@@ -1,8 +1,6 @@
 """
-Altaha Screener — API
-Run locally:  uvicorn main:app --reload
-Deploy free:  Render.com web service, start command:
-              uvicorn main:app --host 0.0.0.0 --port $PORT
+Altaha Screener — API  (v1.1 — hardened data fetching)
+Start command on Render:  uvicorn main:app --host 0.0.0.0 --port $PORT
 """
 
 from fastapi import FastAPI, HTTPException
@@ -12,11 +10,11 @@ import pandas as pd
 
 from engine import technical_score, fundamental_score, composite
 
-app = FastAPI(title="Altaha Screener API", version="1.0")
+app = FastAPI(title="Altaha Screener API", version="1.1")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # tighten to your frontend domain after launch
+    allow_origins=["*"],
     allow_methods=["GET"],
     allow_headers=["*"],
 )
@@ -29,17 +27,36 @@ DISCLAIMER = (
     "SEBI-registered adviser."
 )
 
+BUSY_MSG = (
+    "The data provider is temporarily rate-limiting requests. "
+    "Wait about a minute and try again."
+)
 
-def resolve_ticker(raw: str):
-    """Try the symbol as given, then NSE (.NS), then BSE (.BO)."""
-    raw = raw.strip().upper()
-    candidates = [raw] if "." in raw else [raw, f"{raw}.NS", f"{raw}.BO"]
-    for sym in candidates:
+
+def fetch_history(sym: str):
+    """Fetch 1y history; return (df or None, blocked: bool)."""
+    try:
         t = yf.Ticker(sym)
         hist = t.history(period="1y", auto_adjust=True)
         if hist is not None and len(hist) >= 60:
-            return sym, t, hist
-    return None, None, None
+            return t, hist, False
+        return None, None, False
+    except Exception as e:
+        msg = str(e).lower()
+        blocked = any(k in msg for k in ("429", "rate", "limit", "denied", "blocked", "crumb", "unauthorized"))
+        return None, None, blocked
+
+
+def resolve_ticker(raw: str):
+    raw = raw.strip().upper()
+    candidates = [raw] if "." in raw else [raw, f"{raw}.NS", f"{raw}.BO"]
+    any_blocked = False
+    for sym in candidates:
+        t, hist, blocked = fetch_history(sym)
+        any_blocked = any_blocked or blocked
+        if hist is not None:
+            return sym, t, hist, False
+    return None, None, None, any_blocked
 
 
 @app.get("/")
@@ -53,32 +70,51 @@ def analyze(ticker: str):
     if not ticker or len(ticker) > 20:
         raise HTTPException(400, "Provide a valid ticker symbol.")
 
-    sym, t, hist = resolve_ticker(ticker)
+    try:
+        sym, t, hist, blocked = resolve_ticker(ticker)
+    except Exception:
+        raise HTTPException(503, BUSY_MSG)
+
     if sym is None:
+        if blocked:
+            raise HTTPException(503, BUSY_MSG)
         raise HTTPException(
             404,
             f"Could not find price history for '{ticker}'. "
             "Try the exact exchange symbol (e.g. RELIANCE, TCS, NVDA, AAPL).",
         )
 
-    hist = hist.dropna(subset=["Close"])
-    tech = technical_score(hist)
+    try:
+        hist = hist.dropna(subset=["Close"])
+        tech = technical_score(hist)
+    except Exception:
+        raise HTTPException(500, "Scoring failed for this ticker's price data. Try another symbol.")
 
-    # Fundamentals — degrade gracefully if statements are sparse
+    # Fundamentals — every step degrades gracefully
+    info, fin, bs, cf = {}, pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     try:
         info = t.info or {}
     except Exception:
-        info = {}
+        pass
     try:
         fin = t.financials
+    except Exception:
+        pass
+    try:
         bs = t.balance_sheet
+    except Exception:
+        pass
+    try:
         cf = t.cashflow
     except Exception:
-        fin = bs = cf = pd.DataFrame()
+        pass
 
-    fund = fundamental_score(fin, bs, cf, info)
+    try:
+        fund = fundamental_score(fin, bs, cf, info)
+    except Exception:
+        fund = {"score": None, "f_score": None, "checks": []}
+
     verdict = composite(tech, fund)
-
     currency = info.get("currency") or ("INR" if sym.endswith((".NS", ".BO")) else "USD")
 
     return {
