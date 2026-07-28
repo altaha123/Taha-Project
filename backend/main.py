@@ -1,16 +1,17 @@
 """
-Altaha Screener — API  (v1.1 — hardened data fetching)
+Altaha Screener — API  (v1.2 — numpy-safe responses)
 Start command on Render:  uvicorn main:app --host 0.0.0.0 --port $PORT
 """
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import numpy as np
 import yfinance as yf
 import pandas as pd
 
 from engine import technical_score, fundamental_score, composite
 
-app = FastAPI(title="Altaha Screener API", version="1.1")
+app = FastAPI(title="Altaha Screener API", version="1.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,8 +34,25 @@ BUSY_MSG = (
 )
 
 
+def to_native(obj):
+    """Recursively convert numpy types to plain Python so JSON encoding never fails."""
+    if isinstance(obj, dict):
+        return {k: to_native(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [to_native(v) for v in obj]
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        v = float(obj)
+        return None if (v != v or v in (float("inf"), float("-inf"))) else v
+    if isinstance(obj, float):
+        return None if (obj != obj or obj in (float("inf"), float("-inf"))) else obj
+    return obj
+
+
 def fetch_history(sym: str):
-    """Fetch 1y history; return (df or None, blocked: bool)."""
     try:
         t = yf.Ticker(sym)
         hist = t.history(period="1y", auto_adjust=True)
@@ -90,7 +108,6 @@ def analyze(ticker: str):
     except Exception:
         raise HTTPException(500, "Scoring failed for this ticker's price data. Try another symbol.")
 
-    # Fundamentals — every step degrades gracefully
     info, fin, bs, cf = {}, pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     try:
         info = t.info or {}
@@ -117,7 +134,7 @@ def analyze(ticker: str):
     verdict = composite(tech, fund)
     currency = info.get("currency") or ("INR" if sym.endswith((".NS", ".BO")) else "USD")
 
-    return {
+    return to_native({
         "ticker": sym,
         "name": info.get("longName") or info.get("shortName") or sym,
         "exchange": "NSE" if sym.endswith(".NS") else ("BSE" if sym.endswith(".BO") else info.get("exchange", "—")),
@@ -128,4 +145,4 @@ def analyze(ticker: str):
         "technical": {"score": tech["score"], "checks": tech["checks"]},
         "fundamental": {"score": fund["score"], "f_score": fund["f_score"], "checks": fund["checks"]},
         "disclaimer": DISCLAIMER,
-    }
+    })
