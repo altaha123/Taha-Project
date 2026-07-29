@@ -184,6 +184,32 @@ async function startScan(force){
   .vnote{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:14px;padding-left:15px;
     border-left:2px solid var(--gold-lt)}
 
+  #shwrap{padding:34px 0 30px;border-bottom:1px solid var(--rule);display:none}
+  .shbar{display:flex;height:34px;border:1px solid var(--rule);overflow:hidden;margin-bottom:16px}
+  .shbar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+    font-size:10.5px;letter-spacing:.1em;overflow:hidden;white-space:nowrap}
+  .sh-prom{background:var(--ink);color:var(--paper)}
+  .sh-inst{background:var(--gold);color:#fff}
+  .sh-pub{background:var(--paper-2);color:var(--ink-2)}
+  .shkeys{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+  .shkey{padding:16px 18px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  .shkey .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--mute);display:block;margin-bottom:8px}
+  .shkey .v{font-family:var(--serif);font-size:30px;line-height:1}
+  .shkey .v small{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.06em}
+  .shkey.hi{background:var(--paper-2)}
+  .shkey.hi .v{color:var(--gold-dp)}
+  .shtab{width:100%;border-collapse:collapse;margin-top:24px;font-size:14px}
+  .shtab caption{text-align:left;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--mute);padding-bottom:10px}
+  .shtab th{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--mute);text-align:left;font-weight:400;padding:8px 10px;border-bottom:1px solid var(--ink)}
+  .shtab td{padding:11px 10px;border-bottom:1px solid var(--rule-2)}
+  .shtab tr:nth-child(even) td{background:rgba(244,241,235,.5)}
+  .shtab td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
+  .shnone{font-size:14.5px;line-height:1.7;color:var(--ink-2);padding-left:15px;
+    border-left:2px solid var(--gold-lt)}
   .row{border-bottom:1px solid var(--rule-2)}
   .row:nth-child(even){background:rgba(244,241,235,.5)}
   .row summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:14px 1fr auto;gap:14px;
@@ -287,6 +313,11 @@ async function startScan(force){
       <p class="vnote">Each bar is one day's traded volume. Tall green bars mean buyers were active; tall red bars mean sellers were. When price rises and volume rises together, the move has conviction behind it — when price rises on shrinking volume, fewer people are backing it.</p>
     </div>
 
+    <div id="shwrap">
+      <div class="vhead"><h4>Shareholding pattern</h4><span id="shwhen"></span></div>
+      <div id="shbody"></div>
+    </div>
+
     <div class="lh" style="margin-top:52px"><h3>Validation Ledger</h3><span>Technical</span></div>
     <p class="lsub">Every point traced to its formula. Open any line to see the working — and what the measure actually means.</p>
     <div id="tledger"></div>
@@ -305,7 +336,7 @@ async function startScan(force){
 
 <script>
 /* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
-const API_BASE = "https://taha-project.onrender.com";
+const API_BASE = "http://localhost:8000";
 /* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
@@ -426,6 +457,58 @@ function drawVolume(series){
   $("vstat").textContent = `Latest 20-day avg ${fmtV(last20)} · ${ratio>=1 ? "+" : ""}${((ratio-1)*100).toFixed(0)}% vs 60-day`;
 }
 
+
+/* ── Shareholding pattern ───────────────────────────────────────────── */
+function drawShareholding(s){
+  const wrap = $("shwrap");
+  if(!s){ wrap.style.display="none"; return; }
+  wrap.style.display = "block";
+  $("shwhen").textContent = s.as_of ? `As filed ${s.as_of}` : "Latest published";
+
+  if(!s.published){
+    $("shbody").innerHTML = `<p class="shnone">The shareholding pattern for this stock isn't published by our data source. In India these are quarterly filings under LODR Regulation 31 — the authoritative version sits on the BSE and NSE corporate filings pages for the company. We show nothing rather than estimate.</p>`;
+    return;
+  }
+
+  const pc = v => v===null || v===undefined ? null : (v*100);
+  const prom = pc(s.promoter_pct), inst = pc(s.institutions_pct), pub = pc(s.public_pct);
+  const f1 = v => v===null ? "—" : v.toFixed(1);
+
+  let bar = "";
+  if(prom!==null && inst!==null && pub!==null){
+    const seg = (cls,val,label) => val > 3
+      ? `<div class="${cls}" style="width:${val}%">${label} ${val.toFixed(1)}%</div>`
+      : (val > 0 ? `<div class="${cls}" style="width:${val}%"></div>` : "");
+    bar = `<div class="shbar">${seg("sh-prom",prom,"Promoter")}${seg("sh-inst",inst,"Institutions")}${seg("sh-pub",pub,"Public")}</div>`;
+  }
+
+  const keys = [];
+  keys.push(`<div class="shkey hi"><span class="k">Promoter</span><span class="v">${f1(prom)}<small>%</small></span></div>`);
+  keys.push(`<div class="shkey hi"><span class="k">Institutions · FII + DII</span><span class="v">${f1(inst)}<small>%</small></span></div>`);
+  keys.push(`<div class="shkey"><span class="k">Public &amp; others</span><span class="v">${f1(pub)}<small>%</small></span></div>`);
+  if(s.institutions_count) keys.push(`<div class="shkey"><span class="k">Institutions on register</span><span class="v">${s.institutions_count}</span></div>`);
+  if(s.institutions_float_pct!==null && s.institutions_float_pct!==undefined)
+    keys.push(`<div class="shkey"><span class="k">Of free float</span><span class="v">${f1(pc(s.institutions_float_pct))}<small>%</small></span></div>`);
+
+  const fmtSh = v => v===null||v===undefined ? "—"
+    : v>=1e7 ? (v/1e7).toFixed(2)+" Cr" : v>=1e5 ? (v/1e5).toFixed(2)+" L" : v.toLocaleString();
+
+  const table = (rows, cap) => !rows || !rows.length ? "" : `
+    <table class="shtab"><caption>${cap}</caption>
+      <thead><tr><th>Holder</th><th style="text-align:right">Stake</th><th style="text-align:right">Shares</th><th style="text-align:right">Reported</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td>${esc(r.name)}</td>
+        <td class="n">${r.pct!==null&&r.pct!==undefined ? (r.pct*100).toFixed(2)+"%" : "—"}</td>
+        <td class="n">${fmtSh(r.shares)}</td>
+        <td class="n">${r.date ? esc(r.date) : "—"}</td></tr>`).join("")}</tbody></table>`;
+
+  $("shbody").innerHTML = bar
+    + `<div class="shkeys">${keys.join("")}</div>`
+    + table(s.top_holders, "Largest institutional holders")
+    + table(s.mf_holders, "Largest mutual fund holders")
+    + `<p class="shnone" style="margin-top:22px">Promoter holding is the founding group's own stake — high and stable is a sign of commitment, while a falling trend across quarters deserves attention. Institutions here combine FII and DII. These are quarterly filings, so they lag live prices by up to three months.</p>`;
+}
+
 /* ── Ledger rows ────────────────────────────────────────────────────── */
 function rowHTML(c){
   const full = c.points===c.max, zero = c.points===0;
@@ -485,6 +568,7 @@ function render(d){
   $("fscore").innerHTML = d.fundamental.score===null ? `<small>NOT PUBLISHED</small>`
                                                      : `${d.fundamental.score}<small> /100</small>`;
   drawVolume(d.volume_series);
+  drawShareholding(d.shareholding);
 
   $("tledger").innerHTML = d.technical.checks.map(rowHTML).join("");
   if(d.fundamental.score===null){
