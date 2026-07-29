@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 
 from engine import technical_score, fundamental_score, composite
-from data_source import resolve, fundamentals, NotFound
+from data_source import resolve, fundamentals, shareholding, NotFound
 import scan as scanner
 
 app = FastAPI(title="Altaha Screener API", version="2.1")
@@ -195,6 +195,11 @@ def analyze(ticker: str):
     except Exception:
         info, fund = {}, {"score": None, "f_score": None, "checks": []}
 
+    try:
+        holding = shareholding(t)
+    except Exception:
+        holding = {"published": False}
+
     verdict = composite(tech, fund)
     currency = info.get("currency") or ("INR" if sym.endswith((".NS", ".BO")) else "USD")
 
@@ -206,6 +211,7 @@ def analyze(ticker: str):
         "price": tech["price"],
         "atr_pct": tech["atr_pct"],
         "volume_series": tech["volume_series"],
+        "shareholding": holding,
         "verdict": verdict,
         "technical": {"score": tech["score"], "checks": tech["checks"]},
         "fundamental": {"score": fund["score"], "f_score": fund["f_score"], "checks": fund["checks"]},
