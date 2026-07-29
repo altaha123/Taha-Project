@@ -1,10 +1,12 @@
 """
-Altaha Screener — API  (v2.0)
+Altaha Screener — API  (v2.1 — on-demand scanning)
 Start command on Render:  uvicorn main:app --host 0.0.0.0 --port $PORT
 """
 
 import json
 import os
+import threading
+import time
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,13 +14,14 @@ import numpy as np
 
 from engine import technical_score, fundamental_score, composite
 from data_source import resolve, fundamentals, NotFound
+import scan as scanner
 
-app = FastAPI(title="Altaha Screener API", version="2.0")
+app = FastAPI(title="Altaha Screener API", version="2.1")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -31,7 +34,50 @@ DISCLAIMER = (
     "consult a SEBI-registered adviser."
 )
 
-LEADERBOARD_FILE = os.path.join(os.path.dirname(__file__), "leaderboard.json")
+LEADERBOARD_FILE = scanner.OUT_FILE
+RESULT_TTL = 12 * 3600          # a ranking older than this is stale
+
+# ---------------------------------------------------------------------------
+# Scan job state — one scan at a time, shared by everyone
+# ---------------------------------------------------------------------------
+
+_lock = threading.Lock()
+_state = {
+    "status": "idle",           # idle | running | done | error
+    "done": 0, "total": 0, "scored": 0,
+    "started_at": None, "finished_at": None,
+    "error": None,
+    "payload": None,
+}
+
+
+def _load_from_disk():
+    if os.path.exists(LEADERBOARD_FILE):
+        try:
+            with open(LEADERBOARD_FILE) as f:
+                _state["payload"] = json.load(f)
+                _state["status"] = "done"
+                _state["finished_at"] = os.path.getmtime(LEADERBOARD_FILE)
+        except Exception:
+            pass
+
+
+_load_from_disk()
+
+
+def _worker():
+    def progress(done, total, scored):
+        _state["done"], _state["total"], _state["scored"] = done, total, scored
+
+    try:
+        payload = scanner.run_scan(progress=progress)
+        _state["payload"] = payload
+        _state["status"] = "done"
+        _state["finished_at"] = time.time()
+        _state["error"] = None
+    except Exception as e:
+        _state["status"] = "error"
+        _state["error"] = str(e)[:200]
 
 
 def to_native(obj):
@@ -49,10 +95,15 @@ def to_native(obj):
     return obj
 
 
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+
 @app.get("/")
 def root():
     return {"app": "Altaha Screener", "tagline": "Where Logic Meets Validations",
-            "endpoints": ["/analyze?ticker=RELIANCE", "/leaderboard", "/health"]}
+            "endpoints": ["/analyze?ticker=RELIANCE", "/leaderboard",
+                          "/scan/start", "/scan/status", "/health"]}
 
 
 @app.get("/health")
@@ -64,26 +115,57 @@ def health():
         return {"data_layer": "unreachable", "detail": str(e)[:200]}
 
 
+@app.post("/scan/start")
+@app.get("/scan/start")
+def scan_start(force: bool = False):
+    """Kick off a background scan. Returns immediately."""
+    with _lock:
+        if _state["status"] == "running":
+            return {"started": False, "reason": "already_running", **scan_status()}
+
+        fresh = (_state["payload"] is not None
+                 and _state["finished_at"]
+                 and (time.time() - _state["finished_at"]) < RESULT_TTL)
+        if fresh and not force:
+            return {"started": False, "reason": "cached", **scan_status()}
+
+        _state.update({"status": "running", "done": 0, "scored": 0,
+                       "total": len(scanner.universe()),
+                       "started_at": time.time(), "error": None})
+        threading.Thread(target=_worker, daemon=True).start()
+        return {"started": True, **scan_status()}
+
+
+@app.get("/scan/status")
+def scan_status():
+    elapsed = int(time.time() - _state["started_at"]) if _state["started_at"] else 0
+    out = {
+        "status": _state["status"],
+        "done": _state["done"], "total": _state["total"], "scored": _state["scored"],
+        "elapsed_seconds": elapsed if _state["status"] == "running" else None,
+        "error": _state["error"],
+    }
+    if _state["payload"]:
+        out["scanned_at"] = _state["payload"].get("scanned_at")
+    return out
+
+
 @app.get("/leaderboard")
 def leaderboard(limit: int = 5):
-    """Serve the most recent precomputed ranking (produced by scan.py)."""
-    if not os.path.exists(LEADERBOARD_FILE):
-        return {"available": False,
-                "message": "No scan has been run yet. Run scan.py to generate the ranking."}
-    try:
-        with open(LEADERBOARD_FILE) as f:
-            data = json.load(f)
-    except Exception:
-        return {"available": False, "message": "Ranking file could not be read."}
-
-    rows = data.get("rankings", [])[: max(1, min(limit, 25))]
-    return {"available": True,
-            "scanned_at": data.get("scanned_at"),
-            "universe_size": data.get("universe_size"),
-            "scored": data.get("scored"),
-            "methodology": data.get("methodology"),
-            "rankings": rows,
-            "disclaimer": DISCLAIMER}
+    p = _state["payload"]
+    if not p:
+        return {"available": False, "status": _state["status"],
+                "message": "No ranking generated yet."}
+    return {
+        "available": True,
+        "status": _state["status"],
+        "scanned_at": p.get("scanned_at"),
+        "universe_size": p.get("universe_size"),
+        "scored": p.get("scored"),
+        "methodology": p.get("methodology"),
+        "rankings": p.get("rankings", [])[: max(1, min(limit, 25))],
+        "disclaimer": DISCLAIMER,
+    }
 
 
 @app.get("/analyze")
