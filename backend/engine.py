@@ -164,6 +164,41 @@ def technical_score(df: pd.DataFrame) -> dict:
         "10 pts if close is above the Supertrend(10, 3×ATR) band",
         "Supertrend draws a volatility-adjusted band under (or over) price. Which side price sits on is a simple trend-following regime filter.")
 
+    # ---- Volume intelligence (20 pts) -----------------------------------
+    vol = df["Volume"] if "Volume" in df.columns else None
+    if vol is not None and vol.tail(60).fillna(0).sum() > 0:
+        vol = vol.fillna(0)
+
+        # Participation trend: recent 20d average vs prior 50d average
+        v20 = vol.tail(20).mean()
+        v50 = vol.tail(50).mean()
+        ratio = (v20 / v50) if v50 else 1.0
+        vt_pts = 8 if ratio >= 1.25 else (5 if ratio >= 1.05 else (2 if ratio >= 0.9 else 0))
+        add("Volume trend", vt_pts, 8,
+            f"20-day avg {v20:,.0f} vs 50-day avg {v50:,.0f} = {fmt(ratio)}× participation",
+            "8 pts: ≥1.25× · 5: 1.05–1.25× · 2: 0.90–1.05× · 0: <0.90×",
+            "Volume is how many shares changed hands. Rising average volume means more people are participating — a price move backed by growing volume is more convincing than one on thin trade.")
+
+        # Accumulation: volume on up-days vs down-days over last 20 sessions
+        recent = df.tail(20)
+        chg = recent["Close"].diff()
+        up_v = recent["Volume"][chg > 0].sum()
+        dn_v = recent["Volume"][chg < 0].sum()
+        ud = (up_v / dn_v) if dn_v else (2.0 if up_v > 0 else 1.0)
+        acc_pts = 7 if ud >= 1.5 else (4 if ud >= 1.0 else (2 if ud >= 0.7 else 0))
+        add("Accumulation vs distribution", acc_pts, 7,
+            f"Up-day volume {up_v:,.0f} vs down-day volume {dn_v:,.0f} = {fmt(ud)}× (20 sessions)",
+            "7 pts: ≥1.5× · 4: 1.0–1.5× · 2: 0.7–1.0× · 0: <0.7×",
+            "If more shares trade on rising days than falling days, buyers are being more aggressive than sellers — that's accumulation. The reverse is distribution, where holders are quietly exiting.")
+
+        # On-Balance Volume direction over 30 sessions
+        obv = (np.sign(close.diff().fillna(0)) * vol).fillna(0).cumsum()
+        obv_rising = obv.iloc[-1] > obv.iloc[-30] if len(obv) > 30 else False
+        add("On-Balance Volume", 5 if obv_rising else 0, 5,
+            f"OBV {obv.iloc[-30]:,.0f} → {obv.iloc[-1]:,.0f} ({'rising' if obv_rising else 'falling'})",
+            "5 pts if OBV today is above OBV 30 sessions ago",
+            "On-Balance Volume adds volume on up days and subtracts it on down days, building a running total. When OBV rises alongside price, the trend has real buying behind it. When price rises but OBV doesn't, the move is hollow.")
+
     # 52-week position (10 pts)
     lo52, hi52 = close.tail(252).min(), close.tail(252).max()
     pos = (price - lo52) / (hi52 - lo52) if hi52 > lo52 else 0.5
@@ -175,7 +210,17 @@ def technical_score(df: pd.DataFrame) -> dict:
 
     score = round(100 * earned / possible)
     vol_pct = fmt(100 * atr(df).iloc[-1] / price, 1)
-    return {"score": score, "checks": checks, "atr_pct": vol_pct, "price": fmt(price)}
+
+    # Compact 60-session volume series for the chart: [volume, up-day flag]
+    series = []
+    if "Volume" in df.columns:
+        tail = df.tail(60)
+        chg = tail["Close"].diff().fillna(0)
+        for v, c in zip(tail["Volume"].fillna(0), chg):
+            series.append([int(v), 1 if c >= 0 else 0])
+
+    return {"score": score, "checks": checks, "atr_pct": vol_pct,
+            "price": fmt(price), "volume_series": series}
 
 
 # ---------------------------------------------------------------------------
@@ -310,6 +355,27 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
     add("Valuation (P/E)", pe_pts, 10, pe_detail,
         "10 pts: ≤25 · 6: 25–45 · 2: 45–70 · 0: >70 or loss-making",
         "Price matters. Even a great business bought at an extreme multiple can deliver poor returns for years. P/E is a rough but honest first check.")
+
+    # --- Ownership (shareholding pattern, quarterly) ----------------------
+    # Only scored when actually published — never penalise missing disclosure.
+    inst = info.get("institutions_pct")
+    prom = info.get("insiders_pct")
+
+    if inst is not None:
+        ip = inst * 100
+        inst_pts = 8 if ip >= 30 else (6 if ip >= 18 else (3 if ip >= 8 else 0))
+        add("Institutional holding (FII + DII)", inst_pts, 8,
+            f"Institutions hold {fmt(ip, 1)}% of equity (last filed shareholding pattern)",
+            "8 pts: ≥30% · 6: 18–30% · 3: 8–18% · 0: <8%",
+            "This is the combined FII and DII stake from the company's quarterly shareholding filing. Professional investors run their own diligence before taking large positions, so a meaningful institutional stake means the business has passed outside scrutiny. It is a quality signal, not a guarantee — institutions are wrong regularly, and this figure is quarterly, so it lags the market.")
+
+    if prom is not None:
+        pp = prom * 100
+        prom_pts = 8 if pp >= 50 else (6 if pp >= 35 else (3 if pp >= 20 else 0))
+        add("Promoter holding", prom_pts, 8,
+            f"Promoters / insiders hold {fmt(pp, 1)}% of equity (last filed shareholding pattern)",
+            "8 pts: ≥50% · 6: 35–50% · 3: 20–35% · 0: <20%",
+            "Promoter holding is the founding family's or parent group's own stake. High promoter holding means their wealth rises and falls with yours — skin in the game. Watch for falling promoter stake across quarters, which can signal the people who know the business best are stepping back.")
 
     # If the core statement lines are all missing, data is unavailable —
     # report None rather than a misleading zero.
