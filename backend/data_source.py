@@ -105,6 +105,109 @@ def ownership(t) -> dict:
     return {k: v for k, v in out.items() if v is not None}
 
 
+def shareholding(t) -> dict:
+    """
+    Build the fullest shareholding picture the provider publishes.
+
+    Indian shareholding patterns are quarterly filings under LODR Reg 31.
+    Coverage via this provider is partial — anything missing is reported as
+    unpublished rather than estimated.
+    """
+    own = ownership(t)
+    out = {
+        "promoter_pct": own.get("insiders_pct"),
+        "institutions_pct": own.get("institutions_pct"),
+        "public_pct": None,
+        "institutions_float_pct": None,
+        "institutions_count": None,
+        "as_of": None,
+        "top_holders": [],
+        "mf_holders": [],
+    }
+
+    # Extra figures from major_holders
+    try:
+        mh = t.major_holders
+        if mh is not None and not mh.empty and "Value" in mh.columns:
+            for label, val in mh["Value"].items():
+                key = str(label).lower().replace(" ", "")
+                if "institutionsfloatpercentheld" in key:
+                    out["institutions_float_pct"] = _pct(val)
+                elif "institutionscount" in key:
+                    try:
+                        out["institutions_count"] = int(float(val))
+                    except (TypeError, ValueError):
+                        pass
+    except Exception:
+        pass
+
+    # Derived residual — only when both known and arithmetic is sane
+    p, i = out["promoter_pct"], out["institutions_pct"]
+    if p is not None and i is not None:
+        rest = 1.0 - p - i
+        out["public_pct"] = round(rest, 4) if -0.005 <= rest <= 1.0 else None
+        if out["public_pct"] is not None and out["public_pct"] < 0:
+            out["public_pct"] = 0.0
+
+    def _holders(frame, cap=6):
+        rows = []
+        if frame is None or getattr(frame, "empty", True):
+            return rows
+        cols = {str(c).lower().strip(): c for c in frame.columns}
+
+        def pick(*names):
+            for n in names:
+                if n in cols:
+                    return cols[n]
+            return None
+
+        c_name = pick("holder", "name")
+        c_pct = pick("pctheld", "% out", "pctout", "percentheld")
+        c_sh = pick("shares")
+        c_val = pick("value")
+        c_dt = pick("date reported", "datereported", "date")
+
+        for _, r in frame.head(cap).iterrows():
+            item = {"name": str(r[c_name]) if c_name else None,
+                    "pct": _pct(r[c_pct]) if c_pct else None,
+                    "shares": None, "value": None, "date": None}
+            if c_sh:
+                try:
+                    item["shares"] = int(float(r[c_sh]))
+                except (TypeError, ValueError):
+                    pass
+            if c_val:
+                try:
+                    item["value"] = float(r[c_val])
+                except (TypeError, ValueError):
+                    pass
+            if c_dt:
+                try:
+                    item["date"] = str(r[c_dt])[:10]
+                except Exception:
+                    pass
+            if item["name"]:
+                rows.append(item)
+        return rows
+
+    try:
+        out["top_holders"] = _holders(t.institutional_holders)
+    except Exception:
+        pass
+    try:
+        out["mf_holders"] = _holders(t.mutualfund_holders, cap=5)
+    except Exception:
+        pass
+
+    dates = [h["date"] for h in out["top_holders"] + out["mf_holders"] if h.get("date")]
+    if dates:
+        out["as_of"] = max(dates)
+
+    out["published"] = any(out[k] is not None for k in
+                           ("promoter_pct", "institutions_pct")) or bool(out["top_holders"])
+    return out
+
+
 def fundamentals(sym: str, t):
     """Return (financials, balance_sheet, cashflow, info_dict). Never raises."""
     cached = _cget(f"fn::{sym}")
