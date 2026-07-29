@@ -4,148 +4,222 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Altaha Screener — Where Logic Meets Validations</title>
-<meta name="description" content="Type any Indian or US stock. Get an auditable technical + fundamental score where every number shows its formula." />
+<meta name="description" content="Type any Indian or US stock. Get an auditable technical and fundamental score where every number shows its formula." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0A1120; --panel:#0F1930; --panel2:#131F3A; --line:#22304F;
-    --gold:#C9A24B; --gold-soft:#8A733F; --paper:#EAE6DA; --mute:#7C89A3;
-    --strong:#4CB08A; --weak:#C05A50; --mixed:#C9A24B;
-    --mono:'IBM Plex Mono',monospace; --serif:'Fraunces',serif; --sans:'Inter',sans-serif;
+    --paper:#FBFAF7; --paper-2:#F4F1EB; --ink:#16130E; --ink-2:#4A443A; --mute:#8B8477;
+    --rule:#DDD6C9; --rule-2:#EBE6DC;
+    --gold:#B08D2E; --gold-lt:#D9BC6A; --gold-dp:#8A6D1E;
+    --pass:#1F5D45; --part:#9A7B1F; --fail:#8E2F2A;
+    --mono:'IBM Plex Mono',monospace; --serif:'Instrument Serif',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
-  body{background:var(--ink);color:var(--paper);font-family:var(--sans);min-height:100vh}
-  a{color:var(--gold)}
-  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *{transition:none!important}}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;
+    -webkit-font-smoothing:antialiased;min-height:100vh}
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px}
 
-  header{padding:56px 0 8px;text-align:center}
-  .brand{font-family:var(--serif);font-weight:650;font-size:clamp(34px,6vw,52px);letter-spacing:.5px}
-  .brand em{font-style:normal;color:var(--gold)}
-  .tag{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--mute);margin-top:10px}
-  .rule{width:64px;height:2px;background:var(--gold);margin:22px auto}
+  header{padding:58px 0 0;text-align:center}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--mute)}
+  .brand{font-family:var(--serif);font-size:clamp(42px,8vw,68px);line-height:1;margin-top:14px;letter-spacing:-.01em}
+  .brand i{font-style:italic;color:var(--gold-dp)}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-2);margin-top:16px}
+  .metal{height:1px;max-width:280px;margin:26px auto 0;
+    background:linear-gradient(90deg,transparent,var(--gold-lt) 20%,var(--gold) 50%,var(--gold-lt) 80%,transparent)}
 
-  .searchrow{display:flex;gap:10px;max-width:560px;margin:26px auto 8px}
-  input#tk{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:6px;
-    color:var(--paper);font-family:var(--mono);font-size:17px;padding:14px 16px;letter-spacing:.06em}
-  input#tk::placeholder{color:var(--mute);letter-spacing:.02em}
-  input#tk:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
-  button#go{background:var(--gold);color:var(--ink);border:none;border-radius:6px;font-family:var(--sans);
-    font-weight:600;font-size:15px;padding:0 26px;cursor:pointer}
-  button#go:hover{filter:brightness(1.08)}
-  button#go:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
-  .hint{font-family:var(--mono);font-size:12px;color:var(--mute);text-align:center;margin-bottom:40px}
-  .hint b{color:var(--gold);cursor:pointer;font-weight:500}
+  .searchrow{display:flex;max-width:540px;margin:38px auto 10px;border:1px solid var(--ink);
+    border-radius:2px;overflow:hidden;background:#fff}
+  input#tk{flex:1;border:none;background:transparent;color:var(--ink);font-family:var(--mono);
+    font-size:16px;padding:15px 16px;letter-spacing:.08em}
+  input#tk::placeholder{color:var(--mute);letter-spacing:.02em;font-family:var(--sans)}
+  input#tk:focus{outline:none}
+  .searchrow:focus-within{box-shadow:0 0 0 3px rgba(176,141,46,.22)}
+  button#go{background:var(--ink);color:var(--paper);border:none;font-family:var(--sans);font-weight:500;
+    font-size:14px;letter-spacing:.04em;padding:0 26px;cursor:pointer}
+  button#go:hover{background:var(--gold-dp)}
+  button#go:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .hint{font-family:var(--mono);font-size:11.5px;color:var(--mute);text-align:center;margin-bottom:40px;letter-spacing:.04em}
+  .hint b{color:var(--gold-dp);cursor:pointer;font-weight:500;border-bottom:1px solid var(--rule)}
+  .hint b:hover{border-color:var(--gold)}
 
-  .state{max-width:560px;margin:0 auto 40px;text-align:center;font-size:15px;color:var(--mute);
-    line-height:1.6;display:none;padding:18px;border:1px dashed var(--line);border-radius:8px}
+  .state{max-width:540px;margin:0 auto 40px;text-align:center;font-size:14.5px;color:var(--ink-2);
+    line-height:1.65;display:none;padding:20px;border:1px solid var(--rule);background:var(--paper-2)}
 
-  /* ------- Result ------- */
-  #result{display:none;padding-bottom:80px}
-  .company{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;margin-bottom:6px}
-  .company h2{font-family:var(--serif);font-weight:650;font-size:clamp(22px,4vw,30px)}
-  .company .sym{font-family:var(--mono);color:var(--gold);font-size:14px;letter-spacing:.1em}
-  .company .px{font-family:var(--mono);color:var(--mute);font-size:14px}
+  /* ── Top ranked panel ─────────────────────────────────────── */
+  #board{margin-bottom:56px}
+  .lh{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+    padding-bottom:9px;border-bottom:2px solid var(--ink)}
+  .lh h3{font-family:var(--serif);font-size:25px;font-weight:400;letter-spacing:-.01em}
+  .lh span{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--mute);white-space:nowrap}
+  .lsub{font-size:13.5px;color:var(--mute);margin:12px 0 6px;line-height:1.6}
+  .brow{display:grid;grid-template-columns:34px 1fr auto auto;gap:14px;align-items:center;
+    padding:13px 12px;border-bottom:1px solid var(--rule-2);cursor:pointer;font-size:15px}
+  .brow:nth-child(even){background:rgba(244,241,235,.5)}
+  .brow:hover{background:var(--paper-2)}
+  .brow .rank{font-family:var(--serif);font-size:22px;color:var(--gold-dp);text-align:center;line-height:1}
+  .brow .nm{font-weight:450;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .brow .nm small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--mute);
+    letter-spacing:.1em;margin-top:2px}
+  .brow .tf{font-family:var(--mono);font-size:11px;color:var(--mute);white-space:nowrap;letter-spacing:.06em}
+  .brow .cs{font-family:var(--serif);font-size:26px;line-height:1;min-width:44px;text-align:right}
+  @media(max-width:560px){.brow{grid-template-columns:28px 1fr auto} .brow .tf{display:none}}
+  .bmeta{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);margin-top:12px;line-height:1.8}
 
-  .verdict{display:grid;grid-template-columns:150px 1fr;gap:26px;align-items:center;
-    background:linear-gradient(160deg,var(--panel) 0%,var(--panel2) 100%);
-    border:1px solid var(--line);border-radius:12px;padding:26px;margin:18px 0 26px}
-  @media(max-width:560px){.verdict{grid-template-columns:1fr;text-align:center;justify-items:center}}
-  .dial{position:relative;width:150px;height:150px}
-  .dial svg{transform:rotate(-90deg)}
-  .dial .num{position:absolute;inset:0;display:grid;place-items:center;
-    font-family:var(--mono);font-size:40px;font-weight:600}
-  .vlabel{font-family:var(--mono);font-size:13px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:8px}
-  .vsummary{font-size:15px;line-height:1.65;color:#C8CEDC}
-  .vbasis{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:12px;letter-spacing:.05em}
-  .tone-strong{color:var(--strong)} .tone-weak{color:var(--weak)}
-  .tone-mixed,.tone-constructive{color:var(--mixed)}
+  /* ── Result ───────────────────────────────────────────────── */
+  #result{display:none;padding-bottom:90px}
+  .company{border-bottom:2px solid var(--ink);padding-bottom:14px}
+  .company h2{font-family:var(--serif);font-size:clamp(26px,5vw,38px);line-height:1.1;letter-spacing:-.01em}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:9px;font-family:var(--mono);font-size:11.5px;
+    letter-spacing:.08em;color:var(--mute);text-transform:uppercase}
+  .meta b{color:var(--ink);font-weight:500}
 
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:26px}
-  @media(max-width:640px){.cols{grid-template-columns:1fr}}
-  .subscore{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;
-    display:flex;justify-content:space-between;align-items:center}
-  .subscore .sname{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
-  .subscore .sval{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--gold)}
-  .subscore .sval small{font-size:13px;color:var(--mute);font-weight:400}
+  .verdict{display:grid;grid-template-columns:190px 1fr;gap:34px;align-items:center;
+    padding:38px 0 34px;border-bottom:1px solid var(--rule)}
+  @media(max-width:600px){.verdict{grid-template-columns:1fr;gap:24px;justify-items:center;text-align:center}}
+  .seal{position:relative;width:190px;height:190px;display:grid;place-items:center}
+  .seal svg{position:absolute;inset:0}
+  .seal .val{font-family:var(--serif);font-size:60px;line-height:1;position:relative;top:-6px}
+  .seal .of{position:absolute;bottom:44px;font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:var(--mute)}
+  .vstamp{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;
+    padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--rule)}
+  .vsummary{font-size:16.5px;line-height:1.7;color:var(--ink-2)}
+  .vbasis{font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-top:16px;
+    letter-spacing:.14em;text-transform:uppercase}
 
-  .ledger-h{font-family:var(--serif);font-size:20px;font-weight:650;margin:34px 0 4px}
-  .ledger-sub{font-size:13px;color:var(--mute);margin-bottom:16px}
-  .row{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--panel);overflow:hidden}
-  .row summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto auto;gap:14px;
-    align-items:center;padding:13px 16px;font-size:14px}
+  .sched{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule)}
+  @media(max-width:600px){.sched{grid-template-columns:1fr}}
+  .cell{padding:22px 0;display:flex;justify-content:space-between;align-items:baseline;gap:14px}
+  .cell:first-child{padding-right:26px;border-right:1px solid var(--rule)}
+  .cell:last-child{padding-left:26px}
+  @media(max-width:600px){.cell:first-child{border-right:none;border-bottom:1px solid var(--rule-2);padding-right:0}
+    .cell:last-child{padding-left:0}}
+  .cell .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+  .cell .num{font-family:var(--serif);font-size:34px;line-height:1}
+  .cell .num small{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.1em}
+
+  /* ── Volume chart ─────────────────────────────────────────── */
+  #volwrap{padding:34px 0 30px;border-bottom:1px solid var(--rule)}
+  .vhead{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:16px}
+  .vhead h4{font-family:var(--serif);font-size:20px;font-weight:400}
+  .vhead span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+  #volchart{width:100%;height:130px;display:block}
+  .vlegend{display:flex;gap:20px;margin-top:12px;font-family:var(--mono);font-size:10px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--mute);flex-wrap:wrap}
+  .vlegend i{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
+  .vnote{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:14px;padding-left:15px;
+    border-left:2px solid var(--gold-lt)}
+
+  .row{border-bottom:1px solid var(--rule-2)}
+  .row:nth-child(even){background:rgba(244,241,235,.5)}
+  .row summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:14px 1fr auto;gap:14px;
+    align-items:center;padding:14px 12px;font-size:15px;font-weight:450}
   .row summary::-webkit-details-marker{display:none}
+  .row summary:hover,.row[open] summary{background:var(--paper-2)}
   .row summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
-  .row .pts{font-family:var(--mono);font-size:13px;color:var(--mute);white-space:nowrap}
-  .row .pass{width:9px;height:9px;border-radius:50%}
-  .p-full{background:var(--strong)} .p-part{background:var(--mixed)} .p-zero{background:var(--weak)}
-  .row .body{padding:0 16px 16px;border-top:1px solid var(--line)}
-  .audit{font-family:var(--mono);font-size:12.5px;line-height:1.7;color:#B9C2D6;
-    background:var(--ink);border-radius:6px;padding:12px 14px;margin-top:12px;overflow-x:auto}
-  .audit .lbl{color:var(--gold-soft);user-select:none}
-  .learn{font-size:13.5px;line-height:1.65;color:var(--mute);margin-top:12px;padding-left:12px;
-    border-left:2px solid var(--gold-soft)}
+  .mark{font-family:var(--mono);font-size:13px;font-weight:600;text-align:center}
+  .m-full{color:var(--pass)} .m-part{color:var(--part)} .m-zero{color:var(--fail)}
+  .pts{font-family:var(--mono);font-size:12px;color:var(--mute);white-space:nowrap;letter-spacing:.05em}
+  .tagv{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold-dp);border:1px solid var(--gold-lt);border-radius:2px;padding:2px 5px;
+    margin-left:8px;vertical-align:2px;font-weight:500}
+  .body{padding:2px 12px 20px 40px}
+  .audit{font-family:var(--mono);font-size:12.5px;line-height:1.85;color:var(--ink);background:#fff;
+    border:1px solid var(--rule);padding:13px 15px;overflow-x:auto;white-space:pre-wrap}
+  .audit .k{color:var(--gold-dp);user-select:none}
+  .learn{font-size:14.5px;line-height:1.7;color:var(--ink-2);margin-top:14px;padding-left:15px;
+    border-left:2px solid var(--gold-lt)}
 
-  .disc{margin-top:44px;font-size:12px;line-height:1.7;color:var(--mute);border-top:1px solid var(--line);padding-top:18px}
-  footer{font-family:var(--mono);font-size:11px;color:var(--mute);text-align:center;
-    padding:26px 0 40px;letter-spacing:.15em}
+  .disc{margin-top:54px;padding-top:20px;border-top:1px solid var(--rule);font-size:12px;
+    line-height:1.75;color:var(--mute)}
+  footer{font-family:var(--mono);font-size:10px;color:var(--mute);text-align:center;
+    padding:30px 0 44px;letter-spacing:.22em;text-transform:uppercase}
 </style>
 </head>
 <body>
+
 <header class="wrap">
-  <div class="brand">ALTAHA <em>SCREENER</em></div>
+  <div class="eyebrow">Equity Analysis · India &amp; United States</div>
+  <h1 class="brand">Altaha <i>Screener</i></h1>
   <div class="tag">Where Logic Meets Validations</div>
-  <div class="rule"></div>
+  <div class="metal"></div>
 </header>
 
 <main class="wrap">
   <div class="searchrow">
-    <input id="tk" placeholder="Type a stock — RELIANCE, TCS, NVDA, AAPL…" autocomplete="off"
-           aria-label="Stock ticker symbol" />
+    <input id="tk" placeholder="Enter a stock — RELIANCE, TCS, NVDA…" autocomplete="off"
+           spellcheck="false" aria-label="Stock ticker symbol" />
     <button id="go">Analyse</button>
   </div>
-  <p class="hint">Indian &amp; US equities · try <b data-t="RELIANCE">RELIANCE</b> · <b data-t="HDFCBANK">HDFCBANK</b> · <b data-t="NVDA">NVDA</b> · <b data-t="MSFT">MSFT</b></p>
+  <p class="hint">Try <b data-t="RELIANCE">RELIANCE</b> · <b data-t="HDFCBANK">HDFCBANK</b> · <b data-t="INFY">INFY</b> · <b data-t="NVDA">NVDA</b> · <b data-t="AAPL">AAPL</b></p>
 
   <div class="state" id="state"></div>
 
+  <!-- Top ranked -->
+  <section id="board" aria-label="Highest ranked stocks">
+    <div class="lh"><h3>Top Ranked</h3><span id="bwhen">NSE Universe</span></div>
+    <p class="lsub">The five stocks scoring highest on the Altaha composite at the last scan. This is a ranking of measured scores, not a recommendation — open any name to see its full ledger.</p>
+    <div id="brows"></div>
+    <div class="bmeta" id="bmeta"></div>
+  </section>
+
+  <!-- Single-stock result -->
   <section id="result" aria-live="polite">
     <div class="company">
       <h2 id="cname"></h2>
-      <span class="sym" id="csym"></span>
-      <span class="px" id="cpx"></span>
+      <div class="meta">
+        <span id="csym"></span><span id="cpx"></span><span id="cvol"></span>
+      </div>
     </div>
 
     <div class="verdict">
-      <div class="dial">
-        <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
-          <circle cx="75" cy="75" r="64" fill="none" stroke="var(--line)" stroke-width="9"/>
-          <circle id="arc" cx="75" cy="75" r="64" fill="none" stroke="var(--gold)" stroke-width="9"
-                  stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402"
-                  style="transition:stroke-dashoffset .9s ease"/>
+      <div class="seal">
+        <svg width="190" height="190" viewBox="0 0 190 190" aria-hidden="true">
+          <circle cx="95" cy="95" r="88" fill="none" stroke="var(--gold-lt)" stroke-width="1"/>
+          <circle cx="95" cy="95" r="72" fill="none" stroke="var(--rule)" stroke-width="7"/>
+          <circle id="arc" cx="95" cy="95" r="72" fill="none" stroke="var(--gold)" stroke-width="7"
+                  stroke-dasharray="453" stroke-dashoffset="453" transform="rotate(-90 95 95)"
+                  style="transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)"/>
         </svg>
-        <div class="num" id="score">–</div>
+        <div class="val" id="score">—</div>
+        <div class="of">out of 100</div>
       </div>
       <div>
-        <div class="vlabel" id="vlabel"></div>
+        <div class="vstamp" id="vlabel"></div>
         <p class="vsummary" id="vsummary"></p>
         <div class="vbasis" id="vbasis"></div>
       </div>
     </div>
 
-    <div class="cols">
-      <div class="subscore"><span class="sname">Technical</span><span class="sval" id="tscore"></span></div>
-      <div class="subscore"><span class="sname">Fundamental</span><span class="sval" id="fscore"></span></div>
+    <div class="sched">
+      <div class="cell"><span class="lbl">Technical</span><span class="num" id="tscore"></span></div>
+      <div class="cell"><span class="lbl">Fundamental</span><span class="num" id="fscore"></span></div>
     </div>
 
-    <h3 class="ledger-h">The Validation Ledger — Technical</h3>
-    <p class="ledger-sub">Every point earned, traced to its formula. Tap a row to see the working and learn the concept.</p>
+    <div id="volwrap">
+      <div class="vhead"><h4>Volume — last 60 sessions</h4><span id="vstat"></span></div>
+      <svg id="volchart" viewBox="0 0 720 130" preserveAspectRatio="none" role="img"
+           aria-label="Daily traded volume for the last 60 sessions"></svg>
+      <div class="vlegend">
+        <span><i style="background:var(--pass)"></i>Traded on an up day</span>
+        <span><i style="background:var(--fail)"></i>Traded on a down day</span>
+        <span><i style="background:var(--gold)"></i>20-session average</span>
+      </div>
+      <p class="vnote">Each bar is one day's traded volume. Tall green bars mean buyers were active; tall red bars mean sellers were. When price rises and volume rises together, the move has conviction behind it — when price rises on shrinking volume, fewer people are backing it.</p>
+    </div>
+
+    <div class="lh" style="margin-top:52px"><h3>Validation Ledger</h3><span>Technical</span></div>
+    <p class="lsub">Every point traced to its formula. Open any line to see the working — and what the measure actually means.</p>
     <div id="tledger"></div>
 
     <div id="fblock">
-      <h3 class="ledger-h">The Validation Ledger — Fundamental</h3>
-      <p class="ledger-sub" id="fsub"></p>
+      <div class="lh" style="margin-top:52px"><h3>Validation Ledger</h3><span>Fundamental</span></div>
+      <p class="lsub" id="fsub"></p>
       <div id="fledger"></div>
     </div>
 
@@ -153,75 +227,139 @@
   </section>
 </main>
 
-<footer>ALTAHA SCREENER · EDUCATIONAL USE · DATA VIA PUBLIC EXCHANGE FEEDS</footer>
+<footer>Altaha Screener · Educational Use Only</footer>
 
 <script>
-/* ── CONFIGURE: paste your Render backend URL here after deploying ─────── */
+/* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
 const API_BASE = "https://taha-project.onrender.com";
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
 const state = $("state"), result = $("result");
+const show = m => { state.style.display="block"; state.innerHTML=m; result.style.display="none"; };
+const toneInk = t => t==="strong" ? "var(--pass)" : t==="weak" ? "var(--fail)" : "var(--part)";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-function showState(msg){ state.style.display="block"; state.innerHTML=msg; result.style.display="none"; }
-function toneColor(t){ return t==="strong" ? "var(--strong)" : t==="weak" ? "var(--weak)" : "var(--mixed)"; }
+/* ── Top ranked ─────────────────────────────────────────────────────── */
+async function loadBoard(){
+  try{
+    const r = await fetch(`${API_BASE}/leaderboard?limit=5`);
+    const d = await r.json();
+    if(!d.available){
+      $("brows").innerHTML = `<div class="bmeta" style="padding:16px 0">Ranking not generated yet — run <b style="color:var(--gold-dp)">scan.py</b> and commit leaderboard.json.</div>`;
+      return;
+    }
+    $("bwhen").textContent = `Scanned ${d.scanned_at}`;
+    $("brows").innerHTML = d.rankings.map((s,i)=>`
+      <div class="brow" data-t="${esc(s.symbol)}" role="button" tabindex="0">
+        <span class="rank">${i+1}</span>
+        <span class="nm">${esc(s.name)}<small>${esc(s.symbol)} · NSE</small></span>
+        <span class="tf">T ${s.technical} · F ${s.fundamental} · Piotroski ${s.f_score}/9</span>
+        <span class="cs" style="color:${toneInk(s.tone)}">${s.composite}</span>
+      </div>`).join("");
+    $("bmeta").innerHTML = `${d.scored} of ${d.universe_size} stocks scored · ${esc(d.methodology)}`;
+    document.querySelectorAll(".brow").forEach(el=>{
+      el.addEventListener("click",()=>analyse(el.dataset.t));
+      el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" ") analyse(el.dataset.t); });
+    });
+  }catch(e){
+    $("brows").innerHTML = `<div class="bmeta" style="padding:16px 0">Ranking unavailable — engine may be waking up.</div>`;
+  }
+}
 
+/* ── Volume chart ───────────────────────────────────────────────────── */
+function drawVolume(series){
+  const svg = $("volchart");
+  if(!series || !series.length){ $("volwrap").style.display="none"; return; }
+  $("volwrap").style.display="block";
+  const W=720, H=130, n=series.length, gap=2;
+  const bw = (W - gap*(n-1))/n;
+  const max = Math.max(...series.map(s=>s[0])) || 1;
+  const avg = series.reduce((a,s)=>a+s[0],0)/n;
+
+  let bars = "";
+  series.forEach((s,i)=>{
+    const h = Math.max(1, (s[0]/max)*(H-14));
+    const x = i*(bw+gap), y = H-h;
+    const col = s[1] ? "var(--pass)" : "var(--fail)";
+    bars += `<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${bw.toFixed(2)}" height="${h.toFixed(2)}" fill="${col}" opacity="${s[1]?0.78:0.62}"/>`;
+  });
+  const ay = H - (avg/max)*(H-14);
+  bars += `<line x1="0" y1="${ay.toFixed(2)}" x2="${W}" y2="${ay.toFixed(2)}" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  svg.innerHTML = bars;
+
+  const last20 = series.slice(-20).reduce((a,s)=>a+s[0],0)/Math.min(20,n);
+  const ratio = avg ? last20/avg : 1;
+  const fmtV = v => v>=1e7 ? (v/1e7).toFixed(1)+" Cr" : v>=1e5 ? (v/1e5).toFixed(1)+" L" : Math.round(v).toLocaleString();
+  $("vstat").textContent = `Latest 20-day avg ${fmtV(last20)} · ${ratio>=1 ? "+" : ""}${((ratio-1)*100).toFixed(0)}% vs 60-day`;
+}
+
+/* ── Ledger rows ────────────────────────────────────────────────────── */
 function rowHTML(c){
-  const dot = c.points===c.max ? "p-full" : c.points>0 ? "p-part" : "p-zero";
+  const full = c.points===c.max, zero = c.points===0;
+  const mark = full ? "✓" : zero ? "✕" : "◐";
+  const cls  = full ? "m-full" : zero ? "m-zero" : "m-part";
+  const isVol = /Volume|Accumulation/.test(c.name);
+  const isOwn = /holding/i.test(c.name);
+  const tag = isVol ? ' <span class="tagv">volume</span>'
+            : isOwn ? ' <span class="tagv">shareholding</span>' : '';
   return `<details class="row">
-    <summary><span>${c.name}</span>
-      <span class="pts">${c.points} / ${c.max} pts</span>
-      <span class="pass ${dot}" aria-hidden="true"></span></summary>
+    <summary><span class="mark ${cls}">${mark}</span><span>${esc(c.name)}${tag}</span>
+      <span class="pts">${c.points} / ${c.max}</span></summary>
     <div class="body">
-      <div class="audit"><span class="lbl">inputs  › </span>${c.value ?? "n/a"}<br>
-      <span class="lbl">scoring › </span>${c.formula}</div>
-      <div class="learn">${c.explain}</div>
+      <div class="audit"><span class="k">INPUTS   </span>${esc(c.value ?? "not available")}
+<span class="k">SCORING  </span>${esc(c.formula)}</div>
+      <div class="learn">${esc(c.explain)}</div>
     </div></details>`;
 }
 
+/* ── Analyse ────────────────────────────────────────────────────────── */
 async function analyse(sym){
   sym = (sym || $("tk").value).trim();
   if(!sym) return;
   $("tk").value = sym;
-  showState(`Running validations on <b style="font-family:var(--mono)">${sym.toUpperCase()}</b>…`);
+  show(`Running validations on <b style="font-family:var(--mono)">${esc(sym.toUpperCase())}</b>…`);
   try{
     const res = await fetch(`${API_BASE}/analyze?ticker=${encodeURIComponent(sym)}`);
     if(!res.ok){
-      const err = await res.json().catch(()=>({detail:"Analysis failed."}));
-      showState(err.detail || "Analysis failed. Check the symbol and try again."); return;
+      const e = await res.json().catch(()=>({}));
+      show(esc(e.detail || "Couldn't find that symbol. Check the spelling — try RELIANCE, TCS, INFY, NVDA, AAPL."));
+      return;
     }
     render(await res.json());
-  }catch(e){
-    showState(API_BASE.includes("localhost")
-      ? "The engine isn't connected yet. Deploy the backend (see README), then set <b>API_BASE</b> at the top of this file to its URL."
-      : "Couldn't reach the engine. It may be waking from sleep on the free tier — try again in ~30 seconds.");
+  }catch(err){
+    show(API_BASE.includes("localhost")
+      ? "The engine isn't connected. Set <b>API_BASE</b> near the bottom of index.html to your Render URL."
+      : "Couldn't reach the engine. It may be waking from sleep — try again in about 30 seconds.");
   }
 }
 
 function render(d){
   state.style.display="none"; result.style.display="block";
   $("cname").textContent = d.name;
-  $("csym").textContent = `${d.ticker} · ${d.exchange}`;
-  $("cpx").textContent = `${d.currency} ${d.price}  ·  ATR ${d.atr_pct}%/day`;
+  $("csym").innerHTML = `<b>${esc(d.ticker)}</b> · ${esc(d.exchange)}`;
+  $("cpx").innerHTML  = `Price <b>${esc(d.currency)} ${d.price}</b>`;
+  $("cvol").innerHTML = `Daily range <b>${d.atr_pct}%</b>`;
 
-  const v = d.verdict, col = toneColor(v.tone);
-  $("score").textContent = v.score; $("score").style.color = col;
-  $("arc").style.stroke = col;
-  requestAnimationFrame(()=>{ $("arc").style.strokeDashoffset = 402 - 402*(v.score/100); });
-  $("vlabel").textContent = v.label; $("vlabel").style.color = col;
+  const v = d.verdict, ink = toneInk(v.tone);
+  $("score").textContent = v.score; $("score").style.color = ink;
+  $("arc").style.strokeDashoffset = 453;
+  requestAnimationFrame(()=>{ $("arc").style.strokeDashoffset = 453 - 453*(v.score/100); });
+  $("vlabel").textContent = v.label; $("vlabel").style.color = ink;
   $("vsummary").textContent = v.summary;
   $("vbasis").textContent = v.basis;
 
   $("tscore").innerHTML = `${d.technical.score}<small> /100</small>`;
-  $("fscore").innerHTML = d.fundamental.score===null
-      ? `<small>n/a</small>` : `${d.fundamental.score}<small> /100</small>`;
+  $("fscore").innerHTML = d.fundamental.score===null ? `<small>NOT PUBLISHED</small>`
+                                                     : `${d.fundamental.score}<small> /100</small>`;
+  drawVolume(d.volume_series);
 
   $("tledger").innerHTML = d.technical.checks.map(rowHTML).join("");
   if(d.fundamental.score===null){
     $("fblock").style.display="none";
   }else{
     $("fblock").style.display="block";
-    $("fsub").textContent = `Piotroski F-Score: ${d.fundamental.f_score}/9 — nine audit-style checks on profitability, leverage and efficiency, plus quality overlays.`;
+    $("fsub").textContent = `Piotroski F-Score ${d.fundamental.f_score}/9 — nine audit-style tests of profitability, leverage and efficiency, plus quality, valuation and shareholding overlays.`;
     $("fledger").innerHTML = d.fundamental.checks.map(rowHTML).join("");
   }
   $("disc").textContent = d.disclaimer;
@@ -230,7 +368,8 @@ function render(d){
 
 $("go").addEventListener("click", ()=>analyse());
 $("tk").addEventListener("keydown", e=>{ if(e.key==="Enter") analyse(); });
-document.querySelectorAll(".hint b").forEach(b=>b.addEventListener("click", ()=>analyse(b.dataset.t)));
+document.querySelectorAll(".hint b").forEach(b=>b.addEventListener("click",()=>analyse(b.dataset.t)));
+loadBoard();
 </script>
 </body>
 </html>
