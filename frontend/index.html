@@ -49,7 +49,61 @@
   .state{max-width:540px;margin:0 auto 40px;text-align:center;font-size:14.5px;color:var(--ink-2);
     line-height:1.65;display:none;padding:20px;border:1px solid var(--rule);background:var(--paper-2)}
 
-  /* ── Top ranked panel ─────────────────────────────────────── */
+  
+/* ── Scan controller ────────────────────────────────────────────────── */
+let pollTimer = null;
+
+function setProgress(s){
+  const wrap = $("progwrap"), bar = $("progbar").firstElementChild;
+  if(s.status !== "running"){ wrap.style.display = "none"; return; }
+  wrap.style.display = "block";
+  const pct = s.total ? Math.round(100 * s.done / s.total) : 0;
+  bar.style.width = pct + "%";
+  const mins = Math.floor((s.elapsed_seconds||0)/60), secs = (s.elapsed_seconds||0)%60;
+  $("progtxt").textContent =
+    `Scanning ${s.done} of ${s.total} · ${s.scored} scored · ${mins}m ${String(secs).padStart(2,"0")}s elapsed`;
+}
+
+async function pollScan(){
+  try{
+    const s = await (await fetch(`${API_BASE}/scan/status`)).json();
+    setProgress(s);
+    if(s.status === "running"){ return; }
+    clearInterval(pollTimer); pollTimer = null;
+    $("genbtn").disabled = false;
+    if(s.status === "error"){
+      $("gennote").textContent = "Scan failed — try again in a minute";
+      $("genbtn").textContent = "Generate ranking";
+      return;
+    }
+    $("genbtn").textContent = "Refresh ranking";
+    $("gennote").textContent = "";
+    loadBoard();
+  }catch(e){ /* keep polling through transient errors */ }
+}
+
+async function startScan(force){
+  $("genbtn").disabled = true;
+  $("genbtn").textContent = "Scanning…";
+  $("gennote").textContent = "This takes a few minutes — keep this tab open";
+  $("brows").innerHTML = "";
+  try{
+    const r = await (await fetch(`${API_BASE}/scan/start${force?"?force=true":""}`)).json();
+    if(!r.started && r.reason === "cached"){
+      $("genbtn").disabled = false; $("genbtn").textContent = "Refresh ranking";
+      $("gennote").textContent = ""; loadBoard(); return;
+    }
+    setProgress(r);
+    if(!pollTimer) pollTimer = setInterval(pollScan, 2500);
+  }catch(e){
+    $("genbtn").disabled = false;
+    $("genbtn").textContent = "Generate ranking";
+    $("gennote").textContent = API_BASE.includes("localhost")
+      ? "Engine not connected — set API_BASE" : "Engine waking up — try again";
+  }
+}
+
+/* ── Top ranked panel ─────────────────────────────────────── */
   #board{margin-bottom:56px}
   .lh{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
     padding-bottom:9px;border-bottom:2px solid var(--ink)}
@@ -68,6 +122,21 @@
   .brow .tf{font-family:var(--mono);font-size:11px;color:var(--mute);white-space:nowrap;letter-spacing:.06em}
   .brow .cs{font-family:var(--serif);font-size:26px;line-height:1;min-width:44px;text-align:right}
   @media(max-width:560px){.brow{grid-template-columns:28px 1fr auto} .brow .tf{display:none}}
+  .brun{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:6px 0 4px}
+  #genbtn{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:2px;
+    font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.03em;
+    padding:11px 20px;cursor:pointer}
+  #genbtn:hover:not(:disabled){background:var(--ink);color:var(--paper)}
+  #genbtn:disabled{opacity:.45;cursor:default}
+  #genbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .brun-note{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--mute)}
+  #progwrap{display:none;margin:14px 0 6px}
+  #progbar{height:3px;background:var(--rule-2);overflow:hidden}
+  #progbar i{display:block;height:100%;width:0;background:var(--gold);
+    transition:width .5s cubic-bezier(.4,0,.2,1)}
+  #progtxt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--mute);margin-top:9px}
   .bmeta{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);margin-top:12px;line-height:1.8}
 
@@ -163,7 +232,12 @@
   <!-- Top ranked -->
   <section id="board" aria-label="Highest ranked stocks">
     <div class="lh"><h3>Top Ranked</h3><span id="bwhen">NSE Universe</span></div>
-    <p class="lsub">The five stocks scoring highest on the Altaha composite at the last scan. This is a ranking of measured scores, not a recommendation — open any name to see its full ledger.</p>
+    <p class="lsub">The five stocks scoring highest on the Altaha composite. This is a ranking of measured scores, not a recommendation — open any name to see its full ledger.</p>
+    <div class="brun">
+      <button id="genbtn">Generate ranking</button>
+      <span class="brun-note" id="gennote"></span>
+    </div>
+    <div id="progwrap"><div id="progbar"><i></i></div><div id="progtxt"></div></div>
     <div id="brows"></div>
     <div class="bmeta" id="bmeta"></div>
   </section>
@@ -240,16 +314,74 @@ const show = m => { state.style.display="block"; state.innerHTML=m; result.style
 const toneInk = t => t==="strong" ? "var(--pass)" : t==="weak" ? "var(--fail)" : "var(--part)";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+
+/* ── Scan controller ────────────────────────────────────────────────── */
+let pollTimer = null;
+
+function setProgress(s){
+  const wrap = $("progwrap"), bar = $("progbar").firstElementChild;
+  if(s.status !== "running"){ wrap.style.display = "none"; return; }
+  wrap.style.display = "block";
+  const pct = s.total ? Math.round(100 * s.done / s.total) : 0;
+  bar.style.width = pct + "%";
+  const mins = Math.floor((s.elapsed_seconds||0)/60), secs = (s.elapsed_seconds||0)%60;
+  $("progtxt").textContent =
+    `Scanning ${s.done} of ${s.total} · ${s.scored} scored · ${mins}m ${String(secs).padStart(2,"0")}s elapsed`;
+}
+
+async function pollScan(){
+  try{
+    const s = await (await fetch(`${API_BASE}/scan/status`)).json();
+    setProgress(s);
+    if(s.status === "running"){ return; }
+    clearInterval(pollTimer); pollTimer = null;
+    $("genbtn").disabled = false;
+    if(s.status === "error"){
+      $("gennote").textContent = "Scan failed — try again in a minute";
+      $("genbtn").textContent = "Generate ranking";
+      return;
+    }
+    $("genbtn").textContent = "Refresh ranking";
+    $("gennote").textContent = "";
+    loadBoard();
+  }catch(e){ /* keep polling through transient errors */ }
+}
+
+async function startScan(force){
+  $("genbtn").disabled = true;
+  $("genbtn").textContent = "Scanning…";
+  $("gennote").textContent = "This takes a few minutes — keep this tab open";
+  $("brows").innerHTML = "";
+  try{
+    const r = await (await fetch(`${API_BASE}/scan/start${force?"?force=true":""}`)).json();
+    if(!r.started && r.reason === "cached"){
+      $("genbtn").disabled = false; $("genbtn").textContent = "Refresh ranking";
+      $("gennote").textContent = ""; loadBoard(); return;
+    }
+    setProgress(r);
+    if(!pollTimer) pollTimer = setInterval(pollScan, 2500);
+  }catch(e){
+    $("genbtn").disabled = false;
+    $("genbtn").textContent = "Generate ranking";
+    $("gennote").textContent = API_BASE.includes("localhost")
+      ? "Engine not connected — set API_BASE" : "Engine waking up — try again";
+  }
+}
+
 /* ── Top ranked ─────────────────────────────────────────────────────── */
 async function loadBoard(){
   try{
     const r = await fetch(`${API_BASE}/leaderboard?limit=5`);
     const d = await r.json();
     if(!d.available){
-      $("brows").innerHTML = `<div class="bmeta" style="padding:16px 0">Ranking not generated yet — run <b style="color:var(--gold-dp)">scan.py</b> and commit leaderboard.json.</div>`;
+      if(d.status !== "running"){
+        $("brows").innerHTML = `<div class="bmeta" style="padding:16px 0">No ranking yet — press Generate ranking to scan the NSE universe.</div>`;
+        $("genbtn").textContent = "Generate ranking";
+      }
       return;
     }
     $("bwhen").textContent = `Scanned ${d.scanned_at}`;
+    $("genbtn").textContent = "Refresh ranking";
     $("brows").innerHTML = d.rankings.map((s,i)=>`
       <div class="brow" data-t="${esc(s.symbol)}" role="button" tabindex="0">
         <span class="rank">${i+1}</span>
@@ -369,7 +501,17 @@ function render(d){
 $("go").addEventListener("click", ()=>analyse());
 $("tk").addEventListener("keydown", e=>{ if(e.key==="Enter") analyse(); });
 document.querySelectorAll(".hint b").forEach(b=>b.addEventListener("click",()=>analyse(b.dataset.t)));
+$("genbtn").addEventListener("click", ()=>{
+  startScan($("genbtn").textContent.trim() === "Refresh ranking");
+});
 loadBoard();
+(async()=>{ try{
+  const s = await (await fetch(`${API_BASE}/scan/status`)).json();
+  if(s.status === "running"){
+    $("genbtn").disabled = true; $("genbtn").textContent = "Scanning…";
+    setProgress(s); pollTimer = setInterval(pollScan, 2500);
+  }
+}catch(e){} })();
 </script>
 </body>
 </html>
