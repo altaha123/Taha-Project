@@ -184,6 +184,36 @@ async function startScan(force){
   .vnote{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:14px;padding-left:15px;
     border-left:2px solid var(--gold-lt)}
 
+  #setupwrap{padding:34px 0 32px;border-bottom:1px solid var(--rule);display:none}
+  .setuphead{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+  .sk{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--mute);display:block;margin-bottom:7px}
+  .setuphead h4{font-family:var(--serif);font-size:31px;line-height:1.05;letter-spacing:-.01em}
+  .sstrength{font-size:13px;color:var(--ink-2);display:block;margin-top:7px}
+  .sfit{text-align:right;flex-shrink:0}
+  .sfitval{font-family:var(--serif);font-size:31px;line-height:1;color:var(--gold-dp);display:block}
+  .shorizon{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);display:block;margin-top:8px}
+  .sthesis{font-size:16px;line-height:1.7;color:var(--ink-2);margin:22px 0 24px;
+    padding-left:16px;border-left:2px solid var(--gold-lt)}
+  .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;
+    background:var(--rule);border:1px solid var(--rule);margin-bottom:26px}
+  .pil{background:var(--paper);padding:14px 14px 12px}
+  .pil .pn{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+  .pil .pv{font-family:var(--serif);font-size:26px;line-height:1;margin:8px 0 9px}
+  .pil .pbar{height:3px;background:var(--rule-2)}
+  .pil .pbar i{display:block;height:100%;background:var(--ink)}
+  .pil .pw{font-family:var(--mono);font-size:9px;color:var(--mute);letter-spacing:.1em;margin-top:7px;display:block}
+  .pil.lead{background:var(--paper-2)}
+  .pil.lead .pv{color:var(--gold-dp)}
+  .pil.lead .pbar i{background:var(--gold)}
+  .scols{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+  @media(max-width:640px){.scols{grid-template-columns:1fr;gap:26px}}
+  .scols ul{list-style:none;margin-top:2px}
+  .scols li{font-size:14px;line-height:1.6;color:var(--ink-2);padding:9px 0 9px 17px;
+    border-bottom:1px solid var(--rule-2);position:relative}
+  .scols li:before{content:"";position:absolute;left:0;top:16px;width:6px;height:1px;background:var(--gold)}
+  .srisk{font-size:13.5px;line-height:1.7;color:var(--mute);margin-top:24px;font-style:italic}
   #shwrap{padding:34px 0 30px;border-bottom:1px solid var(--rule);display:none}
   .shbar{display:flex;height:34px;border:1px solid var(--rule);overflow:hidden;margin-bottom:16px}
   .shbar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
@@ -294,6 +324,28 @@ async function startScan(force){
         <p class="vsummary" id="vsummary"></p>
         <div class="vbasis" id="vbasis"></div>
       </div>
+    </div>
+
+    <div id="setupwrap">
+      <div class="setuphead">
+        <div>
+          <span class="sk">Setup archetype</span>
+          <h4 id="setupname"></h4>
+          <span class="sstrength" id="setupstrength"></span>
+        </div>
+        <div class="sfit">
+          <span class="sk">Fit</span>
+          <span class="sfitval" id="setupfit"></span>
+          <span class="shorizon" id="setuphorizon"></span>
+        </div>
+      </div>
+      <p class="sthesis" id="setupthesis"></p>
+      <div class="pillars" id="pillars"></div>
+      <div class="scols">
+        <div><span class="sk">Why it classified here</span><ul id="setupwhy"></ul></div>
+        <div><span class="sk">What would invalidate it</span><ul id="setupinval"></ul></div>
+      </div>
+      <p class="srisk" id="setuprisk"></p>
     </div>
 
     <div class="sched">
@@ -417,7 +469,7 @@ async function loadBoard(){
       <div class="brow" data-t="${esc(s.symbol)}" role="button" tabindex="0">
         <span class="rank">${i+1}</span>
         <span class="nm">${esc(s.name)}<small>${esc(s.symbol)} · NSE</small></span>
-        <span class="tf">T ${s.technical} · F ${s.fundamental} · Piotroski ${s.f_score}/9</span>
+        <span class="tf">${s.setup ? esc(s.setup) : `T ${s.technical} · F ${s.fundamental}`}</span>
         <span class="cs" style="color:${toneInk(s.tone)}">${s.composite}</span>
       </div>`).join("");
     $("bmeta").innerHTML = `${d.scored} of ${d.universe_size} stocks scored · ${esc(d.methodology)}`;
@@ -457,6 +509,32 @@ function drawVolume(series){
   $("vstat").textContent = `Latest 20-day avg ${fmtV(last20)} · ${ratio>=1 ? "+" : ""}${((ratio-1)*100).toFixed(0)}% vs 60-day`;
 }
 
+
+
+/* ── Setup archetype ────────────────────────────────────────────────── */
+function drawSetup(s){
+  const w = $("setupwrap");
+  if(!s){ w.style.display="none"; return; }
+  w.style.display = "block";
+  $("setupname").textContent = s.name;
+  $("setupstrength").textContent = s.strength;
+  $("setupfit").textContent = s.fit;
+  $("setuphorizon").textContent = s.horizon && s.horizon !== "—" ? `Typical hold ${s.horizon}` : "";
+  $("setupthesis").textContent = s.thesis;
+
+  const maxW = Math.max(...s.pillars.map(p=>p.weight));
+  $("pillars").innerHTML = s.pillars.map(p=>`
+    <div class="pil${p.weight===maxW && p.weight>0 ? " lead":""}">
+      <span class="pn">${esc(p.label)}</span>
+      <span class="pv">${p.value===null||p.value===undefined ? "—" : p.value}</span>
+      <div class="pbar"><i style="width:${p.value||0}%"></i></div>
+      <span class="pw">Weight ${p.weight}%</span>
+    </div>`).join("");
+
+  $("setupwhy").innerHTML = s.why.map(x=>`<li>${esc(x)}</li>`).join("");
+  $("setupinval").innerHTML = s.invalidation.map(x=>`<li>${esc(x)}</li>`).join("");
+  $("setuprisk").textContent = s.risks;
+}
 
 /* ── Shareholding pattern ───────────────────────────────────────────── */
 function drawShareholding(s){
@@ -567,6 +645,7 @@ function render(d){
   $("tscore").innerHTML = `${d.technical.score}<small> /100</small>`;
   $("fscore").innerHTML = d.fundamental.score===null ? `<small>NOT PUBLISHED</small>`
                                                      : `${d.fundamental.score}<small> /100</small>`;
+  drawSetup(d.setup);
   drawVolume(d.volume_series);
   drawShareholding(d.shareholding);
 
@@ -575,7 +654,7 @@ function render(d){
     $("fblock").style.display="none";
   }else{
     $("fblock").style.display="block";
-    $("fsub").textContent = `Piotroski F-Score ${d.fundamental.f_score}/9 — nine audit-style tests of profitability, leverage and efficiency, plus quality, valuation and shareholding overlays.`;
+    $("fsub").textContent = `Piotroski F-Score ${d.fundamental.f_score}/9 · adapted Mohanram G-Score ${d.fundamental.g_score ?? "—"}/6 — audit-style tests of profitability, leverage, efficiency and growth quality, plus valuation and shareholding overlays.`;
     $("fledger").innerHTML = d.fundamental.checks.map(rowHTML).join("");
   }
   $("disc").textContent = d.disclaimer;
