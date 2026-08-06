@@ -154,7 +154,7 @@ def run_scan(progress=None, names=None):
         "universe_size": total,
         "scored": len(rows),
         "methodology": METHODOLOGY,
-        "rankings": rows[:TOP_N],
+        "rankings": rows,   # all scored rows; endpoints slice as needed
         "skipped": failed,
     }
     try:
