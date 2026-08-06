@@ -15,6 +15,7 @@ import numpy as np
 from engine import technical_score, fundamental_score, composite
 from data_source import resolve, fundamentals, shareholding, NotFound
 import scan as scanner
+import archetypes as A
 
 app = FastAPI(title="Altaha Screener API", version="2.1")
 
@@ -201,6 +202,10 @@ def analyze(ticker: str):
         holding = {"published": False}
 
     verdict = composite(tech, fund)
+    try:
+        setup = A.evaluate(tech, fund)
+    except Exception:
+        setup = None
     currency = info.get("currency") or ("INR" if sym.endswith((".NS", ".BO")) else "USD")
 
     return to_native({
@@ -212,8 +217,10 @@ def analyze(ticker: str):
         "atr_pct": tech["atr_pct"],
         "volume_series": tech["volume_series"],
         "shareholding": holding,
+        "setup": setup,
         "verdict": verdict,
         "technical": {"score": tech["score"], "checks": tech["checks"]},
-        "fundamental": {"score": fund["score"], "f_score": fund["f_score"], "checks": fund["checks"]},
+        "fundamental": {"score": fund["score"], "f_score": fund["f_score"],
+                        "g_score": fund.get("g_score"), "checks": fund["checks"]},
         "disclaimer": DISCLAIMER,
     })
