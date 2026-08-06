@@ -99,6 +99,16 @@ def fmt(x, dec=2):
     return round(float(x), dec)
 
 
+def bollinger(series: pd.Series, period: int = 20, mult: float = 2.0):
+    """Returns (mid, upper, lower, bandwidth, %B)."""
+    mid = series.rolling(period).mean()
+    sd = series.rolling(period).std()
+    upper, lower = mid + mult * sd, mid - mult * sd
+    width = (upper - lower) / mid.replace(0, np.nan)
+    pct_b = (series - lower) / (upper - lower).replace(0, np.nan)
+    return mid, upper, lower, width, pct_b
+
+
 def technical_score(df: pd.DataFrame) -> dict:
     close = df["Close"]
     price = close.iloc[-1]
@@ -199,6 +209,38 @@ def technical_score(df: pd.DataFrame) -> dict:
             "5 pts if OBV today is above OBV 30 sessions ago",
             "On-Balance Volume adds volume on up days and subtracts it on down days, building a running total. When OBV rises alongside price, the trend has real buying behind it. When price rises but OBV doesn't, the move is hollow.")
 
+    # Bollinger position & squeeze (12 pts)
+    bmid, bup, blo, bwidth, bpct = bollinger(close)
+    pb = bpct.iloc[-1]
+    w_now = bwidth.iloc[-1]
+    w_rank = float((bwidth.tail(126) < w_now).mean()) if bwidth.tail(126).notna().sum() > 20 else 0.5
+    squeeze = w_rank <= 0.25
+    breakout = squeeze is False and w_rank >= 0.5 and pb is not None and pb > 0.85
+
+    if pb is not None and not math.isnan(pb):
+        if 0.55 <= pb <= 1.0:
+            bb_pts, bb_tag = 7, "riding the upper half"
+        elif 0.35 <= pb < 0.55:
+            bb_pts, bb_tag = 4, "mid-band"
+        elif pb > 1.0:
+            bb_pts, bb_tag = 3, "extended above the band"
+        else:
+            bb_pts, bb_tag = 0, "lower half"
+    else:
+        bb_pts, bb_tag = 0, "not computable"
+    add("Bollinger position", bb_pts, 7,
+        f"%B = {fmt(pb)} ({bb_tag}); band {fmt(blo.iloc[-1])} – {fmt(bup.iloc[-1])}",
+        "7 pts: %B 0.55–1.00 · 4: 0.35–0.55 · 3: above 1.00 · 0: below 0.35",
+        "Bollinger Bands sit two standard deviations either side of a 20-day average. %B tells you where price sits inside that channel: above 0.5 is the strong half, above 1.0 means price has pushed outside the band, which is powerful but often short-lived.")
+
+    sq_pts = 5 if squeeze else (5 if breakout else 2 if w_rank <= 0.4 else 0)
+    sq_val = ("Bandwidth in the tightest quartile of 6 months — squeeze" if squeeze
+              else "Expanding from a squeeze with price at the upper band" if breakout
+              else f"Bandwidth at the {fmt(w_rank * 100, 0)}th percentile of 6 months")
+    add("Volatility squeeze", sq_pts, 5, sq_val,
+        "5 pts: bandwidth in tightest 25% (coiling) or expanding breakout · 2: tightest 40% · 0 otherwise",
+        "When Bollinger bands narrow, volatility has compressed and price is coiling — these periods often precede large directional moves. The squeeze doesn't tell you the direction, only that energy is building.")
+
     # 52-week position (10 pts)
     lo52, hi52 = close.tail(252).min(), close.tail(252).max()
     pos = (price - lo52) / (hi52 - lo52) if hi52 > lo52 else 0.5
@@ -219,8 +261,28 @@ def technical_score(df: pd.DataFrame) -> dict:
         for v, c in zip(tail["Volume"].fillna(0), chg):
             series.append([int(v), 1 if c >= 0 else 0])
 
+    # Momentum over multiple horizons, for archetype classification
+    def ret(nd):
+        if len(close) > nd:
+            return float(close.iloc[-1] / close.iloc[-nd - 1] - 1)
+        return None
+
+    extras = {
+        "drawdown_from_high": fmt(100 * (price / hi52 - 1), 1) if hi52 else None,
+        "pct_b": fmt(pb, 3) if pb is not None and not math.isnan(pb) else None,
+        "squeeze": bool(squeeze),
+        "bandwidth_pctile": fmt(w_rank * 100, 0),
+        "rsi": fmt(r, 1),
+        "adx": fmt(a, 1),
+        "supertrend_bull": bool(st == 1),
+        "ret_1m": fmt((ret(21) or 0) * 100, 1) if ret(21) is not None else None,
+        "ret_3m": fmt((ret(63) or 0) * 100, 1) if ret(63) is not None else None,
+        "ret_6m": fmt((ret(126) or 0) * 100, 1) if ret(126) is not None else None,
+        "range_position": fmt(pos * 100, 0),
+    }
+
     return {"score": score, "checks": checks, "atr_pct": vol_pct,
-            "price": fmt(price), "volume_series": series}
+            "price": fmt(price), "volume_series": series, "extras": extras}
 
 
 # ---------------------------------------------------------------------------
@@ -356,6 +418,45 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
         "10 pts: ≤25 · 6: 25–45 · 2: 45–70 · 0: >70 or loss-making",
         "Price matters. Even a great business bought at an extreme multiple can deliver poor returns for years. P/E is a rough but honest first check.")
 
+    # --- G-Score (adapted Mohanram, 6 available checks) -------------------
+    # Mohanram's original uses industry medians plus R&D and advertising
+    # intensity, none of which this data source publishes reliably for Indian
+    # names. This is an honest adaptation: the same growth-quality logic with
+    # absolute thresholds, disclosed on every row, and labelled as adapted.
+    g_bits = []
+
+    def gbit(label, cond, detail, why):
+        g_bits.append(bool(cond))
+        add(f"G-Score · {label}", 4 if cond else 0, 4, detail,
+            "4 pts if condition holds (1 adapted G-Score point)", why)
+
+    cfo_ta = (cfo / ta_now) if cfo is not None and ta_now else None
+    gbit("Cash return on assets", bool(cfo_ta and cfo_ta > 0.08),
+         f"CFO / Assets = {fmt((cfo_ta or 0) * 100, 1)}% (threshold 8%)",
+         "Strong cash generation relative to the asset base separates genuinely productive growth companies from ones that grow by spending.")
+    gbit("Low accruals", bool(cfo is not None and ni_now is not None and ta_now and (ni_now - cfo) / ta_now < 0.02),
+         f"(Net income − CFO) / Assets = {fmt(((ni_now - cfo) / ta_now * 100) if (cfo is not None and ni_now is not None and ta_now) else 0, 1)}% (threshold 2%)",
+         "Accruals are the gap between reported profit and cash collected. A small gap means earnings are backed by cash rather than by aggressive revenue recognition.")
+    capex = _get(cf, ["Capital Expenditure"], 0)
+    capex_int = (abs(capex) / rev_now) if capex is not None and rev_now else None
+    gbit("Reinvestment intensity", bool(capex_int and capex_int >= 0.04),
+         f"Capex / Revenue = {fmt((capex_int or 0) * 100, 1)}% (threshold 4%)",
+         "Companies investing meaningfully in capacity are building future earnings rather than harvesting the present. Mohanram found reinvestment separates durable growers from ones about to stall.")
+    gm_level = gm_now
+    gbit("Gross margin level", bool(gm_level and gm_level >= 0.25),
+         f"Gross margin = {fmt((gm_level or 0) * 100, 1)}% (threshold 25%)",
+         "A high gross margin usually means pricing power or a structural cost advantage — the raw material of a durable business.")
+    roa_stable = bool(roa_now is not None and roa_prev is not None and roa_now > 0 and roa_prev > 0)
+    gbit("Earnings consistency", roa_stable,
+         f"ROA positive in both years: {fmt((roa_prev or 0) * 100, 1)}% → {fmt((roa_now or 0) * 100, 1)}%",
+         "Consistently positive returns matter more than one spectacular year. Volatile earnings are priced lower and for good reason.")
+    rev_g_pos = ((rev_now / rev_prev) - 1) if rev_now and rev_prev else None
+    gbit("Sales growth quality", bool(rev_g_pos is not None and 0.05 <= rev_g_pos <= 0.60),
+         f"Revenue growth = {fmt((rev_g_pos or 0) * 100, 1)}% (band 5%–60%)",
+         "Steady growth is more repeatable than explosive growth. Very high growth often reflects a one-off, an acquisition, or a low base, and rarely persists.")
+
+    g_score = sum(1 for b in g_bits if b)
+
     # --- Ownership (shareholding pattern, quarterly) ----------------------
     # Only scored when actually published — never penalise missing disclosure.
     inst = info.get("institutions_pct")
@@ -381,10 +482,27 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
     # report None rather than a misleading zero.
     has_data = any(v is not None for v in (ni_now, ta_now, rev_now, cfo, te_now))
     if not has_data:
-        return {"score": None, "f_score": None, "checks": []}
+        return {"score": None, "f_score": None, "g_score": None,
+                "checks": [], "extras": {}}
 
     score = round(100 * earned / possible) if possible else None
-    return {"score": score, "f_score": f_score, "checks": checks}
+    f_extras = {
+        "roce": fmt((roce or 0) * 100, 1) if roce is not None else None,
+        "de": fmt(de) if de is not None else None,
+        "pe": fmt(pe, 1) if pe else None,
+        "rev_growth": fmt((rev_g or 0) * 100, 1) if rev_g is not None else None,
+        "gross_margin": fmt((gm_now or 0) * 100, 1) if gm_now is not None else None,
+        "margin_delta": fmt(((gm_now - gm_prev) * 100) if (gm_now and gm_prev) else 0, 2) if (gm_now and gm_prev) else None,
+        "roa": fmt((roa_now or 0) * 100, 1) if roa_now is not None else None,
+        "roa_delta": fmt(((roa_now - roa_prev) * 100) if (roa_now is not None and roa_prev is not None) else 0, 2) if (roa_now is not None and roa_prev is not None) else None,
+        "debt_delta": fmt((((ltd_now / ta_now) - (ltd_prev / ta_prev)) * 100)
+                          if (ltd_now is not None and ltd_prev is not None and ta_now and ta_prev) else 0, 2)
+                      if (ltd_now is not None and ltd_prev is not None and ta_now and ta_prev) else None,
+        "promoter_pct": fmt((prom or 0) * 100, 1) if prom is not None else None,
+        "institutions_pct": fmt((inst or 0) * 100, 1) if inst is not None else None,
+    }
+    return {"score": score, "f_score": f_score, "g_score": g_score,
+            "checks": checks, "extras": f_extras}
 
 
 # ---------------------------------------------------------------------------
