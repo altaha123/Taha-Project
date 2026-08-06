@@ -151,6 +151,37 @@ def scan_status():
     return out
 
 
+HORIZONS = {
+    "short": {"keys": ["momentum_breakout", "institutional_accumulation"],
+              "label": "Short-term setups",
+              "note": ("Setups whose premise plays out in weeks to a few months: strong trends with "
+                       "volume behind them, and accumulation footprints that haven't fully moved yet. "
+                       "These decay fastest — re-scan often.")},
+    "medium": {"keys": ["quality_at_discount", "turnaround"],
+               "label": "Medium-term setups",
+               "note": ("Setups whose premise needs quarters, not weeks: quality businesses in a "
+                        "drawdown, and companies whose fundamentals are inflecting. Judged mainly on "
+                        "filings, so re-check after each results season.")},
+}
+
+
+@app.get("/ideas")
+def ideas(horizon: str = "short", limit: int = 5):
+    h = HORIZONS.get(horizon)
+    if not h:
+        raise HTTPException(400, "horizon must be 'short' or 'medium'")
+    p = _state["payload"]
+    if not p:
+        return {"available": False, "status": _state["status"],
+                "message": "No scan yet — generate the ranking first."}
+    rows = [r for r in p.get("rankings", []) if r.get("setup_key") in h["keys"]]
+    rows.sort(key=lambda r: (r.get("setup_fit") or 0, r.get("composite") or 0), reverse=True)
+    return {"available": True, "horizon": horizon, "label": h["label"], "note": h["note"],
+            "scanned_at": p.get("scanned_at"),
+            "rows": rows[: max(1, min(limit, 10))],
+            "disclaimer": DISCLAIMER}
+
+
 @app.get("/leaderboard")
 def leaderboard(limit: int = 5):
     p = _state["payload"]
