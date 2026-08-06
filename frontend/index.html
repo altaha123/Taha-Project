@@ -358,7 +358,7 @@
   </div><!-- /view-screener -->
 
   <div id="view-ideas" style="display:none">
-    <p class="ideas-intro">Five names per horizon from the full NSE universe, selected by how well each fits its setup archetype. These are rankings of measured evidence — open any name for its complete ledger.</p>
+    <p class="ideas-intro">Fifteen names per horizon, drawn from the full NSE universe after a liquidity filter, selected by how well each fits its setup archetype. These are rankings of measured evidence — open any name for its complete ledger.</p>
     <div class="hzrow">
       <button class="hz active" data-h="short">Short term<small>weeks — a few months</small></button>
       <button class="hz" data-h="medium">Medium term<small>one to several quarters</small></button>
@@ -401,19 +401,23 @@ function switchTab(which){
 }
 
 /* ── Ideas view ─────────────────────────────────────────────────────── */
-let horizon = "short", pollTimer = null;
+let horizon = "short", pollTimer = null, ideasReq = 0;
 
 async function loadIdeas(){
+  const req = ++ideasReq;                     // token: only the latest request may render
+  $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Loading…</div>`;
+  $("hznote").textContent = "";
   try{
-    const d = await (await fetch(`${API_BASE}/ideas?horizon=${horizon}&limit=5`)).json();
+    const d = await (await fetch(`${API_BASE}/ideas?horizon=${horizon}&limit=15`)).json();
+    if(req !== ideasReq) return;              // a newer toggle superseded this response
     if(!d.available){
       $("hznote").textContent = "";
       $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No scan yet — press Generate from universe. It takes a few minutes and the result is cached for everyone afterwards.</div>`;
       return;
     }
-    $("hznote").textContent = `${d.note}  ·  Scanned ${d.scanned_at}`;
+    $("hznote").textContent = `${d.note}  ·  Scanned ${d.scanned_at}${d.universe_source ? "  ·  " + d.universe_source : ""}`;
     if(!d.rows.length){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No names currently fit the ${horizon}-term archetypes cleanly. That is a market condition, not an error — try the other horizon, or refresh the scan after the next session.</div>`;
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Fewer than expected names fit the ${horizon}-term archetypes cleanly right now. That is a market condition, not an error — try the other horizon, or refresh the scan after the next session.</div>`;
     }else{
       $("idearows").innerHTML = d.rows.map((s,i)=>`
         <div class="idea" data-t="${esc(s.symbol)}" role="button" tabindex="0">
@@ -433,6 +437,7 @@ async function loadIdeas(){
     }
     $("ideadisc").textContent = d.disclaimer || "";
   }catch(e){
+    if(req !== ideasReq) return;
     $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable — it may be waking from sleep. Try again in ~30 seconds.</div>`;
   }
 }
