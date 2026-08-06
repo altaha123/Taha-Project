@@ -50,61 +50,6 @@
     line-height:1.65;display:none;padding:20px;border:1px solid var(--rule);background:var(--paper-2)}
 
   
-/* ── Scan controller ────────────────────────────────────────────────── */
-let pollTimer = null;
-
-function setProgress(s){
-  const wrap = $("progwrap"), bar = $("progbar").firstElementChild;
-  if(s.status !== "running"){ wrap.style.display = "none"; return; }
-  wrap.style.display = "block";
-  const pct = s.total ? Math.round(100 * s.done / s.total) : 0;
-  bar.style.width = pct + "%";
-  const mins = Math.floor((s.elapsed_seconds||0)/60), secs = (s.elapsed_seconds||0)%60;
-  $("progtxt").textContent =
-    `Scanning ${s.done} of ${s.total} · ${s.scored} scored · ${mins}m ${String(secs).padStart(2,"0")}s elapsed`;
-}
-
-async function pollScan(){
-  try{
-    const s = await (await fetch(`${API_BASE}/scan/status`)).json();
-    setProgress(s);
-    if(s.status === "running"){ return; }
-    clearInterval(pollTimer); pollTimer = null;
-    $("genbtn").disabled = false;
-    if(s.status === "error"){
-      $("gennote").textContent = "Scan failed — try again in a minute";
-      $("genbtn").textContent = "Generate ranking";
-      return;
-    }
-    $("genbtn").textContent = "Refresh ranking";
-    $("gennote").textContent = "";
-    loadBoard();
-  }catch(e){ /* keep polling through transient errors */ }
-}
-
-async function startScan(force){
-  $("genbtn").disabled = true;
-  $("genbtn").textContent = "Scanning…";
-  $("gennote").textContent = "This takes a few minutes — keep this tab open";
-  $("brows").innerHTML = "";
-  try{
-    const r = await (await fetch(`${API_BASE}/scan/start${force?"?force=true":""}`)).json();
-    if(!r.started && r.reason === "cached"){
-      $("genbtn").disabled = false; $("genbtn").textContent = "Refresh ranking";
-      $("gennote").textContent = ""; loadBoard(); return;
-    }
-    setProgress(r);
-    if(!pollTimer) pollTimer = setInterval(pollScan, 2500);
-  }catch(e){
-    $("genbtn").disabled = false;
-    $("genbtn").textContent = "Generate ranking";
-    $("gennote").textContent = API_BASE.includes("localhost")
-      ? "Engine not connected — set API_BASE" : "Engine waking up — try again";
-  }
-}
-
-/* ── Top ranked panel ─────────────────────────────────────── */
-  #board{margin-bottom:56px}
   .lh{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
     padding-bottom:9px;border-bottom:2px solid var(--ink)}
   .lh h3{font-family:var(--serif);font-size:25px;font-weight:400;letter-spacing:-.01em}
@@ -122,6 +67,41 @@ async function startScan(force){
   .brow .tf{font-family:var(--mono);font-size:11px;color:var(--mute);white-space:nowrap;letter-spacing:.06em}
   .brow .cs{font-family:var(--serif);font-size:26px;line-height:1;min-width:44px;text-align:right}
   @media(max-width:560px){.brow{grid-template-columns:28px 1fr auto} .brow .tf{display:none}}
+  .tabs{display:flex;justify-content:center;margin:34px auto 0;max-width:380px;
+    border:1px solid var(--ink);border-radius:2px;overflow:hidden}
+  .tab{flex:1;background:#fff;color:var(--ink);border:none;font-family:var(--sans);font-weight:500;
+    font-size:14.5px;letter-spacing:.04em;padding:13px 0;cursor:pointer}
+  .tab.active{background:var(--ink);color:var(--paper)}
+  .tab:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
+  .ideas-intro{font-size:14.5px;line-height:1.7;color:var(--ink-2);max-width:620px;margin:34px auto 26px;text-align:center}
+  .hzrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:540px;margin:0 auto 18px}
+  .hz{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:15px 10px;cursor:pointer;
+    font-family:var(--sans);font-weight:500;font-size:15px;color:var(--ink);text-align:center}
+  .hz small{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--mute);margin-top:6px;font-weight:400}
+  .hz.active{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+  .hz.active small{color:var(--gold-dp)}
+  .hz:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .ideas-note{font-size:13px;line-height:1.65;color:var(--mute);max-width:640px;margin:6px auto 18px;text-align:center}
+  .idea{border:1px solid var(--rule);margin-bottom:12px;padding:18px 20px;cursor:pointer;background:#fff}
+  .idea:hover{background:var(--paper-2)}
+  .idea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .idea .top{display:flex;justify-content:space-between;align-items:baseline;gap:14px}
+  .idea .nm{font-family:var(--serif);font-size:21px;line-height:1.15}
+  .idea .nm small{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--mute);
+    display:block;margin-top:4px;text-transform:uppercase}
+  .idea .fit{font-family:var(--serif);font-size:27px;color:var(--gold-dp);flex-shrink:0}
+  .idea .fit small{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--mute);
+    display:block;text-align:right;text-transform:uppercase;margin-top:3px}
+  .idea .arch{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold-dp);margin-top:12px}
+  .idea .ln{display:flex;gap:18px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
+    font-size:11px;color:var(--mute);letter-spacing:.05em}
+  .progbar{height:3px;background:var(--rule-2);overflow:hidden}
+  .progbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .5s}
+  .progtxt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);margin-top:9px}
+  #progwrap2{display:none;max-width:540px;margin:0 auto 18px}
   .brun{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:6px 0 4px}
   #genbtn{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:2px;
     font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.03em;
@@ -276,6 +256,12 @@ async function startScan(force){
 </header>
 
 <main class="wrap">
+  <nav class="tabs" role="tablist">
+    <button class="tab active" id="tab-screener" role="tab" aria-selected="true">Screener</button>
+    <button class="tab" id="tab-ideas" role="tab" aria-selected="false">Ideas</button>
+  </nav>
+
+  <div id="view-screener">
   <div class="searchrow">
     <input id="tk" placeholder="Enter a stock — RELIANCE, TCS, NVDA…" autocomplete="off"
            spellcheck="false" aria-label="Stock ticker symbol" />
@@ -284,19 +270,6 @@ async function startScan(force){
   <p class="hint">Try <b data-t="RELIANCE">RELIANCE</b> · <b data-t="HDFCBANK">HDFCBANK</b> · <b data-t="INFY">INFY</b> · <b data-t="NVDA">NVDA</b> · <b data-t="AAPL">AAPL</b></p>
 
   <div class="state" id="state"></div>
-
-  <!-- Top ranked -->
-  <section id="board" aria-label="Highest ranked stocks">
-    <div class="lh"><h3>Top Ranked</h3><span id="bwhen">NSE Universe</span></div>
-    <p class="lsub">The five stocks scoring highest on the Altaha composite. This is a ranking of measured scores, not a recommendation — open any name to see its full ledger.</p>
-    <div class="brun">
-      <button id="genbtn">Generate ranking</button>
-      <span class="brun-note" id="gennote"></span>
-    </div>
-    <div id="progwrap"><div id="progbar"><i></i></div><div id="progtxt"></div></div>
-    <div id="brows"></div>
-    <div class="bmeta" id="bmeta"></div>
-  </section>
 
   <!-- Single-stock result -->
   <section id="result" aria-live="polite">
@@ -382,13 +355,30 @@ async function startScan(force){
 
     <p class="disc" id="disc"></p>
   </section>
+  </div><!-- /view-screener -->
+
+  <div id="view-ideas" style="display:none">
+    <p class="ideas-intro">Five names per horizon from the full NSE universe, selected by how well each fits its setup archetype. These are rankings of measured evidence — open any name for its complete ledger.</p>
+    <div class="hzrow">
+      <button class="hz active" data-h="short">Short term<small>weeks — a few months</small></button>
+      <button class="hz" data-h="medium">Medium term<small>one to several quarters</small></button>
+    </div>
+    <div class="brun" style="justify-content:center">
+      <button id="genbtn2">Generate from universe</button>
+      <span class="brun-note" id="gennote2"></span>
+    </div>
+    <div id="progwrap2"><div class="progbar"><i></i></div><div class="progtxt"></div></div>
+    <div class="ideas-note" id="hznote"></div>
+    <div id="idearows"></div>
+    <p class="disc" id="ideadisc"></p>
+  </div><!-- /view-ideas -->
 </main>
 
 <footer>Altaha Screener · Educational Use Only</footer>
 
 <script>
 /* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
-const API_BASE = "https://taha-project.onrender.com";
+const API_BASE = "http://localhost:8000";
 /* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
@@ -398,87 +388,98 @@ const toneInk = t => t==="strong" ? "var(--pass)" : t==="weak" ? "var(--fail)" :
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 
-/* ── Scan controller ────────────────────────────────────────────────── */
-let pollTimer = null;
+/* ── Tabs ───────────────────────────────────────────────────────────── */
+function switchTab(which){
+  const scr = which==="screener";
+  $("view-screener").style.display = scr ? "block" : "none";
+  $("view-ideas").style.display = scr ? "none" : "block";
+  $("tab-screener").classList.toggle("active", scr);
+  $("tab-ideas").classList.toggle("active", !scr);
+  $("tab-screener").setAttribute("aria-selected", scr);
+  $("tab-ideas").setAttribute("aria-selected", !scr);
+  if(!scr) loadIdeas();
+}
 
+/* ── Ideas view ─────────────────────────────────────────────────────── */
+let horizon = "short", pollTimer = null;
+
+async function loadIdeas(){
+  try{
+    const d = await (await fetch(`${API_BASE}/ideas?horizon=${horizon}&limit=5`)).json();
+    if(!d.available){
+      $("hznote").textContent = "";
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No scan yet — press Generate from universe. It takes a few minutes and the result is cached for everyone afterwards.</div>`;
+      return;
+    }
+    $("hznote").textContent = `${d.note}  ·  Scanned ${d.scanned_at}`;
+    if(!d.rows.length){
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No names currently fit the ${horizon}-term archetypes cleanly. That is a market condition, not an error — try the other horizon, or refresh the scan after the next session.</div>`;
+    }else{
+      $("idearows").innerHTML = d.rows.map((s,i)=>`
+        <div class="idea" data-t="${esc(s.symbol)}" role="button" tabindex="0">
+          <div class="top">
+            <span class="nm">${i+1}. ${esc(s.name)}<small>${esc(s.symbol)} · NSE · ₹${s.price}</small></span>
+            <span class="fit">${s.setup_fit ?? s.composite}<small>fit</small></span>
+          </div>
+          <div class="arch">${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")}</div>
+          <div class="ln"><span>Composite ${s.composite}</span><span>Technical ${s.technical}</span>
+            <span>Fundamental ${s.fundamental}</span><span>Piotroski ${s.f_score}/9</span></div>
+        </div>`).join("");
+      document.querySelectorAll(".idea").forEach(el=>{
+        const go=()=>{ switchTab("screener"); analyse(el.dataset.t); };
+        el.addEventListener("click",go);
+        el.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" ") go(); });
+      });
+    }
+    $("ideadisc").textContent = d.disclaimer || "";
+  }catch(e){
+    $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable — it may be waking from sleep. Try again in ~30 seconds.</div>`;
+  }
+}
+
+/* ── Scan controller ────────────────────────────────────────────────── */
 function setProgress(s){
-  const wrap = $("progwrap"), bar = $("progbar").firstElementChild;
-  if(s.status !== "running"){ wrap.style.display = "none"; return; }
-  wrap.style.display = "block";
-  const pct = s.total ? Math.round(100 * s.done / s.total) : 0;
-  bar.style.width = pct + "%";
-  const mins = Math.floor((s.elapsed_seconds||0)/60), secs = (s.elapsed_seconds||0)%60;
-  $("progtxt").textContent =
-    `Scanning ${s.done} of ${s.total} · ${s.scored} scored · ${mins}m ${String(secs).padStart(2,"0")}s elapsed`;
+  const wrap=$("progwrap2");
+  if(s.status!=="running"){ wrap.style.display="none"; return; }
+  wrap.style.display="block";
+  const pct=s.total?Math.round(100*s.done/s.total):0;
+  wrap.querySelector(".progbar i").style.width=pct+"%";
+  const m=Math.floor((s.elapsed_seconds||0)/60), sec=(s.elapsed_seconds||0)%60;
+  wrap.querySelector(".progtxt").textContent=`Scanning ${s.done} of ${s.total} · ${s.scored} scored · ${m}m ${String(sec).padStart(2,"0")}s`;
 }
 
 async function pollScan(){
   try{
     const s = await (await fetch(`${API_BASE}/scan/status`)).json();
     setProgress(s);
-    if(s.status === "running"){ return; }
-    clearInterval(pollTimer); pollTimer = null;
-    $("genbtn").disabled = false;
-    if(s.status === "error"){
-      $("gennote").textContent = "Scan failed — try again in a minute";
-      $("genbtn").textContent = "Generate ranking";
-      return;
+    if(s.status==="running") return;
+    clearInterval(pollTimer); pollTimer=null;
+    $("genbtn2").disabled=false;
+    if(s.status==="error"){
+      $("gennote2").textContent="Scan failed — try again in a minute";
+      $("genbtn2").textContent="Generate from universe"; return;
     }
-    $("genbtn").textContent = "Refresh ranking";
-    $("gennote").textContent = "";
-    loadBoard();
-  }catch(e){ /* keep polling through transient errors */ }
+    $("genbtn2").textContent="Refresh universe scan";
+    $("gennote2").textContent="";
+    loadIdeas();
+  }catch(e){}
 }
 
 async function startScan(force){
-  $("genbtn").disabled = true;
-  $("genbtn").textContent = "Scanning…";
-  $("gennote").textContent = "This takes a few minutes — keep this tab open";
-  $("brows").innerHTML = "";
+  $("genbtn2").disabled=true; $("genbtn2").textContent="Scanning…";
+  $("gennote2").textContent="A few minutes — keep this tab open";
   try{
     const r = await (await fetch(`${API_BASE}/scan/start${force?"?force=true":""}`)).json();
-    if(!r.started && r.reason === "cached"){
-      $("genbtn").disabled = false; $("genbtn").textContent = "Refresh ranking";
-      $("gennote").textContent = ""; loadBoard(); return;
+    if(!r.started && r.reason==="cached"){
+      $("genbtn2").disabled=false; $("genbtn2").textContent="Refresh universe scan";
+      $("gennote2").textContent=""; loadIdeas(); return;
     }
     setProgress(r);
-    if(!pollTimer) pollTimer = setInterval(pollScan, 2500);
+    if(!pollTimer) pollTimer=setInterval(pollScan, 2500);
   }catch(e){
-    $("genbtn").disabled = false;
-    $("genbtn").textContent = "Generate ranking";
-    $("gennote").textContent = API_BASE.includes("localhost")
+    $("genbtn2").disabled=false; $("genbtn2").textContent="Generate from universe";
+    $("gennote2").textContent = API_BASE.includes("localhost")
       ? "Engine not connected — set API_BASE" : "Engine waking up — try again";
-  }
-}
-
-/* ── Top ranked ─────────────────────────────────────────────────────── */
-async function loadBoard(){
-  try{
-    const r = await fetch(`${API_BASE}/leaderboard?limit=5`);
-    const d = await r.json();
-    if(!d.available){
-      if(d.status !== "running"){
-        $("brows").innerHTML = `<div class="bmeta" style="padding:16px 0">No ranking yet — press Generate ranking to scan the NSE universe.</div>`;
-        $("genbtn").textContent = "Generate ranking";
-      }
-      return;
-    }
-    $("bwhen").textContent = `Scanned ${d.scanned_at}`;
-    $("genbtn").textContent = "Refresh ranking";
-    $("brows").innerHTML = d.rankings.map((s,i)=>`
-      <div class="brow" data-t="${esc(s.symbol)}" role="button" tabindex="0">
-        <span class="rank">${i+1}</span>
-        <span class="nm">${esc(s.name)}<small>${esc(s.symbol)} · NSE</small></span>
-        <span class="tf">${s.setup ? esc(s.setup) : `T ${s.technical} · F ${s.fundamental}`}</span>
-        <span class="cs" style="color:${toneInk(s.tone)}">${s.composite}</span>
-      </div>`).join("");
-    $("bmeta").innerHTML = `${d.scored} of ${d.universe_size} stocks scored · ${esc(d.methodology)}`;
-    document.querySelectorAll(".brow").forEach(el=>{
-      el.addEventListener("click",()=>analyse(el.dataset.t));
-      el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" ") analyse(el.dataset.t); });
-    });
-  }catch(e){
-    $("brows").innerHTML = `<div class="bmeta" style="padding:16px 0">Ranking unavailable — engine may be waking up.</div>`;
   }
 }
 
@@ -664,15 +665,21 @@ function render(d){
 $("go").addEventListener("click", ()=>analyse());
 $("tk").addEventListener("keydown", e=>{ if(e.key==="Enter") analyse(); });
 document.querySelectorAll(".hint b").forEach(b=>b.addEventListener("click",()=>analyse(b.dataset.t)));
-$("genbtn").addEventListener("click", ()=>{
-  startScan($("genbtn").textContent.trim() === "Refresh ranking");
-});
-loadBoard();
+document.querySelectorAll(".hz").forEach(b=>b.addEventListener("click",()=>{
+  horizon = b.dataset.h;
+  document.querySelectorAll(".hz").forEach(x=>x.classList.toggle("active", x===b));
+  loadIdeas();
+}));
+$("tab-screener").addEventListener("click",()=>switchTab("screener"));
+$("tab-ideas").addEventListener("click",()=>switchTab("ideas"));
+$("genbtn2").addEventListener("click",()=>startScan($("genbtn2").textContent.includes("Refresh")));
 (async()=>{ try{
   const s = await (await fetch(`${API_BASE}/scan/status`)).json();
   if(s.status === "running"){
-    $("genbtn").disabled = true; $("genbtn").textContent = "Scanning…";
+    $("genbtn2").disabled = true; $("genbtn2").textContent = "Scanning…";
     setProgress(s); pollTimer = setInterval(pollScan, 2500);
+  } else if(s.scanned_at){
+    $("genbtn2").textContent = "Refresh universe scan";
   }
 }catch(e){} })();
 </script>
