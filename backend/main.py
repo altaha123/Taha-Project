@@ -166,7 +166,7 @@ HORIZONS = {
 
 
 @app.get("/ideas")
-def ideas(horizon: str = "short", limit: int = 5):
+def ideas(horizon: str = "short", limit: int = 15):
     h = HORIZONS.get(horizon)
     if not h:
         raise HTTPException(400, "horizon must be 'short' or 'medium'")
@@ -178,7 +178,8 @@ def ideas(horizon: str = "short", limit: int = 5):
     rows.sort(key=lambda r: (r.get("setup_fit") or 0, r.get("composite") or 0), reverse=True)
     return {"available": True, "horizon": horizon, "label": h["label"], "note": h["note"],
             "scanned_at": p.get("scanned_at"),
-            "rows": rows[: max(1, min(limit, 10))],
+            "rows": rows[: max(1, min(limit, 25))],
+            "universe_source": p.get("universe_source"),
             "disclaimer": DISCLAIMER}
 
 
