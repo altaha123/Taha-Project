@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import yfinance as yf
 
 from engine import technical_score, fundamental_score, composite
+import archetypes as A
 
 # ---------------------------------------------------------------------------
 # The universe. Edit freely — one NSE symbol per entry, no .NS suffix.
@@ -99,7 +100,15 @@ def score_one(base: str):
         return None                                # rank only evidenced names
 
     v = composite(tech, fund)
+    try:
+        setup = A.evaluate(tech, fund)
+    except Exception:
+        setup = None
     return {
+        "setup": (setup or {}).get("name"),
+        "setup_key": (setup or {}).get("key"),
+        "setup_fit": (setup or {}).get("fit"),
+        "horizon": (setup or {}).get("horizon"),
         "symbol": base, "ticker": sym,
         "name": info.get("longName") or info.get("shortName") or base,
         "price": tech["price"],
