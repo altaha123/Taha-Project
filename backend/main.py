@@ -8,7 +8,7 @@ import os
 import threading
 import time
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 
@@ -16,6 +16,8 @@ from engine import technical_score, fundamental_score, composite
 from data_source import resolve, fundamentals, shareholding, NotFound
 import scan as scanner
 from results import quarterly_results
+from portfolio import build_report, MAX_HOLDINGS, WORKERS as PF_WORKERS
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import archetypes as A
 
 app = FastAPI(title="Altaha Screener API", version="2.1")
@@ -200,6 +202,74 @@ def leaderboard(limit: int = 5):
         "rankings": p.get("rankings", [])[: max(1, min(limit, 25))],
         "disclaimer": DISCLAIMER,
     }
+
+
+def _analyse_holding(item):
+    sym_in = str(item.get("symbol", "")).strip().upper()
+    qty = float(item.get("qty") or 0)
+    buy = item.get("buy_price")
+    buy = float(buy) if buy not in (None, "",) else None
+    if not sym_in or qty <= 0:
+        return {"symbol": sym_in or "?", "error": "missing symbol or quantity",
+                "value": 0.0, "cost": None}
+    try:
+        sym, t, hist = resolve(sym_in)
+    except NotFound:
+        return {"symbol": sym_in, "error": "symbol not found", "value": 0.0, "cost": None}
+    except Exception:
+        return {"symbol": sym_in, "error": "data provider busy", "value": 0.0, "cost": None}
+    try:
+        tech = technical_score(hist)
+    except Exception:
+        return {"symbol": sym_in, "error": "scoring failed", "value": 0.0, "cost": None}
+    try:
+        fin, bs, cf, info = fundamentals(sym, t)
+        fund = fundamental_score(fin, bs, cf, info)
+    except Exception:
+        info, fund = {}, {"score": None, "f_score": None, "g_score": None, "checks": [], "extras": {}}
+    v = composite(tech, fund)
+    try:
+        setup = A.evaluate(tech, fund)
+    except Exception:
+        setup = None
+    price = float(tech["price"])
+    return {
+        "symbol": sym.replace(".NS", "").replace(".BO", ""),
+        "name": info.get("longName") or info.get("shortName") or sym_in,
+        "sector": info.get("sector"),
+        "qty": qty, "buy_price": buy, "price": price,
+        "value": round(qty * price, 2),
+        "cost": round(qty * buy, 2) if buy is not None else None,
+        "pnl_pct": round(100 * (price - buy) / buy, 2) if buy else None,
+        "composite": v["score"], "tone": v["tone"],
+        "technical": tech["score"], "fundamental": fund["score"],
+        "setup": (setup or {}).get("name"), "setup_fit": (setup or {}).get("fit"),
+        "horizon": (setup or {}).get("horizon"),
+        "error": None,
+    }
+
+
+@app.post("/portfolio")
+def portfolio(payload: dict = Body(...)):
+    holdings = payload.get("holdings") or []
+    if not isinstance(holdings, list) or not holdings:
+        raise HTTPException(400, "Provide a holdings list.")
+    if len(holdings) > MAX_HOLDINGS:
+        raise HTTPException(400, f"Maximum {MAX_HOLDINGS} holdings per analysis — "
+                                 "split larger portfolios into batches.")
+    rows = [None] * len(holdings)
+    with ThreadPoolExecutor(max_workers=PF_WORKERS) as pool:
+        futures = {pool.submit(_analyse_holding, h): i for i, h in enumerate(holdings)}
+        for fut in as_completed(futures):
+            i = futures[fut]
+            try:
+                rows[i] = fut.result()
+            except Exception:
+                rows[i] = {"symbol": str(holdings[i].get("symbol", "?")),
+                           "error": "analysis failed", "value": 0.0, "cost": None}
+    report = build_report(rows, _state.get("payload"))
+    report["disclaimer"] = DISCLAIMER
+    return to_native(report)
 
 
 @app.get("/results")
