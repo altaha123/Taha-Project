@@ -15,6 +15,7 @@ import numpy as np
 from engine import technical_score, fundamental_score, composite
 from data_source import resolve, fundamentals, shareholding, NotFound
 import scan as scanner
+from results import quarterly_results
 import archetypes as A
 
 app = FastAPI(title="Altaha Screener API", version="2.1")
@@ -199,6 +200,32 @@ def leaderboard(limit: int = 5):
         "rankings": p.get("rankings", [])[: max(1, min(limit, 25))],
         "disclaimer": DISCLAIMER,
     }
+
+
+@app.get("/results")
+def results(ticker: str):
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    try:
+        sym, t, hist = resolve(ticker)
+    except NotFound:
+        raise HTTPException(404, f"Couldn't find '{ticker.upper()}'. Check the spelling.")
+    except Exception:
+        raise HTTPException(503, "The data provider is busy. Try again in a minute.")
+    try:
+        qfin = t.quarterly_financials
+        info = {}
+        try:
+            info = t.info or {}
+        except Exception:
+            pass
+        name = info.get("longName") or info.get("shortName") or sym.replace(".NS","").replace(".BO","")
+        out = quarterly_results(qfin, name, sym)
+    except Exception:
+        out = {"available": False,
+               "message": "Quarterly statements could not be retrieved for this stock."}
+    out["disclaimer"] = DISCLAIMER
+    return to_native(out)
 
 
 @app.get("/analyze")
