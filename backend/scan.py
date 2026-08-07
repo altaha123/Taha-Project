@@ -179,6 +179,7 @@ def deep_score(cand):
         "composite": v["score"], "label": v["label"], "tone": v["tone"],
         "technical": tech["score"], "fundamental": fund["score"],
         "f_score": fund["f_score"],
+        "sector": info.get("sector"),
         "setup": (setup or {}).get("name"), "setup_key": (setup or {}).get("key"),
         "setup_fit": (setup or {}).get("fit"), "horizon": (setup or {}).get("horizon"),
         "avg_turnover_cr": round(cand["turnover"] / 1e7, 1),
