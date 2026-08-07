@@ -151,6 +151,44 @@
     padding:44px 34px;background:#fff}
   .pfsoon h4{font-family:var(--serif);font-size:29px;margin:6px 0 14px}
   .pfsoon p{font-size:14.5px;line-height:1.75;color:var(--ink-2)}
+  .brandsw{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:18px}
+  .bsw{background:none;border:none;font-family:var(--mono);font-size:12px;letter-spacing:.26em;
+    text-transform:uppercase;color:var(--mute);cursor:pointer;padding:4px 2px;
+    border-bottom:1px solid transparent}
+  .bsw.active{color:var(--gold-dp);border-bottom-color:var(--gold)}
+  .bsw:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  .bswsep{color:var(--rule);font-family:var(--mono)}
+  .psec{padding:30px 0 26px;border-bottom:1px solid var(--rule)}
+  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .pgrid3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  @media(max-width:600px){.pgrid{grid-template-columns:1fr}}
+  .pfield .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--mute);display:block;margin-bottom:7px}
+  .pfield .k i{font-style:normal;text-transform:none;letter-spacing:.03em;opacity:.8}
+  .pin{width:100%;background:#fff;border:1px solid var(--rule);border-radius:2px;
+    color:var(--ink);font-family:var(--mono);font-size:15px;padding:11px 12px}
+  .pin:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,141,46,.16)}
+  .pvhead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+    flex-wrap:wrap;padding:18px 0 22px}
+  .pvbig .pvnum{font-family:var(--serif);font-size:clamp(34px,6vw,50px);line-height:1;display:block;margin-top:4px}
+  .pvsub{font-family:var(--mono);font-size:11px;color:var(--mute);display:block;margin-top:9px;letter-spacing:.05em}
+  .pvgrade{text-align:right}
+  .pvletter{font-family:var(--serif);font-size:56px;line-height:1;display:block;margin-top:2px}
+  .ptaxcols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  @media(max-width:560px){.ptaxcols{grid-template-columns:1fr}}
+  .ptaxcol{border:1px solid var(--rule);background:#fff;padding:20px 22px}
+  .ptaxcol.win{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold);background:var(--paper-2)}
+  .ptv{font-family:var(--serif);font-size:32px;line-height:1;display:block;margin:8px 0 10px}
+  .ptaxcol.win .ptv{color:var(--gold-dp)}
+  .ptd{font-family:var(--mono);font-size:10.5px;color:var(--mute);line-height:1.7;display:block;letter-spacing:.04em}
+  .ptaxverdict{font-family:var(--serif);font-size:20px;margin-top:20px}
+  .ptaxlink{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:10px;
+    padding-left:15px;border-left:2px solid var(--gold-lt)}
+  .pbucket{display:grid;grid-template-columns:44px 1fr;gap:16px;padding:18px 0;border-bottom:1px solid var(--rule-2)}
+  .pbn{font-family:var(--serif);font-size:28px;color:var(--gold-dp);line-height:1}
+  .pbt{font-weight:500;font-size:16px}
+  .pba{font-family:var(--mono);font-size:11.5px;color:var(--gold-dp);display:block;margin-top:4px;letter-spacing:.04em}
+  .pbd{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:9px}
   .brun{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:6px 0 4px}
   #genbtn{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:2px;
     font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.03em;
@@ -300,7 +338,12 @@
 <header class="wrap">
   <div class="eyebrow">Equity Analysis · India &amp; United States</div>
   <h1 class="brand">Altaha <i>Screener</i></h1>
-  <div class="tag">Where Logic Meets Validations</div>
+  <div class="tag" id="brandtag">Where Logic Meets Validations</div>
+  <div class="brandsw" role="tablist">
+    <button class="bsw active" id="bsw-screener" role="tab" aria-selected="true">Screener</button>
+    <span class="bswsep">·</span>
+    <button class="bsw" id="bsw-planner" role="tab" aria-selected="false">Planner</button>
+  </div>
   <div class="metal"></div>
 </header>
 
@@ -460,6 +503,78 @@
       <p>Upload your holdings and get every stock scored through the full Altaha engine — setup archetypes, sector concentration, and checks against the classic value and growth frameworks. Same rule as everywhere else on this site: every number will show its working.</p>
     </div>
   </div><!-- /view-portfolio -->
+
+<div id="view-planner" style="display:none">
+  <p class="ideas-intro">Your household finances through the same lens as the Screener: enter the numbers, get a verdict, and see the working behind every figure. Everything computes in your browser — nothing you type is sent or stored anywhere.</p>
+
+  <!-- Income -->
+  <div class="psec">
+    <div class="lh"><h3>Income</h3><span>Monthly, in-hand</span></div>
+    <div class="pgrid">
+      <label class="pfield"><span class="k">Take-home salary</span><input type="number" class="pin" id="p_sal" min="0" placeholder="e.g. 95000"></label>
+      <label class="pfield"><span class="k">Other income <i>rent, side income</i></span><input type="number" class="pin" id="p_oth" min="0" placeholder="0"></label>
+    </div>
+  </div>
+
+  <!-- Expenses -->
+  <div class="psec">
+    <div class="lh"><h3>Expenses</h3><span>Monthly</span></div>
+    <div class="pgrid pgrid3" id="pexp"></div>
+  </div>
+
+  <!-- Emergency fund input -->
+  <div class="psec">
+    <div class="lh"><h3>Current cushion</h3><span>For the emergency check</span></div>
+    <div class="pgrid">
+      <label class="pfield"><span class="k">Liquid savings today <i>savings a/c, FDs, liquid funds</i></span><input type="number" class="pin" id="p_liq" min="0" placeholder="e.g. 200000"></label>
+    </div>
+  </div>
+
+  <!-- Verdict -->
+  <div class="psec" id="pverdict" style="display:none">
+    <div class="lh"><h3>The Verdict</h3><span>Household ledger</span></div>
+    <div class="pvhead">
+      <div class="pvbig"><span class="k">You save every month</span><span class="pvnum" id="pv_save">—</span><span class="pvsub" id="pv_rate"></span></div>
+      <div class="pvgrade"><span class="k">Financial health</span><span class="pvletter" id="pv_grade">—</span></div>
+    </div>
+    <div id="pledger"></div>
+  </div>
+
+  <!-- Tax -->
+  <div class="psec">
+    <div class="lh"><h3>Tax Regime Verdict</h3><span>AY 2026-27</span></div>
+    <p class="lsub">Annual figures. Computed per the Finance Act 2025 slabs; surcharge above ₹50L income not modelled. Your CA (or the one who built this) should confirm edge cases.</p>
+    <div class="pgrid pgrid3">
+      <label class="pfield"><span class="k">Gross annual salary</span><input type="number" class="pin ptax" id="t_gross" min="0" placeholder="e.g. 1500000"></label>
+      <label class="pfield"><span class="k">80C <i>PF, ELSS, LIC — max 1.5L</i></span><input type="number" class="pin ptax" id="t_80c" min="0" placeholder="0"></label>
+      <label class="pfield"><span class="k">80D <i>health insurance</i></span><input type="number" class="pin ptax" id="t_80d" min="0" placeholder="0"></label>
+      <label class="pfield"><span class="k">NPS 80CCD(1B) <i>max 50K</i></span><input type="number" class="pin ptax" id="t_nps" min="0" placeholder="0"></label>
+      <label class="pfield"><span class="k">Home loan interest 24(b) <i>max 2L</i></span><input type="number" class="pin ptax" id="t_hl" min="0" placeholder="0"></label>
+      <label class="pfield"><span class="k">HRA exemption <i>computed amount</i></span><input type="number" class="pin ptax" id="t_hra" min="0" placeholder="0"></label>
+    </div>
+    <div id="ptax_out" style="display:none">
+      <div class="ptaxcols">
+        <div class="ptaxcol" id="tx_old"><span class="k">Old regime</span><span class="ptv" id="tx_old_v">—</span><span class="ptd" id="tx_old_d"></span></div>
+        <div class="ptaxcol" id="tx_new"><span class="k">New regime</span><span class="ptv" id="tx_new_v">—</span><span class="ptd" id="tx_new_d"></span></div>
+      </div>
+      <p class="ptaxverdict" id="tx_verdict"></p>
+      <p class="ptaxlink" id="tx_link"></p>
+    </div>
+  </div>
+
+  <!-- Buckets -->
+  <div class="psec" id="pbuckets" style="display:none">
+    <div class="lh"><h3>Where the savings go</h3><span>Structure, not products</span></div>
+    <p class="lsub">A sequence, not a shopping list. We name categories and the reasoning — never specific products. What you buy within each category is your decision or one for a SEBI-registered adviser.</p>
+    <div id="pbucketrows"></div>
+  </div>
+
+  <div class="psec" id="psharewrap" style="display:none">
+    <button class="wabtn" id="pshare">Share my scorecard on WhatsApp</button>
+    <p class="rnote">The share message contains only your savings rate and grade — no amounts.</p>
+  </div>
+</div><!-- /view-planner -->
+
 </main>
 
 <footer>Altaha Screener · Educational Use Only</footer>
@@ -851,6 +966,191 @@ document.querySelectorAll(".hz").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".hz").forEach(x=>x.classList.toggle("active", x===b));
   loadIdeas();
 }));
+/* ── Planner ────────────────────────────────────────────────────────── */
+const EXP_CATS = [
+  ["e_rent","Rent / home-loan EMI","need"], ["e_emi","Other EMIs / loans","need"],
+  ["e_groc","Groceries & household","need"], ["e_util","Utilities & bills","need"],
+  ["e_trans","Transport & fuel","need"], ["e_edu","School / education","need"],
+  ["e_help","Domestic help & staff","need"], ["e_health","Health & insurance premiums","need"],
+  ["e_eat","Eating out & entertainment","want"], ["e_shop","Shopping & lifestyle","want"],
+  ["e_subs","Subscriptions","want"], ["e_misc","Everything else","want"],
+];
+const inr = v => "\u20B9" + Math.round(v).toLocaleString("en-IN");
+
+function plannerInit(){
+  $("pexp").innerHTML = EXP_CATS.map(([id,label])=>`
+    <label class="pfield"><span class="k">${label}</span>
+      <input type="number" class="pin pexpin" id="${id}" min="0" placeholder="0"></label>`).join("");
+  document.querySelectorAll("#view-planner .pin").forEach(el=>
+    el.addEventListener("input", el.classList.contains("ptax") ? computeTax : computePlanner));
+  $("pshare").addEventListener("click", plannerShare);
+}
+
+let pState = null;
+
+function pRow(name, pass, value, formula, learn){
+  const mark = pass===true ? "\u2713" : pass===false ? "\u2715" : "\u25D0";
+  const cls  = pass===true ? "m-full" : pass===false ? "m-zero" : "m-part";
+  return `<details class="row"><summary>
+      <span class="mark ${cls}">${mark}</span><span>${name}</span>
+      <span class="pts">${value}</span></summary>
+    <div class="body">
+      <div class="audit"><span class="k">WORKING  </span>${formula}</div>
+      <div class="learn">${learn}</div>
+    </div></details>`;
+}
+
+function computePlanner(){
+  const num = id => Math.max(0, Number($(id).value) || 0);
+  const income = num("p_sal") + num("p_oth");
+  if(income <= 0){ $("pverdict").style.display="none"; $("pbuckets").style.display="none";
+                   $("psharewrap").style.display="none"; return; }
+
+  let needs = 0, wants = 0, emis = num("e_rent") + num("e_emi");
+  EXP_CATS.forEach(([id,,kind])=>{ const v = num(id); if(kind==="need") needs += v; else wants += v; });
+  const expenses = needs + wants;
+  const savings = income - expenses;
+  const rate = 100 * savings / income;
+  const liq = num("p_liq");
+  const efMonths = expenses > 0 ? liq / expenses : null;
+  const emiRatio = 100 * emis / income;
+  const needsPct = 100 * needs / income, wantsPct = 100 * wants / income;
+
+  $("pverdict").style.display = "block";
+  $("pv_save").textContent = savings >= 0 ? inr(savings) : "\u2212" + inr(-savings);
+  $("pv_save").style.color = savings >= 0 ? "var(--pass)" : "var(--fail)";
+  $("pv_rate").textContent = `${rate.toFixed(1)}% of ${inr(income)} income \u00B7 expenses ${inr(expenses)}`;
+
+  let score = 0;
+  score += rate >= 20 ? 40 : rate >= 10 ? 25 : rate > 0 ? 12 : 0;
+  score += emiRatio <= 40 ? 25 : emiRatio <= 50 ? 12 : 0;
+  score += efMonths===null ? 0 : efMonths >= 6 ? 25 : efMonths >= 3 ? 15 : efMonths >= 1 ? 6 : 0;
+  score += wantsPct <= 30 ? 10 : wantsPct <= 40 ? 5 : 0;
+  const grade = score >= 85 ? "A" : score >= 68 ? "B+" : score >= 52 ? "B" : score >= 36 ? "C" : "D";
+  $("pv_grade").textContent = grade;
+  $("pv_grade").style.color = score >= 68 ? "var(--pass)" : score >= 36 ? "var(--part)" : "var(--fail)";
+
+  $("pledger").innerHTML =
+    pRow("Savings rate", rate >= 20 ? true : rate > 0 ? null : false,
+      `${rate.toFixed(1)}%`,
+      `(${inr(income)} income \u2212 ${inr(expenses)} expenses) / income = ${rate.toFixed(1)}% \u00B7 benchmark \u2265 20%`,
+      "The single number that decides how fast you build wealth. 20% is the classic benchmark; below 10% and any shock forces borrowing. Every percentage point here compounds for decades.") +
+    pRow("EMI burden", emiRatio <= 40 ? true : emiRatio <= 50 ? null : false,
+      `${emiRatio.toFixed(1)}% of income`,
+      `${inr(emis)} EMIs / ${inr(income)} income = ${emiRatio.toFixed(1)}% \u00B7 lender red line 40%`,
+      "Banks cap total EMIs near 40% of income for good reason: above it, one bad month cascades. If you're over, no new loans until something is closed.") +
+    pRow("Emergency fund", efMonths===null ? null : efMonths >= 6 ? true : efMonths >= 3 ? null : false,
+      efMonths===null ? "enter expenses" : `${efMonths.toFixed(1)} months covered`,
+      `${inr(liq)} liquid savings / ${inr(expenses)} monthly expenses \u00B7 target 6 months`,
+      "Six months of expenses in instantly-accessible form is what lets you survive a job loss or medical event without touching investments or taking a personal loan at 14%.") +
+    pRow("Needs / wants split", (needsPct <= 55 && wantsPct <= 32) ? true : (wantsPct <= 42 ? null : false),
+      `${needsPct.toFixed(0)}% needs \u00B7 ${wantsPct.toFixed(0)}% wants \u00B7 ${Math.max(0,rate).toFixed(0)}% savings`,
+      `Benchmark 50 / 30 / 20 (needs / wants / savings). Category mapping shown in the form is approximate \u2014 reclassify mentally where your life differs.`,
+      "The 50/30/20 rule is a diagnostic, not a law. What it catches well: wants quietly swelling past 30% while savings absorb the squeeze.");
+
+  // Buckets
+  $("pbuckets").style.display = "block";
+  const efTarget = 6 * expenses, efGap = Math.max(0, efTarget - liq);
+  const bucket = (n, title, amount, desc) => `
+    <div class="pbucket"><span class="pbn">${n}</span>
+      <div><span class="pbt">${title}</span><span class="pba">${amount}</span>
+      <p class="pbd">${desc}</p></div></div>`;
+  $("pbucketrows").innerHTML =
+    bucket("1","Emergency fund first", efGap > 0 ? `${inr(efGap)} still to build (target ${inr(efTarget)})` : "Fully funded \u2713",
+      "Lives in a savings account, sweep-in FD, or liquid fund \u2014 boring on purpose. Until this exists, it takes priority over every investment, because its job is to protect the investments from ever being broken in a crisis.") +
+    bucket("2","Named goals inside ~5 years", "car, wedding, house deposit, fees",
+      "Money with a date on it doesn't belong in equities \u2014 a 30% drawdown the year you need it is a plan-ending event. This bucket lives in FDs, debt-type funds, or RDs, where the return is modest but the date is safe.") +
+    bucket("3","Long-term compounding", savings > 0 ? `up to ${inr(Math.max(0, savings - 0))}/month once buckets 1\u20132 are on track` : "resumes when savings turn positive",
+      "Ten-year-plus money is where equity-type and index-linked categories earn their risk, with gold as a minority diversifier. Monthly and automatic beats lump-sum and heroic. Which specific products \u2014 that's between you and a registered adviser.");
+
+  $("psharewrap").style.display = "block";
+  pState = {rate, grade, efMonths, emiRatio};
+}
+
+/* ── Tax engine — AY 2026-27, Finance Act 2025 ──────────────────────── */
+function slabTax(taxable, slabs){
+  let tax = 0;
+  for(const [from, to, pct] of slabs){
+    if(taxable > from) tax += (Math.min(taxable, to) - from) * pct;
+  }
+  return tax;
+}
+
+function computeTax(){
+  const num = id => Math.max(0, Number($(id).value) || 0);
+  const gross = num("t_gross");
+  if(gross <= 0){ $("ptax_out").style.display="none"; return; }
+  $("ptax_out").style.display = "block";
+
+  // New regime: std deduction 75k; slabs per Finance Act 2025; 87A nil up to 12L taxable, with marginal relief
+  const ntax_taxable = Math.max(0, gross - 75000);
+  let ntax = slabTax(ntax_taxable, [[0,400000,0],[400000,800000,.05],[800000,1200000,.10],
+      [1200000,1600000,.15],[1600000,2000000,.20],[2000000,2400000,.25],[2400000,Infinity,.30]]);
+  if(ntax_taxable <= 1200000) ntax = 0;
+  else ntax = Math.min(ntax, ntax_taxable - 1200000);      // marginal relief
+  const ntotal = Math.round(ntax * 1.04);
+
+  // Old regime: std 50k + capped deductions; 87A up to 5L taxable
+  const ded = 50000 + Math.min(num("t_80c"),150000) + num("t_80d")
+            + Math.min(num("t_nps"),50000) + Math.min(num("t_hl"),200000) + num("t_hra");
+  const otax_taxable = Math.max(0, gross - ded);
+  let otax = slabTax(otax_taxable, [[0,250000,0],[250000,500000,.05],[500000,1000000,.20],[1000000,Infinity,.30]]);
+  if(otax_taxable <= 500000) otax = Math.max(0, otax - 12500);
+  const ototal = Math.round(otax * 1.04);
+
+  $("tx_old_v").textContent = inr(ototal);
+  $("tx_old_d").textContent = `Taxable ${inr(otax_taxable)} after ${inr(ded)} deductions \u00B7 incl. 4% cess`;
+  $("tx_new_v").textContent = inr(ntotal);
+  $("tx_new_d").textContent = `Taxable ${inr(ntax_taxable)} after \u20B975,000 standard deduction \u00B7 incl. 4% cess`;
+
+  const diff = ototal - ntotal;
+  const winner = diff > 0 ? "new" : diff < 0 ? "old" : "either";
+  $("tx_old").classList.toggle("win", winner==="old");
+  $("tx_new").classList.toggle("win", winner==="new");
+  $("tx_verdict").textContent = winner==="either"
+    ? "Both regimes produce the same tax at these numbers."
+    : `The ${winner} regime saves you ${inr(Math.abs(diff))} this year at these numbers.`;
+
+  // Break-even insight: what deductions would flip the verdict
+  if(winner === "new"){
+    const flip = ded + Math.abs(diff) / 0.312;   // rough: 30% + cess marginal band
+    $("tx_link").textContent = `Rough flip point: if your total old-regime deductions crossed about ${inr(flip)}, the old regime would start winning \u2014 exact point depends on which slab the extra deduction lands in.`;
+  } else if(winner === "old"){
+    $("tx_link").textContent = `Your ${inr(ded)} of deductions is what's carrying the old regime here \u2014 if any of those lapse next year, re-run this.`;
+  } else { $("tx_link").textContent = ""; }
+}
+
+function plannerShare(){
+  if(!pState) return;
+  const lines = [
+    "*My Altaha Planner scorecard*",
+    `Savings rate: ${pState.rate.toFixed(1)}%`,
+    `Financial health: ${pState.grade}`,
+    pState.efMonths!==null ? `Emergency cover: ${pState.efMonths.toFixed(1)} months` : null,
+    "",
+    "Altaha \u2014 Where Logic Meets Validations",
+    location.origin,
+  ].filter(x=>x!==null);
+  window.open("https://wa.me/?text="+encodeURIComponent(lines.join("\n")), "_blank");
+}
+
+/* ── Brand switch ───────────────────────────────────────────────────── */
+function switchBrand(which){
+  const scr = which === "screener";
+  document.querySelector(".tabs").style.display = scr ? "flex" : "none";
+  TABS.forEach(t=>{ $("view-"+t).style.display = "none"; });
+  $("view-planner").style.display = scr ? "none" : "block";
+  if(scr) switchTab("screener");
+  $("bsw-screener").classList.toggle("active", scr);
+  $("bsw-planner").classList.toggle("active", !scr);
+  $("bsw-screener").setAttribute("aria-selected", scr);
+  $("bsw-planner").setAttribute("aria-selected", !scr);
+  $("brandtag").textContent = scr ? "Where Logic Meets Validations" : "Where Money Meets Method";
+}
+$("bsw-screener").addEventListener("click",()=>switchBrand("screener"));
+$("bsw-planner").addEventListener("click",()=>switchBrand("planner"));
+plannerInit();
+
 TABS.forEach(t=>$("tab-"+t).addEventListener("click",()=>switchTab(t)));
 $("rgo").addEventListener("click",()=>getResults());
 $("rtk").addEventListener("keydown",e=>{ if(e.key==="Enter") getResults(); });
