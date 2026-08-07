@@ -102,6 +102,55 @@
   .progtxt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);margin-top:9px}
   #progwrap2{display:none;max-width:540px;margin:0 auto 18px}
+  .tabs4{max-width:560px}
+  .rcard{border:1px solid var(--rule);border-left:3px solid var(--gold);background:#fff;
+    padding:26px 28px;margin-top:6px}
+  .rhead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+    border-bottom:1px solid var(--rule);padding-bottom:16px;flex-wrap:wrap}
+  .rsym{font-family:var(--serif);font-size:27px;letter-spacing:.01em;display:block}
+  .rname{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);display:block;margin-top:5px}
+  .rq{text-align:right}
+  .rq span:first-child{font-family:var(--mono);font-size:12px;letter-spacing:.16em;
+    color:var(--gold-dp);display:block;text-transform:uppercase}
+  .ras{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--mute);
+    display:block;margin-top:5px}
+  .rpat{padding:22px 0 20px;border-bottom:1px solid var(--rule)}
+  .rpatline{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-top:4px}
+  .rpatval{font-family:var(--serif);font-size:clamp(34px,6vw,48px);line-height:1}
+  .ryoy{font-family:var(--mono);font-size:13px;padding:4px 10px;border:1px solid currentColor}
+  .ryoy.up{color:var(--pass)} .ryoy.dn{color:var(--fail)}
+  .rvs{font-family:var(--mono);font-size:11px;color:var(--mute);display:block;margin-top:10px;letter-spacing:.05em}
+  .rbars{padding:22px 0 8px}
+  .rbargrp{margin-bottom:18px}
+  .rbargrp .sk{margin-bottom:10px}
+  .rbrow{display:grid;grid-template-columns:74px 1fr 90px;gap:12px;align-items:center;margin-bottom:7px}
+  .rbrow .lb{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mute)}
+  .rbrow .tr{height:16px;background:var(--paper-2);position:relative}
+  .rbrow .tr i{position:absolute;inset:0 auto 0 0;background:var(--rule)}
+  .rbrow.cur .tr i{background:var(--pass);opacity:.85}
+  .rbrow .vl{font-family:var(--mono);font-size:11.5px;text-align:right}
+  .rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    border-top:1px solid var(--rule);border-left:1px solid var(--rule);margin:14px 0 6px}
+  .rg{padding:14px 16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  .rg .k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--mute);display:block;margin-bottom:7px}
+  .rg .v{font-family:var(--serif);font-size:22px;line-height:1}
+  .rg .v small{font-family:var(--mono);font-size:10px;color:var(--mute)}
+  .rbul{list-style:none;margin:18px 0 4px}
+  .rbul li{font-size:14px;line-height:1.65;color:var(--ink-2);padding:8px 0 8px 17px;
+    border-bottom:1px solid var(--rule-2);position:relative}
+  .rbul li:before{content:"";position:absolute;left:0;top:16px;width:6px;height:1px;background:var(--gold)}
+  .rnote{font-size:12px;line-height:1.7;color:var(--mute);margin-top:16px}
+  .wabtn{margin-top:20px;background:#fff;color:var(--ink);border:1px solid var(--ink);
+    border-radius:2px;font-family:var(--sans);font-weight:500;font-size:13.5px;
+    padding:11px 22px;cursor:pointer}
+  .wabtn:hover{background:var(--ink);color:var(--paper)}
+  .wabtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .pfsoon{max-width:560px;margin:56px auto;text-align:center;border:1px solid var(--rule);
+    padding:44px 34px;background:#fff}
+  .pfsoon h4{font-family:var(--serif);font-size:29px;margin:6px 0 14px}
+  .pfsoon p{font-size:14.5px;line-height:1.75;color:var(--ink-2)}
   .brun{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:6px 0 4px}
   #genbtn{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:2px;
     font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.03em;
@@ -256,9 +305,11 @@
 </header>
 
 <main class="wrap">
-  <nav class="tabs" role="tablist">
+  <nav class="tabs tabs4" role="tablist">
     <button class="tab active" id="tab-screener" role="tab" aria-selected="true">Screener</button>
     <button class="tab" id="tab-ideas" role="tab" aria-selected="false">Ideas</button>
+    <button class="tab" id="tab-results" role="tab" aria-selected="false">Results</button>
+    <button class="tab" id="tab-portfolio" role="tab" aria-selected="false">Portfolio</button>
   </nav>
 
   <div id="view-screener">
@@ -372,13 +423,50 @@
     <div id="idearows"></div>
     <p class="disc" id="ideadisc"></p>
   </div><!-- /view-ideas -->
+
+  <div id="view-results" style="display:none">
+    <p class="ideas-intro">The latest reported quarterly numbers for any NSE or US stock — profit, revenue, margin, and the year-ago comparison, computed from published statements.</p>
+    <div class="searchrow" style="margin-top:0">
+      <input id="rtk" placeholder="Enter a stock — GULPOLY, RELIANCE, TCS…" autocomplete="off"
+             spellcheck="false" aria-label="Stock ticker for results" />
+      <button id="rgo">Get results</button>
+    </div>
+    <div class="state" id="rstate"></div>
+    <section id="rcardwrap" style="display:none">
+      <div class="rcard" id="rcard">
+        <div class="rhead">
+          <div><span class="rsym" id="rsym"></span><span class="rname" id="rname"></span></div>
+          <div class="rq"><span id="rquarter"></span><span class="ras" id="ras"></span></div>
+        </div>
+        <div class="rpat">
+          <span class="sk">Consolidated / standalone PAT (as published)</span>
+          <div class="rpatline"><span class="rpatval" id="rpat"></span><span class="ryoy" id="rpatyoy"></span></div>
+          <span class="rvs" id="rpatvs"></span>
+        </div>
+        <div class="rbars" id="rbars"></div>
+        <div class="rgrid" id="rgrid"></div>
+        <ul class="rbul" id="rbul"></ul>
+        <p class="rnote" id="rnote"></p>
+        <button class="wabtn" id="washare">Share on WhatsApp</button>
+      </div>
+      <p class="disc" id="rdisc"></p>
+    </section>
+  </div><!-- /view-results -->
+
+  <div id="view-portfolio" style="display:none">
+    <div class="pfsoon">
+      <span class="sk">In development</span>
+      <h4>Portfolio Score</h4>
+      <p>Upload your holdings and get every stock scored through the full Altaha engine — setup archetypes, sector concentration, and checks against the classic value and growth frameworks. Same rule as everywhere else on this site: every number will show its working.</p>
+    </div>
+  </div><!-- /view-portfolio -->
 </main>
 
 <footer>Altaha Screener · Educational Use Only</footer>
 
 <script>
 /* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
-const API_BASE = "https://taha-project.onrender.com";
+const API_BASE = "http://localhost:8000";
 /* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
@@ -389,15 +477,103 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
+const TABS = ["screener","ideas","results","portfolio"];
 function switchTab(which){
-  const scr = which==="screener";
-  $("view-screener").style.display = scr ? "block" : "none";
-  $("view-ideas").style.display = scr ? "none" : "block";
-  $("tab-screener").classList.toggle("active", scr);
-  $("tab-ideas").classList.toggle("active", !scr);
-  $("tab-screener").setAttribute("aria-selected", scr);
-  $("tab-ideas").setAttribute("aria-selected", !scr);
-  if(!scr) loadIdeas();
+  TABS.forEach(t=>{
+    const on = t===which;
+    $("view-"+t).style.display = on ? "block" : "none";
+    $("tab-"+t).classList.toggle("active", on);
+    $("tab-"+t).setAttribute("aria-selected", on);
+  });
+  if(which==="ideas") loadIdeas();
+}
+
+/* ── Results ────────────────────────────────────────────────────────── */
+let lastResult = null;
+
+function fmtCr(v){ return v===null||v===undefined ? "—" : "\u20B9"+Number(v).toLocaleString("en-IN",{maximumFractionDigits:2})+" Cr"; }
+
+function barGroup(title, series){
+  if(!series || series.length < 2) return "";
+  const vals = series.map(s=>Math.abs(s.value_cr||0));
+  const max = Math.max(...vals) || 1;
+  const rows = series.slice(0,2).reverse().map((s,i,arr)=>{
+    const cur = i===arr.length-1;
+    const w = Math.max(2, 100*Math.abs(s.value_cr||0)/max);
+    return `<div class="rbrow${cur?" cur":""}">
+      <span class="lb">${esc(s.period)}</span>
+      <span class="tr"><i style="width:${w}%"></i></span>
+      <span class="vl">${s.value_cr===null?"—":Number(s.value_cr).toLocaleString("en-IN",{maximumFractionDigits:2})}</span>
+    </div>`;
+  }).join("");
+  return `<div class="rbargrp"><span class="sk">${title} \u2014 \u20B9 crore</span>${rows}</div>`;
+}
+
+function renderResults(d){
+  $("rstate").style.display="none"; $("rcardwrap").style.display="block";
+  lastResult = d;
+  $("rsym").textContent = d.symbol.replace(".NS","").replace(".BO","");
+  $("rname").textContent = d.name;
+  $("rquarter").textContent = d.quarter;
+  $("ras").textContent = "Statements dated " + d.as_of;
+  $("rpat").textContent = fmtCr(d.pat_cr);
+  const y = d.pat_yoy_pct;
+  const badge = $("rpatyoy");
+  if(y===null||y===undefined){ badge.style.display="none"; }
+  else{ badge.style.display="inline-block"; badge.textContent=(y>=0?"+":"")+y+"% YoY";
+        badge.className="ryoy "+(y>=0?"up":"dn"); }
+  $("rpatvs").textContent = d.pat_yoy_base_cr!==null && d.pat_yoy_base_cr!==undefined
+    ? `vs ${fmtCr(d.pat_yoy_base_cr)} in the same quarter last year` : "Year-ago quarter not published by the source";
+  $("rbars").innerHTML = barGroup("Revenue", d.revenue_series) + barGroup("Net profit", d.pat_series);
+  const cells=[];
+  cells.push(`<div class="rg"><span class="k">Revenue</span><span class="v">${fmtCr(d.revenue_cr)}</span></div>`);
+  if(d.revenue_yoy_pct!==null&&d.revenue_yoy_pct!==undefined)
+    cells.push(`<div class="rg"><span class="k">Revenue YoY</span><span class="v">${d.revenue_yoy_pct>=0?"+":""}${d.revenue_yoy_pct}<small>%</small></span></div>`);
+  if(d.net_margin_pct!==null&&d.net_margin_pct!==undefined)
+    cells.push(`<div class="rg"><span class="k">Net margin</span><span class="v">${d.net_margin_pct}<small>%</small></span></div>`);
+  if(d.net_margin_yoy_pct!==null&&d.net_margin_yoy_pct!==undefined)
+    cells.push(`<div class="rg"><span class="k">Margin, year ago</span><span class="v">${d.net_margin_yoy_pct}<small>%</small></span></div>`);
+  $("rgrid").innerHTML = cells.join("");
+  $("rbul").innerHTML = (d.bullets||[]).map(b=>`<li>${esc(b)}</li>`).join("");
+  $("rnote").textContent = d.note || "";
+  $("rdisc").textContent = d.disclaimer || "";
+  $("rcardwrap").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+async function getResults(sym){
+  sym = (sym || $("rtk").value).trim();
+  if(!sym) return;
+  $("rtk").value = sym;
+  $("rcardwrap").style.display="none";
+  $("rstate").style.display="block";
+  $("rstate").innerHTML = `Fetching latest results for <b style="font-family:var(--mono)">${esc(sym.toUpperCase())}</b>\u2026`;
+  try{
+    const res = await fetch(`${API_BASE}/results?ticker=${encodeURIComponent(sym)}`);
+    const d = await res.json();
+    if(!res.ok || d.available===false){
+      $("rstate").innerHTML = esc(d.detail || d.message || "Results unavailable for this stock.");
+      return;
+    }
+    renderResults(d);
+  }catch(e){
+    $("rstate").innerHTML = "Couldn\u2019t reach the engine \u2014 it may be waking from sleep. Try again in ~30 seconds.";
+  }
+}
+
+function shareWhatsApp(){
+  if(!lastResult) return;
+  const d = lastResult;
+  const arrow = (d.pat_yoy_pct??0) >= 0 ? "\u25B2" : "\u25BC";
+  const lines = [
+    `*${d.symbol.replace(".NS","").replace(".BO","")}* \u2014 ${d.quarter} results`,
+    `PAT: ${fmtCr(d.pat_cr)}${d.pat_yoy_pct!==null&&d.pat_yoy_pct!==undefined ? ` (${arrow} ${d.pat_yoy_pct>=0?"+":""}${d.pat_yoy_pct}% YoY)` : ""}`,
+    `Revenue: ${fmtCr(d.revenue_cr)}${d.revenue_yoy_pct!==null&&d.revenue_yoy_pct!==undefined ? ` (${d.revenue_yoy_pct>=0?"+":""}${d.revenue_yoy_pct}% YoY)` : ""}`,
+    ...(d.bullets||[]).slice(0,2).map(b=>"\u2022 "+b),
+    "",
+    "Altaha Screener \u2014 Where Logic Meets Validations",
+    location.origin
+  ];
+  window.open("https://wa.me/?text="+encodeURIComponent(lines.join("\n")), "_blank");
 }
 
 /* ── Ideas view ─────────────────────────────────────────────────────── */
@@ -675,8 +851,10 @@ document.querySelectorAll(".hz").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".hz").forEach(x=>x.classList.toggle("active", x===b));
   loadIdeas();
 }));
-$("tab-screener").addEventListener("click",()=>switchTab("screener"));
-$("tab-ideas").addEventListener("click",()=>switchTab("ideas"));
+TABS.forEach(t=>$("tab-"+t).addEventListener("click",()=>switchTab(t)));
+$("rgo").addEventListener("click",()=>getResults());
+$("rtk").addEventListener("keydown",e=>{ if(e.key==="Enter") getResults(); });
+$("washare").addEventListener("click",shareWhatsApp);
 $("genbtn2").addEventListener("click",()=>startScan($("genbtn2").textContent.includes("Refresh")));
 (async()=>{ try{
   const s = await (await fetch(`${API_BASE}/scan/status`)).json();
