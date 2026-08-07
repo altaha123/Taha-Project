@@ -164,6 +164,47 @@
     color:var(--ink-2);border:1px solid var(--rule);background:#fff;padding:7px 13px;border-radius:2px}
   .badge:first-child{border-color:var(--gold);color:var(--gold-dp);background:var(--paper-2)}
   @media(max-width:520px){.badge{font-size:9px;letter-spacing:.1em;padding:6px 10px}}
+  .tabs5{max-width:680px}
+  @media(max-width:660px){.tabs5{max-width:100%}.tabs5 .tab{font-size:12px;padding:11px 0;letter-spacing:.02em}}
+  .modebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 0 4px}
+  .modelbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+  .modesw{display:flex;border:1px solid var(--ink);border-radius:2px;overflow:hidden}
+  .mode{background:#fff;border:none;font-family:var(--sans);font-size:12.5px;font-weight:500;
+    padding:8px 16px;cursor:pointer;color:var(--ink)}
+  .mode.active{background:var(--ink);color:var(--paper)}
+  .mode:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
+  .modenote{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+  #plainwrap{padding:6px 0 30px;border-bottom:1px solid var(--rule)}
+  .plainv{font-size:18px;line-height:1.7;color:var(--ink);padding-left:18px;
+    border-left:3px solid var(--gold);margin-bottom:26px}
+  .plaincols{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+  @media(max-width:620px){.plaincols{grid-template-columns:1fr;gap:22px}}
+  .plaincols ul{list-style:none;margin-top:4px}
+  .plaincols li{font-size:15px;line-height:1.6;color:var(--ink-2);padding:10px 0 10px 20px;
+    border-bottom:1px solid var(--rule-2);position:relative}
+  .plaincols li:before{position:absolute;left:0;top:10px;font-family:var(--mono);font-size:13px}
+  #plaingood li:before{content:"\2713";color:var(--pass)}
+  #plainbad li:before{content:"\2715";color:var(--fail)}
+  .showfull{margin-top:22px;background:none;border:none;border-bottom:1px solid var(--gold);
+    color:var(--gold-dp);font-family:var(--sans);font-size:14px;font-weight:500;padding:4px 0;cursor:pointer}
+  .showfull:hover{color:var(--ink);border-color:var(--ink)}
+  .vgroups{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:22px 0 26px}
+  .vg{background:#fff;border:1px solid var(--rule);border-radius:2px;font-family:var(--mono);
+    font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);padding:8px 13px;cursor:pointer}
+  .vg.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .vg:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .vcard{border:1px solid var(--rule);border-left:3px solid var(--gold);background:#fff;
+    padding:22px 24px;margin-bottom:14px}
+  .vtop{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .vt{font-family:var(--serif);font-size:25px;line-height:1}
+  .vfull{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .vgroup{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--gold-dp);border:1px solid var(--gold-lt);border-radius:2px;padding:3px 8px}
+  .vs{font-size:16.5px;line-height:1.65;color:var(--ink);margin-bottom:16px}
+  .vex,.vwhy{padding:13px 15px;margin-top:10px}
+  .vex{background:var(--paper-2);border-left:2px solid var(--rule)}
+  .vwhy{border-left:2px solid var(--gold-lt)}
+  .vex p,.vwhy p{font-size:14px;line-height:1.7;color:var(--ink-2);margin-top:6px}
   .brandsw{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:18px}
   .bsw{background:none;border:none;font-family:var(--mono);font-size:12px;letter-spacing:.26em;
     text-transform:uppercase;color:var(--mute);cursor:pointer;padding:4px 2px;
@@ -409,11 +450,12 @@
 </header>
 
 <main class="wrap">
-  <nav class="tabs tabs4" role="tablist">
+  <nav class="tabs tabs5" role="tablist">
     <button class="tab active" id="tab-screener" role="tab" aria-selected="true">Screener</button>
     <button class="tab" id="tab-ideas" role="tab" aria-selected="false">Ideas</button>
     <button class="tab" id="tab-results" role="tab" aria-selected="false">Results</button>
     <button class="tab" id="tab-portfolio" role="tab" aria-selected="false">Portfolio</button>
+    <button class="tab" id="tab-vocab" role="tab" aria-selected="false">Vocabulary</button>
   </nav>
 
   <div id="view-screener">
@@ -433,6 +475,15 @@
       <div class="meta">
         <span id="csym"></span><span id="cpx"></span><span id="cvol"></span>
       </div>
+    </div>
+
+    <div class="modebar">
+      <span class="modelbl">View</span>
+      <div class="modesw">
+        <button class="mode active" id="mode-simple">Beginner</button>
+        <button class="mode" id="mode-full">Analyst</button>
+      </div>
+      <span class="modenote" id="modenote">Plain English, key points only</span>
     </div>
 
     <div class="verdict">
@@ -474,6 +525,15 @@
         <div><span class="sk">What would invalidate it</span><ul id="setupinval"></ul></div>
       </div>
       <p class="srisk" id="setuprisk"></p>
+    </div>
+
+    <div id="plainwrap" style="display:none">
+      <p class="plainv" id="plainv"></p>
+      <div class="plaincols">
+        <div><span class="sk">What's working</span><ul id="plaingood"></ul></div>
+        <div><span class="sk">What's not</span><ul id="plainbad"></ul></div>
+      </div>
+      <button class="showfull" id="showfull">Show the full working →</button>
     </div>
 
     <div class="sched">
@@ -671,6 +731,15 @@
   </div>
 </div><!-- /view-planner -->
 
+  <div id="view-vocab" style="display:none">
+    <p class="ideas-intro">Every term this site uses, in plain English with a worked example. No prior finance knowledge assumed.</p>
+    <div class="searchrow" style="margin-top:0;max-width:440px">
+      <input id="vsearch" placeholder="Search a term — ROCE, debt, volume…" autocomplete="off" aria-label="Search vocabulary">
+    </div>
+    <div class="vgroups" id="vgroups"></div>
+    <div id="vcards"></div>
+  </div><!-- /view-vocab -->
+
 </main>
 
 <footer>Altaha Screener · Educational Use Only</footer>
@@ -688,7 +757,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","results","portfolio"];
+const TABS = ["screener","ideas","results","portfolio","vocab"];
 function switchTab(which){
   TABS.forEach(t=>{
     const on = t===which;
@@ -1038,6 +1107,7 @@ function render(d){
   $("tscore").innerHTML = `${d.technical.score}<small> /100</small>`;
   $("fscore").innerHTML = d.fundamental.score===null ? `<small>NOT PUBLISHED</small>`
                                                      : `${d.fundamental.score}<small> /100</small>`;
+  renderPlain(d.plain);
   drawSetup(d.setup);
   drawVolume(d.volume_series);
   drawShareholding(d.shareholding);
@@ -1051,6 +1121,7 @@ function render(d){
     $("fledger").innerHTML = d.fundamental.checks.map(rowHTML).join("");
   }
   $("disc").textContent = d.disclaimer;
+  applyMode();
   result.scrollIntoView({behavior:"smooth", block:"start"});
 }
 
@@ -1395,7 +1466,188 @@ function pfRender(d){
   $("pf_report").scrollIntoView({behavior:"smooth", block:"start"});
 }
 
+/* ── Vocabulary ─────────────────────────────────────────────────────── */
+const VOCAB = [
+  { g:"Business quality", t:"ROCE", full:"Return on Capital Employed",
+    s:"How much profit a business earns on every rupee put into it.",
+    e:"A shop uses \u20B910 lakh of capital and earns \u20B92 lakh operating profit in a year. ROCE is 20%. A second shop needs \u20B950 lakh to earn the same \u20B92 lakh \u2014 ROCE 4%. Same profit, but the first business is five times better at turning money into money.",
+    w:"This is the single best test of business quality. High ROCE sustained over years is what makes a stock compound. Above 18% is strong in India; below 8% means the business barely beats a fixed deposit." },
+  { g:"Business quality", t:"ROE", full:"Return on Equity",
+    s:"Profit earned on the shareholders' own money.",
+    e:"A company has \u20B9100 crore of shareholder equity and makes \u20B918 crore net profit. ROE is 18% \u2014 the owners' money grew 18% that year.",
+    w:"Similar to ROCE but ignores debt. That's the trap: a company can show a wonderful ROE simply by borrowing heavily. Always read ROE next to debt-to-equity, never alone." },
+  { g:"Business quality", t:"Gross margin",
+    s:"What's left from each rupee of sales after the direct cost of making the product.",
+    e:"Sell a shirt for \u20B91,000; cloth and stitching cost \u20B9600. Gross margin is 40%.",
+    w:"High margins usually mean a brand people pay extra for, or a genuine cost advantage. Rising margins mean pricing power is improving. Falling margins are one of the earliest warning signs a business is losing its edge." },
+  { g:"Business quality", t:"Operating cash flow",
+    s:"Actual cash the business collected from operations \u2014 not accounting profit.",
+    e:"A company reports \u20B9100 crore profit but collected only \u20B940 crore in cash, because \u20B960 crore is still owed by customers. Profit says one thing; cash says another.",
+    w:"Profit is an opinion, cash is a fact. Profit can be shaped by accounting choices; cash in the bank cannot. When cash flow consistently exceeds reported profit, earnings quality is high." },
+
+  { g:"Debt & safety", t:"Debt to Equity",
+    s:"How much the company has borrowed compared with the owners' own money.",
+    e:"\u20B930 crore of loans against \u20B9100 crore of shareholder equity gives a ratio of 0.3.",
+    w:"Debt magnifies both directions. In a good year it boosts returns; in a bad year it can end the company. Below 0.3 is comfortable, above 1.5 means lenders have more at stake than owners." },
+  { g:"Debt & safety", t:"Current ratio",
+    s:"Whether the company can pay bills due within a year using assets it can convert within a year.",
+    e:"\u20B960 crore in current assets against \u20B930 crore of current liabilities gives a ratio of 2.",
+    w:"Below 1 means short-term obligations exceed short-term resources, which forces borrowing at bad moments. A rising ratio year on year means liquidity is improving." },
+  { g:"Debt & safety", t:"Promoter pledging",
+    s:"Promoters using their own shares as collateral for personal loans.",
+    e:"A promoter holds 50% of the company and has pledged 30% of that stake to a lender.",
+    w:"One of the loudest red flags in Indian markets. If the price falls, lenders can sell the pledged shares, which pushes the price down further \u2014 a spiral that has destroyed several listed companies." },
+
+  { g:"Valuation", t:"P/E ratio", full:"Price to Earnings",
+    s:"How many years of current profit you're paying for the shares.",
+    e:"A share costs \u20B9500 and earns \u20B925 per share a year. P/E is 20 \u2014 you pay twenty years of current earnings.",
+    w:"A rough but honest first check. High P/E means the market expects growth; if that growth fails to arrive, the price falls hard. Comparing P/E is only meaningful within the same industry \u2014 an IT company and a bank are not comparable." },
+  { g:"Valuation", t:"Market capitalisation",
+    s:"What the entire company costs at today's price.",
+    e:"10 crore shares at \u20B9500 each means a market cap of \u20B95,000 crore.",
+    w:"This, not the share price, tells you the size of the company. A \u20B950 share is not 'cheap' and a \u20B95,000 share is not 'expensive' \u2014 the share price alone tells you nothing without the share count." },
+  { g:"Valuation", t:"EPS", full:"Earnings Per Share",
+    s:"Profit divided by the number of shares.",
+    e:"\u20B9250 crore profit across 10 crore shares gives EPS of \u20B925.",
+    w:"Watch it across years rather than in isolation. Rising EPS is good \u2014 unless it rose because the company bought back shares rather than because profit actually grew." },
+
+  { g:"Scores", t:"Piotroski F-Score",
+    s:"Nine pass-or-fail tests of financial health, scored out of 9.",
+    e:"A company that is profitable, generates cash, is reducing debt and improving margins might score 8 or 9. One that is losing money with rising debt scores 1 or 2.",
+    w:"Created by accounting professor Joseph Piotroski in 2000. His research found that among cheap-looking stocks, the high scorers substantially outperformed the low scorers \u2014 it separates genuine bargains from businesses that are cheap for good reason." },
+  { g:"Scores", t:"Mohanram G-Score",
+    s:"A companion test for growth companies, checking whether the growth is durable.",
+    e:"A fast-growing company generating strong cash, investing in capacity and holding its margins scores well. One growing on borrowed money with weak cash scores poorly.",
+    w:"Piotroski's test suits cheap stocks; Mohanram's suits expensive ones. Altaha uses an adapted version, because the original needs research-spending data that Indian filings don't reliably publish \u2014 which is why our version is labelled 'adapted' and every threshold is disclosed." },
+
+  { g:"Price & trend", t:"Moving average",
+    s:"The average closing price over a set number of days, redrawn each day.",
+    e:"The 50-day moving average is the average of the last 50 closes. Tomorrow it drops the oldest day and adds the newest.",
+    w:"It strips out daily noise so the underlying direction is visible. When price sits above a rising average, and short averages sit above long ones, that's the textbook definition of an uptrend." },
+  { g:"Price & trend", t:"RSI", full:"Relative Strength Index",
+    s:"A 0\u2013100 gauge of how hard a stock has been bought or sold recently.",
+    e:"RSI of 75 means buying has been intense for several weeks. RSI of 25 means heavy selling.",
+    w:"Above roughly 70 the move is often stretched and due a pause; below 30 it may be oversold. But a strong stock can stay 'overbought' for months \u2014 RSI describes intensity, it does not predict reversal." },
+  { g:"Price & trend", t:"MACD",
+    s:"Compares a fast and a slow moving average to show whether momentum is building or fading.",
+    e:"When the fast line crosses above the slow line and the gap widens, momentum is accelerating.",
+    w:"It answers a different question from 'is the price up' \u2014 it asks whether the move is gaining strength or running out of steam." },
+  { g:"Price & trend", t:"ADX", full:"Average Directional Index",
+    s:"Measures how strongly a stock is trending, in either direction.",
+    e:"ADX of 35 means a powerful trend. ADX of 12 means price is drifting sideways with no conviction.",
+    w:"It says nothing about up or down \u2014 only about strength. Below 20 most trend signals become unreliable, because there is no trend to follow." },
+  { g:"Price & trend", t:"Bollinger Bands",
+    s:"A channel drawn two standard deviations either side of a 20-day average.",
+    e:"Price near the upper band is at the strong end of its recent range; near the lower band, the weak end.",
+    w:"When the bands narrow sharply, volatility has compressed and a large move often follows \u2014 though the squeeze tells you a move is coming, not which way." },
+  { g:"Price & trend", t:"Supertrend",
+    s:"A line that sits below price in an uptrend and above it in a downtrend, adjusting for volatility.",
+    e:"Price closing above the line is a bullish regime; closing below flips it bearish.",
+    w:"A simple, unambiguous regime filter. Its value is that it gives a clear line rather than a judgement call \u2014 useful precisely because it removes discretion." },
+
+  { g:"Volume", t:"Volume",
+    s:"The number of shares that changed hands.",
+    e:"A stock rising 5% on triple its usual volume is a very different event from rising 5% on half its usual volume.",
+    w:"Volume is the conviction behind a price move. Price tells you what happened; volume tells you how many people meant it." },
+  { g:"Volume", t:"Accumulation & distribution",
+    s:"Whether more shares trade on rising days or on falling days.",
+    e:"Over twenty sessions, if up-day volume is 1.8 times down-day volume, buyers have been more aggressive than sellers.",
+    w:"Large investors cannot hide their footprint. Sustained accumulation often appears in volume before it shows up in price." },
+  { g:"Volume", t:"OBV", full:"On-Balance Volume",
+    s:"A running total that adds volume on up days and subtracts it on down days.",
+    e:"If price makes a new high but OBV doesn't, fewer shares are supporting each rise \u2014 the move is hollow.",
+    w:"That divergence between price and OBV is one of the more reliable early warnings that a rally is losing its base." },
+
+  { g:"Ownership", t:"FII and DII",
+    s:"Foreign and domestic institutional investors \u2014 the large professional funds.",
+    e:"FIIs are overseas funds; DIIs are Indian mutual funds, insurers and pension funds.",
+    w:"They move markets by size alone, and they research before buying. A meaningful institutional stake means the company has passed outside scrutiny \u2014 though institutions are wrong regularly, and the data is quarterly, so it lags." },
+  { g:"Ownership", t:"Promoter holding",
+    s:"The stake held by the founding family or parent group.",
+    e:"Promoters holding 55% means more than half the company is owned by the people running it.",
+    w:"High and stable promoter holding means their wealth rises and falls with yours. A stake falling across consecutive quarters deserves attention \u2014 the people who know the business best are stepping back." },
+  { g:"Ownership", t:"Shareholding pattern",
+    s:"The quarterly filing showing exactly who owns the company.",
+    e:"Promoters 55%, institutions 27%, public 18% \u2014 filed with the exchanges every quarter.",
+    w:"It's the only regular window into who is buying and selling in size. Because it's quarterly, it can be up to three months old \u2014 useful for direction, not for timing." },
+];
+
+function vocabInit(){
+  const groups = [...new Set(VOCAB.map(v=>v.g))];
+  $("vgroups").innerHTML = `<button class="vg active" data-g="all">All</button>` +
+    groups.map(g=>`<button class="vg" data-g="${esc(g)}">${esc(g)}</button>`).join("");
+  document.querySelectorAll(".vg").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll(".vg").forEach(x=>x.classList.toggle("active", x===b));
+    vocabRender(b.dataset.g, $("vsearch").value);
+  }));
+  $("vsearch").addEventListener("input", ()=>{
+    const active = document.querySelector(".vg.active");
+    vocabRender(active ? active.dataset.g : "all", $("vsearch").value);
+  });
+  vocabRender("all","");
+}
+
+function vocabRender(group, query){
+  const q = (query||"").trim().toLowerCase();
+  const list = VOCAB.filter(v =>
+    (group==="all" || v.g===group) &&
+    (!q || v.t.toLowerCase().includes(q) || (v.full||"").toLowerCase().includes(q)
+        || v.s.toLowerCase().includes(q)));
+  if(!list.length){
+    $("vcards").innerHTML = `<div class="ideas-note" style="padding:20px 0">No term matches that. Try "ROCE", "debt", or "volume".</div>`;
+    return;
+  }
+  $("vcards").innerHTML = list.map(v=>`
+    <div class="vcard">
+      <div class="vtop"><span class="vt">${esc(v.t)}</span>${v.full?`<span class="vfull">${esc(v.full)}</span>`:""}
+        <span class="vgroup">${esc(v.g)}</span></div>
+      <p class="vs">${esc(v.s)}</p>
+      <div class="vex"><span class="k">Example</span><p>${esc(v.e)}</p></div>
+      <div class="vwhy"><span class="k">Why it matters</span><p>${esc(v.w)}</p></div>
+    </div>`).join("");
+}
+
+/* -- Beginner / Analyst mode -- */
+let viewMode = "simple";
+
+function applyMode(){
+  const simple = viewMode === "simple";
+  $("plainwrap").style.display = simple ? "block" : "none";
+  ["setupwrap","volwrap","shwrap"].forEach(id=>{
+    const el = $(id);
+    if(el && el.style.display !== "none") el.dataset.shown = "1";
+    if(el) el.style.display = simple ? "none" : (el.dataset.shown === "1" ? "block" : "none");
+  });
+  document.querySelectorAll("#view-screener .sched, #tledger, #fblock").forEach(el=>{
+    el.style.display = simple ? "none" : "";
+  });
+  document.querySelectorAll("#view-screener .lh, #view-screener .lsub").forEach(el=>{
+    el.style.display = simple ? "none" : "";
+  });
+  $("mode-simple").classList.toggle("active", simple);
+  $("mode-full").classList.toggle("active", !simple);
+  $("modenote").textContent = simple ? "Plain English, key points only" : "Every check, every formula";
+}
+
+function setMode(m){ viewMode = m; applyMode(); }
+
+function renderPlain(p){
+  if(!p){ $("plainwrap").style.display="none"; return; }
+  $("plainv").textContent = p.verdict || "";
+  $("plaingood").innerHTML = (p.good||[]).map(x=>`<li>${esc(x.text)}</li>`).join("")
+    || `<li style="color:var(--mute)">Nothing scored strongly here.</li>`;
+  $("plainbad").innerHTML = (p.bad||[]).map(x=>`<li>${esc(x.text)}</li>`).join("")
+    || `<li style="color:var(--mute)">No significant weaknesses flagged.</li>`;
+}
+
+vocabInit();
 pfInit();
+$("mode-simple").addEventListener("click",()=>setMode("simple"));
+$("mode-full").addEventListener("click",()=>setMode("full"));
+$("showfull").addEventListener("click",()=>{
+  setMode("full");
+  $("tledger").scrollIntoView({behavior:"smooth", block:"start"});
+});
 TABS.forEach(t=>$("tab-"+t).addEventListener("click",()=>switchTab(t)));
 $("rgo").addEventListener("click",()=>getResults());
 $("rtk").addEventListener("keydown",e=>{ if(e.key==="Enter") getResults(); });
