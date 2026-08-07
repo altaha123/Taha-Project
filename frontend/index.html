@@ -147,10 +147,6 @@
     padding:11px 22px;cursor:pointer}
   .wabtn:hover{background:var(--ink);color:var(--paper)}
   .wabtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .pfsoon{max-width:560px;margin:56px auto;text-align:center;border:1px solid var(--rule);
-    padding:44px 34px;background:#fff}
-  .pfsoon h4{font-family:var(--serif);font-size:29px;margin:6px 0 14px}
-  .pfsoon p{font-size:14.5px;line-height:1.75;color:var(--ink-2)}
   .brandsw{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:18px}
   .bsw{background:none;border:none;font-family:var(--mono);font-size:12px;letter-spacing:.26em;
     text-transform:uppercase;color:var(--mute);cursor:pointer;padding:4px 2px;
@@ -189,6 +185,48 @@
   .pbt{font-weight:500;font-size:16px}
   .pba{font-family:var(--mono);font-size:11.5px;color:var(--gold-dp);display:block;margin-top:4px;letter-spacing:.04em}
   .pbd{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:9px}
+  .pfinrow{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 18px}
+  .pfbtn{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:2px;
+    font-family:var(--sans);font-weight:500;font-size:13px;padding:9px 16px;cursor:pointer;
+    text-decoration:none;display:inline-block}
+  .pfbtn:hover{background:var(--ink);color:var(--paper)}
+  .pfhead{display:grid;grid-template-columns:1.4fr .7fr 1fr 36px;gap:10px;
+    font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--mute);padding:0 2px 8px;border-bottom:1px solid var(--ink)}
+  .pfhead i{font-style:normal;text-transform:none;letter-spacing:.03em}
+  .pfrow{display:grid;grid-template-columns:1.4fr .7fr 1fr 36px;gap:10px;
+    padding:8px 0;border-bottom:1px solid var(--rule-2);align-items:center}
+  .pfrow input{width:100%;background:#fff;border:1px solid var(--rule);border-radius:2px;
+    color:var(--ink);font-family:var(--mono);font-size:13.5px;padding:9px 10px}
+  .pfrow input:focus{outline:none;border-color:var(--gold)}
+  .pfdel{background:none;border:none;color:var(--fail);font-size:16px;cursor:pointer;padding:4px}
+  .pff{padding:12px 0 12px 17px;border-bottom:1px solid var(--rule-2);position:relative;
+    font-size:14px;line-height:1.65;color:var(--ink-2)}
+  .pff:before{content:"";position:absolute;left:0;top:21px;width:7px;height:7px;border-radius:50%}
+  .pff.flag:before{background:var(--fail)} .pff.good:before{background:var(--pass)}
+  .pff.note:before{background:var(--part)}
+  .pfsec{display:grid;grid-template-columns:150px 1fr 74px;gap:12px;align-items:center;
+    padding:9px 0;border-bottom:1px solid var(--rule-2)}
+  .pfsec .lb{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pfsec .tr{height:15px;background:var(--paper-2);position:relative}
+  .pfsec .tr i{position:absolute;inset:0 auto 0 0;background:var(--gold);opacity:.75}
+  .pfsec.over .tr i{background:var(--fail)}
+  .pfsec .vl{font-family:var(--mono);font-size:11.5px;text-align:right}
+  .pfh summary{display:grid;grid-template-columns:1.5fr .8fr .8fr 1.3fr .6fr;gap:10px;
+    align-items:center;padding:13px 10px;cursor:pointer;list-style:none;font-size:14px}
+  .pfh summary::-webkit-details-marker{display:none}
+  .pfh{border-bottom:1px solid var(--rule-2)}
+  .pfh:nth-child(even){background:rgba(244,241,235,.5)}
+  .pfh .sym{font-weight:500}.pfh .sym small{display:block;font-family:var(--mono);font-size:9px;
+    color:var(--mute);letter-spacing:.08em;margin-top:3px;text-transform:uppercase}
+  .pfh .m{font-family:var(--mono);font-size:11.5px;color:var(--mute)}
+  .pfh .comp{font-family:var(--serif);font-size:22px;text-align:right}
+  .pfh .setup{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dp)}
+  .pfh .body{padding:4px 12px 16px}
+  .pfpeer{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+  .pfpeer b{color:var(--gold-dp);font-weight:500}
+  @media(max-width:640px){.pfh summary{grid-template-columns:1.4fr .9fr .6fr}
+    .pfh .m:nth-child(3),.pfh .setup{display:none}}
   .brun{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:6px 0 4px}
   #genbtn{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:2px;
     font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.03em;
@@ -497,11 +535,46 @@
   </div><!-- /view-results -->
 
   <div id="view-portfolio" style="display:none">
-    <div class="pfsoon">
-      <span class="sk">In development</span>
-      <h4>Portfolio Score</h4>
-      <p>Upload your holdings and get every stock scored through the full Altaha engine — setup archetypes, sector concentration, and checks against the classic value and growth frameworks. Same rule as everywhere else on this site: every number will show its working.</p>
+    <p class="ideas-intro">Every holding through the full Altaha engine, then the portfolio as a whole: weights, sector mix, weighted score, and findings with the arithmetic shown. Holdings are analysed on request and never stored.</p>
+
+    <div class="psec">
+      <div class="lh"><h3>Your holdings</h3><span>Max 20 per analysis</span></div>
+      <div class="pfinrow">
+        <button class="pfbtn" id="pf_addrow">+ Add a stock</button>
+        <label class="pfbtn pfup">Upload CSV<input type="file" id="pf_file" accept=".csv,text/csv" hidden></label>
+        <a class="pfbtn" id="pf_tmpl" download="altaha-portfolio-template.csv">Download template</a>
+      </div>
+      <div class="pfhead"><span>Symbol</span><span>Qty</span><span>Buy price <i>(optional)</i></span><span></span></div>
+      <div id="pf_rows"></div>
+      <div class="brun" style="margin-top:18px">
+        <button id="pf_go">Analyse portfolio</button>
+        <span class="brun-note" id="pf_note"></span>
+      </div>
+      <div class="state" id="pf_state"></div>
     </div>
+
+    <section id="pf_report" style="display:none">
+      <div class="psec">
+        <div class="lh"><h3>Portfolio Verdict</h3><span id="pf_peersrc"></span></div>
+        <div class="pvhead">
+          <div class="pvbig"><span class="k">Current value</span><span class="pvnum" id="pf_val">—</span><span class="pvsub" id="pf_pnl"></span></div>
+          <div class="pvgrade"><span class="k">Weighted score</span><span class="pvletter" id="pf_grade">—</span><span class="pvsub" id="pf_wscore" style="text-align:right"></span></div>
+        </div>
+        <div id="pf_findings"></div>
+      </div>
+
+      <div class="psec">
+        <div class="lh"><h3>Sector mix</h3><span>By current value</span></div>
+        <div id="pf_sectors"></div>
+      </div>
+
+      <div class="psec">
+        <div class="lh"><h3>Holdings ledger</h3><span>Tap a row for peers</span></div>
+        <div id="pf_holdings"></div>
+        <div class="ideas-note" id="pf_failed"></div>
+      </div>
+      <p class="disc" id="pf_disc"></p>
+    </section>
   </div><!-- /view-portfolio -->
 
 <div id="view-planner" style="display:none">
@@ -581,7 +654,7 @@
 
 <script>
 /* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
-const API_BASE = "https://taha-project.onrender.com";
+const API_BASE = "http://localhost:8000";
 /* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
@@ -1151,6 +1224,144 @@ $("bsw-screener").addEventListener("click",()=>switchBrand("screener"));
 $("bsw-planner").addEventListener("click",()=>switchBrand("planner"));
 plannerInit();
 
+/* ── Portfolio ──────────────────────────────────────────────────────── */
+function pfAddRow(sym, qty, buy){
+  const row = document.createElement("div");
+  row.className = "pfrow";
+  row.innerHTML = `
+    <input class="pf_sym" placeholder="RELIANCE" value="${sym?esc(sym):""}" spellcheck="false">
+    <input class="pf_qty" type="number" min="0" placeholder="10" value="${qty??""}">
+    <input class="pf_buy" type="number" min="0" placeholder="2400" value="${buy??""}">
+    <button class="pfdel" title="Remove" aria-label="Remove row">\u2715</button>`;
+  row.querySelector(".pfdel").addEventListener("click", ()=>row.remove());
+  $("pf_rows").appendChild(row);
+}
+
+function pfInit(){
+  for(let i=0;i<3;i++) pfAddRow();
+  $("pf_addrow").addEventListener("click", ()=>pfAddRow());
+  $("pf_go").addEventListener("click", pfAnalyse);
+  $("pf_tmpl").href = "data:text/csv;charset=utf-8," + encodeURIComponent(
+    "Symbol,Quantity,BuyPrice\nRELIANCE,10,2450\nTCS,5,3900\nHDFCBANK,15,\n");
+  $("pf_file").addEventListener("change", pfReadCSV);
+}
+
+function pfReadCSV(ev){
+  const f = ev.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const lines = String(reader.result).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+    const rows = [];
+    for(const line of lines){
+      const parts = line.split(",").map(p=>p.trim());
+      if(!parts[0] || /^symbol$/i.test(parts[0])) continue;   // header / blank
+      const qty = Number(parts[1]);
+      if(!isFinite(qty) || qty <= 0) continue;
+      const buy = parts[2] !== undefined && parts[2] !== "" ? Number(parts[2]) : null;
+      rows.push([parts[0].toUpperCase(), qty, (buy!==null && isFinite(buy)) ? buy : null]);
+    }
+    if(!rows.length){
+      $("pf_note").textContent = "No valid rows found — expected Symbol,Quantity,BuyPrice";
+      return;
+    }
+    $("pf_rows").innerHTML = "";
+    rows.slice(0,20).forEach(([s,q,b])=>pfAddRow(s,q,b));
+    $("pf_note").textContent = rows.length > 20
+      ? `Loaded first 20 of ${rows.length} rows (limit per analysis)` : `Loaded ${rows.length} holdings`;
+  };
+  reader.readAsText(f);
+  ev.target.value = "";
+}
+
+function pfCollect(){
+  const out = [];
+  document.querySelectorAll(".pfrow").forEach(r=>{
+    const sym = r.querySelector(".pf_sym").value.trim().toUpperCase();
+    const qty = Number(r.querySelector(".pf_qty").value);
+    const buyRaw = r.querySelector(".pf_buy").value;
+    if(sym && isFinite(qty) && qty > 0)
+      out.push({symbol:sym, qty:qty, buy_price: buyRaw==="" ? null : Number(buyRaw)});
+  });
+  return out;
+}
+
+async function pfAnalyse(){
+  const holdings = pfCollect();
+  if(!holdings.length){ $("pf_note").textContent = "Add at least one holding with a quantity"; return; }
+  $("pf_note").textContent = "";
+  $("pf_report").style.display = "none";
+  $("pf_state").style.display = "block";
+  $("pf_state").innerHTML = `Analysing ${holdings.length} holding${holdings.length>1?"s":""} through the full engine\u2026 roughly ${Math.ceil(holdings.length*4/60)||1} minute${holdings.length>8?"s":""}. Keep this tab open.`;
+  $("pf_go").disabled = true;
+  try{
+    const res = await fetch(`${API_BASE}/portfolio`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({holdings})
+    });
+    const d = await res.json();
+    if(!res.ok){ $("pf_state").innerHTML = esc(d.detail || "Analysis failed."); return; }
+    pfRender(d);
+  }catch(e){
+    $("pf_state").innerHTML = "Couldn\u2019t reach the engine \u2014 it may be waking from sleep. Try again in ~30 seconds.";
+  }finally{
+    $("pf_go").disabled = false;
+  }
+}
+
+function pfRender(d){
+  $("pf_state").style.display = "none";
+  $("pf_report").style.display = "block";
+  $("pf_val").textContent = inr(d.total_value);
+  $("pf_pnl").textContent = d.total_pnl===null || d.total_pnl===undefined
+    ? "Buy prices not provided \u2014 P&L omitted"
+    : `${d.total_pnl>=0?"+":"\u2212"}${inr(Math.abs(d.total_pnl))} (${d.total_pnl_pct>=0?"+":""}${d.total_pnl_pct}%) vs cost ${inr(d.total_cost)}`;
+  $("pf_pnl").style.color = d.total_pnl===null||d.total_pnl===undefined ? "var(--mute)"
+    : d.total_pnl>=0 ? "var(--pass)" : "var(--fail)";
+  $("pf_grade").textContent = d.grade;
+  $("pf_grade").style.color = ["A","B+"].includes(d.grade) ? "var(--pass)"
+    : ["B","C"].includes(d.grade) ? "var(--part)" : d.grade==="D" ? "var(--fail)" : "var(--mute)";
+  $("pf_wscore").textContent = d.weighted_score!==null ? `${d.weighted_score}/100, value-weighted` : "";
+  $("pf_peersrc").textContent = d.peer_source ? `Peers from scan of ${d.peer_source}` : "";
+
+  $("pf_findings").innerHTML = (d.findings||[]).map(f=>
+    `<div class="pff ${f.level}">${esc(f.text)}</div>`).join("");
+
+  const maxW = Math.max(...(d.sectors||[]).map(s=>s.weight_pct), 1);
+  $("pf_sectors").innerHTML = (d.sectors||[]).map(s=>`
+    <div class="pfsec${s.weight_pct>=40?" over":""}">
+      <span class="lb">${esc(s.sector)} \u00B7 ${s.count}</span>
+      <span class="tr"><i style="width:${100*s.weight_pct/maxW}%"></i></span>
+      <span class="vl">${s.weight_pct}%</span>
+    </div>`).join("");
+
+  $("pf_holdings").innerHTML = (d.holdings||[]).map(r=>{
+    const compCol = (r.composite??0)>=72 ? "var(--pass)" : (r.composite??100)<40 ? "var(--fail)" : "var(--ink)";
+    const pnl = r.pnl_pct===null||r.pnl_pct===undefined ? "" :
+      `<span style="color:${r.pnl_pct>=0?"var(--pass)":"var(--fail)"}">${r.pnl_pct>=0?"+":""}${r.pnl_pct}%</span>`;
+    const peers = (r.peers&&r.peers.length)
+      ? `<div class="pfpeer">Sector peers by score: ${r.peers.map(p=>`<span><b>${esc(p.symbol)}</b> ${p.composite??"\u2014"}${p.setup?` \u00B7 ${esc(p.setup)}`:""}</span>`).join("")}</div>`
+      : `<div class="pfpeer">${esc(d.peers_note || "No same-sector peers in the last scan.")}</div>`;
+    return `<details class="pfh"><summary>
+      <span class="sym">${esc(r.symbol)}<small>${esc(r.sector||"sector n/a")} \u00B7 ${r.weight_pct}% of book</small></span>
+      <span class="m">${r.qty} \u00D7 \u20B9${Number(r.price).toLocaleString("en-IN")}</span>
+      <span class="m">${pnl}</span>
+      <span class="setup">${esc(r.setup||"\u2014")}</span>
+      <span class="comp" style="color:${compCol}">${r.composite??"\u2014"}</span>
+    </summary><div class="body">
+      <div class="pfpeer" style="margin-bottom:10px">Technical ${r.technical??"\u2014"} \u00B7 Fundamental ${r.fundamental??"\u2014"} \u00B7 Fit ${r.setup_fit??"\u2014"}${r.horizon&&r.horizon!=="\u2014"?` \u00B7 typical hold ${esc(r.horizon)}`:""} \u2014 full ledger in the Screener tab</div>
+      ${peers}
+    </div></details>`;
+  }).join("");
+
+  $("pf_failed").textContent = (d.failed&&d.failed.length)
+    ? "Couldn\u2019t analyse: " + d.failed.map(f=>`${f.symbol} (${f.error})`).join(", ")
+    : "";
+  $("pf_disc").textContent = d.disclaimer || "";
+  $("pf_report").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+pfInit();
 TABS.forEach(t=>$("tab-"+t).addEventListener("click",()=>switchTab(t)));
 $("rgo").addEventListener("click",()=>getResults());
 $("rtk").addEventListener("keydown",e=>{ if(e.key==="Enter") getResults(); });
