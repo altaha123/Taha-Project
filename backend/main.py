@@ -19,6 +19,7 @@ from results import quarterly_results
 from portfolio import build_report, MAX_HOLDINGS, WORKERS as PF_WORKERS
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import archetypes as A
+from plain import highlights, plain_verdict
 
 app = FastAPI(title="Altaha Screener API", version="2.1")
 
@@ -335,6 +336,11 @@ def analyze(ticker: str):
         setup = A.evaluate(tech, fund)
     except Exception:
         setup = None
+    try:
+        plain = {"verdict": plain_verdict(tech, fund, verdict, setup),
+                 **highlights(tech, fund)}
+    except Exception:
+        plain = None
     currency = info.get("currency") or ("INR" if sym.endswith((".NS", ".BO")) else "USD")
 
     return to_native({
@@ -347,6 +353,7 @@ def analyze(ticker: str):
         "volume_series": tech["volume_series"],
         "shareholding": holding,
         "setup": setup,
+        "plain": plain,
         "verdict": verdict,
         "technical": {"score": tech["score"], "checks": tech["checks"]},
         "fundamental": {"score": fund["score"], "f_score": fund["f_score"],
