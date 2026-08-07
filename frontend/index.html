@@ -3,8 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Altaha Screener — Where Logic Meets Validations</title>
-<meta name="description" content="Type any Indian or US stock. Get an auditable technical and fundamental score where every number shows its formula." />
+<title>Free NSE Stock Screener &amp; Analysis Tool — Altaha</title>
+<meta name="description" content="Free stock screener for NSE and US markets. Type any stock for a 0-100 technical and fundamental score with every calculation shown. Built by a Chartered Accountant. No signup." />
+<meta name="keywords" content="stock screener India, NSE stock analysis, free stock screener, Piotroski score India, fundamental analysis tool, technical analysis NSE" />
+<link rel="canonical" href="https://taha-project-one.vercel.app/" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Altaha Screener — Free NSE Stock Analysis" />
+<meta property="og:description" content="Type any stock. Get a 0-100 score built from technical and fundamental checks, with every calculation shown. Built by a Chartered Accountant. Free, no signup." />
+<meta property="og:site_name" content="Altaha Screener" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Altaha Screener — Free NSE Stock Analysis" />
+<meta name="twitter:description" content="A 0-100 score for any Indian or US stock, with every calculation shown. Built by a Chartered Accountant." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
@@ -147,6 +156,14 @@
     padding:11px 22px;cursor:pointer}
   .wabtn:hover{background:var(--ink);color:var(--paper)}
   .wabtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .pitch{max-width:620px;margin:26px auto 0;text-align:center;font-size:16px;line-height:1.7;
+    color:var(--ink-2)}
+  .pitch b{font-weight:600;color:var(--ink)}
+  .badges{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .badge{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-2);border:1px solid var(--rule);background:#fff;padding:7px 13px;border-radius:2px}
+  .badge:first-child{border-color:var(--gold);color:var(--gold-dp);background:var(--paper-2)}
+  @media(max-width:520px){.badge{font-size:9px;letter-spacing:.1em;padding:6px 10px}}
   .brandsw{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:18px}
   .bsw{background:none;border:none;font-family:var(--mono);font-size:12px;letter-spacing:.26em;
     text-transform:uppercase;color:var(--mute);cursor:pointer;padding:4px 2px;
@@ -383,6 +400,12 @@
     <button class="bsw" id="bsw-planner" role="tab" aria-selected="false">Planner</button>
   </div>
   <div class="metal"></div>
+  <p class="pitch">Type any Indian or US stock and get a <b>0&ndash;100 score</b> built from technical and fundamental checks &mdash; with every single calculation shown, so you can see exactly why.</p>
+  <div class="badges">
+    <span class="badge">Free &middot; No signup</span>
+    <span class="badge">Built by a Chartered Accountant</span>
+    <span class="badge">For investors &amp; traders</span>
+  </div>
 </header>
 
 <main class="wrap">
@@ -654,7 +677,7 @@
 
 <script>
 /* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
-const API_BASE = "https://taha-project.onrender.com";
+const API_BASE = "http://localhost:8000";
 /* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
@@ -1223,6 +1246,17 @@ function switchBrand(which){
 $("bsw-screener").addEventListener("click",()=>switchBrand("screener"));
 $("bsw-planner").addEventListener("click",()=>switchBrand("planner"));
 plannerInit();
+
+/* First impression: show a worked example instead of an empty page.
+   Uses the top-ranked stock from the last scan when available. */
+(async function demoOnArrival(){
+  let sym = "RELIANCE";
+  try{
+    const d = await (await fetch(`${API_BASE}/leaderboard?limit=1`)).json();
+    if(d.available && d.rankings && d.rankings.length) sym = d.rankings[0].symbol;
+  }catch(e){}
+  try{ await analyse(sym); }catch(e){}
+})();
 
 /* ── Portfolio ──────────────────────────────────────────────────────── */
 function pfAddRow(sym, qty, buy){
