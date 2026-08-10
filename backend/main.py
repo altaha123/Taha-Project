@@ -196,6 +196,7 @@ def datasource():
     return {"price_source": "dhan" if st["ok"] else "yahoo (dhan unavailable)",
             "dhan_configured": True, "dhan_ok": st["ok"], "detail": st["detail"],
             "instruments_mapped": len(scrip or {}),
+            "scrip_error": getattr(dhan, "_scrip", {}).get("error"),
             "token": dhan.token_info()}
 
 
