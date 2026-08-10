@@ -51,18 +51,31 @@ def format_alert(a: dict) -> str:
     return "\n".join(lines)
 
 
-def send_telegram(text: str) -> bool:
-    if not (TG_TOKEN and TG_CHAT):
-        return False
+def send_telegram(text: str):
+    """Returns (ok, detail). Detail carries Telegram's own error message."""
+    if not TG_TOKEN:
+        return False, "TELEGRAM_BOT_TOKEN not set on the server"
+    if not TG_CHAT:
+        return False, "TELEGRAM_CHAT_ID not set on the server"
+    url = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
+    payload = {"chat_id": TG_CHAT, "text": text, "disable_web_page_preview": True}
     try:
-        r = requests.post(
-            f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
-            json={"chat_id": TG_CHAT, "text": text, "parse_mode": "Markdown",
-                  "disable_web_page_preview": True},
-            timeout=12)
-        return r.status_code == 200
-    except Exception:
-        return False
+        # First attempt with Markdown; Telegram rejects unbalanced * or _
+        r = requests.post(url, json=dict(payload, parse_mode="Markdown"), timeout=12)
+        if r.status_code == 200:
+            return True, "sent"
+        # Retry as plain text — formatting is not worth losing the alert over
+        r2 = requests.post(url, json=payload, timeout=12)
+        if r2.status_code == 200:
+            return True, "sent (plain text — Markdown was rejected)"
+        try:
+            d = r2.json()
+            detail = f"HTTP {r2.status_code}: {d.get('description') or r2.text[:160]}"
+        except Exception:
+            detail = f"HTTP {r2.status_code}: {r2.text[:160]}"
+        return False, detail
+    except Exception as e:
+        return False, f"network error: {str(e)[:160]}"
 
 
 def send_whatsapp(a: dict) -> bool:
@@ -103,7 +116,7 @@ def send_whatsapp(a: dict) -> bool:
 
 
 def send_alert(a: dict) -> bool:
-    ok = send_telegram(format_alert(a))
+    ok, _ = send_telegram(format_alert(a))
     if WA_TOKEN:
         send_whatsapp(a)
     return ok
@@ -116,6 +129,10 @@ def test() -> dict:
               "price": 1000.0, "entry": 1000.0, "stop": 975.0, "target": 1050.0,
               "rr": 2.0, "risk_pct": 2.5, "rvol": 3.2,
               "why": "This is a test alert from Altaha Screener."}
+    ok, detail = send_telegram(format_alert(sample))
     return {"telegram_configured": bool(TG_TOKEN and TG_CHAT),
             "whatsapp_configured": bool(WA_TOKEN and WA_PHONE_ID and WA_TO),
-            "sent": send_alert(sample)}
+            "token_shape": (f"{TG_TOKEN.split(':')[0]}:***" if ":" in TG_TOKEN
+                            else ("MALFORMED — no colon in token" if TG_TOKEN else "missing")),
+            "chat_id": TG_CHAT or "missing",
+            "sent": ok, "detail": detail}
