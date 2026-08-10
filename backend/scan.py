@@ -30,6 +30,8 @@ import requests
 import gc
 
 import yfinance as yf
+from levels import compute_levels
+from tradeplan import compact_plan
 
 try:
     import dhan_source as dhan
@@ -246,7 +248,13 @@ def deep_score(cand):
         setup = A.evaluate(tech, fund)
     except Exception:
         setup = None
+    try:
+        clean = df.dropna(subset=["Close"])
+        plan = compact_plan(clean, compute_levels(clean))
+    except Exception:
+        plan = None
     return {
+        "plan": plan,
         "symbol": s, "ticker": f"{s}.NS",
         "name": info.get("longName") or info.get("shortName") or s,
         "price": tech["price"],
