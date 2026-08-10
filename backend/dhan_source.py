@@ -17,6 +17,8 @@ reports it and every fetch returns None so the caller degrades to Yahoo
 rather than erroring.
 """
 
+import csv
+import gc
 import io
 import os
 import time
@@ -120,44 +122,56 @@ def _pick(cols, *names):
 
 
 def load_scrip(force=False) -> dict:
-    """Return {SYMBOL: securityId} for NSE equity. Cached in memory."""
+    """
+    Return {SYMBOL: securityId} for NSE equity.
+
+    Streamed line-by-line and parsed with the csv module rather than pandas:
+    the master file carries ~150k rows across all segments, and loading it into
+    a DataFrame peaked at over 130 MB, which is fatal on a 512 MB instance.
+    Streaming keeps this under a megabyte.
+    """
     if not force and _scrip["map"] is not None and (time.time() - _scrip["at"]) < SCRIP_TTL:
         return _scrip["map"]
 
     for url in SCRIP_URLS:
         try:
-            r = requests.get(url, timeout=30)
-            if r.status_code != 200 or len(r.text) < 1000:
-                continue
-            df = pd.read_csv(io.StringIO(r.text), low_memory=False)
-            cols = df.columns
-
-            c_seg = _pick(cols, "exch_id", "sem_exm_exch_id", "exchange_segment", "segment")
-            c_sym = _pick(cols, "underlying_symbol", "sem_trading_symbol", "trading_symbol",
-                          "sm_symbol_name", "symbol_name", "sem_custom_symbol")
-            c_sid = _pick(cols, "security_id", "sem_smst_security_id", "securityid")
-            c_inst = _pick(cols, "instrument", "sem_instrument_name", "instrument_type")
-            if not (c_sym and c_sid):
-                continue
-
-            d = df
-            if c_seg:
-                d = d[d[c_seg].astype(str).str.upper().str.strip().isin(["NSE", "NSE_EQ", "E"])]
-            if c_inst:
-                d = d[d[c_inst].astype(str).str.upper().str.contains("EQUITY", na=False)]
-
-            m = {}
-            for _, row in d.iterrows():
-                try:
-                    sym = str(row[c_sym]).strip().upper()
-                    sid = str(int(float(row[c_sid])))
-                    if sym and sym not in m:
-                        m[sym] = sid
-                except Exception:
+            with requests.get(url, timeout=45, stream=True) as r:
+                if r.status_code != 200:
                     continue
+                lines = r.iter_lines(decode_unicode=True)
+                reader = csv.reader(l for l in lines if l)
+                header = [h.strip().lower() for h in next(reader)]
+
+                def col(*names):
+                    for n in names:
+                        if n in header:
+                            return header.index(n)
+                    return None
+
+                i_seg = col("exch_id", "sem_exm_exch_id", "exchange_segment", "segment")
+                i_sym = col("underlying_symbol", "sem_trading_symbol", "trading_symbol",
+                            "sm_symbol_name", "symbol_name", "sem_custom_symbol")
+                i_sid = col("security_id", "sem_smst_security_id", "securityid")
+                i_ins = col("instrument", "sem_instrument_name", "instrument_type")
+                if i_sym is None or i_sid is None:
+                    continue
+
+                m = {}
+                for row in reader:
+                    try:
+                        if i_seg is not None and row[i_seg].strip().upper() not in ("NSE", "NSE_EQ", "E"):
+                            continue
+                        if i_ins is not None and "EQUITY" not in row[i_ins].strip().upper():
+                            continue
+                        sym = row[i_sym].strip().upper()
+                        if sym and sym not in m:
+                            m[sym] = str(int(float(row[i_sid])))
+                    except (IndexError, ValueError):
+                        continue
 
             if len(m) > 500:
                 _scrip.update({"map": m, "at": time.time(), "error": None})
+                gc.collect()
                 return m
         except Exception as e:
             _scrip["error"] = str(e)[:160]
@@ -325,6 +339,145 @@ def intraday_ohlcv(symbol: str, interval: str = "5", days: int = 5):
         return df.dropna(subset=["Close"])
     except Exception:
         return None
+
+
+# ---------------------------------------------------------------------------
+# Bulk quotes — up to 1000 instruments per request (rate limit 1/second)
+# ---------------------------------------------------------------------------
+
+BULK_MAX = 900          # stay under the documented 1000 ceiling
+QUOTE_GAP = 1.15        # seconds between quote calls (limit is 1/sec)
+_last_quote = {"at": 0.0}
+
+
+def _throttle_quote():
+    wait = QUOTE_GAP - (time.time() - _last_quote["at"])
+    if wait > 0:
+        time.sleep(wait)
+    _last_quote["at"] = time.time()
+
+
+def _quote_call(path: str, ids: list) -> dict:
+    """POST a batch of security IDs to a marketfeed endpoint."""
+    _throttle_quote()
+    body = {"NSE_EQ": [int(i) for i in ids]}
+    try:
+        r = requests.post(f"{BASE}/marketfeed/{path}", json=body, headers=_headers(), timeout=25)
+        if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
+            _throttle_quote()
+            r = requests.post(f"{BASE}/marketfeed/{path}", json=body, headers=_headers(), timeout=25)
+        if r.status_code != 200:
+            return {}
+        payload = r.json() or {}
+    except Exception:
+        return {}
+    data = payload.get("data") or payload
+    seg = data.get("NSE_EQ") if isinstance(data, dict) else None
+    return seg or {}
+
+
+def bulk_quotes(symbols: list, mode: str = "ohlc") -> dict:
+    """
+    Snapshot for many symbols at once. mode: 'ltp' | 'ohlc' | 'quote'.
+    Returns {SYMBOL: {...}} — the single biggest efficiency win Dhan offers,
+    since 2000 stocks cost 3 requests instead of 2000.
+    """
+    if not configured():
+        return {}
+    scrip = load_scrip()
+    pairs = [(s, scrip.get(s.upper().replace(".NS", ""))) for s in symbols]
+    pairs = [(s, sid) for s, sid in pairs if sid]
+    if not pairs:
+        return {}
+    by_id = {str(sid): s for s, sid in pairs}
+
+    out = {}
+    ids = [sid for _, sid in pairs]
+    for i in range(0, len(ids), BULK_MAX):
+        chunk = ids[i:i + BULK_MAX]
+        seg = _quote_call(mode, chunk)
+        for sid, row in (seg or {}).items():
+            sym = by_id.get(str(sid))
+            if not sym or not isinstance(row, dict):
+                continue
+            ohlc = row.get("ohlc") or {}
+            out[sym] = {
+                "ltp": row.get("last_price") or row.get("ltp") or row.get("LTP"),
+                "open": ohlc.get("open") or row.get("open"),
+                "high": ohlc.get("high") or row.get("high"),
+                "low": ohlc.get("low") or row.get("low"),
+                "close": ohlc.get("close") or row.get("close"),
+                "volume": row.get("volume") or row.get("net_change_volume"),
+                "prev_close": ohlc.get("close"),
+            }
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Option chain
+# ---------------------------------------------------------------------------
+
+INDEX_UNDERLYING = {
+    "NIFTY":     {"scrip": 13, "seg": "IDX_I"},
+    "BANKNIFTY": {"scrip": 25, "seg": "IDX_I"},
+    "FINNIFTY":  {"scrip": 27, "seg": "IDX_I"},
+    "MIDCPNIFTY": {"scrip": 442, "seg": "IDX_I"},
+    "SENSEX":    {"scrip": 51, "seg": "IDX_I"},
+}
+
+
+def underlying_ref(symbol: str):
+    """Resolve an underlying to (scripId, segment) for option-chain calls."""
+    s = symbol.strip().upper().replace(".NS", "")
+    if s in INDEX_UNDERLYING:
+        ref = INDEX_UNDERLYING[s]
+        return ref["scrip"], ref["seg"]
+    sid = security_id(s)
+    return (int(sid), "NSE_EQ") if sid else (None, None)
+
+
+def expiry_list(symbol: str) -> list:
+    if not configured():
+        return []
+    scrip, seg = underlying_ref(symbol)
+    if not scrip:
+        return []
+    try:
+        _throttle_quote()
+        r = requests.post(f"{BASE}/optionchain/expirylist",
+                          json={"UnderlyingScrip": scrip, "UnderlyingSeg": seg},
+                          headers=_headers(), timeout=20)
+        if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
+            r = requests.post(f"{BASE}/optionchain/expirylist",
+                              json={"UnderlyingScrip": scrip, "UnderlyingSeg": seg},
+                              headers=_headers(), timeout=20)
+        if r.status_code != 200:
+            return []
+        d = r.json() or {}
+        return d.get("data") or []
+    except Exception:
+        return []
+
+
+def option_chain(symbol: str, expiry: str) -> dict:
+    """Full chain with OI, IV, Greeks and LTP across strikes."""
+    if not configured():
+        return {}
+    scrip, seg = underlying_ref(symbol)
+    if not scrip or not expiry:
+        return {}
+    body = {"UnderlyingScrip": scrip, "UnderlyingSeg": seg, "Expiry": expiry}
+    try:
+        _throttle_quote()
+        r = requests.post(f"{BASE}/optionchain", json=body, headers=_headers(), timeout=25)
+        if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
+            _throttle_quote()
+            r = requests.post(f"{BASE}/optionchain", json=body, headers=_headers(), timeout=25)
+        if r.status_code != 200:
+            return {}
+        return r.json() or {}
+    except Exception:
+        return {}
 
 
 # ---------------------------------------------------------------------------
