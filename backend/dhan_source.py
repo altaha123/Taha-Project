@@ -310,9 +310,59 @@ def daily_ohlcv(symbol: str, days: int = 400):
             "Volume": d.get("volume") or [0] * len(d["close"]),
         }, index=idx)
         df = df.dropna(subset=["Close"])
-        return df if len(df) >= 60 else None
+        if len(df) < 60:
+            return None
+        df = _append_today(symbol, df)
+        return df
     except Exception:
         return None
+
+
+IST_TZ = dt.timezone(dt.timedelta(hours=5, minutes=30))
+
+
+def _append_today(symbol, df):
+    """
+    Dhan's /charts/historical publishes the daily candle only after its
+    end-of-day processing, so on a trading day the last bar can still be
+    yesterday's even at 8 PM. That makes the screener look a day stale.
+
+    When the last bar predates today AND today is a weekday on which the
+    session has already opened, we build today's bar from the live quote
+    (open/high/low/LTP/volume) and append it. During market hours this bar
+    is the forming candle; after 15:30 it is effectively the close.
+    """
+    try:
+        now = dt.datetime.now(IST_TZ)
+        if now.weekday() >= 5:
+            return df
+        mins = now.hour * 60 + now.minute
+        if mins < 555:                       # before 09:15 — nothing to add
+            return df
+        last = df.index[-1]
+        try:
+            last_date = last.date()
+        except AttributeError:
+            return df
+        if last_date >= now.date():
+            return df
+
+        q = bulk_quotes([symbol], mode="ohlc").get(symbol.upper())
+        if not q:
+            return df
+        close = q.get("ltp") or q.get("close")
+        if not close:
+            return df
+        o = q.get("open") or close
+        h = q.get("high") or close
+        l = q.get("low") or close
+        v = q.get("volume") or 0
+        stamp = pd.Timestamp(now.date())
+        df.loc[stamp] = {"Open": float(o), "High": float(h), "Low": float(l),
+                         "Close": float(close), "Volume": float(v)}
+        return df
+    except Exception:
+        return df
 
 
 def intraday_ohlcv(symbol: str, interval: str = "5", days: int = 5):
