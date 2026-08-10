@@ -76,7 +76,47 @@ def _load_from_disk():
             pass
 
 
+def _autostart_intraday():
+    """
+    Render restarts the process on deploy, on idle wake-up, and sometimes for
+    no visible reason. A scanner that only starts when a human presses a button
+    silently stops alerting after the first restart, which is the worst kind of
+    failure: quiet. So it re-arms itself on boot.
+    """
+    if os.environ.get("INTRADAY_AUTOSTART", "").strip().lower() not in ("1", "true", "yes"):
+        return
+    try:
+        limit = int(os.environ.get("INTRADAY_WATCHLIST", "200"))
+    except ValueError:
+        limit = 200
+    try:
+        if dhan is not None and dhan.configured():
+            intraday.start(_default_watchlist(limit))
+    except Exception:
+        pass
+
+
 _load_from_disk()
+
+
+def _autostart_intraday():
+    """
+    Render restarts the process on deploy, on idle wake-up, and sometimes for
+    no visible reason. A scanner that only starts when a human presses a button
+    silently stops alerting after the first restart, which is the worst kind of
+    failure: quiet. So it re-arms itself on boot.
+    """
+    if os.environ.get("INTRADAY_AUTOSTART", "").strip().lower() not in ("1", "true", "yes"):
+        return
+    try:
+        limit = int(os.environ.get("INTRADAY_WATCHLIST", "200"))
+    except ValueError:
+        limit = 200
+    try:
+        if dhan is not None and dhan.configured():
+            intraday.start(_default_watchlist(limit))
+    except Exception:
+        pass
 
 
 def _worker():
@@ -744,3 +784,28 @@ def intraday_mark():
 @app.get("/alerts/test")
 def alerts_test():
     return notify.test()
+
+
+@app.get("/cron/tick")
+def cron_tick():
+    """
+    Keep-alive + self-heal endpoint. Point an external cron (cron-job.org,
+    UptimeRobot) at this every 5 minutes: it stops Render's free tier from
+    sleeping AND restarts the scanner thread if a restart killed it.
+    """
+    revived = False
+    if not intraday._state["running"]:
+        _autostart_intraday()
+        revived = intraday._state["running"]
+    fired = []
+    if intraday.market_open() and intraday._state["running"]:
+        try:
+            fired = intraday.scan_once()
+        except Exception:
+            pass
+    return {"awake": True, "scanner_running": intraday._state["running"],
+            "revived": revived, "market_open": intraday.market_open(),
+            "fired_now": len(fired)}
+
+
+_autostart_intraday()
