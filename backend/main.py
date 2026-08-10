@@ -11,6 +11,7 @@ import time
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
+import pandas as pd
 
 from engine import technical_score, fundamental_score, composite
 from data_source import resolve, fundamentals, shareholding, NotFound
@@ -368,6 +369,88 @@ def results(ticker: str):
                "message": "Quarterly statements could not be retrieved for this stock."}
     out["disclaimer"] = DISCLAIMER
     return to_native(out)
+
+
+RANGES = {
+    "1D":  {"mode": "intraday", "interval": "5",  "days": 3,   "label": "1 day"},
+    "1W":  {"mode": "intraday", "interval": "15", "days": 8,   "label": "1 week"},
+    "1M":  {"mode": "daily",    "sessions": 22,               "label": "1 month"},
+    "3M":  {"mode": "daily",    "sessions": 66,               "label": "3 months"},
+    "6M":  {"mode": "daily",    "sessions": 126,              "label": "6 months"},
+    "1Y":  {"mode": "daily",    "sessions": 252,              "label": "1 year"},
+}
+
+
+@app.get("/chart")
+def chart(ticker: str, range: str = "1M"):
+    """Candles for one symbol at a chosen timeframe, with overlays."""
+    from engine import ema, bollinger
+    key = (range or "1M").upper()
+    cfg = RANGES.get(key)
+    if not cfg:
+        raise HTTPException(400, f"range must be one of {', '.join(RANGES)}")
+
+    base = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    df, live = None, False
+
+    if cfg["mode"] == "intraday":
+        if dhan is None or not dhan.configured():
+            raise HTTPException(503, "Intraday charts need the Dhan data feed. "
+                                     "Longer timeframes are available without it.")
+        try:
+            df = dhan.intraday_ohlcv(base, interval=cfg["interval"], days=cfg["days"])
+        except Exception:
+            df = None
+        if df is None or len(df) < 5:
+            raise HTTPException(404, f"No intraday data available for {base}. "
+                                     "It may be a holiday, or the symbol may be unlisted.")
+        live = True
+        if key == "1D" and len(df):
+            last_day = df.index[-1].date() if hasattr(df.index[-1], "date") else None
+            if last_day is not None:
+                same = [i for i in df.index if i.date() == last_day]
+                if len(same) >= 5:
+                    df = df.loc[same]
+    else:
+        try:
+            sym, t, hist = resolve(base)
+        except NotFound:
+            raise HTTPException(404, f"Couldn't find '{base}'.")
+        except Exception:
+            raise HTTPException(503, "The data provider is busy. Try again in a minute.")
+        df = hist.tail(cfg["sessions"])
+
+    close = df["Close"]
+    e20, e50 = ema(close, 20), ema(close, 50)
+    _, bup, blo, _, _ = bollinger(close)
+
+    rows = []
+    for i in df.index:
+        try:
+            rows.append([
+                round(float(df.at[i, "Open"]), 2), round(float(df.at[i, "High"]), 2),
+                round(float(df.at[i, "Low"]), 2), round(float(df.at[i, "Close"]), 2),
+                None if pd.isna(e20.get(i)) else round(float(e20.get(i)), 2),
+                None if pd.isna(e50.get(i)) else round(float(e50.get(i)), 2),
+                None if pd.isna(bup.get(i)) else round(float(bup.get(i)), 2),
+                None if pd.isna(blo.get(i)) else round(float(blo.get(i)), 2),
+            ])
+        except Exception:
+            continue
+
+    if not rows:
+        raise HTTPException(500, "Chart data could not be assembled for this symbol.")
+
+    first, last = float(close.iloc[0]), float(close.iloc[-1])
+    return to_native({
+        "ticker": base, "range": key, "label": cfg["label"],
+        "live": live, "source": "dhan" if live else "daily feed",
+        "candles": rows,
+        "last": round(last, 2),
+        "change": round(last - first, 2),
+        "change_pct": round(100 * (last - first) / first, 2) if first else None,
+        "as_of": str(df.index[-1])[:19] if len(df) else None,
+    })
 
 
 @app.get("/analyze")
