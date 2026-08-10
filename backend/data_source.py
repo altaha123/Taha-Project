@@ -10,8 +10,14 @@ import time
 import pandas as pd
 import yfinance as yf
 
+try:
+    import dhan_source as dhan
+except Exception:      # module optional
+    dhan = None
+
 _CACHE = {}
 _TTL = 1800  # 30 minutes
+MAX_CACHE = 120        # bounded for a 512 MB instance
 
 
 def _cget(k):
@@ -22,8 +28,9 @@ def _cget(k):
 
 
 def _cput(k, v):
-    if len(_CACHE) > 500:
-        for old in list(_CACHE)[:150]:
+    if len(_CACHE) >= MAX_CACHE:
+        # drop the oldest third rather than growing without bound
+        for old in sorted(_CACHE, key=lambda x: _CACHE[x][0])[: MAX_CACHE // 3]:
             _CACHE.pop(old, None)
     _CACHE[k] = (time.time(), v)
 
@@ -33,9 +40,33 @@ class NotFound(Exception):
 
 
 def resolve(raw: str):
-    """Try symbol as given, then NSE (.NS), then BSE (.BO). Returns (sym, ticker, history)."""
+    """
+    Resolve a symbol to (sym, yfinance_ticker, price_history).
+
+    Price history comes from Dhan when a valid token is configured (faster,
+    live, no datacenter throttling); otherwise from Yahoo. The yfinance
+    Ticker object is always returned because fundamentals, shareholding and
+    quarterly results still come from Yahoo — Dhan does not publish them.
+    """
     raw = raw.strip().upper()
     candidates = [raw] if "." in raw else [raw, f"{raw}.NS", f"{raw}.BO"]
+
+    # Dhan first, for Indian equities only
+    if dhan is not None and dhan.configured():
+        base = raw.replace(".NS", "").replace(".BO", "")
+        if not raw.startswith("^"):
+            key = f"px::{base}.NS"
+            cached = _cget(key)
+            if cached is not None:
+                return f"{base}.NS", yf.Ticker(f"{base}.NS"), cached
+            try:
+                df = dhan.daily_ohlcv(base)
+            except Exception:
+                df = None
+            if df is not None and len(df) >= 60:
+                _cput(key, df)
+                return f"{base}.NS", yf.Ticker(f"{base}.NS"), df
+
     for sym in candidates:
         cached = _cget(f"px::{sym}")
         if cached is not None:
