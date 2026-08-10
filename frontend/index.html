@@ -164,6 +164,50 @@
     color:var(--ink-2);border:1px solid var(--rule);background:#fff;padding:7px 13px;border-radius:2px}
   .badge:first-child{border-color:var(--gold);color:var(--gold-dp);background:var(--paper-2)}
   @media(max-width:520px){.badge{font-size:9px;letter-spacing:.1em;padding:6px 10px}}
+  body{background-image:
+      linear-gradient(rgba(22,19,14,.038) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,19,14,.038) 1px, transparent 1px),
+      linear-gradient(rgba(22,19,14,.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,19,14,.022) 1px, transparent 1px);
+    background-size:120px 120px,120px 120px,24px 24px,24px 24px;
+    background-position:-1px -1px,-1px -1px,-1px -1px,-1px -1px}
+  .tickerbar{background:var(--ink);color:var(--paper);overflow:hidden;
+    border-bottom:1px solid var(--gold-dp)}
+  .tickerinner{max-width:1100px;margin:0 auto;padding:0 18px;display:flex;align-items:center;
+    gap:20px;height:38px}
+  .mkstatus{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;
+    letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+  .mkstatus i{width:7px;height:7px;border-radius:50%;background:var(--mute);display:block}
+  .mkstatus.open i{background:#4CB08A;box-shadow:0 0 0 3px rgba(76,176,138,.25)}
+  .mkstatus.pre i{background:var(--gold-lt)}
+  .mkstatus.closed i{background:#8B8477}
+  .tickers{display:flex;gap:26px;overflow-x:auto;flex:1;scrollbar-width:none}
+  .tickers::-webkit-scrollbar{display:none}
+  .tk{display:flex;align-items:baseline;gap:8px;white-space:nowrap;font-family:var(--mono);font-size:11.5px}
+  .tk .n{color:var(--mute);letter-spacing:.14em;text-transform:uppercase;font-size:9.5px}
+  .tk .l{color:var(--paper)}
+  .tk .c{font-size:10.5px}
+  .tk .c.up{color:#6FCFA6} .tk .c.dn{color:#E4899A}
+  .mktime{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--mute);
+    white-space:nowrap;flex-shrink:0}
+  @media(max-width:700px){.mktime{display:none}}
+  #pricewrap{padding:34px 0 30px;border-bottom:1px solid var(--rule);display:none}
+  #pxchart{width:100%;height:260px;display:block;background:#fff;border:1px solid var(--rule)}
+  .lk{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
+  .tfbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 14px}
+  .tf{background:#fff;border:1px solid var(--rule);border-radius:2px;font-family:var(--mono);
+    font-size:11px;letter-spacing:.1em;color:var(--ink-2);padding:7px 12px;cursor:pointer}
+  .tf.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .tf:disabled{opacity:.4;cursor:default}
+  .tf:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .tfnote{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--mute);margin-left:auto}
+  .livebadge{display:none;font-family:var(--mono);font-size:9px;letter-spacing:.18em;
+    text-transform:uppercase;color:#fff;background:var(--pass);padding:3px 8px;border-radius:2px;
+    vertical-align:3px;margin-left:10px}
+  .livebadge.on{display:inline-block;animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+  @media (prefers-reduced-motion: reduce){.livebadge.on{animation:none}}
   .tabs5{max-width:680px}
   @media(max-width:660px){.tabs5{max-width:100%}.tabs5 .tab{font-size:12px;padding:11px 0;letter-spacing:.02em}}
   .modebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 0 4px}
@@ -431,6 +475,14 @@
 </head>
 <body>
 
+<div class="tickerbar">
+  <div class="tickerinner">
+    <span class="mkstatus" id="mkstatus"><i></i><span id="mkstatustx">Loading</span></span>
+    <div class="tickers" id="tickers"></div>
+    <span class="mktime" id="mktime"></span>
+  </div>
+</div>
+
 <header class="wrap">
   <div class="eyebrow">Equity Analysis · India &amp; United States</div>
   <h1 class="brand">Altaha <i>Screener</i></h1>
@@ -539,6 +591,31 @@
     <div class="sched">
       <div class="cell"><span class="lbl">Technical</span><span class="num" id="tscore"></span></div>
       <div class="cell"><span class="lbl">Fundamental</span><span class="num" id="fscore"></span></div>
+    </div>
+
+    <div id="pricewrap">
+      <div class="vhead">
+        <h4>Price <span class="livebadge" id="livebadge">Live</span></h4>
+        <span id="pxstat"></span>
+      </div>
+      <div class="tfbar" id="tfbar">
+        <button class="tf" data-r="1D">1D</button>
+        <button class="tf" data-r="1W">1W</button>
+        <button class="tf active" data-r="1M">1M</button>
+        <button class="tf" data-r="3M">3M</button>
+        <button class="tf" data-r="6M">6M</button>
+        <button class="tf" data-r="1Y">1Y</button>
+        <span class="tfnote" id="tfnote"></span>
+      </div>
+      <svg id="pxchart" viewBox="0 0 720 260" preserveAspectRatio="none" role="img"
+           aria-label="Candlestick price chart with moving averages"></svg>
+      <div class="vlegend">
+        <span><i class="lk" style="background:var(--pass)"></i>Up day</span>
+        <span><i class="lk" style="background:var(--fail)"></i>Down day</span>
+        <span><i class="lk" style="background:var(--gold)"></i>20-day average</span>
+        <span><i class="lk" style="background:var(--ink-2)"></i>50-day average</span>
+        <span><i class="lk" style="background:var(--rule)"></i>Bollinger band</span>
+      </div>
     </div>
 
     <div id="volwrap">
@@ -945,6 +1022,124 @@ async function startScan(force){
 }
 
 /* ── Volume chart ───────────────────────────────────────────────────── */
+
+/* -- Market ticker strip -- */
+async function loadTicker(){
+  try{
+    const d = await (await fetch(`${API_BASE}/market`)).json();
+    const st = $("mkstatus");
+    st.className = "mkstatus " + (d.status || "closed");
+    $("mkstatustx").textContent = d.status === "open" ? "Market open"
+      : d.status === "pre" ? "Pre-open" : "Market closed";
+    $("mktime").textContent = d.ist || "";
+    $("tickers").innerHTML = (d.indices||[]).map(i=>`
+      <span class="tk"><span class="n">${esc(i.label)}</span>
+        <span class="l">${Number(i.level).toLocaleString("en-IN",{minimumFractionDigits:2})}</span>
+        <span class="c ${i.change_pct>=0?"up":"dn"}">${i.change_pct>=0?"\u25B2":"\u25BC"} ${Math.abs(i.change_pct).toFixed(2)}%</span>
+      </span>`).join("");
+    if(!(d.indices||[]).length) $("tickers").innerHTML = `<span class="tk"><span class="n">Index data unavailable</span></span>`;
+  }catch(e){
+    $("mkstatustx").textContent = "Connecting";
+  }
+}
+
+/* -- Candlestick price chart -- */
+function drawPrice(series){
+  const wrap = $("pricewrap"), svg = $("pxchart");
+  if(!series || series.length < 5){ wrap.style.display="none"; return; }
+  wrap.style.display = "block";
+
+  const W=720, H=260, PADT=14, PADB=20, PADR=52;
+  const plotW = W - PADR, plotH = H - PADT - PADB;
+  const vals = [];
+  series.forEach(r=>{ [r[1],r[2],r[6],r[7]].forEach(v=>{ if(v!=null) vals.push(v); }); });
+  const hi = Math.max(...vals), lo = Math.min(...vals), span = (hi-lo)||1;
+  const y = v => PADT + plotH * (1 - (v - lo)/span);
+  const n = series.length, step = plotW / n, cw = Math.max(1.4, step*0.6);
+
+  let out = "";
+  // horizontal gridlines + right-hand price scale
+  for(let i=0;i<=4;i++){
+    const val = lo + span*i/4, yy = y(val);
+    out += `<line x1="0" y1="${yy.toFixed(1)}" x2="${plotW}" y2="${yy.toFixed(1)}" stroke="var(--rule-2)" stroke-width="1"/>`;
+    out += `<text x="${plotW+7}" y="${(yy+3.5).toFixed(1)}" font-family="IBM Plex Mono,monospace" font-size="9.5" fill="var(--mute)">${val>=1000?Math.round(val).toLocaleString("en-IN"):val.toFixed(1)}</text>`;
+  }
+  // Bollinger band as a filled area
+  const ups = series.map((r,i)=>r[6]!=null?`${(i*step+step/2).toFixed(1)},${y(r[6]).toFixed(1)}`:null).filter(Boolean);
+  const los = series.map((r,i)=>r[7]!=null?`${(i*step+step/2).toFixed(1)},${y(r[7]).toFixed(1)}`:null).filter(Boolean).reverse();
+  if(ups.length>2 && los.length>2)
+    out += `<polygon points="${ups.concat(los).join(" ")}" fill="var(--rule)" opacity=".22"/>`;
+  // candles
+  series.forEach((r,i)=>{
+    const [o,hg,lw,c] = r;
+    if(o==null||hg==null||lw==null||c==null) return;
+    const x = i*step + step/2, up = c >= o;
+    const col = up ? "var(--pass)" : "var(--fail)";
+    out += `<line x1="${x.toFixed(1)}" y1="${y(hg).toFixed(1)}" x2="${x.toFixed(1)}" y2="${y(lw).toFixed(1)}" stroke="${col}" stroke-width="1" opacity=".75"/>`;
+    const yt = y(Math.max(o,c)), hgt = Math.max(1, Math.abs(y(o)-y(c)));
+    out += `<rect x="${(x-cw/2).toFixed(1)}" y="${yt.toFixed(1)}" width="${cw.toFixed(1)}" height="${hgt.toFixed(1)}" fill="${col}" opacity="${up?.9:.8}"/>`;
+  });
+  // moving averages
+  const line = (idx, col, w) => {
+    const pts = series.map((r,i)=>r[idx]!=null?`${(i*step+step/2).toFixed(1)},${y(r[idx]).toFixed(1)}`:null).filter(Boolean);
+    return pts.length>2 ? `<polyline points="${pts.join(" ")}" fill="none" stroke="${col}" stroke-width="${w}"/>` : "";
+  };
+  out += line(5, "var(--ink-2)", 1.2) + line(4, "var(--gold)", 1.6);
+  svg.innerHTML = out;
+
+  const first = series.find(r=>r[3]!=null), last = [...series].reverse().find(r=>r[3]!=null);
+  if(first && last){
+    const chg = 100*(last[3]-first[3])/first[3];
+    $("pxstat").innerHTML = `${chg>=0?"\u25B2":"\u25BC"} ${Math.abs(chg).toFixed(1)}% over the period \u00B7 range ${lo.toFixed(1)}\u2013${hi.toFixed(1)}`;
+  }
+}
+
+
+/* -- Timeframe charting -- */
+let chartRange = "1M", chartSym = null, chartTimer = null, chartReq = 0;
+
+async function loadChart(sym, range){
+  if(sym) chartSym = sym;
+  if(range) chartRange = range;
+  if(!chartSym) return;
+  const req = ++chartReq;
+  document.querySelectorAll(".tf").forEach(b=>b.classList.toggle("active", b.dataset.r===chartRange));
+  $("tfnote").textContent = "Loading\u2026";
+  try{
+    const res = await fetch(`${API_BASE}/chart?ticker=${encodeURIComponent(chartSym)}&range=${chartRange}`);
+    const d = await res.json();
+    if(req !== chartReq) return;
+    if(!res.ok){
+      $("tfnote").textContent = (d.detail || "Unavailable").slice(0, 70);
+      $("livebadge").classList.remove("on");
+      return;
+    }
+    drawPrice(d.candles);
+    const up = (d.change_pct ?? 0) >= 0;
+    $("pxstat").innerHTML = `${up?"\u25B2":"\u25BC"} ${Math.abs(d.change_pct ?? 0).toFixed(2)}% over ${esc(d.label)} \u00B7 last \u20B9${d.last}`;
+    $("livebadge").classList.toggle("on", !!d.live);
+    $("tfnote").textContent = d.live
+      ? `Intraday via Dhan \u00B7 ${esc((d.as_of||"").slice(11,16))} IST`
+      : `${d.candles.length} sessions`;
+    scheduleChartRefresh(d.live);
+  }catch(e){
+    if(req === chartReq) $("tfnote").textContent = "Chart unavailable";
+  }
+}
+
+function scheduleChartRefresh(live){
+  if(chartTimer){ clearInterval(chartTimer); chartTimer = null; }
+  if(!live) return;
+  chartTimer = setInterval(async ()=>{
+    const st = $("mkstatus");
+    if(!st.classList.contains("open")) return;   // only refresh while the market is open
+    loadChart();
+  }, 60000);
+}
+
+document.querySelectorAll(".tf").forEach(b=>
+  b.addEventListener("click", ()=>loadChart(null, b.dataset.r)));
+
 function drawVolume(series){
   const svg = $("volchart");
   if(!series || !series.length){ $("volwrap").style.display="none"; return; }
@@ -1109,6 +1304,8 @@ function render(d){
                                                      : `${d.fundamental.score}<small> /100</small>`;
   renderPlain(d.plain);
   drawSetup(d.setup);
+  drawPrice(d.price_series);
+  loadChart(d.ticker.replace(".NS","").replace(".BO",""), chartRange);
   drawVolume(d.volume_series);
   drawShareholding(d.shareholding);
 
@@ -1613,7 +1810,7 @@ let viewMode = "simple";
 function applyMode(){
   const simple = viewMode === "simple";
   $("plainwrap").style.display = simple ? "block" : "none";
-  ["setupwrap","volwrap","shwrap"].forEach(id=>{
+  ["setupwrap","pricewrap","volwrap","shwrap"].forEach(id=>{
     const el = $(id);
     if(el && el.style.display !== "none") el.dataset.shown = "1";
     if(el) el.style.display = simple ? "none" : (el.dataset.shown === "1" ? "block" : "none");
@@ -1641,6 +1838,8 @@ function renderPlain(p){
 }
 
 vocabInit();
+loadTicker();
+setInterval(loadTicker, 120000);
 pfInit();
 $("mode-simple").addEventListener("click",()=>setMode("simple"));
 $("mode-full").addEventListener("click",()=>setMode("full"));
