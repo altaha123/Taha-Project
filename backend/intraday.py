@@ -277,14 +277,22 @@ def scan_once():
     if not snap:
         return []
 
-    # opening range: captured once, at 09:30
+    # Opening range. The live capture only works if a scan pass happens
+    # between 09:30 and 09:40 — but the morning warm-up (volume profiles and
+    # levels) takes 8-19 minutes, and any Render restart later in the day
+    # misses the window entirely. When that happens the ORB signal silently
+    # never fires for the rest of the session, so we backfill it from
+    # intraday history instead of losing the day.
     mso = minutes_since_open()
-    if mso >= 15 and not _state.get("opening_day") == now_ist().date().isoformat():
-        if mso <= 25:                       # capture window
+    today_str = now_ist().date().isoformat()
+    if mso >= 15 and _state.get("opening_day") != today_str:
+        if mso <= 25:
             _state["opening"] = {s: {"high": float(q.get("high") or 0),
                                      "low": float(q.get("low") or 0)}
                                  for s, q in snap.items() if q.get("high")}
-            _state["opening_day"] = now_ist().date().isoformat()
+            _state["opening_day"] = today_str
+        else:
+            _backfill_opening(list(snap.keys()), today_str)
 
     fired = []
     for s, q in snap.items():
@@ -311,30 +319,95 @@ def scan_once():
     return fired
 
 
+def _backfill_opening(symbols, today_str):
+    """Rebuild the 09:15-09:30 range from 5-minute candles when the live
+    capture window was missed. Runs once per day, throttled by Dhan anyway."""
+    out = {}
+    for s in symbols:
+        try:
+            df = dhan.intraday_ohlcv(s, interval="5", days=1)
+            if df is None or not len(df):
+                continue
+            idx = df.index.tz_convert(IST) if df.index.tz is not None else df.index
+            mask = [i for i, ts in enumerate(idx)
+                    if ts.date().isoformat() == today_str
+                    and 555 <= (ts.hour * 60 + ts.minute) < 570]
+            if not mask:
+                continue
+            sub = df.iloc[mask]
+            out[s] = {"high": float(sub["High"].max()), "low": float(sub["Low"].min())}
+        except Exception:
+            continue
+    if out:
+        with _lock:
+            _state["opening"] = out
+            _state["opening_day"] = today_str
+
+
 def mark_outcomes():
-    """At/after close, mark each open alert as target hit, stop hit, or neither."""
+    """
+    Mark each open alert target-hit, stopped-out, or still open at the close.
+
+    Uses only the intraday bars AFTER the alert fired. The earlier version
+    read the whole day's high/low, which meant a stock that dipped to the
+    stop level at 09:20 would mark an 11:00 alert as stopped out — an event
+    that happened before the trade existed. That silently corrupts the one
+    number this log exists to produce, so it is worth the extra calls.
+    Falls back to the daily bar only when intraday data is unavailable,
+    and flags those rows as approximate.
+    """
     open_alerts = [a for a in _state["alerts"] if a["outcome"] is None]
     if not open_alerts:
         return 0
-    syms = sorted({a["symbol"] for a in open_alerts})
+    today = now_ist().date().isoformat()
+    syms = sorted({a["symbol"] for a in open_alerts if a["date"] == today})
     done = 0
     for s in syms:
+        mine = [x for x in open_alerts if x["symbol"] == s and x["date"] == today]
+        if not mine:
+            continue
+        intra = None
         try:
-            df = dhan.daily_ohlcv(s, days=10)
-            if df is None or df.empty:
-                continue
-            row = df.iloc[-1]
-            hi, lo = float(row["High"]), float(row["Low"])
-            for a in [x for x in open_alerts if x["symbol"] == s]:
-                if a["date"] != now_ist().date().isoformat():
-                    continue
+            intra = dhan.intraday_ohlcv(s, interval="5", days=1)
+        except Exception:
+            intra = None
+
+        try:
+            for a in mine:
+                hi = lo = last = None
+                approx = False
+                if intra is not None and len(intra):
+                    try:
+                        idx = (intra.index.tz_convert(IST) if intra.index.tz is not None
+                               else intra.index)
+                        fired = dt.datetime.strptime(a["time"], "%H:%M").time()
+                        after = [i for i, ts in enumerate(idx)
+                                 if ts.date().isoformat() == today and ts.time() >= fired]
+                        if after:
+                            sub = intra.iloc[after[0]:]
+                            hi = float(sub["High"].max())
+                            lo = float(sub["Low"].min())
+                            last = float(sub["Close"].iloc[-1])
+                    except Exception:
+                        hi = lo = last = None
+                if hi is None:
+                    df = dhan.daily_ohlcv(s, days=10)
+                    if df is None or df.empty:
+                        continue
+                    row = df.iloc[-1]
+                    hi, lo, last = float(row["High"]), float(row["Low"]), float(row["Close"])
+                    approx = True
+
+                # Stop checked first: when both levels trade in the same
+                # window we cannot know the order, so assume the loss.
                 if lo <= a["stop"]:
                     a["outcome"] = "STOP"
                 elif hi >= a["target"]:
                     a["outcome"] = "TARGET"
                 else:
                     a["outcome"] = "OPEN_AT_CLOSE"
-                a["closed_at"] = round(float(row["Close"]), 2)
+                a["closed_at"] = round(last, 2)
+                a["approx"] = approx
                 done += 1
         except Exception:
             continue
@@ -368,7 +441,6 @@ def stats():
 
 
 def _loop():
-    _state["running"] = True
     marked_day = None
     while _state["running"]:
         try:
@@ -384,17 +456,34 @@ def _loop():
         time.sleep(POLL_SECONDS)
 
 
+_thread = {"t": None}
+
+
 def start(watchlist):
-    _state["watch"] = watchlist
-    if not _state["alerts"]:
-        _state["alerts"] = _load_log()
-    if not _state["running"]:
-        threading.Thread(target=_loop, daemon=True).start()
+    """
+    Race-safe start. Guarded by a lock and a live-thread check because two
+    callers can arrive at the same instant — autostart on boot and the cron
+    tick, or the cron tick and the user pressing the button. Without the
+    guard each spawns its own loop, so every stock gets scanned twice, every
+    alert fires twice, and the Dhan rate limit is consumed twice over.
+    """
+    with _lock:
+        _state["watch"] = watchlist
+        if not _state["alerts"]:
+            _state["alerts"] = _load_log()
+        alive = _thread["t"] is not None and _thread["t"].is_alive()
+        if alive and _state["running"]:
+            return True
+        _state["running"] = True          # set BEFORE spawning, closing the race
+        t = threading.Thread(target=_loop, daemon=True, name="altaha-scanner")
+        _thread["t"] = t
+        t.start()
     return True
 
 
 def stop():
     _state["running"] = False
+    _thread["t"] = None
 
 
 def status():
