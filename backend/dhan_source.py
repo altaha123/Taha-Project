@@ -29,9 +29,15 @@ import requests
 
 BASE = "https://api.dhan.co/v2"
 SCRIP_URLS = [
-    "https://images.dhan.co/api-data/api-scrip-master-detailed.csv",
-    "https://images.dhan.co/api-data/api-scrip-master.csv",
+    "https://images.dhan.co/api-data/api-scrip-master.csv",            # compact — try first
+    "https://images.dhan.co/api-data/api-scrip-master-detailed.csv",   # huge — fallback
 ]
+# The CDN sometimes rejects the default python-requests user agent from
+# datacenter IPs; present a normal browser instead.
+SCRIP_HEADERS = {"User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                "Chrome/126.0 Safari/537.36"),
+                 "Accept": "text/csv,*/*"}
 
 CLIENT_ID = os.environ.get("DHAN_CLIENT_ID", "").strip()
 ACCESS_TOKEN = os.environ.get("DHAN_ACCESS_TOKEN", "").strip()
@@ -75,12 +81,13 @@ def refresh_token(force=False) -> bool:
         r = requests.post(AUTH_URL, params={"dhanClientId": CLIENT_ID,
                                             "pin": DHAN_PIN, "totp": code}, timeout=20)
         if r.status_code != 200:
-            _token["error"] = f"auth HTTP {r.status_code}"
+            _token["error"] = f"auth HTTP {r.status_code}: {r.text[:160]}"
             return False
         d = r.json() or {}
         tok = d.get("accessToken") or d.get("access_token") or d.get("token")
         if not tok:
-            _token["error"] = "no accessToken in auth response"
+            # Show Dhan's own words — usually "invalid pin", "invalid totp" etc.
+            _token["error"] = f"auth response without accessToken: {r.text[:160]}"
             return False
         _token.update({"value": tok, "issued": time.time(),
                        "source": "totp", "error": None})
@@ -135,8 +142,9 @@ def load_scrip(force=False) -> dict:
 
     for url in SCRIP_URLS:
         try:
-            with requests.get(url, timeout=45, stream=True) as r:
+            with requests.get(url, headers=SCRIP_HEADERS, timeout=(15, 120), stream=True) as r:
                 if r.status_code != 200:
+                    _scrip["error"] = f"HTTP {r.status_code} downloading instrument master"
                     continue
                 lines = r.iter_lines(decode_unicode=True)
                 reader = csv.reader(l for l in lines if l)
@@ -200,24 +208,27 @@ def is_live(force=False) -> dict:
 
     ok, detail = False, "unknown"
     try:
-        r = requests.get(f"{BASE}/marketfeed/marketstatus", headers=_headers(), timeout=12)
-        if r.status_code == 200:
-            ok, detail = True, "token valid"
-        elif r.status_code in (401, 403):
-            detail = "token expired or unauthorised — regenerate in the Dhan portal"
+        sid = security_id("RELIANCE")
+        if not sid:
+            detail = ("instrument master unavailable — "
+                      + (_scrip.get("error") or "download returned no usable rows"))
         else:
-            # Endpoint may not exist on all plans; try a known-good data call
-            sid = security_id("RELIANCE")
-            if sid:
-                today = dt.date.today()
-                body = {"securityId": sid, "exchangeSegment": "NSE_EQ", "instrument": "EQUITY",
-                        "fromDate": str(today - dt.timedelta(days=10)), "toDate": str(today)}
-                r2 = requests.post(f"{BASE}/charts/historical", json=body,
-                                   headers=_headers(), timeout=15)
-                ok = r2.status_code == 200
-                detail = "token valid" if ok else f"HTTP {r2.status_code}"
+            today = dt.date.today()
+            body = {"securityId": sid, "exchangeSegment": "NSE_EQ", "instrument": "EQUITY",
+                    "fromDate": str(today - dt.timedelta(days=10)), "toDate": str(today)}
+            r = requests.post(f"{BASE}/charts/historical", json=body,
+                              headers=_headers(), timeout=15)
+            if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
+                r = requests.post(f"{BASE}/charts/historical", json=body,
+                                  headers=_headers(), timeout=15)
+            ok = r.status_code == 200
+            if ok:
+                detail = "token valid"
+            elif r.status_code in (401, 403):
+                detail = ("token expired or unauthorised — regenerate in the Dhan "
+                          "portal, or check DHAN_PIN / DHAN_TOTP_SECRET")
             else:
-                detail = "instrument master unavailable"
+                detail = f"HTTP {r.status_code}: {r.text[:120]}"
     except Exception as e:
         detail = str(e)[:160]
 
