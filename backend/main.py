@@ -79,15 +79,31 @@ def _worker():
     def progress(done, total, scored):
         _state["done"], _state["total"], _state["scored"] = done, total, scored
 
+    def checkpoint(partial_payload):
+        # Partial rankings become visible immediately and survive a process
+        # restart (they're also written to disk by the scanner), so the Ideas
+        # tab is never left empty after minutes of scanning.
+        _state["payload"] = partial_payload
+
     try:
-        payload = scanner.run_scan(progress=progress)
+        payload = scanner.run_scan(progress=progress, checkpoint=checkpoint)
         _state["payload"] = payload
         _state["status"] = "done"
         _state["finished_at"] = time.time()
         _state["error"] = None
+    except MemoryError:
+        _state["status"] = "done" if _state["payload"] else "error"
+        _state["finished_at"] = time.time()
+        _state["error"] = "ran out of memory — partial results kept" \
+            if _state["payload"] else "out of memory before any results"
     except Exception as e:
-        _state["status"] = "error"
-        _state["error"] = str(e)[:200]
+        if _state["payload"]:
+            _state["status"] = "done"
+            _state["finished_at"] = time.time()
+            _state["error"] = "scan interrupted — partial results kept: " + str(e)[:120]
+        else:
+            _state["status"] = "error"
+            _state["error"] = str(e)[:200]
 
 
 def to_native(obj):
@@ -250,11 +266,30 @@ def ideas(horizon: str = "short", limit: int = 15):
     if not p:
         return {"available": False, "status": _state["status"],
                 "message": "No scan yet — generate the ranking first."}
+    limit = max(1, min(limit, 25))
     rows = [r for r in p.get("rankings", []) if r.get("setup_key") in h["keys"]]
     rows.sort(key=lambda r: (r.get("setup_fit") or 0, r.get("composite") or 0), reverse=True)
+    rows = rows[:limit]
+
+    # Never hand the UI an empty list when a scan exists. If few names fit
+    # this horizon's archetypes cleanly, top up with the highest-composite
+    # names overall, clearly flagged so the frontend can label them.
+    fallback_used = False
+    if len(rows) < min(8, limit):
+        seen = {r.get("symbol") for r in rows}
+        extras = [dict(r, fallback=True) for r in p.get("rankings", [])
+                  if r.get("symbol") not in seen]
+        extras.sort(key=lambda r: r.get("composite") or 0, reverse=True)
+        extras = extras[: limit - len(rows)]
+        fallback_used = bool(extras)
+        rows += extras
+
     return {"available": True, "horizon": horizon, "label": h["label"], "note": h["note"],
             "scanned_at": p.get("scanned_at"),
-            "rows": rows[: max(1, min(limit, 25))],
+            "partial": bool(p.get("partial")),
+            "scored": p.get("scored"),
+            "fallback_used": fallback_used,
+            "rows": rows,
             "universe_source": p.get("universe_source"),
             "disclaimer": DISCLAIMER}
 
@@ -493,7 +528,9 @@ def options_expiries(ticker: str):
     ex = dhan.expiry_list(ticker)
     if not ex:
         raise HTTPException(404, f"No option expiries found for {ticker.upper()}. "
-                                 "Index options: NIFTY, BANKNIFTY, FINNIFTY, SENSEX.")
+                                 "Indices (NIFTY, BANKNIFTY, FINNIFTY, SENSEX) and "
+                                 "F&O-listed stocks are supported — non-F&O stocks "
+                                 "have no options to show.")
     return {"ticker": ticker.upper(), "expiries": ex[:12]}
 
 
@@ -505,7 +542,9 @@ def options_chain(ticker: str, expiry: str):
     data = (raw or {}).get("data") or {}
     oc = data.get("oc") or {}
     if not oc:
-        raise HTTPException(404, "No option chain returned for that expiry.")
+        raise HTTPException(404, "No option chain returned for that expiry. Dhan "
+                                 "allows one chain request every 3 seconds — wait a "
+                                 "moment and pick the expiry again.")
 
     spot = data.get("last_price")
     rows, ce_oi, pe_oi, ce_vol, pe_vol = [], 0, 0, 0, 0
