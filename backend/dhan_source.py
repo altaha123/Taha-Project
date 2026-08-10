@@ -415,7 +415,49 @@ def bulk_quotes(symbols: list, mode: str = "ohlc") -> dict:
 
 # ---------------------------------------------------------------------------
 # Option chain
+#
+# Dhan enforces a SEPARATE rate limit here: 1 request per 3 seconds across
+# both /optionchain and /optionchain/expirylist. The generic 1.15 s quote
+# throttle is not enough — calling expirylist then the chain back-to-back
+# gets the chain request rejected every time, which is exactly the
+# "options never load" symptom. So these endpoints get their own 3.2 s
+# throttle, one retry after a rate-limit response, and short caches so a
+# user flipping between expiries doesn't burn the limit again.
 # ---------------------------------------------------------------------------
+
+OC_GAP = 3.2                    # Dhan option-chain limit: 1 request / 3 s
+_last_oc = {"at": 0.0}
+_exp_cache = {}                 # {SYMBOL: (expiries, fetched_at, seg_used)}
+_chain_cache = {}               # {SYMBOL|EXPIRY: (payload, fetched_at)}
+EXP_TTL = 3600                  # expiry dates change rarely
+CHAIN_TTL = 25                  # OI updates slowly per Dhan's own docs
+
+
+def _throttle_oc():
+    wait = OC_GAP - (time.time() - _last_oc["at"])
+    if wait > 0:
+        time.sleep(wait)
+    _last_oc["at"] = time.time()
+
+
+def _oc_post(path: str, body: dict):
+    """POST to an option-chain endpoint with throttle + one rate-limit retry."""
+    _throttle_oc()
+    try:
+        r = requests.post(f"{BASE}/{path}", json=body, headers=_headers(), timeout=25)
+        if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
+            _throttle_oc()
+            r = requests.post(f"{BASE}/{path}", json=body, headers=_headers(), timeout=25)
+        if r.status_code == 429 or (r.status_code >= 400 and "Rate" in (r.text or "")[:200]):
+            time.sleep(OC_GAP)
+            _last_oc["at"] = time.time()
+            r = requests.post(f"{BASE}/{path}", json=body, headers=_headers(), timeout=25)
+        if r.status_code != 200:
+            return None
+        return r.json() or {}
+    except Exception:
+        return None
+
 
 INDEX_UNDERLYING = {
     "NIFTY":     {"scrip": 13, "seg": "IDX_I"},
@@ -439,45 +481,56 @@ def underlying_ref(symbol: str):
 def expiry_list(symbol: str) -> list:
     if not configured():
         return []
-    scrip, seg = underlying_ref(symbol)
+    key = symbol.strip().upper().replace(".NS", "")
+    hit = _exp_cache.get(key)
+    if hit and (time.time() - hit[1]) < EXP_TTL:
+        return hit[0]
+
+    scrip, seg = underlying_ref(key)
     if not scrip:
         return []
-    try:
-        _throttle_quote()
-        r = requests.post(f"{BASE}/optionchain/expirylist",
-                          json={"UnderlyingScrip": scrip, "UnderlyingSeg": seg},
-                          headers=_headers(), timeout=20)
-        if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
-            r = requests.post(f"{BASE}/optionchain/expirylist",
-                              json={"UnderlyingScrip": scrip, "UnderlyingSeg": seg},
-                              headers=_headers(), timeout=20)
-        if r.status_code != 200:
-            return []
-        d = r.json() or {}
-        return d.get("data") or []
-    except Exception:
-        return []
+
+    # Stocks: Dhan's docs only show IDX_I examples. In practice the equity
+    # security-id with NSE_EQ works for most stock underlyings; if that comes
+    # back empty, retry once with NSE_FNO before giving up.
+    seg_tries = [seg] if seg == "IDX_I" else [seg, "NSE_FNO"]
+    for s in seg_tries:
+        d = _oc_post("optionchain/expirylist",
+                     {"UnderlyingScrip": scrip, "UnderlyingSeg": s})
+        exp = (d or {}).get("data") or []
+        if exp:
+            _exp_cache[key] = (exp, time.time(), s)
+            return exp
+    return []
 
 
 def option_chain(symbol: str, expiry: str) -> dict:
     """Full chain with OI, IV, Greeks and LTP across strikes."""
     if not configured():
         return {}
-    scrip, seg = underlying_ref(symbol)
+    key = symbol.strip().upper().replace(".NS", "")
+    ck = f"{key}|{expiry}"
+    hit = _chain_cache.get(ck)
+    if hit and (time.time() - hit[1]) < CHAIN_TTL:
+        return hit[0]
+
+    scrip, seg = underlying_ref(key)
     if not scrip or not expiry:
         return {}
-    body = {"UnderlyingScrip": scrip, "UnderlyingSeg": seg, "Expiry": expiry}
-    try:
-        _throttle_quote()
-        r = requests.post(f"{BASE}/optionchain", json=body, headers=_headers(), timeout=25)
-        if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
-            _throttle_quote()
-            r = requests.post(f"{BASE}/optionchain", json=body, headers=_headers(), timeout=25)
-        if r.status_code != 200:
-            return {}
-        return r.json() or {}
-    except Exception:
-        return {}
+    # Reuse whichever segment the expiry lookup succeeded with
+    cached = _exp_cache.get(key)
+    if cached and cached[2]:
+        seg = cached[2]
+
+    d = _oc_post("optionchain", {"UnderlyingScrip": scrip,
+                                 "UnderlyingSeg": seg, "Expiry": expiry})
+    if d and (d.get("data") or {}).get("oc"):
+        _chain_cache[ck] = (d, time.time())
+        if len(_chain_cache) > 40:            # keep the cache tiny
+            oldest = min(_chain_cache, key=lambda k: _chain_cache[k][1])
+            _chain_cache.pop(oldest, None)
+        return d
+    return d or {}
 
 
 # ---------------------------------------------------------------------------
