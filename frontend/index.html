@@ -81,7 +81,24 @@
   .tabs{display:flex;justify-content:center;margin:34px auto 0;max-width:380px;
     border:1px solid var(--ink);border-radius:2px;overflow:hidden}
   .tab{flex:1;background:#fff;color:var(--ink);border:none;font-family:var(--sans);font-weight:500;
-    font-size:14.5px;letter-spacing:.04em;padding:13px 0;cursor:pointer}
+    font-size:14.5px;letter-spacing:.04em;padding:13px 0;cursor:pointer;
+    transition:background .28s cubic-bezier(.4,0,.2,1), color .28s cubic-bezier(.4,0,.2,1)}
+  .tab:hover:not(.active){background:var(--gold-lt,#f6f1e4)}
+  /* Tab view transition: a short fade with a small upward lift. Editorial,
+     not bouncy \u2014 the page should feel like a printed section turning,
+     which is why the distance is 8px and not 40. */
+  @keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .viewfade{animation:viewIn .34s cubic-bezier(.22,.61,.36,1) both}
+  /* The underline slides between tabs rather than jumping. */
+  .tabs{position:relative}
+  .tabink{position:absolute;bottom:0;height:2px;background:var(--gold);
+          transition:left .34s cubic-bezier(.22,.61,.36,1), width .34s cubic-bezier(.22,.61,.36,1);
+          pointer-events:none}
+  @media(prefers-reduced-motion:reduce){
+    .viewfade{animation:none}
+    .tabink{transition:none}
+    .tab{transition:none}
+  }
   .tab.active{background:var(--ink);color:var(--paper)}
   .tab:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
   .ideas-intro{font-size:14.5px;line-height:1.7;color:var(--ink-2);max-width:620px;margin:34px auto 26px;text-align:center}
@@ -1094,13 +1111,32 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
 const TABS = ["screener","ideas","live","results","portfolio","options","vocab"];
+function moveTabInk(which){
+  const nav = document.querySelector(".tabs");
+  if(!nav) return;
+  let ink = nav.querySelector(".tabink");
+  if(!ink){ ink = document.createElement("span"); ink.className = "tabink"; nav.appendChild(ink); }
+  const btn = $("tab-"+which);
+  if(!btn) return;
+  ink.style.left  = btn.offsetLeft + "px";
+  ink.style.width = btn.offsetWidth + "px";
+}
+
 function switchTab(which){
   TABS.forEach(t=>{
     const on = t===which;
-    $("view-"+t).style.display = on ? "block" : "none";
+    const view = $("view-"+t);
+    view.style.display = on ? "block" : "none";
+    if(on){
+      // restart the animation even when re-selecting the same tab
+      view.classList.remove("viewfade");
+      void view.offsetWidth;
+      view.classList.add("viewfade");
+    }
     $("tab-"+t).classList.toggle("active", on);
     $("tab-"+t).setAttribute("aria-selected", on);
   });
+  moveTabInk(which);
   if(which==="ideas") loadIdeas();
   if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
   if(which==="live"){ loadLive(); liveTimer = setInterval(loadLive, 30000); }
@@ -2341,7 +2377,9 @@ function switchBrand(which){
   const scr = which === "screener";
   document.querySelector(".tabs").style.display = scr ? "flex" : "none";
   TABS.forEach(t=>{ $("view-"+t).style.display = "none"; });
-  $("view-planner").style.display = scr ? "none" : "block";
+  const pv = $("view-planner");
+  pv.style.display = scr ? "none" : "block";
+  if(!scr){ pv.classList.remove("viewfade"); void pv.offsetWidth; pv.classList.add("viewfade"); }
   if(scr) switchTab("screener");
   $("bsw-screener").classList.toggle("active", scr);
   $("bsw-planner").classList.toggle("active", !scr);
@@ -2349,6 +2387,15 @@ function switchBrand(which){
   $("bsw-planner").setAttribute("aria-selected", !scr);
   $("brandtag").textContent = scr ? "Where Logic Meets Validations" : "Where Money Meets Method";
 }
+let _inkRaf = null;
+window.addEventListener("resize", ()=>{
+  if(_inkRaf) cancelAnimationFrame(_inkRaf);
+  _inkRaf = requestAnimationFrame(()=>{
+    const active = TABS.find(t=>$("tab-"+t).classList.contains("active"));
+    if(active) moveTabInk(active);
+  });
+});
+
 $("bsw-screener").addEventListener("click",()=>switchBrand("screener"));
 $("bsw-planner").addEventListener("click",()=>switchBrand("planner"));
 plannerInit();
