@@ -278,6 +278,55 @@ def daily_ohlcv(symbol: str, days: int = 400):
         return None
 
 
+def intraday_ohlcv(symbol: str, interval: str = "5", days: int = 5):
+    """
+    Intraday candles from Dhan. interval is minutes: 1, 5, 15, 25, 60.
+    Returns a DataFrame or None. Dhan-only — Yahoo has no reliable
+    intraday feed from a datacenter IP.
+    """
+    if not configured():
+        return None
+    sid = security_id(symbol)
+    if not sid:
+        return None
+
+    today = dt.date.today()
+    body = {
+        "securityId": sid,
+        "exchangeSegment": "NSE_EQ",
+        "instrument": "EQUITY",
+        "interval": str(interval),
+        "fromDate": str(today - dt.timedelta(days=days)),
+        "toDate": str(today),
+    }
+    try:
+        r = requests.post(f"{BASE}/charts/intraday", json=body, headers=_headers(), timeout=20)
+        if r.status_code in (401, 403):
+            if can_auto_refresh() and refresh_token(force=True):
+                r = requests.post(f"{BASE}/charts/intraday", json=body,
+                                  headers=_headers(), timeout=20)
+        if r.status_code != 200:
+            return None
+        d = r.json() or {}
+    except Exception:
+        return None
+
+    if not all(k in d for k in ("open", "high", "low", "close")) or not d["close"]:
+        return None
+    try:
+        ts = d.get("timestamp") or []
+        idx = (pd.to_datetime(pd.Series(ts, dtype="int64"), unit="s")
+               .dt.tz_localize("UTC").dt.tz_convert("Asia/Kolkata").dt.tz_localize(None)
+               if len(ts) == len(d["close"]) else pd.RangeIndex(len(d["close"])))
+        df = pd.DataFrame({
+            "Open": d["open"], "High": d["high"], "Low": d["low"], "Close": d["close"],
+            "Volume": d.get("volume") or [0] * len(d["close"]),
+        }, index=idx)
+        return df.dropna(subset=["Close"])
+    except Exception:
+        return None
+
+
 # ---------------------------------------------------------------------------
 # Quotes / indices
 # ---------------------------------------------------------------------------
