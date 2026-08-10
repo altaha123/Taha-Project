@@ -193,7 +193,58 @@
   .mktime{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--mute);
     white-space:nowrap;flex-shrink:0}
   @media(max-width:700px){.mktime{display:none}}
+
+  /* Trade plan card */
+  #planwrap{margin:26px 0 6px;border:1px solid var(--rule);border-top:3px solid var(--gold)}
+  .planban{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--rule)}
+  .stance{font-family:var(--mono);font-weight:800;letter-spacing:.08em;font-size:1.05rem;padding:6px 14px;border:2px solid}
+  .stance.buy{color:var(--pass);border-color:var(--pass)}
+  .stance.watch{color:var(--gold);border-color:var(--gold)}
+  .stance.wait{color:#8a7a4a;border-color:#8a7a4a}
+  .stance.avoid{color:var(--fail);border-color:var(--fail)}
+  .planconf{font-size:.72rem;letter-spacing:.14em;opacity:.7;font-family:var(--mono)}
+  .plannote{padding:12px 20px;font-size:.92rem;line-height:1.55;border-bottom:1px solid var(--rule)}
+  .plangrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));border-bottom:1px solid var(--rule)}
+  .plangrid .pcell{padding:12px 14px;border-right:1px solid var(--rule)}
+  .plangrid .pcell:last-child{border-right:0}
+  .pcell .pk{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;opacity:.6;display:block}
+  .pcell .pv{font-family:var(--mono);font-weight:700;font-size:1.05rem}
+  .pcell.stopc .pv{color:var(--fail)} .pcell.tgtc .pv{color:var(--pass)}
+  .plansize{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--rule);font-size:.88rem}
+  .plansize input{width:120px;font-family:var(--mono);padding:5px 8px;border:1px solid var(--rule);background:transparent;color:inherit}
+  .plansize b{font-family:var(--mono)}
+  .planwhy{padding:14px 20px}
+  .planwhy .pw{display:flex;gap:10px;margin:7px 0;font-size:.9rem;line-height:1.5}
+  .planwhy .pw::before{content:"\2713";color:var(--pass);font-weight:800}
+  .planwhy .pwarn::before{content:"\26A0";color:var(--fail)}
+  .planinv{margin:0 20px 14px;padding:11px 14px;border:1px dashed var(--fail);font-size:.87rem;line-height:1.5}
+  .planprin{padding:0 20px 16px;font-size:.76rem;opacity:.6;line-height:1.5}
+  .pctile{margin-top:10px;font-size:.85rem}
+  .pctile b{color:var(--gold)}
+  /* Audit toggle */
+  .auditbtn{display:block;width:100%;margin:44px 0 0;padding:13px;font:inherit;font-size:.85rem;letter-spacing:.1em;
+            text-transform:uppercase;background:transparent;border:1px solid var(--rule);cursor:pointer;color:inherit}
+  .auditbtn:hover{border-color:var(--gold)}
+  /* Idea plan strip */
+  .ideaplan{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:8px;font-size:.8rem;font-family:var(--mono)}
+  .ideaplan .ip{padding:2px 8px;border:1px solid;font-weight:700;font-size:.72rem;letter-spacing:.08em}
+  .ideaplan .ip.buy{color:var(--pass);border-color:var(--pass)}
+  .ideaplan .ip.watch{color:var(--gold);border-color:var(--gold)}
+  .ideaplan .ip.wait{color:#8a7a4a;border-color:#8a7a4a}
+  .ideaplan .ip.avoid{color:var(--fail);border-color:var(--fail)}
   #pricewrap{padding:34px 0 30px;border-bottom:1px solid var(--rule);display:none}
+  #lvlwrap{padding:34px 0 30px;border-bottom:1px solid var(--rule)}
+  .lvlrow{display:grid;grid-template-columns:96px 1fr;gap:6px 16px;padding:12px 14px;margin:8px 0;
+          border:1px solid var(--rule);border-left-width:3px;background:var(--card,rgba(0,0,0,.015))}
+  .lvlrow.sup{border-left-color:var(--pass)}
+  .lvlrow.res{border-left-color:var(--fail)}
+  .lvlpx{font-family:var(--mono);font-weight:700;font-size:1.02rem}
+  .lvlrow.sup .lvlpx{color:var(--pass)} .lvlrow.res .lvlpx{color:var(--fail)}
+  .lvlmeta{font-size:.78rem;opacity:.75;font-family:var(--mono)}
+  .lvlwhy{grid-column:1 / -1;font-size:.86rem;line-height:1.5}
+  .lvlbar{grid-column:1 / -1;height:4px;background:var(--rule);border-radius:2px;overflow:hidden}
+  .lvlbar i{display:block;height:100%;background:var(--gold)}
+  .lvlhead{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin:16px 0 4px}
   #pxchart{width:100%;height:260px;display:block;background:#fff;border:1px solid var(--rule)}
   .lk{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
   .tabs6{max-width:780px}
@@ -621,6 +672,26 @@
       </div>
     </div>
 
+
+    <div id="planwrap" style="display:none">
+      <div class="planban">
+        <span class="stance" id="pstance"></span>
+        <span class="planconf" id="pconf"></span>
+        <span class="pctile" id="pctile" style="margin:0 0 0 auto"></span>
+      </div>
+      <div class="plannote" id="pnote"></div>
+      <div class="plangrid" id="pgrid"></div>
+      <div class="plansize" id="psize" style="display:none">
+        <span>Capital &#8377;</span><input id="pcap" type="number" value="100000" min="1000" step="1000">
+        <span>risking</span>
+        <select id="prisk"><option value="0.5">0.5%</option><option value="1" selected>1%</option><option value="2">2%</option></select>
+        <span>&#8594; buy <b id="pshares">&#8212;</b> shares (&#8776; &#8377;<b id="pval">&#8212;</b>); if the stop hits you lose &#8377;<b id="ploss">&#8212;</b>, planned, survivable.</span>
+      </div>
+      <div class="planwhy" id="pwhy"></div>
+      <div class="planinv" id="pinv" style="display:none"></div>
+      <div class="planprin" id="pprin"></div>
+    </div>
+
     <div id="setupwrap">
       <div class="setuphead">
         <div>
@@ -688,6 +759,12 @@
       <div class="charthint" id="charthint">Scroll to zoom, drag to pan. Pick a drawing tool to mark up the chart.</div>
     </div>
 
+    <div id="lvlwrap" style="display:none">
+      <div class="vhead"><h4>Support &amp; Resistance — from the chart itself</h4><span id="lvlstat"></span></div>
+      <div id="lvlbody"></div>
+      <p class="vnote" id="lvlmethod"></p>
+    </div>
+
     <div id="volwrap">
       <div class="vhead"><h4>Volume — last 60 sessions</h4><span id="vstat"></span></div>
       <svg id="volchart" viewBox="0 0 720 130" preserveAspectRatio="none" role="img"
@@ -705,7 +782,9 @@
       <div id="shbody"></div>
     </div>
 
-    <div class="lh" style="margin-top:52px"><h3>Validation Ledger</h3><span>Technical</span></div>
+    <button class="auditbtn" id="auditbtn">Show the full audit — every calculation, every formula &#9662;</button>
+    <div id="auditwrap" style="display:none">
+    <div class="lh" style="margin-top:24px"><h3>Validation Ledger</h3><span>Technical</span></div>
     <p class="lsub">Every point traced to its formula. Open any line to see the working — and what the measure actually means.</p>
     <div id="tledger"></div>
 
@@ -714,6 +793,7 @@
       <p class="lsub" id="fsub"></p>
       <div id="fledger"></div>
     </div>
+    </div><!-- /auditwrap -->
 
     <p class="disc" id="disc"></p>
   </section>
@@ -954,7 +1034,7 @@
 
 <script>
 /* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
-const API_BASE = "https://taha-project.onrender.com";
+const API_BASE = "http://localhost:8000";
 /* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
@@ -1100,6 +1180,10 @@ async function loadIdeas(){
             <span class="fit">${s.setup_fit ?? s.composite ?? "\u2014"}<small>${s.fallback ? "score" : "fit"}</small></span>
           </div>
           <div class="arch">${esc(s.setup || "\u2014")} \u00B7 typical hold ${esc(s.horizon || "\u2014")}</div>
+          ${s.plan ? `<div class="ideaplan"><span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>` +
+            (s.plan.entry!=null ? `<span>Entry \u20B9${Number(s.plan.entry).toLocaleString("en-IN")}</span><span>SL \u20B9${Number(s.plan.stop).toLocaleString("en-IN")}${s.plan.risk_pct!=null?` (\u2212${s.plan.risk_pct}%)`:""}</span>` +
+              (s.plan.t1!=null?`<span>T1 \u20B9${Number(s.plan.t1).toLocaleString("en-IN")}</span>`:"") +
+              (s.plan.rr!=null?`<span>R:R 1:${s.plan.rr}</span>`:"") : `<span>${esc((s.plan.note||"").split("\u2014")[0])}</span>`) + `</div>` : ""}
           <div class="ln"><span>Composite ${s.composite ?? "\u2014"}</span><span>Technical ${s.technical ?? "\u2014"}</span>
             <span>Fundamental ${s.fundamental ?? "\u2014"}</span><span>Piotroski ${s.f_score ?? "\u2014"}/9</span></div>
         </div>`).join("");
@@ -1378,6 +1462,7 @@ function makeChartPanel(cfg){
     S.cs.setData(cd); S.vs.setData(vol);
     S.m20.setData(m20); S.m50.setData(m50);
     S.bu.setData(bu); S.bl.setData(bl);
+    applyLevels();
     S.chart.timeScale().fitContent();
   }
 
@@ -1500,6 +1585,21 @@ function makeChartPanel(cfg){
     const e = g(id); if(e) e.addEventListener("change", applyToggles);
   });
 
+  /* Support/resistance price lines supplied by the analyse payload */
+  function applyLevels(){
+    if(!S.cs) return;
+    (S.lvlLines || []).forEach(l => { try{ S.cs.removePriceLine(l); }catch(e){} });
+    S.lvlLines = [];
+    (S.levels || []).forEach(lv => {
+      S.lvlLines.push(S.cs.createPriceLine({
+        price: lv.level,
+        color: lv.kind === "support" ? "#2E7D53" : "#B0433B",
+        lineWidth: 1, lineStyle: 2, axisLabelVisible: true,
+        title: (lv.kind === "support" ? "S " : "R ") + lv.strength,
+      }));
+    });
+  }
+
   return {
     load,
     queue(sym){ if(sym !== S.sym && S.chart) clearDrawings(); S.sym = sym; S.pendingLoad = true; this.flush(); },
@@ -1507,6 +1607,7 @@ function makeChartPanel(cfg){
       if(S.pendingLoad && (!cfg.canShow || cfg.canShow())){ S.pendingLoad = false; load(); }
       else if(S.chart) requestAnimationFrame(resize);
     },
+    setLevels(arr){ S.levels = arr || []; applyLevels(); },
     sym: ()=>S.sym, range: ()=>S.range, resize,
   };
 }
@@ -1767,8 +1868,87 @@ async function analyse(sym){
   }
 }
 
+/* \u2500\u2500 Trade plan card \u2500\u2500 */
+function stanceCls(s){ return s==="BUY ZONE"?"buy":(s==="BREAKOUT WATCH"?"watch":(s==="AVOID"?"avoid":"wait")); }
+let _plan = null;
+function sizePosition(){
+  const p=_plan; if(!p||!p.entry||!p.stop){ $("psize").style.display="none"; return; }
+  $("psize").style.display="flex";
+  const cap=Math.max(0,+$("pcap").value||0), riskPct=+$("prisk").value/100;
+  const perShare=p.entry-p.stop; if(perShare<=0) return;
+  const sh=Math.floor(cap*riskPct/perShare);
+  $("pshares").textContent=sh.toLocaleString("en-IN");
+  $("pval").textContent=Math.round(sh*p.entry).toLocaleString("en-IN");
+  $("ploss").textContent=Math.round(sh*perShare).toLocaleString("en-IN");
+}
+$("pcap")&&$("pcap").addEventListener("input",sizePosition);
+$("prisk")&&$("prisk").addEventListener("change",sizePosition);
+
+function renderPlan(p,cur,pct){
+  _plan=p; const w=$("planwrap");
+  if(!p){ w.style.display="none"; return; }
+  w.style.display="block";
+  $("pstance").textContent=p.stance; $("pstance").className="stance "+stanceCls(p.stance);
+  $("pconf").textContent=p.confidence?`CONFLUENCE: ${p.confidence}`:"";
+  $("pctile").innerHTML=(pct!=null)?`Stronger than <b>${pct}%</b> of the scanned NSE universe`:"";
+  $("pnote").textContent=p.entry_note||"";
+  const fmt=n=>n==null?"\u2014":Number(n).toLocaleString("en-IN");
+  const cells=[];
+  if(p.entry!=null) cells.push(["Entry",fmt(p.entry),""]);
+  if(p.stop!=null)  cells.push(["Stop-loss",fmt(p.stop)+(p.risk_pct!=null?` (\u2212${p.risk_pct}%)`:""),"stopc"]);
+  (p.targets||[]).forEach((t,i)=>cells.push([`Target ${i+1}`,fmt(t),"tgtc"]));
+  if(p.rr!=null) cells.push(["Risk : Reward","1 : "+p.rr,""]);
+  if(p.atr!=null) cells.push(["Daily swing (ATR)",fmt(p.atr),""]);
+  $("pgrid").innerHTML=cells.map(c=>`<div class="pcell ${c[2]}"><span class="pk">${c[0]}</span><span class="pv">${c[1]}</span></div>`).join("");
+  $("pgrid").style.display=cells.length?"grid":"none";
+  const rows=(p.why||[]).map(x=>`<div class="pw">${esc(x)}</div>`)
+    .concat((p.warnings||[]).map(x=>`<div class="pw pwarn">${esc(x)}</div>`));
+  $("pwhy").innerHTML=rows.join("")||"";
+  $("pwhy").style.display=rows.length?"block":"none";
+  if(p.invalidation){ $("pinv").style.display="block"; $("pinv").textContent=p.invalidation; }
+  else $("pinv").style.display="none";
+  $("pprin").textContent=p.principles||"";
+  sizePosition();
+}
+$("auditbtn").addEventListener("click",()=>{
+  const a=$("auditwrap"), open=a.style.display!=="none";
+  a.style.display=open?"none":"block";
+  $("auditbtn").textContent=open?"Show the full audit \u2014 every calculation, every formula \u25BE"
+                                :"Hide the full audit \u25B4";
+});
+
+/* ── Support & resistance card ─────────────────────────────────────── */
+function renderLevels(lv, cur){
+  const wrap = $("lvlwrap");
+  const all = lv ? [...(lv.supports||[]), ...(lv.resistances||[])] : [];
+  mainChart.setLevels(all);
+  if(!lv || !all.length){ wrap.style.display = "none"; wrap.dataset.shown = ""; return; }
+  wrap.dataset.shown = "1";
+  wrap.style.display = viewMode === "full" ? "block" : "none";
+  $("lvlstat").textContent = `vs current ${cur} ${lv.current}`;
+  $("lvlmethod").textContent = lv.method || "";
+  const fmt = n => Number(n).toLocaleString("en-IN");
+  const row = z => `
+    <div class="lvlrow ${z.kind === "support" ? "sup" : "res"}">
+      <div>
+        <div class="lvlpx">${fmt(z.level)}</div>
+        <div class="lvlmeta">${z.distance_pct > 0 ? "+" : ""}${z.distance_pct}%</div>
+      </div>
+      <div>
+        <div class="lvlmeta">zone ${fmt(z.zone[0])}\u2013${fmt(z.zone[1])} \u00b7 ${z.touches} touch${z.touches>1?"es":""} \u00b7 last ${esc(z.last_touch)} \u00b7 strength ${z.strength}/100</div>
+        <div class="lvlwhy">${esc(z.why)}</div>
+      </div>
+      <div class="lvlbar"><i style="width:${z.strength}%"></i></div>
+    </div>`;
+  $("lvlbody").innerHTML =
+    (lv.resistances?.length ? `<div class="lvlhead">Resistance \u2014 overhead supply</div>` + lv.resistances.slice().reverse().map(row).join("") : "") +
+    (lv.supports?.length ? `<div class="lvlhead">Support \u2014 demand below</div>` + lv.supports.map(row).join("") : "");
+}
+
 function render(d){
   state.style.display="none"; result.style.display="block";
+  $("auditwrap").style.display="none";
+  $("auditbtn").textContent="Show the full audit \u2014 every calculation, every formula \u25BE";
   $("cname").textContent = d.name;
   $("csym").innerHTML = `<b>${esc(d.ticker)}</b> · ${esc(d.exchange)}`;
   $("cpx").innerHTML  = `Price <b>${esc(d.currency)} ${d.price}</b>`;
@@ -1785,9 +1965,11 @@ function render(d){
   $("tscore").innerHTML = `${d.technical.score}<small> /100</small>`;
   $("fscore").innerHTML = d.fundamental.score===null ? `<small>NOT PUBLISHED</small>`
                                                      : `${d.fundamental.score}<small> /100</small>`;
+  renderPlan(d.plan, d.currency, d.percentile);
   renderPlain(d.plain);
   drawSetup(d.setup);
   mainChart.queue(d.ticker.replace(".NS","").replace(".BO",""));
+  renderLevels(d.levels, d.currency);
   drawVolume(d.volume_series);
   drawShareholding(d.shareholding);
 
@@ -2292,7 +2474,7 @@ let viewMode = "simple";
 function applyMode(){
   const simple = viewMode === "simple";
   $("plainwrap").style.display = simple ? "block" : "none";
-  ["setupwrap","pricewrap","volwrap","shwrap"].forEach(id=>{
+  ["setupwrap","pricewrap","lvlwrap","volwrap","shwrap"].forEach(id=>{
     const el = $(id);
     if(el && el.style.display !== "none") el.dataset.shown = "1";
     if(el) el.style.display = simple ? "none" : (el.dataset.shown === "1" ? "block" : "none");
