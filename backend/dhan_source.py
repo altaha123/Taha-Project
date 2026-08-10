@@ -50,8 +50,10 @@ TOTP_SECRET = os.environ.get("DHAN_TOTP_SECRET", "").strip().replace(" ", "")
 AUTH_URL = "https://auth.dhan.co/app/generateAccessToken"
 
 _token = {"value": ACCESS_TOKEN, "issued": time.time() if ACCESS_TOKEN else 0,
-          "source": "env" if ACCESS_TOKEN else None, "error": None}
+          "source": "env" if ACCESS_TOKEN else None, "error": None,
+          "last_attempt": 0}
 TOKEN_TTL = 20 * 3600          # refresh before Dhan's 24h expiry
+AUTH_COOLDOWN = 130            # Dhan: "Token can be generated once every 2 minutes"
 
 _scrip = {"map": None, "at": 0, "error": None}
 _status = {"ok": None, "checked": 0, "detail": "not checked"}
@@ -70,6 +72,11 @@ def refresh_token(force=False) -> bool:
     fresh = _token["value"] and (time.time() - _token["issued"]) < TOKEN_TTL
     if fresh and not force:
         return True
+    # Dhan hard-limits token generation to once per 2 minutes — even forced
+    # retries must wait, or every attempt fails and we lock ourselves out.
+    if (time.time() - _token["last_attempt"]) < AUTH_COOLDOWN:
+        return bool(_token["value"])
+    _token["last_attempt"] = time.time()
     try:
         import pyotp
         code = pyotp.TOTP(TOTP_SECRET).now()
@@ -146,8 +153,13 @@ def load_scrip(force=False) -> dict:
                 if r.status_code != 200:
                     _scrip["error"] = f"HTTP {r.status_code} downloading instrument master"
                     continue
+                # CDN omits the charset header; without this requests yields
+                # bytes and the csv module rejects them.
+                r.encoding = r.encoding or "utf-8"
                 lines = r.iter_lines(decode_unicode=True)
-                reader = csv.reader(l for l in lines if l)
+                reader = csv.reader(
+                    (l.decode("utf-8", "replace") if isinstance(l, bytes) else l)
+                    for l in lines if l)
                 header = [h.strip().lower() for h in next(reader)]
 
                 def col(*names):
