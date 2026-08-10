@@ -194,6 +194,30 @@
     white-space:nowrap;flex-shrink:0}
   @media(max-width:700px){.mktime{display:none}}
 
+
+  /* Live scanner */
+  .livehead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:18px 0}
+  .livebtn{font:inherit;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:10px 18px;
+           border:1px solid var(--rule);background:transparent;cursor:pointer;color:inherit}
+  .livebtn:hover{border-color:var(--gold)}
+  .livedot{width:9px;height:9px;border-radius:50%;background:var(--fail);display:inline-block;margin-right:7px}
+  .livedot.on{background:var(--pass);box-shadow:0 0 0 3px rgba(46,125,83,.18)}
+  .livestat{font-family:var(--mono);font-size:.78rem;opacity:.75}
+  .alertcard{border:1px solid var(--rule);border-left:3px solid var(--gold);padding:14px 16px;margin:10px 0}
+  .alertcard .ah{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
+  .alertcard .asym{font-weight:700;font-size:1.05rem}
+  .alertcard .akind{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;padding:2px 8px;border:1px solid var(--gold);color:var(--gold)}
+  .alertcard .atime{margin-left:auto;font-family:var(--mono);font-size:.75rem;opacity:.6}
+  .alertcard .ahl{margin:6px 0 10px;font-size:.92rem}
+  .alertcard .anums{display:flex;flex-wrap:wrap;gap:16px;font-family:var(--mono);font-size:.84rem}
+  .alertcard .anums b{font-weight:700}
+  .alertcard .awhy{margin-top:10px;font-size:.85rem;line-height:1.5;opacity:.85}
+  .alertcard .aout{margin-top:8px;font-family:var(--mono);font-size:.75rem;letter-spacing:.08em}
+  .aout.TARGET{color:var(--pass)} .aout.STOP{color:var(--fail)}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+  .statbox{border:1px solid var(--rule);padding:12px 14px}
+  .statbox .sk2{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;opacity:.6;display:block}
+  .statbox .sv{font-family:var(--mono);font-weight:700;font-size:1.2rem}
   /* Trade plan card */
   #planwrap{margin:26px 0 6px;border:1px solid var(--rule);border-top:3px solid var(--gold)}
   .planban{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--rule)}
@@ -247,7 +271,7 @@
   .lvlhead{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin:16px 0 4px}
   #pxchart{width:100%;height:260px;display:block;background:#fff;border:1px solid var(--rule)}
   .lk{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
-  .tabs6{max-width:780px}
+  .tabs6{max-width:880px}
   @media(max-width:780px){.tabs6{max-width:100%}.tabs6 .tab{font-size:11px;padding:10px 0;letter-spacing:0}}
   #chartbox{width:100%;height:420px;border:1px solid var(--rule);background:#fff;position:relative}
   @media(max-width:640px){#chartbox{height:320px}}
@@ -619,6 +643,7 @@
   <nav class="tabs tabs6" role="tablist">
     <button class="tab active" id="tab-screener" role="tab" aria-selected="true">Screener</button>
     <button class="tab" id="tab-ideas" role="tab" aria-selected="false">Ideas</button>
+    <button class="tab" id="tab-live" role="tab" aria-selected="false">Live</button>
     <button class="tab" id="tab-results" role="tab" aria-selected="false">Results</button>
     <button class="tab" id="tab-portfolio" role="tab" aria-selected="false">Portfolio</button>
     <button class="tab" id="tab-options" role="tab" aria-selected="false">Options</button>
@@ -798,6 +823,29 @@
     <p class="disc" id="disc"></p>
   </section>
   </div><!-- /view-screener -->
+
+
+  <div id="view-live" style="display:none">
+    <p class="ideas-intro">Three signals, all gated on unusual volume: a volume spike versus what the stock normally trades <i>by this time of day</i>, an opening-range break, and a break of a high-strength level from the screener's own support/resistance engine. Each alert arrives as a complete trade — entry, stop, target — and every one is logged so its real hit rate can be measured.</p>
+
+    <div class="livehead">
+      <button class="livebtn" id="livestart">Start live scanner</button>
+      <button class="livebtn" id="livescan">Scan once now</button>
+      <button class="livebtn" id="livetest">Test alert</button>
+      <span class="livestat"><span class="livedot" id="ldot"></span><span id="lstat">not running</span></span>
+    </div>
+
+    <div id="lstats"></div>
+
+    <div class="lh" style="margin-top:34px"><h3>Today's alerts</h3><span id="lcount"></span></div>
+    <div id="lalerts"><div class="ideas-note" style="padding:14px 0">Nothing yet. Start the scanner during market hours (9:15–3:30 IST).</div></div>
+
+    <div class="lh" style="margin-top:44px"><h3>Measured hit rate</h3><span>your own signals</span></div>
+    <p class="lsub">Every alert is marked target-hit, stop-hit, or still open at the close. This table is the only honest answer to "does it work" — and it needs about 30 closed trades per signal before it means anything.</p>
+    <div id="lhit"></div>
+
+    <p class="disc">Alerts are measurements, not recommendations. No signal predicts price; the edge is taking asymmetric bets and cutting the wrong ones quickly.</p>
+  </div>
 
   <div id="view-ideas" style="display:none">
     <p class="ideas-intro">Fifteen names per horizon, drawn from the full NSE universe after a liquidity filter, selected by how well each fits its setup archetype. These are rankings of measured evidence — open any name for its complete ledger.</p>
@@ -1045,7 +1093,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","results","portfolio","options","vocab"];
+const TABS = ["screener","ideas","live","results","portfolio","options","vocab"];
 function switchTab(which){
   TABS.forEach(t=>{
     const on = t===which;
@@ -1054,7 +1102,112 @@ function switchTab(which){
     $("tab-"+t).setAttribute("aria-selected", on);
   });
   if(which==="ideas") loadIdeas();
+  if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
+  if(which==="live"){ loadLive(); liveTimer = setInterval(loadLive, 30000); }
 }
+
+
+/* \u2500\u2500 Live intraday scanner \u2500\u2500 */
+let liveTimer = null;
+const KIND_LABEL = {RVOL:"VOLUME SPIKE", ORB:"OPENING RANGE", LEVEL:"LEVEL BREAK"};
+
+function alertCard(a){
+  const money = n => "\u20B9" + Number(n).toLocaleString("en-IN");
+  const out = a.outcome && a.outcome !== "OPEN_AT_CLOSE"
+    ? `<div class="aout ${esc(a.outcome)}">Outcome: ${a.outcome === "TARGET" ? "target hit" : "stopped out"} \u00b7 closed ${money(a.closed_at ?? 0)}</div>` : "";
+  return `<div class="alertcard">
+    <div class="ah">
+      <span class="asym">${esc(a.symbol)}</span>
+      <span class="akind">${esc(KIND_LABEL[a.kind] || a.kind)}</span>
+      <span class="atime">${esc(a.time || "")}</span>
+    </div>
+    <div class="ahl">${esc(a.headline || "")}</div>
+    <div class="anums">
+      <span>Entry <b>${money(a.entry)}</b></span>
+      <span>Stop <b>${money(a.stop)}</b> (\u2212${a.risk_pct}%)</span>
+      <span>Target <b>${money(a.target)}</b></span>
+      ${a.rr ? `<span>R:R <b>1:${a.rr}</b></span>` : ""}
+      <span>RVOL <b>${a.rvol}\u00d7</b></span>
+    </div>
+    <div class="awhy">${esc(a.why || "")}</div>${out}
+  </div>`;
+}
+
+async function loadLive(){
+  try{
+    const res = await fetch(`${API_BASE}/intraday/status`);
+    const d = await res.json();
+    $("ldot").className = "livedot" + (d.running && d.market_open ? " on" : "");
+    $("lstat").textContent = !d.running ? "not running"
+      : (d.market_open ? `live \u00b7 ${d.watchlist_size} stocks \u00b7 ${d.quotes_last_pass} quotes last pass`
+                       : "running \u00b7 market closed, will resume at 9:15");
+    $("lstats").innerHTML = d.running ? `<div class="statgrid">
+      <div class="statbox"><span class="sk2">Watchlist</span><span class="sv">${d.watchlist_size}</span></div>
+      <div class="statbox"><span class="sk2">Volume profiles</span><span class="sv">${d.profiles_built}</span></div>
+      <div class="statbox"><span class="sk2">Alerts today</span><span class="sv">${(d.alerts_today||[]).length}</span></div>
+    </div>` : "";
+    const rows = d.alerts_today || [];
+    $("lcount").textContent = rows.length ? `${rows.length} fired` : "";
+    $("lalerts").innerHTML = rows.length ? rows.map(alertCard).join("")
+      : `<div class="ideas-note" style="padding:14px 0">${d.running ? "Scanner is live \u2014 nothing has met the volume threshold yet. Quiet is normal; three signals firing 5\u201310 times a day is the design." : "Nothing yet. Start the scanner during market hours (9:15\u20133:30 IST)."}</div>`;
+    if(d.error) $("lalerts").innerHTML += `<div class="ideas-note" style="padding:8px 0;opacity:.7">Last error: ${esc(d.error)}</div>`;
+  }catch(e){
+    $("lstat").textContent = "engine unreachable";
+  }
+  loadHitRate();
+}
+
+async function loadHitRate(){
+  try{
+    const d = await (await fetch(`${API_BASE}/intraday/stats`)).json();
+    const by = d.by_signal || {};
+    const keys = Object.keys(by);
+    if(!keys.length){
+      $("lhit").innerHTML = `<div class="ideas-note" style="padding:14px 0">No closed trades logged yet. Numbers appear here after alerts have been marked at the close.</div>`;
+      return;
+    }
+    $("lhit").innerHTML = `<div class="statgrid">` + keys.map(k=>{
+      const b = by[k];
+      const col = b.expectancy_R > 0 ? "var(--pass)" : "var(--fail)";
+      return `<div class="statbox">
+        <span class="sk2">${esc(KIND_LABEL[k]||k)}</span>
+        <span class="sv">${b.win_rate}% <small style="font-size:.6em;opacity:.6">win</small></span>
+        <span class="sk2" style="margin-top:6px">Expectancy <b style="color:${col}">${b.expectancy_R > 0 ? "+" : ""}${b.expectancy_R}R</b> \u00b7 ${b.trades} trades</span>
+      </div>`;
+    }).join("") + `</div><p class="vnote">${esc(d.note||"")}</p>`;
+  }catch(e){}
+}
+
+$("livestart").addEventListener("click", async ()=>{
+  $("livestart").textContent = "Starting\u2026";
+  try{
+    const d = await (await fetch(`${API_BASE}/intraday/start`, {method:"POST"})).json();
+    $("livestart").textContent = "Scanner started";
+    if(!d.alerts_configured)
+      $("lstat").textContent = "running \u2014 set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID on Render for phone alerts";
+  }catch(e){ $("livestart").textContent = "Start live scanner"; }
+  loadLive();
+});
+
+$("livescan").addEventListener("click", async ()=>{
+  $("livescan").textContent = "Scanning\u2026";
+  try{
+    const d = await (await fetch(`${API_BASE}/intraday/scan`, {method:"POST"})).json();
+    $("livescan").textContent = d.count ? `${d.count} fired` : "Nothing met the bar";
+  }catch(e){ $("livescan").textContent = "Scan once now"; }
+  setTimeout(()=>{ $("livescan").textContent = "Scan once now"; }, 4000);
+  loadLive();
+});
+
+$("livetest").addEventListener("click", async ()=>{
+  $("livetest").textContent = "Sending\u2026";
+  try{
+    const d = await (await fetch(`${API_BASE}/alerts/test`)).json();
+    $("livetest").textContent = d.sent ? "Sent \u2014 check Telegram"
+      : (d.telegram_configured ? "Send failed" : "Telegram not configured");
+  }catch(e){ $("livetest").textContent = "Test alert"; }
+  setTimeout(()=>{ $("livetest").textContent = "Test alert"; }, 5000);
+});
 
 /* ── Results ────────────────────────────────────────────────────────── */
 let lastResult = null;
