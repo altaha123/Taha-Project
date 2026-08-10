@@ -14,6 +14,10 @@ import numpy as np
 
 from engine import technical_score, fundamental_score, composite
 from data_source import resolve, fundamentals, shareholding, NotFound
+try:
+    import dhan_source as dhan
+except Exception:
+    dhan = None
 import scan as scanner
 from results import quarterly_results
 from portfolio import build_report, MAX_HOLDINGS, WORKERS as PF_WORKERS
@@ -109,6 +113,73 @@ def root():
     return {"app": "Altaha Screener", "tagline": "Where Logic Meets Validations",
             "endpoints": ["/analyze?ticker=RELIANCE", "/leaderboard",
                           "/scan/start", "/scan/status", "/health"]}
+
+
+INDICES = [("^NSEI", "NIFTY 50"), ("^BSESN", "SENSEX"),
+            ("^NSEBANK", "BANK NIFTY"), ("^INDIAVIX", "INDIA VIX")]
+
+
+@app.get("/market")
+def market():
+    """Index levels for the ticker strip. Cached by the data layer."""
+    import datetime as _dt
+    out = []
+    for sym, label in INDICES:
+        try:
+            _, t, hist = resolve(sym)
+            c = hist["Close"].dropna()
+            if len(c) < 2:
+                continue
+            last, prev = float(c.iloc[-1]), float(c.iloc[-2])
+            out.append({"label": label, "level": round(last, 2),
+                        "change": round(last - prev, 2),
+                        "change_pct": round(100 * (last - prev) / prev, 2)})
+        except Exception:
+            continue
+
+    # Market session status, IST
+    dhan_status = None
+    if dhan is not None and dhan.configured():
+        try:
+            dhan_status = dhan.market_status()
+        except Exception:
+            dhan_status = None
+
+    now = _dt.datetime.utcnow() + _dt.timedelta(hours=5, minutes=30)
+    mins = now.hour * 60 + now.minute
+    weekday = now.weekday() < 5
+    if not weekday:
+        status = "closed"
+    elif 555 <= mins < 915:          # 09:15 - 15:30
+        status = "open"
+    elif mins < 555:
+        status = "pre"
+    else:
+        status = "closed"
+    if dhan_status:
+        if "open" in dhan_status:
+            status = "open"
+        elif "pre" in dhan_status:
+            status = "pre"
+        elif "close" in dhan_status:
+            status = "closed"
+
+    return to_native({"indices": out, "status": status,
+                      "ist": now.strftime("%d %b %Y, %H:%M IST")})
+
+
+@app.get("/datasource")
+def datasource():
+    """Which price feed is live right now, and why."""
+    if dhan is None or not dhan.configured():
+        return {"price_source": "yahoo", "dhan_configured": False,
+                "detail": "Set DHAN_CLIENT_ID and DHAN_ACCESS_TOKEN in Render to enable Dhan."}
+    st = dhan.is_live()
+    scrip = dhan.load_scrip()
+    return {"price_source": "dhan" if st["ok"] else "yahoo (dhan unavailable)",
+            "dhan_configured": True, "dhan_ok": st["ok"], "detail": st["detail"],
+            "instruments_mapped": len(scrip or {}),
+            "token": dhan.token_info()}
 
 
 @app.get("/health")
@@ -351,6 +422,7 @@ def analyze(ticker: str):
         "price": tech["price"],
         "atr_pct": tech["atr_pct"],
         "volume_series": tech["volume_series"],
+        "price_series": tech.get("price_series"),
         "shareholding": holding,
         "setup": setup,
         "plain": plain,
