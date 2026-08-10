@@ -372,21 +372,37 @@ def results(ticker: str):
 
 
 RANGES = {
-    "1D":  {"mode": "intraday", "interval": "5",  "days": 3,   "label": "1 day"},
-    "1W":  {"mode": "intraday", "interval": "15", "days": 8,   "label": "1 week"},
-    "1M":  {"mode": "daily",    "sessions": 22,               "label": "1 month"},
-    "3M":  {"mode": "daily",    "sessions": 66,               "label": "3 months"},
-    "6M":  {"mode": "daily",    "sessions": 126,              "label": "6 months"},
-    "1Y":  {"mode": "daily",    "sessions": 252,              "label": "1 year"},
+    "1m":  {"mode": "intraday", "interval": "1",  "days": 4,   "label": "1 minute"},
+    "5m":  {"mode": "intraday", "interval": "5",  "days": 10,  "label": "5 minute"},
+    "15m": {"mode": "intraday", "interval": "15", "days": 25,  "label": "15 minute"},
+    "1H":  {"mode": "intraday", "interval": "60", "days": 90,  "label": "1 hour"},
+    "4H":  {"mode": "intraday", "interval": "60", "days": 240, "label": "4 hour",
+            "resample": 4},
+    "1D":  {"mode": "daily",    "sessions": 400,              "label": "1 day"},
+    "1W":  {"mode": "daily",    "sessions": 1200, "resample_w": True, "label": "1 week"},
 }
 
 
+def _resample_hours(df, factor: int):
+    """Combine N consecutive candles into one (for 4H from 60m)."""
+    out = df.resample(f"{factor}h", origin="start", label="left", closed="left").agg(
+        {"Open": "first", "High": "max", "Low": "min", "Close": "last", "Volume": "sum"})
+    return out.dropna(subset=["Close"])
+
+
+def _resample_weeks(df):
+    out = df.resample("W-FRI", label="left", closed="left").agg(
+        {"Open": "first", "High": "max", "Low": "min", "Close": "last", "Volume": "sum"})
+    return out.dropna(subset=["Close"])
+
+
 @app.get("/chart")
-def chart(ticker: str, range: str = "1M"):
+def chart(ticker: str, range: str = "1D"):
     """Candles for one symbol at a chosen timeframe, with overlays."""
     from engine import ema, bollinger
-    key = (range or "1M").upper()
-    cfg = RANGES.get(key)
+    raw = (range or "1D").strip()
+    key = next((k for k in RANGES if k.lower() == raw.lower()), None)
+    cfg = RANGES.get(key) if key else None
     if not cfg:
         raise HTTPException(400, f"range must be one of {', '.join(RANGES)}")
 
@@ -405,12 +421,8 @@ def chart(ticker: str, range: str = "1M"):
             raise HTTPException(404, f"No intraday data available for {base}. "
                                      "It may be a holiday, or the symbol may be unlisted.")
         live = True
-        if key == "1D" and len(df):
-            last_day = df.index[-1].date() if hasattr(df.index[-1], "date") else None
-            if last_day is not None:
-                same = [i for i in df.index if i.date() == last_day]
-                if len(same) >= 5:
-                    df = df.loc[same]
+        if cfg.get("resample") and isinstance(df.index, pd.DatetimeIndex):
+            df = _resample_hours(df, cfg["resample"])
     else:
         try:
             sym, t, hist = resolve(base)
@@ -419,6 +431,8 @@ def chart(ticker: str, range: str = "1M"):
         except Exception:
             raise HTTPException(503, "The data provider is busy. Try again in a minute.")
         df = hist.tail(cfg["sessions"])
+        if cfg.get("resample_w") and isinstance(df.index, pd.DatetimeIndex):
+            df = _resample_weeks(df)
 
     close = df["Close"]
     e20, e50 = ema(close, 20), ema(close, 50)
@@ -427,13 +441,16 @@ def chart(ticker: str, range: str = "1M"):
     rows = []
     for i in df.index:
         try:
+            ts = int(pd.Timestamp(i).timestamp()) if isinstance(df.index, pd.DatetimeIndex) else None
             rows.append([
+                ts,
                 round(float(df.at[i, "Open"]), 2), round(float(df.at[i, "High"]), 2),
                 round(float(df.at[i, "Low"]), 2), round(float(df.at[i, "Close"]), 2),
                 None if pd.isna(e20.get(i)) else round(float(e20.get(i)), 2),
                 None if pd.isna(e50.get(i)) else round(float(e50.get(i)), 2),
                 None if pd.isna(bup.get(i)) else round(float(bup.get(i)), 2),
                 None if pd.isna(blo.get(i)) else round(float(blo.get(i)), 2),
+                int(df.at[i, "Volume"]) if "Volume" in df.columns and not pd.isna(df.at[i, "Volume"]) else 0,
             ])
         except Exception:
             continue
@@ -450,6 +467,91 @@ def chart(ticker: str, range: str = "1M"):
         "change": round(last - first, 2),
         "change_pct": round(100 * (last - first) / first, 2) if first else None,
         "as_of": str(df.index[-1])[:19] if len(df) else None,
+    })
+
+
+@app.get("/quote")
+def quote(ticker: str):
+    """Single live quote — used by the chart's live tick mode."""
+    if dhan is None or not dhan.configured():
+        raise HTTPException(503, "Live quotes need the Dhan feed.")
+    base = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        q = dhan.bulk_quotes([base], mode="ltp")
+    except Exception:
+        raise HTTPException(503, "Quote feed busy.")
+    row = q.get(base)
+    if not row or not row.get("ltp"):
+        raise HTTPException(404, f"No live quote for {base}.")
+    return to_native({"ticker": base, "ltp": row["ltp"], "ts": int(time.time())})
+
+
+@app.get("/options/expiries")
+def options_expiries(ticker: str):
+    if dhan is None or not dhan.configured():
+        raise HTTPException(503, "Options data needs the Dhan feed.")
+    ex = dhan.expiry_list(ticker)
+    if not ex:
+        raise HTTPException(404, f"No option expiries found for {ticker.upper()}. "
+                                 "Index options: NIFTY, BANKNIFTY, FINNIFTY, SENSEX.")
+    return {"ticker": ticker.upper(), "expiries": ex[:12]}
+
+
+@app.get("/options/chain")
+def options_chain(ticker: str, expiry: str):
+    if dhan is None or not dhan.configured():
+        raise HTTPException(503, "Options data needs the Dhan feed.")
+    raw = dhan.option_chain(ticker, expiry)
+    data = (raw or {}).get("data") or {}
+    oc = data.get("oc") or {}
+    if not oc:
+        raise HTTPException(404, "No option chain returned for that expiry.")
+
+    spot = data.get("last_price")
+    rows, ce_oi, pe_oi, ce_vol, pe_vol = [], 0, 0, 0, 0
+    for strike, legs in sorted(oc.items(), key=lambda kv: float(kv[0])):
+        ce = (legs or {}).get("ce") or {}
+        pe = (legs or {}).get("pe") or {}
+        g_ce = ce.get("greeks") or {}
+        g_pe = pe.get("greeks") or {}
+        ce_oi += ce.get("oi") or 0
+        pe_oi += pe.get("oi") or 0
+        ce_vol += ce.get("volume") or 0
+        pe_vol += pe.get("volume") or 0
+        rows.append({
+            "strike": round(float(strike), 2),
+            "ce_ltp": ce.get("last_price"), "pe_ltp": pe.get("last_price"),
+            "ce_oi": ce.get("oi"), "pe_oi": pe.get("oi"),
+            "ce_vol": ce.get("volume"), "pe_vol": pe.get("volume"),
+            "ce_iv": ce.get("implied_volatility"), "pe_iv": pe.get("implied_volatility"),
+            "ce_delta": g_ce.get("delta"), "pe_delta": g_pe.get("delta"),
+        })
+
+    # Max pain: strike where combined option-writer loss is smallest
+    max_pain, best = None, None
+    for r in rows:
+        k = r["strike"]
+        pain = sum(max(0, k - x["strike"]) * (x["ce_oi"] or 0) +
+                   max(0, x["strike"] - k) * (x["pe_oi"] or 0) for x in rows)
+        if best is None or pain < best:
+            best, max_pain = pain, k
+
+    if spot:
+        rows = sorted(rows, key=lambda r: abs(r["strike"] - float(spot)))[:21]
+        rows.sort(key=lambda r: r["strike"])
+
+    return to_native({
+        "ticker": ticker.upper(), "expiry": expiry, "spot": spot,
+        "pcr_oi": round(pe_oi / ce_oi, 3) if ce_oi else None,
+        "pcr_volume": round(pe_vol / ce_vol, 3) if ce_vol else None,
+        "total_ce_oi": ce_oi, "total_pe_oi": pe_oi,
+        "max_pain": max_pain,
+        "rows": rows,
+        "note": ("Put-call ratio above ~1 means more puts are open than calls, often read as "
+                 "hedging or bearish positioning; below ~0.7 leans bullish. Max pain is the "
+                 "strike where option writers lose least. Both are sentiment gauges, not "
+                 "forecasts."),
+        "disclaimer": DISCLAIMER,
     })
 
 
