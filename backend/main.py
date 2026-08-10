@@ -26,6 +26,8 @@ from tradeplan import build_plan
 from portfolio import build_report, MAX_HOLDINGS, WORKERS as PF_WORKERS
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import archetypes as A
+import intraday
+import alerts as notify
 from plain import highlights, plain_verdict
 
 app = FastAPI(title="Altaha Screener API", version="2.1")
@@ -682,3 +684,63 @@ def analyze(ticker: str):
                         "g_score": fund.get("g_score"), "checks": fund["checks"]},
         "disclaimer": DISCLAIMER,
     })
+
+
+# ---------------------------------------------------------------------------
+# Live intraday scanner
+# ---------------------------------------------------------------------------
+
+def _default_watchlist(limit=200):
+    """Liquid names: prefer the scanned leaderboard, else the curated core."""
+    rows = (_state.get("payload") or {}).get("rankings") or []
+    syms = [r["symbol"] for r in rows if r.get("symbol")][:limit]
+    if len(syms) < 40:
+        syms = sorted({s for s in scanner.FALLBACK.split() if s})[:limit]
+    return syms
+
+
+@app.post("/intraday/start")
+def intraday_start(limit: int = 200):
+    if dhan is None or not dhan.configured():
+        raise HTTPException(503, "Dhan is not configured — the live scanner needs it for quotes.")
+    wl = _default_watchlist(limit)
+    intraday.start(wl)
+    return {"started": True, "watchlist_size": len(wl),
+            "alerts_configured": notify.configured(),
+            "note": ("Scans every 60s while the market is open. Alerts go to Telegram when "
+                     "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set.")}
+
+
+@app.post("/intraday/stop")
+def intraday_stop():
+    intraday.stop()
+    return {"stopped": True}
+
+
+@app.get("/intraday/status")
+def intraday_status():
+    return intraday.status()
+
+
+@app.post("/intraday/scan")
+def intraday_scan_now():
+    """Force one pass — useful for testing outside market hours."""
+    if not intraday._state["watch"]:
+        intraday.start(_default_watchlist())
+    fired = intraday.scan_once()
+    return {"fired": fired, "count": len(fired), "status": intraday.status()}
+
+
+@app.get("/intraday/stats")
+def intraday_stats():
+    return intraday.stats()
+
+
+@app.post("/intraday/mark")
+def intraday_mark():
+    return {"marked": intraday.mark_outcomes(), "stats": intraday.stats()}
+
+
+@app.get("/alerts/test")
+def alerts_test():
+    return notify.test()
