@@ -45,7 +45,9 @@ OUT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaderboard
 # Tunables
 # ---------------------------------------------------------------------------
 CHUNK = 40                 # symbols per bulk price request
-PHASE2_SIZE = 200          # candidates that get full fundamental analysis
+# Candidates that get full fundamental analysis. Overridable so a 512 MB
+# Render instance can be told to go lighter: set SCAN_DEPTH=120 in the env.
+PHASE2_SIZE = int(os.environ.get("SCAN_DEPTH", "200") or 200)
 PHASE2_WORKERS = 3         # polite concurrency for per-stock fundamentals
 MIN_ROWS = 120             # minimum trading days of history
 MIN_TURNOVER = 2e7         # liquidity floor: avg daily traded value ≥ ₹2 crore
@@ -258,7 +260,48 @@ def deep_score(cand):
     }
 
 
-def run_scan(progress=None, names=None):
+def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
+                   ill, nod, n_deep, failed, partial=False):
+    rows = sorted(rows, key=lambda r: (r["composite"], r["fundamental"],
+                                       r["technical"]), reverse=True)
+    return {
+        "scanned_at": dt.datetime.now().strftime("%d %b %Y, %H:%M")
+                      + (" (partial — scan in progress)" if partial else ""),
+        "partial": partial,
+        "universe_source": source,
+        "universe_size": universe_all,
+        "prefiltered_by_quote": prefiltered,
+        "liquidity_floor": "avg daily traded value ≥ ₹2 crore (60 sessions)",
+        "phase1_candidates": n_candidates,
+        "skipped_illiquid": ill,
+        "skipped_no_data": nod,
+        "phase2_analysed": n_deep,
+        "scored": len(rows),
+        "methodology": ("Phase 1: full universe bulk-scanned for liquidity and technicals. "
+                        "Phase 2: top candidates receive full fundamental analysis "
+                        "(Piotroski, adapted G-Score, ROCE, shareholding) and setup "
+                        "classification. Composite = 50% technical + 50% fundamental. "
+                        "Rankings reflect the scan date only."),
+        "rankings": rows[:STORE_TOP],
+        "skipped": failed,
+    }
+
+
+def _dump(payload):
+    try:
+        with open(OUT_FILE, "w") as f:
+            json.dump(payload, f, indent=2)
+    except Exception:
+        pass
+
+
+def run_scan(progress=None, names=None, checkpoint=None):
+    """
+    checkpoint: optional callable(payload) invoked with a partial payload
+    every few phase-2 completions AND written to disk, so a process restart
+    (free-tier memory limits are real) still leaves usable rankings behind
+    instead of silently wiping the scan.
+    """
     if names is not None:
         symbols, source = list(names), f"Provided list ({len(names)} symbols)"
     else:
@@ -279,53 +322,50 @@ def run_scan(progress=None, names=None):
     deep = cands[:n2]
     state["total"] = len(symbols) + len(deep)      # exact now that we know
 
-    rows, failed = [], []
-    with ThreadPoolExecutor(max_workers=PHASE2_WORKERS) as pool:
-        futures = {pool.submit(deep_score, c): c["symbol"] for c in deep}
-        for fut in as_completed(futures):
-            sym = futures[fut]
-            try:
-                r = fut.result()
-                if r:
-                    rows.append(r)
-                else:
-                    failed.append(sym)
-            except Exception:
-                failed.append(sym)
-            state["done"] += 1
-            if progress:
-                progress(state["done"], state["total"], len(rows))
-
     n_candidates = len(cands)
     del cands
     gc.collect()
-    rows.sort(key=lambda r: (r["composite"], r["fundamental"], r["technical"]), reverse=True)
 
-    payload = {
-        "scanned_at": dt.datetime.now().strftime("%d %b %Y, %H:%M"),
-        "universe_source": source,
-        "universe_size": universe_all,
-        "prefiltered_by_quote": prefiltered,
-        "liquidity_floor": "avg daily traded value ≥ ₹2 crore (60 sessions)",
-        "phase1_candidates": n_candidates,
-        "skipped_illiquid": ill,
-        "skipped_no_data": nod,
-        "phase2_analysed": len(deep),
-        "scored": len(rows),
-        "methodology": ("Phase 1: full universe bulk-scanned for liquidity and technicals. "
-                        "Phase 2: top candidates receive full fundamental analysis "
-                        "(Piotroski, adapted G-Score, ROCE, shareholding) and setup "
-                        "classification. Composite = 50% technical + 50% fundamental. "
-                        "Rankings reflect the scan date only."),
-        "rankings": rows[:STORE_TOP],
-        "skipped": failed,
-    }
+    rows, failed = [], []
+    CP_EVERY = 15                       # checkpoint cadence (scored names)
+
+    def _checkpoint(final=False):
+        cp = _build_payload(list(rows), source, universe_all, prefiltered,
+                            n_candidates, ill, nod, len(deep), list(failed),
+                            partial=not final)
+        _dump(cp)
+        if checkpoint:
+            try:
+                checkpoint(cp)
+            except Exception:
+                pass
+        return cp
+
     try:
-        with open(OUT_FILE, "w") as f:
-            json.dump(payload, f, indent=2)
-    except Exception:
-        pass
-    return payload
+        with ThreadPoolExecutor(max_workers=PHASE2_WORKERS) as pool:
+            futures = {pool.submit(deep_score, c): c["symbol"] for c in deep}
+            for fut in as_completed(futures):
+                sym = futures[fut]
+                try:
+                    r = fut.result()
+                    if r:
+                        rows.append(r)
+                    else:
+                        failed.append(sym)
+                except MemoryError:
+                    failed.append(sym)
+                    gc.collect()
+                except Exception:
+                    failed.append(sym)
+                state["done"] += 1
+                if progress:
+                    progress(state["done"], state["total"], len(rows))
+                if rows and len(rows) % CP_EVERY == 0:
+                    _checkpoint()
+    except MemoryError:
+        gc.collect()                    # salvage whatever scored so far
+
+    return _checkpoint(final=True)
 
 
 def main():
