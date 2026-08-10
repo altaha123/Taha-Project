@@ -65,6 +65,26 @@ _state = {
 }
 
 
+
+# ---------------------------------------------------------------------------
+# Admin guard
+#
+# Every control endpoint below was previously open to anyone who found the
+# Render URL: they could stop the scanner, spam the Telegram alerts, or kick
+# off a universe scan that burns the Dhan rate limit. Set ADMIN_KEY in the
+# environment and pass ?key=... to use them. If ADMIN_KEY is unset the guard
+# stays open, so nothing breaks for a local run — but it should be set in
+# production.
+# ---------------------------------------------------------------------------
+
+ADMIN_KEY = os.environ.get("ADMIN_KEY", "").strip()
+
+
+def _require_admin(key: str = ""):
+    if ADMIN_KEY and key != ADMIN_KEY:
+        raise HTTPException(401, "This control endpoint needs the admin key (?key=...).")
+
+
 def _load_from_disk():
     if os.path.exists(LEADERBOARD_FILE):
         try:
@@ -74,26 +94,6 @@ def _load_from_disk():
                 _state["finished_at"] = os.path.getmtime(LEADERBOARD_FILE)
         except Exception:
             pass
-
-
-def _autostart_intraday():
-    """
-    Render restarts the process on deploy, on idle wake-up, and sometimes for
-    no visible reason. A scanner that only starts when a human presses a button
-    silently stops alerting after the first restart, which is the worst kind of
-    failure: quiet. So it re-arms itself on boot.
-    """
-    if os.environ.get("INTRADAY_AUTOSTART", "").strip().lower() not in ("1", "true", "yes"):
-        return
-    try:
-        limit = int(os.environ.get("INTRADAY_WATCHLIST", "200"))
-    except ValueError:
-        limit = 200
-    try:
-        if dhan is not None and dhan.configured():
-            intraday.start(_default_watchlist(limit))
-    except Exception:
-        pass
 
 
 _load_from_disk()
@@ -255,8 +255,9 @@ def health():
 
 @app.post("/scan/start")
 @app.get("/scan/start")
-def scan_start(force: bool = False):
+def scan_start(force: bool = False, key: str = ""):
     """Kick off a background scan. Returns immediately."""
+    _require_admin(key)
     with _lock:
         if _state["status"] == "running":
             return {"started": False, "reason": "already_running", **scan_status()}
@@ -740,7 +741,8 @@ def _default_watchlist(limit=200):
 
 
 @app.post("/intraday/start")
-def intraday_start(limit: int = 200):
+def intraday_start(limit: int = 200, key: str = ""):
+    _require_admin(key)
     if dhan is None or not dhan.configured():
         raise HTTPException(503, "Dhan is not configured — the live scanner needs it for quotes.")
     wl = _default_watchlist(limit)
@@ -752,7 +754,8 @@ def intraday_start(limit: int = 200):
 
 
 @app.post("/intraday/stop")
-def intraday_stop():
+def intraday_stop(key: str = ""):
+    _require_admin(key)
     intraday.stop()
     return {"stopped": True}
 
@@ -763,7 +766,8 @@ def intraday_status():
 
 
 @app.post("/intraday/scan")
-def intraday_scan_now():
+def intraday_scan_now(key: str = ""):
+    _require_admin(key)
     """Force one pass — useful for testing outside market hours."""
     if not intraday._state["watch"]:
         intraday.start(_default_watchlist())
@@ -777,12 +781,14 @@ def intraday_stats():
 
 
 @app.post("/intraday/mark")
-def intraday_mark():
+def intraday_mark(key: str = ""):
+    _require_admin(key)
     return {"marked": intraday.mark_outcomes(), "stats": intraday.stats()}
 
 
 @app.get("/alerts/test")
-def alerts_test():
+def alerts_test(key: str = ""):
+    _require_admin(key)
     return notify.test()
 
 
@@ -797,15 +803,25 @@ def cron_tick():
     if not intraday._state["running"]:
         _autostart_intraday()
         revived = intraday._state["running"]
-    fired = []
+    fired, marked = [], 0
     if intraday.market_open() and intraday._state["running"]:
         try:
             fired = intraday.scan_once()
         except Exception:
             pass
+    else:
+        # Outcome marking previously ran ONLY inside the scanner loop. If the
+        # process restarted after the close, or the scanner was stopped, that
+        # day's alerts stayed permanently unmarked and never reached the hit
+        # rate. The cron tick now closes that gap; mark_outcomes is idempotent.
+        try:
+            if intraday.now_ist().hour >= 16:
+                marked = intraday.mark_outcomes()
+        except Exception:
+            pass
     return {"awake": True, "scanner_running": intraday._state["running"],
             "revived": revived, "market_open": intraday.market_open(),
-            "fired_now": len(fired)}
+            "fired_now": len(fired), "outcomes_marked": marked}
 
 
 _autostart_intraday()
