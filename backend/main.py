@@ -21,6 +21,8 @@ except Exception:
     dhan = None
 import scan as scanner
 from results import quarterly_results
+from levels import compute_levels
+from tradeplan import build_plan
 from portfolio import build_report, MAX_HOLDINGS, WORKERS as PF_WORKERS
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import archetypes as A
@@ -627,6 +629,26 @@ def analyze(ticker: str):
     except Exception:
         holding = {"published": False}
 
+    try:
+        lv = compute_levels(hist)
+    except Exception:
+        lv = None
+    try:
+        plan = build_plan(hist, lv, tech)
+    except Exception:
+        plan = None
+    # Percentile vs the scanned universe — makes the score mean something.
+    pct = None
+    try:
+        rows = (_state.get("payload") or {}).get("rankings") or []
+        base = sym.replace(".NS", "").replace(".BO", "")
+        mine = next((r for r in rows if r.get("symbol") == base), None)
+        if mine and mine.get("composite") is not None and len(rows) >= 50:
+            comps = [r["composite"] for r in rows if r.get("composite") is not None]
+            pct = round(sum(1 for c in comps if c < mine["composite"]) / len(comps) * 100)
+    except Exception:
+        pct = None
+
     verdict = composite(tech, fund)
     try:
         setup = A.evaluate(tech, fund)
@@ -649,6 +671,9 @@ def analyze(ticker: str):
         "volume_series": tech["volume_series"],
         "price_series": tech.get("price_series"),
         "shareholding": holding,
+        "levels": lv,
+        "plan": plan,
+        "percentile": pct,
         "setup": setup,
         "plain": plain,
         "verdict": verdict,
