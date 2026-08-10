@@ -1082,7 +1082,7 @@
 
 <script>
 /* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
-const API_BASE = "https://taha-project.onrender.com";
+const API_BASE = "http://localhost:8000";
 /* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
@@ -1106,6 +1106,23 @@ function switchTab(which){
   if(which==="live"){ loadLive(); liveTimer = setInterval(loadLive, 30000); }
 }
 
+
+
+/* Admin key for control endpoints. Kept in memory for the session only \u2014
+   never hardcoded, because this file is public. Set ADMIN_KEY on Render and
+   enter it once when prompted. */
+let ADMIN_KEY = "";
+function adminKey(){
+  if(!ADMIN_KEY){
+    ADMIN_KEY = window.prompt("Admin key (set as ADMIN_KEY on Render). Leave blank if you haven't set one.") || "";
+  }
+  return ADMIN_KEY;
+}
+function withKey(url){
+  const k = adminKey();
+  if(!k) return url;
+  return url + (url.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(k);
+}
 
 /* \u2500\u2500 Live intraday scanner \u2500\u2500 */
 let liveTimer = null;
@@ -1181,7 +1198,7 @@ async function loadHitRate(){
 $("livestart").addEventListener("click", async ()=>{
   $("livestart").textContent = "Starting\u2026";
   try{
-    const d = await (await fetch(`${API_BASE}/intraday/start`, {method:"POST"})).json();
+    const d = await (await fetch(withKey(`${API_BASE}/intraday/start`), {method:"POST"})).json();
     $("livestart").textContent = "Scanner started";
     if(!d.alerts_configured)
       $("lstat").textContent = "running \u2014 set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID on Render for phone alerts";
@@ -1192,7 +1209,7 @@ $("livestart").addEventListener("click", async ()=>{
 $("livescan").addEventListener("click", async ()=>{
   $("livescan").textContent = "Scanning\u2026";
   try{
-    const d = await (await fetch(`${API_BASE}/intraday/scan`, {method:"POST"})).json();
+    const d = await (await fetch(withKey(`${API_BASE}/intraday/scan`), {method:"POST"})).json();
     $("livescan").textContent = d.count ? `${d.count} fired` : "Nothing met the bar";
   }catch(e){ $("livescan").textContent = "Scan once now"; }
   setTimeout(()=>{ $("livescan").textContent = "Scan once now"; }, 4000);
@@ -1202,7 +1219,7 @@ $("livescan").addEventListener("click", async ()=>{
 $("livetest").addEventListener("click", async ()=>{
   $("livetest").textContent = "Sending\u2026";
   try{
-    const d = await (await fetch(`${API_BASE}/alerts/test`)).json();
+    const d = await (await fetch(withKey(`${API_BASE}/alerts/test`))).json();
     $("livetest").textContent = d.sent ? "Sent \u2014 check Telegram" : "Send failed";
     if(!d.sent){
       $("lalerts").innerHTML = `<div class="ideas-note" style="padding:14px 0">
@@ -1399,7 +1416,7 @@ async function startScan(force){
   $("genbtn2").disabled=true; $("genbtn2").textContent="Scanning…";
   $("gennote2").textContent="A few minutes — keep this tab open";
   try{
-    const r = await (await fetch(`${API_BASE}/scan/start${force?"?force=true":""}`)).json();
+    const r = await (await fetch(withKey(`${API_BASE}/scan/start${force?"?force=true":""}`))).json();
     if(!r.started && r.reason==="cached"){
       $("genbtn2").disabled=false; $("genbtn2").textContent="Refresh universe scan";
       $("gennote2").textContent=""; loadIdeas(); return;
