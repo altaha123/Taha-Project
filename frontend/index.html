@@ -17,6 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script>if(typeof LightweightCharts==="undefined")document.write('<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -500,6 +501,39 @@
     line-height:1.75;color:var(--mute)}
   footer{font-family:var(--mono);font-size:10px;color:var(--mute);text-align:center;
     padding:30px 0 44px;letter-spacing:.22em;text-transform:uppercase}
+
+  /* -- Full-window chart page (?chart=SYMBOL) -- */
+  body.fullchart .tickerbar, body.fullchart header, body.fullchart main,
+  body.fullchart footer{display:none}
+  #fcpage{display:none;position:fixed;inset:0;z-index:60;background:var(--paper);
+    flex-direction:column}
+  body.fullchart #fcpage{display:flex}
+  .fctop{display:flex;align-items:center;gap:14px;padding:10px 16px;flex-wrap:wrap;
+    border-bottom:1px solid var(--rule);background:#fff}
+  .fcbrand{font-family:var(--serif);font-size:21px;letter-spacing:-.01em;white-space:nowrap}
+  .fcbrand i{font-style:italic;color:var(--gold-dp)}
+  .fcsym{display:flex;border:1px solid var(--ink);border-radius:2px;overflow:hidden;background:#fff}
+  .fcsym input{border:none;background:transparent;font-family:var(--mono);font-size:13px;
+    padding:8px 11px;width:160px;letter-spacing:.06em;outline:none;color:var(--ink)}
+  .fcsym button{background:var(--ink);color:var(--paper);border:none;padding:0 15px;
+    font-family:var(--sans);font-weight:500;font-size:12.5px;cursor:pointer}
+  .fcsym button:hover{background:var(--gold-dp)}
+  .fcprice{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+  .fcback{margin-left:auto;font-size:12.5px;color:var(--gold-dp);text-decoration:none;
+    border-bottom:1px solid var(--rule);white-space:nowrap}
+  .fcback:hover{border-color:var(--gold)}
+  .fcbars{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:8px 16px;border-bottom:1px solid var(--rule);background:var(--paper-2)}
+  .fcbars .tfbar,.fcbars .drawbar{margin:0}
+  #fcbox{flex:1;position:relative;background:#fff;min-height:240px;overflow:hidden}
+  #fchintrow{padding:6px 16px 8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--mute);border-top:1px solid var(--rule-2)}
+  .cxlegend{position:absolute;top:8px;left:8px;z-index:5;display:none;pointer-events:none;
+    font-family:var(--mono);font-size:11px;color:var(--ink-2);
+    background:rgba(251,250,247,.93);border:1px solid var(--rule);padding:4px 9px}
+  .fbtag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mute);border:1px solid var(--rule);padding:2px 7px;margin-left:8px;
+    vertical-align:2px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -637,9 +671,10 @@
         <button class="tf" data-r="4H">4H</button>
         <button class="tf active" data-r="1D">1D</button>
         <button class="tf" data-r="1W">1W</button>
+        <button class="tf" id="fullchartbtn" title="Open this chart full-screen in a new window">⛶ Full chart</button>
         <span class="tfnote" id="tfnote"></span>
       </div>
-      <div class="drawbar">
+      <div class="drawbar" id="drawbar">
         <span class="dlbl">Draw</span>
         <button class="dtool active" data-t="none" title="Pan and zoom">Cursor</button>
         <button class="dtool" data-t="trend" title="Click two points">Trendline</button>
@@ -649,7 +684,7 @@
         <label class="dchk"><input type="checkbox" id="showbb"> Bollinger</label>
         <label class="dchk"><input type="checkbox" id="showvol" checked> Volume</label>
       </div>
-      <div id="chartbox"></div>
+      <div id="chartbox"><div class="cxlegend" id="cxlegend"></div></div>
       <div class="charthint" id="charthint">Scroll to zoom, drag to pan. Pick a drawing tool to mark up the chart.</div>
     </div>
 
@@ -877,6 +912,46 @@
 
 <footer>Altaha Screener · Educational Use Only</footer>
 
+<!-- Full-window chart page — shown only when the URL carries ?chart=SYMBOL -->
+<div id="fcpage">
+  <div class="fctop">
+    <span class="fcbrand">Altaha <i>Chart</i></span>
+    <div class="fcsym">
+      <input id="fcinput" placeholder="Symbol — RELIANCE…" autocomplete="off"
+             spellcheck="false" aria-label="Chart symbol">
+      <button id="fcgo">Load</button>
+    </div>
+    <span class="fcprice" id="fcstat"></span>
+    <span class="livebadge" id="fclive">Live</span>
+    <a class="fcback" href="?">← Back to Screener</a>
+  </div>
+  <div class="fcbars">
+    <div class="tfbar" id="fctfbar">
+      <button class="tf" data-r="tick">TICK</button>
+      <button class="tf" data-r="1m">1m</button>
+      <button class="tf" data-r="5m">5m</button>
+      <button class="tf" data-r="15m">15m</button>
+      <button class="tf" data-r="1H">1H</button>
+      <button class="tf" data-r="4H">4H</button>
+      <button class="tf active" data-r="1D">1D</button>
+      <button class="tf" data-r="1W">1W</button>
+      <span class="tfnote" id="fcnote"></span>
+    </div>
+    <div class="drawbar" id="fcdrawbar">
+      <span class="dlbl">Draw</span>
+      <button class="dtool active" data-t="none" title="Pan and zoom">Cursor</button>
+      <button class="dtool" data-t="trend" title="Click two points">Trendline</button>
+      <button class="dtool" data-t="hline" title="Click a price level">Price line</button>
+      <button class="dtool" id="fcdclear" title="Remove all drawings">Clear</button>
+      <label class="dchk"><input type="checkbox" id="fcma" checked> Averages</label>
+      <label class="dchk"><input type="checkbox" id="fcbb"> Bollinger</label>
+      <label class="dchk"><input type="checkbox" id="fcvol" checked> Volume</label>
+    </div>
+  </div>
+  <div id="fcbox"><div class="cxlegend" id="fclegend"></div></div>
+  <div id="fchintrow"><span id="fchint">Scroll to zoom, drag to pan. Pick a drawing tool to mark up the chart.</span></div>
+</div>
+
 <script>
 /* ── CONFIGURE: paste your Render backend URL between the quotes ───────── */
 const API_BASE = "https://taha-project.onrender.com";
@@ -994,29 +1069,39 @@ let horizon = "short", pollTimer = null, ideasReq = 0;
 
 async function loadIdeas(){
   const req = ++ideasReq;                     // token: only the latest request may render
-  $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Loading…</div>`;
+  $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Loading\u2026</div>`;
   $("hznote").textContent = "";
   try{
-    const d = await (await fetch(`${API_BASE}/ideas?horizon=${horizon}&limit=15`)).json();
+    const res = await fetch(`${API_BASE}/ideas?horizon=${horizon}&limit=15`);
+    const d = await res.json();
     if(req !== ideasReq) return;              // a newer toggle superseded this response
-    if(!d.available){
-      $("hznote").textContent = "";
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No scan yet — press Generate from universe. It takes a few minutes and the result is cached for everyone afterwards.</div>`;
+    if(!res.ok){
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.detail || "Couldn\u2019t load ideas.")}</div>`;
       return;
     }
-    $("hznote").textContent = `${d.note}  ·  Scanned ${d.scanned_at}${d.universe_source ? "  ·  " + d.universe_source : ""}`;
-    if(!d.rows.length){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Fewer than expected names fit the ${horizon}-term archetypes cleanly right now. That is a market condition, not an error — try the other horizon, or refresh the scan after the next session.</div>`;
+    if(!d.available){
+      $("hznote").textContent = "";
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No scan yet \u2014 press Generate from universe. It takes a few minutes and the result is cached for everyone afterwards.</div>`;
+      return;
+    }
+    $("hznote").textContent = `${d.note}  \u00B7  Scanned ${d.scanned_at}` +
+      (d.universe_source ? "  \u00B7  " + d.universe_source : "") +
+      (d.partial ? "  \u00B7  scan still running \u2014 the list improves as it goes" : "");
+    if(!d.rows || !d.rows.length){
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">The scan finished but scored ${d.scored ?? 0} names \u2014 the data provider may have rate-limited the engine. Press Refresh universe scan to try again.</div>`;
     }else{
-      $("idearows").innerHTML = d.rows.map((s,i)=>`
+      const fbnote = d.fallback_used
+        ? `<div class="ideas-note" style="padding:4px 0 14px">Few names fit the ${horizon}-term archetypes cleanly right now, so the list is topped up with the strongest overall composites \u2014 marked \u201Coverall rank\u201D.</div>`
+        : "";
+      $("idearows").innerHTML = fbnote + d.rows.map((s,i)=>`
         <div class="idea" data-t="${esc(s.symbol)}" role="button" tabindex="0">
           <div class="top">
-            <span class="nm">${i+1}. ${esc(s.name)}<small>${esc(s.symbol)} · NSE · ₹${s.price}</small></span>
-            <span class="fit">${s.setup_fit ?? s.composite}<small>fit</small></span>
+            <span class="nm">${i+1}. ${esc(s.name)}${s.fallback ? '<span class="fbtag">overall rank</span>' : ""}<small>${esc(s.symbol)} \u00B7 NSE \u00B7 \u20B9${s.price ?? "\u2014"}</small></span>
+            <span class="fit">${s.setup_fit ?? s.composite ?? "\u2014"}<small>${s.fallback ? "score" : "fit"}</small></span>
           </div>
-          <div class="arch">${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")}</div>
-          <div class="ln"><span>Composite ${s.composite}</span><span>Technical ${s.technical}</span>
-            <span>Fundamental ${s.fundamental}</span><span>Piotroski ${s.f_score}/9</span></div>
+          <div class="arch">${esc(s.setup || "\u2014")} \u00B7 typical hold ${esc(s.horizon || "\u2014")}</div>
+          <div class="ln"><span>Composite ${s.composite ?? "\u2014"}</span><span>Technical ${s.technical ?? "\u2014"}</span>
+            <span>Fundamental ${s.fundamental ?? "\u2014"}</span><span>Piotroski ${s.f_score ?? "\u2014"}/9</span></div>
         </div>`).join("");
       document.querySelectorAll(".idea").forEach(el=>{
         const go=()=>{ switchTab("screener"); analyse(el.dataset.t); };
@@ -1027,7 +1112,7 @@ async function loadIdeas(){
     $("ideadisc").textContent = d.disclaimer || "";
   }catch(e){
     if(req !== ideasReq) return;
-    $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable — it may be waking from sleep. Try again in ~30 seconds.</div>`;
+    $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
   }
 }
 
@@ -1050,8 +1135,18 @@ async function pollScan(){
     clearInterval(pollTimer); pollTimer=null;
     $("genbtn2").disabled=false;
     if(s.status==="error"){
-      $("gennote2").textContent="Scan failed — try again in a minute";
-      $("genbtn2").textContent="Generate from universe"; return;
+      $("gennote2").textContent = "Scan stopped: " + (s.error || "try again in a minute");
+      $("genbtn2").textContent="Generate from universe";
+      loadIdeas();                       // a checkpoint may still hold partial rankings
+      return;
+    }
+    if(s.status==="idle"){
+      // The server restarted mid-scan (free-tier memory limits are real).
+      // Checkpoints written to disk mean partial rankings usually survive.
+      $("gennote2").textContent = "The engine restarted mid-scan — showing whatever was scored before. Press Generate to continue.";
+      $("genbtn2").textContent="Generate from universe";
+      loadIdeas();
+      return;
     }
     $("genbtn2").textContent="Refresh universe scan";
     $("gennote2").textContent="";
@@ -1099,13 +1194,12 @@ async function loadTicker(){
   }
 }
 
-/* -- Candlestick price chart -- */
-/* -- Advanced charting (TradingView lightweight-charts) -- */
-let chart = null, candleSeries = null, volSeries = null,
-    ma20Series = null, ma50Series = null, bbUp = null, bbLo = null;
-let chartRange = "1D", chartSym = null, chartTimer = null, chartReq = 0;
-let drawTool = "none", drawPending = null, drawings = [];
-let tickTimer = null, tickCandles = [], tickBucket = null;
+/* -- Charting engine — TradingView lightweight-charts ---------------- */
+/* One factory powers two panels: the inline chart on the Screener, and */
+/* the full-window chart page (?chart=SYMBOL) that behaves like a       */
+/* TradingView tab — full viewport, symbol switcher, live refresh.      */
+
+const RANGE_KEYS = ["tick","1m","5m","15m","1H","4H","1D","1W"];
 
 function chartTheme(){
   return {
@@ -1121,214 +1215,321 @@ function chartTheme(){
   };
 }
 
-function initChart(){
-  if(chart || typeof LightweightCharts === "undefined") return;
-  const box = $("chartbox");
-  chart = LightweightCharts.createChart(box, Object.assign({
-    width: box.clientWidth, height: box.clientHeight }, chartTheme()));
+function makeChartPanel(cfg){
+  const g = id => document.getElementById(id);
+  const S = { chart:null, cs:null, vs:null, m20:null, m50:null, bu:null, bl:null,
+              sym:null, range:"1D", req:0, timer:null, pendingLoad:false,
+              tool:"none", pendA:null, drawings:[],
+              tickTimer:null, tickCandles:[], tickBucket:null };
 
-  candleSeries = chart.addCandlestickSeries({
-    upColor:'#1F5D45', downColor:'#8E2F2A',
-    borderUpColor:'#1F5D45', borderDownColor:'#8E2F2A',
-    wickUpColor:'#1F5D45', wickDownColor:'#8E2F2A',
-  });
-  volSeries = chart.addHistogramSeries({
-    priceFormat:{ type:'volume' }, priceScaleId:'vol',
-  });
-  chart.priceScale('vol').applyOptions({ scaleMargins:{ top:0.80, bottom:0 } });
-  ma20Series = chart.addLineSeries({ color:'#B08D2E', lineWidth:2, priceLineVisible:false, lastValueVisible:false });
-  ma50Series = chart.addLineSeries({ color:'#4A443A', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
-  bbUp = chart.addLineSeries({ color:'#DDD6C9', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
-  bbLo = chart.addLineSeries({ color:'#DDD6C9', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+  const boxEl   = () => g(cfg.box);
+  const visible = () => { const b = boxEl(); return !!b && b.offsetParent !== null; };
+  const note = m => { const e = g(cfg.note); if(e) e.textContent = m; };
+  const stat = m => { const e = g(cfg.stat); if(e) e.innerHTML = m; };
+  const hint = m => { const e = g(cfg.hint); if(e) e.textContent = m; };
+  const liveBadge = on => { const e = g(cfg.live); if(e) e.classList.toggle("on", !!on); };
 
-  new ResizeObserver(()=>{ if(chart) chart.applyOptions({ width: box.clientWidth }); }).observe(box);
-  chart.subscribeClick(onChartClick);
-  applySeriesToggles();
-}
-
-function applySeriesToggles(){
-  if(!chart) return;
-  const ma = $("showma").checked, bb = $("showbb").checked, vol = $("showvol").checked;
-  ma20Series.applyOptions({ visible: ma });
-  ma50Series.applyOptions({ visible: ma });
-  bbUp.applyOptions({ visible: bb });
-  bbLo.applyOptions({ visible: bb });
-  volSeries.applyOptions({ visible: vol });
-}
-
-/* -- Drawing tools -- */
-function onChartClick(param){
-  if(drawTool === "none" || !param.point || !param.time) return;
-  const price = candleSeries.coordinateToPrice(param.point.y);
-  if(price === null) return;
-
-  if(drawTool === "hline"){
-    const line = candleSeries.createPriceLine({
-      price: price, color:'#B08D2E', lineWidth:1, lineStyle:2,
-      axisLabelVisible:true, title:'' });
-    drawings.push({ kind:'hline', ref: line });
-    setDrawTool("none");
-    return;
+  function marketOpen(){
+    const mk = g("mkstatus");
+    return !mk || mk.classList.contains("open");
   }
 
-  if(drawTool === "trend"){
-    if(!drawPending){
-      drawPending = { time: param.time, value: price };
-      $("charthint").textContent = "Now click the second point to finish the line.";
-      return;
+  function dims(){
+    const b = boxEl();
+    let w = b.clientWidth, h = b.clientHeight;
+    if(cfg.fill){
+      w = w || window.innerWidth;
+      h = h || Math.max(300, window.innerHeight - b.getBoundingClientRect().top - 34);
+    }else{
+      w = w || (b.parentElement ? b.parentElement.clientWidth : 0) || 600;
+      h = h || (window.innerWidth < 640 ? 320 : 420);
     }
-    const a = drawPending, b = { time: param.time, value: price };
-    drawPending = null;
-    const pts = [a, b].sort((x,y)=> (x.time > y.time ? 1 : -1));
-    const s = chart.addLineSeries({ color:'#8A6D1E', lineWidth:2, priceLineVisible:false,
-                                    lastValueVisible:false, crosshairMarkerVisible:false });
-    s.setData(pts);
-    drawings.push({ kind:'trend', ref: s });
-    setDrawTool("none");
+    return { w: Math.max(220, w), h: Math.max(220, h) };
   }
-}
 
-function setDrawTool(t){
-  drawTool = t; drawPending = null;
-  document.querySelectorAll(".dtool[data-t]").forEach(b=>b.classList.toggle("active", b.dataset.t===t));
-  chart && chart.applyOptions({ handleScroll: t==="none", handleScale: t==="none" });
-  $("charthint").textContent = t==="trend" ? "Click the first point of the line."
-    : t==="hline" ? "Click the price level to mark."
-    : "Scroll to zoom, drag to pan. Pick a drawing tool to mark up the chart.";
-}
-
-function clearDrawings(){
-  drawings.forEach(d=>{
-    try{ d.kind==='hline' ? candleSeries.removePriceLine(d.ref) : chart.removeSeries(d.ref); }
-    catch(e){}
-  });
-  drawings = []; setDrawTool("none");
-}
-
-/* -- Data loading -- */
-function applyCandles(rows){
-  // rows: [ts, o, h, l, c, ema20, ema50, bbUp, bbLo, volume]
-  const cd=[], vol=[], m20=[], m50=[], bu=[], bl=[];
-  let prevClose = null;
-  rows.forEach(r=>{
-    const t = r[0];
-    if(t === null || t === undefined) return;
-    cd.push({ time:t, open:r[1], high:r[2], low:r[3], close:r[4] });
-    vol.push({ time:t, value:r[9] || 0,
-               color: (prevClose !== null && r[4] < prevClose) ? 'rgba(142,47,42,.35)' : 'rgba(31,93,69,.35)' });
-    if(r[5]!=null) m20.push({ time:t, value:r[5] });
-    if(r[6]!=null) m50.push({ time:t, value:r[6] });
-    if(r[7]!=null) bu.push({ time:t, value:r[7] });
-    if(r[8]!=null) bl.push({ time:t, value:r[8] });
-    prevClose = r[4];
-  });
-  candleSeries.setData(cd); volSeries.setData(vol);
-  ma20Series.setData(m20); ma50Series.setData(m50);
-  bbUp.setData(bu); bbLo.setData(bl);
-  chart.timeScale().fitContent();
-  return cd;
-}
-
-async function loadChart(sym, range){
-  if(sym) chartSym = sym;
-  if(range) chartRange = range;
-  if(!chartSym) return;
-  initChart();
-  if(!chart){ $("tfnote").textContent = "Chart library unavailable"; return; }
-
-  document.querySelectorAll(".tf").forEach(b=>b.classList.toggle("active", b.dataset.r===chartRange));
-  stopTick();
-
-  if(chartRange === "tick"){ startTick(); return; }
-
-  const req = ++chartReq;
-  $("tfnote").textContent = "Loading\u2026";
-  try{
-    const res = await fetch(`${API_BASE}/chart?ticker=${encodeURIComponent(chartSym)}&range=${chartRange}`);
-    const d = await res.json();
-    if(req !== chartReq) return;
-    if(!res.ok){
-      $("tfnote").textContent = (d.detail || "Unavailable").slice(0,80);
-      $("livebadge").classList.remove("on");
-      return;
-    }
-    $("pricewrap").style.display = "block";
-    applyCandles(d.candles);
-    const up = (d.change_pct ?? 0) >= 0;
-    $("pxstat").innerHTML = `${up?"\u25B2":"\u25BC"} ${Math.abs(d.change_pct ?? 0).toFixed(2)}% over ${esc(d.label)} \u00B7 last \u20B9${d.last}`;
-    $("livebadge").classList.toggle("on", !!d.live);
-    $("tfnote").textContent = `${d.candles.length} candles \u00B7 ${d.live ? "intraday via Dhan" : "daily feed"}`;
-    scheduleChartRefresh(d.live);
-  }catch(e){
-    if(req === chartReq) $("tfnote").textContent = "Chart unavailable";
+  function resize(){
+    if(!S.chart || !visible()) return;
+    const d = dims();
+    S.chart.applyOptions({ width: d.w, height: d.h });
   }
-}
 
-function scheduleChartRefresh(live){
-  if(chartTimer){ clearInterval(chartTimer); chartTimer = null; }
-  if(!live) return;
-  chartTimer = setInterval(()=>{
-    if(!$("mkstatus").classList.contains("open")) return;
-    if(chartRange === "tick") return;
-    loadChart();
-  }, 60000);
-}
+  function ensureChart(){
+    if(S.chart) return true;
+    if(typeof LightweightCharts === "undefined" || !visible()) return false;
+    const d = dims();
+    S.chart = LightweightCharts.createChart(boxEl(),
+      Object.assign({ width: d.w, height: d.h }, chartTheme()));
+    S.cs = S.chart.addCandlestickSeries({
+      upColor:'#1F5D45', downColor:'#8E2F2A',
+      borderUpColor:'#1F5D45', borderDownColor:'#8E2F2A',
+      wickUpColor:'#1F5D45', wickDownColor:'#8E2F2A' });
+    S.vs = S.chart.addHistogramSeries({ priceFormat:{ type:'volume' }, priceScaleId:'vol' });
+    S.chart.priceScale('vol').applyOptions({ scaleMargins:{ top:0.80, bottom:0 } });
+    S.m20 = S.chart.addLineSeries({ color:'#B08D2E', lineWidth:2, priceLineVisible:false, lastValueVisible:false });
+    S.m50 = S.chart.addLineSeries({ color:'#4A443A', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+    S.bu  = S.chart.addLineSeries({ color:'#DDD6C9', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+    S.bl  = S.chart.addLineSeries({ color:'#DDD6C9', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
 
-/* -- Live tick mode: builds seconds-candles from quote polling -- */
-function stopTick(){
-  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
-  tickCandles = []; tickBucket = null;
-}
+    let raf = null;
+    new ResizeObserver(()=>{
+      if(!S.chart) return;
+      if(raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(resize);          // throttled: no layout thrash
+    }).observe(boxEl());
+    if(cfg.fill) window.addEventListener("resize", resize);
 
-function startTick(){
-  $("livebadge").classList.add("on");
-  $("tfnote").textContent = "Live ticks \u2014 building candles from now";
-  $("pxstat").innerHTML = "Waiting for the first tick\u2026";
-  candleSeries.setData([]); volSeries.setData([]);
-  ma20Series.setData([]); ma50Series.setData([]); bbUp.setData([]); bbLo.setData([]);
+    S.chart.subscribeClick(onClick);
+    if(cfg.legendEl) S.chart.subscribeCrosshairMove(onCross);
+    applyToggles();
+    return true;
+  }
 
-  const poll = async () => {
-    if(!$("mkstatus").classList.contains("open")){
-      $("tfnote").textContent = "Live ticks resume when the market opens";
+  function applyToggles(){
+    if(!S.chart) return;
+    const ma  = cfg.chkMA  ? g(cfg.chkMA).checked  : true;
+    const bb  = cfg.chkBB  ? g(cfg.chkBB).checked  : false;
+    const vol = cfg.chkVol ? g(cfg.chkVol).checked : true;
+    S.m20.applyOptions({ visible: ma }); S.m50.applyOptions({ visible: ma });
+    S.bu.applyOptions({ visible: bb });  S.bl.applyOptions({ visible: bb });
+    S.vs.applyOptions({ visible: vol });
+  }
+
+  /* -- crosshair OHLC legend (TradingView-style) -- */
+  function onCross(param){
+    const el = g(cfg.legendEl);
+    if(!el) return;
+    const c = param && param.time && param.seriesData ? param.seriesData.get(S.cs) : null;
+    if(!c || c.open === undefined){ el.style.display = "none"; return; }
+    const chg = c.open ? 100 * (c.close - c.open) / c.open : 0;
+    const ink = c.close >= c.open ? "var(--pass)" : "var(--fail)";
+    el.style.display = "block";
+    el.innerHTML = `<b>${esc(S.sym || "")}</b>&nbsp; O ${c.open}&nbsp; H ${c.high}&nbsp; L ${c.low}&nbsp; ` +
+                   `C <b style="color:${ink}">${c.close}</b>&nbsp; ` +
+                   `<span style="color:${ink}">${chg>=0?"+":""}${chg.toFixed(2)}%</span>`;
+  }
+
+  /* -- drawing tools -- */
+  function onClick(param){
+    if(S.tool === "none" || !param.point || !param.time) return;
+    const price = S.cs.coordinateToPrice(param.point.y);
+    if(price === null) return;
+
+    if(S.tool === "hline"){
+      const line = S.cs.createPriceLine({ price: price, color:'#B08D2E', lineWidth:1,
+                                          lineStyle:2, axisLabelVisible:true, title:'' });
+      S.drawings.push({ kind:'hline', ref: line });
+      setTool("none");
       return;
     }
+    if(S.tool === "trend"){
+      if(!S.pendA){
+        S.pendA = { time: param.time, value: price };
+        hint("Now click the second point to finish the line.");
+        return;
+      }
+      const a = S.pendA, b = { time: param.time, value: price };
+      S.pendA = null;
+      const pts = [a, b].sort((x,y)=> (x.time > y.time ? 1 : -1));
+      const s = S.chart.addLineSeries({ color:'#8A6D1E', lineWidth:2, priceLineVisible:false,
+                                        lastValueVisible:false, crosshairMarkerVisible:false });
+      s.setData(pts);
+      S.drawings.push({ kind:'trend', ref: s });
+      setTool("none");
+    }
+  }
+
+  function setTool(t){
+    S.tool = t; S.pendA = null;
+    if(cfg.drawbar) document.querySelectorAll(`#${cfg.drawbar} .dtool[data-t]`)
+      .forEach(b=>b.classList.toggle("active", b.dataset.t === t));
+    S.chart && S.chart.applyOptions({ handleScroll: t==="none", handleScale: t==="none" });
+    hint(t==="trend" ? "Click the first point of the line."
+       : t==="hline" ? "Click the price level to mark."
+       : "Scroll to zoom, drag to pan. Pick a drawing tool to mark up the chart.");
+  }
+
+  function clearDrawings(){
+    S.drawings.forEach(d=>{
+      try{ d.kind === 'hline' ? S.cs.removePriceLine(d.ref) : S.chart.removeSeries(d.ref); }
+      catch(e){}
+    });
+    S.drawings = [];
+    if(S.chart) setTool("none");
+  }
+
+  /* -- data -- */
+  function setCandles(rows){
+    // rows: [ts, o, h, l, c, ema20, ema50, bbUp, bbLo, volume]
+    const cd=[], vol=[], m20=[], m50=[], bu=[], bl=[];
+    let prevClose = null;
+    rows.forEach(r=>{
+      const t = r[0];
+      if(t === null || t === undefined) return;
+      cd.push({ time:t, open:r[1], high:r[2], low:r[3], close:r[4] });
+      vol.push({ time:t, value:r[9] || 0,
+                 color: (prevClose !== null && r[4] < prevClose)
+                        ? 'rgba(142,47,42,.35)' : 'rgba(31,93,69,.35)' });
+      if(r[5]!=null) m20.push({ time:t, value:r[5] });
+      if(r[6]!=null) m50.push({ time:t, value:r[6] });
+      if(r[7]!=null) bu.push({ time:t, value:r[7] });
+      if(r[8]!=null) bl.push({ time:t, value:r[8] });
+      prevClose = r[4];
+    });
+    S.cs.setData(cd); S.vs.setData(vol);
+    S.m20.setData(m20); S.m50.setData(m50);
+    S.bu.setData(bu); S.bl.setData(bl);
+    S.chart.timeScale().fitContent();
+  }
+
+  async function load(sym, range){
+    if(sym && sym !== S.sym){ if(S.chart) clearDrawings(); S.sym = sym; }
+    if(range) S.range = range;
+    if(!S.sym) return;
+
+    if(cfg.canShow && !cfg.canShow()){ S.pendingLoad = true; return; }
+    if(cfg.reveal) cfg.reveal();
+
+    if(!ensureChart()){
+      // Container not laid out yet (was hidden a frame ago) — retry a few frames
+      S.initTries = (S.initTries || 0) + 1;
+      if(S.initTries > 30){
+        S.initTries = 0;
+        note(typeof LightweightCharts === "undefined"
+             ? "Chart library couldn\u2019t load \u2014 check your connection and refresh"
+             : "Chart container isn\u2019t visible");
+        return;
+      }
+      S.pendingLoad = true;
+      requestAnimationFrame(()=>{ if(S.pendingLoad){ S.pendingLoad = false; load(); } });
+      return;
+    }
+    S.initTries = 0;
+    resize();
+
+    if(cfg.tfbar) document.querySelectorAll(`#${cfg.tfbar} .tf[data-r]`)
+      .forEach(b=>b.classList.toggle("active", b.dataset.r === S.range));
+    stopTick();
+
+    if(S.range === "tick"){ startTick(); return; }
+
+    const req = ++S.req;
+    note("Loading\u2026");
     try{
-      const r = await fetch(`${API_BASE}/quote?ticker=${encodeURIComponent(chartSym)}`);
-      if(!r.ok) return;
-      const q = await r.json();
-      const px = q.ltp;
-      if(!px) return;
-      const t = Math.floor(Date.now()/1000);
-      if(!tickBucket || tickBucket.time !== t){
-        if(tickBucket) tickCandles.push(tickBucket);
-        tickBucket = { time:t, open:px, high:px, low:px, close:px };
-      }else{
-        tickBucket.high = Math.max(tickBucket.high, px);
-        tickBucket.low  = Math.min(tickBucket.low, px);
-        tickBucket.close = px;
+      const res = await fetch(`${API_BASE}/chart?ticker=${encodeURIComponent(S.sym)}&range=${S.range}`);
+      const d = await res.json();
+      if(req !== S.req) return;
+      if(!res.ok){
+        note((d.detail || "Unavailable").slice(0, 110));
+        liveBadge(false);
+        return;
       }
-      candleSeries.update(tickBucket);
-      if(tickCandles.length > 1){
-        const first = tickCandles[0].open;
-        const chg = 100*(px-first)/first;
-        $("pxstat").innerHTML = `${chg>=0?"\u25B2":"\u25BC"} ${Math.abs(chg).toFixed(2)}% this session view \u00B7 \u20B9${px}`;
-      }else{
-        $("pxstat").innerHTML = `\u20B9${px}`;
-      }
-      $("tfnote").textContent = `Live ticks \u00B7 ${tickCandles.length+1} candles built`;
-    }catch(e){}
+      setCandles(d.candles);
+      const up = (d.change_pct ?? 0) >= 0;
+      stat(`${up?"\u25B2":"\u25BC"} ${Math.abs(d.change_pct ?? 0).toFixed(2)}% over ${esc(d.label)} \u00B7 last \u20B9${d.last}`);
+      liveBadge(!!d.live);
+      note(`${d.candles.length} candles \u00B7 ${d.live ? "intraday via Dhan" : "daily feed"}`);
+      schedule(d.live);
+    }catch(e){
+      if(req === S.req) note("Chart unavailable \u2014 the engine may be waking up");
+    }
+  }
+
+  function schedule(live){
+    if(S.timer){ clearInterval(S.timer); S.timer = null; }
+    if(!live) return;
+    S.timer = setInterval(()=>{
+      if(document.visibilityState !== "visible") return;   // don't churn hidden tabs
+      if(!marketOpen()) return;
+      if(S.range === "tick") return;
+      load();
+    }, cfg.refreshMs || 60000);
+  }
+
+  /* -- live tick mode: seconds-candles built from quote polling -- */
+  function stopTick(){
+    if(S.tickTimer){ clearInterval(S.tickTimer); S.tickTimer = null; }
+    S.tickCandles = []; S.tickBucket = null;
+  }
+
+  function startTick(){
+    liveBadge(true);
+    note("Live ticks \u2014 building candles from now");
+    stat("Waiting for the first tick\u2026");
+    S.cs.setData([]); S.vs.setData([]);
+    S.m20.setData([]); S.m50.setData([]); S.bu.setData([]); S.bl.setData([]);
+
+    const poll = async () => {
+      if(!marketOpen()){ note("Live ticks resume when the market opens"); return; }
+      try{
+        const r = await fetch(`${API_BASE}/quote?ticker=${encodeURIComponent(S.sym)}`);
+        if(!r.ok) return;
+        const q = await r.json();
+        const px = q.ltp;
+        if(!px) return;
+        const t = Math.floor(Date.now()/1000);
+        if(!S.tickBucket || S.tickBucket.time !== t){
+          if(S.tickBucket) S.tickCandles.push(S.tickBucket);
+          S.tickBucket = { time:t, open:px, high:px, low:px, close:px };
+        }else{
+          S.tickBucket.high = Math.max(S.tickBucket.high, px);
+          S.tickBucket.low  = Math.min(S.tickBucket.low, px);
+          S.tickBucket.close = px;
+        }
+        S.cs.update(S.tickBucket);
+        if(S.tickCandles.length > 1){
+          const first = S.tickCandles[0].open;
+          const chg = 100*(px-first)/first;
+          stat(`${chg>=0?"\u25B2":"\u25BC"} ${Math.abs(chg).toFixed(2)}% this session view \u00B7 \u20B9${px}`);
+        }else{
+          stat(`\u20B9${px}`);
+        }
+        note(`Live ticks \u00B7 ${S.tickCandles.length+1} candles built`);
+      }catch(e){}
+    };
+    poll();
+    S.tickTimer = setInterval(poll, 2000);
+  }
+
+  /* -- control wiring, scoped to this panel's own toolbar -- */
+  if(cfg.tfbar) document.querySelectorAll(`#${cfg.tfbar} .tf[data-r]`)
+    .forEach(b=>b.addEventListener("click", ()=>load(null, b.dataset.r)));
+  if(cfg.drawbar) document.querySelectorAll(`#${cfg.drawbar} .dtool[data-t]`)
+    .forEach(b=>b.addEventListener("click", ()=>setTool(b.dataset.t)));
+  if(cfg.clearBtn && g(cfg.clearBtn)) g(cfg.clearBtn).addEventListener("click", clearDrawings);
+  [cfg.chkMA, cfg.chkBB, cfg.chkVol].filter(Boolean).forEach(id=>{
+    const e = g(id); if(e) e.addEventListener("change", applyToggles);
+  });
+
+  return {
+    load,
+    queue(sym){ if(sym !== S.sym && S.chart) clearDrawings(); S.sym = sym; S.pendingLoad = true; this.flush(); },
+    flush(){
+      if(S.pendingLoad && (!cfg.canShow || cfg.canShow())){ S.pendingLoad = false; load(); }
+      else if(S.chart) requestAnimationFrame(resize);
+    },
+    sym: ()=>S.sym, range: ()=>S.range, resize,
   };
-  poll();
-  tickTimer = setInterval(poll, 2000);
 }
 
-document.querySelectorAll(".tf").forEach(b=>
-  b.addEventListener("click", ()=>loadChart(null, b.dataset.r)));
-document.querySelectorAll(".dtool[data-t]").forEach(b=>
-  b.addEventListener("click", ()=>setDrawTool(b.dataset.t)));
-$("dclear").addEventListener("click", clearDrawings);
-["showma","showbb","showvol"].forEach(id=>
-  $(id).addEventListener("change", applySeriesToggles));
+/* Inline chart on the Screener tab — chart is created only once its
+   container is actually visible (Analyst view), which fixes the
+   zero-height white screen the old code produced. */
+const mainChart = makeChartPanel({
+  box:"chartbox", tfbar:"tfbar", drawbar:"drawbar", clearBtn:"dclear",
+  chkMA:"showma", chkBB:"showbb", chkVol:"showvol",
+  note:"tfnote", stat:"pxstat", live:"livebadge", hint:"charthint",
+  legendEl:"cxlegend", fill:false, refreshMs:60000,
+  canShow: ()=> viewMode === "full",
+  reveal: ()=>{ const w = $("pricewrap"); w.dataset.shown = "1"; w.style.display = "block"; },
+});
+
+$("fullchartbtn").addEventListener("click", ()=>{
+  const s = mainChart.sym();
+  if(!s) return;
+  const r = mainChart.range() === "tick" ? "1D" : mainChart.range();
+  window.open(`${location.pathname}?chart=${encodeURIComponent(s)}&range=${encodeURIComponent(r)}`,
+              "_blank", "noopener");
+});
 
 /* -- Options chain -- */
 let optUnderlying = "NIFTY", optExpiry = null;
@@ -1350,7 +1551,7 @@ function optionsInit(){
 async function loadExpiries(){
   $("optwrap").style.display = "none";
   $("optstate").style.display = "block";
-  $("optstate").textContent = `Loading expiries for ${optUnderlying}\u2026`;
+  $("optstate").textContent = `Loading expiries for ${optUnderlying}\u2026 Dhan paces option data at one call every 3 seconds, so the first load takes a moment.`;
   $("expbar").innerHTML = "";
   try{
     const r = await fetch(`${API_BASE}/options/expiries?ticker=${encodeURIComponent(optUnderlying)}`);
@@ -1371,7 +1572,8 @@ async function loadExpiries(){
 async function loadChain(expiry){
   optExpiry = expiry;
   $("optstate").style.display = "block";
-  $("optstate").textContent = `Loading ${optUnderlying} chain for ${expiry}\u2026`;
+  $("optstate").textContent = `Loading ${optUnderlying} chain for ${expiry}\u2026 a few seconds \u2014 Dhan allows one chain call every 3 seconds.`;
+  document.querySelectorAll(".exp").forEach(b=>b.disabled=true);
   try{
     const r = await fetch(`${API_BASE}/options/chain?ticker=${encodeURIComponent(optUnderlying)}&expiry=${encodeURIComponent(expiry)}`);
     const d = await r.json();
@@ -1416,6 +1618,8 @@ async function loadChain(expiry){
     $("optdisc").textContent = d.disclaimer || "";
   }catch(e){
     $("optstate").textContent = "Chain unavailable right now.";
+  }finally{
+    document.querySelectorAll(".exp").forEach(b=>b.disabled=false);
   }
 }
 
@@ -1583,7 +1787,7 @@ function render(d){
                                                      : `${d.fundamental.score}<small> /100</small>`;
   renderPlain(d.plain);
   drawSetup(d.setup);
-  loadChart(d.ticker.replace(".NS","").replace(".BO",""), chartRange);
+  mainChart.queue(d.ticker.replace(".NS","").replace(".BO",""));
   drawVolume(d.volume_series);
   drawShareholding(d.shareholding);
 
@@ -1603,9 +1807,9 @@ function render(d){
 $("go").addEventListener("click", ()=>analyse());
 $("tk").addEventListener("keydown", e=>{ if(e.key==="Enter") analyse(); });
 document.querySelectorAll(".hint b").forEach(b=>b.addEventListener("click",()=>analyse(b.dataset.t)));
-document.querySelectorAll(".hz").forEach(b=>b.addEventListener("click",()=>{
+document.querySelectorAll(".hz[data-h]").forEach(b=>b.addEventListener("click",()=>{
   horizon = b.dataset.h;
-  document.querySelectorAll(".hz").forEach(x=>x.classList.toggle("active", x===b));
+  document.querySelectorAll(".hz[data-h]").forEach(x=>x.classList.toggle("active", x===b));
   loadIdeas();
 }));
 /* ── Planner ────────────────────────────────────────────────────────── */
@@ -2102,6 +2306,7 @@ function applyMode(){
   $("mode-simple").classList.toggle("active", simple);
   $("mode-full").classList.toggle("active", !simple);
   $("modenote").textContent = simple ? "Plain English, key points only" : "Every check, every formula";
+  mainChart.flush();      // create/size the chart only once its container is visible
 }
 
 function setMode(m){ viewMode = m; applyMode(); }
@@ -2131,6 +2336,31 @@ $("rgo").addEventListener("click",()=>getResults());
 $("rtk").addEventListener("keydown",e=>{ if(e.key==="Enter") getResults(); });
 $("washare").addEventListener("click",shareWhatsApp);
 $("genbtn2").addEventListener("click",()=>startScan($("genbtn2").textContent.includes("Refresh")));
+/* -- Full-window chart mode: ?chart=SYMBOL opens a TradingView-style tab -- */
+const fcParams = new URLSearchParams(location.search);
+const fcSymParam = (fcParams.get("chart") || "").trim().toUpperCase().replace(/[^A-Z0-9&.\-]/g, "");
+if(fcSymParam){
+  document.body.classList.add("fullchart");
+  document.title = fcSymParam + " \u00B7 Altaha Chart";
+  const fcChart = makeChartPanel({
+    box:"fcbox", tfbar:"fctfbar", drawbar:"fcdrawbar", clearBtn:"fcdclear",
+    chkMA:"fcma", chkBB:"fcbb", chkVol:"fcvol",
+    note:"fcnote", stat:"fcstat", live:"fclive", hint:"fchint",
+    legendEl:"fclegend", fill:true, refreshMs:30000,
+  });
+  $("fcinput").value = fcSymParam;
+  const fcGo = ()=>{
+    const v = $("fcinput").value.trim().toUpperCase().replace(".NS","").replace(".BO","");
+    if(!v) return;
+    document.title = v + " \u00B7 Altaha Chart";
+    fcChart.load(v, null);
+  };
+  $("fcgo").addEventListener("click", fcGo);
+  $("fcinput").addEventListener("keydown", e=>{ if(e.key==="Enter") fcGo(); });
+  const rq = fcParams.get("range");
+  fcChart.load(fcSymParam, RANGE_KEYS.includes(rq) ? rq : "1D");
+}
+
 (async()=>{ try{
   const s = await (await fetch(`${API_BASE}/scan/status`)).json();
   if(s.status === "running"){
