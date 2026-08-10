@@ -27,7 +27,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import requests
+import gc
+
 import yfinance as yf
+
+try:
+    import dhan_source as dhan
+except Exception:
+    dhan = None
 
 from engine import technical_score, fundamental_score, composite
 import archetypes as A
@@ -113,25 +120,65 @@ def universe():
 # Phase 1 — bulk prices, liquidity filter, technical scores
 # ---------------------------------------------------------------------------
 
+def prefilter_by_quote(symbols, state, progress):
+    """
+    Cheap first pass: one bulk quote call per ~900 symbols gives today's OHLC
+    and volume for the whole universe. Names whose traded value is far below
+    the floor are dropped before we spend a history request on them.
+
+    Returns (survivors, dropped_count). Falls back to passing everything
+    through when Dhan isn't available.
+    """
+    if dhan is None or not dhan.configured():
+        return symbols, 0
+    try:
+        snap = dhan.bulk_quotes(symbols, mode="ohlc")
+    except Exception:
+        return symbols, 0
+    if not snap:
+        return symbols, 0
+
+    keep, dropped = [], 0
+    for s in symbols:
+        row = snap.get(s)
+        if not row:
+            keep.append(s)          # unknown — let the full path decide
+            continue
+        px, vol = row.get("ltp") or row.get("close"), row.get("volume")
+        if px and vol and (float(px) * float(vol)) < MIN_TURNOVER * 0.5:
+            dropped += 1            # generous margin: one day isn't 60-day average
+        else:
+            keep.append(s)
+    return keep, dropped
+
+
 def phase1(symbols, progress, state):
     candidates, skipped_illiquid, skipped_nodata = [], 0, 0
     chunks = [symbols[i:i + CHUNK] for i in range(0, len(symbols), CHUNK)]
 
     for ci, chunk in enumerate(chunks):
         tickers = [f"{s}.NS" for s in chunk]
-        try:
-            data = yf.download(" ".join(tickers), period="1y", interval="1d",
-                               group_by="ticker", auto_adjust=True,
-                               threads=True, progress=False)
-        except Exception:
-            data = None
+        use_dhan = dhan is not None and dhan.configured() and dhan.is_live().get("ok")
+        data = None
+        if not use_dhan:
+            try:
+                data = yf.download(" ".join(tickers), period="1y", interval="1d",
+                                   group_by="ticker", auto_adjust=True,
+                                   threads=True, progress=False)
+            except Exception:
+                data = None
         time.sleep(0.6 + random.random() * 0.6)
 
         for s in chunk:
             state["done"] += 1
             t = f"{s}.NS"
             try:
-                df = data[t].dropna(subset=["Close"]) if data is not None else None
+                if use_dhan:
+                    df = dhan.daily_ohlcv(s)
+                    if df is not None:
+                        df = df.dropna(subset=["Close"])
+                else:
+                    df = data[t].dropna(subset=["Close"]) if data is not None else None
                 if df is None or len(df) < MIN_ROWS:
                     skipped_nodata += 1
                     continue
@@ -139,14 +186,23 @@ def phase1(symbols, progress, state):
                 if turnover < MIN_TURNOVER:
                     skipped_illiquid += 1
                     continue
+                # Retain only what ranking needs. The full payload (checks,
+                # price_series, volume_series) is ~13 KB per stock; keeping it
+                # for every candidate cost ~9 MB and is recomputed cheaply in
+                # phase 2 for the few hundred that actually advance.
                 tech = technical_score(df)
-                candidates.append({"symbol": s, "tech": tech, "turnover": turnover})
+                candidates.append({"symbol": s, "score": tech["score"], "turnover": turnover})
+                del tech
             except Exception:
                 skipped_nodata += 1
+            finally:
+                df = None
+        del data
+        gc.collect()
         if progress:
             progress(state["done"], state["total"], len(candidates))
 
-    candidates.sort(key=lambda c: c["tech"]["score"], reverse=True)
+    candidates.sort(key=lambda c: c["score"], reverse=True)
     return candidates, skipped_illiquid, skipped_nodata
 
 
@@ -157,8 +213,24 @@ def phase1(symbols, progress, state):
 def deep_score(cand):
     time.sleep(random.uniform(0.15, 0.5))
     s = cand["symbol"]
-    tech = cand["tech"]
     t = yf.Ticker(f"{s}.NS")
+
+    # Phase 1 deliberately discarded the technical payload to save memory;
+    # recompute it here for the shortlist only.
+    df = None
+    if dhan is not None and dhan.configured():
+        try:
+            df = dhan.daily_ohlcv(s)
+        except Exception:
+            df = None
+    if df is None:
+        try:
+            df = t.history(period="1y", auto_adjust=True)
+        except Exception:
+            return None
+    if df is None or len(df) < 120:
+        return None
+    tech = technical_score(df.dropna(subset=["Close"]))
     try:
         fin, bs, cf = t.financials, t.balance_sheet, t.cashflow
         info = dict(t.info or {})
@@ -195,7 +267,15 @@ def run_scan(progress=None, names=None):
     n2 = min(PHASE2_SIZE, len(symbols))
     state = {"done": 0, "total": len(symbols) + n2}
 
+    # Bulk-quote pre-filter: cuts the number of history requests substantially
+    universe_all = len(symbols)
+    symbols, prefiltered = prefilter_by_quote(symbols, state, progress)
+    if prefiltered:
+        state["done"] = prefiltered
+        state["total"] = universe_all + n2
+
     cands, ill, nod = phase1(symbols, progress, state)
+    ill += prefiltered
     deep = cands[:n2]
     state["total"] = len(symbols) + len(deep)      # exact now that we know
 
@@ -216,14 +296,18 @@ def run_scan(progress=None, names=None):
             if progress:
                 progress(state["done"], state["total"], len(rows))
 
+    n_candidates = len(cands)
+    del cands
+    gc.collect()
     rows.sort(key=lambda r: (r["composite"], r["fundamental"], r["technical"]), reverse=True)
 
     payload = {
         "scanned_at": dt.datetime.now().strftime("%d %b %Y, %H:%M"),
         "universe_source": source,
-        "universe_size": len(symbols),
+        "universe_size": universe_all,
+        "prefiltered_by_quote": prefiltered,
         "liquidity_floor": "avg daily traded value ≥ ₹2 crore (60 sessions)",
-        "phase1_candidates": len(cands),
+        "phase1_candidates": n_candidates,
         "skipped_illiquid": ill,
         "skipped_no_data": nod,
         "phase2_analysed": len(deep),
