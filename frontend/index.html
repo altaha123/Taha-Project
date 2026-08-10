@@ -1203,8 +1203,12 @@ $("livetest").addEventListener("click", async ()=>{
   $("livetest").textContent = "Sending\u2026";
   try{
     const d = await (await fetch(`${API_BASE}/alerts/test`)).json();
-    $("livetest").textContent = d.sent ? "Sent \u2014 check Telegram"
-      : (d.telegram_configured ? "Send failed" : "Telegram not configured");
+    $("livetest").textContent = d.sent ? "Sent \u2014 check Telegram" : "Send failed";
+    if(!d.sent){
+      $("lalerts").innerHTML = `<div class="ideas-note" style="padding:14px 0">
+        <b>Alert test failed.</b><br>Telegram says: ${esc(d.detail || "no detail")}<br>
+        Token on server: ${esc(d.token_shape || "?")} \u00b7 Chat ID: ${esc(String(d.chat_id || "?"))}</div>` + $("lalerts").innerHTML;
+    }
   }catch(e){ $("livetest").textContent = "Test alert"; }
   setTimeout(()=>{ $("livetest").textContent = "Test alert"; }, 5000);
 });
