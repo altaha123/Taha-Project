@@ -623,6 +623,55 @@
   .cxlegend{position:absolute;top:8px;left:8px;z-index:5;display:none;pointer-events:none;
     font-family:var(--mono);font-size:11px;color:var(--ink-2);
     background:rgba(251,250,247,.93);border:1px solid var(--rule);padding:4px 9px}
+  /* ── Ideas v23: liquidity tiers, warnings, tracker ─────────────────── */
+  .tier{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+        padding:2px 7px;border:1px solid var(--rule);margin-left:8px;white-space:nowrap}
+  .tier.liquid{border-color:#1f6f43;color:#1f6f43}
+  .tier.moderate{border-color:var(--gold-dp);color:var(--gold-dp)}
+  .tier.thin{border-color:#b26a00;color:#b26a00}
+  .tier.untradeable{border-color:#a11;color:#a11}
+  .warnbox{border-left:3px solid #b26a00;background:#fdf8f0;padding:9px 12px;margin-top:10px;
+           font-size:12px;line-height:1.6;color:#5c4520}
+  .staleflag{border-left:3px solid #a11;background:#fdf3f3;padding:10px 13px;margin:0 auto 16px;
+             max-width:640px;font-size:12.5px;line-height:1.6;color:#7a2020}
+  .selnotes{max-width:640px;margin:0 auto 16px;font-size:12px;line-height:1.7;color:var(--mute)}
+  .selnotes li{margin-bottom:3px}
+  .secmix{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 auto 16px}
+  .secchip{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+           border:1px solid var(--rule);padding:3px 9px;color:var(--mute)}
+  .idearow-actions{display:flex;gap:8px;margin-top:11px}
+  .trackbtn{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+            border:1px solid var(--ink);background:#fff;color:var(--ink);padding:5px 12px;cursor:pointer}
+  .trackbtn:hover{background:var(--ink);color:#fff}
+  .trackbtn.done{border-color:#1f6f43;color:#1f6f43;cursor:default}
+  .trackbtn.done:hover{background:#fff;color:#1f6f43}
+  .toolbar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:0 auto 18px}
+  .toolbar a,.toolbar button{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+      text-transform:uppercase;border:1px solid var(--rule);background:#fff;color:var(--ink);
+      padding:7px 14px;cursor:pointer;text-decoration:none}
+  .toolbar a:hover,.toolbar button:hover{border-color:var(--ink)}
+  .tk{border:1px solid var(--rule);margin-bottom:10px;padding:15px 18px;background:#fff}
+  .tk .tkt{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
+  .tk .tknm{font-family:var(--serif);font-size:19px}
+  .tk .tknm small{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
+                  text-transform:uppercase;color:var(--mute);margin-top:3px}
+  .tk .tkret{font-family:var(--serif);font-size:25px;flex-shrink:0}
+  .tk .tkret small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.13em;
+                   text-transform:uppercase;color:var(--mute);text-align:right;margin-top:2px}
+  .pos{color:#1f6f43}.neg{color:#a11}
+  .tk .tkln{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
+            font-size:10.5px;letter-spacing:.06em;color:var(--mute)}
+  .tkstat{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+          padding:2px 7px;border:1px solid var(--rule);margin-left:8px}
+  .tkstat.LIVE{border-color:#1f6f43;color:#1f6f43}
+  .tkstat.INVALIDATED{border-color:#a11;color:#a11}
+  .tkstat.EXPIRED{border-color:var(--mute);color:var(--mute)}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;
+            margin:0 auto 22px;max-width:760px}
+  .statcell{border:1px solid var(--rule);padding:13px 15px;background:#fff;text-align:center}
+  .statcell b{display:block;font-family:var(--serif);font-size:26px;font-weight:400;margin-bottom:3px}
+  .statcell span{font-family:var(--mono);font-size:9px;letter-spacing:.13em;
+                 text-transform:uppercase;color:var(--mute)}
   .fbtag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);border:1px solid var(--rule);padding:2px 7px;margin-left:8px;
     vertical-align:2px;white-space:nowrap}
@@ -664,6 +713,7 @@
     <button class="tab" id="tab-results" role="tab" aria-selected="false">Results</button>
     <button class="tab" id="tab-portfolio" role="tab" aria-selected="false">Portfolio</button>
     <button class="tab" id="tab-options" role="tab" aria-selected="false">Options</button>
+    <button class="tab" id="tab-tracker" role="tab" aria-selected="false">Tracker</button>
     <button class="tab" id="tab-vocab" role="tab" aria-selected="false">Vocabulary</button>
   </nav>
 
@@ -865,7 +915,7 @@
   </div>
 
   <div id="view-ideas" style="display:none">
-    <p class="ideas-intro">Fifteen names per horizon, drawn from the full NSE universe after a liquidity filter, selected by how well each fits its setup archetype. These are rankings of measured evidence — open any name for its complete ledger.</p>
+    <p class="ideas-intro">Drawn from the full NSE universe, classified by setup archetype, capped at three per sector, and shown with the liquidity you would actually face. The list is as long as the evidence allows — a short list means few clean setups exist, not that the scan failed. Open any name for its complete ledger.</p>
     <div class="hzrow">
       <button class="hz active" data-h="short">Short term<small>weeks — a few months</small></button>
       <button class="hz" data-h="medium">Medium term<small>one to several quarters</small></button>
@@ -876,6 +926,14 @@
     </div>
     <div id="progwrap2"><div class="progbar"><i></i></div><div class="progtxt"></div></div>
     <div class="ideas-note" id="hznote"></div>
+    <div id="stalebox"></div>
+    <div id="regimebox"></div>
+    <div class="secmix" id="secmix"></div>
+    <div class="selnotes" id="selnotes"></div>
+    <div class="toolbar" id="ideatools" style="display:none">
+      <a id="ideacsv" href="#" download>Download CSV</a>
+      <button id="thintoggle">Include thin stocks</button>
+    </div>
     <div id="idearows"></div>
     <p class="disc" id="ideadisc"></p>
   </div><!-- /view-ideas -->
@@ -1044,6 +1102,21 @@
     </section>
   </div><!-- /view-options -->
 
+  <div id="view-tracker" style="display:none">
+    <p class="ideas-intro">Every idea the engine has produced, with what happened next. Return is what the stock did; alpha is what it did <em>beyond the index over the same days</em> — that second number is the only one that says anything about the engine. Recorded automatically at scan time, including the ones that went wrong.</p>
+    <div class="toolbar">
+      <button id="tkall">All</button>
+      <button id="tklive">Live</button>
+      <button id="tkinv">Invalidated</button>
+      <button id="tkexp">Expired</button>
+      <a id="tkcsv" href="#" download>Download CSV</a>
+    </div>
+    <div class="statgrid" id="tkstats"></div>
+    <div class="ideas-note" id="tknote"></div>
+    <div id="tkrows"></div>
+    <p class="disc" id="tkdisc"></p>
+  </div><!-- /view-tracker -->
+
   <div id="view-vocab" style="display:none">
     <p class="ideas-intro">Every term this site uses, in plain English with a worked example. No prior finance knowledge assumed.</p>
     <div class="searchrow" style="margin-top:0;max-width:440px">
@@ -1110,7 +1183,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","live","results","portfolio","options","vocab"];
+const TABS = ["screener","ideas","live","results","portfolio","options","tracker","vocab"];
 function moveTabInk(which){
   const nav = document.querySelector(".tabs");
   if(!nav) return;
@@ -1138,6 +1211,7 @@ function switchTab(which){
   });
   moveTabInk(which);
   if(which==="ideas") loadIdeas();
+  if(which==="tracker") loadTracker();
   if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
   if(which==="live"){ loadLive(); liveTimer = setInterval(loadLive, 30000); }
 }
@@ -1357,56 +1431,180 @@ function shareWhatsApp(){
 /* ── Ideas view ─────────────────────────────────────────────────────── */
 let horizon = "short", pollTimer = null, ideasReq = 0;
 
+let includeThin = false;
+const trackedNow = new Set();
+
+function tierChip(t){
+  if(!t) return "";
+  return `<span class="tier ${esc(t)}">${esc(t)}</span>`;
+}
+
 async function loadIdeas(){
-  const req = ++ideasReq;                     // token: only the latest request may render
+  const req = ++ideasReq;
   $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Loading\u2026</div>`;
   $("hznote").textContent = "";
+  ["stalebox","regimebox","secmix","selnotes"].forEach(id=>$(id).innerHTML="");
+  $("ideatools").style.display="none";
   try{
-    const res = await fetch(`${API_BASE}/ideas?horizon=${horizon}&limit=15`);
+    const qs = `horizon=${horizon}&limit=15&include_thin=${includeThin?1:0}`;
+    const res = await fetch(`${API_BASE}/ideas?${qs}`);
     const d = await res.json();
-    if(req !== ideasReq) return;              // a newer toggle superseded this response
+    if(req !== ideasReq) return;
     if(!res.ok){
       $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.detail || "Couldn\u2019t load ideas.")}</div>`;
       return;
     }
     if(!d.available){
-      $("hznote").textContent = "";
       $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No scan yet \u2014 press Generate from universe. It takes a few minutes and the result is cached for everyone afterwards.</div>`;
       return;
     }
+
     $("hznote").textContent = `${d.note}  \u00B7  Scanned ${d.scanned_at}` +
       (d.universe_source ? "  \u00B7  " + d.universe_source : "") +
       (d.partial ? "  \u00B7  scan still running \u2014 the list improves as it goes" : "");
+
+    /* Staleness. A momentum idea nine days old is not the same object as a
+       fresh one, and the old UI showed them identically. */
+    if(d.staleness && d.staleness.warn){
+      $("stalebox").innerHTML = `<div class="staleflag"><b>Stale.</b> ${esc(d.staleness.text)}</div>`;
+    }
+
+    /* Market regime, shown once at the top and again on each affected row. */
+    if(d.regime && !d.regime.ok){
+      $("regimebox").innerHTML = `<div class="staleflag" style="border-left-color:#b26a00;background:#fdf8f0;color:#5c4520"><b>Market regime.</b> ${esc(d.regime.label)}</div>`;
+    }
+
+    if(d.sector_mix && d.sector_mix.length){
+      $("secmix").innerHTML = d.sector_mix
+        .map(([sec,n])=>`<span class="secchip">${esc(sec)} \u00B7 ${n}</span>`).join("");
+    }
+    if(d.selection_notes && d.selection_notes.length){
+      $("selnotes").innerHTML = "<ul>" + d.selection_notes.map(n=>`<li>${esc(n)}</li>`).join("") + "</ul>";
+    }
+
+    $("ideatools").style.display="flex";
+    $("ideacsv").href = `${API_BASE}/ideas/export.csv?${qs}`;
+    $("thintoggle").textContent = includeThin ? "Hide thin stocks" : "Include thin stocks";
+
     if(!d.rows || !d.rows.length){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">The scan finished but scored ${d.scored ?? 0} names \u2014 the data provider may have rate-limited the engine. Press Refresh universe scan to try again.</div>`;
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing clears the bar for this horizon right now. That is a real answer, not an error \u2014 forcing a list when the evidence is absent is how screeners lose money for people.</div>`;
     }else{
-      const fbnote = d.fallback_used
-        ? `<div class="ideas-note" style="padding:4px 0 14px">Few names fit the ${horizon}-term archetypes cleanly right now, so the list is topped up with the strongest overall composites \u2014 marked \u201Coverall rank\u201D.</div>`
-        : "";
-      $("idearows").innerHTML = fbnote + d.rows.map((s,i)=>`
+      $("idearows").innerHTML = d.rows.map((s,i)=>`
         <div class="idea" data-t="${esc(s.symbol)}" role="button" tabindex="0">
           <div class="top">
-            <span class="nm">${i+1}. ${esc(s.name)}${s.fallback ? '<span class="fbtag">overall rank</span>' : ""}<small>${esc(s.symbol)} \u00B7 NSE \u00B7 \u20B9${s.price ?? "\u2014"}</small></span>
-            <span class="fit">${s.setup_fit ?? s.composite ?? "\u2014"}<small>${s.fallback ? "score" : "fit"}</small></span>
+            <span class="nm">${i+1}. ${esc(s.name)}${tierChip(s.liquidity_tier)}<small>${esc(s.symbol)} \u00B7 NSE \u00B7 \u20B9${s.price ?? "\u2014"}${s.avg_turnover_cr!=null?` \u00B7 \u20B9${s.avg_turnover_cr}cr/day`:""}</small></span>
+            <span class="fit">${s.setup_fit ?? s.composite ?? "\u2014"}<small>fit</small></span>
           </div>
-          <div class="arch">${esc(s.setup || "\u2014")} \u00B7 typical hold ${esc(s.horizon || "\u2014")}</div>
+          <div class="arch">${esc(s.setup || "\u2014")} \u00B7 typical hold ${esc(s.horizon || "\u2014")}${s.expectancy_alpha_pct!=null?` \u00B7 this setup has averaged ${s.expectancy_alpha_pct>0?"+":""}${s.expectancy_alpha_pct}% alpha`:""}</div>
           ${s.plan ? `<div class="ideaplan"><span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>` +
             (s.plan.entry!=null ? `<span>Entry \u20B9${Number(s.plan.entry).toLocaleString("en-IN")}</span><span>SL \u20B9${Number(s.plan.stop).toLocaleString("en-IN")}${s.plan.risk_pct!=null?` (\u2212${s.plan.risk_pct}%)`:""}</span>` +
               (s.plan.t1!=null?`<span>T1 \u20B9${Number(s.plan.t1).toLocaleString("en-IN")}</span>`:"") +
               (s.plan.rr!=null?`<span>R:R 1:${s.plan.rr}</span>`:"") : `<span>${esc((s.plan.note||"").split("\u2014")[0])}</span>`) + `</div>` : ""}
           <div class="ln"><span>Composite ${s.composite ?? "\u2014"}</span><span>Technical ${s.technical ?? "\u2014"}</span>
             <span>Fundamental ${s.fundamental ?? "\u2014"}</span><span>Piotroski ${s.f_score ?? "\u2014"}/9</span></div>
+          ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
+          ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
+          <div class="idearow-actions">
+            <button class="trackbtn" data-track="${esc(s.symbol)}">Add to tracker</button>
+          </div>
         </div>`).join("");
+
+      /* Row click opens the ledger; the track button must not bubble into it. */
       document.querySelectorAll(".idea").forEach(el=>{
         const go=()=>{ switchTab("screener"); analyse(el.dataset.t); };
-        el.addEventListener("click",go);
+        el.addEventListener("click",ev=>{ if(ev.target.closest(".trackbtn")) return; go(); });
         el.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" ") go(); });
+      });
+      document.querySelectorAll(".trackbtn").forEach(btn=>{
+        const sym = btn.dataset.track;
+        if(trackedNow.has(sym)){ btn.textContent="Tracking"; btn.classList.add("done"); }
+        btn.addEventListener("click", async ev=>{
+          ev.stopPropagation();
+          if(btn.classList.contains("done")) return;
+          const row = d.rows.find(r=>r.symbol===sym);
+          btn.textContent="Adding\u2026";
+          try{
+            const r = await fetch(`${API_BASE}/tracker/add`,{
+              method:"POST", headers:{"Content-Type":"application/json"},
+              body: JSON.stringify(row)});
+            const j = await r.json();
+            btn.textContent = j.added ? "Tracking" : (j.reason || "Already tracked");
+            btn.classList.add("done");
+            trackedNow.add(sym);
+          }catch(e){ btn.textContent="Couldn\u2019t add"; }
+        });
       });
     }
     $("ideadisc").textContent = d.disclaimer || "";
   }catch(e){
     if(req !== ideasReq) return;
     $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
+  }
+}
+
+/* ── Tracker ────────────────────────────────────────────────────────── */
+let tkFilter = "";
+
+function pct(v){
+  if(v==null) return "\u2014";
+  return `${v>0?"+":""}${v}%`;
+}
+function signCls(v){ return v==null ? "" : (v>0 ? "pos" : (v<0 ? "neg" : "")); }
+
+async function loadTracker(){
+  $("tkrows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Loading\u2026</div>`;
+  $("tkcsv").href = `${API_BASE}/tracker/export.csv`;
+  try{
+    const [lr, sr] = await Promise.all([
+      fetch(`${API_BASE}/tracker/list?status=${tkFilter}&limit=400`),
+      fetch(`${API_BASE}/tracker/stats`)
+    ]);
+    const d = await lr.json();
+    const st = await sr.json();
+
+    const o = st.overall;
+    $("tkstats").innerHTML = o ? `
+      <div class="statcell"><b>${st.total_tracked}</b><span>ideas recorded</span></div>
+      <div class="statcell"><b class="${signCls(o.avg_alpha_pct)}">${pct(o.avg_alpha_pct)}</b><span>avg alpha vs index</span></div>
+      <div class="statcell"><b>${o.beat_index_pct!=null?o.beat_index_pct+"%":"\u2014"}</b><span>beat the index</span></div>
+      <div class="statcell"><b class="${signCls(o.avg_return_pct)}">${pct(o.avg_return_pct)}</b><span>avg return</span></div>
+      <div class="statcell"><b class="neg">${pct(o.avg_max_drawdown_pct)}</b><span>avg worst dip</span></div>
+      <div class="statcell"><b>${o.median_days_held}</b><span>median days held</span></div>`
+      : `<div class="statcell" style="grid-column:1/-1"><b>0</b><span>ideas recorded yet \u2014 run a universe scan and they start collecting automatically</span></div>`;
+
+    let note = st.note || "";
+    if(st.storage_is_ephemeral){
+      note = "WARNING: DATA_DIR is not set to a Render disk, so this record is wiped on every deploy. Add a disk at /data and set DATA_DIR=/data. \u2014 " + note;
+    }
+    if(st.marked === 0 && st.total_tracked > 0){
+      note = "Ideas are recorded but not yet marked. Marking runs after the close via /cron/tick. \u2014 " + note;
+    }
+    $("tknote").textContent = note;
+
+    if(!d.rows || !d.rows.length){
+      $("tkrows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing here yet. Ideas are added automatically each time the universe scan completes.</div>`;
+      return;
+    }
+    $("tkrows").innerHTML = d.rows.map(r=>`
+      <div class="tk">
+        <div class="tkt">
+          <span class="tknm">${esc(r.name || r.symbol)}<span class="tkstat ${esc(r.status)}">${esc(r.status)}</span>
+            <small>${esc(r.symbol)} \u00B7 ${esc(r.setup || "\u2014")} \u00B7 added ${esc(r.added_on)} at \u20B9${r.added_price}</small></span>
+          <span class="tkret ${signCls(r.alpha_pct)}">${pct(r.alpha_pct)}<small>alpha</small></span>
+        </div>
+        <div class="tkln">
+          <span>Now \u20B9${r.last_price ?? "\u2014"}</span>
+          <span class="${signCls(r.return_pct)}">Return ${pct(r.return_pct)}</span>
+          <span>Index ${pct(r.bench_return_pct)}</span>
+          <span>Best ${pct(r.max_gain_pct)}</span>
+          <span>Worst ${pct(r.max_drawdown_pct)}</span>
+          <span>${r.days_held} days</span>
+          ${r.sector?`<span>${esc(r.sector)}</span>`:""}
+        </div>
+        ${r.invalidated_by?`<div class="warnbox">${esc(r.invalidated_by)}</div>`:""}
+      </div>`).join("");
+  }catch(e){
+    $("tkrows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
   }
 }
 
@@ -2203,6 +2401,17 @@ document.querySelectorAll(".hz[data-h]").forEach(b=>b.addEventListener("click",(
   horizon = b.dataset.h;
   document.querySelectorAll(".hz[data-h]").forEach(x=>x.classList.toggle("active", x===b));
   loadIdeas();
+
+  /* Ideas toolbar */
+  $("thintoggle").addEventListener("click", ()=>{ includeThin = !includeThin; loadIdeas(); });
+
+  /* Tracker filters */
+  [["tkall",""],["tklive","LIVE"],["tkinv","INVALIDATED"],["tkexp","EXPIRED"]]
+    .forEach(([id,val])=>{
+      const el = $(id);
+      if(el) el.addEventListener("click", ()=>{ tkFilter = val; loadTracker(); });
+    });
+
 }));
 /* ── Planner ────────────────────────────────────────────────────────── */
 const EXP_CATS = [
