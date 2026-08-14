@@ -36,6 +36,11 @@ try:
 except Exception:
     tracker = None
 
+try:
+    import announcements as ann
+except Exception:
+    ann = None
+
 BENCHMARK = os.environ.get("INDEX_PROXY", "NIFTYBEES").strip().upper()
 
 SECTOR_CAP = int(os.environ.get("IDEAS_SECTOR_CAP", "3") or 3)
@@ -215,6 +220,18 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
         chosen.append(r)
         if len(chosen) >= limit:
             break
+
+    # Attach any filing from the last three days. A score that jumped because
+    # the company won an order is a different object from one that drifted up,
+    # and the old tab could not tell the reader which had happened.
+    if ann is not None:
+        try:
+            for r in chosen:
+                t = ann.tag(r.get("symbol", ""), minutes=72 * 60)
+                if t:
+                    r["filing"] = t
+        except Exception:
+            pass
 
     # Regime warning on trend-dependent setups, applied per row so the reader
     # sees it where the decision is made rather than in a banner they scroll past.
