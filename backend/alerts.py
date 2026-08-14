@@ -79,6 +79,10 @@ def format_alert(a: dict) -> str:
         lines.append(f"VWAP    ₹{a['vwap']:,}")
     if a.get("regime") is not None:
         lines.append(f"Index   {a['regime']:+.2f}%")
+    f = a.get("filing")
+    if f:
+        lines += ["", f"\U0001F4CE <b>{_e(f['category'])}</b> \u00b7 {_e(f['line'])}",
+                  _e(f["headline"][:180])]
     lines += ["", _e(a["why"]), "",
               "<i>Observation, not advice. Size the position before you act.</i>"]
     return "\n".join(lines)
@@ -91,7 +95,8 @@ def format_public(a: dict) -> str:
     return "\n".join([
         f"{arrow} <b>{_e(a['symbol'])}</b> — {_e(kind)}",
         f"₹{a['price']:,} · {a['rvol']}x normal volume · "
-        f"{int(float(a.get('range_pos', 0)) * 100)}% up the day's range",
+        f"{int(float(a.get('range_pos', 0)) * 100)}% up the day's range"
+        + (f"\n\U0001F4CE {_e(a['filing']['line'])}" if a.get("filing") else ""),
         "",
         _e(a["why"]),
         "",
