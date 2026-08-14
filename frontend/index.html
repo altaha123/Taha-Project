@@ -1900,9 +1900,11 @@ function renderFilterBars(){
   refreshSegsSoon();
 }
 
-async function loadFilings(){
+let filingsTries = 0;
+
+async function loadFilings(retry){
   renderFilterBars();
-  $("frows").innerHTML = SKEL(5);
+  if(!retry){ filingsTries = 0; $("frows").innerHTML = SKEL(5); }
   try{
     const url = `${API_BASE}/announcements?limit=80&min_importance=${fImp}` +
                 (fCat ? `&category=${encodeURIComponent(fCat)}` : "");
@@ -1914,13 +1916,27 @@ async function loadFilings(){
     }
     $("fnote").textContent =
       `${d.count} filings shown of ${d.stored} held \u00B7 ${d.mapped_to_nse} matched to an NSE symbol` +
+      (d.refreshing ? " \u00B7 refreshing\u2026" : "") +
       (d.last_poll ? ` \u00B7 updated ${timeAgo(d.last_poll)}` : "") +
       (d.error ? ` \u00B7 ${d.error}` : "");
 
     if(!d.rows || !d.rows.length){
-      $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing at this importance level right now. Exchanges are quiet outside market hours \u2014 try "Everything", or check back after 9am.</div>`;
+      /* First load fetches several days of filings from the exchange, which
+         takes the better part of a minute. Keep the skeletons up and check
+         back rather than claiming the exchange is quiet when we simply have
+         not finished asking. */
+      if((d.refreshing || d.first_load) && filingsTries < 12){
+        filingsTries++;
+        $("fnote").textContent = `Fetching filings from the exchange\u2026 (${filingsTries * 5}s)`;
+        setTimeout(()=>loadFilings(true), 5000);
+        return;
+      }
+      $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${
+        d.error ? esc(d.error)
+                : `Nothing at this importance level right now. Exchanges are quiet outside market hours \u2014 try "Everything", or check back after 9am.`}</div>`;
       return;
     }
+    filingsTries = 0;
     $("frows").innerHTML = d.rows.map((r,i)=>`
       <div class="fitem rise ${esc(r.importance)}" style="--i:${Math.min(i,10)}">
         <div class="fh">
