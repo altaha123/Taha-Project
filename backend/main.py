@@ -380,6 +380,7 @@ def announcements_feed(limit: int = 60, min_importance: str = "low",
     Live BSE filing feed. Polls at most once every ANN_POLL_SECONDS, so this is
     safe to hit on every page load.
     """
+    # Non-blocking: returns whatever is in memory now and refreshes behind it.
     try:
         ann.poll_if_stale()
     except Exception:
@@ -389,8 +390,12 @@ def announcements_feed(limit: int = 60, min_importance: str = "low",
 
 
 @app.get("/announcements/refresh")
-def announcements_refresh(days: int = 3):
-    return ann.poll(days=days)
+def announcements_refresh(days: int = 3, wait: bool = True):
+    """Force a poll. wait=true blocks until it finishes (useful for checking by
+    hand); wait=false returns immediately and refreshes in the background."""
+    if wait:
+        return ann.poll(days=days)
+    return ann.poll_if_stale(seconds=0, background=True)
 
 
 @app.get("/announcements/probe")
