@@ -280,6 +280,7 @@ def daily_ohlcv(symbol: str, days: int = 400):
         "toDate": str(today),
     }
     try:
+        _throttle_hist()
         r = requests.post(f"{BASE}/charts/historical", json=body, headers=_headers(), timeout=20)
         if r.status_code in (401, 403):
             # Token may have expired mid-session — try one refresh, then retry once
@@ -387,6 +388,7 @@ def intraday_ohlcv(symbol: str, interval: str = "5", days: int = 5):
         "toDate": str(today),
     }
     try:
+        _throttle_hist()
         r = requests.post(f"{BASE}/charts/intraday", json=body, headers=_headers(), timeout=20)
         if r.status_code in (401, 403):
             if can_auto_refresh() and refresh_token(force=True):
@@ -420,6 +422,20 @@ def intraday_ohlcv(symbol: str, interval: str = "5", days: int = 5):
 
 BULK_MAX = 900          # stay under the documented 1000 ceiling
 QUOTE_GAP = 1.15        # seconds between quote calls (limit is 1/sec)
+
+# Dhan's Data APIs (/charts/historical and /charts/intraday) allow 5 requests
+# per second. Nothing here used to throttle them, so the scanner's warm-up —
+# hundreds of calls in a tight loop — was rate-limited into returning None for
+# almost every symbol, which looked exactly like "Dhan has no data".
+HIST_GAP = 0.25
+_last_hist = {"at": 0.0}
+
+
+def _throttle_hist():
+    wait = HIST_GAP - (time.time() - _last_hist["at"])
+    if wait > 0:
+        time.sleep(wait)
+    _last_hist["at"] = time.time()
 _last_quote = {"at": 0.0}
 
 
@@ -480,7 +496,16 @@ def bulk_quotes(symbols: list, mode: str = "ohlc") -> dict:
                 "high": ohlc.get("high") or row.get("high"),
                 "low": ohlc.get("low") or row.get("low"),
                 "close": ohlc.get("close") or row.get("close"),
+                # volume, average_price, buy_quantity and sell_quantity exist
+                # ONLY on /marketfeed/quote. Callers that need them (the live
+                # scanner does — every signal is volume-gated) must pass
+                # mode="quote"; mode="ohlc" returns price fields and nothing
+                # else, which silently produces None here.
                 "volume": row.get("volume") or row.get("net_change_volume"),
+                "vwap": row.get("average_price") or row.get("avg_price"),
+                "buy_qty": row.get("buy_quantity"),
+                "sell_qty": row.get("sell_quantity"),
+                "oi": row.get("oi"),
                 "prev_close": ohlc.get("close"),
             }
     return out
