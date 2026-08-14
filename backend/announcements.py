@@ -54,6 +54,29 @@ HEAD = {
     "Origin": "https://www.bseindia.com",
 }
 
+# BSE's API sits behind a WAF that hands out cookies on the public site and
+# then expects them on api.bseindia.com. The scrip-master endpoint tolerates a
+# cold request; the announcements endpoint returns an empty JSON object — 200,
+# no error, no data — which is precisely the symptom seen in production.
+# Every request now goes through a session warmed on the public pages first.
+_session = requests.Session()
+_warm = {"at": 0.0}
+
+
+def _warm_session(force=False):
+    if not force and time.time() - _warm["at"] < 1800:
+        return
+    for url in ("https://www.bseindia.com/",
+                "https://www.bseindia.com/corporates/ann.html"):
+        try:
+            _session.get(url, headers={"User-Agent": HEAD["User-Agent"],
+                                       "Accept": "text/html,application/xhtml+xml"},
+                         timeout=20)
+        except Exception:
+            pass
+    _warm["at"] = time.time()
+
+
 POLL_SECONDS = int(os.environ.get("ANN_POLL_SECONDS", "300") or 300)
 MAX_STORED = int(os.environ.get("ANN_MAX_STORED", "1200") or 1200)
 LOOKBACK_DAYS = int(os.environ.get("ANN_LOOKBACK_DAYS", "3") or 3)
@@ -152,7 +175,7 @@ def _build_maps(force=False):
     isin_sym, scrip_isin = {}, {}
 
     try:
-        r = requests.get(NSE_LIST, headers={"User-Agent": HEAD["User-Agent"],
+        r = _session.get(NSE_LIST, headers={"User-Agent": HEAD["User-Agent"],
                                             "Referer": "https://www.nseindia.com/"},
                          timeout=25)
         if r.status_code == 200 and "SYMBOL" in r.text[:200]:
@@ -178,7 +201,8 @@ def _build_maps(force=False):
         _state["error"] = f"NSE list: {str(e)[:120]}"
 
     try:
-        r = requests.get(BSE_SCRIPS, headers=HEAD, timeout=25)
+        _warm_session()
+        r = _session.get(BSE_SCRIPS, headers=HEAD, timeout=25)
         if r.status_code == 200:
             for row in (r.json() or []):
                 if not isinstance(row, dict):
@@ -303,7 +327,8 @@ def _rows_from(payload):
 def _try_variant(name, url, params):
     """Returns (rows, note). Never raises."""
     try:
-        r = requests.get(url, headers=HEAD, params=params, timeout=25)
+        _warm_session()
+        r = _session.get(url, headers=HEAD, params=params, timeout=25)
         if r.status_code != 200:
             return [], f"{name}: HTTP {r.status_code}"
         try:
@@ -317,6 +342,60 @@ def _try_variant(name, url, params):
         return rows, f"{name}: {len(rows)} rows"
     except Exception as e:
         return [], f"{name}: {type(e).__name__} {str(e)[:70]}"
+
+
+NSE_ANN = "https://www.nseindia.com/api/corporate-announcements?index=equities"
+_nse_warm = {"at": 0.0}
+
+
+def _nse_rows():
+    """
+    Fallback source. NSE needs a browser-shaped session before its API answers,
+    which is why BSE was chosen as primary — but a fallback that works only
+    sometimes still beats a Filings tab that is permanently empty.
+
+    NSE keys announcements by symbol directly, so no ISIN join is needed here.
+    """
+    try:
+        if time.time() - _nse_warm["at"] > 900:
+            _session.get("https://www.nseindia.com/companies-listing/corporate-filings-announcements",
+                         headers={"User-Agent": HEAD["User-Agent"],
+                                  "Accept": "text/html,application/xhtml+xml",
+                                  "Referer": "https://www.nseindia.com/"}, timeout=20)
+            _nse_warm["at"] = time.time()
+        r = _session.get(NSE_ANN, headers={"User-Agent": HEAD["User-Agent"],
+                                           "Accept": "application/json",
+                                           "Referer": "https://www.nseindia.com/companies-listing/"
+                                                      "corporate-filings-announcements"},
+                         timeout=25)
+        if r.status_code != 200:
+            return [], f"NSE: HTTP {r.status_code}"
+        data = r.json()
+        rows = data if isinstance(data, list) else _rows_from(data)
+        if not rows:
+            return [], "NSE: 200 but no rows"
+        out = []
+        for row in rows:
+            head = (row.get("desc") or row.get("subject") or "").strip()
+            sym = (row.get("symbol") or "").strip().upper()
+            if not head or not sym:
+                continue
+            head = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", head)).strip()
+            when = _parse_dt((row.get("an_dt") or row.get("sort_date") or "").replace(" ", "T"))
+            cat, imp, weight = classify(head + " " + str(row.get("smIndustry") or ""))
+            out.append({
+                "symbol": sym, "scrip_code": "",
+                "company": (row.get("sm_name") or sym).strip(),
+                "headline": head[:400],
+                "exchange_category": (row.get("attchmntText") or "")[:80],
+                "category": cat, "importance": imp, "weight": weight,
+                "at": when.isoformat() if when else None,
+                "epoch": when.timestamp() if when else 0,
+                "pdf": row.get("attchmntFile") or None,
+            })
+        return out, f"NSE: {len(out)} rows"
+    except Exception as e:
+        return [], f"NSE: {type(e).__name__} {str(e)[:80]}"
 
 
 def poll(days: int = None) -> dict:
@@ -381,10 +460,37 @@ def poll(days: int = None) -> dict:
                     idx.setdefault(i["symbol"], []).append(i)
             _state["by_symbol"] = idx
             _state["fetched"] = len(_state["items"])
-    elif not _state["items"]:
+    if not got:
+        # Every BSE shape came back empty — try the other exchange rather than
+        # leave the tab blank.
+        nse_rows, nse_note = _nse_rows()
+        notes.append(nse_note)
+        if nse_rows:
+            got = nse_rows
+            _state["variant"] = "NSE fallback"
+            _state["error"] = None
+            with _lock:
+                seen = {(i["symbol"], i["headline"], i["at"]) for i in _state["items"]}
+                fresh = []
+                for i in got:
+                    k = (i["symbol"], i["headline"], i["at"])
+                    if k not in seen:
+                        seen.add(k); fresh.append(i)
+                merged = fresh + _state["items"]
+                merged.sort(key=lambda i: i["epoch"], reverse=True)
+                _state["items"] = merged[:MAX_STORED]
+                idx = {}
+                for i in _state["items"]:
+                    if i["symbol"]:
+                        idx.setdefault(i["symbol"], []).append(i)
+                _state["by_symbol"] = idx
+                _state["fetched"] = len(_state["items"])
+        _state["attempts"] = notes
+
+    if not _state["items"]:
         # Say so loudly. Silence here is what hid the problem for three polls.
-        _state["error"] = ("No variant returned rows. Attempts: "
-                           + " | ".join(notes[:6]))
+        _state["error"] = ("No source returned rows. Attempts: "
+                           + " | ".join(notes[:8]))
 
     _state["last_poll"] = dt.datetime.now(IST).isoformat()
     _state["polls"] += 1
@@ -462,6 +568,69 @@ def tag(symbol: str, minutes: int = 120):
                  if mins is not None and mins < 120
                  else f"{top['category']} filed recently"),
     }
+
+
+def probe(days: int = 2) -> dict:
+    """
+    Fire a spread of candidate requests and report exactly what came back —
+    status, byte count, content type and the first slice of raw text.
+
+    Written after three rounds of guessing at parameters from the outside. A
+    classifier that says "no rows" cannot distinguish a WAF challenge page from
+    an empty result set; the raw bytes can. This is a diagnostic endpoint, not
+    part of the polling path.
+    """
+    to_d = dt.datetime.now(IST).date()
+    from_d = to_d - dt.timedelta(days=days)
+    f, t = from_d.strftime("%Y%m%d"), to_d.strftime("%Y%m%d")
+    base = {"pageno": 1, "strCat": "-1", "strPrevDate": f, "strToDate": t,
+            "strScrip": "", "strSearch": "P", "strType": "C", "subcategory": "-1"}
+
+    attempts = [
+        ("warmed session, subcat=-1", BSE_ANN, dict(base), True, HEAD),
+        ("cold, no session", BSE_ANN, dict(base), False, HEAD),
+        ("warmed, no Origin header", BSE_ANN, dict(base), True,
+         {k: v for k, v in HEAD.items() if k != "Origin"}),
+        ("warmed, single day", BSE_ANN, dict(base, strPrevDate=t), True, HEAD),
+        ("warmed, subcategory omitted", BSE_ANN,
+         {k: v for k, v in base.items() if k != "subcategory"}, True, HEAD),
+        ("AnnGetData warmed", BSE_ANN_ALT, dict(base), True, HEAD),
+        ("scrip master (known good)", BSE_SCRIPS, None, True, HEAD),
+    ]
+
+    out = []
+    for name, url, params, warm, hdrs in attempts:
+        row = {"attempt": name}
+        try:
+            if warm:
+                _warm_session()
+                r = _session.get(url, headers=hdrs, params=params, timeout=25)
+            else:
+                r = requests.get(url, headers=hdrs, params=params, timeout=25)
+            body = r.text or ""
+            row.update({
+                "status": r.status_code,
+                "content_type": r.headers.get("Content-Type", "")[:60],
+                "bytes": len(r.content or b""),
+                "final_url": r.url[:220],
+                "raw_head": body[:280].replace("\n", " ")[:280],
+            })
+            try:
+                row["rows_found"] = len(_rows_from(r.json()))
+            except Exception:
+                row["rows_found"] = "not JSON"
+        except Exception as e:
+            row["error"] = f"{type(e).__name__}: {str(e)[:120]}"
+        out.append(row)
+
+    return {"probed_at": dt.datetime.now(IST).isoformat(),
+            "date_range": f"{f} to {t}",
+            "session_cookies": sorted(_session.cookies.get_dict().keys())[:12],
+            "attempts": out,
+            "read_this": ("Look at raw_head. JSON starting with a bracket means the endpoint "
+                          "works and the parameters are wrong. HTML, or a body mentioning a "
+                          "challenge or access denial, means a WAF is refusing the request "
+                          "and the fix is session or header related, not parameters.")}
 
 
 def diagnose() -> dict:
