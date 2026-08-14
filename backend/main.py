@@ -22,6 +22,7 @@ except Exception:
 import io
 import csv
 import scan as scanner
+import announcements as ann
 import ideas as ideas_engine
 import tracker
 from results import quarterly_results
@@ -89,6 +90,34 @@ def _require_admin(key: str = ""):
         raise HTTPException(401, "This control endpoint needs the admin key (?key=...).")
 
 
+def _autotrack(payload):
+    """
+    Record every idea a scan produces.
+
+    Deliberately not opt-in. If only the ideas someone bothers to save get
+    tracked, the record becomes a highlight reel of the ones they already
+    liked, and the hit rate it produces is worthless.
+
+    Called from three places, because a scan payload can arrive three ways:
+    a fresh scan finishing, a cached payload being read off disk at boot, or
+    the user pressing Record on the Tracker tab. Only the first was wired
+    originally, which meant anyone whose results came from cache saw an
+    empty tracker forever and had no way to tell why. add() de-duplicates,
+    so calling this repeatedly is safe.
+    """
+    try:
+        rows = []
+        for horizon in ("short", "medium"):
+            sel = ideas_engine.select(payload, horizon=horizon, limit=25,
+                                      include_thin=True)
+            rows.extend(sel.get("rows") or [])
+        if rows:
+            return tracker.add_many(rows, source="auto")
+    except Exception as e:
+        return {"added": 0, "skipped": 0, "error": str(e)[:160]}
+    return {"added": 0, "skipped": 0, "reason": "no qualifying ideas in this payload"}
+
+
 def _load_from_disk():
     if os.path.exists(LEADERBOARD_FILE):
         try:
@@ -96,6 +125,8 @@ def _load_from_disk():
                 _state["payload"] = json.load(f)
                 _state["status"] = "done"
                 _state["finished_at"] = os.path.getmtime(LEADERBOARD_FILE)
+            # A cached payload is still a set of live ideas. Record it.
+            _autotrack(_state["payload"])
         except Exception:
             pass
 
@@ -123,27 +154,6 @@ def _autostart_intraday():
     try:
         if dhan is not None and dhan.configured():
             intraday.start(_default_watchlist(limit))
-    except Exception:
-        pass
-
-
-def _autotrack(payload):
-    """
-    Record every idea the scan produces, automatically.
-
-    Deliberately not opt-in. If only the ideas someone bothers to save get
-    tracked, the record becomes a highlight reel of the ones they already
-    liked, and the hit rate it produces is worthless. Tracking everything is
-    the only version of this that can tell an uncomfortable truth.
-    """
-    try:
-        rows = []
-        for horizon in ("short", "medium"):
-            sel = ideas_engine.select(payload, horizon=horizon, limit=25,
-                                      include_thin=True)
-            rows.extend(sel.get("rows") or [])
-        if rows:
-            tracker.add_many(rows, source="auto")
     except Exception:
         pass
 
@@ -353,9 +363,55 @@ def ideas(horizon: str = "short", limit: int = 15,
 # Idea tracker
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Corporate announcements
+# ---------------------------------------------------------------------------
+
+@app.get("/announcements")
+def announcements_feed(limit: int = 60, min_importance: str = "low",
+                       symbol: str = "", category: str = ""):
+    """
+    Live BSE filing feed. Polls at most once every ANN_POLL_SECONDS, so this is
+    safe to hit on every page load.
+    """
+    try:
+        ann.poll_if_stale()
+    except Exception:
+        pass
+    return ann.feed(limit=limit, min_importance=min_importance,
+                    symbol=symbol, category=category)
+
+
+@app.get("/announcements/refresh")
+def announcements_refresh(days: int = 3):
+    return ann.poll(days=days)
+
+
+@app.get("/announcements/diag")
+def announcements_diag():
+    return ann.diagnose()
+
+
 @app.get("/tracker/list")
 def tracker_list(status: str = "", limit: int = 400):
     return tracker.listing(status=status, limit=max(1, min(limit, 1000)))
+
+
+@app.post("/tracker/backfill")
+def tracker_backfill():
+    """
+    Record the ideas from the CURRENT scan, right now.
+
+    Without this, a user whose scan results came from cache had to wait for a
+    fresh multi-minute scan before a single idea was ever recorded, and the
+    Tracker tab gave no clue that was the reason it looked empty.
+    """
+    p = _state["payload"]
+    if not p:
+        raise HTTPException(404, "No scan available to record. Run a universe scan first.")
+    res = _autotrack(p)
+    return {**(res or {}), "scanned_at": p.get("scanned_at"),
+            "total_tracked": tracker.listing()["count"]}
 
 
 @app.get("/tracker/stats")
@@ -886,6 +942,10 @@ def cron_tick():
     UptimeRobot) at this every 5 minutes: it stops Render's free tier from
     sleeping AND restarts the scanner thread if a restart killed it.
     """
+    try:
+        ann.poll_if_stale()
+    except Exception:
+        pass
     revived = False
     if not intraday._state["running"]:
         _autostart_intraday()
