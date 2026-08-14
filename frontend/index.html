@@ -740,7 +740,14 @@
     background:rgba(251,250,247,.93);border:1px solid var(--rule);padding:4px 9px}
   /* ── Nav overflow menu ─────────────────────────────────────────────── */
   .moreWrap{position:relative;display:inline-block}
-  .moreMenu{position:absolute;top:calc(100% + 10px);right:0;background:#fff;
+  /* position:fixed, not absolute.
+     The bar scrolls horizontally on narrow screens, so .seg carries
+     overflow-x:auto — and a scroll container clips on BOTH axes. An absolutely
+     positioned dropdown hanging below the bar was therefore clipped to the
+     bar's own height and rendered invisible: the menu opened correctly and
+     could not be seen. Fixed positioning escapes ancestor overflow entirely;
+     coordinates are set from the trigger's rect in openMore(). */
+  .moreMenu{position:fixed;top:0;left:0;background:#fff;
             border:1px solid var(--rule-2);border-radius:var(--r-card);min-width:190px;z-index:60;
             box-shadow:var(--sh-2);padding:6px;
             opacity:0;visibility:hidden;transform:translateY(-6px) scale(.97);transform-origin:top right;
@@ -1393,12 +1400,32 @@ function closeMore(){
   if(m) m.classList.remove("open");
   if(b) b.setAttribute("aria-expanded","false");
 }
+
+function placeMore(){
+  const m = $("moreMenu"), b = $("tab-more");
+  if(!m || !b || !m.classList.contains("open")) return;
+  const r = b.getBoundingClientRect();
+  const w = m.offsetWidth || 190;
+  /* Right-align to the trigger, then clamp so it can never hang off a phone
+     screen. 10px of breathing room below the bar. */
+  let left = r.right - w;
+  left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+  m.style.left = left + "px";
+  m.style.top = (r.bottom + 10) + "px";
+}
+
 function toggleMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(!m) return;
   const open = m.classList.toggle("open");
   if(b) b.setAttribute("aria-expanded", open ? "true" : "false");
+  if(open) placeMore();
 }
+
+/* A fixed menu does not travel with the page, so close it rather than let it
+   float away from the button it belongs to. */
+window.addEventListener("scroll", closeMore, {passive:true});
+window.addEventListener("resize", () => { closeMore(); });
 
 /* ── Segmented bubble engine ────────────────────────────────────────────
    Every "pick one of N" control on the site is a .seg containing buttons. A
@@ -2778,50 +2805,58 @@ document.querySelectorAll(".hz[data-h]").forEach(b=>b.addEventListener("click",(
   horizon = b.dataset.h;
   document.querySelectorAll(".hz[data-h]").forEach(x=>x.classList.toggle("active", x===b));
   loadIdeas();
-
-  /* Segmented bubbles: register every bar, then measure once fonts settle so
-     the puck matches the final text width rather than the fallback face. */
-  initSegs();
-  refreshSegsSoon();
-
-  /* More menu */
-  const mb = $("tab-more");
-  if(mb) mb.addEventListener("click", ev=>{ ev.stopPropagation(); toggleMore(); });
-  document.addEventListener("click", ev=>{
-    if(!ev.target.closest(".moreWrap")) closeMore();
-  });
-  document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") closeMore(); });
-
-  /* Ideas toolbar */
-  $("thintoggle").addEventListener("click", ()=>{ includeThin = !includeThin; loadIdeas(); });
-
-  /* Tracker filters */
-  const bf = $("tkbackfill");
-  if(bf) bf.addEventListener("click", async ()=>{
-    bf.textContent = "Recording\u2026";
-    try{
-      const r = await fetch(`${API_BASE}/tracker/backfill`, {method:"POST"});
-      const j = await r.json();
-      bf.textContent = r.ok
-        ? `Recorded ${j.added ?? 0}${j.skipped ? ` (${j.skipped} already tracked)` : ""}`
-        : (j.detail || "Nothing to record");
-      loadTracker();
-    }catch(e){ bf.textContent = "Couldn\u2019t record"; }
-    setTimeout(()=>{ bf.textContent = "Record current ideas"; }, 4000);
-  });
-
-  [["tkall",""],["tklive","LIVE"],["tkinv","INVALIDATED"],["tkexp","EXPIRED"]]
-    .forEach(([id,val])=>{
-      const el = $(id);
-      if(el) el.addEventListener("click", ()=>{
-        tkFilter = val;
-        document.querySelectorAll("#tkfilter button")
-          .forEach(x => x.classList.toggle("active", x === el));
-        loadTracker();
-      });
-    });
-
 }));
+
+/* ── Page wiring ────────────────────────────────────────────────────────
+   These listeners were, in an earlier pass, accidentally nested INSIDE the
+   horizon button's click handler. Two consequences: nothing here was wired
+   until a horizon button happened to be clicked (so the More menu simply did
+   nothing), and every subsequent click stacked another duplicate set of
+   listeners on the same elements. They belong at top level. */
+
+/* Segmented bubbles: register every bar, then measure once fonts settle so the
+   puck matches the final text width rather than the fallback face. */
+initSegs();
+refreshSegsSoon();
+
+/* More menu */
+const mb = $("tab-more");
+if(mb) mb.addEventListener("click", ev=>{ ev.stopPropagation(); toggleMore(); });
+document.addEventListener("click", ev=>{
+  if(!ev.target.closest(".moreWrap")) closeMore();
+});
+document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") closeMore(); });
+
+/* Ideas toolbar */
+$("thintoggle").addEventListener("click", ()=>{ includeThin = !includeThin; loadIdeas(); });
+
+/* Tracker filters */
+const bf = $("tkbackfill");
+if(bf) bf.addEventListener("click", async ()=>{
+  bf.textContent = "Recording\u2026";
+  try{
+    const r = await fetch(`${API_BASE}/tracker/backfill`, {method:"POST"});
+    const j = await r.json();
+    bf.textContent = r.ok
+      ? `Recorded ${j.added ?? 0}${j.skipped ? ` (${j.skipped} already tracked)` : ""}`
+      : (j.detail || "Nothing to record");
+    loadTracker();
+  }catch(e){ bf.textContent = "Couldn\u2019t record"; }
+  setTimeout(()=>{ bf.textContent = "Record current ideas"; }, 4000);
+});
+
+[["tkall",""],["tklive","LIVE"],["tkinv","INVALIDATED"],["tkexp","EXPIRED"]]
+  .forEach(([id,val])=>{
+    const el = $(id);
+    if(el) el.addEventListener("click", ()=>{
+      tkFilter = val;
+      document.querySelectorAll("#tkfilter button")
+        .forEach(x => x.classList.toggle("active", x === el));
+      loadTracker();
+    });
+  });
+
+
 /* ── Planner ────────────────────────────────────────────────────────── */
 const EXP_CATS = [
   ["e_rent","Rent / home-loan EMI","need"], ["e_emi","Other EMIs / loans","need"],
