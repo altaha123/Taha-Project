@@ -211,6 +211,9 @@ def _build_maps(force=False):
                 code = str(row.get("SCRIP_CD") or row.get("Scrip_Code") or "").strip()
                 if isin and code:
                     scrip_isin[code] = isin
+                name = (row.get("Scrip_Name") or row.get("Issuer_Name") or "").strip()
+                if code and name:
+                    _scrip_names[code] = name
     except Exception as e:
         _state["error"] = f"BSE scrip list: {str(e)[:120]}"
 
@@ -246,27 +249,49 @@ def _parse_dt(s):
     return None
 
 
+# scrip code -> clean company name, harvested from the scrip master we already
+# fetch for the ISIN join. BSE's announcement rows do not reliably carry a
+# company field; the name is buried in the subject line instead.
+_scrip_names = {}
+
+
+def _clean_headline(text, company=""):
+    """
+    NEWSSUB arrives as
+        "Kilburn Engineering Ltd - 522101 - Announcement under Regulation 30..."
+    The company and code are shown separately in the UI, so repeating them in
+    the headline just wastes the line. Strip a leading "name - code - " prefix
+    when one is present, and leave anything else untouched.
+    """
+    t = re.sub(r"<[^>]+>", " ", text or "")
+    t = re.sub(r"\s+", " ", t).strip()
+    m = re.match(r"^(.{2,90}?)\s*-\s*(\d{6})\s*-\s*(.+)$", t)
+    if m:
+        return m.group(3).strip(), m.group(1).strip()
+    return t, company
+
+
 def _norm(row):
     """One BSE announcement row -> our shape. Returns None when unusable."""
     if not isinstance(row, dict):
         return None
     code = row.get("SCRIP_CD") or row.get("SCRIPCD")
-    head = (row.get("HEADLINE") or row.get("NEWSSUB") or "").strip()
-    if not head:
+    raw = (row.get("NEWSSUB") or row.get("HEADLINE") or "").strip()
+    if not raw:
         return None
-    # BSE sometimes wraps the headline in HTML.
-    head = re.sub(r"<[^>]+>", " ", head)
-    head = re.sub(r"\s+", " ", head).strip()
+    company = (row.get("SLONGNAME") or row.get("SHORTNAME") or "").strip()
+    head, from_subject = _clean_headline(raw, company)
+    company = company or _scrip_names.get(str(code or "")) or from_subject
 
     when = _parse_dt(row.get("NEWS_DT") or row.get("DT_TM") or row.get("News_submission_dt"))
     cat, imp, weight = classify(head + " " + str(row.get("CATEGORYNAME") or ""))
-    att = (row.get("ATTACHMENTNAME") or "").strip()
+    att = (row.get("ATTACHMENTNAME") or row.get("AttachmentName") or "").strip()
     sym = symbol_for(code)
 
     return {
         "symbol": sym,
         "scrip_code": str(code or ""),
-        "company": (row.get("SLONGNAME") or row.get("SHORTNAME") or "").strip(),
+        "company": company,
         "headline": head[:400],
         "exchange_category": (row.get("CATEGORYNAME") or "").strip(),
         "category": cat,
@@ -279,40 +304,28 @@ def _norm(row):
 
 
 # ---------------------------------------------------------------------------
-# Endpoint discovery
+# Fetching
 #
-# BSE ships several announcement endpoints and quietly changed which parameter
-# combinations return rows. A wrong combination does not error — it returns
-# HTTP 200 with an empty table, which is indistinguishable from "no filings
-# today" and was exactly the failure seen in production: maps built fine,
-# 4,974 scrips loaded, three polls run, zero rows, no error.
+# BSE's announcements endpoint accepts a SINGLE DAY only. Ask for a range and
+# it returns HTTP 200 with the body "{}" — no error, no rows, indistinguishable
+# from a quiet day. That one behaviour cost several rounds of debugging: the
+# scrip master worked, the session worked, the parameters looked right, and the
+# feed stayed empty. Proven by probe: strPrevDate=strToDate=20260814 returned
+# 50 rows and 56KB; the same request spanning three days returned two bytes.
 #
-# Rather than guess one shape, try several in order and remember the first that
-# actually yields rows. Every attempt is recorded so a failure reports what each
-# variant returned instead of just going quiet.
+# So: loop day by day, page within each day, and stop early on a quiet one.
 # ---------------------------------------------------------------------------
 
 BSE_ANN_ALT = "https://api.bseindia.com/BseIndiaAPI/api/AnnGetData/w"
-
-
-def _variants(from_d, to_d, page):
-    f, t = from_d.strftime("%Y%m%d"), to_d.strftime("%Y%m%d")
-    base = {"pageno": page, "strCat": "-1", "strPrevDate": f, "strToDate": t,
-            "strScrip": "", "strSearch": "P", "strType": "C"}
-    return [
-        # subcategory="-1" is the shape the site itself sends today. The old
-        # code sent an empty string, which is what produced empty tables.
-        ("subcat=-1", BSE_ANN, dict(base, subcategory="-1")),
-        ("subcat=blank", BSE_ANN, dict(base, subcategory="")),
-        ("cat=blank,subcat=-1", BSE_ANN, dict(base, strCat="", subcategory="-1")),
-        ("search=blank", BSE_ANN, dict(base, strSearch="", subcategory="-1")),
-        ("type=A", BSE_ANN, dict(base, strType="A", subcategory="-1")),
-        ("AnnGetData", BSE_ANN_ALT, dict(base, subcategory="-1")),
-    ]
+PAGE_SIZE = 50                     # BSE's own page size
+MAX_PAGES_PER_DAY = int(os.environ.get("ANN_MAX_PAGES", "4") or 4)
 
 
 def _rows_from(payload):
-    """BSE has used Table, table and Table1 for the same list."""
+    """BSE has used Table, table and Table1 — and returns a bare JSON string
+    ("No Record Found!") from the older endpoint."""
+    if isinstance(payload, str):
+        return []
     if isinstance(payload, list):
         return payload
     if not isinstance(payload, dict):
@@ -324,24 +337,118 @@ def _rows_from(payload):
     return []
 
 
-def _try_variant(name, url, params):
-    """Returns (rows, note). Never raises."""
+def _fetch_day(day, page):
+    """One day, one page. Returns (rows, note)."""
+    d = day.strftime("%Y%m%d")
+    params = {"pageno": page, "strCat": "-1",
+              "strPrevDate": d, "strToDate": d,      # same day, both ends
+              "strScrip": "", "strSearch": "P", "strType": "C",
+              "subcategory": "-1"}
     try:
         _warm_session()
-        r = _session.get(url, headers=HEAD, params=params, timeout=25)
+        r = _session.get(BSE_ANN, headers=HEAD, params=params, timeout=25)
         if r.status_code != 200:
-            return [], f"{name}: HTTP {r.status_code}"
+            return [], f"{d} p{page}: HTTP {r.status_code}"
         try:
             payload = r.json()
         except Exception:
-            return [], f"{name}: non-JSON ({len(r.content)} bytes)"
+            return [], f"{d} p{page}: non-JSON ({len(r.content)}B)"
         rows = _rows_from(payload)
-        if not rows:
-            keys = list(payload)[:6] if isinstance(payload, dict) else "list"
-            return [], f"{name}: 200 but no rows (keys={keys})"
-        return rows, f"{name}: {len(rows)} rows"
+        return rows, f"{d} p{page}: {len(rows)} rows"
     except Exception as e:
-        return [], f"{name}: {type(e).__name__} {str(e)[:70]}"
+        return [], f"{d} p{page}: {type(e).__name__} {str(e)[:60]}"
+
+
+def poll(days: int = None) -> dict:
+    """
+    Pull recent announcements, one day at a time. Safe to call on a timer;
+    results are merged and de-duplicated, so overlapping windows cost nothing.
+    """
+    _build_maps()
+    days = days or LOOKBACK_DAYS
+    today = dt.datetime.now(IST).date()
+    got, notes, fetched_days = [], [], 0
+
+    for back in range(days):
+        day = today - dt.timedelta(days=back)
+        if day.weekday() >= 5 and back > 0:
+            continue                       # exchanges are shut at weekends
+        day_rows = 0
+        for page in range(1, MAX_PAGES_PER_DAY + 1):
+            rows, note = _fetch_day(day, page)
+            if page == 1:
+                notes.append(note)
+            if not rows:
+                break
+            day_rows += len(rows)
+            for row in rows:
+                item = _norm(row)
+                if item:
+                    got.append(item)
+            if len(rows) < PAGE_SIZE:
+                break                      # last page for this day
+            time.sleep(0.4)
+        if day_rows:
+            fetched_days += 1
+        time.sleep(0.3)
+
+    if got:
+        _state["error"] = None
+        _state["variant"] = "BSE single-day"
+        with _lock:
+            # De-duplicate against storage AND within this batch — pages overlap
+            # when a filing lands mid-poll.
+            seen = {(i["scrip_code"], i["headline"], i["at"]) for i in _state["items"]}
+            fresh = []
+            for i in got:
+                k = (i["scrip_code"], i["headline"], i["at"])
+                if k not in seen:
+                    seen.add(k)
+                    fresh.append(i)
+            merged = fresh + _state["items"]
+            merged.sort(key=lambda i: i["epoch"], reverse=True)
+            _state["items"] = merged[:MAX_STORED]
+
+            idx = {}
+            for i in _state["items"]:
+                if i["symbol"]:
+                    idx.setdefault(i["symbol"], []).append(i)
+            _state["by_symbol"] = idx
+            _state["fetched"] = len(_state["items"])
+    else:
+        nse_rows, nse_note = _nse_rows()
+        notes.append(nse_note)
+        if nse_rows:
+            got = nse_rows
+            _state["variant"] = "NSE fallback"
+            _state["error"] = None
+            with _lock:
+                seen = {(i["symbol"], i["headline"], i["at"]) for i in _state["items"]}
+                fresh = []
+                for i in got:
+                    k = (i["symbol"], i["headline"], i["at"])
+                    if k not in seen:
+                        seen.add(k)
+                        fresh.append(i)
+                merged = fresh + _state["items"]
+                merged.sort(key=lambda i: i["epoch"], reverse=True)
+                _state["items"] = merged[:MAX_STORED]
+                idx = {}
+                for i in _state["items"]:
+                    if i["symbol"]:
+                        idx.setdefault(i["symbol"], []).append(i)
+                _state["by_symbol"] = idx
+                _state["fetched"] = len(_state["items"])
+
+    _state["attempts"] = notes
+    if not _state["items"]:
+        _state["error"] = "No source returned rows. Attempts: " + " | ".join(notes[:8])
+
+    _state["last_poll"] = dt.datetime.now(IST).isoformat()
+    _state["polls"] += 1
+    return {"days_with_rows": fetched_days, "new": len(got),
+            "stored": len(_state["items"]), "variant": _state.get("variant"),
+            "attempts": notes, "error": _state["error"]}
 
 
 NSE_ANN = "https://www.nseindia.com/api/corporate-announcements?index=equities"
@@ -396,107 +503,6 @@ def _nse_rows():
         return out, f"NSE: {len(out)} rows"
     except Exception as e:
         return [], f"NSE: {type(e).__name__} {str(e)[:80]}"
-
-
-def poll(days: int = None) -> dict:
-    """
-    Pull recent announcements. Safe to call on a timer; results are merged and
-    de-duplicated, so overlapping windows cost nothing.
-    """
-    _build_maps()
-    days = days or LOOKBACK_DAYS
-    to_d = dt.datetime.now(IST).date()
-    from_d = to_d - dt.timedelta(days=days)
-    got, pages, notes = [], 0, []
-
-    # Reuse the variant that worked last time before trying the rest.
-    def ordered(page):
-        vs = _variants(from_d, to_d, page)
-        win = _state.get("variant")
-        if win:
-            vs.sort(key=lambda v: 0 if v[0] == win else 1)
-        return vs
-
-    for page in range(1, 4):            # ~150 filings per poll is plenty
-        rows, note = [], None
-        for name, url, params in ordered(page):
-            rows, note = _try_variant(name, url, params)
-            if rows:
-                _state["variant"] = name
-                break
-            if page == 1:
-                notes.append(note)
-        if page == 1:
-            _state["attempts"] = notes
-        if not rows:
-            break
-        pages += 1
-        for row in rows:
-            item = _norm(row)
-            if item:
-                got.append(item)
-        time.sleep(0.4)
-
-    if got:
-        _state["error"] = None
-        with _lock:
-            # De-duplicate against what is stored AND within this batch. Pages
-            # overlap when a filing lands mid-poll, so the same row can arrive
-            # twice in one pass.
-            seen = {(i["scrip_code"], i["headline"], i["at"]) for i in _state["items"]}
-            fresh = []
-            for i in got:
-                k = (i["scrip_code"], i["headline"], i["at"])
-                if k not in seen:
-                    seen.add(k)
-                    fresh.append(i)
-            merged = fresh + _state["items"]
-            merged.sort(key=lambda i: i["epoch"], reverse=True)
-            _state["items"] = merged[:MAX_STORED]
-
-            idx = {}
-            for i in _state["items"]:
-                if i["symbol"]:
-                    idx.setdefault(i["symbol"], []).append(i)
-            _state["by_symbol"] = idx
-            _state["fetched"] = len(_state["items"])
-    if not got:
-        # Every BSE shape came back empty — try the other exchange rather than
-        # leave the tab blank.
-        nse_rows, nse_note = _nse_rows()
-        notes.append(nse_note)
-        if nse_rows:
-            got = nse_rows
-            _state["variant"] = "NSE fallback"
-            _state["error"] = None
-            with _lock:
-                seen = {(i["symbol"], i["headline"], i["at"]) for i in _state["items"]}
-                fresh = []
-                for i in got:
-                    k = (i["symbol"], i["headline"], i["at"])
-                    if k not in seen:
-                        seen.add(k); fresh.append(i)
-                merged = fresh + _state["items"]
-                merged.sort(key=lambda i: i["epoch"], reverse=True)
-                _state["items"] = merged[:MAX_STORED]
-                idx = {}
-                for i in _state["items"]:
-                    if i["symbol"]:
-                        idx.setdefault(i["symbol"], []).append(i)
-                _state["by_symbol"] = idx
-                _state["fetched"] = len(_state["items"])
-        _state["attempts"] = notes
-
-    if not _state["items"]:
-        # Say so loudly. Silence here is what hid the problem for three polls.
-        _state["error"] = ("No source returned rows. Attempts: "
-                           + " | ".join(notes[:8]))
-
-    _state["last_poll"] = dt.datetime.now(IST).isoformat()
-    _state["polls"] += 1
-    return {"pages": pages, "new": len(got), "stored": len(_state["items"]),
-            "variant": _state.get("variant"), "attempts": notes,
-            "error": _state["error"]}
 
 
 def poll_if_stale(seconds: int = None):
@@ -646,6 +652,7 @@ def diagnose() -> dict:
         "last_attempts": _state.get("attempts"),
         "last_poll": _state["last_poll"],
         "error": _state["error"],
+        "company_names_loaded": len(_scrip_names),
         "hint": ("If isin_to_symbol_entries is 0 the NSE list is unreachable from this "
                  "server; if bse_scrip_entries is 0 BSE is blocking the request. Filings "
                  "still show with company names but cannot be joined to your watchlist."),
