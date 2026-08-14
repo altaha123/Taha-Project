@@ -623,6 +623,50 @@
   .cxlegend{position:absolute;top:8px;left:8px;z-index:5;display:none;pointer-events:none;
     font-family:var(--mono);font-size:11px;color:var(--ink-2);
     background:rgba(251,250,247,.93);border:1px solid var(--rule);padding:4px 9px}
+  /* ── Nav overflow menu ─────────────────────────────────────────────── */
+  .moreWrap{position:relative;display:inline-block}
+  .moreMenu{position:absolute;top:calc(100% + 6px);right:0;background:#fff;
+            border:1px solid var(--rule);min-width:184px;z-index:60;display:none;
+            box-shadow:0 8px 28px rgba(0,0,0,.09)}
+  .moreMenu.open{display:block}
+  .moreMenu button{display:block;width:100%;text-align:left;background:none;border:0;
+            padding:11px 16px;font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;
+            text-transform:uppercase;color:var(--ink);cursor:pointer}
+  .moreMenu button:hover{background:var(--paper-2,#f4f1ea)}
+  .moreMenu button.active{color:var(--gold-dp)}
+  .moreMenu .sep{height:1px;background:var(--rule);margin:4px 0}
+
+  /* ── Filings feed ──────────────────────────────────────────────────── */
+  .fbar{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin:0 auto 18px;max-width:760px}
+  .fchip{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+         border:1px solid var(--rule);background:#fff;color:var(--mute);padding:6px 12px;cursor:pointer}
+  .fchip.on{border-color:var(--ink);color:var(--ink)}
+  .fitem{border:1px solid var(--rule);border-left-width:3px;background:#fff;
+         padding:14px 17px;margin-bottom:9px}
+  .fitem.critical{border-left-color:#a11}
+  .fitem.high{border-left-color:#b26a00}
+  .fitem.medium{border-left-color:var(--gold-dp)}
+  .fitem.low,.fitem.routine{border-left-color:var(--rule)}
+  .fitem .fh{display:flex;justify-content:space-between;gap:14px;align-items:baseline;flex-wrap:wrap}
+  .fitem .fco{font-family:var(--serif);font-size:17px;line-height:1.3}
+  .fitem .fco em{font-style:normal;font-family:var(--mono);font-size:10px;letter-spacing:.13em;
+                 color:var(--mute);margin-left:8px;cursor:pointer}
+  .fitem .fco em:hover{color:var(--gold-dp)}
+  .fitem .fwhen{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mute);
+                white-space:nowrap;flex-shrink:0}
+  .fitem .fhl{font-size:13.5px;line-height:1.62;margin-top:7px;color:var(--ink)}
+  .fitem .ffoot{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:10px;
+                font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase}
+  .fcat{border:1px solid var(--rule);padding:3px 9px;color:var(--mute)}
+  .fimp{padding:3px 9px;border:1px solid currentColor}
+  .fimp.critical{color:#a11}.fimp.high{color:#b26a00}
+  .fimp.medium{color:var(--gold-dp)}.fimp.low,.fimp.routine{color:var(--mute)}
+  .fitem a.fpdf{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule)}
+  .fitem a.fpdf:hover{border-color:var(--ink)}
+  .filingtag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;
+             letter-spacing:.12em;text-transform:uppercase;border:1px solid #b26a00;color:#b26a00;
+             padding:2px 8px;margin-left:8px}
+
   /* ── Ideas v23: liquidity tiers, warnings, tracker ─────────────────── */
   .tier{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
         padding:2px 7px;border:1px solid var(--rule);margin-left:8px;white-space:nowrap}
@@ -709,12 +753,19 @@
   <nav class="tabs tabs6" role="tablist">
     <button class="tab active" id="tab-screener" role="tab" aria-selected="true">Screener</button>
     <button class="tab" id="tab-ideas" role="tab" aria-selected="false">Ideas</button>
+    <button class="tab" id="tab-filings" role="tab" aria-selected="false">Filings</button>
     <button class="tab" id="tab-live" role="tab" aria-selected="false">Live</button>
-    <button class="tab" id="tab-results" role="tab" aria-selected="false">Results</button>
     <button class="tab" id="tab-portfolio" role="tab" aria-selected="false">Portfolio</button>
-    <button class="tab" id="tab-options" role="tab" aria-selected="false">Options</button>
-    <button class="tab" id="tab-tracker" role="tab" aria-selected="false">Tracker</button>
-    <button class="tab" id="tab-vocab" role="tab" aria-selected="false">Vocabulary</button>
+    <span class="moreWrap">
+      <button class="tab" id="tab-more" aria-haspopup="true" aria-expanded="false">More \u25BE</button>
+      <div class="moreMenu" id="moreMenu" role="menu">
+        <button id="tab-tracker" role="menuitem">Tracker</button>
+        <button id="tab-results" role="menuitem">Results</button>
+        <button id="tab-options" role="menuitem">Options</button>
+        <div class="sep"></div>
+        <button id="tab-vocab" role="menuitem">Vocabulary</button>
+      </div>
+    </span>
   </nav>
 
   <div id="view-screener">
@@ -1102,6 +1153,15 @@
     </section>
   </div><!-- /view-options -->
 
+  <div id="view-filings" style="display:none">
+    <p class="ideas-intro">Every corporate filing as it lands on the exchange \u2014 the primary source, minutes before it reaches a news site. Categories and importance below are keyword rules applied to the exchange\u2019s own headline, shown so you can sort quickly. Nothing here is a summary; open the filing for what the company actually said.</p>
+    <div class="fbar" id="fimpbar"></div>
+    <div class="fbar" id="fcatbar"></div>
+    <div class="ideas-note" id="fnote"></div>
+    <div id="frows"></div>
+    <p class="disc">Source: BSE corporate announcements. Altaha does not verify, interpret or endorse any filing.</p>
+  </div><!-- /view-filings -->
+
   <div id="view-tracker" style="display:none">
     <p class="ideas-intro">Every idea the engine has produced, with what happened next. Return is what the stock did; alpha is what it did <em>beyond the index over the same days</em> — that second number is the only one that says anything about the engine. Recorded automatically at scan time, including the ones that went wrong.</p>
     <div class="toolbar">
@@ -1110,6 +1170,7 @@
       <button id="tkinv">Invalidated</button>
       <button id="tkexp">Expired</button>
       <a id="tkcsv" href="#" download>Download CSV</a>
+      <button id="tkbackfill">Record current ideas</button>
     </div>
     <div class="statgrid" id="tkstats"></div>
     <div class="ideas-note" id="tknote"></div>
@@ -1183,7 +1244,23 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","live","results","portfolio","options","tracker","vocab"];
+const TABS = ["screener","ideas","filings","live","portfolio","results","options","tracker","vocab"];
+/* Tabs that live under the More menu rather than in the main bar. The bar was
+   carrying nine items, which on a phone wrapped to two rows and made everything
+   look equally important. Five primary, the rest one tap away. */
+const OVERFLOW_TABS = ["results","options","tracker","vocab"];
+function closeMore(){
+  const m = $("moreMenu"), b = $("tab-more");
+  if(m) m.classList.remove("open");
+  if(b) b.setAttribute("aria-expanded","false");
+}
+function toggleMore(){
+  const m = $("moreMenu"), b = $("tab-more");
+  if(!m) return;
+  const open = m.classList.toggle("open");
+  if(b) b.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
 function moveTabInk(which){
   const nav = document.querySelector(".tabs");
   if(!nav) return;
@@ -1206,12 +1283,21 @@ function switchTab(which){
       void view.offsetWidth;
       view.classList.add("viewfade");
     }
-    $("tab-"+t).classList.toggle("active", on);
-    $("tab-"+t).setAttribute("aria-selected", on);
+    const btn = $("tab-"+t);
+    if(btn){
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-selected", on);
+    }
   });
-  moveTabInk(which);
+  /* When an overflow tab is active, light up "More" so the bar still shows
+     where you are. The ink underline only tracks buttons in the bar. */
+  const moreBtn = $("tab-more");
+  if(moreBtn) moreBtn.classList.toggle("active", OVERFLOW_TABS.includes(which));
+  closeMore();
+  moveTabInk(OVERFLOW_TABS.includes(which) ? "more" : which);
   if(which==="ideas") loadIdeas();
   if(which==="tracker") loadTracker();
+  if(which==="filings") loadFilings();
   if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
   if(which==="live"){ loadLive(); liveTimer = setInterval(loadLive, 30000); }
 }
@@ -1495,7 +1581,7 @@ async function loadIdeas(){
             <span class="nm">${i+1}. ${esc(s.name)}${tierChip(s.liquidity_tier)}<small>${esc(s.symbol)} \u00B7 NSE \u00B7 \u20B9${s.price ?? "\u2014"}${s.avg_turnover_cr!=null?` \u00B7 \u20B9${s.avg_turnover_cr}cr/day`:""}</small></span>
             <span class="fit">${s.setup_fit ?? s.composite ?? "\u2014"}<small>fit</small></span>
           </div>
-          <div class="arch">${esc(s.setup || "\u2014")} \u00B7 typical hold ${esc(s.horizon || "\u2014")}${s.expectancy_alpha_pct!=null?` \u00B7 this setup has averaged ${s.expectancy_alpha_pct>0?"+":""}${s.expectancy_alpha_pct}% alpha`:""}</div>
+          <div class="arch">${esc(s.setup || "\u2014")} \u00B7 typical hold ${esc(s.horizon || "\u2014")}${s.filing?`<span class="filingtag">\uD83D\uDCCE ${esc(s.filing.category)} \u00B7 ${esc(s.filing.line)}</span>`:""}${s.expectancy_alpha_pct!=null?` \u00B7 this setup has averaged ${s.expectancy_alpha_pct>0?"+":""}${s.expectancy_alpha_pct}% alpha`:""}</div>
           ${s.plan ? `<div class="ideaplan"><span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>` +
             (s.plan.entry!=null ? `<span>Entry \u20B9${Number(s.plan.entry).toLocaleString("en-IN")}</span><span>SL \u20B9${Number(s.plan.stop).toLocaleString("en-IN")}${s.plan.risk_pct!=null?` (\u2212${s.plan.risk_pct}%)`:""}</span>` +
               (s.plan.t1!=null?`<span>T1 \u20B9${Number(s.plan.t1).toLocaleString("en-IN")}</span>`:"") +
@@ -1542,6 +1628,82 @@ async function loadIdeas(){
   }
 }
 
+/* ── Filings ────────────────────────────────────────────────────────── */
+let fImp = "medium";        // default hides trading-window / compliance noise
+let fCat = "";
+
+const F_IMP = [["routine","Everything"],["low","Low +"],["medium","Medium +"],
+               ["high","High +"],["critical","Critical only"]];
+const F_CAT = ["","Results","Order win","M&A","Buyback","Fundraise","Regulatory action",
+               "Credit rating","Management change","Pledge","Dividend","Capacity / capex"];
+
+function timeAgo(iso){
+  if(!iso) return "";
+  const t = new Date(iso).getTime();
+  if(!t) return "";
+  const m = Math.floor((Date.now() - t)/60000);
+  if(m < 1) return "just now";
+  if(m < 60) return m + " min ago";
+  const h = Math.floor(m/60);
+  if(h < 24) return h + "h ago";
+  return Math.floor(h/24) + "d ago";
+}
+
+function renderFilterBars(){
+  $("fimpbar").innerHTML = F_IMP.map(([v,l])=>
+    `<button class="fchip ${fImp===v?"on":""}" data-imp="${v}">${l}</button>`).join("");
+  $("fcatbar").innerHTML = F_CAT.map(c=>
+    `<button class="fchip ${fCat===c?"on":""}" data-cat="${esc(c)}">${c||"All categories"}</button>`).join("");
+  document.querySelectorAll("#fimpbar .fchip").forEach(b=>
+    b.addEventListener("click",()=>{ fImp=b.dataset.imp; loadFilings(); }));
+  document.querySelectorAll("#fcatbar .fchip").forEach(b=>
+    b.addEventListener("click",()=>{ fCat=b.dataset.cat; loadFilings(); }));
+}
+
+async function loadFilings(){
+  renderFilterBars();
+  $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Loading filings\u2026</div>`;
+  try{
+    const url = `${API_BASE}/announcements?limit=80&min_importance=${fImp}` +
+                (fCat ? `&category=${encodeURIComponent(fCat)}` : "");
+    const res = await fetch(url);
+    const d = await res.json();
+    if(!res.ok){
+      $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.detail||"Couldn\u2019t load filings.")}</div>`;
+      return;
+    }
+    $("fnote").textContent =
+      `${d.count} filings shown of ${d.stored} held \u00B7 ${d.mapped_to_nse} matched to an NSE symbol` +
+      (d.last_poll ? ` \u00B7 updated ${timeAgo(d.last_poll)}` : "") +
+      (d.error ? ` \u00B7 ${d.error}` : "");
+
+    if(!d.rows || !d.rows.length){
+      $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing at this importance level right now. Exchanges are quiet outside market hours \u2014 try "Everything", or check back after 9am.</div>`;
+      return;
+    }
+    $("frows").innerHTML = d.rows.map(r=>`
+      <div class="fitem ${esc(r.importance)}">
+        <div class="fh">
+          <span class="fco">${esc(r.company || r.symbol || "\u2014")}${
+            r.symbol ? `<em data-open="${esc(r.symbol)}">${esc(r.symbol)} \u2197</em>` : ""}</span>
+          <span class="fwhen">${esc(timeAgo(r.at))}</span>
+        </div>
+        <div class="fhl">${esc(r.headline)}</div>
+        <div class="ffoot">
+          <span class="fcat">${esc(r.category)}</span>
+          <span class="fimp ${esc(r.importance)}">${esc(r.importance)}</span>
+          ${r.pdf ? `<a class="fpdf" href="${esc(r.pdf)}" target="_blank" rel="noopener">Open filing \u2197</a>` : ""}
+        </div>
+      </div>`).join("");
+
+    /* A filing is only useful if you can jump to the chart. */
+    document.querySelectorAll("[data-open]").forEach(el=>
+      el.addEventListener("click", ()=>{ switchTab("screener"); analyse(el.dataset.open); }));
+  }catch(e){
+    $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
+  }
+}
+
 /* ── Tracker ────────────────────────────────────────────────────────── */
 let tkFilter = "";
 
@@ -1582,7 +1744,7 @@ async function loadTracker(){
     $("tknote").textContent = note;
 
     if(!d.rows || !d.rows.length){
-      $("tkrows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing here yet. Ideas are added automatically each time the universe scan completes.</div>`;
+      $("tkrows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing recorded yet. Ideas are added automatically whenever a universe scan completes \u2014 but if your current results came from cache, press <b>Record current ideas</b> above to log them now without waiting for a fresh scan.</div>`;
       return;
     }
     $("tkrows").innerHTML = d.rows.map(r=>`
@@ -2402,10 +2564,32 @@ document.querySelectorAll(".hz[data-h]").forEach(b=>b.addEventListener("click",(
   document.querySelectorAll(".hz[data-h]").forEach(x=>x.classList.toggle("active", x===b));
   loadIdeas();
 
+  /* More menu */
+  const mb = $("tab-more");
+  if(mb) mb.addEventListener("click", ev=>{ ev.stopPropagation(); toggleMore(); });
+  document.addEventListener("click", ev=>{
+    if(!ev.target.closest(".moreWrap")) closeMore();
+  });
+  document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") closeMore(); });
+
   /* Ideas toolbar */
   $("thintoggle").addEventListener("click", ()=>{ includeThin = !includeThin; loadIdeas(); });
 
   /* Tracker filters */
+  const bf = $("tkbackfill");
+  if(bf) bf.addEventListener("click", async ()=>{
+    bf.textContent = "Recording\u2026";
+    try{
+      const r = await fetch(`${API_BASE}/tracker/backfill`, {method:"POST"});
+      const j = await r.json();
+      bf.textContent = r.ok
+        ? `Recorded ${j.added ?? 0}${j.skipped ? ` (${j.skipped} already tracked)` : ""}`
+        : (j.detail || "Nothing to record");
+      loadTracker();
+    }catch(e){ bf.textContent = "Couldn\u2019t record"; }
+    setTimeout(()=>{ bf.textContent = "Record current ideas"; }, 4000);
+  });
+
   [["tkall",""],["tklive","LIVE"],["tkinv","INVALIDATED"],["tkexp","EXPIRED"]]
     .forEach(([id,val])=>{
       const el = $(id);
