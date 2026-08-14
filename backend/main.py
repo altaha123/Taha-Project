@@ -387,6 +387,13 @@ def announcements_refresh(days: int = 3):
     return ann.poll(days=days)
 
 
+@app.get("/announcements/probe")
+def announcements_probe(days: int = 2):
+    """Raw evidence for why the feed is empty: status, bytes, content type and
+    the first slice of each response body. Read raw_head."""
+    return ann.probe(days=days)
+
+
 @app.get("/announcements/diag")
 def announcements_diag():
     return ann.diagnose()
