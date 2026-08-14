@@ -505,8 +505,28 @@ def _nse_rows():
         return [], f"NSE: {type(e).__name__} {str(e)[:80]}"
 
 
-def poll_if_stale(seconds: int = None):
-    """Cheap guard so callers can poll on every scan pass without spamming BSE."""
+_polling = {"on": False}
+
+
+def _poll_worker(days):
+    try:
+        poll(days=days)
+    finally:
+        _polling["on"] = False
+
+
+def poll_if_stale(seconds: int = None, background: bool = True):
+    """
+    Kick off a refresh if the data is stale.
+
+    Runs on a thread by default. A full pass builds the ISIN maps (a 1.7MB
+    scrip master), then walks several days a page at a time with polite pauses
+    between requests — comfortably half a minute on a cold start. Doing that
+    inside the /announcements handler meant the browser sat on skeleton rows
+    until the whole thing finished, which is exactly how it looked: permanently
+    loading. The endpoint now answers instantly from memory and the refresh
+    catches up behind it.
+    """
     seconds = seconds or POLL_SECONDS
     last = _state["last_poll"]
     if last:
@@ -516,7 +536,14 @@ def poll_if_stale(seconds: int = None):
                 return None
         except Exception:
             pass
-    return poll()
+    if not background:
+        return poll()
+    if _polling["on"]:
+        return {"started": False, "reason": "a refresh is already running"}
+    _polling["on"] = True
+    threading.Thread(target=_poll_worker, args=(LOOKBACK_DAYS,),
+                     daemon=True, name="altaha-filings").start()
+    return {"started": True}
 
 
 # ---------------------------------------------------------------------------
@@ -539,6 +566,8 @@ def feed(limit: int = 60, min_importance: str = "low", symbol: str = "",
         "stored": len(_state["items"]),
         "mapped_to_nse": sum(1 for i in _state["items"] if i["symbol"]),
         "last_poll": _state["last_poll"],
+        "refreshing": _polling["on"],
+        "first_load": _state["last_poll"] is None,
         "error": _state["error"],
         "source": "BSE corporate announcements (primary exchange filing feed)",
         "note": ("Categories and importance are keyword rules applied to the exchange's own "
