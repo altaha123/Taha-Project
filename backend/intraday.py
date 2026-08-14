@@ -60,6 +60,11 @@ try:
 except Exception:
     notify = None
 
+try:
+    import announcements as ann
+except Exception:
+    ann = None
+
 
 # ---------------------------------------------------------------------------
 # Configuration — every number is env-overridable, so thresholds can be tuned
@@ -616,6 +621,21 @@ def scan_once():
         fired = []
     elif len(fired) > room:
         fired = sorted(fired, key=lambda a: -a["score"])[:room]
+
+    # THE JOIN. Volume on its own says something happened. Volume with a filing
+    # eleven minutes old says what. No retail tool in India puts these two facts
+    # in the same message, and it costs one dictionary lookup.
+    if fired and ann is not None:
+        try:
+            ann.poll_if_stale()
+            for a_ in fired:
+                t = ann.tag(a_["symbol"], minutes=120)
+                if t:
+                    a_["filing"] = t
+                    a_["score"] = min(100, a_["score"] + (8 if t["importance"] in
+                                                          ("critical", "high") else 3))
+        except Exception:
+            pass
 
     if fired:
         fired = sorted(fired, key=lambda a: -a["score"])
