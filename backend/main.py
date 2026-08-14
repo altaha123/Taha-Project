@@ -125,8 +125,14 @@ def _load_from_disk():
                 _state["payload"] = json.load(f)
                 _state["status"] = "done"
                 _state["finished_at"] = os.path.getmtime(LEADERBOARD_FILE)
-            # A cached payload is still a set of live ideas. Record it.
-            _autotrack(_state["payload"])
+            # A cached payload is still a set of live ideas. Record it — but on
+            # a background thread. This runs at import time, and _autotrack
+            # reaches for the index quote and the filings feed, so doing it
+            # inline delays the port binding and can make Render mark the
+            # deploy as failed. A 502 on a fresh deploy usually traces back to
+            # something slow happening before the server starts listening.
+            threading.Thread(target=_autotrack, args=(_state["payload"],),
+                             daemon=True, name="altaha-autotrack").start()
         except Exception:
             pass
 
