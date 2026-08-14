@@ -8,7 +8,7 @@ import os
 import threading
 import time
 
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Response
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
@@ -19,7 +19,11 @@ try:
     import dhan_source as dhan
 except Exception:
     dhan = None
+import io
+import csv
 import scan as scanner
+import ideas as ideas_engine
+import tracker
 from results import quarterly_results
 from levels import compute_levels
 from tradeplan import build_plan
@@ -123,6 +127,27 @@ def _autostart_intraday():
         pass
 
 
+def _autotrack(payload):
+    """
+    Record every idea the scan produces, automatically.
+
+    Deliberately not opt-in. If only the ideas someone bothers to save get
+    tracked, the record becomes a highlight reel of the ones they already
+    liked, and the hit rate it produces is worthless. Tracking everything is
+    the only version of this that can tell an uncomfortable truth.
+    """
+    try:
+        rows = []
+        for horizon in ("short", "medium"):
+            sel = ideas_engine.select(payload, horizon=horizon, limit=25,
+                                      include_thin=True)
+            rows.extend(sel.get("rows") or [])
+        if rows:
+            tracker.add_many(rows, source="auto")
+    except Exception:
+        pass
+
+
 def _worker():
     def progress(done, total, scored):
         _state["done"], _state["total"], _state["scored"] = done, total, scored
@@ -139,6 +164,7 @@ def _worker():
         _state["status"] = "done"
         _state["finished_at"] = time.time()
         _state["error"] = None
+        _autotrack(payload)
     except MemoryError:
         _state["status"] = "done" if _state["payload"] else "error"
         _state["finished_at"] = time.time()
@@ -293,55 +319,96 @@ def scan_status():
     return out
 
 
-HORIZONS = {
-    "short": {"keys": ["momentum_breakout", "institutional_accumulation"],
-              "label": "Short-term setups",
-              "note": ("Setups whose premise plays out in weeks to a few months: strong trends with "
-                       "volume behind them, and accumulation footprints that haven't fully moved yet. "
-                       "These decay fastest — re-scan often.")},
-    "medium": {"keys": ["quality_at_discount", "turnaround"],
-               "label": "Medium-term setups",
-               "note": ("Setups whose premise needs quarters, not weeks: quality businesses in a "
-                        "drawdown, and companies whose fundamentals are inflecting. Judged mainly on "
-                        "filings, so re-check after each results season.")},
-}
+HORIZONS = ideas_engine.HORIZONS
 
 
 @app.get("/ideas")
-def ideas(horizon: str = "short", limit: int = 15):
-    h = HORIZONS.get(horizon)
-    if not h:
-        raise HTTPException(400, "horizon must be 'short' or 'medium'")
+def ideas(horizon: str = "short", limit: int = 15,
+          min_tier: str = "moderate", include_thin: bool = False):
+    """
+    Ideas, rebuilt. Differences from the old endpoint, all deliberate:
+      · returns FEWER than `limit` when fewer names genuinely qualify, instead
+        of padding the list with unrelated high-composite names
+      · caps how many ideas can come from one sector
+      · attaches a liquidity tier and its consequence to every row
+      · warns per-row when the index is below its 50-day average
+      · orders by fit adjusted for what each archetype has actually delivered,
+        once the tracker has enough marked ideas to say
+    """
     p = _state["payload"]
     if not p:
         return {"available": False, "status": _state["status"],
                 "message": "No scan yet — generate the ranking first."}
-    limit = max(1, min(limit, 25))
-    rows = [r for r in p.get("rankings", []) if r.get("setup_key") in h["keys"]]
-    rows.sort(key=lambda r: (r.get("setup_fit") or 0, r.get("composite") or 0), reverse=True)
-    rows = rows[:limit]
+    try:
+        return {**ideas_engine.select(p, horizon=horizon,
+                                      limit=max(1, min(limit, 25)),
+                                      min_tier=min_tier,
+                                      include_thin=bool(include_thin)),
+                "disclaimer": DISCLAIMER}
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
-    # Never hand the UI an empty list when a scan exists. If few names fit
-    # this horizon's archetypes cleanly, top up with the highest-composite
-    # names overall, clearly flagged so the frontend can label them.
-    fallback_used = False
-    if len(rows) < min(8, limit):
-        seen = {r.get("symbol") for r in rows}
-        extras = [dict(r, fallback=True) for r in p.get("rankings", [])
-                  if r.get("symbol") not in seen]
-        extras.sort(key=lambda r: r.get("composite") or 0, reverse=True)
-        extras = extras[: limit - len(rows)]
-        fallback_used = bool(extras)
-        rows += extras
 
-    return {"available": True, "horizon": horizon, "label": h["label"], "note": h["note"],
-            "scanned_at": p.get("scanned_at"),
-            "partial": bool(p.get("partial")),
-            "scored": p.get("scored"),
-            "fallback_used": fallback_used,
-            "rows": rows,
-            "universe_source": p.get("universe_source"),
-            "disclaimer": DISCLAIMER}
+# ---------------------------------------------------------------------------
+# Idea tracker
+# ---------------------------------------------------------------------------
+
+@app.get("/tracker/list")
+def tracker_list(status: str = "", limit: int = 400):
+    return tracker.listing(status=status, limit=max(1, min(limit, 1000)))
+
+
+@app.get("/tracker/stats")
+def tracker_stats():
+    return tracker.stats()
+
+
+@app.post("/tracker/add")
+def tracker_add(payload: dict = Body(...)):
+    """Add one idea by hand. The scan records everything automatically anyway;
+    this is for names spotted outside the Ideas list."""
+    return tracker.add(payload, source="manual")
+
+
+@app.post("/tracker/remove")
+def tracker_remove(id: str = ""):
+    if not id:
+        raise HTTPException(400, "id is required")
+    return tracker.remove(id)
+
+
+@app.post("/tracker/update")
+def tracker_update(key: str = "", limit: int = 120):
+    _require_admin(key)
+    return tracker.update_all(limit=limit)
+
+
+@app.get("/tracker/export.csv")
+def tracker_export():
+    return Response(content=tracker.export_csv(), media_type="text/csv",
+                    headers={"Content-Disposition":
+                             "attachment; filename=altaha-tracked-ideas.csv"})
+
+
+@app.get("/ideas/export.csv")
+def ideas_export(horizon: str = "short", limit: int = 25,
+                 min_tier: str = "moderate", include_thin: bool = False):
+    p = _state["payload"]
+    if not p:
+        raise HTTPException(404, "No scan yet.")
+    sel = ideas_engine.select(p, horizon=horizon, limit=max(1, min(limit, 25)),
+                              min_tier=min_tier, include_thin=bool(include_thin))
+    cols = ["symbol", "name", "sector", "setup", "setup_fit", "rank_score",
+            "composite", "technical", "fundamental", "f_score", "price",
+            "horizon", "liquidity_tier", "avg_turnover_cr"]
+    buf = io.StringIO()
+    w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
+    w.writeheader()
+    for r in sel["rows"]:
+        w.writerow(r)
+    return Response(content=buf.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition":
+                             f"attachment; filename=altaha-ideas-{horizon}.csv"})
 
 
 @app.get("/leaderboard")
@@ -809,6 +876,9 @@ def alerts_test(key: str = ""):
     return notify.test()
 
 
+_track_day = {"on": None}
+
+
 @app.get("/cron/tick")
 def cron_tick():
     """
@@ -834,6 +904,14 @@ def cron_tick():
         try:
             if intraday.now_ist().hour >= 16:
                 marked = intraday.mark_outcomes()
+        except Exception:
+            pass
+        # Mark tracked ideas once after the close. Capped per tick so a single
+        # cron call can never burn the Dhan daily quota.
+        try:
+            if intraday.now_ist().hour >= 16 and _track_day["on"] != intraday.now_ist().date():
+                tracker.update_all(limit=150)
+                _track_day["on"] = intraday.now_ist().date()
         except Exception:
             pass
     return {"awake": True, "scanner_running": intraday._state["running"],
