@@ -52,7 +52,10 @@ CHUNK = 40                 # symbols per bulk price request
 PHASE2_SIZE = int(os.environ.get("SCAN_DEPTH", "200") or 200)
 PHASE2_WORKERS = 3         # polite concurrency for per-stock fundamentals
 MIN_ROWS = 120             # minimum trading days of history
-MIN_TURNOVER = 2e7         # liquidity floor: avg daily traded value ≥ ₹2 crore
+MIN_TURNOVER = 2e7         # legacy constant, retained for the payload label
+# Only genuinely untradeable names are removed. Everything above this floor is
+# scored and shown with a liquidity tier attached (see ideas.liquidity_tier).
+HARD_FLOOR = float(os.environ.get("SCAN_HARD_FLOOR", "5e6") or 5e6)   # ₹50 lakh
 STORE_TOP = 60             # ranked rows kept in the output file
 
 NSE_LIST_URLS = [
@@ -136,7 +139,10 @@ def prefilter_by_quote(symbols, state, progress):
     if dhan is None or not dhan.configured():
         return symbols, 0
     try:
-        snap = dhan.bulk_quotes(symbols, mode="ohlc")
+        # mode="quote", not "ohlc". /marketfeed/ohlc returns no volume field,
+        # so the traded-value test below was always false and this prefilter
+        # silently dropped nothing while still costing a full round trip.
+        snap = dhan.bulk_quotes(symbols, mode="quote")
     except Exception:
         return symbols, 0
     if not snap:
@@ -149,7 +155,7 @@ def prefilter_by_quote(symbols, state, progress):
             keep.append(s)          # unknown — let the full path decide
             continue
         px, vol = row.get("ltp") or row.get("close"), row.get("volume")
-        if px and vol and (float(px) * float(vol)) < MIN_TURNOVER * 0.5:
+        if px and vol and (float(px) * float(vol)) < HARD_FLOOR * 0.5:
             dropped += 1            # generous margin: one day isn't 60-day average
         else:
             keep.append(s)
@@ -187,7 +193,12 @@ def phase1(symbols, progress, state):
                     skipped_nodata += 1
                     continue
                 turnover = float((df["Close"] * df["Volume"]).tail(60).mean())
-                if turnover < MIN_TURNOVER:
+                # Previously anything under 2 crore was deleted here, which hid
+                # roughly half the real companies on the exchange. Now only
+                # genuinely untradeable names are dropped; everything else is
+                # carried through and LABELLED by tier in ideas.py, so the
+                # reader sees the name and the warning together.
+                if turnover < HARD_FLOOR:
                     skipped_illiquid += 1
                     continue
                 # Retain only what ranking needs. The full payload (checks,
@@ -279,7 +290,7 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
         "universe_source": source,
         "universe_size": universe_all,
         "prefiltered_by_quote": prefiltered,
-        "liquidity_floor": "avg daily traded value ≥ ₹2 crore (60 sessions)",
+        "liquidity_floor": f"avg daily traded value ≥ ₹{HARD_FLOOR/1e7:.2f} crore (60 sessions); everything above is scored and tiered, not deleted",
         "phase1_candidates": n_candidates,
         "skipped_illiquid": ill,
         "skipped_no_data": nod,
