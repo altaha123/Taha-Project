@@ -106,7 +106,11 @@ def _autostart_intraday():
     silently stops alerting after the first restart, which is the worst kind of
     failure: quiet. So it re-arms itself on boot.
     """
-    if os.environ.get("INTRADAY_AUTOSTART", "").strip().lower() not in ("1", "true", "yes"):
+    # Defaults to ON. Previously this defaulted to OFF, so a deploy that never
+    # set INTRADAY_AUTOSTART left the scanner permanently unarmed while every
+    # status endpoint still returned HTTP 200. Set INTRADAY_AUTOSTART=0 to
+    # disable deliberately.
+    if os.environ.get("INTRADAY_AUTOSTART", "1").strip().lower() in ("0", "false", "no", "off"):
         return
     try:
         limit = int(os.environ.get("INTRADAY_WATCHLIST", "200"))
@@ -778,6 +782,19 @@ def intraday_scan_now(key: str = ""):
 @app.get("/intraday/stats")
 def intraday_stats():
     return intraday.stats()
+
+
+@app.get("/intraday/diag")
+def intraday_diag():
+    """
+    Why is nothing firing? Open this in a browser during market hours and it
+    answers in one screen: is the thread alive, are quotes arriving, are the
+    volume profiles built, is the regime filter suppressing longs, and which
+    names came closest to the threshold without clearing it. Built because
+    "no alerts" has at least eight distinct causes and guessing between them
+    from the outside is miserable.
+    """
+    return intraday.diagnose()
 
 
 @app.post("/intraday/mark")
