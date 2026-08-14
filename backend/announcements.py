@@ -71,6 +71,8 @@ _state = {
     "error": None,
     "polls": 0,
     "fetched": 0,
+    "variant": None,
+    "attempts": [],
 }
 
 
@@ -252,6 +254,71 @@ def _norm(row):
     }
 
 
+# ---------------------------------------------------------------------------
+# Endpoint discovery
+#
+# BSE ships several announcement endpoints and quietly changed which parameter
+# combinations return rows. A wrong combination does not error — it returns
+# HTTP 200 with an empty table, which is indistinguishable from "no filings
+# today" and was exactly the failure seen in production: maps built fine,
+# 4,974 scrips loaded, three polls run, zero rows, no error.
+#
+# Rather than guess one shape, try several in order and remember the first that
+# actually yields rows. Every attempt is recorded so a failure reports what each
+# variant returned instead of just going quiet.
+# ---------------------------------------------------------------------------
+
+BSE_ANN_ALT = "https://api.bseindia.com/BseIndiaAPI/api/AnnGetData/w"
+
+
+def _variants(from_d, to_d, page):
+    f, t = from_d.strftime("%Y%m%d"), to_d.strftime("%Y%m%d")
+    base = {"pageno": page, "strCat": "-1", "strPrevDate": f, "strToDate": t,
+            "strScrip": "", "strSearch": "P", "strType": "C"}
+    return [
+        # subcategory="-1" is the shape the site itself sends today. The old
+        # code sent an empty string, which is what produced empty tables.
+        ("subcat=-1", BSE_ANN, dict(base, subcategory="-1")),
+        ("subcat=blank", BSE_ANN, dict(base, subcategory="")),
+        ("cat=blank,subcat=-1", BSE_ANN, dict(base, strCat="", subcategory="-1")),
+        ("search=blank", BSE_ANN, dict(base, strSearch="", subcategory="-1")),
+        ("type=A", BSE_ANN, dict(base, strType="A", subcategory="-1")),
+        ("AnnGetData", BSE_ANN_ALT, dict(base, subcategory="-1")),
+    ]
+
+
+def _rows_from(payload):
+    """BSE has used Table, table and Table1 for the same list."""
+    if isinstance(payload, list):
+        return payload
+    if not isinstance(payload, dict):
+        return []
+    for k in ("Table", "table", "Table1", "Data", "data"):
+        v = payload.get(k)
+        if isinstance(v, list) and v:
+            return v
+    return []
+
+
+def _try_variant(name, url, params):
+    """Returns (rows, note). Never raises."""
+    try:
+        r = requests.get(url, headers=HEAD, params=params, timeout=25)
+        if r.status_code != 200:
+            return [], f"{name}: HTTP {r.status_code}"
+        try:
+            payload = r.json()
+        except Exception:
+            return [], f"{name}: non-JSON ({len(r.content)} bytes)"
+        rows = _rows_from(payload)
+        if not rows:
+            keys = list(payload)[:6] if isinstance(payload, dict) else "list"
+            return [], f"{name}: 200 but no rows (keys={keys})"
+        return rows, f"{name}: {len(rows)} rows"
+    except Exception as e:
+        return [], f"{name}: {type(e).__name__} {str(e)[:70]}"
+
+
 def poll(days: int = None) -> dict:
     """
     Pull recent announcements. Safe to call on a timer; results are merged and
@@ -261,38 +328,49 @@ def poll(days: int = None) -> dict:
     days = days or LOOKBACK_DAYS
     to_d = dt.datetime.now(IST).date()
     from_d = to_d - dt.timedelta(days=days)
-    got, pages = [], 0
+    got, pages, notes = [], 0, []
 
-    try:
-        for page in range(1, 4):        # 3 pages is ~150 filings, plenty per poll
-            params = {
-                "pageno": page, "strCat": "-1", "strPrevDate": from_d.strftime("%Y%m%d"),
-                "strScrip": "", "strSearch": "P", "strToDate": to_d.strftime("%Y%m%d"),
-                "strType": "C", "subcategory": "",
-            }
-            r = requests.get(BSE_ANN, headers=HEAD, params=params, timeout=25)
-            if r.status_code != 200:
-                _state["error"] = f"BSE announcements HTTP {r.status_code}"
+    # Reuse the variant that worked last time before trying the rest.
+    def ordered(page):
+        vs = _variants(from_d, to_d, page)
+        win = _state.get("variant")
+        if win:
+            vs.sort(key=lambda v: 0 if v[0] == win else 1)
+        return vs
+
+    for page in range(1, 4):            # ~150 filings per poll is plenty
+        rows, note = [], None
+        for name, url, params in ordered(page):
+            rows, note = _try_variant(name, url, params)
+            if rows:
+                _state["variant"] = name
                 break
-            payload = r.json() or {}
-            rows = payload.get("Table") or payload.get("table") or []
-            if not rows:
-                break
-            pages += 1
-            for row in rows:
-                item = _norm(row)
-                if item:
-                    got.append(item)
-            time.sleep(0.4)
-    except Exception as e:
-        _state["error"] = f"BSE announcements: {str(e)[:140]}"
+            if page == 1:
+                notes.append(note)
+        if page == 1:
+            _state["attempts"] = notes
+        if not rows:
+            break
+        pages += 1
+        for row in rows:
+            item = _norm(row)
+            if item:
+                got.append(item)
+        time.sleep(0.4)
 
     if got:
         _state["error"] = None
         with _lock:
+            # De-duplicate against what is stored AND within this batch. Pages
+            # overlap when a filing lands mid-poll, so the same row can arrive
+            # twice in one pass.
             seen = {(i["scrip_code"], i["headline"], i["at"]) for i in _state["items"]}
-            fresh = [i for i in got
-                     if (i["scrip_code"], i["headline"], i["at"]) not in seen]
+            fresh = []
+            for i in got:
+                k = (i["scrip_code"], i["headline"], i["at"])
+                if k not in seen:
+                    seen.add(k)
+                    fresh.append(i)
             merged = fresh + _state["items"]
             merged.sort(key=lambda i: i["epoch"], reverse=True)
             _state["items"] = merged[:MAX_STORED]
@@ -303,10 +381,15 @@ def poll(days: int = None) -> dict:
                     idx.setdefault(i["symbol"], []).append(i)
             _state["by_symbol"] = idx
             _state["fetched"] = len(_state["items"])
+    elif not _state["items"]:
+        # Say so loudly. Silence here is what hid the problem for three polls.
+        _state["error"] = ("No variant returned rows. Attempts: "
+                           + " | ".join(notes[:6]))
 
     _state["last_poll"] = dt.datetime.now(IST).isoformat()
     _state["polls"] += 1
     return {"pages": pages, "new": len(got), "stored": len(_state["items"]),
+            "variant": _state.get("variant"), "attempts": notes,
             "error": _state["error"]}
 
 
@@ -390,6 +473,8 @@ def diagnose() -> dict:
         "mapped_to_nse_symbol": sum(1 for i in _state["items"] if i["symbol"]),
         "symbols_with_filings": len(_state["by_symbol"]),
         "polls_run": _state["polls"],
+        "working_variant": _state.get("variant"),
+        "last_attempts": _state.get("attempts"),
         "last_poll": _state["last_poll"],
         "error": _state["error"],
         "hint": ("If isin_to_symbol_entries is 0 the NSE list is unreachable from this "
