@@ -272,7 +272,7 @@
 
   function countUp() {
     var node = $('#score');
-    if (!node || reduced) return;
+    if (!node) return;
     var busy = false;
 
     new MutationObserver(function () {
@@ -281,9 +281,16 @@
       if (!isFinite(target) || target <= 0) return;
       if (node.dataset.shown === String(target)) return;
 
-      busy = true;
       node.dataset.shown = String(target);
-      var t0 = performance.now(), dur = 1050;
+
+      // Announced before the count starts, so the dial sweeps alongside the
+      // number instead of a second behind it.
+      window.dispatchEvent(new CustomEvent('altaha:score', { detail: { score: target } }));
+
+      if (reduced) { node.textContent = target; return; }
+
+      busy = true;
+      var t0 = performance.now(), dur = 1250;   // matches the needle sweep
 
       (function step(now) {
         var p = Math.min(1, (now - t0) / dur);
@@ -422,11 +429,328 @@
     }).observe(main, { childList: true, subtree: true });
   }
 
+
+  /* ══════════════════════════════════════════════════════════════════════
+     v2.1 — THE DIAL
+     ══════════════════════════════════════════════════════════════════════
+     The seal was a progress ring, which is a loading indicator in formal
+     dress. This rebuilds it as the instrument the product actually is: a 250°
+     dial with a tick ring, a track banded by verdict, and a needle.
+
+     The original #arc is hidden rather than driven, because the existing code
+     computes its dashoffset against a full-circle circumference. Fighting that
+     maths from the outside would be fragile; owning the whole element is not.
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  var DIAL = { CX: 95, CY: 95, START: -125, SWEEP: 250, R: 70 };
+
+  function polar(r, deg) {
+    var a = (deg - 90) * Math.PI / 180;
+    return [DIAL.CX + r * Math.cos(a), DIAL.CY + r * Math.sin(a)];
+  }
+
+  function arcPath(r, a0, a1) {
+    var p0 = polar(r, a0), p1 = polar(r, a1);
+    var large = Math.abs(a1 - a0) > 180 ? 1 : 0;
+    return 'M' + p0[0].toFixed(2) + ' ' + p0[1].toFixed(2) +
+           ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' +
+           p1[0].toFixed(2) + ' ' + p1[1].toFixed(2);
+  }
+
+  function angleFor(v) { return DIAL.START + (Math.max(0, Math.min(100, v)) / 100) * DIAL.SWEEP; }
+
+  /* Thresholds mirror engine.composite() — 72 / 55 / 40. If those move in the
+     backend they must move here, or the dial will disagree with the words
+     printed next to it. */
+  function band(v) {
+    if (v >= 72) return { key: 'b-strong', css: 'var(--pass)' };
+    if (v >= 55) return { key: 'b-good',   css: 'var(--gold)' };
+    if (v >= 40) return { key: 'b-mixed',  css: 'var(--part)' };
+    return          { key: 'b-weak',   css: 'var(--fail)' };
+  }
+
+  var dial = null;
+
+  function buildDial() {
+    var seal = $('.seal');
+    var svg = seal && seal.querySelector('svg');
+    if (!svg) return;
+
+    // Retire the progress ring. The thin outer circle (r=88) stays as the bezel.
+    $$('circle', svg).forEach(function (c) {
+      if (c.getAttribute('r') !== '88') c.style.display = 'none';
+    });
+
+    var g = el('g', { class: 'dial' });
+
+    // Tick ring — 51 ticks, one every 2 points, every fifth one major.
+    var ticks = [];
+    for (var i = 0; i <= 50; i++) {
+      var deg = DIAL.START + (i / 50) * DIAL.SWEEP;
+      var major = i % 5 === 0;
+      var a = polar(major ? 78 : 81, deg);
+      var b = polar(86, deg);
+      var t = el('line', {
+        class: 'tick' + (major ? ' major' : ''),
+        x1: a[0].toFixed(2), y1: a[1].toFixed(2),
+        x2: b[0].toFixed(2), y2: b[1].toFixed(2)
+      });
+      ticks.push({ node: t, value: (i / 50) * 100 });
+      g.appendChild(t);
+    }
+
+    var track = el('path', { class: 'gauge-track',
+      d: arcPath(DIAL.R, DIAL.START, DIAL.START + DIAL.SWEEP) });
+    var value = el('path', { class: 'gauge-value', d: '' });
+
+    var needle = el('g', { class: 'needle-wrap' });
+    needle.appendChild(el('path', { class: 'needle',
+      d: 'M95 33 L98.1 92 L91.9 92 Z' }));               // tapered pointer
+    var hub = el('g', {});
+    hub.appendChild(el('circle', { class: 'hub', cx: 95, cy: 95, r: 6.5 }));
+    hub.appendChild(el('circle', { class: 'hub-ring', cx: 95, cy: 95, r: 9.5 }));
+
+    // No 0/100 end labels: the caption below the needle already reads
+    // "out of 100", and a dial that states its scale twice is a dial that
+    // does not trust its own caption.
+
+    g.appendChild(track); g.appendChild(value);
+    g.appendChild(needle); g.appendChild(hub);
+    svg.appendChild(g);
+
+    dial = { svg: svg, value: value, needle: needle, ticks: ticks, at: 0 };
+    render(0);
+  }
+
+  function render(v) {
+    if (!dial) return;
+    var bd = band(v);
+    var a1 = angleFor(v);
+
+    dial.value.setAttribute('d', arcPath(DIAL.R, DIAL.START, Math.max(DIAL.START + 0.4, a1)));
+    dial.value.setAttribute('stroke', bd.css);
+    dial.value.style.color = bd.css;                     // drives the drop-shadow
+
+    dial.ticks.forEach(function (t) {
+      t.node.classList.toggle('lit', t.value <= v + 0.5);
+      if (t.value <= v + 0.5) t.node.style.color = bd.css;
+      else t.node.style.color = '';
+    });
+  }
+
+  function sweep(target) {
+    if (!dial) return;
+    var bd = band(target);
+
+    var valEl = $('#score');
+    if (valEl) {
+      valEl.classList.remove('b-strong', 'b-good', 'b-mixed', 'b-weak');
+      valEl.classList.add(bd.key);
+    }
+
+    if (reduced) {
+      render(target);
+      dial.needle.setAttribute('transform', 'rotate(' + angleFor(target).toFixed(2) + ' 95 95)');
+      return;
+    }
+
+    var from = dial.at, t0 = performance.now(), dur = 1250;
+    dial.at = target;
+
+    (function step(now) {
+      var p = Math.min(1, (now - t0) / dur);
+
+      // The arc uses a clean decay — data does not overshoot its own maximum.
+      var pArc = 1 - Math.pow(1 - p, 4);
+      render(from + (target - from) * pArc);
+
+      // The needle is mechanism, so it overshoots and settles. Damped sine.
+      var pNdl = 1 - Math.exp(-5.5 * p) * Math.cos(7.5 * p);
+      var deg = angleFor(from + (target - from) * pNdl);
+      dial.needle.setAttribute('transform', 'rotate(' + deg.toFixed(2) + ' 95 95)');
+
+      if (p < 1) requestAnimationFrame(step);
+      else {
+        render(target);
+        dial.needle.setAttribute('transform', 'rotate(' + angleFor(target).toFixed(2) + ' 95 95)');
+      }
+    })(t0);
+  }
+
+  function watchScore() {
+    var last = null;
+    window.addEventListener('altaha:score', function (e) {
+      var v = e.detail && e.detail.score;
+      if (!isFinite(v) || v === last) return;
+      last = v;
+      sweep(v);
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     v2.1 — SCORE CARD
+     ══════════════════════════════════════════════════════════════════════
+     A 1080×1350 PNG of the current verdict, drawn on canvas and downloaded.
+     The analysis is the content, so posting it should not require a
+     screenshot with a browser toolbar in it.
+
+     Everything on the card is read from the DOM that is already on screen —
+     no second request, and nothing can appear on the card that is not also
+     visible in the page it came from.
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  function txt(sel) { var n = $(sel); return n ? (n.textContent || '').trim() : ''; }
+
+  function drawCard() {
+    var W = 1080, H = 1350, c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+
+    var name  = txt('#cname') || 'Altaha Screener';
+    var sym   = txt('#csym');
+    var px    = txt('#cpx');
+    var score = parseInt(txt('#score').replace(/[^0-9]/g, ''), 10);
+    var label = txt('#vlabel');
+    var tsc   = txt('#tscore');
+    var fsc   = txt('#fscore');
+    if (!isFinite(score)) return null;
+
+    var bd = score >= 72 ? '#34C48D' : score >= 55 ? '#D9BE7E'
+           : score >= 40 ? '#D8AE4B' : '#F0736A';
+
+    // Ground
+    x.fillStyle = '#0A0B0E'; x.fillRect(0, 0, W, H);
+    var glow = x.createRadialGradient(W / 2, 300, 40, W / 2, 300, 720);
+    glow.addColorStop(0, 'rgba(196,166,97,.16)');
+    glow.addColorStop(1, 'rgba(196,166,97,0)');
+    x.fillStyle = glow; x.fillRect(0, 0, W, H);
+
+    // Chart paper
+    x.strokeStyle = 'rgba(255,255,255,.045)'; x.lineWidth = 1;
+    for (var gx = 0; gx <= W; gx += 72) { x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx, H); x.stroke(); }
+    for (var gy = 0; gy <= H; gy += 72) { x.beginPath(); x.moveTo(0, gy); x.lineTo(W, gy); x.stroke(); }
+
+    var S = '"Inter", system-ui, -apple-system, sans-serif';
+    var M = '"IBM Plex Mono", ui-monospace, monospace';
+
+    // Wordmark
+    x.textAlign = 'center';
+    x.fillStyle = 'rgba(255,255,255,.42)'; x.font = '500 22px ' + M;
+    x.fillText('A L T A H A   S C R E E N E R', W / 2, 96);
+
+    // Subject
+    x.fillStyle = '#F3F4F7'; x.font = '600 62px ' + S;
+    var nm = name.length > 26 ? name.slice(0, 25) + '…' : name;
+    x.fillText(nm, W / 2, 200);
+    x.fillStyle = 'rgba(255,255,255,.50)'; x.font = '400 28px ' + M;
+    x.fillText([sym, px].filter(Boolean).join('   ·   '), W / 2, 248);
+
+    // The dial, redrawn at scale
+    var cx = W / 2, cy = 600, R = 210;
+    function pol(r, deg) {
+      var a = (deg - 90) * Math.PI / 180;
+      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    }
+    var A0 = -125, SW = 250, A1 = A0 + (score / 100) * SW;
+    function rad(d) { return (d - 90) * Math.PI / 180; }
+
+    x.lineCap = 'round';
+    x.strokeStyle = 'rgba(255,255,255,.10)'; x.lineWidth = 17;
+    x.beginPath(); x.arc(cx, cy, R, rad(A0), rad(A0 + SW)); x.stroke();
+
+    x.strokeStyle = bd; x.lineWidth = 17;
+    x.shadowColor = bd; x.shadowBlur = 34;
+    x.beginPath(); x.arc(cx, cy, R, rad(A0), rad(A1)); x.stroke();
+    x.shadowBlur = 0;
+
+    // Tick ring
+    for (var i = 0; i <= 50; i++) {
+      var d = A0 + (i / 50) * SW, major = i % 5 === 0;
+      var p1 = pol(major ? 232 : 240, d), p2 = pol(252, d);
+      x.strokeStyle = (i / 50) * 100 <= score ? bd : 'rgba(255,255,255,.16)';
+      x.lineWidth = major ? 3 : 1.6;
+      x.beginPath(); x.moveTo(p1[0], p1[1]); x.lineTo(p2[0], p2[1]); x.stroke();
+    }
+
+    // Reading
+    x.fillStyle = '#F3F4F7'; x.font = '600 168px ' + S;
+    x.fillText(String(score), cx, cy + 62);
+    x.fillStyle = 'rgba(255,255,255,.42)'; x.font = '400 22px ' + M;
+    x.fillText('O U T   O F   1 0 0', cx, cy + 118);
+
+    if (label) {
+      x.fillStyle = bd; x.font = '500 30px ' + M;
+      x.fillText(label.toUpperCase(), cx, 900);
+    }
+
+    // Split
+    x.strokeStyle = 'rgba(255,255,255,.12)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(180, 960); x.lineTo(900, 960); x.stroke();
+
+    [['TECHNICAL', tsc, W / 2 - 180], ['FUNDAMENTAL', fsc, W / 2 + 180]].forEach(function (col) {
+      x.fillStyle = 'rgba(255,255,255,.42)'; x.font = '400 20px ' + M;
+      x.fillText(col[0], col[2], 1020);
+      x.fillStyle = '#F3F4F7'; x.font = '600 56px ' + S;
+      x.fillText(col[1] || '—', col[2], 1084);
+    });
+
+    x.beginPath(); x.moveTo(180, 1140); x.lineTo(900, 1140); x.stroke();
+
+    // Provenance. A number without a date is not evidence.
+    var when = new Date().toLocaleDateString('en-IN',
+      { day: 'numeric', month: 'short', year: 'numeric' });
+    x.fillStyle = 'rgba(255,255,255,.52)'; x.font = '400 22px ' + M;
+    x.fillText(when, cx, 1200);
+    x.fillStyle = 'rgba(255,255,255,.34)'; x.font = '400 19px ' + M;
+    x.fillText('Every calculation shown at the source', cx, 1240);
+    x.fillStyle = 'rgba(196,166,97,.72)'; x.font = '500 21px ' + M;
+    x.fillText('taha-project-one.vercel.app', cx, 1284);
+
+    return { canvas: c, sym: sym || 'stock' };
+  }
+
+  function scoreCard() {
+    var host = $('.verdict');
+    if (!host) return;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'act cardbtn';
+    btn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" ' +
+      'stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/>' +
+      '<path d="M4 20h16"/></svg>Save score card';
+    btn.style.display = 'none';
+
+    btn.addEventListener('click', function () {
+      var made;
+      try { made = drawCard(); } catch (e) { made = null; }
+      if (!made) { btn.textContent = 'Analyse a stock first'; return; }
+      made.canvas.toBlob(function (blob) {
+        if (!blob) return;
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'altaha-' + made.sym.replace(/[^A-Za-z0-9]/g, '') + '.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      }, 'image/png');
+    });
+
+    host.appendChild(btn);
+
+    var sc = $('#score');
+    if (sc) new MutationObserver(function () {
+      btn.style.display = /\d/.test(sc.textContent || '') ? '' : 'none';
+    }).observe(sc, { childList: true, characterData: true, subtree: true });
+  }
+
   /* ── BOOT ─────────────────────────────────────────────────────────────── */
 
   function boot() {
     [themeToggle, candleField, indexTiles, heroIn, stickyNav, revealInit,
-     countUp, confidence, commandK, mobileNav, watchMain]
+     countUp, confidence, commandK, mobileNav, watchMain,
+     buildDial, watchScore, scoreCard]
       .forEach(function (fn) { try { fn(); } catch (e) { /* never block the page */ } });
   }
 
