@@ -405,3 +405,67 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ---------------------------------------------------------------------------
+# Company names — for the search typeahead
+# ---------------------------------------------------------------------------
+
+_names_cache = {"at": 0.0, "rows": []}
+
+
+def universe_with_names():
+    """
+    [{"s": "RELIANCE", "n": "Reliance Industries Limited"}, ...]
+
+    fetch_nse_list() already downloads this CSV and throws the company-name
+    column away. Keeping it is what lets someone search "Bajaj Finance"
+    instead of having to already know the symbol is BAJFINANCE.
+
+    Same source as the scan, deliberately: the typeahead must never be able to
+    offer a symbol the engine cannot then score. Cached for a day, because the
+    equity list changes on listings and delistings, not on ticks.
+    """
+    if _names_cache["rows"] and (time.time() - _names_cache["at"]) < 86400:
+        return _names_cache["rows"]
+
+    rows = []
+    for url in NSE_LIST_URLS:
+        try:
+            r = requests.get(url, headers={"User-Agent": UA,
+                                           "Accept": "text/csv,*/*",
+                                           "Referer": "https://www.nseindia.com/"},
+                             timeout=20)
+            if r.status_code != 200 or "SYMBOL" not in r.text[:200]:
+                continue
+            df = pd.read_csv(io.StringIO(r.text))
+            df.columns = [c.strip() for c in df.columns]
+            if "SERIES" in df.columns:
+                df = df[df["SERIES"].astype(str).str.strip() == "EQ"]
+            name_col = next((c for c in df.columns if "NAME" in c.upper()), None)
+
+            seen = set()
+            for _, row in df.iterrows():
+                sym = str(row["SYMBOL"]).strip().upper()
+                if not sym or sym in seen:
+                    continue
+                seen.add(sym)
+                nm = str(row[name_col]).strip() if name_col else sym
+                if nm.lower() in ("nan", "none", ""):
+                    nm = sym
+                rows.append({"s": sym, "n": nm})
+
+            if len(rows) > 500:
+                break
+        except Exception:
+            continue
+
+    if not rows:
+        # Same fallback the scan uses, so the two never disagree about what
+        # the universe is — just without company names.
+        rows = [{"s": x, "n": x} for x in sorted({y for y in FALLBACK.split() if y})]
+
+    rows.sort(key=lambda r: r["s"])
+    _names_cache["at"] = time.time()
+    _names_cache["rows"] = rows
+    return rows
