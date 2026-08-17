@@ -9,6 +9,7 @@ import threading
 import time
 
 from fastapi import FastAPI, HTTPException, Body, Response
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
@@ -218,7 +219,7 @@ def to_native(obj):
 @app.get("/")
 def root():
     return {"app": "Altaha Screener", "tagline": "Where Logic Meets Validations",
-            "endpoints": ["/analyze?ticker=RELIANCE", "/leaderboard",
+            "endpoints": ["/analyze?ticker=RELIANCE", "/universe", "/leaderboard",
                           "/scan/start", "/scan/status", "/health"]}
 
 
@@ -288,6 +289,29 @@ def datasource():
             "instruments_mapped": len(scrip or {}),
             "scrip_error": getattr(dhan, "_scrip", {}).get("error"),
             "token": dhan.token_info()}
+
+
+@app.get("/universe")
+def universe_list():
+    """
+    Symbol and company name for every NSE equity, for the search typeahead.
+
+    Roughly 2,000 rows / ~90 KB. The client caches it in localStorage for a
+    day, so this is fetched once per user per day rather than once per
+    keystroke. Cache-Control lets any CDN in front of this do the same.
+
+    Returns an empty list rather than an error when the NSE list is
+    unreachable: the frontend has its own fallback, and a 500 here would make
+    the whole search box look broken over what is only a degraded feature.
+    """
+    try:
+        rows = scanner.universe_with_names()
+    except Exception:
+        rows = []
+    return JSONResponse(
+        {"rows": rows, "count": len(rows)},
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @app.get("/health")
@@ -865,6 +889,21 @@ def analyze(ticker: str):
         "setup": setup,
         "plain": plain,
         "verdict": verdict,
+        # What the business actually does. The score answers "is this good";
+        # it does not answer "what is this", and a reader who cannot answer the
+        # second question has no business acting on the first. The source line
+        # is not decoration: this text is written by the data provider, not by
+        # us, and a tool built on traceable numbers should say where its words
+        # came from too.
+        "profile": {
+            "description": ((info.get("longBusinessSummary") or "").strip()[:1400] or None),
+            "sector": info.get("sector"),
+            "industry": info.get("industry"),
+            "employees": info.get("fullTimeEmployees"),
+            "website": info.get("website"),
+            "market_cap": info.get("marketCap"),
+            "source": "Business description as published by the data provider",
+        },
         "technical": {"score": tech["score"], "checks": tech["checks"]},
         "fundamental": {"score": fund["score"], "f_score": fund["f_score"],
                         "g_score": fund.get("g_score"), "checks": fund["checks"]},
