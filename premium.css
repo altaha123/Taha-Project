@@ -1,0 +1,608 @@
+/* ============================================================================
+   ALTAHA SCREENER — PREMIUM LAYER  v1
+   ----------------------------------------------------------------------------
+   Drop-in override. Loads AFTER the inline <style> in index.html and re-skins
+   the whole site by redefining the design tokens the existing CSS already uses,
+   then refining ~20 components on top.
+
+   Nothing here renames a class or an id. Existing JS keeps working untouched.
+
+   DIRECTION — "Instrument"
+   The old skin was cream paper + serif + gold: an editorial look, and one that
+   reads as generic because half the web arrived there at the same time. This
+   product is not a magazine. It is a measuring instrument that shows its
+   working. So the material changes from PAPER to GLASS AND GRAPHITE: optical
+   white, machined hairlines, champagne (not amber) metal, and a dark mode that
+   is the real home of the thing.
+
+   PALETTE
+     --void     #0B0C0F   near-black with a blue cast; never pure #000
+     --graphite #16181D   elevated dark surface
+     --optical  #FCFCFD   light-mode ground; cooler than paper, not clinical
+     --champagne#C4A661   the metal. Cold gold. Used once per screen, not everywhere.
+     --mercury  #6E7480   the neutral that carries all secondary text
+
+   TYPE
+     Display  : system UI stack first, so Mac/iOS renders genuine SF Pro Display.
+                Inter is the fallback everyone else gets. Optical sizing + tight
+                tracking is what actually produces the "Apple" feel — not a font.
+     Numerals : IBM Plex Mono with tabular figures forced on. Financial columns
+                must not shift width when a digit changes.
+     Serif    : Instrument Serif survives in exactly one place — the italic word
+                in the wordmark. Restraint is the point.
+============================================================================ */
+
+/* ── 1. TOKENS ─────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light;
+
+  --optical:   #FCFCFD;
+  --void:      #0B0C0F;
+  --graphite:  #16181D;
+  --champagne: #C4A661;
+  --mercury:   #6E7480;
+
+  /* Overrides of the existing token names — this is what re-skins the site */
+  --paper:   #FCFCFD;
+  --paper-2: #F2F3F5;
+  --ink:     #0B0C0F;
+  --ink-2:   #3C424E;
+  --mute:    #6E7480;
+  --rule:    #E2E4E9;
+  --rule-2:  #EDEEF1;
+
+  --gold:    #A8862F;
+  --gold-lt: #C4A661;
+  --gold-dp: #806421;
+
+  --pass: #0B7A55;
+  --part: #A2751A;
+  --fail: #C0392F;
+
+  /* New tokens the premium layer introduces */
+  --surface:    #FFFFFF;
+  --surface-2:  #F7F8FA;
+  --glass:      rgba(252,252,253,.72);
+  --glass-line: rgba(11,12,15,.08);
+  --hairline:   rgba(11,12,15,.10);
+
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+          'Inter', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --serif: 'Instrument Serif', Georgia, serif;
+
+  /* Elevation — three steps, layered, never a single blurry drop */
+  --sh-1: 0 .5px 1px rgba(11,12,15,.05), 0 1px 2px rgba(11,12,15,.04);
+  --sh-2: 0 1px 2px rgba(11,12,15,.05), 0 4px 12px rgba(11,12,15,.06),
+          0 12px 32px rgba(11,12,15,.05);
+  --sh-3: 0 2px 4px rgba(11,12,15,.06), 0 12px 28px rgba(11,12,15,.10),
+          0 32px 64px rgba(11,12,15,.10);
+  --ring: 0 0 0 3.5px rgba(196,166,97,.28);
+
+  --r-card: 14px;
+  --r-panel: 20px;
+  --r-pill: 999px;
+
+  --ease:      cubic-bezier(.32,.72,0,1);
+  --ease-soft: cubic-bezier(.16,1,.3,1);
+  --t-fast: 140ms; --t: 300ms; --t-slow: 620ms;
+
+  --maxw: 1080px;
+}
+
+/* ── 2. DARK MODE ──────────────────────────────────────────────────────── */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper:   #0B0C0F;
+  --paper-2: #16181D;
+  --ink:     #F4F5F7;
+  --ink-2:   #B7BCC6;
+  --mute:    #7B8290;
+  --rule:    #24272F;
+  --rule-2:  #1C1F26;
+
+  --gold:    #D9BE7E;
+  --gold-lt: #C4A661;
+  --gold-dp: #EBD6A2;
+
+  --pass: #35C48D;
+  --part: #D8AE4B;
+  --fail: #F0736A;
+
+  --surface:    #131519;
+  --surface-2:  #191C22;
+  --glass:      rgba(11,12,15,.72);
+  --glass-line: rgba(255,255,255,.09);
+  --hairline:   rgba(255,255,255,.10);
+
+  --sh-1: 0 .5px 1px rgba(0,0,0,.5);
+  --sh-2: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.45);
+  --sh-3: 0 2px 6px rgba(0,0,0,.5), 0 20px 48px rgba(0,0,0,.55);
+  --ring: 0 0 0 3.5px rgba(217,190,126,.30);
+}
+
+/* Every hardcoded #fff in the original sheet, rerouted to a themed surface.
+   Listed explicitly rather than with a wildcard so nothing unintended flips. */
+html[data-theme="dark"] .searchrow,
+html[data-theme="dark"] .idea,
+html[data-theme="dark"] .rcard,
+html[data-theme="dark"] .badge,
+html[data-theme="dark"] .act,
+html[data-theme="dark"] .dtool,
+html[data-theme="dark"] .exp,
+html[data-theme="dark"] .tf,
+html[data-theme="dark"] .mode,
+html[data-theme="dark"] .vg,
+html[data-theme="dark"] .vcard,
+html[data-theme="dark"] .pin,
+html[data-theme="dark"] .ptaxcol,
+html[data-theme="dark"] .pfbtn,
+html[data-theme="dark"] .pfrow input,
+html[data-theme="dark"] .sh-inst,
+html[data-theme="dark"] .audit,
+html[data-theme="dark"] .fctop,
+html[data-theme="dark"] .fcsym,
+html[data-theme="dark"] .fitem,
+html[data-theme="dark"] .trackbtn,
+html[data-theme="dark"] .tk,
+html[data-theme="dark"] .statcell,
+html[data-theme="dark"] .octable-wrap,
+html[data-theme="dark"] #chartbox,
+html[data-theme="dark"] #pxchart,
+html[data-theme="dark"] #fcbox,
+html[data-theme="dark"] #genbtn,
+html[data-theme="dark"] .wabtn,
+html[data-theme="dark"] .livebadge {
+  background: var(--surface);
+  color: var(--ink-2);
+}
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: var(--surface); color: var(--ink); border-color: var(--rule);
+}
+html[data-theme="dark"] .act.solid { background: var(--gold-lt); color: #0B0C0F; border-color: var(--gold-lt); }
+html[data-theme="dark"] .act.solid:hover { background: var(--gold-dp); border-color: var(--gold-dp); color: #0B0C0F; }
+
+/* ── 3. BASE ───────────────────────────────────────────────────────────── */
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-feature-settings: 'cv05' 1, 'ss01' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
+  transition: background var(--t) var(--ease), color var(--t) var(--ease);
+}
+
+/* Every number on the page is tabular. Non-negotiable in a financial UI:
+   without this, a column of prices visibly jitters as digits change. */
+.num, .val, .sfitval, .pvnum, .tkln, .pcell, .k, .v, .rq, .ptv, .pts,
+.mono, [class*="score"], td, th, .lvlpx, .fitem, .anums, .statcell,
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
+}
+
+.wrap { max-width: var(--maxw); }
+
+::selection { background: rgba(196,166,97,.28); color: var(--ink); }
+
+:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 8px; }
+
+/* ── 4. TICKER BAR ─────────────────────────────────────────────────────── */
+
+.tickerbar {
+  background: var(--void);
+  border-bottom: 1px solid var(--glass-line);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.tickerbar .tkln, .tickerbar .tknm, .tickerbar .mktime { color: rgba(255,255,255,.62); }
+.tickerbar .tkt { color: rgba(255,255,255,.92); }
+.tickerbar .mkstatus i { box-shadow: 0 0 0 4px rgba(53,196,141,.18); }
+
+/* ── 5. COMMAND BAR (sticky nav) ───────────────────────────────────────── */
+
+.tabnav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  padding: 10px 0;
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(20px, calc(50vw - var(--maxw) / 2));
+  background: var(--glass);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+}
+.tabnav.is-stuck {
+  border-bottom-color: var(--glass-line);
+  box-shadow: 0 1px 24px rgba(11,12,15,.05);
+}
+html[data-theme="dark"] .tabnav.is-stuck { box-shadow: 0 1px 24px rgba(0,0,0,.5); }
+
+/* ── 6. SEGMENTED CONTROLS ─────────────────────────────────────────────── */
+
+.seg {
+  background: var(--paper-2);
+  border: .5px solid var(--hairline);
+  padding: 3px;
+  box-shadow: inset 0 1px 2px rgba(11,12,15,.03);
+}
+html[data-theme="dark"] .seg { box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
+
+.seg > button, .seg > .moreWrap > button {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 13.5px;
+  letter-spacing: -.005em;
+  padding: 8px 18px;
+}
+.seg-puck {
+  top: 3px; bottom: 3px;
+  background: var(--surface);
+  box-shadow: 0 .5px 1px rgba(11,12,15,.06), 0 3px 8px rgba(11,12,15,.10);
+  transition: transform 420ms var(--ease), width 420ms var(--ease),
+              opacity var(--t-fast) linear;
+}
+.seg-puck::after { border-color: transparent; }
+html[data-theme="dark"] .seg-puck { background: #2A2E37; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+
+.seg.has-puck > button.active,
+.seg.has-puck > .moreWrap > button.active { color: var(--ink); font-weight: 600; }
+.seg > button.active,
+.seg > .moreWrap > button.active {
+  background: var(--surface); color: var(--ink); box-shadow: var(--sh-1);
+}
+
+/* ── 7. HERO ───────────────────────────────────────────────────────────── */
+
+header.wrap {
+  position: relative;
+  padding-block: clamp(48px, 9vw, 104px) clamp(28px, 4vw, 46px);
+  text-align: center;
+}
+/* Ambient field. One slow radial wash, no gradient bar, no mesh. */
+header.wrap::before {
+  content: "";
+  position: absolute; inset: -20% -30% auto -30%; height: 340px;
+  background: radial-gradient(60% 100% at 50% 0%,
+              rgba(196,166,97,.13) 0%, rgba(196,166,97,0) 70%);
+  pointer-events: none; z-index: -1;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--mute);
+}
+
+.brand {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: clamp(46px, 9.5vw, 104px);
+  line-height: .94;
+  letter-spacing: -.045em;
+  margin: 18px 0 0;
+}
+.brand i {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -.02em;
+  background: linear-gradient(150deg, var(--gold-dp), var(--gold-lt) 45%, var(--gold) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tag {
+  font-size: 14px; color: var(--mute); letter-spacing: .01em; margin-top: 14px;
+}
+
+/* The metal rule — a hairline that catches light in the middle, nothing more */
+.metal {
+  height: 1px; border: 0; max-width: 320px; margin: 30px auto;
+  background: linear-gradient(90deg, transparent,
+              var(--rule) 18%, var(--gold-lt) 50%, var(--rule) 82%, transparent);
+  opacity: .8;
+}
+
+.pitch {
+  font-size: clamp(16px, 1.7vw, 19px);
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 620px; margin-inline: auto;
+  letter-spacing: -.012em;
+}
+.pitch b { color: var(--ink); font-weight: 600; }
+
+.badges { margin-top: 26px; }
+.badge {
+  background: var(--surface);
+  border: .5px solid var(--hairline);
+  border-radius: var(--r-pill);
+  box-shadow: var(--sh-1);
+  font-size: 12px; letter-spacing: -.005em; color: var(--ink-2);
+  padding: 7px 15px;
+}
+
+.brandsw { margin-top: 20px; }
+.bsw { font-size: 13px; letter-spacing: -.005em; }
+
+/* ── 8. SEARCH ─────────────────────────────────────────────────────────── */
+
+.searchrow {
+  background: var(--surface);
+  border: .5px solid var(--hairline);
+  border-radius: var(--r-pill);
+  box-shadow: var(--sh-2);
+  padding: 6px 6px 6px 22px;
+  max-width: 620px; margin-inline: auto;
+  transition: box-shadow var(--t) var(--ease), border-color var(--t) var(--ease),
+              transform var(--t) var(--ease);
+}
+.searchrow:focus-within {
+  box-shadow: var(--sh-3), var(--ring);
+  border-color: transparent;
+  transform: translateY(-1px);
+}
+.searchrow input {
+  font-family: var(--sans); font-size: 16px; letter-spacing: -.012em;
+  background: transparent; border: 0; color: var(--ink);
+}
+.searchrow input::placeholder { color: var(--mute); }
+.searchrow button, #go, #rgo {
+  border-radius: var(--r-pill);
+  background: var(--ink); color: var(--paper);
+  font-family: var(--sans); font-weight: 550; font-size: 14px;
+  letter-spacing: -.008em; padding: 11px 26px; border: 0;
+  transition: transform var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
+}
+.searchrow button:hover, #go:hover, #rgo:hover { opacity: .86; transform: translateY(-1px); }
+.searchrow button:active { transform: translateY(0) scale(.985); }
+
+/* ⌘K affordance */
+.kbdhint {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--mono); font-size: 10px; color: var(--mute);
+  border: .5px solid var(--hairline); border-radius: 6px; padding: 3px 6px;
+  margin-right: 8px; background: var(--paper-2);
+}
+@media (max-width: 700px) { .kbdhint { display: none; } }
+
+.hint b {
+  cursor: pointer; color: var(--ink-2); font-weight: 500;
+  border-bottom: 1px solid var(--rule);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.hint b:hover { color: var(--gold-dp); border-color: var(--gold-lt); }
+
+/* ── 9. PANELS ─────────────────────────────────────────────────────────── */
+
+#pricewrap, #volwrap, #shwrap, #lvlwrap, #setupwrap, #plainwrap, #planwrap,
+.rcard, .idea, .vcard, .statbox, .warnbox, .pfrow, .ptaxcol, .alertcard {
+  border-radius: var(--r-card);
+  border: .5px solid var(--hairline);
+  background: var(--surface);
+  box-shadow: var(--sh-1);
+  transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease),
+              border-color var(--t) var(--ease);
+}
+.idea:hover, .rcard:hover, .alertcard:hover {
+  box-shadow: var(--sh-2);
+  transform: translateY(-2px);
+  border-color: var(--rule);
+}
+
+.vhead h4, .lh h3 {
+  font-family: var(--sans); font-weight: 600;
+  letter-spacing: -.022em;
+}
+.lh h3 { font-size: clamp(21px, 2.6vw, 27px); }
+
+.sk, .sk2, .lbl, .modelbl, .dlbl {
+  font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--mute);
+}
+
+/* ── 10. THE GAUGE — signature element ─────────────────────────────────── */
+
+.verdict {
+  border-radius: var(--r-panel);
+  border: .5px solid var(--hairline);
+  background:
+    radial-gradient(120% 140% at 12% 0%, var(--surface-2) 0%, var(--surface) 55%);
+  box-shadow: var(--sh-2);
+  padding: clamp(24px, 4vw, 40px);
+  position: relative; overflow: hidden;
+}
+.verdict::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+}
+html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
+
+.seal { filter: drop-shadow(0 8px 22px rgba(11,12,15,.07)); }
+.seal svg circle#arc {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1200ms var(--ease-soft) !important;
+}
+
+.seal .val {
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: -.05em;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(46px, 7vw, 62px);
+  line-height: 1;
+}
+.seal .of {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--mute);
+}
+
+.vstamp {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--gold-dp);
+}
+.vsummary {
+  font-size: clamp(16px, 1.8vw, 19px); line-height: 1.55;
+  letter-spacing: -.014em; color: var(--ink);
+}
+.vbasis { font-family: var(--mono); font-size: 11px; color: var(--mute); }
+
+/* Data-confidence chip — injected by premium.js next to the basis line */
+.confchip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: var(--r-pill);
+  border: .5px solid var(--hairline); background: var(--paper-2); color: var(--ink-2);
+  margin-left: 8px;
+}
+.confchip i { width: 5px; height: 5px; border-radius: 50%; background: var(--pass); }
+.confchip.partial i { background: var(--part); }
+.confchip.thin i    { background: var(--fail); }
+
+/* ── 11. BUTTONS ───────────────────────────────────────────────────────── */
+
+.act, .livebtn, .trackbtn, .pfbtn, .wabtn, .auditbtn, .showfull {
+  border-radius: var(--r-pill);
+  border: .5px solid var(--hairline);
+  background: var(--surface);
+  color: var(--ink-2);
+  box-shadow: var(--sh-1);
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
+              color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.act:hover, .livebtn:hover, .trackbtn:hover, .pfbtn:hover, .auditbtn:hover, .showfull:hover {
+  transform: translateY(-1px); box-shadow: var(--sh-2); color: var(--ink);
+}
+.act:active, .livebtn:active { transform: translateY(0) scale(.985); }
+
+.auditbtn, .showfull {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; padding: 13px 24px;
+}
+
+/* ── 12. LEDGER / TABLES ───────────────────────────────────────────────── */
+
+.audit { border-radius: 10px; border: .5px solid var(--hairline); background: var(--surface); }
+.audit:hover { border-color: var(--rule); }
+.octable th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--mute);
+  position: sticky; top: 0; background: var(--surface); z-index: 2;
+}
+.octable td { font-variant-numeric: tabular-nums; }
+.octable-wrap { border-radius: var(--r-card); border: .5px solid var(--hairline); }
+
+/* ── 13. MOTION ────────────────────────────────────────────────────────── */
+
+@keyframes heroIn {
+  from { opacity: 0; transform: translateY(18px); filter: blur(6px); }
+  to   { opacity: 1; transform: none;             filter: blur(0); }
+}
+.hero-in > * { animation: heroIn 800ms var(--ease-soft) both; }
+.hero-in > *:nth-child(1) { animation-delay: 40ms; }
+.hero-in > *:nth-child(2) { animation-delay: 110ms; }
+.hero-in > *:nth-child(3) { animation-delay: 180ms; }
+.hero-in > *:nth-child(4) { animation-delay: 240ms; }
+.hero-in > *:nth-child(5) { animation-delay: 300ms; }
+.hero-in > *:nth-child(6) { animation-delay: 350ms; }
+.hero-in > *:nth-child(7) { animation-delay: 410ms; }
+
+/* Scroll-triggered reveal, applied by premium.js */
+.reveal { opacity: 0; transform: translateY(22px); }
+.reveal.seen {
+  opacity: 1; transform: none;
+  transition: opacity var(--t-slow) var(--ease-soft),
+              transform var(--t-slow) var(--ease-soft);
+}
+
+.rise { animation-duration: var(--t-slow); animation-delay: calc(var(--i,0) * 42ms); }
+
+/* ── 14. THEME TOGGLE ──────────────────────────────────────────────────── */
+
+.themebtn {
+  position: fixed; right: 18px; bottom: 18px; z-index: 90;
+  width: 42px; height: 42px; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  background: var(--glass); border: .5px solid var(--glass-line);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: var(--sh-2); color: var(--ink-2); font-size: 15px;
+  transition: transform var(--t) var(--ease), color var(--t-fast) var(--ease);
+}
+.themebtn:hover { transform: scale(1.07) rotate(-8deg); color: var(--ink); }
+@media (max-width: 780px) { .themebtn { bottom: 76px; } }
+
+/* ── 15. MOBILE TAB BAR ────────────────────────────────────────────────── */
+
+.mobnav {
+  display: none;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+  padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
+  background: var(--glass); border-top: .5px solid var(--glass-line);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+}
+.mobnav-inner { display: flex; gap: 2px; }
+.mobnav button {
+  flex: 1 1 0; border: 0; background: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 2px; border-radius: 10px;
+  font-family: var(--sans); font-size: 10px; font-weight: 500;
+  letter-spacing: -.005em; color: var(--mute);
+  transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.mobnav button svg { width: 19px; height: 19px; stroke-width: 1.6; }
+.mobnav button.on { color: var(--ink); background: var(--paper-2); }
+.mobnav button:active { transform: scale(.96); }
+
+@media (max-width: 780px) {
+  .mobnav { display: block; }
+  body { padding-bottom: 62px; }
+  .tabnav { display: none; }
+  .brand { font-size: clamp(40px, 13vw, 62px); }
+  .searchrow { padding-left: 16px; }
+  .verdict { padding: 22px 18px; }
+  /* Chart drawing tools are unusable on touch — hide rather than frustrate */
+  .drawbar .seg.mono, .drawbar #dclear, .drawbar .dlbl { display: none; }
+}
+
+/* ── 16. SCROLLBAR ─────────────────────────────────────────────────────── */
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--rule); border-radius: 99px;
+  border: 3px solid var(--paper); background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--mute); background-clip: padding-box; }
+
+/* ── 17. ACCESSIBILITY ─────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+@media print {
+  .tabnav, .mobnav, .themebtn, .tickerbar { display: none !important; }
+  body { background: #fff; color: #000; }
+}
