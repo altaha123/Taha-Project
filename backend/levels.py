@@ -35,6 +35,8 @@ TOL = 0.015          # 1.5% clustering band
 PIVOT_K = 3          # neighbourhood half-width for a fractal pivot
 LOOKBACK = 260       # ~1 trading year
 MAX_DIST = 0.28      # ignore zones further than 28% from price
+MIN_TOUCH_GAP = 5    # bars between pivots before they count as separate tests
+RECENCY_HALFLIFE = 55  # bars; a level's weight halves every ~11 trading weeks
 
 
 def _fmt_date(ts):
@@ -80,10 +82,15 @@ def compute_levels(df, max_each=3):
     piv.sort(key=lambda p: p[0])
     clusters = []
     for price, idx, kind in piv:
-        if clusters and abs(price - np.median(clusters[-1]["prices"])) <= TOL * price:
-            c = clusters[-1]
+        # Anchor the band to the cluster's FIRST price, not its running median.
+        # Comparing against a median that moves as members are added lets a
+        # chain of pivots each 1.4% from the last span 10% in total and still
+        # be called "one level". Anchoring caps the true width of a zone.
+        c = clusters[-1] if clusters else None
+        if c is not None and (price - c["anchor"]) <= 2 * TOL * c["anchor"]:
+            pass
         else:
-            c = {"prices": [], "idx": [], "kinds": set()}
+            c = {"prices": [], "idx": [], "kinds": set(), "anchor": price}
             clusters.append(c)
         c["prices"].append(price)
         c["idx"].append(idx)
@@ -105,9 +112,23 @@ def compute_levels(df, max_each=3):
         dist = abs(level - px) / px
         if dist > MAX_DIST or dist < 0.004:
             continue
-        touches = len(c["prices"])
-        last_i = max(c["idx"])
-        recency = last_i / (n - 1)                       # 0 old … 1 today
+        # INDEPENDENT touches only. Two pivots three bars apart are one visit
+        # to the level, not two tests of it. Counting them separately was the
+        # main way a single sharp reversal scored like a proven zone.
+        idxs = sorted(c["idx"])
+        touches, last_kept = 0, -10 ** 9
+        for i in idxs:
+            if i - last_kept >= MIN_TOUCH_GAP:
+                touches += 1
+                last_kept = i
+        last_i = idxs[-1]
+
+        # Exponential recency, not linear. A level tested 200 bars ago is not
+        # 25% as relevant as one tested today; it is far less. Half-life in
+        # bars means the decay is stated rather than implied by a ratio.
+        age = (n - 1) - last_i
+        recency = 0.5 ** (age / RECENCY_HALFLIFE)
+
         zvol = float(np.mean([vol[i] for i in c["idx"]])) / avg_vol
         flip = ("high" in c["kinds"]) and ("low" in c["kinds"])
 
@@ -137,6 +158,9 @@ def compute_levels(df, max_each=3):
             "kind": "support" if level < px else "resistance",
             "strength": strength,
             "touches": touches,
+            "pivots": len(c["prices"]),
+            "zone_width_pct": round((max(c["prices"]) - min(c["prices"]))
+                                    / max(1e-9, level) * 100, 2),
             "last_touch": _fmt_date(dates[last_i]),
             "distance_pct": round((level - px) / px * 100, 1),
             "why": (lambda s: s[:1].upper() + s[1:])("; ".join(why)),
