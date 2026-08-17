@@ -642,3 +642,57 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   .tabnav, .mobnav, .themebtn, .tickerbar, .hero-candles { display: none !important; }
   body { background: #fff; color: #000; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   v2.1 — THE DIAL AND THE SCORE CARD
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 18. THE DIAL ────────────────────────────────────────────────────────
+   The seal was a progress ring: a loading indicator wearing a suit. This is
+   the one screen element people will remember, so it becomes what the product
+   actually is — a measuring instrument. A 250° dial with a machined tick ring,
+   a track banded by verdict, and a needle that overshoots and settles the way
+   a real movement does.
+
+   The needle springs; the value arc does not. The needle is mechanism, so it
+   has momentum. The arc is data, and data that overshot 100 before settling
+   would be a small lie told for the sake of a flourish. */
+
+.seal svg { overflow: visible; }
+.seal .gauge-track  { stroke: var(--rule);   stroke-width: 5.5; fill: none; stroke-linecap: round; }
+.seal .gauge-value  { stroke-width: 5.5; fill: none; stroke-linecap: round;
+                      filter: drop-shadow(0 0 6px currentColor); }
+.seal .tick         { stroke: var(--rule);   stroke-width: 1; }
+.seal .tick.major   { stroke: var(--mute);   stroke-width: 1.4; }
+.seal .tick.lit     { stroke: currentColor;  stroke-opacity: .85; }
+.seal .needle       { fill: var(--ink); }
+.seal .hub          { fill: var(--ink); }
+.seal .hub-ring     { fill: none; stroke: var(--gold-lt); stroke-width: .75; }
+
+/* The number sits low in a dial, under the needle hub, not dead centre */
+.seal .val {
+  font-family: var(--sans) !important;
+  font-weight: 600; letter-spacing: -.05em;
+  font-variant-numeric: tabular-nums;
+  font-size: 54px !important;
+  position: relative; top: 26px !important;
+  transition: color var(--t) var(--ease);
+}
+.seal .of { bottom: 20px !important; letter-spacing: .22em; }
+
+.seal .val.b-strong { color: var(--pass); }
+.seal .val.b-good   { color: var(--gold-dp); }
+.seal .val.b-mixed  { color: var(--part); }
+.seal .val.b-weak   { color: var(--fail); }
+
+/* ── 19. SCORE CARD ──────────────────────────────────────────────────────
+   A 1080×1350 PNG of the current verdict, rendered on canvas and downloaded.
+   For the Instagram grid — the analysis is the content, so the screenshot
+   should not have to be a screenshot. */
+
+.cardbtn { margin-top: 16px; }
+.cardbtn svg { width: 13px; height: 13px; stroke-width: 1.8; }
+
+@media (max-width: 780px) {
+  .seal .val { font-size: 46px !important; top: 22px !important; }
+}
