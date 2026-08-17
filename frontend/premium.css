@@ -1,35 +1,24 @@
 /* ============================================================================
-   ALTAHA SCREENER — PREMIUM LAYER  v1
+   ALTAHA SCREENER — PREMIUM LAYER  v2
    ----------------------------------------------------------------------------
-   Drop-in override. Loads AFTER the inline <style> in index.html and re-skins
-   the whole site by redefining the design tokens the existing CSS already uses,
-   then refining ~20 components on top.
+   Replaces v1 entirely. Two things went wrong in v1 and both are fixed here:
 
-   Nothing here renames a class or an id. Existing JS keeps working untouched.
+   1. Reveals used a persistent `opacity:0` switched back on by a scroll
+      observer. Elements inside `display:none` tab views never intersect, so
+      they never turned back on. Ideas, Portfolio and Filings rendered blank.
+      v2 uses keyframe animations instead: if the trigger never fires, the
+      element is simply visible. It fails open, not closed.
+
+   2. The nav used `margin-inline: calc(50% - 50vw)` to go full-bleed, which
+      breaks alignment and causes horizontal scroll at some widths. v2 keeps
+      the nav inside the normal column.
 
    DIRECTION — "Instrument"
-   The old skin was cream paper + serif + gold: an editorial look, and one that
-   reads as generic because half the web arrived there at the same time. This
-   product is not a magazine. It is a measuring instrument that shows its
-   working. So the material changes from PAPER to GLASS AND GRAPHITE: optical
-   white, machined hairlines, champagne (not amber) metal, and a dark mode that
-   is the real home of the thing.
-
-   PALETTE
-     --void     #0B0C0F   near-black with a blue cast; never pure #000
-     --graphite #16181D   elevated dark surface
-     --optical  #FCFCFD   light-mode ground; cooler than paper, not clinical
-     --champagne#C4A661   the metal. Cold gold. Used once per screen, not everywhere.
-     --mercury  #6E7480   the neutral that carries all secondary text
-
-   TYPE
-     Display  : system UI stack first, so Mac/iOS renders genuine SF Pro Display.
-                Inter is the fallback everyone else gets. Optical sizing + tight
-                tracking is what actually produces the "Apple" feel — not a font.
-     Numerals : IBM Plex Mono with tabular figures forced on. Financial columns
-                must not shift width when a digit changes.
-     Serif    : Instrument Serif survives in exactly one place — the italic word
-                in the wordmark. Restraint is the point.
+   The old skin was cream paper, serif and gold: a magazine. This is a
+   measuring instrument, so the material is glass and graphite, and the
+   decoration is drawn from the subject itself — candles, grid, hairlines,
+   tick marks. No stock photography: a chart is more honest to what this is,
+   and generated SVG stays sharp at every density.
 ============================================================================ */
 
 /* ── 1. TOKENS ─────────────────────────────────────────────────────────── */
@@ -37,95 +26,92 @@
 :root {
   color-scheme: light;
 
-  --optical:   #FCFCFD;
-  --void:      #0B0C0F;
-  --graphite:  #16181D;
-  --champagne: #C4A661;
-  --mercury:   #6E7480;
-
-  /* Overrides of the existing token names — this is what re-skins the site */
   --paper:   #FCFCFD;
-  --paper-2: #F2F3F5;
-  --ink:     #0B0C0F;
-  --ink-2:   #3C424E;
-  --mute:    #6E7480;
-  --rule:    #E2E4E9;
-  --rule-2:  #EDEEF1;
+  --paper-2: #F1F3F6;
+  --ink:     #0A0B0E;
+  --ink-2:   #3A404B;
+  --mute:    #6C7280;
+  --rule:    #E1E4E9;
+  --rule-2:  #ECEEF1;
 
   --gold:    #A8862F;
   --gold-lt: #C4A661;
-  --gold-dp: #806421;
+  --gold-dp: #7E6220;
 
   --pass: #0B7A55;
   --part: #A2751A;
   --fail: #C0392F;
 
-  /* New tokens the premium layer introduces */
   --surface:    #FFFFFF;
   --surface-2:  #F7F8FA;
-  --glass:      rgba(252,252,253,.72);
-  --glass-line: rgba(11,12,15,.08);
-  --hairline:   rgba(11,12,15,.10);
+  --glass:      rgba(252,252,253,.78);
+  --glass-line: rgba(10,11,14,.08);
+  --hairline:   rgba(10,11,14,.10);
+  --grid:       rgba(10,11,14,.045);
+
+  --up:   #0B7A55;
+  --down: #C0392F;
 
   --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
           'Inter', 'Segoe UI', system-ui, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --serif: 'Instrument Serif', Georgia, serif;
 
-  /* Elevation — three steps, layered, never a single blurry drop */
-  --sh-1: 0 .5px 1px rgba(11,12,15,.05), 0 1px 2px rgba(11,12,15,.04);
-  --sh-2: 0 1px 2px rgba(11,12,15,.05), 0 4px 12px rgba(11,12,15,.06),
-          0 12px 32px rgba(11,12,15,.05);
-  --sh-3: 0 2px 4px rgba(11,12,15,.06), 0 12px 28px rgba(11,12,15,.10),
-          0 32px 64px rgba(11,12,15,.10);
-  --ring: 0 0 0 3.5px rgba(196,166,97,.28);
+  --sh-1: 0 .5px 1px rgba(10,11,14,.05), 0 1px 2px rgba(10,11,14,.04);
+  --sh-2: 0 1px 2px rgba(10,11,14,.05), 0 4px 12px rgba(10,11,14,.06),
+          0 12px 32px rgba(10,11,14,.05);
+  --sh-3: 0 2px 4px rgba(10,11,14,.06), 0 12px 28px rgba(10,11,14,.10),
+          0 32px 64px rgba(10,11,14,.10);
+  --ring: 0 0 0 3.5px rgba(196,166,97,.30);
 
-  --r-card: 14px;
+  --r-card:  14px;
   --r-panel: 20px;
-  --r-pill: 999px;
+  --r-pill:  999px;
 
   --ease:      cubic-bezier(.32,.72,0,1);
   --ease-soft: cubic-bezier(.16,1,.3,1);
-  --t-fast: 140ms; --t: 300ms; --t-slow: 620ms;
+  --t-fast: 140ms; --t: 300ms; --t-slow: 640ms;
 
-  --maxw: 1080px;
+  --maxw: 1100px;
+  --gut: clamp(18px, 4vw, 34px);
 }
-
-/* ── 2. DARK MODE ──────────────────────────────────────────────────────── */
 
 html[data-theme="dark"] {
   color-scheme: dark;
 
-  --paper:   #0B0C0F;
-  --paper-2: #16181D;
-  --ink:     #F4F5F7;
-  --ink-2:   #B7BCC6;
-  --mute:    #7B8290;
-  --rule:    #24272F;
-  --rule-2:  #1C1F26;
+  --paper:   #0A0B0E;
+  --paper-2: #15171C;
+  --ink:     #F3F4F7;
+  --ink-2:   #B4BAC4;
+  --mute:    #79808E;
+  --rule:    #23262E;
+  --rule-2:  #1B1E24;
 
   --gold:    #D9BE7E;
   --gold-lt: #C4A661;
   --gold-dp: #EBD6A2;
 
-  --pass: #35C48D;
+  --pass: #34C48D;
   --part: #D8AE4B;
   --fail: #F0736A;
 
-  --surface:    #131519;
-  --surface-2:  #191C22;
-  --glass:      rgba(11,12,15,.72);
+  --surface:    #121419;
+  --surface-2:  #181B21;
+  --glass:      rgba(10,11,14,.76);
   --glass-line: rgba(255,255,255,.09);
   --hairline:   rgba(255,255,255,.10);
+  --grid:       rgba(255,255,255,.05);
+
+  --up:   #34C48D;
+  --down: #F0736A;
 
   --sh-1: 0 .5px 1px rgba(0,0,0,.5);
   --sh-2: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.45);
   --sh-3: 0 2px 6px rgba(0,0,0,.5), 0 20px 48px rgba(0,0,0,.55);
-  --ring: 0 0 0 3.5px rgba(217,190,126,.30);
+  --ring: 0 0 0 3.5px rgba(217,190,126,.32);
 }
 
-/* Every hardcoded #fff in the original sheet, rerouted to a themed surface.
-   Listed explicitly rather than with a wildcard so nothing unintended flips. */
+/* Hardcoded #fff in the original sheet, rerouted. Explicit, not wildcard. */
 html[data-theme="dark"] .searchrow,
 html[data-theme="dark"] .idea,
 html[data-theme="dark"] .rcard,
@@ -150,10 +136,6 @@ html[data-theme="dark"] .trackbtn,
 html[data-theme="dark"] .tk,
 html[data-theme="dark"] .statcell,
 html[data-theme="dark"] .octable-wrap,
-html[data-theme="dark"] #chartbox,
-html[data-theme="dark"] #pxchart,
-html[data-theme="dark"] #fcbox,
-html[data-theme="dark"] #genbtn,
 html[data-theme="dark"] .wabtn,
 html[data-theme="dark"] .livebadge {
   background: var(--surface);
@@ -164,179 +146,251 @@ html[data-theme="dark"] select,
 html[data-theme="dark"] textarea {
   background: var(--surface); color: var(--ink); border-color: var(--rule);
 }
-html[data-theme="dark"] .act.solid { background: var(--gold-lt); color: #0B0C0F; border-color: var(--gold-lt); }
-html[data-theme="dark"] .act.solid:hover { background: var(--gold-dp); border-color: var(--gold-dp); color: #0B0C0F; }
+html[data-theme="dark"] .act.solid,
+html[data-theme="dark"] #genbtn,
+html[data-theme="dark"] #genbtn2 {
+  background: var(--gold-lt); color: #0A0B0E; border-color: var(--gold-lt);
+}
+/* Chart containers are left alone — the canvas library paints its own
+   background and forcing one here produced a visible seam in v1. */
 
-/* ── 3. BASE ───────────────────────────────────────────────────────────── */
+/* ── 2. BASE ───────────────────────────────────────────────────────────── */
 
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
 
 body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
-  font-feature-settings: 'cv05' 1, 'ss01' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.011em;
+  letter-spacing: -.011em;
+  overflow-x: hidden;
   transition: background var(--t) var(--ease), color var(--t) var(--ease);
 }
 
-/* Every number on the page is tabular. Non-negotiable in a financial UI:
-   without this, a column of prices visibly jitters as digits change. */
-.num, .val, .sfitval, .pvnum, .tkln, .pcell, .k, .v, .rq, .ptv, .pts,
-.mono, [class*="score"], td, th, .lvlpx, .fitem, .anums, .statcell,
-input[type="number"] {
+.wrap { max-width: var(--maxw); padding-inline: var(--gut); }
+
+/* Tabular figures everywhere a number lives. Without this, price columns
+   visibly jitter as digits change — small, but it reads as unfinished. */
+.num, .val, .sfitval, .pvnum, .tkln, .pcell, .rq, .ptv, .pts, .mono,
+.lvlpx, .anums, .statcell, .tk .l, .tk .c, td, th, input[type="number"],
+.hero-tile-val, .hero-tile-chg {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1, 'zero' 1;
 }
 
-.wrap { max-width: var(--maxw); }
-
 ::selection { background: rgba(196,166,97,.28); color: var(--ink); }
-
 :focus-visible { outline: none; box-shadow: var(--ring); border-radius: 8px; }
 
-/* ── 4. TICKER BAR ─────────────────────────────────────────────────────── */
+/* ── 3. TICKER BAR ─────────────────────────────────────────────────────── */
 
 .tickerbar {
-  background: var(--void);
-  border-bottom: 1px solid var(--glass-line);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  background: #07080A;
+  border-bottom: 1px solid rgba(255,255,255,.07);
 }
-.tickerbar .tkln, .tickerbar .tknm, .tickerbar .mktime { color: rgba(255,255,255,.62); }
-.tickerbar .tkt { color: rgba(255,255,255,.92); }
-.tickerbar .mkstatus i { box-shadow: 0 0 0 4px rgba(53,196,141,.18); }
+.tickerbar .tk { background: transparent !important; border: 0; }
+.tickerbar .tk .n { color: rgba(255,255,255,.48); letter-spacing: .1em; }
+.tickerbar .tk .l { color: rgba(255,255,255,.94); font-weight: 500; }
+.tickerbar .tk .c.up { color: #34C48D; }
+.tickerbar .tk .c.dn { color: #F0736A; }
+.tickerbar .mktime, .tickerbar .mkstatus { color: rgba(255,255,255,.55); }
+.tickerbar .mkstatus i { box-shadow: 0 0 0 4px rgba(52,196,141,.16); }
 
-/* ── 5. COMMAND BAR (sticky nav) ───────────────────────────────────────── */
-
-.tabnav {
-  position: sticky;
-  top: 0;
-  z-index: 60;
-  padding: 10px 0;
-  margin-inline: calc(50% - 50vw);
-  padding-inline: max(20px, calc(50vw - var(--maxw) / 2));
-  background: var(--glass);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
-  border-bottom: 1px solid transparent;
-  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
-}
-.tabnav.is-stuck {
-  border-bottom-color: var(--glass-line);
-  box-shadow: 0 1px 24px rgba(11,12,15,.05);
-}
-html[data-theme="dark"] .tabnav.is-stuck { box-shadow: 0 1px 24px rgba(0,0,0,.5); }
-
-/* ── 6. SEGMENTED CONTROLS ─────────────────────────────────────────────── */
-
-.seg {
-  background: var(--paper-2);
-  border: .5px solid var(--hairline);
-  padding: 3px;
-  box-shadow: inset 0 1px 2px rgba(11,12,15,.03);
-}
-html[data-theme="dark"] .seg { box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
-
-.seg > button, .seg > .moreWrap > button {
-  font-family: var(--sans);
-  font-weight: 500;
-  font-size: 13.5px;
-  letter-spacing: -.005em;
-  padding: 8px 18px;
-}
-.seg-puck {
-  top: 3px; bottom: 3px;
-  background: var(--surface);
-  box-shadow: 0 .5px 1px rgba(11,12,15,.06), 0 3px 8px rgba(11,12,15,.10);
-  transition: transform 420ms var(--ease), width 420ms var(--ease),
-              opacity var(--t-fast) linear;
-}
-.seg-puck::after { border-color: transparent; }
-html[data-theme="dark"] .seg-puck { background: #2A2E37; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
-
-.seg.has-puck > button.active,
-.seg.has-puck > .moreWrap > button.active { color: var(--ink); font-weight: 600; }
-.seg > button.active,
-.seg > .moreWrap > button.active {
-  background: var(--surface); color: var(--ink); box-shadow: var(--sh-1);
-}
-
-/* ── 7. HERO ───────────────────────────────────────────────────────────── */
+/* ── 4. HERO ───────────────────────────────────────────────────────────────
+   The signature. A live-drawn candlestick field sits behind the wordmark:
+   the product's own subject used as its ornament. Generated as SVG by
+   premium.js so it stays sharp on every display and costs no network. */
 
 header.wrap {
   position: relative;
-  padding-block: clamp(48px, 9vw, 104px) clamp(28px, 4vw, 46px);
+  isolation: isolate;
   text-align: center;
+  padding-block: clamp(54px, 9vw, 108px) clamp(30px, 4vw, 52px);
 }
-/* Ambient field. One slow radial wash, no gradient bar, no mesh. */
+
+/* Chart grid — the graph-paper an instrument is read against */
 header.wrap::before {
   content: "";
-  position: absolute; inset: -20% -30% auto -30%; height: 340px;
-  background: radial-gradient(60% 100% at 50% 0%,
-              rgba(196,166,97,.13) 0%, rgba(196,166,97,0) 70%);
-  pointer-events: none; z-index: -1;
+  position: absolute; inset: 0; z-index: -2;
+  background-image:
+    linear-gradient(to right,  var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 68px 68px;
+  mask-image: radial-gradient(78% 72% at 50% 42%, #000 20%, transparent 78%);
+  -webkit-mask-image: radial-gradient(78% 72% at 50% 42%, #000 20%, transparent 78%);
+  pointer-events: none;
 }
+
+/* Warm field behind the wordmark so the type sits on light, not on grid */
+header.wrap::after {
+  content: "";
+  position: absolute; inset: -10% -25% 30% -25%; z-index: -2;
+  background: radial-gradient(52% 74% at 50% 30%,
+              rgba(196,166,97,.15) 0%, rgba(196,166,97,0) 72%);
+  pointer-events: none;
+}
+
+/* The candle field, injected by premium.js */
+.hero-candles {
+  position: absolute; inset: auto 0 0 0; height: 190px; z-index: -1;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent, #000 42%, #000 78%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 42%, #000 78%, transparent);
+  opacity: .5;
+}
+html[data-theme="dark"] .hero-candles { opacity: .42; }
+.hero-candles svg { width: 100%; height: 100%; display: block; }
+.hero-candles .wick { stroke-width: 1; }
+.hero-candles .cndl { transform-origin: center; }
+
+@keyframes candleGrow {
+  from { opacity: 0; transform: scaleY(.05); }
+  to   { opacity: 1; transform: scaleY(1); }
+}
+.hero-candles g { animation: candleGrow 900ms var(--ease-soft) both; transform-origin: 50% 50%; }
 
 .eyebrow {
   font-family: var(--mono);
-  font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase;
+  font-size: 10.5px; letter-spacing: .24em; text-transform: uppercase;
   color: var(--mute);
 }
 
 .brand {
   font-family: var(--sans);
   font-weight: 600;
-  font-size: clamp(46px, 9.5vw, 104px);
-  line-height: .94;
-  letter-spacing: -.045em;
+  font-size: clamp(48px, 9.6vw, 108px);
+  line-height: .93;
+  letter-spacing: -.046em;
   margin: 18px 0 0;
 }
 .brand i {
   font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
+  font-style: italic; font-weight: 400;
   letter-spacing: -.02em;
-  background: linear-gradient(150deg, var(--gold-dp), var(--gold-lt) 45%, var(--gold) 100%);
+  background: linear-gradient(148deg, var(--gold-dp) 0%, var(--gold-lt) 44%, var(--gold) 100%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.tag {
-  font-size: 14px; color: var(--mute); letter-spacing: .01em; margin-top: 14px;
-}
+.tag { font-size: 14px; color: var(--mute); margin-top: 14px; letter-spacing: .005em; }
 
-/* The metal rule — a hairline that catches light in the middle, nothing more */
 .metal {
-  height: 1px; border: 0; max-width: 320px; margin: 30px auto;
-  background: linear-gradient(90deg, transparent,
-              var(--rule) 18%, var(--gold-lt) 50%, var(--rule) 82%, transparent);
-  opacity: .8;
+  height: 1px; border: 0; max-width: 300px; margin: 30px auto;
+  background: linear-gradient(90deg, transparent, var(--rule) 16%,
+              var(--gold-lt) 50%, var(--rule) 84%, transparent);
 }
 
 .pitch {
   font-size: clamp(16px, 1.7vw, 19px);
-  line-height: 1.55;
-  color: var(--ink-2);
-  max-width: 620px; margin-inline: auto;
-  letter-spacing: -.012em;
+  line-height: 1.56; color: var(--ink-2);
+  max-width: 600px; margin-inline: auto; letter-spacing: -.013em;
 }
 .pitch b { color: var(--ink); font-weight: 600; }
 
-.badges { margin-top: 26px; }
+.badges { margin-top: 26px; display: flex; flex-wrap: wrap;
+          justify-content: center; gap: 8px; }
 .badge {
-  background: var(--surface);
-  border: .5px solid var(--hairline);
-  border-radius: var(--r-pill);
-  box-shadow: var(--sh-1);
-  font-size: 12px; letter-spacing: -.005em; color: var(--ink-2);
-  padding: 7px 15px;
+  background: var(--surface); border: .5px solid var(--hairline);
+  border-radius: var(--r-pill); box-shadow: var(--sh-1);
+  font-size: 12px; color: var(--ink-2); padding: 7px 15px; letter-spacing: -.004em;
 }
 
 .brandsw { margin-top: 20px; }
 .bsw { font-size: 13px; letter-spacing: -.005em; }
+
+/* ── 5. INDEX TILES ────────────────────────────────────────────────────────
+   Live NIFTY / SENSEX / BANKNIFTY, mirrored from the ticker data already on
+   the page. Three glass instruments under the hero: the first thing a market
+   person looks for, and currently only present as 11px text in a black bar. */
+
+.hero-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  max-width: 660px; margin: 34px auto 0;
+}
+.hero-tile {
+  position: relative; overflow: hidden;
+  background: var(--surface);
+  border: .5px solid var(--hairline);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-1);
+  padding: 14px 16px 15px;
+  text-align: left;
+  transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.hero-tile:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
+.hero-tile-name {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .17em;
+  text-transform: uppercase; color: var(--mute);
+}
+.hero-tile-val {
+  font-size: 22px; font-weight: 600; letter-spacing: -.03em;
+  margin-top: 7px; color: var(--ink);
+}
+.hero-tile-chg {
+  font-family: var(--mono); font-size: 11.5px; margin-top: 3px; font-weight: 500;
+}
+.hero-tile-chg.up { color: var(--up); }
+.hero-tile-chg.dn { color: var(--down); }
+/* Sparkline strip along the tile's bottom edge */
+.hero-tile-spark { position: absolute; left: 0; right: 0; bottom: 0; height: 26px;
+                   opacity: .3; pointer-events: none; }
+.hero-tile-spark svg { width: 100%; height: 100%; display: block; }
+
+/* ── 6. COMMAND BAR ──────────────────────────────────────────────────────
+   Sticky, but kept inside the normal column. The v1 full-bleed trick caused
+   the misalignment and the horizontal scroll. */
+
+.tabnav {
+  position: sticky; top: 0; z-index: 60;
+  padding: 11px 0 12px;
+  background: var(--glass);
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  transition: box-shadow var(--t) var(--ease);
+}
+/* The hairline spans the viewport without moving the bar itself */
+.tabnav::after {
+  content: ""; position: absolute; left: 50%; bottom: 0;
+  width: 100vw; transform: translateX(-50%); height: 1px;
+  background: var(--glass-line); opacity: 0;
+  transition: opacity var(--t) var(--ease);
+}
+.tabnav.is-stuck::after { opacity: 1; }
+
+/* ── 7. SEGMENTED CONTROLS ─────────────────────────────────────────────── */
+
+.seg {
+  background: var(--paper-2);
+  border: .5px solid var(--hairline);
+  padding: 3px;
+  box-shadow: inset 0 1px 2px rgba(10,11,14,.03);
+}
+html[data-theme="dark"] .seg { box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
+
+.seg > button, .seg > .moreWrap > button {
+  font-family: var(--sans); font-weight: 500; font-size: 13.5px;
+  letter-spacing: -.005em; padding: 8px 18px;
+}
+.seg.mono > button { font-family: var(--mono); font-size: 10.5px; padding: 7px 13px; }
+
+.seg-puck {
+  top: 3px; bottom: 3px;
+  background: var(--surface);
+  box-shadow: 0 .5px 1px rgba(10,11,14,.07), 0 3px 8px rgba(10,11,14,.10);
+  transition: transform 420ms var(--ease), width 420ms var(--ease),
+              opacity var(--t-fast) linear;
+}
+.seg-puck::after { border-color: transparent; }
+html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px rgba(0,0,0,.55); }
+
+.seg.has-puck > button.active,
+.seg.has-puck > .moreWrap > button.active { color: var(--ink); font-weight: 600; }
+.seg > button.active, .seg > .moreWrap > button.active {
+  background: var(--surface); color: var(--ink); box-shadow: var(--sh-1);
+}
 
 /* ── 8. SEARCH ─────────────────────────────────────────────────────────── */
 
@@ -347,35 +401,29 @@ header.wrap::before {
   box-shadow: var(--sh-2);
   padding: 6px 6px 6px 22px;
   max-width: 620px; margin-inline: auto;
-  transition: box-shadow var(--t) var(--ease), border-color var(--t) var(--ease),
-              transform var(--t) var(--ease);
+  transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
 }
-.searchrow:focus-within {
-  box-shadow: var(--sh-3), var(--ring);
-  border-color: transparent;
-  transform: translateY(-1px);
-}
+.searchrow:focus-within { box-shadow: var(--sh-3), var(--ring); transform: translateY(-1px); }
 .searchrow input {
   font-family: var(--sans); font-size: 16px; letter-spacing: -.012em;
   background: transparent; border: 0; color: var(--ink);
 }
 .searchrow input::placeholder { color: var(--mute); }
 .searchrow button, #go, #rgo {
-  border-radius: var(--r-pill);
+  border-radius: var(--r-pill); border: 0;
   background: var(--ink); color: var(--paper);
   font-family: var(--sans); font-weight: 550; font-size: 14px;
-  letter-spacing: -.008em; padding: 11px 26px; border: 0;
+  letter-spacing: -.008em; padding: 11px 26px;
   transition: transform var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
 }
 .searchrow button:hover, #go:hover, #rgo:hover { opacity: .86; transform: translateY(-1px); }
 .searchrow button:active { transform: translateY(0) scale(.985); }
 
-/* ⌘K affordance */
 .kbdhint {
-  display: inline-flex; align-items: center; gap: 4px;
+  display: inline-flex; align-items: center;
   font-family: var(--mono); font-size: 10px; color: var(--mute);
-  border: .5px solid var(--hairline); border-radius: 6px; padding: 3px 6px;
-  margin-right: 8px; background: var(--paper-2);
+  border: .5px solid var(--hairline); border-radius: 6px;
+  padding: 3px 7px; margin-right: 9px; background: var(--paper-2);
 }
 @media (max-width: 700px) { .kbdhint { display: none; } }
 
@@ -389,7 +437,7 @@ header.wrap::before {
 /* ── 9. PANELS ─────────────────────────────────────────────────────────── */
 
 #pricewrap, #volwrap, #shwrap, #lvlwrap, #setupwrap, #plainwrap, #planwrap,
-.rcard, .idea, .vcard, .statbox, .warnbox, .pfrow, .ptaxcol, .alertcard {
+.rcard, .idea, .vcard, .statbox, .alertcard, .ptaxcol {
   border-radius: var(--r-card);
   border: .5px solid var(--hairline);
   background: var(--surface);
@@ -398,80 +446,73 @@ header.wrap::before {
               border-color var(--t) var(--ease);
 }
 .idea:hover, .rcard:hover, .alertcard:hover {
-  box-shadow: var(--sh-2);
-  transform: translateY(-2px);
-  border-color: var(--rule);
+  box-shadow: var(--sh-2); transform: translateY(-2px); border-color: var(--rule);
 }
 
-.vhead h4, .lh h3 {
-  font-family: var(--sans); font-weight: 600;
-  letter-spacing: -.022em;
-}
+.vhead h4, .lh h3 { font-family: var(--sans); font-weight: 600; letter-spacing: -.023em; }
 .lh h3 { font-size: clamp(21px, 2.6vw, 27px); }
 
-.sk, .sk2, .lbl, .modelbl, .dlbl {
-  font-family: var(--mono); font-size: 9.5px;
-  letter-spacing: .18em; text-transform: uppercase; color: var(--mute);
+/* Section headers get a candle glyph — the subject as structural device,
+   not decoration bolted on. */
+.lh { display: flex; align-items: center; gap: 12px; }
+.lh::before {
+  content: ""; flex: 0 0 auto; width: 3px; height: 21px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--gold-lt), var(--gold-dp));
 }
 
-/* ── 10. THE GAUGE — signature element ─────────────────────────────────── */
+.sk, .sk2, .lbl, .modelbl, .dlbl {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--mute);
+}
+
+/* ── 10. THE GAUGE — signature ─────────────────────────────────────────── */
 
 .verdict {
   border-radius: var(--r-panel);
   border: .5px solid var(--hairline);
-  background:
-    radial-gradient(120% 140% at 12% 0%, var(--surface-2) 0%, var(--surface) 55%);
+  background: radial-gradient(120% 140% at 12% 0%, var(--surface-2) 0%, var(--surface) 55%);
   box-shadow: var(--sh-2);
-  padding: clamp(24px, 4vw, 40px);
+  padding: clamp(22px, 4vw, 40px);
   position: relative; overflow: hidden;
 }
 .verdict::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
-  border-radius: inherit;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+  border-radius: inherit; box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
 }
 html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
 
-.seal { filter: drop-shadow(0 8px 22px rgba(11,12,15,.07)); }
+.seal { filter: drop-shadow(0 8px 22px rgba(10,11,14,.07)); }
 .seal svg circle#arc {
   stroke-linecap: round;
   transition: stroke-dashoffset 1200ms var(--ease-soft) !important;
 }
-
 .seal .val {
-  font-family: var(--sans);
-  font-weight: 600;
-  letter-spacing: -.05em;
+  font-family: var(--sans); font-weight: 600; letter-spacing: -.05em;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(46px, 7vw, 62px);
-  line-height: 1;
+  font-size: clamp(46px, 7vw, 62px); line-height: 1;
 }
 .seal .of {
-  font-family: var(--mono); font-size: 9px;
-  letter-spacing: .2em; text-transform: uppercase; color: var(--mute);
+  font-family: var(--mono); font-size: 9px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--mute);
 }
 
 .vstamp {
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em;
   text-transform: uppercase; color: var(--gold-dp);
 }
-.vsummary {
-  font-size: clamp(16px, 1.8vw, 19px); line-height: 1.55;
-  letter-spacing: -.014em; color: var(--ink);
-}
+.vsummary { font-size: clamp(16px, 1.8vw, 19px); line-height: 1.55;
+            letter-spacing: -.014em; color: var(--ink); }
 .vbasis { font-family: var(--mono); font-size: 11px; color: var(--mute); }
 
-/* Data-confidence chip — injected by premium.js next to the basis line */
 .confchip {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
   text-transform: uppercase; padding: 4px 10px; border-radius: var(--r-pill);
-  border: .5px solid var(--hairline); background: var(--paper-2); color: var(--ink-2);
-  margin-left: 8px;
+  border: .5px solid var(--hairline); background: var(--paper-2);
+  color: var(--ink-2); margin-left: 8px;
 }
 .confchip i { width: 5px; height: 5px; border-radius: 50%; background: var(--pass); }
-.confchip.partial i { background: var(--part); }
-.confchip.thin i    { background: var(--fail); }
+.confchip.thin i { background: var(--fail); }
 
 /* ── 11. BUTTONS ───────────────────────────────────────────────────────── */
 
@@ -482,13 +523,13 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   color: var(--ink-2);
   box-shadow: var(--sh-1);
   transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
-              color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+              color var(--t-fast) var(--ease);
 }
-.act:hover, .livebtn:hover, .trackbtn:hover, .pfbtn:hover, .auditbtn:hover, .showfull:hover {
+.act:hover, .livebtn:hover, .trackbtn:hover, .pfbtn:hover,
+.auditbtn:hover, .showfull:hover {
   transform: translateY(-1px); box-shadow: var(--sh-2); color: var(--ink);
 }
 .act:active, .livebtn:active { transform: translateY(0) scale(.985); }
-
 .auditbtn, .showfull {
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
   text-transform: uppercase; padding: 13px 24px;
@@ -498,37 +539,34 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 
 .audit { border-radius: 10px; border: .5px solid var(--hairline); background: var(--surface); }
 .audit:hover { border-color: var(--rule); }
+.octable-wrap { border-radius: var(--r-card); border: .5px solid var(--hairline); }
 .octable th {
   font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--mute);
   position: sticky; top: 0; background: var(--surface); z-index: 2;
 }
-.octable td { font-variant-numeric: tabular-nums; }
-.octable-wrap { border-radius: var(--r-card); border: .5px solid var(--hairline); }
 
-/* ── 13. MOTION ────────────────────────────────────────────────────────── */
+/* ── 13. MOTION — fails open ───────────────────────────────────────────────
+   Everything here is a keyframe animation, never a persistent opacity:0.
+   If a trigger never fires, the element is simply visible. This is the v1 bug
+   that blanked the hidden tabs, and it is the reason for the rule. */
 
-@keyframes heroIn {
-  from { opacity: 0; transform: translateY(18px); filter: blur(6px); }
-  to   { opacity: 1; transform: none;             filter: blur(0); }
-}
-.hero-in > * { animation: heroIn 800ms var(--ease-soft) both; }
-.hero-in > *:nth-child(1) { animation-delay: 40ms; }
+@keyframes riseIn { from { opacity: 0; transform: translateY(16px); }
+                    to   { opacity: 1; transform: none; } }
+@keyframes heroIn { from { opacity: 0; transform: translateY(20px); filter: blur(7px); }
+                    to   { opacity: 1; transform: none; filter: blur(0); } }
+
+.hero-in > * { animation: heroIn 850ms var(--ease-soft) both; }
+.hero-in > *:nth-child(1) { animation-delay:  40ms; }
 .hero-in > *:nth-child(2) { animation-delay: 110ms; }
 .hero-in > *:nth-child(3) { animation-delay: 180ms; }
 .hero-in > *:nth-child(4) { animation-delay: 240ms; }
 .hero-in > *:nth-child(5) { animation-delay: 300ms; }
-.hero-in > *:nth-child(6) { animation-delay: 350ms; }
+.hero-in > *:nth-child(6) { animation-delay: 355ms; }
 .hero-in > *:nth-child(7) { animation-delay: 410ms; }
+.hero-in > *:nth-child(8) { animation-delay: 460ms; }
 
-/* Scroll-triggered reveal, applied by premium.js */
-.reveal { opacity: 0; transform: translateY(22px); }
-.reveal.seen {
-  opacity: 1; transform: none;
-  transition: opacity var(--t-slow) var(--ease-soft),
-              transform var(--t-slow) var(--ease-soft);
-}
-
+.rv { animation: riseIn var(--t-slow) var(--ease-soft) both; }
 .rise { animation-duration: var(--t-slow); animation-delay: calc(var(--i,0) * 42ms); }
 
 /* ── 14. THEME TOGGLE ──────────────────────────────────────────────────── */
@@ -544,7 +582,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   transition: transform var(--t) var(--ease), color var(--t-fast) var(--ease);
 }
 .themebtn:hover { transform: scale(1.07) rotate(-8deg); color: var(--ink); }
-@media (max-width: 780px) { .themebtn { bottom: 76px; } }
+@media (max-width: 780px) { .themebtn { bottom: 78px; } }
 
 /* ── 15. MOBILE TAB BAR ────────────────────────────────────────────────── */
 
@@ -562,21 +600,21 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 6px 2px; border-radius: 10px;
   font-family: var(--sans); font-size: 10px; font-weight: 500;
-  letter-spacing: -.005em; color: var(--mute);
+  color: var(--mute);
   transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 .mobnav button svg { width: 19px; height: 19px; stroke-width: 1.6; }
 .mobnav button.on { color: var(--ink); background: var(--paper-2); }
-.mobnav button:active { transform: scale(.96); }
 
 @media (max-width: 780px) {
   .mobnav { display: block; }
-  body { padding-bottom: 62px; }
+  body { padding-bottom: 64px; }
   .tabnav { display: none; }
-  .brand { font-size: clamp(40px, 13vw, 62px); }
+  .brand { font-size: clamp(40px, 13vw, 64px); }
   .searchrow { padding-left: 16px; }
   .verdict { padding: 22px 18px; }
-  /* Chart drawing tools are unusable on touch — hide rather than frustrate */
+  .hero-candles { height: 140px; }
+  /* Drawing tools are unusable on touch — hide rather than frustrate */
   .drawbar .seg.mono, .drawbar #dclear, .drawbar .dlbl { display: none; }
 }
 
@@ -597,12 +635,10 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;
-    scroll-behavior: auto !important;
   }
-  .reveal { opacity: 1; transform: none; }
 }
 
 @media print {
-  .tabnav, .mobnav, .themebtn, .tickerbar { display: none !important; }
+  .tabnav, .mobnav, .themebtn, .tickerbar, .hero-candles { display: none !important; }
   body { background: #fff; color: #000; }
 }
