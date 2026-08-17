@@ -854,6 +854,14 @@
     color:var(--mute);border:1px solid var(--rule);padding:2px 7px;margin-left:8px;
     vertical-align:2px;white-space:nowrap}
 </style>
+<link rel="stylesheet" href="premium.css">
+<script>
+(function(){try{
+  var s=localStorage.getItem('altaha-theme');
+  var d=window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', s || (d?'dark':'light'));
+}catch(e){}})();
+</script>
 </head>
 <body>
 
@@ -3444,5 +3452,6 @@ if(fcSymParam){
   }
 }catch(e){} })();
 </script>
+<script src="premium.js" defer></script>
 </body>
 </html>
