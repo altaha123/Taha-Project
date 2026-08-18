@@ -246,11 +246,21 @@ def _benchmark_frame():
 
 
 def _window(df, since_iso):
-    """Rows on or after the idea date. Returns None when the date is missing."""
+    """
+    Rows on or after the idea date. Returns None when the date is missing.
+
+    The tz_localize step is not cosmetic. Dhan returns a naive index; yfinance
+    returns one localised to the exchange. Comparing a tz-aware index against a
+    naive Timestamp raises TypeError, which the except swallowed — so every row
+    priced through the fallback feed silently produced no window and stayed
+    blank, which looked identical to having no data at all.
+    """
     if df is None or df.empty:
         return None
     try:
         idx = pd.to_datetime(df.index)
+        if getattr(idx, "tz", None) is not None:
+            idx = idx.tz_localize(None)
         mask = idx >= pd.Timestamp(since_iso)
         sub = df[mask]
         return sub if len(sub) else None
@@ -352,7 +362,15 @@ def update_one(rec):
     return rec
 
 
-def update_all(limit: int = 120, force: bool = False) -> dict:
+# A single yfinance lookup takes one to three seconds and the fallback tries
+# .NS then .BO, so marking is roughly two seconds per symbol. Forty-two rows in
+# one request is well over a minute, which the browser and Render both give up
+# on long before it finishes — the button sits on "Marking…" for ever and
+# nothing is written. Small batches, called repeatedly, complete every time.
+DEFAULT_BATCH = int(os.environ.get("TRACKER_BATCH", "8") or 8)
+
+
+def update_all(limit: int = DEFAULT_BATCH, force: bool = False) -> dict:
     """
     Refresh the oldest-updated records first, capped so one cron tick can never
     blow the data quota. Run it after the close.
@@ -386,8 +404,12 @@ def update_all(limit: int = 120, force: bool = False) -> dict:
             continue
     with _lock:
         _save()
+    today2 = _today()
+    remaining = sum(1 for r in rows
+                    if r.get("last_price") is None or (r.get("updated_on") or "") != today2)
     return {"updated": n, "tracked": len(rows),
             "marked": sum(1 for r in rows if r.get("last_price") is not None),
+            "remaining": remaining,
             "errors": sum(1 for r in rows if r.get("mark_error"))}
 
 
