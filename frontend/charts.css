@@ -1,0 +1,245 @@
+/* ============================================================================
+   Altaha — Charts tab
+   ----------------------------------------------------------------------------
+   Every colour here resolves through the tokens already defined in index.html
+   and premium.css, so the workspace inherits dark mode, reduced motion and the
+   gold/ink/paper identity without restating any of it. Nothing in this file
+   introduces a new hue.
+
+   The one deliberate departure from the rest of the site: this screen is a
+   workspace, not a document. It runs edge-to-edge, it does not scroll, and the
+   tools live on a vertical rail on the left the way an instrument panel does.
+   A reader scrolls; an operator reaches. The layout follows the verb.
+   ========================================================================== */
+
+#view-charts{padding:0}
+
+.cw{
+  --rail:56px;
+  --tape:44px;
+  display:grid;
+  grid-template-columns:var(--rail) 1fr;
+  grid-template-rows:var(--tape) 1fr auto;
+  grid-template-areas:"tape tape" "rail pane" "rail foot";
+  height:calc(100vh - 168px);
+  min-height:460px;
+  border:1px solid var(--rule-2);
+  border-radius:var(--r-card,9px);
+  background:var(--surface,#fff);
+  box-shadow:var(--sh-1);
+  overflow:hidden;
+  position:relative;
+}
+
+/* ── Tape: symbol, price, timeframes ──────────────────────────────────── */
+
+.cw-tape{
+  grid-area:tape;display:flex;align-items:center;gap:10px;
+  padding:0 12px;border-bottom:1px solid var(--rule-2);
+  background:var(--paper-2);overflow-x:auto;scrollbar-width:none;
+}
+.cw-tape::-webkit-scrollbar{display:none}
+
+.cw-sym{
+  display:flex;align-items:center;flex:0 0 auto;
+  border:1px solid var(--rule);border-radius:var(--r-pill,999px);
+  background:var(--paper);overflow:hidden;height:30px;
+}
+.cw-sym input{
+  border:0;background:transparent;outline:none;color:var(--ink);
+  font-family:var(--mono);font-size:12px;letter-spacing:.08em;
+  padding:0 12px;width:118px;text-transform:uppercase;
+}
+.cw-sym button{
+  border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;padding:0 13px;align-self:stretch;
+}
+.cw-sym button:hover{background:var(--gold-dp)}
+
+.cw-px{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--ink);
+  flex:0 0 auto;font-variant-numeric:tabular-nums;transition:color 160ms linear}
+.cw-chg{font-family:var(--mono);font-size:11.5px;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.cw-chg.up{color:var(--pass)} .cw-chg.dn{color:var(--fail)}
+
+/* The tick flash. This is the whole answer to "it doesn't feel live": a number
+   that changes silently reads as a screenshot. A 380ms wash of the direction
+   colour behind the digits reads as a heartbeat. */
+@keyframes cwFlashUp{from{background:rgba(31,93,69,.22)}to{background:transparent}}
+@keyframes cwFlashDn{from{background:rgba(142,47,42,.22)}to{background:transparent}}
+.cw-px.up{animation:cwFlashUp 380ms var(--ease,ease-out)}
+.cw-px.dn{animation:cwFlashDn 380ms var(--ease,ease-out)}
+@media (prefers-reduced-motion:reduce){.cw-px.up,.cw-px.dn{animation:none}}
+
+.cw-live{
+  display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mute);padding:4px 9px;border:1px solid var(--rule-2);
+  border-radius:var(--r-pill,999px);white-space:nowrap;
+}
+.cw-live i{width:6px;height:6px;border-radius:50%;background:var(--mute);display:block}
+.cw-live.on{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 40%,transparent)}
+.cw-live.on i{background:var(--pass);animation:cwPulse 1.9s var(--ease-soft,ease-in-out) infinite}
+@keyframes cwPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+@media (prefers-reduced-motion:reduce){.cw-live.on i{animation:none}}
+
+.cw-tfs{display:flex;gap:2px;flex:0 0 auto;margin-left:auto;
+  background:var(--paper);border:1px solid var(--rule-2);border-radius:var(--r-pill,999px);padding:3px}
+.cw-tfs button{
+  border:0;background:none;cursor:pointer;color:var(--ink-2);
+  font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  padding:5px 10px;border-radius:var(--r-pill,999px);
+  transition:background 150ms var(--ease,ease),color 150ms var(--ease,ease);
+}
+.cw-tfs button:hover{color:var(--ink)}
+.cw-tfs button.on{background:var(--ink);color:var(--paper)}
+.cw-tfs button:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* ── Rail: the drawing tools ──────────────────────────────────────────── */
+
+.cw-rail{
+  grid-area:rail;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 0;border-right:1px solid var(--rule-2);background:var(--paper-2);
+  overflow-y:auto;scrollbar-width:none;
+}
+.cw-rail::-webkit-scrollbar{display:none}
+.cw-rail hr{width:24px;height:1px;border:0;background:var(--rule);margin:6px 0;flex:0 0 auto}
+
+.cw-t{
+  width:38px;height:38px;flex:0 0 auto;border:0;background:none;cursor:pointer;
+  border-radius:8px;color:var(--ink-2);display:grid;place-items:center;position:relative;
+  transition:background 150ms var(--ease,ease),color 150ms var(--ease,ease);
+}
+.cw-t svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.5;
+  stroke-linecap:round;stroke-linejoin:round}
+.cw-t:hover{background:var(--rule-2);color:var(--ink)}
+.cw-t.on{background:var(--ink);color:var(--paper)}
+.cw-t.on::after{content:"";position:absolute;left:-1px;top:9px;bottom:9px;width:2px;
+  background:var(--gold);border-radius:2px}
+.cw-t:focus-visible{outline:none;box-shadow:var(--ring)}
+.cw-t[disabled]{opacity:.32;cursor:default}
+
+/* Tooltip on the rail. Text, not an icon guessing game. */
+.cw-t::before{
+  content:attr(data-tip);position:absolute;left:calc(100% + 8px);top:50%;
+  transform:translateY(-50%) translateX(-4px);
+  background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.11em;text-transform:uppercase;padding:5px 9px;border-radius:5px;
+  white-space:nowrap;pointer-events:none;opacity:0;z-index:40;
+  transition:opacity 130ms var(--ease,ease),transform 130ms var(--ease,ease);
+}
+.cw-t:hover::before{opacity:1;transform:translateY(-50%) translateX(0)}
+@media (hover:none){.cw-t::before{display:none}}
+
+/* ── Pane: the chart itself ───────────────────────────────────────────── */
+
+.cw-pane{grid-area:pane;position:relative;background:var(--surface,#fff);
+  display:flex;flex-direction:column;min-height:0}
+.cw-price{flex:1 1 auto;position:relative;min-height:0}
+.cw-sub{flex:0 0 auto;height:0;position:relative;border-top:1px solid var(--rule-2);
+  transition:height 260ms var(--ease-soft,ease)}
+.cw-sub.on{height:132px}
+
+.cw-canvas{position:absolute;inset:0;z-index:6;pointer-events:none;touch-action:none}
+.cw-canvas.live{pointer-events:auto;cursor:crosshair}
+.cw-canvas.grab{cursor:grab}
+.cw-canvas.grabbing{cursor:grabbing}
+
+.cw-legend{
+  position:absolute;top:9px;left:11px;z-index:8;pointer-events:none;
+  font-family:var(--mono);font-size:10.5px;line-height:1.6;color:var(--ink-2);
+  background:color-mix(in srgb,var(--surface,#fff) 90%,transparent);
+  border:1px solid var(--rule-2);border-radius:6px;padding:5px 9px;
+  font-variant-numeric:tabular-nums;max-width:calc(100% - 22px);
+}
+.cw-legend b{color:var(--ink)}
+.cw-legend .k{color:var(--mute)}
+
+.cw-msg{
+  position:absolute;inset:0;z-index:9;display:none;place-items:center;text-align:center;
+  background:color-mix(in srgb,var(--surface,#fff) 88%,transparent);
+  font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--mute);padding:24px;
+}
+.cw-msg.on{display:grid}
+
+/* ── Inspector: appears only when something is selected ───────────────── */
+
+.cw-insp{
+  position:absolute;left:50%;bottom:14px;transform:translateX(-50%) translateY(8px);
+  z-index:12;display:none;align-items:center;gap:7px;
+  background:var(--ink);border-radius:var(--r-pill,999px);padding:6px 8px;
+  box-shadow:var(--sh-2);opacity:0;transition:opacity 180ms var(--ease,ease),transform 180ms var(--ease-soft,ease);
+}
+.cw-insp.on{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+.cw-insp .lab{font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--paper);opacity:.6;padding:0 4px}
+.cw-sw{width:17px;height:17px;border-radius:50%;border:1.5px solid transparent;cursor:pointer;padding:0}
+.cw-sw.on{border-color:var(--paper)}
+.cw-wd{width:26px;height:24px;border:0;background:none;cursor:pointer;border-radius:5px;
+  display:grid;place-items:center}
+.cw-wd i{display:block;width:15px;background:var(--paper);border-radius:2px}
+.cw-wd.on{background:rgba(255,255,255,.16)}
+.cw-del{border:0;background:none;color:var(--fail);cursor:pointer;width:26px;height:24px;
+  border-radius:5px;display:grid;place-items:center}
+.cw-del:hover{background:rgba(255,255,255,.13)}
+.cw-del svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Foot: indicators and status ──────────────────────────────────────── */
+
+.cw-foot{
+  grid-area:foot;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:7px 12px;border-top:1px solid var(--rule-2);background:var(--paper-2);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mute);
+}
+.cw-chip{
+  border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);
+  border-radius:var(--r-pill,999px);padding:4px 10px;cursor:pointer;
+  font:inherit;letter-spacing:.1em;
+  transition:border-color 150ms var(--ease,ease),background 150ms var(--ease,ease),color 150ms var(--ease,ease);
+}
+.cw-chip:hover{border-color:var(--gold);color:var(--ink)}
+.cw-chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.cw-chip:focus-visible{outline:none;box-shadow:var(--ring)}
+.cw-note{margin-left:auto;text-align:right;letter-spacing:.09em;flex:1 1 160px;min-width:0}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────
+   The rail becomes a horizontal strip below the tape. Hit targets grow to
+   40px, which is why the existing site hides its drawing tools on touch and
+   this one does not: the tools were never unusable, they were 24px wide. */
+
+@media (max-width:780px){
+  .cw{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto 1fr auto;
+    grid-template-areas:"tape" "rail" "pane" "foot";
+    height:calc(100vh - 210px);min-height:400px;border-radius:0;
+    border-left:0;border-right:0;
+  }
+  .cw-rail{
+    flex-direction:row;border-right:0;border-bottom:1px solid var(--rule-2);
+    padding:6px 8px;gap:3px;overflow-x:auto;overflow-y:hidden;
+  }
+  .cw-rail hr{width:1px;height:22px;margin:0 5px;align-self:center}
+  .cw-t{width:40px;height:40px}
+  .cw-sym input{width:92px}
+  .cw-tape{gap:8px;padding:0 10px}
+  .cw-tfs{margin-left:0}
+  .cw-legend{font-size:9.5px;top:6px;left:7px;padding:4px 7px}
+  .cw-insp{bottom:10px}
+  .cw-foot{font-size:9px}
+}
+
+@media (max-width:480px){
+  .cw-chg{display:none}
+  .cw-live span{display:none}
+  .cw-live{padding:5px 7px}
+}
+
+/* Standalone route: /?charts=RELIANCE opens the workspace full-bleed. */
+body.chartsonly .tickerbar,body.chartsonly header,body.chartsonly footer,
+body.chartsonly .tabnav,body.chartsonly .mobnav{display:none}
+body.chartsonly main.wrap{max-width:none;padding:0}
+body.chartsonly .cw{height:100vh;border:0;border-radius:0}
