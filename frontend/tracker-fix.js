@@ -151,13 +151,13 @@
     try {
       var ctrl = new AbortController();
       var bail = setTimeout(function () { ctrl.abort(); }, 70000);
-      var r = await fetch(API + "/tracker/update?limit=2", { method: "POST", signal: ctrl.signal });
+      var r = await fetch(keyed(API + "/tracker/update?limit=2", true), { method: "POST", signal: ctrl.signal });
       clearTimeout(bail);
       var txt = await r.text();
       log("  status", r.status + " in " + (Date.now() - t0) + "ms");
       log("  body", txt.slice(0, 500));
       if (r.status === 401 || r.status === 503) {
-        log("  VERDICT", "the admin guard is closed \u2014 ADMIN_KEY is set on Render");
+        log("  VERDICT", "admin key rejected \u2014 wrong value, or ADMIN_KEY unset on Render");
       } else if (txt.indexOf("remaining") === -1) {
         log("  VERDICT", "no 'remaining' field \u2014 Render is still running the OLD tracker.py");
       }
@@ -194,11 +194,30 @@
   var BATCH = 6;
   var MAX_ROUNDS = 40;
 
-  async function post(url, ms) {
+  /* /tracker/update sits behind the admin guard, so it needs the key that
+     ADMIN_KEY holds on Render. The page already has withKey(), which prompts
+     once per session and caches the answer in memory — never hardcoded,
+     because this file is public. Reusing it means one prompt for the whole
+     site rather than a second one just for the Tracker.
+
+     /tracker/remove and /tracker/list are not guarded and must not ask. */
+  function keyed(url, needsKey) {
+    if (!needsKey) return url;
+    try { if (typeof withKey === "function") return withKey(url); } catch (e) {}
+    return url;
+  }
+
+  /* A key typed wrong would otherwise be cached for the rest of the session
+     and every retry would fail the same way with no explanation. */
+  function forgetKey() {
+    try { ADMIN_KEY = ""; } catch (e) {}
+  }
+
+  async function post(url, ms, needsKey) {
     var ctrl = new AbortController();
     var bail = setTimeout(function () { ctrl.abort(); }, ms || 45000);
     try {
-      var r = await fetch(API + url, { method: "POST", signal: ctrl.signal });
+      var r = await fetch(keyed(API + url, needsKey), { method: "POST", signal: ctrl.signal });
       var j = await r.json().catch(function () { return {}; });
       return { ok: r.ok, status: r.status, body: j };
     } finally { clearTimeout(bail); }
@@ -216,12 +235,17 @@
     try {
       while (rounds++ < MAX_ROUNDS) {
         b.textContent = "Marking\u2026 " + done;
-        var res = await post("/tracker/update?limit=" + BATCH);
+        var res = await post("/tracker/update?limit=" + BATCH, 60000, true);
 
         if (!res.ok) {
-          stop = res.status === 401 || res.status === 503
-            ? "Needs admin key"
-            : ((res.body && res.body.detail) || "Server refused").slice(0, 38);
+          if (res.status === 401) {
+            forgetKey();
+            stop = "Wrong admin key \u2014 try again";
+          } else if (res.status === 503) {
+            stop = "ADMIN_KEY not set on Render";
+          } else {
+            stop = ((res.body && res.body.detail) || "Server refused").slice(0, 38);
+          }
           break;
         }
         var j = res.body || {};
