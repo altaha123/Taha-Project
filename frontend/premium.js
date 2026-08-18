@@ -365,19 +365,46 @@
     ideas:     '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .9 1.6h5.4c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3Z"/>',
     live:      '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
     filings:   '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
-    portfolio: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
+    portfolio: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    more:      '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>'
   };
 
+  /* Five slots, and nine destinations to fit into them.
+     The desktop bar solves this with a More menu, but that menu lives inside
+     .tabnav — which this same stylesheet sets to display:none below 780px. The
+     result was that Tracker, Results, Options and Vocabulary did not exist at
+     all on a phone, which is where most of the traffic arrives. Filings moves
+     behind More; the menu itself is reused, so every handler already written
+     keeps working and nothing new needs wiring. */
   var MOB = [
     ['tab-screener',  'Screener',  'screener'],
     ['tab-ideas',     'Ideas',     'ideas'],
     ['tab-live',      'Live',      'live'],
-    ['tab-filings',   'Filings',   'filings'],
-    ['tab-portfolio', 'Portfolio', 'portfolio']
+    ['tab-portfolio', 'Portfolio', 'portfolio'],
+    ['tab-more',      'More',      'more']
   ];
+
+  /* Filings left the bottom bar to make room for More, so it has to appear
+     inside More — otherwise the fix that rescued four tabs would have stranded
+     a fifth. The entry is injected rather than written into index.html so this
+     stays a one-file change, and it is hidden on desktop where Filings already
+     has its own button in the bar. */
+  function moreMenuFilings() {
+    var menu = $('#moreMenu'), src = $('#tab-filings');
+    if (!menu || !src || menu.querySelector('[data-proxy="tab-filings"]')) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mobonly';
+    b.setAttribute('role', 'menuitem');
+    b.dataset.proxy = 'tab-filings';
+    b.textContent = 'Filings';
+    b.addEventListener('click', function () { src.click(); });
+    menu.insertBefore(b, menu.firstChild);
+  }
 
   function mobileNav() {
     if (!$('#tab-screener')) return;
+    moreMenuFilings();
 
     var bar = document.createElement('nav');
     bar.className = 'mobnav';
@@ -396,6 +423,7 @@
                     ICONS[m[2]] + '</svg><span>' + m[1] + '</span>';
       b.addEventListener('click', function () {
         src.click();
+        if (m[0] === 'tab-more') return;   // keep the page still; the menu is anchored
         window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
       });
       inner.appendChild(b);
