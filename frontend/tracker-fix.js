@@ -94,32 +94,72 @@
 
   /* ---- actions --------------------------------------------------------- */
 
+  /* Marking is roughly two seconds per symbol, because the fallback feed is a
+     network lookup per name. Asking for forty-two in one request takes over a
+     minute, and the browser gives up long before the server finishes — which
+     is why the first version of this button appeared to do nothing at all.
+     Small batches, looped, with the count on the button so it never looks
+     stalled. */
+  var BATCH = 6;
+  var MAX_ROUNDS = 40;
+
+  async function post(url, ms) {
+    var ctrl = new AbortController();
+    var bail = setTimeout(function () { ctrl.abort(); }, ms || 45000);
+    try {
+      var r = await fetch(API + url, { method: "POST", signal: ctrl.signal });
+      var j = await r.json().catch(function () { return {}; });
+      return { ok: r.ok, status: r.status, body: j };
+    } finally { clearTimeout(bail); }
+  }
+
+  var marking = false;
+
   async function refresh() {
+    if (marking) return;
+    marking = true;
     var b = $("tkrefresh");
     b.disabled = true;
-    b.textContent = "Marking\u2026";
+
+    var done = 0, rounds = 0, stop = "";
     try {
-      /* This is the call that was never being made. It fetches daily bars for
-         each unmarked row and computes return, index return, best, worst and
-         days held. Capped server-side, so a large list may need two presses —
-         the button says so rather than looking finished. */
-      var r = await fetch(API + "/tracker/update?limit=150", { method: "POST" });
-      var j = await r.json();
-      b.textContent = r.ok
-        ? "Marked " + (j.updated || 0)
-        : (j.detail || "Couldn't mark").slice(0, 40);
+      while (rounds++ < MAX_ROUNDS) {
+        b.textContent = "Marking\u2026 " + done;
+        var res = await post("/tracker/update?limit=" + BATCH);
+
+        if (!res.ok) {
+          stop = res.status === 401 || res.status === 503
+            ? "Needs admin key"
+            : ((res.body && res.body.detail) || "Server refused").slice(0, 38);
+          break;
+        }
+        var j = res.body || {};
+
+        /* An older backend has no "remaining" field. Falling back to a single
+           pass there is correct: it means tracker.py was not updated, and
+           looping would just repeat the same batch for ever. */
+        if (j.remaining === undefined) { done = j.updated || 0; stop = "old backend"; break; }
+
+        done = j.marked != null ? j.marked : done + (j.updated || 0);
+        if (!j.remaining) break;
+        if (!j.updated) { stop = "stalled at " + j.remaining; break; }
+        await render();                       // show progress as it lands
+      }
+      b.textContent = stop ? stop : "Marked " + done;
       await render();
     } catch (e) {
-      b.textContent = "Engine unreachable";
+      b.textContent = (e && e.name === "AbortError")
+        ? "Timed out \u2014 press again" : "Engine unreachable";
     }
-    setTimeout(function () { b.disabled = false; b.textContent = "Refresh prices"; }, 2600);
+    marking = false;
+    setTimeout(function () { b.disabled = false; b.textContent = "Refresh prices"; }, 3200);
   }
 
   async function remove(id, el) {
     el.disabled = true;
     el.textContent = "Removing";
     try {
-      await fetch(API + "/tracker/remove?id=" + encodeURIComponent(id), { method: "POST" });
+      await post("/tracker/remove?id=" + encodeURIComponent(id), 15000);
       var card = el.closest(".tk");
       if (card) { card.style.transition = "opacity 200ms"; card.style.opacity = "0"; }
       setTimeout(render, 220);
@@ -142,7 +182,7 @@
       b.disabled = true;
       for (var i = 0; i < auto.length; i++) {
         b.textContent = "Removing " + (i + 1) + "/" + auto.length;
-        await fetch(API + "/tracker/remove?id=" + encodeURIComponent(auto[i].id), { method: "POST" });
+        await post("/tracker/remove?id=" + encodeURIComponent(auto[i].id), 15000);
       }
       b.textContent = "Removed " + auto.length;
       await render();
