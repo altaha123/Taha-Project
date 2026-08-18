@@ -78,7 +78,8 @@
     bar.innerHTML =
       '<button class="act solid" id="tkrefresh" type="button">Refresh prices</button>' +
       '<button class="act" id="tkmine" type="button">My picks only</button>' +
-      '<button class="act" id="tkclearauto" type="button">Clear auto-recorded</button>';
+      '<button class="act" id="tkclearauto" type="button">Clear auto-recorded</button>' +
+      '<button class="act" id="tkdiag" type="button">Diagnose</button>';
     var anchor = $("tkstats");
     host.insertBefore(bar, anchor);
 
@@ -90,6 +91,96 @@
       render();
     });
     $("tkclearauto").addEventListener("click", clearAuto);
+    $("tkdiag").addEventListener("click", diagnose);
+  }
+
+  /* ---- diagnostics -----------------------------------------------------
+     When marking produces nothing there are six places it can be failing and
+     no way to tell them apart from the outside: the backend may be the old
+     build, the admin guard may be closed, both price feeds may be refusing
+     the symbol, the request may be timing out, or the rows may be getting
+     wiped between the write and the read. This runs one small batch and puts
+     the raw answer on the page. */
+
+  async function diagnose() {
+    var b = $("tkdiag");
+    b.disabled = true; b.textContent = "Checking\u2026";
+    var box = $("tkdiagout");
+    if (!box) {
+      box = document.createElement("pre");
+      box.id = "tkdiagout";
+      box.style.cssText = "white-space:pre-wrap;word-break:break-word;font-family:var(--mono);" +
+        "font-size:11px;line-height:1.7;background:var(--paper-2);border:1px solid var(--rule);" +
+        "border-radius:9px;padding:14px 16px;margin:0 0 16px;max-height:420px;overflow:auto;color:var(--ink-2)";
+      $("view-tracker").insertBefore(box, $("tkstats"));
+    }
+    var out = [];
+    function log(k, v) { out.push(k + ": " + v); box.textContent = out.join("\n"); }
+
+    log("api", API);
+    log("time", new Date().toISOString());
+
+    async function get(path) {
+      var t0 = Date.now();
+      try {
+        var r = await fetch(API + path);
+        var txt = await r.text();
+        return { ok: r.ok, status: r.status, ms: Date.now() - t0, txt: txt };
+      } catch (e) {
+        return { ok: false, status: 0, ms: Date.now() - t0, txt: String(e && e.message || e) };
+      }
+    }
+
+    var ds = await get("/datasource");
+    log("GET /datasource", ds.status + " in " + ds.ms + "ms");
+    log("  ", ds.txt.slice(0, 420));
+
+    var stt = await get("/tracker/stats");
+    log("GET /tracker/stats", stt.status + " in " + stt.ms + "ms");
+    try {
+      var sj = JSON.parse(stt.txt);
+      log("  total_tracked", sj.total_tracked);
+      log("  unmarked", sj.unmarked === undefined ? "FIELD MISSING -> backend is the OLD tracker.py" : sj.unmarked);
+      log("  mark_errors", sj.mark_errors === undefined ? "n/a" : sj.mark_errors);
+      log("  autotrack", sj.autotrack === undefined ? "n/a" : sj.autotrack);
+      log("  ephemeral_storage", sj.storage_is_ephemeral);
+    } catch (e) { log("  parse failed", stt.txt.slice(0, 200)); }
+
+    log("POST /tracker/update?limit=2", "running, please wait\u2026");
+    var t0 = Date.now();
+    try {
+      var ctrl = new AbortController();
+      var bail = setTimeout(function () { ctrl.abort(); }, 70000);
+      var r = await fetch(API + "/tracker/update?limit=2", { method: "POST", signal: ctrl.signal });
+      clearTimeout(bail);
+      var txt = await r.text();
+      log("  status", r.status + " in " + (Date.now() - t0) + "ms");
+      log("  body", txt.slice(0, 500));
+      if (r.status === 401 || r.status === 503) {
+        log("  VERDICT", "the admin guard is closed \u2014 ADMIN_KEY is set on Render");
+      } else if (txt.indexOf("remaining") === -1) {
+        log("  VERDICT", "no 'remaining' field \u2014 Render is still running the OLD tracker.py");
+      }
+    } catch (e) {
+      log("  FAILED after", (Date.now() - t0) + "ms \u2014 " +
+          (e && e.name === "AbortError" ? "timed out" : String(e && e.message || e)));
+      log("  VERDICT", "the request never completed \u2014 the price feed is hanging on Render");
+    }
+
+    var lst = await get("/tracker/list?limit=3");
+    log("GET /tracker/list", lst.status + " in " + lst.ms + "ms");
+    try {
+      var lj = JSON.parse(lst.txt), row = (lj.rows || [])[0] || {};
+      log("  first row", JSON.stringify({
+        symbol: row.symbol, added_on: row.added_on, added_price: row.added_price,
+        last_price: row.last_price, return_pct: row.return_pct,
+        updated_on: row.updated_on, mark_error: row.mark_error, source: row.source
+      }));
+    } catch (e) { log("  parse failed", lst.txt.slice(0, 200)); }
+
+    log("", "\n\u2014 send this whole block as a screenshot or copy-paste \u2014");
+    b.disabled = false; b.textContent = "Diagnose";
+    await render();
   }
 
   /* ---- actions --------------------------------------------------------- */
