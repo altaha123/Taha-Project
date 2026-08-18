@@ -606,6 +606,12 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 .mobnav button svg { width: 19px; height: 19px; stroke-width: 1.6; }
 .mobnav button.on { color: var(--ink); background: var(--paper-2); }
 
+/* Injected by premium.js for the mobile More sheet; Filings keeps its own
+   button in the desktop bar, so this duplicate stays hidden there. Declared
+   before the media query, or the two would tie on specificity and source
+   order would hide it on phones too. */
+.moreMenu .mobonly { display: none; }
+
 @media (max-width: 780px) {
   .mobnav { display: block; }
   body { padding-bottom: 64px; }
@@ -614,8 +620,31 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   .searchrow { padding-left: 16px; }
   .verdict { padding: 22px 18px; }
   .hero-candles { height: 140px; }
-  /* Drawing tools are unusable on touch — hide rather than frustrate */
+  /* The Screener's inline drawing strip stays hidden on touch — its targets
+     are 24px. The Charts tab has its own 40px rail and is the place to draw
+     on a phone. */
   .drawbar .seg.mono, .drawbar #dclear, .drawbar .dlbl { display: none; }
+
+  /* ── The More menu, on a phone ───────────────────────────────────────────
+     placeMore() positions this menu from the rect of #tab-more, which lives
+     inside .tabnav — hidden at this width, so the rect is all zeros and the
+     menu lands in the top-left corner. Rather than reach into that function,
+     the menu becomes a bottom sheet here and the inline coordinates are
+     overridden outright. It sits above the tab bar because it is opened from
+     it. */
+  .moreMenu {
+    left: 10px !important; right: 10px !important;
+    top: auto !important;
+    bottom: calc(74px + env(safe-area-inset-bottom)) !important;
+    width: auto; min-width: 0; z-index: 90;
+    transform-origin: bottom center;
+    border-radius: 14px; padding: 8px;
+    box-shadow: var(--sh-3, 0 20px 48px rgba(0,0,0,.28));
+  }
+  .moreMenu:not(.open) { transform: translateY(8px) scale(.98); }
+  .moreMenu button { padding: 15px 16px; font-size: 12px; letter-spacing: .12em; }
+  .moreMenu .mobonly { display: block; }
+  .moreMenu .sep { margin: 6px 0; }
 }
 
 /* ── 16. SCROLLBAR ─────────────────────────────────────────────────────── */
