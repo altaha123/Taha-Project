@@ -87,15 +87,44 @@ def quarterly_results(qfin: pd.DataFrame, name: str, sym: str) -> dict:
     def latest_v(s):
         return s[0]["value_cr"] if s and s[0]["value_cr"] is not None else None
 
+    def _period_parts(label):
+        """
+        Split a period label like 'Q2 FY26' into ('Q2', 26).
+
+        BUGFIX: this used to be inline as int(label.split("FY")[1]), which
+        threw IndexError on any label without 'FY' and ValueError on anything
+        non-numeric after it ('FY26-27', 'FY 26', 'Q1 CY2026'). One oddly
+        formatted filing took the whole results endpoint down. Now an
+        unparseable label just returns None and that row is skipped.
+        """
+        try:
+            if not label or "FY" not in label:
+                return None, None
+            quarter = label.split()[0]
+            tail = label.split("FY")[1].strip()
+            digits = ""
+            for ch in tail:
+                if ch.isdigit():
+                    digits += ch
+                else:
+                    break
+            if not digits:
+                return None, None
+            return quarter, int(digits)
+        except Exception:
+            return None, None
+
     def find_yoy(s):
         """Same fiscal quarter, previous year — matched by label, not position."""
         if not s:
             return None
-        want_q = s[0]["period"].split()[0]
-        want_fy = int(s[0]["period"].split("FY")[1])
+        want_q, want_fy = _period_parts(s[0].get("period"))
+        if want_q is None or want_fy is None:
+            return None
         for item in s[1:]:
-            q = item["period"].split()[0]
-            fy = int(item["period"].split("FY")[1])
+            q, fy = _period_parts(item.get("period"))
+            if q is None or fy is None:
+                continue
             if q == want_q and fy == want_fy - 1:
                 return item["value_cr"]
         return None
