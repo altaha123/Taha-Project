@@ -716,6 +716,26 @@ def chart(ticker: str, range: str = "1D"):
         raise HTTPException(500, "Chart data could not be assembled for this symbol.")
 
     first, last = float(close.iloc[0]), float(close.iloc[-1])
+
+    # Support and resistance zones.
+    #
+    # compute_levels() was already being called by /analyse, but /chart — the
+    # endpoint the charting workspace actually uses — never returned it. The
+    # levels existed and were simply never sent to the chart that wanted them.
+    #
+    # Always computed from DAILY history, never from the displayed timeframe.
+    # A support zone is a property of the stock, not of the candle size you
+    # happen to be looking at: levels derived from 5-minute bars would move
+    # every time you switched timeframe, which is exactly what makes a level
+    # untrustworthy.
+    lv = None
+    try:
+        _, _, daily = resolve(base)
+        if daily is not None and len(daily) >= 60:
+            lv = compute_levels(daily)
+    except Exception:
+        lv = None
+
     return to_native({
         "ticker": base, "range": key, "label": cfg["label"],
         "live": live, "source": "dhan" if live else "daily feed",
@@ -724,6 +744,7 @@ def chart(ticker: str, range: str = "1D"):
         "change": round(last - first, 2),
         "change_pct": round(100 * (last - first) / first, 2) if first else None,
         "as_of": str(df.index[-1])[:19] if len(df) else None,
+        "levels": lv,
     })
 
 
