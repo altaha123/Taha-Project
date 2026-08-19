@@ -1418,6 +1418,60 @@
     }
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
-  else mount();
+  /* ── Mount self-check ──────────────────────────────────────────────────
+     mount() bails early if it cannot find `main.wrap` or `.tabs`. When that
+     happens the entire charting workspace — every drawing tool, the Fib, the
+     risk/reward box, the live feed — becomes unreachable, with no error and
+     no visible symptom. The page simply looks like it never had a chart.
+
+     This runs after mount and says so out loud. If the tab is missing it
+     builds a fallback entry point rather than leaving the workspace stranded. */
+  function selfCheck() {
+    var view = document.getElementById("view-charts");
+    var tab = document.getElementById("tab-charts");
+
+    if (view && tab) {
+      console.info("[altaha-charts] ready — Charts tab mounted.");
+      return;
+    }
+
+    console.warn("[altaha-charts] mount incomplete:",
+      { view: !!view, tab: !!tab,
+        mainWrap: !!document.querySelector("main.wrap"),
+        tabsBar: !!document.querySelector(".tabs"),
+        tabLive: !!document.getElementById("tab-live") });
+
+    /* No view at all means mount() never ran. Nothing safe to do from here —
+       the container it needs does not exist. */
+    if (!view) {
+      console.error("[altaha-charts] view-charts was never created. mount() " +
+                    "returned early, most likely because 'main.wrap' is absent.");
+      return;
+    }
+
+    /* View exists but no tab: build one so the workspace is reachable. */
+    if (!tab) {
+      var nav = document.querySelector(".tabs");
+      if (!nav) {
+        console.error("[altaha-charts] no .tabs bar found — cannot add a tab. " +
+                      "Use ?charts=RELIANCE to open the workspace directly.");
+        return;
+      }
+      var b = document.createElement("button");
+      b.className = "tab"; b.id = "tab-charts"; b.type = "button";
+      b.setAttribute("role", "tab"); b.setAttribute("aria-selected", "false");
+      b.textContent = "Charts";
+      nav.appendChild(b);
+      b.addEventListener("click", showCharts);
+      console.info("[altaha-charts] fallback Charts tab created.");
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      mount(); setTimeout(selfCheck, 400);
+    });
+  } else {
+    mount(); setTimeout(selfCheck, 400);
+  }
 })();
