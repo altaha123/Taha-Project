@@ -46,9 +46,20 @@ def build_report(rows: list, scan_payload: dict | None) -> dict:
         s["value"] = round(s["value"], 2)
 
     # Weighted portfolio score
+    #
+    # BUGFIX: this used to divide by sum(value) without checking it. A book
+    # holding only zero-value rows — a fully-sold position left in the sheet,
+    # a cash line, offsetting entries — made that sum zero and crashed the
+    # whole report. Now a zero base falls back to a simple average, which is
+    # the honest answer when weights carry no information.
     scored = [r for r in ok if r.get("composite") is not None]
-    wscore = round(sum(r["composite"] * r["value"] for r in scored) /
-                   sum(r["value"] for r in scored)) if scored else None
+    scored_value = sum(r["value"] for r in scored)
+    if not scored:
+        wscore = None
+    elif scored_value > 0:
+        wscore = round(sum(r["composite"] * r["value"] for r in scored) / scored_value)
+    else:
+        wscore = round(sum(r["composite"] for r in scored) / len(scored))
 
     if wscore is None:
         grade = "—"
