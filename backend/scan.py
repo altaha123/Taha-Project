@@ -41,6 +41,14 @@ except Exception:
 from engine import technical_score, fundamental_score, composite
 import archetypes as A
 
+# The point-in-time ledger. Optional import: if pit_store.py isn't present
+# the scan still runs exactly as before, it just records nothing.
+try:
+    import pit_store
+    pit_store.init_db()
+except Exception:
+    pit_store = None
+
 OUT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaderboard.json")
 
 # ---------------------------------------------------------------------------
@@ -50,6 +58,21 @@ CHUNK = 40                 # symbols per bulk price request
 # Candidates that get full fundamental analysis. Overridable so a 512 MB
 # Render instance can be told to go lighter: set SCAN_DEPTH=120 in the env.
 PHASE2_SIZE = int(os.environ.get("SCAN_DEPTH", "200") or 200)
+
+# CONTROL COHORT — the most important line in this file for research purposes.
+#
+# Phase 2 used to analyse only the top names by technical score. That meant
+# fundamentals were ONLY ever observed for stocks that already had strong
+# price momentum. The recorded data was therefore conditioned on momentum,
+# and no honest question like "does high ROCE predict returns?" could ever
+# be answered from it — there was no comparison group.
+#
+# This reserves a slice of Phase 2 for names drawn at RANDOM from everything
+# that cleared the liquidity floor, stratified so no sector or size band is
+# systematically unobserved. Those names are the control group. They cost
+# about 25% more scan time and they are what makes every future factor
+# statistic meaningful rather than decorative.
+CONTROL_PCT = float(os.environ.get("SCAN_CONTROL_PCT", "0.25") or 0.25)
 PHASE2_WORKERS = 3         # polite concurrency for per-stock fundamentals
 MIN_ROWS = 120             # minimum trading days of history
 MIN_TURNOVER = 2e7         # legacy constant, retained for the payload label
@@ -225,7 +248,15 @@ def phase1(symbols, progress, state):
 # Phase 2 — fundamentals + archetypes for the strongest candidates
 # ---------------------------------------------------------------------------
 
-def deep_score(cand):
+def deep_score(cand, selection="ranked"):
+    """
+    Full analysis of one candidate.
+
+    `selection` records WHY this stock reached Phase 2 — "ranked" (it scored
+    highly on technicals) or "control" (it was drawn at random). Research done
+    later must be able to tell these apart, or it will mistake the sampling
+    design for a finding.
+    """
     time.sleep(random.uniform(0.15, 0.5))
     s = cand["symbol"]
     t = yf.Ticker(f"{s}.NS")
@@ -250,10 +281,26 @@ def deep_score(cand):
         fin, bs, cf = t.financials, t.balance_sheet, t.cashflow
         info = dict(t.info or {})
     except Exception:
-        return None
-    fund = fundamental_score(fin, bs, cf, info)
-    if fund["score"] is None:
-        return None
+        fin = bs = cf = None
+        info = {}
+    try:
+        fund = fundamental_score(fin, bs, cf, info)
+    except Exception:
+        fund = {"score": None, "f_score": None}
+
+    # BUGFIX (silent deletion): this used to be
+    #     if fund["score"] is None: return None
+    # A stock whose statements failed to download simply vanished — no row, no
+    # reason, no record. That quietly biased the whole system toward large,
+    # well-covered companies, because those are the ones Yahoo has data for.
+    #
+    # Now the row survives with fundamental = None and an explicit quality
+    # status. It is excluded from RANKING (you cannot rank on a score that
+    # doesn't exist) but it IS recorded, so the gap is visible and countable
+    # instead of invisible.
+    fund_missing = fund.get("score") is None
+    quality = "MISSING" if fund_missing else "VALID"
+
     v = composite(tech, fund)
     try:
         setup = A.evaluate(tech, fund)
@@ -270,19 +317,137 @@ def deep_score(cand):
         "name": info.get("longName") or info.get("shortName") or s,
         "price": tech["price"],
         "composite": v["score"], "label": v["label"], "tone": v["tone"],
-        "technical": tech["score"], "fundamental": fund["score"],
-        "f_score": fund["f_score"],
+        "technical": tech["score"], "fundamental": fund.get("score"),
+        "f_score": fund.get("f_score"),
         "sector": info.get("sector"),
         "setup": (setup or {}).get("name"), "setup_key": (setup or {}).get("key"),
         "setup_fit": (setup or {}).get("fit"), "horizon": (setup or {}).get("horizon"),
         "avg_turnover_cr": round(cand["turnover"] / 1e7, 1),
+        # --- research metadata: never shown in the UI, essential for analysis
+        "selection": selection,              # "ranked" or "control"
+        "fundamental_quality": quality,      # "VALID" or "MISSING"
+        "rankable": not fund_missing,        # excluded from the leaderboard if False
     }
+
+
+def pick_phase2_cohort(candidates, n_total, control_pct=CONTROL_PCT):
+    """
+    Choose which names get expensive Phase-2 analysis.
+
+    Returns (cohort, n_ranked, n_control) where cohort is a list of
+    (candidate, selection_label) pairs.
+
+    Two groups:
+      RANKED  — the strongest names by technical score. These are the ideas.
+      CONTROL — drawn at random from everyone else that cleared liquidity,
+                stratified across turnover deciles so small, mid and large
+                names are all represented. These are the comparison group.
+
+    Without the control group, every "this factor predicts returns" claim the
+    system ever makes is measured only on stocks that already had momentum,
+    and there is no way to detect that from inside the numbers.
+    """
+    if not candidates:
+        return [], 0, 0
+
+    n_total = min(n_total, len(candidates))
+    n_control = int(n_total * control_pct)
+    n_ranked = n_total - n_control
+
+    ranked = candidates[:n_ranked]
+    ranked_syms = {c["symbol"] for c in ranked}
+    pool = [c for c in candidates if c["symbol"] not in ranked_syms]
+
+    control = []
+    if n_control and pool:
+        # Stratify by turnover so the control group isn't accidentally all
+        # micro-caps (which is what an unstratified random draw would give,
+        # because most of the universe is small).
+        by_turnover = sorted(pool, key=lambda c: c["turnover"])
+        n_strata = min(10, len(by_turnover))
+        stratum_size = max(1, len(by_turnover) // n_strata)
+        per_stratum = max(1, n_control // n_strata)
+
+        rng = random.Random()          # unseeded: a fresh draw every scan
+        for i in range(n_strata):
+            lo = i * stratum_size
+            hi = len(by_turnover) if i == n_strata - 1 else (i + 1) * stratum_size
+            stratum = by_turnover[lo:hi]
+            if not stratum:
+                continue
+            take = min(per_stratum, len(stratum), n_control - len(control))
+            if take <= 0:
+                break
+            control.extend(rng.sample(stratum, take))
+
+        # Top up from anything left if rounding left us short.
+        if len(control) < n_control:
+            chosen = {c["symbol"] for c in control}
+            rest = [c for c in pool if c["symbol"] not in chosen]
+            if rest:
+                rng.shuffle(rest)
+                control.extend(rest[:n_control - len(control)])
+
+    cohort = ([(c, "ranked") for c in ranked] +
+              [(c, "control") for c in control])
+    return cohort, len(ranked), len(control)
+
+
+def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
+    """
+    Write an immutable dated snapshot of this scan to the point-in-time store.
+
+    This is the scan's real long-term output. The leaderboard is what you look
+    at today; this is what lets you ask, in eighteen months, "what did Altaha
+    actually know on 19 August 2026, and was it right?"
+
+    Deliberately wrapped in a broad try/except: recording must never be able
+    to break a scan that otherwise succeeded.
+    """
+    if pit_store is None or not rows:
+        return
+    try:
+        run_id = pit_store.start_run(
+            universe_size=universe_all,
+            regime=regime,
+            notes=(f"candidates={n_candidates} illiquid={ill} nodata={nod} "
+                   f"scored={len(rows)}"),
+        )
+        records = {}
+        for r in rows:
+            records[r["symbol"]] = {
+                "composite": r.get("composite"),
+                "technical": r.get("technical"),
+                "fundamental": r.get("fundamental"),
+                "f_score": r.get("f_score"),
+                "price": r.get("price"),
+                "avg_turnover_cr": r.get("avg_turnover_cr"),
+                "sector": r.get("sector"),
+                "setup_key": r.get("setup_key"),
+                "setup_fit": r.get("setup_fit"),
+                "horizon": r.get("horizon"),
+                "selection": r.get("selection"),
+                "fundamental_quality": r.get("fundamental_quality"),
+                "label": r.get("label"),
+            }
+        pit_store.snapshot_many(records, run_id=run_id)
+    except Exception:
+        pass
 
 
 def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
                    ill, nod, n_deep, failed, partial=False):
-    rows = sorted(rows, key=lambda r: (r["composite"], r["fundamental"],
-                                       r["technical"]), reverse=True)
+    # Rows whose fundamentals failed to load are recorded but must not be
+    # ranked — a composite built from technicals alone is not comparable with
+    # one built from both. They stay visible in the counts below.
+    all_rows = list(rows)
+    rankable = [r for r in all_rows if r.get("rankable", True)]
+    n_missing_fund = len(all_rows) - len(rankable)
+    n_control = sum(1 for r in all_rows if r.get("selection") == "control")
+
+    rows = sorted(rankable, key=lambda r: (r["composite"] or 0,
+                                           r["fundamental"] or 0,
+                                           r["technical"] or 0), reverse=True)
     return {
         "scanned_at": dt.datetime.now().strftime("%d %b %Y, %H:%M")
                       + (" (partial — scan in progress)" if partial else ""),
@@ -296,6 +461,8 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
         "skipped_no_data": nod,
         "phase2_analysed": n_deep,
         "scored": len(rows),
+        "control_cohort": n_control,
+        "missing_fundamentals": n_missing_fund,
         "methodology": ("Phase 1: full universe bulk-scanned for liquidity and technicals. "
                         "Phase 2: top candidates receive full fundamental analysis "
                         "(Piotroski, adapted G-Score, ROCE, shareholding) and setup "
@@ -307,11 +474,26 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
 
 
 def _dump(payload):
+    """
+    Atomic write — same reasoning as tracker._save().
+
+    A scan checkpoints roughly every 15 stocks. With a plain open(..., "w")
+    every one of those was a window in which a crash left leaderboard.json
+    truncated and unparseable, destroying a scan that had otherwise finished.
+    """
+    tmp = f"{OUT_FILE}.{os.getpid()}.tmp"
     try:
-        with open(OUT_FILE, "w") as f:
+        with open(tmp, "w") as f:
             json.dump(payload, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, OUT_FILE)
     except Exception:
-        pass
+        try:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        except Exception:
+            pass
 
 
 def run_scan(progress=None, names=None, checkpoint=None):
@@ -338,7 +520,12 @@ def run_scan(progress=None, names=None, checkpoint=None):
 
     cands, ill, nod = phase1(symbols, progress, state)
     ill += prefiltered
-    deep = cands[:n2]
+
+    # Was: deep = cands[:n2] — top N by technical score only.
+    # Now: ranked names PLUS a stratified random control group, so the data
+    # this scan records can actually be analysed later. See pick_phase2_cohort.
+    cohort, n_ranked, n_control_planned = pick_phase2_cohort(cands, n2)
+    deep = cohort
     state["total"] = len(symbols) + len(deep)      # exact now that we know
 
     n_candidates = len(cands)
@@ -353,6 +540,9 @@ def run_scan(progress=None, names=None, checkpoint=None):
                             n_candidates, ill, nod, len(deep), list(failed),
                             partial=not final)
         _dump(cp)
+        if final:
+            # Immutable record of what this scan knew, written once at the end.
+            _record_to_pit(list(rows), universe_all, n_candidates, ill, nod)
         if checkpoint:
             try:
                 checkpoint(cp)
@@ -362,7 +552,8 @@ def run_scan(progress=None, names=None, checkpoint=None):
 
     try:
         with ThreadPoolExecutor(max_workers=PHASE2_WORKERS) as pool:
-            futures = {pool.submit(deep_score, c): c["symbol"] for c in deep}
+            futures = {pool.submit(deep_score, c, sel): c["symbol"]
+                       for c, sel in deep}
             for fut in as_completed(futures):
                 sym = futures[fut]
                 try:
@@ -398,6 +589,8 @@ def main():
           f"fully scored {p['scored']}.")
     print(f"Excluded: {p['skipped_illiquid']} below the liquidity floor, "
           f"{p['skipped_no_data']} with insufficient price data.")
+    print(f"Research: {p.get('control_cohort', 0)} control-cohort names recorded, "
+          f"{p.get('missing_fundamentals', 0)} recorded with fundamentals missing.")
     print("\nTop 10 by composite:")
     for r in p["rankings"][:10]:
         print(f"  {r['composite']:>3}  {r['symbol']:<14} {r['setup'] or '—'}")
