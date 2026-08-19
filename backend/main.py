@@ -9,7 +9,7 @@ import threading
 import time
 
 from fastapi import FastAPI, HTTPException, Body, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
@@ -29,6 +29,13 @@ import tracker
 from results import quarterly_results
 from levels import compute_levels
 from tradeplan import build_plan
+
+# Live price relay. Optional: if livefeed.py is absent the chart falls back
+# to its existing 3-second polling and nothing else changes.
+try:
+    import livefeed
+except Exception:
+    livefeed = None
 from portfolio import build_report, MAX_HOLDINGS, WORKERS as PF_WORKERS
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import archetypes as A
@@ -1037,3 +1044,36 @@ def cron_tick():
 
 
 _autostart_intraday()
+
+
+# ---------------------------------------------------------------------------
+# Live price stream
+# ---------------------------------------------------------------------------
+# charts.js already opens EventSource("/stream/quotes?tickers=SYM") and falls
+# back to polling when it 404s. This is the endpoint it was always looking for.
+#
+# The browser never receives a Dhan token — it talks only to this server, and
+# this server holds one shared WebSocket to Dhan on behalf of every visitor.
+
+@app.get("/stream/quotes")
+def stream_quotes(tickers: str = ""):
+    """Server-Sent Events price stream. One shared Dhan connection behind it."""
+    if livefeed is None:
+        raise HTTPException(503, "Live feed module not available")
+    return StreamingResponse(
+        livefeed.sse_quotes(tickers),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",   # stops proxies buffering the stream
+        },
+    )
+
+
+@app.get("/stream/status")
+def stream_status():
+    """Diagnostics: is the feed on the WebSocket, on REST, or idle?"""
+    if livefeed is None:
+        return {"mode": "unavailable", "detail": "livefeed module not loaded"}
+    return livefeed.FEED.status()
