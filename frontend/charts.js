@@ -996,6 +996,65 @@
       if (r) { try { W.sub.timeScale().setVisibleLogicalRange(r); } catch (e) {} }
     }
 
+    /* ── Support & resistance ──────────────────────────────────────────────
+       The backend clusters a year of swing highs and lows into zones and
+       scores each on touches, recency, volume at the reversal, and whether
+       the zone has flipped role. Those scores arrive as `strength` 0-100.
+
+       Drawn as native price lines rather than canvas overlays so they sit in
+       the price scale, survive zoom and pan, and cannot drift out of
+       alignment with the candles the way a hand-painted overlay would.
+
+       Line weight follows strength: a zone touched six times over a year is
+       drawn heavier than one touched twice. Reading the chart should tell you
+       which level matters without opening a panel. */
+
+    function clearLevels() {
+      (W.levelLines || []).forEach(function (ln) {
+        try { W.cs.removePriceLine(ln); } catch (e) {}
+      });
+      W.levelLines = [];
+    }
+
+    function drawLevels(lv) {
+      clearLevels();
+      if (!lv || !W.cs) { W.levels = null; return; }
+      W.levels = lv;
+      if (W.hideLevels) return;
+
+      var sup = tok("--good", "#1f5d45");
+      var res = tok("--bad", "#8e2f2a");
+
+      function add(z, colour, tag) {
+        if (!z || z.level == null) return;
+        var s = Math.max(0, Math.min(100, z.strength == null ? 50 : z.strength));
+        var width = s >= 70 ? 2 : 1;
+        /* Weak zones dashed — a level the evidence barely supports should not
+           look as solid as one that has held six times. */
+        var style = s >= 55 ? 0 : 2;   // 0 solid, 2 dashed
+        try {
+          W.levelLines.push(W.cs.createPriceLine({
+            price: z.level,
+            color: colour,
+            lineWidth: width,
+            lineStyle: style,
+            axisLabelVisible: true,
+            title: tag + " " + Math.round(s) +
+                   (z.touches ? " · " + z.touches + "t" : ""),
+          }));
+        } catch (e) {}
+      }
+
+      (lv.supports || []).slice(0, 3).forEach(function (z) { add(z, sup, "S"); });
+      (lv.resistances || []).slice(0, 3).forEach(function (z) { add(z, res, "R"); });
+    }
+
+    function toggleLevels() {
+      W.hideLevels = !W.hideLevels;
+      if (W.hideLevels) clearLevels(); else drawLevels(W.levels);
+      return !W.hideLevels;
+    }
+
     function setPrice(px, prev) {
       if (px == null) { pxEl.textContent = "—"; return; }
       pxEl.textContent = "₹" + fmt(px);
@@ -1059,6 +1118,7 @@
           return { time: r.time, value: r.volume, color: c };
         }));
         indicators();
+        drawLevels(d.levels);
         W.chart.timeScale().fitContent();
         msg("");
         setPrice(d.last, null);
