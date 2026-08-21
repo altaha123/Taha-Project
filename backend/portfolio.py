@@ -28,6 +28,8 @@ sell. Sector context comes from measured index returns over stated windows and
 says which window. Peer context comes from the last universe scan and says so.
 """
 
+import advice
+
 MAX_HOLDINGS = 50            # raised from 20; prices are now fetched in one batch
 WORKERS = 4
 
@@ -158,7 +160,8 @@ def _shares_to_cap(row: dict, cap_pct: float, total_value: float) -> dict | None
 
 def build_report(rows: list, scan_payload: dict | None,
                  policy: dict | None = None,
-                 sector_momentum: dict | None = None) -> dict:
+                 sector_momentum: dict | None = None,
+                 news_by_symbol: dict | None = None) -> dict:
     """rows: per-holding dicts already scored. Assembles the portfolio view."""
     pol = clean_policy(policy)
 
@@ -412,8 +415,35 @@ def build_report(rows: list, scan_payload: dict | None,
         r["peers"] = [{"symbol": p["symbol"], "composite": p.get("composite"),
                        "setup": p.get("setup")} for p in pool[:3]]
 
+    # ── Per-holding action ────────────────────────────────────────────────
+    #
+    # Every input the call rests on is already computed above: the score, the
+    # weight, the sector's state against the index, the drawdown. This joins
+    # them, adds the filing feed, and asks advice.py for a verdict.
+    held = {r["symbol"] for r in ok}
+    news_map = news_by_symbol or {}
+    sector_by_name = {s["sector"]: s for s in sector_rows}
+
+    for r in ok:
+        sec = sector_by_name.get(r.get("sector") or "Unclassified", {})
+        alts = advice.find_alternatives(r, scan_rows, held)
+        r["advice"] = advice.evaluate(
+            r, total_value,
+            sec.get("state"),
+            (sec.get("relative") or {}).get("3M"),
+            news_map.get(r["symbol"]),
+            alts)
+
+    action_rank = {a: i for i, a in enumerate(advice.ACTION_ORDER)}
+    ordered = sorted(ok, key=lambda r: (
+        action_rank.get((r.get("advice") or {}).get("action"), 9),
+        -r["weight_pct"]))
+
+    summary = advice.summarise(ok, total_value, wscore, sector_rows)
+
     return {
-        "holdings": sorted(ok, key=lambda r: -r["weight_pct"]),
+        "summary": summary,
+        "holdings": ordered,
         "failed": [{"symbol": r["symbol"], "error": r["error"]} for r in failed],
         "total_value": round(total_value, 2),
         "total_cost": round(total_cost, 2) if has_cost else None,
