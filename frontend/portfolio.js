@@ -233,22 +233,12 @@
     try { localStorage.setItem(POLICY_KEY, JSON.stringify(p)); } catch (e) {}
   }
 
-  var POLICY_FIELDS = [
-    ['max_stock_pct', 'Max in one stock', '%', 15],
-    ['max_sector_pct', 'Max in one sector', '%', 35],
-    ['min_composite', 'Minimum score', '/100', 45],
-    ['review_drawdown', 'Review if down', '%', 25],
-    ['min_holdings', 'Minimum holdings', 'names', 8]
-  ];
-
+  /* The rulebook is no longer a form the user fills in before getting value.
+     The backend applies sensible guardrails silently; this stays only so a
+     future settings drawer has somewhere to write to. */
   function currentPolicy() {
-    var p = {};
-    POLICY_FIELDS.forEach(function (f) {
-      var node = $('pol_' + f[0]);
-      var v = node ? Number(node.value) : NaN;
-      p[f[0]] = isFinite(v) && node.value !== '' ? v : f[3];
-    });
-    return p;
+    var saved = readPolicy();
+    return saved || {};
   }
 
   /* ── 3. HOLDINGS EDITOR ─────────────────────────────────────────────────── */
@@ -551,7 +541,6 @@
 
     setBusy(true, progressBar(0, holdings.length));
     var policy = currentPolicy();
-    writePolicy(policy);
 
     fetch(API + '/portfolio/start', {
       method: 'POST',
@@ -842,20 +831,39 @@
 
   /* ── 8. RENDER ──────────────────────────────────────────────────────────── */
 
+  var ACTION_META = {
+    EXIT:   { label: 'Exit',   cls: 'exit' },
+    REDUCE: { label: 'Reduce', cls: 'reduce' },
+    REVIEW: { label: 'Review', cls: 'review' },
+    HOLD:   { label: 'Hold',   cls: 'hold' },
+    ADD:    { label: 'Add',    cls: 'add' }
+  };
+
   function render(d) {
     state.report = d;
     var host = $('pf_report');
     if (!host) return;
     host.style.display = 'block';
+    host.innerHTML = buildReport(d, false);
+    var bar = $('pf_reportact');
+    if (bar) bar.style.display = 'flex';
+    bindReport();
+    host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
+  /* One builder for both the on-page report and the downloadable file, so
+     the two can never drift apart. `flat` drops interactive affordances that
+     make no sense in a saved document. */
+  function buildReport(d, flat) {
     var pol = d.policy || {};
     var conc = d.concentration || {};
     var mom = d.sector_momentum || {};
+    var sum = d.summary || {};
+    var counts = sum.counts || {};
 
-    var pnlTxt, pnlCls = '';
+    var pnlTxt, pnlCls = 'mute';
     if (d.total_pnl === null || d.total_pnl === undefined) {
       pnlTxt = 'No buy prices entered \u2014 profit and loss unavailable';
-      pnlCls = 'mute';
     } else {
       pnlTxt = (d.total_pnl >= 0 ? '+' : '\u2212') + inr(Math.abs(d.total_pnl)) +
                ' (' + (d.total_pnl_pct >= 0 ? '+' : '') + d.total_pnl_pct + '%) against cost ' +
@@ -863,132 +871,268 @@
       pnlCls = d.total_pnl >= 0 ? 'up' : 'down';
     }
 
-    var breaches = (d.breaches || []).filter(function (b) { return b.level === 'breach'; });
-    var notes = (d.breaches || []).filter(function (b) { return b.level !== 'breach'; });
-
     var html = '';
 
-    /* Verdict */
+    /* ── Hero ─────────────────────────────────────────────────────────── */
     html +=
-      '<div class="psec">' +
-        '<div class="lh"><h3>Verdict</h3><span>' +
-          (d.peer_source ? 'Peers from scan of ' + esc(d.peer_source) : '') + '</span></div>' +
-        '<div class="pvhead">' +
-          '<div class="pvbig"><span class="k">Current value</span>' +
-            '<span class="pvnum">' + inr(d.total_value) + '</span>' +
-            '<span class="pvsub ' + pnlCls + '">' + esc(pnlTxt) + '</span></div>' +
-          '<div class="pvgrade"><span class="k">Weighted score</span>' +
-            '<span class="pvletter g' + esc(d.grade).replace(/\+/, 'p') + '">' + esc(d.grade) + '</span>' +
-            '<span class="pvsub">' + (d.weighted_score !== null ? d.weighted_score + '/100' : '') +
-            '</span></div>' +
+      '<section class="pfhero">' +
+        '<div class="pfhero-top">' +
+          '<div class="pfhero-val">' +
+            '<span class="k">Portfolio value</span>' +
+            '<span class="v">' + inr(d.total_value) + '</span>' +
+            '<span class="s ' + pnlCls + '">' + esc(pnlTxt) + '</span>' +
+          '</div>' +
+          '<div class="pfhero-score">' +
+            scoreDial(d.weighted_score, d.grade) +
+          '</div>' +
         '</div>' +
-        '<div class="pfstats">' +
-          stat('Holdings', conc.count) +
-          stat('Effective holdings', conc.effective_n, 'Weights concentrate ' + conc.count +
-               ' names into the equivalent of this many equally-sized positions.') +
-          stat('Top 3 weight', pct(conc.top3_pct)) +
-          stat('Largest position', pct(conc.top1_pct)) +
-          stat('Rule breaches', breaches.length) +
+        '<p class="pfhero-say">' + esc(sum.text || '') + '</p>' +
+        '<div class="pfactionbar">' +
+          ['EXIT', 'REDUCE', 'REVIEW', 'HOLD', 'ADD'].map(function (a) {
+            var n = counts[a] || 0;
+            return '<div class="pfab ' + ACTION_META[a].cls + (n ? '' : ' zero') + '">' +
+                   '<b>' + n + '</b><span>' + ACTION_META[a].label + '</span></div>';
+          }).join('') +
         '</div>' +
-      '</div>';
+      '</section>';
 
-    /* Rulebook audit */
-    html += '<div class="psec">' +
-      '<div class="lh"><h3>Rulebook</h3><span>' + breaches.length +
-        ' breach' + (breaches.length === 1 ? '' : 'es') + ' of your limits</span></div>';
+    /* ── Actions ──────────────────────────────────────────────────────── */
+    var actionable = (d.holdings || []).filter(function (h) {
+      var a = (h.advice || {}).action;
+      return a === 'EXIT' || a === 'REDUCE' || a === 'REVIEW' || a === 'ADD';
+    });
 
-    if (!breaches.length) {
-      html += '<div class="pff good">At current prices and weights the book sits inside ' +
-              'every limit you set.</div>';
-    } else {
-      html += breaches.map(function (b) {
-        return '<div class="pfbreach">' +
-          '<div class="pfb-head"><span class="pfb-title">' + esc(b.title) + '</span>' +
-          '<span class="pfb-meter">' + fmtMeasured(b) + '</span></div>' +
-          '<p>' + esc(b.text) + '</p></div>';
-      }).join('');
-    }
-    html += notes.map(function (b) {
-      return '<div class="pff note">' + esc(b.text) + '</div>';
-    }).join('');
-    html += (d.observations || []).map(function (o) {
-      return '<div class="pff ' + esc(o.level) + '"><b>' + esc(o.title) + '</b> ' +
-             esc(o.text) + '</div>';
-    }).join('');
-    html += '</div>';
+    html += '<section class="psec"><div class="lh"><h3>What to do</h3>' +
+            '<span>' + actionable.length + ' of ' + (d.holdings || []).length +
+            ' holdings</span></div>';
+    html += actionable.length
+      ? actionable.map(function (h) { return actionCard(h, flat); }).join('')
+      : '<div class="pff good">Nothing is flagged. Every holding passes on ' +
+        'current evidence at its current weight.</div>';
+    html += '</section>';
 
-    /* Allocation */
-    html += '<div class="psec">' +
-      '<div class="lh"><h3>Where the money sits</h3><span>By current value</span></div>' +
-      chartDonut(d.sectors || []) + '</div>';
+    /* ── Charts ───────────────────────────────────────────────────────── */
+    html += '<section class="psec"><div class="lh"><h3>Where the money sits</h3>' +
+            '<span>By current value</span></div>' + chartDonut(d.sectors || []) + '</section>';
 
-    /* Active weight + momentum */
     if (mom.available) {
       var active = chartActive(d.sectors || []);
       if (active) {
-        html += '<div class="psec">' +
-          '<div class="lh"><h3>Against the index</h3><span>Nifty 500 weights, ' +
-            esc(mom.benchmark_weights_asof || '') + '</span></div>' +
+        html += '<section class="psec"><div class="lh"><h3>Against the index</h3>' +
+          '<span>Nifty 500 weights, ' + esc(mom.benchmark_weights_asof || '') + '</span></div>' +
           '<p class="pfnote">Holding 30% financials is not by itself a bet \u2014 the index ' +
-          'already carries roughly that much. What follows is the difference.</p>' +
-          active + '</div>';
+          'already carries roughly that much. This is the difference.</p>' + active + '</section>';
       }
-
       var quad = chartQuadrant(mom.sectors || []);
       if (quad) {
-        html += '<div class="psec">' +
-          '<div class="lh"><h3>Sector momentum</h3><span>Measured ' +
-            esc(mom.measured_at || '') + '</span></div>' +
-          '<p class="pfnote">Every NSE sector index placed against the Nifty 50. ' +
-          'Filled circles are sectors you hold, sized by weight. This is measured ' +
-          'past return over the stated windows \u2014 not a forecast.</p>' +
-          quad +
-          '<details class="pfmeth"><summary>How this is measured</summary><p>' +
-            esc(mom.method || '') + '</p></details>' +
-          '</div>';
+        html += '<section class="psec"><div class="lh"><h3>Sector momentum</h3>' +
+          '<span>Measured ' + esc(mom.measured_at || '') + '</span></div>' +
+          '<p class="pfnote">Every NSE sector index against the Nifty 50. Filled circles ' +
+          'are sectors you hold, sized by weight. Measured past return, not a forecast.</p>' +
+          quad + '</section>';
       }
-
-      html += '<div class="psec">' +
-        '<div class="lh"><h3>Sector detail</h3><span>Your weight against index returns</span></div>' +
-        sectorTable(d.sectors || []) + '</div>';
-    } else {
-      html += '<div class="psec"><div class="pff note">' +
-        esc(mom.message || 'Sector momentum is unavailable right now.') + '</div></div>';
+      html += '<section class="psec"><div class="lh"><h3>Sector detail</h3>' +
+        '<span>Your weight against index returns</span></div>' +
+        sectorTable(d.sectors || []) + '</section>';
     }
 
-    /* Quality vs weight */
-    var qw = chartQualityWeight(d.holdings || [], pol);
+    var qw = chartQualityWeight(d.holdings || [], { max_stock_pct: 15, min_composite: 45 });
     if (qw) {
-      html += '<div class="psec">' +
-        '<div class="lh"><h3>Score against weight</h3><span>Your rules drawn on</span></div>' +
-        '<p class="pfnote">The shaded corner is the one worth attention: positions that are ' +
-        'both larger than your cap and weaker than your floor.</p>' + qw + '</div>';
+      html += '<section class="psec"><div class="lh"><h3>Score against weight</h3>' +
+        '<span>The corner that costs money</span></div>' +
+        '<p class="pfnote">Bottom right is where losses come from: large positions ' +
+        'carrying weak scores.</p>' + qw + '</section>';
     }
 
-    /* Contribution */
     var contrib = chartContribution(d.contributors || []);
     if (contrib) {
-      html += '<div class="psec">' +
-        '<div class="lh"><h3>What moved the book</h3><span>Unrealised, in rupees</span></div>' +
+      html += '<section class="psec"><div class="lh"><h3>What moved the book</h3>' +
+        '<span>Unrealised, in rupees</span></div>' +
         '<p class="pfnote">In rupees rather than percentages \u2014 a 40% gain on a small ' +
-        'position moves less money than a 9% gain on a large one.</p>' + contrib + '</div>';
+        'position moves less money than a 9% gain on a large one.</p>' + contrib + '</section>';
     }
 
-    /* Holdings ledger */
-    html += '<div class="psec">' +
-      '<div class="lh"><h3>Holdings</h3><span>Tap a row for detail</span></div>' +
-      (d.holdings || []).map(function (r) { return holdingRow(r, d, pol); }).join('') +
+    /* ── Ledger ───────────────────────────────────────────────────────── */
+    html += '<section class="psec"><div class="lh"><h3>Every holding</h3>' +
+      '<span>' + conc.count + ' names \u00B7 effective ' + conc.effective_n + '</span></div>' +
+      ledger(d, flat) +
       ((d.failed || []).length
         ? '<div class="ideas-note">Could not analyse: ' +
-          d.failed.map(function (f) { return esc(f.symbol) + ' (' + esc(f.error) + ')'; }).join(', ') +
-          '</div>'
+          d.failed.map(function (f) { return esc(f.symbol) + ' (' + esc(f.error) + ')'; })
+            .join(', ') + '</div>'
         : '') +
-      '</div>';
+      '</section>';
 
     html += '<p class="disc">' + esc(d.disclaimer || '') + '</p>';
+    return html;
+  }
 
-    host.innerHTML = html;
-    host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  /* A dial rather than a number in a box. */
+  function scoreDial(score, grade) {
+    var v = score === null || score === undefined ? 0 : score;
+    var R = 52, C = 2 * Math.PI * R, span = 0.75, off = C * (1 - span * (v / 100));
+    return '<svg viewBox="0 0 130 130" class="pfdial" role="img" aria-label="Weighted score ' +
+      v + ' out of 100">' +
+      '<circle cx="65" cy="65" r="' + R + '" fill="none" stroke="var(--rule)" ' +
+        'stroke-width="9" stroke-dasharray="' + (C * span) + ' ' + C + '" ' +
+        'transform="rotate(135 65 65)" stroke-linecap="round"/>' +
+      '<circle cx="65" cy="65" r="' + R + '" fill="none" stroke="var(--gold)" ' +
+        'stroke-width="9" stroke-dasharray="' + (C * span) + ' ' + C + '" ' +
+        'stroke-dashoffset="' + (C * span - C * span * (v / 100)) + '" ' +
+        'transform="rotate(135 65 65)" stroke-linecap="round"/>' +
+      '<text x="65" y="66" text-anchor="middle" class="pfdial-v">' +
+        (score === null || score === undefined ? '\u2014' : v) + '</text>' +
+      '<text x="65" y="84" text-anchor="middle" class="pfdial-k">' + esc(grade) + '</text>' +
+      '</svg>';
+  }
+
+  function actionCard(h, flat) {
+    var a = h.advice || {};
+    var meta = ACTION_META[a.action] || ACTION_META.HOLD;
+    var news = a.news;
+
+    var alts = (a.alternatives || []).length
+      ? '<div class="pfalt"><span class="k">Same sector, scoring higher</span>' +
+        a.alternatives.map(function (p) {
+          return '<span class="pfaltpill"><b>' + esc(p.symbol) + '</b> ' + p.composite +
+                 '<i>+' + p.gap + '</i></span>';
+        }).join('') + '</div>'
+      : '';
+
+    return '<article class="pfact ' + meta.cls + '">' +
+      '<div class="pfact-head">' +
+        '<span class="pfact-tag">' + meta.label + '</span>' +
+        '<span class="pfact-sym">' + esc(h.symbol) + '</span>' +
+        '<span class="pfact-meta">' + pct(h.weight_pct) + ' of book \u00B7 score ' +
+          (h.composite === null || h.composite === undefined ? '\u2014' : h.composite) +
+          ' \u00B7 ' + esc(h.sector || 'sector n/a') + '</span>' +
+        '<span class="pfact-conv ' + esc(a.conviction) + '">' + esc(a.conviction) + '</span>' +
+      '</div>' +
+      '<p class="pfact-say">' + esc(a.headline || '') + '</p>' +
+      '<ul class="pfact-why">' +
+        (a.reasons || []).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') +
+      '</ul>' +
+      (news ? '<div class="pfnews ' + esc(news.importance) + '">' +
+        '<span class="k">' + esc(news.category) + '</span>' + esc(news.headline) +
+        (news.pdf && !flat ? ' <a href="' + esc(news.pdf) + '" target="_blank" rel="noopener">filing</a>' : '') +
+        '</div>' : '') +
+      alts +
+      '</article>';
+  }
+
+  function ledger(d, flat) {
+    return '<div class="pfledger"><div class="pfl-head">' +
+      '<span>Holding</span><span>Qty \u00D7 price</span><span>Value</span>' +
+      '<span>P&amp;L</span><span>Score</span><span>Call</span></div>' +
+      (d.holdings || []).map(function (r) {
+        var a = r.advice || {};
+        var meta = ACTION_META[a.action] || ACTION_META.HOLD;
+        var pnl = (r.pnl_pct === null || r.pnl_pct === undefined) ? '\u2014' :
+          '<span class="' + (r.pnl_pct >= 0 ? 'up' : 'down') + '">' +
+          (r.pnl_pct >= 0 ? '+' : '') + r.pnl_pct + '%</span>';
+        return '<div class="pfl-row">' +
+          '<span class="nm">' + esc(r.symbol) +
+            '<small>' + esc(r.sector || 'sector n/a') +
+            (r.sector_source === 'bundled map' ? ' \u00B7 inferred' : '') +
+            ' \u00B7 ' + pct(r.weight_pct) + '</small></span>' +
+          '<span class="mono">' + r.qty + ' \u00D7 \u20B9' +
+            Number(r.price).toLocaleString('en-IN') + '</span>' +
+          '<span class="mono">' + inrShort(r.value) + '</span>' +
+          '<span class="mono">' + pnl + '</span>' +
+          '<span class="mono sc' + (r.composite >= 72 ? ' hi' : r.composite < 40 ? ' lo' : '') +
+            '">' + (r.composite === null || r.composite === undefined ? '\u2014' : r.composite) +
+            '</span>' +
+          '<span class="pftag ' + meta.cls + '">' + meta.label + '</span>' +
+          '</div>';
+      }).join('') + '</div>';
+  }
+
+  var reportBound = false;
+  function bindReport() {
+    if (reportBound) return;          // buttons live outside #pf_report and survive re-renders
+    reportBound = true;
+    var btn = $('pf_dl');
+    if (btn) btn.addEventListener('click', downloadReport);
+    var pr = $('pf_print');
+    if (pr) pr.addEventListener('click', printReport);
+  }
+
+  /* ── Shareable report ───────────────────────────────────────────────────
+     A single self-contained HTML file: styles inline, charts already SVG, no
+     network dependency. It opens in any browser, prints cleanly to PDF, and
+     can be sent as an attachment. No server-side PDF library needed, and no
+     native print dialog appearing without warning the way Save as PDF used
+     to on the Screener. */
+
+  function reportDocument(d) {
+    var when = new Date().toLocaleString('en-IN',
+      { dateStyle: 'medium', timeStyle: 'short' });
+    var body = buildReport(d, true);
+    var css = collectStyles();
+
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<title>Altaha Portfolio Review \u2014 ' + when + '</title>' +
+      '<style>' + css + '</style></head><body><div class="wrap">' +
+      '<header class="rpt-head">' +
+        '<div class="rpt-brand">Altaha <i>Screener</i></div>' +
+        '<div class="rpt-sub">Portfolio Review</div>' +
+        '<div class="rpt-when">Generated ' + esc(when) + '</div>' +
+      '</header>' + body +
+      '<footer class="rpt-foot">Generated by Altaha Screener. Scores are ' +
+      'computations from public data using disclosed formulas. Markets carry ' +
+      'risk of loss.</footer>' +
+      '</div></body></html>';
+  }
+
+  /* Pull the live stylesheets so the saved file looks like the site. Same-origin
+     sheets expose cssRules; anything that throws is skipped rather than
+     breaking the export. */
+  function collectStyles() {
+    var out = [];
+    for (var i = 0; i < document.styleSheets.length; i++) {
+      try {
+        var rules = document.styleSheets[i].cssRules;
+        for (var j = 0; j < rules.length; j++) out.push(rules[j].cssText);
+      } catch (e) { /* cross-origin sheet, skip */ }
+    }
+    out.push(
+      'body{margin:0;padding:34px 20px;background:#fff;color:#1A1A18;' +
+        'font-family:Inter,-apple-system,Segoe UI,sans-serif;line-height:1.6}' +
+      '.wrap{max-width:860px;margin:0 auto}' +
+      '.rpt-head{border-bottom:2px solid #C8A84B;padding-bottom:16px;margin-bottom:28px}' +
+      '.rpt-brand{font-family:Georgia,serif;font-size:30px;letter-spacing:-.01em}' +
+      '.rpt-brand i{color:#9E7C1E;font-style:italic}' +
+      '.rpt-sub{font-size:11px;letter-spacing:.22em;text-transform:uppercase;' +
+        'color:#6E6C66;margin-top:6px}' +
+      '.rpt-when{font-size:11px;color:#8D8B84;margin-top:3px}' +
+      '.rpt-foot{margin-top:36px;padding-top:14px;border-top:1px solid #E4E1D8;' +
+        'font-size:11px;color:#8D8B84}' +
+      '@media print{body{padding:0}.psec,.pfact,.pfhero{break-inside:avoid}' +
+        '.pfact,.pfhero,.pfledger{page-break-inside:avoid}}');
+    return out.join('\n');
+  }
+
+  function downloadReport() {
+    if (!state.report) { note('Run an analysis first.', 'warn'); return; }
+    var blob = new Blob([reportDocument(state.report)], { type: 'text/html;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'altaha-portfolio-review-' +
+      new Date().toISOString().slice(0, 10) + '.html';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+    note('Report saved. Open it in any browser, or attach it to a message.', 'good');
+  }
+
+  function printReport() {
+    if (!state.report) { note('Run an analysis first.', 'warn'); return; }
+    var w = window.open('', '_blank');
+    if (!w) { note('Your browser blocked the popup \u2014 allow it and try again.', 'warn'); return; }
+    w.document.write(reportDocument(state.report));
+    w.document.close();
+    // Let the SVG lay out before the print dialog measures the page.
+    setTimeout(function () { w.focus(); w.print(); }, 700);
   }
 
   function fmtMeasured(b) {
@@ -1089,15 +1233,6 @@
   function init() {
     if (!$('pf_rows')) return;
 
-    // Restore the rulebook the user last used.
-    var saved = readPolicy();
-    if (saved) {
-      POLICY_FIELDS.forEach(function (f) {
-        var node = $('pol_' + f[0]);
-        if (node && saved[f[0]] !== undefined) node.value = saved[f[0]];
-      });
-    }
-
     // Start with one empty row, not three pre-filled samples. Sample rows
     // made users unsure whether to edit or replace them.
     if (!state.rows.length) addRow();
@@ -1145,15 +1280,6 @@
     });
     var exp = $('pf_export');
     if (exp) exp.addEventListener('click', exportCSV);
-
-    var reset = $('pol_reset');
-    if (reset) reset.addEventListener('click', function () {
-      POLICY_FIELDS.forEach(function (f) {
-        var node = $('pol_' + f[0]);
-        if (node) node.value = f[3];
-      });
-      writePolicy(currentPolicy());
-    });
 
     refreshSaved();
     renderRows();
