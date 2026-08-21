@@ -743,3 +743,53 @@ html[data-theme="dark"] .moreMenu button:hover {
   color: var(--gold-dp);
 }
 html[data-theme="dark"] .moreMenu .sep { background: var(--rule); }
+/* ── Button Hover & Focus Animations ────────────────────────────────── */
+
+.pfbtn, .act, .trackbtn, .wabtn, button {
+  transition: box-shadow 0.3s ease, transform 0.15s ease, background-color 0.3s ease, color 0.3s ease;
+  will-change: transform, box-shadow;
+}
+.pfbtn:hover, .act:hover, .trackbtn:hover, .wabtn:hover, button:hover {
+  box-shadow: 0 6px 12px rgba(176,141,46,0.35);
+  transform: translateY(-2px);
+  background-color: var(--gold);
+  color: var(--paper);
+  border-color: var(--gold);
+}
+.pfbtn:focus-visible, .act:focus-visible, .trackbtn:focus-visible, .wabtn:focus-visible, button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(176,141,46,0.6);
+  border-color: var(--gold);
+}
+
+/* ── Tab Content Fade Animation ────────────────────────────────────── */
+
+@keyframes fadeSlideIn {
+  from {opacity: 0; transform: translateY(10px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+.viewfade {
+  animation: fadeSlideIn 320ms cubic-bezier(.22,.61,.36,1) forwards;
+}
+
+/* ── Sticky Context Bar Smooth Show/Hide ───────────────────────────── */
+
+.ctxbar {
+  transition: transform 300ms ease, opacity 300ms ease;
+  transform: translateY(-100%);
+  opacity: 0;
+}
+.ctxbar.on {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ── Mobile Nav Button Size Fix ─────────────────────────────────────── */
+
+.navmob-btn {
+  min-width: 44px;
+  min-height: 52px;
+  padding: 12px 6px;
+  font-size: 11.5px;
+}
+
