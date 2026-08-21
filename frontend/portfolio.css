@@ -1,0 +1,338 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Altaha Screener — Portfolio Review styles
+
+   Chart colours are declared as custom properties on :root and overridden
+   under html[data-theme="dark"]. The SVG builders reference the variables
+   rather than literal hex, so dark mode needs no second code path — the same
+   oversight that made the More menu's labels invisible on a dark background
+   cannot recur here.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --pf-good:        #2E7D5B;
+  --pf-bad:         #B5453C;
+  --pf-over:        #C8A84B;
+  --pf-under:       #4C7A9E;
+  --pf-dot-held:    #C8A84B;
+  --pf-dot-idle:    #8D8B84;
+  --pf-q-lead:      rgba(46, 125, 91, .08);
+  --pf-q-improve:   rgba(76, 122, 158, .08);
+  --pf-q-weaken:    rgba(200, 168, 75, .09);
+  --pf-q-lag:       rgba(181, 69, 60, .07);
+  --pf-axis:        rgba(0, 0, 0, .22);
+  --pf-rule:        rgba(200, 168, 75, .55);
+}
+
+html[data-theme="dark"] {
+  --pf-good:        #34C48D;
+  --pf-bad:         #F0736A;
+  --pf-over:        #D9BE7E;
+  --pf-under:       #6FA8D4;
+  --pf-dot-held:    #D9BE7E;
+  --pf-dot-idle:    #79808E;
+  --pf-q-lead:      rgba(52, 196, 141, .10);
+  --pf-q-improve:   rgba(111, 168, 212, .10);
+  --pf-q-weaken:    rgba(217, 190, 126, .11);
+  --pf-q-lag:       rgba(240, 115, 106, .09);
+  --pf-axis:        rgba(255, 255, 255, .26);
+  --pf-rule:        rgba(217, 190, 126, .5);
+}
+
+/* ── Input rows ─────────────────────────────────────────────────────────── */
+
+.pfrow {
+  display: grid;
+  grid-template-columns: 1.3fr .6fr .8fr .9fr 36px;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.pfrow input {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 9px 10px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink);
+}
+html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--ink); }
+.pfrow input:focus { outline: none; border-color: var(--gold); }
+
+/* Inline validation. The old module could only say "add at least one
+   holding" in a banner while the user stared at holdings they had typed —
+   marking the field itself removes the ambiguity entirely. */
+.pfrow input.bad {
+  border-color: var(--fail);
+  background: rgba(181, 69, 60, .05);
+}
+.pfdel {
+  background: none; border: 1px solid var(--rule); border-radius: 2px;
+  color: var(--mute); cursor: pointer; padding: 8px 0; font-size: 12px;
+  transition: color .15s, border-color .15s;
+}
+.pfdel:hover { color: var(--fail); border-color: var(--fail); }
+
+.pfhead {
+  display: grid;
+  grid-template-columns: 1.3fr .6fr .8fr .9fr 36px;
+  gap: 8px;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--mute); margin-bottom: 8px;
+}
+.pfhead i { font-style: normal; opacity: .6; text-transform: none; letter-spacing: 0; }
+
+.pfinrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+.pfbtn {
+  display: inline-block; background: #fff; border: 1px solid var(--rule);
+  border-radius: 2px; padding: 8px 13px; font-family: var(--mono);
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink); cursor: pointer; text-decoration: none;
+  transition: border-color .15s, color .15s;
+}
+html[data-theme="dark"] .pfbtn { background: var(--surface); color: var(--ink-2); }
+.pfbtn:hover { border-color: var(--gold); color: var(--gold-dp); }
+.pfbtn.ghost { background: none; }
+.pfbtn:disabled { opacity: .4; cursor: not-allowed; }
+.pfsel {
+  background: #fff; border: 1px solid var(--rule); border-radius: 2px;
+  padding: 8px 10px; font-family: var(--mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--ink);
+}
+html[data-theme="dark"] .pfsel { background: var(--surface); color: var(--ink-2); }
+
+.pfpaste {
+  width: 100%; min-height: 42px; resize: vertical;
+  background: #fff; border: 1px dashed var(--rule); border-radius: 3px;
+  padding: 10px 12px; font-family: var(--mono); font-size: 11.5px;
+  color: var(--ink); margin-bottom: 12px;
+}
+html[data-theme="dark"] .pfpaste { background: var(--surface); color: var(--ink-2); }
+.pfpaste:focus { outline: none; border-color: var(--gold); border-style: solid; }
+
+.brun-note.warn { color: var(--fail); }
+.brun-note.good { color: var(--pass); }
+
+/* ── Column mapper ──────────────────────────────────────────────────────── */
+
+.pfmapper {
+  display: none; margin: 14px 0; padding: 16px;
+  border: 1px solid var(--gold-lt); border-radius: 3px;
+  background: var(--paper-2);
+}
+.pfmap-head { font-size: 13px; color: var(--ink-2); margin-bottom: 14px; line-height: 1.55; }
+.pfmap-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.pfmap-grid label { display: flex; flex-direction: column; gap: 5px; }
+.pfmap-grid span {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--mute);
+}
+.pfmap-grid i { font-style: normal; opacity: .6; text-transform: none; }
+.pfmap-grid select {
+  background: #fff; border: 1px solid var(--rule); border-radius: 2px;
+  padding: 8px 9px; font-family: var(--mono); font-size: 11.5px; color: var(--ink);
+}
+html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: var(--ink-2); }
+.pfmap-preview {
+  font-family: var(--mono); font-size: 10.5px; color: var(--mute);
+  border: 1px solid var(--rule); border-radius: 2px; padding: 8px;
+  margin-bottom: 14px; overflow-x: auto;
+}
+.pfmap-preview > div { display: flex; gap: 14px; white-space: nowrap; padding: 2px 0; }
+.pfmap-preview span { min-width: 74px; }
+.pfmap-act { display: flex; gap: 8px; }
+
+/* ── Progress ───────────────────────────────────────────────────────────── */
+
+.pfprog {
+  height: 3px; background: var(--rule); border-radius: 2px;
+  overflow: hidden; margin-bottom: 9px;
+}
+.pfprog i {
+  display: block; height: 100%; background: var(--gold);
+  transition: width .45s cubic-bezier(.4, 0, .2, 1);
+}
+.pfprogtx {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--mute);
+}
+
+/* ── Verdict block ──────────────────────────────────────────────────────── */
+
+.pvsub.up   { color: var(--pass); }
+.pvsub.down { color: var(--fail); }
+.pvsub.mute { color: var(--mute); }
+.pvletter.gA, .pvletter.gBp { color: var(--pass); }
+.pvletter.gB, .pvletter.gC  { color: var(--part); }
+.pvletter.gD  { color: var(--fail); }
+
+.pfstats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+  margin-top: 18px;
+}
+.pfstat {
+  background: var(--paper); padding: 12px 13px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+html[data-theme="dark"] .pfstat { background: var(--surface); }
+.pfstat .k {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--mute);
+}
+.pfstat .v { font-family: var(--mono); font-size: 17px; color: var(--ink); }
+
+/* ── Rulebook ───────────────────────────────────────────────────────────── */
+
+.pfpolicy {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; margin-bottom: 6px;
+}
+.pfpolicy label { display: flex; flex-direction: column; gap: 5px; }
+.pfpolicy .k {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--mute);
+}
+.pfpolicy input {
+  background: #fff; border: 1px solid var(--rule); border-radius: 2px;
+  padding: 8px 10px; font-family: var(--mono); font-size: 13px; color: var(--ink);
+}
+html[data-theme="dark"] .pfpolicy input { background: var(--surface); color: var(--ink); }
+.pfpolicy input:focus { outline: none; border-color: var(--gold); }
+.pfpolicy .u { font-family: var(--mono); font-size: 9px; color: var(--mute); }
+
+.pfbreach {
+  border: 1px solid var(--rule-2); border-left: 3px solid var(--fail);
+  border-radius: 0; background: var(--paper); padding: 14px 16px; margin-bottom: 9px;
+}
+html[data-theme="dark"] .pfbreach { background: var(--surface); }
+.pfb-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px; margin-bottom: 7px; flex-wrap: wrap;
+}
+.pfb-title {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--ink);
+}
+.pfb-meter {
+  font-family: var(--mono); font-size: 11px; color: var(--fail); white-space: nowrap;
+}
+.pfbreach p { margin: 0; font-size: 13.5px; line-height: 1.62; color: var(--ink-2); }
+
+.pff {
+  border-left: 3px solid var(--rule); padding: 12px 15px; margin-bottom: 8px;
+  font-size: 13.5px; line-height: 1.62; color: var(--ink-2); background: var(--paper);
+}
+html[data-theme="dark"] .pff { background: var(--surface); }
+.pff.good { border-left-color: var(--pass); }
+.pff.note { border-left-color: var(--gold-lt); }
+.pff.flag { border-left-color: var(--fail); }
+.pff b { color: var(--ink); font-weight: 600; }
+
+.pfnote {
+  font-size: 13px; line-height: 1.6; color: var(--mute);
+  margin: 0 0 16px; max-width: 62ch;
+}
+
+/* ── Charts ─────────────────────────────────────────────────────────────── */
+
+.pfsvg { width: 100%; height: auto; display: block; overflow: visible; }
+.pfsvg-sm  { font-family: var(--mono); font-size: 10px; fill: var(--mute); }
+.pfsvg-num { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-2); }
+.pfsvg-big { font-family: var(--mono); font-size: 26px; fill: var(--ink); }
+.pfaxis { stroke: var(--pf-axis); stroke-width: 1; }
+.pfrule { stroke: var(--pf-rule); stroke-width: 1; stroke-dasharray: 4 3; }
+
+.pfchart-split {
+  display: grid; grid-template-columns: 220px 1fr; gap: 26px; align-items: center;
+}
+.pflegend { display: flex; flex-direction: column; gap: 7px; }
+.pflg {
+  display: grid; grid-template-columns: 11px 1fr auto; gap: 10px;
+  align-items: center; font-size: 12.5px; color: var(--ink-2);
+}
+.pflg i { width: 11px; height: 11px; border-radius: 2px; display: block; }
+.pflg b { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+.pfmeth { margin-top: 14px; }
+.pfmeth summary {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--mute); cursor: pointer;
+}
+.pfmeth p { font-size: 12.5px; line-height: 1.6; color: var(--mute); margin: 9px 0 0; }
+
+/* ── Sector table ───────────────────────────────────────────────────────── */
+
+.pfsectbl { border: 1px solid var(--rule); overflow-x: auto; }
+.pfst-head, .pfst-row {
+  display: grid;
+  grid-template-columns: 1.7fr .6fr .6fr .6fr .8fr .9fr;
+  gap: 10px; padding: 11px 14px; align-items: center; min-width: 560px;
+}
+.pfst-head {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--mute); border-bottom: 1px solid var(--rule);
+}
+.pfst-row { border-bottom: 1px solid var(--rule-2); font-family: var(--mono); font-size: 12px; }
+.pfst-row:last-child { border-bottom: 0; }
+.pfst-row .nm {
+  display: flex; flex-direction: column; gap: 2px;
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink);
+}
+.pfst-row .nm small { font-family: var(--mono); font-size: 9.5px; color: var(--mute); }
+.pfst-row .up   { color: var(--pass); }
+.pfst-row .down { color: var(--fail); }
+.pfst-row .mute { color: var(--mute); }
+
+.pfstate {
+  font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 7px; border: 1px solid var(--rule); border-radius: 2px;
+  text-align: center; color: var(--mute);
+}
+.pfstate.leading   { color: var(--pass); border-color: var(--pass); }
+.pfstate.improving { color: var(--pf-under); border-color: var(--pf-under); }
+.pfstate.weakening { color: var(--part); border-color: var(--part); }
+.pfstate.lagging   { color: var(--fail); border-color: var(--fail); }
+
+/* ── Holdings ledger ────────────────────────────────────────────────────── */
+
+.pfh { border-bottom: 1px solid var(--rule-2); }
+.pfh.breach > summary { border-left: 3px solid var(--fail); padding-left: 11px; }
+.pfh > summary {
+  display: grid; grid-template-columns: 1.7fr .9fr .6fr 1fr .5fr;
+  gap: 12px; padding: 13px 0; cursor: pointer; align-items: center; list-style: none;
+}
+.pfh > summary::-webkit-details-marker { display: none; }
+.pfh .sym {
+  display: flex; flex-direction: column; gap: 2px;
+  font-family: var(--mono); font-size: 13px; color: var(--ink);
+}
+.pfh .sym small { font-family: var(--mono); font-size: 9.5px; color: var(--mute); }
+.pfh .m { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); }
+.pfh .m .up { color: var(--pass); }
+.pfh .m .down { color: var(--fail); }
+.pfh .setup { font-size: 12px; color: var(--mute); }
+.pfh .comp {
+  font-family: var(--mono); font-size: 16px; color: var(--ink); text-align: right;
+}
+.pfh .comp.hi { color: var(--pass); }
+.pfh .comp.lo { color: var(--fail); }
+.pfh .body { padding: 4px 0 16px; }
+.pfpeer { font-size: 12.5px; line-height: 1.6; color: var(--mute); margin-bottom: 8px; }
+.pfpeer b { color: var(--ink-2); }
+
+/* ── Mobile ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 780px) {
+  .pfrow, .pfhead { grid-template-columns: 1.2fr .6fr .8fr 32px; }
+  .pfrow .pf_date, .pfhead .h-date { display: none; }
+  .pfchart-split { grid-template-columns: 1fr; gap: 18px; }
+  .pfchart-split .pfsvg { max-width: 220px; margin: 0 auto; }
+  .pfh > summary { grid-template-columns: 1.4fr .8fr .5fr; row-gap: 6px; }
+  .pfh .setup { grid-column: 1 / -1; }
+  .pfstats { grid-template-columns: repeat(2, 1fr); }
+}
