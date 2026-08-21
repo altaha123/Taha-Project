@@ -42,6 +42,8 @@ import sectors
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import uuid
 import archetypes as A
+import profiles as PR
+import sector_story as SS
 import intraday
 import alerts as notify
 from plain import highlights, plain_verdict
@@ -759,6 +761,24 @@ def portfolio(payload: dict = Body(...)):
     return to_native(report)
 
 
+@app.get("/sector/overview")
+def sector_overview(window: str = "1D"):
+    """Every sector ranked by strength relative to the Nifty 50."""
+    try:
+        return SS.overview(window)
+    except Exception as e:
+        raise HTTPException(503, f"Sector data unavailable: {str(e)[:120]}")
+
+
+@app.get("/sector/story")
+def sector_story(sector: str, window: str = "1D"):
+    """Why one sector moved: contributors, breadth, and the filings behind it."""
+    try:
+        return SS.story(sector, window)
+    except Exception as e:
+        raise HTTPException(503, f"Sector story unavailable: {str(e)[:120]}")
+
+
 @app.get("/sectors")
 def sector_momentum(force: bool = False):
     """
@@ -1016,7 +1036,7 @@ def options_chain(ticker: str, expiry: str):
 
 
 @app.get("/analyze")
-def analyze(ticker: str):
+def analyze(ticker: str, horizon: str = "position"):
     if not ticker or len(ticker) > 20:
         raise HTTPException(400, "Provide a valid ticker symbol.")
 
@@ -1036,6 +1056,7 @@ def analyze(ticker: str):
     except Exception:
         raise HTTPException(500, "Scoring failed for this ticker's price data.")
 
+    fin = bs = cf = None
     try:
         fin, bs, cf, info = fundamentals(sym, t)
         fund = fundamental_score(fin, bs, cf, info)
@@ -1068,6 +1089,21 @@ def analyze(ticker: str):
         pct = None
 
     verdict = composite(tech, fund)
+
+    # Scoring v3. The headline number is now weighted for the kind of business
+    # this is and for the horizon the reader picked, instead of a flat 50/50
+    # that treated a bank and a steel mill as the same object. composite() is
+    # kept and still returned as `verdict` so nothing that reads the old field
+    # breaks, but `profile` is what the page should show.
+    try:
+        scoring = PR.score(tech, fund, info, fin, bs, cf, horizon=horizon)
+    except Exception:
+        scoring = None
+    try:
+        horizons = PR.compare_horizons(tech, fund, info, fin, bs, cf)
+    except Exception:
+        horizons = None
+
     try:
         setup = A.evaluate(tech, fund)
     except Exception:
@@ -1095,6 +1131,11 @@ def analyze(ticker: str):
         "setup": setup,
         "plain": plain,
         "verdict": verdict,
+        # Scoring v3 — weighted for the business model and the chosen horizon.
+        # `verdict` above is the old flat 50/50 and is kept only so nothing
+        # reading the old field breaks; `scoring` is the number to show.
+        "scoring": scoring,
+        "horizons": horizons,
         # What the business actually does. The score answers "is this good";
         # it does not answer "what is this", and a reader who cannot answer the
         # second question has no business acting on the first. The source line
@@ -1187,13 +1228,6 @@ def intraday_diag():
 def intraday_mark(key: str = ""):
     _require_admin(key)
     return {"marked": intraday.mark_outcomes(), "stats": intraday.stats()}
-
-
-@app.get("/alerts/health")
-def alerts_health():
-    """Delivery status without sending a test message. The Live view reads this
-    so a dead Telegram connection is visible BEFORE an alert is lost to it."""
-    return notify.health()
 
 
 @app.get("/alerts/test")
