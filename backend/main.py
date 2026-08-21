@@ -1189,6 +1189,13 @@ def intraday_mark(key: str = ""):
     return {"marked": intraday.mark_outcomes(), "stats": intraday.stats()}
 
 
+@app.get("/alerts/health")
+def alerts_health():
+    """Delivery status without sending a test message. The Live view reads this
+    so a dead Telegram connection is visible BEFORE an alert is lost to it."""
+    return notify.health()
+
+
 @app.get("/alerts/test")
 def alerts_test(key: str = ""):
     _require_admin(key)
