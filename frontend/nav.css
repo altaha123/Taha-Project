@@ -1,0 +1,155 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Altaha Screener — Navigation styles
+
+   Two levels. The primary row carries weight and never scrolls; the sub row
+   is quieter and only appears when a section actually has a choice in it.
+
+   Every colour is a custom property. The old More menu carried a literal
+   background:#fff and its labels turned invisible the moment dark mode
+   shipped — no literal colours anywhere in this file.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.legacy-nav { display: none !important; }
+
+.navwrap {
+  margin: 0 0 26px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ── Primary ────────────────────────────────────────────────────────────── */
+
+.navmain {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.navmain-btn {
+  position: relative;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 16px 10px 15px;
+  background: none; border: 0; cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11.5px; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--mute);
+  transition: color .18s var(--ease, ease), background .18s var(--ease, ease);
+}
+.navmain-btn svg { width: 17px; height: 17px; flex: 0 0 auto; }
+.navmain-btn:hover { color: var(--ink-2); }
+.navmain-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 2px; }
+
+/* The active section carries an ink underline that sits on the divider, so
+   the two rows read as one control rather than two stacked bars. */
+.navmain-btn.on { color: var(--ink); }
+.navmain-btn.on::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 2px; background: var(--gold);
+}
+
+/* ── Sub row ────────────────────────────────────────────────────────────── */
+
+.navsub {
+  display: flex; align-items: stretch; gap: 12px;
+  padding: 0 2px;
+  min-height: 52px;
+}
+.navsub.empty { min-height: 0; padding: 0; }
+.navsub.empty .navsub-inner { display: none; }
+
+.navsub-inner {
+  display: flex; gap: 2px; flex: 1 1 auto;
+  overflow-x: auto; scrollbar-width: none;
+}
+.navsub-inner::-webkit-scrollbar { display: none; }
+
+.navsub-btn {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 15px 11px;
+  background: none; border: 0; cursor: pointer; text-align: left;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: border-color .18s ease, color .18s ease;
+}
+.navsub-lbl {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--mute);
+  transition: color .18s ease;
+}
+.navsub-hint {
+  font-size: 11px; color: var(--mute); opacity: .62;
+}
+.navsub-btn:hover .navsub-lbl { color: var(--ink-2); }
+.navsub-btn.on { border-bottom-color: var(--ink); }
+.navsub-btn.on .navsub-lbl { color: var(--ink); }
+.navsub-btn.on .navsub-hint { opacity: .85; }
+.navsub-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 2px; }
+
+.navlearn {
+  align-self: center;
+  background: none; border: 1px solid var(--rule); border-radius: 2px;
+  padding: 7px 13px; cursor: pointer;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--mute);
+  transition: border-color .18s ease, color .18s ease;
+  flex: 0 0 auto;
+}
+.navlearn:hover, .navlearn.on { border-color: var(--gold); color: var(--gold-dp); }
+.navlearn:focus-visible { outline: none; box-shadow: var(--ring); }
+
+.navblurb {
+  margin: 0; padding: 11px 2px 13px;
+  font-size: 12.5px; color: var(--mute);
+}
+
+/* ── Mobile bar ─────────────────────────────────────────────────────────── */
+
+.navmob { display: none; }
+
+@media (max-width: 780px) {
+  .navmob {
+    display: block;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
+    background: var(--glass, var(--paper));
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-top: 1px solid var(--rule);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .navmob-inner { display: grid; grid-template-columns: repeat(4, 1fr); }
+
+  /* 44px minimum touch target, which the old pill tabs did not meet. */
+  .navmob-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 9px 4px 8px; min-height: 52px;
+    background: none; border: 0; cursor: pointer; color: var(--mute);
+  }
+  .navmob-btn svg { width: 20px; height: 20px; }
+  .navmob-btn span {
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .navmob-btn.on { color: var(--gold-dp); }
+
+  body { padding-bottom: 66px; }
+
+  /* The desktop rows collapse: icons carry the primary row, the sub row
+     scrolls, and the hint text is dropped because there is no room for it. */
+  .navmain-btn { flex-direction: column; gap: 5px; padding: 12px 4px 11px; font-size: 9.5px; }
+  .navmain-btn .navmain-lbl { letter-spacing: .09em; }
+  .navsub { min-height: 44px; gap: 8px; }
+  .navsub-btn { padding: 9px 12px; }
+  .navsub-hint { display: none; }
+  .navblurb { display: none; }
+  .navwrap { margin-bottom: 18px; }
+}
+
+/* Hiding the primary row on a phone would leave the bottom bar as the only
+   way to move, which is fine — but the sub row must stay, or the four extra
+   views inside Ideas become unreachable. This is the mistake the old More
+   menu made in reverse. */
+@media (max-width: 560px) {
+  .navmain { display: none; }
+  .navwrap { border-bottom: 0; }
+  .navsub { border-bottom: 1px solid var(--rule); }
+}
