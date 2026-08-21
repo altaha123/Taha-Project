@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Altaha Screener — altaha-polish.css
+   Ledger System · batch 1 · 21 Aug 2026
+
+   HOW TO USE THIS FILE
+   Put it in the `frontend` folder, then add ONE line to index.html,
+   immediately AFTER the premium-plus.css line (around line 862):
+
+       <link rel="stylesheet" href="altaha-polish.css">
+
+   It has to be last, because it corrects things the earlier files set.
+   Nothing is deleted from any existing file. If you ever want the old look
+   back, remove that one line.
+
+   WHAT IT FIXES
+   1  The gold text was too pale to read (and failed accessibility rules).
+   2  The candlestick drawing behind the hero cut across the paragraph.
+   3  The "Analyse" button was cut off on phones.
+   4  "Screener · Planner" appeared twice on the homepage.
+   5  The black bar at the very top sat there saying CONNECTING forever.
+   6  Every animation now uses the same speeds instead of nine different ones.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+
+/* ── 1 · READABLE GOLD, READABLE GREY ─────────────────────────────────────
+   The old gold (#B08D2E) on the cream background measured 3.0:1. The
+   accessibility standard for body text is 4.5:1, so on a phone in daylight
+   it disappeared. The new value is the same colour, one shade deeper, and
+   measures 4.7:1. The grey used for hints moves from 3.6:1 to 5.1:1.
+   Decorative gold — rules, arcs, underlines — stays bright, because for
+   lines rather than letters the standard is 3:1 and the old value passes. */
+
+:root {
+  --gold:     #8A6D1E;
+  --gold-dp:  #7F6419;
+  --mute:     #726B5D;
+  --gold-line: #B08D2E;
+}
+
+html[data-theme="dark"] {
+  --gold:     #D9BE7E;
+  --gold-dp:  #EBD6A2;
+  --mute:     #8A919F;
+  --gold-line: #C4A661;
+}
+
+/* The decorative divider under the wordmark keeps the brighter gold. */
+.metal {
+  background: linear-gradient(90deg, transparent,
+              var(--gold-line) 20%, var(--gold-line) 80%, transparent) !important;
+  opacity: .8;
+}
+
+
+/* ── 2 · THE CANDLESTICKS STOP CROSSING THE TEXT ──────────────────────────
+   The drawing is nice and it should stay — it is the product's own subject.
+   The problem was that it ran at 50% strength straight through the middle
+   of the paragraph and the three badges, so both were hard to read.
+
+   Two changes: it is quieter (30% instead of 50%), and it is now masked so
+   it fades out across the middle of the header where the words are, and
+   shows only towards the left and right edges. It reads as a deliberate
+   backdrop rather than an overlap. */
+
+.hero-candles {
+  height: 172px;
+  /* !important because a reveal animation elsewhere sets opacity:1 on this
+     element, and an animation always beats a plain declaration. */
+  opacity: .26 !important;
+  /* Clear the middle of the band completely. Every piece of text in the
+     header is centred and occupies roughly the middle 45% of the width, so
+     the drawing now shows only in the outer thirds and fades out before it
+     reaches a word. */
+  -webkit-mask-image: linear-gradient(90deg,
+      #000 0%, #000 20%, transparent 30%,
+      transparent 70%, #000 80%, #000 100%);
+          mask-image: linear-gradient(90deg,
+      #000 0%, #000 20%, transparent 30%,
+      transparent 70%, #000 80%, #000 100%);
+}
+html[data-theme="dark"] .hero-candles { opacity: .32 !important; }
+
+/* Belt and braces: everything in the header is explicitly stacked above the
+   drawing, so no future change to the drawing can cover the words. */
+header.wrap { position: relative; }
+header.wrap > *:not(.hero-candles) { position: relative; z-index: 1; }
+
+
+/* ── 3 · THE ANALYSE BUTTON STOPS BEING CUT OFF ───────────────────────────
+   On a 390px phone the label clipped to "Analys" and the button hung off
+   the right edge of the field. The search row is a flex container; the text
+   input was allowed to take all the space and the button was allowed to
+   shrink. The button must never shrink — it is the primary action of the
+   entire product. */
+
+.searchrow { align-items: center; }
+.searchrow button,
+button#go, button#rgo {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-height: 44px;          /* the minimum comfortable tap target */
+}
+.searchrow input, input#tk { min-width: 0; }
+
+@media (max-width: 480px) {
+  .searchrow { padding: 5px 5px 5px 14px; }
+  button#go, button#rgo { padding: 0 18px; font-size: 13.5px; }
+  input#tk { padding: 14px 8px 14px 0; font-size: 15px; letter-spacing: .05em; }
+  /* The floating light/dark button used to land on top of the Analyse
+     button. Nudged clear of the bottom tab bar and the search field. */
+  .themebtn { bottom: 84px; right: 12px; width: 38px; height: 38px; }
+}
+
+
+/* ── 4 · ONE NAVIGATION, NOT TWO ──────────────────────────────────────────
+   "Screener · Planner" appears under the tagline AND again in the main tab
+   bar 400px below it. The markup already marks the first one as hidden, but
+   something un-hides it at runtime. Hiding it in CSS is reliable, and the
+   buttons stay in the page so the existing code that clicks them keeps
+   working — nothing breaks. */
+
+.brandsw { display: none !important; }
+
+
+/* ── 5 · NO PERMANENT "CONNECTING" BAR ────────────────────────────────────
+   The black strip at the very top of the page is the first thing a visitor
+   sees, and until index prices arrive it reads "CONNECTING" — or sits empty
+   if the feed is down. A loading state above the masthead makes the whole
+   site look broken. It now stays out of the way until it has something to
+   say, then fades in. */
+
+.tickerbar:has(#tickers:empty) { display: none; }
+.tickerbar { animation: tickerIn 460ms cubic-bezier(.16,1,.3,1) both; }
+@keyframes tickerIn { from { opacity: 0 } to { opacity: 1 } }
+
+
+/* ── 6 · ONE SET OF ANIMATION SPEEDS ──────────────────────────────────────
+   Three speeds and two curves for the whole site. Two different files were
+   each declaring their own version of these, and whichever loaded last won
+   by accident rather than by decision — which is why buttons, tabs and
+   panels all moved at slightly different rates. */
+
+:root {
+  --t-fast: 140ms;
+  --t:      300ms;
+  --t-slow: 640ms;
+  --ease:      cubic-bezier(.32,.72,0,1);
+  --ease-soft: cubic-bezier(.16,1,.3,1);
+}
+
+/* Any control still carrying a hand-written speed is brought back in line. */
+.tab, .mode, .tf, .dtool, .exp, .fchip, .hz, .act, .pfbtn, .livebtn,
+.navmain-btn, .navsub-btn, .bsw, .trackbtn {
+  transition: color var(--t-fast) var(--ease),
+              background var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease),
+              box-shadow var(--t-fast) var(--ease) !important;
+}
+
+
+/* ── 7 · NUMBERS THAT LINE UP ─────────────────────────────────────────────
+   A column of prices where the decimal points do not align is the one thing
+   a screener cannot afford — it argues against its own premise. This turns
+   on the font's fixed-width digits everywhere figures are listed. */
+
+.tk .l, .tk .c, .num, .sv, .pt, .rpatval, .ptv, .pvnum,
+.statbox .sv, .anums, .rg .v, .cell .num, #score, #tscore, #fscore {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+
+/* ── 8 · RESPECT "REDUCE MOTION" ──────────────────────────────────────────
+   Some people set their phone or laptop to reduce animation, often because
+   movement makes them dizzy or ill. This honours that setting across the
+   whole site rather than in the few places that currently check for it. */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
