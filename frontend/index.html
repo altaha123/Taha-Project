@@ -21,6 +21,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="charts.css">
 <link rel="stylesheet" href="portfolio.css">
+<link rel="stylesheet" href="nav.css">
 <style>
   :root{
     --paper:#FBFAF7; --paper-2:#F4F1EB; --ink:#16130E; --ink-2:#4A443A; --mute:#8B8477;
@@ -880,7 +881,7 @@
   <div class="eyebrow">Equity Analysis · India &amp; United States</div>
   <h1 class="brand">Altaha <i>Screener</i></h1>
   <div class="tag" id="brandtag">Where Logic Meets Validations</div>
-  <div class="brandsw" role="tablist">
+  <div class="brandsw" role="tablist" hidden aria-hidden="true">
     <button class="bsw active" id="bsw-screener" role="tab" aria-selected="true">Screener</button>
     <span class="bswsep">·</span>
     <button class="bsw" id="bsw-planner" role="tab" aria-selected="false">Planner</button>
@@ -3316,5 +3317,6 @@ if(fcSymParam){
 <script src="charts.js" defer></script>
 <script src="tracker-fix.js" defer></script>
 <script src="portfolio.js" defer></script>
+<script src="nav.js" defer></script>
 </body>
 </html>
