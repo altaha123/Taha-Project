@@ -644,7 +644,12 @@ def scan_once():
             _save_log()
         if notify:
             try:
-                notify.send_batch(fired)
+                notify.send_batch(
+                    fired,
+                    index_pct=_state.get("regime"),
+                    total_today=len(_alerts_today()),
+                    clock=now_ist().strftime("%H:%M"),
+                )
             except Exception:
                 pass
 
@@ -661,25 +666,25 @@ def _heartbeat():
         return
     t = now_ist()
     day = _today()
-    if _state["heartbeat_day"] != day and market_open() and minutes_since_open() >= 15:
+    # Sent BEFORE the alert window opens (09:18), not after it. At >= 15 the
+    # "I am alive" message could arrive later than the first alert.
+    if _state["heartbeat_day"] != day and market_open() and minutes_since_open() >= 3:
         _state["heartbeat_day"] = day
-        reg = ("%+.2f%%" % _state["regime"]) if _state["regime"] is not None else "n/a"
         try:
-            notify.send_plain(
-                f"Altaha scanner live — {len(_state['watch'])} names, "
-                f"{len(_state['profiles'])} volume profiles built, index {reg}. "
-                f"Thresholds: rolling RVOL {RVOL_MIN}x, max risk {MAX_RISK_PCT}%.")
+            notify.send_plain(notify.format_day_open(
+                watch=len(_state["watch"]),
+                profiles=len(_state["profiles"]),
+                index_pct=_state["regime"],
+                thresholds={"RVOL_MIN": RVOL_MIN, "MAX_RISK_PCT": MAX_RISK_PCT,
+                            "ALERT_START": "09:27", "ALERT_END": "14:45"},
+            ))
         except Exception:
             pass
     if _state["eod_day"] != day and t.hour == 15 and t.minute >= 35:
         _state["eod_day"] = day
         a = _alerts_today()
-        near = ", ".join(f"{r['symbol']} {r['rvol']}x" for r in _state["top_rvol"][:3])
         try:
-            notify.send_plain(
-                f"Close. {len(a)} alerts today"
-                + (f" (best: {a[0]['symbol']}, score {a[0]['score']})" if a else "")
-                + (f". Closest non-firing names: {near}" if near else ""))
+            notify.send_plain(notify.format_day_close(a, _state["top_rvol"]))
         except Exception:
             pass
 
