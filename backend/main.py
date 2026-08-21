@@ -641,7 +641,32 @@ def _pf_run(job_id: str, holdings: list, policy: dict):
             sector_data = {"available": False,
                            "message": "Sector indices could not be retrieved."}
 
-        report = build_report(rows, _state.get("payload"), policy, sector_data)
+        # The filing feed is already in memory from the Filings module — this
+        # is a join, not a fetch. A holding with a high-importance filing in
+        # the window gets that surfaced beside its score, which is exactly
+        # the context a score alone cannot carry.
+        news_map = {}
+        try:
+            for r in rows:
+                if not r or r.get("error") or not r.get("symbol"):
+                    continue
+                hits = ann.feed(limit=3, min_importance="medium",
+                                symbol=r["symbol"]).get("rows") or []
+                if hits:
+                    top = hits[0]
+                    news_map[r["symbol"]] = {
+                        "category": top.get("category"),
+                        "importance": top.get("importance"),
+                        "headline": top.get("headline"),
+                        "pdf": top.get("pdf"),
+                        "when": top.get("when") or top.get("date"),
+                        "count": len(hits),
+                    }
+        except Exception:
+            news_map = {}
+
+        report = build_report(rows, _state.get("payload"), policy,
+                              sector_data, news_map)
         report["disclaimer"] = DISCLAIMER
 
         with _pf_lock:
