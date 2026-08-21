@@ -44,6 +44,7 @@ import uuid
 import archetypes as A
 import profiles as PR
 import sector_story as SS
+import news_feed as press
 import intraday
 import alerts as notify
 from plain import highlights, plain_verdict
@@ -759,6 +760,34 @@ def portfolio(payload: dict = Body(...)):
     report = build_report(rows, _state.get("payload"), policy, sector_data)
     report["disclaimer"] = DISCLAIMER
     return to_native(report)
+
+
+@app.get("/news/press")
+def news_press(limit: int = 30, sector: str = "", symbol: str = ""):
+    """
+    Financial-press headlines, matched to sectors and symbols.
+
+    Kept deliberately separate from /announcements, which is the exchange feed.
+    A journalist's rewrite of a filing is not the filing, and nothing in this
+    feed influences a score or an alert threshold.
+    """
+    try:
+        syms = [symbol] if symbol else None
+        return {"rows": press.feed(limit=limit, symbols=syms, sector=sector),
+                "kind": "press",
+                "disclaimer": ("Reporting about events, not the events themselves. "
+                               "For the primary source see /announcements.")}
+    except Exception as e:
+        raise HTTPException(503, f"Press feed unavailable: {str(e)[:120]}")
+
+
+@app.get("/news/status")
+def news_status():
+    """Which press sources are answering, and how stale the cache is."""
+    try:
+        return press.status()
+    except Exception as e:
+        raise HTTPException(503, f"Press status unavailable: {str(e)[:120]}")
 
 
 @app.get("/sector/overview")
