@@ -6,3 +6,7 @@ pandas
 numpy
 pyotp
 websockets>=12.0
+# Used directly by alerts.py, announcements.py, dhan_source.py and
+# news_feed.py. It arrived transitively via yfinance until now; pinning it
+# explicitly means a yfinance upgrade cannot remove it.
+requests>=2.31
