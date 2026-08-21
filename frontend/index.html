@@ -20,6 +20,7 @@
 <script>if(typeof LightweightCharts==="undefined")document.write('<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="charts.css">
+<link rel="stylesheet" href="portfolio.css">
 <style>
   :root{
     --paper:#FBFAF7; --paper-2:#F4F1EB; --ink:#16130E; --ink-2:#4A443A; --mute:#8B8477;
@@ -1171,46 +1172,47 @@
   </div><!-- /view-results -->
 
   <div id="view-portfolio" style="display:none">
-    <p class="ideas-intro">Every holding through the full Altaha engine, then the portfolio as a whole: weights, sector mix, weighted score, and findings with the arithmetic shown. Holdings are analysed on request and never stored.</p>
+    <p class="ideas-intro">Every holding through the full Altaha engine, then the book as a whole: weights against the index, sector momentum, concentration arithmetic, and an audit against limits you set yourself. Holdings stay in your browser and are sent only to be scored — nothing is stored on our side.</p>
 
     <div class="psec">
-      <div class="lh"><h3>Your holdings</h3><span>Max 20 per analysis</span></div>
-      <div class="pfinrow">
-        <button class="pfbtn" id="pf_addrow">+ Add a stock</button>
-        <label class="pfbtn pfup">Upload CSV<input type="file" id="pf_file" accept=".csv,text/csv" hidden></label>
-        <a class="pfbtn" id="pf_tmpl" download="altaha-portfolio-template.csv">Download template</a>
+      <div class="lh"><h3>Your rulebook</h3><span>The limits this book is audited against</span></div>
+      <p class="pfnote">Altaha does not tell you what to buy or sell. You set the limits; the report shows where the book breaches them and exactly what closing the gap involves — share counts and rupee amounts, not opinions.</p>
+      <div class="pfpolicy">
+        <label><span class="k">Max in one stock</span><input type="number" id="pol_max_stock_pct" min="2" max="100" step="0.5" value="15"><span class="u">% of book</span></label>
+        <label><span class="k">Max in one sector</span><input type="number" id="pol_max_sector_pct" min="5" max="100" step="1" value="35"><span class="u">% of book</span></label>
+        <label><span class="k">Minimum score</span><input type="number" id="pol_min_composite" min="0" max="100" step="1" value="45"><span class="u">out of 100</span></label>
+        <label><span class="k">Review if down</span><input type="number" id="pol_review_drawdown" min="5" max="90" step="1" value="25"><span class="u">% from cost</span></label>
+        <label><span class="k">Minimum holdings</span><input type="number" id="pol_min_holdings" min="1" max="50" step="1" value="8"><span class="u">names</span></label>
       </div>
-      <div class="pfhead"><span>Symbol</span><span>Qty</span><span>Buy price <i>(optional)</i></span><span></span></div>
-      <div id="pf_rows"></div>
-      <div class="brun" style="margin-top:18px">
-        <button id="pf_go">Analyse portfolio</button>
-        <span class="brun-note" id="pf_note"></span>
-      </div>
-      <div class="state" id="pf_state"></div>
+      <button class="pfbtn ghost" type="button" id="pol_reset">Reset to defaults</button>
     </div>
 
-    <section id="pf_report" style="display:none">
-      <div class="psec">
-        <div class="lh"><h3>Portfolio Verdict</h3><span id="pf_peersrc"></span></div>
-        <div class="pvhead">
-          <div class="pvbig"><span class="k">Current value</span><span class="pvnum" id="pf_val">—</span><span class="pvsub" id="pf_pnl"></span></div>
-          <div class="pvgrade"><span class="k">Weighted score</span><span class="pvletter" id="pf_grade">—</span><span class="pvsub" id="pf_wscore" style="text-align:right"></span></div>
-        </div>
-        <div id="pf_findings"></div>
+    <div class="psec">
+      <div class="lh"><h3>Your holdings</h3><span id="pf_count">Max 50 per analysis</span></div>
+      <div class="pfinrow">
+        <button class="pfbtn" type="button" id="pf_addrow">+ Add a stock</button>
+        <label class="pfbtn pfup">Upload CSV<input type="file" id="pf_file" accept=".csv,.txt,text/csv" hidden></label>
+        <a class="pfbtn" id="pf_tmpl" download="altaha-portfolio-template.csv">Template</a>
+        <select class="pfsel" id="pf_saved" aria-label="Saved portfolios"><option value="">Saved portfolios…</option></select>
+        <button class="pfbtn" type="button" id="pf_save">Save</button>
+        <button class="pfbtn ghost" type="button" id="pf_delete" disabled>Delete</button>
+        <button class="pfbtn ghost" type="button" id="pf_clear">Clear</button>
       </div>
+      <textarea class="pfpaste" id="pf_paste" rows="2" placeholder="…or paste a table straight from your broker's holdings page" aria-label="Paste holdings table"></textarea>
+      <div id="pf_mapper" class="pfmapper"></div>
+      <div class="pfhead"><span>Symbol</span><span>Qty</span><span>Buy price <i>(optional)</i></span><span class="h-date">Buy date <i>(optional)</i></span><span></span></div>
+      <div id="pf_rows"></div>
+      <div class="brun" style="margin-top:18px">
+        <button id="pf_go" type="button">Analyse portfolio</button>
+        <span class="brun-note" id="pf_note"></span>
+      </div>
+      <div class="state" id="pf_state" style="display:none"></div>
+    </div>
 
-      <div class="psec">
-        <div class="lh"><h3>Sector mix</h3><span>By current value</span></div>
-        <div id="pf_sectors"></div>
-      </div>
-
-      <div class="psec">
-        <div class="lh"><h3>Holdings ledger</h3><span>Tap a row for peers</span></div>
-        <div id="pf_holdings"></div>
-        <div class="ideas-note" id="pf_failed"></div>
-      </div>
-      <p class="disc" id="pf_disc"></p>
-    </section>
+    <section id="pf_report" style="display:none"></section>
+    <div class="pfinrow" style="margin-top:14px">
+      <button class="pfbtn ghost" type="button" id="pf_export">Export results as CSV</button>
+    </div>
   </div><!-- /view-portfolio -->
 
 <div id="view-planner" style="display:none">
@@ -3091,142 +3093,7 @@ plannerInit();
   try{ await analyse(sym); }catch(e){}
 })();
 
-/* ── Portfolio ──────────────────────────────────────────────────────── */
-function pfAddRow(sym, qty, buy){
-  const row = document.createElement("div");
-  row.className = "pfrow";
-  row.innerHTML = `
-    <input class="pf_sym" placeholder="RELIANCE" value="${sym?esc(sym):""}" spellcheck="false">
-    <input class="pf_qty" type="number" min="0" placeholder="10" value="${qty??""}">
-    <input class="pf_buy" type="number" min="0" placeholder="2400" value="${buy??""}">
-    <button class="pfdel" title="Remove" aria-label="Remove row">\u2715</button>`;
-  row.querySelector(".pfdel").addEventListener("click", ()=>row.remove());
-  $("pf_rows").appendChild(row);
-}
-
-function pfInit(){
-  for(let i=0;i<3;i++) pfAddRow();
-  $("pf_addrow").addEventListener("click", ()=>pfAddRow());
-  $("pf_go").addEventListener("click", pfAnalyse);
-  $("pf_tmpl").href = "data:text/csv;charset=utf-8," + encodeURIComponent(
-    "Symbol,Quantity,BuyPrice\nRELIANCE,10,2450\nTCS,5,3900\nHDFCBANK,15,\n");
-  $("pf_file").addEventListener("change", pfReadCSV);
-}
-
-function pfReadCSV(ev){
-  const f = ev.target.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const lines = String(reader.result).split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-    const rows = [];
-    for(const line of lines){
-      const parts = line.split(",").map(p=>p.trim());
-      if(!parts[0] || /^symbol$/i.test(parts[0])) continue;   // header / blank
-      const qty = Number(parts[1]);
-      if(!isFinite(qty) || qty <= 0) continue;
-      const buy = parts[2] !== undefined && parts[2] !== "" ? Number(parts[2]) : null;
-      rows.push([parts[0].toUpperCase(), qty, (buy!==null && isFinite(buy)) ? buy : null]);
-    }
-    if(!rows.length){
-      $("pf_note").textContent = "No valid rows found — expected Symbol,Quantity,BuyPrice";
-      return;
-    }
-    $("pf_rows").innerHTML = "";
-    rows.slice(0,20).forEach(([s,q,b])=>pfAddRow(s,q,b));
-    $("pf_note").textContent = rows.length > 20
-      ? `Loaded first 20 of ${rows.length} rows (limit per analysis)` : `Loaded ${rows.length} holdings`;
-  };
-  reader.readAsText(f);
-  ev.target.value = "";
-}
-
-function pfCollect(){
-  const out = [];
-  document.querySelectorAll(".pfrow").forEach(r=>{
-    const sym = r.querySelector(".pf_sym").value.trim().toUpperCase();
-    const qty = Number(r.querySelector(".pf_qty").value);
-    const buyRaw = r.querySelector(".pf_buy").value;
-    if(sym && isFinite(qty) && qty > 0)
-      out.push({symbol:sym, qty:qty, buy_price: buyRaw==="" ? null : Number(buyRaw)});
-  });
-  return out;
-}
-
-async function pfAnalyse(){
-  const holdings = pfCollect();
-  if(!holdings.length){ $("pf_note").textContent = "Add at least one holding with a quantity"; return; }
-  $("pf_note").textContent = "";
-  $("pf_report").style.display = "none";
-  $("pf_state").style.display = "block";
-  $("pf_state").innerHTML = `Analysing ${holdings.length} holding${holdings.length>1?"s":""} through the full engine\u2026 roughly ${Math.ceil(holdings.length*4/60)||1} minute${holdings.length>8?"s":""}. Keep this tab open.`;
-  $("pf_go").disabled = true;
-  try{
-    const res = await fetch(`${API_BASE}/portfolio`, {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({holdings})
-    });
-    const d = await res.json();
-    if(!res.ok){ $("pf_state").innerHTML = esc(d.detail || "Analysis failed."); return; }
-    pfRender(d);
-  }catch(e){
-    $("pf_state").innerHTML = "Couldn\u2019t reach the engine \u2014 it may be waking from sleep. Try again in ~30 seconds.";
-  }finally{
-    $("pf_go").disabled = false;
-  }
-}
-
-function pfRender(d){
-  $("pf_state").style.display = "none";
-  $("pf_report").style.display = "block";
-  $("pf_val").textContent = inr(d.total_value);
-  $("pf_pnl").textContent = d.total_pnl===null || d.total_pnl===undefined
-    ? "Buy prices not provided \u2014 P&L omitted"
-    : `${d.total_pnl>=0?"+":"\u2212"}${inr(Math.abs(d.total_pnl))} (${d.total_pnl_pct>=0?"+":""}${d.total_pnl_pct}%) vs cost ${inr(d.total_cost)}`;
-  $("pf_pnl").style.color = d.total_pnl===null||d.total_pnl===undefined ? "var(--mute)"
-    : d.total_pnl>=0 ? "var(--pass)" : "var(--fail)";
-  $("pf_grade").textContent = d.grade;
-  $("pf_grade").style.color = ["A","B+"].includes(d.grade) ? "var(--pass)"
-    : ["B","C"].includes(d.grade) ? "var(--part)" : d.grade==="D" ? "var(--fail)" : "var(--mute)";
-  $("pf_wscore").textContent = d.weighted_score!==null ? `${d.weighted_score}/100, value-weighted` : "";
-  $("pf_peersrc").textContent = d.peer_source ? `Peers from scan of ${d.peer_source}` : "";
-
-  $("pf_findings").innerHTML = (d.findings||[]).map(f=>
-    `<div class="pff ${f.level}">${esc(f.text)}</div>`).join("");
-
-  const maxW = Math.max(...(d.sectors||[]).map(s=>s.weight_pct), 1);
-  $("pf_sectors").innerHTML = (d.sectors||[]).map(s=>`
-    <div class="pfsec${s.weight_pct>=40?" over":""}">
-      <span class="lb">${esc(s.sector)} \u00B7 ${s.count}</span>
-      <span class="tr"><i style="width:${100*s.weight_pct/maxW}%"></i></span>
-      <span class="vl">${s.weight_pct}%</span>
-    </div>`).join("");
-
-  $("pf_holdings").innerHTML = (d.holdings||[]).map(r=>{
-    const compCol = (r.composite??0)>=72 ? "var(--pass)" : (r.composite??100)<40 ? "var(--fail)" : "var(--ink)";
-    const pnl = r.pnl_pct===null||r.pnl_pct===undefined ? "" :
-      `<span style="color:${r.pnl_pct>=0?"var(--pass)":"var(--fail)"}">${r.pnl_pct>=0?"+":""}${r.pnl_pct}%</span>`;
-    const peers = (r.peers&&r.peers.length)
-      ? `<div class="pfpeer">Sector peers by score: ${r.peers.map(p=>`<span><b>${esc(p.symbol)}</b> ${p.composite??"\u2014"}${p.setup?` \u00B7 ${esc(p.setup)}`:""}</span>`).join("")}</div>`
-      : `<div class="pfpeer">${esc(d.peers_note || "No same-sector peers in the last scan.")}</div>`;
-    return `<details class="pfh"><summary>
-      <span class="sym">${esc(r.symbol)}<small>${esc(r.sector||"sector n/a")} \u00B7 ${r.weight_pct}% of book</small></span>
-      <span class="m">${r.qty} \u00D7 \u20B9${Number(r.price).toLocaleString("en-IN")}</span>
-      <span class="m">${pnl}</span>
-      <span class="setup">${esc(r.setup||"\u2014")}</span>
-      <span class="comp" style="color:${compCol}">${r.composite??"\u2014"}</span>
-    </summary><div class="body">
-      <div class="pfpeer" style="margin-bottom:10px">Technical ${r.technical??"\u2014"} \u00B7 Fundamental ${r.fundamental??"\u2014"} \u00B7 Fit ${r.setup_fit??"\u2014"}${r.horizon&&r.horizon!=="\u2014"?` \u00B7 typical hold ${esc(r.horizon)}`:""} \u2014 full ledger in the Screener tab</div>
-      ${peers}
-    </div></details>`;
-  }).join("");
-
-  $("pf_failed").textContent = (d.failed&&d.failed.length)
-    ? "Couldn\u2019t analyse: " + d.failed.map(f=>`${f.symbol} (${f.error})`).join(", ")
-    : "";
-  $("pf_disc").textContent = d.disclaimer || "";
-  $("pf_report").scrollIntoView({behavior:"smooth", block:"start"});
-}
+/* Portfolio lives in portfolio.js now — see that file. */
 
 /* ── Vocabulary ─────────────────────────────────────────────────────── */
 const VOCAB = [
@@ -3407,7 +3274,6 @@ vocabInit();
 optionsInit();
 loadTicker();
 setInterval(loadTicker, 120000);
-pfInit();
 $("mode-simple").addEventListener("click",()=>setMode("simple"));
 $("mode-full").addEventListener("click",()=>setMode("full"));
 $("showfull").addEventListener("click",()=>{
@@ -3458,5 +3324,6 @@ if(fcSymParam){
 <script src="premium-plus.js" defer></script>
 <script src="charts.js" defer></script>
 <script src="tracker-fix.js" defer></script>
+<script src="portfolio.js" defer></script>
 </body>
 </html>
