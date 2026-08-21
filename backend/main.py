@@ -36,8 +36,11 @@ try:
     import livefeed
 except Exception:
     livefeed = None
-from portfolio import build_report, MAX_HOLDINGS, WORKERS as PF_WORKERS
+from portfolio import (build_report, clean_policy, DEFAULT_POLICY,
+                       MAX_HOLDINGS, WORKERS as PF_WORKERS)
+import sectors
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import uuid
 import archetypes as A
 import intraday
 import alerts as notify
@@ -563,10 +566,12 @@ def _analyse_holding(item):
     except Exception:
         setup = None
     price = float(tech["price"])
+    clean_sym = sym.replace(".NS", "").replace(".BO", "")
+    sector, sector_source = sectors.resolve_sector(clean_sym, info)
     return {
-        "symbol": sym.replace(".NS", "").replace(".BO", ""),
+        "symbol": clean_sym,
         "name": info.get("longName") or info.get("shortName") or sym_in,
-        "sector": info.get("sector"),
+        "sector": sector, "sector_source": sector_source,
         "qty": qty, "buy_price": buy, "price": price,
         "value": round(qty * price, 2),
         "cost": round(qty * buy, 2) if buy is not None else None,
@@ -579,14 +584,137 @@ def _analyse_holding(item):
     }
 
 
-@app.post("/portfolio")
-def portfolio(payload: dict = Body(...)):
+# ---------------------------------------------------------------------------
+# Portfolio review — job-based
+# ---------------------------------------------------------------------------
+#
+# A fifty-holding book takes long enough that a synchronous request is at the
+# mercy of whatever proxy sits in front of the app. The work therefore runs on
+# a background thread and the client polls: progress arrives immediately,
+# holdings appear as they finish, and no single request stays open long enough
+# to be killed. Jobs are in-memory and expire — nothing about a user's
+# holdings is ever written to disk.
+
+_pf_jobs = {}
+_pf_lock = threading.Lock()
+PF_JOB_TTL = 900             # fifteen minutes is well past any real session
+
+
+def _pf_sweep():
+    """Drop finished jobs past their TTL. Called on every job creation."""
+    now = time.time()
+    with _pf_lock:
+        for jid in [k for k, v in _pf_jobs.items()
+                    if now - v.get("touched", now) > PF_JOB_TTL]:
+            _pf_jobs.pop(jid, None)
+
+
+def _pf_run(job_id: str, holdings: list, policy: dict):
+    """Score every holding, then assemble the report. Errors stay per-row."""
+    rows = [None] * len(holdings)
+
+    def record(i, value):
+        rows[i] = value
+        with _pf_lock:
+            job = _pf_jobs.get(job_id)
+            if job is not None:
+                job["done"] = sum(1 for r in rows if r is not None)
+                job["touched"] = time.time()
+
+    try:
+        with ThreadPoolExecutor(max_workers=PF_WORKERS) as pool:
+            futures = {pool.submit(_analyse_holding, h): i
+                       for i, h in enumerate(holdings)}
+            for fut in as_completed(futures):
+                i = futures[fut]
+                try:
+                    record(i, fut.result())
+                except Exception:
+                    record(i, {"symbol": str(holdings[i].get("symbol", "?")),
+                               "error": "analysis failed", "value": 0.0, "cost": None})
+
+        # Sector momentum is cached for six hours, so this is usually free.
+        # A failure here must not cost the user the rest of the report.
+        try:
+            sector_data = sectors.momentum()
+        except Exception:
+            sector_data = {"available": False,
+                           "message": "Sector indices could not be retrieved."}
+
+        report = build_report(rows, _state.get("payload"), policy, sector_data)
+        report["disclaimer"] = DISCLAIMER
+
+        with _pf_lock:
+            job = _pf_jobs.get(job_id)
+            if job is not None:
+                job.update(status="done", report=to_native(report),
+                           finished_at=time.time(), touched=time.time())
+    except Exception as exc:                              # pragma: no cover
+        with _pf_lock:
+            job = _pf_jobs.get(job_id)
+            if job is not None:
+                job.update(status="error", error=str(exc)[:200],
+                           touched=time.time())
+
+
+@app.post("/portfolio/start")
+def portfolio_start(payload: dict = Body(...)):
+    """Queue a portfolio analysis. Returns a job id to poll."""
     holdings = payload.get("holdings") or []
     if not isinstance(holdings, list) or not holdings:
         raise HTTPException(400, "Provide a holdings list.")
     if len(holdings) > MAX_HOLDINGS:
         raise HTTPException(400, f"Maximum {MAX_HOLDINGS} holdings per analysis — "
                                  "split larger portfolios into batches.")
+
+    policy = clean_policy(payload.get("policy"))
+    _pf_sweep()
+
+    job_id = uuid.uuid4().hex[:16]
+    with _pf_lock:
+        _pf_jobs[job_id] = {"status": "running", "done": 0, "total": len(holdings),
+                            "report": None, "error": None,
+                            "started_at": time.time(), "touched": time.time()}
+
+    threading.Thread(target=_pf_run, args=(job_id, holdings, policy),
+                     daemon=True).start()
+
+    return {"job_id": job_id, "total": len(holdings), "policy": policy}
+
+
+@app.get("/portfolio/status")
+def portfolio_status(job: str):
+    """Progress, then the finished report. Poll until status leaves 'running'."""
+    with _pf_lock:
+        state = _pf_jobs.get(job)
+        if state is None:
+            raise HTTPException(404, "That analysis has expired. Run it again.")
+        state["touched"] = time.time()
+        snapshot = dict(state)
+
+    out = {"status": snapshot["status"], "done": snapshot["done"],
+           "total": snapshot["total"], "error": snapshot["error"]}
+    if snapshot["status"] == "done":
+        out["report"] = snapshot["report"]
+    return out
+
+
+@app.post("/portfolio")
+def portfolio(payload: dict = Body(...)):
+    """
+    Synchronous analysis, kept for anything already calling this path.
+
+    New clients should use /portfolio/start — this route blocks for as long as
+    the book takes and is capped well below MAX_HOLDINGS to keep that bounded.
+    """
+    holdings = payload.get("holdings") or []
+    if not isinstance(holdings, list) or not holdings:
+        raise HTTPException(400, "Provide a holdings list.")
+    if len(holdings) > 20:
+        raise HTTPException(400, "This route handles up to 20 holdings. Use "
+                                 "/portfolio/start for larger books.")
+
+    policy = clean_policy(payload.get("policy"))
     rows = [None] * len(holdings)
     with ThreadPoolExecutor(max_workers=PF_WORKERS) as pool:
         futures = {pool.submit(_analyse_holding, h): i for i, h in enumerate(holdings)}
@@ -597,9 +725,34 @@ def portfolio(payload: dict = Body(...)):
             except Exception:
                 rows[i] = {"symbol": str(holdings[i].get("symbol", "?")),
                            "error": "analysis failed", "value": 0.0, "cost": None}
-    report = build_report(rows, _state.get("payload"))
+    try:
+        sector_data = sectors.momentum()
+    except Exception:
+        sector_data = {"available": False}
+    report = build_report(rows, _state.get("payload"), policy, sector_data)
     report["disclaimer"] = DISCLAIMER
     return to_native(report)
+
+
+@app.get("/sectors")
+def sector_momentum(force: bool = False):
+    """
+    Sector index returns and relative strength versus the Nifty 50.
+
+    Standalone so the Sector view can render before any holdings are entered,
+    and so the six-hour cache gets warmed by the first visitor rather than by
+    the first person to run a portfolio.
+    """
+    try:
+        return to_native(sectors.momentum(force=force))
+    except Exception:
+        raise HTTPException(503, "Sector indices are unavailable right now.")
+
+
+@app.get("/portfolio/policy")
+def portfolio_policy():
+    """The default rulebook, so the UI can render it without hardcoding."""
+    return {"defaults": DEFAULT_POLICY}
 
 
 @app.get("/results")
