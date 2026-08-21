@@ -1172,20 +1172,9 @@
   </div><!-- /view-results -->
 
   <div id="view-portfolio" style="display:none">
-    <p class="ideas-intro">Every holding through the full Altaha engine, then the book as a whole: weights against the index, sector momentum, concentration arithmetic, and an audit against limits you set yourself. Holdings stay in your browser and are sent only to be scored — nothing is stored on our side.</p>
+    <p class="ideas-intro">Every holding through the full Altaha engine, then a call on each one — with the sector it sits in measured against the index, any exchange filing that matters, and a better-scoring peer named where one exists. Download the whole thing as a report you can share. Holdings stay in your browser and are sent only to be scored.</p>
 
-    <div class="psec">
-      <div class="lh"><h3>Your rulebook</h3><span>The limits this book is audited against</span></div>
-      <p class="pfnote">Altaha does not tell you what to buy or sell. You set the limits; the report shows where the book breaches them and exactly what closing the gap involves — share counts and rupee amounts, not opinions.</p>
-      <div class="pfpolicy">
-        <label><span class="k">Max in one stock</span><input type="number" id="pol_max_stock_pct" min="2" max="100" step="0.5" value="15"><span class="u">% of book</span></label>
-        <label><span class="k">Max in one sector</span><input type="number" id="pol_max_sector_pct" min="5" max="100" step="1" value="35"><span class="u">% of book</span></label>
-        <label><span class="k">Minimum score</span><input type="number" id="pol_min_composite" min="0" max="100" step="1" value="45"><span class="u">out of 100</span></label>
-        <label><span class="k">Review if down</span><input type="number" id="pol_review_drawdown" min="5" max="90" step="1" value="25"><span class="u">% from cost</span></label>
-        <label><span class="k">Minimum holdings</span><input type="number" id="pol_min_holdings" min="1" max="50" step="1" value="8"><span class="u">names</span></label>
-      </div>
-      <button class="pfbtn ghost" type="button" id="pol_reset">Reset to defaults</button>
-    </div>
+
 
     <div class="psec">
       <div class="lh"><h3>Your holdings</h3><span id="pf_count">Max 50 per analysis</span></div>
@@ -1210,8 +1199,10 @@
     </div>
 
     <section id="pf_report" style="display:none"></section>
-    <div class="pfinrow" style="margin-top:14px">
-      <button class="pfbtn ghost" type="button" id="pf_export">Export results as CSV</button>
+    <div class="pfinrow pfreport-act" id="pf_reportact" style="display:none">
+      <button class="pfbtn primary" type="button" id="pf_dl">Download report</button>
+      <button class="pfbtn" type="button" id="pf_print">Print / Save as PDF</button>
+      <button class="pfbtn ghost" type="button" id="pf_export">Export CSV</button>
     </div>
   </div><!-- /view-portfolio -->
 
