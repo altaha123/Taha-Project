@@ -51,6 +51,28 @@ from plain import highlights, plain_verdict
 
 app = FastAPI(title="Altaha Screener API", version="2.1")
 
+# ---------------------------------------------------------------------------
+# Social surface — Updates 5 and 6
+#
+# social_routes  -> /social/*        filing drafts + review queue + X posting
+# news_routes    -> /social/news/*   market news, clustered across outlets
+#
+# social_posts.py reads from announcements.py rather than fetching anything
+# itself, so there is still exactly one BSE session in this process.
+# news_feed.py is untouched and still owns /news/press.
+#
+# Pollers are daemon threads. Set ANN_POLLER=0 or NEWS_POLLER=0 on Render to
+# stop either one without touching this file.
+# ---------------------------------------------------------------------------
+import social_routes
+import news_routes
+import market_news
+
+app.include_router(social_routes.router)
+app.include_router(news_routes.router)
+
+market_news.start_poller()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
