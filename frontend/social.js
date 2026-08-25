@@ -455,115 +455,129 @@
   /* ---------- styles, all from existing tokens ----------------------- */
   var CSS = `
   #altaha-social-panel{position:fixed;inset:0;z-index:9800;display:none;
-    background:var(--paper,#F6F2E9);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    background:var(--paper-2,#F4F1EB);overflow-y:auto;-webkit-overflow-scrolling:touch}
   #altaha-social-panel.open{display:block}
-  .as-wrap{max-width:820px;margin:0 auto;padding:22px 18px 90px}
+  .as-wrap{max-width:940px;margin:0 auto;padding:0 0 120px;background:var(--paper,#FBFAF7);min-height:100vh;border-left:1px solid var(--rule-2,#EBE6DC);border-right:1px solid var(--rule-2,#EBE6DC)}
+  .as-pad{padding:0 40px}
+  @media(max-width:620px){.as-pad{padding:0 18px}}
   .as-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
-    border-bottom:1px solid var(--gold-line,#B08D2E);padding-bottom:12px;margin-bottom:6px}
-  .as-title{font-family:var(--display,'Instrument Serif',Georgia,serif);
-    font-size:clamp(26px,5vw,34px);line-height:1.05;color:var(--ink,#1A1712);margin:0}
+    border-bottom:1px solid var(--gold,#B08D2E);padding-bottom:12px;margin-bottom:6px}
+  .as-title{font-family:var(--serif,'Instrument Serif',Georgia,serif);
+    font-size:clamp(26px,5vw,34px);line-height:1.05;color:var(--ink,#16130E);margin:0}
   .as-sub{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#726B5D)}
-  .as-close{margin-left:auto;background:none;border:1px solid var(--mute,#726B5D);
-    color:var(--ink,#1A1712);border-radius:999px;width:34px;height:34px;font-size:17px;
-    cursor:pointer;line-height:1;transition:background var(--t1,140ms) var(--ease,ease)}
+    letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#8B8477)}
+  .as-close{margin-left:auto;background:none;border:1px solid var(--mute,#8B8477);
+    color:var(--ink,#16130E);border-radius:999px;width:34px;height:34px;font-size:17px;
+    cursor:pointer;line-height:1;transition:background var(--t-fast,150ms) var(--ease,ease)}
   .as-close:hover{background:rgba(0,0,0,.05)}
-  .as-close:focus-visible{outline:2px solid var(--gold-line,#B08D2E);outline-offset:2px}
+  .as-close:focus-visible{outline:2px solid var(--gold,#B08D2E);outline-offset:2px}
 
-  .as-note{font-size:12.5px;line-height:1.55;color:var(--mute,#726B5D);
-    margin:12px 0 16px;padding:10px 12px;border-left:2px solid var(--gold-line,#B08D2E)}
+  .as-note{font-size:12.5px;line-height:1.55;color:var(--mute,#8B8477);
+    margin:12px 0 16px;padding:10px 12px;border-left:2px solid var(--gold,#B08D2E)}
 
-  .as-tabs{display:flex;gap:0;margin:14px 0 4px;border-bottom:1px solid rgba(120,110,90,.25)}
+  .as-tabs{display:flex;gap:0;margin:14px 0 4px;border-bottom:1px solid var(--rule,#DDD6C9)}
   .as-tab{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11.5px;letter-spacing:.09em;
     text-transform:uppercase;padding:9px 16px;background:none;border:none;cursor:pointer;
-    color:var(--mute,#726B5D);border-bottom:2px solid transparent;margin-bottom:-1px;
-    transition:color var(--t1,140ms) var(--ease,ease)}
-  .as-tab[aria-selected="true"]{color:var(--ink,#1A1712);border-bottom-color:var(--gold-line,#B08D2E)}
-  .as-tab:focus-visible{outline:2px solid var(--gold-line,#B08D2E);outline-offset:-2px}
+    color:var(--mute,#8B8477);border-bottom:2px solid transparent;margin-bottom:-1px;
+    transition:color var(--t-fast,150ms) var(--ease,ease)}
+  .as-tab[aria-selected="true"]{color:var(--ink,#16130E);border-bottom-color:var(--gold,#B08D2E)}
+  .as-tab:focus-visible{outline:2px solid var(--gold,#B08D2E);outline-offset:-2px}
 
   .as-corro{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:10.5px;
     letter-spacing:.06em;padding:2px 8px;border-radius:999px;
-    border:1px solid var(--gold-line,#B08D2E);color:var(--gold,#8A6D1E)}
-  .as-corro.solo{border-color:var(--mute,#726B5D);color:var(--mute,#726B5D)}
+    border:1px solid var(--gold,#B08D2E);color:var(--gold-dp,#8A6D1E)}
+  .as-corro.solo{border-color:var(--mute,#8B8477);color:var(--mute,#8B8477)}
   .as-spec{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:10.5px;
     letter-spacing:.06em;color:#9A5B00;text-transform:uppercase}
-  .as-also{font-size:12px;color:var(--mute,#726B5D);line-height:1.5;margin:6px 0 2px}
-  .as-also a{color:var(--mute,#726B5D)}
-  .as-headline{font-size:16px;line-height:1.45;color:var(--ink,#1A1712);margin:0 0 6px}
-  .as-headline a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(120,110,90,.35)}
-  .as-headline a:hover{border-bottom-color:var(--gold-line,#B08D2E)}
+  .as-also{font-size:12px;color:var(--mute,#8B8477);line-height:1.5;margin:6px 0 2px}
+  .as-also a{color:var(--mute,#8B8477)}
+  .as-headline{font-size:16px;line-height:1.45;color:var(--ink,#16130E);margin:0 0 6px}
+  .as-headline a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule,#DDD6C9)}
+  .as-headline a:hover{border-bottom-color:var(--gold,#B08D2E)}
 
-  .as-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-  .as-chip{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    letter-spacing:.05em;padding:5px 11px;border-radius:999px;cursor:pointer;
-    border:1px solid var(--mute,#726B5D);background:transparent;color:var(--mute,#726B5D);
-    transition:all var(--t1,140ms) var(--ease,ease)}
-  .as-chip[aria-pressed="true"]{background:var(--ink,#1A1712);color:var(--paper,#F6F2E9);
-    border-color:var(--ink,#1A1712)}
-  .as-chip:focus-visible{outline:2px solid var(--gold-line,#B08D2E);outline-offset:2px}
+  .as-bar{display:flex;gap:12px;align-items:center;padding:14px 0 4px}
+  .as-chips{display:flex;gap:7px;overflow-x:auto;flex:1 1 auto;padding-bottom:6px;scrollbar-width:none;-ms-overflow-style:none}
+  .as-chips::-webkit-scrollbar{display:none}
+  .as-fetch{flex:0 0 auto}
+  .as-chip{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:10.5px;
+    letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;flex:0 0 auto;padding:6px 12px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--mute,#8B8477);background:transparent;color:var(--mute,#8B8477);
+    transition:all var(--t-fast,150ms) var(--ease,ease)}
+  .as-chip[aria-pressed="true"]{background:var(--ink,#16130E);color:var(--paper,#FBFAF7);
+    border-color:var(--ink,#16130E)}
+  .as-chip:focus-visible{outline:2px solid var(--gold,#B08D2E);outline-offset:2px}
 
-  .as-row{border-top:1px solid rgba(120,110,90,.22);padding:18px 0;
+  .as-row{border-bottom:1px solid var(--rule-2,#EBE6DC);padding:24px 0;
     opacity:0;transform:translateY(8px);
-    animation:asArrive var(--t3,640ms) var(--ease-soft,cubic-bezier(.16,1,.3,1)) forwards}
+    animation:asArrive var(--t-slow,460ms) var(--ease-soft,cubic-bezier(.16,1,.3,1)) forwards}
   @keyframes asArrive{to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.as-row{animation:none;opacity:1;transform:none}}
 
   .as-eyebrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
     font-family:var(--mono,'IBM Plex Mono',monospace);font-size:10.5px;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--mute,#726B5D);margin-bottom:7px}
-  .as-tag{color:var(--gold,#8A6D1E);border-bottom:1px solid var(--gold-line,#B08D2E);padding-bottom:1px}
-  .as-tierA::after{content:'●';color:var(--gold-line,#B08D2E);font-size:8px}
-  .as-body{font-size:16px;line-height:1.5;color:var(--ink,#1A1712);margin:0 0 8px}
-  .as-figs{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:12.5px;
-    color:var(--gold,#8A6D1E);margin-bottom:10px}
+    letter-spacing:.1em;text-transform:uppercase;color:var(--mute,#8B8477);margin-bottom:7px}
+  .as-tag{color:var(--gold-dp,#8A6D1E);border-bottom:1px solid var(--gold,#B08D2E);padding-bottom:1px}
+  .as-dot{width:4px;height:4px;border-radius:50%;background:var(--gold,#B08D2E);flex:0 0 auto}
+  .as-pill{border:1px solid var(--rule,#DDD6C9);border-radius:999px;padding:2px 8px}
+  .as-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .as-tick{font-family:var(--serif,'Instrument Serif',Georgia,serif);font-size:30px;line-height:1;color:var(--ink,#16130E)}
+  .as-co{font-size:13px;color:var(--mute,#8B8477)}
+  .as-hold{display:inline-block;font-family:var(--mono,monospace);font-size:11px;color:var(--part,#9A7B1F);border:1px dashed var(--gold-lt,#D9BC6A);border-radius:4px;padding:5px 10px;margin-bottom:12px}
+  .as-edit{margin-top:12px}
+  .as-edit[hidden]{display:none}
+  .as-btn.quiet{background:transparent;border-color:transparent;color:var(--mute,#8B8477);padding:8px 6px}
+  .as-body{font-size:16px;line-height:1.5;color:var(--ink,#16130E);margin:0 0 8px}
+  .as-figs{display:inline-block;font-family:var(--mono,'IBM Plex Mono',monospace);font-size:12.5px;
+    color:var(--gold-dp,#8A6D1E);border:1px solid var(--gold-lt,#D9BC6A);border-radius:999px;
+    padding:4px 11px;margin-bottom:12px}
 
   .as-post{width:100%;box-sizing:border-box;min-height:112px;resize:vertical;
     font-family:var(--mono,'IBM Plex Mono',monospace);font-size:12.5px;line-height:1.55;
-    color:var(--ink,#1A1712);background:rgba(0,0,0,.025);
-    border:1px solid rgba(120,110,90,.3);border-radius:4px;padding:10px 11px}
-  .as-post:focus{outline:none;border-color:var(--gold-line,#B08D2E)}
+    color:var(--ink,#16130E);background:rgba(0,0,0,.025);
+    border:1px solid var(--rule,#DDD6C9);border-radius:4px;padding:10px 11px}
+  .as-post:focus{outline:none;border-color:var(--gold,#B08D2E)}
 
   .as-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
   .as-btn{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;letter-spacing:.06em;
     text-transform:uppercase;padding:7px 14px;border-radius:3px;cursor:pointer;
-    border:1px solid var(--ink,#1A1712);background:var(--ink,#1A1712);color:var(--paper,#F6F2E9);
-    transition:opacity var(--t1,140ms) var(--ease,ease)}
-  .as-btn.ghost{background:transparent;color:var(--mute,#726B5D);border-color:var(--mute,#726B5D)}
+    border:1px solid var(--ink,#16130E);background:var(--ink,#16130E);color:var(--paper,#FBFAF7);
+    transition:opacity var(--t-fast,150ms) var(--ease,ease)}
+  .as-btn.ghost{background:transparent;color:var(--mute,#8B8477);border-color:var(--mute,#8B8477)}
   .as-btn:hover{opacity:.82}
-  .as-btn:focus-visible{outline:2px solid var(--gold-line,#B08D2E);outline-offset:2px}
+  .as-btn:focus-visible{outline:2px solid var(--gold,#B08D2E);outline-offset:2px}
   .as-count{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    color:var(--mute,#726B5D);margin-left:auto}
+    color:var(--mute,#8B8477);margin-left:auto}
   .as-count.over{color:#B3261E}
-  .as-src{font-size:11.5px;color:var(--mute,#726B5D);margin-top:7px}
-  .as-src a{color:var(--gold,#8A6D1E)}
+  .as-src{font-size:11.5px;color:var(--mute,#8B8477);margin-top:7px}
+  .as-src a{color:var(--gold-dp,#8A6D1E)}
 
-  .as-shot{margin-top:12px;border:1px solid rgba(120,110,90,.28);border-radius:4px;
+  .as-shot{margin-top:12px;border:1px solid var(--rule,#DDD6C9);border-radius:4px;
     padding:12px;background:rgba(0,0,0,.02)}
   .as-shot[hidden]{display:none}
   .as-shot-opts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
   .as-opt{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:10.5px;letter-spacing:.05em;
     text-transform:uppercase;padding:4px 10px;border-radius:999px;cursor:pointer;
-    border:1px solid var(--mute,#726B5D);background:transparent;color:var(--mute,#726B5D)}
-  .as-opt[aria-pressed="true"]{background:var(--ink,#1A1712);color:var(--paper,#F6F2E9);
-    border-color:var(--ink,#1A1712)}
-  .as-opt:focus-visible{outline:2px solid var(--gold-line,#B08D2E);outline-offset:2px}
+    border:1px solid var(--mute,#8B8477);background:transparent;color:var(--mute,#8B8477)}
+  .as-opt[aria-pressed="true"]{background:var(--ink,#16130E);color:var(--paper,#FBFAF7);
+    border-color:var(--ink,#16130E)}
+  .as-opt:focus-visible{outline:2px solid var(--gold,#B08D2E);outline-offset:2px}
   .as-canvas{display:block;width:100%;max-width:270px;height:auto;margin:0 auto 10px;
-    border:1px solid rgba(120,110,90,.3);border-radius:2px}
+    border:1px solid var(--rule,#DDD6C9);border-radius:2px}
   .as-cap{width:100%;box-sizing:border-box;min-height:130px;resize:vertical;
     font-family:var(--sans,'Inter',system-ui,sans-serif);font-size:12.5px;line-height:1.5;
-    color:var(--ink,#1A1712);background:transparent;border:1px solid rgba(120,110,90,.3);
+    color:var(--ink,#16130E);background:transparent;border:1px solid var(--rule,#DDD6C9);
     border-radius:4px;padding:9px 10px;margin-bottom:8px}
-  .as-cap:focus{outline:none;border-color:var(--gold-line,#B08D2E)}
+  .as-cap:focus{outline:none;border-color:var(--gold,#B08D2E)}
 
   .as-skel{height:74px;border-radius:4px;margin:14px 0;
     background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);
     background-size:400% 100%;animation:asSkel 1.4s ease-in-out infinite}
   @keyframes asSkel{0%{background-position:100% 0}100%{background-position:0 0}}
-  .as-empty{padding:34px 0;color:var(--mute,#726B5D);font-size:14px;line-height:1.6}
+  .as-empty{padding:56px 0 40px;max-width:52ch;color:var(--mute,#8B8477);font-size:14px;line-height:1.6}
   .as-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:9900;
-    background:var(--ink,#1A1712);color:var(--paper,#F6F2E9);padding:9px 16px;border-radius:999px;
+    background:var(--ink,#16130E);color:var(--paper,#FBFAF7);padding:9px 16px;border-radius:999px;
     font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11.5px;letter-spacing:.05em;
-    opacity:0;transition:opacity var(--t2,300ms) var(--ease,ease);pointer-events:none}
+    opacity:0;transition:opacity var(--t,280ms) var(--ease,ease);pointer-events:none}
   .as-toast.show{opacity:1}
   #altaha-social-open{font:inherit}
   @media(max-width:560px){.as-wrap{padding:16px 14px 90px}.as-body{font-size:15px}}
@@ -601,7 +615,7 @@
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-label', 'Social — announcement feed');
     panel.innerHTML = ''
-      + '<div class="as-wrap">'
+      + '<div class="as-wrap"><div class="as-pad">'
       + '  <div class="as-top">'
       + '    <h2 class="as-title">Social</h2>'
       + '    <span class="as-sub" id="as-status">loading</span>'
@@ -614,13 +628,15 @@
       + '    <button class="as-tab" id="as-tab-filings" role="tab">Filings</button>'
       + '    <button class="as-tab" id="as-tab-news" role="tab">News</button>'
       + '  </div>'
-      + '  <div class="as-bar" id="as-filters"></div>'
+      + '  <div class="as-bar"><div class="as-chips" id="as-filters"></div>'
+      + '    <button class="as-chip as-fetch" id="as-fetch" type="button">\u21BB Fetch now</button></div>'
       + '  <div id="as-list"><div class="as-skel"></div><div class="as-skel"></div><div class="as-skel"></div></div>'
-      + '</div>';
+      + '</div></div>';
     document.body.appendChild(panel);
     listEl = panel.querySelector('#as-list');
     statusEl = panel.querySelector('#as-status');
     panel.querySelector('#as-close').addEventListener('click', close);
+    panel.querySelector('#as-fetch').addEventListener('click', refreshNow);
     panel.querySelector('#as-tab-filings').addEventListener('click', function () { setTab('filings'); });
     panel.querySelector('#as-tab-news').addEventListener('click', function () { setTab('news'); });
     document.addEventListener('keydown', function (e) {
@@ -689,59 +705,79 @@
   function rowFor(item, idx) {
     var row = document.createElement('article');
     row.className = 'as-row';
-    row.style.animationDelay = Math.min(idx * 45, 420) + 'ms';
-
-    var eyebrow = '<div class="as-eyebrow">'
-      + '<span class="as-tag' + (item.tier === 'A' ? ' as-tierA' : '') + '">'
-      + esc(item.category_label || 'Filing') + '</span>'
-      + '<span>' + esc(item.exchange || '') + '</span>'
-      + '<span>' + esc(item.time_ist || '') + '</span>'
-      + (item.status && item.status !== 'pending' ? '<span>' + esc(item.status) + '</span>' : '')
-      + '</div>';
+    row.style.animationDelay = Math.min(idx * 40, 400) + 'ms';
 
     var r = item.restated || {};
-    var figs = r.figures ? '<div class="as-figs">' + esc(r.figures) + '</div>' : '';
-    var src = item.pdf
-      ? '<div class="as-src">Filing: <a href="' + esc(item.pdf) + '" target="_blank" rel="noopener">open the PDF</a></div>'
-      : '<div class="as-src">' + esc(item.company || '') + '</div>';
+    var held = item.evidence_ok === false;
 
-    row.innerHTML = eyebrow
+    var eyebrow = '<div class="as-eyebrow">'
+      + '<span class="as-tag">' + esc(item.category_label || 'Filing') + '</span>'
+      + (item.tier === 'A' && !held ? '<span class="as-dot"></span>' : '')
+      + '<span>' + esc(item.exchange || 'BSE') + '</span>'
+      + '<span>' + esc(item.time_ist || '') + '</span>'
+      + (item.status && item.status !== 'pending' && !held
+          ? '<span class="as-pill">' + esc(item.status) + '</span>' : '')
+      + '</div>';
+
+    var head = '<div class="as-head">'
+      + (item.symbol ? '<span class="as-tick">' + esc(item.symbol) + '</span>' : '')
+      + '<span class="as-co">' + esc(item.company || '') + '</span></div>';
+
+    var badge = held
+      ? '<div class="as-hold">Headline does not carry the facts \u2014 read the PDF before posting</div>'
+      : (r.figures ? '<div class="as-figs">' + esc(r.figures) + '</div>' : '');
+
+    var acts = held
+      ? '<div class="as-acts">'
+        + (item.pdf ? '<a class="as-btn ghost" href="' + esc(item.pdf) + '" target="_blank" rel="noopener">Open filing</a>' : '')
+        + '<button class="as-btn quiet" data-act="skip">Dismiss</button></div>'
+      : '<div class="as-acts">'
+        + '<button class="as-btn" data-act="copy">Copy for X</button>'
+        + '<button class="as-btn ghost" data-act="image">Instagram</button>'
+        + '<button class="as-btn quiet" data-act="edit">Edit post</button>'
+        + '<button class="as-btn quiet" data-act="approve">Posted</button>'
+        + '<button class="as-btn quiet" data-act="skip">Skip</button>'
+        + '<span class="as-count"></span></div>';
+
+    var edit = held ? '' : '<div class="as-edit" hidden>'
+      + '<textarea class="as-post" spellcheck="false" aria-label="Post text">'
+      + esc(item.x_post || '') + '</textarea></div>';
+
+    var src = (item.pdf && !held)
+      ? '<div class="as-src"><a href="' + esc(item.pdf) + '" target="_blank" rel="noopener">Open the filing</a></div>' : '';
+
+    row.innerHTML = eyebrow + head
       + '<p class="as-body">' + esc(r.body || item.headline || '') + '</p>'
-      + figs
-      + '<textarea class="as-post" spellcheck="false" aria-label="Post text">' + esc(item.x_post || '') + '</textarea>'
-      + '<div class="as-acts">'
-      + '  <button class="as-btn" data-act="copy">Copy for X</button>'
-      + '  <button class="as-btn ghost" data-act="image">Instagram</button>'
-      + '  <button class="as-btn ghost" data-act="approve">Mark posted</button>'
-      + '  <button class="as-btn ghost" data-act="skip">Skip</button>'
-      + '  <span class="as-count"></span>'
-      + '</div>'
-      + src;
+      + badge + acts + edit + src;
 
     var composer = null;
     var ta = row.querySelector('.as-post');
     var counter = row.querySelector('.as-count');
     function tick() {
+      if (!ta || !counter) return;
       var n = ta.value.length;
       counter.textContent = n + '/280';
       counter.classList.toggle('over', n > 280);
     }
-    ta.addEventListener('input', tick);
-    tick();
+    if (ta) { ta.addEventListener('input', tick); tick(); }
 
     row.addEventListener('click', function (e) {
       var btn = e.target.closest('[data-act]');
       if (!btn) return;
       var act = btn.getAttribute('data-act');
       if (act === 'copy') {
-        copyText(ta.value);
+        copyText(ta ? ta.value : (item.x_post || ''));
+      } else if (act === 'edit') {
+        var box = row.querySelector('.as-edit');
+        box.hidden = !box.hidden;
+        btn.textContent = box.hidden ? 'Edit post' : 'Hide post';
       } else if (act === 'image') {
         if (!composer) { composer = attachComposer(row, 'filing', item, item.symbol || item.company); }
         composer.box.hidden = !composer.box.hidden;
         btn.textContent = composer.box.hidden ? 'Instagram' : 'Hide image';
         if (!composer.box.hidden) composer.refresh();
       } else if (act === 'approve') {
-        send('/social/approve', { id: item.id, x_post: ta.value }, 'Marked posted');
+        send('/social/approve', { id: item.id, x_post: ta ? ta.value : item.x_post }, 'Marked posted');
         row.style.opacity = '.45';
       } else if (act === 'skip') {
         send('/social/skip', { id: item.id }, 'Skipped');
@@ -782,13 +818,15 @@
       ? '<div class="as-figs">' + esc(c.symbols.join(' · ')) + '</div>' : '';
 
     row.innerHTML = eyebrow + headline + also + syms
-      + '<textarea class="as-post" spellcheck="false" aria-label="Post text">' + esc(c.x_post || '') + '</textarea>'
       + '<div class="as-acts">'
       + '  <button class="as-btn" data-act="copy">Copy for X</button>'
       + '  <button class="as-btn ghost" data-act="image">Instagram</button>'
-      + '  <button class="as-btn ghost" data-act="skip">Skip</button>'
+      + '  <button class="as-btn quiet" data-act="edit">Edit post</button>'
+      + '  <button class="as-btn quiet" data-act="skip">Skip</button>'
       + '  <span class="as-count"></span>'
-      + '</div>';
+      + '</div>'
+      + '<div class="as-edit" hidden><textarea class="as-post" spellcheck="false" '
+      + 'aria-label="Post text">' + esc(c.x_post || '') + '</textarea></div>';
 
     var composer = null;
     var ta = row.querySelector('.as-post');
@@ -809,6 +847,10 @@
       var act = btn.getAttribute('data-act');
       if (act === 'copy') {
         copyText(ta.value);
+      } else if (act === 'edit') {
+        var box = row.querySelector('.as-edit');
+        box.hidden = !box.hidden;
+        btn.textContent = box.hidden ? 'Edit post' : 'Hide post';
       } else if (act === 'image') {
         if (!composer) { composer = attachComposer(row, 'news', c, (c.symbols || [])[0] || 'news'); }
         composer.box.hidden = !composer.box.hidden;
