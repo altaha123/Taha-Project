@@ -473,6 +473,7 @@ _state: Dict[str, Any] = {
     "recent_drops": [],
 }
 _loaded = False
+_mtime = 0.0
 
 
 def _load() -> None:
@@ -503,6 +504,7 @@ def _save() -> None:
             with open(tmp, "w", encoding="utf-8") as fh:
                 json.dump({"items": _state["items"], "counters": _state["counters"]}, fh)
             os.replace(tmp, STORE_PATH)
+            globals()['_mtime'] = os.path.getmtime(STORE_PATH)
         except Exception:
             pass
 
@@ -585,9 +587,44 @@ def poll_once() -> Dict[str, Any]:
     return {"added": added, "sources": status, "counters": dict(_state["counters"])}
 
 
+
+def _reload_if_changed() -> None:
+    """Re-read the store when the file on disk is newer than what we hold.
+
+    Why this is needed: _load() set a _loaded flag and never looked at the file
+    again. If Render runs uvicorn with more than one worker — and the default
+    for a paid instance often is — then each worker is a separate process with
+    its own memory. The poller lives in worker A. A request served by worker B
+    reads B's copy, which was loaded once at first request and never refreshed.
+    Result: the feed populates once and then appears frozen forever, which is
+    exactly the symptom.
+
+    Checking mtime costs one stat call and makes the behaviour identical
+    whether the app runs on one worker or six.
+    """
+    global _mtime
+    try:
+        m = os.path.getmtime(STORE_PATH)
+    except OSError:
+        return
+    if m <= _mtime:
+        return
+    try:
+        with open(STORE_PATH, "r", encoding="utf-8") as fh:
+            d = json.load(fh)
+        if isinstance(d.get("items"), dict):
+            with _lock:
+                _state["items"] = d["items"]
+                _state["counters"] = d.get("counters", _state["counters"])
+                _mtime = m
+    except Exception:
+        pass
+
+
 def feed(limit: int = 40, theme: Optional[str] = None,
          symbol: Optional[str] = None, min_corroboration: int = 1) -> List[Dict[str, Any]]:
     _load()
+    _reload_if_changed()
     with _lock:
         items = list(_state["items"].values())
     cutoff = datetime.now(IST) - timedelta(hours=LOOKBACK_HOURS)
@@ -626,6 +663,7 @@ def set_status(item_id: str, status: str) -> Optional[Dict[str, Any]]:
 
 def status_report() -> Dict[str, Any]:
     _load()
+    _reload_if_changed()
     with _lock:
         c = dict(_state["counters"])
         return {

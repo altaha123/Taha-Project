@@ -32,6 +32,26 @@ def _check_admin(key: Optional[str]) -> None:
         raise HTTPException(status_code=401, detail="admin key required")
 
 
+_poller_started = False
+
+
+def _ensure_poller() -> None:
+    """Start the background poller on first use rather than at import.
+
+    See the comment in main.py: a thread per worker at import time is what
+    made the instance unstable. Lazy start means the cost is only paid by
+    someone actually looking at the news tab.
+    """
+    global _poller_started
+    if _poller_started:
+        return
+    _poller_started = True
+    try:
+        market_news.start_poller()
+    except Exception:
+        pass
+
+
 @router.get("/feed")
 def news_feed_route(
     limit: int = Query(40, ge=1, le=120),
@@ -39,6 +59,7 @@ def news_feed_route(
     symbol: Optional[str] = None,
     min_corroboration: int = Query(1, ge=1, le=8),
 ):
+    _ensure_poller()
     clusters = market_news.feed(limit=limit, theme=theme, symbol=symbol,
                                min_corroboration=min_corroboration)
     return {
@@ -54,6 +75,7 @@ def news_feed_route(
 
 @router.get("/status")
 def news_status_route():
+    _ensure_poller()
     return market_news.status_report()
 
 

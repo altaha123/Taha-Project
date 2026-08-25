@@ -61,17 +61,18 @@ app = FastAPI(title="Altaha Screener API", version="2.1")
 # itself, so there is still exactly one BSE session in this process.
 # news_feed.py is untouched and still owns /news/press.
 #
-# Pollers are daemon threads. Set ANN_POLLER=0 or NEWS_POLLER=0 on Render to
-# stop either one without touching this file.
+# The news poller is NOT started here. Starting a thread at import time means
+# one poller per uvicorn worker, and on a 512 MB instance already running the
+# intraday scanner, the alerts loop and the announcements poller, that extra
+# memory is what pushes it over and gets the process restarted — which takes
+# /announcements down with it. It now starts on the first request to the news
+# feed instead, so a user who never opens the Social tab never pays for it.
 # ---------------------------------------------------------------------------
 import social_routes
 import news_routes
-import market_news
 
 app.include_router(social_routes.router)
 app.include_router(news_routes.router)
-
-market_news.start_poller()
 
 app.add_middleware(
     CORSMiddleware,

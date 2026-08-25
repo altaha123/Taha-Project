@@ -70,6 +70,7 @@ _state: Dict[str, Any] = {
     "last_build": None,
 }
 _loaded = False
+_mtime = 0.0
 
 ALLOWED_ADJECTIVES = {"largest", "single", "domestic", "international", "consolidated", "standalone"}
 
@@ -142,9 +143,9 @@ CATEGORY_RULES: List[Dict[str, Any]] = [
         "label": "Order win",
         "tier": "A",
         "patterns": [
-            r"\b(receipt|received|award(ed)?|bagg?ed|secur(ed|ing)|win(s|ning)?)\b.{0,40}\b(order|contract|loa|letter\s+of\s+award|work\s+order|tender)\b",
-            r"\border\s+(win|book|inflow|received)\b",
-            r"\bletter\s+of\s+(award|intent|acceptance)\b",
+            r"\b(receipt|received|award(ed)?|bagg?ed|secur(ed|ing)|win(s|ning)?)\b.{0,40}\b(orders?|contracts?|loa|letters?\s+of\s+award|work\s+orders?|tenders?)\b",
+            r"\borders?\s+(win|book|inflow|received)\b",
+            r"\bletters?\s+of\s+(award|intent|acceptance)\b",
         ],
         # A tax demand order is also an "order received". Without this, a GST
         # penalty gets posted as a business win — the single worst thing this
@@ -238,10 +239,10 @@ CATEGORY_RULES: List[Dict[str, Any]] = [
         "label": "Regulatory action",
         "tier": "A",
         "patterns": [
-            r"\b(penalty|fine|show\s+cause|adjudicat|prosecution|search\s+and\s+seiz|raid|summons)\b",
+            r"\b(penalt(y|ies)|fine[sd]?|show\s+cause|adjudicat|prosecution|search\s+and\s+seiz|raid|summons)\b",
             r"\b(gst|income\s+tax|sebi|rbi|cci|enforcement\s+directorate|nclt|nclat)\b.{0,50}\b(order|notice|penalty|demand|action)\b",
             r"regulation\s*30.{0,30}\b(tax\s+demand|penalty)",
-            r"\bdemand\s+(order|notice)\b",
+            r"\bdemand\s+(orders?|notices?)\b",
         ],
     },
     {
@@ -280,7 +281,7 @@ CATEGORY_RULES: List[Dict[str, Any]] = [
         "key": "bonus_split",
         "label": "Bonus / split",
         "tier": "A",
-        "patterns": [r"\bbonus\s+(issue|share)", r"\b(stock\s+)?split\b", r"\bsub-?division\s+of\s+(equity\s+)?shares?\b"],
+        "patterns": [r"\bbonus\s+(issues?|shares?)", r"\b(stock\s+)?split\b", r"\bsub-?division\s+of\s+(equity\s+)?shares?\b"],
     },
     {
         "key": "related_party",
@@ -712,6 +713,70 @@ def _market_cap_cr(symbol: str) -> Optional[float]:
 
 
 # ============================================================================
+# FACT SUFFICIENCY — the fix for confidently wrong restatements
+# ============================================================================
+# The mistake in the first version: I wrote the templates for the full text of
+# a filing, then fed them BSE's NEWSSUB field, which is frequently nothing but
+# "Announcement under Regulation 30 (LODR)-Press Release / Media Release".
+#
+# A template given no facts still produces a fluent sentence. "X has won an
+# order" from a headline that never said so is not a small error — it is a
+# false statement about a listed company, published under Taha's name.
+#
+# So each category now declares what it must SEE before it is allowed to
+# assert anything. If the evidence is not in the text, the restatement falls
+# back to the exchange's own headline, verbatim, and the row is marked
+# needs_pdf. Fewer confident cards, none of them invented.
+
+REQUIRED_EVIDENCE: Dict[str, List[str]] = {
+    "order_win":       [r"\b(orders?|contracts?|loa|letters?\s+of\s+(award|intent|acceptance)|work\s+orders?|tenders?)\b"],
+    "credit_rating":   [r"\b(upgrad|downgrad|reaffirm|revis|assign|withdraw|rating\s+of|AAA|AA|BBB|\bA[+-]?\b)"],
+    "pledge":          [r"\b(pledg|encumbr|invok|releas)"],
+    "board_change":    [r"\b(resign|cessation|appoint|re-?appoint|demise|retire|step\s+down|ceas)"],
+    "fundraise":       [r"\b(qip|preferential|rights\s+issue|ncd|deben|warrant|rais\w*\s+of\s+fund|fund\s+rais|issue\s+of\s+(equity\s+)?shares?)"],
+    "ma":              [r"\b(scheme\s+of|acquir|acquisition|demerger|amalgamat|slump\s+sale|divest|stake|joint\s+venture|open\s+offer)"],
+    "buyback":         [r"\bbuy-?back\b"],
+    "capex":           [r"\b(capex|capital\s+expenditure|expansion|new\s+plant|greenfield|brownfield|capacity|commission|setting\s+up)"],
+    "disruption":      [r"\b(fire|explosion|accident|mishap|shutdown|shut\s+down|suspension|closure|lock-?out|strike|force\s+majeure|cyber)"],
+    "regulatory":      [r"\b(penalt|fine|show\s+cause|demand|adjudicat|prosecut|search|seiz|order\s+(from|by)|notice)"],
+    "insolvency":      [r"\b(insolvency|ibc|cirp|liquidation|resolution\s+plan|moratorium)"],
+    "results":         [r"\b(financial\s+results?|quarterly\s+results?|audited|un-?audited)"],
+    "business_update": [r"\b(business|operational|sales|production|offtake|dispatch)\s+(update|figures?|volume|data)|\b(sales|production)\b.{0,20}\d"],
+    "dividend":        [r"\bdividend\b"],
+    "bonus_split":     [r"\b(bonus|split|sub-?division)\b"],
+    "related_party":   [r"\brelated\s+part(y|ies)\b"],
+}
+REQUIRED_C = {k: [re.compile(p, re.I) for p in v] for k, v in REQUIRED_EVIDENCE.items()}
+
+# Headlines that are pure envelope — the filing exists, its content does not
+# appear in the text we were given.
+ENVELOPE_ONLY = re.compile(
+    r"^\s*(announcement|disclosure|intimation|submission|update|general\s+update)"
+    r"[\s\-–:]*(under|pursuant|of|regarding)?[\s\-–:]*"
+    r"(regulation\s*\d+[\s\(\)\d]*)?"
+    r"[\s\-–:]*(\(?lodr\)?)?[\s\-–:]*"
+    r"(press\s+release|media\s+release|newspaper)?\s*$", re.I)
+
+
+def evidence_ok(rec: Dict[str, Any], text: str) -> Tuple[bool, str]:
+    """Is the fact this template is about to assert actually present?"""
+    key = rec.get("category_key")
+    if ENVELOPE_ONLY.match((rec.get("headline") or "").strip()):
+        return False, "headline is a Regulation 30 envelope with no content"
+    rules = REQUIRED_C.get(key)
+    if not rules:
+        return True, ""
+    if not any(rx.search(text) for rx in rules):
+        return False, f"nothing in the headline evidences a {key.replace('_', ' ')}"
+    # Categories whose whole point is a number are not worth asserting without one.
+    if key in ("order_win", "capex", "buyback", "fundraise") and rec.get("money_cr") is None:
+        return False, "no amount given in the headline"
+    if key == "dividend" and not rec.get("per_share") and rec.get("money_cr") is None:
+        return False, "no dividend amount given in the headline"
+    return True, ""
+
+
+# ============================================================================
 # BUILD — read announcements.feed(), add restatement + post, store
 # ============================================================================
 
@@ -748,6 +813,7 @@ def _save() -> None:
             with open(tmp, "w", encoding="utf-8") as fh:
                 json.dump({"items": _state["items"], "counters": _state["counters"]}, fh)
             os.replace(tmp, STORE_PATH)
+            globals()['_mtime'] = os.path.getmtime(STORE_PATH)
         except Exception:
             pass
 
@@ -818,9 +884,21 @@ def process(row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         _state["counters"]["dropped"] += 1
         return None
 
-    rec["restated"] = restate(rec)
-    rec["x_post"] = build_x_post(rec)
-    rec["ig_caption"] = build_ig_caption(rec)
+    ok, why = evidence_ok(rec, blob)
+    rec["evidence_ok"] = ok
+    rec["evidence_note"] = why
+    if ok:
+        rec["restated"] = restate(rec)
+    else:
+        # No invention. The exchange's own words, and a flag to go read the PDF.
+        rec["restated"] = {
+            "headline": f"{_company_short(rec['company'])} — filing",
+            "body": rec["headline"],
+            "figures": "",
+        }
+        rec["status"] = "needs_pdf"
+    rec["x_post"] = build_x_post(rec) if ok else ""
+    rec["ig_caption"] = build_ig_caption(rec) if ok else ""
     rec["id"] = _digest(rec)
     _state["counters"]["kept"] += 1
     return rec
@@ -859,9 +937,44 @@ def build(limit: int = 300, refresh: bool = False) -> Dict[str, Any]:
             "counters": dict(_state["counters"])}
 
 
+
+def _reload_if_changed() -> None:
+    """Re-read the store when the file on disk is newer than what we hold.
+
+    Why this is needed: _load() set a _loaded flag and never looked at the file
+    again. If Render runs uvicorn with more than one worker — and the default
+    for a paid instance often is — then each worker is a separate process with
+    its own memory. The poller lives in worker A. A request served by worker B
+    reads B's copy, which was loaded once at first request and never refreshed.
+    Result: the feed populates once and then appears frozen forever, which is
+    exactly the symptom.
+
+    Checking mtime costs one stat call and makes the behaviour identical
+    whether the app runs on one worker or six.
+    """
+    global _mtime
+    try:
+        m = os.path.getmtime(STORE_PATH)
+    except OSError:
+        return
+    if m <= _mtime:
+        return
+    try:
+        with open(STORE_PATH, "r", encoding="utf-8") as fh:
+            d = json.load(fh)
+        if isinstance(d.get("items"), dict):
+            with _lock:
+                _state["items"] = d["items"]
+                _state["counters"] = d.get("counters", _state["counters"])
+                _mtime = m
+    except Exception:
+        pass
+
+
 def feed(limit: int = 60, status: Optional[str] = None,
          category: Optional[str] = None) -> List[Dict[str, Any]]:
     _load()
+    _reload_if_changed()
     with _lock:
         items = list(_state["items"].values())
     cutoff = datetime.now(IST) - timedelta(hours=LOOKBACK_HOURS)
@@ -897,6 +1010,8 @@ def set_status(item_id: str, status: str, x_post: Optional[str] = None) -> Optio
 
 def status_report() -> Dict[str, Any]:
     _load()
+    _reload_if_changed()
+    _reload_if_changed()
     with _lock:
         items = list(_state["items"].values())
         by_cat: Dict[str, int] = {}
