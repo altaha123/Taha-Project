@@ -1077,7 +1077,11 @@
     var sibling = host && host.querySelector('a, button');
     if (sibling) {
       var el = sibling.cloneNode(true);
-      el.textContent = 'Social';
+      el.classList.remove('on');           // clone inherited the active state
+      var icon = el.querySelector('svg');  // keep the icon, replace only the label
+      el.textContent = '';
+      if (icon) el.appendChild(icon);
+      el.appendChild(document.createTextNode('Social'));
       el.removeAttribute('href');
       el.id = 'altaha-social-open';
       el.setAttribute('role', 'button');
@@ -1088,6 +1092,17 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
       });
       sibling.parentNode.appendChild(el);
+      /* .navmain is a fixed four-column grid. Appending a fifth child pushed
+         Social onto its own row at full column width, underline and all —
+         it looked like the page had broken. Re-count the columns. The CSS
+         in altaha-polish.css does this too; this is here so the nav is
+         still right if that stylesheet ever goes missing again. */
+      try {
+        var host2 = sibling.parentNode;
+        if (getComputedStyle(host2).display === 'grid') {
+          host2.style.gridTemplateColumns = 'repeat(' + host2.children.length + ', 1fr)';
+        }
+      } catch (e) {}
       return true;
     }
     return false;
