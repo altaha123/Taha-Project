@@ -1,4 +1,420 @@
 /* ===========================================================================
+   cards.js — Instagram card renderer.
+
+   Pure Canvas 2D. No html2canvas, no SVG-to-image, no server rendering.
+
+   Why not SVG. The obvious approach is to build an <svg>, load it into an
+   <img>, and drawImage it. It silently loses every custom font: an SVG loaded
+   through an img tag cannot reach the page's fonts, so Instrument Serif comes
+   out as Times and the whole identity evaporates. There is no error. You just
+   get an ugly card.
+
+   Why not server-side. Rendering PNGs on the 512 MB Render instance means
+   Pillow plus font files plus memory per request, on a box already running a
+   scanner and two pollers. The browser has the fonts loaded and an idle GPU.
+
+   So: draw directly on a canvas at 1080 wide, export with toBlob. The only
+   real cost is that everything — word wrap, fitting, alignment — is manual.
+   That is what most of this file is.
+
+   Exposes window.AltahaCards = { render, download, FORMATS }.
+   =========================================================================== */
+(function (global) {
+  'use strict';
+
+  var FORMATS = {
+    portrait: { w: 1080, h: 1350, label: 'Feed 4:5' },
+    square:   { w: 1080, h: 1080, label: 'Square' },
+    story:    { w: 1080, h: 1920, label: 'Story' }
+  };
+
+  /* Ledger palette. Hard-coded rather than read from CSS variables: an
+     exported PNG must look the same whoever generates it, and must not flip
+     when the site is in dark mode. */
+  var LIGHT = {
+    paper: '#F6F2E9', ink: '#1A1712', mute: '#726B5D',
+    gold: '#8A6D1E', goldLine: '#B08D2E', rule: 'rgba(120,110,90,0.28)'
+  };
+  var DARK = {
+    paper: '#16150F', ink: '#F2EDE1', mute: '#8A919F',
+    gold: '#C9A63E', goldLine: '#B08D2E', rule: 'rgba(200,190,160,0.22)'
+  };
+
+  var SERIF = '"Instrument Serif", Georgia, serif';
+  var MONO  = '"IBM Plex Mono", ui-monospace, monospace';
+  var SANS  = '"Inter", system-ui, sans-serif';
+
+  function font(size, family, weight) {
+    return (weight ? weight + ' ' : '') + Math.round(size) + 'px ' + family;
+  }
+
+  /* ---- text measurement and wrapping ---------------------------------- */
+
+  function wrap(ctx, text, maxWidth) {
+    var words = String(text || '').split(/\s+/).filter(Boolean);
+    var lines = [], line = '';
+    for (var i = 0; i < words.length; i++) {
+      var probe = line ? line + ' ' + words[i] : words[i];
+      if (ctx.measureText(probe).width > maxWidth && line) {
+        lines.push(line);
+        line = words[i];
+      } else {
+        line = probe;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  /* Shrink until the block fits the space it has been given. A filing
+     restatement can be one clause or four; a fixed size would either clip the
+     long ones or make the short ones look lost. */
+  function fitText(ctx, text, opts) {
+    var size = opts.max;
+    while (size >= opts.min) {
+      ctx.font = font(size, opts.family, opts.weight);
+      var lines = wrap(ctx, text, opts.width);
+      var lh = size * (opts.lineHeight || 1.28);
+      if (lines.length * lh <= opts.height) {
+        return { size: size, lines: lines, lineHeight: lh, height: lines.length * lh };
+      }
+      size -= 2;
+    }
+    ctx.font = font(opts.min, opts.family, opts.weight);
+    var l = wrap(ctx, text, opts.width);
+    var lhm = opts.min * (opts.lineHeight || 1.28);
+    var maxLines = Math.max(1, Math.floor(opts.height / lhm));
+    if (l.length > maxLines) {
+      l = l.slice(0, maxLines);
+      l[maxLines - 1] = l[maxLines - 1].replace(/[\s,.;:]+$/, '') + '…';
+    }
+    return { size: opts.min, lines: l, lineHeight: lhm, height: l.length * lhm };
+  }
+
+  function drawLines(ctx, block, x, y, color) {
+    ctx.fillStyle = color;
+    ctx.font = font(block.size, block._family, block._weight);
+    for (var i = 0; i < block.lines.length; i++) {
+      ctx.fillText(block.lines[i], x, y + block.lineHeight * (i + 0.78));
+    }
+    return y + block.height;
+  }
+
+  function measured(ctx, text, opts) {
+    var b = fitText(ctx, text, opts);
+    b._family = opts.family; b._weight = opts.weight;
+    return b;
+  }
+
+  /* ---- chrome --------------------------------------------------------- */
+
+  function drawEyebrow(ctx, parts, x, y, P, size) {
+    ctx.font = font(size, MONO, '500');
+    ctx.textBaseline = 'alphabetic';
+    var cx = x;
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      if (!p || !p.text) continue;
+      ctx.fillStyle = p.gold ? P.gold : P.mute;
+      var t = String(p.text).toUpperCase();
+      ctx.fillText(t, cx, y);
+      var w = ctx.measureText(t).width;
+      if (p.gold) {
+        ctx.fillStyle = P.goldLine;
+        ctx.fillRect(cx, y + size * 0.34, w, 2);
+      }
+      cx += w;
+      if (i < parts.length - 1) {
+        ctx.fillStyle = P.mute;
+        ctx.fillText('  ·  ', cx, y);
+        cx += ctx.measureText('  ·  ').width;
+      }
+    }
+  }
+
+  function drawRule(ctx, x, y, w, P) {
+    ctx.fillStyle = P.rule;
+    ctx.fillRect(x, y, w, 1);
+  }
+
+  /* The one deliberate flourish: a gold arc in the corner, echoing the
+     --gold-line stroke role from the design system. Strokes and arcs only,
+     never text — that is what the token is for. */
+  function drawMark(ctx, W, H, P, pad) {
+    ctx.save();
+    ctx.strokeStyle = P.goldLine;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.42;
+    ctx.beginPath();
+    ctx.arc(W + 40, -40, 250, Math.PI * 0.5, Math.PI * 1.0);
+    ctx.stroke();
+    ctx.globalAlpha = 0.18;
+    ctx.beginPath();
+    ctx.arc(W + 40, -40, 320, Math.PI * 0.5, Math.PI * 1.0);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawFooter(ctx, W, H, P, pad, handle) {
+    var fy = H - pad;
+    drawRule(ctx, pad, fy - 74, W - pad * 2, P);
+    ctx.font = font(25, MONO, '500');
+    ctx.fillStyle = P.mute;
+    ctx.textAlign = 'left';
+    ctx.fillText(handle || '@altaha.screener', pad, fy - 26);
+    ctx.textAlign = 'right';
+    ctx.font = font(22, MONO, '400');
+    ctx.fillText('NOT INVESTMENT ADVICE', W - pad, fy - 26);
+    ctx.textAlign = 'left';
+  }
+
+  /* ---- filing card ---------------------------------------------------- */
+
+  function renderFiling(ctx, item, F, P, opts) {
+    var W = F.w, H = F.h, pad = 88;
+    var inner = W - pad * 2;
+    var r = item.restated || {};
+
+    ctx.fillStyle = P.paper;
+    ctx.fillRect(0, 0, W, H);
+    drawMark(ctx, W, H, P, pad);
+
+    var y = pad + 34;
+    drawEyebrow(ctx, [
+      { text: item.category_label || 'Filing', gold: true },
+      { text: item.exchange || 'BSE' },
+      { text: item.time_ist || '' }
+    ], pad, y, P, 24);
+
+    y += 62;
+
+    // Ticker, the largest thing on the card. It is what someone scrolling sees.
+    var ticker = item.symbol || '';
+    if (ticker) {
+      ctx.font = font(104, SERIF, '400');
+      ctx.fillStyle = P.ink;
+      ctx.fillText(ticker, pad, y + 82);
+      y += 110;
+    }
+
+    // Company name, quiet, under the ticker.
+    var nameBlock = measured(ctx, item.company || '', {
+      family: SANS, weight: '400', min: 26, max: 32,
+      width: inner, height: 84, lineHeight: 1.3
+    });
+    y = drawLines(ctx, nameBlock, pad, y, P.mute) + 40;
+
+    drawRule(ctx, pad, y, inner, P);
+    y += 54;
+
+    // The restatement, optically centred between the rule and the source line.
+    var regionTop = y;
+    var regionBottom = H - pad - 150;
+    var figs = (r.figures || '').trim();
+    var figsHeight = figs ? 96 : 0;
+    var regionHeight = regionBottom - regionTop - figsHeight;
+
+    var body = measured(ctx, r.body || item.headline || '', {
+      family: SERIF, weight: '400', min: 38, max: 78,
+      width: inner, height: regionHeight, lineHeight: 1.22
+    });
+
+    var contentHeight = body.height + figsHeight;
+    y = regionTop + Math.max(0, (regionBottom - regionTop - contentHeight) / 2);
+    y = drawLines(ctx, body, pad, y, P.ink);
+
+    if (figs) {
+      y += 58;
+      ctx.font = font(34, MONO, '500');
+      ctx.fillStyle = P.goldLine;
+      ctx.fillRect(pad, y - 34, 3, 46);
+      ctx.fillStyle = P.gold;
+      ctx.fillText(figs, pad + 24, y);
+    }
+
+    // Source line sits on the footer rule, not floating after the body.
+    ctx.font = font(23, MONO, '400');
+    ctx.fillStyle = P.mute;
+    var src = 'SOURCE: ' + (item.exchange || 'BSE') + ' FILING' +
+              (item.pdf ? ' · PDF LINKED IN BIO' : '');
+    ctx.fillText(src, pad, H - pad - 108);
+
+    drawFooter(ctx, W, H, P, pad, opts.handle);
+  }
+
+  /* ---- news card ------------------------------------------------------ */
+
+  function renderNews(ctx, c, F, P, opts) {
+    var W = F.w, H = F.h, pad = 88;
+    var inner = W - pad * 2;
+    var lead = c.lead || {};
+
+    ctx.fillStyle = P.paper;
+    ctx.fillRect(0, 0, W, H);
+    drawMark(ctx, W, H, P, pad);
+
+    var y = pad + 34;
+    drawEyebrow(ctx, [
+      { text: (c.themes && c.themes[0]) || 'Markets', gold: true },
+      { text: lead.when_ist || '' }
+    ], pad, y, P, 24);
+
+    y += 74;
+
+    /* The corroboration count, given real estate. It is the only thing on this
+       card that is mine rather than the publication's, so it gets the number
+       treatment: big figure, small label. */
+    var n = c.corroboration || 1;
+    ctx.font = font(150, SERIF, '400');
+    ctx.fillStyle = n >= 3 ? P.gold : P.mute;
+    ctx.fillText(String(n), pad, y + 118);
+    var nw = ctx.measureText(String(n)).width;
+    ctx.font = font(30, MONO, '500');
+    ctx.fillStyle = P.mute;
+    ctx.fillText(n === 1 ? 'OUTLET' : 'OUTLETS', pad + nw + 28, y + 76);
+    ctx.font = font(24, MONO, '400');
+    ctx.fillText(n >= 3 ? 'CARRYING THIS' : (c.speculative ? 'UNCONFIRMED' : 'SO FAR'),
+                 pad + nw + 28, y + 112);
+    y += 170;
+
+    drawRule(ctx, pad, y, inner, P);
+    y += 58;
+
+    // Centre the whole block — headline, attribution and the "also carried by"
+    // line together. Centring only the headline reserved the trailing space
+    // twice and left a third of the card empty.
+    var sourceTop = H - pad - 170;
+    var alsoText = (c.publications && c.publications.length > 1)
+      ? 'Also carried by ' + c.publications.slice(1).join(', ') + '.' : '';
+
+    var head = measured(ctx, '\u201C' + (lead.title || '') + '\u201D', {
+      family: SERIF, weight: '400', min: 40, max: 76,
+      width: inner, height: sourceTop - y - 120, lineHeight: 1.2
+    });
+
+    var alsoBlock = null;
+    if (alsoText) {
+      alsoBlock = measured(ctx, alsoText, {
+        family: SANS, weight: '400', min: 20, max: 24,
+        width: inner, height: 80, lineHeight: 1.35
+      });
+    }
+
+    var attribGap = 52, attribH = 30;
+    var total = head.height + attribGap + attribH + (alsoBlock ? 16 + alsoBlock.height : 0);
+    y = y + Math.max(0, (sourceTop - y - total) / 2);
+
+    y = drawLines(ctx, head, pad, y, P.ink);
+
+    y += attribGap;
+    ctx.font = font(28, SANS, '400');
+    ctx.fillStyle = P.mute;
+    ctx.fillText('\u2014 ' + (lead.publication || ''), pad, y);
+
+    if (alsoBlock) {
+      y += 16;
+      drawLines(ctx, alsoBlock, pad, y, P.mute);
+    }
+
+    ctx.font = font(23, MONO, '400');
+    ctx.fillStyle = P.mute;
+    ctx.fillText('HEADLINE AS PUBLISHED · LINK IN BIO', pad, H - pad - 108);
+
+    drawFooter(ctx, W, H, P, pad, opts.handle);
+  }
+
+  /* ---- daily wrap ----------------------------------------------------- */
+
+  function renderWrap(ctx, data, F, P, opts) {
+    var W = F.w, H = F.h, pad = 88;
+    var inner = W - pad * 2;
+
+    ctx.fillStyle = P.paper;
+    ctx.fillRect(0, 0, W, H);
+    drawMark(ctx, W, H, P, pad);
+
+    var y = pad + 34;
+    drawEyebrow(ctx, [{ text: 'Daily wrap', gold: true }, { text: data.date || '' }], pad, y, P, 24);
+
+    y += 84;
+    ctx.font = font(88, SERIF, '400');
+    ctx.fillStyle = P.ink;
+    ctx.fillText('Today’s filings', pad, y + 68);
+    y += 128;
+
+    drawRule(ctx, pad, y, inner, P);
+    y += 30;
+
+    var rows = data.rows || [];
+    for (var i = 0; i < rows.length && i < 7; i++) {
+      var rowY = y + 92;
+      ctx.font = font(58, SERIF, '400');
+      ctx.fillStyle = P.gold;
+      var num = String(rows[i].count);
+      ctx.fillText(num, pad, rowY);
+      ctx.font = font(31, SANS, '400');
+      ctx.fillStyle = P.ink;
+      ctx.fillText(rows[i].label, pad + Math.max(ctx.measureText(num).width, 78) + 34, rowY - 4);
+      y += 104;
+      drawRule(ctx, pad, y, inner, P);
+    }
+
+    if (data.note) {
+      var noteBlock = measured(ctx, data.note, {
+        family: SANS, weight: '400', min: 24, max: 30,
+        width: inner, height: 120, lineHeight: 1.4
+      });
+      drawLines(ctx, noteBlock, pad, H - pad - 250, P.mute);
+    }
+
+    drawFooter(ctx, W, H, P, pad, opts.handle);
+  }
+
+  /* ---- public --------------------------------------------------------- */
+
+  function render(canvas, kind, data, options) {
+    var opts = options || {};
+    var F = FORMATS[opts.format || 'portrait'] || FORMATS.portrait;
+    var P = opts.theme === 'dark' ? DARK : LIGHT;
+
+    canvas.width = F.w;
+    canvas.height = F.h;
+    var ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+
+    if (kind === 'news') renderNews(ctx, data, F, P, opts);
+    else if (kind === 'wrap') renderWrap(ctx, data, F, P, opts);
+    else renderFiling(ctx, data, F, P, opts);
+
+    return canvas;
+  }
+
+  function download(canvas, filename) {
+    return new Promise(function (resolve, reject) {
+      if (!canvas.toBlob) { reject(new Error('canvas export unsupported')); return; }
+      canvas.toBlob(function (blob) {
+        if (!blob) { reject(new Error('export failed')); return; }
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename || 'altaha.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        resolve(blob);
+      }, 'image/png');
+    });
+  }
+
+  global.AltahaCards = { render: render, download: download, FORMATS: FORMATS,
+                         _wrap: wrap, _fitText: fitText };
+
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+/* ===========================================================================
    social.js — the Social surface for Altaha Screener
    ---------------------------------------------------------------------------
    Same pattern as nav.js and scoring.js: a wrapper layer. It does not rewrite
@@ -120,6 +536,24 @@
   .as-count.over{color:#B3261E}
   .as-src{font-size:11.5px;color:var(--mute,#726B5D);margin-top:7px}
   .as-src a{color:var(--gold,#8A6D1E)}
+
+  .as-shot{margin-top:12px;border:1px solid rgba(120,110,90,.28);border-radius:4px;
+    padding:12px;background:rgba(0,0,0,.02)}
+  .as-shot[hidden]{display:none}
+  .as-shot-opts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .as-opt{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:10.5px;letter-spacing:.05em;
+    text-transform:uppercase;padding:4px 10px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--mute,#726B5D);background:transparent;color:var(--mute,#726B5D)}
+  .as-opt[aria-pressed="true"]{background:var(--ink,#1A1712);color:var(--paper,#F6F2E9);
+    border-color:var(--ink,#1A1712)}
+  .as-opt:focus-visible{outline:2px solid var(--gold-line,#B08D2E);outline-offset:2px}
+  .as-canvas{display:block;width:100%;max-width:270px;height:auto;margin:0 auto 10px;
+    border:1px solid rgba(120,110,90,.3);border-radius:2px}
+  .as-cap{width:100%;box-sizing:border-box;min-height:130px;resize:vertical;
+    font-family:var(--sans,'Inter',system-ui,sans-serif);font-size:12.5px;line-height:1.5;
+    color:var(--ink,#1A1712);background:transparent;border:1px solid rgba(120,110,90,.3);
+    border-radius:4px;padding:9px 10px;margin-bottom:8px}
+  .as-cap:focus{outline:none;border-color:var(--gold-line,#B08D2E)}
 
   .as-skel{height:74px;border-radius:4px;margin:14px 0;
     background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);
@@ -277,12 +711,14 @@
       + '<textarea class="as-post" spellcheck="false" aria-label="Post text">' + esc(item.x_post || '') + '</textarea>'
       + '<div class="as-acts">'
       + '  <button class="as-btn" data-act="copy">Copy for X</button>'
+      + '  <button class="as-btn ghost" data-act="image">Instagram</button>'
       + '  <button class="as-btn ghost" data-act="approve">Mark posted</button>'
       + '  <button class="as-btn ghost" data-act="skip">Skip</button>'
       + '  <span class="as-count"></span>'
       + '</div>'
       + src;
 
+    var composer = null;
     var ta = row.querySelector('.as-post');
     var counter = row.querySelector('.as-count');
     function tick() {
@@ -299,6 +735,11 @@
       var act = btn.getAttribute('data-act');
       if (act === 'copy') {
         copyText(ta.value);
+      } else if (act === 'image') {
+        if (!composer) { composer = attachComposer(row, 'filing', item, item.symbol || item.company); }
+        composer.box.hidden = !composer.box.hidden;
+        btn.textContent = composer.box.hidden ? 'Instagram' : 'Hide image';
+        if (!composer.box.hidden) composer.refresh();
       } else if (act === 'approve') {
         send('/social/approve', { id: item.id, x_post: ta.value }, 'Marked posted');
         row.style.opacity = '.45';
@@ -344,10 +785,12 @@
       + '<textarea class="as-post" spellcheck="false" aria-label="Post text">' + esc(c.x_post || '') + '</textarea>'
       + '<div class="as-acts">'
       + '  <button class="as-btn" data-act="copy">Copy for X</button>'
+      + '  <button class="as-btn ghost" data-act="image">Instagram</button>'
       + '  <button class="as-btn ghost" data-act="skip">Skip</button>'
       + '  <span class="as-count"></span>'
       + '</div>';
 
+    var composer = null;
     var ta = row.querySelector('.as-post');
     var counter = row.querySelector('.as-count');
     function tick() {
@@ -363,14 +806,109 @@
     row.addEventListener('click', function (e) {
       var btn = e.target.closest('[data-act]');
       if (!btn) return;
-      if (btn.getAttribute('data-act') === 'copy') {
+      var act = btn.getAttribute('data-act');
+      if (act === 'copy') {
         copyText(ta.value);
+      } else if (act === 'image') {
+        if (!composer) { composer = attachComposer(row, 'news', c, (c.symbols || [])[0] || 'news'); }
+        composer.box.hidden = !composer.box.hidden;
+        btn.textContent = composer.box.hidden ? 'Instagram' : 'Hide image';
+        if (!composer.box.hidden) composer.refresh();
       } else {
         send('/social/news/skip', { id: c.id }, 'Skipped');
         row.style.opacity = '.35';
       }
     });
     return row;
+  }
+
+  /* ---- Instagram composer ------------------------------------------- */
+  var IG_PREFS = 'altaha-ig-prefs';
+  function igPrefs() {
+    try { return JSON.parse(localStorage.getItem(IG_PREFS)) || {}; } catch (e) { return {}; }
+  }
+  function saveIgPrefs(p) {
+    try { localStorage.setItem(IG_PREFS, JSON.stringify(p)); } catch (e) {}
+  }
+
+  /* Instrument Serif and IBM Plex Mono must be loaded before the first draw.
+     Canvas silently falls back to a default serif if they are not, and the
+     card comes out looking like nothing — no error, just a wrong-looking PNG.
+     document.fonts.ready is the only reliable gate. */
+  var fontsReady = (document.fonts && document.fonts.ready)
+    ? document.fonts.ready.catch(function () { return null; })
+    : Promise.resolve(null);
+
+  function attachComposer(row, kind, data, nameHint) {
+    var box = document.createElement('div');
+    box.className = 'as-shot';
+    box.hidden = true;
+
+    var prefs = igPrefs();
+    var state = { format: prefs.format || 'portrait', theme: prefs.theme || 'light' };
+
+    var opts = document.createElement('div');
+    opts.className = 'as-shot-opts';
+    [['portrait', 'Feed 4:5'], ['square', 'Square'], ['story', 'Story']].forEach(function (f) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'as-opt'; b.textContent = f[1];
+      b.setAttribute('aria-pressed', String(state.format === f[0]));
+      b.addEventListener('click', function () {
+        state.format = f[0]; saveIgPrefs(state); refresh();
+      });
+      opts.appendChild(b);
+    });
+    var themeBtn = document.createElement('button');
+    themeBtn.type = 'button'; themeBtn.className = 'as-opt';
+    themeBtn.style.marginLeft = 'auto';
+    opts.appendChild(themeBtn);
+    themeBtn.addEventListener('click', function () {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark'; saveIgPrefs(state); refresh();
+    });
+
+    var canvas = document.createElement('canvas');
+    canvas.className = 'as-canvas';
+
+    var cap = document.createElement('textarea');
+    cap.className = 'as-cap';
+    cap.spellcheck = false;
+    cap.setAttribute('aria-label', 'Instagram caption');
+    cap.value = data.ig_caption || '';
+
+    var acts = document.createElement('div');
+    acts.className = 'as-acts';
+    acts.innerHTML = '<button class="as-btn" data-ig="png">Download image</button>'
+      + '<button class="as-btn ghost" data-ig="caption">Copy caption</button>';
+
+    box.appendChild(opts); box.appendChild(canvas); box.appendChild(cap); box.appendChild(acts);
+
+    function refresh() {
+      [].forEach.call(opts.querySelectorAll('.as-opt'), function (b, i) {
+        if (i < 3) b.setAttribute('aria-pressed',
+          String(['portrait', 'square', 'story'][i] === state.format));
+      });
+      themeBtn.textContent = state.theme === 'dark' ? 'Dark' : 'Light';
+      fontsReady.then(function () {
+        try {
+          window.AltahaCards.render(canvas, kind, data,
+            { format: state.format, theme: state.theme, handle: prefs.handle });
+        } catch (e) { toast('Could not draw the card'); }
+      });
+    }
+
+    acts.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-ig]');
+      if (!b) return;
+      if (b.getAttribute('data-ig') === 'caption') { copyText(cap.value); return; }
+      var name = 'altaha-' + (nameHint || 'card').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+        + '-' + state.format + '.png';
+      window.AltahaCards.download(canvas, name).then(function () {
+        toast('Saved — post it from your phone');
+      }, function () { toast('Download failed'); });
+    });
+
+    row.appendChild(box);
+    return { box: box, refresh: refresh };
   }
 
   function copyText(text) {
