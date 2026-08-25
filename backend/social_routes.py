@@ -23,7 +23,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Body, Header, HTTPException, Query
 
-import announcements
+import social_posts
 import social_x
 
 router = APIRouter(prefix="/social", tags=["social"])
@@ -43,7 +43,8 @@ def social_feed(
     status: Optional[str] = None,
     category: Optional[str] = None,
 ):
-    items = announcements.feed(limit=limit, status=status, category=category)
+    social_posts.build()
+    items = social_posts.feed(limit=limit, status=status, category=category)
     return {
         "count": len(items),
         "items": items,
@@ -58,17 +59,17 @@ def social_feed(
 
 @router.get("/status")
 def social_status():
-    return announcements.status_report()
+    return social_posts.status_report()
 
 
 @router.get("/health")
 def social_health():
-    rep = announcements.status_report()
-    srcs = rep.get("sources") or {}
+    rep = social_posts.status_report()
+    up = rep.get("upstream_announcements") or {}
     return {
-        "ok": any((s or {}).get("ok") for s in srcs.values()) if srcs else None,
-        "last_poll": rep.get("last_poll"),
-        "sources": srcs,
+        "ok": up.get("error") is None and up.get("last_poll") is not None,
+        "last_build": rep.get("last_build"),
+        "upstream_announcements": up,
         "held": rep.get("held"),
         "kept_pct": rep.get("kept_pct"),
         "x": social_x.health(),
@@ -81,16 +82,18 @@ def social_categories():
     return {
         "keep": [
             {"key": r["key"], "label": r["label"], "tier": r["tier"]}
-            for r in announcements.CATEGORY_RULES
+            for r in social_posts.CATEGORY_RULES
         ],
-        "drop_reasons": sorted({why for _, why in announcements.DROP_RULES}),
+        "drop_reasons": sorted({why for _, why in social_posts.DROP_RULES}),
     }
 
 
 @router.post("/refresh")
 def social_refresh(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     _check_admin(x_admin_key)
-    return announcements.poll_once()
+    # Asks announcements.py to refresh if its data is stale, then rebuilds the
+    # drafts. No second fetcher — announcements.py owns the BSE session.
+    return social_posts.build(refresh=True)
 
 
 @router.post("/approve")
@@ -101,14 +104,14 @@ def social_approve(
     _check_admin(x_admin_key)
     item_id = payload.get("id")
     text = payload.get("x_post")
-    rec = announcements.set_status(item_id, "approved", text)
+    rec = social_posts.set_status(item_id, "approved", text)
     if not rec:
         raise HTTPException(status_code=404, detail="item not found")
     result = {"item": rec, "posted": None}
     if social_x.auto_post_enabled() and rec.get("tier") == "A":
         result["posted"] = social_x.post(rec.get("x_post", ""))
         if result["posted"].get("sent"):
-            announcements.set_status(item_id, "posted")
+            social_posts.set_status(item_id, "posted")
     return result
 
 
@@ -118,7 +121,7 @@ def social_skip(
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
 ):
     _check_admin(x_admin_key)
-    rec = announcements.set_status(payload.get("id"), "skipped")
+    rec = social_posts.set_status(payload.get("id"), "skipped")
     if not rec:
         raise HTTPException(status_code=404, detail="item not found")
     return {"item": rec}
@@ -131,10 +134,10 @@ def social_post_now(
 ):
     _check_admin(x_admin_key)
     item_id = payload.get("id")
-    rec = announcements.set_status(item_id, "approved", payload.get("x_post"))
+    rec = social_posts.set_status(item_id, "approved", payload.get("x_post"))
     if not rec:
         raise HTTPException(status_code=404, detail="item not found")
     res = social_x.post(rec.get("x_post", ""), force=True)
     if res.get("sent"):
-        announcements.set_status(item_id, "posted")
+        social_posts.set_status(item_id, "posted")
     return res

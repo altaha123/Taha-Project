@@ -608,6 +608,7 @@ def feed(limit: int = 40, theme: Optional[str] = None,
     cs = [c for c in cs if c["corroboration"] >= min_corroboration]
     for c in cs:
         c["x_post"] = build_x_post(c)
+        c["ig_caption"] = build_ig_caption(c)
         c["id"] = c["lead"]["id"]
     return cs[:limit]
 
@@ -677,3 +678,57 @@ def start_poller() -> bool:
 
 def stop_poller() -> None:
     _stop.set()
+
+
+# ============================================================================
+# INSTAGRAM CAPTION
+# ============================================================================
+# The headline stays verbatim and attributed, exactly as in the X post. What
+# changes is that Instagram links are not clickable, so the caption points at
+# the bio instead of pretending otherwise.
+
+IG_BASE_TAGS = ["StockMarketIndia", "IndianStockMarket", "NSE", "BSE", "MarketNews"]
+
+IG_THEME_TAGS = {
+    "Policy": ["RBI", "MonetaryPolicy"],
+    "Macro": ["IndianEconomy", "Inflation"],
+    "Flows": ["FII", "DII"],
+    "Currency & commodities": ["Rupee", "Commodities"],
+    "Global": ["GlobalMarkets", "FederalReserve"],
+    "Markets": ["Nifty50", "Sensex"],
+    "Primary market": ["IPO"],
+    "Corporate": ["Earnings"],
+    "Sector policy": ["Policy"],
+}
+
+
+def build_ig_caption(c: Dict[str, Any]) -> str:
+    lead = c.get("lead") or {}
+    theme = max(c.get("themes") or ["Markets"], key=lambda t: THEME_WEIGHT.get(t, 1.0))
+    lines: List[str] = []
+
+    lines.append('"' + (lead.get("title") or "") + '"')
+    lines.append("Reported by " + (lead.get("publication") or "") + ".")
+
+    n = c.get("corroboration", 1)
+    if n >= 3:
+        lines.append(f"Carried by {n} outlets so far: "
+                     + ", ".join(c.get("publications", [])[:6]) + ".")
+    elif c.get("speculative"):
+        lines.append("One outlet has this and the company has not confirmed it. "
+                     "Worth knowing before you act on it.")
+
+    lines.append("Headline as published. Link in bio. "
+                 "We report what was written, we do not add a view.")
+
+    tags = [f"#{s}" for s in (c.get("symbols") or [])[:2]] \
+        + ["#" + t for t in IG_THEME_TAGS.get(theme, [])] \
+        + ["#" + t for t in IG_BASE_TAGS]
+    seen, ordered = set(), []
+    for t in tags:
+        if t.lower() not in seen:
+            seen.add(t.lower())
+            ordered.append(t)
+    lines.append(" ".join(ordered[:10]))
+
+    return "\n\n".join(x for x in lines if x).strip()[:2200]
