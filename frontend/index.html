@@ -860,6 +860,7 @@
 <link rel="stylesheet" href="premium.css">
 <link rel="stylesheet" href="premium-plus.css">
 <link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
 <script>
 (function(){try{
   var s=localStorage.getItem('altaha-theme');
@@ -879,16 +880,41 @@
 </div>
 
 <header class="wrap">
+  <div id="skin-art" aria-hidden="true">
+    <svg viewBox="0 0 1400 470" preserveAspectRatio="xMidYMax slice">
+      <defs>
+        <linearGradient id="skSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="var(--sky-1)"/><stop offset="1" stop-color="var(--sky-2)"/></linearGradient>
+        <linearGradient id="skGold" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="var(--gold-dp)"/><stop offset="1" stop-color="var(--gold-lt)"/></linearGradient>
+        <radialGradient id="skSun"><stop offset="0" stop-color="var(--gold)" stop-opacity=".34"/>
+          <stop offset="1" stop-color="var(--gold)" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect width="1400" height="470" fill="url(#skSky)"/>
+      <circle cx="1120" cy="120" r="170" fill="url(#skSun)" class="sk-float"/>
+      <g stroke="var(--rule)" stroke-width="1" opacity=".5">
+        <path d="M0 110H1400M0 220H1400M0 330H1400"/>
+        <path d="M240 0V470M560 0V470M880 0V470M1200 0V470"/></g>
+      <path d="M0 400 C 190 356, 320 412, 500 366 S 800 300, 980 332 S 1260 278, 1400 300 L1400 470 L0 470Z"
+            fill="var(--hill)" opacity=".85"/>
+      <path d="M0 438 C 230 410, 430 448, 660 418 S 1030 372, 1400 400 L1400 470 L0 470Z"
+            fill="var(--hill-2)" opacity=".7"/>
+      <g id="skCandles"></g>
+      <path class="sk-arc" d="M50 372 C 250 348, 390 392, 550 326 S 870 236, 1050 266 S 1290 184, 1364 172"
+            fill="none" stroke="url(#skGold)" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+      <circle cx="1364" cy="172" r="6" fill="var(--gold)" class="sk-float"/>
+    </svg>
+  </div>
   <div class="eyebrow">Equity Analysis · India &amp; United States</div>
   <h1 class="brand">Altaha <i>Screener</i></h1>
-  <div class="tag" id="brandtag">Where Logic Meets Validations</div>
+  <div class="tag" id="brandtag">Every score shows its working</div>
   <div class="brandsw" role="tablist" hidden aria-hidden="true">
     <button class="bsw active" id="bsw-screener" role="tab" aria-selected="true">Screener</button>
     <span class="bswsep">·</span>
     <button class="bsw" id="bsw-planner" role="tab" aria-selected="false">Planner</button>
   </div>
   <div class="metal"></div>
-  <p class="pitch">Type any Indian or US stock and get a <b>0&ndash;100 score</b> built from technical and fundamental checks &mdash; with every single calculation shown, so you can see exactly why.</p>
+  <p class="pitch">Type any Indian or US stock. You get a <b>0&ndash;100 score</b> assembled from technical and fundamental checks &mdash; and every calculation that produced it, line by line. No tips, no targets. Just the arithmetic, in the open.</p>
   <div class="badges">
     <span class="badge">Free &middot; No signup</span>
     <span class="badge">Built by a Chartered Accountant</span>
@@ -2103,7 +2129,7 @@ async function loadTicker(){
         <span class="l">${Number(i.level).toLocaleString("en-IN",{minimumFractionDigits:2})}</span>
         <span class="c ${i.change_pct>=0?"up":"dn"}">${i.change_pct>=0?"\u25B2":"\u25BC"} ${Math.abs(i.change_pct).toFixed(2)}%</span>
       </span>`).join("");
-    if(!(d.indices||[]).length) $("tickers").innerHTML = `<span class="tk"><span class="n">Index data unavailable</span></span>`;
+    if(!(d.indices||[]).length) $("tickers").innerHTML = `<span class="tk"><span class="n">${d.status==="open"?"Index feed reconnecting":"Indices resume at 09:15 IST"}</span></span>`;
   }catch(e){
     $("mkstatustx").textContent = "Connecting";
   }
@@ -3354,6 +3380,27 @@ if(fcSymParam){
       }
     }
   });
+})();
+</script>
+
+<script>
+/* Hero candlesticks — drawn once, grown from the baseline in sequence.
+   Deterministic heights so the masthead looks the same on every visit
+   rather than reshuffling itself each reload. */
+(function(){
+  var g = document.getElementById("skCandles"); if(!g) return;
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var seed = 7, out = "";
+  function rnd(){ seed = (seed*1103515245 + 12345) & 0x7fffffff; return seed/0x7fffffff; }
+  for (var i=0;i<27;i++){
+    var x = 30 + i*51, up = rnd() > .42;
+    var hgt = 22 + rnd()*62, y = 330 - rnd()*96;
+    var c = up ? "var(--pass)" : "var(--fail)";
+    out += '<g class="sk-candle" style="animation-delay:'+(reduce?0:i*24)+'ms">'
+        +  '<rect x="'+x+'" y="'+y+'" width="14" height="'+hgt+'" rx="2" fill="'+c+'" opacity=".26"/>'
+        +  '<rect x="'+(x+6)+'" y="'+(y-11)+'" width="2" height="'+(hgt+22)+'" fill="'+c+'" opacity=".2"/></g>';
+  }
+  g.innerHTML = out;
 })();
 </script>
 </body>

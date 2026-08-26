@@ -1,0 +1,164 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   altaha-skin.css — the new design, applied to the real application.
+
+   This replaces the index-new.html approach, which was a mistake. That was
+   a separate landing page, so the moment you clicked anything you were
+   returned to the old design. One document, one look, everything works.
+
+   Loads LAST, after altaha-polish.css. Overrides only colour, type, space
+   and motion — no layout surgery, so nothing in the app can break.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 1 · PALETTE ─────────────────────────────────────────────────────────
+   Both themes defined against the tokens index.html already uses, so the
+   existing theme button switches the entire application, not just a page. */
+
+:root, :root[data-theme="light"]{
+  --paper:#FBF8F1; --paper-2:#F3EFE4;
+  --ink:#17140E; --ink-2:#4B4438; --mute:#8A8171;
+  --rule:#E2DACA; --rule-2:#EFEADF;
+  --gold:#A8801C; --gold-lt:#C9A63E; --gold-dp:#8A6D1E;
+  --pass:#1F7A55; --part:#9A7B1F; --fail:#B03A2B;
+  --skin-card:#FFFDF8;
+  --skin-shadow:0 1px 2px rgba(23,20,14,.04),0 12px 34px rgba(23,20,14,.07);
+  --skin-lift:0 22px 50px rgba(23,20,14,.11);
+  --sky-1:#F6E7C4; --sky-2:#FBF8F1; --hill:#E8DCC0; --hill-2:#DCCFAE;
+}
+:root[data-theme="dark"]{
+  --paper:#0C0B08; --paper-2:#131109;
+  --ink:#F7F4EC; --ink-2:#CFC8B6; --mute:#8E877A;
+  --rule:#2C271C; --rule-2:#221E16;
+  --gold:#D9BC6A; --gold-lt:#C9A63E; --gold-dp:#D9BC6A;
+  --pass:#3FBF87; --part:#D9BC6A; --fail:#E0614F;
+  --skin-card:#17150F;
+  --skin-shadow:0 1px 2px rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.45);
+  --skin-lift:0 22px 56px rgba(0,0,0,.55);
+  --sky-1:#241E12; --sky-2:#0C0B08; --hill:#1D1810; --hill-2:#272013;
+}
+body{background:var(--paper);color:var(--ink);
+  transition:background 300ms cubic-bezier(.22,.61,.36,1),color 300ms cubic-bezier(.22,.61,.36,1)}
+
+
+/* ── 2 · THE HERO GETS ITS ARTWORK ───────────────────────────────────────
+   A market landscape behind the masthead: hills, a low sun, candlesticks
+   growing from the baseline and a trend arc drawing over the top. Pure SVG,
+   about 4 KB, and it recolours with the theme.                            */
+
+header.wrap{position:relative;isolation:isolate}
+#skin-art{position:absolute;top:-10px;bottom:0;left:0;right:0;z-index:-1;pointer-events:none;overflow:hidden}
+#skin-art svg{width:100%;height:100%;display:block}
+.sk-candle{transform-origin:bottom;animation:skGrow 820ms cubic-bezier(.16,1,.3,1) both}
+@keyframes skGrow{from{transform:scaleY(0);opacity:0}to{transform:scaleY(1);opacity:1}}
+.sk-arc{stroke-dasharray:1500;stroke-dashoffset:1500;
+  animation:skDraw 2.2s cubic-bezier(.16,1,.3,1) 260ms forwards}
+@keyframes skDraw{to{stroke-dashoffset:0}}
+.sk-float{animation:skFloat 7s ease-in-out infinite}
+@keyframes skFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* the old hero candlesticks are replaced by the new artwork */
+.hero-candles, .heroart, canvas.heroart{display:none !important}
+
+
+/* ── 3 · THE SEARCH FIELD BECOMES THE MAIN EVENT ─────────────────────────
+   It is the one control the whole product hangs on and it looked like a
+   form field on a tax portal.                                             */
+
+.searchrow{background:var(--skin-card) !important;border:1px solid var(--rule) !important;
+  border-radius:15px !important;box-shadow:var(--skin-shadow) !important;padding:6px !important;
+  transition:border-color 150ms ease,box-shadow 300ms ease}
+.searchrow:focus-within{border-color:var(--gold) !important;
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 15%,transparent) !important}
+#tk{font-family:var(--mono) !important;font-size:15px !important;letter-spacing:.05em;
+  color:var(--ink) !important;background:none !important;border:0 !important}
+#go{background:var(--gold) !important;color:#fff !important;border:0 !important;
+  border-radius:10px !important;font-family:var(--mono) !important;font-size:11.5px !important;
+  letter-spacing:.09em;text-transform:uppercase;padding:0 26px !important;
+  transition:transform 150ms ease,box-shadow 300ms ease}
+:root[data-theme="dark"] #go{color:#17140E !important}
+#go:hover{transform:translateY(-1px);box-shadow:0 10px 24px color-mix(in srgb,var(--gold) 30%,transparent)}
+
+
+/* ── 4 · TABS THAT LOOK LIKE TABS ────────────────────────────────────────
+   The complaint was that switching between Filings, Ideas and the rest was
+   confusing. Selected state is now unmistakable in both themes.           */
+
+.tabs .tab{font-family:var(--mono) !important;font-size:11.5px !important;letter-spacing:.09em;
+  text-transform:uppercase;border-radius:9px !important;padding:11px 16px !important;
+  color:var(--mute) !important;background:transparent !important;border:0 !important;
+  transition:color 150ms ease,background 150ms ease}
+.tabs .tab:hover{color:var(--ink) !important;
+  background:color-mix(in srgb,var(--gold) 10%,transparent) !important}
+.tabs .tab.active, .tabs .tab[aria-selected="true"]{
+  color:var(--paper) !important;background:var(--ink) !important}
+.tabnav{border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:8px}
+.moreMenu{background:var(--skin-card) !important;border:1px solid var(--rule) !important;
+  border-radius:12px !important;box-shadow:var(--skin-lift) !important}
+
+
+/* ── 5 · SURFACES ────────────────────────────────────────────────────────
+   Flat panels on a flat page were why everything read as one grey mass.   */
+
+.card, .panel, .box, .result, .verdictbox, .fitem, .idea, .row.card{
+  background:var(--skin-card);border-color:var(--rule) !important;
+  border-radius:14px;transition:transform 300ms cubic-bezier(.16,1,.3,1),
+    border-color 150ms ease,box-shadow 300ms ease}
+.card:hover, .panel:hover, .idea:hover{transform:translateY(-3px);
+  border-color:var(--gold) !important;box-shadow:var(--skin-shadow)}
+
+
+/* ── 6 · MOTION ──────────────────────────────────────────────────────────
+   Rows arriving in sequence read as a calculation being performed. Capped
+   at 420ms total, per the design system's staircase rule.                 */
+
+@media (prefers-reduced-motion: no-preference){
+  .row.rise,.fitem.rise,.idea.rise,.chk.rise{
+    animation:skRise 300ms cubic-bezier(.16,1,.3,1) both;
+    animation-delay:calc(var(--i,0) * 40ms)}
+  @keyframes skRise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  .badge,.pill,.chip{transition:transform 150ms ease,border-color 150ms ease}
+  .badge:hover,.pill:hover{transform:translateY(-1px);border-color:var(--gold)}
+}
+@media (prefers-reduced-motion: reduce){
+  .sk-candle,.sk-arc,.sk-float{animation:none !important;stroke-dashoffset:0 !important;
+    transform:none !important;opacity:1 !important}
+}
+
+
+/* ── 7 · THE ARTWORK STAYS BEHIND THE WORDS ──────────────────────────────
+   First render put candlesticks straight through the pitch copy — the exact
+   legibility fault the original audit raised as F-01, reintroduced by me.
+   A soft scrim sits between the art and the text: enough to read through,
+   not enough to flatten the picture.                                      */
+
+/* full-bleed: the header sits in a max-width column, the picture should not */
+#skin-art{left:50%;right:auto;width:100vw;margin-left:-50vw;transform:none}
+#skin-art::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(62% 58% at 50% 46%,
+    var(--paper) 0%,
+    color-mix(in srgb,var(--paper) 82%,transparent) 42%,
+    transparent 78%)}
+header.wrap > *:not(#skin-art){position:relative;z-index:1}
+
+
+/* ── 8 · THE REAL NAVIGATION ─────────────────────────────────────────────
+   nav.js rebuilds the tab bar as .navmain-btn / .navsub-btn, so styling
+   .tabs .tab missed entirely. Targeting what is actually on the page.     */
+
+.navmain-btn{font-family:var(--mono) !important;font-size:11.5px !important;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--mute) !important;
+  border-radius:9px 9px 0 0;padding:12px 14px !important;
+  transition:color 150ms ease,background 150ms ease}
+.navmain-btn:hover{color:var(--ink) !important;
+  background:color-mix(in srgb,var(--gold) 9%,transparent) !important}
+.navmain-btn.on,.navmain-btn[aria-selected="true"]{color:var(--ink) !important;
+  border-bottom:2px solid var(--gold) !important}
+.navsub-btn.on,.navsub-btn[aria-selected="true"]{
+  border-bottom:2px solid var(--gold) !important;color:var(--ink) !important}
+.navmain,.navsub-inner{border-bottom:1px solid var(--rule)}
+
+
+/* ── 9 · THE TICKER BAR ──────────────────────────────────────────────────
+   Restyled to match, and no longer the loudest thing above the masthead.  */
+
+.tickerbar,.tkbar{background:var(--ink) !important;border-bottom:1px solid var(--rule)}
+.tickerbar .tk,.tkbar .tk,#tickers .tk{color:var(--paper) !important;opacity:.86}
