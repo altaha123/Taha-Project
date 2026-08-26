@@ -3321,5 +3321,40 @@ if(fcSymParam){
 <script src="nav.js" defer></script>
 <script src="scoring.js" defer></script>
 <script src="social.js" defer></script>
+<script>
+/* ── Deep links from the landing page ───────────────────────────────────
+   ALTAHA_DEEPLINK. index.html already understood ?chart=SYMBOL but had no
+   way to be handed a ticker to analyse, so the front page had nothing to
+   link to. Two parameters now:
+     ?q=RELIANCE      fill the search box and run the analysis
+     ?go=filings      open a specific tab on arrival
+   Both are sanitised, and neither runs unless present, so an ordinary
+   visit to the site behaves exactly as it did before.               */
+(function(){
+  var P = new URLSearchParams(location.search);
+  var q = (P.get("q")||"").trim().toUpperCase().replace(/[^A-Z0-9&.\-]/g,"").slice(0,20);
+  var go = (P.get("go")||"").trim().toLowerCase().replace(/[^a-z]/g,"");
+
+  function ready(fn){
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  }
+  ready(function(){
+    if (go) {
+      var t = document.getElementById("tab-" + go);
+      if (t) setTimeout(function(){ t.click(); }, 60);
+    }
+    if (q) {
+      var tk = document.getElementById("tk"), btn = document.getElementById("go");
+      if (tk && btn) {
+        tk.value = q;
+        /* the page listens for input before it will analyse */
+        tk.dispatchEvent(new Event("input", {bubbles:true}));
+        setTimeout(function(){ btn.click(); }, 220);
+      }
+    }
+  });
+})();
+</script>
 </body>
 </html>

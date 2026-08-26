@@ -67,11 +67,11 @@ a{color:inherit}
 .brandlock .wm i{color:var(--gold);font-style:italic}
 .nav-links{display:flex;gap:3px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
 .nav-links::-webkit-scrollbar{display:none}
-.nav-links button{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--mute);background:none;border:0;padding:10px 14px;border-radius:8px;cursor:pointer;
+.nav-links a{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mute);text-decoration:none;padding:10px 14px;border-radius:8px;cursor:pointer;
   white-space:nowrap;transition:color var(--t1) var(--ease),background var(--t1) var(--ease)}
-.nav-links button:hover{color:var(--ink);background:var(--gold-soft)}
-.nav-links button.on{color:var(--bg);background:var(--ink)}
+.nav-links a:hover{color:var(--ink);background:var(--gold-soft)}
+.nav-links a.on{color:var(--bg);background:var(--ink)}
 .themeswap{flex:0 0 auto;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);
   background:var(--card);cursor:pointer;display:grid;place-items:center;
   transition:transform var(--t2) var(--soft),border-color var(--t1) var(--ease)}
@@ -108,6 +108,27 @@ h1.big i{color:var(--gold);font-style:italic}
   font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute)}
 .trust span{display:flex;align-items:center;gap:7px}
 .trust i{width:4px;height:4px;border-radius:50%;background:var(--gold);font-style:normal}
+
+
+/* The landing page had no search box at all. The first thing anyone wants
+   to do here is type a ticker, and there was nowhere to type it. */
+.searchrow{display:flex;gap:0;align-items:stretch;background:var(--card);
+  border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+  padding:6px;margin:0 0 16px;max-width:520px;
+  transition:border-color var(--t1) var(--ease),box-shadow var(--t2) var(--ease)}
+.searchrow:focus-within{border-color:var(--gold);box-shadow:0 0 0 4px var(--gold-soft)}
+.searchrow input{flex:1 1 auto;border:0;background:none;outline:none;color:var(--ink);
+  font-family:var(--mono);font-size:15px;letter-spacing:.06em;padding:13px 14px;min-width:0}
+.searchrow input::placeholder{color:var(--mute);letter-spacing:.02em}
+.searchrow button{flex:0 0 auto;border:0;border-radius:9px;background:var(--gold);color:#fff;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+  padding:0 24px;cursor:pointer;transition:transform var(--t1) var(--ease)}
+:root[data-theme="dark"] .searchrow button{color:#17140E}
+.searchrow button:hover{transform:translateX(2px)}
+.tryrow{font-family:var(--mono);font-size:11.5px;color:var(--mute);margin:0 0 26px}
+.tryrow a{color:var(--gold);text-decoration:none;border-bottom:1px solid transparent;
+  transition:border-color var(--t1) var(--ease)}
+.tryrow a:hover{border-bottom-color:var(--gold)}
 
 /* ═══ ARTWORK ═══ */
 .art{position:absolute;inset:0;pointer-events:none;z-index:0}
@@ -202,7 +223,7 @@ h1.big i{color:var(--gold);font-style:italic}
 
 .feed{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
   border-radius:16px;overflow:hidden}
-.fitem{background:var(--card);padding:18px 22px;display:flex;gap:16px;align-items:flex-start;
+.fitem{background:var(--card);text-decoration:none;color:inherit;padding:18px 22px;display:flex;gap:16px;align-items:flex-start;
   transition:background var(--t1) var(--ease)}
 .fitem:hover{background:var(--bg-2)}
 .f-tick{font-family:var(--serif);font-size:19px;min-width:120px;flex:0 0 auto}
@@ -263,8 +284,9 @@ footer{border-top:1px solid var(--line);padding:32px 0;font-family:var(--mono);f
     <span class="wm">Altaha <i>Screener</i></span>
   </a>
   <div class="nav-links">
-    <button class="on">Screener</button><button>Filings</button><button>Ideas</button>
-    <button>Portfolio</button><button>Planner</button><button>Social</button>
+    <a class="on" href="index.html">Screener</a><a href="index.html?go=filings">Filings</a>
+    <a href="index.html?go=ideas">Ideas</a><a href="index.html?go=portfolio">Portfolio</a>
+    <a href="index.html?go=tracker">Planner</a><a href="index.html#social">Social</a>
   </div>
   <button class="themeswap" id="theme" aria-label="Switch between light and dark">
     <svg class="ic-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
@@ -312,9 +334,19 @@ footer{border-top:1px solid var(--line);padding:32px 0;font-family:var(--mono);f
       <p class="lede">Type any Indian or US stock. You get a <b>0–100 score</b> assembled from
         technical and fundamental checks — and every calculation that produced it, line by line.</p>
       <p class="lede-2">No tips. No targets. Just the arithmetic, in the open.</p>
+      <div class="searchrow">
+        <input id="tk" type="text" placeholder="Enter a stock — RELIANCE, TCS, NVDA…"
+               autocomplete="off" spellcheck="false" aria-label="Stock symbol">
+        <button id="go" type="button">Analyse</button>
+      </div>
+      <p class="tryrow">Try
+        <a href="index.html?q=RELIANCE">RELIANCE</a> ·
+        <a href="index.html?q=HDFCBANK">HDFCBANK</a> ·
+        <a href="index.html?q=INFY">INFY</a> ·
+        <a href="index.html?q=NVDA">NVDA</a></p>
       <div class="cta">
-        <a class="btn" href="#">Score a stock</a>
-        <a class="btn ghost" href="#work">See how it works</a>
+        <a class="btn ghost" href="index.html?go=filings">Today's filings</a>
+        <a class="btn ghost" href="#work">How it works</a>
       </div>
       <div class="trust">
         <span><i></i>Free, no signup</span>
@@ -375,23 +407,23 @@ footer{border-top:1px solid var(--line);padding:32px 0;font-family:var(--mono);f
       <span class="tabink" id="tabink"></span>
     </div>
     <div class="tabpane on" id="p1"><div class="feed">
-      <div class="fitem"><div class="f-tick">KEC</div><div class="f-body"><div class="f-cat">Order win</div>
-        <div class="f-txt">KEC International has won an order from Power Grid Corporation.</div></div><div class="f-fig">₹1,132 cr</div></div>
-      <div class="fitem"><div class="f-tick">TATASTEEL</div><div class="f-body"><div class="f-cat">Operations</div>
-        <div class="f-txt">Tata Steel has reported a fire at one of its plants. The filing states there was no loss of life.</div></div><div class="f-fig">—</div></div>
-      <div class="fitem"><div class="f-tick">VEDL</div><div class="f-body"><div class="f-cat">Fundraise</div>
-        <div class="f-txt">Vedanta's board approved raising money by issuing debentures.</div></div><div class="f-fig">₹8,500 cr</div></div>
-      <div class="fitem"><div class="f-tick">HINDUNILVR</div><div class="f-body"><div class="f-cat">Regulatory</div>
-        <div class="f-txt">Hindustan Unilever has received a tax demand from the GST authorities. It says it will contest it.</div></div><div class="f-fig">₹448 cr</div></div>
+      <a class="fitem" href="index.html?go=filings"><div class="f-tick">KEC</div><div class="f-body"><div class="f-cat">Order win</div>
+        <div class="f-txt">KEC International has won an order from Power Grid Corporation.</div></div><div class="f-fig">₹1,132 cr</div></a>
+      <a class="fitem" href="index.html?go=filings"><div class="f-tick">TATASTEEL</div><div class="f-body"><div class="f-cat">Operations</div>
+        <div class="f-txt">Tata Steel has reported a fire at one of its plants. The filing states there was no loss of life.</div></div><div class="f-fig">—</div></a>
+      <a class="fitem" href="index.html?go=filings"><div class="f-tick">VEDL</div><div class="f-body"><div class="f-cat">Fundraise</div>
+        <div class="f-txt">Vedanta's board approved raising money by issuing debentures.</div></div><div class="f-fig">₹8,500 cr</div></a>
+      <a class="fitem" href="index.html?go=filings"><div class="f-tick">HINDUNILVR</div><div class="f-body"><div class="f-cat">Regulatory</div>
+        <div class="f-txt">Hindustan Unilever has received a tax demand from the GST authorities. It says it will contest it.</div></div><div class="f-fig">₹448 cr</div></a>
     </div></div>
     <div class="tabpane" id="p2"><div class="sectors" id="sectors"></div></div>
     <div class="tabpane" id="p3"><div class="feed">
-      <div class="fitem"><div class="f-tick">Unusual volume</div><div class="f-body"><div class="f-cat">Signal</div>
-        <div class="f-txt">Six names trading above three times their own 20-day average, with the range holding.</div></div><div class="f-fig">6 names</div></div>
-      <div class="fitem"><div class="f-tick">Margin turn</div><div class="f-body"><div class="f-cat">Signal</div>
-        <div class="f-txt">Operating margin improving for three consecutive quarters against a falling input cost.</div></div><div class="f-fig">4 names</div></div>
-      <div class="fitem"><div class="f-tick">Pledge released</div><div class="f-body"><div class="f-cat">Signal</div>
-        <div class="f-txt">Promoter encumbrance reduced by more than two percent of capital this month.</div></div><div class="f-fig">3 names</div></div>
+      <a class="fitem" href="index.html?go=filings"><div class="f-tick">Unusual volume</div><div class="f-body"><div class="f-cat">Signal</div>
+        <div class="f-txt">Six names trading above three times their own 20-day average, with the range holding.</div></div><div class="f-fig">6 names</div></a>
+      <a class="fitem" href="index.html?go=filings"><div class="f-tick">Margin turn</div><div class="f-body"><div class="f-cat">Signal</div>
+        <div class="f-txt">Operating margin improving for three consecutive quarters against a falling input cost.</div></div><div class="f-fig">4 names</div></a>
+      <a class="fitem" href="index.html?go=filings"><div class="f-tick">Pledge released</div><div class="f-body"><div class="f-cat">Signal</div>
+        <div class="f-txt">Promoter encumbrance reduced by more than two percent of capital this month.</div></div><div class="f-fig">3 names</div></a>
     </div></div>
   </div>
 </div></section>
@@ -408,7 +440,7 @@ footer{border-top:1px solid var(--line);padding:32px 0;font-family:var(--mono);f
 <section class="closer wrap reveal">
   <h2>Type a ticker.<br>Read the working.</h2>
   <p>Free, no signup, and every number traceable to the line item it came from.</p>
-  <a class="btn" href="#">Score a stock</a>
+  <a class="btn" href="index.html">Score a stock</a>
 </section>
 
 <div class="wrap"><footer>
@@ -420,6 +452,16 @@ footer{border-top:1px solid var(--line);padding:32px 0;font-family:var(--mono);f
 (function(){
 'use strict';
 var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ── search: hand the ticker to the real app ───────────────────────── */
+var tk=document.getElementById('tk'), go=document.getElementById('go');
+function analyse(){
+  var v=(tk.value||'').trim().toUpperCase().replace(/[^A-Z0-9&.\-]/g,'');
+  if(!v){ tk.focus(); return; }
+  location.href='index.html?q='+encodeURIComponent(v);
+}
+go.addEventListener('click', analyse);
+tk.addEventListener('keydown', function(e){ if(e.key==='Enter') analyse(); });
 
 /* ── theme ─────────────────────────────────────────────────────────── */
 var root = document.documentElement;
