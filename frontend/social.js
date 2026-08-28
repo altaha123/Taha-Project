@@ -370,6 +370,170 @@
     drawFooter(ctx, W, H, P, pad, opts.handle);
   }
 
+
+  /* ═══ REEL ═══════════════════════════════════════════════════════════
+     A 1080x1920 vertical video, drawn frame by frame on a canvas and
+     recorded off canvas.captureStream() with MediaRecorder. No server, no
+     ffmpeg, no upload of your data anywhere.
+
+     Format: Chrome and Safari can now record MP4 (avc1), which Instagram
+     accepts directly. Where they cannot, this falls back to WebM and says
+     so — WebM will not upload to Instagram, so you would need to convert
+     it. The button reports which one you got rather than leaving you to
+     discover it at the upload screen.
+
+     Nine seconds: a beat to read the ticker, the sentence revealing a word
+     at a time, the figure landing, then the source card.                */
+
+  function reelFrames(ctx, W, H, P, data, t) {
+    var pad = 96;
+    var ease = function (x) { return 1 - Math.pow(1 - Math.min(Math.max(x, 0), 1), 3); };
+
+    ctx.fillStyle = P.paper; ctx.fillRect(0, 0, W, H);
+
+    // gold rule sweeping down behind everything
+    var sweep = ease(t / 1.1);
+    ctx.save(); ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = P.goldLine; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, 300); ctx.lineTo(W * sweep, 300); ctx.stroke();
+    ctx.restore();
+
+    // mark
+    var mk = ease((t - 0.15) / 0.7);
+    if (mk > 0) {
+      ctx.save(); ctx.globalAlpha = mk;
+      var mx = W / 2 - 46, my = 150, sz = 92;
+      ctx.fillStyle = P.ink;
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(mx, my, sz, sz, 20); ctx.fill(); }
+      else ctx.fillRect(mx, my, sz, sz);
+      ctx.strokeStyle = P.paper; ctx.lineWidth = 7; ctx.lineJoin = 'miter';
+      ctx.beginPath(); ctx.moveTo(mx + 28, my + 67); ctx.lineTo(mx + 46, my + 25);
+      ctx.lineTo(mx + 64, my + 67); ctx.stroke();
+      ctx.strokeStyle = P.goldLine;
+      ctx.beginPath(); ctx.moveTo(mx + 34, my + 52); ctx.lineTo(mx + 58, my + 52); ctx.stroke();
+      ctx.restore();
+    }
+
+    // ticker + tag
+    var tk = ease((t - 0.5) / 0.7);
+    if (tk > 0) {
+      ctx.save(); ctx.globalAlpha = tk;
+      ctx.textAlign = 'center';
+      ctx.font = '600 30px ' + MONO; ctx.fillStyle = P.gold;
+      ctx.fillText((data.category_label || 'Filing').toUpperCase(), W / 2, 380);
+      ctx.font = '400 128px ' + SERIF; ctx.fillStyle = P.ink;
+      ctx.fillText(data.symbol || '', W / 2, 510);
+      ctx.font = '400 30px ' + SANS; ctx.fillStyle = P.mute;
+      ctx.fillText(data.company || '', W / 2, 562);
+      ctx.restore();
+    }
+
+    // the sentence, a word at a time
+    var r = data.restated || {};
+    var words = String(r.body || '').split(/\s+/).filter(Boolean);
+    var shown = Math.floor(Math.max(0, (t - 1.25)) / 0.13);
+    if (shown > 0) {
+      ctx.textAlign = 'left';
+      ctx.font = '400 62px ' + SERIF;
+      var lines = wrap(ctx, words.slice(0, shown).join(' '), W - pad * 2);
+      var all = wrap(ctx, words.join(' '), W - pad * 2);
+      var blockH = all.length * 78;
+      var y0 = 700 + Math.max(0, (380 - blockH) / 2);
+      ctx.fillStyle = P.ink;
+      for (var i = 0; i < lines.length; i++) ctx.fillText(lines[i], pad, y0 + i * 78);
+    }
+
+    // the figure
+    var fg = (r.figures || '').trim();
+    if (fg) {
+      var f = ease((t - Math.min(1.45 + words.length * 0.13, 5.0)) / 0.55);
+      if (f > 0) {
+        ctx.save(); ctx.globalAlpha = f;
+        ctx.translate(0, (1 - f) * 22);
+        ctx.fillStyle = P.goldLine; ctx.fillRect(pad, 1210, 4, 66);
+        ctx.font = '500 50px ' + MONO; ctx.fillStyle = P.gold;
+        ctx.textAlign = 'left'; ctx.fillText(fg, pad + 30, 1260);
+        ctx.restore();
+      }
+    }
+
+    // A reel that stops moving looks frozen. The bar runs the whole
+    // duration so there is always something alive on screen.
+    ctx.fillStyle = P.rule;
+    ctx.fillRect(pad, H - 96, W - pad * 2, 3);
+    ctx.fillStyle = P.goldLine;
+    ctx.fillRect(pad, H - 96, (W - pad * 2) * Math.min(t / 8.0, 1), 3);
+
+    // source card
+    var sc = ease((t - 5.5) / 0.7);
+    if (sc > 0) {
+      ctx.save(); ctx.globalAlpha = sc;
+      ctx.strokeStyle = P.rule; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(pad, 1560); ctx.lineTo(W - pad, 1560); ctx.stroke();
+      ctx.textAlign = 'left'; ctx.font = '400 30px ' + MONO; ctx.fillStyle = P.mute;
+      ctx.fillText('SOURCE: ' + (data.exchange || 'BSE') + ' FILING'
+        + (data.time_ist ? ' \u00B7 ' + data.time_ist.toUpperCase() : ''), pad, 1622);
+      ctx.font = '500 34px ' + MONO; ctx.fillStyle = P.ink;
+      ctx.fillText(data.handle || '@altaha.screener', pad, 1760);
+      ctx.textAlign = 'right'; ctx.font = '400 28px ' + MONO; ctx.fillStyle = P.mute;
+      ctx.fillText('NOT INVESTMENT ADVICE', W - pad, 1760);
+      ctx.restore();
+    }
+  }
+
+  /* Instagram wants H.264 in MP4. Chrome will happily hand you an MP4
+     container with VP9 inside it if you ask for plain "video/mp4" — the
+     file extension looks right and the upload is rejected. Only an explicit
+     avc1 request counts as Instagram-ready; everything else is reported
+     honestly as needing conversion. */
+  function pickMime() {
+    var avc = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=h264', 'video/mp4;codecs=avc1'];
+    var fallback = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'];
+    if (!window.MediaRecorder) return { mime: '', ready: false };
+    for (var i = 0; i < avc.length; i++) {
+      if (MediaRecorder.isTypeSupported(avc[i])) return { mime: avc[i], ready: true };
+    }
+    for (var j = 0; j < fallback.length; j++) {
+      if (MediaRecorder.isTypeSupported(fallback[j])) return { mime: fallback[j], ready: false };
+    }
+    return { mime: '', ready: false };
+  }
+
+  function recordReel(data, opts, onProgress) {
+    return new Promise(function (resolve, reject) {
+      if (!window.MediaRecorder) { reject(new Error('This browser cannot record video')); return; }
+      var pick = pickMime();
+      if (!pick.mime) { reject(new Error('No supported video format')); return; }
+      var mime = pick.mime;
+
+      var W = 1080, H = 1920, DUR = 8.0, FPS = 30;
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      var ctx = cv.getContext('2d');
+      var P = opts.theme === 'dark' ? DARK : LIGHT;
+      var stream = cv.captureStream(FPS);
+      var chunks = [];
+      var rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000 });
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = function () {
+        resolve({ blob: new Blob(chunks, { type: mime }), mime: mime, instagramReady: pick.ready });
+      };
+      rec.onerror = function (e) { reject(e.error || new Error('recording failed')); };
+
+      var t0 = null;
+      rec.start();
+      function step(ts) {
+        if (t0 === null) t0 = ts;
+        var t = (ts - t0) / 1000;
+        reelFrames(ctx, W, H, P, data, t);
+        if (onProgress) onProgress(Math.min(t / DUR, 1));
+        if (t < DUR) requestAnimationFrame(step);
+        else setTimeout(function () { try { rec.stop(); } catch (e) {} }, 120);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
   /* ---- public --------------------------------------------------------- */
 
   function render(canvas, kind, data, options) {
@@ -409,6 +573,7 @@
   }
 
   global.AltahaCards = { render: render, download: download, FORMATS: FORMATS,
+                         recordReel: recordReel, pickMime: pickMime,
                          _wrap: wrap, _fitText: fitText };
 
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -568,6 +733,9 @@
     color:var(--ink,#16130E);background:transparent;border:1px solid var(--rule,#DDD6C9);
     border-radius:4px;padding:9px 10px;margin-bottom:8px}
   .as-cap:focus{outline:none;border-color:var(--gold,#B08D2E)}
+  .as-writelbl{display:block;font-size:12px;line-height:1.5;color:var(--mute,#8B8477);margin-bottom:7px}
+  .as-writeacts[hidden]{display:none}
+  .as-btn[disabled]{opacity:.5;cursor:progress}
 
   .as-skel{height:74px;border-radius:4px;margin:14px 0;
     background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);
@@ -629,6 +797,7 @@
       + '    <button class="as-tab" id="as-tab-news" role="tab">News</button>'
       + '  </div>'
       + '  <div class="as-bar"><div class="as-chips" id="as-filters"></div>'
+      + '    <button class="as-chip as-fetch" id="as-sort" type="button" hidden></button>'
       + '    <button class="as-chip as-fetch" id="as-fetch" type="button">\u21BB Fetch now</button></div>'
       + '  <div id="as-list"><div class="as-skel"></div><div class="as-skel"></div><div class="as-skel"></div></div>'
       + '</div></div>';
@@ -637,6 +806,12 @@
     statusEl = panel.querySelector('#as-status');
     panel.querySelector('#as-close').addEventListener('click', close);
     panel.querySelector('#as-fetch').addEventListener('click', refreshNow);
+    panel.querySelector('#as-sort').addEventListener('click', function () {
+      newsSort = newsSort === 'latest' ? 'coverage' : 'latest';
+      try { localStorage.setItem(SORT_STORE, newsSort); } catch (e) {}
+      syncSort();
+      load();
+    });
     panel.querySelector('#as-tab-filings').addEventListener('click', function () { setTab('filings'); });
     panel.querySelector('#as-tab-news').addEventListener('click', function () { setTab('news'); });
     document.addEventListener('keydown', function (e) {
@@ -658,6 +833,10 @@
     load();
   }
 
+  var SORT_STORE = 'altaha-news-sort';
+  var newsSort = 'latest';
+  try { newsSort = localStorage.getItem(SORT_STORE) || 'latest'; } catch (e) {}
+
   var NEWS_FILTERS = [
     ['all', 'All'], ['Policy', 'Policy'], ['Macro', 'Macro'], ['Flows', 'Flows'],
     ['Currency & commodities', 'FX & commodities'], ['Global', 'Global'],
@@ -670,7 +849,16 @@
     ['capex', 'Capex'], ['regulatory', 'Regulatory'], ['results', 'Results'],
   ];
 
+  function syncSort() {
+    var b = panel.querySelector('#as-sort');
+    if (!b) return;
+    b.hidden = activeTab !== 'news';
+    b.textContent = newsSort === 'latest' ? '\u2193 Latest first' : '\u2691 Most covered';
+    b.setAttribute('aria-pressed', 'true');
+  }
+
   function renderFilters() {
+    syncSort();
     var bar = panel.querySelector('#as-filters');
     bar.innerHTML = '';
     (activeTab === 'news' ? NEWS_FILTERS : FILTERS).forEach(function (f) {
@@ -727,21 +915,38 @@
       ? '<div class="as-hold">Headline does not carry the facts \u2014 read the PDF before posting</div>'
       : (r.figures ? '<div class="as-figs">' + esc(r.figures) + '</div>' : '');
 
+    /* A held row used to offer only "Open filing" and "Dismiss" — a dead end.
+       The parser being unsure about a Regulation 30 headline does not mean the
+       filing is unpostable; it means a human has to read the PDF and write the
+       sentence. So: read it, write it, and every output unlocks from there. */
     var acts = held
       ? '<div class="as-acts">'
-        + (item.pdf ? '<a class="as-btn ghost" href="' + esc(item.pdf) + '" target="_blank" rel="noopener">Open filing</a>' : '')
+        + (item.pdf ? '<a class="as-btn" href="' + esc(item.pdf) + '" target="_blank" rel="noopener">Read the PDF</a>' : '')
+        + '<button class="as-btn ghost" data-act="write">Write it myself</button>'
         + '<button class="as-btn quiet" data-act="skip">Dismiss</button></div>'
       : '<div class="as-acts">'
         + '<button class="as-btn" data-act="copy">Copy for X</button>'
         + '<button class="as-btn ghost" data-act="image">Instagram</button>'
+        + '<button class="as-btn ghost" data-act="reel">Reel</button>'
         + '<button class="as-btn quiet" data-act="edit">Edit post</button>'
         + '<button class="as-btn quiet" data-act="approve">Posted</button>'
         + '<button class="as-btn quiet" data-act="skip">Skip</button>'
         + '<span class="as-count"></span></div>';
 
-    var edit = held ? '' : '<div class="as-edit" hidden>'
-      + '<textarea class="as-post" spellcheck="false" aria-label="Post text">'
-      + esc(item.x_post || '') + '</textarea></div>';
+    var edit = held
+      ? '<div class="as-edit" hidden>'
+        + '<label class="as-writelbl">Restate the filing in one sentence. '
+        + 'Facts only \u2014 what the company said, not what you think of it.</label>'
+        + '<textarea class="as-post" spellcheck="false" aria-label="Your restatement" '
+        + 'placeholder="e.g. IDFC First Bank\u2019s long term rating was reaffirmed at CRISIL AA+/Stable."></textarea>'
+        + '<div class="as-acts as-writeacts" hidden>'
+        + '<button class="as-btn" data-act="copy">Copy for X</button>'
+        + '<button class="as-btn ghost" data-act="image">Instagram post</button>'
+        + '<button class="as-btn ghost" data-act="reel">Instagram reel</button>'
+        + '<span class="as-count"></span></div></div>'
+      : '<div class="as-edit" hidden>'
+        + '<textarea class="as-post" spellcheck="false" aria-label="Post text">'
+        + esc(item.x_post || '') + '</textarea></div>';
 
     var src = (item.pdf && !held)
       ? '<div class="as-src"><a href="' + esc(item.pdf) + '" target="_blank" rel="noopener">Open the filing</a></div>' : '';
@@ -753,11 +958,34 @@
     var composer = null;
     var ta = row.querySelector('.as-post');
     var counter = row.querySelector('.as-count');
+
+    /* For a held row the card and caption are built from what you typed,
+       not from the parser's guess. */
+    function liveItem() {
+      if (!held) return item;
+      var txt = (ta && ta.value.trim()) || item.headline || '';
+      var copy = JSON.parse(JSON.stringify(item));
+      copy.restated = { headline: item.company, body: txt, figures: '' };
+      copy.x_post = '#' + (item.symbol || '') + ' \u00B7 ' + (item.category_label || 'Filing')
+                  + '\n\n' + txt + '\n\nSource: ' + (item.exchange || 'BSE') + ' filing'
+                  + (item.time_ist ? ', ' + item.time_ist : '');
+      copy.ig_caption = txt + '\n\nFiled with ' + (item.exchange || 'BSE')
+                  + (item.time_ist ? ' on ' + item.time_ist : '')
+                  + '. The full PDF is linked in our bio.\n\n'
+                  + 'A plain-English restatement of the company\u2019s own filing. '
+                  + 'Descriptive only \u2014 not a recommendation, not advice.\n\n'
+                  + '#' + (item.symbol || 'Markets') + ' #StockMarketIndia #NSE #BSE #CorporateFilings';
+      return copy;
+    }
+
     function tick() {
       if (!ta || !counter) return;
       var n = ta.value.length;
       counter.textContent = n + '/280';
       counter.classList.toggle('over', n > 280);
+      var wa = row.querySelector('.as-writeacts');
+      if (wa) wa.hidden = !ta.value.trim();
+      if (composer && held) composer.update(liveItem());
     }
     if (ta) { ta.addEventListener('input', tick); tick(); }
 
@@ -765,14 +993,28 @@
       var btn = e.target.closest('[data-act]');
       if (!btn) return;
       var act = btn.getAttribute('data-act');
-      if (act === 'copy') {
+      if (act === 'write') {
+        var wbox = row.querySelector('.as-edit');
+        wbox.hidden = !wbox.hidden;
+        btn.textContent = wbox.hidden ? 'Write it myself' : 'Hide';
+        if (!wbox.hidden) ta.focus();
+      } else if (act === 'reel') {
+        var txt = ta ? ta.value.trim() : '';
+        if (held && !txt) { toast('Write the sentence first'); return; }
+        if (!composer) { composer = attachComposer(row, 'filing', liveItem(), item.symbol || item.company); }
+        composer.box.hidden = false;
+        composer.refresh();
+        composer.recordReel();
+      } else if (act === 'copy') {
         copyText(ta ? ta.value : (item.x_post || ''));
       } else if (act === 'edit') {
         var box = row.querySelector('.as-edit');
         box.hidden = !box.hidden;
         btn.textContent = box.hidden ? 'Edit post' : 'Hide post';
       } else if (act === 'image') {
-        if (!composer) { composer = attachComposer(row, 'filing', item, item.symbol || item.company); }
+        if (held && !(ta && ta.value.trim())) { toast('Write the sentence first'); return; }
+        if (!composer) { composer = attachComposer(row, 'filing', liveItem(), item.symbol || item.company); }
+        else composer.update(liveItem());
         composer.box.hidden = !composer.box.hidden;
         btn.textContent = composer.box.hidden ? 'Instagram' : 'Hide image';
         if (!composer.box.hidden) composer.refresh();
@@ -920,9 +1162,13 @@
     var acts = document.createElement('div');
     acts.className = 'as-acts';
     acts.innerHTML = '<button class="as-btn" data-ig="png">Download image</button>'
-      + '<button class="as-btn ghost" data-ig="caption">Copy caption</button>';
+      + '<button class="as-btn ghost" data-ig="reel">Record reel</button>'
+      + '<button class="as-btn ghost" data-ig="caption">Copy caption</button>'
+      + '<span class="as-count" id="as-reelnote"></span>';
 
     box.appendChild(opts); box.appendChild(canvas); box.appendChild(cap); box.appendChild(acts);
+
+    function update(next) { data = next; cap.value = data.ig_caption || cap.value; refresh(); }
 
     function refresh() {
       [].forEach.call(opts.querySelectorAll('.as-opt'), function (b, i) {
@@ -938,10 +1184,41 @@
       });
     }
 
+    var note = null;
+    function doReel(btn) {
+      note = note || box.querySelector('#as-reelnote');
+      var label = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Recording…'; }
+      fontsReady.then(function () {
+        return window.AltahaCards.recordReel(
+          Object.assign({ handle: prefs.handle }, data),
+          { theme: state.theme },
+          function (p) { if (note) note.textContent = Math.round(p * 100) + '%'; });
+      }).then(function (res) {
+        var mp4 = res.mime.indexOf('mp4') !== -1;
+        var name = 'altaha-' + (nameHint || 'reel').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                 + '-reel.' + (mp4 ? 'mp4' : 'webm');
+        var url = URL.createObjectURL(res.blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 6000);
+        if (note) note.textContent = mp4 ? 'MP4 saved' : 'WebM — convert before uploading';
+        toast(mp4 ? 'Reel saved \u2014 ready for Instagram'
+                  : 'Reel saved as WebM. Instagram needs MP4, so convert it first.');
+      }).catch(function (err) {
+        if (note) note.textContent = '';
+        toast('Could not record: ' + (err && err.message ? err.message : 'unsupported browser'));
+      }).then(function () {
+        if (btn) { btn.disabled = false; btn.textContent = label || 'Record reel'; }
+      });
+    }
+
     acts.addEventListener('click', function (e) {
       var b = e.target.closest('[data-ig]');
       if (!b) return;
       if (b.getAttribute('data-ig') === 'caption') { copyText(cap.value); return; }
+      if (b.getAttribute('data-ig') === 'reel') { doReel(b); return; }
       var name = 'altaha-' + (nameHint || 'card').toLowerCase().replace(/[^a-z0-9]+/g, '-')
         + '-' + state.format + '.png';
       window.AltahaCards.download(canvas, name).then(function () {
@@ -950,7 +1227,8 @@
     });
 
     row.appendChild(box);
-    return { box: box, refresh: refresh };
+    return { box: box, refresh: refresh, update: update,
+             recordReel: function () { doReel(box.querySelector('[data-ig="reel"]')); } };
   }
 
   function copyText(text) {
@@ -1032,14 +1310,15 @@
 
   function loadNews() {
     listEl.innerHTML = '<div class="as-skel"></div><div class="as-skel"></div><div class="as-skel"></div>';
-    var q = '?limit=40' + (activeFilter !== 'all' ? '&theme=' + encodeURIComponent(activeFilter) : '');
+    var q = '?limit=150&sort=' + newsSort
+          + (activeFilter !== 'all' ? '&theme=' + encodeURIComponent(activeFilter) : '');
     fetch(API + '/social/news/feed' + q)
       .then(function (r) { return r.json(); })
       .then(function (d) {
         var cs = (d && d.clusters) || [];
         listEl.innerHTML = '';
-        var multi = cs.filter(function (c) { return c.corroboration >= 3; }).length;
-        statusEl.textContent = cs.length + ' stories · ' + multi + ' in three or more outlets';
+        statusEl.textContent = cs.length + ' of ' + (d.total_clusters || cs.length)
+          + ' stories · from ' + (d.total_stories || '?') + ' headlines';
         if (!cs.length) {
           listEl.innerHTML = '<div class="as-empty">No stories have cleared the relevance filter yet. '
             + 'Press <strong>Fetch now</strong> to pull the feeds.</div>';
