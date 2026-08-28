@@ -44,6 +44,31 @@
     moveTick("fctfbar");
   }
 
+  function showChartsInMenu() {
+    var nav = window.AltahaNav;
+    if (!nav || !nav.sections) return;
+    var screener = null;
+    for (var i = 0; i < nav.sections.length; i++) {
+      if (nav.sections[i].id === "screener") { screener = nav.sections[i]; break; }
+    }
+    if (!screener || !screener.tabs) return;
+    var has = false;
+    for (var j = 0; j < screener.tabs.length; j++) {
+      if (screener.tabs[j].id === "charts") { has = true; break; }
+    }
+    if (!has) {
+      screener.tabs.push({
+        id: "charts",
+        label: "Charts",
+        hint: "Drawings, Fibonacci, RSI, MACD"
+      });
+    }
+    if (typeof nav.go === "function") {
+      var onScreener = document.querySelector('.navmain-btn.on[data-section="screener"]');
+      if (onScreener) nav.go("screener", "screener", false);
+    }
+  }
+
   wrapChart();
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootPatch);
@@ -60,6 +85,9 @@
       var src = (window.__ALTAHA_CHARTS_PARTS || []).join("");
       window.__ALTAHA_CHARTS_PARTS = null;
       try { (0, eval)(src); } catch (e) { console.error("Altaha chart failed to load", e); }
+      showChartsInMenu();
+      setTimeout(showChartsInMenu, 400);
+      setTimeout(showChartsInMenu, 1200);
       return;
     }
     i += 1;
