@@ -63,8 +63,8 @@ def _resolve_store_dir() -> str:
 
 
 STORE_PATH = os.path.join(_resolve_store_dir(), "market_news.json")
-MAX_KEEP = int(os.getenv("NEWS_MAX_KEEP", "900"))
-LOOKBACK_HOURS = int(os.getenv("NEWS_LOOKBACK_HOURS", "30"))
+MAX_KEEP = int(os.getenv("NEWS_MAX_KEEP", "2000"))
+LOOKBACK_HOURS = int(os.getenv("NEWS_LOOKBACK_HOURS", "48"))
 POLL_SECONDS = int(os.getenv("NEWS_POLL_SECONDS", "900"))
 
 
@@ -621,8 +621,16 @@ def _reload_if_changed() -> None:
         pass
 
 
-def feed(limit: int = 40, theme: Optional[str] = None,
-         symbol: Optional[str] = None, min_corroboration: int = 1) -> List[Dict[str, Any]]:
+def feed(limit: int = 120, theme: Optional[str] = None,
+         symbol: Optional[str] = None, min_corroboration: int = 1,
+         sort: str = "latest") -> Dict[str, Any]:
+    """sort='latest' orders by publication time, newest first. sort='coverage'
+    orders by how many outlets carry the story.
+
+    Latest is the default now. Ranking by corroboration meant a story from
+    yesterday morning that six outlets ran sat above something that broke ten
+    minutes ago, which is the wrong answer for a feed you check through the day."""
+
     _load()
     _reload_if_changed()
     with _lock:
@@ -641,13 +649,35 @@ def feed(limit: int = 40, theme: Optional[str] = None,
     if symbol:
         items = [r for r in items if symbol in (r.get("symbols") or [])]
 
+    total_items = len(items)
     cs = cluster(items)
     cs = [c for c in cs if c["corroboration"] >= min_corroboration]
+
+    def newest(c):
+        # the freshest member of the cluster, not the lead: the lead is chosen
+        # by score, and a later outlet often carries the same story
+        best = ""
+        for m in c["members"]:
+            w = m.get("when_iso") or m.get("ingested_at") or ""
+            if w > best:
+                best = w
+        c["newest_iso"] = best
+        return best
+
+    for c in cs:
+        newest(c)
+
+    if sort == "coverage":
+        cs.sort(key=lambda c: (c["rank"], c["newest_iso"]), reverse=True)
+    else:
+        cs.sort(key=lambda c: (c["newest_iso"], c["rank"]), reverse=True)
+
     for c in cs:
         c["x_post"] = build_x_post(c)
         c["ig_caption"] = build_ig_caption(c)
         c["id"] = c["lead"]["id"]
-    return cs[:limit]
+
+    return {"clusters": cs[:limit], "total_clusters": len(cs), "total_stories": total_items}
 
 
 def set_status(item_id: str, status: str) -> Optional[Dict[str, Any]]:

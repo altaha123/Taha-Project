@@ -54,17 +54,21 @@ def _ensure_poller() -> None:
 
 @router.get("/feed")
 def news_feed_route(
-    limit: int = Query(40, ge=1, le=120),
+    limit: int = Query(120, ge=1, le=300),
     theme: Optional[str] = None,
     symbol: Optional[str] = None,
     min_corroboration: int = Query(1, ge=1, le=8),
+    sort: str = Query("latest", pattern="^(latest|coverage)$"),
 ):
     _ensure_poller()
-    clusters = market_news.feed(limit=limit, theme=theme, symbol=symbol,
-                               min_corroboration=min_corroboration)
+    data = market_news.feed(limit=limit, theme=theme, symbol=symbol,
+                            min_corroboration=min_corroboration, sort=sort)
     return {
-        "count": len(clusters),
-        "clusters": clusters,
+        "count": len(data["clusters"]),
+        "total_clusters": data["total_clusters"],
+        "total_stories": data["total_stories"],
+        "sort": sort,
+        "clusters": data["clusters"],
         "note": (
             "Press coverage, not company filings, and never merged with them. "
             "Headlines are reproduced as published with the publication named "
