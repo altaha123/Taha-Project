@@ -53,7 +53,7 @@
   setTimeout(bootPatch, 400);
   setTimeout(bootPatch, 1200);
 
-  var N = 29;
+  var N = 15;
   var i = 0;
   function next() {
     if (i >= N) {
