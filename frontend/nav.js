@@ -9,7 +9,7 @@
 
    This replaces it with two levels:
 
-     Screener   Analysis · Results · Filings
+     Screener   Analysis · Charts · Results · Filings
      Portfolio  (single view)
      Ideas      Ideas · Alerts · Track record · Options
      Planner    (single view)
@@ -46,6 +46,7 @@
       icon: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/>',
       tabs: [
         { id: 'screener', label: 'Analysis', hint: 'Score with the full ledger' },
+        { id: 'charts',   label: 'Charts',   hint: 'Drawings, Fibonacci, RSI, MACD' },
         { id: 'results',  label: 'Results',  hint: 'Latest quarterly numbers' },
         { id: 'filings',  label: 'Filings',  hint: 'Live exchange announcements' }
       ]
@@ -112,6 +113,25 @@
       }
     }
     return null;
+  }
+
+  function queryChartsSymbol() {
+    try {
+      var q = new URLSearchParams(location.search).get('charts');
+      return q;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clickLegacy(tabId, tries) {
+    var btn = $id('tab-' + tabId);
+    if (btn) {
+      btn.click();
+      return;
+    }
+    if ((tries || 0) >= 25) return;
+    setTimeout(function () { clickLegacy(tabId, (tries || 0) + 1); }, 200);
   }
 
   function build() {
@@ -216,10 +236,7 @@
       target = s.tabs.length ? s.tabs[0].id : null;
     }
 
-    if (target) {
-      var btn = $id('tab-' + target);
-      if (btn) btn.click();
-    }
+    if (target) clickLegacy(target, 0);
 
     current = { section: s.id, tab: target };
     paint(s, target);
@@ -337,15 +354,17 @@
     setTimeout(buildMobile, 400);
     setTimeout(buildMobile, 1200);
 
+    var qCharts = queryChartsSymbol();
     var r = readHash();
-    if (r) go(r.section, r.tab, false);
+    if (qCharts != null) go('screener', 'charts', false);
+    else if (r) go(r.section, r.tab, false);
     else paint(SECTIONS[0], 'screener');
 
     var legacy = $('.legacy-nav');
     if (legacy) {
       new MutationObserver(function () {
         var active = null;
-        ['screener', 'ideas', 'filings', 'live', 'portfolio',
+        ['screener', 'charts', 'ideas', 'filings', 'live', 'portfolio',
          'results', 'options', 'tracker'].forEach(function (t) {
           var b = $id('tab-' + t);
           if (b && b.classList.contains('active')) active = t;
