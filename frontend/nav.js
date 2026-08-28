@@ -360,6 +360,17 @@
     }
 
     setTimeout(function () { booting = false; }, 600);
+
+    function dropClonedSocial() {
+      document.querySelectorAll('.navmain #altaha-social-open').forEach(function (el) {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+      var host = $('.navmain');
+      if (host) host.style.gridTemplateColumns = '';
+    }
+    dropClonedSocial();
+    setTimeout(dropClonedSocial, 500);
+    setTimeout(dropClonedSocial, 1600);
   }
 
   if (document.readyState === 'loading') {
