@@ -36,11 +36,8 @@
   if (window.__ALTAHA_CHARTS__) return;
   window.__ALTAHA_CHARTS__ = 1;
 
-  /* ── plumbing ──────────────────────────────────────────────────────────────────── */
-
   var API = (typeof API_BASE !== "undefined" && API_BASE) ? API_BASE
           : (window.API_BASE || "https://taha-project.onrender.com");
-
   var $ = function (id) { return document.getElementById(id); };
   var IS_TOUCH = window.matchMedia("(hover:none)").matches;
   var TOL = IS_TOUCH ? 16 : 8;
@@ -62,10 +59,6 @@
     });
   }
   function uid() { return "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-
-  /* IST session window. The market status pill on the page is authoritative
-     when it exists; this is the fallback so the Charts tab is never wrong on
-     its own. */
   function marketOpen() {
     var mk = $("mkstatus");
     if (mk && mk.classList.contains("open")) return true;
@@ -76,15 +69,11 @@
     return m >= 555 && m < 930;
   }
 
-  /* ── timeframes ────────────────────────────────────────────────────────── */
-
   var TFS = [
     { k: "1m", lab: "1m" }, { k: "5m", lab: "5m" }, { k: "15m", lab: "15m" },
     { k: "1H", lab: "1H" }, { k: "4H", lab: "4H" }, { k: "1D", lab: "1D" },
     { k: "1W", lab: "1W" }
   ];
-
-  /* ── tools ───────────────────────────────────────────────────────────── */
 
   var I = {
     pan: '<path d="M6 11V6.5a1.5 1.5 0 0 1 3 0V11m0-1V5a1.5 1.5 0 0 1 3 0v5m0-.5V6a1.5 1.5 0 0 1 3 0v6"/><path d="M15 8.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.2-3L4 13.4a1.5 1.5 0 0 1 2.5-1.7L8 13.5"/>',
@@ -105,3 +94,42 @@
     undo: '<path d="M3 8h11a6 6 0 0 1 0 12H8"/><path d="m3 8 4-4M3 8l4 4"/>',
     trash: '<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>'
   };
+
+  var TOOLS = [
+    { t: "pan", tip: "Pan & zoom", icon: I.pan },
+    { t: "sel", tip: "Select & move", icon: I.sel },
+    { rule: 1 },
+    { t: "trend", tip: "Trend line", icon: I.trend, n: 2 },
+    { t: "ray", tip: "Ray", icon: I.ray, n: 2 },
+    { t: "xline", tip: "Extended line", icon: I.xline, n: 2 },
+    { t: "hline", tip: "Horizontal line", icon: I.hline, n: 1 },
+    { t: "vline", tip: "Vertical line", icon: I.vline, n: 1 },
+    { rule: 1 },
+    { t: "rect", tip: "Rectangle", icon: I.rect, n: 2 },
+    { t: "chan", tip: "Parallel channel", icon: I.chan, n: 3 },
+    { t: "fib", tip: "Fib retracement", icon: I.fib, n: 2 },
+    { rule: 1 },
+    { t: "pos", tip: "Risk / reward box", icon: I.pos, n: 2 },
+    { t: "ruler", tip: "Measure", icon: I.ruler, n: 2 },
+    { rule: 1 },
+    { t: "text", tip: "Note", icon: I.text, n: 1 },
+    { t: "brush", tip: "Freehand", icon: I.brush, n: 0 }
+  ];
+
+  var HINT = {
+    trend: "Tap the start of the line, then the end.",
+    ray: "Tap two points — the line runs on past the second one.",
+    xline: "Tap two points — the line runs both ways forever.",
+    hline: "Tap the price level to mark.",
+    vline: "Tap the candle to mark.",
+    rect: "Tap two opposite corners of the box.",
+    chan: "Tap the two ends of the base line, then a third point to set the width.",
+    fib: "Tap the swing low, then the swing high. Or the reverse, for a fall.",
+    pos: "Tap your entry, then your stop. The target lands at 2R — drag it to change.",
+    ruler: "Tap where you start measuring, then where you finish.",
+    text: "Tap where the note should sit.",
+    brush: "Draw with your finger or the mouse held down."
+  };
+
+  var PALETTE = ["#B08D2E", "#1F5D45", "#8E2F2A", "#2E5E8E", "#16130E"];
+  var FIB = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1, 1.272, 1.618];
