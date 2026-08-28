@@ -74,7 +74,23 @@ DEDUPE_DAYS = 30
 # only the names you press Add on are recorded. The statistics then describe
 # your picks rather than the engine's, which is a different question; the
 # note on the Tracker tab says so.
-AUTOTRACK = os.environ.get("AUTOTRACK", "1").strip().lower() not in ("0", "false", "no", "off")
+# Default changed to OFF on 28 Aug 2026.
+#
+# The original reasoning for recording every scanned idea was sound as
+# statistics: a tracker containing only the ideas you chose to save is a
+# highlight reel, and the hit rate it reports is meaningless. But it made the
+# Tracker tab unusable as a tracker — it filled with hundreds of rows nobody
+# asked for, and "Add to tracker" appeared to do nothing because the row was
+# already there.
+#
+# Both goals are kept by separating the two lists rather than choosing one.
+# What you click on is yours and is the default view. The statistical record
+# still exists under source="auto" when you switch AUTOTRACK back on, and
+# listing(source=...) keeps them apart.
+# A blank value means "not set", not "on". Adding AUTOTRACK to Render and
+# leaving the box empty should not silently switch recording back on.
+_AT = os.environ.get("AUTOTRACK", "").strip().lower()
+AUTOTRACK = _AT in ("1", "true", "yes", "on")
 
 # How long each archetype's premise is allowed before it is judged expired.
 # Taken from the horizons the archetypes already declare, expressed in days.
@@ -175,10 +191,23 @@ def add(row: dict, source: str = "manual") -> dict:
         if (r["symbol"] == sym and r.get("setup_key") == key
                 and _days_since(r["added_on"]) < DEDUPE_DAYS
                 and r.get("status") == "LIVE"):
+            # Pressing "Add to tracker" on something the scanner had already
+            # recorded automatically used to hit this branch and do nothing
+            # visible — the button said "already tracked" and the row never
+            # appeared in your list, because your list only shows manual rows.
+            # A deliberate click now promotes the existing row to yours and
+            # keeps its original entry price, so the record stays honest.
+            if source == "manual" and (r.get("source") or "auto") != "manual":
+                with _lock:
+                    r["source"] = "manual"
+                    r["promoted_on"] = _today()
+                    _save()
+                return {"added": True, "reason": "added to your tracker",
+                        "id": r["id"], "promoted": True}
             return {"added": False, "reason": f"already tracking this setup on {sym}"}
 
     rec = {
-        "id": f"{sym}-{key}-{_today()}",
+        "id": f"{sym}-{key}-{_today()}-{source[:1]}",
         "symbol": sym,
         "name": row.get("name") or sym,
         "added_on": _today(),
@@ -502,7 +531,10 @@ def expectancy_by_archetype() -> dict:
     return out
 
 
-def listing(status: str = "", limit: int = 400, source: str = "") -> dict:
+def listing(status: str = "", limit: int = 400, source: str = "manual") -> dict:
+    """source defaults to "manual" — the Tracker tab is your list, not the
+    scanner's. Pass source="" for everything, or source="auto" for the
+    statistical record."""
     rows = _load()
     if status:
         rows = [r for r in rows if r.get("status") == status.upper()]

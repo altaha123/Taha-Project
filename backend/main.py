@@ -8,7 +8,8 @@ import os
 import threading
 import time
 
-from fastapi import FastAPI, HTTPException, Body, Response
+from fastapi import FastAPI, HTTPException, Body, Response, Header
+from typing import Optional
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
@@ -129,11 +130,13 @@ def _require_admin(key: str = ""):
 
 def _autotrack(payload):
     """
-    Record every idea a scan produces.
+    Record every idea a scan produces, for hit-rate statistics only.
 
-    Deliberately not opt-in. If only the ideas someone bothers to save get
-    tracked, the record becomes a highlight reel of the ones they already
-    liked, and the hit rate it produces is worthless.
+    Gated on AUTOTRACK, which is OFF by default. Rows land under
+    source="auto" and do not appear in the Tracker tab, which lists your
+    manual picks. The statistical argument for recording everything still
+    holds — a tracker of only the ideas you liked flatters itself — but that
+    record belongs in its own list, not in yours.
 
     Called from three places, because a scan payload can arrive three ways:
     a fresh scan finishing, a cached payload being read off disk at boot, or
@@ -217,7 +220,10 @@ def _worker():
         _state["status"] = "done"
         _state["finished_at"] = time.time()
         _state["error"] = None
-        _autotrack(payload)
+        # Only records if AUTOTRACK is explicitly switched on. Off by
+        # default since 28 Aug 2026 — see the note in tracker.py.
+        if tracker.AUTOTRACK:
+            _autotrack(payload)
     except MemoryError:
         _state["status"] = "done" if _state["payload"] else "error"
         _state["finished_at"] = time.time()
@@ -471,8 +477,10 @@ def announcements_diag():
 
 
 @app.get("/tracker/list")
-def tracker_list(status: str = "", limit: int = 400):
-    return tracker.listing(status=status, limit=max(1, min(limit, 1000)))
+def tracker_list(status: str = "", limit: int = 400, source: str = "manual"):
+    """source="manual" (default) is your tracker — only what you pressed Add on.
+    source="auto" is the scanner's statistical record. source="" is both."""
+    return tracker.listing(status=status, limit=max(1, min(limit, 1000)), source=source)
 
 
 @app.post("/tracker/backfill")
@@ -502,6 +510,19 @@ def tracker_add(payload: dict = Body(...)):
     """Add one idea by hand. The scan records everything automatically anyway;
     this is for names spotted outside the Ideas list."""
     return tracker.add(payload, source="manual")
+
+
+@app.post("/tracker/purge-auto")
+def tracker_purge_auto(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Delete every row the scanner recorded on its own.
+
+    Needed once after 28 Aug 2026: automatic recording ran from the start, so
+    an existing tracker already holds rows nobody asked for. Manual rows and
+    anything promoted by a click are untouched."""
+    expected = os.getenv("ADMIN_KEY")
+    if expected and x_admin_key != expected:
+        raise HTTPException(status_code=401, detail="admin key required")
+    return tracker.purge(source="auto")
 
 
 @app.post("/tracker/remove")
