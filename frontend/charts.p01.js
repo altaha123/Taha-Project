@@ -1,5 +1,5 @@
 (window.__ALTAHA_CHARTS_PARTS=window.__ALTAHA_CHARTS_PARTS||[]).push("/* ============================================================================
-   Altaha — Charts
+   Altaha \u2014 Charts
    ----------------------------------------------------------------------------
    A drop-in Charts tab. One <script> line in index.html and nothing else: this
    file injects its own tab button (desktop bar and mobile bar), its own view
@@ -11,7 +11,7 @@
    1. Drawings are anchored to TIME AND PRICE, not to the on-screen pixel or to
       a bar index. Switch 15m to 1D and the trendline you drew still sits on the
       same two dates. The old panel stored a lightweight-charts LineSeries per
-      drawing, which meant the drawing was data — it could not be moved, could
+      drawing, which meant the drawing was data \u2014 it could not be moved, could
       not be deleted individually, and was wiped on every timeframe change.
    2. Drawings live on a canvas above the chart, so there is no limit on what
       can be drawn: rectangles, Fibonacci grids, parallel channels, a measuring
@@ -19,7 +19,7 @@
    3. Everything is selectable, draggable by body or by handle, deletable, and
       undoable, and it persists per symbol in the browser.
    4. It works on touch. The existing site hides its drawing tools below 780px
-      with the comment \"unusable on touch\" — they were not unusable, the hit
+      with the comment \"unusable on touch\" \u2014 they were not unusable, the hit
       targets were 24px. These are 40px with 16px hit tolerance.
    5. The last candle updates from the live quote every second or two instead
       of the whole chart being refetched every sixty. That, more than anything
@@ -36,7 +36,7 @@
   if (window.__ALTAHA_CHARTS__) return;
   window.__ALTAHA_CHARTS__ = 1;
 
-  /* ── plumbing ──────────────────────────────────────────────────────────── */
+  /* \u2500\u2500 plumbing \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 
   var API = (typeof API_BASE !== \"undefined\" && API_BASE) ? API_BASE
           : (window.API_BASE || \"https://taha-project.onrender.com\");
@@ -55,7 +55,7 @@
     return v || fb;
   }
   function fmt(n, d) {
-    if (n == null || !isFinite(n)) return \"—\";
+    if (n == null || !isFinite(n)) return \"\u2014\";
     return Number(n).toLocaleString(\"en-IN\", {
       minimumFractionDigits: d == null ? 2 : d,
       maximumFractionDigits: d == null ? 2 : d
@@ -76,7 +76,7 @@
     return m >= 555 && m < 930;
   }
 
-  /* ── timeframes ────────────────────────────────────────────────────────── */
+  /* \u2500\u2500 timeframes \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 
   var TFS = [
     { k: \"1m\", lab: \"1m\" }, { k: \"5m\", lab: \"5m\" }, { k: \"15m\", lab: \"15m\" },
@@ -84,7 +84,7 @@
     { k: \"1W\", lab: \"1W\" }
   ];
 
-  /* ── tools ─────────────────────────────────────────────────────────────── */
+  /* \u2500\u2500 tools \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 
   var I = {
     pan: '<path d=\"M6 11V6.5a1.5 1.5 0 0 1 3 0V11m0-1V5a1.5 1.5 0 0 1 3 0v5m0-.5V6a1.5 1.5 0 0 1 3 0v6\"/><path d=\"M15 8.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.2-3L4 13.4a1.5 1.5 0 0 1 2.5-1.7L8 13.5\"/>',
