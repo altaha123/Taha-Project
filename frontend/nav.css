@@ -1,13 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   Altaha Screener — Navigation styles
-
-   Two levels. The primary row carries weight and never scrolls; the sub row
-   is quieter and only appears when a section actually has a choice in it.
-
-   Every colour is a custom property. The old More menu carried a literal
-   background:#fff and its labels turned invisible the moment dark mode
-   shipped — no literal colours anywhere in this file.
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* Altaha Screener — Navigation styles */
 
 .legacy-nav { display: none !important; }
 
@@ -16,11 +7,9 @@
   border-bottom: 1px solid var(--rule);
 }
 
-/* ── Primary ────────────────────────────────────────────────────────────── */
-
 .navmain {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0;
   border-bottom: 1px solid var(--rule);
 }
@@ -39,15 +28,11 @@
 .navmain-btn:hover { color: var(--ink-2); }
 .navmain-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 2px; }
 
-/* The active section carries an ink underline that sits on the divider, so
-   the two rows read as one control rather than two stacked bars. */
 .navmain-btn.on { color: var(--ink); }
 .navmain-btn.on::after {
   content: ''; position: absolute; left: 0; right: 0; bottom: -1px;
   height: 2px; background: var(--gold);
 }
-
-/* ── Sub row ────────────────────────────────────────────────────────────── */
 
 .navsub {
   display: flex; align-items: stretch; gap: 12px;
@@ -102,8 +87,6 @@
   font-size: 12.5px; color: var(--mute);
 }
 
-/* ── Mobile bar ─────────────────────────────────────────────────────────── */
-
 .navmob { display: none; }
 
 @media (max-width: 780px) {
@@ -116,9 +99,8 @@
     border-top: 1px solid var(--rule);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .navmob-inner { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .navmob-inner { display: grid; grid-template-columns: repeat(5, 1fr); }
 
-  /* 44px minimum touch target, which the old pill tabs did not meet. */
   .navmob-btn {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     padding: 9px 4px 8px; min-height: 52px;
@@ -133,23 +115,19 @@
 
   body { padding-bottom: 66px; }
 
-  /* The desktop rows collapse: icons carry the primary row, the sub row
-     scrolls, and the hint text is dropped because there is no room for it. */
-  .navmain-btn { flex-direction: column; gap: 5px; padding: 12px 4px 11px; font-size: 9.5px; }
-  .navmain-btn .navmain-lbl { letter-spacing: .09em; }
-  .navsub { min-height: 44px; gap: 8px; }
+  .navmain { display: none; }
+  .navwrap { border-bottom: 0; margin-bottom: 10px; }
+  .navsub { border-bottom: 1px solid var(--rule); min-height: 44px; gap: 8px; }
   .navsub-btn { padding: 9px 12px; }
   .navsub-hint { display: none; }
   .navblurb { display: none; }
-  .navwrap { margin-bottom: 18px; }
+
+  header { padding-top: 18px !important; }
+  header .brand { font-size: 34px !important; }
+  .pitch, .badges, .hero-candles, .metal { display: none !important; }
 }
 
-/* Hiding the primary row on a phone would leave the bottom bar as the only
-   way to move, which is fine — but the sub row must stay, or the four extra
-   views inside Ideas become unreachable. This is the mistake the old More
-   menu made in reverse. */
 @media (max-width: 560px) {
-  .navmain { display: none; }
-  .navwrap { border-bottom: 0; }
-  .navsub { border-bottom: 1px solid var(--rule); }
+  .navsub-lbl { font-size: 10px; letter-spacing: .08em; }
+  .navlearn { padding: 6px 10px; }
 }

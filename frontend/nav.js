@@ -13,6 +13,7 @@
      Portfolio  (single view)
      Ideas      Ideas · Alerts · Track record · Options
      Planner    (single view)
+     Social     (overlay)
 
    Four things to know about how it is built:
 
@@ -71,6 +72,12 @@
       blurb: 'Household money through the same lens',
       icon: '<path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-6"/>',
       tabs: []
+    },
+    {
+      id: 'social', label: 'Social',
+      blurb: 'Filings and news, ready to post',
+      icon: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>',
+      tabs: []
     }
   ];
 
@@ -98,9 +105,6 @@
     return SECTIONS[0];
   }
 
-  /* Which section owns a given underlying tab. Used when something outside
-     this file changes tabs — the deep link handler, or a card that jumps the
-     user to Filings — so the bar stays truthful. */
   function ownerOf(tabId) {
     for (var i = 0; i < SECTIONS.length; i++) {
       for (var j = 0; j < SECTIONS[i].tabs.length; j++) {
@@ -110,14 +114,10 @@
     return null;
   }
 
-  /* ── Build ──────────────────────────────────────────────────────────────── */
-
   function build() {
     var oldNav = $('.tabnav');
     if (!oldNav) return false;
 
-    // Keep the original buttons alive but out of sight — every existing
-    // handler is bound to them and this file works by clicking them.
     oldNav.setAttribute('aria-hidden', 'true');
     oldNav.classList.add('legacy-nav');
 
@@ -146,9 +146,6 @@
     subInner.setAttribute('aria-label', 'Views');
     sub.appendChild(subInner);
 
-    // The glossary is a persistent link rather than a tab. Definitions are
-    // already available inline through the .vterm popovers, so a whole tab
-    // for the same content was never earning its place in the bar.
     var learn = el('button', 'navlearn');
     learn.type = 'button';
     learn.innerHTML = '<span>Glossary</span>';
@@ -185,15 +182,23 @@
     }
   }
 
-  /* ── Navigate ───────────────────────────────────────────────────────────── */
-
   function go(sectionId, tabId, userInitiated) {
     var s = sectionById(sectionId);
     markLearn(false);
 
-    // Planner and Screener are separate brands in the original markup, with
-    // their own header tagline. Route through the existing brand switch so
-    // that behaviour is preserved exactly.
+    if (s.id === 'social') {
+      if (window.AltahaSocial && typeof window.AltahaSocial.open === 'function') {
+        window.AltahaSocial.open();
+      } else {
+        var so = $id('altaha-social-open');
+        if (so) so.click();
+      }
+      current = { section: s.id, tab: null };
+      paint(s, null);
+      if (userInitiated) { setHash(s.id, null); }
+      return;
+    }
+
     if (s.brand === 'planner') {
       var pb = $id('bsw-planner');
       if (pb) pb.click();
@@ -213,7 +218,7 @@
 
     if (target) {
       var btn = $id('tab-' + target);
-      if (btn) btn.click();          // switchTab does the real work
+      if (btn) btn.click();
     }
 
     current = { section: s.id, tab: target };
@@ -231,8 +236,6 @@
     var host = $('.navsub-inner');
     if (host) {
       host.innerHTML = '';
-      // A sub-bar with one item is decoration. Only render it when there is
-      // an actual choice to make.
       if (section.tabs.length > 1) {
         section.tabs.forEach(function (t) {
           var b = el('button', 'navsub-btn' + (t.id === tabId ? ' on' : ''));
@@ -254,8 +257,6 @@
     syncMobile(section.id);
   }
 
-  /* The hero fills most of a first screen. Without this the content changes
-     below the fold and the click reads as having done nothing. */
   function scrollToContent() {
     if (booting) return;
     var anchor = $('.navwrap');
@@ -264,13 +265,6 @@
     window.scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' });
   }
 
-  /* ── Hash routing ───────────────────────────────────────────────────────── */
-
-  /* Guarding this with a flag cleared on a timer looked fine and was racy:
-     two navigations inside the same tick left the flag set, and the second
-     legitimate hashchange was swallowed. Comparing against the last value we
-     wrote is deterministic — if the hash already says what we put there, the
-     event is our own echo and there is nothing to do. */
   var lastWritten = null;
 
   function hashFor(sectionId, tabId) {
@@ -289,8 +283,6 @@
     var tabId = raw[1] || null;
     if (!sectionId) return null;
 
-    // A bare tab name still resolves — #tracker works as well as #ideas/tracker,
-    // so links shared before this change keep landing somewhere sensible.
     var owner = ownerOf(sectionId);
     if (owner && owner.id !== sectionId) return { section: owner.id, tab: sectionId };
 
@@ -299,7 +291,7 @@
   }
 
   window.addEventListener('hashchange', function () {
-    if (location.hash === lastWritten) return;      // our own echo
+    if (location.hash === lastWritten) return;
     var r = readHash();
     if (r) {
       lastWritten = location.hash;
@@ -307,13 +299,10 @@
     }
   });
 
-  /* ── Mobile bar ─────────────────────────────────────────────────────────── */
-  /* premium.js builds a five-slot bar whose fifth slot is More. With four
-     sections there is no overflow to hide, so that bar is replaced. */
-
   function buildMobile() {
-    var old = $('.mobnav');
-    if (old && old.parentNode) old.parentNode.removeChild(old);
+    document.querySelectorAll('.mobnav, .navmob').forEach(function (n) {
+      if (n.parentNode) n.parentNode.removeChild(n);
+    });
 
     var bar = el('nav', 'navmob');
     bar.setAttribute('aria-label', 'Sections');
@@ -341,12 +330,9 @@
     });
   }
 
-  /* ── Boot ───────────────────────────────────────────────────────────────── */
-
   function start() {
     if (!build()) return;
 
-    // premium.js appends its bar on its own schedule; sweep once it has.
     buildMobile();
     setTimeout(buildMobile, 400);
     setTimeout(buildMobile, 1200);
@@ -355,8 +341,6 @@
     if (r) go(r.section, r.tab, false);
     else paint(SECTIONS[0], 'screener');
 
-    // Anything outside this file that changes tabs — a deep link, a card that
-    // jumps to Filings — should still leave the bar telling the truth.
     var legacy = $('.legacy-nav');
     if (legacy) {
       new MutationObserver(function () {
