@@ -23,7 +23,7 @@
         if (typeof chart[name] !== "function") return;
         var add = chart[name].bind(chart);
         chart[name] = function () {
-          var series = add.apply(chart, arguments);
+          var series = add.apply(this, arguments);
           if (series && typeof series.createPriceLine === "function") {
             var make = series.createPriceLine.bind(series);
             series.createPriceLine = function (opts) {
@@ -44,6 +44,11 @@
     moveTick("fctfbar");
   }
 
+  function queryChartsSymbol() {
+    try { return new URLSearchParams(location.search).get("charts"); }
+    catch (e) { return null; }
+  }
+
   function showChartsInMenu() {
     var nav = window.AltahaNav;
     if (!nav || !nav.sections) return;
@@ -57,16 +62,31 @@
       if (screener.tabs[j].id === "charts") { has = true; break; }
     }
     if (!has) {
-      screener.tabs.push({
+      screener.tabs.splice(1, 0, {
         id: "charts",
         label: "Charts",
         hint: "Drawings, Fibonacci, RSI, MACD"
       });
     }
-    if (typeof nav.go === "function") {
-      var onScreener = document.querySelector('.navmain-btn.on[data-section="screener"]');
-      if (onScreener) nav.go("screener", "screener", false);
+    if (typeof nav.go !== "function") return;
+
+    var q = queryChartsSymbol();
+    var view = document.getElementById("view-charts");
+    var chartsOpen = view && view.style.display !== "none";
+    if (q != null || chartsOpen) {
+      nav.go("screener", "charts", false);
+      return;
     }
+
+    var onScreener = document.querySelector('.navmain-btn.on[data-section="screener"]');
+    if (!onScreener) return;
+    var onSub = document.querySelector(".navsub-btn.on .navsub-lbl");
+    var label = onSub ? onSub.textContent : "Analysis";
+    var tab = "screener";
+    if (label === "Charts") tab = "charts";
+    else if (label === "Results") tab = "results";
+    else if (label === "Filings") tab = "filings";
+    nav.go("screener", tab, false);
   }
 
   wrapChart();
