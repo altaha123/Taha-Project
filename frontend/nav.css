@@ -131,3 +131,7 @@
   .navsub-lbl { font-size: 10px; letter-spacing: .08em; }
   .navlearn { padding: 6px 10px; }
 }
+
+/* Hide the extra Social tab that another script still paints on the desktop bar. */
+.navmain #altaha-social-open,
+.navmain > *:not(.navmain-btn) { display: none !important; }
