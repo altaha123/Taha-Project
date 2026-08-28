@@ -1,5 +1,4 @@
-/* Altaha — keep S/R lines, hide the price-axis pills they draw on top of the numbers.
-   Also move Tick to the end of the timeframe bar so daily stays the default. */
+/* Altaha Screener — full drawing chart plus the label/Tick fix. */
 (function () {
   "use strict";
 
@@ -39,7 +38,7 @@
     };
   }
 
-  function boot() {
+  function bootPatch() {
     wrapChart();
     moveTick("tfbar");
     moveTick("fctfbar");
@@ -47,10 +46,29 @@
 
   wrapChart();
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
+    document.addEventListener("DOMContentLoaded", bootPatch);
   } else {
-    boot();
+    bootPatch();
   }
-  setTimeout(boot, 400);
-  setTimeout(boot, 1200);
+  setTimeout(bootPatch, 400);
+  setTimeout(bootPatch, 1200);
+
+  var N = 15;
+  var i = 0;
+  function next() {
+    if (i >= N) {
+      var src = (window.__ALTAHA_CHARTS_PARTS || []).join("");
+      window.__ALTAHA_CHARTS_PARTS = null;
+      try { (0, eval)(src); } catch (e) { console.error("Altaha chart failed to load", e); }
+      return;
+    }
+    i += 1;
+    var s = document.createElement("script");
+    var n = i < 10 ? "0" + i : String(i);
+    s.src = "charts.p" + n + ".js";
+    s.onload = next;
+    s.onerror = function () { console.error("Missing chart piece " + n); next(); };
+    document.head.appendChild(s);
+  }
+  next();
 })();
