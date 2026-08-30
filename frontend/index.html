@@ -2302,9 +2302,15 @@ async function pollScan(){
       return;
     }
     if(s.status==="idle"){
-      // The server restarted mid-scan (free-tier memory limits are real).
-      // Checkpoints written to disk mean partial rankings usually survive.
-      $("gennote2").textContent = "The engine restarted mid-scan — showing whatever was scored before. Press Generate to continue.";
+      /* Two different situations used to share one sentence. The server can
+         come back with a checkpoint, in which case partial rankings really are
+         being shown — or with nothing at all, after a deploy or a cold start,
+         in which case "showing whatever was scored before" describes an empty
+         page and reads as a malfunction. /scan/status reports scanned_at only
+         when a payload actually survived, so ask it rather than assume. */
+      $("gennote2").textContent = s.scanned_at
+        ? "The engine restarted mid-scan — showing what was scored before it stopped. Press Generate to continue."
+        : "No universe scan is stored on the server yet. Press Generate from universe — it takes a few minutes, and the result is then cached for everyone.";
       $("genbtn2").textContent="Generate from universe";
       loadIdeas();
       return;
