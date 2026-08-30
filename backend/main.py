@@ -128,7 +128,7 @@ def _require_admin(key: str = ""):
         raise HTTPException(401, "This control endpoint needs the admin key (?key=...).")
 
 
-def _autotrack(payload):
+def _autotrack(payload, source: str = "auto", force: bool = False):
     """
     Record every idea a scan produces, for hit-rate statistics only.
 
@@ -144,15 +144,25 @@ def _autotrack(payload):
     originally, which meant anyone whose results came from cache saw an
     empty tracker forever and had no way to tell why. add() de-duplicates,
     so calling this repeatedly is safe.
+
+    force=True bypasses the AUTOTRACK gate. That is what the Record current
+    ideas button needs: pressing a button IS the explicit instruction the gate
+    exists to require, and without the bypass the button reported "Recorded 0"
+    on every press for anyone running the default configuration.
     """
     try:
         rows = []
         for horizon in ("short", "medium"):
             sel = ideas_engine.select(payload, horizon=horizon, limit=25,
-                                      include_thin=True)
+                                      include_thin=True,
+                                      # The statistical record wants everything the
+                                      # setup matched, not only what cleared the
+                                      # display floor — filtering it here would make
+                                      # the measured hit rate a highlight reel again.
+                                      min_conviction=0)
             rows.extend(sel.get("rows") or [])
         if rows:
-            return tracker.add_many(rows, source="auto")
+            return tracker.add_many(rows, source=source, force=force)
     except Exception as e:
         return {"added": 0, "skipped": 0, "error": str(e)[:160]}
     return {"added": 0, "skipped": 0, "reason": "no qualifying ideas in this payload"}
@@ -406,29 +416,59 @@ HORIZONS = ideas_engine.HORIZONS
 
 @app.get("/ideas")
 def ideas(horizon: str = "short", limit: int = 15,
-          min_tier: str = "moderate", include_thin: bool = False):
+          min_tier: str = "moderate", include_thin: bool = False,
+          min_conviction: Optional[float] = None):
     """
     Ideas, rebuilt. Differences from the old endpoint, all deliberate:
       · returns FEWER than `limit` when fewer names genuinely qualify, instead
         of padding the list with unrelated high-composite names
+      · scores every row out of 100 across seven factors weighted for the
+        horizon — setup fit, engine composite, sector outlook, market regime,
+        catalyst (filings and press), liquidity and the archetype's measured
+        record — and ships the points each factor contributed
+      · drops anything under the conviction floor rather than reordering it
       · caps how many ideas can come from one sector
-      · attaches a liquidity tier and its consequence to every row
+      · marks adverse filings as adverse instead of counting them as news
       · warns per-row when the index is below its 50-day average
-      · orders by fit adjusted for what each archetype has actually delivered,
-        once the tracker has enough marked ideas to say
     """
     p = _state["payload"]
     if not p:
         return {"available": False, "status": _state["status"],
-                "message": "No scan yet — generate the ranking first."}
+                "message": "No scan yet — generate the ranking first.",
+                "market_context": _safe_context(horizon)}
     try:
         return {**ideas_engine.select(p, horizon=horizon,
                                       limit=max(1, min(limit, 25)),
                                       min_tier=min_tier,
-                                      include_thin=bool(include_thin)),
+                                      include_thin=bool(include_thin),
+                                      min_conviction=min_conviction),
                 "disclaimer": DISCLAIMER}
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+def _safe_context(horizon: str):
+    """The market context never blocks the tab: a feed that is down returns
+    nothing here rather than failing the whole request."""
+    try:
+        return ideas_engine.market_context(horizon)
+    except Exception:
+        return None
+
+
+@app.get("/ideas/context")
+def ideas_context(horizon: str = "short"):
+    """
+    Index regime, sector leaders and laggards, and the market-wide headlines —
+    the backdrop the ideas are being picked against. Served separately so the
+    Ideas tab can show the state of the market even before a scan exists, and
+    so a slow news feed never delays the list itself.
+    """
+    ctx = _safe_context(horizon)
+    if ctx is None:
+        return {"available": False,
+                "message": "Market context feeds are unavailable right now."}
+    return {"available": True, **ctx}
 
 
 # ---------------------------------------------------------------------------
@@ -484,25 +524,34 @@ def tracker_list(status: str = "", limit: int = 400, source: str = "manual"):
 
 
 @app.post("/tracker/backfill")
-def tracker_backfill():
+def tracker_backfill(source: str = "auto"):
     """
     Record the ideas from the CURRENT scan, right now.
 
     Without this, a user whose scan results came from cache had to wait for a
     fresh multi-minute scan before a single idea was ever recorded, and the
     Tracker tab gave no clue that was the reason it looked empty.
+
+    BUGFIX: this went through the AUTOTRACK gate, which has been off by default
+    since 28 Aug 2026, so it recorded nothing and said so only as "added: 0".
+    A deliberate press bypasses the gate. source=auto (the default) files them
+    under the statistical record; source=manual files them as your own picks.
     """
     p = _state["payload"]
     if not p:
         raise HTTPException(404, "No scan available to record. Run a universe scan first.")
-    res = _autotrack(p)
-    return {**(res or {}), "scanned_at": p.get("scanned_at"),
-            "total_tracked": tracker.listing()["count"]}
+    source = "manual" if source == "manual" else "auto"
+    res = _autotrack(p, source=source, force=True)
+    return {**(res or {}), "scanned_at": p.get("scanned_at"), "recorded_as": source,
+            "total_tracked": tracker.listing(source="")["count"]}
 
 
 @app.get("/tracker/stats")
-def tracker_stats():
-    return tracker.stats()
+def tracker_stats(source: str = ""):
+    """source="" is the whole ledger; "manual" is your own picks. The Tracker
+    tab passes whichever list it is showing, so the headline numbers describe
+    the rows underneath them instead of a different population."""
+    return tracker.stats(source=source)
 
 
 @app.post("/tracker/add")
@@ -532,10 +581,37 @@ def tracker_remove(id: str = ""):
     return tracker.remove(id)
 
 
+# Marking reads price feeds, so it must not be possible to run two passes at
+# once or to ask for a hundred symbols in one request and have the browser give
+# up halfway. One at a time, small batches.
+_marking = threading.Lock()
+
+
 @app.post("/tracker/update")
-def tracker_update(key: str = "", limit: int = 120):
-    _require_admin(key)
-    return tracker.update_all(limit=limit)
+def tracker_update(key: str = "", limit: int = 25, force: bool = False):
+    """
+    Mark tracked ideas with their current prices.
+
+    Two changes, both of which the Refresh prices button needed:
+
+    · No admin key. This endpoint reads public closes and writes the price
+      columns of rows the user already owns — it is not a control endpoint.
+      Guarding it meant the button prompted for a key, and anyone who had not
+      set ADMIN_KEY on Render (or typed it wrong once, since the wrong value is
+      cached for the session) got 401 and concluded the feature was broken.
+      It is protected instead by a lock and a batch cap, which is what actually
+      matters here: the risk was hammering the price feed, not authorship.
+
+    · force=true re-marks rows already marked today, which is the whole point
+      of a manual refresh button. Without it a press after the daily cron run
+      returned "updated: 0" and looked like a no-op.
+    """
+    if not _marking.acquire(blocking=False):
+        raise HTTPException(409, "A marking pass is already running — let it finish.")
+    try:
+        return tracker.update_all(limit=max(1, min(int(limit), 25)), force=bool(force))
+    finally:
+        _marking.release()
 
 
 @app.get("/tracker/export.csv")
@@ -553,14 +629,19 @@ def ideas_export(horizon: str = "short", limit: int = 25,
         raise HTTPException(404, "No scan yet.")
     sel = ideas_engine.select(p, horizon=horizon, limit=max(1, min(limit, 25)),
                               min_tier=min_tier, include_thin=bool(include_thin))
-    cols = ["symbol", "name", "sector", "setup", "setup_fit", "rank_score",
-            "composite", "technical", "fundamental", "f_score", "price",
-            "horizon", "liquidity_tier", "avg_turnover_cr"]
+    cols = ["symbol", "name", "sector", "setup", "conviction", "conviction_band",
+            "setup_fit", "composite", "technical", "fundamental", "f_score",
+            "price", "horizon", "liquidity_tier", "avg_turnover_cr",
+            "sector_state", "catalyst_category", "adverse_filing"]
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
     w.writeheader()
     for r in sel["rows"]:
-        w.writerow(r)
+        # Flatten the two nested objects the CSV wants a column for; a
+        # DictWriter would otherwise print the whole dict into one cell.
+        w.writerow({**r,
+                    "sector_state": (r.get("sector_outlook") or {}).get("state"),
+                    "catalyst_category": (r.get("catalyst") or {}).get("category")})
     return Response(content=buf.getvalue(), media_type="text/csv",
                     headers={"Content-Disposition":
                              f"attachment; filename=altaha-ideas-{horizon}.csv"})

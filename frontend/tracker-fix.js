@@ -44,7 +44,15 @@
   function sign(v) { return v == null ? "" : (v > 0 ? "pos" : (v < 0 ? "neg" : "")); }
   function rupee(v) { return v == null ? "\u2014" : "\u20B9" + Number(v).toLocaleString("en-IN"); }
 
-  var srcFilter = "";        // "" = everything, "manual" = only what you added
+  /* "manual" = only what you pressed Add on, "" = the whole ledger.
+     BUGFIX: this started as "" and the request then omitted the source
+     parameter entirely — but the backend defaults /tracker/list to "manual",
+     so the tab was already showing manual rows while claiming to show
+     everything. Pressing "My picks only" filtered a list that was already
+     filtered and visibly did nothing. The filter now starts where the backend
+     actually starts, the button says which way it will move, and the source is
+     always sent explicitly so the two ends cannot drift apart again. */
+  var srcFilter = "manual";
 
   /* ---- styles, on the existing tokens ---------------------------------- */
 
@@ -77,7 +85,7 @@
     bar.id = "tkbar2";
     bar.innerHTML =
       '<button class="act solid" id="tkrefresh" type="button">Refresh prices</button>' +
-      '<button class="act" id="tkmine" type="button">My picks only</button>' +
+      '<button class="act solid" id="tkmine" type="button">Showing my picks</button>' +
       '<button class="act" id="tkclearauto" type="button">Clear auto-recorded</button>' +
       '<button class="act" id="tkdiag" type="button">Diagnose</button>';
     var anchor = $("tkstats");
@@ -87,7 +95,7 @@
     $("tkmine").addEventListener("click", function () {
       srcFilter = srcFilter === "manual" ? "" : "manual";
       this.classList.toggle("solid", srcFilter === "manual");
-      this.textContent = srcFilter === "manual" ? "Showing my picks" : "My picks only";
+      this.textContent = srcFilter === "manual" ? "Showing my picks" : "Showing everything";
       render();
     });
     $("tkclearauto").addEventListener("click", clearAuto);
@@ -151,15 +159,17 @@
     try {
       var ctrl = new AbortController();
       var bail = setTimeout(function () { ctrl.abort(); }, 70000);
-      var r = await fetch(keyed(API + "/tracker/update?limit=2", true), { method: "POST", signal: ctrl.signal });
+      var r = await fetch(API + "/tracker/update?limit=2&force=true", { method: "POST", signal: ctrl.signal });
       clearTimeout(bail);
       var txt = await r.text();
       log("  status", r.status + " in " + (Date.now() - t0) + "ms");
       log("  body", txt.slice(0, 500));
-      if (r.status === 401 || r.status === 503) {
-        log("  VERDICT", "admin key rejected \u2014 wrong value, or ADMIN_KEY unset on Render");
+      if (r.status === 401) {
+        log("  VERDICT", "admin key rejected \u2014 this endpoint should no longer need one, so Render is running an older build");
+      } else if (r.status === 409) {
+        log("  VERDICT", "a marking pass is already running \u2014 wait for it and re-run");
       } else if (txt.indexOf("remaining") === -1) {
-        log("  VERDICT", "no 'remaining' field \u2014 Render is still running the OLD tracker.py");
+        log("  VERDICT", "no 'remaining' field \u2014 Render is still running the OLD tracker.py, so Refresh prices stops after one batch");
       }
     } catch (e) {
       log("  FAILED after", (Date.now() - t0) + "ms \u2014 " +
@@ -194,13 +204,14 @@
   var BATCH = 6;
   var MAX_ROUNDS = 40;
 
-  /* /tracker/update sits behind the admin guard, so it needs the key that
-     ADMIN_KEY holds on Render. The page already has withKey(), which prompts
-     once per session and caches the answer in memory — never hardcoded,
-     because this file is public. Reusing it means one prompt for the whole
-     site rather than a second one just for the Tracker.
-
-     /tracker/remove and /tracker/list are not guarded and must not ask. */
+  /* Nothing on this tab is behind the admin guard any more. /tracker/update
+     used to be, which meant Refresh prices opened a password prompt and then
+     returned 401 for everyone who had not set ADMIN_KEY on Render — the single
+     most common reason this button "did nothing". Marking reads public closes
+     and writes the price columns of rows you already own; the server protects
+     it with a lock and a batch cap instead, which is the risk actually worth
+     protecting against. keyed() is kept for anything that genuinely is
+     guarded. */
   function keyed(url, needsKey) {
     if (!needsKey) return url;
     try { if (typeof withKey === "function") return withKey(url); } catch (e) {}
@@ -231,18 +242,23 @@
     var b = $("tkrefresh");
     b.disabled = true;
 
-    var done = 0, rounds = 0, stop = "";
+    var done = 0, rounds = 0, stop = "", left = null;
     try {
       while (rounds++ < MAX_ROUNDS) {
-        b.textContent = "Marking\u2026 " + done;
-        var res = await post("/tracker/update?limit=" + BATCH, 60000, true);
+        b.textContent = (left == null) ? ("Marking\u2026 " + done)
+                                       : ("Marking\u2026 " + done + ", " + left + " to go");
+        /* force=true is what makes this a refresh rather than a no-op: without
+           it the server skips every row it already marked today, so a press
+           after the daily cron run returned "updated: 0" and the button
+           flashed and did nothing. */
+        var res = await post("/tracker/update?force=true&limit=" + BATCH, 60000, false);
 
         if (!res.ok) {
-          if (res.status === 401) {
+          if (res.status === 409) {
+            stop = "Already refreshing";
+          } else if (res.status === 401) {
             forgetKey();
             stop = "Wrong admin key \u2014 try again";
-          } else if (res.status === 503) {
-            stop = "ADMIN_KEY not set on Render";
           } else {
             stop = ((res.body && res.body.detail) || "Server refused").slice(0, 38);
           }
@@ -250,12 +266,19 @@
         }
         var j = res.body || {};
 
-        /* An older backend has no "remaining" field. Falling back to a single
-           pass there is correct: it means tracker.py was not updated, and
-           looping would just repeat the same batch for ever. */
-        if (j.remaining === undefined) { done = j.updated || 0; stop = "old backend"; break; }
+        /* A backend older than this build has no "remaining" field and cannot
+           say how far there is to go, so one pass is all we can safely do —
+           looping would repeat the same batch for ever. This was the bug that
+           made the button useless: the field did not exist on ANY build, so
+           every press stopped after six rows and reported "old backend". */
+        if (j.remaining === undefined) {
+          done = j.updated || 0;
+          stop = "Update the backend to finish";
+          break;
+        }
 
         done = j.marked != null ? j.marked : done + (j.updated || 0);
+        left = j.remaining;
         if (!j.remaining) break;
         if (!j.updated) { stop = "stalled at " + j.remaining; break; }
         await render();                       // show progress as it lands
@@ -283,23 +306,40 @@
     }
   }
 
+  /* BUGFIX: this listed /tracker/list with no source parameter and then
+     filtered the result for source === "auto". The backend defaults that
+     endpoint to "manual", so the list it searched could not contain a single
+     auto row by construction, and the button answered "Nothing auto-recorded"
+     however many there were. It now asks for the auto rows explicitly, and
+     deletes them in one server-side call instead of one request per row. */
   async function clearAuto() {
     var b = $("tkclearauto");
     try {
-      var d = await (await fetch(API + "/tracker/list?limit=1000")).json();
-      var auto = (d.rows || []).filter(function (r) { return (r.source || "auto") === "auto"; });
-      if (!auto.length) { b.textContent = "Nothing auto-recorded"; return; }
+      var d = await (await fetch(API + "/tracker/list?limit=1000&source=auto")).json();
+      var auto = d.rows || [];
+      var n = d.count != null ? d.count : auto.length;
+      if (!n) { b.textContent = "Nothing auto-recorded"; return; }
       if (!window.confirm(
-        "Remove " + auto.length + " automatically recorded ideas?\n\n" +
+        "Remove " + n + " automatically recorded ideas?\n\n" +
         "Anything you added yourself is kept. This also resets the hit-rate " +
         "statistics, because those are computed from the rows that remain."
       )) return;
       b.disabled = true;
-      for (var i = 0; i < auto.length; i++) {
-        b.textContent = "Removing " + (i + 1) + "/" + auto.length;
-        await post("/tracker/remove?id=" + encodeURIComponent(auto[i].id), 15000);
+      b.textContent = "Removing " + n + "\u2026";
+
+      var purge = await post("/tracker/purge-auto", 45000);
+      if (purge.ok) {
+        b.textContent = "Removed " + (((purge.body || {}).removed != null)
+          ? purge.body.removed : n);
+      } else {
+        /* purge-auto is admin-guarded when ADMIN_KEY is set. Fall back to the
+           unguarded per-row route rather than leaving the user stuck. */
+        for (var i = 0; i < auto.length; i++) {
+          b.textContent = "Removing " + (i + 1) + "/" + auto.length;
+          await post("/tracker/remove?id=" + encodeURIComponent(auto[i].id), 15000);
+        }
+        b.textContent = "Removed " + auto.length;
       }
-      b.textContent = "Removed " + auto.length;
       await render();
     } catch (e) {
       b.textContent = "Couldn't clear";
@@ -320,11 +360,15 @@
     rowsEl.innerHTML = (typeof SKEL === "function") ? SKEL(3) : "Loading\u2026";
 
     try {
-      var q = "/tracker/list?status=" + encodeURIComponent(status) + "&limit=400" +
-              (srcFilter ? "&source=" + srcFilter : "");
+      /* The source is always sent, on BOTH calls. Sending it on the list but
+         not on the stats is how the tab ended up showing six of your own rows
+         under a headline counting ninety-two ideas, beside a warning about
+         twenty-three unpriced rows that were not in the list at all. */
+      var src = "&source=" + encodeURIComponent(srcFilter);
+      var q = "/tracker/list?status=" + encodeURIComponent(status) + "&limit=400" + src;
       var res = await Promise.all([
         fetch(API + q),
-        fetch(API + "/tracker/stats")
+        fetch(API + "/tracker/stats?source=" + encodeURIComponent(srcFilter))
       ]);
       var d = await res[0].json();
       var st = await res[1].json();
@@ -349,8 +393,10 @@
       var flags = [];
       if (st.unmarked) {
         flags.push("<b>" + st.unmarked + " row" + (st.unmarked === 1 ? "" : "s") +
-          " have no prices yet.</b> Press Refresh prices. Marking otherwise only " +
-          "runs after 16:00 IST, and only if an external cron is calling /cron/tick.");
+          " in this list " + (st.unmarked === 1 ? "has" : "have") + " no prices yet.</b> " +
+          "Press Refresh prices \u2014 it walks the whole list in batches. Marking " +
+          "otherwise runs once after 16:00 IST, and only if an external cron is " +
+          "calling /cron/tick.");
       }
       if (st.mark_errors) {
         flags.push(st.mark_errors + " row" + (st.mark_errors === 1 ? "" : "s") +
@@ -364,6 +410,9 @@
       }
       if (st.storage_is_ephemeral) {
         flags.push("<b>DATA_DIR is not set to a Render disk</b>, so this record is wiped on every deploy.");
+      }
+      if (st.last_marked_at) {
+        flags.push("Prices last marked " + esc(String(st.last_marked_at).replace("T", " ")) + ".");
       }
       var note = $("tknote");
       if (note) {
@@ -388,7 +437,9 @@
             '<span class="tkstat ' + esc(r.status) + '">' + esc(r.status) + '</span>' +
             '<span class="tksrc">' + src + '</span>' +
             '<small>' + esc(r.symbol) + ' \u00B7 ' + esc(r.setup || "\u2014") +
-            ' \u00B7 added ' + esc(r.added_on) + ' at ' + rupee(r.added_price) + '</small></span>' +
+            ' \u00B7 added ' + esc(r.added_on) + ' at ' + rupee(r.added_price) +
+            (r.added_price_source && r.added_price_source !== "scan price"
+               ? ' (' + esc(r.added_price_source) + ')' : "") + '</small></span>' +
           '<span class="tkret ' + sign(r.alpha_pct) + '">' + pct(r.alpha_pct) + '<small>alpha</small></span></div>' +
           '<div class="tkln">' +
             '<span>Now ' + rupee(r.last_price) + '</span>' +
