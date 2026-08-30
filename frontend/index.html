@@ -812,6 +812,86 @@
   .secmix{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 auto 16px}
   .secchip{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
            border:1px solid var(--rule);padding:3px 9px;color:var(--mute)}
+  /* ── Ideas v24: market context, conviction, evidence ────────────────
+     The tab used to show a fit number and nothing about the world the stock
+     trades in. These are the surfaces for the sector outlook, the index
+     regime, the catalyst and the per-factor evidence ledger. */
+  .mktctx{max-width:760px;margin:0 auto 20px;border:1px solid var(--rule-2);
+          border-radius:var(--r-card);background:#fff;box-shadow:var(--sh-1);overflow:hidden}
+  .mktctx .mh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+              padding:13px 17px;border-bottom:1px solid var(--rule-2);background:var(--paper-2)}
+  .mktctx .mh b{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;
+                text-transform:uppercase;color:var(--mute);font-weight:400}
+  .rstance{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+           border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 10px;white-space:nowrap}
+  .rstance.Tailwind{border-color:#1f6f43;color:#1f6f43;background:rgba(31,111,67,.06)}
+  .rstance.Mixed{border-color:var(--gold-dp);color:var(--gold-dp);background:rgba(176,141,46,.07)}
+  .rstance.Headwind{border-color:#b26a00;color:#b26a00;background:#fdf8f0}
+  .rstance.Hostile{border-color:#a11;color:#a11;background:#fdf3f3}
+  .mktctx .mb{padding:14px 17px;font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+  .mnum{display:flex;gap:20px;flex-wrap:wrap;margin-top:10px;font-family:var(--mono);
+        font-size:10px;letter-spacing:.1em;color:var(--mute)}
+  .mnum b{color:var(--ink);font-weight:500}
+  .secgrid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--rule-2)}
+  .secgrid > div{padding:13px 17px}
+  .secgrid > div + div{border-left:1px solid var(--rule-2)}
+  .secgrid h5{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+              color:var(--mute);margin:0 0 8px;font-weight:400}
+  .secline{display:flex;justify-content:space-between;gap:10px;font-size:12px;line-height:1.9;
+           color:var(--ink-2)}
+  .secline i{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--mute)}
+  .secline i.pos{color:#1f6f43}
+  .secline i.neg{color:#a11}
+  .mheads{border-top:1px solid var(--rule-2);padding:13px 17px}
+  .mheads a{display:block;font-size:12.5px;line-height:1.55;color:var(--ink-2);
+            text-decoration:none;padding:5px 0;border-bottom:1px solid var(--rule-2)}
+  .mheads a:last-child{border-bottom:none}
+  .mheads a:hover{color:var(--ink)}
+  .mheads span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+               color:var(--mute);margin-left:7px}
+  @media(max-width:620px){.secgrid{grid-template-columns:1fr}
+    .secgrid > div + div{border-left:none;border-top:1px solid var(--rule-2)}}
+
+  .conv{font-family:var(--serif);font-size:27px;color:var(--gold-dp);flex-shrink:0;text-align:right}
+  .conv small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+              color:var(--mute);text-transform:uppercase;margin-top:2px}
+  .cband{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+         border:1px solid var(--rule);padding:2px 7px;margin-left:8px;white-space:nowrap}
+  .cband.High{border-color:#1f6f43;color:#1f6f43}
+  .cband.Moderate{border-color:var(--gold-dp);color:var(--gold-dp)}
+  .cband.Speculative{border-color:#b26a00;color:#b26a00}
+  .ctx{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .ctxchip{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+           border:1px solid var(--rule);padding:3px 9px;color:var(--mute);white-space:nowrap}
+  .ctxchip.good{border-color:#1f6f43;color:#1f6f43}
+  .ctxchip.bad{border-color:#a11;color:#a11}
+  .ctxchip.warn{border-color:#b26a00;color:#b26a00}
+  .badbox{border-left:3px solid #a11;background:#fdf3f3;padding:9px 12px;margin-top:10px;
+          font-size:12px;line-height:1.6;color:#7a2020}
+  .ideanews{margin-top:10px;border-top:1px dashed var(--rule-2);padding-top:9px}
+  .ideanews a{display:block;font-size:12px;line-height:1.5;color:var(--ink-2);
+              text-decoration:none;padding:3px 0}
+  .ideanews a:hover{color:var(--ink);text-decoration:underline}
+  .ideanews em{font-style:normal;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+               text-transform:uppercase;color:var(--mute);margin-left:6px}
+  .evbtn{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+         background:none;border:none;color:var(--mute);cursor:pointer;padding:8px 0 0;
+         border-bottom:1px solid transparent}
+  .evbtn:hover{color:var(--ink)}
+  .evwrap{display:none;margin-top:9px;border-top:1px solid var(--rule-2);padding-top:9px}
+  .evwrap.open{display:block}
+  .evrow{display:grid;grid-template-columns:112px 62px 1fr;gap:10px;align-items:baseline;
+         padding:5px 0;border-bottom:1px solid var(--rule-2);font-size:11.5px;line-height:1.55}
+  .evrow:last-child{border-bottom:none}
+  .evrow b{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+           color:var(--ink-2);font-weight:400}
+  .evrow i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--gold-dp)}
+  .evrow i.neg{color:#a11}
+  .evrow span{color:var(--mute)}
+  .evbar{height:2px;background:var(--rule-2);margin-top:3px;position:relative}
+  .evbar > i{position:absolute;left:0;top:0;height:100%;background:var(--gold-lt);display:block}
+  @media(max-width:560px){.evrow{grid-template-columns:1fr;gap:2px}}
+
   .idearow-actions{display:flex;gap:8px;margin-top:11px}
   .trackbtn{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
             border:1px solid var(--rule);background:#fff;color:var(--ink-2);padding:7px 15px;
@@ -1145,7 +1225,7 @@
   </div>
 
   <div id="view-ideas" style="display:none">
-    <p class="ideas-intro">Drawn from the full NSE universe, classified by setup archetype, capped at three per sector, and shown with the liquidity you would actually face. The list is as long as the evidence allows — a short list means few clean setups exist, not that the scan failed. Open any name for its complete ledger.</p>
+    <p class="ideas-intro">Drawn from the full NSE universe, classified by setup archetype, then scored out of 100 against the world it has to trade in: where the industry sits versus the Nifty 50, where the index sits versus its own averages, what the company has filed with the exchange, what the press is carrying, the liquidity you would actually face, and what this archetype has historically delivered. Short and medium term are weighted differently on purpose. Every score opens into the ledger that produced it — a short list means few names cleared the bar, not that the scan failed.</p>
     <div class="hzrow">
       <div class="seg" id="hzseg">
         <button class="hz active" data-h="short">Short term</button>
@@ -1158,6 +1238,7 @@
     </div>
     <div id="progwrap2"><div class="progbar"><i></i></div><div class="progtxt"></div></div>
     <div class="ideas-note" id="hznote"></div>
+    <div id="mktctx"></div>
     <div id="stalebox"></div>
     <div id="regimebox"></div>
     <div class="secmix" id="secmix"></div>
@@ -1336,7 +1417,7 @@
   </div><!-- /view-filings -->
 
   <div id="view-tracker" style="display:none">
-    <p class="ideas-intro">Every idea the engine has produced, with what happened next. Return is what the stock did; alpha is what it did <em>beyond the index over the same days</em> — that second number is the only one that says anything about the engine. Recorded automatically at scan time, including the ones that went wrong.</p>
+    <p class="ideas-intro">The ideas you have added, with what happened next. Return is what the stock did; alpha is what it did <em>beyond the index over the same days</em> — that second number is the only one that says anything about the engine. Entry prices are anchored on the close at the moment you add, never on a cached scan price. Press <b>Refresh prices</b> to mark the whole list; it walks through in batches and tells you how many are left.</p>
     <div class="toolbar">
       <div class="seg mono" id="tkfilter">
         <button id="tkall" class="active">All</button>
@@ -1795,6 +1876,97 @@ function tierChip(t){
   return `<span class="tier ${esc(t)}">${esc(t)}</span>`;
 }
 
+function pctTxt(v, dp){
+  if(v==null) return "—";
+  const n = Number(v);
+  return (n>0?"+":"") + n.toFixed(dp==null?1:dp) + "%";
+}
+function relCls(v){ return v==null ? "" : (v>0 ? "pos" : (v<0 ? "neg" : "")); }
+
+/* ── Market context ───────────────────────────────────────────────────
+   The backdrop the ideas are being chosen against: where the index sits
+   against its own averages, which sectors are ahead of the Nifty 50 and
+   which are behind, and the market-wide headlines that belong to no single
+   company. Previously the tab showed a fit number and nothing about the
+   world the stock trades in, which is how a breakout in the worst-performing
+   sector on the exchange looked identical to one in the best. */
+function renderContext(ctx){
+  const host = $("mktctx");
+  if(!host) return;
+  if(!ctx || (!ctx.regime && !(ctx.leaders||[]).length && !(ctx.headlines||[]).length)){
+    host.innerHTML = ""; return;
+  }
+  const r = ctx.regime;
+  const secLine = s => `<div class="secline"><span>${esc(s.sector||s.index_name||"")}</span>`
+    + `<i class="${relCls(s.rel_3m)}">${pctTxt(s.rel_3m)} 3M</i></div>`;
+
+  const leaders  = (ctx.leaders  || []).map(secLine).join("");
+  const laggards = (ctx.laggards || []).map(secLine).join("");
+  const heads = (ctx.headlines || []).slice(0,4).map(h =>
+    `<a href="${esc(h.url||"#")}" target="_blank" rel="noopener">${esc(h.title||"")}`
+    + `<span>${esc(h.source||"")}${h.outlets>1?" · "+h.outlets+" outlets":""}</span></a>`).join("");
+
+  host.innerHTML = `<div class="mktctx">
+    <div class="mh"><b>Market backdrop</b>${r&&r.stance?`<span class="rstance ${esc(r.stance)}">${esc(r.stance)}</span>`:""}</div>
+    ${r ? `<div class="mb">${esc(r.label||"")}
+      <div class="mnum">
+        <span>50-day <b class="${relCls(r.pct_vs_50dma)}">${pctTxt(r.pct_vs_50dma)}</b></span>
+        ${r.pct_vs_200dma!=null?`<span>200-day <b class="${relCls(r.pct_vs_200dma)}">${pctTxt(r.pct_vs_200dma)}</b></span>`:""}
+        ${r.change_5d_pct!=null?`<span>5 sessions <b class="${relCls(r.change_5d_pct)}">${pctTxt(r.change_5d_pct)}</b></span>`:""}
+        <span>${esc(r.benchmark||"")}</span>
+      </div></div>`
+      : `<div class="mb">Index trend unavailable right now, so regime scored neutral rather than assumed.</div>`}
+    ${(leaders||laggards) ? `<div class="secgrid">
+      <div><h5>Sectors ahead of the index</h5>${leaders||"<div class=\"secline\">—</div>"}</div>
+      <div><h5>Sectors behind it</h5>${laggards||"<div class=\"secline\">—</div>"}</div>
+    </div>` : ""}
+    ${heads ? `<div class="mheads"><h5 style="font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+       text-transform:uppercase;color:var(--mute);margin:0 0 6px;font-weight:400">Latest market news</h5>${heads}</div>` : ""}
+  </div>`;
+}
+
+/* One row's evidence ledger — the same inputs → weight → points shape the
+   screener uses, so a conviction score can be argued with rather than
+   believed. */
+function evidenceHTML(rows){
+  if(!rows || !rows.length) return "";
+  return `<div class="evwrap">` + rows.map(e => {
+    const neg = e.points < 0;
+    const width = e.of ? Math.max(0, Math.min(100, (e.points / e.of) * 100)) : 0;
+    return `<div class="evrow">
+      <b>${esc(e.factor)}</b>
+      <i class="${neg?"neg":""}">${neg?"":"+"}${e.points}${e.of?` / ${e.of}`:""}
+        ${e.of?`<span class="evbar"><i style="width:${width}%"></i></span>`:""}</i>
+      <span>${esc(e.detail||"")}</span>
+    </div>`;
+  }).join("") + `</div>`;
+}
+
+function catalystChips(s){
+  const chips = [];
+  if(s.sector_outlook && s.sector_outlook.state){
+    const st = s.sector_outlook.state;
+    const cls = st==="Leading" ? "good" : (st==="Lagging" ? "bad" : (st==="Weakening" ? "warn" : ""));
+    chips.push(`<span class="ctxchip ${cls}">Sector ${esc(st)}${s.sector_outlook.rel_3m!=null?" "+pctTxt(s.sector_outlook.rel_3m,0):""}</span>`);
+  }
+  if(s.catalyst){
+    const d = s.catalyst.direction;
+    chips.push(`<span class="ctxchip ${d==="adverse"?"bad":(d==="supportive"?"good":"warn")}">${esc(s.catalyst.category||"Filing")}</span>`);
+  }
+  if(s.news && s.news.length){
+    chips.push(`<span class="ctxchip">${s.news.length} news item${s.news.length>1?"s":""}</span>`);
+  }
+  if(s.liquidity_tier) chips.push(`<span class="ctxchip ${s.liquidity_tier==="liquid"?"good":(s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable"?"bad":"")}">${esc(s.liquidity_tier)}</span>`);
+  return chips.length ? `<div class="ctx">${chips.join("")}</div>` : "";
+}
+
+function newsHTML(s){
+  if(!s.news || !s.news.length) return "";
+  return `<div class="ideanews">` + s.news.slice(0,3).map(n =>
+    `<a href="${esc(n.url||"#")}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(n.title||"")}`
+    + `<em>${esc(n.source||"")}${n.outlets>1?" · "+n.outlets+" outlets":""}</em></a>`).join("") + `</div>`;
+}
+
 async function loadIdeas(){
   const req = ++ideasReq;
   $("idearows").innerHTML = SKEL(4);
@@ -1807,17 +1979,29 @@ async function loadIdeas(){
     const d = await res.json();
     if(req !== ideasReq) return;
     if(!res.ok){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.detail || "Couldn\u2019t load ideas.")}</div>`;
-      return;
-    }
-    if(!d.available){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No scan yet \u2014 press Generate from universe. It takes a few minutes and the result is cached for everyone afterwards.</div>`;
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.detail || "Couldn’t load ideas.")}</div>`;
       return;
     }
 
-    $("hznote").textContent = `${d.note}  \u00B7  Scanned ${d.scanned_at}` +
-      (d.universe_source ? "  \u00B7  " + d.universe_source : "") +
-      (d.partial ? "  \u00B7  scan still running \u2014 the list improves as it goes" : "");
+    /* The market backdrop is worth showing even when no scan exists yet —
+       "what is the market doing" is answerable without a universe scan, and
+       the tab used to be completely blank until one had run. */
+    renderContext(d.market_context);
+
+    if(!d.available){
+      if(!d.market_context) {
+        try{
+          const c = await (await fetch(`${API_BASE}/ideas/context?horizon=${horizon}`)).json();
+          if(c && c.available) renderContext(c);
+        }catch(e){}
+      }
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">No scan yet — press Generate from universe. It takes a few minutes and the result is cached for everyone afterwards.</div>`;
+      return;
+    }
+
+    $("hznote").textContent = `${d.horizon_note || d.note}  ·  Scanned ${d.scanned_at}` +
+      (d.universe_source ? "  ·  " + d.universe_source : "") +
+      (d.partial ? "  ·  scan still running — the list improves as it goes" : "");
 
     /* Staleness. A momentum idea nine days old is not the same object as a
        fresh one, and the old UI showed them identically. */
@@ -1832,10 +2016,26 @@ async function loadIdeas(){
 
     if(d.sector_mix && d.sector_mix.length){
       $("secmix").innerHTML = d.sector_mix
-        .map(([sec,n])=>`<span class="secchip">${esc(sec)} \u00B7 ${n}</span>`).join("");
+        .map(([sec,n])=>`<span class="secchip">${esc(sec)} · ${n}</span>`).join("");
     }
-    if(d.selection_notes && d.selection_notes.length){
-      $("selnotes").innerHTML = "<ul>" + d.selection_notes.map(n=>`<li>${esc(n)}</li>`).join("") + "</ul>";
+    const notes = (d.selection_notes || []).slice();
+    if(d.considered!=null && d.count!=null){
+      notes.unshift(`${d.count} of ${d.considered} names matching this horizon’s setups cleared the `
+        + `${d.conviction_floor}-point conviction floor.`);
+    }
+    if(notes.length){
+      $("selnotes").innerHTML = "<ul>" + notes.map(n=>`<li>${esc(n)}</li>`).join("") + "</ul>"
+        + (d.method ? `<p style="margin-top:8px">${esc(d.method)}</p>` : "");
+    }
+
+    /* Names pulled for a serious filing are named, not silently dropped. A
+       list that quietly shrinks is indistinguishable from one that failed. */
+    if(d.excluded_adverse && d.excluded_adverse.length){
+      $("regimebox").innerHTML += `<div class="staleflag"><b>Removed for filings.</b> ` +
+        d.excluded_adverse.map(e =>
+          `${esc(e.symbol)} — ${esc(e.category||"adverse filing")}${e.headline?`: ${esc(e.headline)}`:""}`
+        ).join("<br>") +
+        `<br><span style="color:var(--mute)">Matched the setup; a live regulatory action is not a setup with a caveat.</span></div>`;
     }
 
     $("ideatools").style.display="flex";
@@ -1843,34 +2043,54 @@ async function loadIdeas(){
     $("thintoggle").textContent = includeThin ? "Hide thin stocks" : "Include thin stocks";
 
     if(!d.rows || !d.rows.length){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing clears the bar for this horizon right now. That is a real answer, not an error \u2014 forcing a list when the evidence is absent is how screeners lose money for people.</div>`;
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing clears the bar for this horizon right now. That is a real answer, not an error — forcing a list when the evidence is absent is how screeners lose money for people.</div>`;
     }else{
       $("idearows").innerHTML = d.rows.map((s,i)=>`
         <div class="idea rise" style="--i:${Math.min(i,10)}" data-t="${esc(s.symbol)}" role="button" tabindex="0">
           <div class="top">
-            <span class="nm">${i+1}. ${esc(s.name)}${tierChip(s.liquidity_tier)}<small>${esc(s.symbol)} \u00B7 NSE \u00B7 \u20B9${s.price ?? "\u2014"}${s.avg_turnover_cr!=null?` \u00B7 \u20B9${s.avg_turnover_cr}cr/day`:""}</small></span>
-            <span class="fit">${s.setup_fit ?? s.composite ?? "\u2014"}<small>fit</small></span>
+            <span class="nm">${i+1}. ${esc(s.name)}${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}<small>${esc(s.symbol)} · NSE · ₹${s.price ?? "—"}${s.avg_turnover_cr!=null?` · ₹${s.avg_turnover_cr}cr/day`:""}</small></span>
+            <span class="conv">${s.conviction ?? s.setup_fit ?? "—"}<small>conviction</small></span>
           </div>
-          <div class="arch">${esc(s.setup || "\u2014")} \u00B7 typical hold ${esc(s.horizon || "\u2014")}${s.filing?`<span class="filingtag">\uD83D\uDCCE ${esc(s.filing.category)} \u00B7 ${esc(s.filing.line)}</span>`:""}${s.expectancy_alpha_pct!=null?` \u00B7 this setup has averaged ${s.expectancy_alpha_pct>0?"+":""}${s.expectancy_alpha_pct}% alpha`:""}</div>
+          <div class="arch">${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${s.setup_fit ?? "—"}/100${s.filing?`<span class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</span>`:""}</div>
+          ${catalystChips(s)}
           ${s.plan ? `<div class="ideaplan"><span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>` +
-            (s.plan.entry!=null ? `<span>Entry \u20B9${Number(s.plan.entry).toLocaleString("en-IN")}</span><span>SL \u20B9${Number(s.plan.stop).toLocaleString("en-IN")}${s.plan.risk_pct!=null?` (\u2212${s.plan.risk_pct}%)`:""}</span>` +
-              (s.plan.t1!=null?`<span>T1 \u20B9${Number(s.plan.t1).toLocaleString("en-IN")}</span>`:"") +
-              (s.plan.rr!=null?`<span>R:R 1:${s.plan.rr}</span>`:"") : `<span>${esc((s.plan.note||"").split("\u2014")[0])}</span>`) + `</div>` : ""}
-          <div class="ln"><span>Composite ${s.composite ?? "\u2014"}</span><span>Technical ${s.technical ?? "\u2014"}</span>
-            <span>Fundamental ${s.fundamental ?? "\u2014"}</span><span>Piotroski ${s.f_score ?? "\u2014"}/9</span></div>
+            (s.plan.entry!=null ? `<span>Entry ₹${Number(s.plan.entry).toLocaleString("en-IN")}</span><span>SL ₹${Number(s.plan.stop).toLocaleString("en-IN")}${s.plan.risk_pct!=null?` (−${s.plan.risk_pct}%)`:""}</span>` +
+              (s.plan.t1!=null?`<span>T1 ₹${Number(s.plan.t1).toLocaleString("en-IN")}</span>`:"") +
+              (s.plan.rr!=null?`<span>R:R 1:${s.plan.rr}</span>`:"") : `<span>${esc((s.plan.note||"").split("—")[0])}</span>`) + `</div>` : ""}
+          <div class="ln"><span>Composite ${s.composite ?? "—"}</span><span>Technical ${s.technical ?? "—"}</span>
+            <span>Fundamental ${s.fundamental ?? "—"}</span><span>Piotroski ${s.f_score ?? "—"}/9</span></div>
+          ${s.adverse_filing ? `<div class="badbox"><b>Adverse filing.</b> ${esc((s.catalyst&&s.catalyst.headline)||(s.catalyst&&s.catalyst.line)||"")} — scored against this idea, not for it.</div>` : ""}
           ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
           ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
+          ${newsHTML(s)}
+          <button class="evbtn" type="button" data-ev="${i}">Why this scored ${s.conviction ?? "—"} — show the ledger</button>
+          ${evidenceHTML(s.evidence)}
           <div class="idearow-actions">
-            <button class="trackbtn" data-track="${esc(s.symbol)}">Add to tracker</button>
+            <button class="trackbtn${s.tracked?" done":""}" data-track="${esc(s.symbol)}">${s.tracked?"Tracking":"Add to tracker"}</button>
           </div>
         </div>`).join("");
 
-      /* Row click opens the ledger; the track button must not bubble into it. */
+      /* Row click opens the ledger; the buttons and links must not bubble. */
       document.querySelectorAll(".idea").forEach(el=>{
         const go=()=>{ switchTab("screener"); analyse(el.dataset.t); };
-        el.addEventListener("click",ev=>{ if(ev.target.closest(".trackbtn")) return; go(); });
+        el.addEventListener("click",ev=>{
+          if(ev.target.closest(".trackbtn") || ev.target.closest(".evbtn") ||
+             ev.target.closest("a")) return;
+          go();
+        });
         el.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" ") go(); });
       });
+
+      document.querySelectorAll(".evbtn").forEach(btn=>{
+        const shut = btn.textContent;
+        btn.addEventListener("click", ev=>{
+          ev.stopPropagation();
+          const wrap = btn.parentElement.querySelector(".evwrap");
+          if(!wrap) return;
+          btn.textContent = wrap.classList.toggle("open") ? "Hide the ledger" : shut;
+        });
+      });
+
       document.querySelectorAll(".trackbtn").forEach(btn=>{
         const sym = btn.dataset.track;
         if(trackedNow.has(sym)){ btn.textContent="Tracking"; btn.classList.add("done"); }
@@ -1878,7 +2098,7 @@ async function loadIdeas(){
           ev.stopPropagation();
           if(btn.classList.contains("done")) return;
           const row = d.rows.find(r=>r.symbol===sym);
-          btn.textContent="Adding\u2026";
+          btn.textContent="Adding…";
           try{
             const r = await fetch(`${API_BASE}/tracker/add`,{
               method:"POST", headers:{"Content-Type":"application/json"},
@@ -1887,14 +2107,14 @@ async function loadIdeas(){
             btn.textContent = j.added ? "Tracking" : (j.reason || "Already tracked");
             btn.classList.add("done");
             trackedNow.add(sym);
-          }catch(e){ btn.textContent="Couldn\u2019t add"; }
+          }catch(e){ btn.textContent="Couldn’t add"; }
         });
       });
     }
     $("ideadisc").textContent = d.disclaimer || "";
   }catch(e){
     if(req !== ideasReq) return;
-    $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
+    $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable — it may be waking from sleep. Try again in ~30 seconds.</div>`;
   }
 }
 
@@ -2882,12 +3102,18 @@ const bf = $("tkbackfill");
 if(bf) bf.addEventListener("click", async ()=>{
   bf.textContent = "Recording\u2026";
   try{
+    /* Recorded rows land under source="auto" — the statistical record, not
+       your picks — so the tab must switch to showing everything or the button
+       looks like it did nothing. It previously also went through the AUTOTRACK
+       gate, which is off by default, so it genuinely did nothing. */
     const r = await fetch(`${API_BASE}/tracker/backfill`, {method:"POST"});
     const j = await r.json();
     bf.textContent = r.ok
       ? `Recorded ${j.added ?? 0}${j.skipped ? ` (${j.skipped} already tracked)` : ""}`
       : (j.detail || "Nothing to record");
-    loadTracker();
+    const mine = $("tkmine");
+    if(r.ok && (j.added ?? 0) > 0 && mine && mine.textContent === "Showing my picks") mine.click();
+    else loadTracker();
   }catch(e){ bf.textContent = "Couldn\u2019t record"; }
   setTimeout(()=>{ bf.textContent = "Record current ideas"; }, 4000);
 });
