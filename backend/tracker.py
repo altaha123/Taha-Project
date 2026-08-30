@@ -249,6 +249,19 @@ def add(row: dict, source: str = "manual", force: bool = False,
         if fresh and fresh > 0:
             price, price_source = fresh, "latest close"
 
+    # The idea carried a trade plan — entry, stop, first target. Snapshotting
+    # it here is what lets the tracker answer "did it reach the target" later.
+    # Without it the row could only ever say what the price is now, which is
+    # not the question anyone asks of an idea they saved.
+    plan = row.get("plan") or {}
+
+    def _num(v):
+        try:
+            f = float(v)
+            return f if f > 0 else None
+        except (TypeError, ValueError):
+            return None
+
     rec = {
         "id": f"{sym}-{key}-{_today()}-{source[:1]}",
         "symbol": sym,
@@ -274,6 +287,12 @@ def add(row: dict, source: str = "manual", force: bool = False,
         "alpha_pct": None, "max_gain_pct": None, "max_drawdown_pct": None,
         "days_held": 0, "invalidated_by": None,
         "updated_on": None, "updated_at": None, "mark_error": None,
+        # Plan snapshot + outcome, filled by update_all()
+        "target_price": _num(plan.get("t1")),
+        "stop_price": _num(plan.get("stop")),
+        "plan_entry": _num(plan.get("entry")),
+        "plan_rr": plan.get("rr"),
+        "target_hit": None, "stop_hit": None, "outcome": "OPEN",
     }
     with _lock:
         rows.append(rec)
@@ -492,6 +511,43 @@ def _check_invalidation(key, df, entry=None):
     return None
 
 
+def _first_touch(win, target, stop):
+    """
+    Walk the window in order and report which level was reached first.
+
+    Order matters and cannot be recovered from the max and the min. A row whose
+    high cleared the target and whose low broke the stop looks identical either
+    way in summary statistics, but "hit the target, then fell through the stop"
+    and "stopped out, then rallied past the target" are opposite outcomes for
+    anyone who was actually holding it. Only a chronological walk can tell them
+    apart, so that is what this does — one pass, first level wins.
+    """
+    if win is None or win.empty or (not target and not stop):
+        return None, None
+    hit_t = hit_s = None
+    idx = _dated_index(win)
+    highs = win["High"] if "High" in win else win["Close"]
+    lows = win["Low"] if "Low" in win else win["Close"]
+    for i in range(len(win)):
+        try:
+            hi, lo = float(highs.iloc[i]), float(lows.iloc[i])
+        except Exception:
+            continue
+        when = None
+        if idx is not None:
+            try:
+                when = idx[i].date().isoformat()
+            except Exception:
+                when = None
+        if target and hit_t is None and hi >= target:
+            hit_t = {"price": round(target, 2), "on": when}
+        if stop and hit_s is None and lo <= stop:
+            hit_s = {"price": round(stop, 2), "on": when}
+        if hit_t or hit_s:
+            break          # first level reached ends the question
+    return hit_t, hit_s
+
+
 def update_one(rec):
     """
     Mark a single record. Mutates and returns it.
@@ -572,6 +628,23 @@ def update_one(rec):
                 rec["alpha_pct"] = round(rec["return_pct"] - rec["bench_return_pct"], 2)
         except Exception:
             pass
+
+    # Did it reach the target, or break the stop? Evaluated over the same
+    # window as everything else, and reported with the date it happened.
+    target, stop = rec.get("target_price"), rec.get("stop_price")
+    if not (target or stop):
+        # Recorded before the plan was snapshotted, or an idea that never
+        # carried one. "No plan" is a different state from "target missed".
+        rec["outcome"] = "NO_PLAN"
+    elif win is not None and not win.empty:
+        hit_t, hit_s = _first_touch(win, target, stop)
+        rec["target_hit"], rec["stop_hit"] = hit_t, hit_s
+        rec["outcome"] = "TARGET" if hit_t else ("STOP" if hit_s else "OPEN")
+        if hit_s and rec.get("status") == "LIVE":
+            on = f" on {hit_s['on']}" if hit_s.get("on") else ""
+            rec["status"] = "INVALIDATED"
+            rec["invalidated_by"] = (f"Stop \u20b9{hit_s['price']} broke{on} — the plan's own "
+                                    "invalidation level, reached before the target")
 
     if rec.get("status") == "LIVE":
         if rec["days_held"] > HORIZON_DAYS.get(rec.get("setup_key"), 365):
@@ -703,6 +776,9 @@ def _bucket(rows):
     alpha_rows = [r for r in marked if r.get("alpha_pct") is not None]
     beat = sum(1 for r in alpha_rows if r["alpha_pct"] > 0)
     dd_rows = [r["max_drawdown_pct"] for r in marked if r.get("max_drawdown_pct") is not None]
+    planned = [r for r in marked if r.get("target_price") or r.get("stop_price")]
+    hit_t = sum(1 for r in planned if r.get("outcome") == "TARGET")
+    hit_s = sum(1 for r in planned if r.get("outcome") == "STOP")
     return {
         "ideas": n,
         "win_rate": round(wins / n * 100),
@@ -717,6 +793,12 @@ def _bucket(rows):
         # worst dip whenever some rows were missing the column.
         "avg_max_drawdown_pct": round(sum(dd_rows) / len(dd_rows), 2) if dd_rows else None,
         "median_days_held": _median([r.get("days_held") or 0 for r in marked]),
+        # Of the ideas that carried a plan, how many reached the first target
+        # before breaking the stop. This is the question "did it work" in the
+        # form the plan itself posed it.
+        "ideas_with_plan": len(planned),
+        "target_hit_pct": round(hit_t / len(planned) * 100) if planned else None,
+        "stop_hit_pct": round(hit_s / len(planned) * 100) if planned else None,
         # Under about 30 closed ideas any of this is noise, and the tab should
         # say so rather than printing a confident percentage.
         "reliable": n >= 30,
@@ -804,9 +886,18 @@ def expectancy_detail() -> dict:
             for k, v in grouped.items()}
 
 
-def tracked_symbols(source: str = "") -> set:
-    """Symbols with a LIVE row, so the Ideas tab can show what is already
-    tracked instead of offering an Add button that answers "already tracked"."""
+def tracked_symbols(source: str = "manual") -> set:
+    """
+    Symbols with a LIVE row, so the Ideas tab can show what is already tracked
+    instead of offering an Add button that answers "already tracked".
+
+    BUGFIX: this defaulted to every source, so any name the scanner had
+    recorded automatically in the past showed as "Tracking" on the Ideas tab —
+    names the user had never added and could not see in their own list. It is
+    worse than cosmetic: pressing Add on such a name PROMOTES the existing
+    auto row into your list, which is a real action the button was hiding.
+    Your tracker is the manual list, so that is what the button reflects.
+    """
     out = set()
     for r in _load():
         if r.get("status") != "LIVE":
@@ -851,7 +942,7 @@ def export_csv() -> str:
             "alpha_pct", "max_gain_pct", "max_drawdown_pct", "days_held",
             "status", "invalidated_by", "fit", "composite", "technical",
             "fundamental", "liquidity_tier", "avg_turnover_cr", "source",
-            "mark_error"]
+            "target_price", "stop_price", "outcome", "mark_error"]
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
     w.writeheader()

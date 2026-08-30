@@ -660,7 +660,10 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
     outlook = sector_outlook()
     news_idx, headlines = _news_index(h["news_hours"])
     record = tracker.expectancy_detail() if tracker else {}
-    tracked = tracker.tracked_symbols() if tracker else set()
+    # "manual" on purpose: the Add button must reflect YOUR tracker. Counting
+    # the scanner's automatic rows marked names as tracked that the user had
+    # never added and could not see in their own list.
+    tracked = tracker.tracked_symbols(source="manual") if tracker else set()
     stale = _staleness(payload.get("scanned_at"))
     _leaders = _leaders_laggards(outlook)
 

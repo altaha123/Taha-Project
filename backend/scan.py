@@ -49,7 +49,32 @@ try:
 except Exception:
     pit_store = None
 
-OUT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "leaderboard.json")
+# Where the finished ranking is cached.
+#
+# BUGFIX: this was written next to the code. On Render that directory is
+# replaced wholesale by every deploy, so each deploy silently destroyed the
+# universe scan — the Ideas tab came back empty and the only clue was a
+# "the engine restarted mid-scan" note that had nothing to do with it. The
+# tracker had already solved this with DATA_DIR and a mounted disk; the scan
+# cache simply never used it. It does now, so a deploy no longer costs a
+# multi-minute scan. With DATA_DIR unset the path is unchanged.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.environ.get("DATA_DIR", "").strip() or _HERE
+try:
+    os.makedirs(_DATA_DIR, exist_ok=True)
+except Exception:
+    _DATA_DIR = _HERE
+
+OUT_FILE = os.path.join(_DATA_DIR, "leaderboard.json")
+
+# One-time migration: a scan cached by an older build sits in the code
+# directory. Move it onto the disk rather than making the user re-run it.
+_LEGACY_OUT = os.path.join(_HERE, "leaderboard.json")
+if _DATA_DIR != _HERE and os.path.exists(_LEGACY_OUT) and not os.path.exists(OUT_FILE):
+    try:
+        os.replace(_LEGACY_OUT, OUT_FILE)
+    except Exception:
+        pass
 
 # ---------------------------------------------------------------------------
 # Tunables
