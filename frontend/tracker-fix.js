@@ -71,7 +71,12 @@
     "  border-left:2px solid var(--gold);padding:2px 0 2px 10px;margin:0 0 12px;line-height:1.7}",
     ".tksrc{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;",
     "  color:var(--mute);border:1px solid var(--rule-2);border-radius:999px;padding:2px 7px;margin-left:8px}",
-    "@media(max-width:560px){.tk .tkt{padding-right:0}.tkrm{position:static;margin-top:10px;display:inline-block}}"
+    /* The mobile override used to unset position:absolute. Remove is the first
+       child of the card, so going static put the button ABOVE the company
+       name — which is where the screenshot showed it. It stays pinned
+       top-right at every width; only its size changes. */
+    "@media(max-width:560px){.tkrm{top:8px;right:8px;padding:3px 8px;font-size:8px}",
+    "  .tk .tkt{padding-right:74px}}"
   ].join("\n");
   document.head.appendChild(css);
 
@@ -347,6 +352,99 @@
     setTimeout(function () { b.disabled = false; b.textContent = "Clear auto-recorded"; }, 2600);
   }
 
+  /* ---- one row -----------------------------------------------------------
+     The old row printed "Now ₹— Return — Index — Best — Worst — 0 days" as a
+     single run-on line of unlabelled values, and on a phone it was the first
+     thing to disappear. Every number now sits in a labelled cell, in the order
+     the question is actually asked: when did I add it, at what price, what is
+     it now, what has it done — then the same against the index, then the plan
+     the idea came with and whether the target was reached. */
+
+  function dmy(iso) {
+    if (!iso) return "\u2014";
+    var p = String(iso).split("-");
+    if (p.length !== 3) return esc(iso);
+    var M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return p[2] + " " + (M[Number(p[1]) - 1] || p[1]) + " " + p[0].slice(2);
+  }
+
+  function cellHTML(label, value, cls) {
+    return '<div class="tkcell"><b>' + label + '</b>' +
+           '<span class="' + (cls || "") + '">' + value + '</span></div>';
+  }
+
+  /* The plan strip. An idea recorded before the plan was snapshotted says so,
+     rather than showing an empty target that reads as "never got there". */
+  function planHTML(r) {
+    var out = r.outcome || (r.target_price || r.stop_price ? "OPEN" : "NO_PLAN");
+    var bits = [];
+    if (out === "NO_PLAN") {
+      bits.push('<span class="tkout NO_PLAN">No plan recorded</span>');
+      bits.push("Added before the entry/stop/target were saved with the idea.");
+    } else {
+      if (out === "TARGET") {
+        bits.push('<span class="tkout TARGET">Target hit</span>');
+        if (r.target_hit && r.target_hit.on) bits.push("reached " + dmy(r.target_hit.on));
+      } else if (out === "STOP") {
+        bits.push('<span class="tkout STOP">Stop hit</span>');
+        if (r.stop_hit && r.stop_hit.on) bits.push("broke " + dmy(r.stop_hit.on));
+      } else {
+        bits.push('<span class="tkout OPEN">Open</span>');
+      }
+      if (r.target_price) bits.push("Target " + rupee(r.target_price));
+      if (r.stop_price) bits.push("Stop " + rupee(r.stop_price));
+      if (r.plan_rr) bits.push("R:R 1:" + r.plan_rr);
+    }
+    return '<div class="tkplan">' + bits.join("<span>\u00B7</span>") + "</div>";
+  }
+
+  function card(r, i) {
+    var src = (r.source || "auto") === "manual" ? "ADDED BY YOU" : "FROM SCAN";
+    var unmarked = r.last_price == null;
+
+    /* Distance still to run to the target, which is the number you actually
+       want when deciding whether to keep holding. */
+    var toGo = "\u2014";
+    if (r.target_price && r.last_price) {
+      var g = (r.target_price - r.last_price) / r.last_price * 100;
+      toGo = g <= 0 ? "reached" : "+" + g.toFixed(1) + "% to go";
+    }
+
+    return '<div class="tk rise" style="--i:' + Math.min(i, 10) + '">' +
+      '<button class="tkrm" type="button" data-id="' + esc(r.id) + '">Remove</button>' +
+      '<div class="tkt"><span class="tknm">' + esc(r.name || r.symbol) +
+        '<span class="tkstat ' + esc(r.status) + '">' + esc(r.status) + '</span>' +
+        '<span class="tksrc">' + src + '</span>' +
+        '<small>' + esc(r.symbol) + ' \u00B7 ' + esc(r.setup || "\u2014") +
+        (r.sector ? ' \u00B7 ' + esc(r.sector) : "") + '</small></span>' +
+      '<span class="tkret ' + sign(r.alpha_pct) + '">' + pct(r.alpha_pct) +
+        '<small>alpha vs index</small></span></div>' +
+
+      '<div class="tkgrid">' +
+        cellHTML("Added on", dmy(r.added_on), "sm") +
+        cellHTML("Price at addition", rupee(r.added_price)) +
+        cellHTML("Price now", unmarked ? '<span class="dim">not marked</span>' : rupee(r.last_price)) +
+        cellHTML("Return", pct(r.return_pct), sign(r.return_pct)) +
+      '</div>' +
+      '<div class="tkgrid">' +
+        cellHTML("Index, same days", pct(r.bench_return_pct), "sm " + sign(r.bench_return_pct)) +
+        cellHTML("Best it reached", pct(r.max_gain_pct), "sm " + sign(r.max_gain_pct)) +
+        cellHTML("Worst dip", pct(r.max_drawdown_pct), "sm " + sign(r.max_drawdown_pct)) +
+        cellHTML("Held", (r.days_held || 0) + (r.days_held === 1 ? " day" : " days"), "sm") +
+      '</div>' +
+      (r.target_price ? '<div class="tkgrid"><div class="tkcell" style="grid-column:1/-1">' +
+         '<b>To target</b><span class="sm">' + toGo + '</span></div></div>' : "") +
+
+      planHTML(r) +
+      (r.added_price_source && r.added_price_source !== "scan price"
+        ? '<div class="tkplan" style="margin-top:6px">Entry anchored on the ' +
+          esc(r.added_price_source) + ' at the moment you added it.</div>' : "") +
+      (unmarked ? '<div class="warnbox">No prices yet \u2014 press Refresh prices above.</div>' : "") +
+      (r.mark_error ? '<div class="warnbox">Could not price this symbol: ' + esc(r.mark_error) + '</div>' : "") +
+      (r.invalidated_by ? '<div class="warnbox">' + esc(r.invalidated_by) + '</div>' : "") +
+    '</div>';
+  }
+
   /* ---- render ---------------------------------------------------------- */
 
   async function render() {
@@ -382,7 +480,11 @@
           cell(2, o.beat_index_pct != null ? o.beat_index_pct + "%" : "\u2014", "beat the index"),
           cell(3, pct(o.avg_return_pct), "avg return", sign(o.avg_return_pct)),
           cell(4, pct(o.avg_max_drawdown_pct), "avg worst dip", "neg"),
-          cell(5, o.median_days_held, "median days held")
+          cell(5, o.median_days_held, "median days held"),
+          (o.target_hit_pct != null
+            ? cell(6, o.target_hit_pct + "%", "reached their target (" + o.ideas_with_plan + " with a plan)",
+                   o.target_hit_pct >= 50 ? "pos" : "")
+            : "")
         ].join("") :
           '<div class="statcell" style="grid-column:1/-1"><b>' + (st.total_tracked || 0) +
           '</b><span>recorded, none marked yet \u2014 press Refresh prices</span></div>';
@@ -430,29 +532,7 @@
       }
 
       rowsEl.innerHTML = d.rows.map(function (r, i) {
-        var src = (r.source || "auto") === "manual" ? "ADDED BY YOU" : "FROM SCAN";
-        return '<div class="tk rise" style="--i:' + Math.min(i, 10) + '">' +
-          '<button class="tkrm" type="button" data-id="' + esc(r.id) + '">Remove</button>' +
-          '<div class="tkt"><span class="tknm">' + esc(r.name || r.symbol) +
-            '<span class="tkstat ' + esc(r.status) + '">' + esc(r.status) + '</span>' +
-            '<span class="tksrc">' + src + '</span>' +
-            '<small>' + esc(r.symbol) + ' \u00B7 ' + esc(r.setup || "\u2014") +
-            ' \u00B7 added ' + esc(r.added_on) + ' at ' + rupee(r.added_price) +
-            (r.added_price_source && r.added_price_source !== "scan price"
-               ? ' (' + esc(r.added_price_source) + ')' : "") + '</small></span>' +
-          '<span class="tkret ' + sign(r.alpha_pct) + '">' + pct(r.alpha_pct) + '<small>alpha</small></span></div>' +
-          '<div class="tkln">' +
-            '<span>Now ' + rupee(r.last_price) + '</span>' +
-            '<span class="' + sign(r.return_pct) + '">Return ' + pct(r.return_pct) + '</span>' +
-            '<span>Index ' + pct(r.bench_return_pct) + '</span>' +
-            '<span>Best ' + pct(r.max_gain_pct) + '</span>' +
-            '<span>Worst ' + pct(r.max_drawdown_pct) + '</span>' +
-            '<span>' + (r.days_held || 0) + ' days</span>' +
-            (r.sector ? '<span>' + esc(r.sector) + '</span>' : "") +
-          '</div>' +
-          (r.mark_error ? '<div class="warnbox">Could not price this symbol: ' + esc(r.mark_error) + '</div>' : "") +
-          (r.invalidated_by ? '<div class="warnbox">' + esc(r.invalidated_by) + '</div>' : "") +
-        '</div>';
+        return card(r, i);
       }).join("");
 
       rowsEl.querySelectorAll(".tkrm").forEach(function (b) {

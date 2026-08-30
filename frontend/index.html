@@ -318,11 +318,21 @@
   .mkstatus.closed i{background:#8B8477}
   .tickers{display:flex;gap:26px;overflow-x:auto;flex:1;scrollbar-width:none}
   .tickers::-webkit-scrollbar{display:none}
-  .tk{display:flex;align-items:baseline;gap:8px;white-space:nowrap;font-family:var(--mono);font-size:11.5px}
-  .tk .n{color:var(--mute);letter-spacing:.14em;text-transform:uppercase;font-size:9.5px}
-  .tk .l{color:var(--paper)}
-  .tk .c{font-size:10.5px}
-  .tk .c.up{color:#6FCFA6} .tk .c.dn{color:#E4899A}
+  /* Scoped to the ticker strip. These rules were written as a bare `.tk`,
+     which is also the class on every Tracker card 600 lines below — so the
+     tracker card silently inherited `display:flex` and `white-space:nowrap`
+     from the ticker. That turned each card into one un-wrapping horizontal
+     row: the Remove button landed left of the name, long company names ran
+     off the screen edge, and the price line was pushed so far right it was
+     invisible, leaving a tall blank card. Same class, two unrelated
+     components, and the later rule only won on the properties it happened to
+     redeclare. */
+  .tickers .tk{display:flex;align-items:baseline;gap:8px;white-space:nowrap;
+               font-family:var(--mono);font-size:11.5px}
+  .tickers .tk .n{color:var(--mute);letter-spacing:.14em;text-transform:uppercase;font-size:9.5px}
+  .tickers .tk .l{color:var(--paper)}
+  .tickers .tk .c{font-size:10.5px}
+  .tickers .tk .c.up{color:#6FCFA6} .tickers .tk .c.dn{color:#E4899A}
   .mktime{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--mute);
     white-space:nowrap;flex-shrink:0}
   @media(max-width:700px){.mktime{display:none}}
@@ -904,20 +914,50 @@
   .trackbtn.done:hover{background:rgba(31,111,67,.06);color:#1f6f43;transform:none}
   .toolbar{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;align-items:center;
            margin:0 auto 18px}
-  .tk{border:1px solid var(--rule-2);border-radius:var(--r-card);margin-bottom:10px;
+  /* display and white-space are declared explicitly, not left to whatever
+     an earlier rule happened to set — see the note on .tickers .tk above. */
+  .tk{display:block;white-space:normal;border:1px solid var(--rule-2);
+      border-radius:var(--r-card);margin-bottom:10px;
       padding:16px 19px;background:#fff;box-shadow:var(--sh-1);
       transition:box-shadow var(--t) var(--ease), transform var(--t) var(--ease)}
   .tk:hover{box-shadow:var(--sh-2);transform:translateY(-1px)}
   .tk .tkt{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
-  .tk .tknm{font-family:var(--serif);font-size:19px}
+  .tk .tknm{font-family:var(--serif);font-size:19px;line-height:1.2;min-width:0;
+            overflow-wrap:anywhere}
   .tk .tknm small{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
-                  text-transform:uppercase;color:var(--mute);margin-top:3px}
+                  text-transform:uppercase;color:var(--mute);margin-top:3px;
+                  overflow-wrap:anywhere}
   .tk .tkret{font-family:var(--serif);font-size:25px;flex-shrink:0}
   .tk .tkret small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.13em;
                    text-transform:uppercase;color:var(--mute);text-align:right;margin-top:2px}
   .pos{color:#1f6f43}.neg{color:#a11}
   .tk .tkln{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
             font-size:10.5px;letter-spacing:.06em;color:var(--mute)}
+
+  /* ── Tracker rows v25: the numbers, labelled ────────────────────────
+     The old row printed "Now ₹— Return — Index —" as a run-on line of
+     unlabelled values. These are the four-across cells that say what each
+     number is, plus the plan strip that answers whether the target was
+     actually reached. */
+  .tkgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:13px;
+          background:var(--rule-2);border:1px solid var(--rule-2);border-radius:7px;
+          overflow:hidden}
+  .tkcell{background:#fff;padding:9px 11px;min-width:0}
+  .tkcell b{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;
+            text-transform:uppercase;color:var(--mute);font-weight:400;margin-bottom:3px}
+  .tkcell span{display:block;font-family:var(--serif);font-size:17px;line-height:1.2;
+               color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .tkcell span.sm{font-size:13px;font-family:var(--mono);letter-spacing:.02em}
+  .tkcell span.dim{color:var(--mute)}
+  .tkplan{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:11px;
+          font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mute)}
+  .tkout{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+         border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 10px}
+  .tkout.TARGET{border-color:#1f6f43;color:#1f6f43;background:rgba(31,111,67,.06)}
+  .tkout.STOP{border-color:#a11;color:#a11;background:#fdf3f3}
+  .tkout.OPEN{border-color:var(--gold-dp);color:var(--gold-dp)}
+  .tkout.NO_PLAN{border-color:var(--rule);color:var(--mute)}
+  @media(max-width:620px){.tkgrid{grid-template-columns:repeat(2,1fr)}}
   .tkstat{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
           padding:2px 7px;border:1px solid var(--rule);margin-left:8px}
   .tkstat.LIVE{border-color:#1f6f43;color:#1f6f43}
