@@ -66,9 +66,18 @@ def compute_levels(df, max_each=3):
         return None
 
     close = df["Close"].values.astype(float)
+    # Guard the divisions below. A feed can return a row of zeros, and the
+    # whole scoring section divides by the last price.
+    if not len(close) or not np.isfinite(close[-1]) or close[-1] <= 0:
+        return None
     high = df["High"].fillna(df["Close"]).values.astype(float)
     low = df["Low"].fillna(df["Close"]).values.astype(float)
-    vol = df["Volume"].fillna(0).values.astype(float)
+    # A frame can arrive without a Volume column at all — a resample that
+    # dropped it, or an intraday feed that never supplied one. Volume only
+    # weights the zones here, so its absence should cost the weighting, not
+    # the levels.
+    vol = (df["Volume"].fillna(0).values.astype(float)
+           if "Volume" in df.columns else np.zeros(len(df), dtype=float))
     dates = df.index
     n = len(df)
     px = float(close[-1])
