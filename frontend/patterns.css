@@ -93,3 +93,25 @@
   .pathead{flex-direction:column;gap:6px}
   .patconf-n{text-align:left}
 }
+
+/* ── Summary strip, above the chart ────────────────────────────────────────
+   The workspace is a full viewport tall, so the panel below it is invisible
+   until someone scrolls past an entire screen of chart. This is the pointer. */
+.patbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer;
+        margin:0 0 12px;padding:10px 14px;border:1px solid var(--rule-2);
+        border-left:3px solid var(--gold);border-radius:var(--r-card);
+        background:var(--paper-2);transition:border-color var(--t-fast) var(--ease)}
+.patbar:hover{border-color:var(--gold-lt);border-left-color:var(--gold-dp)}
+.patbar b{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+          color:var(--ink);font-weight:500}
+.patbar i{font-style:normal;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+          border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 10px;
+          color:var(--ink-2);white-space:nowrap}
+.patbar i.bullish{border-color:#1f6f43;color:#1f6f43}
+.patbar i.bearish{border-color:#a11;color:#a11}
+.patbar i em{font-style:normal;text-transform:uppercase;font-size:8px;
+             letter-spacing:.12em;color:var(--mute)}
+.patbar span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+             color:var(--mute);margin-left:auto}
+.patbar.quiet{border-left-color:var(--rule)}
+@media(max-width:620px){.patbar span{margin-left:0;width:100%}}

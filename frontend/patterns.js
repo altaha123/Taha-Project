@@ -51,6 +51,43 @@
     return el;
   }
 
+  /* The workspace is height:calc(100vh - 168px), so anything appended after it
+     starts a full screen below the fold — findable only by someone who already
+     knew to scroll. This strip goes ABOVE the chart, names what was found in
+     one line, and scrolls to the detail. */
+  function summary(d) {
+    var view = document.getElementById("view-charts");
+    if (!view) return;
+    var bar = document.getElementById("patbar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "patbar";
+      bar.className = "patbar";
+      var cw = document.getElementById("cw");
+      if (cw && cw.parentNode === view) view.insertBefore(bar, cw);
+      else view.insertBefore(bar, view.firstChild);
+      bar.addEventListener("click", function () {
+        var p = document.getElementById("patpanel");
+        if (p) p.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+    if (!d || !d.available) { bar.innerHTML = ""; bar.hidden = true; return; }
+    bar.hidden = false;
+    if (!d.count) {
+      bar.innerHTML = '<b>No textbook pattern</b><span>on the ' + esc(d.timeframe) +
+        " chart right now — read why below</span>";
+      bar.className = "patbar quiet";
+      return;
+    }
+    bar.className = "patbar";
+    bar.innerHTML = "<b>" + d.count + " pattern" + (d.count > 1 ? "s" : "") + "</b>" +
+      d.patterns.slice(0, 3).map(function (p) {
+        return '<i class="' + esc(p.direction) + '">' + esc(p.name) +
+               " <em>" + esc(p.status) + "</em></i>";
+      }).join("") +
+      "<span>tap for the full reading &darr;</span>";
+  }
+
   function checksHTML(checks) {
     return '<ul class="patchecks">' + (checks || []).map(function (c) {
       return '<li class="' + (c.ok ? "ok" : "no") + '"><b>' + (c.ok ? "✓" : "✕") +
@@ -168,9 +205,11 @@
         return;
       }
       if (!d.available) {
+        summary(null);
         el.innerHTML = '<div class="patload">' + esc(d.message || "Not enough history.") + "</div>";
         return;
       }
+      summary(d);
       el.innerHTML =
         '<div class="pathdr"><h3>Patterns on the ' + esc(d.timeframe) + " chart</h3>" +
         "<span>" + esc(d.symbol) + " · " + esc(d.as_of) + " · last " + rupee(d.last_close) +
@@ -194,9 +233,18 @@
      built by an eval'd bundle this file must not reach into. Listening to the
      controls is enough, and it keeps the two independent. */
 
+  /* BUGFIX: these selectors were written for the full-window chart page
+     (?chart=SYMBOL), whose controls are #fcinput / #fctfbar. The Charts TAB
+     builds a different workspace whose ids are all cw-* — #cw-in for the
+     symbol, #cw-go for Load, #cw-tfs for the timeframes, with the active one
+     carrying .on rather than .active.
+
+     So on the tab itself currentSymbol() returned null, refresh() did nothing,
+     and the panel was never populated. It only ever worked when the URL
+     happened to carry ?charts=SYMBOL, which is exactly how it was tested. */
   function currentSymbol() {
-    var i = document.getElementById("cinput") || document.getElementById("fcinput");
-    if (i && i.value.trim()) return i.value.trim().toUpperCase();
+    var i = document.getElementById("cw-in") || document.getElementById("fcinput");
+    if (i && i.value && i.value.trim()) return i.value.trim().toUpperCase();
     try {
       var q = new URLSearchParams(location.search);
       return (q.get("charts") || q.get("chart") || "").toUpperCase() || null;
@@ -204,27 +252,28 @@
   }
 
   function currentRange() {
-    var on = document.querySelector("#ctfbar .tf.active, #fctfbar .tf.active");
+    var on = document.querySelector("#cw-tfs button.on, #fctfbar .tf.active");
     return (on && on.dataset && on.dataset.r) || "1D";
   }
 
-  function refresh() {
+  /* Rather than guessing every control that might change the symbol, watch
+     what the controls produce. One cheap comparison a second is immune to the
+     workspace being rebuilt, renamed, or driven from code we do not own —
+     which is precisely how the selector bug above went unnoticed. */
+  var lastKey = null;
+  function poll() {
+    var view = document.getElementById("view-charts");
+    if (!view || getComputedStyle(view).display === "none") return;
     var s = currentSymbol();
-    if (s) load(s, currentRange());
+    if (!s) return;
+    var key = s + "|" + currentRange();
+    if (key === lastKey) return;
+    lastKey = key;
+    load(s, currentRange());
   }
 
-  document.addEventListener("click", function (ev) {
-    var t = ev.target;
-    if (!t || !t.closest) return;
-    if (t.closest(".tf[data-r]")) { setTimeout(refresh, 600); return; }
-    if (t.closest("#cgo, #fcgo")) { setTimeout(refresh, 900); return; }
-  }, true);
-
-  document.addEventListener("keydown", function (ev) {
-    if (ev.key !== "Enter") return;
-    var id = ev.target && ev.target.id;
-    if (id === "cinput" || id === "fcinput") setTimeout(refresh, 900);
-  }, true);
+  function refresh() { lastKey = null; poll(); }
+  setInterval(poll, 1000);
 
   /* First paint once the workspace has mounted and loaded its own data. */
   function boot(tries) {
