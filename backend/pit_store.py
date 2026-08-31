@@ -31,7 +31,39 @@ import threading
 from contextlib import contextmanager
 from datetime import date, datetime, timezone
 
-DB_PATH = os.environ.get("ALTAHA_PIT_DB", "altaha_pit.db")
+# Where the point-in-time database lives.
+#
+# BUGFIX: this was a bare relative filename, so the database landed in
+# whatever directory the process happened to start in — next to the code on
+# Render, which replaces that directory wholesale on every deploy. Every
+# universe scan writes factor snapshots here, and every deploy destroyed
+# them, so the one dataset in this project that can only be built by waiting
+# was being reset to empty on a weekly basis.
+#
+# tracker.py and scan.py had already learned this: DATA_DIR points at a
+# mounted disk in production and falls back to the code directory locally.
+# ALTAHA_PIT_DB still overrides everything for anyone who wants it elsewhere.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.environ.get("DATA_DIR", "").strip() or _HERE
+try:
+    os.makedirs(_DATA_DIR, exist_ok=True)
+except Exception:
+    _DATA_DIR = _HERE
+
+DB_PATH = os.environ.get("ALTAHA_PIT_DB", "").strip() or \
+    os.path.join(_DATA_DIR, "altaha_pit.db")
+
+# One-time migration: a database written by an earlier build sits in the code
+# directory. Move it onto the disk rather than starting the record again.
+_LEGACY_DB = os.path.join(_HERE, "altaha_pit.db")
+if _LEGACY_DB != DB_PATH and os.path.exists(_LEGACY_DB) and not os.path.exists(DB_PATH):
+    try:
+        os.replace(_LEGACY_DB, DB_PATH)
+        for _suffix in ("-wal", "-shm"):
+            if os.path.exists(_LEGACY_DB + _suffix):
+                os.replace(_LEGACY_DB + _suffix, DB_PATH + _suffix)
+    except Exception:
+        pass
 
 _local = threading.local()
 
@@ -310,6 +342,55 @@ def factor_history(symbol, factor):
     return [(r["as_of_date"],
              r["value"] if r["value"] is not None else r["text_value"])
             for r in rows]
+
+
+def score_history(symbol, factors=None, limit=400):
+    """
+    Every factor this project has recorded for one stock, aligned by date.
+
+    factor_history() answers for a single factor, which is the wrong shape for
+    the question a reader actually asks — "the score was 74 in March and is 42
+    now, what moved?" That needs the columns side by side on the same dates.
+
+    Returns {"rows": [{"date": ..., "composite": ..., ...}], "factors": [...]}
+    with the dates ascending, so a chart can consume it directly.
+    """
+    wanted = list(factors or ("composite", "technical", "fundamental", "f_score",
+                              "price", "setup_key", "sector", "label"))
+    marks = ",".join("?" * len(wanted))
+    conn = _connect()
+    rows = conn.execute(
+        f"SELECT as_of_date, factor, value, text_value FROM factor_snapshots"
+        f" WHERE symbol = ? AND factor IN ({marks})"
+        f" ORDER BY as_of_date",
+        [symbol] + wanted,
+    ).fetchall()
+
+    by_date = {}
+    for r in rows:
+        slot = by_date.setdefault(r["as_of_date"], {"date": r["as_of_date"]})
+        slot[r["factor"]] = r["value"] if r["value"] is not None else r["text_value"]
+
+    out = [by_date[d] for d in sorted(by_date)][-limit:]
+    present = sorted({k for row in out for k in row if k != "date"})
+    return {"rows": out, "factors": present, "observations": len(rows)}
+
+
+def score_change(symbol, factor="composite"):
+    """
+    First and latest reading of one factor, and the gap between them.
+
+    None when there is nothing to compare — one observation is not a history,
+    and reporting a change of zero would be a different claim entirely.
+    """
+    series = [(d, v) for d, v in factor_history(symbol, factor)
+              if isinstance(v, (int, float))]
+    if len(series) < 2:
+        return None
+    (d0, v0), (d1, v1) = series[0], series[-1]
+    return {"factor": factor, "from": {"date": d0, "value": v0},
+            "to": {"date": d1, "value": v1},
+            "change": round(v1 - v0, 2), "observations": len(series)}
 
 
 def snapshot_dates():
