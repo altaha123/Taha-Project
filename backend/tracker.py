@@ -483,9 +483,15 @@ def _check_invalidation(key, df, entry=None):
         if last is None:
             return None
         if key == "momentum_breakout":
+            # BUGFIX: engine.supertrend() returns the DIRECTION (+1 / -1), not
+            # the band price. This compared a rupee price against 1 — so for a
+            # ₹1,287 stock the test read "1287 < 1", which is false for every
+            # stock that has ever traded. The check has therefore never fired
+            # once, silently, since it was written; momentum ideas were never
+            # invalidated on a regime flip at all. Compare the direction.
             st = val(supertrend(df))
-            if st is not None and last < st:
-                return "Closed below the Supertrend band — trend regime flipped"
+            if st is not None and st < 0:
+                return "Supertrend flipped bearish — the trend regime has turned"
             a = val(adx(df))
             if a is not None and a < 20:
                 return f"ADX fell to {a:.0f} — trend lost force"
