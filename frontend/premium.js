@@ -49,6 +49,18 @@
   function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     try { localStorage.setItem('altaha-theme', t); } catch (e) {}
+
+    /* Segmented control: mark the live option and move the puck. */
+    var seg = $('.themeseg');
+    if (seg) {
+      seg.querySelectorAll('button').forEach(function (btn) {
+        var on = btn.dataset.t === t;
+        btn.classList.toggle('on', on);
+        btn.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
+      seg.dataset.t = t;
+    }
+    /* The old floating button, if anything still renders one. */
     var b = $('.themebtn');
     if (b) {
       b.textContent = t === 'dark' ? '\u263E' : '\u2600';
@@ -58,14 +70,45 @@
     window.dispatchEvent(new CustomEvent('altaha:theme', { detail: { theme: t } }));
   }
 
+  /* The control lives in the ticker strip at the very top of the page rather
+     than floating over the bottom-right corner, where it sat on top of the
+     content, competed with the mobile tab bar, and was easy to miss entirely.
+     A two-option segmented control also states what it will do: a lone sun
+     icon leaves you guessing whether it shows the current theme or the one
+     you would switch to. */
   function themeToggle() {
-    var b = document.createElement('button');
-    b.className = 'themebtn';
-    b.type = 'button';
-    b.addEventListener('click', function () {
+    var seg = document.createElement('div');
+    seg.className = 'themeseg';
+    seg.setAttribute('role', 'radiogroup');
+    seg.setAttribute('aria-label', 'Appearance');
+    seg.innerHTML =
+      '<i class="themepuck" aria-hidden="true"></i>' +
+      '<button type="button" role="radio" data-t="light" aria-label="Light appearance">' +
+        '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">' +
+        '<circle cx="8" cy="8" r="3.1" fill="currentColor"/>' +
+        '<g stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
+        '<path d="M8 1.4v1.8M8 12.8v1.8M1.4 8h1.8M12.8 8h1.8"/>' +
+        '<path d="M3.3 3.3l1.3 1.3M11.4 11.4l1.3 1.3M12.7 3.3l-1.3 1.3M4.6 11.4l-1.3 1.3"/>' +
+        '</g></svg><span>Light</span></button>' +
+      '<button type="button" role="radio" data-t="dark" aria-label="Dark appearance">' +
+        '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">' +
+        '<path d="M13.2 9.6A5.6 5.6 0 0 1 6.4 2.8a5.6 5.6 0 1 0 6.8 6.8z" fill="currentColor"/>' +
+        '</svg><span>Dark</span></button>';
+
+    seg.addEventListener('click', function (ev) {
+      var btn = ev.target.closest('button[data-t]');
+      if (btn) applyTheme(btn.dataset.t);
+    });
+    /* Left/right arrows move between options, as a radiogroup should. */
+    seg.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+      ev.preventDefault();
       applyTheme(theme() === 'dark' ? 'light' : 'dark');
     });
-    document.body.appendChild(b);
+
+    var bar = $('.tickerinner');
+    if (bar) bar.appendChild(seg);
+    else document.body.appendChild(seg);   // strip absent: still reachable
     applyTheme(theme());
   }
 
