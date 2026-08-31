@@ -26,6 +26,8 @@ import csv
 import scan as scanner
 import announcements as ann
 import ideas as ideas_engine
+import patterns as pattern_engine
+import forward as forward_engine
 import tracker
 from results import quarterly_results
 from levels import compute_levels
@@ -645,6 +647,59 @@ def ideas_export(horizon: str = "short", limit: int = 25,
     return Response(content=buf.getvalue(), media_type="text/csv",
                     headers={"Content-Disposition":
                              f"attachment; filename=altaha-ideas-{horizon}.csv"})
+
+
+@app.get("/patterns")
+def chart_patterns(ticker: str, range: str = "1D", base_rates: bool = True):
+    """
+    Classical chart patterns for one symbol, with the geometry that defines
+    each one, the price that confirms or kills it, and how often the same
+    shape resolved in this stock's own history.
+
+    Also returns the forward indicator mechanics: the close that would put RSI
+    at 30/50/70, the price that flips Supertrend, how many sessions until a
+    moving-average cross at an unchanged price. Those are solved from the
+    indicator formulas with history held fixed — arithmetic, not forecasts.
+
+    Patterns want daily bars. An intraday range is accepted but the shapes are
+    correspondingly less meaningful, and the payload says which timeframe it
+    measured so nobody has to guess.
+    """
+    raw = (range or "1D").strip()
+    key = next((k for k in RANGES if k.lower() == raw.lower()), None)
+    cfg = RANGES.get(key) if key else None
+    if not cfg:
+        raise HTTPException(400, f"range must be one of {', '.join(RANGES)}")
+
+    base = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    if cfg["mode"] == "intraday":
+        if dhan is None or not dhan.configured():
+            raise HTTPException(503, "Intraday patterns need the Dhan data feed. "
+                                     "Daily and weekly work without it.")
+        try:
+            df = dhan.intraday_ohlcv(base, interval=cfg["interval"], days=cfg["days"])
+        except Exception:
+            df = None
+        if df is None or len(df) < 80:
+            raise HTTPException(404, f"Not enough intraday history for {base} to read a pattern.")
+    else:
+        try:
+            _sym, _t, hist = resolve(base)
+        except NotFound:
+            raise HTTPException(404, f"Couldn't find '{base}'.")
+        except Exception:
+            raise HTTPException(503, "The data provider is busy. Try again in a minute.")
+        df = hist.tail(cfg["sessions"])
+        if cfg.get("resample_w") and isinstance(df.index, pd.DatetimeIndex):
+            df = _resample_weeks(df)
+
+    try:
+        out = pattern_engine.analyse(df, symbol=base,
+                                     with_base_rates=bool(base_rates),
+                                     timeframe=key)
+    except Exception as e:
+        raise HTTPException(500, f"Pattern analysis failed: {str(e)[:120]}")
+    return to_native({**out, "range": key, "disclaimer_global": DISCLAIMER})
 
 
 @app.get("/leaderboard")
