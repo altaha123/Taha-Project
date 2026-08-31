@@ -64,6 +64,12 @@ jobs:
           sys.exit(1 if bad else 0)
           PY
 
+      - name: Frontend unit tests
+        # share.js composes the text that goes onto a public timeline, so its
+        # guard against price levels and directives runs on every PR.
+        run: |
+          for t in frontend/*.test.js; do node "$t"; done
+
       - name: No duplicate element ids
         run: |
           python3 - <<'PY'
