@@ -20,6 +20,7 @@
 <script>if(typeof LightweightCharts==="undefined")document.write('<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="charts.css">
+<link rel="stylesheet" href="motion.css">
 <link rel="stylesheet" href="portfolio.css">
 <link rel="stylesheet" href="nav.css">
 <style>
@@ -898,7 +899,12 @@
   .evrow i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--gold-dp)}
   .evrow i.neg{color:#a11}
   .evrow span{color:var(--mute)}
-  .evbar{height:2px;background:var(--rule-2);margin-top:3px;position:relative}
+  /* display:block and an explicit width are load-bearing, not tidiness: this
+     is a <span> inside an inline <i>, so without them it is an inline box of
+     zero width, and the bar inside — sized as a percentage of its containing
+     block — computed to 0px and never appeared at all. */
+  .evbar{display:block;width:100%;height:2px;background:var(--rule-2);
+         margin-top:3px;position:relative;border-radius:1px;overflow:hidden}
   .evbar > i{position:absolute;left:0;top:0;height:100%;background:var(--gold-lt);display:block}
   @media(max-width:560px){.evrow{grid-template-columns:1fr;gap:2px}}
 
@@ -3619,6 +3625,7 @@ if(fcSymParam){
 <script src="nav.js" defer></script>
 <script src="scoring.js" defer></script>
 <script src="social.js" defer></script>
+<script src="motion.js" defer></script>
 <script>
 /* ── Deep links from the landing page ───────────────────────────────────
    ALTAHA_DEEPLINK. index.html already understood ?chart=SYMBOL but had no
