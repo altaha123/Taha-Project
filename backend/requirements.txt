@@ -10,3 +10,8 @@ websockets>=12.0
 # news_feed.py. It arrived transitively via yfinance until now; pinning it
 # explicitly means a yfinance upgrade cannot remove it.
 requests>=2.31
+
+# Tests only — the CI workflow installs this separately, so it is listed
+# here for anyone running the suite locally rather than pinned into the
+# deployed image.
+# pytest>=8.0

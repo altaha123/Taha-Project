@@ -34,11 +34,38 @@ def hma(series: pd.Series, period: int = 21) -> pd.Series:
 
 
 def rsi(series: pd.Series, period: int = 14) -> pd.Series:
+    """
+    Wilder's RSI.
+
+    BUGFIX: the zero-loss case returned NaN. `loss.replace(0, np.nan)` was
+    there to dodge a division by zero, but it answered the wrong question — an
+    average loss of zero does not mean "undefined", it means every one of the
+    last fourteen sessions closed up, which is RSI 100, the strongest reading
+    the scale has.
+
+    The consequence was not cosmetic. technical_score() compares the value
+    against 50–70 and 40–78 bands; NaN fails every comparison and falls to the
+    else branch, so a stock in an unbroken advance scored 0 of 15 and was
+    labelled "weak or overheated" in its own audit trail. That is a run of
+    upper circuits in a small-cap — precisely the momentum this engine exists
+    to find — being marked weak.
+
+    Zero movement in both directions is genuinely undefined; 50 is the
+    conventional reading and is what a flat series returns here.
+    """
     delta = series.diff()
     gain = delta.clip(lower=0).ewm(alpha=1 / period, adjust=False).mean()
     loss = (-delta.clip(upper=0)).ewm(alpha=1 / period, adjust=False).mean()
+
     rs = gain / loss.replace(0, np.nan)
-    return 100 - (100 / (1 + rs))
+    out = 100 - (100 / (1 + rs))
+
+    # Where the average loss is zero, the answer is 100 if anything was gained
+    # at all and 50 if the series simply did not move.
+    no_loss = loss.fillna(0) <= 0
+    out = out.mask(no_loss & (gain.fillna(0) > 0), 100.0)
+    out = out.mask(no_loss & (gain.fillna(0) <= 0), 50.0)
+    return out
 
 
 def macd(series: pd.Series):

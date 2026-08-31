@@ -1,0 +1,77 @@
+name: CI
+
+# Every bug this project has shipped was silent: the chart module died only
+# when its library loaded, a tracker row read 0.00% for ever, a check compared
+# a rupee price against the number 1. Nothing crashed and nothing logged, so
+# they were all found by looking at the screen. This runs on every push and
+# pull request so the next one is found here instead.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest
+      - name: Compile every module
+        # Catches a syntax error in a file no test happens to import.
+        run: python -m compileall -q backend
+      - name: Tests
+        run: python -m pytest backend/tests -q
+
+  frontend:
+    name: frontend syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Parse every script
+        # node --check on each file, plus the inline <script> blocks in
+        # index.html, which is where most of this frontend actually lives.
+        run: |
+          set -e
+          for f in frontend/*.js; do node --check "$f"; done
+          python3 - <<'PY'
+          import re, sys, subprocess, tempfile, os
+          html = open("frontend/index.html", encoding="utf-8").read()
+          blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
+          print(f"checking {len(blocks)} inline script blocks")
+          bad = 0
+          for i, b in enumerate(blocks):
+              with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False,
+                                               encoding="utf-8") as fh:
+                  fh.write(b); path = fh.name
+              r = subprocess.run(["node", "--check", path], capture_output=True, text=True)
+              os.unlink(path)
+              if r.returncode:
+                  bad += 1
+                  print(f"block {i} failed:\n{r.stderr}")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: No duplicate element ids
+        run: |
+          python3 - <<'PY'
+          import re, collections, sys
+          html = open("frontend/index.html", encoding="utf-8").read()
+          ids = re.findall(r'<[^>]+\sid="([^"]+)"', html)
+          dup = {k: v for k, v in collections.Counter(ids).items() if v > 1}
+          if dup:
+              print("duplicate ids:", dup); sys.exit(1)
+          print(f"{len(ids)} unique element ids")
+          PY

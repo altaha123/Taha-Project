@@ -60,7 +60,8 @@ def build_plan(df, levels, tech=None):
     if len(df) < 60 or not levels:
         return None
     close = df["Close"].values.astype(float)
-    vol = df["Volume"].fillna(0).values.astype(float)
+    vol = (df["Volume"].fillna(0).values.astype(float)
+           if "Volume" in df.columns else np.zeros(len(df), dtype=float))
     px = float(close[-1])
     n = len(df)
     atr = _atr(df)
