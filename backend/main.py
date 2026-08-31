@@ -31,6 +31,10 @@ try:
     import pit_store
 except Exception:
     pit_store = None
+try:
+    import xbrl as xbrl_source
+except Exception:
+    xbrl_source = None
 import patterns as pattern_engine
 import forward as forward_engine
 import tracker
@@ -855,6 +859,33 @@ def pit_coverage():
                     os.environ.get("DATA_DIR", "\x00")) if os.environ.get("DATA_DIR") else False}
     except Exception as e:
         raise HTTPException(503, f"Point-in-time store unavailable: {str(e)[:100]}")
+
+
+@app.get("/fundamentals/xbrl")
+def fundamentals_xbrl(ticker: str, limit: int = 8, consolidated: Optional[bool] = None):
+    """
+    Quarterly results read from the company's own XBRL filing with the
+    exchange, under LODR Regulation 33.
+
+    This is the primary source rather than a scrape: the numbers are the ones
+    the company filed, and the payload carries the URL of the filing each row
+    came from so any figure can be checked against the document.
+
+    It covers the income statement in full plus total assets and liabilities
+    from the segment reconciliation. The rest of the balance sheet and the cash
+    flow statement are not in a quarterly filing, and the response says so
+    rather than leaving a reader to assume otherwise.
+    """
+    if xbrl_source is None:
+        return {"available": False, "message": "The XBRL reader is not available."}
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        return to_native(xbrl_source.summary(sym, limit=max(1, min(limit, 24)),
+                                             consolidated=consolidated))
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
 
 
 @app.get("/leaderboard")
