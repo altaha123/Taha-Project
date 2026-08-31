@@ -160,5 +160,14 @@ header.wrap > *:not(#skin-art){position:relative;z-index:1}
 /* ── 9 · THE TICKER BAR ──────────────────────────────────────────────────
    Restyled to match, and no longer the loudest thing above the masthead.  */
 
-.tickerbar,.tkbar{background:var(--ink) !important;border-bottom:1px solid var(--rule)}
-.tickerbar .tk,.tkbar .tk,#tickers .tk{color:var(--paper) !important;opacity:.86}
+/* The ticker strip is a permanently dark brand bar in BOTH themes, so its
+   colours must not be drawn from tokens that invert. Painting it with
+   var(--ink) meant that in dark mode — where --ink is near-white — the bar
+   turned white while its text stayed fixed white, and "MARKET CLOSED"
+   disappeared into its own background. Fixed values, deliberately. */
+.tickerbar,.tkbar{background:#07080A !important;border-bottom:1px solid rgba(255,255,255,.08)}
+/* No compounding opacity on top of an already-translucent colour: .48 alpha
+   from premium.css multiplied by .86 here left the strip's labels at an
+   effective .41 white, which on a near-black bar is about 4:1 — under the
+   4.5:1 floor for 9.5px uppercase mono, and visibly murky. */
+.tickerbar .tk,.tkbar .tk,#tickers .tk{color:rgba(255,255,255,.92) !important}

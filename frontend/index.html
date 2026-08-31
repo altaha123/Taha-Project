@@ -923,22 +923,27 @@
            margin:0 auto 18px}
   /* display and white-space are declared explicitly, not left to whatever
      an earlier rule happened to set — see the note on .tickers .tk above. */
-  .tk{display:block;white-space:normal;border:1px solid var(--rule-2);
+  /* Scoped to #tkrows. Scoping only the ticker half of this collision left it
+     running the other way: the card's padding, radius and display:flex landed
+     on every item in the market ticker strip, which is where the pale rounded
+     box behind "Indices resume at 09:15 IST" came from. Both sides are now
+     addressed by their own container and cannot reach each other. */
+  #tkrows .tk{display:block;white-space:normal;border:1px solid var(--rule-2);
       border-radius:var(--r-card);margin-bottom:10px;
-      padding:16px 19px;background:#fff;box-shadow:var(--sh-1);
+      padding:16px 19px;background:var(--skin-card,#fff);box-shadow:var(--sh-1);
       transition:box-shadow var(--t) var(--ease), transform var(--t) var(--ease)}
-  .tk:hover{box-shadow:var(--sh-2);transform:translateY(-1px)}
-  .tk .tkt{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
-  .tk .tknm{font-family:var(--serif);font-size:19px;line-height:1.2;min-width:0;
+  #tkrows .tk:hover{box-shadow:var(--sh-2);transform:translateY(-1px)}
+  #tkrows .tk .tkt{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
+  #tkrows .tk .tknm{font-family:var(--serif);font-size:19px;line-height:1.2;min-width:0;
             overflow-wrap:anywhere}
-  .tk .tknm small{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
+  #tkrows .tk .tknm small{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
                   text-transform:uppercase;color:var(--mute);margin-top:3px;
                   overflow-wrap:anywhere}
-  .tk .tkret{font-family:var(--serif);font-size:25px;flex-shrink:0}
-  .tk .tkret small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.13em;
+  #tkrows .tk .tkret{font-family:var(--serif);font-size:25px;flex-shrink:0}
+  #tkrows .tk .tkret small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.13em;
                    text-transform:uppercase;color:var(--mute);text-align:right;margin-top:2px}
   .pos{color:#1f6f43}.neg{color:#a11}
-  .tk .tkln{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
+  #tkrows .tk .tkln{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
             font-size:10.5px;letter-spacing:.06em;color:var(--mute)}
 
   /* ── Tracker rows v25: the numbers, labelled ────────────────────────

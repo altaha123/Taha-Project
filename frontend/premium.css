@@ -191,11 +191,11 @@ body {
   border-bottom: 1px solid rgba(255,255,255,.07);
 }
 .tickerbar .tk { background: transparent !important; border: 0; }
-.tickerbar .tk .n { color: rgba(255,255,255,.48); letter-spacing: .1em; }
+.tickerbar .tk .n { color: rgba(255,255,255,.66); letter-spacing: .1em; }
 .tickerbar .tk .l { color: rgba(255,255,255,.94); font-weight: 500; }
 .tickerbar .tk .c.up { color: #34C48D; }
 .tickerbar .tk .c.dn { color: #F0736A; }
-.tickerbar .mktime, .tickerbar .mkstatus { color: rgba(255,255,255,.55); }
+.tickerbar .mktime, .tickerbar .mkstatus { color: rgba(255,255,255,.74); }
 .tickerbar .mkstatus i { box-shadow: 0 0 0 4px rgba(52,196,141,.16); }
 
 /* ── 4. HERO ───────────────────────────────────────────────────────────────
@@ -572,18 +572,51 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 
 /* ── 14. THEME TOGGLE ──────────────────────────────────────────────────── */
 
+/* Segmented Light / Dark, in the ticker strip at the top of the page.
+   It sits on a permanently dark bar in both themes, so its colours are fixed
+   whites rather than tokens that invert — the same mistake that turned the
+   strip itself white in dark mode. */
+.themeseg {
+  position: relative; display: inline-flex; align-items: center;
+  margin-left: auto; flex-shrink: 0; padding: 2px;
+  border: 1px solid rgba(255,255,255,.16); border-radius: 999px;
+  background: rgba(255,255,255,.05);
+}
+.themeseg button {
+  position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 5px;
+  border: 0; background: none; cursor: pointer; border-radius: 999px;
+  padding: 4px 10px; color: rgba(255,255,255,.5);
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em;
+  text-transform: uppercase; line-height: 1;
+  transition: color var(--t-fast) var(--ease);
+}
+.themeseg button svg { display: block; }
+.themeseg button:hover { color: rgba(255,255,255,.82); }
+.themeseg button.on { color: #17140E; }
+.themeseg button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(217,188,106,.6); }
+
+/* One puck that slides, rather than two backgrounds that flick. */
+.themepuck {
+  position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px);
+  border-radius: 999px; background: #E8E2D4; z-index: 0;
+  transition: transform var(--t) var(--ease-soft);
+}
+.themeseg[data-t="dark"] .themepuck { transform: translateX(100%); }
+
+@media (max-width: 560px) {
+  .themeseg button span { display: none; }      /* icons only on a narrow strip */
+  .themeseg button { padding: 5px 9px; }
+}
+@media (prefers-reduced-motion: reduce) { .themepuck { transition: none; } }
+
+/* Kept so any older markup still renders something usable. */
 .themebtn {
   position: fixed; right: 18px; bottom: 18px; z-index: 90;
   width: 42px; height: 42px; border-radius: 50%;
   display: grid; place-items: center; cursor: pointer;
   background: var(--glass); border: .5px solid var(--glass-line);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
   box-shadow: var(--sh-2); color: var(--ink-2); font-size: 15px;
-  transition: transform var(--t) var(--ease), color var(--t-fast) var(--ease);
 }
-.themebtn:hover { transform: scale(1.07) rotate(-8deg); color: var(--ink); }
-@media (max-width: 780px) { .themebtn { bottom: 78px; } }
 
 /* ── 15. MOBILE TAB BAR ────────────────────────────────────────────────── */
 

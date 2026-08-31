@@ -58,14 +58,15 @@
 
   var css = document.createElement("style");
   css.textContent = [
-    ".tk{position:relative}",
+    /* Scoped: a bare .tk also matches every item in the market ticker strip. */
+    "#tkrows .tk{position:relative}",
     ".tkrm{position:absolute;top:10px;right:10px;border:1px solid var(--rule);",
     "  background:var(--paper);color:var(--mute);border-radius:999px;cursor:pointer;",
     "  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;",
     "  padding:4px 10px;transition:border-color 150ms,color 150ms,background 150ms}",
     ".tkrm:hover{border-color:var(--fail);color:var(--fail)}",
     ".tkrm[disabled]{opacity:.5;cursor:default}",
-    ".tk .tkt{padding-right:86px}",
+    "#tkrows .tk .tkt{padding-right:86px}",
     ".tkbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}",
     ".tkflag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mute);",
     "  border-left:2px solid var(--gold);padding:2px 0 2px 10px;margin:0 0 12px;line-height:1.7}",
@@ -76,7 +77,7 @@
        name — which is where the screenshot showed it. It stays pinned
        top-right at every width; only its size changes. */
     "@media(max-width:560px){.tkrm{top:8px;right:8px;padding:3px 8px;font-size:8px}",
-    "  .tk .tkt{padding-right:74px}}"
+    "  #tkrows .tk .tkt{padding-right:74px}}"
   ].join("\n");
   document.head.appendChild(css);
 
