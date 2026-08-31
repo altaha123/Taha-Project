@@ -26,6 +26,7 @@ import csv
 import scan as scanner
 import announcements as ann
 import ideas as ideas_engine
+import og as og_cards
 import patterns as pattern_engine
 import forward as forward_engine
 import tracker
@@ -700,6 +701,95 @@ def chart_patterns(ticker: str, range: str = "1D", base_rates: bool = True):
     except Exception as e:
         raise HTTPException(500, f"Pattern analysis failed: {str(e)[:120]}")
     return to_native({**out, "range": key, "disclaimer_global": DISCLAIMER})
+
+
+# ---------------------------------------------------------------------------
+# Share cards
+#
+# No social crawler runs JavaScript. Twitterbot, facebookexternalhit and
+# WhatsApp fetch the URL, read the <meta> tags out of the raw HTML and leave —
+# so a single-page app served as one static index.html can only ever advertise
+# one image, however cleverly the page rewrites its own head afterwards.
+#
+# /share/SYMBOL is the answer: a small server-rendered document carrying the
+# tags for that one stock, which forwards a human straight on to the app. That
+# is the link to paste into a post.
+# ---------------------------------------------------------------------------
+
+SITE_URL = os.environ.get("SITE_URL", "https://taha-project-one.vercel.app").rstrip("/")
+API_URL = os.environ.get("API_URL", "https://taha-project.onrender.com").rstrip("/")
+
+_PNG_HEADERS = {"Cache-Control": "public, max-age=3600, s-maxage=86400"}
+
+
+@app.get("/og/stock.png")
+def og_stock(ticker: str):
+    """The share card for one stock: scores and the archetype.
+
+    Deliberately carries no entry, stop or target. Those are on the site next
+    to their own ledger; on a public image they would be a recommendation."""
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper()
+    try:
+        png = og_cards.cached(f"stock:{sym}", lambda: og_cards.stock_card(analyze(sym)))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
+    return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
+
+
+@app.get("/og/record.png")
+def og_record():
+    """The track-record card — the one claim here nobody else publishes."""
+    try:
+        png = og_cards.cached("record", lambda: og_cards.record_card(tracker.stats()))
+    except Exception as e:
+        raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
+    return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
+
+
+@app.get("/share/record")
+def share_record():
+    st = tracker.stats()
+    o = st.get("overall") or {}
+    alpha = o.get("avg_alpha_pct")
+    beat = o.get("beat_index_pct")
+    desc = (f"{st.get('total_tracked', 0)} ideas recorded automatically — winners and "
+            f"losers. {beat}% beat the index" if beat is not None else
+            f"{st.get('total_tracked', 0)} ideas recorded automatically.")
+    if alpha is not None:
+        desc += f", average alpha {alpha:+.2f}% over the index across the identical window."
+    return Response(content=og_cards.share_page(
+        "Does the Altaha engine work?", desc,
+        f"{API_URL}/og/record.png", f"{SITE_URL}/?tab=tracker"),
+        media_type="text/html")
+
+
+@app.get("/share/{ticker}")
+def share_stock(ticker: str):
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        payload = analyze(sym)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(404, f"Couldn't analyse '{sym}'.")
+    _s, name, comp, label, tech, fund, _f, setup = og_cards._read(payload)
+    score = "—" if comp is None else str(int(round(comp)))
+    desc = (f"{name} scores {score}/100"
+            + (f" ({label.lower()})" if label else "")
+            + (f". Technical {int(tech)}, fundamental {int(fund)}."
+               if tech is not None and fund is not None else ".")
+            + (f" Setup: {setup}." if setup else "")
+            + " Every number opens into the arithmetic behind it.")
+    return Response(content=og_cards.share_page(
+        f"{name} ({sym}) — Altaha Screener", desc,
+        f"{API_URL}/og/stock.png?ticker={sym}", f"{SITE_URL}/?ticker={sym}"),
+        media_type="text/html")
 
 
 @app.get("/leaderboard")
