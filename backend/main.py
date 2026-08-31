@@ -27,6 +27,10 @@ import scan as scanner
 import announcements as ann
 import ideas as ideas_engine
 import og as og_cards
+try:
+    import pit_store
+except Exception:
+    pit_store = None
 import patterns as pattern_engine
 import forward as forward_engine
 import tracker
@@ -799,6 +803,58 @@ def share_stock(ticker: str):
         f"{name} ({sym}) — Altaha Screener", desc,
         f"{API_URL}/og/stock.png?ticker={sym}", f"{SITE_URL}/?q={sym}"),
         media_type="text/html")
+
+
+@app.get("/score-history")
+def score_history(ticker: str, limit: int = 400):
+    """
+    How this stock's own score has moved.
+
+    Every universe scan banks a point-in-time snapshot of what the engine
+    believed that day. Financial history is everywhere; a screener's own score
+    history is not, and it is the natural extension of showing the working —
+    it lets a reader see not just what the engine thinks but when it changed
+    its mind.
+
+    The record only goes back as far as the scans do, so a fresh deployment
+    answers honestly with an empty series rather than inventing one.
+    """
+    if pit_store is None:
+        return {"available": False, "message": "The point-in-time store is not available."}
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        hist = pit_store.score_history(sym, limit=max(2, min(limit, 2000)))
+        change = pit_store.score_change(sym, "composite")
+    except Exception as e:
+        raise HTTPException(503, f"Point-in-time store unavailable: {str(e)[:100]}")
+
+    rows = hist.get("rows") or []
+    if not rows:
+        return {"available": False, "symbol": sym, "rows": [],
+                "message": ("No scan has recorded this symbol yet. The history builds "
+                            "one universe scan at a time — it cannot be backfilled, "
+                            "because a score computed today is not what the engine "
+                            "believed in March.")}
+    return {"available": True, "symbol": sym, **hist, "change": change,
+            "note": ("Each row is what the engine believed on that date, written at "
+                     "the time and never rewritten. A gap in the dates is a day no "
+                     "universe scan ran.")}
+
+
+@app.get("/pit/coverage")
+def pit_coverage():
+    """How much point-in-time data has actually been banked."""
+    if pit_store is None:
+        return {"available": False}
+    try:
+        return {"available": True, **pit_store.coverage_report(),
+                "db_path": pit_store.DB_PATH,
+                "persistent": pit_store.DB_PATH.startswith(
+                    os.environ.get("DATA_DIR", "\x00")) if os.environ.get("DATA_DIR") else False}
+    except Exception as e:
+        raise HTTPException(503, f"Point-in-time store unavailable: {str(e)[:100]}")
 
 
 @app.get("/leaderboard")
