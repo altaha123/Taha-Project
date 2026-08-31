@@ -1,0 +1,78 @@
+/* ============================================================================
+   Altaha — Motion layer
+   ----------------------------------------------------------------------------
+   Extends the motion system already in index.html (riseIn, viewIn, shimmer,
+   fadeUp) rather than replacing it. Everything here is additive and every
+   rule is switched off under prefers-reduced-motion, which the rest of the
+   site already respects.
+
+   The rule this file follows: motion earns its place by showing something
+   the static page cannot. A number that counts up says "this was computed".
+   A bar that fills says "this is a proportion". A card that arrives as you
+   reach it says "there is more below". Decoration that says nothing is left
+   out — this is a tool people make money decisions with, not a showreel.
+
+   Only transform and opacity are animated (width on the small ledger bars),
+   so none of it triggers layout on scroll.
+   ========================================================================== */
+
+/* ── scroll reveal ─────────────────────────────────────────────────────────
+   .rise fires the moment its element is rendered, whether or not anyone can
+   see it — so a list of fifteen ideas plays its whole stagger off-screen and
+   is over before you scroll to it. These arrive as they reach the viewport. */
+.mo-reveal{opacity:0;transform:translateY(14px);
+           transition:opacity var(--t-slow) var(--ease-soft),
+                      transform var(--t-slow) var(--ease-soft)}
+.mo-reveal.mo-in{opacity:1;transform:none}
+
+/* ── numbers ───────────────────────────────────────────────────────────────
+   Tabular figures while counting, so the element does not jitter as digit
+   widths change mid-animation. */
+.mo-num{font-variant-numeric:tabular-nums}
+
+/* ── evidence bars fill from zero ───────────────────────────────────────── */
+.evbar > i{transition:width 900ms var(--ease-soft)}
+
+/* ── the gold rule catches a slow sheen ────────────────────────────────── */
+.metal{position:relative;overflow:hidden}
+.metal::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.85) 50%,transparent 80%);
+  transform:translateX(-120%);animation:moSheen 7s var(--ease-soft) 1.4s infinite}
+@keyframes moSheen{0%{transform:translateX(-120%)}
+                   34%,100%{transform:translateX(120%)}}
+
+/* ── press feedback ────────────────────────────────────────────────────────
+   A tap on a phone has no hover state to confirm it landed. */
+.act:active,.trackbtn:active,.tkrm:active,.hz:active,#go:active,#genbtn2:active{
+  transform:translateY(0) scale(.972)}
+.act,.trackbtn,.tkrm{will-change:transform}
+
+/* ── conviction / score figures land rather than appear ──────────────────── */
+@keyframes moPop{0%{opacity:0;transform:scale(.9)}
+                 60%{opacity:1;transform:scale(1.03)}
+                 100%{opacity:1;transform:scale(1)}}
+.mo-pop{animation:moPop 520ms var(--ease-soft) both}
+
+/* ── status chips draw their border ───────────────────────────────────────── */
+@keyframes moChip{from{opacity:0;transform:translateY(-3px)}
+                  to{opacity:1;transform:none}}
+.cband,.tkout,.rstance,.tier,.tkstat{animation:moChip 420ms var(--ease-soft) both}
+
+/* ── the live badge breathes instead of blinking ─────────────────────────── */
+.livebadge.on{animation:moBreathe 2.8s var(--ease-soft) infinite}
+@keyframes moBreathe{0%,100%{opacity:1;transform:scale(1)}
+                     50%{opacity:.62;transform:scale(.97)}}
+
+/* ── skeleton rows stagger so a loading list reads as a list ─────────────── */
+.skel:nth-child(2){animation-delay:.08s}
+.skel:nth-child(3){animation-delay:.16s}
+.skel:nth-child(4){animation-delay:.24s}
+
+/* ── nothing above applies when the reader has asked for stillness ───────── */
+@media (prefers-reduced-motion:reduce){
+  .mo-reveal{opacity:1;transform:none;transition:none}
+  .metal::after{animation:none;display:none}
+  .evbar > i{transition:none}
+  .mo-pop,.cband,.tkout,.rstance,.tier,.tkstat,.livebadge.on{animation:none}
+  .act:active,.trackbtn:active,.tkrm:active,.hz:active{transform:none}
+}
