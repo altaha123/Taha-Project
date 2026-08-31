@@ -716,6 +716,15 @@ def chart_patterns(ticker: str, range: str = "1D", base_rates: bool = True):
 # is the link to paste into a post.
 # ---------------------------------------------------------------------------
 
+# The deep-link parameters the FRONTEND actually parses, not ones invented
+# here. index.html reads ?q=SYMBOL to fill the search box and run the
+# analysis, and ?go=TAB to open a tab on arrival. Sending ?ticker= instead —
+# which is what this shipped with — produced a share link whose card previewed
+# correctly and whose click-through landed on an empty homepage: the crawler
+# was happy and the human was not.
+SHARE_QUERY_PARAM = "q"
+SHARE_TAB_PARAM = "go"
+
 SITE_URL = os.environ.get("SITE_URL", "https://taha-project-one.vercel.app").rstrip("/")
 API_URL = os.environ.get("API_URL", "https://taha-project.onrender.com").rstrip("/")
 
@@ -763,7 +772,7 @@ def share_record():
         desc += f", average alpha {alpha:+.2f}% over the index across the identical window."
     return Response(content=og_cards.share_page(
         "Does the Altaha engine work?", desc,
-        f"{API_URL}/og/record.png", f"{SITE_URL}/?tab=tracker"),
+        f"{API_URL}/og/record.png", f"{SITE_URL}/?go=tracker"),
         media_type="text/html")
 
 
@@ -788,7 +797,7 @@ def share_stock(ticker: str):
             + " Every number opens into the arithmetic behind it.")
     return Response(content=og_cards.share_page(
         f"{name} ({sym}) — Altaha Screener", desc,
-        f"{API_URL}/og/stock.png?ticker={sym}", f"{SITE_URL}/?ticker={sym}"),
+        f"{API_URL}/og/stock.png?ticker={sym}", f"{SITE_URL}/?q={sym}"),
         media_type="text/html")
 
 
