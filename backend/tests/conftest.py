@@ -28,9 +28,45 @@ def _stub(name, **attrs):
     return m
 
 
+class _OfflineSession:
+    """
+    A requests.Session that refuses rather than reaches.
+
+    Several modules build a Session at import time — announcements warms one
+    against the exchange's public pages before it will fetch anything — so the
+    stub has to be shaped enough to construct. Every actual call raises, which
+    is the point: a test that silently starts hitting the NSE is a test that
+    passes on a good day and fails on a Sunday.
+    """
+
+    def __init__(self, *a, **k):
+        self.headers = {}
+        self.cookies = {}
+
+    def _refuse(self, *a, **k):
+        raise RuntimeError("network access is disabled in tests")
+
+    get = post = put = head = request = mount = _refuse
+
+    def close(self):
+        pass
+
+
+class _RequestException(Exception):
+    pass
+
+
 for _n in ("yfinance", "curl_cffi", "requests"):
     if _n not in sys.modules:
-        _stub(_n, Ticker=lambda *a, **k: None)
+        _stub(_n, Ticker=lambda *a, **k: None,
+              Session=_OfflineSession,
+              get=_OfflineSession._refuse, post=_OfflineSession._refuse,
+              RequestException=_RequestException,
+              exceptions=types.SimpleNamespace(
+                  RequestException=_RequestException,
+                  Timeout=_RequestException,
+                  ConnectionError=_RequestException,
+                  HTTPError=_RequestException))
 _stub("dhan_source", configured=lambda: False, daily_ohlcv=lambda *a, **k: None,
       intraday_ohlcv=lambda *a, **k: None)
 

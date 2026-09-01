@@ -736,6 +736,21 @@ SHARE_TAB_PARAM = "go"
 SITE_URL = os.environ.get("SITE_URL", "https://taha-project-one.vercel.app").rstrip("/")
 API_URL = os.environ.get("API_URL", "https://taha-project.onrender.com").rstrip("/")
 
+# The host a shared link is allowed to show.
+#
+# The API runs on Render, and until now every card URL and every share link
+# handed out read https://taha-project.onrender.com/... A link is the first
+# thing anybody sees of this product, and a free-tier PaaS hostname in it says
+# "someone's weekend project" before the card has finished loading. It is also
+# an operational lock-in: every link ever posted breaks the day the API moves.
+#
+# vercel.json now proxies /share/* and /og/* from the site's own domain
+# straight through to the API, so the same documents are reachable at
+# SHARE_ORIGIN and that is the only host that appears in public. Set
+# SHARE_ORIGIN explicitly once a custom domain is in place; nothing else has
+# to change.
+SHARE_ORIGIN = os.environ.get("SHARE_ORIGIN", SITE_URL).rstrip("/")
+
 _PNG_HEADERS = {"Cache-Control": "public, max-age=3600, s-maxage=86400"}
 
 
@@ -780,7 +795,286 @@ def share_record():
         desc += f", average alpha {alpha:+.2f}% over the index across the identical window."
     return Response(content=og_cards.share_page(
         "Does the Altaha engine work?", desc,
-        f"{API_URL}/og/record.png", f"{SITE_URL}/?go=tracker"),
+        f"{SHARE_ORIGIN}/og/record.png", f"{SITE_URL}/?go=tracker"),
+        media_type="text/html")
+
+
+# ---------------------------------------------------------------------------
+# The rest of the cards
+#
+# Every card the site shows can be published, because a screener that only
+# publishes its good days is advertising rather than analysis. A chart, an
+# idea with its ledger, a tracked position marked to market — winners and
+# losers render identically and neither is easier to post than the other.
+# ---------------------------------------------------------------------------
+
+
+def _og_frame(base: str, raw: str):
+    """
+    Candles for a card, at the requested timeframe.
+
+    Differs from /chart in one way that matters: a card must never fail. An
+    intraday range with no Dhan feed behind it silently becomes the daily
+    chart rather than a 503, because the alternative is a broken image in
+    somebody's timeline — and a daily chart is a truthful answer to "show me
+    this stock", just not the one that was asked for.
+    """
+    key = next((k for k in RANGES if k.lower() == (raw or "1D").strip().lower()), None)
+    cfg = RANGES.get(key) if key else None
+    if not cfg:
+        key, cfg = "1D", RANGES["1D"]
+
+    if cfg["mode"] == "intraday" and dhan is not None and dhan.configured():
+        try:
+            df = dhan.intraday_ohlcv(base, interval=cfg["interval"], days=cfg["days"])
+        except Exception:
+            df = None
+        if df is not None and len(df) >= 40:
+            if cfg.get("resample") and isinstance(df.index, pd.DatetimeIndex):
+                df = _resample_hours(df, cfg["resample"])
+            return key, cfg["label"], df
+
+    if cfg["mode"] == "intraday":
+        key, cfg = "1D", RANGES["1D"]
+
+    try:
+        _sym, _t, hist = resolve(base)
+    except NotFound:
+        raise HTTPException(404, f"Couldn't find '{base}'.")
+    except Exception:
+        raise HTTPException(503, "The data provider is busy. Try again in a minute.")
+    df = hist.tail(cfg["sessions"])
+    if cfg.get("resample_w") and isinstance(df.index, pd.DatetimeIndex):
+        df = _resample_weeks(df)
+    return key, cfg["label"], df
+
+
+def _chart_card_payload(base: str, raw_range: str):
+    from engine import ema
+
+    key, label, df = _og_frame(base, raw_range)
+    if df is None or len(df) < 20:
+        raise HTTPException(404, f"Not enough price history for {base}.")
+
+    close = df["Close"]
+    e20, e50 = ema(close, 20), ema(close, 50)
+    candles, ema20, ema50 = [], [], []
+    for i in df.index:
+        try:
+            candles.append([
+                int(pd.Timestamp(i).timestamp()) if isinstance(df.index, pd.DatetimeIndex) else None,
+                float(df.at[i, "Open"]), float(df.at[i, "High"]),
+                float(df.at[i, "Low"]), float(df.at[i, "Close"]),
+                float(df.at[i, "Volume"]) if "Volume" in df.columns
+                and not pd.isna(df.at[i, "Volume"]) else 0.0,
+            ])
+        except Exception:
+            continue
+        v20, v50 = e20.get(i), e50.get(i)
+        ema20.append(None if pd.isna(v20) else float(v20))
+        ema50.append(None if pd.isna(v50) else float(v50))
+
+    if not candles:
+        raise HTTPException(404, f"Chart data could not be assembled for {base}.")
+
+    # The strongest shape on this timeframe, if there is one. A card with no
+    # pattern on it is published as readily as one with a pattern, and says so.
+    shape = None
+    try:
+        out = pattern_engine.analyse(df, symbol=base, with_base_rates=False, timeframe=key)
+        rows = (out or {}).get("patterns") or []
+        if rows:
+            top = rows[0]
+            shape = {"name": top.get("name"), "status": top.get("status"),
+                     "direction": top.get("direction"), "confidence": top.get("confidence"),
+                     "points": top.get("points") or []}
+    except Exception:
+        shape = None
+
+    # The company name, from the same NSE list the scan uses (cached for a
+    # day). A card headed "RELIANCE" instead of "Reliance Industries Limited"
+    # is not wrong, only worse, so this never raises.
+    name = base
+    try:
+        for r in scanner.universe_with_names() or []:
+            if str(r.get("s") or "").upper() == base:
+                name = r.get("n") or base
+                break
+    except Exception:
+        pass
+
+    first, last = candles[0][4], candles[-1][4]
+    return {
+        "symbol": base, "name": name, "timeframe": label,
+        "candles": candles, "ema20": ema20, "ema50": ema50,
+        "last": round(last, 2),
+        "change_pct": round(100 * (last - first) / first, 2) if first else None,
+        "shape": shape,
+        "range_key": key,
+    }
+
+
+@app.get("/og/chart.png")
+def og_chart(ticker: str, range: str = "1D"):
+    """The price chart with the detected shape drawn on it.
+
+    Carries the candles and the geometry — never the trigger or the measured
+    move, which are forecasts and stay on the site beside their base rate."""
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    rng = (range or "1D").strip()[:4]
+    try:
+        png = og_cards.cached(f"chart:{sym}:{rng}",
+                              lambda: og_cards.chart_card(_chart_card_payload(sym, rng)))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
+    return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
+
+
+def _idea_row(sym: str, horizon: str):
+    """The idea row for one symbol, or None if it is not on the current list."""
+    p = _state["payload"]
+    if not p:
+        return None
+    try:
+        out = ideas_engine.select(p, horizon=horizon, limit=25, include_thin=True)
+    except Exception:
+        return None
+    for row in (out or {}).get("rows") or []:
+        if str(row.get("symbol") or "").upper() == sym:
+            return row
+    return None
+
+
+@app.get("/og/idea.png")
+def og_idea(ticker: str, horizon: str = "short"):
+    """An idea with the seven weighted inputs that add up to its conviction."""
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    h = (horizon or "short").strip().lower()[:10]
+
+    def build():
+        row = _idea_row(sym, h)
+        # Not on today's list — the stock still has a scorecard, and a card
+        # that renders the wrong thing beats a link that previews as a grey box.
+        return og_cards.idea_card(row) if row else og_cards.stock_card(analyze(sym))
+
+    try:
+        png = og_cards.cached(f"idea:{sym}:{h}", build)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
+    return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
+
+
+def _tracked_row(sym: str):
+    for row in (tracker.listing(source="", limit=800) or {}).get("rows") or []:
+        if str(row.get("symbol") or "").upper() == sym:
+            return row
+    return None
+
+
+@app.get("/og/holding.png")
+def og_holding(ticker: str):
+    """A tracked idea marked to market — return, alpha, days held."""
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+
+    def build():
+        row = _tracked_row(sym)
+        if not row:
+            raise HTTPException(404, f"{sym} is not in the tracker.")
+        return og_cards.holding_card(row)
+
+    try:
+        png = og_cards.cached(f"holding:{sym}", build)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
+    return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
+
+
+@app.get("/share/chart/{ticker}")
+def share_chart(ticker: str, range: str = "1D"):
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    rng = (range or "1D").strip()[:4]
+    shape, label, name = None, "1 day", sym
+    try:
+        payload = _chart_card_payload(sym, rng)
+        shape, label, name = payload["shape"], payload["timeframe"], payload["name"]
+    except Exception:
+        pass
+    if shape:
+        desc = (f"{name} on the {label} chart — {shape['name']}, {shape['status']}, "
+                f"{shape['confidence']} shape match. Every check behind that reading, "
+                "and how the same shape resolved here before, opens on the site.")
+    else:
+        desc = (f"{name} on the {label} chart. No textbook pattern right now — which is "
+                "the usual answer, and a detector that always finds one has stopped "
+                "detecting.")
+    return Response(content=og_cards.share_page(
+        f"{name} ({sym}) — {label} chart", desc,
+        f"{SHARE_ORIGIN}/og/chart.png?ticker={sym}&range={rng}",
+        f"{SITE_URL}/?q={sym}&go=charts&range={rng}"),
+        media_type="text/html")
+
+
+@app.get("/share/idea/{ticker}")
+def share_idea(ticker: str, horizon: str = "short"):
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    h = (horizon or "short").strip().lower()[:10]
+    row = _idea_row(sym, h)
+    if row:
+        name = row.get("name") or sym
+        desc = (f"{name} scores {row.get('conviction')}/100 conviction on the "
+                f"{h}-term list — {row.get('setup') or 'no archetype'}, typical hold "
+                f"{row.get('horizon') or '—'}. The seven weighted inputs that add up "
+                "to that number are published beside it.")
+    else:
+        name, desc = sym, (f"{sym} is not on the current {h}-term list. The scorecard "
+                           "and the arithmetic behind it are on the site.")
+    return Response(content=og_cards.share_page(
+        f"{name} ({sym}) — conviction {row.get('conviction') if row else '—'}/100",
+        desc,
+        f"{SHARE_ORIGIN}/og/idea.png?ticker={sym}&horizon={h}",
+        f"{SITE_URL}/?q={sym}&go=ideas"),
+        media_type="text/html")
+
+
+@app.get("/share/holding/{ticker}")
+def share_holding(ticker: str):
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    row = _tracked_row(sym)
+    if not row:
+        raise HTTPException(404, f"{sym} is not in the tracker.")
+    name = row.get("name") or sym
+
+    def pct(v):
+        return "—" if v is None else f"{float(v):+.2f}%".replace("+-", "-")
+
+    desc = (f"{name}, recorded on {row.get('added_on')} and marked to market since: "
+            f"{pct(row.get('return_pct'))} against {pct(row.get('bench_return_pct'))} "
+            f"for the index — {pct(row.get('alpha_pct'))} alpha over "
+            f"{row.get('days_held') or 0} days. Logged in advance, winners and losers "
+            "alike.")
+    return Response(content=og_cards.share_page(
+        f"{name} ({sym}) — {pct(row.get('return_pct'))} since the idea was recorded",
+        desc,
+        f"{SHARE_ORIGIN}/og/holding.png?ticker={sym}",
+        f"{SITE_URL}/?go=tracker"),
         media_type="text/html")
 
 
@@ -805,7 +1099,7 @@ def share_stock(ticker: str):
             + " Every number opens into the arithmetic behind it.")
     return Response(content=og_cards.share_page(
         f"{name} ({sym}) — Altaha Screener", desc,
-        f"{API_URL}/og/stock.png?ticker={sym}", f"{SITE_URL}/?q={sym}"),
+        f"{SHARE_ORIGIN}/og/stock.png?ticker={sym}", f"{SITE_URL}/?q={sym}"),
         media_type="text/html")
 
 

@@ -31,6 +31,7 @@
 <link rel="stylesheet" href="patterns.css">
 <link rel="stylesheet" href="portfolio.css">
 <link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="share.css">
 <style>
   :root{
     --paper:#FBFAF7; --paper-2:#F4F1EB; --ink:#16130E; --ink-2:#4A443A; --mute:#8B8477;
@@ -1283,11 +1284,14 @@
     <div class="sharerow" id="sharerow" hidden>
       <div class="shareinfo">
         <b>Share this analysis</b>
-        <span>The card shows the scores and the setup — never an entry, a stop or a target.</span>
+        <span>The card shows the scores and the setup — never an entry, a stop or a target.
+          Post the link and X draws the card; download the image to attach it anywhere else.</span>
       </div>
       <div class="sharebtns">
         <button class="sharebtn x" id="sharex" type="button">Post on X</button>
         <button class="sharebtn" id="sharewa" type="button">WhatsApp</button>
+        <button class="sharebtn" id="sharedl" type="button">Download card</button>
+        <button class="sharebtn" id="shareopen" type="button">Open share sheet</button>
         <button class="sharebtn" id="sharecopy" type="button">Copy link</button>
       </div>
       <img class="sharecard" id="sharecard" alt="" loading="lazy" hidden>
@@ -1525,6 +1529,7 @@
     <div class="toolbar">
       <button class="act" id="tkbackfill">Record current ideas</button>
       <a class="act" id="tkcsv" href="#" download>Download CSV</a>
+      <button class="shbtn" type="button" id="tkshare" data-share="{&quot;kind&quot;:&quot;record&quot;}">Share the record</button>
     </div>
     <div class="statgrid" id="tkstats"></div>
     <div class="ideas-note" id="tknote"></div>
@@ -1595,6 +1600,15 @@ const state = $("state"), result = $("result");
 const show = m => { state.style.display="block"; state.innerHTML=m; result.style.display="none"; };
 const toneInk = t => t==="strong" ? "var(--pass)" : t==="weak" ? "var(--fail)" : "var(--part)";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* A data-share attribute for share.js to read.
+   Serialised as JSON inside a double-quoted attribute, so every character HTML
+   treats specially is escaped here rather than trusted. A row's name can and
+   does contain an ampersand (BAJAJ FINSERV & CO), which is enough to break a
+   naively built attribute and take the surrounding markup with it. */
+const shareAttr = o => `data-share="${JSON.stringify(o)
+  .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+  .replace(/</g,'&lt;').replace(/>/g,'&gt;')}"`;
+const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v13"/><path d="M8 7l4-4 4 4"/></svg>';
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
@@ -2163,6 +2177,10 @@ async function loadIdeas(){
           ${evidenceHTML(s.evidence)}
           <div class="idearow-actions">
             <button class="trackbtn${s.tracked?" done":""}" data-track="${esc(s.symbol)}">${s.tracked?"Tracking":"Add to tracker"}</button>
+            <button class="shbtn" type="button" ${shareAttr({kind:"idea", ticker:s.symbol,
+              horizon_key:horizon, conviction:s.conviction, conviction_band:s.conviction_band,
+              setup:s.setup, horizon:s.horizon})}>${SHARE_ICON}Share</button>
+            <button class="shbtn" type="button" ${shareAttr({kind:"chart", ticker:s.symbol, range:"1D"})}>${SHARE_ICON}Chart</button>
           </div>
         </div>`).join("");
 
@@ -2171,6 +2189,7 @@ async function loadIdeas(){
         const go=()=>{ switchTab("screener"); analyse(el.dataset.t); };
         el.addEventListener("click",ev=>{
           if(ev.target.closest(".trackbtn") || ev.target.closest(".evbtn") ||
+             ev.target.closest(".shbtn") || ev.target.closest("[data-share]") ||
              ev.target.closest("a")) return;
           go();
         });
@@ -2337,6 +2356,15 @@ async function loadTracker(){
       <div class="statcell rise" style="--i:5"><b>${o.median_days_held}</b><span>median days held</span></div>`
       : `<div class="statcell" style="grid-column:1/-1"><b>0</b><span>ideas recorded yet \u2014 run a universe scan and they start collecting automatically</span></div>`;
 
+    /* The record card's post text carries the same numbers as the grid above
+       it, so it is filled from the same response rather than re-fetched. */
+    const shb = $("tkshare");
+    /* setAttribute takes a string, not markup — no HTML escaping here, and
+       adding some would put &quot; inside the JSON and break the parse. */
+    if(shb) shb.setAttribute("data-share", JSON.stringify({
+      kind:"record", total_tracked: st.total_tracked, overall: o || {}
+    }));
+
     let note = st.note || "";
     if(st.storage_is_ephemeral){
       note = "WARNING: DATA_DIR is not set to a Render disk, so this record is wiped on every deploy. Add a disk at /data and set DATA_DIR=/data. \u2014 " + note;
@@ -2367,6 +2395,12 @@ async function loadTracker(){
           ${r.sector?`<span>${esc(r.sector)}</span>`:""}
         </div>
         ${r.invalidated_by?`<div class="warnbox">${esc(r.invalidated_by)}</div>`:""}
+        <div class="idearow-actions">
+          <button class="shbtn" type="button" ${shareAttr({kind:"holding", ticker:r.symbol,
+            return_pct:r.return_pct, alpha_pct:r.alpha_pct, bench_return_pct:r.bench_return_pct,
+            added_on:r.added_on, days_held:r.days_held})}>${SHARE_ICON}Share this position</button>
+          <button class="shbtn" type="button" ${shareAttr({kind:"chart", ticker:r.symbol, range:"1D"})}>${SHARE_ICON}Chart</button>
+        </div>
       </div>`).join("");
   }catch(e){
     $("tkrows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
@@ -3701,6 +3735,22 @@ if(fcSymParam){
     if (go) {
       var t = document.getElementById("tab-" + go);
       if (t) setTimeout(function(){ t.click(); }, 60);
+      else {
+        /* Not every tab is markup. Charts is inserted into the nav by
+           charts.js once its bundle has mounted, so there is no #tab-charts
+           to click and ?go=charts used to land silently on the homepage —
+           which is what a shared chart link does. Ask the nav instead, and
+           give the bundle time to have registered the tab. */
+        [500, 1400, 2600].forEach(function (ms) {
+          setTimeout(function () {
+            var nav = window.AltahaNav;
+            if (!nav || typeof nav.go !== "function") return;
+            var view = document.getElementById("view-" + go);
+            if (!view || view.style.display !== "none") return;
+            try { nav.go("screener", go, false); } catch (e) {}
+          }, ms);
+        });
+      }
     }
     if (q) {
       var tk = document.getElementById("tk"), btn = document.getElementById("go");

@@ -35,7 +35,7 @@
     return (v > 0 ? "+" : "") + Number(v).toFixed(dp == null ? 2 : dp) + "%";
   }
 
-  var state = { sym: null, range: "1D", busy: false };
+  var state = { sym: null, range: "1D", busy: false, data: null };
 
   /* ---- the panel ------------------------------------------------------- */
 
@@ -148,7 +148,27 @@
       '<div class="patpoints">' + (p.points || []).map(function (pt) {
         return "<span>" + esc(pt.label) + " · " + esc(pt.date) + " · " + rupee(pt.price) + "</span>";
       }).join("") + "</div>" +
+      shareRow(p) +
     "</div>";
+  }
+
+  /* Every pattern the panel prints can be published as the chart it was found
+     on. The card carries the shape and the candles; the trigger, the
+     invalidation and the measured move printed above stay here, beside the
+     base rate and the disclaimer that qualify them. */
+  function shareAttr(o) {
+    return 'data-share="' + JSON.stringify(o)
+      .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;").replace(/>/g, "&gt;") + '"';
+  }
+
+  function shareRow(p) {
+    var sym = state.sym || currentSymbol();
+    if (!sym) return "";
+    return '<div class="patshare"><button class="shbtn" type="button" ' +
+      shareAttr({ kind: "chart", ticker: sym, range: state.range,
+                  pattern: { name: p.name, status: p.status, confidence: p.confidence } }) +
+      ">Share this chart</button></div>";
   }
 
   function forwardHTML(f) {
@@ -183,6 +203,377 @@
       }).join("") + "</div>";
   }
 
+  /* ======================================================================
+     The overlay — the shape drawn ON the chart
+
+     The panel below the chart has always described the pattern in words and
+     numbers. It was never drawn where a reader looks, which made it easy to
+     miss entirely: "cup and handle, confirmed" means very little until you can
+     see the cup.
+
+     Nothing here reaches into the charting bundle. charts.js publishes the
+     chart handle and the candlestick series through window.AltahaChartTap, and
+     everything below is computed from those two public methods —
+     priceToCoordinate for the y axis, logicalToCoordinate for the x. The
+     bundle does not know this exists and does not have to.
+
+     WHY logicalToCoordinate AND NOT timeToCoordinate
+     timeToCoordinate answers null for any timestamp that is not exactly a
+     point on the scale. Pattern pivots and chart candles come from the same
+     history so they should always match — but "should always match" is how
+     every seam in this project has broken so far. Matching the pivot to its
+     nearest candle and asking for that candle's logical coordinate is right
+     when the timestamps agree and still right, to within one bar, when a
+     timezone or a resample has moved them.
+
+     The overlay is off by default and remembers its own state. A chart covered
+     in annotations you did not ask for is worse than a plain one.
+     ====================================================================== */
+
+  var overlay = (function () {
+    var KEY = "altaha.patterns.overlay";
+    var cv = null, ctx = null, chip = null, timer = null, raf = null, sig = "";
+    var on = (function () {
+      try { return localStorage.getItem(KEY) !== "0"; } catch (e) { return true; }
+    })();
+
+    function tok(name, dflt) {
+      try {
+        var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return v || dflt;
+      } catch (e) { return dflt; }
+    }
+
+    function tap() {
+      var T = window.AltahaChartTap;
+      return (T && T.ready()) ? T.get() : null;
+    }
+
+    /* The candle nearest a pivot's timestamp, as a logical index. */
+    function indexAt(times, t) {
+      if (!times.length || t == null) return null;
+      var lo = 0, hi = times.length - 1;
+      if (t <= times[0]) return 0;
+      if (t >= times[hi]) return hi;
+      while (hi - lo > 1) {
+        var mid = (lo + hi) >> 1;
+        if (times[mid] <= t) lo = mid; else hi = mid;
+      }
+      return (t - times[lo] <= times[hi] - t) ? lo : hi;
+    }
+
+    function host() { return document.getElementById("cw-price"); }
+
+    function ensure() {
+      var box = host();
+      if (!box) return false;
+      if (!cv || cv.parentNode !== box) {
+        cv = document.createElement("canvas");
+        cv.id = "cw-pat-ov";
+        cv.className = "cw-patov";
+        /* Below the drawing canvas (z-index 6) so a user's own trendline is
+           always on top of ours, and click-through in every case. */
+        cv.style.cssText = "position:absolute;inset:0;z-index:5;pointer-events:none";
+        box.appendChild(cv);
+        ctx = cv.getContext("2d");
+      }
+      return !!ctx;
+    }
+
+    function size() {
+      var box = host();
+      if (!box || !cv) return false;
+      var dpr = window.devicePixelRatio || 1;
+      var w = box.clientWidth, h = box.clientHeight;
+      if (!w || !h) return false;
+      if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+        cv.width = Math.round(w * dpr);
+        cv.height = Math.round(h * dpr);
+        cv.style.width = w + "px";
+        cv.style.height = h + "px";
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      return true;
+    }
+
+    /* A joined polyline reads as the shape for the shapes that ARE a line —
+       a cup, a double bottom, shoulders. A triangle's pivots alternate between
+       two trendlines, and joining them in time order draws a zigzag that looks
+       nothing like a triangle. Those get their two fitted lines instead. */
+    function isPolyline(name) {
+      var n = String(name || "").toLowerCase();
+      return !/triangle|rectangle|channel|wedge|flag/.test(n);
+    }
+
+    function fit(pts) {
+      var n = pts.length;
+      if (n < 2) return null;
+      var mx = 0, my = 0, i;
+      for (i = 0; i < n; i++) { mx += pts[i][0]; my += pts[i][1]; }
+      mx /= n; my /= n;
+      var num = 0, den = 0;
+      for (i = 0; i < n; i++) {
+        num += (pts[i][0] - mx) * (pts[i][1] - my);
+        den += (pts[i][0] - mx) * (pts[i][0] - mx);
+      }
+      if (!den) return null;
+      var m = num / den;
+      return [m, my - m * mx];
+    }
+
+    function colourFor(direction) {
+      if (direction === "bullish") return tok("--pass", "#1F5D45");
+      if (direction === "bearish") return tok("--fail", "#8E2F2A");
+      return tok("--gold", "#B08D2E");
+    }
+
+    function dash(c, a, b, colour, width) {
+      c.save();
+      c.setLineDash([7, 6]);
+      c.strokeStyle = colour;
+      c.lineWidth = width || 1.5;
+      c.beginPath();
+      c.moveTo(a[0], a[1]);
+      c.lineTo(b[0], b[1]);
+      c.stroke();
+      c.restore();
+    }
+
+    function label(c, text, x, y, colour, right) {
+      c.save();
+      c.font = "600 10px 'IBM Plex Mono', monospace";
+      var w = c.measureText(text).width;
+      if (right) x -= w;
+      c.fillStyle = tok("--paper", "#FBFAF7");
+      c.globalAlpha = 0.88;
+      c.fillRect(x - 3, y - 11, w + 6, 14);
+      c.globalAlpha = 1;
+      c.fillStyle = colour;
+      c.fillText(text, x, y);
+      c.restore();
+    }
+
+    function paint() {
+      if (!on) { if (cv && ctx) size(); return; }
+      if (!ensure() || !size()) return;
+      var d = state.data;
+      var T = tap();
+      if (!d || !d.available || !d.patterns || !d.patterns.length || !T) return;
+
+      var ts = T.chart.timeScale();
+      var box = host();
+      var wide = box.clientWidth;
+
+      /* Only the two strongest shapes. Every detected pattern at once turns
+         the chart into a scribble, and the panel below has the rest. */
+      d.patterns.slice(0, 2).forEach(function (p, k) {
+        var colour = colourFor(p.direction);
+        var pts = [];
+        (p.points || []).forEach(function (pt) {
+          if (pt.price == null) return;
+          var i = pt.t != null ? indexAt(T.times, pt.t) : null;
+          if (i == null) return;
+          var x = ts.logicalToCoordinate(i);
+          var y = T.series.priceToCoordinate(pt.price);
+          if (x == null || y == null) return;
+          pts.push([x, y, pt.label || "", i]);
+        });
+        if (!pts.length) return;
+
+        ctx.save();
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.globalAlpha = k ? 0.55 : 1;
+
+        if (isPolyline(p.name)) {
+          if (pts.length > 1) {
+            ctx.strokeStyle = colour;
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.moveTo(pts[0][0], pts[0][1]);
+            for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+            ctx.stroke();
+          }
+        } else {
+          var mid = pts.reduce(function (a, q) { return a + q[1]; }, 0) / pts.length;
+          /* y grows downward, so "above the midline" is the SMALLER y. */
+          [pts.filter(function (q) { return q[1] <= mid; }),
+           pts.filter(function (q) { return q[1] > mid; })].forEach(function (group) {
+            if (group.length < 2) return;
+            var f = fit(group.map(function (q) { return [q[0], q[1]]; }));
+            if (!f) return;
+            var xs = group.map(function (q) { return q[0]; });
+            var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+            /* Extended a little to the right, dashed, because a trendline
+               projected forward is an extrapolation and should not be drawn
+               as though it were data. */
+            var x2 = Math.min(wide - 4, x1 + (x1 - x0) * 0.35);
+            ctx.strokeStyle = colour;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x0, f[0] * x0 + f[1]);
+            ctx.lineTo(x1, f[0] * x1 + f[1]);
+            ctx.stroke();
+            dash(ctx, [x1, f[0] * x1 + f[1]], [x2, f[0] * x2 + f[1]], colour, 2);
+          });
+        }
+
+        pts.forEach(function (q) {
+          ctx.beginPath();
+          ctx.arc(q[0], q[1], 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = tok("--paper", "#FBFAF7");
+          ctx.fill();
+          ctx.lineWidth = 2.4;
+          ctx.strokeStyle = colour;
+          ctx.stroke();
+          if (q[2] && !k) label(ctx, q[2], q[0] + 7, q[1] - 7, colour);
+        });
+
+        /* The trigger and the invalidation, as levels. These are on the site,
+           beside the base rate and the disclaimer that qualify them — unlike
+           the share card, which carries neither and so carries no levels. */
+        if (!k) {
+          [[p.trigger, "confirms " + (p.direction === "bearish" ? "below" : "above")],
+           [p.invalidation, "invalid at"]].forEach(function (lv) {
+            if (lv[0] == null) return;
+            var y = T.series.priceToCoordinate(lv[0]);
+            if (y == null) return;
+            dash(ctx, [0, y], [wide, y], colour, 1.4);
+            /* Right-aligned. The workspace's own OHLC legend sits at the top
+               left, and a level near the top of the range put its label
+               underneath that legend — drawn, invisible, indistinguishable
+               from not drawn at all. */
+            label(ctx, lv[1] + " " + Number(lv[0]).toFixed(2), wide - 10, y - 5,
+                  colour, true);
+          });
+        }
+        ctx.restore();
+      });
+
+      /* Whose shape this is, so a screenshot is self-describing. Lifted clear
+         of the time axis: the axis is part of the chart's own canvas and
+         drawing the caption over it made both unreadable. */
+      var axis = 26;
+      try { axis = ts.height() || 26; } catch (e) {}
+      var top = d.patterns[0];
+      label(ctx, top.name + " · " + top.status + " · " + top.confidence + " shape match",
+            10, box.clientHeight - axis - 10, colourFor(top.direction));
+    }
+
+    function draw() {
+      if (raf) return;
+      raf = requestAnimationFrame(function () { raf = null; try { paint(); } catch (e) {} });
+    }
+
+    /* A vertical drag on the price scale fires no event the chart exposes, so
+       a cheap signature poll catches it — the same trick the charting bundle
+       uses on itself for exactly the same reason. */
+    function signature() {
+      var T = tap();
+      var box = host();
+      if (!T || !box) return "";
+      var r = null;
+      try { r = T.chart.timeScale().getVisibleLogicalRange(); } catch (e) {}
+      var y = null;
+      try {
+        var last = T.rows[T.rows.length - 1];
+        if (last) y = T.series.priceToCoordinate(last.close);
+      } catch (e) {}
+      return (r ? r.from.toFixed(2) + "," + r.to.toFixed(2) : "") + "|" + y +
+             "|" + box.clientWidth + "x" + box.clientHeight + "|" + (state.data ? 1 : 0);
+    }
+
+    function tick() {
+      var view = document.getElementById("view-charts");
+      if (!view || getComputedStyle(view).display === "none") return;
+      if (!on) return;
+      var sg = signature();
+      if (sg === sig) return;
+      sig = sg;
+      draw();
+    }
+
+    function set(next) {
+      on = !!next;
+      try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (e) {}
+      if (chip) {
+        chip.classList.toggle("on", on);
+        chip.setAttribute("aria-pressed", on ? "true" : "false");
+      }
+      sig = "";
+      if (!on && ctx) { ensure(); size(); }
+      else draw();
+    }
+
+    /* The toggle, and the share button beside it. Both are appended to the
+       workspace's own footer so they sit with the indicator chips rather than
+       in a second bar of their own. The bundle's footer handler filters on
+       button[data-i], so neither of these reaches it. */
+    function mount() {
+      var foot = document.querySelector("#view-charts .cw-foot");
+      if (!foot) return;
+      if (!chip || chip.parentNode !== foot) {
+        chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "cw-chip" + (on ? " on" : "");
+        chip.setAttribute("data-pat", "1");
+        chip.setAttribute("aria-pressed", on ? "true" : "false");
+        chip.title = "Draw the detected pattern on the chart";
+        chip.textContent = "Patterns";
+        chip.addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          set(!on);
+        });
+        var note = document.getElementById("cw-note");
+        foot.insertBefore(chip, note || null);
+      }
+      if (!document.getElementById("cw-share")) {
+        var sh = document.createElement("button");
+        sh.type = "button";
+        sh.id = "cw-share";
+        sh.className = "cw-chip";
+        sh.setAttribute("data-share-chart", "1");
+        sh.textContent = "Share chart";
+        sh.title = "Post this chart, with the shape drawn on it";
+        sh.addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          if (!window.AltahaShare) return;
+          var d = state.data;
+          var top = (d && d.patterns && d.patterns[0]) || null;
+          window.AltahaShare.open({
+            kind: "chart",
+            ticker: currentSymbol() || state.sym,
+            range: currentRange(),
+            pattern: top ? { name: top.name, status: top.status, confidence: top.confidence } : null
+          });
+        });
+        var note2 = document.getElementById("cw-note");
+        foot.insertBefore(sh, note2 || null);
+      }
+    }
+
+    function boot() {
+      mount();
+      if (!timer) timer = setInterval(tick, 140);
+      if (window.AltahaChartTap && window.AltahaChartTap.watch) {
+        window.AltahaChartTap.watch(function () { sig = ""; draw(); });
+      }
+      window.addEventListener("resize", function () { sig = ""; draw(); });
+    }
+
+    /* The workspace mounts asynchronously, and on a slow connection so does
+       the charting library. Retry until the footer exists rather than
+       assuming a timing that holds on a fast machine. */
+    (function wait(n) {
+      if (document.querySelector("#view-charts .cw-foot")) { boot(); return; }
+      if (n > 60) return;
+      setTimeout(function () { wait(n + 1); }, 400);
+    })(0);
+
+    return { draw: draw, set: set, isOn: function () { return on; } };
+  })();
+
   /* ---- load ------------------------------------------------------------ */
 
   async function load(sym, range) {
@@ -206,10 +597,14 @@
       }
       if (!d.available) {
         summary(null);
+        state.data = null;
+        overlay.draw();
         el.innerHTML = '<div class="patload">' + esc(d.message || "Not enough history.") + "</div>";
         return;
       }
       summary(d);
+      state.data = d;
+      overlay.draw();
       el.innerHTML =
         '<div class="pathdr"><h3>Patterns on the ' + esc(d.timeframe) + " chart</h3>" +
         "<span>" + esc(d.symbol) + " · " + esc(d.as_of) + " · last " + rupee(d.last_close) +
@@ -288,5 +683,9 @@
   } else {
     setTimeout(boot, 1200);
   }
-  window.AltahaPatterns = { refresh: refresh, load: load };
+  window.AltahaPatterns = {
+    refresh: refresh, load: load,
+    data: function () { return state.data; },
+    overlay: overlay
+  };
 })();

@@ -119,9 +119,25 @@ def _date(idx, i):
         return str(i)
 
 
+def _epoch(idx, i):
+    """
+    The pivot's timestamp in seconds, so the browser can put it on the chart.
+
+    The panel's dates are formatted for a human ("14 Mar 25") and cannot be
+    parsed back reliably, which is why drawing the shape on the chart needed
+    this. It is the identical expression /chart uses to stamp its candles —
+    int(Timestamp.timestamp()) — so a point and its candle land on the same
+    x-coordinate rather than nearly the same one.
+    """
+    try:
+        return int(pd.Timestamp(idx[i]).timestamp())
+    except Exception:
+        return None
+
+
 def _pt(c, i, price, label):
-    return {"i": int(i), "date": _date(c["index"], i), "price": round(float(price), 2),
-            "label": label}
+    return {"i": int(i), "date": _date(c["index"], i), "t": _epoch(c["index"], i),
+            "price": round(float(price), 2), "label": label}
 
 
 def _near(a, b, atr_val, mult):
@@ -832,7 +848,8 @@ def analyse(df, symbol="", with_base_rates=True, timeframe="1D"):
         "patterns": found,
         "count": len(found),
         "forward": fwd,
-        "pivots": [{"date": _date(c["index"], i), "price": round(p, 2),
+        "pivots": [{"date": _date(c["index"], i), "t": _epoch(c["index"], i),
+                    "price": round(p, 2),
                     "kind": "high" if k == "H" else "low"} for i, p, k in piv[-12:]],
         "disclaimer": (
             "Patterns are shapes measured on past prices. A measured move is arithmetic "

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/share", "destination": "https://taha-project.onrender.com/share/record" },
+    { "source": "/share/:path*", "destination": "https://taha-project.onrender.com/share/:path*" },
+    { "source": "/og/:path*", "destination": "https://taha-project.onrender.com/og/:path*" }
+  ],
+  "headers": [
+    {
+      "source": "/og/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }
+      ]
+    }
+  ]
+}
