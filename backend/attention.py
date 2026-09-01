@@ -106,7 +106,8 @@ def market_attention(df):
             "times_normal": round(math.exp(shock), 2), "tier": _tier(shock)}
 
 
-def assess(symbol, df=None, filings=None, stories=None, liquidity_tier=None):
+def assess(symbol, df=None, filings=None, stories=None, liquidity_tier=None,
+           deals=None):
     """
     One stock's attention reading, and what it should make a reader do.
 
@@ -120,6 +121,26 @@ def assess(symbol, df=None, filings=None, stories=None, liquidity_tier=None):
     n_filings = len(filings or [])
     n_stories = len(stories or [])
 
+    # A disclosed bulk or block deal is a harder attention signal than turnover
+    # on its own: turnover says people traded, a disclosure says one identified
+    # party traded size and had to report it. It is still not a direction — a
+    # named seller is exactly as newsworthy as a named buyer — so it raises the
+    # tier and never sets a sign.
+    deal_note = None
+    if deals:
+        net = deals.get("net_cr")
+        gross = deals.get("gross_cr")
+        if deals.get("crossed") and (net is None or abs(net) < 0.5):
+            deal_note = ("A bulk deal was disclosed, but the same counterparty is "
+                         "on both sides and ends flat — stock changed hands, "
+                         "nobody built a position.")
+        elif net is not None and abs(net) >= 1:
+            deal_note = (f"₹{abs(net):.1f}cr net {'bought' if net > 0 else 'sold'} "
+                         f"in disclosed bulk or block deals"
+                         + (f" out of ₹{gross:.1f}cr traded through them." if gross else "."))
+        elif gross:
+            deal_note = f"₹{gross:.1f}cr crossed in disclosed deals, netting to little."
+
     tier = market.get("tier") or "normal"
     reasons = []
     if market.get("available") and tier != "normal":
@@ -128,6 +149,13 @@ def assess(symbol, df=None, filings=None, stories=None, liquidity_tier=None):
         reasons.append(f"{n_filings} exchange filing{'s' if n_filings != 1 else ''} this week.")
     if n_stories:
         reasons.append(f"{n_stories} press stor{'ies' if n_stories != 1 else 'y'} this week.")
+    if deal_note:
+        reasons.append(deal_note)
+        # A disclosure lifts a quiet stock to elevated on its own. Somebody
+        # large enough to be named traded it today, and that is worth a reader
+        # slowing down over even when turnover looks ordinary.
+        if tier == "normal":
+            tier = "elevated"
 
     # The combination that actually matters. Heavy attention on a name that is
     # easy to move is the pattern behind most retail losses in this market —
@@ -154,6 +182,8 @@ def assess(symbol, df=None, filings=None, stories=None, liquidity_tier=None):
         "market": market,
         "filings_this_week": n_filings,
         "stories_this_week": n_stories,
+        "deals": deals or None,
+        "deal_note": deal_note,
         "reasons": reasons,
         "flag": flag,
         "sources": src,
