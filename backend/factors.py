@@ -58,6 +58,7 @@ shows up as a negative IC rather than as a silent subtraction.
 
 import datetime as dt
 import math
+import os
 
 try:
     import numpy as np
@@ -205,6 +206,33 @@ def _parse_filed(q):
         return None
 
 
+# How old a filing may be before it stops describing the present.
+#
+# THIS IS THE CONSEQUENTIAL ONE. NSE's XBRL index is frozen at the December
+# 2024 quarter, and without this cutoff every growth, margin and yield factor
+# below would be computed from filings twenty months old and fed into the
+# ranking as though they were current. That is not a weak signal, it is a
+# wrong one, and it would have been completely silent: the numbers are
+# well-formed, the arithmetic is correct, and the answer describes a company
+# that has since reported six more times.
+#
+# A quarterly filer owes a result within 45 days of the quarter end. Two
+# quarters plus that allowance is generous and still refuses a dead source.
+STALE_AFTER_DAYS = int(os.environ.get("FUNDAMENTAL_STALE_DAYS", "225") or 225)
+
+
+def _too_old(quarter, as_of):
+    """Is this the newest thing available, and is the newest thing ancient?"""
+    end = (quarter.get("period") or {}).get("to")
+    if not end:
+        return False
+    try:
+        d = dt.date.fromisoformat(str(end)[:10])
+    except Exception:
+        return False
+    return (as_of - d).days > STALE_AFTER_DAYS
+
+
 def known_quarters(quarters, as_of=None, consolidated=None):
     """
     The filings the market had actually seen on `as_of`, newest first.
@@ -300,7 +328,26 @@ def fundamental_factors(quarters, price=None, as_of=None, consolidated=None):
     if not known:
         return out
 
+    cutoff = as_of or dt.date.today()
+    if isinstance(cutoff, str):
+        try:
+            cutoff = dt.date.fromisoformat(cutoff[:10])
+        except Exception:
+            cutoff = dt.date.today()
+
     latest = known[0]
+
+    # Refuse rather than mislead. None means "not knowable", which the ranker
+    # already handles by scoring the stock on the families it does have; a
+    # stale number would instead have ranked it confidently and wrongly.
+    if _too_old(latest, cutoff):
+        out["stale"] = True
+        out["stale_reason"] = (
+            f"Newest filing covers a period ending "
+            f"{(latest.get('period') or {}).get('to')}, older than "
+            f"{STALE_AFTER_DAYS} days. Fundamental factors are withheld rather "
+            "than computed from a period the company has since superseded.")
+        return out
     prior = _same_quarter_last_year(known, latest)
 
     if prior:
@@ -385,9 +432,19 @@ def compute(df, quarters=None, price=None, as_of=None, consolidated=None):
         "volume_shock": safe(volume_shock, df),
     }
     try:
-        out.update(fundamental_factors(quarters or [], price, as_of, consolidated))
+        fund = fundamental_factors(quarters or [], price, as_of, consolidated)
+        out["_fundamentals_stale"] = bool(fund.pop("stale", False))
+        out["_fundamentals_note"] = fund.pop("stale_reason", None)
+        out.update(fund)
     except Exception:
         for k in ("earnings_yield", "earnings_growth", "revenue_growth",
                   "margin_trend", "return_on_assets"):
             out.setdefault(k, None)
-    return {k: out.get(k) for k in REGISTRY}
+    # The registry keys, in registry order, plus the two diagnostics. The
+    # underscore prefix keeps them out of anything that iterates factors —
+    # the ranker walks REGISTRY, so a diagnostic leaking in would be ranked as
+    # though it were a signal.
+    result = {k: out.get(k) for k in REGISTRY}
+    result["_fundamentals_stale"] = bool(out.get("_fundamentals_stale"))
+    result["_fundamentals_note"] = out.get("_fundamentals_note")
+    return result

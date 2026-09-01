@@ -63,7 +63,12 @@ def test_pit_ic_for_an_unknown_factor_says_so(app):
 def test_factors_endpoint_returns_every_registered_factor(app):
     out = app.factors_for(ticker="RELIANCE")
     assert out["symbol"] == "RELIANCE"
-    assert set(out["factors"]) == set(app.factor_lib.REGISTRY)
+    # Every registered factor, plus the staleness diagnostics the endpoint
+    # surfaces so a caller can tell "no value" from "value withheld".
+    assert set(app.factor_lib.REGISTRY) <= set(out["factors"])
+    assert set(out["factors"]) - set(app.factor_lib.REGISTRY) == {
+        "_fundamentals_stale", "_fundamentals_note"}
+    assert "fundamentals" in out
     # Families are surfaced so the reader can see the grouping, not just the
     # numbers.
     assert all("family" in v for v in out["families"].values())

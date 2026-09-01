@@ -459,6 +459,120 @@ def statements(symbol, limit=8, consolidated=None):
     return rows
 
 
+# ---------------------------------------------------------------------------
+# Freshness
+#
+# WHY THIS EXISTS, AND WHAT IT IS NOT
+# This module was reporting the December 2024 quarter as current, twenty
+# months later, in complete silence. The parser was not at fault: NSE's
+# corporates-financial-results API is itself frozen. Queried for the WHOLE
+# equities universe it returns 3,816 rows whose newest toDate is 31-Dec-2024,
+# and no combination of symbol, period or date-range parameters produces
+# anything newer. There is nothing to fix upstream from here.
+#
+# What WAS ours to fix is that nothing said so. Stale fundamentals presented
+# as current are worse than absent ones: a year-on-year growth factor computed
+# from twenty-month-old filings is not weak, it is wrong, and it would have
+# ranked the entire universe while looking perfectly healthy.
+#
+# So freshness is measured, published, and — in factors.py — enforced.
+# ---------------------------------------------------------------------------
+
+# A company filing quarterly under Reg 33 owes a result within 45 days of the
+# quarter end. Allowing a full extra quarter on top of that is generous and
+# still catches a source that has stopped moving.
+STALE_AFTER_DAYS = int(os.environ.get("XBRL_STALE_DAYS", "135") or 135)
+
+
+def _age_days(latest_end, today=None):
+    d = _dparse(latest_end)
+    if not d:
+        return None
+    return ((today or dt.date.today()) - d).days
+
+
+def latest_bse_result(symbol, days=200):
+    """
+    When BSE last saw a results filing for this company.
+
+    A cross-check, not a data source. BSE's announcement feed is live —
+    verified current to within a day — while NSE's XBRL index is not, so the
+    gap between them turns "our fundamentals might be old" into a fact with a
+    date on it: NSE's newest XBRL for this symbol is from December 2024, BSE
+    saw it file results in August 2026, therefore the XBRL is two quarters
+    behind for THIS company rather than in general.
+
+    Returns None on any failure. This must never be able to break a payload —
+    it is a footnote, not a dependency.
+    """
+    try:
+        import announcements as ann
+    except Exception:
+        return None
+    sym = (symbol or "").strip().upper()
+    if not sym:
+        return None
+    try:
+        rows = (ann.feed(limit=200, symbol=sym) or {}).get("items") or []
+    except Exception:
+        return None
+    best = None
+    for r in rows:
+        cat = str(r.get("category") or r.get("subcategory") or "")
+        head = str(r.get("headline") or r.get("line") or "")
+        if "result" not in (cat + " " + head).lower():
+            continue
+        when = _dparse(str(r.get("at") or r.get("date") or "")[:11])
+        if when and (best is None or when > best):
+            best = when
+    return best.isoformat() if best else None
+
+
+def freshness(rows, symbol=None, today=None):
+    """
+    How old the newest filing is, and whether that is a problem.
+
+    Always returns a verdict, including when there is nothing to judge.
+    """
+    today = today or dt.date.today()
+    latest = rows[0].get("to") if rows else None
+    age = _age_days(latest, today)
+    out = {
+        "latest_period_end": latest,
+        "latest_filed_at": (rows[0].get("filed_at") if rows else None),
+        "age_days": age,
+        "stale_after_days": STALE_AFTER_DAYS,
+        "stale": bool(age is not None and age > STALE_AFTER_DAYS),
+        "checked_on": today.isoformat(),
+    }
+    if age is None:
+        out["note"] = "No dated filing to measure."
+        return out
+    if not out["stale"]:
+        out["note"] = f"Newest filing covers a period ending {latest} — current."
+        return out
+
+    out["note"] = (
+        f"The newest XBRL filing available covers a period ending {latest}, "
+        f"{age} days ago. NSE's results index is not serving anything newer — "
+        "for any symbol, not just this one — so growth and margin figures "
+        "derived from it describe a period that has since been superseded.")
+    if symbol:
+        # Guarded here as well as inside. The docstring promises this is a
+        # footnote rather than a dependency, and a promise a caller cannot
+        # rely on is worse than one that was never made.
+        try:
+            seen = latest_bse_result(symbol)
+        except Exception:
+            seen = None
+        if seen:
+            out["bse_last_result_seen"] = seen
+            out["note"] += (f" BSE's live announcement feed shows this company "
+                            f"filing results as recently as {seen}, which is the "
+                            "measure of how far behind the XBRL source is.")
+    return out
+
+
 def summary(symbol, limit=8, consolidated=None):
     rows = statements(symbol, limit=limit, consolidated=consolidated)
     if not rows:
@@ -467,12 +581,16 @@ def summary(symbol, limit=8, consolidated=None):
                             "exchange. Fundamentals fall back to the existing "
                             "provider."),
                 "source": "NSE corporate filings (XBRL, LODR Reg 33)"}
+    fresh = freshness(rows, symbol)
     return {
         "available": True,
         "symbol": (symbol or "").upper(),
         "company": rows[0].get("company"),
         "quarters": rows,
         "count": len(rows),
+        "freshness": fresh,
+        "stale": fresh["stale"],
+        "as_of": fresh["latest_period_end"],
         "source": "NSE corporate filings (XBRL, LODR Reg 33)",
         "covers": ("The income statement in full, plus total assets and total "
                    "liabilities from the segment reconciliation. A quarterly Reg 33 "
