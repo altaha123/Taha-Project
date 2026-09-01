@@ -186,3 +186,127 @@ def test_the_cross_check_dates_the_gap_when_bse_answers(monkeypatch):
                        today=_dt.date(2026, 9, 1))
     assert f["bse_last_result_seen"] == "2026-08-14"
     assert "2026-08-14" in f["note"]
+
+
+# ---------------------------------------------------------------------------
+# Two filing regimes
+#
+# SEBI's Integrated Filing replaced the standalone results filing from the
+# quarter ending December 2024. Companies stopped filing under the old
+# mechanism at exactly that point — which is why the legacy endpoint appeared
+# "frozen at 31-Dec-2024" for every symbol in the universe. It was not stale,
+# it was finished, and reading only it made this module report a twenty-month-
+# old quarter as current.
+#
+# The legacy endpoint is still needed: the year-earlier comparatives for the
+# first integrated quarters live there and nowhere else.
+# ---------------------------------------------------------------------------
+
+INTEGRATED = [
+    {"type": "Integrated Filing- Financials/Original", "qe_Date": "30-JUN-2026",
+     "broadcast_Date": "17-Jul-2026 19:50:03", "consolidated": "Consolidated",
+     "audited": "Un-Audited", "cmName": "Acme Ltd",
+     "xbrl": "https://nsearchives.nseindia.com/corporate/xbrl/INTEGRATED_FILING_INDAS_1.xml"},
+    {"type": "Integrated Filing- Financials/Original", "qe_Date": "30-JUN-2026",
+     "broadcast_Date": "17-Jul-2026 19:49:04", "consolidated": "Standalone",
+     "audited": "Un-Audited", "cmName": "Acme Ltd",
+     "xbrl": "https://nsearchives.nseindia.com/corporate/xbrl/INTEGRATED_FILING_INDAS_2.xml"},
+    # Governance filings ride the same feed and carry no income statement.
+    {"type": "Integrated Filing- Governance/New", "qe_Date": "30-JUN-2026",
+     "broadcast_Date": "28-Jul-2026 18:43:22", "consolidated": None,
+     "cmName": "Acme Ltd",
+     "xbrl": "https://nsearchives.nseindia.com/corporate/xbrl/INTEGRATED_FILING_GOVERNANCE_9.xml"},
+    # No XBRL document: nothing to parse, so nothing to offer.
+    {"type": "Integrated Filing- Financials/Original", "qe_Date": "31-MAR-2026",
+     "broadcast_Date": "24-Apr-2026 22:57:12", "consolidated": "Consolidated",
+     "cmName": "Acme Ltd", "xbrl": ""},
+]
+
+LEGACY = [
+    {"symbol": "ACME", "companyName": "Acme Ltd", "fromDate": "01-Oct-2024",
+     "toDate": "31-Dec-2024", "period": "Quarterly", "relatingTo": "Third Quarter",
+     "financialYear": "01-Apr-2024 To 31-Mar-2025", "consolidated": "Consolidated",
+     "filingDate": "16-Jan-2025 20:15",
+     "xbrl": "https://nsearchives.nseindia.com/corporate/xbrl/OLD_1.xml"},
+    # Also present in the integrated feed — the newer regime must win.
+    {"symbol": "ACME", "companyName": "Acme Ltd", "fromDate": "01-Apr-2026",
+     "toDate": "30-Jun-2026", "period": "Quarterly", "relatingTo": "First Quarter",
+     "consolidated": "Consolidated", "filingDate": "01-Jan-1990",
+     "xbrl": "https://nsearchives.nseindia.com/corporate/xbrl/DUPLICATE.xml"},
+]
+
+
+@pytest.fixture
+def two_regimes(monkeypatch):
+    def fake_api(url, params):
+        return INTEGRATED if "integrated" in url else LEGACY
+    monkeypatch.setattr(xbrl, "_api", fake_api)
+
+
+def test_recent_filings_come_from_the_integrated_regime(two_regimes):
+    rows = xbrl.filings("ACME")
+    assert rows[0]["to"] == "30-JUN-2026"
+    assert rows[0]["regime"] == "integrated"
+    assert rows[0]["filed_at"].startswith("17-Jul-2026")
+
+
+def test_governance_filings_are_excluded(two_regimes):
+    """They ride the same feed and have no income statement in them."""
+    assert all("GOVERNANCE" not in r["xbrl"] for r in xbrl.filings("ACME"))
+
+
+def test_a_filing_with_no_xbrl_document_is_skipped(two_regimes):
+    assert all(r["xbrl"].lower().endswith(".xml") for r in xbrl.filings("ACME"))
+    assert not any(r["to"] == "31-MAR-2026" for r in xbrl.filings("ACME"))
+
+
+def test_history_still_reaches_back_through_the_legacy_regime(two_regimes):
+    """
+    The comparatives for the first integrated quarters exist only in the old
+    feed. Dropping it would silently remove every year-on-year growth figure
+    for the newest quarters.
+    """
+    rows = xbrl.filings("ACME")
+    assert any(r["regime"] == "legacy" and r["to"] == "31-Dec-2024" for r in rows)
+
+
+def test_the_newer_regime_wins_where_the_two_overlap(two_regimes):
+    """A quarter present in both must appear once, from the integrated feed."""
+    rows = [r for r in xbrl.filings("ACME")
+            if xbrl._dparse(r["to"]) == _dt.date(2026, 6, 30) and r["consolidated"]]
+    assert len(rows) == 1
+    assert rows[0]["regime"] == "integrated"
+    assert "DUPLICATE" not in rows[0]["xbrl"]
+
+
+def test_standalone_and_consolidated_both_survive(two_regimes):
+    june = [r for r in xbrl.filings("ACME")
+            if xbrl._dparse(r["to"]) == _dt.date(2026, 6, 30)]
+    assert sorted(r["consolidated"] for r in june) == [False, True]
+
+
+def test_the_quarter_label_is_derived_when_the_feed_omits_it():
+    """
+    The integrated feed labels a filing by quarter-end date alone. Growth is
+    matched on the quarter label, so without deriving one every integrated
+    filing would fail to find its year-earlier comparative.
+    """
+    assert xbrl._quarter_of("30-JUN-2026") == "First Quarter"
+    assert xbrl._quarter_of("30-SEP-2025") == "Second Quarter"
+    assert xbrl._quarter_of("31-DEC-2025") == "Third Quarter"
+    assert xbrl._quarter_of("31-MAR-2026") == "Fourth Quarter"
+    assert xbrl._quarter_of("nonsense") is None
+
+
+def test_a_dead_endpoint_does_not_take_the_other_one_down(monkeypatch):
+    """One regime failing must degrade the history, not empty it."""
+    def half_dead(url, params):
+        if "integrated" in url:
+            raise RuntimeError("down")
+        return LEGACY
+    monkeypatch.setattr(xbrl, "_api", half_dead)
+    try:
+        rows = xbrl.filings("ACME")
+    except Exception as e:                                  # pragma: no cover
+        raise AssertionError(f"a dead integrated feed broke filings(): {e}")
+    assert rows and all(r["regime"] == "legacy" for r in rows)
