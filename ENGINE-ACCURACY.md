@@ -131,46 +131,57 @@ python research/ic_study.py --study       # IC by horizon
 python research/ic_study.py --decompose   # per-check IC and collinearity
 ```
 
-## The XBRL feed: what "stale" turned out to mean
+## The XBRL feed: it was the wrong endpoint
 
-Investigated properly. **NSE's `corporates-financial-results` API is itself
-frozen**, not our parser. Queried for the *entire* equities universe it returns
-**3,816 rows whose newest period end is 31-Dec-2024**, and no combination of
-symbol, `period`, or date-range parameter produces anything newer. As of
-1 Sep 2026 that is **609 days** old.
+My first conclusion here was wrong and is corrected below.
 
-BSE, by contrast, is live — its announcement feed returns 50 filings for
-28 Aug 2026 — but it does not expose a results XBRL document at any path that
-resolves, so it cannot replace NSE as a source. It does serve as a
-**cross-check**: the gap between "NSE's newest XBRL for this company" and "BSE
-saw it file results on this date" turns a vague worry into a dated fact.
+I found NSE's `corporates-financial-results` API returning nothing newer than
+31-Dec-2024 for the *entire* 3,816-row equities universe, and concluded the
+source itself was dead. It is not. **SEBI's Integrated Filing regime replaced
+the standalone results filing from the quarter ending December 2024** — which
+is exactly where the data stopped. The old endpoint was not frozen, it was
+finished, and everything since is filed somewhere else:
 
-So the fix is not to the fetching, which was already correct. It is to the
-silence:
+```
+https://www.nseindia.com/api/integrated-filing-results?index=equities&symbol=SYM
+```
 
-- `xbrl.freshness()` publishes `age_days`, a `stale` flag, and a note that says
-  the problem is the **source, not the company** — otherwise a reader concludes
-  the business stopped reporting.
-- **`factors.py` refuses to compute fundamental factors past 225 days.** This is
-  the one that mattered. Without it, every growth, margin, yield and ROA factor
-  would have been computed from twenty-month-old filings and fed into the
-  ranking looking perfectly healthy — well-formed numbers, correct arithmetic,
-  describing a company that has since reported six more times. Stale
-  fundamentals presented as current are worse than absent ones.
-- A stock whose fundamentals are withheld still ranks on its price families;
-  the ranker renormalises. Withholding degrades the reading, it does not delete
-  the stock.
-- `/factors` reports `fundamentals.withheld` and why, so a caller can tell "this
-  company has no value factor" from "we refused to invent one".
+Live, and current: for RELIANCE the newest filing covers the quarter ending
+**30 Jun 2026**, broadcast 17 Jul 2026 — 63 days old, not stale. The XBRL
+documents sit on `nsearchives.nseindia.com` under a new taxonomy
+(`in-capmkt` rather than `in-bse-fin`), but the element names are unchanged and
+our parser strips namespaces, so it read the new documents correctly with no
+changes at all.
 
-The thresholds allow a normal reporting lag — a quarterly filer owes results
-within 45 days of the quarter end, so a cutoff inside that gap would flag every
-company for part of every quarter and be ignored within a week.
+### What changed
 
-**What would actually restore fresh fundamentals:** a source that publishes
-current Indian quarterly results in machine-readable form. BSE's results PDFs
-exist and are current but need parsing; a paid fundamentals feed is the
-reliable route. Until then the engine ranks on price factors and says so.
+- `filings()` reads **both regimes and merges them**, integrated first so the
+  newer filing wins where they overlap. RELIANCE now returns 65 filings from
+  Jun 2026 back to Jun 2018.
+- The legacy endpoint is still needed and still read: the year-earlier
+  comparatives for the first integrated quarters exist only there, so dropping
+  it would silently delete every YoY figure for the newest quarters.
+- Governance filings ride the same feed and carry no income statement, so they
+  are filtered out by `type`.
+- The integrated feed labels a filing by quarter-end date alone where the old
+  one carried "Third Quarter" in words. Growth is matched on the quarter label,
+  so one is derived — without it every integrated filing would fail to find its
+  comparative.
+- Each regime is fetched behind its own guard. One endpoint failing degrades
+  the history rather than emptying it.
+
+Verified end to end: Q1 FY27 revenue ₹3,11,850cr, +25.41% YoY, PAT −24.65% YoY,
+earnings yield 4.32%, margin trend −2.01.
+
+### The staleness machinery stays
+
+Built when I thought the source was dead, and worth keeping now that it is not.
+`xbrl.freshness()` publishes `age_days` and a `stale` flag; `factors.py`
+withholds fundamental factors past 225 days and says why; a stock whose
+fundamentals are withheld still ranks on its price families. It correctly
+reports **"current"** today, which is what a regression guard is supposed to do
+— it caught this once and will catch the next endpoint migration the week it
+happens rather than twenty months later.
 
 ## What still needs money
 
