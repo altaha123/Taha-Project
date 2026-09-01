@@ -399,6 +399,33 @@
     return '<div class="tkplan">' + bits.join("<span>\u00B7</span>") + "</div>";
   }
 
+  /* A data-share attribute for share.js. JSON inside a double-quoted HTML
+     attribute, so every character HTML treats specially is escaped here — a
+     company name with an ampersand in it is enough to break a naively built
+     attribute and take the surrounding markup with it. */
+  function shareAttr(o) {
+    return 'data-share="' + JSON.stringify(o)
+      .replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;").replace(/>/g, "&gt;") + '"';
+  }
+
+  var SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>' +
+    '<path d="M12 3v13"/><path d="M8 7l4-4 4 4"/></svg>';
+
+  function shareRow(r) {
+    return '<div class="idearow-actions">' +
+      '<button class="shbtn" type="button" ' + shareAttr({
+        kind: "holding", ticker: r.symbol, return_pct: r.return_pct,
+        alpha_pct: r.alpha_pct, bench_return_pct: r.bench_return_pct,
+        added_on: r.added_on, days_held: r.days_held
+      }) + '>' + SHARE_ICON + 'Share this position</button>' +
+      '<button class="shbtn" type="button" ' + shareAttr({
+        kind: "chart", ticker: r.symbol, range: "1D"
+      }) + '>' + SHARE_ICON + 'Chart</button>' +
+    '</div>';
+  }
+
   function card(r, i) {
     var src = (r.source || "auto") === "manual" ? "ADDED BY YOU" : "FROM SCAN";
     var unmarked = r.last_price == null;
@@ -443,6 +470,7 @@
       (unmarked ? '<div class="warnbox">No prices yet \u2014 press Refresh prices above.</div>' : "") +
       (r.mark_error ? '<div class="warnbox">Could not price this symbol: ' + esc(r.mark_error) + '</div>' : "") +
       (r.invalidated_by ? '<div class="warnbox">' + esc(r.invalidated_by) + '</div>' : "") +
+      shareRow(r) +
     '</div>';
   }
 
@@ -489,6 +517,17 @@
         ].join("") :
           '<div class="statcell" style="grid-column:1/-1"><b>' + (st.total_tracked || 0) +
           '</b><span>recorded, none marked yet \u2014 press Refresh prices</span></div>';
+      }
+
+      /* The track-record card posts these same numbers, so it is filled from
+         this response rather than fetching them a second time. setAttribute
+         takes a string, not markup — escaping here would put &quot; inside
+         the JSON and break the parse on the other side. */
+      var shb = $("tkshare");
+      if (shb) {
+        shb.setAttribute("data-share", JSON.stringify({
+          kind: "record", total_tracked: st.total_tracked, overall: o || {}
+        }));
       }
 
       /* The honest status line. Previously the tab was silent about the one

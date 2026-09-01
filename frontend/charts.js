@@ -37,13 +37,72 @@
      changes shape again must cost us the label tweak, never the chart. */
   var labelPatchDone = false;
 
+  /* ---- the tap --------------------------------------------------------
+     The charting workspace is an eval'd bundle. Its chart handle, its
+     candlestick series and its rows all live in a closure inside that bundle
+     and nothing outside can reach them — which is fine until you want to draw
+     a detected pattern ON the chart rather than describe it underneath.
+
+     Rather than reaching into someone else's closure, or worse, editing a
+     bundle that is shipped as fifteen concatenated string literals, the wrap
+     that was already here for the price-line labels does the work. It sees
+     every createChart call and every addCandlestickSeries call, so it can
+     hand out the handle it is already holding, and patching setData gives the
+     rows for free.
+
+     Deliberately read-only: this publishes handles, it does not drive the
+     chart. If the bundle changes shape the overlay stops drawing and nothing
+     else in the tab notices. */
+  var tap = { chart: null, series: null, container: null, rows: [], times: [] };
+  var tapWatchers = [];
+
+  function announce() {
+    for (var i = 0; i < tapWatchers.length; i++) {
+      try { tapWatchers[i](tap); } catch (e) {}
+    }
+  }
+
+  function tapCandles(chart, container, series) {
+    if (!series) return;
+    tap.chart = chart;
+    tap.series = series;
+    tap.container = (container && container.nodeType === 1) ? container : null;
+    tap.rows = [];
+    tap.times = [];
+    if (typeof series.setData === "function") {
+      var set = series.setData.bind(series);
+      series.setData = function (data) {
+        var out = set(data);
+        try {
+          tap.rows = Array.isArray(data) ? data : [];
+          tap.times = tap.rows.map(function (r) { return r && r.time; });
+        } catch (e) { tap.rows = []; tap.times = []; }
+        announce();
+        return out;
+      };
+    }
+    announce();
+  }
+
+  window.AltahaChartTap = {
+    get: function () { return tap; },
+    ready: function () { return !!(tap.chart && tap.series && tap.times.length); },
+    /* Called on every setData and on first attach. A subscriber that throws
+       must not take the others down with it, hence the try above. */
+    watch: function (fn) {
+      if (typeof fn !== "function") return;
+      tapWatchers.push(fn);
+      if (tap.chart) { try { fn(tap); } catch (e) {} }
+    }
+  };
+
   function wrapChart() {
     if (labelPatchDone) return;
     var L = window.LightweightCharts;
     if (!L || typeof L.createChart !== "function") return;
 
     var orig = L.createChart;
-    function patchedCreateChart() {
+    function patchedCreateChart(container) {
       var chart = orig.apply(this, arguments);
       ["addCandlestickSeries", "addLineSeries", "addAreaSeries", "addBarSeries", "addHistogramSeries"].forEach(function (name) {
         if (typeof chart[name] !== "function") return;
@@ -57,6 +116,7 @@
               return make(opts);
             };
           }
+          if (name === "addCandlestickSeries") tapCandles(chart, container, series);
           return series;
         };
       });
@@ -83,6 +143,36 @@
   function bootPatch() {
     try { wrapChart(); } catch (e) {}
     try { moveTick("tfbar"); moveTick("fctfbar"); } catch (e) {}
+    try { seedFromQuery(); } catch (e) {}
+  }
+
+  /* A shared chart link lands here.
+     /share/chart/RELIANCE forwards a human to /?q=RELIANCE&go=charts&range=1D.
+     The nav opens the tab; nothing was putting the symbol into the workspace,
+     so the reader arrived at an empty chart with the symbol they came for
+     sitting in the URL. Seeded through the workspace's own controls rather
+     than its internals: type into the box and press Load, which is what a
+     person would do. */
+  function seedFromQuery() {
+    var p;
+    try { p = new URLSearchParams(location.search); } catch (e) { return; }
+    if ((p.get("go") || "").toLowerCase() !== "charts") return;
+    var sym = (p.get("q") || "").trim().toUpperCase().replace(/[^A-Z0-9&.\-]/g, "");
+    if (!sym) return;
+    var input = document.getElementById("cw-in");
+    var load = document.getElementById("cw-go");
+    if (!input || !load || input.dataset.seeded) return;
+    input.dataset.seeded = "1";
+    input.value = sym;
+    /* Timeframe first, then Load. The timeframe button alone cannot fetch:
+       it calls the workspace's loader with no symbol, which returns early
+       while no symbol has been chosen. Pressing it only records the range. */
+    var range = (p.get("range") || "").trim();
+    if (range) {
+      var tf = document.querySelector('#cw-tfs button[data-r="' + range.replace(/[^\w]/g, "") + '"]');
+      if (tf) tf.click();
+    }
+    load.click();
   }
 
   function queryChartsSymbol() {

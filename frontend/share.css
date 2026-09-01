@@ -1,0 +1,78 @@
+/* ============================================================================
+   Altaha — the share sheet and the share buttons that open it.
+
+   The sheet is a modal so the card can be shown at a size worth judging. A
+   preview at row width is unreadable, and posting a card you have not
+   actually looked at is how a typo reaches a timeline.
+   ========================================================================== */
+
+/* ---- the little button that sits on a card ------------------------------
+   Quiet by default. It appears on every idea row, every tracked position and
+   the chart, and thirty loud buttons would turn the page into a share bar
+   with some analysis attached. */
+.shbtn{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--rule-2);background:transparent;color:var(--mute);
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  padding:6px 11px;border-radius:6px;cursor:pointer;
+  transition:color .18s ease,border-color .18s ease,background .18s ease,transform .18s ease;
+}
+.shbtn:hover{color:var(--gold);border-color:var(--gold);background:var(--paper-2);transform:translateY(-1px)}
+.shbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.shbtn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- the sheet ---------------------------------------------------------- */
+body.sh-open{overflow:hidden}
+
+.shsheet{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;
+  justify-content:center;padding:22px}
+.shsheet[hidden]{display:none}
+.shback{position:absolute;inset:0;background:rgba(12,10,7,.62);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  animation:shfade .2s ease both}
+.shbox{position:relative;z-index:1;width:min(720px,100%);max-height:92vh;overflow:auto;
+  background:var(--paper);border:1px solid var(--rule-2);border-radius:14px;
+  box-shadow:0 30px 80px rgba(12,10,7,.34);padding:26px 26px 22px;
+  animation:shrise .24s cubic-bezier(.2,.8,.25,1) both}
+@keyframes shfade{from{opacity:0}to{opacity:1}}
+@keyframes shrise{from{opacity:0;transform:translateY(14px) scale(.985)}
+  to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .shback,.shbox{animation:none}
+}
+
+.shx{position:absolute;top:12px;right:14px;width:30px;height:30px;border:0;
+  background:transparent;color:var(--mute);font-size:24px;line-height:1;cursor:pointer;
+  border-radius:6px}
+.shx:hover{color:var(--ink);background:var(--paper-2)}
+
+.shttl{font-family:var(--serif);font-size:26px;font-weight:400;margin:0 0 6px;
+  color:var(--ink);padding-right:34px}
+.shsub{font-size:13px;line-height:1.55;color:var(--mute);margin:0 0 16px;max-width:56ch}
+
+.shcardwrap{position:relative;border:1px solid var(--rule-2);border-radius:9px;
+  overflow:hidden;background:var(--paper-2);min-height:120px;display:flex;
+  align-items:center;justify-content:center}
+.shcard{display:block;width:100%;height:auto}
+.shcard[hidden]{display:none}
+.shspin{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--mute);padding:38px 24px;text-align:center;line-height:1.7}
+.shspin[hidden]{display:none}
+
+.shbtns{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+.shnote{font-size:12px;line-height:1.6;color:var(--mute);margin:12px 0 0;min-height:1.2em}
+
+/* The sheet reuses .sharebtn, which the analysis page already defines. These
+   are the pieces that page had no reason to specify. */
+.shbtns .sharebtn[hidden]{display:none}
+.shbtns .sharebtn.done{border-color:var(--pass);color:var(--pass)}
+
+@media (max-width:560px){
+  .shbox{padding:20px 16px 16px;border-radius:11px}
+  .shttl{font-size:21px}
+  .shbtns .sharebtn{flex:1 1 46%;justify-content:center;text-align:center}
+}
+
+/* The share control on a pattern card in the chart panel. */
+.patshare{margin-top:13px;display:flex;justify-content:flex-end}

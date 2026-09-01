@@ -128,3 +128,180 @@ def test_share_page_escapes_hostile_input():
     assert "<script>alert(1)</script>" not in html
     assert 'onload="alert(1)' not in html
     assert "&lt;script&gt;" in html
+
+
+# ---------------------------------------------------------------------------
+# The rest of the cards
+# ---------------------------------------------------------------------------
+
+def _candles(n=220, start=100.0):
+    """A deterministic price series. Shape does not matter; coverage does."""
+    import math
+    out = []
+    t = 1_700_000_000
+    for i in range(n):
+        base = start + 18 * math.sin(i / 21.0) + i * 0.08
+        o = base
+        c = base + math.sin(i / 3.0)
+        h = max(o, c) + 1.4
+        l = min(o, c) - 1.4
+        out.append([t + i * 86400, round(o, 2), round(h, 2), round(l, 2),
+                    round(c, 2), 100000 + (i % 17) * 4000])
+    return out
+
+
+CHART = {
+    "symbol": "RELIANCE", "name": "Reliance Industries Limited",
+    "timeframe": "1 day", "candles": _candles(),
+    "last": 118.42, "change_pct": 12.4,
+    "ema20": [None] * 19 + [100.0 + i * 0.09 for i in range(201)],
+    "ema50": [None] * 49 + [99.0 + i * 0.08 for i in range(171)],
+    "shape": {
+        "name": "Cup and Handle", "status": "forming", "direction": "bullish",
+        "confidence": 74,
+        "points": [
+            {"i": 120, "price": 112.0, "label": "L"},
+            {"i": 150, "price": 88.0, "label": "B"},
+            {"i": 190, "price": 111.5, "label": "R"},
+            {"i": 208, "price": 104.0, "label": "H"},
+        ],
+    },
+}
+
+IDEA = {
+    "symbol": "HDFCBANK", "name": "HDFC Bank Limited", "conviction": 68.4,
+    "conviction_band": "High", "setup": "Momentum Breakout", "horizon": "3–6 months",
+    "evidence": [
+        {"factor": "Setup fit", "points": 24.1, "of": 30, "detail": "…"},
+        {"factor": "Engine composite", "points": 12.0, "of": 18, "detail": "…"},
+        {"factor": "Sector outlook", "points": 11.2, "of": 16, "detail": "…"},
+        {"factor": "Market regime", "points": 2.0, "of": 4, "detail": "…"},
+        {"factor": "Catalyst", "points": 8.0, "of": 12, "detail": "…"},
+        {"factor": "Liquidity", "points": 8.0, "of": 8, "detail": "…"},
+        {"factor": "Archetype record", "points": 3.1, "of": 12, "detail": "…"},
+        {"factor": "Scan freshness", "points": -0.5, "of": 0, "detail": "…"},
+    ],
+}
+
+HOLDING = {"symbol": "ITC", "name": "ITC Limited", "added_on": "2026-01-04",
+           "return_pct": 8.42, "alpha_pct": 3.11, "bench_return_pct": 5.31,
+           "days_held": 61, "status": "open"}
+
+
+def test_chart_card_renders():
+    assert _png_size(og.chart_card(CHART)) == (1200, 630)
+
+
+def test_chart_card_without_a_pattern_still_renders():
+    payload = dict(CHART)
+    payload["shape"] = None
+    png = og.chart_card(payload)
+    assert _png_size(png) == (1200, 630)
+
+
+def test_chart_card_survives_an_empty_series():
+    """A card must never fail. An empty window says so on the image."""
+    assert _png_size(og.chart_card({"symbol": "X", "candles": []})) == (1200, 630)
+
+
+def test_chart_card_survives_a_flat_series():
+    """Every high equal to every low: the price span is zero and every
+    coordinate divides by it. This used to be the shape that crashed."""
+    flat = [[1_700_000_000 + i * 86400, 50.0, 50.0, 50.0, 50.0, 0] for i in range(120)]
+    assert _png_size(og.chart_card({"symbol": "FLAT", "candles": flat,
+                                    "last": 50.0, "change_pct": 0.0})) == (1200, 630)
+
+
+def test_the_window_always_contains_the_whole_shape():
+    """
+    A cup whose left rim is cropped off is a worse picture than no picture,
+    and the crop is silent — the card renders, it is simply wrong.
+    """
+    candles = _candles(600)
+    points = [{"i": 30, "price": 100.0}, {"i": 400, "price": 90.0}]
+    start, end = og._series_window(candles, points)
+    assert start <= 30 - 8 or start == 0
+    assert end == len(candles)
+    # With no points it is just the tail.
+    assert og._series_window(candles, [])[0] == len(candles) - 150
+
+
+def test_a_triangle_is_drawn_as_trendlines_not_a_zigzag():
+    """Joining a triangle's alternating pivots in time order draws a zigzag
+    that looks nothing like a triangle."""
+    assert og._pattern_polyline("Cup and Handle") is True
+    assert og._pattern_polyline("Double Bottom") is True
+    assert og._pattern_polyline("Ascending Triangle") is False
+    assert og._pattern_polyline("Rectangle") is False
+    assert og._pattern_polyline("Bull Flag") is False
+
+
+def test_the_chart_card_never_carries_the_trigger_or_the_target():
+    """
+    The compliance guard for the chart.
+
+    Historical candles are public fact and may be drawn — that is what a chart
+    is. The pattern's geometry describes what already happened. The TRIGGER and
+    the MEASURED MOVE are forecasts about what a reader should do next, so
+    neither the lines nor their numbers may reach a published image; they stay
+    on the site beside the base rate that qualifies them.
+    """
+    drawn = []
+    from PIL import ImageDraw
+
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        drawn.append(str(text))
+        return original(self, xy, text, *a, **k)
+
+    payload = dict(CHART)
+    payload["shape"] = dict(CHART["shape"], trigger=1995.98, invalidation=1836.31,
+                            target=2315.34)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        og.chart_card(payload)
+    finally:
+        ImageDraw.ImageDraw.text = original
+
+    blob = "".join(drawn)
+    for forbidden in ("1995", "1836", "2315", "1,995", "1,836", "2,315"):
+        assert forbidden not in blob, f"a forecast level reached the chart card: {forbidden}"
+    for word in ("BUY", "SELL", "TARGET", "STOP LOSS", "CONFIRMS ABOVE"):
+        assert word not in blob.upper(), f"a directive reached the chart card: {word}"
+    assert "NOT INVESTMENT ADVICE" in blob.upper()
+
+
+def test_idea_card_renders_with_its_ledger():
+    assert _png_size(og.idea_card(IDEA)) == (1200, 630)
+    assert _png_size(og.idea_card({"symbol": "X"})) == (1200, 630)
+
+
+def test_holding_card_renders_a_loss_as_readily_as_a_gain():
+    assert _png_size(og.holding_card(HOLDING)) == (1200, 630)
+    loser = dict(HOLDING, return_pct=-12.5, alpha_pct=-8.2, bench_return_pct=-4.3)
+    assert _png_size(og.holding_card(loser)) == (1200, 630)
+    assert _png_size(og.holding_card({})) == (1200, 630)
+
+
+def test_the_idea_card_never_carries_a_price_level():
+    drawn = []
+    from PIL import ImageDraw
+
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        drawn.append(str(text))
+        return original(self, xy, text, *a, **k)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        og.idea_card(dict(IDEA, plan={"entry": 1995.98, "stop": 1836.31, "t1": 2315.34}))
+        og.holding_card(dict(HOLDING, added_price=1995.98, last_price=2315.34))
+    finally:
+        ImageDraw.ImageDraw.text = original
+
+    blob = "".join(drawn)
+    for forbidden in ("1995", "1836", "2315"):
+        assert forbidden not in blob, f"a price level reached the card: {forbidden}"
