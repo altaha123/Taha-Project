@@ -1663,10 +1663,18 @@ def news_status():
 
 
 @app.get("/sector/overview")
-def sector_overview(window: str = "1D"):
-    """Every sector ranked by strength relative to the Nifty 50."""
+def sector_overview(window: str = "1D", stocks: bool = False):
+    """
+    Every sector ranked by strength relative to the Nifty 50.
+
+    `stocks=1` also returns the constituents behind each sector, sorted best to
+    worst. They come from the same bulk quote the aggregate was computed from,
+    so asking for them costs one extra field rather than one extra request —
+    and it is always the next thing a reader wants: not "materials is up 1.4%"
+    but "which names in materials are doing that".
+    """
     try:
-        return SS.overview(window)
+        return SS.overview(window, with_stocks=bool(stocks))
     except Exception as e:
         raise HTTPException(503, f"Sector data unavailable: {str(e)[:120]}")
 

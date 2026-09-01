@@ -1,0 +1,121 @@
+/* ============================================================================
+   The live sector board.
+
+   Every animation is on transform and opacity only, so none of them cost a
+   layout, and all of them stop under prefers-reduced-motion. Movement here is
+   doing a job — a reordering board that teleports is a board nobody can read —
+   so it is never decorative and never longer than it needs to be.
+   ========================================================================== */
+
+.sb-board{margin:26px 0 6px}
+
+.sb-hdr{display:flex;align-items:baseline;justify-content:space-between;
+  gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.sb-hdr h3{font-family:var(--serif);font-size:23px;font-weight:400;margin:0;color:var(--ink)}
+.sb-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+
+.sb-live{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);
+  margin-right:4px}
+.sb-live i{width:6px;height:6px;border-radius:50%;background:var(--mute);flex:0 0 auto}
+.sb-live.on{color:var(--pass)}
+.sb-live.on i{background:var(--pass);animation:sb-pulse 2.4s ease-in-out infinite}
+@keyframes sb-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.78)}}
+
+.sb-win{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+  border:1px solid var(--rule);background:transparent;color:var(--mute);
+  padding:6px 12px;border-radius:var(--r-pill,20px);cursor:pointer;
+  transition:color .18s ease,border-color .18s ease,background .18s ease}
+.sb-win:hover{border-color:var(--gold);color:var(--ink)}
+.sb-win.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+/* ---- the grid ---------------------------------------------------------- */
+.sb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:10px}
+
+.sb-tile{position:relative;display:flex;flex-direction:column;gap:8px;
+  text-align:left;padding:14px 15px 13px;cursor:pointer;
+  border:1px solid var(--rule-2);border-radius:10px;
+  background:var(--skin-card,var(--paper));box-shadow:var(--sh-1);
+  font:inherit;color:inherit;overflow:hidden;
+  animation:sb-rise .5s cubic-bezier(.2,.8,.25,1) both;
+  animation-delay:calc(var(--i,0) * 38ms);
+  transition:box-shadow .2s ease,border-color .2s ease}
+.sb-tile:hover{box-shadow:var(--sh-2);border-color:var(--rule)}
+.sb-tile:focus-visible{outline:none;box-shadow:var(--ring,0 0 0 2px var(--gold))}
+@keyframes sb-rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+/* A hairline down the left edge, coloured by direction — readable at a glance
+   without painting whole tiles green and red, which turns a board into a
+   traffic light and stops anyone reading the numbers. */
+.sb-tile:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--rule);transition:background .25s ease}
+.sb-tile.up:before{background:var(--pass)}
+.sb-tile.dn:before{background:var(--fail)}
+.sb-tile.open{border-color:var(--gold)}
+.sb-tile.open:after{content:"";position:absolute;right:13px;top:15px;width:5px;height:5px;
+  border-radius:50%;background:var(--gold)}
+
+.sb-head{display:flex;align-items:center;gap:8px;min-width:0}
+.sb-icon{width:17px;height:17px;flex:0 0 auto;fill:none;stroke:currentColor;
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--mute);
+  transition:color .25s ease}
+.sb-tile:hover .sb-icon,.sb-tile.open .sb-icon{color:var(--gold)}
+.sb-name{font-size:12.5px;line-height:1.3;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.sb-pct{font-family:var(--serif);font-size:27px;line-height:1;color:var(--ink-2);
+  font-variant-numeric:tabular-nums}
+.sb-pct.up{color:var(--pass)} .sb-pct.dn{color:var(--fail)}
+
+.sb-breadth{display:block;height:3px;border-radius:2px;background:var(--rule-2);
+  overflow:hidden}
+.sb-breadth i{display:block;height:100%;background:var(--pass);
+  transition:width .6s cubic-bezier(.2,.8,.25,1)}
+
+.sb-meta{font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--mute);display:flex;gap:8px;flex-wrap:wrap}
+.sb-meta em{font-style:normal}
+.sb-meta em.up{color:var(--pass)} .sb-meta em.dn{color:var(--fail)}
+
+/* ---- the constituent panel --------------------------------------------- */
+.sb-detail{margin-top:12px;padding:16px 18px;border:1px solid var(--rule-2);
+  border-radius:10px;background:var(--paper-2);
+  animation:sb-open .34s cubic-bezier(.2,.8,.25,1) both}
+@keyframes sb-open{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+.sb-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.sb-col h5{margin:0 0 9px;font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;font-weight:500;color:var(--mute);
+  display:flex;align-items:center;gap:7px}
+.sb-col h5.up{color:var(--pass)} .sb-col h5.dn{color:var(--fail)}
+.sb-col h5 i{font-style:normal;color:var(--ink-2);font-size:10px}
+.sb-col ul{list-style:none;margin:0;padding:0}
+.sb-col li{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;
+  padding:5px 0;border-bottom:1px solid var(--rule-2);font-size:12px;
+  animation:sb-rise .34s ease both;animation-delay:calc(var(--i,0) * 14ms)}
+.sb-col li:last-child{border-bottom:0}
+.sb-col li b{font-weight:500;color:var(--ink);cursor:pointer;
+  border-bottom:1px solid transparent;transition:border-color .16s ease,color .16s ease}
+.sb-col li b:hover{color:var(--gold-dp,var(--gold));border-bottom-color:currentColor}
+.sb-col li span{font-family:var(--mono);font-size:10.5px;color:var(--mute)}
+.sb-col li em{font-family:var(--mono);font-size:11px;font-style:normal;
+  font-variant-numeric:tabular-nums}
+.sb-col li em.up{color:var(--pass)} .sb-col li em.dn{color:var(--fail)}
+
+.sb-note,.sb-foot{font-size:11.5px;line-height:1.7;color:var(--mute);margin:11px 0 0}
+.sb-foot{margin-top:12px}
+.sb-load{padding:26px 0;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--mute)}
+
+@media(max-width:620px){
+  .sb-grid{grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:8px}
+  .sb-tile{padding:12px 13px}
+  .sb-pct{font-size:23px}
+  .sb-cols{grid-template-columns:1fr;gap:18px}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .sb-tile,.sb-detail,.sb-col li{animation:none}
+  .sb-live.on i{animation:none}
+  .sb-breadth i{transition:none}
+}

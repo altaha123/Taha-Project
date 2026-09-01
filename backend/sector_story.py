@@ -105,6 +105,27 @@ CONSTITUENTS_AS_OF = "2026-08-21"
 
 # Heavyweights per NSE sector index. Ten to twelve names each is enough to
 # explain a move; adding the long tail adds requests, not information.
+# A visual key per sector, drawn as a line icon by the frontend.
+#
+# Named rather than supplied as markup: the backend has no business shipping
+# SVG paths, and a key lets the frontend draw them in its own stroke language
+# so they sit with the rest of the site's icons instead of looking pasted on.
+# An unknown sector falls back to a neutral mark rather than disappearing.
+SECTOR_ICON = {
+    "Technology":             "chip",
+    "Financial Services":     "bank",
+    "Healthcare":             "pill",
+    "Consumer Defensive":     "wheat",
+    "Consumer Cyclical":      "car",
+    "Basic Materials":        "ingot",
+    "Energy":                 "bolt",
+    "Utilities":              "plug",
+    "Industrials":            "factory",
+    "Real Estate":            "building",
+    "Communication Services": "tower",
+}
+
+
 CONSTITUENTS = {
     "Technology": ["TCS", "INFY", "HCLTECH", "WIPRO", "TECHM", "LTIM",
                    "PERSISTENT", "COFORGE", "MPHASIS", "LTTS"],
@@ -495,7 +516,7 @@ def story(sector: str, window: str = "1D") -> dict:
     }
 
 
-def overview(window: str = "1D") -> dict:
+def overview(window: str = "1D", with_stocks: bool = False) -> dict:
     """
     Every sector ranked by strength relative to the benchmark.
 
@@ -522,8 +543,9 @@ def overview(window: str = "1D") -> dict:
             if not vals:
                 continue
             avg = round(sum(vals) / len(vals), 2)
-            out.append({
+            row = {
                 "sector": sector,
+                "icon": SECTOR_ICON.get(sector),
                 "index": f"{sector} (equal-weight)",
                 "change_pct": avg,
                 "benchmark": "Nifty (NIFTYBEES proxy)",
@@ -531,14 +553,31 @@ def overview(window: str = "1D") -> dict:
                 "relative_pp": (round(avg - bench_pct, 2)
                                 if bench_pct is not None else None),
                 "up": sum(1 for v in vals if v > 0),
+                "down": sum(1 for v in vals if v < 0),
+                "flat": sum(1 for v in vals if v == 0),
                 "total": len(vals),
-            })
+            }
+            if with_stocks:
+                # The bulk quote already fetched every one of these. Returning
+                # them costs nothing and saves the client a second round trip
+                # for the one thing a reader always wants next: which names
+                # inside the sector are actually doing the moving.
+                stocks = [{"symbol": n,
+                           "change_pct": rows_all[n]["change_pct"],
+                           "ltp": rows_all[n].get("ltp"),
+                           "volume": rows_all[n].get("volume")}
+                          for n in names if n in rows_all]
+                stocks.sort(key=lambda r: -(r["change_pct"] or 0))
+                row["stocks"] = stocks
+                row["leader"] = stocks[0] if stocks else None
+                row["laggard"] = stocks[-1] if len(stocks) > 1 else None
+            out.append(row)
     else:
         # Fallback: published index levels, one download each.
         for sector in CONSTITUENTS:
             m = _index_move(sector, sessions)
             if m and m.get("change_pct") is not None:
-                out.append({"sector": sector, **m})
+                out.append({"sector": sector, "icon": SECTOR_ICON.get(sector), **m})
         source = "yahoo"
 
     out.sort(key=lambda r: -(r["relative_pp"] if r.get("relative_pp") is not None
