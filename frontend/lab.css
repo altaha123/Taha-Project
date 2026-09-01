@@ -1,0 +1,57 @@
+/* The Engine Lab — the panel that measures the engine rather than the ideas. */
+
+.lab{margin-top:44px;padding-top:30px;border-top:1px solid var(--rule-2)}
+.labhdr h3{font-family:var(--serif);font-size:26px;font-weight:400;margin:0;color:var(--ink)}
+.labhdr span{display:block;font-size:13px;color:var(--mute);margin-top:5px;line-height:1.6}
+
+.labload,.labnote{font-size:12.5px;line-height:1.7;color:var(--mute);margin:14px 0 0}
+
+.labwarn{margin:16px 0;padding:12px 14px;border:1px solid var(--fail);
+  border-left-width:3px;border-radius:7px;background:var(--paper-2);
+  font-size:13px;line-height:1.65;color:var(--ink-2)}
+.labwarn b{color:var(--fail)}
+
+.labstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
+  gap:9px;margin:16px 0}
+.labcell{border:1px solid var(--rule-2);border-radius:8px;padding:12px 13px;
+  background:var(--skin-card,var(--paper))}
+.labcell b{display:block;font-family:var(--serif);font-size:25px;color:var(--ink);line-height:1.1}
+.labcell span{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--mute);margin-top:5px}
+
+.labbar{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0 4px}
+.labbar button{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;border:1px solid var(--rule);background:transparent;
+  color:var(--mute);padding:7px 13px;border-radius:var(--r-pill,20px);cursor:pointer;
+  transition:border-color .18s ease,color .18s ease,background .18s ease}
+.labbar button:hover{border-color:var(--gold);color:var(--ink)}
+.labbar button.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+.labscale{margin:16px 0;padding:13px 15px;border:1px solid var(--rule-2);
+  border-radius:8px;background:var(--paper-2);font-size:12.5px;line-height:1.75;
+  color:var(--ink-2)}
+.labscale b{color:var(--ink)}
+.labscale i{font-style:italic;color:var(--gold-dp,var(--gold))}
+
+.labwait{margin:16px 0;padding:14px 16px;border:1px dashed var(--rule);
+  border-radius:8px;font-size:12.5px;line-height:1.75;color:var(--mute)}
+.labwait b{color:var(--ink)}
+.labwait span{display:block;margin-top:7px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.06em;color:var(--ink-2)}
+
+.labtable{width:100%;border-collapse:collapse;margin-top:14px;font-size:12.5px}
+.labtable th{font-family:var(--mono);font-size:9px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--mute);text-align:left;font-weight:500;
+  padding:0 10px 8px 0;border-bottom:1px solid var(--rule-2)}
+.labtable td{padding:9px 10px 9px 0;border-bottom:1px solid var(--rule-2);
+  color:var(--ink-2);vertical-align:top}
+.labtable td:nth-child(2),.labtable td:nth-child(3),.labtable td:nth-child(4){
+  font-family:var(--mono);white-space:nowrap}
+.labtable .pos{color:var(--pass)}
+.labtable .neg{color:var(--fail)}
+.labverdict{font-size:11.5px;line-height:1.6;color:var(--mute);max-width:34ch}
+
+@media(max-width:640px){
+  .labtable{display:block;overflow-x:auto}
+  .labverdict{max-width:none}
+}

@@ -336,8 +336,28 @@ def deep_score(cand, selection="ranked"):
         plan = compact_plan(clean, compute_levels(clean))
     except Exception:
         plan = None
+    # The orthogonal factor block, and the technical score's own checks broken
+    # out individually. Neither is shown in the UI; both are banked, because
+    # the Factor Lab cannot measure what was never recorded and every day this
+    # is missing is a day of evidence that cannot be recovered later.
+    extra = {}
+    try:
+        import factors as _factors
+        extra = _factors.compute(df, quarters=None, price=tech.get("price")) or {}
+    except Exception:
+        extra = {}
+    checks = {}
+    try:
+        for c in (tech.get("checks") or []):
+            if c.get("max"):
+                checks["chk_" + str(c["name"]).lower().replace(" ", "_")[:40]] = c.get("points")
+    except Exception:
+        checks = {}
+
     return {
         "plan": plan,
+        "factors": extra,
+        "tech_checks": checks,
         "symbol": s, "ticker": f"{s}.NS",
         "name": info.get("longName") or info.get("shortName") or s,
         "price": tech["price"],
@@ -455,6 +475,13 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
                 "fundamental_quality": r.get("fundamental_quality"),
                 "label": r.get("label"),
             }
+            # Orthogonal factors and the individual technical checks. Recorded
+            # flat alongside everything else — factor_snapshots is long-format
+            # precisely so new factors never need a migration.
+            for src in (r.get("factors") or {}, r.get("tech_checks") or {}):
+                for k, v in src.items():
+                    if v is not None:
+                        records[r["symbol"]][k] = v
         pit_store.snapshot_many(records, run_id=run_id)
     except Exception:
         pass

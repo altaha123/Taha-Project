@@ -1,3 +1,9 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# The point-in-time store. Data, never source — it lives on the mounted
+# disk in production and is recreated locally by any test run.
+altaha_pit.db
+altaha_pit.db-*
+research/.cache/

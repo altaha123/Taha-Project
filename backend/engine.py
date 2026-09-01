@@ -260,13 +260,29 @@ def technical_score(df: pd.DataFrame) -> dict:
         "7 pts: %B 0.55–1.00 · 4: 0.35–0.55 · 3: above 1.00 · 0: below 0.35",
         "Bollinger Bands sit two standard deviations either side of a 20-day average. %B tells you where price sits inside that channel: above 0.5 is the strong half, above 1.0 means price has pushed outside the band, which is powerful but often short-lived.")
 
-    sq_pts = 5 if squeeze else (5 if breakout else 2 if w_rank <= 0.4 else 0)
-    sq_val = ("Bandwidth in the tightest quartile of 6 months — squeeze" if squeeze
+    # SCORED ZERO ON PURPOSE — the check stays, its points do not.
+    #
+    # A squeeze says a move is coming. It does not say which way. Awarding
+    # points for it inside a score that is read as "this looks bullish" pays a
+    # stock for being ambiguous, and a coiled spring that uncoils downward
+    # earned exactly the same five points as one that broke out.
+    #
+    # This is a reasoning argument, not a fitted one, which is why it is the
+    # only weight touched by hand. Measured over three months of 2026 the check
+    # ran an information coefficient of -0.035 — consistent with the argument,
+    # nowhere near enough evidence to justify it on its own. Everything else
+    # keeps its weight until the Factor Lab has enough history to speak.
+    #
+    # The reader still sees it. A squeeze is genuinely worth knowing about;
+    # it belongs in the ledger as context, not in the total as an opinion.
+    sq_pts = 0
+    sq_max = 0
+    sq_val = ("Bandwidth in the tightest quartile of 6 months — squeeze, direction unknown" if squeeze
               else "Expanding from a squeeze with price at the upper band" if breakout
               else f"Bandwidth at the {fmt(w_rank * 100, 0)}th percentile of 6 months")
-    add("Volatility squeeze", sq_pts, 5, sq_val,
-        "5 pts: bandwidth in tightest 25% (coiling) or expanding breakout · 2: tightest 40% · 0 otherwise",
-        "When Bollinger bands narrow, volatility has compressed and price is coiling — these periods often precede large directional moves. The squeeze doesn't tell you the direction, only that energy is building.")
+    add("Volatility squeeze", sq_pts, sq_max, sq_val,
+        "Not scored — a squeeze has no direction, so it earns no points either way",
+        "When Bollinger bands narrow, volatility has compressed and price is coiling — these periods often precede large directional moves. The squeeze doesn't tell you the direction, only that energy is building, which is exactly why it is shown here and left out of the score.")
 
     # 52-week position (10 pts)
     lo52, hi52 = close.tail(252).min(), close.tail(252).max()

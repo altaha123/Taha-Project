@@ -29,8 +29,31 @@ import ideas as ideas_engine
 import og as og_cards
 try:
     import pit_store
+    pit_store.init_db()
 except Exception:
     pit_store = None
+# The measurement stack. Each is optional: the site works without any of them,
+# it just stops being able to answer whether it works.
+try:
+    import forward_returns as fwd_labels
+except Exception:
+    fwd_labels = None
+try:
+    import factor_lab
+except Exception:
+    factor_lab = None
+try:
+    import factors as factor_lib
+except Exception:
+    factor_lib = None
+try:
+    import multifactor
+except Exception:
+    multifactor = None
+try:
+    import attention as attention_mod
+except Exception:
+    attention_mod = None
 try:
     import xbrl as xbrl_source
 except Exception:
@@ -1143,16 +1166,188 @@ def score_history(ticker: str, limit: int = 400):
 
 @app.get("/pit/coverage")
 def pit_coverage():
-    """How much point-in-time data has actually been banked."""
+    """
+    How much point-in-time data has actually been banked, and if none, why.
+
+    Answers 200 even when the store is broken. This endpoint exists to explain
+    a failure; returning 503 with a bare sqlite string ("unable to open
+    database file") told nobody whether DATA_DIR was unset, the directory was
+    missing, or the disk was read-only — which is exactly the question being
+    asked.
+    """
     if pit_store is None:
-        return {"available": False}
+        return {"available": False,
+                "reason": "pit_store failed to import — the store records nothing."}
+    return {"available": True, **pit_store.coverage_report()}
+
+
+# ---------------------------------------------------------------------------
+# The measurement stack
+#
+# A scoring engine that has never been scored is the one place this project's
+# claim to show its working did not hold. These endpoints close that: what was
+# believed, what happened next, and what the difference says about each factor.
+# ---------------------------------------------------------------------------
+
+
+@app.get("/pit/label")
+def pit_label(limit_symbols: int = 0):
+    """
+    Attach forward returns to everything banked whose horizon has elapsed.
+
+    Idempotent and safe to call repeatedly — it fills what is missing and
+    leaves the rest. Normally driven by /cron/tick; exposed so it can be run
+    by hand after a backfill.
+    """
+    if fwd_labels is None:
+        raise HTTPException(503, "The labelling job is unavailable.")
+    return fwd_labels.run(limit_symbols=limit_symbols or None)
+
+
+@app.get("/pit/ic")
+def pit_ic(horizon: int = 21, factor: Optional[str] = None,
+           min_cross_section: int = 25):
+    """
+    The information coefficient: does a factor predict anything?
+
+    On each date, rank every stock by the factor and by what it then did
+    relative to the index, and correlate the two. A real, professionally
+    traded equity factor runs 0.03 to 0.05 — right about 52% of the time. That
+    is not a weak result, it is what this looks like when it works; the money
+    comes from breadth, not from being right about any one name.
+
+    Returns nothing rather than a number when the sample is too thin. An
+    average built from three overlapping fortnights would be quoted forever
+    and caveated once.
+    """
+    if factor_lab is None or pit_store is None:
+        raise HTTPException(503, "The Factor Lab is unavailable.")
+    h = max(1, min(int(horizon), 500))
+    m = max(5, min(int(min_cross_section), 500))
+    if factor:
+        return factor_lab.evaluate(factor.strip()[:60], h, m)
+    return factor_lab.sweep(h, min_cross_section=m)
+
+
+@app.get("/factors")
+def factors_for(ticker: str, horizon: str = "short"):
+    """
+    The orthogonal factor block for one stock: momentum with the last month
+    skipped, one-week reversal, trend quality, realised volatility, turnover
+    shock, and — from the company's own XBRL filing — growth, margin
+    direction, return on assets and earnings yield.
+
+    Every fundamental factor respects the filing date, not the period end. A
+    December quarter was not knowable in December.
+    """
+    if factor_lib is None:
+        raise HTTPException(503, "The factor library is unavailable.")
+    base = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
     try:
-        return {"available": True, **pit_store.coverage_report(),
-                "db_path": pit_store.DB_PATH,
-                "persistent": pit_store.DB_PATH.startswith(
-                    os.environ.get("DATA_DIR", "\x00")) if os.environ.get("DATA_DIR") else False}
-    except Exception as e:
-        raise HTTPException(503, f"Point-in-time store unavailable: {str(e)[:100]}")
+        _sym, _t, hist = resolve(base)
+    except NotFound:
+        raise HTTPException(404, f"Couldn't find '{base}'.")
+    except Exception:
+        raise HTTPException(503, "The data provider is busy. Try again in a minute.")
+
+    quarters = []
+    if xbrl_source is not None:
+        try:
+            quarters = (xbrl_source.summary(base) or {}).get("quarters") or []
+        except Exception:
+            quarters = []
+
+    price = float(hist["Close"].dropna().iloc[-1]) if hist is not None and len(hist) else None
+    values = factor_lib.compute(hist, quarters=quarters, price=price)
+    return to_native({
+        "symbol": base, "price": price, "horizon": horizon,
+        "factors": values,
+        "families": {n: {"family": factor_lib.REGISTRY[n][0],
+                         "label": factor_lib.REGISTRY[n][1],
+                         "value": values.get(n)} for n in factor_lib.REGISTRY},
+        "note": ("Higher is better for every factor — volatility and reversal are "
+                 "negated at source, so nothing downstream has to remember which "
+                 "way each one points."),
+        "disclaimer": DISCLAIMER,
+    })
+
+
+@app.get("/factors/rank")
+def factors_rank(horizon: str = "short", limit: int = 50):
+    """
+    The whole scanned universe ranked against itself.
+
+    Percentiles, not absolute scores: an absolute 0-100 scale saturates once
+    everything that survives a scan already sits in the high eighties, which
+    is why a live list could score eight names inside 3.4 points with a tie in
+    it. And factors are averaged within their family before the families are
+    weighted, so two measurements of the same thing sharpen one estimate
+    instead of casting two votes.
+    """
+    if multifactor is None:
+        raise HTTPException(503, "The ranking layer is unavailable.")
+    p = _state["payload"]
+    rows = (p or {}).get("rankings") or []
+    if not rows:
+        return {"available": False,
+                "message": "No scan yet — generate the ranking first."}
+    h = horizon if horizon in multifactor.WEIGHTS else "short"
+    out = multifactor.rank(
+        [{"symbol": r.get("symbol"), "name": r.get("name"),
+          "sector": r.get("sector"), "price": r.get("price"),
+          "composite": r.get("composite"),
+          "factors": r.get("factors") or {}} for r in rows],
+        horizon=h)
+    if not out.get("available"):
+        return out
+    ranked = [r for r in out["rows"] if r.get("factor_score") is not None]
+    ranked.sort(key=lambda r: -r["factor_score"])
+    out["rows"] = ranked[:max(1, min(int(limit), 200))]
+    out["scanned_at"] = (p or {}).get("scanned_at")
+    out["disclaimer"] = DISCLAIMER
+    return to_native(out)
+
+
+@app.get("/attention")
+def attention_for(ticker: str):
+    """
+    Unusual retail attention, as a RISK flag and never as a buy signal.
+
+    For Indian small and mid caps a mention spike is far more often a pump in
+    progress than a discovery. This never touches a score; it sits beside one.
+    """
+    if attention_mod is None:
+        raise HTTPException(503, "The attention module is unavailable.")
+    base = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    hist = None
+    try:
+        _sym, _t, hist = resolve(base)
+    except Exception:
+        hist = None
+
+    filings, stories = [], []
+    try:
+        filings = (ann.feed(limit=40, symbol=base) or {}).get("items") or []
+    except Exception:
+        filings = []
+    try:
+        stories = (ideas_engine._news_index(168)[0] or {}).get(base) or []
+    except Exception:
+        stories = []
+
+    # Thin liquidity is what turns attention from interesting into dangerous,
+    # so the tier is looked up when the scan knows it.
+    tier = None
+    try:
+        for r in ((_state["payload"] or {}).get("rankings") or []):
+            if str(r.get("symbol") or "").upper() == base:
+                tier = ideas_engine.liquidity_tier(r.get("avg_turnover_cr"))[0]
+                break
+    except Exception:
+        tier = None
+
+    return to_native(attention_mod.assess(base, df=hist, filings=filings,
+                                          stories=stories, liquidity_tier=tier))
 
 
 @app.get("/fundamentals/xbrl")
@@ -1939,6 +2134,18 @@ def cron_tick():
         ann.poll_if_stale()
     except Exception:
         pass
+
+    # Attach forward returns to anything whose horizon has now elapsed. This
+    # has to be unattended: a label can only be written days or months after
+    # the snapshot it belongs to, so a job that needs a human to remember it
+    # is a job that silently never runs.
+    labelled = None
+    if fwd_labels is not None:
+        try:
+            labelled = fwd_labels.run().get("written")
+        except Exception:
+            labelled = None
+
     revived = False
     if not intraday._state["running"]:
         _autostart_intraday()
@@ -1969,7 +2176,8 @@ def cron_tick():
             pass
     return {"awake": True, "scanner_running": intraday._state["running"],
             "revived": revived, "market_open": intraday.market_open(),
-            "fired_now": len(fired), "outcomes_marked": marked}
+            "fired_now": len(fired), "outcomes_marked": marked,
+            "forward_returns_labelled": labelled}
 
 
 _autostart_intraday()
