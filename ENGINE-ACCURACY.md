@@ -131,6 +131,47 @@ python research/ic_study.py --study       # IC by horizon
 python research/ic_study.py --decompose   # per-check IC and collinearity
 ```
 
+## The XBRL feed: what "stale" turned out to mean
+
+Investigated properly. **NSE's `corporates-financial-results` API is itself
+frozen**, not our parser. Queried for the *entire* equities universe it returns
+**3,816 rows whose newest period end is 31-Dec-2024**, and no combination of
+symbol, `period`, or date-range parameter produces anything newer. As of
+1 Sep 2026 that is **609 days** old.
+
+BSE, by contrast, is live — its announcement feed returns 50 filings for
+28 Aug 2026 — but it does not expose a results XBRL document at any path that
+resolves, so it cannot replace NSE as a source. It does serve as a
+**cross-check**: the gap between "NSE's newest XBRL for this company" and "BSE
+saw it file results on this date" turns a vague worry into a dated fact.
+
+So the fix is not to the fetching, which was already correct. It is to the
+silence:
+
+- `xbrl.freshness()` publishes `age_days`, a `stale` flag, and a note that says
+  the problem is the **source, not the company** — otherwise a reader concludes
+  the business stopped reporting.
+- **`factors.py` refuses to compute fundamental factors past 225 days.** This is
+  the one that mattered. Without it, every growth, margin, yield and ROA factor
+  would have been computed from twenty-month-old filings and fed into the
+  ranking looking perfectly healthy — well-formed numbers, correct arithmetic,
+  describing a company that has since reported six more times. Stale
+  fundamentals presented as current are worse than absent ones.
+- A stock whose fundamentals are withheld still ranks on its price families;
+  the ranker renormalises. Withholding degrades the reading, it does not delete
+  the stock.
+- `/factors` reports `fundamentals.withheld` and why, so a caller can tell "this
+  company has no value factor" from "we refused to invent one".
+
+The thresholds allow a normal reporting lag — a quarterly filer owes results
+within 45 days of the quarter end, so a cutoff inside that gap would flag every
+company for part of every quarter and be ignored within a week.
+
+**What would actually restore fresh fundamentals:** a source that publishes
+current Indian quarterly results in machine-readable form. BSE's results PDFs
+exist and are current but need parsing; a paid fundamentals feed is the
+reliable route. Until then the engine ranks on price factors and says so.
+
 ## What still needs money
 
 Earnings **estimate revisions** — the strongest single alpha family in emerging

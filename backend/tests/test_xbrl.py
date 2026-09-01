@@ -110,3 +110,79 @@ def test_an_empty_document_does_not_crash():
 def test_the_cache_directory_sits_on_the_data_disk():
     """Same lesson as the tracker and the point-in-time store."""
     assert os.path.isabs(xbrl.CACHE_DIR or "/")
+
+
+# ---------------------------------------------------------------------------
+# Freshness
+#
+# Discovered the hard way: this module reported the December 2024 quarter as
+# current twenty months later, in silence. The parser was right — NSE's
+# results index is itself frozen. Queried for the WHOLE equities universe it
+# returns 3,816 rows whose newest period end is 31-Dec-2024, and no symbol,
+# period or date-range parameter produces anything newer.
+#
+# Nothing in this codebase can fix that. These tests protect the part that was
+# ours: that it can never be silent again.
+# ---------------------------------------------------------------------------
+import datetime as _dt
+
+
+def _rows(latest_end, filed=None):
+    return [{"to": latest_end, "filed_at": filed or "10-Feb-2025"}]
+
+
+def test_a_current_filing_is_not_flagged():
+    f = xbrl.freshness(_rows("31-Dec-2025"), today=_dt.date(2026, 2, 20))
+    assert f["stale"] is False
+    assert f["age_days"] == 51
+    assert "current" in f["note"]
+
+
+def test_the_frozen_source_is_flagged_with_its_age():
+    f = xbrl.freshness(_rows("31-Dec-2024"), today=_dt.date(2026, 9, 1))
+    assert f["stale"] is True
+    assert f["age_days"] > 600
+    assert "31-Dec-2024" in f["note"]
+    # It must say the problem is the source, not this one company — otherwise
+    # the reader concludes the company stopped filing.
+    assert "not just this one" in f["note"]
+
+
+def test_a_normal_reporting_lag_is_not_staleness():
+    """There is always a gap between a period ending and the next filing. A
+    threshold inside that gap would flag every company for part of every
+    quarter and the warning would be ignored within a week."""
+    assert xbrl.STALE_AFTER_DAYS >= 135
+    f = xbrl.freshness(_rows("31-Mar-2026"), today=_dt.date(2026, 6, 30))
+    assert f["stale"] is False
+
+
+def test_freshness_always_returns_a_verdict():
+    for rows in ([], [{}], [{"to": "not-a-date"}]):
+        f = xbrl.freshness(rows)
+        assert "stale" in f and "note" in f
+        assert f["stale"] is False          # unknown is not the same as stale
+
+
+def test_the_bse_cross_check_never_breaks_the_payload(monkeypatch):
+    """
+    BSE's announcement feed is live where NSE's XBRL index is not, so the gap
+    between them dates the staleness. It is a footnote, not a dependency —
+    a failure there must not cost the caller its filings.
+    """
+    monkeypatch.setattr(xbrl, "latest_bse_result",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("down")))
+    try:
+        f = xbrl.freshness(_rows("31-Dec-2024"), symbol="RELIANCE",
+                           today=_dt.date(2026, 9, 1))
+    except Exception as e:                              # pragma: no cover
+        raise AssertionError(f"a BSE failure broke freshness(): {e}")
+    assert f["stale"] is True
+
+
+def test_the_cross_check_dates_the_gap_when_bse_answers(monkeypatch):
+    monkeypatch.setattr(xbrl, "latest_bse_result", lambda *a, **k: "2026-08-14")
+    f = xbrl.freshness(_rows("31-Dec-2024"), symbol="RELIANCE",
+                       today=_dt.date(2026, 9, 1))
+    assert f["bse_last_result_seen"] == "2026-08-14"
+    assert "2026-08-14" in f["note"]

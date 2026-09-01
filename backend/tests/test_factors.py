@@ -175,9 +175,16 @@ def test_standalone_and_consolidated_are_not_mixed():
 # ---------------------------------------------------------------------------
 
 def test_compute_returns_every_registered_factor():
+    """
+    The registry in full, plus exactly two diagnostics and nothing else.
+
+    Both halves matter. A missing factor silently drops a family from the
+    ranking; an unexpected key would be walked as though it were a signal.
+    """
     out = F.compute(ohlcv(ramp(100, 180, 300)), quarters=QUARTERS, price=150.0,
                     as_of=dt.date(2026, 6, 1))
-    assert set(out) == set(F.REGISTRY)
+    assert set(F.REGISTRY) <= set(out)
+    assert set(out) - set(F.REGISTRY) == {"_fundamentals_stale", "_fundamentals_note"}
 
 
 def test_missing_is_none_and_never_zero():
@@ -192,3 +199,82 @@ def test_missing_is_none_and_never_zero():
 def test_every_factor_belongs_to_a_family():
     for name, (family, label) in F.REGISTRY.items():
         assert family in F.FAMILIES and label
+
+
+# ---------------------------------------------------------------------------
+# Staleness
+#
+# NSE's XBRL results index is frozen at the December 2024 quarter — queried for
+# the whole equities universe it returns 3,816 rows whose newest period end is
+# 31-Dec-2024, and no parameter produces anything newer. Nothing here can fix
+# that. What these tests protect is that it can never again be silent.
+# ---------------------------------------------------------------------------
+
+def test_fundamentals_are_withheld_when_the_newest_filing_is_ancient():
+    """
+    The consequential guard.
+
+    Without it, a growth factor computed from a twenty-month-old filing is fed
+    into the ranking as though it were current. The numbers are well-formed and
+    the arithmetic is right, which is exactly why nobody would notice: the
+    answer simply describes a company that has since reported six more times.
+    """
+    out = F.fundamental_factors(QUARTERS, price=100.0, as_of=dt.date(2027, 6, 1))
+    assert out["stale"] is True
+    assert "superseded" in out["stale_reason"]
+    for k in ("earnings_growth", "revenue_growth", "margin_trend",
+              "return_on_assets", "earnings_yield"):
+        assert out[k] is None, f"{k} was computed from a stale filing"
+
+
+def test_fresh_filings_are_not_withheld():
+    out = F.fundamental_factors(QUARTERS, price=100.0, as_of=dt.date(2026, 3, 1))
+    assert not out.get("stale")
+    assert out["earnings_growth"] is not None
+
+
+def test_the_cutoff_allows_a_normal_reporting_lag():
+    """
+    A quarterly filer owes a result within 45 days of the quarter end, and
+    there is always a gap between the last period end and the next filing. A
+    cutoff that fired inside that gap would withhold fundamentals for every
+    company for part of every quarter.
+    """
+    assert F.STALE_AFTER_DAYS >= 135
+    # Four and a half months after the newest period end is routine, not stale.
+    routine = F.fundamental_factors(QUARTERS, price=100.0,
+                                    as_of=dt.date(2026, 5, 15))
+    assert not routine.get("stale")
+
+
+def test_compute_reports_staleness_without_polluting_the_factor_block():
+    """The ranker iterates the registry; a diagnostic key leaking into it
+    would be ranked as though it were a factor."""
+    out = F.compute(ohlcv(ramp(100, 180, 300)), quarters=QUARTERS, price=150.0,
+                    as_of=dt.date(2027, 6, 1))
+    assert out["_fundamentals_stale"] is True
+    assert out["_fundamentals_note"]
+    assert set(out) - set(F.REGISTRY) == {"_fundamentals_stale", "_fundamentals_note"}
+    for name in F.REGISTRY:
+        if F.REGISTRY[name][0] in ("value", "growth", "quality"):
+            assert out[name] is None
+
+
+def test_a_stock_with_stale_fundamentals_still_ranks_on_its_price_factors():
+    """
+    Withholding must degrade the reading, not delete the stock. The ranker
+    already scores on the families that are present and renormalises — this
+    asserts the two halves actually meet.
+    """
+    import multifactor as M
+    rows = []
+    for i in range(30):
+        f = F.compute(ohlcv(ramp(100, 130 + i, 300)), quarters=QUARTERS,
+                      price=100.0 + i, as_of=dt.date(2027, 6, 1))
+        rows.append({"symbol": f"S{i:02d}", "factors": f})
+    out = M.rank(rows, horizon="short")
+    assert out["available"]
+    scored = [r for r in out["rows"] if r["factor_score"] is not None]
+    assert len(scored) == 30, "stale fundamentals removed the stocks entirely"
+    assert all("value" not in r["families"] for r in scored)
+    assert all("momentum" in r["families"] for r in scored)

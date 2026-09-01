@@ -1259,9 +1259,26 @@ def factors_for(ticker: str, horizon: str = "short"):
 
     price = float(hist["Close"].dropna().iloc[-1]) if hist is not None and len(hist) else None
     values = factor_lib.compute(hist, quarters=quarters, price=price)
+
+    # Whether the fundamental half was withheld, and why. NSE's XBRL results
+    # index is frozen at the December 2024 quarter, so for most symbols it
+    # currently is — and a caller must be able to tell "this company has no
+    # value factor" from "we refused to compute one from a dead source".
+    fundamentals = {
+        "withheld": bool(values.get("_fundamentals_stale")),
+        "reason": values.get("_fundamentals_note"),
+        "quarters_available": len(quarters),
+    }
+    if xbrl_source is not None and quarters:
+        try:
+            fundamentals["freshness"] = xbrl_source.freshness(quarters, base)
+        except Exception:
+            pass
+
     return to_native({
         "symbol": base, "price": price, "horizon": horizon,
         "factors": values,
+        "fundamentals": fundamentals,
         "families": {n: {"family": factor_lib.REGISTRY[n][0],
                          "label": factor_lib.REGISTRY[n][1],
                          "value": values.get(n)} for n in factor_lib.REGISTRY},
