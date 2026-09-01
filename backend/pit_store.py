@@ -67,22 +67,100 @@ if _LEGACY_DB != DB_PATH and os.path.exists(_LEGACY_DB) and not os.path.exists(D
 
 _local = threading.local()
 
+# Why the store is where it is, and whether it worked. Filled by _connect() on
+# the first attempt and read by diagnostics() / coverage_report().
+#
+# This exists because the store failed in production with sqlite's famously
+# unhelpful "unable to open database file" and there was no way to tell from
+# outside whether DATA_DIR was unset, the directory was missing, the disk was
+# read-only, or the path had been pointed at something that was not a
+# directory at all. A store that silently records nothing is worse than one
+# that is absent, because the absence is at least visible.
+_state = {
+    "configured_path": DB_PATH,
+    "active_path": DB_PATH,
+    "data_dir": _DATA_DIR,
+    "data_dir_from_env": bool(os.environ.get("DATA_DIR", "").strip()),
+    "fell_back": False,
+    "last_error": None,
+}
 
-# --------------------------------------------------------------------------
-# Connection handling
-# --------------------------------------------------------------------------
+
+def _writable(path):
+    """Can this process actually create a file in that directory?"""
+    probe = os.path.join(path, ".altaha-write-probe")
+    try:
+        with open(probe, "w") as fh:
+            fh.write("x")
+        os.remove(probe)
+        return True
+    except Exception:
+        return False
+
+
+def _open(path):
+    conn = sqlite3.connect(path, timeout=30.0)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA busy_timeout=30000")
+    return conn
+
 
 def _connect():
-    """One connection per thread. Safe under ThreadPoolExecutor."""
+    """
+    One connection per thread. Safe under ThreadPoolExecutor.
+
+    Falls back to the code directory if the configured path cannot be opened.
+    An ephemeral store that records today's scan is worth more than no store
+    at all, and the fallback is reported loudly rather than hidden — every
+    caller that surfaces coverage also surfaces the fact that persistence was
+    lost, so this cannot quietly become the permanent arrangement.
+    """
     conn = getattr(_local, "conn", None)
-    if conn is None:
-        conn = sqlite3.connect(DB_PATH, timeout=30.0)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA synchronous=NORMAL")
-        conn.execute("PRAGMA busy_timeout=30000")
-        _local.conn = conn
+    if conn is not None:
+        return conn
+
+    path = _state["active_path"]
+    try:
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        conn = _open(path)
+    except Exception as e:
+        _state["last_error"] = f"{type(e).__name__}: {e}"
+        fallback = os.path.join(_HERE, "altaha_pit.db")
+        if path == fallback:
+            raise
+        _state["fell_back"] = True
+        _state["active_path"] = fallback
+        conn = _open(fallback)
+
+    _local.conn = conn
     return conn
+
+
+def diagnostics():
+    """
+    Everything needed to explain a store that is not recording, without
+    shelling into the box. Never raises.
+    """
+    out = dict(_state)
+    d = os.path.dirname(_state["active_path"]) or "."
+    out["dir_exists"] = os.path.isdir(d)
+    out["dir_writable"] = _writable(d) if out["dir_exists"] else False
+    out["db_exists"] = os.path.exists(_state["active_path"])
+    try:
+        out["db_size_mb"] = round(os.path.getsize(_state["active_path"]) / 1e6, 3) \
+            if out["db_exists"] else 0.0
+    except Exception:
+        out["db_size_mb"] = None
+    out["persistent"] = bool(out["data_dir_from_env"]) and not out["fell_back"]
+    if not out["persistent"]:
+        out["warning"] = (
+            "The point-in-time store is NOT on a persistent disk, so everything "
+            "it records is lost on the next deploy. Mount a Render disk and set "
+            "DATA_DIR to its mount path."
+        )
+    return out
 
 
 @contextmanager
@@ -403,22 +481,39 @@ def snapshot_dates():
 
 
 def coverage_report():
-    """Health check — how much data have you actually banked so far?"""
-    conn = _connect()
-    q = lambda s: conn.execute(s).fetchone()[0]
-    dates = snapshot_dates()
-    return {
-        "snapshot_dates": len(dates),
-        "first_date": dates[0] if dates else None,
-        "last_date": dates[-1] if dates else None,
-        "total_observations": q("SELECT COUNT(*) FROM factor_snapshots"),
-        "distinct_symbols": q("SELECT COUNT(DISTINCT symbol) FROM factor_snapshots"),
-        "distinct_factors": q("SELECT COUNT(DISTINCT factor) FROM factor_snapshots"),
-        "filings_recorded": q("SELECT COUNT(*) FROM filings"),
-        "forward_returns": q("SELECT COUNT(*) FROM forward_returns"),
-        "db_size_mb": round(os.path.getsize(DB_PATH) / 1e6, 2)
-                      if os.path.exists(DB_PATH) else 0,
-    }
+    """
+    How much data have you actually banked so far?
+
+    Never raises. A health check that throws is useless precisely when it is
+    needed — this endpoint's whole job is to explain a store that is not
+    working, and the previous version answered a broken store with a 503 and
+    an unhelpful sqlite string.
+    """
+    out = {"diagnostics": diagnostics()}
+    try:
+        init_db()
+        conn = _connect()
+        q = lambda s: conn.execute(s).fetchone()[0]
+        dates = snapshot_dates()
+        out.update({
+            "ok": True,
+            "snapshot_dates": len(dates),
+            "first_date": dates[0] if dates else None,
+            "last_date": dates[-1] if dates else None,
+            "total_observations": q("SELECT COUNT(*) FROM factor_snapshots"),
+            "distinct_symbols": q("SELECT COUNT(DISTINCT symbol) FROM factor_snapshots"),
+            "distinct_factors": q("SELECT COUNT(DISTINCT factor) FROM factor_snapshots"),
+            "filings_recorded": q("SELECT COUNT(*) FROM filings"),
+            "forward_returns": q("SELECT COUNT(*) FROM forward_returns"),
+            "labelled_pairs": q(
+                "SELECT COUNT(*) FROM factor_snapshots s JOIN forward_returns f"
+                "  ON f.as_of_date = s.as_of_date AND f.symbol = s.symbol"),
+        })
+        out["db_size_mb"] = out["diagnostics"].get("db_size_mb")
+    except Exception as e:
+        out["ok"] = False
+        out["error"] = f"{type(e).__name__}: {str(e)[:160]}"
+    return out
 
 
 # --------------------------------------------------------------------------
@@ -438,6 +533,45 @@ def record_forward_return(as_of, symbol, horizon_days, ret_pct,
             (_as_date(as_of), symbol, horizon_days, ret_pct,
              bench_ret_pct, excess, _utcnow()),
         )
+
+
+def unlabelled(horizon_days, before_date=None):
+    """
+    Snapshot (date, symbol) pairs that have no forward return yet at this
+    horizon. The work list for the labeller.
+
+    `before_date` excludes dates whose horizon has not elapsed — asking for a
+    63-day return on a snapshot taken yesterday produces a number that is not
+    wrong so much as meaningless, and once written it would never be revisited.
+    """
+    conn = _connect()
+    sql = ("SELECT DISTINCT s.as_of_date AS d, s.symbol AS sym"
+           " FROM factor_snapshots s"
+           " LEFT JOIN forward_returns f"
+           "   ON f.as_of_date = s.as_of_date AND f.symbol = s.symbol"
+           "  AND f.horizon_days = ?"
+           " WHERE f.symbol IS NULL")
+    args = [horizon_days]
+    if before_date:
+        sql += " AND s.as_of_date <= ?"
+        args.append(_as_date(before_date))
+    sql += " ORDER BY s.as_of_date"
+    return [(r["d"], r["sym"]) for r in conn.execute(sql, args).fetchall()]
+
+
+def label_counts():
+    """How many forward returns exist per horizon."""
+    conn = _connect()
+    rows = conn.execute(
+        "SELECT horizon_days AS h, COUNT(*) AS n FROM forward_returns"
+        " GROUP BY horizon_days ORDER BY horizon_days").fetchall()
+    return {int(r["h"]): int(r["n"]) for r in rows}
+
+
+def factor_names():
+    conn = _connect()
+    return [r[0] for r in conn.execute(
+        "SELECT DISTINCT factor FROM factor_snapshots ORDER BY factor").fetchall()]
 
 
 def training_set(factor, horizon_days=63):

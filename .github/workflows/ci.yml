@@ -28,7 +28,7 @@ jobs:
           pip install pytest
       - name: Compile every module
         # Catches a syntax error in a file no test happens to import.
-        run: python -m compileall -q backend
+        run: python -m compileall -q backend research
       - name: Tests
         run: python -m pytest backend/tests -q
 
