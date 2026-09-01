@@ -7,3 +7,6 @@ __pycache__/
 altaha_pit.db
 altaha_pit.db-*
 research/.cache/
+
+# XBRL documents fetched at runtime. Cache, never source.
+xbrl-cache/
