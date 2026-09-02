@@ -1,0 +1,111 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Altaha Screener — home.css
+   The homepage, cut down and given something to look at.
+
+   WHAT WAS WRONG
+   The first screen was 420px of decorative artwork, then a search box, then
+   nothing. There was no market data anywhere above the fold, so a returning
+   visitor opened the site and saw a drawing. Worse, when the free instance
+   was asleep the entire page body was the words "Couldn't reach the engine" —
+   which is what every first-time visitor saw after fifteen quiet minutes.
+
+   WHAT THIS DOES
+   Keeps the masthead — it is the brand and it is genuinely good — but cuts it
+   to a band, and puts the market underneath it: indices, then the day's
+   movers. The search box stays the primary action and now leads somewhere
+   real. Everything below the board is unchanged; this file only reshapes the
+   top of the page.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1 · The masthead, reduced to a band ─────────────────────────────────── */
+
+body.sh-on header.wrap{ padding:22px 20px 16px !important }
+body.sh-on #skin-art{ top:-6px; opacity:.62 }
+body.sh-on #skin-art svg{ height:100% }
+
+/* The artwork was tall enough to be the whole first screen. It is now a
+   backdrop to the masthead rather than the content of the page. */
+body.sh-on header.wrap{ min-height:0; max-height:none }
+body.sh-on .brand{ font-size:clamp(28px,4.6vw,44px); margin:4px 0 2px }
+body.sh-on .eyebrow{ font-size:9.5px; letter-spacing:.18em }
+body.sh-on .tag{ font-size:11px; margin-top:2px }
+
+/* Two claims that repeated what the masthead already said, and a badge row
+   that competed with the search box for the eye. The pitch survives in one
+   line under the board, where it is read rather than skipped. */
+body.sh-on header.wrap .pitch,
+body.sh-on header.wrap .badges,
+body.sh-on header.wrap .metal{ display:none }
+
+/* premium.js floats its own three index tiles over the artwork. The board
+   below carries the same four indices plus breadth and the day's movers, and
+   two rows of the same numbers forty pixels apart is precisely the "everything
+   on one plate" problem. The tiles go; the board stays, because it is the one
+   that also answers what moved. */
+body.sh-on .hero-tiles{ display:none !important }
+
+/* ── 2 · The market board ────────────────────────────────────────────────── */
+
+.mb{ max-width:1120px; margin:0 auto; padding:6px 20px 0 }
+.mb-idx{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:12px; margin-bottom:14px;
+}
+.mb-card{ padding:16px 18px; border-radius:14px }
+.mb-card .k{
+  font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--mute);
+}
+.mb-card .v{ font:600 24px/1 'IBM Plex Mono',monospace; margin-top:12px; letter-spacing:-.02em }
+.mb-card .c{ font:600 12.5px/1 'IBM Plex Mono',monospace; margin-top:9px }
+.mb-card .c.up{ color:var(--sh-up) } .mb-card .c.dn{ color:var(--sh-dn) }
+
+/* A hairline that fills to show the move's size against the day's biggest.
+   Absolute percentages on four indices are hard to compare at a glance;
+   lengths are not. */
+.mb-card .spark{ height:3px; background:var(--rule-2); border-radius:99px; margin-top:13px; overflow:hidden }
+.mb-card .spark i{ display:block; height:100%; width:0; border-radius:99px;
+  transition:width 900ms var(--ease-out) }
+.mb-card .spark i.up{ background:var(--sh-up) } .mb-card .spark i.dn{ background:var(--sh-dn) }
+
+.mb-movers{
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+}
+@media (max-width:680px){ .mb-movers{ grid-template-columns:1fr } }
+.mb-col{ padding:15px 17px; border-radius:14px }
+.mb-col h3{
+  margin:0 0 11px; font:600 10px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--mute);
+}
+.mb-col ol{ margin:0; padding:0; list-style:none }
+.mb-col li{ display:flex; align-items:baseline; gap:10px; padding:6px 0 }
+.mb-col li + li{ border-top:1px solid var(--rule-2) }
+.mb-col a{
+  flex:1 1 auto; min-width:0; text-decoration:none; color:var(--ink);
+  font:500 13px/1.3 'IBM Plex Mono',monospace; letter-spacing:.02em;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  transition:color 160ms var(--ease);
+}
+.mb-col a:hover{ color:var(--gold) }
+.mb-col em{ font:600 12px/1 'IBM Plex Mono',monospace; font-style:normal; flex:0 0 auto }
+.mb-col em.up{ color:var(--sh-up) } .mb-col em.dn{ color:var(--sh-dn) }
+
+.mb-note{
+  margin:14px 0 0; text-align:center; font-size:12.5px; color:var(--mute);
+}
+.mb-skel{ height:96px; border-radius:14px;
+  background:linear-gradient(90deg,var(--rule-2) 25%,var(--paper-2) 37%,var(--rule-2) 63%);
+  background-size:400% 100%; animation:mbSkel 1400ms ease-in-out infinite }
+@keyframes mbSkel{ from{ background-position:100% 0 } to{ background-position:0 0 } }
+
+/* ── 3 · The search box, promoted ────────────────────────────────────────── */
+
+body.sh-on .searchrow{ max-width:660px; margin-left:auto; margin-right:auto }
+body.sh-on .searchrow input{ font-size:16px }   /* 16px stops iOS zooming on focus */
+
+/* ── 4 · Motion off ──────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce){
+  .mb-card .spark i{ transition:none }
+  .mb-skel{ animation:none }
+}

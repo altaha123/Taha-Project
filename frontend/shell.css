@@ -1,0 +1,436 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Altaha Screener — shell.css
+   The application chrome: headline ribbon, live ticker, and the menu.
+
+   WHY THIS FILE EXISTS
+   The homepage put everything on one plate. Three navigation systems ran at
+   once — the legacy tab row, the two-level bar nav.js builds, and a mobile
+   bottom bar that repeated the same five destinations already at the top —
+   and above all of them sat 420px of decorative artwork before a single
+   number. A visitor's first screen contained no market data at all.
+
+   This replaces the chrome with three fixed layers, in the order a trader
+   reads them:
+
+       1  Headline ribbon   what just happened
+       2  Live ticker       what things are doing right now
+       3  Menu              where you can go
+
+   HOW IT INTEGRATES WITHOUT BREAKING ANYTHING
+   It does not reimplement routing. nav.js already owns section/tab routing,
+   hash restore and the legacy-tab proxy, and it exposes AltahaNav.go(). The
+   new menu calls that. nav.js's own visual output is hidden here rather than
+   deleted, so if this file is removed the previous navigation reappears
+   intact and the application still works.
+
+   ON THE 3D
+   Depth is used to say what is in front, never for its own sake. Three
+   elevations only — surface, raised, floating — plus pointer-tracked tilt on
+   cards you can act on. Everything is transform/opacity so it runs on the
+   compositor, and every animation is disabled wholesale under
+   prefers-reduced-motion, which is not optional on a page showing money.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1 · DEPTH AND MOTION TOKENS ─────────────────────────────────────────── */
+
+:root{
+  --sh-bar-h: 58px;
+  --sh-ribbon-h: 34px;
+  --sh-ticker-h: 40px;
+  --sh-chrome-h: calc(var(--sh-ribbon-h) + var(--sh-ticker-h) + var(--sh-bar-h));
+
+  /* Three elevations. A fourth would stop meaning anything. */
+  --e1: 0 1px 2px rgba(23,20,14,.05);
+  --e2: 0 2px 6px rgba(23,20,14,.06), 0 12px 28px rgba(23,20,14,.09);
+  --e3: 0 8px 18px rgba(23,20,14,.10), 0 30px 70px rgba(23,20,14,.16);
+
+  --sh-glass: rgba(255,253,248,.82);
+  --sh-glass-2: rgba(243,239,228,.75);
+  /* The ribbon is a dark band in BOTH themes. Deriving it from an inverted
+     token turned it into a bright white strip across the top of a dark page,
+     which is the one thing a dark theme exists to avoid. */
+  --sh-ribbon-bg: #17140E;
+  --sh-ribbon-fg: #FBF8F1;
+
+  --sh-up: #1F7A55;
+  --sh-dn: #B03A2B;
+
+  --ease: cubic-bezier(.22,.61,.36,1);
+  --ease-out: cubic-bezier(.16,1,.3,1);
+  --t-fast: 160ms;
+  --t-mid: 320ms;
+  --t-slow: 620ms;
+}
+
+:root[data-theme="dark"]{
+  --e1: 0 1px 2px rgba(0,0,0,.5);
+  --e2: 0 2px 6px rgba(0,0,0,.5), 0 12px 30px rgba(0,0,0,.55);
+  --e3: 0 8px 20px rgba(0,0,0,.6), 0 34px 80px rgba(0,0,0,.7);
+  --sh-glass: rgba(23,21,15,.82);
+  --sh-glass-2: rgba(19,17,9,.78);
+  --sh-ribbon-bg: #060504;
+  --sh-ribbon-fg: #F2EEE4;
+  --sh-up: #3FBF87;
+  --sh-dn: #E0614F;
+}
+
+/* ── 2 · SUPPRESS THE OLD CHROME ─────────────────────────────────────────────
+   Hidden, not removed. nav.js keeps running: it still owns routing and still
+   proxies to the legacy tab buttons, which is exactly the part worth keeping.
+   Only its pixels are replaced.                                             */
+
+body.sh-on .navwrap,
+body.sh-on .navmob,
+body.sh-on .mobnav,
+body.sh-on .tickerbar{ display:none !important; }
+
+body.sh-on .legacy-nav,
+body.sh-on .tabnav{
+  position:absolute !important; width:1px; height:1px;
+  overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+  white-space:nowrap;
+}
+
+/* The chrome is fixed, so the document needs the height back. */
+body.sh-on{ padding-top: var(--sh-chrome-h); }
+
+/* ── 3 · THE FIXED CHROME STACK ──────────────────────────────────────────── */
+
+.sh-chrome{
+  position:fixed; inset:0 0 auto 0; z-index:900;
+  transform:translateZ(0);            /* own compositor layer; no repaint on scroll */
+  will-change:transform;
+}
+
+/* ── 3a · Headline ribbon ────────────────────────────────────────────────── */
+
+.sh-ribbon{
+  height:var(--sh-ribbon-h);
+  background:var(--sh-ribbon-bg); color:var(--sh-ribbon-fg);
+  display:flex; align-items:center; gap:14px;
+  padding:0 18px; overflow:hidden;
+  font-size:12.5px; letter-spacing:.01em;
+  perspective:600px;
+}
+.sh-ribbon-tag{
+  flex:0 0 auto; display:inline-flex; align-items:center; gap:7px;
+  font:600 10px/1 'IBM Plex Mono',ui-monospace,monospace;
+  letter-spacing:.14em; text-transform:uppercase;
+  color:var(--gold-lt); white-space:nowrap;
+}
+.sh-dot{
+  width:6px; height:6px; border-radius:50%;
+  background:var(--sh-up); box-shadow:0 0 0 0 currentColor;
+  animation: shPulse 2.4s var(--ease) infinite;
+}
+@keyframes shPulse{
+  0%{ box-shadow:0 0 0 0 rgba(63,191,135,.55) }
+  70%{ box-shadow:0 0 0 7px rgba(63,191,135,0) }
+  100%{ box-shadow:0 0 0 0 rgba(63,191,135,0) }
+}
+
+/* One headline at a time, rotated on a 3D hinge — the ribbon is thin, so a
+   scroll would be unreadable and a fade would not signal that it changed. */
+.sh-ribbon-slot{
+  position:relative; flex:1 1 auto; height:var(--sh-ribbon-h);
+  transform-style:preserve-3d; min-width:0;
+}
+.sh-head{
+  position:absolute; inset:0; display:flex; align-items:center; gap:10px;
+  transform-origin:50% 100%; backface-visibility:hidden;
+  opacity:0; transform:rotateX(-88deg) translateZ(1px);
+  transition:opacity var(--t-mid) var(--ease-out), transform var(--t-mid) var(--ease-out);
+  min-width:0;
+}
+.sh-head.on{ opacity:1; transform:rotateX(0deg); }
+.sh-head.out{ opacity:0; transform:rotateX(88deg); }
+.sh-head a{
+  color:inherit; text-decoration:none; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; min-width:0;
+}
+.sh-head a:hover{ text-decoration:underline; text-underline-offset:3px; }
+.sh-head .src{
+  flex:0 0 auto; font:500 10px/1 'IBM Plex Mono',ui-monospace,monospace;
+  letter-spacing:.08em; text-transform:uppercase; opacity:.62;
+}
+.sh-head .corr{
+  flex:0 0 auto; font:600 9.5px/1 'IBM Plex Mono',monospace;
+  padding:3px 6px; border-radius:99px;
+  border:1px solid rgba(217,188,106,.35); color:var(--gold-lt);
+}
+.sh-ribbon-clock{
+  flex:0 0 auto; font:500 11px/1 'IBM Plex Mono',monospace;
+  opacity:.66; white-space:nowrap;
+}
+@media (max-width:720px){ .sh-ribbon-clock{ display:none } }
+
+/* ── 3b · The live ticker floater ────────────────────────────────────────── */
+
+.sh-ticker{
+  height:var(--sh-ticker-h);
+  background:var(--sh-glass-2);
+  backdrop-filter:blur(14px) saturate(1.5);
+  -webkit-backdrop-filter:blur(14px) saturate(1.5);
+  border-bottom:1px solid var(--rule);
+  display:flex; align-items:center; overflow:hidden;
+  position:relative; perspective:900px;
+}
+/* The rail fades at both ends so items enter and leave rather than being cut. */
+.sh-ticker::before, .sh-ticker::after{
+  content:''; position:absolute; top:0; bottom:0; width:60px; z-index:2;
+  pointer-events:none;
+}
+.sh-ticker::before{ left:0;  background:linear-gradient(90deg,var(--paper),transparent) }
+.sh-ticker::after{  right:0; background:linear-gradient(270deg,var(--paper),transparent) }
+
+.sh-rail{
+  display:flex; align-items:center; gap:0;
+  white-space:nowrap; will-change:transform;
+  animation: shMarquee var(--sh-dur,64s) linear infinite;
+}
+.sh-ticker:hover .sh-rail,
+.sh-ticker:focus-within .sh-rail{ animation-play-state:paused; }
+@keyframes shMarquee{ from{ transform:translate3d(0,0,0) } to{ transform:translate3d(-50%,0,0) } }
+
+.sh-chip{
+  display:inline-flex; align-items:baseline; gap:8px;
+  padding:0 18px; height:var(--sh-ticker-h);
+  align-items:center; text-decoration:none; color:var(--ink);
+  border-right:1px solid var(--rule-2);
+  transition:transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+  transform-style:preserve-3d;
+}
+.sh-chip:hover{
+  background:var(--skin-card);
+  transform:translateZ(24px) scale(1.045);
+  box-shadow:var(--e2);
+}
+.sh-chip .sym{
+  font:600 12px/1 'IBM Plex Mono',monospace; letter-spacing:.04em;
+}
+.sh-chip .lv{ font:500 12px/1 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.sh-chip .ch{ font:600 11.5px/1 'IBM Plex Mono',monospace }
+.sh-chip .ch.up{ color:var(--sh-up) } .sh-chip .ch.dn{ color:var(--sh-dn) }
+.sh-chip .arw{ font-size:9px; vertical-align:middle }
+/* A flash when a printed value changes, so movement is noticed, not hunted. */
+.sh-chip.flash-up{ animation: shFlashU 900ms var(--ease) }
+.sh-chip.flash-dn{ animation: shFlashD 900ms var(--ease) }
+@keyframes shFlashU{ 0%{background:rgba(31,122,85,.20)} 100%{background:transparent} }
+@keyframes shFlashD{ 0%{background:rgba(176,58,43,.20)} 100%{background:transparent} }
+
+/* ── 3c · The menu bar ───────────────────────────────────────────────────── */
+
+.sh-bar{
+  height:var(--sh-bar-h);
+  background:var(--sh-glass);
+  backdrop-filter:blur(18px) saturate(1.6);
+  -webkit-backdrop-filter:blur(18px) saturate(1.6);
+  border-bottom:1px solid var(--rule);
+  display:flex; align-items:center; gap:18px; padding:0 18px;
+  transition:box-shadow var(--t-mid) var(--ease);
+}
+.sh-chrome.scrolled .sh-bar{ box-shadow:var(--e2) }
+
+.sh-brand{
+  display:flex; align-items:center; gap:9px; text-decoration:none;
+  color:var(--ink); flex:0 0 auto; font-weight:600; letter-spacing:-.01em;
+}
+.sh-brand .mk{
+  width:26px; height:26px; border-radius:7px; display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt));
+  color:#fff; font:700 13px/1 'Instrument Serif',Georgia,serif;
+  box-shadow:var(--e1);
+  transition:transform var(--t-mid) var(--ease-out);
+}
+.sh-brand:hover .mk{ transform:rotateY(180deg) }
+.sh-brand .nm{ font-size:15.5px }
+.sh-brand .nm i{ font-family:'Instrument Serif',Georgia,serif; font-style:italic; color:var(--gold) }
+@media (max-width:560px){ .sh-brand .nm{ display:none } }
+
+.sh-nav{ display:flex; align-items:stretch; gap:2px; height:100%; flex:1 1 auto; min-width:0 }
+@media (max-width:1040px){ .sh-nav{ display:none } }
+
+.sh-top{
+  position:relative; display:inline-flex; align-items:center; gap:6px;
+  padding:0 13px; height:100%; border:0; background:none; cursor:pointer;
+  font:500 13.5px/1 inherit; color:var(--ink-2); white-space:nowrap;
+  transition:color var(--t-fast) var(--ease);
+}
+.sh-top:hover, .sh-top[aria-expanded="true"]{ color:var(--ink) }
+.sh-top .cv{ transition:transform var(--t-fast) var(--ease); opacity:.5 }
+.sh-top[aria-expanded="true"] .cv{ transform:rotate(180deg) }
+/* The active underline grows from the centre rather than appearing. */
+.sh-top::after{
+  content:''; position:absolute; left:13px; right:13px; bottom:0; height:2px;
+  background:var(--gold); border-radius:2px 2px 0 0;
+  transform:scaleX(0); transform-origin:50%;
+  transition:transform var(--t-mid) var(--ease-out);
+}
+.sh-top.on::after{ transform:scaleX(1) }
+
+/* ── 3d · The mega panel ─────────────────────────────────────────────────── */
+
+.sh-megawrap{ position:absolute; left:0; right:0; top:100%; perspective:1400px; pointer-events:none }
+.sh-mega{
+  margin:0 auto; max-width:1180px;
+  background:var(--skin-card); border:1px solid var(--rule);
+  border-radius:0 0 16px 16px; box-shadow:var(--e3);
+  padding:22px 26px 24px;
+  display:none; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:26px 34px;
+  transform-origin:50% 0; transform:rotateX(-12deg) translateY(-10px); opacity:0;
+  transition:opacity var(--t-mid) var(--ease-out), transform var(--t-mid) var(--ease-out);
+}
+.sh-mega.open{ display:grid; opacity:1; transform:rotateX(0) translateY(0); pointer-events:auto }
+
+.sh-col h4{
+  margin:0 0 12px; font:600 10.5px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--mute);
+}
+.sh-item{
+  display:block; width:100%; text-align:left; border:0; background:none;
+  cursor:pointer; padding:8px 10px; border-radius:9px; color:var(--ink);
+  transition:background var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.sh-item:hover{ background:var(--paper-2); transform:translateX(3px) }
+.sh-item b{ display:block; font-weight:550; font-size:13.5px }
+.sh-item span{ display:block; font-size:11.5px; color:var(--mute); margin-top:2px }
+
+/* Each column lifts in on its own beat — the panel reads as one object
+   assembling, which is what tells you it is a panel and not a page. */
+.sh-mega.open .sh-col{ animation: shColIn var(--t-mid) var(--ease-out) both }
+.sh-mega.open .sh-col:nth-child(2){ animation-delay:40ms }
+.sh-mega.open .sh-col:nth-child(3){ animation-delay:80ms }
+.sh-mega.open .sh-col:nth-child(4){ animation-delay:120ms }
+@keyframes shColIn{ from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:none } }
+
+/* ── 3e · Search in the bar ──────────────────────────────────────────────── */
+
+.sh-search{ position:relative; flex:0 1 300px; min-width:0 }
+@media (max-width:820px){ .sh-search{ flex:1 1 auto } }
+.sh-search input{
+  width:100%; height:36px; padding:0 34px 0 34px;
+  border:1px solid var(--rule); border-radius:99px;
+  background:var(--paper); color:var(--ink);
+  font:500 13px/1 'IBM Plex Mono',monospace; letter-spacing:.03em;
+  transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-mid) var(--ease), background var(--t-fast) var(--ease);
+}
+.sh-search input:focus{
+  outline:none; border-color:var(--gold);
+  box-shadow:0 0 0 4px rgba(168,128,28,.14), var(--e2);
+  background:var(--skin-card);
+}
+.sh-search input::placeholder{ color:var(--mute); letter-spacing:.02em }
+.sh-search .ic{ position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.45; pointer-events:none }
+.sh-search .kbd{
+  position:absolute; right:9px; top:50%; transform:translateY(-50%);
+  font:500 9.5px/1 'IBM Plex Mono',monospace; color:var(--mute);
+  border:1px solid var(--rule); border-radius:5px; padding:3px 5px; pointer-events:none;
+}
+.sh-search input:focus ~ .kbd{ opacity:0 }
+
+/* Typeahead */
+.sh-ac{
+  position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:40;
+  background:var(--skin-card); border:1px solid var(--rule);
+  border-radius:12px; box-shadow:var(--e3); overflow:hidden;
+  display:none; max-height:340px; overflow-y:auto;
+  transform-origin:50% 0; animation: shAcIn 200ms var(--ease-out) both;
+}
+.sh-ac.open{ display:block }
+@keyframes shAcIn{ from{ opacity:0; transform:translateY(-6px) rotateX(-8deg) } to{ opacity:1; transform:none } }
+.sh-ac b.row{
+  display:flex; align-items:baseline; gap:10px; padding:9px 13px; cursor:pointer;
+  font-weight:400; transition:background var(--t-fast) var(--ease);
+}
+.sh-ac b.row:hover, .sh-ac b.row.sel{ background:var(--paper-2) }
+.sh-ac .s{ font:600 12px/1 'IBM Plex Mono',monospace; flex:0 0 auto }
+.sh-ac .n{ font-size:12px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+
+/* ── 3f · Bar right side ─────────────────────────────────────────────────── */
+
+.sh-right{ display:flex; align-items:center; gap:8px; flex:0 0 auto; margin-left:auto }
+.sh-icon{
+  width:34px; height:34px; display:grid; place-items:center;
+  border:1px solid var(--rule); border-radius:9px; background:none;
+  color:var(--ink-2); cursor:pointer;
+  transition:transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.sh-icon:hover{ background:var(--paper-2); color:var(--ink); transform:translateY(-1px) }
+.sh-icon:active{ transform:translateY(0) scale(.95) }
+
+.sh-burger{ display:none }
+@media (max-width:1040px){ .sh-burger{ display:grid } }
+
+/* ── 3g · Mobile drawer ──────────────────────────────────────────────────── */
+
+.sh-drawer{
+  position:fixed; inset:var(--sh-chrome-h) 0 0 0; z-index:880;
+  background:var(--paper); overflow-y:auto; padding:20px 18px 60px;
+  transform:translateX(100%); transition:transform var(--t-mid) var(--ease-out);
+  visibility:hidden;
+}
+.sh-drawer.open{ transform:none; visibility:visible }
+.sh-drawer .sh-col{ margin-bottom:22px }
+.sh-drawer .sh-col h4{ border-bottom:1px solid var(--rule-2); padding-bottom:8px }
+
+/* ── 4 · REUSABLE 3D PRIMITIVES ──────────────────────────────────────────────
+   Used by the homepage and the stock page. Kept here because they are chrome-
+   level vocabulary, not page-level decoration.                              */
+
+.d3-stage{ perspective:1200px; perspective-origin:50% 30% }
+
+.d3-card{
+  position:relative; background:var(--skin-card);
+  border:1px solid var(--rule); border-radius:14px;
+  box-shadow:var(--e1); transform-style:preserve-3d;
+  transition:box-shadow var(--t-mid) var(--ease), transform var(--t-mid) var(--ease-out);
+}
+/* --rx/--ry are written by shell.js from pointer position; the fallback of 0
+   means the card is simply flat wherever that script has not run. */
+.d3-card.tilt{
+  transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(0);
+}
+.d3-card.tilt:hover{ box-shadow:var(--e3) }
+/* A specular sheen that tracks the pointer. Pure decoration, and the first
+   thing to go when motion is reduced. */
+.d3-card.tilt::after{
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),
+             rgba(255,255,255,.16), transparent 45%);
+  opacity:0; transition:opacity var(--t-mid) var(--ease);
+}
+.d3-card.tilt:hover::after{ opacity:1 }
+:root[data-theme="dark"] .d3-card.tilt::after{
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),
+             rgba(217,188,106,.10), transparent 45%);
+}
+
+.d3-lift{ transition:transform var(--t-mid) var(--ease-out), box-shadow var(--t-mid) var(--ease) }
+.d3-lift:hover{ transform:translateY(-4px) translateZ(30px); box-shadow:var(--e3) }
+
+/* Scroll reveal. Elements start displaced on the Z hinge and settle. */
+.reveal{ opacity:0; transform:translateY(22px) rotateX(-6deg); transform-origin:50% 100%;
+  transition:opacity var(--t-slow) var(--ease-out), transform var(--t-slow) var(--ease-out) }
+.reveal.in{ opacity:1; transform:none }
+
+/* Numbers that count up read as live. Tabular figures stop the width jitter
+   that otherwise makes a counting number look broken. */
+.tnum{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1 }
+
+/* ── 5 · MOTION OFF ──────────────────────────────────────────────────────────
+   Not a softening — a full stop. Vestibular disorders are not a preference,
+   and a scrolling ticker is one of the worst offenders on the web.          */
+
+@media (prefers-reduced-motion: reduce){
+  .sh-rail{ animation:none !important; transform:none !important }
+  .sh-ticker{ overflow-x:auto }
+  .sh-head{ transition:none; transform:none !important }
+  .sh-mega{ transition:none; transform:none !important }
+  .sh-mega.open .sh-col{ animation:none }
+  .d3-card.tilt{ transform:none !important }
+  .d3-card.tilt::after{ display:none }
+  .reveal{ opacity:1 !important; transform:none !important; transition:none }
+  .sh-dot{ animation:none }
+  .sh-chip.flash-up, .sh-chip.flash-dn{ animation:none }
+  *{ scroll-behavior:auto !important }
+}
