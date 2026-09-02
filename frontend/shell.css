@@ -270,30 +270,64 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 
 /* ── 3d · The mega panel ─────────────────────────────────────────────────── */
 
-.sh-megawrap{ position:absolute; left:0; right:0; top:100%; perspective:1400px; pointer-events:none }
+.sh-megawrap{ position:absolute; left:0; right:0; top:100%; perspective:1400px;
+  pointer-events:none; padding:0 18px }
 .sh-mega{
-  margin:0 auto; max-width:1180px;
+  /* Sized to its content and parked under the nav, not stretched across the
+     viewport. Held at 1180px full-width it left most of the panel empty,
+     which read as an unfinished layout rather than a restrained one. The
+     offset lines its left edge up with the first menu label. */
+  width:max-content; max-width:min(1100px, calc(100vw - 36px));
+  margin:6px 0 0 172px;
   background:var(--skin-card); border:1px solid var(--rule);
-  border-radius:0 0 16px 16px; box-shadow:var(--e3);
+  border-radius:14px; box-shadow:var(--e3);
   padding:22px 26px 24px;
-  display:none; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:26px 34px;
+  /* Capped, and packed to the left. With 1fr columns a two-column section
+     stretched each one to ~560px and stranded its text at the far edge, which
+     is what made the panel read as mostly empty space. */
+  display:none; grid-template-columns:repeat(auto-fit,minmax(230px,290px));
+  justify-content:start; gap:22px 30px;
   transform-origin:50% 0; transform:rotateX(-12deg) translateY(-10px); opacity:0;
   transition:opacity var(--t-mid) var(--ease-out), transform var(--t-mid) var(--ease-out);
 }
 .sh-mega.open{ display:grid; opacity:1; transform:rotateX(0) translateY(0); pointer-events:auto }
+
+.sh-mega{ transform-origin:20% 0 }
+@media (max-width:1200px){ .sh-mega{ margin-left:0 } }
 
 .sh-col h4{
   margin:0 0 12px; font:600 10.5px/1 'IBM Plex Mono',monospace;
   letter-spacing:.14em; text-transform:uppercase; color:var(--mute);
 }
 .sh-item{
-  display:block; width:100%; text-align:left; border:0; background:none;
-  cursor:pointer; padding:8px 10px; border-radius:9px; color:var(--ink);
+  display:grid; grid-template-columns:34px 1fr; gap:11px; align-items:start;
+  width:100%; text-align:left; border:0; background:none;
+  cursor:pointer; padding:8px 10px; border-radius:10px; color:var(--ink);
   transition:background var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
 }
 .sh-item:hover{ background:var(--paper-2); transform:translateX(3px) }
+.sh-txt{ display:block; min-width:0 }
 .sh-item b{ display:block; font-weight:550; font-size:13.5px }
-.sh-item span{ display:block; font-size:11.5px; color:var(--mute); margin-top:2px }
+.sh-txt > span{ display:block; font-size:11.5px; color:var(--mute); margin-top:2px; line-height:1.4 }
+
+/* The icon tile. display:grid rather than inline because it is a <span> and
+   an inline box would ignore the size outright — the same trap that left the
+   score page's bars invisible. */
+.sh-ico{
+  display:grid; place-items:center; width:34px; height:34px; border-radius:10px;
+  background:var(--paper-2); border:1px solid var(--rule); color:var(--gold);
+  transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+             transform var(--t-mid) var(--ease-out), box-shadow var(--t-mid) var(--ease);
+}
+.sh-ico svg{ width:17px; height:17px; display:block }
+/* It lifts off the panel on hover — the depth cue that says this row is the
+   thing you are about to press. */
+.sh-item:hover .sh-ico{
+  background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt));
+  border-color:transparent; color:#fff;
+  transform:translateZ(20px) translateY(-2px) scale(1.06);
+  box-shadow:var(--e2);
+}
 
 /* Each column lifts in on its own beat — the panel reads as one object
    assembling, which is what tells you it is a panel and not a page. */
@@ -371,6 +405,7 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 }
 .sh-drawer.open{ transform:none; visibility:visible }
 .sh-drawer .sh-col{ margin-bottom:22px }
+.sh-drawer .sh-item{ padding:10px 8px }
 .sh-drawer .sh-col h4{ border-bottom:1px solid var(--rule-2); padding-bottom:8px }
 
 /* ── 4 · REUSABLE 3D PRIMITIVES ──────────────────────────────────────────────
@@ -427,6 +462,7 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
   .sh-head{ transition:none; transform:none !important }
   .sh-mega{ transition:none; transform:none !important }
   .sh-mega.open .sh-col{ animation:none }
+  .sh-item:hover .sh-ico{ transform:none }
   .d3-card.tilt{ transform:none !important }
   .d3-card.tilt::after{ display:none }
   .reveal{ opacity:1 !important; transform:none !important; transition:none }
