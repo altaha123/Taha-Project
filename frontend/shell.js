@@ -61,6 +61,40 @@
       });
   }
 
+  /* ── Icons ────────────────────────────────────────────────────────────────
+     Inline SVG paths, not image files. Three reasons that matters here: they
+     cost no extra request on a page already waiting on a sleeping backend,
+     they are drawn in currentColor so they recolour with the theme and on
+     hover for free, and they stay sharp on any display. Stroke geometry
+     matches the icons nav.js already draws, so the two sets look like one.
+
+     Each one depicts its destination rather than decorating it — a receipt
+     for the ledger, candles for charts, a target for the measured record. An
+     icon that could be swapped with its neighbour without anyone noticing is
+     not carrying information and should not be on the screen. */
+
+  var ICON = {
+    ledger:   '<path d="M5 3v18l2.5-1.6L10 21l2.5-1.6L15 21l2.5-1.6L20 21V3z"/><path d="M9 8h6M9 12h6"/>',
+    candles:  '<path d="M7 4v3M7 17v3M17 4v3M17 17v3"/><rect x="4.5" y="7" width="5" height="10" rx="1"/><rect x="14.5" y="7" width="5" height="10" rx="1"/>',
+    document: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14h5M9 17h3"/>',
+    bell:     '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+    exchange: '<path d="M3 8h14l-4-4"/><path d="M21 16H7l4 4"/>',
+    layers:   '<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
+    bulb:     '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .9 1.6h5.4c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3Z"/>',
+    pulse:    '<path d="M3 12h3.5l2.2-6 3.4 12 2.6-7.5 1.4 1.5H21"/>',
+    target:   '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.6"/><circle cx="12" cy="12" r="1"/>',
+    bars:     '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    shield:   '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+    plan:     '<path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-6"/>',
+    share:    '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>'
+  };
+
+  function svg(key) {
+    return '<span class="sh-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      (ICON[key] || '') + '</svg></span>';
+  }
+
   /* ── The menu map ──────────────────────────────────────────────────────────
      Grouped into columns, which is the whole reason the old bar failed: eleven
      flat destinations tell a first-time visitor that everything matters
@@ -71,14 +105,14 @@
       id: 'screener', label: 'Analyse',
       cols: [
         { head: 'One stock', items: [
-          { tab: 'screener', label: 'Score & ledger', hint: 'Every point, with its arithmetic' },
-          { tab: 'charts',   label: 'Charts',         hint: 'Drawings, Fibonacci, RSI, MACD' },
-          { tab: 'results',  label: 'Results',        hint: 'Latest quarterly numbers' }
+          { tab: 'screener', label: 'Score & ledger', icon: 'ledger', hint: 'Every point, with its arithmetic' },
+          { tab: 'charts',   label: 'Charts',         icon: 'candles', hint: 'Drawings, Fibonacci, RSI, MACD' },
+          { tab: 'results',  label: 'Results',        icon: 'document', hint: 'Latest quarterly numbers' }
         ]},
         { head: 'The market', items: [
-          { tab: 'filings', label: 'Filings',  hint: 'Live exchange announcements' },
-          { tab: 'deals',   label: 'Deals',    hint: 'Who traded size, netted' },
-          { tab: 'options', label: 'Options',  hint: 'Chain, OI and max pain' }
+          { tab: 'filings', label: 'Filings',  icon: 'bell', hint: 'Live exchange announcements' },
+          { tab: 'deals',   label: 'Deals',    icon: 'exchange', hint: 'Who traded size, netted' },
+          { tab: 'options', label: 'Options',  icon: 'layers', hint: 'Chain, OI and max pain' }
         ]}
       ]
     },
@@ -86,11 +120,11 @@
       id: 'ideas', label: 'Ideas',
       cols: [
         { head: 'What the scan found', items: [
-          { tab: 'ideas', label: "Today's shortlist", hint: 'Ranked, with the setup named' },
-          { tab: 'live',  label: 'Alerts',            hint: 'Intraday scanner' }
+          { tab: 'ideas', label: "Today's shortlist", icon: 'bulb', hint: 'Ranked, with the setup named' },
+          { tab: 'live',  label: 'Alerts',            icon: 'pulse', hint: 'Intraday scanner' }
         ]},
         { head: 'Does it work?', items: [
-          { tab: 'tracker', label: 'Track record', hint: 'Measured hit rate, not a highlight reel' }
+          { tab: 'tracker', label: 'Track record', icon: 'target', hint: 'Measured hit rate, not a highlight reel' }
         ]}
       ]
     },
@@ -98,21 +132,21 @@
       id: 'portfolio', label: 'Portfolio',
       cols: [
         { head: 'Your book', items: [
-          { tab: 'portfolio', label: 'Review', hint: 'Every holding, then the book as a whole' }
+          { tab: 'portfolio', label: 'Review', icon: 'bars', hint: 'Every holding, then the book as a whole' }
         ]},
         { head: 'Against your rules', items: [
-          { tab: 'portfolio', label: 'Policy audit', hint: 'Breaches, with the arithmetic to close them' }
+          { tab: 'portfolio', label: 'Policy audit', icon: 'shield', hint: 'Breaches, with the arithmetic to close them' }
         ]}
       ]
     },
     { id: 'planner', label: 'Planner', cols: [
       { head: 'Household', items: [
-        { tab: 'planner', label: 'Money planner', hint: 'The same lens, on your own finances' }
+        { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'The same lens, on your own finances' }
       ]}
     ]},
     { id: 'social', label: 'Social', cols: [
       { head: 'Publish', items: [
-        { tab: 'social', label: 'Filings & news', hint: 'Drafted, reviewed, ready to post' }
+        { tab: 'social', label: 'Filings & news', icon: 'share', hint: 'Drafted, reviewed, ready to post' }
       ]}
     ]}
   ];
@@ -237,14 +271,19 @@
 
   /* ── Mega menu ───────────────────────────────────────────────────────────── */
 
+  // One builder for both the desktop panel and the mobile drawer, so an icon
+  // can never appear in one and be missing from the other.
+  function itemHTML(secId, it) {
+    return '<button class="sh-item" type="button" data-sec="' + esc(secId) +
+      '" data-tab="' + esc(it.tab) + '">' + svg(it.icon) +
+      '<span class="sh-txt"><b>' + esc(it.label) + '</b>' +
+      '<span>' + esc(it.hint) + '</span></span></button>';
+  }
+
   function columnsHTML(sec) {
     return sec.cols.map(function (c) {
       return '<div class="sh-col"><h4>' + esc(c.head) + '</h4>' +
-        c.items.map(function (it) {
-          return '<button class="sh-item" type="button" data-sec="' + esc(sec.id) +
-            '" data-tab="' + esc(it.tab) + '"><b>' + esc(it.label) + '</b>' +
-            '<span>' + esc(it.hint) + '</span></button>';
-        }).join('') + '</div>';
+        c.items.map(function (it) { return itemHTML(sec.id, it); }).join('') + '</div>';
     }).join('');
   }
 
@@ -313,11 +352,7 @@
     drawer.innerHTML = MENU.map(function (sec) {
       return '<div class="sh-col"><h4>' + esc(sec.label) + '</h4>' +
         sec.cols.map(function (c) {
-          return c.items.map(function (it) {
-            return '<button class="sh-item" type="button" data-sec="' + esc(sec.id) +
-              '" data-tab="' + esc(it.tab) + '"><b>' + esc(it.label) + '</b>' +
-              '<span>' + esc(it.hint) + '</span></button>';
-          }).join('');
+          return c.items.map(function (it) { return itemHTML(sec.id, it); }).join('');
         }).join('') + '</div>';
     }).join('');
 
