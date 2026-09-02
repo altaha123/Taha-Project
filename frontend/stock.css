@@ -1,0 +1,228 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Altaha Screener — stock.css
+   Styles for stock.html, the dedicated per-company page.
+
+   WHY A PAGE AND NOT A TAB
+   Analysing a company used to expand a panel inside the homepage. That meant
+   one company had no address: you could not link to it, share it, bookmark
+   it, or press Back to leave it. A stock is the atomic object of this product
+   and it now has a URL of its own.
+
+   ONE COLUMN, NOT FIVE TABS
+   The same company's score, chart, results, filings and deals used to live in
+   five separate tabs. Reading it meant five clicks and remembering what was
+   in the other four. It is now one scrolling page with a sticky rail, which
+   is the layout every dense financial product converges on for the same
+   reason: comparison beats navigation.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.stk-wrap{ max-width:1120px; margin:0 auto; padding:0 20px 90px }
+
+/* ── Identity ────────────────────────────────────────────────────────────── */
+
+.stk-head{ padding:34px 0 24px; border-bottom:1px solid var(--rule) }
+.stk-crumb{
+  font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--mute); margin-bottom:14px;
+}
+.stk-crumb a{ color:var(--mute); text-decoration:none }
+.stk-crumb a:hover{ color:var(--gold); text-decoration:underline }
+
+.stk-id{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 26px }
+.stk-name{
+  margin:0; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
+  font-size:clamp(28px,4.4vw,46px); line-height:1.06; letter-spacing:-.015em;
+}
+.stk-tags{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px }
+.stk-tag{
+  font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.05em;
+  padding:5px 9px; border:1px solid var(--rule); border-radius:99px; color:var(--ink-2);
+}
+.stk-px{ margin-left:auto; text-align:right }
+.stk-px .now{ font:600 30px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em }
+.stk-px .chg{ font:600 14px/1 'IBM Plex Mono',monospace; margin-top:7px }
+.up{ color:var(--sh-up) } .dn{ color:var(--sh-dn) }
+
+/* ── The section rail ────────────────────────────────────────────────────── */
+
+.stk-rail{
+  position:sticky; top:var(--sh-chrome-h); z-index:60;
+  display:flex; gap:2px; overflow-x:auto; scrollbar-width:none;
+  background:var(--sh-glass); backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--rule); margin:0 -20px; padding:0 20px;
+}
+.stk-rail::-webkit-scrollbar{ display:none }
+.stk-rail a{
+  position:relative; flex:0 0 auto; padding:13px 14px; text-decoration:none;
+  color:var(--ink-2); font-size:13px; font-weight:500; white-space:nowrap;
+  transition:color 160ms var(--ease);
+}
+.stk-rail a:hover{ color:var(--ink) }
+.stk-rail a.on{ color:var(--ink) }
+.stk-rail a::after{
+  content:''; position:absolute; left:14px; right:14px; bottom:0; height:2px;
+  background:var(--gold); transform:scaleX(0); transform-origin:50%;
+  transition:transform 300ms var(--ease-out);
+}
+.stk-rail a.on::after{ transform:scaleX(1) }
+
+/* ── Sections ────────────────────────────────────────────────────────────── */
+
+.stk-sec{ padding:44px 0 8px; scroll-margin-top:calc(var(--sh-chrome-h) + 54px) }
+.stk-sec > h2{
+  margin:0 0 4px; font-family:'Instrument Serif',Georgia,serif;
+  font-weight:400; font-size:25px; letter-spacing:-.01em;
+}
+.stk-sec > .sub{ margin:0 0 22px; color:var(--mute); font-size:13.5px; max-width:66ch }
+
+/* ── Score ───────────────────────────────────────────────────────────────── */
+
+.stk-scorewrap{ display:grid; grid-template-columns:230px 1fr; gap:30px; align-items:center }
+@media (max-width:760px){ .stk-scorewrap{ grid-template-columns:1fr } }
+
+.dial{ position:relative; width:210px; height:210px; margin:0 auto }
+.dial svg{ width:100%; height:100%; transform:rotate(-90deg) }
+.dial .trk{ fill:none; stroke:var(--rule); stroke-width:13 }
+.dial .arc{
+  fill:none; stroke:url(#dialG); stroke-width:13; stroke-linecap:round;
+  transition:stroke-dashoffset 1400ms var(--ease-out);
+}
+.dial .mid{
+  position:absolute; inset:0; display:grid; place-content:center; text-align:center;
+}
+.dial .n{ font:600 52px/1 'IBM Plex Mono',monospace; letter-spacing:-.03em }
+.dial .of{ font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute); margin-top:6px; letter-spacing:.1em }
+.dial .lb{
+  margin-top:9px; font:600 10.5px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--gold);
+}
+
+.pillars{ display:grid; gap:13px }
+.pill{ display:grid; grid-template-columns:130px 1fr 58px; gap:12px; align-items:center; font-size:13px }
+.pill .nm{ color:var(--ink-2); text-transform:capitalize }
+/* display:block is load-bearing, not tidiness. Both of these are <span>, and
+   an inline box ignores width and height outright — the fill rendered at zero
+   size and every pillar bar read as empty. */
+.pill .bar{ display:block; height:7px; background:var(--rule-2); border-radius:99px; overflow:hidden }
+.pill .fill{
+  display:block; height:100%; border-radius:99px;
+  background:linear-gradient(90deg,var(--gold-dp),var(--gold-lt));
+  width:0; transition:width 1100ms var(--ease-out);
+}
+.pill .vv{ font:600 12.5px/1 'IBM Plex Mono',monospace; text-align:right }
+
+.stk-basis{
+  margin-top:22px; padding:15px 17px; border-left:2px solid var(--gold);
+  background:var(--paper-2); border-radius:0 10px 10px 0;
+  font-size:13.5px; line-height:1.6; color:var(--ink-2);
+}
+
+/* ── Numbers grid ────────────────────────────────────────────────────────── */
+
+.nums{ display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:13px }
+.num{ padding:16px 17px }
+.num .k{
+  font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--mute);
+}
+.num .v{ font:600 21px/1 'IBM Plex Mono',monospace; margin-top:11px; letter-spacing:-.02em }
+.num .h{ font-size:11.5px; color:var(--mute); margin-top:7px; line-height:1.45 }
+
+/* ── Chart ───────────────────────────────────────────────────────────────── */
+
+.chartbox{ padding:18px }
+.chartbox svg{ width:100%; height:250px; display:block; overflow:visible }
+.ranges{ display:flex; gap:5px; margin-bottom:14px; flex-wrap:wrap }
+.ranges button{
+  border:1px solid var(--rule); background:none; color:var(--ink-2);
+  border-radius:8px; padding:6px 11px; cursor:pointer;
+  font:500 11.5px/1 'IBM Plex Mono',monospace;
+  transition:all 160ms var(--ease);
+}
+.ranges button:hover{ background:var(--paper-2); color:var(--ink) }
+.ranges button.on{ background:var(--gold); border-color:var(--gold); color:#fff }
+.spark-line{ fill:none; stroke:var(--gold); stroke-width:2; stroke-linejoin:round; stroke-linecap:round }
+.spark-fill{ fill:url(#sparkG); opacity:.5 }
+.spark-draw{ stroke-dasharray:var(--len); stroke-dashoffset:var(--len);
+  animation:sparkIn 1500ms var(--ease-out) forwards }
+@keyframes sparkIn{ to{ stroke-dashoffset:0 } }
+
+/* ── The ledger — the reason this product exists ─────────────────────────── */
+
+.ledger{ display:grid; gap:9px }
+.chk{
+  border:1px solid var(--rule); border-radius:12px; background:var(--skin-card);
+  overflow:hidden; transition:box-shadow 260ms var(--ease), border-color 200ms var(--ease);
+}
+.chk:hover{ border-color:var(--gold-lt); box-shadow:var(--e2) }
+.chk > summary{
+  list-style:none; cursor:pointer; padding:14px 17px;
+  display:grid; grid-template-columns:1fr auto 96px; gap:14px; align-items:center;
+}
+.chk > summary::-webkit-details-marker{ display:none }
+.chk .cn{ font-weight:550; font-size:14px }
+.chk .cv{ font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--mute);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:340px }
+@media (max-width:700px){
+  .chk > summary{ grid-template-columns:1fr 96px }
+  .chk .cv{ display:none }
+}
+.chk .pts{ display:flex; align-items:center; gap:9px; justify-content:flex-end }
+.chk .ptn{ font:600 13px/1 'IBM Plex Mono',monospace; white-space:nowrap }
+.chk .ptbar{ display:block; width:44px; height:5px; background:var(--rule-2);
+  border-radius:99px; overflow:hidden; flex:0 0 auto }
+.chk .ptfill{ display:block; height:100%; border-radius:99px; background:var(--gold) }
+.chk .ptfill.full{ background:var(--sh-up) } .chk .ptfill.zero{ background:var(--sh-dn) }
+
+.chk .body{ padding:2px 17px 17px; border-top:1px solid var(--rule-2); margin-top:2px }
+.chk .row{ display:grid; grid-template-columns:88px 1fr; gap:12px; padding:11px 0; font-size:13px }
+.chk .row + .row{ border-top:1px dashed var(--rule-2) }
+.chk .row .k{
+  font:500 9.5px/1.5 'IBM Plex Mono',monospace; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--mute); padding-top:2px;
+}
+.chk .row .v{ line-height:1.6; color:var(--ink-2) }
+.chk .row .v.mono{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink) }
+.chk[open]{ border-color:var(--gold-lt) }
+
+/* ── Prose blocks ────────────────────────────────────────────────────────── */
+
+.prose{ padding:20px 22px; font-size:14px; line-height:1.72; color:var(--ink-2) }
+.prose .src{
+  margin-top:14px; font:500 10.5px/1.5 'IBM Plex Mono',monospace;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
+}
+
+.lvls{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:11px }
+.lvl{ padding:14px 16px; border-radius:11px; border:1px solid var(--rule); background:var(--skin-card) }
+.lvl .k{ font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--mute) }
+.lvl .v{ font:600 17px/1 'IBM Plex Mono',monospace; margin-top:9px }
+
+/* ── States ──────────────────────────────────────────────────────────────── */
+
+.stk-state{ padding:70px 20px; text-align:center; color:var(--mute); font-size:14.5px }
+.stk-state .big{ font-size:17px; color:var(--ink); margin-bottom:10px }
+.skel{
+  background:linear-gradient(90deg,var(--rule-2) 25%,var(--paper-2) 37%,var(--rule-2) 63%);
+  background-size:400% 100%; animation:skel 1400ms ease-in-out infinite; border-radius:8px;
+}
+@keyframes skel{ from{ background-position:100% 0 } to{ background-position:0 0 } }
+.skel-row{ height:15px; margin:11px 0 }
+
+.stk-disc{
+  margin-top:52px; padding:19px 21px; border:1px dashed var(--rule);
+  border-radius:12px; font-size:12.5px; line-height:1.65; color:var(--mute);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .dial .arc, .pill .fill{ transition:none }
+  .spark-draw{ animation:none; stroke-dashoffset:0 }
+  .skel{ animation:none }
+}

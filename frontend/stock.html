@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stock — Altaha Screener</title>
+<meta name="description" content="A 0–100 score for any Indian or US stock, with every calculation that produced it shown line by line." />
+<meta name="robots" content="index,follow" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="stock.css">
+
+<script>
+  /* Theme is resolved before first paint. Doing it in a stylesheet or after
+     DOMContentLoaded produces a white flash on every load for dark-mode users,
+     which is the single most noticeable rendering bug a site can ship. */
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+</head>
+
+<body>
+
+<main class="stk-wrap">
+
+  <!-- Identity. Filled by stock.js; skeletons until then, because a blank
+       area and a broken area look identical while you are waiting. -->
+  <div class="stk-head">
+    <div class="stk-crumb"><a href="index.html">Altaha Screener</a> · <span id="crumb">Loading</span></div>
+    <div class="stk-id">
+      <div style="min-width:0">
+        <h1 class="stk-name" id="nm"><span class="skel skel-row" style="display:block;width:280px;height:34px"></span></h1>
+        <div class="stk-tags" id="tags"></div>
+      </div>
+      <div class="stk-px">
+        <div class="now tnum" id="px">—</div>
+        <div class="chg tnum" id="chg"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="stk-rail" id="rail" aria-label="Sections of this page">
+    <a href="#s-score" class="on">Score</a>
+    <a href="#s-chart">Chart</a>
+    <a href="#s-numbers">Numbers</a>
+    <a href="#s-ledger">The ledger</a>
+    <a href="#s-levels">Levels</a>
+    <a href="#s-about">About</a>
+  </nav>
+
+  <div id="state"></div>
+
+  <div id="body" hidden>
+
+    <section class="stk-sec" id="s-score">
+      <h2>The score</h2>
+      <p class="sub" id="score-sub">Weighted for what kind of business this is and for the horizon you are reading it over.</p>
+      <div class="stk-scorewrap">
+        <div class="dial" id="dial">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <linearGradient id="dialG" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="var(--gold-dp)"/>
+                <stop offset="1" stop-color="var(--gold-lt)"/>
+              </linearGradient>
+            </defs>
+            <circle class="trk" cx="100" cy="100" r="84"/>
+            <circle class="arc" id="arc" cx="100" cy="100" r="84"/>
+          </svg>
+          <div class="mid">
+            <div class="n tnum" id="scoren">—</div>
+            <div class="of">OUT OF 100</div>
+            <div class="lb" id="scorelb"></div>
+          </div>
+        </div>
+        <div>
+          <div class="pillars" id="pillars"></div>
+          <div class="stk-basis" id="basis"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stk-sec" id="s-chart">
+      <h2>Price</h2>
+      <p class="sub">Closes from the exchange feed. The band is drawn from the same series, not smoothed for looks.</p>
+      <div class="ranges" id="ranges"></div>
+      <div class="d3-card chartbox" id="chartbox"></div>
+    </section>
+
+    <section class="stk-sec" id="s-numbers">
+      <h2>The numbers</h2>
+      <p class="sub">Everything the engine measured before it scored anything.</p>
+      <div class="nums d3-stage" id="nums"></div>
+    </section>
+
+    <section class="stk-sec" id="s-ledger">
+      <h2>The ledger</h2>
+      <p class="sub">Every check, what it measured, the formula that turned that into points, and what the concept means. Open any row. This is the part no other screener will show you.</p>
+      <div class="ledger" id="ledger"></div>
+    </section>
+
+    <section class="stk-sec" id="s-levels">
+      <h2>Levels</h2>
+      <p class="sub">Arithmetic on the price series — support, resistance and volatility. Observations, not instructions.</p>
+      <div class="lvls" id="levels"></div>
+    </section>
+
+    <section class="stk-sec" id="s-about">
+      <h2>About the company</h2>
+      <p class="sub">What the business actually does. A score answers whether something looks good; it does not answer what it is.</p>
+      <div class="d3-card prose" id="about"></div>
+    </section>
+
+    <div class="stk-disc" id="disc"></div>
+  </div>
+</main>
+
+<script src="shell.js" defer></script>
+<script src="stock.js" defer></script>
+</body>
+</html>

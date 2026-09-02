@@ -1028,6 +1028,8 @@
 <link rel="stylesheet" href="premium-plus.css">
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="home.css">
 <script>
 (function(){try{
   var s=localStorage.getItem('altaha-theme');
@@ -3472,16 +3474,20 @@ $("bsw-screener").addEventListener("click",()=>switchBrand("screener"));
 $("bsw-planner").addEventListener("click",()=>switchBrand("planner"));
 plannerInit();
 
-/* First impression: show a worked example instead of an empty page.
-   Uses the top-ranked stock from the last scan when available. */
-(async function demoOnArrival(){
-  let sym = "RELIANCE";
-  try{
-    const d = await (await fetch(`${API_BASE}/leaderboard?limit=1`)).json();
-    if(d.available && d.rankings && d.rankings.length) sym = d.rankings[0].symbol;
-  }catch(e){}
-  try{ await analyse(sym); }catch(e){}
-})();
+/* REMOVED: demoOnArrival().
+
+   It analysed a stock into this page on every single load, to avoid a first
+   impression of an empty screen. The instinct was right and the answer was
+   wrong: it meant every visitor — including one who arrived to read the
+   Ideas list — was handed a full company analysis they had not asked for,
+   sitting under the search box, which is most of what made the homepage feel
+   like everything on one plate.
+
+   The empty screen it was solving no longer exists. home.js now puts the
+   index board and the day's movers above the search box, which answers
+   "show me something" with the market rather than with one arbitrary
+   company. A stock is analysed when somebody asks for one, and it opens at
+   its own address: stock.html?ticker=SYM. */
 
 /* Portfolio lives in portfolio.js now — see that file. */
 
@@ -3724,6 +3730,8 @@ if(fcSymParam){
 <script src="lab.js" defer></script>
 <script src="sectors-live.js" defer></script>
 <script src="deals.js" defer></script>
+<script src="shell.js" defer></script>
+<script src="home.js" defer></script>
 <script>
 /* ── Deep links from the landing page ───────────────────────────────────
    ALTAHA_DEEPLINK. index.html already understood ?chart=SYMBOL but had no
