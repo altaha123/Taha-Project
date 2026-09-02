@@ -1100,6 +1100,7 @@
     <span class="moreWrap">
       <button class="tab" id="tab-more" aria-haspopup="true" aria-expanded="false">More ▾</button>
       <div class="moreMenu" id="moreMenu" role="menu">
+        <button id="tab-deals" role="menuitem">Deals</button>
         <button id="tab-tracker" role="menuitem">Tracker</button>
         <button id="tab-results" role="menuitem">Results</button>
         <button id="tab-options" role="menuitem">Options</button>
@@ -1519,6 +1520,10 @@
     <p class="disc">Source: BSE corporate announcements. Altaha does not verify, interpret or endorse any filing.</p>
   </div><!-- /view-filings -->
 
+  <div id="view-deals" style="display:none">
+    <p class="ideas-intro">Bulk and block deals, straight from the exchange. A <b>bulk deal</b> is one client trading more than 0.5% of a company's shares in a day; a <b>block deal</b> is a negotiated trade of at least &#8377;10 crore in one of two fixed windows. Both are disclosures made <i>after</i> the trade, not a live feed &mdash; block deals appear within minutes of their window, bulk deals arrive through the day and complete after the close. Buys are netted against sells, counterparties who end flat are marked as crossing rather than accumulating, and proprietary desks are separated out, because none of those three things is visible in the raw table everyone else prints.</p>
+  </div><!-- /view-deals -->
+
   <div id="view-tracker" style="display:none">
     <p class="ideas-intro">The ideas you have added, with what happened next. Return is what the stock did; alpha is what it did <em>beyond the index over the same days</em> — that second number is the only one that says anything about the engine. Entry prices are anchored on the close at the moment you add, never on a cached scan price. Press <b>Refresh prices</b> to mark the whole list; it walks through in batches and tells you how many are left.</p>
     <div class="toolbar">
@@ -1615,11 +1620,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","filings","live","portfolio","results","options","tracker","vocab"];
+const TABS = ["screener","ideas","filings","deals","live","portfolio","results","options","tracker","vocab"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["results","options","tracker","vocab"];
+const OVERFLOW_TABS = ["deals","results","options","tracker","vocab"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
