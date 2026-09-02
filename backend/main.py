@@ -55,6 +55,10 @@ try:
 except Exception:
     attention_mod = None
 try:
+    import deals as deals_source
+except Exception:
+    deals_source = None
+try:
     import xbrl as xbrl_source
 except Exception:
     xbrl_source = None
@@ -1325,6 +1329,53 @@ def factors_rank(horizon: str = "short", limit: int = 50):
     return to_native(out)
 
 
+# ---------------------------------------------------------------------------
+# Bulk, block and short deals
+#
+# Exchange disclosures of who traded size, published through the day and
+# complete after the close. Not a live trade feed — there is no such thing as
+# a real-time bulk deal, because a bulk deal is a report about a trade rather
+# than the trade itself.
+# ---------------------------------------------------------------------------
+
+
+@app.get("/deals")
+def deals_board(min_value_cr: float = 1.0, limit: int = 40):
+    """
+    Today's disclosures, netted per stock and ranked by what was actually
+    accumulated.
+
+    The netting is the point. A stock with a large buy and an equally large
+    sell saw its shares change hands, not demand arrive; and a substantial
+    share of bulk-deal rows in small caps are proprietary desks providing
+    liquidity, whose presence carries no view about the company. Both are
+    separated out here rather than left for the reader to fall for.
+    """
+    if deals_source is None:
+        raise HTTPException(503, "The deals feed is unavailable.")
+    try:
+        return to_native(deals_source.board(
+            min_value_cr=max(0.0, float(min_value_cr)),
+            limit=max(1, min(int(limit), 200))))
+    except Exception as e:
+        raise HTTPException(503, f"Deals feed unavailable: {str(e)[:120]}")
+
+
+@app.get("/deals/{ticker}")
+def deals_for(ticker: str, days: int = 90):
+    """Every bulk and block disclosure for one stock, newest first."""
+    if deals_source is None:
+        raise HTTPException(503, "The deals feed is unavailable.")
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    try:
+        out = deals_source.for_symbol(ticker, days=max(1, min(int(days), 365)))
+    except Exception as e:
+        raise HTTPException(503, f"Deals feed unavailable: {str(e)[:120]}")
+    out["disclaimer"] = DISCLAIMER
+    return to_native(out)
+
+
 @app.get("/attention")
 def attention_for(ticker: str):
     """
@@ -1363,8 +1414,19 @@ def attention_for(ticker: str):
     except Exception:
         tier = None
 
+    # A disclosed bulk or block deal is the hardest attention signal available
+    # and it is free — the exchange publishes it. Failure is silent by design:
+    # the flag is weaker without it, never absent.
+    deal = None
+    if deals_source is not None:
+        try:
+            deal = (deals_source.for_symbol(base, days=30) or {}).get("net")
+        except Exception:
+            deal = None
+
     return to_native(attention_mod.assess(base, df=hist, filings=filings,
-                                          stories=stories, liquidity_tier=tier))
+                                          stories=stories, liquidity_tier=tier,
+                                          deals=deal))
 
 
 @app.get("/fundamentals/xbrl")
