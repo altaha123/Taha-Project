@@ -62,7 +62,13 @@
   function boardHost() {
     var el = document.getElementById("dl-board");
     if (el) return el;
-    var view = document.getElementById("view-live") ||
+    /* Its own tab, beside Filings. Both are exchange disclosures, which is
+       what these are — the earlier home on the intraday-alerts view was
+       wrong on both counts: nav.js renames that tab "Alerts" and nests it
+       under Ideas, so the board was neither where it was described nor
+       anywhere a reader would look for it. */
+    var view = document.getElementById("view-deals") ||
+               document.getElementById("view-live") ||
                document.getElementById("view-screener");
     if (!view) return null;
     el = document.createElement("section");
@@ -244,7 +250,8 @@
   var seenLive = false;
   function tick() {
     watch();
-    var live = document.getElementById("view-live") ||
+    var live = document.getElementById("view-deals") ||
+               document.getElementById("view-live") ||
                document.getElementById("view-screener");
     if (!live || getComputedStyle(live).display === "none") return;
     if (seenLive) return;

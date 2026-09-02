@@ -48,7 +48,8 @@
         { id: 'screener', label: 'Analysis', hint: 'Score with the full ledger' },
         { id: 'charts',   label: 'Charts',   hint: 'Drawings, Fibonacci, RSI, MACD' },
         { id: 'results',  label: 'Results',  hint: 'Latest quarterly numbers' },
-        { id: 'filings',  label: 'Filings',  hint: 'Live exchange announcements' }
+        { id: 'filings',  label: 'Filings',  hint: 'Live exchange announcements' },
+        { id: 'deals',    label: 'Deals',    hint: 'Who traded size, netted' }
       ]
     },
     {
@@ -364,7 +365,7 @@
     if (legacy) {
       new MutationObserver(function () {
         var active = null;
-        ['screener', 'charts', 'ideas', 'filings', 'live', 'portfolio',
+        ['screener', 'charts', 'ideas', 'filings', 'deals', 'live', 'portfolio',
          'results', 'options', 'tracker'].forEach(function (t) {
           var b = $id('tab-' + t);
           if (b && b.classList.contains('active')) active = t;
