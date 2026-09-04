@@ -26,32 +26,45 @@
         '</div><div class="h">vs NIFTY ' + f(m.nifty_sharpe, 2) + '</div></div>' +
       '<div class="sp-stat"><div class="k">Worst drawdown</div><div class="v">' +
         f(m.max_drawdown_pct, 1) + '%</div><div class="h">peak to trough</div></div>' +
+      (m.decay_warning ? '<div class="sp-caveat sp-warn"><b>Every one of these signals has weakened.</b> ' +
+        esc(m.decay_warning) + '</div>' : '') +
+      (m.vs_single_best ? '<div class="sp-caveat"><b>Why five and not the best one.</b> ' +
+        esc(m.vs_single_best) + '</div>' : '') +
       '<div class="sp-caveat"><b>Read this before the list.</b> ' + esc(m.honest_note) +
         ' Tested over ' + esc(m.window) + '.</div>';
   }
 
+  function legend(sigs) {
+    if (!sigs || !sigs.length) return '';
+    return '<div class="sp-legend">' + sigs.map(function (s) {
+      return '<div class="sp-leg"><b>' + esc(s.label) + '</b><span>' + esc(s.note) + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  function bars(parts) {
+    return '<div class="sp-parts">' + parts.map(function (c) {
+      var v = c.percentile;
+      var cls = v == null ? 'na' : (v >= 70 ? 'hi' : (v <= 30 ? 'lo' : 'mid'));
+      return '<div class="sp-part"><span class="pl">' + esc(c.label) + '</span>' +
+        '<span class="pb"><i class="' + cls + '" style="width:' +
+        (v == null ? 0 : Math.max(2, v)).toFixed(0) + '%"></i></span>' +
+        '<span class="pv">' + (v == null ? '—' : Math.round(v)) + '</span></div>';
+    }).join('') + '</div>';
+  }
+
   function row(r, i) {
-    var pct = Math.max(0, Math.min(100, r.delivery_avg_pct));
+    var sc = Math.max(0, Math.min(100, r.composite));
     return '<details class="sp-row"><summary>' +
       '<span class="sp-rank">' + (i + 1) + '</span>' +
       '<span><span class="sp-sym"><a href="stock.html?ticker=' +
         encodeURIComponent(r.symbol) + '">' + esc(r.symbol) + '</a></span>' +
-        '<span class="sp-sub">up ' + f(r.raw_return_pct, 0) + '% · ₹' +
-        f(r.turnover_cr, 0) + 'cr a day · ' + f(r.above_200dma_pct, 0) +
-        '% over its 200-day</span></span>' +
-      '<span class="sp-bar"><i style="width:' + pct.toFixed(0) + '%"></i></span>' +
-      '<span class="sp-deliv"><span class="n">' + f(r.delivery_avg_pct, 0) +
-        '%</span><span class="l">delivered</span></span>' +
+        '<span class="sp-sub">₹' + f(r.turnover_cr, 0) + 'cr a day · ' +
+        f(r.above_200dma_pct, 0) + '% over its 200-day · ₹' + f(r.price, 2) + '</span></span>' +
+      '<span class="sp-bar"><i style="width:' + sc.toFixed(0) + '%"></i></span>' +
+      '<span class="sp-deliv"><span class="n">' + f(r.composite, 0) +
+        '</span><span class="l">of 100</span></span>' +
       '</summary><div class="sp-body-open">' +
-      '<div class="sp-kv"><span class="k">Signal</span><span class="v mono">' +
-        f(r.signal, 4) + '  (' + f(r.percentile, 0) + 'th percentile of the ranked universe)</span></div>' +
-      '<div class="sp-kv"><span class="k">Raw move</span><span class="v mono">' +
-        f(r.raw_return_pct, 1) + '% over the window</span></div>' +
-      '<div class="sp-kv"><span class="k">Delivery</span><span class="v mono">' +
-        f(r.delivery_avg_pct, 1) + '% of volume settled, on average</span></div>' +
-      '<div class="sp-kv"><span class="k">Ownership edge</span><span class="v mono">' +
-        f(r.quality, 4) + (r.quality >= 0 ? '  (better owned than its own norm)'
-                                          : '  (less well owned than its own norm)') + '</span></div>' +
+      bars(r.components || []) +
       '<div class="sp-kv"><span class="k">Reading</span><span class="v">' + esc(r.why) + '</span></div>' +
       '</div></details>';
   }
@@ -74,7 +87,7 @@
           if (d && d.measured) $('spmeasured').innerHTML = measured(d.measured);
           return;
         }
-        $('spmeasured').innerHTML = measured(d.measured);
+        $('spmeasured').innerHTML = measured(d.measured) + legend(d.signals);
         $('spasof').textContent = 'as of ' + esc(d.as_of) + ' · ranked ' +
           d.universe_ranked + ' names';
         host.innerHTML = (d.book || []).map(row).join('') ||

@@ -1532,9 +1532,9 @@
     <div class="sp-head">
       <h2 class="sp-title">Altaha <i>Special</i></h2>
       <p class="sp-lede">Every momentum screen in India ranks stocks by how much they went up. This one ranks them by how much they went up <b>on days when ownership actually changed hands</b>.</p>
-      <p class="sp-body">NSE publishes, for every stock every day, what share of the traded volume was <b>delivered</b> &mdash; settled into somebody's demat account &mdash; rather than bought and sold again before the close. That field is not in any Yahoo or Bloomberg price feed. It is specific to this market, it is free, and nothing else in Indian retail tooling appears to use it systematically.</p>
-      <p class="sp-body">Two stocks are both up 60% over a year. One rose on days when 70% of volume was delivered; the other on 20%-delivery days. The first was <b>accumulated</b> by people who wanted to own it. The second was <b>churned</b> by traders who were flat by 3:30pm. Plain momentum scores them identically. This does not.</p>
-      <div class="sp-formula mono">signal&nbsp;=&nbsp;&Sigma;<sub>252 sessions</sub>&nbsp;(&nbsp;daily&nbsp;return&nbsp;&times;&nbsp;delivery&nbsp;share&nbsp;)</div>
+      <p class="sp-body">NSE publishes, for every stock every day, what share of the traded volume was <b>delivered</b> &mdash; settled into somebody's demat account &mdash; rather than bought and sold again before the close. That field is not in any Yahoo or Bloomberg price feed. It is specific to this market, it is free, and nothing else in Indian retail tooling appears to use it systematically. Two stocks both up 60%: one rose on 70%-delivery days and was <b>accumulated</b>; the other on 20%-delivery days and was <b>churned</b> by traders flat by 3:30pm. Plain momentum scores them identically.</p>
+      <p class="sp-body">Delivery is one of <b>five</b> signals here, not the whole book. Each is turned into a percentile against every other name ranked today, and the five are averaged with <b>equal weight</b>. Equal weighting is a finding, not laziness: weighting by each signal's measured information coefficient was tested and produced a worse book, because those weights chase whichever signal last worked.</p>
+      <div class="sp-formula mono">score&nbsp;=&nbsp;mean&nbsp;of&nbsp;five&nbsp;percentile&nbsp;ranks&nbsp;&nbsp;&middot;&nbsp;&nbsp;liquid,&nbsp;above&nbsp;its&nbsp;200-day</div>
     </div>
 
     <div class="sp-measured" id="spmeasured"></div>
