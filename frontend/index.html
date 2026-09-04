@@ -1785,7 +1785,8 @@ function switchTab(which){
   if(which==="filings") loadFilings();
   refreshSegsSoon();
   if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
-  if(which==="live"){ loadLive(); liveTimer = setInterval(loadLive, 30000); }
+  if(which==="live"){ loadLive();
+    liveTimer = setInterval(function(){ if(!document.hidden) loadLive(); }, 30000); }
 }
 
 
@@ -2489,7 +2490,7 @@ async function startScan(force){
       $("gennote2").textContent=""; loadIdeas(); return;
     }
     setProgress(r);
-    if(!pollTimer) pollTimer=setInterval(pollScan, 2500);
+    if(!pollTimer) pollTimer=setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);
   }catch(e){
     $("genbtn2").disabled=false; $("genbtn2").textContent="Generate from universe";
     $("gennote2").textContent = API_BASE.includes("localhost")
@@ -2813,7 +2814,9 @@ function makeChartPanel(cfg){
       }catch(e){}
     };
     poll();
-    S.tickTimer = setInterval(poll, 2000);
+    /* Was every 2 seconds and never paused — 1,800 requests an hour per open
+       chart, most of them while nobody was looking at it. */
+    S.tickTimer = setInterval(function(){ if(!document.hidden) poll(); }, 5000);
   }
 
   /* -- control wiring, scoped to this panel's own toolbar -- */
@@ -3686,8 +3689,16 @@ function renderPlain(p){
 
 vocabInit();
 optionsInit();
-loadTicker();
-setInterval(loadTicker, 120000);
+/* The legacy ticker bar is hidden by shell.css, which hides PIXELS and not
+   TIMERS — this kept fetching /market every two minutes forever, on top of the
+   new chrome's own poll and the homepage board's. Three pollers, one endpoint,
+   one visible ticker. It now stands down whenever the new chrome is present,
+   and pauses in a background tab either way. */
+function tickerAlive(){
+  return !document.body.classList.contains("sh-on") && !document.hidden;
+}
+if(tickerAlive()) loadTicker();
+setInterval(function(){ if(tickerAlive()) loadTicker(); }, 120000);
 $("mode-simple").addEventListener("click",()=>setMode("simple"));
 $("mode-full").addEventListener("click",()=>setMode("full"));
 $("showfull").addEventListener("click",()=>{
@@ -3728,7 +3739,7 @@ if(fcSymParam){
   const s = await (await fetch(`${API_BASE}/scan/status`)).json();
   if(s.status === "running"){
     $("genbtn2").disabled = true; $("genbtn2").textContent = "Scanning…";
-    setProgress(s); pollTimer = setInterval(pollScan, 2500);
+    setProgress(s); pollTimer = setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);
   } else if(s.scanned_at){
     $("genbtn2").textContent = "Refresh universe scan";
   }

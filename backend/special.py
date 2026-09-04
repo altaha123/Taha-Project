@@ -78,7 +78,26 @@ try:
     os.makedirs(DATA_DIR, exist_ok=True)
 except Exception:
     DATA_DIR = HERE
-CACHE = os.path.join(DATA_DIR, "delivery_cache_v2.pkl")
+CACHE = os.path.join(DATA_DIR, "delivery_panels_v3.pkl")
+
+# MEMORY. This runs on a 512 MB Render instance that already carries a ~99 MB
+# floor of numpy, pandas and yfinance before a line of app code runs, and whose
+# scan path already has an out-of-memory handler in main.py. The first version
+# of this module cached the bhavcopy in LONG format — one row per symbol per
+# day, with the symbol string repeated — and measured 299 MB resident at 305
+# sessions, on track for ~736 MB at its own three-year retention. It would have
+# OOM-ed the box on its own.
+#
+# Three changes, each measured:
+#   1. Store WIDE float32 panels, never the long frame. The repeated symbol
+#      strings were most of the 86 MB.
+#   2. Keep 400 sessions, not 1100. The signal needs 252 + 21; the rest was
+#      being carried for nothing.
+#   3. Prune to symbols that clear the turnover floor. Roughly 2,950 symbols
+#      trade on any given day and about 600 are rankable; the other 2,350 were
+#      being stored so they could be filtered out later.
+RETAIN_SESSIONS = int(os.environ.get("SPECIAL_RETAIN", "400") or 400)
+PANEL_FIELDS = ("deliv", "qty", "vwap", "close", "high", "low")
 
 LOOKBACK = 252          # sessions in the signal window
 SKIP = 21               # ignore the most recent month
@@ -159,8 +178,8 @@ def refresh(days_back=420, max_days=None):
         have = _load_cache()
         today = dt.date.today()
         start = today - dt.timedelta(days=days_back)
-        if have is not None and len(have):
-            last = have["date"].max().date()
+        if have and len(have.get("close", [])):
+            last = have["close"].index.max().date()
             start = max(start, last + dt.timedelta(days=1))
 
         wanted = [start + dt.timedelta(days=i)
@@ -179,22 +198,55 @@ def refresh(days_back=420, max_days=None):
                 time.sleep(0.05)
 
         if rows:
-            fresh = pd.concat(rows, ignore_index=True)
-            have = fresh if have is None else pd.concat([have, fresh], ignore_index=True)
-            have = have.drop_duplicates(subset=["date", "SYMBOL"], keep="last")
-            # Keep three years; older bars fall outside every window used here.
-            cut = pd.Timestamp(today - dt.timedelta(days=1100))
-            have = have[have["date"] >= cut]
+            # Convert to panels in one pass and drop the long frame immediately;
+            # holding both at once is the peak that matters on a 512 MB box.
+            have = _merge(have, pd.concat(rows, ignore_index=True))
+            del rows
             try:
-                have.to_pickle(CACHE)
+                pd.to_pickle(have, CACHE)
             except Exception:
                 pass
 
         _state["panel"] = have
         _state["built_at"] = dt.datetime.now().isoformat(timespec="seconds")
-        _state["days"] = 0 if have is None else int(have["date"].nunique())
+        _state["days"] = 0 if not have else int(len(have["close"]))
         _state["error"] = None
-        return _state
+        return {k: v for k, v in _state.items() if k != "panel"}
+
+
+def _to_panels(long_df):
+    """Long bhavcopy rows -> six wide float32 panels, pruned to what is
+    actually rankable."""
+    piv = lambda c: long_df.pivot_table(index="date", columns="SYMBOL",
+                                        values=c, aggfunc="last").sort_index()
+    P = {"deliv": piv("DELIV_PER"), "qty": piv("TTL_TRD_QNTY"),
+         "vwap": piv("AVG_PRICE"), "close": piv("CLOSE_PRICE"),
+         "high": piv("HIGH_PRICE"), "low": piv("LOW_PRICE")}
+    P = {k: v.tail(RETAIN_SESSIONS).astype("float32") for k, v in P.items()}
+
+    # Prune the universe. A symbol that has never cleared half the turnover
+    # floor cannot appear in the book, so storing it is pure cost.
+    turn_cr = (P["qty"] * P["vwap"]) / 1e7
+    keep = turn_cr.tail(120).median()
+    keep = keep[keep >= MIN_TURNOVER_CR * 0.5].index
+    keep = [c for c in keep if not _is_fund(c)]
+    return {k: v.reindex(columns=keep) for k, v in P.items()}
+
+
+def _merge(old, new_long):
+    """Fold newly fetched days into the stored panels."""
+    fresh = _to_panels(new_long)
+    if not old:
+        return fresh
+    out = {}
+    for k in PANEL_FIELDS:
+        a, b = old.get(k), fresh.get(k)
+        if a is None: out[k] = b; continue
+        if b is None: out[k] = a; continue
+        m = pd.concat([a, b])
+        m = m[~m.index.duplicated(keep="last")].sort_index()
+        out[k] = m.tail(RETAIN_SESSIONS).astype("float32")
+    return out
 
 
 def _load_cache():
@@ -202,25 +254,38 @@ def _load_cache():
         return _state["panel"]
     try:
         if os.path.exists(CACHE):
-            df = pd.read_pickle(CACHE)
-            _state["panel"] = df
-            _state["days"] = int(df["date"].nunique())
-            return df
+            P = pd.read_pickle(CACHE)
+            if isinstance(P, dict) and "close" in P:
+                _state["panel"] = P
+                _state["days"] = int(len(P["close"]))
+                return P
+            # A v2 long-format cache: convert once, then keep the panels.
+            if isinstance(P, pd.DataFrame):
+                P = _to_panels(P)
+                _state["panel"] = P
+                pd.to_pickle(P, CACHE)
+                return P
     except Exception:
         pass
     return None
 
 
 def status():
-    df = _load_cache()
-    out = {"cached_sessions": 0 if df is None else int(df["date"].nunique()),
-           "symbols": 0 if df is None else int(df["SYMBOL"].nunique()),
+    P = _load_cache()
+    close = None if not P else P.get("close")
+    out = {"cached_sessions": 0 if close is None else int(len(close)),
+           "symbols": 0 if close is None else int(close.shape[1]),
            "built_at": _state["built_at"], "error": _state["error"],
            "cache_path": CACHE,
            "persistent": bool(os.environ.get("DATA_DIR", "").strip())}
-    if df is not None and len(df):
-        out["from"] = str(df["date"].min().date())
-        out["to"] = str(df["date"].max().date())
+    if close is not None and len(close):
+        out["from"] = str(close.index.min().date())
+        out["to"] = str(close.index.max().date())
+        try:
+            out["resident_mb"] = round(sum(
+                v.memory_usage(deep=True).sum() for v in P.values()) / 1e6, 1)
+        except Exception:
+            pass
         out["ready"] = out["cached_sessions"] >= LOOKBACK + SKIP
     else:
         out["ready"] = False
@@ -234,14 +299,6 @@ def status():
 # ---------------------------------------------------------------------------
 # The signal
 # ---------------------------------------------------------------------------
-
-def _panels(df):
-    piv = lambda c: df.pivot_table(index="date", columns="SYMBOL",
-                                   values=c, aggfunc="last").sort_index()
-    return {"deliv": piv("DELIV_PER"), "qty": piv("TTL_TRD_QNTY"),
-            "vwap": piv("AVG_PRICE"), "close": piv("CLOSE_PRICE"),
-            "high": piv("HIGH_PRICE"), "low": piv("LOW_PRICE")}
-
 
 SIGNALS = [
     ("residual_momentum",  "Residual drift",
@@ -324,8 +381,8 @@ def rank_universe(limit=BOOK):
     equal-weight blend decayed least. Diversification across signals is doing
     the work; cleverness about the weights was not.
     """
-    df = _load_cache()
-    if df is None or df["date"].nunique() < 120:
+    P = _load_cache()
+    if not P or P.get("close") is None or len(P["close"]) < 120:
         return {"available": False,
                 "message": ("The delivery history is still being built. It "
                             "needs about a year of sessions before it can rank "
@@ -333,7 +390,6 @@ def rank_universe(limit=BOOK):
                             "less rather than publish a misleading one."),
                 "status": status()}
 
-    P = _panels(df)
     close, vwap, qty, dp = P["close"], P["vwap"], P["qty"], P["deliv"]
     comps, look = _components(P)
 

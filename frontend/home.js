@@ -95,29 +95,48 @@
 
   function fail(box) { if (box && box.parentNode) box.parentNode.removeChild(box); }
 
+  /* The board used to fetch /market and /sector/overview itself, which meant
+     the homepage pulled the same two endpoints the chrome's ticker had just
+     pulled — two callers, one screen, double the load on a 512 MB instance.
+     It now listens for the ticker's broadcast and only falls back to its own
+     fetch if the chrome is absent (this file works without shell.js). */
+  var painted = false;
+
   function board() {
     var box = mount();
     if (!box) return;
 
-    var indices = null, movers = null, done = 0;
+    window.addEventListener('altaha:market', function (e) {
+      var d = (e && e.detail) || {};
+      if (!d.indices || !d.indices.length) return;
+      painted = true;
+      paint(box, d.indices, d.sectors);
+    });
 
-    function maybePaint() {
-      if (++done < 2) return;
-      if (!indices || !indices.length) { fail(box); return; }
-      paint(box, indices, movers);
-    }
-
-    fetch(API + '/market')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { indices = (d && d.indices) || []; })
-      .catch(function () { indices = []; })
-      .then(maybePaint);
-
-    fetch(API + '/sector/overview?window=1d')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { movers = d; })
-      .catch(function () { movers = null; })
-      .then(maybePaint);
+    // Fallback only: if no broadcast arrives, the chrome is not running.
+    setTimeout(function () {
+      if (painted) return;
+      if (window.AltahaShell) {
+        // The chrome IS running and still produced nothing, which means its
+        // market call failed. Remove the skeleton rather than leave it
+        // shimmering forever — an unresolved placeholder reads as broken.
+        fail(box);
+        return;
+      }
+      var indices = null, movers = null, done = 0;
+      function maybePaint() {
+        if (++done < 2) return;
+        if (!indices || !indices.length) { fail(box); return; }
+        painted = true; paint(box, indices, movers);
+      }
+      fetch(API + '/market').then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { indices = (d && d.indices) || []; })
+        .catch(function () { indices = []; }).then(maybePaint);
+      fetch(API + '/sector/overview?window=1d')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { movers = d; })
+        .catch(function () { movers = null; }).then(maybePaint);
+    }, 6000);
   }
 
   function paint(box, indices, sectors) {
@@ -181,10 +200,8 @@
   function start() {
     hijack();
     board();
-    setInterval(function () {
-      var box = document.querySelector('.mb');
-      if (box) { box.remove(); board(); }
-    }, 120000);
+    // No interval of its own any more: the chrome already refreshes every 60
+    // seconds and broadcasts, and the listener above repaints from that.
   }
 
   if (document.readyState === 'loading') {
