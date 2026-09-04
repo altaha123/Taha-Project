@@ -50,8 +50,26 @@ altaha/
    - Root directory: `backend`
    - Build command: `pip install -r requirements.txt`
    - Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-4. Deploy. Render gives you a URL like `https://altaha-api.onrender.com`.
+4. **Set these environment variables** (Render → Environment). They are not
+   optional on a 512 MB instance — without the first two the service will hit
+   its memory limit and restart, which looks from the outside like the tabs
+   being broken:
+
+   | Variable | Value | Why |
+   |---|---|---|
+   | `MALLOC_ARENA_MAX` | `2` | glibc gives a threaded process up to 8 memory arenas **per CPU**. This app runs eight-plus threads. Measured on a scan-shaped workload: 93.2 MB unrestricted, 79.7 MB at 2. |
+   | `WEB_CONCURRENCY` | `1` | One uvicorn worker. Two doubles the ~99 MB library floor (numpy + pandas + yfinance) before any data. |
+   | `DATA_DIR` | `/var/data` | Must be a **mounted disk**. The tracker ledger, the point-in-time store and the Altaha Special delivery panels all live here and are otherwise rebuilt from nothing on every deploy. |
+   | `ADMIN_KEY` | your own secret | Guards the control endpoints. |
+
+   `render.yaml` in the repo root declares all of this — point Render at it as
+   a Blueprint and it is applied for you.
+
+5. Deploy. Render gives you a URL like `https://altaha-api.onrender.com`.
    Open `https://altaha-api.onrender.com/analyze?ticker=TCS` — if you see JSON, it's live.
+   Then open `/health/memory`: it reports resident memory, the peak, the thread
+   count, whether the arena cap is actually set, and which subsystem is holding
+   what. Check it before assuming a slow site is a frontend problem.
 
 ### Step 2 — Frontend on Vercel or Netlify
 1. Edit `frontend/index.html`: near the bottom, change

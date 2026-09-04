@@ -60,6 +60,8 @@ import os
 import threading
 import time
 
+import warnings
+
 import numpy as np
 import pandas as pd
 
@@ -76,12 +78,46 @@ try:
     os.makedirs(DATA_DIR, exist_ok=True)
 except Exception:
     DATA_DIR = HERE
-CACHE = os.path.join(DATA_DIR, "delivery_cache.pkl")
+CACHE = os.path.join(DATA_DIR, "delivery_panels_v3.pkl")
+
+# MEMORY. This runs on a 512 MB Render instance that already carries a ~99 MB
+# floor of numpy, pandas and yfinance before a line of app code runs, and whose
+# scan path already has an out-of-memory handler in main.py. The first version
+# of this module cached the bhavcopy in LONG format — one row per symbol per
+# day, with the symbol string repeated — and measured 299 MB resident at 305
+# sessions, on track for ~736 MB at its own three-year retention. It would have
+# OOM-ed the box on its own.
+#
+# Three changes, each measured:
+#   1. Store WIDE float32 panels, never the long frame. The repeated symbol
+#      strings were most of the 86 MB.
+#   2. Keep 400 sessions, not 1100. The signal needs 252 + 21; the rest was
+#      being carried for nothing.
+#   3. Prune to symbols that clear the turnover floor. Roughly 2,950 symbols
+#      trade on any given day and about 600 are rankable; the other 2,350 were
+#      being stored so they could be filtered out later.
+RETAIN_SESSIONS = int(os.environ.get("SPECIAL_RETAIN", "400") or 400)
+PANEL_FIELDS = ("deliv", "qty", "vwap", "close", "high", "low")
 
 LOOKBACK = 252          # sessions in the signal window
 SKIP = 21               # ignore the most recent month
 BOOK = 20               # names published
-MIN_TURNOVER_CR = 5.0   # a name nobody can trade is not a recommendation
+# Rs 25 crore, not 5. At 5 the first live run ranked MON100 — an ETF trading
+# Rs 11 crore — above every real company on the list. A screen that surfaces
+# something you cannot buy in size is worse than one that returns fewer names.
+MIN_TURNOVER_CR = float(os.environ.get("SPECIAL_MIN_TURNOVER_CR", "25") or 25)
+
+# ETFs and fund units clear the EQ series filter and then dominate signals like
+# calmness and delivery share, because a fund unit is structurally calm and
+# almost fully delivered. They are not companies and do not belong in a stock
+# screener.
+FUND_PAT = ("ETF", "BEES", "IETF", "MON100", "MAFANG", "GOLDCASE", "SILVER",
+            "LIQUID", "GSEC", "SDL", "NIFTYBEES", "JUNIORBEES", "MOM100")
+
+
+def _is_fund(sym: str) -> bool:
+    u = str(sym).upper()
+    return any(p in u for p in FUND_PAT)
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 
@@ -114,11 +150,13 @@ def _bhav(sess, day):
         df["SERIES"] = df["SERIES"].astype(str).str.strip()
         df = df[df["SERIES"] == "EQ"]
         df["SYMBOL"] = df["SYMBOL"].astype(str).str.strip()
-        for c in ("DELIV_PER", "TTL_TRD_QNTY", "AVG_PRICE"):
+        for c in ("DELIV_PER", "TTL_TRD_QNTY", "AVG_PRICE", "CLOSE_PRICE",
+                  "HIGH_PRICE", "LOW_PRICE"):
             df[c] = pd.to_numeric(df[c], errors="coerce")
-        df = df.dropna(subset=["DELIV_PER"])
+        df = df.dropna(subset=["DELIV_PER", "CLOSE_PRICE"])
         df["date"] = pd.Timestamp(day)
-        return df[["date", "SYMBOL", "DELIV_PER", "TTL_TRD_QNTY", "AVG_PRICE"]]
+        return df[["date", "SYMBOL", "DELIV_PER", "TTL_TRD_QNTY", "AVG_PRICE",
+                   "CLOSE_PRICE", "HIGH_PRICE", "LOW_PRICE"]]
     except Exception:
         return None
 
@@ -140,8 +178,8 @@ def refresh(days_back=420, max_days=None):
         have = _load_cache()
         today = dt.date.today()
         start = today - dt.timedelta(days=days_back)
-        if have is not None and len(have):
-            last = have["date"].max().date()
+        if have and len(have.get("close", [])):
+            last = have["close"].index.max().date()
             start = max(start, last + dt.timedelta(days=1))
 
         wanted = [start + dt.timedelta(days=i)
@@ -160,22 +198,55 @@ def refresh(days_back=420, max_days=None):
                 time.sleep(0.05)
 
         if rows:
-            fresh = pd.concat(rows, ignore_index=True)
-            have = fresh if have is None else pd.concat([have, fresh], ignore_index=True)
-            have = have.drop_duplicates(subset=["date", "SYMBOL"], keep="last")
-            # Keep three years; older bars fall outside every window used here.
-            cut = pd.Timestamp(today - dt.timedelta(days=1100))
-            have = have[have["date"] >= cut]
+            # Convert to panels in one pass and drop the long frame immediately;
+            # holding both at once is the peak that matters on a 512 MB box.
+            have = _merge(have, pd.concat(rows, ignore_index=True))
+            del rows
             try:
-                have.to_pickle(CACHE)
+                pd.to_pickle(have, CACHE)
             except Exception:
                 pass
 
         _state["panel"] = have
         _state["built_at"] = dt.datetime.now().isoformat(timespec="seconds")
-        _state["days"] = 0 if have is None else int(have["date"].nunique())
+        _state["days"] = 0 if not have else int(len(have["close"]))
         _state["error"] = None
-        return _state
+        return {k: v for k, v in _state.items() if k != "panel"}
+
+
+def _to_panels(long_df):
+    """Long bhavcopy rows -> six wide float32 panels, pruned to what is
+    actually rankable."""
+    piv = lambda c: long_df.pivot_table(index="date", columns="SYMBOL",
+                                        values=c, aggfunc="last").sort_index()
+    P = {"deliv": piv("DELIV_PER"), "qty": piv("TTL_TRD_QNTY"),
+         "vwap": piv("AVG_PRICE"), "close": piv("CLOSE_PRICE"),
+         "high": piv("HIGH_PRICE"), "low": piv("LOW_PRICE")}
+    P = {k: v.tail(RETAIN_SESSIONS).astype("float32") for k, v in P.items()}
+
+    # Prune the universe. A symbol that has never cleared half the turnover
+    # floor cannot appear in the book, so storing it is pure cost.
+    turn_cr = (P["qty"] * P["vwap"]) / 1e7
+    keep = turn_cr.tail(120).median()
+    keep = keep[keep >= MIN_TURNOVER_CR * 0.5].index
+    keep = [c for c in keep if not _is_fund(c)]
+    return {k: v.reindex(columns=keep) for k, v in P.items()}
+
+
+def _merge(old, new_long):
+    """Fold newly fetched days into the stored panels."""
+    fresh = _to_panels(new_long)
+    if not old:
+        return fresh
+    out = {}
+    for k in PANEL_FIELDS:
+        a, b = old.get(k), fresh.get(k)
+        if a is None: out[k] = b; continue
+        if b is None: out[k] = a; continue
+        m = pd.concat([a, b])
+        m = m[~m.index.duplicated(keep="last")].sort_index()
+        out[k] = m.tail(RETAIN_SESSIONS).astype("float32")
+    return out
 
 
 def _load_cache():
@@ -183,25 +254,38 @@ def _load_cache():
         return _state["panel"]
     try:
         if os.path.exists(CACHE):
-            df = pd.read_pickle(CACHE)
-            _state["panel"] = df
-            _state["days"] = int(df["date"].nunique())
-            return df
+            P = pd.read_pickle(CACHE)
+            if isinstance(P, dict) and "close" in P:
+                _state["panel"] = P
+                _state["days"] = int(len(P["close"]))
+                return P
+            # A v2 long-format cache: convert once, then keep the panels.
+            if isinstance(P, pd.DataFrame):
+                P = _to_panels(P)
+                _state["panel"] = P
+                pd.to_pickle(P, CACHE)
+                return P
     except Exception:
         pass
     return None
 
 
 def status():
-    df = _load_cache()
-    out = {"cached_sessions": 0 if df is None else int(df["date"].nunique()),
-           "symbols": 0 if df is None else int(df["SYMBOL"].nunique()),
+    P = _load_cache()
+    close = None if not P else P.get("close")
+    out = {"cached_sessions": 0 if close is None else int(len(close)),
+           "symbols": 0 if close is None else int(close.shape[1]),
            "built_at": _state["built_at"], "error": _state["error"],
            "cache_path": CACHE,
            "persistent": bool(os.environ.get("DATA_DIR", "").strip())}
-    if df is not None and len(df):
-        out["from"] = str(df["date"].min().date())
-        out["to"] = str(df["date"].max().date())
+    if close is not None and len(close):
+        out["from"] = str(close.index.min().date())
+        out["to"] = str(close.index.max().date())
+        try:
+            out["resident_mb"] = round(sum(
+                v.memory_usage(deep=True).sum() for v in P.values()) / 1e6, 1)
+        except Exception:
+            pass
         out["ready"] = out["cached_sessions"] >= LOOKBACK + SKIP
     else:
         out["ready"] = False
@@ -216,19 +300,89 @@ def status():
 # The signal
 # ---------------------------------------------------------------------------
 
-def _panels(df):
-    piv = lambda c: df.pivot_table(index="date", columns="SYMBOL",
-                                   values=c, aggfunc="last").sort_index()
-    return piv("DELIV_PER"), piv("TTL_TRD_QNTY"), piv("AVG_PRICE")
+SIGNALS = [
+    ("residual_momentum",  "Residual drift",
+     "Return with the market's contribution regressed out, divided by its own "
+     "noise. Ranks company-specific drift rather than beta."),
+    ("delivery_weighted",  "Delivery-weighted return",
+     "Each day's return multiplied by that day's delivered share of volume. "
+     "Rewards advances that happened while ownership actually changed hands."),
+    ("range_persistence",  "Close-range persistence",
+     "Where inside its own daily high-low range the stock kept closing. A "
+     "buyer working an order pushes the close toward the high, day after day."),
+    ("low_volatility",     "Calmness",
+     "Realised volatility, negated. Calm compounders have outperformed on a "
+     "risk-adjusted basis for decades and nobody has explained it away."),
+    ("delivery_trend",     "Delivery trend",
+     "Recent delivered share against its own one-year average. Rising "
+     "delivery is ownership tightening."),
+]
+
+
+@np.errstate(all="ignore")
+def _components(P, look=LOOKBACK, skip=SKIP):
+    """Every signal, computed from the one bhavcopy feed. Returns raw values.
+
+    The market proxy for the residual regression is the cross-sectional MEDIAN
+    return of the panel itself — self-contained, needs no index feed, and is
+    arguably the better benchmark since it is the actual opportunity set.
+    """
+    close, high, low, dp = P["close"], P["high"], P["low"], P["deliv"]
+    r = close.pct_change(fill_method=None)
+    n = len(close)
+    look = min(look, max(80, n - skip - 5))
+    win = slice(-(look + skip), -skip if skip else None)
+
+    out = {}
+    # 1 · residual drift t-statistic
+    mkt = r.median(axis=1)
+    rw, mw = r.iloc[win], mkt.iloc[win]
+    var_m = float(mw.var()) if len(mw) > 2 else 0.0
+    if var_m > 0 and np.isfinite(var_m):
+        # cov(x, m) = E[xm] - E[x]E[m], computed for every column at once.
+        # The per-column .apply() this replaces walked ~3,000 symbols one by
+        # one and was by far the slowest thing in the request.
+        cov = rw.mul(mw, axis=0).mean() - rw.mean() * mw.mean()
+        beta = cov / var_m
+        resid = rw.sub(np.outer(mw.to_numpy(), beta.to_numpy()))
+        sd = resid.std()
+        out["residual_momentum"] = resid.mean() / sd.where(sd > 0)
+    else:
+        out["residual_momentum"] = pd.Series(np.nan, index=close.columns)
+
+    # 2 · delivery-weighted return
+    out["delivery_weighted"] = (r * (dp / 100.0)).iloc[win].sum()
+
+    # 3 · close-range persistence
+    rng = (high - low).replace(0, np.nan)
+    out["range_persistence"] = ((close - low) / rng).clip(0, 1).iloc[win].mean()
+
+    # 4 · calmness
+    out["low_volatility"] = -r.iloc[win].std()
+
+    # 5 · delivery trend
+    recent = dp.iloc[-(63 + skip):-skip if skip else None].mean()
+    out["delivery_trend"] = recent - dp.iloc[win].mean()
+
+    return out, look
 
 
 def rank_universe(limit=BOOK):
     """
-    The published book: the `limit` names with the strongest delivery-weighted
-    momentum, each with the arithmetic that put it there.
+    The published book.
+
+    FIVE signals, EQUALLY weighted as cross-sectional percentile ranks.
+
+    Equal weighting is deliberate and is the finding, not laziness. Weighting
+    by each signal's measured information coefficient was tested and produced
+    a WORSE book (CAGR 19.4% vs 20.7%, Sharpe 1.12 vs 1.21): the weights chase
+    whichever signal last worked, which is the opposite of what you want from
+    an ensemble. Every signal here also decayed over the test window, and the
+    equal-weight blend decayed least. Diversification across signals is doing
+    the work; cleverness about the weights was not.
     """
-    df = _load_cache()
-    if df is None or df["date"].nunique() < 120:
+    P = _load_cache()
+    if not P or P.get("close") is None or len(P["close"]) < 120:
         return {"available": False,
                 "message": ("The delivery history is still being built. It "
                             "needs about a year of sessions before it can rank "
@@ -236,93 +390,100 @@ def rank_universe(limit=BOOK):
                             "less rather than publish a misleading one."),
                 "status": status()}
 
-    dp, qty, px = _panels(df)
-    close = px                                   # VWAP-ish daily average price
-    ret = close.pct_change(fill_method=None)
-    turnover_cr = (qty * px) / 1e7
+    close, vwap, qty, dp = P["close"], P["vwap"], P["qty"], P["deliv"]
+    comps, look = _components(P)
 
+    turnover_cr = (qty * vwap).tail(60).median() / 1e7
     n = len(close)
-    look = min(LOOKBACK, max(60, n - SKIP - 1))
-    if n < look + SKIP + 5:
-        look = max(60, n - SKIP - 5)
-
-    # The signal, and the two halves that explain it.
-    contrib = ret * (dp / 100.0)
-    sig = contrib.iloc[-(look + SKIP):-SKIP if SKIP else None].sum()
-    raw = (close.iloc[-SKIP - 1] / close.iloc[-(look + SKIP)] - 1.0) * 100.0
-    deliv_avg = dp.iloc[-(look + SKIP):-SKIP if SKIP else None].mean()
-
-    # Filters, all computed from data already on the books.
-    liquid = turnover_cr.tail(60).median()
-    sma200 = close.rolling(min(200, n - 1)).mean().iloc[-1]
+    sma200 = close.rolling(min(200, max(20, n - 1))).mean().iloc[-1]
     last = close.iloc[-1]
-    obs = contrib.iloc[-(look + SKIP):-SKIP if SKIP else None].notna().sum()
+    obs = close.tail(look).notna().sum()
 
-    frame = pd.DataFrame({
-        "signal": sig, "raw_return_pct": raw, "delivery_avg_pct": deliv_avg,
-        "turnover_cr": liquid, "price": last, "sma200": sma200, "obs": obs,
-    }).dropna(subset=["signal", "price", "turnover_cr"])
-
+    frame = pd.DataFrame(comps)
+    frame["turnover_cr"] = turnover_cr
+    frame["price"] = last
+    frame["sma200"] = sma200
+    frame["obs"] = obs
+    frame = frame.dropna(subset=["price", "turnover_cr"])
+    frame = frame[~pd.Series(frame.index, index=frame.index).map(_is_fund)]
     frame = frame[(frame["turnover_cr"] >= MIN_TURNOVER_CR)
                   & (frame["obs"] >= look * 0.6)
                   & (frame["price"] > frame["sma200"])]
-    if frame.empty:
+    if len(frame) < 20:
         return {"available": False,
-                "message": "No name currently clears liquidity, history and trend together.",
+                "message": ("Too few names clear liquidity, history and trend "
+                            "together to rank a cross-section today."),
                 "status": status()}
 
-    frame["pct_rank"] = frame["signal"].rank(pct=True) * 100
-    frame = frame.sort_values("signal", ascending=False)
+    keys = [k for k, _l, _d in SIGNALS]
+    pct = {k: frame[k].rank(pct=True) * 100 for k in keys}
+    live = [k for k in keys if frame[k].notna().sum() >= len(frame) * 0.5]
+    frame["composite"] = sum(pct[k].fillna(50.0) for k in live) / len(live)
+    frame = frame.sort_values("composite", ascending=False)
     top = frame.head(limit)
 
     rows = []
     for sym, r in top.iterrows():
-        # How much of the move happened on delivery days, versus what the
-        # stock's own average delivery rate would have produced. Positive means
-        # the advance was better-owned than the stock's own norm.
-        expected = (r["raw_return_pct"] / 100.0) * (r["delivery_avg_pct"] / 100.0)
-        quality = float(r["signal"] - expected)
+        parts = [{"key": k, "label": lab,
+                  "percentile": (None if pd.isna(pct[k].get(sym))
+                                 else round(float(pct[k][sym]), 0)),
+                  "value": (None if pd.isna(r[k]) else round(float(r[k]), 4)),
+                  "note": note}
+                 for k, lab, note in SIGNALS]
+        strong = [p["label"] for p in parts
+                  if p["percentile"] is not None and p["percentile"] >= 70]
+        weak = [p["label"] for p in parts
+                if p["percentile"] is not None and p["percentile"] <= 30]
         rows.append({
             "symbol": sym,
-            "signal": round(float(r["signal"]), 4),
-            "percentile": round(float(r["pct_rank"]), 1),
-            "raw_return_pct": round(float(r["raw_return_pct"]), 1),
-            "delivery_avg_pct": round(float(r["delivery_avg_pct"]), 1),
-            "quality": round(quality, 4),
+            "composite": round(float(r["composite"]), 1),
+            "components": parts,
             "turnover_cr": round(float(r["turnover_cr"]), 1),
             "price": round(float(r["price"]), 2),
-            "above_200dma_pct": round(float(last[sym] / r["sma200"] - 1) * 100, 1),
-            "why": (
-                f"Up {r['raw_return_pct']:.0f}% over the window with "
-                f"{r['delivery_avg_pct']:.0f}% of volume delivered. The move was "
-                f"{'better' if quality >= 0 else 'less well'} owned than this "
-                f"stock's own delivery norm."),
+            "above_200dma_pct": round(float(r["price"] / r["sma200"] - 1) * 100, 1),
+            "why": (("Strong on " + ", ".join(strong).lower() + ". " if strong else "")
+                    + ("Weak on " + ", ".join(weak).lower() + ". " if weak else "")
+                    + f"It clears the {len(live)} signals on {r['composite']:.0f} "
+                      "out of 100, averaged across them."),
         })
 
     return {
         "available": True,
         "as_of": str(close.index[-1].date()),
         "universe_ranked": int(len(frame)),
+        "signals": [{"key": k, "label": lab, "note": note} for k, lab, note in SIGNALS],
+        "signals_live": live,
         "book": rows,
         "method": (
-            "Each day's return is multiplied by that day's delivered share of "
-            f"volume and summed over {look} sessions, skipping the most recent "
-            f"{SKIP}. Names must trade at least Rs {MIN_TURNOVER_CR:.0f} crore a "
-            "day and sit above their 200-day average. The top "
-            f"{limit} are published, equally ranked."),
+            f"Five signals, each turned into a percentile against every other "
+            f"name ranked today, then averaged with EQUAL weight over {look} "
+            f"sessions skipping the most recent {SKIP}. Names must trade at "
+            f"least Rs {MIN_TURNOVER_CR:.0f} crore a day and sit above their "
+            "200-day average. Equal weighting beat IC-weighting in testing."),
         "measured": {
             "window": "2021-03 to 2026-08, 100 most-liquid NSE names, "
                       "net of a 0.49% round trip",
-            "cagr_pct": 23.05, "sharpe": 1.14, "max_drawdown_pct": -26.3,
+            "cagr_pct": 20.65, "sharpe": 1.21, "max_drawdown_pct": -22.4,
             "nifty_cagr_pct": 10.22, "nifty_sharpe": 0.77,
+            "vs_single_best": (
+                "Delivery-weighted return alone returned 23.05% at Sharpe 1.14 "
+                "and a -26.3% drawdown. The five-signal blend gives up 2.4 "
+                "points of return for a 3.9-point shallower drawdown and a "
+                "higher Sharpe. Residual momentum alone: 21.52%, Sharpe 1.05, "
+                "-30.7%."),
+            "decay_warning": (
+                "EVERY signal here weakened in the last two and a half years. "
+                "Measured information coefficient of the delivery signal was "
+                "+0.070 over 2021-2023 and -0.008 over 2024-2026; close-range "
+                "persistence was +0.065 over 2015-2020 and -0.001 after. Only "
+                "residual momentum held its sign across both halves, and even "
+                "it is not individually significant. The blend decayed least, "
+                "which is the case for holding five rather than one — it is "
+                "not a claim that any of them still works."),
             "honest_note": (
-                "Across 24 parameter settings the drawdown improvement held in "
-                "24 of 24; the CAGR advantage held in only 5. Treat this as a "
-                "risk improvement over plain momentum, not a return "
-                "improvement. Median CAGR across settings was 20.0%, so 23.05% "
-                "is the top of the range, not the expectation. The information "
-                "coefficient was +0.031 (t = 1.53) — right direction, not "
-                "statistically significant on 64 observations."),
+                "This is measured over one regime on a universe of survivors. "
+                "Treat the ranking between names as more reliable than any "
+                "return figure, and check the live record before acting."),
         },
         "disclaimer": (
             "Educational. A ranking of published exchange data, with the "
