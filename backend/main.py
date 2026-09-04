@@ -62,6 +62,10 @@ try:
     import xbrl as xbrl_source
 except Exception:
     xbrl_source = None
+try:
+    import special as special_engine
+except Exception:
+    special_engine = None
 import patterns as pattern_engine
 import forward as forward_engine
 import tracker
@@ -1454,6 +1458,51 @@ def fundamentals_xbrl(ticker: str, limit: int = 8, consolidated: Optional[bool] 
                                              consolidated=consolidated))
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+
+
+@app.get("/special")
+def altaha_special(limit: int = 20):
+    """
+    Altaha Special — delivery-weighted momentum.
+
+    Ranks on how much of a stock's advance happened on days when volume was
+    actually DELIVERED rather than churned intraday. The delivery share is
+    published by NSE per stock per day and does not exist in any OHLCV feed,
+    which is the whole point: it is a signal the rest of the market's tooling
+    cannot see.
+    """
+    if special_engine is None:
+        raise HTTPException(503, "The Special engine is not loaded on this instance.")
+    try:
+        return to_native(special_engine.rank_universe(limit=max(5, min(int(limit), 50))))
+    except Exception as e:
+        raise HTTPException(503, f"Delivery data unavailable: {type(e).__name__}")
+
+
+@app.get("/special/status")
+def altaha_special_status():
+    """Whether the delivery cache is deep enough to rank anything, and why not."""
+    if special_engine is None:
+        return {"ready": False, "error": "engine not loaded"}
+    return to_native(special_engine.status())
+
+
+@app.post("/special/refresh")
+def altaha_special_refresh(days_back: int = 420,
+                           x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    Extend the delivery cache. Incremental — it fetches only the sessions it is
+    missing, so the first call is slow and every later one is quick.
+
+    Behind the admin key because it walks a few hundred NSE files and a public
+    button that does that is a public button that gets the instance blocked.
+    """
+    expected = os.getenv("ADMIN_KEY")
+    if expected and x_admin_key != expected:
+        raise HTTPException(status_code=401, detail="admin key required")
+    if special_engine is None:
+        raise HTTPException(503, "The Special engine is not loaded on this instance.")
+    return to_native(special_engine.refresh(days_back=max(30, min(int(days_back), 1100))))
 
 
 @app.get("/leaderboard")

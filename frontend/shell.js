@@ -109,6 +109,10 @@
           { tab: 'charts',   label: 'Charts',         icon: 'candles', hint: 'Drawings, Fibonacci, RSI, MACD' },
           { tab: 'results',  label: 'Results',        icon: 'document', hint: 'Latest quarterly numbers' }
         ]},
+        { head: 'Altaha only', items: [
+          { tab: 'special', label: 'Altaha Special', icon: 'target',
+            hint: 'Delivery-weighted momentum — a signal only NSE publishes' }
+        ]},
         { head: 'The market', items: [
           { tab: 'filings', label: 'Filings',  icon: 'bell', hint: 'Live exchange announcements' },
           { tab: 'deals',   label: 'Deals',    icon: 'exchange', hint: 'Who traded size, netted' },
