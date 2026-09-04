@@ -1030,6 +1030,7 @@
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css">
 <link rel="stylesheet" href="home.css">
+<link rel="stylesheet" href="special.css">
 <script>
 (function(){try{
   var s=localStorage.getItem('altaha-theme');
@@ -1103,6 +1104,7 @@
       <button class="tab" id="tab-more" aria-haspopup="true" aria-expanded="false">More ▾</button>
       <div class="moreMenu" id="moreMenu" role="menu">
         <button id="tab-deals" role="menuitem">Deals</button>
+        <button id="tab-special" role="menuitem">Altaha Special</button>
         <button id="tab-tracker" role="menuitem">Tracker</button>
         <button id="tab-results" role="menuitem">Results</button>
         <button id="tab-options" role="menuitem">Options</button>
@@ -1526,6 +1528,22 @@
     <p class="ideas-intro">Bulk and block deals, straight from the exchange. A <b>bulk deal</b> is one client trading more than 0.5% of a company's shares in a day; a <b>block deal</b> is a negotiated trade of at least &#8377;10 crore in one of two fixed windows. Both are disclosures made <i>after</i> the trade, not a live feed &mdash; block deals appear within minutes of their window, bulk deals arrive through the day and complete after the close. Buys are netted against sells, counterparties who end flat are marked as crossing rather than accumulating, and proprietary desks are separated out, because none of those three things is visible in the raw table everyone else prints.</p>
   </div><!-- /view-deals -->
 
+  <div id="view-special" style="display:none">
+    <div class="sp-head">
+      <h2 class="sp-title">Altaha <i>Special</i></h2>
+      <p class="sp-lede">Every momentum screen in India ranks stocks by how much they went up. This one ranks them by how much they went up <b>on days when ownership actually changed hands</b>.</p>
+      <p class="sp-body">NSE publishes, for every stock every day, what share of the traded volume was <b>delivered</b> &mdash; settled into somebody's demat account &mdash; rather than bought and sold again before the close. That field is not in any Yahoo or Bloomberg price feed. It is specific to this market, it is free, and nothing else in Indian retail tooling appears to use it systematically.</p>
+      <p class="sp-body">Two stocks are both up 60% over a year. One rose on days when 70% of volume was delivered; the other on 20%-delivery days. The first was <b>accumulated</b> by people who wanted to own it. The second was <b>churned</b> by traders who were flat by 3:30pm. Plain momentum scores them identically. This does not.</p>
+      <div class="sp-formula mono">signal&nbsp;=&nbsp;&Sigma;<sub>252 sessions</sub>&nbsp;(&nbsp;daily&nbsp;return&nbsp;&times;&nbsp;delivery&nbsp;share&nbsp;)</div>
+    </div>
+
+    <div class="sp-measured" id="spmeasured"></div>
+    <div class="toolbar"><button class="act" id="spload">Load the book</button>
+      <span class="sp-asof mono" id="spasof"></span></div>
+    <div id="sprows"></div>
+    <p class="disc" id="spdisc"></p>
+  </div><!-- /view-special -->
+
   <div id="view-tracker" style="display:none">
     <p class="ideas-intro">The ideas you have added, with what happened next. Return is what the stock did; alpha is what it did <em>beyond the index over the same days</em> — that second number is the only one that says anything about the engine. Entry prices are anchored on the close at the moment you add, never on a cached scan price. Press <b>Refresh prices</b> to mark the whole list; it walks through in batches and tells you how many are left.</p>
     <div class="toolbar">
@@ -1622,11 +1640,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","filings","deals","live","portfolio","results","options","tracker","vocab"];
+const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["deals","results","options","tracker","vocab"];
+const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -3732,6 +3750,7 @@ if(fcSymParam){
 <script src="deals.js" defer></script>
 <script src="shell.js" defer></script>
 <script src="home.js" defer></script>
+<script src="special.js" defer></script>
 <script>
 /* ── Deep links from the landing page ───────────────────────────────────
    ALTAHA_DEEPLINK. index.html already understood ?chart=SYMBOL but had no

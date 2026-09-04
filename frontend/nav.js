@@ -49,7 +49,8 @@
         { id: 'charts',   label: 'Charts',   hint: 'Drawings, Fibonacci, RSI, MACD' },
         { id: 'results',  label: 'Results',  hint: 'Latest quarterly numbers' },
         { id: 'filings',  label: 'Filings',  hint: 'Live exchange announcements' },
-        { id: 'deals',    label: 'Deals',    hint: 'Who traded size, netted' }
+        { id: 'deals',    label: 'Deals',    hint: 'Who traded size, netted' },
+        { id: 'special',  label: 'Altaha Special', hint: 'Delivery-weighted momentum' }
       ]
     },
     {
@@ -365,8 +366,8 @@
     if (legacy) {
       new MutationObserver(function () {
         var active = null;
-        ['screener', 'charts', 'ideas', 'filings', 'deals', 'live', 'portfolio',
-         'results', 'options', 'tracker'].forEach(function (t) {
+        ['screener', 'charts', 'ideas', 'filings', 'deals', 'special', 'live',
+         'portfolio', 'results', 'options', 'tracker'].forEach(function (t) {
           var b = $id('tab-' + t);
           if (b && b.classList.contains('active')) active = t;
         });
