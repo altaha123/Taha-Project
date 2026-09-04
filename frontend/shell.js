@@ -570,9 +570,12 @@
 
     load();
     stamp();
+    // Nothing polls while the tab is in the background. Browsers keep timers
+    // alive there, so an open tab left overnight was hitting the backend a few
+    // thousand times for a page nobody was looking at.
     setInterval(stamp, 30000);
-    setInterval(load, 300000);
-    if (!REDUCED) setInterval(tick, 7000);
+    setInterval(function () { if (!document.hidden) load(); }, 300000);
+    if (!REDUCED) setInterval(function () { if (!document.hidden) tick(); }, 7000);
   }
 
   /* ── The live ticker ─────────────────────────────────────────────────────── */
@@ -619,8 +622,9 @@
     }
 
     function load() {
-      var chips = [];
+      var chips = [], idx = [], sec = null;
       get('/market', 11000).then(function (d) {
+        idx = (d && d.indices) || [];
         (d && d.indices || []).forEach(function (i) {
           chips.push({ key: 'i:' + i.label, sym: i.label, level: i.level,
                        pct: i.change_pct, link: false });
@@ -628,6 +632,7 @@
       }).catch(function () {}).then(function () {
         return get('/sector/overview?window=1d', 12000).catch(function () { return null; });
       }).then(function (d) {
+        sec = d;
         var seen = {};
         ((d && d.rows) || []).forEach(function (row) {
           (row.stocks || []).forEach(function (s) {
@@ -645,11 +650,22 @@
           return Math.abs(b.pct || 0) - Math.abs(a.pct || 0);
         });
         render(chips.slice(0, 40));
+        // One fetch, two consumers: the homepage board listens for this
+        // instead of pulling /market and /sector/overview again on its own.
+        try {
+          window.dispatchEvent(new CustomEvent('altaha:market',
+            { detail: { indices: idx, sectors: sec } }));
+        } catch (e) {}
       });
     }
 
     load();
-    setInterval(load, 60000);
+    setInterval(function () { if (!document.hidden) load(); }, 60000);
+    // Refresh on return, so coming back to the tab shows live prices rather
+    // than whatever was on screen when you left.
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) load();
+    });
   }
 
   /* ── 3D primitives ────────────────────────────────────────────────────────

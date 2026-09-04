@@ -94,6 +94,16 @@ from plain import highlights, plain_verdict
 
 app = FastAPI(title="Altaha Screener API", version="2.1")
 
+# Everything imported above is permanent. Moving it out of the generational
+# collector's reach means every later gc pass walks only real working data,
+# which on a 512 MB box is both faster and less fragmenting.
+try:
+    import gc as _gc
+    _gc.collect()
+    _gc.freeze()
+except Exception:
+    pass
+
 # ---------------------------------------------------------------------------
 # Social surface — Updates 5 and 6
 #
@@ -406,6 +416,56 @@ def universe_list():
         {"rows": rows, "count": len(rows)},
         headers={"Cache-Control": "public, max-age=86400"},
     )
+
+
+@app.get("/health/memory")
+def health_memory():
+    """
+    What this process is actually holding, and where.
+
+    Exists because "exceeded memory limit" arrives as an email with no detail,
+    and this instance has 512 MB against a library floor of roughly 99 MB
+    (numpy, pandas, yfinance) before a line of app code runs. Reading it from
+    /proc keeps this dependency-free — psutil is not worth 8 MB here.
+    """
+    out = {"limit_mb": 512, "note": "Render Starter is 512 MB."}
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    out["rss_mb"] = round(int(line.split()[1]) / 1024, 1)
+                elif line.startswith("VmHWM:"):        # high-water mark
+                    out["peak_mb"] = round(int(line.split()[1]) / 1024, 1)
+                elif line.startswith("Threads:"):
+                    out["threads"] = int(line.split()[1])
+    except Exception:
+        pass
+    out["malloc_arena_max"] = os.environ.get("MALLOC_ARENA_MAX") or \
+        "UNSET — glibc may open up to 8 arenas per CPU for a threaded process"
+    out["web_concurrency"] = os.environ.get("WEB_CONCURRENCY") or "unset (1)"
+    out["data_dir_persistent"] = bool(os.environ.get("DATA_DIR", "").strip())
+
+    # The big resident consumers, so a spike can be attributed.
+    holders = {}
+    try:
+        p = _state.get("payload") or {}
+        holders["scan_payload_rows"] = len(p.get("rankings") or [])
+    except Exception:
+        pass
+    try:
+        if special_engine is not None:
+            st = special_engine.status()
+            holders["special_panels_mb"] = st.get("resident_mb")
+            holders["special_sessions"] = st.get("cached_sessions")
+            holders["special_symbols"] = st.get("symbols")
+    except Exception:
+        pass
+    out["holders"] = holders
+    if out.get("rss_mb") and out["rss_mb"] > 420:
+        out["warning"] = ("Within 90 MB of the limit. The usual causes are a "
+                          "universe scan in flight, MALLOC_ARENA_MAX unset, or "
+                          "more than one uvicorn worker.")
+    return out
 
 
 @app.get("/health")

@@ -1,0 +1,45 @@
+# Render blueprint for the Altaha API.
+#
+# The two settings that matter most here are environment variables, not code,
+# which is why this file exists at all: without it they have to be re-entered
+# by hand in the dashboard and they silently go missing on a service rebuild.
+#
+#   MALLOC_ARENA_MAX  glibc gives a THREADED process up to 8 arenas per CPU.
+#                     This container reports 4 CPUs, so the default ceiling is
+#                     32 arenas, each able to hold on to freed memory. This app
+#                     runs eight-plus threads (announcements, news, intraday,
+#                     alerts, the scan pool). Measured on a workload shaped like
+#                     the scan: 93.2 MB unrestricted, 79.7 MB at 2 — a 14%
+#                     saving for one line and no code change.
+#
+#   DATA_DIR          Must point at a mounted disk. Everything that takes time
+#                     to accumulate lives here: the tracker ledger, the
+#                     point-in-time store, and the Altaha Special delivery
+#                     panels. Without it they are rebuilt from scratch on every
+#                     deploy, which is both a data loss and a memory spike.
+services:
+  - type: web
+    name: altaha-api
+    runtime: python
+    plan: starter                 # 512 MB / 0.5 CPU
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    disk:
+      name: altaha-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: MALLOC_ARENA_MAX
+        value: "2"
+      - key: WEB_CONCURRENCY       # one worker. Two would double the 99 MB
+        value: "1"                 # library floor before any app data.
+      - key: DATA_DIR
+        value: /var/data
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: SPECIAL_RETAIN        # sessions of delivery history to keep
+        value: "400"
+      - key: ADMIN_KEY
+        sync: false                # set this in the dashboard, never in git
