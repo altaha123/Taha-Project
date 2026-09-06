@@ -28,7 +28,13 @@ services:
     healthCheckPath: /health
     disk:
       name: altaha-data
-      mountPath: /var/data
+      # Render fixes a disk's mount path at creation and it cannot be edited
+      # afterwards. The live service already has a 1 GB disk mounted at /data,
+      # so this matches it — pointing DATA_DIR anywhere else makes the app fall
+      # back to the ephemeral code directory, which is why the disk was sitting
+      # at 0 GB used while the tracker and the point-in-time store kept
+      # resetting on every deploy.
+      mountPath: /data
       sizeGB: 1
     envVars:
       - key: MALLOC_ARENA_MAX
@@ -36,7 +42,7 @@ services:
       - key: WEB_CONCURRENCY       # one worker. Two would double the 99 MB
         value: "1"                 # library floor before any app data.
       - key: DATA_DIR
-        value: /var/data
+        value: /data
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: SPECIAL_RETAIN        # sessions of delivery history to keep
