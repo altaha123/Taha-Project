@@ -10,6 +10,7 @@
   var API = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE
           : (window.API_BASE || 'https://taha-project.onrender.com');
   var loaded = false;
+  var poll = null;      // set while the delivery cache is still filling
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -69,6 +70,28 @@
       '</div></details>';
   }
 
+  function building(d) {
+    var have = (d && d.sessions != null) ? d.sessions
+             : ((d && d.status && d.status.cached_sessions) || 0);
+    var need = (d && d.needed) || 120;
+    var msg = (d && (d.message || d.detail)) ||
+      'The delivery history is not deep enough to rank anything yet.';
+    if (!d || !d.building) {
+      return '<div class="sp-state"><b>Nothing to rank today</b>' + esc(msg) + '</div>';
+    }
+    var pct = Math.max(2, Math.min(100, Math.round(have / need * 100)));
+    return '<div class="sp-state"><b>Building the book</b>' + esc(msg) +
+      '<span class="sp-prog"><i style="width:' + pct + '%"></i></span>' +
+      '<span class="sp-progn mono">' + have + ' / ' + need + ' sessions</span></div>';
+  }
+
+  // Only keep polling while the tab is actually on screen.
+  function again() {
+    var view = $('view-special');
+    if (view && view.style.display === 'none') { poll = setTimeout(again, 20000); return; }
+    load(true);
+  }
+
   function load(force) {
     if (loaded && !force) return;
     loaded = true;
@@ -81,12 +104,15 @@
       .then(function (o) {
         var d = o.j;
         if (!o.ok || !d || d.available === false) {
-          var msg = (d && (d.message || d.detail)) ||
-            'The delivery history is not deep enough to rank anything yet.';
-          host.innerHTML = '<div class="sp-state"><b>Not ready</b>' + esc(msg) + '</div>';
+          host.innerHTML = building(d);
           if (d && d.measured) $('spmeasured').innerHTML = measured(d.measured);
+          // The cache fills itself in the background, so keep looking rather
+          // than leaving a dead end on screen.
+          clearTimeout(poll);
+          if (d && d.building) poll = setTimeout(again, 20000);
           return;
         }
+        clearTimeout(poll);
         $('spmeasured').innerHTML = measured(d.measured) + legend(d.signals);
         $('spasof').textContent = 'as of ' + esc(d.as_of) + ' · ranked ' +
           d.universe_ranked + ' names';
