@@ -1544,25 +1544,68 @@ def altaha_special_status():
     """Whether the delivery cache is deep enough to rank anything, and why not."""
     if special_engine is None:
         return {"ready": False, "error": "engine not loaded"}
-    return to_native(special_engine.status())
+    out = to_native(special_engine.status())
+    out["building"] = bool(_special_build["running"])
+    if _special_build["error"]:
+        out["build_error"] = _special_build["error"]
+    if _special_build["running"]:
+        out["message"] = "Still building. Reload this page in a minute."
+    elif out.get("ready"):
+        out["message"] = "Ready. Open the Altaha Special tab."
+    else:
+        out["message"] = ("Not enough history yet. Visit /special/refresh?key=... "
+                          "to build it.")
+    return out
+
+
+_special_build = {"running": False, "started_at": None, "finished_at": None,
+                  "error": None}
+
+
+def _special_worker(days_back):
+    try:
+        special_engine.refresh(days_back=days_back)
+        _special_build["error"] = None
+    except Exception as e:                                   # pragma: no cover
+        _special_build["error"] = f"{type(e).__name__}: {e}"
+    finally:
+        _special_build["running"] = False
+        _special_build["finished_at"] = time.time()
 
 
 @app.post("/special/refresh")
-def altaha_special_refresh(days_back: int = 420,
+@app.get("/special/refresh")
+def altaha_special_refresh(days_back: int = 420, key: str = "",
                            x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     """
     Extend the delivery cache. Incremental — it fetches only the sessions it is
-    missing, so the first call is slow and every later one is quick.
+    missing, so the first build is slow and every later one is quick.
 
-    Behind the admin key because it walks a few hundred NSE files and a public
-    button that does that is a public button that gets the instance blocked.
+    Answers to GET as well as POST, and takes the admin key as ?key= as well as
+    a header, because the person who runs this is not necessarily holding a
+    terminal. Pasting a URL into a browser has to be enough.
+
+    Runs in the BACKGROUND and returns immediately: the first build walks four
+    hundred exchange files and takes a couple of minutes, which is longer than
+    a browser will politely wait. Poll /special/status to watch it fill.
     """
     expected = os.getenv("ADMIN_KEY")
-    if expected and x_admin_key != expected:
+    if expected and key != expected and x_admin_key != expected:
         raise HTTPException(status_code=401, detail="admin key required")
     if special_engine is None:
         raise HTTPException(503, "The Special engine is not loaded on this instance.")
-    return to_native(special_engine.refresh(days_back=max(30, min(int(days_back), 1100))))
+    if _special_build["running"]:
+        return {"started": False, "reason": "a build is already running",
+                "status": to_native(special_engine.status())}
+    _special_build.update({"running": True, "started_at": time.time(),
+                           "finished_at": None, "error": None})
+    threading.Thread(target=_special_worker, daemon=True, name="altaha-special",
+                     args=(max(30, min(int(days_back), 1100)),)).start()
+    return {"started": True,
+            "message": ("Building in the background. It walks a few hundred "
+                        "exchange files, so give it two or three minutes, then "
+                        "open /special/status."),
+            "status": to_native(special_engine.status())}
 
 
 @app.get("/leaderboard")
