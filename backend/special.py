@@ -55,6 +55,7 @@ LIMITS, STATED WHERE THE CODE IS RATHER THAN IN A FOOTNOTE
 
 import datetime as dt
 import io
+import json
 import math
 import os
 import threading
@@ -79,6 +80,9 @@ try:
 except Exception:
     DATA_DIR = HERE
 CACHE = os.path.join(DATA_DIR, "delivery_panels_v3.pkl")
+# Days the archive genuinely has no file for — holidays, mostly. Remembered so
+# the builder stops asking for them on every pass.
+BLANKS = os.path.join(DATA_DIR, "delivery_blank_days.json")
 
 # MEMORY. This runs on a 512 MB Render instance that already carries a ~99 MB
 # floor of numpy, pandas and yfinance before a line of app code runs, and whose
@@ -102,6 +106,10 @@ PANEL_FIELDS = ("deliv", "qty", "vwap", "close", "high", "low")
 LOOKBACK = 252          # sessions in the signal window
 SKIP = 21               # ignore the most recent month
 BOOK = 20               # names published
+MIN_SESSIONS = 120      # nothing is published below this
+BUILD_CHUNK = 20        # sessions fetched per pass before the cache is written
+BLANK_SETTLE_DAYS = 3   # today's file lands after the close, so a young day is
+                        # never written off as a holiday
 # Rs 25 crore, not 5. At 5 the first live run ranked MON100 — an ETF trading
 # Rs 11 crore — above every real company on the list. A screen that surfaces
 # something you cannot buy in size is worse than one that returns fewer names.
@@ -137,13 +145,23 @@ def _session():
 
 
 def _bhav(sess, day):
-    """One day's full bhavcopy. None on a holiday — that is not an error."""
+    """
+    One day's full bhavcopy, as (frame, state).
+
+    state is "ok", "blank" (a holiday, or today's file is not out yet — not an
+    error) or "blocked" (the archive refused us). The distinction matters: the
+    archive answers a perfectly good request with 403 every so often, and an
+    earlier version counted that as a holiday. A day written off as a holiday
+    is never asked for again, so every refusal became a permanent hole.
+    """
     tag = day.strftime("%d%m%Y")
     url = f"https://nsearchives.nseindia.com/products/content/sec_bhavdata_full_{tag}.csv"
     try:
         r = sess.get(url, timeout=30)
+        if r.status_code in (401, 403, 429, 500, 502, 503, 504):
+            return None, "blocked"
         if r.status_code == 404 or len(r.content) < 5000:
-            return None
+            return None, "blank"
         r.raise_for_status()
         df = pd.read_csv(io.StringIO(r.text))
         df.columns = [c.strip() for c in df.columns]
@@ -156,45 +174,92 @@ def _bhav(sess, day):
         df = df.dropna(subset=["DELIV_PER", "CLOSE_PRICE"])
         df["date"] = pd.Timestamp(day)
         return df[["date", "SYMBOL", "DELIV_PER", "TTL_TRD_QNTY", "AVG_PRICE",
-                   "CLOSE_PRICE", "HIGH_PRICE", "LOW_PRICE"]]
+                   "CLOSE_PRICE", "HIGH_PRICE", "LOW_PRICE"]], "ok"
     except Exception:
-        return None
+        # A timeout or a half-read file is a day to come back for, not a
+        # holiday.
+        return None, "blocked"
+
+
+def _load_blanks():
+    try:
+        with io.open(BLANKS, encoding="utf-8") as fh:
+            return set(json.load(fh))
+    except Exception:
+        return set()
+
+
+def _save_blanks(days):
+    try:
+        with io.open(BLANKS, "w", encoding="utf-8") as fh:
+            json.dump(sorted(days), fh)
+    except Exception:
+        pass
+
+
+def _missing(have, days_back, blanks):
+    """Sessions inside the window that the cache does not hold, oldest first.
+
+    Computed as a set difference rather than "everything after the last day I
+    stored", so a day skipped because the archive was busy is picked up on the
+    next pass instead of being lost behind the high-water mark.
+    """
+    today = dt.date.today()
+    got = set()
+    if have and have.get("close") is not None and len(have["close"]):
+        got = {d.date() for d in have["close"].index}
+    out, day = [], today - dt.timedelta(days=days_back)
+    while day <= today:
+        if (day.weekday() < 5 and day not in got
+                and day.isoformat() not in blanks):
+            out.append(day)
+        day += dt.timedelta(days=1)
+    return out
 
 
 def refresh(days_back=420, max_days=None):
     """
-    Extend the delivery cache up to today.
+    Fetch the sessions the cache is missing and fold them in.
 
-    Incremental on purpose: the first build walks about 420 calendar days and
-    takes a couple of minutes, every run after that fetches only the sessions
-    it is missing. A free instance cannot afford to re-download two years of
-    bhavcopies because somebody opened a tab.
+    Incremental on purpose: a full build walks about 420 calendar days and
+    takes minutes, every pass after that fetches only what it lacks. Pass
+    max_days to do it a chunk at a time — the cache is written at the end of
+    every call, so an instance that sleeps or restarts resumes from where it
+    got to instead of starting over.
+
+    Newest days are taken first: a book off the most recent 120 sessions is
+    worth more than one waiting on a complete year.
     """
     if requests is None:
         _state["error"] = "requests unavailable"
-        return _state
+        # Never hand the caller _state itself: it carries the panel, and the
+        # route serialises whatever it gets back.
+        return {"error": _state["error"], "built_at": _state["built_at"],
+                "days": _state["days"], "fetched": 0, "blocked": 0,
+                "remaining": 0}
 
     with _lock:
         have = _load_cache()
-        today = dt.date.today()
-        start = today - dt.timedelta(days=days_back)
-        if have and len(have.get("close", [])):
-            last = have["close"].index.max().date()
-            start = max(start, last + dt.timedelta(days=1))
-
-        wanted = [start + dt.timedelta(days=i)
-                  for i in range((today - start).days + 1)]
-        wanted = [d for d in wanted if d.weekday() < 5]
+        blanks = _load_blanks()
+        wanted = _missing(have, days_back, blanks)
+        outstanding = len(wanted)
         if max_days:
             wanted = wanted[-max_days:]
 
-        rows = []
+        today = dt.date.today()
+        rows, fetched, blocked = [], 0, 0
         if wanted:
             sess = _session()
             for day in wanted:
-                got = _bhav(sess, day)
-                if got is not None:
+                got, state = _bhav(sess, day)
+                if state == "ok":
                     rows.append(got)
+                    fetched += 1
+                elif state == "blocked":
+                    blocked += 1
+                    time.sleep(1.5)          # back off rather than hammer it
+                elif day <= today - dt.timedelta(days=BLANK_SETTLE_DAYS):
+                    blanks.add(day.isoformat())
                 time.sleep(0.05)
 
         if rows:
@@ -206,12 +271,76 @@ def refresh(days_back=420, max_days=None):
                 pd.to_pickle(have, CACHE)
             except Exception:
                 pass
+        _save_blanks(blanks)
 
         _state["panel"] = have
         _state["built_at"] = dt.datetime.now().isoformat(timespec="seconds")
         _state["days"] = 0 if not have else int(len(have["close"]))
         _state["error"] = None
-        return {k: v for k, v in _state.items() if k != "panel"}
+        out = {k: v for k, v in _state.items() if k != "panel"}
+        out.update({"fetched": fetched, "blocked": blocked,
+                    "remaining": max(0, outstanding - fetched)})
+        return out
+
+
+# ---------------------------------------------------------------------------
+# The builder
+#
+# The cache used to be filled only by an admin POST to /special/refresh. Nothing
+# ever called it, so on a fresh disk the page read "not ready" forever and there
+# was no path from that state to a book. It now fills itself, in chunks, the
+# first time somebody opens the tab.
+# ---------------------------------------------------------------------------
+
+_build = {"running": False, "started_at": None, "fetched": 0, "blocked": 0,
+          "remaining": None, "error": None, "last_start": 0.0}
+
+
+def _build_worker(days_back):
+    stalls = 0
+    try:
+        while True:
+            r = refresh(days_back=days_back, max_days=BUILD_CHUNK)
+            _build["fetched"] += r.get("fetched", 0)
+            _build["blocked"] += r.get("blocked", 0)
+            _build["remaining"] = r.get("remaining")
+            if not r.get("remaining"):
+                _build["error"] = None
+                break
+            if r.get("fetched"):
+                stalls = 0
+                continue
+            # Nothing came back. Give the archive room, then try twice more
+            # before leaving it for the next visitor.
+            stalls += 1
+            if stalls >= 3:
+                _build["error"] = ("The exchange archive is refusing requests "
+                                   "right now. It picks up where it stopped.")
+                break
+            time.sleep(20)
+    except Exception as e:                                   # pragma: no cover
+        _build["error"] = f"{type(e).__name__}: {str(e)[:90]}"
+    finally:
+        _build["running"] = False
+
+
+def ensure_building(days_back=420):
+    """Start a build if the cache is short or stale. Cheap and idempotent."""
+    if requests is None or _build["running"]:
+        return
+    P = _load_cache()
+    deep = bool(P and P.get("close") is not None
+                and len(P["close"]) >= LOOKBACK + SKIP)
+    since = time.time() - _build["last_start"]
+    # A deep cache only needs the day's top-up, so do not go looking every
+    # time somebody reloads the tab.
+    if since < (900 if deep else 60):
+        return
+    _build.update({"running": True, "last_start": time.time(), "fetched": 0,
+                   "blocked": 0, "error": None,
+                   "started_at": dt.datetime.now().isoformat(timespec="seconds")})
+    threading.Thread(target=_build_worker, args=(days_back,), daemon=True,
+                     name="altaha-special-build").start()
 
 
 def _to_panels(long_df):
@@ -289,6 +418,11 @@ def status():
         out["ready"] = out["cached_sessions"] >= LOOKBACK + SKIP
     else:
         out["ready"] = False
+    out["needed"] = MIN_SESSIONS
+    out["building"] = bool(_build["running"])
+    out["build"] = {k: _build[k] for k in
+                    ("running", "started_at", "fetched", "blocked",
+                     "remaining", "error")}
     if not out["persistent"]:
         out["warning"] = ("Delivery cache is not on a persistent disk, so it "
                           "rebuilds from scratch on every deploy. Mount a disk "
@@ -382,13 +516,16 @@ def rank_universe(limit=BOOK):
     the work; cleverness about the weights was not.
     """
     P = _load_cache()
-    if not P or P.get("close") is None or len(P["close"]) < 120:
-        return {"available": False,
-                "message": ("The delivery history is still being built. It "
-                            "needs about a year of sessions before it can rank "
-                            "anything, and it refuses to publish a list from "
-                            "less rather than publish a misleading one."),
-                "status": status()}
+    if not P or P.get("close") is None or len(P["close"]) < MIN_SESSIONS:
+        ensure_building()
+        st = status()
+        have = int(st.get("cached_sessions", 0))
+        err = st.get("build", {}).get("error")
+        return {"available": False, "building": True, "sessions": have,
+                "needed": MIN_SESSIONS,
+                "message": (err or (f"Reading the exchange delivery record — "
+                                    f"{have} of {MIN_SESSIONS} sessions in.")),
+                "status": st}
 
     close, vwap, qty, dp = P["close"], P["vwap"], P["qty"], P["deliv"]
     comps, look = _components(P)
