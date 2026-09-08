@@ -104,6 +104,13 @@ def _open(path):
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA busy_timeout=30000")
+    # One connection per THREAD lives in the threading.local() below, and each
+    # carries its own page cache. SQLite's default is about 2 MB; across a
+    # request threadpool that is tens of megabytes of duplicated cache for a
+    # database only a few MB in size. 2000 KiB -> 256 KiB.
+    conn.execute("PRAGMA cache_size=-256")
+    conn.execute("PRAGMA temp_store=MEMORY")
+    conn.execute("PRAGMA mmap_size=0")      # no per-thread mmap windows
     return conn
 
 
