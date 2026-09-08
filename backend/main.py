@@ -92,7 +92,74 @@ import intraday
 import alerts as notify
 from plain import highlights, plain_verdict
 
+# MEMORY, PART ONE: THREADS.
+#
+# Every one of the 74 routes below is a plain `def`, which means Starlette runs
+# each request in a worker thread. Its default pool is FORTY threads, and this
+# process was sitting at nineteen with 285 MB resident on a 512 MB box.
+#
+# Each thread costs more than its stack. pit_store.py keeps ONE SQLITE
+# CONNECTION PER THREAD in a threading.local(), and every SQLite connection
+# carries its own page cache — so the thread count silently multiplies the
+# database memory too.
+#
+# stack_size() has to be set BEFORE any thread is created, which is why it sits
+# here at import rather than in a startup hook. 512 KB is ample: nothing in
+# this app recurses deeply.
+_THREADS = int(os.environ.get("ALTAHA_MAX_THREADS", "8") or 8)
+try:
+    threading.stack_size(512 * 1024)
+except (ValueError, RuntimeError):
+    pass
+
 app = FastAPI(title="Altaha Screener API", version="2.1")
+
+
+_threadcap = {"applied": None, "error": None}
+
+
+def _apply_thread_cap():
+    """Hold the request pool to `_THREADS` instead of Starlette's default 40.
+
+    Every route here is a plain `def`, so Starlette hands each request to a
+    worker thread and keeps those threads alive for reuse. The pool therefore
+    RATCHETS UP and never comes back down: measured on the live instance,
+    19 threads / 285 MB at 13:47 and 30 threads / 365 MB five minutes later.
+    Each thread also brings its own pit_store SQLite connection with it. Left
+    alone it reaches 40, crosses 512 MB and the instance is killed — which is
+    exactly the shape of the memory emails.
+
+    With WEB_CONCURRENCY=1 and this traffic eight concurrent slow requests is
+    generous; past that they queue. Queuing is slower. Being killed is slower.
+    """
+    try:
+        import anyio.to_thread
+        lim = anyio.to_thread.current_default_thread_limiter()
+        lim.total_tokens = _THREADS
+        _threadcap["applied"] = lim.total_tokens
+        _threadcap["error"] = None
+    except Exception as e:
+        _threadcap["error"] = f"{type(e).__name__}: {e}"
+    return _threadcap
+
+
+@app.on_event("startup")
+async def _cap_request_threadpool():
+    _apply_thread_cap()
+
+
+@app.middleware("http")
+async def _ensure_thread_cap(request, call_next):
+    """Belt and braces.
+
+    on_event("startup") is deprecated and can be skipped when a lifespan is
+    installed by something else, and a cap that silently fails to apply is the
+    same as no cap. This re-applies it on the first request and then costs one
+    comparison per request afterwards. The person running this cannot debug a
+    silent failure, so it must not be possible to have one."""
+    if _threadcap["applied"] != _THREADS:
+        _apply_thread_cap()
+    return await call_next(request)
 
 # Everything imported above is permanent. Moving it out of the generational
 # collector's reach means every later gc pass walks only real working data,
@@ -418,8 +485,29 @@ def universe_list():
     )
 
 
+def _rss_mb():
+    """Resident memory in MB, or None off Linux. No dependency: psutil is 8 MB
+    and this is four lines."""
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    return round(int(line.split()[1]) / 1024, 1)
+    except Exception:
+        pass
+    return None
+
+
+# Refuse to start a universe scan above this. The scan is the only thing here
+# that needs hundreds of MB — it walks ~2,000 symbols pulling a year of history
+# each — and on a 512 MB box it is what turns a healthy process into a killed
+# one. Better a clear refusal than an OOM restart that takes the whole site
+# down with it.
+SCAN_RSS_CEILING = int(os.environ.get("SCAN_RSS_CEILING_MB", "330") or 330)
+
+
 @app.get("/health/memory")
-def health_memory():
+def health_memory(detail: int = 0):
     """
     What this process is actually holding, and where.
 
@@ -460,6 +548,77 @@ def health_memory():
             holders["special_symbols"] = st.get("symbols")
     except Exception:
         pass
+    # Name the threads. "19 threads" is not actionable; "12 of them are
+    # request workers" is.
+    try:
+        names = {}
+        for t in threading.enumerate():
+            key = "request-worker" if t.name.startswith(("ThreadPoolExecutor",
+                  "AnyIO", "asyncio_")) else t.name
+            names[key] = names.get(key, 0) + 1
+        out["thread_names"] = names
+        out["thread_cap_requested"] = _THREADS
+        out["thread_cap_applied"] = _threadcap["applied"]
+        if _threadcap["error"]:
+            out["thread_cap_error"] = _threadcap["error"]
+        if _threadcap["applied"] != _THREADS:
+            out["warning"] = ("The request-thread cap did NOT apply. The pool "
+                              "will grow to 40 and the instance will be killed.")
+    except Exception:
+        pass
+    # A real breakdown, on request. /health/memory stays cheap; ?detail=1 walks
+    # the module-level stores and reports what each is actually holding, so the
+    # next spike is attributed instead of guessed at. I guessed twice and was
+    # wrong both times — thread stacks cost almost nothing, and malloc_trim
+    # returned 0.2 MB. Measure, do not theorise.
+    if detail:
+        import sys as _sys
+
+        def deep(obj, cap=400000):
+            """Rough recursive size. Capped so this cannot itself be the spike."""
+            seen, stack, total, n = set(), [obj], 0, 0
+            while stack and n < cap:
+                o = stack.pop()
+                i = id(o)
+                if i in seen:
+                    continue
+                seen.add(i); n += 1
+                try:
+                    total += _sys.getsizeof(o)
+                except Exception:
+                    continue
+                if isinstance(o, dict):
+                    stack.extend(o.keys()); stack.extend(o.values())
+                elif isinstance(o, (list, tuple, set, frozenset)):
+                    stack.extend(o)
+            return round(total / 1e6, 2)
+
+        det = {}
+        for label, getter in (
+            ("scan_payload", lambda: _state.get("payload")),
+            ("announcements", lambda: getattr(ann, "_state", None)),
+            ("market_news", lambda: getattr(__import__("market_news"), "_state", None)),
+            ("intraday", lambda: getattr(intraday, "_state", None)),
+            ("tracker_cache", lambda: getattr(tracker, "_cache", None)),
+            ("scan_names_cache", lambda: getattr(scanner, "_names_cache", None)),
+        ):
+            try:
+                obj = getter()
+                if obj is not None:
+                    det[label + "_mb"] = deep(obj)
+            except Exception:
+                pass
+        try:
+            det["pit_db_mb"] = round(os.path.getsize(
+                pit_store.DB_PATH) / 1e6, 2) if pit_store else None
+        except Exception:
+            pass
+        out["detail"] = det
+        out["detail_note"] = ("Deep sizes of the module-level stores. These are "
+                              "Python object graphs; numpy/pandas buffers and "
+                              "allocator overhead sit outside them, so the parts "
+                              "will not add up to rss_mb. The gap IS the answer "
+                              "when it is large.")
     out["holders"] = holders
     if out.get("rss_mb") and out["rss_mb"] > 420:
         out["warning"] = ("Within 90 MB of the limit. The usual causes are a "
@@ -482,6 +641,16 @@ def health():
 def scan_start(force: bool = False, key: str = ""):
     """Kick off a background scan. Returns immediately."""
     _require_admin(key)
+    rss = _rss_mb()
+    if rss is not None and rss > SCAN_RSS_CEILING and not force:
+        return {"started": False, "reason": "low_memory",
+                "rss_mb": rss, "ceiling_mb": SCAN_RSS_CEILING,
+                "message": (f"Already holding {rss:.0f} MB of 512 MB. A universe "
+                            "scan needs a few hundred more and would get the "
+                            "instance killed, taking the whole site with it. "
+                            "Restart the service to clear it, or pass force=true "
+                            "if you accept the risk."),
+                **scan_status()}
     with _lock:
         if _state["status"] == "running":
             return {"started": False, "reason": "already_running", **scan_status()}
