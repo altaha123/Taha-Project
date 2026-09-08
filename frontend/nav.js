@@ -1,84 +1,54 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   Altaha Screener — Navigation
-   ═══════════════════════════════════════════════════════════════════════════
-
-   Eleven destinations behind one flat bar plus a More menu, and the bar was
-   the first thing a new visitor met. Everything looked equally important, so
-   nothing did — and the two strongest modules, the Tracker and the glossary,
-   were the two buried deepest.
-
-   This replaces it with two levels:
-
-     Screener   Analysis · Charts · Results · Filings
-     Portfolio  (single view)
-     Ideas      Ideas · Alerts · Track record · Options
-     Planner    (single view)
-     Social     (overlay)
-
-   Four things to know about how it is built:
-
-   1. It proxies rather than rewrites. The original tab buttons stay in the
-      DOM, hidden; the new controls call .click() on them. switchTab and its
-      seven data-loading handlers are untouched, so nothing that already works
-      can break here.
-
-   2. The More menu is gone entirely, not fixed. Its labels were invisible in
-      dark mode because the panel kept a hardcoded white background while its
-      buttons used var(--ink). Removing the component removes that class of
-      bug rather than patching one instance of it.
-
-   3. Sections are in the URL. #ideas/tracker restores the exact view, so a
-      tab can be linked, bookmarked and shared — which the audit asked for and
-      which costs almost nothing once routing exists at all.
-
-   4. Choosing a tab scrolls to the content. The hero is tall; without this,
-      picking a tab left the user looking at the same hero and wondering
-      whether the click had registered.
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* Altaha Screener — Navigation
+   Desktop and mobile navigation delegate to the original tab handlers.
+   Keep section and tab identifiers stable for existing bookmarked URLs.
+   shell.js provides the visible header; this module owns routing and
+   fallback navigation.
+*/
 
 (function () {
   'use strict';
 
   var SECTIONS = [
     {
-      id: 'screener', label: 'Screener',
-      blurb: 'Score any stock, read the chart, check the filings',
+      id: 'screener', label: 'Stocks',
+      blurb: 'Research stocks, charts and company updates',
       icon: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/>',
       tabs: [
-        { id: 'screener', label: 'Analysis', hint: 'Score with the full ledger' },
-        { id: 'charts',   label: 'Charts',   hint: 'Drawings, Fibonacci, RSI, MACD' },
-        { id: 'results',  label: 'Results',  hint: 'Latest quarterly numbers' },
-        { id: 'filings',  label: 'Filings',  hint: 'Live exchange announcements' },
-        { id: 'deals',    label: 'Deals',    hint: 'Who traded size, netted' },
-        { id: 'special',  label: 'Altaha Special', hint: 'Delivery-weighted momentum' }
+        { id: 'screener', label: 'Stock analysis', hint: 'Stock score and calculation details' },
+        { id: 'charts',   label: 'Charts',   hint: 'Price charts and technical indicators' },
+        { id: 'results',  label: 'Quarterly results', hint: 'Latest quarterly numbers' },
+        { id: 'filings',  label: 'Company announcements', hint: 'Updates filed with the exchange' },
+        { id: 'deals',    label: 'Bulk & block deals', hint: 'Large trades and their participants' },
+        { id: 'special', label: 'Delivery trends', hint: 'Price momentum and delivery volume' },
+        { id: 'vocab', label: 'Glossary', hint: 'Financial terms in plain language' }
       ]
     },
     {
       id: 'portfolio', label: 'Portfolio',
-      blurb: 'Your holdings, reviewed and graded',
+      blurb: 'Review holdings, allocation and portfolio rules',
       icon: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
-      tabs: [{ id: 'portfolio', label: 'Review', hint: 'Every holding, then the book' }]
+      tabs: [{ id: 'portfolio', label: 'Portfolio review', hint: 'Review your investments' }]
     },
     {
-      id: 'ideas', label: 'Ideas',
-      blurb: 'What the scan found, and how past calls actually did',
+      id: 'ideas', label: 'Discover',
+      blurb: 'Explore screened stocks and review past scan results',
       icon: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.5.4.8 1 .9 1.6h5.4c.1-.6.4-1.2.9-1.6A6 6 0 0 0 12 3Z"/>',
       tabs: [
-        { id: 'ideas',   label: 'Ideas',        hint: "Today's ranked shortlist" },
-        { id: 'live',    label: 'Alerts',       hint: 'Intraday scanner' },
-        { id: 'tracker', label: 'Track record', hint: 'Measured hit rate' },
-        { id: 'options', label: 'Options',      hint: 'Chain, OI and max pain' }
+        { id: 'ideas',   label: 'Stock shortlist', hint: 'Stocks ranked by the screener' },
+        { id: 'live',    label: 'Live scanner',       hint: 'Intraday scanner' },
+        { id: 'tracker', label: 'Score history', hint: 'Review outcomes of past scans' },
+        { id: 'options', label: 'Options',      hint: 'Option prices and open interest' }
       ]
     },
     {
       id: 'planner', label: 'Planner', brand: 'planner',
-      blurb: 'Household money through the same lens',
+      blurb: 'Plan income, expenses and financial goals',
       icon: '<path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-6"/>',
       tabs: []
     },
     {
-      id: 'social', label: 'Social',
-      blurb: 'Filings and news, ready to post',
+      id: 'social', label: 'News & posts',
+      blurb: 'Read updates and prepare posts',
       icon: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>',
       tabs: []
     }
@@ -172,9 +142,7 @@
     learn.type = 'button';
     learn.innerHTML = '<span>Glossary</span>';
     learn.addEventListener('click', function () {
-      var t = $id('tab-vocab');
-      if (t) { t.click(); scrollToContent(); }
-      markLearn(true);
+      go('screener', 'vocab', true);
     });
     sub.appendChild(learn);
 
@@ -367,7 +335,7 @@
       new MutationObserver(function () {
         var active = null;
         ['screener', 'charts', 'ideas', 'filings', 'deals', 'special', 'live',
-         'portfolio', 'results', 'options', 'tracker'].forEach(function (t) {
+         'portfolio', 'results', 'options', 'tracker', 'vocab'].forEach(function (t) {
           var b = $id('tab-' + t);
           if (b && b.classList.contains('active')) active = t;
         });

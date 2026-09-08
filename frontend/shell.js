@@ -102,55 +102,53 @@
 
   var MENU = [
     {
-      id: 'screener', label: 'Analyse',
+      id: 'screener', label: 'Stocks',
       cols: [
-        { head: 'One stock', items: [
-          { tab: 'screener', label: 'Score & ledger', icon: 'ledger', hint: 'Every point, with its arithmetic' },
-          { tab: 'charts',   label: 'Charts',         icon: 'candles', hint: 'Drawings, Fibonacci, RSI, MACD' },
-          { tab: 'results',  label: 'Results',        icon: 'document', hint: 'Latest quarterly numbers' }
+        { head: 'Stock research', items: [
+          { tab: 'screener', label: 'Stock analysis', icon: 'ledger', hint: 'Stock score and calculation details' },
+          { tab: 'charts',   label: 'Charts',         icon: 'candles', hint: 'Price charts and technical indicators' },
+          { tab: 'results',  label: 'Quarterly results',        icon: 'document', hint: 'Latest quarterly numbers' }
         ]},
-        { head: 'Altaha only', items: [
-          { tab: 'special', label: 'Altaha Special', icon: 'target',
-            hint: 'Delivery-weighted momentum — a signal only NSE publishes' }
+        { head: 'More research', items: [
+          { tab: 'special', label: 'Delivery trends', icon: 'target',
+            hint: 'Price momentum and delivery volume' },
+          { tab: 'vocab', label: 'Glossary', icon: 'document', hint: 'Financial terms in plain language' }
         ]},
         { head: 'The market', items: [
-          { tab: 'filings', label: 'Filings',  icon: 'bell', hint: 'Live exchange announcements' },
-          { tab: 'deals',   label: 'Deals',    icon: 'exchange', hint: 'Who traded size, netted' },
-          { tab: 'options', label: 'Options',  icon: 'layers', hint: 'Chain, OI and max pain' }
+          { tab: 'filings', label: 'Company announcements',  icon: 'bell', hint: 'Updates filed with the exchange' },
+          { tab: 'deals',   label: 'Bulk & block deals',    icon: 'exchange', hint: 'Large trades and their participants' },
+          { tab: 'options', section: 'ideas', label: 'Options',  icon: 'layers', hint: 'Option prices and open interest' }
         ]}
       ]
     },
     {
-      id: 'ideas', label: 'Ideas',
+      id: 'ideas', label: 'Discover',
       cols: [
-        { head: 'What the scan found', items: [
-          { tab: 'ideas', label: "Today's shortlist", icon: 'bulb', hint: 'Ranked, with the setup named' },
-          { tab: 'live',  label: 'Alerts',            icon: 'pulse', hint: 'Intraday scanner' }
+        { head: 'Find stocks', items: [
+          { tab: 'ideas', label: 'Stock shortlist', icon: 'bulb', hint: 'Stocks ranked by the screener' },
+          { tab: 'live',  label: 'Live scanner',            icon: 'pulse', hint: 'Intraday scanner' }
         ]},
-        { head: 'Does it work?', items: [
-          { tab: 'tracker', label: 'Track record', icon: 'target', hint: 'Measured hit rate, not a highlight reel' }
+        { head: 'Past results', items: [
+          { tab: 'tracker', label: 'Score history', icon: 'target', hint: 'Review outcomes of past scans' }
         ]}
       ]
     },
     {
       id: 'portfolio', label: 'Portfolio',
       cols: [
-        { head: 'Your book', items: [
-          { tab: 'portfolio', label: 'Review', icon: 'bars', hint: 'Every holding, then the book as a whole' }
-        ]},
-        { head: 'Against your rules', items: [
-          { tab: 'portfolio', label: 'Policy audit', icon: 'shield', hint: 'Breaches, with the arithmetic to close them' }
+        { head: 'Your investments', items: [
+          { tab: 'portfolio', label: 'Portfolio review', icon: 'bars', hint: 'Review holdings, allocation and portfolio rules' }
         ]}
       ]
     },
     { id: 'planner', label: 'Planner', cols: [
       { head: 'Household', items: [
-        { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'The same lens, on your own finances' }
+        { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'Plan income, expenses and financial goals' }
       ]}
     ]},
-    { id: 'social', label: 'Social', cols: [
-      { head: 'Publish', items: [
-        { tab: 'social', label: 'Filings & news', icon: 'share', hint: 'Drafted, reviewed, ready to post' }
+    { id: 'social', label: 'News & posts', cols: [
+      { head: 'News and sharing', items: [
+        { tab: 'social', label: 'News & post drafts', icon: 'share', hint: 'Read updates and prepare posts' }
       ]}
     ]}
   ];
@@ -237,7 +235,8 @@
     var burger = el('button', 'sh-icon sh-burger');
     burger.type = 'button';
     burger.id = 'sh-burger';
-    burger.setAttribute('aria-label', 'Menu');
+    burger.setAttribute('aria-label', 'Open navigation menu');
+    burger.setAttribute('aria-controls', 'sh-drawer');
     burger.setAttribute('aria-expanded', 'false');
     burger.innerHTML =
       '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
@@ -278,7 +277,7 @@
   // One builder for both the desktop panel and the mobile drawer, so an icon
   // can never appear in one and be missing from the other.
   function itemHTML(secId, it) {
-    return '<button class="sh-item" type="button" data-sec="' + esc(secId) +
+    return '<button class="sh-item" type="button" data-sec="' + esc(it.section || secId) +
       '" data-tab="' + esc(it.tab) + '">' + svg(it.icon) +
       '<span class="sh-txt"><b>' + esc(it.label) + '</b>' +
       '<span>' + esc(it.hint) + '</span></span></button>';
@@ -323,7 +322,7 @@
       });
       b.addEventListener('click', function (e) {
         e.preventDefault();
-        if (openId === b.dataset.sec) { close(); navigate(b.dataset.sec, null); }
+        if (openId === b.dataset.sec) close();
         else open(b.dataset.sec);
       });
       b.addEventListener('keydown', function (e) {
@@ -364,8 +363,15 @@
     function setDrawer(on) {
       drawer.classList.toggle('open', on);
       burger.setAttribute('aria-expanded', on ? 'true' : 'false');
+      burger.setAttribute('aria-label', on ? 'Close navigation menu' : 'Open navigation menu');
       document.body.style.overflow = on ? 'hidden' : '';
     }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && drawer.classList.contains('open')) {
+        setDrawer(false);
+        burger.focus();
+      }
+    });
     burger.addEventListener('click', function () {
       setDrawer(!drawer.classList.contains('open'));
     });
