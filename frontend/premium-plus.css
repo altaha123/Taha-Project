@@ -55,6 +55,18 @@
    The product was gated behind knowing an exact NSE symbol. This is the
    single largest usability gap the site had. */
 
+/* THE BUG THAT MADE THIS INVISIBLE FOR MONTHS.
+
+   .searchrow carries `overflow:hidden` (index.html) so the Analyse button's
+   square corners stay inside the pill. The dropdown is a child of that same
+   row, so it was being clipped to zero height on every keystroke — the list
+   was built, opened and painted, and the browser threw it away. Nothing in
+   the JS was wrong, which is why reading the JS never found it.
+
+   The pill no longer needs the clip: the button carries its own pill radius
+   (premium.css) and sits inside 6px of padding. */
+.searchrow { overflow: visible; }
+
 .tah {
   position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 70;
   max-height: 330px; overflow-y: auto;
@@ -81,9 +93,19 @@
 .tah b { color: var(--gold-dp); font-weight: 600; }
 html[data-theme="dark"] .tah b { color: var(--gold); }
 
+/* Anchored to a narrow grid cell — the portfolio symbol column — where
+   matching the box width would leave no room for the company name. It grows
+   rightwards but never past the viewport. */
+.tah-narrow {
+  right: auto;
+  min-width: min(320px, 78vw);
+  width: max-content; max-width: min(420px, 82vw);
+}
+
 @media (max-width: 560px) {
   .tah-sym { min-width: 74px; font-size: 12px; }
   .tah-name { font-size: 12px; }
+  .tah-narrow { min-width: min(260px, 76vw); }
 }
 
 /* ── 3. RECENT STOCKS ──────────────────────────────────────────────────── */

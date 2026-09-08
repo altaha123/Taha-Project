@@ -47,6 +47,11 @@ html[data-theme="dark"] {
   margin-bottom: 8px;
   align-items: center;
 }
+/* The symbol column is a positioning context, not just a cell: the
+   typeahead dropdown hangs off it. It must fill its grid track exactly or
+   the row's columns stop lining up with .pfhead above them. */
+.pf-symcell { position: relative; display: block; min-width: 0; }
+
 .pfrow input {
   width: 100%;
   background: #fff;

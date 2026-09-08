@@ -265,8 +265,10 @@
     state.rows.forEach(function (r, i) {
       var row = el('div', 'pfrow');
       row.innerHTML =
+        '<span class="pf-symcell">' +
         '<input class="pf_sym" placeholder="RELIANCE" spellcheck="false" ' +
           'aria-label="Symbol, row ' + (i + 1) + '" value="' + esc(r.symbol) + '">' +
+        '</span>' +
         '<input class="pf_qty" type="number" min="0" step="any" placeholder="10" ' +
           'aria-label="Quantity, row ' + (i + 1) + '" value="' + esc(r.qty) + '">' +
         '<input class="pf_buy" type="number" min="0" step="any" placeholder="2400" ' +
@@ -284,6 +286,19 @@
         clearNote();
       });
       sym.addEventListener('blur', function () { sym.value = r.symbol; });
+
+      /* The same dropdown the home search has. Without it this column is a
+         memory test: the engine wants NSE symbols, and nobody knows that
+         Bajaj Finance files as BAJFINANCE until they have been told. */
+      if (window.AltahaTypeahead) {
+        window.AltahaTypeahead.load();
+        window.AltahaTypeahead.attach(sym, function (picked) {
+          r.symbol = cleanSymbol(picked);
+          sym.value = r.symbol;
+          validateRow(row, r);
+          clearNote();
+        }, { anchor: row.querySelector('.pf-symcell'), narrow: true });
+      }
       qty.addEventListener('input', function () {
         r.qty = qty.value; validateRow(row, r); clearNote();
       });

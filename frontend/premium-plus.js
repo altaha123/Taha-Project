@@ -183,7 +183,13 @@
   var UNIVERSE = SEED.slice();
   var CACHE_KEY = 'altaha-universe-v1';
 
+  var universeAsked = false;
+
   function loadUniverse() {
+    // Twenty portfolio rows each ask for this on every re-render. Once is
+    // enough, and a cold localStorage must not become twenty fetches.
+    if (universeAsked) return;
+    universeAsked = true;
     try {
       var raw = localStorage.getItem(CACHE_KEY);
       if (raw) {
@@ -226,12 +232,54 @@
     return out.slice(0, limit || 7).map(function (o) { return o.r; });
   }
 
-  function attachTypeahead(input, onPick) {
-    if (!input) return;
-    var wrap = input.closest('.searchrow') || input.parentNode;
+  /* Every live typeahead registers its "close" here, and ONE document
+     listener drives all of them. The previous version added a document click
+     listener per attachment, which was harmless for the two boxes on the home
+     page and a genuine leak for the portfolio editor, where every add or
+     delete re-renders all twenty rows and would have attached twenty more. */
+  var LIVE = [];
+  var outsideBound = false;
+  var seq = 0;
+
+  function bindOutside() {
+    if (outsideBound) return;
+    outsideBound = true;
+    document.addEventListener('click', function (e) {
+      /* ONLY A REAL CLICK DISMISSES THE LIST.
+
+         nav.js routes by calling .click() on the old tab buttons (its own
+         comment: "the new controls call .click() on them"), and it does that
+         on load and on every hashchange. Those synthetic clicks land on
+         #tab-screener — outside the search row — so this handler was closing
+         the dropdown a frame after each keystroke opened it. The list was
+         built and populated correctly every time and then hidden by the
+         router, which is why nothing looked wrong in the typeahead code.
+
+         A programmatic .click() carries isTrusted === false. A person
+         dismissing a dropdown does not. And a click that leaves the input
+         focused did not move the user anywhere either. */
+      if (!e.isTrusted) return;
+      LIVE = LIVE.filter(function (h) { return h.input.isConnected; });
+      LIVE.forEach(function (h) {
+        if (h.wrap.contains(e.target) || document.activeElement === h.input) return;
+        h.close();
+      });
+    });
+  }
+
+  /* opts.anchor   the element the dropdown is positioned inside. Defaults to
+                   the search row, or failing that the input's own parent.
+     opts.narrow   the anchor is a narrow grid cell (the portfolio symbol
+                   column), so let the list be wider than its box. */
+  function attachTypeahead(input, onPick, opts) {
+    if (!input || input.dataset.tah === '1') return;
+    input.dataset.tah = '1';
+    opts = opts || {};
+
+    var wrap = opts.anchor || input.closest('.searchrow') || input.parentNode;
     if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
 
-    var list = el('div', 'tah');
+    var list = el('div', 'tah' + (opts.narrow ? ' tah-narrow' : ''));
     list.setAttribute('role', 'listbox');
     list.hidden = true;
     wrap.appendChild(list);
@@ -242,6 +290,10 @@
     input.setAttribute('autocomplete', 'off');
 
     var rows = [], cur = -1;
+    // Option ids must be unique across the page: aria-activedescendant is a
+    // document-wide lookup, and the portfolio editor puts twenty of these
+    // lists in one document.
+    var uid = 'tah-' + (++seq) + '-';
 
     function close() {
       list.hidden = true; cur = -1;
@@ -260,7 +312,7 @@
       rows = search(q);
       if (!rows.length) { close(); return; }
       list.innerHTML = rows.map(function (r, i) {
-        return '<div class="tah-item" role="option" id="tah-' + i + '" data-i="' + i + '">' +
+        return '<div class="tah-item" role="option" id="' + uid + i + '" data-i="' + i + '">' +
                '<span class="tah-sym">' + highlight(r.s, q) + '</span>' +
                '<span class="tah-name">' + highlight(r.n || '', q) + '</span></div>';
       }).join('');
@@ -277,7 +329,7 @@
       cur = (cur + step + items.length) % items.length;
       items[cur].classList.add('on');
       items[cur].scrollIntoView({ block: 'nearest' });
-      input.setAttribute('aria-activedescendant', 'tah-' + cur);
+      input.setAttribute('aria-activedescendant', uid + cur);
     }
 
     function pick(i) {
@@ -294,12 +346,33 @@
       open(q);
     });
 
+    /* CAPTURE PHASE, and the event is stopped dead whenever this consumes it.
+
+       home.js listens for Enter on this same input, also in the capture
+       phase, and calls stopImmediatePropagation() before navigating to
+       whatever raw text is in the box. So arrowing down to RELIANCE and
+       pressing Enter opened stock.html?ticker=re — the two letters typed,
+       not the row chosen. premium-plus.js loads before home.js, so a capture
+       listener registered here runs first and can claim the keystroke.
+
+       It claims ONLY the keys it actually acts on. With the list closed,
+       Enter and Escape pass through untouched and every other handler on the
+       page behaves exactly as before. */
     input.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); if (list.hidden) open(input.value.trim()); else move(1); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
-      else if (e.key === 'Enter') { if (!list.hidden && cur > -1) { e.preventDefault(); pick(cur); } else close(); }
-      else if (e.key === 'Escape') { close(); }
-    });
+      var consumed = false;
+      if (e.key === 'ArrowDown') {
+        if (list.hidden) open(input.value.trim()); else move(1);
+        consumed = true;
+      } else if (e.key === 'ArrowUp') {
+        if (!list.hidden) { move(-1); consumed = true; }
+      } else if (e.key === 'Enter') {
+        if (!list.hidden && cur > -1) { pick(cur); consumed = true; }
+        else close();
+      } else if (e.key === 'Escape') {
+        if (!list.hidden) { close(); consumed = true; }
+      }
+      if (consumed) { e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
 
     list.addEventListener('mousedown', function (e) {
       var it = e.target.closest('.tah-item');
@@ -308,10 +381,18 @@
       pick(parseInt(it.dataset.i, 10));
     });
 
-    document.addEventListener('click', function (e) {
-      if (!wrap.contains(e.target)) close();
-    });
+    bindOutside();
+    LIVE.push({ input: input, wrap: wrap, close: close });
   }
+
+  /* Published because the portfolio editor needs the identical dropdown on
+     its symbol column, and a second copy of this logic there would be a
+     second copy to keep in step with the universe payload. */
+  window.AltahaTypeahead = {
+    attach: attachTypeahead,
+    search: search,
+    load: loadUniverse
+  };
 
   function typeahead() {
     loadUniverse();
