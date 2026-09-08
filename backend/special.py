@@ -324,9 +324,34 @@ def _build_worker(days_back):
         _build["running"] = False
 
 
+def _rss_mb():
+    """Resident memory in MB, or None off Linux."""
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) / 1024.0
+    except Exception:
+        pass
+    return None
+
+
+# Do not start a build when the process is already close to its ceiling. The
+# builder fetches twenty bhavcopies and pivots them, which is a real spike on a
+# 512 MB instance, and being killed mid-build helps nobody — the cache resumes
+# either way, so waiting costs one visitor a few minutes and losing the process
+# costs everyone the whole site.
+BUILD_RSS_CEILING = int(os.environ.get("SPECIAL_RSS_CEILING_MB", "380") or 380)
+
+
 def ensure_building(days_back=420):
     """Start a build if the cache is short or stale. Cheap and idempotent."""
     if requests is None or _build["running"]:
+        return
+    rss = _rss_mb()
+    if rss is not None and rss > BUILD_RSS_CEILING:
+        _build["error"] = (f"Holding {rss:.0f} MB of 512 — waiting for headroom "
+                           "before fetching more. The cache resumes on its own.")
         return
     P = _load_cache()
     deep = bool(P and P.get("close") is not None
