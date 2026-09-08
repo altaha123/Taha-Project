@@ -305,3 +305,87 @@ def test_the_idea_card_never_carries_a_price_level():
     blob = "".join(drawn)
     for forbidden in ("1995", "1836", "2315"):
         assert forbidden not in blob, f"a price level reached the card: {forbidden}"
+
+
+# ---------------------------------------------------------------------------
+# The mark
+#
+# A missing logo file does not raise and does not change the card's size, so
+# nothing above would notice it. What would notice is a timeline: the card is
+# the only thing most people ever see of this product, and an unbranded one is
+# indistinguishable from a screenshot somebody else made.
+# ---------------------------------------------------------------------------
+
+def test_every_card_carries_the_mark():
+    """The gold arrow only exists in the logo, so its pixels prove it landed."""
+    from PIL import Image
+    import io as _io
+
+    cards = {
+        "stock": og.stock_card(ANALYZE),
+        "record": og.record_card(STATS),
+        "idea": og.idea_card(IDEA),
+        "holding": og.holding_card(HOLDING),
+        "chart": og.chart_card(CHART),
+    }
+    for name, png in cards.items():
+        im = Image.open(_io.BytesIO(png)).convert("RGB")
+        # The lockup's left slot, tight enough that only the mark is inside it.
+        box = im.crop((64, 52, 64 + 82, 52 + og.LOGO_H))
+        colours = box.getcolors(maxcolors=100_000) or []
+        ink = sum(n for n, (r, g, b) in colours if max(r, g, b) < 90)
+        gold = sum(n for n, (r, g, b) in colours if r > 140 and b < 120 and r - b > 70)
+        assert ink > 500, f"{name} card: no letterform where the mark should be"
+        assert gold > 120, f"{name} card: no gold arrow where the mark should be"
+
+
+def test_the_wordmark_does_not_sit_on_top_of_the_mark():
+    """
+    The mark shifts the wordmark right. If the shift is ever dropped the two
+    overlap into mush, which renders perfectly and reads as a printing error.
+    """
+    from PIL import Image, ImageDraw
+
+    if og.logo(og.LOGO_H) is None:
+        pytest.skip("no mark to shift past — test_every_card_carries_the_mark covers that")
+
+    img = Image.new("RGB", (og.W, og.H), og.PAPER)
+    d = ImageDraw.Draw(img)
+    seen = []
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        seen.append((xy[0], str(text)))
+        return original(self, xy, text, *a, **k)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        og._shell(d, img)
+    finally:
+        ImageDraw.ImageDraw.text = original
+
+    x = min(px for px, text in seen if text == "Altaha")
+    assert x >= 64 + og.LOGO_H, "the wordmark still starts where the mark is drawn"
+
+
+def test_a_missing_logo_file_costs_the_mark_and_nothing_else():
+    """Same contract as the fonts: an unbranded card beats a broken link."""
+    original, og.LOGO_PATH = og.LOGO_PATH, "/nonexistent/altaha-logo.png"
+    cache, og._logo_cache = og._logo_cache, {}
+    try:
+        assert og.logo(og.LOGO_H) is None
+        assert _png_size(og.stock_card(ANALYZE)) == (1200, 630)
+    finally:
+        og.LOGO_PATH = original
+        og._logo_cache = cache
+
+
+def test_the_share_page_points_a_crawler_at_the_icon():
+    html = og.share_page("Title", "Desc",
+                         "https://altahascreener.in/og/stock.png?ticker=X",
+                         "https://altahascreener.in/?q=X")
+    assert '<link rel="icon" href="https://altahascreener.in/favicon.ico"' in html
+    assert 'apple-touch-icon" href="https://altahascreener.in/apple-touch-icon.png"' in html
+    assert 'og:logo" content="https://altahascreener.in/icon-512.png"' in html
+    # A target that is not an absolute URL must not produce a half-built link.
+    assert "rel=\"icon\"" not in og.share_page("T", "D", "i.png", "/?q=X")

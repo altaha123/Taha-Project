@@ -30,6 +30,13 @@ domain:
 Query strings are forwarded by Vercel automatically. Everything else on the
 domain is still the static site: rewrites only apply when no file matches.
 
+That last sentence is what lets the share pages carry the logo. Each one
+advertises `/favicon.ico`, `/icon-512.png` and `/apple-touch-icon.png` on its
+own domain, and because those files exist in `frontend/` no rewrite catches
+them — Vercel serves them directly and the API never sees the request. The
+card image itself carries the mark drawn into the PNG by `backend/og.py`, so
+it survives clients that show the image and nothing else.
+
 ## After a custom domain
 
 Point the domain at the same Vercel project and set two environment variables

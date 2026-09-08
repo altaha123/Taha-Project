@@ -235,14 +235,17 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
   display:flex; align-items:center; gap:9px; text-decoration:none;
   color:var(--ink); flex:0 0 auto; font-weight:600; letter-spacing:-.01em;
 }
+/* The mark itself, not a stand-in for it. A background rather than an <img>
+   because the artwork swaps with the theme; see .brandmark in index.html. */
 .sh-brand .mk{
-  width:26px; height:26px; border-radius:7px; display:grid; place-items:center;
-  background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt));
-  color:#fff; font:700 13px/1 'Instrument Serif',Georgia,serif;
-  box-shadow:var(--e1);
+  height:26px; aspect-ratio:109/100; display:block; flex:0 0 auto;
+  background:url(altaha-logo.png) center/contain no-repeat;
   transition:transform var(--t-mid) var(--ease-out);
 }
-.sh-brand:hover .mk{ transform:rotateY(180deg) }
+html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png) }
+/* The old placeholder tile flipped on hover. A mirrored logo is a wrong
+   logo — the arrow would point the other way — so it lifts instead. */
+.sh-brand:hover .mk{ transform:translateY(-1px) scale(1.06) }
 .sh-brand .nm{ font-size:15.5px }
 .sh-brand .nm i{ font-family:'Instrument Serif',Georgia,serif; font-style:italic; color:var(--gold) }
 @media (max-width:560px){ .sh-brand .nm{ display:none } }

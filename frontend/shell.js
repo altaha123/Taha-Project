@@ -203,7 +203,9 @@
 
     var brand = el('a', 'sh-brand');
     brand.href = 'index.html';
-    brand.innerHTML = '<span class="mk">A</span><span class="nm">Altaha <i>Screener</i></span>';
+    brand.innerHTML =
+      '<span class="mk" aria-hidden="true"></span>' +
+      '<span class="nm">Altaha <i>Screener</i></span>';
 
     var nav = el('nav', 'sh-nav');
     nav.setAttribute('aria-label', 'Main');
