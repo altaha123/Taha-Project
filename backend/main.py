@@ -115,18 +115,51 @@ except (ValueError, RuntimeError):
 app = FastAPI(title="Altaha Screener API", version="2.1")
 
 
-@app.on_event("startup")
-async def _cap_request_threadpool():
+_threadcap = {"applied": None, "error": None}
+
+
+def _apply_thread_cap():
     """Hold the request pool to `_THREADS` instead of Starlette's default 40.
 
-    With WEB_CONCURRENCY=1 and this traffic, eight concurrent slow requests is
-    already generous; past that they queue, which is the correct behaviour on a
-    512 MB instance. Queuing is slower. Being killed is slower still."""
+    Every route here is a plain `def`, so Starlette hands each request to a
+    worker thread and keeps those threads alive for reuse. The pool therefore
+    RATCHETS UP and never comes back down: measured on the live instance,
+    19 threads / 285 MB at 13:47 and 30 threads / 365 MB five minutes later.
+    Each thread also brings its own pit_store SQLite connection with it. Left
+    alone it reaches 40, crosses 512 MB and the instance is killed — which is
+    exactly the shape of the memory emails.
+
+    With WEB_CONCURRENCY=1 and this traffic eight concurrent slow requests is
+    generous; past that they queue. Queuing is slower. Being killed is slower.
+    """
     try:
         import anyio.to_thread
-        anyio.to_thread.current_default_thread_limiter().total_tokens = _THREADS
-    except Exception:
-        pass
+        lim = anyio.to_thread.current_default_thread_limiter()
+        lim.total_tokens = _THREADS
+        _threadcap["applied"] = lim.total_tokens
+        _threadcap["error"] = None
+    except Exception as e:
+        _threadcap["error"] = f"{type(e).__name__}: {e}"
+    return _threadcap
+
+
+@app.on_event("startup")
+async def _cap_request_threadpool():
+    _apply_thread_cap()
+
+
+@app.middleware("http")
+async def _ensure_thread_cap(request, call_next):
+    """Belt and braces.
+
+    on_event("startup") is deprecated and can be skipped when a lifespan is
+    installed by something else, and a cap that silently fails to apply is the
+    same as no cap. This re-applies it on the first request and then costs one
+    comparison per request afterwards. The person running this cannot debug a
+    silent failure, so it must not be possible to have one."""
+    if _threadcap["applied"] != _THREADS:
+        _apply_thread_cap()
+    return await call_next(request)
 
 # Everything imported above is permanent. Moving it out of the generational
 # collector's reach means every later gc pass walks only real working data,
@@ -524,7 +557,13 @@ def health_memory(detail: int = 0):
                   "AnyIO", "asyncio_")) else t.name
             names[key] = names.get(key, 0) + 1
         out["thread_names"] = names
-        out["thread_cap"] = _THREADS
+        out["thread_cap_requested"] = _THREADS
+        out["thread_cap_applied"] = _threadcap["applied"]
+        if _threadcap["error"]:
+            out["thread_cap_error"] = _threadcap["error"]
+        if _threadcap["applied"] != _THREADS:
+            out["warning"] = ("The request-thread cap did NOT apply. The pool "
+                              "will grow to 40 and the instance will be killed.")
     except Exception:
         pass
     # A real breakdown, on request. /health/memory stays cheap; ?detail=1 walks
