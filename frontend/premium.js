@@ -775,7 +775,7 @@
     x.fillStyle = 'rgba(255,255,255,.34)'; x.font = '400 19px ' + M;
     x.fillText('Every calculation shown at the source', cx, 1240);
     x.fillStyle = 'rgba(196,166,97,.72)'; x.font = '500 21px ' + M;
-    x.fillText('taha-project-one.vercel.app', cx, 1284);
+    x.fillText('altahascreener.in', cx, 1284);
 
     return { canvas: c, sym: sym || 'stock' };
   }

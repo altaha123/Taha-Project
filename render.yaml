@@ -39,6 +39,8 @@ services:
         value: /var/data
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: SITE_URL              # the public domain. Every share link, OG
+        value: https://altahascreener.in   # tag and card footer is built from it.
       - key: SPECIAL_RETAIN        # sessions of delivery history to keep
         value: "400"
       - key: ADMIN_KEY

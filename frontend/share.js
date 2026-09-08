@@ -53,7 +53,7 @@
     if (configured) return configured;
     var o = (window.location && window.location.origin) || "";
     if (/^https?:/.test(o) && !/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(o)) return o;
-    return "https://taha-project-one.vercel.app";
+    return "https://altahascreener.in";
   })();
 
   var $ = function (id) { return document.getElementById(id); };
