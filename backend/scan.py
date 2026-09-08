@@ -79,7 +79,84 @@ if _DATA_DIR != _HERE and os.path.exists(_LEGACY_OUT) and not os.path.exists(OUT
 # ---------------------------------------------------------------------------
 # Tunables
 # ---------------------------------------------------------------------------
-CHUNK = 40                 # symbols per bulk price request
+# MEMORY. A universe scan is the only thing in this project that can kill the
+# instance, and it did: a scan on a 512 MB box took the site blank and produced
+# a memory-limit email. Three changes, in order of how much they matter.
+#
+# 1. A WATCHDOG. Whatever the scan costs, it now checks resident memory between
+#    chunks and stops itself while there is still headroom. Partial results are
+#    kept — the checkpoint machinery below already supports that. A scan that
+#    ends early with 300 names scored is a mild disappointment; one that is
+#    killed by the kernel takes the whole website down with it.
+#
+# 2. A SMALLER CHUNK, FETCHED SEQUENTIALLY. 40 symbols with threads=True meant
+#    forty concurrent HTTP responses buffered at once, each a year of daily
+#    bars. Yahoo also rate-limits that hard — trying to measure it here got
+#    empty responses back, which is its own argument against the setting.
+#
+# 3. TRIM AFTER EACH CHUNK. gc.collect() returns memory to Python's allocator,
+#    not to the operating system, so RSS stays at the high-water mark all scan.
+#    malloc_trim() hands it back.
+SCAN_RSS_CEILING = int(os.environ.get("SCAN_RSS_CEILING_MB", "440") or 440)
+
+# The scan MUST be able to finish — a half-scanned universe is a half-useful
+# product. So the watchdog is a last resort, not the plan, and it records what
+# the scan actually costs so the ceiling can be set from evidence rather than
+# from my guesses. I have guessed at this instance's memory three times now and
+# been wrong three times: thread stacks cost nothing, malloc_trim recovered
+# 0.2 MB, and 120 synthetic chunks grew 2 MB. The scan is the one path I cannot
+# reproduce locally, so it reports its own high-water mark instead.
+_scan_mem = {"start_mb": None, "peak_mb": None, "peak_at": None}
+
+
+class ScanAborted(RuntimeError):
+    """Raised by the watchdog. Caught by run_scan, which keeps what it has."""
+
+
+def _rss_mb():
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) / 1024.0
+    except Exception:
+        pass
+    return None
+
+
+def _trim():
+    """Return freed pages to the OS. gc.collect() alone does not."""
+    gc.collect()
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+
+
+def _note_peak(where=""):
+    rss = _rss_mb()
+    if rss is None:
+        return None
+    if _scan_mem["peak_mb"] is None or rss > _scan_mem["peak_mb"]:
+        _scan_mem["peak_mb"] = round(rss, 1)
+        _scan_mem["peak_at"] = where
+    return rss
+
+
+def _watchdog(where=""):
+    _note_peak(where)
+    rss = _rss_mb()
+    if rss is not None and rss > SCAN_RSS_CEILING:
+        _trim()
+        rss = _rss_mb() or rss
+        if rss > SCAN_RSS_CEILING:
+            raise ScanAborted(
+                f"stopped at {rss:.0f} MB of 512 to avoid being killed"
+                + (f" ({where})" if where else ""))
+
+
+CHUNK = int(os.environ.get("SCAN_CHUNK", "15") or 15)   # was 40
 # Candidates that get full fundamental analysis. Overridable so a 512 MB
 # Render instance can be told to go lighter: set SCAN_DEPTH=120 in the env.
 PHASE2_SIZE = int(os.environ.get("SCAN_DEPTH", "200") or 200)
@@ -98,7 +175,7 @@ PHASE2_SIZE = int(os.environ.get("SCAN_DEPTH", "200") or 200)
 # about 25% more scan time and they are what makes every future factor
 # statistic meaningful rather than decorative.
 CONTROL_PCT = float(os.environ.get("SCAN_CONTROL_PCT", "0.25") or 0.25)
-PHASE2_WORKERS = 3         # polite concurrency for per-stock fundamentals
+PHASE2_WORKERS = int(os.environ.get("SCAN_PHASE2_WORKERS", "2") or 2)
 MIN_ROWS = 120             # minimum trading days of history
 MIN_TURNOVER = 2e7         # legacy constant, retained for the payload label
 # Only genuinely untradeable names are removed. Everything above this floor is
@@ -211,18 +288,23 @@ def prefilter_by_quote(symbols, state, progress):
 
 
 def phase1(symbols, progress, state):
+    phase1.aborted = None
     candidates, skipped_illiquid, skipped_nodata = [], 0, 0
     chunks = [symbols[i:i + CHUNK] for i in range(0, len(symbols), CHUNK)]
 
+    aborted = None
     for ci, chunk in enumerate(chunks):
         tickers = [f"{s}.NS" for s in chunk]
         use_dhan = dhan is not None and dhan.configured() and dhan.is_live().get("ok")
         data = None
         if not use_dhan:
             try:
+                # threads=False: threads=True buffered one response per symbol
+                # simultaneously. Slower, and it is the difference between a
+                # scan that finishes and an instance that is killed.
                 data = yf.download(" ".join(tickers), period="1y", interval="1d",
                                    group_by="ticker", auto_adjust=True,
-                                   threads=True, progress=False)
+                                   threads=False, progress=False)
             except Exception:
                 data = None
         time.sleep(0.6 + random.random() * 0.6)
@@ -261,12 +343,32 @@ def phase1(symbols, progress, state):
             finally:
                 df = None
         del data
-        gc.collect()
+        # yfinance memoises per-Ticker metadata and HTTP responses. Over two
+        # thousand symbols that is not nothing, and none of it is wanted once
+        # the chunk is scored.
+        try:
+            for _c in ("_shared", "_price_cache", "_data"):
+                _o = getattr(yf, _c, None)
+                if isinstance(_o, dict):
+                    _o.clear()
+        except Exception:
+            pass
+        _trim()
+        try:
+            _watchdog(f"phase 1, chunk {ci + 1} of {len(chunks)}")
+        except ScanAborted as e:
+            # Stop scanning, keep every candidate found so far. Phase 2 will
+            # run on a shorter list, which is the correct degradation.
+            aborted = str(e)
+            break
         if progress:
             progress(state["done"], state["total"], len(candidates))
 
     candidates.sort(key=lambda c: c["score"], reverse=True)
+    if aborted:
+        phase1.aborted = aborted
     return candidates, skipped_illiquid, skipped_nodata
+
 
 
 # ---------------------------------------------------------------------------
@@ -488,7 +590,7 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
 
 
 def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
-                   ill, nod, n_deep, failed, partial=False):
+                   ill, nod, n_deep, failed, partial=False, note=None):
     # Rows whose fundamentals failed to load are recorded but must not be
     # ranked — a composite built from technicals alone is not comparable with
     # one built from both. They stay visible in the counts below.
@@ -503,7 +605,15 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
     return {
         "scanned_at": dt.datetime.now().strftime("%d %b %Y, %H:%M")
                       + (" (partial — scan in progress)" if partial else ""),
-        "partial": partial,
+        "partial": partial or bool(note),
+        # What the scan actually cost. Printed so the ceiling can be set from a
+        # measurement instead of a guess, and so a memory email can be matched
+        # against a real high-water mark.
+        "memory": {k: v for k, v in _scan_mem.items()},
+        # Why a list is shorter than usual. The watchdog stops a scan while
+        # there is still headroom rather than letting the kernel kill the
+        # process, and a reader deserves to know that is what happened.
+        "stopped_early": note,
         "universe_source": source,
         "universe_size": universe_all,
         "prefiltered_by_quote": prefiltered,
@@ -570,7 +680,10 @@ def run_scan(progress=None, names=None, checkpoint=None):
         state["done"] = prefiltered
         state["total"] = universe_all + n2
 
+    _scan_mem.update({"start_mb": _rss_mb(), "peak_mb": None, "peak_at": None})
+    _note_peak("start")
     cands, ill, nod = phase1(symbols, progress, state)
+    scan_note = getattr(phase1, "aborted", None)
     ill += prefiltered
 
     # Was: deep = cands[:n2] — top N by technical score only.
@@ -624,6 +737,11 @@ def run_scan(progress=None, names=None, checkpoint=None):
                     progress(state["done"], state["total"], len(rows))
                 if rows and len(rows) % CP_EVERY == 0:
                     _checkpoint()
+                    _watchdog(f"phase 2, {len(rows)} scored")
+    except ScanAborted:
+        # Deliberate stop, not a failure. Everything scored so far is kept and
+        # written by the final checkpoint below.
+        _trim()
     except MemoryError:
         gc.collect()                    # salvage whatever scored so far
 
