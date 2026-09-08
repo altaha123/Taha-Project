@@ -35,11 +35,12 @@ domain is still the static site: rewrites only apply when no file matches.
 Point the domain at the same Vercel project and set two environment variables
 on the Render service:
 
-    SITE_URL=https://altaha.example
-    SHARE_ORIGIN=https://altaha.example
+    SITE_URL=https://altahascreener.in
+    SHARE_ORIGIN=https://altahascreener.in
 
 `SHARE_ORIGIN` defaults to `SITE_URL`, so in practice only the first is
-required. Nothing in the code changes.
+required, and `render.yaml` already carries it so a blueprint sync sets it
+without a trip to the dashboard. Nothing in the code changes.
 
 ## If the rewrite is not live yet
 

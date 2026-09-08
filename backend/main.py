@@ -824,7 +824,7 @@ def chart_patterns(ticker: str, range: str = "1D", base_rates: bool = True):
 SHARE_QUERY_PARAM = "q"
 SHARE_TAB_PARAM = "go"
 
-SITE_URL = os.environ.get("SITE_URL", "https://taha-project-one.vercel.app").rstrip("/")
+SITE_URL = os.environ.get("SITE_URL", "https://altahascreener.in").rstrip("/")
 API_URL = os.environ.get("API_URL", "https://taha-project.onrender.com").rstrip("/")
 
 # The host a shared link is allowed to show.

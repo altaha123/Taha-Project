@@ -392,7 +392,7 @@ details.row.flash {
 
   /* Every printed page states where it came from and when */
   #result::after {
-    content: "Altaha Screener \00b7 taha-project-one.vercel.app \00b7 Educational use only";
+    content: "Altaha Screener \00b7 altahascreener.in \00b7 Educational use only";
     display: block; margin-top: 14pt; padding-top: 8pt;
     border-top: .5pt solid #999; font-size: 8pt; color: #555;
   }

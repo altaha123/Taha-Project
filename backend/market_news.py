@@ -49,7 +49,7 @@ except Exception:  # pragma: no cover
 
 IST = timezone(timedelta(hours=5, minutes=30))
 HTTP_TIMEOUT = 15
-USER_AGENT = "Mozilla/5.0 (compatible; AltahaScreener/1.0; +https://taha-project-one.vercel.app)"
+USER_AGENT = "Mozilla/5.0 (compatible; AltahaScreener/1.0; +https://altahascreener.in)"
 
 
 def _resolve_store_dir() -> str:
