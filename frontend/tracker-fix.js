@@ -61,17 +61,22 @@
     /* Scoped: a bare .tk also matches every item in the market ticker strip. */
     "#tkrows .tk{position:relative}",
     ".tkrm{position:absolute;top:10px;right:10px;border:1px solid var(--rule);",
-    "  background:var(--paper);color:var(--mute);border-radius:999px;cursor:pointer;",
+    "  background:var(--paper);color:var(--tk-quiet,var(--mute));border-radius:999px;cursor:pointer;",
     "  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;",
     "  padding:4px 10px;transition:border-color 150ms,color 150ms,background 150ms}",
     ".tkrm:hover{border-color:var(--fail);color:var(--fail)}",
     ".tkrm[disabled]{opacity:.5;cursor:default}",
     "#tkrows .tk .tkt{padding-right:86px}",
     ".tkbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}",
-    ".tkflag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mute);",
+    /* --tk-quiet is the tracker's small-text tone; index.html gives it a value
+       on both themes. var(--mute) stays as the fallback for anything loading
+       this file without that sheet. */
+    ".tkflag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;",
+    "  color:var(--tk-quiet,var(--mute));",
     "  border-left:2px solid var(--gold);padding:2px 0 2px 10px;margin:0 0 12px;line-height:1.7}",
     ".tksrc{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;",
-    "  color:var(--mute);border:1px solid var(--rule-2);border-radius:999px;padding:2px 7px;margin-left:8px}",
+    "  color:var(--tk-quiet,var(--mute));border:1px solid var(--rule-2);border-radius:999px;",
+    "  padding:2px 7px;margin-left:8px}",
     /* The mobile override used to unset position:absolute. Remove is the first
        child of the card, so going static put the button ABOVE the company
        name — which is where the screenshot showed it. It stays pinned
