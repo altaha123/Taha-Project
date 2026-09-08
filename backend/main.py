@@ -15,6 +15,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
 
+# Before any module that pulls prices is imported. yf.download(threads=True)
+# starts one OS thread per ticker rather than using a pool, and multitasking
+# never releases them; that is what was killing the universe scan on a 512 MB
+# box. ythreads.py has the full reading of yfinance/multi.py.
+import ythreads
+ythreads.serial_downloads()
+
 from engine import technical_score, fundamental_score, composite
 from data_source import resolve, fundamentals, shareholding, NotFound
 try:
@@ -498,12 +505,52 @@ def _rss_mb():
     return None
 
 
-# Refuse to start a universe scan above this. The scan is the only thing here
-# that needs hundreds of MB — it walks ~2,000 symbols pulling a year of history
-# each — and on a 512 MB box it is what turns a healthy process into a killed
-# one. Better a clear refusal than an OOM restart that takes the whole site
-# down with it.
-SCAN_RSS_CEILING = int(os.environ.get("SCAN_RSS_CEILING_MB", "330") or 330)
+# Refuse to start a universe scan without this much room left. The scan is the
+# only thing here that needs hundreds of MB — it walks ~2,000 symbols pulling a
+# year of history each — and on a 512 MB box it is what turns a healthy process
+# into a killed one. Better a clear refusal than an OOM restart that takes the
+# whole site down with it.
+#
+# This used to be an ABSOLUTE ceiling of 330 MB, which was the bug: the process
+# boots at ~367 MB and idles around 467 MB, so the ceiling sat below the floor
+# and every single press of "Generate from universe" was refused, for eight
+# days, with the button silently resetting itself. A ceiling you can never be
+# under is not a safety valve, it is an outage.
+#
+# Headroom is the honest question — "is there room for a scan", not "is the
+# process small". SCAN_RSS_CEILING_MB is still read so an existing Render
+# setting keeps working; it is converted to the equivalent headroom.
+MEM_LIMIT_MB = int(os.environ.get("MEM_LIMIT_MB", "512") or 512)
+_legacy_ceiling = os.environ.get("SCAN_RSS_CEILING_MB", "").strip()
+SCAN_HEADROOM_MB = int(os.environ.get("SCAN_HEADROOM_MB", "0") or 0) or (
+    max(MEM_LIMIT_MB - int(_legacy_ceiling), 60) if _legacy_ceiling.isdigit() else 90)
+
+
+def _reclaim():
+    """
+    Give back what is droppable, then measure again.
+
+    Called before refusing a scan, because the refusal is only honest if the
+    process has first let go of what it does not need. Returns (before, after).
+    """
+    before = _rss_mb()
+    try:
+        import data_source as _ds
+        _ds._CACHE.clear()
+    except Exception:
+        pass
+    ythreads.reap()
+    try:
+        import gc
+        gc.collect()
+    except Exception:
+        pass
+    try:                      # hand freed arenas back to the OS
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+    return before, _rss_mb()
 
 
 @app.get("/health/memory")
@@ -557,6 +604,7 @@ def health_memory(detail: int = 0):
                   "AnyIO", "asyncio_")) else t.name
             names[key] = names.get(key, 0) + 1
         out["thread_names"] = names
+        out["yfinance_threads"] = ythreads.status()
         out["thread_cap_requested"] = _THREADS
         out["thread_cap_applied"] = _threadcap["applied"]
         if _threadcap["error"]:
@@ -642,11 +690,19 @@ def scan_start(force: bool = False, key: str = ""):
     """Kick off a background scan. Returns immediately."""
     _require_admin(key)
     rss = _rss_mb()
-    if rss is not None and rss > SCAN_RSS_CEILING and not force:
+    if rss is not None and (MEM_LIMIT_MB - rss) < SCAN_HEADROOM_MB and not force:
+        # Drop what is droppable before saying no. Previously this refused on
+        # the first reading, so a cache that was about to expire anyway could
+        # block a scan for the rest of the day.
+        _, rss = _reclaim()
+    headroom = None if rss is None else round(MEM_LIMIT_MB - rss, 1)
+    if headroom is not None and headroom < SCAN_HEADROOM_MB and not force:
         return {"started": False, "reason": "low_memory",
-                "rss_mb": rss, "ceiling_mb": SCAN_RSS_CEILING,
-                "message": (f"Already holding {rss:.0f} MB of 512 MB. A universe "
-                            "scan needs a few hundred more and would get the "
+                "rss_mb": rss, "headroom_mb": headroom,
+                "needs_headroom_mb": SCAN_HEADROOM_MB, "limit_mb": MEM_LIMIT_MB,
+                "message": (f"Holding {rss:.0f} MB of {MEM_LIMIT_MB} MB, so only "
+                            f"{headroom:.0f} MB is free and a scan needs about "
+                            f"{SCAN_HEADROOM_MB} MB. Starting one now would get the "
                             "instance killed, taking the whole site with it. "
                             "Restart the service to clear it, or pass force=true "
                             "if you accept the risk."),

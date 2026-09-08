@@ -249,7 +249,8 @@ def _returns_yahoo(symbols, sessions):
     tickers = [f"{s}.NS" for s in symbols]
     try:
         raw = yf.download(tickers, period="3mo", interval="1d",
-                          progress=False, auto_adjust=True, threads=True)
+                          progress=False, auto_adjust=True,
+                          threads=False)                   # see ythreads.py
         closes = raw["Close"] if "Close" in raw else raw
     except Exception as e:
         return None, None, f"Yahoo download failed ({str(e)[:60]})"
@@ -290,7 +291,8 @@ def _index_move(sector, sessions):
         return None
     try:
         raw = yf.download([spec["sym"], S.BENCHMARK], period="6mo",
-                          interval="1d", progress=False, auto_adjust=True)
+                          interval="1d", progress=False, auto_adjust=True,
+                          threads=False)                   # see ythreads.py
         closes = raw["Close"] if "Close" in raw else raw
 
         def chg(sym):

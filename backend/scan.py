@@ -24,6 +24,11 @@ import random
 import time
 import datetime as dt
 from concurrent.futures import ThreadPoolExecutor, as_completed
+try:
+    from ythreads import reap as _reap
+except Exception:                       # standalone use without the API package
+    def _reap():
+        return 0
 
 import pandas as pd
 import requests
@@ -220,12 +225,20 @@ def phase1(symbols, progress, state):
         data = None
         if not use_dhan:
             try:
+                # threads=False deliberately. threads=True does not use a
+                # pool: yfinance starts one OS thread per ticker (see
+                # ythreads.py), so this line alone created CHUNK threads per
+                # chunk and ~1,200 over a universe pass. On a 512 MB box with
+                # ~45 MB of headroom that is what was killing the scan
+                # part-way through. Sequential is slower per chunk and is the
+                # difference between a scan that finishes and one that does not.
                 data = yf.download(" ".join(tickers), period="1y", interval="1d",
                                    group_by="ticker", auto_adjust=True,
-                                   threads=True, progress=False)
+                                   threads=False, progress=False)
             except Exception:
                 data = None
         time.sleep(0.6 + random.random() * 0.6)
+        _reap()          # multitasking never drops finished tasks; see ythreads
 
         for s in chunk:
             state["done"] += 1

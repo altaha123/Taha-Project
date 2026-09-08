@@ -2539,11 +2539,32 @@ async function startScan(force){
   $("genbtn2").disabled=true; $("genbtn2").textContent="Scanning…";
   $("gennote2").textContent="A few minutes — keep this tab open";
   try{
-    const r = await (await fetch(withKey(`${API_BASE}/scan/start${force?"?force=true":""}`))).json();
+    const res = await fetch(withKey(`${API_BASE}/scan/start${force?"?force=true":""}`));
+    const r = await res.json();
     if(!r.started && r.reason==="cached"){
       $("genbtn2").disabled=false; $("genbtn2").textContent="Refresh universe scan";
       $("gennote2").textContent=""; loadIdeas(); return;
     }
+    /* Every other way this can fail used to be swallowed whole. A 401 for a
+       missing admin key, and a low_memory refusal, both parse as JSON, so
+       nothing threw; setProgress() saw no status:"running", hid the bar, and
+       the poller then relabelled the button and reloaded the cached scan.
+       Pressing Generate did nothing and said nothing about why — for eight
+       days, while the newest ideas on the page were from 31 August. */
+    if((!res.ok || r.started === false) && r.reason !== "already_running"){
+      $("genbtn2").disabled=false;
+      $("genbtn2").textContent = "Refresh universe scan";
+      $("gennote2").textContent =
+        res.status === 401
+          ? "This needs the admin key — the one set as ADMIN_KEY on Render. Reload the page and enter it when prompted."
+          : (r.message || r.detail ||
+             ("The engine refused to start a scan" +
+              (r.reason ? " (" + r.reason + ")." : " and gave no reason.")));
+      loadIdeas();
+      return;
+    }
+    /* already_running is not a failure: a scan someone else started is in
+       flight, so fall through and poll it rather than resetting the button. */
     setProgress(r);
     if(!pollTimer) pollTimer=setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);
   }catch(e){
