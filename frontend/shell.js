@@ -381,64 +381,122 @@
 
   var UNIVERSE = null;
 
+  // The cache key carries a version because the rows it holds are normalised
+  // now. A browser holding yesterday's raw payload under the old key would
+  // otherwise keep feeding the broken shape back in for a day.
+  var UNI_KEY = 'altaha-universe-v2';
+
+  /* /universe answers with {"s": "RELIANCE", "n": "Reliance Industries Limited"}.
+     This read it as r.symbol / r.name / r[0] / r[1] — none of which exist on
+     that object — so every row scored as an empty symbol with an empty name
+     and nothing ever matched. The box looked broken because it was: typing
+     "reliance" against 2,300 real NSE tickers returned zero rows.
+
+     Normalising once on load, instead of at every keystroke, means the matcher
+     below reads one shape and only one, whatever the endpoint hands back. */
+  function normalise(rows) {
+    var out = [];
+    for (var i = 0; i < (rows || []).length; i++) {
+      var r = rows[i] || {};
+      var s = String(r.s || r.symbol || r.ticker || r[0] || '').trim().toUpperCase();
+      if (!s) continue;
+      var n = String(r.n || r.name || r.company || r[1] || '').trim();
+      out.push({ s: s, n: n || s, x: String(r.x || r.exchange || 'NSE').toUpperCase() });
+    }
+    return out;
+  }
+
   function loadUniverse() {
-    // Cached for a day. ~2,000 rows is far too much to refetch per keystroke,
+    // Cached for a day. ~2,300 rows is far too much to refetch per keystroke,
     // and /universe already sets Cache-Control to say so.
     try {
-      var raw = localStorage.getItem('altaha-universe');
+      var raw = localStorage.getItem(UNI_KEY);
       if (raw) {
         var o = JSON.parse(raw);
         if (o && o.day === new Date().toISOString().slice(0, 10) && o.rows && o.rows.length) {
-          UNIVERSE = o.rows;
+          UNIVERSE = normalise(o.rows);
           return;
         }
       }
     } catch (e) {}
+    try { localStorage.removeItem('altaha-universe'); } catch (e) {}
     get('/universe', 12000).then(function (d) {
-      UNIVERSE = (d && d.rows) || [];
+      UNIVERSE = normalise((d && d.rows) || []);
       try {
-        localStorage.setItem('altaha-universe', JSON.stringify({
+        localStorage.setItem(UNI_KEY, JSON.stringify({
           day: new Date().toISOString().slice(0, 10), rows: UNIVERSE
         }));
       } catch (e) {}
     }).catch(function () { UNIVERSE = []; });
   }
 
+  /* Ranked, not merely filtered. An exact ticker has to outrank a company that
+     merely contains the same letters, or typing ITC buries ITC under forty
+     names with "itc" in the middle of a word. Same ladder premium-plus.js
+     scores with, so the two search boxes agree on what the best answer is. */
+  function score(r, q) {
+    var s = r.s, n = (r.n || '').toUpperCase();
+    if (s === q) return 1000;
+    if (s.indexOf(q) === 0) return 600 - s.length;
+    if (n.indexOf(q) === 0) return 400 - n.length / 10;
+    if (n.indexOf(' ' + q) > -1) return 300;
+    if (s.indexOf(q) > -1) return 200;
+    if (n.indexOf(q) > -1) return 100;
+    return 0;
+  }
+
   function match(q) {
-    if (!UNIVERSE || !q) return [];
-    q = q.toUpperCase();
-    var starts = [], holds = [];
-    for (var i = 0; i < UNIVERSE.length && starts.length + holds.length < 220; i++) {
-      var r = UNIVERSE[i];
-      var s = String(r.symbol || r[0] || '').toUpperCase();
-      var n = String(r.name || r[1] || '').toUpperCase();
-      if (s.indexOf(q) === 0) starts.push(r);
-      else if (s.indexOf(q) > -1 || n.indexOf(q) > -1) holds.push(r);
+    if (!UNIVERSE || !UNIVERSE.length || !q) return [];
+    q = q.trim().toUpperCase();
+    if (!q) return [];
+    var hits = [];
+    for (var i = 0; i < UNIVERSE.length; i++) {
+      var sc = score(UNIVERSE[i], q);
+      if (sc) hits.push({ r: UNIVERSE[i], sc: sc });
     }
-    return starts.concat(holds).slice(0, 9);
+    hits.sort(function (a, b) { return b.sc - a.sc || (a.r.s < b.r.s ? -1 : 1); });
+    return hits.slice(0, 9).map(function (h) { return h.r; });
   }
 
   function wireSearch() {
     var input = document.getElementById('sh-q');
     var ac = document.getElementById('sh-ac');
     if (!input || !ac) return;
-    var sel = -1, rows = [];
+    var sel = -1, rows = [], q = '';
+
+    // The part you typed is marked inside both the ticker and the company
+    // name, so it is obvious why a row is on the list — RELIANCE for "reli"
+    // and RELCHEMQ for the same four letters are on it for different reasons.
+    function mark(text, needle) {
+      var i = needle ? text.toUpperCase().indexOf(needle.toUpperCase()) : -1;
+      if (i < 0) return esc(text);
+      return esc(text.slice(0, i)) + '<i>' + esc(text.slice(i, i + needle.length)) +
+        '</i>' + esc(text.slice(i + needle.length));
+    }
 
     function paint() {
-      if (!rows.length) { ac.classList.remove('open'); ac.innerHTML = ''; return; }
+      if (!q) { ac.classList.remove('open'); ac.innerHTML = ''; return; }
+      if (!rows.length) {
+        // An empty box and a broken box used to look identical. Say which.
+        ac.innerHTML = '<b class="row empty">' + (UNIVERSE === null
+          ? 'Loading the NSE list\u2026'
+          : 'No NSE listing matches \u201c' + esc(q) + '\u201d') + '</b>';
+        ac.classList.add('open');
+        return;
+      }
       ac.innerHTML = rows.map(function (r, i) {
-        var s = r.symbol || r[0] || '';
-        var n = r.name || r[1] || '';
         return '<b class="row' + (i === sel ? ' sel' : '') + '" role="option" data-s="' +
-          esc(s) + '"><span class="s">' + esc(s) + '</span>' +
-          '<span class="n">' + esc(n) + '</span></b>';
+          esc(r.s) + '"><span class="s">' + mark(r.s, q) + '</span>' +
+          '<span class="n">' + mark(r.n, q) + '</span>' +
+          '<span class="x">' + esc(r.x) + '</span></b>';
       }).join('');
       ac.classList.add('open');
     }
 
     input.addEventListener('input', function () {
       sel = -1;
-      rows = match(input.value.trim());
+      q = input.value.trim();
+      rows = match(q);
       paint();
     });
     input.addEventListener('keydown', function (e) {
@@ -446,7 +504,8 @@
       else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, -1); paint(); }
       else if (e.key === 'Enter') {
         e.preventDefault();
-        var pick = (sel >= 0 && rows[sel]) ? (rows[sel].symbol || rows[sel][0]) : input.value.trim();
+        var pick = (sel >= 0 && rows[sel]) ? rows[sel].s
+          : (rows[0] ? rows[0].s : input.value.trim());
         openStock(pick);
       } else if (e.key === 'Escape') { ac.classList.remove('open'); input.blur(); }
     });

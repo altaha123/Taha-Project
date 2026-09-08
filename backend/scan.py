@@ -661,7 +661,7 @@ _names_cache = {"at": 0.0, "rows": []}
 
 def universe_with_names():
     """
-    [{"s": "RELIANCE", "n": "Reliance Industries Limited"}, ...]
+    [{"s": "RELIANCE", "n": "Reliance Industries Limited", "x": "NSE"}, ...]
 
     fetch_nse_list() already downloads this CSV and throws the company-name
     column away. Keeping it is what lets someone search "Bajaj Finance"
@@ -698,7 +698,11 @@ def universe_with_names():
                 nm = str(row[name_col]).strip() if name_col else sym
                 if nm.lower() in ("nan", "none", ""):
                     nm = sym
-                rows.append({"s": sym, "n": nm})
+                # The exchange travels with the row so the typeahead can label
+                # a suggestion with the listing it actually is, rather than the
+                # client assuming one. Everything here is NSE EQ series; a BSE
+                # source would append rows carrying "x": "BSE".
+                rows.append({"s": sym, "n": nm, "x": "NSE"})
 
             if len(rows) > 500:
                 break
@@ -708,7 +712,8 @@ def universe_with_names():
     if not rows:
         # Same fallback the scan uses, so the two never disagree about what
         # the universe is — just without company names.
-        rows = [{"s": x, "n": x} for x in sorted({y for y in FALLBACK.split() if y})]
+        rows = [{"s": x, "n": x, "x": "NSE"}
+                for x in sorted({y for y in FALLBACK.split() if y})]
 
     rows.sort(key=lambda r: r["s"])
     _names_cache["at"] = time.time()
