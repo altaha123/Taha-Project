@@ -18,12 +18,18 @@ shareable image is the difference between publishing analysis and publishing
 advice — which in India is the difference between an educational tool and one
 that needs SEBI Research Analyst registration.
 
-FONTS
+FONTS AND THE MARK
 Instrument Serif and IBM Plex Mono are bundled under the SIL Open Font
 License, which permits redistribution. They are the site's own faces, so a
 shared card looks like the product rather than like a generic template. If a
 face fails to load the renderer falls back rather than failing the request —
 an ugly card beats a broken link preview.
+
+The logo sits beside the wordmark on every card under the same rule. It is
+the one element that survives being scrolled past at thumbnail size, which is
+how most of these cards are actually seen, so it is drawn first and given the
+top-left corner; and if `assets/altaha-logo.png` is missing the card renders
+without it rather than 500ing the share route.
 """
 
 import datetime as dt
@@ -33,6 +39,7 @@ import threading
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONT_DIR = os.path.join(HERE, "assets", "fonts")
+LOGO_PATH = os.path.join(HERE, "assets", "altaha-logo.png")
 
 W, H = 1200, 630
 
@@ -76,6 +83,32 @@ def serif(size):
 
 def mono(size, medium=False):
     return _font("IBMPlexMono-Medium.ttf" if medium else "IBMPlexMono-Regular.ttf", size)
+
+
+_logo_cache = {}
+
+
+def logo(height):
+    """
+    The mark, as RGBA at the requested height, or None if the file is missing.
+
+    Cached per height because every card asks for the same one and LANCZOS on
+    a 262x240 source is not free. Same rule as the fonts: a card without the
+    mark beats a share route that 500s.
+    """
+    with _lock:
+        if height in _logo_cache:
+            return _logo_cache[height]
+    try:
+        from PIL import Image
+        src = Image.open(LOGO_PATH).convert("RGBA")
+        w = max(1, round(src.width * height / src.height))
+        out = src.resize((w, height), Image.LANCZOS)
+    except Exception:
+        out = None
+    with _lock:
+        _logo_cache[height] = out
+    return out
 
 
 def _tracking(draw, xy, text, font, fill, px=0):
@@ -171,16 +204,38 @@ def _band(score):
     return FAIL
 
 
-def _shell(draw):
-    """Background, gold rule, wordmark, footer. Shared by every card."""
+# The lockup: mark, then wordmark. Every card carries it, so these two
+# numbers set where the rest of every card's header can start.
+LOGO_H = 74
+LOGO_GAP = 20
+
+
+def _shell(draw, img=None):
+    """
+    Background, gold rule, the mark, the wordmark, footer rule. Shared by
+    every card.
+
+    `img` is the canvas behind `draw`. It is optional only so a caller that
+    wants the typographic shell alone can omit it; every card in this module
+    passes it, because the mark is what makes a card recognisable at the size
+    a timeline actually renders it.
+    """
     draw.rectangle([0, 0, W, H], fill=PAPER)
     draw.rectangle([0, 0, W, 8], fill=GOLD)
 
-    draw.text((64, 52), "Altaha", font=serif(46), fill=INK)
-    w = draw.textlength("Altaha ", font=serif(46))
-    draw.text((64 + w, 52), "Screener", font=serif(46), fill=GOLD)
+    x = 64
+    mark = logo(LOGO_H) if img is not None else None
+    if mark is not None:
+        # The mark is transparent, so it composites onto the paper ground the
+        # same way it sits on the site.
+        img.paste(mark, (x, 52), mark)
+        x += mark.width + LOGO_GAP
 
-    _tracking(draw, (66, 112), "EVERY SCORE SHOWS ITS WORKING", mono(15), MUTE, 3.2)
+    draw.text((x, 52), "Altaha", font=serif(46), fill=INK)
+    w = draw.textlength("Altaha ", font=serif(46))
+    draw.text((x + w, 52), "Screener", font=serif(46), fill=GOLD)
+
+    _tracking(draw, (x + 2, 112), "EVERY SCORE SHOWS ITS WORKING", mono(15), MUTE, 3.2)
     draw.line([(64, H - 92), (W - 64, H - 92)], fill=RULE, width=1)
 
 
@@ -206,7 +261,7 @@ def stock_card(payload: dict) -> bytes:
 
     img = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(img)
-    _shell(d)
+    _shell(d, img)
 
     sym, name, comp, label, tech, fund, fsc, setup = _read(payload)
 
@@ -261,7 +316,7 @@ def record_card(stats: dict) -> bytes:
 
     img = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(img)
-    _shell(d)
+    _shell(d, img)
 
     o = stats.get("overall") or {}
     d.text((64, 178), "Does it work?", font=serif(66), fill=INK)
@@ -312,22 +367,55 @@ def cached(key, build):
     return out
 
 
+def _origin(url):
+    """
+    The scheme and host of a link, for building sibling absolute URLs.
+
+    A crawler resolves nothing relative to a page it fetched from a proxy, so
+    the icon a share page advertises has to be absolute. Returns "" when the
+    target is not an absolute URL, and the caller then omits the icon rather
+    than emitting a broken one.
+    """
+    try:
+        from urllib.parse import urlsplit
+        parts = urlsplit(str(url))
+        if parts.scheme in ("http", "https") and parts.netloc:
+            return f"{parts.scheme}://{parts.netloc}"
+    except Exception:
+        pass
+    return ""
+
+
 def share_page(title, description, image, target):
     """The document a crawler reads and a human never sees for long."""
     def esc(t):
         return (str(t).replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace('"', "&quot;"))
     t, d, i, u = esc(title), esc(description), esc(image), esc(target)
+
+    # The mark, so the tab, the bookmark and every chat client that shows a
+    # site icon beside the unfurled card get the brand rather than a blank
+    # globe. Served by the static site, which is also what `target` points at.
+    site = _origin(target)
+    icon = ""
+    if site:
+        icon = (f'<link rel="icon" href="{esc(site)}/favicon.ico" sizes="any">\n'
+                f'<link rel="icon" type="image/png" href="{esc(site)}/icon-512.png" '
+                f'sizes="512x512">\n'
+                f'<link rel="apple-touch-icon" href="{esc(site)}/apple-touch-icon.png">\n'
+                f'<meta property="og:logo" content="{esc(site)}/icon-512.png">\n')
+
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{t}</title>
 <meta name="description" content="{d}">
-<meta property="og:type" content="article">
+{icon}<meta property="og:type" content="article">
 <meta property="og:site_name" content="Altaha Screener">
 <meta property="og:title" content="{t}">
 <meta property="og:description" content="{d}">
 <meta property="og:image" content="{i}">
+<meta property="og:image:alt" content="Altaha Screener card — {t}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="{u}">
@@ -445,7 +533,7 @@ def chart_card(payload: dict) -> bytes:
 
     img = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(img)
-    _shell(d)
+    _shell(d, img)
 
     sym = str(payload.get("symbol") or "").upper().replace(".NS", "").replace(".BO", "")
     name = str(payload.get("name") or sym or "—")
@@ -626,7 +714,7 @@ def idea_card(row: dict) -> bytes:
 
     img = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(img)
-    _shell(d)
+    _shell(d, img)
 
     sym = str(row.get("symbol") or row.get("ticker") or "").upper()
     sym = sym.replace(".NS", "").replace(".BO", "")
@@ -692,7 +780,7 @@ def holding_card(row: dict) -> bytes:
 
     img = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(img)
-    _shell(d)
+    _shell(d, img)
 
     sym = str(row.get("symbol") or "").upper().replace(".NS", "").replace(".BO", "")
     name = str(row.get("name") or sym or "—")

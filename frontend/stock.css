@@ -29,9 +29,18 @@ body{
 .stk-crumb{
   font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
   text-transform:uppercase; color:var(--mute); margin-bottom:14px;
+  display:flex; align-items:center; gap:7px;
 }
-.stk-crumb a{ color:var(--mute); text-decoration:none }
+.stk-crumb a{ color:var(--mute); text-decoration:none;
+  display:inline-flex; align-items:center; gap:7px }
 .stk-crumb a:hover{ color:var(--gold); text-decoration:underline }
+/* The mark, themed. Same background-image trick as the rest of the site —
+   see .brandmark in index.html for why it is not an <img>. */
+.stk-crumb .brandmark{
+  height:16px; aspect-ratio:109/100; flex:0 0 auto;
+  background:url(altaha-logo.png) center/contain no-repeat;
+}
+html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-dark.png) }
 
 .stk-id{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 26px }
 .stk-name{

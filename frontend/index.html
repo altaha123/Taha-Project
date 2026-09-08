@@ -7,6 +7,13 @@
 <meta name="description" content="Free stock screener for NSE and US markets. Type any stock for a 0-100 technical and fundamental score with every calculation shown. Built by a Chartered Accountant. No signup." />
 <meta name="keywords" content="stock screener India, NSE stock analysis, free stock screener, Piotroski score India, fundamental analysis tool, technical analysis NSE" />
 <link rel="canonical" href="https://altahascreener.in/" />
+<!-- The mark. `favicon.ico` carries 16-256px for the browsers that still ask
+     for it by name; the PNGs are for everything modern, and og:logo is what
+     an unfurler shows beside the card. -->
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta property="og:logo" content="https://altahascreener.in/icon-512.png" />
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Altaha Screener — Free NSE Stock Analysis" />
 <meta property="og:description" content="Type any stock. Get a 0-100 score built from technical and fundamental checks, with every calculation shown. Built by a Chartered Accountant. Free, no signup." />
@@ -17,6 +24,7 @@
 <meta property="og:image" content="https://taha-project.onrender.com/og/record.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Altaha Screener — the track record card" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://taha-project.onrender.com/og/record.png" />
 <meta name="twitter:title" content="Altaha Screener — Free NSE Stock Analysis" />
@@ -197,8 +205,27 @@
 
   header{padding:58px 0 0;text-align:center}
   .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--mute)}
-  .brand{font-family:var(--serif);font-size:clamp(42px,8vw,68px);line-height:1;margin-top:14px;letter-spacing:-.01em}
+  .brand{font-family:var(--serif);font-size:clamp(42px,8vw,68px);line-height:1;margin-top:14px;letter-spacing:-.01em;
+    display:flex;align-items:center;justify-content:center;gap:.26em}
   .brand i{font-style:italic;color:var(--gold-dp)}
+  /* THE MARK
+     Drawn as a background rather than an <img> for one reason: the artwork
+     has to change with the theme — the letterform is near-black and vanishes
+     on the dark ground — and a background-image is the only swap every
+     browser honours. It is decorative in every place it appears, because the
+     wordmark it sits beside already says "Altaha" to a screen reader.
+     Give it a height; aspect-ratio finds the width. */
+  .brandmark{display:block;flex:0 0 auto;aspect-ratio:109/100;height:1.02em;
+    background:url(altaha-logo.png) center/contain no-repeat;
+    transform:translateY(-.03em)}
+  html[data-theme="dark"] .brandmark{background-image:url(altaha-logo-dark.png)}
+  /* Narrow screens: "Altaha Screener" wraps to two lines at this size, and a
+     mark centred against a two-line block reads as a mark that slid off. So
+     the lockup stacks instead. */
+  @media (max-width:600px){
+    .brand{flex-direction:column;gap:.12em}
+    .brandmark{height:1.34em;transform:none}
+  }
   .tag{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-2);margin-top:16px}
   .metal{height:1px;max-width:280px;margin:26px auto 0;
     background:linear-gradient(90deg,transparent,var(--gold-lt) 20%,var(--gold) 50%,var(--gold-lt) 80%,transparent)}
@@ -787,7 +814,9 @@
   .disc{margin-top:54px;padding-top:20px;border-top:1px solid var(--rule);font-size:12px;
     line-height:1.75;color:var(--mute)}
   footer{font-family:var(--mono);font-size:10px;color:var(--mute);text-align:center;
-    padding:30px 0 44px;letter-spacing:.22em;text-transform:uppercase}
+    padding:30px 0 44px;letter-spacing:.22em;text-transform:uppercase;
+    display:flex;align-items:center;justify-content:center;gap:9px}
+  footer .brandmark{height:20px;transform:none}
 
   /* -- Full-window chart page (?chart=SYMBOL) -- */
   body.fullchart .tickerbar, body.fullchart header, body.fullchart main,
@@ -797,8 +826,10 @@
   body.fullchart #fcpage{display:flex}
   .fctop{display:flex;align-items:center;gap:14px;padding:10px 16px;flex-wrap:wrap;
     border-bottom:1px solid var(--rule);background:#fff}
-  .fcbrand{font-family:var(--serif);font-size:21px;letter-spacing:-.01em;white-space:nowrap}
+  .fcbrand{font-family:var(--serif);font-size:21px;letter-spacing:-.01em;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:8px}
   .fcbrand i{font-style:italic;color:var(--gold-dp)}
+  .fcbrand .brandmark{height:24px;transform:none}
   .fcsym{display:flex;border:1px solid var(--ink);border-radius:2px;overflow:hidden;background:#fff}
   .fcsym input{border:none;background:transparent;font-family:var(--mono);font-size:13px;
     padding:8px 11px;width:160px;letter-spacing:.06em;outline:none;color:var(--ink)}
@@ -1131,7 +1162,7 @@
     </svg>
   </div>
   <div class="eyebrow">Equity Analysis · India &amp; United States</div>
-  <h1 class="brand">Altaha <i>Screener</i></h1>
+  <h1 class="brand"><span class="brandmark" aria-hidden="true"></span><span>Altaha <i>Screener</i></span></h1>
   <div class="tag" id="brandtag">Every score shows its working</div>
   <div class="brandsw" role="tablist" hidden aria-hidden="true">
     <button class="bsw active" id="bsw-screener" role="tab" aria-selected="true">Screener</button>
@@ -1631,12 +1662,12 @@
 
 </main>
 
-<footer>Altaha Screener · Stock research and analysis</footer>
+<footer><span class="brandmark" aria-hidden="true"></span><span>Altaha Screener · Stock research and analysis</span></footer>
 
 <!-- Full-window chart page — shown only when the URL carries ?chart=SYMBOL -->
 <div id="fcpage">
   <div class="fctop">
-    <span class="fcbrand">Altaha <i>Chart</i></span>
+    <span class="fcbrand"><span class="brandmark" aria-hidden="true"></span><span>Altaha <i>Chart</i></span></span>
     <div class="fcsym">
       <input id="fcinput" placeholder="Symbol — RELIANCE…" autocomplete="off"
              spellcheck="false" aria-label="Chart symbol">
