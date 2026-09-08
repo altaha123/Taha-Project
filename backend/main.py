@@ -678,7 +678,26 @@ def scan_status():
         "error": _state["error"],
     }
     if _state["payload"]:
-        out["scanned_at"] = _state["payload"].get("scanned_at")
+        p = _state["payload"]
+        out["scanned_at"] = p.get("scanned_at")
+        # What the scan cost, surfaced HERE rather than only inside the payload.
+        # The scan is the one path that can kill this instance, and /scan/status
+        # is where anybody looks after it goes wrong — burying the measurement
+        # in /leaderboard made it useless for the one job it exists to do.
+        if p.get("memory"):
+            out["memory"] = p["memory"]
+        if p.get("stopped_early"):
+            out["stopped_early"] = p["stopped_early"]
+        if p.get("partial"):
+            out["partial"] = True
+    # Live figure while a scan is in flight, so a run can be watched climbing
+    # instead of examined after the process has already been killed.
+    out["rss_mb"] = _rss_mb()
+    try:
+        out["scan_peak_mb"] = scanner._scan_mem.get("peak_mb")
+        out["scan_peak_at"] = scanner._scan_mem.get("peak_at")
+    except Exception:
+        pass
     return out
 
 
