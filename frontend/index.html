@@ -203,9 +203,19 @@
   .metal{height:1px;max-width:280px;margin:26px auto 0;
     background:linear-gradient(90deg,transparent,var(--gold-lt) 20%,var(--gold) 50%,var(--gold-lt) 80%,transparent)}
 
+  /* overflow was hidden here, to clip the square-cornered input and button
+     into the pill. It also clipped the typeahead panel, which hangs below the
+     row: the suggestions were built, filled and unhidden on every keystroke
+     and then cut off by this one property, so the box looked like it had no
+     suggestions at all. The two children round themselves instead. */
   .searchrow{display:flex;max-width:540px;margin:38px auto 10px;border:1px solid var(--rule);
-    border-radius:var(--r-pill);overflow:hidden;background:#fff;box-shadow:var(--sh-1);
+    border-radius:var(--r-pill);overflow:visible;background:#fff;box-shadow:var(--sh-1);
     transition:border-color var(--t) var(--ease), box-shadow var(--t) var(--ease)}
+  /* Typed as > input / > button rather than :first-child / :last-child: the
+     typeahead panel is appended into this row and would otherwise take the
+     last child's rounding and steal it from the button. */
+  .searchrow > input{border-radius:var(--r-pill) 0 0 var(--r-pill)}
+  .searchrow > button{border-radius:0 var(--r-pill) var(--r-pill) 0}
   .searchrow:hover{border-color:var(--ink-2)}
   input#tk{flex:1;border:none;background:transparent;color:var(--ink);font-family:var(--mono);
     font-size:16px;padding:15px 22px;letter-spacing:.08em}

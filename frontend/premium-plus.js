@@ -144,6 +144,11 @@
      isn't deployed yet it falls back to the built-in seed below, so the
      feature works either way — just with less coverage. */
 
+  // The seed's US listings, so a row can say which exchange it is from. The
+  // rest of the seed is NSE, and so is everything /universe adds.
+  var US_SEED = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META',
+                 'TSLA', 'NFLX', 'AMD', 'INTC'];
+
   var SEED = ('RELIANCE Reliance Industries|TCS Tata Consultancy Services|HDFCBANK HDFC Bank|' +
     'INFY Infosys|ICICIBANK ICICI Bank|BHARTIARTL Bharti Airtel|SBIN State Bank of India|' +
     'LT Larsen & Toubro|ITC ITC|HINDUNILVR Hindustan Unilever|BAJFINANCE Bajaj Finance|' +
@@ -178,10 +183,44 @@
     'ASHOKLEY Ashok Leyland|ESCORTS Escorts Kubota|BHARATFORG Bharat Forge|' +
     'AAPL Apple|MSFT Microsoft|NVDA NVIDIA|GOOGL Alphabet|AMZN Amazon|META Meta Platforms|' +
     'TSLA Tesla|NFLX Netflix|AMD Advanced Micro Devices|INTC Intel').split('|')
-    .map(function (r) { var i = r.indexOf(' '); return { s: r.slice(0, i), n: r.slice(i + 1) }; });
+    .map(function (r) {
+      var i = r.indexOf(' '), s = r.slice(0, i);
+      return { s: s, n: r.slice(i + 1), x: US_SEED.indexOf(s) > -1 ? 'US' : 'NSE' };
+    });
 
   var UNIVERSE = SEED.slice();
-  var CACHE_KEY = 'altaha-universe-v1';
+  // v1 held rows without an exchange and without the US listings below. The
+  // key moves so a browser holding it does not spend a day on the old list.
+  var CACHE_KEY = 'altaha-universe-v3';
+
+  // Every row that /universe cannot supply, because that endpoint is the NSE
+  // equity list. resolve() in data_source.py takes these unsuffixed, so they
+  // are real destinations, not decoration.
+  function normalise(rows) {
+    var out = [];
+    for (var i = 0; i < (rows || []).length; i++) {
+      var r = rows[i] || {};
+      var s = String(r.s || r.symbol || r.ticker || r[0] || '').trim().toUpperCase();
+      if (!s) continue;
+      var n = String(r.n || r.name || r.company || r[1] || '').trim();
+      out.push({ s: s, n: n || s, x: String(r.x || r.exchange || 'NSE').toUpperCase() });
+    }
+    return out;
+  }
+
+  /* /universe is the NSE list, and it used to replace the seed outright. That
+     silently dropped every US listing the moment the fetch landed — the hint
+     under the box says "Try NVDA · AAPL" and typing either returned NSE names
+     that merely contain those letters. Merging keeps both, with the fetched
+     row winning any symbol that appears in each. */
+  function mergeUniverse(fetched) {
+    var out = normalise(fetched), have = {};
+    for (var i = 0; i < out.length; i++) have[out[i].s] = 1;
+    for (var j = 0; j < SEED.length; j++) {
+      if (!have[SEED[j].s]) out.push(SEED[j]);
+    }
+    return out;
+  }
 
   function loadUniverse() {
     try {
@@ -189,17 +228,18 @@
       if (raw) {
         var c = JSON.parse(raw);
         if (c && c.rows && c.rows.length && (Date.now() - c.at) < 864e5) {
-          UNIVERSE = c.rows;
+          UNIVERSE = normalise(c.rows);
           return;
         }
       }
     } catch (e) {}
+    try { localStorage.removeItem('altaha-universe-v1'); } catch (e) {}
 
     origFetch(API + '/universe').then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d || !d.rows || !d.rows.length) return;
-        UNIVERSE = d.rows;
-        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), rows: d.rows })); }
+        UNIVERSE = mergeUniverse(d.rows);
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), rows: UNIVERSE })); }
         catch (e) { /* quota — the in-memory copy still works this session */ }
       }).catch(function () { /* seed list stands */ });
   }
@@ -262,7 +302,8 @@
       list.innerHTML = rows.map(function (r, i) {
         return '<div class="tah-item" role="option" id="tah-' + i + '" data-i="' + i + '">' +
                '<span class="tah-sym">' + highlight(r.s, q) + '</span>' +
-               '<span class="tah-name">' + highlight(r.n || '', q) + '</span></div>';
+               '<span class="tah-name">' + highlight(r.n || '', q) + '</span>' +
+               '<span class="tah-x">' + esc(r.x || 'NSE') + '</span></div>';
       }).join('');
       list.hidden = false;
       cur = -1;

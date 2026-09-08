@@ -77,6 +77,15 @@
 .tah-name {
   font-size: 13px; color: var(--mute); letter-spacing: -.008em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1 1 auto;
+}
+/* The exchange the ticker actually trades on, so a suggestion reads as a
+   listing rather than as a guess at a name. */
+.tah-x {
+  flex: 0 0 auto; margin-left: auto;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .08em; color: var(--mute);
+  border: 1px solid var(--rule-2); border-radius: 4px; padding: 3px 5px;
 }
 .tah b { color: var(--gold-dp); font-weight: 600; }
 html[data-theme="dark"] .tah b { color: var(--gold); }
@@ -84,6 +93,7 @@ html[data-theme="dark"] .tah b { color: var(--gold); }
 @media (max-width: 560px) {
   .tah-sym { min-width: 74px; font-size: 12px; }
   .tah-name { font-size: 12px; }
+  .tah-x { display: none; }   /* the name matters more than the tag on a phone */
 }
 
 /* ── 3. RECENT STOCKS ──────────────────────────────────────────────────── */
