@@ -304,7 +304,7 @@ def _download(symbols: list[str]) -> dict:
     try:
         raw = yf.download(symbols, period="2y", interval="1d",
                           group_by="ticker", auto_adjust=True,
-                          progress=False, threads=True)
+                          progress=False, threads=False)   # see ythreads.py
     except Exception:
         return {}
 
