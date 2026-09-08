@@ -378,7 +378,19 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 }
 .sh-ac b.row:hover, .sh-ac b.row.sel{ background:var(--paper-2) }
 .sh-ac .s{ font:600 12px/1 'IBM Plex Mono',monospace; flex:0 0 auto }
-.sh-ac .n{ font-size:12px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.sh-ac .n{ font-size:12px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1 1 auto }
+/* The exchange the ticker actually trades on, so the row reads as a listing
+   rather than as a guess at a name. */
+.sh-ac .x{
+  flex:0 0 auto; margin-left:auto; font:600 9px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.08em; color:var(--mute); border:1px solid var(--rule-2);
+  border-radius:4px; padding:3px 5px;
+}
+.sh-ac .row i{ font-style:normal; font-weight:700; color:var(--ink) }
+.sh-ac b.row.empty{
+  display:block; cursor:default; font-size:12px; color:var(--mute);
+}
+.sh-ac b.row.empty:hover{ background:none }
 
 /* ── 3f · Bar right side ─────────────────────────────────────────────────── */
 
