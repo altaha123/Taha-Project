@@ -44,6 +44,36 @@
     --mono:'IBM Plex Mono',monospace; --serif:'Instrument Serif',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
   }
 
+  /* ══ Surfaces that have to invert ══════════════════════════════════════
+     The tracker cells, the warning panel and the stale-data flag were mixed
+     against paper and written as literal hex, so the dark theme left them as
+     bright tiles — and, worse, the tracker's figures are drawn in var(--ink),
+     which in the dark theme is near-white on that white tile. Every number in
+     the grid disappeared. Each surface now names a token with a value on both
+     sides, so the tile and the ink on it can never invert independently.
+
+     Measured on the dark theme with these values: cell labels 6.8:1, the
+     figures 15.1:1, the quiet metadata line 7.1:1, a losing return 4.7:1.
+     The lowest of them clears AA at the sizes this card uses. */
+  :root{
+    /* Not var(--mute): the light mute lands at 3.8:1, which fails AA for the
+       8.5-10px mono this grid labels itself with. This is the value
+       altaha-polish.css picked for exactly that reason. */
+    --tk-cell:#fff; --tk-label:#726B5D; --tk-quiet:#726B5D; --tk-gap:var(--rule-2);
+    --warn-bg:#fdf8f0; --warn-ink:#5c4520; --warn-edge:#b26a00;
+    --stale-bg:#fdf3f3; --stale-ink:#7a2020;
+  }
+  html[data-theme="dark"]{
+    /* A shade off the card rather than off the page, so the cells still read
+       as tiles sitting on it rather than as holes cut out of it. */
+    --tk-cell:#221E15; --tk-label:#ADA593; --tk-quiet:#A9A190;
+    /* The separators invert too. On --rule-2 they were #221E16 between
+       #221E15 tiles, and the four cells merged into a single slab. */
+    --tk-gap:#0D0B07;
+    --warn-bg:#241C10; --warn-ink:#E4D5B4; --warn-edge:#C08A2A;
+    --stale-bg:#261412; --stale-ink:#F0B5AC;
+  }
+
   /* ══ Motion & surface system ═══════════════════════════════════════════
      One easing curve and three durations for the whole site. The old file had
      four different transition timings on four different controls, which is
@@ -850,10 +880,15 @@
   .tier.moderate{border-color:var(--gold-dp);color:var(--gold-dp)}
   .tier.thin{border-color:#b26a00;color:#b26a00}
   .tier.untradeable{border-color:#a11;color:#a11}
-  .warnbox{border-left:3px solid #b26a00;background:#fdf8f0;padding:9px 12px;margin-top:10px;
-           font-size:12px;line-height:1.6;color:#5c4520}
-  .staleflag{border-left:3px solid #a11;background:#fdf3f3;padding:10px 13px;margin:0 auto 16px;
-             max-width:640px;font-size:12.5px;line-height:1.6;color:#7a2020}
+  /* Both of these were mixed for paper only — a near-white panel carrying
+     near-black text. On a dark page they came out as a lit slab, and the
+     invalidation reason on a tracker row is the one line you most need to
+     read. Tinted from the theme's own tokens instead. */
+  .warnbox{border-left:3px solid var(--warn-edge);background:var(--warn-bg);padding:9px 12px;
+           margin-top:10px;font-size:12px;line-height:1.6;color:var(--warn-ink)}
+  .staleflag{border-left:3px solid var(--fail);background:var(--stale-bg);padding:10px 13px;
+             margin:0 auto 16px;max-width:640px;font-size:12.5px;line-height:1.6;
+             color:var(--stale-ink)}
   .selnotes{max-width:640px;margin:0 auto 16px;font-size:12px;line-height:1.7;color:var(--mute)}
   .selnotes li{margin-bottom:3px}
   .secmix{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 auto 16px}
@@ -972,12 +1007,15 @@
   #tkrows .tk .tknm{font-family:var(--serif);font-size:19px;line-height:1.2;min-width:0;
             overflow-wrap:anywhere}
   #tkrows .tk .tknm small{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
-                  text-transform:uppercase;color:var(--mute);margin-top:3px;
+                  text-transform:uppercase;color:var(--tk-quiet);margin-top:3px;
                   overflow-wrap:anywhere}
   #tkrows .tk .tkret{font-family:var(--serif);font-size:25px;flex-shrink:0}
   #tkrows .tk .tkret small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.13em;
-                   text-transform:uppercase;color:var(--mute);text-align:right;margin-top:2px}
-  .pos{color:#1f6f43}.neg{color:#a11}
+                   text-transform:uppercase;color:var(--tk-quiet);text-align:right;margin-top:2px}
+  /* These were literal ink. In the dark theme #a11 sits at about 2:1 against
+     the page, so a loss read as a smudge rather than a number. Both tokens
+     carry a light and a dark value — the pattern lab.css already uses. */
+  .pos{color:var(--pass)}.neg{color:var(--fail)}
   #tkrows .tk .tkln{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
             font-size:10.5px;letter-spacing:.06em;color:var(--mute)}
 
@@ -987,28 +1025,42 @@
      number is, plus the plan strip that answers whether the target was
      actually reached. */
   .tkgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:13px;
-          background:var(--rule-2);border:1px solid var(--rule-2);border-radius:7px;
+          background:var(--tk-gap);border:1px solid var(--tk-gap);border-radius:7px;
           overflow:hidden}
-  .tkcell{background:#fff;padding:9px 11px;min-width:0}
+  /* The cell was painted with a literal #fff and its value with var(--ink).
+     Those two invert in opposite directions: in the dark theme --ink is
+     near-white, so every figure in the grid — the prices, the return, the
+     distance to target — was white on a white tile and effectively gone.
+     Surface, label and value are one token set now, so they move together. */
+  .tkcell{background:var(--tk-cell);padding:9px 11px;min-width:0}
   .tkcell b{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;
-            text-transform:uppercase;color:var(--mute);font-weight:400;margin-bottom:3px}
+            text-transform:uppercase;color:var(--tk-label);font-weight:400;margin-bottom:3px}
   .tkcell span{display:block;font-family:var(--serif);font-size:17px;line-height:1.2;
                color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
   .tkcell span.sm{font-size:13px;font-family:var(--mono);letter-spacing:.02em}
   .tkcell span.dim{color:var(--mute)}
+  /* .tkcell span is (0,1,1) and .neg is (0,1,0), so the plain colour won and
+     Return printed in body ink while the same number printed red in the
+     header. Matched here at (0,2,1) so the sign actually shows. */
+  .tkcell span.pos{color:var(--pass)}
+  .tkcell span.neg{color:var(--fail)}
+  /* The plan strip carries the target and the stop — real numbers, not
+     decoration — so it sits a step above the muted metadata tone. */
   .tkplan{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:11px;
-          font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mute)}
+          font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--tk-quiet)}
   .tkout{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
          border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 10px}
-  .tkout.TARGET{border-color:#1f6f43;color:#1f6f43;background:rgba(31,111,67,.06)}
-  .tkout.STOP{border-color:#a11;color:#a11;background:#fdf3f3}
+  .tkout.TARGET{border-color:var(--pass);color:var(--pass);
+                background:color-mix(in srgb,var(--pass) 10%,transparent)}
+  .tkout.STOP{border-color:var(--fail);color:var(--fail);
+              background:color-mix(in srgb,var(--fail) 10%,transparent)}
   .tkout.OPEN{border-color:var(--gold-dp);color:var(--gold-dp)}
   .tkout.NO_PLAN{border-color:var(--rule);color:var(--mute)}
   @media(max-width:620px){.tkgrid{grid-template-columns:repeat(2,1fr)}}
   .tkstat{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
           padding:2px 7px;border:1px solid var(--rule);margin-left:8px}
-  .tkstat.LIVE{border-color:#1f6f43;color:#1f6f43}
-  .tkstat.INVALIDATED{border-color:#a11;color:#a11}
+  .tkstat.LIVE{border-color:var(--pass);color:var(--pass)}
+  .tkstat.INVALIDATED{border-color:var(--fail);color:var(--fail)}
   .tkstat.EXPIRED{border-color:var(--mute);color:var(--mute)}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;
             margin:0 auto 22px;max-width:760px}
@@ -1020,6 +1072,9 @@
   .statcell b{display:block;font-family:var(--serif);font-size:26px;font-weight:400;margin-bottom:3px}
   .statcell span{font-family:var(--mono);font-size:9px;letter-spacing:.13em;
                  text-transform:uppercase;color:var(--mute)}
+  /* Scoped to the tracker's own summary strip, which sits directly above the
+     rows: same label tone as the cells below it, in both themes. */
+  #tkstats .statcell span{color:var(--tk-label)}
   .fbtag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);border:1px solid var(--rule);padding:2px 7px;margin-left:8px;
     vertical-align:2px;white-space:nowrap}
