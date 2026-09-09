@@ -754,6 +754,14 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
                              "of": 0, "share_pct": None,
                              "detail": (stale or {}).get("text", "")})
 
+        v4 = row.get("altaha_score_v4")
+        if v4:
+            row["legacy_conviction"] = conviction
+            hz = "trade" if horizon == "short" else "position"
+            conviction = v4[hz]["final_score"]
+            evidence = [{"factor": "Altaha Score v4", "points": conviction, "of": 100,
+                         "share_pct": conviction,
+                         "detail": f"{hz} score; confidence {v4[hz]['confidence']:.1%}; peer-relative as of {v4.get('as_of')}"}]
         band, band_why = _band(conviction)
         row["conviction"] = conviction
         row["conviction_band"] = band

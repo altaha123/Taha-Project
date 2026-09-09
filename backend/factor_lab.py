@@ -69,7 +69,7 @@ def _ranks(a):
 
 
 def _spearman(x, y):
-    if len(x) < 3:
+    if len(x) < 3 or not np.all(np.isfinite(x)) or not np.all(np.isfinite(y)):
         return None
     rx, ry = _ranks(np.asarray(x, float)), _ranks(np.asarray(y, float))
     sx, sy = rx.std(), ry.std()
@@ -97,7 +97,8 @@ def evaluate(factor, horizon_days=21, min_cross_section=MIN_CROSS_SECTION):
 
     by_date = {}
     for as_of, _sym, x, y in rows:
-        by_date.setdefault(as_of, []).append((x, y))
+        if math.isfinite(x) and math.isfinite(y):
+            by_date.setdefault(as_of, []).append((x, y))
 
     dates = []
     for as_of in sorted(by_date):
@@ -119,7 +120,8 @@ def evaluate(factor, horizon_days=21, min_cross_section=MIN_CROSS_SECTION):
         })
 
     out = {"available": True, "factor": factor, "horizon_days": horizon_days,
-           "dates_measured": len(dates), "observations": len(rows),
+           "dates_measured": len(dates), "observations": sum(d["n"] for d in dates),
+           "observations_available": len(rows), "statistically_validated": False,
            "per_date": dates}
 
     if len(dates) < MIN_DATES:
@@ -140,6 +142,9 @@ def evaluate(factor, horizon_days=21, min_cross_section=MIN_CROSS_SECTION):
         "reliable": True,
         "mean_ic": round(mean, 4),
         "ic_sd": round(sd, 4),
+        "ic_information_ratio": round(mean / sd, 4) if sd > 0 else None,
+        "top_quintile_pct": _mean_present([d["top_quintile_pct"] for d in dates]),
+        "bottom_quintile_pct": _mean_present([d["bottom_quintile_pct"] for d in dates]),
         "hit_rate_pct": round(100.0 * float((ics > 0).mean()), 1),
         "quintile_spread_pct": round(float(np.mean(spreads)), 3) if spreads else None,
         "t_stat": round(mean / sd * math.sqrt(len(ics)), 2) if sd > 0 else None,
@@ -153,16 +158,17 @@ def evaluate(factor, horizon_days=21, min_cross_section=MIN_CROSS_SECTION):
     return out
 
 
+def _mean_present(values):
+    vs = [v for v in values if v is not None]
+    return round(float(np.mean(vs)), 4) if vs else None
+
+
 def _verdict(ic, n_dates):
-    if ic >= 0.03:
-        return ("Carries signal at the strength a real equity factor carries it. "
-                "That means right about 52% of the time, which is how this works.")
-    if ic >= 0.01:
-        return "Weakly positive. Not yet distinguishable from noise on this sample."
-    if ic > -0.01:
-        return "No measurable signal. It is contributing points and no information."
-    return ("Negative. On this sample the factor ranked backwards — every point "
-            "it contributes is subtracted from the score's accuracy.")
+    if ic > .01:
+        return "Positive sample rank association; out-of-sample validation is still required."
+    if ic >= -.01:
+        return "No measurable signal on this sample; absence of evidence is not evidence of absence."
+    return "Negative sample association: ranks ran backwards; this does not establish future behaviour."
 
 
 def sweep(horizon_days=21, factors=None, min_cross_section=MIN_CROSS_SECTION):
@@ -182,6 +188,10 @@ def sweep(horizon_days=21, factors=None, min_cross_section=MIN_CROSS_SECTION):
             "dates": r.get("dates_measured"),
             "observations": r.get("observations"),
             "mean_ic": r.get("mean_ic"),
+            "ic_sd": r.get("ic_sd"),
+            "ic_information_ratio": r.get("ic_information_ratio"),
+            "top_quintile_pct": r.get("top_quintile_pct"),
+            "bottom_quintile_pct": r.get("bottom_quintile_pct"),
             "hit_rate_pct": r.get("hit_rate_pct"),
             "quintile_spread_pct": r.get("quintile_spread_pct"),
             "reliable": r.get("reliable", False),
@@ -190,3 +200,71 @@ def sweep(horizon_days=21, factors=None, min_cross_section=MIN_CROSS_SECTION):
     out.sort(key=lambda r: (r["mean_ic"] is None, -(r["mean_ic"] or -9)))
     return {"available": True, "horizon_days": horizon_days,
             "factors": out, "count": len(out)}
+
+
+def correlations(names=None, min_cross_section=MIN_CROSS_SECTION, max_dates=126):
+    """Date-wise Spearman correlations; bounded to the latest 126 scan dates.
+
+    Warning requires >=8 dates and |rho|>=.85 on >=75% of dates. Correlation
+    is diagnostic only and never changes production weights automatically.
+    """
+    import factors as F
+    from itertools import combinations
+    names = names or ["v4_raw_" + n for n in F.SPEC]
+    pairs = {}
+    dates = pit_store.snapshot_dates()[-max_dates:]
+    for date in dates:
+        snapshot = pit_store.get_snapshot(date)
+        for a,b in combinations(names, 2):
+            obs = [(r.get(a),r.get(b)) for r in snapshot.values()
+                   if F.finite(r.get(a)) is not None and F.finite(r.get(b)) is not None]
+            if len(obs) < min_cross_section: continue
+            rho = _spearman([x for x,y in obs],[y for x,y in obs])
+            if rho is not None: pairs.setdefault((a,b), []).append(rho)
+    rows = []
+    for (a,b), rs in pairs.items():
+        enough = len(rs) >= MIN_DATES
+        frequency = sum(abs(r) >= .85 for r in rs)/len(rs)
+        rows.append({"factor_a":a, "factor_b":b, "dates":len(rs),
+                     "mean_correlation":float(np.mean(rs)) if enough else None,
+                     "high_correlation_frequency":frequency if enough else None,
+                     "warning":enough and frequency >= .75})
+    return {"available":True, "pairs":rows, "dates_examined":len(dates),
+            "threshold":.85, "minimum_dates":MIN_DATES, "automatic_changes":False}
+
+
+def suggested_weights(horizon_days=63):
+    """Research-only suggestions with chronological held-out observations.
+
+    At least 60 NON-overlapping evaluation dates per pillar, after 126 warm-up
+    dates, are required. No optimizer, no production consumer, no activation.
+    Even this gate does not establish significance or remove survivorship bias.
+    """
+    import profiles as P
+    import datetime as dt
+    dates = pit_store.snapshot_dates()
+    if len(dates) < 127:
+        return {"available":False, "automatic_changes":False,
+                "message":"Need 126 warm-up dates plus sufficient held-out non-overlapping history."}
+    start = dates[126]
+    measurements = {}
+    for family in P.V4_WEIGHTS["position"]:
+        report = evaluate("v4_position_family_" + family, horizon_days)
+        chosen, last = [], None
+        for row in report.get("per_date", []):
+            date = dt.date.fromisoformat(row["date"])
+            if row["date"] < start or (last and (date-last).days < math.ceil(horizon_days*1.55)+2):
+                continue
+            chosen.append(row["ic"]); last = date
+        if len(chosen) < 60:
+            return {"available":False, "automatic_changes":False,
+                    "message":"Need 60 held-out non-overlapping dates per pillar; fixed priors remain active."}
+        measurements[family] = max(0., float(np.mean(chosen)))
+    den = sum(measurements.values())
+    if den <= 0:
+        return {"available":False,"automatic_changes":False,"message":"No positive held-out association."}
+    prior = P.V4_WEIGHTS["position"]
+    return {"available":True, "automatic_changes":False, "research_only":True,
+            "held_out_from":start, "suggested_weights":{
+                f:.7*prior[f]/100 + .3*v/den for f,v in measurements.items()},
+            "caveat":"Requires human review and further independent validation; not deployed weights."}

@@ -37,7 +37,7 @@ import pit_store
 # a fortnight, a month, a quarter. The engine's own signal was measured to
 # decay somewhere between the fortnight and the month, so both sides of that
 # boundary have to be observable.
-HORIZONS = (5, 10, 21, 63)
+HORIZONS = (5, 10, 21, 63, 126)
 
 BENCHMARK = "NIFTYBEES"
 
@@ -184,9 +184,16 @@ def run(horizons=HORIZONS, limit_symbols=None, today=None):
                 # stock was measured between, not over its own bar count —
                 # otherwise a symbol that did not trade on some days is
                 # compared against a longer window than it actually had.
-                b0, _ = _at_or_before(bench, as_of)
-                b1, _ = _at_or_before(bench, end)
+                _, stock_start = _at_or_before(series, as_of)
+                b0, bd0 = _at_or_before(bench, stock_start)
+                b1, bd1 = _at_or_before(bench, end)
+                if bd0 != stock_start or bd1 != end or end.date() > today:
+                    skipped += 1
+                    continue
                 bret = ((b1 / b0 - 1.0) * 100.0) if (b0 and b1 and b0 > 0) else None
+                if bret is None:
+                    skipped += 1
+                    continue
                 pit_store.record_forward_return(as_of, sym, h, round(ret, 4),
                                                 round(bret, 4) if bret is not None else None)
                 written += 1

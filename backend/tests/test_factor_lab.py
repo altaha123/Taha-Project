@@ -148,6 +148,6 @@ def test_sweep_ranks_factors_by_measured_ic(lab_db):
 def test_the_verdict_language_is_calibrated_to_reality():
     """0.03 is a real factor, not a weak one. The wording has to say so, or
     every honest result reads as a failure."""
-    assert "real equity factor" in L._verdict(0.04, 20)
+    assert "validation" in L._verdict(0.04, 20)
     assert "No measurable signal" in L._verdict(0.0, 20)
     assert "Negative" in L._verdict(-0.05, 20)

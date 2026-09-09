@@ -37,7 +37,9 @@
     participation: 'Volume & ownership',
     quality:       'Business quality',
     improvement:   'Direction of travel',
-    valuation:     'What you pay'
+    valuation:     'What you pay',
+    value: 'Value', growth: 'Growth', acceleration: 'Acceleration',
+    financial_strength: 'Financial strength', risk: 'Risk'
   };
 
   function get() {
@@ -218,6 +220,14 @@
       parts.push('<p class="whysrc">Classified from ' + esc(m.source) + '.</p>');
     }
 
+    if (s.methodology_version === 'v4') {
+      parts.push('<p class="whynote">Raw score ' + Number(s.raw_score).toFixed(1) +
+        ' → final ' + Number(s.score).toFixed(1) + ' after confidence adjustment toward 50.</p>');
+      parts.push('<details class="whydrop"><summary>Factor evidence and peer comparisons</summary><ul>' +
+        (s.factor_ledger || []).map(function (e) {
+          return '<li><b>' + esc(e.explanation) + '</b><span>' + esc(e.peer_group || e.missing_reason) + '</span></li>';
+        }).join('') + '</ul></details>');
+    }
     host.innerHTML = parts.join('');
   }
 
@@ -235,14 +245,25 @@
           // means the score, label, summary, basis and the animated arc all
           // pick up v3 with no change to the drawing code.
           d.verdict = {
-            score: s.score, label: s.label, tone: s.tone,
+            score: Math.round(s.score * 10) / 10, label: s.label, tone: s.tone,
             summary: s.summary || '',
             basis: s.basis + ' · confidence ' + s.confidence + '%'
           };
         }
       } catch (e) { s = null; }
 
+      var unavailable = d && d.altaha_score_v4 && d.altaha_score_v4.available === false;
+      if (unavailable) {
+        d.verdict = { score: null, label: 'AWAITING SCAN', tone: 'mixed',
+          summary: d.altaha_score_v4.message, basis: 'Altaha Score v4 unavailable' };
+      }
       var out = orig.apply(this, arguments);
+      if (unavailable) {
+        if ($('score')) $('score').textContent = '—';
+        var oldStrip = $('altaha-pillars'), oldWhy = $('altaha-why');
+        if (oldStrip) oldStrip.innerHTML = '';
+        if (oldWhy) oldWhy.innerHTML = '<p>' + esc(d.altaha_score_v4.message) + '</p>';
+      }
 
       try {
         buildSwitch();

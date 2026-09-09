@@ -100,7 +100,7 @@
   function paintScore(d) {
     var sc = d.scoring || {};
     var score = sc.score != null ? sc.score
-      : (d.verdict && d.verdict.score != null ? d.verdict.score : null);
+      : (d.altaha_score_v4 ? null : (d.verdict && d.verdict.score != null ? d.verdict.score : null));
     var label = sc.label || (d.verdict && d.verdict.label) || '';
 
     if (score == null) {
