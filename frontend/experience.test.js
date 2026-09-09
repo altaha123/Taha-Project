@@ -1,0 +1,13 @@
+'use strict';
+const assert = require('node:assert/strict');
+const { clean, matches } = require('./experience.js');
+assert.deepEqual(clean([' reliance ', 'RELIANCE', 'M&M', 'BRK.B', '<script>', null, {}]), ['RELIANCE', 'M&M', 'BRK.B']);
+assert.deepEqual(clean({ bad: 'shape' }), []);
+assert.equal(clean(Array.from({ length: 110 }, (_, i) => 'STOCK' + i)).length, 100);
+assert.equal(matches({ symbol: 'INFY', name: 'Infosys', score: '75' }, ' info ', 70), true);
+assert.equal(matches({ symbol: 'INFY', name: 'Infosys', score: '' }, '', 70), false);
+assert.equal(matches({ symbol: 'INFY', name: 'Infosys', score: '—' }, '', 70), false);
+assert.equal(matches({ symbol: 'INFY', name: 'Infosys', score: '69' }, '', 70), false);
+assert.equal(matches({ symbol: 'INFY', name: 'Infosys', score: '' }, '', 0), true);
+assert.equal(matches({ symbol: 'M&M', name: 'Mahindra', score: '80' }, 'M&M', 80), true);
+console.log('Watchlist validation and shortlist filtering passed');
