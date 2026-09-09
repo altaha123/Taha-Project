@@ -208,6 +208,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------------------------------------------------------------------------
+# Unhandled errors, and why the browser could not see them
+#
+# An exception inside a route returns 500 from Starlette's ServerErrorMiddleware,
+# which sits OUTSIDE the CORS middleware. That response therefore carries no
+# Access-Control-Allow-Origin header, so a browser on altahascreener.in refuses
+# to hand it to the page's JavaScript and fetch() rejects instead. From inside
+# the app the failure is a 500 with a traceback in the logs; from inside the
+# page it is indistinguishable from an engine that is down.
+#
+# That is the whole reason a crash in /ideas read as "Engine unreachable — it
+# may be waking from sleep" for nine days while the ticker strip on the same
+# page kept updating. The message was not wrong about what the browser saw. It
+# was wrong about why, and it sent everyone hunting for a sleeping server.
+#
+# Registering a handler for Exception moves nothing on its own — Starlette puts
+# 500/Exception handlers on the outermost middleware, still outside CORS — so
+# the header is set explicitly here. allow_origins is "*" above; this matches it.
+@app.exception_handler(Exception)
+async def _unhandled_error(request, exc):
+    import traceback
+    tb = traceback.format_exc()
+    # Render captures stdout. This is the only copy of the traceback, so it is
+    # printed whole rather than summarised.
+    print(f"[unhandled] {request.method} {request.url.path}\n{tb}", flush=True)
+    return JSONResponse(
+        status_code=500,
+        content={"error": type(exc).__name__,
+                 "detail": str(exc)[:400],
+                 "path": request.url.path,
+                 "note": "The engine reached this endpoint and failed inside it. "
+                         "This is a bug in the app, not a connectivity problem."},
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
+
+
 DISCLAIMER = (
     "Altaha Screener is an educational analysis tool. Scores are objective "
     "computations from public data using disclosed formulas. Nothing here is "
@@ -817,6 +853,22 @@ def ideas(horizon: str = "short", limit: int = 15,
                 "disclaimer": DISCLAIMER}
     except ValueError as e:
         raise HTTPException(400, str(e))
+    except Exception as e:
+        # A bug in scoring must not present as a dead engine. The 500 this used
+        # to raise reached the browser without CORS headers, so the tab could
+        # only report that it could not reach anything — which is how a crash
+        # in here went nine days looking like a sleeping server.
+        import traceback
+        print(f"[ideas] select() failed for horizon={horizon}\n{traceback.format_exc()}",
+              flush=True)
+        return {"available": False,
+                "status": _state["status"],
+                "error": f"{type(e).__name__}: {str(e)[:300]}",
+                "message": ("The scan is on the server but the ideas engine failed while "
+                            "scoring it. The ranking is intact — this is a bug in the "
+                            "scoring layer, not a lost scan."),
+                "scanned_at": p.get("scanned_at"),
+                "market_context": _safe_context(horizon)}
 
 
 def _safe_context(horizon: str):

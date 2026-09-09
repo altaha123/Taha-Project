@@ -725,12 +725,22 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
     slow = [name for name, ok in (("market regime", regime_ok),
                                   ("sector outlook", outlook_ok),
                                   ("news", news_ok)) if not ok]
-    # Local reads — the ledger is on disk, so these are not on a deadline.
-    record = tracker.expectancy_detail() if tracker else {}
+    # Local reads — the ledger is on disk, so these are not on a deadline. They
+    # ARE guarded, which they were not: these two were the only calls in this
+    # function that could take the whole endpoint down, because every other
+    # feed here already fails soft. A ledger that will not parse should cost
+    # the track-record factor and the Tracking labels, not the Ideas tab.
+    try:
+        record = tracker.expectancy_detail() if tracker else {}
+    except Exception:
+        record = {}
     # "manual" on purpose: the Add button must reflect YOUR tracker. Counting
     # the scanner's automatic rows marked names as tracked that the user had
     # never added and could not see in their own list.
-    tracked = tracker.tracked_symbols(source="manual") if tracker else set()
+    try:
+        tracked = tracker.tracked_symbols(source="manual") if tracker else set()
+    except Exception:
+        tracked = set()
     stale = _staleness(payload.get("scanned_at"))
     _leaders = _leaders_laggards(outlook)
 
