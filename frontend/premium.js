@@ -313,6 +313,16 @@
 
   /* ── 7. SCORE COUNT-UP ────────────────────────────────────────────────── */
 
+  /* Reads the number out of a rendered score element. Stripping every
+     non-digit is what turned a score of 58.9 into 589 — the decimal point
+     was deleted and the digits closed up, so the seal read 589 out of 100
+     and the needle was asked for an angle off the end of the dial. Keep the
+     point and the sign, then parse. */
+  function scoreOf(s) {
+    var m = String(s == null ? '' : s).replace(/[,\s]/g, '').match(/-?\d+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+
   function countUp() {
     var node = $('#score');
     if (!node) return;
@@ -320,7 +330,7 @@
 
     new MutationObserver(function () {
       if (busy) return;
-      var target = parseInt((node.textContent || '').replace(/[^0-9]/g, ''), 10);
+      var target = scoreOf(node.textContent);
       if (!isFinite(target) || target <= 0) return;
       if (node.dataset.shown === String(target)) return;
 
@@ -680,7 +690,7 @@
     var name  = txt('#cname') || 'Altaha Screener';
     var sym   = txt('#csym');
     var px    = txt('#cpx');
-    var score = parseInt(txt('#score').replace(/[^0-9]/g, ''), 10);
+    var score = scoreOf(txt('#score'));
     var label = txt('#vlabel');
     var tsc   = txt('#tscore');
     var fsc   = txt('#fscore');
@@ -745,7 +755,7 @@
 
     // Reading
     x.fillStyle = '#F3F4F7'; x.font = '600 168px ' + S;
-    x.fillText(String(score), cx, cy + 62);
+    x.fillText(String(Math.round(score)), cx, cy + 62);
     x.fillStyle = 'rgba(255,255,255,.42)'; x.font = '400 22px ' + M;
     x.fillText('O U T   O F   1 0 0', cx, cy + 118);
 

@@ -816,7 +816,13 @@
       });
     }
 
-    function cell(v) { return v == null ? '\u2014' : v; }
+    /* Scores only, never prices — the compare card is a 0..100 grid, and a
+       pillar mean arrives with the full precision of a peer ratio. */
+    function cell(v) {
+      if (v == null) return '\u2014';
+      var n = Number(v);
+      return isFinite(n) ? String(Math.round(n)) : '\u2014';
+    }
 
     function draw(A, B) {
       function bandOf(v) {
@@ -827,7 +833,7 @@
         return '<div class="cmp-col">' +
           '<div class="cmp-name">' + esc(d.name) + '</div>' +
           '<div class="cmp-sym">' + esc(d.ticker) + '</div>' +
-          '<div class="cmp-score ' + bandOf(v) + '">' + v + '</div>' +
+          '<div class="cmp-score ' + bandOf(v) + '">' + cell(v) + '</div>' +
           '<div class="cmp-lbl">' + esc(d.verdict.label) + '</div>' +
           '<div class="cmp-sub"><span>Technical <b>' + cell(d.technical.score) + '</b></span>' +
           '<span>Fundamental <b>' + cell(d.fundamental.score) + '</b></span></div>' +
