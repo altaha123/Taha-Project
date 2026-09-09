@@ -132,7 +132,8 @@ def rank(rows, horizon="short", weights=None):
                 w = {k: float(weights.get(k,0))/sum(weights.values()) for k in w}
             present = [f for f in w if f in fs and w[f] > 0]
             total = sum(w[f] for f in present)
-            raw = sum(fs[f] * w[f] for f in present)/total if total else 50.
+            # Bound floating-point accumulation as well as economic inputs.
+            raw = max(0., min(100., sum(fs[f] * w[f] for f in present)/total)) if total else 50.
             coverage = len(present)/len(w)
             # Confidence is based on REQUIRED groups, never a renormalised denominator.
             # An inapplicable pillar (e.g. missing banking strength toolkit) remains unknown.
