@@ -2242,11 +2242,23 @@ async function loadIdeas(){
   $("ideatools").style.display="none";
   try{
     const qs = `horizon=${horizon}&limit=15&include_thin=${includeThin?1:0}`;
-    const {res, body} = await jget(`${API_BASE}/ideas?${qs}`);
+    /* A longer timeout than the default on purpose. /ideas is the heaviest
+       endpoint here — it scores every row against the sector, regime, news and
+       filing feeds — and each of those now has its own server-side deadline,
+       so the worst case is bounded but is not two seconds. Cutting it off at
+       the default would report an unreachable engine for a request that was
+       about to answer. */
+    const {res, body} = await jget(`${API_BASE}/ideas?${qs}`, {timeoutMs: 45000});
     const d = body || {};
     if(req !== ideasReq) return;
     if(!res.ok){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.detail || "Couldn’t load ideas.")}</div>`;
+      /* The engine answered — it just answered badly. Say what it said. A 500
+         now carries CORS headers and a real body, so there is something to
+         show here instead of the generic line this used to fall back to. */
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">`
+        + esc(d.detail || d.note || `The engine returned HTTP ${res.status}.`)
+        + (d.error ? `<br><code style="font-size:11px">${esc(d.error)}</code>` : "")
+        + `</div>`;
       return;
     }
 
@@ -2255,6 +2267,15 @@ async function loadIdeas(){
        the tab used to be completely blank until one had run. */
     renderContext(d.market_context);
 
+    /* An engine that reached this endpoint and failed inside it is a different
+       problem from an engine that is not there, and the reader must be able to
+       tell them apart — conflating the two is what made this bug invisible. */
+    if(d.error){
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">`
+        + `<b>The ideas engine failed while scoring the scan.</b><br>`
+        + `${esc(d.message || "")}<br><code style="font-size:11px">${esc(d.error)}</code></div>`;
+      return;
+    }
     if(!d.available){
       if(!d.market_context) {
         try{
@@ -2284,6 +2305,14 @@ async function loadIdeas(){
     if(d.sector_mix && d.sector_mix.length){
       $("secmix").innerHTML = d.sector_mix
         .map(([sec,n])=>`<span class="secchip">${esc(sec)} · ${n}</span>`).join("");
+    }
+    /* A list scored while a feed was still loading is complete but
+       under-informed, and saying so is the difference between a short list the
+       reader can trust and one they cannot place. */
+    if(d.degraded && d.degraded.length){
+      $("stalebox").innerHTML += `<div class="staleflag" style="border-left-color:#b26a00;background:#fdf8f0;color:#5c4520">`
+        + `<b>Still loading.</b> The ${esc(d.degraded.join(", "))} feed hadn\u2019t answered when this `
+        + `list was scored, so those factors scored neutral. It is loading now \u2014 reload in a moment.</div>`;
     }
     const notes = (d.selection_notes || []).slice();
     if(d.considered!=null && d.count!=null){

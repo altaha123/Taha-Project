@@ -227,3 +227,99 @@ def test_phase1_honours_the_chunk_it_is_given(monkeypatch):
     scan.phase1(["S%d" % i for i in range(25)], None,
                 {"done": 0, "total": 25}, chunk_size=10)
     assert sizes == [10, 10, 5]
+
+
+# ---------------------------------------------------------------------------
+# 4. No feed may hold /ideas open.
+#
+# The Ideas tab reported an unreachable engine while /market and /scan/status
+# answered instantly from the same page. The engine was up; /ideas was in the
+# middle of a cold sector-index download. Every overlay it reads was already
+# optional — a feed that RAISED scored neutral and said so — but a feed that
+# hung was never bounded, and it held the whole request behind it.
+# ---------------------------------------------------------------------------
+
+def test_a_hanging_feed_does_not_hold_the_request(monkeypatch):
+    import time as _t
+
+    import ideas
+
+    monkeypatch.setattr(ideas, "IDEAS_FEED_DEADLINE", 0.2)
+
+    def never_answers():
+        _t.sleep(30)
+        return "too late"
+
+    began = _t.time()
+    value, ok = ideas._soft("test-hang", never_answers, "fallback")
+    assert value == "fallback"
+    assert ok is False
+    assert _t.time() - began < 5, "the deadline did not bound the call"
+
+
+def test_a_feed_that_answers_in_time_is_used(monkeypatch):
+    import ideas
+
+    monkeypatch.setattr(ideas, "IDEAS_FEED_DEADLINE", 5)
+    value, ok = ideas._soft("test-fast", lambda: {"nifty": 1}, {})
+    assert value == {"nifty": 1}
+    assert ok is True
+
+
+def test_a_feed_that_raises_is_unavailable_not_an_error(monkeypatch):
+    """A raising feed and a hanging feed must land in the same place."""
+    import ideas
+
+    def blows_up():
+        raise RuntimeError("the exchange said no")
+
+    value, ok = ideas._soft("test-raise", blows_up, "fallback")
+    assert value == "fallback"
+    assert ok is False
+
+
+def test_a_slow_feed_is_not_started_twice(monkeypatch):
+    """
+    The second request must join the download already running, not launch a
+    second copy of it. Two requests racing to fetch the same twelve index
+    symbols is how a slow endpoint becomes a slower one.
+    """
+    import time as _t
+
+    import ideas
+
+    monkeypatch.setattr(ideas, "IDEAS_FEED_DEADLINE", 0.2)
+    starts = []
+
+    def slow():
+        starts.append(1)
+        _t.sleep(1.5)
+        return "done"
+
+    ideas._soft("test-once", slow, None)
+    ideas._soft("test-once", slow, None)
+    assert len(starts) == 1
+
+
+def test_the_work_keeps_running_so_the_next_request_is_warm(monkeypatch):
+    """
+    Overrunning is not cancelling. The point of the deadline is to stop WAITING,
+    not to throw away a download that is nearly finished — the request a few
+    seconds behind this one should find it done.
+    """
+    import time as _t
+
+    import ideas
+
+    monkeypatch.setattr(ideas, "IDEAS_FEED_DEADLINE", 0.2)
+
+    def slow():
+        _t.sleep(0.8)
+        return "the real answer"
+
+    value, ok = ideas._soft("test-warm", slow, "fallback")
+    assert (value, ok) == ("fallback", False)
+
+    _t.sleep(1.2)
+    value, ok = ideas._soft("test-warm", lambda: "resubmitted", "fallback")
+    assert ok is True
