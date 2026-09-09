@@ -789,6 +789,45 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
     }
 
 
+def _jsonable(obj):
+    """
+    Last resort for a value json cannot encode. Passed as json.dump(default=).
+
+    Every HTTP endpoint in this project runs its response through
+    main.to_native() first, because a single numpy scalar anywhere in a
+    payload — one sector figure, one corroboration count — fails encoding.
+    _dump() never had that protection: it called json.dump() directly, inside
+    a bare `except Exception: pass`. So a payload holding one numpy value was
+    served to the browser perfectly well (the endpoint converts on the way
+    out) while every attempt to write it to disk raised TypeError and was
+    swallowed. The scan looked like it worked and vanished on the next
+    restart, which is exactly the reported symptom.
+
+    Using default= rather than converting the whole payload keeps the common
+    path untouched: json only calls this for values it has already failed on.
+    """
+    # Arrays and sets first: .item() raises on anything holding more than one
+    # value, and str() would then "succeed" by writing the repr of an array
+    # into the file — a silent corruption worse than the failure it replaces.
+    if isinstance(obj, (set, frozenset)):
+        return sorted(obj, key=str)
+    tolist = getattr(obj, "tolist", None)
+    if callable(tolist):
+        try:
+            return tolist()
+        except Exception:
+            pass
+    for cast in (float, int, str):
+        try:
+            v = cast(obj)
+        except Exception:
+            continue
+        if isinstance(v, float) and (v != v or v in (float("inf"), float("-inf"))):
+            return None
+        return v
+    return None
+
+
 def _dump(payload):
     """
     Atomic write — same reasoning as tracker._save().
@@ -800,7 +839,7 @@ def _dump(payload):
     tmp = f"{OUT_FILE}.{os.getpid()}.tmp"
     try:
         with open(tmp, "w") as f:
-            json.dump(payload, f, indent=2)
+            json.dump(payload, f, indent=2, default=_jsonable)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, OUT_FILE)
