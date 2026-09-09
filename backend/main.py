@@ -412,9 +412,27 @@ def _worker():
 
 
 def to_native(obj):
+    """
+    Plain Python, all the way down.
+
+    FastAPI serialises a response with jsonable_encoder, which does not know
+    what a numpy scalar is: it tries dict(obj), then vars(obj), and raises
+    ValueError when both fail. That happens AFTER the route function has
+    returned, so no try/except inside a route can catch it — the endpoint
+    succeeds and the response still 500s. Anything that touches pandas or
+    numpy must therefore be converted here, at the boundary, and every
+    endpoint that does so passes through this function.
+
+    Sets and numpy's own scalar types are handled explicitly. A set is not
+    JSON at all, and np.str_ / np.datetime64 satisfy none of the branches
+    below while still failing to encode — .item() is numpy's own answer for
+    "give me the Python equivalent", so it is asked rather than guessed at.
+    """
     if isinstance(obj, dict):
         return {k: to_native(v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
+        return [to_native(v) for v in obj]
+    if isinstance(obj, (set, frozenset)):
         return [to_native(v) for v in obj]
     if isinstance(obj, np.bool_):
         return bool(obj)
@@ -423,6 +441,13 @@ def to_native(obj):
     if isinstance(obj, (np.floating, float)):
         v = float(obj)
         return None if (v != v or v in (float("inf"), float("-inf"))) else v
+    if isinstance(obj, np.generic):
+        try:
+            return to_native(obj.item())
+        except Exception:
+            return str(obj)
+    if isinstance(obj, np.ndarray):
+        return [to_native(v) for v in obj.tolist()]
     return obj
 
 
@@ -841,16 +866,21 @@ def ideas(horizon: str = "short", limit: int = 15,
     """
     p = _state["payload"]
     if not p:
-        return {"available": False, "status": _state["status"],
-                "message": "No scan yet — generate the ranking first.",
-                "market_context": _safe_context(horizon)}
+        return to_native({"available": False, "status": _state["status"],
+                           "message": "No scan yet — generate the ranking first.",
+                           "market_context": _safe_context(horizon)})
     try:
-        return {**ideas_engine.select(p, horizon=horizon,
-                                      limit=max(1, min(limit, 25)),
-                                      min_tier=min_tier,
-                                      include_thin=bool(include_thin),
-                                      min_conviction=min_conviction),
-                "disclaimer": DISCLAIMER}
+        # to_native, like every other endpoint that touches pandas. Without it
+        # a single numpy scalar anywhere in the response — one sector figure,
+        # one corroboration count — fails serialisation and returns 500, and
+        # the failure happens after this function returns, so the except below
+        # never sees it. This missing call is what broke the Ideas tab.
+        return to_native({**ideas_engine.select(p, horizon=horizon,
+                                                limit=max(1, min(limit, 25)),
+                                                min_tier=min_tier,
+                                                include_thin=bool(include_thin),
+                                                min_conviction=min_conviction),
+                          "disclaimer": DISCLAIMER})
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:
@@ -861,14 +891,15 @@ def ideas(horizon: str = "short", limit: int = 15,
         import traceback
         print(f"[ideas] select() failed for horizon={horizon}\n{traceback.format_exc()}",
               flush=True)
-        return {"available": False,
+        return to_native({
+                "available": False,
                 "status": _state["status"],
                 "error": f"{type(e).__name__}: {str(e)[:300]}",
                 "message": ("The scan is on the server but the ideas engine failed while "
                             "scoring it. The ranking is intact — this is a bug in the "
                             "scoring layer, not a lost scan."),
                 "scanned_at": p.get("scanned_at"),
-                "market_context": _safe_context(horizon)}
+                "market_context": _safe_context(horizon)})
 
 
 def _safe_context(horizon: str):
@@ -892,7 +923,7 @@ def ideas_context(horizon: str = "short"):
     if ctx is None:
         return {"available": False,
                 "message": "Market context feeds are unavailable right now."}
-    return {"available": True, **ctx}
+    return to_native({"available": True, **ctx})
 
 
 # ---------------------------------------------------------------------------
