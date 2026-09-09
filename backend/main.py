@@ -870,8 +870,15 @@ def scan_status():
     # is unchanged.
     try:
         ph = scanner.persistence_health()
+        # Two different faults, both of which end with a stale scan on screen:
+        # the write failed, or the process died before a write was reached.
+        # The second is what a deploy during a scan causes, and without this
+        # the restarted process reports a clean "done" with a date days old.
         if not ph.get("healthy"):
             out["persistence"] = ph
+        if ph.get("interrupted_scan") and _state["status"] != "running":
+            out["interrupted_scan"] = ph["interrupted_scan"]
+            out["last_attempt"] = ph.get("last_attempt")
     except Exception:
         pass
     return out

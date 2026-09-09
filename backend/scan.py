@@ -98,6 +98,46 @@ _persist = {
 }
 
 
+# A scan that dies leaves no evidence it ever ran.
+#
+# _state in main.py is memory only, and the checkpoint that writes results to
+# disk is not reached until the depth pass. Phase 1 — the NSE list, the quote
+# pre-filter and the bulk price download over ~2,300 symbols — is minutes of
+# work that writes nothing. So a restart during it (a Render deploy is one)
+# loses the scan AND every trace that it happened: the process comes back,
+# reloads the last completed scan, and reports "done" with a date from days
+# ago. There is then no way to answer the only question that matters, which is
+# whether a run was even attempted.
+#
+# This is a breadcrumb, not results: a few bytes rewritten at each phase
+# boundary so the answer survives the restart.
+_ATTEMPT_FILE = os.path.join(_DATA_DIR, "scan_attempt.json")
+
+
+def _note_attempt(**fields):
+    """Record where the current scan has got to. Never raises."""
+    try:
+        rec = last_attempt() or {}
+        rec.update(fields)
+        tmp = f"{_ATTEMPT_FILE}.{os.getpid()}.tmp"
+        with open(tmp, "w") as f:
+            json.dump(rec, f)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, _ATTEMPT_FILE)
+    except Exception:
+        pass
+
+
+def last_attempt():
+    """The last recorded scan attempt, or None. Never raises."""
+    try:
+        with open(_ATTEMPT_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
 def persistence_health():
     """
     Can a finished scan survive a restart? Never raises.
@@ -122,6 +162,18 @@ def persistence_health():
         out["disk_total_mb"] = round(st.f_blocks * st.f_frsize / 1e6, 1)
     except Exception:
         out["disk_free_mb"] = out["disk_total_mb"] = None
+    att = last_attempt()
+    if att:
+        out["last_attempt"] = att
+        # Started but never finished means the process died mid-scan. That is
+        # a different fault from a write that failed, and it is the one a
+        # deploy causes.
+        if att.get("started_at") and not att.get("finished_at"):
+            out["interrupted_scan"] = (
+                "A scan reached the '" + str(att.get("phase")) + "' phase at " +
+                str(att.get("started_at")) + " and never finished — the process "
+                "restarted while it was running. Nothing was written, so the "
+                "cached scan below is older than that attempt.")
     out["healthy"] = bool(out.get("dir_exists")) and _persist["consecutive_failures"] == 0
     if not out["healthy"]:
         out["warning"] = (
@@ -787,10 +839,15 @@ def run_scan(progress=None, names=None, checkpoint=None):
     (free-tier memory limits are real) still leaves usable rankings behind
     instead of silently wiping the scan.
     """
+    _note_attempt(started_at=dt.datetime.now().isoformat(timespec="seconds"),
+                  finished_at=None, phase="fetching the NSE universe list",
+                  pid=os.getpid(), scored=0)
     if names is not None:
         symbols, source = list(names), f"Provided list ({len(names)} symbols)"
     else:
         symbols, source = fetch_nse_list()
+    _note_attempt(phase="phase 1 — bulk prices and technical scores",
+                  universe=len(symbols))
 
     n2 = min(PHASE2_SIZE, len(symbols))
     state = {"done": 0, "total": len(symbols) + n2}
@@ -809,6 +866,8 @@ def run_scan(progress=None, names=None, checkpoint=None):
 
     cands, ill, nod, stopped = phase1(symbols, progress, state, chunk_size)
     ill += prefiltered
+    _note_attempt(phase="phase 2 — fundamentals and archetypes",
+                  candidates=len(cands))
 
     # Was: deep = cands[:n2] — top N by technical score only.
     # Now: ranked names PLUS a stratified random control group, so the data
@@ -829,6 +888,9 @@ def run_scan(progress=None, names=None, checkpoint=None):
                             n_candidates, ill, nod, len(deep), list(failed),
                             partial=not final, stopped=stopped)
         _dump(cp)
+        _note_attempt(scored=len(rows),
+                      **({"finished_at": dt.datetime.now().isoformat(timespec="seconds"),
+                          "phase": "complete"} if final else {}))
         if final and not stopped:
             # Immutable record of what this scan knew, written once at the end.
             _record_to_pit(cp.get("factor_universe") or [], universe_all, n_candidates, ill, nod)
