@@ -1,3 +1,8 @@
+> **V4 update:** [SCORING-V4.md](SCORING-V4.md) is the current ranking methodology.
+> The historical measurements below concern the previous engine and do not
+> establish v4 performance. IC is not directly convertible to a win rate.
+> No new predictive-accuracy claim is made by this change.
+
 # Measuring the engine
 
 ## The thing to understand before reading any number here
