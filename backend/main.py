@@ -1107,12 +1107,21 @@ def ideas_export(horizon: str = "short", limit: int = 25,
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")
     w.writeheader()
+    # The 0..100 columns come from the v4 engine, which works in peer
+    # percentiles and keeps full precision on purpose so ranking can separate
+    # near-identical rows. A spreadsheet is not ranking anything, and a cell
+    # reading 71.63358681820048 is unreadable, so the published copy is
+    # rounded to the precision the number actually carries.
+    def _cell(v):
+        return round(v, 1) if isinstance(v, float) else v
+
     for r in sel["rows"]:
         # Flatten the two nested objects the CSV wants a column for; a
         # DictWriter would otherwise print the whole dict into one cell.
-        w.writerow({**r,
-                    "sector_state": (r.get("sector_outlook") or {}).get("state"),
-                    "catalyst_category": (r.get("catalyst") or {}).get("category")})
+        row = {**r,
+               "sector_state": (r.get("sector_outlook") or {}).get("state"),
+               "catalyst_category": (r.get("catalyst") or {}).get("category")}
+        w.writerow({k: _cell(row.get(k)) for k in cols})
     return Response(content=buf.getvalue(), media_type="text/csv",
                     headers={"Content-Disposition":
                              f"attachment; filename=altaha-ideas-{horizon}.csv"})
