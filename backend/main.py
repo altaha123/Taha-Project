@@ -3,6 +3,7 @@ Altaha Screener — API  (v2.1 — on-demand scanning)
 Start command on Render:  uvicorn main:app --host 0.0.0.0 --port $PORT
 """
 
+import datetime as _dt_mod
 import json
 import os
 import threading
@@ -253,6 +254,10 @@ DISCLAIMER = (
     "consult a SEBI-registered adviser."
 )
 
+# Indian Standard Time. Fixed at UTC+5:30 — India observes no daylight saving,
+# so an offset is the whole story and no tz database is needed for it.
+IST = _dt_mod.timezone(_dt_mod.timedelta(hours=5, minutes=30))
+
 LEADERBOARD_FILE = scanner.OUT_FILE
 RESULT_TTL = 12 * 3600          # a ranking older than this is stale
 
@@ -492,7 +497,18 @@ def market():
         except Exception:
             dhan_status = None
 
-    now = _dt.datetime.utcnow() + _dt.timedelta(hours=5, minutes=30)
+    # An IST-aware clock, not naive UTC plus five and a half hours.
+    #
+    # datetime.utcnow() is deprecated and scheduled for removal — it is already
+    # printing a DeprecationWarning on every /market request under the Python
+    # 3.14 this runs on, and when it goes this endpoint goes with it, taking
+    # the ticker strip and the open/closed badge down.
+    #
+    # The old line was also lying about what it held: a NAIVE datetime carrying
+    # IST wall-clock numbers, which reads as UTC to anything that inspects it.
+    # A real timezone makes .hour, .minute and .weekday() mean what the market
+    # session checks below already assume they mean.
+    now = _dt.datetime.now(IST)
     mins = now.hour * 60 + now.minute
     weekday = now.weekday() < 5
     if not weekday:
