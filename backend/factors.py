@@ -67,21 +67,74 @@ except Exception:                                  # pragma: no cover
     np = pd = None
 
 
-# name -> (family, human label)
-REGISTRY = {
-    "momentum_12_1":    ("momentum",   "12-month momentum, last month skipped"),
-    "trend_quality":    ("momentum",   "Straightness of the advance"),
-    "reversal_5d":      ("reversal",   "One-week reversal"),
-    "low_volatility":   ("volatility", "Realised volatility (negated)"),
-    "volume_shock":     ("attention",  "Turnover against its own history"),
-    "earnings_yield":   ("value",      "Trailing earnings yield"),
-    "earnings_growth":  ("growth",     "Profit after tax, year on year"),
-    "revenue_growth":   ("growth",     "Revenue, year on year"),
-    "margin_trend":     ("quality",    "EBITDA margin change, year on year"),
-    "return_on_assets": ("quality",    "Return on assets, annualised"),
-}
+# Compatibility tuple view; SPEC is the canonical, auditable factor registry.
+from dataclasses import dataclass
 
-FAMILIES = sorted({f for f, _ in REGISTRY.values()})
+@dataclass(frozen=True)
+class FactorSpec:
+    family: str
+    label: str
+    inputs: tuple
+    min_history: int
+    group: str
+    invalid_models: tuple = ()
+    valid_models: tuple = ()
+    orientation: str = "higher_is_better_at_source"
+    winsorisation: str = "peer 2nd/98th percentiles, linear interpolation"
+    peer_group: str = "business_model / sector / size / eligible universe; lenders isolated"
+    pit: str = "filing date <= evaluation date; latest known revision; consistent basis"
+    missing: str = "None; excluded from raw mean; reduces confidence"
+
+SPEC = {
+    "momentum_12_1": FactorSpec("momentum", "12-month momentum, last month skipped", ("Close",), 260, "trend"),
+    "trend_quality": FactorSpec("momentum", "Signed straightness of the trend", ("Close",), 90, "trend"),
+    "reversal_5d": FactorSpec("risk", "One-week reversal", ("Close",), 8, "reversal"),
+    "low_volatility": FactorSpec("risk", "Realised volatility (negated)", ("Close",), 61, "volatility"),
+    "volume_shock": FactorSpec("participation", "Log turnover against its history", ("Close", "Volume"), 65, "turnover"),
+    "earnings_yield": FactorSpec("value", "Positive trailing earnings yield", ("eps_basic", "price"), 4, "valuation", ("lender", "cyclical", "emerging")),
+    "cycle_earnings_yield": FactorSpec("value", "Three-year median annual EPS yield", ("eps_basic", "price"), 12, "valuation", (), ("cyclical",)),
+    "earnings_growth": FactorSpec("growth", "PAT growth year on year", ("pat",), 5, "earnings"),
+    "revenue_growth": FactorSpec("growth", "Revenue growth year on year", ("revenue",), 5, "revenue"),
+    "margin_trend": FactorSpec("growth", "EBITDA margin change year on year", ("ebitda_margin_pct",), 5, "margin", ("lender",)),
+    "margin_level": FactorSpec("quality", "EBITDA margin level", ("ebitda_margin_pct",), 1, "profitability", ("lender",)),
+    "return_on_assets": FactorSpec("quality", "Annualised return on assets", ("roa_annualised_pct",), 1, "profitability"),
+    "earnings_consistency": FactorSpec("quality", "Negative dispersion of bounded PAT growth", ("pat",), 8, "persistence"),
+    "other_income_quality": FactorSpec("quality", "Negative other income / PBT", ("other_income", "pbt", "revenue"), 1, "earnings_quality", ("lender",)),
+    "eps_acceleration": FactorSpec("acceleration", "EPS YoY growth acceleration (pp)", ("eps_basic",), 6, "earnings"),
+    "revenue_acceleration": FactorSpec("acceleration", "Revenue YoY growth acceleration (pp)", ("revenue",), 6, "revenue"),
+    "margin_acceleration": FactorSpec("acceleration", "Acceleration of YoY EBITDA margin change (pp)", ("ebitda_margin_pct",), 6, "margin", ("lender",)),
+    "earnings_surprise": FactorSpec("acceleration", "Historical standardized EPS surprise", ("eps_basic",), 13, "earnings"),
+    "low_leverage": FactorSpec("financial_strength", "Negative reported debt/equity", ("debt_equity", "ratio_units_validated"), 1, "leverage", ("lender", "utility")),
+    "interest_coverage": FactorSpec("financial_strength", "Operating interest coverage", ("pbt_before_exceptional", "finance_cost", "other_income"), 1, "coverage", ("lender",)),
+    "interest_coverage_trend": FactorSpec("financial_strength", "YoY operating interest coverage change", ("pbt_before_exceptional", "finance_cost", "other_income"), 5, "coverage", ("lender",)),
+}
+REGISTRY = {n: (s.family, s.label) for n, s in SPEC.items()}
+FAMILIES = sorted({s.family for s in SPEC.values()})
+PRICE_FACTORS = {n for n, s in SPEC.items() if "Close" in s.inputs}
+
+
+def eligible(name, model):
+    s = SPEC[name]
+    return model not in s.invalid_models and (not s.valid_models or model in s.valid_models)
+
+
+def finite(value):
+    try:
+        v = float(value)
+        return v if math.isfinite(v) else None
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def cutoff_date(value=None):
+    if value is None:
+        return dt.date.today()
+    if isinstance(value, dt.datetime):
+        return value.date()
+    if isinstance(value, dt.date):
+        return value
+    # Fail closed: an invalid historical cutoff must never default to today.
+    return dt.date.fromisoformat(str(value)[:10])
 
 
 def _closes(df):
@@ -244,22 +297,37 @@ def known_quarters(quarters, as_of=None, consolidated=None):
     """
     if not quarters:
         return []
-    cutoff = as_of or dt.date.today()
-    if isinstance(cutoff, str):
-        try:
-            cutoff = dt.date.fromisoformat(cutoff[:10])
-        except Exception:
-            cutoff = dt.date.today()
+    cutoff = cutoff_date(as_of)
     out = []
     for q in quarters:
         filed = _parse_filed(q)
-        if filed is None or filed > cutoff:
+        try:
+            end = dt.date.fromisoformat(_period_to(q))
+        except (ValueError, TypeError):
             continue
-        if consolidated is not None and bool(q.get("consolidated")) != bool(consolidated):
+        if filed is None or filed > cutoff or end > filed or end > cutoff:
             continue
-        out.append((filed, q))
-    out.sort(key=lambda t: (t[0], str((t[1].get("period") or {}).get("to") or "")), reverse=True)
-    return [q for _f, q in out]
+        # Reject annual/YTD statements when an actual duration is supplied.
+        begin = (q.get("period") or {}).get("from")
+        if begin and begin != end.isoformat():
+            try:
+                if not 60 <= (end - dt.date.fromisoformat(str(begin)[:10])).days <= 110:
+                    continue
+            except ValueError:
+                continue
+        out.append(q)
+    if consolidated is None and out:
+        newest = max(_period_to(q) for q in out)
+        consolidated = any(q.get("consolidated") for q in out if _period_to(q) == newest)
+    out = [q for q in out if consolidated is None or bool(q.get("consolidated")) == bool(consolidated)]
+    # Sort by period first: a late revision of an old quarter isn't the latest quarter.
+    out.sort(key=lambda q: (_period_to(q), _parse_filed(q),
+                           str(q.get("filed_at") or ""), q.get("regime") == "integrated",
+                           str(q.get("source_url") or "")), reverse=True)
+    unique = {}
+    for q in out:
+        unique.setdefault(_period_to(q), q)
+    return list(unique.values())
 
 
 def _period_to(q):
@@ -275,30 +343,11 @@ def _same_quarter_last_year(known, latest):
     a company that missed or restated a quarter would otherwise be compared
     against the wrong one, silently.
     """
-    want = latest.get("quarter")
-    end = _period_to(latest)
-    if not end:
-        return None
     try:
-        target = dt.date.fromisoformat(end) - dt.timedelta(days=365)
-    except Exception:
+        end = dt.date.fromisoformat(_period_to(latest))
+    except ValueError:
         return None
-    best, gap = None, 75
-    for q in known:
-        if q is latest:
-            continue
-        if want and q.get("quarter") and q["quarter"] != want:
-            continue
-        e = _period_to(q)
-        if not e:
-            continue
-        try:
-            d = abs((dt.date.fromisoformat(e) - target).days)
-        except Exception:
-            continue
-        if d < gap:
-            best, gap = q, d
-    return best
+    return next((q for q in known if _period_to(q)[:7] == f"{end.year-1:04d}-{end.month:02d}"), None)
 
 
 def _growth(now, then):
@@ -308,88 +357,132 @@ def _growth(now, then):
         now, then = float(now), float(then)
     except (TypeError, ValueError):
         return None
-    if then == 0:
+    if not math.isfinite(now) or not math.isfinite(then) or then <= 1e-8:
         return None
     # A swing through zero has no meaningful percentage. Reporting one turns a
     # loss-making company that lost slightly less into a 300% grower.
     if then < 0 or now < 0:
         return None
+    # Reject tiny bases relative to the current scale (over 100x); never cap into a buy.
+    if then < abs(now) * 0.01:
+        return None
     return (now / then - 1.0) * 100.0
 
 
+def _previous(known, latest):
+    end = dt.date.fromisoformat(_period_to(latest))
+    month = end.year * 12 + end.month - 1 - 3
+    key = f"{month // 12:04d}-{month % 12 + 1:02d}"
+    return next((q for q in known if _period_to(q).startswith(key)), None)
+
+
+def _chain(known, latest, n):
+    result, q = [], latest
+    while q is not None and len(result) < n:
+        result.append(q)
+        q = _previous(known, q)
+    return result
+
+
 def fundamental_factors(quarters, price=None, as_of=None, consolidated=None):
-    """
-    Growth, margin direction, return on assets and earnings yield, all from
-    filings the market had already seen on `as_of`.
-    """
     known = known_quarters(quarters, as_of, consolidated)
-    out = {"earnings_growth": None, "revenue_growth": None,
-           "margin_trend": None, "return_on_assets": None, "earnings_yield": None}
+    out = {n: None for n in SPEC if n not in PRICE_FACTORS}
     if not known:
         return out
-
-    cutoff = as_of or dt.date.today()
-    if isinstance(cutoff, str):
-        try:
-            cutoff = dt.date.fromisoformat(cutoff[:10])
-        except Exception:
-            cutoff = dt.date.today()
-
     latest = known[0]
-
-    # Refuse rather than mislead. None means "not knowable", which the ranker
-    # already handles by scoring the stock on the families it does have; a
-    # stale number would instead have ranked it confidently and wrongly.
-    if _too_old(latest, cutoff):
-        out["stale"] = True
-        out["stale_reason"] = (
-            f"Newest filing covers a period ending "
-            f"{(latest.get('period') or {}).get('to')}, older than "
-            f"{STALE_AFTER_DAYS} days. Fundamental factors are withheld rather "
-            "than computed from a period the company has since superseded.")
+    if _too_old(latest, cutoff_date(as_of)):
+        out.update(stale=True, stale_reason="Newest filing period is superseded; fundamental factors withheld after "
+                   f"{STALE_AFTER_DAYS} days.")
         return out
     prior = _same_quarter_last_year(known, latest)
-
-    if prior:
-        out["earnings_growth"] = _growth(latest.get("pat"), prior.get("pat"))
-        out["revenue_growth"] = _growth(latest.get("revenue"), prior.get("revenue"))
-        a, b = latest.get("ebitda_margin_pct"), prior.get("ebitda_margin_pct")
+    prev = _previous(known, latest)
+    prev_prior = _same_quarter_last_year(known, prev) if prev else None
+    def change(q, p, key, growth=False):
+        a, b = finite((q or {}).get(key)), finite((p or {}).get(key))
+        if a is None or b is None:
+            return None
+        return _growth(a, b) if growth else a - b
+    for name, key, growth in (("earnings_growth", "pat", True), ("revenue_growth", "revenue", True),
+                              ("margin_trend", "ebitda_margin_pct", False)):
+        out[name] = change(latest, prior, key, growth)
+    for name, key, growth in (("eps_acceleration", "eps_basic", True),
+                              ("revenue_acceleration", "revenue", True),
+                              ("margin_acceleration", "ebitda_margin_pct", False)):
+        a, b = change(latest, prior, key, growth), change(prev, prev_prior, key, growth)
         if a is not None and b is not None:
-            out["margin_trend"] = float(a) - float(b)
+            out[name] = a - b
+    out["margin_level"] = finite(latest.get("ebitda_margin_pct"))
+    out["return_on_assets"] = finite(latest.get("roa_annualised_pct"))
+    de = finite(latest.get("debt_equity"))
+    if de is not None and de >= 0 and latest.get("ratio_units_validated") is True:
+        out["low_leverage"] = -de
+    def coverage(q):
+        # Ratio tags have inconsistent scaling/sentinel zeros across real filings.
+        # Rebuild operating EBIT from explicit statement lines in the same unit.
+        q = q or {}
+        p, cost, other = [finite(q.get(k)) for k in
+                          ("pbt_before_exceptional", "finance_cost", "other_income")]
+        if all(v is not None for v in (p,cost,other)) and cost > 1e-8:
+            return (p + cost - other) / cost
+        return None
+    out["interest_coverage"] = coverage(latest)
+    prior_coverage = coverage(prior)
+    if out["interest_coverage"] is not None and prior_coverage is not None:
+        out["interest_coverage_trend"] = out["interest_coverage"] - prior_coverage
+    oi, pbt, rev = [finite(latest.get(k)) for k in ("other_income", "pbt", "revenue")]
+    if all(v is not None for v in (oi, pbt, rev)) and rev > 0 and pbt > max(1e-8, rev * .01) and oi >= 0:
+        out["other_income_quality"] = -oi / pbt
+    chain = _chain(known, latest, 16)
+    # Symmetric percentage change in [-200,200], valid through losses/zero.
+    # Consistency measures dispersion, not profitability; level is a separate group.
+    changes = []
+    deltas = []
+    for q in chain:
+        py = _same_quarter_last_year(known, q)
+        a, b = finite(q.get("pat")), finite((py or {}).get("pat"))
+        if a is not None and b is not None and abs(a) + abs(b) > 1e-8:
+            changes.append(200 * (a - b) / (abs(a) + abs(b)))
+        else:
+            changes.append(None)
+        deltas.append(change(q, py, "eps_basic"))
+    cs = []
+    for v in changes[:8]:
+        if v is None: break
+        cs.append(v)
+    if len(cs) >= 4:
+        out["earnings_consistency"] = -float(np.std(cs, ddof=1))
+    # Current innovation excluded from the eight preceding seasonal differences.
+    # MAD denominator; a zero historical scale withholds SUE rather than exploding.
+    if len(deltas) >= 9 and all(v is not None for v in deltas[:9]):
+        history = np.asarray(deltas[1:9], float)
+        median = float(np.median(history))
+        scale = float(1.4826 * np.median(np.abs(history - median)))
+        if scale > max(1e-8, float(np.max(np.abs(history))) * 1e-6):
+            out["earnings_surprise"] = (deltas[0] - median) / scale
+    p = finite(price)
+    eps = [finite(q.get("eps_basic")) for q in chain]
+    if p is not None and p > 0:
+        if len(eps) >= 4 and all(v is not None for v in eps[:4]) and sum(eps[:4]) > 0:
+            out["earnings_yield"] = sum(eps[:4]) / p * 100
+        if len(eps) >= 12 and all(v is not None for v in eps[:12]):
+            normal = float(np.median([sum(eps[j:j+4]) for j in (0, 4, 8)]))
+            if normal > 0:
+                out["cycle_earnings_yield"] = normal / p * 100
+    return {k: finite(v) if k in SPEC else v for k, v in out.items()}
 
-    roa = latest.get("roa_annualised_pct")
-    if roa is not None:
-        try:
-            out["return_on_assets"] = float(roa)
-        except (TypeError, ValueError):
-            pass
 
-    # Trailing twelve months of EPS over price. Four consecutive quarters or
-    # nothing — annualising one quarter would rank a seasonal business on
-    # whichever quarter it last reported.
-    if price:
-        eps = []
-        seen = set()
-        for q in known:
-            e = q.get("eps_basic")
-            key = _period_to(q)
-            if e is None or not key or key in seen:
-                continue
-            seen.add(key)
-            try:
-                eps.append(float(e))
-            except (TypeError, ValueError):
-                continue
-            if len(eps) == 4:
-                break
-        if len(eps) == 4:
-            try:
-                p = float(price)
-                if p > 0:
-                    out["earnings_yield"] = sum(eps) / p * 100.0
-            except (TypeError, ValueError):
-                pass
-    return out
+def data_quality(quarters, as_of=None, consolidated=None):
+    known = known_quarters(quarters, as_of, consolidated)
+    q = known[0] if known else {}
+    age = (cutoff_date(as_of) - dt.date.fromisoformat(_period_to(q))).days if q else None
+    return {"as_of": cutoff_date(as_of).isoformat(), "period_age_days": age,
+            "latest_period_end": _period_to(q) or None,
+            "latest_filed_at": q.get("filed_at"),
+            "stale": age is not None and age > STALE_AFTER_DAYS,
+            "history_quarters": len(_chain(known, q, 16)) if q else 0,
+            "source_valid": bool(known) and all(bool(x.get("source_url")) for x in known),
+            "consolidated": q.get("consolidated"),
+            "source_urls": list(dict.fromkeys(x.get("source_url") for x in known if x.get("source_url")))}
 
 
 # --------------------------------------------------------------------------
@@ -407,6 +500,9 @@ def compute(df, quarters=None, price=None, as_of=None, consolidated=None):
     if np is None:
         return {k: None for k in REGISTRY}
 
+    if as_of is not None and df is not None:
+        cutoff = cutoff_date(as_of)
+        df = df.loc[pd.to_datetime(df.index).date <= cutoff]
     if price is None:
         c = _closes(df)
         price = float(c.iloc[-1]) if c is not None else None

@@ -159,8 +159,12 @@ def test_earnings_yield_needs_four_quarters_or_none():
     assert F.fundamental_factors(three, price=100.0,
                                  as_of=dt.date(2026, 6, 1))["earnings_yield"] is None
     out = F.fundamental_factors(QUARTERS, price=100.0, as_of=dt.date(2026, 6, 1))
-    # Four quarters at 5.0 EPS each against a price of 100 = a 20% yield.
-    assert out["earnings_yield"] == pytest.approx(20.0)
+    # These four observations skip two quarters; they are NOT a TTM.
+    assert out["earnings_yield"] is None
+    consecutive = QUARTERS[:2] + [
+        _q("2025-06-30", "2025-07-20", 100, 1000, quarter="First Quarter"),
+        _q("2025-03-31", "2025-04-20", 100, 1000, quarter="Fourth Quarter")]
+    assert F.fundamental_factors(consecutive, 100, "2026-06-01")["earnings_yield"] == pytest.approx(20)
 
 
 def test_standalone_and_consolidated_are_not_mixed():

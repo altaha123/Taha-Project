@@ -797,3 +797,24 @@ _PILLAR_WORD = {
 def compare_horizons(tech, fund, info, fin=None, bs=None, cf=None) -> dict:
     """All three horizons at once — the switch the frontend offers."""
     return {h: score(tech, fund, info, fin, bs, cf, horizon=h) for h in HORIZONS}
+
+# Canonical v4 horizon priors. Classification and business biases remain here.
+# Risk combines reversal and volatility before receiving ONE pillar vote.
+V4_WEIGHTS = {
+    "trade": dict(quality=10, growth=5, acceleration=5, value=5,
+                  financial_strength=5, momentum=20, risk=30, participation=20),
+    "position": dict(quality=20, growth=15, acceleration=15, value=15,
+                     financial_strength=10, momentum=15, risk=5, participation=5),
+    "invest": dict(quality=25, growth=15, acceleration=10, value=20,
+                   financial_strength=15, momentum=8, risk=5, participation=2),
+}
+V4_BIAS_MAP = {"growth": "improvement", "acceleration": "improvement",
+               "value": "valuation", "financial_strength": "quality"}
+
+
+def v4_weights(model_key, horizon):
+    horizon = {"short": "trade", "medium": "position"}.get(horizon, horizon)
+    base = V4_WEIGHTS.get(horizon, V4_WEIGHTS[DEFAULT_HORIZON])
+    bias = BUSINESS_MODELS.get(model_key, BUSINESS_MODELS["general"])["bias"]
+    raw = {p: w * bias.get(V4_BIAS_MAP.get(p, p), 1.) for p, w in base.items()}
+    return {p: w / sum(raw.values()) for p, w in raw.items()}

@@ -206,7 +206,7 @@ def _legacy_filings(sym, period="Quarterly"):
     return out
 
 
-def filings(symbol, period="Quarterly"):
+def filings(symbol, period="Quarterly", retain_versions=False):
     """
     Every results filing NSE lists for one symbol, newest first, across both
     filing regimes.
@@ -237,7 +237,8 @@ def filings(symbol, period="Quarterly"):
                 safely(_legacy_filings, sym, period)):
         for row in src:
             end = _dparse(row.get("to"))
-            key = (end, bool(row.get("consolidated")))
+            key = ((end, bool(row.get("consolidated")), row.get("filed_at"), row.get("xbrl"))
+                   if retain_versions else (end, bool(row.get("consolidated"))))
             if end and key in seen:
                 continue
             if end:
@@ -469,7 +470,7 @@ def normalise(parsed):
         # EBITDA from the statement's own lines: profit before tax, add back
         # finance cost and depreciation, strip out non-operating income.
         pbt = out.get("pbt")
-        if pbt is not None:
+        if pbt is not None and all(out.get(k) is not None for k in ("finance_cost", "depreciation", "other_income")):
             ebitda = pbt + (out.get("finance_cost") or 0) + (out.get("depreciation") or 0) \
                      - (out.get("other_income") or 0)
             out["ebitda"] = round(ebitda, 2)
@@ -491,7 +492,7 @@ def normalise(parsed):
 def _cache_path(url):
     if not CACHE_DIR:
         return None
-    return os.path.join(CACHE_DIR, hashlib.sha1(url.encode()).hexdigest() + ".json")
+    return os.path.join(CACHE_DIR, hashlib.sha1(("v4:" + url).encode()).hexdigest() + ".json")
 
 
 def fetch(url):
@@ -523,18 +524,31 @@ def fetch(url):
     return out
 
 
-def statements(symbol, limit=8, consolidated=None):
+def statements(symbol, limit=8, consolidated=None, as_of=None, retain_versions=False):
     """
     The last `limit` quarters for one symbol, newest first, with year-on-year
     growth against the same quarter a year earlier — not against the previous
     quarter, which for most Indian businesses compares a festive season with a
     monsoon and calls the difference performance.
     """
-    idx = filings(symbol)
+    idx = filings(symbol, retain_versions=True) if retain_versions else filings(symbol)
+    if as_of is not None:
+        from factors import cutoff_date
+        cutoff = cutoff_date(as_of)
+        idx = [f for f in idx if _dparse(f.get("filed_at")) is not None and
+               _dparse(f.get("filed_at")) <= cutoff]
     if consolidated is not None:
         want = [f for f in idx if f["consolidated"] == consolidated]
         idx = want or idx          # not every company files both
-    idx = idx[:max(1, limit)]
+    if retain_versions:
+        # Select metadata BEFORE fetching. Keep one known revision per period
+        # and one accounting basis; at most limit documents hit the disk/network.
+        from factors import known_quarters
+        candidates = [{**f, "period": {"to": (_dparse(f.get("to")) or dt.date.min).isoformat()},
+                       "source_url": f["xbrl"]} for f in idx]
+        idx = known_quarters(candidates, as_of, consolidated)[:max(1, limit)]
+    else:
+        idx = idx[:max(1, limit)]
 
     rows = []
     for meta in idx:
@@ -719,3 +733,37 @@ def summary(symbol, limit=8, consolidated=None):
                    "flow statement, so the current ratio and operating cash flow "
                    "still come from the existing provider."),
     }
+
+
+_scoring_cache = {}
+_scoring_lock = threading.Lock()
+
+
+def scoring_statements(symbol, as_of=None, limit=16):
+    """Bounded one-hour cache of PIT-selected history; reuse immutable XML cache.
+
+    Callers running historical research must supply as_of. The key includes
+    the cutoff; today's revisions can never satisfy a historical cache read.
+    """
+    import time
+    from factors import cutoff_date
+    key = (symbol, cutoff_date(as_of).isoformat(), limit)
+    with _scoring_lock:
+        cached = _scoring_cache.get(key)
+        if cached and time.time()-cached[0] < 3600:
+            return cached[1]
+    rows = statements(symbol, limit=limit, as_of=key[1], retain_versions=True)
+    try:
+        import pit_store
+        from factors import known_quarters
+        pit_store.record_quarter_versions(symbol, rows)
+        rows = known_quarters(pit_store.quarter_versions(symbol), key[1])[:limit]
+    except Exception:
+        # Live scoring survives storage failure; scan PIT health exposes durability.
+        pass
+    with _scoring_lock:
+        if len(_scoring_cache) >= 256:
+            oldest = min(_scoring_cache, key=lambda k:_scoring_cache[k][0])
+            _scoring_cache.pop(oldest, None)
+        _scoring_cache[key] = (time.time(), rows)
+    return rows

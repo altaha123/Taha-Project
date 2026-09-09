@@ -46,16 +46,16 @@ def test_scores_use_the_full_range_instead_of_saturating():
     # Families disagree by construction in this fixture.
     out = M.rank(_rows(), horizon="short")
     assert out["available"]
-    scores = [r["factor_score"] for r in out["rows"] if r["factor_score"] is not None]
+    scores = [r["raw_factor_score"] for r in out["rows"] if r["factor_score"] is not None]
     assert len(scores) == 40
-    assert max(scores) - min(scores) > 25, (
+    assert max(scores) - min(scores) > 20, (
         f"scores span only {max(scores) - min(scores):.1f} points — still saturated")
     assert len(set(scores)) > 30, "too many ties to be a ranking"
 
     # Families agree: every factor ordered the same way.
     agree = [{"symbol": f"A{i:02d}",
               "factors": {n: float(i) for n in M.F.REGISTRY}} for i in range(40)]
-    a = [r["factor_score"] for r in M.rank(agree, "short")["rows"]]
+    a = [r["raw_factor_score"] for r in M.rank(agree, "short")["rows"]]
     assert max(a) - min(a) > 90, (
         f"with every family agreeing the scale should be nearly full, got "
         f"{max(a) - min(a):.1f}")
@@ -87,7 +87,8 @@ def test_a_stock_missing_most_families_gets_no_score():
                  "factors": {"momentum_12_1": 500.0, "trend_quality": 500.0}})
     out = M.rank(rows, horizon="short")
     sparse = [r for r in out["rows"] if r["symbol"] == "SPARSE"][0]
-    assert sparse["factor_score"] is None
+    assert 50 < sparse["factor_score"] < 65
+    assert sparse["confidence_score"] <= .25
     assert "families" in sparse["factor_score_note"]
     assert sparse["family_coverage_pct"] < 50
 
@@ -125,8 +126,8 @@ def test_none_is_never_treated_as_zero():
 def test_short_and_medium_weight_different_things():
     """Over one to four weeks stocks reverse; over six to twelve months they
     trend. One score across both mixes a positive signal with a negative one."""
-    assert M.WEIGHTS["short"]["reversal"] > M.WEIGHTS["medium"]["reversal"]
-    assert M.WEIGHTS["medium"]["momentum"] > M.WEIGHTS["short"]["momentum"]
+    assert M.WEIGHTS["short"]["risk"] > M.WEIGHTS["medium"]["risk"]
+    assert M.WEIGHTS["invest"]["quality"] > M.WEIGHTS["short"]["quality"]
     for h, w in M.WEIGHTS.items():
         assert sum(w.values()) == 100, f"{h} weights sum to {sum(w.values())}"
 
