@@ -330,17 +330,7 @@
       // number instead of a second behind it.
       window.dispatchEvent(new CustomEvent('altaha:score', { detail: { score: target } }));
 
-      if (reduced) { node.textContent = target; return; }
-
-      busy = true;
-      var t0 = performance.now(), dur = 1250;   // matches the needle sweep
-
-      (function step(now) {
-        var p = Math.min(1, (now - t0) / dur);
-        node.textContent = Math.round(target * (1 - Math.pow(1 - p, 4)));
-        if (p < 1) requestAnimationFrame(step);
-        else { node.textContent = target; busy = false; }
-      })(t0);
+      // Keep measured values exact; the decorative dial handles feedback.
     }).observe(node, { childList: true, characterData: true, subtree: true });
   }
 

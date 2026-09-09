@@ -203,6 +203,7 @@
 
     var brand = el('a', 'sh-brand');
     brand.href = 'index.html';
+    brand.setAttribute('aria-label', 'Altaha Screener home');
     brand.innerHTML =
       '<span class="mk" aria-hidden="true"></span>' +
       '<span class="nm">Altaha <i>Screener</i></span>';
@@ -261,7 +262,8 @@
 
     document.body.insertBefore(chrome, document.body.firstChild);
 
-    var drawer = el('div', 'sh-drawer');
+    var drawer = el('dialog', 'sh-drawer');
+    drawer.setAttribute('aria-label', 'Navigation menu');
     drawer.id = 'sh-drawer';
     document.body.appendChild(drawer);
 
@@ -362,7 +364,22 @@
     }).join('');
 
     var burger = document.getElementById('sh-burger');
+    var drawerClose = el('button', 'ux-button', 'Close menu');
+    drawerClose.type = 'button';
+    drawerClose.addEventListener('click', function () { setDrawer(false); });
+    drawer.prepend(drawerClose);
+    drawer.addEventListener('close', function () {
+      drawer.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+      burger.setAttribute('aria-label', 'Open navigation menu');
+      document.body.style.overflow = '';
+    });
+    window.matchMedia('(max-width:1040px)').addEventListener('change', function (e) {
+      if (!e.matches && drawer.open) setDrawer(false);
+    });
     function setDrawer(on) {
+      if (on && !drawer.open) drawer.showModal();
+      if (!on && drawer.open) drawer.close();
       drawer.classList.toggle('open', on);
       burger.setAttribute('aria-expanded', on ? 'true' : 'false');
       burger.setAttribute('aria-label', on ? 'Close navigation menu' : 'Open navigation menu');
@@ -786,16 +803,8 @@
     to = Number(to);
     if (isNaN(to)) { node.textContent = '—'; return; }
     decimals = decimals == null ? 0 : decimals;
-    if (REDUCED) { node.textContent = to.toFixed(decimals); return; }
-    var from = 0, t0 = null, dur = ms || 900;
-    function frame(t) {
-      if (t0 === null) t0 = t;
-      var p = Math.min(1, (t - t0) / dur);
-      var eased = 1 - Math.pow(1 - p, 3);
-      node.textContent = (from + (to - from) * eased).toFixed(decimals);
-      if (p < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
+    // Preserve the public helper without displaying intermediate financial values.
+    node.textContent = to.toFixed(decimals);
   }
 
   window.AltahaShell = {

@@ -290,11 +290,11 @@
 
   var RANGES = [['1D', '1 day'], ['1W', '1 week'], ['1M', '1 month'],
                 ['6M', '6 months'], ['1Y', '1 year']];
-  var chartRange = '6M';
+  var chartRange = '6M', chartRequest = 0;
 
   function paintRanges() {
     $('ranges').innerHTML = RANGES.map(function (r) {
-      return '<button type="button" data-r="' + r[0] + '"' +
+      return '<button type="button" aria-label="' + r[1] + '" aria-pressed="' + (r[0] === chartRange) + '" data-r="' + r[0] + '"' +
         (r[0] === chartRange ? ' class="on"' : '') + '>' + esc(r[0]) + '</button>';
     }).join('');
     $('ranges').onclick = function (e) {
@@ -302,6 +302,7 @@
       if (!b) return;
       chartRange = b.dataset.r;
       paintRanges();
+      $('ranges').querySelector('[data-r="' + chartRange + '"]').focus();
       loadChart();
     };
   }
@@ -325,18 +326,26 @@
 
   function loadChart() {
     var box = $('chartbox');
+    var request = ++chartRequest;
+    box.setAttribute('aria-busy', 'true');
     box.innerHTML = '<div class="skel" style="height:250px"></div>';
     fetch(API + '/chart?ticker=' + encodeURIComponent(TICKER) + '&range=' + chartRange)
       .then(function (r) { if (!r.ok) throw new Error('x'); return r.json(); })
-      .then(function (d) { drawChart(d, box); })
+      .then(function (d) {
+        if (request !== chartRequest) return;
+        box.setAttribute('aria-busy', 'false');
+        drawChart(d, box);
+      })
       .catch(function () {
+        if (request !== chartRequest) return;
+        box.setAttribute('aria-busy', 'false');
         box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--mute);' +
           'font-size:13px">Price history is not available right now.</div>';
       });
   }
 
   function drawChart(d, box) {
-    var rows = (d && d.candles) || [];
+    var rows = ((d && d.candles) || []).filter(function (r) { return r && typeof r[4] === 'number' && isFinite(r[4]); });
     if (rows.length < 2) {
       box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--mute);' +
         'font-size:13px">Not enough history to draw this range.</div>';
@@ -373,6 +382,30 @@
         '<span>' + money(lo + pad, d.currency) + '</span>' +
         '<span>' + esc(d.source || '') + (d.as_of ? ' · ' + esc(d.as_of) : '') + '</span>' +
         '<span>' + money(hi - pad, d.currency) + '</span></div>';
+
+
+    // A scrubber exposes the same closes to touch and keyboard users.
+    var output = document.createElement('output');
+    output.className = 'ux-chart-value';
+    output.id = 'chart-close-value';
+    var scrub = document.createElement('input');
+    scrub.type = 'range'; scrub.min = '0'; scrub.max = String(rows.length - 1);
+    scrub.step = '1'; scrub.value = String(rows.length - 1);
+    scrub.setAttribute('aria-label', 'Inspect closing prices');
+    scrub.setAttribute('aria-describedby', output.id);
+    function inspect() {
+      var row = rows[Number(scrub.value)];
+      var raw = row[0];
+      var date = String(raw == null ? 'Date unavailable' : raw);
+      if (typeof raw === 'number') {
+        var parsed = new Date(raw > 1e12 ? raw : raw * 1000);
+        date = isNaN(parsed.getTime()) ? 'Date unavailable' : parsed.toISOString();
+      }
+      output.textContent = date + ' · Close ' + money(row[4], d.currency);
+      scrub.setAttribute('aria-valuetext', output.textContent);
+    }
+    scrub.addEventListener('input', inspect);
+    box.appendChild(output); box.appendChild(scrub); inspect();
 
     if (!REDUCED) {
       var path = box.querySelector('.spark-draw');

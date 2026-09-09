@@ -1117,6 +1117,7 @@
 <link rel="stylesheet" href="shell.css">
 <link rel="stylesheet" href="home.css">
 <link rel="stylesheet" href="special.css">
+<link rel="stylesheet" href="experience.css">
 <script>
 (function(){try{
   var s=localStorage.getItem('altaha-theme');
@@ -2342,9 +2343,9 @@ async function loadIdeas(){
       $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing clears the bar for this horizon right now. That is a real answer, not an error — forcing a list when the evidence is absent is how screeners lose money for people.</div>`;
     }else{
       $("idearows").innerHTML = d.rows.map((s,i)=>`
-        <div class="idea rise" style="--i:${Math.min(i,10)}" data-t="${esc(s.symbol)}" role="button" tabindex="0">
+        <div class="idea rise" style="--i:${Math.min(i,10)}" data-t="${esc(s.symbol)}" data-score="${esc(s.conviction ?? s.setup_fit ?? "")}" data-name="${esc(s.name)}" role="group" aria-label="${esc(s.name)}">
           <div class="top">
-            <span class="nm">${i+1}. ${esc(s.name)}${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}<small>${esc(s.symbol)} · NSE · ₹${s.price ?? "—"}${s.avg_turnover_cr!=null?` · ₹${s.avg_turnover_cr}cr/day`:""}</small></span>
+            <span class="nm"><a href="stock.html?ticker=${encodeURIComponent(s.symbol)}">${i+1}. ${esc(s.name)}</a>${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}<small>${esc(s.symbol)} · NSE · ₹${s.price ?? "—"}${s.avg_turnover_cr!=null?` · ₹${s.avg_turnover_cr}cr/day`:""}</small></span>
             <span class="conv">${s.conviction ?? s.setup_fit ?? "—"}<small>conviction</small></span>
           </div>
           <div class="arch">${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${s.setup_fit ?? "—"}/100${s.filing?`<span class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</span>`:""}</div>
@@ -2359,7 +2360,7 @@ async function loadIdeas(){
           ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
           ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
           ${newsHTML(s)}
-          <button class="evbtn" type="button" data-ev="${i}">Why this scored ${s.conviction ?? "—"} — show the ledger</button>
+          <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">Why this scored ${s.conviction ?? "—"} — show the ledger</button>
           ${evidenceHTML(s.evidence)}
           <div class="idearow-actions">
             <button class="trackbtn${s.tracked?" done":""}" data-track="${esc(s.symbol)}">${s.tracked?"Tracking":"Add to tracker"}</button>
@@ -2374,12 +2375,12 @@ async function loadIdeas(){
       document.querySelectorAll(".idea").forEach(el=>{
         const go=()=>{ switchTab("screener"); analyse(el.dataset.t); };
         el.addEventListener("click",ev=>{
-          if(ev.target.closest(".trackbtn") || ev.target.closest(".evbtn") ||
+          if(ev.target.closest("button") || ev.target.closest(".trackbtn") || ev.target.closest(".evbtn") ||
              ev.target.closest(".shbtn") || ev.target.closest("[data-share]") ||
              ev.target.closest("a")) return;
           go();
         });
-        el.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" ") go(); });
+
       });
 
       document.querySelectorAll(".evbtn").forEach(btn=>{
@@ -2388,7 +2389,9 @@ async function loadIdeas(){
           ev.stopPropagation();
           const wrap = btn.parentElement.querySelector(".evwrap");
           if(!wrap) return;
-          btn.textContent = wrap.classList.toggle("open") ? "Hide the ledger" : shut;
+          const opened = wrap.classList.toggle("open");
+          btn.setAttribute("aria-expanded", String(opened));
+          btn.textContent = opened ? "Hide the ledger" : shut;
         });
       });
 
@@ -4010,6 +4013,7 @@ if(fcSymParam){
 <script src="shell.js" defer></script>
 <script src="home.js" defer></script>
 <script src="special.js" defer></script>
+<script src="experience.js" defer></script>
 <script>
 /* ── Deep links from the landing page ───────────────────────────────────
    ALTAHA_DEEPLINK. index.html already understood ?chart=SYMBOL but had no

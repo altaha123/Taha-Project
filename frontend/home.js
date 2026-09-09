@@ -88,7 +88,7 @@
     box.innerHTML = '<div class="mb-idx"><div class="mb-skel"></div><div class="mb-skel"></div>' +
                     '<div class="mb-skel"></div><div class="mb-skel"></div></div>';
     // Above the search row, below the (now much shorter) masthead.
-    if (host && host.parentNode) host.parentNode.insertBefore(box, host);
+    if (host) host.appendChild(box);
     else main.insertBefore(box, main.firstChild);
     return box;
   }

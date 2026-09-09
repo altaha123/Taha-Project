@@ -242,13 +242,15 @@
     if (blurb) blurb.textContent = section.blurb || '';
 
     syncMobile(section.id);
+    window.dispatchEvent(new CustomEvent('altaha:navigate', { detail: { section: section.id, tab: tabId } }));
   }
 
   function scrollToContent() {
     if (booting) return;
-    var anchor = $('.navwrap');
+    var anchor = document.body.classList.contains('sh-on')
+      ? ($id('view-' + current.tab) || $('main')) : $('.navwrap');
     if (!anchor) return;
-    var top = anchor.getBoundingClientRect().top + window.scrollY - 12;
+    var top = anchor.getBoundingClientRect().top + window.scrollY - (document.querySelector('.sh-chrome')?.offsetHeight || 0) - 12;
     window.scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' });
   }
 
@@ -261,14 +263,14 @@
   function setHash(sectionId, tabId) {
     var h = hashFor(sectionId, tabId);
     lastWritten = h;
-    if (location.hash !== h) history.replaceState(null, '', h);
+    if (location.hash !== h) history.pushState(null, '', h);
   }
 
   function readHash() {
     var raw = (location.hash || '').replace(/^#/, '').split('/');
     var sectionId = raw[0] || '';
     var tabId = raw[1] || null;
-    if (!sectionId) return null;
+    if (!sectionId) return { section: 'screener', tab: 'screener' };
 
     var owner = ownerOf(sectionId);
     if (owner && owner.id !== sectionId) return { section: owner.id, tab: sectionId };
