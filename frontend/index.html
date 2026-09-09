@@ -2242,7 +2242,13 @@ async function loadIdeas(){
   $("ideatools").style.display="none";
   try{
     const qs = `horizon=${horizon}&limit=15&include_thin=${includeThin?1:0}`;
-    const {res, body} = await jget(`${API_BASE}/ideas?${qs}`);
+    /* A longer timeout than the default on purpose. /ideas is the heaviest
+       endpoint here — it scores every row against the sector, regime, news and
+       filing feeds — and each of those now has its own server-side deadline,
+       so the worst case is bounded but is not two seconds. Cutting it off at
+       the default would report an unreachable engine for a request that was
+       about to answer. */
+    const {res, body} = await jget(`${API_BASE}/ideas?${qs}`, {timeoutMs: 45000});
     const d = body || {};
     if(req !== ideasReq) return;
     if(!res.ok){
@@ -2284,6 +2290,14 @@ async function loadIdeas(){
     if(d.sector_mix && d.sector_mix.length){
       $("secmix").innerHTML = d.sector_mix
         .map(([sec,n])=>`<span class="secchip">${esc(sec)} · ${n}</span>`).join("");
+    }
+    /* A list scored while a feed was still loading is complete but
+       under-informed, and saying so is the difference between a short list the
+       reader can trust and one they cannot place. */
+    if(d.degraded && d.degraded.length){
+      $("stalebox").innerHTML += `<div class="staleflag" style="border-left-color:#b26a00;background:#fdf8f0;color:#5c4520">`
+        + `<b>Still loading.</b> The ${esc(d.degraded.join(", "))} feed hadn\u2019t answered when this `
+        + `list was scored, so those factors scored neutral. It is loading now \u2014 reload in a moment.</div>`;
     }
     const notes = (d.selection_notes || []).slice();
     if(d.considered!=null && d.count!=null){
