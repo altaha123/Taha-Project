@@ -513,7 +513,7 @@ def market():
     weekday = now.weekday() < 5
     if not weekday:
         status = "closed"
-    elif 555 <= mins < 915:          # 09:15 - 15:30
+    elif 555 <= mins < 930:          # 09:15 - 15:30 IST, the NSE equity session
         status = "open"
     elif mins < 555:
         status = "pre"

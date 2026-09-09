@@ -51,7 +51,7 @@ def _session(now):
     mins = now.hour * 60 + now.minute
     if now.weekday() >= 5:
         return "closed"
-    if 555 <= mins < 915:
+    if 555 <= mins < 930:
         return "open"
     if mins < 555:
         return "pre"
@@ -62,8 +62,9 @@ def _session(now):
     (dt.datetime(2026, 9, 9, 9, 14), "pre"),      # one minute before the bell
     (dt.datetime(2026, 9, 9, 9, 15), "open"),     # 09:15 exactly
     (dt.datetime(2026, 9, 9, 12, 0), "open"),
-    (dt.datetime(2026, 9, 9, 15, 14), "open"),
-    (dt.datetime(2026, 9, 9, 15, 15), "closed"),  # 15:15 — the close as coded
+    (dt.datetime(2026, 9, 9, 15, 15), "open"),    # the code used to close here
+    (dt.datetime(2026, 9, 9, 15, 29), "open"),    # last minute of the session
+    (dt.datetime(2026, 9, 9, 15, 30), "closed"),  # the bell
     (dt.datetime(2026, 9, 9, 23, 59), "closed"),
     (dt.datetime(2026, 9, 12, 12, 0), "closed"),  # Saturday
     (dt.datetime(2026, 9, 13, 12, 0), "closed"),  # Sunday
