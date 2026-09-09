@@ -1666,6 +1666,22 @@ def pit_ic(horizon: int = 21, factor: Optional[str] = None,
     return factor_lab.sweep(h, min_cross_section=m)
 
 
+@app.get("/pit/correlations")
+def pit_correlations():
+    if factor_lab is None:
+        raise HTTPException(503, "The Factor Lab is unavailable.")
+    return factor_lab.correlations()
+
+
+@app.get("/pit/suggested-weights")
+def pit_suggested_weights(horizon: int = 63):
+    if factor_lab is None:
+        raise HTTPException(503, "The Factor Lab is unavailable.")
+    if horizon not in (5, 10, 21, 63, 126):
+        raise HTTPException(400, "Use a supported session horizon.")
+    return factor_lab.suggested_weights(horizon)
+
+
 @app.get("/factors")
 def factors_for(ticker: str, horizon: str = "short"):
     """
@@ -1690,7 +1706,7 @@ def factors_for(ticker: str, horizon: str = "short"):
     quarters = []
     if xbrl_source is not None:
         try:
-            quarters = (xbrl_source.summary(base) or {}).get("quarters") or []
+            quarters = xbrl_source.scoring_statements(base)
         except Exception:
             quarters = []
 
@@ -1715,6 +1731,7 @@ def factors_for(ticker: str, horizon: str = "short"):
     return to_native({
         "symbol": base, "price": price, "horizon": horizon,
         "factors": values,
+        "altaha_score_v4": _cached_v4(base),
         "fundamentals": fundamentals,
         "families": {n: {"family": factor_lib.REGISTRY[n][0],
                          "label": factor_lib.REGISTRY[n][1],
@@ -1746,12 +1763,31 @@ def factors_rank(horizon: str = "short", limit: int = 50):
         return {"available": False,
                 "message": "No scan yet — generate the ranking first."}
     h = horizon if horizon in multifactor.WEIGHTS else "short"
-    out = multifactor.rank(
-        [{"symbol": r.get("symbol"), "name": r.get("name"),
-          "sector": r.get("sector"), "price": r.get("price"),
-          "composite": r.get("composite"),
-          "factors": r.get("factors") or {}} for r in rows],
-        horizon=h)
+    rows = (p or {}).get("factor_universe") or rows
+    if rows and all(r.get("altaha_score_v4", {}).get("position") for r in rows):
+        hz = {"short": "trade", "medium": "position"}.get(h, h)
+        projected = []
+        for original in rows:
+            r = dict(original)
+            v4 = r["altaha_score_v4"]
+            score = v4[hz]
+            r.update(factor_score=score["final_score"], final_factor_score=score["final_score"],
+                     raw_factor_score=score["raw_score"], confidence_score=score["confidence"],
+                     family_coverage_pct=score["family_coverage_pct"], families=score["pillars"])
+            projected.append(r)
+        projected.sort(key=lambda r: (-r["factor_score"], r["symbol"]))
+        previous, rank_no = None, 0
+        for i, r in enumerate(projected):
+            if r["factor_score"] != previous: rank_no = i + 1
+            r["factor_rank"] = rank_no
+            previous = r["factor_score"]
+        out = {"available": True, "horizon": h, "rows": projected,
+               "universe": len(rows), "ranked": len(rows), "methodology_version": "v4",
+               "families": factor_lib.FAMILIES, "weights": PR.V4_WEIGHTS[hz],
+               "caveat": "Fixed prior weights; cached scan-date scores, not probabilities."}
+    else:
+        out = multifactor.rank(rows, horizon=h)
+        out["input_status"] = "Unversioned legacy scan; preview only. Rescan to bank canonical v4 scores."
     if not out.get("available"):
         return out
     ranked = [r for r in out["rows"] if r.get("factor_score") is not None]
@@ -1983,6 +2019,9 @@ def _analyse_holding(item):
     price = float(tech["price"])
     clean_sym = sym.replace(".NS", "").replace(".BO", "")
     sector, sector_source = sectors.resolve_sector(clean_sym, info)
+    v4 = _cached_v4(clean_sym)
+    legacy = v
+    v = multifactor.presentation(v4) if "position" in v4 else {"score": None, "tone": "mixed"}
     return {
         "symbol": clean_sym,
         "name": info.get("longName") or info.get("shortName") or sym_in,
@@ -1992,6 +2031,7 @@ def _analyse_holding(item):
         "cost": round(qty * buy, 2) if buy is not None else None,
         "pnl_pct": round(100 * (price - buy) / buy, 2) if buy else None,
         "composite": v["score"], "tone": v["tone"],
+        "legacy_composite": legacy["score"], "altaha_score_v4": v4,
         "technical": tech["score"], "fundamental": fund["score"],
         "setup": (setup or {}).get("name"), "setup_fit": (setup or {}).get("fit"),
         "horizon": (setup or {}).get("horizon"),
@@ -2484,6 +2524,17 @@ def options_chain(ticker: str, expiry: str):
     })
 
 
+def _cached_v4(symbol):
+    payload = _state.get("payload") or {}
+    rows = payload.get("factor_universe") or payload.get("rankings") or []
+    row = next((r for r in rows if r.get("symbol") == symbol), {})
+    result = row.get("altaha_score_v4")
+    if result:
+        return result
+    return {"available": False, "methodology_version": "v4",
+            "message": "No v4 universe score for this stock yet; run a new universe scan."}
+
+
 @app.get("/analyze")
 def analyze(ticker: str, horizon: str = "position"):
     if not ticker or len(ticker) > 20:
@@ -2528,29 +2579,30 @@ def analyze(ticker: str, horizon: str = "position"):
     # Percentile vs the scanned universe — makes the score mean something.
     pct = None
     try:
-        rows = (_state.get("payload") or {}).get("rankings") or []
+        rows = (_state.get("payload") or {}).get("factor_universe") or []
         base = sym.replace(".NS", "").replace(".BO", "")
         mine = next((r for r in rows if r.get("symbol") == base), None)
-        if mine and mine.get("composite") is not None and len(rows) >= 50:
-            comps = [r["composite"] for r in rows if r.get("composite") is not None]
-            pct = round(sum(1 for c in comps if c < mine["composite"]) / len(comps) * 100)
+        field = (horizon if horizon in PR.HORIZONS else "position") + "_score"
+        if mine and mine.get(field) is not None and len(rows) >= multifactor.MIN_PEERS:
+            comps = [r[field] for r in rows if r.get(field) is not None]
+            pct = round(sum(1 for c in comps if c < mine[field]) / len(comps) * 100)
     except Exception:
         pct = None
 
     verdict = composite(tech, fund)
 
-    # Scoring v3. The headline number is now weighted for the kind of business
-    # this is and for the horizon the reader picked, instead of a flat 50/50
-    # that treated a bank and a steel mill as the same object. composite() is
-    # kept and still returned as `verdict` so nothing that reads the old field
-    # breaks, but `profile` is what the page should show.
+    base = sym.replace(".NS", "").replace(".BO", "")
+    v4 = _cached_v4(base)
     try:
-        scoring = PR.score(tech, fund, info, fin, bs, cf, horizon=horizon)
+        legacy_scoring = PR.score(tech, fund, info, fin, bs, cf, horizon=horizon)
     except Exception:
-        scoring = None
-    try:
-        horizons = PR.compare_horizons(tech, fund, info, fin, bs, cf)
-    except Exception:
+        legacy_scoring = None
+    if "position" in v4:
+        scoring = multifactor.presentation(v4, horizon)
+        horizons = {h: multifactor.presentation(v4, h) for h in PR.HORIZONS}
+    else:
+        scoring = {"score": None, "methodology_version": "v4", "label": "AWAITING SCAN",
+                   "basis": v4["message"], "summary": v4["message"], "confidence": 0}
         horizons = None
 
     try:
@@ -2580,10 +2632,12 @@ def analyze(ticker: str, horizon: str = "position"):
         "setup": setup,
         "plain": plain,
         "verdict": verdict,
-        # Scoring v3 — weighted for the business model and the chosen horizon.
+        # Canonical v4 — weighted for the business model and chosen horizon.
         # `verdict` above is the old flat 50/50 and is kept only so nothing
         # reading the old field breaks; `scoring` is the number to show.
         "scoring": scoring,
+        "altaha_score_v4": v4,
+        "legacy_scoring": legacy_scoring,
         "horizons": horizons,
         # What the business actually does. The score answers "is this good";
         # it does not answer "what is this", and a reader who cannot answer the

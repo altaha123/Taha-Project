@@ -651,3 +651,25 @@ if __name__ == "__main__":
     print("Altaha PIT store ready at:", os.path.abspath(DB_PATH))
     for k, v in coverage_report().items():
         print(f"  {k:24} {v}")
+
+
+def record_quarter_versions(symbol, quarters):
+    """Append immutable filing payloads, including revisions, without changing old tables."""
+    with _tx() as conn:
+        conn.execute("""CREATE TABLE IF NOT EXISTS quarter_versions (
+            symbol TEXT NOT NULL, source_url TEXT NOT NULL, filed_at TEXT NOT NULL,
+            consolidated INTEGER NOT NULL, payload TEXT NOT NULL,
+            PRIMARY KEY(symbol, source_url, filed_at, consolidated)) WITHOUT ROWID""")
+        conn.executemany("INSERT OR IGNORE INTO quarter_versions VALUES (?,?,?,?,?)", [
+            (symbol, q["source_url"], q["filed_at"], int(bool(q.get("consolidated"))),
+             json.dumps(q, allow_nan=False)) for q in quarters
+            if q.get("source_url") and q.get("filed_at")])
+
+
+def quarter_versions(symbol):
+    conn = _connect()
+    exists = conn.execute("SELECT 1 FROM sqlite_master WHERE name='quarter_versions'").fetchone()
+    if not exists:
+        return []
+    return [json.loads(r[0]) for r in conn.execute(
+        "SELECT payload FROM quarter_versions WHERE symbol=?", (symbol,))]

@@ -45,6 +45,9 @@ except Exception:
 
 from engine import technical_score, fundamental_score, composite
 import archetypes as A
+import profiles as PR
+import multifactor
+import xbrl
 
 # The point-in-time ledger. Optional import: if pit_store.py isn't present
 # the scan still runs exactly as before, it just records nothing.
@@ -428,7 +431,7 @@ def deep_score(cand, selection="ranked"):
             df = None
     if df is None:
         try:
-            df = t.history(period="1y", auto_adjust=True)
+            df = t.history(period="2y", auto_adjust=True)
         except Exception:
             return None
     if df is None or len(df) < 120:
@@ -472,10 +475,15 @@ def deep_score(cand, selection="ranked"):
     # out individually. Neither is shown in the UI; both are banked, because
     # the Factor Lab cannot measure what was never recorded and every day this
     # is missing is a day of evidence that cannot be recovered later.
-    extra = {}
+    extra, quality_meta = {}, {}
+    try:
+        quarters = xbrl.scoring_statements(s)
+    except Exception:
+        quarters = []
     try:
         import factors as _factors
-        extra = _factors.compute(df, quarters=None, price=tech.get("price")) or {}
+        extra = _factors.compute(df, quarters=quarters, price=tech.get("price")) or {}
+        quality_meta = _factors.data_quality(quarters)
     except Exception:
         extra = {}
     checks = {}
@@ -489,6 +497,10 @@ def deep_score(cand, selection="ranked"):
     return {
         "plan": plan,
         "factors": extra,
+        "data_quality": quality_meta,
+        "industry": info.get("industry"),
+        "market_cap": info.get("marketCap"),
+        "trailing_eps": info.get("trailingEps"),
         "tech_checks": checks,
         "symbol": s, "ticker": f"{s}.NS",
         "name": info.get("longName") or info.get("shortName") or s,
@@ -594,6 +606,7 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
         for r in rows:
             records[r["symbol"]] = {
                 "composite": r.get("composite"),
+                "legacy_composite": r.get("legacy_composite"),
                 "technical": r.get("technical"),
                 "fundamental": r.get("fundamental"),
                 "f_score": r.get("f_score"),
@@ -610,6 +623,18 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
             # Orthogonal factors and the individual technical checks. Recorded
             # flat alongside everything else — factor_snapshots is long-format
             # precisely so new factors never need a migration.
+            v4 = r.get("altaha_score_v4")
+            if v4:
+                records[r["symbol"]]["v4_audit"] = v4
+                records[r["symbol"]]["methodology_version"] = "v4"
+                for hz in PR.V4_WEIGHTS:
+                    for metric in ("raw_score", "final_score", "confidence"):
+                        records[r["symbol"]][f"v4_{hz}_{metric}"] = v4[hz][metric]
+                    for family, value in v4[hz]["pillars"].items():
+                        records[r["symbol"]][f"v4_{hz}_family_{family}"] = value
+                for entry in v4["factor_ledger"]:
+                    if entry["value"] is not None and entry["applicable"]:
+                        records[r["symbol"]]["v4_raw_" + entry["factor"]] = entry["value"]
             for src in (r.get("factors") or {}, r.get("tech_checks") or {}):
                 for k, v in src.items():
                     if v is not None:
@@ -621,17 +646,18 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
 
 def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
                    ill, nod, n_deep, failed, partial=False, stopped=None):
-    # Rows whose fundamentals failed to load are recorded but must not be
-    # ranked — a composite built from technicals alone is not comparable with
-    # one built from both. They stay visible in the counts below.
     all_rows = list(rows)
-    rankable = [r for r in all_rows if r.get("rankable", True)]
-    n_missing_fund = len(all_rows) - len(rankable)
-    n_control = sum(1 for r in all_rows if r.get("selection") == "control")
-
-    rows = sorted(rankable, key=lambda r: (r["composite"] or 0,
-                                           r["fundamental"] or 0,
-                                           r["technical"] or 0), reverse=True)
+    n_missing_fund = sum(r.get("fundamental") is None for r in all_rows)
+    n_control = sum(r.get("selection") == "control" for r in all_rows)
+    ranked = multifactor.rank(all_rows, "position")
+    scored = ranked.get("rows", [])
+    for r in scored:
+        r.setdefault("legacy_composite", r.get("composite"))
+        r["composite"] = r["position_score"]
+        p = multifactor.presentation(r["altaha_score_v4"])
+        r["label"], r["tone"] = p["label"], p["tone"]
+        r["rankable"] = True
+    rows = sorted(scored, key=lambda r: (-r["position_score"], r["symbol"]))
     return {
         "scanned_at": dt.datetime.now().strftime("%d %b %Y, %H:%M")
                       + (" (partial — scan in progress)" if partial else ""),
@@ -647,11 +673,11 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
         "scored": len(rows),
         "control_cohort": n_control,
         "missing_fundamentals": n_missing_fund,
-        "methodology": ("Phase 1: full universe bulk-scanned for liquidity and technicals. "
-                        "Phase 2: top candidates receive full fundamental analysis "
-                        "(Piotroski, adapted G-Score, ROCE, shareholding) and setup "
-                        "classification. Composite = 50% technical + 50% fundamental. "
-                        "Rankings reflect the scan date only."),
+        "methodology": ("Altaha Score v4: peer percentiles, eight pillars, business-model priors, "
+                        "confidence shrinkage. Analysed cohort includes technical candidates and random controls; "
+                        "it is not the complete NSE universe."),
+        "methodology_version": "v4",
+        "factor_universe": rows,
         "rankings": rows[:STORE_TOP],
         "skipped": failed,
         # Set when the scan ended itself rather than finishing. A short list
@@ -734,9 +760,9 @@ def run_scan(progress=None, names=None, checkpoint=None):
                             n_candidates, ill, nod, len(deep), list(failed),
                             partial=not final, stopped=stopped)
         _dump(cp)
-        if final:
+        if final and not stopped:
             # Immutable record of what this scan knew, written once at the end.
-            _record_to_pit(list(rows), universe_all, n_candidates, ill, nod)
+            _record_to_pit(cp.get("factor_universe") or [], universe_all, n_candidates, ill, nod)
         if checkpoint:
             try:
                 checkpoint(cp)
