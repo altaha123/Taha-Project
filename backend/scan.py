@@ -84,6 +84,55 @@ if _DATA_DIR != _HERE and os.path.exists(_LEGACY_OUT) and not os.path.exists(OUT
     except Exception:
         pass
 
+# Whether the cache is actually being written. Filled by _dump() and read by
+# persistence_health(), which the API surfaces so a disk problem is visible
+# from outside the box instead of only as results that quietly go stale.
+_persist = {
+    "path": OUT_FILE,
+    "data_dir_from_env": bool(os.environ.get("DATA_DIR", "").strip()),
+    "last_ok": None,
+    "last_error": None,
+    "last_error_at": None,
+    "consecutive_failures": 0,
+    "bytes_written": None,
+}
+
+
+def persistence_health():
+    """
+    Can a finished scan survive a restart? Never raises.
+
+    A scan is minutes of work that exists in one process's memory until it
+    reaches this file, so "the write is failing" and "the disk is nearly
+    full" are the two facts worth having before the results disappear.
+    """
+    out = dict(_persist)
+    d = os.path.dirname(OUT_FILE) or "."
+    out["dir_exists"] = os.path.isdir(d)
+    try:
+        out["file_exists"] = os.path.exists(OUT_FILE)
+        out["file_mtime"] = os.path.getmtime(OUT_FILE) if out["file_exists"] else None
+        out["file_age_hours"] = round((time.time() - out["file_mtime"]) / 3600, 1) \
+            if out["file_mtime"] else None
+    except Exception:
+        out["file_exists"] = None
+    try:
+        st = os.statvfs(d)
+        out["disk_free_mb"] = round(st.f_bavail * st.f_frsize / 1e6, 1)
+        out["disk_total_mb"] = round(st.f_blocks * st.f_frsize / 1e6, 1)
+    except Exception:
+        out["disk_free_mb"] = out["disk_total_mb"] = None
+    out["healthy"] = bool(out.get("dir_exists")) and _persist["consecutive_failures"] == 0
+    if not out["healthy"]:
+        out["warning"] = (
+            "The universe scan is not reaching disk. Results will look correct "
+            "until this process restarts, then revert to the last write that "
+            "succeeded. Check free space on the mounted disk and the "
+            "permissions on " + str(d) + "."
+        )
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Tunables
 # ---------------------------------------------------------------------------
@@ -703,7 +752,27 @@ def _dump(payload):
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, OUT_FILE)
-    except Exception:
+        _persist.update(last_ok=time.time(), last_error=None, consecutive_failures=0,
+                        bytes_written=os.path.getsize(OUT_FILE))
+    except Exception as e:
+        # This used to be `except Exception: pass`, and that silence is the
+        # whole reason a scan could appear to work and then vanish.
+        #
+        # The failure mode: the in-memory payload and the disk copy are
+        # written by the same call, so a scan whose checkpoints all failed
+        # still served fresh ideas for as long as the process lived. When
+        # Render restarted it, _load_from_disk() restored the last write that
+        # HAD succeeded — a scan from days earlier — and reported it as
+        # "done". Nothing anywhere said a write had ever failed. Observed in
+        # production on 9 Sep 2026: the site served a 31 Aug payload with no
+        # record of the nine days of scans in between.
+        #
+        # pit_store.py already learned this lesson and states it plainly: a
+        # store that silently records nothing is worse than one that is
+        # absent, because the absence is at least visible.
+        _persist.update(last_error=f"{type(e).__name__}: {e}"[:300],
+                        last_error_at=time.time(),
+                        consecutive_failures=_persist["consecutive_failures"] + 1)
         try:
             if os.path.exists(tmp):
                 os.remove(tmp)

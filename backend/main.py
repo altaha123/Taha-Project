@@ -668,6 +668,13 @@ def health_memory(detail: int = 0):
         "UNSET — glibc may open up to 8 arenas per CPU for a threaded process"
     out["web_concurrency"] = os.environ.get("WEB_CONCURRENCY") or "unset (1)"
     out["data_dir_persistent"] = bool(os.environ.get("DATA_DIR", "").strip())
+    # DATA_DIR being SET is not the same as the scan cache being written; the
+    # env var was true throughout the incident where nine days of scans never
+    # reached the disk. Report the write itself.
+    try:
+        out["scan_persistence"] = scanner.persistence_health()
+    except Exception:
+        pass
 
     # The big resident consumers, so a spike can be attributed.
     holders = {}
@@ -857,6 +864,16 @@ def scan_status():
             out["stopped_reason"] = p.get("stopped_reason")
     out["rss_mb"] = _rss_mb()
     out["limit_mb"] = MEM_LIMIT_MB
+    # A scan that cannot reach disk is a scan that will be lost on the next
+    # restart, and the browser is the only place anyone is looking while it
+    # runs. Reported only when it is actually broken, so the normal response
+    # is unchanged.
+    try:
+        ph = scanner.persistence_health()
+        if not ph.get("healthy"):
+            out["persistence"] = ph
+    except Exception:
+        pass
     return out
 
 
