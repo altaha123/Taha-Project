@@ -49,6 +49,18 @@
   function set(v) { try { localStorage.setItem(KEY, v); } catch (e) {} }
 
   var $ = function (id) { return document.getElementById(id); };
+
+  /* Pillar scores are means of peer percentiles, so they arrive as the full
+     expansion of a ratio — 63.41463414634147 for 52 out of 82. The strip is
+     meant to be read across and added up, which nobody can do against
+     fourteen decimals. One decimal, trailing ".0" dropped. */
+  function scoreTxt(v, dp) {
+    if (v == null || v === '') return '—';
+    var n = Number(v);
+    if (!isFinite(n)) return '—';
+    return n.toFixed(dp == null ? 1 : dp).replace(/\.0+$/, '');
+  }
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -128,7 +140,7 @@
       var pct = Math.round(c.weight * 100);
       return '<div class="cell v3cell">' +
              '<span class="lbl">' + esc(PILLAR[c.pillar] || c.pillar) + '</span>' +
-             '<span class="num">' + c.pillar_score + '<small> /100</small></span>' +
+             '<span class="num">' + scoreTxt(c.pillar_score) + '<small> /100</small></span>' +
              '<span class="wt"><i style="width:' + pct + '%"></i></span>' +
              '<span class="wtx">' + pct + '% weight</span>' +
              '</div>';
@@ -174,7 +186,7 @@
         '</div>' +
         '<div class="whytitle">' +
           '<span class="wk">Confidence</span>' +
-          '<span class="wv conf-' + confTone + '">' + conf + '%</span>' +
+          '<span class="wv conf-' + confTone + '">' + scoreTxt(conf) + '%</span>' +
           '<span class="wsub">' +
             (s.coverage ? esc(s.coverage.present + ' of ' + s.coverage.total +
              ' figures published') : 'how much of the evidence exists') +

@@ -2149,6 +2149,19 @@ function pctTxt(v, dp){
   const n = Number(v);
   return (n>0?"+":"") + n.toFixed(dp==null?1:dp) + "%";
 }
+
+/* Every 0..100 score on the page goes through here. The engine works in
+   peer percentiles, so a pillar mean is a ratio like 52/82 and arrives as
+   63.41463414634147. Printing that verbatim claims fourteen digits of
+   precision for a number built from a few dozen observations, and it reads
+   as a bug because it is one. One decimal, and a trailing ".0" dropped so
+   a whole number looks like a whole number. */
+function scoreTxt(v, dp){
+  if(v==null || v==="") return "—";
+  const n = Number(v);
+  if(!isFinite(n)) return "—";
+  return n.toFixed(dp==null?1:dp).replace(/\.0+$/, "");
+}
 function relCls(v){ return v==null ? "" : (v>0 ? "pos" : (v<0 ? "neg" : "")); }
 
 /* ── Market context ───────────────────────────────────────────────────
@@ -2203,7 +2216,7 @@ function evidenceHTML(rows){
     const width = e.of ? Math.max(0, Math.min(100, (e.points / e.of) * 100)) : 0;
     return `<div class="evrow">
       <b>${esc(e.factor)}</b>
-      <i class="${neg?"neg":""}">${neg?"":"+"}${e.points}${e.of?` / ${e.of}`:""}
+      <i class="${neg?"neg":""}">${neg?"":"+"}${scoreTxt(e.points)}${e.of?` / ${scoreTxt(e.of, 0)}`:""}
         ${e.of?`<span class="evbar"><i style="width:${width}%"></i></span>`:""}</i>
       <span>${esc(e.detail||"")}</span>
     </div>`;
@@ -2346,21 +2359,21 @@ async function loadIdeas(){
         <div class="idea rise" style="--i:${Math.min(i,10)}" data-t="${esc(s.symbol)}" data-score="${esc(s.conviction ?? s.setup_fit ?? "")}" data-name="${esc(s.name)}" role="group" aria-label="${esc(s.name)}">
           <div class="top">
             <span class="nm"><a href="stock.html?ticker=${encodeURIComponent(s.symbol)}">${i+1}. ${esc(s.name)}</a>${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}<small>${esc(s.symbol)} · NSE · ₹${s.price ?? "—"}${s.avg_turnover_cr!=null?` · ₹${s.avg_turnover_cr}cr/day`:""}</small></span>
-            <span class="conv">${s.conviction ?? s.setup_fit ?? "—"}<small>conviction</small></span>
+            <span class="conv">${scoreTxt(s.conviction ?? s.setup_fit)}<small>conviction</small></span>
           </div>
-          <div class="arch">${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${s.setup_fit ?? "—"}/100${s.filing?`<span class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</span>`:""}</div>
+          <div class="arch">${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${scoreTxt(s.setup_fit, 0)}/100${s.filing?`<span class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</span>`:""}</div>
           ${catalystChips(s)}
           ${s.plan ? `<div class="ideaplan"><span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>` +
             (s.plan.entry!=null ? `<span>Entry ₹${Number(s.plan.entry).toLocaleString("en-IN")}</span><span>SL ₹${Number(s.plan.stop).toLocaleString("en-IN")}${s.plan.risk_pct!=null?` (−${s.plan.risk_pct}%)`:""}</span>` +
               (s.plan.t1!=null?`<span>T1 ₹${Number(s.plan.t1).toLocaleString("en-IN")}</span>`:"") +
               (s.plan.rr!=null?`<span>R:R 1:${s.plan.rr}</span>`:"") : `<span>${esc((s.plan.note||"").split("—")[0])}</span>`) + `</div>` : ""}
-          <div class="ln"><span>Composite ${s.composite ?? "—"}</span><span>Technical ${s.technical ?? "—"}</span>
-            <span>Fundamental ${s.fundamental ?? "—"}</span><span>Piotroski ${s.f_score ?? "—"}/9</span></div>
+          <div class="ln"><span>Composite ${scoreTxt(s.composite)}</span><span>Technical ${scoreTxt(s.technical, 0)}</span>
+            <span>Fundamental ${scoreTxt(s.fundamental, 0)}</span><span>Piotroski ${s.f_score ?? "—"}/9</span></div>
           ${s.adverse_filing ? `<div class="badbox"><b>Adverse filing.</b> ${esc((s.catalyst&&s.catalyst.headline)||(s.catalyst&&s.catalyst.line)||"")} — scored against this idea, not for it.</div>` : ""}
           ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
           ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
           ${newsHTML(s)}
-          <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">Why this scored ${s.conviction ?? "—"} — show the ledger</button>
+          <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">Why this scored ${scoreTxt(s.conviction)} — show the ledger</button>
           ${evidenceHTML(s.evidence)}
           <div class="idearow-actions">
             <button class="trackbtn${s.tracked?" done":""}" data-track="${esc(s.symbol)}">${s.tracked?"Tracking":"Add to tracker"}</button>
@@ -3452,16 +3465,21 @@ function render(d){
   $("cvol").innerHTML = `Daily range <b>${d.atr_pct}%</b>`;
 
   const v = d.verdict, ink = toneInk(v.tone);
-  $("score").textContent = v.score; $("score").style.color = ink;
+  /* The dial is captioned "out of 100" and set at 54px with tight negative
+     tracking, where a decimal point all but disappears — 58.9 read as 589.
+     A headline score carries no useful tenth anyway; the exact figure and the
+     confidence adjustment behind it are shown in the ledger below. */
+  $("score").textContent = v.score==null ? "—" : scoreTxt(v.score, 0);
+  $("score").style.color = ink;
   $("arc").style.strokeDashoffset = 453;
   requestAnimationFrame(()=>{ $("arc").style.strokeDashoffset = 453 - 453*(v.score/100); });
   $("vlabel").textContent = v.label; $("vlabel").style.color = ink;
   $("vsummary").textContent = v.summary;
   $("vbasis").textContent = v.basis;
 
-  $("tscore").innerHTML = `${d.technical.score}<small> /100</small>`;
+  $("tscore").innerHTML = `${scoreTxt(d.technical.score, 0)}<small> /100</small>`;
   $("fscore").innerHTML = d.fundamental.score===null ? `<small>NOT PUBLISHED</small>`
-                                                     : `${d.fundamental.score}<small> /100</small>`;
+                                                     : `${scoreTxt(d.fundamental.score, 0)}<small> /100</small>`;
   renderPlan(d.plan, d.currency, d.percentile);
   renderPlain(d.plain);
   drawSetup(d.setup);

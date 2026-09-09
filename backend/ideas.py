@@ -835,9 +835,12 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
         if v4:
             row["legacy_conviction"] = conviction
             hz = "trade" if horizon == "short" else "position"
-            conviction = v4[hz]["final_score"]
+            # v4 already rounds its published score; round again here so this
+            # branch can never reintroduce the precision the legacy branch
+            # above deliberately drops with round(total - applied, 1).
+            conviction = round(v4[hz]["final_score"], 1)
             evidence = [{"factor": "Altaha Score v4", "points": conviction, "of": 100,
-                         "share_pct": conviction,
+                         "share_pct": round(conviction),
                          "detail": f"{hz} score; confidence {v4[hz]['confidence']:.1%}; peer-relative as of {v4.get('as_of')}"}]
         band, band_why = _band(conviction)
         row["conviction"] = conviction

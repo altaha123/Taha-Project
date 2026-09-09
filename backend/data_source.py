@@ -49,7 +49,25 @@ def resolve(raw: str):
     quarterly results still come from Yahoo — Dhan does not publish them.
     """
     raw = raw.strip().upper()
-    candidates = [raw] if "." in raw else [raw, f"{raw}.NS", f"{raw}.BO"]
+    # Indian listings are tried BEFORE the bare symbol.
+    #
+    # The bare symbol used to come first, so any NSE ticker that collides with
+    # a US one silently resolved to the American company. AGI is the case that
+    # exposed it: bare AGI is Alamos Gold on the NYSE at USD 36.45, while
+    # AGI.NS is AGI Greenpac on the NSE at INR 796.15. A tracked AGI Greenpac
+    # position added at INR 774.80 was therefore marked at Alamos Gold's price
+    # and reported as -95.3% — and that figure is not merely displayed, it
+    # becomes the row's alpha, which feeds the archetype record that weights
+    # every conviction score.
+    #
+    # This is an NSE screener: every other part of it assumes INR, so an
+    # Indian listing must win a collision. The bare symbol is kept as a last
+    # resort rather than dropped, so a genuinely foreign ticker still
+    # resolves. Explicit suffixes and ^INDEX symbols are used exactly as given.
+    if "." in raw or raw.startswith("^"):
+        candidates = [raw]
+    else:
+        candidates = [f"{raw}.NS", f"{raw}.BO", raw]
 
     # Dhan first, for Indian equities only
     if dhan is not None and dhan.configured():
