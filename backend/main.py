@@ -530,13 +530,25 @@ def _reclaim():
     """
     Give back what is droppable, then measure again.
 
-    Called before refusing a scan, because the refusal is only honest if the
-    process has first let go of what it does not need. Returns (before, after).
+    Called before every scan, because a refusal is only honest if the process
+    has first let go of what it does not need, and because the scan is the one
+    job here that needs the room. Everything dropped is either a cache with a
+    file behind it or a cache that refills on demand — nothing is lost, the
+    next request that wants it pays to rebuild it. Returns (before, after).
     """
     before = _rss_mb()
     try:
         import data_source as _ds
         _ds._CACHE.clear()
+    except Exception:
+        pass
+    # The Special panel is tens of MB of float32 price history held resident,
+    # with a pickle of exactly the same thing sitting on disk beside it. Of
+    # everything this process holds at idle it is the largest single item that
+    # costs nothing to drop — _load_cache() reads it straight back.
+    try:
+        if special_engine is not None:
+            special_engine._state["panel"] = None
     except Exception:
         pass
     ythreads.reap()
@@ -686,27 +698,51 @@ def health():
 
 @app.post("/scan/start")
 @app.get("/scan/start")
-def scan_start(force: bool = False, key: str = ""):
-    """Kick off a background scan. Returns immediately."""
+def scan_start(force: bool = False, key: str = "",
+               ignore_memory: bool = False, force_memory: bool = False):
+    """
+    Kick off a background scan. Returns immediately.
+
+    Two separate overrides, which used to be one and should never have been:
+
+      force          ignore the cached result and scan again. This is what the
+                     Refresh button sends on every press.
+      ignore_memory  ignore the memory guard as well. Nothing sends this by
+                     default; it has to be asked for.
+
+    Conflating them is what made "Refresh universe scan" fail identically every
+    time. Refresh needs force to get past the 12-hour cache, and force also
+    switched off the headroom check — so the one button a user actually presses
+    was the one press the safety valve could never see. On an instance idling
+    near its limit the scan then started, the instance was killed part-way
+    through, and every request after that failed until Render brought it back.
+    The browser has no way to tell that apart from a sleeping server, so it
+    said "Engine unreachable — it may be waking from sleep", and the obvious
+    response to that message is to press the button again.
+
+    force now means only "ignore the cache". A refresh with no room left is
+    refused, in words, with the numbers behind the refusal.
+    """
     _require_admin(key)
-    rss = _rss_mb()
-    if rss is not None and (MEM_LIMIT_MB - rss) < SCAN_HEADROOM_MB and not force:
-        # Drop what is droppable before saying no. Previously this refused on
-        # the first reading, so a cache that was about to expire anyway could
-        # block a scan for the rest of the day.
-        _, rss = _reclaim()
+    ignore_memory = bool(ignore_memory or force_memory)
+    # Reclaim first, always. This runs before the heaviest job in the process,
+    # and the caches it drops are rebuilt on demand — measuring headroom
+    # without doing it first refuses scans over memory nobody still needs.
+    _, rss = _reclaim()
     headroom = None if rss is None else round(MEM_LIMIT_MB - rss, 1)
-    if headroom is not None and headroom < SCAN_HEADROOM_MB and not force:
-        return {"started": False, "reason": "low_memory",
+    if headroom is not None and headroom < SCAN_HEADROOM_MB and not ignore_memory:
+        return {**scan_status(),
+                "started": False, "reason": "low_memory",
                 "rss_mb": rss, "headroom_mb": headroom,
                 "needs_headroom_mb": SCAN_HEADROOM_MB, "limit_mb": MEM_LIMIT_MB,
                 "message": (f"Holding {rss:.0f} MB of {MEM_LIMIT_MB} MB, so only "
                             f"{headroom:.0f} MB is free and a scan needs about "
                             f"{SCAN_HEADROOM_MB} MB. Starting one now would get the "
-                            "instance killed, taking the whole site with it. "
-                            "Restart the service to clear it, or pass force=true "
-                            "if you accept the risk."),
-                **scan_status()}
+                            "instance killed part-way through, taking the whole "
+                            "site down with it for a minute or two — which is what "
+                            "an unreachable engine right after pressing Generate "
+                            "actually was. Restart the service to clear it, or pass "
+                            "ignore_memory=true if you accept the risk.")}
     with _lock:
         if _state["status"] == "running":
             return {"started": False, "reason": "already_running", **scan_status()}
@@ -734,7 +770,16 @@ def scan_status():
         "error": _state["error"],
     }
     if _state["payload"]:
-        out["scanned_at"] = _state["payload"].get("scanned_at")
+        p = _state["payload"]
+        out["scanned_at"] = p.get("scanned_at")
+        # A scan that stopped itself to stay alive is not the same event as one
+        # that finished, and the difference is the whole explanation for a
+        # short list. Carried through so the browser can say which happened.
+        if p.get("stopped_early"):
+            out["stopped_early"] = True
+            out["stopped_reason"] = p.get("stopped_reason")
+    out["rss_mb"] = _rss_mb()
+    out["limit_mb"] = MEM_LIMIT_MB
     return out
 
 
