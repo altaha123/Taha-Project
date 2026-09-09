@@ -1710,6 +1710,48 @@ const API_BASE = "https://taha-project.onrender.com";
 /* ─────────────────────────────────────────────────────────────────────── */
 
 const $ = id => document.getElementById(id);
+
+/* ── Reaching the engine ────────────────────────────────────────────────
+   One failed fetch is not evidence that the engine is down. The instance
+   sleeps, restarts on deploy, and — until the memory guard below was fixed —
+   could be killed part-way through a universe scan; each of those is a gap of
+   thirty to ninety seconds during which every request fails and then requests
+   start working again on their own. The old code gave up on the first refusal
+   and printed "Engine unreachable", which is the message the user saw over and
+   over while pressing a button that was itself causing the restarts.
+
+   So: retry a transient failure a few times, spaced out, before saying
+   anything. A request that is going to succeed after the server comes back now
+   does, silently. Only a request that keeps failing reports it.
+
+   Timeouts are per attempt, because a request to a sleeping Render instance
+   hangs rather than failing — without one the retries never get their turn. */
+async function jget(url, opts){
+  const o = opts || {};
+  const tries = o.tries != null ? o.tries : 3;
+  const timeout = o.timeoutMs != null ? o.timeoutMs : 20000;
+  let lastErr;
+  for(let i = 0; i < tries; i++){
+    if(i) await new Promise(r => setTimeout(r, o.backoffMs || (1500 * Math.pow(2, i - 1))));
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), timeout);
+    try{
+      const res = await fetch(url, Object.assign({signal: ctl.signal}, o.init || {}));
+      /* A 5xx from a process that is coming back up is as transient as a
+         dropped connection; a 4xx is the server answering, so it stands. */
+      if(res.status >= 500 && i < tries - 1){ lastErr = new Error("http " + res.status); continue; }
+      let body = null;
+      try{ body = await res.json(); }catch(e){ body = null; }
+      return {res, body, ok: res.ok};
+    }catch(e){
+      lastErr = e;
+    }finally{
+      clearTimeout(timer);
+    }
+  }
+  throw lastErr || new Error("unreachable");
+}
+
 const state = $("state"), result = $("result");
 const show = m => { state.style.display="block"; state.innerHTML=m; result.style.display="none"; };
 const toneInk = t => t==="strong" ? "var(--pass)" : t==="weak" ? "var(--fail)" : "var(--part)";
@@ -2200,11 +2242,23 @@ async function loadIdeas(){
   $("ideatools").style.display="none";
   try{
     const qs = `horizon=${horizon}&limit=15&include_thin=${includeThin?1:0}`;
-    const res = await fetch(`${API_BASE}/ideas?${qs}`);
-    const d = await res.json();
+    /* A longer timeout than the default on purpose. /ideas is the heaviest
+       endpoint here — it scores every row against the sector, regime, news and
+       filing feeds — and each of those now has its own server-side deadline,
+       so the worst case is bounded but is not two seconds. Cutting it off at
+       the default would report an unreachable engine for a request that was
+       about to answer. */
+    const {res, body} = await jget(`${API_BASE}/ideas?${qs}`, {timeoutMs: 45000});
+    const d = body || {};
     if(req !== ideasReq) return;
     if(!res.ok){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.detail || "Couldn’t load ideas.")}</div>`;
+      /* The engine answered — it just answered badly. Say what it said. A 500
+         now carries CORS headers and a real body, so there is something to
+         show here instead of the generic line this used to fall back to. */
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">`
+        + esc(d.detail || d.note || `The engine returned HTTP ${res.status}.`)
+        + (d.error ? `<br><code style="font-size:11px">${esc(d.error)}</code>` : "")
+        + `</div>`;
       return;
     }
 
@@ -2213,6 +2267,15 @@ async function loadIdeas(){
        the tab used to be completely blank until one had run. */
     renderContext(d.market_context);
 
+    /* An engine that reached this endpoint and failed inside it is a different
+       problem from an engine that is not there, and the reader must be able to
+       tell them apart — conflating the two is what made this bug invisible. */
+    if(d.error){
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">`
+        + `<b>The ideas engine failed while scoring the scan.</b><br>`
+        + `${esc(d.message || "")}<br><code style="font-size:11px">${esc(d.error)}</code></div>`;
+      return;
+    }
     if(!d.available){
       if(!d.market_context) {
         try{
@@ -2242,6 +2305,14 @@ async function loadIdeas(){
     if(d.sector_mix && d.sector_mix.length){
       $("secmix").innerHTML = d.sector_mix
         .map(([sec,n])=>`<span class="secchip">${esc(sec)} · ${n}</span>`).join("");
+    }
+    /* A list scored while a feed was still loading is complete but
+       under-informed, and saying so is the difference between a short list the
+       reader can trust and one they cannot place. */
+    if(d.degraded && d.degraded.length){
+      $("stalebox").innerHTML += `<div class="staleflag" style="border-left-color:#b26a00;background:#fdf8f0;color:#5c4520">`
+        + `<b>Still loading.</b> The ${esc(d.degraded.join(", "))} feed hadn\u2019t answered when this `
+        + `list was scored, so those factors scored neutral. It is loading now \u2014 reload in a moment.</div>`;
     }
     const notes = (d.selection_notes || []).slice();
     if(d.considered!=null && d.count!=null){
@@ -2344,7 +2415,14 @@ async function loadIdeas(){
     $("ideadisc").textContent = d.disclaimer || "";
   }catch(e){
     if(req !== ideasReq) return;
-    $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable — it may be waking from sleep. Try again in ~30 seconds.</div>`;
+    /* Three attempts over roughly half a minute have failed, so this is no
+       longer "it may be waking" — offer the retry rather than a dead end. */
+    $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">`
+      + `Couldn\u2019t reach the engine after three tries. It restarts on deploy and `
+      + `sleeps when idle, so this usually clears within a minute. `
+      + `<button type="button" id="ideasretry" class="evbtn">Try again</button></div>`;
+    const rb = $("ideasretry");
+    if(rb) rb.addEventListener("click", () => loadIdeas());
   }
 }
 
@@ -2533,11 +2611,39 @@ function setProgress(s){
   wrap.querySelector(".progtxt").textContent=`Scanning ${s.done} of ${s.total} · ${s.scored} scored · ${m}m ${String(sec).padStart(2,"0")}s`;
 }
 
+/* Consecutive poll failures. A scan takes minutes and a restart mid-scan is
+   exactly what we are now trying to survive, so one unanswered poll means
+   nothing; several in a row mean the engine really went away. */
+let pollMisses = 0;
+
 async function pollScan(){
+  let s;
   try{
-    const s = await (await fetch(`${API_BASE}/scan/status`)).json();
+    s = (await jget(`${API_BASE}/scan/status`, {tries: 1, timeoutMs: 12000})).body;
+    if(!s) throw new Error("no body");
+    pollMisses = 0;
+  }catch(e){
+    if(++pollMisses < 6){
+      $("gennote2").textContent = "Engine not answering \u2014 still polling";
+      return;
+    }
+    clearInterval(pollTimer); pollTimer=null; pollMisses=0;
+    $("genbtn2").disabled=false;
+    $("genbtn2").textContent="Refresh universe scan";
+    $("gennote2").textContent =
+      "Lost contact with the engine while it was scanning. Anything scored "
+      + "before that is kept and shown below \u2014 press again once it is back.";
+    loadIdeas();
+    return;
+  }
+  try{
     setProgress(s);
-    if(s.status==="running") return;
+    if(s.status==="running"){
+      if($("gennote2").textContent.startsWith("Engine not answering")){
+        $("gennote2").textContent = "A few minutes \u2014 keep this tab open";
+      }
+      return;
+    }
     clearInterval(pollTimer); pollTimer=null;
     $("genbtn2").disabled=false;
     if(s.status==="error"){
@@ -2561,17 +2667,35 @@ async function pollScan(){
       return;
     }
     $("genbtn2").textContent="Refresh universe scan";
-    $("gennote2").textContent="";
+    /* A scan that stopped itself to avoid being killed is not a finished scan,
+       and a short list is then the scan's fault rather than the market's. Say
+       so, instead of leaving the note blank as if all were well. */
+    $("gennote2").textContent = s.stopped_early ? (s.stopped_reason || "") : "";
     loadIdeas();
   }catch(e){}
 }
 
-async function startScan(force){
-  $("genbtn2").disabled=true; $("genbtn2").textContent="Scanning…";
-  $("gennote2").textContent="A few minutes — keep this tab open";
+/* ignoreMemory is deliberately NOT wired to the Refresh button.
+
+   It used to be, by accident: Refresh sends force=true to get past the cached
+   result, and the server read that same flag as "skip the memory check too".
+   So the only press anyone ever made was the one press that could start a scan
+   on an instance with no room for one. The instance was then killed part-way
+   through, every request failed until Render restarted it, and the page —
+   which cannot tell a killed server from a sleeping one — reported an
+   unreachable engine. Pressing again repeated it exactly.
+
+   Refresh now sends force alone. A refusal comes back in words, and the
+   override is a second, explicit press of the button the refusal offers. */
+async function startScan(force, ignoreMemory){
+  $("genbtn2").disabled=true; $("genbtn2").textContent="Scanning\u2026";
+  $("gennote2").textContent="A few minutes \u2014 keep this tab open";
   try{
-    const res = await fetch(withKey(`${API_BASE}/scan/start${force?"?force=true":""}`));
-    const r = await res.json();
+    const qs = [force ? "force=true" : "", ignoreMemory ? "ignore_memory=true" : ""]
+      .filter(Boolean).join("&");
+    const {res, body} = await jget(withKey(`${API_BASE}/scan/start${qs?"?"+qs:""}`),
+                                   {tries: 3, timeoutMs: 30000});
+    const r = body || {};
     if(!r.started && r.reason==="cached"){
       $("genbtn2").disabled=false; $("genbtn2").textContent="Refresh universe scan";
       $("gennote2").textContent=""; loadIdeas(); return;
@@ -2591,6 +2715,17 @@ async function startScan(force){
           : (r.message || r.detail ||
              ("The engine refused to start a scan" +
               (r.reason ? " (" + r.reason + ")." : " and gave no reason.")));
+      /* A refusal on memory is the one refusal that can be overridden, and the
+         override belongs behind a second deliberate press — not behind the
+         same button that produced the refusal. */
+      if(r.reason === "low_memory"){
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "evbtn"; b.style.marginTop = "8px";
+        b.textContent = "Scan anyway (may restart the site)";
+        b.addEventListener("click", () => startScan(true, true));
+        $("gennote2").appendChild(document.createElement("br"));
+        $("gennote2").appendChild(b);
+      }
       loadIdeas();
       return;
     }
@@ -2599,9 +2734,15 @@ async function startScan(force){
     setProgress(r);
     if(!pollTimer) pollTimer=setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);
   }catch(e){
-    $("genbtn2").disabled=false; $("genbtn2").textContent="Generate from universe";
+    $("genbtn2").disabled=false;
+    /* Don't relabel to "Generate from universe" on a network failure: a cached
+       scan may well still exist on the server, and relabelling made the next
+       press send force=false, which then came back "cached" and looked like a
+       second, different failure. */
+    $("genbtn2").textContent = force ? "Refresh universe scan" : "Generate from universe";
     $("gennote2").textContent = API_BASE.includes("localhost")
-      ? "Engine not connected — set API_BASE" : "Engine waking up — try again";
+      ? "Engine not connected — set API_BASE"
+      : "Couldn’t reach the engine after three tries. It sleeps when idle and restarts on deploy; try again in a minute.";
   }
 }
 
@@ -3816,7 +3957,7 @@ TABS.forEach(t=>$("tab-"+t).addEventListener("click",()=>switchTab(t)));
 $("rgo").addEventListener("click",()=>getResults());
 $("rtk").addEventListener("keydown",e=>{ if(e.key==="Enter") getResults(); });
 $("washare").addEventListener("click",shareWhatsApp);
-$("genbtn2").addEventListener("click",()=>startScan($("genbtn2").textContent.includes("Refresh")));
+$("genbtn2").addEventListener("click",()=>startScan($("genbtn2").textContent.includes("Refresh"), false));
 /* -- Full-window chart mode: ?chart=SYMBOL opens a TradingView-style tab -- */
 const fcParams = new URLSearchParams(location.search);
 const fcSymParam = (fcParams.get("chart") || "").trim().toUpperCase().replace(/[^A-Z0-9&.\-]/g, "");
@@ -3843,7 +3984,7 @@ if(fcSymParam){
 }
 
 (async()=>{ try{
-  const s = await (await fetch(`${API_BASE}/scan/status`)).json();
+  const s = (await jget(`${API_BASE}/scan/status`)).body || {};
   if(s.status === "running"){
     $("genbtn2").disabled = true; $("genbtn2").textContent = "Scanning…";
     setProgress(s); pollTimer = setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);

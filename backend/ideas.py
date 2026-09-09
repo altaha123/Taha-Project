@@ -53,6 +53,8 @@ than a full one built from the least-bad names available.
 
 import datetime as dt
 import os
+import threading
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
 
 try:
     import dhan_source as dhan
@@ -176,6 +178,57 @@ FILING_DIRECTION = {
 
 _regime_cache = {"day": None, "value": None}
 _sector_cache = {"at": None, "value": None}
+
+# ---------------------------------------------------------------------------
+# Feed deadlines
+#
+# Every overlay this module reads is optional by design — the `layers` block at
+# the bottom of select() already scores a missing feed as neutral and says so
+# in the notes. But "missing" was only ever tested by exception. A feed that
+# raises was handled; a feed that HANGS was not, and it holds the whole request
+# open behind it.
+#
+# That is what /ideas was doing. sector_outlook() bulk-downloads twelve index
+# symbols and market_regime() pulls a year of index history; both are cached,
+# but a process that has just been deployed has neither, and on half a CPU the
+# first request after a restart pays for all of it in series. From the browser
+# that is indistinguishable from an engine that is down — which is exactly what
+# the page reported.
+#
+# So the deadline is explicit. A feed that answers in time is used; a feed that
+# does not is treated as unavailable AND LEFT RUNNING, so the work it has
+# already started fills the cache for the request a few seconds behind this
+# one. Nothing is wasted and nothing is waited on twice.
+IDEAS_FEED_DEADLINE = float(os.environ.get("IDEAS_FEED_DEADLINE", "6") or 6)
+
+_feed_pool = ThreadPoolExecutor(max_workers=3, thread_name_prefix="altaha-ideas-feed")
+_feed_inflight = {}
+_feed_lock = threading.Lock()
+
+
+def _soft(label, fn, default, seconds=None):
+    """
+    fn(), or `default` if it has not answered within the deadline.
+
+    Returns (value, ok). ok=False means the caller should treat the feed as
+    unavailable — the same state an exception would have produced, which the
+    scoring already knows how to handle.
+
+    A call that overruns is not cancelled and not repeated: the next request
+    for the same label joins the future already in flight rather than starting
+    a second copy of a slow download.
+    """
+    with _feed_lock:
+        fut = _feed_inflight.get(label)
+        if fut is None or fut.done():
+            fut = _feed_pool.submit(fn)
+            _feed_inflight[label] = fut
+    try:
+        return fut.result(timeout=IDEAS_FEED_DEADLINE if seconds is None else seconds), True
+    except FuturesTimeout:
+        return default, False
+    except Exception:
+        return default, False
 
 
 # ---------------------------------------------------------------------------
@@ -624,11 +677,17 @@ def market_context(horizon: str = "short"):
     its own so the tab can render the context before the scan payload has
     even been read.
     """
-    outlook = sector_outlook()
+    # Same deadline as select(). This endpoint exists so the tab can show the
+    # backdrop before a scan is even read; an endpoint that hangs defeats the
+    # whole reason it was split out.
+    outlook, _ok = _soft("sector_outlook", sector_outlook, {})
     leaders, laggards, measured = _leaders_laggards(outlook)
-    _idx, headlines = _news_index(HORIZONS.get(horizon, HORIZONS["short"])["news_hours"])
+    (_idx, headlines), _ok = _soft(
+        "news", lambda: _news_index(HORIZONS.get(horizon, HORIZONS["short"])["news_hours"]),
+        ({}, []))
+    regime, _ok = _soft("regime", market_regime, None)
     return {
-        "regime": market_regime(),
+        "regime": regime,
         "leaders": leaders,
         "laggards": laggards,
         "sectors_measured": measured,
@@ -656,14 +715,32 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
     weights = h["weights"]
     rankings = payload.get("rankings") or []
 
-    regime = market_regime()
-    outlook = sector_outlook()
-    news_idx, headlines = _news_index(h["news_hours"])
-    record = tracker.expectancy_detail() if tracker else {}
+    # Each of these reaches a feed. None of them may hold the request open —
+    # see the deadline note above. A feed that misses its deadline scores
+    # neutral and is named in the notes, exactly as a feed that raises does.
+    regime, regime_ok = _soft("regime", market_regime, None)
+    outlook, outlook_ok = _soft("sector_outlook", sector_outlook, {})
+    (news_idx, headlines), news_ok = _soft(
+        "news", lambda: _news_index(h["news_hours"]), ({}, []))
+    slow = [name for name, ok in (("market regime", regime_ok),
+                                  ("sector outlook", outlook_ok),
+                                  ("news", news_ok)) if not ok]
+    # Local reads — the ledger is on disk, so these are not on a deadline. They
+    # ARE guarded, which they were not: these two were the only calls in this
+    # function that could take the whole endpoint down, because every other
+    # feed here already fails soft. A ledger that will not parse should cost
+    # the track-record factor and the Tracking labels, not the Ideas tab.
+    try:
+        record = tracker.expectancy_detail() if tracker else {}
+    except Exception:
+        record = {}
     # "manual" on purpose: the Add button must reflect YOUR tracker. Counting
     # the scanner's automatic rows marked names as tracked that the user had
     # never added and could not see in their own list.
-    tracked = tracker.tracked_symbols(source="manual") if tracker else set()
+    try:
+        tracked = tracker.tracked_symbols(source="manual") if tracker else set()
+    except Exception:
+        tracked = set()
     stale = _staleness(payload.get("scanned_at"))
     _leaders = _leaders_laggards(outlook)
 
@@ -856,9 +933,18 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
         notes.append("Scored without " + ", ".join(missing) +
                      " — that feed was unavailable, so those factors scored neutral rather "
                      "than being guessed at.")
+    if slow:
+        notes.append("The " + ", ".join(slow) + " feed did not answer within "
+                     f"{IDEAS_FEED_DEADLINE:.0f} seconds and is still loading. It is being "
+                     "fetched now — reload in a moment for the full picture rather than a "
+                     "list that was scored without it.")
 
     return {
         "available": True,
+        # Which feeds missed their deadline on THIS request. Empty is the
+        # normal case; non-empty means the list is complete but under-informed,
+        # and the caller can say so instead of presenting it as final.
+        "degraded": slow,
         "horizon": horizon,
         "label": h["label"],
         "note": h["note"],

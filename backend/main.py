@@ -3,6 +3,7 @@ Altaha Screener — API  (v2.1 — on-demand scanning)
 Start command on Render:  uvicorn main:app --host 0.0.0.0 --port $PORT
 """
 
+import datetime as _dt_mod
 import json
 import os
 import threading
@@ -208,6 +209,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------------------------------------------------------------------------
+# Unhandled errors, and why the browser could not see them
+#
+# An exception inside a route returns 500 from Starlette's ServerErrorMiddleware,
+# which sits OUTSIDE the CORS middleware. That response therefore carries no
+# Access-Control-Allow-Origin header, so a browser on altahascreener.in refuses
+# to hand it to the page's JavaScript and fetch() rejects instead. From inside
+# the app the failure is a 500 with a traceback in the logs; from inside the
+# page it is indistinguishable from an engine that is down.
+#
+# That is the whole reason a crash in /ideas read as "Engine unreachable — it
+# may be waking from sleep" for nine days while the ticker strip on the same
+# page kept updating. The message was not wrong about what the browser saw. It
+# was wrong about why, and it sent everyone hunting for a sleeping server.
+#
+# Registering a handler for Exception moves nothing on its own — Starlette puts
+# 500/Exception handlers on the outermost middleware, still outside CORS — so
+# the header is set explicitly here. allow_origins is "*" above; this matches it.
+@app.exception_handler(Exception)
+async def _unhandled_error(request, exc):
+    import traceback
+    tb = traceback.format_exc()
+    # Render captures stdout. This is the only copy of the traceback, so it is
+    # printed whole rather than summarised.
+    print(f"[unhandled] {request.method} {request.url.path}\n{tb}", flush=True)
+    return JSONResponse(
+        status_code=500,
+        content={"error": type(exc).__name__,
+                 "detail": str(exc)[:400],
+                 "path": request.url.path,
+                 "note": "The engine reached this endpoint and failed inside it. "
+                         "This is a bug in the app, not a connectivity problem."},
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
+
+
 DISCLAIMER = (
     "Altaha Screener is an educational analysis tool. Scores are objective "
     "computations from public data using disclosed formulas. Nothing here is "
@@ -216,6 +253,10 @@ DISCLAIMER = (
     "filings change. Markets carry risk of loss. Do your own research or "
     "consult a SEBI-registered adviser."
 )
+
+# Indian Standard Time. Fixed at UTC+5:30 — India observes no daylight saving,
+# so an offset is the whole story and no tz database is needed for it.
+IST = _dt_mod.timezone(_dt_mod.timedelta(hours=5, minutes=30))
 
 LEADERBOARD_FILE = scanner.OUT_FILE
 RESULT_TTL = 12 * 3600          # a ranking older than this is stale
@@ -376,9 +417,27 @@ def _worker():
 
 
 def to_native(obj):
+    """
+    Plain Python, all the way down.
+
+    FastAPI serialises a response with jsonable_encoder, which does not know
+    what a numpy scalar is: it tries dict(obj), then vars(obj), and raises
+    ValueError when both fail. That happens AFTER the route function has
+    returned, so no try/except inside a route can catch it — the endpoint
+    succeeds and the response still 500s. Anything that touches pandas or
+    numpy must therefore be converted here, at the boundary, and every
+    endpoint that does so passes through this function.
+
+    Sets and numpy's own scalar types are handled explicitly. A set is not
+    JSON at all, and np.str_ / np.datetime64 satisfy none of the branches
+    below while still failing to encode — .item() is numpy's own answer for
+    "give me the Python equivalent", so it is asked rather than guessed at.
+    """
     if isinstance(obj, dict):
         return {k: to_native(v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
+        return [to_native(v) for v in obj]
+    if isinstance(obj, (set, frozenset)):
         return [to_native(v) for v in obj]
     if isinstance(obj, np.bool_):
         return bool(obj)
@@ -387,6 +446,13 @@ def to_native(obj):
     if isinstance(obj, (np.floating, float)):
         v = float(obj)
         return None if (v != v or v in (float("inf"), float("-inf"))) else v
+    if isinstance(obj, np.generic):
+        try:
+            return to_native(obj.item())
+        except Exception:
+            return str(obj)
+    if isinstance(obj, np.ndarray):
+        return [to_native(v) for v in obj.tolist()]
     return obj
 
 
@@ -431,12 +497,23 @@ def market():
         except Exception:
             dhan_status = None
 
-    now = _dt.datetime.utcnow() + _dt.timedelta(hours=5, minutes=30)
+    # An IST-aware clock, not naive UTC plus five and a half hours.
+    #
+    # datetime.utcnow() is deprecated and scheduled for removal — it is already
+    # printing a DeprecationWarning on every /market request under the Python
+    # 3.14 this runs on, and when it goes this endpoint goes with it, taking
+    # the ticker strip and the open/closed badge down.
+    #
+    # The old line was also lying about what it held: a NAIVE datetime carrying
+    # IST wall-clock numbers, which reads as UTC to anything that inspects it.
+    # A real timezone makes .hour, .minute and .weekday() mean what the market
+    # session checks below already assume they mean.
+    now = _dt.datetime.now(IST)
     mins = now.hour * 60 + now.minute
     weekday = now.weekday() < 5
     if not weekday:
         status = "closed"
-    elif 555 <= mins < 915:          # 09:15 - 15:30
+    elif 555 <= mins < 930:          # 09:15 - 15:30 IST, the NSE equity session
         status = "open"
     elif mins < 555:
         status = "pre"
@@ -530,13 +607,25 @@ def _reclaim():
     """
     Give back what is droppable, then measure again.
 
-    Called before refusing a scan, because the refusal is only honest if the
-    process has first let go of what it does not need. Returns (before, after).
+    Called before every scan, because a refusal is only honest if the process
+    has first let go of what it does not need, and because the scan is the one
+    job here that needs the room. Everything dropped is either a cache with a
+    file behind it or a cache that refills on demand — nothing is lost, the
+    next request that wants it pays to rebuild it. Returns (before, after).
     """
     before = _rss_mb()
     try:
         import data_source as _ds
         _ds._CACHE.clear()
+    except Exception:
+        pass
+    # The Special panel is tens of MB of float32 price history held resident,
+    # with a pickle of exactly the same thing sitting on disk beside it. Of
+    # everything this process holds at idle it is the largest single item that
+    # costs nothing to drop — _load_cache() reads it straight back.
+    try:
+        if special_engine is not None:
+            special_engine._state["panel"] = None
     except Exception:
         pass
     ythreads.reap()
@@ -686,27 +775,51 @@ def health():
 
 @app.post("/scan/start")
 @app.get("/scan/start")
-def scan_start(force: bool = False, key: str = ""):
-    """Kick off a background scan. Returns immediately."""
+def scan_start(force: bool = False, key: str = "",
+               ignore_memory: bool = False, force_memory: bool = False):
+    """
+    Kick off a background scan. Returns immediately.
+
+    Two separate overrides, which used to be one and should never have been:
+
+      force          ignore the cached result and scan again. This is what the
+                     Refresh button sends on every press.
+      ignore_memory  ignore the memory guard as well. Nothing sends this by
+                     default; it has to be asked for.
+
+    Conflating them is what made "Refresh universe scan" fail identically every
+    time. Refresh needs force to get past the 12-hour cache, and force also
+    switched off the headroom check — so the one button a user actually presses
+    was the one press the safety valve could never see. On an instance idling
+    near its limit the scan then started, the instance was killed part-way
+    through, and every request after that failed until Render brought it back.
+    The browser has no way to tell that apart from a sleeping server, so it
+    said "Engine unreachable — it may be waking from sleep", and the obvious
+    response to that message is to press the button again.
+
+    force now means only "ignore the cache". A refresh with no room left is
+    refused, in words, with the numbers behind the refusal.
+    """
     _require_admin(key)
-    rss = _rss_mb()
-    if rss is not None and (MEM_LIMIT_MB - rss) < SCAN_HEADROOM_MB and not force:
-        # Drop what is droppable before saying no. Previously this refused on
-        # the first reading, so a cache that was about to expire anyway could
-        # block a scan for the rest of the day.
-        _, rss = _reclaim()
+    ignore_memory = bool(ignore_memory or force_memory)
+    # Reclaim first, always. This runs before the heaviest job in the process,
+    # and the caches it drops are rebuilt on demand — measuring headroom
+    # without doing it first refuses scans over memory nobody still needs.
+    _, rss = _reclaim()
     headroom = None if rss is None else round(MEM_LIMIT_MB - rss, 1)
-    if headroom is not None and headroom < SCAN_HEADROOM_MB and not force:
-        return {"started": False, "reason": "low_memory",
+    if headroom is not None and headroom < SCAN_HEADROOM_MB and not ignore_memory:
+        return {**scan_status(),
+                "started": False, "reason": "low_memory",
                 "rss_mb": rss, "headroom_mb": headroom,
                 "needs_headroom_mb": SCAN_HEADROOM_MB, "limit_mb": MEM_LIMIT_MB,
                 "message": (f"Holding {rss:.0f} MB of {MEM_LIMIT_MB} MB, so only "
                             f"{headroom:.0f} MB is free and a scan needs about "
                             f"{SCAN_HEADROOM_MB} MB. Starting one now would get the "
-                            "instance killed, taking the whole site with it. "
-                            "Restart the service to clear it, or pass force=true "
-                            "if you accept the risk."),
-                **scan_status()}
+                            "instance killed part-way through, taking the whole "
+                            "site down with it for a minute or two — which is what "
+                            "an unreachable engine right after pressing Generate "
+                            "actually was. Restart the service to clear it, or pass "
+                            "ignore_memory=true if you accept the risk.")}
     with _lock:
         if _state["status"] == "running":
             return {"started": False, "reason": "already_running", **scan_status()}
@@ -734,7 +847,16 @@ def scan_status():
         "error": _state["error"],
     }
     if _state["payload"]:
-        out["scanned_at"] = _state["payload"].get("scanned_at")
+        p = _state["payload"]
+        out["scanned_at"] = p.get("scanned_at")
+        # A scan that stopped itself to stay alive is not the same event as one
+        # that finished, and the difference is the whole explanation for a
+        # short list. Carried through so the browser can say which happened.
+        if p.get("stopped_early"):
+            out["stopped_early"] = True
+            out["stopped_reason"] = p.get("stopped_reason")
+    out["rss_mb"] = _rss_mb()
+    out["limit_mb"] = MEM_LIMIT_MB
     return out
 
 
@@ -760,18 +882,40 @@ def ideas(horizon: str = "short", limit: int = 15,
     """
     p = _state["payload"]
     if not p:
-        return {"available": False, "status": _state["status"],
-                "message": "No scan yet — generate the ranking first.",
-                "market_context": _safe_context(horizon)}
+        return to_native({"available": False, "status": _state["status"],
+                           "message": "No scan yet — generate the ranking first.",
+                           "market_context": _safe_context(horizon)})
     try:
-        return {**ideas_engine.select(p, horizon=horizon,
-                                      limit=max(1, min(limit, 25)),
-                                      min_tier=min_tier,
-                                      include_thin=bool(include_thin),
-                                      min_conviction=min_conviction),
-                "disclaimer": DISCLAIMER}
+        # to_native, like every other endpoint that touches pandas. Without it
+        # a single numpy scalar anywhere in the response — one sector figure,
+        # one corroboration count — fails serialisation and returns 500, and
+        # the failure happens after this function returns, so the except below
+        # never sees it. This missing call is what broke the Ideas tab.
+        return to_native({**ideas_engine.select(p, horizon=horizon,
+                                                limit=max(1, min(limit, 25)),
+                                                min_tier=min_tier,
+                                                include_thin=bool(include_thin),
+                                                min_conviction=min_conviction),
+                          "disclaimer": DISCLAIMER})
     except ValueError as e:
         raise HTTPException(400, str(e))
+    except Exception as e:
+        # A bug in scoring must not present as a dead engine. The 500 this used
+        # to raise reached the browser without CORS headers, so the tab could
+        # only report that it could not reach anything — which is how a crash
+        # in here went nine days looking like a sleeping server.
+        import traceback
+        print(f"[ideas] select() failed for horizon={horizon}\n{traceback.format_exc()}",
+              flush=True)
+        return to_native({
+                "available": False,
+                "status": _state["status"],
+                "error": f"{type(e).__name__}: {str(e)[:300]}",
+                "message": ("The scan is on the server but the ideas engine failed while "
+                            "scoring it. The ranking is intact — this is a bug in the "
+                            "scoring layer, not a lost scan."),
+                "scanned_at": p.get("scanned_at"),
+                "market_context": _safe_context(horizon)})
 
 
 def _safe_context(horizon: str):
@@ -795,7 +939,7 @@ def ideas_context(horizon: str = "short"):
     if ctx is None:
         return {"available": False,
                 "message": "Market context feeds are unavailable right now."}
-    return {"available": True, **ctx}
+    return to_native({"available": True, **ctx})
 
 
 # ---------------------------------------------------------------------------

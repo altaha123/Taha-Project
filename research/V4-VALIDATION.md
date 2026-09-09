@@ -1,7 +1,7 @@
 # V4 validation — 9 September 2026
 
 Baseline commit: `634d4e8e8c2376ea36f41b2ec8e10ad011876ed1`.
-Untouched baseline: **447 backend tests passed**. V4: **469 passed**.
+Untouched baseline: **447 backend tests passed**. V4: **469 passed** before integrating upstream changes; **518 passed** after merging main at `30b4a3f` (including its 49 new regression tests).
 The four warnings also occur in the baseline: zero-price indicator divisions
 and FastAPI's existing startup-event deprecation. No deployment performed.
 All frontend script/inline-script syntax, share.js unit tests and duplicate-ID

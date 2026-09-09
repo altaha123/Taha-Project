@@ -114,6 +114,100 @@ MIN_TURNOVER = 2e7         # legacy constant, retained for the payload label
 HARD_FLOOR = float(os.environ.get("SCAN_HARD_FLOOR", "5e6") or 5e6)   # ₹50 lakh
 STORE_TOP = 60             # ranked rows kept in the output file
 
+# ---------------------------------------------------------------------------
+# Memory watchdog
+#
+# The scan is the only thing in this process that needs hundreds of MB, and on
+# a 512 MB instance it is what turns a healthy process into a killed one. Being
+# killed is the worst possible ending: the instance goes down, every other tab
+# on the site starts returning nothing, and the browser can only report that
+# the engine is unreachable — which reads as "the server is asleep" rather than
+# "the scan you just started took the site with it". The user then presses the
+# button again, and it happens again.
+#
+# So the scan now watches its own resident size and stops itself while it can
+# still write a checkpoint. A scan that ends early with 140 names scored and
+# says so is worth more than one that is 80% done and dies.
+#
+# Two settings, both overridable on Render:
+#   MEM_LIMIT_MB             what the instance is allowed to hold (Render plan)
+#   SCAN_ABORT_HEADROOM_MB   stop when less than this much is left
+MEM_LIMIT_MB = int(os.environ.get("MEM_LIMIT_MB", "512") or 512)
+SCAN_ABORT_HEADROOM_MB = int(os.environ.get("SCAN_ABORT_HEADROOM_MB", "45") or 45)
+
+
+def rss_mb():
+    """Resident memory in MB, or None where /proc is not available."""
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    return round(int(line.split()[1]) / 1024, 1)
+    except Exception:
+        pass
+    return None
+
+
+def trim():
+    """
+    Collect, then hand the freed arenas back to the OS.
+
+    gc.collect() on its own frees Python objects but can leave the memory in
+    glibc's arenas, so RSS — the number Render actually kills on — need not
+    move at all. malloc_trim is the half that was missing here.
+
+    Measured at idle it returns very little (the /health/memory notes in
+    main.py record 0.2 MB, honestly), which is why it is not sold as the fix.
+    Its moment is this one: immediately after a chunk's price frames are
+    dropped, when there is something large and recently freed to hand back.
+    It costs microseconds either way.
+    """
+    gc.collect()
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+    return rss_mb()
+
+
+def headroom_mb():
+    """MB left before the instance limit, or None when RSS is unreadable."""
+    rss = rss_mb()
+    return None if rss is None else round(MEM_LIMIT_MB - rss, 1)
+
+
+def _should_stop():
+    """
+    True when the process is close enough to the limit that continuing means
+    being killed. Trims first: the point is to stop on memory genuinely in
+    use, not on arenas nobody has handed back yet.
+    """
+    head = headroom_mb()
+    if head is None or head >= SCAN_ABORT_HEADROOM_MB:
+        return False
+    trim()
+    head = headroom_mb()
+    return head is not None and head < SCAN_ABORT_HEADROOM_MB
+
+
+def plan_footprint():
+    """
+    (chunk, workers) sized to the room actually available right now.
+
+    A scan is not one fixed weight. Phase 1 holds one bulk price frame of
+    `chunk` tickers at a time and phase 2 holds one yfinance session per
+    worker, so both are dials, and on a cramped instance turning them down is
+    the difference between a scan that gets somewhere before the watchdog
+    stops it and one that does not. A roomy instance keeps the fast settings.
+    """
+    head = headroom_mb()
+    if head is None or head >= 150:
+        return CHUNK, PHASE2_WORKERS
+    if head >= 90:
+        return max(20, CHUNK // 2), PHASE2_WORKERS
+    return max(10, CHUNK // 4), 1
+
 NSE_LIST_URLS = [
     "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv",
     "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
@@ -218,11 +312,34 @@ def prefilter_by_quote(symbols, state, progress):
     return keep, dropped
 
 
-def phase1(symbols, progress, state):
+def phase1(symbols, progress, state, chunk_size=None):
+    """
+    Returns (candidates, skipped_illiquid, skipped_nodata, stopped).
+
+    `stopped` is None on a full pass, or a sentence explaining why the breadth
+    pass ended early. It ends early only to avoid being killed — see the
+    memory watchdog above — and everything scored up to that point is kept.
+    """
     candidates, skipped_illiquid, skipped_nodata = [], 0, 0
-    chunks = [symbols[i:i + CHUNK] for i in range(0, len(symbols), CHUNK)]
+    stopped = None
+    size = int(chunk_size or CHUNK)
+    chunks = [symbols[i:i + size] for i in range(0, len(symbols), size)]
 
     for ci, chunk in enumerate(chunks):
+        if _should_stop():
+            done_syms = ci * size
+            # The unreached symbols advance the progress bar — a scan that ends
+            # is not a scan that hangs — but they are NOT counted as skipped for
+            # missing data. They were never looked at, and recording them as
+            # "insufficient price data" would put a false reason in the payload
+            # for names that may be perfectly fine. The counts under-run the
+            # universe size instead, and stopped_reason says why.
+            state["done"] += max(0, len(symbols) - done_syms)
+            stopped = (f"Breadth pass stopped after {done_syms} of {len(symbols)} "
+                       f"symbols: the instance was within {SCAN_ABORT_HEADROOM_MB} MB "
+                       f"of its {MEM_LIMIT_MB} MB limit. Depth analysis continues on "
+                       "what cleared so far.")
+            break
         tickers = [f"{s}.NS" for s in chunk]
         use_dhan = dhan is not None and dhan.configured() and dhan.is_live().get("ok")
         data = None
@@ -277,12 +394,14 @@ def phase1(symbols, progress, state):
             finally:
                 df = None
         del data
-        gc.collect()
+        # Trim, not just collect: the chunk's price frames are the largest
+        # thing this loop allocates and gc alone leaves them resident.
+        trim()
         if progress:
             progress(state["done"], state["total"], len(candidates))
 
     candidates.sort(key=lambda c: c["score"], reverse=True)
-    return candidates, skipped_illiquid, skipped_nodata
+    return candidates, skipped_illiquid, skipped_nodata, stopped
 
 
 # ---------------------------------------------------------------------------
@@ -526,7 +645,7 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
 
 
 def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
-                   ill, nod, n_deep, failed, partial=False):
+                   ill, nod, n_deep, failed, partial=False, stopped=None):
     all_rows = list(rows)
     n_missing_fund = sum(r.get("fundamental") is None for r in all_rows)
     n_control = sum(r.get("selection") == "control" for r in all_rows)
@@ -561,6 +680,11 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
         "factor_universe": rows,
         "rankings": rows[:STORE_TOP],
         "skipped": failed,
+        # Set when the scan ended itself rather than finishing. A short list
+        # then means the scan stopped early, not that the market had nothing
+        # to offer, and the reader is told which.
+        "stopped_early": bool(stopped),
+        "stopped_reason": stopped,
     }
 
 
@@ -609,7 +733,12 @@ def run_scan(progress=None, names=None, checkpoint=None):
         state["done"] = prefiltered
         state["total"] = universe_all + n2
 
-    cands, ill, nod = phase1(symbols, progress, state)
+    # Size the scan to the room there is, once, up front. Reading it here
+    # rather than at import time matters: the process is a different size at
+    # 09:00 with the intraday scanner armed than it is at boot.
+    chunk_size, workers = plan_footprint()
+
+    cands, ill, nod, stopped = phase1(symbols, progress, state, chunk_size)
     ill += prefiltered
 
     # Was: deep = cands[:n2] — top N by technical score only.
@@ -629,9 +758,9 @@ def run_scan(progress=None, names=None, checkpoint=None):
     def _checkpoint(final=False):
         cp = _build_payload(list(rows), source, universe_all, prefiltered,
                             n_candidates, ill, nod, len(deep), list(failed),
-                            partial=not final)
+                            partial=not final, stopped=stopped)
         _dump(cp)
-        if final:
+        if final and not stopped:
             # Immutable record of what this scan knew, written once at the end.
             _record_to_pit(cp.get("factor_universe") or [], universe_all, n_candidates, ill, nod)
         if checkpoint:
@@ -642,10 +771,12 @@ def run_scan(progress=None, names=None, checkpoint=None):
         return cp
 
     try:
-        with ThreadPoolExecutor(max_workers=PHASE2_WORKERS) as pool:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
             futures = {pool.submit(deep_score, c, sel): c["symbol"]
                        for c, sel in deep}
+            pending = set(futures)
             for fut in as_completed(futures):
+                pending.discard(fut)
                 sym = futures[fut]
                 try:
                     r = fut.result()
@@ -655,7 +786,7 @@ def run_scan(progress=None, names=None, checkpoint=None):
                         failed.append(sym)
                 except MemoryError:
                     failed.append(sym)
-                    gc.collect()
+                    trim()
                 except Exception:
                     failed.append(sym)
                 state["done"] += 1
@@ -663,8 +794,33 @@ def run_scan(progress=None, names=None, checkpoint=None):
                     progress(state["done"], state["total"], len(rows))
                 if rows and len(rows) % CP_EVERY == 0:
                     _checkpoint()
+                # Stop while a checkpoint can still be written. Being killed
+                # here loses nothing scored (checkpoints are on disk) but it
+                # does take the whole instance down, and the site is then
+                # unreachable for as long as Render takes to restart it.
+                if _should_stop():
+                    for f in pending:
+                        f.cancel()
+                    for f in pending:
+                        failed.append(futures[f])
+                    # The names that will never be attempted still count as
+                    # processed, or the progress bar freezes part-way and the
+                    # scan looks hung rather than finished early.
+                    state["done"] += len(pending)
+                    if progress:
+                        progress(state["done"], state["total"], len(rows))
+                    stopped = (
+                        (stopped + " ") if stopped else "") + (
+                        f"Depth pass stopped after {len(rows)} names scored: the "
+                        f"instance was within {SCAN_ABORT_HEADROOM_MB} MB of its "
+                        f"{MEM_LIMIT_MB} MB limit. Rankings below are from what "
+                        "was scored before it stopped.")
+                    break
     except MemoryError:
-        gc.collect()                    # salvage whatever scored so far
+        trim()                          # salvage whatever scored so far
+        stopped = ((stopped + " ") if stopped else "") + (
+            "The scan ran out of memory part-way through; what had been scored "
+            "was kept.")
 
     return _checkpoint(final=True)
 
