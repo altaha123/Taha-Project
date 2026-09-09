@@ -53,6 +53,10 @@
      actually starts, the button says which way it will move, and the source is
      always sent explicitly so the two ends cannot drift apart again. */
   var srcFilter = "manual";
+  /* Size of the whole ledger as the last marking pass saw it. Refresh prices
+     walks every tracked row; the tab shows your picks. Kept so render() can
+     say so instead of leaving a count nobody can reconcile on screen. */
+  var lastMarkedTotal = null;
 
   /* ---- styles, on the existing tokens ---------------------------------- */
 
@@ -253,11 +257,19 @@
     var b = $("tkrefresh");
     b.disabled = true;
 
-    var done = 0, rounds = 0, stop = "", left = null;
+    var done = 0, rounds = 0, stop = "", left = null, tracked = null;
     try {
       while (rounds++ < MAX_ROUNDS) {
-        b.textContent = (left == null) ? ("Marking\u2026 " + done)
-                                       : ("Marking\u2026 " + done + ", " + left + " to go");
+        /* "Marking… 101, 95 to go" was two numbers from different
+           populations printed as if they were one pair. `marked` is a
+           ledger-wide count of rows that hold ANY price, so it starts at
+           roughly the size of the whole ledger and barely moves; `remaining`
+           is the queue left in THIS pass. Their sum is not a total — with 101
+           rows tracked the button read as though there were 196. Progress is
+           counted from what this pass has actually re-marked. */
+        b.textContent = (left == null)
+          ? "Marking\u2026"
+          : ("Marking\u2026 " + done + " of " + (done + left));
         /* force=true is what makes this a refresh rather than a no-op: without
            it the server skips every row it already marked today, so a press
            after the daily cron run returned "updated: 0" and the button
@@ -288,13 +300,15 @@
           break;
         }
 
-        done = j.marked != null ? j.marked : done + (j.updated || 0);
+        done += (j.updated || 0);
         left = j.remaining;
+        tracked = j.tracked != null ? j.tracked : tracked;
         if (!j.remaining) break;
         if (!j.updated) { stop = "stalled at " + j.remaining; break; }
         await render();                       // show progress as it lands
       }
       b.textContent = stop ? stop : "Marked " + done;
+      lastMarkedTotal = tracked;
       await render();
     } catch (e) {
       b.textContent = (e && e.name === "AbortError")
@@ -560,6 +574,20 @@
       }
       if (st.last_marked_at) {
         flags.push("Prices last marked " + esc(String(st.last_marked_at).replace("T", " ")) + ".");
+      }
+      /* Refresh prices has no source filter — it marks the whole ledger,
+         auto-recorded rows included, because the measured record is built
+         from all of them. Showing "Marked 101" above a list of 12 with no
+         explanation is the same confusion this tab already fixed once for
+         the stats headline; say it here rather than leave it to be guessed. */
+      var shownCount = (d.rows || []).length;
+      if (srcFilter === "manual" && lastMarkedTotal != null &&
+          lastMarkedTotal > shownCount) {
+        flags.push("Refresh prices marks all " + lastMarkedTotal +
+                   " tracked rows, including " + (lastMarkedTotal - shownCount) +
+                   " recorded automatically by earlier scans. This list shows " +
+                   "your " + shownCount + " own picks \u2014 switch to " +
+                   "<b>Showing everything</b> to see the rest.");
       }
       var note = $("tknote");
       if (note) {
