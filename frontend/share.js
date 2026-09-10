@@ -277,6 +277,10 @@
       var btn = ev.target.closest ? ev.target.closest("[data-do]") : null;
       if (!btn) return;
       var act = btn.getAttribute("data-do");
+      if (window.AltahaTrack) {
+        window.AltahaTrack('share_clicked',
+          { kind: (current && current.kind) || 'stock', action: act });
+      }
       if (act === "x") onX();
       else if (act === "wa") onWhatsApp();
       else if (act === "dl") onDownload(btn);

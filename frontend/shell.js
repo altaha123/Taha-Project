@@ -170,9 +170,10 @@
     setTimeout(function () { navigate(sectionId, tabId, (tries || 0) + 1); }, 200);
   }
 
-  function openStock(sym) {
+  function openStock(sym, from) {
     sym = String(sym || '').trim().toUpperCase();
     if (!sym) return;
+    if (window.AltahaTrack) window.AltahaTrack('stock_opened', { ticker: sym, from: from || 'link' });
     location.href = 'stock.html?ticker=' + encodeURIComponent(sym);
   }
   window.AltahaOpenStock = openStock;
@@ -518,11 +519,20 @@
       ac.classList.add('open');
     }
 
+    var missTimer = null, missReported = '';
     input.addEventListener('input', function () {
       sel = -1;
       q = input.value.trim();
       rows = match(q);
       paint();
+
+      if (missTimer) clearTimeout(missTimer);
+      missTimer = setTimeout(function () {
+        if (!q || q.length < 2 || rows.length || UNIVERSE === null) return;
+        if (q.toUpperCase() === missReported) return;
+        missReported = q.toUpperCase();
+        if (window.AltahaTrack) window.AltahaTrack('search_no_match', { query: q });
+      }, 900);
     });
     input.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, rows.length - 1); paint(); }
@@ -531,12 +541,12 @@
         e.preventDefault();
         var pick = (sel >= 0 && rows[sel]) ? rows[sel].s
           : (rows[0] ? rows[0].s : input.value.trim());
-        openStock(pick);
+        openStock(pick, 'search');
       } else if (e.key === 'Escape') { ac.classList.remove('open'); input.blur(); }
     });
     ac.addEventListener('mousedown', function (e) {
       var r = e.target.closest('.row');
-      if (r) { e.preventDefault(); openStock(r.dataset.s); }
+      if (r) { e.preventDefault(); openStock(r.dataset.s, 'search'); }
     });
     input.addEventListener('blur', function () {
       setTimeout(function () { ac.classList.remove('open'); }, 120);

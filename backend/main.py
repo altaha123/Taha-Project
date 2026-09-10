@@ -120,6 +120,49 @@ try:
 except (ValueError, RuntimeError):
     pass
 
+# ---------------------------------------------------------------------------
+# Crash reporting
+#
+# Until now a 500 in here left a traceback in Render's log stream and nothing
+# else. Nobody reads a log stream on a Tuesday; the way bugs in this project
+# have actually been found is by somebody noticing a wrong number on a screen.
+#
+# Everything about this is optional and silent. With SENTRY_DSN unset — which
+# is how it ships — nothing is imported, nothing is sent, and startup is
+# byte-for-byte what it was. If the package is missing on the deployed image
+# the failure is printed once and the app carries on, because a monitoring
+# tool that can take the API down is worse than no monitoring tool.
+#
+# Tracing and profiling are explicitly off. They are sampled per request and
+# this runs on a 512 MB box with one worker; error reporting is what was
+# asked for and error reporting is all that is paid for.
+# ---------------------------------------------------------------------------
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "").strip()
+
+
+def _start_sentry() -> bool:
+    if not SENTRY_DSN:
+        return False
+    try:
+        import sentry_sdk
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            traces_sample_rate=0.0,
+            profiles_sample_rate=0.0,
+            # No cookies, no headers, no request bodies. A ticker in a query
+            # string is the most personal thing this API ever receives.
+            send_default_pii=False,
+            environment=os.environ.get("SENTRY_ENV", "production"),
+            max_breadcrumbs=20,
+        )
+        return True
+    except Exception as e:                                    # pragma: no cover
+        print(f"[sentry] not started: {type(e).__name__}: {e}", flush=True)
+        return False
+
+
+SENTRY_ON = _start_sentry()
+
 app = FastAPI(title="Altaha Screener API", version="2.1")
 
 
@@ -234,6 +277,17 @@ async def _unhandled_error(request, exc):
     # Render captures stdout. This is the only copy of the traceback, so it is
     # printed whole rather than summarised.
     print(f"[unhandled] {request.method} {request.url.path}\n{tb}", flush=True)
+
+    # This handler swallows the exception — Starlette calls it INSTEAD of
+    # re-raising — so nothing downstream, Sentry's middleware included, ever
+    # sees it. Reporting it here is what makes the difference between a
+    # traceback nobody reads and an alert that names the endpoint.
+    if SENTRY_ON:
+        try:
+            import sentry_sdk
+            sentry_sdk.capture_exception(exc)
+        except Exception:
+            pass
     return JSONResponse(
         status_code=500,
         content={"error": type(exc).__name__,
@@ -775,9 +829,11 @@ def health_memory(detail: int = 0):
 def health():
     try:
         sym, t, h = resolve("AAPL")
-        return {"data_layer": "ok", "rows": len(h), "last_close": round(float(h["Close"].iloc[-1]), 2)}
+        return {"data_layer": "ok", "rows": len(h),
+                "last_close": round(float(h["Close"].iloc[-1]), 2),
+                "sentry": SENTRY_ON}
     except Exception as e:
-        return {"data_layer": "unreachable", "detail": str(e)[:200]}
+        return {"data_layer": "unreachable", "detail": str(e)[:200], "sentry": SENTRY_ON}
 
 
 @app.post("/scan/start")

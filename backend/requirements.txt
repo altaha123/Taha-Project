@@ -16,3 +16,8 @@ requests>=2.31
 # deployed image.
 # pytest>=8.0
 Pillow>=10.0
+
+# Crash reporting. Inert without SENTRY_DSN in the environment — main.py does
+# not import it at all in that case — so this costs disk on the image and
+# nothing at runtime until it is switched on. Pure Python, no build step.
+sentry-sdk>=2.0
