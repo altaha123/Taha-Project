@@ -119,3 +119,25 @@
   .sb-live.on i{animation:none}
   .sb-breadth i{transition:none}
 }
+
+/* Homepage readability and motion. Keep component selectors in their owning
+   stylesheet so cascade order cannot silently change the sector layout. */
+.sb-board { scroll-margin-top:calc(var(--sh-chrome-h,132px) + 20px); border-top:1px solid var(--rule); padding-top:24px; }
+.sb-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.sb-tile { padding:20px 18px; gap:12px; animation:none; border-radius:12px; box-shadow:none; }
+.sb-tile .sb-name { white-space:normal; font-size:13px; min-height:34px; }
+.sb-pct { font:30px/1.1 var(--serif); }
+.sb-breadth { height:7px; border-radius:6px; }
+.sb-breadth i { transform-origin:left center; transition:none; }
+.sb-meta { font-size:10px; letter-spacing:0; line-height:1.6; }
+.sb-win { min-height:44px; min-width:50px; font-size:10px; }
+.sb-detail { scroll-margin-top:calc(var(--sh-chrome-h,132px) + 20px); }
+@media(hover:hover) and (pointer:fine) { .sb-tile:hover { border-color:var(--gold); } }
+@media(max-width:800px) { .sb-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:540px) {
+  .sb-tile { padding:14px 12px; }
+  .sb-grid { gap:8px; }
+  .sb-hdr { gap:12px; }
+  .sb-hdr h3 { font-size:25px; }
+}
+@media(prefers-reduced-motion:reduce) { .sb-tile { transition:none !important; } }
