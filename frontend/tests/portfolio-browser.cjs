@@ -18,7 +18,7 @@ const server=http.createServer((req,res)=>{
  const browser=await chromium.launch({headless:true});
  const context=await browser.newContext({viewport:{width:1280,height:900}}), page=await context.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(String(e.stack)));
- await page.route('**/*',route=>{
+ const routeRequest=route=>{
    const url=new URL(route.request().url());
    if(url.pathname==='/portfolio/start')return route.fulfill({json:{job_id:'fixture',total:12}});
    if(url.pathname==='/portfolio/status')return route.fulfill({json:{status:'done',done:12,total:12,revision:1,report:activeReport}});
@@ -27,7 +27,8 @@ const server=http.createServer((req,res)=>{
      return route.fulfill({json:{available:false,rows:[],rankings:[],sectors:[],items:[],status:'idle'}});
    }
    return route.continue();
- });
+ };
+ await page.route('**/*',routeRequest);
  await page.goto('http://127.0.0.1:8765/?go=portfolio',{waitUntil:'domcontentloaded'});
  await page.locator('#pf_rows .pf_sym').first().fill('HDFCBANK');
  await page.locator('#pf_rows .pf_qty').first().fill('10');
@@ -50,6 +51,11 @@ const server=http.createServer((req,res)=>{
      for(const c of layout.charts){assert.ok(c.width>100&&c.height>100,JSON.stringify(c));assert.ok(c.painted,c.id+' blank');}
      await page.locator('.pi-header').scrollIntoViewIfNeeded();
      await page.screenshot({path:path.join(output,`${width}-${theme}.png`)});
+     if(width===390||width===1280){
+       for(const id of ['pi-allocation','pi-sector-comparison']){
+         await page.locator('#'+id).screenshot({path:path.join(output,`${width}-${theme}-${id}.png`)});
+       }
+     }
    }
  }
  await page.setViewportSize({width:390,height:844});
@@ -72,14 +78,13 @@ const server=http.createServer((req,res)=>{
  activeReport=report50;await page.locator('#pf_go').click();await page.waitForFunction(()=>document.querySelectorAll('.pi-holding').length===50);
  await page.waitForTimeout(450);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
  // Loss of Chart.js: data must remain readable and no blank canvas survives.
- const fallback=await context.newPage();await fallback.route('**/vendor/chart.umd.min.js',r=>r.abort());
- await fallback.route('**/*',r=>{const u=new URL(r.request().url());if(u.pathname.includes('chart.umd.min.js'))return r.abort();if(u.hostname!=='127.0.0.1')return r.abort();return r.continue();});
- // A small standalone harness loads the same production renderer without the
- // shell; this tests the library-load failure specifically.
- await fallback.goto('http://127.0.0.1:8765/portfolio-intelligence.css');
- await fallback.setContent('<html><head><base href="http://127.0.0.1:8765/"></head><body><div id="pf_report"></div><script src="portfolio-intelligence.js"></script></body></html>');
- await fallback.waitForFunction(()=>window.PortfolioIntelligence);
- await fallback.evaluate(d=>PortfolioIntelligence.mount(d),report);
+ activeReport=report;
+ const fallback=await context.newPage();
+ await fallback.route('**/*',r=>new URL(r.request().url()).pathname.includes('chart.umd.min.js')?r.abort():routeRequest(r));
+ await fallback.goto('http://127.0.0.1:8765/?go=portfolio',{waitUntil:'domcontentloaded'});
+ await fallback.locator('#pf_rows .pf_sym').first().fill('HDFCBANK');
+ await fallback.locator('#pf_rows .pf_qty').first().fill('10');
+ await fallback.locator('#pf_go').click();
  await fallback.getByText('Chart unavailable. Open “View chart data” below for the full figures.').first().waitFor();
  assert.equal(await fallback.locator('canvas').count(),0);
  assert.ok(await fallback.getByText('View chart data',{exact:true}).count()>=5);
