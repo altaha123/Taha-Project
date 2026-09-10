@@ -48,7 +48,7 @@ const server=http.createServer((req,res)=>{
      assert.equal(layout.overflow,false,`${width}/${theme} page overflow`);
      assert.equal(layout.charts.length,7);
      for(const c of layout.charts){assert.ok(c.width>100&&c.height>100,JSON.stringify(c));assert.ok(c.painted,c.id+' blank');}
-     await page.locator('#pf_report').scrollIntoViewIfNeeded();
+     await page.locator('.pi-header').scrollIntoViewIfNeeded();
      await page.screenshot({path:path.join(output,`${width}-${theme}.png`)});
    }
  }
@@ -57,7 +57,7 @@ const server=http.createServer((req,res)=>{
  assert.equal(await page.locator('.pi-holding:visible').count(),2);
  await page.getByRole('button',{name:'Show all holdings',exact:true}).click();
  assert.equal(await page.locator('.pi-holding:visible').count(),12);
- await page.locator('.pi-holding[data-symbol="HDFCBANK"] summary').click();
+ await page.locator('.pi-holding[data-symbol="HDFCBANK"] > summary').click();
  assert.ok(await page.locator('.pi-holding[data-symbol="HDFCBANK"] .pi-holding-body').isVisible());
  await page.locator('#pi-allocation-mode').selectOption('Stock');
  await page.locator('#pi-sector-sort').selectOption('under');
