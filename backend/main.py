@@ -1167,9 +1167,7 @@ def chart_patterns(ticker: str, range: str = "1D", base_rates: bool = True):
     correspondingly less meaningful, and the payload says which timeframe it
     measured so nobody has to guess.
     """
-    raw = (range or "1D").strip()
-    key = next((k for k in RANGES if k.lower() == raw.lower()), None)
-    cfg = RANGES.get(key) if key else None
+    key, cfg = _pick_range(range or "1D")
     if not cfg:
         raise HTTPException(400, f"range must be one of {', '.join(RANGES)}")
 
@@ -1312,10 +1310,7 @@ def _og_frame(base: str, raw: str):
     somebody's timeline — and a daily chart is a truthful answer to "show me
     this stock", just not the one that was asked for.
     """
-    key = next((k for k in RANGES if k.lower() == (raw or "1D").strip().lower()), None)
-    cfg = RANGES.get(key) if key else None
-    if not cfg:
-        key, cfg = "1D", RANGES["1D"]
+    key, cfg = _pick_range(raw or "1D", fallback="1D")
 
     if cfg["mode"] == "intraday" and dhan is not None and dhan.configured():
         try:
@@ -2348,6 +2343,18 @@ def results(ticker: str):
     return to_native(out)
 
 
+# Two different questions arrive on the same `range=` parameter.
+#
+# The first seven keys are CANDLE SIZES — how much time one bar covers. That
+# is what the charting workspace asks for, and "1D" there means daily bars
+# (four hundred sessions of them), not today.
+#
+# The last five are WINDOWS — how much history to draw, at daily resolution.
+# A stock page's range control asks this question: someone pressing "6M"
+# wants six months of the stock, and has no opinion about bar size. Those
+# keys did not exist, so the stock page's chart asked for a window and got a
+# 400 back; 6M is its default range, which is why that chart never drew at
+# all. Windows are daily-mode so they need no live feed to answer.
 RANGES = {
     "1m":  {"mode": "intraday", "interval": "1",  "days": 4,   "label": "1 minute"},
     "5m":  {"mode": "intraday", "interval": "5",  "days": 10,  "label": "5 minute"},
@@ -2357,7 +2364,37 @@ RANGES = {
             "resample": 4},
     "1D":  {"mode": "daily",    "sessions": 400,              "label": "1 day"},
     "1W":  {"mode": "daily",    "sessions": 1200, "resample_w": True, "label": "1 week"},
+
+    "1M":  {"mode": "daily",    "sessions": 22,   "label": "1 month"},
+    "3M":  {"mode": "daily",    "sessions": 63,   "label": "3 months"},
+    "6M":  {"mode": "daily",    "sessions": 126,  "label": "6 months"},
+    "1Y":  {"mode": "daily",    "sessions": 252,  "label": "1 year"},
+    "5Y":  {"mode": "daily",    "sessions": 1260, "label": "5 years"},
 }
+
+
+def _pick_range(raw: str, fallback: str = None):
+    """Resolve a `range=` value to (key, cfg), or (None, None).
+
+    Case carries meaning for exactly one pair: "1m" is one-minute candles and
+    "1M" is a one-month window. The old lookup was case-insensitive and took
+    the first key that matched, so a request for a month of history quietly
+    returned minute bars — or a 503, since minute bars need the live feed.
+    An exact match therefore wins outright.
+
+    The case-insensitive pass is kept for everything else, because callers do
+    send "1d" and "1w" and always have, but it is only accepted when exactly
+    one key matches: silently guessing between two meanings is the bug above.
+    """
+    raw = (raw or "").strip()
+    if raw in RANGES:
+        return raw, RANGES[raw]
+    hits = [k for k in RANGES if k.lower() == raw.lower()]
+    if len(hits) == 1:
+        return hits[0], RANGES[hits[0]]
+    if fallback:
+        return fallback, RANGES[fallback]
+    return None, None
 
 
 def _resample_hours(df, factor: int):
@@ -2408,9 +2445,7 @@ def _day_move(base: str):
 def chart(ticker: str, range: str = "1D"):
     """Candles for one symbol at a chosen timeframe, with overlays."""
     from engine import ema, bollinger
-    raw = (range or "1D").strip()
-    key = next((k for k in RANGES if k.lower() == raw.lower()), None)
-    cfg = RANGES.get(key) if key else None
+    key, cfg = _pick_range(range or "1D")
     if not cfg:
         raise HTTPException(400, f"range must be one of {', '.join(RANGES)}")
 
