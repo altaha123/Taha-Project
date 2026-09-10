@@ -313,6 +313,7 @@
       var b = e.target.closest('button');
       if (!b) return;
       chartRange = b.dataset.r;
+      if (window.AltahaTrack) window.AltahaTrack('chart_range_changed', { range: chartRange });
       paintRanges();
       $('ranges').querySelector('[data-r="' + chartRange + '"]').focus();
       loadChart();
@@ -354,8 +355,18 @@
     var request = ++chartRequest;
     box.setAttribute('aria-busy', 'true');
     box.innerHTML = '<div class="skel" style="height:250px"></div>';
+    var asked = chartRange;
     fetch(API + '/chart?ticker=' + encodeURIComponent(TICKER) + '&range=' + chartRange)
-      .then(function (r) { if (!r.ok) throw new Error('x'); return r.json(); })
+      .then(function (r) {
+        if (!r.ok) {
+          if (window.AltahaTrack) {
+            window.AltahaTrack('chart_failed', { range: asked, status: r.status });
+            window.AltahaTrack('api_error', { endpoint: '/chart', status: r.status });
+          }
+          throw new Error('x');
+        }
+        return r.json();
+      })
       .then(function (d) {
         if (request !== chartRequest) return;
         box.setAttribute('aria-busy', 'false');
@@ -443,6 +454,17 @@
 
   /* ── The rail's scroll spy ───────────────────────────────────────────────── */
 
+  function wireRail() {
+    var rail = $('rail');
+    if (!rail) return;
+    rail.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a') : null;
+      if (!a || !window.AltahaTrack) return;
+      window.AltahaTrack('stock_section_clicked',
+        { section: String(a.getAttribute('href') || '').replace('#s-', '') });
+    });
+  }
+
   function spy() {
     var links = [].slice.call(document.querySelectorAll('.stk-rail a'));
     var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
@@ -468,6 +490,9 @@
     loading();
     fetch(API + '/analyze?ticker=' + encodeURIComponent(TICKER))
       .then(function (r) {
+        if (!r.ok && window.AltahaTrack) {
+          window.AltahaTrack('api_error', { endpoint: '/analyze', status: r.status });
+        }
         if (r.status === 404) throw new Error('notfound');
         if (!r.ok) throw new Error('down');
         return r.json();
@@ -475,6 +500,14 @@
       .then(function (d) {
         $('state').innerHTML = '';
         $('body').hidden = false;
+        if (window.AltahaTrack) {
+          var sc = (d.scoring && d.scoring.score != null) ? Math.round(d.scoring.score) : null;
+          window.AltahaTrack('stock_viewed', {
+            ticker: TICKER,
+            sector: (d.profile && d.profile.sector) || null,
+            score: sc
+          });
+        }
         paintHead(d);
         paintScore(d);
         paintNumbers(d);
@@ -486,11 +519,14 @@
         paintRanges();
         loadChart();
         loadDayChange();
+        wireRail();
         spy();
         if (window.AltahaShell) window.AltahaShell.reveal();
       })
       .catch(function (e) {
-        failed(e && e.message === 'notfound'
+        var reason = (e && e.message === 'notfound') ? 'not_found' : 'engine_unreachable';
+        if (window.AltahaTrack) window.AltahaTrack('stock_view_failed', { ticker: TICKER, reason: reason });
+        failed(reason === 'not_found'
           ? "Couldn't find " + TICKER + '. Check the spelling.'
           : 'The engine is unreachable. If it has been idle it takes about thirty seconds to wake — try again.');
       });

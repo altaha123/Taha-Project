@@ -176,6 +176,12 @@
     var s = sectionById(sectionId);
     markLearn(false);
 
+    // Only deliberate navigation. Restoring a section from the hash on load
+    // would otherwise count as a visit to a page nobody chose to open.
+    if (userInitiated && window.AltahaTrack) {
+      window.AltahaTrack('view_opened', { section: s && s.id, tab: tabId || null });
+    }
+
     if (s.id === 'social') {
       if (window.AltahaSocial && typeof window.AltahaSocial.open === 'function') {
         window.AltahaSocial.open();

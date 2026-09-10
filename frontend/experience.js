@@ -86,7 +86,12 @@
     const next = exists ? current.filter(x => x !== sym) : current.concat(sym);
     try { localStorage.setItem(KEY, JSON.stringify(next)); }
     catch (_) { announce('Could not save. Browser storage may be unavailable or full.'); return false; }
-    saved = next; sync(); announce(sym + (exists ? ' removed from watchlist' : ' added to watchlist')); return true;
+    saved = next; sync(); announce(sym + (exists ? ' removed from watchlist' : ' added to watchlist'));
+    if (typeof window !== 'undefined' && window.AltahaTrack) {
+      window.AltahaTrack('watchlist_changed',
+        { ticker: sym, action: exists ? 'removed' : 'added', size: next.length });
+    }
+    return true;
   }
   function saveButton(sym) {
     const b = button('☆ Save', e => { e.stopPropagation(); toggle(sym); });

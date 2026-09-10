@@ -51,3 +51,6 @@ services:
         value: "400"
       - key: ADMIN_KEY
         sync: false                # set this in the dashboard, never in git
+      - key: SENTRY_DSN            # crash reporting. Unset = off, silently.
+        sync: false                # an address rather than a secret, but it
+                                   # belongs with the deploy, not in git.
