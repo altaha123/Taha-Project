@@ -88,12 +88,12 @@
     box.innerHTML = '<div class="mb-idx"><div class="mb-skel"></div><div class="mb-skel"></div>' +
                     '<div class="mb-skel"></div><div class="mb-skel"></div></div>';
     // Above the search row, below the (now much shorter) masthead.
-    if (host) host.appendChild(box);
+    if (host) host.insertBefore(box, host.querySelector('.state'));
     else main.insertBefore(box, main.firstChild);
     return box;
   }
 
-  function fail(box) { if (box && box.parentNode) box.parentNode.removeChild(box); }
+  function fail(box) { if (box) box.innerHTML = '<p class="mb-note">Index data is unavailable right now. Stock search and research tools remain available.</p>'; }
 
   /* The board used to fetch /market and /sector/overview itself, which meant
      the homepage pulled the same two endpoints the chrome's ticker had just
@@ -132,7 +132,7 @@
       fetch(API + '/market').then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) { indices = (d && d.indices) || []; })
         .catch(function () { indices = []; }).then(maybePaint);
-      fetch(API + '/sector/overview?window=1d')
+      fetch(API + '/sector/overview?window=1D&stocks=1')
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) { movers = d; })
         .catch(function () { movers = null; }).then(maybePaint);
@@ -145,7 +145,7 @@
     }).concat([0.01]));
 
     var idxHTML = indices.map(function (i, n) {
-      var p = Number(i.change_pct);
+      var p = i.change_pct == null || i.change_pct === '' ? NaN : Number(i.change_pct);
       var t = p > 0 ? 'up' : (p < 0 ? 'dn' : '');
       var w = Math.min(100, (Math.abs(p) / biggest) * 100);
       return '<div class="mb-card d3-card tilt reveal" data-i="' + n + '">' +
@@ -154,15 +154,15 @@
           : Number(i.level).toLocaleString('en-IN', { maximumFractionDigits: 2 })) + '</div>' +
         '<div class="c tnum ' + t + '">' + (isNaN(p) ? '—'
           : (p > 0 ? '+' : '') + p.toFixed(2) + '%') + '</div>' +
-        '<div class="spark"><i class="' + t + '" data-w="' + w.toFixed(0) + '"></i></div>' +
+        '<div class="spark" aria-hidden="true"><i class="' + t + '" data-motion-key="index:' + esc(i.label) + '" data-motion-value="' + (isFinite(w) ? w : 0) + '" style="width:' + (isFinite(w) ? w : 0) + '%"></i></div>' +
         '</div>';
     }).join('');
 
     // Flatten every sector's constituents into one list, then take the ends.
-    var all = [];
+    var all = [], seen = new Set();
     ((sectors && sectors.rows) || []).forEach(function (row) {
       (row.stocks || []).forEach(function (s) {
-        if (s && s.symbol && s.change_pct != null) all.push(s);
+        if (s && s.symbol && s.change_pct != null && s.change_pct !== '' && isFinite(Number(s.change_pct)) && !seen.has(s.symbol)) { seen.add(s.symbol); all.push(s); }
       });
     });
     all.sort(function (a, b) { return b.change_pct - a.change_pct; });
@@ -180,20 +180,13 @@
 
     var moversHTML = all.length
       ? '<div class="mb-movers">' +
-          col('Leading today', all.slice(0, 5), 'up') +
-          col('Lagging today', all.slice(-5).reverse(), 'dn') +
+          col('Advancing today', all.filter(function(s){return s.change_pct>0;}).slice(0, 5), 'up') +
+          col('Declining today', all.filter(function(s){return s.change_pct<0;}).slice(-5).reverse(), 'dn') +
         '</div>'
       : '';
 
-    box.innerHTML = '<div class="mb-idx">' + idxHTML + '</div>' + moversHTML +
-      '<p class="mb-note">Type any Indian or US stock below. You get a 0–100 score ' +
-      'and every calculation that produced it — line by line.</p>';
-
-    requestAnimationFrame(function () {
-      box.querySelectorAll('.spark i').forEach(function (n) {
-        n.style.width = n.dataset.w + '%';
-      });
-    });
+    box.innerHTML = '<div class="mb-heading"><div><span class="hm-kicker">MARKET SNAPSHOT</span><h2>The market, at a glance.</h2></div><span class="mb-scope">Latest available session</span></div><div class="mb-idx">' + idxHTML + '</div>' +
+      '<p class="mb-note">Bars compare the magnitude of each index move; they are not price histories. India VIX measures volatility. Quotes may be delayed.</p>' + moversHTML;
     if (window.AltahaShell) window.AltahaShell.reveal();
   }
 

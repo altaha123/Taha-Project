@@ -36,3 +36,12 @@ jobs:
         with:
           name: portfolio-browser-verification
           path: test-results/portfolio
+      - name: Verify homepage visuals, motion and accessibility
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/home-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: homepage-browser-verification
+          path: test-results/home
