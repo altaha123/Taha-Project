@@ -311,15 +311,25 @@
      is fetched separately from the chart for exactly that reason: the chart's
      range is a browsing choice, and letting it rewrite the headline change
      meant selecting "1Y" printed a year's return where a reader looks for the
-     day's. */
+     day's.
+
+     Fetching it separately was not enough, because `range=1D` names a CANDLE
+     SIZE on this API — daily bars, four hundred sessions of them — and
+     `change_pct` is the move across whatever was drawn. So the headline read
+     the full window: CAPLIPOINT printed "+26.37% today" on a day it moved
+     +0.92%, the 26% being its return since the previous September. The day's
+     move is `day_change_pct`, the last close against the one before it. There
+     is no fallback to `change_pct`: printing a year's return as today's is
+     worse than printing nothing, so when the day's number is missing the
+     headline stays blank. */
   function loadDayChange() {
     fetch(API + '/chart?ticker=' + encodeURIComponent(TICKER) + '&range=1D')
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (!d || d.change_pct == null) return;
+        if (!d || d.day_change_pct == null) return;
         var c = $('chg');
-        c.className = 'chg tnum ' + tone(d.change_pct);
-        c.textContent = pct(d.change_pct) + ' today';
+        c.className = 'chg tnum ' + tone(d.day_change_pct);
+        c.textContent = pct(d.day_change_pct) + ' today';
       })
       .catch(function () {});
   }

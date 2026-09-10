@@ -2373,6 +2373,37 @@ def _resample_weeks(df):
     return out.dropna(subset=["Close"])
 
 
+def _day_move(base: str):
+    """Today's move: the last close against the one before it.
+
+    Deliberately NOT the return across the range being charted. "1D" in
+    RANGES names a candle size — daily bars, four hundred sessions of them —
+    not the day, so /chart's `change_pct` for range=1D is a year and a half
+    of return. Printed under the price as "today" it read +26.37% on a day
+    CAPLIPOINT moved +0.92%.
+
+    Computed from the daily series alone, whatever range the caller asked
+    for, because the day's move is a property of the stock and not of the
+    timeframe someone is browsing. The daily series is also what sets the
+    price the number sits under, so the two always agree: a live tick over a
+    daily close would print a percentage that doesn't reconcile with the
+    rupees above it.
+    """
+    try:
+        _, _, hist = resolve(base)
+        close = hist["Close"].dropna()
+        if len(close) < 2:
+            return None
+        last, prev = float(close.iloc[-1]), float(close.iloc[-2])
+    except Exception:
+        return None
+    if not prev:
+        return None
+    return {"last": round(last, 2), "prev_close": round(prev, 2),
+            "change": round(last - prev, 2),
+            "change_pct": round(100 * (last - prev) / prev, 2)}
+
+
 @app.get("/chart")
 def chart(ticker: str, range: str = "1D"):
     """Candles for one symbol at a chosen timeframe, with overlays."""
@@ -2456,6 +2487,12 @@ def chart(ticker: str, range: str = "1D"):
     except Exception:
         lv = None
 
+    # `change_pct` is the move ACROSS THE RANGE DRAWN — a year of return on
+    # range=1D, which is four hundred daily candles. `day_change_pct` is the
+    # move today. They are different questions and now have different names;
+    # the headline under the price wants the second one.
+    day = _day_move(base)
+
     return to_native({
         "ticker": base, "range": key, "label": cfg["label"],
         "live": live, "source": "dhan" if live else "daily feed",
@@ -2463,6 +2500,9 @@ def chart(ticker: str, range: str = "1D"):
         "last": round(last, 2),
         "change": round(last - first, 2),
         "change_pct": round(100 * (last - first) / first, 2) if first else None,
+        "prev_close": (day or {}).get("prev_close"),
+        "day_change": (day or {}).get("change"),
+        "day_change_pct": (day or {}).get("change_pct"),
         "as_of": str(df.index[-1])[:19] if len(df) else None,
         "levels": lv,
     })
