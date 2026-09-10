@@ -288,8 +288,20 @@
      of candlestick engine over a mobile connection to draw it would be a poor
      trade. The full workspace still lives on the Charts tab.               */
 
-  var RANGES = [['1D', '1 day'], ['1W', '1 week'], ['1M', '1 month'],
-                ['6M', '6 months'], ['1Y', '1 year']];
+  /* Windows of history, not candle sizes. The old list asked for '1D' and
+     '1W', which on this API name daily and weekly BARS — four hundred and
+     twelve hundred sessions of them — so a button labelled "1 day" drew a
+     year and a half. '6M' and '1Y' were not ranges the API knew at all and
+     came back 400, and '6M' is where this chart opens, so the stock page's
+     chart drew nothing until you pressed something else. '1M' was worse than
+     an error: it matched the one-MINUTE timeframe and returned intraday bars
+     when the live feed was up, and 503 when it wasn't.
+
+     All five are daily-resolution windows now, which need no live feed. The
+     intraday timeframes still exist and still belong to the charting
+     workspace, where the control is explicitly a bar size. */
+  var RANGES = [['1M', '1 month'], ['3M', '3 months'], ['6M', '6 months'],
+                ['1Y', '1 year'], ['5Y', '5 years']];
   var chartRange = '6M', chartRequest = 0;
 
   function paintRanges() {
@@ -323,7 +335,10 @@
      worse than printing nothing, so when the day's number is missing the
      headline stays blank. */
   function loadDayChange() {
-    fetch(API + '/chart?ticker=' + encodeURIComponent(TICKER) + '&range=1D')
+    /* `day_change_pct` does not depend on the range, so this asks for the
+       shortest window there is rather than 1D — which is four hundred daily
+       candles fetched, parsed and thrown away for one number. */
+    fetch(API + '/chart?ticker=' + encodeURIComponent(TICKER) + '&range=1M')
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || d.day_change_pct == null) return;
