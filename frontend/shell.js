@@ -754,7 +754,7 @@
                        pct: i.change_pct, link: false });
         });
       }).catch(function () {}).then(function () {
-        return get('/sector/overview?window=1d', 12000).catch(function () { return null; });
+        return get('/sector/overview?window=1D&stocks=1', 12000).catch(function () { return null; });
       }).then(function (d) {
         sec = d;
         var seen = {};

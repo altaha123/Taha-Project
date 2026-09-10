@@ -93,7 +93,10 @@
     /* Above the search result and below the search box: this is market
        context, and context belongs before the thing it contextualises. */
     var after = view.querySelector(".hint") || view.querySelector(".searchrow");
-    if (after && after.parentNode === view) {
+    var market = view.querySelector('.mb');
+    if (market) {
+      market.after(el);
+    } else if (after && after.parentNode === view) {
       view.insertBefore(el, after.nextSibling);
     } else {
       view.insertBefore(el, view.firstChild);
@@ -115,7 +118,7 @@
   }
 
   function playMoves(el, before) {
-    if (REDUCED || !el) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.motion === 'off' || !el) return;
     el.querySelectorAll("[data-sector]").forEach(function (n) {
       var was = before[n.getAttribute("data-sector")];
       if (!was) return;
@@ -131,31 +134,18 @@
     });
   }
 
-  /* Count the number up rather than snapping it. A figure that changes while
-     you are looking at it is noticed; one that has already changed is not. */
+  /* Financial labels remain exact. The breadth graphic carries the motion. */
   function countUp(node, to) {
-    var from = parseFloat(node.getAttribute("data-v"));
     node.setAttribute("data-v", to);
-    if (REDUCED || !isFinite(from) || from === to) {
-      node.textContent = pct(to);
-      return;
-    }
-    var t0 = 0, dur = 620;
-    function step(ts) {
-      if (!t0) t0 = ts;
-      var k = Math.min(1, (ts - t0) / dur);
-      var e = 1 - Math.pow(1 - k, 3);
-      node.textContent = pct(from + (to - from) * e);
-      if (k < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
+    node.textContent = pct(to);
   }
 
   /* ---- markup ----------------------------------------------------------- */
 
   function tile(r, i) {
     var t = tone(r.change_pct);
-    var up = r.up || 0, total = r.total || 0;
+    var known = Number.isFinite(r.up) && Number.isFinite(r.total) && r.total > 0 && r.up >= 0 && r.up <= r.total;
+    var up = known ? r.up : 0, total = known ? r.total : 0;
     var upPct = total ? (up / total) * 100 : 0;
     var open = state.open === r.sector;
     return '<button class="sb-tile ' + t + (open ? " open" : "") + '" type="button"' +
@@ -165,9 +155,9 @@
         '<span class="sb-name">' + esc(r.sector) + "</span></span>" +
       '<span class="sb-pct ' + t + '" data-v="' + (r.change_pct == null ? "" : r.change_pct) + '">' +
         pct(r.change_pct) + "</span>" +
-      '<span class="sb-breadth" title="' + up + " of " + total + ' advancing">' +
-        '<i style="width:' + upPct.toFixed(1) + '%"></i></span>' +
-      '<span class="sb-meta">' + up + "/" + total + " advancing" +
+      (known ? '<span class="sb-breadth" aria-hidden="true">' +
+        '<i data-motion-key="sector:' + esc(r.sector) + ':' + state.window + '" data-motion-value="' + upPct + '" style="width:' + upPct + '%"></i></span>' : '') +
+      '<span class="sb-meta">' + (known ? up + "/" + total + " advancing" : "Breadth unavailable") +
         (r.relative_pp != null
           ? '<em class="' + tone(r.relative_pp) + '">' + pct(r.relative_pp, 1) + " vs Nifty</em>"
           : "") + "</span>" +
@@ -221,6 +211,9 @@
     }
 
     var before = positions(el);
+    var focused = el.contains(document.activeElement) ? document.activeElement : null;
+    var focusedSector = focused && focused.getAttribute('data-sector');
+    var focusedWindow = focused && focused.getAttribute('data-w');
     var live = (d.source || "").toLowerCase() === "dhan";
     var opened = rows.filter(function (r) { return r.sector === state.open; })[0];
 
@@ -239,12 +232,16 @@
       "</div>" +
       '<div class="sb-grid">' + rows.map(tile).join("") + "</div>" +
       (opened ? detail(opened) : "") +
-      '<p class="sb-foot">Ranked by return relative to the Nifty. Breadth is how ' +
+      '<p class="sb-foot">' + (d.as_of ? 'Snapshot generated ' + esc(d.as_of) + '. ' : '') + 'Ranked by return relative to the Nifty. Breadth is how ' +
         "many of the sector's carried names are advancing — a sector can be green " +
         "on one enormous company while most of it falls, and the bar is there to " +
         "show you when that is happening.</p>";
 
     playMoves(el, before);
+    el.querySelectorAll('[data-sector], [data-w]').forEach(function(n) {
+      if ((focusedSector && n.getAttribute('data-sector') === focusedSector) ||
+          (focusedWindow && n.getAttribute('data-w') === focusedWindow)) n.focus({preventScroll:true});
+    });
     el.querySelectorAll(".sb-pct").forEach(function (n) {
       var v = parseFloat(n.getAttribute("data-v"));
       if (isFinite(v)) { n.setAttribute("data-v", ""); countUp(n, v); }
@@ -256,11 +253,13 @@
   async function load(quiet) {
     if (state.busy) return;
     state.busy = true;
+    var requestedWindow = state.window;
     if (!quiet && !state.data) render();
     try {
       var r = await fetch(API + "/sector/overview?window=" +
-                          encodeURIComponent(state.window) + "&stocks=1");
+                          encodeURIComponent(requestedWindow) + "&stocks=1");
       var d = await r.json();
+      if (requestedWindow !== state.window) return;
       if (r.ok && d && d.rows) {
         state.data = d;
         render();
@@ -272,12 +271,13 @@
         }
       }
     } catch (e) {
-      if (!state.data) {
+      if (!state.data && requestedWindow === state.window) {
         var h = host();
         if (h) h.innerHTML = '<div class="sb-load">Engine unreachable — it may be waking up.</div>';
       }
     } finally {
       state.busy = false;
+      if (requestedWindow !== state.window) load();
     }
   }
 
