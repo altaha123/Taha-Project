@@ -41,10 +41,16 @@
     posthogHost: 'https://us.i.posthog.com',
     posthogAssets: 'https://us-assets.i.posthog.com',
 
-    /* Browser DSN from the Sentry "javascript" project. Empty means crash
-       reporting stays dormant and nothing is loaded — the site behaves
-       exactly as it does today until this line is filled in. */
-    sentryDsn: '',
+    /* Browser DSN from the Sentry "javascript" project. A DSN is an address,
+       not a credential: it can file a crash report and read nothing back,
+       which is why it is allowed to sit in public page source. Blanking this
+       line switches browser crash reporting off and loads nothing at all.
+
+       The server has its own DSN, from a separate Sentry project, and it
+       lives in the SENTRY_DSN environment variable on Render rather than
+       here — not because it is more secret, but because it belongs with the
+       deploy. */
+    sentryDsn: 'https://c96a19b06d2aa898bc78c24f605661e4@o4512061262200832.ingest.us.sentry.io/4512061316923392',
     sentryVersion: '8.55.0'
   };
 
