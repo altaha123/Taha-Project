@@ -1,0 +1,20 @@
+'use strict';
+const assert = require('node:assert/strict');
+const {compare,snapshot,build,safeURL}=require('./portfolio-intelligence.js');
+function snap(overrides={}){return {at:'2026-09-10T10:00:00Z',basis:{version:1,benchmark:'March 2026'},score:70,coverage:100,holdings:[{symbol:'A',score:70,qty:1}],sectors:[{sector:'Energy',weight:100}],events:[],...overrides};}
+assert.deepEqual(compare(null,snap()),[]);
+assert.deepEqual(compare(snap(),snap()),[]);
+assert.deepEqual(compare(snap(),snap({at:'2026-09-11',basis:{version:2}})),[]);
+assert.deepEqual(compare(snap(),snap({at:'2026-09-11',coverage:50,score:80})),[]);
+assert.ok(compare(snap(),snap({at:'2026-09-11',score:80}))[0].includes('70.0 → 80.0'));
+assert.ok(compare(snap(),snap({at:'2026-09-11',holdings:[{symbol:'B',score:70}],sectors:[{sector:'Technology',weight:100}]})).some(x=>x.includes('Energy exposure 100.0% → 0.0%')));
+assert.equal(safeURL('javascript:alert(1)'),null);
+assert.equal(safeURL('https://nseindia.com/a.pdf'),'https://nseindia.com/a.pdf');
+const html=build({holdings:[],failed:[{symbol:'<script>alert(1)</script>',error:'Unavailable'}],data_quality:{},risk:{},history:{},sectors:[],sector_comparison:[]});
+assert.ok(html.includes('&lt;script&gt;'));
+assert.ok(!html.includes('<script>alert'));
+assert.ok(html.includes('Partial valuation'));
+assert.ok(html.includes('No positive market values available'));
+assert.ok(!html.includes('NaN'));
+assert.ok(!html.includes('What Changed Recently'));
+console.log('Portfolio Intelligence: 14 frontend assertions passed');

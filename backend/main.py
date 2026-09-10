@@ -2016,229 +2016,265 @@ def leaderboard(limit: int = 5):
     }
 
 
-def _analyse_holding(item):
-    sym_in = str(item.get("symbol", "")).strip().upper()
-    qty = float(item.get("qty") or 0)
-    buy = item.get("buy_price")
-    buy = float(buy) if buy not in (None, "",) else None
-    if not sym_in or qty <= 0:
-        return {"symbol": sym_in or "?", "error": "missing symbol or quantity",
-                "value": 0.0, "cost": None}
+# Portfolio jobs share bounded executors across requests on the 512 MB service.
+# Slow providers may finish after a deadline, but cannot grow a new pool per job.
+import portfolio_intelligence as PI
+from datetime import datetime, timezone
+from concurrent.futures import wait
+
+_pf_workers = ThreadPoolExecutor(max_workers=PF_WORKERS, thread_name_prefix="portfolio")
+_pf_enrichment = ThreadPoolExecutor(max_workers=2, thread_name_prefix="portfolio-enrichment")
+_pf_jobs = {}
+_pf_lock = threading.Lock()
+PF_JOB_TTL = 900
+PF_ANALYSIS_TIMEOUT = 100
+PF_MAX_ACTIVE = 2
+PF_MAX_JOBS = 20
+
+
+def _pf_inputs(payload, limit=MAX_HOLDINGS):
+    holdings = payload.get("holdings")
+    if not isinstance(holdings, list) or not holdings or len(holdings) > limit:
+        raise HTTPException(400, f"Provide 1–{limit} holdings.")
+    if payload.get("policy") is not None and not isinstance(payload["policy"], dict):
+        raise HTTPException(400, "Policy must be an object.")
+    # Coalesce tax lots for concentration, preserving partial cost coverage by
+    # withholding average cost if any lot is missing it.
+    merged = {}
+    import re
+    for item in holdings:
+        if not isinstance(item, dict):
+            raise HTTPException(400, "Each holding must be an object.")
+        symbol = str(item.get("symbol") or "").strip().upper()
+        symbol = re.sub(r"\.NS$", "", symbol)
+        if not re.fullmatch(r"[A-Z0-9][A-Z0-9&-]{0,24}", symbol):
+            raise HTTPException(400, "Use an NSE symbol without a foreign exchange suffix.")
+        qty = PI.number(item.get("qty"))
+        raw_buy = item.get("buy_price")
+        buy = PI.number(raw_buy)
+        if qty is None or not 0 < qty <= 1e12:
+            raise HTTPException(400, f"{symbol}: quantity must be positive and finite.")
+        if raw_buy not in (None, "") and (buy is None or not 0 < buy <= 1e12):
+            raise HTTPException(400, f"{symbol}: purchase price must be positive or omitted.")
+        row = merged.setdefault(symbol, {"symbol":symbol, "qty":0., "_cost":0., "_complete":True})
+        row["qty"] += qty
+        row["_cost"] += qty*buy if buy is not None else 0.
+        row["_complete"] = row["_complete"] and buy is not None
+    return [{"symbol":r["symbol"], "qty":r["qty"],
+             "buy_price":r["_cost"]/r["qty"] if r["_complete"] else None} for r in merged.values()]
+
+
+def _pf_row(item, scan_row=None, quote=None, checked_at=None):
+    scan_row, quote = scan_row or {}, quote or {}
+    qprice = PI.number(quote.get("ltp"))
+    price = qprice if qprice is not None and qprice > 0 else PI.number(scan_row.get("price"))
+    v4 = scan_row.get("altaha_score_v4") or {}
+    score = PI.number(v4.get("position", {}).get("final_score"))
+    sec, src = sectors.resolve_sector(item["symbol"], scan_row)
+    buy, qty = item.get("buy_price"), item["qty"]
+    return {"symbol":item["symbol"], "name":scan_row.get("name") or item["symbol"],
+            "qty":qty, "buy_price":buy, "price":price,
+            "value":round(price*qty, 2) if price is not None and price > 0 else None,
+            "cost":round(buy*qty, 2) if buy is not None else None,
+            "sector":sec, "sector_source":src, "composite":score,
+            "altaha_score_v4":v4, "technical":scan_row.get("technical"),
+            "fundamental":scan_row.get("fundamental"), "setup":scan_row.get("setup"),
+            "price_source":"Dhan quote (exchange time unavailable)" if qprice is not None and qprice > 0 else "Universe scan",
+            "price_as_of":None if qprice is not None and qprice > 0 else checked_at,
+            "price_checked_at":datetime.now(timezone.utc).isoformat(),
+            "score_as_of":checked_at,
+            "market_cap_bucket":None,
+            "market_cap_note":"Official size classification unavailable; scan-relative size buckets are not SEBI classifications.",
+            "error":None if price is not None and price > 0 else "Price unavailable", "warnings":[]}
+
+
+def _analyse_holding(item, cached=None):
+    # The initial quote/scan valuation survives a history or scoring failure.
+    row = dict(cached or _pf_row(item))
     try:
-        sym, t, hist = resolve(sym_in)
-    except NotFound:
-        return {"symbol": sym_in, "error": "symbol not found", "value": 0.0, "cost": None}
+        sym, t, hist = resolve(item["symbol"] + ".NS")
+        if not sym.endswith(".NS"):
+            raise ValueError("Only INR NSE listings are supported")
+        price = PI.number(hist["Close"].iloc[-1])
+        if price is not None and price > 0 and row.get("price_source") != "Dhan quote (exchange time unavailable)":
+            row.update(price=price, value=round(item["qty"]*price,2), error=None,
+                       price_source=hist.attrs.get("price_source", "Historical close (source unavailable)"),
+                       price_as_of=str(hist.index[-1]) if hasattr(hist.index[-1], "date") else None)
+        row["_history"] = hist
     except Exception:
-        return {"symbol": sym_in, "error": "data provider busy", "value": 0.0, "cost": None}
+        row["warnings"] = ["History unavailable; retained available quote or dated scan valuation."]
+        return row
     try:
         tech = technical_score(hist)
+        row.update(technical=tech.get("score"), technical_extras=tech.get("extras") or {},
+                   technical_checks=tech.get("checks") or [])
+        closes = hist['Close'].dropna()
+        row['moving_averages'] = {str(n):round(100*(float(closes.iloc[-1])/float(closes.tail(n).mean())-1),2)
+                                  for n in (20,50,200) if len(closes) >= n and closes.tail(n).mean() > 0}
+        row['trend'] = 'Above 200-day average' if row['moving_averages'].get('200',0) > 0 else 'Below 200-day average' if '200' in row['moving_averages'] else 'Insufficient history'
     except Exception:
-        return {"symbol": sym_in, "error": "scoring failed", "value": 0.0, "cost": None}
+        row['warnings'] = row.get('warnings', []) + ['Technical scoring unavailable; position valuation retained.']
     try:
         fin, bs, cf, info = fundamentals(sym, t)
         fund = fundamental_score(fin, bs, cf, info)
+        sec, source = sectors.resolve_sector(item['symbol'], info)
+        row.update(name=info.get('longName') or info.get('shortName') or row['name'],
+                   sector=sec, sector_source=source, fundamental=fund.get('score'),
+                   fundamental_extras=fund.get('extras') or {}, fundamental_checks=fund.get('checks') or [],
+                   fundamental_source='Provider annual statements; Altaha v4 factors use the dated universe scan / XBRL',
+                   valuation={'pe':PI.number(info.get('trailingPE')), 'pb':PI.number(info.get('priceToBook')),
+                              'market_cap':PI.number(info.get('marketCap'))})
     except Exception:
-        info, fund = {}, {"score": None, "f_score": None, "g_score": None, "checks": [], "extras": {}}
-    v = composite(tech, fund)
+        row['warnings'] = row.get('warnings', []) + ['Fundamental enrichment unavailable.']
+    return row
+
+
+def _pf_news(holdings):
+    items, status = [], {}
     try:
-        setup = A.evaluate(tech, fund)
+        # In-memory indexed joins, no per-holding network request. Do not cap
+        # the global filing list before matching, which loses small holdings.
+        for h in holdings:
+            feed = ann.feed(limit=30, min_importance='low', symbol=h['symbol'])
+            for raw in feed.get('rows') or []:
+                item = dict(raw)
+                url = item.get('pdf') or ''
+                item['source'] = 'NSE filing' if 'nseindia' in url else 'BSE filing' if 'bseindia' in url else 'Exchange filing'
+                items.append(item)
+            status['filings'] = {'last_poll':feed.get('last_poll'), 'error':feed.get('error'), 'first_load':feed.get('first_load')}
     except Exception:
-        setup = None
-    price = float(tech["price"])
-    clean_sym = sym.replace(".NS", "").replace(".BO", "")
-    sector, sector_source = sectors.resolve_sector(clean_sym, info)
-    v4 = _cached_v4(clean_sym)
-    legacy = v
-    v = multifactor.presentation(v4) if "position" in v4 else {"score": None, "tone": "mixed"}
-    return {
-        "symbol": clean_sym,
-        "name": info.get("longName") or info.get("shortName") or sym_in,
-        "sector": sector, "sector_source": sector_source,
-        "qty": qty, "buy_price": buy, "price": price,
-        "value": round(qty * price, 2),
-        "cost": round(qty * buy, 2) if buy is not None else None,
-        "pnl_pct": round(100 * (price - buy) / buy, 2) if buy else None,
-        "composite": v["score"], "tone": v["tone"],
-        "legacy_composite": legacy["score"], "altaha_score_v4": v4,
-        "technical": tech["score"], "fundamental": fund["score"],
-        "setup": (setup or {}).get("name"), "setup_fit": (setup or {}).get("fit"),
-        "horizon": (setup or {}).get("horizon"),
-        "error": None,
-    }
-
-
-# ---------------------------------------------------------------------------
-# Portfolio review — job-based
-# ---------------------------------------------------------------------------
-#
-# A fifty-holding book takes long enough that a synchronous request is at the
-# mercy of whatever proxy sits in front of the app. The work therefore runs on
-# a background thread and the client polls: progress arrives immediately,
-# holdings appear as they finish, and no single request stays open long enough
-# to be killed. Jobs are in-memory and expire — nothing about a user's
-# holdings is ever written to disk.
-
-_pf_jobs = {}
-_pf_lock = threading.Lock()
-PF_JOB_TTL = 900             # fifteen minutes is well past any real session
+        status['filings'] = {'error':'Filing cache unavailable'}
+    try:
+        # One bulk cache read. Freshness is recalculated from published dates.
+        items.extend(press.feed(limit=500, max_age_hours=168))
+        status['press'] = press.status()
+    except Exception:
+        status['press'] = {'error':'Press cache unavailable'}
+    return items, status
 
 
 def _pf_sweep():
-    """Drop finished jobs past their TTL. Called on every job creation."""
     now = time.time()
     with _pf_lock:
-        for jid in [k for k, v in _pf_jobs.items()
-                    if now - v.get("touched", now) > PF_JOB_TTL]:
+        for jid in [k for k,v in _pf_jobs.items() if v['status'] != 'running' and now-v.get('touched',now) > PF_JOB_TTL]:
             _pf_jobs.pop(jid, None)
 
 
-def _pf_run(job_id: str, holdings: list, policy: dict):
-    """Score every holding, then assemble the report. Errors stay per-row."""
-    rows = [None] * len(holdings)
-
-    def record(i, value):
-        rows[i] = value
+def _pf_run(job_id, holdings, policy):
+    scan = _state.get('payload') or {}
+    scan_map = {r['symbol']:r for r in scan.get('factor_universe') or scan.get('rankings') or []}
+    rows = [_pf_row(h, scan_map.get(h['symbol']), checked_at=scan.get('scanned_at')) for h in holdings]
+    def publish(stage, report, done, final=False):
+        report['stage'] = stage
+        report['disclaimer'] = DISCLAIMER
         with _pf_lock:
             job = _pf_jobs.get(job_id)
             if job is not None:
-                job["done"] = sum(1 for r in rows if r is not None)
-                job["touched"] = time.time()
-
+                job.update(status='done' if final else 'running', report=to_native(report),
+                           stage=stage, done=done, revision=job.get('revision',0)+1, touched=time.time())
     try:
-        with ThreadPoolExecutor(max_workers=PF_WORKERS) as pool:
-            futures = {pool.submit(_analyse_holding, h): i
-                       for i, h in enumerate(holdings)}
-            for fut in as_completed(futures):
-                i = futures[fut]
+        publish('Cached valuation', build_report(rows, scan, policy), 0)
+        # Quotes are batched; their timeout cannot consume the report deadline.
+        def quotes():
+            import dhan_source
+            return dhan_source.bulk_quotes([h['symbol'] for h in holdings]) if dhan_source.configured() else {}
+        quote_task = _pf_enrichment.submit(quotes)
+        ready, _ = wait([quote_task], timeout=8)
+        try:
+            quote_data = quote_task.result() if ready else {}
+        except Exception:
+            quote_data = {}
+        rows = [_pf_row(h, scan_map.get(h['symbol']), quote_data.get(h['symbol']), scan.get('scanned_at')) for h in holdings]
+        publish('Prices & scores', build_report(rows, scan, policy), 0)
+        pending = {_pf_workers.submit(_analyse_holding, h, r):i for i,(h,r) in enumerate(zip(holdings, rows))}
+        sector_task = _pf_enrichment.submit(sectors.momentum)
+        deadline = time.monotonic()+PF_ANALYSIS_TIMEOUT
+        histories, done = {}, 0
+        while pending and time.monotonic() < deadline:
+            ready, _ = wait(pending, timeout=min(1, max(0,deadline-time.monotonic())))
+            for future in ready:
+                i = pending.pop(future)
                 try:
-                    record(i, fut.result())
+                    row = future.result()
+                    history = row.pop('_history', None)
+                    if history is not None: histories[row['symbol']] = history
+                    rows[i] = row
                 except Exception:
-                    record(i, {"symbol": str(holdings[i].get("symbol", "?")),
-                               "error": "analysis failed", "value": 0.0, "cost": None})
-
-        # Sector momentum is cached for six hours, so this is usually free.
-        # A failure here must not cost the user the rest of the report.
+                    rows[i]['warnings'].append('Holding enrichment failed; available valuation retained.')
+                done += 1
+            with _pf_lock:
+                if job_id in _pf_jobs: _pf_jobs[job_id].update(done=done, stage='Holding research', touched=time.time())
+        for future,i in pending.items():
+            future.cancel()
+            rows[i]['warnings'].append('Enrichment deadline reached; available valuation retained. Retry to refresh.')
         try:
-            sector_data = sectors.momentum()
+            sector_data = sector_task.result(timeout=0) if sector_task.done() else {'available':False, 'message':'Sector index enrichment timed out; allocation proxy remains available.'}
         except Exception:
-            sector_data = {"available": False,
-                           "message": "Sector indices could not be retrieved."}
-
-        # The filing feed is already in memory from the Filings module — this
-        # is a join, not a fetch. A holding with a high-importance filing in
-        # the window gets that surfaced beside its score, which is exactly
-        # the context a score alone cannot carry.
-        news_map = {}
-        try:
-            for r in rows:
-                if not r or r.get("error") or not r.get("symbol"):
-                    continue
-                hits = ann.feed(limit=3, min_importance="medium",
-                                symbol=r["symbol"]).get("rows") or []
-                if hits:
-                    top = hits[0]
-                    news_map[r["symbol"]] = {
-                        "category": top.get("category"),
-                        "importance": top.get("importance"),
-                        "headline": top.get("headline"),
-                        "pdf": top.get("pdf"),
-                        "when": top.get("when") or top.get("date"),
-                        "count": len(hits),
-                    }
-        except Exception:
-            news_map = {}
-
-        report = build_report(rows, _state.get("payload"), policy,
-                              sector_data, news_map)
-        report["disclaimer"] = DISCLAIMER
-
+            sector_data = {'available':False, 'message':'Sector index data unavailable.'}
+        items, status = _pf_news(holdings)
+        report = build_report(rows, scan, policy, sector_data, histories=histories, news_items=items, news_status=status)
+        report['enrichment_incomplete'] = bool(pending)
+        publish('Complete' if not pending else 'Complete with unavailable enrichment', report, done, True)
+    except Exception:
+        # A final enrichment error must never discard the earlier basic report.
         with _pf_lock:
             job = _pf_jobs.get(job_id)
-            if job is not None:
-                job.update(status="done", report=to_native(report),
-                           finished_at=time.time(), touched=time.time())
-    except Exception as exc:                              # pragma: no cover
-        with _pf_lock:
-            job = _pf_jobs.get(job_id)
-            if job is not None:
-                job.update(status="error", error=str(exc)[:200],
-                           touched=time.time())
+            if job:
+                if job.get('report'):
+                    job['report']['enrichment_incomplete'] = True
+                    job['report'].setdefault('data_quality',{}).setdefault('warnings',[]).append('Enrichment failed. Earlier valuation retained; retry for a fresh review.')
+                    job.update(status='done', revision=job.get('revision',0)+1, touched=time.time())
+                else:
+                    job.update(status='error', error='Portfolio analysis unavailable. Please retry.', touched=time.time())
 
 
-@app.post("/portfolio/start")
+@app.post('/portfolio/start')
 def portfolio_start(payload: dict = Body(...)):
-    """Queue a portfolio analysis. Returns a job id to poll."""
-    holdings = payload.get("holdings") or []
-    if not isinstance(holdings, list) or not holdings:
-        raise HTTPException(400, "Provide a holdings list.")
-    if len(holdings) > MAX_HOLDINGS:
-        raise HTTPException(400, f"Maximum {MAX_HOLDINGS} holdings per analysis — "
-                                 "split larger portfolios into batches.")
-
-    policy = clean_policy(payload.get("policy"))
+    holdings = _pf_inputs(payload)
+    policy = clean_policy(payload.get('policy'))
     _pf_sweep()
-
-    job_id = uuid.uuid4().hex[:16]
     with _pf_lock:
-        _pf_jobs[job_id] = {"status": "running", "done": 0, "total": len(holdings),
-                            "report": None, "error": None,
-                            "started_at": time.time(), "touched": time.time()}
+        if sum(j['status'] == 'running' for j in _pf_jobs.values()) >= PF_MAX_ACTIVE:
+            raise HTTPException(429, 'Portfolio analysis is busy. Please retry shortly.')
+        if len(_pf_jobs) >= PF_MAX_JOBS:
+            finished = [k for k,v in _pf_jobs.items() if v['status'] != 'running']
+            if finished: _pf_jobs.pop(min(finished,key=lambda k:_pf_jobs[k]['touched']))
+        job_id = uuid.uuid4().hex
+        _pf_jobs[job_id] = {'status':'running', 'done':0, 'total':len(holdings), 'report':None,
+                            'error':None, 'stage':'Starting', 'revision':0, 'touched':time.time()}
+    threading.Thread(target=_pf_run,args=(job_id,holdings,policy),daemon=True).start()
+    return {'job_id':job_id, 'total':len(holdings), 'policy':policy}
 
-    threading.Thread(target=_pf_run, args=(job_id, holdings, policy),
-                     daemon=True).start()
 
-    return {"job_id": job_id, "total": len(holdings), "policy": policy}
-
-
-@app.get("/portfolio/status")
+@app.get('/portfolio/status')
 def portfolio_status(job: str):
-    """Progress, then the finished report. Poll until status leaves 'running'."""
     with _pf_lock:
         state = _pf_jobs.get(job)
-        if state is None:
-            raise HTTPException(404, "That analysis has expired. Run it again.")
-        state["touched"] = time.time()
-        snapshot = dict(state)
-
-    out = {"status": snapshot["status"], "done": snapshot["done"],
-           "total": snapshot["total"], "error": snapshot["error"]}
-    if snapshot["status"] == "done":
-        out["report"] = snapshot["report"]
-    return out
+        if state is None: raise HTTPException(404, 'That analysis expired. Run it again.')
+        state['touched'] = time.time()
+        return dict(state)
 
 
-@app.post("/portfolio")
+@app.post('/portfolio')
 def portfolio(payload: dict = Body(...)):
-    """
-    Synchronous analysis, kept for anything already calling this path.
-
-    New clients should use /portfolio/start — this route blocks for as long as
-    the book takes and is capped well below MAX_HOLDINGS to keep that bounded.
-    """
-    holdings = payload.get("holdings") or []
-    if not isinstance(holdings, list) or not holdings:
-        raise HTTPException(400, "Provide a holdings list.")
-    if len(holdings) > 20:
-        raise HTTPException(400, "This route handles up to 20 holdings. Use "
-                                 "/portfolio/start for larger books.")
-
-    policy = clean_policy(payload.get("policy"))
-    rows = [None] * len(holdings)
-    with ThreadPoolExecutor(max_workers=PF_WORKERS) as pool:
-        futures = {pool.submit(_analyse_holding, h): i for i, h in enumerate(holdings)}
-        for fut in as_completed(futures):
-            i = futures[fut]
-            try:
-                rows[i] = fut.result()
-            except Exception:
-                rows[i] = {"symbol": str(holdings[i].get("symbol", "?")),
-                           "error": "analysis failed", "value": 0.0, "cost": None}
-    try:
-        sector_data = sectors.momentum()
-    except Exception:
-        sector_data = {"available": False}
-    report = build_report(rows, _state.get("payload"), policy, sector_data)
-    report["disclaimer"] = DISCLAIMER
+    # Backward-compatible synchronous result with the same arithmetic / contract.
+    holdings = _pf_inputs(payload,20)
+    scan = _state.get('payload') or {}
+    scan_map = {r['symbol']:r for r in scan.get('factor_universe') or scan.get('rankings') or []}
+    cached = [_pf_row(h,scan_map.get(h['symbol']),checked_at=scan.get('scanned_at')) for h in holdings]
+    tasks = [_pf_workers.submit(_analyse_holding,h,r) for h,r in zip(holdings,cached)]
+    ready,_ = wait(tasks,timeout=PF_ANALYSIS_TIMEOUT)
+    rows,histories = [],{}
+    for future,fallback in zip(tasks,cached):
+        try: row = future.result() if future in ready else fallback
+        except Exception: row = fallback
+        if future not in ready: future.cancel()
+        history = row.pop('_history',None)
+        if history is not None: histories[row['symbol']] = history
+        rows.append(row)
+    items,status = _pf_news(holdings)
+    report = build_report(rows,scan,payload.get('policy'),histories=histories,news_items=items,news_status=status)
+    report['disclaimer'] = DISCLAIMER
     return to_native(report)
 
 

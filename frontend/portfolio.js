@@ -214,7 +214,7 @@
     pollTimer: null,
     jobId: null,
     pendingCSV: null,
-    activeName: null
+    activeName: null, revision: -1, request: 0, snapshotKey: null, pollErrors: 0
   };
 
   function readStore() {
@@ -238,7 +238,13 @@
      future settings drawer has somewhere to write to. */
   function currentPolicy() {
     var saved = readPolicy();
-    return saved || {};
+    var out = saved || {};
+    document.querySelectorAll('[data-pf-policy]').forEach(function(input) {
+      var value = Number(input.value);
+      if (input.value !== '' && Number.isFinite(value)) out[input.dataset.pfPolicy] = value;
+    });
+    writePolicy(out);
+    return out;
   }
 
   /* ── 3. HOLDINGS EDITOR ─────────────────────────────────────────────────── */
@@ -521,7 +527,7 @@
   function progressBar(done, total) {
     var p = total ? Math.round(100 * done / total) : 0;
     return '<div class="pfprog"><i style="width:' + p + '%"></i></div>' +
-           '<div class="pfprogtx">Scored ' + done + ' of ' + total + ' holdings</div>';
+           '<div class="pfprogtx">Processed ' + done + ' of ' + total + ' holdings</div>';
   }
 
   function analyse() {
@@ -539,7 +545,12 @@
     var report = $('pf_report');
     if (report) report.style.display = 'none';
 
-    setBusy(true, progressBar(0, holdings.length));
+    clearTimeout(state.pollTimer);
+    state.request += 1;
+    var request = state.request;
+    state.revision = -1; state.pollErrors = 0;
+    state.snapshotKey = state.activeName ? 'named:' + state.activeName : 'symbols:' + holdings.map(function(h){ return h.symbol; }).sort().join(',');
+    setBusy(true, progressBar(0, holdings.length) + '<div class="pi-skeleton" aria-hidden="true"></div>');
     var policy = currentPolicy();
 
     fetch(API + '/portfolio/start', {
@@ -553,36 +564,39 @@
           return d;
         });
       })
-      .then(function (d) { state.jobId = d.job_id; poll(); })
+      .then(function (d) { if (request !== state.request) return; state.jobId = d.job_id; poll(request); })
       .catch(function (err) {
         setBusy(false, '<b>' + esc(err.message) + '</b>');
       });
   }
 
-  function poll() {
+  function poll(request) {
     clearTimeout(state.pollTimer);
-    fetch(API + '/portfolio/status?job=' + encodeURIComponent(state.jobId))
-      .then(function (res) {
-        return res.json().then(function (d) {
-          if (!res.ok) throw new Error(d.detail || 'Lost track of that analysis.');
-          return d;
-        });
-      })
-      .then(function (d) {
-        if (d.status === 'running') {
-          setBusy(true, progressBar(d.done, d.total));
-          state.pollTimer = setTimeout(poll, 1400);
-          return;
+    if(request !== state.request) return;
+    fetch(API + '/portfolio/status?job=' + encodeURIComponent(state.jobId), {signal: AbortSignal.timeout(15000)})
+      .then(function(res) { return res.json().then(function(d) {
+        if(!res.ok) {var e = new Error(d.detail || 'Analysis unavailable'); e.status=res.status; throw e;} return d;
+      }); })
+      .then(function(d) {
+        if(request !== state.request) return;
+        state.pollErrors=0;
+        if(d.report && d.revision !== state.revision) {
+          state.revision=d.revision;
+          if(d.status === 'done' && window.PortfolioIntelligence) window.PortfolioIntelligence.acceptSnapshot(d.report,state.snapshotKey);
+          render(d.report);
         }
-        if (d.status === 'error') {
-          setBusy(false, 'Analysis failed: ' + esc(d.error || 'unknown error'));
-          return;
+        if(d.status === 'running') {
+          setBusy(true,progressBar(d.done,d.total)+'<p>'+esc(d.stage || 'Analysing')+'</p>');
+          state.pollTimer=setTimeout(function(){poll(request);},1400); return;
         }
-        setBusy(false, '');
-        render(d.report);
-      })
-      .catch(function (err) {
-        setBusy(false, esc(err.message));
+        setBusy(false,d.status === 'error' ? esc(d.error || 'Analysis failed. Please retry.') : '');
+      }).catch(function(err) {
+        if(request !== state.request) return;
+        state.pollErrors++;
+        if(state.pollErrors < 4 && err.status !== 404) {
+          setBusy(true,'Connection interrupted. Retrying; available results remain visible.');
+          state.pollTimer=setTimeout(function(){poll(request);},2000*state.pollErrors);
+        } else setBusy(false,esc(err.message)+' — run Analyse portfolio to retry.');
       });
   }
 
@@ -844,17 +858,19 @@
     var host = $('pf_report');
     if (!host) return;
     host.style.display = 'block';
-    host.innerHTML = buildReport(d, false);
+    if (window.PortfolioIntelligence && d.intelligence_version) window.PortfolioIntelligence.mount(d);
+    else host.innerHTML = buildReport(d, false);
     var bar = $('pf_reportact');
     if (bar) bar.style.display = 'flex';
     bindReport();
-    host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Staged updates retain the reader’s scroll position.
   }
 
   /* One builder for both the on-page report and the downloadable file, so
      the two can never drift apart. `flat` drops interactive affordances that
      make no sense in a saved document. */
   function buildReport(d, flat) {
+    if (window.PortfolioIntelligence && d.intelligence_version) return window.PortfolioIntelligence.build(d, flat);
     var pol = d.policy || {};
     var conc = d.concentration || {};
     var mom = d.sector_momentum || {};
@@ -1073,6 +1089,7 @@
      to on the Screener. */
 
   function reportDocument(d) {
+    if (window.PortfolioIntelligence && d.intelligence_version) return window.PortfolioIntelligence.exportHTML(d, collectStyles());
     var when = new Date().toLocaleString('en-IN',
       { dateStyle: 'medium', timeStyle: 'short' });
     var body = buildReport(d, true);
@@ -1292,6 +1309,14 @@
     var exp = $('pf_export');
     if (exp) exp.addEventListener('click', exportCSV);
 
+    var policy = readPolicy() || {};
+    var panel = el('details','pi-policy');
+    panel.innerHTML = '<summary>Your portfolio policy</summary><div class="pi-policy-grid">'+[
+      ['max_stock_pct','Maximum stock weight %',15,2,100],['max_sector_pct','Maximum sector weight %',35,5,100],
+      ['min_composite','Minimum Altaha Score',45,0,100],['review_drawdown','Review drawdown %',25,5,90],
+      ['min_holdings','Minimum effective holdings',8,1,50],['max_unclassified_pct','Maximum unclassified %',20,0,100]
+    ].map(function(p){return '<label>'+p[1]+'<input type="number" data-pf-policy="'+p[0]+'" min="'+p[3]+'" max="'+p[4]+'" value="'+esc(policy[p[0]] === undefined ? p[2] : policy[p[0]])+'"></label>';}).join('')+'</div>';
+    $('pf_rows').parentElement.insertBefore(panel,$('pf_rows').nextSibling);
     refreshSaved();
     renderRows();
   }
@@ -1302,5 +1327,5 @@
     init();
   }
 
-  window.AltahaPortfolio = { parseCSV: parseCSV, findHeader: findHeader, init: init };
+  window.AltahaPortfolio = { parseCSV: parseCSV, findHeader: findHeader, init: init, collect: collect };
 })();
