@@ -41,7 +41,7 @@ const server=http.createServer((req,res)=>{
  assert.equal(await page.locator('.hm-route svg').count(),3);
  assert.match(await page.locator('.mb-card').nth(2).innerText(),/—/);
  assert.doesNotMatch(await page.locator('.mb-card').nth(2).innerText(),/0\.00%/);
- assert.match(await page.locator('[data-sector="Healthcare"]').innerText(),/Breadth unavailable/);
+ assert.match(await page.locator('[data-sector="Healthcare"]').innerText(),/Breadth unavailable/i);
  assert.equal(await page.locator('[data-sector="Healthcare"] .sb-breadth').count(),0);
  assert.ok(sectorRequests.every(q=>q.includes('stocks=1')));
  for(const width of [320,390,768,1280]){
@@ -77,6 +77,7 @@ const server=http.createServer((req,res)=>{
  await page.locator('[data-home-destination="portfolio"]').tap();
  await page.locator('#pf_go').waitFor();
  assert.ok(await page.locator('#view-portfolio').isVisible());
+ await page.evaluate(()=>window.AltahaNav.go('screener','screener',true));
  // Preference changes stop motion immediately and persist through navigation.
  await page.locator('.hm-motion').tap();
  assert.equal(await page.locator('html').getAttribute('data-motion'),'off');
