@@ -28,7 +28,9 @@ sell. Sector context comes from measured index returns over stated windows and
 says which window. Peer context comes from the last universe scan and says so.
 """
 
-import advice
+import math
+from copy import deepcopy
+import portfolio_intelligence as intelligence
 
 MAX_HOLDINGS = 50            # raised from 20; prices are now fetched in one batch
 WORKERS = 4
@@ -74,6 +76,8 @@ def clean_policy(raw: dict | None) -> dict:
         try:
             value = float(value)
         except (TypeError, ValueError):
+            continue
+        if not math.isfinite(value):
             continue
         lo, hi = POLICY_BOUNDS[key]
         value = max(lo, min(hi, value))
@@ -121,7 +125,7 @@ def _shares_to_cap(row: dict, cap_pct: float, total_value: float) -> dict | None
     shrinks the book: the position holds V of total T, and selling x rupees
     leaves (V - x) / (T - x) = cap. That rearranges to
     x = (V - cap*T) / (1 - cap), which is the figure a user can actually act
-    on — the naive V - cap*T overstates the sale because it forgets that the
+    on — the naive V - cap*T understates the sale because it forgets that the
     denominator moves too.
     """
     price = row.get("price")
@@ -137,7 +141,7 @@ def _shares_to_cap(row: dict, cap_pct: float, total_value: float) -> dict | None
     if excess_value <= 0:
         return None
 
-    shares = int(excess_value / price)
+    shares = min(math.ceil(excess_value / price), row.get("qty") or 0)
     if shares <= 0:
         return None
 
@@ -161,20 +165,39 @@ def _shares_to_cap(row: dict, cap_pct: float, total_value: float) -> dict | None
 def build_report(rows: list, scan_payload: dict | None,
                  policy: dict | None = None,
                  sector_momentum: dict | None = None,
-                 news_by_symbol: dict | None = None) -> dict:
+                 news_by_symbol: dict | None = None, *, histories=None,
+                 news_items=None, news_status=None, now=None) -> dict:
     """rows: per-holding dicts already scored. Assembles the portfolio view."""
     pol = clean_policy(policy)
+    rows = [deepcopy(r) for r in rows if isinstance(r, dict)]
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        value = intelligence.number(r.get("value"))
+        r["value"] = value
+        r["sector"] = r.get("sector") or "Unclassified"
+        if value is None or value <= 0:
+            r["error"] = r.get("error") or "Positive market value unavailable"
+        for field in ("composite", "technical", "fundamental", "cost", "pnl_pct"):
+            r[field] = intelligence.number(r.get(field))
+        if r.get("cost") is not None and r["cost"] <= 0:
+            r["cost"] = None
+        for field in ("composite", "technical", "fundamental"):
+            if r[field] is not None and not 0 <= r[field] <= 100:
+                r[field] = None
 
     ok = [r for r in rows if r and r.get("error") is None]
     failed = [r for r in rows if r and r.get("error") is not None]
 
     total_value = sum(r["value"] for r in ok) or 0.0
+    costed_value = sum(r["value"] for r in ok if r.get("cost") is not None)
     total_cost = sum(r["cost"] for r in ok if r.get("cost") is not None)
     has_cost = any(r.get("cost") is not None for r in ok)
 
     for r in ok:
         r["weight_pct"] = round(100 * r["value"] / total_value, 2) if total_value else 0.0
         r["pnl"] = round(r["value"] - r["cost"], 2) if r.get("cost") is not None else None
+        r["pnl_pct"] = round(100 * r["pnl"] / r["cost"], 2) if r.get("cost") else None
 
     # ── Sector aggregation, with the index overlay where available ─────────
     sec_mom = sector_momentum or {}
@@ -219,9 +242,7 @@ def build_report(rows: list, scan_payload: dict | None,
 
     # ── Weighted portfolio score ──────────────────────────────────────────
     #
-    # A zero base falls back to a simple average, which is the honest answer
-    # when weights carry no information — a book of fully-sold positions left
-    # in the sheet would otherwise divide by zero.
+    # An empty scored capital base is unavailable, never a simple-average fallback.
     scored = [r for r in ok if r.get("composite") is not None]
     scored_value = sum(r["value"] for r in scored)
     if not scored:
@@ -229,7 +250,7 @@ def build_report(rows: list, scan_payload: dict | None,
     elif scored_value > 0:
         wscore = round(sum(r["composite"] * r["value"] for r in scored) / scored_value)
     else:
-        wscore = round(sum(r["composite"] for r in scored) / len(scored))
+        wscore = None
 
     if wscore is None:
         grade = "—"
@@ -244,7 +265,7 @@ def build_report(rows: list, scan_payload: dict | None,
     else:
         grade = "D"
 
-    conc = _concentration([r["weight_pct"] for r in ok])
+    conc = _concentration([100*r["value"]/total_value for r in ok])
 
     # ── Rulebook audit ────────────────────────────────────────────────────
     #
@@ -415,40 +436,17 @@ def build_report(rows: list, scan_payload: dict | None,
         r["peers"] = [{"symbol": p["symbol"], "composite": p.get("composite"),
                        "setup": p.get("setup")} for p in pool[:3]]
 
-    # ── Per-holding action ────────────────────────────────────────────────
-    #
-    # Every input the call rests on is already computed above: the score, the
-    # weight, the sector's state against the index, the drawdown. This joins
-    # them, adds the filing feed, and asks advice.py for a verdict.
-    held = {r["symbol"] for r in ok}
-    news_map = news_by_symbol or {}
-    sector_by_name = {s["sector"]: s for s in sector_rows}
+    ordered = sorted(ok, key=lambda r: -r["weight_pct"])
+    summary = {}
 
-    for r in ok:
-        sec = sector_by_name.get(r.get("sector") or "Unclassified", {})
-        alts = advice.find_alternatives(r, scan_rows, held)
-        r["advice"] = advice.evaluate(
-            r, total_value,
-            sec.get("state"),
-            (sec.get("relative") or {}).get("3M"),
-            news_map.get(r["symbol"]),
-            alts)
-
-    action_rank = {a: i for i, a in enumerate(advice.ACTION_ORDER)}
-    ordered = sorted(ok, key=lambda r: (
-        action_rank.get((r.get("advice") or {}).get("action"), 9),
-        -r["weight_pct"]))
-
-    summary = advice.summarise(ok, total_value, wscore, sector_rows)
-
-    return {
+    report = {
         "summary": summary,
         "holdings": ordered,
         "failed": [{"symbol": r["symbol"], "error": r["error"]} for r in failed],
         "total_value": round(total_value, 2),
         "total_cost": round(total_cost, 2) if has_cost else None,
-        "total_pnl": round(total_value - total_cost, 2) if has_cost else None,
-        "total_pnl_pct": round(100 * (total_value - total_cost) / total_cost, 2)
+        "total_pnl": round(costed_value - total_cost, 2) if has_cost else None,
+        "total_pnl_pct": round(100 * (costed_value - total_cost) / total_cost, 2)
                           if has_cost and total_cost else None,
         "weighted_score": wscore,
         "grade": grade,
@@ -472,3 +470,5 @@ def build_report(rows: list, scan_payload: dict | None,
         "peers_note": peers_note,
         "peer_source": (scan_payload or {}).get("scanned_at"),
     }
+
+    return intelligence.enrich(report, histories, news_items, news_status, now, scan_payload)

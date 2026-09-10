@@ -82,6 +82,7 @@ def resolve(raw: str):
             except Exception:
                 df = None
             if df is not None and len(df) >= 60:
+                df.attrs.update(price_source="Dhan", adjustment="unverified")
                 _cput(key, df)
                 return f"{base}.NS", yf.Ticker(f"{base}.NS"), df
 
@@ -94,6 +95,7 @@ def resolve(raw: str):
             h = t.history(period="1y", auto_adjust=True)
             if h is not None and len(h) >= 60:
                 h = h.dropna(subset=["Close"])
+                h.attrs.update(price_source="Yahoo Finance", adjustment="adjusted")
                 _cput(f"px::{sym}", h)
                 return sym, t, h
         except Exception:

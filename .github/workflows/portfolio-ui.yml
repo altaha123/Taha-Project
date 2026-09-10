@@ -1,0 +1,38 @@
+name: Portfolio UI
+on:
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'backend/portfolio*.py'
+      - 'backend/tests/*portfolio*'
+      - '.github/workflows/portfolio-ui.yml'
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install test dependencies
+        run: |
+          pip install numpy pandas
+          npm install --prefix /tmp/portfolio-browser playwright@1.58.2
+          /tmp/portfolio-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build synthetic portfolio fixtures
+        run: python backend/tests/portfolio_fixture.py /tmp/portfolio-fixtures
+      - name: Verify phone, tablet, desktop and chart failures
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/portfolio-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: portfolio-browser-verification
+          path: test-results/portfolio
