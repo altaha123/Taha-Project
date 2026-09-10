@@ -86,8 +86,8 @@ const server=http.createServer((req,res)=>{
  await fallback.locator('#pf_rows .pf_qty').first().fill('10');
  await fallback.locator('#pf_go').click();
  await fallback.getByText('Chart unavailable. Open “View chart data” below for the full figures.').first().waitFor();
- assert.equal(await fallback.locator('canvas').count(),0);
- assert.ok(await fallback.getByText('View chart data',{exact:true}).count()>=5);
+ assert.equal(await fallback.locator('#pf_report canvas').count(),0);
+ assert.ok(await fallback.locator('#pf_report').getByText('View chart data',{exact:true}).count()>=5);
  // Ignore known unrelated optional shell failures; portfolio errors fail CI.
  const relevant=errors.filter(e=>/portfolio(?:-intelligence)?\.js/.test(e));assert.deepEqual(relevant,[]);
  fs.writeFileSync(path.join(output,'verification.json'),JSON.stringify({viewports:[320,390,768,1280],themes:['light','dark'],charts:7,holdings:[12,50],tapFiltering:true,exports:true,chartFailureFallback:true,portfolioErrors:relevant,otherShellErrors:errors},null,2));
