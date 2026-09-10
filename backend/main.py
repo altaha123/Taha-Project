@@ -11,7 +11,8 @@ import time
 
 from fastapi import FastAPI, HTTPException, Body, Response, Header
 from typing import Optional
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import (JSONResponse, StreamingResponse,
+                               HTMLResponse, PlainTextResponse)
 from fastapi.middleware.cors import CORSMiddleware
 import numpy as np
 import pandas as pd
@@ -2401,6 +2402,92 @@ def sector_momentum(force: bool = False):
         return to_native(sectors.momentum(force=force))
     except Exception:
         raise HTTPException(503, "Sector indices are unavailable right now.")
+
+
+# ---------------------------------------------------------------------------
+# The daily digest
+#
+# Content first, delivery later. This renders exactly what a subscriber would
+# receive so it can be read, argued with and fixed BEFORE there is a mailing
+# list, a scheduler or a per-message bill attached to it. An email nobody
+# would open is cheaper to discover here than after it has been sent to five
+# hundred inboxes.
+#
+# Holdings arrive in the query string — SYMBOL:QTY:AVG, comma separated —
+# because there is nowhere to save them yet. When accounts exist this endpoint
+# reads the same digest from a user's stored portfolio and nothing else about
+# it changes.
+# ---------------------------------------------------------------------------
+
+def _parse_holdings(spec: str) -> list:
+    """"INFY:10:1400,TCS:5" -> rows. Quantity required, average price optional."""
+    out = []
+    for chunk in (spec or "").split(","):
+        bits = [b.strip() for b in chunk.split(":") if b.strip() != ""]
+        if not bits:
+            continue
+        row = {"symbol": bits[0]}
+        if len(bits) > 1:
+            try:
+                row["qty"] = float(bits[1])
+            except ValueError:
+                continue
+        else:
+            row["qty"] = 1
+        if len(bits) > 2:
+            try:
+                row["avg_price"] = float(bits[2])
+            except ValueError:
+                pass
+        out.append(row)
+    return out
+
+
+@app.get("/digest/preview")
+def digest_preview(holdings: str = "", format: str = "html", name: str = ""):
+    """The daily portfolio email, rendered. format=html | text | json."""
+    import digest as digest_mod
+    import email_render
+
+    rows = _parse_holdings(holdings)
+    if not rows:
+        raise HTTPException(400, "Pass holdings=SYMBOL:QTY:AVG,SYMBOL:QTY "
+                                 "(average price optional).")
+    if len(rows) > 40:
+        raise HTTPException(400, "Forty holdings is the limit for a preview.")
+
+    # The index line, for the comparison every holder makes anyway: was that
+    # my stocks, or was that the market?
+    index_pct = None
+    try:
+        _s, _t, idx = resolve("^NSEI")
+        closes = idx["Close"].dropna()
+        if len(closes) >= 2:
+            index_pct = round(100 * (float(closes.iloc[-1]) - float(closes.iloc[-2]))
+                              / float(closes.iloc[-2]), 2)
+    except Exception:
+        index_pct = None
+
+    def _filings(sym):
+        try:
+            return ann.recent_for(sym, minutes=digest_mod.FILING_WINDOW_MINUTES)
+        except Exception:
+            return []
+
+    try:
+        d = digest_mod.build_digest(rows, resolve=resolve, filings_for=_filings,
+                                    index_pct=index_pct)
+    except Exception as e:
+        raise HTTPException(503, f"Could not build the digest: {type(e).__name__}")
+
+    site = os.environ.get("SITE_URL", "https://altahascreener.in")
+    if format == "json":
+        return to_native({"subject": email_render.subject(d),
+                          "worth_sending": digest_mod.is_worth_sending(d),
+                          "digest": d})
+    if format == "text":
+        return PlainTextResponse(email_render.render_text(d, site=site))
+    return HTMLResponse(email_render.render_html(d, site=site, name=name))
 
 
 @app.get("/portfolio/policy")
