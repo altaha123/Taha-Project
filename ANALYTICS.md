@@ -28,6 +28,10 @@ here first, and `frontend/analytics.test.js` fails CI if the two drift.
 | `chart_failed` | range, status | A chart that refuses to draw — the 6M bug, caught next time |
 | `search_no_match` | query | Names people search for that the universe does not carry |
 | `watchlist_changed` | ticker, action, size | The closest thing to intent this site has without accounts |
+| `sign_in_link_requested` | — | How many people ask for a sign-in link |
+| `signed_in` | method | How many of those links get used — the drop-off between the two is the whole funnel |
+| `portfolio_saved` | holdings, destination | Saved to the browser or to an account, and how much |
+| `digest_opt_in_changed` | opt_in | Whether people keep the daily email on |
 | `view_opened` | section, tab | Which of the forty-odd modules earn their keep |
 | `share_clicked` | kind, action | Whether the growth loop turns at all |
 | `api_error` | endpoint, status | The API's real error rate, seen from the browser |
@@ -42,6 +46,9 @@ the first thing to switch off if the free quota ever tightens.
 - No portfolio holdings, quantities or values. No planner inputs — savings,
   income, goals.
 - No free text except the search box, capped at 40 characters.
+- **No email addresses.** `signed_in` records the method, never the address.
+  PostHog identifies people by an anonymous id, and nothing links it to an
+  account.
 - Every other property value is capped at 64 characters and coerced to a
   string, number or boolean.
 

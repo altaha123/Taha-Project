@@ -222,7 +222,17 @@ def test_a_flat_uneventful_day_can_be_held_back(two_stocks):
     assert D.is_worth_sending(d, min_move_pct=0.5) is False
 
 
-def test_the_digest_is_dated_in_ist():
+def test_an_empty_digest_falls_back_to_the_wall_clock():
     now = dt.datetime(2026, 9, 10, 16, 30, tzinfo=D.IST)
     d = D.build_digest([], resolve=resolver({}), now=now)
-    assert d["date"] == "2026-09-10"
+    assert d["date"] == "2026-09-10" and d["data_date"] is None
+
+
+def test_the_digest_is_dated_by_the_market_not_the_clock(two_stocks):
+    """The feed settles after the close and lags at times. A card headed with
+    today's date over yesterday's closes is the 26%-bug shape all over again."""
+    now = dt.datetime(2026, 9, 10, 16, 30, tzinfo=D.IST)
+    d = D.build_digest([{"symbol": "AAA", "qty": 1}], resolve=two_stocks, now=now)
+    last_session = str(two_stocks("AAA")[2].index[-1])[:10]
+    assert d["data_date"] == last_session
+    assert d["date"] == last_session != "2026-09-10"

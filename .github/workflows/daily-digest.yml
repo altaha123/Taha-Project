@@ -1,0 +1,81 @@
+name: Daily portfolio digest
+
+# The scheduler, for free.
+#
+# Render's own cron is a separate paid service and an in-process timer dies
+# with the worker — on a 512 MB instance that restarts, a timer is a job that
+# silently stops running one afternoon and nobody notices for a fortnight.
+# A workflow is versioned, its history is visible, and a failed run is an
+# email from GitHub rather than silence.
+#
+# 12:15 UTC is 17:45 IST — after the 15:30 close, and late enough that the
+# daily feed has settled. Weekdays only; the job itself is keyed on the
+# market's last session, so an Indian market holiday mails nobody rather than
+# repeating the previous close.
+#
+# Needs one repository secret: ALTAHA_ADMIN_KEY, the same value as ADMIN_KEY
+# on Render. Settings → Secrets and variables → Actions.
+
+on:
+  schedule:
+    - cron: "15 12 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build every digest but send nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Ask the API to send today's digests
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          DRY: ${{ inputs.dry_run && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set — nothing was sent."
+            exit 1
+          fi
+
+          # A free-tier instance can be asleep, and the first request pays for
+          # waking it. Warm it, then send, and let curl retry the wake rather
+          # than counting a cold start as a failed digest.
+          curl -sS --max-time 90 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+
+          code=$(curl -sS --max-time 600 -o response.json -w "%{http_code}" \
+                 -X POST "${API}/jobs/daily-digest?dry_run=${DRY}" \
+                 -H "X-Admin-Key: ${ADMIN_KEY}")
+
+          echo "HTTP ${code}"
+          cat response.json
+          echo
+
+          if [ "${code}" != "200" ]; then
+            echo "::error::The digest job returned ${code}."
+            exit 1
+          fi
+
+          # A run that fails to send to somebody is a run that needs looking
+          # at, even though the others went out.
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open("response.json"))
+          print(f"session={d.get('session')} recipients={d.get('recipients')} "
+                f"sent={d.get('sent')} skipped={d.get('skipped')} failed={d.get('failed')}")
+          if d.get("provider") == "console":
+              print("::warning::No email provider is configured — "
+                    "digests were logged, not delivered.")
+          if d.get("failed"):
+              print(f"::error::{d['failed']} digest(s) failed to send.")
+              sys.exit(1)
+          PY

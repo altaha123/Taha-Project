@@ -245,8 +245,21 @@
     burger.innerHTML =
       '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
       'stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>';
+    // Signed out it says "Sign in"; signed in it shows the address, and
+    // clicking it goes to the page that can sign you out. Deliberately plain:
+    // an account control that shouts competes with the search box, which is
+    // what people actually came for.
+    var account = el('a', 'sh-account');
+    account.id = 'sh-account';
+    account.href = 'signin.html';
+    account.textContent = 'Sign in';
+    right.appendChild(account);
+
     right.appendChild(themeBtn);
     right.appendChild(burger);
+
+    paintAccount();
+    window.addEventListener('altaha-auth', paintAccount);
 
     bar.appendChild(brand);
     bar.appendChild(nav);
@@ -563,6 +576,23 @@
     });
 
     loadUniverse();
+  }
+
+  /* Redrawn whenever auth.js announces a change — signing in on the sign-in
+     page and coming back should not need a reload to show it. */
+  function paintAccount() {
+    var a = document.getElementById('sh-account');
+    if (!a || !window.AltahaAuth) return;
+    var user = window.AltahaAuth.user();
+    if (user && user.email) {
+      a.textContent = user.email.split('@')[0];
+      a.title = 'Signed in as ' + user.email;
+      a.setAttribute('aria-label', 'Account: ' + user.email);
+    } else {
+      a.textContent = 'Sign in';
+      a.removeAttribute('title');
+      a.setAttribute('aria-label', 'Sign in');
+    }
   }
 
   /* ── Theme ───────────────────────────────────────────────────────────────── */

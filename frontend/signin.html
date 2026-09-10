@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in — Altaha Screener</title>
+<meta name="description" content="Sign in to save your portfolio and get one email after the close: what your holdings did, and what was filed on them." />
+<meta name="robots" content="noindex,follow" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css">
+
+<script>
+  /* Theme before first paint, as every other page here does — a white flash
+     on a dark-mode phone is the most visible bug a page can ship. */
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+
+<style>
+  .si-wrap { max-width: 460px; margin: 0 auto; padding: 64px 20px 90px; }
+  .si-mark { font: 500 10.5px/1 'IBM Plex Mono', monospace; letter-spacing: 2.4px;
+             text-transform: uppercase; color: var(--mute); margin-bottom: 26px; }
+  .si-wrap h1 { font: 400 34px/1.15 'Instrument Serif', Georgia, serif;
+                color: var(--ink); margin: 0 0 12px; }
+  .si-lede { font-size: 14.5px; line-height: 1.65; color: var(--mute); margin: 0 0 30px; }
+  .si-field { display: block; margin-bottom: 14px; }
+  .si-field span { display: block; font: 500 10.5px/1 'IBM Plex Mono', monospace;
+                   letter-spacing: 1.6px; text-transform: uppercase;
+                   color: var(--mute); margin-bottom: 8px; }
+  .si-input { width: 100%; box-sizing: border-box; padding: 13px 14px; font-size: 15px;
+              color: var(--ink); background: var(--paper); border: 1px solid var(--line);
+              border-radius: 2px; }
+  .si-input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .si-btn { width: 100%; padding: 13px 18px; font: 600 14px/1 Inter, system-ui, sans-serif;
+            color: var(--paper); background: var(--ink); border: 0; border-radius: 2px;
+            cursor: pointer; }
+  .si-btn[disabled] { opacity: .55; cursor: default; }
+  .si-note { font-size: 13px; line-height: 1.6; margin: 18px 0 0; }
+  .si-note.bad { color: #8e2f2a; }
+  .si-note.good { color: #1f5d45; }
+  .si-list { margin: 30px 0 0; padding: 22px 0 0; border-top: 1px solid var(--line);
+             font-size: 13.5px; line-height: 1.75; color: var(--mute); }
+  .si-list b { color: var(--ink); font-weight: 600; }
+  .si-back { display: inline-block; margin-top: 26px; font-size: 13px; color: var(--mute); }
+</style>
+</head>
+
+<body>
+<main class="si-wrap">
+  <div class="si-mark">Altaha Screener</div>
+
+  <div id="si-state">
+    <h1>Sign in</h1>
+    <p class="si-lede">
+      No password. Type your email and we send a link that signs you in — the
+      same address the daily portfolio email goes to.
+    </p>
+
+    <form id="si-form" novalidate>
+      <label class="si-field" for="si-email"><span>Email address</span>
+        <input class="si-input" type="email" id="si-email" name="email"
+               autocomplete="email" inputmode="email" required
+               placeholder="you@example.com" />
+      </label>
+      <button class="si-btn" type="submit" id="si-go">Email me a link</button>
+    </form>
+    <p class="si-note" id="si-note" role="status" aria-live="polite"></p>
+
+    <div class="si-list">
+      Signing in adds three things:<br>
+      <b>Your portfolio, saved</b> — on the server, so it survives a new phone.<br>
+      <b>One email after the close</b> — what your holdings did, and what was filed on them.<br>
+      <b>Nothing else.</b> No password stored, and one click stops the emails.
+    </div>
+
+    <a class="si-back" href="index.html">← Back to the screener</a>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function note(msg, kind) {
+    var n = $('si-note');
+    if (!n) return;
+    n.textContent = msg || '';
+    n.className = 'si-note' + (kind ? ' ' + kind : '');
+  }
+  function track(ev, props) { if (window.AltahaTrack) window.AltahaTrack(ev, props); }
+
+  function param(k) {
+    try { return new URLSearchParams(location.search).get(k) || ''; }
+    catch (e) { return ''; }
+  }
+
+  function panel(html) { $('si-state').innerHTML = html; }
+
+  /* The link from the email lands here. Spend the token, keep the session,
+     and get out of the way — nobody wants to read a page after clicking a
+     link that says "sign in". */
+  function completeFromLink(token) {
+    panel('<h1>Signing you in…</h1><p class="si-lede">One moment.</p>');
+    window.AltahaAuth.verify(token).then(function (user) {
+      track('signed_in', { method: 'email_link' });
+      // The URL still holds a spent token. Replace it so a refresh, a shared
+      // screenshot or a browser history entry does not carry it around.
+      try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
+      panel('<h1>You are signed in</h1>' +
+            '<p class="si-lede">Signed in as <b>' + (user && user.email ? user.email : '') +
+            '</b>. Taking you to your portfolio…</p>' +
+            '<a class="si-back" href="index.html#portfolio">Go now →</a>');
+      setTimeout(function () { location.href = 'index.html#portfolio'; }, 1200);
+    }).catch(function (e) {
+      panel('<h1>That link did not work</h1>' +
+            '<p class="si-lede">' + (e && e.message ? e.message : 'Ask for a new one.') +
+            ' Links work once and expire after fifteen minutes.</p>' +
+            '<a class="si-btn" style="display:block;text-align:center;text-decoration:none;' +
+            'box-sizing:border-box" href="signin.html">Get a new link</a>');
+    });
+  }
+
+  function wireForm() {
+    var form = $('si-form');
+    if (!form) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = ($('si-email').value || '').trim();
+      if (!email || email.indexOf('@') < 0) { note('That does not look like an email address.', 'bad'); return; }
+      $('si-go').disabled = true;
+      note('Sending…');
+      window.AltahaAuth.requestLink(email).then(function (d) {
+        track('sign_in_link_requested', {});
+        panel('<h1>Check your inbox</h1>' +
+              '<p class="si-lede">If <b>' + email.replace(/[<>&]/g, '') + '</b> can receive mail, ' +
+              'a sign-in link is on its way. It works once and expires in fifteen minutes.</p>' +
+              '<p class="si-lede">Not there in a minute? Look in spam — and if it is there, ' +
+              'marking it "not spam" is what keeps the daily email out of that folder too.</p>' +
+              (d && d.debug_link
+                ? '<p class="si-note">Delivery is not configured on this deploy. ' +
+                  '<a href="' + d.debug_link + '">Use this link</a>.</p>' : '') +
+              '<a class="si-back" href="signin.html">Use a different address</a>');
+      }).catch(function (err) {
+        $('si-go').disabled = false;
+        note(err && err.message ? err.message : 'Could not send that. Try again.', 'bad');
+      });
+    });
+  }
+
+  function start() {
+    var token = param('token');
+    if (token) { completeFromLink(token); return; }
+    if (window.AltahaAuth && window.AltahaAuth.authed()) {
+      panel('<h1>You are already signed in</h1>' +
+            '<p class="si-lede">Your portfolio is saved to your account.</p>' +
+            '<a class="si-btn" style="display:block;text-align:center;text-decoration:none;' +
+            'box-sizing:border-box" href="index.html#portfolio">Open your portfolio</a>' +
+            '<a class="si-back" href="#" id="si-out">Sign out</a>');
+      var out = $('si-out');
+      if (out) out.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.AltahaAuth.signOut().then(function () { location.href = 'signin.html'; });
+      });
+      return;
+    }
+    wireForm();
+  }
+
+  // auth.js is deferred, so wait for it rather than racing it.
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>
+</body>
+</html>

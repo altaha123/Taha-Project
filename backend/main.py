@@ -828,13 +828,27 @@ def health_memory(detail: int = 0):
 
 @app.get("/health")
 def health():
+    # Whether the pieces that are invisible from outside are actually on: is
+    # crash reporting live, can email be delivered, is the accounts database
+    # writable. Each has failed silently on this project before.
+    extras = {"sentry": SENTRY_ON}
+    try:
+        import mailer
+        extras["email"] = mailer.status()
+    except Exception as e:
+        extras["email"] = {"error": type(e).__name__}
+    try:
+        import accounts
+        extras["accounts"] = accounts.stats()
+    except Exception as e:
+        extras["accounts"] = {"ok": False, "error": type(e).__name__}
+
     try:
         sym, t, h = resolve("AAPL")
         return {"data_layer": "ok", "rows": len(h),
-                "last_close": round(float(h["Close"].iloc[-1]), 2),
-                "sentry": SENTRY_ON}
+                "last_close": round(float(h["Close"].iloc[-1]), 2), **extras}
     except Exception as e:
-        return {"data_layer": "unreachable", "detail": str(e)[:200], "sentry": SENTRY_ON}
+        return {"data_layer": "unreachable", "detail": str(e)[:200], **extras}
 
 
 @app.post("/scan/start")
@@ -2441,6 +2455,293 @@ def _parse_holdings(spec: str) -> list:
                 pass
         out.append(row)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Accounts
+#
+# Bearer tokens rather than cookies: the site is altahascreener.in and this API
+# is on onrender.com, so a session cookie would need SameSite=None, credentialed
+# CORS with an explicit origin allowlist in place of the "*" above, and a CSRF
+# story. A token in an Authorization header sidesteps all of it, and no other
+# site's page can attach it to a request.
+# ---------------------------------------------------------------------------
+
+def _bearer(authorization: Optional[str]) -> str:
+    if not authorization:
+        return ""
+    parts = authorization.split(None, 1)
+    return parts[1].strip() if len(parts) == 2 and parts[0].lower() == "bearer" else ""
+
+
+def _require_user(authorization: Optional[str]):
+    import accounts
+    user = accounts.user_for_session(_bearer(authorization))
+    if not user:
+        raise HTTPException(401, "Sign in to use this.")
+    return user
+
+
+def _site() -> str:
+    return os.environ.get("SITE_URL", "https://altahascreener.in").rstrip("/")
+
+
+@app.post("/auth/request-link")
+def auth_request_link(payload: dict = Body(...)):
+    """Email a one-time sign-in link.
+
+    The response is deliberately the same whether or not the address has an
+    account: this endpoint is public, and a different answer for a known
+    address turns it into a way to test who has signed up.
+    """
+    import accounts
+    import mailer
+
+    started = accounts.start_login(str(payload.get("email") or ""))
+    if started.get("error"):
+        raise HTTPException(400, started["error"])
+
+    link = f"{_site()}/signin.html?token={started['token']}"
+    subject, html, text = mailer.login_email(link, minutes=accounts.LOGIN_TTL_MINUTES)
+    ok, detail = mailer.send(started["email"], subject, html, text)
+    if not ok:
+        print(f"[auth] link email failed for {started['email']}: {detail}", flush=True)
+
+    out = {"sent": True,
+           "message": "If that address can receive mail, a sign-in link is on its way."}
+    # With no provider configured the link is printed to the log and would
+    # otherwise be unusable. Handing it back on an ADMIN_KEY'd request is what
+    # makes the flow testable on a fresh deploy without pasting a token out of
+    # Render's log stream.
+    if mailer.provider() == "console" and ADMIN_KEY and \
+            str(payload.get("key") or "") == ADMIN_KEY:
+        out["debug_link"] = link
+    return out
+
+
+@app.post("/auth/verify")
+def auth_verify(payload: dict = Body(...)):
+    """Spend the link, receive a session token to keep."""
+    import accounts
+    done = accounts.complete_login(str(payload.get("token") or ""))
+    if done.get("error"):
+        raise HTTPException(400, done["error"])
+    return {"token": done["session"], "user": {"email": done["user"]["email"],
+                                               "digest_opt_in": done["user"]["digest_opt_in"]}}
+
+
+@app.get("/auth/me")
+def auth_me(authorization: Optional[str] = Header(None)):
+    user = _require_user(authorization)
+    import accounts
+    return {"email": user["email"], "digest_opt_in": user["digest_opt_in"],
+            "created_at": user["created_at"],
+            "holdings": len(accounts.get_holdings(user["id"]))}
+
+
+@app.post("/auth/logout")
+def auth_logout(authorization: Optional[str] = Header(None)):
+    import accounts
+    return {"ok": accounts.logout(_bearer(authorization))}
+
+
+# ---------------------------------------------------------------------------
+# The saved portfolio
+# ---------------------------------------------------------------------------
+
+@app.get("/me/portfolio")
+def my_portfolio(authorization: Optional[str] = Header(None)):
+    import accounts
+    user = _require_user(authorization)
+    return {"holdings": accounts.get_holdings(user["id"])}
+
+
+@app.put("/me/portfolio")
+def save_my_portfolio(payload: dict = Body(...),
+                      authorization: Optional[str] = Header(None)):
+    """Replace the saved portfolio.
+
+    Replace, not merge: the screen shows a list and a Save button, and a merge
+    would make a row somebody deleted come back — the most alarming thing a
+    portfolio page can do.
+    """
+    import accounts
+    user = _require_user(authorization)
+    rows = payload.get("holdings")
+    if not isinstance(rows, list):
+        raise HTTPException(400, "Send holdings: [{symbol, qty, avg_price}].")
+    result = accounts.save_holdings(user["id"], rows)
+    return {"saved": result["saved"], "rejected": result["rejected"],
+            "holdings": accounts.get_holdings(user["id"])}
+
+
+@app.post("/me/digest/settings")
+def my_digest_settings(payload: dict = Body(...),
+                       authorization: Optional[str] = Header(None)):
+    import accounts
+    user = _require_user(authorization)
+    accounts.set_digest_opt_in(user["id"], bool(payload.get("opt_in")))
+    return {"digest_opt_in": bool(payload.get("opt_in"))}
+
+
+@app.get("/unsubscribe")
+def unsubscribe(token: str = ""):
+    """One click, no login. Anything harder and people press the spam button
+    instead — which costs the sending domain rather than one subscriber."""
+    import accounts
+    ok = accounts.unsubscribe_by_token(token)
+    body = ("<p>You will not receive any more daily emails. "
+            "Your account and portfolio are untouched.</p>" if ok else
+            "<p>That unsubscribe link is not valid. Sign in and turn the daily "
+            "email off from your account instead.</p>")
+    return HTMLResponse(
+        "<!doctype html><meta charset='utf-8'><title>Altaha Screener</title>"
+        "<body style=\"font:400 15px/1.6 Arial,sans-serif;color:#1a1a1a;"
+        "background:#faf9f7;padding:60px 20px;text-align:center\">" + body +
+        f"<p><a href='{_site()}' style='color:#6b6b6b'>Back to Altaha Screener</a></p>")
+
+
+@app.post("/unsubscribe")
+def unsubscribe_post(token: str = ""):
+    """List-Unsubscribe-Post — the one-click header Gmail and Yahoo look for
+    sends a POST, not a GET."""
+    import accounts
+    return {"ok": accounts.unsubscribe_by_token(token)}
+
+
+# ---------------------------------------------------------------------------
+# The daily send
+# ---------------------------------------------------------------------------
+
+def _build_one_digest(holdings: list, index_pct=None):
+    import digest as digest_mod
+    ann_window = digest_mod.FILING_WINDOW_MINUTES
+
+    def _filings(sym):
+        try:
+            return ann.recent_for(sym, minutes=ann_window)
+        except Exception:
+            return []
+
+    return digest_mod.build_digest(holdings, resolve=resolve,
+                                   filings_for=_filings, index_pct=index_pct)
+
+
+def _index_day_pct():
+    try:
+        _s, _t, idx = resolve("^NSEI")
+        closes = idx["Close"].dropna()
+        if len(closes) >= 2:
+            prev = float(closes.iloc[-2])
+            return round(100 * (float(closes.iloc[-1]) - prev) / prev, 2) if prev else None
+    except Exception:
+        pass
+    return None
+
+
+def _market_data_date():
+    """The session the daily feed has actually settled, as YYYY-MM-DD.
+
+    This is what the digest is keyed on rather than the calendar date, and it
+    solves two problems with one lookup. On a market holiday the last session
+    is unchanged, so every subscriber is already marked sent and nobody is
+    mailed yesterday's closes a second time. And when the feed lags — it did
+    on 2026-09-10, still serving the 9th — the email is dated by the data
+    rather than by the clock."""
+    try:
+        _s, _t, idx = resolve("^NSEI")
+        return str(idx["Close"].dropna().index[-1])[:10]
+    except Exception:
+        return None
+
+
+@app.post("/me/digest/send-test")
+def send_my_digest_now(authorization: Optional[str] = Header(None)):
+    """Send today's digest to yourself. The only honest way to check what a
+    subscriber actually receives — a preview in a browser is not an inbox."""
+    import accounts
+    import email_render
+    import mailer
+
+    user = _require_user(authorization)
+    holdings = accounts.get_holdings(user["id"])
+    if not holdings:
+        raise HTTPException(400, "Save a portfolio first.")
+
+    d = _build_one_digest(holdings, _index_day_pct())
+    unsub = f"{_site()}/unsubscribe?token={user['unsub_token']}"
+    ok, detail = mailer.send(
+        user["email"], email_render.subject(d),
+        email_render.render_html(d, site=_site(), unsubscribe_url=unsub),
+        email_render.render_text(d, site=_site(), unsubscribe_url=unsub),
+        unsubscribe_url=unsub)
+    return {"sent": ok, "detail": detail, "provider": mailer.provider(),
+            "subject": email_render.subject(d)}
+
+
+@app.post("/jobs/daily-digest")
+def run_daily_digest(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+                     key: str = "", dry_run: bool = False, limit: int = 500):
+    """Send every subscriber their digest. Called by a scheduler, once, after
+    the close.
+
+    Guarded by ADMIN_KEY, idempotent through accounts.send_log — a retry after
+    a crash re-sends to the people who were missed and to nobody else. The
+    market data is fetched ONCE for the union of everybody's symbols, which is
+    what keeps this affordable on a 512 MB instance.
+    """
+    import accounts
+    import digest as digest_mod
+    import email_render
+    import mailer
+
+    expected = ADMIN_KEY
+    if expected and (x_admin_key or key) != expected:
+        raise HTTPException(403, "Set X-Admin-Key.")
+
+    # Keyed on the market's last session, not on today's date — see
+    # _market_data_date(). A run on a holiday finds every subscriber already
+    # marked for that session and mails nobody.
+    today = _market_data_date() or _dt_mod.datetime.now(digest_mod.IST).date().isoformat()
+    people = accounts.digest_recipients()[:max(1, limit)]
+    index_pct = _index_day_pct()
+
+    sent, skipped, failed = 0, 0, 0
+    for person in people:
+        if accounts.already_sent(person["id"], "daily", today):
+            skipped += 1
+            continue
+        holdings = accounts.get_holdings(person["id"])
+        if not holdings:
+            skipped += 1
+            continue
+        try:
+            d = _build_one_digest(holdings, index_pct)
+        except Exception as e:
+            failed += 1
+            accounts.record_send(person["id"], "daily", today, False,
+                                 f"build failed: {type(e).__name__}")
+            continue
+        if not digest_mod.is_worth_sending(d):
+            skipped += 1
+            continue
+        if dry_run:
+            sent += 1
+            continue
+
+        unsub = f"{_site()}/unsubscribe?token={person['unsub_token']}"
+        ok, detail = mailer.send(
+            person["email"], email_render.subject(d),
+            email_render.render_html(d, site=_site(), unsubscribe_url=unsub),
+            email_render.render_text(d, site=_site(), unsubscribe_url=unsub),
+            unsubscribe_url=unsub)
+        accounts.record_send(person["id"], "daily", today, ok, detail)
+        sent += 1 if ok else 0
+        failed += 0 if ok else 1
+
+    return {"date": today, "session": today, "recipients": len(people),
+            "sent": sent, "skipped": skipped, "failed": failed,
+            "dry_run": dry_run, "provider": mailer.provider()}
 
 
 @app.get("/digest/preview")

@@ -487,7 +487,17 @@
     }
     state.activeName = name;
     refreshSaved();
-    note('Saved as "' + name + '". It stays in this browser only.', 'good');
+    if (window.AltahaAuth && window.AltahaAuth.authed()) {
+      note('Saved as "' + name + '".', 'good');
+      serverSave(false);
+    } else {
+      note('Saved as "' + name + '". It stays in this browser only \u2014 ' +
+           'sign in to keep it on your account.', 'good');
+      if (window.AltahaTrack) {
+        window.AltahaTrack('portfolio_saved',
+          { holdings: holdings.length, destination: 'browser' });
+      }
+    }
   }
 
   function loadSaved(name) {
@@ -1319,6 +1329,110 @@
     $('pf_rows').parentElement.insertBefore(panel,$('pf_rows').nextSibling);
     refreshSaved();
     renderRows();
+    paintAccount();
+    serverLoad();
+    window.addEventListener('altaha-auth', function () { paintAccount(); serverLoad(); });
+  }
+
+  /* ── 5b. THE ACCOUNT ──────────────────────────────────────────────────────
+     Saving to localStorage keeps a portfolio on one browser. Saving to an
+     account keeps it on the person. This panel is the whole difference, and
+     it stays out of the way entirely for anyone signed out — the portfolio
+     tools work exactly as they did, because a screener that demands a login
+     before it will do arithmetic is a screener people leave. */
+
+  function serverSave(silent) {
+    if (!window.AltahaAuth || !window.AltahaAuth.authed()) return Promise.resolve(false);
+    var holdings = collect().map(function (h) {
+      return { symbol: h.symbol, qty: h.qty, avg_price: h.buy_price };
+    });
+    return window.AltahaAuth.fetch('/me/portfolio', {
+      method: 'PUT', body: JSON.stringify({ holdings: holdings })
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { if (!silent) note('Saved here, but not to your account.', 'warn'); return false; }
+        if (window.AltahaTrack) {
+          window.AltahaTrack('portfolio_saved',
+            { holdings: d.saved, destination: 'account' });
+        }
+        if (!silent) {
+          note(d.saved + ' holding' + (d.saved === 1 ? '' : 's') +
+               ' saved to your account. The daily email uses this list.', 'good');
+        }
+        paintAccount();
+        return true;
+      }).catch(function () { return false; });
+  }
+
+  /* Pulled once on load, and only into an EMPTY table. Somebody who arrives
+     with rows already typed must not have them replaced by an older saved
+     list — losing work is worse than not syncing. */
+  function serverLoad() {
+    if (!window.AltahaAuth || !window.AltahaAuth.authed()) return;
+    window.AltahaAuth.fetch('/me/portfolio')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.holdings || !d.holdings.length) return;
+        var typed = state.rows.filter(function (r) { return r.symbol; });
+        if (typed.length) { paintAccount(); return; }
+        state.rows = d.holdings.slice(0, MAX_ROWS).map(function (h) {
+          return { symbol: h.symbol, qty: String(h.qty),
+                   buy: h.avg_price == null ? '' : String(h.avg_price), date: '' };
+        });
+        renderRows();
+        note('Loaded ' + d.holdings.length + ' holding' +
+             (d.holdings.length === 1 ? '' : 's') + ' from your account.', 'good');
+        paintAccount();
+      }).catch(function () {});
+  }
+
+  function paintAccount() {
+    var box = $('pf_account');
+    if (!box) return;
+    var user = window.AltahaAuth && window.AltahaAuth.user();
+    if (!user) {
+      box.innerHTML = '<div class="pfacct"><b>Keep this portfolio</b>' +
+        '<span>Sign in and it is saved to your account instead of this browser — ' +
+        'and you get one email after the close: what your holdings did, and what ' +
+        'was filed on them.</span>' +
+        '<a class="pfbtn" href="signin.html">Sign in with email</a></div>';
+      return;
+    }
+    box.innerHTML = '<div class="pfacct on"><b>Signed in as ' + esc(user.email) + '</b>' +
+      '<span>Saving stores this list on your account.</span>' +
+      '<label class="pfacct-opt"><input type="checkbox" id="pf_digest"' +
+      (user.digest_opt_in ? ' checked' : '') + '> Email me the daily portfolio card</label>' +
+      '<button class="pfbtn ghost" type="button" id="pf_sendtest">Send me today\'s email</button>' +
+      '</div>';
+
+    var opt = $('pf_digest');
+    if (opt) opt.addEventListener('change', function () {
+      var on = this.checked;
+      window.AltahaAuth.fetch('/me/digest/settings', {
+        method: 'POST', body: JSON.stringify({ opt_in: on })
+      }).then(function () {
+        if (window.AltahaTrack) window.AltahaTrack('digest_opt_in_changed', { opt_in: on });
+        note(on ? 'The daily email is on.' : 'The daily email is off.', 'good');
+      }).catch(function () {});
+    });
+
+    var test = $('pf_sendtest');
+    if (test) test.addEventListener('click', function () {
+      var btn = this;
+      btn.disabled = true;
+      note('Sending today\'s email to ' + user.email + '…');
+      serverSave(true).then(function () {
+        return window.AltahaAuth.fetch('/me/digest/send-test', { method: 'POST' });
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          btn.disabled = false;
+          if (d && d.sent) note('Sent to ' + user.email + ' — subject: "' + d.subject + '".', 'good');
+          else note((d && d.detail) || 'Could not send that right now.', 'warn');
+        }).catch(function () {
+          btn.disabled = false;
+          note('Could not send that right now.', 'warn');
+        });
+    });
   }
 
   if (document.readyState === 'loading') {

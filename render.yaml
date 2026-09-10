@@ -54,3 +54,19 @@ services:
       - key: SENTRY_DSN            # crash reporting. Unset = off, silently.
         sync: false                # an address rather than a secret, but it
                                    # belongs with the deploy, not in git.
+
+      # Email. Unset means EMAIL_PROVIDER=console: sign-in links and digests
+      # are printed to the log and delivered nowhere, which is a working
+      # deploy for everything except actually reaching a person.
+      #
+      # Whichever provider is chosen, do its DNS step first — SPF, DKIM and
+      # DMARC on the sending domain are what decide inbox versus spam, and no
+      # amount of code substitutes for them.
+      - key: EMAIL_PROVIDER        # resend | brevo | smtp | console
+        value: console
+      - key: EMAIL_FROM
+        value: Altaha Screener <no-reply@altahascreener.in>
+      - key: RESEND_API_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false

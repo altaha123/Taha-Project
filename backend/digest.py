@@ -139,7 +139,7 @@ def symbol_facts_bulk(symbols: Iterable[str], *, resolve, filings_for=None) -> d
             continue
         entry = {"symbol": sym, "price": None, "prev_close": None,
                  "day_change_pct": None, "observations": [], "filings": [],
-                 "error": None}
+                 "data_date": None, "error": None}
         try:
             _s, _t, hist = resolve(sym)
             close = hist["Close"].dropna()
@@ -151,6 +151,14 @@ def symbol_facts_bulk(symbols: Iterable[str], *, resolve, filings_for=None) -> d
                 entry["prev_close"] = round(prev, 2)
                 entry["day_change_pct"] = round(100 * (last - prev) / prev, 2) if prev else None
                 entry["observations"] = _observations(hist)
+                # The session these prices are FROM. The daily feed settles
+                # after the close and lags by a day at times, and a card headed
+                # with today's date over yesterday's closes is the same class
+                # of mistake as a year's return labelled "today".
+                try:
+                    entry["data_date"] = str(close.index[-1])[:10]
+                except Exception:
+                    entry["data_date"] = None
         except Exception as e:
             entry["error"] = f"{type(e).__name__}"
 
@@ -250,8 +258,15 @@ def build_digest(holdings: list, *, resolve, filings_for=None, now=None,
             notes.append({"symbol": r["symbol"], "line": line, "value": r["value"]})
     notes.sort(key=lambda n: n["value"], reverse=True)
 
+    # Dated by the market, not by the clock. On a holiday every frame still
+    # ends on the last trading session, so the digest is stamped with that —
+    # which is also what stops the daily job mailing the same closes twice.
+    dates = [f.get("data_date") for f in facts.values() if f.get("data_date")]
+    data_date = max(dates) if dates else None
+
     return {
-        "date": now.date().isoformat(),
+        "date": data_date or now.date().isoformat(),
+        "data_date": data_date,
         "generated_at": now.isoformat(timespec="seconds"),
         "holdings_counted": len(rows),
         "totals": {
