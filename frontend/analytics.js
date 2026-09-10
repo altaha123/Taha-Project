@@ -96,6 +96,13 @@
     // The closest thing to intent this site has without accounts.
     watchlist_changed:     ['ticker', 'action', 'size'],
 
+    // The funnel that decides whether any of this becomes a business: how
+    // many people ask for a link, and how many of those links get used.
+    sign_in_link_requested: [],
+    signed_in:              ['method'],
+    portfolio_saved:        ['holdings', 'destination'],
+    digest_opt_in_changed:  ['opt_in'],
+
     // Which of the forty-odd modules earn their keep — Deals, Social, Lab.
     view_opened:           ['section', 'tab'],
 

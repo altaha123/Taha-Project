@@ -637,6 +637,17 @@
     font-family:var(--sans);font-weight:500;font-size:13px;padding:9px 16px;cursor:pointer;
     text-decoration:none;display:inline-block}
   .pfbtn:hover{background:var(--ink);color:var(--paper)}
+  /* The account panel above the holdings table. Quiet when signed out — an
+     offer, not a gate. */
+  .pfacct{border:1px solid var(--line);border-left:3px solid var(--ink);
+    padding:16px 18px;margin:18px 0 4px;display:flex;flex-direction:column;
+    align-items:flex-start;gap:8px;background:var(--paper)}
+  .pfacct b{font-family:var(--serif);font-weight:400;font-size:17px;color:var(--ink)}
+  .pfacct span{font-size:13.5px;line-height:1.65;color:var(--ink-2);max-width:66ch}
+  .pfacct.on{border-left-color:#1f5d45}
+  .pfacct-opt{display:flex;align-items:center;gap:9px;font-size:13.5px;
+    color:var(--ink);cursor:pointer}
+  .pfacct-opt input{width:16px;height:16px;accent-color:var(--ink);cursor:pointer}
   .pfhead{display:grid;grid-template-columns:1.4fr .7fr 1fr 36px;gap:10px;
     font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--mute);padding:0 2px 8px;border-bottom:1px solid var(--ink)}
@@ -1477,7 +1488,9 @@
   </div><!-- /view-results -->
 
   <div id="view-portfolio" style="display:none" data-private>
-    <p class="ideas-intro">Altaha Portfolio Intelligence connects your holdings, research scores, sector exposures and sourced developments. Import your holdings to see where capital is working and which risks deserve attention. Saved holdings and review history stay in this browser.</p>
+    <p class="ideas-intro">Altaha Portfolio Intelligence connects your holdings, research scores, sector exposures and sourced developments. Import your holdings to see where capital is working and which risks deserve attention. Saved holdings stay in this browser — <a href="signin.html">sign in</a> to keep them on your account and get one email after the close.</p>
+
+    <div id="pf_account"></div>
 
 
 
@@ -4016,6 +4029,7 @@ if(fcSymParam){
 }catch(e){} })();
 </script>
 <script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
 <script src="premium.js" defer></script>
 <script src="premium-plus.js" defer></script>
 <script src="charts.js" defer></script>
