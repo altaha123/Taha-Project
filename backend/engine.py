@@ -322,6 +322,11 @@ def technical_score(df: pd.DataFrame) -> dict:
         "ret_3m": fmt((ret(63) or 0) * 100, 1) if ret(63) is not None else None,
         "ret_6m": fmt((ret(126) or 0) * 100, 1) if ret(126) is not None else None,
         "range_position": fmt(pos * 100, 0),
+        # The 52-week band itself, not just where in it we are. The header grid
+        # on the stock page shows "high / low" the way every screener does, and
+        # it was recomputing nothing because nothing sent it the two numbers.
+        "high_52w": fmt(hi52),
+        "low_52w": fmt(lo52),
     }
 
     return {"score": score, "checks": checks, "atr_pct": vol_pct,

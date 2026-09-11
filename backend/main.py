@@ -3123,6 +3123,58 @@ def _cached_v4(symbol):
             "message": "No v4 universe score for this stock yet; run a new universe scan."}
 
 
+def _header_ratios(info, tech, fund):
+    """The nine figures that belong above the fold, in one shape.
+
+    Every screener opens with the same handful of numbers, and a reader checks
+    them before they read anything else: what is it worth, what does it cost,
+    what does it earn, what does it owe. They were all being computed already —
+    the engine has ROCE and debt/equity, the provider has book value and the
+    dividend — and none of them reached the page.
+
+    A figure that is genuinely unavailable comes back None and the grid shows a
+    dash. It never comes back zero: for a dividend yield or a P/E, zero is a
+    statement about the company, and "we could not get this" is not.
+    """
+    info = info or {}
+    tx = (tech or {}).get("extras") or {}
+    fx = (fund or {}).get("extras") or {}
+
+    def num(v, nd=2):
+        try:
+            f = float(v)
+        except (TypeError, ValueError):
+            return None
+        if f != f or f in (float("inf"), float("-inf")):
+            return None
+        return round(f, nd)
+
+    # yfinance reports the dividend yield as a fraction on some feeds and as a
+    # percentage on others. Anything above 1 is already a percentage — a 100%+
+    # dividend yield does not occur, and reading 0.013 as 0.013% would.
+    dy = num(info.get("dividendYield"), 2)
+    if dy is not None and dy <= 1:
+        dy = round(dy * 100, 2)
+
+    roe_frac = num(info.get("returnOnEquity"), 4)
+
+    return {
+        "market_cap":     num(info.get("marketCap"), 0),
+        "price":          num((tech or {}).get("price")),
+        "high_52w":       num(tx.get("high_52w")),
+        "low_52w":        num(tx.get("low_52w")),
+        "pe":             num(fx.get("pe") or info.get("trailingPE"), 1),
+        "book_value":     num(info.get("bookValue")),
+        "dividend_yield": dy,
+        "roce":           num(fx.get("roce"), 1),
+        # Kept as its own step: `num(x * 100) or None` would turn a real 0%
+        # return on equity into "unavailable", which is a different claim.
+        "roe":            (None if roe_frac is None else round(roe_frac * 100, 1)),
+        "debt_to_equity": num(fx.get("de")),
+        "price_to_book":  num(info.get("priceToBook")),
+    }
+
+
 @app.get("/analyze")
 def analyze(ticker: str, horizon: str = "position"):
     if not ticker or len(ticker) > 20:
@@ -3242,9 +3294,21 @@ def analyze(ticker: str, horizon: str = "position"):
             "market_cap": info.get("marketCap"),
             "source": "Business description as published by the data provider",
         },
-        "technical": {"score": tech["score"], "checks": tech["checks"]},
+        # `extras` is where the engine puts every measured number that is not
+        # itself a scored check — RSI, ADX, the return series, the 52-week band,
+        # ROCE, debt/equity, the earnings multiple. This endpoint used to drop
+        # both dictionaries on the floor while the stock page read
+        # `technical.extras` for its entire numbers grid, so all twelve of those
+        # cells rendered "—" on every stock, on every load, in production.
+        "technical": {"score": tech["score"], "checks": tech["checks"],
+                      "extras": tech.get("extras") or {}},
         "fundamental": {"score": fund["score"], "f_score": fund["f_score"],
-                        "g_score": fund.get("g_score"), "checks": fund["checks"]},
+                        "g_score": fund.get("g_score"), "checks": fund["checks"],
+                        "extras": fund.get("extras") or {}},
+        # The header grid: the nine figures a reader checks before anything
+        # else. Assembled here rather than in the browser so there is one
+        # definition of "book value" and the page cannot invent a tenth.
+        "ratios": _header_ratios(info, tech, fund),
         "disclaimer": DISCLAIMER,
     })
 

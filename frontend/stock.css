@@ -57,29 +57,104 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .stk-px .chg{ font:600 14px/1 'IBM Plex Mono',monospace; margin-top:7px }
 .up{ color:var(--sh-up) } .dn{ color:var(--sh-dn) }
 
-/* ── The section rail ────────────────────────────────────────────────────── */
+/* ── Key figures, above the fold ─────────────────────────────────────────
+   Nine cells, three to a row on a desktop and two on a phone. The alternating
+   row tint is doing real work: nine label/value pairs in a plain grid read as
+   one undifferentiated block, and the band is what lets the eye track across
+   a row without a rule between every cell. */
 
-.stk-rail{
+.stk-key{ margin:26px 0 0 }
+.kgrid{
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+  border:1px solid var(--rule); border-radius:12px; overflow:hidden;
+  background:var(--skin-card);
+}
+.kcell{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  padding:15px 18px; min-width:0;
+}
+/* Rows 2 and 4 of a three-column grid. Written as nth-child so it survives a
+   cell being added or dropped — :nth-child(6n+4) is the fourth of each pair
+   of rows, which is the second row of every six cells. */
+.kcell:nth-child(6n+4), .kcell:nth-child(6n+5), .kcell:nth-child(6n+6){
+  background:var(--paper-2);
+}
+.kcell .k{ font-size:14px; color:var(--ink-2); white-space:nowrap }
+.kcell .v{
+  font-family:var(--mono,'IBM Plex Mono',monospace); font-weight:500;
+  font-size:14px; color:var(--ink); text-align:right;
+  overflow-wrap:anywhere;
+}
+@media (max-width:760px){
+  .kgrid{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .kcell:nth-child(6n+4), .kcell:nth-child(6n+5), .kcell:nth-child(6n+6){ background:none }
+  .kcell:nth-child(4n+3), .kcell:nth-child(4n+4){ background:var(--paper-2) }
+  .kcell{ padding:13px 14px }
+  .kcell .k{ font-size:13px }
+}
+@media (max-width:420px){
+  .kcell{ flex-direction:column; gap:4px; align-items:flex-start }
+  .kcell .v{ text-align:left }
+}
+
+/* ── What the company does ──────────────────────────────────────────────── */
+
+.stk-brief{ margin:24px 0 0 }
+.stk-brief > h2{
+  margin:0 0 8px; font-family:'Instrument Serif',Georgia,serif;
+  font-weight:400; font-size:20px; letter-spacing:-.01em;
+}
+.brief-body{
+  font-size:14px; line-height:1.7; color:var(--ink-2); max-width:78ch;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3;
+  overflow:hidden;
+}
+.brief-body.open{ -webkit-line-clamp:unset; overflow:visible }
+.brief-more{
+  margin-top:8px; padding:0; border:0; background:none; cursor:pointer;
+  font-family:inherit; font-size:13px; font-weight:500; color:var(--gold-dp);
+}
+.brief-more:hover{ text-decoration:underline }
+.brief-meta{
+  margin-top:12px; font-family:var(--mono,'IBM Plex Mono',monospace);
+  font-size:11px; letter-spacing:.06em; color:var(--mute);
+}
+.brief-meta a{ color:var(--gold-dp) }
+
+/* ── The three panes ─────────────────────────────────────────────────────
+   Was a sticky rail of six anchor links over six stacked sections. The rail
+   scrolled the page; this switches it. Same idiom as the segmented controls
+   on the homepage, restated here because those live in index.html's own
+   stylesheet and this page does not load it. */
+
+/* The pill itself is opaque but the strip it sits in was not, so the cards
+   underneath scrolled through the gap beside it. The sticky element is the
+   full-bleed bar; the pill is just its content. */
+.stk-panebar{
   position:sticky; top:var(--sh-chrome-h); z-index:60;
-  display:flex; gap:2px; overflow-x:auto; scrollbar-width:none;
+  margin:34px -20px 0; padding:10px 20px;
   background:var(--sh-glass); backdrop-filter:blur(14px);
   -webkit-backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--rule); margin:0 -20px; padding:0 20px;
+  border-bottom:1px solid var(--rule);
 }
-.stk-rail::-webkit-scrollbar{ display:none }
-.stk-rail a{
-  position:relative; flex:0 0 auto; padding:13px 14px; text-decoration:none;
-  color:var(--ink-2); font-size:13px; font-weight:500; white-space:nowrap;
-  transition:color 160ms var(--ease);
+.stk-panes{
+  display:flex; gap:2px; padding:4px;
+  background:var(--paper-2); border:1px solid var(--rule-2);
+  border-radius:999px; width:max-content; max-width:100%;
+  overflow-x:auto; scrollbar-width:none;
 }
-.stk-rail a:hover{ color:var(--ink) }
-.stk-rail a.on{ color:var(--ink) }
-.stk-rail a::after{
-  content:''; position:absolute; left:14px; right:14px; bottom:0; height:2px;
-  background:var(--gold); transform:scaleX(0); transform-origin:50%;
-  transition:transform 300ms var(--ease-out);
+.stk-panes::-webkit-scrollbar{ display:none }
+.stk-pane-btn{
+  flex:0 0 auto; border:0; background:none; cursor:pointer;
+  padding:9px 22px; border-radius:999px; white-space:nowrap;
+  font-family:inherit; font-size:14px; font-weight:500; color:var(--ink-2);
+  transition:color 200ms var(--ease), background 200ms var(--ease);
 }
-.stk-rail a.on::after{ transform:scaleX(1) }
+.stk-pane-btn:hover:not(.active){ color:var(--ink) }
+.stk-pane-btn.active{ background:var(--ink); color:var(--paper) }
+.stk-pane-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.stk-pane[hidden]{ display:none }
+.stk-pane > .stk-sec:first-child{ padding-top:34px }
 
 /* ── Sections ────────────────────────────────────────────────────────────── */
 
