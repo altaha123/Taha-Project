@@ -52,14 +52,14 @@
 }
 .cw-sym button{
   border:0;background:var(--ink);color:var(--paper);cursor:pointer;
-  font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;
   text-transform:uppercase;padding:0 13px;align-self:stretch;
 }
 .cw-sym button:hover{background:var(--gold-dp)}
 
-.cw-px{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--ink);
+.cw-px{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--ink);
   flex:0 0 auto;font-variant-numeric:tabular-nums;transition:color 160ms linear}
-.cw-chg{font-family:var(--mono);font-size:11.5px;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.cw-chg{font-family:var(--mono);font-size:12px;flex:0 0 auto;font-variant-numeric:tabular-nums}
 .cw-chg.up{color:var(--pass)} .cw-chg.dn{color:var(--fail)}
 
 /* The tick flash. This is the whole answer to "it doesn't feel live": a number
@@ -73,7 +73,7 @@
 
 .cw-live{
   display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
-  font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--mute);padding:4px 9px;border:1px solid var(--rule-2);
   border-radius:var(--r-pill,999px);white-space:nowrap;
 }
@@ -123,7 +123,7 @@
 .cw-t::before{
   content:attr(data-tip);position:absolute;left:calc(100% + 8px);top:50%;
   transform:translateY(-50%) translateX(-4px);
-  background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:9.5px;
+  background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:10px;
   letter-spacing:.11em;text-transform:uppercase;padding:5px 9px;border-radius:5px;
   white-space:nowrap;pointer-events:none;opacity:0;z-index:40;
   transition:opacity 130ms var(--ease,ease),transform 130ms var(--ease,ease);
@@ -147,7 +147,7 @@
 
 .cw-legend{
   position:absolute;top:9px;left:11px;z-index:8;pointer-events:none;
-  font-family:var(--mono);font-size:10.5px;line-height:1.6;color:var(--ink-2);
+  font-family:var(--mono);font-size:11px;line-height:1.6;color:var(--ink-2);
   background:color-mix(in srgb,var(--surface,#fff) 90%,transparent);
   border:1px solid var(--rule-2);border-radius:6px;padding:5px 9px;
   font-variant-numeric:tabular-nums;max-width:calc(100% - 22px);
@@ -172,7 +172,7 @@
   box-shadow:var(--sh-2);opacity:0;transition:opacity 180ms var(--ease,ease),transform 180ms var(--ease-soft,ease);
 }
 .cw-insp.on{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
-.cw-insp .lab{font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+.cw-insp .lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;
   text-transform:uppercase;color:var(--paper);opacity:.6;padding:0 4px}
 .cw-sw{width:17px;height:17px;border-radius:50%;border:1.5px solid transparent;cursor:pointer;padding:0}
 .cw-sw.on{border-color:var(--paper)}
@@ -191,7 +191,7 @@
 .cw-foot{
   grid-area:foot;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   padding:7px 12px;border-top:1px solid var(--rule-2);background:var(--paper-2);
-  font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--mute);
 }
 .cw-chip{
@@ -227,9 +227,9 @@
   .cw-sym input{width:92px}
   .cw-tape{gap:8px;padding:0 10px}
   .cw-tfs{margin-left:0}
-  .cw-legend{font-size:9.5px;top:6px;left:7px;padding:4px 7px}
+  .cw-legend{font-size:10px;top:6px;left:7px;padding:4px 7px}
   .cw-insp{bottom:10px}
-  .cw-foot{font-size:9px}
+  .cw-foot{font-size:10px}
 }
 
 @media (max-width:480px){

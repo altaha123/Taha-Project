@@ -47,7 +47,7 @@ body.sh-open{overflow:hidden}
   border-radius:6px}
 .shx:hover{color:var(--ink);background:var(--paper-2)}
 
-.shttl{font-family:var(--serif);font-size:26px;font-weight:400;margin:0 0 6px;
+.shttl{font-family:var(--serif);font-size:28px;font-weight:400;margin:0 0 6px;
   color:var(--ink);padding-right:34px}
 .shsub{font-size:13px;line-height:1.55;color:var(--mute);margin:0 0 16px;max-width:56ch}
 
@@ -70,7 +70,7 @@ body.sh-open{overflow:hidden}
 
 @media (max-width:560px){
   .shbox{padding:20px 16px 16px;border-radius:11px}
-  .shttl{font-size:21px}
+  .shttl{font-size:20px}
   .shbtns .sharebtn{flex:1 1 46%;justify-content:center;text-align:center}
 }
 

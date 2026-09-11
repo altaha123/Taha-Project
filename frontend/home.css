@@ -26,8 +26,8 @@ body.sh-on #skin-art svg{ height:100% }
 /* The artwork was tall enough to be the whole first screen. It is now a
    backdrop to the masthead rather than the content of the page. */
 body.sh-on header.wrap{ min-height:0; max-height:none }
-body.sh-on .brand{ font-size:clamp(28px,4.6vw,44px); margin:4px 0 2px }
-body.sh-on .eyebrow{ font-size:9.5px; letter-spacing:.18em }
+body.sh-on .brand{ font-size:clamp(28px,4.6vw,42px); margin:4px 0 2px }
+body.sh-on .eyebrow{ font-size:10px; letter-spacing:.18em }
 body.sh-on .tag{ font-size:11px; margin-top:2px }
 
 /* Two claims that repeated what the masthead already said, and a badge row
@@ -57,7 +57,7 @@ body.sh-on .hero-tiles{ display:none !important }
   text-transform:uppercase; color:var(--mute);
 }
 .mb-card .v{ font:600 24px/1 'IBM Plex Mono',monospace; margin-top:12px; letter-spacing:-.02em }
-.mb-card .c{ font:600 12.5px/1 'IBM Plex Mono',monospace; margin-top:9px }
+.mb-card .c{ font:600 13px/1 'IBM Plex Mono',monospace; margin-top:9px }
 .mb-card .c.up{ color:var(--sh-up) } .mb-card .c.dn{ color:var(--sh-dn) }
 
 /* A hairline that fills to show the move's size against the day's biggest.
@@ -91,7 +91,7 @@ body.sh-on .hero-tiles{ display:none !important }
 .mb-col em.up{ color:var(--sh-up) } .mb-col em.dn{ color:var(--sh-dn) }
 
 .mb-note{
-  margin:14px 0 0; text-align:center; font-size:12.5px; color:var(--mute);
+  margin:14px 0 0; text-align:center; font-size:13px; color:var(--mute);
 }
 .mb-skel{ height:96px; border-radius:14px;
   background:linear-gradient(90deg,var(--rule-2) 25%,var(--paper-2) 37%,var(--rule-2) 63%);

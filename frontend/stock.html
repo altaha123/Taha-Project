@@ -12,13 +12,14 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css">
 <link rel="stylesheet" href="stock.css">
 <link rel="stylesheet" href="experience.css">
+<link rel="stylesheet" href="type.css">
 
 <script>
   /* Theme is resolved before first paint. Doing it in a stylesheet or after
@@ -72,7 +73,7 @@
 
     <section class="stk-sec" id="s-score">
       <h2>The score</h2>
-      <p class="sub" id="score-sub">Weighted for what kind of business this is and for the horizon you are reading it over.</p>
+      <p class="sub" id="score-sub">Weighted for the kind of business, and for the horizon you are reading it over.</p>
       <div class="stk-scorewrap">
         <div class="dial" id="dial">
           <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -100,7 +101,7 @@
 
     <section class="stk-sec" id="s-chart">
       <h2>Price</h2>
-      <p class="sub">Closes from the exchange feed. The band is drawn from the same series, not smoothed for looks.</p>
+      <p class="sub">Closes from the exchange feed, unsmoothed.</p>
       <div class="ranges" id="ranges"></div>
       <div class="d3-card chartbox" id="chartbox"></div>
     </section>
@@ -113,19 +114,19 @@
 
     <section class="stk-sec" id="s-ledger">
       <h2>The ledger</h2>
-      <p class="sub">Every check, what it measured, the formula that turned that into points, and what the concept means. Open any row. This is the part no other screener will show you.</p>
+      <p class="sub">Every check, the formula that turned it into points, and what the concept means. Open any row.</p>
       <div class="ledger" id="ledger"></div>
     </section>
 
     <section class="stk-sec" id="s-levels">
       <h2>Levels</h2>
-      <p class="sub">Arithmetic on the price series — support, resistance and volatility. Observations, not instructions.</p>
+      <p class="sub">Support, resistance and volatility, computed from the price series. Observations, not instructions.</p>
       <div class="lvls" id="levels"></div>
     </section>
 
     <section class="stk-sec" id="s-about">
       <h2>About the company</h2>
-      <p class="sub">What the business actually does. A score answers whether something looks good; it does not answer what it is.</p>
+      <p class="sub">What the business actually does.</p>
       <div class="d3-card prose" id="about"></div>
     </section>
 

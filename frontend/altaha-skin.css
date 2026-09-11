@@ -68,10 +68,10 @@ header.wrap{position:relative;isolation:isolate}
   transition:border-color 150ms ease,box-shadow 300ms ease}
 .searchrow:focus-within{border-color:var(--gold) !important;
   box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 15%,transparent) !important}
-#tk{font-family:var(--mono) !important;font-size:15px !important;letter-spacing:.05em;
+#tk{font-family:var(--mono) !important;font-size:16px !important;letter-spacing:.05em;
   color:var(--ink) !important;background:none !important;border:0 !important}
 #go{background:var(--gold) !important;color:#fff !important;border:0 !important;
-  border-radius:10px !important;font-family:var(--mono) !important;font-size:11.5px !important;
+  border-radius:10px !important;font-family:var(--mono) !important;font-size:12px !important;
   letter-spacing:.09em;text-transform:uppercase;padding:0 26px !important;
   transition:transform 150ms ease,box-shadow 300ms ease}
 :root[data-theme="dark"] #go{color:#17140E !important}
@@ -82,7 +82,7 @@ header.wrap{position:relative;isolation:isolate}
    The complaint was that switching between Filings, Ideas and the rest was
    confusing. Selected state is now unmistakable in both themes.           */
 
-.tabs .tab{font-family:var(--mono) !important;font-size:11.5px !important;letter-spacing:.09em;
+.tabs .tab{font-family:var(--mono) !important;font-size:12px !important;letter-spacing:.09em;
   text-transform:uppercase;border-radius:9px !important;padding:11px 16px !important;
   color:var(--mute) !important;background:transparent !important;border:0 !important;
   transition:color 150ms ease,background 150ms ease}
@@ -144,7 +144,7 @@ header.wrap > *:not(#skin-art){position:relative;z-index:1}
    nav.js rebuilds the tab bar as .navmain-btn / .navsub-btn, so styling
    .tabs .tab missed entirely. Targeting what is actually on the page.     */
 
-.navmain-btn{font-family:var(--mono) !important;font-size:11.5px !important;
+.navmain-btn{font-family:var(--mono) !important;font-size:12px !important;
   letter-spacing:.1em;text-transform:uppercase;color:var(--mute) !important;
   border-radius:9px 9px 0 0;padding:12px 14px !important;
   transition:color 150ms ease,background 150ms ease}
@@ -165,9 +165,13 @@ header.wrap > *:not(#skin-art){position:relative;z-index:1}
    var(--ink) meant that in dark mode — where --ink is near-white — the bar
    turned white while its text stayed fixed white, and "MARKET CLOSED"
    disappeared into its own background. Fixed values, deliberately. */
-.tickerbar,.tkbar{background:#07080A !important;border-bottom:1px solid rgba(255,255,255,.08)}
+/* `.tkbar` was in this selector and is not a ticker: it is the tracker's own
+   button row, created by tracker-fix.js. The name collision painted four
+   outlined buttons onto a full-width near-black band in the middle of the
+   Score history tab. */
+.tickerbar{background:#07080A !important;border-bottom:1px solid rgba(255,255,255,.08)}
 /* No compounding opacity on top of an already-translucent colour: .48 alpha
    from premium.css multiplied by .86 here left the strip's labels at an
    effective .41 white, which on a near-black bar is about 4:1 — under the
    4.5:1 floor for 9.5px uppercase mono, and visibly murky. */
-.tickerbar .tk,.tkbar .tk,#tickers .tk{color:rgba(255,255,255,.92) !important}
+.tickerbar .tk,#tickers .tk{color:rgba(255,255,255,.92) !important}

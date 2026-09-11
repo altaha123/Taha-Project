@@ -10,3 +10,6 @@ research/.cache/
 
 # XBRL documents fetched at runtime. Cache, never source.
 xbrl-cache/
+
+# Browser-test screenshots and traces. Output, never source.
+test-results/

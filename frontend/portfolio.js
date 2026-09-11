@@ -1137,7 +1137,7 @@
         'font-family:Inter,-apple-system,Segoe UI,sans-serif;line-height:1.6}' +
       '.wrap{max-width:860px;margin:0 auto}' +
       '.rpt-head{border-bottom:2px solid #C8A84B;padding-bottom:16px;margin-bottom:28px}' +
-      '.rpt-brand{font-family:Georgia,serif;font-size:30px;letter-spacing:-.01em;' +
+      '.rpt-brand{font-family:Georgia,serif;font-size:28px;letter-spacing:-.01em;' +
         'display:flex;align-items:center;gap:11px}' +
       '.rpt-brand i{color:#9E7C1E;font-style:italic}' +
       '.rpt-mark{height:34px;width:auto;display:block}' +
@@ -1392,9 +1392,8 @@
     var user = window.AltahaAuth && window.AltahaAuth.user();
     if (!user) {
       box.innerHTML = '<div class="pfacct"><b>Keep this portfolio</b>' +
-        '<span>Sign in and it is saved to your account instead of this browser — ' +
-        'and you get one email after the close: what your holdings did, and what ' +
-        'was filed on them.</span>' +
+        '<span>Saved to your account instead of this browser, plus one email ' +
+        'after the close.</span>' +
         '<a class="pfbtn" href="signin.html">Sign in with email</a></div>';
       return;
     }

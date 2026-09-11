@@ -66,7 +66,7 @@
     "#tkrows .tk{position:relative}",
     ".tkrm{position:absolute;top:10px;right:10px;border:1px solid var(--rule);",
     "  background:var(--paper);color:var(--tk-quiet,var(--mute));border-radius:999px;cursor:pointer;",
-    "  font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;",
+    "  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;",
     "  padding:4px 10px;transition:border-color 150ms,color 150ms,background 150ms}",
     ".tkrm:hover{border-color:var(--fail);color:var(--fail)}",
     ".tkrm[disabled]{opacity:.5;cursor:default}",
@@ -78,14 +78,14 @@
     ".tkflag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;",
     "  color:var(--tk-quiet,var(--mute));",
     "  border-left:2px solid var(--gold);padding:2px 0 2px 10px;margin:0 0 12px;line-height:1.7}",
-    ".tksrc{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;",
+    ".tksrc{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;",
     "  color:var(--tk-quiet,var(--mute));border:1px solid var(--rule-2);border-radius:999px;",
     "  padding:2px 7px;margin-left:8px}",
     /* The mobile override used to unset position:absolute. Remove is the first
        child of the card, so going static put the button ABOVE the company
        name — which is where the screenshot showed it. It stays pinned
        top-right at every width; only its size changes. */
-    "@media(max-width:560px){.tkrm{top:8px;right:8px;padding:3px 8px;font-size:8px}",
+    "@media(max-width:560px){.tkrm{top:8px;right:8px;padding:3px 8px;font-size:10px}",
     "  #tkrows .tk .tkt{padding-right:74px}}"
   ].join("\n");
   document.head.appendChild(css);

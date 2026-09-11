@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>if(typeof LightweightCharts==="undefined")document.write('<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="charts.css">
 <link rel="stylesheet" href="motion.css">
 <link rel="stylesheet" href="patterns.css">
@@ -141,7 +141,7 @@
        text-transform:uppercase;padding:8px 14px}
   .seg.wide{display:flex;width:100%}
   .seg.wide > button{flex:1 1 0}
-  .segwrap{display:flex;justify-content:center;margin:0 auto 18px;max-width:100%}
+  .segwrap{display:flex;justify-content:flex-start;margin:0 0 18px;max-width:100%}
 
   /* ══ Action buttons — deliberately NOT bubbles ═════════════════════════
      A control that performs an action should not look like one that selects a
@@ -204,9 +204,12 @@
     -webkit-font-smoothing:antialiased;min-height:100vh}
   .wrap{max-width:860px;margin:0 auto;padding:0 22px}
 
-  header{padding:58px 0 0;text-align:center}
+  /* Scoped to the page banner. As a bare element selector it also claimed
+     every <header> inside the tab views, which is why a tab title that is
+     left-aligned everywhere else came out centred here. */
+  header.wrap{padding:58px 22px 0;text-align:center}
   .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--mute)}
-  .brand{font-family:var(--serif);font-size:clamp(42px,8vw,68px);line-height:1;margin-top:14px;letter-spacing:-.01em;
+  .brand{font-family:var(--serif);font-size:clamp(42px,8vw,64px);line-height:1;margin-top:14px;letter-spacing:-.01em;
     display:flex;align-items:center;justify-content:center;gap:.26em}
   .brand i{font-style:italic;color:var(--gold-dp)}
   /* THE MARK
@@ -245,30 +248,30 @@
     transition:background var(--t-fast) var(--ease)}
   button#go:hover{background:var(--gold-dp)}
   button#go:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .hint{font-family:var(--mono);font-size:11.5px;color:var(--mute);text-align:center;margin-bottom:40px;letter-spacing:.04em}
+  .hint{font-family:var(--mono);font-size:12px;color:var(--mute);text-align:center;margin-bottom:40px;letter-spacing:.04em}
   .hint b{color:var(--gold-dp);cursor:pointer;font-weight:500;border-bottom:1px solid var(--rule)}
   .hint b:hover{border-color:var(--gold)}
 
-  .state{max-width:540px;margin:0 auto 40px;text-align:center;font-size:14.5px;color:var(--ink-2);
+  .state{max-width:540px;margin:0 auto 40px;text-align:center;font-size:14px;color:var(--ink-2);
     line-height:1.65;display:none;padding:20px;border:1px solid var(--rule);background:var(--paper-2)}
 
   
   .lh{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
     padding-bottom:9px;border-bottom:2px solid var(--ink)}
-  .lh h3{font-family:var(--serif);font-size:25px;font-weight:400;letter-spacing:-.01em}
+  .lh h3{font-family:var(--serif);font-size:24px;font-weight:400;letter-spacing:-.01em}
   .lh span{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
     color:var(--mute);white-space:nowrap}
-  .lsub{font-size:13.5px;color:var(--mute);margin:12px 0 6px;line-height:1.6}
+  .lsub{font-size:14px;color:var(--mute);margin:12px 0 6px;line-height:1.6}
   .brow{display:grid;grid-template-columns:34px 1fr auto auto;gap:14px;align-items:center;
-    padding:13px 12px;border-bottom:1px solid var(--rule-2);cursor:pointer;font-size:15px}
+    padding:13px 12px;border-bottom:1px solid var(--rule-2);cursor:pointer;font-size:16px}
   .brow:nth-child(even){background:rgba(244,241,235,.5)}
   .brow:hover{background:var(--paper-2)}
-  .brow .rank{font-family:var(--serif);font-size:22px;color:var(--gold-dp);text-align:center;line-height:1}
-  .brow .nm{font-weight:450;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .brow .nm small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--mute);
+  .brow .rank{font-family:var(--serif);font-size:24px;color:var(--gold-dp);text-align:center;line-height:1}
+  .brow .nm{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .brow .nm small{display:block;font-family:var(--mono);font-size:11px;color:var(--mute);
     letter-spacing:.1em;margin-top:2px}
   .brow .tf{font-family:var(--mono);font-size:11px;color:var(--mute);white-space:nowrap;letter-spacing:.06em}
-  .brow .cs{font-family:var(--serif);font-size:26px;line-height:1;min-width:44px;text-align:right}
+  .brow .cs{font-family:var(--serif);font-size:28px;line-height:1;min-width:44px;text-align:right}
   @media(max-width:560px){.brow{grid-template-columns:28px 1fr auto} .brow .tf{display:none}}
   /* Centring is done by a plain flex wrapper. The nav previously used
      width:max-content with margin:auto on an overflow:auto flex container,
@@ -287,12 +290,23 @@
   /* The More trigger sits inside the bar but must not be swallowed by the
      puck's scroll math, so it keeps its own relative wrapper. */
   .moreWrap{flex:0 0 auto}
-  .ideas-intro{font-size:14.5px;line-height:1.7;color:var(--ink-2);max-width:620px;margin:34px auto 26px;text-align:center}
+  /* The explanation a tab used to open with, folded away. Tabs whose
+     background reading is genuinely worth keeping (what a block deal is, why
+     the Special book weights its signals equally) keep it here, one click
+     from the page and out of the way of the numbers. */
+  .tabnote{margin:0 0 24px;max-width:72ch;border-left:2px solid var(--rule);padding-left:16px}
+  .tabnote > summary{font-family:var(--sans);font-size:13px;color:var(--gold-dp);
+    cursor:pointer;list-style:none;padding:2px 0}
+  .tabnote > summary::-webkit-details-marker{display:none}
+  .tabnote > summary::before{content:"+ ";font-family:var(--mono)}
+  .tabnote[open] > summary::before{content:"\2212 "}
+  .tabnote > summary:hover{color:var(--gold)}
+  .tabnote p{font-size:13px;line-height:1.65;color:var(--ink-2);margin:10px 0 0;max-width:68ch}
   /* Horizons were two large bordered cards carrying sub-descriptions. The
      descriptions already repeat in the note below the selector, so the cards
      were saying it twice and taking a third of the screen to do it. */
-  .hzrow{display:flex;justify-content:center;margin:0 auto 18px}
-  .ideas-note{font-size:13px;line-height:1.65;color:var(--mute);max-width:640px;margin:6px auto 18px;text-align:center}
+  .hzrow{display:flex;justify-content:flex-start;margin:0 0 18px}
+  .ideas-note{font-size:13px;line-height:1.65;color:var(--mute);max-width:66ch;margin:6px 0 18px}
   .idea{border:1px solid var(--rule-2);border-radius:var(--r-card);margin-bottom:12px;
         padding:19px 22px;cursor:pointer;background:#fff;box-shadow:var(--sh-1);
         transition:border-color var(--t) var(--ease), box-shadow var(--t) var(--ease),
@@ -302,19 +316,19 @@
   .idea:hover{background:var(--paper-2)}
   .idea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .idea .top{display:flex;justify-content:space-between;align-items:baseline;gap:14px}
-  .idea .nm{font-family:var(--serif);font-size:21px;line-height:1.15}
+  .idea .nm{font-family:var(--serif);font-size:20px;line-height:1.15}
   .idea .nm small{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--mute);
     display:block;margin-top:4px;text-transform:uppercase}
-  .idea .fit{font-family:var(--serif);font-size:27px;color:var(--gold-dp);flex-shrink:0}
-  .idea .fit small{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--mute);
+  .idea .fit{font-family:var(--serif);font-size:28px;color:var(--gold-dp);flex-shrink:0}
+  .idea .fit small{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--mute);
     display:block;text-align:right;text-transform:uppercase;margin-top:3px}
-  .idea .arch{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  .idea .arch{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--gold-dp);margin-top:12px}
   .idea .ln{display:flex;gap:18px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
     font-size:11px;color:var(--mute);letter-spacing:.05em}
   .progbar{height:3px;background:var(--rule-2);overflow:hidden}
   .progbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .5s}
-  .progtxt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  .progtxt{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);margin-top:9px}
   #progwrap2{display:none;max-width:540px;margin:0 auto 18px}
   .tabs4{max-width:560px}
@@ -322,17 +336,17 @@
     padding:26px 28px;margin-top:6px}
   .rhead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
     border-bottom:1px solid var(--rule);padding-bottom:16px;flex-wrap:wrap}
-  .rsym{font-family:var(--serif);font-size:27px;letter-spacing:.01em;display:block}
-  .rname{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  .rsym{font-family:var(--serif);font-size:28px;letter-spacing:.01em;display:block}
+  .rname{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);display:block;margin-top:5px}
   .rq{text-align:right}
   .rq span:first-child{font-family:var(--mono);font-size:12px;letter-spacing:.16em;
     color:var(--gold-dp);display:block;text-transform:uppercase}
-  .ras{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--mute);
+  .ras{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mute);
     display:block;margin-top:5px}
   .rpat{padding:22px 0 20px;border-bottom:1px solid var(--rule)}
   .rpatline{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-top:4px}
-  .rpatval{font-family:var(--serif);font-size:clamp(34px,6vw,48px);line-height:1}
+  .rpatval{font-family:var(--serif);font-size:clamp(34px,6vw,42px);line-height:1}
   .ryoy{font-family:var(--mono);font-size:13px;padding:4px 10px;border:1px solid currentColor}
   .ryoy.up{color:var(--pass)} .ryoy.dn{color:var(--fail)}
   .rvs{font-family:var(--mono);font-size:11px;color:var(--mute);display:block;margin-top:10px;letter-spacing:.05em}
@@ -344,13 +358,13 @@
   .rbrow .tr{height:16px;background:var(--paper-2);position:relative}
   .rbrow .tr i{position:absolute;inset:0 auto 0 0;background:var(--rule)}
   .rbrow.cur .tr i{background:var(--pass);opacity:.85}
-  .rbrow .vl{font-family:var(--mono);font-size:11.5px;text-align:right}
+  .rbrow .vl{font-family:var(--mono);font-size:12px;text-align:right}
   .rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
     border-top:1px solid var(--rule);border-left:1px solid var(--rule);margin:14px 0 6px}
   .rg{padding:14px 16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
-  .rg .k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  .rg .k{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--mute);display:block;margin-bottom:7px}
-  .rg .v{font-family:var(--serif);font-size:22px;line-height:1}
+  .rg .v{font-family:var(--serif);font-size:24px;line-height:1}
   .rg .v small{font-family:var(--mono);font-size:10px;color:var(--mute)}
   .rbul{list-style:none;margin:18px 0 4px}
   .rbul li{font-size:14px;line-height:1.65;color:var(--ink-2);padding:8px 0 8px 17px;
@@ -362,11 +376,11 @@
             border-radius:var(--r-card);background:var(--skin-card,#fff);
             box-shadow:var(--sh-1);padding:16px 18px}
   .sharerow[hidden]{display:none}
-  .shareinfo b{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;
+  .shareinfo b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
                text-transform:uppercase;color:var(--ink-2);font-weight:500}
   .shareinfo span{display:block;font-size:12px;line-height:1.6;color:var(--mute);margin-top:4px}
   .sharebtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
-  .sharebtn{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  .sharebtn{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
             border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);
             padding:8px 15px;border-radius:var(--r-pill);cursor:pointer;
             transition:border-color var(--t-fast) var(--ease),
@@ -382,7 +396,7 @@
   @media(max-width:520px){.sharebtn{flex:1 1 auto;text-align:center}}
 
   .wabtn{margin-top:20px;background:#fff;color:var(--ink);border:1px solid var(--ink);
-    border-radius:2px;font-family:var(--sans);font-weight:500;font-size:13.5px;
+    border-radius:2px;font-family:var(--sans);font-weight:500;font-size:14px;
     padding:11px 22px;cursor:pointer}
   .wabtn:hover{background:var(--ink);color:var(--paper)}
   .wabtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
@@ -393,7 +407,7 @@
   .badge{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--ink-2);border:1px solid var(--rule);background:#fff;padding:7px 13px;border-radius:2px}
   .badge:first-child{border-color:var(--gold);color:var(--gold-dp);background:var(--paper-2)}
-  @media(max-width:520px){.badge{font-size:9px;letter-spacing:.1em;padding:6px 10px}}
+  @media(max-width:520px){.badge{font-size:10px;letter-spacing:.1em;padding:6px 10px}}
   body{background-image:
       linear-gradient(rgba(22,19,14,.038) 1px, transparent 1px),
       linear-gradient(90deg, rgba(22,19,14,.038) 1px, transparent 1px),
@@ -405,7 +419,7 @@
     border-bottom:1px solid var(--gold-dp)}
   .tickerinner{max-width:1100px;margin:0 auto;padding:0 18px;display:flex;align-items:center;
     gap:20px;height:38px}
-  .mkstatus{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;
+  .mkstatus{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;
     letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
   .mkstatus i{width:7px;height:7px;border-radius:50%;background:var(--mute);display:block}
   .mkstatus.open i{background:#4CB08A;box-shadow:0 0 0 3px rgba(76,176,138,.25)}
@@ -423,73 +437,73 @@
      components, and the later rule only won on the properties it happened to
      redeclare. */
   .tickers .tk{display:flex;align-items:baseline;gap:8px;white-space:nowrap;
-               font-family:var(--mono);font-size:11.5px}
-  .tickers .tk .n{color:var(--mute);letter-spacing:.14em;text-transform:uppercase;font-size:9.5px}
+               font-family:var(--mono);font-size:12px}
+  .tickers .tk .n{color:var(--mute);letter-spacing:.14em;text-transform:uppercase;font-size:10px}
   .tickers .tk .l{color:var(--paper)}
-  .tickers .tk .c{font-size:10.5px}
+  .tickers .tk .c{font-size:11px}
   .tickers .tk .c.up{color:#6FCFA6} .tickers .tk .c.dn{color:#E4899A}
-  .mktime{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--mute);
+  .mktime{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--mute);
     white-space:nowrap;flex-shrink:0}
   @media(max-width:700px){.mktime{display:none}}
 
 
   /* Live scanner */
   .livehead{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:18px 0}
-  .livebtn{font:inherit;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;padding:10px 18px;
+  .livebtn{font:inherit;font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:10px 18px;
            border:1px solid var(--rule);background:transparent;cursor:pointer;color:inherit}
   .livebtn:hover{border-color:var(--gold)}
   .livedot{width:9px;height:9px;border-radius:50%;background:var(--fail);display:inline-block;margin-right:7px}
   .livedot.on{background:var(--pass);box-shadow:0 0 0 3px rgba(46,125,83,.18)}
-  .livestat{font-family:var(--mono);font-size:.78rem;opacity:.75}
+  .livestat{font-family:var(--mono);font-size:12px;opacity:.75}
   .alertcard{border:1px solid var(--rule);border-left:3px solid var(--gold);padding:14px 16px;margin:10px 0}
   .alertcard .ah{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
-  .alertcard .asym{font-weight:700;font-size:1.05rem}
-  .alertcard .akind{font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;padding:2px 8px;border:1px solid var(--gold);color:var(--gold)}
-  .alertcard .atime{margin-left:auto;font-family:var(--mono);font-size:.75rem;opacity:.6}
-  .alertcard .ahl{margin:6px 0 10px;font-size:.92rem}
-  .alertcard .anums{display:flex;flex-wrap:wrap;gap:16px;font-family:var(--mono);font-size:.84rem}
-  .alertcard .anums b{font-weight:700}
-  .alertcard .awhy{margin-top:10px;font-size:.85rem;line-height:1.5;opacity:.85}
-  .alertcard .aout{margin-top:8px;font-family:var(--mono);font-size:.75rem;letter-spacing:.08em}
+  .alertcard .asym{font-weight:600;font-size:16px}
+  .alertcard .akind{font-family:var(--mono);font-size:11px;letter-spacing:.12em;padding:2px 8px;border:1px solid var(--gold);color:var(--gold)}
+  .alertcard .atime{margin-left:auto;font-family:var(--mono);font-size:12px;opacity:.6}
+  .alertcard .ahl{margin:6px 0 10px;font-size:14px}
+  .alertcard .anums{display:flex;flex-wrap:wrap;gap:16px;font-family:var(--mono);font-size:13px}
+  .alertcard .anums b{font-weight:600}
+  .alertcard .awhy{margin-top:10px;font-size:14px;line-height:1.5;opacity:.85}
+  .alertcard .aout{margin-top:8px;font-family:var(--mono);font-size:12px;letter-spacing:.08em}
   .aout.TARGET{color:var(--pass)} .aout.STOP{color:var(--fail)}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
   .statbox{border:1px solid var(--rule);padding:12px 14px}
-  .statbox .sk2{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;opacity:.6;display:block}
-  .statbox .sv{font-family:var(--mono);font-weight:700;font-size:1.2rem}
+  .statbox .sk2{font-size:11px;letter-spacing:.13em;text-transform:uppercase;opacity:.6;display:block}
+  .statbox .sv{font-family:var(--mono);font-weight:600;font-size:20px}
   /* Trade plan card */
   #planwrap{margin:26px 0 6px;border:1px solid var(--rule);border-top:3px solid var(--gold)}
   .planban{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--rule)}
-  .stance{font-family:var(--mono);font-weight:800;letter-spacing:.08em;font-size:1.05rem;padding:6px 14px;border:2px solid}
+  .stance{font-family:var(--mono);font-weight:600;letter-spacing:.08em;font-size:16px;padding:6px 14px;border:2px solid}
   .stance.buy{color:var(--pass);border-color:var(--pass)}
   .stance.watch{color:var(--gold);border-color:var(--gold)}
   .stance.wait{color:#8a7a4a;border-color:#8a7a4a}
   .stance.avoid{color:var(--fail);border-color:var(--fail)}
-  .planconf{font-size:.72rem;letter-spacing:.14em;opacity:.7;font-family:var(--mono)}
-  .plannote{padding:12px 20px;font-size:.92rem;line-height:1.55;border-bottom:1px solid var(--rule)}
+  .planconf{font-size:12px;letter-spacing:.14em;opacity:.7;font-family:var(--mono)}
+  .plannote{padding:12px 20px;font-size:14px;line-height:1.55;border-bottom:1px solid var(--rule)}
   .plangrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));border-bottom:1px solid var(--rule)}
   .plangrid .pcell{padding:12px 14px;border-right:1px solid var(--rule)}
   .plangrid .pcell:last-child{border-right:0}
-  .pcell .pk{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;opacity:.6;display:block}
-  .pcell .pv{font-family:var(--mono);font-weight:700;font-size:1.05rem}
+  .pcell .pk{font-size:11px;letter-spacing:.13em;text-transform:uppercase;opacity:.6;display:block}
+  .pcell .pv{font-family:var(--mono);font-weight:600;font-size:16px}
   .pcell.stopc .pv{color:var(--fail)} .pcell.tgtc .pv{color:var(--pass)}
-  .plansize{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--rule);font-size:.88rem}
+  .plansize{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--rule);font-size:14px}
   .plansize input{width:120px;font-family:var(--mono);padding:5px 8px;border:1px solid var(--rule);background:transparent;color:inherit}
   .plansize b{font-family:var(--mono)}
   .planwhy{padding:14px 20px}
-  .planwhy .pw{display:flex;gap:10px;margin:7px 0;font-size:.9rem;line-height:1.5}
-  .planwhy .pw::before{content:"\2713";color:var(--pass);font-weight:800}
+  .planwhy .pw{display:flex;gap:10px;margin:7px 0;font-size:14px;line-height:1.5}
+  .planwhy .pw::before{content:"\2713";color:var(--pass);font-weight:600}
   .planwhy .pwarn::before{content:"\26A0";color:var(--fail)}
-  .planinv{margin:0 20px 14px;padding:11px 14px;border:1px dashed var(--fail);font-size:.87rem;line-height:1.5}
-  .planprin{padding:0 20px 16px;font-size:.76rem;opacity:.6;line-height:1.5}
-  .pctile{margin-top:10px;font-size:.85rem}
+  .planinv{margin:0 20px 14px;padding:11px 14px;border:1px dashed var(--fail);font-size:14px;line-height:1.5}
+  .planprin{padding:0 20px 16px;font-size:12px;opacity:.6;line-height:1.5}
+  .pctile{margin-top:10px;font-size:14px}
   .pctile b{color:var(--gold)}
   /* Audit toggle */
-  .auditbtn{display:block;width:100%;margin:44px 0 0;padding:13px;font:inherit;font-size:.85rem;letter-spacing:.1em;
+  .auditbtn{display:block;width:100%;margin:44px 0 0;padding:13px;font:inherit;font-size:14px;letter-spacing:.1em;
             text-transform:uppercase;background:transparent;border:1px solid var(--rule);cursor:pointer;color:inherit}
   .auditbtn:hover{border-color:var(--gold)}
   /* Idea plan strip */
-  .ideaplan{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:8px;font-size:.8rem;font-family:var(--mono)}
-  .ideaplan .ip{padding:2px 8px;border:1px solid;font-weight:700;font-size:.72rem;letter-spacing:.08em}
+  .ideaplan{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:8px;font-size:13px;font-family:var(--mono)}
+  .ideaplan .ip{padding:2px 8px;border:1px solid;font-weight:600;font-size:12px;letter-spacing:.08em}
   .ideaplan .ip.buy{color:var(--pass);border-color:var(--pass)}
   .ideaplan .ip.watch{color:var(--gold);border-color:var(--gold)}
   .ideaplan .ip.wait{color:#8a7a4a;border-color:#8a7a4a}
@@ -500,42 +514,42 @@
           border:1px solid var(--rule);border-left-width:3px;background:var(--card,rgba(0,0,0,.015))}
   .lvlrow.sup{border-left-color:var(--pass)}
   .lvlrow.res{border-left-color:var(--fail)}
-  .lvlpx{font-family:var(--mono);font-weight:700;font-size:1.02rem}
+  .lvlpx{font-family:var(--mono);font-weight:600;font-size:16px}
   .lvlrow.sup .lvlpx{color:var(--pass)} .lvlrow.res .lvlpx{color:var(--fail)}
-  .lvlmeta{font-size:.78rem;opacity:.75;font-family:var(--mono)}
-  .lvlwhy{grid-column:1 / -1;font-size:.86rem;line-height:1.5}
+  .lvlmeta{font-size:12px;opacity:.75;font-family:var(--mono)}
+  .lvlwhy{grid-column:1 / -1;font-size:14px;line-height:1.5}
   .lvlbar{grid-column:1 / -1;height:4px;background:var(--rule);border-radius:2px;overflow:hidden}
   .lvlbar i{display:block;height:100%;background:var(--gold)}
-  .lvlhead{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin:16px 0 4px}
+  .lvlhead{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin:16px 0 4px}
   #pxchart{width:100%;height:260px;display:block;background:#fff;border:1px solid var(--rule-2);
            border-radius:var(--r-card);box-shadow:var(--sh-1)}
   .lk{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
-  @media(max-width:780px){.tabs.seg > button{font-size:12.5px;padding:9px 13px}}
+  @media(max-width:780px){.tabs.seg > button{font-size:13px;padding:9px 13px}}
   @media(max-width:420px){.tabs.seg > button{font-size:12px;padding:8px 11px}}
   #chartbox{width:100%;height:420px;border:1px solid var(--rule-2);border-radius:var(--r-card);
             background:#fff;position:relative;box-shadow:var(--sh-1);overflow:hidden}
   @media(max-width:640px){#chartbox{height:320px}}
   .drawbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 12px}
-  .dlbl{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-right:4px}
+  .dlbl{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-right:4px}
   .dtool{background:#fff;border:1px solid var(--rule);border-radius:2px;font-family:var(--sans);
-    font-size:11.5px;color:var(--ink-2);padding:6px 11px;cursor:pointer}
+    font-size:12px;color:var(--ink-2);padding:6px 11px;cursor:pointer}
   .dtool.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .dtool:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .dchk{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  .dchk{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
     color:var(--ink-2);display:flex;align-items:center;gap:5px;margin-left:8px;cursor:pointer}
-  .charthint{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  .charthint{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
     color:var(--mute);margin-top:9px}
-  .expbar{display:flex;justify-content:center;margin-bottom:18px;max-width:100%}
+  .expbar{display:flex;justify-content:flex-start;margin-bottom:18px;max-width:100%}
   .exp{background:#fff;border:1px solid var(--rule);border-radius:2px;font-family:var(--mono);
-    font-size:10.5px;letter-spacing:.08em;color:var(--ink-2);padding:7px 12px;cursor:pointer}
+    font-size:11px;letter-spacing:.08em;color:var(--ink-2);padding:7px 12px;cursor:pointer}
   .exp.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .octable-wrap{overflow-x:auto;border:1px solid var(--rule-2);border-radius:var(--r-card);
                 background:#fff;box-shadow:var(--sh-1)}
-  .octable{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;min-width:640px}
-  .octable th{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);
+  .octable{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;min-width:640px}
+  .octable th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);
     font-weight:400;padding:9px 8px;border-bottom:1px solid var(--ink);white-space:nowrap}
   .octable td{padding:8px;text-align:right;border-bottom:1px solid var(--rule-2);white-space:nowrap}
-  .octable td.k{text-align:center;font-weight:600;background:var(--paper-2);font-family:var(--serif);font-size:15px}
+  .octable td.k{text-align:center;font-weight:600;background:var(--paper-2);font-family:var(--serif);font-size:16px}
   .octable tr.atm td{background:rgba(176,141,46,.10)}
   .octable tr.atm td.k{background:var(--gold);color:#fff}
   .octable .ce{color:var(--pass)} .octable .pe{color:var(--fail)}
@@ -546,9 +560,9 @@
   .tf.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .tf:disabled{opacity:.4;cursor:default}
   .tf:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .tfnote{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  .tfnote{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
     color:var(--mute);margin-left:auto}
-  .livebadge{display:none;font-family:var(--mono);font-size:9px;letter-spacing:.18em;
+  .livebadge{display:none;font-family:var(--mono);font-size:10px;letter-spacing:.18em;
     text-transform:uppercase;color:#fff;background:var(--pass);padding:3px 8px;border-radius:2px;
     vertical-align:3px;margin-left:10px}
   .livebadge.on{display:inline-block;animation:pulse 2.4s ease-in-out infinite}
@@ -556,9 +570,9 @@
   @media (prefers-reduced-motion: reduce){.livebadge.on{animation:none}}
 
   .modebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 0 4px}
-  .modelbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+  .modelbl{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
   .modesw{display:flex;border:1px solid var(--ink);border-radius:2px;overflow:hidden}
-  .mode{background:#fff;border:none;font-family:var(--sans);font-size:12.5px;font-weight:500;
+  .mode{background:#fff;border:none;font-family:var(--sans);font-size:13px;font-weight:500;
     padding:8px 16px;cursor:pointer;color:var(--ink)}
   .mode.active{background:var(--ink);color:var(--paper)}
   .mode:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
@@ -569,7 +583,7 @@
   .plaincols{display:grid;grid-template-columns:1fr 1fr;gap:30px}
   @media(max-width:620px){.plaincols{grid-template-columns:1fr;gap:22px}}
   .plaincols ul{list-style:none;margin-top:4px}
-  .plaincols li{font-size:15px;line-height:1.6;color:var(--ink-2);padding:10px 0 10px 20px;
+  .plaincols li{font-size:16px;line-height:1.6;color:var(--ink-2);padding:10px 0 10px 20px;
     border-bottom:1px solid var(--rule-2);position:relative}
   .plaincols li:before{position:absolute;left:0;top:10px;font-family:var(--mono);font-size:13px}
   #plaingood li:before{content:"\2713";color:var(--pass)}
@@ -577,7 +591,7 @@
   .showfull{margin-top:22px;background:none;border:none;border-bottom:1px solid var(--gold);
     color:var(--gold-dp);font-family:var(--sans);font-size:14px;font-weight:500;padding:4px 0;cursor:pointer}
   .showfull:hover{color:var(--ink);border-color:var(--ink)}
-  .vgroups{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:22px 0 26px}
+  .vgroups{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start;margin:22px 0 26px}
   .vg{background:#fff;border:1px solid var(--rule);border-radius:2px;font-family:var(--mono);
     font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);padding:8px 13px;cursor:pointer}
   .vg.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -585,11 +599,11 @@
   .vcard{border:1px solid var(--rule);border-left:3px solid var(--gold);background:#fff;
     padding:22px 24px;margin-bottom:14px}
   .vtop{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-  .vt{font-family:var(--serif);font-size:25px;line-height:1}
-  .vfull{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
-  .vgroup{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  .vt{font-family:var(--serif);font-size:24px;line-height:1}
+  .vfull{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .vgroup{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
     text-transform:uppercase;color:var(--gold-dp);border:1px solid var(--gold-lt);border-radius:2px;padding:3px 8px}
-  .vs{font-size:16.5px;line-height:1.65;color:var(--ink);margin-bottom:16px}
+  .vs{font-size:16px;line-height:1.65;color:var(--ink);margin-bottom:16px}
   .vex,.vwhy{padding:13px 15px;margin-top:10px}
   .vex{background:var(--paper-2);border-left:2px solid var(--rule)}
   .vwhy{border-left:2px solid var(--gold-lt)}
@@ -605,33 +619,33 @@
   .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
   .pgrid3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
   @media(max-width:600px){.pgrid{grid-template-columns:1fr}}
-  .pfield .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  .pfield .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--mute);display:block;margin-bottom:7px}
   .pfield .k i{font-style:normal;text-transform:none;letter-spacing:.03em;opacity:.8}
   .pin{width:100%;background:#fff;border:1px solid var(--rule);border-radius:2px;
-    color:var(--ink);font-family:var(--mono);font-size:15px;padding:11px 12px}
+    color:var(--ink);font-family:var(--mono);font-size:16px;padding:11px 12px}
   .pin:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(176,141,46,.16)}
   .pvhead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
     flex-wrap:wrap;padding:18px 0 22px}
-  .pvbig .pvnum{font-family:var(--serif);font-size:clamp(34px,6vw,50px);line-height:1;display:block;margin-top:4px}
+  .pvbig .pvnum{font-family:var(--serif);font-size:clamp(34px,6vw,52px);line-height:1;display:block;margin-top:4px}
   .pvsub{font-family:var(--mono);font-size:11px;color:var(--mute);display:block;margin-top:9px;letter-spacing:.05em}
   .pvgrade{text-align:right}
-  .pvletter{font-family:var(--serif);font-size:56px;line-height:1;display:block;margin-top:2px}
+  .pvletter{font-family:var(--serif);font-size:52px;line-height:1;display:block;margin-top:2px}
   .ptaxcols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
   @media(max-width:560px){.ptaxcols{grid-template-columns:1fr}}
   .ptaxcol{border:1px solid var(--rule);background:#fff;padding:20px 22px}
   .ptaxcol.win{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold);background:var(--paper-2)}
-  .ptv{font-family:var(--serif);font-size:32px;line-height:1;display:block;margin:8px 0 10px}
+  .ptv{font-family:var(--serif);font-size:34px;line-height:1;display:block;margin:8px 0 10px}
   .ptaxcol.win .ptv{color:var(--gold-dp)}
-  .ptd{font-family:var(--mono);font-size:10.5px;color:var(--mute);line-height:1.7;display:block;letter-spacing:.04em}
+  .ptd{font-family:var(--mono);font-size:11px;color:var(--mute);line-height:1.7;display:block;letter-spacing:.04em}
   .ptaxverdict{font-family:var(--serif);font-size:20px;margin-top:20px}
-  .ptaxlink{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:10px;
+  .ptaxlink{font-size:14px;line-height:1.7;color:var(--ink-2);margin-top:10px;
     padding-left:15px;border-left:2px solid var(--gold-lt)}
   .pbucket{display:grid;grid-template-columns:44px 1fr;gap:16px;padding:18px 0;border-bottom:1px solid var(--rule-2)}
   .pbn{font-family:var(--serif);font-size:28px;color:var(--gold-dp);line-height:1}
   .pbt{font-weight:500;font-size:16px}
-  .pba{font-family:var(--mono);font-size:11.5px;color:var(--gold-dp);display:block;margin-top:4px;letter-spacing:.04em}
-  .pbd{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:9px}
+  .pba{font-family:var(--mono);font-size:12px;color:var(--gold-dp);display:block;margin-top:4px;letter-spacing:.04em}
+  .pbd{font-size:14px;line-height:1.7;color:var(--ink-2);margin-top:9px}
   .pfinrow{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 18px}
   .pfbtn{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:2px;
     font-family:var(--sans);font-weight:500;font-size:13px;padding:9px 16px;cursor:pointer;
@@ -639,23 +653,23 @@
   .pfbtn:hover{background:var(--ink);color:var(--paper)}
   /* The account panel above the holdings table. Quiet when signed out — an
      offer, not a gate. */
-  .pfacct{border:1px solid var(--line);border-left:3px solid var(--ink);
+  .pfacct{border:1px solid var(--rule);border-left:3px solid var(--ink);
     padding:16px 18px;margin:18px 0 4px;display:flex;flex-direction:column;
     align-items:flex-start;gap:8px;background:var(--paper)}
-  .pfacct b{font-family:var(--serif);font-weight:400;font-size:17px;color:var(--ink)}
-  .pfacct span{font-size:13.5px;line-height:1.65;color:var(--ink-2);max-width:66ch}
+  .pfacct b{font-family:var(--serif);font-weight:400;font-size:18px;color:var(--ink)}
+  .pfacct span{font-size:14px;line-height:1.65;color:var(--ink-2);max-width:66ch}
   .pfacct.on{border-left-color:#1f5d45}
-  .pfacct-opt{display:flex;align-items:center;gap:9px;font-size:13.5px;
+  .pfacct-opt{display:flex;align-items:center;gap:9px;font-size:14px;
     color:var(--ink);cursor:pointer}
   .pfacct-opt input{width:16px;height:16px;accent-color:var(--ink);cursor:pointer}
   .pfhead{display:grid;grid-template-columns:1.4fr .7fr 1fr 36px;gap:10px;
-    font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--mute);padding:0 2px 8px;border-bottom:1px solid var(--ink)}
   .pfhead i{font-style:normal;text-transform:none;letter-spacing:.03em}
   .pfrow{display:grid;grid-template-columns:1.4fr .7fr 1fr 36px;gap:10px;
     padding:8px 0;border-bottom:1px solid var(--rule-2);align-items:center}
   .pfrow input{width:100%;background:#fff;border:1px solid var(--rule);border-radius:2px;
-    color:var(--ink);font-family:var(--mono);font-size:13.5px;padding:9px 10px}
+    color:var(--ink);font-family:var(--mono);font-size:14px;padding:9px 10px}
   .pfrow input:focus{outline:none;border-color:var(--gold)}
   .pfdel{background:none;border:none;color:var(--fail);font-size:16px;cursor:pointer;padding:4px}
   .pff{padding:12px 0 12px 17px;border-bottom:1px solid var(--rule-2);position:relative;
@@ -669,17 +683,17 @@
   .pfsec .tr{height:15px;background:var(--paper-2);position:relative}
   .pfsec .tr i{position:absolute;inset:0 auto 0 0;background:var(--gold);opacity:.75}
   .pfsec.over .tr i{background:var(--fail)}
-  .pfsec .vl{font-family:var(--mono);font-size:11.5px;text-align:right}
+  .pfsec .vl{font-family:var(--mono);font-size:12px;text-align:right}
   .pfh summary{display:grid;grid-template-columns:1.5fr .8fr .8fr 1.3fr .6fr;gap:10px;
     align-items:center;padding:13px 10px;cursor:pointer;list-style:none;font-size:14px}
   .pfh summary::-webkit-details-marker{display:none}
   .pfh{border-bottom:1px solid var(--rule-2)}
   .pfh:nth-child(even){background:rgba(244,241,235,.5)}
-  .pfh .sym{font-weight:500}.pfh .sym small{display:block;font-family:var(--mono);font-size:9px;
+  .pfh .sym{font-weight:500}.pfh .sym small{display:block;font-family:var(--mono);font-size:10px;
     color:var(--mute);letter-spacing:.08em;margin-top:3px;text-transform:uppercase}
-  .pfh .m{font-family:var(--mono);font-size:11.5px;color:var(--mute)}
-  .pfh .comp{font-family:var(--serif);font-size:22px;text-align:right}
-  .pfh .setup{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dp)}
+  .pfh .m{font-family:var(--mono);font-size:12px;color:var(--mute)}
+  .pfh .comp{font-family:var(--serif);font-size:24px;text-align:right}
+  .pfh .setup{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-dp)}
   .pfh .body{padding:4px 12px 16px}
   .pfpeer{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--ink-2)}
   .pfpeer b{color:var(--gold-dp);font-weight:500}
@@ -687,18 +701,18 @@
     .pfh .m:nth-child(3),.pfh .setup{display:none}}
   .brun{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:6px 0 4px}
   #genbtn{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:2px;
-    font-family:var(--sans);font-weight:500;font-size:13.5px;letter-spacing:.03em;
+    font-family:var(--sans);font-weight:500;font-size:14px;letter-spacing:.03em;
     padding:11px 20px;cursor:pointer}
   #genbtn:hover:not(:disabled){background:var(--ink);color:var(--paper)}
   #genbtn:disabled{opacity:.45;cursor:default}
   #genbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .brun-note{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;
+  .brun-note{font-family:var(--mono);font-size:11px;letter-spacing:.12em;
     text-transform:uppercase;color:var(--mute)}
   #progwrap{display:none;margin:14px 0 6px}
   #progbar{height:3px;background:var(--rule-2);overflow:hidden}
   #progbar i{display:block;height:100%;width:0;background:var(--gold);
     transition:width .5s cubic-bezier(.4,0,.2,1)}
-  #progtxt{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  #progtxt{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--mute);margin-top:9px}
   .bmeta{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);margin-top:12px;line-height:1.8}
@@ -706,8 +720,8 @@
   /* ── Result ───────────────────────────────────────────────── */
   #result{display:none;padding-bottom:90px}
   .company{border-bottom:2px solid var(--ink);padding-bottom:14px}
-  .company h2{font-family:var(--serif);font-size:clamp(26px,5vw,38px);line-height:1.1;letter-spacing:-.01em}
-  .meta{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:9px;font-family:var(--mono);font-size:11.5px;
+  .company h2{font-family:var(--serif);font-size:clamp(28px,4.4vw,42px);line-height:1.1;letter-spacing:-.01em}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:9px;font-family:var(--mono);font-size:12px;
     letter-spacing:.08em;color:var(--mute);text-transform:uppercase}
   .meta b{color:var(--ink);font-weight:500}
 
@@ -716,12 +730,12 @@
   @media(max-width:600px){.verdict{grid-template-columns:1fr;gap:24px;justify-items:center;text-align:center}}
   .seal{position:relative;width:190px;height:190px;display:grid;place-items:center}
   .seal svg{position:absolute;inset:0}
-  .seal .val{font-family:var(--serif);font-size:60px;line-height:1;position:relative;top:-6px}
-  .seal .of{position:absolute;bottom:44px;font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:var(--mute)}
+  .seal .val{font-family:var(--serif);font-size:64px;line-height:1;position:relative;top:-6px}
+  .seal .of{position:absolute;bottom:44px;font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--mute)}
   .vstamp{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;
     padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--rule)}
-  .vsummary{font-size:16.5px;line-height:1.7;color:var(--ink-2)}
-  .vbasis{font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-top:16px;
+  .vsummary{font-size:16px;line-height:1.7;color:var(--ink-2)}
+  .vbasis{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:16px;
     letter-spacing:.14em;text-transform:uppercase}
 
   .sched{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--rule)}
@@ -731,7 +745,7 @@
   .cell:last-child{padding-left:26px}
   @media(max-width:600px){.cell:first-child{border-right:none;border-bottom:1px solid var(--rule-2);padding-right:0}
     .cell:last-child{padding-left:0}}
-  .cell .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+  .cell .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
   .cell .num{font-family:var(--serif);font-size:34px;line-height:1}
   .cell .num small{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.1em}
 
@@ -744,17 +758,17 @@
   .vlegend{display:flex;gap:20px;margin-top:12px;font-family:var(--mono);font-size:10px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--mute);flex-wrap:wrap}
   .vlegend i{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:-1px}
-  .vnote{font-size:13.5px;line-height:1.7;color:var(--ink-2);margin-top:14px;padding-left:15px;
+  .vnote{font-size:14px;line-height:1.7;color:var(--ink-2);margin-top:14px;padding-left:15px;
     border-left:2px solid var(--gold-lt)}
 
   #setupwrap{padding:34px 0 32px;border-bottom:1px solid var(--rule);display:none}
   .setuphead{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
-  .sk{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+  .sk{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;
     color:var(--mute);display:block;margin-bottom:7px}
-  .setuphead h4{font-family:var(--serif);font-size:31px;line-height:1.05;letter-spacing:-.01em}
+  .setuphead h4{font-family:var(--serif);font-size:34px;line-height:1.05;letter-spacing:-.01em}
   .sstrength{font-size:13px;color:var(--ink-2);display:block;margin-top:7px}
   .sfit{text-align:right;flex-shrink:0}
-  .sfitval{font-family:var(--serif);font-size:31px;line-height:1;color:var(--gold-dp);display:block}
+  .sfitval{font-family:var(--serif);font-size:34px;line-height:1;color:var(--gold-dp);display:block}
   .shorizon{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);display:block;margin-top:8px}
   .sthesis{font-size:16px;line-height:1.7;color:var(--ink-2);margin:22px 0 24px;
@@ -762,11 +776,11 @@
   .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;
     background:var(--rule);border:1px solid var(--rule);margin-bottom:26px}
   .pil{background:var(--paper);padding:14px 14px 12px}
-  .pil .pn{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
-  .pil .pv{font-family:var(--serif);font-size:26px;line-height:1;margin:8px 0 9px}
+  .pil .pn{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+  .pil .pv{font-family:var(--serif);font-size:28px;line-height:1;margin:8px 0 9px}
   .pil .pbar{height:3px;background:var(--rule-2)}
   .pil .pbar i{display:block;height:100%;background:var(--ink)}
-  .pil .pw{font-family:var(--mono);font-size:9px;color:var(--mute);letter-spacing:.1em;margin-top:7px;display:block}
+  .pil .pw{font-family:var(--mono);font-size:10px;color:var(--mute);letter-spacing:.1em;margin-top:7px;display:block}
   .pil.lead{background:var(--paper-2)}
   .pil.lead .pv{color:var(--gold-dp)}
   .pil.lead .pbar i{background:var(--gold)}
@@ -776,51 +790,51 @@
   .scols li{font-size:14px;line-height:1.6;color:var(--ink-2);padding:9px 0 9px 17px;
     border-bottom:1px solid var(--rule-2);position:relative}
   .scols li:before{content:"";position:absolute;left:0;top:16px;width:6px;height:1px;background:var(--gold)}
-  .srisk{font-size:13.5px;line-height:1.7;color:var(--mute);margin-top:24px;font-style:italic}
+  .srisk{font-size:14px;line-height:1.7;color:var(--mute);margin-top:24px;font-style:italic}
   #shwrap{padding:34px 0 30px;border-bottom:1px solid var(--rule);display:none}
   .shbar{display:flex;height:34px;border:1px solid var(--rule);overflow:hidden;margin-bottom:16px}
   .shbar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
-    font-size:10.5px;letter-spacing:.1em;overflow:hidden;white-space:nowrap}
+    font-size:11px;letter-spacing:.1em;overflow:hidden;white-space:nowrap}
   .sh-prom{background:var(--ink);color:var(--paper)}
   .sh-inst{background:var(--gold);color:#fff}
   .sh-pub{background:var(--paper-2);color:var(--ink-2)}
   .shkeys{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
     border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
   .shkey{padding:16px 18px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
-  .shkey .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  .shkey .k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
     color:var(--mute);display:block;margin-bottom:8px}
-  .shkey .v{font-family:var(--serif);font-size:30px;line-height:1}
+  .shkey .v{font-family:var(--serif);font-size:28px;line-height:1}
   .shkey .v small{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.06em}
   .shkey.hi{background:var(--paper-2)}
   .shkey.hi .v{color:var(--gold-dp)}
   .shtab{width:100%;border-collapse:collapse;margin-top:24px;font-size:14px}
-  .shtab caption{text-align:left;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;
+  .shtab caption{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.2em;
     text-transform:uppercase;color:var(--mute);padding-bottom:10px}
-  .shtab th{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  .shtab th{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--mute);text-align:left;font-weight:400;padding:8px 10px;border-bottom:1px solid var(--ink)}
   .shtab td{padding:11px 10px;border-bottom:1px solid var(--rule-2)}
   .shtab tr:nth-child(even) td{background:rgba(244,241,235,.5)}
   .shtab td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
-  .shnone{font-size:14.5px;line-height:1.7;color:var(--ink-2);padding-left:15px;
+  .shnone{font-size:14px;line-height:1.7;color:var(--ink-2);padding-left:15px;
     border-left:2px solid var(--gold-lt)}
   .row{border-bottom:1px solid var(--rule-2)}
   .row:nth-child(even){background:rgba(244,241,235,.5)}
   .row summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:14px 1fr auto;gap:14px;
-    align-items:center;padding:14px 12px;font-size:15px;font-weight:450}
+    align-items:center;padding:14px 12px;font-size:16px;font-weight:400}
   .row summary::-webkit-details-marker{display:none}
   .row summary:hover,.row[open] summary{background:var(--paper-2)}
   .row summary:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
   .mark{font-family:var(--mono);font-size:13px;font-weight:600;text-align:center}
   .m-full{color:var(--pass)} .m-part{color:var(--part)} .m-zero{color:var(--fail)}
   .pts{font-family:var(--mono);font-size:12px;color:var(--mute);white-space:nowrap;letter-spacing:.05em}
-  .tagv{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;
+  .tagv{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--gold-dp);border:1px solid var(--gold-lt);border-radius:2px;padding:2px 5px;
     margin-left:8px;vertical-align:2px;font-weight:500}
   .body{padding:2px 12px 20px 40px}
-  .audit{font-family:var(--mono);font-size:12.5px;line-height:1.85;color:var(--ink);background:#fff;
+  .audit{font-family:var(--mono);font-size:13px;line-height:1.85;color:var(--ink);background:#fff;
     border:1px solid var(--rule);padding:13px 15px;overflow-x:auto;white-space:pre-wrap}
   .audit .k{color:var(--gold-dp);user-select:none}
-  .learn{font-size:14.5px;line-height:1.7;color:var(--ink-2);margin-top:14px;padding-left:15px;
+  .learn{font-size:14px;line-height:1.7;color:var(--ink-2);margin-top:14px;padding-left:15px;
     border-left:2px solid var(--gold-lt)}
 
   .disc{margin-top:54px;padding-top:20px;border-top:1px solid var(--rule);font-size:12px;
@@ -838,7 +852,7 @@
   body.fullchart #fcpage{display:flex}
   .fctop{display:flex;align-items:center;gap:14px;padding:10px 16px;flex-wrap:wrap;
     border-bottom:1px solid var(--rule);background:#fff}
-  .fcbrand{font-family:var(--serif);font-size:21px;letter-spacing:-.01em;white-space:nowrap;
+  .fcbrand{font-family:var(--serif);font-size:20px;letter-spacing:-.01em;white-space:nowrap;
     display:inline-flex;align-items:center;gap:8px}
   .fcbrand i{font-style:italic;color:var(--gold-dp)}
   .fcbrand .brandmark{height:24px;transform:none}
@@ -846,17 +860,17 @@
   .fcsym input{border:none;background:transparent;font-family:var(--mono);font-size:13px;
     padding:8px 11px;width:160px;letter-spacing:.06em;outline:none;color:var(--ink)}
   .fcsym button{background:var(--ink);color:var(--paper);border:none;padding:0 15px;
-    font-family:var(--sans);font-weight:500;font-size:12.5px;cursor:pointer}
+    font-family:var(--sans);font-weight:500;font-size:13px;cursor:pointer}
   .fcsym button:hover{background:var(--gold-dp)}
-  .fcprice{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
-  .fcback{margin-left:auto;font-size:12.5px;color:var(--gold-dp);text-decoration:none;
+  .fcprice{font-family:var(--mono);font-size:13px;color:var(--ink-2)}
+  .fcback{margin-left:auto;font-size:13px;color:var(--gold-dp);text-decoration:none;
     border-bottom:1px solid var(--rule);white-space:nowrap}
   .fcback:hover{border-color:var(--gold)}
   .fcbars{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
     padding:8px 16px;border-bottom:1px solid var(--rule);background:var(--paper-2)}
   .fcbars .tfbar,.fcbars .drawbar{margin:0}
   #fcbox{flex:1;position:relative;background:#fff;min-height:240px;overflow:hidden}
-  #fchintrow{padding:6px 16px 8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;
+  #fchintrow{padding:6px 16px 8px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--mute);border-top:1px solid var(--rule-2)}
   .cxlegend{position:absolute;top:8px;left:8px;z-index:5;display:none;pointer-events:none;
     font-family:var(--mono);font-size:11px;color:var(--ink-2);
@@ -879,7 +893,7 @@
   .moreMenu.open{opacity:1;visibility:visible;transform:none;transition-delay:0s}
   .moreMenu button{display:block;width:100%;text-align:left;background:none;border:0;
             padding:11px 14px;border-radius:calc(var(--r-card) - 3px);
-            font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;
+            font-family:var(--mono);font-size:11px;letter-spacing:.13em;
             text-transform:uppercase;color:var(--ink);cursor:pointer;
             transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease)}
   .moreMenu button:hover{background:var(--paper-2);color:var(--gold-dp)}
@@ -887,7 +901,7 @@
   .moreMenu .sep{height:1px;background:var(--rule);margin:4px 0}
 
   /* ── Filings feed ──────────────────────────────────────────────────── */
-  .fbar{display:flex;justify-content:center;margin:0 auto 14px;max-width:100%}
+  .fbar{display:flex;justify-content:flex-start;margin:0 0 14px;max-width:100%}
   .fitem{border:1px solid var(--rule-2);border-left-width:3px;background:#fff;
          border-radius:var(--r-card);padding:15px 18px;margin-bottom:9px;box-shadow:var(--sh-1);
          transition:box-shadow var(--t) var(--ease), transform var(--t) var(--ease)}
@@ -897,27 +911,27 @@
   .fitem.medium{border-left-color:var(--gold-dp)}
   .fitem.low,.fitem.routine{border-left-color:var(--rule)}
   .fitem .fh{display:flex;justify-content:space-between;gap:14px;align-items:baseline;flex-wrap:wrap}
-  .fitem .fco{font-family:var(--serif);font-size:17px;line-height:1.3}
+  .fitem .fco{font-family:var(--serif);font-size:18px;line-height:1.3}
   .fitem .fco em{font-style:normal;font-family:var(--mono);font-size:10px;letter-spacing:.13em;
                  color:var(--mute);margin-left:8px;cursor:pointer}
   .fitem .fco em:hover{color:var(--gold-dp)}
   .fitem .fwhen{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mute);
                 white-space:nowrap;flex-shrink:0}
-  .fitem .fhl{font-size:13.5px;line-height:1.62;margin-top:7px;color:var(--ink)}
+  .fitem .fhl{font-size:14px;line-height:1.62;margin-top:7px;color:var(--ink)}
   .fitem .ffoot{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:10px;
-                font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase}
+                font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase}
   .fcat{border:1px solid var(--rule);padding:3px 9px;color:var(--mute)}
   .fimp{padding:3px 9px;border:1px solid currentColor}
   .fimp.critical{color:#a11}.fimp.high{color:#b26a00}
   .fimp.medium{color:var(--gold-dp)}.fimp.low,.fimp.routine{color:var(--mute)}
   .fitem a.fpdf{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule)}
   .fitem a.fpdf:hover{border-color:var(--ink)}
-  .filingtag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;
+  .filingtag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;
              letter-spacing:.12em;text-transform:uppercase;border:1px solid #b26a00;color:#b26a00;
              padding:2px 8px;margin-left:8px}
 
   /* ── Ideas v23: liquidity tiers, warnings, tracker ─────────────────── */
-  .tier{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  .tier{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
         padding:2px 7px;border:1px solid var(--rule);margin-left:8px;white-space:nowrap}
   .tier.liquid{border-color:#1f6f43;color:#1f6f43}
   .tier.moderate{border-color:var(--gold-dp);color:var(--gold-dp)}
@@ -930,12 +944,12 @@
   .warnbox{border-left:3px solid var(--warn-edge);background:var(--warn-bg);padding:9px 12px;
            margin-top:10px;font-size:12px;line-height:1.6;color:var(--warn-ink)}
   .staleflag{border-left:3px solid var(--fail);background:var(--stale-bg);padding:10px 13px;
-             margin:0 auto 16px;max-width:640px;font-size:12.5px;line-height:1.6;
+             margin:0 auto 16px;max-width:640px;font-size:13px;line-height:1.6;
              color:var(--stale-ink)}
   .selnotes{max-width:640px;margin:0 auto 16px;font-size:12px;line-height:1.7;color:var(--mute)}
   .selnotes li{margin-bottom:3px}
-  .secmix{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 auto 16px}
-  .secchip{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  .secmix{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:0 0 16px}
+  .secchip{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
            border:1px solid var(--rule);padding:3px 9px;color:var(--mute)}
   /* ── Ideas v24: market context, conviction, evidence ────────────────
      The tab used to show a fit number and nothing about the world the stock
@@ -945,48 +959,48 @@
           border-radius:var(--r-card);background:#fff;box-shadow:var(--sh-1);overflow:hidden}
   .mktctx .mh{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
               padding:13px 17px;border-bottom:1px solid var(--rule-2);background:var(--paper-2)}
-  .mktctx .mh b{font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;
+  .mktctx .mh b{font-family:var(--mono);font-size:10px;letter-spacing:.22em;
                 text-transform:uppercase;color:var(--mute);font-weight:400}
-  .rstance{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  .rstance{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
            border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 10px;white-space:nowrap}
   .rstance.Tailwind{border-color:#1f6f43;color:#1f6f43;background:rgba(31,111,67,.06)}
   .rstance.Mixed{border-color:var(--gold-dp);color:var(--gold-dp);background:rgba(176,141,46,.07)}
   .rstance.Headwind{border-color:#b26a00;color:#b26a00;background:#fdf8f0}
   .rstance.Hostile{border-color:#a11;color:#a11;background:#fdf3f3}
-  .mktctx .mb{padding:14px 17px;font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+  .mktctx .mb{padding:14px 17px;font-size:13px;line-height:1.7;color:var(--ink-2)}
   .mnum{display:flex;gap:20px;flex-wrap:wrap;margin-top:10px;font-family:var(--mono);
         font-size:10px;letter-spacing:.1em;color:var(--mute)}
   .mnum b{color:var(--ink);font-weight:500}
   .secgrid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--rule-2)}
   .secgrid > div{padding:13px 17px}
   .secgrid > div + div{border-left:1px solid var(--rule-2)}
-  .secgrid h5{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  .secgrid h5{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
               color:var(--mute);margin:0 0 8px;font-weight:400}
   .secline{display:flex;justify-content:space-between;gap:10px;font-size:12px;line-height:1.9;
            color:var(--ink-2)}
-  .secline i{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--mute)}
+  .secline i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--mute)}
   .secline i.pos{color:#1f6f43}
   .secline i.neg{color:#a11}
   .mheads{border-top:1px solid var(--rule-2);padding:13px 17px}
-  .mheads a{display:block;font-size:12.5px;line-height:1.55;color:var(--ink-2);
+  .mheads a{display:block;font-size:13px;line-height:1.55;color:var(--ink-2);
             text-decoration:none;padding:5px 0;border-bottom:1px solid var(--rule-2)}
   .mheads a:last-child{border-bottom:none}
   .mheads a:hover{color:var(--ink)}
-  .mheads span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  .mheads span{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
                color:var(--mute);margin-left:7px}
   @media(max-width:620px){.secgrid{grid-template-columns:1fr}
     .secgrid > div + div{border-left:none;border-top:1px solid var(--rule-2)}}
 
-  .conv{font-family:var(--serif);font-size:27px;color:var(--gold-dp);flex-shrink:0;text-align:right}
-  .conv small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+  .conv{font-family:var(--serif);font-size:28px;color:var(--gold-dp);flex-shrink:0;text-align:right}
+  .conv small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
               color:var(--mute);text-transform:uppercase;margin-top:2px}
-  .cband{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+  .cband{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
          border:1px solid var(--rule);padding:2px 7px;margin-left:8px;white-space:nowrap}
   .cband.High{border-color:#1f6f43;color:#1f6f43}
   .cband.Moderate{border-color:var(--gold-dp);color:var(--gold-dp)}
   .cband.Speculative{border-color:#b26a00;color:#b26a00}
   .ctx{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-  .ctxchip{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  .ctxchip{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
            border:1px solid var(--rule);padding:3px 9px;color:var(--mute);white-space:nowrap}
   .ctxchip.good{border-color:#1f6f43;color:#1f6f43}
   .ctxchip.bad{border-color:#a11;color:#a11}
@@ -997,18 +1011,18 @@
   .ideanews a{display:block;font-size:12px;line-height:1.5;color:var(--ink-2);
               text-decoration:none;padding:3px 0}
   .ideanews a:hover{color:var(--ink);text-decoration:underline}
-  .ideanews em{font-style:normal;font-family:var(--mono);font-size:9px;letter-spacing:.1em;
+  .ideanews em{font-style:normal;font-family:var(--mono);font-size:10px;letter-spacing:.1em;
                text-transform:uppercase;color:var(--mute);margin-left:6px}
-  .evbtn{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  .evbtn{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
          background:none;border:none;color:var(--mute);cursor:pointer;padding:8px 0 0;
          border-bottom:1px solid transparent}
   .evbtn:hover{color:var(--ink)}
   .evwrap{display:none;margin-top:9px;border-top:1px solid var(--rule-2);padding-top:9px}
   .evwrap.open{display:block}
   .evrow{display:grid;grid-template-columns:112px 62px 1fr;gap:10px;align-items:baseline;
-         padding:5px 0;border-bottom:1px solid var(--rule-2);font-size:11.5px;line-height:1.55}
+         padding:5px 0;border-bottom:1px solid var(--rule-2);font-size:12px;line-height:1.55}
   .evrow:last-child{border-bottom:none}
-  .evrow b{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  .evrow b{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
            color:var(--ink-2);font-weight:400}
   .evrow i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--gold-dp)}
   .evrow i.neg{color:#a11}
@@ -1023,7 +1037,7 @@
   @media(max-width:560px){.evrow{grid-template-columns:1fr;gap:2px}}
 
   .idearow-actions{display:flex;gap:8px;margin-top:11px}
-  .trackbtn{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  .trackbtn{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
             border:1px solid var(--rule);background:#fff;color:var(--ink-2);padding:7px 15px;
             border-radius:var(--r-pill);cursor:pointer;
             transition:border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease),
@@ -1032,7 +1046,7 @@
   .trackbtn:focus-visible{outline:none;box-shadow:var(--ring)}
   .trackbtn.done{border-color:#1f6f43;color:#1f6f43;background:rgba(31,111,67,.06);cursor:default}
   .trackbtn.done:hover{background:rgba(31,111,67,.06);color:#1f6f43;transform:none}
-  .toolbar{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;align-items:center;
+  .toolbar{display:flex;gap:9px;justify-content:flex-start;flex-wrap:wrap;align-items:center;
            margin:0 auto 18px}
   /* display and white-space are declared explicitly, not left to whatever
      an earlier rule happened to set — see the note on .tickers .tk above. */
@@ -1047,20 +1061,20 @@
       transition:box-shadow var(--t) var(--ease), transform var(--t) var(--ease)}
   #tkrows .tk:hover{box-shadow:var(--sh-2);transform:translateY(-1px)}
   #tkrows .tk .tkt{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
-  #tkrows .tk .tknm{font-family:var(--serif);font-size:19px;line-height:1.2;min-width:0;
+  #tkrows .tk .tknm{font-family:var(--serif);font-size:20px;line-height:1.2;min-width:0;
             overflow-wrap:anywhere}
-  #tkrows .tk .tknm small{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;
+  #tkrows .tk .tknm small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.13em;
                   text-transform:uppercase;color:var(--tk-quiet);margin-top:3px;
                   overflow-wrap:anywhere}
-  #tkrows .tk .tkret{font-family:var(--serif);font-size:25px;flex-shrink:0}
-  #tkrows .tk .tkret small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.13em;
+  #tkrows .tk .tkret{font-family:var(--serif);font-size:24px;flex-shrink:0}
+  #tkrows .tk .tkret small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.13em;
                    text-transform:uppercase;color:var(--tk-quiet);text-align:right;margin-top:2px}
   /* These were literal ink. In the dark theme #a11 sits at about 2:1 against
      the page, so a loss read as a smudge rather than a number. Both tokens
      carry a light and a dark value — the pattern lab.css already uses. */
   .pos{color:var(--pass)}.neg{color:var(--fail)}
   #tkrows .tk .tkln{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
-            font-size:10.5px;letter-spacing:.06em;color:var(--mute)}
+            font-size:11px;letter-spacing:.06em;color:var(--mute)}
 
   /* ── Tracker rows v25: the numbers, labelled ────────────────────────
      The old row printed "Now ₹— Return — Index —" as a run-on line of
@@ -1076,9 +1090,9 @@
      distance to target — was white on a white tile and effectively gone.
      Surface, label and value are one token set now, so they move together. */
   .tkcell{background:var(--tk-cell);padding:9px 11px;min-width:0}
-  .tkcell b{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;
+  .tkcell b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
             text-transform:uppercase;color:var(--tk-label);font-weight:400;margin-bottom:3px}
-  .tkcell span{display:block;font-family:var(--serif);font-size:17px;line-height:1.2;
+  .tkcell span{display:block;font-family:var(--serif);font-size:18px;line-height:1.2;
                color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
   .tkcell span.sm{font-size:13px;font-family:var(--mono);letter-spacing:.02em}
   .tkcell span.dim{color:var(--mute)}
@@ -1091,7 +1105,7 @@
      decoration — so it sits a step above the muted metadata tone. */
   .tkplan{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:11px;
           font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--tk-quiet)}
-  .tkout{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  .tkout{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
          border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 10px}
   .tkout.TARGET{border-color:var(--pass);color:var(--pass);
                 background:color-mix(in srgb,var(--pass) 10%,transparent)}
@@ -1100,7 +1114,7 @@
   .tkout.OPEN{border-color:var(--gold-dp);color:var(--gold-dp)}
   .tkout.NO_PLAN{border-color:var(--rule);color:var(--mute)}
   @media(max-width:620px){.tkgrid{grid-template-columns:repeat(2,1fr)}}
-  .tkstat{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  .tkstat{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
           padding:2px 7px;border:1px solid var(--rule);margin-left:8px}
   .tkstat.LIVE{border-color:var(--pass);color:var(--pass)}
   .tkstat.INVALIDATED{border-color:var(--fail);color:var(--fail)}
@@ -1112,13 +1126,13 @@
             transition:box-shadow var(--t) var(--ease), transform var(--t) var(--ease)}
   .statcell:hover{box-shadow:var(--sh-2);transform:translateY(-2px)}
   .statcell b{font-variant-numeric:tabular-nums}
-  .statcell b{display:block;font-family:var(--serif);font-size:26px;font-weight:400;margin-bottom:3px}
-  .statcell span{font-family:var(--mono);font-size:9px;letter-spacing:.13em;
+  .statcell b{display:block;font-family:var(--serif);font-size:28px;font-weight:400;margin-bottom:3px}
+  .statcell span{font-family:var(--mono);font-size:10px;letter-spacing:.13em;
                  text-transform:uppercase;color:var(--mute)}
   /* Scoped to the tracker's own summary strip, which sits directly above the
      rows: same label tone as the cells below it, in both themes. */
   #tkstats .statcell span{color:var(--tk-label)}
-  .fbtag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  .fbtag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);border:1px solid var(--rule);padding:2px 7px;margin-left:8px;
     vertical-align:2px;white-space:nowrap}
 </style>
@@ -1131,6 +1145,7 @@
 <link rel="stylesheet" href="special.css">
 <link rel="stylesheet" href="experience.css">
 <link rel="stylesheet" href="home-motion.css">
+<link rel="stylesheet" href="type.css">
 <script>
 (function(){try{
   var s=localStorage.getItem('altaha-theme');
@@ -1411,7 +1426,10 @@
 
 
   <div id="view-live" style="display:none">
-    <p class="ideas-intro">Three signals, all gated on unusual volume: a volume spike versus what the stock normally trades <i>by this time of day</i>, an opening-range break, and a break of a high-strength level from the screener's own support/resistance engine. Each alert arrives as a complete trade — entry, stop, target — and every one is logged so its real hit rate can be measured.</p>
+    <header class="tabhead">
+      <h2>Live scanner</h2>
+      <p>Three intraday signals, all gated on unusual volume. Every alert carries an entry, a stop and a target, and every one is logged so its hit rate can be measured.</p>
+    </header>
 
     <div class="livehead">
       <button class="livebtn" id="livestart">Start live scanner</button>
@@ -1426,21 +1444,24 @@
     <div id="lalerts"><div class="ideas-note" style="padding:14px 0">Nothing yet. Start the scanner during market hours (9:15–3:30 IST).</div></div>
 
     <div class="lh" style="margin-top:44px"><h3>Measured hit rate</h3><span>your own signals</span></div>
-    <p class="lsub">Every alert is marked target-hit, stop-hit, or still open at the close. This table is the only honest answer to "does it work" — and it needs about 30 closed trades per signal before it means anything.</p>
+    <p class="lsub">Each alert is marked target-hit, stop-hit or still open at the close. It takes about 30 closed trades per signal before this means anything.</p>
     <div id="lhit"></div>
 
-    <p class="disc">Alerts are measurements, not recommendations. No signal predicts price; the edge is taking asymmetric bets and cutting the wrong ones quickly.</p>
+    <p class="disc">Alerts are measurements, not recommendations. No signal predicts price.</p>
   </div>
 
   <div id="view-ideas" style="display:none">
-    <p class="ideas-intro">Drawn from the full NSE universe, classified by setup archetype, then scored out of 100 against the world it has to trade in: where the industry sits versus the Nifty 50, where the index sits versus its own averages, what the company has filed with the exchange, what the press is carrying, the liquidity you would actually face, and what this archetype has historically delivered. Short and medium term are weighted differently on purpose. Every score opens into the ledger that produced it — a short list means few names cleared the bar, not that the scan failed.</p>
+    <header class="tabhead">
+      <h2>Stock shortlist</h2>
+      <p>The NSE universe classified by setup and scored out of 100. Every score opens into the ledger that produced it.</p>
+    </header>
     <div class="hzrow">
       <div class="seg" id="hzseg">
         <button class="hz active" data-h="short">Short term</button>
         <button class="hz" data-h="medium">Medium term</button>
       </div>
     </div>
-    <div class="brun" style="justify-content:center">
+    <div class="brun">
       <button id="genbtn2">Generate from universe</button>
       <span class="brun-note" id="gennote2"></span>
     </div>
@@ -1460,7 +1481,10 @@
   </div><!-- /view-ideas -->
 
   <div id="view-results" style="display:none">
-    <p class="ideas-intro">The latest reported quarterly numbers for any NSE or US stock — profit, revenue, margin, and the year-ago comparison, computed from published statements.</p>
+    <header class="tabhead">
+      <h2>Quarterly results</h2>
+      <p>The latest reported quarter for any NSE or US stock — profit, revenue, margin and the year-ago comparison.</p>
+    </header>
     <div class="searchrow" style="margin-top:0">
       <input id="rtk" placeholder="Enter a stock — GULPOLY, RELIANCE, TCS…" autocomplete="off"
              spellcheck="false" aria-label="Stock ticker for results" />
@@ -1489,7 +1513,10 @@
   </div><!-- /view-results -->
 
   <div id="view-portfolio" style="display:none" data-private>
-    <p class="ideas-intro">Altaha Portfolio Intelligence connects your holdings, research scores, sector exposures and sourced developments. Import your holdings to see where capital is working and which risks deserve attention. Saved holdings stay in this browser — <a href="signin.html">sign in</a> to keep them on your account and get one email after the close.</p>
+    <header class="tabhead">
+      <h2>Portfolio review</h2>
+      <p>Your holdings against their scores, sectors and exposures. Saved in this browser — <a href="signin.html">sign in</a> to keep them on your account.</p>
+    </header>
 
     <div id="pf_account"></div>
 
@@ -1526,7 +1553,10 @@
   </div><!-- /view-portfolio -->
 
 <div id="view-planner" style="display:none" data-private>
-  <p class="ideas-intro">Your household finances through the same lens as the Screener: enter the numbers, get a verdict, and see the working behind every figure. Everything computes in your browser — nothing you type is sent or stored anywhere.</p>
+  <header class="tabhead">
+    <h2>Planner</h2>
+    <p>Your household numbers, with the working shown. Everything computes in this browser; nothing you type is sent anywhere.</p>
+  </header>
 
   <!-- Income -->
   <div class="psec">
@@ -1564,7 +1594,7 @@
   <!-- Tax -->
   <div class="psec">
     <div class="lh"><h3>Tax Regime Verdict</h3><span>AY 2026-27</span></div>
-    <p class="lsub">Annual figures. Computed per the Finance Act 2025 slabs; surcharge above ₹50L income not modelled. Your CA (or the one who built this) should confirm edge cases.</p>
+    <p class="lsub">Annual figures, per the Finance Act 2025 slabs. Surcharge above ₹50L income is not modelled.</p>
     <div class="pgrid pgrid3">
       <label class="pfield"><span class="k">Gross annual salary</span><input type="number" class="pin ptax" id="t_gross" min="0" placeholder="e.g. 1500000"></label>
       <label class="pfield"><span class="k">80C <i>PF, ELSS, LIC — max 1.5L</i></span><input type="number" class="pin ptax" id="t_80c" min="0" placeholder="0"></label>
@@ -1586,7 +1616,7 @@
   <!-- Buckets -->
   <div class="psec" id="pbuckets" style="display:none">
     <div class="lh"><h3>Where the savings go</h3><span>Structure, not products</span></div>
-    <p class="lsub">A sequence, not a shopping list. We name categories and the reasoning — never specific products. What you buy within each category is your decision or one for a SEBI-registered adviser.</p>
+    <p class="lsub">Categories and the reasoning, in sequence — never specific products.</p>
     <div id="pbucketrows"></div>
   </div>
 
@@ -1597,13 +1627,16 @@
 </div><!-- /view-planner -->
 
   <div id="view-options" style="display:none">
-    <p class="ideas-intro">Live option chain with open interest, implied volatility and Greeks &mdash; plus put-call ratio and max pain. Index and stock options.</p>
+    <header class="tabhead">
+      <h2>Options</h2>
+      <p>Live option chain with open interest, implied volatility and Greeks, plus put-call ratio and max pain.</p>
+    </header>
     <div class="hzrow" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">
       <button class="hz active" data-u="NIFTY">NIFTY<small>Index</small></button>
       <button class="hz" data-u="BANKNIFTY">BANK NIFTY<small>Index</small></button>
       <button class="hz" data-u="FINNIFTY">FIN NIFTY<small>Index</small></button>
     </div>
-    <div class="searchrow" style="max-width:440px;margin:0 auto 14px">
+    <div class="searchrow" style="max-width:440px;margin:0 0 14px">
       <input id="optsym" placeholder="Or a stock &mdash; RELIANCE, TCS&hellip;" autocomplete="off" spellcheck="false" aria-label="Option underlying">
       <button id="optgo">Load</button>
     </div>
@@ -1618,7 +1651,10 @@
   </div><!-- /view-options -->
 
   <div id="view-filings" style="display:none">
-    <p class="ideas-intro">Every corporate filing as it lands on the exchange — the primary source, minutes before it reaches a news site. Categories and importance below are keyword rules applied to the exchange’s own headline, shown so you can sort quickly. Nothing here is a summary; open the filing for what the company actually said.</p>
+    <header class="tabhead">
+      <h2>Company announcements</h2>
+      <p>Exchange filings as they land, ahead of the news sites. Categories are keyword rules on the exchange’s own headline — never a summary of it.</p>
+    </header>
     <div class="fbar" id="fimpbar"></div>
     <div class="fbar" id="fcatbar"></div>
     <div class="ideas-note" id="fnote"></div>
@@ -1627,17 +1663,27 @@
   </div><!-- /view-filings -->
 
   <div id="view-deals" style="display:none">
-    <p class="ideas-intro">Bulk and block deals, straight from the exchange. A <b>bulk deal</b> is one client trading more than 0.5% of a company's shares in a day; a <b>block deal</b> is a negotiated trade of at least &#8377;10 crore in one of two fixed windows. Both are disclosures made <i>after</i> the trade, not a live feed &mdash; block deals appear within minutes of their window, bulk deals arrive through the day and complete after the close. Buys are netted against sells, counterparties who end flat are marked as crossing rather than accumulating, and proprietary desks are separated out, because none of those three things is visible in the raw table everyone else prints.</p>
+    <header class="tabhead">
+      <h2>Bulk &amp; block deals</h2>
+      <p>Large trades the exchange discloses after they happen, netted by counterparty so crossing is separated from accumulation.</p>
+    </header>
+    <details class="tabnote">
+      <summary>What counts as a bulk or block deal</summary>
+      <p>A <b>bulk deal</b> is one client trading more than 0.5% of a company’s shares in a day. A <b>block deal</b> is a negotiated trade of at least ₹10 crore inside one of two fixed windows. Both are disclosed after the trade, not live: block deals appear within minutes of their window, bulk deals arrive through the day and complete after the close.</p>
+    </details>
   </div><!-- /view-deals -->
 
   <div id="view-special" style="display:none">
-    <div class="sp-head">
-      <h2 class="sp-title">Altaha <i>Special</i></h2>
-      <p class="sp-lede">Every momentum screen in India ranks stocks by how much they went up. This one ranks them by how much they went up <b>on days when ownership actually changed hands</b>.</p>
-      <p class="sp-body">NSE publishes, for every stock every day, what share of the traded volume was <b>delivered</b> &mdash; settled into somebody's demat account &mdash; rather than bought and sold again before the close. That field is not in any Yahoo or Bloomberg price feed. It is specific to this market, it is free, and nothing else in Indian retail tooling appears to use it systematically. Two stocks both up 60%: one rose on 70%-delivery days and was <b>accumulated</b>; the other on 20%-delivery days and was <b>churned</b> by traders flat by 3:30pm. Plain momentum scores them identically.</p>
-      <p class="sp-body">Delivery is one of <b>five</b> signals here, not the whole book. Each is turned into a percentile against every other name ranked today, and the five are averaged with <b>equal weight</b>. Equal weighting is a finding, not laziness: weighting by each signal's measured information coefficient was tested and produced a worse book, because those weights chase whichever signal last worked.</p>
-      <div class="sp-formula mono">score&nbsp;=&nbsp;mean&nbsp;of&nbsp;five&nbsp;percentile&nbsp;ranks&nbsp;&nbsp;&middot;&nbsp;&nbsp;liquid,&nbsp;above&nbsp;its&nbsp;200-day</div>
-    </div>
+    <header class="tabhead">
+      <h2>Altaha <i>Special</i></h2>
+      <p>Momentum ranked by how much a stock rose <b>on days when ownership actually changed hands</b> — not by how much it rose.</p>
+    </header>
+    <div class="sp-formula mono">score&nbsp;=&nbsp;mean&nbsp;of&nbsp;five&nbsp;percentile&nbsp;ranks&nbsp;&nbsp;&middot;&nbsp;&nbsp;liquid,&nbsp;above&nbsp;its&nbsp;200-day</div>
+    <details class="tabnote">
+      <summary>Why delivery percentage, and why equal weights</summary>
+      <p>NSE publishes, for every stock every day, what share of traded volume was <b>delivered</b> — settled into somebody’s demat account — rather than bought and sold again before the close. Two stocks both up 60% score identically on plain momentum: one rose on 70%-delivery days and was accumulated, the other on 20%-delivery days and was churned by traders flat by 3:30pm.</p>
+      <p>Delivery is one of five signals. Each becomes a percentile against every other name ranked today, and the five are averaged with equal weight. Equal weighting is a finding, not laziness: weighting by each signal’s measured information coefficient was tested and produced a worse book, because those weights chase whichever signal last worked.</p>
+    </details>
 
     <div class="sp-measured" id="spmeasured"></div>
     <div class="toolbar"><button class="act" id="spload">Load the book</button>
@@ -1647,7 +1693,10 @@
   </div><!-- /view-special -->
 
   <div id="view-tracker" style="display:none">
-    <p class="ideas-intro">The ideas you have added, with what happened next. Return is what the stock did; alpha is what it did <em>beyond the index over the same days</em> — that second number is the only one that says anything about the engine. Entry prices are anchored on the close at the moment you add, never on a cached scan price. Press <b>Refresh prices</b> to mark the whole list; it walks through in batches and tells you how many are left.</p>
+    <header class="tabhead">
+      <h2>Score history</h2>
+      <p>Ideas you have added and what happened next. Alpha — the return beyond the index over the same days — is the number that says anything about the engine.</p>
+    </header>
     <div class="toolbar">
       <div class="seg mono" id="tkfilter">
         <button id="tkall" class="active">All</button>
@@ -1668,7 +1717,10 @@
   </div><!-- /view-tracker -->
 
   <div id="view-vocab" style="display:none">
-    <p class="ideas-intro">Every term this site uses, in plain English with a worked example. No prior finance knowledge assumed.</p>
+    <header class="tabhead">
+      <h2>Glossary</h2>
+      <p>Every term this site uses, in plain English with a worked example.</p>
+    </header>
     <div class="searchrow" style="margin-top:0;max-width:440px">
       <input id="vsearch" placeholder="Search a term — ROCE, debt, volume…" autocomplete="off" aria-label="Search vocabulary">
     </div>
@@ -2216,7 +2268,7 @@ function renderContext(ctx){
       <div><h5>Sectors ahead of the index</h5>${leaders||"<div class=\"secline\">—</div>"}</div>
       <div><h5>Sectors behind it</h5>${laggards||"<div class=\"secline\">—</div>"}</div>
     </div>` : ""}
-    ${heads ? `<div class="mheads"><h5 style="font-family:var(--mono);font-size:9px;letter-spacing:.2em;
+    ${heads ? `<div class="mheads"><h5 style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;
        text-transform:uppercase;color:var(--mute);margin:0 0 6px;font-weight:400">Latest market news</h5>${heads}</div>` : ""}
   </div>`;
 }
@@ -2504,11 +2556,15 @@ async function loadFilings(retry){
       $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.detail||"Couldn\u2019t load filings.")}</div>`;
       return;
     }
+    /* This line used to read "N filings shown of M held \u00B7 K matched to an
+       NSE symbol" \u2014 three internal counters that mean nothing to a reader,
+       and that rendered as "undefined" whenever the backend omitted one. What
+       a reader wants from it is how much is here and how fresh it is. */
     $("fnote").textContent =
-      `${d.count} filings shown of ${d.stored} held \u00B7 ${d.mapped_to_nse} matched to an NSE symbol` +
-      (d.refreshing ? " \u00B7 refreshing\u2026" : "") +
-      (d.last_poll ? ` \u00B7 updated ${timeAgo(d.last_poll)}` : "") +
-      (d.error ? ` \u00B7 ${d.error}` : "");
+      [ d.count != null ? `${d.count} filings` : "",
+        d.refreshing ? "refreshing\u2026" : "",
+        d.last_poll ? `updated ${timeAgo(d.last_poll)}` : "",
+        d.error || "" ].filter(Boolean).join(" \u00B7 ");
 
     if(!d.rows || !d.rows.length){
       /* First load fetches several days of filings from the exchange, which

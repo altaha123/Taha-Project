@@ -253,14 +253,14 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 
 .eyebrow {
   font-family: var(--mono);
-  font-size: 10.5px; letter-spacing: .24em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: .24em; text-transform: uppercase;
   color: var(--mute);
 }
 
 .brand {
   font-family: var(--sans);
   font-weight: 600;
-  font-size: clamp(48px, 9.6vw, 108px);
+  font-size: clamp(52px, 9.6vw, 100px);
   line-height: .93;
   letter-spacing: -.046em;
   margin: 18px 0 0;
@@ -283,7 +283,7 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 }
 
 .pitch {
-  font-size: clamp(16px, 1.7vw, 19px);
+  font-size: clamp(16px, 1.8vw, 20px);
   line-height: 1.56; color: var(--ink-2);
   max-width: 600px; margin-inline: auto; letter-spacing: -.013em;
 }
@@ -323,15 +323,15 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 }
 .hero-tile:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
 .hero-tile-name {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .17em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .17em;
   text-transform: uppercase; color: var(--mute);
 }
 .hero-tile-val {
-  font-size: 22px; font-weight: 600; letter-spacing: -.03em;
+  font-size: 24px; font-weight: 600; letter-spacing: -.03em;
   margin-top: 7px; color: var(--ink);
 }
 .hero-tile-chg {
-  font-family: var(--mono); font-size: 11.5px; margin-top: 3px; font-weight: 500;
+  font-family: var(--mono); font-size: 12px; margin-top: 3px; font-weight: 500;
 }
 .hero-tile-chg.up { color: var(--up); }
 .hero-tile-chg.dn { color: var(--down); }
@@ -372,10 +372,10 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 html[data-theme="dark"] .seg { box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
 
 .seg > button, .seg > .moreWrap > button {
-  font-family: var(--sans); font-weight: 500; font-size: 13.5px;
+  font-family: var(--sans); font-weight: 500; font-size: 14px;
   letter-spacing: -.005em; padding: 8px 18px;
 }
-.seg.mono > button { font-family: var(--mono); font-size: 10.5px; padding: 7px 13px; }
+.seg.mono > button { font-family: var(--mono); font-size: 11px; padding: 7px 13px; }
 
 .seg-puck {
   top: 3px; bottom: 3px;
@@ -413,7 +413,7 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
 .searchrow button, #go, #rgo {
   border-radius: var(--r-pill); border: 0;
   background: var(--ink); color: var(--paper);
-  font-family: var(--sans); font-weight: 550; font-size: 14px;
+  font-family: var(--sans); font-weight: 500; font-size: 14px;
   letter-spacing: -.008em; padding: 11px 26px;
   transition: transform var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
 }
@@ -451,7 +451,7 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
 }
 
 .vhead h4, .lh h3 { font-family: var(--sans); font-weight: 600; letter-spacing: -.023em; }
-.lh h3 { font-size: clamp(21px, 2.6vw, 27px); }
+.lh h3 { font-size: 24px; }
 
 /* Section headers get a candle glyph — the subject as structural device,
    not decoration bolted on. */
@@ -462,7 +462,7 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
 }
 
 .sk, .sk2, .lbl, .modelbl, .dlbl {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .18em;
   text-transform: uppercase; color: var(--mute);
 }
 
@@ -490,18 +490,18 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 .seal .val {
   font-family: var(--sans); font-weight: 600; letter-spacing: -.05em;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(46px, 7vw, 62px); line-height: 1;
+  font-size: clamp(42px, 7vw, 64px); line-height: 1;
 }
 .seal .of {
-  font-family: var(--mono); font-size: 9px; letter-spacing: .2em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .2em;
   text-transform: uppercase; color: var(--mute);
 }
 
 .vstamp {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .2em;
   text-transform: uppercase; color: var(--gold-dp);
 }
-.vsummary { font-size: clamp(16px, 1.8vw, 19px); line-height: 1.55;
+.vsummary { font-size: clamp(16px, 1.8vw, 20px); line-height: 1.55;
             letter-spacing: -.014em; color: var(--ink); }
 .vbasis { font-family: var(--mono); font-size: 11px; color: var(--mute); }
 
@@ -532,7 +532,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 }
 .act:active, .livebtn:active { transform: translateY(0) scale(.985); }
 .auditbtn, .showfull {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
   text-transform: uppercase; padding: 13px 24px;
 }
 
@@ -586,7 +586,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 5px;
   border: 0; background: none; cursor: pointer; border-radius: 999px;
   padding: 4px 10px; color: rgba(255,255,255,.5);
-  font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
   text-transform: uppercase; line-height: 1;
   transition: color var(--t-fast) var(--ease);
 }
@@ -615,7 +615,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   width: 42px; height: 42px; border-radius: 50%;
   display: grid; place-items: center; cursor: pointer;
   background: var(--glass); border: .5px solid var(--glass-line);
-  box-shadow: var(--sh-2); color: var(--ink-2); font-size: 15px;
+  box-shadow: var(--sh-2); color: var(--ink-2); font-size: 16px;
 }
 
 /* ── 15. MOBILE TAB BAR ────────────────────────────────────────────────── */
@@ -650,7 +650,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   .mobnav { display: block; }
   body { padding-bottom: 64px; }
   .tabnav { display: none; }
-  .brand { font-size: clamp(40px, 13vw, 64px); }
+  .brand { font-size: clamp(42px, 13vw, 64px); }
   .searchrow { padding-left: 16px; }
   .verdict { padding: 22px 18px; }
   .hero-candles { height: 140px; }
@@ -737,7 +737,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   font-family: var(--sans) !important;
   font-weight: 600; letter-spacing: -.05em;
   font-variant-numeric: tabular-nums;
-  font-size: 54px !important;
+  font-size: 52px !important;
   position: relative; top: 26px !important;
   transition: color var(--t) var(--ease);
 }
@@ -757,7 +757,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 .cardbtn svg { width: 13px; height: 13px; stroke-width: 1.8; }
 
 @media (max-width: 780px) {
-  .seal .val { font-size: 46px !important; top: 22px !important; }
+  .seal .val { font-size: 42px !important; top: 22px !important; }
 }
 
 /* ── More menu, dark mode ──────────────────────────────────────────────────

@@ -20,7 +20,7 @@
   padding: 16px 10px 15px;
   background: none; border: 0; cursor: pointer;
   font-family: var(--mono);
-  font-size: 11.5px; letter-spacing: .13em; text-transform: uppercase;
+  font-size: 12px; letter-spacing: .13em; text-transform: uppercase;
   color: var(--mute);
   transition: color .18s var(--ease, ease), background .18s var(--ease, ease);
 }
@@ -57,7 +57,7 @@
   transition: border-color .18s ease, color .18s ease;
 }
 .navsub-lbl {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .11em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .11em;
   text-transform: uppercase; color: var(--mute);
   transition: color .18s ease;
 }
@@ -74,7 +74,7 @@
   align-self: center;
   background: none; border: 1px solid var(--rule); border-radius: 2px;
   padding: 7px 13px; cursor: pointer;
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .13em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
   text-transform: uppercase; color: var(--mute);
   transition: border-color .18s ease, color .18s ease;
   flex: 0 0 auto;
@@ -84,7 +84,7 @@
 
 .navblurb {
   margin: 0; padding: 11px 2px 13px;
-  font-size: 12.5px; color: var(--mute);
+  font-size: 13px; color: var(--mute);
 }
 
 .navmob { display: none; }
@@ -108,7 +108,7 @@
   }
   .navmob-btn svg { width: 20px; height: 20px; }
   .navmob-btn span {
-    font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
     text-transform: uppercase;
   }
   .navmob-btn.on { color: var(--gold-dp); }
@@ -122,7 +122,7 @@
   .navsub-hint { display: none; }
   .navblurb { display: none; }
 
-  header { padding-top: 18px !important; }
+  header.wrap { padding-top: 18px !important; }
   header .brand { font-size: 34px !important; }
   .pitch, .badges, .hero-candles, .metal { display: none !important; }
 }

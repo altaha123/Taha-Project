@@ -195,17 +195,26 @@
     }).join('');
   }
 
+  /* A large-cap in rupees runs to seven figures of crore. Two decimal places
+     on it produced "\u20B91912000.00 cr" \u2014 a string with no grouping, no
+     meaning past the third digit, and wide enough to wrap its own card onto a
+     second line. Decimals earn their place only while the number is small. */
   function compact(v, cur) {
     var n = Number(v);
     if (!n || isNaN(n)) return '—';
     var sym = cur === 'INR' ? '₹' : '$';
-    if (cur === 'INR') {
-      if (n >= 1e7) return sym + (n / 1e7).toFixed(2) + ' cr';
-      if (n >= 1e5) return sym + (n / 1e5).toFixed(2) + ' L';
+    function fig(x) {
+      return x >= 1000 ? Math.round(x).toLocaleString('en-IN')
+           : x >= 100  ? x.toFixed(0)
+                       : x.toFixed(2);
     }
-    if (n >= 1e12) return sym + (n / 1e12).toFixed(2) + 'T';
-    if (n >= 1e9) return sym + (n / 1e9).toFixed(2) + 'B';
-    if (n >= 1e6) return sym + (n / 1e6).toFixed(2) + 'M';
+    if (cur === 'INR') {
+      if (n >= 1e7) return sym + fig(n / 1e7) + ' cr';
+      if (n >= 1e5) return sym + fig(n / 1e5) + ' L';
+    }
+    if (n >= 1e12) return sym + fig(n / 1e12) + 'T';
+    if (n >= 1e9) return sym + fig(n / 1e9) + 'B';
+    if (n >= 1e6) return sym + fig(n / 1e6) + 'M';
     return sym + n.toLocaleString();
   }
 
@@ -219,7 +228,7 @@
     var html = '';
     groups.forEach(function (g) {
       if (!g[1].length) return;
-      html += '<h3 style="margin:26px 0 12px;font:600 10.5px/1 \'IBM Plex Mono\',monospace;' +
+      html += '<h3 style="margin:26px 0 12px;font:600 11px/1 \'IBM Plex Mono\',monospace;' +
         'letter-spacing:.14em;text-transform:uppercase;color:var(--mute)">' + esc(g[0]) + '</h3>';
       html += g[1].map(function (c, i) {
         var mx = Number(c.max) || 0, p = Number(c.points) || 0;
@@ -244,7 +253,7 @@
       }).join('');
     });
     $('ledger').innerHTML = html ||
-      '<p style="color:var(--mute);font-size:13.5px">No checks were returned for this company.</p>';
+      '<p style="color:var(--mute);font-size:14px">No checks were returned for this company.</p>';
   }
 
   /* ── Levels ──────────────────────────────────────────────────────────────── */
@@ -261,7 +270,7 @@
       return '<div class="lvl d3-card tilt reveal" data-i="' + i + '" title="' + esc(z.why || '') + '">' +
         '<div class="k">' + esc(z.kind) + ' · ' + (z.strength == null ? '' : z.strength + '/100') + '</div>' +
         '<div class="v tnum">' + money(z.level, d.currency) + '</div>' +
-        '<div class="h" style="font-size:11.5px;color:var(--mute);margin-top:7px">' +
+        '<div class="h" style="font-size:12px;color:var(--mute);margin-top:7px">' +
           (z.distance_pct == null ? '' : pct(z.distance_pct, 1) + ' away') +
           (z.touches ? ' · ' + z.touches + ' touches' : '') + '</div></div>';
     }).join('');
@@ -277,7 +286,7 @@
     if (p.website) meta.push('<a href="' + esc(p.website) + '" target="_blank" rel="noopener noreferrer" ' +
       'style="color:var(--gold)">' + esc(String(p.website).replace(/^https?:\/\//, '')) + '</a>');
     $('about').innerHTML = '<div>' + esc(p.description) + '</div>' +
-      (meta.length ? '<div style="margin-top:14px;font-size:12.5px;color:var(--mute)">' +
+      (meta.length ? '<div style="margin-top:14px;font-size:13px;color:var(--mute)">' +
         meta.join(' · ') + '</div>' : '') +
       '<div class="src">' + esc(p.source || 'Source: data provider') + '</div>';
   }

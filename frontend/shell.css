@@ -109,7 +109,7 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
   background:var(--sh-ribbon-bg); color:var(--sh-ribbon-fg);
   display:flex; align-items:center; gap:14px;
   padding:0 18px; overflow:hidden;
-  font-size:12.5px; letter-spacing:.01em;
+  font-size:13px; letter-spacing:.01em;
   perspective:600px;
 }
 .sh-ribbon-tag{
@@ -154,7 +154,7 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
   letter-spacing:.08em; text-transform:uppercase; opacity:.62;
 }
 .sh-head .corr{
-  flex:0 0 auto; font:600 9.5px/1 'IBM Plex Mono',monospace;
+  flex:0 0 auto; font:600 10px/1 'IBM Plex Mono',monospace;
   padding:3px 6px; border-radius:99px;
   border:1px solid rgba(217,188,106,.35); color:var(--gold-lt);
 }
@@ -209,9 +209,9 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
   font:600 12px/1 'IBM Plex Mono',monospace; letter-spacing:.04em;
 }
 .sh-chip .lv{ font:500 12px/1 'IBM Plex Mono',monospace; color:var(--ink-2) }
-.sh-chip .ch{ font:600 11.5px/1 'IBM Plex Mono',monospace }
+.sh-chip .ch{ font:600 12px/1 'IBM Plex Mono',monospace }
 .sh-chip .ch.up{ color:var(--sh-up) } .sh-chip .ch.dn{ color:var(--sh-dn) }
-.sh-chip .arw{ font-size:9px; vertical-align:middle }
+.sh-chip .arw{ font-size:10px; vertical-align:middle }
 /* A flash when a printed value changes, so movement is noticed, not hunted. */
 .sh-chip.flash-up{ animation: shFlashU 900ms var(--ease) }
 .sh-chip.flash-dn{ animation: shFlashD 900ms var(--ease) }
@@ -246,7 +246,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 /* The old placeholder tile flipped on hover. A mirrored logo is a wrong
    logo — the arrow would point the other way — so it lifts instead. */
 .sh-brand:hover .mk{ transform:translateY(-1px) scale(1.06) }
-.sh-brand .nm{ font-size:15.5px }
+.sh-brand .nm{ font-size:16px }
 .sh-brand .nm i{ font-family:'Instrument Serif',Georgia,serif; font-style:italic; color:var(--gold) }
 @media (max-width:560px){ .sh-brand .nm{ display:none } }
 
@@ -256,7 +256,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-top{
   position:relative; display:inline-flex; align-items:center; gap:6px;
   padding:0 13px; height:100%; border:0; background:none; cursor:pointer;
-  font:500 13.5px/1 inherit; color:var(--ink-2); white-space:nowrap;
+  font:500 14px/1 inherit; color:var(--ink-2); white-space:nowrap;
   transition:color var(--t-fast) var(--ease);
 }
 .sh-top:hover, .sh-top[aria-expanded="true"]{ color:var(--ink) }
@@ -299,7 +299,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 @media (max-width:1200px){ .sh-mega{ margin-left:0 } }
 
 .sh-col h4{
-  margin:0 0 12px; font:600 10.5px/1 'IBM Plex Mono',monospace;
+  margin:0 0 12px; font:600 11px/1 'IBM Plex Mono',monospace;
   letter-spacing:.14em; text-transform:uppercase; color:var(--mute);
 }
 .sh-item{
@@ -310,8 +310,8 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 }
 .sh-item:hover{ background:var(--paper-2); transform:translateX(3px) }
 .sh-txt{ display:block; min-width:0 }
-.sh-item b{ display:block; font-weight:550; font-size:13.5px }
-.sh-txt > span{ display:block; font-size:11.5px; color:var(--mute); margin-top:2px; line-height:1.4 }
+.sh-item b{ display:block; font-weight:500; font-size:14px }
+.sh-txt > span{ display:block; font-size:12px; color:var(--mute); margin-top:2px; line-height:1.4 }
 
 /* The icon tile. display:grid rather than inline because it is a <span> and
    an inline box would ignore the size outright — the same trap that left the
@@ -360,7 +360,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-search .ic{ position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.45; pointer-events:none }
 .sh-search .kbd{
   position:absolute; right:9px; top:50%; transform:translateY(-50%);
-  font:500 9.5px/1 'IBM Plex Mono',monospace; color:var(--mute);
+  font:500 10px/1 'IBM Plex Mono',monospace; color:var(--mute);
   border:1px solid var(--rule); border-radius:5px; padding:3px 5px; pointer-events:none;
 }
 .sh-search input:focus ~ .kbd{ opacity:0 }
@@ -385,11 +385,11 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 /* The exchange the ticker actually trades on, so the row reads as a listing
    rather than as a guess at a name. */
 .sh-ac .x{
-  flex:0 0 auto; margin-left:auto; font:600 9px/1 'IBM Plex Mono',monospace;
+  flex:0 0 auto; margin-left:auto; font:600 10px/1 'IBM Plex Mono',monospace;
   letter-spacing:.08em; color:var(--mute); border:1px solid var(--rule-2);
   border-radius:4px; padding:3px 5px;
 }
-.sh-ac .row i{ font-style:normal; font-weight:700; color:var(--ink) }
+.sh-ac .row i{ font-style:normal; font-weight:600; color:var(--ink) }
 .sh-ac b.row.empty{
   display:block; cursor:default; font-size:12px; color:var(--mute);
 }
@@ -408,7 +408,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-icon:active{ transform:translateY(0) scale(.95) }
 
 .sh-account{
-  font:600 12.5px/1 Inter, system-ui, sans-serif; color:var(--ink-2);
+  font:600 13px/1 Inter, system-ui, sans-serif; color:var(--ink-2);
   text-decoration:none; padding:9px 13px; border:1px solid var(--rule);
   border-radius:9px; white-space:nowrap; max-width:150px; overflow:hidden;
   text-overflow:ellipsis;
