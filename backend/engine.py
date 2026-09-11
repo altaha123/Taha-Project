@@ -542,6 +542,14 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
         "gross_margin": fmt((gm_now or 0) * 100, 1) if gm_now is not None else None,
         "margin_delta": fmt(((gm_now - gm_prev) * 100) if (gm_now and gm_prev) else 0, 2) if (gm_now and gm_prev) else None,
         "roa": fmt((roa_now or 0) * 100, 1) if roa_now is not None else None,
+        # Return on equity, from the statements rather than from the provider's
+        # summary block. yfinance only reports `returnOnEquity` for names it
+        # covers well, so it is routinely absent on Indian mid- and small-caps
+        # — TNPETRO showed a dash for ROE while printing the P/E and the book
+        # value that between them imply 13.9%. Net income and shareholders'
+        # equity are both already read for the F-Score above.
+        "roe": (fmt((ni_now / te_now) * 100, 1)
+                if ni_now is not None and te_now and te_now > 0 else None),
         "roa_delta": fmt(((roa_now - roa_prev) * 100) if (roa_now is not None and roa_prev is not None) else 0, 2) if (roa_now is not None and roa_prev is not None) else None,
         "debt_delta": fmt((((ltd_now / ta_now) - (ltd_prev / ta_prev)) * 100)
                           if (ltd_now is not None and ltd_prev is not None and ta_now and ta_prev) else 0, 2)
