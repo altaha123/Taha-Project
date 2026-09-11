@@ -3156,6 +3156,10 @@ def _header_ratios(info, tech, fund):
     if dy is not None and dy <= 1:
         dy = round(dy * 100, 2)
 
+    # The engine's ROE is computed from the filed statements; the provider's
+    # summary figure is the fallback, not the other way round, because the
+    # provider omits it for most non-large-caps.
+    roe_engine = num(fx.get("roe"), 1)
     roe_frac = num(info.get("returnOnEquity"), 4)
 
     return {
@@ -3169,7 +3173,8 @@ def _header_ratios(info, tech, fund):
         "roce":           num(fx.get("roce"), 1),
         # Kept as its own step: `num(x * 100) or None` would turn a real 0%
         # return on equity into "unavailable", which is a different claim.
-        "roe":            (None if roe_frac is None else round(roe_frac * 100, 1)),
+        "roe":            (roe_engine if roe_engine is not None
+                           else (None if roe_frac is None else round(roe_frac * 100, 1))),
         "debt_to_equity": num(fx.get("de")),
         "price_to_book":  num(info.get("priceToBook")),
     }
