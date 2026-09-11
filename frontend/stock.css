@@ -45,7 +45,7 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .stk-id{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 26px }
 .stk-name{
   margin:0; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
-  font-size:clamp(28px,4.4vw,46px); line-height:1.06; letter-spacing:-.015em;
+  font-size:clamp(28px,4.4vw,42px); line-height:1.06; letter-spacing:-.015em;
 }
 .stk-tags{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px }
 .stk-tag{
@@ -53,7 +53,7 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
   padding:5px 9px; border:1px solid var(--rule); border-radius:99px; color:var(--ink-2);
 }
 .stk-px{ margin-left:auto; text-align:right }
-.stk-px .now{ font:600 30px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em }
+.stk-px .now{ font:600 28px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em }
 .stk-px .chg{ font:600 14px/1 'IBM Plex Mono',monospace; margin-top:7px }
 .up{ color:var(--sh-up) } .dn{ color:var(--sh-dn) }
 
@@ -86,9 +86,9 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .stk-sec{ padding:44px 0 8px; scroll-margin-top:calc(var(--sh-chrome-h) + 54px) }
 .stk-sec > h2{
   margin:0 0 4px; font-family:'Instrument Serif',Georgia,serif;
-  font-weight:400; font-size:25px; letter-spacing:-.01em;
+  font-weight:400; font-size:24px; letter-spacing:-.01em;
 }
-.stk-sec > .sub{ margin:0 0 22px; color:var(--mute); font-size:13.5px; max-width:66ch }
+.stk-sec > .sub{ margin:0 0 22px; color:var(--mute); font-size:14px; max-width:66ch }
 
 /* ── Score ───────────────────────────────────────────────────────────────── */
 
@@ -108,7 +108,7 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .dial .n{ font:600 52px/1 'IBM Plex Mono',monospace; letter-spacing:-.03em }
 .dial .of{ font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute); margin-top:6px; letter-spacing:.1em }
 .dial .lb{
-  margin-top:9px; font:600 10.5px/1 'IBM Plex Mono',monospace;
+  margin-top:9px; font:600 11px/1 'IBM Plex Mono',monospace;
   letter-spacing:.12em; text-transform:uppercase; color:var(--gold);
 }
 
@@ -124,12 +124,12 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
   background:linear-gradient(90deg,var(--gold-dp),var(--gold-lt));
   width:0; transition:width 1100ms var(--ease-out);
 }
-.pill .vv{ font:600 12.5px/1 'IBM Plex Mono',monospace; text-align:right }
+.pill .vv{ font:600 13px/1 'IBM Plex Mono',monospace; text-align:right }
 
 .stk-basis{
   margin-top:22px; padding:15px 17px; border-left:2px solid var(--gold);
   background:var(--paper-2); border-radius:0 10px 10px 0;
-  font-size:13.5px; line-height:1.6; color:var(--ink-2);
+  font-size:14px; line-height:1.6; color:var(--ink-2);
 }
 
 /* ── Numbers grid ────────────────────────────────────────────────────────── */
@@ -140,8 +140,8 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
   font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
   text-transform:uppercase; color:var(--mute);
 }
-.num .v{ font:600 21px/1 'IBM Plex Mono',monospace; margin-top:11px; letter-spacing:-.02em }
-.num .h{ font-size:11.5px; color:var(--mute); margin-top:7px; line-height:1.45 }
+.num .v{ font:600 20px/1 'IBM Plex Mono',monospace; margin-top:11px; letter-spacing:-.02em }
+.num .h{ font-size:12px; color:var(--mute); margin-top:7px; line-height:1.45 }
 
 /* ── Chart ───────────────────────────────────────────────────────────────── */
 
@@ -151,7 +151,7 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .ranges button{
   border:1px solid var(--rule); background:none; color:var(--ink-2);
   border-radius:8px; padding:6px 11px; cursor:pointer;
-  font:500 11.5px/1 'IBM Plex Mono',monospace;
+  font:500 12px/1 'IBM Plex Mono',monospace;
   transition:all 160ms var(--ease);
 }
 .ranges button:hover{ background:var(--paper-2); color:var(--ink) }
@@ -175,7 +175,7 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
   display:grid; grid-template-columns:1fr auto 96px; gap:14px; align-items:center;
 }
 .chk > summary::-webkit-details-marker{ display:none }
-.chk .cn{ font-weight:550; font-size:14px }
+.chk .cn{ font-weight:500; font-size:14px }
 .chk .cv{ font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--mute);
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:340px }
 @media (max-width:700px){
@@ -193,7 +193,7 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .chk .row{ display:grid; grid-template-columns:88px 1fr; gap:12px; padding:11px 0; font-size:13px }
 .chk .row + .row{ border-top:1px dashed var(--rule-2) }
 .chk .row .k{
-  font:500 9.5px/1.5 'IBM Plex Mono',monospace; letter-spacing:.1em;
+  font:500 10px/1.5 'IBM Plex Mono',monospace; letter-spacing:.1em;
   text-transform:uppercase; color:var(--mute); padding-top:2px;
 }
 .chk .row .v{ line-height:1.6; color:var(--ink-2) }
@@ -204,7 +204,7 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 
 .prose{ padding:20px 22px; font-size:14px; line-height:1.72; color:var(--ink-2) }
 .prose .src{
-  margin-top:14px; font:500 10.5px/1.5 'IBM Plex Mono',monospace;
+  margin-top:14px; font:500 11px/1.5 'IBM Plex Mono',monospace;
   letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
 }
 
@@ -212,12 +212,12 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .lvl{ padding:14px 16px; border-radius:11px; border:1px solid var(--rule); background:var(--skin-card) }
 .lvl .k{ font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
   text-transform:uppercase; color:var(--mute) }
-.lvl .v{ font:600 17px/1 'IBM Plex Mono',monospace; margin-top:9px }
+.lvl .v{ font:600 18px/1 'IBM Plex Mono',monospace; margin-top:9px }
 
 /* ── States ──────────────────────────────────────────────────────────────── */
 
-.stk-state{ padding:70px 20px; text-align:center; color:var(--mute); font-size:14.5px }
-.stk-state .big{ font-size:17px; color:var(--ink); margin-bottom:10px }
+.stk-state{ padding:70px 20px; text-align:center; color:var(--mute); font-size:14px }
+.stk-state .big{ font-size:18px; color:var(--ink); margin-bottom:10px }
 .skel{
   background:linear-gradient(90deg,var(--rule-2) 25%,var(--paper-2) 37%,var(--rule-2) 63%);
   background-size:400% 100%; animation:skel 1400ms ease-in-out infinite; border-radius:8px;
@@ -227,7 +227,7 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 
 .stk-disc{
   margin-top:52px; padding:19px 21px; border:1px dashed var(--rule);
-  border-radius:12px; font-size:12.5px; line-height:1.65; color:var(--mute);
+  border-radius:12px; font-size:13px; line-height:1.65; color:var(--mute);
 }
 
 @media (prefers-reduced-motion: reduce){

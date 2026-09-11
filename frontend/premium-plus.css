@@ -20,12 +20,12 @@
 }
 .apf-head { margin-bottom: 10px; }
 .apf-text {
-  margin: 0; font-size: 15.5px; line-height: 1.62;
+  margin: 0; font-size: 16px; line-height: 1.62;
   color: var(--ink-2); letter-spacing: -.008em; max-width: 74ch;
 }
 .apf-more {
   margin-top: 10px; padding: 0; border: 0; background: none; cursor: pointer;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--gold-dp);
   border-bottom: 1px solid var(--gold-lt);
 }
@@ -38,7 +38,7 @@
 }
 .apf-facts div { min-width: 0; }
 .apf-facts dt {
-  font-family: var(--mono); font-size: 9px; letter-spacing: .16em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
   text-transform: uppercase; color: var(--mute);
 }
 .apf-facts dd {
@@ -71,7 +71,7 @@
 }
 .tah-item:hover, .tah-item.on { background: var(--paper-2); }
 .tah-sym {
-  font-family: var(--mono); font-size: 12.5px; font-weight: 500;
+  font-family: var(--mono); font-size: 13px; font-weight: 500;
   color: var(--ink); letter-spacing: .02em; flex: 0 0 auto; min-width: 88px;
 }
 .tah-name {
@@ -131,16 +131,16 @@ html[data-theme="dark"] .tah b { color: var(--gold); }
 }
 .ctx-spacer { flex: 1 1 auto; }
 .ctx-sym {
-  font-family: var(--mono); font-size: 12.5px; font-weight: 500;
+  font-family: var(--mono); font-size: 13px; font-weight: 500;
   color: var(--ink); letter-spacing: .04em;
 }
 .ctx-px { font-family: var(--mono); font-size: 12px; color: var(--mute); }
 .ctx-lbl {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
   text-transform: uppercase; color: var(--mute);
 }
 .ctx-score {
-  font-size: 17px; font-weight: 600; letter-spacing: -.03em;
+  font-size: 18px; font-weight: 600; letter-spacing: -.03em;
   font-variant-numeric: tabular-nums; min-width: 26px; text-align: right;
 }
 .ctx-score.b-strong { color: var(--pass); }
@@ -172,7 +172,7 @@ html[data-theme="dark"] .tah b { color: var(--gold); }
   letter-spacing: .16em; text-transform: uppercase; color: var(--gold-dp);
   margin-bottom: 7px;
 }
-.vpop-d { display: block; font-size: 13.5px; line-height: 1.55; letter-spacing: -.008em; }
+.vpop-d { display: block; font-size: 14px; line-height: 1.55; letter-spacing: -.008em; }
 
 /* ── 6. LEDGER — HEAT STRIP AND GROUPS ─────────────────────────────────────
    Twenty-five collapsed rows is a wall. The strip shows the balance of
@@ -209,7 +209,7 @@ html[data-theme="dark"] .tah b { color: var(--gold); }
 }
 .lgroup:first-child { margin-top: 6px; }
 .lgroup-n {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .18em;
   text-transform: uppercase; color: var(--ink-2); flex: 1 1 auto;
 }
 .lgroup-s {
@@ -244,7 +244,7 @@ details.row.flash {
   }
   .mtable td::before {
     content: attr(data-label);
-    font-family: var(--mono); font-size: 9px; letter-spacing: .14em;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
     text-transform: uppercase; color: var(--mute);
     text-align: left; flex: 0 0 auto;
   }
@@ -285,7 +285,7 @@ details.row.flash {
   flex: 1 1 220px; min-width: 0;
   padding: 11px 16px; border-radius: var(--r-pill);
   border: .5px solid var(--hairline); background: var(--surface);
-  color: var(--ink); font-family: var(--sans); font-size: 14.5px;
+  color: var(--ink); font-family: var(--sans); font-size: 14px;
   letter-spacing: -.01em;
 }
 .cmp-input::placeholder { color: var(--mute); }
@@ -297,12 +297,12 @@ details.row.flash {
 }
 .cmp-col { text-align: center; min-width: 0; }
 .cmp-name {
-  font-size: 15px; font-weight: 600; letter-spacing: -.018em; color: var(--ink);
+  font-size: 16px; font-weight: 600; letter-spacing: -.018em; color: var(--ink);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.cmp-sym { font-family: var(--mono); font-size: 10.5px; color: var(--mute); margin-top: 3px; }
+.cmp-sym { font-family: var(--mono); font-size: 11px; color: var(--mute); margin-top: 3px; }
 .cmp-score {
-  font-size: 46px; font-weight: 600; letter-spacing: -.045em;
+  font-size: 42px; font-weight: 600; letter-spacing: -.045em;
   font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 8px;
 }
 .cmp-score.b-strong { color: var(--pass); }
@@ -310,16 +310,16 @@ details.row.flash {
 .cmp-score.b-mixed  { color: var(--part); }
 .cmp-score.b-weak   { color: var(--fail); }
 .cmp-lbl {
-  font-family: var(--mono); font-size: 9px; letter-spacing: .16em;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
   text-transform: uppercase; color: var(--mute); margin-top: 2px;
 }
 .cmp-sub {
   display: flex; justify-content: center; gap: 16px; margin-top: 10px;
-  font-family: var(--mono); font-size: 10.5px; color: var(--mute);
+  font-family: var(--mono); font-size: 11px; color: var(--mute);
 }
 .cmp-sub b { color: var(--ink); font-weight: 600; margin-left: 4px; }
 .cmp-v {
-  font-family: var(--serif); font-style: italic; font-size: 19px; color: var(--mute);
+  font-family: var(--serif); font-style: italic; font-size: 20px; color: var(--mute);
 }
 
 .cmp-diff { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--rule-2); }
@@ -331,7 +331,7 @@ details.row.flash {
 }
 .cmp-row:last-child { border-bottom: 0; }
 .cmp-a, .cmp-b {
-  font-family: var(--mono); font-size: 11.5px; color: var(--mute);
+  font-family: var(--mono); font-size: 12px; color: var(--mute);
   font-variant-numeric: tabular-nums;
 }
 .cmp-a { text-align: right; }
@@ -346,7 +346,7 @@ details.row.flash {
 @media (max-width: 560px) {
   .cmp-heads { grid-template-columns: 1fr; gap: 18px; }
   .cmp-v { display: none; }
-  .cmp-score { font-size: 38px; }
+  .cmp-score { font-size: 42px; }
   .cmp-row { grid-template-columns: 48px 1fr 48px; gap: 8px; }
   .cmp-k { font-size: 12px; }
 }

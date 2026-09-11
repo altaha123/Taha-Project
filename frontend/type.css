@@ -1,0 +1,187 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Altaha Screener — type.css
+   One type ladder, one set of text roles, for every page and every tab.
+
+   WHY THIS FILE EXISTS
+   Text sizes had accumulated one declaration at a time: 8, 8.5, 9, 9.5, 10,
+   10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 19,
+   21, 22, 23, 25, 26, 27, 30, 31, 32 … roughly six hundred of them across
+   twenty stylesheets. Half-pixel steps are invisible one at a time and
+   unmistakable in aggregate: nothing lines up, and every panel reads as though
+   it came from a different site. The same happened to weight (450 and 550 are
+   not weights Inter ships, so the browser was faking them) and to section
+   headings, which were declared serif in one stylesheet and sans-600 in
+   another, so the winner depended on load order.
+
+   THE LADDER — every font-size in this project is one of these
+     10  micro     mono uppercase labels, the smallest legible step
+     11  caption   metadata, table headers
+     12  small     secondary lines, chips
+     13  compact   dense body text in cards and tables
+     14  body      default reading size
+     16  lead      intro lines, inputs (16px also stops iOS zooming on focus)
+     18  h4        sub-headings
+     20  h3        card titles
+     24  h2        section headings
+     28  figure    the number a card exists to show
+     34  display   panel headlines
+     42  page      page titles
+     52  hero      the score, the brand on small screens
+     64  brand     the wordmark
+
+   Anything responsive uses clamp() between two rungs — never a value between
+   them. Weight is 400, 500 or 600; all three families ship those and none of
+   them ships 700, so 700 was being synthesised and looked blotchy next to the
+   real 600.
+
+   This file loads last on purpose. It settles the arguments between the older
+   stylesheets rather than adding a fourth opinion.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  --fs-micro:10px;  --fs-caption:11px; --fs-small:12px;   --fs-compact:13px;
+  --fs-body:14px;   --fs-lead:16px;    --fs-h4:18px;      --fs-h3:20px;
+  --fs-h2:24px;     --fs-figure:28px;  --fs-display:34px; --fs-page:42px;
+
+  --lh-tight:1.15;  --lh-snug:1.35;    --lh-body:1.6;     --lh-loose:1.7;
+  --tr-label:.14em;                    /* one tracking for every mono label */
+
+  /* The family, radius and timing tokens live in premium.css, which only the
+     homepage loads — stock.html and signin.html share these stylesheets
+     without it. Aliasing them here with the same fallbacks keeps this file
+     correct on all three pages without redefining anybody's token. */
+  --ty-serif: var(--serif, 'Instrument Serif', Georgia, serif);
+  --ty-mono:  var(--mono, 'IBM Plex Mono', ui-monospace, monospace);
+  --ty-sans:  var(--sans, 'Inter', system-ui, sans-serif);
+  --ty-pill:  var(--r-pill, 999px);
+  --ty-t:     var(--t, 280ms);
+  --ty-ease:  var(--ease, cubic-bezier(.22,.61,.36,1));
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────
+   b/strong and the heading elements default to 700 in every browser. With no
+   700 loaded that is a synthetic bold, which is why emphasised words looked
+   heavier in some panels than others. */
+b, strong{ font-weight:600 }
+h1, h2, h3, h4, h5, h6{ font-weight:400 }
+
+/* ── Section headings ──────────────────────────────────────────────────────
+   `.lh h3` (index), `.vhead h4` (index sub-panels) and `.stk-sec h2` (stock
+   page) are the same thing wearing three faces. Instrument Serif at 400 is the
+   one the rest of the product already uses. */
+.lh h3, .vhead h4, .stk-sec > h2, .psec > .lh h3{
+  font-family:var(--ty-serif);
+  font-weight:400;
+  letter-spacing:-.01em;
+  line-height:var(--lh-tight);
+}
+.lh h3{ font-size:var(--fs-h2) }
+.vhead h4{ font-size:var(--fs-h3) }
+
+/* `.lh` holds three children — a gold rule, the heading, and a metadata span —
+   under `justify-content:space-between`, which parked the heading in the
+   middle of the row and made it read as a centred title by accident. The
+   heading belongs at the left edge; only the metadata is pushed right. */
+.lh{ justify-content:flex-start }
+.lh > h3 + span, .lh > h3 ~ span{ margin-left:auto; text-align:right }
+
+/* ── Page header, one per tab ──────────────────────────────────────────────
+   Every tab used to open with a centred paragraph of explanation at a size
+   that belonged to no role — some four lines, one eight. A tab opens with its
+   name and a single line saying what it is, exactly as the stock page does. */
+.tabhead{ margin:6px 0 26px; max-width:72ch }
+.tabhead > h2{
+  margin:0 0 4px; font-family:var(--ty-serif); font-weight:400;
+  font-size:var(--fs-h2); line-height:var(--lh-tight); letter-spacing:-.01em;
+}
+.tabhead > h2 i{ font-style:italic; color:var(--gold) }
+.tabhead > p{
+  margin:0; font-size:var(--fs-body); line-height:var(--lh-body);
+  color:var(--mute); max-width:66ch;
+}
+.tabhead > p a{ color:var(--gold-dp) }
+
+/* ── Secondary text ────────────────────────────────────────────────────────
+   Four classes doing one job at four sizes. Two roles now: a line under a
+   heading, and a quiet footnote. */
+.stk-sec > .sub, .lsub, .ideas-note{
+  font-size:var(--fs-body); line-height:var(--lh-body); color:var(--mute);
+}
+.rnote, .disc, .brun-note, .stk-disc{ line-height:var(--lh-loose) }
+.rnote, .disc, .stk-disc{ font-size:var(--fs-small); color:var(--mute) }
+
+/* ── Mono labels ───────────────────────────────────────────────────────────
+   The uppercase mono label is the most repeated element on the site and had
+   accumulated five sizes and six trackings. Tracking is what the eye reads as
+   "same kind of label", so it matters more than the size does. */
+.brun-note, .statcell span, .tkstat, .fbtag, .sk, .sk2, .lbl, .modelbl, .dlbl{
+  font-size:var(--fs-micro); letter-spacing:var(--tr-label);
+}
+
+/* ── Controls that never got a style ───────────────────────────────────────
+   Each of these renders as a raw browser button or a stunted input, because
+   the rule that dressed it was written against one id and then a second
+   instance of the same control was added with a different id. */
+.searchrow{ align-items:center }
+.searchrow input{
+  flex:1 1 auto; min-width:0;
+  border:0; background:transparent; color:var(--ink);
+  font-family:var(--ty-mono); font-size:var(--fs-lead); letter-spacing:.06em;
+  padding:15px 22px;
+}
+.searchrow input::placeholder{ font-family:var(--ty-sans); letter-spacing:.01em; color:var(--mute) }
+.searchrow input:focus{ outline:none }
+.searchrow > button{ flex:0 0 auto; cursor:pointer }
+
+/* `.hz` is styled only as a child of `.seg`; the Options tab uses the same
+   buttons outside one, where they fell back to the browser's default chrome. */
+.hzrow{ display:flex; flex-wrap:wrap; justify-content:flex-start; gap:8px }
+.hzrow > .hz{
+  border:1px solid var(--rule); border-radius:var(--ty-pill);
+  background:var(--paper); color:var(--ink-2); cursor:pointer;
+  font-family:var(--ty-sans); font-weight:500; font-size:var(--fs-body);
+  padding:10px 20px; line-height:1.2;
+  transition:border-color var(--ty-t) var(--ty-ease), color var(--ty-t) var(--ty-ease),
+             background var(--ty-t) var(--ty-ease);
+}
+.hzrow > .hz small{
+  display:block; font-family:var(--ty-mono); font-size:var(--fs-micro);
+  letter-spacing:var(--tr-label); text-transform:uppercase; color:var(--mute);
+  margin-top:3px;
+}
+.hzrow > .hz:hover{ border-color:var(--ink-2); color:var(--ink) }
+.hzrow > .hz.active{ background:var(--ink); border-color:var(--ink); color:var(--paper) }
+.hzrow > .hz.active small{ color:var(--gold-lt) }
+
+/* `#genbtn` and `#pf_go` were dressed by id; `#genbtn2` and the Planner's twin
+   were not, and shipped as system buttons. */
+#genbtn, #genbtn2, #pf_go, #rgo, #optgo{
+  font-family:var(--ty-sans); font-weight:500; font-size:var(--fs-body);
+  letter-spacing:-.008em; cursor:pointer;
+}
+#genbtn2, #pf_go{
+  background:var(--ink); color:var(--paper); border:1px solid var(--ink);
+  border-radius:var(--ty-pill); padding:11px 24px;
+  transition:opacity var(--ty-t) var(--ty-ease), transform var(--ty-t) var(--ty-ease);
+}
+#genbtn2:hover:not(:disabled), #pf_go:hover:not(:disabled){ opacity:.86; transform:translateY(-1px) }
+#genbtn2:disabled, #pf_go:disabled{ opacity:.45; cursor:default; transform:none }
+#genbtn2:focus-visible, #pf_go:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+
+/* The holdings table's column headings wrapped to three lines because the
+   optional-field hint was set in the same uppercase mono as the heading. */
+.pfhead i{ font-style:normal; text-transform:none; letter-spacing:.01em; opacity:.72 }
+.pfhead > span{ white-space:nowrap }
+
+/* ── Tab bodies read from the left margin ──────────────────────────────────
+   Every tab used to open with a centred paragraph, so the controls under it
+   were centred to match and the results below them were not. With the intro
+   gone, a tab that centres its filter row and left-aligns its rows just looks
+   unfinished. One edge: the left one, like the stock page. */
+#view-results .searchrow,
+#view-options .searchrow,
+#view-vocab .searchrow{ margin-inline:0 }
+#view-ideas .ideas-note,
+#view-live .ideas-note,
+#view-filings .ideas-note,
+#view-tracker .ideas-note{ margin-inline:0; text-align:left }

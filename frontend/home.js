@@ -186,7 +186,7 @@
       : '';
 
     box.innerHTML = '<div class="mb-heading"><div><span class="hm-kicker">MARKET SNAPSHOT</span><h2>The market, at a glance.</h2></div><span class="mb-scope">Latest available session</span></div><div class="mb-idx">' + idxHTML + '</div>' +
-      '<p class="mb-note">Bars compare the magnitude of each index move; they are not price histories. India VIX measures volatility. Quotes may be delayed.</p>' + moversHTML;
+      '<p class="mb-note">Bars show the size of each move, not a price history. Quotes may be delayed.</p>' + moversHTML;
     if (window.AltahaShell) window.AltahaShell.reveal();
   }
 

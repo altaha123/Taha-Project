@@ -72,12 +72,12 @@
   .ux-dialog-foot { bottom: -20px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
   .ux-guide { grid-template-columns: 1fr; gap: 14px; padding: 18px; }
   .ux-guide > .ux-art { width: 120px; }
-  .ux-guide h2 { font-size: 25px; }
+  .ux-guide h2 { font-size: 24px; }
   .mb { padding: 6px 0 0; }
   .mb-idx { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .mb-card { padding: 14px 12px; }
   .mb-card .v { font-size: clamp(16px, 4.4vw, 24px); }
-  .mb-card .k { font-size: 9px; letter-spacing: .06em; }
+  .mb-card .k { font-size: 10px; letter-spacing: .06em; }
   .mb-movers { grid-template-columns: 1fr; }
   .stk-id { flex-wrap: wrap; gap: 16px; }
   .stk-rail a { display: inline-flex; align-items: center; }

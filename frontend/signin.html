@@ -12,11 +12,12 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="type.css">
 
 <script>
   /* Theme before first paint, as every other page here does — a white flash
@@ -34,18 +35,23 @@
 <script src="auth.js" defer></script>
 
 <style>
+  /* This page loads the shared stylesheets but not premium.css, which is
+     where `body { font-family }` is set — so every word on it rendered in the
+     browser's default serif while the rest of the site is in Inter. */
+  body { margin: 0; font-family: var(--sans, Inter, system-ui, sans-serif);
+         -webkit-font-smoothing: antialiased; }
   .si-wrap { max-width: 460px; margin: 0 auto; padding: 64px 20px 90px; }
-  .si-mark { font: 500 10.5px/1 'IBM Plex Mono', monospace; letter-spacing: 2.4px;
+  .si-mark { font: 500 11px/1 'IBM Plex Mono', monospace; letter-spacing: 2.4px;
              text-transform: uppercase; color: var(--mute); margin-bottom: 26px; }
   .si-wrap h1 { font: 400 34px/1.15 'Instrument Serif', Georgia, serif;
                 color: var(--ink); margin: 0 0 12px; }
-  .si-lede { font-size: 14.5px; line-height: 1.65; color: var(--mute); margin: 0 0 30px; }
+  .si-lede { font-size: 14px; line-height: 1.65; color: var(--mute); margin: 0 0 30px; }
   .si-field { display: block; margin-bottom: 14px; }
-  .si-field span { display: block; font: 500 10.5px/1 'IBM Plex Mono', monospace;
+  .si-field span { display: block; font: 500 11px/1 'IBM Plex Mono', monospace;
                    letter-spacing: 1.6px; text-transform: uppercase;
                    color: var(--mute); margin-bottom: 8px; }
-  .si-input { width: 100%; box-sizing: border-box; padding: 13px 14px; font-size: 15px;
-              color: var(--ink); background: var(--paper); border: 1px solid var(--line);
+  .si-input { width: 100%; box-sizing: border-box; padding: 13px 14px; font-size: 16px;
+              color: var(--ink); background: var(--paper); border: 1px solid var(--rule);
               border-radius: 2px; }
   .si-input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
   .si-btn { width: 100%; padding: 13px 18px; font: 600 14px/1 Inter, system-ui, sans-serif;
@@ -55,8 +61,8 @@
   .si-note { font-size: 13px; line-height: 1.6; margin: 18px 0 0; }
   .si-note.bad { color: #8e2f2a; }
   .si-note.good { color: #1f5d45; }
-  .si-list { margin: 30px 0 0; padding: 22px 0 0; border-top: 1px solid var(--line);
-             font-size: 13.5px; line-height: 1.75; color: var(--mute); }
+  .si-list { margin: 30px 0 0; padding: 22px 0 0; border-top: 1px solid var(--rule);
+             font-size: 14px; line-height: 1.75; color: var(--mute); }
   .si-list b { color: var(--ink); font-weight: 600; }
   .si-back { display: inline-block; margin-top: 26px; font-size: 13px; color: var(--mute); }
 </style>

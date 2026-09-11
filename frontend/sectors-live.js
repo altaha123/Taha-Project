@@ -232,10 +232,11 @@
       "</div>" +
       '<div class="sb-grid">' + rows.map(tile).join("") + "</div>" +
       (opened ? detail(opened) : "") +
-      '<p class="sb-foot">' + (d.as_of ? 'Snapshot generated ' + esc(d.as_of) + '. ' : '') + 'Ranked by return relative to the Nifty. Breadth is how ' +
-        "many of the sector's carried names are advancing — a sector can be green " +
-        "on one enormous company while most of it falls, and the bar is there to " +
-        "show you when that is happening.</p>";
+      /* This footnote used to run to four lines explaining what breadth is and
+         why it can disagree with the headline return. The bar already shows
+         that; the reader needs the ranking basis and the timestamp. */
+      '<p class="sb-foot">Ranked by return against the Nifty; the bar is how much of each sector is advancing.' +
+        (d.as_of ? ' Snapshot ' + esc(d.as_of) + '.' : '') + '</p>';
 
     playMoves(el, before);
     el.querySelectorAll('[data-sector], [data-w]').forEach(function(n) {
