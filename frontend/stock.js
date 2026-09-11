@@ -297,31 +297,67 @@
 
   function paintKey(d) {
     var r = d.ratios || {};
+    var peers = d.peers || {};
     var cur = d.currency;
     var tx = (d.technical && d.technical.extras) || {};
 
     var hi = r.high_52w != null ? r.high_52w : tx.high_52w;
     var lo = r.low_52w  != null ? r.low_52w  : tx.low_52w;
     var band = (hi == null && lo == null) ? '—'
-             : money(hi, cur) + ' / ' + money(lo, cur);
+             : money(lo, cur) + ' – ' + money(hi, cur);
 
-    var cells = [
-      ['Market Cap',     compactMoney(r.market_cap, cur)],
-      ['Current Price',  money(r.price != null ? r.price : d.price, cur)],
-      ['High / Low',     band],
-      ['Stock P/E',      plain(r.pe, '', 1)],
-      ['Book Value',     r.book_value == null ? '—' : money(r.book_value, cur)],
-      ['Dividend Yield', plain(r.dividend_yield, ' %', 2)],
-      ['ROCE',           plain(r.roce, ' %', 1)],
-      ['ROE',            plain(r.roe, ' %', 1)],
-      ['Debt / Equity',  plain(r.debt_to_equity, '', 2)]
+    /* Labels are our own wording. "Stock P/E" is one particular screener's
+       coinage; the ratio is called a P/E everywhere else, and borrowing a
+       competitor's phrasing for a number neither of us invented is how a page
+       ends up reading as a copy of theirs. `key` is the metric name the
+       backend's peer block uses — null where a peer percentile is meaningless,
+       as it is for a rupee amount like book value. */
+    var tiles = [
+      { label: 'Market cap',     value: compactMoney(r.market_cap, cur) },
+      { label: 'Price',          value: money(r.price != null ? r.price : d.price, cur) },
+      { label: '52-week range',  value: band, small: true },
+      { label: 'P/E',            value: plain(r.pe, '', 1),             key: 'pe' },
+      { label: 'Book value',     value: r.book_value == null ? '—' : money(r.book_value, cur) },
+      { label: 'Dividend yield', value: plain(r.dividend_yield, '%', 2), key: 'dividend_yield' },
+      { label: 'ROCE',           value: plain(r.roce, '%', 1),          key: 'roce' },
+      { label: 'ROE',            value: plain(r.roe, '%', 1),           key: 'roe' },
+      { label: 'Debt / equity',  value: plain(r.debt_to_equity, '', 2), key: 'debt_to_equity' }
     ];
 
-    $('kgrid').innerHTML = cells.map(function (c) {
-      return '<div class="kcell"><span class="k">' + esc(c[0]) + '</span>' +
-             '<span class="v tnum">' + esc(c[1]) + '</span></div>';
+    $('kgrid').innerHTML = tiles.map(function (t) {
+      return '<div class="ktile">' +
+        '<div class="k">' + esc(t.label) + '</div>' +
+        '<div class="v' + (t.small ? ' range' : '') + '">' + esc(t.value) + '</div>' +
+        meter(t.key ? peers[t.key] : null) +
+      '</div>';
     }).join('');
   }
+
+  /* The peer meter.
+
+     One gold track per figure showing where it sits in its sector, with a tick
+     at the 50th so the reader can see the peer median without being told what
+     to think about it. Deliberately one hue and no red/green: whether a high
+     P/E is bad is a judgement, and this page reports arithmetic. The phrase
+     ("cheaper than 81%") is written by the backend so the words and the
+     direction of the measurement can never disagree.
+
+     A figure with no peer data renders a spacer of the same height, so the
+     tiles in a row stay the same size whether or not a scan has run. */
+  function meter(p) {
+    if (!p || p.percentile == null) return '<div class="kmeter empty"></div>';
+    var pc = Math.max(0, Math.min(100, p.percentile));
+    return '<div class="kmeter">' +
+      '<div class="track" role="img" aria-label="' +
+        esc(p.phrase + ' of ' + p.peers + ' ' + p.group) + '">' +
+        '<span class="fill" style="width:' + pc + '%"></span>' +
+        '<span class="mid" aria-hidden="true"></span>' +
+      '</div>' +
+      '<div class="cap">' + esc(p.phrase) + ' of ' + p.peers + ' ' +
+        esc(p.group) + '</div>' +
+    '</div>';
+  }
+
 
   /* The description the provider publishes runs to a thousand characters and
      is the last thing that should push the page down. It opens clamped to

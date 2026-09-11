@@ -3123,6 +3123,93 @@ def _cached_v4(symbol):
             "message": "No v4 universe score for this stock yet; run a new universe scan."}
 
 
+# How each header figure is read against its peers. `higher` says which
+# direction is the better end of the distribution, and it is the whole reason
+# this cannot be a single shared function: a P/E in the 90th percentile of its
+# sector is the EXPENSIVE end, and a debt/equity in the 90th is the indebted
+# one. Reporting "90th percentile" on both without saying which way it runs
+# would be worse than reporting nothing.
+_PEER_METRICS = {
+    "roce":           {"higher": True,  "above": "higher than", "below": "lower than"},
+    "roe":            {"higher": True,  "above": "higher than", "below": "lower than"},
+    "book_value":     None,   # a rupee amount, not comparable across companies
+    "dividend_yield": {"higher": True,  "above": "higher than", "below": "lower than"},
+    "pe":             {"higher": False, "above": "cheaper than", "below": "dearer than"},
+    "debt_to_equity": {"higher": False, "above": "less debt than", "below": "more debt than"},
+}
+
+# Below this many peers a percentile is arithmetic, not evidence. Same floor
+# the v4 engine uses for its own peer percentiles, and for the same reason.
+_PEER_FLOOR = multifactor.MIN_PEERS
+
+
+def _peer_context(sym, sector, ratios):
+    """Where each header figure sits among the names in the last universe scan.
+
+    This is the part of the page that no data vendor's summary table can carry,
+    because it needs a scored universe rather than one company. It is also the
+    part that turns "ROCE 11.3%" into something a reader can act on their own
+    judgement about: 11.3% is strong for a utility and weak for software.
+
+    Peers are the same sector where the scan has enough of them, and the whole
+    scanned cohort otherwise — the group is named in the return value either
+    way, because "68th percentile" means different things against 40 chemicals
+    companies and against everything that cleared the liquidity floor.
+    """
+    payload = _state.get("payload") or {}
+    rows = payload.get("factor_universe") or payload.get("rankings") or []
+    if not rows:
+        return {}
+
+    base = sym.replace(".NS", "").replace(".BO", "")
+    same_sector = [r for r in rows if sector and r.get("sector") == sector]
+    if len(same_sector) >= _PEER_FLOOR:
+        # The caption reads "... of 47 Specialty Chemicals peers"; against the
+        # whole cohort it reads "... of 1,240 scanned names". The noun is part
+        # of the group so the sentence is built in one place.
+        pool, group = same_sector, f"{sector} peers"
+    else:
+        pool, group = rows, "scanned names"
+
+    out = {}
+    for key, rule in _PEER_METRICS.items():
+        if rule is None:
+            continue
+        mine = ratios.get(key)
+        if mine is None:
+            continue
+        # The scan banks debt/equity as `de`; the header grid names it in full.
+        field = "de" if key == "debt_to_equity" else key
+        vals = []
+        for r in pool:
+            if r.get("symbol") == base:
+                continue
+            v = (r.get("grid_ratios") or {}).get(field)
+            try:
+                f = float(v)
+            except (TypeError, ValueError):
+                continue
+            if f == f and abs(f) != float("inf"):
+                vals.append(f)
+        if len(vals) < _PEER_FLOOR:
+            continue
+
+        # Percentile of the peers this figure beats, in the direction that is
+        # the good end for this particular metric.
+        beaten = (sum(1 for v in vals if v < mine) if rule["higher"]
+                  else sum(1 for v in vals if v > mine))
+        pct = round(100 * beaten / len(vals))
+        out[key] = {
+            "percentile": pct,
+            "peers": len(vals),
+            "group": group,
+            # Written here rather than in the browser so the sentence and the
+            # number can never disagree about which direction was measured.
+            "phrase": f"{rule['above'] if pct >= 50 else rule['below']} {pct if pct >= 50 else 100 - pct}%",
+        }
+    return out
+
+
 def _header_ratios(info, tech, fund):
     """The nine figures that belong above the fold, in one shape.
 
@@ -3260,6 +3347,7 @@ def analyze(ticker: str, horizon: str = "position"):
     except Exception:
         plain = None
     currency = info.get("currency") or ("INR" if sym.endswith((".NS", ".BO")) else "USD")
+    header_ratios = _header_ratios(info, tech, fund)
 
     return to_native({
         "ticker": sym,
@@ -3313,7 +3401,11 @@ def analyze(ticker: str, horizon: str = "position"):
         # The header grid: the nine figures a reader checks before anything
         # else. Assembled here rather than in the browser so there is one
         # definition of "book value" and the page cannot invent a tenth.
-        "ratios": _header_ratios(info, tech, fund),
+        "ratios": header_ratios,
+        # Where each of those figures sits against its sector. Empty until a
+        # universe scan has run, and the page renders the figures plainly when
+        # it is — the context is an addition, never a dependency.
+        "peers": _peer_context(sym, info.get("sector"), header_ratios),
         "disclaimer": DISCLAIMER,
     })
 

@@ -595,9 +595,27 @@ def deep_score(cand, selection="ranked"):
     except Exception:
         checks = {}
 
+    # The same nine figures the stock page leads with, banked per name so the
+    # page can say where any one of them sits against its sector rather than
+    # printing it bare. A number on its own tells a reader nothing: 11.3% ROCE
+    # is strong for a utility and weak for a software company, and that is the
+    # question the figure is actually being read to answer.
+    fx = fund.get("extras") or {}
+    try:
+        dy = info.get("dividendYield")
+        dy = None if dy is None else (float(dy) * 100 if float(dy) <= 1 else float(dy))
+    except (TypeError, ValueError):
+        dy = None
+    grid_ratios = {
+        "roce": fx.get("roce"), "roe": fx.get("roe"), "de": fx.get("de"),
+        "pe": fx.get("pe") or info.get("trailingPE"),
+        "book_value": info.get("bookValue"), "dividend_yield": dy,
+    }
+
     return {
         "plan": plan,
         "factors": extra,
+        "grid_ratios": grid_ratios,
         "data_quality": quality_meta,
         "industry": info.get("industry"),
         "market_cap": info.get("marketCap"),

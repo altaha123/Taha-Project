@@ -58,43 +58,86 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .up{ color:var(--sh-up) } .dn{ color:var(--sh-dn) }
 
 /* ── Key figures, above the fold ─────────────────────────────────────────
-   Nine cells, three to a row on a desktop and two on a phone. The alternating
-   row tint is doing real work: nine label/value pairs in a plain grid read as
-   one undifferentiated block, and the band is what lets the eye track across
-   a row without a rule between every cell. */
+   Nine stat tiles, not a ratio table.
+
+   The table this replaced was a three-column grid with alternating row tints —
+   which is one particular competitor's layout signature, and printing the same
+   nine public numbers in the same arrangement under our own logo read as a
+   copy of their page rather than as ours. The numbers are not the problem;
+   every screener shows them and must. The arrangement was.
+
+   What is ours is the meter under each figure. Nothing in a vendor's summary
+   block can say where a number sits among its sector, because that needs a
+   scored universe rather than one company — and it is the thing a reader
+   actually wants, since 11.3% ROCE is strong for a utility and weak for
+   software. The figure alone never answers the question it is read to answer.
+
+   One hue, no red/green. Whether a high P/E is bad is a judgement and this
+   page reports arithmetic; the tick at the 50th shows the peer median and
+   leaves the reading to the reader. */
 
 .stk-key{ margin:26px 0 0 }
 .kgrid{
   display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
-  border:1px solid var(--rule); border-radius:12px; overflow:hidden;
-  background:var(--skin-card);
+  gap:1px; background:var(--rule-2);
+  border:1px solid var(--rule-2); border-radius:14px; overflow:hidden;
 }
-.kcell{
-  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
-  padding:15px 18px; min-width:0;
+.ktile{ background:var(--skin-card); padding:17px 18px 15px; min-width:0 }
+.ktile .k{
+  font-family:var(--mono,'IBM Plex Mono',monospace); font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--mute);
 }
-/* Rows 2 and 4 of a three-column grid. Written as nth-child so it survives a
-   cell being added or dropped — :nth-child(6n+4) is the fourth of each pair
-   of rows, which is the second row of every six cells. */
-.kcell:nth-child(6n+4), .kcell:nth-child(6n+5), .kcell:nth-child(6n+6){
-  background:var(--paper-2);
-}
-.kcell .k{ font-size:14px; color:var(--ink-2); white-space:nowrap }
-.kcell .v{
-  font-family:var(--mono,'IBM Plex Mono',monospace); font-weight:500;
-  font-size:14px; color:var(--ink); text-align:right;
+/* The house display face, as every other figure on this site is set — the
+   tracker cells, the sector board, the portfolio dial. Proportional figures,
+   not tabular: these are standalone values, and `tabular-nums` gives every
+   digit the width of a zero, which reads loose at this size. */
+.ktile .v{
+  margin-top:9px; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
+  font-size:28px; line-height:1.05; letter-spacing:-.01em; color:var(--ink);
   overflow-wrap:anywhere;
 }
+
+.ktile .v.range{ font-size:20px }
+
+.kmeter{ margin-top:11px }
+/* Grid items in a row already stretch to the tallest of them, so a tile with
+   no peer data needs no spacer — reserving height here left the whole first
+   row (market cap, price, the 52-week band, none of which have a meaningful
+   peer percentile) carrying 25px of dead space. */
+.kmeter.empty{ display:none }
+.kmeter .track{
+  position:relative; height:4px; border-radius:99px;
+  background:var(--rule-2); overflow:hidden;
+}
+.kmeter .fill{
+  display:block; height:100%; border-radius:99px;
+  background:linear-gradient(90deg,var(--gold-dp),var(--gold));
+}
+.kmeter .mid{
+  position:absolute; left:50%; top:-2px; bottom:-2px; width:1px;
+  background:var(--ink); opacity:.22;
+}
+.kmeter .cap{
+  margin-top:6px; font-size:11px; line-height:1.4; color:var(--mute);
+}
+
 @media (max-width:760px){
   .kgrid{ grid-template-columns:repeat(2,minmax(0,1fr)) }
-  .kcell:nth-child(6n+4), .kcell:nth-child(6n+5), .kcell:nth-child(6n+6){ background:none }
-  .kcell:nth-child(4n+3), .kcell:nth-child(4n+4){ background:var(--paper-2) }
-  .kcell{ padding:13px 14px }
-  .kcell .k{ font-size:13px }
+  .ktile{ padding:14px 14px 12px }
+  .ktile .v{ font-size:24px }
+  .ktile .v.range{ font-size:18px }
 }
-@media (max-width:420px){
-  .kcell{ flex-direction:column; gap:4px; align-items:flex-start }
-  .kcell .v{ text-align:left }
+/* Two columns for as long as the widest value still fits on one line. At one
+   column these nine tiles are most of a phone screen before the reader reaches
+   anything else; the single column is the last resort, not the phone layout. */
+@media (max-width:430px){
+  .ktile{ padding:12px 12px 11px }
+  .ktile .v{ font-size:20px }
+  .ktile .v.range{ font-size:14px }
+  .kmeter .cap{ font-size:10px }
+}
+@media (max-width:340px){
+  .kgrid{ grid-template-columns:1fr }
 }
 
 /* ── What the company does ──────────────────────────────────────────────── */
