@@ -183,9 +183,10 @@
       ['52-week range', x.range_position == null ? '—' : x.range_position + '%',
         'Where price sits between the year low and high'],
       ['From high', x.drawdown_from_high == null ? '—' : pct(x.drawdown_from_high, 1),
-        'Distance below the 52-week high'],
-      ['Market cap', d.profile && d.profile.market_cap
-        ? compact(d.profile.market_cap, d.currency) : '—', 'As published by the data provider']
+        'Distance below the 52-week high']
+      // Market cap used to sit here as a twelfth cell. It is one of the nine
+      // figures in the header grid now, and the same number printed twice on
+      // one screen reads as two numbers that happen to agree.
     ];
     $('nums').innerHTML = cells.map(function (c, i) {
       return '<div class="num d3-card tilt reveal" data-i="' + i + '">' +
@@ -199,24 +200,7 @@
      on it produced "\u20B91912000.00 cr" \u2014 a string with no grouping, no
      meaning past the third digit, and wide enough to wrap its own card onto a
      second line. Decimals earn their place only while the number is small. */
-  function compact(v, cur) {
-    var n = Number(v);
-    if (!n || isNaN(n)) return '—';
-    var sym = cur === 'INR' ? '₹' : '$';
-    function fig(x) {
-      return x >= 1000 ? Math.round(x).toLocaleString('en-IN')
-           : x >= 100  ? x.toFixed(0)
-                       : x.toFixed(2);
-    }
-    if (cur === 'INR') {
-      if (n >= 1e7) return sym + fig(n / 1e7) + ' cr';
-      if (n >= 1e5) return sym + fig(n / 1e5) + ' L';
-    }
-    if (n >= 1e12) return sym + fig(n / 1e12) + 'T';
-    if (n >= 1e9) return sym + fig(n / 1e9) + 'B';
-    if (n >= 1e6) return sym + fig(n / 1e6) + 'M';
-    return sym + n.toLocaleString();
-  }
+
 
   /* ── The ledger ──────────────────────────────────────────────────────────── */
 
@@ -278,18 +262,99 @@
 
   /* ── About ───────────────────────────────────────────────────────────────── */
 
+  /* ── Above the fold ───────────────────────────────────────────────────────
+     Nine figures and one paragraph, in that order, before any score. This is
+     the shape every screener opens with and the reason is not fashion: a
+     reader needs to know what the thing is worth and what it does before a
+     number out of 100 means anything to them. All nine come from the
+     backend's `ratios` block so there is one definition of each, and a figure
+     the provider does not publish shows a dash rather than a zero. */
+
+  function compactMoney(v, cur) {
+    var n = Number(v);
+    if (!n || isNaN(n)) return '—';
+    var sym = cur === 'INR' ? '₹' : '$';
+    function fig(x) {
+      return x >= 1000 ? Math.round(x).toLocaleString('en-IN')
+           : x >= 100  ? x.toFixed(0)
+                       : x.toFixed(2);
+    }
+    if (cur === 'INR') {
+      if (n >= 1e7) return sym + fig(n / 1e7) + ' Cr.';
+      if (n >= 1e5) return sym + fig(n / 1e5) + ' L';
+    }
+    if (n >= 1e12) return sym + fig(n / 1e12) + 'T';
+    if (n >= 1e9) return sym + fig(n / 1e9) + 'B';
+    if (n >= 1e6) return sym + fig(n / 1e6) + 'M';
+    return sym + n.toLocaleString();
+  }
+
+  function plain(v, unit, nd) {
+    var n = num(v, nd == null ? 2 : nd);
+    if (n == null) return '—';
+    return n.toLocaleString() + (unit || '');
+  }
+
+  function paintKey(d) {
+    var r = d.ratios || {};
+    var cur = d.currency;
+    var tx = (d.technical && d.technical.extras) || {};
+
+    var hi = r.high_52w != null ? r.high_52w : tx.high_52w;
+    var lo = r.low_52w  != null ? r.low_52w  : tx.low_52w;
+    var band = (hi == null && lo == null) ? '—'
+             : money(hi, cur) + ' / ' + money(lo, cur);
+
+    var cells = [
+      ['Market Cap',     compactMoney(r.market_cap, cur)],
+      ['Current Price',  money(r.price != null ? r.price : d.price, cur)],
+      ['High / Low',     band],
+      ['Stock P/E',      plain(r.pe, '', 1)],
+      ['Book Value',     r.book_value == null ? '—' : money(r.book_value, cur)],
+      ['Dividend Yield', plain(r.dividend_yield, ' %', 2)],
+      ['ROCE',           plain(r.roce, ' %', 1)],
+      ['ROE',            plain(r.roe, ' %', 1)],
+      ['Debt / Equity',  plain(r.debt_to_equity, '', 2)]
+    ];
+
+    $('kgrid').innerHTML = cells.map(function (c) {
+      return '<div class="kcell"><span class="k">' + esc(c[0]) + '</span>' +
+             '<span class="v tnum">' + esc(c[1]) + '</span></div>';
+    }).join('');
+  }
+
+  /* The description the provider publishes runs to a thousand characters and
+     is the last thing that should push the page down. It opens clamped to
+     three lines with the rest one tap away. */
   function paintAbout(d) {
     var p = d.profile || {};
-    if (!p.description) { $('s-about').hidden = true; return; }
+    var box = $('brief');
+    if (!p.description) { box.hidden = true; return; }
+
+    $('brief-body').textContent = p.description;
+
+    var more = $('brief-more');
+    // Clamped text is only worth a control when there is something hidden by
+    // the clamp. scrollHeight is read after layout for the same reason.
+    requestAnimationFrame(function () {
+      var el = $('brief-body');
+      if (el.scrollHeight - el.clientHeight > 4) {
+        more.hidden = false;
+        more.addEventListener('click', function () {
+          var open = el.classList.toggle('open');
+          more.textContent = open ? 'Show less' : 'Read more';
+        });
+      }
+    });
+
     var meta = [];
     if (p.employees) meta.push(Number(p.employees).toLocaleString() + ' employees');
-    if (p.website) meta.push('<a href="' + esc(p.website) + '" target="_blank" rel="noopener noreferrer" ' +
-      'style="color:var(--gold)">' + esc(String(p.website).replace(/^https?:\/\//, '')) + '</a>');
-    $('about').innerHTML = '<div>' + esc(p.description) + '</div>' +
-      (meta.length ? '<div style="margin-top:14px;font-size:13px;color:var(--mute)">' +
-        meta.join(' · ') + '</div>' : '') +
-      '<div class="src">' + esc(p.source || 'Source: data provider') + '</div>';
+    if (p.website) meta.push('<a href="' + esc(p.website) + '" target="_blank" rel="noopener noreferrer">' +
+      esc(String(p.website).replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</a>');
+    meta.push(esc(p.source || 'Source: data provider'));
+    $('brief-meta').innerHTML = meta.join(' · ');
   }
+
 
   /* ── Chart ───────────────────────────────────────────────────────────────
      A line, drawn from the same closes the engine scored. Deliberately not a
@@ -463,30 +528,52 @@
 
   /* ── The rail's scroll spy ───────────────────────────────────────────────── */
 
-  function wireRail() {
-    var rail = $('rail');
-    if (!rail) return;
-    rail.addEventListener('click', function (e) {
-      var a = e.target.closest ? e.target.closest('a') : null;
-      if (!a || !window.AltahaTrack) return;
-      window.AltahaTrack('stock_section_clicked',
-        { section: String(a.getAttribute('href') || '').replace('#s-', '') });
+  /* ── Panes ────────────────────────────────────────────────────────────────
+     Replaces the anchor rail and its scroll-spy. Six stacked sections and a
+     menu that scrolled between them is a lot of page on a phone; three panes
+     is the same content with only one of them asking to be read.
+
+     The chart is drawn on first reveal, not on load. Its SVG scales to its
+     container, and a container that is `hidden` measures zero. */
+
+  var chartDrawn = false;
+
+  function showPane(name) {
+    ['info', 'chart', 'scores'].forEach(function (p) {
+      var pane = $('pane-' + p), btn = $('pane-btn-' + p);
+      if (!pane || !btn) return;
+      var on = p === name;
+      pane.hidden = !on;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
     });
+    if (name === 'chart' && !chartDrawn) {
+      chartDrawn = true;
+      paintRanges();
+      loadChart();
+    }
+    if (window.AltahaTrack) window.AltahaTrack('stock_pane_shown', { pane: name });
   }
 
-  function spy() {
-    var links = [].slice.call(document.querySelectorAll('.stk-rail a'));
-    var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
-    if (!('IntersectionObserver' in window)) return;
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        var i = secs.indexOf(en.target);
-        if (i < 0) return;
-        links.forEach(function (a, j) { a.classList.toggle('on', i === j); });
+  function wirePanes() {
+    var bar = $('panes');
+    if (!bar) return;
+    bar.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-p]') : null;
+      if (b) showPane(b.dataset.p);
+    });
+    // Left/right arrows move between tabs, which is the half of the tablist
+    // pattern a screen reader actually uses.
+    var btns = [].slice.call(bar.querySelectorAll('[data-p]'));
+    btns.forEach(function (b, i) {
+      b.addEventListener('keydown', function (e) {
+        var step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        var n = btns[(i + step + btns.length) % btns.length];
+        n.focus(); showPane(n.dataset.p);
       });
-    }, { rootMargin: '-20% 0px -70% 0px' });
-    secs.forEach(function (s) { if (s) io.observe(s); });
+    });
   }
 
   /* ── Boot ────────────────────────────────────────────────────────────────── */
@@ -518,18 +605,18 @@
           });
         }
         paintHead(d);
+        paintKey(d);
+        paintAbout(d);
         paintScore(d);
         paintNumbers(d);
         paintLedger(d);
         paintLevels(d);
-        paintAbout(d);
         $('disc').textContent = d.disclaimer ||
           'Educational tool. Scores and evidence only — never a recommendation to buy or sell.';
-        paintRanges();
-        loadChart();
+        // The chart pane draws itself when it is first opened; only the
+        // headline day-change is needed up front.
         loadDayChange();
-        wireRail();
-        spy();
+        wirePanes();
         if (window.AltahaShell) window.AltahaShell.reveal();
       })
       .catch(function (e) {

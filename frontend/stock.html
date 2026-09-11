@@ -58,77 +58,100 @@
     </div>
   </div>
 
-  <nav class="stk-rail" id="rail" aria-label="Sections of this page">
-    <a href="#s-score" class="on">Score</a>
-    <a href="#s-chart">Chart</a>
-    <a href="#s-numbers">Numbers</a>
-    <a href="#s-ledger">The ledger</a>
-    <a href="#s-levels">Levels</a>
-    <a href="#s-about">About</a>
-  </nav>
-
   <div id="state"></div>
 
   <div id="body" hidden>
 
-    <section class="stk-sec" id="s-score">
-      <h2>The score</h2>
-      <p class="sub" id="score-sub">Weighted for the kind of business, and for the horizon you are reading it over.</p>
-      <div class="stk-scorewrap">
-        <div class="dial" id="dial">
-          <svg viewBox="0 0 200 200" aria-hidden="true">
-            <defs>
-              <linearGradient id="dialG" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="var(--gold-dp)"/>
-                <stop offset="1" stop-color="var(--gold-lt)"/>
-              </linearGradient>
-            </defs>
-            <circle class="trk" cx="100" cy="100" r="84"/>
-            <circle class="arc" id="arc" cx="100" cy="100" r="84"/>
-          </svg>
-          <div class="mid">
-            <div class="n tnum" id="scoren">—</div>
-            <div class="of">OUT OF 100</div>
-            <div class="lb" id="scorelb"></div>
+    <!-- ══ Above the fold ══════════════════════════════════════════════════
+         The nine figures a reader checks before they read anything else, and
+         one paragraph on what the company actually does. Both are answers to
+         "what am I looking at", which has to come before "is it any good" —
+         the score means nothing to someone who cannot answer the first. -->
+    <section class="stk-key" aria-label="Key figures">
+      <div class="kgrid" id="kgrid"></div>
+    </section>
+
+    <section class="stk-brief" id="brief">
+      <h2>About</h2>
+      <div class="brief-body" id="brief-body"></div>
+      <button type="button" class="brief-more" id="brief-more" hidden>Read more</button>
+      <div class="brief-meta" id="brief-meta"></div>
+    </section>
+
+    <!-- ══ Everything else, one pane at a time ═════════════════════════════
+         This page used to be six sections stacked end to end and a rail of
+         anchor links to scroll between them, which on a phone is a very long
+         page with a menu that scrolls it. Three panes: what was measured,
+         what the price did, and what the engine made of it. -->
+    <div class="stk-panebar">
+    <nav class="stk-panes" id="panes" role="tablist" aria-label="Sections">
+      <button type="button" class="stk-pane-btn active" role="tab" data-p="info"
+              id="pane-btn-info" aria-selected="true" aria-controls="pane-info">Info</button>
+      <button type="button" class="stk-pane-btn" role="tab" data-p="chart"
+              id="pane-btn-chart" aria-selected="false" aria-controls="pane-chart">Chart</button>
+      <button type="button" class="stk-pane-btn" role="tab" data-p="scores"
+              id="pane-btn-scores" aria-selected="false" aria-controls="pane-scores">Scores</button>
+    </nav>
+    </div>
+
+    <div class="stk-pane" id="pane-info" role="tabpanel" aria-labelledby="pane-btn-info">
+      <section class="stk-sec">
+        <h2>The numbers</h2>
+        <p class="sub">Everything the engine measured before it scored anything.</p>
+        <div class="nums d3-stage" id="nums"></div>
+      </section>
+
+      <section class="stk-sec" id="s-levels">
+        <h2>Levels</h2>
+        <p class="sub">Support, resistance and volatility, computed from the price series. Observations, not instructions.</p>
+        <div class="lvls" id="levels"></div>
+      </section>
+    </div>
+
+    <div class="stk-pane" id="pane-chart" role="tabpanel" aria-labelledby="pane-btn-chart" hidden>
+      <section class="stk-sec">
+        <h2>Price</h2>
+        <p class="sub">Closes from the exchange feed, unsmoothed.</p>
+        <div class="ranges" id="ranges"></div>
+        <div class="d3-card chartbox" id="chartbox"></div>
+      </section>
+    </div>
+
+    <div class="stk-pane" id="pane-scores" role="tabpanel" aria-labelledby="pane-btn-scores" hidden>
+      <section class="stk-sec">
+        <h2>The score</h2>
+        <p class="sub" id="score-sub">Weighted for the kind of business, and for the horizon you are reading it over.</p>
+        <div class="stk-scorewrap">
+          <div class="dial" id="dial">
+            <svg viewBox="0 0 200 200" aria-hidden="true">
+              <defs>
+                <linearGradient id="dialG" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="var(--gold-dp)"/>
+                  <stop offset="1" stop-color="var(--gold-lt)"/>
+                </linearGradient>
+              </defs>
+              <circle class="trk" cx="100" cy="100" r="84"/>
+              <circle class="arc" id="arc" cx="100" cy="100" r="84"/>
+            </svg>
+            <div class="mid">
+              <div class="n tnum" id="scoren">—</div>
+              <div class="of">OUT OF 100</div>
+              <div class="lb" id="scorelb"></div>
+            </div>
+          </div>
+          <div>
+            <div class="pillars" id="pillars"></div>
+            <div class="stk-basis" id="basis"></div>
           </div>
         </div>
-        <div>
-          <div class="pillars" id="pillars"></div>
-          <div class="stk-basis" id="basis"></div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="stk-sec" id="s-chart">
-      <h2>Price</h2>
-      <p class="sub">Closes from the exchange feed, unsmoothed.</p>
-      <div class="ranges" id="ranges"></div>
-      <div class="d3-card chartbox" id="chartbox"></div>
-    </section>
-
-    <section class="stk-sec" id="s-numbers">
-      <h2>The numbers</h2>
-      <p class="sub">Everything the engine measured before it scored anything.</p>
-      <div class="nums d3-stage" id="nums"></div>
-    </section>
-
-    <section class="stk-sec" id="s-ledger">
-      <h2>The ledger</h2>
-      <p class="sub">Every check, the formula that turned it into points, and what the concept means. Open any row.</p>
-      <div class="ledger" id="ledger"></div>
-    </section>
-
-    <section class="stk-sec" id="s-levels">
-      <h2>Levels</h2>
-      <p class="sub">Support, resistance and volatility, computed from the price series. Observations, not instructions.</p>
-      <div class="lvls" id="levels"></div>
-    </section>
-
-    <section class="stk-sec" id="s-about">
-      <h2>About the company</h2>
-      <p class="sub">What the business actually does.</p>
-      <div class="d3-card prose" id="about"></div>
-    </section>
+      <section class="stk-sec">
+        <h2>The ledger</h2>
+        <p class="sub">Every check, the formula that turned it into points, and what the concept means. Open any row.</p>
+        <div class="ledger" id="ledger"></div>
+      </section>
+    </div>
 
     <div class="stk-disc" id="disc"></div>
   </div>
