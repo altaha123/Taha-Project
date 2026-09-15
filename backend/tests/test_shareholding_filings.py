@@ -505,3 +505,127 @@ def test_the_index_cache_is_bounded(monkeypatch):
         sf.index("SYM%d" % i)
     assert len(sf._index_cache) <= 10
     sf._index_cache.clear()
+
+
+# ---------------------------------------------------------------------------
+# Quarter-ends versus interim filings
+#
+# Regulation 31 requires a filing each quarter AND one within ten days of a
+# capital change, so a company's list interleaves the two. Fatchem's real list
+# carries 2025-11-03, 2025-11-21 and 2026-01-17 between the quarter-ends.
+#
+# Reading that list as "quarters" broke the page twice: the chart plotted a
+# fortnight at the same width as a quarter, and the year-on-year comparison
+# counted four rows back, landed six months back, failed its own gap check and
+# returned nothing — so every YoY cell rendered as an em-dash.
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("day", ["2026-03-31", "2026-06-30", "2026-09-30",
+                                 "2025-12-31", "2024-03-31"])
+def test_quarter_ends_are_recognised(day):
+    assert sf.is_quarter_end(day) is True
+
+
+@pytest.mark.parametrize("day", ["2025-11-03", "2025-11-21", "2026-01-17",
+                                 "2026-06-29", "2026-02-28", "", "nonsense", None])
+def test_an_interim_filing_is_not_a_quarter_end(day):
+    assert sf.is_quarter_end(day) is False
+
+
+def _fcl_shaped(monkeypatch, periods):
+    """A filing list shaped like the real one: quarter-ends with interim
+    filings interleaved, and a different promoter figure at each."""
+    rows = [{"period": p, "filed": p, "xbrl": "https://nsearchives.nseindia.com/x/%s" % p,
+             "record_id": p, "revised": False,
+             "quarter_end": sf.is_quarter_end(p)} for p in periods]
+    monkeypatch.setattr(sf, "available", lambda: True)
+    monkeypatch.setattr(sf, "index", lambda s, force=False: rows)
+
+    base = sf.parse(_read(NEW))
+    bodies = {}
+    for i, p in enumerate(periods):
+        cats = {k: dict(v) for k, v in base["categories"].items()}
+        # Promoter falls one point per entry, so any wrong pairing shows up as
+        # a wrong delta rather than as no delta at all.
+        cats["promoter"] = dict(cats["promoter"], pct=60.0 - i)
+        bodies["https://nsearchives.nseindia.com/x/%s" % p] = dict(
+            base, categories=cats, period=p, filed=p,
+            source="https://nsearchives.nseindia.com/x/%s" % p, revised=False)
+    monkeypatch.setattr(sf, "filing",
+                        lambda url, period="", filed="", revised=False: bodies.get(url))
+
+
+# newest first, exactly as the exchange serves it
+FCL_SHAPED = ["2026-06-30", "2026-03-31", "2026-01-17", "2025-12-31",
+              "2025-11-21", "2025-11-03", "2025-09-30", "2025-06-30"]
+
+
+def test_quarter_on_quarter_skips_an_interim_filing(monkeypatch):
+    """
+    The row before 2026-03-31 in the raw list is 2026-01-17, a fortnight
+    earlier. Comparing against it reports a quarter of drift that did not
+    happen.
+    """
+    _fcl_shaped(monkeypatch, FCL_SHAPED)
+    out = sf.summary("FCL", quarters=12)
+    promoter = [s for s in out["split"] if s["key"] == "promoter"][0]
+    # 2026-06-30 is index 0 (60.0); the previous QUARTER-END is 2026-03-31 at
+    # index 1 (59.0). One step, not two.
+    assert promoter["change_qoq"] == pytest.approx(1.0)
+
+
+def test_year_on_year_survives_interleaved_interim_filings(monkeypatch):
+    """The regression that produced a column of em-dashes on the live page."""
+    _fcl_shaped(monkeypatch, FCL_SHAPED)
+    out = sf.summary("FCL", quarters=12)
+    for row in out["split"]:
+        assert row["change_yoy"] is not None, row["key"]
+    promoter = [s for s in out["split"] if s["key"] == "promoter"][0]
+    # 2025-06-30 is index 7 (53.0) against 2026-06-30 at 60.0.
+    assert promoter["change_yoy"] == pytest.approx(7.0)
+
+
+def test_quarters_and_filings_are_counted_separately(monkeypatch):
+    _fcl_shaped(monkeypatch, FCL_SHAPED)
+    out = sf.summary("FCL", quarters=12)
+    assert out["filings_read"] == 8
+    assert out["quarters_read"] == 5
+    assert out["interim_filings"] == 3
+    assert out["basis_period"] == "2026-06-30"
+
+
+def test_the_presence_of_interim_filings_is_stated(monkeypatch):
+    _fcl_shaped(monkeypatch, FCL_SHAPED)
+    out = sf.summary("FCL", quarters=12)
+    assert any("interim disclosures" in n for n in out["notes"])
+
+
+def test_history_marks_which_rows_are_quarter_ends(monkeypatch):
+    """The chart plots quarter-ends only; it needs to be able to tell."""
+    _fcl_shaped(monkeypatch, FCL_SHAPED)
+    out = sf.summary("FCL", quarters=12)
+    marked = {h["period"]: h["quarter_end"] for h in out["history"]}
+    assert marked["2026-03-31"] is True
+    assert marked["2026-01-17"] is False
+    assert marked["2025-11-21"] is False
+
+
+def test_a_company_filing_only_quarter_ends_is_unaffected(monkeypatch):
+    """The common case must not pay for the awkward one."""
+    _fcl_shaped(monkeypatch, ["2026-06-30", "2026-03-31", "2025-12-31",
+                              "2025-09-30", "2025-06-30"])
+    out = sf.summary("CLEAN", quarters=12)
+    assert out["interim_filings"] == 0
+    assert out["quarters_read"] == 5
+    promoter = [s for s in out["split"] if s["key"] == "promoter"][0]
+    assert promoter["change_qoq"] == pytest.approx(1.0)
+    assert promoter["change_yoy"] == pytest.approx(4.0)
+    assert not any("interim disclosures" in n for n in out["notes"])
+
+
+def test_a_gap_in_the_quarter_series_yields_no_year_figure(monkeypatch):
+    """A company that stopped filing for a year gets nothing, not a guess."""
+    _fcl_shaped(monkeypatch, ["2026-06-30", "2026-03-31", "2023-12-31"])
+    out = sf.summary("GAPPY", quarters=12)
+    for row in out["split"]:
+        assert row["change_yoy"] is None
