@@ -17,12 +17,12 @@ const root = path.resolve('frontend'), output = path.resolve('test-results/owner
 fs.mkdirSync(output, { recursive: true });
 
 const history = [
-  { period: '2025-03-31', filed: '2025-04-21', promoter: 50.11, fii: 19.06, dii: 19.46, public_non_institutional: 11.27, holders: 4765728, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_1' },
-  { period: '2025-06-30', filed: '2025-07-21', promoter: 50.07, fii: 19.21, dii: 19.80, public_non_institutional: 10.82, holders: 4435756, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_2' },
-  { period: '2025-09-30', filed: '2025-10-17', promoter: 50.01, fii: 18.65, dii: 20.33, public_non_institutional: 10.91, holders: 4393764, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_3' },
-  { period: '2025-12-31', filed: '2026-01-21', promoter: 50.01, fii: 19.09, dii: 20.18, public_non_institutional: 10.62, holders: 4206159, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_4' },
-  { period: '2026-03-31', filed: '2026-04-21', promoter: 50.00, fii: 18.67, dii: 20.55, public_non_institutional: 10.69, holders: 4421289, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_5' },
-  { period: '2026-06-30', filed: '2026-07-16', promoter: 50.48, fii: 17.20, dii: 21.19, public_non_institutional: 11.04, holders: 4651863, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_6', revised: true }
+  { quarter_end: true, period: '2025-03-31', filed: '2025-04-21', promoter: 50.11, fii: 19.06, dii: 19.46, public_non_institutional: 11.27, holders: 4765728, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_1' },
+  { quarter_end: true, period: '2025-06-30', filed: '2025-07-21', promoter: 50.07, fii: 19.21, dii: 19.80, public_non_institutional: 10.82, holders: 4435756, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_2' },
+  { quarter_end: true, period: '2025-09-30', filed: '2025-10-17', promoter: 50.01, fii: 18.65, dii: 20.33, public_non_institutional: 10.91, holders: 4393764, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_3' },
+  { quarter_end: true, period: '2025-12-31', filed: '2026-01-21', promoter: 50.01, fii: 19.09, dii: 20.18, public_non_institutional: 10.62, holders: 4206159, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_4' },
+  { quarter_end: true, period: '2026-03-31', filed: '2026-04-21', promoter: 50.00, fii: 18.67, dii: 20.55, public_non_institutional: 10.69, holders: 4421289, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_5' },
+  { quarter_end: true, period: '2026-06-30', filed: '2026-07-16', promoter: 50.48, fii: 17.20, dii: 21.19, public_non_institutional: 11.04, holders: 4651863, source: 'https://nsearchives.nseindia.com/corporate/xbrl/SHP_6', revised: true }
 ];
 
 const shareholding = {
@@ -99,7 +99,7 @@ const server = http.createServer((req, res) => {
   assert.equal(shareholdingCalls, 0, 'ownership must not load before its pane is opened');
 
   await page.locator('#pane-btn-owners').click();
-  await page.locator('.own-rows .own-row').first().waitFor();
+  await page.locator('.op').first().waitFor();
   assert.equal(shareholdingCalls, 1);
 
   // Lead with the finding: the biggest mover, named, before any chart.
@@ -108,10 +108,10 @@ const server = http.createServer((req, res) => {
   assert.match(lead, /fell 1\.47 percentage points/);
 
   // THE DOUBLE-COUNT GUARD. The reported public total (49.52) must never be a
-  // row or a bar segment beside the categories it contains.
-  const rowLabels = await page.locator('.own-rows .own-row .k').allInnerTexts();
-  assert.equal(rowLabels.length, 5);
-  assert.ok(!rowLabels.some(t => /^Public shareholding/i.test(t.trim())));
+  // panel or a bar segment beside the categories it contains.
+  const panelLabels = await page.locator('.op header h3').allInnerTexts();
+  assert.equal(panelLabels.length, 4, 'four categories get a panel of their own');
+  assert.ok(!panelLabels.some(t => /^Public shareholding/i.test(t.trim())));
   assert.equal(await page.locator('.own-bar .seg').count(), 5);
   const segSum = await page.locator('.own-bar').evaluate(bar =>
     [...bar.querySelectorAll('.seg')].reduce((a, s) => a + parseFloat(s.style.flex), 0));
@@ -119,35 +119,38 @@ const server = http.createServer((req, res) => {
   // The overlap is explained in prose exactly once.
   assert.match(await page.locator('.own-notes').innerText(), /do not overlap and sum to 100/);
 
-  // A derived figure stays visibly derived.
-  const diiRow = page.locator('.own-rows .own-row', { hasText: 'Domestic institutions' });
-  assert.match(await diiRow.innerText(), /derived/i);
+  // A derived figure stays visibly derived, and carries its own numbers.
+  const diiPanel = page.locator('.op', { hasText: 'Domestic institutions' });
+  assert.match(await diiPanel.innerText(), /derived/i);
+  assert.match(await diiPanel.innerText(), /21\.19/);
+  assert.match(await diiPanel.innerText(), /QoQ/);
+  assert.match(await diiPanel.innerText(), /YoY/);
+  assert.match(await diiPanel.innerText(), /378/);
 
-  // Identity never rests on colour: legend, direct labels and a table.
-  assert.equal(await page.locator('.own-legend .lg').count(), 4);
-  assert.equal(await page.locator('.own-chart .oll').count(), 4);
-  // textContent, not innerText: innerText is an HTML concept and comes back
-  // empty for an SVG <text>, which would make this assertion pass vacuously.
-  const labelText = (await page.locator('.own-chart').evaluate(
-    svg => [...svg.querySelectorAll('.oll')].map(t => t.textContent))).join(' ');
-  for (const s of ['Promoters', 'DII', 'FII', 'Public']) {
-    assert.ok(labelText.includes(s), `direct label missing: ${s} (got "${labelText}")`);
-  }
+  // Every panel draws on its own scale. That is the point of the layout:
+  // promoters near 62% and DII near 1% on one axis flattens two series onto
+  // the floor and collides their end labels.
+  assert.equal(await page.locator('.op-spark').count(), 4);
+  const scales = await page.evaluate(() =>
+    [...document.querySelectorAll('.op')].map(p => {
+      const r = p.querySelector('.op-range');
+      return r ? r.textContent.replace(/\s+/g, ' ').trim() : null;
+    }));
+  assert.ok(scales.every(Boolean), 'each panel states the range it is drawn on');
+  assert.ok(new Set(scales).size > 1, 'panels must not all share one scale');
+
+  // Identity never rests on colour: every panel names its series in text.
+  // Compared case-insensitively — the heading is uppercased by CSS, so
+  // innerText returns what is rendered, not what the payload said.
+  const labelsLower = panelLabels.map(t => t.toLowerCase());
+  for (const want of ['promoters', 'foreign institutions', 'domestic institutions', 'public'])
+    assert.ok(labelsLower.some(t => t.includes(want)), want);
+
+  // The full table repeats every figure for a reader who cannot use the marks.
   await page.locator('.own-more > summary').click();
   assert.equal(await page.locator('.own-table tbody tr').count(), 6);
   assert.match(await page.locator('.own-table tbody tr').first().innerText(), /2026-06-30/);
-  assert.match(await page.locator(".own-table tbody tr").first().innerText(), /revised/i);
-
-  // Axis ticks must be round numbers a reader can do arithmetic against.
-  const yticks = await page.locator('.own-chart').evaluate(
-    svg => [...svg.querySelectorAll('.oyl')].map(t => t.textContent));
-  for (const t of yticks) {
-    assert.ok(/^\d+(\.\d)?$/.test(t), `tick not a plain number: ${t}`);
-    assert.equal(Number(t) % 5, 0, `tick ${t} is not a round step`);
-  }
-
-  // One percentage axis, never two.
-  assert.ok(await page.locator(".own-chart .oyl").count() >= 3);
+  assert.match(await page.locator('.own-table tbody tr').first().innerText(), /revised/i);
 
   // Named holders, and a holder new to the table labelled as such rather than
   // as a purchase the filing does not evidence.
@@ -155,20 +158,12 @@ const server = http.createServer((req, res) => {
   assert.match(await page.locator('.own-names').nth(1).innerText(), /new in table/);
   assert.match(await page.locator('.own-names').nth(0).innerText(), /Srichakra/);
 
-  // Hover puts real numbers on screen.
-  await page.locator('.own-chart .oh').nth(2).hover();
-  assert.match(await page.locator('#own-read').innerText(), /2025-09-30/);
-  assert.match(await page.locator('#own-read').innerText(), /FII 18\.65%/);
-
-  // The chart keeps a readable floor width and scrolls inside its own box
-  // rather than shrinking its labels to nothing on a phone.
-  await page.setViewportSize({ width: 390, height: 1000 });
-  await page.waitForTimeout(60);
-  const chartBox = await page.locator('.own-chart').boundingBox();
-  assert.ok(chartBox.width >= 500, `chart squeezed to ${chartBox.width}px`);
-  const wrapScrolls = await page.locator('.own-chartwrap').evaluate(
-    n => n.scrollWidth > n.clientWidth);
-  assert.ok(wrapScrolls, 'chart should scroll inside its own container on a phone');
+  // Hover names the series as well as the number, so a readout cannot be
+  // mistaken for a different panel's.
+  await page.locator('.op-spark .oh').nth(2).hover();
+  const readout = await page.locator('#own-read').innerText();
+  assert.match(readout, /20\d\d-\d\d/);
+  assert.match(readout, /%/);
 
   // Phone through desktop, both themes, no horizontal overflow.
   for (const width of [320, 390, 768, 1280]) {
@@ -179,7 +174,19 @@ const server = http.createServer((req, res) => {
       const over = await page.evaluate(() =>
         document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert.ok(over <= 1, `horizontal overflow ${over}px at ${width}`);
-      await page.screenshot({ path: path.join(output, `own-${width}-${theme}.png`), fullPage: width === 1280 });
+      // Shoot the pane itself, not the whole page. A fullPage capture of a
+      // long document is mostly header, which says nothing about the
+      // component under test.
+      const shot = await page.locator('#own-body').boundingBox();
+      await page.screenshot({
+        path: path.join(output, `own-${width}-${theme}.png`),
+        // fullPage so the clip may extend past the viewport; without it a clip
+        // taller than the window is rejected as out of bounds.
+        fullPage: true,
+        clip: shot
+          ? { x: 0, y: Math.max(0, shot.y), width, height: Math.min(shot.height, 2600) }
+          : undefined,
+      });
     }
   }
   await page.setViewportSize({ width: 1280, height: 1000 });

@@ -621,103 +621,125 @@
   }
 
   /* The trend. Four series on one percentage axis — never two scales. */
-  function ownChart(history) {
-    var rows = (history || []).filter(function (h) { return h.period; });
-    if (rows.length < 2) return '';
+  /* One panel per category: the number, how it moved, and its own sparkline.
+     Replaces a four-series line chart and a separate row list that showed the
+     same four things twice.
 
-    var W = 640, H = 230, L = 34, R = 104, T = 14, B = 30;
-    var series = OWN_KEYS.map(function (k) {
-      return {
-        key: k,
-        label: OWN_SHORT[k],
-        pts: rows.map(function (h, i) { return { i: i, v: h[k] }; })
-                 .filter(function (p) { return p.v != null; })
-      };
-    }).filter(function (s) { return s.pts.length > 1; });
-    if (!series.length) return '';
-
-    var all = [];
-    series.forEach(function (s) { s.pts.forEach(function (p) { all.push(p.v); }); });
-    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
-    var pad = Math.max(2, (hi - lo) * 0.15);
-    lo = Math.max(0, lo - pad); hi = Math.min(100, hi + pad);
-    if (hi - lo < 4) { hi = lo + 4; }
-    // Snap the bounds outwards to a round step, so the axis reads 10/20/30/40
-    // rather than 5/22/39/56. An axis nobody can do arithmetic against is an
-    // axis that gets ignored.
-    var STEPS = [1, 2, 2.5, 5, 10, 20, 25];
-    var step = STEPS[STEPS.length - 1];
-    for (var si = 0; si < STEPS.length; si++) {
-      if ((hi - lo) / STEPS[si] <= 4) { step = STEPS[si]; break; }
+     WHY SMALL MULTIPLES AND NOT ONE CHART
+     Promoters sit near 62% and domestic institutions near 1%. On one linear
+     axis that is a line at the top, two lines flattened onto the floor, and
+     two-thirds of the plot empty in between — and the end labels of the two
+     floor-level series land on top of each other. Each panel here gets its own
+     scale, so a move from 3.17% to 1.36% is visible movement rather than a
+     twitch, and no two labels can ever collide because no panel has more than
+     one series. */
+  function spark(points, key) {
+    if (!points || points.length < 2) {
+      return '<div class="op-nospark">Not enough quarter-ends to plot yet</div>';
     }
-    lo = Math.max(0, Math.floor(lo / step) * step);
-    hi = Math.min(100, lo + step * 3);
-    while (hi < Math.max.apply(null, all)) { hi += step; }
+    var W = 260, H = 46, P = 3;
+    var vals = points.map(function (p) { return p.v; });
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    // A dead-flat series would divide by zero and draw at the top edge; give
+    // it a band so it reads as the flat line it is, centred.
+    if (hi - lo < 1e-9) { lo -= 0.5; hi += 0.5; }
+    var pad = (hi - lo) * 0.18;
+    lo -= pad; hi += pad;
 
-    function x(i) { return L + (i / (rows.length - 1)) * (W - L - R); }
-    function y(v) { return T + (1 - (v - lo) / (hi - lo)) * (H - T - B); }
+    function x(i) { return P + (i / (points.length - 1)) * (W - P * 2); }
+    function y(v) { return P + (1 - (v - lo) / (hi - lo)) * (H - P * 2); }
 
-    // A recessive grid: four lines, no box, labels in muted ink.
-    var ticks = [];
-    for (var t0 = lo; t0 <= hi + 1e-9; t0 += step) ticks.push(t0);
-    var dec = step < 1 ? 1 : 0;
-    var grid = ticks.map(function (t) {
-      return '<line class="og" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t).toFixed(1) +
-        '" y2="' + y(t).toFixed(1) + '"/>' +
-        '<text class="oyl" x="' + (L - 7) + '" y="' + (y(t) + 3.5).toFixed(1) + '">' +
-        t.toFixed(dec) + '</text>';
+    var d = points.map(function (p, i) {
+      return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.v).toFixed(1);
+    }).join(' ');
+    var area = d + ' L' + x(points.length - 1).toFixed(1) + ' ' + (H - P) +
+               ' L' + x(0).toFixed(1) + ' ' + (H - P) + ' Z';
+    var last = points[points.length - 1];
+
+    var hits = points.map(function (p, i) {
+      var bw = (W - P * 2) / Math.max(1, points.length - 1);
+      return '<rect class="oh" x="' + (x(i) - bw / 2).toFixed(1) + '" y="0" width="' +
+        bw.toFixed(1) + '" height="' + H + '" data-period="' + esc(p.label) +
+        '" data-val="' + p.v.toFixed(2) + '"></rect>';
     }).join('');
 
-    var lines = series.map(function (s) {
-      var d = s.pts.map(function (p, n) {
-        return (n ? 'L' : 'M') + x(p.i).toFixed(1) + ' ' + y(p.v).toFixed(1);
-      }).join(' ');
-      var last = s.pts[s.pts.length - 1];
-      return '<path class="ol s-' + s.key + '" d="' + d + '"/>' +
-        '<circle class="od s-' + s.key + '" cx="' + x(last.i).toFixed(1) + '" cy="' +
-          y(last.v).toFixed(1) + '" r="4.5"/>' +
-        // Direct label at the last point. With a legend as well, identity never
-        // rests on colour alone.
-        '<text class="oll s-' + s.key + '" x="' + (W - R + 10) + '" y="' +
-          (y(last.v) + 4).toFixed(1) + '">' + esc(s.label) + ' ' +
-          last.v.toFixed(1) + '%</text>';
-    }).join('');
-
-    var xlabels = rows.map(function (h, i) {
-      if (rows.length > 6 && i % 2) return '';
-      var q = String(h.period).slice(0, 7);
-      return '<text class="oxl" x="' + x(i).toFixed(1) + '" y="' + (H - 9) + '">' +
-        esc(q) + '</text>';
-    }).join('');
-
-    // Hover: one invisible band per quarter drives the crosshair and readout.
-    var hit = rows.map(function (h, i) {
-      var vals = OWN_KEYS.filter(function (k) { return h[k] != null; })
-        .map(function (k) { return OWN_SHORT[k] + ' ' + h[k].toFixed(2) + '%'; }).join(' · ');
-      var bw = (W - L - R) / Math.max(1, rows.length - 1);
-      return '<rect class="oh" x="' + (x(i) - bw / 2).toFixed(1) + '" y="' + T +
-        '" width="' + bw.toFixed(1) + '" height="' + (H - T - B) +
-        '" data-i="' + i + '" data-period="' + esc(String(h.period)) +
-        '" data-vals="' + esc(vals) + '"></rect>';
-    }).join('');
-
-    return '<div class="own-chartwrap">' +
-      '<svg class="own-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
-        'aria-label="Shareholding by category over the last ' + rows.length + ' quarters">' +
-        grid + xlabels +
-        '<line class="ocross" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" hidden/>' +
-        lines + hit +
-      '</svg>' +
-      '<div class="own-read" id="own-read" aria-live="polite"></div>' +
-      '</div>';
+    return '<svg class="op-spark s-' + esc(key) + '" viewBox="0 0 ' + W + ' ' + H +
+      '" preserveAspectRatio="none" role="img" aria-label="' +
+      points.length + ' quarters, ' + points[0].v.toFixed(2) + '% to ' +
+      last.v.toFixed(2) + '%">' +
+      '<path class="ar" d="' + area + '"/>' +
+      '<path class="ln" d="' + d + '"/>' +
+      '<circle class="dt" cx="' + x(points.length - 1).toFixed(1) + '" cy="' +
+        y(last.v).toFixed(1) + '" r="2.6"/>' + hits + '</svg>';
   }
 
-  function ownLegend(split) {
-    return '<div class="own-legend">' + split.filter(function (s) {
-      return OWN_KEYS.indexOf(s.key) >= 0;
-    }).map(function (s) {
-      return '<span class="lg"><i class="s-' + esc(s.key) + '"></i>' + esc(s.label) + '</span>';
-    }).join('') + '</div>';
+  /* A change chip. `fmt` decides how the magnitude reads, because percentage
+     points and people are not the same quantity: 0.48 points is meaningful to
+     two decimals, and "+230574.00 shareholders" is not a number anyone wrote. */
+  function chip(v, unit, fmt) {
+    if (v == null) return '<span class="op-chip none">—<b>' + unit + '</b></span>';
+    var t = Math.abs(v) < (fmt ? 0.5 : 0.005) ? 'flat' : (v > 0 ? 'up' : 'dn');
+    var sign = v > 0 ? '+' : (v < 0 ? '−' : '');
+    var mag = fmt ? fmt(Math.abs(v)) : Math.abs(v).toFixed(2);
+    return '<span class="op-chip ' + t + '">' + sign + mag +
+      '<b>' + unit + '</b></span>';
+  }
+
+  function ownPanels(split, history) {
+    // Only quarter-ends go on the line. An interim filing a fortnight after
+    // the last one would otherwise occupy the same width as a full quarter.
+    var qs = (history || []).filter(function (h) { return h.quarter_end !== false; });
+    var by = {};
+    OWN_KEYS.forEach(function (k) {
+      by[k] = qs.filter(function (h) { return h[k] != null; })
+               .map(function (h) { return { v: h[k], label: String(h.period).slice(0, 7) }; });
+    });
+
+    var order = OWN_KEYS.filter(function (k) {
+      return split.some(function (s) { return s.key === k; });
+    });
+    // Anything outside the four main lines (government, custodian) still has a
+    // row, just without a panel of its own.
+    var extras = split.filter(function (s) { return OWN_KEYS.indexOf(s.key) < 0; });
+
+    var panels = order.map(function (k) {
+      var s = split.filter(function (x) { return x.key === k; })[0];
+      var pts = by[k] || [];
+      // Labelled "range", because a bare pair of numbers under a line reads as
+      // first-and-last and these are lowest-and-highest.
+      var vals = pts.map(function (p) { return p.v; });
+      var range = pts.length > 1
+        ? '<div class="op-range"><span>' + pts.length + ' quarters</span>' +
+          '<span><b>range</b> ' + Math.min.apply(null, vals).toFixed(2) + '–' +
+          Math.max.apply(null, vals).toFixed(2) + '</span></div>'
+        : '';
+      return '<article class="op s-' + esc(k) + '">' +
+        '<header><i></i><h3>' + esc(s.label) + '</h3>' +
+          (s.derived ? '<em class="drv" title="Not filed as its own line in this quarter’s format; derived from the totals the filing does report">derived</em>' : '') +
+        '</header>' +
+        '<div class="op-val tnum">' + s.pct.toFixed(2) + '<span>%</span></div>' +
+        '<div class="op-chips">' + chip(s.change_qoq, 'QoQ') + chip(s.change_yoy, 'YoY') + '</div>' +
+        spark(pts, k) + range +
+        '<div class="op-holders">' +
+          (s.holders == null ? '—' : holders(s.holders)) +
+          '<b>' + (s.holders === 1 ? 'holder' : 'holders') + '</b>' +
+          (s.holders_change_qoq
+            ? '<em class="' + tone(s.holders_change_qoq) + '">' +
+              (s.holders_change_qoq > 0 ? '+' : '−') +
+              holders(Math.abs(s.holders_change_qoq)) + '</em>' : '') +
+        '</div>' +
+        '</article>';
+    }).join('');
+
+    var rest = extras.length
+      ? '<div class="op-rest">' + extras.map(function (s) {
+          return '<span><i class="s-' + esc(s.key) + '"></i>' + esc(s.label) +
+            '<b class="tnum">' + s.pct.toFixed(2) + '%</b></span>';
+        }).join('') + '</div>'
+      : '';
+
+    return '<div class="op-grid">' + panels + '</div>' + rest +
+      '<div class="own-read" id="own-read" aria-live="polite"></div>';
   }
 
   function ownNames(list, heading, empty) {
@@ -760,21 +782,20 @@
   }
 
   function wireOwnHover() {
-    var svg = document.querySelector('.own-chart');
     var read = $('own-read');
-    if (!svg || !read) return;
-    var cross = svg.querySelector('.ocross');
-    function show(e) {
-      var t = e.target;
-      if (!t || !t.classList || !t.classList.contains('oh')) return;
-      var x = Number(t.getAttribute('x')) + Number(t.getAttribute('width')) / 2;
-      cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.hidden = false;
-      read.innerHTML = '<b>' + esc(t.dataset.period) + '</b> · ' + esc(t.dataset.vals);
-    }
-    svg.addEventListener('mousemove', show);
-    svg.addEventListener('focusin', show);
-    svg.addEventListener('mouseleave', function () {
-      cross.hidden = true; read.innerHTML = '';
+    if (!read) return;
+    [].slice.call(document.querySelectorAll('.op-spark')).forEach(function (svg) {
+      function show(e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('oh')) return;
+        var panel = svg.closest ? svg.closest('.op') : null;
+        var who = panel ? panel.querySelector('h3').textContent : '';
+        read.innerHTML = '<b>' + esc(t.dataset.period) + '</b> · ' + esc(who) +
+          ' ' + esc(t.dataset.val) + '%';
+      }
+      svg.addEventListener('mousemove', show);
+      svg.addEventListener('focusin', show);
+      svg.addEventListener('mouseleave', function () { read.innerHTML = ''; });
     });
   }
 
@@ -812,38 +833,25 @@
       }
     }
 
+    var read = (d.quarters_read || 0) + ' quarter-end' +
+      ((d.quarters_read === 1) ? '' : 's') +
+      (d.interim_filings ? ' and ' + d.interim_filings + ' interim filing' +
+        (d.interim_filings === 1 ? '' : 's') : '') + ' read';
     var head = '<p class="own-lead">' + esc(lead) + '</p>' +
-      '<p class="own-asof">Quarter ended <b>' + esc(d.period || '—') + '</b>, filed ' +
-      esc(d.filed || '—') + '. ' + esc(String(d.quarters_read || 0)) +
-      ' quarters read.' +
+      '<p class="own-asof">As filed for <b>' + esc(d.period || '—') + '</b>' +
+      (d.filed ? ', filed ' + esc(d.filed) : '') + '. ' + esc(read) + '.' +
       (d.latest_source ? ' <a href="' + esc(d.latest_source) +
         '" target="_blank" rel="noopener">Open the filing</a>.' : '') + '</p>';
 
-    var rows = '<div class="own-rows">' + split.map(function (s) {
-      var flags = '';
-      if (s.derived) flags += '<em class="drv" title="Not filed as its own line in this quarter’s format; derived from the totals the filing does report">derived</em>';
-      if (s.reported_absent) flags += '<em class="drv">none reported</em>';
-      return '<div class="own-row">' +
-        '<span class="k"><i class="s-' + esc(s.key) + '"></i>' + esc(s.label) + flags + '</span>' +
-        '<span class="v tnum">' + s.pct.toFixed(2) + '%</span>' +
-        '<span class="c tnum ' + tone(s.change_qoq) + '">' +
-          (s.change_qoq == null ? '—' : pp(s.change_qoq)) + '<b>qoq</b></span>' +
-        '<span class="c tnum ' + tone(s.change_yoy) + '">' +
-          (s.change_yoy == null ? '—' : pp(s.change_yoy)) + '<b>yoy</b></span>' +
-        '<span class="h tnum">' + (s.holders == null ? '—' : holders(s.holders)) +
-          '<b>holders</b></span>' +
-        '</div>';
-    }).join('') + '</div>';
-
     var count = '';
     if (t.holders != null) {
-      var dir = t.holders_change_qoq;
       count = '<div class="own-count">' +
         '<div class="big tnum">' + holders(t.holders) + '</div>' +
         '<div class="lb">shareholders on the register</div>' +
-        (dir == null ? '' : '<div class="ch ' + tone(dir) + '">' +
-          (dir > 0 ? '+' : '') + holders(dir) + ' over the quarter</div>') +
-        '</div>';
+        '<div class="ch">' +
+          chip(t.holders_change_qoq, 'QoQ', holders) +
+          chip(t.holders_change_yoy, 'YoY', holders) +
+        '</div></div>';
     }
 
     var notes = (d.notes || []).length
@@ -852,8 +860,8 @@
         }).join('') + '</div>'
       : '';
 
-    box.innerHTML = head + ownBar(split) + rows + count +
-      ownLegend(split) + ownChart(d.history) + ownTable(d.history) +
+    box.innerHTML = head + ownBar(split) +
+      ownPanels(split, d.history) + count + ownTable(d.history) +
       '<div class="own-namecols">' +
       '<div>' + ownNames(d.names && d.names.promoters, 'Promoter group',
         'This company reports no promoter holding.') + '</div>' +

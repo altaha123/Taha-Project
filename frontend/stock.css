@@ -401,32 +401,89 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .own-bar{ display:flex; height:13px; border-radius:99px; overflow:hidden; gap:2px; margin-bottom:20px }
 .own-bar .seg{ background:var(--own-c); display:block; min-width:2px }
 
-.own-rows{ display:grid; gap:2px; margin-bottom:26px }
-.own-row{
-  display:grid; grid-template-columns:minmax(0,1.6fr) 74px 92px 92px 110px;
-  gap:10px; align-items:baseline; padding:11px 13px;
-  background:var(--paper-2); border-radius:9px; font-size:13px;
+/* One panel per category. Each has its own scale, which is the whole point:
+   promoters near 62% and domestic institutions near 1% on a shared axis put
+   two series flat on the floor with their end labels on top of each other, and
+   left two-thirds of the plot empty. */
+.op-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:12px; margin-bottom:22px;
 }
-.own-row .k{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; color:var(--ink-2) }
-.own-row .k i{
-  width:9px; height:9px; border-radius:2px; background:var(--own-c); flex:0 0 auto;
+.op{
+  padding:15px 16px 13px; background:var(--skin-card);
+  border:1px solid var(--rule); border-radius:13px; min-width:0;
 }
-.own-row .v{ font:600 15px/1 'IBM Plex Mono',monospace; text-align:right }
-.own-row .c,.own-row .h{ font:500 12px/1 'IBM Plex Mono',monospace; text-align:right; color:var(--ink-2) }
-.own-row .c b,.own-row .h b{
-  display:block; font:500 9px/1 'IBM Plex Mono',monospace; letter-spacing:.11em;
-  text-transform:uppercase; color:var(--mute); margin-top:5px;
+/* A fixed two-line header box. "Domestic institutions (DII)" wraps and
+   "Promoters" does not, and without a floor the wrapped one pushes its
+   sparkline down so the row of panels no longer lines up. */
+.op > header{
+  display:flex; align-items:flex-start; gap:8px; margin-bottom:11px;
+  min-width:0; min-height:28px;
 }
-.own-row .drv{
-  font:500 9px/1 'IBM Plex Mono',monospace; letter-spacing:.08em; text-transform:uppercase;
-  color:var(--mute); border:1px solid var(--rule); border-radius:4px; padding:3px 5px; font-style:normal;
+.op > header i{
+  width:9px; height:9px; border-radius:2px; background:var(--own-c);
+  flex:0 0 auto; margin-top:2px;
 }
-@media (max-width:720px){
-  .own-row{ grid-template-columns:1fr auto; gap:6px 10px }
-  .own-row .k{ grid-column:1 } .own-row .v{ grid-column:2 }
-  .own-row .c,.own-row .h{ text-align:left }
-  .own-row .c b,.own-row .h b{ display:inline; margin:0 0 0 5px }
+.op > header h3{
+  margin:0; font:500 11px/1.25 'IBM Plex Mono',monospace; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--mute); min-width:0;
+  overflow-wrap:anywhere;
 }
+.op .drv{
+  font:500 9px/1 'IBM Plex Mono',monospace; letter-spacing:.07em; font-style:normal;
+  text-transform:uppercase; color:var(--mute); border:1px solid var(--rule);
+  border-radius:4px; padding:3px 5px; flex:0 0 auto;
+}
+.op-val{
+  font:600 30px/1 'IBM Plex Mono',monospace; letter-spacing:-.03em; color:var(--ink);
+}
+.op-val span{ font-size:16px; color:var(--mute); margin-left:2px }
+
+.op-chips{ display:flex; gap:6px; margin:11px 0 13px; flex-wrap:wrap }
+.op-chip{
+  font:600 11px/1 'IBM Plex Mono',monospace; padding:5px 7px; border-radius:6px;
+  background:var(--paper-2); color:var(--ink-2); white-space:nowrap;
+}
+.op-chip b{
+  font:500 9px/1 'IBM Plex Mono',monospace; letter-spacing:.09em;
+  color:var(--mute); margin-left:5px;
+}
+.op-chip.up{ color:var(--sh-up) } .op-chip.dn{ color:var(--sh-dn) }
+.op-chip.none,.op-chip.flat{ color:var(--mute) }
+
+.op-spark{ display:block; width:100%; height:46px; overflow:visible }
+.op-spark .ln{ fill:none; stroke:var(--own-c); stroke-width:1.8; stroke-linejoin:round;
+  stroke-linecap:round; vector-effect:non-scaling-stroke }
+.op-spark .ar{ fill:var(--own-c); opacity:.10; stroke:none }
+.op-spark .dt{ fill:var(--own-c); stroke:var(--skin-card); stroke-width:1.5;
+  vector-effect:non-scaling-stroke }
+.op-spark .oh{ fill:transparent; cursor:crosshair }
+.op-nospark{
+  height:46px; display:flex; align-items:center; font-size:11.5px;
+  color:var(--mute); line-height:1.4;
+}
+.op-range{
+  display:flex; justify-content:space-between; gap:8px; margin-top:7px;
+  font:500 10px/1 'IBM Plex Mono',monospace; color:var(--mute);
+}
+.op-range b{ font-weight:500; letter-spacing:.08em; text-transform:uppercase; opacity:.75 }
+.op-holders{
+  margin-top:11px; padding-top:10px; border-top:1px solid var(--rule);
+  font:600 13px/1 'IBM Plex Mono',monospace; color:var(--ink-2);
+  display:flex; align-items:baseline; gap:6px; flex-wrap:wrap;
+}
+.op-holders b{
+  font:500 9px/1 'IBM Plex Mono',monospace; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--mute);
+}
+.op-holders em{ font:600 11px/1 'IBM Plex Mono',monospace; font-style:normal; margin-left:auto }
+.op-holders em.up{ color:var(--sh-up) } .op-holders em.dn{ color:var(--sh-dn) }
+
+/* Government, custodian and the rest: real, small, and not worth a panel. */
+.op-rest{ display:flex; flex-wrap:wrap; gap:8px 18px; margin:-8px 0 20px }
+.op-rest span{ display:inline-flex; align-items:center; gap:7px; font-size:12.5px; color:var(--mute) }
+.op-rest i{ width:8px; height:8px; border-radius:2px; background:var(--own-c) }
+.op-rest b{ font:600 12.5px/1 'IBM Plex Mono',monospace; color:var(--ink-2) }
 
 .own-count{
   padding:17px 19px; background:var(--paper-2); border-radius:11px;
@@ -437,31 +494,15 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
   font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
   text-transform:uppercase; color:var(--mute); margin-top:8px;
 }
-.own-count .ch{ font-size:13px; margin-top:9px }
+.own-count .ch{ display:flex; gap:6px; margin-top:11px; flex-wrap:wrap }
 
-.own-legend{ display:flex; flex-wrap:wrap; gap:7px 18px; margin-bottom:10px }
-.own-legend .lg{ display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-2) }
-.own-legend .lg i{ width:12px; height:3px; border-radius:99px; background:var(--own-c) }
 
 /* The chart keeps a floor width and scrolls inside its own box on a phone.
    Letting it shrink to the viewport looked tidier and made every label about
    five pixels tall — a chart nobody can read is worse than a table. The page
    itself still never scrolls sideways; only this container does. */
-.own-chartwrap{ margin-bottom:8px; overflow-x:auto; overflow-y:hidden }
-.own-chart{ width:100%; min-width:540px; height:auto; display:block; overflow:visible }
-.own-chart .og{ stroke:var(--rule); stroke-width:1 }
-.own-chart .oyl,.own-chart .oxl{
-  font:500 11px/1 'IBM Plex Mono',monospace; fill:var(--mute);
-}
-.own-chart .oyl{ text-anchor:end }
-.own-chart .oxl{ text-anchor:middle }
-/* 2px lines, ≥8px end markers, a surface ring so crossings stay legible. */
-.own-chart .ol{ fill:none; stroke:var(--own-c); stroke-width:2; stroke-linejoin:round; stroke-linecap:round }
-.own-chart .od{ fill:var(--own-c); stroke:var(--skin-card); stroke-width:2 }
-.own-chart .oll{ font:600 11px/1 'IBM Plex Mono',monospace; fill:var(--own-c) }
-.own-chart .ocross{ stroke:var(--mute); stroke-width:1; stroke-dasharray:3 3 }
-.own-chart .oh{ fill:transparent; cursor:crosshair }
-.own-read{ min-height:19px; font:500 12px/1.5 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.own-read{ min-height:19px; margin:-10px 0 18px;
+  font:500 12px/1.5 'IBM Plex Mono',monospace; color:var(--ink-2) }
 .own-read b{ color:var(--ink) }
 
 .own-more{ margin:14px 0 26px }
@@ -519,5 +560,5 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .own-notes p{ margin:0 0 9px } .own-notes p:last-child{ margin:0 }
 
 @media (prefers-reduced-motion:reduce){
-  .own-chart .ol,.own-bar .seg{ transition:none }
+  .op-spark .ln,.own-bar .seg{ transition:none }
 }

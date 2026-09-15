@@ -227,6 +227,29 @@ def _parse_nse_date(s: str):
         return None
 
 
+
+def is_quarter_end(iso: str) -> bool:
+    """
+    True for 31 Mar, 30 Jun, 30 Sep, 31 Dec.
+
+    Regulation 31 requires a filing each quarter, but it ALSO requires one
+    within ten days of any capital restructuring — so a company's filing list
+    is a mix of quarter-ends and interim snapshots. Fatchem's list carries
+    2025-11-03, 2025-11-21 and 2026-01-17 alongside the real quarters.
+
+    Treating those as quarters is wrong twice over. The chart plots them evenly
+    spaced, so a fortnight looks the same width as a quarter; and the
+    year-on-year comparison counts four rows back, lands six months back
+    instead, fails its own sanity check and returns nothing — which is why
+    every YoY cell rendered as an em-dash.
+    """
+    try:
+        d = dt.date.fromisoformat(iso)
+    except Exception:
+        return False
+    return (d.month, d.day) in ((3, 31), (6, 30), (9, 30), (12, 31))
+
+
 def index(symbol: str, force=False):
     """
     Every shareholding filing NSE holds for this symbol, newest first.
@@ -262,6 +285,9 @@ def index(symbol: str, force=False):
             continue
         rows.append({
             "period": period.isoformat(),
+            # A quarter-end filing is comparable with other quarter-ends. An
+            # interim one is a real disclosure but not a point on that series.
+            "quarter_end": is_quarter_end(period.isoformat()),
             # Both dates are kept. The period is what the figures describe; the
             # broadcast date is when the market could first have known them,
             # and they can be three weeks apart.
@@ -646,23 +672,43 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
         return out
 
     latest = parsed[0]
-    prev = parsed[1] if len(parsed) > 1 else None
-    # A year ago means four quarters back, and only if that is really what the
-    # row is — a company that skipped a filing must not have a five-quarter gap
-    # silently labelled as a year.
-    year_ago = None
-    if len(parsed) > 4:
-        cand = parsed[4]
+
+    # Comparisons run on the quarter-end series, never on the raw filing list.
+    # Reg 31 also requires an interim filing within ten days of a capital
+    # change, so "the row before this one" is frequently a fortnight back, not
+    # a quarter. Comparing against it reports a quarter of drift that did not
+    # happen, and counting four rows back for the year lands wherever those
+    # interim filings happen to put it.
+    quarters = [p for p in parsed if is_quarter_end(p.get("period") or "")]
+    interim = [p for p in parsed if not is_quarter_end(p.get("period") or "")]
+
+    def _before(series, when, lo, hi):
+        """The entry lo-hi days before `when`, or None. Never a guess."""
         try:
-            d0 = dt.date.fromisoformat(latest["period"])
-            d4 = dt.date.fromisoformat(cand["period"])
-            if 300 <= (d0 - d4).days <= 430:
-                year_ago = cand
+            d0 = dt.date.fromisoformat(when)
         except Exception:
-            year_ago = None
+            return None
+        for cand in series:
+            try:
+                gap = (d0 - dt.date.fromisoformat(cand["period"])).days
+            except Exception:
+                continue
+            if lo <= gap <= hi:
+                return cand
+        return None
+
+    # The latest filing may itself be interim. Compare like with like: an
+    # interim filing against the quarter-end series is not a quarter's change.
+    basis = quarters[0] if quarters else latest
+    prev = _before(quarters, basis["period"], 60, 135) if quarters else None
+    year_ago = _before(quarters, basis["period"], 300, 430) if quarters else None
 
     def cat(rec, key):
         return (rec or {}).get("categories", {}).get(key) or {}
+
+    # Levels come from the most recent filing of any kind — that is what the
+    # register says today. Changes come from the quarter-end series.
+    latest_cats = latest
 
     # A company with no promoter does not file a zero — it omits the line.
     # Read as a gap that is indistinguishable from a parse failure, which it is
@@ -680,7 +726,7 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
             "the public total and the grand total at 100%.")
 
     for key in SPLIT_KEYS:
-        now = cat(latest, key)
+        now = cat(latest_cats, key)
         if not now or now.get("pct") is None:
             if key == "promoter" and no_promoter:
                 out["split"].append({
@@ -699,8 +745,8 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
             "shares": now.get("shares"),
             "derived": bool(now.get("derived")),
             "reported_absent": False,
-            "change_qoq": _delta(now.get("pct"), cat(prev, key).get("pct")),
-            "change_yoy": _delta(now.get("pct"), cat(year_ago, key).get("pct")),
+            "change_qoq": _delta(cat(basis, key).get("pct"), cat(prev, key).get("pct")),
+            "change_yoy": _delta(cat(basis, key).get("pct"), cat(year_ago, key).get("pct")),
             "holders_change_qoq": _delta(now.get("holders"), cat(prev, key).get("holders")),
         })
 
@@ -708,8 +754,10 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
     public = cat(latest, "public_total")
     out["totals"] = {
         "holders": total.get("holders"),
-        "holders_change_qoq": _delta(total.get("holders"), cat(prev, "total").get("holders")),
-        "holders_change_yoy": _delta(total.get("holders"), cat(year_ago, "total").get("holders")),
+        "holders_change_qoq": _delta(cat(basis, "total").get("holders"),
+                                     cat(prev, "total").get("holders")),
+        "holders_change_yoy": _delta(cat(basis, "total").get("holders"),
+                                     cat(year_ago, "total").get("holders")),
         "shares": total.get("shares"),
         "public_total_pct": public.get("pct"),
         "split_sums_to": round(sum(s["pct"] for s in out["split"] if s["pct"] is not None), 2),
@@ -728,7 +776,8 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
 
     for rec in parsed:
         row = {"period": rec.get("period"), "filed": rec.get("filed"),
-               "revised": bool(rec.get("revised")), "source": rec.get("source")}
+               "revised": bool(rec.get("revised")), "source": rec.get("source"),
+               "quarter_end": is_quarter_end(rec.get("period") or "")}
         for key in SPLIT_KEYS:
             c = cat(rec, key)
             if c.get("pct") is not None:
@@ -773,9 +822,20 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
         out["notes"].append(
             "The latest filing for this quarter is a revision of an earlier one.")
 
+    if interim:
+        out["notes"].append(
+            "%d of the %d filings read are interim disclosures rather than "
+            "quarter-ends — Regulation 31 requires one within ten days of a "
+            "capital change. They are shown, but the quarter-on-quarter and "
+            "year-on-year figures compare quarter-ends only."
+            % (len(interim), len(parsed)))
+
     out["available"] = True
     out["period"] = latest.get("period")
     out["filed"] = latest.get("filed")
-    out["quarters_read"] = len(parsed)
+    out["basis_period"] = basis.get("period")
+    out["quarters_read"] = len(quarters)
+    out["filings_read"] = len(parsed)
+    out["interim_filings"] = len(interim)
     out["latest_source"] = latest.get("source")
     return out
