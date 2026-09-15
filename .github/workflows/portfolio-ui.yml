@@ -44,6 +44,7 @@ jobs:
           name: portfolio-browser-verification
           path: test-results/portfolio
       - name: Verify homepage visuals, motion and accessibility
+        if: always()
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/home-browser.cjs
@@ -53,6 +54,7 @@ jobs:
           name: homepage-browser-verification
           path: test-results/home
       - name: Verify the ownership pane does not double-count public holding
+        if: always()
         # The one failure mode worth a browser for: in the exchange's format
         # Public CONTAINS the FII and DII lines, so a chart of all four
         # overstates the company by about half. This asserts on the rendered
@@ -66,6 +68,7 @@ jobs:
           name: ownership-browser-verification
           path: test-results/ownership
       - name: Verify WOW orders and concall digests
+        if: always()
         # The two failure modes worth a browser: an order the company never
         # priced must never render as zero, and a quoted line must never
         # appear without the name of who said it.
@@ -78,6 +81,7 @@ jobs:
           name: filings-views-verification
           path: test-results/filings-views
       - name: Verify sign-in failures and link completion on phone and desktop
+        if: always()
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/signin-browser.cjs
