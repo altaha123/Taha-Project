@@ -237,3 +237,24 @@ def test_housekeeping_removes_only_dead_rows():
     removed = A.purge_expired()
     assert removed["login_tokens_removed"] >= 1
     assert A.user_for_session(live) is not None
+
+
+def test_simultaneous_verification_creates_only_one_session():
+    from concurrent.futures import ThreadPoolExecutor
+    import threading
+    token = A.start_login('reader@example.com')['token']
+    barrier = threading.Barrier(4)
+
+    def verify(_):
+        A._connect()
+        barrier.wait()
+        try:
+            return A.complete_login(token)
+        finally:
+            A._local.conn.close()
+            A._local.conn = None
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(verify, range(4)))
+    assert sum('session' in r for r in results) == 1
+    assert A._connect().execute('SELECT COUNT(*) FROM sessions').fetchone()[0] == 1
