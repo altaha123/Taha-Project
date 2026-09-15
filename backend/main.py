@@ -72,6 +72,21 @@ try:
 except Exception:
     xbrl_source = None
 try:
+    # Named for the filing, not for the concept: `shareholding` is already a
+    # function on data_source (the provider's thin two-line version). This is
+    # the company's own Reg 31 document, and the two must not be confused.
+    import shareholding_filings
+except Exception:
+    shareholding_filings = None
+try:
+    import wow_orders
+except Exception:
+    wow_orders = None
+try:
+    import concalls as concall_source
+except Exception:
+    concall_source = None
+try:
     import special as special_engine
 except Exception:
     special_engine = None
@@ -2022,6 +2037,130 @@ def fundamentals_xbrl(ticker: str, limit: int = 8, consolidated: Optional[bool] 
                                              consolidated=consolidated))
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+
+
+@app.get("/shareholding")
+def shareholding_pattern(ticker: str, quarters: int = 8, names: int = 12):
+    """
+    Who owns this company, read from its own filing with the exchange.
+
+    Every listed Indian company files its shareholding pattern quarterly under
+    LODR Regulation 31, in XBRL. This is that document — the split between
+    promoters, foreign institutions, domestic institutions and the rest of the
+    public, how many shareholders sit behind each line, and the names of the
+    promoter entities and every public holder above one per cent.
+
+    The response separates two things most screeners blur. `split` is the
+    non-overlapping decomposition and sums to 100. `public_total_pct` is the
+    exchange's own Table III figure, which CONTAINS the foreign, domestic and
+    non-institutional lines — drawing the two together double-counts about
+    half the company.
+
+    Every row carries the URL of the filing it was read from.
+    """
+    if shareholding_filings is None:
+        return {"available": False,
+                "message": "The shareholding reader is not available."}
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        return to_native(shareholding_filings.summary(
+            sym, quarters=max(2, min(quarters, 12)), names_limit=max(1, min(names, 40))))
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+
+
+@app.get("/wow-orders")
+def wow_orders_feed(days: int = 7, refresh: bool = False):
+    """
+    Order wins, sized against the company that won them.
+
+    "Rs 450 crore order" is a headline. "Rs 450 crore against a market value of
+    Rs 3,700 crore" is a fact about the company, and that is what this returns.
+    The order value is read out of the filed PDF, because the exchange headline
+    almost never carries it.
+
+    Orders whose value the company did not disclose are listed and clearly
+    marked, never ranked, and never given an assumed number. The quarter block
+    compares disclosed order inflow this fiscal quarter with the previous one,
+    and says so when one of the two started before this service was recording.
+    """
+    if wow_orders is None:
+        return {"available": False, "message": "The orders reader is not available."}
+    try:
+        payload = wow_orders.scan(days=max(1, min(days, 30)), force=bool(refresh))
+        payload["quarter"] = wow_orders.quarter_comparison()
+        return to_native(payload)
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the orders: {str(e)[:110]}")
+
+
+@app.post("/jobs/wow-backfill")
+def wow_backfill(days: int = 45, key: str = ""):
+    """
+    Walk the exchange archive and record order events this instance never saw.
+
+    Admin-gated and bounded: a few hundred requests, so it belongs on a
+    schedule or a one-off call, never in a page load.
+    """
+    _require_admin(key)
+    if wow_orders is None:
+        raise HTTPException(503, "The orders reader is not available.")
+    return to_native(wow_orders.backfill(days=max(1, min(days, 120))))
+
+
+@app.get("/concalls")
+def concalls_recent(days: int = 7, limit: int = 25):
+    """
+    Earnings call transcripts filed recently, digested.
+
+    The digest is EXTRACTED, never paraphrased: who was on the call, the
+    company's own forward-looking sentences quoted verbatim and attributed to
+    the person who said them, and what the call spent its time on. A written
+    summary requires a language model and appears only when one is configured;
+    when it is not, the response says so rather than passing the extraction off
+    as a summary.
+    """
+    if concall_source is None:
+        return {"available": False, "message": "The transcript reader is not available."}
+    try:
+        return to_native(concall_source.recent(days=max(1, min(days, 30)),
+                                               limit=max(1, min(limit, 50))))
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the transcripts: {str(e)[:110]}")
+
+
+@app.get("/concall")
+def concall_for_company(ticker: str, summary: bool = False):
+    """
+    One company's latest earnings call, and how it differed from the last one.
+
+    `summary=true` asks for a written summary. It is produced only when a model
+    is configured on this instance; otherwise the response explains that none
+    is, and the extracted digest stands on its own.
+    """
+    if concall_source is None:
+        return {"available": False, "message": "The transcript reader is not available."}
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        payload = concall_source.for_symbol(sym)
+        if summary and payload.get("available"):
+            text = None
+            if payload.get("pdf"):
+                try:
+                    import filings_text
+                    text = filings_text.cached(payload["pdf"])
+                except Exception:
+                    text = None
+            payload["summary"] = concall_source.summarise(
+                text or "", company=payload.get("company") or sym,
+                quarter=payload.get("quarter") or "")
+        return to_native(payload)
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the transcript: {str(e)[:110]}")
 
 
 @app.get("/special")

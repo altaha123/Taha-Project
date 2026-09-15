@@ -17,6 +17,19 @@ requests>=2.31
 # pytest>=8.0
 Pillow>=10.0
 
+# Reading the PDF a filing actually is. Almost nothing worth knowing is in the
+# exchange headline — the order value, the customer, what management said on
+# the call are all in the attachment. Pure Python, no build step, so it cannot
+# break a deploy on a free instance for want of a compiler.
+pypdf>=4.0
+
+# The optional written summary of an earnings call. Dormant: concalls.py
+# imports it lazily and only when ANTHROPIC_API_KEY is set, so until a key is
+# present this costs disk on the image and nothing at runtime. It is pinned
+# here rather than left out so that switching the feature on is one environment
+# variable, not a deploy.
+anthropic>=0.40
+
 # Crash reporting. Inert without SENTRY_DSN in the environment — main.py does
 # not import it at all in that case — so this costs disk on the image and
 # nothing at runtime until it is switched on. Pure Python, no build step.

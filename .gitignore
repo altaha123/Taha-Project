@@ -11,5 +11,18 @@ research/.cache/
 # XBRL documents fetched at runtime. Cache, never source.
 xbrl-cache/
 
+# Parsed shareholding filings. Cache, never source — a filed document
+# never changes, so this is rebuilt on demand and never checked in.
+shp-cache/
+
+# Text extracted from filed PDFs, and the order / concall ledgers. Data and
+# cache, never source: they live on the mounted disk in production and are
+# rebuilt on demand anywhere else.
+filing-text/
+wow_orders.db
+wow_orders.db-*
+concalls.db
+concalls.db-*
+
 # Browser-test screenshots and traces. Output, never source.
 test-results/

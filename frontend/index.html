@@ -1145,6 +1145,7 @@
 <link rel="stylesheet" href="special.css">
 <link rel="stylesheet" href="experience.css">
 <link rel="stylesheet" href="home-motion.css">
+<link rel="stylesheet" href="filings-views.css">
 <link rel="stylesheet" href="type.css">
 <script>
 (function(){try{
@@ -1223,6 +1224,8 @@
         <button id="tab-tracker" role="menuitem">Tracker</button>
         <button id="tab-results" role="menuitem">Results</button>
         <button id="tab-options" role="menuitem">Options</button>
+        <button id="tab-wow" role="menuitem">WOW orders</button>
+        <button id="tab-concalls" role="menuitem">Concall summaries</button>
         <div class="sep"></div>
         <button id="tab-vocab" role="menuitem">Vocabulary</button>
       </div>
@@ -1673,6 +1676,34 @@
     </details>
   </div><!-- /view-deals -->
 
+  <!-- WOW orders. An order is only interesting relative to the company that
+       won it, so the size against market capitalisation is the headline and
+       the rupee figure is the supporting detail. -->
+  <div id="view-wow" style="display:none">
+    <header class="tabhead">
+      <h2>WOW orders</h2>
+      <p>Order wins measured against the size of the company that won them. The value is read from the filed document, because the exchange headline almost never carries it.</p>
+    </header>
+    <details class="tabnote">
+      <summary>How an order gets called WOW, and what is left out</summary>
+      <p>An order is flagged <b>WOW</b> when the value the company disclosed is at least a set share of its market capitalisation — shown on the page, and configurable. Plenty of order disclosures quantify a contract in megawatts or containers and never state a rupee figure at all; those are listed as <b>value not disclosed</b>, and are never ranked or given an assumed number. Nothing here is a recommendation: an order is an event with a size, and the size is all this claims.</p>
+    </details>
+    <div id="wow-body"></div>
+  </div><!-- /view-wow -->
+
+  <!-- Concall digests. Extracted from the transcript, never paraphrased. -->
+  <div id="view-concalls" style="display:none">
+    <header class="tabhead">
+      <h2>Concall summaries</h2>
+      <p>Earnings call transcripts, digested — who was on the call, what management committed to in their own words, and what the call spent its time on compared with last quarter.</p>
+    </header>
+    <details class="tabnote">
+      <summary>What is extracted, and what is not</summary>
+      <p>Everything on this page is taken from the transcript itself. Forward-looking lines are quoted <b>verbatim and attributed to the person who said them</b> — a commitment put in management's mouth that they did not make would be the worst thing this page could print, so an analyst's question or the moderator's script is never quoted as guidance. Topic emphasis counts how often a subject came up per thousand words: it shows what the call was spent on, which is not the same as what was said about it. A written summary needs a language model; when none is configured the page says so instead of presenting the extraction as one.</p>
+    </details>
+    <div id="concalls-body"></div>
+  </div><!-- /view-concalls -->
+
   <div id="view-special" style="display:none">
     <header class="tabhead">
       <h2>Altaha <i>Special</i></h2>
@@ -1836,11 +1867,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab"];
+const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab"];
+const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -4105,6 +4136,8 @@ if(fcSymParam){
 <script src="shell.js" defer></script>
 <script src="home.js" defer></script>
 <script src="special.js" defer></script>
+<script src="wow.js" defer></script>
+<script src="concalls.js" defer></script>
 <script src="experience.js" defer></script>
 <script src="home-motion.js" defer></script>
 <script>
