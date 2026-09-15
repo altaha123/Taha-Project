@@ -226,12 +226,17 @@
     return out.slice(0, limit || 7).map(function (o) { return o.r; });
   }
 
+  var typeaheadId = 0;
+
   function attachTypeahead(input, onPick) {
     if (!input) return;
     var wrap = input.closest('.searchrow') || input.parentNode;
     if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
 
+    wrap.classList.add('has-typeahead');
     var list = el('div', 'tah');
+    list.id = 'stock-suggestions-' + (++typeaheadId);
+    input.setAttribute('aria-controls', list.id);
     list.setAttribute('role', 'listbox');
     list.hidden = true;
     wrap.appendChild(list);
@@ -245,6 +250,7 @@
 
     function close() {
       list.hidden = true; cur = -1;
+      wrap.classList.remove('typeahead-open');
       input.setAttribute('aria-expanded', 'false');
       input.removeAttribute('aria-activedescendant');
     }
@@ -258,13 +264,16 @@
 
     function open(q) {
       rows = search(q);
-      if (!rows.length) { close(); return; }
+      if (!q) { close(); return; }
+      input.removeAttribute('aria-activedescendant');
       list.innerHTML = rows.map(function (r, i) {
-        return '<div class="tah-item" role="option" id="tah-' + i + '" data-i="' + i + '">' +
+        return '<div class="tah-item" role="option" aria-selected="false" id="' + list.id + '-' + i + '" data-i="' + i + '">' +
                '<span class="tah-sym">' + highlight(r.s, q) + '</span>' +
                '<span class="tah-name">' + highlight(r.n || '', q) + '</span></div>';
       }).join('');
+      if (!rows.length) list.innerHTML = '<div class="tah-empty" role="status">No matching stocks. Try a company name or symbol.</div>';
       list.hidden = false;
+      wrap.classList.add('typeahead-open');
       cur = -1;
       input.setAttribute('aria-expanded', 'true');
     }
@@ -273,11 +282,12 @@
       if (list.hidden) return;
       var items = $$('.tah-item', list);
       if (!items.length) return;
-      if (cur > -1) items[cur].classList.remove('on');
+      if (cur > -1) { items[cur].classList.remove('on'); items[cur].setAttribute('aria-selected', 'false'); }
       cur = (cur + step + items.length) % items.length;
       items[cur].classList.add('on');
+      items[cur].setAttribute('aria-selected', 'true');
       items[cur].scrollIntoView({ block: 'nearest' });
-      input.setAttribute('aria-activedescendant', 'tah-' + cur);
+      input.setAttribute('aria-activedescendant', list.id + '-' + cur);
     }
 
     function pick(i) {
@@ -294,14 +304,19 @@
       open(q);
     });
 
+    input.addEventListener('focus', function () { open(input.value.trim()); });
+    input.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement !== input) close(); }, 150); });
     input.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); if (list.hidden) open(input.value.trim()); else move(1); }
+      if (e.isComposing) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (list.hidden) open(input.value.trim()); move(1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
-      else if (e.key === 'Enter') { if (!list.hidden && cur > -1) { e.preventDefault(); pick(cur); } else close(); }
-      else if (e.key === 'Escape') { close(); }
-    });
+      else if (e.key === 'Enter') { if (!list.hidden && cur > -1) { e.preventDefault(); e.stopImmediatePropagation(); pick(cur); } else close(); }
+      else if (e.key === 'Escape' || e.key === 'Tab') { close(); }
+    }, true);
 
-    list.addEventListener('mousedown', function (e) {
+    // Keep focus until click; click supports both taps and mouse selection.
+    list.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    list.addEventListener('click', function (e) {
       var it = e.target.closest('.tah-item');
       if (!it) return;
       e.preventDefault();
