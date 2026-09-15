@@ -266,12 +266,15 @@
   function renderRows() {
     var host = $('pf_rows');
     if (!host) return;
+    host.querySelectorAll('.pf_sym').forEach(function (input) {
+      if (input.disposeStockSearch) input.disposeStockSearch();
+    });
     host.innerHTML = '';
 
     state.rows.forEach(function (r, i) {
       var row = el('div', 'pfrow');
       row.innerHTML =
-        '<input class="pf_sym" placeholder="RELIANCE" spellcheck="false" ' +
+        '<input class="pf_sym" placeholder="Company or symbol" autocomplete="off" spellcheck="false" ' +
           'aria-label="Symbol, row ' + (i + 1) + '" value="' + esc(r.symbol) + '">' +
         '<input class="pf_qty" type="number" min="0" step="any" placeholder="10" ' +
           'aria-label="Quantity, row ' + (i + 1) + '" value="' + esc(r.qty) + '">' +
@@ -304,6 +307,15 @@
       });
 
       host.appendChild(row);
+      if (window.AltahaStockSearch) {
+        sym.disposeStockSearch = window.AltahaStockSearch.attach(sym, function (symbol) {
+          r.symbol = cleanSymbol(symbol);
+          sym.value = r.symbol;
+          validateRow(row, r);
+          clearNote();
+          qty.focus();
+        });
+      }
     });
 
     var count = $('pf_count');

@@ -30,6 +30,31 @@ const server=http.createServer((req,res)=>{
  };
  await page.route('**/*',routeRequest);
  await page.goto('http://127.0.0.1:8765/?go=portfolio',{waitUntil:'domcontentloaded'});
+ // Select stocks in existing and newly created holding rows.
+ for (const width of [390,1280]) {
+   await page.setViewportSize({width,height:900});
+   const sym=page.locator('#pf_rows .pf_sym').first();
+   await sym.fill('r');
+   const list=page.locator('#'+await sym.getAttribute('aria-controls'));
+   await list.locator('.tah-item').first().waitFor();
+   await sym.fill('Reliance');
+   const option=list.locator('.tah-item').first();
+   await option.scrollIntoViewIfNeeded();
+   assert.equal(await option.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true);
+   await option.click();
+   assert.equal(await sym.inputValue(),'RELIANCE');
+   assert.equal(await page.locator('.pf_qty').first().evaluate(n=>n===document.activeElement),true);
+   await page.locator('.pf_qty').first().fill('10');
+   assert.equal(await page.evaluate(()=>AltahaPortfolio.collect()[0].symbol),'RELIANCE');
+   await page.locator('#pf_addrow').click();
+   const next=page.locator('.pf_sym').nth(1);
+   await next.fill('Infosys');
+   await next.press('ArrowDown');await next.press('Enter');
+   assert.equal(await next.inputValue(),'INFY');
+   await page.locator('.pfdel').nth(1).click();
+   assert.equal(await page.locator('.pf_sym').count(),1);
+ }
+ await page.setViewportSize({width:1280,height:900});
  await page.locator('#pf_rows .pf_sym').first().fill('HDFCBANK');
  await page.locator('#pf_rows .pf_qty').first().fill('10');
  await page.locator('#pf_go').click();

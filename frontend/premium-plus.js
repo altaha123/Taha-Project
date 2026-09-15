@@ -230,7 +230,7 @@
 
   function attachTypeahead(input, onPick) {
     if (!input) return;
-    var wrap = input.closest('.searchrow') || input.parentNode;
+    var wrap = input.closest('.searchrow, .pfrow') || input.parentNode;
     if (getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
 
     wrap.classList.add('has-typeahead');
@@ -323,10 +323,17 @@
       pick(parseInt(it.dataset.i, 10));
     });
 
-    document.addEventListener('click', function (e) {
+    function outsideClick(e) {
       if (!wrap.contains(e.target)) close();
-    });
+    }
+    document.addEventListener('click', outsideClick);
+    return function () {
+      document.removeEventListener('click', outsideClick);
+      close();
+    };
   }
+
+  window.AltahaStockSearch = { attach: attachTypeahead };
 
   function typeahead() {
     loadUniverse();
