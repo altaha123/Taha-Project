@@ -107,7 +107,8 @@
         { head: 'Stock research', items: [
           { tab: 'screener', label: 'Stock analysis', icon: 'ledger', hint: 'Stock score and calculation details' },
           { tab: 'charts',   label: 'Charts',         icon: 'candles', hint: 'Price charts and technical indicators' },
-          { tab: 'results',  label: 'Quarterly results',        icon: 'document', hint: 'Latest quarterly numbers' }
+          { tab: 'results',  label: 'Quarterly results',        icon: 'document', hint: 'Latest quarterly numbers' },
+          { tab: 'concalls', label: 'Concall summaries', icon: 'document', hint: 'Earnings call transcripts, digested' }
         ]},
         { head: 'More research', items: [
           { tab: 'special', label: 'Delivery trends', icon: 'target',
@@ -117,6 +118,7 @@
         { head: 'The market', items: [
           { tab: 'filings', label: 'Company announcements',  icon: 'bell', hint: 'Updates filed with the exchange' },
           { tab: 'deals',   label: 'Bulk & block deals',    icon: 'exchange', hint: 'Large trades and their participants' },
+          { tab: 'wow',     label: 'WOW orders', icon: 'target', hint: 'Order wins measured against company size' },
           { tab: 'options', section: 'ideas', label: 'Options',  icon: 'layers', hint: 'Option prices and open interest' }
         ]}
       ]

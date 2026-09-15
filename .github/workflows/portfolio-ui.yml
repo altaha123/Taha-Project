@@ -5,8 +5,13 @@ on:
       - 'frontend/**'
       - 'backend/portfolio*.py'
       - 'backend/shareholding_filings.py'
+      - 'backend/wow_orders.py'
+      - 'backend/concalls.py'
+      - 'backend/filings_text.py'
       - 'backend/tests/*portfolio*'
       - 'backend/tests/*shareholding*'
+      - 'backend/tests/*wow*'
+      - 'backend/tests/*concall*'
       - '.github/workflows/portfolio-ui.yml'
 permissions:
   contents: read
@@ -60,3 +65,15 @@ jobs:
         with:
           name: ownership-browser-verification
           path: test-results/ownership
+      - name: Verify WOW orders and concall digests
+        # The two failure modes worth a browser: an order the company never
+        # priced must never render as zero, and a quoted line must never
+        # appear without the name of who said it.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/filings-views-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: filings-views-verification
+          path: test-results/filings-views
