@@ -32,9 +32,23 @@ people leave.
 folder is decided by whether the domain vouches for the sender, and no library
 substitutes for that. Both providers walk you through the exact records.
 
-With nothing configured, `EMAIL_PROVIDER` is `console`: every message is
-printed to Render's log and delivered nowhere. The whole flow still works —
-which is what makes it testable before a provider exists.
+With nothing configured, `EMAIL_PROVIDER` is `console` and public sign-in
+returns HTTP 503 instead of claiming an email was sent. Missing provider
+credentials and rejected sends also return a retryable error. Failed sends
+remove their unused token so they do not exhaust the address's link quota.
+An explicit request with the configured admin key can still obtain a debug
+link in console mode for local testing; public users never receive one.
+
+Email links open a confirmation button before verification, so automated link
+previews do not immediately spend them. Open the link in the same browser
+where you use Altaha; an email app's embedded browser has separate storage.
+Existing sessions are checked before the sign-in page claims you are signed
+in. Sessions remain stored during temporary API outages.
+
+Before release, verify Render's `EMAIL_PROVIDER`, provider API key, verified
+`EMAIL_FROM`, and `SITE_URL=https://altahascreener.in`. Confirm `DATA_DIR`
+points at the persistent disk. Provider acceptance is not proof of inbox
+delivery: complete one real sign-in using an address you control.
 
 ## Checking it works
 

@@ -45,3 +45,7 @@ jobs:
         with:
           name: homepage-browser-verification
           path: test-results/home
+      - name: Verify sign-in failures and link completion on phone and desktop
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/signin-browser.cjs
