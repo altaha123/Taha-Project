@@ -194,13 +194,31 @@ const server = http.createServer((req, res) => {
 
   // The empty state says what is missing instead of rendering a blank panel.
   const page2 = await context.newPage();
-  await context.route('**/shareholding*', route => route.fulfill({
-    json: { symbol: 'XYZ', available: false, message: 'No shareholding filing could be read for XYZ right now.', split: [], history: [], names: { promoters: [], public: [] }, notes: [] }
-  }));
+  // Deliberately slow, because the bug this covers only appears when the
+  // fetch takes long enough for the loading placeholder to be observed —
+  // which is every CI runner and almost no development machine.
+  await context.route('**/shareholding*', async route => {
+    await new Promise(r => setTimeout(r, 700));
+    route.fulfill({
+      json: { symbol: 'XYZ', available: false, message: 'No shareholding filing could be read for XYZ right now.', split: [], history: [], names: { promoters: [], public: [] }, notes: [] }
+    });
+  });
   await page2.goto('http://127.0.0.1:8771/stock.html?ticker=XYZ', { waitUntil: 'domcontentloaded' });
   await page2.locator('#pane-btn-owners').click();
-  await page2.locator('.own-empty').waitFor();
-  assert.match(await page2.locator('.own-empty').innerText(), /No shareholding filing/);
+
+  // While it is fetching the pane says so, and that placeholder is NOT the
+  // empty state. Conflating them is what made this test read "Reading the
+  // filings…" and assert against it.
+  const loading = page2.locator('.own-empty.is-loading');
+  await loading.waitFor();
+  assert.match(await loading.innerText(), /Reading the filings/);
+
+  // :not(.is-loading), because the loading placeholder and the empty state
+  // shared a class — so waitFor resolved on "Reading the filings…" and the
+  // assertion read that instead. Passed locally on a fast fetch, failed in CI.
+  const settled = page2.locator('.own-empty:not(.is-loading)');
+  await settled.waitFor();
+  assert.match(await settled.innerText(), /No shareholding filing/);
   assert.equal(await page2.locator('.own-bar').count(), 0);
 
   const relevant = errors.filter(e => /stock\.js/.test(e));

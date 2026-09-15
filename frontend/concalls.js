@@ -169,7 +169,10 @@
 
   function load() {
     var box = $('concalls-body');
-    if (box) box.innerHTML = '<div class="cc-empty">Reading the transcripts…</div>';
+    if (box) {
+      box.innerHTML = '<div class="cc-empty is-loading" aria-busy="true">' +
+        'Reading the transcripts…</div>';
+    }
     fetch(API + '/concalls?days=10')
       .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
       .then(paint)

@@ -874,7 +874,10 @@
 
   function loadOwnership() {
     var box = $('own-body');
-    if (box) box.innerHTML = '<div class="own-empty">Reading the filings…</div>';
+    if (box) {
+      box.innerHTML = '<div class="own-empty is-loading" aria-busy="true">' +
+        'Reading the filings…</div>';
+    }
     fetch(API + '/shareholding?ticker=' + encodeURIComponent(TICKER) + '&quarters=8')
       .then(function (r) {
         if (!r.ok) throw new Error('down');

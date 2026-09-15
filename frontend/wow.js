@@ -155,7 +155,10 @@
 
   function load() {
     var box = $('wow-body');
-    if (box) box.innerHTML = '<div class="wo-empty">Reading the filings…</div>';
+    if (box) {
+      box.innerHTML = '<div class="wo-empty is-loading" aria-busy="true">' +
+        'Reading the filings…</div>';
+    }
     fetch(API + '/wow-orders?days=7')
       .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
       .then(paint)
