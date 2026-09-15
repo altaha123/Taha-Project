@@ -562,6 +562,326 @@
     }
   }
 
+
+  /* ── Ownership ────────────────────────────────────────────────────────────
+     The shareholding pattern, read from the company's own Reg 31 filing.
+
+     THE ONE THING THIS SECTION MUST NOT DO
+     In the exchange's format "Public" is the PARENT of the foreign, domestic
+     and non-institutional lines, not their sibling. Drawing all four together
+     double-counts roughly half the company. The API hands back `split` — the
+     decomposition that does sum to 100 — and this renders only that. The
+     reported public figure appears once, in prose, described as the total it
+     is.
+
+     COLOUR
+     Four categorical hues, fixed per category and never cycled, validated for
+     colour-vision deficiency against both surfaces rather than chosen by eye.
+     Identity is never carried by colour alone: every series is directly
+     labelled at its last point, repeated in the legend, and repeated again in
+     the table under the chart. */
+
+  var OWN_KEYS = ['promoter', 'dii', 'fii', 'public_non_institutional'];
+  var OWN_SHORT = {
+    promoter: 'Promoters',
+    dii: 'DII',
+    fii: 'FII',
+    public_non_institutional: 'Public'
+  };
+
+  var ownLoaded = false;
+
+  function pp(v, d) {
+    var n = num(v, d == null ? 2 : d);
+    if (n == null) return '—';
+    return (n > 0 ? '+' : '') + n.toFixed(d == null ? 2 : d) + ' pp';
+  }
+  function crore(v) {
+    var n = Number(v);
+    if (!isFinite(n) || n === 0) return '—';
+    if (Math.abs(n) >= 1e7) return (n / 1e7).toFixed(2) + ' cr';
+    if (Math.abs(n) >= 1e5) return (n / 1e5).toFixed(2) + ' lakh';
+    return n.toLocaleString('en-IN');
+  }
+  function holders(v) {
+    var n = Number(v);
+    if (!isFinite(n)) return '—';
+    return Math.round(n).toLocaleString('en-IN');
+  }
+
+  /* The composition bar. One row, six segments at most, 2px of surface between
+     each so adjacent fills never read as one. */
+  function ownBar(split) {
+    var parts = split.filter(function (s) { return s.pct > 0.05; });
+    return '<div class="own-bar" role="img" aria-label="Shareholding composition">' +
+      parts.map(function (s) {
+        return '<i class="seg s-' + esc(s.key) + '" style="flex:' + s.pct + '" ' +
+          'title="' + esc(s.label) + ' ' + s.pct.toFixed(2) + '%"></i>';
+      }).join('') + '</div>';
+  }
+
+  /* The trend. Four series on one percentage axis — never two scales. */
+  function ownChart(history) {
+    var rows = (history || []).filter(function (h) { return h.period; });
+    if (rows.length < 2) return '';
+
+    var W = 640, H = 230, L = 34, R = 104, T = 14, B = 30;
+    var series = OWN_KEYS.map(function (k) {
+      return {
+        key: k,
+        label: OWN_SHORT[k],
+        pts: rows.map(function (h, i) { return { i: i, v: h[k] }; })
+                 .filter(function (p) { return p.v != null; })
+      };
+    }).filter(function (s) { return s.pts.length > 1; });
+    if (!series.length) return '';
+
+    var all = [];
+    series.forEach(function (s) { s.pts.forEach(function (p) { all.push(p.v); }); });
+    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    var pad = Math.max(2, (hi - lo) * 0.15);
+    lo = Math.max(0, lo - pad); hi = Math.min(100, hi + pad);
+    if (hi - lo < 4) { hi = lo + 4; }
+    // Snap the bounds outwards to a round step, so the axis reads 10/20/30/40
+    // rather than 5/22/39/56. An axis nobody can do arithmetic against is an
+    // axis that gets ignored.
+    var STEPS = [1, 2, 2.5, 5, 10, 20, 25];
+    var step = STEPS[STEPS.length - 1];
+    for (var si = 0; si < STEPS.length; si++) {
+      if ((hi - lo) / STEPS[si] <= 4) { step = STEPS[si]; break; }
+    }
+    lo = Math.max(0, Math.floor(lo / step) * step);
+    hi = Math.min(100, lo + step * 3);
+    while (hi < Math.max.apply(null, all)) { hi += step; }
+
+    function x(i) { return L + (i / (rows.length - 1)) * (W - L - R); }
+    function y(v) { return T + (1 - (v - lo) / (hi - lo)) * (H - T - B); }
+
+    // A recessive grid: four lines, no box, labels in muted ink.
+    var ticks = [];
+    for (var t0 = lo; t0 <= hi + 1e-9; t0 += step) ticks.push(t0);
+    var dec = step < 1 ? 1 : 0;
+    var grid = ticks.map(function (t) {
+      return '<line class="og" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(t).toFixed(1) +
+        '" y2="' + y(t).toFixed(1) + '"/>' +
+        '<text class="oyl" x="' + (L - 7) + '" y="' + (y(t) + 3.5).toFixed(1) + '">' +
+        t.toFixed(dec) + '</text>';
+    }).join('');
+
+    var lines = series.map(function (s) {
+      var d = s.pts.map(function (p, n) {
+        return (n ? 'L' : 'M') + x(p.i).toFixed(1) + ' ' + y(p.v).toFixed(1);
+      }).join(' ');
+      var last = s.pts[s.pts.length - 1];
+      return '<path class="ol s-' + s.key + '" d="' + d + '"/>' +
+        '<circle class="od s-' + s.key + '" cx="' + x(last.i).toFixed(1) + '" cy="' +
+          y(last.v).toFixed(1) + '" r="4.5"/>' +
+        // Direct label at the last point. With a legend as well, identity never
+        // rests on colour alone.
+        '<text class="oll s-' + s.key + '" x="' + (W - R + 10) + '" y="' +
+          (y(last.v) + 4).toFixed(1) + '">' + esc(s.label) + ' ' +
+          last.v.toFixed(1) + '%</text>';
+    }).join('');
+
+    var xlabels = rows.map(function (h, i) {
+      if (rows.length > 6 && i % 2) return '';
+      var q = String(h.period).slice(0, 7);
+      return '<text class="oxl" x="' + x(i).toFixed(1) + '" y="' + (H - 9) + '">' +
+        esc(q) + '</text>';
+    }).join('');
+
+    // Hover: one invisible band per quarter drives the crosshair and readout.
+    var hit = rows.map(function (h, i) {
+      var vals = OWN_KEYS.filter(function (k) { return h[k] != null; })
+        .map(function (k) { return OWN_SHORT[k] + ' ' + h[k].toFixed(2) + '%'; }).join(' · ');
+      var bw = (W - L - R) / Math.max(1, rows.length - 1);
+      return '<rect class="oh" x="' + (x(i) - bw / 2).toFixed(1) + '" y="' + T +
+        '" width="' + bw.toFixed(1) + '" height="' + (H - T - B) +
+        '" data-i="' + i + '" data-period="' + esc(String(h.period)) +
+        '" data-vals="' + esc(vals) + '"></rect>';
+    }).join('');
+
+    return '<div class="own-chartwrap">' +
+      '<svg class="own-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
+        'aria-label="Shareholding by category over the last ' + rows.length + ' quarters">' +
+        grid + xlabels +
+        '<line class="ocross" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" hidden/>' +
+        lines + hit +
+      '</svg>' +
+      '<div class="own-read" id="own-read" aria-live="polite"></div>' +
+      '</div>';
+  }
+
+  function ownLegend(split) {
+    return '<div class="own-legend">' + split.filter(function (s) {
+      return OWN_KEYS.indexOf(s.key) >= 0;
+    }).map(function (s) {
+      return '<span class="lg"><i class="s-' + esc(s.key) + '"></i>' + esc(s.label) + '</span>';
+    }).join('') + '</div>';
+  }
+
+  function ownNames(list, heading, empty) {
+    if (!list || !list.length) return '<div class="own-empty">' + esc(empty) + '</div>';
+    return '<h3 class="own-h3">' + esc(heading) + '</h3>' +
+      '<ul class="own-names">' + list.map(function (n) {
+        var ch = n.change_qoq;
+        var badge = n.new_in_table
+          ? '<em class="new">new in table</em>'
+          : (ch == null || Math.abs(ch) < 0.005
+              ? '<em class="flat">unchanged</em>'
+              : '<em class="' + tone(ch) + '">' + pp(ch) + '</em>');
+        return '<li><span class="nm">' + esc(n.name) + '</span>' +
+          '<span class="kd">' + esc(n.kind || '') + '</span>' +
+          '<span class="vv tnum">' + n.pct.toFixed(2) + '%</span>' + badge + '</li>';
+      }).join('') + '</ul>';
+  }
+
+  /* The table the chart is an illustration of. Required, not a fallback: a
+     reader who cannot separate two hues still gets every number. */
+  function ownTable(history) {
+    var rows = (history || []).slice().reverse();
+    if (!rows.length) return '';
+    return '<details class="own-more"><summary>All figures, quarter by quarter</summary>' +
+      '<div class="own-tablewrap"><table class="own-table">' +
+      '<caption>Shareholding by category, percent of total shares. Source column links the filing.</caption>' +
+      '<thead><tr><th scope="col">Quarter ended</th>' +
+      OWN_KEYS.map(function (k) { return '<th scope="col">' + esc(OWN_SHORT[k]) + '</th>'; }).join('') +
+      '<th scope="col">Shareholders</th><th scope="col">Filed</th><th scope="col">Source</th></tr></thead><tbody>' +
+      rows.map(function (h) {
+        return '<tr><th scope="row">' + esc(h.period) + '</th>' +
+          OWN_KEYS.map(function (k) {
+            return '<td class="tnum">' + (h[k] == null ? '—' : h[k].toFixed(2) + '%') + '</td>';
+          }).join('') +
+          '<td class="tnum">' + holders(h.holders) + '</td>' +
+          '<td>' + esc(h.filed || '—') + (h.revised ? ' <em>revised</em>' : '') + '</td>' +
+          '<td>' + (h.source ? '<a href="' + esc(h.source) + '" target="_blank" rel="noopener">XBRL</a>' : '—') + '</td>' +
+          '</tr>';
+      }).join('') + '</tbody></table></div></details>';
+  }
+
+  function wireOwnHover() {
+    var svg = document.querySelector('.own-chart');
+    var read = $('own-read');
+    if (!svg || !read) return;
+    var cross = svg.querySelector('.ocross');
+    function show(e) {
+      var t = e.target;
+      if (!t || !t.classList || !t.classList.contains('oh')) return;
+      var x = Number(t.getAttribute('x')) + Number(t.getAttribute('width')) / 2;
+      cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.hidden = false;
+      read.innerHTML = '<b>' + esc(t.dataset.period) + '</b> · ' + esc(t.dataset.vals);
+    }
+    svg.addEventListener('mousemove', show);
+    svg.addEventListener('focusin', show);
+    svg.addEventListener('mouseleave', function () {
+      cross.hidden = true; read.innerHTML = '';
+    });
+  }
+
+  function paintOwnership(d) {
+    var box = $('own-body');
+    if (!box) return;
+
+    if (!d || !d.available) {
+      box.innerHTML = '<div class="own-empty">' +
+        esc((d && d.message) || 'No shareholding filing could be read for this company.') +
+        '</div>';
+      return;
+    }
+
+    var split = (d.split || []).filter(function (s) { return s.pct != null; });
+    var t = d.totals || {};
+
+    // Lead with the finding: the biggest mover this quarter, named in a
+    // sentence, before any chart.
+    var movers = split.filter(function (s) {
+      return s.change_qoq != null && Math.abs(s.change_qoq) >= 0.05;
+    }).sort(function (a, b) { return Math.abs(b.change_qoq) - Math.abs(a.change_qoq); });
+    var lead;
+    if (!movers.length) {
+      lead = 'No category moved by more than a twentieth of a point over the quarter.';
+    } else {
+      var m = movers[0];
+      lead = m.label + ' ' + (m.change_qoq > 0 ? 'rose' : 'fell') + ' ' +
+        Math.abs(m.change_qoq).toFixed(2) + ' percentage points over the quarter, to ' +
+        m.pct.toFixed(2) + '%.';
+      if (movers.length > 1) {
+        var n2 = movers[1];
+        lead += ' ' + n2.label + ' ' + (n2.change_qoq > 0 ? 'rose' : 'fell') + ' ' +
+          Math.abs(n2.change_qoq).toFixed(2) + '.';
+      }
+    }
+
+    var head = '<p class="own-lead">' + esc(lead) + '</p>' +
+      '<p class="own-asof">Quarter ended <b>' + esc(d.period || '—') + '</b>, filed ' +
+      esc(d.filed || '—') + '. ' + esc(String(d.quarters_read || 0)) +
+      ' quarters read.' +
+      (d.latest_source ? ' <a href="' + esc(d.latest_source) +
+        '" target="_blank" rel="noopener">Open the filing</a>.' : '') + '</p>';
+
+    var rows = '<div class="own-rows">' + split.map(function (s) {
+      var flags = '';
+      if (s.derived) flags += '<em class="drv" title="Not filed as its own line in this quarter’s format; derived from the totals the filing does report">derived</em>';
+      if (s.reported_absent) flags += '<em class="drv">none reported</em>';
+      return '<div class="own-row">' +
+        '<span class="k"><i class="s-' + esc(s.key) + '"></i>' + esc(s.label) + flags + '</span>' +
+        '<span class="v tnum">' + s.pct.toFixed(2) + '%</span>' +
+        '<span class="c tnum ' + tone(s.change_qoq) + '">' +
+          (s.change_qoq == null ? '—' : pp(s.change_qoq)) + '<b>qoq</b></span>' +
+        '<span class="c tnum ' + tone(s.change_yoy) + '">' +
+          (s.change_yoy == null ? '—' : pp(s.change_yoy)) + '<b>yoy</b></span>' +
+        '<span class="h tnum">' + (s.holders == null ? '—' : holders(s.holders)) +
+          '<b>holders</b></span>' +
+        '</div>';
+    }).join('') + '</div>';
+
+    var count = '';
+    if (t.holders != null) {
+      var dir = t.holders_change_qoq;
+      count = '<div class="own-count">' +
+        '<div class="big tnum">' + holders(t.holders) + '</div>' +
+        '<div class="lb">shareholders on the register</div>' +
+        (dir == null ? '' : '<div class="ch ' + tone(dir) + '">' +
+          (dir > 0 ? '+' : '') + holders(dir) + ' over the quarter</div>') +
+        '</div>';
+    }
+
+    var notes = (d.notes || []).length
+      ? '<div class="own-notes">' + d.notes.map(function (n) {
+          return '<p>' + esc(n) + '</p>';
+        }).join('') + '</div>'
+      : '';
+
+    box.innerHTML = head + ownBar(split) + rows + count +
+      ownLegend(split) + ownChart(d.history) + ownTable(d.history) +
+      '<div class="own-namecols">' +
+      '<div>' + ownNames(d.names && d.names.promoters, 'Promoter group',
+        'This company reports no promoter holding.') + '</div>' +
+      '<div>' + ownNames(d.names && d.names.public, 'Public holders above 1%',
+        'No public holder crosses one per cent in this filing.') + '</div>' +
+      '</div>' + notes;
+
+    wireOwnHover();
+  }
+
+  function loadOwnership() {
+    var box = $('own-body');
+    if (box) box.innerHTML = '<div class="own-empty">Reading the filings…</div>';
+    fetch(API + '/shareholding?ticker=' + encodeURIComponent(TICKER) + '&quarters=8')
+      .then(function (r) {
+        if (!r.ok) throw new Error('down');
+        return r.json();
+      })
+      .then(paintOwnership)
+      .catch(function () {
+        if (box) {
+          box.innerHTML = '<div class="own-empty">The filings could not be read ' +
+            'just now. If the engine has been idle it takes about thirty seconds ' +
+            'to wake — try again.</div>';
+        }
+      });
+  }
+
   /* ── The rail's scroll spy ───────────────────────────────────────────────── */
 
   /* ── Panes ────────────────────────────────────────────────────────────────
@@ -575,7 +895,7 @@
   var chartDrawn = false;
 
   function showPane(name) {
-    ['info', 'chart', 'scores'].forEach(function (p) {
+    ['info', 'chart', 'scores', 'owners'].forEach(function (p) {
       var pane = $('pane-' + p), btn = $('pane-btn-' + p);
       if (!pane || !btn) return;
       var on = p === name;
@@ -587,6 +907,12 @@
       chartDrawn = true;
       paintRanges();
       loadChart();
+    }
+    // Same reasoning as the chart: several filings' worth of fetching, paid
+    // for only by a reader who asks for it.
+    if (name === 'owners' && !ownLoaded) {
+      ownLoaded = true;
+      loadOwnership();
     }
     if (window.AltahaTrack) window.AltahaTrack('stock_pane_shown', { pane: name });
   }

@@ -4,7 +4,9 @@ on:
     paths:
       - 'frontend/**'
       - 'backend/portfolio*.py'
+      - 'backend/shareholding_filings.py'
       - 'backend/tests/*portfolio*'
+      - 'backend/tests/*shareholding*'
       - '.github/workflows/portfolio-ui.yml'
 permissions:
   contents: read
@@ -45,3 +47,16 @@ jobs:
         with:
           name: homepage-browser-verification
           path: test-results/home
+      - name: Verify the ownership pane does not double-count public holding
+        # The one failure mode worth a browser for: in the exchange's format
+        # Public CONTAINS the FII and DII lines, so a chart of all four
+        # overstates the company by about half. This asserts on the rendered
+        # bar and rows, not on the payload.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/stock-ownership-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ownership-browser-verification
+          path: test-results/ownership

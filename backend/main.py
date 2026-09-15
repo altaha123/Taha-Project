@@ -72,6 +72,13 @@ try:
 except Exception:
     xbrl_source = None
 try:
+    # Named for the filing, not for the concept: `shareholding` is already a
+    # function on data_source (the provider's thin two-line version). This is
+    # the company's own Reg 31 document, and the two must not be confused.
+    import shareholding_filings
+except Exception:
+    shareholding_filings = None
+try:
     import special as special_engine
 except Exception:
     special_engine = None
@@ -2020,6 +2027,38 @@ def fundamentals_xbrl(ticker: str, limit: int = 8, consolidated: Optional[bool] 
     try:
         return to_native(xbrl_source.summary(sym, limit=max(1, min(limit, 24)),
                                              consolidated=consolidated))
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+
+
+@app.get("/shareholding")
+def shareholding_pattern(ticker: str, quarters: int = 8, names: int = 12):
+    """
+    Who owns this company, read from its own filing with the exchange.
+
+    Every listed Indian company files its shareholding pattern quarterly under
+    LODR Regulation 31, in XBRL. This is that document — the split between
+    promoters, foreign institutions, domestic institutions and the rest of the
+    public, how many shareholders sit behind each line, and the names of the
+    promoter entities and every public holder above one per cent.
+
+    The response separates two things most screeners blur. `split` is the
+    non-overlapping decomposition and sums to 100. `public_total_pct` is the
+    exchange's own Table III figure, which CONTAINS the foreign, domestic and
+    non-institutional lines — drawing the two together double-counts about
+    half the company.
+
+    Every row carries the URL of the filing it was read from.
+    """
+    if shareholding_filings is None:
+        return {"available": False,
+                "message": "The shareholding reader is not available."}
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        return to_native(shareholding_filings.summary(
+            sym, quarters=max(2, min(quarters, 12)), names_limit=max(1, min(names, 40))))
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
 

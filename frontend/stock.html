@@ -91,6 +91,8 @@
               id="pane-btn-chart" aria-selected="false" aria-controls="pane-chart">Chart</button>
       <button type="button" class="stk-pane-btn" role="tab" data-p="scores"
               id="pane-btn-scores" aria-selected="false" aria-controls="pane-scores">Scores</button>
+      <button type="button" class="stk-pane-btn" role="tab" data-p="owners"
+              id="pane-btn-owners" aria-selected="false" aria-controls="pane-owners">Ownership</button>
     </nav>
     </div>
 
@@ -150,6 +152,21 @@
         <h2>The ledger</h2>
         <p class="sub">Every check, the formula that turned it into points, and what the concept means. Open any row.</p>
         <div class="ledger" id="ledger"></div>
+      </section>
+    </div>
+
+    <!-- Ownership. Read from the company's own Reg 31 filing rather than a
+         provider's summary, which is why every figure here can name the
+         document it came from. Loaded when the pane is first opened: it is
+         several filings' worth of fetching and nobody who came for the chart
+         should pay for it. -->
+    <div class="stk-pane" id="pane-owners" role="tabpanel" aria-labelledby="pane-btn-owners" hidden>
+      <section class="stk-sec">
+        <h2>Who owns this company</h2>
+        <p class="sub">From the shareholding pattern the company files with the
+          exchange each quarter under Regulation 31 — not a provider's summary.
+          Every figure links back to the filing it was read from.</p>
+        <div id="own-body"></div>
       </section>
     </div>
 

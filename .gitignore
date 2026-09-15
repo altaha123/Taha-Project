@@ -11,5 +11,9 @@ research/.cache/
 # XBRL documents fetched at runtime. Cache, never source.
 xbrl-cache/
 
+# Parsed shareholding filings. Cache, never source — a filed document
+# never changes, so this is rebuilt on demand and never checked in.
+shp-cache/
+
 # Browser-test screenshots and traces. Output, never source.
 test-results/
