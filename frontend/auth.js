@@ -40,7 +40,27 @@
     try {
       if (t) localStorage.setItem(KEY, t);
       else localStorage.removeItem(KEY);
-    } catch (e) {}
+    } catch (e) {
+      if (t) throw new Error('Your browser could not save your sign-in. Allow site storage and request a new link.');
+    }
+  }
+
+  // Bound both the response and body read; never retry a one-time token automatically.
+  function request(path, opts) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 30000);
+    opts = Object.assign({}, opts || {}, { signal: controller.signal });
+    return fetch(API + path, opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) throw new Error(typeof d.detail === 'string' ? d.detail :
+          'Sign-in is temporarily unavailable. Please try again shortly.');
+        return d;
+      });
+    }).catch(function (err) {
+      if (err.name === 'AbortError') throw new Error('The server took too long to respond. Please try again.');
+      if (err instanceof TypeError) throw new Error('Could not connect. Check your connection and try again.');
+      throw err;
+    }).finally(function () { clearTimeout(timer); });
   }
 
   function announce() {
@@ -60,7 +80,7 @@
     if (opts.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
     opts.headers = headers;
     return fetch(API + path, opts).then(function (r) {
-      if (r.status === 401 && token) {
+      if (r.status === 401 && token && readToken() === token) {
         writeToken('');
         cached = null;
         announce();
@@ -75,38 +95,48 @@
       announce();
       return Promise.resolve(null);
     }
+    var token = readToken();
     return authFetch('/auth/me')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (u) { cached = u; announce(); return u; })
+      .then(function (r) {
+        if (!r.ok && r.status !== 401) throw new Error('Could not check your session.');
+        return r.ok ? r.json() : null;
+      })
+      .then(function (u) {
+        if (readToken() !== token) return cached;
+        cached = u; announce(); return u;
+      })
       .catch(function () { return cached; });
   }
 
   function requestLink(email) {
-    return fetch(API + '/auth/request-link', {
+    return request('/auth/request-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: String(email || '').trim() })
-    }).then(function (r) {
-      return r.json().then(function (d) {
-        if (!r.ok) throw new Error(d.detail || 'That did not work.');
-        return d;
-      });
+    }).then(function (d) {
+      if (d.sent !== true) throw new Error('Your sign-in email could not be sent. Please try again.');
+      return d;
     });
   }
 
   function verify(token) {
-    return fetch(API + '/auth/verify', {
+    // Check storage before spending the single-use link.
+    try {
+      localStorage.setItem(KEY + '-check', '1');
+      localStorage.removeItem(KEY + '-check');
+    } catch (e) {
+      return Promise.reject(new Error('Allow site storage in your browser before signing in.'));
+    }
+    return request('/auth/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: token })
-    }).then(function (r) {
-      return r.json().then(function (d) {
-        if (!r.ok) throw new Error(d.detail || 'This link did not work.');
-        writeToken(d.token);
-        cached = d.user;
-        announce();
-        return d.user;
-      });
+    }).then(function (d) {
+      if (!d.token || !d.user || !d.user.email) throw new Error('The server returned an incomplete sign-in. Please request a new link.');
+      writeToken(d.token);
+      cached = d.user;
+      announce();
+      return d.user;
     });
   }
 
@@ -129,6 +159,13 @@
     verify: verify,
     signOut: signOut
   };
+
+  window.addEventListener('storage', function (event) {
+    if (event.key === KEY || event.key === null) {
+      cached = null;
+      refresh();
+    }
+  });
 
   // Ask once on load so anything that renders a signed-in state has an answer
   // without every module making its own call.

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Sign in — Altaha Screener</title>
 <meta name="description" content="Sign in to save your portfolio and get one email after the close: what your holdings did, and what was filed on them." />
+<meta name="referrer" content="no-referrer" />
 <meta name="robots" content="noindex,follow" />
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
@@ -117,6 +118,12 @@
     catch (e) { return ''; }
   }
 
+  function escapeHTML(value) {
+    return String(value || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
   function panel(html) { $('si-state').innerHTML = html; }
 
   /* The link from the email lands here. Spend the token, keep the session,
@@ -130,13 +137,13 @@
       // screenshot or a browser history entry does not carry it around.
       try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
       panel('<h1>You are signed in</h1>' +
-            '<p class="si-lede">Signed in as <b>' + (user && user.email ? user.email : '') +
+            '<p class="si-lede">Signed in as <b>' + escapeHTML(user && user.email) +
             '</b>. Taking you to your portfolio…</p>' +
             '<a class="si-back" href="index.html#portfolio">Go now →</a>');
       setTimeout(function () { location.href = 'index.html#portfolio'; }, 1200);
     }).catch(function (e) {
       panel('<h1>That link did not work</h1>' +
-            '<p class="si-lede">' + (e && e.message ? e.message : 'Ask for a new one.') +
+            '<p class="si-lede">' + escapeHTML(e && e.message ? e.message : 'Ask for a new one.') +
             ' Links work once and expire after fifteen minutes.</p>' +
             '<a class="si-btn" style="display:block;text-align:center;text-decoration:none;' +
             'box-sizing:border-box" href="signin.html">Get a new link</a>');
@@ -149,20 +156,22 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var email = ($('si-email').value || '').trim();
-      if (!email || email.indexOf('@') < 0) { note('That does not look like an email address.', 'bad'); return; }
+      if (!$('si-email').checkValidity()) { note('That does not look like an email address.', 'bad'); return; }
+      if ($('si-go').disabled) return;
       $('si-go').disabled = true;
       note('Sending…');
       window.AltahaAuth.requestLink(email).then(function (d) {
         track('sign_in_link_requested', {});
         panel('<h1>Check your inbox</h1>' +
-              '<p class="si-lede">If <b>' + email.replace(/[<>&]/g, '') + '</b> can receive mail, ' +
+              '<p class="si-lede">If <b>' + escapeHTML(email) + '</b> can receive mail, ' +
               'a sign-in link is on its way. It works once and expires in fifteen minutes.</p>' +
               '<p class="si-lede">Not there in a minute? Look in spam — and if it is there, ' +
               'marking it "not spam" is what keeps the daily email out of that folder too.</p>' +
               (d && d.debug_link
                 ? '<p class="si-note">Delivery is not configured on this deploy. ' +
                   '<a href="' + d.debug_link + '">Use this link</a>.</p>' : '') +
-              '<a class="si-back" href="signin.html">Use a different address</a>');
+              '<p class="si-note">Open the link in the browser where you use Altaha. Signing in inside your email app does not sign in your other browsers.</p>' +
+              '<a class="si-back" href="signin.html">Send another link or change email</a>');
       }).catch(function (err) {
         $('si-go').disabled = false;
         note(err && err.message ? err.message : 'Could not send that. Try again.', 'bad');
@@ -172,8 +181,15 @@
 
   function start() {
     var token = param('token');
-    if (token) { completeFromLink(token); return; }
-    if (window.AltahaAuth && window.AltahaAuth.authed()) {
+    if (token) {
+      // Keep the token out of history and subsequent requests immediately.
+      try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
+      panel('<h1>Finish signing in</h1><p class="si-lede">Continue to securely open your account in this browser.</p>' +
+            '<button class="si-btn" id="si-confirm">Continue to sign in</button>');
+      $('si-confirm').addEventListener('click', function () { completeFromLink(token); });
+      return;
+    }
+    if (window.AltahaAuth && window.AltahaAuth.user()) {
       panel('<h1>You are already signed in</h1>' +
             '<p class="si-lede">Your portfolio is saved to your account.</p>' +
             '<a class="si-btn" style="display:block;text-align:center;text-decoration:none;' +
@@ -190,8 +206,26 @@
   }
 
   // auth.js is deferred, so wait for it rather than racing it.
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-  else start();
+  function ready() {
+    if (!window.AltahaAuth) {
+      note('Sign-in could not load. Please refresh this page.', 'bad');
+      $('si-go').disabled = true;
+      return;
+    }
+    if (param('token')) { start(); return; }
+    $('si-go').disabled = true;
+    note('Checking your session…');
+    // A slow API must never prevent access to the email form.
+    Promise.race([window.AltahaAuth.refresh(), new Promise(function (resolve) {
+      setTimeout(resolve, 8000);
+    })]).then(function () {
+      $('si-go').disabled = false;
+      note('');
+      start();
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+  else ready();
 })();
 </script>
 </body>

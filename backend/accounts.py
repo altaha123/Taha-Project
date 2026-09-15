@@ -205,6 +205,14 @@ def start_login(email: str) -> dict:
     return {"token": token, "email": addr}
 
 
+def cancel_login(token: str) -> None:
+    """Remove an undelivered link so delivery failures do not exhaust the quota."""
+    conn = _connect()
+    with conn:
+        conn.execute("DELETE FROM login_tokens WHERE token_hash=? AND used_at IS NULL",
+                     (_hash(token),))
+
+
 def complete_login(token: str) -> dict:
     """Spend a login token. Returns {"session", "user"} or {"error"}.
 
@@ -221,13 +229,17 @@ def complete_login(token: str) -> dict:
         return {"error": "This login link is not valid."}
     if row["used_at"]:
         return {"error": "This login link has already been used. Ask for a new one."}
-    if row["expires_at"] < _iso(_now()):
+    if row["expires_at"] <= _iso(_now()):
         return {"error": "This login link has expired. Ask for a new one."}
 
     now = _now()
     with conn:
-        conn.execute("UPDATE login_tokens SET used_at=? WHERE token_hash=?",
-                     (_iso(now), _hash(token)))
+        claimed = conn.execute(
+            "UPDATE login_tokens SET used_at=? WHERE token_hash=? "
+            "AND used_at IS NULL AND expires_at>?",
+            (_iso(now), _hash(token), _iso(now)))
+        if claimed.rowcount != 1:
+            return {"error": "This login link has expired or already been used. Ask for a new one."}
         user = conn.execute("SELECT * FROM users WHERE email=?",
                             (row["email"],)).fetchone()
         if user is None:

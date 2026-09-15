@@ -270,3 +270,34 @@ def test_send_test_needs_a_saved_portfolio(main_mod, fresh):
     with pytest.raises(HTTPException) as e:
         main_mod.send_my_digest_now(authorization=auth(token))
     assert e.value.status_code == 400
+
+
+def test_console_delivery_is_not_reported_as_sent(main_mod, fresh, monkeypatch):
+    import mailer
+    from fastapi import HTTPException
+    monkeypatch.setattr(mailer, 'provider', lambda: 'console')
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_request_link({'email': 'reader@example.com'})
+    assert error.value.status_code == 503
+    assert fresh == []
+
+
+def test_failed_delivery_can_be_retried_without_exhausting_quota(main_mod, fresh, monkeypatch):
+    import mailer
+    from fastapi import HTTPException
+    monkeypatch.setattr(mailer, 'send', lambda *args: (False, 'provider rejected'))
+    for _ in range(7):
+        with pytest.raises(HTTPException) as error:
+            main_mod.auth_request_link({'email': 'reader@example.com'})
+        assert error.value.status_code == 503
+    assert A._connect().execute('SELECT COUNT(*) FROM login_tokens').fetchone()[0] == 0
+
+
+def test_unconfigured_provider_does_not_mint_links(main_mod, fresh, monkeypatch):
+    import mailer
+    from fastapi import HTTPException
+    monkeypatch.setattr(mailer, 'configured', lambda: False)
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_request_link({'email': 'reader@example.com'})
+    assert error.value.status_code == 503
+    assert fresh == []

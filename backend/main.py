@@ -2636,6 +2636,13 @@ def auth_request_link(payload: dict = Body(...)):
     import accounts
     import mailer
 
+    debug = (mailer.provider() == "console" and bool(ADMIN_KEY)
+             and str(payload.get("key") or "") == ADMIN_KEY)
+    if not accounts.valid_email(payload.get("email")):
+        raise HTTPException(400, "That does not look like an email address.")
+    if not debug and (mailer.provider() == "console" or not mailer.configured()):
+        raise HTTPException(503, "Email sign-in is temporarily unavailable. Please try again later.")
+
     started = accounts.start_login(str(payload.get("email") or ""))
     if started.get("error"):
         raise HTTPException(400, started["error"])
@@ -2644,7 +2651,9 @@ def auth_request_link(payload: dict = Body(...)):
     subject, html, text = mailer.login_email(link, minutes=accounts.LOGIN_TTL_MINUTES)
     ok, detail = mailer.send(started["email"], subject, html, text)
     if not ok:
-        print(f"[auth] link email failed for {started['email']}: {detail}", flush=True)
+        accounts.cancel_login(started["token"])
+        print("[auth] sign-in email delivery failed", flush=True)
+        raise HTTPException(503, "We could not send your sign-in email. Please try again shortly.")
 
     out = {"sent": True,
            "message": "If that address can receive mail, a sign-in link is on its way."}
@@ -2652,8 +2661,7 @@ def auth_request_link(payload: dict = Body(...)):
     # otherwise be unusable. Handing it back on an ADMIN_KEY'd request is what
     # makes the flow testable on a fresh deploy without pasting a token out of
     # Render's log stream.
-    if mailer.provider() == "console" and ADMIN_KEY and \
-            str(payload.get("key") or "") == ADMIN_KEY:
+    if debug:
         out["debug_link"] = link
     return out
 
