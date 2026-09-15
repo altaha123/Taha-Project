@@ -36,6 +36,43 @@ const server=http.createServer((req,res)=>{
    return route.fulfill({json:{available:false,rows:[],rankings:[],sectors:[],items:[],status:'idle'}});
  });
  await page.goto('http://127.0.0.1:8766/',{waitUntil:'domcontentloaded'});
+ // Regression: suggestions must be hittable outside the rounded search bar.
+ await page.evaluate(() => {
+   window.__searchPicks = [];
+   document.getElementById('go').addEventListener('click', event => {
+     event.preventDefault(); event.stopImmediatePropagation();
+     window.__searchPicks.push(document.getElementById('tk').value);
+   }, true);
+ });
+ for (const width of [390, 1280]) {
+   await page.setViewportSize({width, height:900});
+   const input = page.locator('#tk');
+   await input.fill('r');
+   const list = page.locator('#' + await input.getAttribute('aria-controls'));
+   await list.locator('.tah-item').first().waitFor();
+   assert.equal(await input.getAttribute('aria-expanded'), 'true');
+   await input.fill('Reliance');
+   const item = list.locator('.tah-item').first();
+   await item.scrollIntoViewIfNeeded();
+   assert.equal(await item.evaluate(n => {
+     const r=n.getBoundingClientRect();
+     return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+   }), true, 'suggestion is clipped or covered');
+   if (width === 390) await item.tap(); else await item.click();
+   assert.equal(await input.inputValue(), 'RELIANCE');
+   assert.equal(await input.getAttribute('aria-expanded'), 'false');
+   await input.fill('hdf');
+   await input.press('ArrowDown');
+   await input.press('Enter');
+   assert.equal(await input.inputValue(), 'HDFCBANK');
+   await input.fill('zzzznomatch');
+   await list.locator('.tah-empty').waitFor();
+   await input.press('Escape');
+   assert.equal(await input.getAttribute('aria-expanded'), 'false');
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+ }
+ assert.deepEqual(await page.evaluate(() => window.__searchPicks), ['RELIANCE','HDFCBANK','RELIANCE','HDFCBANK']);
+ await page.locator('#tk').fill('');
  await page.locator('.mb-card').first().waitFor();
  await page.locator('.sb-tile').first().waitFor();
  assert.equal(await page.locator('.hm-route svg').count(),3);

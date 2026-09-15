@@ -397,3 +397,15 @@ details.row.flash {
     border-top: .5pt solid #999; font-size: 8pt; color: #555;
   }
 }
+
+/* The rounded search bar otherwise clips its absolutely positioned results. */
+.searchrow.has-typeahead { position: relative; overflow: visible; }
+.searchrow.typeahead-open { z-index: 80; }
+.tah[hidden] { display: none; }
+.tah { max-height: min(330px, 42vh); overscroll-behavior: contain; text-align: left; }
+.tah-item { min-height: 44px; box-sizing: border-box; touch-action: manipulation; }
+.tah-empty { padding: 14px; font-size: 13px; color: var(--mute); }
+@media (max-width: 560px) {
+  .tah-item { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .tah-name { white-space: normal; overflow-wrap: anywhere; }
+}
