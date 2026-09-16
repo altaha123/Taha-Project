@@ -114,6 +114,23 @@ jobs:
         with:
           name: investors-browser-verification
           path: test-results/investors
+      - name: Verify fund house portfolios state their coverage
+        if: always()
+        # The failure mode for this page is looking complete when it is not:
+        # AMFI lists 53 fund houses and publishes a directory rather than a
+        # feed, so a page showing four of them must say so. Also guards the
+        # three things the parser can get plausibly wrong — a debt holding
+        # appearing as an equity position, an unmatched ISIN being dropped
+        # rather than shown, and two schemes' weights being added into one
+        # meaningless percentage.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/funds-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: funds-browser-verification
+          path: test-results/funds
       - name: Verify sign-in failures and link completion on phone and desktop
         if: always()
         env:

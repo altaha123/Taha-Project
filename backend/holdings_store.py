@@ -121,6 +121,41 @@ CREATE TABLE IF NOT EXISTS coverage (
   note           TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_coverage_try ON coverage (last_try_utc);
+
+-- Fund-house holdings, from the monthly portfolio disclosures SEBI requires.
+-- A separate table rather than a column on `holdings`, because they are a
+-- different kind of fact: monthly rather than quarterly, complete rather than
+-- truncated at 1%, and joined to a company by registered identifier rather
+-- than by name. Mixing them into one table would invite a query that averages
+-- the two and means nothing.
+CREATE TABLE IF NOT EXISTS fund_holdings (
+  amc_id      TEXT NOT NULL,
+  scheme      TEXT NOT NULL,
+  as_of       TEXT NOT NULL,            -- month end, YYYY-MM-DD
+  isin        TEXT NOT NULL,
+  symbol      TEXT,                     -- NSE symbol where the ISIN maps
+  name        TEXT NOT NULL,
+  industry    TEXT,
+  quantity    REAL,
+  value_lakh  REAL,
+  pct_nav     REAL,
+  first_seen_utc TEXT NOT NULL,
+  PRIMARY KEY (amc_id, scheme, as_of, isin)
+);
+CREATE INDEX IF NOT EXISTS idx_fund_symbol ON fund_holdings (symbol, as_of);
+CREATE INDEX IF NOT EXISTS idx_fund_amc    ON fund_holdings (amc_id, as_of);
+
+CREATE TABLE IF NOT EXISTS fund_packs (
+  amc_id      TEXT NOT NULL,
+  as_of       TEXT NOT NULL,
+  amc_name    TEXT,
+  source_url  TEXT,
+  schemes     INTEGER NOT NULL DEFAULT 0,
+  rows        INTEGER NOT NULL DEFAULT 0,
+  unmapped    INTEGER NOT NULL DEFAULT 0,
+  read_utc    TEXT NOT NULL,
+  PRIMARY KEY (amc_id, as_of)
+);
 """
 
 # Columns added after the first release. CREATE TABLE IF NOT EXISTS does
@@ -509,6 +544,111 @@ def due_symbols(universe, limit=60, stale_hours=24 * 20):
     return fresh[: max(1, int(limit))]
 
 
+# ---------------------------------------------------------------------------
+# Fund houses
+# ---------------------------------------------------------------------------
+
+def record_fund_pack(amc_id, amc_name, as_of, schemes, source_url=None,
+                     symbol_for=None):
+    """
+    One AMC's monthly pack.
+
+    `schemes` is what fund_workbook.parse_workbook returns. `symbol_for` maps
+    an ISIN to an NSE symbol; a holding whose ISIN does not map is still
+    stored, with a null symbol, and counted — it is a real position in
+    something unlisted, foreign or not equity, and dropping it silently would
+    make every weight on the page add up to less than the fund actually holds
+    without saying why.
+    """
+    amc_id = (amc_id or "").strip()
+    if not amc_id or not as_of:
+        return {"rows": 0, "schemes": 0, "unmapped": 0, "seen": 0}
+    now = _utcnow()
+    rows, unmapped = [], 0
+    for pack in schemes or []:
+        sheet = pack.get("scheme") or pack.get("sheet") or ""
+        for h in pack.get("holdings") or []:
+            isin = (h.get("isin") or "").strip().upper()
+            if not isin:
+                continue
+            sym = symbol_for(isin) if symbol_for else None
+            if not sym:
+                unmapped += 1
+            rows.append((amc_id, sheet[:120], as_of, isin, sym,
+                         (h.get("name") or "")[:160], (h.get("industry") or None),
+                         h.get("quantity"), h.get("value_lakh"), h.get("pct_nav"),
+                         now))
+    if not rows:
+        return {"rows": 0, "schemes": 0, "unmapped": 0, "seen": 0}
+    with _tx() as conn:
+        before = conn.total_changes
+        conn.executemany(
+            "INSERT OR IGNORE INTO fund_holdings (amc_id, scheme, as_of, isin,"
+            " symbol, name, industry, quantity, value_lakh, pct_nav,"
+            " first_seen_utc) VALUES (?,?,?,?,?,?,?,?,?,?,?)", rows)
+        written = conn.total_changes - before
+        conn.execute(
+            "INSERT INTO fund_packs (amc_id, as_of, amc_name, source_url,"
+            " schemes, rows, unmapped, read_utc) VALUES (?,?,?,?,?,?,?,?)"
+            " ON CONFLICT(amc_id, as_of) DO UPDATE SET"
+            "   amc_name=excluded.amc_name, source_url=excluded.source_url,"
+            "   schemes=excluded.schemes, rows=excluded.rows,"
+            "   unmapped=excluded.unmapped, read_utc=excluded.read_utc",
+            (amc_id, as_of, amc_name, source_url, len(schemes or []),
+             len(rows), unmapped, now))
+    return {"rows": written, "schemes": len(schemes or []),
+            "unmapped": unmapped, "seen": len(rows)}
+
+
+def fund_months(limit=12):
+    conn = _connect()
+    return [dict(r) for r in conn.execute(
+        "SELECT as_of, COUNT(DISTINCT amc_id) AS amcs, COUNT(*) AS rows"
+        " FROM fund_holdings GROUP BY as_of ORDER BY as_of DESC LIMIT ?",
+        (int(limit),)).fetchall()]
+
+
+def latest_fund_month():
+    conn = _connect()
+    r = conn.execute("SELECT MAX(as_of) AS m FROM fund_holdings").fetchone()
+    return r["m"] if r else None
+
+
+def fund_positions(amc_id, as_of=None, min_pct=0.0):
+    """Every listed-equity position an AMC disclosed, newest month by default."""
+    conn = _connect()
+    as_of = as_of or latest_fund_month()
+    if not as_of or not amc_id:
+        return []
+    return [dict(r) for r in conn.execute(
+        "SELECT scheme, isin, symbol, name, industry, quantity, value_lakh,"
+        " pct_nav FROM fund_holdings WHERE amc_id=? AND as_of=? AND pct_nav >= ?"
+        " ORDER BY value_lakh DESC", (amc_id, as_of, float(min_pct))).fetchall()]
+
+
+def funds_holding(symbol, as_of=None):
+    """Which schemes hold one company — the direction a stock page asks in."""
+    sym = (symbol or "").strip().upper()
+    conn = _connect()
+    as_of = as_of or latest_fund_month()
+    if not sym or not as_of:
+        return []
+    return [dict(r) for r in conn.execute(
+        "SELECT amc_id, scheme, isin, name, quantity, value_lakh, pct_nav"
+        " FROM fund_holdings WHERE symbol=? AND as_of=?"
+        " ORDER BY value_lakh DESC", (sym, as_of)).fetchall()]
+
+
+def fund_packs(as_of=None):
+    conn = _connect()
+    as_of = as_of or latest_fund_month()
+    if not as_of:
+        return []
+    return [dict(r) for r in conn.execute(
+        "SELECT * FROM fund_packs WHERE as_of=? ORDER BY rows DESC",
+        (as_of,)).fetchall()]
+
+
 def stats():
     """What the store actually holds, for the admin view and the pane's footer."""
     conn = _connect()
@@ -529,4 +669,11 @@ def stats():
         "latest_period": latest_period(),
         "coverage": {(r["status"] or "unknown"): r["n"] for r in cov},
         "tried": one("SELECT COUNT(*) FROM coverage"),
+        "funds": {
+            "rows": one("SELECT COUNT(*) FROM fund_holdings"),
+            "amcs": one("SELECT COUNT(DISTINCT amc_id) FROM fund_holdings"),
+            "schemes": one("SELECT COUNT(DISTINCT amc_id || scheme) FROM fund_holdings"),
+            "latest_month": latest_fund_month(),
+            "months": [m["as_of"] for m in fund_months(6)],
+        },
     }

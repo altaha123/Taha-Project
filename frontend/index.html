@@ -1227,6 +1227,7 @@
         <button id="tab-wow" role="menuitem">WOW orders</button>
         <button id="tab-concalls" role="menuitem">Concall summaries</button>
         <button id="tab-investors" role="menuitem">Investor portfolios</button>
+        <button id="tab-funds" role="menuitem">Fund house portfolios</button>
         <div class="sep"></div>
         <button id="tab-vocab" role="menuitem">Vocabulary</button>
       </div>
@@ -1721,6 +1722,22 @@
     <div id="investors-body"></div>
   </div><!-- /view-investors -->
 
+  <!-- Fund house portfolios, from the monthly disclosures SEBI requires. -->
+  <div id="view-funds" style="display:none">
+    <header class="tabhead">
+      <h2>Fund house portfolios</h2>
+      <p>What the mutual funds hold, from each asset manager&rsquo;s own monthly portfolio disclosure &mdash; the whole book, not just the stakes big enough to be named in a company&rsquo;s filing.</p>
+    </header>
+    <details class="tabnote">
+      <summary>Where this comes from, and how complete it is</summary>
+      <p><b>A different source from the investor portfolios, with different limits.</b> SEBI requires every asset manager to publish each scheme&rsquo;s full portfolio every month. There is <b>no 1% floor</b> here &mdash; a fund&rsquo;s entire book is disclosed, down to the smallest position &mdash; and every row carries an <b>ISIN</b>, so a holding is matched to a listed company by registered identifier rather than by name. Nothing on this page is guessed.</p>
+      <p><b>Monthly, and due by the tenth of the following month</b>, so a position here can be about six weeks old. Fresher than the quarterly shareholding filings, still not live.</p>
+      <p><b>Coverage is partial and is stated.</b> AMFI lists all 53 fund houses but publishes a <i>directory</i>, not a feed &mdash; each pack has to be fetched from that AMC&rsquo;s own website, and a good many build their download list in JavaScript rather than serving a link. The number read is printed on the page. Fund houses not listed here have not been read; it does not mean they hold nothing.</p>
+      <p><b>Listed equity only.</b> A pack also contains debt, government securities and trust units. Those are read but not shown, and anything whose ISIN is not in NSE&rsquo;s equity list &mdash; another fund&rsquo;s units, an unlisted or BSE-only holding &mdash; is listed separately rather than dropped, so the weights reconcile.</p>
+    </details>
+    <div id="funds-body"></div>
+  </div><!-- /view-funds -->
+
   <div id="view-special" style="display:none">
     <header class="tabhead">
       <h2>Altaha <i>Special</i></h2>
@@ -1884,11 +1901,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors"];
+const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls","investors"];
+const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls","investors","funds"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -4156,6 +4173,7 @@ if(fcSymParam){
 <script src="wow.js" defer></script>
 <script src="concalls.js" defer></script>
 <script src="investors.js" defer></script>
+<script src="funds.js" defer></script>
 <script src="experience.js" defer></script>
 <script src="home-motion.js" defer></script>
 <script>

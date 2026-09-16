@@ -1,0 +1,137 @@
+{
+ "available": true,
+ "amc_id": "20",
+ "name": "Baroda BNP Paribas Mutual Fund",
+ "month": "2026-08-31",
+ "source": "https://www.barodabnpparibasmf.in/assets/BOBBNPMF_Monthly_Portfolio_31-08-2026.xlsx",
+ "positions": [
+  {
+   "symbol": "ICICIBANK",
+   "isin": "INE090A01021",
+   "name": "ICICI Bank Limited",
+   "industry": "Banks",
+   "value_lakh": 21604.99,
+   "quantity": 1300000.0,
+   "listed": true,
+   "schemes": [
+    {
+     "scheme": "Baroda BNP Paribas Large Cap Fund",
+     "pct_nav": 6.29,
+     "value_lakh": 16619.22
+    },
+    {
+     "scheme": "Baroda BNP Paribas Mid Cap Fund",
+     "pct_nav": 1.87,
+     "value_lakh": 4985.77
+    }
+   ],
+   "value_cr": 216.05,
+   "scheme_count": 2
+  },
+  {
+   "symbol": "RELIANCE",
+   "isin": "INE002A01018",
+   "name": "Reliance Industries Limited",
+   "industry": "Petroleum Products",
+   "value_lakh": 14366.25,
+   "quantity": 900000.0,
+   "listed": true,
+   "schemes": [
+    {
+     "scheme": "Baroda BNP Paribas Large Cap Fund",
+     "pct_nav": 5.44,
+     "value_lakh": 14366.25
+    }
+   ],
+   "value_cr": 143.66,
+   "scheme_count": 1
+  },
+  {
+   "symbol": "BHEL",
+   "isin": "INE257A01026",
+   "name": "Bharat Heavy Electricals Limited",
+   "industry": "Electrical Equipment",
+   "value_lakh": 14163.0,
+   "quantity": 3200000.0,
+   "listed": true,
+   "schemes": [
+    {
+     "scheme": "Baroda BNP Paribas Mid Cap Fund",
+     "pct_nav": 3.33,
+     "value_lakh": 8853.0
+    },
+    {
+     "scheme": "Baroda BNP Paribas Large Cap Fund",
+     "pct_nav": 2.01,
+     "value_lakh": 5310.0
+    }
+   ],
+   "value_cr": 141.63,
+   "scheme_count": 2
+  },
+  {
+   "symbol": "HDFCBANK",
+   "isin": "INE040A01034",
+   "name": "HDFC Bank Limited",
+   "industry": "Banks",
+   "value_lakh": 14038.2,
+   "quantity": 1400000.0,
+   "listed": true,
+   "schemes": [
+    {
+     "scheme": "Baroda BNP Paribas Large Cap Fund",
+     "pct_nav": 5.32,
+     "value_lakh": 14038.2
+    }
+   ],
+   "value_cr": 140.38,
+   "scheme_count": 1
+  },
+  {
+   "symbol": "LT",
+   "isin": "INE018A01030",
+   "name": "Larsen & Toubro Limited",
+   "industry": "Construction",
+   "value_lakh": 7000.0,
+   "quantity": 200000.0,
+   "listed": true,
+   "schemes": [
+    {
+     "scheme": "Baroda BNP Paribas Mid Cap Fund",
+     "pct_nav": 2.63,
+     "value_lakh": 7000.0
+    }
+   ],
+   "value_cr": 70.0,
+   "scheme_count": 1
+  }
+ ],
+ "count": 5,
+ "not_on_nse": [
+  {
+   "symbol": null,
+   "isin": "INE0J1901017",
+   "name": "Baroda BNP Paribas Gold ETF-RG",
+   "industry": null,
+   "value_lakh": 19181.0,
+   "quantity": 5000000.0,
+   "listed": false,
+   "schemes": [
+    {
+     "scheme": "Baroda BNP Paribas Gold ETF Fund of Fund",
+     "pct_nav": 1.0,
+     "value_lakh": 19181.0
+    }
+   ],
+   "value_cr": 191.81,
+   "scheme_count": 1
+  }
+ ],
+ "schemes": 3,
+ "unmapped": 1,
+ "notes": [
+  "Listed-equity positions only. The pack also contains debt, government securities and trust units; those are read but are not shown here. 1 row in this pack had no match in NSE's equity list.",
+  "Disclosed monthly, due by the tenth of the following month, so these can be about six weeks old. Unlike the shareholding filings there is no 1% floor: a fund's whole book is published.",
+  "A company held by several schemes is shown once, with the schemes listed beneath it. The percentages are each scheme's weight in its own portfolio and are not added together."
+ ]
+}

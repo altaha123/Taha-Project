@@ -333,3 +333,16 @@
   .iv-parts li{ grid-template-columns:minmax(0,1fr) auto }
   .iv-parts .rel{ grid-column:1; grid-row:2 }
 }
+
+/* Fund house portfolios reuse the investor layout — the two are the same shape
+   of claim from different sources, and looking alike is the point. The company
+   name is the one addition: an investor position is identified by its ticker
+   alone, but a fund's row comes from a pack that names the instrument, and
+   twenty ISINs in a column without names is unreadable. */
+.iv-pos-head .fu-co{
+  flex:1 1 auto; min-width:0; font-size:13px; color:var(--ink-2);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+@media (max-width:560px){
+  .iv-pos-head .fu-co{ flex:0 0 100%; white-space:normal }
+}
