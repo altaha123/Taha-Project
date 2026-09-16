@@ -19,7 +19,7 @@ const server=http.createServer((req,res)=>{
 });
 (async()=>{
  await new Promise(resolve=>server.listen(8766,'127.0.0.1',resolve));
- const browser=await chromium.launch({headless:true});
+ const browser=await chromium.launch({headless:true, executablePath: process.env.CHROMIUM_PATH || undefined});
  const context=await browser.newContext({viewport:{width:1280,height:900},hasTouch:true});
  await context.addInitScript(()=>localStorage.setItem('altaha-guide-dismissed','1'));
  const page=await context.newPage(), errors=[], sectorRequests=[];

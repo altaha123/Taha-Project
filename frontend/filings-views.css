@@ -204,3 +204,145 @@
   color:var(--gold); text-decoration:none;
 }
 .cc-pdf:hover{ text-decoration:underline }
+
+/* ── Investor portfolios ──────────────────────────────────────────────────
+   The design problem here is not density, it is credibility. Every number on
+   this page is an attributed claim about what a named private individual owns,
+   and the layout's job is to keep the evidence attached to the claim: a
+   rolled-up total is always shown above the filed rows it was summed from, and
+   the caveats sit in the header of the portfolio rather than in a footnote
+   nobody reaches. */
+
+.iv-lead{
+  margin:0 0 10px; font-family:'Instrument Serif',Georgia,serif;
+  font-size:19px; line-height:1.5; letter-spacing:-.01em; max-width:64ch;
+  color:var(--ink);
+}
+.iv-cover{
+  margin:0 0 20px; font-size:12.5px; line-height:1.6; color:var(--mute);
+  max-width:74ch;
+}
+.iv-cover b{ color:var(--ink-2) }
+
+.iv-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(216px,1fr));
+  gap:10px;
+}
+.iv-card{
+  display:grid; gap:4px; text-align:left; padding:14px 15px; cursor:pointer;
+  background:var(--skin-card); border:1px solid var(--rule); border-radius:12px;
+  font-family:inherit; color:var(--ink-2);
+}
+.iv-card:hover{ border-color:var(--gold-lt); box-shadow:var(--e2) }
+.iv-card:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.iv-card b{ font-size:14.5px; color:var(--ink) }
+.iv-card .iv-kind{
+  font:500 9.5px/1 'IBM Plex Mono',monospace; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--mute);
+}
+.iv-card .iv-about{ font-size:12px; line-height:1.5; color:var(--mute) }
+
+.iv-back{
+  margin:0 0 16px; padding:7px 12px; cursor:pointer;
+  background:none; border:1px solid var(--rule); border-radius:99px;
+  font:500 12px/1 'IBM Plex Mono',monospace; color:var(--ink-2);
+}
+.iv-back:hover{ border-color:var(--gold); color:var(--gold) }
+
+.iv-name{
+  margin:0 0 4px; font-family:'Instrument Serif',Georgia,serif;
+  font-size:27px; line-height:1.2; letter-spacing:-.015em; color:var(--ink);
+}
+.iv-about{ margin:0 0 12px; font-size:13.5px; line-height:1.6; color:var(--ink-2); max-width:70ch }
+.iv-redirect{
+  margin:0 0 14px; padding:11px 14px; border-left:2px solid var(--gold);
+  background:var(--paper-2); border-radius:0 9px 9px 0;
+  font-size:13px; line-height:1.6; color:var(--ink-2); max-width:70ch;
+}
+/* The floor and the lag, in the header of every portfolio rather than in a
+   footnote. A reader who takes this for a live holdings list has been misled
+   even though every figure on it is correct. */
+.iv-asof{ margin:0 0 20px; font-size:12.5px; line-height:1.6; color:var(--mute); max-width:74ch }
+.iv-asof b{ color:var(--ink) }
+
+.iv-list{ list-style:none; margin:0 0 8px; padding:0; display:grid; gap:8px }
+.iv-pos{
+  padding:12px 14px; background:var(--skin-card);
+  border:1px solid var(--rule); border-radius:11px;
+}
+.iv-pos-head{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap }
+.iv-pos-head .sym{
+  font:600 13px/1 'IBM Plex Mono',monospace; letter-spacing:.02em;
+  color:var(--ink); text-decoration:none;
+}
+.iv-pos-head .sym:hover{ color:var(--gold); text-decoration:underline }
+.iv-pos-head .vv{
+  margin-left:auto; font:600 15px/1 'IBM Plex Mono',monospace; color:var(--ink);
+}
+.iv-pos-head .vv.was{ color:var(--mute); font-size:13px }
+.iv-pos-head .mv{
+  flex:0 0 100%; font:500 11px/1.4 'IBM Plex Mono',monospace; color:var(--mute);
+}
+.iv-pos-head .mv.up{ color:var(--sh-up) } .iv-pos-head .mv.dn{ color:var(--sh-dn) }
+.iv-flag{
+  font:500 9.5px/1 'IBM Plex Mono',monospace; letter-spacing:.07em;
+  text-transform:uppercase; color:var(--mute); cursor:help;
+  border:1px solid var(--rule); border-radius:4px; padding:3px 6px;
+}
+
+/* The breakdown. Indented under its total and in the mono face, so it reads as
+   the working behind the figure rather than as more positions. */
+.iv-parts{
+  list-style:none; margin:10px 0 0; padding:9px 0 0; display:grid; gap:5px;
+  border-top:1px dashed var(--rule);
+}
+.iv-parts li{
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto;
+  gap:6px 12px; align-items:baseline; font-size:12.5px;
+}
+.iv-parts .nm{ color:var(--ink-2); overflow-wrap:anywhere }
+.iv-parts .rel{
+  font:500 9.5px/1 'IBM Plex Mono',monospace; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--mute); white-space:nowrap;
+}
+.iv-parts .vv{ font:600 12.5px/1 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.iv-parts.is-beside .vv{ color:var(--mute) }
+.iv-beside{ margin:10px 0 0; font-size:11.5px; line-height:1.55; color:var(--mute) }
+
+.iv-list.is-gone .iv-pos{ opacity:.78 }
+.iv-h4{
+  margin:24px 0 6px; font:500 11px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
+}
+.iv-sub{ margin:0 0 12px; font-size:12px; line-height:1.6; color:var(--mute); max-width:74ch }
+.iv-who{ list-style:none; margin:0; padding:0; display:grid; gap:4px; font-size:12.5px; color:var(--mute) }
+.iv-who b{ color:var(--ink-2) }
+.iv-looking{ margin:12px 0 0; font-size:12.5px; line-height:1.7; color:var(--mute) }
+.iv-notes{
+  margin-top:24px; padding:14px 16px; border-left:2px solid var(--rule);
+  color:var(--mute); font-size:12px; line-height:1.65; max-width:80ch;
+}
+.iv-notes p{ margin:0 0 9px } .iv-notes p:last-child{ margin:0 }
+.iv-empty{
+  padding:20px 18px; background:var(--paper-2); border-radius:11px;
+  color:var(--mute); font-size:13.5px; line-height:1.55;
+}
+
+@media (max-width:560px){
+  .iv-grid{ grid-template-columns:1fr }
+  .iv-parts li{ grid-template-columns:minmax(0,1fr) auto }
+  .iv-parts .rel{ grid-column:1; grid-row:2 }
+}
+
+/* Fund house portfolios reuse the investor layout — the two are the same shape
+   of claim from different sources, and looking alike is the point. The company
+   name is the one addition: an investor position is identified by its ticker
+   alone, but a fund's row comes from a pack that names the instrument, and
+   twenty ISINs in a column without names is unreadable. */
+.iv-pos-head .fu-co{
+  flex:1 1 auto; min-width:0; font-size:13px; color:var(--ink-2);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+@media (max-width:560px){
+  .iv-pos-head .fu-co{ flex:0 0 100%; white-space:normal }
+}

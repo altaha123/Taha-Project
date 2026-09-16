@@ -1,0 +1,20 @@
+{
+ "available": false,
+ "id": "dolly-khanna",
+ "name": "Dolly Khanna",
+ "kind": "individual",
+ "about": "Chennai-based; the portfolio is managed with Rajiv Khanna and filed in her name.",
+ "message": "Nothing has been recorded for Dolly Khanna yet. The ledger is built by reading company filings one at a time; a name appears once a company it holds has been read.",
+ "entities": [
+  {
+   "alias": "Dolly Khanna",
+   "relation": "self",
+   "relation_word": "in their own name"
+  },
+  {
+   "alias": "Rajiv Khanna",
+   "relation": "family",
+   "relation_word": "immediate family"
+  }
+ ]
+}

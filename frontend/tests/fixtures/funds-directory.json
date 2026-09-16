@@ -1,0 +1,23 @@
+{
+ "available": true,
+ "month": "2026-08-31",
+ "months": [
+  "2026-08-31"
+ ],
+ "funds": [
+  {
+   "amc_id": "20",
+   "as_of": "2026-08-31",
+   "amc_name": "Baroda BNP Paribas Mutual Fund",
+   "source_url": "https://www.barodabnpparibasmf.in/assets/BOBBNPMF_Monthly_Portfolio_31-08-2026.xlsx",
+   "schemes": 3,
+   "rows": 8,
+   "unmapped": 1,
+   "read_utc": "2026-09-16T16:13:05+00:00"
+  }
+ ],
+ "read": 1,
+ "listed_with_amfi": 53,
+ "note": "Read from each asset manager's own monthly portfolio disclosure. 1 of the 53 fund houses AMFI lists have been read for this month \u2014 AMFI publishes a directory, not a feed, and several AMCs build their download list in JavaScript rather than serving it as a link.",
+ "lag": "Portfolios are disclosed monthly and are due by the tenth of the following month, so a position here can be about six weeks old."
+}

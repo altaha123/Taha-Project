@@ -26,3 +26,12 @@ concalls.db-*
 
 # Browser-test screenshots and traces. Output, never source.
 test-results/
+
+# The holdings ledger: who holds what, from the shareholding filings and the
+# fund houses' monthly disclosures. Data, never source — it lives on the
+# mounted disk in production and is rebuilt by the crawlers anywhere else.
+altaha_holdings.db
+altaha_holdings.db-*
+
+# NSE's ISIN -> symbol map, refreshed fortnightly. Cache, never source.
+nse-isin-map.json

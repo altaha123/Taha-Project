@@ -1,0 +1,173 @@
+{
+ "available": true,
+ "id": "rekha-jhunjhunwala",
+ "name": "Rekha Jhunjhunwala",
+ "kind": "individual",
+ "about": "Holds the portfolio built with Rakesh Jhunjhunwala, who died in August 2022, together with the family trusts.",
+ "period_end": "2026-06-30",
+ "period": "Q1 FY27",
+ "compared_with": "Q4 FY26",
+ "compared_with_period_end": "2026-03-31",
+ "positions": [
+  {
+   "symbol": "METROBRAND",
+   "pct": 14.37,
+   "shares": null,
+   "has_shares": false,
+   "parts": [
+    {
+     "name": "ARYAMAN JHUNJHUNWALA DISCRETIONARY TRUST (TRUSTEE - REKHA RAKESH JHUNJHUNWALA)",
+     "pct": 4.79,
+     "shares": null,
+     "relation": "trust",
+     "relation_word": "a family trust they are trustee of",
+     "matched_on": "name-without-bracket"
+    },
+    {
+     "name": "ARYAVIR JHUNJHUNWALA DISCRETIONARY TRUST (TRUSTEE - REKHA RAKESH JHUNJHUNWALA)",
+     "pct": 4.79,
+     "shares": null,
+     "relation": "trust",
+     "relation_word": "a family trust they are trustee of",
+     "matched_on": "name-without-bracket"
+    },
+    {
+     "name": "NISHTHA JHUNJHUNWALA DISCRETIONARY TRUST (TRUSTEE - REKHA RAKESH JHUNJHUNWALA)",
+     "pct": 4.79,
+     "shares": null,
+     "relation": "trust",
+     "relation_word": "a family trust they are trustee of",
+     "matched_on": "name-without-bracket"
+    }
+   ],
+   "beside": [],
+   "promoter": false,
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/SHP_METROBRAND_2026-06-30",
+   "filed": "2026-06-30",
+   "split": true,
+   "change": {
+    "kind": "held",
+    "delta": 0.0
+   }
+  },
+  {
+   "symbol": "TITAN",
+   "pct": 5.31,
+   "shares": null,
+   "has_shares": false,
+   "parts": [
+    {
+     "name": "Rekha Jhunjhunwala",
+     "pct": 4.24,
+     "shares": null,
+     "relation": "self",
+     "relation_word": "in their own name",
+     "matched_on": "name"
+    },
+    {
+     "name": "Rekha Jhunjhunwala",
+     "pct": 1.07,
+     "shares": null,
+     "relation": "self",
+     "relation_word": "in their own name",
+     "matched_on": "name"
+    }
+   ],
+   "beside": [],
+   "promoter": false,
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/SHP_TITAN_2026-06-30",
+   "filed": "2026-06-30",
+   "split": true,
+   "change": {
+    "kind": "held",
+    "delta": 0.0
+   }
+  },
+  {
+   "symbol": "STARHEALTH",
+   "pct": 3.04,
+   "shares": null,
+   "has_shares": false,
+   "parts": [
+    {
+     "name": "Rekha Jhunjhunwala",
+     "pct": 3.04,
+     "shares": null,
+     "relation": "self",
+     "relation_word": "in their own name",
+     "matched_on": "name"
+    }
+   ],
+   "beside": [],
+   "promoter": true,
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/SHP_STARHEALTH_2026-06-30",
+   "filed": "2026-06-30",
+   "split": false,
+   "change": {
+    "kind": "trimmed",
+    "delta": -0.47
+   }
+  }
+ ],
+ "count": 3,
+ "no_longer_disclosed": [
+  {
+   "symbol": "CRISIL",
+   "was_pct": 5.19,
+   "parts": [
+    {
+     "name": "Rekha Jhunjhunwala",
+     "pct": 5.19,
+     "shares": null,
+     "relation": "self",
+     "relation_word": "in their own name",
+     "matched_on": "name"
+    }
+   ]
+  }
+ ],
+ "entities": [
+  {
+   "alias": "Rekha Jhunjhunwala",
+   "relation": "self",
+   "relation_word": "in their own name"
+  },
+  {
+   "alias": "Rekha Rakesh Jhunjhunwala",
+   "relation": "self",
+   "relation_word": "in their own name"
+  },
+  {
+   "alias": "Aryaman Jhunjhunwala Discretionary Trust",
+   "relation": "trust",
+   "relation_word": "a family trust they are trustee of"
+  },
+  {
+   "alias": "Aryavir Jhunjhunwala Discretionary Trust",
+   "relation": "trust",
+   "relation_word": "a family trust they are trustee of"
+  },
+  {
+   "alias": "Nishtha Jhunjhunwala Discretionary Trust",
+   "relation": "trust",
+   "relation_word": "a family trust they are trustee of"
+  },
+  {
+   "alias": "Rare Enterprises",
+   "relation": "entity",
+   "relation_word": "through an entity they control"
+  }
+ ],
+ "quarters_available": [
+  "2026-06-30",
+  "2026-03-31"
+ ],
+ "notes": [
+  "This total includes family trusts of which Rekha Jhunjhunwala is trustee. A discretionary trust is not the same as shares owned outright; each trust is listed separately under the position it belongs to.",
+  "Rakesh Jhunjhunwala died in August 2022. These are Rekha Jhunjhunwala's holdings and the family trusts', not his.",
+  "Only stakes above 1% of a company are named in its shareholding filing. A position below that is invisible here however large it is in rupees, so this is a floor on what is held, never the whole portfolio.",
+  "Filings are quarterly and land up to 21 days after the quarter ends, so a position can be up to four months old. It is what was disclosed, not what is held today.",
+  "A company leaving the list has fallen below the 1% disclosure threshold or been sold. The filing does not say which, and this does not guess.",
+  "A holding marked as a promoter stake is the investor's own company rather than a position taken in someone else's, and is not a stock pick."
+ ]
+}

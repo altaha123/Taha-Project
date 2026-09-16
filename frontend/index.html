@@ -1226,6 +1226,8 @@
         <button id="tab-options" role="menuitem">Options</button>
         <button id="tab-wow" role="menuitem">WOW orders</button>
         <button id="tab-concalls" role="menuitem">Concall summaries</button>
+        <button id="tab-investors" role="menuitem">Investor portfolios</button>
+        <button id="tab-funds" role="menuitem">Fund house portfolios</button>
         <div class="sep"></div>
         <button id="tab-vocab" role="menuitem">Vocabulary</button>
       </div>
@@ -1704,6 +1706,38 @@
     <div id="concalls-body"></div>
   </div><!-- /view-concalls -->
 
+  <!-- Investor portfolios, assembled by inverting the shareholding filings. -->
+  <div id="view-investors" style="display:none">
+    <header class="tabhead">
+      <h2>Investor portfolios</h2>
+      <p>What well-known investors hold, taken from the companies&rsquo; own shareholding filings. Each position links back to the document it came from.</p>
+    </header>
+    <details class="tabnote">
+      <summary>What this can and cannot show &mdash; read this first</summary>
+      <p><b>Only stakes above 1% appear.</b> A company names a public shareholder in its filing only once they cross 1% of its equity. A position below that can be several hundred crore in a large company and is completely invisible here. Every portfolio on this page is therefore a <i>floor</i> on what someone holds, never the whole of it.</p>
+      <p><b>It is quarterly, and it is late.</b> Shareholding patterns are filed once a quarter and land up to 21 days after the quarter ends, so a position shown here can be four months old. It is what was disclosed, not what is held today, and it is not a reason to buy anything.</p>
+      <p><b>Names are matched by hand, not by a similarity score.</b> Atul Auto&rsquo;s register names <i>VIJAY KEDIA</i> and <i>KEDIA SECURITIES PRIVATE LIMITED</i> separately; Elecon&rsquo;s writes <i>Vijay Kishanlal Kedia</i>. Getting that wrong would mean publishing a false statement about what a named person owns, so every association is curated, and every rolled-up total is shown broken into the entities that make it up. A holding in a <b>family trust</b> is counted but labelled as one &mdash; a trust someone is trustee of is not the same as shares they own outright.</p>
+      <p><b>A company leaving the list is not necessarily a sale.</b> It has fallen below the 1% disclosure threshold or been sold, and the filing does not say which. This page does not guess.</p>
+    </details>
+    <div id="investors-body"></div>
+  </div><!-- /view-investors -->
+
+  <!-- Fund house portfolios, from the monthly disclosures SEBI requires. -->
+  <div id="view-funds" style="display:none">
+    <header class="tabhead">
+      <h2>Fund house portfolios</h2>
+      <p>What the mutual funds hold, from each asset manager&rsquo;s own monthly portfolio disclosure &mdash; the whole book, not just the stakes big enough to be named in a company&rsquo;s filing.</p>
+    </header>
+    <details class="tabnote">
+      <summary>Where this comes from, and how complete it is</summary>
+      <p><b>A different source from the investor portfolios, with different limits.</b> SEBI requires every asset manager to publish each scheme&rsquo;s full portfolio every month. There is <b>no 1% floor</b> here &mdash; a fund&rsquo;s entire book is disclosed, down to the smallest position &mdash; and every row carries an <b>ISIN</b>, so a holding is matched to a listed company by registered identifier rather than by name. Nothing on this page is guessed.</p>
+      <p><b>Monthly, and due by the tenth of the following month</b>, so a position here can be about six weeks old. Fresher than the quarterly shareholding filings, still not live.</p>
+      <p><b>Coverage is partial and is stated.</b> AMFI lists all 53 fund houses but publishes a <i>directory</i>, not a feed &mdash; each pack has to be fetched from that AMC&rsquo;s own website, and a good many build their download list in JavaScript rather than serving a link. The number read is printed on the page. Fund houses not listed here have not been read; it does not mean they hold nothing.</p>
+      <p><b>Listed equity only.</b> A pack also contains debt, government securities and trust units. Those are read but not shown, and anything whose ISIN is not in NSE&rsquo;s equity list &mdash; another fund&rsquo;s units, an unlisted or BSE-only holding &mdash; is listed separately rather than dropped, so the weights reconcile.</p>
+    </details>
+    <div id="funds-body"></div>
+  </div><!-- /view-funds -->
+
   <div id="view-special" style="display:none">
     <header class="tabhead">
       <h2>Altaha <i>Special</i></h2>
@@ -1867,11 +1901,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls"];
+const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls"];
+const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls","investors","funds"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -4138,6 +4172,8 @@ if(fcSymParam){
 <script src="special.js" defer></script>
 <script src="wow.js" defer></script>
 <script src="concalls.js" defer></script>
+<script src="investors.js" defer></script>
+<script src="funds.js" defer></script>
 <script src="experience.js" defer></script>
 <script src="home-motion.js" defer></script>
 <script>

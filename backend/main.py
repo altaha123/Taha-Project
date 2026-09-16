@@ -83,6 +83,28 @@ try:
 except Exception:
     fundamentals_source = None
 try:
+    # The holdings ledger and the curated investor table. Three modules, each
+    # importable on its own: the store is stdlib-only, so a box without
+    # curl_cffi can still SERVE what has already been collected even though it
+    # cannot collect any more.
+    import holdings_store
+    import investors as investors_source
+except Exception:
+    holdings_store = None
+    investors_source = None
+try:
+    import holdings_crawl
+except Exception:
+    holdings_crawl = None
+try:
+    # Fund-house holdings, from the monthly portfolio disclosures. A separate
+    # pipeline from the shareholding filings: monthly rather than quarterly,
+    # complete rather than truncated at 1%, and joined to a company by ISIN
+    # rather than by name.
+    import fund_portfolios
+except Exception:
+    fund_portfolios = None
+try:
     import wow_orders
 except Exception:
     wow_orders = None
@@ -2101,6 +2123,335 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
             ticker, quarters=max(2, min(quarters, 16)), basis=want))
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+
+
+@app.get("/investors")
+def investors_list():
+    """
+    Everyone the screener tracks a portfolio for.
+
+    A curated list, deliberately. Matching filed shareholder names to people is
+    the whole difficulty of this feature, and a wrong match publishes a false
+    statement about a named private individual — so every association was made
+    by a person rather than by a similarity score.
+    """
+    if investors_source is None:
+        return {"available": False, "investors": [],
+                "message": "The investor table is not available."}
+    out = {"available": True, "investors": investors_source.listing()}
+    if holdings_store is not None:
+        try:
+            st = holdings_store.stats()
+            out["ledger"] = {
+                "companies_read": st["companies"],
+                "latest_period": st["latest_period"],
+                "rows": st["rows"],
+                "persistent": st["persistent"],
+            }
+        except Exception:
+            pass
+    return out
+
+
+@app.get("/investor")
+def investor_portfolio(id: str, period: str = None):
+    """
+    One investor's disclosed positions, and how they moved since the quarter
+    before.
+
+    WHAT THIS IS NOT. It is not a portfolio. A company names a public
+    shareholder only above 1% of its equity, so a position below that — which
+    can be hundreds of crore in a large company — does not appear at all. And
+    the filing is quarterly, landing up to 21 days after the quarter ends, so
+    what is here can be four months old. It is a floor on what was disclosed,
+    not a statement of what is held today, and the payload says so in every
+    response rather than only in the ones where it matters.
+    """
+    if investors_source is None:
+        raise HTTPException(503, "The investor table is not available.")
+    if not id or len(id) > 60:
+        raise HTTPException(400, "Provide an investor id.")
+    try:
+        return to_native(investors_source.portfolio(id, period_end=period))
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the holdings ledger: {str(e)[:110]}")
+
+
+@app.get("/holders")
+def company_holders(ticker: str, period: str = None):
+    """
+    The named holders of one company, served from the ledger.
+
+    The same filing the Ownership pane reads, but already collected — so the
+    stock page can say "Vijay Kedia holds 18.20% of this" without a network
+    call, and link through to his other positions.
+    """
+    if holdings_store is None:
+        return {"available": False, "holders": [],
+                "message": "The holdings ledger is not available."}
+    sym = (ticker or "").strip().upper()
+    if not sym or len(sym) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    try:
+        rows = holdings_store.holders_of(sym, period_end=period)
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the holdings ledger: {str(e)[:110]}")
+    if not rows:
+        return {"available": False, "symbol": sym, "holders": [],
+                "message": ("No shareholding filing has been read for %s yet. "
+                            "The ledger is built one company at a time." % sym)}
+    # Which tracked investors appear on this register, so the page can link out.
+    tracked = {}
+    if investors_source is not None:
+        for inv in investors_source.INVESTORS:
+            if inv.get("kind") == "redirect":
+                continue
+            for k in investors_source.keys_for(inv):
+                tracked[k] = {"id": inv["id"], "name": inv["name"]}
+    for r in rows:
+        who = tracked.get(r.get("holder_key")) or tracked.get(r.get("holder_base") or "")
+        r["investor"] = who
+    try:
+        funds = holdings_store.funds_holding(sym)
+    except Exception:
+        funds = []
+    return to_native({
+        "available": True, "symbol": sym,
+        "period_end": rows[0]["period_end"],
+        "holders": rows,
+        # The mutual-fund side of the same question, from a different source:
+        # monthly rather than quarterly, and with no 1% floor.
+        "funds": funds,
+        # One entry per investor, not per matching row: Vijay Kedia appears on
+        # Atul Auto's register twice, personally and through Kedia Securities.
+        "tracked": list({h["investor"]["id"]: h["investor"]
+                         for h in rows if h.get("investor")}.values()),
+        "note": ("Only holders above 1% of the company are named in the filing, "
+                 "so this is the disclosed part of the register, not all of it."),
+    })
+
+
+@app.get("/investors/coverage")
+def investors_coverage():
+    """
+    How much of the universe the ledger actually holds.
+
+    Published rather than kept in the admin area because it is the honest
+    caveat on everything above: a portfolio assembled from 300 companies read
+    out of 2,000 is a sample, and a reader is entitled to know which.
+    """
+    if holdings_store is None:
+        return {"available": False, "message": "The holdings ledger is not available."}
+    out = {"available": True, "store": holdings_store.stats()}
+    if investors_source is not None:
+        try:
+            out["aliases"] = investors_source.verify()
+        except Exception:
+            pass
+    try:
+        out["universe"] = len(holdings_crawl.universe()) if holdings_crawl else None
+    except Exception:
+        out["universe"] = None
+    return to_native(out)
+
+
+@app.post("/admin/holdings/crawl")
+def admin_holdings_crawl(key: str = "", limit: int = 40, quarters: int = 4,
+                         symbols: str = ""):
+    """
+    Read the next slice of companies into the holdings ledger.
+
+    Driven by a scheduled workflow rather than a timer — see holdings_crawl for
+    why. Bounded per call: a full sweep is two thousand documents from an
+    exchange that throttles bursts, and it is meant to take many runs.
+    """
+    _require_admin(key)
+    if holdings_crawl is None:
+        raise HTTPException(503, "The holdings crawler is not available.")
+    syms = [s.strip().upper() for s in (symbols or "").split(",") if s.strip()]
+    try:
+        return to_native(holdings_crawl.run(
+            limit=max(1, min(int(limit), 300)),
+            quarters=max(1, min(int(quarters), 12)),
+            symbols=syms or None))
+    except Exception as e:
+        raise HTTPException(503, f"The crawl failed: {str(e)[:150]}")
+
+
+@app.get("/admin/holdings/unclaimed")
+def admin_holdings_unclaimed(key: str = "", min_pct: float = 1.0, limit: int = 60):
+    """
+    Large named holders that no tracked investor claims.
+
+    How the curated table grows without guesswork: rather than inventing alias
+    spellings, look at what companies have actually filed. It is also how a
+    misspelling in the table surfaces — the correct spelling shows up here,
+    unclaimed, next to the name that should have matched it.
+    """
+    _require_admin(key)
+    if investors_source is None:
+        raise HTTPException(503, "The investor table is not available.")
+    return to_native({
+        "unclaimed": investors_source.unknown_big_holders(
+            min_pct=min_pct, limit=max(1, min(int(limit), 300))),
+        "aliases": investors_source.verify(),
+    })
+
+
+@app.get("/funds")
+def funds_list(month: str = None):
+    """
+    The fund houses whose monthly portfolio disclosure has been read.
+
+    COVERAGE IS PART OF THE ANSWER. SEBI requires all 53 asset managers to
+    publish, and AMFI lists them — but it aggregates nothing, so each pack has
+    to be fetched from that AMC's own website and a good many build their
+    download list in JavaScript. This returns what was actually read, and the
+    count, rather than presenting a fraction of the industry as the whole of
+    it.
+    """
+    if holdings_store is None:
+        return {"available": False, "funds": [],
+                "message": "The holdings ledger is not available."}
+    try:
+        packs = holdings_store.fund_packs(as_of=month)
+        st = holdings_store.stats().get("funds", {})
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the holdings ledger: {str(e)[:110]}")
+    listed = 53
+    return to_native({
+        "available": bool(packs),
+        "month": month or st.get("latest_month"),
+        "months": st.get("months", []),
+        "funds": packs,
+        "read": len(packs),
+        "listed_with_amfi": listed,
+        "note": ("Read from each asset manager's own monthly portfolio "
+                 "disclosure. %d of the %d fund houses AMFI lists have been "
+                 "read for this month — AMFI publishes a directory, not a "
+                 "feed, and several AMCs build their download list in "
+                 "JavaScript rather than serving it as a link."
+                 % (len(packs), listed)),
+        "lag": ("Portfolios are disclosed monthly and are due by the tenth of "
+                "the following month, so a position here can be about six "
+                "weeks old."),
+    })
+
+
+@app.get("/fund")
+def fund_portfolio(amc: str, month: str = None, min_pct: float = 0.0):
+    """
+    One fund house's listed-equity positions, across every scheme it runs.
+
+    Only listed equity. A monthly pack carries the whole book — debentures,
+    government securities, InvIT units, treasury bills — and the filter here is
+    NSE's own equity list rather than a guess about the instrument. Rows whose
+    ISIN is not in that list are counted as `unmapped` so the weights can be
+    reconciled against the fund's real portfolio rather than quietly adding up
+    to less than it holds.
+    """
+    if holdings_store is None:
+        raise HTTPException(503, "The holdings ledger is not available.")
+    if not amc or len(amc) > 40:
+        raise HTTPException(400, "Provide a fund house id.")
+    try:
+        rows = holdings_store.fund_positions(amc, as_of=month, min_pct=min_pct)
+        packs = [p for p in holdings_store.fund_packs(as_of=month)
+                 if p["amc_id"] == amc]
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the holdings ledger: {str(e)[:110]}")
+    if not rows:
+        return {"available": False, "amc_id": amc,
+                "message": ("No monthly portfolio has been read for this fund "
+                            "house yet.")}
+    pack = packs[0] if packs else {}
+    # One line per company, summed across the schemes that hold it — which is
+    # what "the house owns" means — with the schemes kept underneath.
+    by_symbol = {}
+    for r in rows:
+        key = r["symbol"] or r["isin"]
+        a = by_symbol.setdefault(key, {
+            "symbol": r["symbol"], "isin": r["isin"], "name": r["name"],
+            "industry": r.get("industry"), "value_lakh": 0.0, "quantity": 0.0,
+            # A row whose ISIN is not in NSE's equity list: another fund's
+            # units, an unlisted holding, something listed only on BSE. Kept
+            # and flagged rather than dropped, so the weights reconcile.
+            "listed": bool(r["symbol"]),
+            "schemes": []})
+        a["value_lakh"] += float(r.get("value_lakh") or 0)
+        a["quantity"] += float(r.get("quantity") or 0)
+        a["schemes"].append({"scheme": r["scheme"], "pct_nav": r.get("pct_nav"),
+                             "value_lakh": r.get("value_lakh")})
+    positions = sorted([p for p in by_symbol.values() if p["listed"]],
+                       key=lambda x: -x["value_lakh"])
+    unlisted = sorted([p for p in by_symbol.values() if not p["listed"]],
+                      key=lambda x: -x["value_lakh"])
+    for p in positions + unlisted:
+        p["value_lakh"] = round(p["value_lakh"], 2)
+        p["value_cr"] = round(p["value_lakh"] / 100.0, 2)
+        p["schemes"].sort(key=lambda s: -(s["value_lakh"] or 0))
+        p["scheme_count"] = len(p["schemes"])
+    return to_native({
+        "available": True,
+        "amc_id": amc,
+        "name": pack.get("amc_name"),
+        "month": pack.get("as_of") or month,
+        "source": pack.get("source_url"),
+        "positions": positions,
+        "count": len(positions),
+        "not_on_nse": unlisted,
+        "schemes": pack.get("schemes"),
+        "unmapped": pack.get("unmapped"),
+        "notes": [
+            "Listed-equity positions only. The pack also contains debt, "
+            "government securities and trust units; those are read but are "
+            "not shown here." +
+            (" %d row%s in this pack had no match in NSE's equity list."
+             % (pack["unmapped"], "" if pack["unmapped"] == 1 else "s")
+             if pack.get("unmapped") else ""),
+            "Disclosed monthly, due by the tenth of the following month, so "
+            "these can be about six weeks old. Unlike the shareholding "
+            "filings there is no 1% floor: a fund's whole book is published.",
+            "A company held by several schemes is shown once, with the "
+            "schemes listed beneath it. The percentages are each scheme's "
+            "weight in its own portfolio and are not added together.",
+        ],
+    })
+
+
+@app.post("/admin/funds/ingest")
+def admin_funds_ingest(key: str = "", limit: int = 4, amc: str = "",
+                       url: str = ""):
+    """
+    Read the next few fund houses' monthly packs.
+
+    Bounded hard: each pack is a fifteen-megabyte download and a few seconds of
+    parsing, and this may be running on a 512 MB instance. `url` reads one
+    workbook directly, for an AMC whose download list is built in JavaScript
+    and cannot be discovered from the HTML.
+    """
+    _require_admin(key)
+    if fund_portfolios is None:
+        raise HTTPException(503, "The fund portfolio reader is not available.")
+    try:
+        if url:
+            mapping, meta = fund_portfolios.isin_map()
+            out = fund_portfolios.ingest_url(amc or "manual", None, url,
+                                             mapping=mapping)
+            out["isin_map"] = meta
+            return to_native(out)
+        return to_native(fund_portfolios.run(limit=max(1, min(int(limit), 20))))
+    except Exception as e:
+        raise HTTPException(503, f"The ingest failed: {str(e)[:150]}")
+
+
+@app.get("/admin/funds/directory")
+def admin_funds_directory(key: str = ""):
+    """Every AMC AMFI lists, and whether its workbook can be found in HTML."""
+    _require_admin(key)
+    if fund_portfolios is None:
+        raise HTTPException(503, "The fund portfolio reader is not available.")
+    return to_native({"amcs": fund_portfolios.amc_directory()})
 
 
 @app.get("/wow-orders")

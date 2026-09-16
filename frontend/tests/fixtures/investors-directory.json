@@ -1,0 +1,207 @@
+{
+ "available": true,
+ "investors": [
+  {
+   "id": "aequitas",
+   "name": "Aequitas Investment",
+   "kind": "fund",
+   "about": "Portfolio management service; small-cap focused.",
+   "entities": 2
+  },
+  {
+   "id": "akash-bhanshali",
+   "name": "Akash Bhanshali",
+   "kind": "individual",
+   "about": "Mumbai investor; associated with Enam.",
+   "entities": 2
+  },
+  {
+   "id": "anil-kumar-goel",
+   "name": "Anil Kumar Goel",
+   "kind": "individual",
+   "about": "Long-standing investor in sugar and commodity cyclicals; holdings are often filed jointly with Seema Goel.",
+   "entities": 3
+  },
+  {
+   "id": "ashish-dhawan",
+   "name": "Ashish Dhawan",
+   "kind": "individual",
+   "about": "Co-founder of ChrysCapital; now largely in philanthropy, with a personal listed portfolio.",
+   "entities": 1
+  },
+  {
+   "id": "ashish-kacholia",
+   "name": "Ashish Kacholia",
+   "kind": "individual",
+   "about": "Small-cap investor; also invests through Bengal Finance & Investment.",
+   "entities": 3
+  },
+  {
+   "id": "ashok-kumar-jain",
+   "name": "Ashok Kumar Jain",
+   "kind": "individual",
+   "about": "Appears in several small-cap registers.",
+   "entities": 1
+  },
+  {
+   "id": "bhavook-tripathi",
+   "name": "Bhavook Tripathi",
+   "kind": "individual",
+   "about": "Known for concentrated, very long-held positions.",
+   "entities": 1
+  },
+  {
+   "id": "dheeraj-kumar-lohia",
+   "name": "Dheeraj Kumar Lohia",
+   "kind": "individual",
+   "about": "Small-cap investor.",
+   "entities": 1
+  },
+  {
+   "id": "dolly-khanna",
+   "name": "Dolly Khanna",
+   "kind": "individual",
+   "about": "Chennai-based; the portfolio is managed with Rajiv Khanna and filed in her name.",
+   "entities": 2
+  },
+  {
+   "id": "girish-gulati",
+   "name": "Girish Gulati",
+   "kind": "individual",
+   "about": "Small-cap investor.",
+   "entities": 2
+  },
+  {
+   "id": "hemendra-kothari",
+   "name": "Hemendra Kothari",
+   "kind": "individual",
+   "about": "Founder of DSP; invests personally and through family entities.",
+   "entities": 2
+  },
+  {
+   "id": "hitesh-doshi",
+   "name": "Hitesh Ramji Doshi",
+   "kind": "individual",
+   "about": "Mumbai investor.",
+   "entities": 2
+  },
+  {
+   "id": "jagdish-master",
+   "name": "Jagdish Amritlal Master",
+   "kind": "individual",
+   "about": "Long-standing small-cap investor.",
+   "entities": 2
+  },
+  {
+   "id": "lashit-sanghvi",
+   "name": "Lashit Sanghvi",
+   "kind": "individual",
+   "about": "Co-founder of Alchemy Capital.",
+   "entities": 1
+  },
+  {
+   "id": "madhusudan-kela",
+   "name": "Madhusudan Kela",
+   "kind": "individual",
+   "about": "Former Reliance Capital chief investment strategist; invests through family entities and MK Ventures.",
+   "entities": 4
+  },
+  {
+   "id": "malabar",
+   "name": "Malabar Investments",
+   "kind": "fund",
+   "about": "Singapore-based India-focused fund.",
+   "entities": 3
+  },
+  {
+   "id": "mukul-agrawal",
+   "name": "Mukul Agrawal",
+   "kind": "individual",
+   "about": "Mumbai investor; the filed name is usually Mukul Mahavir Prasad Agrawal.",
+   "entities": 4
+  },
+  {
+   "id": "nalanda",
+   "name": "Nalanda Capital",
+   "kind": "fund",
+   "about": "Singapore-based, long-hold India fund.",
+   "entities": 2
+  },
+  {
+   "id": "nemish-shah",
+   "name": "Nemish Shah",
+   "kind": "individual",
+   "about": "Co-founder of Enam; a small number of very long holds.",
+   "entities": 2
+  },
+  {
+   "id": "porinju-veliyath",
+   "name": "Porinju Veliyath",
+   "kind": "individual",
+   "about": "Kochi-based; also invests through Equity Intelligence India.",
+   "entities": 3
+  },
+  {
+   "id": "radhakishan-damani",
+   "name": "Radhakishan Damani",
+   "kind": "individual",
+   "about": "Founder of Avenue Supermarts (DMart); invests through several family entities.",
+   "entities": 6
+  },
+  {
+   "id": "rekha-jhunjhunwala",
+   "name": "Rekha Jhunjhunwala",
+   "kind": "individual",
+   "about": "Holds the portfolio built with Rakesh Jhunjhunwala, who died in August 2022, together with the family trusts.",
+   "entities": 6
+  },
+  {
+   "id": "ricky-kirpalani",
+   "name": "Ricky Ishwardas Kirpalani",
+   "kind": "individual",
+   "about": "Invests personally and through Alchemy-linked vehicles.",
+   "entities": 1
+  },
+  {
+   "id": "sangeetha-s",
+   "name": "Sangeetha S",
+   "kind": "individual",
+   "about": "Chennai-based investor who appears in a number of small-cap registers.",
+   "entities": 1
+  },
+  {
+   "id": "shivani-tejas-trivedi",
+   "name": "Shivani Tejas Trivedi",
+   "kind": "individual",
+   "about": "Appears in a number of small-cap registers.",
+   "entities": 2
+  },
+  {
+   "id": "sunil-singhania",
+   "name": "Sunil Singhania",
+   "kind": "individual",
+   "about": "Founder of Abakkus Asset Manager; positions are usually filed under the Abakkus funds rather than his own name.",
+   "entities": 5
+  },
+  {
+   "id": "vanaja-sundar-iyer",
+   "name": "Vanaja Sundar Iyer",
+   "kind": "individual",
+   "about": "Appears in several small-cap shareholder registers.",
+   "entities": 1
+  },
+  {
+   "id": "vijay-kedia",
+   "name": "Vijay Kedia",
+   "kind": "individual",
+   "about": "Mumbai-based investor, active since the late 1980s; known for long holds in small and mid caps.",
+   "entities": 3
+  }
+ ],
+ "ledger": {
+  "companies_read": 8,
+  "latest_period": "2026-06-30",
+  "rows": 22,
+  "persistent": true
+ }
+}
