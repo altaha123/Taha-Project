@@ -893,6 +893,262 @@
       });
   }
 
+
+  /* ── Fundamentals ─────────────────────────────────────────────────────────
+     The quarterly P&L as filed, the ratios that follow from it, and a change
+     column.
+
+     A TABLE, DELIBERATELY
+     Sixteen line items against six quarters with a change column is tabular
+     data, and a reader comparing two quarters of "other expenses" wants the
+     number, not a mark whose length they have to estimate. The sparklines in
+     the ratio block earn their place because a trend is the question there;
+     in the P&L the question is "what was it", and the answer is a figure.
+
+     THE TWO THINGS THIS MUST NOT DO
+     Mix accounting bases — the payload carries one basis and names it, and
+     the basis is printed at the top rather than assumed. And print a
+     percentage across zero: a company that lost money and then made money has
+     not grown by a percentage, so the payload sends a `kind` and this renders
+     the words instead of inventing a number. */
+
+  var fundaLoaded = false;
+
+  function cr(v) {
+    if (v == null || isNaN(Number(v))) return '—';
+    var n = Number(v) / 1e7;
+    var a = Math.abs(n);
+    var s = a >= 1000 ? n.toFixed(0) : (a >= 10 ? n.toFixed(1) : n.toFixed(2));
+    return Number(s).toLocaleString('en-IN');
+  }
+  function plain(v, d) {
+    if (v == null || isNaN(Number(v))) return '—';
+    return Number(Number(v).toFixed(d == null ? 2 : d)).toLocaleString('en-IN');
+  }
+
+  /* The change cell. `kind` comes from the API precisely so this never has to
+     infer a turnaround from a sign.
+
+     Two vocabularies, because one does not fit. On profit after tax "to
+     profit" is exactly the right phrase; on the tax line it is nonsense — tax
+     going from a credit to a charge is not a company turning profitable. So
+     the profit lines get the profit words and everything else gets the
+     sign words, which are true of any line. */
+  var PROFIT_LINES = {
+    pbt_before_exceptional: 1, pbt: 1, pat: 1, eps_basic: 1, exceptional: 1
+  };
+  var KIND_WORDS = {
+    loss_to_profit: 'to profit',
+    profit_to_loss: 'to loss',
+    loss_widened: 'loss wider',
+    loss_narrowed: 'loss narrower',
+    unavailable: '—',
+    flat: 'flat'
+  };
+  var SIGN_WORDS = {
+    loss_to_profit: 'to positive',
+    profit_to_loss: 'to negative',
+    loss_widened: 'more negative',
+    loss_narrowed: 'less negative',
+    unavailable: '—',
+    flat: 'flat'
+  };
+  function words(key) { return PROFIT_LINES[key] ? KIND_WORDS : SIGN_WORDS; }
+
+  function changeCell(c, key) {
+    if (!c || c.kind === 'unavailable') return '<td class="fu-ch none">—</td>';
+    /* Nil in both quarters — exceptional items, usually. "Flat" is true but it
+       says a line moved nowhere when the line was never there. */
+    if (c.pct == null && c.kind === 'flat' && !c.abs)
+      return '<td class="fu-ch none">—</td>';
+    if (c.pct == null) {
+      var word = words(key)[c.kind] || 'changed';
+      var t = (c.kind === 'loss_to_profit' || c.kind === 'loss_narrowed') ? 'up'
+            : (c.kind === 'profit_to_loss' || c.kind === 'loss_widened') ? 'dn' : '';
+      return '<td class="fu-ch word ' + t + '" title="A percentage change needs a ' +
+        'positive base to mean anything">' + esc(word) + '</td>';
+    }
+    var tone2 = c.pct > 0.005 ? 'up' : (c.pct < -0.005 ? 'dn' : '');
+    return '<td class="fu-ch ' + tone2 + ' tnum">' +
+      (c.pct > 0 ? '+' : '') + c.pct.toFixed(1) + '%</td>';
+  }
+
+  function fundaTable(d) {
+    var rows = d.rows || [];
+    if (!rows.length) return '';
+    var latest = rows[0];
+    var older = rows.slice(1);
+
+    var head = '<tr><th scope="col" class="fu-line">₹ crore</th>' +
+      '<th scope="col" class="fu-now">' + esc(latest.label || '') + '</th>' +
+      '<th scope="col" class="fu-chh">' +
+        (latest.yoy_against ? 'vs ' + esc(latest.yoy_against) : 'YoY') + '</th>' +
+      '<th scope="col" class="fu-chh">' +
+        (latest.qoq_against ? 'vs ' + esc(latest.qoq_against) : 'QoQ') + '</th>' +
+      older.map(function (r) {
+        return '<th scope="col">' + esc(r.label || '') + '</th>';
+      }).join('') + '</tr>';
+
+    var body = (d.lines || []).map(function (ln) {
+      var v = latest.values || {};
+      var isKey = ln.key === 'revenue' || ln.key === 'ebitda' || ln.key === 'pat';
+      var money = ln.unit !== 'rupees';
+      var fmt = money ? cr : function (x) { return plain(x, 2); };
+      /* The column header reads "₹ crore". EPS is rupees per share, so it says
+         so on its own row rather than being read off by a factor of a crore. */
+      return '<tr' + (isKey ? ' class="key"' : '') + '>' +
+        '<th scope="row" class="fu-line">' + esc(ln.label) +
+          (money ? '' : '<em>₹ per share</em>') + '</th>' +
+        '<td class="fu-now tnum">' + fmt(v[ln.key]) + '</td>' +
+        changeCell((latest.yoy || {})[ln.key], ln.key) +
+        changeCell((latest.qoq || {})[ln.key], ln.key) +
+        older.map(function (r) {
+          return '<td class="tnum">' + fmt((r.values || {})[ln.key]) + '</td>';
+        }).join('') + '</tr>';
+    }).join('');
+
+    /* The note sits OUTSIDE the scroller. Inside it, it is as wide as the
+       table and gets clipped at the viewport edge on a phone — which is where
+       it matters most, because that is where the basis is least visible. */
+    return '<p class="fu-cap" id="fu-cap-pl">Profit and loss as filed, ' +
+      esc(d.basis) + ', in ₹ crore. The first change column compares the same ' +
+      'quarter a year earlier — the comparison that means something for a ' +
+      'seasonal business. The second is against the quarter just gone.</p>' +
+      '<div class="fu-block"><div class="fu-wrap">' +
+      '<table class="fu-table" aria-describedby="fu-cap-pl">' +
+      '<caption class="fu-vh">Quarterly profit and loss, ' + esc(d.basis) +
+      ' basis, in rupees crore</caption>' +
+      '<thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>';
+  }
+
+  function ratioSpark(rows, key) {
+    var pts = rows.slice().reverse()
+      .map(function (r) { return (r.ratios || {})[key]; })
+      .filter(function (v) { return v != null; });
+    if (pts.length < 2) return '';
+    var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts);
+    if (hi - lo < 1e-9) { lo -= 0.5; hi += 0.5; }
+    var W = 96, H = 22;
+    var d = pts.map(function (v, i) {
+      var x = (i / (pts.length - 1)) * W;
+      var y = (1 - (v - lo) / (hi - lo)) * (H - 4) + 2;
+      return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }).join(' ');
+    return '<svg class="fu-spark" viewBox="0 0 ' + W + ' ' + H +
+      '" preserveAspectRatio="none" aria-hidden="true"><path d="' + d + '"/></svg>';
+  }
+
+  function fundaRatios(d) {
+    var rows = d.rows || [];
+    if (!rows.length) return '';
+    var latest = rows[0], older = rows.slice(1);
+    var body = (d.ratio_defs || []).map(function (rd) {
+      var unit = rd.key === 'interest_cover_x' ? '×' : '%';
+      var val = (latest.ratios || {})[rd.key];
+      /* The unit goes on the row label. Suffixing every cell in six columns is
+         noise; suffixing only the latest leaves the older quarters looking
+         like a different quantity. */
+      return '<tr>' +
+        '<th scope="row" class="fu-line">' + esc(rd.label) +
+          '<em>' + esc(rd.formula) + ', ' + unit + '</em></th>' +
+        '<td class="fu-now tnum">' + (val == null ? '—' : plain(val, 2) + unit) + '</td>' +
+        '<td class="fu-sp">' + ratioSpark(rows, rd.key) + '</td>' +
+        older.map(function (r) {
+          var x = (r.ratios || {})[rd.key];
+          return '<td class="tnum">' + (x == null ? '—' : plain(x, 2)) + '</td>';
+        }).join('') + '</tr>';
+    }).join('');
+
+    var head = '<tr><th scope="col" class="fu-line">Ratio</th>' +
+      '<th scope="col" class="fu-now">' + esc(latest.label || '') + '</th>' +
+      '<th scope="col" class="fu-sp">Trend</th>' +
+      older.map(function (r) {
+        return '<th scope="col">' + esc(r.label || '') + '</th>';
+      }).join('') + '</tr>';
+
+    return '<h3 class="fu-h3">Ratios</h3>' +
+      '<p class="fu-cap" id="fu-cap-ratios">Computed from the lines above, the ' +
+      'same way in every quarter. A ratio is left blank rather than shown where ' +
+      'its denominator is zero or negative — an effective tax rate against a ' +
+      'loss before tax is not a rate.</p>' +
+      '<div class="fu-block"><div class="fu-wrap">' +
+      '<table class="fu-table fu-ratios" aria-describedby="fu-cap-ratios">' +
+      '<caption class="fu-vh">Quarterly ratios</caption>' +
+      '<thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>';
+  }
+
+  function paintFunda(d) {
+    var box = $('funda-body');
+    if (!box) return;
+    if (!d || !d.available) {
+      box.innerHTML = '<div class="own-empty">' +
+        esc((d && d.message) || 'The filings could not be read.') + '</div>';
+      return;
+    }
+    var rows = d.rows || [];
+    var latest = rows[0] || {};
+    var rev = (latest.yoy || {}).revenue || {};
+    var pat = (latest.yoy || {}).pat || {};
+
+    var LEAD_WORDS = {
+      loss_to_profit: 'turned from a loss into a profit',
+      profit_to_loss: 'turned from a profit into a loss',
+      loss_widened: 'lost more',
+      loss_narrowed: 'lost less',
+      flat: 'was unchanged'
+    };
+    function phrase(c, what) {
+      if (!c || c.kind === 'unavailable') return '';
+      if (c.pct != null) {
+        if (Math.abs(c.pct) < 0.05) return what + ' was flat';
+        return what + ' ' + (c.pct > 0 ? 'grew' : 'fell') + ' ' +
+          Math.abs(c.pct).toFixed(1) + '%';
+      }
+      return what + ' ' + (LEAD_WORDS[c.kind] || 'changed');
+    }
+    var bits = [phrase(rev, 'Revenue'), phrase(pat, 'profit after tax')]
+      .filter(Boolean);
+    var lead = bits.length
+      ? bits.join(' and ') + ' against ' + (latest.yoy_against || 'a year earlier') + '.'
+      : 'Not enough history yet to compare this quarter with a year earlier.';
+
+    var alts = (d.basis_alternatives || []).filter(function (b) { return b !== d.basis; });
+    var head = '<p class="own-lead">' + esc(lead) + '</p>' +
+      '<p class="own-asof">' +
+        '<b>' + esc(d.basis) + '</b> results — ' + esc(d.basis_reason) + '. ' +
+        esc(String(d.count)) + ' quarter' + (d.count === 1 ? '' : 's') + ' read' +
+        (d.partial ? ' of ' + esc(String(d.requested)) + ' asked for' : '') + '.' +
+        (alts.length ? ' The company also files ' + esc(alts.join(' and ')) + '.' : '') +
+        (latest.source ? ' <a href="' + esc(latest.source) +
+          '" target="_blank" rel="noopener">Open the filing</a>.' : '') +
+      '</p>';
+
+    box.innerHTML = head + fundaTable(d) + fundaRatios(d) +
+      ((d.notes || []).length
+        ? '<div class="own-notes">' + d.notes.map(function (n) {
+            return '<p>' + esc(n) + '</p>';
+          }).join('') + '</div>'
+        : '');
+  }
+
+  function loadFunda() {
+    var box = $('funda-body');
+    if (box) {
+      box.innerHTML = '<div class="own-empty is-loading" aria-busy="true">' +
+        'Reading the results filings…</div>';
+    }
+    fetch(API + '/fundamentals?ticker=' + encodeURIComponent(TICKER) + '&quarters=6')
+      .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
+      .then(paintFunda)
+      .catch(function () {
+        if (box) {
+          box.innerHTML = '<div class="own-empty">The filings could not be read ' +
+            'just now. If the engine has been idle it takes about thirty seconds ' +
+            'to wake — try again.</div>';
+        }
+      });
+  }
+
   /* ── The rail's scroll spy ───────────────────────────────────────────────── */
 
   /* ── Panes ────────────────────────────────────────────────────────────────
@@ -906,7 +1162,7 @@
   var chartDrawn = false;
 
   function showPane(name) {
-    ['info', 'chart', 'scores', 'owners'].forEach(function (p) {
+    ['info', 'chart', 'scores', 'owners', 'funda'].forEach(function (p) {
       var pane = $('pane-' + p), btn = $('pane-btn-' + p);
       if (!pane || !btn) return;
       var on = p === name;
@@ -924,6 +1180,12 @@
     if (name === 'owners' && !ownLoaded) {
       ownLoaded = true;
       loadOwnership();
+    }
+    // Same reasoning: one network fetch per quarter, paid for only by a reader
+    // who opens the pane.
+    if (name === 'funda' && !fundaLoaded) {
+      fundaLoaded = true;
+      loadFunda();
     }
     if (window.AltahaTrack) window.AltahaTrack('stock_pane_shown', { pane: name });
   }

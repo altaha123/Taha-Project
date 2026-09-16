@@ -77,7 +77,7 @@ const server = http.createServer((req, res) => {
 
 (async () => {
   await new Promise(r => server.listen(8771, '127.0.0.1', r));
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   const context = await browser.newContext({ viewport: { width: 1280, height: 1000 } });
   const page = await context.newPage(), errors = [];
   let shareholdingCalls = 0;

@@ -119,7 +119,7 @@ const server = http.createServer((req, res) => {
 
 (async () => {
   await new Promise(r => server.listen(8773, '127.0.0.1', r));
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   // Reduced motion, deliberately. The page reveals content through an
   // intersection observer, so anything below the fold sits at opacity 0 until
   // it scrolls into view — which makes a click on it wait forever for an

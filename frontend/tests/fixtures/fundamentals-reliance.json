@@ -1,0 +1,934 @@
+{
+ "symbol": "RELIANCE",
+ "available": true,
+ "rows": [
+  {
+   "period_end": "2026-06-30",
+   "label": "Q1 FY27",
+   "from": "2026-04-01",
+   "filed_at": "20-Jul-2026 19:41:02",
+   "audited": "Unaudited",
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/RESULT_2026-06-30_C.xml",
+   "values": {
+    "revenue": 2694960000000.0,
+    "other_income": 49856760000.0,
+    "total_income": 2744816760000.0,
+    "materials": 1093614768000.0,
+    "employee_cost": 78153840000.0,
+    "finance_cost": 62792568000.0,
+    "depreciation": 137173464000.0,
+    "other_expenses": 434697048000.0,
+    "total_expenses": 2448640656000.0,
+    "ebitda": 460299168000.0,
+    "pbt_before_exceptional": 288432600000.0,
+    "exceptional": 0.0,
+    "pbt": 288432600000.0,
+    "tax": 65532600000.0,
+    "pat": 222900000000.0,
+    "eps_basic": 164.75
+   },
+   "ratios": {
+    "opm_pct": 17.08,
+    "net_margin_pct": 8.27,
+    "tax_rate_pct": 22.72,
+    "other_income_share_pct": 17.29,
+    "interest_cover_x": 7.33,
+    "employee_cost_pct": 2.9
+   },
+   "yoy": {
+    "revenue": {
+     "pct": 10.53,
+     "abs": 256640000000.0,
+     "kind": "grew"
+    },
+    "other_income": {
+     "pct": 10.53,
+     "abs": 4747840000.0,
+     "kind": "grew"
+    },
+    "total_income": {
+     "pct": 10.53,
+     "abs": 261387840000.0,
+     "kind": "grew"
+    },
+    "materials": {
+     "pct": 10.53,
+     "abs": 104144512000.0,
+     "kind": "grew"
+    },
+    "employee_cost": {
+     "pct": 10.53,
+     "abs": 7442560000.0,
+     "kind": "grew"
+    },
+    "finance_cost": {
+     "pct": 10.53,
+     "abs": 5979712000.0,
+     "kind": "grew"
+    },
+    "depreciation": {
+     "pct": 10.53,
+     "abs": 13062976000.0,
+     "kind": "grew"
+    },
+    "other_expenses": {
+     "pct": 10.53,
+     "abs": 41396032000.0,
+     "kind": "grew"
+    },
+    "total_expenses": {
+     "pct": 10.53,
+     "abs": 233183104000.0,
+     "kind": "grew"
+    },
+    "ebitda": {
+     "pct": 10.53,
+     "abs": 43834112000.0,
+     "kind": "grew"
+    },
+    "pbt_before_exceptional": {
+     "pct": null,
+     "abs": 344074600000.0,
+     "kind": "loss_to_profit"
+    },
+    "exceptional": {
+     "pct": null,
+     "abs": 0.0,
+     "kind": "flat"
+    },
+    "pbt": {
+     "pct": null,
+     "abs": 344074600000.0,
+     "kind": "loss_to_profit"
+    },
+    "tax": {
+     "pct": null,
+     "abs": 78174600000.0,
+     "kind": "loss_to_profit"
+    },
+    "pat": {
+     "pct": null,
+     "abs": 265900000000.0,
+     "kind": "loss_to_profit"
+    },
+    "eps_basic": {
+     "pct": null,
+     "abs": 196.53,
+     "kind": "loss_to_profit"
+    }
+   },
+   "qoq": {
+    "revenue": {
+     "pct": 1.86,
+     "abs": 49230000000.0,
+     "kind": "grew"
+    },
+    "other_income": {
+     "pct": 1.86,
+     "abs": 910755000.0,
+     "kind": "grew"
+    },
+    "total_income": {
+     "pct": 1.86,
+     "abs": 50140755000.0,
+     "kind": "grew"
+    },
+    "materials": {
+     "pct": 1.86,
+     "abs": 19977534000.0,
+     "kind": "grew"
+    },
+    "employee_cost": {
+     "pct": 1.86,
+     "abs": 1427670000.0,
+     "kind": "grew"
+    },
+    "finance_cost": {
+     "pct": 1.86,
+     "abs": 1147059000.0,
+     "kind": "grew"
+    },
+    "depreciation": {
+     "pct": 1.86,
+     "abs": 2505807000.0,
+     "kind": "grew"
+    },
+    "other_expenses": {
+     "pct": 1.86,
+     "abs": 7940799000.0,
+     "kind": "grew"
+    },
+    "total_expenses": {
+     "pct": 1.86,
+     "abs": 44730378000.0,
+     "kind": "grew"
+    },
+    "ebitda": {
+     "pct": 1.86,
+     "abs": 8408484000.0,
+     "kind": "grew"
+    },
+    "pbt_before_exceptional": {
+     "pct": -1.42,
+     "abs": -4153740000.0,
+     "kind": "shrank"
+    },
+    "exceptional": {
+     "pct": null,
+     "abs": 0.0,
+     "kind": "flat"
+    },
+    "pbt": {
+     "pct": -1.42,
+     "abs": -4153740000.0,
+     "kind": "shrank"
+    },
+    "tax": {
+     "pct": -1.42,
+     "abs": -943740000.0,
+     "kind": "shrank"
+    },
+    "pat": {
+     "pct": -1.42,
+     "abs": -3210000000.0,
+     "kind": "shrank"
+    },
+    "eps_basic": {
+     "pct": -1.42,
+     "abs": -2.3700000000000045,
+     "kind": "shrank"
+    }
+   },
+   "yoy_against": "Q1 FY26",
+   "qoq_against": "Q4 FY26"
+  },
+  {
+   "period_end": "2026-03-31",
+   "label": "Q4 FY26",
+   "from": "2026-01-01",
+   "filed_at": "20-Jul-2026 19:41:02",
+   "audited": "Unaudited",
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/RESULT_2026-03-31_C.xml",
+   "values": {
+    "revenue": 2645730000000.0,
+    "other_income": 48946005000.0,
+    "total_income": 2694676005000.0,
+    "materials": 1073637234000.0,
+    "employee_cost": 76726170000.0,
+    "finance_cost": 61645509000.0,
+    "depreciation": 134667657000.0,
+    "other_expenses": 426756249000.0,
+    "total_expenses": 2403910278000.0,
+    "ebitda": 451890684000.0,
+    "pbt_before_exceptional": 292586340000.0,
+    "exceptional": 0.0,
+    "pbt": 292586340000.0,
+    "tax": 66476340000.0,
+    "pat": 226110000000.0,
+    "eps_basic": 167.12
+   },
+   "ratios": {
+    "opm_pct": 17.08,
+    "net_margin_pct": 8.55,
+    "tax_rate_pct": 22.72,
+    "other_income_share_pct": 16.73,
+    "interest_cover_x": 7.33,
+    "employee_cost_pct": 2.9
+   },
+   "yoy": {
+    "revenue": {
+     "pct": 11.85,
+     "abs": 280400000000.0,
+     "kind": "grew"
+    },
+    "other_income": {
+     "pct": 11.85,
+     "abs": 5187400000.0,
+     "kind": "grew"
+    },
+    "total_income": {
+     "pct": 11.85,
+     "abs": 285587400000.0,
+     "kind": "grew"
+    },
+    "materials": {
+     "pct": 11.85,
+     "abs": 113786320000.0,
+     "kind": "grew"
+    },
+    "employee_cost": {
+     "pct": 11.85,
+     "abs": 8131600000.0,
+     "kind": "grew"
+    },
+    "finance_cost": {
+     "pct": 11.85,
+     "abs": 6533320000.0,
+     "kind": "grew"
+    },
+    "depreciation": {
+     "pct": 11.85,
+     "abs": 14272360000.0,
+     "kind": "grew"
+    },
+    "other_expenses": {
+     "pct": 11.85,
+     "abs": 45228520000.0,
+     "kind": "grew"
+    },
+    "total_expenses": {
+     "pct": 11.85,
+     "abs": 254771440000.0,
+     "kind": "grew"
+    },
+    "ebitda": {
+     "pct": 11.85,
+     "abs": 47892320000.0,
+     "kind": "grew"
+    },
+    "pbt_before_exceptional": {
+     "pct": 19.31,
+     "abs": 47360400000.0,
+     "kind": "grew"
+    },
+    "exceptional": {
+     "pct": null,
+     "abs": 0.0,
+     "kind": "flat"
+    },
+    "pbt": {
+     "pct": 19.31,
+     "abs": 47360400000.0,
+     "kind": "grew"
+    },
+    "tax": {
+     "pct": 19.31,
+     "abs": 10760400000.0,
+     "kind": "grew"
+    },
+    "pat": {
+     "pct": 19.31,
+     "abs": 36600000000.0,
+     "kind": "grew"
+    },
+    "eps_basic": {
+     "pct": 19.31,
+     "abs": 27.05000000000001,
+     "kind": "grew"
+    }
+   },
+   "qoq": {
+    "revenue": {
+     "pct": 6.61,
+     "abs": 164130000000.0,
+     "kind": "grew"
+    },
+    "other_income": {
+     "pct": 6.61,
+     "abs": 3036405000.0,
+     "kind": "grew"
+    },
+    "total_income": {
+     "pct": 6.61,
+     "abs": 167166405000.0,
+     "kind": "grew"
+    },
+    "materials": {
+     "pct": 6.61,
+     "abs": 66603954000.0,
+     "kind": "grew"
+    },
+    "employee_cost": {
+     "pct": 6.61,
+     "abs": 4759770000.0,
+     "kind": "grew"
+    },
+    "finance_cost": {
+     "pct": 6.61,
+     "abs": 3824229000.0,
+     "kind": "grew"
+    },
+    "depreciation": {
+     "pct": 6.61,
+     "abs": 8354217000.0,
+     "kind": "grew"
+    },
+    "other_expenses": {
+     "pct": 6.61,
+     "abs": 26474169000.0,
+     "kind": "grew"
+    },
+    "total_expenses": {
+     "pct": 6.61,
+     "abs": 149128518000.0,
+     "kind": "grew"
+    },
+    "ebitda": {
+     "pct": 6.61,
+     "abs": 28033404000.0,
+     "kind": "grew"
+    },
+    "pbt_before_exceptional": {
+     "pct": 3.11,
+     "abs": 8812140000.0,
+     "kind": "grew"
+    },
+    "exceptional": {
+     "pct": null,
+     "abs": 0.0,
+     "kind": "flat"
+    },
+    "pbt": {
+     "pct": 3.11,
+     "abs": 8812140000.0,
+     "kind": "grew"
+    },
+    "tax": {
+     "pct": 3.11,
+     "abs": 2002140000.0,
+     "kind": "grew"
+    },
+    "pat": {
+     "pct": 3.11,
+     "abs": 6810000000.0,
+     "kind": "grew"
+    },
+    "eps_basic": {
+     "pct": 3.11,
+     "abs": 5.039999999999992,
+     "kind": "grew"
+    }
+   },
+   "yoy_against": "Q4 FY25",
+   "qoq_against": "Q3 FY26"
+  },
+  {
+   "period_end": "2025-12-31",
+   "label": "Q3 FY26",
+   "from": "2025-10-01",
+   "filed_at": "20-Jul-2026 19:41:02",
+   "audited": "Unaudited",
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/RESULT_2025-12-31_C.xml",
+   "values": {
+    "revenue": 2481600000000.0,
+    "other_income": 45909600000.0,
+    "total_income": 2527509600000.0,
+    "materials": 1007033280000.0,
+    "employee_cost": 71966400000.0,
+    "finance_cost": 57821280000.0,
+    "depreciation": 126313440000.0,
+    "other_expenses": 400282080000.0,
+    "total_expenses": 2254781760000.0,
+    "ebitda": 423857280000.0,
+    "pbt_before_exceptional": 283774200000.0,
+    "exceptional": 0.0,
+    "pbt": 283774200000.0,
+    "tax": 64474200000.0,
+    "pat": 219300000000.0,
+    "eps_basic": 162.08
+   },
+   "ratios": {
+    "opm_pct": 17.08,
+    "net_margin_pct": 8.84,
+    "tax_rate_pct": 22.72,
+    "other_income_share_pct": 16.18,
+    "interest_cover_x": 7.33,
+    "employee_cost_pct": 2.9
+   },
+   "yoy": {},
+   "qoq": {
+    "revenue": {
+     "pct": 3.25,
+     "abs": 78030000000.0,
+     "kind": "grew"
+    },
+    "other_income": {
+     "pct": 3.25,
+     "abs": 1443555000.0,
+     "kind": "grew"
+    },
+    "total_income": {
+     "pct": 3.25,
+     "abs": 79473555000.0,
+     "kind": "grew"
+    },
+    "materials": {
+     "pct": 3.25,
+     "abs": 31664574000.0,
+     "kind": "grew"
+    },
+    "employee_cost": {
+     "pct": 3.25,
+     "abs": 2262870000.0,
+     "kind": "grew"
+    },
+    "finance_cost": {
+     "pct": 3.25,
+     "abs": 1818099000.0,
+     "kind": "grew"
+    },
+    "depreciation": {
+     "pct": 3.25,
+     "abs": 3971727000.0,
+     "kind": "grew"
+    },
+    "other_expenses": {
+     "pct": 3.25,
+     "abs": 12586239000.0,
+     "kind": "grew"
+    },
+    "total_expenses": {
+     "pct": 3.25,
+     "abs": 70898058000.0,
+     "kind": "grew"
+    },
+    "ebitda": {
+     "pct": 3.25,
+     "abs": 13327524000.0,
+     "kind": "grew"
+    },
+    "pbt_before_exceptional": {
+     "pct": 20.73,
+     "abs": 48719100000.0,
+     "kind": "grew"
+    },
+    "exceptional": {
+     "pct": null,
+     "abs": 0.0,
+     "kind": "flat"
+    },
+    "pbt": {
+     "pct": 20.73,
+     "abs": 48719100000.0,
+     "kind": "grew"
+    },
+    "tax": {
+     "pct": 20.73,
+     "abs": 11069100000.0,
+     "kind": "grew"
+    },
+    "pat": {
+     "pct": 20.73,
+     "abs": 37650000000.0,
+     "kind": "grew"
+    },
+    "eps_basic": {
+     "pct": 20.72,
+     "abs": 27.82000000000002,
+     "kind": "grew"
+    }
+   },
+   "yoy_against": null,
+   "qoq_against": "Q2 FY26"
+  },
+  {
+   "period_end": "2025-09-30",
+   "label": "Q2 FY26",
+   "from": "2025-07-01",
+   "filed_at": "20-Jul-2026 19:41:02",
+   "audited": "Unaudited",
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/RESULT_2025-09-30_C.xml",
+   "values": {
+    "revenue": 2403570000000.0,
+    "other_income": 44466045000.0,
+    "total_income": 2448036045000.0,
+    "materials": 975368706000.0,
+    "employee_cost": 69703530000.0,
+    "finance_cost": 56003181000.0,
+    "depreciation": 122341713000.0,
+    "other_expenses": 387695841000.0,
+    "total_expenses": 2183883702000.0,
+    "ebitda": 410529756000.0,
+    "pbt_before_exceptional": 235055100000.0,
+    "exceptional": 0.0,
+    "pbt": 235055100000.0,
+    "tax": 53405100000.0,
+    "pat": 181650000000.0,
+    "eps_basic": 134.26
+   },
+   "ratios": {
+    "opm_pct": 17.08,
+    "net_margin_pct": 7.56,
+    "tax_rate_pct": 22.72,
+    "other_income_share_pct": 18.92,
+    "interest_cover_x": 7.33,
+    "employee_cost_pct": 2.9
+   },
+   "yoy": {},
+   "qoq": {
+    "revenue": {
+     "pct": -1.43,
+     "abs": -34750000000.0,
+     "kind": "shrank"
+    },
+    "other_income": {
+     "pct": -1.43,
+     "abs": -642875000.0,
+     "kind": "shrank"
+    },
+    "total_income": {
+     "pct": -1.43,
+     "abs": -35392875000.0,
+     "kind": "shrank"
+    },
+    "materials": {
+     "pct": -1.43,
+     "abs": -14101550000.0,
+     "kind": "shrank"
+    },
+    "employee_cost": {
+     "pct": -1.43,
+     "abs": -1007750000.0,
+     "kind": "shrank"
+    },
+    "finance_cost": {
+     "pct": -1.43,
+     "abs": -809675000.0,
+     "kind": "shrank"
+    },
+    "depreciation": {
+     "pct": -1.43,
+     "abs": -1768775000.0,
+     "kind": "shrank"
+    },
+    "other_expenses": {
+     "pct": -1.43,
+     "abs": -5605175000.0,
+     "kind": "shrank"
+    },
+    "total_expenses": {
+     "pct": -1.43,
+     "abs": -31573850000.0,
+     "kind": "shrank"
+    },
+    "ebitda": {
+     "pct": -1.43,
+     "abs": -5935300000.0,
+     "kind": "shrank"
+    },
+    "pbt_before_exceptional": {
+     "pct": null,
+     "abs": 290697100000.0,
+     "kind": "loss_to_profit"
+    },
+    "exceptional": {
+     "pct": null,
+     "abs": 0.0,
+     "kind": "flat"
+    },
+    "pbt": {
+     "pct": null,
+     "abs": 290697100000.0,
+     "kind": "loss_to_profit"
+    },
+    "tax": {
+     "pct": null,
+     "abs": 66047100000.0,
+     "kind": "loss_to_profit"
+    },
+    "pat": {
+     "pct": null,
+     "abs": 224650000000.0,
+     "kind": "loss_to_profit"
+    },
+    "eps_basic": {
+     "pct": null,
+     "abs": 166.04,
+     "kind": "loss_to_profit"
+    }
+   },
+   "yoy_against": null,
+   "qoq_against": "Q1 FY26"
+  },
+  {
+   "period_end": "2025-06-30",
+   "label": "Q1 FY26",
+   "from": "2025-04-01",
+   "filed_at": "20-Jul-2026 19:41:02",
+   "audited": "Unaudited",
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/RESULT_2025-06-30_C.xml",
+   "values": {
+    "revenue": 2438320000000.0,
+    "other_income": 45108920000.0,
+    "total_income": 2483428920000.0,
+    "materials": 989470256000.0,
+    "employee_cost": 70711280000.0,
+    "finance_cost": 56812856000.0,
+    "depreciation": 124110488000.0,
+    "other_expenses": 393301016000.0,
+    "total_expenses": 2215457552000.0,
+    "ebitda": 416465056000.0,
+    "pbt_before_exceptional": -55642000000.0,
+    "exceptional": 0.0,
+    "pbt": -55642000000.0,
+    "tax": -12642000000.0,
+    "pat": -43000000000.0,
+    "eps_basic": -31.78
+   },
+   "ratios": {
+    "opm_pct": 17.08,
+    "net_margin_pct": -1.76,
+    "tax_rate_pct": null,
+    "other_income_share_pct": null,
+    "interest_cover_x": 7.33,
+    "employee_cost_pct": 2.9
+   },
+   "yoy": {},
+   "qoq": {
+    "revenue": {
+     "pct": 3.09,
+     "abs": 72990000000.0,
+     "kind": "grew"
+    },
+    "other_income": {
+     "pct": 3.09,
+     "abs": 1350315000.0,
+     "kind": "grew"
+    },
+    "total_income": {
+     "pct": 3.09,
+     "abs": 74340315000.0,
+     "kind": "grew"
+    },
+    "materials": {
+     "pct": 3.09,
+     "abs": 29619342000.0,
+     "kind": "grew"
+    },
+    "employee_cost": {
+     "pct": 3.09,
+     "abs": 2116710000.0,
+     "kind": "grew"
+    },
+    "finance_cost": {
+     "pct": 3.09,
+     "abs": 1700667000.0,
+     "kind": "grew"
+    },
+    "depreciation": {
+     "pct": 3.09,
+     "abs": 3715191000.0,
+     "kind": "grew"
+    },
+    "other_expenses": {
+     "pct": 3.09,
+     "abs": 11773287000.0,
+     "kind": "grew"
+    },
+    "total_expenses": {
+     "pct": 3.09,
+     "abs": 66318714000.0,
+     "kind": "grew"
+    },
+    "ebitda": {
+     "pct": 3.09,
+     "abs": 12466692000.0,
+     "kind": "grew"
+    },
+    "pbt_before_exceptional": {
+     "pct": null,
+     "abs": -300867940000.0,
+     "kind": "profit_to_loss"
+    },
+    "exceptional": {
+     "pct": null,
+     "abs": 0.0,
+     "kind": "flat"
+    },
+    "pbt": {
+     "pct": null,
+     "abs": -300867940000.0,
+     "kind": "profit_to_loss"
+    },
+    "tax": {
+     "pct": null,
+     "abs": -68357940000.0,
+     "kind": "profit_to_loss"
+    },
+    "pat": {
+     "pct": null,
+     "abs": -232510000000.0,
+     "kind": "profit_to_loss"
+    },
+    "eps_basic": {
+     "pct": null,
+     "abs": -171.85,
+     "kind": "profit_to_loss"
+    }
+   },
+   "yoy_against": null,
+   "qoq_against": "Q4 FY25"
+  },
+  {
+   "period_end": "2025-03-31",
+   "label": "Q4 FY25",
+   "from": "2025-01-01",
+   "filed_at": "20-Jul-2026 19:41:02",
+   "audited": "Unaudited",
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/RESULT_2025-03-31_C.xml",
+   "values": {
+    "revenue": 2365330000000.0,
+    "other_income": 43758605000.0,
+    "total_income": 2409088605000.0,
+    "materials": 959850914000.0,
+    "employee_cost": 68594570000.0,
+    "finance_cost": 55112189000.0,
+    "depreciation": 120395297000.0,
+    "other_expenses": 381527729000.0,
+    "total_expenses": 2149138838000.0,
+    "ebitda": 403998364000.0,
+    "pbt_before_exceptional": 245225940000.0,
+    "exceptional": 0.0,
+    "pbt": 245225940000.0,
+    "tax": 55715940000.0,
+    "pat": 189510000000.0,
+    "eps_basic": 140.07
+   },
+   "ratios": {
+    "opm_pct": 17.08,
+    "net_margin_pct": 8.01,
+    "tax_rate_pct": 22.72,
+    "other_income_share_pct": 17.84,
+    "interest_cover_x": 7.33,
+    "employee_cost_pct": 2.9
+   },
+   "yoy": {},
+   "qoq": {},
+   "yoy_against": null,
+   "qoq_against": null
+  }
+ ],
+ "lines": [
+  {
+   "key": "revenue",
+   "label": "Revenue from operations",
+   "unit": "money"
+  },
+  {
+   "key": "other_income",
+   "label": "Other income",
+   "unit": "money"
+  },
+  {
+   "key": "total_income",
+   "label": "Total income",
+   "unit": "money"
+  },
+  {
+   "key": "materials",
+   "label": "Cost of materials",
+   "unit": "money"
+  },
+  {
+   "key": "employee_cost",
+   "label": "Employee cost",
+   "unit": "money"
+  },
+  {
+   "key": "finance_cost",
+   "label": "Finance cost",
+   "unit": "money"
+  },
+  {
+   "key": "depreciation",
+   "label": "Depreciation",
+   "unit": "money"
+  },
+  {
+   "key": "other_expenses",
+   "label": "Other expenses",
+   "unit": "money"
+  },
+  {
+   "key": "total_expenses",
+   "label": "Total expenses",
+   "unit": "money"
+  },
+  {
+   "key": "ebitda",
+   "label": "EBITDA",
+   "unit": "money"
+  },
+  {
+   "key": "pbt_before_exceptional",
+   "label": "PBT before exceptional",
+   "unit": "money"
+  },
+  {
+   "key": "exceptional",
+   "label": "Exceptional items",
+   "unit": "money"
+  },
+  {
+   "key": "pbt",
+   "label": "Profit before tax",
+   "unit": "money"
+  },
+  {
+   "key": "tax",
+   "label": "Tax",
+   "unit": "money"
+  },
+  {
+   "key": "pat",
+   "label": "Profit after tax",
+   "unit": "money"
+  },
+  {
+   "key": "eps_basic",
+   "label": "EPS (basic)",
+   "unit": "rupees"
+  }
+ ],
+ "source": "NSE corporate filings (XBRL, LODR Reg 33)",
+ "company": "Reliance Industries Limited",
+ "basis": "consolidated",
+ "basis_reason": "the company files consolidated results",
+ "basis_alternatives": [
+  "consolidated",
+  "standalone"
+ ],
+ "count": 6,
+ "latest": "Q1 FY27",
+ "requested": 6,
+ "partial": false,
+ "ratio_defs": [
+  {
+   "key": "opm_pct",
+   "label": "Operating margin",
+   "formula": "EBITDA \u00f7 revenue"
+  },
+  {
+   "key": "net_margin_pct",
+   "label": "Net margin",
+   "formula": "PAT \u00f7 revenue"
+  },
+  {
+   "key": "tax_rate_pct",
+   "label": "Effective tax rate",
+   "formula": "tax \u00f7 profit before tax"
+  },
+  {
+   "key": "other_income_share_pct",
+   "label": "Other income share of PBT",
+   "formula": "other income \u00f7 profit before tax"
+  },
+  {
+   "key": "interest_cover_x",
+   "label": "Interest cover",
+   "formula": "EBITDA \u00f7 finance cost"
+  },
+  {
+   "key": "employee_cost_pct",
+   "label": "Employee cost of revenue",
+   "formula": "employee cost \u00f7 revenue"
+  }
+ ],
+ "unit": "crore",
+ "unit_divisor": 10000000.0,
+ "notes": [
+  "Figures are as filed with the exchange under Regulation 33, on a consolidated basis. Standalone and consolidated results are never mixed: for a group they differ by more than a factor of two, and alternating between them would report that difference as growth.",
+  "Year-on-year compares the same quarter twelve months earlier. The sequential change is shown alongside, but for a seasonal business it compares a festive quarter with a monsoon.",
+  "A percentage change is shown only where the earlier figure was positive. A company that lost money and then made money has not grown by a percentage, and the move is described instead."
+ ]
+}

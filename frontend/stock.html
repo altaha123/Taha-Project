@@ -93,6 +93,8 @@
               id="pane-btn-scores" aria-selected="false" aria-controls="pane-scores">Scores</button>
       <button type="button" class="stk-pane-btn" role="tab" data-p="owners"
               id="pane-btn-owners" aria-selected="false" aria-controls="pane-owners">Ownership</button>
+      <button type="button" class="stk-pane-btn" role="tab" data-p="funda"
+              id="pane-btn-funda" aria-selected="false" aria-controls="pane-funda">Fundamentals</button>
     </nav>
     </div>
 
@@ -167,6 +169,20 @@
           exchange each quarter under Regulation 31 — not a provider's summary.
           Every figure links back to the filing it was read from.</p>
         <div id="own-body"></div>
+      </section>
+    </div>
+
+    <!-- Fundamentals. The quarterly P&L as filed, on ONE accounting basis —
+         standalone and consolidated differ by more than a factor of two for a
+         group, and alternating between them would report that difference as
+         growth. -->
+    <div class="stk-pane" id="pane-funda" role="tabpanel" aria-labelledby="pane-btn-funda" hidden>
+      <section class="stk-sec">
+        <h2>Fundamentals</h2>
+        <p class="sub">The quarterly profit and loss account as the company filed
+          it with the exchange under Regulation 33, the ratios that follow from
+          it, and how each line moved against the same quarter a year earlier.</p>
+        <div id="funda-body"></div>
       </section>
     </div>
 
