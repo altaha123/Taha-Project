@@ -562,3 +562,139 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 @media (prefers-reduced-motion:reduce){
   .op-spark .ln,.own-bar .seg{ transition:none }
 }
+
+/* ── Fundamentals ─────────────────────────────────────────────────────────
+   The same furniture as Ownership — .own-lead, .own-asof, .own-empty,
+   .own-notes are reused deliberately so the two panes read as one product.
+   What is new here is a wide table, and everything below is about making a
+   wide table survive a phone.
+
+   The shape of the problem: sixteen rows against six quarter columns plus a
+   change column. On a laptop that fits; at 390px it does not, and the two
+   columns a reader actually came for — the latest quarter and how it moved —
+   are the ones that would scroll off first. So the line-item column and the
+   latest-quarter column are sticky, the older quarters scroll underneath
+   them, and the change column sits immediately after the latest so the pair
+   the reader compares is never split by a scroll. */
+
+/* The scroller, and an honest edge. A wide table that simply stops at the
+   viewport looks like a narrower table, so the right edge is faded — over the
+   table, not behind it, because every cell paints an opaque background of its
+   own and a gradient on the scroller would be hidden by them. */
+.fu-block{ position:relative; margin-bottom:26px }
+.fu-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch }
+.fu-block::after{
+  content:''; position:absolute; top:0; right:0; bottom:0; width:24px;
+  pointer-events:none;
+  background:linear-gradient(to left, var(--paper), transparent);
+}
+/* Not on a wide screen, where the whole table fits and the fade would only
+   dim the last quarter. */
+@media (min-width:1100px){ .fu-block::after{ display:none } }
+
+/* The note above each table. Outside the scroller deliberately: inside it, it
+   inherits the table's width and is clipped at the viewport edge on a phone. */
+.fu-cap{
+  margin:0 0 11px; color:var(--mute); font-size:12px; line-height:1.55;
+  max-width:74ch;
+}
+.fu-vh{
+  position:absolute; width:1px; height:1px; overflow:hidden;
+  clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;
+}
+.fu-table{
+  width:100%; border-collapse:separate; border-spacing:0;
+  font-size:12.5px; min-width:640px;
+}
+.fu-table th,.fu-table td{
+  padding:9px 12px; text-align:right; white-space:nowrap;
+  border-bottom:1px solid var(--rule); background:var(--paper);
+}
+.fu-table thead th{
+  position:sticky; top:0; z-index:2;
+  font:500 10px/1.3 'IBM Plex Mono',monospace; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--mute);
+  border-bottom:1px solid var(--rule);
+}
+
+/* The two sticky columns. Their widths are fixed rather than content-sized
+   because the second one is offset by the first: `left` has to be a number,
+   and a number that disagrees with the real width overlaps the columns. Their
+   z-order has to beat the scrolling cells but lose to the header corner, or a
+   header cell slides under a body cell. */
+.fu-table .fu-line{
+  position:sticky; left:0; z-index:1; text-align:left; white-space:normal;
+  width:186px; min-width:186px; max-width:186px;
+  color:var(--ink-2); font-weight:500;
+}
+.fu-table thead .fu-line{ z-index:3 }
+.fu-table .fu-line{ box-shadow:inset -1px 0 0 var(--rule) }
+.fu-table .fu-now{
+  position:sticky; left:186px; z-index:1;
+  color:var(--ink); font-weight:600; background:var(--paper-2);
+  box-shadow:inset -1px 0 0 var(--rule);
+}
+.fu-table thead .fu-now{ z-index:3; color:var(--gold) }
+
+/* Revenue, EBITDA and profit after tax. A reader scanning sixteen lines for
+   the three that carry the story should not have to know which three. */
+.fu-table tbody tr.key th,.fu-table tbody tr.key td{
+  font-weight:600; color:var(--ink);
+}
+.fu-table tbody tr.key .fu-line{ color:var(--ink) }
+
+/* The change column. `.up` / `.dn` are the shell's own tone classes, so a
+   percentage here is the same green and the same red as everywhere else on
+   the site. The word form — "to profit", "loss narrower" — is set smaller and
+   in the mono face so it reads as a label rather than as a mistyped number. */
+.fu-table .fu-ch{ font-weight:600 }
+.fu-table .fu-chh{ color:var(--ink-2) }
+.fu-table .fu-ch.none{ color:var(--mute); opacity:.45 }
+.fu-table .fu-ch.word{
+  font:500 10px/1.3 'IBM Plex Mono',monospace; letter-spacing:.04em;
+  text-transform:uppercase; cursor:help;
+}
+
+.fu-h3{
+  margin:0 0 8px; font:500 11px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
+}
+
+/* Ratios. The formula is printed under its name rather than hidden in a
+   tooltip: "OPM" means nothing until you know it is EBITDA over revenue, and
+   a reader who has to hover to find that out will not hover. */
+.fu-table .fu-line{ line-height:1.4 }
+.fu-table .fu-line em{
+  display:block; margin-top:3px; font:400 10.5px/1.35 'IBM Plex Mono',monospace;
+  font-style:normal; letter-spacing:.02em; color:var(--mute); white-space:normal;
+}
+.fu-table .fu-sp{ width:104px; min-width:104px; padding:6px 12px }
+.fu-spark{
+  display:block; width:96px; height:22px; overflow:visible;
+}
+.fu-spark path{
+  fill:none; stroke:var(--gold); stroke-width:1.5;
+  stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke;
+}
+
+/* Below 560px the sticky latest column costs more than it earns — two frozen
+   columns leave barely a column of scrollable width. The line item stays
+   pinned; the quarter scrolls with the rest.
+
+   The tightening is not cosmetic. At 320px it is what puts the line item, the
+   latest quarter and the year-on-year change on screen together, and those
+   three are the whole reason a reader opened the pane. */
+@media (max-width:560px){
+  .fu-table{ min-width:520px; font-size:11.5px }
+  .fu-table th,.fu-table td{ padding:8px 9px }
+  .fu-table .fu-line{ width:124px; min-width:124px; max-width:124px }
+  .fu-table .fu-line em{ font-size:10px }
+  .fu-table thead th{ font-size:9.5px; letter-spacing:.06em }
+  .fu-table .fu-ch.word{ font-size:9.5px }
+  .fu-table .fu-now{ position:static; box-shadow:none }
+  .fu-table .fu-sp{ width:88px; min-width:88px }
+  .fu-spark{ width:80px }
+  /* Narrower, because at this width the fade is sitting on the change column
+     it exists to advertise. */
+  .fu-block::after{ width:15px }
+}

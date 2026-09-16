@@ -50,7 +50,7 @@ import re
 import threading
 import xml.etree.ElementTree as ET
 
-import requests
+import nse_http
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.environ.get("DATA_DIR", "").strip() or HERE
@@ -68,46 +68,37 @@ NSE_RESULTS = "https://www.nseindia.com/api/corporates-financial-results"
 # broken, it was finished. Everything since is here.
 NSE_INTEGRATED = "https://www.nseindia.com/api/integrated-filing-results"
 NSE_REFERER = "https://www.nseindia.com/companies-listing/corporate-filings-financial-results"
-UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-      "(KHTML, like Gecko) Chrome/122.0 Safari/537.36")
 
-TIMEOUT = 30
-_warm = {"at": 0.0}
-_lock = threading.Lock()
-_sess = {"s": None}
 
+# ---------------------------------------------------------------------------
+# Transport
+#
+# This module shipped talking to NSE through plain `requests`, and NSE's WAF
+# answers a datacenter IP with 403 whatever headers it carries — it
+# fingerprints the TLS handshake. Render is a datacenter IP. So in production
+# every call here returned 403, `summary()` reported "no XBRL results filing
+# found for this symbol", and the primary-source fundamentals path fell back
+# to the provider without anything logging an error. It read as a coverage gap
+# and was a transport failure.
+#
+# Measured from this project's host, identical URL, params and headers:
+# requests 403, curl_cffi 200 with nineteen rows.
+#
+# nse_http carries the impersonating session, the cookie warm-up and the
+# re-warm-once-on-401 that this had its own copy of.
+# ---------------------------------------------------------------------------
 
 def session():
-    """
-    Built on first use, not at import.
-
-    Parsing a filing needs no network at all, so importing this module should
-    not open a connection pool — and on a small box every object created at
-    import is paid for by every worker whether or not it is ever used.
-    """
-    with _lock:
-        if _sess["s"] is None:
-            s = requests.Session()
-            s.headers.update({"User-Agent": UA, "Accept": "*/*",
-                              "Accept-Language": "en-US,en;q=0.9"})
-            _sess["s"] = s
-        return _sess["s"]
+    """Kept for callers and tests that reach for it; the pool is nse_http's."""
+    return nse_http.session(NSE_REFERER)
 
 
 def _warm_session(force=False):
-    """
-    NSE hands out cookies on the public site and expects them on /api.
-    Without them the endpoint answers 401 with no explanation.
-    """
-    import time
-    if not force and time.time() - _warm["at"] < 1800:
-        return
-    for url in ("https://www.nseindia.com/", NSE_REFERER):
-        try:
-            session().get(url, timeout=TIMEOUT)
-        except Exception:
-            pass
-    _warm["at"] = time.time()
+    nse_http.warm(NSE_REFERER, force=force)
+
+
+def available() -> bool:
+    return nse_http.available()
 
 
 # ---------------------------------------------------------------------------
@@ -115,27 +106,9 @@ def _warm_session(force=False):
 # ---------------------------------------------------------------------------
 
 def _api(url, params):
-    """One authenticated NSE call, with the cookie re-warm it periodically needs."""
-    _warm_session()
-    try:
-        r = session().get(url, timeout=TIMEOUT,
-                          headers={"Referer": NSE_REFERER}, params=params)
-        if r.status_code == 401:
-            _warm_session(force=True)
-            r = session().get(url, timeout=TIMEOUT,
-                              headers={"Referer": NSE_REFERER}, params=params)
-        if r.status_code != 200:
-            return []
-        body = r.json()
-    except Exception:
-        return []
-    if isinstance(body, list):
-        return body
-    if isinstance(body, dict):
-        for key in ("data", "resultBody", "records"):
-            if isinstance(body.get(key), list):
-                return body[key]
-    return []
+    """One authenticated NSE call. Returns the rows, or an empty list."""
+    body = nse_http.get_json(url, params=params, referer=NSE_REFERER)
+    return nse_http.rows(body) if body is not None else []
 
 
 def _integrated_filings(sym):
@@ -507,14 +480,15 @@ def fetch(url):
                 return json.load(fh)
         except Exception:
             pass
+    # The document lives on nsearchives and needs the same impersonating
+    # handshake as the index call — a plain fetch is refused there too.
+    r = nse_http.get(url, referer=nse_http.NSE_HOME)
+    if r is None:
+        return {"ok": False, "error": "could not fetch the filing"}
     try:
-        r = session().get(url, timeout=TIMEOUT,
-                         headers={"Referer": "https://www.nseindia.com/"})
-        if r.status_code != 200:
-            return {"ok": False, "error": f"filing fetch returned HTTP {r.status_code}"}
         out = normalise(parse(r.text))
     except Exception as e:
-        return {"ok": False, "error": f"could not fetch the filing: {str(e)[:90]}"}
+        return {"ok": False, "error": f"could not read the filing: {str(e)[:90]}"}
     if path and out.get("period"):
         try:
             with open(path, "w") as fh:

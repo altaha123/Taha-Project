@@ -79,6 +79,10 @@ try:
 except Exception:
     shareholding_filings = None
 try:
+    import fundamentals as fundamentals_source
+except Exception:
+    fundamentals_source = None
+try:
     import wow_orders
 except Exception:
     wow_orders = None
@@ -2067,6 +2071,34 @@ def shareholding_pattern(ticker: str, quarters: int = 8, names: int = 12):
     try:
         return to_native(shareholding_filings.summary(
             sym, quarters=max(2, min(quarters, 12)), names_limit=max(1, min(names, 40))))
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+
+
+@app.get("/fundamentals")
+def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
+    """
+    The quarterly P&L as filed, with ratios and how each line moved.
+
+    Read from the company's own Regulation 33 filing. Every figure is the one
+    it filed; the ratios are computed here so the arithmetic is the same in
+    every quarter and can be checked.
+
+    ONE ACCOUNTING BASIS, ALWAYS. Almost every Indian company files twice,
+    standalone and consolidated, and for a group the two differ by more than a
+    factor of two. The response names the basis it used and never mixes them.
+
+    A percentage change appears only where the earlier figure was positive: a
+    company that lost money and then made money has not grown by a percentage.
+    """
+    if fundamentals_source is None:
+        return {"available": False, "message": "The fundamentals reader is not available."}
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    want = basis if basis in ("consolidated", "standalone") else None
+    try:
+        return to_native(fundamentals_source.series(
+            ticker, quarters=max(2, min(quarters, 16)), basis=want))
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
 

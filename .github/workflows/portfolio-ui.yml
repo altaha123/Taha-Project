@@ -80,6 +80,22 @@ jobs:
         with:
           name: filings-views-verification
           path: test-results/filings-views
+      - name: Verify the fundamentals pane never mixes accounting bases
+        if: always()
+        # The failure mode worth a browser for: a company files its results
+        # both standalone and consolidated, the two differ by more than a
+        # factor of two, and a table that alternates between them shows that
+        # difference as growth while looking entirely normal. Asserted on the
+        # rendered figures. Also guards the second silent one: a percentage
+        # change across zero, which reports a turnaround as a collapse.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/stock-fundamentals-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fundamentals-browser-verification
+          path: test-results/fundamentals
       - name: Verify sign-in failures and link completion on phone and desktop
         if: always()
         env:
