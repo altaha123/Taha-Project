@@ -83,6 +83,20 @@ try:
 except Exception:
     fundamentals_source = None
 try:
+    # The holdings ledger and the curated investor table. Three modules, each
+    # importable on its own: the store is stdlib-only, so a box without
+    # curl_cffi can still SERVE what has already been collected even though it
+    # cannot collect any more.
+    import holdings_store
+    import investors as investors_source
+except Exception:
+    holdings_store = None
+    investors_source = None
+try:
+    import holdings_crawl
+except Exception:
+    holdings_crawl = None
+try:
     import wow_orders
 except Exception:
     wow_orders = None
@@ -2101,6 +2115,172 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
             ticker, quarters=max(2, min(quarters, 16)), basis=want))
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+
+
+@app.get("/investors")
+def investors_list():
+    """
+    Everyone the screener tracks a portfolio for.
+
+    A curated list, deliberately. Matching filed shareholder names to people is
+    the whole difficulty of this feature, and a wrong match publishes a false
+    statement about a named private individual — so every association was made
+    by a person rather than by a similarity score.
+    """
+    if investors_source is None:
+        return {"available": False, "investors": [],
+                "message": "The investor table is not available."}
+    out = {"available": True, "investors": investors_source.listing()}
+    if holdings_store is not None:
+        try:
+            st = holdings_store.stats()
+            out["ledger"] = {
+                "companies_read": st["companies"],
+                "latest_period": st["latest_period"],
+                "rows": st["rows"],
+                "persistent": st["persistent"],
+            }
+        except Exception:
+            pass
+    return out
+
+
+@app.get("/investor")
+def investor_portfolio(id: str, period: str = None):
+    """
+    One investor's disclosed positions, and how they moved since the quarter
+    before.
+
+    WHAT THIS IS NOT. It is not a portfolio. A company names a public
+    shareholder only above 1% of its equity, so a position below that — which
+    can be hundreds of crore in a large company — does not appear at all. And
+    the filing is quarterly, landing up to 21 days after the quarter ends, so
+    what is here can be four months old. It is a floor on what was disclosed,
+    not a statement of what is held today, and the payload says so in every
+    response rather than only in the ones where it matters.
+    """
+    if investors_source is None:
+        raise HTTPException(503, "The investor table is not available.")
+    if not id or len(id) > 60:
+        raise HTTPException(400, "Provide an investor id.")
+    try:
+        return to_native(investors_source.portfolio(id, period_end=period))
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the holdings ledger: {str(e)[:110]}")
+
+
+@app.get("/holders")
+def company_holders(ticker: str, period: str = None):
+    """
+    The named holders of one company, served from the ledger.
+
+    The same filing the Ownership pane reads, but already collected — so the
+    stock page can say "Vijay Kedia holds 18.20% of this" without a network
+    call, and link through to his other positions.
+    """
+    if holdings_store is None:
+        return {"available": False, "holders": [],
+                "message": "The holdings ledger is not available."}
+    sym = (ticker or "").strip().upper()
+    if not sym or len(sym) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    try:
+        rows = holdings_store.holders_of(sym, period_end=period)
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the holdings ledger: {str(e)[:110]}")
+    if not rows:
+        return {"available": False, "symbol": sym, "holders": [],
+                "message": ("No shareholding filing has been read for %s yet. "
+                            "The ledger is built one company at a time." % sym)}
+    # Which tracked investors appear on this register, so the page can link out.
+    tracked = {}
+    if investors_source is not None:
+        for inv in investors_source.INVESTORS:
+            if inv.get("kind") == "redirect":
+                continue
+            for k in investors_source.keys_for(inv):
+                tracked[k] = {"id": inv["id"], "name": inv["name"]}
+    for r in rows:
+        who = tracked.get(r.get("holder_key")) or tracked.get(r.get("holder_base") or "")
+        r["investor"] = who
+    return to_native({
+        "available": True, "symbol": sym,
+        "period_end": rows[0]["period_end"],
+        "holders": rows,
+        # One entry per investor, not per matching row: Vijay Kedia appears on
+        # Atul Auto's register twice, personally and through Kedia Securities.
+        "tracked": list({h["investor"]["id"]: h["investor"]
+                         for h in rows if h.get("investor")}.values()),
+        "note": ("Only holders above 1% of the company are named in the filing, "
+                 "so this is the disclosed part of the register, not all of it."),
+    })
+
+
+@app.get("/investors/coverage")
+def investors_coverage():
+    """
+    How much of the universe the ledger actually holds.
+
+    Published rather than kept in the admin area because it is the honest
+    caveat on everything above: a portfolio assembled from 300 companies read
+    out of 2,000 is a sample, and a reader is entitled to know which.
+    """
+    if holdings_store is None:
+        return {"available": False, "message": "The holdings ledger is not available."}
+    out = {"available": True, "store": holdings_store.stats()}
+    if investors_source is not None:
+        try:
+            out["aliases"] = investors_source.verify()
+        except Exception:
+            pass
+    try:
+        out["universe"] = len(holdings_crawl.universe()) if holdings_crawl else None
+    except Exception:
+        out["universe"] = None
+    return to_native(out)
+
+
+@app.post("/admin/holdings/crawl")
+def admin_holdings_crawl(key: str = "", limit: int = 40, quarters: int = 4,
+                         symbols: str = ""):
+    """
+    Read the next slice of companies into the holdings ledger.
+
+    Driven by a scheduled workflow rather than a timer — see holdings_crawl for
+    why. Bounded per call: a full sweep is two thousand documents from an
+    exchange that throttles bursts, and it is meant to take many runs.
+    """
+    _require_admin(key)
+    if holdings_crawl is None:
+        raise HTTPException(503, "The holdings crawler is not available.")
+    syms = [s.strip().upper() for s in (symbols or "").split(",") if s.strip()]
+    try:
+        return to_native(holdings_crawl.run(
+            limit=max(1, min(int(limit), 300)),
+            quarters=max(1, min(int(quarters), 12)),
+            symbols=syms or None))
+    except Exception as e:
+        raise HTTPException(503, f"The crawl failed: {str(e)[:150]}")
+
+
+@app.get("/admin/holdings/unclaimed")
+def admin_holdings_unclaimed(key: str = "", min_pct: float = 1.0, limit: int = 60):
+    """
+    Large named holders that no tracked investor claims.
+
+    How the curated table grows without guesswork: rather than inventing alias
+    spellings, look at what companies have actually filed. It is also how a
+    misspelling in the table surfaces — the correct spelling shows up here,
+    unclaimed, next to the name that should have matched it.
+    """
+    _require_admin(key)
+    if investors_source is None:
+        raise HTTPException(503, "The investor table is not available.")
+    return to_native({
+        "unclaimed": investors_source.unknown_big_holders(
+            min_pct=min_pct, limit=max(1, min(int(limit), 300))),
+        "aliases": investors_source.verify(),
+    })
 
 
 @app.get("/wow-orders")

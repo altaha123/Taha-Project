@@ -15,7 +15,7 @@ const server=http.createServer((req,res)=>{
 });
 (async()=>{
  await new Promise(resolve=>server.listen(8765,'127.0.0.1',resolve));
- const browser=await chromium.launch({headless:true});
+ const browser=await chromium.launch({headless:true, executablePath: process.env.CHROMIUM_PATH || undefined});
  const context=await browser.newContext({viewport:{width:1280,height:900}}), page=await context.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(String(e.stack)));
  const routeRequest=route=>{

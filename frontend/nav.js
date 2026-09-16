@@ -21,6 +21,7 @@
         { id: 'deals',    label: 'Bulk & block deals', hint: 'Large trades and their participants' },
         { id: 'wow',      label: 'WOW orders', hint: 'Order wins measured against company size' },
         { id: 'concalls', label: 'Concall summaries', hint: 'Earnings call transcripts, digested' },
+        { id: 'investors', label: 'Investor portfolios', hint: 'What well-known investors disclosed holding' },
         { id: 'special', label: 'Delivery trends', hint: 'Price momentum and delivery volume' },
         { id: 'vocab', label: 'Glossary', hint: 'Financial terms in plain language' }
       ]

@@ -108,7 +108,8 @@
           { tab: 'screener', label: 'Stock analysis', icon: 'ledger', hint: 'Stock score and calculation details' },
           { tab: 'charts',   label: 'Charts',         icon: 'candles', hint: 'Price charts and technical indicators' },
           { tab: 'results',  label: 'Quarterly results',        icon: 'document', hint: 'Latest quarterly numbers' },
-          { tab: 'concalls', label: 'Concall summaries', icon: 'document', hint: 'Earnings call transcripts, digested' }
+          { tab: 'concalls', label: 'Concall summaries', icon: 'document', hint: 'Earnings call transcripts, digested' },
+          { tab: 'investors', label: 'Investor portfolios', icon: 'ledger', hint: 'What well-known investors disclosed holding' }
         ]},
         { head: 'More research', items: [
           { tab: 'special', label: 'Delivery trends', icon: 'target',

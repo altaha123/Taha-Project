@@ -1,0 +1,140 @@
+{
+ "available": true,
+ "id": "vijay-kedia",
+ "name": "Vijay Kedia",
+ "kind": "individual",
+ "about": "Mumbai-based investor, active since the late 1980s; known for long holds in small and mid caps.",
+ "period_end": "2026-06-30",
+ "period": "Q1 FY27",
+ "compared_with": "Q4 FY26",
+ "compared_with_period_end": "2026-03-31",
+ "positions": [
+  {
+   "symbol": "ATULAUTO",
+   "pct": 20.91,
+   "shares": 45900000.0,
+   "has_shares": true,
+   "parts": [
+    {
+     "name": "VIJAY KEDIA",
+     "pct": 18.2,
+     "shares": 40000000.0,
+     "relation": "self",
+     "relation_word": "in their own name",
+     "matched_on": "name"
+    },
+    {
+     "name": "KEDIA SECURITIES PRIVATE LIMITED",
+     "pct": 2.71,
+     "shares": 5900000.0,
+     "relation": "entity",
+     "relation_word": "through an entity they control",
+     "matched_on": "name"
+    }
+   ],
+   "beside": [],
+   "promoter": false,
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/SHP_ATULAUTO_2026-06-30",
+   "filed": "2026-06-30",
+   "split": true,
+   "change": {
+    "kind": "added",
+    "delta": 0.6
+   }
+  },
+  {
+   "symbol": "REPRO",
+   "pct": 6.32,
+   "shares": 8700000.0,
+   "has_shares": true,
+   "parts": [
+    {
+     "name": "Vijay Kishanlal Kedia",
+     "pct": 6.32,
+     "shares": 8700000.0,
+     "relation": "self",
+     "relation_word": "in their own name",
+     "matched_on": "name"
+    }
+   ],
+   "beside": [],
+   "promoter": false,
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/SHP_REPRO_2026-06-30",
+   "filed": "2026-06-30",
+   "split": false,
+   "change": {
+    "kind": "held",
+    "delta": 0.0
+   }
+  },
+  {
+   "symbol": "ELECON",
+   "pct": 1.0,
+   "shares": 11200000.0,
+   "has_shares": true,
+   "parts": [
+    {
+     "name": "Vijay Kishanlal Kedia",
+     "pct": 1.0,
+     "shares": 11200000.0,
+     "relation": "self",
+     "relation_word": "in their own name",
+     "matched_on": "name"
+    }
+   ],
+   "beside": [],
+   "promoter": false,
+   "source": "https://nsearchives.nseindia.com/corporate/xbrl/SHP_ELECON_2026-06-30",
+   "filed": "2026-06-30",
+   "split": false,
+   "change": {
+    "kind": "new",
+    "delta": null
+   }
+  }
+ ],
+ "count": 3,
+ "no_longer_disclosed": [
+  {
+   "symbol": "VAIBHAVGBL",
+   "was_pct": 2.8,
+   "parts": [
+    {
+     "name": "VIJAY KEDIA",
+     "pct": 2.8,
+     "shares": 4600000.0,
+     "relation": "self",
+     "relation_word": "in their own name",
+     "matched_on": "name"
+    }
+   ]
+  }
+ ],
+ "entities": [
+  {
+   "alias": "Vijay Kedia",
+   "relation": "self",
+   "relation_word": "in their own name"
+  },
+  {
+   "alias": "Vijay Kishanlal Kedia",
+   "relation": "self",
+   "relation_word": "in their own name"
+  },
+  {
+   "alias": "Kedia Securities Private Limited",
+   "relation": "entity",
+   "relation_word": "through an entity they control"
+  }
+ ],
+ "quarters_available": [
+  "2026-06-30",
+  "2026-03-31"
+ ],
+ "notes": [
+  "Only stakes above 1% of a company are named in its shareholding filing. A position below that is invisible here however large it is in rupees, so this is a floor on what is held, never the whole portfolio.",
+  "Filings are quarterly and land up to 21 days after the quarter ends, so a position can be up to four months old. It is what was disclosed, not what is held today.",
+  "A company leaving the list has fallen below the 1% disclosure threshold or been sold. The filing does not say which, and this does not guess.",
+  "A holding marked as a promoter stake is the investor's own company rather than a position taken in someone else's, and is not a stock pick."
+ ]
+}

@@ -96,6 +96,24 @@ jobs:
         with:
           name: fundamentals-browser-verification
           path: test-results/fundamentals
+      - name: Verify investor portfolios never overstate a position
+        if: always()
+        # This page makes attributed, public claims about what named private
+        # individuals own, so the guards are about truthfulness rather than
+        # layout: a rolled-up total must always be shown broken into the filed
+        # rows it was summed from, one name filed twice in a register must be
+        # summed rather than collapsed, a family trust must be labelled
+        # wherever it is counted, a company dropping off must never be called
+        # a sale, and the 1% disclosure floor and the quarterly lag must be on
+        # the page rather than in a footnote.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/investors-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: investors-browser-verification
+          path: test-results/investors
       - name: Verify sign-in failures and link completion on phone and desktop
         if: always()
         env:
