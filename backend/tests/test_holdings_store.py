@@ -262,3 +262,62 @@ def test_a_ledger_from_an_earlier_version_gains_the_new_column(tmp_path, monkeyp
     assert s.backfill_base_keys() == 1
     assert len(s.positions_for_keys([key])) == 1
     assert s.backfill_base_keys() == 0, "backfilling twice must be a no-op"
+
+
+# ---------------------------------------------------------------------------
+# Quarter ends
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("iso,ok", [
+    ("2026-03-31", True), ("2026-06-30", True),
+    ("2026-09-30", True), ("2026-12-31", True),
+    ("2026-07-01", False),      # the one that actually happened
+    ("2026-06-29", False), ("2026-03-30", False), ("2026-12-30", False),
+    ("2026-02-28", False), ("", False), (None, False), ("nonsense", False),
+])
+def test_only_a_real_quarter_end_counts_as_a_quarter(store, iso, ok):
+    assert store.is_quarter_end(iso) is ok
+
+
+def test_an_interim_filing_never_reaches_the_ledger(store):
+    """Regulation 31 also requires a filing within ten days of a capital
+    change. It is a real disclosure and it is not a quarter, and the crawler
+    only ever sees the INDEX's date — the document can date itself differently."""
+    assert store.record_filing("RAMBHAJO", "2026-07-01",
+                               [_name("A Holder", 5.0)]) == 0
+    assert store.holders_of("RAMBHAJO") == []
+
+
+def test_one_stray_date_cannot_become_the_current_quarter(store):
+    """
+    The bug this exists for, end to end.
+
+    One company filed under 1 July. That became MAX(period_end), so every
+    caller asking for the current quarter got a period containing a single
+    company — and the investor directory, which counts holdings in the current
+    quarter, showed all twenty-seven names as holding nothing while their
+    portfolio pages were full.
+    """
+    for i in range(30):
+        store.record_filing("CO%d" % i, "2026-06-30", [_name("A Holder", 2.0)])
+    # Written straight past record_filing's guard, the way the old crawler did.
+    conn = store._connect()
+    conn.execute(
+        "INSERT INTO holdings (symbol, period_end, slot, holder_raw, holder_key,"
+        " holder_base, pct, promoter, first_seen_utc)"
+        " VALUES ('STRAY','2026-07-01',0,'A Holder','a holder','a holder',5.0,0,'x')")
+    conn.commit()
+
+    assert store.latest_period() == "2026-06-30", \
+        "the newest QUARTER, not the newest date"
+    assert store.purge_non_quarter_rows() == 1
+    assert store.purge_non_quarter_rows() == 0, "repairing twice is a no-op"
+    assert store.latest_period() == "2026-06-30"
+
+
+def test_the_purge_leaves_every_real_quarter_alone(store):
+    """It is a repair for one defect, not licence to prune the ledger."""
+    for p in ("2026-06-30", "2026-03-31", "2021-12-31"):
+        store.record_filing("X", p, [_name("A Holder", 2.0)])
+    assert store.purge_non_quarter_rows() == 0
+    assert len(store.positions_for_keys(["a holder"])) == 3

@@ -135,6 +135,27 @@ much of the exchange has been read and that the sweep continues, because
 without that a reader concludes the investor holds nothing, which is the one
 thing it must not be read as.
 
+### Only quarter ends go in
+
+Regulation 31 also requires a filing within ten days of a capital change, and
+those carry their own date. One company filed under **1 July 2026**, and the
+crawler let it through because it checks the INDEX's date while the ledger
+stores the date inside the DOCUMENT — and the two can disagree.
+
+That single row did real damage. It became `MAX(period_end)`, so every caller
+asking for the current quarter got a period containing one company: the
+investor directory counts each name's holdings in the current quarter, and
+showed **all twenty-seven as holding nothing** while their portfolio pages were
+full. Exactly the symptom the directory counts were added to prevent.
+
+Both the crawler and `record_filing()` now reject a period that is not 31
+March, 30 June, 30 September or 31 December, `latest_period()` returns the
+newest *quarter* rather than the newest date, and `purge_non_quarter_rows()`
+repairs a ledger that already has them — a deliberate and narrow exception to
+the append-only rule, which exists so a re-crawl cannot rewrite what a company
+said, not to oblige the ledger to keep rows a defect put there. The nightly
+workflow calls it before crawling; it is a no-op once clean.
+
 ### What it refuses to claim
 
 * **The 1% floor.** A company names a public shareholder only above 1% of its

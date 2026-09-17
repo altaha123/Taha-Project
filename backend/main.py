@@ -2268,6 +2268,28 @@ def company_holders(ticker: str, period: str = None):
     })
 
 
+@app.post("/admin/holdings/repair")
+def admin_holdings_repair(key: str = "",
+                          x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    Remove rows an earlier build filed under a date that is not a quarter end.
+
+    The crawler and the store both refuse those now, but a ledger collected
+    before that fix still carries them — and one of them is enough to make
+    every "current quarter" question return a period a single company filed
+    for. Repeated calls are no-ops.
+    """
+    _require_admin(x_admin_key or key)
+    if holdings_store is None:
+        raise HTTPException(503, "The holdings ledger is not available.")
+    removed = holdings_store.purge_non_quarter_rows()
+    return to_native({"removed": removed,
+                      "latest_period": holdings_store.latest_period(),
+                      "note": ("Rows filed under a non-quarter date have been "
+                               "removed." if removed else
+                               "Nothing to repair.")})
+
+
 @app.get("/investors/coverage")
 def investors_coverage():
     """

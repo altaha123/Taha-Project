@@ -112,6 +112,14 @@ def crawl_symbol(symbol, quarters=DEFAULT_QUARTERS):
         period_end = parsed.get("period_end") or f.get("period")
         if not period_end:
             continue
+        # The index said this was a quarter end; the DOCUMENT gets the final
+        # say, and the two can disagree. Ram Bhajo's filing was indexed at a
+        # quarter end and dated itself 1 July — which, stored, became the
+        # newest period in the whole ledger and made every "current quarter"
+        # question return a period one company had filed for.
+        if not store.is_quarter_end(period_end):
+            res["note"] = "a filing dated %s is not a quarter end" % period_end
+            continue
         wrote += store.record_filing(sym, period_end, parsed["names"],
                                      filed=f.get("filed"), source_url=url)
         done += 1

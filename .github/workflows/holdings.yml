@@ -82,6 +82,15 @@ jobs:
           curl -sS --max-time 120 --retry 3 --retry-delay 10 \
                --retry-all-errors -o /dev/null "${API}/health" || true
 
+          # A ledger collected before the quarter-end guard can carry rows
+          # filed under an interim date, and one of those is enough to make
+          # every "current quarter" question return a period a single company
+          # filed for. A no-op once the ledger is clean.
+          curl -sS --max-time 300 -o repair.json \
+               -X POST "${API}/admin/holdings/repair" \
+               -H "X-Admin-Key: ${ADMIN_KEY}" || true
+          cat repair.json 2>/dev/null; echo
+
           ok=0; failed=0; rows=0
           for i in $(seq 1 "${SLICES}"); do
             code=$(curl -sS --max-time 900 -o slice.json -w "%{http_code}" \
