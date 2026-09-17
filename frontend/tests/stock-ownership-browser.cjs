@@ -54,6 +54,18 @@ const shareholding = {
   ]
 };
 
+// Synthetic holder histories exercise missing disclosure without inventing zero.
+shareholding.basis_period = shareholding.period;
+shareholding.names.coverage = {public_total:3, limit_per_group:40};
+shareholding.names.public.forEach(n => {
+  n.institutional = true;
+  n.previous_pct = n.new_in_table ? null : Number((n.pct - n.change_qoq).toFixed(2));
+  n.first_seen = n.new_in_table ? shareholding.period : history[0].period;
+  n.history = history.map((h, i) => ({period:h.period, source:h.source,
+    pct:i === history.length - 1 ? n.pct : n.new_in_table ? null : n.previous_pct}));
+});
+shareholding.names.no_longer_disclosed = [{name:'Previously Disclosed Fund', previous_pct:1.2}];
+
 const analyze = {
   ticker: 'RELIANCE', name: 'Reliance Industries Limited', currency: 'INR', price: 1402.5,
   scoring: { score: 61, label: 'Watch', pillars: {}, checks: [] },
@@ -80,13 +92,20 @@ const server = http.createServer((req, res) => {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   const context = await browser.newContext({ viewport: { width: 1280, height: 1000 } });
   const page = await context.newPage(), errors = [];
-  let shareholdingCalls = 0;
+  let shareholdingCalls = 0; const peerRequests = [];
   page.on('pageerror', e => errors.push(String(e.stack)));
 
   await context.route('**/*', route => {
     const u = new URL(route.request().url());
     if (u.hostname === '127.0.0.1') return route.continue();
     if (['font', 'stylesheet', 'image'].includes(route.request().resourceType())) return route.abort();
+    if (u.pathname === '/shareholding/peers') return route.fulfill({json:{sector:'Energy',classification_source:'test fixture',candidates:['PEERA','PEERB','PEERC'],selection:'Same-sector sample.'}});
+    if (u.pathname === '/shareholding/compare') {
+      peerRequests.push([u.searchParams.get('ticker'),u.searchParams.get('period')]);
+      const symbol=u.searchParams.get('ticker');
+      return route.fulfill({json:symbol==='PEERB' ? {symbol,period:'2026-06-30',available:false,message:'No filing for the matching quarter.'} :
+        {symbol,period:'2026-06-30',available:true,source:shareholding.latest_source,metrics:{institutions:{pct:30,change_qoq:1,derived:true},promoter:{pct:0,change_qoq:0},fii:{pct:10},dii:{pct:20}}}});
+    }
     if (u.pathname === '/shareholding') { shareholdingCalls++; return route.fulfill({ json: shareholding }); }
     if (u.pathname === '/analyze') return route.fulfill({ json: analyze });
     return route.fulfill({ json: { available: false, rows: [], items: [] } });
@@ -165,6 +184,54 @@ const server = http.createServer((req, res) => {
   assert.match(readout, /20\d\d-\d\d/);
   assert.match(readout, /%/);
 
+
+  // Investor identity, previous holding and history are visible, not just categories.
+  assert.equal(await page.locator('.oi-investor').count(),3);
+  assert.match(await page.locator('.oi-investor').first().innerText(), /Life Insurance/);
+  assert.match(await page.locator('.oi-investor').first().innerText(), /6.80%/);
+  assert.match(await page.locator('.oi-investor').nth(2).innerText(), /Newly disclosed/);
+  assert.match(await page.locator('.oi-disclosures').innerText(), /Previously Disclosed Fund/);
+  assert.equal(peerRequests.length,0,'peer XMLs must not load with ownership');
+  await page.locator('#oi-load-peers').click();
+  await page.waitForFunction(() => document.querySelector('#oi-peer-status').textContent.includes('Up to five'));
+  assert.equal(peerRequests.length,3);
+  assert.ok(peerRequests.every(r => r[1] === '2026-06-30'));
+  assert.match(await page.locator('#oi-peers').innerText(),/No filing for the matching quarter/);
+  assert.match(await page.locator('#oi-peers').innerText(),/derived/);
+  assert.match(await page.locator('#oi-peer-finding').innerText(),/8.39 pp above the median of 2 loaded peers/);
+  await page.locator('#oi-metric').selectOption('promoter');
+  assert.match(await page.locator('#oi-peers').innerText(),/0.00%/,'filed zero remains zero');
+  await page.locator('#oi-metric').selectOption('institutions');
+
+  // Preview first; no automatic post. PNG is a real portrait or square image.
+  await page.locator('#oi-share').click();
+  await page.locator('.oi-dialog img').waitFor();
+  await page.waitForFunction(() => !document.querySelector('.oi-dialog [data-download]').disabled);
+  const snapshotURL = await page.locator('.oi-snapshot-link').inputValue();
+  assert.match(snapshotURL,/ownership-share.html#/);
+  const portraitDownload=page.waitForEvent('download');
+  await page.locator('.oi-dialog [data-download]').click();
+  const portraitPath=await (await portraitDownload).path();
+  const png=fs.readFileSync(portraitPath);
+  assert.equal(png.readUInt32BE(16),1080); assert.equal(png.readUInt32BE(20),1350);
+  fs.copyFileSync(portraitPath,path.join(output,'snapshot-portrait.png'));
+  await page.locator('.oi-dialog select').selectOption('square');
+  await page.waitForFunction(() => !document.querySelector('.oi-dialog [data-download]').disabled);
+  const squareDownload=page.waitForEvent('download');
+  await page.locator('.oi-dialog [data-download]').click();
+  const squarePath=await (await squareDownload).path(), square=fs.readFileSync(squarePath);
+  assert.equal(square.readUInt32BE(20),1080);
+  fs.copyFileSync(squarePath,path.join(output,'snapshot-square.png'));
+  await page.locator('.oi-dialog [data-share]').click();
+  assert.match(await page.locator('.oi-dialog [role=status]').innerText(),/unavailable|failed/);
+  await page.locator('.oi-dialog [data-close]').click();
+  const shared=await context.newPage();
+  await shared.goto(snapshotURL);
+  await shared.locator('#snapshot-view').waitFor();
+  assert.match(await shared.locator('[data-data]').textContent(),/Life Insurance/);
+  assert.match(await shared.locator('[data-data]').textContent(),/PEERA/);
+  assert.match(await shared.locator('[data-live]').getAttribute('href'),/pane=owners/);
+  await shared.close();
   // Phone through desktop, both themes, no horizontal overflow.
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 1000 });
@@ -221,7 +288,7 @@ const server = http.createServer((req, res) => {
   assert.match(await settled.innerText(), /No shareholding filing/);
   assert.equal(await page2.locator('.own-bar').count(), 0);
 
-  const relevant = errors.filter(e => /stock\.js/.test(e));
+  const relevant = errors.filter(e => /stock\.js|ownership/.test(e));
   assert.deepEqual(relevant, []);
 
   fs.writeFileSync(path.join(output, 'verification.json'), JSON.stringify({
