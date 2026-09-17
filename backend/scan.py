@@ -313,6 +313,66 @@ NSE_LIST_URLS = [
     "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv",
     "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
 ]
+NSE_LIST_REFERER = ("https://www.nseindia.com/market-data/"
+                    "securities-available-for-trading")
+
+
+_list_cache = {"at": 0.0, "text": None}
+
+
+def _nse_list_text():
+    """
+    The official equity list as CSV text, or None.
+
+    WHY THIS IS NOT A PLAIN requests.get ANY MORE
+    It was, and NSE's WAF answers a datacenter IP with 403 whatever headers the
+    request carries — it fingerprints the TLS handshake. Render is a datacenter
+    IP, so in production every attempt failed and fetch_nse_list() fell through
+    to the curated FALLBACK: 204 large caps, silently, while its own label said
+    so in a string nobody reads.
+
+    That is not a cosmetic difference. The real list is around 2,100 symbols,
+    and the 1,900 missing ones are the small and mid caps — which is precisely
+    where the investors the holdings ledger tracks actually hold. A crawler
+    pointed at the fallback can never find Atul Auto, Repro India or Carysil,
+    however long it runs.
+
+    nse_http carries the impersonating handshake that works. Plain requests is
+    kept as a second attempt because it succeeds from a home connection and
+    costs nothing to try when the first has already failed.
+
+    Cached for an hour, and shared. Two callers want this same CSV — the scan's
+    symbol list and the typeahead's names — and fetching it twice in a row is
+    how the second one gets rate-limited and silently falls back to the curated
+    204 while the first has the real 2,100. The equity list changes on listings
+    and delistings, not on ticks.
+    """
+    if _list_cache["text"] and (time.time() - _list_cache["at"]) < 3600:
+        return _list_cache["text"]
+    try:
+        import nse_http
+    except Exception:
+        nse_http = None
+    if nse_http is not None and nse_http.available():
+        for url in NSE_LIST_URLS:
+            r = nse_http.get(url, referer=NSE_LIST_REFERER)
+            if r is not None and "SYMBOL" in r.text[:200]:
+                _list_cache.update({"at": time.time(), "text": r.text})
+                return r.text
+    for url in NSE_LIST_URLS:
+        try:
+            r = requests.get(url, headers={"User-Agent": UA,
+                                           "Accept": "text/csv,*/*",
+                                           "Referer": "https://www.nseindia.com/"},
+                             timeout=20)
+            if r.status_code == 200 and "SYMBOL" in r.text[:200]:
+                _list_cache.update({"at": time.time(), "text": r.text})
+                return r.text
+        except Exception:
+            continue
+    # Deliberately not cached: a failure must not pin the fallback in place for
+    # an hour when the next call might get through.
+    return None
 
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
@@ -349,15 +409,10 @@ ASTRAL PRINCEPIPE CERA KAJARIACER CDSL BSE MCX ANGELONE IEX CAMS KFINTECH
 
 def fetch_nse_list():
     """Official NSE equity list. Returns (symbols, source_label)."""
-    for url in NSE_LIST_URLS:
+    text = _nse_list_text()
+    if text:
         try:
-            r = requests.get(url, headers={"User-Agent": UA,
-                                           "Accept": "text/csv,*/*",
-                                           "Referer": "https://www.nseindia.com/"},
-                             timeout=20)
-            if r.status_code != 200 or "SYMBOL" not in r.text[:200]:
-                continue
-            df = pd.read_csv(io.StringIO(r.text))
+            df = pd.read_csv(io.StringIO(text))
             df.columns = [c.strip() for c in df.columns]
             if "SERIES" in df.columns:
                 df = df[df["SERIES"].astype(str).str.strip() == "EQ"]
@@ -365,7 +420,7 @@ def fetch_nse_list():
             if len(syms) > 500:
                 return syms, f"NSE official list ({len(syms)} EQ-series symbols)"
         except Exception:
-            continue
+            pass
     fb = sorted({s for s in FALLBACK.split() if s})
     return fb, f"Fallback curated list ({len(fb)} symbols) — NSE list unreachable from this server"
 
@@ -1058,15 +1113,10 @@ def universe_with_names():
         return _names_cache["rows"]
 
     rows = []
-    for url in NSE_LIST_URLS:
+    text = _nse_list_text()
+    if text:
         try:
-            r = requests.get(url, headers={"User-Agent": UA,
-                                           "Accept": "text/csv,*/*",
-                                           "Referer": "https://www.nseindia.com/"},
-                             timeout=20)
-            if r.status_code != 200 or "SYMBOL" not in r.text[:200]:
-                continue
-            df = pd.read_csv(io.StringIO(r.text))
+            df = pd.read_csv(io.StringIO(text))
             df.columns = [c.strip() for c in df.columns]
             if "SERIES" in df.columns:
                 df = df[df["SERIES"].astype(str).str.strip() == "EQ"]
@@ -1086,13 +1136,10 @@ def universe_with_names():
                 # client assuming one. Everything here is NSE EQ series; a BSE
                 # source would append rows carrying "x": "BSE".
                 rows.append({"s": sym, "n": nm, "x": "NSE"})
-
-            if len(rows) > 500:
-                break
         except Exception:
-            continue
+            rows = []
 
-    if not rows:
+    if len(rows) <= 500:
         # Same fallback the scan uses, so the two never disagree about what
         # the universe is — just without company names.
         rows = [{"s": x, "n": x, "x": "NSE"}

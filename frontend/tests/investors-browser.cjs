@@ -129,6 +129,17 @@ async function onTab(page, id) {
   const names = await page.locator('.iv-card b').allInnerTexts();
   assert.ok(names.includes('Vijay Kedia'));
   assert.ok(names.includes('Rekha Jhunjhunwala'));
+
+  // Each card says how much is behind it, so an empty one is never a surprise
+  // reached by clicking. Names with holdings come first.
+  const tags = await page.locator('.iv-card .iv-kind').allInnerTexts();
+  assert.match(tags[0], /holding/i, 'the first card must have holdings');
+  assert.ok(tags.some(t => /none found yet/i.test(t)),
+    'a tracked name the crawl has not reached must say so on its card');
+  const empties = await page.locator('.iv-card.is-empty').count();
+  assert.ok(empties > 0 && empties < tags.length);
+  // A card with holdings is never dimmed as empty.
+  assert.equal(await page.locator('.iv-card.is-empty', { hasText: 'Vijay Kedia' }).count(), 0);
   // A dead investor gets no card of his own.
   assert.ok(!names.includes('Rakesh Jhunjhunwala'),
     'Rakesh Jhunjhunwala died in 2022 and must not have a portfolio card');
@@ -237,7 +248,15 @@ async function onTab(page, id) {
   await page.locator('.iv-card').first().waitFor({ state: 'visible' });
   await page.locator('.iv-card', { hasText: 'Dolly Khanna' }).first().click();
   await page.locator('.iv-empty:not(.is-loading)').waitFor();
-  assert.match(await page.locator('.iv-empty').innerText(), /Nothing has been recorded/i);
+  // An empty portfolio is a statement about the LEDGER, not the investor.
+  // Without that distinction on the page a reader concludes the person holds
+  // nothing, which is the one thing it must not be read as.
+  const emptyText = await page.locator('.iv-empty').innerText();
+  assert.match(emptyText, /No holding has been found/i);
+  assert.match(emptyText, /have not been reached/i);
+  assert.match(emptyText, /not that there are none/i);
+  assert.match(await page.locator('#investors-body .iv-cover').innerText(),
+    /companies read so far/i);
   assert.match(await page.locator('.iv-looking').innerText(), /Dolly Khanna/);
   assert.equal(await page.locator('.iv-pos').count(), 0,
     'no positions at all rather than an empty-looking list');

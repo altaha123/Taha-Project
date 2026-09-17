@@ -4,7 +4,12 @@
  "name": "Dolly Khanna",
  "kind": "individual",
  "about": "Chennai-based; the portfolio is managed with Rajiv Khanna and filed in her name.",
- "message": "Nothing has been recorded for Dolly Khanna yet. The ledger is built by reading company filings one at a time; a name appears once a company it holds has been read.",
+ "message": "No holding has been found for Dolly Khanna yet. The ledger is built by reading company filings one at a time, and 8 companies have been read so far \u2014 so this means the companies Dolly Khanna holds have not been reached, not that there are none.",
+ "coverage": {
+  "companies_read": 8,
+  "latest_period": "2026-06-30",
+  "rows": 22
+ },
  "entities": [
   {
    "alias": "Dolly Khanna",

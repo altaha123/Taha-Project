@@ -74,10 +74,18 @@
       return;
     }
     var led = d.ledger || {};
+    /* The holding count goes on the card. Clicking a name and landing on an
+       empty page reads as a broken feature; the same emptiness, labelled
+       before the click, reads as a ledger still being filled. */
     var cards = d.investors.map(function (i) {
-      return '<button type="button" class="iv-card" data-id="' + esc(i.id) + '">' +
+      var n = i.positions;
+      var tag = n == null
+        ? (i.kind === 'fund' ? 'fund' : 'individual')
+        : (n > 0 ? n + ' holding' + (n === 1 ? '' : 's') : 'none found yet');
+      return '<button type="button" class="iv-card' +
+        (n === 0 ? ' is-empty' : '') + '" data-id="' + esc(i.id) + '">' +
         '<b>' + esc(i.name) + '</b>' +
-        '<span class="iv-kind">' + esc(i.kind === 'fund' ? 'fund' : 'individual') + '</span>' +
+        '<span class="iv-kind">' + esc(tag) + '</span>' +
         '<span class="iv-about">' + esc(i.about || '') + '</span>' +
         '</button>';
     }).join('');
@@ -87,8 +95,9 @@
        between a floor and a claim. */
     var cover = '';
     if (led.companies_read != null) {
+      var of = led.universe ? ' of ' + esc(String(led.universe)) : '';
       cover = '<p class="iv-cover">Built from <b>' + esc(String(led.companies_read)) +
-        '</b> companies read so far' +
+        of + '</b> companies read so far' +
         (led.latest_period ? ', to ' + esc(led.latest_period) : '') +
         '. The ledger is filled one company at a time, so an investor may hold ' +
         'something in a company that has not been read yet.' +
@@ -163,10 +172,22 @@
       '&larr; All investors</button>';
 
     if (!d || !d.available) {
+      /* An empty portfolio is a statement about the LEDGER, not about the
+         investor, and the page has to say which. Without the coverage line a
+         reader concludes the person holds nothing. */
+      var cov = d && d.coverage;
       box.innerHTML = back +
         '<h3 class="iv-name">' + esc((d && d.name) || 'Not found') + '</h3>' +
+        ((d && d.about) ? '<p class="iv-about">' + esc(d.about) + '</p>' : '') +
         '<div class="iv-empty">' + esc((d && d.message) ||
           'Nothing could be read for this investor.') + '</div>' +
+        (cov && cov.companies_read != null
+          ? '<p class="iv-cover"><b>' + esc(String(cov.companies_read)) +
+            '</b> companies read so far' +
+            (cov.latest_period ? ', to ' + esc(cov.latest_period) : '') +
+            '. The sweep runs nightly and keeps going until it has read the ' +
+            'whole exchange, so this fills in rather than staying empty.</p>'
+          : '') +
         (d && d.entities && d.entities.length
           ? '<p class="iv-looking">Names being looked for: ' +
             d.entities.map(function (e) { return '<b>' + esc(e.alias) + '</b>'; })

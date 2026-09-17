@@ -283,3 +283,72 @@ def test_unclaimed_holders_ignore_promoters(mods):
     store.record_filing("X", "2026-06-30", [
         _name("Founder Family Holdings", 60.0, promoter=True)])
     assert inv.unknown_big_holders(limit=50) == []
+
+
+# ---------------------------------------------------------------------------
+# The directory, and what an empty portfolio says
+# ---------------------------------------------------------------------------
+
+def test_the_directory_says_how_many_holdings_each_name_has(mods):
+    """A card that gives no warning, clicked, lands on an empty page and reads
+    as a broken feature. The same emptiness labelled beforehand reads as a
+    ledger still being filled."""
+    store, inv = mods
+    _atulauto(store)
+    rows = {r["id"]: r for r in inv.listing()}
+    assert rows["vijay-kedia"]["positions"] == 1
+    assert rows["dolly-khanna"]["positions"] == 0
+
+
+def test_names_with_holdings_are_listed_first(mods):
+    """A first screen of empty cards teaches a reader that the whole feature
+    is empty."""
+    store, inv = mods
+    _atulauto(store)
+    assert inv.listing()[0]["id"] == "vijay-kedia"
+
+
+def test_a_position_is_counted_once_however_many_entities_hold_it(mods):
+    """Atul Auto is on the register twice — him and his company. That is one
+    holding, not two."""
+    store, inv = mods
+    _atulauto(store)
+    assert {r["id"]: r for r in inv.listing()}["vijay-kedia"]["positions"] == 1
+
+
+def test_a_joint_holding_is_not_counted_in_the_directory(mods):
+    """It is excluded from the total on the portfolio page, so counting it on
+    the card would promise a holding the page then declines to show."""
+    store, inv = mods
+    inv.INVESTORS.append({
+        "id": "test-joint2", "name": "Test Two", "kind": "individual",
+        "about": "fixture",
+        "entities": [{"alias": "Test Two And Another", "relation": "joint"}]})
+    try:
+        store.record_filing("X", "2026-06-30", [_name("Test Two And Another", 9.0)])
+        assert {r["id"]: r for r in inv.listing()}["test-joint2"]["positions"] == 0
+    finally:
+        inv.INVESTORS[:] = [i for i in inv.INVESTORS if i["id"] != "test-joint2"]
+
+
+def test_an_empty_portfolio_blames_the_ledger_not_the_investor(mods):
+    """Without this, a reader concludes the person holds nothing. The ledger
+    having read 43 of 2,300 companies is the fact that explains the page."""
+    store, inv = mods
+    _atulauto(store)
+    d = inv.portfolio("dolly-khanna")
+    assert d["available"] is False
+    assert "have not been reached" in d["message"]
+    assert "not that there are none" in d["message"]
+    assert d["coverage"]["companies_read"] == 1
+
+
+def test_the_directory_works_before_anything_has_been_crawled(mods):
+    """The first load of a brand-new instance. Every count is zero and nothing
+    raises."""
+    _store, inv = mods
+    rows = inv.listing()
+    tracked = [i for i in inv.INVESTORS if i.get("kind") != "redirect"]
+    assert len(rows) == len(tracked)
+    assert all(r["positions"] == 0 for r in rows), \
+        "an un-crawled ledger must report zero, not omit the count"

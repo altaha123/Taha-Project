@@ -108,6 +108,15 @@ total, not inside it.
 A **promoter stake** is flagged. Radhakishan Damani's 23% of Avenue Supermarts
 is the largest line in his register and it is his own company, not a stock pick.
 
+### An empty portfolio is a fact about the ledger
+
+Every directory card carries how many companies that name is currently known to
+hold, and names with holdings sort first — so an empty page is never something
+a reader discovers by clicking. When a portfolio is empty the page says how
+much of the exchange has been read and that the sweep continues, because
+without that a reader concludes the investor holds nothing, which is the one
+thing it must not be read as.
+
 ### What it refuses to claim
 
 * **The 1% floor.** A company names a public shareholder only above 1% of its
@@ -202,17 +211,45 @@ underneath, unsummed.
 
 ## Running the collectors
 
-Both are driven by scheduled workflows rather than in-process timers — Render's
-cron is a paid add-on and a timer dies with the worker.
+`.github/workflows/holdings.yml` fills the ledger nightly. **This is not
+optional plumbing** — nothing else writes to it, and without it both pages are
+correct, tested, and empty.
+
+The crawl runs on the API rather than in the runner, because the ledger lives
+on the disk mounted to the API; the workflow's only job is to keep asking for
+the next slice. The admin key travels in the `X-Admin-Key` header, not the
+query string: a query parameter ends up in access logs, proxy logs and error
+reports, which is a poor place for the credential that can start a crawl.
+
+### The universe has to be the real one
+
+`scan.fetch_nse_list()` fetched the official equity list with plain `requests`,
+which NSE answers with 403 from a datacenter IP — so in production it fell
+through to the curated `FALLBACK` list of 204 large caps. Silently: its own
+label said so, in a string nobody reads.
+
+That is not a small difference for this feature. The real list is about 2,300
+symbols, and the ~2,100 missing ones are the small and mid caps — which is
+exactly where these investors hold. A crawler pointed at the fallback can never
+find Atul Auto, Repro India or Carysil however long it runs, so every tracked
+investor except the handful holding large caps would stay permanently empty.
+The list now goes through `nse_http`, and is cached for an hour and shared, so
+the two callers that want it do not fetch it twice and get the second one
+throttled back onto the fallback.
+
+Both collectors are driven by scheduled workflows rather than in-process timers
+— Render's cron is a paid add-on and a timer dies with the worker.
 
 ```
-POST /admin/holdings/crawl?key=…&limit=40&quarters=4   # next slice of companies
-POST /admin/funds/ingest?key=…&limit=4                 # next few AMC packs
-POST /admin/funds/ingest?key=…&amc=20&url=…            # one workbook directly,
-                                                       # for a JS-built page
-GET  /admin/holdings/unclaimed?key=…                   # holders to consider adding
-GET  /investors/coverage                               # published, not admin
+POST /admin/holdings/crawl?limit=40&quarters=4   # next slice of companies
+POST /admin/funds/ingest?limit=4                 # next few AMC packs
+POST /admin/funds/ingest?amc=20&url=…            # one workbook directly, for
+                                                 # an AMC with a JS-built page
+GET  /admin/holdings/unclaimed                   # holders to consider adding
+GET  /investors/coverage                         # published, not admin
 ```
+
+All four take the key as `X-Admin-Key:` (preferred) or `?key=`.
 
 Each run is bounded. The shareholding crawl stops early after eight consecutive
 unreadable companies — a crawler that keeps asking after the exchange starts

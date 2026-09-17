@@ -2147,6 +2147,10 @@ def investors_list():
                 "latest_period": st["latest_period"],
                 "rows": st["rows"],
                 "persistent": st["persistent"],
+                # The denominator, so "340 companies" reads as the fraction of
+                # the exchange it is rather than as a number with no scale.
+                "universe": (len(holdings_crawl.universe())
+                             if holdings_crawl else None),
             }
         except Exception:
             pass
@@ -2257,15 +2261,21 @@ def investors_coverage():
 
 @app.post("/admin/holdings/crawl")
 def admin_holdings_crawl(key: str = "", limit: int = 40, quarters: int = 4,
-                         symbols: str = ""):
+                         symbols: str = "",
+                         x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     """
     Read the next slice of companies into the holdings ledger.
 
     Driven by a scheduled workflow rather than a timer — see holdings_crawl for
     why. Bounded per call: a full sweep is two thousand documents from an
     exchange that throttles bursts, and it is meant to take many runs.
+
+    The key may come in the X-Admin-Key header instead of the query string,
+    and the header is what the workflow uses: a query parameter ends up in
+    access logs, proxy logs and error reports, which is a poor place for the
+    credential that can start a crawl.
     """
-    _require_admin(key)
+    _require_admin(x_admin_key or key)
     if holdings_crawl is None:
         raise HTTPException(503, "The holdings crawler is not available.")
     syms = [s.strip().upper() for s in (symbols or "").split(",") if s.strip()]
@@ -2279,7 +2289,8 @@ def admin_holdings_crawl(key: str = "", limit: int = 40, quarters: int = 4,
 
 
 @app.get("/admin/holdings/unclaimed")
-def admin_holdings_unclaimed(key: str = "", min_pct: float = 1.0, limit: int = 60):
+def admin_holdings_unclaimed(key: str = "", min_pct: float = 1.0, limit: int = 60,
+                             x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     """
     Large named holders that no tracked investor claims.
 
@@ -2288,7 +2299,7 @@ def admin_holdings_unclaimed(key: str = "", min_pct: float = 1.0, limit: int = 6
     misspelling in the table surfaces — the correct spelling shows up here,
     unclaimed, next to the name that should have matched it.
     """
-    _require_admin(key)
+    _require_admin(x_admin_key or key)
     if investors_source is None:
         raise HTTPException(503, "The investor table is not available.")
     return to_native({
@@ -2421,7 +2432,8 @@ def fund_portfolio(amc: str, month: str = None, min_pct: float = 0.0):
 
 @app.post("/admin/funds/ingest")
 def admin_funds_ingest(key: str = "", limit: int = 4, amc: str = "",
-                       url: str = ""):
+                       url: str = "",
+                       x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     """
     Read the next few fund houses' monthly packs.
 
@@ -2446,9 +2458,10 @@ def admin_funds_ingest(key: str = "", limit: int = 4, amc: str = "",
 
 
 @app.get("/admin/funds/directory")
-def admin_funds_directory(key: str = ""):
+def admin_funds_directory(key: str = "",
+                          x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     """Every AMC AMFI lists, and whether its workbook can be found in HTML."""
-    _require_admin(key)
+    _require_admin(x_admin_key or key)
     if fund_portfolios is None:
         raise HTTPException(503, "The fund portfolio reader is not available.")
     return to_native({"amcs": fund_portfolios.amc_directory()})
