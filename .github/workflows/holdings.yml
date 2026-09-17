@@ -73,7 +73,7 @@ jobs:
         run: |
           set -uo pipefail
           if [ -z "${ADMIN_KEY}" ]; then
-            echo "::error::ALTAHA_ADMIN_KEY is not set — the ledger cannot be filled."
+            echo "::error::ALTAHA_ADMIN_KEY is not set, so this job cannot ask the API to do anything. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render. Until then the investor and fund-house pages stay empty, and the daily digest cannot send either — it uses the same secret."
             exit 1
           fi
 
