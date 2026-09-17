@@ -75,6 +75,27 @@ def _utcnow():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+_QUARTER_LAST_DAY = {3: 31, 6: 30, 9: 30, 12: 31}
+
+
+def is_quarter_end(iso) -> bool:
+    """
+    A shareholding quarter end: 31 March, 30 June, 30 September, 31 December.
+
+    Regulation 31 also requires a filing within ten days of a capital change,
+    and those carry their own date — Ram Bhajo's July 2026 filing is one. It is
+    a real disclosure and it is not a quarter, and letting one into the ledger
+    does far more damage than losing it would: it becomes the newest period on
+    record, and everything that asks "what is the current quarter" then gets an
+    answer one company in two thousand filed for.
+    """
+    try:
+        y, m, d = str(iso).strip().split("-")
+        return _QUARTER_LAST_DAY.get(int(m)) == int(d) and 1990 < int(y) < 2200
+    except Exception:
+        return False
+
+
 def _open(path):
     conn = sqlite3.connect(path, timeout=30.0)
     conn.row_factory = sqlite3.Row
@@ -363,6 +384,29 @@ def is_real_holder(name: str, key: str = None) -> bool:
 # Writing
 # ---------------------------------------------------------------------------
 
+def purge_non_quarter_rows():
+    """
+    Remove rows filed under a date that is not a quarter end.
+
+    A deliberate exception to the append-only rule, and the only one. That rule
+    exists so a re-crawl cannot rewrite what a company said on a date — it does
+    not oblige the ledger to keep rows a defect put there under a period that
+    was never a quarter. Returns how many were removed, and repeated calls are
+    no-ops.
+    """
+    conn = _connect()
+    bad = [r["period_end"] for r in conn.execute(
+        "SELECT DISTINCT period_end FROM holdings").fetchall()
+        if not is_quarter_end(r["period_end"])]
+    if not bad:
+        return 0
+    with _tx() as c:
+        before = c.total_changes
+        c.execute("DELETE FROM holdings WHERE period_end IN (%s)"
+                  % ",".join("?" * len(bad)), bad)
+        return c.total_changes - before
+
+
 def record_filing(symbol, period_end, names, filed=None, source_url=None):
     """
     Write one company-quarter's named holders.
@@ -377,6 +421,12 @@ def record_filing(symbol, period_end, names, filed=None, source_url=None):
     """
     sym = (symbol or "").strip().upper()
     if not sym or not period_end:
+        return 0
+    # Checked HERE as well as in the crawler, because the period stored is the
+    # one inside the document and the crawler only ever saw the index's. The
+    # two can disagree: a filing the index dates to a quarter end can carry its
+    # own date of a few days later.
+    if not is_quarter_end(period_end):
         return 0
     rows, slot = [], 0
     now = _utcnow()
@@ -445,9 +495,24 @@ def periods(limit=12):
 
 
 def latest_period():
+    """
+    The newest QUARTER on record — not simply the newest date.
+
+    The difference is not academic. One company filing an interim disclosure
+    dated 1 July made that the maximum period_end, and every caller asking for
+    the current quarter then looked at a period containing a single company.
+    The investor directory, which counts each name's holdings in the current
+    quarter, showed all twenty-seven as holding nothing while their portfolio
+    pages were full.
+    """
     conn = _connect()
-    r = conn.execute("SELECT MAX(period_end) AS p FROM holdings").fetchone()
-    return r["p"] if r else None
+    rows = conn.execute(
+        "SELECT DISTINCT period_end FROM holdings ORDER BY period_end DESC"
+    ).fetchall()
+    for r in rows:
+        if is_quarter_end(r["period_end"]):
+            return r["period_end"]
+    return rows[0]["period_end"] if rows else None
 
 
 def positions_for_keys(keys, period_end=None):
