@@ -34,3 +34,21 @@ anthropic>=0.40
 # not import it at all in that case — so this costs disk on the image and
 # nothing at runtime until it is switched on. Pure Python, no build step.
 sentry-sdk>=2.0
+
+# Reading an asset manager's monthly portfolio disclosure, which SEBI requires
+# every AMC to publish as a workbook. fund_workbook.py streams these in
+# read-only mode because the packs run to fifteen megabytes.
+#
+# This was missing for a release. The module imported it, the parser was tested
+# against a real pack locally, and the deployed instance had no such module —
+# so every ingest raised ImportError, got caught as "could not read the
+# workbook", and the nightly job reported success while writing nothing. Pure
+# Python, no build step.
+openpyxl>=3.1
+
+# Both arrive transitively today — anyio under fastapi/starlette, multitasking
+# under yfinance — and both are imported directly by this codebase, so an
+# upgrade that dropped either would break a deploy for a reason nothing in the
+# diff would explain. Pinned for the same reason requests is, above.
+anyio>=4.0
+multitasking>=0.0.11

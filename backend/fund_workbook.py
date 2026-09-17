@@ -38,8 +38,10 @@ column readers compare across funds. The scale is detected per sheet by summing
 the column: a full portfolio sums to about 1 or about 100, and those are far
 enough apart to tell apart safely.
 
-NO EXTERNAL DEPENDENCIES beyond openpyxl, which is already used for the
-spreadsheet exports.
+DEPENDENCIES: openpyxl, and it is the only thing in this module that is not
+the standard library. It is declared in requirements.txt — which it was not,
+for a release, with the result that every ingest on the deployed instance
+raised ImportError and was swallowed as "could not read the workbook".
 """
 
 import re
