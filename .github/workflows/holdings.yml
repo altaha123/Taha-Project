@@ -1,0 +1,183 @@
+name: Fill the holdings ledger
+
+# WHAT THIS IS FOR
+# The investor and fund-house portfolio pages are assembled from a ledger, and
+# the ledger is built by reading filings one company at a time. Nothing else
+# fills it. Without this workflow both pages are correct, tested, and empty —
+# which is exactly how they shipped, and exactly what a reader sees as a bug.
+#
+# WHY A WORKFLOW AND NOT A TIMER
+# Same reasoning as the daily digest. Render's cron is a separate paid service,
+# and an in-process timer dies with the worker — on a 512 MB instance that
+# restarts, a timer is a job that quietly stops one afternoon and nobody
+# notices for a fortnight. A workflow is versioned, its history is visible, and
+# a failed run is an email from GitHub rather than silence.
+#
+# HOW THE WORK IS DIVIDED
+# The crawl runs ON THE API, not here, because the ledger lives on the disk
+# mounted to the API. This job's only role is to keep asking for the next
+# slice. Each call is bounded — the instance has half a CPU and NSE throttles
+# bursts — so a sweep of ~2,300 companies is many calls across many runs, and
+# the coverage table is what makes each call continue the last rather than
+# start it again.
+#
+# CADENCE. Shareholding patterns are filed quarterly, within 21 days of quarter
+# end, and monthly fund portfolios are due by the tenth. Nightly is far more
+# often than either changes — but a night's slice is a few hundred companies,
+# so frequent small runs are how the sweep finishes at all. Once the ledger is
+# full each night's run is nearly all no-ops, which costs one API call per
+# slice and nothing else.
+#
+# Needs one repository secret: ALTAHA_ADMIN_KEY, the same value as ADMIN_KEY on
+# Render. Settings → Secrets and variables → Actions.
+
+on:
+  schedule:
+    # 20:30 UTC = 02:00 IST. Well clear of market hours and of the digest.
+    - cron: "30 20 * * *"
+  workflow_dispatch:
+    inputs:
+      slices:
+        description: "How many crawl calls to make (40 companies each)"
+        type: string
+        default: "20"
+      quarters:
+        description: "Quarters to read per company"
+        type: string
+        default: "2"
+      funds:
+        description: "Also read the fund houses' monthly packs"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  # Two runs crawling at once would double the request rate at NSE, which is
+  # the one thing guaranteed to get the instance blocked.
+  group: holdings-ledger
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - name: Read the next slices of companies into the ledger
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          SLICES: ${{ inputs.slices || '20' }}
+          QUARTERS: ${{ inputs.quarters || '2' }}
+        run: |
+          set -uo pipefail
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set — the ledger cannot be filled."
+            exit 1
+          fi
+
+          # A free-tier instance can be asleep and the first request pays for
+          # waking it. Warm it rather than counting a cold start as a failure.
+          curl -sS --max-time 120 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+
+          ok=0; failed=0; rows=0
+          for i in $(seq 1 "${SLICES}"); do
+            code=$(curl -sS --max-time 900 -o slice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/holdings/crawl?limit=40&quarters=${QUARTERS}" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+
+            if [ "${code}" != "200" ]; then
+              echo "slice ${i}: HTTP ${code}"
+              failed=$((failed + 1))
+              # Three consecutive failures means the instance is down or the
+              # key is wrong. Continuing would just be twenty more of the same.
+              if [ "${failed}" -ge 3 ]; then
+                echo "::error::three slices in a row failed (last HTTP ${code}) — stopping."
+                exit 1
+              fi
+              sleep 30
+              continue
+            fi
+
+            failed=0
+            got=$(python3 -c "import json;d=json.load(open('slice.json'));print(d.get('rows',0))")
+            attempted=$(python3 -c "import json;d=json.load(open('slice.json'));print(d.get('attempted',0))")
+            early=$(python3 -c "import json;d=json.load(open('slice.json'));print(d.get('stopped_early') or '')")
+            rows=$((rows + got)); ok=$((ok + 1))
+            echo "slice ${i}: ${attempted} companies, ${got} rows ${early:+— ${early}}"
+
+            # Nothing left due: the sweep has caught up with itself.
+            if [ "${attempted}" = "0" ]; then
+              echo "nothing further is due — the ledger is current."
+              break
+            fi
+            # The crawler stops a slice early when the exchange starts
+            # refusing. Backing off is the whole point of it saying so.
+            if [ -n "${early}" ]; then sleep 60; else sleep 5; fi
+          done
+
+          echo "::notice::${ok} slices, ${rows} new rows."
+
+      - name: Read the fund houses' monthly portfolios
+        if: ${{ inputs.funds != 'false' }}
+        continue-on-error: true       # the investor ledger is the primary job
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+        run: |
+          set -uo pipefail
+          # Each pack is a ~15 MB download parsed on a 512 MB instance, so
+          # these are taken four at a time with a pause between.
+          for i in $(seq 1 14); do
+            code=$(curl -sS --max-time 900 -o funds.json -w "%{http_code}" \
+                   -X POST "${API}/admin/funds/ingest?limit=4" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+            if [ "${code}" != "200" ]; then
+              echo "fund slice ${i}: HTTP ${code}"; sleep 20; continue
+            fi
+            python3 - <<'PY'
+          import json
+          d = json.load(open("funds.json"))
+          print("fund slice: %d attempted, %d read, %d rows"
+                % (d.get("attempted", 0), d.get("ok", 0), d.get("rows", 0)))
+          for r in d.get("results", []):
+              if not r.get("ok"):
+                  print("   -- %s: %s" % (r.get("name"), (r.get("note") or "")[:90]))
+          PY
+            sleep 15
+          done
+
+      - name: Report what the ledger now holds
+        if: always()
+        env:
+          API: https://taha-project.onrender.com
+        run: |
+          set -uo pipefail
+          curl -sS --max-time 120 -o coverage.json "${API}/investors/coverage" || exit 0
+          python3 - <<'PY'
+          import json
+          d = json.load(open("coverage.json"))
+          st = d.get("store", {}) or {}
+          funds = st.get("funds", {}) or {}
+          universe = d.get("universe")
+          read = st.get("companies", 0)
+          print("companies read : %s%s" % (read, " of %s" % universe if universe else ""))
+          print("holder rows    : %s" % st.get("rows", 0))
+          print("distinct names : %s" % st.get("holders", 0))
+          print("latest quarter : %s" % st.get("latest_period"))
+          print("fund houses    : %s (%s positions, %s)"
+                % (funds.get("amcs", 0), funds.get("rows", 0),
+                   funds.get("latest_month")))
+          if not st.get("persistent"):
+              print("::warning::the ledger is NOT on a persistent disk — "
+                    "everything collected is lost on the next deploy. "
+                    "Check DATA_DIR on Render.")
+          aliases = d.get("aliases") or {}
+          if aliases.get("unmatched"):
+              print("::notice::%d tracked aliases have never matched a filing. "
+                    "Either the crawl has not reached those companies yet, or "
+                    "the spelling in investors.py is wrong."
+                    % len(aliases["unmatched"]))
+          PY

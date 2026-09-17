@@ -346,3 +346,11 @@
 @media (max-width:560px){
   .iv-pos-head .fu-co{ flex:0 0 100%; white-space:normal }
 }
+
+/* A tracked name the ledger has not reached yet. Dimmed rather than hidden:
+   the list is what the screener claims to track, and dropping a name because
+   the crawl has not got there would misrepresent the coverage in the other
+   direction. */
+.iv-card.is-empty{ opacity:.62 }
+.iv-card.is-empty:hover{ opacity:1 }
+.iv-card.is-empty .iv-kind{ font-style:italic; text-transform:none; letter-spacing:.02em }

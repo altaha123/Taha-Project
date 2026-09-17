@@ -435,18 +435,89 @@ def keys_for(inv):
     return out
 
 
-def listing():
-    """The directory, without touching the ledger."""
+def listing(with_counts=True):
+    """
+    The directory.
+
+    Carries how many companies each investor is currently known to hold, so a
+    reader can see before clicking that a name has nothing behind it yet. An
+    empty page reached by clicking a card that gave no warning reads as a
+    broken feature; the same emptiness, labelled on the card, reads as what it
+    is — a ledger still being filled.
+    """
+    # None means "could not count" — the ledger is unavailable — and the cards
+    # fall back to describing what the investor IS. A dict means the count ran,
+    # and an investor absent from it genuinely has nothing yet, which is a
+    # different statement and has to reach the page as 0 rather than as a
+    # missing key.
+    counts = None
+    if with_counts and store is not None:
+        try:
+            counts = _position_counts()
+        except Exception:
+            counts = None
     out = []
     for inv in INVESTORS:
         if inv.get("kind") == "redirect":
             continue
-        out.append({
+        row = {
             "id": inv["id"], "name": inv["name"], "kind": inv.get("kind"),
             "about": inv.get("about"),
             "entities": len(inv.get("entities") or []),
-        })
-    return sorted(out, key=lambda r: r["name"])
+        }
+        if counts is not None:
+            row["positions"] = counts.get(inv["id"], 0)
+        out.append(row)
+    # Names with holdings first — a directory whose first screen is all empty
+    # cards teaches the reader that the whole feature is empty.
+    return sorted(out, key=lambda r: (-(r.get("positions") or 0), r["name"]))
+
+
+def _position_counts():
+    """
+    Companies per investor in the newest quarter on record, in one query.
+
+    One query rather than one per investor: this runs on every load of the
+    directory, and twenty-eight separate scans of the ledger for a count is how
+    a list page becomes the slowest thing on the site.
+    """
+    conn = store._connect()
+    period = store.latest_period()
+    if not period:
+        return {}           # counted, and nothing is held: every card reads 0
+    owner = {}
+    for inv in INVESTORS:
+        if inv.get("kind") == "redirect":
+            continue
+        for e in inv.get("entities") or []:
+            if e["relation"] not in COUNTED:
+                continue
+            owner[store.holder_key(e["alias"])] = inv["id"]
+            owner[store.holder_base(e["alias"])] = inv["id"]
+    if not owner:
+        return {}
+    seen = {}
+    for r in conn.execute(
+            "SELECT DISTINCT symbol, holder_key, holder_base FROM holdings"
+            " WHERE period_end = ?", (period,)):
+        who = owner.get(r["holder_key"]) or owner.get(r["holder_base"] or "")
+        if who:
+            seen.setdefault(who, set()).add(r["symbol"])
+    return {k: len(v) for k, v in seen.items()}
+
+
+def coverage():
+    """How much of the universe the ledger holds — the honest caveat on an
+    empty portfolio, and the reason it is empty."""
+    if store is None:
+        return {}
+    try:
+        st = store.stats()
+        return {"companies_read": st["companies"],
+                "latest_period": st["latest_period"],
+                "rows": st["rows"]}
+    except Exception:
+        return {}
 
 
 # ---------------------------------------------------------------------------
@@ -492,10 +563,18 @@ def portfolio(investor_id, period_end=None):
     keymap = keys_for(inv)
     rows = store.positions_for_keys(list(keymap))
     if not rows:
-        out["message"] = ("Nothing has been recorded for %s yet. The ledger is "
-                          "built by reading company filings one at a time; a "
-                          "name appears once a company it holds has been read."
-                          % inv["name"])
+        cov = coverage()
+        read = cov.get("companies_read") or 0
+        out["message"] = (
+            "No holding has been found for %s yet. The ledger is built by "
+            "reading company filings one at a time, and %s so far — so this "
+            "means the companies %s holds have not been reached, not that "
+            "there are none."
+            % (inv["name"],
+               ("%d companies have been read" % read) if read
+               else "none have been read",
+               inv["name"]))
+        out["coverage"] = cov
         out["entities"] = [{"alias": e["alias"], "relation": e["relation"],
                             "relation_word": RELATION_WORDS.get(e["relation"], "")}
                            for e in inv.get("entities") or []]
