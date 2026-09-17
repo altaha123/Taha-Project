@@ -96,15 +96,26 @@
     var cover = '';
     if (led.companies_read != null) {
       var of = led.universe ? ' of ' + esc(String(led.universe)) : '';
-      cover = '<p class="iv-cover">Built from <b>' + esc(String(led.companies_read)) +
-        of + '</b> companies read so far' +
-        (led.latest_period ? ', to ' + esc(led.latest_period) : '') +
-        '. The ledger is filled one company at a time, so an investor may hold ' +
-        'something in a company that has not been read yet.' +
-        (led.persistent === false
-          ? ' <b>This instance is not storing the ledger between restarts.</b>'
-          : '') +
-        '</p>';
+      /* Never started and part-way through look identical as a number, and
+         they are not the same situation: "0 of 2309 read so far" reads as
+         though waiting is the answer when in fact nothing has been run. */
+      if (!led.companies_read && led.attempted === 0) {
+        cover = '<p class="iv-cover"><b>The collector has not run yet.</b> ' +
+          'These pages are assembled from a ledger built by reading company ' +
+          'filings one at a time, and nothing has been read into it so far &mdash; ' +
+          'so every name below is empty for that reason, not because the ' +
+          'investor holds nothing.</p>';
+      } else {
+        cover = '<p class="iv-cover">Built from <b>' + esc(String(led.companies_read)) +
+          of + '</b> companies read so far' +
+          (led.latest_period ? ', to ' + esc(led.latest_period) : '') +
+          '. The ledger is filled one company at a time, so an investor may hold ' +
+          'something in a company that has not been read yet.' +
+          (led.persistent === false
+            ? ' <b>This instance is not storing the ledger between restarts.</b>'
+            : '') +
+          '</p>';
+      }
     }
 
     box.innerHTML =

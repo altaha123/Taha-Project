@@ -390,3 +390,17 @@ def test_an_asset_managers_own_name_is_not_one_persons_portfolio(mods):
         for e in i.get("entities") or []:
             assert "mutual fund" not in e["alias"].lower(), \
                 "%s claims %r, which is an asset manager" % (i["id"], e["alias"])
+
+
+def test_never_started_is_distinguishable_from_part_way_through(mods):
+    """
+    Zero read is ambiguous as a number. "0 of 2309 read so far" reads as though
+    waiting is the answer, when in fact nobody has started the collector — and
+    on the live site that was the difference between a page filling up
+    overnight and a page that would have stayed empty for ever.
+    """
+    store, _inv = mods
+    assert store.stats()["tried"] == 0
+    store.mark_coverage("X", "no-filings")
+    assert store.stats()["tried"] == 1, \
+        "a company attempted and found to have nothing still counts as started"

@@ -2184,6 +2184,12 @@ def investors_list():
                 # the exchange it is rather than as a number with no scale.
                 "universe": (len(holdings_crawl.universe())
                              if holdings_crawl else None),
+                # Companies the crawler has ATTEMPTED. Zero read with zero
+                # attempted means the collector has never run at all, which is
+                # a different thing from a sweep in progress and needs saying:
+                # "0 of 2309 read so far" reads like patience is the answer
+                # when in fact nobody has started it.
+                "attempted": st["tried"],
             }
         except Exception:
             pass
