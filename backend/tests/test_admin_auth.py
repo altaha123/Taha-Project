@@ -34,10 +34,22 @@ def client(tmp_path_factory):
     Only the guard is under test. Left alone, a request that gets past it runs
     the thing it guards — the first version of this file spent a minute
     crawling NSE and downloading AMC workbooks on every run, which is a poor
-    way to check an if-statement and a worse thing to point at an exchange from
-    CI.
+    way to check an if-statement and a worse thing to point at an exchange
+    from CI.
+
+    EVERYTHING IS PUT BACK. `main` is a module the whole suite shares, and the
+    first version of this fixture set two environment variables, re-imported
+    main, and left four of its attributes stubbed — which passed here and broke
+    five tests in test_scan_memory_guard.py, a file that has nothing to do with
+    admin keys and only fails when this one has run first. A test that leaves
+    the process different from how it found it is a test that breaks its
+    neighbours.
     """
     tmp = tmp_path_factory.mktemp("admin")
+    saved_env = {k: os.environ.get(k)
+                 for k in ("ADMIN_KEY", "ALTAHA_HOLDINGS_DB")}
+    saved_modules = {k: sys.modules.get(k) for k in ("main", "holdings_store")}
+
     os.environ["ADMIN_KEY"] = KEY
     os.environ["ALTAHA_HOLDINGS_DB"] = str(tmp / "h.db")
     for m in ("main", "holdings_store"):
@@ -50,11 +62,30 @@ def client(tmp_path_factory):
         def __getattr__(self, _name):
             return lambda *a, **kw: {}
 
+    stubbed = {}
     for name in ("holdings_crawl", "holdings_job", "fund_portfolios",
                  "investors_source"):
         if getattr(main, name, None) is not None:
+            stubbed[name] = getattr(main, name)
             setattr(main, name, Inert())
-    return TestClient(main.app), main
+
+    yield TestClient(main.app), main
+
+    for name, original in stubbed.items():
+        setattr(main, name, original)
+    for k, v in saved_env.items():
+        if v is None:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = v
+    # The module this test re-imported carries the admin key it was built with.
+    # Dropping it means the next importer builds a fresh one from the restored
+    # environment rather than inheriting this file's.
+    for k, original in saved_modules.items():
+        if original is None:
+            sys.modules.pop(k, None)
+        else:
+            sys.modules[k] = original
 
 
 def _admin_routes(app):
