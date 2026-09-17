@@ -99,9 +99,18 @@ jobs:
 
             if [ "${code}" != "200" ]; then
               echo "slice ${i}: HTTP ${code}"
+              # 401 is not a transient failure and retrying it twenty times
+              # teaches nobody anything. The secret EXISTS — the guard above
+              # would have caught an empty one — so the value simply does not
+              # match ADMIN_KEY on the server, which is the single most likely
+              # thing to be wrong here and deserves saying in those words.
+              if [ "${code}" = "401" ]; then
+                echo "::error::The server rejected the admin key (401). ALTAHA_ADMIN_KEY is set on this repository but its value does not match ADMIN_KEY on Render. Copy the value from the Render dashboard (Environment tab) into Settings → Secrets and variables → Actions, taking care not to include a trailing space or newline. You can also fill the ledger without any secret at all, from the Fill the ledger panel at the bottom of the Investor portfolios page."
+                exit 1
+              fi
               failed=$((failed + 1))
-              # Three consecutive failures means the instance is down or the
-              # key is wrong. Continuing would just be twenty more of the same.
+              # Three consecutive failures means the instance is down.
+              # Continuing would just be twenty more of the same.
               if [ "${failed}" -ge 3 ]; then
                 echo "::error::three slices in a row failed (last HTTP ${code}) — stopping."
                 exit 1

@@ -250,9 +250,26 @@ underneath, unsummed.
 
 ## Running the collectors
 
-`.github/workflows/holdings.yml` fills the ledger nightly. **This is not
-optional plumbing** — nothing else writes to it, and without it both pages are
-correct, tested, and empty.
+There are two ways to fill it, and the second exists because the first has a
+single point of failure that has now bitten twice.
+
+**From the page itself.** The *Fill the ledger* panel at the foot of the
+Investor portfolios tab starts a background sweep on the API and polls it. It
+asks for the admin key, keeps it in memory for that tab only, and sends it as a
+header. Start it, close the tab, come back — the work happens on the server, not
+in the browser, because a sweep is over an hour and no proxy holds a request
+open that long. Whoever can see an empty page can fill it, with no repository
+secret involved at all.
+
+**From the schedule.** `.github/workflows/holdings.yml` does the same thing
+nightly, driving the same bounded endpoint. It needs `ALTAHA_ADMIN_KEY` set as
+a repository secret, matching `ADMIN_KEY` on Render. When that secret is
+missing the job fails in under a second; when it is set but WRONG the job gets
+401 and says so in those words, because a wrong value looks identical to a
+missing one in every other respect.
+
+**This is not optional plumbing** — nothing else writes to the ledger, and
+without one of the two both pages are correct, tested, and empty.
 
 The crawl runs on the API rather than in the runner, because the ledger lives
 on the disk mounted to the API; the workflow's only job is to keep asking for

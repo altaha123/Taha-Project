@@ -313,6 +313,13 @@
     if (view.style.display !== 'none' && !loaded) { loaded = true; load(); }
   }
 
+  /* Called by the admin panel when a sweep finishes, so the cards fill in
+     rather than sitting stale behind a panel that just said it read 2,000
+     companies. */
+  window.AltahaLedgerDone = function () {
+    if (loaded) load();
+  };
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', watch);
   } else { watch(); }
