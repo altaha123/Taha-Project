@@ -54,14 +54,14 @@
    "name": "Ashish Kacholia",
    "kind": "individual",
    "about": "Small-cap investor; also invests through Bengal Finance & Investment.",
-   "entities": 3,
+   "entities": 2,
    "positions": 0
   },
   {
-   "id": "ashok-kumar-jain",
-   "name": "Ashok Kumar Jain",
-   "kind": "individual",
-   "about": "Appears in several small-cap registers.",
+   "id": "authum",
+   "name": "Authum Investment & Infrastructure",
+   "kind": "fund",
+   "about": "Listed investment company with large concentrated stakes in small caps.",
    "entities": 1,
    "positions": 0
   },
@@ -102,14 +102,6 @@
    "name": "Hemendra Kothari",
    "kind": "individual",
    "about": "Founder of DSP; invests personally and through family entities.",
-   "entities": 2,
-   "positions": 0
-  },
-  {
-   "id": "hitesh-doshi",
-   "name": "Hitesh Ramji Doshi",
-   "kind": "individual",
-   "about": "Mumbai investor.",
    "entities": 2,
    "positions": 0
   },
@@ -182,7 +174,7 @@
    "name": "Radhakishan Damani",
    "kind": "individual",
    "about": "Founder of Avenue Supermarts (DMart); invests through several family entities.",
-   "entities": 6,
+   "entities": 7,
    "positions": 0
   },
   {
@@ -214,7 +206,7 @@
    "name": "Sunil Singhania",
    "kind": "individual",
    "about": "Founder of Abakkus Asset Manager; positions are usually filed under the Abakkus funds rather than his own name.",
-   "entities": 5,
+   "entities": 6,
    "positions": 0
   },
   {

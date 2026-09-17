@@ -352,3 +352,41 @@ def test_the_directory_works_before_anything_has_been_crawled(mods):
     assert len(rows) == len(tracked)
     assert all(r["positions"] == 0 for r in rows), \
         "an un-crawled ledger must report zero, not omit the count"
+
+
+def test_no_alias_welds_two_different_investors_into_one_name(mods):
+    """
+    The table once carried "Ashish Dhawan Kacholia" — a name that exists
+    nowhere, made by running two real and unrelated investors together. It
+    matched nothing, so it was harmless; the same mistake with a name that DOES
+    appear in a filing would credit one man with the other's holdings.
+
+    Guarded structurally: no alias may contain another investor's full name as
+    a proper substring.
+    """
+    store, inv = mods
+    names = {}
+    for i in inv.INVESTORS:
+        if i.get("kind") == "redirect":
+            continue
+        names[i["id"]] = store.holder_key(i["name"])
+    for i in inv.INVESTORS:
+        for e in i.get("entities") or []:
+            key = store.holder_key(e["alias"])
+            for other_id, other in names.items():
+                if other_id == i["id"] or len(other.split()) < 2:
+                    continue
+                assert other not in key, (
+                    "%s's alias %r contains %s's name — one of them is wrong"
+                    % (i["id"], e["alias"], other_id))
+
+
+def test_an_asset_managers_own_name_is_not_one_persons_portfolio(mods):
+    """"Abakkus Mutual Fund" is the AMC. Its schemes belong to the fund-house
+    side; folding them into Sunil Singhania's personal holdings would credit
+    one man with every rupee the house manages."""
+    _store, inv = mods
+    for i in inv.INVESTORS:
+        for e in i.get("entities") or []:
+            assert "mutual fund" not in e["alias"].lower(), \
+                "%s claims %r, which is an asset manager" % (i["id"], e["alias"])
