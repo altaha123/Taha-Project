@@ -787,26 +787,10 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
     out["history"].reverse()          # oldest first, for charting
 
     lim = max(1, min(int(names_limit or 12), 40))
-    named = latest.get("names") or []
-    prev_named = {n["name"].strip().lower(): n.get("pct")
-                  for n in (prev or {}).get("names", [])}
-    for n in named:
-        if n.get("pct") is None:
-            continue
-        before = prev_named.get(n["name"].strip().lower())
-        entry = {
-            "name": n["name"],
-            "pct": n["pct"],
-            "kind": n.get("kind"),
-            "change_qoq": _delta(n["pct"], before),
-            # A holder absent from the previous filing is not necessarily new:
-            # the public table only names holders above 1%, so crossing that
-            # line looks identical to buying in. The UI says "new in table".
-            "new_in_table": before is None,
-        }
-        bucket_name = "promoters" if n.get("promoter") else "public"
-        if len(out["names"][bucket_name]) < lim:
-            out["names"][bucket_name].append(entry)
+    from ownership_insights import named_insights
+    out["names"] = named_insights(latest, quarters, prev, lim)
+    out["previous_period"] = prev.get("period") if prev else None
+    out["retrieved_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
 
     if any(s["derived"] for s in out["split"]):
         out["notes"].append(

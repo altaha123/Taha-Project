@@ -2075,6 +2075,39 @@ def shareholding_pattern(ticker: str, quarters: int = 8, names: int = 12):
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
 
 
+@app.get("/shareholding/peers")
+def ownership_peers(ticker: str):
+    import re
+    import sectors
+    from ownership_insights import peer_candidates
+    if not re.fullmatch(r"[A-Za-z0-9&.\-]{1,20}", ticker):
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    payload = _state.get("payload") or {}
+    return peer_candidates(ticker, payload.get("factor_universe") or payload.get("rankings") or [],
+                           sectors.SYMBOL_SECTOR)
+
+
+@app.get("/shareholding/compare")
+def ownership_compare(ticker: str, period: str):
+    import re
+    from ownership_insights import comparison_at
+    if not re.fullmatch(r"[A-Za-z0-9&.\-]{1,20}", ticker):
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    if shareholding_filings is None:
+        return {"available": False, "message": "The shareholding reader is not available."}
+    try:
+        _dt_mod.date.fromisoformat(period)
+        if not shareholding_filings.is_quarter_end(period):
+            raise ValueError()
+    except ValueError:
+        raise HTTPException(400, "Provide a quarter-end date in YYYY-MM-DD format.")
+    sym = re.sub(r"\.(NS|BO)$", "", ticker.upper())
+    try:
+        return to_native(comparison_at(sym, period, shareholding_filings))
+    except Exception:
+        raise HTTPException(503, "Could not read the matching ownership filing. Try again.")
+
+
 @app.get("/fundamentals")
 def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
     """

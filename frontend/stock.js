@@ -749,7 +749,7 @@
         var ch = n.change_qoq;
         var badge = n.new_in_table
           ? '<em class="new">new in table</em>'
-          : (ch == null || Math.abs(ch) < 0.005
+          : (ch == null ? '<em class="flat">comparison unavailable</em>' : Math.abs(ch) < 0.005
               ? '<em class="flat">unchanged</em>'
               : '<em class="' + tone(ch) + '">' + pp(ch) + '</em>');
         return '<li><span class="nm">' + esc(n.name) + '</span>' +
@@ -820,7 +820,9 @@
     }).sort(function (a, b) { return Math.abs(b.change_qoq) - Math.abs(a.change_qoq); });
     var lead;
     if (!movers.length) {
-      lead = 'No category moved by more than a twentieth of a point over the quarter.';
+      lead = split.some(function (s) { return s.change_qoq != null; })
+        ? 'No comparable category moved by more than a twentieth of a point over the quarter.'
+        : 'Quarter-on-quarter comparison is unavailable for the filings read.';
     } else {
       var m = movers[0];
       lead = m.label + ' ' + (m.change_qoq > 0 ? 'rose' : 'fell') + ' ' +
@@ -831,6 +833,11 @@
         lead += ' ' + n2.label + ' ' + (n2.change_qoq > 0 ? 'rose' : 'fell') + ' ' +
           Math.abs(n2.change_qoq).toFixed(2) + '.';
       }
+    }
+
+    if (d.basis_period && d.basis_period !== d.period) {
+      lead = 'Latest holdings are from the interim filing dated ' + d.period +
+        '. Quarterly changes compare quarter-ends through ' + d.basis_period + '; they do not describe changes since the interim filing.';
     }
 
     var read = (d.quarters_read || 0) + ' quarter-end' +
@@ -860,7 +867,7 @@
         }).join('') + '</div>'
       : '';
 
-    box.innerHTML = head + ownBar(split) +
+    box.innerHTML = head + '<div id="own-intelligence"></div>' + ownBar(split) +
       ownPanels(split, d.history) + count + ownTable(d.history) +
       '<div class="own-namecols">' +
       '<div>' + ownNames(d.names && d.names.promoters, 'Promoter group',
@@ -870,6 +877,7 @@
       '</div>' + notes;
 
     wireOwnHover();
+    if (window.OwnershipInsights) window.OwnershipInsights.mount(d, {ticker:TICKER, api:API, name:$('nm').textContent});
   }
 
   function loadOwnership() {
@@ -878,7 +886,7 @@
       box.innerHTML = '<div class="own-empty is-loading" aria-busy="true">' +
         'Reading the filings…</div>';
     }
-    fetch(API + '/shareholding?ticker=' + encodeURIComponent(TICKER) + '&quarters=8')
+    fetch(API + '/shareholding?ticker=' + encodeURIComponent(TICKER) + '&quarters=8&names=40')
       .then(function (r) {
         if (!r.ok) throw new Error('down');
         return r.json();
@@ -1252,6 +1260,7 @@
         // headline day-change is needed up front.
         loadDayChange();
         wirePanes();
+        if (param('pane') === 'owners') showPane('owners');
         if (window.AltahaShell) window.AltahaShell.reveal();
       })
       .catch(function (e) {

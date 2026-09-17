@@ -97,3 +97,49 @@ unavailable rather than pretending to have data.
 * The domestic/foreign split is filed only in the newer format; older quarters
   carry a derived DII, flagged as such.
 * Nothing here is adjusted for pledged shares, which are a separate filing.
+
+## Ownership intelligence and sharing
+
+The investor cards now lead the Ownership pane. `ownership_insights.py` enriches
+named public holders and promoters with conservative case/whitespace matches,
+previous stakes, source-linked quarterly histories, and first appearance in the
+**available** history. Missing disclosures stay null; they are never zero stakes.
+A first filing or latest interim filing does not produce a “newly disclosed” or
+quarterly-change claim. Public holders absent from the next quarterly table are
+labelled **no longer disclosed**, not sold out. Individual schemes are never
+invented from an institution's aggregate name. Counts and the 40-per-group display
+limit are visible. No PAN or other parser-only identity is serialized.
+
+The existing split, derived markers, category sparklines, promoter register and
+source table remain available below the investor analysis. Public total remains
+outside the non-overlapping composition. The comparison bars use 0–100% throughout;
+investor sparklines label their own ranges and break at missing disclosures.
+
+- `GET /shareholding/peers?ticker=...` lists an alphabetical same-sector sample
+  from the latest scan, or the bundled sector map when unresolved. It never
+  broadens to unrelated companies. The classification source is displayed.
+- `GET /shareholding/compare?ticker=...&period=YYYY-MM-DD` reads exactly the named
+  quarter and its previous quarter (at most two XMLs, using the existing caches).
+  It skips interim filings and returns unavailable when that quarter is missing.
+  There is no substitution of a peer's latest quarter. Browser loading is explicit
+  and sequential, defaults to three peers, and permits up to five. Broad sector
+  membership does not imply identical business models. Pledge data remains
+  unavailable because this reader does not cover it.
+
+`ownership-snapshot.js` draws 1080×1350 portrait and 1080×1080 square PNGs locally,
+with preview before download or native image sharing. It uses no screenshot CDN,
+external institution logos or third-party rendering service. Browser sharing and
+clipboard failures have download/manual-copy fallbacks. The compact snapshot link
+is `ownership-share.html#...`: it carries the displayed public figures, dates and
+source links in its fragment, so it continues to show the **same** figures after
+later filings arrive. It requires no backend persistence. It is a shared copy,
+not signed/independently verified data; the page states this and links the NSE
+filing. Input lengths, numeric bounds and source hosts are validated on reading.
+These long links do not provide dynamic Open Graph previews; share the PNG for a
+visual WhatsApp/social post. No message is sent until the user chooses to share.
+
+Validation: `pytest backend/tests/test_shareholding_filings.py
+backend/tests/test_ownership_insights.py` and
+`node frontend/tests/stock-ownership-browser.cjs` (Playwright). The browser test
+covers lazy loading, missing peers, shared period alignment, investor detail,
+PNG dimensions, snapshot round-trip and responsive light/dark layouts.
