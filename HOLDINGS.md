@@ -82,6 +82,24 @@ named private individual owns**. So:
   is how the table grows from what companies actually filed rather than from
   guessed spellings.
 
+Both of those have already earned their place. `verify()` found that the
+trustee wording inside a trust's name varies between companies, and that the
+table carried **"Ashish Dhawan Kacholia"** — a name that exists nowhere, made
+by running two real and unrelated investors together. It matched nothing, so it
+was harmless; the same mistake with a name that *does* appear in a filing would
+credit one man with the other's holdings. A test now asserts structurally that
+no alias contains another tracked investor's full name.
+
+Two entries were removed for the same reason in advance of any error: an
+invented middle name, and names common enough that an exact match is as likely
+to be somebody else as the right person. A tracked name that might attribute a
+stranger's stake is worse than no entry at all.
+
+An asset manager's own name is never an alias either — "Abakkus Mutual Fund" is
+the AMC, and its schemes belong to the fund-house side. Folding them into one
+man's personal holdings would credit him with every rupee the house manages.
+That is also asserted by a test.
+
 ### Rolled up, but never silently
 
 `relation` records what each association is, and the total is always shown

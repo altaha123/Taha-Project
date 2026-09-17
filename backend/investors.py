@@ -120,6 +120,7 @@ INVESTORS = [
                  "family entities.",
         "entities": [
             {"alias": "Radhakishan Shivkishan Damani", "relation": "self"},
+            {"alias": "Radhakishan S Damani", "relation": "self"},
             {"alias": "Radhakishan Damani", "relation": "self"},
             {"alias": "Gopikishan Shivkishan Damani", "relation": "family"},
             {"alias": "Derive Trading And Resorts Private Limited", "relation": "entity"},
@@ -134,7 +135,6 @@ INVESTORS = [
         "about": "Small-cap investor; also invests through Bengal Finance & "
                  "Investment.",
         "entities": [
-            {"alias": "Ashish Dhawan Kacholia", "relation": "self"},
             {"alias": "Ashish Kacholia", "relation": "self"},
             {"alias": "Bengal Finance And Investment Private Limited", "relation": "entity"},
         ],
@@ -174,6 +174,7 @@ INVESTORS = [
             {"alias": "Abakkus Growth Fund 1", "relation": "entity"},
             {"alias": "Abakkus Growth Fund 2", "relation": "entity"},
             {"alias": "Abakkus Emerging Opportunities Fund 1", "relation": "entity"},
+            {"alias": "Abakkus Four2Eight Opportunities Fund", "relation": "entity"},
             {"alias": "Abakkus Diversified Alpha Fund", "relation": "entity"},
         ],
     },
@@ -240,16 +241,6 @@ INVESTORS = [
         "about": "Known for concentrated, very long-held positions.",
         "entities": [
             {"alias": "Bhavook Tripathi", "relation": "self"},
-        ],
-    },
-    {
-        "id": "hitesh-doshi",
-        "name": "Hitesh Ramji Doshi",
-        "kind": "individual",
-        "about": "Mumbai investor.",
-        "entities": [
-            {"alias": "Hitesh Ramji Doshi", "relation": "self"},
-            {"alias": "Hitesh Doshi", "relation": "self"},
         ],
     },
     {
@@ -320,15 +311,6 @@ INVESTORS = [
         ],
     },
     {
-        "id": "ashok-kumar-jain",
-        "name": "Ashok Kumar Jain",
-        "kind": "individual",
-        "about": "Appears in several small-cap registers.",
-        "entities": [
-            {"alias": "Ashok Kumar Jain", "relation": "self"},
-        ],
-    },
-    {
         "id": "girish-gulati",
         "name": "Girish Gulati",
         "kind": "individual",
@@ -356,6 +338,16 @@ INVESTORS = [
         "entities": [
             {"alias": "Hemendra Mafatlal Kothari", "relation": "self"},
             {"alias": "Hemendra Kothari", "relation": "self"},
+        ],
+    },
+    {
+        "id": "authum",
+        "name": "Authum Investment & Infrastructure",
+        "kind": "fund",
+        "about": "Listed investment company with large concentrated stakes in "
+                 "small caps.",
+        "entities": [
+            {"alias": "Authum Investment And Infrastructure Limited", "relation": "self"},
         ],
     },
     {
