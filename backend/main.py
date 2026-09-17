@@ -2554,7 +2554,7 @@ def admin_funds_ingest(key: str = "", limit: int = 4, amc: str = "",
     workbook directly, for an AMC whose download list is built in JavaScript
     and cannot be discovered from the HTML.
     """
-    _require_admin(key)
+    _require_admin(x_admin_key or key)
     if fund_portfolios is None:
         raise HTTPException(503, "The fund portfolio reader is not available.")
     try:
