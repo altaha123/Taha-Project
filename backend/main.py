@@ -97,6 +97,12 @@ try:
 except Exception:
     holdings_crawl = None
 try:
+    # The background sweep, so filling the ledger is a button rather than a
+    # request nobody can hold open for an hour.
+    import holdings_job
+except Exception:
+    holdings_job = None
+try:
     # Fund-house holdings, from the monthly portfolio disclosures. A separate
     # pipeline from the shareholding filings: monthly rather than quarterly,
     # complete rather than truncated at 1%, and joined to a company by ISIN
@@ -2294,6 +2300,51 @@ def admin_holdings_repair(key: str = "",
                       "note": ("Rows filed under a non-quarter date have been "
                                "removed." if removed else
                                "Nothing to repair.")})
+
+
+@app.post("/admin/holdings/start")
+def admin_holdings_start(key: str = "", quarters: int = 2,
+                         x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    Start the sweep in the background and return at once.
+
+    Filling the ledger is two thousand documents and well over an hour — far
+    longer than any proxy between a browser and this instance will hold a
+    request open, and longer than anybody can be expected to leave a tab open
+    on a phone. So the work happens in a thread here and the page polls it.
+    One at a time: a second sweep would double the request rate at NSE and the
+    memory on a 512 MB box, and neither would finish sooner.
+    """
+    _require_admin(x_admin_key or key)
+    if holdings_job is None:
+        raise HTTPException(503, "The holdings crawler is not available.")
+    return to_native(holdings_job.start(quarters=max(1, min(int(quarters), 8))))
+
+
+@app.post("/admin/holdings/stop")
+def admin_holdings_stop(key: str = "",
+                        x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Ask a running sweep to finish its current slice and stop."""
+    _require_admin(x_admin_key or key)
+    if holdings_job is None:
+        raise HTTPException(503, "The holdings crawler is not available.")
+    return to_native(holdings_job.stop())
+
+
+@app.get("/admin/holdings/progress")
+def admin_holdings_progress(key: str = "",
+                            x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    How the sweep is getting on.
+
+    Behind the admin key like the controls it reports on, even though the
+    coverage it duplicates is public: it also carries whether a job failed and
+    why, which is operational detail rather than a caveat a reader needs.
+    """
+    _require_admin(x_admin_key or key)
+    if holdings_job is None:
+        raise HTTPException(503, "The holdings crawler is not available.")
+    return to_native(holdings_job.state())
 
 
 @app.get("/investors/coverage")

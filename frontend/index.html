@@ -1720,6 +1720,11 @@
       <p><b>A company leaving the list is not necessarily a sale.</b> It has fallen below the 1% disclosure threshold or been sold, and the filing does not say which. This page does not guess.</p>
     </details>
     <div id="investors-body"></div>
+    <!-- Starts the sweep that fills the ledger these pages are built from.
+         Visible to anyone and useless without the admin key the API checks. -->
+    <details class="lg-wrap"><summary>Fill the ledger (admin)</summary>
+      <div id="ledger-admin" class="lg-panel"></div>
+    </details>
   </div><!-- /view-investors -->
 
   <!-- Fund house portfolios, from the monthly disclosures SEBI requires. -->
@@ -1736,6 +1741,9 @@
       <p><b>Listed equity only.</b> A pack also contains debt, government securities and trust units. Those are read but not shown, and anything whose ISIN is not in NSE&rsquo;s equity list &mdash; another fund&rsquo;s units, an unlisted or BSE-only holding &mdash; is listed separately rather than dropped, so the weights reconcile.</p>
     </details>
     <div id="funds-body"></div>
+    <details class="lg-wrap"><summary>Fill the ledger (admin)</summary>
+      <div id="ledger-admin-funds" class="lg-panel"></div>
+    </details>
   </div><!-- /view-funds -->
 
   <div id="view-special" style="display:none">
@@ -4174,6 +4182,7 @@ if(fcSymParam){
 <script src="concalls.js" defer></script>
 <script src="investors.js" defer></script>
 <script src="funds.js" defer></script>
+<script src="ledger-admin.js" defer></script>
 <script src="experience.js" defer></script>
 <script src="home-motion.js" defer></script>
 <script>
