@@ -60,6 +60,11 @@ SESSION_TTL_DAYS = 90
 # the person who owns the address from being mailed repeatedly by a stranger,
 # not just the sender's reputation.
 MAX_LINKS_PER_EMAIL_PER_HOUR = 5
+
+# A six-digit code is one of 900,000, which a script gets through in minutes if
+# it is allowed to keep guessing. The expiry is not the protection — this is.
+# Five wrong tries and the code is spent, exactly as if it had been used.
+MAX_CODE_ATTEMPTS = 5
 MAX_HOLDINGS = 100
 # The watchlist the UI already enforces on this browser. Same number here
 # so a list that was legal offline does not get truncated on sign-in.
@@ -104,7 +109,12 @@ CREATE TABLE IF NOT EXISTS login_tokens (
   email      TEXT NOT NULL,
   created_at TEXT NOT NULL,
   expires_at TEXT NOT NULL,
-  used_at    TEXT
+  used_at    TEXT,
+  -- The same sign-in, offered two ways. The link carries token_hash; the code
+  -- typed into the page carries this. One row, so spending either spends both
+  -- and a mail scanner following the link cannot leave a live code behind.
+  code_hash  TEXT,
+  attempts   INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_login_email ON login_tokens(email, created_at);
 CREATE TABLE IF NOT EXISTS sessions (
@@ -152,6 +162,20 @@ CREATE TABLE IF NOT EXISTS send_log (
 """
 
 
+def _ensure_column(conn, table: str, column: str, decl: str) -> None:
+    """Add a column to a table that already exists.
+
+    CREATE TABLE IF NOT EXISTS is a no-op against a live table, so a new column
+    in SCHEMA above reaches a fresh database and never an existing one. The
+    accounts database on the disk has real users in it; without this, every
+    statement naming the new column fails there and only there — which is the
+    kind of bug that passes every test and breaks only production.
+    """
+    have = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+    if column not in have:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+
+
 def _open(path):
     conn = sqlite3.connect(path, timeout=30.0)
     conn.row_factory = sqlite3.Row
@@ -162,6 +186,9 @@ def _open(path):
     conn.execute("PRAGMA temp_store=MEMORY")
     conn.execute("PRAGMA mmap_size=0")
     conn.executescript(SCHEMA)
+    with conn:
+        _ensure_column(conn, "login_tokens", "code_hash", "TEXT")
+        _ensure_column(conn, "login_tokens", "attempts", "INTEGER NOT NULL DEFAULT 0")
     return conn
 
 
@@ -193,11 +220,18 @@ def reset_for_tests(path: str):                               # pragma: no cover
 # ---------------------------------------------------------------------------
 
 def start_login(email: str) -> dict:
-    """Mint a login link. Returns {"token", "email"} or {"error"}.
+    """Mint a sign-in. Returns {"token", "code", "email"} or {"error"}.
 
     The token is returned rather than emailed here: sending is the mailer's
     job, and keeping them apart means this whole flow is testable without a
     mail provider and works the same whichever provider is configured.
+
+    TWO WAYS INTO ONE ROW
+    The link exists because it is one click. The code exists because the link
+    lands in whichever browser opens the mail — which on a phone is the mail
+    app's own, not the one the reader uses the site in, so they sign in and
+    find themselves signed out where it matters. The code is typed into the
+    page that is already open, so it cannot go to the wrong browser.
     """
     addr = valid_email(email)
     if not addr:
@@ -213,14 +247,17 @@ def start_login(email: str) -> dict:
                          "Check your inbox, including spam."}
 
     token = secrets.token_urlsafe(32)
+    # 100000-999999: uniform, and never a leading zero to be lost on the way
+    # from an inbox to a keyboard.
+    code = str(secrets.randbelow(900000) + 100000)
     now = _now()
     with conn:
         conn.execute(
-            "INSERT INTO login_tokens(token_hash,email,created_at,expires_at) "
-            "VALUES(?,?,?,?)",
+            "INSERT INTO login_tokens(token_hash,email,created_at,expires_at,code_hash) "
+            "VALUES(?,?,?,?,?)",
             (_hash(token), addr, _iso(now),
-             _iso(now + dt.timedelta(minutes=LOGIN_TTL_MINUTES))))
-    return {"token": token, "email": addr}
+             _iso(now + dt.timedelta(minutes=LOGIN_TTL_MINUTES)), _hash(code)))
+    return {"token": token, "code": code, "email": addr}
 
 
 def cancel_login(token: str) -> None:
@@ -258,26 +295,110 @@ def complete_login(token: str) -> dict:
             (_iso(now), _hash(token), _iso(now)))
         if claimed.rowcount != 1:
             return {"error": "This login link has expired or already been used. Ask for a new one."}
-        user = conn.execute("SELECT * FROM users WHERE email=?",
-                            (row["email"],)).fetchone()
-        if user is None:
-            conn.execute(
-                "INSERT INTO users(email,created_at,last_login_at,unsub_token) "
-                "VALUES(?,?,?,?)",
-                (row["email"], _iso(now), _iso(now), secrets.token_urlsafe(24)))
-            user = conn.execute("SELECT * FROM users WHERE email=?",
-                                (row["email"],)).fetchone()
-        else:
-            conn.execute("UPDATE users SET last_login_at=? WHERE id=?",
-                         (_iso(now), user["id"]))
+        session, user = _issue_session(conn, row["email"], now)
 
-        session = secrets.token_urlsafe(32)
+    return {"session": session, "user": _user_dict(user)}
+
+
+def _issue_session(conn, email: str, now) -> tuple:
+    """The account, and a session for it. Caller owns the transaction.
+
+    Three ways in reach this — a link, a typed code, a provider that vouched
+    for the address — and all three mean the same thing once they succeed:
+    this reader owns this address. What follows must not differ between them,
+    so it is written once.
+    """
+    user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+    if user is None:
         conn.execute(
-            "INSERT INTO sessions(token_hash,user_id,created_at,expires_at,last_seen) "
-            "VALUES(?,?,?,?,?)",
-            (_hash(session), user["id"], _iso(now),
-             _iso(now + dt.timedelta(days=SESSION_TTL_DAYS)), _iso(now)))
+            "INSERT INTO users(email,created_at,last_login_at,unsub_token) "
+            "VALUES(?,?,?,?)",
+            (email, _iso(now), _iso(now), secrets.token_urlsafe(24)))
+        user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+    else:
+        conn.execute("UPDATE users SET last_login_at=? WHERE id=?",
+                     (_iso(now), user["id"]))
 
+    session = secrets.token_urlsafe(32)
+    conn.execute(
+        "INSERT INTO sessions(token_hash,user_id,created_at,expires_at,last_seen) "
+        "VALUES(?,?,?,?,?)",
+        (_hash(session), user["id"], _iso(now),
+         _iso(now + dt.timedelta(days=SESSION_TTL_DAYS)), _iso(now)))
+    return session, user
+
+
+def complete_login_code(email: str, code: str) -> dict:
+    """Spend a typed code. Returns {"session", "user"} or {"error"}.
+
+    Same row as the link, so whichever arrives first spends both.
+    """
+    addr = valid_email(email)
+    digits = re.sub(r"\D", "", str(code or ""))
+    if not addr or len(digits) != 6:
+        return {"error": "Enter the six-digit code from your email."}
+
+    conn = _connect()
+    now = _now()
+    row = conn.execute(
+        "SELECT * FROM login_tokens WHERE email=? AND used_at IS NULL "
+        "AND expires_at>? AND code_hash IS NOT NULL "
+        "ORDER BY created_at DESC LIMIT 1",
+        (addr, _iso(now))).fetchone()
+    if row is None:
+        return {"error": "That code has expired or was already used. Ask for a new one."}
+    if row["attempts"] >= MAX_CODE_ATTEMPTS:
+        with conn:
+            conn.execute("UPDATE login_tokens SET used_at=? WHERE token_hash=?",
+                         (_iso(now), row["token_hash"]))
+        return {"error": "Too many wrong codes. Ask for a new one."}
+
+    # Count the attempt before judging it. A process that dies between the two
+    # must not hand the next caller a free guess.
+    with conn:
+        conn.execute("UPDATE login_tokens SET attempts=attempts+1 WHERE token_hash=?",
+                     (row["token_hash"],))
+    used = row["attempts"] + 1
+
+    if not secrets.compare_digest(str(row["code_hash"] or ""), _hash(digits)):
+        left = MAX_CODE_ATTEMPTS - used
+        if left <= 0:
+            with conn:
+                conn.execute("UPDATE login_tokens SET used_at=? WHERE token_hash=?",
+                             (_iso(now), row["token_hash"]))
+            return {"error": "Too many wrong codes. Ask for a new one."}
+        return {"error": "That code is not right. %d %s left."
+                         % (left, "try" if left == 1 else "tries")}
+
+    with conn:
+        claimed = conn.execute(
+            "UPDATE login_tokens SET used_at=? WHERE token_hash=? "
+            "AND used_at IS NULL AND expires_at>?",
+            (_iso(now), row["token_hash"], _iso(now)))
+        if claimed.rowcount != 1:
+            return {"error": "That code has already been used. Ask for a new one."}
+        session, user = _issue_session(conn, addr, now)
+
+    return {"session": session, "user": _user_dict(user)}
+
+
+def complete_oauth_login(email: str) -> dict:
+    """A session for an address a provider has just proved the reader owns.
+
+    No token to spend: there was never one. The caller has already verified the
+    provider's assertion, and this decides only that such an assertion is worth
+    the same as a clicked link — which, for an address Google reports as
+    verified, it is. The account is keyed on the address either way, so the
+    same person signing in by code one day and by Google the next lands on one
+    account rather than two.
+    """
+    addr = valid_email(email)
+    if not addr:
+        return {"error": "That sign-in did not return a usable email address."}
+    conn = _connect()
+    now = _now()
+    with conn:
+        session, user = _issue_session(conn, addr, now)
     return {"session": session, "user": _user_dict(user)}
 
 

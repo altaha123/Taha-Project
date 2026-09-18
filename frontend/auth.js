@@ -119,25 +119,63 @@
     });
   }
 
-  function verify(token) {
-    // Check storage before spending the single-use link.
+  /* Storage is checked before anything single-use is spent. A browser that
+     cannot keep the session would otherwise consume the link or the code and
+     leave the reader signed out with nothing left to try. */
+  function storageReady() {
     try {
       localStorage.setItem(KEY + '-check', '1');
       localStorage.removeItem(KEY + '-check');
-    } catch (e) {
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function adopt(d, whatToAskFor) {
+    if (!d || !d.token || !d.user || !d.user.email) {
+      throw new Error('The server returned an incomplete sign-in. Please request a new ' +
+                      (whatToAskFor || 'link') + '.');
+    }
+    writeToken(d.token);
+    cached = d.user;
+    announce();
+    return d.user;
+  }
+
+  function post(path, body, whatToAskFor) {
+    if (!storageReady()) {
       return Promise.reject(new Error('Allow site storage in your browser before signing in.'));
     }
-    return request('/auth/verify', {
+    return request(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: token })
-    }).then(function (d) {
-      if (!d.token || !d.user || !d.user.email) throw new Error('The server returned an incomplete sign-in. Please request a new link.');
-      writeToken(d.token);
-      cached = d.user;
-      announce();
-      return d.user;
-    });
+      body: JSON.stringify(body)
+    }).then(function (d) { return adopt(d, whatToAskFor); });
+  }
+
+  function verify(token) {
+    return post('/auth/verify', { token: token }, 'link');
+  }
+
+  /* The code, not the link. A link is opened by whichever browser the mail app
+     hands it to; a code is typed into the page already open in this one. */
+  function verifyCode(email, code) {
+    return post('/auth/verify-code', {
+      email: String(email || '').trim(),
+      code: String(code || '').replace(/\D/g, '')
+    }, 'code');
+  }
+
+  /* Google hands the page a signed assertion; the server decides whether to
+     believe it. Nothing here is trusted on this side of the wire. */
+  function google(credential) {
+    return post('/auth/google', { credential: String(credential || '') }, 'sign-in');
+  }
+
+  /* Which methods this deployment actually has. A Google button that cannot
+     work is worse than no Google button. */
+  function config() {
+    return request('/auth/config', { method: 'GET' })
+      .catch(function () { return { google_client_id: '', email: true }; });
   }
 
   function signOut() {
@@ -157,6 +195,9 @@
     refresh: refresh,
     requestLink: requestLink,
     verify: verify,
+    verifyCode: verifyCode,
+    google: google,
+    config: config,
     signOut: signOut
   };
 
