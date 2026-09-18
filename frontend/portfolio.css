@@ -509,3 +509,93 @@ html[data-theme="dark"] .pfnews { background: var(--surface-2); }
   .pfl-head span:nth-child(3), .pfl-row span:nth-child(3),
   .pfl-head span:nth-child(5), .pfl-row span:nth-child(5) { display: none; }
 }
+
+/* Portfolio workspace: scoped above legacy global button/input rules. */
+#view-portfolio{
+  --pf-editor-muted:#686052;
+  scroll-margin-top:calc(var(--sh-chrome-h,132px) + 20px);
+}
+html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:#B5AD9C }
+#view-portfolio .tabhead{ margin-bottom:24px }
+#view-portfolio .tabhead h2{ font-size:clamp(28px,4vw,42px); margin-bottom:10px }
+#view-portfolio .tabhead p{ max-width:64ch; line-height:1.65 }
+#view-portfolio > .psec{ padding:24px; border:1px solid var(--rule); border-radius:18px; background:var(--skin-card) }
+#view-portfolio .lh{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:22px }
+#view-portfolio #pf_count{ color:var(--pf-editor-muted); font:400 12px/1.5 Inter,system-ui,sans-serif }
+#view-portfolio .pf-workspace{ margin-bottom:24px }
+#view-portfolio .pf-savebar{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 12px; padding-bottom:20px; border-bottom:1px solid var(--rule) }
+#view-portfolio .pf-savebar > label{ grid-column:1/-1; font-size:12px; font-weight:600; color:var(--pf-editor-muted) }
+#view-portfolio .pf-entrybar{ display:flex; flex-wrap:wrap; gap:10px; margin-top:20px }
+#view-portfolio .pfbtn{
+  display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
+  min-height:44px; padding:11px 16px; border:1px solid var(--rule); border-radius:9px;
+  background:var(--paper-2); color:var(--ink); box-shadow:none;
+  font:500 14px/1.4 Inter,system-ui,sans-serif; text-transform:none; letter-spacing:0;
+}
+#view-portfolio .pfbtn:hover:not(:disabled){ background:var(--paper); border-color:var(--gold); transform:none; box-shadow:none }
+#view-portfolio #pf_addrow{ background:var(--ink); color:var(--paper); border-color:var(--ink) }
+#view-portfolio #pf_save, #view-portfolio #pf_go, #view-portfolio #pf_dl{
+  background:var(--gold); color:#17140E; border-color:var(--gold);
+}
+#view-portfolio .pfbtn:disabled{ opacity:.4; cursor:not-allowed; transform:none }
+#view-portfolio .pfbtn.ghost{ background:transparent; border-color:var(--rule); color:var(--pf-editor-muted) }
+#view-portfolio .pfbtn.ghost:hover:not(:disabled){ color:var(--fail); border-color:var(--fail) }
+#view-portfolio .pfsel, #view-portfolio .pfpaste{
+  width:100%; min-width:0; box-sizing:border-box; min-height:46px; padding:12px;
+  border:1px solid var(--rule); border-radius:9px; background:var(--paper);
+  color:var(--ink); font:400 16px/1.4 Inter,system-ui,sans-serif; text-transform:none; letter-spacing:0;
+}
+#view-portfolio .pf-import-options, #view-portfolio .pf-manage{ margin-top:18px; color:var(--pf-editor-muted); font:400 13px/1.6 Inter,system-ui,sans-serif }
+#view-portfolio .pf-import-options summary, #view-portfolio .pf-manage summary{ cursor:pointer; min-height:44px; padding:10px 0; color:var(--ink-2) }
+#view-portfolio .pf-manage{ border-top:1px solid var(--rule); padding-top:10px }
+#view-portfolio .pfhead{ display:none }
+#view-portfolio .pfrow{
+  display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,.6fr) minmax(0,1fr) minmax(0,1fr) 44px;
+  align-items:end; gap:12px; padding:18px 0; margin:0; border-bottom:1px solid var(--rule);
+}
+#view-portfolio .pf-field{ display:block; min-width:0 }
+#view-portfolio .pf-field > span{ display:block; margin-bottom:8px; color:var(--pf-editor-muted); font:500 12px/1.5 Inter,system-ui,sans-serif }
+#view-portfolio .pf-field small{ font:inherit; font-weight:400 }
+#view-portfolio .pfrow input{
+  display:block; box-sizing:border-box; width:100%; min-width:0; height:46px;
+  padding:11px 12px; border:1px solid var(--rule); border-radius:8px;
+  background:var(--paper); color:var(--ink); font:400 16px/1.4 Inter,system-ui,sans-serif;
+}
+#view-portfolio .pfrow input.bad{ border-color:var(--fail); background:color-mix(in srgb,var(--fail) 6%,var(--paper)) }
+#view-portfolio .pfrow input:focus{ outline:2px solid var(--gold); outline-offset:2px }
+#view-portfolio .pfdel{
+  min-height:44px; width:44px; padding:0; border:1px solid var(--rule);
+  border-radius:8px; background:transparent; color:var(--pf-editor-muted); cursor:pointer;
+}
+#view-portfolio .pfdel:hover{ border-color:var(--fail); color:var(--fail) }
+#view-portfolio .brun{ display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding-top:8px }
+#view-portfolio #pf_go{ min-height:50px; padding:14px 24px; border-radius:10px; font:600 15px/1.4 Inter,system-ui,sans-serif; letter-spacing:0; text-transform:none; box-shadow:none }
+#view-portfolio .pfacct{ border:1px solid var(--rule); border-left:3px solid var(--gold); border-radius:12px; padding:18px; margin:0 0 24px; background:var(--paper-2); overflow-wrap:anywhere }
+#view-portfolio .pfacct b{ font:600 14px/1.5 Inter,system-ui,sans-serif }
+#view-portfolio .pfacct span{ font-size:13px; color:var(--pf-editor-muted) }
+#view-portfolio .pfacct-opt{ min-height:44px; font-size:13px }
+#view-portfolio .pfacct-opt input{ flex-shrink:0 }
+#view-portfolio .pfacct-note:empty{ display:none }
+#view-portfolio :where(button,a,summary,select,textarea):focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
+@media(max-width:780px){
+  #view-portfolio > .psec{ padding:18px 14px }
+  #view-portfolio .pf-savebar{ grid-template-columns:minmax(0,1fr) }
+  #view-portfolio .pf-entrybar > .pfbtn{ flex:1 }
+  #view-portfolio #pf_rows{ display:grid; gap:12px }
+  #view-portfolio .pfrow{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;
+    gap:14px 10px; padding:16px; border:1px solid var(--rule); border-radius:12px;
+    background:var(--paper);
+  }
+  #view-portfolio .pf-field-symbol{ grid-column:1/3; grid-row:1 }
+  #view-portfolio .pfdel{ grid-column:3; grid-row:1 }
+  #view-portfolio .pf-field-qty{ grid-column:1; grid-row:2 }
+  #view-portfolio .pf-field-buy{ grid-column:2/4; grid-row:2 }
+  #view-portfolio .pf-field-date{ grid-column:1/-1; grid-row:3 }
+  #view-portfolio .pfrow input{ background:var(--skin-card) }
+  #view-portfolio #pf_go{ width:100% }
+  #view-portfolio .brun-note{ width:100% }
+}
+@media print{
+  #view-portfolio .pf-workspace, #view-portfolio .pf-manage{ display:none }
+}

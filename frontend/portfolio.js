@@ -438,15 +438,15 @@
     state.rows.forEach(function (r, i) {
       var row = el('div', 'pfrow');
       row.innerHTML =
-        '<input class="pf_sym" placeholder="RELIANCE" spellcheck="false" ' +
+        '<label class="pf-field pf-field-symbol"><span>Stock symbol</span><input class="pf_sym" placeholder="RELIANCE" spellcheck="false" ' +
           'aria-label="Symbol, row ' + (i + 1) + '" value="' + esc(r.symbol) + '">' +
-        '<input class="pf_qty" type="number" min="0" step="any" placeholder="10" ' +
+        '</label><label class="pf-field pf-field-qty"><span>Quantity</span><input inputmode="decimal" class="pf_qty" type="number" min="0" step="any" placeholder="10" ' +
           'aria-label="Quantity, row ' + (i + 1) + '" value="' + esc(r.qty) + '">' +
-        '<input class="pf_buy" type="number" min="0" step="any" placeholder="2400" ' +
+        '</label><label class="pf-field pf-field-buy"><span>Avg. buy price <small>(optional)</small></span><input inputmode="decimal" class="pf_buy" type="number" min="0" step="any" placeholder="2400" ' +
           'aria-label="Average buy price, row ' + (i + 1) + '" value="' + esc(r.buy) + '">' +
-        '<input class="pf_date" type="date" ' +
+        '</label><label class="pf-field pf-field-date"><span>Buy date <small>(optional)</small></span><input class="pf_date" type="date" ' +
           'aria-label="Buy date, row ' + (i + 1) + '" value="' + esc(r.date) + '">' +
-        '<button class="pfdel" type="button" aria-label="Remove row ' + (i + 1) + '">\u2715</button>';
+        '</label><button class="pfdel" type="button" aria-label="Remove row ' + (i + 1) + '">\u2715</button>';
 
       var sym = row.querySelector('.pf_sym');
       var qty = row.querySelector('.pf_qty');
@@ -1551,6 +1551,8 @@
       'TCS,5,3900,2024-08-02\n' +
       'HDFCBANK,15,,\n');
 
+    var upload = $('pf_upload');
+    if (upload) upload.addEventListener('click', function () { $('pf_file').click(); });
     $('pf_save').addEventListener('click', saveCurrent);
     $('pf_delete').addEventListener('click', deleteSaved);
     $('pf_saved').addEventListener('change', function () { loadSaved(this.value); });
