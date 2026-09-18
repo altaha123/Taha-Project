@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   try {
-    for (const width of [390, 1280]) {
+    for (const width of [320, 390, 768, 1280]) {
       const context = await browser.newContext({ viewport: { width, height: 850 } });
       let deliveryFails = true, verifications = 0, codeTries = 0;
       const GOOD_CODE = '472913';
@@ -46,6 +46,12 @@ const assert = require('node:assert/strict');
       await page.goto('https://altaha.test/signin.html');
       await page.waitForFunction(() => !document.getElementById('si-go').disabled);
       assert.match(await page.locator('h1').innerText(), /^Sign in$/);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false,
+        'sign-in must fit the viewport');
+      const emailBox = await page.locator('#si-email').boundingBox();
+      const buttonBox = await page.locator('#si-go').boundingBox();
+      assert.ok(Math.abs(emailBox.width - buttonBox.width) < 1, 'form controls must align');
+      assert.ok(buttonBox.height >= 48, 'primary action must be touch sized');
       await page.locator('#si-email').fill('reader@example.com');
       await page.locator('#si-go').click();
       await page.getByText('Email is unavailable', { exact: true }).waitFor();
