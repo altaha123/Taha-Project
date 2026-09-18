@@ -33,6 +33,16 @@ const server=http.createServer((req,res)=>{
  await page.locator('#pf_rows .pf_sym').first().fill('HDFCBANK');
  await page.locator('#pf_rows .pf_qty').first().fill('10');
  await page.locator('#pf_go').click();
+ await page.locator('#pi-money-map').waitFor();
+ for(const width of [320,390,768,1280]){
+   await page.setViewportSize({width,height:900});
+   assert.ok(await page.locator('#pi-money-map .pi-story-track').count()>0);
+   assert.equal(await page.locator('#pi-sector-comparison').isVisible(),false);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+   await page.locator('.pi-header').scrollIntoViewIfNeeded();
+   await page.screenshot({path:path.join(output,`${width}-simple.png`)});
+ }
+ await page.getByRole('button',{name:'Advanced analysis',exact:true}).click();
  await page.locator('#pi-allocation-chart').waitFor();
  await page.waitForFunction(()=>window.Chart&&Object.keys(Chart.instances).length===7);
  for(const width of [320,390,768,1280]){
@@ -85,8 +95,11 @@ const server=http.createServer((req,res)=>{
  await fallback.locator('#pf_rows .pf_sym').first().fill('HDFCBANK');
  await fallback.locator('#pf_rows .pf_qty').first().fill('10');
  await fallback.locator('#pf_go').click();
+ await fallback.getByRole('button',{name:'Advanced analysis',exact:true}).click();
  await fallback.getByText('Chart unavailable. Open “View chart data” below for the full figures.').first().waitFor();
  assert.equal(await fallback.locator('#pf_report canvas').count(),0);
+ await fallback.getByRole('button',{name:'Simple overview',exact:true}).click();
+ assert.ok(await fallback.locator('#pi-money-map .pi-story-track').count()>0);
  assert.ok(await fallback.locator('#pf_report').getByText('View chart data',{exact:true}).count()>=5);
  // Ignore known unrelated optional shell failures; portfolio errors fail CI.
  const relevant=errors.filter(e=>/portfolio(?:-intelligence)?\.js/.test(e));assert.deepEqual(relevant,[]);

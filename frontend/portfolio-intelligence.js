@@ -3,7 +3,7 @@
 (function (root) {
   'use strict';
   const SNAP_KEY = 'altaha-intelligence-snapshots-v1';
-  const state = { report: null, charts: [], allocation: 'Sector', sort: 'weight', window: '3M', sector: '', generation: 0 };
+  const state = { report: null, charts: [], allocation: 'Sector', sort: 'weight', window: '3M', sector: '', generation: 0, mode: 'simple' };
   const esc = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const finite = x => typeof x === 'number' && Number.isFinite(x);
   const num = (x, dp=1) => finite(x) ? x.toLocaleString('en-IN',{minimumFractionDigits:dp,maximumFractionDigits:dp}) : '—';
@@ -61,13 +61,43 @@
       table(['Altaha v4 factor','Percentile','Source evidence'],(r.altaha_score_v4?.factor_ledger||[]).map(e=>[esc(e.label),num(e.percentile),esc(e.explanation)]))+'</details>'+
       (r.news?.length?'<h4>Recent mapped developments</h4>'+newsCards(r.news,3):'')+'</div></details>';
   }
+  // The first screen uses the same measured report values as the detailed view.
+  // Native HTML bars remain visible when Chart.js or the network is unavailable.
+  function overview(d) {
+    const rows=d.holdings||[], q=d.data_quality||{};
+    const ranked=[...rows].filter(r=>finite(r.weight_pct)).sort((a,b)=>b.weight_pct-a.weight_pct);
+    const pnl=rows.filter(r=>finite(r.pnl)).sort((a,b)=>Math.abs(b.pnl)-Math.abs(a.pnl));
+    const sectors=[...(d.sectors||[])].filter(s=>finite(s.weight_pct)).sort((a,b)=>b.weight_pct-a.weight_pct);
+    const top=ranked[0], sector=sectors[0], cap=d.policy?.max_stock_pct;
+    const bar=(label,value,max,text,i=0)=>'<div class="pi-story-bar"><div><span>'+esc(label)+'</span><b>'+esc(text)+'</b></div><div class="pi-story-track" aria-hidden="true"><i style="width:'+Math.max(0,Math.min(100,Math.abs(value)/max*100))+'%;background:'+palette(i)+'"></i></div></div>';
+    const tips=[];
+    if(!q.valuation_complete) tips.push(['Check missing prices first','Some holdings could not be valued. Amounts and percentages below describe only the priced part of your portfolio.']);
+    if(!finite(q.cost_value_pct)||q.cost_value_pct<100) tips.push(['Add missing purchase prices','Profit or loss is available only for holdings with a known cost. It is not your complete portfolio return.']);
+    if(top && finite(cap) && top.weight_pct>cap) tips.push(['Review your largest holding',top.symbol+' is '+pct(top.weight_pct)+' of your priced money, above your '+pct(cap)+' stock limit. A fall in this stock would have an outsized effect.']);
+    if(sector && sector.sector!=='Unclassified' && finite(d.policy?.max_sector_pct) && sector.weight_pct>d.policy.max_sector_pct) tips.push(['Check your sector balance',sector.sector+' holds '+pct(sector.weight_pct)+' of your priced money, above your '+pct(d.policy.max_sector_pct)+' sector limit. Several stocks can be affected by the same industry news.']);
+    if(q.score_stale || !finite(q.scored_value_pct) || q.scored_value_pct<80) tips.push(['Refresh the research before relying on the score','Scores cover '+pct(q.scored_value_pct)+' of priced money'+(q.score_stale?' and the scan is out of date.':'. Missing scores are unknown, not poor scores.')]);
+    const weak=(d.groups?.weak||[])[0];
+    if(weak) tips.push(['Read the evidence for '+weak.symbol,'This holding appears in the weak-evidence group. Open its stock review to understand the reasons before deciding what to do.']);
+    if(!tips.length) tips.push(['Review the individual stocks next','The checks above did not identify a priority item. Read each holding’s evidence and source dates; this does not mean the portfolio is risk-free.']);
+    const totalNote=q.valuation_complete?'your portfolio':'the priced part of your portfolio';
+    let out=card('pi-story','Your portfolio, in plain English','Start here. Three things to understand before the detail.',
+      '<div class="pi-story-facts"><article><span>01 / Your money</span><h4>'+money(d.total_value)+'</h4><p>'+esc(rows.length+' holdings make up '+totalNote+'.')+'</p></article><article><span>02 / Biggest holding</span><h4>'+esc(top?.symbol||'Not available')+'</h4><p>'+(top?'About ₹'+num(top.weight_pct,0)+' of every ₹100 of priced money is in this stock.':'No holding weights are available yet.')+'</p></article><article><span>03 / Research coverage</span><h4>'+pct(q.scored_value_pct)+'</h4><p>Of priced money has an Altaha score. A score measures research evidence, not the chance of making a profit.</p></article></div>');
+    out+='<div class="pi-grid pi-simple-charts">'+card('pi-money-map','Where is my money?','Sector share of '+totalNote,
+      sectors.length?sectors.map((r,i)=>bar(r.sector,r.weight_pct,100,pct(r.weight_pct),i)).join('')+'<p class="pi-note">Longer bars mean more of your money is exposed to that industry. Unclassified means the sector is unknown.</p>':empty('No positive market values available.'));
+    const biggest=pnl.length?Math.max(1,...pnl.map(r=>Math.abs(r.pnl))):1;
+    out+=card('pi-money-moves','What is driving my gain or loss?','Largest changes in rupees since purchase; holdings with known costs only',pnl.length?pnl.slice(0,6).map(r=>bar(r.symbol,r.pnl,biggest,(r.pnl>=0?'Gain ':'Loss ')+money(Math.abs(r.pnl)),r.pnl<0?4:2)).join('')+'<p class="pi-note">Top '+Math.min(6,pnl.length)+' by absolute gain or loss. These are unsold gains and losses, not today’s movement. Known costs cover '+pct(q.cost_value_pct)+' of priced money.</p>':empty('Add purchase prices to see which holdings made or lost money.'))+'</div>';
+    out+=card('pi-next','What should I look at next?','Review priorities based on your data and selected limits', '<ol class="pi-next-list">'+tips.slice(0,3).map(([title,body])=>'<li><h4>'+esc(title)+'</h4><p>'+esc(body)+'</p></li>').join('')+'</ol><p class="pi-note">Review prompts, not automatic buy or sell instructions. Open Advanced analysis for all checks and assumptions.</p>');
+    return out;
+  }
   function build(d,flat=false) {
     const q=d.data_quality||{}, c=d.concentration||{}, risk=d.risk||{}, health=d.health||{}, rows=d.holdings||[], alloc=allocation(d), comp=sectorComparison(d), factors=d.factor_exposure||[];
-    let html='<div class="pi-root"><header class="pi-header"><div><span class="pi-eyebrow">ALTAHA / PORTFOLIO INTELLIGENCE</span><h2>Your capital. In perspective.</h2><p>Quality, concentration and the developments that matter to your holdings.</p></div><span class="pi-badge">'+esc(health.label||'Awaiting data')+(health.provisional?' · Provisional':'')+'</span></header>';
+    let html='<div class="pi-root pi-mode-'+(flat?'advanced':state.mode)+'"><header class="pi-header"><div><span class="pi-eyebrow">ALTAHA / PORTFOLIO INTELLIGENCE</span><h2>Understand your portfolio.</h2><p>Where your money is. What needs attention. Why it matters.</p></div><span class="pi-badge">'+esc(health.label||'Awaiting data')+(health.provisional?' · Provisional':'')+'</span></header>';
     if(d.stage && !d.stage.startsWith('Complete')) html+='<p class="pi-warning" role="status">'+esc(d.stage)+' · Research enrichment is still running. Values may update.</p>';
     if(d.enrichment_incomplete) html+='<p class="pi-warning">Some enrichment could not finish. Available valuations are retained; review holding notes and retry to refresh.</p>';
     if(d.failed?.length) html+='<div class="pi-warning" role="alert"><b>Partial valuation — '+d.failed.length+' holdings unavailable.</b> Weights use priced capital only. '+d.failed.map(r=>esc(r.symbol)+': '+esc(r.error)).join(' · ')+'</div>';
-    html+='<div class="pi-metrics">'+metric(q.valuation_complete?'Portfolio value':'Priced portfolio value',money(d.total_value),rows.length+' priced holdings')+metric('Unrealised P&L',money(d.total_pnl),pct(d.total_pnl_pct)+' on known cost · '+pct(q.cost_value_pct)+' cost coverage',tone(d.total_pnl))+metric('Altaha Portfolio Score',num(d.weighted_score)+' <em>/ 100</em>','Grade '+esc(d.grade)+' · '+pct(q.scored_value_pct)+' capital scored')+metric('Observed portfolio risk',esc(risk.grade||'Unavailable'),(risk.triggered_count??0)+' disclosed thresholds triggered')+'</div>';
+    if(!flat) html+='<div class="pi-view-switch" role="group" aria-label="Report detail"><button type="button" data-review-mode="simple" aria-pressed="'+(state.mode==='simple')+'">Simple overview</button><button type="button" data-review-mode="advanced" aria-pressed="'+(state.mode==='advanced')+'">Advanced analysis</button></div>';
+    html+=overview(d);
+    html+='<div class="pi-metrics">'+metric(q.valuation_complete?'Portfolio value':'Priced portfolio value',money(d.total_value),rows.length+' priced holdings')+metric('Gain / loss since purchase',money(d.total_pnl),pct(d.total_pnl_pct)+' on known costs · '+pct(q.cost_value_pct)+' cost coverage',tone(d.total_pnl))+metric('Altaha Portfolio Score',num(d.weighted_score)+' <em>/ 100</em>','Grade '+esc(d.grade)+' · '+pct(q.scored_value_pct)+' capital scored')+metric('Risk checks',esc(risk.grade||'Unavailable'),(risk.triggered_count??0)+' disclosed thresholds triggered')+'</div>';
     html+=card('pi-committee','Portfolio Investment Committee Summary','The portfolio in 30 seconds','<p class="pi-committee">'+esc(d.committee_summary)+'</p><div class="pi-confidence"><span>Score confidence <b>'+pct(q.weighted_confidence_pct)+'</b></span><span>Effective holdings <b>'+num(c.effective_n)+'</b></span><span>Top 3 <b>'+pct(c.top3_pct)+'</b></span><span>Score scan <b>'+esc(date(q.score_as_of))+'</b></span></div>');
     if(d.changes?.length) html+=card('pi-changes','What Changed Recently','Compared with '+esc(date(d.previous_review_at))+' · '+esc(d.comparison_note||''),'<ul class="pi-changes">'+d.changes.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>');
     html+='<div class="pi-grid">';
@@ -99,7 +129,7 @@
     html+=card('pi-correlation','Correlation & Hidden Concentration','Do different holdings behave alike?',heat+'<p class="pi-note">'+esc(corr.from||'—')+' to '+esc(corr.to||'—')+'. '+esc(d.history?.method||'')+'</p>');
     html+=card('pi-scenarios','Hypothetical Stress Scenarios','What would an equal decline in an exposed sleeve mean?',table(['Hypothetical shock','Exposure','Arithmetic','Change in value'],(d.scenarios||[]).map(s=>[esc(s.name),pct(s.exposure_pct),esc(s.arithmetic),money(s.impact_inr)]))+'<p class="pi-note">Exposure arithmetic only. Other holdings are assumed unchanged. No estimated beta, forecast, second-order effect, oil, currency or rate sensitivity is implied.</p>');
     html+=card('pi-developments','Latest Portfolio Developments','What changed in the world around your holdings?',newsCards(d.developments?.events)+'<p class="pi-note">Feed cache checked '+esc(date(d.developments?.checked_at))+'. '+esc(d.developments?.method)+'</p>');
-    html+=card('pi-holdings','Holding-level Review','Tap a holding to inspect its evidence, contribution and source dates','<p id="pi-filter-note" class="pi-note"></p>'+(flat?'':'<button class="pi-reset" type="button" id="pi-reset-filter">Show all holdings</button>')+rows.map(r=>holding(r,flat)).join(''));
+    html+=card('pi-holdings','Holding-level Review','Your stocks, one at a time. Tap to see why each holding needs attention.','<p id="pi-filter-note" class="pi-note"></p>'+(flat?'':'<button class="pi-reset" type="button" id="pi-reset-filter">Show all holdings</button>')+rows.map(r=>holding(r,flat)).join(''));
     html+=card('pi-risk-rules','Risk, Diversification & Your Policy','Each threshold is visible and explainable','<div class="pi-confidence"><span>Holdings <b>'+num(c.count,0)+'</b></span><span>Effective <b>'+num(c.effective_n)+'</b></span><span>Top 1 <b>'+pct(c.top1_pct)+'</b></span><span>Top 3 <b>'+pct(c.top3_pct)+'</b></span><span>Top 5 <b>'+pct(c.top5_pct)+'</b></span><span>HHI <b>'+num(c.hhi,4)+'</b></span></div><p class="pi-note">HHI = sum of squared weight fractions; effective holdings = 1 ÷ HHI. These measure weight concentration, not statistical independence.</p>'+table(['Measure','Observed','Threshold','Status / Why it matters'],(risk.rules||[]).map(r=>[esc(r.name),num(r.measured),esc(r.direction)+' '+num(r.limit),'<b>'+(!finite(r.measured)?'Unavailable':r.triggered?'Flagged':'Within threshold')+'</b> · '+esc(r.why)]))+'<p class="pi-note">'+esc(risk.method)+'</p><details class="pi-data"><summary>Policy findings and arithmetic</summary>'+(d.breaches||[]).map(b=>'<p>'+esc(b.text)+'</p>').join('')+'</details>');
     html+=card('pi-quality','Data Quality','Coverage and freshness set the limits of this review','<div class="pi-confidence"><span>Scored capital <b>'+pct(q.scored_value_pct)+'</b></span><span>Sector classified <b>'+pct(q.sector_value_pct)+'</b></span><span>Holdings with costs <b>'+pct(q.cost_holdings_pct)+'</b></span><span>Confidence coverage <b>'+pct(q.confidence_coverage_pct)+'</b></span></div>'+(q.warnings||[]).map(w=>'<p class="pi-warning">'+esc(w)+'</p>').join('')+'<p class="pi-note">Valuation sources: '+esc(q.price_sources?.join(', '))+'. Price dates: '+esc(q.price_dates?.join(', ')||'Unavailable')+'. Score scan: '+esc(date(q.score_as_of))+'. Benchmark weights: '+esc(d.benchmark?.as_of)+'.</p><p class="pi-note">Filings last poll: '+esc(date(d.developments?.source_status?.filings?.last_poll))+'. '+esc(d.developments?.source_status?.filings?.error||'')+' Press cache age: '+num(d.developments?.source_status?.press?.age_seconds,0)+' seconds. '+esc((d.developments?.source_status?.press?.errors||[]).join?.('; ')||d.developments?.source_status?.press?.error||'')+'</p><p class="pi-note">'+esc(d.snapshot_note||'Review history is saved only in this browser. Clearing browser data removes it; it is not synced across devices.')+'</p>');
     return html+'</div>';
@@ -119,7 +149,7 @@
     const style=getComputedStyle(document.documentElement), ink=style.getPropertyValue('--ink').trim()||'#242627', mute=style.getPropertyValue('--mute').trim()||'#69706E';
     const dark=document.documentElement.dataset.theme==='dark';
     function create(id,type,labels,datasets,extra={}) {
-      const canvas=document.getElementById(id);if(!canvas)return;
+      const canvas=document.getElementById(id);if(!canvas || !canvas.getBoundingClientRect().width)return;
       const grid=dark?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)';
       const options={responsive:true,maintainAspectRatio:false,animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:350},color:ink,
         events:['mousemove','mouseout','click','touchstart','touchmove'],
@@ -156,6 +186,7 @@
     state.report=d;state.generation++;const gen=state.generation;destroy();
     const host=document.getElementById('pf_report');if(!host)return;
     host.innerHTML=build(d);host.style.display='block';
+    host.querySelectorAll('[data-review-mode]').forEach(b=>b.addEventListener('click',()=>{state.mode=b.dataset.reviewMode;mount(d);host.querySelector('[data-review-mode="'+state.mode+'"]')?.focus({preventScroll:true});}));
     [['pi-allocation-mode','allocation'],['pi-sector-sort','sort'],['pi-window','window']].forEach(([id,key])=>document.getElementById(id)?.addEventListener('change',e=>{state[key]=e.target.value;const y=window.scrollY;mount(d);window.scrollTo(0,y);}));
     host.querySelectorAll('[data-allocation]').forEach(b=>b.addEventListener('click',()=>filterAllocation(b.dataset.allocation)));
     host.querySelectorAll('[data-focus-symbol]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();focus(b.dataset.focusSymbol);}));
@@ -196,7 +227,7 @@
   }
   function exportHTML(d,css) {
     const box=document.createElement('div');box.innerHTML=build(d,true);
-    box.querySelectorAll('canvas').forEach(canvas=>{const live=document.getElementById(canvas.id);try{if(!live||!live.width)throw Error();const img=document.createElement('img');img.src=live.toDataURL('image/png');img.alt=canvas.getAttribute('aria-label');img.style='max-width:100%;height:auto';canvas.parentElement.replaceWith(img);}catch(e){canvas.parentElement.remove();}});
+    box.querySelectorAll('canvas').forEach(canvas=>{const live=document.getElementById(canvas.id);try{if(!live||!live.width||!live.getBoundingClientRect().width)throw Error();const img=document.createElement('img');img.src=live.toDataURL('image/png');img.alt=canvas.getAttribute('aria-label');img.style='max-width:100%;height:auto';canvas.parentElement.replaceWith(img);}catch(e){canvas.parentElement.remove();}});
     box.querySelectorAll('details').forEach(el=>el.open=true);box.querySelectorAll('button').forEach(el=>{const span=document.createElement('span');span.className=el.className;span.innerHTML=el.innerHTML;el.replaceWith(span);});
     return '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Altaha Portfolio Intelligence</title><style>'+css+'\n.pi-root{max-width:1180px;margin:auto}.pi-grid{display:block}.pi-card{margin-bottom:20px}body{background:#fff;color:#202824;padding:20px}details{break-inside:avoid}</style><body>'+box.innerHTML+'</body></html>';
   }
