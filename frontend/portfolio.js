@@ -1595,18 +1595,24 @@
       method: 'PUT', body: JSON.stringify({ holdings: holdings })
     }).then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (!d) { if (!silent) note('Saved here, but not to your account.', 'warn'); return false; }
+        // "silent" means do not announce a success. It never meant hide a
+        // failure: for two releases a blocked PUT returned false here and the
+        // page went on looking exactly as if the save had worked.
+        if (!d) { say('Saved in this browser, but not to your account. Try again in a moment.', 'warn'); return false; }
         if (window.AltahaTrack) {
           window.AltahaTrack('portfolio_saved',
             { holdings: d.saved, destination: 'account' });
         }
         if (!silent) {
-          note(d.saved + ' holding' + (d.saved === 1 ? '' : 's') +
-               ' saved to your account. The daily email uses this list.', 'good');
+          say(d.saved + ' holding' + (d.saved === 1 ? '' : 's') +
+              ' saved to your account. The daily email uses this list.', 'good');
         }
         paintAccount();
         return true;
-      }).catch(function () { return false; });
+      }).catch(function () {
+        say('Could not reach your account to save that. It is still in this browser.', 'warn');
+        return false;
+      });
   }
 
   /* Pulled once on load, and only into an EMPTY table. Somebody who arrives
@@ -1637,6 +1643,16 @@
      doing, saved, and fell silent again, which looks exactly like a button
      that does nothing. */
   var acctMsg = { text: '', kind: '' };
+
+  function say(msg, kind) {
+    acctMsg = { text: msg || '', kind: kind || '' };
+    var n = $('pf_acctnote');
+    if (n) {
+      n.textContent = acctMsg.text;
+      n.className = 'pfacct-note' + (acctMsg.kind ? ' ' + acctMsg.kind : '');
+    }
+    note(msg, kind);
+  }
 
   function paintAccount() {
     var box = $('pf_account');
@@ -1674,15 +1690,7 @@
         '" id="pf_acctnote" role="status" aria-live="polite">' + esc(acctMsg.text) + '</p>' +
       '</div>';
 
-    function say(msg, kind) {
-      acctMsg = { text: msg || '', kind: kind || '' };
-      var n = $('pf_acctnote');
-      if (n) {
-        n.textContent = acctMsg.text;
-        n.className = 'pfacct-note' + (acctMsg.kind ? ' ' + acctMsg.kind : '');
-      }
-      note(msg, kind);
-    }
+
 
     var opt = $('pf_digest');
     if (opt) opt.addEventListener('change', function () {
@@ -1707,10 +1715,15 @@
       }
       btn.disabled = true;
       say('Sending today\'s email to ' + user.email + '…');
-      serverSave(true).then(function () {
+      serverSave(true).then(function (saved) {
+        // The email reports on what the ACCOUNT holds. Sending after a failed
+        // save would mail a list the account never received, which is a worse
+        // answer than no email: it looks like confirmation.
+        if (!saved) { btn.disabled = false; return null; }
         return window.AltahaAuth.fetch('/me/digest/send-test', { method: 'POST' });
-      }).then(function (r) { return r.json(); })
+      }).then(function (r) { return r ? r.json() : null; })
         .then(function (d) {
+          if (!d) return;                 // serverSave has already said why
           btn.disabled = false;
           if (d && d.sent) say('Sent to ' + user.email + ' — subject: "' + d.subject + '".', 'good');
           else say((d && d.detail) || 'Could not send that right now.', 'warn');
