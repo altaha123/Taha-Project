@@ -293,10 +293,23 @@ import news_routes
 app.include_router(social_routes.router)
 app.include_router(news_routes.router)
 
+# Every method this API actually serves.
+#
+# This read ["GET", "POST"] while /me/portfolio and /me/watchlist were PUT. An
+# Authorization header makes those requests non-simple, so the browser sends a
+# preflight first, the preflight answered "GET, POST", and the browser refused
+# to send the PUT at all. Nothing reached the server, nothing was logged, and
+# the only sign was a save that quietly did not save — for the portfolio and
+# for every watchlist edit alike.
+#
+# test_cors.py derives this from the app's own routing table, so adding a route
+# with a new method fails there rather than in somebody's browser.
+ALLOWED_METHODS = ["GET", "POST", "PUT", "OPTIONS"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET", "POST"],
+    allow_methods=ALLOWED_METHODS,
     allow_headers=["*"],
 )
 

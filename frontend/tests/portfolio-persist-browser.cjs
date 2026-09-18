@@ -33,7 +33,7 @@ const server = http.createServer((req, res) => {
     headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   try {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-    let signedIn = false, accountHoldings = [], sendResult = null;
+    let signedIn = false, accountHoldings = [], sendResult = null, putFails = false;
     const calls = [];
 
     await context.route('**/*', route => {
@@ -48,6 +48,7 @@ const server = http.createServer((req, res) => {
       if (p === '/me/portfolio') {
         calls.push(route.request().method() + ' ' + p);
         if (route.request().method() === 'PUT') {
+          if (putFails) return route.fulfill({ status: 503, json: { detail: 'down' } });
           accountHoldings = (JSON.parse(route.request().postData() || '{}').holdings) || [];
           return route.fulfill({ json: { saved: accountHoldings.length, rejected: [],
                                          holdings: accountHoldings } });
@@ -133,6 +134,19 @@ const server = http.createServer((req, res) => {
       /Your holdings today/.test(document.getElementById('pf_acctnote').textContent));
     assert.match(await page.locator('#pf_acctnote').innerText(), /reader@example\.com/);
     assert.ok(calls.some(c => c === 'POST /me/digest/send-test'));
+
+    // ── 4. A save the account never received is not reported as a save ──────
+    // The PUT was blocked by CORS for two releases and this path returned
+    // false without a word, so the page looked exactly as if it had worked.
+    putFails = true;
+    calls.length = 0;
+    await page.locator('#pf_sendtest').click();
+    await page.waitForFunction(() =>
+      /not to your account|Could not reach your account/.test(
+        document.getElementById('pf_acctnote').textContent));
+    assert.ok(!calls.some(c => c.includes('send-test')),
+      'emailed a portfolio the account never received');
+    assert.equal(await page.locator('#pf_sendtest').isEnabled(), true);
 
     assert.deepEqual(errors, []);
     await context.close();
