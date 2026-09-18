@@ -662,6 +662,12 @@
   .pfacct-opt{display:flex;align-items:center;gap:9px;font-size:14px;
     color:var(--ink);cursor:pointer}
   .pfacct-opt input{width:16px;height:16px;accent-color:var(--ink);cursor:pointer}
+  /* The answer to the button above it. Empty until there is something to say,
+     so it takes no room on a page nobody has pressed anything on yet. */
+  .pfacct-note{font-size:13px;line-height:1.6;margin:10px 0 0;color:var(--ink-2)}
+  .pfacct-note:empty{display:none}
+  .pfacct-note.good{color:#1f5d45}
+  .pfacct-note.warn{color:#8e2f2a}
   .pfhead{display:grid;grid-template-columns:1.4fr .7fr 1fr 36px;gap:10px;
     font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
     color:var(--mute);padding:0 2px 8px;border-bottom:1px solid var(--ink)}
@@ -1520,7 +1526,7 @@
   <div id="view-portfolio" style="display:none" data-private>
     <header class="tabhead">
       <h2>Portfolio review</h2>
-      <p>Your holdings against their scores, sectors and exposures. Saved in this browser — <a href="signin.html">sign in</a> to keep them on your account.</p>
+      <p id="pf_lede">Your holdings against their scores, sectors and exposures. Saved in this browser — <a href="signin.html">sign in</a> to keep them on your account.</p>
     </header>
 
     <div id="pf_account"></div>
