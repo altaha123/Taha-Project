@@ -28,6 +28,13 @@
   var API = (typeof API_BASE !== 'undefined' && API_BASE) || '';
   var MAX_ROWS = 50;
   var STORE_KEY = 'altaha-portfolios';
+  /* What is on the screen right now, saved as it is typed.
+     STORE_KEY holds portfolios somebody deliberately named and saved. This
+     holds the one they are working on, which until now lived only in memory:
+     upload a broker file, reload the page, and twenty-one holdings were gone
+     with nothing saying so. A list you can see is a list you expect to still
+     be there. */
+  var DRAFT_KEY = 'altaha-portfolio-draft-v1';
   var POLICY_KEY = 'altaha-policy';
 
   function $(id) { return document.getElementById(id); }
@@ -398,10 +405,35 @@
     renderRows();
   }
 
+  function saveDraft() {
+    var rows = state.rows.filter(function (r) { return r.symbol; });
+    try {
+      if (rows.length) localStorage.setItem(DRAFT_KEY, JSON.stringify({ rows: rows }));
+      else localStorage.removeItem(DRAFT_KEY);
+    } catch (e) { /* a full or blocked store is not worth an error here */ }
+  }
+
+  function readDraft() {
+    try {
+      var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      if (!d || !Array.isArray(d.rows)) return [];
+      return d.rows.filter(function (r) { return r && r.symbol; }).slice(0, MAX_ROWS);
+    } catch (e) { return []; }
+  }
+
+  var draftWired = false;
+
   function renderRows() {
     var host = $('pf_rows');
     if (!host) return;
     host.innerHTML = '';
+    if (!draftWired) {
+      // One delegated listener rather than one per input per render: the row's
+      // own handler has already written to the model by the time this fires.
+      host.addEventListener('input', saveDraft);
+      host.addEventListener('change', saveDraft);
+      draftWired = true;
+    }
 
     state.rows.forEach(function (r, i) {
       var row = el('div', 'pfrow');
@@ -448,6 +480,7 @@
       }).length;
       count.textContent = filled + ' of ' + state.rows.length + ' rows ready';
     }
+    saveDraft();
   }
 
   /* Inline validation, live. The old module validated only on submit and had
@@ -1477,8 +1510,13 @@
   function init() {
     if (!$('pf_rows')) return;
 
-    // Start with one empty row, not three pre-filled samples. Sample rows
-    // made users unsure whether to edit or replace them.
+    // Whatever was on the screen last time comes back. Start with one empty
+    // row, not three pre-filled samples: sample rows made users unsure whether
+    // to edit or replace them.
+    if (!state.rows.length) {
+      var draft = readDraft();
+      if (draft.length) state.rows = draft;
+    }
     if (!state.rows.length) addRow();
 
     $('pf_addrow').addEventListener('click', function () { addRow(); });
@@ -1519,6 +1557,7 @@
     $('pf_clear').addEventListener('click', function () {
       if (!confirm('Clear all rows?')) return;
       state.rows = []; state.activeName = null;
+      try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
       addRow(); refreshSaved(); clearNote();
       var rep = $('pf_report'); if (rep) rep.style.display = 'none';
     });
@@ -1592,10 +1631,30 @@
       }).catch(function () {});
   }
 
+  /* The last thing this panel said, kept outside the markup it is rendered
+     into. serverSave() repaints the panel on success, which threw away the
+     message the button had just written — so the button announced what it was
+     doing, saved, and fell silent again, which looks exactly like a button
+     that does nothing. */
+  var acctMsg = { text: '', kind: '' };
+
   function paintAccount() {
     var box = $('pf_account');
     if (!box) return;
     var user = window.AltahaAuth && window.AltahaAuth.user();
+
+    // This line sat above the box reading "Saved in this browser — sign in",
+    // directly on top of a box reading "Signed in as ...". Two sentences
+    // contradicting each other is worse than either being wrong alone.
+    var lede = $('pf_lede');
+    if (lede) {
+      lede.innerHTML = user
+        ? 'Your holdings against their scores, sectors and exposures. ' +
+          'Press <b>Save</b> to keep this list on your account.'
+        : 'Your holdings against their scores, sectors and exposures. Saved in ' +
+          'this browser \u2014 <a href="signin.html">sign in</a> to keep them on your account.';
+    }
+
     if (!user) {
       box.innerHTML = '<div class="pfacct"><b>Keep this portfolio</b>' +
         '<span>Saved to your account instead of this browser, plus one email ' +
@@ -1608,7 +1667,22 @@
       '<label class="pfacct-opt"><input type="checkbox" id="pf_digest"' +
       (user.digest_opt_in ? ' checked' : '') + '> Email me the daily portfolio card</label>' +
       '<button class="pfbtn ghost" type="button" id="pf_sendtest">Send me today\'s email</button>' +
+      // The answer used to be written to the note beside the holdings table,
+      // several screens below this button. Pressing it looked like pressing a
+      // dead button, which is how a working feature gets reported as broken.
+      '<p class="pfacct-note' + (acctMsg.kind ? ' ' + acctMsg.kind : '') +
+        '" id="pf_acctnote" role="status" aria-live="polite">' + esc(acctMsg.text) + '</p>' +
       '</div>';
+
+    function say(msg, kind) {
+      acctMsg = { text: msg || '', kind: kind || '' };
+      var n = $('pf_acctnote');
+      if (n) {
+        n.textContent = acctMsg.text;
+        n.className = 'pfacct-note' + (acctMsg.kind ? ' ' + acctMsg.kind : '');
+      }
+      note(msg, kind);
+    }
 
     var opt = $('pf_digest');
     if (opt) opt.addEventListener('change', function () {
@@ -1617,25 +1691,32 @@
         method: 'POST', body: JSON.stringify({ opt_in: on })
       }).then(function () {
         if (window.AltahaTrack) window.AltahaTrack('digest_opt_in_changed', { opt_in: on });
-        note(on ? 'The daily email is on.' : 'The daily email is off.', 'good');
+        say(on ? 'The daily email is on.' : 'The daily email is off.', 'good');
       }).catch(function () {});
     });
 
     var test = $('pf_sendtest');
     if (test) test.addEventListener('click', function () {
       var btn = this;
+      // The server answers "Save a portfolio first" when the account holds
+      // nothing, which is right and was invisible. Saying it here, before the
+      // request, costs a round trip nobody needed.
+      if (!collect().length) {
+        say('Add at least one holding first — the email reports on what you hold.', 'warn');
+        return;
+      }
       btn.disabled = true;
-      note('Sending today\'s email to ' + user.email + '…');
+      say('Sending today\'s email to ' + user.email + '…');
       serverSave(true).then(function () {
         return window.AltahaAuth.fetch('/me/digest/send-test', { method: 'POST' });
       }).then(function (r) { return r.json(); })
         .then(function (d) {
           btn.disabled = false;
-          if (d && d.sent) note('Sent to ' + user.email + ' — subject: "' + d.subject + '".', 'good');
-          else note((d && d.detail) || 'Could not send that right now.', 'warn');
+          if (d && d.sent) say('Sent to ' + user.email + ' — subject: "' + d.subject + '".', 'good');
+          else say((d && d.detail) || 'Could not send that right now.', 'warn');
         }).catch(function () {
           btn.disabled = false;
-          note('Could not send that right now.', 'warn');
+          say('Could not send that right now.', 'warn');
         });
     });
   }

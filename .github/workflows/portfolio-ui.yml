@@ -145,3 +145,11 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/watchlist-browser.cjs
+      - name: Verify the portfolio list survives a reload
+        # Three silent ones: an uploaded list that lived in memory only, a lede
+        # telling a signed-in reader to sign in, and a button whose answer was
+        # written several screens below it.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/portfolio-persist-browser.cjs
