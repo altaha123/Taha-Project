@@ -117,9 +117,16 @@
              'securityname', 'name', 'ticker', 'nsecode', 'bsecode'],
     qty: ['qty', 'quantity', 'shares', 'holdingqty', 'netqty', 'totalqty',
           'quantityavailable', 'freeqty', 'balance', 'units', 'noofshares'],
+    // "Avg. Buy Rate" is Dhan's, and it matched nothing here: the file
+    // imported, the quantities were right, and the cost basis was silently
+    // dropped — which is the whole profit-and-loss column gone, with no error
+    // anywhere. Matching is a prefix test, so these stay specific enough not
+    // to swallow the "Buy Value" column sitting next to it.
     buy: ['buyprice', 'avgcost', 'averagecost', 'avgprice', 'averageprice',
           'buyavg', 'avgbuyprice', 'averagebuyprice', 'costprice', 'price',
-          'purchaseprice', 'rate', 'avgtradedprice'],
+          'purchaseprice', 'rate', 'avgtradedprice',
+          'avgbuyrate', 'averagebuyrate', 'buyrate', 'avgrate', 'averagerate',
+          'netavgprice', 'avgnetprice', 'avgtradeprice', 'holdingavgprice'],
     date: ['buydate', 'purchasedate', 'date', 'tradedate', 'transactiondate',
            'dateofpurchase']
   };
@@ -189,21 +196,149 @@
     return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
   }
 
+  /* Broker files end with a totals line — Dhan's reads
+     "Investment,1060205.80,Current Value,..." — and a totals line has a
+     number in the quantity column, so it imports as a holding of ten lakh
+     shares of a company called INVESTMENT. Matched whole, never as a prefix,
+     so a real company is never dropped for starting with one of these. */
+  var SUMMARY_ROW = /^(investment|total|grand\s+total|net\s+total|sub\s*total|summary|overall|opening\s+balance|closing\s+balance)$/i;
+
   function rowsFromMap(rows, headerIndex, map) {
     var out = [];
     for (var i = headerIndex + 1; i < rows.length; i++) {
       var cells = rows[i];
-      var sym = cleanSymbol(cells[map.symbol]);
+      var raw = String(cells[map.symbol] === undefined ? '' : cells[map.symbol]).trim();
+      var sym = cleanSymbol(raw);
       var qty = cleanNumber(cells[map.qty]);
-      if (!sym || qty === null || qty <= 0) continue;
+      if (!raw || SUMMARY_ROW.test(raw) || qty === null || qty <= 0) continue;
       out.push({
+        // raw is what the broker wrote. Dhan writes "Himadri Speciality
+        // Chemical"; Zerodha writes HSCL. Which one this is gets decided in
+        // the resolver below, so the parser does not have to guess.
         symbol: sym,
+        raw: raw,
         qty: qty,
         buy: map.buy !== undefined ? cleanNumber(cells[map.buy]) : null,
         date: map.date !== undefined ? cleanDate(cells[map.date]) : null
       });
     }
     return out;
+  }
+
+  /* ── 1b. NAMES INTO SYMBOLS ─────────────────────────────────────────────
+     Half the brokers export a ticker and half export a company name. Dhan
+     exports "Himadri Speciality Chemical"; everything downstream of here —
+     scoring, filings, the daily email — is keyed on HSCL. Stripped of its
+     punctuation that name became HIMADRISPECIALITYCHEMICAL, which matches no
+     stock on any exchange, so a Dhan file imported twenty-one holdings and
+     scored none of them.
+
+     /universe already ships symbol and company name for every NSE equity, and
+     shell.js already caches it for the search box. This reads that same cache
+     rather than fetching a second copy of 2,300 rows into the same browser.
+
+     THE FILE NEVER LEAVES THE BROWSER. A broker statement carries the client
+     code, the mobile number and the email address in its first five lines.
+     Matching happens here, against a list already on this machine, and only
+     the symbols and quantities are ever sent anywhere. */
+
+  var UNI_KEY = 'altaha-universe-v2';        // shared with shell.js, same shape
+  var NAME_NOISE = /\b(limited|ltd|private|pvt|company|co|corporation|corp|inc|plc|the)\b/g;
+
+  function normName(str) {
+    return String(str || '').toLowerCase()
+      .replace(/&/g, ' and ')                // "Transformers & Rectifiers" is
+      .replace(/[^a-z0-9]+/g, ' ')           // "Transformers And Rectifiers"
+      .replace(NAME_NOISE, ' ')              // on the exchange
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function indexUniverse(rows) {
+    var bySymbol = {}, byName = {}, list = [];
+    (rows || []).forEach(function (r) {
+      var sym = String((r && (r.s || r.symbol)) || '').trim().toUpperCase();
+      if (!sym) return;
+      bySymbol[sym] = true;
+      var n = normName(r.n || r.name);
+      if (!n) return;
+      (byName[n] = byName[n] || []).push(sym);
+      list.push({ n: n, s: sym });
+    });
+    return { bySymbol: bySymbol, byName: byName, list: list };
+  }
+
+  /* A symbol if the exchange knows it as one, otherwise a name. Checking the
+     symbol first matters: PRAVEG is both a valid ticker and the whole of that
+     company's name, and the ticker is the answer that cannot be wrong. */
+  function resolveOne(raw, idx) {
+    var sym = cleanSymbol(raw);
+    if (sym && idx.bySymbol[sym]) return { symbol: sym, candidates: [] };
+
+    var key = normName(raw);
+    if (!key) return { symbol: null, candidates: [] };
+
+    var exact = idx.byName[key];
+    if (exact && exact.length === 1) return { symbol: exact[0], candidates: [] };
+    if (exact && exact.length > 1) return { symbol: null, candidates: exact.slice(0, 6) };
+
+    // "Transformers And Rectifiers" against "Transformers And Rectifiers
+    // (India)" — the broker drops the bracketed part, so a unique name
+    // starting with theirs is the answer.
+    var starts = idx.list.filter(function (r) { return r.n.indexOf(key + ' ') === 0; });
+    if (starts.length === 1) return { symbol: starts[0].s, candidates: [] };
+    if (starts.length > 1) {
+      return { symbol: null, candidates: starts.slice(0, 6).map(function (r) { return r.s; }) };
+    }
+
+    // Nothing clean. Offer the closest few rather than a blank refusal.
+    var want = key.split(' ');
+    var scored = [];
+    idx.list.forEach(function (r) {
+      var have = r.n.split(' '), hit = 0;
+      want.forEach(function (w) { if (have.indexOf(w) !== -1) hit++; });
+      if (!hit) return;
+      var score = hit / Math.max(want.length, have.length);
+      if (score >= 0.5) scored.push({ s: r.s, score: score });
+    });
+    scored.sort(function (a, b) { return b.score - a.score; });
+    return { symbol: null, candidates: scored.slice(0, 5).map(function (r) { return r.s; }) };
+  }
+
+  function resolveRows(parsed, idx) {
+    var rows = [], unresolved = [];
+    parsed.forEach(function (p) {
+      var hit = resolveOne(p.raw || p.symbol, idx);
+      if (hit.symbol) {
+        rows.push({ symbol: hit.symbol, raw: p.raw, qty: p.qty, buy: p.buy, date: p.date });
+      } else {
+        unresolved.push({ row: p, candidates: hit.candidates });
+      }
+    });
+    return { rows: rows, unresolved: unresolved };
+  }
+
+  function loadUniverse() {
+    try {
+      var cached = JSON.parse(localStorage.getItem(UNI_KEY) || 'null');
+      if (cached && cached.rows && cached.rows.length &&
+          cached.day === new Date().toISOString().slice(0, 10)) {
+        return Promise.resolve(cached.rows);
+      }
+    } catch (e) {}
+    return fetch(API + '/universe', { signal: AbortSignal.timeout(15000) })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        var rows = (d && d.rows) || [];
+        if (rows.length) {
+          try {
+            localStorage.setItem(UNI_KEY, JSON.stringify({
+              day: new Date().toISOString().slice(0, 10), rows: rows
+            }));
+          } catch (e) {}
+        }
+        return rows;
+      })
+      .catch(function () { return []; });
   }
 
   /* ── 2. STATE ───────────────────────────────────────────────────────────── */
@@ -371,10 +506,24 @@
       openMapper(rows);
       return;
     }
-    applyImport(parsed, sourceLabel, found.map);
+    finishImport(parsed, sourceLabel, found.map);
   }
 
-  function applyImport(parsed, sourceLabel, map) {
+  /* Everything that produces rows comes through here — the recognised path and
+     the hand-mapped one — so a name-based file works the same either way. */
+  function finishImport(parsed, sourceLabel, map) {
+    loadUniverse().then(function (universe) {
+      // No list: the endpoint is down, or this browser is offline. Import what
+      // the file says rather than blocking on a lookup that is an improvement
+      // to the import, not a precondition for it.
+      if (!universe.length) { applyImport(parsed, sourceLabel, map, 0); return; }
+      var out = resolveRows(parsed, indexUniverse(universe));
+      if (out.unresolved.length) openResolver(out, sourceLabel, map);
+      else applyImport(out.rows, sourceLabel, map, 0);
+    });
+  }
+
+  function applyImport(parsed, sourceLabel, map, skipped) {
     var over = parsed.length > MAX_ROWS;
     state.rows = parsed.slice(0, MAX_ROWS).map(function (p) {
       return {
@@ -388,8 +537,9 @@
     var bits = ['Loaded ' + state.rows.length + ' holdings'];
     if (sourceLabel) bits.push('from ' + sourceLabel);
     if (over) bits.push('(first ' + MAX_ROWS + ' of ' + parsed.length + ')');
+    if (skipped) bits.push('\u2014 ' + skipped + ' row' + (skipped === 1 ? '' : 's') + ' skipped');
     if (map && map.buy === undefined) bits.push('\u2014 no cost column found, so profit and loss is unavailable');
-    note(bits.join(' '), 'good');
+    note(bits.join(' '), state.rows.length ? 'good' : 'warn');
   }
 
   /* Column mapper — the fallback that makes any broker's file work. */
@@ -443,8 +593,8 @@
           'No usable rows with that mapping \u2014 check the quantity column holds numbers.';
         return;
       }
-      applyImport(parsed, 'your mapping', map);
       closeMapper();
+      finishImport(parsed, 'your mapping', map);
     });
     $('map_cancel').addEventListener('click', closeMapper);
   }
@@ -453,6 +603,62 @@
     var panel = $('pf_mapper');
     if (panel) { panel.style.display = 'none'; panel.innerHTML = ''; }
     state.pendingCSV = null;
+  }
+
+  /* Name resolver — shown only for the rows the list could not place.
+     A broker file is somebody's actual money, so a wrong guess silently
+     imported is worse than a question asked. The ones that matched are
+     already counted; these are the leftovers. */
+  function openResolver(out, sourceLabel, map) {
+    var panel = $('pf_mapper');
+    if (!panel) { applyImport(out.rows, sourceLabel, map, out.unresolved.length); return; }
+
+    panel.innerHTML =
+      '<div class="pfmap-head">' +
+        esc(out.rows.length + ' holding' + (out.rows.length === 1 ? '' : 's') + ' matched. ') +
+        esc(out.unresolved.length === 1
+            ? 'This one we could not place — pick the right stock, or leave it out.'
+            : 'These ' + out.unresolved.length + ' we could not place — pick the right stock, or leave them out.') +
+      '</div>' +
+      '<div class="pfmap-grid">' +
+        out.unresolved.map(function (u, i) {
+          var label = u.row.raw || u.row.symbol;
+          return '<label><span>' + esc(label) + '</span>' +
+            '<select id="res_' + i + '">' +
+              '<option value="">— leave this one out —</option>' +
+              u.candidates.map(function (sym) {
+                return '<option value="' + esc(sym) + '">' + esc(sym) + '</option>';
+              }).join('') +
+            '</select></label>';
+        }).join('') +
+      '</div>' +
+      '<div class="pfmap-act">' +
+        '<button type="button" class="pfbtn" id="res_go">Add to portfolio</button>' +
+        '<button type="button" class="pfbtn ghost" id="res_skip">Leave them all out</button>' +
+      '</div>';
+
+    panel.style.display = 'block';
+
+    function done(rows, skipped) {
+      panel.style.display = 'none';
+      panel.innerHTML = '';
+      state.pendingCSV = null;
+      applyImport(rows, sourceLabel, map, skipped);
+    }
+
+    $('res_go').addEventListener('click', function () {
+      var rows = out.rows.slice(), skipped = 0;
+      out.unresolved.forEach(function (u, i) {
+        var pick = $('res_' + i);
+        var sym = pick ? pick.value : '';
+        if (!sym) { skipped++; return; }
+        rows.push({ symbol: sym, raw: u.row.raw, qty: u.row.qty, buy: u.row.buy, date: u.row.date });
+      });
+      done(rows, skipped);
+    });
+    $('res_skip').addEventListener('click', function () {
+      done(out.rows, out.unresolved.length);
+    });
   }
 
   /* ── 5. SAVED PORTFOLIOS ────────────────────────────────────────────────── */
@@ -1440,5 +1646,7 @@
     init();
   }
 
-  window.AltahaPortfolio = { parseCSV: parseCSV, findHeader: findHeader, init: init, collect: collect };
+  window.AltahaPortfolio = { parseCSV: parseCSV, findHeader: findHeader, init: init, collect: collect,
+    rowsFromMap: rowsFromMap, normName: normName, indexUniverse: indexUniverse,
+    resolveOne: resolveOne, resolveRows: resolveRows };
 })();
