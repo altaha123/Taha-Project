@@ -258,3 +258,91 @@ def test_simultaneous_verification_creates_only_one_session():
         results = list(pool.map(verify, range(4)))
     assert sum('session' in r for r in results) == 1
     assert A._connect().execute('SELECT COUNT(*) FROM sessions').fetchone()[0] == 1
+
+
+# ── The watchlist ────────────────────────────────────────────────────────────
+#
+# The portfolio is what somebody owns; the watchlist is what they are thinking
+# about. It lived in one browser's localStorage, which meant a cleared browser
+# or a new phone started an empty list — the single easiest way to lose a
+# reader who had already done the work of building one.
+
+def test_a_watchlist_is_saved_and_read_back():
+    me = login()["user"]["id"]
+    A.save_watchlist(me, ["INFY", "reliance", "TCS.NS"])
+    assert A.get_watchlist(me) == ["INFY", "RELIANCE", "TCS"]
+
+
+def test_the_order_a_reader_built_the_list_in_survives():
+    """Alphabetical would quietly reshuffle the list on every addition."""
+    me = login()["user"]["id"]
+    A.save_watchlist(me, ["ZOMATO", "INFY"])
+    A.merge_watchlist(me, ["ADANIENT"])
+    assert A.get_watchlist(me) == ["ZOMATO", "INFY", "ADANIENT"]
+
+
+def test_saving_replaces_so_a_removal_sticks():
+    me = login()["user"]["id"]
+    A.save_watchlist(me, ["INFY", "TCS", "WIPRO"])
+    A.save_watchlist(me, ["INFY", "WIPRO"])
+    assert A.get_watchlist(me) == ["INFY", "WIPRO"]
+
+
+def test_merging_keeps_both_lists_and_the_account_order():
+    """Six names saved signed out meet forty saved on the account. Neither
+    list may be the one that loses."""
+    me = login()["user"]["id"]
+    A.save_watchlist(me, ["INFY", "TCS"])
+    out = A.merge_watchlist(me, ["TCS", "DMART"])
+    assert out["added"] == 1
+    assert A.get_watchlist(me) == ["INFY", "TCS", "DMART"]
+
+
+def test_resaving_an_unchanged_list_does_not_reorder_it():
+    me = login()["user"]["id"]
+    A.save_watchlist(me, ["ZOMATO", "INFY", "TCS"])
+    A.save_watchlist(me, ["ZOMATO", "INFY", "TCS"])
+    assert A.get_watchlist(me) == ["ZOMATO", "INFY", "TCS"]
+
+
+def test_unreadable_symbols_are_named_without_losing_the_good_ones():
+    me = login()["user"]["id"]
+    out = A.save_watchlist(me, ["INFY", "<script>", "", "TCS"])
+    assert out["saved"] == 2
+    assert A.get_watchlist(me) == ["INFY", "TCS"]
+    assert [r["why"] for r in out["rejected"]] == ["unreadable symbol"] * 2
+
+
+def test_a_duplicate_keeps_one_row():
+    me = login()["user"]["id"]
+    assert A.save_watchlist(me, ["INFY", "infy", "INFY.NS"])["saved"] == 1
+    assert A.get_watchlist(me) == ["INFY"]
+
+
+def test_the_watchlist_limit_holds_on_both_paths():
+    me = login()["user"]["id"]
+    assert A.save_watchlist(me, [f"S{i}" for i in range(A.MAX_WATCHLIST + 20)])["saved"] \
+        == A.MAX_WATCHLIST
+    out = A.merge_watchlist(me, ["EXTRA1", "EXTRA2"])
+    assert out["added"] == 0
+    assert len(A.get_watchlist(me)) == A.MAX_WATCHLIST
+
+
+def test_one_persons_watchlist_is_not_anothers():
+    mine = login("a@example.com")["user"]["id"]
+    theirs = login("b@example.com")["user"]["id"]
+    A.save_watchlist(mine, ["INFY"])
+    A.save_watchlist(theirs, ["TCS"])
+    assert A.get_watchlist(mine) == ["INFY"]
+    assert A.get_watchlist(theirs) == ["TCS"]
+
+
+def test_the_watchlist_and_the_portfolio_are_separate_lists():
+    """Following a stock is not owning it, and the daily email must not start
+    reporting on money somebody does not have."""
+    me = login()["user"]["id"]
+    A.save_watchlist(me, ["INFY"])
+    A.save_holdings(me, [{"symbol": "TCS", "qty": 5}])
+    assert A.get_watchlist(me) == ["INFY"]
+    assert [h["symbol"] for h in A.get_holdings(me)] == ["TCS"]
+    assert A.digest_recipients()[0]["id"] == me

@@ -24,7 +24,8 @@ they typed proves they own the address — which is exactly what a product that
 emails you a daily digest needs to establish anyway.
 
 WHAT IS STORED, AND WHAT IS NOT
-An email address, what somebody holds, and when they were last emailed. No
+An email address, what somebody holds, what they are following, and when they
+were last emailed. No
 passwords, ever. Tokens are stored as SHA-256 digests, so a copy of this
 database does not let the holder log in as anybody: a stolen digest cannot be
 turned back into the link that was mailed.
@@ -60,6 +61,9 @@ SESSION_TTL_DAYS = 90
 # not just the sender's reputation.
 MAX_LINKS_PER_EMAIL_PER_HOUR = 5
 MAX_HOLDINGS = 100
+# The watchlist the UI already enforces on this browser. Same number here
+# so a list that was legal offline does not get truncated on sign-in.
+MAX_WATCHLIST = 100
 
 _local = threading.local()
 _state = {"path": DB_PATH, "fell_back": False, "last_error": None}
@@ -119,6 +123,20 @@ CREATE TABLE IF NOT EXISTS holdings (
   updated_at TEXT NOT NULL,
   PRIMARY KEY (user_id, symbol)
 );
+-- The watchlist: what somebody is following, as opposed to what they own.
+-- An explicit position, because the order a reader built the list in is the
+-- order they expect to read it back in, and sorting by a timestamp does not
+-- give it: a whole list saved in one request shares one second, and the
+-- tie-break silently reshuffles it into alphabetical order.
+-- added_at is kept for "following since", not for sorting.
+CREATE TABLE IF NOT EXISTS watchlist (
+  user_id  INTEGER NOT NULL,
+  symbol   TEXT NOT NULL,
+  position INTEGER NOT NULL,
+  added_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, symbol)
+);
+CREATE INDEX IF NOT EXISTS idx_watchlist_user ON watchlist(user_id, position);
 -- What was sent, so a retry after a crash cannot mail the same person the
 -- same day twice. The digest job is not transactional; this table is what
 -- makes it safe to run again.
@@ -364,6 +382,100 @@ def get_holdings(user_id: int) -> list:
 
 
 # ---------------------------------------------------------------------------
+# The watchlist
+#
+# WHY IT IS NOT THE PORTFOLIO
+# Holdings answer "what did my money do today". A watchlist answers "what am I
+# thinking about buying" — which is most of what a screener is for, and the
+# only list most readers will ever build. It lived in localStorage, so it died
+# with a cleared browser and never followed anybody to their phone.
+#
+# WHY MERGE EXISTS ALONGSIDE REPLACE
+# The portfolio replaces, because a merge would resurrect a row somebody
+# deleted. The watchlist needs both. A reader saves six names signed out, then
+# signs in: replacing in either direction throws away a list they built. So
+# sign-in merges once, and every edit after that replaces, which is what makes
+# a removal stick.
+# ---------------------------------------------------------------------------
+
+def _clean_symbols(symbols) -> tuple:
+    """(kept, rejected) — deduped, order preserved, capped."""
+    kept, seen, rejected = [], set(), []
+    for raw in symbols or []:
+        sym = _clean_symbol(raw)
+        if not sym:
+            rejected.append({"symbol": str(raw)[:20], "why": "unreadable symbol"})
+            continue
+        if sym in seen:
+            continue
+        if len(kept) >= MAX_WATCHLIST:
+            rejected.append({"symbol": sym, "why": f"over the {MAX_WATCHLIST}-stock limit"})
+            continue
+        seen.add(sym)
+        kept.append(sym)
+    return kept, rejected
+
+
+def get_watchlist(user_id: int) -> list:
+    conn = _connect()
+    rows = conn.execute(
+        "SELECT symbol FROM watchlist WHERE user_id=? ORDER BY position",
+        (user_id,)).fetchall()
+    return [r["symbol"] for r in rows]
+
+
+def save_watchlist(user_id: int, symbols) -> dict:
+    """Replace the whole list. Returns {"saved", "rejected", "symbols"}.
+
+    A symbol that was already there keeps its original added_at, so re-saving
+    an unchanged list does not reorder it under the reader.
+    """
+    kept, rejected = _clean_symbols(symbols)
+    conn = _connect()
+    previous = {r["symbol"]: r["added_at"] for r in conn.execute(
+        "SELECT symbol,added_at FROM watchlist WHERE user_id=?", (user_id,)).fetchall()}
+    now = _iso(_now())
+    with conn:
+        conn.execute("DELETE FROM watchlist WHERE user_id=?", (user_id,))
+        conn.executemany(
+            "INSERT INTO watchlist(user_id,symbol,position,added_at) VALUES(?,?,?,?)",
+            [(user_id, sym, i, previous.get(sym, now))
+             for i, sym in enumerate(kept)])
+    return {"saved": len(kept), "rejected": rejected,
+            "symbols": get_watchlist(user_id)}
+
+
+def merge_watchlist(user_id: int, symbols) -> dict:
+    """Add these without removing anything. What sign-in calls, once.
+
+    The account's own list comes first: it is the older one, and a reader who
+    saved six names on a borrowed laptop should not see those six jump above
+    the forty they have been following for months.
+    """
+    kept, rejected = _clean_symbols(symbols)
+    existing = set(get_watchlist(user_id))
+    room = MAX_WATCHLIST - len(existing)
+    added, now = [], _now()
+    for sym in kept:
+        if sym in existing:
+            continue
+        if len(added) >= room:
+            rejected.append({"symbol": sym, "why": f"over the {MAX_WATCHLIST}-stock limit"})
+            continue
+        added.append(sym)
+    conn = _connect()
+    with conn:
+        tail = conn.execute(
+            "SELECT COALESCE(MAX(position), -1) AS p FROM watchlist WHERE user_id=?",
+            (user_id,)).fetchone()["p"]
+        conn.executemany(
+            "INSERT OR IGNORE INTO watchlist(user_id,symbol,position,added_at) VALUES(?,?,?,?)",
+            [(user_id, sym, tail + 1 + i, _iso(now)) for i, sym in enumerate(added)])
+    return {"added": len(added), "rejected": rejected,
+            "symbols": get_watchlist(user_id)}
+
+
+# ---------------------------------------------------------------------------
 # The daily send
 # ---------------------------------------------------------------------------
 
@@ -424,6 +536,7 @@ def stats() -> dict:
             "path": _state["path"],
             "users": one("SELECT COUNT(*) FROM users"),
             "with_holdings": one("SELECT COUNT(DISTINCT user_id) FROM holdings"),
+            "with_watchlist": one("SELECT COUNT(DISTINCT user_id) FROM watchlist"),
             "opted_in": one("SELECT COUNT(*) FROM users WHERE digest_opt_in=1"),
             "sessions": one("SELECT COUNT(*) FROM sessions WHERE expires_at>'%s'"
                             % _iso(_now())),

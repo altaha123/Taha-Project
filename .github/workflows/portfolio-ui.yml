@@ -136,3 +136,12 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/signin-browser.cjs
+      - name: Verify the watchlist survives signing in
+        # The three ways a synced list loses somebody's work are all silent:
+        # signing in replaces the list they built with an empty account, a
+        # removal comes back on the next load, or a save the network dropped
+        # is reported as saved. None of them throw.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/watchlist-browser.cjs

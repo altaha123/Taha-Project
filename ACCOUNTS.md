@@ -15,7 +15,10 @@ people leave.
    exactly what a product that emails you every day needs to establish anyway.
 2. **Save a portfolio** — the Save button on the Portfolio tab now writes to
    the account as well as the browser.
-3. **The daily email** — on by default once there is a portfolio, off in one
+3. **Keep a watchlist** — the star on any stock. Signed out it is saved on that
+   browser, as it always was. Signed in it is saved to the account, so it is
+   there on the next device and survives a cleared browser.
+4. **The daily email** — on by default once there is a portfolio, off in one
    click, from a link in every message that needs no login.
 
 ## Switching it on
@@ -81,6 +84,41 @@ The job is keyed on **the market's last session, not the calendar date**, so a
 run on an Indian market holiday finds everybody already marked for that
 session and mails nobody. Same mechanism makes a retry after a crash safe: it
 sends to whoever was missed and to nobody else.
+
+## The watchlist, and why it merges exactly once
+
+The watchlist is the list most readers will ever build — following a stock
+costs nothing, owning one is a decision. It lived in `localStorage`, which
+meant a cleared browser or a new phone started an empty list and threw away
+the only work a reader had done on the site.
+
+It now syncs, with `localStorage` still the thing the screen reads: instant,
+works offline, and all a signed-out reader has. The account is a copy that
+follows behind.
+
+The rule that matters is **merge once, replace after**:
+
+- A reader stars six names signed out, then signs in. Replacing in either
+  direction throws away a list somebody built, so the first sync after signing
+  in **merges** — and the account's own list keeps its order, because it is the
+  older one.
+- Every edit after that **replaces**. A watchlist that merged on every load
+  would push back a stock removed on another device, and a list that refuses to
+  forget is worse than one that forgets everything.
+
+Which account this browser has already merged into is remembered in
+`altaha-watchlist-account-v1`, so the merge happens at the handoff and nowhere
+else.
+
+An edit that could not be sent — the tab was offline, the API was down — sets
+`altaha-watchlist-unsent-v1` and says so on screen rather than showing a filled
+star for something that never left the browser. It is on disk rather than in a
+variable, because the reader closes the tab and comes back, and the account
+copy, which never heard about that edit, would otherwise quietly overwrite it.
+The next load retries it instead of adopting the older copy.
+
+`frontend/tests/watchlist-browser.cjs` drives all three of those in a real
+browser, because every one of them fails silently: the star still turns gold.
 
 ## Design decisions worth knowing
 
