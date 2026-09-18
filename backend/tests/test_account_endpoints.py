@@ -301,3 +301,55 @@ def test_unconfigured_provider_does_not_mint_links(main_mod, fresh, monkeypatch)
         main_mod.auth_request_link({'email': 'reader@example.com'})
     assert error.value.status_code == 503
     assert fresh == []
+
+
+# ── The watchlist ────────────────────────────────────────────────────────────
+
+def test_a_watchlist_needs_a_session(main_mod, fresh):
+    from fastapi import HTTPException
+    for call in (lambda: main_mod.my_watchlist(authorization=None),
+                 lambda: main_mod.save_my_watchlist({"symbols": ["INFY"]}, authorization=None),
+                 lambda: main_mod.merge_my_watchlist({"symbols": ["INFY"]}, authorization=None)):
+        with pytest.raises(HTTPException) as error:
+            call()
+        assert error.value.status_code == 401
+
+
+def test_a_watchlist_saved_on_one_device_is_there_on_the_next(main_mod, fresh):
+    """The whole point: the list is not a property of the browser that made it."""
+    phone = sign_in(main_mod, fresh)
+    main_mod.save_my_watchlist({"symbols": ["INFY", "TCS"]}, authorization=auth(phone))
+    laptop = sign_in(main_mod, fresh)
+    assert main_mod.my_watchlist(authorization=auth(laptop))["symbols"] == ["INFY", "TCS"]
+
+
+def test_signing_in_keeps_the_list_built_before_signing_in(main_mod, fresh):
+    token = sign_in(main_mod, fresh)
+    main_mod.save_my_watchlist({"symbols": ["INFY", "TCS"]}, authorization=auth(token))
+    out = main_mod.merge_my_watchlist({"symbols": ["DMART", "INFY"]}, authorization=auth(token))
+    assert out["symbols"] == ["INFY", "TCS", "DMART"]
+
+
+def test_a_removal_survives_a_reload(main_mod, fresh):
+    token = sign_in(main_mod, fresh)
+    main_mod.save_my_watchlist({"symbols": ["INFY", "TCS"]}, authorization=auth(token))
+    main_mod.save_my_watchlist({"symbols": ["INFY"]}, authorization=auth(token))
+    assert main_mod.my_watchlist(authorization=auth(token))["symbols"] == ["INFY"]
+
+
+def test_a_malformed_payload_is_refused_rather_than_emptying_the_list(main_mod, fresh):
+    from fastapi import HTTPException
+    token = sign_in(main_mod, fresh)
+    main_mod.save_my_watchlist({"symbols": ["INFY"]}, authorization=auth(token))
+    with pytest.raises(HTTPException) as error:
+        main_mod.save_my_watchlist({"symbols": "INFY"}, authorization=auth(token))
+    assert error.value.status_code == 400
+    assert main_mod.my_watchlist(authorization=auth(token))["symbols"] == ["INFY"]
+
+
+def test_the_session_reports_what_is_saved(main_mod, fresh):
+    token = sign_in(main_mod, fresh)
+    main_mod.save_my_watchlist({"symbols": ["INFY", "TCS"]}, authorization=auth(token))
+    me = main_mod.auth_me(authorization=auth(token))
+    assert me["watchlist"] == 2
+    assert me["holdings"] == 0

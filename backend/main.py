@@ -3191,7 +3191,8 @@ def auth_me(authorization: Optional[str] = Header(None)):
     import accounts
     return {"email": user["email"], "digest_opt_in": user["digest_opt_in"],
             "created_at": user["created_at"],
-            "holdings": len(accounts.get_holdings(user["id"]))}
+            "holdings": len(accounts.get_holdings(user["id"])),
+            "watchlist": len(accounts.get_watchlist(user["id"]))}
 
 
 @app.post("/auth/logout")
@@ -3228,6 +3229,47 @@ def save_my_portfolio(payload: dict = Body(...),
     result = accounts.save_holdings(user["id"], rows)
     return {"saved": result["saved"], "rejected": result["rejected"],
             "holdings": accounts.get_holdings(user["id"])}
+
+
+# ---------------------------------------------------------------------------
+# The saved watchlist
+# ---------------------------------------------------------------------------
+
+@app.get("/me/watchlist")
+def my_watchlist(authorization: Optional[str] = Header(None)):
+    import accounts
+    user = _require_user(authorization)
+    return {"symbols": accounts.get_watchlist(user["id"])}
+
+
+@app.put("/me/watchlist")
+def save_my_watchlist(payload: dict = Body(...),
+                      authorization: Optional[str] = Header(None)):
+    """Replace the saved watchlist.
+
+    Replace, because this is what a removal calls. The one case where replacing
+    would lose something — a list built signed out meeting a list built on the
+    account — is the merge below, and nothing else.
+    """
+    import accounts
+    user = _require_user(authorization)
+    symbols = payload.get("symbols")
+    if not isinstance(symbols, list):
+        raise HTTPException(400, "Send symbols: [\"RELIANCE\", ...].")
+    return accounts.save_watchlist(user["id"], symbols)
+
+
+@app.post("/me/watchlist/merge")
+def merge_my_watchlist(payload: dict = Body(...),
+                       authorization: Optional[str] = Header(None)):
+    """Add without removing. Sign-in calls this once, with whatever the browser
+    had saved, so a reader who built a list before signing in keeps it."""
+    import accounts
+    user = _require_user(authorization)
+    symbols = payload.get("symbols")
+    if not isinstance(symbols, list):
+        raise HTTPException(400, "Send symbols: [\"RELIANCE\", ...].")
+    return accounts.merge_watchlist(user["id"], symbols)
 
 
 @app.post("/me/digest/settings")

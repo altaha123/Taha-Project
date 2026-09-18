@@ -2,11 +2,20 @@
 (function () {
   'use strict';
   const KEY = 'altaha-watchlist-v1';
+  // Which account this browser has already handed its offline list to. Set
+  // once, at the moment somebody signs in, and never read again for that
+  // account — see merge() for why merging twice would undo a removal.
+  const ACCOUNT_KEY = 'altaha-watchlist-account-v1';
+  // An edit this browser made but never managed to send. On disk, not in a
+  // variable: the reader closes the tab, comes back, and the account copy —
+  // which never heard about the edit — would otherwise quietly overwrite it.
+  const UNSENT_KEY = 'altaha-watchlist-unsent-v1';
+  const MAX = 100;
   const normalise = value => String(value || '').trim().toUpperCase();
   const valid = value => /^[A-Z0-9][A-Z0-9.&^=_-]{0,29}$/.test(value);
   function clean(rows) {
     if (!Array.isArray(rows)) return [];
-    return [...new Set(rows.filter(x => typeof x === 'string').map(normalise).filter(valid))].slice(0, 100);
+    return [...new Set(rows.filter(x => typeof x === 'string').map(normalise).filter(valid))].slice(0, MAX);
   }
   function matches(row, query, min) {
     return (row.symbol + ' ' + row.name).toLowerCase().includes(query.trim().toLowerCase()) &&
@@ -24,6 +33,10 @@
     b.addEventListener('click', fn); return b;
   }
   function read() { try { return clean(JSON.parse(localStorage.getItem(KEY))); } catch (_) { return []; } }
+  function write(rows) {
+    try { localStorage.setItem(KEY, JSON.stringify(rows)); return true; } catch (_) { return false; }
+  }
+  const auth = () => (window.AltahaAuth && window.AltahaAuth.authed()) ? window.AltahaAuth : null;
   let saved = read(), toastTimer;
   const toast = node('div', 'ux-toast'); toast.setAttribute('role', 'status');
   toast.setAttribute('aria-live', 'polite'); document.body.append(toast);
@@ -47,7 +60,16 @@
   }
   function open(d) { if (!d.open) { d.showModal(); document.body.classList.add('ux-modal'); } }
   const watch = dialog('Your watchlist');
-  watch.append(node('p', 'ux-note', 'Saved on this browser. Open a stock to see its latest analysis.'));
+  // Where this list actually lives is the one thing a reader cannot guess, and
+  // the difference between "I will rebuild it later" and "it is safe".
+  const note = node('p', 'ux-note', '');
+  watch.append(note);
+  function paintNote() {
+    note.textContent = auth()
+      ? 'Saved to your account. It follows you to any device you sign in on.'
+      : 'Saved on this browser only. Sign in and it follows you everywhere \u2014 and survives a cleared browser.';
+  }
+  paintNote();
   const list = node('div', 'ux-saved-list'); watch.append(list);
   function renderSaved() {
     list.replaceChildren();
@@ -82,11 +104,13 @@
     sym = normalise(sym); if (!valid(sym)) return false;
     // Read again to avoid overwriting saves made in another tab.
     const current = read(), exists = current.includes(sym);
-    if (!exists && current.length >= 100) { announce('Your watchlist holds 100 stocks. Remove one to add another.'); return false; }
+    if (!exists && current.length >= MAX) { announce('Your watchlist holds ' + MAX + ' stocks. Remove one to add another.'); return false; }
     const next = exists ? current.filter(x => x !== sym) : current.concat(sym);
-    try { localStorage.setItem(KEY, JSON.stringify(next)); }
-    catch (_) { announce('Could not save. Browser storage may be unavailable or full.'); return false; }
+    if (!write(next)) { announce('Could not save. Browser storage may be unavailable or full.'); return false; }
     saved = next; sync(); announce(sym + (exists ? ' removed from watchlist' : ' added to watchlist'));
+    // The screen updated already. The account catches up in the background,
+    // because a watchlist that waits for the network to agree feels broken.
+    push();
     if (typeof window !== 'undefined' && window.AltahaTrack) {
       window.AltahaTrack('watchlist_changed',
         { ticker: sym, action: exists ? 'removed' : 'added', size: next.length });
@@ -97,6 +121,74 @@
     const b = button('☆ Save', e => { e.stopPropagation(); toggle(sym); });
     b.dataset.saveStock = normalise(sym); return b;
   }
+  /* ── The account copy ───────────────────────────────────────────────────
+     localStorage stays the thing the screen reads: it is instant, it works
+     offline, and it is all a signed-out reader has. The account is a copy that
+     follows behind, so signing in on a new phone brings the list along rather
+     than starting an empty one.
+
+     WHY THE MERGE HAPPENS ONCE PER BROWSER
+     Somebody saves six names signed out, then signs in: those six have to
+     survive, so the first sync merges. Every sync after that adopts the
+     account's list instead — because a browser that merged on every load would
+     push back a stock removed on another device, and a watchlist that refuses
+     to forget a stock is worse than one that forgets everything. */
+  let pushing = Promise.resolve();
+  const local = key => { try { return localStorage.getItem(key) || ''; } catch (_) { return ''; } };
+  function markUnsent(who) {
+    try { if (who) localStorage.setItem(UNSENT_KEY, who); else localStorage.removeItem(UNSENT_KEY); } catch (_) {}
+  }
+
+  function adopt(symbols) {
+    const next = clean(symbols);
+    if (next.join() === saved.join()) return;
+    if (write(next)) { saved = next; sync(); }
+  }
+
+  function who() {
+    const a = auth(), user = a && a.user();
+    return (user && user.email) || '';
+  }
+
+  function push() {
+    const a = auth(); if (!a) return;
+    const body = JSON.stringify({ symbols: saved });
+    pushing = pushing
+      .then(() => a.fetch('/me/watchlist', { method: 'PUT', body: body })
+        .then(r => { if (!r.ok) throw new Error(String(r.status)); markUnsent(''); }))
+      .catch(() => {
+        // Not lost — it is on this browser. Said out loud because the star on
+        // the button would otherwise promise something that did not happen.
+        markUnsent(who());
+        announce('Saved on this browser. Your account copy will catch up when the connection does.');
+      });
+  }
+
+  function pull() {
+    paintNote();
+    const a = auth(); if (!a) return;
+    const me = who();
+    if (!me) return;             // /auth/me has not answered yet; its event brings us back
+    if (local(ACCOUNT_KEY) !== me) {
+      a.fetch('/me/watchlist/merge', { method: 'POST', body: JSON.stringify({ symbols: saved }) })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (!d) return;
+          try { localStorage.setItem(ACCOUNT_KEY, me); } catch (_) {}
+          markUnsent(''); adopt(d.symbols);
+        }).catch(() => {});
+      return;
+    }
+    // An edit this browser never managed to send outranks the account copy,
+    // which is simply older than it.
+    if (local(UNSENT_KEY) === me) { push(); return; }
+    a.fetch('/me/watchlist').then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) adopt(d.symbols); }).catch(() => {});
+  }
+
+  window.addEventListener('altaha-auth', pull);
+  pull();
+
   window.addEventListener('storage', e => { if (e.key === KEY || e.key === null) { saved = read(); sync(); } });
   function go(section) {
     if (window.AltahaNav) window.AltahaNav.go(section, null, true);
