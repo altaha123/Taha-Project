@@ -153,3 +153,11 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/portfolio-persist-browser.cjs
+      - name: Verify the planner fork and the risk questionnaire
+        # Somebody with no holdings must be taken to the questions rather than
+        # left at an empty table, asked once rather than every visit, and shown
+        # the lower of capacity and temperament rather than the flattering one.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/planner-risk-browser.cjs

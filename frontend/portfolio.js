@@ -35,6 +35,10 @@
      with nothing saying so. A list you can see is a list you expect to still
      be there. */
   var DRAFT_KEY = 'altaha-portfolio-draft-v1';
+  /* Whether this reader said they hold anything. Asked once, then remembered:
+     a question that reappears on every visit stops being a question and starts
+     being an obstacle. */
+  var FORK_KEY = 'altaha-portfolio-fork-v1';
   var POLICY_KEY = 'altaha-policy';
 
   function $(id) { return document.getElementById(id); }
@@ -1572,11 +1576,57 @@
       ['min_holdings','Minimum effective holdings',8,1,50],['max_unclassified_pct','Maximum unclassified %',20,0,100]
     ].map(function(p){return '<label>'+p[1]+'<input type="number" data-pf-policy="'+p[0]+'" min="'+p[3]+'" max="'+p[4]+'" value="'+esc(policy[p[0]] === undefined ? p[2] : policy[p[0]])+'"></label>';}).join('')+'</div>';
     $('pf_rows').parentElement.insertBefore(panel,$('pf_rows').nextSibling);
+    wireFork();
     refreshSaved();
     renderRows();
     paintAccount();
     serverLoad();
     window.addEventListener('altaha-auth', function () { paintAccount(); serverLoad(); });
+  }
+
+  /* ── 5a. THE FORK ─────────────────────────────────────────────────────────
+     This page reviews holdings somebody already owns. Arriving with none, the
+     honest answer is not an empty table with an Analyse button under it — it
+     is that the review is not the page they need yet, and where the right one
+     is. Asked once and remembered, and never asked at all of somebody who
+     already has rows. */
+
+  function wireFork() {
+    var fork = $('pf_fork');
+    if (!fork) return;
+
+    var decided = '';
+    try { decided = localStorage.getItem(FORK_KEY) || ''; } catch (e) {}
+    var hasRows = state.rows.some(function (r) { return r.symbol; });
+    if (decided || hasRows) return;      // nothing to ask
+
+    fork.style.display = 'flex';
+
+    function settle(answer) {
+      try { localStorage.setItem(FORK_KEY, answer); } catch (e) {}
+      fork.style.display = 'none';
+    }
+
+    $('pf_fork_yes').addEventListener('click', function () {
+      settle('has');
+      var first = document.querySelector('#pf_rows .pf_sym');
+      if (first) first.focus();
+    });
+
+    $('pf_fork_no').addEventListener('click', function () {
+      settle('not');
+      if (window.AltahaNav && typeof window.AltahaNav.go === 'function') {
+        window.AltahaNav.go('planner', null, true);
+      } else {
+        location.hash = '#planner';
+      }
+      // After the tab has swapped, put them at the questions rather than at
+      // the top of a page they then have to search.
+      setTimeout(function () {
+        var target = $('riskprofile');
+        if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }, 220);
+    });
   }
 
   /* ── 5b. THE ACCOUNT ──────────────────────────────────────────────────────

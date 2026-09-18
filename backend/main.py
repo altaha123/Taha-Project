@@ -369,6 +369,21 @@ DISCLAIMER = (
     "consult a SEBI-registered adviser."
 )
 
+# The line above is right for a tool nobody has signed. Where a registered
+# adviser stands behind the page, telling the reader to go and find one reads
+# as a disclaimer of the very responsibility the registration accepts.
+DISCLAIMER_REGISTERED = (
+    "Scores are objective computations from public data using disclosed "
+    "formulas, and change as prices and filings change. Investments in "
+    "securities are subject to market risk; read all related documents "
+    "carefully. Past performance is not indicative of future returns, and "
+    "nothing here guarantees any return."
+)
+
+
+def disclaimer() -> str:
+    return DISCLAIMER_REGISTERED if adviser_configured() else DISCLAIMER
+
 # Indian Standard Time. Fixed at UTC+5:30 — India observes no daylight saving,
 # so an offset is the whole story and no tz database is needed for it.
 IST = _dt_mod.timezone(_dt_mod.timedelta(hours=5, minutes=30))
@@ -3333,6 +3348,96 @@ def save_my_portfolio(payload: dict = Body(...),
     result = accounts.save_holdings(user["id"], rows)
     return {"saved": result["saved"], "rejected": result["rejected"],
             "holdings": accounts.get_holdings(user["id"])}
+
+
+# ---------------------------------------------------------------------------
+# The adviser, and the risk profile
+#
+# WHY THE DISCLOSURE IS CONFIGURATION AND NOT A STRING IN A TEMPLATE
+# A registration number that only exists in one page's markup gets out of date
+# in exactly one place and stays right everywhere else, which is the worst
+# possible failure for a number a reader is entitled to verify. It is set once
+# in the environment, read here, and rendered wherever it is needed.
+#
+# Unset, adviser_configured() is False. The recommendation layer must refuse to
+# issue advice in that state — advice published without the adviser's identity
+# and registration beside it is the thing the disclosure rules exist to
+# prevent. Risk PROFILING is not advice and stays available either way: it
+# describes a person's situation back to them and recommends nothing.
+# ---------------------------------------------------------------------------
+
+ADVISER = {
+    "name": os.environ.get("RIA_NAME", "").strip(),
+    "registration": os.environ.get("RIA_REG_NUMBER", "").strip(),
+    "type": os.environ.get("RIA_TYPE", "Investment Adviser").strip(),
+    "address": os.environ.get("RIA_ADDRESS", "").strip(),
+    "contact": os.environ.get("RIA_CONTACT", "").strip(),
+    "validity": os.environ.get("RIA_VALIDITY", "").strip(),
+    "grievance": os.environ.get("RIA_GRIEVANCE", "").strip(),
+}
+
+
+def adviser_configured() -> bool:
+    return bool(ADVISER["name"] and ADVISER["registration"])
+
+
+@app.get("/adviser")
+def adviser_details():
+    """Who is advising, under what registration. Public, and deliberately so."""
+    out = dict(ADVISER)
+    out["configured"] = adviser_configured()
+    out["disclaimer"] = DISCLAIMER
+    return out
+
+
+@app.get("/planner/questions")
+def planner_questions():
+    """The risk questionnaire, served rather than hard-coded into the page.
+
+    One source of truth for what was asked, so an answer recorded today still
+    resolves to the same question five years from now.
+    """
+    import risk_profile
+    return {"questions": risk_profile.QUESTIONS, "bands": [
+        {"from": low, "to": high, "band": name, "note": note}
+        for low, high, name, note in risk_profile.BANDS]}
+
+
+@app.post("/me/risk-profile")
+def save_my_risk_profile(payload: dict = Body(...),
+                         authorization: Optional[str] = Header(None)):
+    """Assess, record, and hand back the working.
+
+    Recorded rather than merely computed: the basis for advice has to be
+    retrievable long after the advice was given, and the basis is the answers
+    as they stood that day.
+    """
+    import accounts
+    import risk_profile
+    user = _require_user(authorization)
+    answers = payload.get("answers")
+    if not isinstance(answers, dict):
+        raise HTTPException(400, "Send answers: {question_id: value}.")
+
+    out = risk_profile.assess(answers)
+    if out.get("error"):
+        raise HTTPException(400, out["error"] + " Missing: " +
+                            ", ".join(out.get("missing", [])))
+
+    saved = accounts.save_risk_profile(user["id"], answers, out)
+    return {"profile": {**out, "id": saved["id"]}, "adviser": adviser_details()}
+
+
+@app.get("/me/risk-profile")
+def my_risk_profile(history: bool = False,
+                    authorization: Optional[str] = Header(None)):
+    import accounts
+    user = _require_user(authorization)
+    latest = accounts.latest_risk_profile(user["id"])
+    out = {"profile": latest}
+    if history:
+        out["history"] = accounts.risk_profile_history(user["id"])
+    return out
 
 
 # ---------------------------------------------------------------------------

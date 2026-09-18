@@ -666,6 +666,32 @@
      so it takes no room on a page nobody has pressed anything on yet. */
   .pfacct-note{font-size:13px;line-height:1.6;margin:10px 0 0;color:var(--ink-2)}
   .pfacct-note:empty{display:none}
+  .pffork{border:1px solid var(--rule);border-left:3px solid var(--ink);
+          padding:22px 24px;margin:0 0 26px;display:flex;flex-direction:column;gap:12px}
+  .pffork h3{font-family:var(--serif);font-weight:400;font-size:20px;margin:0;color:var(--ink)}
+  .pffork p{font-size:14px;line-height:1.65;color:var(--ink-2);margin:0;max-width:66ch}
+  .pffork-act{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+  .prq{border-top:1px solid var(--rule);padding:18px 0 4px}
+  .prq:first-child{border-top:0}
+  .prq .q{font-size:15px;line-height:1.5;color:var(--ink);margin:0 0 4px}
+  .prq .why{font-size:12.5px;line-height:1.6;color:var(--mute);margin:0 0 12px;max-width:70ch}
+  .prq-opts{display:flex;flex-wrap:wrap;gap:8px}
+  .prq-opt{border:1px solid var(--rule);background:transparent;color:var(--ink-2);
+           padding:8px 13px;font:inherit;font-size:13.5px;cursor:pointer;text-align:left}
+  .prq-opt[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);
+           box-shadow:inset 0 0 0 1px var(--ink)}
+  .prq-amt{width:100%;max-width:280px;padding:10px 12px;border:1px solid var(--rule);
+           background:transparent;color:var(--ink);font:inherit}
+  .prres{border:1px solid var(--rule);border-left:3px solid var(--ink);padding:22px 24px;margin:22px 0 0}
+  .prres h4{font-family:var(--serif);font-weight:400;font-size:24px;margin:0 0 6px;color:var(--ink)}
+  .prres .band-note{font-size:14px;line-height:1.7;color:var(--ink-2);margin:0 0 18px;max-width:70ch}
+  .prres-axes{display:flex;flex-wrap:wrap;gap:26px;margin:0 0 16px}
+  .prres-axis{display:flex;flex-direction:column;gap:3px}
+  .prres-axis .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .prres-axis .v{font-family:var(--serif);font-size:26px;color:var(--ink)}
+  .prres-gap{font-size:14px;line-height:1.7;color:var(--ink-2);margin:0;max-width:70ch;
+             border-top:1px solid var(--rule);padding-top:16px}
+  .prres-gap b{color:var(--ink);font-weight:600}
   .pfacct-note.good{color:#1f5d45}
   .pfacct-note.warn{color:#8e2f2a}
   .pfhead{display:grid;grid-template-columns:1.4fr .7fr 1fr 36px;gap:10px;
@@ -1529,6 +1555,17 @@
       <p id="pf_lede">Your holdings against their scores, sectors and exposures. Saved in this browser — <a href="signin.html">sign in</a> to keep them on your account.</p>
     </header>
 
+    <!-- Asked once, remembered after. Somebody with nothing to review should
+         not have to work out that the review is not the page they need. -->
+    <div class="pffork" id="pf_fork" style="display:none">
+      <h3>Do you already hold stocks?</h3>
+      <p>The review reads a portfolio you already own. If you have not started, the planner is the place to begin.</p>
+      <div class="pffork-act">
+        <button class="pfbtn" type="button" id="pf_fork_yes">Yes — let me add them</button>
+        <button class="pfbtn ghost" type="button" id="pf_fork_no">Not yet — where do I start?</button>
+      </div>
+    </div>
+
     <div id="pf_account"></div>
 
 
@@ -1629,6 +1666,16 @@
     <div class="lh"><h3>Where the savings go</h3><span>Structure, not products</span></div>
     <p class="lsub">Categories and the reasoning, in sequence — never specific products.</p>
     <div id="pbucketrows"></div>
+  </div>
+
+  <!-- Risk profile. The questions come from the server so that what was asked
+       is recorded once and means the same thing when an answer is read back
+       years later. -->
+  <div class="psec" id="riskprofile">
+    <div class="lh"><h3>Your risk profile</h3><span>Capacity and temperament</span></div>
+    <p class="lsub" id="prisk_lede">What your circumstances can carry, and what you could actually sit through. The two are rarely the same number, and the gap between them is the useful part.</p>
+    <div id="prisk_body"></div>
+    <p class="rnote" id="prisk_note" role="status" aria-live="polite"></p>
   </div>
 
   <div class="psec" id="psharewrap" style="display:none">
@@ -4189,6 +4236,7 @@ if(fcSymParam){
 <script src="investors.js" defer></script>
 <script src="funds.js" defer></script>
 <script src="ledger-admin.js" defer></script>
+<script src="planner-risk.js" defer></script>
 <script src="experience.js" defer></script>
 <script src="home-motion.js" defer></script>
 <script>
