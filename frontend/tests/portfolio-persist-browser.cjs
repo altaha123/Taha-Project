@@ -112,6 +112,9 @@ const server = http.createServer((req, res) => {
     // ── 3. The button answers where the button is ───────────────────────────
     // Nothing held yet: it says so beside itself, and does not go to the server
     // to be told the same thing.
+    // Clear lives inside the collapsed "Manage holdings" panel, so it gets
+    // opened the way a reader opens it.
+    await page.locator('.pf-manage > summary').click();
     page.once('dialog', d => d.accept());
     await page.locator('#pf_clear').click();
     await page.waitForFunction(() =>
