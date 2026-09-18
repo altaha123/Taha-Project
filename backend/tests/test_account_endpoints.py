@@ -353,3 +353,160 @@ def test_the_session_reports_what_is_saved(main_mod, fresh):
     me = main_mod.auth_me(authorization=auth(token))
     assert me["watchlist"] == 2
     assert me["holdings"] == 0
+
+
+# ── Signing in with a typed code ─────────────────────────────────────────────
+
+def code_from(sent) -> str:
+    m = re.search(r"\b(\d{6})\b", sent[-1]["text"])
+    assert m, sent[-1]["text"]
+    return m.group(1)
+
+
+def test_the_email_carries_a_code_and_a_link(main_mod, fresh):
+    main_mod.auth_request_link({"email": "reader@example.com"})
+    body = fresh[-1]["text"]
+    assert re.search(r"\b\d{6}\b", body), "no code in the email"
+    assert "token=" in body, "the link was dropped when the code arrived"
+    assert re.search(r"\b\d{6}\b", fresh[-1]["subject"]), \
+        "the code belongs in the subject, where a phone shows it without opening anything"
+
+
+def test_the_code_signs_you_in_without_leaving_the_page(main_mod, fresh):
+    main_mod.auth_request_link({"email": "reader@example.com"})
+    out = main_mod.auth_verify_code({"email": "reader@example.com", "code": code_from(fresh)})
+    assert out["user"]["email"] == "reader@example.com"
+    assert main_mod.auth_me(authorization=auth(out["token"]))["email"] == "reader@example.com"
+
+
+def test_a_wrong_code_is_refused(main_mod, fresh):
+    from fastapi import HTTPException
+    main_mod.auth_request_link({"email": "reader@example.com"})
+    wrong = "000000" if code_from(fresh) != "000000" else "111111"
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_verify_code({"email": "reader@example.com", "code": wrong})
+    assert error.value.status_code == 400
+
+
+# ── Signing in with Google ───────────────────────────────────────────────────
+#
+# The browser hands over an ID token. Everything here is about refusing to
+# believe it until Google has vouched for it: without the audience check, a
+# token minted for any other site that uses Google sign-in would be accepted.
+
+CLIENT_ID = "1234.apps.googleusercontent.com"
+
+
+class _Answer:
+    def __init__(self, status, payload):
+        self.status_code = status
+        self._payload = payload
+
+    def json(self):
+        return self._payload
+
+
+def google_says(monkeypatch, payload, status=200):
+    import requests
+    monkeypatch.setattr(requests, "get",
+                        lambda *a, **k: _Answer(status, payload))
+
+
+def good_claims(**over):
+    import time
+    claims = {"aud": CLIENT_ID, "iss": "https://accounts.google.com",
+              "email": "reader@example.com", "email_verified": "true",
+              "exp": int(time.time()) + 600}
+    claims.update(over)
+    return claims
+
+
+def test_google_sign_in_is_off_until_it_is_configured(main_mod, fresh, monkeypatch):
+    from fastapi import HTTPException
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", "")
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_google({"credential": "anything"})
+    assert error.value.status_code == 503
+    assert main_mod.auth_config()["google_client_id"] == ""
+
+
+def test_a_verified_google_account_signs_in(main_mod, fresh, monkeypatch):
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", CLIENT_ID)
+    google_says(monkeypatch, good_claims())
+    out = main_mod.auth_google({"credential": "an.id.token"})
+    assert out["user"]["email"] == "reader@example.com"
+    assert main_mod.auth_me(authorization=auth(out["token"]))["email"] == "reader@example.com"
+
+
+def test_a_token_minted_for_another_site_is_refused(main_mod, fresh, monkeypatch):
+    """Without this check, anyone running any site with Google sign-in could
+    mint a token and present it here."""
+    from fastapi import HTTPException
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", CLIENT_ID)
+    google_says(monkeypatch, good_claims(aud="9999.apps.googleusercontent.com"))
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_google({"credential": "an.id.token"})
+    assert error.value.status_code == 401
+    assert A.stats()["users"] == 0
+
+
+def test_an_unverified_google_address_is_refused(main_mod, fresh, monkeypatch):
+    """An address Google has not confirmed is a claim, and this project mails
+    people at the address they sign in with."""
+    from fastapi import HTTPException
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", CLIENT_ID)
+    google_says(monkeypatch, good_claims(email_verified="false"))
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_google({"credential": "an.id.token"})
+    assert error.value.status_code == 401
+    assert A.stats()["users"] == 0
+
+
+def test_a_token_from_somewhere_other_than_google_is_refused(main_mod, fresh, monkeypatch):
+    from fastapi import HTTPException
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", CLIENT_ID)
+    google_says(monkeypatch, good_claims(iss="https://evil.example"))
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_google({"credential": "an.id.token"})
+    assert error.value.status_code == 401
+
+
+def test_an_expired_google_token_is_refused(main_mod, fresh, monkeypatch):
+    import time
+    from fastapi import HTTPException
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", CLIENT_ID)
+    google_says(monkeypatch, good_claims(exp=int(time.time()) - 60))
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_google({"credential": "an.id.token"})
+    assert error.value.status_code == 401
+
+
+def test_a_token_google_rejects_is_refused(main_mod, fresh, monkeypatch):
+    from fastapi import HTTPException
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", CLIENT_ID)
+    google_says(monkeypatch, {"error": "invalid_token"}, status=400)
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_google({"credential": "forged"})
+    assert error.value.status_code == 401
+
+
+def test_google_being_unreachable_is_a_retry_not_a_rejection(main_mod, fresh, monkeypatch):
+    from fastapi import HTTPException
+    import requests
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", CLIENT_ID)
+
+    def boom(*a, **k):
+        raise OSError("network down")
+    monkeypatch.setattr(requests, "get", boom)
+    with pytest.raises(HTTPException) as error:
+        main_mod.auth_google({"credential": "an.id.token"})
+    assert error.value.status_code == 503
+
+
+def test_signing_in_by_google_then_by_code_is_one_account(main_mod, fresh, monkeypatch):
+    monkeypatch.setattr(main_mod, "GOOGLE_CLIENT_ID", CLIENT_ID)
+    google_says(monkeypatch, good_claims())
+    main_mod.auth_google({"credential": "an.id.token"})
+    main_mod.auth_request_link({"email": "reader@example.com"})
+    main_mod.auth_verify_code({"email": "reader@example.com", "code": code_from(fresh)})
+    assert A.stats()["users"] == 1

@@ -66,6 +66,13 @@
              font-size: 14px; line-height: 1.75; color: var(--mute); }
   .si-list b { color: var(--ink); font-weight: 600; }
   .si-back { display: inline-block; margin-top: 26px; font-size: 13px; color: var(--mute); }
+  .si-code { font-family: 'Courier New', Courier, monospace; font-size: 26px;
+             letter-spacing: 10px; text-align: center; }
+  .si-or { display: none; align-items: center; gap: 14px; margin: 22px 0;
+           font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+           color: var(--mute); }
+  .si-or::before, .si-or::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+  #si-google { display: none; margin-bottom: 4px; min-height: 44px; }
 </style>
 </head>
 
@@ -76,9 +83,12 @@
   <div id="si-state">
     <h1>Sign in</h1>
     <p class="si-lede">
-      No password. Type your email and we send a link that signs you in — the
-      same address the daily portfolio email goes to.
+      No password. Type your email and we send you a six-digit code — the same
+      address the daily portfolio email goes to.
     </p>
+
+    <div id="si-google"></div>
+    <div class="si-or" id="si-or">or</div>
 
     <form id="si-form" novalidate>
       <label class="si-field" for="si-email"><span>Email address</span>
@@ -86,7 +96,7 @@
                autocomplete="email" inputmode="email" required
                placeholder="you@example.com" />
       </label>
-      <button class="si-btn" type="submit" id="si-go">Email me a link</button>
+      <button class="si-btn" type="submit" id="si-go">Email me a code</button>
     </form>
     <p class="si-note" id="si-note" role="status" aria-live="polite"></p>
 
@@ -129,24 +139,127 @@
   /* The link from the email lands here. Spend the token, keep the session,
      and get out of the way — nobody wants to read a page after clicking a
      link that says "sign in". */
+  /* A link, a typed code and Google all end the same way, so this is written
+     once: the account is the same account whichever door was used. */
+  function signedIn(user, method) {
+    track('signed_in', { method: method });
+    try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
+    panel('<h1>You are signed in</h1>' +
+          '<p class="si-lede">Signed in as <b>' + escapeHTML(user && user.email) +
+          '</b>. Taking you to your portfolio…</p>' +
+          '<a class="si-back" href="index.html#portfolio">Go now →</a>');
+    setTimeout(function () { location.href = 'index.html#portfolio'; }, 1200);
+  }
+
   function completeFromLink(token) {
     panel('<h1>Signing you in…</h1><p class="si-lede">One moment.</p>');
     window.AltahaAuth.verify(token).then(function (user) {
-      track('signed_in', { method: 'email_link' });
-      // The URL still holds a spent token. Replace it so a refresh, a shared
-      // screenshot or a browser history entry does not carry it around.
-      try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
-      panel('<h1>You are signed in</h1>' +
-            '<p class="si-lede">Signed in as <b>' + escapeHTML(user && user.email) +
-            '</b>. Taking you to your portfolio…</p>' +
-            '<a class="si-back" href="index.html#portfolio">Go now →</a>');
-      setTimeout(function () { location.href = 'index.html#portfolio'; }, 1200);
+      signedIn(user, 'email_link');
     }).catch(function (e) {
       panel('<h1>That link did not work</h1>' +
             '<p class="si-lede">' + escapeHTML(e && e.message ? e.message : 'Ask for a new one.') +
             ' Links work once and expire after fifteen minutes.</p>' +
             '<a class="si-btn" style="display:block;text-align:center;text-decoration:none;' +
             'box-sizing:border-box" href="signin.html">Get a new link</a>');
+    });
+  }
+
+  /* Ask for the code on the page the reader is already looking at. This is the
+     whole reason the code exists: a link is opened by whichever browser the
+     mail app hands it to, and on a phone that is the mail app's own, so the
+     session lands somewhere the reader is not. */
+  function askForCode(email, d) {
+    panel('<h1>Check your email</h1>' +
+          '<p class="si-lede">If <b>' + escapeHTML(email) + '</b> can receive mail, a ' +
+          'six-digit code is on its way. Type it here \u2014 stay on this page.</p>' +
+          '<form id="si-codeform" novalidate>' +
+            '<label class="si-field" for="si-code"><span>Six-digit code</span>' +
+              '<input class="si-input si-code" id="si-code" name="code" inputmode="numeric" ' +
+                     'autocomplete="one-time-code" pattern="[0-9]*" ' +
+                     'placeholder="000000" aria-describedby="si-note" />' +
+            '</label>' +
+            '<button class="si-btn" type="submit" id="si-codego">Sign in</button>' +
+          '</form>' +
+          '<p class="si-note" id="si-note" role="status" aria-live="polite"></p>' +
+          (d && d.debug_code
+            ? '<p class="si-note">Delivery is not configured on this deploy. ' +
+              'Your code is <b>' + escapeHTML(d.debug_code) + '</b>.</p>' : '') +
+          '<p class="si-note">Not there in a minute? Look in spam \u2014 and if it is there, ' +
+          'marking it "not spam" is what keeps the daily email out of that folder too. ' +
+          'The email also has a link, if you would rather click one.</p>' +
+          '<a class="si-back" href="signin.html">Use a different email</a>');
+
+    var input = $('si-code');
+    if (input) {
+      input.focus();
+      // Phones offer the code from the notification; paste brings the spaces
+      // and dashes with it, and neither is the reader's problem to strip.
+      //
+      // No maxlength on the field, deliberately. With one, the browser cuts
+      // "472 913" to "472 91" before this ever runs, and the reader is left
+      // holding a code that is silently one digit short of the one they were
+      // sent. The limit belongs after the stripping, not before it.
+      input.addEventListener('input', function () {
+        var only = input.value.replace(/\D/g, '').slice(0, 6);
+        if (only !== input.value) input.value = only;
+      });
+    }
+
+    $('si-codeform').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var code = ($('si-code').value || '').replace(/\D/g, '');
+      if (code.length !== 6) { note('That code is six digits.', 'bad'); return; }
+      var btn = $('si-codego');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      note('Checking\u2026');
+      window.AltahaAuth.verifyCode(email, code).then(function (user) {
+        signedIn(user, 'email_code');
+      }).catch(function (err) {
+        btn.disabled = false;
+        note(err && err.message ? err.message : 'That code did not work.', 'bad');
+        if ($('si-code')) { $('si-code').value = ''; $('si-code').focus(); }
+      });
+    });
+  }
+
+  /* Google. The only third-party script this site loads, it loads only on this
+     page, and only when a client id is configured — so a deploy without one is
+     a deploy that talks to nobody. */
+  function mountGoogle(clientId) {
+    var slot = $('si-google');
+    if (!slot || !clientId) return;
+    var tag = document.createElement('script');
+    tag.src = 'https://accounts.google.com/gsi/client';
+    tag.async = true;
+    tag.defer = true;
+    tag.onload = function () {
+      var gid = window.google && window.google.accounts && window.google.accounts.id;
+      if (!gid) return;
+      try {
+        gid.initialize({
+          client_id: clientId,
+          callback: function (resp) { onGoogle(resp && resp.credential); }
+        });
+        gid.renderButton(slot, { theme: 'outline', size: 'large', text: 'continue_with',
+                                 shape: 'rectangular', width: 320 });
+        slot.style.display = 'block';
+        var divider = $('si-or');
+        if (divider) divider.style.display = 'flex';
+      } catch (e) { /* email still works; that is the point of the divider */ }
+    };
+    // No handler on error: a blocked script leaves the email form exactly as
+    // it was, which is a working sign-in page.
+    document.head.appendChild(tag);
+  }
+
+  function onGoogle(credential) {
+    if (!credential) { note('That Google sign-in did not complete. Please try again.', 'bad'); return; }
+    note('Signing you in\u2026');
+    window.AltahaAuth.google(credential).then(function (user) {
+      signedIn(user, 'google');
+    }).catch(function (err) {
+      note(err && err.message ? err.message : 'Could not sign you in with Google.', 'bad');
     });
   }
 
@@ -162,16 +275,7 @@
       note('Sending…');
       window.AltahaAuth.requestLink(email).then(function (d) {
         track('sign_in_link_requested', {});
-        panel('<h1>Check your inbox</h1>' +
-              '<p class="si-lede">If <b>' + escapeHTML(email) + '</b> can receive mail, ' +
-              'a sign-in link is on its way. It works once and expires in fifteen minutes.</p>' +
-              '<p class="si-lede">Not there in a minute? Look in spam — and if it is there, ' +
-              'marking it "not spam" is what keeps the daily email out of that folder too.</p>' +
-              (d && d.debug_link
-                ? '<p class="si-note">Delivery is not configured on this deploy. ' +
-                  '<a href="' + d.debug_link + '">Use this link</a>.</p>' : '') +
-              '<p class="si-note">Open the link in the browser where you use Altaha. Signing in inside your email app does not sign in your other browsers.</p>' +
-              '<a class="si-back" href="signin.html">Send another link or change email</a>');
+        askForCode(email, d);
       }).catch(function (err) {
         $('si-go').disabled = false;
         note(err && err.message ? err.message : 'Could not send that. Try again.', 'bad');
@@ -203,6 +307,11 @@
       return;
     }
     wireForm();
+    if (window.AltahaAuth.config) {
+      window.AltahaAuth.config().then(function (cfg) {
+        mountGoogle(cfg && cfg.google_client_id);
+      }).catch(function () {});
+    }
   }
 
   // auth.js is deferred, so wait for it rather than racing it.

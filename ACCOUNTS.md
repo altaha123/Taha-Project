@@ -10,9 +10,11 @@ people leave.
 
 ## What it looks like from outside
 
-1. **Sign in** — `signin.html`. Type an email, get a link, click it. No
-   password: a link to the address proves they own the address, which is
-   exactly what a product that emails you every day needs to establish anyway.
+1. **Sign in** — `signin.html`. Type an email, get a six-digit code, type it
+   into the page still open in front of them. No password: reaching the
+   address proves they own the address, which is exactly what a product that
+   emails you every day needs to establish anyway. The same email carries a
+   link, and **Continue with Google** is offered when it is configured.
 2. **Save a portfolio** — the Save button on the Portfolio tab now writes to
    the account as well as the browser.
 3. **Keep a watchlist** — the star on any stock. Signed out it is saved on that
@@ -28,6 +30,7 @@ people leave.
 | Render → Environment | `EMAIL_PROVIDER` = `resend` or `brevo` | Without it nothing is delivered — see below |
 | Render → Environment | `RESEND_API_KEY` / `BREVO_API_KEY` | The provider's key |
 | Render → Environment | `EMAIL_FROM` | e.g. `Altaha Screener <hello@altahascreener.in>` |
+| Render → Environment | `GOOGLE_CLIENT_ID` | Optional. Unset, the Google button is not rendered at all |
 | GitHub → Secrets → Actions | `ALTAHA_ADMIN_KEY` | Same value as `ADMIN_KEY` on Render; the scheduled job authenticates with it |
 | DNS for altahascreener.in | SPF, DKIM, DMARC | **Do this first** |
 
@@ -84,6 +87,48 @@ The job is keyed on **the market's last session, not the calendar date**, so a
 run on an Indian market holiday finds everybody already marked for that
 session and mails nobody. Same mechanism makes a retry after a crash safe: it
 sends to whoever was missed and to nobody else.
+
+## Three ways in, one account
+
+All three end at `_issue_session`, and the account is keyed on the email
+address, so somebody who types a code today and presses the Google button
+tomorrow lands on one account rather than two.
+
+**The code is the one that works everywhere.** A link is opened by whichever
+browser the mail app hands it to — on a phone, the mail app's own — so the
+reader signs in and finds the browser they actually use still signed out.
+That is not a bug in the link; it is what links do. The code goes back into
+the page that is already open, which is the one they want.
+
+The code and the link are the same row in `login_tokens`. Spending either
+spends both, so a mail scanner that follows the link cannot leave a live code
+behind it.
+
+**Five wrong codes and it is spent.** Six digits is one of 900,000, which a
+script gets through in minutes if it is allowed to keep guessing; the
+fifteen-minute expiry is not what protects this, `MAX_CODE_ATTEMPTS` is. The
+attempt is counted before it is judged, so a process that dies between the two
+cannot hand the next caller a free guess.
+
+**Google is verified server-side, or not at all.** The browser hands over an ID
+token and the server checks it against Google's `tokeninfo` endpoint — a real
+HTTPS call on every sign-in, rather than a JWT library, a JWKS cache and a
+key-rotation story for a site signing in a few hundred people a day. Four
+things are then checked and every one matters: the **audience** is this site's
+client id (without it, a token minted for any other site using Google sign-in
+would be accepted here), the issuer is Google, the address is one Google
+reports as **verified**, and the token has not expired.
+
+With `GOOGLE_CLIENT_ID` unset, `/auth/google` returns 503 and the page does not
+render the button — a button that cannot work is worse than no button. It is
+also the only third-party script this site loads, it loads only on
+`signin.html`, and only when that client id is set.
+
+**The database already had rows.** `CREATE TABLE IF NOT EXISTS` is a no-op
+against a live table, so `code_hash` and `attempts` reach a fresh database and
+never the one on the disk with real users in it. `_ensure_column` is what makes
+the deployed database get them too, and there is a test that opens a
+pre-codes database and signs in against it.
 
 ## The watchlist, and why it merges exactly once
 

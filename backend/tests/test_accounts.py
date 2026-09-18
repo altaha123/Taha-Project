@@ -346,3 +346,150 @@ def test_the_watchlist_and_the_portfolio_are_separate_lists():
     assert A.get_watchlist(me) == ["INFY"]
     assert [h["symbol"] for h in A.get_holdings(me)] == ["TCS"]
     assert A.digest_recipients()[0]["id"] == me
+
+
+# ── The six-digit code ───────────────────────────────────────────────────────
+#
+# The link works, but it is opened by whichever browser the mail app hands it
+# to — on a phone, the mail app's own. The reader signs in and finds the
+# browser they actually use still signed out. The code is typed into the page
+# already open, so it cannot land anywhere else.
+
+def test_a_sign_in_mints_a_code_beside_the_link():
+    started = A.start_login("reader@example.com")
+    assert started["code"].isdigit() and len(started["code"]) == 6
+    assert not started["code"].startswith("0"), "a leading zero gets lost between inbox and keyboard"
+
+
+def test_the_code_signs_you_in():
+    started = A.start_login("reader@example.com")
+    done = A.complete_login_code("reader@example.com", started["code"])
+    assert done["user"]["email"] == "reader@example.com"
+    assert A.user_for_session(done["session"])["email"] == "reader@example.com"
+
+
+def test_the_code_is_read_the_way_people_type_it():
+    """Pasted from a notification it arrives with spaces; that is not the
+    reader's problem to fix."""
+    started = A.start_login("reader@example.com")
+    spaced = " " + " ".join(started["code"]) + " "
+    assert "session" in A.complete_login_code("READER@Example.com ", spaced)
+
+
+def test_the_code_works_once():
+    started = A.start_login("reader@example.com")
+    assert "session" in A.complete_login_code("reader@example.com", started["code"])
+    assert "error" in A.complete_login_code("reader@example.com", started["code"])
+
+
+def test_spending_the_link_kills_the_code_it_was_sent_with():
+    """One sign-in offered two ways is still one sign-in. A mail scanner that
+    follows the link must not leave a live code behind it."""
+    started = A.start_login("reader@example.com")
+    assert "session" in A.complete_login(started["token"])
+    assert "error" in A.complete_login_code("reader@example.com", started["code"])
+
+
+def test_spending_the_code_kills_its_link():
+    started = A.start_login("reader@example.com")
+    assert "session" in A.complete_login_code("reader@example.com", started["code"])
+    assert "error" in A.complete_login(started["token"])
+
+
+def test_guessing_is_stopped_long_before_the_odds_matter():
+    """Six digits is one of 900,000, which a script gets through in minutes if
+    it is allowed to keep going. The expiry is not what protects this."""
+    started = A.start_login("reader@example.com")
+    wrong = "000000" if started["code"] != "000000" else "111111"
+    for _ in range(A.MAX_CODE_ATTEMPTS):
+        assert "error" in A.complete_login_code("reader@example.com", wrong)
+    # Even the right code is now worthless: the row is spent.
+    assert "error" in A.complete_login_code("reader@example.com", started["code"])
+
+
+def test_a_wrong_code_says_how_many_tries_are_left():
+    started = A.start_login("reader@example.com")
+    wrong = "000000" if started["code"] != "000000" else "111111"
+    first = A.complete_login_code("reader@example.com", wrong)
+    assert str(A.MAX_CODE_ATTEMPTS - 1) in first["error"]
+
+
+def test_a_wrong_attempt_does_not_spend_a_good_code():
+    started = A.start_login("reader@example.com")
+    wrong = "000000" if started["code"] != "000000" else "111111"
+    A.complete_login_code("reader@example.com", wrong)
+    assert "session" in A.complete_login_code("reader@example.com", started["code"])
+
+
+def test_one_persons_code_is_not_anothers():
+    mine = A.start_login("a@example.com")
+    A.start_login("b@example.com")
+    assert "error" in A.complete_login_code("b@example.com", mine["code"])
+
+
+def test_an_expired_code_is_refused():
+    started = A.start_login("reader@example.com")
+    conn = A._connect()
+    with conn:
+        conn.execute("UPDATE login_tokens SET expires_at=? WHERE email=?",
+                     (A._iso(A._now() - dt.timedelta(minutes=1)), "reader@example.com"))
+    assert "error" in A.complete_login_code("reader@example.com", started["code"])
+
+
+@pytest.mark.parametrize("bad", ["", "12345", "1234567", "abcdef", None])
+def test_a_code_that_is_not_six_digits_never_reaches_the_database(bad):
+    A.start_login("reader@example.com")
+    assert "error" in A.complete_login_code("reader@example.com", bad)
+
+
+# ── Signing in with a provider ───────────────────────────────────────────────
+
+def test_google_and_the_code_land_on_one_account():
+    """The account is keyed on the address. Somebody who uses a code today and
+    Google tomorrow is one person, not two."""
+    started = A.start_login("reader@example.com")
+    A.complete_login_code("reader@example.com", started["code"])
+    done = A.complete_oauth_login("Reader@Example.com")
+    assert done["user"]["email"] == "reader@example.com"
+    assert A.stats()["users"] == 1
+
+
+def test_a_provider_sign_in_creates_the_account_if_it_is_new():
+    done = A.complete_oauth_login("fresh@example.com")
+    assert A.user_for_session(done["session"])["email"] == "fresh@example.com"
+
+
+def test_a_provider_that_returns_nothing_usable_is_refused():
+    assert "error" in A.complete_oauth_login("")
+    assert "error" in A.complete_oauth_login("not-an-address")
+
+
+# ── The migration ────────────────────────────────────────────────────────────
+
+def test_a_database_written_before_codes_existed_still_opens():
+    """CREATE TABLE IF NOT EXISTS is a no-op against a live table, so a new
+    column reaches a fresh database and never the one on the disk with real
+    users in it. This is the failure that passes every test and breaks only
+    production."""
+    import sqlite3
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "old.db")
+        old = sqlite3.connect(path)
+        old.executescript("""
+            CREATE TABLE login_tokens (
+              token_hash TEXT PRIMARY KEY, email TEXT NOT NULL,
+              created_at TEXT NOT NULL, expires_at TEXT NOT NULL, used_at TEXT);
+            CREATE TABLE users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE,
+              created_at TEXT NOT NULL, last_login_at TEXT,
+              digest_opt_in INTEGER NOT NULL DEFAULT 1, unsub_token TEXT NOT NULL);
+        """)
+        old.execute("INSERT INTO users(email,created_at,unsub_token) VALUES(?,?,?)",
+                    ("existing@example.com", "2026-01-01T00:00:00+00:00", "tok"))
+        old.commit()
+        old.close()
+
+        A.reset_for_tests(path)
+        started = A.start_login("existing@example.com")
+        assert "session" in A.complete_login_code("existing@example.com", started["code"])
+        assert A.stats()["users"] == 1, "the existing account was not reused"

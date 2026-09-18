@@ -170,14 +170,31 @@ def send(to: str, subject: str, html: str, text: str = "",
 # The login email
 # ---------------------------------------------------------------------------
 
-def login_email(link: str, *, minutes: int = 15) -> tuple:
+def login_email(link: str, code: str = "", *, minutes: int = 15) -> tuple:
     """(subject, html, text).
 
     Short, plain, and it says what to do if the reader did not ask for it —
     which is the difference between a stranger shrugging and a stranger
     reporting the message as phishing.
+
+    THE CODE COMES FIRST, THE LINK SECOND
+    A link opened on a phone is opened by the mail app's own browser, and the
+    session it collects stays there — so the reader signs in and finds the site
+    they were actually using still signed out. The code goes back to the page
+    that is already open, which is the one they want. The link stays for the
+    desktop reader for whom one click is genuinely the shortest path.
     """
-    subject = "Your Altaha Screener sign-in link"
+    subject = f"{code} is your Altaha Screener sign-in code" if code \
+        else "Your Altaha Screener sign-in link"
+    intro = (f"Type this code into the page you started signing in on. "
+             f"It expires in {minutes} minutes."
+             if code else
+             f"Here is your sign-in link. It works once, and it expires in {minutes} minutes.")
+    code_block = (f"""<div style="font:700 30px/1.1 'Courier New',Courier,monospace;
+color:#1a1a1a;letter-spacing:8px;background:#faf9f7;border:1px solid #e4e2dd;
+padding:16px 20px;margin:0 0 20px;text-align:center">{code}</div>"""
+                  if code else "")
+    link_label = "Or sign in with one click" if code else "Sign in"
     html = f"""<!doctype html><html><body style="margin:0;background:#faf9f7">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#faf9f7">
 <tr><td align="center" style="padding:28px 12px">
@@ -186,10 +203,11 @@ background:#fff;border:1px solid #e4e2dd">
 <tr><td style="padding:30px 28px">
 <div style="font:400 11px Arial,sans-serif;color:#6b6b6b;letter-spacing:2px;
 text-transform:uppercase;padding-bottom:22px">Altaha Screener</div>
-<p style="font:400 15px Arial,sans-serif;color:#1a1a1a;margin:0 0 22px">
-Here is your sign-in link. It works once, and it expires in {minutes} minutes.</p>
+<p style="font:400 15px Arial,sans-serif;color:#1a1a1a;margin:0 0 14px">
+{intro}</p>
+{code_block}
 <a href="{link}" style="font:600 14px Arial,sans-serif;color:#fff;background:#1a1a1a;
-padding:13px 22px;text-decoration:none;display:inline-block">Sign in</a>
+padding:13px 22px;text-decoration:none;display:inline-block">{link_label}</a>
 <p style="font:400 12px Arial,sans-serif;color:#6b6b6b;margin:22px 0 0;line-height:1.6">
 If the button does not work, paste this into your browser:<br>
 <span style="color:#1a1a1a;word-break:break-all">{link}</span></p>
@@ -198,8 +216,13 @@ border-top:1px solid #e4e2dd;padding-top:16px;line-height:1.6">
 If you did not ask to sign in, you can ignore this email — nothing happens
 until the link is opened, and it stops working shortly.</p>
 </td></tr></table></td></tr></table></body></html>"""
-    text = (f"Your Altaha Screener sign-in link\n\n{link}\n\n"
-            f"It works once and expires in {minutes} minutes.\n\n"
+    text = ((f"Your Altaha Screener sign-in code\n\n    {code}\n\n"
+             f"Type it into the page you started signing in on. "
+             f"It expires in {minutes} minutes.\n\n"
+             f"Or open this link instead:\n{link}\n\n"
+             if code else
+             f"Your Altaha Screener sign-in link\n\n{link}\n\n"
+             f"It works once and expires in {minutes} minutes.\n\n") +
             "If you did not ask to sign in, ignore this email — nothing "
-            "happens until the link is opened.")
+            "happens until it is used.")
     return subject, html, text

@@ -3156,7 +3156,8 @@ def auth_request_link(payload: dict = Body(...)):
         raise HTTPException(400, started["error"])
 
     link = f"{_site()}/signin.html?token={started['token']}"
-    subject, html, text = mailer.login_email(link, minutes=accounts.LOGIN_TTL_MINUTES)
+    subject, html, text = mailer.login_email(link, started.get("code", ""),
+                                             minutes=accounts.LOGIN_TTL_MINUTES)
     ok, detail = mailer.send(started["email"], subject, html, text)
     if not ok:
         accounts.cancel_login(started["token"])
@@ -3171,6 +3172,7 @@ def auth_request_link(payload: dict = Body(...)):
     # Render's log stream.
     if debug:
         out["debug_link"] = link
+        out["debug_code"] = started.get("code", "")
     return out
 
 
@@ -3183,6 +3185,95 @@ def auth_verify(payload: dict = Body(...)):
         raise HTTPException(400, done["error"])
     return {"token": done["session"], "user": {"email": done["user"]["email"],
                                                "digest_opt_in": done["user"]["digest_opt_in"]}}
+
+
+@app.post("/auth/verify-code")
+def auth_verify_code(payload: dict = Body(...)):
+    """Spend a typed six-digit code, receive a session token to keep.
+
+    The answer is deliberately vague about which of the address and the code
+    was wrong: this endpoint is public, and separating the two would turn it
+    into a way to test which addresses have signed up.
+    """
+    import accounts
+    done = accounts.complete_login_code(str(payload.get("email") or ""),
+                                        str(payload.get("code") or ""))
+    if done.get("error"):
+        raise HTTPException(400, done["error"])
+    return {"token": done["session"], "user": done["user"]}
+
+
+# ---------------------------------------------------------------------------
+# Signing in with Google
+#
+# The browser does the Google half and hands over an ID token — a JWT Google
+# signed. Verifying it here is the whole point: a client that says "this is
+# taha@gmail.com" is a claim, and a signature Google will vouch for is proof.
+#
+# Verification is Google's own tokeninfo endpoint rather than a local JWT
+# library, which would mean a new dependency, a JWKS cache and a key-rotation
+# story for a site signing in a few hundred people a day. One HTTPS call on a
+# sign-in, and no crypto written here to get wrong.
+# ---------------------------------------------------------------------------
+
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
+_GOOGLE_ISSUERS = ("accounts.google.com", "https://accounts.google.com")
+
+
+@app.get("/auth/config")
+def auth_config():
+    """What sign-in methods this deployment actually has, so the page offers
+    only the ones that work. A Google button that cannot work is worse than no
+    Google button."""
+    import mailer
+    return {
+        "google_client_id": GOOGLE_CLIENT_ID,
+        "email": mailer.provider() != "console" and mailer.configured(),
+    }
+
+
+@app.post("/auth/google")
+def auth_google(payload: dict = Body(...)):
+    import accounts
+    import requests as _rq
+
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(503, "Google sign-in is not configured on this server.")
+    credential = str(payload.get("credential") or "").strip()
+    if not credential:
+        raise HTTPException(400, "That Google sign-in did not complete. Please try again.")
+
+    try:
+        r = _rq.get("https://oauth2.googleapis.com/tokeninfo",
+                    params={"id_token": credential}, timeout=10)
+    except Exception:
+        raise HTTPException(503, "Could not reach Google to check that sign-in. Please try again.")
+    if r.status_code != 200:
+        raise HTTPException(401, "That Google sign-in could not be verified. Please try again.")
+
+    try:
+        claims = r.json()
+    except ValueError:
+        raise HTTPException(401, "That Google sign-in could not be verified. Please try again.")
+
+    # Every one of these matters. Without the audience check a token minted for
+    # any other site that uses Google sign-in would be accepted here.
+    if claims.get("aud") != GOOGLE_CLIENT_ID:
+        raise HTTPException(401, "That sign-in was issued for a different site.")
+    if str(claims.get("iss") or "") not in _GOOGLE_ISSUERS:
+        raise HTTPException(401, "That sign-in did not come from Google.")
+    if str(claims.get("email_verified", "")).lower() not in ("true", "1"):
+        raise HTTPException(401, "That Google account has no verified email address.")
+    try:
+        if int(claims.get("exp", 0)) <= int(time.time()):
+            raise HTTPException(401, "That Google sign-in has expired. Please try again.")
+    except (TypeError, ValueError):
+        raise HTTPException(401, "That Google sign-in could not be verified. Please try again.")
+
+    done = accounts.complete_oauth_login(str(claims.get("email") or ""))
+    if done.get("error"):
+        raise HTTPException(400, done["error"])
+    return {"token": done["session"], "user": done["user"]}
 
 
 @app.get("/auth/me")
