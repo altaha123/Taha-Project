@@ -176,86 +176,56 @@ header.wrap > *:not(#skin-art){position:relative;z-index:1}
    4.5:1 floor for 9.5px uppercase mono, and visibly murky. */
 .tickerbar .tk,#tickers .tk{color:rgba(255,255,255,.92) !important}
 
+/* ── 10 · GOLD & CREAM REFINEMENTS ─────────────────────────────────────
+   Restore the original palette, with clearer hierarchy and quieter surfaces.
+   Market status colours and mobile account visibility are independent. */
+:root{ --ui-secondary:#686052; --ui-elevation:0 2px 4px #17140e04,0 8px 24px #17140e08 }
+:root[data-theme="dark"]{ --ui-secondary:#B5AD9C; --ui-elevation:0 2px 8px #0003,0 12px 28px #0003 }
 
-/* ── 10 · FOREST GREEN + GOLD ──────────────────────────────────────────
-   Green is a brand accent for navigation and actions; gold remains on the
-   wordmark and decorative details. Do not recolour financial status tokens. */
-:root{
-  --brand-green:#204D3D;
-  --brand-green-hover:#163C2F;
-  --brand-green-soft:#EAF0E8;
-  --brand-green-line:#809C85;
-  --brand-green-on:#FFFDF8;
-}
-:root[data-theme="dark"]{
-  --brand-green:#B7D8C0;
-  --brand-green-hover:#CEE6D3;
-  --brand-green-soft:#1B2B23;
-  --brand-green-line:#668B73;
-  --brand-green-on:#11251A;
-}
-
-/* Gold skies and sage hills give the existing market landscape depth. */
-:root[data-theme="light"]{ --hill:#DCE4CF; --hill-2:#B9CBB0 }
-:root[data-theme="dark"]{ --hill:#17271D; --hill-2:#243B2C }
-body.sh-on{ --sh-ribbon-bg:#17372C; --sh-ribbon-fg:#FBF8F1 }
-html[data-theme="dark"] body.sh-on{ --sh-ribbon-bg:#0D2018 }
-
-/* One strong green action, with the cream canvas and gold brand intact. */
+/* Keep the primary search field and action aligned, including on phones. */
+body .searchrow{ box-shadow:var(--ui-elevation) !important }
+body .searchrow:focus-within{ transform:none }
+body #tk{ letter-spacing:0; min-height:48px }
 body #go{
-  background:var(--brand-green) !important;
-  color:var(--brand-green-on) !important;
+  min-height:48px; color:#17140E !important;
+  font-family:Inter,system-ui,sans-serif !important;
+  font-weight:600; letter-spacing:.02em;
 }
-body #go:hover{
-  background:var(--brand-green-hover) !important;
-  box-shadow:0 8px 24px color-mix(in srgb,var(--brand-green) 22%,transparent);
-}
-body .searchrow:focus-within{
-  border-color:var(--brand-green-line) !important;
-  box-shadow:0 0 0 4px color-mix(in srgb,var(--brand-green) 14%,transparent) !important;
-}
-body .sh-search input:focus{
-  border-color:var(--brand-green-line);
-  box-shadow:0 0 0 4px color-mix(in srgb,var(--brand-green) 14%,transparent);
-}
-body .sh-bar .sh-account{
-  color:var(--brand-green); background:var(--brand-green-soft);
-  border-color:var(--brand-green-line);
-}
-body .sh-bar .sh-account:hover{
-  color:var(--brand-green-on); background:var(--brand-green);
-}
+body #go:hover{ opacity:1; box-shadow:0 4px 12px #17140e18 }
+body #go:disabled{ opacity:.55; cursor:wait; transform:none; box-shadow:none }
 
-/* Selected navigation is sage, with gold retained as the fine underline. */
-body .sh-top.on,
+/* Reading surfaces stay still; interactive destination cards get depth. */
+body .card:hover, body .panel:hover, body .idea:hover{
+  transform:none; border-color:var(--rule) !important;
+}
+body .hm-tools{ gap:16px }
+body .hm-route{
+  border-radius:16px; box-shadow:var(--ui-elevation);
+}
+body .hm-route h3{ font-weight:600; line-height:1.4 }
+body .hm-route p{ color:var(--ui-secondary); font-size:14px; line-height:1.65 }
+body .mb-card{ border-radius:14px; box-shadow:var(--ui-elevation) }
+body .mb-card .k, body .mb-note{ color:var(--ui-secondary) }
+
+/* Warm selected states retain the existing fine gold borders. */
+body .sh-top.on{ background:var(--paper-2) }
 body .ux-bottom button[aria-current],
 body .ux-bottom button[aria-expanded="true"]{
-  color:var(--brand-green); background:var(--brand-green-soft);
-  border-color:var(--brand-green-line);
+  background:var(--paper-2); color:var(--ink); font-weight:600;
 }
-body .navmain-btn.on, body .navmain-btn[aria-selected="true"],
-body .navsub-btn.on, body .navsub-btn[aria-selected="true"]{
-  color:var(--brand-green) !important;
-  background:var(--brand-green-soft) !important;
+body .sh-bar .sh-account{ font-weight:600 }
+@media(hover:hover) and (pointer:fine){
+  body .hm-route:hover{
+    transform:translateY(-2px); border-color:var(--gold);
+    box-shadow:var(--skin-shadow);
+  }
 }
-body .tabs .tab.active, body .tabs .tab[aria-selected="true"]{
-  color:var(--brand-green-on) !important;
-  background:var(--brand-green) !important;
+@media(max-width:540px){
+  body #go{ padding:0 18px !important }
+  body .hm-tools{ gap:12px }
+  body .hm-route{ padding:18px; gap:16px }
 }
-body .sh-item:hover, body .sh-ac b.row.sel{
-  background:var(--brand-green-soft);
+@media(prefers-reduced-motion:reduce){
+  body .hm-route, body .searchrow, body #go{ transition:none }
+  body .hm-route:hover, body #go:hover{ transform:none }
 }
-body .sh-ac b.row.empty:hover{ background:none }
-
-/* Green illustration strokes pair with the existing gold bars. */
-body .hm-route svg{ stroke:var(--brand-green); fill:var(--brand-green-soft) }
-body .hm-route h3 span{ color:var(--brand-green) }
-body .hm-route:hover{ border-color:var(--brand-green-line) }
-body .ux-guide{
-  background:linear-gradient(120deg,var(--brand-green-soft),var(--skin-card) 75%);
-  border-color:var(--brand-green-line);
-}
-body :where(button,a,input,select,summary):focus-visible{
-  outline-color:var(--brand-green);
-}
-body .sh-bar .sh-account:focus-visible{ outline-color:var(--brand-green) }
