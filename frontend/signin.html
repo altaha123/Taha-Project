@@ -36,80 +36,148 @@
 <script src="auth.js" defer></script>
 
 <style>
-  /* This page loads the shared stylesheets but not premium.css, which is
-     where `body { font-family }` is set — so every word on it rendered in the
-     browser's default serif while the rest of the site is in Inter. */
-  body { margin: 0; font-family: var(--sans, Inter, system-ui, sans-serif);
-         -webkit-font-smoothing: antialiased; }
-  .si-wrap { max-width: 460px; margin: 0 auto; padding: 64px 20px 90px; }
-  .si-mark { font: 500 11px/1 'IBM Plex Mono', monospace; letter-spacing: 2.4px;
-             text-transform: uppercase; color: var(--mute); margin-bottom: 26px; }
-  .si-wrap h1 { font: 400 34px/1.15 'Instrument Serif', Georgia, serif;
-                color: var(--ink); margin: 0 0 12px; }
-  .si-lede { font-size: 14px; line-height: 1.65; color: var(--mute); margin: 0 0 30px; }
-  .si-field { display: block; margin-bottom: 14px; }
-  .si-field span { display: block; font: 500 11px/1 'IBM Plex Mono', monospace;
-                   letter-spacing: 1.6px; text-transform: uppercase;
-                   color: var(--mute); margin-bottom: 8px; }
-  .si-input { width: 100%; box-sizing: border-box; padding: 13px 14px; font-size: 16px;
-              color: var(--ink); background: var(--paper); border: 1px solid var(--rule);
-              border-radius: 2px; }
-  .si-input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
-  .si-btn { width: 100%; padding: 13px 18px; font: 600 14px/1 Inter, system-ui, sans-serif;
-            color: var(--paper); background: var(--ink); border: 0; border-radius: 2px;
-            cursor: pointer; }
-  .si-btn[disabled] { opacity: .55; cursor: default; }
-  .si-note { font-size: 13px; line-height: 1.6; margin: 18px 0 0; }
-  .si-note.bad { color: #8e2f2a; }
-  .si-note.good { color: #1f5d45; }
-  .si-list { margin: 30px 0 0; padding: 22px 0 0; border-top: 1px solid var(--rule);
-             font-size: 14px; line-height: 1.75; color: var(--mute); }
-  .si-list b { color: var(--ink); font-weight: 600; }
-  .si-back { display: inline-block; margin-top: 26px; font-size: 13px; color: var(--mute); }
-  .si-code { font-family: 'Courier New', Courier, monospace; font-size: 26px;
-             letter-spacing: 10px; text-align: center; }
-  .si-or { display: none; align-items: center; gap: 14px; margin: 22px 0;
-           font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
-           color: var(--mute); }
-  .si-or::before, .si-or::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
-  #si-google { display: none; margin-bottom: 4px; min-height: 44px; }
+  body { margin:0; font-family:Inter,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  .si-page { --si-muted:#68685f; --si-card:#fffdf8; --si-accent:#183f35;
+    min-height:100svh; padding:28px clamp(20px,5vw,80px); box-sizing:border-box;
+    background:radial-gradient(ellipse at 10% 80%,#e7eadf80,transparent 55%),var(--paper); }
+  [data-theme="dark"] .si-page { --si-muted:#b4b5a9; --si-card:#191d19; --si-accent:#b8dac8; }
+  .si-page *, .si-page *::before, .si-page *::after { box-sizing:border-box; }
+  .si-header { max-width:1180px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+  .si-brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); }
+  .si-monogram { width:40px; height:40px; border-radius:12px; background:#183f35; color:#e2cf9e; display:grid; place-items:center; font:400 30px/1 Georgia,serif; }
+  .si-brand-name { font-size:18px; font-weight:600; letter-spacing:-.04em; }
+  .si-brand-name small { display:block; font-size:10px; letter-spacing:.2em; text-transform:uppercase; margin-top:4px; color:var(--si-muted); }
+  .si-home { color:var(--si-muted); font-size:13px; text-decoration:none; padding:12px 0; }
+  .si-wrap { max-width:1100px; margin:clamp(40px,8vh,96px) auto 48px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:center; gap:clamp(40px,7vw,100px); }
+  .si-eyebrow { color:var(--si-accent); font:500 11px/1.5 'IBM Plex Mono',monospace; letter-spacing:.16em; text-transform:uppercase; margin:0 0 20px; }
+  .si-story h2 { font:400 clamp(42px,4.6vw,64px)/1.04 'Instrument Serif',Georgia,serif; letter-spacing:-.035em; margin:0; color:var(--ink); }
+  .si-story h2 em { color:var(--si-accent); font-weight:400; }
+  .si-description { max-width:370px; color:var(--si-muted); font-size:16px; line-height:1.7; margin:22px 0 0; }
+  .si-art { margin:28px 0 0; position:relative; }
+  .si-art svg { display:block; width:100%; height:auto; border-radius:24px; }
+  .si-art figcaption { color:var(--si-muted); font-size:11px; margin-top:10px; letter-spacing:.03em; }
+  .si-card { min-width:0; padding:38px; border:1px solid var(--rule); border-radius:24px; background:var(--si-card); box-shadow:0 16px 60px #183f350c,0 2px 6px #183f3505; animation:si-enter .5s ease-out both; }
+  .si-card h1 { font:400 42px/1.15 'Instrument Serif',Georgia,serif; letter-spacing:-.025em; margin:0 0 12px; color:var(--ink); }
+  .si-lede { font-size:14px; line-height:1.7; color:var(--si-muted); margin:0 0 26px; overflow-wrap:anywhere; }
+  .si-field { display:block; margin-bottom:16px; }
+  .si-field span { display:block; font-size:13px; font-weight:500; color:var(--ink); margin-bottom:9px; }
+  .si-input { width:100%; min-height:52px; padding:14px 16px; font:400 16px/1.4 Inter,system-ui,sans-serif; color:var(--ink); background:var(--paper); border:1px solid var(--rule); border-radius:10px; }
+  .si-input::placeholder { color:var(--si-muted); opacity:1; }
+  .si-page :focus-visible { outline:3px solid var(--si-accent); outline-offset:4px; }
+  .si-btn { display:block; width:100%; min-height:52px; padding:15px 18px; font:600 14px/1.5 Inter,system-ui,sans-serif; color:#fffdf8; background:#183f35; border:1px solid transparent; border-radius:10px; cursor:pointer; transition:background .18s ease,box-shadow .18s ease; }
+  .si-btn:hover:not(:disabled) { background:#245848; box-shadow:0 4px 12px #183f3520; }
+  .si-btn[disabled] { opacity:.55; cursor:wait; }
+  .si-note { font-size:13px; line-height:1.65; margin:16px 0 0; color:var(--si-muted); overflow-wrap:anywhere; }
+  .si-note:empty { display:none; }
+  .si-note.bad { color:#a52f28; background:#fff0ec; padding:12px; border-radius:8px; }
+  .si-note.good { color:var(--si-accent); }
+  [data-theme="dark"] .si-note.bad { color:#ffc3b8; background:#38201d; }
+  .si-list { list-style:none; margin:28px 0 0; padding:22px 0 0; border-top:1px solid var(--rule); display:grid; gap:16px; }
+  .si-list li { display:flex; align-items:flex-start; gap:12px; font-size:12px; line-height:1.6; color:var(--si-muted); }
+  .si-list b { display:block; font-size:13px; color:var(--ink); font-weight:500; }
+  .si-list svg { flex:none; width:18px; height:18px; margin-top:2px; color:var(--si-accent); }
+  .si-back { display:inline-block; margin-top:24px; font-size:13px; color:var(--si-accent); text-underline-offset:4px; }
+  .si-code { font-family:'IBM Plex Mono',monospace; font-size:24px; letter-spacing:8px; text-align:center; }
+  .si-or { display:none; align-items:center; gap:14px; margin:22px 0; font-size:12px; color:var(--si-muted); }
+  .si-or::before, .si-or::after { content:''; flex:1; height:1px; background:var(--rule); }
+  #si-google { display:none; min-height:44px; }
+  .si-footer { max-width:1100px; margin:auto; padding:0 0 16px; color:var(--si-muted); font-size:12px; line-height:1.6; display:flex; justify-content:space-between; gap:16px; }
+  @keyframes si-enter { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @media(max-width:760px) {
+    .si-page { padding:20px; }
+    .si-wrap { grid-template-columns:minmax(0,1fr); max-width:440px; gap:24px; margin:32px auto; }
+    .si-story { position:relative; padding-right:110px; min-height:120px; }
+    .si-eyebrow { font-size:10px; margin-bottom:12px; }
+    .si-story h2 { font-size:34px; }
+    .si-description { font-size:13px; line-height:1.6; margin:12px 0 0; }
+    .si-art { position:absolute; right:0; top:22px; width:96px; margin:0; }
+    .si-art svg { height:124px; object-fit:cover; border-radius:16px; }
+    .si-art figcaption { display:none; }
+    .si-card { padding:26px 24px; border-radius:20px; }
+    .si-card h1 { font-size:34px; }
+    .si-footer { max-width:440px; font-size:11px; flex-wrap:wrap; gap:4px; }
+  }
+  @media(max-width:360px) {
+    .si-page { padding:16px; }
+    .si-card { padding:24px 18px; }
+    .si-story { padding-right:0; }
+    .si-art { display:none; }
+    .si-home { font-size:12px; }
+  }
+  @media(prefers-reduced-motion:reduce) { .si-card { animation:none; } .si-page, .si-btn { transition:none; } }
 </style>
 </head>
 
-<body>
+<body class="si-page">
+<header class="si-header">
+  <a class="si-brand" href="index.html" aria-label="Altaha Screener home"><span class="si-monogram" aria-hidden="true">A</span><span class="si-brand-name">Altaha<small>Screener</small></span></a>
+  <a class="si-home" href="index.html">Explore screener ↗</a>
+</header>
 <main class="si-wrap">
-  <div class="si-mark">Altaha Screener</div>
+  <section class="si-story" aria-label="Your investing workspace">
+    <p class="si-eyebrow">Your investing workspace</p>
+    <h2>A clearer view.<br><em>Of every investment.</em></h2>
+    <p class="si-description">Keep your portfolio close. See what changed, and stay connected to the companies you own.</p>
+    <figure class="si-art">
+      <svg viewBox="0 0 500 280" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="si-art-title">
+        <title id="si-art-title">An abstract market landscape with sculptural green and gold columns</title>
+        <defs>
+          <linearGradient id="si-sky" x2="500" y2="280" gradientUnits="userSpaceOnUse"><stop stop-color="#eaece0"/><stop offset="1" stop-color="#d6dece"/></linearGradient>
+          <linearGradient id="si-green" x2="1" y2="1"><stop stop-color="#497663"/><stop offset="1" stop-color="#163d32"/></linearGradient>
+          <linearGradient id="si-gold" x2="1" y2="1"><stop stop-color="#e2c986"/><stop offset="1" stop-color="#a68848"/></linearGradient>
+        </defs>
+        <rect width="500" height="280" rx="24" fill="url(#si-sky)"/>
+        <circle cx="380" cy="90" r="58" fill="#f8f4e7"/>
+        <circle cx="380" cy="90" r="74" stroke="#f8f4e7" stroke-opacity=".5"/>
+        <path d="M0 210Q150 160 290 210T500 205V280H0Z" fill="#bdcab8"/>
+        <path d="M0 247Q180 206 500 240V280H0Z" fill="#a3b7a0"/>
+        <ellipse cx="275" cy="244" rx="166" ry="16" fill="#264d36" opacity=".12"/>
+        <path d="M118 184l40-19 41 19-40 20z" fill="#719181"/>
+        <path d="M118 184l41 20v42l-41-20z" fill="url(#si-green)"/><path d="M159 204l40-20v42l-40 20z" fill="#173e32"/>
+        <path d="M203 143l40-19 41 19-40 20z" fill="#719181"/>
+        <path d="M203 143l41 20v83l-41-20z" fill="url(#si-green)"/><path d="M244 163l40-20v83l-40 20z" fill="#173e32"/>
+        <path d="M288 94l40-19 41 19-40 20z" fill="#e5d298"/>
+        <path d="M288 94l41 20v132l-41-20z" fill="url(#si-gold)"/><path d="M329 114l40-20v132l-40 20z" fill="#9e8246"/>
+        <path d="M77 164C147 115 174 148 225 91S316 62 344 38" stroke="#426c58" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>
+        <circle cx="77" cy="164" r="4" fill="#426c58"/><circle cx="344" cy="38" r="4" fill="#426c58"/>
+        <path d="M397 231v-39m-7 13h14v18h-14zM429 208v-51m-7 11h14v24h-14z" stroke="#526f59" stroke-width="2"/>
+      </svg>
+      <figcaption>A little perspective makes a difference.</figcaption>
+    </figure>
+  </section>
+  <section class="si-card" aria-label="Sign in to your account">
 
   <div id="si-state">
     <h1>Sign in</h1>
     <p class="si-lede">
-      No password. Type your email and we send you a six-digit code — the same
-      address the daily portfolio email goes to.
+      Your portfolio. Your daily perspective.<br>
+      Sign in to keep it all in one place.
     </p>
 
     <div id="si-google"></div>
-    <div class="si-or" id="si-or">or</div>
+    <div class="si-or" id="si-or">or use email</div>
 
     <form id="si-form" novalidate>
       <label class="si-field" for="si-email"><span>Email address</span>
         <input class="si-input" type="email" id="si-email" name="email"
-               autocomplete="email" inputmode="email" required
+               autocomplete="email" inputmode="email" aria-describedby="si-note" required
                placeholder="you@example.com" />
       </label>
       <button class="si-btn" type="submit" id="si-go">Email me a code</button>
     </form>
     <p class="si-note" id="si-note" role="status" aria-live="polite"></p>
 
-    <div class="si-list">
-      Signing in adds three things:<br>
-      <b>Your portfolio, saved</b> — on the server, so it survives a new phone.<br>
-      <b>One email after the close</b> — what your holdings did, and what was filed on them.<br>
-      <b>Nothing else.</b> No password stored, and one click stops the emails.
-    </div>
+    <p class="si-note">No password to remember. Just a six-digit email code.</p>
+    <ul class="si-list">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span><b>Your portfolio, always with you</b>Saved to your account, across devices.</span></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span><b>The market closes. You stay informed.</b>One email with your holdings’ moves and filings. Unsubscribe anytime.</span></li>
+    </ul>
 
     <a class="si-back" href="index.html">← Back to the screener</a>
   </div>
+  </section>
 </main>
+<footer class="si-footer"><span>Altaha Screener</span><span>Research with perspective.</span></footer>
 
 <script>
 (function () {
@@ -241,9 +309,26 @@
           client_id: clientId,
           callback: function (resp) { onGoogle(resp && resp.credential); }
         });
-        gid.renderButton(slot, { theme: 'outline', size: 'large', text: 'continue_with',
-                                 shape: 'rectangular', width: 320 });
+        // Measure the visible form; Google caps its official button at 400px.
         slot.style.display = 'block';
+        function renderGoogle() {
+          if (!slot.isConnected) return;
+          slot.innerHTML = '';
+          gid.renderButton(slot, { theme: 'outline', size: 'large', text: 'continue_with',
+            shape: 'rectangular', width: Math.min(400, Math.floor(slot.getBoundingClientRect().width)) });
+        }
+        renderGoogle();
+        if (window.ResizeObserver) {
+          var previousWidth = slot.clientWidth;
+          var observer = new ResizeObserver(function () {
+            if (!slot.isConnected) { observer.disconnect(); return; }
+            if (slot.clientWidth !== previousWidth) {
+              previousWidth = slot.clientWidth;
+              renderGoogle();
+            }
+          });
+          observer.observe(slot);
+        }
         var divider = $('si-or');
         if (divider) divider.style.display = 'flex';
       } catch (e) { /* email still works; that is the point of the divider */ }
