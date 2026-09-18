@@ -510,3 +510,96 @@ def test_signing_in_by_google_then_by_code_is_one_account(main_mod, fresh, monke
     main_mod.auth_request_link({"email": "reader@example.com"})
     main_mod.auth_verify_code({"email": "reader@example.com", "code": code_from(fresh)})
     assert A.stats()["users"] == 1
+
+
+# ── The planner, and who is signing it ───────────────────────────────────────
+
+def profile_answers(**over):
+    base = {"age": "25_34", "horizon": "10plus", "surplus": "25_40",
+            "emergency": "6_12", "emi": "under20", "dependents": "0",
+            "drawdown_action": "hold_plan", "max_fall": "30",
+            "priority": "mostly_grow", "experience": "3_10",
+            "purpose": "retirement", "mode": "sip", "amount": 25000}
+    base.update(over)
+    return base
+
+
+def test_the_questionnaire_is_served_rather_than_kept_in_the_page(main_mod, fresh):
+    """One source of truth for what was asked, so an answer recorded today
+    still resolves to the same question in five years."""
+    out = main_mod.planner_questions()
+    ids = [q["id"] for q in out["questions"]]
+    assert "horizon" in ids and "drawdown_action" in ids
+    for q in out["questions"]:
+        assert q["label"] and q["why"], q["id"]
+        if q["kind"] == "choice":
+            assert q["options"], q["id"]
+    assert out["bands"][0]["band"] == "Conservative"
+
+
+def test_a_profile_needs_a_session(main_mod, fresh):
+    from fastapi import HTTPException
+    for call in (lambda: main_mod.save_my_risk_profile({"answers": profile_answers()},
+                                                       authorization=None),
+                 lambda: main_mod.my_risk_profile(authorization=None)):
+        with pytest.raises(HTTPException) as error:
+            call()
+        assert error.value.status_code == 401
+
+
+def test_a_profile_is_assessed_recorded_and_handed_back(main_mod, fresh):
+    token = sign_in(main_mod, fresh)
+    out = main_mod.save_my_risk_profile({"answers": profile_answers()},
+                                        authorization=auth(token))
+    p = out["profile"]
+    assert p["score"] == min(p["capacity"], p["tolerance"])
+    assert p["band"] and p["binding_note"]
+    assert main_mod.my_risk_profile(authorization=auth(token))["profile"]["band"] == p["band"]
+
+
+def test_an_incomplete_questionnaire_is_refused_by_name(main_mod, fresh):
+    from fastapi import HTTPException
+    token = sign_in(main_mod, fresh)
+    with pytest.raises(HTTPException) as error:
+        main_mod.save_my_risk_profile({"answers": {"age": "25_34"}},
+                                      authorization=auth(token))
+    assert error.value.status_code == 400
+    assert "horizon" in error.value.detail
+
+
+def test_reassessing_keeps_the_earlier_basis(main_mod, fresh):
+    token = sign_in(main_mod, fresh)
+    main_mod.save_my_risk_profile({"answers": profile_answers()}, authorization=auth(token))
+    main_mod.save_my_risk_profile(
+        {"answers": profile_answers(drawdown_action="sell_all", max_fall="any")},
+        authorization=auth(token))
+    out = main_mod.my_risk_profile(history=True, authorization=auth(token))
+    assert len(out["history"]) == 2
+    assert out["profile"]["score"] < out["history"][1]["score"]
+
+
+def test_the_page_says_who_is_advising_and_under_what_number(main_mod, monkeypatch):
+    """A registration number a reader cannot see is a registration number they
+    cannot check."""
+    monkeypatch.setitem(main_mod.ADVISER, "name", "Example Advisers")
+    monkeypatch.setitem(main_mod.ADVISER, "registration", "INA000000000")
+    out = main_mod.adviser_details()
+    assert out["configured"] is True
+    assert out["registration"] == "INA000000000"
+
+
+def test_an_unconfigured_deploy_says_so_rather_than_implying_a_registration(main_mod, monkeypatch):
+    monkeypatch.setitem(main_mod.ADVISER, "name", "")
+    monkeypatch.setitem(main_mod.ADVISER, "registration", "")
+    assert main_mod.adviser_details()["configured"] is False
+    # And the reader is still told to go and find an adviser, which is the
+    # right advice from a page nobody has signed.
+    assert "SEBI-registered adviser" in main_mod.disclaimer()
+
+
+def test_a_signed_page_stops_telling_readers_to_find_an_adviser(main_mod, monkeypatch):
+    monkeypatch.setitem(main_mod.ADVISER, "name", "Example Advisers")
+    monkeypatch.setitem(main_mod.ADVISER, "registration", "INA000000000")
+    text = main_mod.disclaimer()
+    assert "consult a SEBI-registered adviser" not in text
+    assert "market risk" in text.lower()

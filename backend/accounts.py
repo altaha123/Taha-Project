@@ -147,6 +147,24 @@ CREATE TABLE IF NOT EXISTS watchlist (
   PRIMARY KEY (user_id, symbol)
 );
 CREATE INDEX IF NOT EXISTS idx_watchlist_user ON watchlist(user_id, position);
+-- Risk profiles, kept as a history rather than a current value.
+--
+-- An adviser has to be able to say what was recommended, to whom, on what
+-- basis, and when — and "on what basis" is the answers as they stood that day,
+-- not as they stand now. An UPDATE here would destroy exactly the record the
+-- regulations exist to preserve, so nothing updates: every assessment is a new
+-- row and the latest one is simply the newest.
+CREATE TABLE IF NOT EXISTS risk_profiles (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER NOT NULL,
+  answers     TEXT NOT NULL,        -- JSON, exactly as submitted
+  capacity    REAL NOT NULL,
+  tolerance   REAL NOT NULL,
+  score       REAL NOT NULL,
+  band        TEXT NOT NULL,
+  assessed_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_risk_user ON risk_profiles(user_id, id);
 -- What was sent, so a retry after a crash cannot mail the same person the
 -- same day twice. The digest job is not transactional; this table is what
 -- makes it safe to run again.
@@ -597,6 +615,54 @@ def merge_watchlist(user_id: int, symbols) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Risk profiles
+# ---------------------------------------------------------------------------
+
+def save_risk_profile(user_id: int, answers: dict, assessment: dict) -> dict:
+    """Record an assessment. Never replaces an earlier one."""
+    import json
+    conn = _connect()
+    with conn:
+        cur = conn.execute(
+            "INSERT INTO risk_profiles(user_id,answers,capacity,tolerance,score,band,assessed_at) "
+            "VALUES(?,?,?,?,?,?,?)",
+            (user_id, json.dumps(answers, sort_keys=True),
+             float(assessment["capacity"]), float(assessment["tolerance"]),
+             float(assessment["score"]), str(assessment["band"]),
+             assessment["assessed_at"]))
+    return {"id": cur.lastrowid}
+
+
+def _profile_dict(row) -> dict:
+    import json
+    try:
+        answers = json.loads(row["answers"])
+    except Exception:                                         # pragma: no cover
+        answers = {}
+    return {"id": row["id"], "answers": answers, "capacity": row["capacity"],
+            "tolerance": row["tolerance"], "score": row["score"],
+            "band": row["band"], "assessed_at": row["assessed_at"]}
+
+
+def latest_risk_profile(user_id: int):
+    conn = _connect()
+    row = conn.execute(
+        "SELECT * FROM risk_profiles WHERE user_id=? ORDER BY id DESC LIMIT 1",
+        (user_id,)).fetchone()
+    return _profile_dict(row) if row else None
+
+
+def risk_profile_history(user_id: int, limit: int = 20) -> list:
+    """Newest first. What somebody answered a year ago is the record of why
+    they were advised what they were advised a year ago."""
+    conn = _connect()
+    rows = conn.execute(
+        "SELECT * FROM risk_profiles WHERE user_id=? ORDER BY id DESC LIMIT ?",
+        (user_id, max(1, min(int(limit or 20), 100)))).fetchall()
+    return [_profile_dict(r) for r in rows]
+
+
+# ---------------------------------------------------------------------------
 # The daily send
 # ---------------------------------------------------------------------------
 
@@ -658,6 +724,7 @@ def stats() -> dict:
             "users": one("SELECT COUNT(*) FROM users"),
             "with_holdings": one("SELECT COUNT(DISTINCT user_id) FROM holdings"),
             "with_watchlist": one("SELECT COUNT(DISTINCT user_id) FROM watchlist"),
+            "risk_profiled": one("SELECT COUNT(DISTINCT user_id) FROM risk_profiles"),
             "opted_in": one("SELECT COUNT(*) FROM users WHERE digest_opt_in=1"),
             "sessions": one("SELECT COUNT(*) FROM sessions WHERE expires_at>'%s'"
                             % _iso(_now())),
