@@ -1551,7 +1551,7 @@
 
   <div id="view-portfolio" style="display:none" data-private>
     <header class="tabhead">
-      <h2>Portfolio review</h2>
+      <h2>My portfolio</h2>
       <p id="pf_lede">Your holdings against their scores, sectors and exposures. Saved in this browser — <a href="signin.html">sign in</a> to keep them on your account.</p>
     </header>
 
@@ -1572,16 +1572,24 @@
 
     <div class="psec">
       <div class="lh"><h3>Your holdings</h3><span id="pf_count">Max 50 per analysis</span></div>
-      <div class="pfinrow">
-        <button class="pfbtn" type="button" id="pf_addrow">+ Add a stock</button>
-        <label class="pfbtn pfup">Upload CSV<input type="file" id="pf_file" accept=".csv,.txt,text/csv" hidden></label>
-        <a class="pfbtn" id="pf_tmpl" download="altaha-portfolio-template.csv">Template</a>
-        <select class="pfsel" id="pf_saved" aria-label="Saved portfolios"><option value="">Saved portfolios…</option></select>
-        <button class="pfbtn" type="button" id="pf_save">Save</button>
-        <button class="pfbtn ghost" type="button" id="pf_delete" disabled>Delete</button>
-        <button class="pfbtn ghost" type="button" id="pf_clear">Clear</button>
+      <div class="pf-workspace">
+        <div class="pf-savebar">
+          <label for="pf_saved">Your portfolios</label>
+          <select class="pfsel" id="pf_saved" aria-label="Saved portfolios"><option value="">Saved portfolios…</option></select>
+          <button class="pfbtn" type="button" id="pf_save">Save portfolio</button>
+        </div>
+        <div class="pf-entrybar">
+          <button class="pfbtn" type="button" id="pf_addrow">+ Add a stock</button>
+          <button class="pfbtn" type="button" id="pf_upload">Import CSV</button>
+          <input type="file" id="pf_file" accept=".csv,.txt,text/csv" hidden>
+        </div>
+        <details class="pf-import-options">
+          <summary>Paste holdings or download a template</summary>
+          <p>Copy the holdings table from your broker, or use our CSV template.</p>
+          <textarea class="pfpaste" id="pf_paste" rows="3" placeholder="Paste your broker’s holdings table here" aria-label="Paste holdings table"></textarea>
+          <a class="pfbtn" id="pf_tmpl" download="altaha-portfolio-template.csv">Download CSV template</a>
+        </details>
       </div>
-      <textarea class="pfpaste" id="pf_paste" rows="2" placeholder="…or paste a table straight from your broker's holdings page" aria-label="Paste holdings table"></textarea>
       <div id="pf_mapper" class="pfmapper"></div>
       <div class="pfhead"><span>Symbol</span><span>Qty</span><span>Buy price <i>(optional)</i></span><span class="h-date">Buy date <i>(optional)</i></span><span></span></div>
       <div id="pf_rows"></div>
@@ -1589,6 +1597,14 @@
         <button id="pf_go" type="button">Analyse portfolio</button>
         <span class="brun-note" id="pf_note"></span>
       </div>
+      <details class="pf-manage">
+        <summary>Manage holdings</summary>
+        <p>Clear the editor or delete the selected saved portfolio.</p>
+        <div class="pfinrow">
+          <button class="pfbtn ghost" type="button" id="pf_clear">Clear holdings</button>
+          <button class="pfbtn ghost" type="button" id="pf_delete" disabled>Delete saved portfolio</button>
+        </div>
+      </details>
       <div class="state" id="pf_state" style="display:none"></div>
     </div>
 
