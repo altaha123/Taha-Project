@@ -522,3 +522,20 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
   .sh-chip.flash-up, .sh-chip.flash-dn{ animation:none }
   *{ scroll-behavior:auto !important }
 }
+
+/* ── The product question ───────────────────────────────────────────────────
+   Four products, four questions. The question is the label's reason to exist,
+   so it is printed above the columns rather than left to a tooltip nobody on
+   a touchscreen can reach. Spans the whole panel: it introduces every column
+   under it, not the first one. */
+.sh-megaq{
+  grid-column:1 / -1;
+  margin:0 0 4px; padding:0 0 12px;
+  border-bottom:1px solid var(--rule-2);
+  font-family:var(--serif, Georgia, serif);
+  font-size:15px; line-height:1.35; color:var(--ink);
+}
+.sh-drawer .sh-megaq{
+  border-bottom:0; padding:0 0 10px;
+  font-size:13.5px; color:var(--mute);
+}

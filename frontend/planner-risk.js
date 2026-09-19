@@ -197,6 +197,15 @@
   }
 
   function show(p) {
+    /* Published so Allocate can key its split off the profile without
+       re-implementing the arithmetic. Signed in this is the server's
+       assessment; signed out it is the local one, and Allocate is told which
+       by `recorded`. It stays in this browser either way. */
+    window.AltahaRiskProfile = p;
+    try {
+      window.dispatchEvent(new CustomEvent('altaha:risk', { detail: p }));
+    } catch (e) {}
+
     var old = $('prisk_result');
     if (old) old.remove();
     var box = el('div', 'prres');

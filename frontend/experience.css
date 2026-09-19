@@ -52,7 +52,7 @@
 }
 @media (max-width: 1040px) {
   body.sh-on { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-  .ux-bottom { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); position: fixed; inset: auto 0 0; z-index: 950; gap: 4px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--paper); border-top: 1px solid var(--rule); box-shadow: var(--e2); }
+  .ux-bottom { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; inset: auto 0 0; z-index: 950; gap: 4px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--paper); border-top: 1px solid var(--rule); box-shadow: var(--e2); }
   .ux-bottom button { border-color: transparent; font-size: 12px; padding: 10px 4px; font-weight: 500; }
   .ux-bottom button[aria-current], .ux-bottom button[aria-expanded="true"] { background: var(--paper-2); border-color: var(--gold); }
   .ux-desktop-save { display: none; }

@@ -642,8 +642,12 @@
       t.dataset.mob = '1';
       t.classList.add('mtable');
       $$('tbody tr', t).forEach(function (tr) {
-        $$('td', tr).forEach(function (td, i) {
-          if (heads[i]) td.setAttribute('data-label', heads[i]);
+        /* Count row headers as columns. A table whose first cell is a
+           <th scope="row"> has one fewer <td> than it has <th> in the head,
+           so indexing the tds alone shifted every label one column left and
+           stamped each number with the name of the column before it. */
+        $$('th, td', tr).forEach(function (cell, i) {
+          if (cell.tagName === 'TD' && heads[i]) cell.setAttribute('data-label', heads[i]);
         });
       });
     });

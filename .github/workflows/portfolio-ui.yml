@@ -43,6 +43,20 @@ jobs:
         with:
           name: portfolio-browser-verification
           path: test-results/portfolio
+      - name: Verify the four products and every address they inherited
+        if: always()
+        # Navigation is the one part of the site everything else depends on,
+        # and its failures are all silent: a hash that opens nothing, a
+        # destination owned by two products at once, a phone bar and a desktop
+        # bar naming different things. Asserted on the rendered views.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/nav-products-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nav-products-verification
+          path: test-results/nav-products
       - name: Verify homepage visuals, motion and accessibility
         if: always()
         env:
