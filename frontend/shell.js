@@ -96,65 +96,104 @@
   }
 
   /* ── The menu map ──────────────────────────────────────────────────────────
-     Grouped into columns, which is the whole reason the old bar failed: eleven
-     flat destinations tell a first-time visitor that everything matters
-     equally, so nothing does. `tab` values are the ids nav.js already knows. */
+     Four products, each one the answer to a question somebody actually walks
+     in with. Grouped into columns, which is the whole reason the old bar
+     failed: eleven flat destinations tell a first-time visitor that everything
+     matters equally, so nothing does. `tab` values are the ids nav.js already
+     knows, and nav.js resolves a tab to its owning product, so a column can
+     be moved between products here without breaking a single link. */
 
   var MENU = [
     {
-      id: 'screener', label: 'Stocks',
+      id: 'discover', label: 'Discover',
+      question: 'Where are opportunities now?',
       cols: [
-        { head: 'Stock research', items: [
-          { tab: 'screener', label: 'Stock analysis', icon: 'ledger', hint: 'Stock score and calculation details' },
-          { tab: 'charts',   label: 'Charts',         icon: 'candles', hint: 'Price charts and technical indicators' },
-          { tab: 'results',  label: 'Quarterly results',        icon: 'document', hint: 'Latest quarterly numbers' },
-          { tab: 'concalls', label: 'Concall summaries', icon: 'document', hint: 'Earnings call transcripts, digested' },
-          { tab: 'investors', label: 'Investor portfolios', icon: 'ledger', hint: 'What well-known investors disclosed holding' },
-          { tab: 'funds', label: 'Fund house portfolios', icon: 'ledger', hint: 'What the mutual funds disclosed holding' }
+        { head: 'Right now', items: [
+          { tab: 'discover', label: 'Opportunities now', icon: 'target',
+            hint: 'Today’s setups, movers and unusual activity' },
+          { tab: 'live', label: 'Live scanner', icon: 'pulse',
+            hint: 'Intraday alerts as they fire' }
         ]},
-        { head: 'More research', items: [
-          { tab: 'special', label: 'Delivery trends', icon: 'target',
-            hint: 'Price momentum and delivery volume' },
-          { tab: 'vocab', label: 'Glossary', icon: 'document', hint: 'Financial terms in plain language' }
+        { head: 'Unusual activity', items: [
+          { tab: 'special', label: 'Delivery trends', icon: 'bars',
+            hint: 'Price momentum backed by delivered volume' },
+          { tab: 'deals', label: 'Bulk & block deals', icon: 'exchange',
+            hint: 'Large trades and their participants' },
+          { tab: 'wow', label: 'WOW orders', icon: 'target',
+            hint: 'Order wins measured against company size' }
         ]},
-        { head: 'The market', items: [
-          { tab: 'filings', label: 'Company announcements',  icon: 'bell', hint: 'Updates filed with the exchange' },
-          { tab: 'deals',   label: 'Bulk & block deals',    icon: 'exchange', hint: 'Large trades and their participants' },
-          { tab: 'wow',     label: 'WOW orders', icon: 'target', hint: 'Order wins measured against company size' },
-          { tab: 'options', section: 'ideas', label: 'Options',  icon: 'layers', hint: 'Option prices and open interest' }
+        { head: 'Derivatives', items: [
+          { tab: 'options', label: 'Options activity', icon: 'layers',
+            hint: 'Option prices and open interest' }
         ]}
       ]
     },
     {
-      id: 'ideas', label: 'Discover',
+      id: 'allocate', label: 'Allocate',
+      question: 'What should I do with my money?',
       cols: [
-        { head: 'Find stocks', items: [
-          { tab: 'ideas', label: 'Stock shortlist', icon: 'bulb', hint: 'Stocks ranked by the screener' },
-          { tab: 'live',  label: 'Live scanner',            icon: 'pulse', hint: 'Intraday scanner' }
+        { head: 'The plan', items: [
+          { tab: 'allocate', label: 'Allocation plan', icon: 'plan',
+            hint: 'What the next rupee should do, in order' }
         ]},
-        { head: 'Past results', items: [
-          { tab: 'tracker', label: 'Score history', icon: 'target', hint: 'Review outcomes of past scans' }
+        { head: 'Your household', items: [
+          { tab: 'planner', label: 'Money planner', icon: 'ledger',
+            hint: 'Income, expenses, tax and the cushion' }
         ]}
       ]
     },
     {
       id: 'portfolio', label: 'Portfolio',
+      question: 'How are my existing investments doing?',
       cols: [
         { head: 'Your investments', items: [
-          { tab: 'portfolio', label: 'Portfolio review', icon: 'bars', hint: 'Review holdings, allocation and portfolio rules' }
+          { tab: 'portfolio', label: 'Holdings review', icon: 'bars',
+            hint: 'Your holdings against their scores and exposures' }
+        ]},
+        { head: 'The record', items: [
+          { tab: 'tracker', label: 'Idea record', icon: 'target',
+            hint: 'Ideas you added and what happened next' }
         ]}
       ]
     },
-    { id: 'planner', label: 'Planner', cols: [
-      { head: 'Household', items: [
-        { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'Plan income, expenses and financial goals' }
-      ]}
-    ]},
-    { id: 'social', label: 'News & posts', cols: [
-      { head: 'News and sharing', items: [
-        { tab: 'social', label: 'News & post drafts', icon: 'share', hint: 'Read updates and prepare posts' }
-      ]}
-    ]}
+    {
+      id: 'research', label: 'Research',
+      question: 'What does the evidence say?',
+      cols: [
+        { head: 'Stocks', items: [
+          { tab: 'ideas', label: 'Stock screener', icon: 'bulb',
+            hint: 'The NSE universe ranked by the engine' },
+          { tab: 'screener', label: 'Stock analysis', icon: 'ledger',
+            hint: 'One company, scored, with the ledger' },
+          { tab: 'charts', label: 'Technicals', icon: 'candles',
+            hint: 'Price charts, levels and indicators' }
+        ]},
+        { head: 'The evidence', items: [
+          { tab: 'score', label: 'Altaha Score', icon: 'shield',
+            hint: 'How the score is built and what it has been worth' },
+          { tab: 'factors', label: 'Factors', icon: 'target',
+            hint: 'What each factor has actually predicted' },
+          { tab: 'results', label: 'Fundamentals', icon: 'document',
+            hint: 'Quarterly numbers and the year-ago comparison' }
+        ]},
+        { head: 'Ownership', items: [
+          { tab: 'investors', label: 'Investor portfolios', icon: 'ledger',
+            hint: 'What well-known investors disclosed holding' },
+          { tab: 'funds', label: 'Fund house portfolios', icon: 'ledger',
+            hint: 'What the mutual funds disclosed holding' }
+        ]},
+        { head: 'News', items: [
+          { tab: 'filings', label: 'Company announcements', icon: 'bell',
+            hint: 'Updates filed with the exchange' },
+          { tab: 'concalls', label: 'Concall summaries', icon: 'document',
+            hint: 'Earnings call transcripts, digested' },
+          { tab: 'social', label: 'News & post drafts', icon: 'share',
+            hint: 'Read updates and prepare posts' },
+          { tab: 'vocab', label: 'Glossary', icon: 'document',
+            hint: 'Financial terms in plain language' }
+        ]}
+      ]
+    }
   ];
 
   /* ── Navigation hand-off ─────────────────────────────────────────────────── */
@@ -221,6 +260,7 @@
       b.dataset.sec = sec.id;
       b.setAttribute('aria-expanded', 'false');
       b.setAttribute('aria-haspopup', 'true');
+      b.title = sec.question || '';
       b.innerHTML = esc(sec.label) +
         '<svg class="cv" width="10" height="10" viewBox="0 0 24 24" fill="none" ' +
         'stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>';
@@ -305,11 +345,15 @@
       '<span>' + esc(it.hint) + '</span></span></button>';
   }
 
+  /* The question sits above the columns, not in a tooltip. It is the only
+     thing on the panel that tells a first-time reader why these particular
+     destinations are filed together. */
   function columnsHTML(sec) {
-    return sec.cols.map(function (c) {
-      return '<div class="sh-col"><h4>' + esc(c.head) + '</h4>' +
-        c.items.map(function (it) { return itemHTML(sec.id, it); }).join('') + '</div>';
-    }).join('');
+    return (sec.question ? '<p class="sh-megaq">' + esc(sec.question) + '</p>' : '') +
+      sec.cols.map(function (c) {
+        return '<div class="sh-col"><h4>' + esc(c.head) + '</h4>' +
+          c.items.map(function (it) { return itemHTML(sec.id, it); }).join('') + '</div>';
+      }).join('');
   }
 
   function wireMenu(megawrap, drawer) {
@@ -376,6 +420,7 @@
        for what the destinations are. */
     drawer.innerHTML = MENU.map(function (sec) {
       return '<div class="sh-col"><h4>' + esc(sec.label) + '</h4>' +
+        (sec.question ? '<p class="sh-megaq">' + esc(sec.question) + '</p>' : '') +
         sec.cols.map(function (c) {
           return c.items.map(function (it) { return itemHTML(sec.id, it); }).join('');
         }).join('') + '</div>';

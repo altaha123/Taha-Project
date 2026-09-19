@@ -42,6 +42,7 @@
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="share.css">
 <link rel="stylesheet" href="lab.css">
+<link rel="stylesheet" href="products.css">
 <link rel="stylesheet" href="sectors-live.css">
 <link rel="stylesheet" href="deals.css">
 <style>
@@ -1251,6 +1252,10 @@
     <span class="moreWrap">
       <button class="tab" id="tab-more" aria-haspopup="true" aria-expanded="false">More ▾</button>
       <div class="moreMenu" id="moreMenu" role="menu">
+        <button id="tab-discover" role="menuitem">Opportunities now</button>
+        <button id="tab-allocate" role="menuitem">Allocation plan</button>
+        <button id="tab-score" role="menuitem">Altaha Score</button>
+        <button id="tab-factors" role="menuitem">Factors</button>
         <button id="tab-deals" role="menuitem">Deals</button>
         <button id="tab-special" role="menuitem">Altaha Special</button>
         <button id="tab-tracker" role="menuitem">Tracker</button>
@@ -1461,6 +1466,51 @@
   </section>
   </div><!-- /view-screener -->
 
+
+  <!-- ══ DISCOVER ══════════════════════════════════════════════════════════
+       Where are opportunities now?
+
+       This is the product's front door for the question "show me something".
+       It does not own a feed of its own: every block here is a window onto a
+       tab that already exists, cut to the six rows worth looking at, with the
+       door to the full view underneath it. That is deliberate — a hub that
+       re-implements its children drifts out of step with them within a month.
+       Every block fails soft and independently: one dead feed removes one
+       card, never the page.                                                -->
+  <div id="view-discover" style="display:none">
+    <header class="tabhead">
+      <h2>Opportunities now</h2>
+      <p>What the market is actually doing today, and the handful of names where
+         something unusual is happening. Nothing here is a recommendation — it is
+         where to point the research at.</p>
+    </header>
+    <div id="dsc-market"></div>
+    <div id="dsc-setups"></div>
+    <div id="dsc-activity"></div>
+    <p class="disc" id="dsc-disc"></p>
+  </div><!-- /view-discover -->
+
+  <!-- ══ ALLOCATE ══════════════════════════════════════════════════════════
+       What should I do with my money?
+
+       The order matters more than any individual answer, so the order is what
+       this view renders: cushion, then costly debt, then the split, then the
+       size of a single position. Each step reads what the planner and the
+       portfolio already hold in this browser and says where the reader is
+       against it. It computes locally and recommends no product — the same
+       line the planner and the risk profile already hold to.                -->
+  <div id="view-allocate" style="display:none" data-private>
+    <header class="tabhead">
+      <h2>Allocation plan</h2>
+      <p>What the next rupee should do, in the order it should do it. Everything
+         here computes in this browser from what you have already entered in the
+         planner and the portfolio. Nothing you type is sent anywhere, and no
+         product is ever named.</p>
+    </header>
+    <div id="alc-steps"></div>
+    <div id="alc-size"></div>
+    <p class="disc" id="alc-disc"></p>
+  </div><!-- /view-allocate -->
 
   <div id="view-live" style="display:none">
     <header class="tabhead">
@@ -1858,6 +1908,101 @@
     <p class="disc" id="tkdisc"></p>
   </div><!-- /view-tracker -->
 
+  <!-- ══ THE ALTAHA SCORE ══════════════════════════════════════════════════
+       The number appears on every row on this site, so it gets a page that
+       says what it is and — more importantly — what it is not. The weights
+       below are the disclosed priors from profiles.V4_WEIGHTS; they are not
+       fitted, and saying so here is the point of the page.                  -->
+  <div id="view-score" style="display:none">
+    <header class="tabhead">
+      <h2>The Altaha Score</h2>
+      <p>A 0–100 interpretable research ranking. It is not a probability of
+         profit, not a price forecast, and not a measured improvement in
+         predictive accuracy. It is a way of holding twenty-odd observations
+         about a company in one place with the arithmetic left open.</p>
+    </header>
+
+    <div class="psec">
+      <div class="lh"><h3>How the number is assembled</h3><span>One scoring path</span></div>
+      <p class="lsub">Raw observations are ranked against business-model peers,
+         averaged within a signal group, then within a pillar, then weighted for
+         the horizon you asked about and shrunk towards the middle where the
+         evidence is thin. A missing input is never counted as a zero — it is
+         withheld, and the confidence falls instead.</p>
+      <ol class="scr-path">
+        <li><b>Observe.</b> Each factor is measured from reported numbers and prices, oriented so higher is better.</li>
+        <li><b>Rank.</b> Every factor becomes a percentile against companies with the same business model, never against the whole market.</li>
+        <li><b>Group.</b> Related signals average together first, so adding a second trend metric does not quietly double the weight of trend.</li>
+        <li><b>Weight.</b> The eight pillars are combined using the horizon's weights, below.</li>
+        <li><b>Shrink.</b> A score built from fewer inputs is pulled towards the middle, because a confident number from thin evidence is the expensive kind of wrong.</li>
+      </ol>
+    </div>
+
+    <div class="psec">
+      <div class="lh"><h3>The eight pillars</h3><span>Weights by horizon, in percent</span></div>
+      <p class="lsub">These are disclosed priors, not estimated truths. No weight
+         search was run to produce them. A day trader and a ten-year holder are
+         asking different questions of the same company, which is why one set of
+         weights could not serve both.</p>
+      <div class="scr-wrap">
+        <table class="scr-weights">
+          <thead>
+            <tr><th scope="col">Pillar</th><th scope="col">What it asks</th>
+                <th scope="col">Days</th><th scope="col">Months</th><th scope="col">Years</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Quality</th><td>Does the business earn well, repeatably, without flattering itself?</td><td>10</td><td>20</td><td>25</td></tr>
+            <tr><th scope="row">Growth</th><td>Are earnings, revenue and margin bigger than a year ago?</td><td>5</td><td>15</td><td>15</td></tr>
+            <tr><th scope="row">Acceleration</th><td>Is the rate of improvement itself improving?</td><td>5</td><td>15</td><td>10</td></tr>
+            <tr><th scope="row">Value</th><td>What are you paying for those earnings?</td><td>5</td><td>15</td><td>20</td></tr>
+            <tr><th scope="row">Financial strength</th><td>Can it service what it owes?</td><td>5</td><td>10</td><td>15</td></tr>
+            <tr><th scope="row">Momentum</th><td>Has the price been going up, and in a straight line?</td><td>20</td><td>15</td><td>8</td></tr>
+            <tr><th scope="row">Risk</th><td>How violently does it move, and has it just spiked?</td><td>30</td><td>5</td><td>5</td></tr>
+            <tr><th scope="row">Participation</th><td>Is turnover unusual against its own history?</td><td>20</td><td>5</td><td>2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lsub">Participation is an attention prior, not evidence of
+         institutional buying, and never a standalone reason to buy anything.</p>
+    </div>
+
+    <div class="psec">
+      <div class="lh"><h3>What it is not</h3><span>Read this part twice</span></div>
+      <ul class="scr-not">
+        <li><b>Not a forecast.</b> A high score describes the evidence available today. It says nothing about what the price will do.</li>
+        <li><b>Not a probability.</b> 82 is not an 82% chance of anything. It is a rank against peers, on disclosed weights.</li>
+        <li><b>Not validated by the older study.</b> The technical-engine results in the accuracy notes concern a different engine and do not carry over.</li>
+        <li><b>Not comparable across versions.</b> An old composite and a v4 score are different measurements and must never be pooled as one record.</li>
+      </ul>
+      <p class="lsub">What the score <i>has</i> been worth is a measurement, not a
+         claim, and it is kept where it can be audited: the per-factor evidence
+         sits under <b>Factors</b>, and the outcome of every idea added from it
+         sits under <b>Portfolio → Idea record</b>.</p>
+      <div class="toolbar">
+        <button class="act" type="button" data-goto="factors">Open the factor evidence</button>
+        <button class="act" type="button" data-goto="tracker">Open the idea record</button>
+        <button class="act" type="button" data-goto="vocab">Glossary of every term</button>
+      </div>
+    </div>
+  </div><!-- /view-score -->
+
+  <!-- ══ FACTORS ═══════════════════════════════════════════════════════════
+       The engine lab used to live at the bottom of the tracker, where it was
+       one scroll past a table about something else. Under Research it is a
+       destination of its own, because "does this factor carry signal" is a
+       different question from "did my ideas work". lab.js mounts into the
+       container below.                                                      -->
+  <div id="view-factors" style="display:none">
+    <header class="tabhead">
+      <h2>Factors</h2>
+      <p>What each individual factor has actually predicted, measured against a
+         point-in-time record rather than against the past rewritten. An
+         information coefficient of 0.03 to 0.05 is what a real, professionally
+         traded equity factor looks like — it means right about 52% of the time.</p>
+    </header>
+    <div id="fct-host"></div>
+  </div><!-- /view-factors -->
+
   <div id="view-vocab" style="display:none">
     <header class="tabhead">
       <h2>Glossary</h2>
@@ -1978,11 +2123,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds"];
+const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls","investors","funds"];
+const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -2121,6 +2266,10 @@ function switchTab(which){
   if(which==="ideas") loadIdeas();
   if(which==="tracker") loadTracker();
   if(which==="filings") loadFilings();
+  /* The two product hubs build themselves on first sight rather than on page
+     load: neither is the landing view, and both fan out to several feeds. */
+  if(which==="discover" && window.AltahaDiscover) window.AltahaDiscover.open();
+  if(which==="allocate" && window.AltahaAllocate) window.AltahaAllocate.open();
   refreshSegsSoon();
   if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
   if(which==="live"){ loadLive();
@@ -3879,6 +4028,14 @@ function computePlanner(){
 
   $("psharewrap").style.display = "block";
   pState = {rate, grade, efMonths, emiRatio};
+
+  /* Allocate needs the household numbers to say where somebody stands in the
+     sequence, so the planner publishes them rather than letting another file
+     scrape them back out of these inputs. It never leaves this browser —
+     same rule the planner itself holds to. */
+  window.AltahaPlannerState = {rate, grade, efMonths, emiRatio,
+    income, expenses, savings, liquid: liq, efTarget, efGap};
+  window.dispatchEvent(new CustomEvent("altaha:planner"));
 }
 
 /* ── Tax engine — AY 2026-27, Finance Act 2025 ──────────────────────── */
@@ -4253,6 +4410,8 @@ if(fcSymParam){
 <script src="funds.js" defer></script>
 <script src="ledger-admin.js" defer></script>
 <script src="planner-risk.js" defer></script>
+<script src="discover.js" defer></script>
+<script src="allocate.js" defer></script>
 <script src="experience.js" defer></script>
 <script src="home-motion.js" defer></script>
 <script>

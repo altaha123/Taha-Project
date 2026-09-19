@@ -11,6 +11,35 @@ Keep it that way — issuing recommendations to the public requires SEBI RA regi
 
 ---
 
+## The four products
+
+The site is not one screener with a row of tabs. It is four products, and each
+one exists to answer a single question somebody actually arrives with. Where a
+destination goes is decided by which question it answers — not by which feed it
+happens to read.
+
+| Product | The question it answers | What lives there |
+|---|---|---|
+| **Discover** | *Where are opportunities now?* | The opportunities hub, the live intraday scanner, delivery trends, bulk & block deals, WOW orders, options activity |
+| **Allocate** | *What should I do with my money?* | The allocation plan — cushion, costly debt, dated goals, the long-term split, position sizing — and the money planner behind it |
+| **Portfolio** | *How are my existing investments doing?* | The holdings review and the record of ideas you added |
+| **Research** | *What does the evidence say?* | The stock screener, stock analysis, the Altaha Score, factors, fundamentals, ownership, technicals, news — and the glossary |
+
+`frontend/nav.js` holds the map and owns routing; `frontend/shell.js` renders
+the same map as the header menu. A destination has exactly one owner, and every
+address the site has ever published still resolves — `#screener`, `#ideas`,
+`#planner`, `#social` and the `#section/tab` pairs all map onto the product that
+now owns them. `frontend/tests/nav-products-browser.cjs` asserts all of that in
+a real browser, because none of it throws when it breaks.
+
+The two hubs are new surfaces rather than renamed tabs: `frontend/discover.js`
+builds Discover out of the feeds that already have tabs of their own, and
+`frontend/allocate.js` computes the allocation sequence in the browser from
+what the planner and the portfolio already hold. Neither names a product or
+issues a recommendation — see the SEBI note above.
+
+---
+
 ## Folder map
 
 ```

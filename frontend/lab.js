@@ -41,15 +41,24 @@
 
   var state = { horizon: 21, busy: false };
 
+  /* Factors is its own destination under Research now. The lab mounts into
+     that view's container; the tracker is kept as a fallback so an older
+     index.html without the container still renders the panel rather than
+     silently dropping it. */
+  function view() {
+    return document.getElementById("view-factors")
+        || document.getElementById("view-tracker");
+  }
+
   function host() {
-    var view = document.getElementById("view-tracker");
-    if (!view) return null;
+    var v = view();
+    if (!v) return null;
     var el = document.getElementById("lab");
     if (el) return el;
     el = document.createElement("section");
     el.id = "lab";
     el.className = "lab";
-    view.appendChild(el);
+    (document.getElementById("fct-host") || v).appendChild(el);
     return el;
   }
 
@@ -189,12 +198,11 @@
     }
   }
 
-  /* The tracker tab is the honesty surface, so the lab lives at the bottom of
-     it rather than competing for a tab of its own. Loaded when that view is
-     actually shown, not on every page load. */
+  /* Loaded when the Factors view is actually shown, not on every page load:
+     this panel costs several point-in-time queries. */
   var seen = false;
   function poll() {
-    var v = document.getElementById("view-tracker");
+    var v = view();
     if (!v || getComputedStyle(v).display === "none") return;
     if (seen) return;
     seen = true;

@@ -194,28 +194,41 @@
     if (window.AltahaNav) window.AltahaNav.go(section, null, true);
     else location.href = 'index.html#' + section;
   }
-  const bar = node('nav', 'ux-bottom'); bar.setAttribute('aria-label', 'Quick navigation');
-  const home = button('Home', () => go('screener'));
-  const discover = button('Discover', () => go('ideas'));
+  /* The phone bar carries the four products and nothing else but the
+     watchlist. It used to carry Home, Discover, Watchlist and More, which
+     meant the primary navigation on a phone and the primary navigation on a
+     desktop named different things — and "More" was doing the work of three
+     of the four products. The burger in the header still opens the full menu
+     at this width, so nothing is lost by giving that slot to a product. */
+  const PRODUCTS = [
+    ['discover',  'Discover'],
+    ['allocate',  'Allocate'],
+    ['portfolio', 'Portfolio'],
+    ['research',  'Research']
+  ];
+  const bar = node('nav', 'ux-bottom'); bar.setAttribute('aria-label', 'Products');
+  const productButtons = PRODUCTS.map(([id, label]) => button(label, () => go(id)));
   const savedButton = button('Watchlist', () => open(watch));
-  const more = button('More', () => document.getElementById('sh-burger')?.click());
-  more.setAttribute('aria-controls', 'sh-drawer');
-  bar.append(home, discover, savedButton, more); document.body.append(bar);
+  bar.append(...productButtons, savedButton); document.body.append(bar);
   const desktopSave = button('Watchlist', () => open(watch), 'ux-button ux-desktop-save');
   document.querySelector('.sh-right')?.prepend(desktopSave);
   function active(section) {
-    [home, discover].forEach((b, i) => {
-      if (section === ['screener', 'ideas'][i]) b.setAttribute('aria-current', 'page');
+    productButtons.forEach((b, i) => {
+      if (section === PRODUCTS[i][0]) b.setAttribute('aria-current', 'page');
       else b.removeAttribute('aria-current');
     });
   }
-  active(location.pathname.endsWith('stock.html') ? '' : ((location.hash.slice(1).split('/')[0]) || 'screener'));
-  window.addEventListener('altaha:navigate', e => active(e.detail.section));
-  const burger = document.getElementById('sh-burger');
-  if (burger) {
-    const update = () => more.setAttribute('aria-expanded', burger.getAttribute('aria-expanded'));
-    new MutationObserver(update).observe(burger, { attributes: true, attributeFilter: ['aria-expanded'] }); update();
+  /* An old hash still says #screener or #ideas. nav.js publishes the map from
+     those to the product that now owns them; reading it here beats keeping a
+     second copy that can drift. */
+  function product(raw) {
+    if (!raw) return 'research';
+    const aliases = (window.AltahaNav && window.AltahaNav.aliases) || {};
+    return aliases[raw] || raw;
   }
+  active(location.pathname.endsWith('stock.html') ? '' : product(location.hash.slice(1).split('/')[0]));
+  window.addEventListener('altaha:navigate', e => active(e.detail.section));
+
   const ticker = new URLSearchParams(location.search).get('ticker');
   if (ticker && valid(normalise(ticker))) document.querySelector('.stk-id')?.append(saveButton(ticker));
 
