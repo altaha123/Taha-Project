@@ -323,7 +323,18 @@
       pick(parseInt(it.dataset.i, 10));
     });
 
+    /* A click elsewhere dismisses the suggestions — but only a click somebody
+       made. charts.js finishes loading, calls nav.go to put Charts in the menu,
+       and nav.js gets there with btn.click() on a tab: a synthetic click on the
+       document, which this handler read as the reader pointing somewhere else
+       and shut the list on them. On a slow connection that bundle can land a
+       second or two into typing, so the suggestions vanished mid-word for
+       exactly the people least able to afford the retry.
+
+       isTrusted is the whole distinction: false for any click a script
+       dispatched, true only for one a person actually made. */
     document.addEventListener('click', function (e) {
+      if (!e.isTrusted) return;
       if (!wrap.contains(e.target)) close();
     });
   }

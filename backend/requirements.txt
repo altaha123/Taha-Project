@@ -11,10 +11,13 @@ websockets>=12.0
 # explicitly means a yfinance upgrade cannot remove it.
 requests>=2.31
 
-# Tests only — the CI workflow installs this separately, so it is listed
+# Tests only — the CI workflow installs these separately, so they are listed
 # here for anyone running the suite locally rather than pinned into the
-# deployed image.
+# deployed image. httpx is not imported by any test directly; it is what
+# fastapi.testclient needs, which is why its absence read as an admin-auth
+# failure rather than a missing package.
 # pytest>=8.0
+# httpx>=0.27
 Pillow>=10.0
 
 # Reading the PDF a filing actually is. Almost nothing worth knowing is in the

@@ -25,7 +25,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install pytest
+          # httpx is what fastapi.testclient imports. Without it test_admin_auth
+          # errors in its fixture — after that fixture has already set ADMIN_KEY
+          # and reloaded main, and before the teardown that would put them back.
+          # The poisoned module stays in sys.modules, and five unrelated tests in
+          # test_scan_memory_guard then fail with a 401 pointing at code that is
+          # perfectly fine. One missing test dependency, ten red tests, none of
+          # them naming it.
+          pip install pytest httpx
       - name: Compile every module
         # Catches a syntax error in a file no test happens to import.
         run: python -m compileall -q backend research

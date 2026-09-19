@@ -11,6 +11,21 @@ const rows=[
  {sector:'Energy',icon:'bolt',change_pct:.4,relative_pp:-.6,up:1,total:2,stocks:[{symbol:'RELIANCE',change_pct:.8,ltp:1400},{symbol:'ONGC',change_pct:0,ltp:220}]}
 ];
 const sector={rows,source:'dhan',as_of:'2026-09-10T09:00:00Z',window:'1D'};
+/* The search box needs a universe. Without one this fell through to the
+   catch-all and answered {rows:[]}, and an empty universe is not nothing: the
+   typeahead opens on its built-in fallback, then that reply lands, replaces the
+   list with nothing and closes itself — a millisecond after showing the right
+   answer. The suggestions were fine; the fixture was starving them. */
+const universe={rows:[
+ {s:'RELIANCE',n:'Reliance Industries Limited',x:'NSE'},
+ {s:'HDFCBANK',n:'HDFC Bank Limited',x:'NSE'},
+ {s:'HDFCLIFE',n:'HDFC Life Insurance Company Limited',x:'NSE'},
+ {s:'ICICIBANK',n:'ICICI Bank Limited',x:'NSE'},
+ {s:'RVNL',n:'Rail Vikas Nigam Limited',x:'NSE'},
+ {s:'ROSSARI',n:'Rossari Biotech Limited',x:'NSE'},
+ {s:'SBIN',n:'State Bank of India',x:'NSE'},
+ {s:'TCS',n:'Tata Consultancy Services Limited',x:'NSE'}
+],count:8};
 const server=http.createServer((req,res)=>{
  const file=path.join(root,decodeURIComponent(req.url.split('?')[0]==='/'?'/index.html':req.url.split('?')[0]));
  if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}
@@ -28,6 +43,7 @@ const server=http.createServer((req,res)=>{
    const u=new URL(route.request().url());
    if(u.hostname==='127.0.0.1') return route.continue();
    if(['script','font','stylesheet'].includes(route.request().resourceType())) return route.abort();
+   if(u.pathname==='/universe') return route.fulfill({json:universe});
    if(u.pathname==='/market') return route.fulfill({json:{indices,status:'closed',ist:'10 Sep 2026, 15:45 IST'}});
    if(u.pathname==='/sector/overview') {
      sectorRequests.push(u.search);
@@ -35,15 +51,14 @@ const server=http.createServer((req,res)=>{
    }
    return route.fulfill({json:{available:false,rows:[],rankings:[],sectors:[],items:[],status:'idle'}});
  });
- await page.goto('http://127.0.0.1:8766/',{waitUntil:'domcontentloaded'});
- // Regression: suggestions must be hittable outside the rounded search bar.
- await page.evaluate(() => {
-   window.__searchPicks = [];
-   document.getElementById('go').addEventListener('click', event => {
-     event.preventDefault(); event.stopImmediatePropagation();
-     window.__searchPicks.push(document.getElementById('tk').value);
-   }, true);
- });
+ const home = async () => {
+   await page.goto('http://127.0.0.1:8766/',{waitUntil:'domcontentloaded'});
+   await page.locator('#tk').waitFor();
+ };
+ await home();
+ /* Picking a suggestion opens the stock at its own address — index.html says
+    so where the old inline analyser used to be. The test asserted the flow
+    that replaced: fill the box, stay on the page, click Analyse. */
  for (const width of [390, 1280]) {
    await page.setViewportSize({width, height:900});
    const input = page.locator('#tk');
@@ -51,27 +66,36 @@ const server=http.createServer((req,res)=>{
    const list = page.locator('#' + await input.getAttribute('aria-controls'));
    await list.locator('.tah-item').first().waitFor();
    assert.equal(await input.getAttribute('aria-expanded'), 'true');
+
    await input.fill('Reliance');
    const item = list.locator('.tah-item').first();
    await item.scrollIntoViewIfNeeded();
+   // Regression: suggestions must be hittable outside the rounded search bar.
    assert.equal(await item.evaluate(n => {
      const r=n.getBoundingClientRect();
      return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
    }), true, 'suggestion is clipped or covered');
    if (width === 390) await item.tap(); else await item.click();
-   assert.equal(await input.inputValue(), 'RELIANCE');
-   assert.equal(await input.getAttribute('aria-expanded'), 'false');
-   await input.fill('hdf');
-   await input.press('ArrowDown');
-   await input.press('Enter');
-   assert.equal(await input.inputValue(), 'HDFCBANK');
-   await input.fill('zzzznomatch');
-   await list.locator('.tah-empty').waitFor();
-   await input.press('Escape');
-   assert.equal(await input.getAttribute('aria-expanded'), 'false');
+   await page.waitForURL(/stock\.html\?ticker=RELIANCE/, {timeout: 10000});
+
+   // The keyboard reaches the same place as the pointer.
+   await home();
+   await page.locator('#tk').fill('hdf');
+   await page.locator('#tk').press('ArrowDown');
+   await page.locator('#tk').press('Enter');
+   await page.waitForURL(/stock\.html\?ticker=HDFCBANK/, {timeout: 10000});
+
+   await home();
+   const box = page.locator('#tk');
+   const l2 = page.locator('#' + await box.getAttribute('aria-controls'));
+   await box.fill('zzzznomatch');
+   await l2.locator('.tah-empty').waitFor();
+   await box.press('Escape');
+   assert.equal(await box.getAttribute('aria-expanded'), 'false');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
  }
- assert.deepEqual(await page.evaluate(() => window.__searchPicks), ['RELIANCE','HDFCBANK','RELIANCE','HDFCBANK']);
+ await page.setViewportSize({width:1280, height:900});
+ await home();
  await page.locator('#tk').fill('');
  await page.locator('.mb-card').first().waitFor();
  await page.locator('.sb-tile').first().waitFor();
