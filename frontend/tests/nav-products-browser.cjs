@@ -107,8 +107,32 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   /* The eight destinations Research is meant to carry in its visible row. */
   const research = sections.filter(s => s.id === 'research')[0];
   assert.deepEqual(research.tabs,
-    ['ideas', 'screener', 'score', 'factors', 'results', 'investors', 'charts', 'filings'],
+    ['screener', 'score', 'factors', 'results', 'investors', 'charts', 'filings'],
     'the Research row is not the eight named destinations');
+
+  assert.deepEqual(sections.find(s => s.id === 'discover').tabs.slice(0, 3), ['ideas', 'live', 'tracker']);
+  assert.equal(owners.ideas, 'discover');
+  assert.equal(owners.live, 'discover');
+  assert.equal(owners.tracker, 'discover');
+
+  await page.evaluate(() => window.AltahaNav.go('discover', null, true));
+  assert.ok(await page.locator('#view-ideas').isVisible());
+  await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100,scored:42}));
+  assert.equal(await page.locator('.su-planet.is-scanned').count(), 3);
+  assert.equal(await page.locator('.su-planet.is-scanning').count(), 1);
+  assert.match(await page.locator('.su-detail').innerText(), /50 \/ 100/);
+  await page.evaluate(() => window.AltahaUniverse.update({status:'done'}));
+  assert.equal(await page.locator('.su-planet.is-scanned').count(), 6);
+  await page.evaluate(() => window.AltahaUniverse.update({status:'done',stopped_early:true}));
+  assert.match(await page.locator('.su-status').innerText(), /paused/);
+  await page.evaluate(() => window.AltahaUniverse.update({status:'error'}));
+  assert.equal(await page.locator('.su-planet.is-scanning').count(), 0);
+  await page.evaluate(() => window.AltahaUniverse.update({status:'cached'}));
+  assert.match(await page.locator('.su-status').innerText(), /saved/);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100}));
+  assert.equal(await page.locator('.su-sweep').evaluate(el => getComputedStyle(el).animationName), 'none');
+  await page.emulateMedia({reducedMotion:'no-preference'});
 
   /* ── 3 · Every address the site has published still opens something ──── */
 
@@ -120,6 +144,8 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   }
   await shows('#screener', 'view-screener');
   await shows('#ideas', 'view-ideas');
+  await shows('#research/ideas', 'view-ideas');
+  await shows('#portfolio/tracker', 'view-tracker');
   await shows('#funds', 'view-funds');
   await shows('#screener/funds', 'view-funds');
   await shows('#screener/filings', 'view-filings');
@@ -141,7 +167,7 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
 
   /* ── 4 · The two new hubs actually render ────────────────────────────── */
 
-  await page.evaluate(() => window.AltahaNav.go('discover', null, true));
+  await page.evaluate(() => window.AltahaNav.go('discover', 'discover', true));
   await page.locator('#dsc-market .dsc-ix').first().waitFor();
   assert.match(await page.locator('#dsc-market').innerText(), /NIFTY 50/);
   await page.locator('#dsc-activity .dsc-card').first().waitFor();
@@ -180,13 +206,13 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
 
   for (const width of [390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
-    for (const view of ['discover', 'allocate', 'score', 'factors']) {
+    for (const view of ['ideas', 'discover', 'allocate', 'score', 'factors']) {
       await page.evaluate(v => window.AltahaNav.go(null, v, true), view);
       await page.waitForTimeout(350);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
                    false, `${view} overflows at ${width}`);
     }
-    for (const view of ['discover', 'allocate']) {
+    for (const view of ['ideas', 'discover', 'allocate']) {
       await page.evaluate(v => window.AltahaNav.go(null, v, true), view);
       await page.waitForTimeout(400);
       await page.screenshot({ path: path.join(output, `${width}-${view}.png`), fullPage: true });

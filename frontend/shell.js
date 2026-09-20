@@ -108,11 +108,17 @@
       id: 'discover', label: 'Discover',
       question: 'Where are opportunities now?',
       cols: [
+        { head: 'Explore & follow', items: [
+          { tab: 'ideas', label: 'Universe Scan', icon: 'bulb',
+            hint: 'Explore the NSE universe and reveal ranked stocks' },
+          { tab: 'live', label: 'Alerts', icon: 'bell',
+            hint: 'Intraday alerts as they fire' },
+          { tab: 'tracker', label: 'Tracker', icon: 'target',
+            hint: 'Follow discovered stocks and their performance' }
+        ]},
         { head: 'Right now', items: [
           { tab: 'discover', label: 'Opportunities now', icon: 'target',
-            hint: 'Today’s setups, movers and unusual activity' },
-          { tab: 'live', label: 'Live scanner', icon: 'pulse',
-            hint: 'Intraday alerts as they fire' }
+            hint: 'Today’s setups, movers and unusual activity' }
         ]},
         { head: 'Unusual activity', items: [
           { tab: 'special', label: 'Delivery trends', icon: 'bars',
@@ -149,10 +155,6 @@
         { head: 'Your investments', items: [
           { tab: 'portfolio', label: 'Holdings review', icon: 'bars',
             hint: 'Your holdings against their scores and exposures' }
-        ]},
-        { head: 'The record', items: [
-          { tab: 'tracker', label: 'Idea record', icon: 'target',
-            hint: 'Ideas you added and what happened next' }
         ]}
       ]
     },
@@ -161,8 +163,6 @@
       question: 'What does the evidence say?',
       cols: [
         { head: 'Stocks', items: [
-          { tab: 'ideas', label: 'Stock screener', icon: 'bulb',
-            hint: 'The NSE universe ranked by the engine' },
           { tab: 'screener', label: 'Stock analysis', icon: 'ledger',
             hint: 'One company, scored, with the ledger' },
           { tab: 'charts', label: 'Technicals', icon: 'candles',
