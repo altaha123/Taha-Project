@@ -73,7 +73,7 @@
   function renderBatch(host) {
     var box=host.querySelector('.su-batch'); box.hidden=selected<0;
     host.querySelectorAll('.su-planet').forEach(function (p,i) {p.setAttribute('aria-expanded',String(i===selected));});
-    if(selected<0) return;
+    if(selected<0) {box.replaceChildren();delete box.dataset.batch;return;}
     var batch=batches[selected], key=selected+JSON.stringify(batch);
     if(box.dataset.batch===key) return; box.dataset.batch=key; box.replaceChildren();
     if(!batch) { box.appendChild(node('p','','This planet is still waiting for a detailed analysis checkpoint.')); return; }

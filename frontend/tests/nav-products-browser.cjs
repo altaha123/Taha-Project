@@ -144,6 +144,12 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   await page.evaluate(() => pollScan());
   await page.locator('.su-card').first().waitFor();
   assert.match(await page.locator('.su-card').first().innerText(), /TEST/);
+  assert.equal(await page.locator('header.wrap').isVisible(),false,'scan view retains the empty header');
+  for (const width of [390,768,1280]) {
+    await page.setViewportSize({width,height:900});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'live scan overflows at '+width);
+    await page.screenshot({path:path.join(output, width+'-live-universe.png'),fullPage:true});
+  }
   await page.locator('.su-card summary').first().click();
   assert.match(await page.locator('.su-card').first().innerText(), /Setup: Momentum/);
   await page.locator('.su-motion').click();
