@@ -158,6 +158,154 @@
 .alc-split .v{ font-size:18px; color:var(--ink) }
 .alc-split small{ font-size:11.5px; color:var(--mute); line-height:1.4 }
 
+/* ── Allocate · what the reader has to allocate ──────────────────────────── */
+
+.alc-money{
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:14px;
+  align-items:center; margin:0 0 20px; padding:14px 16px;
+  border:1px solid var(--rule); border-radius:12px; background:var(--skin-card);
+}
+.alc-money.is-skip{ background:var(--paper-2) }
+.alc-money-l{ display:flex; flex-direction:column; gap:2px }
+.alc-money-l .k{
+  font-family:var(--mono); font-size:10px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--mute);
+}
+.alc-money-l .v{ font-size:25px; line-height:1.1; color:var(--ink) }
+.alc-money-l .s{ font-size:11.5px; color:var(--mute) }
+.alc-money-n{ margin:0; font-size:13px; line-height:1.55; color:var(--ink-2) }
+.alc-money-n b{ color:var(--ink) }
+
+/* Three columns is one column on a phone, and the button goes full width
+   rather than sitting as a 60px stub beside 30 characters of text. */
+@media (max-width:620px){
+  .alc-money{ grid-template-columns:1fr; gap:10px }
+  .alc-money [data-money]{ width:100% }
+}
+
+/* ── Allocate · the opening question ─────────────────────────────────────── */
+
+body.alc-open{ overflow:hidden }
+
+.alc-sheet{
+  position:fixed; inset:0; z-index:9000;
+  display:flex; align-items:center; justify-content:center; padding:22px;
+}
+.alc-sheet[hidden]{ display:none }
+.alc-back{
+  position:absolute; inset:0; background:rgba(12,10,7,.62);
+  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+  animation:alcfade .2s ease both;
+}
+.alc-box{
+  position:relative; z-index:1; width:min(480px,100%); max-height:92vh; overflow:auto;
+  background:var(--paper); border:1px solid var(--rule-2); border-radius:16px;
+  box-shadow:0 30px 80px rgba(12,10,7,.34); padding:26px 26px 20px;
+  animation:alcrise .24s cubic-bezier(.2,.8,.25,1) both;
+}
+@keyframes alcfade{ from{opacity:0} to{opacity:1} }
+@keyframes alcrise{
+  from{ opacity:0; transform:translateY(14px) scale(.985) }
+  to{ opacity:1; transform:none }
+}
+
+.alc-x{
+  position:absolute; top:10px; right:12px; width:30px; height:30px; border:0;
+  background:transparent; color:var(--mute); font-size:24px; line-height:1;
+  cursor:pointer; border-radius:6px;
+}
+.alc-x:hover{ color:var(--ink); background:var(--paper-2) }
+
+/* The cash. Decoration, hidden from the accessibility tree — it says "this is
+   about money" faster than the heading under it reads. */
+.alc-cash{
+  display:flex; justify-content:center; gap:8px; font-size:30px; line-height:1;
+  margin:2px 0 14px;
+}
+.alc-cash span{ animation:alcbob 2.6s ease-in-out infinite both }
+.alc-cash span:nth-child(2){ animation-delay:.18s }
+.alc-cash span:nth-child(3){ animation-delay:.36s }
+.alc-cash span:nth-child(4){ animation-delay:.54s }
+.alc-cash span:nth-child(5){ animation-delay:.72s }
+@keyframes alcbob{
+  0%,100%{ transform:translateY(0) rotate(0) }
+  50%{ transform:translateY(-7px) rotate(-4deg) }
+}
+
+.alc-ask-t{
+  font-family:var(--serif); font-size:26px; font-weight:400; line-height:1.2;
+  margin:0 0 8px; color:var(--ink); text-align:center; padding:0 10px;
+}
+.alc-ask-s{
+  font-size:13px; line-height:1.55; color:var(--ink-2);
+  margin:0 0 16px; text-align:center;
+}
+
+.alc-quick{ display:flex; flex-wrap:wrap; gap:7px; justify-content:center; margin:0 0 16px }
+.alc-q{
+  font-family:var(--mono); font-size:12px; padding:8px 12px; border-radius:999px;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink-2);
+  cursor:pointer; transition:color .16s ease, border-color .16s ease, background .16s ease;
+}
+.alc-q:hover{ color:var(--ink); border-color:var(--gold) }
+.alc-q.on{ color:var(--gold-dp); border-color:var(--gold); background:var(--paper) }
+.alc-q:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+
+.alc-ask-f{
+  display:block; font-family:var(--mono); font-size:10px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--mute); margin:0 0 6px;
+}
+.alc-ask-in{
+  display:flex; align-items:center; gap:8px; padding:0 12px;
+  border:1px solid var(--rule); border-radius:10px; background:var(--paper-2);
+}
+.alc-ask-in:focus-within{ border-color:var(--gold) }
+.alc-ask-in i{ font-style:normal; font-size:18px; color:var(--mute) }
+.alc-ask-in input{
+  flex:1; min-width:0; border:0; background:transparent; color:var(--ink);
+  font-size:20px; padding:12px 0; outline:none;
+}
+.alc-ask-in input::-webkit-outer-spin-button,
+.alc-ask-in input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
+.alc-ask-in input[type=number]{ -moz-appearance:textfield; appearance:textfield }
+/* The echo is the check on a mistyped zero, so it is read at the contrast of
+   body text and not at the contrast of a hint. */
+.alc-ask-e{
+  min-height:17px; margin:7px 0 0; font-family:var(--mono); font-size:11.5px;
+  color:var(--ink-2); text-align:right;
+}
+
+.alc-ask-b{ display:flex; flex-direction:column; gap:8px; margin:14px 0 0 }
+/* --gold-dp, not --gold. In the light theme --gold resolves to #A8801C, which
+   puts this button's near-white label at 3.43:1 — under the 4.5:1 that text
+   this size needs, and this is the one control the page exists to have
+   pressed. The deeper gold clears it, and both tokens invert correctly
+   in the dark theme, where --paper is the dark one. */
+.alc-go{
+  width:100%; padding:13px 16px; border-radius:10px; border:1px solid var(--gold-dp);
+  background:var(--gold-dp); color:var(--paper); font-size:14.5px; cursor:pointer;
+  transition:opacity .16s ease, transform .16s ease;
+}
+.alc-go:hover:not(:disabled){ transform:translateY(-1px) }
+.alc-go:disabled{ opacity:.42; cursor:not-allowed }
+.alc-go:focus-visible, .alc-skip:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.alc-skip{
+  width:100%; padding:10px 16px; border-radius:10px; border:1px solid transparent;
+  background:transparent; color:var(--ink-2); font-size:13px; cursor:pointer;
+}
+.alc-skip:hover{ color:var(--ink); border-color:var(--rule) }
+
+/* Fine print by size, never by contrast. --mute would put this at 3.63:1 in
+   the light theme, and a disclaimer nobody can read is not a disclaimer. */
+.alc-ask-d{
+  margin:14px 0 0; font-size:11px; line-height:1.5; color:var(--ink-2); text-align:center;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .alc-back, .alc-box, .alc-cash span{ animation:none }
+  .alc-go:hover:not(:disabled){ transform:none }
+}
+
 /* ── Allocate · the sizing result ────────────────────────────────────────── */
 
 .alc-res{

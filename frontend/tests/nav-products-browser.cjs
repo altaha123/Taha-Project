@@ -50,7 +50,14 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   const browser = await chromium.launch({
     headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, hasTouch: true });
-  await context.addInitScript(() => localStorage.setItem('altaha-guide-dismissed', '1'));
+  await context.addInitScript(() => {
+    localStorage.setItem('altaha-guide-dismissed', '1');
+    /* Allocate opens by asking what there is to allocate, and that prompt is
+       modal — its backdrop would swallow every click this file makes once the
+       run reaches Allocate. Answered here so navigation is what gets tested;
+       the prompt itself has its own check in allocate-money-browser.cjs. */
+    localStorage.setItem('altaha-allocate-money-v1', JSON.stringify({ amount: 500000 }));
+  });
   const page = await context.newPage(), errors = [];
   page.on('pageerror', e => errors.push(String(e.stack)));
 
