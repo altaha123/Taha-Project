@@ -124,7 +124,7 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   await page.evaluate(() => window.AltahaUniverse.update({status:'done'}));
   assert.equal(await page.locator('.su-planet.is-scanned').count(), 6);
   await page.evaluate(() => window.AltahaUniverse.update({status:'done',stopped_early:true}));
-  assert.match(await page.locator('.su-status').innerText(), /paused/);
+  assert.match(await page.locator('.su-status').innerText(), /stopped before completion/);
   await page.evaluate(() => window.AltahaUniverse.update({status:'error'}));
   assert.equal(await page.locator('.su-planet.is-scanning').count(), 0);
   await page.evaluate(() => window.AltahaUniverse.update({status:'cached'}));
@@ -133,6 +133,41 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100}));
   assert.equal(await page.locator('.su-sweep').evaluate(el => getComputedStyle(el).animationName), 'none');
   await page.emulateMedia({reducedMotion:'no-preference'});
+
+  // Exercise the real start/poll controller with mocked backend checkpoints.
+  let phase = 'running';
+  const discovered = {symbol:'TEST',name:'Test company',score:72.4,sector:'Industrials',finding:'Setup: Momentum'};
+  await page.route('**/scan/start*', route => route.fulfill({json:{started:true,status:'running',run_id:123,total:100,done:0,scored:0,discoveries:[],planet_batches:[]}}));
+  await page.route('**/scan/status*', route => route.fulfill({json:{status:phase,run_id:123,total:100,done:phase==='done'?100:50,scored:15,elapsed_seconds:65,discoveries:[discovered],planet_batches:[{number:1,count:15,rows:[discovered]}]}}));
+  await page.evaluate(() => startScan(true,false));
+  assert.equal(await page.locator('#scan-results').isVisible(),false);
+  await page.evaluate(() => pollScan());
+  await page.locator('.su-card').first().waitFor();
+  assert.match(await page.locator('.su-card').first().innerText(), /TEST/);
+  assert.equal(await page.locator('header.wrap').isVisible(),false,'scan view retains the empty header');
+  for (const width of [390,768,1280]) {
+    await page.setViewportSize({width,height:900});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'live scan overflows at '+width);
+    await page.screenshot({path:path.join(output, width+'-live-universe.png'),fullPage:true});
+  }
+  await page.locator('.su-card summary').first().click();
+  assert.match(await page.locator('.su-card').first().innerText(), /Setup: Momentum/);
+  await page.locator('.su-motion').click();
+  assert.equal(await page.locator('#scan-universe').evaluate(el=>el.classList.contains('su-paused')),true);
+  await page.locator('.su-planet').first().click();
+  assert.match(await page.locator('.su-batch').innerText(), /15 newly analysed stocks/);
+  await page.evaluate(() => window.AltahaNav.go('research','screener',true));
+  await page.locator('#su-dock').waitFor();
+  phase='done'; await page.evaluate(() => pollScan());
+  assert.match(await page.locator('#su-dock').innerText(), /Scan complete/);
+  await page.locator('#su-dock').click();
+  assert.equal(await page.locator('#scan-results').isVisible(),true);
+  assert.equal(await page.locator('#su-dock').isVisible(),false);
+  await page.evaluate(() => window.AltahaUniverse.update({status:'running',run_id:124,total:100,done:0,discoveries:[],planet_batches:[]}));
+  assert.equal(await page.locator('.su-card').count(),0,'old run leaked into fresh scan');
+  await page.evaluate(() => window.AltahaUniverse.update({status:'error'}));
+  await page.unroute('**/scan/status*');
+  await page.unroute('**/scan/start*');
 
   /* ── 3 · Every address the site has published still opens something ──── */
 

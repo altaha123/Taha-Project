@@ -321,6 +321,7 @@
   }
 
   function paint(section, tabId) {
+    document.body.dataset.tab = tabId || "";
     document.querySelectorAll('.navmain-btn').forEach(function (b) {
       var on = b.dataset.section === section.id;
       b.classList.toggle('on', on);

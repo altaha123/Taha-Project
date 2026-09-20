@@ -3056,7 +3056,7 @@ async function pollScan(){
     /* A scan that stopped itself to avoid being killed is not a finished scan,
        and a short list is then the scan's fault rather than the market's. Say
        so, instead of leaving the note blank as if all were well. */
-    $("gennote2").textContent = s.stopped_early ? (s.stopped_reason || "") : "";
+    $("gennote2").textContent = s.error || (s.stopped_early ? (s.stopped_reason || "Scan stopped before completion.") : "");
     loadIdeas();
   }catch(e){}
 }

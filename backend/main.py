@@ -33,6 +33,7 @@ except Exception:
 import io
 import csv
 import scan as scanner
+from scan_preview import ScanPreview
 import announcements as ann
 import ideas as ideas_engine
 import og as og_cards
@@ -402,6 +403,7 @@ _state = {
     "started_at": None, "finished_at": None,
     "error": None,
     "payload": None,
+    "preview": {"discoveries": [], "planet_batches": []},
 }
 
 
@@ -512,6 +514,7 @@ def _autostart_intraday():
 
 
 def _worker():
+    preview = ScanPreview()
     def progress(done, total, scored):
         _state["done"], _state["total"], _state["scored"] = done, total, scored
 
@@ -519,10 +522,12 @@ def _worker():
         # Partial rankings become visible immediately and survive a process
         # restart (they're also written to disk by the scanner), so the Ideas
         # tab is never left empty after minutes of scanning.
+        _state["preview"] = preview.checkpoint(partial_payload)
         _state["payload"] = partial_payload
 
     try:
         payload = scanner.run_scan(progress=progress, checkpoint=checkpoint)
+        _state["preview"] = preview.checkpoint(payload)
         _state["payload"] = payload
         _state["status"] = "done"
         _state["finished_at"] = time.time()
@@ -985,7 +990,8 @@ def scan_start(force: bool = False, key: str = "",
 
         _state.update({"status": "running", "done": 0, "scored": 0,
                        "total": len(scanner.universe()),
-                       "started_at": time.time(), "error": None})
+                       "started_at": time.time(), "error": None,
+                       "preview": {"discoveries": [], "planet_batches": []}})
         threading.Thread(target=_worker, daemon=True).start()
         return {"started": True, **scan_status()}
 
@@ -998,6 +1004,8 @@ def scan_status():
         "done": _state["done"], "total": _state["total"], "scored": _state["scored"],
         "elapsed_seconds": elapsed if _state["status"] == "running" else None,
         "error": _state["error"],
+        "run_id": _state["started_at"],
+        **_state["preview"],
     }
     if _state["payload"]:
         p = _state["payload"]
