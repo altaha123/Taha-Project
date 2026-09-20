@@ -22,11 +22,27 @@ const server=http.createServer((req,res)=>{
  const browser=await chromium.launch({headless:true, executablePath: process.env.CHROMIUM_PATH || undefined});
  const context=await browser.newContext({viewport:{width:1280,height:900},hasTouch:true});
  await context.addInitScript(()=>localStorage.setItem('altaha-guide-dismissed','1'));
- const page=await context.newPage(), errors=[], sectorRequests=[];
+ const page=await context.newPage(), errors=[], sectorRequests=[], searchPicks=[];
  page.on('pageerror',e=>errors.push(String(e.stack)));
  await context.route('**/*',route=>{
    const u=new URL(route.request().url());
-   if(u.hostname==='127.0.0.1') return route.continue();
+   if(u.hostname==='127.0.0.1'){
+     // What picking a suggestion is FOR: home.js opens the stock page. The
+     // symbol is recorded from the request itself, and 204 answers it so the
+     // homepage stays put and the assertions below still have a page to read.
+     //
+     // This used to be a capture listener added to #go from the test, which
+     // could never fire: home.js is deferred, so it binds #go while the
+     // document is still 'interactive' — before waitUntil:'domcontentloaded'
+     // returns — and its handler calls stopImmediatePropagation. Anything
+     // added afterwards is unreachable, so every pick navigated away and the
+     // next line found no #tk. The race was unwinnable and there was nothing
+     // to win: the navigation IS the behaviour under test, so assert on it.
+     // (abort() is not the same thing — Chromium commits an error page for a
+     // cancelled navigation, which destroys the document just as thoroughly.)
+     if(u.pathname==='/stock.html'){searchPicks.push(u.searchParams.get('ticker'));return route.fulfill({status:204,body:''});}
+     return route.continue();
+   }
    if(['script','font','stylesheet'].includes(route.request().resourceType())) return route.abort();
    if(u.pathname==='/market') return route.fulfill({json:{indices,status:'closed',ist:'10 Sep 2026, 15:45 IST'}});
    if(u.pathname==='/sector/overview') {
@@ -37,13 +53,6 @@ const server=http.createServer((req,res)=>{
  });
  await page.goto('http://127.0.0.1:8766/',{waitUntil:'domcontentloaded'});
  // Regression: suggestions must be hittable outside the rounded search bar.
- await page.evaluate(() => {
-   window.__searchPicks = [];
-   document.getElementById('go').addEventListener('click', event => {
-     event.preventDefault(); event.stopImmediatePropagation();
-     window.__searchPicks.push(document.getElementById('tk').value);
-   }, true);
- });
  for (const width of [390, 1280]) {
    await page.setViewportSize({width, height:900});
    const input = page.locator('#tk');
@@ -71,7 +80,7 @@ const server=http.createServer((req,res)=>{
    assert.equal(await input.getAttribute('aria-expanded'), 'false');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
  }
- assert.deepEqual(await page.evaluate(() => window.__searchPicks), ['RELIANCE','HDFCBANK','RELIANCE','HDFCBANK']);
+ assert.deepEqual(searchPicks, ['RELIANCE','HDFCBANK','RELIANCE','HDFCBANK']);
  await page.locator('#tk').fill('');
  await page.locator('.mb-card').first().waitFor();
  await page.locator('.sb-tile').first().waitFor();

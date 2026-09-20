@@ -25,7 +25,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install pytest
+          # httpx is test-only: starlette's TestClient refuses to start without
+          # it, and test_admin_auth.py is the one file that uses it. It stays
+          # out of requirements.txt so it stays out of the deployed image —
+          # the instance has half a gigabyte and no use for an HTTP client it
+          # never calls.
+          pip install pytest httpx
       - name: Compile every module
         # Catches a syntax error in a file no test happens to import.
         run: python -m compileall -q backend research
