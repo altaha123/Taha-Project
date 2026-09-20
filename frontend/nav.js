@@ -45,8 +45,10 @@
       blurb: 'Where are opportunities now? — today’s setups, live alerts and unusual activity',
       icon: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
       tabs: [
+        { id: 'ideas', label: 'Universe Scan', hint: 'Explore the NSE universe and reveal ranked stocks' },
+        { id: 'live', label: 'Alerts', hint: 'Intraday alerts as they fire' },
+        { id: 'tracker', label: 'Tracker', hint: 'Follow discovered stocks and their performance' },
         { id: 'discover', label: 'Opportunities now', hint: 'Today’s setups, movers and unusual activity' },
-        { id: 'live',     label: 'Live scanner',      hint: 'Intraday alerts as they fire' },
         { id: 'special',  label: 'Delivery trends',   hint: 'Price momentum backed by delivered volume' },
         { id: 'deals',    label: 'Bulk & block deals', hint: 'Large trades and their participants' },
         { id: 'wow',      label: 'WOW orders',        hint: 'Order wins measured against company size' }
@@ -72,8 +74,7 @@
       blurb: 'How are my existing investments doing? — holdings, exposures and the record of your picks',
       icon: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
       tabs: [
-        { id: 'portfolio', label: 'Holdings review', hint: 'Your holdings against their scores and exposures' },
-        { id: 'tracker',   label: 'Idea record',     hint: 'Ideas you added and what happened next' }
+        { id: 'portfolio', label: 'Holdings review', hint: 'Your holdings against their scores and exposures' }
       ],
       extras: []
     },
@@ -83,7 +84,6 @@
       blurb: 'The evidence — screener, scores, fundamentals, ownership, technicals and news',
       icon: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/>',
       tabs: [
-        { id: 'ideas',     label: 'Stock screener',  hint: 'The NSE universe ranked by the engine' },
         { id: 'screener',  label: 'Stock analysis',  hint: 'One company, scored, with the ledger' },
         { id: 'score',     label: 'Altaha Score',    hint: 'How the score is built and what it has been worth' },
         { id: 'factors',   label: 'Factors',         hint: 'What each factor has actually predicted' },
@@ -107,7 +107,7 @@
   var ALIASES = {
     screener: 'research',
     stocks:   'research',
-    ideas:    'research',
+    ideas:    'discover',
     social:   'research',
     planner:  'allocate',
     news:     'research'

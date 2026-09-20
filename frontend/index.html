@@ -1187,6 +1187,8 @@
   document.documentElement.setAttribute('data-theme', s || (d?'dark':'light'));
 }catch(e){}})();
 </script>
+<link rel="stylesheet" href="universe-scan.css">
+<script src="universe-scan.js"></script>
 </head>
 <body>
 
@@ -1539,9 +1541,10 @@
 
   <div id="view-ideas" style="display:none">
     <header class="tabhead">
-      <h2>Stock shortlist</h2>
+      <h2>Universe Scan</h2>
       <p>The NSE universe classified by setup and scored out of 100. Every score opens into the ledger that produced it.</p>
     </header>
+    <div id="scan-universe"></div>
     <div class="hzrow">
       <div class="seg" id="hzseg">
         <button class="hz active" data-h="short">Short term</button>
@@ -1553,6 +1556,7 @@
       <span class="brun-note" id="gennote2"></span>
     </div>
     <div id="progwrap2"><div class="progbar"><i></i></div><div class="progtxt"></div></div>
+    <div id="scan-results">
     <div class="ideas-note" id="hznote"></div>
     <div id="mktctx"></div>
     <div id="stalebox"></div>
@@ -1565,6 +1569,7 @@
     </div>
     <div id="idearows"></div>
     <p class="disc" id="ideadisc"></p>
+    </div>
   </div><!-- /view-ideas -->
 
   <div id="view-results" style="display:none">
@@ -2980,6 +2985,7 @@ async function loadTracker(){
 
 /* ── Scan controller ────────────────────────────────────────────────── */
 function setProgress(s){
+  window.AltahaUniverse.update(s);
   const wrap=$("progwrap2");
   if(s.status!=="running"){ wrap.style.display="none"; return; }
   wrap.style.display="block";
@@ -3001,10 +3007,12 @@ async function pollScan(){
     if(!s) throw new Error("no body");
     pollMisses = 0;
   }catch(e){
+    window.AltahaUniverse.update({status:"reconnecting"});
     if(++pollMisses < 6){
       $("gennote2").textContent = "Engine not answering \u2014 still polling";
       return;
     }
+    window.AltahaUniverse.update({status:"error"});
     clearInterval(pollTimer); pollTimer=null; pollMisses=0;
     $("genbtn2").disabled=false;
     $("genbtn2").textContent="Refresh universe scan";
@@ -3066,6 +3074,7 @@ async function pollScan(){
    Refresh now sends force alone. A refusal comes back in words, and the
    override is a second, explicit press of the button the refusal offers. */
 async function startScan(force, ignoreMemory){
+  window.AltahaUniverse.update({status:"starting"});
   $("genbtn2").disabled=true; $("genbtn2").textContent="Scanning\u2026";
   $("gennote2").textContent="A few minutes \u2014 keep this tab open";
   try{
@@ -3075,6 +3084,7 @@ async function startScan(force, ignoreMemory){
                                    {tries: 3, timeoutMs: 30000});
     const r = body || {};
     if(!r.started && r.reason==="cached"){
+      window.AltahaUniverse.update({...r, status:"cached"});
       $("genbtn2").disabled=false; $("genbtn2").textContent="Refresh universe scan";
       $("gennote2").textContent=""; loadIdeas(); return;
     }
@@ -3085,6 +3095,7 @@ async function startScan(force, ignoreMemory){
        Pressing Generate did nothing and said nothing about why — for eight
        days, while the newest ideas on the page were from 31 August. */
     if((!res.ok || r.started === false) && r.reason !== "already_running"){
+      window.AltahaUniverse.update({status:"error"});
       $("genbtn2").disabled=false;
       $("genbtn2").textContent = "Refresh universe scan";
       $("gennote2").textContent =
@@ -3109,10 +3120,11 @@ async function startScan(force, ignoreMemory){
     }
     /* already_running is not a failure: a scan someone else started is in
        flight, so fall through and poll it rather than resetting the button. */
-    setProgress(r);
+    setProgress({...r, status:"running"});
     if(!pollTimer) pollTimer=setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);
   }catch(e){
     $("genbtn2").disabled=false;
+    window.AltahaUniverse.update({status:"error"});
     /* Don't relabel to "Generate from universe" on a network failure: a cached
        scan may well still exist on the server, and relabelling made the next
        press send force=false, which then came back "cached" and looked like a
@@ -4380,6 +4392,7 @@ if(fcSymParam){
     $("genbtn2").disabled = true; $("genbtn2").textContent = "Scanning…";
     setProgress(s); pollTimer = setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);
   } else if(s.scanned_at){
+    window.AltahaUniverse.update({...s, status:"cached"});
     $("genbtn2").textContent = "Refresh universe scan";
   }
 }catch(e){} })();
