@@ -37,55 +37,72 @@ def client(tmp_path_factory):
     way to check an if-statement and a worse thing to point at an exchange
     from CI.
 
-    EVERYTHING IS PUT BACK. `main` is a module the whole suite shares, and the
-    first version of this fixture set two environment variables, re-imported
-    main, and left four of its attributes stubbed — which passed here and broke
-    five tests in test_scan_memory_guard.py, a file that has nothing to do with
-    admin keys and only fails when this one has run first. A test that leaves
-    the process different from how it found it is a test that breaks its
-    neighbours.
+    EVERYTHING IS PUT BACK, AND PUT BACK EVEN WHEN SETUP FAILS. `main` is a
+    module the whole suite shares, and the first version of this fixture set
+    two environment variables, re-imported main, and left four of its
+    attributes stubbed — which passed here and broke five tests in
+    test_scan_memory_guard.py, a file that has nothing to do with admin keys
+    and only fails when this one has run first. A test that leaves the process
+    different from how it found it is a test that breaks its neighbours.
+
+    That restore then sat after the yield, where it is skipped entirely if
+    anything above the yield raises — so the fixture kept the exact leak its
+    own docstring warns about, waiting for a setup failure to spring it. One
+    duly arrived: TestClient needs httpx, CI did not install it, and the
+    ImportError landed after the environment had been rewritten and main
+    evicted. The five scan-memory-guard tests imported a main carrying this
+    file's ADMIN_KEY and got 401 from a function they call directly, so a
+    missing test dependency reported itself as ten failures, five of them in
+    a file that does not import this one. The restore is in a finally now,
+    and nothing global is touched until the import that can fail has.
     """
+    # Before anything global is touched: this is the import that raises when
+    # httpx is absent, and it must not take the environment down with it.
+    from fastapi.testclient import TestClient
+
     tmp = tmp_path_factory.mktemp("admin")
     saved_env = {k: os.environ.get(k)
                  for k in ("ADMIN_KEY", "ALTAHA_HOLDINGS_DB")}
     saved_modules = {k: sys.modules.get(k) for k in ("main", "holdings_store")}
-
-    os.environ["ADMIN_KEY"] = KEY
-    os.environ["ALTAHA_HOLDINGS_DB"] = str(tmp / "h.db")
-    for m in ("main", "holdings_store"):
-        sys.modules.pop(m, None)
-    from fastapi.testclient import TestClient
-    import main
-
-    class Inert:
-        """Answers anything with something harmless and touches no network."""
-        def __getattr__(self, _name):
-            return lambda *a, **kw: {}
-
     stubbed = {}
-    for name in ("holdings_crawl", "holdings_job", "fund_portfolios",
-                 "investors_source"):
-        if getattr(main, name, None) is not None:
-            stubbed[name] = getattr(main, name)
-            setattr(main, name, Inert())
+    mod = None
 
-    yield TestClient(main.app), main
+    try:
+        os.environ["ADMIN_KEY"] = KEY
+        os.environ["ALTAHA_HOLDINGS_DB"] = str(tmp / "h.db")
+        for m in ("main", "holdings_store"):
+            sys.modules.pop(m, None)
+        import main as mod
 
-    for name, original in stubbed.items():
-        setattr(main, name, original)
-    for k, v in saved_env.items():
-        if v is None:
-            os.environ.pop(k, None)
-        else:
-            os.environ[k] = v
-    # The module this test re-imported carries the admin key it was built with.
-    # Dropping it means the next importer builds a fresh one from the restored
-    # environment rather than inheriting this file's.
-    for k, original in saved_modules.items():
-        if original is None:
-            sys.modules.pop(k, None)
-        else:
-            sys.modules[k] = original
+        class Inert:
+            """Answers anything with something harmless, touches no network."""
+            def __getattr__(self, _name):
+                return lambda *a, **kw: {}
+
+        for name in ("holdings_crawl", "holdings_job", "fund_portfolios",
+                     "investors_source"):
+            if getattr(mod, name, None) is not None:
+                stubbed[name] = getattr(mod, name)
+                setattr(mod, name, Inert())
+
+        yield TestClient(mod.app), mod
+    finally:
+        if mod is not None:
+            for name, original in stubbed.items():
+                setattr(mod, name, original)
+        for k, v in saved_env.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        # The module this test re-imported carries the admin key it was built
+        # with. Dropping it means the next importer builds a fresh one from the
+        # restored environment rather than inheriting this file's.
+        for k, original in saved_modules.items():
+            if original is None:
+                sys.modules.pop(k, None)
+            else:
+                sys.modules[k] = original
 
 
 def _admin_routes(app):
