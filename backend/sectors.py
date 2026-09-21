@@ -220,6 +220,12 @@ WINDOWS = {"1M": 21, "3M": 63, "6M": 126, "12M": 252}
 _CACHE = {"at": 0.0, "data": None}
 _TTL = 6 * 3600          # sector momentum does not need intraday refresh
 
+# The Nifty 50 close series is already downloaded to compute relative strength
+# and was then discarded. Keeping it costs nothing and is the only adjusted
+# benchmark history in the process, so beta and capture can be measured
+# against a real index instead of being left unassessed.
+_BENCH = {"at": 0.0, "frame": None}
+
 
 # ---------------------------------------------------------------------------
 # Sector resolution
@@ -319,6 +325,40 @@ def _download(symbols: list[str]) -> dict:
     return out
 
 
+def _as_frame(closes):
+    """
+    The benchmark closes as a provenance-carrying frame.
+
+    `auto_adjust=True` is what makes these comparable with the holdings'
+    histories, so the adjustment is stamped on the frame rather than assumed
+    by whatever reads it later. Anything without that stamp is refused
+    downstream, which is the behaviour we want.
+    """
+    if closes is None or not len(closes):
+        return None
+    frame = pd.DataFrame({"Close": closes})
+    frame.attrs.update(price_source="Yahoo Finance", adjustment="adjusted",
+                       symbol=BENCHMARK, name=BENCHMARK_NAME)
+    return frame
+
+
+def benchmark_closes(force: bool = False):
+    """
+    The Nifty 50 history behind the momentum overlay, for beta and capture.
+
+    Served from the same six-hour cache the sector overlay fills, so a
+    portfolio report that already asked for momentum pays nothing extra for
+    it. Returns None rather than raising when the download failed — a missing
+    benchmark removes two numbers from the review and nothing else.
+    """
+    if force or _BENCH["frame"] is None or (time.time() - _BENCH["at"]) >= _TTL:
+        try:
+            momentum(force=force)
+        except Exception:
+            return None
+    return _BENCH["frame"]
+
+
 def momentum(force: bool = False) -> dict:
     """
     Returns and relative strength for every sector index, versus the Nifty 50.
@@ -334,6 +374,7 @@ def momentum(force: bool = False) -> dict:
     series = _download(wanted)
 
     bench = series.get(BENCHMARK)
+    _BENCH.update(at=time.time(), frame=_as_frame(bench))
     if bench is None:
         payload = {
             "available": False,

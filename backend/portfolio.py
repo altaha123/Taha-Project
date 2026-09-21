@@ -166,7 +166,8 @@ def build_report(rows: list, scan_payload: dict | None,
                  policy: dict | None = None,
                  sector_momentum: dict | None = None,
                  news_by_symbol: dict | None = None, *, histories=None,
-                 news_items=None, news_status=None, now=None) -> dict:
+                 news_items=None, news_status=None, now=None,
+                 benchmark_history=None) -> dict:
     """rows: per-holding dicts already scored. Assembles the portfolio view."""
     pol = clean_policy(policy)
     rows = [deepcopy(r) for r in rows if isinstance(r, dict)]
@@ -471,4 +472,5 @@ def build_report(rows: list, scan_payload: dict | None,
         "peer_source": (scan_payload or {}).get("scanned_at"),
     }
 
-    return intelligence.enrich(report, histories, news_items, news_status, now, scan_payload)
+    return intelligence.enrich(report, histories, news_items, news_status, now, scan_payload,
+                               benchmark_history=benchmark_history)

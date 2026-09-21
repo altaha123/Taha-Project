@@ -30,3 +30,37 @@ html[data-theme="dark"] .pi-root{--pi-surface:var(--surface,#181d22)}
 @keyframes pi-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @media(prefers-reduced-motion:reduce){.pi-story-track i{animation:none}}
 @media(max-width:600px){.pi-story-facts{grid-template-columns:1fr;gap:18px}.pi-story-facts article+article{padding-top:18px;border-top:1px solid var(--rule,#deded8)}.pi-story-facts h4{margin:6px 0}.pi-view-switch{width:100%}.pi-view-switch button{flex:1;padding:10px 8px;font-size:12px}}
+
+/* ── Investment Committee review ────────────────────────────────────────
+   The memo reads as a document, not a dashboard: one measure per line, the
+   verdict above the working, and the scorecard bars sized from the same
+   numbers printed beside them so the picture and the figure cannot drift. */
+.pi-scorecard{margin:18px 0 4px;padding:16px 0 0;border-top:1px solid var(--rule,#deded8)}
+.pi-scorecard-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:14px}
+.pi-scorecard-head>span{font-size:11px;color:var(--mute,#69706e);text-transform:uppercase;letter-spacing:.08em}
+.pi-scorecard-head>b{font-family:var(--mono,monospace);font-size:20px;letter-spacing:-.04em}
+.pi-scorecard-head>b em{font-size:12px;font-style:normal;color:var(--mute,#69706e)}
+.pi-scorecard-head>small{flex:1 1 100%;font-size:11px;color:var(--mute,#69706e)}
+.pi-score-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.pi-score-chip{position:relative;padding:10px 12px 12px;border:1px solid var(--rule,#deded8);border-radius:6px;background:var(--pi-surface)}
+.pi-score-chip>span{display:block;font-size:11px;color:var(--mute,#69706e)}
+.pi-score-chip>b{display:block;font-family:var(--mono,monospace);font-size:17px;margin:4px 0 8px;letter-spacing:-.04em}
+.pi-score-chip>i{display:block;height:3px;background:var(--gold,#a38338);border-radius:2px;min-width:0}
+.pi-score-chip>small{display:block;margin-top:8px;font-size:10px;line-height:1.5;color:var(--mute,#69706e)}
+.pi-memo{margin-top:22px;display:grid;gap:22px}
+.pi-memo-section{padding-top:18px;border-top:1px solid var(--rule,#deded8)}
+.pi-memo-section h4{margin:0 0 4px;font-size:15px}
+.pi-memo-verdict{margin:0 0 10px;font-family:var(--mono,monospace);font-size:12px;color:var(--gold,#a38338)}
+.pi-memo-section p{margin:0 0 10px;font-size:13px;line-height:1.75}
+.pi-agenda{list-style:none;margin:0;padding:0;counter-reset:agenda}
+.pi-agenda li{counter-increment:agenda;padding:16px 0 16px 38px;border-bottom:1px solid var(--rule,#deded8);position:relative}
+.pi-agenda li:last-child{border-bottom:0}
+.pi-agenda li::before{content:counter(agenda);position:absolute;left:0;top:16px;font:600 12px var(--mono,monospace);color:var(--gold,#a38338)}
+.pi-agenda-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 12px}
+.pi-agenda-head b{font-size:13px}
+.pi-agenda-head span{font-family:var(--mono,monospace);font-size:11px;color:var(--mute,#69706e)}
+.pi-agenda p{margin:8px 0 0;font-size:12px;line-height:1.7;color:var(--mute,#69706e)}
+.pi-agenda-math{font-family:var(--mono,monospace);font-size:11px!important;color:var(--ink,#222)!important}
+.pi-agenda-question{color:var(--ink,#222)!important;font-style:italic}
+.pi-mode-simple>#pi-risk-budget,.pi-mode-simple>#pi-valuation,.pi-mode-simple>#pi-capital-plan,.pi-mode-simple>#pi-ic-limits{display:none}
+@media(max-width:700px){.pi-score-chips{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}}

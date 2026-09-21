@@ -61,6 +61,81 @@
       table(['Altaha v4 factor','Percentile','Source evidence'],(r.altaha_score_v4?.factor_ledger||[]).map(e=>[esc(e.label),num(e.percentile),esc(e.explanation)]))+'</details>'+
       (r.news?.length?'<h4>Recent mapped developments</h4>'+newsCards(r.news,3):'')+'</div></details>';
   }
+  /* ── Investment Committee review ──────────────────────────────────────
+     The memo layer. Everything below renders values computed server-side in
+     ic_review.py and carried in the payload: nothing is recalculated here, so
+     the page, an export of it and the saved snapshot can never disagree about
+     a number. Each block degrades to its own stated reason rather than
+     disappearing, because "unavailable, and here is why" is information and a
+     missing card is not. */
+  function scoreChip(dim) {
+    const v = finite(dim.score) ? Math.max(0,Math.min(100,dim.score)) : null;
+    return '<div class="pi-score-chip"><span>'+esc(dim.label)+'</span><b>'+(v===null?'—':num(dim.score,0))+'</b><i aria-hidden="true" style="width:'+(v===null?0:v)+'%"></i><small>'+esc(dim.method)+'</small></div>';
+  }
+  function riskBudget(rb) {
+    if(!rb||!rb.available) return empty((rb&&rb.reason)||'A risk budget needs dated adjusted price history for at least two holdings.');
+    const var95=(rb.value_at_risk||{})['95']||{}, bench=rb.benchmark&&rb.benchmark.available?rb.benchmark:null;
+    let html='<div class="pi-metrics">'+
+      metric('Portfolio volatility',pct(rb.volatility_pct),'Annualised over '+num(rb.observations,0)+' shared dates')+
+      metric('Diversification ratio',num(rb.diversification_ratio,2),pct(rb.diversification_benefit_pct)+' of volatility removed by imperfect correlation')+
+      metric('Effective positions by risk',num(rb.effective_risk_positions),'Top three carry '+pct(rb.top3_risk_share_pct)+' of risk')+
+      metric('Worst 5% of days',pct(var95.historical_pct),'Observed one-day loss · normal-curve equivalent '+pct(var95.parametric_pct))+'</div>';
+    if(finite(rb.coverage_pct)&&rb.coverage_pct<99.5) html+='<p class="pi-warning">These shares are of the '+pct(rb.coverage_pct)+' of the book with usable price history, renormalised to 100%. They are not shares of the whole portfolio: '+esc((rb.symbols||[]).join(', '))+' are the holdings measured here.</p>';
+    html+=table(['Holding','Share of capital','Share of risk','Difference','Volatility / year'],
+      (rb.holdings||[]).map(h=>[esc(h.symbol),pct(h.weight_pct),pct(h.risk_share_pct),
+        '<b class="'+tone(-h.risk_vs_capital_pp)+'">'+sign(h.risk_vs_capital_pp)+' pp</b>',pct(h.volatility_pct)]));
+    html+=bench
+      ? '<div class="pi-confidence"><span>Beta vs '+esc(bench.name)+' <b>'+num(bench.beta,2)+'</b></span><span>R² <b>'+num(bench.r_squared,2)+'</b></span><span>Tracking error <b>'+pct(bench.tracking_error_pct)+'</b></span><span>Up capture <b>'+pct(bench.up_capture_pct)+'</b></span><span>Down capture <b>'+pct(bench.down_capture_pct)+'</b></span><span>Observations <b>'+num(bench.observations,0)+'</b></span></div>'
+      : '<p class="pi-note">Benchmark sensitivity unavailable: '+esc((rb.benchmark&&rb.benchmark.reason)||'no index history accompanied this report')+'</p>';
+    return html+'<p class="pi-note">'+esc(rb.method)+' '+esc(rb.basis)+' Coverage '+pct(rb.coverage_pct)+' of priced capital, '+esc(rb.from||'—')+' to '+esc(rb.to||'—')+'. '+esc((rb.value_at_risk||{}).method||'')+'</p>';
+  }
+  function valuationView(v) {
+    if(!v||!v.available) return empty((v&&v.reason)||'No holding in this book carries a usable trailing multiple.');
+    let html='<div class="pi-metrics">'+
+      metric('Portfolio P/E',finite(v.portfolio_pe)?num(v.portfolio_pe,1)+' <em>×</em>':'—',esc(v.band_position)+' · '+pct(v.portfolio_pe_coverage_pct)+' of capital covered')+
+      metric('Earnings yield',pct(v.earnings_yield_pct),'The reciprocal of the aggregate multiple')+
+      metric('Portfolio P/B',finite(v.portfolio_pb)?num(v.portfolio_pb,2)+' <em>×</em>':'—',pct(v.portfolio_pb_coverage_pct)+' of capital covered')+
+      metric('Median holding P/E',finite(v.median_holding_pe)?num(v.median_holding_pe,1)+' <em>×</em>':'—','Half the scored names sit either side')+'</div>';
+    const priced=(v.most_expensive||[]).concat(v.least_expensive||[]);
+    if(priced.length) html+=table(['Holding','Weight','P/E','P/B','Earnings yield'],priced.map(n=>[esc(n.symbol),pct(n.weight_pct),num(n.pe,1),num(n.pb,2),pct(n.earnings_yield_pct)]));
+    if((v.loss_making||[]).length) html+='<p class="pi-warning">'+pct(v.loss_making_weight_pct)+' of capital — '+v.loss_making.map(n=>esc(n.symbol)).join(', ')+' — reports no positive trailing earnings and therefore no multiple. Those holdings are excluded from every figure above rather than counted as cheap.</p>';
+    if((v.unpriced_multiple_symbols||[]).length) html+='<p class="pi-note">No trailing multiple was available for '+v.unpriced_multiple_symbols.map(esc).join(', ')+'.</p>';
+    return html+'<p class="pi-note">'+esc(v.method)+'</p>';
+  }
+  function capitalPlan(plan) {
+    if(!plan||!plan.available) return empty((plan&&plan.reason)||'No priced capital.');
+    if(!(plan.gaps||[]).length) return '<p class="pi-committee">'+esc(plan.note||'No single-stock ceiling is exceeded.')+'</p>';
+    return '<div class="pi-metrics">'+
+      metric('Capital above the ceilings',money(plan.released_value),pct(plan.released_pct)+' of the priced book')+
+      metric('Largest position after',pct(plan.proforma_top1_pct),'Against your '+pct(plan.gaps[0].limit_pct)+' ceiling')+
+      metric('Top three after',pct(plan.proforma_top3_pct),'Concentration on the pro-forma weights')+
+      metric('Effective holdings after',num(plan.proforma_effective_n),'1 ÷ HHI on the same weights')+'</div>'+
+      table(['Holding','Now','Ceiling','Gap in shares','Value at today’s price','Weight after'],
+        plan.gaps.map(g=>[esc(g.symbol),pct(g.measured_pct),pct(g.limit_pct),
+          num(g.shares,0)+' of '+num(g.of_shares,0),money(g.value),pct(g.resulting_weight_pct)]))+
+      '<p class="pi-note">'+esc(plan.note)+'</p>';
+  }
+  function icReview(d) {
+    const ic=d.ic_review;
+    if(!ic) return '';
+    if(!ic.available) return card('pi-ic-memo','Investment Committee Review','The portfolio read as a whole',empty(ic.reason||'Unavailable for this book.'));
+    const sc=ic.scorecard||{};
+    let html=card('pi-ic-memo','Investment Committee Review','What a reviewer reads first, and the arithmetic under it',
+      '<p class="pi-committee">'+esc(ic.headline)+'</p>'+
+      '<div class="pi-scorecard"><div class="pi-scorecard-head"><span>Assessment</span><b>'+(finite(sc.overall)?num(sc.overall,0):'—')+' <em>/ 100 · '+esc(sc.grade||'—')+'</em></b><small>'+num(sc.dimensions_scored,0)+' of '+num(sc.dimensions_total,0)+' dimensions could be scored</small></div><div class="pi-score-chips">'+(sc.dimensions||[]).map(scoreChip).join('')+'</div></div>'+
+      '<div class="pi-memo">'+(ic.sections||[]).map(s=>'<article class="pi-memo-section"><h4>'+esc(s.heading)+'</h4><p class="pi-memo-verdict">'+esc(s.verdict)+'</p>'+(s.paragraphs||[]).map(p=>'<p>'+esc(p)+'</p>').join('')+'</article>').join('')+'</div>'+
+      '<p class="pi-note">'+esc(sc.method||'')+' '+esc(ic.framing)+'</p>');
+    html+=card('pi-risk-budget','Risk Budget','Which holdings actually move this portfolio — not which are largest',riskBudget(ic.risk_budget));
+    html+=card('pi-valuation','What the Book Costs','Aggregate earnings and book multiples across the holdings',valuationView(ic.valuation));
+    html+=card('pi-capital-plan','Distance From Your Own Limits','If every single-stock gap were closed at today’s prices',capitalPlan(ic.capital_plan));
+    html+=card('pi-agenda','Review Agenda','Ranked by what the measurements say deserves attention first',
+      (ic.agenda||[]).length
+        ? '<ol class="pi-agenda">'+ic.agenda.map(a=>'<li><div class="pi-agenda-head"><b>'+esc(a.title)+'</b><span>'+(finite(a.measured)?num(a.measured)+(finite(a.limit)?' vs limit '+num(a.limit):''):esc(a.rule||''))+'</span></div><p>'+esc(a.observation)+'</p>'+(a.arithmetic?'<p class="pi-agenda-math">'+esc(a.arithmetic)+'</p>':'')+'<p class="pi-agenda-question">'+esc(a.question)+'</p></li>').join('')+'</ol>'
+        : empty('Nothing in the measured evidence crosses a limit in your rulebook.'))+
+      '';
+    html+=card('pi-ic-limits','Outside This Review','What no uploaded file can tell the engine','<ul class="pi-changes">'+(ic.unassessed||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><p class="pi-note">'+esc(ic.framing)+'</p>');
+    return html;
+  }
   // The first screen uses the same measured report values as the detailed view.
   // Native HTML bars remain visible when Chart.js or the network is unavailable.
   function overview(d) {
@@ -99,6 +174,7 @@
     html+=overview(d);
     html+='<div class="pi-metrics">'+metric(q.valuation_complete?'Portfolio value':'Priced portfolio value',money(d.total_value),rows.length+' priced holdings')+metric('Gain / loss since purchase',money(d.total_pnl),pct(d.total_pnl_pct)+' on known costs · '+pct(q.cost_value_pct)+' cost coverage',tone(d.total_pnl))+metric('Altaha Portfolio Score',num(d.weighted_score)+' <em>/ 100</em>','Grade '+esc(d.grade)+' · '+pct(q.scored_value_pct)+' capital scored')+metric('Risk checks',esc(risk.grade||'Unavailable'),(risk.triggered_count??0)+' disclosed thresholds triggered')+'</div>';
     html+=card('pi-committee','Portfolio Investment Committee Summary','The portfolio in 30 seconds','<p class="pi-committee">'+esc(d.committee_summary)+'</p><div class="pi-confidence"><span>Score confidence <b>'+pct(q.weighted_confidence_pct)+'</b></span><span>Effective holdings <b>'+num(c.effective_n)+'</b></span><span>Top 3 <b>'+pct(c.top3_pct)+'</b></span><span>Score scan <b>'+esc(date(q.score_as_of))+'</b></span></div>');
+    html+=icReview(d);
     if(d.changes?.length) html+=card('pi-changes','What Changed Recently','Compared with '+esc(date(d.previous_review_at))+' · '+esc(d.comparison_note||''),'<ul class="pi-changes">'+d.changes.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>');
     html+='<div class="pi-grid">';
     html+=card('pi-allocation','Portfolio allocation','Where is your capital committed?',(alloc.length?chart('pi-allocation-chart','Allocation by '+state.allocation,270):empty('No positive market values available.'))+

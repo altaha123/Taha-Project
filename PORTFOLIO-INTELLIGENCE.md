@@ -61,8 +61,18 @@ before calculating returns, require 60 overlapping observations, use up to 126
 returns, and do not fill gaps. Dated, explicitly adjusted history ending within
 seven days is required. Yahoo's `auto_adjust=True` carries provenance. Dhan's
 adjustment status is unverified in this repository, so its histories are withheld
-from these analytics. No beta, commodity/FX/rate sensitivities or synthetic
-historical portfolio returns are inferred from holdings' purchase dates.
+from these analytics. No commodity/FX/rate sensitivities or synthetic historical
+portfolio returns are inferred from holdings' purchase dates.
+
+Beta, R², tracking error and up/down capture are measured in `ic_review.py`
+against the Nifty 50 series the sector overlay already downloads, handed in as an
+argument rather than fetched inside the analytics; they need sixty overlapping
+dates and are absent, with a stated reason, when the index download failed. The
+portfolio return series they use is **today's weights applied to past prices**,
+labelled as such everywhere it appears — it is a property of the current book,
+not a record of what the holder earned. See `IC-REVIEW.md` for the risk budget,
+aggregate multiple, pro-forma and scorecard arithmetic built on top of this
+module.
 Scenarios are labelled hypothetical, with exposure × equal sector shock shown.
 
 News joins existing exchange/press caches. Every rendered item needs a source,
