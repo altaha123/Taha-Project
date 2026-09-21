@@ -237,6 +237,7 @@
    bottom is what makes that a promise rather than a hope. */
 
 .acf-card{
+  position:relative;                      /* the coin layer's frame of reference */
   border:1px solid var(--rule); border-radius:16px; background:var(--skin-card);
   box-shadow:var(--skin-shadow,0 1px 2px rgba(0,0,0,.04));
   margin:0 0 26px; overflow:hidden;
@@ -403,4 +404,78 @@
   .acf-slider input[type=range]::-webkit-slider-thumb,
   .acf-slider input[type=range]::-moz-range-thumb{ transition:none }
   .acf-chip:hover,.acf-opt:hover,.acf-go:hover{ transform:none }
+}
+
+/* ── Money effects ───────────────────────────────────────────────────────────
+   Coins, the sheen, and the ring. All of it is decoration over markup that is
+   already correct: the layer takes no clicks, carries aria-hidden, and the
+   reduced-motion block at the end switches the whole thing off without taking
+   a single figure or control with it. */
+
+.mfx-layer{
+  position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:3;
+  border-radius:inherit;
+}
+.mfx-coin{
+  position:absolute; width:28px; height:28px; border-radius:50%;
+  display:grid; place-items:center; will-change:transform,opacity;
+  font:700 15px/1 var(--mono,monospace); color:#54400d;
+  background:radial-gradient(circle at 34% 28%,#fbf0cf 0%,#e3c979 42%,#b8912c 78%,#8a6d1e 100%);
+  box-shadow:0 2px 5px rgba(0,0,0,.28), inset 0 -1px 2px rgba(0,0,0,.22),
+             inset 0 1px 1px rgba(255,255,255,.55);
+  text-shadow:0 1px 0 rgba(255,255,255,.35);
+}
+
+/* The light that runs across a figure the moment it changes. */
+.mfx-sheen{
+  background-image:linear-gradient(100deg,
+    transparent 30%, rgba(233,203,120,.85) 45%, rgba(255,255,255,.95) 50%,
+    rgba(233,203,120,.85) 55%, transparent 70%);
+  background-size:260% 100%; background-repeat:no-repeat;
+  -webkit-background-clip:text; background-clip:text;
+  animation:mfx-sweep 850ms cubic-bezier(.3,.1,.3,1);
+}
+@keyframes mfx-sweep{ from{ background-position:180% 0 } to{ background-position:-80% 0 } }
+
+/* The rupee sign, which is the one glyph on the card that means money. */
+.acf-sym{ font-style:normal; color:var(--gold-dp,#8a6d1e); display:inline-block;
+  will-change:transform; margin-right:.06em }
+
+/* Stage 3 — the ring */
+.acf-ring{
+  position:relative; display:grid; place-items:center;
+  width:200px; height:200px; margin:22px auto 6px;
+}
+.acf-ring svg{ width:100%; height:100%; transform:rotate(-90deg) }
+.acf-arc-bg{ fill:none; stroke:var(--rule); stroke-width:13 }
+.acf-arc{ fill:none; stroke-width:13; stroke-linecap:butt }
+.acf-arc.is-growth{ stroke:var(--gold,#a8801c) }
+.acf-arc.is-stable{ stroke:var(--ink-2,#4b4438) }
+.acf-arc.is-gold{ stroke:var(--gold-lt,#c9a63e) }
+.acf-ring-mid{
+  position:absolute; inset:0; display:grid; place-content:center; text-align:center;
+  gap:1px; line-height:1.1;
+}
+.acf-total-line{ display:flex; align-items:baseline; justify-content:center; white-space:nowrap }
+.acf-ring-mid .acf-sym{ font-size:17px }
+.acf-ring-mid .acf-total{
+  font-family:var(--mono,monospace); font-weight:400; font-size:27px; color:var(--ink);
+  letter-spacing:-.045em; font-variant-numeric:tabular-nums;
+}
+.acf-ring-mid small{ display:block; margin-top:3px; font-size:9.5px; color:var(--mute);
+  letter-spacing:.03em }
+
+.acf-swatch{
+  display:inline-block; width:9px; height:9px; border-radius:2.5px;
+  margin-right:7px; vertical-align:baseline;
+}
+.acf-swatch.is-growth{ background:var(--gold,#a8801c) }
+.acf-swatch.is-stable{ background:var(--ink-2,#4b4438) }
+.acf-swatch.is-gold{ background:var(--gold-lt,#c9a63e) }
+
+@media (prefers-reduced-motion:reduce){
+  .mfx-layer{ display:none }
+  .mfx-sheen{ animation:none; background-image:none; -webkit-background-clip:border-box;
+              background-clip:border-box }
+  .acf-arc{ transition:none }
 }

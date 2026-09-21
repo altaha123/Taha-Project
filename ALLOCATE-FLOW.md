@@ -31,12 +31,20 @@ pixel width, not an intention. Values snap to a step that matches their size —
 was picked, so choosing ₹1 Cr and then nudging the slider does not first jump
 to ₹99.5 lakh.
 
-**Animation.** The figure counts rather than swaps, the fill follows the
-handle, the card and its rows stagger in. Every tween runs on a named channel
-and a newer value on the same channel cancels the older one — without that,
-clicking a quick pick and immediately dragging leaves a 400ms animation
-writing the old figure over the new one, which is the display disagreeing with
-the control.
+**The money moves.** Gold ₹ coins spray off the slider handle as you drag,
+arc, spin and fall away. The count follows the **order of magnitude of the
+sum** — ₹50,000 throws a few, ₹5 crore throws a shower — so sliding into a
+crore feels like more money, because it is, and a reader takes that in before
+they have read a digit. Dragging down drains instead: fewer coins, heavier,
+no spin, falling. A quick pick or letting go of the handle is a decision
+rather than a nudge, so it gets a full spray sized to the number. The ₹ glyph
+itself springs on every change, a sheen runs across the figure, and the figure
+counts rather than swaps.
+
+Every tween runs on a named channel and a newer value on the same channel
+cancels the older one — without that, clicking a quick pick and immediately
+dragging leaves a 400ms animation writing the old figure over the new one,
+which is the display disagreeing with the control.
 
 ## Stage 2 — the profile
 
@@ -76,6 +84,13 @@ range, and the card says on its face that this is what it did. Figures are
 then rounded to a unit matching the size of the sum, with the rounding drift
 pushed onto the largest line so the parts still total what was put in.
 
+**The ring.** The whole sum as one circle, divided. Each arc sweeps out from
+twelve o'clock in the order the money is committed, and then the money is
+handed out: coins fly from the middle of the ring into each sleeve card, in
+the proportion that sleeve receives. The split stops being a table and becomes
+something that happens. The ring's centre reads the sum as a headline (₹5 Cr);
+the sleeve figures below carry every digit.
+
 **The flags matter more than the split.** An allocation handed to somebody
 whose money is needed next year, or who has no emergency fund, is arithmetic
 wrapped around a mistake. A horizon under three years is flagged however brave
@@ -83,6 +98,21 @@ the rest of the profile reads; so is a missing cushion, borrowings taking a
 large share of income, and a lump sum about to go in on a single date.
 
 ---
+
+## The effects are decoration, and the tests prove it
+
+`frontend/money-fx.js` spawns everything into a layer that sits above the
+card, takes no clicks, carries `aria-hidden`, and removes each particle when
+it lands — with a timeout sweep behind that, because a tab backgrounded
+mid-flight never fires `finish` and a coin that never lands is a leak. There
+is a hard ceiling on coins alive at once.
+
+`prefers-reduced-motion` switches the whole file off. The browser test drives
+the entire flow in that mode — every figure, control and reading asserted with
+not one coin on screen — and then re-drives it with motion on to assert the
+coins actually fly, that a larger sum throws more of them, that the layer
+takes no clicks, and that nothing leaks once they land. That is the contract:
+the money effects are never load-bearing.
 
 ## What it will not do
 
@@ -102,6 +132,7 @@ against their own account.
 |---|---|
 | Capacity, temperament, the lower of the two | `frontend/risk-math.js` |
 | Slider scale, the split, the flags, the card | `frontend/allocate-flow.js` |
+| Coins, the sheen, the arcs | `frontend/money-fx.js` |
 | Styling and the reduced-motion promise | `frontend/products.css` |
 | The five-step sequence below it | `frontend/allocate.js` |
 | The questions, and the recorded assessment | `backend/risk_profile.py` |
