@@ -167,6 +167,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/portfolio-persist-browser.cjs
+      - name: Verify the guided allocation card
+        # Four silent ones: a slider whose figure disagrees with its handle, a
+        # questionnaire that asks again for answers already given, asset
+        # classes shown without a profile behind them, and rupee figures that
+        # do not add up to the sum the reader put in.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/allocate-flow-browser.cjs
       - name: Verify the planner fork and the risk questionnaire
         # Somebody with no holdings must be taken to the questions rather than
         # left at an empty table, asked once rather than every visit, and shown

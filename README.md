@@ -21,7 +21,7 @@ happens to read.
 | Product | The question it answers | What lives there |
 |---|---|---|
 | **Discover** | *Where are opportunities now?* | The opportunities hub, the live intraday scanner, delivery trends, bulk & block deals, WOW orders, options activity |
-| **Allocate** | *What should I do with my money?* | The allocation plan — cushion, costly debt, dated goals, the long-term split, position sizing — and the money planner behind it |
+| **Allocate** | *What should I do with my money?* | The guided card — how much, what risk it can carry, which asset classes follow ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)) — then the allocation plan itself: cushion, costly debt, dated goals, the long-term split, position sizing, and the money planner behind it |
 | **Portfolio** | *How are my existing investments doing?* | The holdings review — see [`IC-REVIEW.md`](IC-REVIEW.md) for what happens to an uploaded file, end to end — and the record of ideas you added |
 | **Research** | *What does the evidence say?* | The stock screener, stock analysis, the Altaha Score, factors, fundamentals, ownership, technicals, news — and the glossary |
 
