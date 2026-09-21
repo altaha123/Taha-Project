@@ -45,3 +45,6 @@
   .scan-universe[data-voyage=planet] .su-scene-heading h3{opacity:0;transition:opacity 1s ease}
   .su-voyage-hud{bottom:100px}
 }
+
+.su-texture-credit{padding:0 26px 16px;font:10px/1.5 sans-serif;color:#a8b3c6;text-decoration:underline;justify-self:start}
+.su-texture-credit:focus-visible{outline:2px solid #e4c785;outline-offset:3px}

@@ -3,7 +3,7 @@
 const {JSDOM}=require('jsdom');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 function fixture({reduced=false,noCanvas=false}={}){
-  const dom=new JSDOM('<body><div id="view-ideas"><div class="hzrow"><button id="horizon">Short term</button></div><div class="brun"><button id="genbtn2">Scan</button></div><div id="scan-universe"></div></div><div id="scan-results"></div></body>',{runScripts:'outside-only',pretendToBeVisual:true});
+  const dom=new JSDOM('<body><div id="view-ideas"><div class="hzrow"><button id="horizon">Short term</button></div><div class="brun"><button id="genbtn2">Scan</button></div><div id="scan-universe"></div></div><div id="scan-results"></div></body>',{url:'http://localhost/',runScripts:'outside-only',pretendToBeVisual:true});
   const w=dom.window,queue=new Map();let id=0,draws=0,now=0,intersect,changePreference;
   const media={matches:reduced,addEventListener(_,fn){changePreference=fn},removeEventListener(){}};
   w.matchMedia=()=>media;
@@ -16,7 +16,7 @@ function fixture({reduced=false,noCanvas=false}={}){
   const ctx=new Proxy({}, {get(_,key){if(key==='createRadialGradient'||key==='createLinearGradient')return ()=>gradient;if(key==='fillRect')return ()=>draws++;return ()=>{}},set(){return true}});
   w.HTMLCanvasElement.prototype.getContext=()=>noCanvas?null:ctx;
   const button=w.document.querySelector('#genbtn2');let clicks=0;button.onclick=()=>clicks++;
-  for(const name of ['universe-voyage','universe-scan'])w.eval(fs.readFileSync(path.join(__dirname,'../'+name+'.js'),'utf8'));
+  for(const name of ['planet-renderer','universe-voyage','universe-scan'])w.eval(fs.readFileSync(path.join(__dirname,'../'+name+'.js'),'utf8'));
   const update=s=>w.AltahaUniverse.update(s);
   const advance=(frames=5)=>{for(let i=0;i<frames;i++){now+=40;const pending=[...queue.values()];queue.clear();pending.forEach(fn=>fn(now))}};
   const $=selector=>w.document.querySelector(selector);
@@ -33,7 +33,7 @@ try{
   f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Saturn');
   f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Mars');
   f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Neptune');
-  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'An undiscovered world');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Earth');
   f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Jupiter','journey loops');
   f.$('#genbtn2').click();assert.equal(f.clicks,1,'moved scan control retains handler');
   f.$('.su-motion').click();before=f.draws;f.advance();assert.equal(f.draws,before,'pause freezes drawing');assert.equal(f.queue.size,0);

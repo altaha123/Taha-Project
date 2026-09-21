@@ -21,7 +21,7 @@
       {name:'Saturn',base:'#ad9265',light:'#f5dfaa',kind:'rings'},
       {name:'Mars',base:'#a7472c',light:'#efae79',kind:'rock'},
       {name:'Neptune',base:'#2255ad',light:'#79beff',kind:'cloud'},
-      {name:'An undiscovered world',base:'#247b76',light:'#b5f4db',kind:'ocean'}
+      {name:'Earth',base:'#247b76',light:'#b5f4db',kind:'ocean'}
     ];
     function smooth(value){value=Math.max(0,Math.min(1,value));return value*value*(3-2*value);}
     // Pre-render textured spheres once, avoiding gradients/noise on every frame.
@@ -47,6 +47,12 @@
       var shade=p.createLinearGradient(10,0,240,180);shade.addColorStop(0,'#0000');shade.addColorStop(.45,'#0000');shade.addColorStop(1,'#000e');p.fillStyle=shade;p.fillRect(0,0,256,256);
       p.restore();return tile;
     });
+    var renderer=window.AltahaPlanets?window.AltahaPlanets.create(textureReady):null;
+    function textureReady(restored){
+      if(destroyed)return;
+      if(restored){if(renderer)renderer.destroy();renderer=window.AltahaPlanets.create(textureReady);}
+      draw();
+    }
     function glow(x,y,r,color){
       var g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'#0000');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);
     }
@@ -75,6 +81,10 @@
       ctx.globalAlpha=alpha;glow(0,0,r*.24,blue?'#d5eaffac':'#ffe6b9cf');glow(0,0,r*.08,'#fff2dede');ctx.restore();
     }
     function planet(index,x,y,r,opacity,spin){
+      if(opacity<=0)return;
+      // GPU ray-traced globe: the surface rotates around its axis under a fixed sun.
+      var globe=renderer&&r>18?renderer.render(index,time,r*5*Math.min(window.devicePixelRatio||1,1.5)):null;
+      if(globe){ctx.save();ctx.globalAlpha=opacity;ctx.drawImage(globe,x-r*2.5,y-r*2.5,r*5,r*5);ctx.restore();return;}
       var world=worlds[index];ctx.save();ctx.globalAlpha=opacity;
       glow(x,y,r*1.3,index===1?'#66c9eb28':'#bbad9120');
       function ring(front){
@@ -119,7 +129,7 @@
       galaxy(width*.12,height*.68,radius*.24,time*.21,.3,true);
       // A large recognisable destination occupies the open centre of the scene.
       var mobile=width<700;
-      var heroRadius=Math.min(width*(mobile?.27:.19),height*.27);
+      var heroRadius=Math.min(width*(mobile?.30:.20),height*.28)*(chapter===2?.70:1);
       var x=width*(mobile?.55:.69)-depart*width*.8;
       var y=height*(mobile?.47:.49);
       var r=12+approach*heroRadius+depart*heroRadius*.8;
@@ -163,7 +173,7 @@
     var view=document.getElementById('view-ideas');if(view)tabObserver.observe(view,{attributes:true,attributeFilter:['style','class','hidden']});
     function preference(){draw();sync();}
     reduced.addEventListener('change',preference);document.addEventListener('visibilitychange',sync);
-    function destroy(){destroyed=true;cancelAnimationFrame(frame);if(resizeObserver)resizeObserver.disconnect();if(intersection)intersection.disconnect();tabObserver.disconnect();window.removeEventListener('resize',resize);reduced.removeEventListener('change',preference);document.removeEventListener('visibilitychange',sync);window.removeEventListener('pagehide',pagehide);}
+    function destroy(){destroyed=true;if(renderer)renderer.destroy();cancelAnimationFrame(frame);if(resizeObserver)resizeObserver.disconnect();if(intersection)intersection.disconnect();tabObserver.disconnect();window.removeEventListener('resize',resize);reduced.removeEventListener('change',preference);document.removeEventListener('visibilitychange',sync);window.removeEventListener('pagehide',pagehide);}
     function pagehide(event){if(!event.persisted)destroy();}
     window.addEventListener('pagehide',pagehide);
     resize();return {sync:sync,destroy:destroy};
