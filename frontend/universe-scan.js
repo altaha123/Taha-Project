@@ -16,7 +16,7 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = { estimateRemaining: estimateRemaining, stateOf: stateOf };
   if (typeof document === 'undefined') return;
   var pending = {status:'ready'}, samples = [], runId = null, previous = 'ready', milestone = 0;
-  var batches = [], discoveries = [], selected = -1, paused = false, observed = false, lastPct = 0;
+  var batches = [], discoveries = [], selected = -1, paused = false, observed = false, lastPct = 0, voyage;
   function node(tag, cls, text) {
     var el = document.createElement(tag); if (cls) el.className = cls;
     if (text !== undefined) el.textContent = text; return el;
@@ -25,9 +25,23 @@
     var host = document.getElementById('scan-universe');
     if (!host || host.firstChild) return host;
     host.className = 'scan-universe';
-    host.innerHTML = '<div class="su-scene"><div class="su-stars" aria-hidden="true"></div><div class="su-orbit su-orbit-a" aria-hidden="true"></div><div class="su-orbit su-orbit-b" aria-hidden="true"></div><div class="su-orbit su-orbit-c" aria-hidden="true"></div><div class="su-sweep" aria-hidden="true"></div><div class="su-ripple" aria-hidden="true"></div><svg class="su-constellation" viewBox="0 0 400 300" aria-hidden="true"><path d="M64 70 130 95 270 65 275 190 345 215 80 210 130 95"/></svg><div class="su-sun" aria-hidden="true"><span>A</span></div>' +
+    host.innerHTML = '<div class="su-scene">' +
       Array.from({length:6}, function (_, i) { return '<button type="button" class="su-planet su-planet-' + i + '" aria-label="Planet ' + (i+1) + ': awaiting discoveries" aria-expanded="false"><i></i><span>' + String(i+1).padStart(2,'0') + '</span></button>'; }).join('') +
-      '<span class="su-caption">THE NSE UNIVERSE</span><button type="button" class="su-motion">Pause motion</button></div><div class="su-copy"><span class="su-eyebrow">DISCOVER / UNIVERSE SCAN</span><h3>Explore a universe<br>of possibilities.</h3><p class="su-status" role="status" aria-live="polite"></p><div class="su-meter"><progress class="su-progress" max="100" value="0" aria-label="Universe scan progress"></progress><b class="su-percent"></b></div><p class="su-detail"></p><p class="su-timing"></p><p class="su-milestone" role="status"></p><div class="su-controls"></div><span class="su-footnote">Tap a planet to explore its discoveries. Preview scores may change as the universe grows.</span></div><section class="su-discoveries" aria-label="Live discoveries"><div class="su-discovery-head"><h4>Discoveries as they happen</h4><span>PRELIMINARY</span></div><p class="su-discovery-note">Detailed stock cards appear at analysis checkpoints. Early checks screen the universe first.</p><div class="su-cards"></div><div class="su-batch" hidden></div></section>';
+      '<button type="button" class="su-motion">Pause motion</button></div><div class="su-copy"><span class="su-eyebrow">DISCOVER / UNIVERSE SCAN</span><h3>Explore a universe<br>of possibilities.</h3><p class="su-status" role="status" aria-live="polite"></p><div class="su-meter"><progress class="su-progress" max="100" value="0" aria-label="Universe scan progress"></progress><b class="su-percent"></b></div><p class="su-detail"></p><p class="su-timing"></p><p class="su-milestone" role="status"></p><div class="su-controls"></div><span class="su-footnote">Tap a planet to explore its discoveries. Preview scores may change as the universe grows.</span></div><section class="su-discoveries" aria-label="Live discoveries"><div class="su-discovery-head"><h4>Discoveries as they happen</h4><span>PRELIMINARY</span></div><p class="su-discovery-note">Detailed stock cards appear at analysis checkpoints. Early checks screen the universe first.</p><div class="su-cards"></div><div class="su-batch" hidden></div></section>';
+    var scene=host.querySelector('.su-scene');
+    var canvas=node('canvas','su-cosmos'); canvas.setAttribute('aria-hidden','true'); scene.prepend(canvas);
+    var heading=node('div','su-scene-heading');
+    heading.appendChild(host.querySelector('.su-eyebrow'));
+    var title=host.querySelector('h3'); title.textContent='An entire universe. Waiting to be discovered.'; heading.appendChild(title); scene.appendChild(heading);
+    var hud=node('div','su-voyage-hud');
+    hud.appendChild(node('span','su-voyage-mode','SPACE EXPLORER'));
+    hud.appendChild(node('strong','su-voyage-place','The golden spiral'));
+    hud.appendChild(node('span','su-voyage-note','A visual journey · stock findings appear below'));
+    scene.appendChild(hud);
+    var checkpoints=node('div','su-checkpoints');
+    checkpoints.setAttribute('aria-label','Analysis checkpoints');
+    scene.querySelectorAll('.su-planet').forEach(function(el){checkpoints.appendChild(el);}); scene.appendChild(checkpoints);
+    if(window.AltahaVoyage) voyage=window.AltahaVoyage.create(host,canvas);
     // Move existing controls, retaining their IDs and event handlers.
     var controls = host.querySelector('.su-controls');
     ['.hzrow','.brun'].forEach(function (sel) { var el = document.querySelector('#view-ideas ' + sel); if (el) controls.appendChild(el); });
@@ -37,6 +51,7 @@
     host.querySelector('.su-motion').addEventListener('click', function () {
       paused = !paused; host.classList.toggle('su-paused',paused);
       this.textContent = paused ? 'Resume motion' : 'Pause motion'; this.setAttribute('aria-pressed', String(paused));
+      if(voyage) voyage.sync();
     });
     var dock = node('button','su-dock'); dock.id = 'su-dock'; dock.type = 'button'; dock.hidden = true;
     dock.addEventListener('click', function () {
@@ -112,6 +127,8 @@
     }
     if(running||state==='starting') observed=true;
     host.dataset.state=state; lastPct=pct;
+    host.querySelector('.su-voyage-mode').textContent=running?'LIVE SCAN · '+pct+'%':state==='starting'?'CONNECTING TO SCAN':state==='reconnecting'?'SCAN CONNECTION INTERRUPTED':'SPACE EXPLORER';
+    if(voyage) voyage.sync();
     var results=document.getElementById('scan-results');if(results) results.hidden=['starting','running','reconnecting'].includes(state);
     var title='Your next discovery starts here.',detail='Choose a horizon, then start your universe scan.';
     if(state==='starting'){title='Launching your discovery…';detail='Waiting for the engine to confirm the scan.';}
