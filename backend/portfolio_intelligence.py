@@ -201,7 +201,8 @@ def news_intelligence(rows, items, now=None, status=None):
             'method': 'Exposed portfolio weight × category materiality × exp(−age in hours / 72); seven-day window. Company mapping takes precedence over sector context.'}
 
 
-def enrich(report, histories=None, news_items=None, news_status=None, now=None, scan=None):
+def enrich(report, histories=None, news_items=None, news_status=None, now=None, scan=None,
+           benchmark_history=None):
     now = now or datetime.now(timezone.utc)
     rows, total = report['holdings'], report['total_value']
     score = weighted(rows, lambda r: r.get('composite'))
@@ -385,4 +386,15 @@ def enrich(report, histories=None, news_items=None, news_status=None, now=None, 
                    'groups':groups, 'scenarios':scenarios, 'committee_summary':' '.join(sentences),
                    'summary':{'text':' '.join(sentences)},
                    'snapshot_basis':{'version':VERSION, 'score_method':'v4-position', 'benchmark_as_of':bench['as_of']}})
+    # The committee review reads the finished report and adds the judgement
+    # layer: risk budget, aggregate multiples, pro-forma book and the memo.
+    # Imported here rather than at module scope because it reads back from
+    # this module; a failure in the added layer must never cost the reader
+    # the measurement it was built on.
+    import ic_review
+    try:
+        report['ic_review'] = ic_review.build(report, histories, benchmark_history, now)
+    except Exception as exc:
+        report['ic_review'] = {'version': ic_review.VERSION, 'available': False,
+                               'reason': f'Committee review unavailable: {type(exc).__name__}.'}
     return json_safe(report)

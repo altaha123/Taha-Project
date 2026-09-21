@@ -2966,7 +2966,15 @@ def _pf_run(job_id, holdings, policy):
         except Exception:
             sector_data = {'available':False, 'message':'Sector index data unavailable.'}
         items, status = _pf_news(holdings)
-        report = build_report(rows, scan, policy, sector_data, histories=histories, news_items=items, news_status=status)
+        # The Nifty 50 series the sector overlay already downloaded. Handed in
+        # rather than fetched inside the report so the analytics stay pure and
+        # a failed index download costs only beta and capture.
+        try:
+            benchmark_history = sectors.benchmark_closes()
+        except Exception:
+            benchmark_history = None
+        report = build_report(rows, scan, policy, sector_data, histories=histories, news_items=items,
+                              news_status=status, benchmark_history=benchmark_history)
         report['enrichment_incomplete'] = bool(pending)
         publish('Complete' if not pending else 'Complete with unavailable enrichment', report, done, True)
     except Exception:
@@ -3027,7 +3035,12 @@ def portfolio(payload: dict = Body(...)):
         if history is not None: histories[row['symbol']] = history
         rows.append(row)
     items,status = _pf_news(holdings)
-    report = build_report(rows,scan,payload.get('policy'),histories=histories,news_items=items,news_status=status)
+    try:
+        benchmark_history = sectors.benchmark_closes()
+    except Exception:
+        benchmark_history = None
+    report = build_report(rows,scan,payload.get('policy'),histories=histories,news_items=items,
+                          news_status=status,benchmark_history=benchmark_history)
     report['disclaimer'] = DISCLAIMER
     return to_native(report)
 
