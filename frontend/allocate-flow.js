@@ -112,6 +112,8 @@
     if (v >= 1000) return '₹' + trim(v / 1000) + 'K';
     return '₹' + Math.round(v);
   }
+  function plain(value) { return words(value).replace('₹', ''); }
+
   function trim(n) {
     var s = n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2);
     return s.replace(/\.0+$/, '').replace(/(\.\d)0$/, '$1');
@@ -307,6 +309,14 @@
   var API = (typeof root.API_BASE !== 'undefined' && root.API_BASE)
     ? root.API_BASE : (root.API_BASE || 'https://taha-project.onrender.com');
 
+  /* The adviser and the question, side by side. The heading stays a real
+     heading in the real order — the figure is seated beside it, never in
+     place of it, so nothing that carries meaning lives in a drawing. */
+  function asking(pose, block) {
+    var who = root.AltahaAdviser ? root.AltahaAdviser.figure(pose) : '';
+    return '<div class="acf-ask" data-stagger>' + who + block + '</div>';
+  }
+
   function $(id) { return doc.getElementById(id); }
   function esc(s) {
     return String(s == null ? '' : s)
@@ -412,14 +422,17 @@
     var pos = rupeesToSlider(amount);
     var marks = [1, 100000, 1000000, 10000000, 200000000];
     return '' +
-      '<div class="acf-head" data-stagger>' +
-        '<span class="acf-step">Step 1 of 3</span>' +
-        '<h3>How much are you putting to work?</h3>' +
-        '<p>Everything after this is a share of this number. It is the sum you are allocating — ' +
-        'not your net worth, and not money you have already committed elsewhere.</p>' +
-      '</div>' +
+      asking('ask',
+        '<div class="acf-head acf-bubble">' +
+          '<span class="acf-step">Step 1 of 3</span>' +
+          '<h3>How much are you putting to work?</h3>' +
+          '<p>Everything after this is a share of this number. It is the sum you are allocating — ' +
+          'not your net worth, and not money you have already committed elsewhere.</p>' +
+        '</div>') +
       '<div class="acf-amount" data-stagger>' +
-        '<output class="acf-big" id="acf_big" for="acf_slider">' + esc(words(amount)) + '</output>' +
+        '<output class="acf-big" id="acf_big" for="acf_slider">' +
+          '<i class="acf-sym" id="acf_sym">₹</i><span id="acf_num">' + esc(plain(amount)) + '</span>' +
+        '</output>' +
         '<span class="acf-exact" id="acf_exact">' + esc(inr(amount)) + '</span>' +
       '</div>' +
       '<div class="acf-slider" data-stagger>' +
@@ -446,9 +459,11 @@
       '</div>';
   }
 
-  function setAmount(value, animateNumber) {
+  function setAmount(value, animateNumber, spend) {
     var v = snap(value);
+    var was = state.amount;
     state.amount = v;
+    if (spend !== false && was != null && v !== was) coins(v, was);
     var big = $('acf_big'), exact = $('acf_exact'), fill = $('acf_fill'),
         slider = $('acf_slider'), typed = $('acf_type');
     if (fill) fill.style.width = (rupeesToSlider(v) / TRACK * 100) + '%';
@@ -458,18 +473,53 @@
     }
     if (typed && doc.activeElement !== typed) typed.value = v;
     if (exact) exact.textContent = inr(v);
-    if (!big) return;
+    var num = $('acf_num');
+    if (!big || !num) return;
     if (animateNumber) {
       var from = Number(String(big.dataset.value || v));
-      tween(from, v, 420, function (n) { big.textContent = words(n); }, 'amount');
-      animate(big, [{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }],
-              { duration: 280, easing: 'cubic-bezier(.22,1,.36,1)' });
+      tween(from, v, 420, function (n) { num.textContent = plain(n); }, 'amount');
+      animate(big, [{ transform: 'scale(1.07)' }, { transform: 'scale(1)' }],
+              { duration: 300, easing: 'cubic-bezier(.34,1.56,.64,1)' });
     } else {
       cancel('amount');                          // a drag outranks a running count
-      big.textContent = words(v);
+      num.textContent = plain(v);
     }
+    // The symbol takes the hit on every change, counted or not: it is the one
+    // glyph on the card that means money, so it is the one that reacts.
+    var sym = $('acf_sym');
+    animate(sym, [{ transform: 'scale(1) rotate(0deg)' },
+                  { transform: 'scale(1.3) rotate(-9deg)', offset: .4 },
+                  { transform: 'scale(1) rotate(0deg)' }],
+            { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
     big.dataset.value = v;
     saveState();
+  }
+
+  /* ── Coins ────────────────────────────────────────────────────────────────
+     Off the slider handle, scaled to the size of the sum, and throttled so a
+     drag across the whole track sprays rather than floods. Up when the figure
+     grows, down when it shrinks: the direction is the whole point, and a
+     reader picks it up before they have read a digit. */
+  var lastCoins = 0;
+
+  function coins(value, previous, origin) {
+    var fx = root.AltahaMoneyFx;
+    var card = $('acf-card');
+    if (!fx || !card || fx.still()) return;
+    var now = Date.now();
+    if (now - lastCoins < 110) return;
+    lastCoins = now;
+    var host = fx.layer(card);
+    var from = origin || fx.thumb($('acf_slider'));
+    if (!from || (!from.x && !from.y)) from = fx.centre($('acf_big'));
+    if (value >= previous) {
+      // The spray follows the magnitude of the sum, not the size of the drag:
+      // sliding into a crore should feel like more money, because it is.
+      fx.fountain(host, from, { count: Math.round(fx.countFor(value) * 0.55) + 1, rise: 130 });
+      fx.sheen($('acf_big'));
+    } else {
+      fx.drain(host, from, { count: 3 });
+    }
   }
 
   /* ── Stage 2 · the questions ───────────────────────────────────────────── */
@@ -502,10 +552,11 @@
         '<span class="acf-step">Step 2 of 3 · question ' + (i + 1) + ' of ' + list.length +
         ' · allocating ' + esc(words(state.amount)) + '</span>' +
       '</div>' +
-      '<div class="acf-q" data-stagger>' +
-        '<h3>' + esc(q.label) + '</h3>' +
-        '<p class="acf-why">' + esc(q.why || '') + '</p>' +
-      '</div>' +
+      asking('listen',
+        '<div class="acf-q acf-bubble">' +
+          '<h3>' + esc(q.label) + '</h3>' +
+          '<p class="acf-why">' + esc(q.why || '') + '</p>' +
+        '</div>') +
       '<div class="acf-opts" data-stagger>' +
         (q.options || []).map(function (o) {
           return '<button type="button" class="acf-opt' + (chosen === o.value ? ' is-on' : '') + '" ' +
@@ -557,28 +608,31 @@
              '<div class="acf-act" data-stagger><button type="button" class="acf-go" id="acf_again">Back to the questions</button></div>';
     }
     var result = plan(p.band, state.amount, state.answers);
+    if (result) state.lastShares = result.groups.map(function (g) { return g.share.mid; });
     if (!result) {
       return '<div class="acf-head" data-stagger><h3>' + esc(p.band) + '</h3>' +
              '<p>An allocation needs an amount above zero.</p></div>' +
              '<div class="acf-act" data-stagger><button type="button" class="acf-back" id="acf_back">Set the amount</button></div>';
     }
 
-    var html = '' +
-      '<div class="acf-head" data-stagger>' +
+    var html = asking('present',
+      '<div class="acf-head acf-bubble">' +
         '<span class="acf-step">Step 3 of 3 · ' + esc(inr(state.amount)) + ' allocated</span>' +
         '<h3>' + esc(p.band) + '</h3>' +
         '<p>' + esc(result.band_note) + '</p>' +
-        '<div class="acf-axes">' +
-          axis('Capacity', p.capacity, 'What your circumstances can absorb') +
-          axis('Temperament', p.tolerance, 'What you could sit through') +
-          axis('Profile', p.score, 'The lower of the two — always') +
-        '</div>' +
         '<p class="acf-why">' + esc(p.binding_note || '') +
           (state.recorded === false
             ? ' This one was worked out in this browser and not recorded. Sign in to keep it.'
             : state.recorded === true ? ' Recorded to your account.' : '') +
         '</p>' +
+      '</div>') +
+      '<div class="acf-axes" data-stagger>' +
+        axis('Capacity', p.capacity, 'What your circumstances can absorb') +
+        axis('Temperament', p.tolerance, 'What you could sit through') +
+        axis('Profile', p.score, 'The lower of the two — always') +
       '</div>';
+
+    html += donut(result);
 
     html += result.flags.map(function (f) {
       return '<div class="acf-flag is-' + f.level + '" data-stagger>' +
@@ -588,7 +642,8 @@
     html += '<div class="acf-groups">' + result.groups.map(function (g, i) {
       return '<div class="acf-group" data-stagger>' +
         '<div class="acf-group-head">' +
-          '<div><b>' + esc(g.label) + '</b><small>' + esc(g.kind) + '</small></div>' +
+          '<div><b><i class="acf-swatch is-' + g.key + '" aria-hidden="true"></i>' + esc(g.label) +
+            '</b><small>' + esc(g.kind) + '</small></div>' +
           '<div class="acf-group-num">' +
             '<span class="acf-money" data-count="' + g.share.rupees_mid + '">' + esc(inr(0)) + '</span>' +
             '<small>' + g.share.low + '–' + g.share.high + '% · ' +
@@ -620,6 +675,42 @@
     return html;
   }
 
+  /* The whole sum as one ring, divided. Three cards in a column state the
+     split; a ring shows it, and it is the shape a reader remembers after the
+     numbers have gone. Drawn with stroke-dasharray so each arc can sweep out
+     from twelve o'clock in turn, in the order the money is committed. */
+  var RING_R = 54, RING_C = 2 * Math.PI * 54;
+
+  function donut(result) {
+    var offset = 0;
+    var arcs = result.groups.map(function (g) {
+      var fraction = Math.max(0, (g.share.mid || 0) / 100);
+      var arc = '<circle class="acf-arc is-' + g.key + '" cx="70" cy="70" r="' + RING_R + '" ' +
+        'stroke-dasharray="0 ' + RING_C.toFixed(1) + '" ' +
+        'stroke-dashoffset="' + (-offset * RING_C).toFixed(1) + '" ' +
+        'data-arc="' + (fraction * RING_C).toFixed(1) + ' ' + RING_C.toFixed(1) + '"></circle>';
+      offset += fraction;
+      return arc;
+    }).join('');
+
+    var label = result.groups.map(function (g) {
+      return g.label + ' ' + g.share.mid + '%';
+    }).join(', ');
+
+    return '<div class="acf-ring" data-stagger>' +
+      '<svg viewBox="0 0 140 140" role="img" aria-label="' + esc(label) + '">' +
+        '<circle class="acf-arc-bg" cx="70" cy="70" r="' + RING_R + '"></circle>' + arcs +
+      '</svg>' +
+      '<div class="acf-ring-mid">' +
+        '<span class="acf-total-line">' +
+          '<i class="acf-sym">₹</i>' +
+          '<b class="acf-total" data-count="' + result.amount + '" data-format="words">0</b>' +
+        '</span>' +
+        '<small>across three sleeves</small>' +
+      '</div>' +
+    '</div>';
+  }
+
   function axis(label, value, why) {
     return '<div class="acf-axis"><span class="k">' + esc(label) + '</span>' +
       '<span class="v">' + (value == null ? '—' : esc(String(value))) + '</span>' +
@@ -629,6 +720,38 @@
   /* The bars grow and the rupee figures count up once, after the stage has
      landed. Re-running it on every repaint would be a fidget, not a signal. */
   function playResult() {
+    var fx = root.AltahaMoneyFx;
+    var card = $('acf-card');
+
+    // The ring sweeps out one arc at a time, in the order the money is
+    // committed, rather than appearing already divided.
+    Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-arc')).forEach(function (n, i) {
+      var to = n.dataset.arc;
+      if (still()) { n.setAttribute('stroke-dasharray', to); return; }
+      root.setTimeout(function () {
+        n.style.transition = 'stroke-dasharray 680ms cubic-bezier(.22,1,.36,1)';
+        n.setAttribute('stroke-dasharray', to);
+      }, 120 + i * 220);
+    });
+
+    // And then it is handed out: coins fly from the middle of the ring into
+    // each sleeve, in the proportion that sleeve receives. The split stops
+    // being a table and becomes something that happens.
+    if (fx && card && !fx.still()) {
+      var ring = doc.querySelector('#acf-body .acf-ring');
+      var groups = Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-group'));
+      if (ring && groups.length) {
+        root.setTimeout(function () {
+          if (!doc.querySelector('#acf-body .acf-ring')) return;   // stage moved on
+          fx.transfer(fx.layer(card), fx.centre(ring), groups.map(function (g, i) {
+            var point = fx.centre(g.querySelector('.acf-group-head') || g);
+            return { x: point.x, y: point.y,
+                     share: Number((state.lastShares || [])[i]) || 1 };
+          }), { count: 21 });
+        }, 620);
+      }
+    }
+
     Array.prototype.slice.call(doc.querySelectorAll('#acf-body [data-grow]')).forEach(function (n, i) {
       var to = Number(n.dataset.grow) || 0;
       if (still()) { n.style.width = to + '%'; return; }
@@ -640,14 +763,17 @@
     });
     Array.prototype.slice.call(doc.querySelectorAll('#acf-body [data-count]')).forEach(function (n, i) {
       var to = Number(n.dataset.count) || 0;
+      // The ring's centre is a headline, not a ledger line: it reads ₹5 Cr
+      // while the sleeve figures below it carry every digit.
+      var show = n.dataset.format === 'words' ? plain : inr;
       // `data-settled` is the signal that the figure on screen is the final
       // one. A number mid-count is not a number anybody should read off, and
       // the browser test would otherwise be racing the animation.
       n.removeAttribute('data-settled');
-      if (still()) { n.textContent = inr(to); n.setAttribute('data-settled', '1'); return; }
+      if (still()) { n.textContent = show(to); n.setAttribute('data-settled', '1'); return; }
       root.setTimeout(function () {
         tween(0, to, 900, function (v) {
-          n.textContent = inr(v);
+          n.textContent = show(v);
           if (v === to) n.setAttribute('data-settled', '1');
         }, 'count' + i);
       }, 140 + i * 110);
@@ -731,7 +857,18 @@
     var slider = $('acf_slider');
     if (slider) {
       slider.addEventListener('input', function () { setAmount(sliderToRupees(slider.value), false); });
-      slider.addEventListener('change', function () { setAmount(sliderToRupees(slider.value), false); });
+      slider.addEventListener('change', function () {
+        // Letting go is the moment somebody has chosen a number, so it gets a
+        // spray sized to that number rather than to the last nudge.
+        var value = sliderToRupees(slider.value);
+        setAmount(value, false, false);
+        var fx = root.AltahaMoneyFx, card = $('acf-card');
+        if (fx && card) {
+          lastCoins = 0;
+          fx.fountain(fx.layer(card), fx.thumb(slider), { count: fx.countFor(value), rise: 150 });
+          fx.sheen($('acf_big'));
+        }
+      });
     }
     var typed = $('acf_type');
     if (typed) {
@@ -741,14 +878,35 @@
       });
     }
     Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-chip')).forEach(function (b) {
-      b.addEventListener('click', function () { setAmount(Number(b.dataset.amount), true); });
+      b.addEventListener('click', function () {
+        var value = Number(b.dataset.amount);
+        setAmount(value, true, false);
+        var fx = root.AltahaMoneyFx, card = $('acf-card');
+        if (fx && card) {
+          lastCoins = 0;                         // a pick is never throttled away
+          fx.fountain(fx.layer(card), fx.centre(b),
+                      { count: fx.countFor(value), rise: 150, spread: 240 });
+          fx.sheen($('acf_big'));
+        }
+      });
     });
     Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-opt')).forEach(function (b) {
       b.addEventListener('click', function () { answer(b.dataset.answer, b); });
     });
 
     var next = $('acf_next');
-    if (next) next.addEventListener('click', function () { go('questions'); });
+    if (next) next.addEventListener('click', function () {
+      // The money goes in. One throw off the button as the stage turns, so
+      // the step from a figure to a questionnaire is something committed
+      // rather than a page swap.
+      var fx = root.AltahaMoneyFx, card = $('acf-card');
+      if (fx && card && !fx.still()) {
+        lastCoins = 0;
+        fx.fountain(fx.layer(card), fx.centre(next),
+                    { count: fx.countFor(state.amount), rise: 210, spread: 300 });
+      }
+      go('questions');
+    });
     var forward = $('acf_forward');
     if (forward) forward.addEventListener('click', function () {
       var list = asked();
@@ -800,6 +958,7 @@
     host.innerHTML = '<section class="acf-card" id="acf-card" aria-live="polite">' +
       '<div class="acf-body" id="acf-body"></div></section>';
     var card = $('acf-card');
+    if (root.AltahaMoneyFx) root.AltahaMoneyFx.layer(card);
     animate(card, [{ opacity: 0, transform: 'translateY(16px) scale(.985)' },
                    { opacity: 1, transform: 'none' }],
             { duration: 460, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });

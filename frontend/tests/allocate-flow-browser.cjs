@@ -130,6 +130,17 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     await page.locator('#acf_type').fill('2500000');
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000);
 
+    // ── The adviser asks it ────────────────────────────────────────────────
+    // A figure carrying meaning would be a figure a screen reader cannot
+    // read, so the question stays a real heading and the drawing stays
+    // hidden from the accessibility tree. Both halves are asserted.
+    assert.equal(await page.locator('.acf-adviser.is-ask').count(), 1);
+    assert.equal(await page.locator('.acf-adviser').getAttribute('aria-hidden'), 'true');
+    assert.equal(await page.locator('.acf-bubble h3').innerText(),
+      'How much are you putting to work?');
+    assert.equal(await page.locator('.acf-adviser').innerText(), '',
+      'the figure must carry no text of its own');
+
     // ── Stage 2 · the questions, one at a time ─────────────────────────────
     await page.locator('#acf_next').click();
     await page.locator('.acf-opts').waitFor({ state: 'visible' });
@@ -137,6 +148,8 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.match(await page.locator('.acf-progress .acf-step').innerText(), /question 1 of 6/i);
     assert.equal(await page.locator('.acf-q .acf-why').count(), 1,
       'every question says why it is being asked');
+    assert.equal(await page.locator('.acf-adviser.is-listen').count(), 1,
+      'the figure takes the answers down rather than still presenting');
 
     // The context questions are asked; `amount` is not, because the slider
     // already answered it.
@@ -192,6 +205,21 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.ok((await page.locator('.acf-flag.is-stop').count()) >= 1,
       'money needed within three years must be flagged');
 
+    // ── The effects are decoration, and prove it ───────────────────────────
+    // Everything above ran under reduced motion, which switches the coin
+    // layer off entirely. That every figure, control and reading was still
+    // correct IS the assertion: the money effects are never load-bearing.
+    assert.equal(await page.evaluate(() => window.AltahaMoneyFx.still()), true);
+    assert.equal(await page.locator('.mfx-coin').count(), 0,
+      'reduced motion must spawn no coins at all');
+    assert.equal(await page.locator('.acf-ring .acf-arc').count(), 3,
+      'the ring is markup, not motion, and must be drawn either way');
+    assert.equal(await page.locator('.acf-adviser.is-present').count(), 1,
+      'the figure turns to the allocation it is handing over');
+    // One person the whole way through, not three different drawings.
+    assert.equal(await page.locator('.acf-adviser .adv-gold').count() >= 2, true);
+    assert.match(await page.locator('.acf-ring .acf-total').innerText(), /[0-9]/);
+
     // It names categories and never a product or an instruction.
     const prose = (await page.locator('#acf-body').innerText()).toLowerCase();
     for (const word of [' buy ', ' sell ', 'we recommend', 'you should']) {
@@ -228,9 +256,66 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
         false, `the card overflowed the page at ${width}px`);
       assert.equal(await page.locator('#acf_slider').isVisible(), true);
+      // The figure stays on the card at every width rather than pushing the
+      // question into a gutter or hanging off the edge.
+      const seated = await page.locator('.acf-adviser').boundingBox();
+      const frame = await page.locator('#acf-card').boundingBox();
+      assert.ok(seated.width <= frame.width,
+        `the adviser was wider than the card at ${width}px`);
+      assert.ok(seated.x >= frame.x - 1 && seated.x + seated.width <= frame.x + frame.width + 1,
+        `the adviser hung off the card at ${width}px`);
     }
 
     assert.deepEqual(errors, [], 'the page threw while the card was driven');
+
+    // ── And with motion on, the money actually moves ───────────────────────
+    const lively = await browser.newContext({
+      viewport: { width: 1100, height: 950 }, reducedMotion: 'no-preference' });
+    await lively.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (url.pathname === '/planner/questions') return route.fulfill({ json: QUESTIONS });
+      if (url.pathname === '/auth/me') return route.fulfill({ status: 401, json: { detail: 'Sign in.' } });
+      if (url.hostname !== '127.0.0.1') {
+        const kind = route.request().resourceType();
+        if (kind === 'script' || kind === 'font' || kind === 'stylesheet') return route.abort();
+        return route.fulfill({ json: { available: false, rows: [], rankings: [],
+                                       sectors: [], items: [], status: 'idle' } });
+      }
+      return route.continue();
+    });
+    const moving = await lively.newPage();
+    const movingErrors = [];
+    moving.on('pageerror', e => movingErrors.push(String(e.stack)));
+    await moving.goto('http://127.0.0.1:8771/?go=allocate', { waitUntil: 'domcontentloaded' });
+    await moving.locator('#acf_slider').waitFor({ state: 'visible' });
+
+    // A quick pick throws coins, and more of them for more money.
+    await moving.locator('.acf-chip', { hasText: '₹50K' }).click();
+    await moving.waitForFunction(() => document.querySelectorAll('.mfx-coin').length > 0);
+    const small = await moving.locator('.mfx-coin').count();
+    await moving.waitForFunction(() => document.querySelectorAll('.mfx-coin').length === 0,
+      null, { timeout: 6000 });
+    await moving.locator('.acf-chip', { hasText: '₹5 Cr' }).click();
+    await moving.waitForFunction(() => document.querySelectorAll('.mfx-coin').length > 0);
+    const large = await moving.locator('.mfx-coin').count();
+    assert.ok(large > small,
+      `₹5 Cr must throw more coins than ₹50K (${large} vs ${small})`);
+    assert.equal(await moving.locator('.mfx-coin').first().innerText(), '₹');
+
+    // Every coin clears up after itself rather than piling on the card.
+    await moving.waitForFunction(() => document.querySelectorAll('.mfx-coin').length === 0,
+      null, { timeout: 8000 });
+    assert.ok(await moving.evaluate(() => window.AltahaMoneyFx.liveCount() === 0),
+      'coins must not leak once they have landed');
+
+    // The layer takes no clicks: the control underneath it stays reachable.
+    assert.equal(await moving.evaluate(() =>
+      getComputedStyle(document.querySelector('.mfx-layer')).pointerEvents), 'none');
+    assert.equal(await moving.locator('.mfx-layer').getAttribute('aria-hidden'), 'true');
+
+    assert.deepEqual(movingErrors, [], 'the page threw while the coins were flying');
+    await lively.close();
+
     console.log('Allocate guided card: checks passed');
   } finally {
     await browser.close();
