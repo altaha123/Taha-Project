@@ -479,3 +479,89 @@
               background-clip:border-box }
   .acf-arc{ transition:none }
 }
+
+/* ── The adviser ─────────────────────────────────────────────────────────────
+   Ink line, paper fill, one gold accent at the tie. Every colour is a theme
+   token, so the same few hundred bytes of SVG draw in ink on cream and in
+   cream on ink without a second asset. The figure is aria-hidden and the
+   question beside it is a real heading: nothing that carries meaning is
+   inside the drawing. */
+
+.acf-ask{
+  display:grid; grid-template-columns:106px minmax(0,1fr);
+  gap:18px; align-items:start; margin-bottom:4px;
+}
+.acf-adviser{ width:106px; align-self:end }
+.adv-svg{ display:block; width:100%; height:auto; overflow:visible }
+
+.adv-suit{ fill:var(--ink-2,#4b4438) }
+.adv-lapel{ fill:var(--ink,#17140e); opacity:.85 }
+.adv-shirt{ fill:var(--paper,#fffdf7) }
+.adv-collar{ fill:var(--paper,#fffdf7); stroke:var(--rule,#deded8); stroke-width:.8 }
+.adv-skin{ fill:var(--paper-2,#f7f3e8); stroke:var(--ink-2,#4b4438); stroke-width:1.5 }
+.adv-hair{ fill:var(--ink,#17140e) }
+.adv-gold{ fill:var(--gold,#a8801c) }
+.adv-eye{ fill:var(--ink,#17140e) }
+.adv-line{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:1.7;
+  stroke-linecap:round; stroke-linejoin:round }
+.adv-mouth{ stroke-width:1.5 }
+.adv-sleeve{ fill:var(--ink-2,#4b4438) }
+.adv-palm{ stroke-width:1.4 }
+.adv-knuckle{ stroke-width:1.1; opacity:.55 }
+.adv-desk{ fill:var(--hill,#e8dcc0) }
+.adv-desk-edge{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:1.4; opacity:.5 }
+.adv-pad{ fill:var(--paper,#fffdf7); stroke:var(--ink-2,#4b4438); stroke-width:1.6 }
+.adv-pad-line{ fill:none; stroke:var(--rule,#deded8); stroke-width:1.6; stroke-linecap:round }
+.adv-pen-body{ fill:var(--gold,#a8801c) }
+.adv-pen-nib{ fill:var(--ink,#17140e) }
+
+/* The question, in a bubble the figure is talking into. */
+.acf-bubble{
+  position:relative; background:var(--paper-2); border:1px solid var(--rule);
+  border-radius:15px; padding:16px 19px;
+}
+.acf-bubble::before{
+  content:''; position:absolute; left:-8px; top:30px; width:15px; height:15px;
+  background:var(--paper-2); border-left:1px solid var(--rule);
+  border-bottom:1px solid var(--rule); border-radius:0 0 0 4px;
+  transform:rotate(45deg);
+}
+.acf-bubble > :last-child{ margin-bottom:0 }
+
+@media (prefers-reduced-motion:no-preference){
+  .acf-adviser{ animation:adv-arrive 620ms cubic-bezier(.22,1,.36,1) both }
+  .adv-svg{ animation:adv-bob 4.6s ease-in-out 700ms infinite }
+  .adv-eyes{ transform-box:fill-box; transform-origin:center;
+             animation:adv-blink 5.4s steps(1,end) 1.4s infinite }
+  .adv-arm{ transform-box:fill-box; transform-origin:8% 12%;
+            animation:adv-gesture 3.8s ease-in-out .6s infinite }
+  .acf-adviser.is-listen .adv-pen{ transform-box:fill-box; transform-origin:80% 20%;
+            animation:adv-write 1.9s ease-in-out infinite }
+  .acf-bubble{ animation:adv-said 420ms cubic-bezier(.22,1,.36,1) both }
+}
+@keyframes adv-arrive{
+  from{ opacity:0; transform:translateX(-16px) rotate(-5deg) }
+  to{ opacity:1; transform:none }
+}
+@keyframes adv-said{
+  from{ opacity:0; transform:translateX(10px) scale(.97) }
+  to{ opacity:1; transform:none }
+}
+@keyframes adv-bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
+@keyframes adv-blink{ 0%,93%,100%{ transform:scaleY(1) } 95.5%{ transform:scaleY(.08) } }
+@keyframes adv-gesture{
+  0%,100%{ transform:rotate(0deg) } 45%{ transform:rotate(-8deg) }
+}
+@keyframes adv-write{
+  0%,100%{ transform:translate(0,0) rotate(0deg) }
+  50%{ transform:translate(-3px,2px) rotate(-7deg) }
+}
+
+@media (max-width:620px){
+  /* The figure moves above the question and shrinks: at phone width a column
+     of 106px beside the text leaves the text in a gutter. */
+  .acf-ask{ grid-template-columns:minmax(0,1fr); gap:0 }
+  .acf-adviser{ width:76px; margin:0 0 -6px 4px; align-self:start }
+  .acf-bubble::before{ left:26px; top:-8px; border-left:1px solid var(--rule);
+    border-bottom:0; border-top:1px solid var(--rule); border-radius:4px 0 0 0 }
+}

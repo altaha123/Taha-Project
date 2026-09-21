@@ -309,6 +309,14 @@
   var API = (typeof root.API_BASE !== 'undefined' && root.API_BASE)
     ? root.API_BASE : (root.API_BASE || 'https://taha-project.onrender.com');
 
+  /* The adviser and the question, side by side. The heading stays a real
+     heading in the real order — the figure is seated beside it, never in
+     place of it, so nothing that carries meaning lives in a drawing. */
+  function asking(pose, block) {
+    var who = root.AltahaAdviser ? root.AltahaAdviser.figure(pose) : '';
+    return '<div class="acf-ask" data-stagger>' + who + block + '</div>';
+  }
+
   function $(id) { return doc.getElementById(id); }
   function esc(s) {
     return String(s == null ? '' : s)
@@ -414,12 +422,13 @@
     var pos = rupeesToSlider(amount);
     var marks = [1, 100000, 1000000, 10000000, 200000000];
     return '' +
-      '<div class="acf-head" data-stagger>' +
-        '<span class="acf-step">Step 1 of 3</span>' +
-        '<h3>How much are you putting to work?</h3>' +
-        '<p>Everything after this is a share of this number. It is the sum you are allocating — ' +
-        'not your net worth, and not money you have already committed elsewhere.</p>' +
-      '</div>' +
+      asking('ask',
+        '<div class="acf-head acf-bubble">' +
+          '<span class="acf-step">Step 1 of 3</span>' +
+          '<h3>How much are you putting to work?</h3>' +
+          '<p>Everything after this is a share of this number. It is the sum you are allocating — ' +
+          'not your net worth, and not money you have already committed elsewhere.</p>' +
+        '</div>') +
       '<div class="acf-amount" data-stagger>' +
         '<output class="acf-big" id="acf_big" for="acf_slider">' +
           '<i class="acf-sym" id="acf_sym">₹</i><span id="acf_num">' + esc(plain(amount)) + '</span>' +
@@ -543,10 +552,11 @@
         '<span class="acf-step">Step 2 of 3 · question ' + (i + 1) + ' of ' + list.length +
         ' · allocating ' + esc(words(state.amount)) + '</span>' +
       '</div>' +
-      '<div class="acf-q" data-stagger>' +
-        '<h3>' + esc(q.label) + '</h3>' +
-        '<p class="acf-why">' + esc(q.why || '') + '</p>' +
-      '</div>' +
+      asking('listen',
+        '<div class="acf-q acf-bubble">' +
+          '<h3>' + esc(q.label) + '</h3>' +
+          '<p class="acf-why">' + esc(q.why || '') + '</p>' +
+        '</div>') +
       '<div class="acf-opts" data-stagger>' +
         (q.options || []).map(function (o) {
           return '<button type="button" class="acf-opt' + (chosen === o.value ? ' is-on' : '') + '" ' +
@@ -605,21 +615,21 @@
              '<div class="acf-act" data-stagger><button type="button" class="acf-back" id="acf_back">Set the amount</button></div>';
     }
 
-    var html = '' +
-      '<div class="acf-head" data-stagger>' +
+    var html = asking('present',
+      '<div class="acf-head acf-bubble">' +
         '<span class="acf-step">Step 3 of 3 · ' + esc(inr(state.amount)) + ' allocated</span>' +
         '<h3>' + esc(p.band) + '</h3>' +
         '<p>' + esc(result.band_note) + '</p>' +
-        '<div class="acf-axes">' +
-          axis('Capacity', p.capacity, 'What your circumstances can absorb') +
-          axis('Temperament', p.tolerance, 'What you could sit through') +
-          axis('Profile', p.score, 'The lower of the two — always') +
-        '</div>' +
         '<p class="acf-why">' + esc(p.binding_note || '') +
           (state.recorded === false
             ? ' This one was worked out in this browser and not recorded. Sign in to keep it.'
             : state.recorded === true ? ' Recorded to your account.' : '') +
         '</p>' +
+      '</div>') +
+      '<div class="acf-axes" data-stagger>' +
+        axis('Capacity', p.capacity, 'What your circumstances can absorb') +
+        axis('Temperament', p.tolerance, 'What you could sit through') +
+        axis('Profile', p.score, 'The lower of the two — always') +
       '</div>';
 
     html += donut(result);

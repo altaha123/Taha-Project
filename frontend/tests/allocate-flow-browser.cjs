@@ -130,6 +130,17 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     await page.locator('#acf_type').fill('2500000');
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000);
 
+    // ── The adviser asks it ────────────────────────────────────────────────
+    // A figure carrying meaning would be a figure a screen reader cannot
+    // read, so the question stays a real heading and the drawing stays
+    // hidden from the accessibility tree. Both halves are asserted.
+    assert.equal(await page.locator('.acf-adviser.is-ask').count(), 1);
+    assert.equal(await page.locator('.acf-adviser').getAttribute('aria-hidden'), 'true');
+    assert.equal(await page.locator('.acf-bubble h3').innerText(),
+      'How much are you putting to work?');
+    assert.equal(await page.locator('.acf-adviser').innerText(), '',
+      'the figure must carry no text of its own');
+
     // ── Stage 2 · the questions, one at a time ─────────────────────────────
     await page.locator('#acf_next').click();
     await page.locator('.acf-opts').waitFor({ state: 'visible' });
@@ -137,6 +148,8 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.match(await page.locator('.acf-progress .acf-step').innerText(), /question 1 of 6/i);
     assert.equal(await page.locator('.acf-q .acf-why').count(), 1,
       'every question says why it is being asked');
+    assert.equal(await page.locator('.acf-adviser.is-listen').count(), 1,
+      'the figure takes the answers down rather than still presenting');
 
     // The context questions are asked; `amount` is not, because the slider
     // already answered it.
@@ -201,6 +214,10 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
       'reduced motion must spawn no coins at all');
     assert.equal(await page.locator('.acf-ring .acf-arc').count(), 3,
       'the ring is markup, not motion, and must be drawn either way');
+    assert.equal(await page.locator('.acf-adviser.is-present').count(), 1,
+      'the figure turns to the allocation it is handing over');
+    // One person the whole way through, not three different drawings.
+    assert.equal(await page.locator('.acf-adviser .adv-gold').count() >= 2, true);
     assert.match(await page.locator('.acf-ring .acf-total').innerText(), /[0-9]/);
 
     // It names categories and never a product or an instruction.
@@ -239,6 +256,14 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
         false, `the card overflowed the page at ${width}px`);
       assert.equal(await page.locator('#acf_slider').isVisible(), true);
+      // The figure stays on the card at every width rather than pushing the
+      // question into a gutter or hanging off the edge.
+      const seated = await page.locator('.acf-adviser').boundingBox();
+      const frame = await page.locator('#acf-card').boundingBox();
+      assert.ok(seated.width <= frame.width,
+        `the adviser was wider than the card at ${width}px`);
+      assert.ok(seated.x >= frame.x - 1 && seated.x + seated.width <= frame.x + frame.width + 1,
+        `the adviser hung off the card at ${width}px`);
     }
 
     assert.deepEqual(errors, [], 'the page threw while the card was driven');

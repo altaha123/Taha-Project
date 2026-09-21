@@ -10,6 +10,35 @@ This answers "and how much of it, in what".
 
 ---
 
+## The adviser
+
+A question set in a heading is a form label. The same sentence coming out of
+somebody's mouth is a question, and a question gets answered. So each stage
+seats a figure beside its heading, talking into a speech bubble: hands on the
+desk while he asks for a number, head tilted to a pad while he takes the
+answers down, one palm open towards the allocation while he hands it over.
+Same person throughout — only the hands change.
+
+**Drawn, not photographed.** A stock photograph of a man in a tie would date
+the site, weigh several hundred kilobytes, need a licence, and pick a face for
+a reader who did not ask for one. `frontend/adviser.js` is about two kilobytes
+of inline SVG in the site's own tokens — ink line, paper fill, one gold accent
+at the tie — so it draws in ink on cream and in cream on ink without a second
+asset, and stays sharp at any size.
+
+**Seated at a desk on purpose.** An earlier pass gave him free-floating arms.
+At 106 pixels a curved sleeve and a pale oval do not read as an arm; they read
+as a growth. A desk gives the forearms somewhere to be and the hands something
+to rest on, which is easier to draw honestly and is what an adviser is
+actually doing.
+
+**He carries no meaning.** `aria-hidden`, always, and the browser test asserts
+the figure contains no text of its own. The question stays a real heading at
+the real level beside him, so a screen-reader user loses nothing and a reader
+with reduced motion gets the figure without the blink or the bob. On a phone
+he moves above the question and shrinks, and the bubble's tail flips to point
+up at him.
+
 ## Stage 1 — the amount
 
 A slider from **₹1 to ₹20 crore**, an exact figure typeable beside it, and
@@ -133,6 +162,7 @@ against their own account.
 | Capacity, temperament, the lower of the two | `frontend/risk-math.js` |
 | Slider scale, the split, the flags, the card | `frontend/allocate-flow.js` |
 | Coins, the sheen, the arcs | `frontend/money-fx.js` |
+| The figure and its three poses | `frontend/adviser.js` |
 | Styling and the reduced-motion promise | `frontend/products.css` |
 | The five-step sequence below it | `frontend/allocate.js` |
 | The questions, and the recorded assessment | `backend/risk_profile.py` |
