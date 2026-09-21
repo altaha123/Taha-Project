@@ -147,8 +147,13 @@
     // Signed out there is nobody to record it against, so it is computed and
     // shown and not kept. Said plainly rather than quietly not saving.
     if (!auth || !auth.authed()) {
+      var local = localAssess();
+      if (!local) {
+        note('That profile could not be worked out here. Please refresh and try again.', 'warn');
+        return;
+      }
       note('Sign in to keep this profile on your account — showing it here for now.', '');
-      show(localAssess());
+      show(local);
       return;
     }
     note('Working it out…');
@@ -164,36 +169,16 @@
       });
   }
 
-  /* Signed out, the same arithmetic without the record. Kept deliberately
-     simple: the server's assessment is the one that counts, and this exists so
-     a reader who has not signed in still sees an answer. */
+  /* Signed out, the same arithmetic without the record. The arithmetic itself
+     lives in risk-math.js because the guided card in Allocate computes the
+     same profile from the same draft, and a person handed two different bands
+     for one set of answers has been told nothing. The server's assessment is
+     still the one that counts; this exists so a reader who has not signed in
+     sees an answer rather than a sign-in wall. */
   function localAssess() {
-    function axis(name) {
-      var w = 0, earned = 0;
-      questions.forEach(function (q) {
-        if (q.axis !== name || !q.weight) return;
-        var o = (q.options || []).filter(function (x) { return x.value === answers[q.id]; })[0];
-        if (!o) return;
-        w += q.weight; earned += q.weight * o.score;
-      });
-      return w ? Math.round(earned / w * 10) / 10 : 0;
-    }
-    var capacity = axis('capacity'), tolerance = axis('tolerance');
-    var score = Math.min(capacity, tolerance);
-    var hit = (window.__ALTAHA_BANDS || []).filter(function (b) {
-      return score >= b.from && score < b.to;
-    })[0] || { band: '—', note: '' };
-    return {
-      capacity: capacity, tolerance: tolerance, score: score,
-      band: hit.band, band_note: hit.note,
-      gap: Math.round(Math.abs(capacity - tolerance) * 10) / 10,
-      binding: capacity > tolerance ? 'tolerance' : tolerance > capacity ? 'capacity' : 'both',
-      binding_note: capacity > tolerance
-        ? 'Your circumstances could carry more risk than you would be comfortable holding.'
-        : tolerance > capacity
-          ? 'You are willing to carry more risk than your circumstances can absorb today.'
-          : 'Circumstances and temperament agree.'
-    };
+    var math = window.AltahaRiskMath;
+    if (!math) return null;
+    return math.assess(answers, questions, window.__ALTAHA_BANDS || []);
   }
 
   function show(p) {

@@ -1,0 +1,239 @@
+/* The guided card in Allocate, driven the way a reader drives it.
+ *
+ * Four things here fail silently rather than throwing, which is why they are
+ * asserted in a real browser instead of a unit test. A slider whose reported
+ * figure does not match what the handle was set to. A questionnaire that asks
+ * again for answers already given in the planner. A card that reaches the
+ * asset classes without a profile behind them. And rupee figures that do not
+ * add up to the sum the reader put in — the one thing on the page somebody
+ * will check with a calculator.
+ */
+const fs = require('node:fs'), path = require('node:path'), http = require('node:http');
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright');
+const root = path.resolve('frontend');
+
+// The shape the server sends. The real list is asserted in
+// backend/tests/test_risk_profile.py; this only has to be that shape.
+const QUESTIONS = {
+  questions: [
+    { id: 'horizon', axis: 'capacity', weight: 24, kind: 'choice',
+      label: 'When will you need this money?', why: 'The single strongest input.',
+      options: [{ value: 'under1', label: 'Within a year', score: 0 },
+                { value: '10plus', label: 'More than 10 years', score: 100 }] },
+    { id: 'emergency', axis: 'capacity', weight: 16, kind: 'choice',
+      label: 'How many months of expenses could you cover from cash today?',
+      why: 'An emergency fund stops a job loss becoming a forced sale.',
+      options: [{ value: 'none', label: 'None', score: 0 },
+                { value: 'over12', label: 'More than 12 months', score: 100 }] },
+    { id: 'drawdown_action', axis: 'tolerance', weight: 34, kind: 'choice',
+      label: 'It falls by a third. What do you actually do?',
+      why: 'An action, not an attitude.',
+      options: [{ value: 'sell_all', label: 'Sell everything and stop', score: 0 },
+                { value: 'buy_more', label: 'Put more in while it is cheaper', score: 100 }] },
+    { id: 'max_fall', axis: 'tolerance', weight: 26, kind: 'choice',
+      label: 'How far could this fall before you could not leave it alone?',
+      why: 'Indian equity has fallen more than 38% inside a year.',
+      options: [{ value: 'any', label: 'Any fall would worry me', score: 0 },
+                { value: '40plus', label: '40% or more', score: 100 }] },
+    { id: 'purpose', axis: 'context', weight: 0, kind: 'choice',
+      label: 'What is this money for?', why: 'Recorded, not scored.',
+      options: [{ value: 'retirement', label: 'Retirement' },
+                { value: 'house', label: 'A house' }] },
+    { id: 'mode', axis: 'context', weight: 0, kind: 'choice',
+      label: 'How would you put money in?', why: 'A SIP and a lump sum are different risks.',
+      options: [{ value: 'sip', label: 'A fixed amount every month' },
+                { value: 'lumpsum', label: 'One lump sum' }] },
+    { id: 'amount', axis: 'context', weight: 0, kind: 'amount',
+      label: 'How much, in rupees?', why: 'The slider already answered this.' }
+  ],
+  bands: [{ from: 0, to: 20, band: 'Conservative', note: 'Capital first.' },
+          { from: 20, to: 40, band: 'Moderately conservative', note: '' },
+          { from: 40, to: 60, band: 'Balanced', note: '' },
+          { from: 60, to: 80, band: 'Growth', note: '' },
+          { from: 80, to: 101, band: 'Aggressive', note: 'Patience is the constraint.' }]
+};
+
+const server = http.createServer((req, res) => {
+  const name = path.join(root, decodeURIComponent(
+    req.url.split('?')[0] === '/' ? '/index.html' : req.url.split('?')[0]));
+  if (!name.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
+  try {
+    res.setHeader('Content-Type',
+      name.endsWith('.js') ? 'text/javascript' : name.endsWith('.css') ? 'text/css'
+      : name.endsWith('.html') ? 'text/html' : 'application/octet-stream');
+    res.end(fs.readFileSync(name));
+  } catch (e) { res.writeHead(404).end(); }
+});
+
+const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
+
+(async () => {
+  await new Promise(r => server.listen(8771, '127.0.0.1', r));
+  const browser = await chromium.launch({
+    headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
+  try {
+    // Reduced motion, because mid-animation nothing is reliably clickable and
+    // the card promises to work without the movement anyway. That promise is
+    // exactly what this setting tests.
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 950 }, reducedMotion: 'reduce' });
+    let saved = null;
+
+    await context.route('**/*', route => {
+      const url = new URL(route.request().url());
+      const p = url.pathname;
+      if (p === '/planner/questions') return route.fulfill({ json: QUESTIONS });
+      if (p === '/auth/me') return route.fulfill({ status: 401, json: { detail: 'Sign in.' } });
+      if (p === '/me/risk-profile') {
+        saved = JSON.parse(route.request().postData() || '{}').answers;
+        return route.fulfill({ status: 401, json: { detail: 'Sign in.' } });
+      }
+      if (url.hostname !== '127.0.0.1') {
+        const kind = route.request().resourceType();
+        if (kind === 'script' || kind === 'font' || kind === 'stylesheet') return route.abort();
+        return route.fulfill({ json: { available: false, rows: [], rankings: [],
+                                       sectors: [], items: [], status: 'idle' } });
+      }
+      return route.continue();
+    });
+
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', e => errors.push(String(e.stack)));
+    await page.goto('http://127.0.0.1:8771/?go=allocate', { waitUntil: 'domcontentloaded' });
+
+    // ── Stage 1 · the amount ────────────────────────────────────────────────
+    await page.locator('#acf-card').waitFor({ state: 'visible' });
+    await page.locator('#acf_slider').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#acf_slider').getAttribute('min'), '0');
+
+    // The ends of the track are the ends the reader was promised.
+    await page.locator('#acf_slider').fill('0');
+    assert.equal(rupees(await page.locator('#acf_exact').innerText()), 1,
+      'the track must start at ₹1');
+    await page.locator('#acf_slider').fill('10000');
+    assert.equal(rupees(await page.locator('#acf_exact').innerText()), 200000000,
+      'the track must end at ₹20 crore');
+    assert.match(await page.locator('#acf_big').innerText(), /20 Cr/);
+
+    // A quick pick and the typed figure are the same number in three places:
+    // the big display, the exact line and the handle.
+    await page.locator('.acf-chip', { hasText: '₹1 Cr' }).click();
+    assert.equal(rupees(await page.locator('#acf_exact').innerText()), 10000000);
+    assert.equal(await page.locator('#acf_type').inputValue(), '10000000');
+    const pos = Number(await page.locator('#acf_slider').inputValue());
+    await page.locator('#acf_slider').fill(String(pos));
+    assert.equal(rupees(await page.locator('#acf_exact').innerText()), 10000000,
+      'nudging the handle after a quick pick must not move the figure');
+
+    await page.locator('#acf_type').fill('2500000');
+    assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000);
+
+    // ── Stage 2 · the questions, one at a time ─────────────────────────────
+    await page.locator('#acf_next').click();
+    await page.locator('.acf-opts').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#acf_slider').count(), 0, 'the stage must replace, not stack');
+    assert.match(await page.locator('.acf-progress .acf-step').innerText(), /question 1 of 6/i);
+    assert.equal(await page.locator('.acf-q .acf-why').count(), 1,
+      'every question says why it is being asked');
+
+    // The context questions are asked; `amount` is not, because the slider
+    // already answered it.
+    const asked = [];
+    for (let i = 0; i < 6; i++) {
+      asked.push(await page.locator('.acf-q h3').innerText());
+      await page.locator('.acf-opt').first().click();          // the cautious answer
+      await page.waitForTimeout(60);
+    }
+    assert.ok(asked.some(q => /what is this money for/i.test(q)));
+    assert.ok(!asked.some(q => /how much, in rupees/i.test(q)),
+      'the slider already answered the amount; asking again is asking twice');
+
+    // The last question does not advance on its own: the step into the
+    // allocation is taken deliberately.
+    await page.locator('#acf_forward').click();
+
+    // ── Stage 3 · the asset classes ────────────────────────────────────────
+    await page.locator('.acf-groups').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('.acf-groups .acf-group').count(), 3);
+
+    // Every cautious answer is a conservative profile, and the profile is the
+    // lower of the two axes rather than the flattering one.
+    const head = await page.locator('.acf-head h3').innerText();
+    assert.equal(head, 'Conservative');
+    const axes = await page.locator('.acf-axis .v').allInnerTexts();
+    assert.equal(Number(axes[2]), Math.min(Number(axes[0]), Number(axes[1])));
+
+    // Signed out, nothing is recorded, and the card says so rather than
+    // quietly not saving.
+    assert.match(await page.locator('.acf-head .acf-why').innerText(), /not recorded/i);
+    assert.equal(saved, null);
+
+    // The money adds up. This is the one number a reader checks by hand.
+    // Wait for the count-up to settle rather than racing it: a figure caught
+    // mid-animation is not the figure the reader is shown.
+    await page.waitForFunction(() => {
+      const all = document.querySelectorAll('.acf-money');
+      return all.length === 3 &&
+        [...all].every(n => n.hasAttribute('data-settled'));
+    });
+    const totals = (await page.locator('.acf-money').allInnerTexts()).map(rupees);
+    assert.equal(totals.reduce((a, b) => a + b, 0), 2500000,
+      'the three sleeves must add to exactly what was allocated');
+    for (const group of await page.locator('.acf-group').all()) {
+      const sleeve = rupees(await group.locator('.acf-money').innerText());
+      const rows = (await group.locator('.acf-sleeve-t b').allInnerTexts()).map(rupees);
+      assert.equal(rows.reduce((a, b) => a + b, 0), sleeve,
+        'the categories inside a sleeve must add to the sleeve above them');
+    }
+
+    // A one-year horizon is flagged however the rest of the profile reads.
+    assert.ok((await page.locator('.acf-flag.is-stop').count()) >= 1,
+      'money needed within three years must be flagged');
+
+    // It names categories and never a product or an instruction.
+    const prose = (await page.locator('#acf-body').innerText()).toLowerCase();
+    for (const word of [' buy ', ' sell ', 'we recommend', 'you should']) {
+      assert.ok(!prose.includes(word), `the card issued an instruction: ${word.trim()}`);
+    }
+    assert.ok(prose.includes('categories, never products'));
+
+    // ── The step list below the card agrees with it ────────────────────────
+    // Allocate's fourth step keys its split off the published profile. If the
+    // card reached a band and the sequence under it still says "not known
+    // yet", the same page is telling a reader two different things.
+    await page.waitForFunction(() =>
+      /Conservative/.test(document.querySelector('#alc-steps')?.innerText || ''));
+    const step4 = await page.locator('.alc-step', { hasText: 'Decide the long-term split' }).innerText();
+    assert.match(step4, /Conservative/);
+    assert.match(step4, /10–25%/, 'the step list must show the same growth range as the card');
+
+    // ── The answers are the planner's answers ──────────────────────────────
+    const draft = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('altaha-risk-answers-v1') || '{}'));
+    assert.equal(draft.horizon, 'under1');
+    assert.equal(draft.purpose, 'retirement');
+
+    // ── Coming back lands on the answer, not on question one ───────────────
+    await page.goto('http://127.0.0.1:8771/?go=allocate', { waitUntil: 'domcontentloaded' });
+    await page.locator('#acf-card').waitFor({ state: 'visible' });
+    await page.locator('#acf_slider').waitFor({ state: 'visible' });
+    assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000,
+      'the amount must survive a reload');
+
+    // ── Narrow screens ─────────────────────────────────────────────────────
+    for (const width of [320, 390, 768]) {
+      await page.setViewportSize({ width, height: 900 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
+        false, `the card overflowed the page at ${width}px`);
+      assert.equal(await page.locator('#acf_slider').isVisible(), true);
+    }
+
+    assert.deepEqual(errors, [], 'the page threw while the card was driven');
+    console.log('Allocate guided card: checks passed');
+  } finally {
+    await browser.close();
+    server.close();
+  }
+})().catch(e => { console.error(e); process.exit(1); });
