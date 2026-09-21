@@ -38,6 +38,9 @@
     hud.appendChild(node('strong','su-voyage-place','The golden spiral'));
     hud.appendChild(node('span','su-voyage-note','A visual journey · stock findings appear below'));
     scene.appendChild(hud);
+    var credit=node('a','su-texture-credit','Planet maps: Solar System Scope · CC BY 4.0');
+    credit.href='https://www.solarsystemscope.com/textures/';credit.target='_blank';credit.rel='noopener noreferrer';
+    host.appendChild(credit);
     var checkpoints=node('div','su-checkpoints');
     checkpoints.setAttribute('aria-label','Analysis checkpoints');
     scene.querySelectorAll('.su-planet').forEach(function(el){checkpoints.appendChild(el);}); scene.appendChild(checkpoints);
