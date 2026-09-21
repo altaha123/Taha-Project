@@ -34,3 +34,14 @@
 
 @media(max-width:700px){.scan-universe{margin-top:12px;border-radius:18px}.su-scene{height:470px}.su-scene-heading{left:20px;top:72px;width:78%;max-width:330px}.su-scene-heading h3{font-size:32px}.su-motion{top:14px;right:14px;font-size:11px}.su-eyebrow{font-size:9px}.su-voyage-hud{left:20px;right:16px;bottom:104px}.su-voyage-place{font-size:23px}.su-voyage-note{font-size:10px}.su-checkpoints{left:12px;right:12px;gap:5px}.su-planet{flex-direction:column;gap:4px;padding:5px 2px;font-size:9px!important}.su-planet i{width:21px;height:21px}.su-copy{display:block;padding:22px 20px}.su-controls{margin-top:18px}.su-footnote{display:block}.su-discoveries{padding:20px}.su-cards{grid-template-columns:minmax(0,1fr)}.su-card summary{grid-template-columns:minmax(0,1fr) auto}.su-status{font-size:16px}.su-detail{font-size:13px}.su-dock{left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom))}.su-discovery-head h4{font-size:22px}}
 @media(prefers-reduced-motion:reduce){.scan-universe *{animation:none!important;transition:none!important}#scan-results{animation:none!important}.su-motion{display:none}}
+
+
+/* Leave the centre open for the destination as the camera approaches. */
+.su-scene-heading{transition:opacity 1.2s ease,transform 1.2s ease}
+.scan-universe[data-voyage=planet] .su-scene-heading{opacity:.55;transform:translateY(-8px)}
+@media(max-width:700px){
+  .su-scene-heading{top:64px;width:80%}
+  .su-scene-heading h3{font-size:24px;line-height:1.12;margin-top:9px;max-width:260px}
+  .scan-universe[data-voyage=planet] .su-scene-heading h3{opacity:0;transition:opacity 1s ease}
+  .su-voyage-hud{bottom:100px}
+}

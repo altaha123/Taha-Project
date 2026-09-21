@@ -26,6 +26,15 @@ const f=fixture();
 try{
   f.update({status:'cached'});let before=f.draws;f.advance();assert(f.draws>before,'saved universe must animate');assert.equal(f.queue.size,1,'only one animation loop');
   assert.equal(f.$('#scan-results').hidden,false);assert.equal(f.$('.su-card'),null,'space tour cannot invent stock discoveries');
+  assert.match(f.$('.su-voyage-place').textContent,/Entering the galaxy/);
+  f.advance(180);assert.equal(f.$('.su-voyage-place').textContent,'Jupiter');
+  assert.equal(f.$('#scan-universe').dataset.voyage,'planet');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Venus');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Saturn');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Mars');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Neptune');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'An undiscovered world');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Jupiter','journey loops');
   f.$('#genbtn2').click();assert.equal(f.clicks,1,'moved scan control retains handler');
   f.$('.su-motion').click();before=f.draws;f.advance();assert.equal(f.draws,before,'pause freezes drawing');assert.equal(f.queue.size,0);
   f.update({status:'running',run_id:'one',done:30,total:100});assert.equal(f.queue.size,0,'engine polling cannot override pause');assert.equal(f.$('progress').value,30);assert.equal(f.$('#scan-results').hidden,true);

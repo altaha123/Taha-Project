@@ -16,11 +16,14 @@
       return {r:radius,a:(i%4)*Math.PI/2+radius*6+(random()-.5)*.65,s:.4+random()*1.35,c:i%3};
     });
     var worlds=[
-      {name:'The golden spiral',base:'#92714b',light:'#f5d5a1',kind:'rings'},
-      {name:'Beyond the sapphire nebula',base:'#145d81',light:'#9fe6ec',kind:'ocean'},
-      {name:'Through the amber starfields',base:'#9a4c2b',light:'#fbc18b',kind:'rock'},
-      {name:'At the edge of an ice galaxy',base:'#456d8d',light:'#d9f5ff',kind:'ice'}
+      {name:'Jupiter',base:'#ab7954',light:'#f7dfb9',kind:'gas'},
+      {name:'Venus',base:'#ba8845',light:'#ffedb3',kind:'cloud'},
+      {name:'Saturn',base:'#ad9265',light:'#f5dfaa',kind:'rings'},
+      {name:'Mars',base:'#a7472c',light:'#efae79',kind:'rock'},
+      {name:'Neptune',base:'#2255ad',light:'#79beff',kind:'cloud'},
+      {name:'An undiscovered world',base:'#247b76',light:'#b5f4db',kind:'ocean'}
     ];
+    function smooth(value){value=Math.max(0,Math.min(1,value));return value*value*(3-2*value);}
     // Pre-render textured spheres once, avoiding gradients/noise on every frame.
     var sprites=worlds.map(function(world){
       var tile=document.createElement('canvas');tile.width=tile.height=256;
@@ -30,11 +33,15 @@
       g.addColorStop(0,world.light);g.addColorStop(.48,world.base);g.addColorStop(1,'#02050e');p.fillStyle=g;p.fillRect(0,0,256,256);
       for(var i=0;i<95;i++){
         p.globalAlpha=.04+random()*.14;p.fillStyle=i%2?world.light:'#03121d';
-        if(world.kind==='rings'){
+        if(world.kind==='rings'||world.kind==='gas'||world.kind==='cloud'){
           p.save();p.translate(128,128);p.rotate(-.2);p.fillRect(-160,random()*280-140,320,2+random()*10);p.restore();
         }else{
           p.beginPath();p.ellipse(random()*256,random()*256,3+random()*28,2+random()*12,random()*6,0,Math.PI*2);p.fill();
         }
+      }
+      if(world.kind==='gas'){
+        p.globalAlpha=.7;p.fillStyle='#a64d32';p.beginPath();p.ellipse(155,157,24,12,-.2,0,Math.PI*2);p.fill();
+        p.strokeStyle='#e8ba85';p.lineWidth=4;p.stroke();
       }
       p.globalAlpha=1;
       var shade=p.createLinearGradient(10,0,240,180);shade.addColorStop(0,'#0000');shade.addColorStop(.45,'#0000');shade.addColorStop(1,'#000e');p.fillStyle=shade;p.fillRect(0,0,256,256);
@@ -85,8 +92,14 @@
     function draw(){
       if(!width||!height)return;
       ctx.fillStyle='#050914';ctx.fillRect(0,0,width,height);
-      var chapter=Math.floor(time/14)%worlds.length;
-      if(chapter!==lastPlace){place.textContent=worlds[chapter].name;lastPlace=chapter;}
+      // Each chapter visibly dives into the galaxy, approaches a world, then flies past it.
+      var chapter=Math.floor(time/12)%worlds.length,phase=time%12;
+      var approach=smooth((phase-2)/5),depart=smooth((phase-9)/3);
+      var encounter=smooth((phase-1.8)/1.5)*(1-depart);
+      var label=phase<2?'Entering the galaxy':phase<6?'Approaching '+worlds[chapter].name:worlds[chapter].name;
+      if(label!==lastPlace){place.textContent=label;lastPlace=label;}
+      host.dataset.voyage=phase<2?'galaxy':'planet';
+      canvas.dataset.world=worlds[chapter].name;
       glow(width*.68,height*.5,width*.65,chapter%2?'#15364b75':'#34213a70');
       glow(width*.18,height*.85,width*.5,'#6c4e251f');
       var cx=width*.53,cy=height*.46;
@@ -99,18 +112,24 @@
         if(z<.25){ctx.strokeStyle='#c4ddff38';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(x-cx)*.018,y+(y-cy)*.018);ctx.stroke();}
       });ctx.globalAlpha=1;
       var radius=Math.min(width*.39,height*.62);
-      galaxy(width*(.56+Math.sin(time*.065)*.07),height*.49,radius, time*.16, .95,false);
-      galaxy(width*.87,height*.19,radius*.34,-time*.12,.6,true);
-      galaxy(width*.12,height*.68,radius*.24,time*.21,.4,true);
-      // Staggered fly-bys: new worlds emerge continuously, independent of scan data.
-      for(var n=0;n<4;n++){
-        var travel=((time+n*5)/20)%1;
-        var fade=Math.min(1,travel*8,(1-travel)*6);
-        var side=n%2?1:-1;
-        var x=width*.53+side*width*(.055+travel*.47);
-        var y=height*(.45+((n%3)-1)*travel*.36);
-        var r=(9+Math.pow(travel,1.7)*Math.min(width*.115,76));
-        planet(n,x,y,r,fade,time*.06*(n%2?1:-1));
+      var zoom=1+smooth(phase/6)*2.8;
+      var galaxyOpacity=1-encounter*.85;
+      galaxy(width*(.56-approach*.12),height*.49,radius*zoom,time*.16,galaxyOpacity,false);
+      galaxy(width*.87,height*.19,radius*.34,-time*.12,.45,true);
+      galaxy(width*.12,height*.68,radius*.24,time*.21,.3,true);
+      // A large recognisable destination occupies the open centre of the scene.
+      var mobile=width<700;
+      var heroRadius=Math.min(width*(mobile?.27:.19),height*.27);
+      var x=width*(mobile?.55:.69)-depart*width*.8;
+      var y=height*(mobile?.47:.49);
+      var r=12+approach*heroRadius+depart*heroRadius*.8;
+      planet(chapter,x,y,r,encounter,Math.sin(time*.12)*.09);
+      // Small moons establish depth around Jupiter and Saturn.
+      if(chapter===0||chapter===2){
+        for(var moon=0;moon<3;moon++){
+          var orbit=time*.22+moon*2.1;
+          planet(3,x+Math.cos(orbit)*r*1.65,y+Math.sin(orbit)*r*.5,r*.065,encounter*.8,0);
+        }
       }
       // A faint moving signal, never interpreted as a progress percentage.
       if(host.dataset.state==='running'){
