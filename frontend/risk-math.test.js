@@ -33,7 +33,7 @@ const BANDS = [
   { from: 80, to: 101, band: 'Aggressive', note: 'Patience is the constraint.' }
 ];
 
-/* ── The lower of the two decides ─────────────────────────────────────────── */
+/* ── The lower of the two decides ───────────────────────────────────────────── */
 const brave = { horizon: 'under1', emergency: 'none',
                 drawdown_action: 'buy_more', max_fall: '40plus' };
 const cautious = { horizon: '10plus', emergency: 'over12',
@@ -103,7 +103,7 @@ assert.equal(flow.words(45000), '₹45K');
 
 console.log('Amount slider: 34 assertions passed');
 
-/* ── The split, in rupees ─────────────────────────────────────────────────── */
+/* ── The split, in rupees ───────────────────────────────────────────────────── */
 const built = flow.plan('Balanced', 10000000, { horizon: '10plus', emergency: '6_12' });
 const total = built.groups.reduce((sum, g) => sum + g.share.rupees_mid, 0);
 assert.ok(Math.abs(total - 10000000) <= 3,
@@ -121,11 +121,140 @@ assert.equal(flow.plan('Not a band', 100000, {}), null);
 const soon = flow.plan('Aggressive', 1000000, { horizon: '1_3' });
 assert.ok(soon.flags.some(f => f.level === 'stop'),
   'money needed within three years must be flagged however brave the profile');
-const noCushion = flow.plan('Growth', 1000000, { horizon: '10plus', emergency: 'none' });
-assert.ok(noCushion.flags.some(f => /cushion/i.test(f.title)));
+// And flagged is not enough: money with a date inside three years gets no
+// growth sleeve at all, however brave the profile reads.
+assert.equal(soon.dated, true);
+assert.equal(soon.groups.length, 1);
+assert.equal(soon.groups[0].key, 'stable');
+assert.equal(soon.groups[0].share.rupees_mid, 1000000);
+assert.ok(soon.groups[0].sleeves.every(s => /short-duration/i.test(s.label)),
+  'dated money must not be locked into long-term savings either');
 const lump = flow.plan('Growth', 1000000, { horizon: '10plus', mode: 'lumpsum' });
 assert.ok(lump.flags.some(f => /lump sum/i.test(f.title)));
+for (const sample of [
+  soon,
+  flow.plan('Balanced', 1000000, { horizon: '3_5' }),
+  flow.plan('Growth', 1000000, { horizon: '10plus', emi: 'over60' }),
+  lump,
+]) {
+  for (const flag of sample.flags) {
+    assert.ok(!/step\s*\d/i.test(flag.title + ' ' + flag.text),
+      `a flag still points at a removed step: ${flag.title}`);
+  }
+}
 assert.equal(flow.plan('Growth', 1000000, { horizon: '10plus', emergency: '6_12' }).flags.length, 0);
+
+/* ── First calls: the cushion and costly loans come off the top ───────────── */
+// Without the household numbers the cushion cannot be sized, so the card asks
+// rather than pretending: a call with no rupees and a `needs` marker.
+const unsized = flow.plan('Growth', 1000000, { horizon: '10plus', emergency: 'none' });
+assert.equal(unsized.first.length, 1);
+assert.equal(unsized.first[0].key, 'cushion');
+assert.equal(unsized.first[0].needs, 'expenses');
+assert.equal(unsized.free, 1000000, 'an unsized call must not silently shrink the split');
+assert.ok(!unsized.flags.some(f => /cushion/i.test(f.title)),
+  'the cushion is a line with a number, not a paragraph in the flags');
+
+// With them, the gap is six months of expenses less what is already held,
+// and it comes off the sum before anything is split.
+const sized = flow.plan('Growth', 1000000, { horizon: '10plus', emergency: 'none' }, { expenses: 50000 });
+assert.equal(sized.first[0].rupees, 300000);
+assert.equal(sized.free, 700000);
+assert.equal(sized.first[0].rupees + sized.groups.reduce((s, g) => s + g.share.rupees_mid, 0), 1000000,
+  'first calls plus sleeves must equal exactly what was put in');
+// Someone already holding a month and a half is asked for less.
+const partial = flow.plan('Growth', 1000000, { horizon: '10plus', emergency: 'under3' }, { expenses: 50000 });
+assert.equal(partial.first[0].rupees, 225000);
+// A planner figure for liquid savings wins over the estimate from the answer.
+const planned = flow.plan('Growth', 1000000, { horizon: '10plus', emergency: 'none' }, { expenses: 50000, liquid: 250000 });
+assert.equal(planned.first[0].rupees, 50000);
+// Six months already held: no call at all, whatever the answer said.
+assert.equal(flow.plan('Growth', 1000000, { horizon: '10plus', emergency: 'none' }, { expenses: 50000, liquid: 300000 }).first.length, 0);
+
+// Costly debt is the second call and is capped at what is left.
+const indebted = flow.plan('Growth', 1000000, { horizon: '10plus', emergency: 'none', emi: 'over60' },
+  { expenses: 100000, debt: 900000 });
+assert.deepEqual(indebted.first.map(c => [c.key, c.rupees]), [['cushion', 600000], ['debt', 400000]]);
+assert.equal(indebted.free, 0);
+assert.equal(indebted.groups.length, 0, 'nothing free, nothing split');
+// Heavy EMIs with no figure: asked, not assumed.
+const heavy = flow.plan('Growth', 1000000, { horizon: '10plus', emi: '40_60' });
+assert.equal(heavy.first[0].key, 'debt');
+assert.equal(heavy.first[0].needs, 'debt');
+// The cushion can never exceed the sum.
+assert.equal(flow.plan('Growth', 100000, { horizon: '10plus', emergency: 'none' }, { expenses: 50000 }).first[0].rupees, 100000);
+
+/* ── Alternatives enter only when everything allows it ────────────────────── */
+const long = { horizon: '10plus', emergency: 'over12', experience: 'over10' };
+assert.equal(flow.alternatives(5000000, 'Aggressive', long), null, 'not at ₹50 lakh');
+assert.equal(flow.alternatives(50000000, 'Balanced', long), null, 'not for a balanced profile');
+assert.equal(flow.alternatives(50000000, 'Aggressive', { ...long, horizon: '5_10' }), null, 'not inside ten years');
+assert.equal(flow.alternatives(50000000, 'Aggressive', { ...long, experience: 'under3' }), null, 'not without the years in the market');
+const alt = flow.alternatives(50000000, 'Aggressive', long);
+assert.equal(alt.pct, 15);
+assert.deepEqual(alt.mix.map(r => r[0]), ['Alternative investment funds (Category II & III)', 'Early-stage & angel investing']);
+assert.equal(alt.mix.reduce((s, r) => s + r[1], 0), 100);
+// Growth at ₹5 crore: funds yes, angel no.
+const growthAlt = flow.alternatives(50000000, 'Growth', long);
+assert.equal(growthAlt.pct, 10);
+assert.deepEqual(growthAlt.mix, [['Alternative investment funds (Category II & III)', 100]]);
+// Aggressive at ₹2 crore: angel yes (a ₹25 lakh cheque is 12.5%), funds no (₹1 crore would be half).
+assert.deepEqual(flow.alternatives(20000000, 'Aggressive', long).mix, [['Early-stage & angel investing', 100]]);
+
+// When they enter, they are carved out of growth, and everything still adds up.
+const rich = flow.plan('Aggressive', 100000000, long);
+assert.equal(rich.groups.length, 4);
+assert.equal(rich.groups[3].key, 'alt');
+assert.equal(rich.groups[3].share.rupees_mid, 15000000);
+assert.equal(rich.groups.reduce((s, g) => s + g.share.rupees_mid, 0), 100000000);
+assert.ok(rich.groups[0].share.mid + rich.groups[3].share.mid <= 90.05, 'growth plus alternatives must stay inside the growth guardrail');
+// Listed real estate joins the growth sleeve once the sum is large enough.
+assert.ok(rich.groups[0].sleeves.some(s => /REIT/.test(s.label)));
+assert.ok(!flow.plan('Growth', 200000, long).groups[0].sleeves.some(s => /REIT/.test(s.label)),
+  'not at ₹2 lakh, where a tenth of the sleeve is not worth a separate line');
+assert.ok(!flow.plan('Conservative', 5000000, long).groups[0].sleeves.some(s => /REIT/.test(s.label)));
+
+// What was left out is said, with the reason in the reader's own numbers.
+const small = flow.plan('Balanced', 1000000, { horizon: '10plus', emergency: 'over12' });
+assert.deepEqual(small.left_out.map(o => o.label),
+  ['Direct property', 'Alternative investment funds', 'Start-ups and angel investing', 'Crypto']);
+assert.match(small.left_out[1].text, /more than all of this money/);
+assert.match(flow.plan('Growth', 30000000, long).left_out[1].text, /33% of what is free/);
+assert.deepEqual(rich.left_out.map(o => o.label), ['Direct property', 'Crypto'],
+  'what is in the split is not also listed as left out');
+
+/* ── Every category says how it is actually held ────────────────────────── */
+for (const band of ['Conservative', 'Moderately conservative', 'Balanced', 'Growth', 'Aggressive']) {
+  for (const g of flow.plan(band, 100000000, long).groups) {
+    for (const s of g.sleeves) {
+      const h = flow.HOWTO[s.label];
+      assert.ok(h && h.via && h.route && h.look, `${s.label} has no route`);
+    }
+  }
+}
+// Never a product name, never an instruction to buy or sell.
+for (const [label, h] of Object.entries(flow.HOWTO)) {
+  const text = [h.via, h.route, h.look].join(' ');
+  assert.ok(!/\b(buy|sell)\b/i.test(text), `${label}: the route issues an instruction`);
+  assert.ok(!/(HDFC|SBI|ICICI|Axis|Nippon|Mirae|Zerodha|Groww|Kuvera|Parag)/i.test(text), `${label}: names a product`);
+}
+
+/* ── What it becomes: a range, never a promise ──────────────────────────── */
+const ten = flow.outcomes(sized.groups, 10);
+assert.equal(ten.years, 10);
+assert.equal(ten.invested, 700000);
+assert.ok(ten.low < ten.high);
+assert.ok(ten.low > ten.invested, 'ten years of a mixed book has always ended above where it started');
+assert.ok(ten.today_low < ten.low, 'inflation only ever makes the figure smaller');
+const grew = ten.rows.find(r => r.key === 'growth');
+assert.ok(grew.fall < grew.rupees, 'the equity row must show a fall that has actually happened');
+assert.ok(ten.rows.find(r => r.key === 'stable').fall === ten.rows.find(r => r.key === 'stable').rupees);
+const one = flow.outcomes(sized.groups, 1);
+assert.ok(one.high < ten.low, 'more years, more money — the slider has to move the numbers');
+// No public series for alternatives, so no number is invented for them.
+const altRow = flow.outcomes(rich.groups, 10).rows.find(r => r.key === 'alt');
+assert.equal(altRow.low, null);
+assert.ok(altRow.note);
 
 /* Riskier bands hold more equity, and never less. */
 const order = ['Conservative', 'Moderately conservative', 'Balanced', 'Growth', 'Aggressive'];
@@ -155,9 +284,9 @@ for (const band of order) {
    own SPLIT — so there is no second copy that can drift. The step list that
    printed them again in words was removed along with the old Allocate page. */
 
-console.log('Allocation split: 18 assertions passed');
+console.log('Allocation split, first calls, alternatives and outcomes: assertions passed');
 
-/* ── Question art ─────────────────────────────────────────────────────────── */
+/* ── Question art ───────────────────────────────────────────────────────────── */
 // Each scene has to actually respond to the option, or it is a decoration
 // pretending to be an answer. The cheap way to prove that is to render every
 // option of every question and check the markup differs.
