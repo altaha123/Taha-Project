@@ -286,15 +286,12 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     }
     assert.ok(prose.includes('categories, never products'));
 
-    // ── The step list below the card agrees with it ────────────────────────
-    // Allocate's fourth step keys its split off the published profile. If the
-    // card reached a band and the sequence under it still says "not known
-    // yet", the same page is telling a reader two different things.
-    await page.waitForFunction(() =>
-      /Conservative/.test(document.querySelector('#alc-steps')?.innerText || ''));
-    const step4 = await page.locator('.alc-step', { hasText: 'Decide the long-term split' }).innerText();
-    assert.match(step4, /Conservative/);
-    assert.match(step4, /10–25%/, 'the step list must show the same growth range as the card');
+    // ── The card is the whole of Allocate ──────────────────────────────────
+    // The five-step sequence that used to sit under it is gone, so nothing
+    // below can repeat the card's split back in different words.
+    assert.equal(await page.locator('#alc-steps').count(), 0);
+    assert.equal(await page.locator('.alc-step').count(), 0);
+    assert.equal(await page.evaluate(() => typeof window.AltahaAllocate), 'undefined');
 
     // ── The answers are the planner's answers ──────────────────────────────
     const draft = await page.evaluate(() =>

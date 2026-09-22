@@ -4,9 +4,17 @@ Three questions in the only order that makes them answerable: **how much**,
 then **what kind of risk that money can carry**, then **which asset classes
 that implies**. One card, one stage at a time, each stage replacing the last.
 
-It sits at the top of Allocate → Allocation plan, above the five-step sequence
-that was already there. The sequence answers "what should the next rupee do".
-This answers "and how much of it, in what".
+It is the whole of Allocate → Allocation plan.
+
+A five-step sequence used to sit under it — cushion, costly debt, dated money,
+the split, position size — carrying a genuine argument about order. It was
+removed, because next to the card it had stopped earning its space: three of
+its five steps could say nothing at all until the Money Planner had been
+filled in, so they read as three paragraphs of theory pointing at another
+screen; the fourth repeated the card's own split back in percentages where the
+card gives rupees; and the fifth asked the reader to retype the growth sleeve
+the card had just worked out for them. The Money Planner is still its own tab
+for the household numbers.
 
 ---
 
@@ -205,6 +213,5 @@ against their own account.
 | The figure, its three poses and its four ages | `frontend/adviser.js` |
 | A scene per question | `frontend/question-art.js` |
 | Styling and the reduced-motion promise | `frontend/products.css` |
-| The five-step sequence below it | `frontend/allocate.js` |
 | The questions, and the recorded assessment | `backend/risk_profile.py` |
 | Tests | `frontend/risk-math.test.js`, `frontend/tests/allocate-flow-browser.cjs` |

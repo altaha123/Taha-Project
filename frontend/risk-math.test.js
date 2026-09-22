@@ -11,8 +11,6 @@
  * until a reader adds them up.
  */
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const math = require('./risk-math.js');
 const flow = require('./allocate-flow.js');
 
@@ -153,24 +151,11 @@ for (const band of order) {
   assert.ok(Math.abs(scaled.groups.reduce((sum, g) => sum + g.share.rupees_mid, 0) - 1000000) <= 3);
 }
 
-/* ── The words and the numbers must be the same split ─────────────────────── */
-// The step list prints ranges as text; this card turns them into rupees. If
-// they ever disagree, one of the two screens is lying to the same reader.
-const allocate = fs.readFileSync(path.join(__dirname, 'allocate.js'), 'utf8');
-let found = 0;
-for (const band of order) {
-  const block = allocate.slice(allocate.indexOf(`'${band}': {`));
-  for (const key of ['growth', 'stable', 'gold']) {
-    const m = new RegExp(`${key}:\\s*'(\\d+)[–-](\\d+)%'`).exec(block.slice(0, 400));
-    assert.ok(m, `allocate.js should state a ${key} range for ${band}`);
-    assert.deepEqual([Number(m[1]), Number(m[2])], flow.SPLIT[band][key],
-      `${band} ${key}: the step list and the card must show the same range`);
-    found++;
-  }
-}
-assert.equal(found, 15);
+/* The split's numeric ranges now live in exactly one place — allocate-flow's
+   own SPLIT — so there is no second copy that can drift. The step list that
+   printed them again in words was removed along with the old Allocate page. */
 
-console.log('Allocation split: 33 assertions passed');
+console.log('Allocation split: 18 assertions passed');
 
 /* ── Question art ─────────────────────────────────────────────────────────── */
 // Each scene has to actually respond to the option, or it is a decoration

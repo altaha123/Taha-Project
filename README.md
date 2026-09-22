@@ -21,7 +21,7 @@ happens to read.
 | Product | The question it answers | What lives there |
 |---|---|---|
 | **Discover** | *Where are opportunities now?* | The opportunities hub, the live intraday scanner, delivery trends, bulk & block deals, WOW orders, options activity |
-| **Allocate** | *What should I do with my money?* | The guided card — how much, what risk it can carry, which asset classes follow ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)) — then the allocation plan itself: cushion, costly debt, dated goals, the long-term split, position sizing, and the money planner behind it |
+| **Allocate** | *What should I do with my money?* | The guided card — how much, what risk it can carry, which asset classes follow ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)) — and the money planner behind it |
 | **Portfolio** | *How are my existing investments doing?* | The holdings review — see [`IC-REVIEW.md`](IC-REVIEW.md) for what happens to an uploaded file, end to end — and the record of ideas you added |
 | **Research** | *What does the evidence say?* | The stock screener, stock analysis, the Altaha Score, factors, fundamentals, ownership, technicals, news — and the glossary |
 
@@ -34,9 +34,9 @@ a real browser, because none of it throws when it breaks.
 
 The two hubs are new surfaces rather than renamed tabs: `frontend/discover.js`
 builds Discover out of the feeds that already have tabs of their own, and
-`frontend/allocate.js` computes the allocation sequence in the browser from
-what the planner and the portfolio already hold. Neither names a product or
-issues a recommendation — see the SEBI note above.
+`frontend/allocate-flow.js` asks for an amount, profiles the risk it can carry
+and turns the two into asset classes, entirely in the browser. Neither names a
+product or issues a recommendation — see the SEBI note above.
 
 ---
 

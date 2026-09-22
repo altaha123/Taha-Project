@@ -213,14 +213,19 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   assert.ok((await page.locator('#dsc-activity').innerText()).trim().length > 80);
 
   await page.evaluate(() => window.AltahaNav.go('allocate', null, true));
-  await page.locator('#alc-steps .alc-step').first().waitFor();
-  assert.equal(await page.locator('.alc-step').count(), 5, 'the allocation sequence is not five steps');
-  /* Nothing has been entered, so nothing may claim to be done. */
-  assert.equal(await page.locator('.alc-chip.is-done').count(), 0,
-               'a step reported itself complete on no evidence');
-  await page.locator('#alc_cap').fill('500000');
-  await page.locator('#alc_out .alc-big').first().waitFor();
-  assert.match(await page.locator('#alc_out').innerText(), /₹/);
+  /* Allocate is the guided card and nothing else: the five-step sequence and
+     the position calculator that used to sit under it were removed. The card
+     boots off view visibility rather than off the router, so arriving here by
+     navigation has to be enough to build it. */
+  await page.locator('#acf-card').waitFor({ state: 'visible' });
+  await page.locator('#acf_slider').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('.alc-step').count(), 0,
+               'the old allocation sequence is still being rendered');
+  /* Nothing has been answered, so nothing downstream may claim a profile. */
+  assert.equal(await page.locator('.acf-groups').count(), 0,
+               'asset classes appeared before the questions were answered');
+  assert.match(await page.locator('#acf_exact').innerText(), /₹/,
+               'Allocate rendered without an amount');
 
   /* ── 5 · The mega menu carries each product's question ───────────────── */
 

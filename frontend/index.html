@@ -1497,24 +1497,26 @@
   <!-- ══ ALLOCATE ══════════════════════════════════════════════════════════
        What should I do with my money?
 
-       The order matters more than any individual answer, so the order is what
-       this view renders: cushion, then costly debt, then the split, then the
-       size of a single position. Each step reads what the planner and the
-       portfolio already hold in this browser and says where the reader is
-       against it. It computes locally and recommends no product — the same
-       line the planner and the risk profile already hold to.                -->
+       One card, three questions, asked in the only order that makes them
+       answerable: how much, what risk that money can carry, and which asset
+       classes follow. Built by allocate-flow.js; see ALLOCATE-FLOW.md.
+
+       A five-step sequence used to sit under it — cushion, costly debt, dated
+       money, the split, position size. It was removed: three of its steps
+       could say nothing until the money planner had been filled in, the
+       fourth repeated the card's own split in percentages where the card
+       gives rupees, and the fifth asked the reader to retype the growth
+       sleeve the card had just worked out. The planner is still a tab of its
+       own for the household numbers.                                        -->
   <div id="view-allocate" style="display:none" data-private>
     <header class="tabhead">
       <h2>Allocation plan</h2>
-      <p>What the next rupee should do, in the order it should do it. Everything
-         here computes in this browser from what you have already entered in the
-         planner and the portfolio. Nothing you type is sent anywhere, and no
-         product is ever named.</p>
+      <p>How much you are putting to work, what kind of risk it can carry, and
+         which asset classes follow from that. Everything computes in this
+         browser, nothing you type is sent anywhere, and no product is ever
+         named.</p>
     </header>
     <div id="alc-flow"></div>
-    <div id="alc-steps"></div>
-    <div id="alc-size"></div>
-    <p class="disc" id="alc-disc"></p>
   </div><!-- /view-allocate -->
 
   <div id="view-live" style="display:none">
@@ -2277,7 +2279,6 @@ function switchTab(which){
   /* The two product hubs build themselves on first sight rather than on page
      load: neither is the landing view, and both fan out to several feeds. */
   if(which==="discover" && window.AltahaDiscover) window.AltahaDiscover.open();
-  if(which==="allocate" && window.AltahaAllocate) window.AltahaAllocate.open();
   refreshSegsSoon();
   if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
   if(which==="live"){ loadLive();
@@ -4432,7 +4433,6 @@ if(fcSymParam){
 <script src="money-fx.js" defer></script>
 <script src="risk-math.js" defer></script>
 <script src="allocate-flow.js" defer></script>
-<script src="allocate.js" defer></script>
 <script src="experience.js" defer></script>
 <script src="home-motion.js" defer></script>
 <script>
