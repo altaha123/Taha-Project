@@ -7,7 +7,7 @@ const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'i
 const head=source.slice(source.indexOf('<head>')+6,source.indexOf('</head>')).replace(/<script\b[\s\S]*?<\/script>/g,'');
 const start=source.indexOf('<header class="wrap">');
 const header=source.slice(start,source.indexOf('</header>',start)+9);
-const fixture='<!doctype html><html data-theme="light"><head>'+head+'</head><body class="sh-on" data-tab="screener">'+header+
+const fixture='<!doctype html><html data-theme="light"><head>'+head+'</head><body class="sh-on" data-tab="screener">'+'<div class="sh-search"><input id="sh-q" aria-label="Search a stock"></div>'+header+
  '<main id="view-screener" class="wrap"><div class="searchrow"><input id="tk"><button id="go">Analyse</button></div></main><script src="home-motion.js"></script><script src="home-hero.js"></script></body></html>';
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.ALTAHA_CHROMIUM||undefined,args:['--no-sandbox','--disable-dev-shm-usage']});
@@ -31,7 +31,15 @@ const fixture='<!doctype html><html data-theme="light"><head>'+head+'</head><bod
   }
   await page.evaluate(()=>{window.AltahaNav={go(...args){window.destination=args}}});
   await page.locator('[data-hh-go=allocate]').click();assert.equal(await page.evaluate(()=>window.destination[0]),'allocate');
-  await page.locator('[data-hh-go=search]').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'tk');
+  await page.evaluate(()=>document.getElementById('view-screener').style.display='none');
+  await page.locator('.hh-btn-gold').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'sh-q','hidden legacy field must not receive focus');
+  assert.equal(await page.evaluate(()=>window.destination[0]),'research');
+  await page.evaluate(()=>{document.getElementById('sh-q').style.display='none';document.getElementById('view-screener').style.display='block'});
+  await page.locator('.hh-btn-gold').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'tk','legacy fallback');
+  await page.evaluate(()=>document.getElementById('sh-q').style.display='block');
+  await page.locator('.hm-route[data-home-destination=search]').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'sh-q','lower research card');
+  await page.locator('.hh-portfolio').click({force:true});assert.equal(await page.evaluate(()=>window.destination[0]),'portfolio');
+  await page.locator('[data-hh-go=ideas]').click();assert.equal(await page.evaluate(()=>window.destination[1]),'ideas');
   await page.locator('.hm-motion').click();
   assert.equal(await page.locator('html').getAttribute('data-motion'),'off');
   assert.equal(await page.locator('.hh-signals').evaluate(el=>getComputedStyle(el).animationName),'none');
@@ -53,6 +61,7 @@ const fixture='<!doctype html><html data-theme="light"><head>'+head+'</head><bod
   const rgb=s=>s.match(/[\d.]+/g).slice(0,3).map(Number);
   assert(rgb(colors.bg).reduce((a,b)=>a+b,0)<300,'dark cards use dark surfaces');
   assert(rgb(colors.fg).reduce((a,b)=>a+b,0)>450,'dark cards retain legible text');
-  assert.deepEqual(errors,[]);console.log('Landing responsive widths, navigation, search focus, motion preference, persistence and reduced motion passed.');
+  assert.deepEqual(errors,[]);console.log('Responsive widths, hidden legacy search, shell focus, fallback, research cards, exploration links, real motion and preferences passed.');
  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});
+

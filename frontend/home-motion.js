@@ -21,7 +21,7 @@
     if (!allowed()) cancel();
     if (button) {
       button.setAttribute('aria-pressed', String(enabled && !media.matches));
-      button.textContent = media.matches ? 'Motion off · system' : enabled ? 'Motion on' : 'Motion off';
+      button.textContent = media.matches ? 'Motion off · system' : enabled ? 'Pause animations' : 'Enable animations';
       button.disabled = media.matches;
     }
   }
@@ -84,11 +84,16 @@
       if (dest === 'portfolio' && window.AltahaNav) {
         e.preventDefault(); window.AltahaNav.go('portfolio', 'portfolio', true);
       } else if (dest !== 'portfolio') {
-        const target = document.getElementById(dest === 'search' ? 'tk' : 'sb-board');
+        if (dest === 'search' && window.AltahaNav) window.AltahaNav.go('research', 'screener', false);
+        const target = dest === 'search'
+          ? [document.getElementById('sh-q'), document.getElementById('tk')].find(el => el && !el.disabled && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden')
+          : document.getElementById('sb-board');
         if (!target) return;
-        e.preventDefault(); target.scrollIntoView({behavior:allowed()?'smooth':'auto', block:'center'});
-        if (dest === 'search') target.focus({preventScroll:true});
-        else target.querySelector('button')?.focus({preventScroll:true});
+        e.preventDefault(); target.scrollIntoView({behavior:'auto', block:'center'});
+        if (dest === 'search') {
+          target.focus({preventScroll:true});
+          target.closest('.sh-search,.searchrow')?.classList.add('hh-search-target');
+        } else target.querySelector('button')?.focus({preventScroll:true});
       }
     });
     const header = document.querySelector('header.wrap');
@@ -127,3 +132,4 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
+

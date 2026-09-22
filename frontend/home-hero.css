@@ -108,3 +108,38 @@ header.hh-stage::before,header.hh-stage::after,header.hh-stage>.hero-candles{dis
 @media(max-width:640px){#view-screener .hm-route{flex-direction:row}#view-screener .hm-route svg{margin:0}#view-screener .ux-guide h2{font-size:19px}}
 
 @media(max-width:640px){.hh-core{left:39%;top:30%;width:27%}.hh-evidence{left:0;bottom:1%}.hh-btn{font-size:12px;gap:8px;padding:0 10px}.hh-visual-caption{max-width:46%;text-align:right}}
+
+
+/* Every illustrated card now opens the research tool it represents. */
+.hh-visual{pointer-events:auto}
+.hh-connections,.hh-core,.hh-visual-caption{pointer-events:none}
+button.hh-insight{box-sizing:border-box;text-align:left;cursor:pointer;font-family:var(--sans,system-ui);color:var(--ink);appearance:none;transition:border-color .25s,box-shadow .25s}
+button.hh-insight:focus-visible{outline:3px solid var(--gold);outline-offset:5px}
+button.hh-insight:hover,button.hh-insight:focus-visible{border-color:var(--gold);box-shadow:0 15px 40px #a27c3035}
+.hh-explore{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:20px;font:500 12px/1.5 var(--sans,system-ui)}
+.hh-explore>span{width:100%;color:var(--mute);font-size:11px}
+.hh-explore a{display:inline-flex;align-items:center;min-height:40px;border:1px solid var(--rule);border-radius:99px;padding:0 13px;text-decoration:none;color:var(--ink);background:var(--skin-card,var(--paper))}
+.hh-explore a:hover,.hh-explore a:focus-visible{border-color:var(--gold);color:var(--gold-dp)}
+.hh-active .hh-signals{animation-duration:3.6s;stroke-width:3.5;stroke-dasharray:12 88}
+.hh-active .hh-signals path:nth-child(2){animation-duration:4.4s}
+.hh-active .hh-orbit-line{animation:hhOrbitDrift 12s linear infinite}
+.hh-active .hh-quality{animation:hhExploreLeft 5s ease-in-out infinite}
+.hh-active .hh-portfolio{animation:hhExploreRight 6s ease-in-out -2s infinite}
+.hh-active .hh-evidence{animation:hhExploreLeft 7s ease-in-out -3s infinite}
+.hh-active .hh-donut{animation:hhDonutTurn 14s linear infinite}
+.hh-active .hh-lines i{animation:hhEvidence 3s ease-in-out infinite}.hh-active .hh-lines i:nth-child(2){animation-delay:.4s}.hh-active .hh-lines i:nth-child(3){animation-delay:.8s}
+.hh-active .hh-grid{animation:hhGridTravel 16s linear infinite}
+.hh-active .hh-bars i{animation-duration:2s}
+@keyframes hhExploreLeft{50%{transform:translateY(-17px) rotate(1deg)}}
+@keyframes hhExploreRight{50%{transform:translateY(17px) rotate(-2deg)}}
+@keyframes hhOrbitDrift{to{stroke-dashoffset:-120}}
+@keyframes hhDonutTurn{to{transform:rotate(360deg)}}
+@keyframes hhEvidence{50%{background:#bb943d88;transform:scaleX(.75);transform-origin:left}}
+@keyframes hhGridTravel{to{background-position:64px 64px}}
+.sh-search:focus-within,.searchrow.hh-search-target:focus-within{outline:2px solid var(--gold);outline-offset:5px;border-radius:14px}
+.hh-search-target{animation:hhSearchRing 1.2s ease-out}
+@keyframes hhSearchRing{from{box-shadow:0 0 0 12px #b9953933}to{box-shadow:0 0 0 0 #b9953900}}
+header.wrap.hh-stage>.hm-motion{min-height:44px;padding:10px 18px;border-color:var(--gold);color:var(--gold-dp);font-size:12px}
+@media(max-width:640px){.hh-explore{justify-content:center}button.hh-insight{padding:12px}.hh-explore a{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.hh-search-target{animation:none!important}button.hh-insight{transition:none!important}}
+html[data-motion="off"] .hh-search-target{animation:none}
