@@ -61,12 +61,41 @@ five decades a fifth of the track and the remaining three and a bit decades
 the other four fifths. Still monotonic, still exactly invertible, and ₹1 is
 still reachable.
 
-**Why round numbers.** A slider that reports ₹1,03,477 is reporting its own
-pixel width, not an intention. Values snap to a step that matches their size —
-₹500 under a lakh, ₹25,000 over ten lakh, ₹1 lakh over a crore — and
-`rupeesToSlider` lands on the handle position that reads back *exactly* what
-was picked, so choosing ₹1 Cr and then nudging the slider does not first jump
-to ₹99.5 lakh.
+**Why round numbers, and why not while you drag.** A slider that reports
+₹1,03,477 is reporting its own pixel width, not an intention, so a settled
+value snaps to a step matching its size — ₹500 under a lakh, ₹25,000 over ten
+lakh, ₹1 lakh over a crore — and `rupeesToSlider` lands on the handle position
+that reads back *exactly* what was picked, so choosing ₹1 Cr and then nudging
+the slider does not first jump to ₹99.5 lakh.
+
+While the handle is **moving**, that step is too coarse to be the step: at
+₹18.5 lakh it is ₹25,000 against ₹10,000 of displayed resolution, so eight
+consecutive handle positions read identically and the ninth jumped two or
+three readings at once. A drag therefore steps by a thousandth of the figure's
+own size and settles onto the round one when it is let go — the reading moves
+with the handle instead of lurching behind it.
+
+**Why the figure keeps its shape.** `words` trims trailing zeros, which is
+right for a chip or an axis mark and wrong for a number in motion: "19 L" is
+two characters and "18.75 L" is seven, so the reading changed length as it
+moved and the digits shuffled sideways under a fixed-width font. The moving
+figure uses a fixed number of decimals for whatever unit it is in, so the
+digits change and the string does not.
+
+**Why the sparkle waits for a commit.** The ₹ spring and the sheen fire when a
+figure is *chosen* — a quick pick, a release, a typed number — never on every
+frame of a drag. Firing them per input event restarted a 420ms spring dozens
+of times a second, so the symbol never finished a movement and the sheen
+strobed; both read as jitter rather than as motion. For the same reason a drag
+throws two or three coins per batch and the full spray belongs to the commit,
+and the fill tracks the handle with its transition off rather than easing
+towards it from behind.
+
+**Why the state is written late.** `saveState` is debounced by 300ms.
+`localStorage.setItem` is synchronous, and one write per mouse move is disk
+work inside the frame budget — it showed up as the drag stuttering rather than
+as anything obviously wrong. A stage change still writes immediately, since a
+reader can navigate away inside that window.
 
 **The money moves.** Gold ₹ coins spray off the slider handle as you drag,
 arc, spin and fall away. The count follows the **order of magnitude of the

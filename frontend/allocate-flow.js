@@ -59,8 +59,17 @@
 
   /* Rounded to something a person would actually say out loud. A slider that
      reports ₹1,03,477 is reporting its own pixel width, not an intention. */
-  function snap(value) {
+  function snap(value, fine) {
     var v = Math.max(MIN_RUPEES, Math.min(MAX_RUPEES, value));
+    // While the handle is moving the step has to be finer than the reading.
+    // At ₹18.5 lakh the settled step is ₹25,000 but the figure shows ₹10,000
+    // of resolution, so a drag skipped two or three readings at a time and
+    // the number lurched instead of moving. A thousandth of the figure's own
+    // size is fine enough to follow the handle and still a round number.
+    if (fine) {
+      var mag = Math.pow(10, Math.max(0, Math.floor(Math.log(v) / Math.LN10) - 3));
+      return Math.max(MIN_RUPEES, Math.min(MAX_RUPEES, Math.round(v / mag) * mag));
+    }
     var step = v < 1000 ? 1
              : v < 100000 ? 500
              : v < 1000000 ? 5000
@@ -70,12 +79,12 @@
     return Math.max(MIN_RUPEES, Math.min(MAX_RUPEES, Math.round(v / step) * step));
   }
 
-  function sliderToRupees(pos) {
+  function sliderToRupees(pos, fine) {
     var t = Math.max(0, Math.min(TRACK, Number(pos) || 0)) / TRACK;
     var log = t <= KNEE_POS
       ? LOG_MIN + (t / KNEE_POS) * (LOG_KNEE - LOG_MIN)
       : LOG_KNEE + ((t - KNEE_POS) / (1 - KNEE_POS)) * (LOG_MAX - LOG_KNEE);
-    return snap(Math.exp(log));
+    return snap(Math.exp(log), fine);
   }
 
   function rupeesToSlider(value) {
@@ -113,6 +122,19 @@
     return '₹' + Math.round(v);
   }
   function plain(value) { return words(value).replace('₹', ''); }
+
+  /* `words` trims trailing zeros, which is right for a chip or a mark and
+     wrong for a number in motion: "19 L" is two characters and "18.75 L" is
+     seven, so the reading changed length as it moved and the digits shuffled
+     sideways. The moving figure gets a fixed number of decimals for whatever
+     unit it is in, so the digits change and the string does not. */
+  function figureText(value) {
+    var v = Math.max(0, Number(value) || 0);
+    if (v >= 10000000) return (v / 10000000).toFixed(2) + ' Cr';
+    if (v >= 100000) return (v / 100000).toFixed(1) + ' L';
+    if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+    return String(Math.round(v));
+  }
 
   function trim(n) {
     var s = n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2);
@@ -365,12 +387,24 @@
     try { return JSON.parse(root.localStorage.getItem(STATE_KEY) || '{}') || {}; }
     catch (e) { return {}; }
   }
-  function saveState() {
+  /* Debounced, because this is called on every value change and a drag emits
+     one per mouse move. `localStorage.setItem` is synchronous: sixty writes a
+     second is disk work inside the frame budget, and it showed up as the drag
+     stuttering rather than as anything obviously wrong. */
+  var saveTimer = null;
+
+  function writeState() {
+    saveTimer = null;
     try {
       root.localStorage.setItem(STATE_KEY, JSON.stringify({
         amount: state.chosen ? state.amount : null, stage: state.stage
       }));
     } catch (e) {}
+  }
+
+  function saveState() {
+    if (saveTimer) return;
+    saveTimer = root.setTimeout(writeState, 300);
   }
 
   /* Count a number up rather than swapping it. The movement is what makes a
@@ -450,7 +484,7 @@
         '</div>') +
       '<div class="acf-amount" data-stagger>' +
         '<output class="acf-big" id="acf_big" for="acf_slider">' +
-          '<i class="acf-sym" id="acf_sym">₹</i><span id="acf_num">' + esc(plain(amount)) + '</span>' +
+          '<i class="acf-sym" id="acf_sym">₹</i><span id="acf_num">' + esc(figureText(amount)) + '</span>' +
         '</output>' +
         '<span class="acf-exact" id="acf_exact">' + esc(inr(amount)) + '</span>' +
       '</div>' +
@@ -497,20 +531,26 @@
     if (!big || !num) return;
     if (animateNumber) {
       var from = Number(String(big.dataset.value || v));
-      tween(from, v, 420, function (n) { num.textContent = plain(n); }, 'amount');
+      tween(from, v, 420, function (n) { num.textContent = figureText(n); }, 'amount');
       animate(big, [{ transform: 'scale(1.07)' }, { transform: 'scale(1)' }],
               { duration: 300, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+      // The symbol springs, and the light runs across the figure, on a
+      // COMMIT only. Firing these on every input event of a drag restarted a
+      // 420ms spring dozens of times a second, so the ₹ never finished a
+      // movement and the sheen strobed — read as jitter, not as motion.
+      animate($('acf_sym'), [{ transform: 'scale(1) rotate(0deg)' },
+                             { transform: 'scale(1.3) rotate(-9deg)', offset: .4 },
+                             { transform: 'scale(1) rotate(0deg)' }],
+              { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+      if (root.AltahaMoneyFx) root.AltahaMoneyFx.sheen(big);
+      if (fill) fill.style.transition = '';
     } else {
       cancel('amount');                          // a drag outranks a running count
-      num.textContent = plain(v);
+      num.textContent = figureText(v);
+      // The fill tracks the handle rather than easing towards it: a 140ms
+      // transition restarted on every input event lags a drag visibly.
+      if (fill) fill.style.transition = 'none';
     }
-    // The symbol takes the hit on every change, counted or not: it is the one
-    // glyph on the card that means money, so it is the one that reacts.
-    var sym = $('acf_sym');
-    animate(sym, [{ transform: 'scale(1) rotate(0deg)' },
-                  { transform: 'scale(1.3) rotate(-9deg)', offset: .4 },
-                  { transform: 'scale(1) rotate(0deg)' }],
-            { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
     big.dataset.value = v;
     saveState();
   }
@@ -527,18 +567,18 @@
     var card = $('acf-card');
     if (!fx || !card || fx.still()) return;
     var now = Date.now();
-    if (now - lastCoins < 110) return;
+    if (now - lastCoins < 130) return;
     lastCoins = now;
     var host = fx.layer(card);
     var from = origin || fx.thumb($('acf_slider'));
     if (!from || (!from.x && !from.y)) from = fx.centre($('acf_big'));
     if (value >= previous) {
-      // The spray follows the magnitude of the sum, not the size of the drag:
-      // sliding into a crore should feel like more money, because it is.
-      fx.fountain(host, from, { count: Math.round(fx.countFor(value) * 0.55) + 1, rise: 130 });
-      fx.sheen($('acf_big'));
+      // Two or three per batch: at ten batches a second a fistful each time
+      // is eighty coins of layout work per second, which is a frame budget
+      // spent on decoration. The full spray belongs to a commit.
+      fx.fountain(host, from, { count: 3, rise: 130 });
     } else {
-      fx.drain(host, from, { count: 3 });
+      fx.drain(host, from, { count: 2 });
     }
   }
 
@@ -814,7 +854,7 @@
       var to = Number(n.dataset.count) || 0;
       // The ring's centre is a headline, not a ledger line: it reads ₹5 Cr
       // while the sleeve figures below it carry every digit.
-      var show = n.dataset.format === 'words' ? plain : inr;
+      var show = n.dataset.format === 'words' ? figureText : inr;
       // `data-settled` is the signal that the figure on screen is the final
       // one. A number mid-count is not a number anybody should read off, and
       // the browser test would otherwise be racing the animation.
@@ -899,18 +939,23 @@
              : stageResult();
     swap(html, direction || 'next');
     if (state.stage === 'result' && !state.busy) playResult();
-    saveState();
+    if (saveTimer) { root.clearTimeout(saveTimer); saveTimer = null; }
+    writeState();
   }
 
   function bind() {
     var slider = $('acf_slider');
     if (slider) {
-      slider.addEventListener('input', function () { setAmount(sliderToRupees(slider.value), false); });
+      // Fine steps while it moves, round ones once it is let go.
+      slider.addEventListener('input', function () {
+        setAmount(sliderToRupees(slider.value, true), false);
+      });
       slider.addEventListener('change', function () {
         // Letting go is the moment somebody has chosen a number, so it gets a
-        // spray sized to that number rather than to the last nudge.
+        // spray sized to that number rather than to the last nudge, and the
+        // figure settles onto a round one.
         var value = sliderToRupees(slider.value);
-        setAmount(value, false, false);
+        setAmount(value, true, false);
         var fx = root.AltahaMoneyFx, card = $('acf-card');
         if (fx && card) {
           lastCoins = 0;
