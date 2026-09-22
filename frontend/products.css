@@ -1,1 +1,13 @@
-PLACEHOLDER_WILL_NOT_USE
+/* ═════════════════════════════════════════════════════════════════════════
+   Altaha — the four products
+
+   Three views' worth of surface: the Discover hub, the Allocate sequence and
+   the Altaha Score explainer. Kept in one file because they share one idea —
+   a product page is a set of cards that each answer part of the product's
+   question, and the cards have to look like siblings or the grouping does not
+   read as a grouping.
+
+   Every colour is a token with a value on both themes. A literal hex here is
+   how a card becomes a bright tile with white text on it in the dark theme,
+   which is the exact bug this project has shipped before.
+   ═════════════════════════════════════════════════════════════════════════ */
