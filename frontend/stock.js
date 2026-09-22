@@ -1262,8 +1262,20 @@
         '</tr>';
     }).join('');
 
+    /* The store kept only the liquid names until recently and is fetching the
+       rest of the history back in. A smaller company's averages are therefore
+       over less history than the file holds, which is worth one sentence:
+       a short window that says so is honest, a short window that does not is
+       a wrong number. */
+    var filling = d.backfilling
+      ? '<p class="dv-filling">Older sessions for this company are still being ' +
+        'read back from the exchange archive, so the averages above cover the ' +
+        esc(String(d.sessions_held)) + ' sessions held so far rather than the ' +
+        'full window. They deepen on their own.</p>'
+      : '';
+
     box.innerHTML =
-      '<div class="dv-tiles">' + tiles + '</div>' +
+      '<div class="dv-tiles">' + tiles + '</div>' + filling +
       '<p class="fu-cap" id="dv-cap">Each session as the exchange published it. ' +
       'The bar is scaled to this window’s own range, not to 0–100, and is ' +
       'shaded where the day ran above this stock’s 20-session average.</p>' +

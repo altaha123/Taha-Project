@@ -208,6 +208,9 @@ def _missing(have, days_back, blanks):
     got = set()
     if have and have.get("close") is not None and len(have["close"]):
         got = {d.date() for d in have["close"].index}
+    # A day held from before the store kept the whole exchange counts as
+    # missing: it is on file, but for a fraction of the companies.
+    got -= _thin_days(have)
     out, day = [], today - dt.timedelta(days=days_back)
     while day <= today:
         if (day.weekday() < 5 and day not in got
@@ -376,15 +379,76 @@ def _to_panels(long_df):
     P = {"deliv": piv("DELIV_PER"), "qty": piv("TTL_TRD_QNTY"),
          "vwap": piv("AVG_PRICE"), "close": piv("CLOSE_PRICE"),
          "high": piv("HIGH_PRICE"), "low": piv("LOW_PRICE")}
-    P = {k: v.tail(RETAIN_SESSIONS).astype("float32") for k, v in P.items()}
+    return {k: v.tail(RETAIN_SESSIONS).astype("float32") for k, v in P.items()}
 
-    # Prune the universe. A symbol that has never cleared half the turnover
-    # floor cannot appear in the book, so storing it is pure cost.
+    # THE PRUNE THAT USED TO BE HERE, AND WHY IT IS GONE
+    #
+    # This kept only symbols clearing half the turnover floor, on the grounds
+    # that a stock which cannot appear in the book is pure cost to store. That
+    # was written against the v2 LONG-format cache, which measured 299 MB at
+    # 305 sessions because it repeated the symbol string on every row, and
+    # there the argument was overwhelming.
+    #
+    # It stopped being true the moment the cache became wide float32, and
+    # nobody went back to check. Measured on the live instance: 1,198 symbols
+    # over 297 sessions is 8.6 MB. A session lists about 2,665 EQ symbols with
+    # a delivery figure, of which roughly 820 clear the floor — so the prune
+    # was discarding about 1,845 companies to save some 11 MB on a 512 MB box.
+    #
+    # Those 1,845 are the entire reason somebody opens a screener: the small
+    # and mid caps nobody else covers. The whole exchange is now stored, and
+    # the BOOK is narrowed instead, at rank time, by _rank_cols below. That
+    # keeps the ranking identical — including its market proxy, which is the
+    # cross-sectional median of the panel and would otherwise have moved the
+    # moment the panel got wider.
+
+
+def _rank_cols(P):
+    """The symbols the BOOK may draw from: liquid enough to buy in size, and
+    not a fund unit.
+
+    This is the rule that used to decide what got stored. It now decides only
+    what gets ranked, which is all it was ever really about — a stock's median
+    turnover does not depend on which other stocks are in the file, so the set
+    it returns is the same one the old prune produced.
+    """
     turn_cr = (P["qty"] * P["vwap"]) / 1e7
-    keep = turn_cr.tail(120).median()
-    keep = keep[keep >= MIN_TURNOVER_CR * 0.5].index
-    keep = [c for c in keep if not _is_fund(c)]
-    return {k: v.reindex(columns=keep) for k, v in P.items()}
+    med = turn_cr.tail(120).median()
+    cols = med[med >= MIN_TURNOVER_CR * 0.5].index
+    return [c for c in cols if not _is_fund(c)]
+
+
+def _for_ranking(P):
+    """The panel as the book sees it. Narrowing BEFORE any cross-sectional
+    statistic is computed is the whole point: _components takes the median
+    return across columns as its market proxy, so a wider file would quietly
+    change every score in the book."""
+    cols = _rank_cols(P)
+    return {k: (None if v is None else v.reindex(columns=cols))
+            for k, v in P.items()}, cols
+
+
+def _thin_days(have, floor_ratio=0.6):
+    """Dates held from before the store kept the whole exchange.
+
+    Coverage per date is the number of symbols carrying a delivery figure that
+    day: about 1,200 for a day fetched under the old prune, about 2,600 for one
+    fetched since. Those days are handed back to the builder as if they were
+    missing, and _merge replaces them because it de-duplicates keep="last".
+
+    Measured per DATE rather than from a flag in the file, so the backfill
+    resumes correctly if it is interrupted, and stops on its own when there is
+    nothing thin left. No cache version bump, so the book keeps working from
+    its existing history while the small caps fill in behind it.
+    """
+    dp = None if not have else have.get("deliv")
+    if dp is None or not len(dp):
+        return set()
+    cover = dp.notna().sum(axis=1)
+    best = float(cover.max() or 0)
+    if best <= 0:
+        return set()
+    return {d.date() for d, c in cover.items() if float(c) < best * floor_ratio}
 
 
 def _merge(old, new_long):
@@ -427,8 +491,17 @@ def _load_cache():
 def status():
     P = _load_cache()
     close = None if not P else P.get("close")
+    # Two different counts, and conflating them is how the old prune hid for
+    # so long: `symbols` is what the store holds and can answer a delivery
+    # lookup for; `rankable` is the much smaller set the book may draw from.
+    try:
+        rankable = 0 if not P else len(_rank_cols(P))
+    except Exception:
+        rankable = 0
     out = {"cached_sessions": 0 if close is None else int(len(close)),
            "symbols": 0 if close is None else int(close.shape[1]),
+           "rankable": rankable,
+           "backfilling": 0 if not P else len(_thin_days(P)),
            "built_at": _state["built_at"], "error": _state["error"],
            "cache_path": CACHE,
            "persistent": bool(os.environ.get("DATA_DIR", "").strip())}
@@ -533,19 +606,19 @@ def daily_delivery(symbol, days=DAILY_DEFAULT):
     dp, qty, close, vwap = P["deliv"], P["qty"], P["close"], P["vwap"]
 
     if sym not in dp.columns:
-        # Three different things land here and a reader deserves to know
-        # which: a US ticker (delivery is an NSE disclosure and has no
-        # counterpart), a name outside the EQ series, or a real NSE company
-        # that trades too thinly to be retained. The panel cannot tell them
-        # apart, so the message names all three rather than guessing.
+        # The store now keeps every EQ symbol the bhavcopy lists, so being
+        # small is no longer a reason to be missing. What is left is: a US
+        # ticker (delivery is an NSE disclosure with no counterpart), a name
+        # outside the equity series, a symbol that has changed, or a company
+        # that has not traded inside the window held. The file cannot tell
+        # those apart, so the message names them rather than guessing.
         return {"available": False, "symbol": sym, "reason": "not_covered",
-                "min_turnover_cr": MIN_TURNOVER_CR,
                 "covered_symbols": int(dp.shape[1]),
                 "message": (f"No delivery record is held for {sym}. The "
                             f"exchange publishes this for NSE equity-series "
-                            f"stocks only, and the store keeps the roughly "
-                            f"{int(dp.shape[1])} names that trade above about "
-                            f"Rs {MIN_TURNOVER_CR / 2:.0f} crore a day.")}
+                            f"stocks only — a US listing has no equivalent — "
+                            f"and the store carries the {int(dp.shape[1])} "
+                            f"symbols that have traded in the sessions held.")}
 
     series = dp[sym].dropna()
     if not len(series):
@@ -586,12 +659,21 @@ def daily_delivery(symbol, days=DAILY_DEFAULT):
     hi_ts = window.idxmax() if len(window) else None
     lo_ts = window.idxmin() if len(window) else None
 
+    # The store kept only the liquid names until recently, so a smaller
+    # company's older sessions are still being fetched back in. Its averages
+    # are therefore over less history than the file holds, and saying so is
+    # the difference between a short window and a wrong one.
+    held = 0 if dp is None else int(len(dp))
+    backfilling = bool(held and len(series) < held * 0.6)
+
     return {
         "available": True,
         "symbol": sym,
         "as_of": str(series.index[-1].date()),
         "sessions_returned": len(rows),
         "sessions_held": int(len(series)),
+        "panel_sessions": held,
+        "backfilling": backfilling,
         "delivered_qty_derived": True,
         "source": "NSE sec_bhavdata_full (EQ series)",
         "summary": {
@@ -712,6 +794,10 @@ def rank_universe(limit=BOOK):
                                     f"{have} of {MIN_SESSIONS} sessions in.")),
                 "status": st}
 
+    # The book is drawn from the liquid, non-fund subset. The store itself is
+    # the whole exchange now, so this narrowing has to happen before anything
+    # cross-sectional is computed — see _for_ranking.
+    P, rank_cols = _for_ranking(P)
     close, vwap, qty, dp = P["close"], P["vwap"], P["qty"], P["deliv"]
     comps, look = _components(P)
 

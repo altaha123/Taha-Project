@@ -754,6 +754,13 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 }
 .dv-bar.hi{ background:var(--gold) }
 
+.dv-filling{
+  margin:0 0 16px; padding:11px 14px; border-radius:11px;
+  border:1px solid color-mix(in srgb,var(--gold) 34%,var(--rule));
+  background:color-mix(in srgb,var(--gold) 7%,transparent);
+  font-size:12px; line-height:1.6; color:var(--ink-2); max-width:74ch;
+}
+
 .dv-note{
   margin:14px 0 0; font-size:11px; line-height:1.7; color:var(--mute);
   max-width:74ch;
