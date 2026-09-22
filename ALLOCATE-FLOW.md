@@ -149,6 +149,38 @@ does not change with the answer is a decoration pretending to be an answer.
 Selecting an answer holds the new picture for a beat before advancing, so a
 reader on a phone — who never hovers — still sees it respond.
 
+**One dot per question, under the card.** Filled when answered, ringed when
+current, hollow when still to come. Hovering or focusing one names the
+question it stands for, and clicking it goes there — which is what somebody
+wanting to change an earlier answer reaches for, rather than pressing Back
+eight times. The name appears in a line of its own rather than a floating
+tooltip: twelve tooltips at phone width would be clipped by the card, and a
+line is readable on a touch screen, which has no hover at all.
+
+**The question holds its place while the answers scroll.** A six-option
+question is taller than a laptop window, so scrolling to reach the last option
+used to carry the question and its picture off the top of the screen, leaving a
+column of answers to nothing. The question, its picture and the progress line
+are now sticky inside the card.
+
+That took fixing something older and larger. `premium.css` set
+`overflow-x: hidden` on the **body**, which makes the body a scroll container —
+and the used value of `overflow-y` then becomes `auto`. So every
+`position: sticky` element inside the body was resolving against the body's
+scrollport, which never scrolls, while the document scrolled underneath.
+Sticky silently did nothing anywhere on the site, including the rules already
+written for it in `stock.css` and `experience.css`. `overflow-x: clip` holds
+back the same horizontal overflow without becoming a scroll container. The
+browser test asserts the body's `overflow-y` is not `auto`, because the symptom
+is invisible: sticky simply stops working and nothing throws.
+
+**And each new screen starts at its own top.** Pressing Continue at the bottom
+of one stage left the page scrolled there, so the next stage opened halfway
+down its own options. A new screen now pulls the card back into view — but only
+when the top of the card has gone behind the site chrome, since scrolling
+somebody who is already looking at the top of the card is the page fighting
+them.
+
 One question this file has no art for falls back to the adviser taking notes,
 so the slot is never empty and the layout never jumps.
 
