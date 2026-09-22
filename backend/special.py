@@ -456,6 +456,166 @@ def status():
 
 
 # ---------------------------------------------------------------------------
+# One company, session by session
+# ---------------------------------------------------------------------------
+
+DAILY_MAX = 250          # rows a single request may ask for
+DAILY_DEFAULT = 60       # about a quarter of sessions
+
+
+def _col_at(frame, sym, ts):
+    """One cell, or None. Returns a float rather than a numpy scalar so the
+    payload serialises without to_native having to walk it."""
+    try:
+        v = float(frame.at[ts, sym])
+    except Exception:
+        return None
+    return None if v != v else v          # NaN is not a reading
+
+
+def daily_delivery(symbol, days=DAILY_DEFAULT):
+    """
+    The delivery record for one company, day by day.
+
+    The ranking above reduces a year of this to a single number, which is the
+    right thing for a book of twenty names and the wrong thing for somebody
+    who has just typed a symbol into a search box. "62% delivered yesterday
+    against a 47% year" is a statement a reader can go and check against the
+    company's own news. A percentile rank is not.
+
+    Everything here is the exchange's own figure, read from the same full
+    bhavcopy the signal is built on, with one exception that the payload
+    labels rather than hides:
+
+    DELIVERED QUANTITY IS DERIVED. The panel stores the published share
+    (DELIV_PER) and the traded quantity, not the published DELIV_QTY, because
+    a seventh float32 panel is real memory on a 512 MB instance for a column
+    that is the product of two already held. NSE defines DELIV_PER as
+    DELIV_QTY / TTL_TRD_QNTY x 100, so quantity x share recovers the filed
+    number to within the rounding of a two-decimal percentage — close enough
+    to show, not close enough to call filed. `delivered_qty_derived: true`
+    travels with the payload and the page prints the caveat.
+
+    The averages here are plain means over trailing windows. They are NOT the
+    `delivery_trend` component of the ranking, which measures 63 sessions
+    against 252 and skips the most recent month so the signal cannot read a
+    price it would have traded on. Two numbers with the same name and
+    different windows is how a page ends up disagreeing with itself, so these
+    are named for their windows and the ranking's is left where it is.
+    """
+    sym = str(symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        days = int(days)
+    except Exception:
+        days = DAILY_DEFAULT
+    days = max(5, min(days, DAILY_MAX))
+
+    if not sym:
+        return {"available": False, "symbol": "", "reason": "no_symbol",
+                "message": "No symbol was given."}
+
+    P = _load_cache()
+    if not P or P.get("deliv") is None or not len(P["deliv"]):
+        # Same posture as the book: say what is happening and start the work,
+        # rather than returning an error for a cache that is merely young.
+        ensure_building()
+        st = status()
+        have = int(st.get("cached_sessions", 0))
+        return {"available": False, "symbol": sym, "reason": "building",
+                "building": True, "sessions": have,
+                "message": (st.get("build", {}).get("error")
+                            or f"Reading the exchange delivery record — "
+                               f"{have} sessions held so far. This fills "
+                               f"itself; nothing here needs a retry."),
+                "status": {k: st.get(k) for k in
+                           ("cached_sessions", "from", "to", "ready")}}
+
+    dp, qty, close, vwap = P["deliv"], P["qty"], P["close"], P["vwap"]
+
+    if sym not in dp.columns:
+        # Three different things land here and a reader deserves to know
+        # which: a US ticker (delivery is an NSE disclosure and has no
+        # counterpart), a name outside the EQ series, or a real NSE company
+        # that trades too thinly to be retained. The panel cannot tell them
+        # apart, so the message names all three rather than guessing.
+        return {"available": False, "symbol": sym, "reason": "not_covered",
+                "min_turnover_cr": MIN_TURNOVER_CR,
+                "covered_symbols": int(dp.shape[1]),
+                "message": (f"No delivery record is held for {sym}. The "
+                            f"exchange publishes this for NSE equity-series "
+                            f"stocks only, and the store keeps the roughly "
+                            f"{int(dp.shape[1])} names that trade above about "
+                            f"Rs {MIN_TURNOVER_CR / 2:.0f} crore a day.")}
+
+    series = dp[sym].dropna()
+    if not len(series):
+        return {"available": False, "symbol": sym, "reason": "no_sessions",
+                "message": (f"{sym} is in the store but has no session with a "
+                            f"published delivery figure yet.")}
+
+    rows = []
+    for ts in series.tail(days).index[::-1]:          # newest first
+        share = _col_at(dp, sym, ts)
+        traded = _col_at(qty, sym, ts)
+        avg_px = _col_at(vwap, sym, ts)
+        delivered = None if (share is None or traded is None) else traded * share / 100.0
+        rows.append({
+            "date": str(ts.date()),
+            "deliv_pct": None if share is None else round(share, 2),
+            "traded_qty": None if traded is None else int(round(traded)),
+            "delivered_qty": None if delivered is None else int(round(delivered)),
+            "close": _col_at(close, sym, ts),
+            "avg_price": avg_px,
+            "turnover_cr": (None if (traded is None or avg_px is None)
+                            else round(traded * avg_px / 1e7, 2)),
+        })
+
+    def mean_of(n):
+        tail = series.tail(n)
+        return None if not len(tail) else round(float(tail.mean()), 2)
+
+    # The window the "vs its own year" comparison is made against. Named in
+    # the payload so the page can print the sample size instead of implying a
+    # full year it may not hold.
+    year = series.tail(LOOKBACK)
+    year_avg = None if not len(year) else round(float(year.mean()), 2)
+    latest = round(float(series.iloc[-1]), 2)
+    avg_20 = mean_of(20)
+
+    window = series.tail(days)
+    hi_ts = window.idxmax() if len(window) else None
+    lo_ts = window.idxmin() if len(window) else None
+
+    return {
+        "available": True,
+        "symbol": sym,
+        "as_of": str(series.index[-1].date()),
+        "sessions_returned": len(rows),
+        "sessions_held": int(len(series)),
+        "delivered_qty_derived": True,
+        "source": "NSE sec_bhavdata_full (EQ series)",
+        "summary": {
+            "latest": latest,
+            "avg_5": mean_of(5),
+            "avg_20": avg_20,
+            "avg_63": mean_of(63),
+            "avg_year": year_avg,
+            "year_sessions": int(len(year)),
+            # Positive means ownership has been tightening lately relative to
+            # how this stock normally trades. It is a comparison, not a
+            # forecast, and the units are percentage points.
+            "trend_pp": (None if (avg_20 is None or year_avg is None)
+                         else round(avg_20 - year_avg, 2)),
+            "high": (None if hi_ts is None else
+                     {"date": str(hi_ts.date()), "deliv_pct": round(float(window.max()), 2)}),
+            "low": (None if lo_ts is None else
+                    {"date": str(lo_ts.date()), "deliv_pct": round(float(window.min()), 2)}),
+        },
+        "rows": rows,
+    }
+
+
+# ---------------------------------------------------------------------------
 # The signal
 # ---------------------------------------------------------------------------
 
