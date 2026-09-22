@@ -285,6 +285,17 @@
 .acf-group .acf-money{ font-size:clamp(24px,4vw,32px) }
 .acf-group-head > div:last-child{ flex:1 1 160px }
 .acf-line{ margin:4px 0 0; font-size:13px; line-height:1.55; color:var(--ink-2) }
+.acf-holds{ list-style:none; margin:10px 0 0; padding:0 }
+.acf-holds li{
+  display:flex; justify-content:space-between; gap:12px; align-items:baseline;
+  padding:7px 0; border-top:1px solid var(--rule); font-size:13.5px; color:var(--ink);
+}
+.acf-holds li:first-child{ border-top:0; padding-top:2px }
+.acf-holds span{ flex:1 1 auto; min-width:0; line-height:1.4 }
+.acf-holds b{
+  font-family:var(--mono,monospace); font-weight:500; white-space:nowrap;
+  font-variant-numeric:tabular-nums; color:var(--ink);
+}
 
 .acf-first{ margin:18px 0 0; border:1px solid var(--rule); border-radius:13px;
   background:var(--paper-2); padding:14px 16px 12px }
@@ -394,6 +405,7 @@
   .acf-call{ flex-wrap:wrap }
   .acf-call-amt{ flex-basis:100%; padding-left:36px }
   .acf-out-rows li{ grid-template-columns:1fr }
+  .acf-holds li{ flex-wrap:wrap }
   .acf-inline input{ width:100% }
 }
 

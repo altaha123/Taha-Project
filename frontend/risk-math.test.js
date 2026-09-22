@@ -127,8 +127,9 @@ assert.equal(soon.dated, true);
 assert.equal(soon.groups.length, 1);
 assert.equal(soon.groups[0].key, 'stable');
 assert.equal(soon.groups[0].share.rupees_mid, 1000000);
-assert.ok(soon.groups[0].sleeves.every(s => /short-duration/i.test(s.label)),
-  'dated money must not be locked into long-term savings either');
+assert.deepEqual(soon.groups[0].sleeves.map(s => s.label),
+  ['Bank fixed deposits', 'Short-term bonds & debt funds'],
+  'dated money is a deposit and a short bond fund, never a fifteen-year lock');
 const lump = flow.plan('Growth', 1000000, { horizon: '10plus', mode: 'lumpsum' });
 assert.ok(lump.flags.some(f => /lump sum/i.test(f.title)));
 for (const sample of [
@@ -223,21 +224,53 @@ assert.match(flow.plan('Growth', 30000000, long).left_out[1].text, /33% of what 
 assert.deepEqual(rich.left_out.map(o => o.label), ['Direct property', 'Crypto'],
   'what is in the split is not also listed as left out');
 
-/* ── Every category says how it is actually held ────────────────────────── */
+/* ── Every category names the instrument, never the product ─────────────── */
 for (const band of ['Conservative', 'Moderately conservative', 'Balanced', 'Growth', 'Aggressive']) {
   for (const g of flow.plan(band, 100000000, long).groups) {
     for (const s of g.sleeves) {
       const h = flow.HOWTO[s.label];
-      assert.ok(h && h.via && h.route && h.look, `${s.label} has no route`);
+      assert.ok(h && h.holds && h.via && h.route && h.look, `${s.label} has no instrument`);
     }
   }
 }
-// Never a product name, never an instruction to buy or sell.
+// Never a product name, never an instruction to buy or sell. The bank-count
+// sentence is built per sum, so it is grepped too.
 for (const [label, h] of Object.entries(flow.HOWTO)) {
-  const text = [h.via, h.route, h.look].join(' ');
+  const text = [h.holds, h.via, h.route, h.look, flow.holding(label, 1800000).look].join(' ');
   assert.ok(!/\b(buy|sell)\b/i.test(text), `${label}: the route issues an instruction`);
   assert.ok(!/(HDFC|SBI|ICICI|Axis|Nippon|Mirae|Zerodha|Groww|Kuvera|Parag)/i.test(text), `${label}: names a product`);
+  assert.ok(!/you should|we recommend/i.test(text), `${label}: tells the reader what to do`);
 }
+
+const grown = flow.plan('Growth', 1000000, { horizon: '10plus', emergency: 'over12' });
+const held = grown.groups.flatMap(g => g.sleeves.map(s => flow.HOWTO[s.label].holds)).join(' | ');
+assert.match(held, /Nifty 50 index fund/);
+assert.match(held, /Nifty Midcap 150/);
+assert.match(held, /Nifty Smallcap 250/);
+assert.match(held, /S&P 500 feeder/);
+assert.match(held, /fixed deposit of one to three years/);
+assert.match(held, /short-duration debt fund/);
+assert.match(held, /PPF/);
+assert.match(held, /Sovereign Gold Bonds/);
+assert.match(held, /gold ETF/);
+assert.ok(!flow.plan('Balanced', 1000000, { horizon: '10plus', emergency: 'over12' })
+  .groups[0].sleeves.some(s => /Small-cap/.test(s.label)),
+  'small-caps are the violent part; Balanced does not hold them');
+assert.ok(!flow.plan('Conservative', 1000000, { horizon: '10plus', emergency: 'over12' })
+  .groups[0].sleeves.some(s => /Mid-cap|Small-cap/.test(s.label)));
+
+// Money needed inside three years is deposits and short bonds, never PPF.
+const datedBook = flow.plan('Aggressive', 2500000, { horizon: 'under1', emergency: 'over12' });
+assert.deepEqual(datedBook.groups[0].sleeves.map(s => s.label),
+  ['Bank fixed deposits', 'Short-term bonds & debt funds']);
+
+// "Which bank" is a count under the ₹5 lakh DICGC cover, not a name.
+assert.match(flow.bankSpread(240000), /One scheduled commercial bank/);
+assert.match(flow.bankSpread(500000), /One scheduled commercial bank/);
+assert.match(flow.bankSpread(500001), /2 scheduled commercial banks/);
+assert.match(flow.bankSpread(1320000), /3 scheduled commercial banks/);
+assert.match(flow.holding('Bank fixed deposits', 1320000).look, /3 scheduled commercial banks/);
+assert.match(flow.holding('Bank fixed deposits', 1320000).look, /DICGC/);
 
 /* ── What it becomes: a range, never a promise ──────────────────────────── */
 const ten = flow.outcomes(sized.groups, 10);

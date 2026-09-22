@@ -107,7 +107,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     page.on('pageerror', e => errors.push(String(e.stack)));
     await page.goto('http://127.0.0.1:8771/?go=allocate', { waitUntil: 'domcontentloaded' });
 
-    // ── Stage 1 · the amount ────────────────────────────────────────────────────
+    // ── Stage 1 · the amount ────────────────────────────────────────────────────────
     await page.locator('#acf-card').waitFor({ state: 'visible' });
     await page.locator('#acf_slider').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#acf_slider').getAttribute('min'), '0');
@@ -156,7 +156,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     await page.locator('#acf_type').fill('2500000');
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000);
 
-    // ── The adviser asks it ────────────────────────────────────────────────────
+    // ── The adviser asks it ────────────────────────────────────────────────────────
     // (the amount stage; the questions get their own art below)
     // A figure carrying meaning would be a figure a screen reader cannot
     // read, so the question stays a real heading and the drawing stays
@@ -299,7 +299,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     // allocation is taken deliberately.
     await page.locator('#acf_forward').click();
 
-    // ── Stage 3 · the answer ───────────────────────────────────────────────────
+    // ── Stage 3 · the answer ─────────────────────────────────────────────────────────
     await page.locator('.acf-first').waitFor({ state: 'visible' });
 
     // The headline is the sum and the order, not the band. The band is a label.
@@ -374,11 +374,19 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.match(await page.locator('.acf-out-total small').innerText(), /today's money/);
     assert.match(await page.locator('.acf-out-rows li').first().innerText(), /a year/);
 
-    // ── How to do it: kind, route, and what to look for, never a name ──────
+    // ── The instrument is on the card; the route is behind How to do it ──
+    // Dated money: a fixed deposit and a short bond fund, and the deposit
+    // line says how many banks the ₹5 lakh cover needs. No equity index,
+    // because this money has a date.
+    const holds = await page.locator('.acf-holds').innerText();
+    assert.match(holds, /fixed deposit of one to three years/i);
+    assert.match(holds, /short-duration debt fund/i);
+    assert.ok(!/Nifty|S&P/.test(holds), 'money needed within a year must not name an equity index');
     assert.equal(await page.locator('.acf-how-group[open]').count(), 1);
     const how = await page.locator('.acf-how').innerText();
     assert.match(how, /Where:/);
     assert.match(how, /Look for:/);
+    assert.match(how, /3 scheduled commercial banks/);
     assert.match(how, /DICGC/);
 
     // ── What was considered and left out, with the reason ──────────────────
@@ -388,7 +396,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.match(left, /₹1 crore per fund/);
     assert.match(left, /angel/i);
 
-    // ── The same figures, as twelve monthly ones ───────────────────────────────────
+    // ── The same figures, as twelve monthly ones ─────────────────────────────────────
     await page.locator('#acf_monthly').click();
     await page.waitForFunction(() => {
       const n = document.querySelector('.acf-money');
@@ -403,7 +411,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     });
     assert.equal(rupees(await page.locator('.acf-money').innerText()), 2200000);
 
-    // ── The effects are decoration, and prove it ───────────────────────────────────
+    // ── The effects are decoration, and prove it ─────────────────────────────────────
     // Everything above ran under reduced motion, which switches the coin
     // layer off entirely. That every figure, control and reading was still
     // correct IS the assertion: the money effects are never load-bearing.
@@ -426,7 +434,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     }
     assert.ok(prose.includes('categories, never products'));
 
-    // ── The card is the whole of Allocate ──────────────────────────────────────────
+    // ── The card is the whole of Allocate ────────────────────────────────────────────
     // The five-step sequence that used to sit under it is gone, so nothing
     // below can repeat the card's split back in different words.
     assert.equal(await page.locator('#alc-steps').count(), 0);
@@ -446,7 +454,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000,
       'the amount must survive a reload');
 
-    // ── Narrow screens ─────────────────────────────────────────────────────────
+    // ── Narrow screens ─────────────────────────────────────────────────────────────
     for (const width of [320, 390, 768]) {
       await page.setViewportSize({ width, height: 900 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
