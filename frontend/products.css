@@ -36,7 +36,7 @@
 }
 .dsc-more:hover{ text-decoration:underline }
 
-/* ── Discover · the market strip ─────────────────────────────────────────── */
+/* ── Discover · the market strip ───────────────────────────────────────────── */
 
 .dsc-mkt{
   border:1px solid var(--rule); border-radius:14px; background:var(--paper-2);
@@ -62,7 +62,7 @@
 .dsc-ix .c.up{ color:var(--pass) }
 .dsc-ix .c.dn{ color:var(--fail) }
 
-/* ── Discover · the ranked rows ──────────────────────────────────────────── */
+/* ── Discover · the ranked rows ────────────────────────────────────────────── */
 
 .dsc-rows{ list-style:none; margin:0; padding:0; counter-reset:dsc }
 .dsc-row{
@@ -80,7 +80,7 @@
 .dsc-val small{ display:block; font-family:var(--mono); font-size:9px;
   letter-spacing:.08em; text-transform:uppercase; color:var(--mute) }
 
-/* ── Discover · the activity grid ────────────────────────────────────────── */
+/* ── Discover · the activity grid ──────────────────────────────────────────── */
 
 .dsc-sech{
   margin:22px 0 12px; font-family:var(--serif); font-weight:400;
@@ -277,6 +277,100 @@
 
 .acf-disc{ margin:20px 0 0; font-size:11.5px; line-height:1.7; color:var(--mute) }
 
+/* Stage 3 — the answer. Numbers first, prose behind a tap. */
+.acf-bandline{ margin:4px 0 0; font-size:13px; color:var(--mute) }
+.acf-bandline b{ color:var(--ink); font-weight:600 }
+.acf-group .acf-group-head{ align-items:center }
+.acf-group .acf-group-num{ text-align:left; order:-1; flex:0 0 auto; min-width:150px }
+.acf-group .acf-money{ font-size:clamp(24px,4vw,32px) }
+.acf-group-head > div:last-child{ flex:1 1 160px }
+.acf-line{ margin:4px 0 0; font-size:13px; line-height:1.55; color:var(--ink-2) }
+
+.acf-first{ margin:18px 0 0; border:1px solid var(--rule); border-radius:13px;
+  background:var(--paper-2); padding:14px 16px 12px }
+.acf-first h4,.acf-out h4,.acf-how h4{
+  margin:0 0 10px; font-family:var(--mono,monospace); font-size:10.5px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--gold-dp,#8a6d2f); font-weight:500;
+}
+.acf-first ol{ list-style:none; margin:0; padding:0 }
+.acf-call{ display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-top:1px solid var(--rule) }
+.acf-call:first-child{ border-top:0; padding-top:2px }
+.acf-call-n{
+  flex:0 0 24px; height:24px; border-radius:999px; display:grid; place-items:center;
+  font-family:var(--mono,monospace); font-size:11.5px; color:#fff; background:var(--ink-2,#4b4438);
+}
+.acf-call.is-cushion .acf-call-n{ background:var(--part,#b58a2a) }
+.acf-call.is-debt .acf-call-n{ background:var(--fail,#a13d2d) }
+.acf-call-body{ flex:1 1 auto; min-width:0 }
+.acf-call-body b{ display:block; font-size:14px; color:var(--ink) }
+.acf-call-body p{ margin:3px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-2) }
+.acf-call-body small{ display:block; margin-top:5px; font-size:11.5px; line-height:1.55; color:var(--mute) }
+.acf-call-amt{ flex:0 0 auto; font-family:var(--mono,monospace); font-size:18px; color:var(--ink);
+  font-variant-numeric:tabular-nums }
+.acf-call.needs .acf-call-amt{ color:var(--mute) }
+.acf-inline{ display:flex; align-items:center; gap:8px; margin:8px 0 2px; flex-wrap:wrap }
+.acf-inline span{ font-family:var(--mono,monospace); font-size:10px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--mute) }
+.acf-inline input{
+  width:150px; padding:7px 10px; border:1px solid var(--gold); border-radius:9px;
+  background:var(--paper); color:var(--ink); font-family:var(--mono,monospace); font-size:13px;
+}
+.acf-free{ display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+  margin:10px 0 0; padding-top:10px; border-top:2px solid var(--ink-2,#4b4438) }
+.acf-free span{ font-size:13px; color:var(--ink) }
+.acf-free b{ font-family:var(--mono,monospace); font-size:20px; color:var(--ink); font-variant-numeric:tabular-nums }
+
+.acf-view{ display:flex; gap:6px; margin:22px 0 -10px; flex-wrap:wrap }
+.acf-pill{
+  font-family:var(--mono,monospace); font-size:11px; padding:6px 12px; border-radius:999px;
+  border:1px solid var(--rule); background:transparent; color:var(--ink-2); cursor:pointer; min-height:32px;
+}
+.acf-pill.is-on{ border-color:var(--gold); background:var(--gold-lt,#f2e7cc); color:var(--ink) }
+
+.acf-out{ margin:20px 0 0; border:1px solid var(--rule); border-radius:13px; background:var(--paper-2); padding:14px 16px }
+.acf-out-head{ display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap }
+.acf-out-head h4{ margin:0 }
+.acf-years{ display:flex; align-items:center; gap:10px; flex:1 1 200px; max-width:320px }
+.acf-years > span{ font-size:12.5px; color:var(--ink-2); white-space:nowrap; min-width:64px }
+.acf-years b{ font-family:var(--mono,monospace); font-size:15px; color:var(--ink) }
+.acf-years input{ flex:1 1 auto; accent-color:var(--gold); min-height:28px }
+.acf-out-rows{ list-style:none; margin:10px 0 0; padding:0 }
+.acf-out-rows li{ display:grid; grid-template-columns:1fr auto; gap:2px 14px; padding:10px 0; border-top:1px solid var(--rule) }
+.acf-out-rows li > span{ font-size:13.5px; color:var(--ink) }
+.acf-out-rows li > span em{ font-style:normal; font-family:var(--mono,monospace); font-size:12px; color:var(--mute); margin-left:6px }
+.acf-out-rows li > b{ font-family:var(--mono,monospace); font-size:16px; color:var(--ink); white-space:nowrap; font-variant-numeric:tabular-nums }
+.acf-out-rows li > small{ grid-column:1 / -1; font-size:11.5px; line-height:1.6; color:var(--mute) }
+.acf-out-total{ border-top:2px solid var(--ink-2,#4b4438) !important }
+.acf-out-total > b{ font-size:19px !important }
+
+.acf-how{ margin:20px 0 0 }
+.acf-how-group{ border:1px solid var(--rule); border-radius:12px; background:var(--paper-2); margin:0 0 8px }
+.acf-how-group summary{
+  display:flex; align-items:center; gap:8px; padding:12px 14px; cursor:pointer; list-style:none;
+  font-size:14px; color:var(--ink);
+}
+.acf-how-group summary::-webkit-details-marker{ display:none }
+.acf-how-group summary::after{ content:'+'; margin-left:auto; font-family:var(--mono,monospace); color:var(--mute) }
+.acf-how-group[open] summary::after{ content:'–' }
+.acf-how-group summary b{ font-family:var(--mono,monospace); font-weight:400; margin-left:auto; padding-right:10px }
+.acf-how-group[open] summary b{ margin-left:auto }
+.acf-how-group .acf-sleeves{ padding:0 14px 6px }
+.acf-via{ margin:4px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-2) }
+.acf-sleeves small b{ color:var(--ink-2); font-weight:600 }
+
+.acf-leftout{ margin:14px 0 0; border:1px dashed var(--rule); border-radius:12px; padding:0 14px }
+.acf-leftout summary{ padding:12px 0; cursor:pointer; font-size:13.5px; color:var(--ink) }
+.acf-leftout summary small{ display:block; margin-top:2px; font-size:11.5px; color:var(--mute) }
+.acf-leftout ul{ list-style:none; margin:0; padding:0 0 6px }
+.acf-leftout li{ padding:10px 0; border-top:1px solid var(--rule) }
+.acf-leftout li b{ display:block; font-size:13.5px; color:var(--ink) }
+.acf-leftout li p{ margin:3px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-2) }
+
+.acf-more{ margin:18px 0 0; border-top:1px solid var(--rule); padding-top:6px }
+.acf-more summary{ padding:8px 0; cursor:pointer; font-size:12.5px; color:var(--mute) }
+.acf-more > p{ margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--ink-2) }
+.acf-more .acf-axes{ margin-top:12px }
+
 .acf-act{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:22px 0 0 }
 .acf-go{
   padding:12px 22px; border-radius:999px; border:1px solid var(--gold);
@@ -295,8 +389,12 @@
   .acf-body{ padding:20px 16px 18px }
   .acf-type{ margin-left:0; width:100% }
   .acf-type input{ flex:1 1 auto; width:auto }
-  .acf-group-head{ flex-direction:column }
+  .acf-group-head{ flex-direction:column; align-items:flex-start }
   .acf-group-num{ text-align:left }
+  .acf-call{ flex-wrap:wrap }
+  .acf-call-amt{ flex-basis:100%; padding-left:36px }
+  .acf-out-rows li{ grid-template-columns:1fr }
+  .acf-inline input{ width:100% }
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -352,6 +450,7 @@
 .acf-arc.is-growth{ stroke:var(--gold,#a8801c) }
 .acf-arc.is-stable{ stroke:var(--ink-2,#4b4438) }
 .acf-arc.is-gold{ stroke:var(--gold-lt,#c9a63e) }
+.acf-arc.is-alt{ stroke:var(--mute,#8a8171) }
 .acf-ring-mid{
   position:absolute; inset:0; display:grid; place-content:center; text-align:center;
   gap:1px; line-height:1.1;
@@ -372,6 +471,7 @@
 .acf-swatch.is-growth{ background:var(--gold,#a8801c) }
 .acf-swatch.is-stable{ background:var(--ink-2,#4b4438) }
 .acf-swatch.is-gold{ background:var(--gold-lt,#c9a63e) }
+.acf-swatch.is-alt{ background:var(--mute,#8a8171) }
 
 @media (prefers-reduced-motion:reduce){
   .mfx-layer{ display:none }
@@ -380,7 +480,7 @@
   .acf-arc{ transition:none }
 }
 
-/* ── The adviser ─────────────────────────────────────────────────────────────
+/* ── The adviser ────────────────────────────────────────────────────────────
    Ink line, paper fill, one gold accent at the tie. Every colour is a theme
    token, so the same few hundred bytes of SVG draw in ink on cream and in
    cream on ink without a second asset. The figure is aria-hidden and the

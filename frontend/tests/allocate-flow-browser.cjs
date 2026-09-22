@@ -107,7 +107,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     page.on('pageerror', e => errors.push(String(e.stack)));
     await page.goto('http://127.0.0.1:8771/?go=allocate', { waitUntil: 'domcontentloaded' });
 
-    // ── Stage 1 · the amount ────────────────────────────────────────────────
+    // ── Stage 1 · the amount ────────────────────────────────────────────────────
     await page.locator('#acf-card').waitFor({ state: 'visible' });
     await page.locator('#acf_slider').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#acf_slider').getAttribute('min'), '0');
@@ -123,7 +123,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     // reading cannot change length as it moves.
     assert.match(await page.locator('#acf_big').innerText(), /^₹20\.00 Cr$/);
 
-    // ── A drag moves the reading, it does not lurch ────────────────────────
+    // ── A drag moves the reading, it does not lurch ────────────────────────────────────
     // While the handle is moving the step has to be finer than the reading.
     // The settled step at ₹18.5 lakh is ₹25,000 against ₹10,000 of displayed
     // resolution, so a coarse drag skipped two or three readings at a time.
@@ -156,7 +156,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     await page.locator('#acf_type').fill('2500000');
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000);
 
-    // ── The adviser asks it ────────────────────────────────────────────────
+    // ── The adviser asks it ────────────────────────────────────────────────────
     // (the amount stage; the questions get their own art below)
     // A figure carrying meaning would be a figure a screen reader cannot
     // read, so the question stays a real heading and the drawing stays
@@ -187,7 +187,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     await page.locator('#acf_slider').waitFor({ state: 'visible' });
     await page.locator('#acf_type').fill('2500000');
 
-    // ── Stage 2 · the questions, one at a time ─────────────────────────────
+    // ── Stage 2 · the questions, one at a time ───────────────────────────────────────
     await page.locator('#acf_next').click();
     await page.locator('.acf-opts').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#acf_slider').count(), 0, 'the stage must replace, not stack');
@@ -299,52 +299,118 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     // allocation is taken deliberately.
     await page.locator('#acf_forward').click();
 
-    // ── Stage 3 · the asset classes ────────────────────────────────────────
-    await page.locator('.acf-groups').waitFor({ state: 'visible' });
-    assert.equal(await page.locator('.acf-groups .acf-group').count(), 3);
+    // ── Stage 3 · the answer ───────────────────────────────────────────────────
+    await page.locator('.acf-first').waitFor({ state: 'visible' });
 
-    // Every cautious answer is a conservative profile, and the profile is the
-    // lower of the two axes rather than the flattering one.
-    const head = await page.locator('.acf-head h3').innerText();
-    assert.equal(head, 'Conservative');
-    const axes = await page.locator('.acf-axis .v').allInnerTexts();
-    assert.equal(Number(axes[2]), Math.min(Number(axes[0]), Number(axes[1])));
+    // The headline is the sum and the order, not the band. The band is a label.
+    assert.match(await page.locator('.acf-head h3').innerText(), /₹25 L, in order/);
+    assert.equal(await page.locator('.acf-bandline b').innerText(), 'Conservative');
+    // The profile is the lower of the two axes rather than the flattering one;
+    // the axes now sit behind a tap, so they are read from the markup.
+    const axes = await page.evaluate(() =>
+      [...document.querySelectorAll('.acf-axis .v')].map(n => Number(n.textContent)));
+    assert.equal(axes[2], Math.min(axes[0], axes[1]));
+    assert.equal(await page.locator('.acf-more[open]').count(), 0,
+      'the theory opens on request, not by default');
 
     // Signed out, nothing is recorded, and the card says so rather than
     // quietly not saving.
-    assert.match(await page.locator('.acf-head .acf-why').innerText(), /not recorded/i);
+    assert.match(await page.locator('.acf-bandline').innerText(), /not recorded/i);
     assert.equal(saved, null);
 
+    // ── First calls: the cushion is a line with a number, not a paragraph ──
+    // "None" was the answer to the cushion question, so the cushion is call
+    // one. It cannot be sized without the household number, so it is asked
+    // for on the card rather than assumed — and until then nothing is taken
+    // off the sum.
+    assert.equal(await page.locator('.acf-call.is-cushion.needs').count(), 1);
+    assert.equal(rupees(await page.locator('#acf_free').innerText()), 2500000);
+    await page.locator('#acf_expenses').fill('50000');
+    await page.locator('#acf_expenses').press('Enter');
+    await page.locator('#acf_expenses').blur();
+    await page.waitForFunction(() => document.querySelector('.acf-call.is-cushion.needs') === null);
+    assert.equal(rupees(await page.locator('.acf-call.is-cushion .acf-call-amt').innerText()), 300000,
+      'six months of ₹50,000 with nothing held is ₹3 lakh');
+    assert.equal(rupees(await page.locator('#acf_free').innerText()), 2200000);
+    assert.equal(await page.locator('#acf_expenses').inputValue(), '50000',
+      'the figure typed stays on the card after the repaint');
+
+    // ── Dated money gets no growth sleeve ──────────────────────────────────────
+    // "Within a year" was the horizon. That is not a risk to be sized; it is
+    // the reason equity does not apply to this money at all.
+    assert.equal(await page.locator('.acf-groups .acf-group').count(), 1);
+    assert.equal(await page.locator('.acf-groups .acf-group.is-stable').count(), 1);
+    assert.ok((await page.locator('.acf-flag.is-stop').count()) >= 1,
+      'money needed within three years must be flagged');
+    const flagText = (await page.locator('.acf-flag').allInnerTexts()).join('\n');
+    assert.ok(!/step\s+\d/i.test(flagText),
+      'a flag still points at the allocation sequence that was removed');
+
     // The money adds up. This is the one number a reader checks by hand.
-    // Wait for the count-up to settle rather than racing it: a figure caught
-    // mid-animation is not the figure the reader is shown.
     await page.waitForFunction(() => {
       const all = document.querySelectorAll('.acf-money');
-      return all.length === 3 &&
-        [...all].every(n => n.hasAttribute('data-settled'));
+      return all.length === 1 && [...all].every(n => n.hasAttribute('data-settled'));
     });
-    const totals = (await page.locator('.acf-money').allInnerTexts()).map(rupees);
-    assert.equal(totals.reduce((a, b) => a + b, 0), 2500000,
-      'the three sleeves must add to exactly what was allocated');
-    for (const group of await page.locator('.acf-group').all()) {
-      const sleeve = rupees(await group.locator('.acf-money').innerText());
+    const sleeveTotal = (await page.locator('.acf-money').allInnerTexts()).map(rupees)
+      .reduce((a, b) => a + b, 0);
+    assert.equal(sleeveTotal, 2200000, 'the sleeves must add to exactly what is free');
+    assert.equal(sleeveTotal + 300000, 2500000, 'first calls plus sleeves must equal the sum put in');
+    for (const group of await page.locator('.acf-how-group').all()) {
+      const sleeve = rupees(await group.locator('summary b').innerText());
       const rows = (await group.locator('.acf-sleeve-t b').allInnerTexts()).map(rupees);
       assert.equal(rows.reduce((a, b) => a + b, 0), sleeve,
         'the categories inside a sleeve must add to the sleeve above them');
     }
 
-    // A one-year horizon is flagged however the rest of the profile reads.
-    assert.ok((await page.locator('.acf-flag.is-stop').count()) >= 1,
-      'money needed within three years must be flagged');
+    // ── What it becomes: the years move the numbers ────────────────────────────────
+    assert.equal(await page.locator('#acf_years').inputValue(), '1',
+      'a one-year horizon opens the outcomes on one year');
+    const before = await page.locator('.acf-out-total b').innerText();
+    assert.match(before, /₹/);
+    await page.locator('#acf_years').fill('10');
+    await page.waitForFunction(() => document.querySelector('#acf_years_v').textContent === '10');
+    const after = await page.locator('.acf-out-total b').innerText();
+    assert.notEqual(after, before, 'ten years must not read the same as one');
+    assert.match(await page.locator('.acf-out-total small').innerText(), /today's money/);
+    assert.match(await page.locator('.acf-out-rows li').first().innerText(), /a year/);
 
-    // ── The effects are decoration, and prove it ───────────────────────────
+    // ── How to do it: kind, route, and what to look for, never a name ──────
+    assert.equal(await page.locator('.acf-how-group[open]').count(), 1);
+    const how = await page.locator('.acf-how').innerText();
+    assert.match(how, /Where:/);
+    assert.match(how, /Look for:/);
+    assert.match(how, /DICGC/);
+
+    // ── What was considered and left out, with the reason ──────────────────
+    const left = await page.evaluate(() => document.querySelector('.acf-leftout').textContent);
+    assert.match(left, /Direct property/);
+    assert.match(left, /Alternative investment funds/);
+    assert.match(left, /₹1 crore per fund/);
+    assert.match(left, /angel/i);
+
+    // ── The same figures, as twelve monthly ones ───────────────────────────────────
+    await page.locator('#acf_monthly').click();
+    await page.waitForFunction(() => {
+      const n = document.querySelector('.acf-money');
+      return n && n.hasAttribute('data-settled') && /a month/.test(n.parentElement.textContent);
+    });
+    assert.equal(rupees(await page.locator('.acf-money').innerText()), Math.round(2200000 / 12));
+    assert.match(await page.locator('.acf-how-group summary b').innerText(), /a month/);
+    await page.locator('#acf_lump').click();
+    await page.waitForFunction(() => {
+      const n = document.querySelector('.acf-money');
+      return n && n.hasAttribute('data-settled') && !/a month/.test(n.parentElement.textContent);
+    });
+    assert.equal(rupees(await page.locator('.acf-money').innerText()), 2200000);
+
+    // ── The effects are decoration, and prove it ───────────────────────────────────
     // Everything above ran under reduced motion, which switches the coin
     // layer off entirely. That every figure, control and reading was still
     // correct IS the assertion: the money effects are never load-bearing.
     assert.equal(await page.evaluate(() => window.AltahaMoneyFx.still()), true);
     assert.equal(await page.locator('.mfx-coin').count(), 0,
       'reduced motion must spawn no coins at all');
-    assert.equal(await page.locator('.acf-ring .acf-arc').count(), 3,
+    assert.equal(await page.locator('.acf-ring .acf-arc').count(), 1,
       'the ring is markup, not motion, and must be drawn either way');
     assert.equal(await page.locator('.acf-adviser.is-present').count(), 1,
       'the figure turns to the allocation it is handing over');
@@ -352,21 +418,22 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.equal(await page.locator('.acf-adviser .adv-gold').count() >= 2, true);
     assert.match(await page.locator('.acf-ring .acf-total').innerText(), /[0-9]/);
 
-    // It names categories and never a product or an instruction.
-    const prose = (await page.locator('#acf-body').innerText()).toLowerCase();
+    // It names categories and never a product or an instruction — including
+    // everything folded behind a tap, which is why this reads textContent.
+    const prose = (await page.evaluate(() => document.querySelector('#acf-body').textContent)).toLowerCase();
     for (const word of [' buy ', ' sell ', 'we recommend', 'you should']) {
       assert.ok(!prose.includes(word), `the card issued an instruction: ${word.trim()}`);
     }
     assert.ok(prose.includes('categories, never products'));
 
-    // ── The card is the whole of Allocate ──────────────────────────────────
+    // ── The card is the whole of Allocate ──────────────────────────────────────────
     // The five-step sequence that used to sit under it is gone, so nothing
     // below can repeat the card's split back in different words.
     assert.equal(await page.locator('#alc-steps').count(), 0);
     assert.equal(await page.locator('.alc-step').count(), 0);
     assert.equal(await page.evaluate(() => typeof window.AltahaAllocate), 'undefined');
 
-    // ── The answers are the planner's answers ──────────────────────────────
+    // ── The answers are the planner's answers ──────────────────────────────────────
     const draft = await page.evaluate(() =>
       JSON.parse(localStorage.getItem('altaha-risk-answers-v1') || '{}'));
     assert.equal(draft.horizon, 'under1');
@@ -379,7 +446,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000,
       'the amount must survive a reload');
 
-    // ── Narrow screens ─────────────────────────────────────────────────────
+    // ── Narrow screens ─────────────────────────────────────────────────────────
     for (const width of [320, 390, 768]) {
       await page.setViewportSize({ width, height: 900 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
@@ -397,7 +464,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
 
     assert.deepEqual(errors, [], 'the page threw while the card was driven');
 
-    // ── And with motion on, the money actually moves ───────────────────────
+    // ── And with motion on, the money actually moves ───────────────────────────────
     const lively = await browser.newContext({
       viewport: { width: 1100, height: 950 }, reducedMotion: 'no-preference' });
     await lively.route('**/*', route => {
