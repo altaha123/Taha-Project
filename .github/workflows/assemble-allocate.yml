@@ -41,12 +41,12 @@ jobs:
           raw = gzip.decompress(g)
           pathlib.Path("tools/allocate-flow.patch").write_bytes(raw)
           PY
-          note "decoded"
           git apply --whitespace=nowarn tools/allocate-flow.patch || fail "git apply failed"
           echo "bd429ba865b0176878061c7f4ed3f33b62c6b7b9c3e44ce41dc875d294324fbb  frontend/allocate-flow.js" | sha256sum -c - || fail "sha mismatch"
           node --check frontend/allocate-flow.js || fail "node check failed"
           note "file verified"
-          git rm -f tools/allocate-flow.patch.b64 tools/allocate-flow.patch
+          rm -f tools/allocate-flow.patch
+          git rm -f tools/allocate-flow.patch.b64
           git config user.name "altaha123"
           git config user.email "taha.cal@gmail.com"
           git add frontend/allocate-flow.js
