@@ -119,7 +119,13 @@ const server=http.createServer((req,res)=>{
  assert.equal(await page.evaluate(()=>document.activeElement.dataset.sector),'Financial Services');
  assert.equal(await page.locator('[data-sector="Financial Services"]').getAttribute('aria-expanded'),'false');
  await page.locator('[data-home-destination="search"]').tap();
- assert.equal(await page.evaluate(()=>document.activeElement.id),'tk');
+ // The shell search, not the in-page field. b6ec626 moved the destination
+ // deliberately and says why where it made the change: "The shell search is
+ // the primary visible search. The legacy field can live in a hidden tab;
+ // focusing it without activating that tab does nothing." This line still
+ // expected #tk afterwards, so the step has been red on main ever since --
+ // failing on a stale expectation rather than on a broken destination.
+ assert.equal(await page.evaluate(()=>document.activeElement.id),'sh-q');
  await page.locator('[data-home-destination="portfolio"]').tap();
  await page.locator('#pf_go').waitFor();
  assert.ok(await page.locator('#view-portfolio').isVisible());

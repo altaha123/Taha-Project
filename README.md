@@ -127,10 +127,26 @@ which is the same disclosure the Altaha Special book is ranked on — both read
 the one panel in `backend/special.py`, so the book and the stock page can never
 quote different numbers for the same session.
 
-Two limits, both visible on the page rather than only here. The panel keeps the
-names that clear the turnover floor, so a thin small cap comes back
-`available: false` with the reason instead of an empty table. And the delivered
-QUANTITY is derived — traded quantity multiplied by the published share —
+The store holds **every EQ symbol the bhavcopy lists** — about 2,665 a session,
+not the ~820 that clear the book's turnover floor. It used to keep only the
+liquid ones, on an argument inherited from the v2 long-format cache where the
+saving was real; against wide float32 panels it was discarding roughly 1,845
+companies to save some 11 MB on a 512 MB instance, and those are exactly the
+small and mid caps somebody opens a screener to look up. The BOOK is narrowed
+instead, at rank time, by `_rank_cols` — which matters more than it sounds,
+because `_components` uses the cross-sectional median of the panel as its
+market proxy, so a wider file would otherwise have re-scored every name in the
+Altaha Special book. `test_store_the_whole_exchange.py` pins that: same names,
+same order, same scores to floating-point equality, wide file or narrow.
+
+Sessions stored before the widening carry only the liquid names. They are
+detected per date by their coverage and handed back to the builder as if they
+were missing, so the history backfills itself and an interrupted backfill
+resumes; `/special/status` reports how many days are left as `backfilling`. A
+company whose history is still filling says so on the page rather than
+presenting a short average as a considered one.
+
+The delivered QUANTITY is derived — traded quantity multiplied by the published share —
 because storing NSE's `DELIV_QTY` would be a seventh float32 panel on a 512 MB
 instance for a column that is the product of two already held. The percentage
 is the exchange's own figure; the quantity carries that percentage's rounding,
