@@ -2726,6 +2726,32 @@ def altaha_special(limit: int = 20):
         raise HTTPException(503, f"Delivery data unavailable: {type(e).__name__}")
 
 
+@app.get("/delivery")
+def delivery_daily(ticker: str, days: int = 60):
+    """
+    One company's delivery record, session by session.
+
+    The share of each day's traded volume that was actually DELIVERED into
+    somebody's demat account rather than bought and sold again before the
+    close. NSE publishes it per stock per day in the full bhavcopy; no OHLCV
+    feed carries it.
+
+    Read from the same panel /special ranks on, so the stock page and the book
+    can never quote different delivery figures for the same session.
+
+    NSE equity series only. A US ticker, a non-EQ series or a stock too thin
+    to be retained comes back available:false with which of those it is, not
+    an error — a reader who searched a small cap has not done anything wrong.
+    """
+    if special_engine is None:
+        raise HTTPException(503, "The delivery engine is not loaded on this instance.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    try:
+        return to_native(special_engine.daily_delivery(sym, days=days))
+    except Exception as e:
+        raise HTTPException(503, f"Delivery data unavailable: {type(e).__name__}")
+
+
 @app.get("/special/status")
 def altaha_special_status():
     """Whether the delivery cache is deep enough to rank anything, and why not."""
