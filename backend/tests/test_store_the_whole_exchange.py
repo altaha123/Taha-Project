@@ -20,6 +20,20 @@ import pytest
 import special
 
 
+@pytest.fixture(autouse=True)
+def no_background_builder(monkeypatch):
+    """rank_universe and daily_delivery ask the builder to run on every call
+    now, which is the point of that change — but in a test it spawns a thread
+    that writes the shared cache and leaves a panel behind in module state for
+    whatever runs next. It surfaced as an unrelated cache test counting 302
+    sessions where it had fetched three. Same rule the conftest applies to the
+    network: nothing reaches out unless the test asked it to."""
+    calls = []
+    monkeypatch.setattr(special, "ensure_building", lambda *a, **k: calls.append(True))
+    return calls
+
+
+
 DAYS = pd.bdate_range(end="2026-09-18", periods=300)
 # The book refuses to rank a cross-section of fewer than twenty names, and it
 # only considers stocks trading above their own 200-day average, so the liquid
@@ -36,7 +50,9 @@ def _panel(symbols, turnover_cr, seed, drift=0.0009):
     close = 100.0 * np.exp(np.cumsum(steps, axis=0))
     frame = lambda arr: pd.DataFrame(arr, index=DAYS, columns=symbols).astype("float32")
     qty = (turnover_cr * 1e7) / close
+    # Stamped, because these stand for a store written by the current builder.
     return {
+        "schema": special.WIDE_SCHEMA,
         "deliv": frame(rng.uniform(34, 66, (n, len(symbols)))),
         "qty": frame(qty * rng.uniform(.95, 1.05, (n, len(symbols)))),
         "vwap": frame(close),
@@ -48,7 +64,9 @@ def _panel(symbols, turnover_cr, seed, drift=0.0009):
 
 def _widen(a, b):
     """Two panels side by side, as the store now holds them."""
-    return {k: pd.concat([a[k], b[k]], axis=1) for k in special.PANEL_FIELDS}
+    out = {k: pd.concat([a[k], b[k]], axis=1) for k in special.PANEL_FIELDS}
+    out["schema"] = special.WIDE_SCHEMA
+    return out
 
 
 @pytest.fixture
@@ -123,23 +141,38 @@ def test_a_thin_company_now_has_a_delivery_record(wide, monkeypatch):
     assert all(r["deliv_pct"] is not None for r in out["rows"])
 
 
-def test_days_held_from_before_the_widening_are_asked_for_again(wide):
-    """The migration. Old sessions are on file for the liquid names only, so
-    they are handed back to the builder as missing and replaced on merge —
-    measured per date, so an interrupted backfill resumes."""
+def test_a_store_written_before_the_widening_is_refetched_whole(wide):
+    """A pruned store carries no schema marker, so every day it holds is
+    thin — which is the case that matters, because on the live instance every
+    one of its 297 sessions was written by the pruning builder and they were
+    all equally narrow. Anything that compares days against each OTHER finds
+    nothing there and reports a backfill of zero for ever."""
     P, _ = wide
-    # Make the oldest ten sessions look like they were fetched under the prune.
+    P.pop("schema")
+
+    flagged = special._thin_days(P)
+    assert flagged == {d.date() for d in P["deliv"].index}
+
+    missing = special._missing(P, days_back=500, blanks=set())
+    inside = {d for d in flagged if d in set(missing)}
+    assert inside, "a store written before the widening must be refetched"
+
+
+def test_a_partly_widened_store_refetches_only_what_is_still_narrow(wide):
+    """Once any day has been rewritten the marker is set, and the relative
+    test carries the rest: a pruned day sits well under half the coverage of
+    a whole one. This is what stops the backfill when it is done."""
+    P, _ = wide
     thin_dates = P["deliv"].index[:10]
     P["deliv"].loc[thin_dates, THIN] = np.nan
 
     flagged = special._thin_days(P)
     assert flagged == {d.date() for d in thin_dates}
 
-    missing = special._missing(P, days_back=500, blanks=set())
-    assert set(flagged).issubset(set(missing)), "thin days must be refetched"
+    missing = set(special._missing(P, days_back=500, blanks=set()))
+    assert flagged & missing, "still-narrow days must be refetched"
     # Days that already carry the whole exchange are not fetched again.
-    full = {d.date() for d in P["deliv"].index[10:]}
-    assert not (full & set(missing))
+    assert not ({d.date() for d in P["deliv"].index[10:]} & missing)
 
 
 def test_a_store_that_is_already_complete_asks_for_nothing_back(wide):
@@ -154,3 +187,30 @@ def test_status_separates_what_is_held_from_what_is_rankable(wide, monkeypatch):
     assert st["symbols"] == len(LIQUID) + len(THIN)
     assert st["rankable"] == len(LIQUID)
     assert st["backfilling"] == 0
+
+
+def test_a_healthy_store_still_asks_the_builder_to_run(wide, monkeypatch,
+                                                       no_background_builder):
+    """The bug that kept the live store eighteen days stale.
+
+    ensure_building used to be called only from inside the "cache is missing
+    or too short" branches of these two functions. Nothing calls
+    /special/refresh on a schedule either, so the moment the store passed
+    MIN_SESSIONS nothing ever asked it to fetch another session again. It sat
+    frozen and looked entirely healthy doing it: a stale book renders exactly
+    like a current one, and `ready: true` was true.
+
+    So the assertion is not about a short store. It is that a DEEP, current,
+    complete one still asks — ensure_building is rate-limited and has its own
+    memory ceiling, so being asked costs a comparison, and not being asked
+    costs every session after the one that crossed the threshold.
+    """
+    P, _ = wide
+    monkeypatch.setattr(special, "_load_cache", lambda: P)
+
+    assert special.rank_universe(limit=20)["available"] is True
+    assert no_background_builder, "a deep store must still ask the builder to run"
+
+    no_background_builder.clear()
+    assert special.daily_delivery("TINY00", days=20)["available"] is True
+    assert no_background_builder, "a delivery lookup must ask the builder to run"

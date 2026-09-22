@@ -24,6 +24,18 @@ import pytest
 import special
 
 
+@pytest.fixture(autouse=True)
+def no_background_builder(monkeypatch):
+    """rank_universe and daily_delivery ask the builder to run on every call
+    now, which is the point of that change — but in a test it spawns a thread
+    that writes the shared cache and leaves a panel behind in module state for
+    whatever runs next. It surfaced as an unrelated cache test counting 302
+    sessions where it had fetched three. Same rule the conftest applies to the
+    network: nothing reaches out unless the test asked it to."""
+    monkeypatch.setattr(special, "ensure_building", lambda *a, **k: None)
+
+
+
 SYMS = ["RELIANCE", "TCS"]
 
 
