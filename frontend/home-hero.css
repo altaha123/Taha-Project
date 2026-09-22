@@ -450,29 +450,127 @@ body.sh-on #go{ position:relative; overflow:hidden }
 
 /* ── 11 · SWITCHING IT OFF ───────────────────────────────────────────────
    Two switches, and they mean different things. The site's Motion toggle
-   stops the loops — the things that would still be moving a minute from now
-   — and leaves the entrance alone, because by the time anyone can reach the
-   button the entrance has finished. The OS setting stops everything, the
-   entrance included, and returns the artwork to its resting state rather
-   than freezing it mid-animation.                                         */
+   stops the loops — the things that would still be moving a minute from now.
+   The OS setting stops everything and returns the artwork to its resting
+   state rather than freezing it mid-animation.
 
+   THE INVARIANT, learned the hard way: A REVEAL IS NOT A LOOP, AND MUST
+   NEVER BE PAUSABLE.
+
+   home-motion.css carries this rule, which predates everything here:
+
+       html[data-motion="off"] .hm-masthead * { animation-play-state:paused }
+
+   For a candle that breathes, pausing is exactly right. For an entrance it
+   is fatal: every reveal in this file is `both`-filled, so the state it
+   holds before it runs is its `from` state, which is opacity:0. Pausing did
+   not stop the opening screen moving — it deleted it. Reported from a phone
+   as a blank sheet of paper where the hero should be, and the same rule had
+   taken the Motion button with it, so the setting could not be undone from
+   the page that the setting had emptied.
+
+   So nothing below is left paused if it is the thing that makes content
+   visible. Reveals are forced to their finished state; only loops stop. */
+
+/* premium.css reveals every direct child of a `.hero-in` container:
+       .hero-in > * { animation: heroIn 850ms var(--ease-soft) both }
+   The masthead carries that class, so the pause rule above was freezing the
+   whole hero SECTION at opacity:0 — which is why forcing its children
+   visible changed nothing, and why the old masthead was already blank with
+   motion off before any of this was written. heroIn's `from` also carries a
+   7px blur, so filter has to be reset with the rest. */
+html[data-motion="off"] .hero-in > *{
+  animation:none !important; opacity:1 !important;
+  transform:none !important; filter:none !important;
+}
+
+html[data-motion="off"] .hh-rise,
+html[data-motion="off"] body.sh-on header.hh-stage .eyebrow,
+html[data-motion="off"] body.sh-on header.hh-stage .brand,
+html[data-motion="off"] .hh-head .hh-w,
+html[data-motion="off"] .hh-sub,
+html[data-motion="off"] .hh-ask,
 html[data-motion="off"] .hh-ask-line,
+html[data-motion="off"] .hh-cta,
+html[data-motion="off"] .hh-tile,
+html[data-motion="off"] .hh-card,
 html[data-motion="off"] .hh-card > svg,
+html[data-motion="off"] body.sh-on .searchrow,
+html[data-motion="off"] body.sh-on .hint,
+html[data-motion="off"] .mb-idx .mb-card,
+html[data-motion="off"] .mb-movers .mb-col,
+html[data-motion="off"] .hm-tools .hm-route,
+/* index.html's own heroIn runs on this button. It was being paused at
+   opacity:0 by the same rule, which is how a one-way door gets built: turn
+   motion off, and the control for turning it back on disappears. */
+html[data-motion="off"] header.hh-stage > .hm-motion{
+  animation:none !important; opacity:1 !important; transform:none !important;
+}
+html[data-motion="off"] .hh-card{ opacity:var(--hh-op,.95) !important }
+html[data-motion="off"] .hh-head em::after,
+html[data-motion="off"] .hh-sub b::after{ transform:scaleX(1) !important }
+
+/* Sweeps rest OFF their element and are carried across by the animation, so
+   they are hidden rather than reset — the same trap as the reduced-motion
+   block below, where `transform:none` once parked a permanent diagonal band
+   across the Analyse button. */
+html[data-motion="off"] .hh-btn-gold::after,
+html[data-motion="off"] #go::after,
+html[data-motion="off"] .mb-idx .mb-card::after,
+html[data-motion="off"] .mb-card .spark i::after,
+html[data-motion="off"] .hm-route::before,
 html[data-motion="off"] .hh-ember,
 html[data-motion="off"] .hh-spark,
-html[data-motion="off"] .hh-burst,
-html[data-motion="off"] .hh-btn-gold::after,
-html[data-motion="off"] .hh-head .hh-w,
-html[data-motion="off"] .hm-kicker::before,
-html[data-motion="off"] .mb-card .spark i::after,
-html[data-motion="off"] .mb-idx .mb-card::after,
-html[data-motion="off"] .searchrow::after,
-html[data-motion="off"] #go::after,
-html[data-motion="off"] .hm-route::before{ animation:none !important }
+html[data-motion="off"] .hh-burst{ display:none !important }
+
+html[data-motion="off"] .hm-kicker::before{ animation:none !important; box-shadow:none !important }
 html[data-motion="off"] #skin-art svg,
 html[data-motion="off"] .hh-tile{ transform:none !important; transition:none !important }
 html[data-motion="off"] .hm-route svg{ transition:none !important }
 
+/* ── The backstop ────────────────────────────────────────────────────────
+   home-hero.js adds hh-played three seconds in, on a timer that runs whether
+   or not animation does. By then every entrance here has had its time, so
+   they are switched off rather than left in a state something else might
+   freeze. The rules above name the two pause rules that exist today; this
+   one does not need to know the next one's name.
+
+   Only reveals are listed. The loops — the bob, the embers, the spark, the
+   sweeps — are left running, because they are the animation people asked
+   for. The market board and the route cards are left out too: they are not
+   inside the masthead, nothing pauses them, and on a cold instance they can
+   arrive well after three seconds, when their cascade is the whole point. */
+html.hh-played .hh-rise,
+html.hh-played .hero-in > *,
+html.hh-played .hh-sub,
+html.hh-played .hh-ask,
+html.hh-played .hh-ask-line,
+html.hh-played .hh-cta,
+html.hh-played body.sh-on .searchrow,
+html.hh-played body.sh-on .hint{
+  animation:none !important; opacity:1 !important;
+  transform:none !important; filter:none !important;
+}
+html.hh-played .hh-card{
+  animation:none !important; opacity:var(--hh-op,.95) !important;
+  transform:none !important; filter:none !important;
+}
+html.hh-played .hh-head em::after,
+html.hh-played .hh-sub b::after{ animation:none !important; transform:scaleX(1) !important }
+
+/* The words carry their entrance and their glow in one shorthand, so this
+   cannot use `animation:none` without taking the light along with it. The
+   glow is re-declared on its own instead. */
+html.hh-played .hh-on .hh-head .hh-w,
+html:where(.hh-played) .hh-head .hh-w{
+  animation:hhWordGlow 5.8s ease-in-out infinite !important;
+  animation-delay:calc(1900ms + var(--hh-i,0) * 150ms) !important;
+  opacity:1 !important; transform:none !important;
+}
+html.hh-played[data-motion="off"] .hh-head .hh-w{ animation:none !important }
+
+/* Hiding the tab only pauses loops. An entrance caught mid-flight resumes
+   when the tab comes back, which is why these are paused and not reset. */
 html.hh-tab-hidden .hh-card > svg,
 html.hh-tab-hidden .hh-ember,
 html.hh-tab-hidden .hh-spark,
@@ -578,4 +676,5 @@ html.hh-tab-hidden .mb-card .spark i::after{ animation-play-state:paused !import
   header.wrap.hh-stage > .hm-motion{
     position:static !important; margin:16px 0 0; opacity:.55;
   }
+  html[data-motion="off"] header.wrap.hh-stage > .hm-motion{ opacity:1 !important }
 }
