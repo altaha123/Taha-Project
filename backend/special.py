@@ -102,6 +102,10 @@ BLANKS = os.path.join(DATA_DIR, "delivery_blank_days.json")
 #      being stored so they could be filtered out later.
 RETAIN_SESSIONS = int(os.environ.get("SPECIAL_RETAIN", "400") or 400)
 PANEL_FIELDS = ("deliv", "qty", "vwap", "close", "high", "low")
+# Bumped when a change alters what a stored SESSION contains rather than how
+# it is laid out. 4 is "every EQ symbol, not only the rankable ones". A store
+# without it was written by the pruning builder and its days are refetched.
+WIDE_SCHEMA = 4
 
 LOOKBACK = 252          # sessions in the signal window
 SKIP = 21               # ignore the most recent month
@@ -359,10 +363,14 @@ def ensure_building(days_back=420):
     P = _load_cache()
     deep = bool(P and P.get("close") is not None
                 and len(P["close"]) >= LOOKBACK + SKIP)
+    # A store that is deep, current and complete has nothing to do but pick up
+    # today's file once it lands, so it is asked rarely. A store with a
+    # backlog is asked often: at twenty sessions a pass, the difference
+    # between 60s and 900s is the difference between twenty minutes and four
+    # hours of catching up.
+    settled = deep and _is_current(P) and not _thin_days(P)
     since = time.time() - _build["last_start"]
-    # A deep cache only needs the day's top-up, so do not go looking every
-    # time somebody reloads the tab.
-    if since < (900 if deep else 60):
+    if since < (900 if settled else 60):
         return
     _build.update({"running": True, "last_start": time.time(), "fetched": 0,
                    "blocked": 0, "error": None,
@@ -379,7 +387,9 @@ def _to_panels(long_df):
     P = {"deliv": piv("DELIV_PER"), "qty": piv("TTL_TRD_QNTY"),
          "vwap": piv("AVG_PRICE"), "close": piv("CLOSE_PRICE"),
          "high": piv("HIGH_PRICE"), "low": piv("LOW_PRICE")}
-    return {k: v.tail(RETAIN_SESSIONS).astype("float32") for k, v in P.items()}
+    out = {k: v.tail(RETAIN_SESSIONS).astype("float32") for k, v in P.items()}
+    out["schema"] = WIDE_SCHEMA
+    return out
 
     # THE PRUNE THAT USED TO BE HERE, AND WHY IT IS GONE
     #
@@ -424,27 +434,61 @@ def _for_ranking(P):
     return across columns as its market proxy, so a wider file would quietly
     change every score in the book."""
     cols = _rank_cols(P)
-    return {k: (None if v is None else v.reindex(columns=cols))
-            for k, v in P.items()}, cols
+    return {k: (None if P.get(k) is None else P[k].reindex(columns=cols))
+            for k in PANEL_FIELDS}, cols
+
+
+def _is_current(have, slack_days=4):
+    """Whether the store has caught up with the exchange.
+
+    Deliberately loose: weekends, holidays and a file that lands after the
+    close all mean the newest session is legitimately a few days old. This is
+    only used to decide how often to look, so erring towards looking more
+    often costs one HTTP request.
+    """
+    close = None if not have else have.get("close")
+    if close is None or not len(close):
+        return False
+    newest = close.index.max()
+    try:
+        newest = newest.date()
+    except AttributeError:
+        pass
+    return (dt.date.today() - newest).days <= slack_days
 
 
 def _thin_days(have, floor_ratio=0.6):
     """Dates held from before the store kept the whole exchange.
 
-    Coverage per date is the number of symbols carrying a delivery figure that
-    day: about 1,200 for a day fetched under the old prune, about 2,600 for one
-    fetched since. Those days are handed back to the builder as if they were
-    missing, and _merge replaces them because it de-duplicates keep="last".
+    Handed back to the builder as if they were missing; _merge replaces them
+    because it de-duplicates keep="last". Measured from the file rather than
+    from a date in the code, so the backfill resumes if it is interrupted and
+    stops on its own when nothing thin is left.
 
-    Measured per DATE rather than from a flag in the file, so the backfill
-    resumes correctly if it is interrupted, and stops on its own when there is
-    nothing thin left. No cache version bump, so the book keeps working from
-    its existing history while the small caps fill in behind it.
+    WHY THIS ASKS WHICH CODE WROTE THE DAY, AND NOT HOW MANY SYMBOLS IT HOLDS.
+    The first attempt compared each day's coverage against an absolute floor —
+    a real session lists about 2,665 EQ symbols, a pruned one about 1,200, so
+    1,800 looked like a safe line to draw. It is not a line that can be drawn.
+    A store whose days all legitimately sit under the floor is thin for ever:
+    every pass refetches every day, the worker never reaches remaining == 0,
+    and the build loop does not terminate. test_builder_fills_the_cache_without
+    _an_admin_call caught exactly that, which is the whole reason it exists.
+
+    Narrowness is not a property of a day's size. It is a property of the code
+    that wrote it, and that is what a schema marker is for. A store written by
+    the pruning builder carries no marker, so all of its days are thin. Any
+    merge since runs this module, which stamps one — and from then on the
+    relative test is enough, because a pruned day sits well under half the
+    coverage of a whole one. Both terminate: a rewritten day is never thin
+    again, whatever its size.
     """
     dp = None if not have else have.get("deliv")
     if dp is None or not len(dp):
         return set()
     cover = dp.notna().sum(axis=1)
+    if have.get("schema") != WIDE_SCHEMA:
+        # Written before the store kept the whole exchange: all of it.
+        return {d.date() for d in cover.index}
     best = float(cover.max() or 0)
     if best <= 0:
         return set()
@@ -464,6 +508,7 @@ def _merge(old, new_long):
         m = pd.concat([a, b])
         m = m[~m.index.duplicated(keep="last")].sort_index()
         out[k] = m.tail(RETAIN_SESSIONS).astype("float32")
+    out["schema"] = WIDE_SCHEMA
     return out
 
 
@@ -510,7 +555,8 @@ def status():
         out["to"] = str(close.index.max().date())
         try:
             out["resident_mb"] = round(sum(
-                v.memory_usage(deep=True).sum() for v in P.values()) / 1e6, 1)
+                P[k].memory_usage(deep=True).sum()
+                for k in PANEL_FIELDS if P.get(k) is not None) / 1e6, 1)
         except Exception:
             pass
         out["ready"] = out["cached_sessions"] >= LOOKBACK + SKIP
@@ -587,11 +633,14 @@ def daily_delivery(symbol, days=DAILY_DEFAULT):
         return {"available": False, "symbol": "", "reason": "no_symbol",
                 "message": "No symbol was given."}
 
+    # Same reasoning as rank_universe: asked on every lookup, not only when
+    # the store is empty. Somebody searching a company the store cannot answer
+    # for is exactly the moment to be filling it.
+    ensure_building()
     P = _load_cache()
     if not P or P.get("deliv") is None or not len(P["deliv"]):
-        # Same posture as the book: say what is happening and start the work,
-        # rather than returning an error for a cache that is merely young.
-        ensure_building()
+        # Say what is happening rather than returning an error for a store
+        # that is merely young.
         st = status()
         have = int(st.get("cached_sessions", 0))
         return {"available": False, "symbol": sym, "reason": "building",
@@ -782,9 +831,16 @@ def rank_universe(limit=BOOK):
     equal-weight blend decayed least. Diversification across signals is doing
     the work; cleverness about the weights was not.
     """
+    # Unconditional. This used to sit inside the "too short to rank" branch
+    # below, which meant that the moment the store passed MIN_SESSIONS nothing
+    # asked it to fetch anything ever again — no cron calls /special/refresh
+    # either, so the live store sat frozen eighteen days stale and nobody
+    # could tell, because a stale book looks exactly like a current one.
+    # ensure_building is already rate-limited and has its own memory ceiling,
+    # so calling it on every request costs a comparison.
+    ensure_building()
     P = _load_cache()
     if not P or P.get("close") is None or len(P["close"]) < MIN_SESSIONS:
-        ensure_building()
         st = status()
         have = int(st.get("cached_sessions", 0))
         err = st.get("build", {}).get("error")
