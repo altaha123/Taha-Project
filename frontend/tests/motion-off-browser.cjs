@@ -114,7 +114,14 @@ const SETTINGS = [
       for (const sel of ['.hh-head', '.hh-sub', '.hh-cta .hh-btn', '.hm-motion']) {
         assert.ok(await page.locator(sel).first().isVisible(), `${setting.name} @ ${width}px: ${sel} not visible`);
       }
-      assert.match(await page.locator('.hh-head').innerText(), /Discover the power of money/i);
+      // Deliberately NOT the exact wording. This test asks whether the
+      // opening screen can be SEEN under each motion setting; pinning the
+      // headline's copy here meant a marketing edit registered as a motion
+      // regression, which is what happened when the hero was reworded. What
+      // matters is that the headline has words in it and they are on screen.
+      const headline = (await page.locator('.hh-head').innerText()).trim();
+      assert.ok(headline.length > 8,
+        `${setting.name} @ ${width}px: the headline is empty — "${headline}"`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
         false, `${setting.name} @ ${width}px: horizontal overflow`);
 
