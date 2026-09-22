@@ -26,15 +26,15 @@ const f=fixture();
 try{
   f.update({status:'cached'});let before=f.draws;f.advance();assert(f.draws>before,'saved universe must animate');assert.equal(f.queue.size,1,'only one animation loop');
   assert.equal(f.$('#scan-results').hidden,false);assert.equal(f.$('.su-card'),null,'space tour cannot invent stock discoveries');
-  assert.match(f.$('.su-voyage-place').textContent,/Entering the galaxy/);
-  f.advance(180);assert.equal(f.$('.su-voyage-place').textContent,'Jupiter');
+  assert.match(f.$('.su-voyage-place').textContent,/Quality & profitability/);
+  f.advance(180);assert.equal(f.$('.su-voyage-place').textContent,'Quality & profitability');
   assert.equal(f.$('#scan-universe').dataset.voyage,'planet');
-  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Venus');
-  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Saturn');
-  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Mars');
-  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Neptune');
-  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Earth');
-  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Jupiter','journey loops');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Earnings & growth');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Valuation & value');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Price momentum');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Sector strength');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Risk & resilience');
+  f.advance(300);assert.equal(f.$('.su-voyage-place').textContent,'Quality & profitability','journey loops');
   f.$('#genbtn2').click();assert.equal(f.clicks,1,'moved scan control retains handler');
   f.$('.su-motion').click();before=f.draws;f.advance();assert.equal(f.draws,before,'pause freezes drawing');assert.equal(f.queue.size,0);
   f.update({status:'running',run_id:'one',done:30,total:100});assert.equal(f.queue.size,0,'engine polling cannot override pause');assert.equal(f.$('progress').value,30);assert.equal(f.$('#scan-results').hidden,true);
@@ -45,7 +45,7 @@ try{
   const row={symbol:'TEST',name:'Test stock',sector:'Test',score:75,finding:'Fixture finding'};
   f.update({status:'running',run_id:'one',done:60,total:100,discoveries:[row],planet_batches:[{number:1,count:8,rows:[row]}]});f.$('.su-planet').click();assert.match(f.$('.su-batch').textContent,/Checkpoint 1/);assert.match(f.$('.su-batch').textContent,/TEST/);
   f.update({status:'starting'});assert.equal(f.$('.su-card'),null);assert.equal(f.$('.su-batch').hidden,true,'new run resets previous checkpoint');
-  f.update({status:'done',error:'interrupted'});assert.equal(f.$('#scan-universe').dataset.state,'partial');assert.doesNotMatch(f.$('.su-status').textContent,/universe is ready/);
+  f.update({status:'done',error:'interrupted'});assert.equal(f.$('#scan-universe').dataset.state,'partial');assert.doesNotMatch(f.$('.su-status').textContent,/stock rankings are ready/);
   f.update({status:'reconnecting'});assert.match(f.$('.su-voyage-mode').textContent,/INTERRUPTED/);
   f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide',{persisted:false}));assert.equal(f.queue.size,0,'destroy cancels loop');
 }finally{f.dom.window.close()}

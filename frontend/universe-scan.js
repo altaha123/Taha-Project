@@ -26,17 +26,17 @@
     if (!host || host.firstChild) return host;
     host.className = 'scan-universe';
     host.innerHTML = '<div class="su-scene">' +
-      Array.from({length:6}, function (_, i) { return '<button type="button" class="su-planet su-planet-' + i + '" aria-label="Planet ' + (i+1) + ': awaiting discoveries" aria-expanded="false"><i></i><span>' + String(i+1).padStart(2,'0') + '</span></button>'; }).join('') +
-      '<button type="button" class="su-motion">Pause motion</button></div><div class="su-copy"><span class="su-eyebrow">DISCOVER / UNIVERSE SCAN</span><h3>Explore a universe<br>of possibilities.</h3><p class="su-status" role="status" aria-live="polite"></p><div class="su-meter"><progress class="su-progress" max="100" value="0" aria-label="Universe scan progress"></progress><b class="su-percent"></b></div><p class="su-detail"></p><p class="su-timing"></p><p class="su-milestone" role="status"></p><div class="su-controls"></div><span class="su-footnote">Tap a planet to explore its discoveries. Preview scores may change as the universe grows.</span></div><section class="su-discoveries" aria-label="Live discoveries"><div class="su-discovery-head"><h4>Discoveries as they happen</h4><span>PRELIMINARY</span></div><p class="su-discovery-note">Detailed stock cards appear at analysis checkpoints. Early checks screen the universe first.</p><div class="su-cards"></div><div class="su-batch" hidden></div></section>';
+      Array.from({length:6}, function (_, i) { return '<button type="button" class="su-planet su-planet-' + i + '" aria-label="Checkpoint ' + (i+1) + ': awaiting discoveries" aria-expanded="false"><i></i><span>' + String(i+1).padStart(2,'0') + '</span></button>'; }).join('') +
+      '<button type="button" class="su-motion">Pause motion</button></div><div class="su-copy"><span class="su-eyebrow">DISCOVER / UNIVERSE SCAN</span><h3>Discover stocks.<br>Understand their potential.</h3><p class="su-status" role="status" aria-live="polite"></p><div class="su-meter"><progress class="su-progress" max="100" value="0" aria-label="Universe scan progress"></progress><b class="su-percent"></b></div><p class="su-detail"></p><p class="su-timing"></p><p class="su-milestone" role="status"></p><div class="su-controls"></div><span class="su-footnote">Tap a checkpoint to view stock findings. Preview scores may change as analysis continues.</span></div><section class="su-discoveries" aria-label="Live discoveries"><div class="su-discovery-head"><h4>Discoveries as they happen</h4><span>PRELIMINARY</span></div><p class="su-discovery-note">Detailed stock cards appear at analysis checkpoints. Early checks screen the universe first.</p><div class="su-cards"></div><div class="su-batch" hidden></div></section>';
     var scene=host.querySelector('.su-scene');
     var canvas=node('canvas','su-cosmos'); canvas.setAttribute('aria-hidden','true'); scene.prepend(canvas);
     var heading=node('div','su-scene-heading');
     heading.appendChild(host.querySelector('.su-eyebrow'));
-    var title=host.querySelector('h3'); title.textContent='An entire universe. Waiting to be discovered.'; heading.appendChild(title); scene.appendChild(heading);
+    var title=host.querySelector('h3'); title.textContent='Discover stocks. Understand their potential.'; heading.appendChild(title); scene.appendChild(heading);
     var hud=node('div','su-voyage-hud');
-    hud.appendChild(node('span','su-voyage-mode','SPACE EXPLORER'));
-    hud.appendChild(node('strong','su-voyage-place','The golden spiral'));
-    hud.appendChild(node('span','su-voyage-note','A visual journey · stock findings appear below'));
+    hud.appendChild(node('span','su-voyage-mode','STOCK SCREENER'));
+    hud.appendChild(node('strong','su-voyage-place','Quality & profitability'));
+    hud.appendChild(node('span','su-voyage-note','Stock rankings and analysis appear below'));
     scene.appendChild(hud);
     var credit=node('a','su-texture-credit','Planet maps: Solar System Scope · CC BY 4.0');
     credit.href='https://www.solarsystemscope.com/textures/';credit.target='_blank';credit.rel='noopener noreferrer';
@@ -94,7 +94,7 @@
     if(selected<0) {box.replaceChildren();delete box.dataset.batch;return;}
     var batch=batches[selected], key=selected+JSON.stringify(batch);
     if(box.dataset.batch===key) return; box.dataset.batch=key; box.replaceChildren();
-    if(!batch) { box.appendChild(node('p','','This planet is still waiting for a detailed analysis checkpoint.')); return; }
+    if(!batch) { box.appendChild(node('p','','Stock findings for this checkpoint are not available yet.')); return; }
     box.appendChild(node('h4','','Checkpoint '+batch.number+' · '+batch.count+' newly analysed stocks'));
     box.appendChild(node('p','','A sample from this checkpoint. Scores are preliminary.'));
     var cards=node('div','su-cards'); box.appendChild(cards); renderCards(cards,batch.rows || []);
@@ -107,7 +107,7 @@
     var state=stateOf(pending);
     dock.textContent = state==='running' ? '◌ Universe scan · '+lastPct+'% · View discoveries' :
       state==='done' ? '✓ Scan complete · View stocks' :
-      state==='starting' ? '◌ Connecting to the universe…' :
+      state==='starting' ? '◌ Connecting to the stock scan…' :
       state==='reconnecting' ? '◌ Scan reconnecting · Check progress' : 'Universe scan · View status';
     if(!['running','starting','reconnecting','done','partial','error'].includes(state)) dock.hidden=true;
   }
@@ -130,15 +130,15 @@
     }
     if(running||state==='starting') observed=true;
     host.dataset.state=state; lastPct=pct;
-    host.querySelector('.su-voyage-mode').textContent=running?'LIVE SCAN · '+pct+'%':state==='starting'?'CONNECTING TO SCAN':state==='reconnecting'?'SCAN CONNECTION INTERRUPTED':'SPACE EXPLORER';
+    host.querySelector('.su-voyage-mode').textContent=running?'LIVE SCAN · '+pct+'%':state==='starting'?'CONNECTING TO SCAN':state==='reconnecting'?'SCAN CONNECTION INTERRUPTED':'STOCK SCREENER';
     if(voyage) voyage.sync();
     var results=document.getElementById('scan-results');if(results) results.hidden=['starting','running','reconnecting'].includes(state);
-    var title='Your next discovery starts here.',detail='Choose a horizon, then start your universe scan.';
-    if(state==='starting'){title='Launching your discovery…';detail='Waiting for the engine to confirm the scan.';}
-    if(running){title=discoveries.length?'New discoveries are coming into view.':'Exploring the stock universe…';detail=total?done.toLocaleString('en-IN')+' / '+total.toLocaleString('en-IN')+' analysis checks · '+(Number(s.scored)||0).toLocaleString('en-IN')+' scored':'Preparing the universe. Waiting for engine progress.';}
-    if(complete){title='Your universe is ready.';detail='Explore your final shortlist below. Preview cards retain their checkpoint scores.';}
+    var title='Your next stock idea starts here.',detail='Choose a horizon, then start your universe scan.';
+    if(state==='starting'){title='Starting your stock scan…';detail='Waiting for the engine to confirm the scan.';}
+    if(running){title=discoveries.length?'New stock findings are available.':'Exploring the stock universe…';detail=total?done.toLocaleString('en-IN')+' / '+total.toLocaleString('en-IN')+' analysis checks · '+(Number(s.scored)||0).toLocaleString('en-IN')+' scored':'Preparing the stock scan. Waiting for engine progress.';}
+    if(complete){title='Your stock rankings are ready.';detail='Explore your final shortlist below. Preview cards retain their checkpoint scores.';}
     if(state==='partial'){title='The scan stopped before completion.';detail='Available results are shown below. See the scan note for details.';}
-    if(state==='cached'){title='Your saved universe is ready.';detail='Saved rankings appear below. Refresh to request a new scan.';}
+    if(state==='cached'){title='Your saved stock rankings are ready.';detail='Saved rankings appear below. Refresh to request a new scan.';}
     if(state==='idle'){title='Ready for another discovery.';detail='Start a scan to build your shortlist. Any saved results appear below.';}
     if(state==='reconnecting'){title='Reconnecting to the engine…';detail='Progress is unconfirmed. These previews are from the last received checkpoint.';}
     if(state==='error'){title='The scan needs your attention.';detail='See the message below. Available checkpoint previews are retained.';}
@@ -155,7 +155,7 @@
       planet.classList.toggle('is-scanned',(running||complete)&&pct>=(i+1)*100/6);
       planet.classList.toggle('is-scanning',running&&pct>=i*100/6&&pct<(i+1)*100/6);
       planet.classList.toggle('has-discovery',!!batches[i]);
-      planet.setAttribute('aria-label','Planet '+(i+1)+(batches[i]?': open checkpoint '+batches[i].number:': awaiting discoveries'));
+      planet.setAttribute('aria-label','Checkpoint '+(i+1)+(batches[i]?': open checkpoint '+batches[i].number:': awaiting discoveries'));
     });
     renderCards(host.querySelector('.su-cards'),discoveries);
     host.querySelector('.su-discovery-note').textContent=discoveries.length?'Real checkpoint discoveries · expand a card for the finding. Final ranking may change.':
