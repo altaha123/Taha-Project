@@ -119,7 +119,29 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     await page.locator('#acf_slider').fill('10000');
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 200000000,
       'the track must end at ₹20 crore');
-    assert.match(await page.locator('#acf_big').innerText(), /20 Cr/);
+    // The moving figure keeps a fixed number of decimals for its unit, so the
+    // reading cannot change length as it moves.
+    assert.match(await page.locator('#acf_big').innerText(), /^₹20\.00 Cr$/);
+
+    // ── A drag moves the reading, it does not lurch ────────────────────────
+    // While the handle is moving the step has to be finer than the reading.
+    // The settled step at ₹18.5 lakh is ₹25,000 against ₹10,000 of displayed
+    // resolution, so a coarse drag skipped two or three readings at a time.
+    const walk = await page.evaluate(() => {
+      const flow = window.AltahaAllocateFlow;
+      const at = flow.rupeesToSlider(1850000);
+      const out = [];
+      for (let p = at; p < at + 12; p++) out.push(flow.sliderToRupees(p, true));
+      return out;
+    });
+    const jumps = walk.slice(1).map((v, i) => v - walk[i]).filter(d => d > 0);
+    assert.ok(jumps.length >= 8, 'most of a drag produced no change at all');
+    assert.ok(Math.max(...jumps) <= 10000,
+      `a single drag step moved ₹${Math.max(...jumps)}, more than the reading's resolution`);
+    // Letting go still settles onto a round figure.
+    assert.equal(await page.evaluate(() =>
+      window.AltahaAllocateFlow.sliderToRupees(
+        window.AltahaAllocateFlow.rupeesToSlider(1850000))), 1850000);
 
     // A quick pick and the typed figure are the same number in three places:
     // the big display, the exact line and the handle.
