@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════════════
    Altaha — the four products
 
    Three views' worth of surface: the Discover hub, the Allocate sequence and
@@ -10,7 +10,7 @@
    Every colour is a token with a value on both themes. A literal hex here is
    how a card becomes a bright tile with white text on it in the dark theme,
    which is the exact bug this project has shipped before.
-   ═══════════════════════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════════════════ */
 
 /* ── Shared card ─────────────────────────────────────────────────────────── */
 
@@ -111,7 +111,7 @@
   border:1px solid var(--rule); color:var(--ink-2); background:var(--paper-2);
 }
 
-/* ── Allocate · the guided card ──────────────────────────────────────────────
+/* ── Allocate · the guided card ──────────────────────────────────────────────────
    One card, three stages, and the movement between them carries the meaning:
    the amount becomes a profile, the profile becomes a split. Every animation
    here is decoration over markup that is already correct and readable — the
@@ -285,6 +285,17 @@
 .acf-group .acf-money{ font-size:clamp(24px,4vw,32px) }
 .acf-group-head > div:last-child{ flex:1 1 160px }
 .acf-line{ margin:4px 0 0; font-size:13px; line-height:1.55; color:var(--ink-2) }
+.acf-holds{ list-style:none; margin:10px 0 0; padding:0 }
+.acf-holds li{
+  display:flex; justify-content:space-between; gap:12px; align-items:baseline;
+  padding:7px 0; border-top:1px solid var(--rule); font-size:13.5px; color:var(--ink);
+}
+.acf-holds li:first-child{ border-top:0; padding-top:2px }
+.acf-holds span{ flex:1 1 auto; min-width:0; line-height:1.4 }
+.acf-holds b{
+  font-family:var(--mono,monospace); font-weight:500; white-space:nowrap;
+  font-variant-numeric:tabular-nums; color:var(--ink);
+}
 
 .acf-first{ margin:18px 0 0; border:1px solid var(--rule); border-radius:13px;
   background:var(--paper-2); padding:14px 16px 12px }
@@ -394,6 +405,7 @@
   .acf-call{ flex-wrap:wrap }
   .acf-call-amt{ flex-basis:100%; padding-left:36px }
   .acf-out-rows li{ grid-template-columns:1fr }
+  .acf-holds li{ flex-wrap:wrap }
   .acf-inline input{ width:100% }
 }
 
@@ -404,7 +416,7 @@
   .acf-chip:hover,.acf-opt:hover,.acf-go:hover{ transform:none }
 }
 
-/* ── Money effects ───────────────────────────────────────────────────────────
+/* ── Money effects ───────────────────────────────────────────────────────
    Coins, the sheen, and the ring. All of it is decoration over markup that is
    already correct: the layer takes no clicks, carries aria-hidden, and the
    reduced-motion block at the end switches the whole thing off without taking
@@ -578,7 +590,7 @@
   .acf-bubble::before{ top:22px }
 }
 
-/* ── Question art ────────────────────────────────────────────────────────────
+/* ── Question art ──────────────────────────────────────────────────────────────
    Twelve scenes, one frame, three inks. Each one draws the thing its question
    asks about and re-draws when the reader points at a different answer. All
    of it is aria-hidden decoration beside a real heading and real buttons; the
@@ -713,7 +725,7 @@
   .qa-scene{ width:76px; margin:0 0 -6px 4px; align-self:start }
 }
 
-/* ── One dot per question ────────────────────────────────────────────────────
+/* ── One dot per question ───────────────────────────────────────────────────────
    Filled when answered, ringed when current, hollow when still to come. The
    name of the question sits in a line of its own rather than a floating
    tooltip: twelve dots at phone width would have their tooltips clipped by the
