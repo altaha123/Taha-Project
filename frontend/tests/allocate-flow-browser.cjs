@@ -17,6 +17,10 @@ const root = path.resolve('frontend');
 // backend/tests/test_risk_profile.py; this only has to be that shape.
 const QUESTIONS = {
   questions: [
+    { id: 'age', axis: 'capacity', weight: 18, kind: 'choice',
+      label: 'How old are you?', why: 'Years to retirement decide the recovery time.',
+      options: [{ value: 'under25', label: 'Under 25', score: 100 },
+                { value: '65plus', label: '65 or older', score: 15 }] },
     { id: 'horizon', axis: 'capacity', weight: 24, kind: 'choice',
       label: 'When will you need this money?', why: 'The single strongest input.',
       options: [{ value: 'under1', label: 'Within a year', score: 0 },
@@ -131,6 +135,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000);
 
     // ── The adviser asks it ────────────────────────────────────────────────
+    // (the amount stage; the questions get their own art below)
     // A figure carrying meaning would be a figure a screen reader cannot
     // read, so the question stays a real heading and the drawing stays
     // hidden from the accessibility tree. Both halves are asserted.
@@ -141,20 +146,74 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.equal(await page.locator('.acf-adviser').innerText(), '',
       'the figure must carry no text of its own');
 
+    // ── The default amount is real state, not just something drawn ─────────
+    // Pressing Continue without touching the handle used to carry a reader
+    // all the way to the allocation with no amount at all: "allocating ₹0"
+    // in the header and a dead end at the end of the flow.
+    await page.evaluate(() => localStorage.removeItem('altaha-allocate-flow-v1'));
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('#acf_slider').waitFor({ state: 'visible' });
+    const opening = rupees(await page.locator('#acf_exact').innerText());
+    assert.ok(opening > 0, 'the slider must open on a real figure');
+    await page.locator('#acf_next').click();
+    await page.locator('.acf-opts').waitFor({ state: 'visible' });
+    assert.match(await page.locator('.acf-progress .acf-step').innerText(),
+      new RegExp('allocating', 'i'));
+    assert.ok(!(await page.locator('.acf-progress .acf-step').innerText()).includes('₹0'),
+      'the untouched default must carry through as the amount, not as zero');
+    await page.locator('#acf_back').click();
+    await page.locator('#acf_slider').waitFor({ state: 'visible' });
+    await page.locator('#acf_type').fill('2500000');
+
     // ── Stage 2 · the questions, one at a time ─────────────────────────────
     await page.locator('#acf_next').click();
     await page.locator('.acf-opts').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#acf_slider').count(), 0, 'the stage must replace, not stack');
-    assert.match(await page.locator('.acf-progress .acf-step').innerText(), /question 1 of 6/i);
+    assert.match(await page.locator('.acf-progress .acf-step').innerText(), /question 1 of 7/i);
     assert.equal(await page.locator('.acf-q .acf-why').count(), 1,
       'every question says why it is being asked');
-    assert.equal(await page.locator('.acf-adviser.is-listen').count(), 1,
-      'the figure takes the answers down rather than still presenting');
+    // Each question draws the thing it is asking about, and pointing at an
+    // option previews that option before it is committed to. The age question
+    // is the one this was built for: the adviser ages with the answer.
+    assert.equal(await page.locator('.acf-q h3').innerText(), 'How old are you?');
+    await page.locator('.acf-opt', { hasText: 'Under 25' }).hover();
+    await page.waitForFunction(() =>
+      !!document.querySelector('#acf_art .is-age-young'));
+    await page.locator('.acf-opt', { hasText: '65 or older' }).hover();
+    await page.waitForFunction(() =>
+      !!document.querySelector('#acf_art .is-age-elder'),
+      null, { timeout: 4000 });
+    assert.equal(await page.locator('#acf_art .adv-specs').count(), 1,
+      'reading glasses arrive with the older answer');
+    // Pointing away puts the picture back to what is actually selected.
+    await page.locator('.acf-q h3').hover();
+    await page.waitForFunction(() =>
+      !!document.querySelector('#acf_art .is-age-young'), null, { timeout: 4000 });
+    assert.equal(await page.locator('#acf_art').innerText(), '',
+      'the picture must carry no words of its own');
+
+    // Time question, time picture.
+    await page.locator('.acf-opt').first().click();
+    await page.waitForTimeout(700);
+    assert.equal(await page.locator('.acf-q h3').innerText(), 'When will you need this money?');
+    assert.equal(await page.locator('#acf_art .qa-scene.is-horizon').count(), 1,
+      'the horizon question must draw time, not a person');
+    await page.locator('.acf-opt', { hasText: 'Within a year' }).hover();
+    await page.waitForFunction(() => {
+      const sand = document.querySelectorAll('#acf_art .qa-sand');
+      return sand.length === 2;
+    });
+    await page.locator('#acf_prev').click();
+    await page.locator('.acf-opts').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('.acf-q h3').innerText(), 'How old are you?',
+      'Back must return to the previous question');
+    assert.equal(await page.locator('#acf_art .is-age-young').count(), 1,
+      'and to the answer that was given there');
 
     // The context questions are asked; `amount` is not, because the slider
     // already answered it.
     const asked = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
       asked.push(await page.locator('.acf-q h3').innerText());
       await page.locator('.acf-opt').first().click();          // the cautious answer
       await page.waitForTimeout(60);

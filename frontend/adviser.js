@@ -42,8 +42,34 @@
 
   /* Head, shoulders and tie. Shared by every pose, so it is the same person
      sitting there the whole way through; only the hands change. */
-  function bust(tilt) {
+  /* Ageing, four steps. Shown by hair — its colour and how far it has gone
+     back — and by reading glasses, which is how age actually reads on a face
+     at this size. Not by stooping, wrinkling or shrinking anybody: the point
+     is a different person's circumstances, not a joke about being old. */
+  var AGES = {
+    young:  { tone: 'is-dark',  hair: 'full',   glasses: false },
+    mid:    { tone: 'is-dark',  hair: 'full',   glasses: true },
+    senior: { tone: 'is-salt',  hair: 'back',   glasses: true },
+    elder:  { tone: 'is-white', hair: 'thin',   glasses: true }
+  };
+
+  var HAIR = {
+    full: 'M43 52c0-19 10-30 22-30 13 0 22 10 23 29-3-9-9-15-17-17-7-2-12 2-18 4-4 2-8 6-10 14z',
+    back: 'M45 48c1-16 10-26 20-26 12 0 20 9 22 25-4-8-11-12-19-12-8 0-15 3-19 9-2 2-3 3-4 4z',
+    thin: 'M45 50c1-11 6-19 13-23-6 7-8 14-8 22zm40 0c-1-11-6-19-13-23 6 7 8 14 8 22z'
+  };
+
+  function glasses() {
+    return '<g class="adv-specs">' +
+      '<rect x="46" y="52" width="16" height="12" rx="5"/>' +
+      '<rect x="68" y="52" width="16" height="12" rx="5"/>' +
+      '<path d="M62 57h6M46 56l-5-2M84 56l5-2"/>' +
+      '</g>';
+  }
+
+  function bust(tilt, age) {
     var turn = tilt ? ' transform="rotate(' + tilt + ' 65 96)"' : '';
+    var years = AGES[age] || AGES.young;
     return '' +
       // jacket: sloped shoulders into a squared body, not a mound
       '<path class="adv-suit" d="M22 136c0-14 6-24 17-29l13-6 13 8 13-8 13 6c11 5 17 15 17 29z"/>' +
@@ -66,8 +92,8 @@
         '<ellipse class="adv-skin" cx="88" cy="62" rx="3.4" ry="5.4"/>' +
         // head
         '<ellipse class="adv-skin" cx="65" cy="58" rx="23" ry="27"/>' +
-        // hair, with a side part rather than a helmet
-        '<path class="adv-hair" d="M43 52c0-19 10-30 22-30 13 0 22 10 23 29-3-9-9-15-17-17-7-2-12 2-18 4-4 2-8 6-10 14z"/>' +
+        // hair: colour and hairline carry the age
+        '<path class="adv-hair ' + years.tone + '" d="' + HAIR[years.hair] + '"/>' +
         // brows
         '<path class="adv-line" d="M51 49q6-3 11-1"/>' +
         '<path class="adv-line" d="M79 49q-6-3-11-1"/>' +
@@ -78,6 +104,7 @@
         // nose and mouth
         '<path class="adv-line" d="M65 59v7q0 2-3 2.5"/>' +
         '<path class="adv-line adv-mouth" d="M59 75q6 4.5 12 0"/>' +
+        (years.glasses ? glasses() : '') +
       '</g>';
   }
 
@@ -137,15 +164,19 @@
 
   /* `pose` is the only input, and an unknown one falls back to asking rather
      than rendering an empty frame. */
-  function figure(name) {
+  /* `pose` picks the hands, `options.age` picks the hair and the glasses.
+     Both fall back rather than rendering an empty frame. */
+  function figure(name, options) {
     var which = POSES[name] ? name : 'ask';
-    return '<div class="acf-adviser is-' + which + '" aria-hidden="true">' +
+    var opts = options || {};
+    var age = AGES[opts.age] ? opts.age : 'young';
+    return '<div class="acf-adviser is-' + which + ' is-age-' + age + '" aria-hidden="true">' +
       '<svg viewBox="0 0 130 150" class="adv-svg" focusable="false">' +
-        bust(which === 'listen' ? 7 : 0) + pose(which) +
+        bust(which === 'listen' ? 7 : 0, age) + pose(which) +
       '</svg></div>';
   }
 
-  var api = { figure: figure, poses: Object.keys(POSES) };
+  var api = { figure: figure, poses: Object.keys(POSES), ages: Object.keys(AGES) };
   root.AltahaAdviser = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
