@@ -214,6 +214,57 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.equal(await page.locator('#acf_art').innerText(), '',
       'the picture must carry no words of its own');
 
+    // ── A dot per question, and the question stays on screen ───────────────
+    // `overflow-x: hidden` on the body used to make it a scroll container,
+    // which made the used value of overflow-y `auto` and left every sticky
+    // element on the site resolving against a box that never scrolls. The
+    // guard is here because the symptom is invisible: sticky simply does
+    // nothing, and nothing throws.
+    assert.notEqual(await page.evaluate(() => getComputedStyle(document.body).overflowY),
+      'auto', 'the body is a scroll container again, which silently kills every sticky');
+
+    const total = QUESTIONS.questions.filter(q => q.weight > 0 || q.id === 'purpose' || q.id === 'mode').length;
+    assert.equal(await page.locator('.acf-dot').count(), total,
+      'there must be one dot per question asked');
+    assert.equal(await page.locator('.acf-dot.is-now').count(), 1);
+    assert.match(await page.locator('#acf_dot_label').innerText(), /1 of \d+ · How old are you\?/);
+
+    // Hovering a dot names the question it stands for; leaving puts the
+    // current one back.
+    await page.locator('.acf-dot').nth(3).hover();
+    const hovered = await page.locator('#acf_dot_label').innerText();
+    assert.match(hovered, /^4 of /, `hovering the fourth dot showed "${hovered}"`);
+    await page.locator('.acf-q h3').hover();
+    assert.match(await page.locator('#acf_dot_label').innerText(), /^1 of /);
+
+    // And clicking one goes there, which is what somebody changing an earlier
+    // answer reaches for rather than pressing Back eight times.
+    await page.locator('.acf-dot').nth(2).click();
+    await page.waitForFunction(() =>
+      /^3 of /.test(document.getElementById('acf_dot_label').textContent));
+    assert.equal(await page.locator('.acf-dot').nth(2).getAttribute('aria-current'), 'step');
+    await page.locator('.acf-dot').nth(0).click();
+    await page.waitForFunction(() => /How old are you/.test(
+      document.querySelector('.acf-q h3').textContent));
+
+    // The question and its picture hold their place while the answers scroll
+    // under them: a six-option question is taller than a laptop window, and
+    // scrolling to the last option used to leave answers with nothing above
+    // them to answer.
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.locator('.acf-opt').last().scrollIntoViewIfNeeded();
+    await page.waitForTimeout(250);
+    const seat = await page.locator('.acf-q h3').boundingBox();
+    const artSeat = await page.locator('#acf_art').boundingBox();
+    const chromeBottom = await page.evaluate(() => {
+      const bar = document.querySelector('.sh-chrome');
+      return bar ? bar.getBoundingClientRect().bottom : 0;
+    });
+    assert.ok(seat.y >= chromeBottom - 1 && seat.y < 720,
+      `the question scrolled out of reach (top ${Math.round(seat.y)}, chrome ends ${Math.round(chromeBottom)})`);
+    assert.ok(artSeat.y + artSeat.height > chromeBottom,
+      'the picture scrolled out of reach');
+
     // Time question, time picture.
     await page.locator('.acf-opt').first().click();
     await page.waitForTimeout(700);

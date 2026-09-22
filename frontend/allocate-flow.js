@@ -607,16 +607,21 @@
     var q = list[i];
     var chosen = state.answers[q.id];
     return '' +
-      '<div class="acf-progress" data-stagger>' +
-        '<div class="acf-bar"><i style="width:' + ((i) / list.length * 100) + '%" id="acf_bar"></i></div>' +
-        '<span class="acf-step">Step 2 of 3 · question ' + (i + 1) + ' of ' + list.length +
-        ' · allocating ' + esc(words(state.amount)) + '</span>' +
-      '</div>' +
-      '<div class="acf-ask" data-stagger>' +
-        '<div class="acf-art" id="acf_art">' + sceneFor(q, chosen) + '</div>' +
-        '<div class="acf-q acf-bubble">' +
-          '<h3>' + esc(q.label) + '</h3>' +
-          '<p class="acf-why">' + esc(q.why || '') + '</p>' +
+      // Sticky, because the answers to a six-option question are taller than
+      // a laptop window: scrolling to reach the last option used to carry the
+      // question and its picture off the top of the screen, leaving a column
+      // of answers to nothing.
+      '<div class="acf-stick" data-stagger>' +
+        '<div class="acf-progress">' +
+          '<span class="acf-step">Step 2 of 3 · question ' + (i + 1) + ' of ' + list.length +
+          ' · allocating ' + esc(words(state.amount)) + '</span>' +
+        '</div>' +
+        '<div class="acf-ask">' +
+          '<div class="acf-art" id="acf_art">' + sceneFor(q, chosen) + '</div>' +
+          '<div class="acf-q acf-bubble">' +
+            '<h3>' + esc(q.label) + '</h3>' +
+            '<p class="acf-why">' + esc(q.why || '') + '</p>' +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div class="acf-opts" data-stagger>' +
@@ -633,7 +638,8 @@
           ? '<button type="button" class="acf-go" id="acf_forward">' +
             (i === list.length - 1 ? 'See the asset classes' : 'Next') + '</button>'
           : '<span class="acf-hint">Pick the closest one. There is no right answer, and you can change it.</span>') +
-      '</div>';
+      '</div>' +
+      dots(list, i);
   }
 
   /* Pointing at an option previews it. Re-rendering only when the value
@@ -655,6 +661,38 @@
     var list = asked();
     var q = list[state.index];
     return q ? state.answers[q.id] : undefined;
+  }
+
+  /* One dot per question: filled when answered, ringed when current, hollow
+     when still to come. Hovering or focusing one names the question it stands
+     for, and clicking it goes there — which is what somebody wanting to change
+     an earlier answer reaches for, rather than pressing Back eight times.
+
+     The name appears in a line of its own rather than a floating tooltip: with
+     twelve dots at phone width a tooltip would be clipped by the card, and a
+     line is readable on a touch screen, which has no hover at all. */
+  function dots(list, current) {
+    var row = list.map(function (q, i) {
+      var answered = state.answers[q.id] !== undefined && state.answers[q.id] !== '';
+      var cls = 'acf-dot' + (i === current ? ' is-now' : answered ? ' is-done' : '');
+      return '<button type="button" class="' + cls + '" data-jump="' + i + '" ' +
+        'aria-label="Question ' + (i + 1) + ': ' + esc(q.label) + '" ' +
+        'aria-current="' + (i === current ? 'step' : 'false') + '"></button>';
+    }).join('');
+    return '<div class="acf-dots" data-stagger>' +
+      '<div class="acf-dot-row" role="group" aria-label="The twelve questions">' + row + '</div>' +
+      '<p class="acf-dot-label" id="acf_dot_label">' + esc(dotLabel(list, current)) + '</p>' +
+    '</div>';
+  }
+
+  function dotLabel(list, i) {
+    var q = list[i];
+    if (!q) return '';
+    var answered = list.filter(function (x) {
+      return state.answers[x.id] !== undefined && state.answers[x.id] !== '';
+    }).length;
+    return (i + 1) + ' of ' + list.length + ' · ' + q.label +
+      '  ·  ' + answered + ' answered';
   }
 
   function answer(value, node) {
@@ -933,11 +971,31 @@
 
   /* ── Wiring ────────────────────────────────────────────────────────────── */
 
+  /* Pressing Continue at the bottom of one stage leaves the page scrolled
+     there, so the next stage opened halfway down its own options with the
+     question already pinned above them. When a new screen arrives and the top
+     of the card is behind the site chrome, put the card back at the top of the
+     reader's view. Only then: scrolling somebody who is already looking at the
+     top of the card would be the page fighting them. */
+  function reveal() {
+    var card = $('acf-card');
+    if (!card || !card.getBoundingClientRect) return;
+    var bar = doc.querySelector('.sh-chrome');
+    var floor = bar ? bar.getBoundingClientRect().bottom : 0;
+    if (card.getBoundingClientRect().top >= floor - 2) return;
+    try {
+      card.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' });
+    } catch (e) {
+      card.scrollIntoView(true);
+    }
+  }
+
   function paint(direction) {
     var html = state.stage === 'amount' ? stageAmount()
              : state.stage === 'questions' ? stageQuestions()
              : stageResult();
     swap(html, direction || 'next');
+    reveal();
     if (state.stage === 'result' && !state.busy) playResult();
     if (saveTimer) { root.clearTimeout(saveTimer); saveTimer = null; }
     writeState();
@@ -1021,6 +1079,24 @@
     if (again) again.addEventListener('click', function () {
       state.index = 0; state.stage = 'questions'; paint('back');
     });
+    var list = asked();
+    var label = $('acf_dot_label');
+    Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-dot')).forEach(function (d) {
+      var to = Number(d.dataset.jump);
+      var show = function () { if (label) label.textContent = dotLabel(list, to); };
+      var reset = function () { if (label) label.textContent = dotLabel(list, state.index); };
+      d.addEventListener('mouseenter', show);
+      d.addEventListener('focus', show);
+      d.addEventListener('mouseleave', reset);
+      d.addEventListener('blur', reset);
+      d.addEventListener('click', function () {
+        if (to === state.index) return;
+        var back = to < state.index;
+        state.index = to;
+        paint(back ? 'back' : 'next');
+      });
+    });
+
     var retry = $('acf_retry');
     if (retry) retry.addEventListener('click', function () { load(true); });
   }

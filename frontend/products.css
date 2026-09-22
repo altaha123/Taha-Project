@@ -122,7 +122,25 @@
   position:relative;                      /* the coin layer's frame of reference */
   border:1px solid var(--rule); border-radius:16px; background:var(--skin-card);
   box-shadow:var(--skin-shadow,0 1px 2px rgba(0,0,0,.04));
-  margin:0 0 26px; overflow:hidden;
+  margin:0 0 26px;
+  /* So `scrollIntoView` lands the card below the site chrome rather than
+     under it. */
+  scroll-margin-top:calc(var(--sh-chrome-h, 0px) + 12px);
+  overflow:hidden;                        /* fallback */
+  overflow:clip;                          /* clips without becoming a scroll
+                                             container, so .acf-stick can stick
+                                             to the page rather than to a box
+                                             that never scrolls */
+}
+
+/* The question and its picture hold their place while the answers scroll
+   under them. A six-option question is taller than a laptop window, and
+   scrolling to reach the last option used to leave a column of answers with
+   nothing above them to answer. */
+.acf-stick{
+  position:sticky; top:calc(var(--sh-chrome-h, 0px) + 6px); z-index:5;
+  background:var(--skin-card); padding-bottom:12px;
+  margin:-4px 0 0;
 }
 .acf-body{ padding:26px 26px 22px }
 
@@ -200,7 +218,7 @@
 }
 
 /* Stage 2 — the questions */
-.acf-progress{ margin-bottom:18px }
+.acf-progress{ margin-bottom:14px; padding-top:4px }
 .acf-bar{ height:4px; border-radius:999px; background:var(--rule); overflow:hidden; margin-bottom:9px }
 .acf-bar > i{
   display:block; height:100%; border-radius:999px; background:var(--gold);
@@ -450,13 +468,14 @@
 }
 
 @media (max-width:620px){
-  /* The figure moves above the question and shrinks: at phone width a column
-     of 106px beside the text leaves the text in a gutter. */
-  .acf-ask{ grid-template-columns:minmax(0,1fr); gap:0 }
-  .acf-art{ width:80px; margin:0 0 -4px 4px; align-self:start }
-  .acf-adviser{ width:76px; margin:0 0 -6px 4px; align-self:start }
-  .acf-bubble::before{ left:26px; top:-8px; border-left:1px solid var(--rule);
-    border-bottom:0; border-top:1px solid var(--rule); border-radius:4px 0 0 0 }
+  /* Narrow, but still side by side. Stacking the figure above the question
+     made the sticky header 200px tall, which on a phone left almost no room
+     for the answers scrolling under it. A 64px column keeps the header half
+     that height and still leaves the text 280px. */
+  .acf-ask{ grid-template-columns:64px minmax(0,1fr); gap:10px }
+  .acf-art,.acf-adviser{ width:64px; align-self:center }
+  .acf-bubble{ padding:12px 14px; border-radius:13px }
+  .acf-bubble::before{ top:22px }
 }
 
 /* ── Question art ────────────────────────────────────────────────────────────
@@ -592,4 +611,44 @@
 
 @media (max-width:620px){
   .qa-scene{ width:76px; margin:0 0 -6px 4px; align-self:start }
+}
+
+/* ── One dot per question ────────────────────────────────────────────────────
+   Filled when answered, ringed when current, hollow when still to come. The
+   name of the question sits in a line of its own rather than a floating
+   tooltip: twelve dots at phone width would have their tooltips clipped by the
+   card, and a line is readable on a touch screen, which has no hover at all. */
+
+.acf-dots{ margin:22px 0 0; padding-top:16px; border-top:1px solid var(--rule) }
+.acf-dot-row{ display:flex; flex-wrap:wrap; gap:9px; align-items:center }
+.acf-dot{
+  width:11px; height:11px; padding:0; border-radius:999px; cursor:pointer;
+  border:1.5px solid var(--rule); background:transparent;
+  transition:transform 160ms cubic-bezier(.34,1.5,.64,1),
+             background 160ms ease, border-color 160ms ease;
+}
+/* The hit area is a finger, the dot is a dot. */
+.acf-dot::before{ content:''; position:absolute; inset:-9px }
+.acf-dot{ position:relative }
+.acf-dot:hover,.acf-dot:focus-visible{ transform:scale(1.5); border-color:var(--gold) }
+.acf-dot:focus-visible{ outline:2px solid var(--gold); outline-offset:4px }
+.acf-dot.is-done{ background:var(--gold,#a8801c); border-color:var(--gold,#a8801c) }
+.acf-dot.is-now{
+  background:var(--paper); border-color:var(--gold-dp,#8a6d1e); border-width:3px;
+  transform:scale(1.35);
+}
+.acf-dot.is-now:hover{ transform:scale(1.6) }
+.acf-dot-label{
+  margin:11px 0 0; min-height:2.6em;
+  font-size:11.5px; line-height:1.5; color:var(--mute);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .acf-dot{ transition:none }
+  .acf-dot:hover,.acf-dot:focus-visible,.acf-dot.is-now,.acf-dot.is-now:hover{ transform:none }
+}
+@media (max-width:620px){
+  .acf-stick{ top:calc(var(--sh-chrome-h, 0px) + 2px); padding-bottom:8px }
+  .acf-dot{ width:10px; height:10px }
+  .acf-dot-row{ gap:7px }
 }
