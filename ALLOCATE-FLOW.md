@@ -236,15 +236,28 @@ temperament. The order on the card:
    at 6% inflation. A range, before tax, never a promise; the card says so
    on the row.
 
-4. **How to do it.** Every category carries the *kind* of instrument (an
-   index fund tracking the Nifty 50; a bank deposit of one to three years;
-   Sovereign Gold Bonds when a tranche is open), the *route* to it (which
-   sort of app, bank or account), and *what to look for* on the label
-   (direct plan, expense ratio, DICGC cover, occupancy). That is enough to
-   walk into any app and judge what is on offer. It names no fund, no house
-   and no platform — a category is education, a name is advice this project
-   is not registered to give, and the test greps for both the brands and the
-   directive verbs.
+4. **What to hold, on the sleeve itself.** Each line names the instrument:
+
+   - Indian equity is a **Nifty 50** index fund, direct plan. Mid-caps are a
+     **Nifty Midcap 150** index fund. Small-caps, a **Nifty Smallcap 250**
+     index fund, and only on Growth and Aggressive.
+   - International equity is an **S&P 500 feeder fund**. A world index fund
+     is the wider version when the US feeder is shut to new money.
+   - Gold is a **Sovereign Gold Bond** when a tranche is open, otherwise a
+     **gold ETF**. Jewellery and digital gold are said, and left out.
+   - The stable sleeve is three lines: a **bank fixed deposit** of one to
+     three years, a **short-duration debt fund** or a target-maturity fund
+     of government bonds, and **PPF, the NPS, or a government bond**.
+   - The deposit line answers "which bank" with a count. DICGC covers ₹5
+     lakh per depositor per bank, so ₹13.2 lakh is three scheduled
+     commercial banks and ₹2.4 lakh is one. No bank is named.
+
+   **How to do it** still carries the route and what to look for on the
+   label (direct plan, expense ratio, tracking error, AAA and sovereign,
+   occupancy). It names no fund house, no scheme and no platform. Naming
+   one is a recommendation, and a recommendation to the public needs a
+   SEBI registration this project does not hold. The test greps for the
+   brands and for directive verbs.
 
 5. **Considered, and left out.** Property, private funds, start-ups and
    crypto are asset classes too, so their absence is said with the reason in
@@ -258,8 +271,9 @@ temperament. The order on the card:
 
 **Money with a date gets no growth sleeve.** A horizon inside three years is
 not a risk to be sized; it is the reason equity does not apply to this money
-at all. The whole free sum goes to deposits and short-duration debt — not to
-long-locked savings either — and the stop flag says why.
+at all. The free sum splits between a bank fixed deposit and a short-duration
+debt fund — not into PPF, whose lock is fifteen years — and the stop flag
+says why.
 
 **Alternatives enter only when everything allows it.** A fourth sleeve,
 carved out of growth rather than added on top, when the band is Growth or
@@ -302,11 +316,13 @@ the money effects are never load-bearing.
 
 ## What it will not do
 
-Categories, never products. Ranges, never a single number presented as the
-right one. No instruction to buy or sell anything. Under the SEBI adviser
-regulations what to buy is not this project's to say, and the profile is what
-makes anything downstream of it defensible at all. The browser test asserts
-the rendered card contains no directive verb.
+Categories, never products. The index and the kind of instrument are named;
+the fund house, the scheme and the bank are not. Ranges, never a single
+number presented as the right one. No instruction to buy or sell anything.
+Under the SEBI adviser regulations naming the product is a recommendation,
+and a recommendation to the public is not this project's to give. The
+browser test asserts the rendered card contains no directive verb.
+
 
 Everything computes in this browser. The only network calls are the
 questionnaire itself and, for a signed-in reader, recording their own profile
