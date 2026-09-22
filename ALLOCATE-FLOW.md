@@ -75,6 +75,46 @@ cancels the older one — without that, clicking a quick pick and immediately
 dragging leaves a 400ms animation writing the old figure over the new one,
 which is the display disagreeing with the control.
 
+## Stage 2 — the profile, and a picture per question
+
+The same figure beside twelve different questions tells a reader nothing about
+any of them. Each question asks about one concrete thing — a date, a cushion,
+a fall, a loan — so `frontend/question-art.js` draws that thing, and **the
+drawing answers back**: point at a different option and the picture changes to
+the option you are pointing at, before you have committed to it.
+
+That preview is the point. "How far could this fall before you could not leave
+it alone?" is abstract until a gauge drops to 40% and you can see how far down
+that is.
+
+| Question | What it draws |
+|---|---|
+| How old are you? | the adviser, at your stage of life — hair greying and going back, reading glasses arriving |
+| When will you need this money? | an hourglass, sand still in the top bulb in proportion to the time this money has |
+| What share of your income is left? | a month's income, with what is still there at the end stacked beside it as coins |
+| Months of expenses in cash? | an umbrella in the rain, and twelve pips with the covered months filled |
+| Share of income to loan repayments? | income as a note, with the lender's fixed claim chained off the side |
+| How many people depend on you? | you, and the people whose outcome rides on this with you |
+| ₹10 lakh is now ₹7 lakh — what do you do? | the fall, and your answer drawn as the next stroke of the same line |
+| How far could it fall? | a depth gauge, against the 38% Indian equity has actually done |
+| Protect or grow? | the two on the ends of a beam, because they are a trade and not a menu |
+| How long have you been investing? | the market's own line, as far back as you have been standing in it |
+| What is this money for? | the thing itself — a house, a cap, a palm and a sun |
+| Lump sum or monthly? | one sum on one date, or the same money arriving month after month |
+
+Every scene is a pure function — `scene(questionId, optionValue)` in, SVG
+string out, no DOM and no state — so the whole library is asserted in node:
+every option of every question renders, none of them leak an `undefined` into
+the markup, none of them put words inside a drawing, and **each question draws
+at least three different pictures across its options**, because a scene that
+does not change with the answer is a decoration pretending to be an answer.
+
+Selecting an answer holds the new picture for a beat before advancing, so a
+reader on a phone — who never hovers — still sees it respond.
+
+One question this file has no art for falls back to the adviser taking notes,
+so the slot is never empty and the layout never jumps.
+
 ## Stage 2 — the profile
 
 The questions come from `GET /planner/questions`, which is the same list the
@@ -162,7 +202,8 @@ against their own account.
 | Capacity, temperament, the lower of the two | `frontend/risk-math.js` |
 | Slider scale, the split, the flags, the card | `frontend/allocate-flow.js` |
 | Coins, the sheen, the arcs | `frontend/money-fx.js` |
-| The figure and its three poses | `frontend/adviser.js` |
+| The figure, its three poses and its four ages | `frontend/adviser.js` |
+| A scene per question | `frontend/question-art.js` |
 | Styling and the reduced-motion promise | `frontend/products.css` |
 | The five-step sequence below it | `frontend/allocate.js` |
 | The questions, and the recorded assessment | `backend/risk_profile.py` |

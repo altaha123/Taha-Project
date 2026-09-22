@@ -492,6 +492,10 @@
   gap:18px; align-items:start; margin-bottom:4px;
 }
 .acf-adviser{ width:106px; align-self:end }
+/* The art slot is a fixed column so the question beside it never reflows
+   when the picture changes under the reader's pointer. */
+.acf-art{ width:106px; align-self:end }
+.acf-art .acf-adviser,.acf-art .qa-scene{ width:100% }
 .adv-svg{ display:block; width:100%; height:auto; overflow:visible }
 
 .adv-suit{ fill:var(--ink-2,#4b4438) }
@@ -499,7 +503,13 @@
 .adv-shirt{ fill:var(--paper,#fffdf7) }
 .adv-collar{ fill:var(--paper,#fffdf7); stroke:var(--rule,#deded8); stroke-width:.8 }
 .adv-skin{ fill:var(--paper-2,#f7f3e8); stroke:var(--ink-2,#4b4438); stroke-width:1.5 }
-.adv-hair{ fill:var(--ink,#17140e) }
+.adv-hair{ fill:var(--ink,#17140e); transition:fill 260ms ease }
+.adv-hair.is-dark{ fill:var(--ink,#17140e) }
+.adv-hair.is-salt{ fill:#7c766a }
+.adv-hair.is-grey{ fill:#a09a8e }
+.adv-hair.is-white{ fill:#cfc9bb }
+.adv-specs{ fill:none; stroke:var(--gold-dp,#8a6d1e); stroke-width:1.7;
+  stroke-linecap:round; stroke-linejoin:round }
 .adv-gold{ fill:var(--gold,#a8801c) }
 .adv-eye{ fill:var(--ink,#17140e) }
 .adv-line{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:1.7;
@@ -561,7 +571,143 @@
   /* The figure moves above the question and shrinks: at phone width a column
      of 106px beside the text leaves the text in a gutter. */
   .acf-ask{ grid-template-columns:minmax(0,1fr); gap:0 }
+  .acf-art{ width:80px; margin:0 0 -4px 4px; align-self:start }
   .acf-adviser{ width:76px; margin:0 0 -6px 4px; align-self:start }
   .acf-bubble::before{ left:26px; top:-8px; border-left:1px solid var(--rule);
     border-bottom:0; border-top:1px solid var(--rule); border-radius:4px 0 0 0 }
+}
+
+/* ── Question art ────────────────────────────────────────────────────────────
+   Twelve scenes, one frame, three inks. Each one draws the thing its question
+   asks about and re-draws when the reader points at a different answer. All
+   of it is aria-hidden decoration beside a real heading and real buttons; the
+   reduced-motion block at the end takes the movement and leaves the picture. */
+
+.qa-scene{ width:106px; align-self:end }
+/* Clipped, unlike the adviser: a scene that animates must not be able to
+   throw a shape into the card behind it. */
+.qa-svg{ display:block; width:100%; height:auto; overflow:hidden }
+
+.qa-ground{ fill:none; stroke:var(--rule); stroke-width:1.6 }
+.qa-axis{ fill:none; stroke:var(--rule); stroke-width:1.6 }
+.qa-line{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:1.9;
+  stroke-linecap:round; stroke-linejoin:round }
+.qa-coin circle{ fill:var(--gold-lt,#c9a63e); stroke:var(--gold-dp,#8a6d1e); stroke-width:1.4 }
+.qa-coin text{ fill:var(--ink,#17140e); text-anchor:middle; font-family:var(--mono,monospace);
+  font-weight:700 }
+.qa-coin.qa-dim circle{ fill:var(--hill,#e8dcc0) }
+.qa-person{ transform-box:fill-box; transform-origin:50% 100% }
+.qa-person .qa-head,.qa-person .qa-body{ fill:var(--ink-2,#4b4438) }
+.qa-only{ stroke-dasharray:4 5; opacity:.6 }
+.qa-person.is-self .qa-head,.qa-person.is-self .qa-body{ fill:var(--gold,#a8801c) }
+
+/* hourglass */
+.qa-glass{ fill:var(--paper,#fffdf7); stroke:var(--ink-2,#4b4438); stroke-width:2;
+  stroke-linejoin:round }
+.qa-sand{ fill:var(--gold,#a8801c); transition:d 420ms ease }
+
+/* surplus */
+.qa-bar{ fill:var(--gold-lt,#c9a63e) }
+.qa-bar-spent{ fill:var(--hill-2,#dccfae) }
+.qa-arrow{ stroke-width:2 }
+.qa-nil{ fill:none; stroke:var(--fail,#b03a2b); stroke-width:2.4; stroke-linecap:round }
+
+/* umbrella */
+.qa-canopy{ fill:var(--gold,#a8801c) }
+.qa-pip{ fill:var(--rule) }
+.qa-pip.is-on{ fill:var(--gold,#a8801c) }
+.qa-rain{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:2; stroke-linecap:round;
+  opacity:.45 }
+
+/* note and chain */
+.qa-note{ fill:var(--hill,#e8dcc0); stroke:var(--ink-2,#4b4438); stroke-width:1.6 }
+.qa-note-claim{ fill:var(--ink-2,#4b4438); opacity:.75 }
+.qa-chain circle{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:2.6 }
+.qa-tick{ fill:none; stroke:var(--pass,#1f7a55); stroke-width:2.6; stroke-linecap:round;
+  stroke-linejoin:round }
+
+/* the fall, and what the reader does next */
+.qa-fall{ fill:none; stroke:var(--fail,#b03a2b); stroke-width:2.4; stroke-linecap:round;
+  stroke-linejoin:round }
+.qa-tail{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:2.4; stroke-linecap:round;
+  stroke-linejoin:round }
+.qa-tail.is-up{ stroke:var(--pass,#1f7a55) }
+.qa-tail.is-flat{ stroke:var(--mute,#8a8171); stroke-dasharray:4 4 }
+
+/* depth gauge */
+.qa-tank{ fill:var(--paper,#fffdf7); stroke:var(--ink-2,#4b4438); stroke-width:1.8 }
+.qa-water{ fill:var(--gold-lt,#c9a63e); opacity:.8; transition:height 420ms cubic-bezier(.22,1,.36,1) }
+.qa-waterline{ fill:none; stroke:var(--gold-dp,#8a6d1e); stroke-width:2;
+  transition:transform 420ms cubic-bezier(.22,1,.36,1) }
+.qa-mark{ fill:none; stroke:var(--fail,#b03a2b); stroke-width:1.5; stroke-dasharray:3 3 }
+.qa-scale{ stroke-width:1.5 }
+.qa-down{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:2; stroke-linecap:round;
+  stroke-linejoin:round }
+
+/* the beam */
+.qa-post{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:3; stroke-linecap:round }
+.qa-beam{ transform-box:view-box; transform-origin:65px 74px;
+  transition:transform 460ms cubic-bezier(.34,1.3,.64,1) }
+.qa-shield{ fill:var(--ink-2,#4b4438) }
+.qa-sprout{ fill:none; stroke:var(--pass,#1f7a55); stroke-width:2.4; stroke-linecap:round }
+.qa-leaf{ fill:var(--pass,#1f7a55) }
+
+/* the market's own line */
+.qa-cycle-ghost{ fill:none; stroke:var(--rule); stroke-width:2.2 }
+.qa-cycle{ fill:none; stroke:var(--gold,#a8801c); stroke-width:2.6; stroke-linecap:round;
+  transition:stroke-dasharray 520ms cubic-bezier(.22,1,.36,1) }
+.qa-now{ fill:var(--gold-dp,#8a6d1e) }
+
+/* what it is for */
+.qa-sun{ fill:var(--gold-lt,#c9a63e) }
+.qa-trunk{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:3; stroke-linecap:round }
+.qa-roof{ fill:var(--gold,#a8801c) }
+.qa-wall{ fill:var(--hill,#e8dcc0); stroke:var(--ink-2,#4b4438); stroke-width:1.6 }
+.qa-door{ fill:var(--ink-2,#4b4438) }
+.qa-knob{ fill:var(--gold,#a8801c) }
+
+@media (prefers-reduced-motion:no-preference){
+  .qa-scene{ animation:adv-arrive 560ms cubic-bezier(.22,1,.36,1) both }
+  .qa-grain{ animation:qa-fall-grain 1.5s linear infinite }
+  .qa-grain-2{ animation-delay:.75s }
+  .qa-rain{ animation:qa-rain-fall 1.2s linear infinite }
+  .qa-rain-1{ animation-delay:.24s } .qa-rain-2{ animation-delay:.48s }
+  .qa-rain-3{ animation-delay:.72s } .qa-rain-4{ animation-delay:.96s }
+  .qa-rise{ animation:qa-rise-in 520ms cubic-bezier(.34,1.4,.64,1) both }
+  .qa-arrive{ animation:qa-pop 420ms cubic-bezier(.34,1.5,.64,1) both }
+  .qa-d0{ animation-delay:.06s } .qa-d1{ animation-delay:.14s }
+  .qa-d2{ animation-delay:.22s } .qa-d3{ animation-delay:.3s }
+  .qa-d4{ animation-delay:.38s } .qa-d5{ animation-delay:.46s }
+  .qa-drip{ animation:qa-drip-in 1.9s cubic-bezier(.3,.1,.3,1) infinite }
+  .qa-drop{ animation:qa-drop-in 640ms cubic-bezier(.34,1.35,.64,1) both }
+  .qa-chain{ animation:qa-tug 2.4s ease-in-out infinite; transform-box:fill-box;
+             transform-origin:50% 0 }
+  .qa-sun{ animation:qa-glow 3.4s ease-in-out infinite }
+}
+@keyframes qa-fall-grain{
+  0%{ transform:translateY(-6px); opacity:0 }
+  20%{ opacity:1 } 90%{ opacity:1 }
+  100%{ transform:translateY(46px); opacity:0 }
+}
+@keyframes qa-rain-fall{
+  0%{ transform:translateY(-8px); opacity:0 }
+  30%{ opacity:.5 } 100%{ transform:translateY(16px); opacity:0 }
+}
+@keyframes qa-rise-in{
+  from{ transform:translateY(14px) scale(.6); opacity:0 } to{ transform:none; opacity:1 }
+}
+@keyframes qa-pop{ from{ transform:scale(.4); opacity:0 } to{ transform:none; opacity:1 } }
+@keyframes qa-drop-in{
+  from{ transform:translateY(-40px) scale(.7); opacity:0 } to{ transform:none; opacity:1 }
+}
+@keyframes qa-drip-in{
+  0%{ transform:translateY(-30px); opacity:0 }
+  25%,75%{ transform:none; opacity:1 }
+  100%{ transform:translateY(6px); opacity:0 }
+}
+@keyframes qa-tug{ 0%,100%{ transform:rotate(0) } 50%{ transform:rotate(7deg) } }
+@keyframes qa-glow{ 0%,100%{ opacity:1 } 50%{ opacity:.6 } }
+
+@media (max-width:620px){
+  .qa-scene{ width:76px; margin:0 0 -6px 4px; align-self:start }
 }

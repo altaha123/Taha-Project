@@ -317,6 +317,16 @@
     return '<div class="acf-ask" data-stagger>' + who + block + '</div>';
   }
 
+  /* The picture for a question, at a given option. Falls back to the adviser
+     taking notes when this question has no art of its own, so the slot is
+     never empty and never jumps in size. */
+  function sceneFor(question, value) {
+    var art = root.AltahaQuestionArt;
+    var drawn = (art && question) ? art.scene(question.id, value) : null;
+    if (drawn) return drawn;
+    return root.AltahaAdviser ? root.AltahaAdviser.figure('listen') : '';
+  }
+
   function $(id) { return doc.getElementById(id); }
   function esc(s) {
     return String(s == null ? '' : s)
@@ -329,8 +339,17 @@
     } catch (e) { return false; }
   }
 
+  /* What the slider opens on. It has to be in `state`, not just drawn: a
+     reader who agrees with the default and presses Continue without touching
+     the handle was otherwise carried all the way to the allocation with no
+     amount at all — "allocating ₹0" in the header and a dead end at the end.
+     `chosen` keeps the distinction between this default and a figure somebody
+     actually picked, so an existing profile cannot skip them past a number
+     they never saw. */
+  var DEFAULT_AMOUNT = 500000;
+
   var state = {
-    stage: 'amount', amount: null, index: 0,
+    stage: 'amount', amount: DEFAULT_AMOUNT, chosen: false, index: 0,
     questions: [], bands: [], answers: {}, profile: null, recorded: null,
     busy: false, error: ''
   };
@@ -349,7 +368,7 @@
   function saveState() {
     try {
       root.localStorage.setItem(STATE_KEY, JSON.stringify({
-        amount: state.amount, stage: state.stage
+        amount: state.chosen ? state.amount : null, stage: state.stage
       }));
     } catch (e) {}
   }
@@ -418,7 +437,7 @@
   var CHIPS = [50000, 500000, 2500000, 10000000, 50000000];
 
   function stageAmount() {
-    var amount = state.amount || 500000;
+    var amount = state.amount || DEFAULT_AMOUNT;
     var pos = rupeesToSlider(amount);
     var marks = [1, 100000, 1000000, 10000000, 200000000];
     return '' +
@@ -463,6 +482,7 @@
     var v = snap(value);
     var was = state.amount;
     state.amount = v;
+    state.chosen = true;
     if (spend !== false && was != null && v !== was) coins(v, was);
     var big = $('acf_big'), exact = $('acf_exact'), fill = $('acf_fill'),
         slider = $('acf_slider'), typed = $('acf_type');
@@ -552,11 +572,13 @@
         '<span class="acf-step">Step 2 of 3 · question ' + (i + 1) + ' of ' + list.length +
         ' · allocating ' + esc(words(state.amount)) + '</span>' +
       '</div>' +
-      asking('listen',
+      '<div class="acf-ask" data-stagger>' +
+        '<div class="acf-art" id="acf_art">' + sceneFor(q, chosen) + '</div>' +
         '<div class="acf-q acf-bubble">' +
           '<h3>' + esc(q.label) + '</h3>' +
           '<p class="acf-why">' + esc(q.why || '') + '</p>' +
-        '</div>') +
+        '</div>' +
+      '</div>' +
       '<div class="acf-opts" data-stagger>' +
         (q.options || []).map(function (o) {
           return '<button type="button" class="acf-opt' + (chosen === o.value ? ' is-on' : '') + '" ' +
@@ -574,6 +596,27 @@
       '</div>';
   }
 
+  /* Pointing at an option previews it. Re-rendering only when the value
+     actually changes keeps the entrance animation from replaying on every
+     pixel of mouse movement across a button. */
+  function paintArt(value) {
+    var slot = $('acf_art');
+    if (!slot) return;
+    var list = asked();
+    var q = list[state.index];
+    if (!q) return;
+    var key = q.id + '|' + String(value);
+    if (slot.dataset.art === key) return;
+    slot.dataset.art = key;
+    slot.innerHTML = sceneFor(q, value);
+  }
+
+  function selectedValue() {
+    var list = asked();
+    var q = list[state.index];
+    return q ? state.answers[q.id] : undefined;
+  }
+
   function answer(value, node) {
     var list = asked();
     var q = list[state.index];
@@ -586,10 +629,16 @@
       animate(node, [{ transform: 'scale(1)' }, { transform: 'scale(.97)' }, { transform: 'scale(1)' }],
               { duration: 200, easing: 'ease-out' });
     }
+    // The picture changes to the answer that was just given, and the card
+    // holds there for a beat before advancing. Without the pause a reader on
+    // a phone — who never hovers — would never see the art respond at all.
+    paintArt(value);
+    var art = root.AltahaQuestionArt;
+    var hold = still() ? 0 : (art && art.has(q.id) ? 620 : 230);
     if (state.index < list.length - 1) {
-      root.setTimeout(function () { state.index++; paint('next'); }, still() ? 0 : 230);
+      root.setTimeout(function () { state.index++; paint('next'); }, hold);
     } else {
-      paint('next');
+      root.setTimeout(function () { paint('next'); }, hold ? 340 : 0);
     }
   }
 
@@ -892,6 +941,12 @@
     });
     Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-opt')).forEach(function (b) {
       b.addEventListener('click', function () { answer(b.dataset.answer, b); });
+      // Pointing at an answer shows what it looks like. Focus does the same,
+      // so arrowing through the options with a keyboard previews them too.
+      b.addEventListener('mouseenter', function () { paintArt(b.dataset.answer); });
+      b.addEventListener('focus', function () { paintArt(b.dataset.answer); });
+      b.addEventListener('mouseleave', function () { paintArt(selectedValue()); });
+      b.addEventListener('blur', function () { paintArt(selectedValue()); });
     });
 
     var next = $('acf_next');
@@ -993,17 +1048,20 @@
 
     var saved = readState();
     state.answers = readDraft();
-    state.amount = saved.amount && saved.amount > 0 ? snap(saved.amount) : null;
+    var picked = saved.amount && saved.amount > 0 ? snap(saved.amount) : null;
+    state.amount = picked || DEFAULT_AMOUNT;
+    state.chosen = !!picked;
 
     // Somebody who already has an amount and a profile is shown the answer,
-    // not the first question again.
+    // not the first question again. An amount they never picked does not
+    // count: it would skip them past the one number the rest is a share of.
     var known = root.AltahaRiskProfile;
-    if (state.amount && known && known.band && SPLIT[known.band]) {
+    if (state.chosen && known && known.band && SPLIT[known.band]) {
       state.profile = known;
       state.recorded = known.recorded === false ? false : null;
       state.stage = 'result';
     } else {
-      state.stage = state.amount && saved.stage === 'questions' ? 'questions' : 'amount';
+      state.stage = state.chosen && saved.stage === 'questions' ? 'questions' : 'amount';
     }
 
     if (state.stage === 'amount') { paint('next'); load(false); }

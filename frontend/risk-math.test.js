@@ -171,3 +171,57 @@ for (const band of order) {
 assert.equal(found, 15);
 
 console.log('Allocation split: 33 assertions passed');
+
+/* ── Question art ─────────────────────────────────────────────────────────── */
+// Each scene has to actually respond to the option, or it is a decoration
+// pretending to be an answer. The cheap way to prove that is to render every
+// option of every question and check the markup differs.
+require('./adviser.js');
+const art = require('./question-art.js');
+
+const OPTIONS = {
+  age: ['under25', '25_34', '35_44', '45_54', '55_64', '65plus'],
+  horizon: ['under1', '1_3', '3_5', '5_10', '10plus'],
+  surplus: ['none', 'under10', '10_25', '25_40', 'over40'],
+  emergency: ['none', 'under3', '3_6', '6_12', 'over12'],
+  emi: ['none', 'under20', '20_40', '40_60', 'over60'],
+  dependents: ['0', '1_2', '3_4', '5plus'],
+  drawdown_action: ['sell_all', 'sell_some', 'hold', 'hold_plan', 'buy_more'],
+  max_fall: ['any', '10', '20', '30', '40plus'],
+  priority: ['protect', 'mostly_protect', 'balanced', 'mostly_grow', 'grow'],
+  experience: ['none', 'under3', '3_10', 'over10'],
+  purpose: ['retirement', 'house', 'education', 'wealth', 'income', 'other'],
+  mode: ['sip', 'lumpsum', 'both']
+};
+
+assert.deepEqual(art.ids.sort(), Object.keys(OPTIONS).sort(),
+  'every question with options here should have art, and vice versa');
+
+for (const [id, values] of Object.entries(OPTIONS)) {
+  const drawn = values.map(v => art.scene(id, v));
+  drawn.forEach((markup, i) => {
+    assert.ok(markup && markup.length > 100, `${id}/${values[i]} drew nothing`);
+    assert.ok(markup.includes('aria-hidden="true"'), `${id} must be hidden from readers`);
+    assert.ok(!/undefined|NaN|null/.test(markup), `${id}/${values[i]} leaked a bad value`);
+    // No text in the picture: the question and the options carry the words.
+    assert.ok(!/>[A-Za-z]{3,}</.test(markup.replace(/<text[^>]*>₹<\/text>/g, '')),
+      `${id}/${values[i]} put words inside the drawing`);
+  });
+  assert.ok(new Set(drawn).size >= Math.min(3, values.length),
+    `${id} draws the same picture for different answers, so it answers nothing`);
+}
+
+// The one the ageing is for: the figure has to visibly age across the range.
+assert.ok(art.scene('age', 'under25').includes('is-age-young'));
+assert.ok(art.scene('age', '65plus').includes('is-age-elder'));
+assert.ok(art.scene('age', '65plus').includes('adv-specs'), 'reading glasses by 65');
+assert.ok(!art.scene('age', 'under25').includes('adv-specs'), 'and none at 24');
+assert.ok(art.scene('age', '45_54').includes('is-salt'), 'greying in the middle');
+
+// An unknown question or a nonsense option must fall back, never throw.
+assert.equal(art.scene('not_a_question', 'x'), null);
+assert.equal(art.has('horizon'), true);
+assert.equal(art.has('nope'), false);
+for (const id of art.ids) assert.ok(art.scene(id, undefined) !== undefined);
+
+console.log('Question art: ' + Object.values(OPTIONS).flat().length + ' scenes asserted');
