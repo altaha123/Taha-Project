@@ -129,9 +129,27 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   assert.equal(await page.locator('.su-planet.is-scanning').count(), 0);
   await page.evaluate(() => window.AltahaUniverse.update({status:'cached'}));
   assert.match(await page.locator('.su-status').innerText(), /saved/);
+  // Motion allowed first, so the assertion below is a comparison rather than a
+  // sentence that would pass just as happily against a stylesheet that never
+  // animated anything.
+  await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100}));
+  assert.equal(
+    await page.locator('.su-planet.is-scanning i').first()
+      .evaluate(el => getComputedStyle(el).animationName), 'su-pulse',
+    'the scan must animate when motion is allowed, or the next assertion proves nothing');
+
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100}));
-  assert.equal(await page.locator('.su-sweep').evaluate(el => getComputedStyle(el).animationName), 'none');
+  // .su-sweep was removed in 9dd183c ("Replace static universe panel with
+  // animated galaxy flythrough") and this line kept asserting against it, so
+  // the step has been failing on main ever since — on an element that is not
+  // there rather than on the thing it was written to protect. The intent is
+  // unchanged: under prefers-reduced-motion nothing in the scan animates,
+  // which universe-scan.css enforces with `.scan-universe *`. Asserted now on
+  // a pulsing planet, which is the animation that actually exists.
+  assert.equal(
+    await page.locator('.su-planet.is-scanning i').first()
+      .evaluate(el => getComputedStyle(el).animationName), 'none');
   await page.emulateMedia({reducedMotion:'no-preference'});
 
   // Exercise the real start/poll controller with mocked backend checkpoints.
