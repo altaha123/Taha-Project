@@ -24,18 +24,17 @@
 
    WHAT THE ANSWER IS
    Not a paragraph. First what has a prior claim on the money — a six-month
-   cushion and any costly loan, in rupees — then the sleeves as numbers, what
-   each is likely to become over a chosen number of years, how each category
-   is actually held (the kind of instrument, the route, what to look for on
-   the label), and what was considered and left out, with the reason. The
-   theory sits behind a tap.
+   cushion and any costly loan, in rupees — then the sleeves as numbers, and
+   inside each sleeve the instrument: which index, which kind of fund, where
+   the gold sits, which debt, and how many banks the fixed deposits need.
+   Then what each is likely to become, the route, and what was left out.
 
    WHAT IT WILL NOT DO
-   It names categories, never products. It gives ranges, never a single number
-   presented as the right one. It issues no instruction to buy or sell
-   anything. Under the SEBI adviser regulations what to buy is not this
-   project's to say, and the profile is what makes anything downstream of it
-   defensible at all.
+   It names the index and the kind of instrument, never a fund house, a
+   scheme or a bank. It gives ranges, never a single number presented as the
+   right one. It issues no instruction to buy or sell anything. Under the
+   SEBI adviser regulations naming the product is a recommendation, and a
+   recommendation to the public is not this project's to give.
 
    EVERYTHING COMPUTES IN THIS BROWSER. The only network calls are the
    questionnaire itself and, for a signed-in reader, recording their own
@@ -167,28 +166,38 @@
      held in mid and small companies. Shares are of the sleeve, not the book. */
   var GROWTH_MIX = {
     'Conservative':            [['Broad-market Indian equity', 75], ['International equity', 25]],
-    'Moderately conservative': [['Broad-market Indian equity', 70], ['Mid & small-cap Indian equity', 10], ['International equity', 20]],
-    'Balanced':                [['Broad-market Indian equity', 60], ['Mid & small-cap Indian equity', 20], ['International equity', 20]],
-    'Growth':                  [['Broad-market Indian equity', 50], ['Mid & small-cap Indian equity', 30], ['International equity', 20]],
-    'Aggressive':              [['Broad-market Indian equity', 45], ['Mid & small-cap Indian equity', 40], ['International equity', 15]]
+    'Moderately conservative': [['Broad-market Indian equity', 70], ['Mid-cap Indian equity', 10], ['International equity', 20]],
+    'Balanced':                [['Broad-market Indian equity', 60], ['Mid-cap Indian equity', 20], ['International equity', 20]],
+    'Growth':                  [['Broad-market Indian equity', 50], ['Mid-cap Indian equity', 20], ['Small-cap Indian equity', 10], ['International equity', 20]],
+    'Aggressive':              [['Broad-market Indian equity', 45], ['Mid-cap Indian equity', 25], ['Small-cap Indian equity', 15], ['International equity', 15]]
   };
+  /* The old "deposits & debt" line answered neither question. A fixed deposit
+     and a bond fund are different instruments, different routes, and a
+     different number of banks, so they are separate lines. The government
+     share is unchanged. */
   var STABLE_MIX = {
-    'Conservative':            [['Deposits & short-duration debt', 60], ['Government-backed long-term savings', 40]],
-    'Moderately conservative': [['Deposits & short-duration debt', 55], ['Government-backed long-term savings', 45]],
-    'Balanced':                [['Deposits & short-duration debt', 55], ['Government-backed long-term savings', 45]],
-    'Growth':                  [['Deposits & short-duration debt', 60], ['Government-backed long-term savings', 40]],
-    'Aggressive':              [['Deposits & short-duration debt', 65], ['Government-backed long-term savings', 35]]
+    'Conservative':            [['Bank fixed deposits', 35], ['Short-term bonds & debt funds', 25], ['Government-backed long-term savings', 40]],
+    'Moderately conservative': [['Bank fixed deposits', 30], ['Short-term bonds & debt funds', 25], ['Government-backed long-term savings', 45]],
+    'Balanced':                [['Bank fixed deposits', 30], ['Short-term bonds & debt funds', 25], ['Government-backed long-term savings', 45]],
+    'Growth':                  [['Bank fixed deposits', 40], ['Short-term bonds & debt funds', 20], ['Government-backed long-term savings', 40]],
+    'Aggressive':              [['Bank fixed deposits', 45], ['Short-term bonds & debt funds', 20], ['Government-backed long-term savings', 35]]
   };
+  /* Money with a date cannot sit in PPF: the lock is fifteen years. */
+  var DATED_MIX = [['Bank fixed deposits', 60], ['Short-term bonds & debt funds', 40]];
 
   var WHY = {
     'Broad-market Indian equity':
       'The whole market rather than a view about part of it. The cheapest way to own the growth sleeve and the hardest to be badly wrong with.',
-    'Mid & small-cap Indian equity':
-      'Higher expected return and materially deeper falls. It is the part of the sleeve that decides whether a bad year is sat through.',
+    'Mid-cap Indian equity':
+      'The 150 companies after the large ones. Higher expected return, and a deeper fall than the Nifty 50.',
+    'Small-cap Indian equity':
+      'The next 250 after the mid-caps. This is the part of the sleeve that decides whether a bad year is sat through, so only Growth and Aggressive hold it.',
     'International equity':
       'The Indian market is one economy and one currency. Exposure elsewhere is diversification, and it carries currency movement and its own tax treatment.',
-    'Deposits & short-duration debt':
-      'The money that has to still be there. Short duration because a long bond falls when rates rise, which is exactly the wrong moment.',
+    'Bank fixed deposits':
+      'A rate known on the day, at a bank, for a tenor that matches when the money is needed.',
+    'Short-term bonds & debt funds':
+      'Government and top-rated paper held to a short date. Short, because a long bond falls when rates rise, which is exactly the wrong moment.',
     'Government-backed long-term savings':
       'Sovereign-backed, long-locked and usually tax-favoured. The lock is the cost, and it is only a cost if the money was needed sooner.',
     'Gold':
@@ -270,51 +279,93 @@
 
   var HOWTO = {
     'Broad-market Indian equity': {
-      via: 'An index fund or ETF that tracks the Nifty 50 or Nifty 500.',
-      route: 'Any mutual-fund app, your bank\u2019s app, or a demat account. Monthly or in one go.',
-      look: 'The words \u201cdirect plan\u201d, an expense ratio under 0.3%, and a tracking error close to zero.'
+      holds: 'Nifty 50 index fund, direct plan.',
+      via: 'An index fund, or the ETF of the same index in a demat account. A Nifty 500 fund is the wider version: more companies, the same idea.',
+      route: 'Any mutual-fund app, or a demat account for the ETF. Monthly or in one go.',
+      look: 'The words “direct plan”, an expense ratio under 0.3%, and a tracking error close to zero. Several houses run one; the cheapest that has actually tracked the index is the one that fits.'
     },
-    'Mid & small-cap Indian equity': {
-      via: 'A mid-cap or small-cap index fund.',
-      route: 'The same apps. Put it in monthly rather than on one date: this is the part that swings.',
-      look: 'Direct plan, low cost, and a fund large enough that it does not close to new money.'
+    'Mid-cap Indian equity': {
+      holds: 'Nifty Midcap 150 index fund, direct plan.',
+      via: 'The 150 companies after the largest hundred. An index fund, not one manager’s list.',
+      route: 'The same apps. Monthly rather than on one date: this is the part that swings.',
+      look: 'Direct plan, an expense ratio under 0.5%, and a fund large enough that it stays open.'
+    },
+    'Small-cap Indian equity': {
+      holds: 'Nifty Smallcap 250 index fund, direct plan.',
+      via: 'The next 250 after the mid-caps. Deeper falls than the Nifty 50, which is why only Growth and Aggressive hold it.',
+      route: 'The same apps, monthly.',
+      look: 'Direct plan and a low expense ratio. A tiny fund here can struggle to own the companies the index holds.'
     },
     'International equity': {
-      via: 'An index fund of US or world markets, or a fund-of-funds that holds one.',
-      route: 'The same apps. Some close to fresh money when overseas limits are hit; check it is open.',
-      look: 'The total cost including the fund it holds underneath, and how the gains are taxed here.'
+      holds: 'An S&P 500 feeder fund.',
+      via: 'A fund that holds a US index fund of the 500 largest American companies. When that feeder is shut to new money, a world index fund — developed markets, not only the US — is the wider version of the same idea.',
+      route: 'The same mutual-fund apps. Overseas limits fill up; the fund has to be open.',
+      look: 'The total cost, including the fund it holds underneath, and how the gains are taxed here.'
     },
     'Listed real estate (REITs & InvITs)': {
-      via: 'Units of a listed REIT or InvIT: offices, malls, roads and power lines that pay out rent.',
+      holds: 'Units of a listed REIT or InvIT.',
+      via: 'Offices, malls, roads and power lines that pay out rent, in units that trade daily.',
       route: 'A demat account, from a few hundred rupees a unit. Traded on the NSE like a share.',
-      look: 'Occupancy above 85%, a distribution yield of 6\u20138%, and how much debt the trust carries.'
+      look: 'Occupancy above 85%, a distribution yield of 6–8%, and how much debt the trust carries.'
     },
-    'Deposits & short-duration debt': {
-      via: 'Bank fixed deposits of one to three years, or a liquid / short-duration debt fund.',
-      route: 'Your bank; any mutual-fund app. Split deposits so no bank holds more than \u20B95 lakh.',
-      look: 'DICGC cover of \u20B95 lakh per bank, and for funds a portfolio that is almost all AAA and sovereign.'
+    'Bank fixed deposits': {
+      holds: 'A fixed deposit of one to three years, at a scheduled commercial bank.',
+      via: 'The bank that already holds the savings account is the natural first. The rate is what differs, not the logo, and the cover decides how many banks.',
+      route: 'The bank’s own app or a branch. Tenor matched to when the money is needed.',
+      look: 'Interest is taxable. Cumulative or paid-out is only a question of when the interest arrives.'
+    },
+    'Short-term bonds & debt funds': {
+      holds: 'A short-duration debt fund, or a target-maturity fund of government bonds.',
+      via: 'Government securities, state development loans, and AAA paper, held to a short date. A liquid fund is the version for money needed inside a year.',
+      route: 'Any mutual-fund app, direct plan.',
+      look: 'A portfolio that is almost all sovereign and AAA, average maturity under three years. A credit fund reaching for extra yield is a different product.'
     },
     'Government-backed long-term savings': {
+      holds: 'PPF, the NPS, or a government bond held for the lock.',
       via: 'PPF, the NPS, or sovereign paper that locks for years and is usually tax-favoured.',
-      route: 'A bank or post office for PPF; NPS through your bank or its own site.',
-      look: 'Whether the lock-in ends before the date you need the money. If not, this is not the place.'
+      route: 'A bank or post office for PPF; NPS through a bank or its own site. Government bonds through a demat account or a gilt fund.',
+      look: 'Whether the lock-in ends before the date the money is needed. If it does not, this is not the place.'
     },
     'Gold': {
-      via: 'Sovereign Gold Bonds when a tranche is open; a gold ETF or gold fund otherwise.',
-      route: 'Your bank or demat account for the bonds; any mutual-fund app for the fund.',
-      look: 'Bonds pay 2.5% a year on top of the gold price and are tax-free at maturity. Jewellery is not an investment: 10\u201325% goes in making charges.'
+      holds: 'Sovereign Gold Bonds when a tranche is open; a gold ETF otherwise.',
+      via: 'The bond tracks the gold price and pays 2.5% a year on top. The ETF tracks the gold price in a demat account. A gold fund is that ETF held through a mutual-fund app.',
+      route: 'A bank or demat account for the bonds; a demat account or any mutual-fund app for the ETF.',
+      look: 'Bonds are tax-free at maturity if held to the end. Jewellery is not this line: 10–25% goes in making charges. Digital gold sits outside a regulated bond or fund and is not this line either.'
     },
     'Alternative investment funds (Category II & III)': {
+      holds: 'One Category II or III alternative investment fund.',
       via: 'Private credit, private equity or long-short funds run for large investors.',
-      route: 'Through the fund house or a wealth desk. SEBI sets the minimum at \u20B91 crore per fund.',
+      route: 'Through the fund house or a wealth desk. SEBI sets the minimum at ₹1 crore per fund.',
       look: 'Fees near 2% a year plus 20% of gains, a lock of five to seven years, and an audited record over a full cycle.'
     },
     'Early-stage & angel investing': {
+      holds: 'A SEBI-registered angel fund, or cheques into a few companies.',
       via: 'A SEBI-registered angel fund, an angel network, or direct cheques into companies.',
-      route: 'Angel funds from \u20B925 lakh; networks by invitation. Money is locked for seven to ten years.',
+      route: 'Angel funds from ₹25 lakh; networks by invitation. Money is locked for seven to ten years.',
       look: 'Whether losing all of it changes anything. Most early cheques go to zero; a few pay for the rest.'
     }
   };
+
+  /* DICGC covers ₹5 lakh per depositor per bank, interest included. The
+     answer to "which bank" is not a name. It is how many banks this line
+     needs so that no one of them holds more than the cover. */
+  var DICGC = 500000;
+
+  function bankSpread(rupees) {
+    var v = Math.max(0, Number(rupees) || 0);
+    var n = Math.max(1, Math.ceil(v / DICGC));
+    if (v <= DICGC) {
+      return 'One scheduled commercial bank is enough: this line sits inside the ₹5 lakh DICGC cover.';
+    }
+    return 'Spread across ' + n + ' scheduled commercial banks, so no one of them holds more than ₹5 lakh — the DICGC cover, interest included.';
+  }
+
+  function holding(label, rupees) {
+    var h = HOWTO[label] || {};
+    var look = h.look || '';
+    if (label === 'Bank fixed deposits') look = bankSpread(rupees) + (look ? ' ' + look : '');
+    return { holds: h.holds || label, via: h.via || '', route: h.route || '', look: look };
+  }
 
   /* ── What a sleeve has tended to do ─────────────────────────────────────────
      Annual ranges, before inflation, from published long-run Indian series:
@@ -357,10 +408,10 @@
 
   /* ── First calls ────────────────────────────────────────────────────────────
      Two things have a prior claim on this money before any of it is split: a
-     cushion of six months\u2019 expenses, and any loan charging more than the
+     cushion of six months’ expenses, and any loan charging more than the
      stable sleeve could ever earn. Both are in rupees when the household
-     numbers are known, and asked for when they are not \u2014 a warning that says
-     \u201cbuild a cushion\u201d without a figure is theory, which is what this card
+     numbers are known, and asked for when they are not — a warning that says
+     “build a cushion” without a figure is theory, which is what this card
      stopped being. */
 
   var MONTHS_HELD = { none: 0, under3: 1.5, '3_6': 4.5, '6_12': 9, over12: 12 };
@@ -381,17 +432,17 @@
       var cushion = Math.min(left, Math.round(gap / 1000) * 1000 || gap);
       if (cushion > 0) {
         calls.push({ key: 'cushion', label: 'Cushion first', rupees: cushion,
-          text: 'Six months of \u20B9' + Math.round(expenses).toLocaleString('en-IN') + ' is ' + inr(target) +
+          text: 'Six months of ₹' + Math.round(expenses).toLocaleString('en-IN') + ' is ' + inr(target) +
                 '. You hold about ' + inr(liquid) + ', so ' + inr(gap) + ' is still to build' +
                 (cushion < gap ? ' and this sum covers ' + inr(cushion) + ' of it' : '') + '.',
-          via: 'A savings account with a sweep-in deposit, or a liquid fund. Not equity, not locked.' });
+          via: 'A savings account with a sweep-in deposit, or a liquid fund in the direct plan. Not equity, not locked.' });
         left -= cushion;
       }
     } else if (thin) {
       calls.push({ key: 'cushion', label: 'Cushion first', rupees: null, needs: 'expenses',
         text: 'You said you hold under three months of expenses in cash. Six months is the target, ' +
               'and it comes before every sleeve. Enter your monthly expenses to size it.',
-        via: 'A savings account with a sweep-in deposit, or a liquid fund. Not equity, not locked.' });
+        via: 'A savings account with a sweep-in deposit, or a liquid fund in the direct plan. Not equity, not locked.' });
     }
 
     var debt = Number(h.debt) > 0 ? Number(h.debt) : null;
@@ -400,17 +451,17 @@
       var repay = Math.min(left, debt);
       if (repay > 0) {
         calls.push({ key: 'debt', label: 'Costly loans next', rupees: repay,
-          text: 'Closing a loan at 12\u201318% is a certain 12\u201318% earned. Nothing in the sleeves is certain of anything. ' +
+          text: 'Closing a loan at 12–18% is a certain 12–18% earned. Nothing in the sleeves is certain of anything. ' +
                 (repay < debt ? inr(repay) + ' of the ' + inr(debt) + ' outstanding goes here.' :
                  'The whole ' + inr(debt) + ' can be closed from this sum.'),
-          via: 'The highest rate first: cards, then personal loans. A home loan at 8\u20139% is not costly debt and stays.' });
+          via: 'The highest rate first: cards, then personal loans. A home loan at 8–9% is not costly debt and stays.' });
         left -= repay;
       }
     } else if (heavy) {
       calls.push({ key: 'debt', label: 'Costly loans next', rupees: null, needs: 'debt',
-        text: 'You said loan repayments take over 40% of income. Any loan above about 10% \u2014 cards, ' +
-              'personal loans \u2014 outranks the sleeves. Enter what is outstanding on those.',
-        via: 'The highest rate first. A home loan at 8\u20139% is not costly debt and stays.' });
+        text: 'You said loan repayments take over 40% of income. Any loan above about 10% — cards, ' +
+              'personal loans — outranks the sleeves. Enter what is outstanding on those.',
+        via: 'The highest rate first. A home loan at 8–9% is not costly debt and stays.' });
     }
 
     return { calls: calls, free: Math.max(0, left) };
@@ -420,12 +471,12 @@
      Property, private funds and start-ups are asset classes; they are also
      illiquid, high-minimum and expensive to leave. They enter the split only
      when the sum, the band, the horizon and the experience all allow it, and
-     the ones that do not fit are said so, with the reason in the reader\u2019s own
+     the ones that do not fit are said so, with the reason in the reader’s own
      numbers, rather than left out in silence. */
 
   var CRORE = 10000000;
   var AIF_MIN = 1 * CRORE;
-  var AIF_BOOK = 5 * CRORE;          // \u20B91 crore ticket \u2264 20% of the free money
+  var AIF_BOOK = 5 * CRORE;          // ₹1 crore ticket ≤ 20% of the free money
   var ANGEL_BOOK = 2 * CRORE;
 
   function alternatives(free, band, answers) {
@@ -454,26 +505,26 @@
     var flat = 60 * 100000;           // a modest city flat, for scale
     out.push({ label: 'Direct property',
       text: free < flat
-        ? 'A flat in a city costs more than this whole sum. It is one thing in one place, costs 7\u20138% to ' +
-          'enter and leave, and rents at 2\u20133% a year. Listed REITs give the property exposure from a few ' +
+        ? 'A flat in a city costs more than this whole sum. It is one thing in one place, costs 7–8% to ' +
+          'enter and leave, and rents at 2–3% a year. Listed REITs give the property exposure from a few ' +
           'hundred rupees a unit and sit in the growth sleeve where the sum allows.'
         : 'One flat would take about ' + Math.round(flat / free * 100) + '% of this in a single thing that cannot be ' +
-          'sold in parts, costs 7\u20138% to enter and leave, and rents at 2\u20133%. A home is a decision about living, ' +
+          'sold in parts, costs 7–8% to enter and leave, and rents at 2–3%. A home is a decision about living, ' +
           'not a sleeve. A second property counts against the growth sleeve, not on top of it.' });
 
     if (!inAlt['Alternative investment funds (Category II & III)']) {
       out.push({ label: 'Alternative investment funds',
-        text: 'SEBI sets the minimum at \u20B91 crore per fund' +
+        text: 'SEBI sets the minimum at ₹1 crore per fund' +
           (free < AIF_MIN ? ', which is more than all of this money.' :
-           ', which is ' + Math.round(AIF_MIN / free * 100) + '% of what is free here \u2014 too much in one locked fund.') +
+           ', which is ' + Math.round(AIF_MIN / free * 100) + '% of what is free here — too much in one locked fund.') +
           ' Fees run near 2% a year plus a fifth of the gains, with a five-to-seven-year lock. They start to make sense ' +
-          'past about \u20B95 crore of investable money' +
+          'past about ₹5 crore of investable money' +
           (band === 'Growth' || band === 'Aggressive' ? '' : ', and only for a growth-type profile') + '.' });
     }
     if (!inAlt['Early-stage & angel investing']) {
       var why = band !== 'Aggressive' ? 'The profile is not one that can lose a sleeve entirely.'
         : a.experience !== 'over10' ? 'It comes after a decade of holding listed equity through a fall.'
-        : free < ANGEL_BOOK ? 'At this size a single \u20B925 lakh cheque is too large a share to lose.'
+        : free < ANGEL_BOOK ? 'At this size a single ₹25 lakh cheque is too large a share to lose.'
         : 'Not with money needed inside ten years.';
       out.push({ label: 'Start-ups and angel investing',
         text: 'Most early cheques go to zero and the few that work take seven to ten years to show it. It is only ' +
@@ -501,7 +552,7 @@
   /* ── The plan ──────────────────────────────────────────────────────────────
      Pure: band + amount + the answers already given (+ the household numbers,
      when known) in, one object out. The first calls and the flags are the
-     part that matters most \u2014 an allocation handed to somebody whose money is
+     part that matters most — an allocation handed to somebody whose money is
      needed next year, or who has no cushion, is arithmetic wrapped around a
      mistake. */
 
@@ -519,9 +570,9 @@
     if (free > 0 && dated) {
       // Money with a date inside three years gets no growth sleeve at all.
       var whole = slice(free, [100, 100], 1);
-      groups = [{ key: 'stable', label: 'Stays put', kind: 'Deposits and short-duration debt \u2014 this money has a date',
+      groups = [{ key: 'stable', label: 'Stays put', kind: 'Deposits and short-duration debt — this money has a date',
                   line: 'Needed within three years, so none of it is exposed to a fall it has no time to recover from.',
-                  share: whole, sleeves: sleeves(free, whole, [['Deposits & short-duration debt', 100]]) }];
+                  share: whole, sleeves: sleeves(free, whole, DATED_MIX) }];
     } else if (free > 0) {
       var scale = midScale(split);
       var growth = slice(free, split.growth, scale);
@@ -556,7 +607,7 @@
           share: gold, sleeves: sleeves(free, gold, [['Gold', 100]]) }
       ];
       if (altShare) {
-        groups.push({ key: 'alt', label: 'Alternatives', kind: 'Private funds and early-stage \u2014 locked for years',
+        groups.push({ key: 'alt', label: 'Alternatives', kind: 'Private funds and early-stage — locked for years',
           line: 'Illiquid, expensive, and capped. It is here because the sum, the horizon and the years in the market all allow it.',
           share: altShare, sleeves: sleeves(free, altShare, alt.mix) });
       }
@@ -1071,9 +1122,9 @@
       '<p class="acf-disc">The sleeve ranges are independent guardrails, so their midpoints do not add to ' +
       '100% on their own; the rupee figures are those midpoints scaled to what is free after the first ' +
       'calls, and each still sits inside its published range. Outcome ranges are long-run historical ' +
-      'rates, before tax, and a range is never a promise. Categories, never products. Which specific ' +
-      'fund, scheme or security sits inside any of these is between you and a registered adviser — it ' +
-      'is not this site\'s to say.</p>' +
+      'rates, before tax, and a range is never a promise. Categories, never products. The card names ' +
+      'the index and the kind of instrument. Which fund house, which scheme and which bank is not ' +
+      'this site\'s to say.</p>' +
     '</details>';
 
     html += '<div class="acf-act" data-stagger>' +
@@ -1135,6 +1186,10 @@
         '</div>' +
         '<div class="acf-bar wide"><i data-grow="' + g.share.mid + '" style="width:0"></i></div>' +
         '<p class="acf-line">' + esc(g.line) + '</p>' +
+        '<ul class="acf-holds">' + g.sleeves.map(function (s) {
+          return '<li><span>' + esc(holding(s.label, s.rupees).holds) + '</span>' +
+            '<b>' + esc(money(s.rupees)) + per() + '</b></li>';
+        }).join('') + '</ul>' +
       '</div>';
     }).join('') + '</div>';
   }
@@ -1183,10 +1238,11 @@
           '<summary><i class="acf-swatch is-' + g.key + '" aria-hidden="true"></i>' + esc(g.label) +
             ' <b>' + esc(money(g.share.rupees_mid)) + per() + '</b></summary>' +
           '<ul class="acf-sleeves">' + g.sleeves.map(function (s) {
-            var h = HOWTO[s.label] || {};
+            var h = holding(s.label, s.rupees);
             return '<li><div class="acf-sleeve-t"><span>' + esc(s.label) + '</span>' +
               '<b>' + esc(money(s.rupees)) + per() + '</b></div>' +
-              '<p class="acf-via">' + esc(h.via || s.why) + '</p>' +
+              '<p class="acf-via">' + esc(h.holds) + '</p>' +
+              (h.via ? '<small>' + esc(h.via) + '</small>' : '') +
               (h.route ? '<small><b>Where:</b> ' + esc(h.route) + '</small>' : '') +
               (h.look ? '<small><b>Look for:</b> ' + esc(h.look) + '</small>' : '') +
             '</li>';
@@ -1646,6 +1702,7 @@
     snap: snap, words: words, plan: plan, SPLIT: SPLIT,
     firstCalls: firstCalls, outcomes: outcomes, alternatives: alternatives,
     leftOut: leftOut, HOWTO: HOWTO, RETURNS: RETURNS,
+    bankSpread: bankSpread, holding: holding,
     MIN_RUPEES: MIN_RUPEES, MAX_RUPEES: MAX_RUPEES
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.AltahaAllocateFlow;
