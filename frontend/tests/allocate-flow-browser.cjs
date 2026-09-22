@@ -121,7 +121,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
       'the track must end at ₹20 crore');
     // The moving figure keeps a fixed number of decimals for its unit, so the
     // reading cannot change length as it moves.
-    assert.match(await page.locator('#acf_big').innerText(), /^\u20b920\.00 Cr$/);
+    assert.match(await page.locator('#acf_big').innerText(), /^₹20\.00 Cr$/);
 
     // ── A drag moves the reading, it does not lurch ────────────────────────────────────
     // While the handle is moving the step has to be finer than the reading.
@@ -396,7 +396,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.match(left, /₹1 crore per fund/);
     assert.match(left, /angel/i);
 
-    // ── The same figures, as twelve monthly ones ───────────────────────────────────
+    // ── The same figures, as twelve monthly ones ─────────────────────────────────────
     await page.locator('#acf_monthly').click();
     await page.waitForFunction(() => {
       const n = document.querySelector('.acf-money');
@@ -411,7 +411,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     });
     assert.equal(rupees(await page.locator('.acf-money').innerText()), 2200000);
 
-    // ── The effects are decoration, and prove it ───────────────────────────────────
+    // ── The effects are decoration, and prove it ─────────────────────────────────────
     // Everything above ran under reduced motion, which switches the coin
     // layer off entirely. That every figure, control and reading was still
     // correct IS the assertion: the money effects are never load-bearing.
@@ -454,7 +454,7 @@ const rupees = text => Number(String(text).replace(/[^0-9]/g, ''));
     assert.equal(rupees(await page.locator('#acf_exact').innerText()), 2500000,
       'the amount must survive a reload');
 
-    // ── Narrow screens ───────────────────────────────────────────────────────────────
+    // ── Narrow screens ─────────────────────────────────────────────────────────────
     for (const width of [320, 390, 768]) {
       await page.setViewportSize({ width, height: 900 });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
