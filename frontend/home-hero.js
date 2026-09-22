@@ -341,6 +341,21 @@
      goes on only once the markup exists, so a thrown exception above leaves
      the page in its previous, working state rather than half-animated. */
   function start() {
+    /* THE BACKSTOP. Arm it before anything else can throw.
+
+       Twice now this opening screen has shipped blank, and both times the
+       cause had the same shape: some rule elsewhere on the site paused every
+       animation inside the masthead, and a `both`-filled reveal held at its
+       `from` state is not stilled motion, it is deleted content. The
+       stylesheet names the two rules that do this today. This is the answer
+       to the ones it does not know about.
+
+       A timer runs whether or not any animation is allowed to. Once the
+       entrance has had its time, hh-played switches every reveal off for
+       good and the things it was revealing are simply there — whatever
+       paused them, and whether or not the rest of this file worked. */
+    setTimeout(function () { root.classList.add('hh-played'); }, 3000);
+
     var header = document.querySelector('header.wrap');
     if (!header || !document.getElementById('view-screener')) return;
     if (header.classList.contains('hh-stage')) return;
