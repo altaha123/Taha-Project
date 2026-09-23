@@ -35,3 +35,13 @@ altaha_holdings.db-*
 
 # NSE's ISIN -> symbol map, refreshed fortnightly. Cache, never source.
 nse-isin-map.json
+
+# Playwright, for the browser tests. CI installs it to /tmp and points
+# NODE_PATH at it (see .github/workflows/portfolio-ui.yml); anyone running
+# those tests on their own machine ends up with this here instead.
+node_modules
+
+# Every company's quarterly P&L. Data, never source — it lives on the mounted
+# disk in production and is rebuilt by the fundamentals crawl anywhere else.
+altaha_fundamentals.db
+altaha_fundamentals.db-*

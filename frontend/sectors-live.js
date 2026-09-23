@@ -5,13 +5,8 @@
    are doing the moving.
 
    WHERE THE NUMBERS COME FROM
-   /sector/overview?stocks=1 — one bulk Dhan quote covering every constituent
-   of every sector plus the benchmark, in a single request. The sector figure
-   is the equal-weight average of its carried heavyweights, not a published
-   index level: an index is capitalisation-weighted, so "Nifty Bank is up 1%"
-   can mean one enormous name moved and eleven others did nothing. The
-   breadth count beside each tile is there for exactly that reason, and it is
-   why clicking through to the constituents matters more than the headline.
+   /sector/benchmarks — published NSE index levels and NSE historical closes.
+   No equal-weight stock baskets, ETF proxies or inferred constituent breadth.
 
    ANIMATION, AND THE LINE IT DOES NOT CROSS
    Tiles reorder as the market moves, and a reorder that teleports is a reorder
@@ -48,10 +43,7 @@
     return (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(dp == null ? 2 : dp) + "%";
   }
   function tone(v) { return v == null ? "" : v > 0 ? "up" : v < 0 ? "dn" : "flat"; }
-  function rupee(v) {
-    return v == null ? "—" : "₹" + Number(v).toLocaleString("en-IN",
-      { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+
 
   /* ---- the icons ---------------------------------------------------------
      Drawn here rather than shipped from the server: these are the site's own
@@ -134,7 +126,7 @@
     });
   }
 
-  /* Financial labels remain exact. The breadth graphic carries the motion. */
+  /* Financial labels show the exact received value throughout the animation. */
   function countUp(node, to) {
     node.setAttribute("data-v", to);
     node.textContent = pct(to);
@@ -144,9 +136,6 @@
 
   function tile(r, i) {
     var t = tone(r.change_pct);
-    var known = Number.isFinite(r.up) && Number.isFinite(r.total) && r.total > 0 && r.up >= 0 && r.up <= r.total;
-    var up = known ? r.up : 0, total = known ? r.total : 0;
-    var upPct = total ? (up / total) * 100 : 0;
     var open = state.open === r.sector;
     return '<button class="sb-tile ' + t + (open ? " open" : "") + '" type="button"' +
       ' data-sector="' + esc(r.sector) + '" style="--i:' + Math.min(i, 11) + '"' +
@@ -155,45 +144,26 @@
         '<span class="sb-name">' + esc(r.sector) + "</span></span>" +
       '<span class="sb-pct ' + t + '" data-v="' + (r.change_pct == null ? "" : r.change_pct) + '">' +
         pct(r.change_pct) + "</span>" +
-      (known ? '<span class="sb-breadth" aria-hidden="true">' +
-        '<i data-motion-key="sector:' + esc(r.sector) + ':' + state.window + '" data-motion-value="' + upPct + '" style="width:' + upPct + '%"></i></span>' : '') +
-      '<span class="sb-meta">' + (known ? up + "/" + total + " advancing" : "Breadth unavailable") +
+      '<span class="sb-meta">' + (r.index_level != null
+        ? 'Index ' + Number(r.index_level).toLocaleString('en-IN', {maximumFractionDigits:2})
+        : 'Index level unavailable') + '</span>' +
+      '<span class="sb-meta">' + (r.change_pct == null ? 'Return unavailable' : 'NSE benchmark') +
         (r.relative_pp != null
-          ? '<em class="' + tone(r.relative_pp) + '">' + pct(r.relative_pp, 1) + " vs Nifty</em>"
-          : "") + "</span>" +
+          ? '<em class="' + tone(r.relative_pp) + '">' +
+            (r.relative_pp > 0 ? '+' : '') + Number(r.relative_pp).toFixed(2) + ' pp vs Nifty 50</em>'
+          : '') + '</span>' +
     "</button>";
   }
 
-  function stockRow(s) {
-    return '<li class="' + tone(s.change_pct) + '"><b>' + esc(s.symbol) + "</b>" +
-      "<span>" + rupee(s.ltp) + "</span>" +
-      '<em class="' + tone(s.change_pct) + '">' + pct(s.change_pct) + "</em></li>";
-  }
-
   function detail(r) {
-    var stocks = r.stocks || [];
-    if (!stocks.length) {
-      return '<div class="sb-detail"><p class="sb-note">Constituent detail is not ' +
-        "available for this window.</p></div>";
-    }
-    var up = stocks.filter(function (s) { return s.change_pct > 0; });
-    var dn = stocks.filter(function (s) { return s.change_pct < 0; }).reverse();
-    var flat = stocks.filter(function (s) { return s.change_pct === 0; });
-    return '<div class="sb-detail" role="region">' +
-      '<div class="sb-cols">' +
-        '<div class="sb-col"><h5 class="up">Advancing <i>' + up.length + "</i></h5>" +
-          (up.length ? "<ul>" + up.map(stockRow).join("") + "</ul>"
-                     : '<p class="sb-note">Nothing in this sector is up.</p>') + "</div>" +
-        '<div class="sb-col"><h5 class="dn">Declining <i>' + dn.length + "</i></h5>" +
-          (dn.length ? "<ul>" + dn.map(stockRow).join("") + "</ul>"
-                     : '<p class="sb-note">Nothing in this sector is down.</p>') + "</div>" +
-      "</div>" +
-      (flat.length ? '<p class="sb-note">' + flat.length + " unchanged.</p>" : "") +
-      '<p class="sb-note">Equal-weight across the ' + stocks.length +
-        " heavyweights carried for this sector, not a published index level — " +
-        "so one very large company cannot speak for the rest. Click any name to " +
-        "score it." +
-      "</p></div>";
+    var d = state.data || {};
+    return '<div class="sb-detail" role="region" aria-label="Benchmark calculation">' +
+      '<h4>' + esc(r.sector) + '</h4><p class="sb-note">' +
+      esc(d.method || 'Published NSE index price return.') + '</p>' +
+      '<p class="sb-note">' + (d.as_of ? 'Exchange timestamp: ' + esc(d.as_of) + ' IST. ' : 'Exchange timestamp unavailable. ') +
+      (r.baseline_date ? 'Comparison close: ' + esc(r.baseline_date) + '. ' : '') +
+      (r.change_pct == null ? 'The exchange data needed for this return is unavailable. ' : '') +
+      '</p><a href="https://www.niftyindices.com/indices/equity/sectoral-indices" target="_blank" rel="noopener noreferrer">NSE index definitions ↗</a></div>';
   }
 
   function render() {
@@ -214,29 +184,29 @@
     var focused = el.contains(document.activeElement) ? document.activeElement : null;
     var focusedSector = focused && focused.getAttribute('data-sector');
     var focusedWindow = focused && focused.getAttribute('data-w');
-    var live = (d.source || "").toLowerCase() === "dhan";
+    var status = d.stale ? "Last available · refresh failed" : d.available ? "NSE snapshot" : "NSE unavailable";
     var opened = rows.filter(function (r) { return r.sector === state.open; })[0];
 
     el.innerHTML =
       '<div class="sb-hdr">' +
-        "<h3>Where the market is moving</h3>" +
+        "<h3>NSE sector benchmarks</h3>" +
         '<div class="sb-bar">' +
-          '<span class="sb-live ' + (live ? "on" : "") + '"><i></i>' +
-            (live ? "Live feed" : "Delayed") + "</span>" +
+          '<span class="sb-live"><i></i>' + status + "</span>" +
           ["1D", "1W", "1M"].map(function (w) {
             return '<button type="button" class="sb-win' + (w === state.window ? " on" : "") +
                    '" data-w="' + w + '">' +
-                   (w === "1D" ? "Today" : w === "1W" ? "Week" : "Month") + "</button>";
+                   (w === "1D" ? "Day" : w === "1W" ? "7D" : "30D") + "</button>";
           }).join("") +
         "</div>" +
       "</div>" +
       '<div class="sb-grid">' + rows.map(tile).join("") + "</div>" +
       (opened ? detail(opened) : "") +
-      /* This footnote used to run to four lines explaining what breadth is and
-         why it can disagree with the headline return. The bar already shows
-         that; the reader needs the ranking basis and the timestamp. */
-      '<p class="sb-foot">Ranked by return against the Nifty; the bar is how much of each sector is advancing.' +
-        (d.as_of ? ' Snapshot ' + esc(d.as_of) + '.' : '') + '</p>';
+      '<p class="sb-foot">Published NSE index price returns, ranked highest first. ' +
+        'Day compares with the previous close; 7D/30D compare with the close on or before 7/30 calendar days earlier. ' +
+        (d.as_of ? 'Exchange timestamp ' + esc(d.as_of) + ' IST. ' : '') +
+        (d.baseline_date ? 'Comparison close ' + esc(d.baseline_date) + '. ' : '') +
+        (d.stale ? 'Refresh failed; showing the last available snapshot. ' : '') +
+        'Unavailable returns are shown as —.</p>';
 
     playMoves(el, before);
     el.querySelectorAll('[data-sector], [data-w]').forEach(function(n) {
@@ -257,14 +227,16 @@
     var requestedWindow = state.window;
     if (!quiet && !state.data) render();
     try {
-      var r = await fetch(API + "/sector/overview?window=" +
-                          encodeURIComponent(requestedWindow) + "&stocks=1");
+      var r = await fetch(API + "/sector/benchmarks?window=" +
+                          encodeURIComponent(requestedWindow));
       var d = await r.json();
       if (requestedWindow !== state.window) return;
       if (r.ok && d && d.rows) {
         state.data = d;
         render();
-      } else if (!state.data) {
+      } else if (state.data) {
+        state.data = Object.assign({}, state.data, {stale:true}); render();
+      } else {
         var el = host();
         if (el) {
           el.innerHTML = '<div class="sb-load">' +
@@ -272,6 +244,9 @@
         }
       }
     } catch (e) {
+      if (state.data && requestedWindow === state.window) {
+        state.data = Object.assign({}, state.data, {stale:true}); render();
+      }
       if (!state.data && requestedWindow === state.window) {
         var h = host();
         if (h) h.innerHTML = '<div class="sb-load">Engine unreachable — it may be waking up.</div>';
@@ -300,17 +275,6 @@
       return;
     }
 
-    var name = ev.target.closest("#sb-board .sb-detail li b");
-    if (name) {
-      /* A constituent is a stock like any other — send it to the analyser
-         rather than making the reader retype it. */
-      var sym = name.textContent.trim();
-      if (sym && typeof window.analyse === "function") {
-        try { window.analyse(sym); } catch (e) {}
-      }
-      return;
-    }
-
     var tileEl = ev.target.closest(".sb-tile[data-sector]");
     if (tileEl && el.contains(tileEl)) {
       var s = tileEl.getAttribute("data-sector");
@@ -333,7 +297,7 @@
     var view = document.getElementById("view-screener");
     if (!view || getComputedStyle(view).display === "none") return;
     if (document.hidden) return;
-    if (state.data && !marketOpen()) return;
+    if (state.data && state.data.available && !state.data.stale && !marketOpen()) return;
     load(true);
   }
 

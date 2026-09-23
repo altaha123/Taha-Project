@@ -35,9 +35,6 @@ body.sh-on .hm-masthead #skin-art { opacity:.85; }
 .hm-masthead .sk-float { animation-play-state:paused; }
 .hm-masthead.hm-art-visible .sk-float { animation-play-state:running; }
 @keyframes hm-candle { 0%,100% {transform:scaleY(.8);opacity:.65} 50% {transform:scaleY(1);opacity:1} }
-.hm-motion { display:inline-flex; align-items:center; justify-content:center; min-height:44px; margin-top:12px; padding:8px 13px; border:1px solid var(--rule); border-radius:24px; background:var(--skin-card,var(--paper)); color:var(--mute); font:10px var(--mono); cursor:pointer; }
-.hm-motion[aria-pressed="true"] { color:var(--gold-dp); }
-.hm-motion:disabled { cursor:default; }
 html[data-motion="off"] .hm-masthead *, html.hm-tab-hidden .hm-masthead * { animation-play-state:paused !important; }
 html[data-motion="off"] .hm-route, html[data-motion="off"] .sb-tile { transition:none !important; }
 html[data-motion="off"] .sh-rail, html[data-motion="off"] .sb-live i,

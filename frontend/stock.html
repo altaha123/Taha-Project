@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css">
-<link rel="stylesheet" href="stock.css">
+<link rel="stylesheet" href="stock.css?v=20260923-delivery">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css">
 <link rel="stylesheet" href="type.css">
@@ -96,6 +96,8 @@
               id="pane-btn-owners" aria-selected="false" aria-controls="pane-owners">Ownership</button>
       <button type="button" class="stk-pane-btn" role="tab" data-p="funda"
               id="pane-btn-funda" aria-selected="false" aria-controls="pane-funda">Fundamentals</button>
+      <button type="button" class="stk-pane-btn" role="tab" data-p="deliv"
+              id="pane-btn-deliv" aria-selected="false" aria-controls="pane-deliv">Delivery</button>
     </nav>
     </div>
 
@@ -187,6 +189,25 @@
       </section>
     </div>
 
+    <!-- Delivery. NSE publishes, per stock per session, what share of the
+         traded volume was actually settled into somebody's demat account
+         rather than bought and sold again before the close. No OHLCV feed
+         carries it. Read from the same panel the Altaha Special book is
+         ranked on, so the two can never quote different figures for the same
+         day. Loaded when the pane is first opened. -->
+    <div class="stk-pane" id="pane-deliv" role="tabpanel" aria-labelledby="pane-btn-deliv" hidden>
+      <section class="stk-sec">
+        <h2>Delivery</h2>
+        <p class="sub">How much of each day's volume was actually delivered —
+          settled into a demat account — rather than traded out again before
+          the close. Published by NSE per stock per session in the full
+          bhavcopy. A high share means ownership changed hands; a low one
+          means the day was churn.</p>
+        <div class="ranges dv-ranges" id="dv-ranges"></div>
+        <div id="dv-body"></div>
+      </section>
+    </div>
+
     <div class="stk-disc" id="disc"></div>
   </div>
 </main>
@@ -194,7 +215,8 @@
 <script src="shell.js" defer></script>
 <script src="ownership-snapshot.js" defer></script>
 <script src="ownership.js" defer></script>
-<script src="stock.js" defer></script>
+<script src="delivery-ui.js?v=20260923" defer></script>
+<script src="stock.js?v=20260923-delivery" defer></script>
 <script src="experience.js" defer></script>
 </body>
 </html>

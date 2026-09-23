@@ -166,7 +166,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -.011em;
+  /* `overflow-x: hidden` on the body makes it a scroll container, and the used
+     value of overflow-y then becomes `auto` — so every `position: sticky`
+     inside the body resolved against the body's scrollport, which never
+     scrolls, while the document did. Sticky silently did nothing anywhere on
+     the site. `clip` holds back the same horizontal overflow without becoming
+     a scroll container. The `hidden` line stays first as the fallback for
+     browsers that do not know `clip`. */
   overflow-x: hidden;
+  overflow-x: clip;
   transition: background var(--t) var(--ease), color var(--t) var(--ease);
 }
 

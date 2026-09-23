@@ -145,6 +145,33 @@ jobs:
         with:
           name: funds-browser-verification
           path: test-results/funds
+      - name: Verify the opening screen is visible under every motion setting
+        if: always()
+        # The failure mode worth a browser for, because it has shipped twice:
+        # a `both`-filled reveal held at its `from` state by a pause rule is
+        # not stilled motion, it is an invisible page — and every element
+        # still reports the right computed opacity, because the zero is on an
+        # ancestor. This walks the masthead multiplying opacity down the tree
+        # the way the compositor does, under motion on, motion off, reduced
+        # motion, and with every animation on the page frozen.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/motion-off-browser.cjs
+      - name: Verify the delivery pane never invents a delivered figure
+        if: always()
+        # Two silent ones. A session the exchange published no quantity for
+        # must read as an em dash: "0 delivered" is a dramatic claim about a
+        # company and looks exactly like a bug. And delivered quantity is
+        # DERIVED from the published share, so the page has to disclose that
+        # where the number is rather than pass arithmetic off as a filing.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/stock-delivery-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: delivery-browser-verification
+          path: test-results/delivery
       - name: Verify sign-in failures and link completion on phone and desktop
         if: always()
         env:

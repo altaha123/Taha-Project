@@ -23,6 +23,8 @@
       {name:'Neptune',base:'#2255ad',light:'#79beff',kind:'cloud'},
       {name:'Earth',base:'#247b76',light:'#b5f4db',kind:'ocean'}
     ];
+    // Research themes are decorative labels, not claims about live engine stages.
+    var themes=["Quality & profitability","Earnings & growth","Valuation & value","Price momentum","Sector strength","Risk & resilience"];
     function smooth(value){value=Math.max(0,Math.min(1,value));return value*value*(3-2*value);}
     // Pre-render textured spheres once, avoiding gradients/noise on every frame.
     var sprites=worlds.map(function(world){
@@ -106,7 +108,7 @@
       var chapter=Math.floor(time/12)%worlds.length,phase=time%12;
       var approach=smooth((phase-2)/5),depart=smooth((phase-9)/3);
       var encounter=smooth((phase-1.8)/1.5)*(1-depart);
-      var label=phase<2?'Entering the galaxy':phase<6?'Approaching '+worlds[chapter].name:worlds[chapter].name;
+      var label=themes[chapter];
       if(label!==lastPlace){place.textContent=label;lastPlace=label;}
       host.dataset.voyage=phase<2?'galaxy':'planet';
       canvas.dataset.world=worlds[chapter].name;

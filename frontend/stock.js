@@ -1157,6 +1157,81 @@
       });
   }
 
+  /* ── Delivery ─────────────────────────────────────────────────────────────
+     NSE publishes, per stock per session, what share of the traded volume was
+     actually DELIVERED — settled into somebody's demat account — rather than
+     bought and sold again before the close. It is in the full bhavcopy, it is
+     free, and no OHLCV feed carries it, which is why almost nothing in retail
+     tooling here shows it per company.
+
+     This reads /delivery, which reads the same panel the Altaha Special book
+     is ranked on. One store, so the book and this page can never quote
+     different delivery figures for the same session.
+
+     WHAT IT DOES NOT DO: say whether a number is good. A 70% day on a stock
+     that normally delivers 65% is unremarkable; the same 70% on one that
+     normally delivers 30% is the whole story. So every figure is shown
+     against this company's own average and never against a threshold, and
+     nothing here is phrased as a signal to act on. */
+
+  var DV_RANGES = [['20', '20 sessions'], ['60', '60 sessions'], ['120', '120 sessions']];
+  var dvDays = '60';
+  var dvLoaded = false;
+  var dvRequest = 0;
+
+  function paintDelivery(d) {
+    var box = $('dv-body');
+    if (!box) return;
+
+    if (!d || d.available !== true) {
+      // Not covered, still building, or no sessions yet — each of which is a
+      // fact about the data rather than a failure, and is written as one.
+      var msg = (d && d.message) || 'Delivery data is unavailable just now.';
+      box.innerHTML = '<div class="own-empty' + (d && d.building ? ' is-loading' : '') + '"' +
+        (d && d.building ? ' aria-busy="true"' : '') + '>' + esc(msg) + '</div>';
+      return;
+    }
+
+    window.AltahaDelivery.mount(box, d);
+  }
+
+  function paintDvRanges() {
+    var host = $('dv-ranges');
+    if (!host) return;
+    host.innerHTML = DV_RANGES.map(function (r) {
+      return '<button type="button" aria-label="' + r[1] + '" aria-pressed="' +
+        (r[0] === dvDays) + '" data-d="' + r[0] + '"' +
+        (r[0] === dvDays ? ' class="on"' : '') + '>' + esc(r[0]) + '</button>';
+    }).join('');
+    host.onclick = function (e) {
+      var b = e.target.closest('button');
+      if (!b || b.dataset.d === dvDays) return;
+      dvDays = b.dataset.d;
+      paintDvRanges();
+      host.querySelector('[data-d="' + dvDays + '"]').focus();
+      loadDelivery();
+    };
+  }
+
+  function loadDelivery() {
+    var request = ++dvRequest;
+    var box = $('dv-body');
+    if (box) {
+      box.innerHTML = '<div class="own-empty is-loading" aria-busy="true">' +
+        'Reading the exchange delivery record…</div>';
+    }
+    fetch(API + '/delivery?ticker=' + encodeURIComponent(TICKER) + '&days=' + encodeURIComponent(dvDays))
+      .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
+      .then(function(d) { if (request === dvRequest) paintDelivery(d); })
+      .catch(function () {
+        if (box && request === dvRequest) {
+          box.innerHTML = '<div class="own-empty">The delivery record could not ' +
+            'be read just now. If the engine has been idle it takes about thirty ' +
+            'seconds to wake — try again.</div>';
+        }
+      });
+  }
+
   /* ── The rail's scroll spy ───────────────────────────────────────────────── */
 
   /* ── Panes ────────────────────────────────────────────────────────────────
@@ -1170,7 +1245,7 @@
   var chartDrawn = false;
 
   function showPane(name) {
-    ['info', 'chart', 'scores', 'owners', 'funda'].forEach(function (p) {
+    ['info', 'chart', 'scores', 'owners', 'funda', 'deliv'].forEach(function (p) {
       var pane = $('pane-' + p), btn = $('pane-btn-' + p);
       if (!pane || !btn) return;
       var on = p === name;
@@ -1194,6 +1269,13 @@
     if (name === 'funda' && !fundaLoaded) {
       fundaLoaded = true;
       loadFunda();
+    }
+    // Same reasoning again: a few hundred sessions of exchange data, fetched
+    // only for a reader who asks to see it.
+    if (name === 'deliv' && !dvLoaded) {
+      dvLoaded = true;
+      paintDvRanges();
+      loadDelivery();
     }
     if (window.AltahaTrack) window.AltahaTrack('stock_pane_shown', { pane: name });
   }

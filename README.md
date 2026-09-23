@@ -23,7 +23,7 @@ happens to read.
 | **Discover** | *Where are opportunities now?* | The opportunities hub, the live intraday scanner, delivery trends, bulk & block deals, WOW orders, options activity |
 | **Allocate** | *What should I do with my money?* | The guided card — how much, what risk it can carry, which asset classes follow ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)) — and the money planner behind it |
 | **Portfolio** | *How are my existing investments doing?* | The holdings review — see [`IC-REVIEW.md`](IC-REVIEW.md) for what happens to an uploaded file, end to end — and the record of ideas you added |
-| **Research** | *What does the evidence say?* | The stock screener, stock analysis, the Altaha Score, factors, fundamentals, ownership, technicals, news — and the glossary |
+| **Research** | *What does the evidence say?* | The stock screener, stock analysis, the Altaha Score, factors, fundamentals, ownership, technicals, delivery, news — and the glossary |
 
 `frontend/nav.js` holds the map and owns routing; `frontend/shell.js` renders
 the same map as the header menu. A destination has exactly one owner, and every
@@ -117,6 +117,40 @@ altaha/
   engine only needs OHLCV + statements, so only `main.py` changes.
 
 ---
+
+### Delivery, per company
+
+`/delivery?ticker=SYM` returns the delivered share of each session's volume for
+one stock, and the Delivery pane on `stock.html` renders it. NSE publishes the
+figure per stock per day in the full bhavcopy and no OHLCV feed carries it,
+which is the same disclosure the Altaha Special book is ranked on — both read
+the one panel in `backend/special.py`, so the book and the stock page can never
+quote different numbers for the same session.
+
+The store holds **every EQ symbol the bhavcopy lists** — about 2,665 a session,
+not the ~820 that clear the book's turnover floor. It used to keep only the
+liquid ones, on an argument inherited from the v2 long-format cache where the
+saving was real; against wide float32 panels it was discarding roughly 1,845
+companies to save some 11 MB on a 512 MB instance, and those are exactly the
+small and mid caps somebody opens a screener to look up. The BOOK is narrowed
+instead, at rank time, by `_rank_cols` — which matters more than it sounds,
+because `_components` uses the cross-sectional median of the panel as its
+market proxy, so a wider file would otherwise have re-scored every name in the
+Altaha Special book. `test_store_the_whole_exchange.py` pins that: same names,
+same order, same scores to floating-point equality, wide file or narrow.
+
+Sessions stored before the widening carry only the liquid names. They are
+detected per date by their coverage and handed back to the builder as if they
+were missing, so the history backfills itself and an interrupted backfill
+resumes; `/special/status` reports how many days are left as `backfilling`. A
+company whose history is still filling says so on the page rather than
+presenting a short average as a considered one.
+
+The delivered QUANTITY is derived — traded quantity multiplied by the published share —
+because storing NSE's `DELIV_QTY` would be a seventh float32 panel on a 512 MB
+instance for a column that is the product of two already held. The percentage
+is the exchange's own figure; the quantity carries that percentage's rounding,
+and the page says so.
 
 ## Where the accuracy lives (read before you market it)
 

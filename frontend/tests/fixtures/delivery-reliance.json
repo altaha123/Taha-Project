@@ -1,0 +1,568 @@
+{
+ "as_of": "2026-09-18",
+ "available": true,
+ "delivered_qty_derived": true,
+ "rows": [
+  {
+   "avg_price": 1446.3751220703125,
+   "close": 1393.4688720703125,
+   "date": "2026-09-18",
+   "deliv_pct": 66.0,
+   "delivered_qty": 1320000,
+   "traded_qty": 2000000,
+   "turnover_cr": 289.28
+  },
+  {
+   "avg_price": 1430.0654296875,
+   "close": 1421.7713623046875,
+   "date": "2026-09-17",
+   "deliv_pct": 54.98,
+   "delivered_qty": 3672136,
+   "traded_qty": 6679212,
+   "turnover_cr": 955.17
+  },
+  {
+   "avg_price": 1375.6978759765625,
+   "close": 1358.8505859375,
+   "date": "2026-09-16",
+   "deliv_pct": 45.81,
+   "delivered_qty": null,
+   "traded_qty": null,
+   "turnover_cr": null
+  },
+  {
+   "avg_price": 1367.2919921875,
+   "close": 1402.798828125,
+   "date": "2026-09-15",
+   "deliv_pct": 55.68,
+   "delivered_qty": 4458072,
+   "traded_qty": 8007002,
+   "turnover_cr": 1094.79
+  },
+  {
+   "avg_price": 1416.9771728515625,
+   "close": 1367.369140625,
+   "date": "2026-09-14",
+   "deliv_pct": 55.07,
+   "delivered_qty": 1856244,
+   "traded_qty": 3370470,
+   "turnover_cr": 477.59
+  },
+  {
+   "avg_price": 1397.392578125,
+   "close": 1371.1988525390625,
+   "date": "2026-09-11",
+   "deliv_pct": 42.42,
+   "delivered_qty": 1204866,
+   "traded_qty": 2840507,
+   "turnover_cr": 396.93
+  },
+  {
+   "avg_price": 1429.5606689453125,
+   "close": 1386.2515869140625,
+   "date": "2026-09-10",
+   "deliv_pct": 49.06,
+   "delivered_qty": 3106881,
+   "traded_qty": 6332642,
+   "turnover_cr": 905.29
+  },
+  {
+   "avg_price": 1378.136962890625,
+   "close": 1416.78125,
+   "date": "2026-09-09",
+   "deliv_pct": 52.92,
+   "delivered_qty": 4535486,
+   "traded_qty": 8569987,
+   "turnover_cr": 1181.06
+  },
+  {
+   "avg_price": 1410.521728515625,
+   "close": 1407.911865234375,
+   "date": "2026-09-08",
+   "deliv_pct": 38.04,
+   "delivered_qty": 1063989,
+   "traded_qty": 2797101,
+   "turnover_cr": 394.54
+  },
+  {
+   "avg_price": 1361.487060546875,
+   "close": 1383.146240234375,
+   "date": "2026-09-07",
+   "deliv_pct": 52.23,
+   "delivered_qty": 1483125,
+   "traded_qty": 2839338,
+   "turnover_cr": 386.57
+  },
+  {
+   "avg_price": 1422.011474609375,
+   "close": 1357.2772216796875,
+   "date": "2026-09-04",
+   "deliv_pct": 53.2,
+   "delivered_qty": 3865077,
+   "traded_qty": 7265780,
+   "turnover_cr": 1033.2
+  },
+  {
+   "avg_price": 1403.424072265625,
+   "close": 1372.056396484375,
+   "date": "2026-09-03",
+   "deliv_pct": 42.75,
+   "delivered_qty": 2053053,
+   "traded_qty": 4802754,
+   "turnover_cr": 674.03
+  },
+  {
+   "avg_price": 1447.1197509765625,
+   "close": 1362.44482421875,
+   "date": "2026-09-02",
+   "deliv_pct": 38.04,
+   "delivered_qty": 1097045,
+   "traded_qty": 2884020,
+   "turnover_cr": 417.35
+  },
+  {
+   "avg_price": 1387.363525390625,
+   "close": 1415.5615234375,
+   "date": "2026-09-01",
+   "deliv_pct": 49.8,
+   "delivered_qty": 2054378,
+   "traded_qty": 4125210,
+   "turnover_cr": 572.32
+  },
+  {
+   "avg_price": 1380.9998779296875,
+   "close": 1370.762939453125,
+   "date": "2026-08-31",
+   "deliv_pct": 41.48,
+   "delivered_qty": 2909925,
+   "traded_qty": 7014421,
+   "turnover_cr": 968.69
+  },
+  {
+   "avg_price": 1371.34423828125,
+   "close": 1375.0518798828125,
+   "date": "2026-08-28",
+   "deliv_pct": 42.86,
+   "delivered_qty": 3785960,
+   "traded_qty": 8833680,
+   "turnover_cr": 1211.4
+  },
+  {
+   "avg_price": 1386.2381591796875,
+   "close": 1363.805908203125,
+   "date": "2026-08-27",
+   "deliv_pct": 49.11,
+   "delivered_qty": 4002592,
+   "traded_qty": 8150101,
+   "turnover_cr": 1129.8
+  },
+  {
+   "avg_price": 1404.72412109375,
+   "close": 1351.2093505859375,
+   "date": "2026-08-26",
+   "deliv_pct": 39.11,
+   "delivered_qty": 1100440,
+   "traded_qty": 2813688,
+   "turnover_cr": 395.25
+  },
+  {
+   "avg_price": 1432.72802734375,
+   "close": 1395.3016357421875,
+   "date": "2026-08-25",
+   "deliv_pct": 48.55,
+   "delivered_qty": 1651836,
+   "traded_qty": 3402671,
+   "turnover_cr": 487.51
+  },
+  {
+   "avg_price": 1355.8885498046875,
+   "close": 1399.3214111328125,
+   "date": "2026-08-24",
+   "deliv_pct": 46.85,
+   "delivered_qty": 3839708,
+   "traded_qty": 8195446,
+   "turnover_cr": 1111.21
+  },
+  {
+   "avg_price": 1381.2333984375,
+   "close": 1433.920166015625,
+   "date": "2026-08-21",
+   "deliv_pct": 57.58,
+   "delivered_qty": 3226049,
+   "traded_qty": 5602683,
+   "turnover_cr": 773.86
+  },
+  {
+   "avg_price": 1421.9202880859375,
+   "close": 1445.0643310546875,
+   "date": "2026-08-20",
+   "deliv_pct": 54.18,
+   "delivered_qty": 1232748,
+   "traded_qty": 2275334,
+   "turnover_cr": 323.53
+  },
+  {
+   "avg_price": 1413.6544189453125,
+   "close": 1368.8115234375,
+   "date": "2026-08-19",
+   "deliv_pct": 55.67,
+   "delivered_qty": 2047388,
+   "traded_qty": 3677515,
+   "turnover_cr": 519.87
+  },
+  {
+   "avg_price": 1397.361328125,
+   "close": 1418.737060546875,
+   "date": "2026-08-18",
+   "deliv_pct": 39.57,
+   "delivered_qty": 2602193,
+   "traded_qty": 6576213,
+   "turnover_cr": 918.93
+  },
+  {
+   "avg_price": 1357.9033203125,
+   "close": 1397.671630859375,
+   "date": "2026-08-17",
+   "deliv_pct": 45.6,
+   "delivered_qty": 3633694,
+   "traded_qty": 7969192,
+   "turnover_cr": 1082.14
+  },
+  {
+   "avg_price": 1359.4189453125,
+   "close": 1376.314453125,
+   "date": "2026-08-14",
+   "deliv_pct": 44.99,
+   "delivered_qty": 1053508,
+   "traded_qty": 2341906,
+   "turnover_cr": 318.36
+  },
+  {
+   "avg_price": 1436.9521484375,
+   "close": 1403.222900390625,
+   "date": "2026-08-13",
+   "deliv_pct": 40.92,
+   "delivered_qty": 2356606,
+   "traded_qty": 5759640,
+   "turnover_cr": 827.63
+  },
+  {
+   "avg_price": 1358.113525390625,
+   "close": 1355.4261474609375,
+   "date": "2026-08-12",
+   "deliv_pct": 54.17,
+   "delivered_qty": 4848270,
+   "traded_qty": 8950548,
+   "turnover_cr": 1215.59
+  },
+  {
+   "avg_price": 1388.0330810546875,
+   "close": 1387.3773193359375,
+   "date": "2026-08-11",
+   "deliv_pct": 46.94,
+   "delivered_qty": 2698025,
+   "traded_qty": 5748202,
+   "turnover_cr": 797.87
+  },
+  {
+   "avg_price": 1399.796630859375,
+   "close": 1425.0943603515625,
+   "date": "2026-08-10",
+   "deliv_pct": 42.87,
+   "delivered_qty": 3679579,
+   "traded_qty": 8583878,
+   "turnover_cr": 1201.57
+  },
+  {
+   "avg_price": 1387.8812255859375,
+   "close": 1383.75634765625,
+   "date": "2026-08-07",
+   "deliv_pct": 40.53,
+   "delivered_qty": 3425495,
+   "traded_qty": 8452016,
+   "turnover_cr": 1173.04
+  },
+  {
+   "avg_price": 1390.126708984375,
+   "close": 1373.629638671875,
+   "date": "2026-08-06",
+   "deliv_pct": 50.08,
+   "delivered_qty": 2670280,
+   "traded_qty": 5331895,
+   "turnover_cr": 741.2
+  },
+  {
+   "avg_price": 1419.5850830078125,
+   "close": 1389.3536376953125,
+   "date": "2026-08-05",
+   "deliv_pct": 49.34,
+   "delivered_qty": 2759924,
+   "traded_qty": 5593130,
+   "turnover_cr": 793.99
+  },
+  {
+   "avg_price": 1447.5689697265625,
+   "close": 1392.54541015625,
+   "date": "2026-08-04",
+   "deliv_pct": 54.17,
+   "delivered_qty": 3099920,
+   "traded_qty": 5722340,
+   "turnover_cr": 828.35
+  },
+  {
+   "avg_price": 1437.7069091796875,
+   "close": 1375.929443359375,
+   "date": "2026-08-03",
+   "deliv_pct": 39.96,
+   "delivered_qty": 3483160,
+   "traded_qty": 8716345,
+   "turnover_cr": 1253.15
+  },
+  {
+   "avg_price": 1377.748779296875,
+   "close": 1445.603515625,
+   "date": "2026-07-31",
+   "deliv_pct": 49.17,
+   "delivered_qty": 1935844,
+   "traded_qty": 3937363,
+   "turnover_cr": 542.47
+  },
+  {
+   "avg_price": 1384.1221923828125,
+   "close": 1366.172119140625,
+   "date": "2026-07-30",
+   "deliv_pct": 41.93,
+   "delivered_qty": 3266261,
+   "traded_qty": 7788901,
+   "turnover_cr": 1078.08
+  },
+  {
+   "avg_price": 1424.404296875,
+   "close": 1370.5875244140625,
+   "date": "2026-07-29",
+   "deliv_pct": 57.36,
+   "delivered_qty": 1396002,
+   "traded_qty": 2433758,
+   "turnover_cr": 346.67
+  },
+  {
+   "avg_price": 1393.9501953125,
+   "close": 1374.70751953125,
+   "date": "2026-07-28",
+   "deliv_pct": 47.77,
+   "delivered_qty": 2910448,
+   "traded_qty": 6092770,
+   "turnover_cr": 849.3
+  },
+  {
+   "avg_price": 1433.2386474609375,
+   "close": 1378.732177734375,
+   "date": "2026-07-27",
+   "deliv_pct": 52.79,
+   "delivered_qty": 1879033,
+   "traded_qty": 3559570,
+   "turnover_cr": 510.17
+  },
+  {
+   "avg_price": 1406.375732421875,
+   "close": 1360.5108642578125,
+   "date": "2026-07-24",
+   "deliv_pct": 38.37,
+   "delivered_qty": 2007167,
+   "traded_qty": 5230436,
+   "turnover_cr": 735.6
+  },
+  {
+   "avg_price": 1390.126953125,
+   "close": 1398.576171875,
+   "date": "2026-07-23",
+   "deliv_pct": 45.37,
+   "delivered_qty": 3735529,
+   "traded_qty": 8234253,
+   "turnover_cr": 1144.67
+  },
+  {
+   "avg_price": 1426.1572265625,
+   "close": 1395.9742431640625,
+   "date": "2026-07-22",
+   "deliv_pct": 51.99,
+   "delivered_qty": 2931204,
+   "traded_qty": 5637576,
+   "turnover_cr": 804.01
+  },
+  {
+   "avg_price": 1443.341552734375,
+   "close": 1378.5184326171875,
+   "date": "2026-07-21",
+   "deliv_pct": 44.14,
+   "delivered_qty": 2562850,
+   "traded_qty": 5806272,
+   "turnover_cr": 838.04
+  },
+  {
+   "avg_price": 1384.3828125,
+   "close": 1415.0341796875,
+   "date": "2026-07-20",
+   "deliv_pct": 47.54,
+   "delivered_qty": 3165055,
+   "traded_qty": 6657573,
+   "turnover_cr": 921.66
+  },
+  {
+   "avg_price": 1430.300048828125,
+   "close": 1433.150146484375,
+   "date": "2026-07-17",
+   "deliv_pct": 46.48,
+   "delivered_qty": 3878456,
+   "traded_qty": 8344004,
+   "turnover_cr": 1193.44
+  },
+  {
+   "avg_price": 1424.368896484375,
+   "close": 1410.6519775390625,
+   "date": "2026-07-16",
+   "deliv_pct": 38.78,
+   "delivered_qty": 2326458,
+   "traded_qty": 5999571,
+   "turnover_cr": 854.56
+  },
+  {
+   "avg_price": 1376.377685546875,
+   "close": 1367.383544921875,
+   "date": "2026-07-15",
+   "deliv_pct": 53.18,
+   "delivered_qty": 1825442,
+   "traded_qty": 3432632,
+   "turnover_cr": 472.46
+  },
+  {
+   "avg_price": 1383.7958984375,
+   "close": 1418.4937744140625,
+   "date": "2026-07-14",
+   "deliv_pct": 50.81,
+   "delivered_qty": 2206727,
+   "traded_qty": 4343260,
+   "turnover_cr": 601.02
+  },
+  {
+   "avg_price": 1403.3372802734375,
+   "close": 1444.3397216796875,
+   "date": "2026-07-13",
+   "deliv_pct": 38.06,
+   "delivered_qty": 860497,
+   "traded_qty": 2260646,
+   "turnover_cr": 317.24
+  },
+  {
+   "avg_price": 1350.091552734375,
+   "close": 1419.5167236328125,
+   "date": "2026-07-10",
+   "deliv_pct": 56.22,
+   "delivered_qty": 4828801,
+   "traded_qty": 8589253,
+   "turnover_cr": 1159.63
+  },
+  {
+   "avg_price": 1380.033935546875,
+   "close": 1399.2408447265625,
+   "date": "2026-07-09",
+   "deliv_pct": 41.6,
+   "delivered_qty": 3628858,
+   "traded_qty": 8722481,
+   "turnover_cr": 1203.73
+  },
+  {
+   "avg_price": 1358.8887939453125,
+   "close": 1413.0635986328125,
+   "date": "2026-07-08",
+   "deliv_pct": 42.74,
+   "delivered_qty": 3089014,
+   "traded_qty": 7227504,
+   "turnover_cr": 982.14
+  },
+  {
+   "avg_price": 1420.7711181640625,
+   "close": 1361.7034912109375,
+   "date": "2026-07-07",
+   "deliv_pct": 43.67,
+   "delivered_qty": 3903202,
+   "traded_qty": 8938184,
+   "turnover_cr": 1269.91
+  },
+  {
+   "avg_price": 1365.9073486328125,
+   "close": 1378.7408447265625,
+   "date": "2026-07-06",
+   "deliv_pct": 45.57,
+   "delivered_qty": 3169435,
+   "traded_qty": 6954892,
+   "turnover_cr": 949.97
+  },
+  {
+   "avg_price": 1423.4571533203125,
+   "close": 1401.7437744140625,
+   "date": "2026-07-03",
+   "deliv_pct": 48.49,
+   "delivered_qty": 4342706,
+   "traded_qty": 8955038,
+   "turnover_cr": 1274.71
+  },
+  {
+   "avg_price": 1367.728271484375,
+   "close": 1379.431884765625,
+   "date": "2026-07-02",
+   "deliv_pct": 44.57,
+   "delivered_qty": 1650887,
+   "traded_qty": 3704367,
+   "turnover_cr": 506.66
+  },
+  {
+   "avg_price": 1352.526611328125,
+   "close": 1437.0023193359375,
+   "date": "2026-07-01",
+   "deliv_pct": 41.11,
+   "delivered_qty": 2451012,
+   "traded_qty": 5961370,
+   "turnover_cr": 806.29
+  },
+  {
+   "avg_price": 1356.570556640625,
+   "close": 1416.6827392578125,
+   "date": "2026-06-30",
+   "deliv_pct": 54.2,
+   "delivered_qty": 2863135,
+   "traded_qty": 5282632,
+   "turnover_cr": 716.63
+  },
+  {
+   "avg_price": 1383.602783203125,
+   "close": 1389.167724609375,
+   "date": "2026-06-29",
+   "deliv_pct": 48.57,
+   "delivered_qty": 2343322,
+   "traded_qty": 4824349,
+   "turnover_cr": 667.5
+  }
+ ],
+ "sessions_held": 300,
+ "sessions_returned": 60,
+ "source": "NSE sec_bhavdata_full (EQ series)",
+ "summary": {
+  "avg_20": 48.2,
+  "avg_5": 55.51,
+  "avg_63": 47.35,
+  "avg_year": 48.13,
+  "high": {
+   "date": "2026-09-18",
+   "deliv_pct": 66.0
+  },
+  "latest": 66.0,
+  "low": {
+   "date": "2026-09-02",
+   "deliv_pct": 38.04
+  },
+  "trend_pp": 0.07,
+  "year_sessions": 252
+ },
+ "symbol": "RELIANCE"
+}

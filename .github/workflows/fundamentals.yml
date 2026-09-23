@@ -1,0 +1,128 @@
+name: Fill the fundamentals tables
+
+# Every listed company's income statement, balance sheet and cash flow, read
+# from its Regulation 33 filings into three tables (altaha_fundamentals.db on
+# the API's disk). Same shape as the holdings ledger workflow: the crawl runs
+# ON THE API, where the disk is, and this job only keeps asking for the next
+# bounded slice. The first read of a company is ~34 documents (back to 2018),
+# so the first sweep of ~2,300 companies takes about a week of nights; after
+# that each company is re-read once a fortnight, fetching only new filings.
+#
+# Needs the same repository secret as the holdings workflow: ALTAHA_ADMIN_KEY.
+
+on:
+  schedule:
+    # 23:30 UTC = 05:00 IST. After the holdings crawl, before market hours —
+    # two crawls at once would double the request rate at NSE.
+    - cron: "30 23 * * *"
+  workflow_dispatch:
+    inputs:
+      slices:
+        description: "How many crawl calls to make (8 companies each)"
+        type: string
+        default: "40"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fundamentals-table
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Read the next slices of companies into the tables
+        timeout-minutes: 290
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          SLICES: ${{ inputs.slices || '40' }}
+        run: |
+          set -uo pipefail
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render."
+            exit 1
+          fi
+          curl -sS --max-time 120 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+
+          failed=0; rows=0
+          for i in $(seq 1 "${SLICES}"); do
+            code=$(curl -sS --max-time 1500 -o slice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/fundamentals/crawl?limit=8" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+            if [ "${code}" != "200" ]; then
+              echo "slice ${i}: HTTP ${code}"
+              if [ "${code}" = "401" ]; then
+                echo "::error::The server rejected the admin key (401). ALTAHA_ADMIN_KEY does not match ADMIN_KEY on Render."
+                exit 1
+              fi
+              failed=$((failed + 1))
+              if [ "${failed}" -ge 3 ]; then
+                echo "::error::three slices in a row failed (last HTTP ${code}) — stopping."
+                exit 1
+              fi
+              sleep 30
+              continue
+            fi
+            failed=0
+            read -r attempted got early < <(python3 -c "import json;d=json.load(open('slice.json'));print(d.get('attempted',0), d.get('rows',0), (d.get('stopped_early') or '').replace(' ','_'))")
+            rows=$((rows + got))
+            echo "slice ${i}: ${attempted} companies, ${got} rows ${early:+— ${early}}"
+            if [ "${attempted}" = "0" ]; then
+              echo "nothing further is due — the table is current."
+              break
+            fi
+            if [ -n "${early}" ]; then sleep 60; else sleep 5; fi
+          done
+          echo "::notice::${rows} rows written."
+
+      - name: Read the next slices of companies from Yahoo Finance
+        # A second opinion in its own table, on its own queue, so a Yahoo
+        # outage never stalls the exchange sweep.
+        continue-on-error: true
+        timeout-minutes: 50
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          SLICES: "15"
+        run: |
+          set -uo pipefail
+          failed=0
+          for i in $(seq 1 "${SLICES}"); do
+            code=$(curl -sS --max-time 900 -o yslice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/fundamentals/crawl?source=yfinance&limit=30" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+            if [ "${code}" != "200" ]; then
+              echo "yahoo slice ${i}: HTTP ${code}"
+              failed=$((failed + 1))
+              if [ "${failed}" -ge 3 ]; then echo "::warning::three Yahoo slices failed — stopping."; exit 0; fi
+              sleep 30; continue
+            fi
+            failed=0
+            read -r attempted got early < <(python3 -c "import json;d=json.load(open('yslice.json'));print(d.get('attempted',0), d.get('rows',0), (d.get('stopped_early') or '').replace(' ','_'))")
+            echo "yahoo slice ${i}: ${attempted} companies, ${got} values ${early:+— ${early}}"
+            if [ "${attempted}" = "0" ]; then echo "nothing further is due from Yahoo."; break; fi
+            if [ -n "${early}" ]; then sleep 120; else sleep 5; fi
+          done
+
+      - name: Report what the table now holds
+        if: always()
+        env:
+          API: https://taha-project.onrender.com
+        run: |
+          curl -sS --max-time 120 "${API}/fundamentals/coverage" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin); st=d.get('store') or {}
+          print('universe  : %s companies' % d.get('universe'))
+          for name, t in (st.get('tables') or {}).items():
+              print('%-17s %s companies, %s rows, %s to %s' % (name, t.get('companies'),
+                    t.get('rows'), t.get('earliest_period'), t.get('latest_period')))
+          print('coverage  : %s' % st.get('coverage'))
+          print('yahoo     : %s' % st.get('yfinance'))
+          if not st.get('persistent'):
+              print('::warning::the table is NOT on a persistent disk — check DATA_DIR on Render.')
+          " || true

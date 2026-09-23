@@ -149,6 +149,38 @@ does not change with the answer is a decoration pretending to be an answer.
 Selecting an answer holds the new picture for a beat before advancing, so a
 reader on a phone — who never hovers — still sees it respond.
 
+**One dot per question, under the card.** Filled when answered, ringed when
+current, hollow when still to come. Hovering or focusing one names the
+question it stands for, and clicking it goes there — which is what somebody
+wanting to change an earlier answer reaches for, rather than pressing Back
+eight times. The name appears in a line of its own rather than a floating
+tooltip: twelve tooltips at phone width would be clipped by the card, and a
+line is readable on a touch screen, which has no hover at all.
+
+**The question holds its place while the answers scroll.** A six-option
+question is taller than a laptop window, so scrolling to reach the last option
+used to carry the question and its picture off the top of the screen, leaving a
+column of answers to nothing. The question, its picture and the progress line
+are now sticky inside the card.
+
+That took fixing something older and larger. `premium.css` set
+`overflow-x: hidden` on the **body**, which makes the body a scroll container —
+and the used value of `overflow-y` then becomes `auto`. So every
+`position: sticky` element inside the body was resolving against the body's
+scrollport, which never scrolls, while the document scrolled underneath.
+Sticky silently did nothing anywhere on the site, including the rules already
+written for it in `stock.css` and `experience.css`. `overflow-x: clip` holds
+back the same horizontal overflow without becoming a scroll container. The
+browser test asserts the body's `overflow-y` is not `auto`, because the symptom
+is invisible: sticky simply stops working and nothing throws.
+
+**And each new screen starts at its own top.** Pressing Continue at the bottom
+of one stage left the page scrolled there, so the next stage opened halfway
+down its own options. A new screen now pulls the card back into view — but only
+when the top of the card has gone behind the site chrome, since scrolling
+somebody who is already looking at the top of the card is the page fighting
+them.
+
 One question this file has no art for falls back to the adviser taking notes,
 so the slot is never empty and the layout never jumps.
 
@@ -174,34 +206,96 @@ answers has been told nothing. Signed in, the server's assessment is used and
 recorded against the account. Signed out, it is computed here and the card
 says plainly that it was not kept.
 
-## Stage 3 — the asset classes
+## Stage 3 — the answer
 
-Three sleeves — growth-type, stable, gold — as a range from the profile band,
-a rupee figure, and the categories inside each one, which shift with the band:
-the same 50% in equities is a different thing held as broad-market exposure
-than held in mid and small companies.
+The payoff screen, so the least wordy one. A reader who has put in ₹10 lakh
+and answered ten questions is owed numbers, not two paragraphs about
+temperament. The order on the card:
 
-**The rupee figures add up, exactly.** The three ranges are independent
+1. **What has a prior claim on the money.** Before a rupee is split, two
+   things come off the top. A **cushion** of six months' expenses, sized in
+   rupees from the household numbers — the planner's if it has published
+   them this session, otherwise a monthly-expenses field on the card itself,
+   asked for rather than assumed. And **costly loans**: anything above about
+   10% a year (cards, personal loans; a home loan at 8–9% is not costly debt)
+   is a certain return no sleeve can match, so what is outstanding on them is
+   closed first. Both are capped at what is left, and what remains is printed
+   as **Free to invest**. First calls plus sleeves equal exactly what was put
+   in; `frontend/risk-math.test.js` asserts it.
+
+2. **The sleeves as numbers.** Grows, Stays put, Gold — a rupee figure, one
+   line on what each does, and a bar. A toggle reads the same figures as
+   twelve monthly ones, because that is how a salaried person will actually
+   do it.
+
+3. **What it is likely to become.** Each sleeve compounded over a years
+   slider (opening on the horizon that was answered): a range from long-run
+   published Indian series — 10–13% for broad equity, 6–7.5% for deposits
+   and short debt, 7–10% for gold in rupees — and the fall each has actually
+   taken inside a year, in rupees. A total, and the total in today's money
+   at 6% inflation. A range, before tax, never a promise; the card says so
+   on the row.
+
+4. **What to hold, on the sleeve itself.** Each line names the instrument:
+
+   - Indian equity is a **Nifty 50** index fund, direct plan. Mid-caps are a
+     **Nifty Midcap 150** index fund. Small-caps, a **Nifty Smallcap 250**
+     index fund, and only on Growth and Aggressive.
+   - International equity is an **S&P 500 feeder fund**. A world index fund
+     is the wider version when the US feeder is shut to new money.
+   - Gold is a **Sovereign Gold Bond** when a tranche is open, otherwise a
+     **gold ETF**. Jewellery and digital gold are said, and left out.
+   - The stable sleeve is three lines: a **bank fixed deposit** of one to
+     three years, a **short-duration debt fund** or a target-maturity fund
+     of government bonds, and **PPF, the NPS, or a government bond**.
+   - The deposit line answers "which bank" with a count. DICGC covers ₹5
+     lakh per depositor per bank, so ₹13.2 lakh is three scheduled
+     commercial banks and ₹2.4 lakh is one. No bank is named.
+
+   **How to do it** still carries the route and what to look for on the
+   label (direct plan, expense ratio, tracking error, AAA and sovereign,
+   occupancy). It names no fund house, no scheme and no platform. Naming
+   one is a recommendation, and a recommendation to the public needs a
+   SEBI registration this project does not hold. The test greps for the
+   brands and for directive verbs.
+
+5. **Considered, and left out.** Property, private funds, start-ups and
+   crypto are asset classes too, so their absence is said with the reason in
+   the reader's own numbers: a ₹1 crore AIF minimum is "more than all of this
+   money" or "33% of what is free"; a flat is one thing, in one place, with
+   7–8% to enter and leave. Listed real estate does get in — REITs and InvITs
+   join the growth sleeve at 5–10% of it once the sum passes ₹5 lakh.
+
+6. **The flags, one line each.** Then, behind a tap, why this profile: the
+   band note, capacity and temperament, and how the split is built.
+
+**Money with a date gets no growth sleeve.** A horizon inside three years is
+not a risk to be sized; it is the reason equity does not apply to this money
+at all. The free sum splits between a bank fixed deposit and a short-duration
+debt fund — not into PPF, whose lock is fifteen years — and the stop flag
+says why.
+
+**Alternatives enter only when everything allows it.** A fourth sleeve,
+carved out of growth rather than added on top, when the band is Growth or
+Aggressive, the horizon is ten-plus years, the reader has three or more
+years in the market, and the sum is large enough that the minimum ticket is
+a minority: AIFs (Category II & III, ₹1 crore per fund) from ₹5 crore free,
+angel investing (₹25 lakh cheques) from ₹2 crore for an Aggressive reader
+with a decade behind them. 10% of the free sum for Growth, 15% for
+Aggressive. No outcome range is invented for them: there is no reliable
+public series, and the row says so.
+
+**The rupee figures add up, exactly.** The sleeve ranges are independent
 guardrails, so their midpoints do not sum to 100% on their own — Balanced
-centres on 50 + 45 + 7.5. Handing somebody three figures adding to 102.5% of
-their money is an error a reader finds with a calculator, so the midpoints are
-scaled to the amount, each scaled share still lands inside its own published
-range, and the card says on its face that this is what it did. Figures are
-then rounded to a unit matching the size of the sum, with the rounding drift
-pushed onto the largest line so the parts still total what was put in.
+centres on 50 + 45 + 7.5. The midpoints are scaled to what is free, each
+scaled share still lands inside its own published range, figures are rounded
+to a unit matching the size of the sum, and the drift is pushed onto the
+largest line so the parts total what was put in.
 
-**The ring.** The whole sum as one circle, divided. Each arc sweeps out from
-twelve o'clock in the order the money is committed, and then the money is
-handed out: coins fly from the middle of the ring into each sleeve card, in
-the proportion that sleeve receives. The split stops being a table and becomes
-something that happens. The ring's centre reads the sum as a headline (₹5 Cr);
-the sleeve figures below carry every digit.
-
-**The flags matter more than the split.** An allocation handed to somebody
-whose money is needed next year, or who has no emergency fund, is arithmetic
-wrapped around a mistake. A horizon under three years is flagged however brave
-the rest of the profile reads; so is a missing cushion, borrowings taking a
-large share of income, and a lump sum about to go in on a single date.
+**The ring.** The free sum as one circle, divided. Each arc sweeps out from
+twelve o'clock in the order the money is committed, and then coins fly from
+the middle into each sleeve in proportion. The centre reads a headline
+(₹5.5 L); the sleeves carry every digit.
 
 ---
 
@@ -222,11 +316,13 @@ the money effects are never load-bearing.
 
 ## What it will not do
 
-Categories, never products. Ranges, never a single number presented as the
-right one. No instruction to buy or sell anything. Under the SEBI adviser
-regulations what to buy is not this project's to say, and the profile is what
-makes anything downstream of it defensible at all. The browser test asserts
-the rendered card contains no directive verb.
+Categories, never products. The index and the kind of instrument are named;
+the fund house, the scheme and the bank are not. Ranges, never a single
+number presented as the right one. No instruction to buy or sell anything.
+Under the SEBI adviser regulations naming the product is a recommendation,
+and a recommendation to the public is not this project's to give. The
+browser test asserts the rendered card contains no directive verb.
+
 
 Everything computes in this browser. The only network calls are the
 questionnaire itself and, for a signed-in reader, recording their own profile
@@ -237,7 +333,7 @@ against their own account.
 | Concern | File |
 |---|---|
 | Capacity, temperament, the lower of the two | `frontend/risk-math.js` |
-| Slider scale, the split, the flags, the card | `frontend/allocate-flow.js` |
+| Slider scale, first calls, the split, alternatives, outcomes, routes, the card | `frontend/allocate-flow.js` |
 | Coins, the sheen, the arcs | `frontend/money-fx.js` |
 | The figure, its three poses and its four ages | `frontend/adviser.js` |
 | A scene per question | `frontend/question-art.js` |

@@ -22,12 +22,19 @@
    already serves — same ids, same weights, same draft — so answering them here
    is answering them in the planner, and nobody is asked twice.
 
+   WHAT THE ANSWER IS
+   Not a paragraph. First what has a prior claim on the money — a six-month
+   cushion and any costly loan, in rupees — then the sleeves as numbers, and
+   inside each sleeve the instrument: which index, which kind of fund, where
+   the gold sits, which debt, and how many banks the fixed deposits need.
+   Then what each is likely to become, the route, and what was left out.
+
    WHAT IT WILL NOT DO
-   It names categories, never products. It gives ranges, never a single number
-   presented as the right one. It issues no instruction to buy or sell
-   anything. Under the SEBI adviser regulations what to buy is not this
-   project's to say, and the profile is what makes anything downstream of it
-   defensible at all.
+   It names the index and the kind of instrument, never a fund house, a
+   scheme or a bank. It gives ranges, never a single number presented as the
+   right one. It issues no instruction to buy or sell anything. Under the
+   SEBI adviser regulations naming the product is a recommendation, and a
+   recommendation to the public is not this project's to give.
 
    EVERYTHING COMPUTES IN THIS BROWSER. The only network calls are the
    questionnaire itself and, for a signed-in reader, recording their own
@@ -159,32 +166,48 @@
      held in mid and small companies. Shares are of the sleeve, not the book. */
   var GROWTH_MIX = {
     'Conservative':            [['Broad-market Indian equity', 75], ['International equity', 25]],
-    'Moderately conservative': [['Broad-market Indian equity', 70], ['Mid & small-cap Indian equity', 10], ['International equity', 20]],
-    'Balanced':                [['Broad-market Indian equity', 60], ['Mid & small-cap Indian equity', 20], ['International equity', 20]],
-    'Growth':                  [['Broad-market Indian equity', 50], ['Mid & small-cap Indian equity', 30], ['International equity', 20]],
-    'Aggressive':              [['Broad-market Indian equity', 45], ['Mid & small-cap Indian equity', 40], ['International equity', 15]]
+    'Moderately conservative': [['Broad-market Indian equity', 70], ['Mid-cap Indian equity', 10], ['International equity', 20]],
+    'Balanced':                [['Broad-market Indian equity', 60], ['Mid-cap Indian equity', 20], ['International equity', 20]],
+    'Growth':                  [['Broad-market Indian equity', 50], ['Mid-cap Indian equity', 20], ['Small-cap Indian equity', 10], ['International equity', 20]],
+    'Aggressive':              [['Broad-market Indian equity', 45], ['Mid-cap Indian equity', 25], ['Small-cap Indian equity', 15], ['International equity', 15]]
   };
+  /* The old "deposits & debt" line answered neither question. A fixed deposit
+     and a bond fund are different instruments, different routes, and a
+     different number of banks, so they are separate lines. The government
+     share is unchanged. */
   var STABLE_MIX = {
-    'Conservative':            [['Deposits & short-duration debt', 60], ['Government-backed long-term savings', 40]],
-    'Moderately conservative': [['Deposits & short-duration debt', 55], ['Government-backed long-term savings', 45]],
-    'Balanced':                [['Deposits & short-duration debt', 55], ['Government-backed long-term savings', 45]],
-    'Growth':                  [['Deposits & short-duration debt', 60], ['Government-backed long-term savings', 40]],
-    'Aggressive':              [['Deposits & short-duration debt', 65], ['Government-backed long-term savings', 35]]
+    'Conservative':            [['Bank fixed deposits', 35], ['Short-term bonds & debt funds', 25], ['Government-backed long-term savings', 40]],
+    'Moderately conservative': [['Bank fixed deposits', 30], ['Short-term bonds & debt funds', 25], ['Government-backed long-term savings', 45]],
+    'Balanced':                [['Bank fixed deposits', 30], ['Short-term bonds & debt funds', 25], ['Government-backed long-term savings', 45]],
+    'Growth':                  [['Bank fixed deposits', 40], ['Short-term bonds & debt funds', 20], ['Government-backed long-term savings', 40]],
+    'Aggressive':              [['Bank fixed deposits', 45], ['Short-term bonds & debt funds', 20], ['Government-backed long-term savings', 35]]
   };
+  /* Money with a date cannot sit in PPF: the lock is fifteen years. */
+  var DATED_MIX = [['Bank fixed deposits', 60], ['Short-term bonds & debt funds', 40]];
 
   var WHY = {
     'Broad-market Indian equity':
       'The whole market rather than a view about part of it. The cheapest way to own the growth sleeve and the hardest to be badly wrong with.',
-    'Mid & small-cap Indian equity':
-      'Higher expected return and materially deeper falls. It is the part of the sleeve that decides whether a bad year is sat through.',
+    'Mid-cap Indian equity':
+      'The 150 companies after the large ones. Higher expected return, and a deeper fall than the Nifty 50.',
+    'Small-cap Indian equity':
+      'The next 250 after the mid-caps. This is the part of the sleeve that decides whether a bad year is sat through, so only Growth and Aggressive hold it.',
     'International equity':
       'The Indian market is one economy and one currency. Exposure elsewhere is diversification, and it carries currency movement and its own tax treatment.',
-    'Deposits & short-duration debt':
-      'The money that has to still be there. Short duration because a long bond falls when rates rise, which is exactly the wrong moment.',
+    'Bank fixed deposits':
+      'A rate known on the day, at a bank, for a tenor that matches when the money is needed.',
+    'Short-term bonds & debt funds':
+      'Government and top-rated paper held to a short date. Short, because a long bond falls when rates rise, which is exactly the wrong moment.',
     'Government-backed long-term savings':
       'Sovereign-backed, long-locked and usually tax-favoured. The lock is the cost, and it is only a cost if the money was needed sooner.',
     'Gold':
-      'A diversifier held in a minority. It earns nothing and has gone a decade sideways; its job is to behave differently from the rest, not to grow.'
+      'A diversifier held in a minority. It earns nothing and has gone a decade sideways; its job is to behave differently from the rest, not to grow.',
+    'Listed real estate (REITs & InvITs)':
+      'Property that pays rent, in units that trade daily. The exposure without the one flat, the one tenant and the 7% stamp duty.',
+    'Alternative investment funds (Category II & III)':
+      'Private credit, private equity and long-short strategies. Locked for years and expensive, which is why they are capped and only enter past a size.',
+    'Early-stage & angel investing':
+      'A few winners have to pay for many zeros. It is a sleeve for money that can be lost entirely, after a decade of holding listed equity through a fall.'
   };
 
   var BAND_NOTE = {
@@ -247,78 +270,374 @@
     return reconcile(rows, share.rupees_mid, unitFor(amount));
   }
 
-  /* ── The plan ──────────────────────────────────────────────────────────────
-     Pure: band + amount + the answers already given, in, one object out. The
-     flags are the part that matters most — an allocation handed to somebody
-     whose money is needed next year, or who has no cushion, is arithmetic
-     wrapped around a mistake. */
+  /* ── Where each category is actually held ──────────────────────────────────
+     The question every reader asks once the split is in front of them is
+     "and how do I do that?" A category is education; a fund name is advice
+     this project is not registered to give. So each category carries the
+     KIND of instrument, the ROUTE to it, and what to look for on the label —
+     which is enough to walk into any app and judge what is on offer. */
 
-  function plan(band, amount, answers) {
+  var HOWTO = {
+    'Broad-market Indian equity': {
+      holds: 'Nifty 50 index fund, direct plan.',
+      via: 'An index fund, or the ETF of the same index in a demat account. A Nifty 500 fund is the wider version: more companies, the same idea.',
+      route: 'Any mutual-fund app, or a demat account for the ETF. Monthly or in one go.',
+      look: 'The words “direct plan”, an expense ratio under 0.3%, and a tracking error close to zero. Several houses run one; the cheapest that has actually tracked the index is the one that fits.'
+    },
+    'Mid-cap Indian equity': {
+      holds: 'Nifty Midcap 150 index fund, direct plan.',
+      via: 'The 150 companies after the largest hundred. An index fund, not one manager’s list.',
+      route: 'The same apps. Monthly rather than on one date: this is the part that swings.',
+      look: 'Direct plan, an expense ratio under 0.5%, and a fund large enough that it stays open.'
+    },
+    'Small-cap Indian equity': {
+      holds: 'Nifty Smallcap 250 index fund, direct plan.',
+      via: 'The next 250 after the mid-caps. Deeper falls than the Nifty 50, which is why only Growth and Aggressive hold it.',
+      route: 'The same apps, monthly.',
+      look: 'Direct plan and a low expense ratio. A tiny fund here can struggle to own the companies the index holds.'
+    },
+    'International equity': {
+      holds: 'An S&P 500 feeder fund.',
+      via: 'A fund that holds a US index fund of the 500 largest American companies. When that feeder is shut to new money, a world index fund — developed markets, not only the US — is the wider version of the same idea.',
+      route: 'The same mutual-fund apps. Overseas limits fill up; the fund has to be open.',
+      look: 'The total cost, including the fund it holds underneath, and how the gains are taxed here.'
+    },
+    'Listed real estate (REITs & InvITs)': {
+      holds: 'Units of a listed REIT or InvIT.',
+      via: 'Offices, malls, roads and power lines that pay out rent, in units that trade daily.',
+      route: 'A demat account, from a few hundred rupees a unit. Traded on the NSE like a share.',
+      look: 'Occupancy above 85%, a distribution yield of 6–8%, and how much debt the trust carries.'
+    },
+    'Bank fixed deposits': {
+      holds: 'A fixed deposit of one to three years, at a scheduled commercial bank.',
+      via: 'The bank that already holds the savings account is the natural first. The rate is what differs, not the logo, and the cover decides how many banks.',
+      route: 'The bank’s own app or a branch. Tenor matched to when the money is needed.',
+      look: 'Interest is taxable. Cumulative or paid-out is only a question of when the interest arrives.'
+    },
+    'Short-term bonds & debt funds': {
+      holds: 'A short-duration debt fund, or a target-maturity fund of government bonds.',
+      via: 'Government securities, state development loans, and AAA paper, held to a short date. A liquid fund is the version for money needed inside a year.',
+      route: 'Any mutual-fund app, direct plan.',
+      look: 'A portfolio that is almost all sovereign and AAA, average maturity under three years. A credit fund reaching for extra yield is a different product.'
+    },
+    'Government-backed long-term savings': {
+      holds: 'PPF, the NPS, or a government bond held for the lock.',
+      via: 'PPF, the NPS, or sovereign paper that locks for years and is usually tax-favoured.',
+      route: 'A bank or post office for PPF; NPS through a bank or its own site. Government bonds through a demat account or a gilt fund.',
+      look: 'Whether the lock-in ends before the date the money is needed. If it does not, this is not the place.'
+    },
+    'Gold': {
+      holds: 'Sovereign Gold Bonds when a tranche is open; a gold ETF otherwise.',
+      via: 'The bond tracks the gold price and pays 2.5% a year on top. The ETF tracks the gold price in a demat account. A gold fund is that ETF held through a mutual-fund app.',
+      route: 'A bank or demat account for the bonds; a demat account or any mutual-fund app for the ETF.',
+      look: 'Bonds are tax-free at maturity if held to the end. Jewellery is not this line: 10–25% goes in making charges. Digital gold sits outside a regulated bond or fund and is not this line either.'
+    },
+    'Alternative investment funds (Category II & III)': {
+      holds: 'One Category II or III alternative investment fund.',
+      via: 'Private credit, private equity or long-short funds run for large investors.',
+      route: 'Through the fund house or a wealth desk. SEBI sets the minimum at ₹1 crore per fund.',
+      look: 'Fees near 2% a year plus 20% of gains, a lock of five to seven years, and an audited record over a full cycle.'
+    },
+    'Early-stage & angel investing': {
+      holds: 'A SEBI-registered angel fund, or cheques into a few companies.',
+      via: 'A SEBI-registered angel fund, an angel network, or direct cheques into companies.',
+      route: 'Angel funds from ₹25 lakh; networks by invitation. Money is locked for seven to ten years.',
+      look: 'Whether losing all of it changes anything. Most early cheques go to zero; a few pay for the rest.'
+    }
+  };
+
+  /* DICGC covers ₹5 lakh per depositor per bank, interest included. The
+     answer to "which bank" is not a name. It is how many banks this line
+     needs so that no one of them holds more than the cover. */
+  var DICGC = 500000;
+
+  function bankSpread(rupees) {
+    var v = Math.max(0, Number(rupees) || 0);
+    var n = Math.max(1, Math.ceil(v / DICGC));
+    if (v <= DICGC) {
+      return 'One scheduled commercial bank is enough: this line sits inside the ₹5 lakh DICGC cover.';
+    }
+    return 'Spread across ' + n + ' scheduled commercial banks, so no one of them holds more than ₹5 lakh — the DICGC cover, interest included.';
+  }
+
+  function holding(label, rupees) {
+    var h = HOWTO[label] || {};
+    var look = h.look || '';
+    if (label === 'Bank fixed deposits') look = bankSpread(rupees) + (look ? ' ' + look : '');
+    return { holds: h.holds || label, via: h.via || '', route: h.route || '', look: look };
+  }
+
+  /* ── What a sleeve has tended to do ─────────────────────────────────────────
+     Annual ranges, before inflation, from published long-run Indian series:
+     Nifty 50 total return over rolling ten-year windows, bank deposit and
+     short-duration debt rates, and gold in rupees. The bad year is a fall
+     that has actually happened, not a stress test. Ranges, never a promise. */
+
+  var RETURNS = { growth: [10, 13], stable: [6, 7.5], gold: [7, 10], alt: null };
+  var BAD_YEAR = { growth: -35, stable: 0, gold: -20, alt: -100 };
+  var INFLATION = 6;
+  var HORIZON_YEARS = { under1: 1, '1_3': 2, '3_5': 4, '5_10': 7, '10plus': 10 };
+
+  function compound(rupees, pct, years) {
+    return rupees * Math.pow(1 + pct / 100, years);
+  }
+
+  /* One row per sleeve: what the rupees in it are likely to become over the
+     years chosen, and how far they have fallen inside a year. */
+  function outcomes(groups, years) {
+    var y = Math.max(1, Math.min(40, Number(years) || 1));
+    var rows = [], low = 0, high = 0, sized = 0;
+    groups.forEach(function (g) {
+      var r = RETURNS[g.key], rupees = g.share.rupees_mid || 0;
+      if (!rupees) return;
+      if (!r) {
+        rows.push({ key: g.key, label: g.label, rupees: rupees, low: null, high: null,
+                    fall: 0, note: 'No reliable public series. Some of it comes back many times over; ' +
+                    'much of it does not come back at all.' });
+        return;
+      }
+      var lo = Math.round(compound(rupees, r[0], y)), hi = Math.round(compound(rupees, r[1], y));
+      rows.push({ key: g.key, label: g.label, rupees: rupees, low: lo, high: hi,
+                  rate: r, fall: Math.round(rupees * (1 + BAD_YEAR[g.key] / 100)) });
+      low += lo; high += hi; sized += rupees;
+    });
+    var today = Math.pow(1 + INFLATION / 100, y);
+    return { years: y, rows: rows, low: low, high: high, invested: sized,
+             today_low: Math.round(low / today), today_high: Math.round(high / today) };
+  }
+
+  /* ── First calls ────────────────────────────────────────────────────────────
+     Two things have a prior claim on this money before any of it is split: a
+     cushion of six months’ expenses, and any loan charging more than the
+     stable sleeve could ever earn. Both are in rupees when the household
+     numbers are known, and asked for when they are not — a warning that says
+     “build a cushion” without a figure is theory, which is what this card
+     stopped being. */
+
+  var MONTHS_HELD = { none: 0, under3: 1.5, '3_6': 4.5, '6_12': 9, over12: 12 };
+  var CUSHION_MONTHS = 6;
+
+  function firstCalls(amount, answers, household) {
+    var a = answers || {}, h = household || {};
+    var calls = [], left = amount;
+    var expenses = Number(h.expenses) > 0 ? Number(h.expenses) : null;
+    var thin = a.emergency === 'none' || a.emergency === 'under3';
+
+    if (expenses) {
+      var liquid = h.liquid !== undefined && h.liquid !== null && h.liquid !== ''
+        ? Math.max(0, Number(h.liquid) || 0)
+        : (MONTHS_HELD[a.emergency] == null ? CUSHION_MONTHS : MONTHS_HELD[a.emergency]) * expenses;
+      var target = CUSHION_MONTHS * expenses;
+      var gap = Math.max(0, target - liquid);
+      var cushion = Math.min(left, Math.round(gap / 1000) * 1000 || gap);
+      if (cushion > 0) {
+        calls.push({ key: 'cushion', label: 'Cushion first', rupees: cushion,
+          text: 'Six months of ₹' + Math.round(expenses).toLocaleString('en-IN') + ' is ' + inr(target) +
+                '. You hold about ' + inr(liquid) + ', so ' + inr(gap) + ' is still to build' +
+                (cushion < gap ? ' and this sum covers ' + inr(cushion) + ' of it' : '') + '.',
+          via: 'A savings account with a sweep-in deposit, or a liquid fund in the direct plan. Not equity, not locked.' });
+        left -= cushion;
+      }
+    } else if (thin) {
+      calls.push({ key: 'cushion', label: 'Cushion first', rupees: null, needs: 'expenses',
+        text: 'You said you hold under three months of expenses in cash. Six months is the target, ' +
+              'and it comes before every sleeve. Enter your monthly expenses to size it.',
+        via: 'A savings account with a sweep-in deposit, or a liquid fund in the direct plan. Not equity, not locked.' });
+    }
+
+    var debt = Number(h.debt) > 0 ? Number(h.debt) : null;
+    var heavy = a.emi === '40_60' || a.emi === 'over60';
+    if (debt) {
+      var repay = Math.min(left, debt);
+      if (repay > 0) {
+        calls.push({ key: 'debt', label: 'Costly loans next', rupees: repay,
+          text: 'Closing a loan at 12–18% is a certain 12–18% earned. Nothing in the sleeves is certain of anything. ' +
+                (repay < debt ? inr(repay) + ' of the ' + inr(debt) + ' outstanding goes here.' :
+                 'The whole ' + inr(debt) + ' can be closed from this sum.'),
+          via: 'The highest rate first: cards, then personal loans. A home loan at 8–9% is not costly debt and stays.' });
+        left -= repay;
+      }
+    } else if (heavy) {
+      calls.push({ key: 'debt', label: 'Costly loans next', rupees: null, needs: 'debt',
+        text: 'You said loan repayments take over 40% of income. Any loan above about 10% — cards, ' +
+              'personal loans — outranks the sleeves. Enter what is outstanding on those.',
+        via: 'The highest rate first. A home loan at 8–9% is not costly debt and stays.' });
+    }
+
+    return { calls: calls, free: Math.max(0, left) };
+  }
+
+  /* ── Alternatives ───────────────────────────────────────────────────────────
+     Property, private funds and start-ups are asset classes; they are also
+     illiquid, high-minimum and expensive to leave. They enter the split only
+     when the sum, the band, the horizon and the experience all allow it, and
+     the ones that do not fit are said so, with the reason in the reader’s own
+     numbers, rather than left out in silence. */
+
+  var CRORE = 10000000;
+  var AIF_MIN = 1 * CRORE;
+  var AIF_BOOK = 5 * CRORE;          // ₹1 crore ticket ≤ 20% of the free money
+  var ANGEL_BOOK = 2 * CRORE;
+
+  function alternatives(free, band, answers) {
+    var a = answers || {};
+    var long = a.horizon === '10plus';
+    var seasoned = a.experience === '3_10' || a.experience === 'over10';
+    var rows = [];
+    if ((band === 'Growth' || band === 'Aggressive') && long && seasoned) {
+      if (free >= AIF_BOOK) rows.push(['Alternative investment funds (Category II & III)', 60]);
+      if (band === 'Aggressive' && free >= ANGEL_BOOK && a.experience === 'over10') {
+        rows.push(['Early-stage & angel investing', 40]);
+      }
+    }
+    if (!rows.length) return null;
+    var total = rows.reduce(function (s, r) { return s + r[1]; }, 0);
+    rows.forEach(function (r) { r[1] = Math.round(r[1] / total * 100); });
+    return { pct: band === 'Aggressive' ? 15 : 10, mix: rows };
+  }
+
+  function leftOut(free, band, answers, alt) {
+    var a = answers || {};
+    var out = [];
+    var inAlt = {};
+    ((alt && alt.mix) || []).forEach(function (r) { inAlt[r[0]] = true; });
+
+    var flat = 60 * 100000;           // a modest city flat, for scale
+    out.push({ label: 'Direct property',
+      text: free < flat
+        ? 'A flat in a city costs more than this whole sum. It is one thing in one place, costs 7–8% to ' +
+          'enter and leave, and rents at 2–3% a year. Listed REITs give the property exposure from a few ' +
+          'hundred rupees a unit and sit in the growth sleeve where the sum allows.'
+        : 'One flat would take about ' + Math.round(flat / free * 100) + '% of this in a single thing that cannot be ' +
+          'sold in parts, costs 7–8% to enter and leave, and rents at 2–3%. A home is a decision about living, ' +
+          'not a sleeve. A second property counts against the growth sleeve, not on top of it.' });
+
+    if (!inAlt['Alternative investment funds (Category II & III)']) {
+      out.push({ label: 'Alternative investment funds',
+        text: 'SEBI sets the minimum at ₹1 crore per fund' +
+          (free < AIF_MIN ? ', which is more than all of this money.' :
+           ', which is ' + Math.round(AIF_MIN / free * 100) + '% of what is free here — too much in one locked fund.') +
+          ' Fees run near 2% a year plus a fifth of the gains, with a five-to-seven-year lock. They start to make sense ' +
+          'past about ₹5 crore of investable money' +
+          (band === 'Growth' || band === 'Aggressive' ? '' : ', and only for a growth-type profile') + '.' });
+    }
+    if (!inAlt['Early-stage & angel investing']) {
+      var why = band !== 'Aggressive' ? 'The profile is not one that can lose a sleeve entirely.'
+        : a.experience !== 'over10' ? 'It comes after a decade of holding listed equity through a fall.'
+        : free < ANGEL_BOOK ? 'At this size a single ₹25 lakh cheque is too large a share to lose.'
+        : 'Not with money needed inside ten years.';
+      out.push({ label: 'Start-ups and angel investing',
+        text: 'Most early cheques go to zero and the few that work take seven to ten years to show it. It is only ' +
+              'for money that can be lost entirely, capped near 5%. ' + why });
+    }
+    out.push({ label: 'Crypto',
+      text: 'No cash flows, no reference range, and falls of 70% inside a year. The card has no sleeve for it; ' +
+            'anything put there is money set aside to lose, outside this plan.' });
+    return out;
+  }
+
+  /* Listed real estate joins the growth sleeve once the sum is large enough
+     that a tenth of the sleeve is worth holding as a separate line. */
+  var REIT_FROM = 500000;
+
+  function growthMix(band, free) {
+    var base = GROWTH_MIX[band].map(function (r) { return [r[0], r[1]]; });
+    if (free < REIT_FROM || band === 'Conservative') return base;
+    var reit = band === 'Moderately conservative' ? 5 : 10;
+    base[0][1] -= reit;
+    base.push(['Listed real estate (REITs & InvITs)', reit]);
+    return base;
+  }
+
+  /* ── The plan ──────────────────────────────────────────────────────────────
+     Pure: band + amount + the answers already given (+ the household numbers,
+     when known) in, one object out. The first calls and the flags are the
+     part that matters most — an allocation handed to somebody whose money is
+     needed next year, or who has no cushion, is arithmetic wrapped around a
+     mistake. */
+
+  function plan(band, amount, answers, household) {
     var split = SPLIT[band];
     if (!split || !(amount > 0)) return null;
     var a = answers || {};
 
-    var scale = midScale(split);
-    var growth = slice(amount, split.growth, scale);
-    var stable = slice(amount, split.stable, scale);
-    var gold = slice(amount, split.gold, scale);
-
-    // Round the three sleeves against the total first, so the sleeve figures
-    // inside each one are built from the number actually shown above them.
+    var fc = firstCalls(amount, a, household);
+    var free = fc.free;
+    var dated = a.horizon === 'under1' || a.horizon === '1_3';
     var unit = unitFor(amount);
-    reconcile([growth, stable, gold].map(function (sh) {
-      return { get rupees() { return sh.rupees_mid; }, set rupees(v) { sh.rupees_mid = v; } };
-    }), amount, unit);
+    var groups = [], alt = null;
 
-    var groups = [
-      { key: 'growth', label: 'Growth-type', kind: 'Equity and equity-linked categories',
-        share: growth, sleeves: sleeves(amount, growth, GROWTH_MIX[band]) },
-      { key: 'stable', label: 'Stable', kind: 'Deposits and debt-type categories',
-        share: stable, sleeves: sleeves(amount, stable, STABLE_MIX[band]) },
-      { key: 'gold', label: 'Gold', kind: 'A diversifier, in a minority',
-        share: gold, sleeves: sleeves(amount, gold, [['Gold', 100]]) }
-    ];
+    if (free > 0 && dated) {
+      // Money with a date inside three years gets no growth sleeve at all.
+      var whole = slice(free, [100, 100], 1);
+      groups = [{ key: 'stable', label: 'Stays put', kind: 'Deposits and short-duration debt — this money has a date',
+                  line: 'Needed within three years, so none of it is exposed to a fall it has no time to recover from.',
+                  share: whole, sleeves: sleeves(free, whole, DATED_MIX) }];
+    } else if (free > 0) {
+      var scale = midScale(split);
+      var growth = slice(free, split.growth, scale);
+      var stable = slice(free, split.stable, scale);
+      var gold = slice(free, split.gold, scale);
+      alt = alternatives(free, band, a);
+      var altShare = null;
+      if (alt) {
+        // Carved out of the growth sleeve, not added on top of it.
+        altShare = { low: 0, high: alt.pct, mid: alt.pct,
+                     rupees_low: 0, rupees_high: Math.round(free * alt.pct / 100),
+                     rupees_mid: Math.round(free * alt.pct / 100) };
+        growth.mid = Math.round((growth.mid - alt.pct) * 10) / 10;
+        growth.low = Math.max(0, growth.low - alt.pct); growth.high = Math.max(0, growth.high - alt.pct);
+        growth.rupees_low = Math.round(free * growth.low / 100); growth.rupees_high = Math.round(free * growth.high / 100);
+        growth.rupees_mid = Math.round(free * growth.mid / 100);
+      }
+      var parts = [growth, stable, gold].concat(altShare ? [altShare] : []);
+      reconcile(parts.map(function (sh) {
+        return { get rupees() { return sh.rupees_mid; }, set rupees(v) { sh.rupees_mid = v; } };
+      }), free, unit);
+
+      groups = [
+        { key: 'growth', label: 'Grows', kind: 'Equity and equity-linked categories',
+          line: 'This is where the growth comes from, and where the falls happen. It is the part that needs the years.',
+          share: growth, sleeves: sleeves(free, growth, growthMix(band, free)) },
+        { key: 'stable', label: 'Stays put', kind: 'Deposits and debt-type categories',
+          line: 'It barely moves. This is the money that can be reached in a bad month without selling anything that has fallen.',
+          share: stable, sleeves: sleeves(free, stable, STABLE_MIX[band]) },
+        { key: 'gold', label: 'Gold', kind: 'A diversifier, in a minority',
+          line: 'It tends to hold when equity falls, which is the only reason it is here.',
+          share: gold, sleeves: sleeves(free, gold, [['Gold', 100]]) }
+      ];
+      if (altShare) {
+        groups.push({ key: 'alt', label: 'Alternatives', kind: 'Private funds and early-stage — locked for years',
+          line: 'Illiquid, expensive, and capped. It is here because the sum, the horizon and the years in the market all allow it.',
+          share: altShare, sleeves: sleeves(free, altShare, alt.mix) });
+      }
+    }
 
     var flags = [];
-
-    if (a.horizon === 'under1' || a.horizon === '1_3') {
+    if (dated) {
       flags.push({ level: 'stop', title: 'This money has a date on it',
-        text: 'You said it is needed within three years. Indian equity has fallen more than a '
-            + 'third inside a year and taken years to come back, so a date that close is not a '
-            + 'risk to be sized — it is a reason the growth sleeve does not apply to this money '
-            + 'at all. Deposits and short-duration debt exist for exactly this. The split below '
-            + 'describes only the part of this sum that is genuinely long-term.' });
+        text: 'Needed within three years. Indian equity has fallen by more than a third inside a year, so ' +
+              'none of this gets a growth sleeve. The split covers only what is genuinely long-term.' });
     } else if (a.horizon === '3_5') {
       flags.push({ level: 'warn', title: 'Three to five years is the awkward middle',
-        text: 'Long enough that deposits alone cost you, short enough that one bad year lands on '
-            + 'the date you need it. Whatever is needed at a fixed moment inside this window '
-            + 'belongs in the stable sleeve regardless of the profile.' });
+        text: 'Whatever is needed on a fixed date inside this window belongs in the stable sleeve, whatever the profile says.' });
     }
-
-    if (a.emergency === 'none' || a.emergency === 'under3') {
-      flags.push({ level: 'warn', title: 'The cushion is not there yet',
-        text: 'You said you hold under three months of expenses in cash. Until six months exist, '
-            + 'the first call on this money is that cushion — its job is to stop a job loss or a '
-            + 'medical event turning into a forced sale at the worst price. That is step 1 below, '
-            + 'and it outranks everything on this card.' });
-    }
-
     if (a.emi === '40_60' || a.emi === 'over60') {
-      flags.push({ level: 'warn', title: 'Borrowings are taking a large share of income',
-        text: 'Repaying a loan at 14% is a guaranteed 14% saved. Nothing in the sleeves below is '
-            + 'guaranteed anything, and a falling market does not pause an EMI.' });
+      flags.push({ level: 'warn', title: 'Loans are taking a large share of income',
+        text: 'A falling market does not pause an EMI. Costly loans are line two above, before any sleeve.' });
     }
-
-    if (a.mode === 'lumpsum' && growth.rupees_mid > 0) {
+    var grows = groups.filter(function (g) { return g.key === 'growth'; })[0];
+    if (a.mode === 'lumpsum' && grows && grows.share.rupees_mid > 0) {
       flags.push({ level: 'note', title: 'One lump sum into the growth sleeve',
-        text: 'About ' + inr(growth.rupees_mid) + ' would go in on a single date. Staging it over '
-            + 'several months spreads that date out; on average it gives up a little expected '
-            + 'return to do so. Both are defensible — the question is which mistake you would '
-            + 'rather live with.' });
+        text: 'About ' + inr(grows.share.rupees_mid) + ' on a single date. Spreading it over six to twelve months ' +
+              'spreads the date; it gives up a little expected return to do so. Both are defensible.' });
     }
 
     return {
-      band: band, amount: amount, groups: groups, flags: flags,
+      band: band, amount: amount, free: free, first: fc.calls, dated: dated,
+      groups: groups, flags: flags, alt: alt,
+      left_out: leftOut(free, band, a, alt),
+      years: HORIZON_YEARS[a.horizon] || 10,
       band_note: BAND_NOTE[band] || '',
       split_pct: { growth: split.growth, stable: split.stable, gold: split.gold }
     };
@@ -373,8 +692,25 @@
   var state = {
     stage: 'amount', amount: DEFAULT_AMOUNT, chosen: false, index: 0,
     questions: [], bands: [], answers: {}, profile: null, recorded: null,
-    busy: false, error: ''
+    busy: false, error: '',
+    // Stage 3's own controls: the household numbers the first calls are
+    // sized from, the years the outcomes are compounded over, and whether the
+    // figures read as one sum or as twelve monthly ones.
+    household: {}, years: null, monthly: false
   };
+
+  /* The planner publishes its household numbers in this browser session and
+     nowhere else. When it has, the cushion is sized from them without asking
+     twice; a figure typed on this card always wins over it. */
+  function household() {
+    var h = state.household || {};
+    var p = root.AltahaPlannerState || {};
+    return {
+      expenses: h.expenses > 0 ? h.expenses : (p.expenses > 0 ? p.expenses : null),
+      liquid: h.expenses > 0 ? h.liquid : (p.expenses > 0 ? p.liquid : undefined),
+      debt: h.debt > 0 ? h.debt : null
+    };
+  }
 
   function readDraft() {
     try { return JSON.parse(root.localStorage.getItem(DRAFT_KEY) || '{}') || {}; }
@@ -397,7 +733,8 @@
     saveTimer = null;
     try {
       root.localStorage.setItem(STATE_KEY, JSON.stringify({
-        amount: state.chosen ? state.amount : null, stage: state.stage
+        amount: state.chosen ? state.amount : null, stage: state.stage,
+        household: state.household, years: state.years, monthly: state.monthly
       }));
     } catch (e) {}
   }
@@ -607,16 +944,21 @@
     var q = list[i];
     var chosen = state.answers[q.id];
     return '' +
-      '<div class="acf-progress" data-stagger>' +
-        '<div class="acf-bar"><i style="width:' + ((i) / list.length * 100) + '%" id="acf_bar"></i></div>' +
-        '<span class="acf-step">Step 2 of 3 · question ' + (i + 1) + ' of ' + list.length +
-        ' · allocating ' + esc(words(state.amount)) + '</span>' +
-      '</div>' +
-      '<div class="acf-ask" data-stagger>' +
-        '<div class="acf-art" id="acf_art">' + sceneFor(q, chosen) + '</div>' +
-        '<div class="acf-q acf-bubble">' +
-          '<h3>' + esc(q.label) + '</h3>' +
-          '<p class="acf-why">' + esc(q.why || '') + '</p>' +
+      // Sticky, because the answers to a six-option question are taller than
+      // a laptop window: scrolling to reach the last option used to carry the
+      // question and its picture off the top of the screen, leaving a column
+      // of answers to nothing.
+      '<div class="acf-stick" data-stagger>' +
+        '<div class="acf-progress">' +
+          '<span class="acf-step">Step 2 of 3 · question ' + (i + 1) + ' of ' + list.length +
+          ' · allocating ' + esc(words(state.amount)) + '</span>' +
+        '</div>' +
+        '<div class="acf-ask">' +
+          '<div class="acf-art" id="acf_art">' + sceneFor(q, chosen) + '</div>' +
+          '<div class="acf-q acf-bubble">' +
+            '<h3>' + esc(q.label) + '</h3>' +
+            '<p class="acf-why">' + esc(q.why || '') + '</p>' +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div class="acf-opts" data-stagger>' +
@@ -633,7 +975,8 @@
           ? '<button type="button" class="acf-go" id="acf_forward">' +
             (i === list.length - 1 ? 'See the asset classes' : 'Next') + '</button>'
           : '<span class="acf-hint">Pick the closest one. There is no right answer, and you can change it.</span>') +
-      '</div>';
+      '</div>' +
+      dots(list, i);
   }
 
   /* Pointing at an option previews it. Re-rendering only when the value
@@ -655,6 +998,38 @@
     var list = asked();
     var q = list[state.index];
     return q ? state.answers[q.id] : undefined;
+  }
+
+  /* One dot per question: filled when answered, ringed when current, hollow
+     when still to come. Hovering or focusing one names the question it stands
+     for, and clicking it goes there — which is what somebody wanting to change
+     an earlier answer reaches for, rather than pressing Back eight times.
+
+     The name appears in a line of its own rather than a floating tooltip: with
+     twelve dots at phone width a tooltip would be clipped by the card, and a
+     line is readable on a touch screen, which has no hover at all. */
+  function dots(list, current) {
+    var row = list.map(function (q, i) {
+      var answered = state.answers[q.id] !== undefined && state.answers[q.id] !== '';
+      var cls = 'acf-dot' + (i === current ? ' is-now' : answered ? ' is-done' : '');
+      return '<button type="button" class="' + cls + '" data-jump="' + i + '" ' +
+        'aria-label="Question ' + (i + 1) + ': ' + esc(q.label) + '" ' +
+        'aria-current="' + (i === current ? 'step' : 'false') + '"></button>';
+    }).join('');
+    return '<div class="acf-dots" data-stagger>' +
+      '<div class="acf-dot-row" role="group" aria-label="The twelve questions">' + row + '</div>' +
+      '<p class="acf-dot-label" id="acf_dot_label">' + esc(dotLabel(list, current)) + '</p>' +
+    '</div>';
+  }
+
+  function dotLabel(list, i) {
+    var q = list[i];
+    if (!q) return '';
+    var answered = list.filter(function (x) {
+      return state.answers[x.id] !== undefined && state.answers[x.id] !== '';
+    }).length;
+    return (i + 1) + ' of ' + list.length + ' · ' + q.label +
+      '  ·  ' + answered + ' answered';
   }
 
   function answer(value, node) {
@@ -682,7 +1057,17 @@
     }
   }
 
-  /* ── Stage 3 · the asset classes ───────────────────────────────────────── */
+  /* ── Stage 3 · the answer ───────────────────────────────────────────────────
+     The payoff screen, so it is the least wordy one. In order: what has a
+     prior claim on the money, the sleeves as three numbers, what those numbers
+     are likely to become, how each category is actually held, what was
+     considered and left out, and the flags in one line each. Everything that
+     used to be a paragraph is behind a tap. */
+
+  function money(v) {
+    return state.monthly ? inr(Math.round(v / 12)) : inr(v);
+  }
+  function per() { return state.monthly ? ' a month' : ''; }
 
   function stageResult() {
     if (state.busy) {
@@ -696,66 +1081,51 @@
              'circumstances can absorb and what your temperament can sit through.') + '</p></div>' +
              '<div class="acf-act" data-stagger><button type="button" class="acf-go" id="acf_again">Back to the questions</button></div>';
     }
-    var result = plan(p.band, state.amount, state.answers);
+    var result = plan(p.band, state.amount, state.answers, household());
     if (result) state.lastShares = result.groups.map(function (g) { return g.share.mid; });
     if (!result) {
       return '<div class="acf-head" data-stagger><h3>' + esc(p.band) + '</h3>' +
              '<p>An allocation needs an amount above zero.</p></div>' +
              '<div class="acf-act" data-stagger><button type="button" class="acf-back" id="acf_back">Set the amount</button></div>';
     }
+    if (!state.years) state.years = result.years;
 
     var html = asking('present',
       '<div class="acf-head acf-bubble">' +
-        '<span class="acf-step">Step 3 of 3 · ' + esc(inr(state.amount)) + ' allocated</span>' +
-        '<h3>' + esc(p.band) + '</h3>' +
-        '<p>' + esc(result.band_note) + '</p>' +
-        '<p class="acf-why">' + esc(p.binding_note || '') +
-          (state.recorded === false
-            ? ' This one was worked out in this browser and not recorded. Sign in to keep it.'
-            : state.recorded === true ? ' Recorded to your account.' : '') +
-        '</p>' +
-      '</div>') +
-      '<div class="acf-axes" data-stagger>' +
-        axis('Capacity', p.capacity, 'What your circumstances can absorb') +
-        axis('Temperament', p.tolerance, 'What you could sit through') +
-        axis('Profile', p.score, 'The lower of the two — always') +
-      '</div>';
+        '<span class="acf-step">Step 3 of 3 · ' + esc(inr(state.amount)) + '</span>' +
+        '<h3>Your ' + esc(words(state.amount)) + ', in order.</h3>' +
+        '<p class="acf-bandline"><b>' + esc(p.band) + '</b> profile' +
+          (state.recorded === false ? ' · worked out here, not recorded'
+           : state.recorded === true ? ' · recorded to your account' : '') + '</p>' +
+      '</div>');
 
-    html += donut(result);
+    html += firstCallsHTML(result);
+    html += groupsHTML(result);
+    if (result.groups.length) html += donut(result);
+    html += outcomesHTML(result);
+    html += howtoHTML(result);
+    html += leftOutHTML(result);
 
     html += result.flags.map(function (f) {
       return '<div class="acf-flag is-' + f.level + '" data-stagger>' +
         '<b>' + esc(f.title) + '</b><p>' + esc(f.text) + '</p></div>';
     }).join('');
 
-    html += '<div class="acf-groups">' + result.groups.map(function (g, i) {
-      return '<div class="acf-group" data-stagger>' +
-        '<div class="acf-group-head">' +
-          '<div><b><i class="acf-swatch is-' + g.key + '" aria-hidden="true"></i>' + esc(g.label) +
-            '</b><small>' + esc(g.kind) + '</small></div>' +
-          '<div class="acf-group-num">' +
-            '<span class="acf-money" data-count="' + g.share.rupees_mid + '">' + esc(inr(0)) + '</span>' +
-            '<small>' + g.share.low + '–' + g.share.high + '% · ' +
-              esc(inr(g.share.rupees_low)) + ' to ' + esc(inr(g.share.rupees_high)) + '</small>' +
-          '</div>' +
-        '</div>' +
-        '<div class="acf-bar wide"><i data-grow="' + g.share.mid + '" style="width:0"></i></div>' +
-        '<ul class="acf-sleeves">' + g.sleeves.map(function (s) {
-          return '<li><div class="acf-sleeve-t"><span>' + esc(s.label) + '</span>' +
-            '<b>' + esc(inr(s.rupees)) + '</b></div>' +
-            '<small>' + s.pct_of_total + '% of the total · ' + esc(s.why) + '</small></li>';
-        }).join('') + '</ul>' +
-      '</div>';
-    }).join('') + '</div>';
-
-    html += '<p class="acf-disc" data-stagger>The three ranges are independent guardrails, so ' +
-      'their midpoints do not add to 100% on their own; the rupee figures are those midpoints ' +
-      'scaled to your ' + esc(inr(state.amount)) + ', and each one still sits inside its own ' +
-      'published range. Categories, never products. Which specific fund, scheme ' +
-      'or security sits inside any of these is between you and a registered adviser — it is not this ' +
-      'site\'s to say. The ranges are conventional guardrails for a profile, not a recommendation, ' +
-      'and the midpoint is shown because a range needs a number to be legible, not because it is ' +
-      'the right one.</p>';
+    html += '<details class="acf-more" data-stagger><summary>Why this profile, and how the split is built</summary>' +
+      '<p>' + esc(result.band_note) + '</p>' +
+      '<p class="acf-why">' + esc(p.binding_note || '') + '</p>' +
+      '<div class="acf-axes">' +
+        axis('Capacity', p.capacity, 'What your circumstances can absorb') +
+        axis('Temperament', p.tolerance, 'What you could sit through') +
+        axis('Profile', p.score, 'The lower of the two — always') +
+      '</div>' +
+      '<p class="acf-disc">The sleeve ranges are independent guardrails, so their midpoints do not add to ' +
+      '100% on their own; the rupee figures are those midpoints scaled to what is free after the first ' +
+      'calls, and each still sits inside its published range. Outcome ranges are long-run historical ' +
+      'rates, before tax, and a range is never a promise. Categories, never products. The card names ' +
+      'the index and the kind of instrument. Which fund house, which scheme and which bank is not ' +
+      'this site\'s to say.</p>' +
+    '</details>';
 
     html += '<div class="acf-act" data-stagger>' +
       '<button type="button" class="acf-back" id="acf_back">Change the amount</button>' +
@@ -764,10 +1134,137 @@
     return html;
   }
 
-  /* The whole sum as one ring, divided. Three cards in a column state the
-     split; a ring shows it, and it is the shape a reader remembers after the
-     numbers have gone. Drawn with stroke-dasharray so each arc can sweep out
-     from twelve o'clock in turn, in the order the money is committed. */
+  function firstCallsHTML(result) {
+    var calls = result.first || [];
+    if (!calls.length) return '';
+    var h = household();
+    var rows = calls.map(function (c, i) {
+      var input = '';
+      if (c.key === 'cushion' && (c.needs || state.household.expenses > 0)) {
+        input = '<label class="acf-inline"><span>Monthly expenses</span>' +
+          '<input type="number" id="acf_expenses" min="0" step="1000" placeholder="e.g. 60000" ' +
+          'value="' + (h.expenses || '') + '" aria-label="Monthly expenses in rupees"></label>';
+      }
+      if (c.key === 'debt' && (c.needs || state.household.debt > 0)) {
+        input = '<label class="acf-inline"><span>Costly loans outstanding</span>' +
+          '<input type="number" id="acf_debt" min="0" step="10000" placeholder="cards, personal loans" ' +
+          'value="' + (h.debt || '') + '" aria-label="Costly loans outstanding in rupees"></label>';
+      }
+      return '<li class="acf-call is-' + c.key + (c.needs ? ' needs' : '') + '">' +
+        '<span class="acf-call-n">' + (i + 1) + '</span>' +
+        '<div class="acf-call-body"><b>' + esc(c.label) + '</b>' +
+          '<p>' + esc(c.text) + '</p>' + input +
+          '<small>' + esc(c.via) + '</small></div>' +
+        '<span class="acf-call-amt">' + (c.rupees != null ? esc(inr(c.rupees)) : '?') + '</span>' +
+      '</li>';
+    }).join('');
+    return '<section class="acf-first" data-stagger>' +
+      '<h4>Before any of it is invested</h4><ol>' + rows + '</ol>' +
+      '<div class="acf-free"><span>Free to invest</span><b id="acf_free">' + esc(inr(result.free)) + '</b></div>' +
+    '</section>';
+  }
+
+  function groupsHTML(result) {
+    if (!result.groups.length) {
+      return '<div class="acf-flag is-note" data-stagger><b>Nothing left to split yet</b>' +
+        '<p>The first calls take all of this sum. That is the plan — the sleeves start with the next rupee.</p></div>';
+    }
+    var toggle = '<div class="acf-view" data-stagger>' +
+      '<button type="button" class="acf-pill' + (!state.monthly ? ' is-on' : '') + '" id="acf_lump" aria-pressed="' + !state.monthly + '">One sum</button>' +
+      '<button type="button" class="acf-pill' + (state.monthly ? ' is-on' : '') + '" id="acf_monthly" aria-pressed="' + state.monthly + '">Monthly, over 12 months</button>' +
+    '</div>';
+    return toggle + '<div class="acf-groups">' + result.groups.map(function (g) {
+      var count = state.monthly ? Math.round(g.share.rupees_mid / 12) : g.share.rupees_mid;
+      return '<div class="acf-group is-' + g.key + '" data-stagger>' +
+        '<div class="acf-group-head">' +
+          '<div class="acf-group-num">' +
+            '<span class="acf-money" data-count="' + count + '">' + esc(inr(0)) + '</span>' +
+            '<small>' + (state.monthly ? 'a month for 12 months' : Math.round(g.share.mid) + '% of what is free') + '</small>' +
+          '</div>' +
+          '<div><b><i class="acf-swatch is-' + g.key + '" aria-hidden="true"></i>' + esc(g.label) +
+            '</b><small>' + esc(g.kind) + '</small></div>' +
+        '</div>' +
+        '<div class="acf-bar wide"><i data-grow="' + g.share.mid + '" style="width:0"></i></div>' +
+        '<p class="acf-line">' + esc(g.line) + '</p>' +
+        '<ul class="acf-holds">' + g.sleeves.map(function (s) {
+          return '<li><span>' + esc(holding(s.label, s.rupees).holds) + '</span>' +
+            '<b>' + esc(money(s.rupees)) + per() + '</b></li>';
+        }).join('') + '</ul>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  function outcomesHTML(result) {
+    if (!result.groups.length) return '';
+    return '<section class="acf-out" data-stagger>' +
+      '<div class="acf-out-head"><h4>What it is likely to become</h4>' +
+        '<label class="acf-years"><span><b id="acf_years_v">' + state.years + '</b> years</span>' +
+        '<input type="range" id="acf_years" min="1" max="30" step="1" value="' + state.years + '" ' +
+        'aria-label="Years invested"></label></div>' +
+      '<ul class="acf-out-rows" id="acf_out_rows">' + outcomeRows(result) + '</ul>' +
+    '</section>';
+  }
+
+  function range(lo, hi) {
+    return words(lo) + ' – ' + words(hi).replace('₹', '');
+  }
+
+  function outcomeRows(result) {
+    var o = outcomes(result.groups, state.years);
+    var rows = o.rows.map(function (r) {
+      var note = r.low == null ? r.note
+        : r.rate[0] + '–' + r.rate[1] + '% a year, the long-run range for this sleeve.' +
+          (r.fall < r.rupees ? ' In a bad year it has fallen to about ' + words(r.fall) + ' before recovering.' : ' It does not fall.');
+      return '<li class="is-' + r.key + '"><span><i class="acf-swatch is-' + r.key + '" aria-hidden="true"></i>' +
+        esc(r.label) + ' <em>' + esc(inr(r.rupees)) + '</em></span>' +
+        '<b>' + (r.low == null ? '—' : esc(range(r.low, r.high))) + '</b>' +
+        '<small>' + esc(note) + '</small></li>';
+    }).join('');
+    if (o.invested > 0) {
+      rows += '<li class="acf-out-total"><span>Together, in ' + o.years + ' year' + (o.years > 1 ? 's' : '') +
+        ' <em>' + esc(inr(o.invested)) + ' today</em></span>' +
+        '<b>' + esc(range(o.low, o.high)) + '</b>' +
+        '<small>About ' + esc(range(o.today_low, o.today_high)) + ' in today\'s money, at ' + INFLATION +
+        '% inflation. Before tax. A range, never a promise.</small></li>';
+    }
+    return rows;
+  }
+
+  function howtoHTML(result) {
+    if (!result.groups.length) return '';
+    return '<section class="acf-how" data-stagger><h4>How to do it</h4>' +
+      result.groups.map(function (g) {
+        return '<details class="acf-how-group is-' + g.key + '"' + (g.key === 'growth' || result.dated ? ' open' : '') + '>' +
+          '<summary><i class="acf-swatch is-' + g.key + '" aria-hidden="true"></i>' + esc(g.label) +
+            ' <b>' + esc(money(g.share.rupees_mid)) + per() + '</b></summary>' +
+          '<ul class="acf-sleeves">' + g.sleeves.map(function (s) {
+            var h = holding(s.label, s.rupees);
+            return '<li><div class="acf-sleeve-t"><span>' + esc(s.label) + '</span>' +
+              '<b>' + esc(money(s.rupees)) + per() + '</b></div>' +
+              '<p class="acf-via">' + esc(h.holds) + '</p>' +
+              (h.via ? '<small>' + esc(h.via) + '</small>' : '') +
+              (h.route ? '<small><b>Where:</b> ' + esc(h.route) + '</small>' : '') +
+              (h.look ? '<small><b>Look for:</b> ' + esc(h.look) + '</small>' : '') +
+            '</li>';
+          }).join('') + '</ul>' +
+        '</details>';
+      }).join('') +
+    '</section>';
+  }
+
+  function leftOutHTML(result) {
+    var out = result.left_out || [];
+    if (!out.length) return '';
+    return '<details class="acf-leftout" data-stagger><summary>Considered, and left out' +
+      '<small>' + out.map(function (o) { return o.label; }).join(' · ') + '</small></summary><ul>' +
+      out.map(function (o) {
+        return '<li><b>' + esc(o.label) + '</b><p>' + esc(o.text) + '</p></li>';
+      }).join('') + '</ul></details>';
+  }
+
+  /* The whole free sum as one ring, divided. Drawn with stroke-dasharray so
+     each arc can sweep out from twelve o'clock in turn, in the order the
+     money is committed. */
   var RING_R = 54, RING_C = 2 * Math.PI * 54;
 
   function donut(result) {
@@ -793,9 +1290,9 @@
       '<div class="acf-ring-mid">' +
         '<span class="acf-total-line">' +
           '<i class="acf-sym">₹</i>' +
-          '<b class="acf-total" data-count="' + result.amount + '" data-format="words">0</b>' +
+          '<b class="acf-total" data-count="' + result.free + '" data-format="words">0</b>' +
         '</span>' +
-        '<small>across three sleeves</small>' +
+        '<small>' + (result.first.length ? 'free to invest' : 'across ' + result.groups.length + ' sleeve' + (result.groups.length > 1 ? 's' : '')) + '</small>' +
       '</div>' +
     '</div>';
   }
@@ -807,16 +1304,18 @@
   }
 
   /* The bars grow and the rupee figures count up once, after the stage has
-     landed. Re-running it on every repaint would be a fidget, not a signal. */
-  function playResult() {
+     landed. A repaint caused by a control on the stage itself — the years
+     slider, the monthly toggle, a household figure — is `quiet`: the numbers
+     land at once, because replaying the whole entrance on every edit would be
+     a fidget, not a signal. */
+  function playResult(quiet) {
     var fx = root.AltahaMoneyFx;
     var card = $('acf-card');
+    var flat = quiet || still();
 
-    // The ring sweeps out one arc at a time, in the order the money is
-    // committed, rather than appearing already divided.
     Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-arc')).forEach(function (n, i) {
       var to = n.dataset.arc;
-      if (still()) { n.setAttribute('stroke-dasharray', to); return; }
+      if (flat) { n.setAttribute('stroke-dasharray', to); return; }
       root.setTimeout(function () {
         n.style.transition = 'stroke-dasharray 680ms cubic-bezier(.22,1,.36,1)';
         n.setAttribute('stroke-dasharray', to);
@@ -824,9 +1323,8 @@
     });
 
     // And then it is handed out: coins fly from the middle of the ring into
-    // each sleeve, in the proportion that sleeve receives. The split stops
-    // being a table and becomes something that happens.
-    if (fx && card && !fx.still()) {
+    // each sleeve, in the proportion that sleeve receives.
+    if (!flat && fx && card && !fx.still()) {
       var ring = doc.querySelector('#acf-body .acf-ring');
       var groups = Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-group'));
       if (ring && groups.length) {
@@ -843,7 +1341,7 @@
 
     Array.prototype.slice.call(doc.querySelectorAll('#acf-body [data-grow]')).forEach(function (n, i) {
       var to = Number(n.dataset.grow) || 0;
-      if (still()) { n.style.width = to + '%'; return; }
+      if (flat) { n.style.width = to + '%'; return; }
       n.style.width = '0%';
       root.setTimeout(function () {
         n.style.transition = 'width 760ms cubic-bezier(.22,1,.36,1)';
@@ -853,13 +1351,12 @@
     Array.prototype.slice.call(doc.querySelectorAll('#acf-body [data-count]')).forEach(function (n, i) {
       var to = Number(n.dataset.count) || 0;
       // The ring's centre is a headline, not a ledger line: it reads ₹5 Cr
-      // while the sleeve figures below it carry every digit.
+      // while the sleeve figures carry every digit.
       var show = n.dataset.format === 'words' ? figureText : inr;
       // `data-settled` is the signal that the figure on screen is the final
-      // one. A number mid-count is not a number anybody should read off, and
-      // the browser test would otherwise be racing the animation.
+      // one. A number mid-count is not a number anybody should read off.
       n.removeAttribute('data-settled');
-      if (still()) { n.textContent = show(to); n.setAttribute('data-settled', '1'); return; }
+      if (flat) { n.textContent = show(to); n.setAttribute('data-settled', '1'); return; }
       root.setTimeout(function () {
         tween(0, to, 900, function (v) {
           n.textContent = show(v);
@@ -867,6 +1364,16 @@
         }, 'count' + i);
       }, 140 + i * 110);
     });
+  }
+
+  /* A control on Stage 3 changed a number the whole stage is built from. */
+  function repaintQuiet() {
+    saveState();
+    var body = $('acf-body');
+    if (!body) return;
+    body.innerHTML = stageResult();
+    bind();
+    playResult(true);
   }
 
   /* ── Profile resolution ────────────────────────────────────────────────── */
@@ -933,11 +1440,31 @@
 
   /* ── Wiring ────────────────────────────────────────────────────────────── */
 
+  /* Pressing Continue at the bottom of one stage leaves the page scrolled
+     there, so the next stage opened halfway down its own options with the
+     question already pinned above them. When a new screen arrives and the top
+     of the card is behind the site chrome, put the card back at the top of the
+     reader's view. Only then: scrolling somebody who is already looking at the
+     top of the card would be the page fighting them. */
+  function reveal() {
+    var card = $('acf-card');
+    if (!card || !card.getBoundingClientRect) return;
+    var bar = doc.querySelector('.sh-chrome');
+    var floor = bar ? bar.getBoundingClientRect().bottom : 0;
+    if (card.getBoundingClientRect().top >= floor - 2) return;
+    try {
+      card.scrollIntoView({ block: 'start', behavior: still() ? 'auto' : 'smooth' });
+    } catch (e) {
+      card.scrollIntoView(true);
+    }
+  }
+
   function paint(direction) {
     var html = state.stage === 'amount' ? stageAmount()
              : state.stage === 'questions' ? stageQuestions()
              : stageResult();
     swap(html, direction || 'next');
+    reveal();
     if (state.stage === 'result' && !state.busy) playResult();
     if (saveTimer) { root.clearTimeout(saveTimer); saveTimer = null; }
     writeState();
@@ -1021,8 +1548,58 @@
     if (again) again.addEventListener('click', function () {
       state.index = 0; state.stage = 'questions'; paint('back');
     });
+    var list = asked();
+    var label = $('acf_dot_label');
+    Array.prototype.slice.call(doc.querySelectorAll('#acf-body .acf-dot')).forEach(function (d) {
+      var to = Number(d.dataset.jump);
+      var show = function () { if (label) label.textContent = dotLabel(list, to); };
+      var reset = function () { if (label) label.textContent = dotLabel(list, state.index); };
+      d.addEventListener('mouseenter', show);
+      d.addEventListener('focus', show);
+      d.addEventListener('mouseleave', reset);
+      d.addEventListener('blur', reset);
+      d.addEventListener('click', function () {
+        if (to === state.index) return;
+        var back = to < state.index;
+        state.index = to;
+        paint(back ? 'back' : 'next');
+      });
+    });
+
     var retry = $('acf_retry');
     if (retry) retry.addEventListener('click', function () { load(true); });
+
+    // Stage 3's own controls. The years slider redraws only the outcome rows;
+    // the household figures and the monthly toggle rebuild the stage, quietly.
+    var years = $('acf_years');
+    if (years) years.addEventListener('input', function () {
+      state.years = Math.max(1, Math.min(30, Number(years.value) || 1));
+      var label = $('acf_years_v'), rows = $('acf_out_rows');
+      if (label) label.textContent = state.years;
+      if (rows && state.profile) {
+        rows.innerHTML = outcomeRows(plan(state.profile.band, state.amount, state.answers, household()));
+      }
+      saveState();
+    });
+    function figure(id, key) {
+      var input = $(id);
+      if (!input) return;
+      input.addEventListener('change', function () {
+        var v = Math.max(0, Number(input.value) || 0);
+        if (v > 0) state.household[key] = v; else delete state.household[key];
+        if (key === 'expenses') delete state.household.liquid;   // a typed figure sizes from the answer
+        repaintQuiet();
+      });
+    }
+    figure('acf_expenses', 'expenses');
+    figure('acf_debt', 'debt');
+    var lump = $('acf_lump'), monthly = $('acf_monthly');
+    if (lump) lump.addEventListener('click', function () {
+      if (!state.monthly) return; state.monthly = false; repaintQuiet();
+    });
+    if (monthly) monthly.addEventListener('click', function () {
+      if (state.monthly) return; state.monthly = true; repaintQuiet();
+    });
   }
 
   function go(stage) {
@@ -1096,6 +1673,9 @@
     var picked = saved.amount && saved.amount > 0 ? snap(saved.amount) : null;
     state.amount = picked || DEFAULT_AMOUNT;
     state.chosen = !!picked;
+    state.household = saved.household || {};
+    state.years = saved.years > 0 ? saved.years : null;
+    state.monthly = !!saved.monthly;
 
     // Somebody who already has an amount and a profile is shown the answer,
     // not the first question again. An amount they never picked does not
@@ -1120,6 +1700,9 @@
     // same arithmetic without the card around it.
     sliderToRupees: sliderToRupees, rupeesToSlider: rupeesToSlider,
     snap: snap, words: words, plan: plan, SPLIT: SPLIT,
+    firstCalls: firstCalls, outcomes: outcomes, alternatives: alternatives,
+    leftOut: leftOut, HOWTO: HOWTO, RETURNS: RETURNS,
+    bankSpread: bankSpread, holding: holding,
     MIN_RUPEES: MIN_RUPEES, MAX_RUPEES: MAX_RUPEES
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = root.AltahaAllocateFlow;
