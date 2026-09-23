@@ -84,6 +84,17 @@ try:
 except Exception:
     fundamentals_source = None
 try:
+    # Every company's quarterly P&L as one table, and the crawler that fills
+    # it. The store is stdlib-only, so it can serve what is held even where
+    # the crawler cannot reach NSE.
+    import fundamentals_store
+except Exception:
+    fundamentals_store = None
+try:
+    import fundamentals_crawl
+except Exception:
+    fundamentals_crawl = None
+try:
     # The holdings ledger and the curated investor table. Three modules, each
     # importable on its own: the store is stdlib-only, so a box without
     # curl_cffi can still SERVE what has already been collected even though it
@@ -2194,10 +2205,84 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
         raise HTTPException(400, "Provide a valid ticker symbol.")
     want = basis if basis in ("consolidated", "standalone") else None
     try:
-        return to_native(fundamentals_source.series(
-            ticker, quarters=max(2, min(quarters, 16)), basis=want))
+        out = fundamentals_source.series(
+            ticker, quarters=max(2, min(quarters, 16)), basis=want)
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+    # A page view already paid for the fetch; keep what it read.
+    if fundamentals_store is not None:
+        try:
+            fundamentals_store.record_series(out)
+        except Exception:
+            pass
+    return to_native(out)
+
+
+@app.get("/fundamentals/table")
+def fundamentals_table(symbol: str = "", period_end: str = "",
+                       format: str = "json", limit: int = 0):
+    """
+    The stored quarterly results of every company read so far, as one table.
+
+    One row per company per quarter, one column per P&L line in ₹ crore, on
+    the basis named in the row. `format=csv` downloads it for a spreadsheet;
+    `symbol` narrows it to one company and `period_end` (YYYY-MM-DD) to one
+    quarter across the market. What is held is exactly what
+    /fundamentals/coverage says — a company the crawl has not reached yet is
+    absent, not zero.
+    """
+    if fundamentals_store is None:
+        raise HTTPException(503, "The fundamentals table is not available.")
+    sym = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+    if len(sym) > 20 or (period_end and len(period_end) != 10):
+        raise HTTPException(400, "Provide a valid symbol or period_end (YYYY-MM-DD).")
+    recs = fundamentals_store.rows(symbol=sym or None,
+                                   period_end=period_end or None,
+                                   limit=max(0, int(limit)) or None)
+    if format == "csv":
+        name = "fundamentals-%s.csv" % (sym or period_end or "all")
+        return Response(content=fundamentals_store.to_csv(recs),
+                        media_type="text/csv",
+                        headers={"Content-Disposition": f'attachment; filename="{name}"'})
+    return to_native({"count": len(recs), "columns": fundamentals_store.COLUMNS,
+                      "rows": recs})
+
+
+@app.get("/fundamentals/coverage")
+def fundamentals_coverage():
+    """How much of the NSE list the fundamentals table holds, and where."""
+    if fundamentals_store is None:
+        return {"available": False, "message": "The fundamentals table is not available."}
+    out = {"available": True, "store": fundamentals_store.stats()}
+    try:
+        out["universe"] = len(fundamentals_crawl.universe()) if fundamentals_crawl else None
+    except Exception:
+        out["universe"] = None
+    return to_native(out)
+
+
+@app.post("/admin/fundamentals/crawl")
+def admin_fundamentals_crawl(key: str = "", limit: int = 30, quarters: int = 8,
+                             symbols: str = "",
+                             x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    Read the next slice of companies into the fundamentals table.
+
+    Driven by the scheduled workflow, like the holdings crawl and for the same
+    reasons. Bounded per call: the first sweep is roughly ten documents for
+    each of two thousand companies, and it is meant to take many runs.
+    """
+    _require_admin(x_admin_key or key)
+    if fundamentals_crawl is None:
+        raise HTTPException(503, "The fundamentals crawler is not available.")
+    syms = [s.strip().upper() for s in (symbols or "").split(",") if s.strip()]
+    try:
+        return to_native(fundamentals_crawl.run(
+            limit=max(1, min(int(limit), 200)),
+            quarters=max(2, min(int(quarters), 16)),
+            symbols=syms or None))
+    except Exception as e:
+        raise HTTPException(503, f"The crawl failed: {str(e)[:150]}")
 
 
 @app.get("/investors")

@@ -1,0 +1,96 @@
+name: Fill the fundamentals table
+
+# Every listed company's quarterly P&L, read from its Regulation 33 filing
+# into one table (altaha_fundamentals.db on the API's disk). Same shape as the
+# holdings ledger workflow: the crawl runs ON THE API, where the disk is, and
+# this job only keeps asking for the next bounded slice. The coverage table
+# makes each call continue the last, so a sweep of ~2,300 companies spreads
+# across as many nights as it needs and then settles into re-reading each
+# company once a fortnight for new quarters.
+#
+# Needs the same repository secret as the holdings workflow: ALTAHA_ADMIN_KEY.
+
+on:
+  schedule:
+    # 23:30 UTC = 05:00 IST. After the holdings crawl, before market hours —
+    # two crawls at once would double the request rate at NSE.
+    - cron: "30 23 * * *"
+  workflow_dispatch:
+    inputs:
+      slices:
+        description: "How many crawl calls to make (30 companies each)"
+        type: string
+        default: "30"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fundamentals-table
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Read the next slices of companies into the table
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          SLICES: ${{ inputs.slices || '30' }}
+        run: |
+          set -uo pipefail
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render."
+            exit 1
+          fi
+          curl -sS --max-time 120 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+
+          failed=0; rows=0
+          for i in $(seq 1 "${SLICES}"); do
+            code=$(curl -sS --max-time 900 -o slice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/fundamentals/crawl?limit=30&quarters=8" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+            if [ "${code}" != "200" ]; then
+              echo "slice ${i}: HTTP ${code}"
+              if [ "${code}" = "401" ]; then
+                echo "::error::The server rejected the admin key (401). ALTAHA_ADMIN_KEY does not match ADMIN_KEY on Render."
+                exit 1
+              fi
+              failed=$((failed + 1))
+              if [ "${failed}" -ge 3 ]; then
+                echo "::error::three slices in a row failed (last HTTP ${code}) — stopping."
+                exit 1
+              fi
+              sleep 30
+              continue
+            fi
+            failed=0
+            read -r attempted got early < <(python3 -c "import json;d=json.load(open('slice.json'));print(d.get('attempted',0), d.get('rows',0), (d.get('stopped_early') or '').replace(' ','_'))")
+            rows=$((rows + got))
+            echo "slice ${i}: ${attempted} companies, ${got} rows ${early:+— ${early}}"
+            if [ "${attempted}" = "0" ]; then
+              echo "nothing further is due — the table is current."
+              break
+            fi
+            if [ -n "${early}" ]; then sleep 60; else sleep 5; fi
+          done
+          echo "::notice::${rows} rows written."
+
+      - name: Report what the table now holds
+        if: always()
+        env:
+          API: https://taha-project.onrender.com
+        run: |
+          curl -sS --max-time 120 "${API}/fundamentals/coverage" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin); st=d.get('store') or {}
+          print('companies : %s of %s' % (st.get('companies',0), d.get('universe')))
+          print('rows      : %s' % st.get('rows',0))
+          print('latest    : %s' % st.get('latest_period'))
+          print('coverage  : %s' % st.get('coverage'))
+          if not st.get('persistent'):
+              print('::warning::the table is NOT on a persistent disk — check DATA_DIR on Render.')
+          " || true

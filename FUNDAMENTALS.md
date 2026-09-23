@@ -178,3 +178,20 @@ Values are in rupees; divide by `unit_divisor` for crore. The page does.
 * `backend/tests/make_fundamentals_fixture.py` regenerates the browser
   fixture **from the real module**, so a key renamed in `fundamentals.py`
   cannot keep passing against a stale JSON literal.
+
+## The whole market, as one table
+
+`backend/fundamentals_store.py` · `backend/fundamentals_crawl.py` ·
+`.github/workflows/fundamentals.yml`
+
+Every quarter the pane reads is also kept in `altaha_fundamentals.db` on the
+data disk, table `quarterly_results`: one row per company per quarter per
+basis, P&L lines in ₹ crore (`*_cr`), EPS in rupees, the six ratios, and
+year-on-year change for revenue, EBITDA and PAT. A nightly workflow crawls the
+NSE list into it a slice at a time; `coverage` records who was read and when.
+
+* `GET /fundamentals/table?format=csv` — the whole table, for a spreadsheet
+* `GET /fundamentals/table?symbol=TCS` — one company
+* `GET /fundamentals/table?period_end=2026-06-30&format=csv` — one quarter, every company
+* `GET /fundamentals/coverage` — how much of the market is held so far
+* `POST /admin/fundamentals/crawl` — the next slice (admin key)
