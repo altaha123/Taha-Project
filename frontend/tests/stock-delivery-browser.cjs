@@ -86,6 +86,8 @@ const server = http.createServer((req, res) => {
   // ── Lazy, and only once ──────────────────────────────────────────────────
   assert.deepEqual(asked, [], 'delivery must not load before its pane is opened');
   await page.locator('#pane-btn-deliv').click();
+  await page.locator('.dv-hero').waitFor();
+  await page.locator('.dv-data summary').click();
   await page.locator('.dv-table').waitFor();
   assert.deepEqual(asked, ['60'], 'first open asks for the default window');
   await page.locator('#pane-btn-deliv').click();
@@ -155,19 +157,32 @@ const server = http.createServer((req, res) => {
   assert.equal(await other.locator('#pane-deliv .dv-table').count(), 0);
   await other.close();
 
+  await page.locator('.dv-data').evaluate(el => el.open = false);
+  await page.locator('.dv-slider').fill('0');
+  await page.locator('.dv-slider').dispatchEvent('input');
+  assert.match(await page.locator('.dv-selected').innerText(), new RegExp(delivery.rows[delivery.rows.length-1].deliv_pct.toFixed(2)+'%'));
+
   // ── It reads on a phone, in both themes ──────────────────────────────────
   for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 1000 });
     for (const theme of ['light', 'dark']) {
       await page.evaluate(t => document.documentElement.dataset.theme = t, theme);
-      await page.waitForTimeout(220);
+      await page.locator('.dv-hero').scrollIntoViewIfNeeded();
+      await page.waitForTimeout(1300);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
         false, `${width} ${theme}: horizontal page scroll`);
       await page.screenshot({ path: path.join(output, `${width}-${theme}.png`) });
+      await page.locator('.dv-trend').scrollIntoViewIfNeeded();
+      await page.screenshot({ path: path.join(output, `${width}-${theme}-trend.png`) });
+      await page.locator('.dv-history').scrollIntoViewIfNeeded();
+      assert.equal(await page.locator('.dv-session-grid').first().evaluate(el=>el.scrollWidth>el.clientWidth+1),false);
+      await page.screenshot({ path: path.join(output, `${width}-${theme}-sessions.png`) });
     }
   }
 
-  const relevant = errors.filter(e => /stock\.js/.test(e));
+  await page.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await page.locator('.dv-trend-line').evaluate(el=>getComputedStyle(el).animationName),'none');
+  const relevant = errors.filter(e => /stock\.js|delivery-ui\.js/.test(e));
   assert.deepEqual(relevant, []);
   await browser.close(); server.close();
   console.log('Delivery pane: lazy, derived figures disclosed, holes are dashes, not a zero');
