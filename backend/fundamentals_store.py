@@ -1,35 +1,42 @@
 """
-fundamentals_store.py — every listed company's quarterly P&L, as one table
+fundamentals_store.py — every listed company's statements, as three tables
 
 WHAT THIS IS
 The Fundamentals pane reads a company's Regulation 33 filings when someone
-opens it, and until now that was the only time anything was read. The XBRL
-documents were cached on disk as hashed JSON files, which nobody can browse,
-and a company nobody had looked at had nothing stored at all.
+opens it, and until now that was the only time anything was read. This is
+where a crawl of the whole NSE list keeps what those filings say, as three
+tables a person can open, export and query:
 
-This is the table those reads land in: one row per company per quarter, one
-column per P&L line, in ₹ crore, on the basis `fundamentals.series()` chose.
-It is filled by fundamentals_crawl a slice at a time across the whole NSE
-list, and also whenever the pane is served, so a page view is never wasted.
+  income_statement  one row per company per quarter AND per financial year:
+                    the P&L in ₹ crore, EPS, six ratios, year-on-year growth.
+                    Quarters go back to September 2018 — eight years.
+  balance_sheet     one row per company per half-year end (March, September):
+                    assets, equity, borrowings, and the ratios that follow.
+                    Filed in XBRL only from the September 2022 half-year, so
+                    four financial years to begin with, growing every year.
+  cash_flow         one row per company per half-year and full year: operating,
+                    investing and financing cash flow, capex, free cash flow.
+                    Filed from the 2020-21 year — six financial years.
 
-WHY ONE ROW PER (symbol, basis, period_end)
-A company files standalone and consolidated results for the same quarter, and
-the two are not comparable — see fundamentals.py. The basis is part of the key
-so the two can never overwrite each other, and every row says which it is.
+All three come from the same documents: every Reg 33 filing carries the
+quarter's P&L, and the March and September ones also carry the balance sheet
+at that date and the cash flow for the year to date.
+
+WHY THE BASIS IS PART OF EVERY KEY
+A company files standalone and consolidated results for the same period, and
+the two are not comparable — see fundamentals.py. The crawl reads one basis
+per company (consolidated where it files it) and every row says which.
 
 WHAT IS UPDATED AND WHAT IS NOT
-A company can revise a quarter's results. The row for a period holds the
-LATEST filing for it, judged by `filed_at`; an older filing arriving later
-never replaces a newer one. The raw documents stay in xbrl-cache and the
-point-in-time history of revisions stays in pit_store.quarter_versions — this
-table is the current view, meant to be read, exported and queried.
+A company can revise a period's results. A row holds the LATEST filing for its
+period, judged by `filed_at`; an older filing read later never replaces a
+newer one. `docs` records every document read, so a re-crawl fetches only
+what is new.
 
-AND YAHOO'S FULL STATEMENTS BESIDE IT
-A quarterly filing has no balance sheet and no cash flow, so yf_statements
-holds Yahoo Finance's income statement, balance sheet and cash flow, annual
-and quarterly, for the same companies. A separate table with its own coverage,
-because it is a different source with a different standing — see
-fundamentals_crawl.
+AND YAHOO'S STATEMENTS BESIDE THEM
+yf_statements holds Yahoo Finance's income statement, balance sheet and cash
+flow for the same companies — a secondary source, kept in its own table with
+its own coverage and never mixed into the three above.
 
 NO EXTERNAL DEPENDENCIES. Standard library only.
 """
@@ -40,7 +47,7 @@ import os
 import sqlite3
 import threading
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _DATA_DIR = os.environ.get("DATA_DIR", "").strip() or _HERE
@@ -67,40 +74,78 @@ _state = {
 
 CRORE = 1e7
 
-# (column, key in fundamentals.series()'s `values`). Money in ₹ crore, so the
-# table reads the way an Indian P&L is read; EPS stays in rupees per share.
-MONEY = [
-    ("revenue_cr",          "revenue"),
-    ("other_income_cr",     "other_income"),
-    ("total_income_cr",     "total_income"),
-    ("materials_cr",        "materials"),
-    ("employee_cost_cr",    "employee_cost"),
-    ("finance_cost_cr",     "finance_cost"),
-    ("depreciation_cr",     "depreciation"),
-    ("other_expenses_cr",   "other_expenses"),
-    ("total_expenses_cr",   "total_expenses"),
-    ("ebitda_cr",           "ebitda"),
-    ("pbt_before_exceptional_cr", "pbt_before_exceptional"),
-    ("exceptional_cr",      "exceptional"),
-    ("pbt_cr",              "pbt"),
-    ("tax_cr",              "tax"),
-    ("pat_cr",              "pat"),
+# ---------------------------------------------------------------------------
+# The three tables
+#
+# Money columns end in _cr and are ₹ crore; eps_basic is ₹ per share; *_pct
+# is a percentage and *_x a multiple. Line keys are the ones xbrl.normalise()
+# returns, so a column is `<key>_cr`.
+# ---------------------------------------------------------------------------
+
+INCOME_LINES = [
+    "revenue", "other_income", "total_income", "materials", "employee_cost",
+    "finance_cost", "depreciation", "other_expenses", "total_expenses",
+    "operating_profit_pre_provision", "provisions", "ebitda",
+    "pbt_before_exceptional", "exceptional", "pbt", "tax", "pat",
 ]
-RUPEES = [("eps_basic", "eps_basic")]
-RATIOS = ["opm_pct", "net_margin_pct", "tax_rate_pct",
-          "other_income_share_pct", "interest_cover_x", "employee_cost_pct"]
-# Year-on-year against the same quarter a year earlier, where a percentage
+INCOME_RATIOS = ["opm_pct", "net_margin_pct", "tax_rate_pct",
+                 "other_income_share_pct", "interest_cover_x", "employee_cost_pct"]
+# Year-on-year against the same period a year earlier, where a percentage
 # means something — None across zero, exactly as the pane shows it.
-YOY = [("revenue_yoy_pct", "revenue"), ("ebitda_yoy_pct", "ebitda"),
-       ("pat_yoy_pct", "pat")]
+INCOME_YOY = ["revenue", "ebitda", "pat"]
 
-VALUE_COLUMNS = [c for c, _k in MONEY + RUPEES] + RATIOS + [c for c, _k in YOY]
+BALANCE_LINES = [
+    "total_assets", "non_current_assets", "ppe", "cwip", "goodwill",
+    "other_intangibles", "non_current_investments", "current_assets",
+    "inventories", "current_investments", "investments", "trade_receivables",
+    "cash_and_equivalents", "other_bank_balances", "loans",
+    "total_equity", "equity_capital", "other_equity", "equity_to_owners",
+    "minority_interest", "total_liabilities", "non_current_liabilities",
+    "current_liabilities", "borrowings_non_current", "borrowings_current",
+    "borrowings", "debt_securities", "subordinated_liabilities", "deposits",
+    "trade_payables", "total_equity_and_liabilities",
+    "total_borrowings", "net_debt",                      # derived
+]
+BALANCE_RATIOS = ["debt_equity_x", "current_ratio_x"]
 
-# The order a reader wants the export in: who, when, then the statement top
-# to bottom, then what follows from it.
-COLUMNS = (["symbol", "company", "basis", "quarter", "period_end",
-            "period_from", "filed_at", "audited"]
-           + VALUE_COLUMNS + ["source_url", "updated_utc"])
+CASHFLOW_LINES = [
+    "cfo", "cfi", "cff", "capex_ppe", "capex_intangibles", "capex",
+    "fcf", "asset_sale_proceeds", "income_tax_paid", "dividends_paid",
+    "interest_paid", "borrowings_raised", "borrowings_repaid",
+    "lease_payments", "share_buyback", "shares_issued",
+    "net_change_in_cash", "closing_cash",
+]
+
+_MONEY = {"income": INCOME_LINES, "balance": BALANCE_LINES, "cashflow": CASHFLOW_LINES}
+
+TABLES = {
+    "income": {
+        "name": "income_statement",
+        "key": ["symbol", "basis", "freq", "period_end"],
+        "meta": ["symbol", "company", "basis", "freq", "label", "period_from",
+                 "period_end", "months", "filed_at", "audited"],
+        "values": ["%s_cr" % k for k in INCOME_LINES] + ["eps_basic"]
+                  + INCOME_RATIOS + ["%s_yoy_pct" % k for k in INCOME_YOY],
+    },
+    "balance": {
+        "name": "balance_sheet",
+        "key": ["symbol", "basis", "period_end"],
+        "meta": ["symbol", "company", "basis", "label", "period_end",
+                 "filed_at", "audited"],
+        "values": ["%s_cr" % k for k in BALANCE_LINES] + BALANCE_RATIOS,
+    },
+    "cashflow": {
+        "name": "cash_flow",
+        "key": ["symbol", "basis", "period_end", "months"],
+        "meta": ["symbol", "company", "basis", "label", "period_from",
+                 "period_end", "months", "filed_at", "audited"],
+        "values": ["%s_cr" % k for k in CASHFLOW_LINES],
+    },
+}
+for _t in TABLES.values():
+    _t["columns"] = _t["meta"] + _t["values"] + ["source_url", "updated_utc"]
+
+_INT = {"months"}
 
 
 def _utcnow():
@@ -121,23 +166,31 @@ def _open(path):
     return conn
 
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS quarterly_results (
-  symbol       TEXT NOT NULL,
-  company      TEXT,
-  basis        TEXT NOT NULL,            -- 'consolidated' | 'standalone'
-  quarter      TEXT,                     -- 'Q1 FY27'
-  period_end   TEXT NOT NULL,            -- YYYY-MM-DD
-  period_from  TEXT,
-  filed_at     TEXT,
-  audited      TEXT,
-%s,
-  source_url   TEXT,
-  first_seen_utc TEXT NOT NULL,
-  updated_utc  TEXT NOT NULL,
-  PRIMARY KEY (symbol, basis, period_end)
-);
-CREATE INDEX IF NOT EXISTS idx_qr_period ON quarterly_results (period_end);
+def _table_sql(t):
+    cols = []
+    for c in t["columns"]:
+        if c in t["values"]:
+            cols.append("  %s REAL" % c)
+        elif c in _INT:
+            cols.append("  %s INTEGER NOT NULL DEFAULT 0" % c)
+        elif c in t["key"] or c == "updated_utc":
+            cols.append("  %s TEXT NOT NULL" % c)
+        else:
+            cols.append("  %s TEXT" % c)
+    return ("CREATE TABLE IF NOT EXISTS %s (\n%s,\n  first_seen_utc TEXT NOT NULL,\n"
+            "  PRIMARY KEY (%s)\n);\nCREATE INDEX IF NOT EXISTS idx_%s_period ON %s (period_end);\n"
+            % (t["name"], ",\n".join(cols), ", ".join(t["key"]), t["name"], t["name"]))
+
+
+SCHEMA = "".join(_table_sql(t) for t in TABLES.values()) + """
+-- Every filing document read, so a re-crawl fetches only what is new.
+CREATE TABLE IF NOT EXISTS docs (
+  symbol      TEXT NOT NULL,
+  source_url  TEXT NOT NULL,
+  period_end  TEXT,
+  read_utc    TEXT NOT NULL,
+  PRIMARY KEY (symbol, source_url)
+) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS coverage (
   symbol         TEXT PRIMARY KEY,
@@ -186,7 +239,7 @@ CREATE TABLE IF NOT EXISTS yf_coverage (
   note           TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ycov_try ON yf_coverage (last_try_utc);
-""" % ",\n".join("  %s REAL" % c for c in VALUE_COLUMNS)
+"""
 
 
 def _connect():
@@ -263,56 +316,110 @@ def _iso(raw):
     return str(raw).strip()
 
 
-def _row(sym, company, basis, q, now):
-    values, ratios = q.get("values") or {}, q.get("ratios") or {}
-    yoy = q.get("yoy") or {}
-    out = {"symbol": sym, "company": company, "basis": basis,
-           "quarter": q.get("label"), "period_end": q.get("period_end"),
-           "period_from": q.get("from"), "filed_at": _iso(q.get("filed_at")),
-           "audited": None if q.get("audited") is None else str(q.get("audited")),
-           "source_url": q.get("source"), "updated_utc": now}
-    for col, key in MONEY:
-        out[col] = _num(values.get(key), CRORE)
-    for col, key in RUPEES:
-        out[col] = _num(values.get(key))
-    for col in RATIOS:
-        out[col] = _num(ratios.get(col))
-    for col, key in YOY:
-        out[col] = _num((yoy.get(key) or {}).get("pct"))
+def _date(raw):
+    try:
+        return date.fromisoformat(str(raw)[:10])
+    except (TypeError, ValueError):
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Writing
+# ---------------------------------------------------------------------------
+
+def to_row(table, meta, values):
+    """
+    One row for `table` from filing metadata and xbrl.normalise() line values
+    in rupees. Money becomes crore; ratios and EPS pass through; anything the
+    table has no column for is dropped.
+    """
+    t = TABLES[table]
+    out = {c: meta.get(c) for c in t["meta"]}
+    out["filed_at"] = _iso(meta.get("filed_at"))
+    out["months"] = int(meta.get("months") or 0) if "months" in t["meta"] else None
+    out["source_url"] = meta.get("source_url")
+    for k in _MONEY[table]:
+        out["%s_cr" % k] = _num(values.get(k), CRORE)
+    for c in t["values"]:
+        if not c.endswith("_cr"):
+            out[c] = _num(values.get(c))
     return out
 
 
-def record_series(series):
+def upsert(table, rows):
     """
-    Store what fundamentals.series() returned. Returns rows written.
+    Write rows into one of the three tables. Returns rows written.
 
     A row already held for a period is replaced only by a filing made on or
     after the one it came from, so a revision wins and a stale re-read of an
     older document never undoes it.
     """
-    if not series or not series.get("available"):
-        return 0
-    sym = (series.get("symbol") or "").strip().upper()
-    basis = series.get("basis")
-    if not sym or basis not in ("consolidated", "standalone"):
-        return 0
-    now = _utcnow()
-    rows = [_row(sym, series.get("company"), basis, q, now)
-            for q in series.get("rows") or [] if q.get("period_end")]
+    t = TABLES[table]
+    rows = [r for r in rows or [] if all(r.get(k) not in (None, "") for k in t["key"])]
     if not rows:
         return 0
-    cols = list(COLUMNS)
-    sql = ("INSERT INTO quarterly_results (%s, first_seen_utc) VALUES (%s, ?) "
-           "ON CONFLICT(symbol, basis, period_end) DO UPDATE SET %s "
-           "WHERE COALESCE(excluded.filed_at, '') >= "
-           "COALESCE(quarterly_results.filed_at, '')"
-           % (", ".join(cols), ", ".join("?" * len(cols)),
-              ", ".join("%s=excluded.%s" % (c, c) for c in cols
-                        if c not in ("symbol", "basis", "period_end"))))
+    now = _utcnow()
+    cols = t["columns"]
+    sql = ("INSERT INTO %s (%s, first_seen_utc) VALUES (%s, ?) "
+           "ON CONFLICT(%s) DO UPDATE SET %s "
+           "WHERE COALESCE(excluded.filed_at, '') >= COALESCE(%s.filed_at, '')"
+           % (t["name"], ", ".join(cols), ", ".join("?" * len(cols)),
+              ", ".join(t["key"]),
+              ", ".join("%s=excluded.%s" % (c, c) for c in cols if c not in t["key"]),
+              t["name"]))
     with _tx() as conn:
         before = conn.total_changes
-        conn.executemany(sql, [[r[c] for c in cols] + [now] for r in rows])
+        conn.executemany(sql, [[r.get(c) if c != "updated_utc" else now
+                                for c in cols] + [now] for r in rows])
         return conn.total_changes - before
+
+
+def _pct(now, before):
+    """A percentage only across a positive base, as fundamentals.change()."""
+    if now is None or before is None or before <= 0 or now <= 0:
+        return None
+    return round(100.0 * (now - before) / before, 2)
+
+
+def recompute_yoy(symbol):
+    """
+    Year-on-year growth on every income row of one company: against the row
+    of the same frequency and basis whose period ended a year earlier, within
+    a fortnight either way. Recomputed from the table rather than carried in
+    from a filing, so a quarter that arrives late fills in its successor too.
+    """
+    sym = (symbol or "").strip().upper()
+    with _tx() as conn:
+        recs = [dict(r) for r in conn.execute(
+            "SELECT basis, freq, period_end, %s FROM income_statement WHERE symbol=?"
+            % ", ".join("%s_cr" % k for k in INCOME_YOY), (sym,))]
+        by = {}
+        for r in recs:
+            by.setdefault((r["basis"], r["freq"]), []).append(r)
+        updates = []
+        for group in by.values():
+            for r in group:
+                end = _date(r["period_end"])
+                prev = next((p for p in group if end and _date(p["period_end"])
+                             and 350 <= (end - _date(p["period_end"])).days <= 380), None)
+                updates.append(tuple(
+                    _pct(r["%s_cr" % k], prev["%s_cr" % k]) if prev else None
+                    for k in INCOME_YOY) + (sym, r["basis"], r["freq"], r["period_end"]))
+        conn.executemany(
+            "UPDATE income_statement SET %s WHERE symbol=? AND basis=? AND freq=? AND period_end=?"
+            % ", ".join("%s_yoy_pct=?" % k for k in INCOME_YOY), updates)
+
+
+def read_docs(symbol):
+    """The filing documents already read for one company."""
+    return {r["source_url"] for r in _connect().execute(
+        "SELECT source_url FROM docs WHERE symbol=?", ((symbol or "").strip().upper(),))}
+
+
+def mark_doc(symbol, source_url, period_end=None):
+    with _tx() as conn:
+        conn.execute("INSERT OR REPLACE INTO docs VALUES (?,?,?,?)",
+                     ((symbol or "").strip().upper(), source_url, period_end, _utcnow()))
 
 
 _COVERAGE = {"nse": "coverage", "yfinance": "yf_coverage"}
@@ -324,14 +431,14 @@ def mark_coverage(symbol, status, latest_period=None, quarters=0, basis=None,
     with _tx() as conn:
         conn.execute(
             ("INSERT INTO {t} (symbol, last_try_utc, last_ok_utc, latest_period,"
-            " quarters, basis, status, note) VALUES (?,?,?,?,?,?,?,?)"
-            " ON CONFLICT(symbol) DO UPDATE SET last_try_utc=excluded.last_try_utc,"
-            " last_ok_utc=COALESCE(excluded.last_ok_utc, {t}.last_ok_utc),"
-            " latest_period=COALESCE(excluded.latest_period, {t}.latest_period),"
-            " quarters=CASE WHEN excluded.quarters > 0 THEN excluded.quarters"
-            "               ELSE {t}.quarters END,"
-            " basis=COALESCE(excluded.basis, {t}.basis),"
-            " status=excluded.status, note=excluded.note").format(t=_COVERAGE[source]),
+             " quarters, basis, status, note) VALUES (?,?,?,?,?,?,?,?)"
+             " ON CONFLICT(symbol) DO UPDATE SET last_try_utc=excluded.last_try_utc,"
+             " last_ok_utc=COALESCE(excluded.last_ok_utc, {t}.last_ok_utc),"
+             " latest_period=COALESCE(excluded.latest_period, {t}.latest_period),"
+             " quarters=CASE WHEN excluded.quarters > 0 THEN excluded.quarters"
+             "               ELSE {t}.quarters END,"
+             " basis=COALESCE(excluded.basis, {t}.basis),"
+             " status=excluded.status, note=excluded.note").format(t=_COVERAGE[source]),
             ((symbol or "").strip().upper(), now, now if ok else None,
              latest_period, int(quarters or 0), basis, status, (note or "")[:200]))
 
@@ -339,15 +446,17 @@ def mark_coverage(symbol, status, latest_period=None, quarters=0, basis=None,
 def due_symbols(universe, limit=40, stale_hours=24 * 14, source="nse"):
     """
     What the crawler should read next: never-tried companies first, then the
-    ones tried longest ago. Re-reading a company is cheap once its documents
-    are cached — one index call, plus a document only for a new quarter — so
-    a fortnight keeps the table current through a results season.
+    ones tried longest ago. A re-read fetches only documents not yet in
+    `docs`, so a fortnight keeps the tables current through a results season.
     """
     conn = _connect()
-    seen = {r["symbol"]: (r["last_try_utc"] or "") for r in conn.execute(
-        "SELECT symbol, last_try_utc FROM %s" % _COVERAGE[source]).fetchall()}
-    cutoff = (datetime.now(timezone.utc) -
-              timedelta(hours=stale_hours)).isoformat(timespec="seconds")
+    seen = {r["symbol"]: ((r["last_try_utc"] or ""), r["status"]) for r in conn.execute(
+        "SELECT symbol, last_try_utc, status FROM %s" % _COVERAGE[source]).fetchall()}
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(hours=stale_hours)).isoformat(timespec="seconds")
+    # A company left half-read because the exchange started refusing is
+    # retried the next day, not a fortnight later.
+    retry = (now - timedelta(hours=20)).isoformat(timespec="seconds")
     never, stale = [], []
     for sym in universe or []:
         s = (sym or "").strip().upper()
@@ -355,15 +464,22 @@ def due_symbols(universe, limit=40, stale_hours=24 * 14, source="nse"):
             continue
         if s not in seen:
             never.append(s)
-        elif seen[s] < cutoff:
-            stale.append((seen[s], s))
+            continue
+        tried, status = seen[s]
+        if tried < (retry if status in ("partial", "unreadable", "error") else cutoff):
+            stale.append((tried, s))
     stale.sort()
     return (never + [s for _t, s in stale])[: max(1, int(limit))]
 
 
-def rows(symbol=None, period_end=None, limit=None):
-    """The table, newest quarter first within each company."""
-    sql = "SELECT %s FROM quarterly_results" % ", ".join(COLUMNS)
+# ---------------------------------------------------------------------------
+# Reading
+# ---------------------------------------------------------------------------
+
+def rows(table, symbol=None, period_end=None, freq=None, limit=None):
+    """One of the three tables, each company's newest period first."""
+    t = TABLES[table]
+    sql = "SELECT %s FROM %s" % (", ".join(t["columns"]), t["name"])
     where, args = [], []
     if symbol:
         where.append("symbol = ?")
@@ -371,17 +487,20 @@ def rows(symbol=None, period_end=None, limit=None):
     if period_end:
         where.append("period_end = ?")
         args.append(period_end)
+    if freq and "freq" in t["columns"]:
+        where.append("freq = ?")
+        args.append(freq)
     if where:
         sql += " WHERE " + " AND ".join(where)
-    sql += " ORDER BY symbol, period_end DESC"
+    sql += " ORDER BY symbol, %speriod_end DESC" % ("freq, " if "freq" in t["columns"] else "")
     if limit:
         sql += " LIMIT %d" % max(1, int(limit))
     return [dict(r) for r in _connect().execute(sql, args).fetchall()]
 
 
-def to_csv(records):
+def to_csv(table, records):
     buf = io.StringIO()
-    w = csv.DictWriter(buf, fieldnames=COLUMNS, extrasaction="ignore")
+    w = csv.DictWriter(buf, fieldnames=TABLES[table]["columns"], extrasaction="ignore")
     w.writeheader()
     for r in records:
         w.writerow(r)
@@ -470,30 +589,41 @@ def yf_statement_csv(table):
 
 
 def stats():
-    """What the table actually holds, for the coverage endpoint."""
+    """What the tables actually hold, for the coverage endpoint."""
     conn = _connect()
 
     def one(sql):
         r = conn.execute(sql).fetchone()
         return r[0] if r and r[0] is not None else 0
-    cov = conn.execute(
-        "SELECT status, COUNT(*) AS n FROM coverage GROUP BY status").fetchall()
+
+    def cov(table):
+        return {(r["status"] or "unknown"): r["n"] for r in conn.execute(
+            "SELECT status, COUNT(*) AS n FROM %s GROUP BY status" % table)}
+
+    tables = {}
+    for key, t in TABLES.items():
+        n = t["name"]
+        tables[n] = {
+            "rows": one("SELECT COUNT(*) FROM %s" % n),
+            "companies": one("SELECT COUNT(DISTINCT symbol) FROM %s" % n),
+            "earliest_period": one("SELECT MIN(period_end) FROM %s" % n) or None,
+            "latest_period": one("SELECT MAX(period_end) FROM %s" % n) or None,
+        }
     return {
         "path": _state["active_path"],
         "persistent": not _state["fell_back"] and _state["data_dir_from_env"],
         "fell_back": _state["fell_back"],
         "last_error": _state["last_error"],
-        "rows": one("SELECT COUNT(*) FROM quarterly_results"),
-        "companies": one("SELECT COUNT(DISTINCT symbol) FROM quarterly_results"),
-        "latest_period": one("SELECT MAX(period_end) FROM quarterly_results") or None,
-        "coverage": {(r["status"] or "unknown"): r["n"] for r in cov},
+        "tables": tables,
+        "documents_read": one("SELECT COUNT(*) FROM docs"),
+        "coverage": cov("coverage"),
         "tried": one("SELECT COUNT(*) FROM coverage"),
         "yfinance": {
             "values": one("SELECT COUNT(*) FROM yf_statements"),
             "companies": one("SELECT COUNT(DISTINCT symbol) FROM yf_statements"),
             "latest_period": one("SELECT MAX(period_end) FROM yf_statements") or None,
-            "coverage": {(r["status"] or "unknown"): r["n"] for r in conn.execute(
-                "SELECT status, COUNT(*) AS n FROM yf_coverage GROUP BY status")},
+            "coverage": cov("yf_coverage"),
         },
-        "unit": "₹ crore, except eps_basic (₹ per share) and the *_pct / *_x ratios",
+        "unit": ("₹ crore for *_cr columns; eps_basic in ₹ per share; *_pct a "
+                 "percentage; *_x a multiple"),
     }

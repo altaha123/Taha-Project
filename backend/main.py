@@ -2209,42 +2209,46 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
             ticker, quarters=max(2, min(quarters, 16)), basis=want)
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
-    # A page view already paid for the fetch; keep what it read.
-    if fundamentals_store is not None:
-        try:
-            fundamentals_store.record_series(out)
-        except Exception:
-            pass
     return to_native(out)
 
 
 @app.get("/fundamentals/table")
-def fundamentals_table(symbol: str = "", period_end: str = "",
-                       format: str = "json", limit: int = 0):
+def fundamentals_table(table: str = "income", symbol: str = "", period_end: str = "",
+                       freq: str = "", format: str = "json", limit: int = 0):
     """
-    The stored quarterly results of every company read so far, as one table.
+    The statements of every company read so far, as a table.
 
-    One row per company per quarter, one column per P&L line in ₹ crore, on
-    the basis named in the row. `format=csv` downloads it for a spreadsheet;
-    `symbol` narrows it to one company and `period_end` (YYYY-MM-DD) to one
-    quarter across the market. What is held is exactly what
-    /fundamentals/coverage says — a company the crawl has not reached yet is
-    absent, not zero.
+    `table` is `income` (income_statement: each quarter and each financial
+    year), `balance` (balance_sheet: every March and September) or `cashflow`
+    (cash_flow: each half-year and full year). `symbol` narrows it to one
+    company, `period_end` (YYYY-MM-DD) to one period across the market, and
+    `freq` (quarterly or annual) the income table. `format=csv` downloads it
+    for a spreadsheet. Money columns end in _cr and are ₹ crore.
+
+    What is held is exactly what /fundamentals/coverage says — a company the
+    crawl has not reached yet is absent, not zero.
     """
     if fundamentals_store is None:
-        raise HTTPException(503, "The fundamentals table is not available.")
+        raise HTTPException(503, "The fundamentals tables are not available.")
+    if table not in fundamentals_store.TABLES:
+        raise HTTPException(400, "table must be income, balance or cashflow.")
     sym = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
-    if len(sym) > 20 or (period_end and len(period_end) != 10):
-        raise HTTPException(400, "Provide a valid symbol or period_end (YYYY-MM-DD).")
-    recs = fundamentals_store.rows(symbol=sym or None,
-                                   period_end=period_end or None,
+    if len(sym) > 20 or (period_end and len(period_end) != 10) or \
+            freq not in ("", "quarterly", "annual"):
+        raise HTTPException(400, "Provide a valid symbol, period_end (YYYY-MM-DD) "
+                                 "or freq (quarterly | annual).")
+    recs = fundamentals_store.rows(table, symbol=sym or None,
+                                   period_end=period_end or None, freq=freq or None,
                                    limit=max(0, int(limit)) or None)
     if format == "csv":
-        name = "fundamentals-%s.csv" % (sym or period_end or "all")
-        return Response(content=fundamentals_store.to_csv(recs),
+        name = "%s-%s.csv" % (fundamentals_store.TABLES[table]["name"],
+                              sym or period_end or "all")
+        return Response(content=fundamentals_store.to_csv(table, recs),
                         media_type="text/csv",
                         headers={"Content-Disposition": f'attachment; filename="{name}"'})
-    return to_native({"count": len(recs), "columns": fundamentals_store.COLUMNS,
+    return to_native({"table": fundamentals_store.TABLES[table]["name"],
+                      "count": len(recs),
+                      "columns": fundamentals_store.TABLES[table]["columns"],
                       "rows": recs})
 
 
@@ -2259,7 +2263,7 @@ def fundamentals_statements(symbol: str, statement: str = "income",
     `statement` is income, balance or cashflow; `freq` annual or quarterly.
     Money is in ₹ crore unless `crore=false`; share counts, rates and
     per-share items stay as reported. Yahoo is a secondary source — for the
-    quarterly P&L the company's own filing is /fundamentals/table.
+    statements the company filed itself, see /fundamentals/table.
     """
     if fundamentals_store is None:
         raise HTTPException(503, "The fundamentals table is not available.")
@@ -2292,18 +2296,17 @@ def fundamentals_coverage():
 
 
 @app.post("/admin/fundamentals/crawl")
-def admin_fundamentals_crawl(key: str = "", limit: int = 30, quarters: int = 8,
+def admin_fundamentals_crawl(key: str = "", limit: int = 8,
                              symbols: str = "", source: str = "nse",
                              x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     """
     Read the next slice of companies into the fundamentals table.
 
     Driven by the scheduled workflow, like the holdings crawl and for the same
-    reasons. Bounded per call: the first sweep is roughly ten documents for
-    each of two thousand companies, and it is meant to take many runs.
+    reasons. Bounded per call: the first sweep is about thirty-four documents
+    for each of two thousand companies, and it is meant to take many nights.
 
-    `source=yfinance` reads Yahoo's full statements instead — balance sheet
-    and cash flow included, which a quarterly filing does not carry.
+    `source=yfinance` reads Yahoo's statements into their own table instead.
     """
     _require_admin(x_admin_key or key)
     if fundamentals_crawl is None:
@@ -2314,7 +2317,6 @@ def admin_fundamentals_crawl(key: str = "", limit: int = 30, quarters: int = 8,
     try:
         return to_native(fundamentals_crawl.run(
             limit=max(1, min(int(limit), 200)),
-            quarters=max(2, min(int(quarters), 16)),
             symbols=syms or None, source=source))
     except Exception as e:
         raise HTTPException(503, f"The crawl failed: {str(e)[:150]}")

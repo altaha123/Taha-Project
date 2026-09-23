@@ -1,26 +1,29 @@
 """
-fundamentals_crawl.py — filling the fundamentals table, a slice at a time
+fundamentals_crawl.py — filling the three statement tables, a slice at a time
 
-Every listed company files its quarterly results with NSE under Regulation 33,
-so the whole market's P&L is there to be read — but only one company at a
-time, from an exchange that throttles bursts, on a 512 MB instance. Same shape
-of problem as the holdings ledger and the same answer: bounded slices, driven
-by a scheduled workflow, with a coverage table so each slice continues the
-last rather than starting again. See holdings_crawl for the longer argument.
+Every listed company files its results with NSE under Regulation 33: the
+quarter's P&L every quarter, and in March and September also the balance sheet
+at that date and the cash flow for the year to date. So the whole market's
+statements are there to be read — but only one document at a time, from an
+exchange that throttles bursts, on a 512 MB instance. Same shape of problem as
+the holdings ledger and the same answer: bounded slices, driven by a scheduled
+workflow, with a coverage table so each slice continues the last rather than
+starting again. See holdings_crawl for the longer argument.
 
-Each company is read through fundamentals.series(), the same path the pane
-uses, so the table and the page can never disagree about basis, period or
-ratio. Filed documents are cached for good by xbrl.fetch(), so after the first
-sweep a re-read costs an index call and a document only for a new quarter.
+WHAT ONE COMPANY COSTS
+The first read is every filing back to 2018 on one basis — about thirty-four
+documents. After that `docs` knows what has been read, so a re-read costs the
+index call and a document only for a new or revised period. Documents are not
+cached on disk here: the tables are the durable copy.
 
-YAHOO FOR WHAT A QUARTERLY FILING DOES NOT CARRY
-A Reg 33 filing is an income statement; it has no balance sheet and no cash
-flow. `source="yfinance"` reads Yahoo's full set — income, balance sheet and
-cash flow, annual and quarterly — into their own tables with their own
-coverage, so the two sweeps advance independently and a Yahoo outage never
-stalls the exchange one. Yahoo is a secondary source and the tables say so.
+YAHOO FOR A SECOND OPINION
+`source="yfinance"` reads Yahoo's income statement, balance sheet and cash
+flow into their own tables with their own coverage, so the two sweeps advance
+independently and a Yahoo outage never stalls the exchange one. Yahoo is a
+secondary source and the tables say so.
 """
 
+import datetime as dt
 import time
 
 try:
@@ -34,10 +37,12 @@ except Exception:                                   # pragma: no cover
     store = None
 
 
-DEFAULT_LIMIT = 30
-DEFAULT_QUARTERS = 8
+DEFAULT_LIMIT = 8            # companies per call: ~34 documents each at first
+MAX_DOCS = 34                # quarters back to September 2018, on one basis
+DOC_PAUSE = 0.8              # seconds between documents
+DOC_GIVE_UP = 5              # consecutive failed documents that end a company
 PAUSE = 1.5                  # seconds between companies
-GIVE_UP_AFTER = 8            # consecutive failures that end a run early
+GIVE_UP_AFTER = 6            # consecutive failed companies that end a run
 
 
 def universe():
@@ -49,36 +54,193 @@ def universe():
         return []
 
 
-def crawl_symbol(symbol, quarters=DEFAULT_QUARTERS):
-    """One company into the table. Never raises."""
+def _d(raw):
+    for fmt in ("%Y-%m-%d", "%d-%b-%Y", "%d-%B-%Y"):
+        try:
+            return dt.datetime.strptime(str(raw).strip()[:11].title(), fmt).date()
+        except (TypeError, ValueError):
+            continue
+    try:
+        return dt.date.fromisoformat(str(raw)[:10])
+    except (TypeError, ValueError):
+        return None
+
+
+def _fy(end):
+    """'FY26' for the Indian financial year a date falls in."""
+    return "FY%02d" % ((end.year + 1 if end.month >= 4 else end.year) % 100)
+
+
+def _income_values(v):
+    """P&L lines plus the six ratios, computed as the pane computes them."""
+    out = dict(v)
+    rev, pbt, ebitda = v.get("revenue"), v.get("pbt"), v.get("ebitda")
+    out.update({
+        "opm_pct": fundamentals._div(ebitda, rev),
+        "net_margin_pct": fundamentals._div(v.get("pat"), rev),
+        "tax_rate_pct": fundamentals._div(v.get("tax"), pbt),
+        "other_income_share_pct": fundamentals._div(v.get("other_income"), pbt),
+        "interest_cover_x": fundamentals._times(ebitda, v.get("finance_cost")),
+        "employee_cost_pct": fundamentals._div(v.get("employee_cost"), rev),
+    })
+    return out
+
+
+def _balance_values(b):
+    out = dict(b)
+    parts = [b.get(k) for k in ("borrowings_non_current", "borrowings_current")]
+    if any(p is not None for p in parts):
+        debt = sum(p or 0 for p in parts)
+    else:
+        # Banks and NBFCs file one Borrowings line, and an NBFC's bonds and
+        # subordinated debt sit beside it rather than inside it.
+        parts = [b.get(k) for k in ("borrowings", "debt_securities", "subordinated_liabilities")]
+        debt = sum(p or 0 for p in parts) if any(p is not None for p in parts) else None
+    equity = b.get("total_equity")
+    if equity is None and b.get("equity_capital") is not None and b.get("other_equity") is not None:
+        equity = b["equity_capital"] + b["other_equity"]      # a bank's Capital + Reserves
+        out["total_equity"] = equity
+    out["total_borrowings"] = debt
+    if debt is not None:
+        out["net_debt"] = debt - (b.get("cash_and_equivalents") or 0) \
+            - (b.get("current_investments") or 0)
+    out["debt_equity_x"] = fundamentals._times(debt, equity) if debt is not None else None
+    out["current_ratio_x"] = fundamentals._times(b.get("current_assets"),
+                                                 b.get("current_liabilities"))
+    return out
+
+
+def _cashflow_values(y):
+    out = dict(y)
+    parts = [y.get("capex_ppe"), y.get("capex_intangibles")]
+    if any(p is not None for p in parts):
+        out["capex"] = sum(p or 0 for p in parts)
+        if y.get("cfo") is not None:
+            out["fcf"] = y["cfo"] - out["capex"]      # payments are filed positive
+    return out
+
+
+def build_rows(symbol, company, basis, meta, data):
+    """
+    Everything one filing contributes, as {"income": [...], "balance": [...],
+    "cashflow": [...]}. Pure: no network, no disk, so it can be tested on a
+    parsed document alone.
+    """
+    out = {"income": [], "balance": [], "cashflow": []}
+    period = data.get("period") or {}
+    end = _d(meta.get("to")) or _d(period.get("to"))
+    if not end:
+        return out
+    base = {"symbol": symbol, "company": company, "basis": basis,
+            "filed_at": meta.get("filed_at"), "audited": meta.get("audited"),
+            "source_url": meta.get("xbrl")}
+
+    start = _d(period.get("from"))
+    if data.get("revenue") is not None or data.get("pat") is not None:
+        span = (end - start).days if start else 90
+        if 60 <= span <= 130:
+            out["income"].append(store.to_row("income", {
+                **base, "freq": "quarterly", "label": fundamentals.quarter_label(end),
+                "period_from": start.isoformat() if start else None,
+                "period_end": end.isoformat(), "months": 3},
+                _income_values(data)))
+
+    y = data.get("ytd") or {}
+    months = y.get("months")
+    if months == 12 and (y.get("revenue") is not None or y.get("pat") is not None):
+        out["income"].append(store.to_row("income", {
+            **base, "freq": "annual", "label": _fy(end),
+            "period_from": y.get("from"), "period_end": end.isoformat(),
+            "months": 12}, _income_values(y)))
+    if months in (6, 12) and y.get("cfo") is not None:
+        out["cashflow"].append(store.to_row("cashflow", {
+            **base, "label": _fy(end) if months == 12 else "H1 " + _fy(end),
+            "period_from": y.get("from"), "period_end": end.isoformat(),
+            "months": months}, _cashflow_values(y)))
+
+    b = data.get("balance_sheet") or {}
+    if b.get("total_assets") is not None:
+        out["balance"].append(store.to_row("balance", {
+            **base, "label": end.strftime("%b %Y"), "period_end": end.isoformat()},
+            _balance_values(b)))
+    return out
+
+
+def crawl_symbol(symbol, max_docs=MAX_DOCS, **_kw):
+    """One company into the three tables. Never raises."""
     sym = (symbol or "").strip().upper()
-    res = {"symbol": sym, "ok": False, "rows": 0, "quarters": 0,
+    res = {"symbol": sym, "ok": False, "rows": 0, "documents": 0,
            "status": "error", "note": ""}
     if not sym or fundamentals is None or store is None:
         res["note"] = "reader unavailable"
         return res
     try:
-        s = fundamentals.series(sym, quarters=quarters)
+        import xbrl
+        idx = xbrl.filings(sym)
     except Exception as e:
-        res["note"] = ("series: %s" % e)[:180]
+        res["note"] = ("index: %s" % e)[:180]
         store.mark_coverage(sym, "error", note=res["note"])
         return res
-    if not s.get("available"):
-        msg = s.get("message") or ""
-        # "No filing" is an answer about the company — an SME or a newly
-        # listed name — and must not be mistaken for the exchange refusing.
-        res["status"] = "no-filings" if "No quarterly results filing" in msg \
-            or "declares an accounting basis" in msg else "unreadable"
-        res["note"] = msg[:180]
+    if not idx:
+        res["status"] = "no-filings"
+        res["note"] = "no results filing indexed"
         store.mark_coverage(sym, res["status"], note=res["note"])
         return res
-    wrote = store.record_series(s)
-    got = s.get("rows") or []
-    res.update({"ok": True, "rows": wrote, "quarters": len(got),
-                "status": "ok", "basis": s.get("basis")})
-    store.mark_coverage(sym, "ok", latest_period=got[0].get("period_end") if got else None,
-                        quarters=len(got), basis=s.get("basis"),
-                        note="partial" if s.get("partial") else "", ok=True)
+
+    con, basis, _why = fundamentals._pick_basis(idx)
+    if con is None:
+        res["status"] = "no-filings"
+        res["note"] = "no filing declares an accounting basis"
+        store.mark_coverage(sym, res["status"], note=res["note"])
+        return res
+    picks = [f for f in idx if f.get("consolidated") is con and f.get("xbrl")]
+    picks.sort(key=lambda f: (_d(f.get("to")) or dt.date.min), reverse=True)
+    picks = picks[: max(1, int(max_docs))]
+    done = store.read_docs(sym)
+    company = next((f.get("company") for f in picks if f.get("company")), None)
+
+    wrote, read, fails = 0, 0, 0
+    for f in picks:
+        if f["xbrl"] in done:
+            continue
+        data = xbrl.fetch(f["xbrl"], cache=False)
+        if not data or data.get("ok") is False:
+            # NSE refuses in bursts; one retry after a pause gets most back.
+            time.sleep(DOC_PAUSE * 5)
+            data = xbrl.fetch(f["xbrl"], cache=False)
+        if not data or data.get("ok") is False:
+            fails += 1
+            if fails >= DOC_GIVE_UP:
+                res["note"] = "%d documents in a row refused" % fails
+                break
+            continue
+        fails = 0
+        built = build_rows(sym, company, basis, f, data)
+        for table, recs in built.items():
+            wrote += store.upsert(table, recs)
+        end = _d(f.get("to"))
+        store.mark_doc(sym, f["xbrl"], end.isoformat() if end else None)
+        read += 1
+        if DOC_PAUSE:
+            time.sleep(DOC_PAUSE)
+    if read:
+        store.recompute_yoy(sym)
+
+    have = store.read_docs(sym)
+    outstanding = sum(1 for f in picks if f["xbrl"] not in have)
+    latest = max((_d(f.get("to")) for f in picks if f["xbrl"] in have),
+                 default=None)
+    res.update({"rows": wrote, "documents": read, "basis": basis,
+                "outstanding": outstanding})
+    if have and not (fails >= DOC_GIVE_UP and read == 0):
+        res["ok"], res["status"] = True, "ok" if not outstanding else "partial"
+        store.mark_coverage(sym, res["status"], ok=True, basis=basis,
+                            latest_period=latest.isoformat() if latest else None,
+                            quarters=len(picks) - outstanding, note=res["note"])
+    else:
+        res["status"] = "unreadable"
+        res["note"] = res["note"] or "filings indexed but none could be read"
+        store.mark_coverage(sym, res["status"], note=res["note"])
     return res
 
 
@@ -147,8 +309,7 @@ def crawl_yf_symbol(symbol, **_kw):
     return res
 
 
-def run(limit=DEFAULT_LIMIT, quarters=DEFAULT_QUARTERS, symbols=None,
-        pause=PAUSE, source="nse"):
+def run(limit=DEFAULT_LIMIT, symbols=None, pause=PAUSE, source="nse"):
     """One slice of the sweep. `symbols` overrides the queue."""
     started = time.time()
     out = {"source": source, "attempted": 0, "ok": 0, "rows": 0, "failed": 0,
@@ -175,7 +336,7 @@ def run(limit=DEFAULT_LIMIT, quarters=DEFAULT_QUARTERS, symbols=None,
 
     misses = 0
     for sym in queue[: max(1, int(limit))]:
-        r = crawl(sym, quarters=quarters)
+        r = crawl(sym)
         out["attempted"] += 1
         out["results"].append(r)
         if r["ok"]:

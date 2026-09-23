@@ -1,12 +1,12 @@
-name: Fill the fundamentals table
+name: Fill the fundamentals tables
 
-# Every listed company's quarterly P&L, read from its Regulation 33 filing
-# into one table (altaha_fundamentals.db on the API's disk). Same shape as the
-# holdings ledger workflow: the crawl runs ON THE API, where the disk is, and
-# this job only keeps asking for the next bounded slice. The coverage table
-# makes each call continue the last, so a sweep of ~2,300 companies spreads
-# across as many nights as it needs and then settles into re-reading each
-# company once a fortnight for new quarters.
+# Every listed company's income statement, balance sheet and cash flow, read
+# from its Regulation 33 filings into three tables (altaha_fundamentals.db on
+# the API's disk). Same shape as the holdings ledger workflow: the crawl runs
+# ON THE API, where the disk is, and this job only keeps asking for the next
+# bounded slice. The first read of a company is ~34 documents (back to 2018),
+# so the first sweep of ~2,300 companies takes about a week of nights; after
+# that each company is re-read once a fortnight, fetching only new filings.
 #
 # Needs the same repository secret as the holdings workflow: ALTAHA_ADMIN_KEY.
 
@@ -18,9 +18,9 @@ on:
   workflow_dispatch:
     inputs:
       slices:
-        description: "How many crawl calls to make (30 companies each)"
+        description: "How many crawl calls to make (8 companies each)"
         type: string
-        default: "30"
+        default: "40"
 
 permissions:
   contents: read
@@ -32,13 +32,14 @@ concurrency:
 jobs:
   crawl:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 350
     steps:
-      - name: Read the next slices of companies into the table
+      - name: Read the next slices of companies into the tables
+        timeout-minutes: 290
         env:
           ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
           API: https://taha-project.onrender.com
-          SLICES: ${{ inputs.slices || '30' }}
+          SLICES: ${{ inputs.slices || '40' }}
         run: |
           set -uo pipefail
           if [ -z "${ADMIN_KEY}" ]; then
@@ -50,8 +51,8 @@ jobs:
 
           failed=0; rows=0
           for i in $(seq 1 "${SLICES}"); do
-            code=$(curl -sS --max-time 900 -o slice.json -w "%{http_code}" \
-                   -X POST "${API}/admin/fundamentals/crawl?limit=30&quarters=8" \
+            code=$(curl -sS --max-time 1500 -o slice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/fundamentals/crawl?limit=8" \
                    -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
             if [ "${code}" != "200" ]; then
               echo "slice ${i}: HTTP ${code}"
@@ -80,13 +81,14 @@ jobs:
           echo "::notice::${rows} rows written."
 
       - name: Read the next slices of companies from Yahoo Finance
-        # Balance sheet and cash flow, which a quarterly filing does not carry.
-        # Its own queue, so a Yahoo outage never stalls the exchange sweep.
+        # A second opinion in its own table, on its own queue, so a Yahoo
+        # outage never stalls the exchange sweep.
         continue-on-error: true
+        timeout-minutes: 50
         env:
           ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
           API: https://taha-project.onrender.com
-          SLICES: ${{ inputs.slices || '30' }}
+          SLICES: "15"
         run: |
           set -uo pipefail
           failed=0
@@ -115,9 +117,10 @@ jobs:
           curl -sS --max-time 120 "${API}/fundamentals/coverage" | python3 -c "
           import json,sys
           d=json.load(sys.stdin); st=d.get('store') or {}
-          print('companies : %s of %s' % (st.get('companies',0), d.get('universe')))
-          print('rows      : %s' % st.get('rows',0))
-          print('latest    : %s' % st.get('latest_period'))
+          print('universe  : %s companies' % d.get('universe'))
+          for name, t in (st.get('tables') or {}).items():
+              print('%-17s %s companies, %s rows, %s to %s' % (name, t.get('companies'),
+                    t.get('rows'), t.get('earliest_period'), t.get('latest_period')))
           print('coverage  : %s' % st.get('coverage'))
           print('yahoo     : %s' % st.get('yfinance'))
           if not st.get('persistent'):

@@ -329,6 +329,53 @@ def parse(xml_text):
     p_start = first_text("DateOfStartOfReportingPeriod")
     p_end = first_text("DateOfEndOfReportingPeriod")
 
+    # Filings made under the 2018 BSE taxonomy (TCS's, up to about 2020)
+    # reference their company-level contexts — OneD, FourD, OneI — without
+    # ever defining them; only the segment contexts are declared. Every fact
+    # in those documents was being discarded, which is why the history
+    # stopped short in 2020. Each undefined duration context states its own
+    # period as facts inside it, so it can be rebuilt from those; an
+    # undefined instant is the balance at the end of the reporting period.
+    own = {}
+    for n, c, v in raw:
+        if n in ("DateOfStartOfReportingPeriod", "DateOfEndOfReportingPeriod") and v:
+            own.setdefault(c, {})[n] = v
+    # And where a context IS defined, the period its own facts state wins
+    # over the definition: TCS's March 2024 filing defines FourD as January
+    # to March while the facts inside it say April to March, which silently
+    # turned the full year into a second copy of the quarter.
+    for cref, stated in own.items():
+        c = ctx.get(cref)
+        if c and not c["dimensional"] and c["start"] and \
+                stated.get("DateOfStartOfReportingPeriod") and \
+                stated.get("DateOfEndOfReportingPeriod"):
+            c["start"] = stated["DateOfStartOfReportingPeriod"]
+            c["end"] = stated["DateOfEndOfReportingPeriod"]
+    # Some filings (HDFC Bank's up to 2021) state only the END of each
+    # period. The exchange's naming then carries the rest: One is the quarter
+    # and Four the year to date, which starts where the filing says the
+    # financial year starts.
+    fy_start = first_text("DateOfStartOfFinancialYear")
+    for cref in {c for _n, c, _v in raw} - set(ctx):
+        if not re.fullmatch(r"[A-Z][a-z]+[DI]", cref):
+            continue
+        if cref.endswith("D") and cref in own:
+            start = own[cref].get("DateOfStartOfReportingPeriod")
+            end = own[cref].get("DateOfEndOfReportingPeriod")
+            e = _dparse(end)
+            if not start and e and cref == "OneD":
+                m = e.month - 2 if e.month > 2 else e.month + 10
+                start = dt.date(e.year if e.month > 2 else e.year - 1, m, 1).isoformat()
+            elif not start and cref == "FourD":
+                start = fy_start
+            if not start:
+                continue
+            ctx[cref] = {"start": start, "end": end,
+                         "instant": None, "dimensional": False}
+        elif cref.endswith("I") and p_end:
+            ctx[cref] = {"start": None, "end": None, "instant": p_end,
+                         "dimensional": False}
+
     plain = {c: i for c, i in ctx.items() if not i["dimensional"]}
 
     # The duration context whose dates ARE the declared reporting period.
@@ -348,6 +395,29 @@ def parse(xml_text):
                 spans.append(((b - a).days, cid))
         if spans:
             duration = min(spans)[1]
+            p_start = p_start or plain[duration]["start"]
+
+    # Every plain duration ending on the reporting date, shortest first. The
+    # shortest is the quarter; the longest is the year to date — six months in
+    # a September filing, the full year in a March one — and it is where the
+    # cash flow statement and the annual P&L live.
+    ending = []
+    if p_end:
+        for cid, i in plain.items():
+            a, b = _dparse(i["start"]), _dparse(i["end"])
+            if a and b and i["end"] == p_end:
+                ending.append(((b - a).days, cid))
+    ending.sort()
+    # A filing that declares its whole year as the reporting period still
+    # carries the quarter; the quarter is what `facts` promises.
+    if duration and ending and ending[0][1] != duration and ending[0][0] <= 130:
+        cur = plain[duration]
+        a, b = _dparse(cur["start"]), _dparse(cur["end"])
+        if a and b and (b - a).days > 130:
+            duration = ending[0][1]
+            p_start = plain[duration]["start"]
+    ytd = ending[-1][1] if ending and ending[-1][1] != duration \
+        and ending[-1][0] > 130 else None
 
     instant = None
     for cid, i in plain.items():
@@ -356,11 +426,15 @@ def parse(xml_text):
             break
 
     keep = {c for c in (duration, instant) if c}
-    facts, text = {}, {}
+    facts, text, facts_ytd, facts_instant = {}, {}, {}, {}
     for name, cref, value in raw:
+        num = _numeric(value)
+        if cref == ytd and num is not None:
+            facts_ytd.setdefault(name, num)
+        if cref == instant and num is not None:
+            facts_instant.setdefault(name, num)
         if cref not in keep:
             continue
-        num = _numeric(value)
         if num is not None:
             facts.setdefault(name, num)
         elif value:
@@ -370,7 +444,11 @@ def parse(xml_text):
         "ok": True,
         "period": {"from": p_start, "to": p_end,
                    "duration_context": duration, "instant_context": instant},
+        "ytd": ({"from": plain[ytd]["start"], "to": plain[ytd]["end"],
+                 "context": ytd} if ytd else None),
         "facts": facts,
+        "facts_ytd": facts_ytd,
+        "facts_instant": facts_instant,
         "text": text,
         "contexts": len(ctx),
         "dimensional_contexts_skipped": sum(1 for i in ctx.values() if i["dimensional"]),
@@ -387,27 +465,35 @@ def parse(xml_text):
 # ---------------------------------------------------------------------------
 
 FIELDS = {
-    "revenue":          ["RevenueFromOperations"],
+    # Banks file under a format of their own: interest earned is the top
+    # line, interest expended the finance cost. Ind AS names come first in
+    # every list, so nothing a company files under Ind AS reads differently.
+    "revenue":          ["RevenueFromOperations", "InterestEarned"],
     "other_income":     ["OtherIncome"],
     "total_income":     ["Income", "TotalIncome"],
     "materials":        ["CostOfMaterialsConsumed"],
     "purchases":        ["PurchasesOfStockInTrade"],
     "inventory_change": ["ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade"],
-    "employee_cost":    ["EmployeeBenefitExpense"],
-    "finance_cost":     ["FinanceCosts"],
+    "employee_cost":    ["EmployeeBenefitExpense", "EmployeesCost"],
+    "finance_cost":     ["FinanceCosts", "InterestExpended"],
     "depreciation":     ["DepreciationDepletionAndAmortisationExpense"],
-    "other_expenses":   ["OtherExpenses"],
-    "total_expenses":   ["Expenses", "TotalExpenses"],
+    "other_expenses":   ["OtherExpenses", "OtherOperatingExpenses"],
+    "total_expenses":   ["Expenses", "TotalExpenses",
+                         "ExpenditureExcludingProvisionsAndContingencies"],
+    "operating_profit_pre_provision": ["OperatingProfitBeforeProvisionAndContingencies"],
+    "provisions":       ["ProvisionsOtherThanTaxAndContingencies"],
     "pbt_before_exceptional": ["ProfitBeforeExceptionalItemsAndTax"],
-    "exceptional":      ["ExceptionalItemsBeforeTax"],
-    "pbt":              ["ProfitBeforeTax"],
+    "exceptional":      ["ExceptionalItemsBeforeTax", "ExceptionalItems"],
+    "pbt":              ["ProfitBeforeTax", "ProfitLossFromOrdinaryActivitiesBeforeTax"],
     "current_tax":      ["CurrentTax"],
     "deferred_tax":     ["DeferredTax"],
     "tax":              ["TaxExpense"],
-    "pat":              ["ProfitLossForPeriod", "ProfitLossForPeriodFromContinuingOperations"],
+    "pat":              ["ProfitLossForPeriod", "ProfitLossForPeriodFromContinuingOperations",
+                         "ProfitLossForThePeriod"],
     "comprehensive_income": ["ComprehensiveIncomeForThePeriod"],
     "eps_basic":        ["BasicEarningsLossPerShareFromContinuingAndDiscontinuedOperations",
-                         "BasicEarningsLossPerShareFromContinuingOperations"],
+                         "BasicEarningsLossPerShareFromContinuingOperations",
+                         "BasicEarningsPerShareAfterExtraordinaryItems"],
     "eps_diluted":      ["DilutedEarningsLossPerShareFromContinuingAndDiscontinuedOperations",
                          "DilutedEarningsLossPerShareFromContinuingOperations"],
     "equity_capital":   ["PaidUpValueOfEquityShareCapital"],
@@ -424,6 +510,98 @@ FIELDS = {
     "debt_service_cover": ["DebtServiceCoverageRatio"],
     "interest_cover":   ["InterestServiceCoverageRatio"],
 }
+
+
+# The statement of assets and liabilities, filed with the half-year and
+# annual results (September and March) since the September 2022 half-year.
+# Candidates run Ind AS first, then the banking format (Advances, Deposits,
+# Capital, Reserves and Surplus), then the NBFC one.
+BALANCE_FIELDS = {
+    "total_assets":          ["Assets"],
+    "non_current_assets":    ["NoncurrentAssets"],
+    "ppe":                   ["PropertyPlantAndEquipment", "FixedAssets"],
+    "cwip":                  ["CapitalWorkInProgress"],
+    "goodwill":              ["Goodwill"],
+    "other_intangibles":     ["OtherIntangibleAssets"],
+    "non_current_investments": ["NoncurrentInvestments"],
+    "current_assets":        ["CurrentAssets"],
+    "inventories":           ["Inventories"],
+    "current_investments":   ["CurrentInvestments"],
+    "investments":           ["Investments"],
+    "trade_receivables":     ["TradeReceivablesCurrent", "TradeReceivables"],
+    "cash_and_equivalents":  ["CashAndCashEquivalents", "CashAndBalancesWithReserveBankOfIndia"],
+    "other_bank_balances":   ["BankBalanceOtherThanCashAndCashEquivalents",
+                              "BalancesWithBanksAndMoneyAtCallAndShortNotice"],
+    "loans":                 ["Loans", "Advances"],
+    "total_equity":          ["Equity"],
+    "equity_capital":        ["EquityShareCapital", "Capital"],
+    "other_equity":          ["OtherEquity", "ReservesAndSurplus"],
+    "equity_to_owners":      ["EquityAttributableToOwnersOfParent"],
+    "minority_interest":     ["NonControllingInterest"],
+    "total_liabilities":     ["Liabilities"],
+    "non_current_liabilities": ["NoncurrentLiabilities"],
+    "current_liabilities":   ["CurrentLiabilities"],
+    "borrowings_non_current": ["BorrowingsNoncurrent"],
+    "borrowings_current":    ["BorrowingsCurrent"],
+    "borrowings":            ["Borrowings"],
+    "debt_securities":       ["DebtSecurities"],
+    "subordinated_liabilities": ["SubordinatedLiabilities"],
+    "deposits":              ["Deposits"],
+    "trade_payables":        ["TradePayablesCurrent"],
+    "total_equity_and_liabilities": ["EquityAndLiabilities", "CapitalAndLiabilities"],
+}
+
+# The cash flow statement, year to date: six months in a September filing, the
+# full year in a March one. Filed from the 2020-21 year. Payments — capex,
+# dividends, interest — are filed as positive amounts.
+CASHFLOW_FIELDS = {
+    "cfo":                 ["CashFlowsFromUsedInOperatingActivities"],
+    "cfi":                 ["CashFlowsFromUsedInInvestingActivities"],
+    "cff":                 ["CashFlowsFromUsedInFinancingActivities"],
+    "capex_ppe":           ["PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+                            "PurchaseOfTangibleAssetsClassifiedAsInvestingActivities"],
+    "capex_intangibles":   ["PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities"],
+    "asset_sale_proceeds": ["ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities",
+                            "ProceedsFromSalesOfTangibleAssetsClassifiedAsInvestingActivities"],
+    "income_tax_paid":     ["IncomeTaxesPaidRefundClassifiedAsOperatingActivities"],
+    "dividends_paid":      ["DividendsPaidClassifiedAsFinancingActivities"],
+    "interest_paid":       ["InterestPaidClassifiedAsFinancingActivities"],
+    "borrowings_raised":   ["ProceedsFromBorrowingsClassifiedAsFinancingActivities"],
+    "borrowings_repaid":   ["RepaymentsOfBorrowingsClassifiedAsFinancingActivities"],
+    "lease_payments":      ["PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities"],
+    "share_buyback":       ["PaymentsToAcquireOrRedeemEntitysShares"],
+    "shares_issued":       ["ProceedsFromIssuingSharesClassifiedAsFinancingActivities",
+                            "ProceedsFromIssuingShares"],
+    "net_change_in_cash":  ["IncreaseDecreaseInCashAndCashEquivalents"],
+    "closing_cash":        ["CashAndCashEquivalentsCashFlowStatement"],
+}
+
+# Bumped whenever normalise() starts returning something new, so fetch() can
+# tell a cached parse that predates it from one that does not.
+SCHEMA = 5
+
+
+def _pick(f, fields):
+    out = {}
+    for key, names in fields.items():
+        for n in names:
+            if n in f:
+                out[key] = f[n]
+                break
+    return out
+
+
+def _pnl(f):
+    """The income statement lines, plus EBITDA and the margins that follow."""
+    out = _pick(f, FIELDS)
+    rev = out.get("revenue")
+    if rev:
+        pbt = out.get("pbt")
+        if pbt is not None and all(out.get(k) is not None for k in ("finance_cost", "depreciation", "other_income")):
+            ebitda = pbt + (out.get("finance_cost") or 0) + (out.get("depreciation") or 0) \
+                     - (out.get("other_income") or 0)
+            out["ebitda"] = round(ebitda, 2)
+    return out
 
 
 def normalise(parsed):
@@ -459,6 +637,32 @@ def normalise(parsed):
         out["roa_annualised_pct"] = round(pat * 4 / ta * 100, 2)
 
     out["period"] = parsed.get("period")
+
+    # The balance sheet at the reporting date, and the year to date — the
+    # annual P&L in a March filing and the cash flow in March and September.
+    # Kept apart from the quarter's lines above so nothing that reads those
+    # can mistake a year's figure for a quarter's.
+    bs = _pick(parsed.get("facts_instant") or {}, BALANCE_FIELDS)
+    if bs:
+        out["balance_sheet"] = bs
+    y = parsed.get("ytd")
+    if y and parsed.get("facts_ytd"):
+        a, b = _dparse(y.get("from")), _dparse(y.get("to"))
+        ytd = {"from": y.get("from"), "to": y.get("to"),
+               "months": round((b - a).days / 30.44) if a and b else None}
+        ytd.update(_pnl(parsed["facts_ytd"]))
+        cf = _pick(parsed["facts_ytd"], CASHFLOW_FIELDS)
+        if cf.get("cfo") is None:
+            # Filings up to about 2021 tag the cash flow against the QUARTER's
+            # context. Regulation 33 never asks for a quarterly cash flow — it
+            # is filed for the half-year and the year only — so a cash flow
+            # found there is the year to date, whatever its context says.
+            # TCS's FY21 filing: ₹38,802 cr of operating cash flow, which is
+            # the full year's figure, under OneD.
+            cf = _pick(f, CASHFLOW_FIELDS)
+        ytd.update(cf)
+        out["ytd"] = ytd
+    out["schema"] = SCHEMA
     return out
 
 
@@ -468,16 +672,23 @@ def _cache_path(url):
     return os.path.join(CACHE_DIR, hashlib.sha1(("v4:" + url).encode()).hexdigest() + ".json")
 
 
-def fetch(url):
+def fetch(url, cache=True):
     """
     One filing, parsed and normalised. Cached on disk for good: a filed XBRL
     document is immutable, so re-fetching it is pure waste.
+
+    A cached parse from before SCHEMA is read again, once, so it gains what
+    normalise() has learned to extract since. `cache=False` is for the
+    fundamentals crawl, whose tables are themselves the durable copy — caching
+    eighty thousand documents beside them would fill the disk twice.
     """
     path = _cache_path(url)
     if path and os.path.exists(path):
         try:
             with open(path) as fh:
-                return json.load(fh)
+                hit = json.load(fh)
+            if hit.get("schema", 0) >= SCHEMA:
+                return hit
         except Exception:
             pass
     # The document lives on nsearchives and needs the same impersonating
@@ -489,7 +700,7 @@ def fetch(url):
         out = normalise(parse(r.text))
     except Exception as e:
         return {"ok": False, "error": f"could not read the filing: {str(e)[:90]}"}
-    if path and out.get("period"):
+    if cache and path and out.get("period"):
         try:
             with open(path, "w") as fh:
                 json.dump(out, fh)
