@@ -5,9 +5,9 @@
   'use strict';
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   const previous = new Map(), watched = new WeakSet(), active = new Set();
-  let enabled = true, button, observer;
-  try { enabled = localStorage.getItem('altaha-motion') !== 'off'; } catch (_) {}
-  const allowed = () => enabled && !media.matches && !document.hidden;
+  let observer;
+  // Motion stays on; an obsolete saved pause setting must not disable it.
+  const allowed = () => !media.matches && !document.hidden;
 
   function run(node, frames, options) {
     if (!allowed() || !node.animate) return;
@@ -17,13 +17,8 @@
   }
   function cancel() { active.forEach(a => a.cancel()); active.clear(); }
   function applyPreference() {
-    document.documentElement.dataset.motion = enabled && !media.matches ? 'on' : 'off';
+    document.documentElement.dataset.motion = media.matches ? 'off' : 'on';
     if (!allowed()) cancel();
-    if (button) {
-      button.setAttribute('aria-pressed', String(enabled && !media.matches));
-      button.textContent = media.matches ? 'Motion off · system' : enabled ? 'Pause animations' : 'Enable animations';
-      button.disabled = media.matches;
-    }
   }
 
   function reveal(node) {
@@ -75,7 +70,7 @@
     const tools = document.createElement('nav');
     tools.className = 'hm-tools'; tools.setAttribute('aria-label', 'Research tools');
     tools.innerHTML = route('#tk', 'Research a stock', 'Understand the score. Inspect the evidence.', 'research', 'search') +
-      route('#sb-board', 'Explore sectors', 'See the leaders and the breadth behind each move.', 'sectors', 'sectors') +
+      route('#sb-board', 'Explore sectors', 'Compare the market using official Nifty benchmarks.', 'sectors', 'sectors') +
       route('index.html?go=portfolio', 'Portfolio Intelligence', 'See how your holdings work together.', 'portfolio', 'portfolio');
     host.appendChild(tools);
     tools.addEventListener('click', e => {
@@ -99,14 +94,6 @@
     const header = document.querySelector('header.wrap');
     if (header) {
       header.classList.add('hm-masthead');
-      button = document.createElement('button'); button.className = 'hm-motion'; button.type = 'button';
-      button.title = 'Turn decorative motion and animated market bars on or off';
-      button.addEventListener('click', () => {
-        enabled = !enabled;
-        try { localStorage.setItem('altaha-motion', enabled?'on':'off'); } catch (_) {}
-        applyPreference();
-      });
-      header.appendChild(button);
       if ('IntersectionObserver' in window) new IntersectionObserver(entries => {
         header.classList.toggle('hm-art-visible', entries[0].isIntersecting);
       }).observe(header);

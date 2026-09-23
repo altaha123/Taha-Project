@@ -3099,6 +3099,16 @@ def news_status():
         raise HTTPException(503, f"Press status unavailable: {str(e)[:120]}")
 
 
+@app.get("/sector/benchmarks")
+def sector_benchmarks(window: str = "1D"):
+    """Published NSE index returns for the homepage benchmark snapshot."""
+    import sector_benchmarks as benchmarks
+    try:
+        return benchmarks.overview(window)
+    except Exception:
+        raise HTTPException(503, "NSE benchmark data is temporarily unavailable.")
+
+
 @app.get("/sector/overview")
 def sector_overview(window: str = "1D", stocks: bool = False):
     """

@@ -45,6 +45,12 @@ const server=http.createServer((req,res)=>{
    }
    if(['script','font','stylesheet'].includes(route.request().resourceType())) return route.abort();
    if(u.pathname==='/market') return route.fulfill({json:{indices,status:'closed',ist:'10 Sep 2026, 15:45 IST'}});
+   if(u.pathname==='/sector/benchmarks') return route.fulfill({json:{
+     source:'NSE',available:true,as_of:'23-Sep-2026 15:30:00',window:u.searchParams.get('window')||'1D',
+     rows:[{sector:'Nifty Financial Services',icon:'bank',index_level:24000,change_pct:1.2,relative_pp:.2},
+           {sector:'Nifty Healthcare Index',icon:'pill',index_level:null,change_pct:null,relative_pp:null}],
+     method:'Published NSE price indices.'
+   }});
    if(u.pathname==='/sector/overview') {
      sectorRequests.push(u.search);
      return route.fulfill({json:{...sector,window:u.searchParams.get('window')||'1D'}});
@@ -87,8 +93,8 @@ const server=http.createServer((req,res)=>{
  assert.equal(await page.locator('.hm-route svg').count(),3);
  assert.match(await page.locator('.mb-card').nth(2).innerText(),/—/);
  assert.doesNotMatch(await page.locator('.mb-card').nth(2).innerText(),/0\.00%/);
- assert.match(await page.locator('[data-sector="Healthcare"]').innerText(),/Breadth unavailable/i);
- assert.equal(await page.locator('[data-sector="Healthcare"] .sb-breadth').count(),0);
+ assert.match(await page.locator('[data-sector="Nifty Healthcare Index"]').innerText(),/Return unavailable/i);
+ assert.equal(await page.locator('[data-sector="Nifty Healthcare Index"] .sb-breadth').count(),0);
  assert.ok(sectorRequests.every(q=>q.includes('stocks=1')));
  for(const width of [320,390,768,1280]){
    await page.setViewportSize({width,height:900});
@@ -111,13 +117,13 @@ const server=http.createServer((req,res)=>{
  await page.waitForFunction(()=>document.querySelector('[data-motion-key="index:NIFTY 50"]').getAnimations().length>0);
  assert.match(await page.locator('.mb-card').first().innerText(),/\+2\.50%/);
  // Tap disclosure and verify keyboard focus survives its redraw.
- await page.locator('[data-sector="Financial Services"]').tap();
- assert.equal(await page.locator('[data-sector="Financial Services"]').getAttribute('aria-expanded'),'true');
+ await page.locator('[data-sector="Nifty Financial Services"]').tap();
+ assert.equal(await page.locator('[data-sector="Nifty Financial Services"]').getAttribute('aria-expanded'),'true');
  assert.ok(await page.locator('.sb-detail').isVisible());
- await page.locator('[data-sector="Financial Services"]').focus();
+ await page.locator('[data-sector="Nifty Financial Services"]').focus();
  await page.keyboard.press('Enter');
- assert.equal(await page.evaluate(()=>document.activeElement.dataset.sector),'Financial Services');
- assert.equal(await page.locator('[data-sector="Financial Services"]').getAttribute('aria-expanded'),'false');
+ assert.equal(await page.evaluate(()=>document.activeElement.dataset.sector),'Nifty Financial Services');
+ assert.equal(await page.locator('[data-sector="Nifty Financial Services"]').getAttribute('aria-expanded'),'false');
  await page.locator('[data-home-destination="search"]').tap();
  // The shell search, not the in-page field. b6ec626 moved the destination
  // deliberately and says why where it made the change: "The shell search is
@@ -130,15 +136,14 @@ const server=http.createServer((req,res)=>{
  await page.locator('#pf_go').waitFor();
  assert.ok(await page.locator('#view-portfolio').isVisible());
  await page.evaluate(()=>window.AltahaNav.go('screener','screener',true));
- // Preference changes stop motion immediately and persist through navigation.
- await page.locator('.hm-motion').tap();
- assert.equal(await page.locator('html').getAttribute('data-motion'),'off');
+ // Motion stays enabled across navigation and ignores an obsolete stored pause.
+ assert.equal(await page.locator('.hm-motion').count(),0);
+ await page.evaluate(()=>localStorage.setItem('altaha-motion','off'));
  await page.reload({waitUntil:'domcontentloaded'});
- assert.equal(await page.locator('html').getAttribute('data-motion'),'off');
- await page.locator('.hm-motion').tap();
+ assert.equal(await page.locator('html').getAttribute('data-motion'),'on');
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.waitForFunction(()=>document.documentElement.dataset.motion==='off');
- assert.ok(await page.locator('.hm-motion').isDisabled());
+ assert.equal(await page.locator('.hm-motion').count(),0);
  assert.equal(await page.locator('.sk-candle').first().evaluate(n=>getComputedStyle(n).animationName),'none');
  // A partial refresh recovers missing data without inventing a zero return.
  await page.emulateMedia({reducedMotion:'no-preference'});
