@@ -178,3 +178,46 @@ Values are in rupees; divide by `unit_divisor` for crore. The page does.
 * `backend/tests/make_fundamentals_fixture.py` regenerates the browser
   fixture **from the real module**, so a key renamed in `fundamentals.py`
   cannot keep passing against a stale JSON literal.
+
+## The whole market, as three tables
+
+`backend/fundamentals_store.py` · `backend/fundamentals_crawl.py` ·
+`.github/workflows/fundamentals.yml`
+
+Every Reg 33 filing carries the quarter's P&L, and the March and September
+ones also carry the balance sheet at that date and the cash flow for the year
+to date. A nightly crawl reads every NSE company's filings into
+`altaha_fundamentals.db` on the data disk:
+
+| Table | One row per | History | Columns |
+|---|---|---|---|
+| `income_statement` | company × quarter, and company × financial year (`freq`) | from Sep 2018: ~32 quarters, 8 years | P&L lines in ₹ crore (`*_cr`), EPS, six ratios, YoY for revenue, EBITDA, PAT |
+| `balance_sheet` | company × March / September | from Sep 2022: 4 years, growing | assets, equity, borrowings, deposits and loans for banks, debt/equity, current ratio |
+| `cash_flow` | company × half-year and year (`months` 6 or 12) | from FY21: 6 years | operating, investing, financing, capex, free cash flow, dividends, buybacks |
+
+One accounting basis per company (consolidated where filed), named on every
+row. A revised filing replaces the row for its period; an older one never
+does. `docs` records every document read, so a re-crawl fetches only new ones.
+
+What NSE's own filings get wrong, and the parser now handles: 2018–2020
+filings that reference `OneD`/`FourD` without defining them; a `FourD` defined
+as the quarter while its facts say the year (TCS, FY24); filings that state
+only period ends (HDFC Bank, to FY21); and cash flows tagged against the
+quarter although only a year-to-date one is ever filed (to FY21). Each has a
+real fixture in `tests/test_xbrl_statements.py`.
+
+* `GET /fundamentals/table?table=income&symbol=TCS&freq=annual&format=csv`
+* `GET /fundamentals/table?table=balance&symbol=TCS`
+* `GET /fundamentals/table?table=cashflow&period_end=2026-03-31&format=csv` — one period, every company
+* `GET /fundamentals/coverage` — how much of the market each table holds
+* `POST /admin/fundamentals/crawl` — the next slice (admin key); `&source=yfinance` for Yahoo
+
+### Yahoo Finance, as a second opinion
+
+The same crawl with `source=yfinance` stores Yahoo's income statement,
+balance sheet and cash flow in `yf_statements` (long format; the view
+`yf_statements_v` joins item names back). Yahoo reaches no further back than
+the filings — four annual balance sheets — and is never mixed into the three
+tables above.
+
+* `GET /fundamentals/statements?symbol=TCS&statement=balance&freq=annual&format=csv`

@@ -40,3 +40,8 @@ nse-isin-map.json
 # NODE_PATH at it (see .github/workflows/portfolio-ui.yml); anyone running
 # those tests on their own machine ends up with this here instead.
 node_modules
+
+# Every company's quarterly P&L. Data, never source — it lives on the mounted
+# disk in production and is rebuilt by the fundamentals crawl anywhere else.
+altaha_fundamentals.db
+altaha_fundamentals.db-*

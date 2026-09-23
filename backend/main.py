@@ -84,6 +84,17 @@ try:
 except Exception:
     fundamentals_source = None
 try:
+    # Every company's quarterly P&L as one table, and the crawler that fills
+    # it. The store is stdlib-only, so it can serve what is held even where
+    # the crawler cannot reach NSE.
+    import fundamentals_store
+except Exception:
+    fundamentals_store = None
+try:
+    import fundamentals_crawl
+except Exception:
+    fundamentals_crawl = None
+try:
     # The holdings ledger and the curated investor table. Three modules, each
     # importable on its own: the store is stdlib-only, so a box without
     # curl_cffi can still SERVE what has already been collected even though it
@@ -2194,10 +2205,121 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
         raise HTTPException(400, "Provide a valid ticker symbol.")
     want = basis if basis in ("consolidated", "standalone") else None
     try:
-        return to_native(fundamentals_source.series(
-            ticker, quarters=max(2, min(quarters, 16)), basis=want))
+        out = fundamentals_source.series(
+            ticker, quarters=max(2, min(quarters, 16)), basis=want)
     except Exception as e:
         raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+    return to_native(out)
+
+
+@app.get("/fundamentals/table")
+def fundamentals_table(table: str = "income", symbol: str = "", period_end: str = "",
+                       freq: str = "", format: str = "json", limit: int = 0):
+    """
+    The statements of every company read so far, as a table.
+
+    `table` is `income` (income_statement: each quarter and each financial
+    year), `balance` (balance_sheet: every March and September) or `cashflow`
+    (cash_flow: each half-year and full year). `symbol` narrows it to one
+    company, `period_end` (YYYY-MM-DD) to one period across the market, and
+    `freq` (quarterly or annual) the income table. `format=csv` downloads it
+    for a spreadsheet. Money columns end in _cr and are ₹ crore.
+
+    What is held is exactly what /fundamentals/coverage says — a company the
+    crawl has not reached yet is absent, not zero.
+    """
+    if fundamentals_store is None:
+        raise HTTPException(503, "The fundamentals tables are not available.")
+    if table not in fundamentals_store.TABLES:
+        raise HTTPException(400, "table must be income, balance or cashflow.")
+    sym = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+    if len(sym) > 20 or (period_end and len(period_end) != 10) or \
+            freq not in ("", "quarterly", "annual"):
+        raise HTTPException(400, "Provide a valid symbol, period_end (YYYY-MM-DD) "
+                                 "or freq (quarterly | annual).")
+    recs = fundamentals_store.rows(table, symbol=sym or None,
+                                   period_end=period_end or None, freq=freq or None,
+                                   limit=max(0, int(limit)) or None)
+    if format == "csv":
+        name = "%s-%s.csv" % (fundamentals_store.TABLES[table]["name"],
+                              sym or period_end or "all")
+        return Response(content=fundamentals_store.to_csv(table, recs),
+                        media_type="text/csv",
+                        headers={"Content-Disposition": f'attachment; filename="{name}"'})
+    return to_native({"table": fundamentals_store.TABLES[table]["name"],
+                      "count": len(recs),
+                      "columns": fundamentals_store.TABLES[table]["columns"],
+                      "rows": recs})
+
+
+@app.get("/fundamentals/statements")
+def fundamentals_statements(symbol: str, statement: str = "income",
+                            freq: str = "annual", format: str = "json",
+                            crore: bool = True):
+    """
+    One company's full statement from Yahoo Finance, as it is read: a row per
+    line item, a column per period, newest first.
+
+    `statement` is income, balance or cashflow; `freq` annual or quarterly.
+    Money is in ₹ crore unless `crore=false`; share counts, rates and
+    per-share items stay as reported. Yahoo is a secondary source — for the
+    statements the company filed itself, see /fundamentals/table.
+    """
+    if fundamentals_store is None:
+        raise HTTPException(503, "The fundamentals table is not available.")
+    sym = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+    if not sym or len(sym) > 20:
+        raise HTTPException(400, "Provide a valid symbol.")
+    if statement not in fundamentals_store.STATEMENTS or freq not in fundamentals_store.FREQS:
+        raise HTTPException(400, "statement must be income, balance or cashflow; "
+                                 "freq annual or quarterly.")
+    table = fundamentals_store.yf_statement(sym, statement, freq, crore=crore)
+    if format == "csv":
+        name = "%s-%s-%s.csv" % (sym, statement, freq)
+        return Response(content=fundamentals_store.yf_statement_csv(table),
+                        media_type="text/csv",
+                        headers={"Content-Disposition": f'attachment; filename="{name}"'})
+    return to_native(table)
+
+
+@app.get("/fundamentals/coverage")
+def fundamentals_coverage():
+    """How much of the NSE list the fundamentals table holds, and where."""
+    if fundamentals_store is None:
+        return {"available": False, "message": "The fundamentals table is not available."}
+    out = {"available": True, "store": fundamentals_store.stats()}
+    try:
+        out["universe"] = len(fundamentals_crawl.universe()) if fundamentals_crawl else None
+    except Exception:
+        out["universe"] = None
+    return to_native(out)
+
+
+@app.post("/admin/fundamentals/crawl")
+def admin_fundamentals_crawl(key: str = "", limit: int = 8,
+                             symbols: str = "", source: str = "nse",
+                             x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    Read the next slice of companies into the fundamentals table.
+
+    Driven by the scheduled workflow, like the holdings crawl and for the same
+    reasons. Bounded per call: the first sweep is about thirty-four documents
+    for each of two thousand companies, and it is meant to take many nights.
+
+    `source=yfinance` reads Yahoo's statements into their own table instead.
+    """
+    _require_admin(x_admin_key or key)
+    if fundamentals_crawl is None:
+        raise HTTPException(503, "The fundamentals crawler is not available.")
+    if source not in ("nse", "yfinance"):
+        raise HTTPException(400, "source must be nse or yfinance.")
+    syms = [s.strip().upper() for s in (symbols or "").split(",") if s.strip()]
+    try:
+        return to_native(fundamentals_crawl.run(
+            limit=max(1, min(int(limit), 200)),
+            symbols=syms or None, source=source))
+    except Exception as e:
+        raise HTTPException(503, f"The crawl failed: {str(e)[:150]}")
 
 
 @app.get("/investors")
