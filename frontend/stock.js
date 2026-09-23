@@ -1177,25 +1177,7 @@
   var DV_RANGES = [['20', '20 sessions'], ['60', '60 sessions'], ['120', '120 sessions']];
   var dvDays = '60';
   var dvLoaded = false;
-
-  function dvQty(v) {
-    if (v == null || isNaN(Number(v))) return '—';
-    var n = Number(v);
-    // Share counts run to hundreds of millions. Crore and lakh are the units
-    // an Indian reader counts shares in; a raw nine-digit figure is not read,
-    // it is squinted at. The exact number stays available in the title.
-    if (n >= 1e7) return (n / 1e7).toFixed(2) + ' cr';
-    if (n >= 1e5) return (n / 1e5).toFixed(2) + ' L';
-    return n.toLocaleString('en-IN');
-  }
-
-  function dvPct(v) { return v == null ? '—' : Number(v).toFixed(2) + '%'; }
-
-  function dvTile(label, value, note) {
-    return '<div class="dv-tile"><div class="k">' + esc(label) + '</div>' +
-      '<div class="v tnum">' + value + '</div>' +
-      (note ? '<div class="n">' + note + '</div>' : '') + '</div>';
-  }
+  var dvRequest = 0;
 
   function paintDelivery(d) {
     var box = $('dv-body');
@@ -1210,91 +1192,7 @@
       return;
     }
 
-    var s = d.summary || {};
-    var rows = d.rows || [];
-    var yr = s.avg_year;
-
-    // Against its own year, in percentage points. The comparison is the
-    // point: a bare percentage says nothing without the stock's own habit.
-    var trend = s.trend_pp;
-    var trendNote = (trend == null || yr == null) ? '' :
-      '<span class="' + tone(trend) + '">' + (trend > 0 ? '+' : '') +
-      Number(trend).toFixed(2) + ' pp</span> vs its ' + dvPct(yr) + ' average';
-
-    var tiles =
-      dvTile('Latest session', dvPct(s.latest),
-             d.as_of ? esc(d.as_of) : '') +
-      dvTile('5-session average', dvPct(s.avg_5), 'The week just gone') +
-      dvTile('20-session average', dvPct(s.avg_20), trendNote) +
-      dvTile('Longer average', dvPct(yr),
-             s.year_sessions ? esc(String(s.year_sessions)) + ' sessions held' : '');
-
-    // The bar is scaled against the window's own range, not 0–100: delivery
-    // for a given stock usually lives inside a 20-point band, and a 0–100
-    // axis flattens every one of them into the same indistinguishable stripe.
-    var shares = rows.map(function (r) { return r.deliv_pct; })
-                     .filter(function (v) { return v != null; });
-    var lo = shares.length ? Math.min.apply(null, shares) : 0;
-    var hi = shares.length ? Math.max.apply(null, shares) : 100;
-    if (hi - lo < 1) { lo = Math.max(0, lo - 0.5); hi = lo + 1; }
-    var span = hi - lo;
-
-    var body = rows.map(function (r) {
-      var w = r.deliv_pct == null ? 0 : ((r.deliv_pct - lo) / span) * 100;
-      // Above its own 20-session average is the only comparison drawn, and it
-      // is drawn as a colour on the bar, never as a verdict in words.
-      var above = (s.avg_20 != null && r.deliv_pct != null && r.deliv_pct > s.avg_20);
-      /* The delivered share comes SECOND, not last. This table needs more
-         width than a phone has, so whichever column sits at the far right is
-         the one nobody scrolls to — and the delivered share is the column
-         this whole pane exists for. Close and traded volume are context and
-         can be the ones reached for. */
-      return '<tr>' +
-        '<th scope="row" class="dv-d">' + esc(r.date) + '</th>' +
-        '<td class="dv-pc"><span class="tnum">' + dvPct(r.deliv_pct) + '</span>' +
-          '<i class="dv-bar' + (above ? ' hi' : '') + '" aria-hidden="true" style="width:' +
-          Math.max(2, Math.min(100, w)).toFixed(1) + '%"></i></td>' +
-        '<td class="tnum" title="' + (r.delivered_qty == null ? '' : r.delivered_qty.toLocaleString('en-IN')) + ' shares, derived">' +
-          dvQty(r.delivered_qty) + '</td>' +
-        '<td class="tnum" title="' + (r.traded_qty == null ? '' : r.traded_qty.toLocaleString('en-IN')) + ' shares">' +
-          dvQty(r.traded_qty) + '</td>' +
-        '<td class="tnum">' + (r.close == null ? '—' : Number(r.close).toFixed(2)) + '</td>' +
-        '</tr>';
-    }).join('');
-
-    /* The store kept only the liquid names until recently and is fetching the
-       rest of the history back in. A smaller company's averages are therefore
-       over less history than the file holds, which is worth one sentence:
-       a short window that says so is honest, a short window that does not is
-       a wrong number. */
-    var filling = d.backfilling
-      ? '<p class="dv-filling">Older sessions for this company are still being ' +
-        'read back from the exchange archive, so the averages above cover the ' +
-        esc(String(d.sessions_held)) + ' sessions held so far rather than the ' +
-        'full window. They deepen on their own.</p>'
-      : '';
-
-    box.innerHTML =
-      '<div class="dv-tiles">' + tiles + '</div>' + filling +
-      '<p class="fu-cap" id="dv-cap">Each session as the exchange published it. ' +
-      'The bar is scaled to this window’s own range, not to 0–100, and is ' +
-      'shaded where the day ran above this stock’s 20-session average.</p>' +
-      '<div class="fu-block"><div class="fu-wrap">' +
-      '<table class="fu-table dv-table" aria-describedby="dv-cap">' +
-      '<caption class="fu-vh">Daily delivery for ' + esc(d.symbol) + '</caption>' +
-      '<thead><tr><th scope="col">Session</th>' +
-      '<th scope="col">Delivered share</th><th scope="col">Delivered</th>' +
-      '<th scope="col">Traded</th><th scope="col">Close</th></tr></thead>' +
-      '<tbody>' + body + '</tbody></table></div></div>' +
-      '<p class="dv-note">' +
-        'Source: ' + esc(d.source || 'NSE full bhavcopy') + '. ' +
-        (d.delivered_qty_derived
-          ? 'Delivered quantity is derived — traded quantity multiplied by the ' +
-            'published delivered share — so it carries that percentage’s rounding. ' +
-            'The share itself is the exchange’s own figure. '
-          : '') +
-        'Delivery is an NSE disclosure and has no counterpart for US listings. ' +
-        'Shown as a record of what happened, not as a signal to act on.</p>';
+    window.AltahaDelivery.mount(box, d);
   }
 
   function paintDvRanges() {
@@ -1316,6 +1214,7 @@
   }
 
   function loadDelivery() {
+    var request = ++dvRequest;
     var box = $('dv-body');
     if (box) {
       box.innerHTML = '<div class="own-empty is-loading" aria-busy="true">' +
@@ -1323,9 +1222,9 @@
     }
     fetch(API + '/delivery?ticker=' + encodeURIComponent(TICKER) + '&days=' + encodeURIComponent(dvDays))
       .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
-      .then(paintDelivery)
+      .then(function(d) { if (request === dvRequest) paintDelivery(d); })
       .catch(function () {
-        if (box) {
+        if (box && request === dvRequest) {
           box.innerHTML = '<div class="own-empty">The delivery record could not ' +
             'be read just now. If the engine has been idle it takes about thirty ' +
             'seconds to wake — try again.</div>';
