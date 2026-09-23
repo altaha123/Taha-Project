@@ -52,6 +52,60 @@ does not guess.
 
 ---
 
+## Update after review: India only, built on the fundamentals database
+
+**Decisions:**
+- US stocks are out of scope for now. Everything below that concerns the US
+  (SEC EDGAR, Financial Modeling Prep, a US universe) is kept for reference only.
+- Phase 2 is built on `altaha_fundamentals.db`, the fundamentals database on the
+  Render disk (`backend/fundamentals_store.py`, filled nightly by
+  `fundamentals_crawl.py` and `.github/workflows/fundamentals.yml`).
+
+The database changes several answers in sections A–D. Sections A–D describe the
+code as it stood before `fundamentals_store.py` was merged.
+
+The database holds three tables, all read from each company's own Reg 33
+filings, on one accounting basis per company:
+
+| Table | History | What the lenses read from it |
+|---|---|---|
+| `income_statement` (annual + quarterly) | from about FY18, ~8 years | revenue, EBITDA, PBT, finance cost, depreciation, PAT, EPS, tax rate |
+| `balance_sheet` (March and September) | from September 2022, 4 years | total assets, current assets and liabilities, equity, paid-up capital, borrowings |
+| `cash_flow` (year) | from FY21, 6 years | capex, free cash flow |
+
+The live store read 75 of 2,319 companies on 23 September 2026, with the crawl
+still running.
+
+Phase 2 adds the rest in `altaha_lenses.db` (numbered migration
+`backend/migrations/lenses/001_init.sql`), filled by `lens_data_crawl.py`:
+- **NSE industry, issued shares and price**, from the exchange quote API.
+- **Promoter, FII and DII holdings per quarter, and the promoter pledge.** The
+  pledge is now parsed from the shareholding XBRL itself: a share count in the
+  2020 taxonomy, a yes/no declaration in the 2025 one.
+
+### Which lenses are live, and why three cannot be built yet
+
+| Lens | Status | Reason |
+|---|---|---|
+| Gorilla, Tenbagger, QGLP, Akre, Nomad, Cannibal, Owner-Operator | **Live** | Every rule maps to a column in the database or the lens tables. Peer rules (industry rank, industry median margin, size band) stay "not judged" until 80% of the relevant peer group has been read, so an early rank is never computed over a fraction of an industry. |
+| **Moat** | Coming soon | ROE above 15% in *every one of 10 years* needs 10 balance sheets. Companies have filed balance sheets in XBRL only since September 2022, so there are 4. FCF positive in 8 of 10 years needs 10 cash-flow years; FY21 onward gives 6. The data does not exist in the filings yet. It is not a code limitation. |
+| **Coffee Can** | Coming soon | Revenue growth and ROCE in every one of 10 years. Revenue reaches about 8 years; ROCE needs the balance sheet, so 4. |
+| **Capital Cycle** | Coming soon | "Number of listed peers flat or falling" needs listings *and delistings* per industry over time. The exchange list the site reads (`EQUITY_L.csv`) holds only companies listed today, so the count can only ever rise. The capex/depreciation half is computable. |
+
+**What would bring the three coming-soon lenses forward:**
+
+1. **Moat and Coffee Can** go live as the filings accumulate. The balance
+   sheet reaches 10 years in 2032.
+2. **Or** you can shorten their lookbacks. The engine is config-driven, so
+   changing `lookback_years` in `backend/lenses.json` (for example "ROE above
+   15% in every one of the last 4 years") is a one-line edit, and the lens
+   goes live on the next nightly run. That changes the philosophy as defined,
+   so it is your call.
+3. **Capital Cycle** needs NSE's list of delisted securities joined to
+   industry. That is a small follow-up crawl.
+
+---
+
 ## A. What we have today
 
 ### A.1 Every data source in the codebase
