@@ -194,4 +194,19 @@ NSE list into it a slice at a time; `coverage` records who was read and when.
 * `GET /fundamentals/table?symbol=TCS` — one company
 * `GET /fundamentals/table?period_end=2026-06-30&format=csv` — one quarter, every company
 * `GET /fundamentals/coverage` — how much of the market is held so far
-* `POST /admin/fundamentals/crawl` — the next slice (admin key)
+* `POST /admin/fundamentals/crawl` — the next slice (admin key); `&source=yfinance` for Yahoo
+
+### Balance sheet and cash flow, from Yahoo Finance
+
+A quarterly Reg 33 filing is an income statement only, so the full set — income
+statement, balance sheet and cash flow, annual and quarterly — is read from
+Yahoo Finance by the same crawl with `source=yfinance`, into `yf_statements`
+(long format, since line items differ by company; `yf_statements_v` joins the
+item names back for querying by hand). Values are stored as Yahoo reports
+them, rupees for money. Yahoo is a secondary source: where the two disagree on
+the quarterly P&L, the company's own filing is the one to trust.
+
+* `GET /fundamentals/statements?symbol=TCS&statement=balance&freq=annual&format=csv`
+  — one company's statement, a row per line item and a column per period, in
+  ₹ crore (share counts, rates and per-share items as reported);
+  `statement` is `income`, `balance` or `cashflow`, `freq` is `annual` or `quarterly`

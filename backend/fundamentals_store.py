@@ -24,6 +24,13 @@ never replaces a newer one. The raw documents stay in xbrl-cache and the
 point-in-time history of revisions stays in pit_store.quarter_versions — this
 table is the current view, meant to be read, exported and queried.
 
+AND YAHOO'S FULL STATEMENTS BESIDE IT
+A quarterly filing has no balance sheet and no cash flow, so yf_statements
+holds Yahoo Finance's income statement, balance sheet and cash flow, annual
+and quarterly, for the same companies. A separate table with its own coverage,
+because it is a different source with a different standing — see
+fundamentals_crawl.
+
 NO EXTERNAL DEPENDENCIES. Standard library only.
 """
 
@@ -143,6 +150,42 @@ CREATE TABLE IF NOT EXISTS coverage (
   note           TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_fcov_try ON coverage (last_try_utc);
+
+-- Yahoo Finance's full statements: income, balance sheet and cash flow,
+-- annual and quarterly. Long format because the line items differ from one
+-- company to the next (a bank has no inventory, a manufacturer no deposits),
+-- and a column per possible item would be two hundred mostly-empty columns.
+-- The item NAME lives once in yf_items, so two million values do not each
+-- carry forty bytes of "Net Income From Continuing Operation Net Minority
+-- Interest"; yf_statements_v joins it back for anyone querying by hand.
+CREATE TABLE IF NOT EXISTS yf_items (
+  item_id  INTEGER PRIMARY KEY,
+  name     TEXT NOT NULL UNIQUE
+);
+CREATE TABLE IF NOT EXISTS yf_statements (
+  symbol      TEXT NOT NULL,
+  statement   TEXT NOT NULL,            -- 'income' | 'balance' | 'cashflow'
+  freq        TEXT NOT NULL,            -- 'annual' | 'quarterly'
+  period_end  TEXT NOT NULL,            -- YYYY-MM-DD
+  item_id     INTEGER NOT NULL,
+  value       REAL NOT NULL,            -- as Yahoo reports it: rupees for money
+  PRIMARY KEY (symbol, statement, freq, period_end, item_id)
+) WITHOUT ROWID;
+CREATE VIEW IF NOT EXISTS yf_statements_v AS
+  SELECT s.symbol, s.statement, s.freq, s.period_end, i.name AS item, s.value
+    FROM yf_statements s JOIN yf_items i USING (item_id);
+
+CREATE TABLE IF NOT EXISTS yf_coverage (
+  symbol         TEXT PRIMARY KEY,
+  last_try_utc   TEXT,
+  last_ok_utc    TEXT,
+  latest_period  TEXT,
+  quarters       INTEGER NOT NULL DEFAULT 0,
+  basis          TEXT,
+  status         TEXT,
+  note           TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ycov_try ON yf_coverage (last_try_utc);
 """ % ",\n".join("  %s REAL" % c for c in VALUE_COLUMNS)
 
 
@@ -272,25 +315,28 @@ def record_series(series):
         return conn.total_changes - before
 
 
+_COVERAGE = {"nse": "coverage", "yfinance": "yf_coverage"}
+
+
 def mark_coverage(symbol, status, latest_period=None, quarters=0, basis=None,
-                  note="", ok=False):
+                  note="", ok=False, source="nse"):
     now = _utcnow()
     with _tx() as conn:
         conn.execute(
-            "INSERT INTO coverage (symbol, last_try_utc, last_ok_utc, latest_period,"
+            ("INSERT INTO {t} (symbol, last_try_utc, last_ok_utc, latest_period,"
             " quarters, basis, status, note) VALUES (?,?,?,?,?,?,?,?)"
             " ON CONFLICT(symbol) DO UPDATE SET last_try_utc=excluded.last_try_utc,"
-            " last_ok_utc=COALESCE(excluded.last_ok_utc, coverage.last_ok_utc),"
-            " latest_period=COALESCE(excluded.latest_period, coverage.latest_period),"
+            " last_ok_utc=COALESCE(excluded.last_ok_utc, {t}.last_ok_utc),"
+            " latest_period=COALESCE(excluded.latest_period, {t}.latest_period),"
             " quarters=CASE WHEN excluded.quarters > 0 THEN excluded.quarters"
-            "               ELSE coverage.quarters END,"
-            " basis=COALESCE(excluded.basis, coverage.basis),"
-            " status=excluded.status, note=excluded.note",
+            "               ELSE {t}.quarters END,"
+            " basis=COALESCE(excluded.basis, {t}.basis),"
+            " status=excluded.status, note=excluded.note").format(t=_COVERAGE[source]),
             ((symbol or "").strip().upper(), now, now if ok else None,
              latest_period, int(quarters or 0), basis, status, (note or "")[:200]))
 
 
-def due_symbols(universe, limit=40, stale_hours=24 * 14):
+def due_symbols(universe, limit=40, stale_hours=24 * 14, source="nse"):
     """
     What the crawler should read next: never-tried companies first, then the
     ones tried longest ago. Re-reading a company is cheap once its documents
@@ -299,7 +345,7 @@ def due_symbols(universe, limit=40, stale_hours=24 * 14):
     """
     conn = _connect()
     seen = {r["symbol"]: (r["last_try_utc"] or "") for r in conn.execute(
-        "SELECT symbol, last_try_utc FROM coverage").fetchall()}
+        "SELECT symbol, last_try_utc FROM %s" % _COVERAGE[source]).fetchall()}
     cutoff = (datetime.now(timezone.utc) -
               timedelta(hours=stale_hours)).isoformat(timespec="seconds")
     never, stale = [], []
@@ -342,6 +388,87 @@ def to_csv(records):
     return buf.getvalue()
 
 
+# ---------------------------------------------------------------------------
+# Yahoo Finance statements
+# ---------------------------------------------------------------------------
+
+STATEMENTS = ("income", "balance", "cashflow")
+FREQS = ("annual", "quarterly")
+
+# Line items that are not money, so ?crore=1 must leave them alone: share
+# counts, rates and per-share figures divided by ten million are nonsense.
+_NOT_MONEY = ("Shares", "Rate", "Number", "Per Share", "EPS")
+
+
+def _item_ids(conn, names):
+    conn.executemany("INSERT OR IGNORE INTO yf_items (name) VALUES (?)",
+                     [(n,) for n in names])
+    ids = {}
+    for chunk in range(0, len(names), 500):
+        part = names[chunk:chunk + 500]
+        for r in conn.execute("SELECT item_id, name FROM yf_items WHERE name IN (%s)"
+                              % ",".join("?" * len(part)), part):
+            ids[r["name"]] = r["item_id"]
+    return ids
+
+
+def record_yf(symbol, statement, freq, values):
+    """
+    One statement for one company, as {(period_end, item): value}.
+
+    Yahoo restates — a later annual report reclassifies a line — so what it
+    says now replaces what it said before for the same period and item. Empty
+    cells are not stored: Yahoo pads every frame to the union of periods, and
+    a missing value is absence, not zero.
+    """
+    sym = (symbol or "").strip().upper()
+    if not sym or statement not in STATEMENTS or freq not in FREQS:
+        return 0
+    clean = [(p, i, _num(v)) for (p, i), v in (values or {}).items()]
+    clean = [(p, i, v) for p, i, v in clean if p and i and v is not None]
+    if not clean:
+        return 0
+    with _tx() as conn:
+        ids = _item_ids(conn, sorted({i for _p, i, _v in clean}))
+        before = conn.total_changes
+        conn.executemany(
+            "INSERT OR REPLACE INTO yf_statements VALUES (?,?,?,?,?,?)",
+            [(sym, statement, freq, p, ids[i], v) for p, i, v in clean])
+        return conn.total_changes - before
+
+
+def yf_statement(symbol, statement="income", freq="annual", crore=False):
+    """
+    One company's statement laid out the way it is read: a row per line item,
+    a column per period, newest period first.
+    """
+    sym = (symbol or "").strip().upper()
+    recs = _connect().execute(
+        "SELECT period_end, item, value FROM yf_statements_v"
+        " WHERE symbol=? AND statement=? AND freq=?", (sym, statement, freq)).fetchall()
+    periods = sorted({r["period_end"] for r in recs}, reverse=True)
+    grid = {}
+    for r in recs:
+        v = r["value"]
+        if crore and not any(k in r["item"] for k in _NOT_MONEY):
+            v = round(v / CRORE, 2)
+        grid.setdefault(r["item"], {})[r["period_end"]] = v
+    return {"symbol": sym, "statement": statement, "freq": freq,
+            "unit": "₹ crore (share counts, rates and per-share items as reported)"
+                    if crore else "as reported by Yahoo: rupees for money",
+            "periods": periods,
+            "rows": [{"item": k, **grid[k]} for k in sorted(grid)]}
+
+
+def yf_statement_csv(table):
+    buf = io.StringIO()
+    w = csv.DictWriter(buf, fieldnames=["item"] + table["periods"])
+    w.writeheader()
+    for r in table["rows"]:
+        w.writerow(r)
+    return buf.getvalue()
+
+
 def stats():
     """What the table actually holds, for the coverage endpoint."""
     conn = _connect()
@@ -361,5 +488,12 @@ def stats():
         "latest_period": one("SELECT MAX(period_end) FROM quarterly_results") or None,
         "coverage": {(r["status"] or "unknown"): r["n"] for r in cov},
         "tried": one("SELECT COUNT(*) FROM coverage"),
+        "yfinance": {
+            "values": one("SELECT COUNT(*) FROM yf_statements"),
+            "companies": one("SELECT COUNT(DISTINCT symbol) FROM yf_statements"),
+            "latest_period": one("SELECT MAX(period_end) FROM yf_statements") or None,
+            "coverage": {(r["status"] or "unknown"): r["n"] for r in conn.execute(
+                "SELECT status, COUNT(*) AS n FROM yf_coverage GROUP BY status")},
+        },
         "unit": "₹ crore, except eps_basic (₹ per share) and the *_pct / *_x ratios",
     }

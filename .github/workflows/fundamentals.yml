@@ -79,6 +79,34 @@ jobs:
           done
           echo "::notice::${rows} rows written."
 
+      - name: Read the next slices of companies from Yahoo Finance
+        # Balance sheet and cash flow, which a quarterly filing does not carry.
+        # Its own queue, so a Yahoo outage never stalls the exchange sweep.
+        continue-on-error: true
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          SLICES: ${{ inputs.slices || '30' }}
+        run: |
+          set -uo pipefail
+          failed=0
+          for i in $(seq 1 "${SLICES}"); do
+            code=$(curl -sS --max-time 900 -o yslice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/fundamentals/crawl?source=yfinance&limit=30" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+            if [ "${code}" != "200" ]; then
+              echo "yahoo slice ${i}: HTTP ${code}"
+              failed=$((failed + 1))
+              if [ "${failed}" -ge 3 ]; then echo "::warning::three Yahoo slices failed — stopping."; exit 0; fi
+              sleep 30; continue
+            fi
+            failed=0
+            read -r attempted got early < <(python3 -c "import json;d=json.load(open('yslice.json'));print(d.get('attempted',0), d.get('rows',0), (d.get('stopped_early') or '').replace(' ','_'))")
+            echo "yahoo slice ${i}: ${attempted} companies, ${got} values ${early:+— ${early}}"
+            if [ "${attempted}" = "0" ]; then echo "nothing further is due from Yahoo."; break; fi
+            if [ -n "${early}" ]; then sleep 120; else sleep 5; fi
+          done
+
       - name: Report what the table now holds
         if: always()
         env:
@@ -91,6 +119,7 @@ jobs:
           print('rows      : %s' % st.get('rows',0))
           print('latest    : %s' % st.get('latest_period'))
           print('coverage  : %s' % st.get('coverage'))
+          print('yahoo     : %s' % st.get('yfinance'))
           if not st.get('persistent'):
               print('::warning::the table is NOT on a persistent disk — check DATA_DIR on Render.')
           " || true

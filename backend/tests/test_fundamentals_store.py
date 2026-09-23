@@ -121,3 +121,78 @@ def test_a_run_of_refusals_stops_the_slice(store, monkeypatch):
     out = fc.run(limit=20, pause=0)
     assert out["attempted"] == fc.GIVE_UP_AFTER
     assert "stopping" in out["stopped_early"]
+
+
+# ---------------------------------------------------------------------------
+# Yahoo statements
+# ---------------------------------------------------------------------------
+
+def test_a_yahoo_statement_pivots_items_by_period_in_crore(store):
+    store.record_yf("TCS", "balance", "annual", {
+        ("2026-03-31", "Total Assets"): 1.82e12,
+        ("2025-03-31", "Total Assets"): 1.60e12,
+        ("2026-03-31", "Ordinary Shares Number"): 3.6e9,
+        ("2025-03-31", "Inventory"): float("nan"),   # padding, not zero
+    })
+    t = store.yf_statement("TCS", "balance", "annual", crore=True)
+    assert t["periods"] == ["2026-03-31", "2025-03-31"]
+    rows = {r["item"]: r for r in t["rows"]}
+    assert rows["Total Assets"]["2026-03-31"] == 182000.0
+    assert rows["Ordinary Shares Number"]["2026-03-31"] == 3.6e9   # a count, left alone
+    assert "Inventory" not in rows
+    head = store.yf_statement_csv(t).splitlines()[0]
+    assert head == "item,2026-03-31,2025-03-31"
+
+
+def test_a_yahoo_restatement_replaces_the_old_value(store):
+    store.record_yf("TCS", "income", "annual", {("2026-03-31", "Total Revenue"): 1.0e12})
+    store.record_yf("TCS", "income", "annual", {("2026-03-31", "Total Revenue"): 1.1e12})
+    t = store.yf_statement("TCS", "income", "annual")
+    assert t["rows"] == [{"item": "Total Revenue", "2026-03-31": 1.1e12}]
+
+
+class _Frame:
+    """The slice of a pandas frame the crawler touches."""
+
+    def __init__(self, data):
+        import pandas as pd
+        self._df = pd.DataFrame(data)
+        self._df.columns = pd.to_datetime(self._df.columns)
+
+    def __getattr__(self, name):
+        return getattr(self._df, name)
+
+    def __getitem__(self, k):
+        return self._df[k]
+
+
+def test_the_yahoo_crawl_stores_all_six_frames_and_its_own_coverage(store, monkeypatch):
+    import fundamentals_crawl as fc
+    frame = _Frame({"2026-03-31": {"Total Assets": 5e9}})
+
+    class T:
+        pass
+    t = T()
+    for attr, _s, _f in fc.YF_FRAMES:
+        setattr(t, attr, frame)
+    monkeypatch.setattr(fc, "_ticker", lambda sym: t)
+    out = fc.run(symbols=["ACME"], pause=0, source="yfinance")
+    assert out["results"][0]["statements"] == 6
+    assert out["store"]["yfinance"]["coverage"] == {"ok": 1}
+    # The exchange sweep has its own queue and has not been touched.
+    assert store.due_symbols(["ACME"], source="nse") == ["ACME"]
+
+
+def test_a_run_of_empty_yahoo_answers_is_treated_as_throttling(store, monkeypatch):
+    import fundamentals_crawl as fc
+    import pandas as pd
+
+    class T:
+        pass
+    t = T()
+    for attr, _s, _f in fc.YF_FRAMES:
+        setattr(t, attr, pd.DataFrame())
+    monkeypatch.setattr(fc, "_ticker", lambda sym: t)
+    monkeypatch.setattr(fc, "universe", lambda: ["S%02d" % i for i in range(20)])
+    out = fc.run(limit=20, pause=0, source="yfinance")
+    assert out["attempted"] == fc.GIVE_UP_AFTER
