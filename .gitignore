@@ -45,3 +45,8 @@ node_modules
 # disk in production and is rebuilt by the fundamentals crawl anywhere else.
 altaha_fundamentals.db
 altaha_fundamentals.db-*
+
+# The Lenses inputs and nightly results. Data and cache, never source — it
+# lives on the mounted disk in production and is rebuilt by the lens jobs.
+altaha_lenses.db
+altaha_lenses.db-*

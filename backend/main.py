@@ -95,6 +95,19 @@ try:
 except Exception:
     fundamentals_crawl = None
 try:
+    # Lenses: named investing philosophies applied as rules to the
+    # fundamentals tables. The engine and store are stdlib-only; the crawl
+    # that fills industry and ownership needs NSE, like the others.
+    import lens_engine
+    import lens_store
+    import lens_job
+except Exception:
+    lens_engine = lens_store = lens_job = None
+try:
+    import lens_data_crawl
+except Exception:
+    lens_data_crawl = None
+try:
     # The holdings ledger and the curated investor table. Three modules, each
     # importable on its own: the store is stdlib-only, so a box without
     # curl_cffi can still SERVE what has already been collected even though it
@@ -2318,6 +2331,156 @@ def admin_fundamentals_crawl(key: str = "", limit: int = 8,
         return to_native(fundamentals_crawl.run(
             limit=max(1, min(int(limit), 200)),
             symbols=syms or None, source=source))
+    except Exception as e:
+        raise HTTPException(503, f"The crawl failed: {str(e)[:150]}")
+
+
+# ---------------------------------------------------------------------------
+# Lenses
+#
+# Every endpoint reads the nightly run cached in altaha_lenses.db; nothing is
+# recomputed inside a request. The copy is factual by construction: a stock
+# "meets" a lens or "passes N of M rules", and every page carries the notice
+# below.
+# ---------------------------------------------------------------------------
+
+LENS_NOTICE = ("Lenses are rules-based filters applied to historical financial data. "
+               "They are not investment advice or recommendations.")
+_lens_lock = threading.Lock()
+
+
+def _lens_ready():
+    if lens_engine is None or lens_store is None:
+        raise HTTPException(503, "Lenses are not available on this instance.")
+    try:
+        return lens_engine.load_config()
+    except Exception as e:
+        raise HTTPException(503, f"The lens configuration could not be read: {str(e)[:150]}")
+
+
+def _lens_run():
+    run = lens_store.latest_run()
+    return run, (run or {}).get("run_id")
+
+
+def _lens_row(r):
+    return {"symbol": r["symbol"], "company": r.get("company"), "industry": r.get("industry"),
+            "status": r["status"], "passed": r["passed"], "failed": r["failed"],
+            "na": r["na"], "total": r["total"], "coverage": r["coverage"],
+            "rules": r["rules"]}
+
+
+@app.get("/api/lenses")
+def lenses_index():
+    """Every lens, with how many companies meet it in the latest run."""
+    cfg = _lens_ready()
+    run, run_id = _lens_run()
+    counts = lens_store.status_counts(run_id) if run_id else {}
+    out = []
+    for lens in cfg["lenses"]:
+        pub = lens_engine.public_lens(lens, cfg)
+        c = counts.get(lens["id"], {})
+        pub["counts"] = {k: c.get(k, 0) for k in lens_engine.STATUSES}
+        out.append(pub)
+    return to_native({"available": True, "market": cfg.get("market", "IN"), "run": run,
+                      "lenses": out, "notice": LENS_NOTICE})
+
+
+@app.get("/api/lenses/coverage")
+def lenses_coverage():
+    """What the Lens inputs hold, so a sparse page can say why it is sparse."""
+    _lens_ready()
+    return to_native({"store": lens_store.stats(), "notice": LENS_NOTICE})
+
+
+@app.get("/api/lenses/convergence")
+def lenses_convergence(min_lenses: int = 3):
+    """Companies that meet several lenses at once, most first."""
+    cfg = _lens_ready()
+    run, run_id = _lens_run()
+    names = {l["id"]: l["name"] for l in cfg["lenses"]}
+    rows = lens_store.convergence(run_id, max(1, min(int(min_lenses), 10))) if run_id else []
+    for r in rows:
+        r["lenses"] = [{"id": i, "name": names.get(i, i)} for i in r["lenses"]]
+    live = sum(1 for l in cfg["lenses"] if l.get("status", "live") == "live")
+    return to_native({"run": run, "min_lenses": min_lenses, "live_lenses": live,
+                      "stocks": rows, "notice": LENS_NOTICE})
+
+
+@app.get("/api/lenses/stock/{symbol}")
+def lenses_for_stock(symbol: str):
+    """How one company fares under every lens, rule by rule."""
+    cfg = _lens_ready()
+    sym = (symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
+    if not sym or len(sym) > 20:
+        raise HTTPException(400, "A symbol is required.")
+    run, run_id = _lens_run()
+    got = {r["lens_id"]: r for r in lens_store.results(run_id, symbol=sym)} if run_id else {}
+    lenses, meets, live = [], 0, 0
+    for lens in cfg["lenses"]:
+        pub = lens_engine.public_lens(lens, cfg)
+        r = got.get(lens["id"])
+        if pub["status"] == "live":
+            live += 1
+        pub["result"] = _lens_row(r) if r else None
+        if r and r["status"] == "pass":
+            meets += 1
+        lenses.append(pub)
+    return to_native({"symbol": sym, "run": run, "covered": bool(got), "meets": meets,
+                      "live_lenses": live, "lenses": lenses, "notice": LENS_NOTICE})
+
+
+@app.get("/api/lenses/{lens_id}")
+def lens_detail(lens_id: str, limit: int = 500):
+    """One lens: its rules, the companies that meet it, and the near misses."""
+    cfg = _lens_ready()
+    lens = next((l for l in cfg["lenses"] if l["id"] == lens_id), None)
+    if lens is None:
+        raise HTTPException(404, "No lens with that id.")
+    pub = lens_engine.public_lens(lens, cfg)
+    run, run_id = _lens_run()
+    out = {"lens": pub, "run": run, "passing": [], "near_misses": [], "counts": {},
+           "notice": LENS_NOTICE}
+    if pub["status"] != "live" or not run_id:
+        return to_native(out)
+    cap = max(1, min(int(limit), 2000))
+    rows = lens_store.results(run_id, lens_id=lens_id, statuses=["pass", "near_miss"])
+    # Most rules passed first, then the most rules actually judged.
+    rows.sort(key=lambda r: (-r["passed"], -r["coverage"], r["symbol"]))
+    out["passing"] = [_lens_row(r) for r in rows if r["status"] == "pass"][:cap]
+    out["near_misses"] = [_lens_row(r) for r in rows if r["status"] == "near_miss"][:cap]
+    c = lens_store.status_counts(run_id).get(lens_id, {})
+    out["counts"] = {k: c.get(k, 0) for k in lens_engine.STATUSES}
+    return to_native(out)
+
+
+@app.post("/admin/lenses/compute")
+def admin_lenses_compute(key: str = "",
+                         x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Run every live lens over every company in the fundamentals tables."""
+    _require_admin(x_admin_key or key)
+    _lens_ready()
+    if not _lens_lock.acquire(blocking=False):
+        raise HTTPException(409, "A lens compute is already running.")
+    try:
+        return to_native(lens_job.compute())
+    except Exception as e:
+        raise HTTPException(503, f"The lens compute failed: {str(e)[:200]}")
+    finally:
+        _lens_lock.release()
+
+
+@app.post("/admin/lenses/crawl")
+def admin_lenses_crawl(key: str = "", limit: int = 25, symbols: str = "",
+                       x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Read industry, share count, price and shareholding for the next slice."""
+    _require_admin(x_admin_key or key)
+    if lens_data_crawl is None:
+        raise HTTPException(503, "The lens data crawler is not available.")
+    syms = [s.strip().upper() for s in (symbols or "").split(",") if s.strip()]
+    try:
+        return to_native(lens_data_crawl.run(limit=max(1, min(int(limit), 100)),
+                                             symbols=syms or None))
     except Exception as e:
         raise HTTPException(503, f"The crawl failed: {str(e)[:150]}")
 

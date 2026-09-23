@@ -1,0 +1,104 @@
+name: Compute the Lenses
+
+# WHAT THIS DOES
+# Two steps, every night, against the API:
+#   1  read the next slices of companies' industry, share count, price and
+#      shareholding (POST /admin/lenses/crawl) — the inputs the fundamentals
+#      tables do not carry;
+#   2  apply every live lens to every company in the fundamentals tables and
+#      cache the answers (POST /admin/lenses/compute), which is all the
+#      /api/lenses endpoints ever read.
+#
+# WHY HERE AND WHY THEN
+# Same reasoning as the other scheduled jobs: Render's cron is a paid add-on
+# and an in-process timer dies with the worker, while a workflow is versioned
+# and a failed run is an email. It runs after the fundamentals crawl
+# (23:30 UTC, up to about six hours) so each night's compute sees that night's
+# filings. 05:45 UTC is 11:15 IST.
+#
+# Needs one repository secret: ALTAHA_ADMIN_KEY, the same value as ADMIN_KEY
+# on Render.
+
+on:
+  schedule:
+    - cron: "45 5 * * *"
+  workflow_dispatch:
+    inputs:
+      slices:
+        description: "How many crawl calls to make before computing (25 companies each)"
+        type: string
+        default: "30"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lenses
+  cancel-in-progress: false
+
+jobs:
+  lenses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+      API: https://taha-project.onrender.com
+    steps:
+      - name: Check the admin key
+        run: |
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render."
+            exit 1
+          fi
+          curl -sS --max-time 120 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+
+      - name: Read industry, shares, price and shareholding for the next slices
+        continue-on-error: true
+        timeout-minutes: 180
+        env:
+          SLICES: ${{ inputs.slices || '30' }}
+        run: |
+          set -uo pipefail
+          failed=0
+          for i in $(seq 1 "${SLICES}"); do
+            code=$(curl -sS --max-time 900 -o slice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/lenses/crawl?limit=25" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+            if [ "${code}" != "200" ]; then
+              echo "slice ${i}: HTTP ${code}"
+              [ "${code}" = "401" ] && { echo "::error::The server rejected the admin key (401)."; exit 1; }
+              failed=$((failed + 1))
+              [ "${failed}" -ge 3 ] && { echo "::warning::three slices in a row failed — computing with what is held."; break; }
+              sleep 30; continue
+            fi
+            failed=0
+            read -r attempted ok early < <(python3 -c "import json;d=json.load(open('slice.json'));print(d.get('attempted',0), d.get('ok',0), (d.get('stopped_early') or '').replace(' ','_'))")
+            echo "slice ${i}: ${attempted} companies, ${ok} read ${early:+— ${early}}"
+            [ "${attempted}" = "0" ] && { echo "nothing further is due."; break; }
+            if [ -n "${early}" ]; then sleep 60; else sleep 5; fi
+          done
+
+      - name: Apply every live lens and cache the results
+        run: |
+          set -euo pipefail
+          code=$(curl -sS --max-time 1500 -o compute.json -w "%{http_code}" \
+                 -X POST "${API}/admin/lenses/compute" \
+                 -H "X-Admin-Key: ${ADMIN_KEY}")
+          echo "HTTP ${code}"
+          python3 - <<'PY'
+          import json
+          d = json.load(open("compute.json"))
+          if "run_id" not in d:
+              print(d)
+          else:
+              print(f"run {d['run_id']}: {d['companies']} companies, {d['results']} results "
+                    f"in {d['seconds']}s")
+              for lens, c in sorted(d.get("counts", {}).items()):
+                  print(f"  {lens:10} pass {c.get('pass', 0):5}  near miss {c.get('near_miss', 0):5}  "
+                        f"insufficient {c.get('insufficient', 0):5}")
+          PY
+          if [ "${code}" != "200" ]; then
+            echo "::error::The lens compute returned ${code}."
+            exit 1
+          fi
