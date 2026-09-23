@@ -211,3 +211,18 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/planner-risk-browser.cjs
+      - name: Verify the Lenses views and the Research menu
+        # The LENSES column must sit in the Research menu like its neighbours,
+        # a blocked lens must say "Coming soon" and never show a count, a rule
+        # that could not be judged must read as a dash rather than a pass or a
+        # fail, and every view must carry the notice and none of the words the
+        # site's SEBI position rules out.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/lenses-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lenses-browser-verification
+          path: test-results/lenses

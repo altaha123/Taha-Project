@@ -1,0 +1,3401 @@
+{
+ "convergence": {
+  "2": {
+   "live_lenses": 7,
+   "min_lenses": 2,
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   },
+   "stocks": [
+    {
+     "company": "Grow Industries Ltd",
+     "industry": "Specialty Chemicals",
+     "lenses": [
+      {
+       "id": "akre",
+       "name": "Akre"
+      },
+      {
+       "id": "cannibal",
+       "name": "Cannibal"
+      },
+      {
+       "id": "nomad",
+       "name": "Nomad"
+      },
+      {
+       "id": "owner",
+       "name": "Owner-Operator"
+      },
+      {
+       "id": "qglp",
+       "name": "QGLP"
+      },
+      {
+       "id": "tenbagger",
+       "name": "Tenbagger"
+      }
+     ],
+     "passed": 6,
+     "symbol": "GROW"
+    }
+   ]
+  },
+  "3": {
+   "live_lenses": 7,
+   "min_lenses": 3,
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   },
+   "stocks": [
+    {
+     "company": "Grow Industries Ltd",
+     "industry": "Specialty Chemicals",
+     "lenses": [
+      {
+       "id": "akre",
+       "name": "Akre"
+      },
+      {
+       "id": "cannibal",
+       "name": "Cannibal"
+      },
+      {
+       "id": "nomad",
+       "name": "Nomad"
+      },
+      {
+       "id": "owner",
+       "name": "Owner-Operator"
+      },
+      {
+       "id": "qglp",
+       "name": "QGLP"
+      },
+      {
+       "id": "tenbagger",
+       "name": "Tenbagger"
+      }
+     ],
+     "passed": 6,
+     "symbol": "GROW"
+    }
+   ]
+  },
+  "4": {
+   "live_lenses": 7,
+   "min_lenses": 4,
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   },
+   "stocks": [
+    {
+     "company": "Grow Industries Ltd",
+     "industry": "Specialty Chemicals",
+     "lenses": [
+      {
+       "id": "akre",
+       "name": "Akre"
+      },
+      {
+       "id": "cannibal",
+       "name": "Cannibal"
+      },
+      {
+       "id": "nomad",
+       "name": "Nomad"
+      },
+      {
+       "id": "owner",
+       "name": "Owner-Operator"
+      },
+      {
+       "id": "qglp",
+       "name": "QGLP"
+      },
+      {
+       "id": "tenbagger",
+       "name": "Tenbagger"
+      }
+     ],
+     "passed": 6,
+     "symbol": "GROW"
+    }
+   ]
+  }
+ },
+ "index": {
+  "available": true,
+  "lenses": [
+   {
+    "coming_soon_reason": null,
+    "counts": {
+     "fail": 0,
+     "insufficient": 3,
+     "near_miss": 0,
+     "pass": 0
+    },
+    "id": "gorilla",
+    "idea": "The market leader in its industry, growing fast, earning high returns on capital and holding a margin above the rest of its industry.",
+    "min_coverage": 0.75,
+    "name": "Gorilla",
+    "originator": "Geoffrey Moore, The Gorilla Game",
+    "rules": [
+     {
+      "field": "industry_revenue_rank",
+      "label": "Revenue rank within its NSE industry is 1 or 2",
+      "lookback_years": 1,
+      "operator": "<=",
+      "threshold": 2
+     },
+     {
+      "field": "revenue_cagr",
+      "label": "Revenue grew more than 15% a year over 5 years",
+      "lookback_years": 5,
+      "operator": ">",
+      "threshold": 15
+     },
+     {
+      "field": "roce",
+      "label": "Return on capital employed above 20%",
+      "lookback_years": 1,
+      "operator": ">",
+      "threshold": 20
+     },
+     {
+      "field": "margin_vs_industry_min",
+      "label": "EBITDA margin above the industry median in each of the last 3 years",
+      "lookback_years": 3,
+      "operator": ">",
+      "threshold": 0
+     }
+    ],
+    "status": "live"
+   },
+   {
+    "coming_soon_reason": "Needs 10 years of balance sheets and cash flows. Companies have filed balance sheets in machine-readable form only since September 2022 (4 years), and cash flows since FY21 (6 years). The data does not exist yet in the filings this site reads.",
+    "counts": {
+     "fail": 0,
+     "insufficient": 0,
+     "near_miss": 0,
+     "pass": 0
+    },
+    "id": "moat",
+    "idea": "A business whose returns stay high for a decade, with little debt, steady free cash flow and unusually stable margins.",
+    "min_coverage": 0.75,
+    "name": "Moat",
+    "originator": "Warren Buffett and Pat Dorsey",
+    "rules": [
+     {
+      "field": "roe_min",
+      "label": "Return on equity above 15% in every one of the last 10 years",
+      "lookback_years": 10,
+      "operator": ">",
+      "threshold": 15
+     },
+     {
+      "field": "debt_equity",
+      "label": "Debt to equity below 0.5",
+      "lookback_years": 1,
+      "operator": "<",
+      "threshold": 0.5
+     },
+     {
+      "field": "fcf_positive_years",
+      "label": "Free cash flow positive in at least 8 of the last 10 years",
+      "lookback_years": 10,
+      "operator": ">=",
+      "threshold": 8
+     },
+     {
+      "field": "margin_stdev_pctile",
+      "label": "10-year variation in EBITDA margin in the lowest third of the market",
+      "lookback_years": 10,
+      "operator": "<=",
+      "threshold": 33.33
+     }
+    ],
+    "status": "coming_soon"
+   },
+   {
+    "coming_soon_reason": null,
+    "counts": {
+     "fail": 0,
+     "insufficient": 1,
+     "near_miss": 1,
+     "pass": 1
+    },
+    "id": "tenbagger",
+    "idea": "Smaller companies growing earnings quickly but not at a pace that rarely lasts, priced below their growth, and not yet widely held by institutions.",
+    "min_coverage": 0.75,
+    "name": "Tenbagger",
+    "originator": "Peter Lynch, One Up on Wall Street",
+    "rules": [
+     {
+      "field": "eps_growth",
+      "label": "Trailing EPS grew between 20% and 50% over the year",
+      "lookback_years": 1,
+      "operator": "between",
+      "threshold": [
+       20,
+       50
+      ]
+     },
+     {
+      "field": "peg",
+      "label": "PEG below 1 (P/E divided by EPS growth)",
+      "lookback_years": 1,
+      "operator": "<",
+      "threshold": 1
+     },
+     {
+      "field": "size_band",
+      "label": "Small or mid cap by market value rank",
+      "lookback_years": 0,
+      "operator": "in",
+      "threshold": [
+       "small",
+       "mid"
+      ]
+     },
+     {
+      "field": "fii_dii_pct",
+      "label": "Foreign and domestic institutions together hold less than 20%",
+      "lookback_years": 0,
+      "operator": "<",
+      "threshold": 20
+     }
+    ],
+    "status": "live"
+   },
+   {
+    "coming_soon_reason": "Needs 10 years of revenue and return on capital. Revenue goes back about 8 years in the filings this site reads, and the balance sheet needed for return on capital only 4.",
+    "counts": {
+     "fail": 0,
+     "insufficient": 0,
+     "near_miss": 0,
+     "pass": 0
+    },
+    "id": "coffeecan",
+    "idea": "Companies that grew revenue and earned good returns on capital in every single year of the last decade.",
+    "min_coverage": 0.75,
+    "name": "Coffee Can",
+    "originator": "Robert Kirby; Saurabh Mukherjea in India",
+    "rules": [
+     {
+      "field": "revenue_growth_min",
+      "label": "Revenue grew at least 10% in every one of the last 10 years",
+      "lookback_years": 10,
+      "operator": ">=",
+      "threshold": 10
+     },
+     {
+      "field": "roce_min",
+      "label": "Return on capital employed at least 15% in every one of the last 10 years",
+      "lookback_years": 10,
+      "operator": ">=",
+      "threshold": 15
+     }
+    ],
+    "status": "coming_soon"
+   },
+   {
+    "coming_soon_reason": null,
+    "counts": {
+     "fail": 0,
+     "insufficient": 1,
+     "near_miss": 1,
+     "pass": 1
+    },
+    "id": "qglp",
+    "idea": "Quality, Growth, Longevity and Price: high returns on equity, fast and consistent earnings growth, at a price below that growth.",
+    "min_coverage": 0.75,
+    "name": "QGLP",
+    "originator": "Raamdeo Agrawal, Motilal Oswal",
+    "rules": [
+     {
+      "field": "roe",
+      "label": "Return on equity above 20%",
+      "lookback_years": 1,
+      "operator": ">",
+      "threshold": 20
+     },
+     {
+      "field": "eps_cagr",
+      "label": "EPS grew more than 20% a year over 3 years",
+      "lookback_years": 3,
+      "operator": ">",
+      "threshold": 20
+     },
+     {
+      "field": "eps_rising_years",
+      "label": "EPS rose in each of the last 3 years",
+      "lookback_years": 3,
+      "operator": ">=",
+      "threshold": 3
+     },
+     {
+      "field": "peg",
+      "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+      "lookback_years": 3,
+      "operator": "<",
+      "threshold": 1
+     }
+    ],
+    "status": "live"
+   },
+   {
+    "coming_soon_reason": null,
+    "counts": {
+     "fail": 1,
+     "insufficient": 1,
+     "near_miss": 0,
+     "pass": 1
+    },
+    "id": "akre",
+    "idea": "A high-return business, run by owners with a large unpledged stake, that reinvests most of its profit without its returns falling.",
+    "min_coverage": 0.75,
+    "name": "Akre",
+    "originator": "Chuck Akre's three-legged stool",
+    "rules": [
+     {
+      "field": "roce",
+      "label": "Return on capital employed above 20%",
+      "lookback_years": 1,
+      "operator": ">",
+      "threshold": 20
+     },
+     {
+      "field": "promoter_pct",
+      "label": "Promoters hold more than 50%",
+      "lookback_years": 0,
+      "operator": ">",
+      "threshold": 50
+     },
+     {
+      "field": "pledge_pct",
+      "label": "No promoter shares pledged",
+      "lookback_years": 0,
+      "operator": "==",
+      "threshold": 0
+     },
+     {
+      "field": "reinvestment_rate",
+      "label": "Reinvested more than 50% of operating profit after tax over 3 years",
+      "lookback_years": 3,
+      "operator": ">",
+      "threshold": 50
+     },
+     {
+      "field": "roce_change",
+      "label": "Return on capital employed not lower than 3 years ago",
+      "lookback_years": 3,
+      "operator": ">=",
+      "threshold": 0
+     }
+    ],
+    "status": "live"
+   },
+   {
+    "coming_soon_reason": null,
+    "counts": {
+     "fail": 0,
+     "insufficient": 1,
+     "near_miss": 1,
+     "pass": 1
+    },
+    "id": "nomad",
+    "idea": "Scale economics shared with customers: fast growth, margins held steady rather than expanded, and more sales from every rupee of assets.",
+    "min_coverage": 0.75,
+    "name": "Nomad",
+    "originator": "Nick Sleep and Qais Zakaria, Nomad Investment Partnership",
+    "rules": [
+     {
+      "field": "revenue_cagr",
+      "label": "Revenue grew more than 15% a year over 5 years",
+      "lookback_years": 5,
+      "operator": ">",
+      "threshold": 15
+     },
+     {
+      "field": "margin_change",
+      "label": "EBITDA margin within 2 percentage points of 5 years ago",
+      "lookback_years": 5,
+      "operator": "abs_lte",
+      "threshold": 2
+     },
+     {
+      "field": "asset_turnover_change",
+      "label": "Asset turnover higher than 3 years ago",
+      "lookback_years": 3,
+      "operator": ">",
+      "threshold": 0
+     }
+    ],
+    "status": "live"
+   },
+   {
+    "coming_soon_reason": null,
+    "counts": {
+     "fail": 1,
+     "insufficient": 1,
+     "near_miss": 0,
+     "pass": 1
+    },
+    "id": "cannibal",
+    "idea": "Companies that shrink their own share count, so each remaining share owns more of the business.",
+    "min_coverage": 0.75,
+    "name": "Cannibal",
+    "originator": "Share-count reduction, as studied in William Thorndike's The Outsiders",
+    "rules": [
+     {
+      "field": "share_count_cagr",
+      "label": "Paid-up equity capital fell more than 2% a year over 3 years",
+      "lookback_years": 3,
+      "operator": "<",
+      "threshold": -2
+     }
+    ],
+    "status": "live"
+   },
+   {
+    "coming_soon_reason": null,
+    "counts": {
+     "fail": 1,
+     "insufficient": 1,
+     "near_miss": 0,
+     "pass": 1
+    },
+    "id": "owner",
+    "idea": "Promoters own the majority, have pledged none of it, and have been adding to their stake.",
+    "min_coverage": 0.75,
+    "name": "Owner-Operator",
+    "originator": "Owner-operator investing, as studied in William Thorndike's The Outsiders",
+    "rules": [
+     {
+      "field": "promoter_pct",
+      "label": "Promoters hold more than 50%",
+      "lookback_years": 0,
+      "operator": ">",
+      "threshold": 50
+     },
+     {
+      "field": "pledge_pct",
+      "label": "No promoter shares pledged",
+      "lookback_years": 0,
+      "operator": "==",
+      "threshold": 0
+     },
+     {
+      "field": "promoter_change",
+      "label": "Promoter stake higher than 4 quarters ago",
+      "lookback_years": 1,
+      "operator": ">",
+      "threshold": 0
+     }
+    ],
+    "status": "live"
+   },
+   {
+    "coming_soon_reason": "Needs a history of listed companies per industry, including those that delisted. The exchange list this site reads holds only companies listed today, so the number of competitors over time cannot be counted yet.",
+    "counts": {
+     "fail": 0,
+     "insufficient": 0,
+     "near_miss": 0,
+     "pass": 0
+    },
+    "id": "capcycle",
+    "idea": "Industries where capacity is being withdrawn: capex falling against depreciation and fewer listed competitors.",
+    "min_coverage": 0.75,
+    "name": "Capital Cycle",
+    "originator": "Marathon Asset Management, Capital Returns",
+    "rules": [
+     {
+      "field": "industry_capex_dep_change",
+      "label": "Industry capex to depreciation lower than 3 years ago",
+      "lookback_years": 3,
+      "operator": "<",
+      "threshold": 0
+     },
+     {
+      "field": "industry_peer_count_change",
+      "label": "Number of listed companies in the industry flat or lower over 3 years",
+      "lookback_years": 3,
+      "operator": "<=",
+      "threshold": 0
+     }
+    ],
+    "status": "coming_soon"
+   }
+  ],
+  "market": "IN",
+  "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+  "run": {
+   "companies": 3,
+   "config_version": 1,
+   "finished_utc": "2026-09-23T16:13:53+00:00",
+   "note": "21 results in 0.0s",
+   "run_id": 1,
+   "started_utc": "2026-09-23T16:13:53+00:00",
+   "status": "ok",
+   "universe": 3
+  }
+ },
+ "lens": {
+  "akre": {
+   "counts": {
+    "fail": 1,
+    "insufficient": 1,
+    "near_miss": 0,
+    "pass": 1
+   },
+   "lens": {
+    "coming_soon_reason": null,
+    "id": "akre",
+    "idea": "A high-return business, run by owners with a large unpledged stake, that reinvests most of its profit without its returns falling.",
+    "min_coverage": 0.75,
+    "name": "Akre",
+    "originator": "Chuck Akre's three-legged stool",
+    "rules": [
+     {
+      "field": "roce",
+      "label": "Return on capital employed above 20%",
+      "lookback_years": 1,
+      "operator": ">",
+      "threshold": 20
+     },
+     {
+      "field": "promoter_pct",
+      "label": "Promoters hold more than 50%",
+      "lookback_years": 0,
+      "operator": ">",
+      "threshold": 50
+     },
+     {
+      "field": "pledge_pct",
+      "label": "No promoter shares pledged",
+      "lookback_years": 0,
+      "operator": "==",
+      "threshold": 0
+     },
+     {
+      "field": "reinvestment_rate",
+      "label": "Reinvested more than 50% of operating profit after tax over 3 years",
+      "lookback_years": 3,
+      "operator": ">",
+      "threshold": 50
+     },
+     {
+      "field": "roce_change",
+      "label": "Return on capital employed not lower than 3 years ago",
+      "lookback_years": 3,
+      "operator": ">=",
+      "threshold": 0
+     }
+    ],
+    "status": "live"
+   },
+   "near_misses": [],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [
+    {
+     "company": "Grow Industries Ltd",
+     "coverage": 1.0,
+     "failed": 0,
+     "industry": "Specialty Chemicals",
+     "na": 0,
+     "passed": 5,
+     "rules": [
+      {
+       "display": "24.9%",
+       "field": "roce",
+       "label": "Return on capital employed above 20%",
+       "lookback_years": 1,
+       "note": "FY26: EBIT \u20b954.7 cr \u00f7 capital employed \u20b9220 cr",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 20,
+       "value": 24.89
+      },
+      {
+       "display": "61.2%",
+       "field": "promoter_pct",
+       "label": "Promoters hold more than 50%",
+       "lookback_years": 0,
+       "note": "Quarter to 2026-06-30",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 50,
+       "value": 61.2
+      },
+      {
+       "display": "None",
+       "field": "pledge_pct",
+       "label": "No promoter shares pledged",
+       "lookback_years": 0,
+       "note": "The filing states no promoter shares are pledged (2026-06-30)",
+       "operator": "==",
+       "result": "pass",
+       "threshold": 0,
+       "value": 0.0
+      },
+      {
+       "display": "51.8%",
+       "field": "reinvestment_rate",
+       "label": "Reinvested more than 50% of operating profit after tax over 3 years",
+       "lookback_years": 3,
+       "note": "(capex \u2212 depreciation + change in working capital) \u00f7 operating profit after tax, 3 years",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 50,
+       "value": 51.85
+      },
+      {
+       "display": "+4.8 pp",
+       "field": "roce_change",
+       "label": "Return on capital employed not lower than 3 years ago",
+       "lookback_years": 3,
+       "note": "FY26 24.9% vs FY23 20.1%",
+       "operator": ">=",
+       "result": "pass",
+       "threshold": 0,
+       "value": 4.82
+      }
+     ],
+     "status": "pass",
+     "symbol": "GROW",
+     "total": 5
+    }
+   ],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "cannibal": {
+   "counts": {
+    "fail": 1,
+    "insufficient": 1,
+    "near_miss": 0,
+    "pass": 1
+   },
+   "lens": {
+    "coming_soon_reason": null,
+    "id": "cannibal",
+    "idea": "Companies that shrink their own share count, so each remaining share owns more of the business.",
+    "min_coverage": 0.75,
+    "name": "Cannibal",
+    "originator": "Share-count reduction, as studied in William Thorndike's The Outsiders",
+    "rules": [
+     {
+      "field": "share_count_cagr",
+      "label": "Paid-up equity capital fell more than 2% a year over 3 years",
+      "lookback_years": 3,
+      "operator": "<",
+      "threshold": -2
+     }
+    ],
+    "status": "live"
+   },
+   "near_misses": [],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [
+    {
+     "company": "Grow Industries Ltd",
+     "coverage": 1.0,
+     "failed": 0,
+     "industry": "Specialty Chemicals",
+     "na": 0,
+     "passed": 1,
+     "rules": [
+      {
+       "display": "-4.2% a year",
+       "field": "share_count_cagr",
+       "label": "Paid-up equity capital fell more than 2% a year over 3 years",
+       "lookback_years": 3,
+       "note": "Paid-up equity capital FY23 \u20b910.0 cr \u2192 FY26 \u20b98.8 cr. A bonus issue raises this without dilution.",
+       "operator": "<",
+       "result": "pass",
+       "threshold": -2,
+       "value": -4.17
+      }
+     ],
+     "status": "pass",
+     "symbol": "GROW",
+     "total": 1
+    }
+   ],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "capcycle": {
+   "counts": {},
+   "lens": {
+    "coming_soon_reason": "Needs a history of listed companies per industry, including those that delisted. The exchange list this site reads holds only companies listed today, so the number of competitors over time cannot be counted yet.",
+    "id": "capcycle",
+    "idea": "Industries where capacity is being withdrawn: capex falling against depreciation and fewer listed competitors.",
+    "min_coverage": 0.75,
+    "name": "Capital Cycle",
+    "originator": "Marathon Asset Management, Capital Returns",
+    "rules": [
+     {
+      "field": "industry_capex_dep_change",
+      "label": "Industry capex to depreciation lower than 3 years ago",
+      "lookback_years": 3,
+      "operator": "<",
+      "threshold": 0
+     },
+     {
+      "field": "industry_peer_count_change",
+      "label": "Number of listed companies in the industry flat or lower over 3 years",
+      "lookback_years": 3,
+      "operator": "<=",
+      "threshold": 0
+     }
+    ],
+    "status": "coming_soon"
+   },
+   "near_misses": [],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "coffeecan": {
+   "counts": {},
+   "lens": {
+    "coming_soon_reason": "Needs 10 years of revenue and return on capital. Revenue goes back about 8 years in the filings this site reads, and the balance sheet needed for return on capital only 4.",
+    "id": "coffeecan",
+    "idea": "Companies that grew revenue and earned good returns on capital in every single year of the last decade.",
+    "min_coverage": 0.75,
+    "name": "Coffee Can",
+    "originator": "Robert Kirby; Saurabh Mukherjea in India",
+    "rules": [
+     {
+      "field": "revenue_growth_min",
+      "label": "Revenue grew at least 10% in every one of the last 10 years",
+      "lookback_years": 10,
+      "operator": ">=",
+      "threshold": 10
+     },
+     {
+      "field": "roce_min",
+      "label": "Return on capital employed at least 15% in every one of the last 10 years",
+      "lookback_years": 10,
+      "operator": ">=",
+      "threshold": 15
+     }
+    ],
+    "status": "coming_soon"
+   },
+   "near_misses": [],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "gorilla": {
+   "counts": {
+    "fail": 0,
+    "insufficient": 3,
+    "near_miss": 0,
+    "pass": 0
+   },
+   "lens": {
+    "coming_soon_reason": null,
+    "id": "gorilla",
+    "idea": "The market leader in its industry, growing fast, earning high returns on capital and holding a margin above the rest of its industry.",
+    "min_coverage": 0.75,
+    "name": "Gorilla",
+    "originator": "Geoffrey Moore, The Gorilla Game",
+    "rules": [
+     {
+      "field": "industry_revenue_rank",
+      "label": "Revenue rank within its NSE industry is 1 or 2",
+      "lookback_years": 1,
+      "operator": "<=",
+      "threshold": 2
+     },
+     {
+      "field": "revenue_cagr",
+      "label": "Revenue grew more than 15% a year over 5 years",
+      "lookback_years": 5,
+      "operator": ">",
+      "threshold": 15
+     },
+     {
+      "field": "roce",
+      "label": "Return on capital employed above 20%",
+      "lookback_years": 1,
+      "operator": ">",
+      "threshold": 20
+     },
+     {
+      "field": "margin_vs_industry_min",
+      "label": "EBITDA margin above the industry median in each of the last 3 years",
+      "lookback_years": 3,
+      "operator": ">",
+      "threshold": 0
+     }
+    ],
+    "status": "live"
+   },
+   "near_misses": [],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "moat": {
+   "counts": {},
+   "lens": {
+    "coming_soon_reason": "Needs 10 years of balance sheets and cash flows. Companies have filed balance sheets in machine-readable form only since September 2022 (4 years), and cash flows since FY21 (6 years). The data does not exist yet in the filings this site reads.",
+    "id": "moat",
+    "idea": "A business whose returns stay high for a decade, with little debt, steady free cash flow and unusually stable margins.",
+    "min_coverage": 0.75,
+    "name": "Moat",
+    "originator": "Warren Buffett and Pat Dorsey",
+    "rules": [
+     {
+      "field": "roe_min",
+      "label": "Return on equity above 15% in every one of the last 10 years",
+      "lookback_years": 10,
+      "operator": ">",
+      "threshold": 15
+     },
+     {
+      "field": "debt_equity",
+      "label": "Debt to equity below 0.5",
+      "lookback_years": 1,
+      "operator": "<",
+      "threshold": 0.5
+     },
+     {
+      "field": "fcf_positive_years",
+      "label": "Free cash flow positive in at least 8 of the last 10 years",
+      "lookback_years": 10,
+      "operator": ">=",
+      "threshold": 8
+     },
+     {
+      "field": "margin_stdev_pctile",
+      "label": "10-year variation in EBITDA margin in the lowest third of the market",
+      "lookback_years": 10,
+      "operator": "<=",
+      "threshold": 33.33
+     }
+    ],
+    "status": "coming_soon"
+   },
+   "near_misses": [],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "nomad": {
+   "counts": {
+    "fail": 0,
+    "insufficient": 1,
+    "near_miss": 1,
+    "pass": 1
+   },
+   "lens": {
+    "coming_soon_reason": null,
+    "id": "nomad",
+    "idea": "Scale economics shared with customers: fast growth, margins held steady rather than expanded, and more sales from every rupee of assets.",
+    "min_coverage": 0.75,
+    "name": "Nomad",
+    "originator": "Nick Sleep and Qais Zakaria, Nomad Investment Partnership",
+    "rules": [
+     {
+      "field": "revenue_cagr",
+      "label": "Revenue grew more than 15% a year over 5 years",
+      "lookback_years": 5,
+      "operator": ">",
+      "threshold": 15
+     },
+     {
+      "field": "margin_change",
+      "label": "EBITDA margin within 2 percentage points of 5 years ago",
+      "lookback_years": 5,
+      "operator": "abs_lte",
+      "threshold": 2
+     },
+     {
+      "field": "asset_turnover_change",
+      "label": "Asset turnover higher than 3 years ago",
+      "lookback_years": 3,
+      "operator": ">",
+      "threshold": 0
+     }
+    ],
+    "status": "live"
+   },
+   "near_misses": [
+    {
+     "company": "Steady Foods Ltd",
+     "coverage": 1.0,
+     "failed": 1,
+     "industry": "Packaged Foods",
+     "na": 0,
+     "passed": 2,
+     "rules": [
+      {
+       "display": "8.0%",
+       "field": "revenue_cagr",
+       "label": "Revenue grew more than 15% a year over 5 years",
+       "lookback_years": 5,
+       "note": "FY21 \u20b9117 cr \u2192 FY26 \u20b9171 cr",
+       "operator": ">",
+       "result": "fail",
+       "threshold": 15,
+       "value": 8.0
+      },
+      {
+       "display": "+0.0 pp",
+       "field": "margin_change",
+       "label": "EBITDA margin within 2 percentage points of 5 years ago",
+       "lookback_years": 5,
+       "note": "EBITDA margin FY26 20.0% vs FY21 20.0%",
+       "operator": "abs_lte",
+       "result": "pass",
+       "threshold": 2,
+       "value": 0.0
+      },
+      {
+       "display": "+0.12x",
+       "field": "asset_turnover_change",
+       "label": "Asset turnover higher than 3 years ago",
+       "lookback_years": 3,
+       "note": "Revenue \u00f7 total assets FY26 0.57x vs FY23 0.45x",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 0,
+       "value": 0.1178
+      }
+     ],
+     "status": "near_miss",
+     "symbol": "STEADY",
+     "total": 3
+    }
+   ],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [
+    {
+     "company": "Grow Industries Ltd",
+     "coverage": 1.0,
+     "failed": 0,
+     "industry": "Specialty Chemicals",
+     "na": 0,
+     "passed": 3,
+     "rules": [
+      {
+       "display": "20.0%",
+       "field": "revenue_cagr",
+       "label": "Revenue grew more than 15% a year over 5 years",
+       "lookback_years": 5,
+       "note": "FY21 \u20b9144 cr \u2192 FY26 \u20b9358 cr",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 15,
+       "value": 20.0
+      },
+      {
+       "display": "-0.0 pp",
+       "field": "margin_change",
+       "label": "EBITDA margin within 2 percentage points of 5 years ago",
+       "lookback_years": 5,
+       "note": "EBITDA margin FY26 20.0% vs FY21 20.0%",
+       "operator": "abs_lte",
+       "result": "pass",
+       "threshold": 2,
+       "value": -0.0
+      },
+      {
+       "display": "+0.34x",
+       "field": "asset_turnover_change",
+       "label": "Asset turnover higher than 3 years ago",
+       "lookback_years": 3,
+       "note": "Revenue \u00f7 total assets FY26 1.38x vs FY23 1.04x",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 0,
+       "value": 0.3413
+      }
+     ],
+     "status": "pass",
+     "symbol": "GROW",
+     "total": 3
+    }
+   ],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "owner": {
+   "counts": {
+    "fail": 1,
+    "insufficient": 1,
+    "near_miss": 0,
+    "pass": 1
+   },
+   "lens": {
+    "coming_soon_reason": null,
+    "id": "owner",
+    "idea": "Promoters own the majority, have pledged none of it, and have been adding to their stake.",
+    "min_coverage": 0.75,
+    "name": "Owner-Operator",
+    "originator": "Owner-operator investing, as studied in William Thorndike's The Outsiders",
+    "rules": [
+     {
+      "field": "promoter_pct",
+      "label": "Promoters hold more than 50%",
+      "lookback_years": 0,
+      "operator": ">",
+      "threshold": 50
+     },
+     {
+      "field": "pledge_pct",
+      "label": "No promoter shares pledged",
+      "lookback_years": 0,
+      "operator": "==",
+      "threshold": 0
+     },
+     {
+      "field": "promoter_change",
+      "label": "Promoter stake higher than 4 quarters ago",
+      "lookback_years": 1,
+      "operator": ">",
+      "threshold": 0
+     }
+    ],
+    "status": "live"
+   },
+   "near_misses": [],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [
+    {
+     "company": "Grow Industries Ltd",
+     "coverage": 1.0,
+     "failed": 0,
+     "industry": "Specialty Chemicals",
+     "na": 0,
+     "passed": 3,
+     "rules": [
+      {
+       "display": "61.2%",
+       "field": "promoter_pct",
+       "label": "Promoters hold more than 50%",
+       "lookback_years": 0,
+       "note": "Quarter to 2026-06-30",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 50,
+       "value": 61.2
+      },
+      {
+       "display": "None",
+       "field": "pledge_pct",
+       "label": "No promoter shares pledged",
+       "lookback_years": 0,
+       "note": "The filing states no promoter shares are pledged (2026-06-30)",
+       "operator": "==",
+       "result": "pass",
+       "threshold": 0,
+       "value": 0.0
+      },
+      {
+       "display": "+1.40 pp",
+       "field": "promoter_change",
+       "label": "Promoter stake higher than 4 quarters ago",
+       "lookback_years": 1,
+       "note": "2026-06-30 61.20% vs 2025-06-30 59.80%",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 0,
+       "value": 1.4
+      }
+     ],
+     "status": "pass",
+     "symbol": "GROW",
+     "total": 3
+    }
+   ],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "qglp": {
+   "counts": {
+    "fail": 0,
+    "insufficient": 1,
+    "near_miss": 1,
+    "pass": 1
+   },
+   "lens": {
+    "coming_soon_reason": null,
+    "id": "qglp",
+    "idea": "Quality, Growth, Longevity and Price: high returns on equity, fast and consistent earnings growth, at a price below that growth.",
+    "min_coverage": 0.75,
+    "name": "QGLP",
+    "originator": "Raamdeo Agrawal, Motilal Oswal",
+    "rules": [
+     {
+      "field": "roe",
+      "label": "Return on equity above 20%",
+      "lookback_years": 1,
+      "operator": ">",
+      "threshold": 20
+     },
+     {
+      "field": "eps_cagr",
+      "label": "EPS grew more than 20% a year over 3 years",
+      "lookback_years": 3,
+      "operator": ">",
+      "threshold": 20
+     },
+     {
+      "field": "eps_rising_years",
+      "label": "EPS rose in each of the last 3 years",
+      "lookback_years": 3,
+      "operator": ">=",
+      "threshold": 3
+     },
+     {
+      "field": "peg",
+      "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+      "lookback_years": 3,
+      "operator": "<",
+      "threshold": 1
+     }
+    ],
+    "status": "live"
+   },
+   "near_misses": [
+    {
+     "company": "Steady Foods Ltd",
+     "coverage": 1.0,
+     "failed": 1,
+     "industry": "Packaged Foods",
+     "na": 0,
+     "passed": 3,
+     "rules": [
+      {
+       "display": "9.4%",
+       "field": "roe",
+       "label": "Return on equity above 20%",
+       "lookback_years": 1,
+       "note": "FY26: profit after tax \u00f7 shareholders' equity",
+       "operator": ">",
+       "result": "fail",
+       "threshold": 20,
+       "value": 9.43
+      },
+      {
+       "display": "25.0%",
+       "field": "eps_cagr",
+       "label": "EPS grew more than 20% a year over 3 years",
+       "lookback_years": 3,
+       "note": "FY23 EPS \u20b912.21 \u2192 FY26 \u20b923.84",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 20,
+       "value": 25.0
+      },
+      {
+       "display": "3 of 3 years",
+       "field": "eps_rising_years",
+       "label": "EPS rose in each of the last 3 years",
+       "lookback_years": 3,
+       "note": null,
+       "operator": ">=",
+       "result": "pass",
+       "threshold": 3,
+       "value": 3
+      },
+      {
+       "display": "0.15",
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+       "lookback_years": 3,
+       "note": "P/E 3.8 \u00f7 EPS growth 25.0%",
+       "operator": "<",
+       "result": "pass",
+       "threshold": 1,
+       "value": 0.151
+      }
+     ],
+     "status": "near_miss",
+     "symbol": "STEADY",
+     "total": 4
+    }
+   ],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [
+    {
+     "company": "Grow Industries Ltd",
+     "coverage": 1.0,
+     "failed": 0,
+     "industry": "Specialty Chemicals",
+     "na": 0,
+     "passed": 4,
+     "rules": [
+      {
+       "display": "26.3%",
+       "field": "roe",
+       "label": "Return on equity above 20%",
+       "lookback_years": 1,
+       "note": "FY26: profit after tax \u00f7 shareholders' equity",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 20,
+       "value": 26.28
+      },
+      {
+       "display": "25.0%",
+       "field": "eps_cagr",
+       "label": "EPS grew more than 20% a year over 3 years",
+       "lookback_years": 3,
+       "note": "FY23 EPS \u20b912.21 \u2192 FY26 \u20b923.84",
+       "operator": ">",
+       "result": "pass",
+       "threshold": 20,
+       "value": 25.0
+      },
+      {
+       "display": "3 of 3 years",
+       "field": "eps_rising_years",
+       "label": "EPS rose in each of the last 3 years",
+       "lookback_years": 3,
+       "note": null,
+       "operator": ">=",
+       "result": "pass",
+       "threshold": 3,
+       "value": 3
+      },
+      {
+       "display": "0.42",
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+       "lookback_years": 3,
+       "note": "P/E 10.5 \u00f7 EPS growth 25.0%",
+       "operator": "<",
+       "result": "pass",
+       "threshold": 1,
+       "value": 0.419
+      }
+     ],
+     "status": "pass",
+     "symbol": "GROW",
+     "total": 4
+    }
+   ],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  },
+  "tenbagger": {
+   "counts": {
+    "fail": 0,
+    "insufficient": 1,
+    "near_miss": 1,
+    "pass": 1
+   },
+   "lens": {
+    "coming_soon_reason": null,
+    "id": "tenbagger",
+    "idea": "Smaller companies growing earnings quickly but not at a pace that rarely lasts, priced below their growth, and not yet widely held by institutions.",
+    "min_coverage": 0.75,
+    "name": "Tenbagger",
+    "originator": "Peter Lynch, One Up on Wall Street",
+    "rules": [
+     {
+      "field": "eps_growth",
+      "label": "Trailing EPS grew between 20% and 50% over the year",
+      "lookback_years": 1,
+      "operator": "between",
+      "threshold": [
+       20,
+       50
+      ]
+     },
+     {
+      "field": "peg",
+      "label": "PEG below 1 (P/E divided by EPS growth)",
+      "lookback_years": 1,
+      "operator": "<",
+      "threshold": 1
+     },
+     {
+      "field": "size_band",
+      "label": "Small or mid cap by market value rank",
+      "lookback_years": 0,
+      "operator": "in",
+      "threshold": [
+       "small",
+       "mid"
+      ]
+     },
+     {
+      "field": "fii_dii_pct",
+      "label": "Foreign and domestic institutions together hold less than 20%",
+      "lookback_years": 0,
+      "operator": "<",
+      "threshold": 20
+     }
+    ],
+    "status": "live"
+   },
+   "near_misses": [
+    {
+     "company": "Steady Foods Ltd",
+     "coverage": 0.75,
+     "failed": 1,
+     "industry": "Packaged Foods",
+     "na": 1,
+     "passed": 2,
+     "rules": [
+      {
+       "display": "25.0%",
+       "field": "eps_growth",
+       "label": "Trailing EPS grew between 20% and 50% over the year",
+       "lookback_years": 1,
+       "note": "FY26 EPS \u20b923.84 vs FY25 \u20b919.07",
+       "operator": "between",
+       "result": "pass",
+       "threshold": [
+        20,
+        50
+       ],
+       "value": 25.0
+      },
+      {
+       "display": "0.15",
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by EPS growth)",
+       "lookback_years": 1,
+       "note": "P/E 3.8 \u00f7 EPS growth 25.0%",
+       "operator": "<",
+       "result": "pass",
+       "threshold": 1,
+       "value": 0.151
+      },
+      {
+       "display": null,
+       "field": "size_band",
+       "label": "Small or mid cap by market value rank",
+       "lookback_years": 0,
+       "note": "Market-value ranks need a price and share count for most listed companies; 2 of 3 so far",
+       "operator": "in",
+       "result": "na",
+       "threshold": [
+        "small",
+        "mid"
+       ],
+       "value": null
+      },
+      {
+       "display": "30.0%",
+       "field": "fii_dii_pct",
+       "label": "Foreign and domestic institutions together hold less than 20%",
+       "lookback_years": 0,
+       "note": "FII 18.0% + DII 12.0%, quarter to 2026-06-30",
+       "operator": "<",
+       "result": "fail",
+       "threshold": 20,
+       "value": 30.0
+      }
+     ],
+     "status": "near_miss",
+     "symbol": "STEADY",
+     "total": 4
+    }
+   ],
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "passing": [
+    {
+     "company": "Grow Industries Ltd",
+     "coverage": 0.75,
+     "failed": 0,
+     "industry": "Specialty Chemicals",
+     "na": 1,
+     "passed": 3,
+     "rules": [
+      {
+       "display": "25.0%",
+       "field": "eps_growth",
+       "label": "Trailing EPS grew between 20% and 50% over the year",
+       "lookback_years": 1,
+       "note": "FY26 EPS \u20b923.84 vs FY25 \u20b919.07",
+       "operator": "between",
+       "result": "pass",
+       "threshold": [
+        20,
+        50
+       ],
+       "value": 25.0
+      },
+      {
+       "display": "0.42",
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by EPS growth)",
+       "lookback_years": 1,
+       "note": "P/E 10.5 \u00f7 EPS growth 25.0%",
+       "operator": "<",
+       "result": "pass",
+       "threshold": 1,
+       "value": 0.419
+      },
+      {
+       "display": null,
+       "field": "size_band",
+       "label": "Small or mid cap by market value rank",
+       "lookback_years": 0,
+       "note": "Market-value ranks need a price and share count for most listed companies; 2 of 3 so far",
+       "operator": "in",
+       "result": "na",
+       "threshold": [
+        "small",
+        "mid"
+       ],
+       "value": null
+      },
+      {
+       "display": "11.5%",
+       "field": "fii_dii_pct",
+       "label": "Foreign and domestic institutions together hold less than 20%",
+       "lookback_years": 0,
+       "note": "FII 6.1% + DII 5.4%, quarter to 2026-06-30",
+       "operator": "<",
+       "result": "pass",
+       "threshold": 20,
+       "value": 11.5
+      }
+     ],
+     "status": "pass",
+     "symbol": "GROW",
+     "total": 4
+    }
+   ],
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   }
+  }
+ },
+ "stock": {
+  "GROW": {
+   "covered": true,
+   "lenses": [
+    {
+     "coming_soon_reason": null,
+     "id": "gorilla",
+     "idea": "The market leader in its industry, growing fast, earning high returns on capital and holding a margin above the rest of its industry.",
+     "min_coverage": 0.75,
+     "name": "Gorilla",
+     "originator": "Geoffrey Moore, The Gorilla Game",
+     "result": {
+      "company": "Grow Industries Ltd",
+      "coverage": 0.5,
+      "failed": 0,
+      "industry": "Specialty Chemicals",
+      "na": 2,
+      "passed": 2,
+      "rules": [
+       {
+        "display": null,
+        "field": "industry_revenue_rank",
+        "label": "Revenue rank within its NSE industry is 1 or 2",
+        "lookback_years": 1,
+        "note": "Fewer than 3 listed companies in Specialty Chemicals",
+        "operator": "<=",
+        "result": "na",
+        "threshold": 2,
+        "value": null
+       },
+       {
+        "display": "20.0%",
+        "field": "revenue_cagr",
+        "label": "Revenue grew more than 15% a year over 5 years",
+        "lookback_years": 5,
+        "note": "FY21 \u20b9144 cr \u2192 FY26 \u20b9358 cr",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 15,
+        "value": 20.0
+       },
+       {
+        "display": "24.9%",
+        "field": "roce",
+        "label": "Return on capital employed above 20%",
+        "lookback_years": 1,
+        "note": "FY26: EBIT \u20b954.7 cr \u00f7 capital employed \u20b9220 cr",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 20,
+        "value": 24.89
+       },
+       {
+        "display": null,
+        "field": "margin_vs_industry_min",
+        "label": "EBITDA margin above the industry median in each of the last 3 years",
+        "lookback_years": 3,
+        "note": "Fewer than 3 listed companies in Specialty Chemicals",
+        "operator": ">",
+        "result": "na",
+        "threshold": 0,
+        "value": null
+       }
+      ],
+      "status": "insufficient",
+      "symbol": "GROW",
+      "total": 4
+     },
+     "rules": [
+      {
+       "field": "industry_revenue_rank",
+       "label": "Revenue rank within its NSE industry is 1 or 2",
+       "lookback_years": 1,
+       "operator": "<=",
+       "threshold": 2
+      },
+      {
+       "field": "revenue_cagr",
+       "label": "Revenue grew more than 15% a year over 5 years",
+       "lookback_years": 5,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "roce",
+       "label": "Return on capital employed above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "margin_vs_industry_min",
+       "label": "EBITDA margin above the industry median in each of the last 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs 10 years of balance sheets and cash flows. Companies have filed balance sheets in machine-readable form only since September 2022 (4 years), and cash flows since FY21 (6 years). The data does not exist yet in the filings this site reads.",
+     "id": "moat",
+     "idea": "A business whose returns stay high for a decade, with little debt, steady free cash flow and unusually stable margins.",
+     "min_coverage": 0.75,
+     "name": "Moat",
+     "originator": "Warren Buffett and Pat Dorsey",
+     "result": null,
+     "rules": [
+      {
+       "field": "roe_min",
+       "label": "Return on equity above 15% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "debt_equity",
+       "label": "Debt to equity below 0.5",
+       "lookback_years": 1,
+       "operator": "<",
+       "threshold": 0.5
+      },
+      {
+       "field": "fcf_positive_years",
+       "label": "Free cash flow positive in at least 8 of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 8
+      },
+      {
+       "field": "margin_stdev_pctile",
+       "label": "10-year variation in EBITDA margin in the lowest third of the market",
+       "lookback_years": 10,
+       "operator": "<=",
+       "threshold": 33.33
+      }
+     ],
+     "status": "coming_soon"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "tenbagger",
+     "idea": "Smaller companies growing earnings quickly but not at a pace that rarely lasts, priced below their growth, and not yet widely held by institutions.",
+     "min_coverage": 0.75,
+     "name": "Tenbagger",
+     "originator": "Peter Lynch, One Up on Wall Street",
+     "result": {
+      "company": "Grow Industries Ltd",
+      "coverage": 0.75,
+      "failed": 0,
+      "industry": "Specialty Chemicals",
+      "na": 1,
+      "passed": 3,
+      "rules": [
+       {
+        "display": "25.0%",
+        "field": "eps_growth",
+        "label": "Trailing EPS grew between 20% and 50% over the year",
+        "lookback_years": 1,
+        "note": "FY26 EPS \u20b923.84 vs FY25 \u20b919.07",
+        "operator": "between",
+        "result": "pass",
+        "threshold": [
+         20,
+         50
+        ],
+        "value": 25.0
+       },
+       {
+        "display": "0.42",
+        "field": "peg",
+        "label": "PEG below 1 (P/E divided by EPS growth)",
+        "lookback_years": 1,
+        "note": "P/E 10.5 \u00f7 EPS growth 25.0%",
+        "operator": "<",
+        "result": "pass",
+        "threshold": 1,
+        "value": 0.419
+       },
+       {
+        "display": null,
+        "field": "size_band",
+        "label": "Small or mid cap by market value rank",
+        "lookback_years": 0,
+        "note": "Market-value ranks need a price and share count for most listed companies; 2 of 3 so far",
+        "operator": "in",
+        "result": "na",
+        "threshold": [
+         "small",
+         "mid"
+        ],
+        "value": null
+       },
+       {
+        "display": "11.5%",
+        "field": "fii_dii_pct",
+        "label": "Foreign and domestic institutions together hold less than 20%",
+        "lookback_years": 0,
+        "note": "FII 6.1% + DII 5.4%, quarter to 2026-06-30",
+        "operator": "<",
+        "result": "pass",
+        "threshold": 20,
+        "value": 11.5
+       }
+      ],
+      "status": "pass",
+      "symbol": "GROW",
+      "total": 4
+     },
+     "rules": [
+      {
+       "field": "eps_growth",
+       "label": "Trailing EPS grew between 20% and 50% over the year",
+       "lookback_years": 1,
+       "operator": "between",
+       "threshold": [
+        20,
+        50
+       ]
+      },
+      {
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by EPS growth)",
+       "lookback_years": 1,
+       "operator": "<",
+       "threshold": 1
+      },
+      {
+       "field": "size_band",
+       "label": "Small or mid cap by market value rank",
+       "lookback_years": 0,
+       "operator": "in",
+       "threshold": [
+        "small",
+        "mid"
+       ]
+      },
+      {
+       "field": "fii_dii_pct",
+       "label": "Foreign and domestic institutions together hold less than 20%",
+       "lookback_years": 0,
+       "operator": "<",
+       "threshold": 20
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs 10 years of revenue and return on capital. Revenue goes back about 8 years in the filings this site reads, and the balance sheet needed for return on capital only 4.",
+     "id": "coffeecan",
+     "idea": "Companies that grew revenue and earned good returns on capital in every single year of the last decade.",
+     "min_coverage": 0.75,
+     "name": "Coffee Can",
+     "originator": "Robert Kirby; Saurabh Mukherjea in India",
+     "result": null,
+     "rules": [
+      {
+       "field": "revenue_growth_min",
+       "label": "Revenue grew at least 10% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 10
+      },
+      {
+       "field": "roce_min",
+       "label": "Return on capital employed at least 15% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 15
+      }
+     ],
+     "status": "coming_soon"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "qglp",
+     "idea": "Quality, Growth, Longevity and Price: high returns on equity, fast and consistent earnings growth, at a price below that growth.",
+     "min_coverage": 0.75,
+     "name": "QGLP",
+     "originator": "Raamdeo Agrawal, Motilal Oswal",
+     "result": {
+      "company": "Grow Industries Ltd",
+      "coverage": 1.0,
+      "failed": 0,
+      "industry": "Specialty Chemicals",
+      "na": 0,
+      "passed": 4,
+      "rules": [
+       {
+        "display": "26.3%",
+        "field": "roe",
+        "label": "Return on equity above 20%",
+        "lookback_years": 1,
+        "note": "FY26: profit after tax \u00f7 shareholders' equity",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 20,
+        "value": 26.28
+       },
+       {
+        "display": "25.0%",
+        "field": "eps_cagr",
+        "label": "EPS grew more than 20% a year over 3 years",
+        "lookback_years": 3,
+        "note": "FY23 EPS \u20b912.21 \u2192 FY26 \u20b923.84",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 20,
+        "value": 25.0
+       },
+       {
+        "display": "3 of 3 years",
+        "field": "eps_rising_years",
+        "label": "EPS rose in each of the last 3 years",
+        "lookback_years": 3,
+        "note": null,
+        "operator": ">=",
+        "result": "pass",
+        "threshold": 3,
+        "value": 3
+       },
+       {
+        "display": "0.42",
+        "field": "peg",
+        "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+        "lookback_years": 3,
+        "note": "P/E 10.5 \u00f7 EPS growth 25.0%",
+        "operator": "<",
+        "result": "pass",
+        "threshold": 1,
+        "value": 0.419
+       }
+      ],
+      "status": "pass",
+      "symbol": "GROW",
+      "total": 4
+     },
+     "rules": [
+      {
+       "field": "roe",
+       "label": "Return on equity above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "eps_cagr",
+       "label": "EPS grew more than 20% a year over 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "eps_rising_years",
+       "label": "EPS rose in each of the last 3 years",
+       "lookback_years": 3,
+       "operator": ">=",
+       "threshold": 3
+      },
+      {
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": 1
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "akre",
+     "idea": "A high-return business, run by owners with a large unpledged stake, that reinvests most of its profit without its returns falling.",
+     "min_coverage": 0.75,
+     "name": "Akre",
+     "originator": "Chuck Akre's three-legged stool",
+     "result": {
+      "company": "Grow Industries Ltd",
+      "coverage": 1.0,
+      "failed": 0,
+      "industry": "Specialty Chemicals",
+      "na": 0,
+      "passed": 5,
+      "rules": [
+       {
+        "display": "24.9%",
+        "field": "roce",
+        "label": "Return on capital employed above 20%",
+        "lookback_years": 1,
+        "note": "FY26: EBIT \u20b954.7 cr \u00f7 capital employed \u20b9220 cr",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 20,
+        "value": 24.89
+       },
+       {
+        "display": "61.2%",
+        "field": "promoter_pct",
+        "label": "Promoters hold more than 50%",
+        "lookback_years": 0,
+        "note": "Quarter to 2026-06-30",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 50,
+        "value": 61.2
+       },
+       {
+        "display": "None",
+        "field": "pledge_pct",
+        "label": "No promoter shares pledged",
+        "lookback_years": 0,
+        "note": "The filing states no promoter shares are pledged (2026-06-30)",
+        "operator": "==",
+        "result": "pass",
+        "threshold": 0,
+        "value": 0.0
+       },
+       {
+        "display": "51.8%",
+        "field": "reinvestment_rate",
+        "label": "Reinvested more than 50% of operating profit after tax over 3 years",
+        "lookback_years": 3,
+        "note": "(capex \u2212 depreciation + change in working capital) \u00f7 operating profit after tax, 3 years",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 50,
+        "value": 51.85
+       },
+       {
+        "display": "+4.8 pp",
+        "field": "roce_change",
+        "label": "Return on capital employed not lower than 3 years ago",
+        "lookback_years": 3,
+        "note": "FY26 24.9% vs FY23 20.1%",
+        "operator": ">=",
+        "result": "pass",
+        "threshold": 0,
+        "value": 4.82
+       }
+      ],
+      "status": "pass",
+      "symbol": "GROW",
+      "total": 5
+     },
+     "rules": [
+      {
+       "field": "roce",
+       "label": "Return on capital employed above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "promoter_pct",
+       "label": "Promoters hold more than 50%",
+       "lookback_years": 0,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "pledge_pct",
+       "label": "No promoter shares pledged",
+       "lookback_years": 0,
+       "operator": "==",
+       "threshold": 0
+      },
+      {
+       "field": "reinvestment_rate",
+       "label": "Reinvested more than 50% of operating profit after tax over 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "roce_change",
+       "label": "Return on capital employed not lower than 3 years ago",
+       "lookback_years": 3,
+       "operator": ">=",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "nomad",
+     "idea": "Scale economics shared with customers: fast growth, margins held steady rather than expanded, and more sales from every rupee of assets.",
+     "min_coverage": 0.75,
+     "name": "Nomad",
+     "originator": "Nick Sleep and Qais Zakaria, Nomad Investment Partnership",
+     "result": {
+      "company": "Grow Industries Ltd",
+      "coverage": 1.0,
+      "failed": 0,
+      "industry": "Specialty Chemicals",
+      "na": 0,
+      "passed": 3,
+      "rules": [
+       {
+        "display": "20.0%",
+        "field": "revenue_cagr",
+        "label": "Revenue grew more than 15% a year over 5 years",
+        "lookback_years": 5,
+        "note": "FY21 \u20b9144 cr \u2192 FY26 \u20b9358 cr",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 15,
+        "value": 20.0
+       },
+       {
+        "display": "-0.0 pp",
+        "field": "margin_change",
+        "label": "EBITDA margin within 2 percentage points of 5 years ago",
+        "lookback_years": 5,
+        "note": "EBITDA margin FY26 20.0% vs FY21 20.0%",
+        "operator": "abs_lte",
+        "result": "pass",
+        "threshold": 2,
+        "value": -0.0
+       },
+       {
+        "display": "+0.34x",
+        "field": "asset_turnover_change",
+        "label": "Asset turnover higher than 3 years ago",
+        "lookback_years": 3,
+        "note": "Revenue \u00f7 total assets FY26 1.38x vs FY23 1.04x",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 0,
+        "value": 0.3413
+       }
+      ],
+      "status": "pass",
+      "symbol": "GROW",
+      "total": 3
+     },
+     "rules": [
+      {
+       "field": "revenue_cagr",
+       "label": "Revenue grew more than 15% a year over 5 years",
+       "lookback_years": 5,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "margin_change",
+       "label": "EBITDA margin within 2 percentage points of 5 years ago",
+       "lookback_years": 5,
+       "operator": "abs_lte",
+       "threshold": 2
+      },
+      {
+       "field": "asset_turnover_change",
+       "label": "Asset turnover higher than 3 years ago",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "cannibal",
+     "idea": "Companies that shrink their own share count, so each remaining share owns more of the business.",
+     "min_coverage": 0.75,
+     "name": "Cannibal",
+     "originator": "Share-count reduction, as studied in William Thorndike's The Outsiders",
+     "result": {
+      "company": "Grow Industries Ltd",
+      "coverage": 1.0,
+      "failed": 0,
+      "industry": "Specialty Chemicals",
+      "na": 0,
+      "passed": 1,
+      "rules": [
+       {
+        "display": "-4.2% a year",
+        "field": "share_count_cagr",
+        "label": "Paid-up equity capital fell more than 2% a year over 3 years",
+        "lookback_years": 3,
+        "note": "Paid-up equity capital FY23 \u20b910.0 cr \u2192 FY26 \u20b98.8 cr. A bonus issue raises this without dilution.",
+        "operator": "<",
+        "result": "pass",
+        "threshold": -2,
+        "value": -4.17
+       }
+      ],
+      "status": "pass",
+      "symbol": "GROW",
+      "total": 1
+     },
+     "rules": [
+      {
+       "field": "share_count_cagr",
+       "label": "Paid-up equity capital fell more than 2% a year over 3 years",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": -2
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "owner",
+     "idea": "Promoters own the majority, have pledged none of it, and have been adding to their stake.",
+     "min_coverage": 0.75,
+     "name": "Owner-Operator",
+     "originator": "Owner-operator investing, as studied in William Thorndike's The Outsiders",
+     "result": {
+      "company": "Grow Industries Ltd",
+      "coverage": 1.0,
+      "failed": 0,
+      "industry": "Specialty Chemicals",
+      "na": 0,
+      "passed": 3,
+      "rules": [
+       {
+        "display": "61.2%",
+        "field": "promoter_pct",
+        "label": "Promoters hold more than 50%",
+        "lookback_years": 0,
+        "note": "Quarter to 2026-06-30",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 50,
+        "value": 61.2
+       },
+       {
+        "display": "None",
+        "field": "pledge_pct",
+        "label": "No promoter shares pledged",
+        "lookback_years": 0,
+        "note": "The filing states no promoter shares are pledged (2026-06-30)",
+        "operator": "==",
+        "result": "pass",
+        "threshold": 0,
+        "value": 0.0
+       },
+       {
+        "display": "+1.40 pp",
+        "field": "promoter_change",
+        "label": "Promoter stake higher than 4 quarters ago",
+        "lookback_years": 1,
+        "note": "2026-06-30 61.20% vs 2025-06-30 59.80%",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 0,
+        "value": 1.4
+       }
+      ],
+      "status": "pass",
+      "symbol": "GROW",
+      "total": 3
+     },
+     "rules": [
+      {
+       "field": "promoter_pct",
+       "label": "Promoters hold more than 50%",
+       "lookback_years": 0,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "pledge_pct",
+       "label": "No promoter shares pledged",
+       "lookback_years": 0,
+       "operator": "==",
+       "threshold": 0
+      },
+      {
+       "field": "promoter_change",
+       "label": "Promoter stake higher than 4 quarters ago",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs a history of listed companies per industry, including those that delisted. The exchange list this site reads holds only companies listed today, so the number of competitors over time cannot be counted yet.",
+     "id": "capcycle",
+     "idea": "Industries where capacity is being withdrawn: capex falling against depreciation and fewer listed competitors.",
+     "min_coverage": 0.75,
+     "name": "Capital Cycle",
+     "originator": "Marathon Asset Management, Capital Returns",
+     "result": null,
+     "rules": [
+      {
+       "field": "industry_capex_dep_change",
+       "label": "Industry capex to depreciation lower than 3 years ago",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": 0
+      },
+      {
+       "field": "industry_peer_count_change",
+       "label": "Number of listed companies in the industry flat or lower over 3 years",
+       "lookback_years": 3,
+       "operator": "<=",
+       "threshold": 0
+      }
+     ],
+     "status": "coming_soon"
+    }
+   ],
+   "live_lenses": 7,
+   "meets": 6,
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   },
+   "symbol": "GROW"
+  },
+  "NOPE": {
+   "covered": false,
+   "lenses": [
+    {
+     "coming_soon_reason": null,
+     "id": "gorilla",
+     "idea": "The market leader in its industry, growing fast, earning high returns on capital and holding a margin above the rest of its industry.",
+     "min_coverage": 0.75,
+     "name": "Gorilla",
+     "originator": "Geoffrey Moore, The Gorilla Game",
+     "result": null,
+     "rules": [
+      {
+       "field": "industry_revenue_rank",
+       "label": "Revenue rank within its NSE industry is 1 or 2",
+       "lookback_years": 1,
+       "operator": "<=",
+       "threshold": 2
+      },
+      {
+       "field": "revenue_cagr",
+       "label": "Revenue grew more than 15% a year over 5 years",
+       "lookback_years": 5,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "roce",
+       "label": "Return on capital employed above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "margin_vs_industry_min",
+       "label": "EBITDA margin above the industry median in each of the last 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs 10 years of balance sheets and cash flows. Companies have filed balance sheets in machine-readable form only since September 2022 (4 years), and cash flows since FY21 (6 years). The data does not exist yet in the filings this site reads.",
+     "id": "moat",
+     "idea": "A business whose returns stay high for a decade, with little debt, steady free cash flow and unusually stable margins.",
+     "min_coverage": 0.75,
+     "name": "Moat",
+     "originator": "Warren Buffett and Pat Dorsey",
+     "result": null,
+     "rules": [
+      {
+       "field": "roe_min",
+       "label": "Return on equity above 15% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "debt_equity",
+       "label": "Debt to equity below 0.5",
+       "lookback_years": 1,
+       "operator": "<",
+       "threshold": 0.5
+      },
+      {
+       "field": "fcf_positive_years",
+       "label": "Free cash flow positive in at least 8 of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 8
+      },
+      {
+       "field": "margin_stdev_pctile",
+       "label": "10-year variation in EBITDA margin in the lowest third of the market",
+       "lookback_years": 10,
+       "operator": "<=",
+       "threshold": 33.33
+      }
+     ],
+     "status": "coming_soon"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "tenbagger",
+     "idea": "Smaller companies growing earnings quickly but not at a pace that rarely lasts, priced below their growth, and not yet widely held by institutions.",
+     "min_coverage": 0.75,
+     "name": "Tenbagger",
+     "originator": "Peter Lynch, One Up on Wall Street",
+     "result": null,
+     "rules": [
+      {
+       "field": "eps_growth",
+       "label": "Trailing EPS grew between 20% and 50% over the year",
+       "lookback_years": 1,
+       "operator": "between",
+       "threshold": [
+        20,
+        50
+       ]
+      },
+      {
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by EPS growth)",
+       "lookback_years": 1,
+       "operator": "<",
+       "threshold": 1
+      },
+      {
+       "field": "size_band",
+       "label": "Small or mid cap by market value rank",
+       "lookback_years": 0,
+       "operator": "in",
+       "threshold": [
+        "small",
+        "mid"
+       ]
+      },
+      {
+       "field": "fii_dii_pct",
+       "label": "Foreign and domestic institutions together hold less than 20%",
+       "lookback_years": 0,
+       "operator": "<",
+       "threshold": 20
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs 10 years of revenue and return on capital. Revenue goes back about 8 years in the filings this site reads, and the balance sheet needed for return on capital only 4.",
+     "id": "coffeecan",
+     "idea": "Companies that grew revenue and earned good returns on capital in every single year of the last decade.",
+     "min_coverage": 0.75,
+     "name": "Coffee Can",
+     "originator": "Robert Kirby; Saurabh Mukherjea in India",
+     "result": null,
+     "rules": [
+      {
+       "field": "revenue_growth_min",
+       "label": "Revenue grew at least 10% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 10
+      },
+      {
+       "field": "roce_min",
+       "label": "Return on capital employed at least 15% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 15
+      }
+     ],
+     "status": "coming_soon"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "qglp",
+     "idea": "Quality, Growth, Longevity and Price: high returns on equity, fast and consistent earnings growth, at a price below that growth.",
+     "min_coverage": 0.75,
+     "name": "QGLP",
+     "originator": "Raamdeo Agrawal, Motilal Oswal",
+     "result": null,
+     "rules": [
+      {
+       "field": "roe",
+       "label": "Return on equity above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "eps_cagr",
+       "label": "EPS grew more than 20% a year over 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "eps_rising_years",
+       "label": "EPS rose in each of the last 3 years",
+       "lookback_years": 3,
+       "operator": ">=",
+       "threshold": 3
+      },
+      {
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": 1
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "akre",
+     "idea": "A high-return business, run by owners with a large unpledged stake, that reinvests most of its profit without its returns falling.",
+     "min_coverage": 0.75,
+     "name": "Akre",
+     "originator": "Chuck Akre's three-legged stool",
+     "result": null,
+     "rules": [
+      {
+       "field": "roce",
+       "label": "Return on capital employed above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "promoter_pct",
+       "label": "Promoters hold more than 50%",
+       "lookback_years": 0,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "pledge_pct",
+       "label": "No promoter shares pledged",
+       "lookback_years": 0,
+       "operator": "==",
+       "threshold": 0
+      },
+      {
+       "field": "reinvestment_rate",
+       "label": "Reinvested more than 50% of operating profit after tax over 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "roce_change",
+       "label": "Return on capital employed not lower than 3 years ago",
+       "lookback_years": 3,
+       "operator": ">=",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "nomad",
+     "idea": "Scale economics shared with customers: fast growth, margins held steady rather than expanded, and more sales from every rupee of assets.",
+     "min_coverage": 0.75,
+     "name": "Nomad",
+     "originator": "Nick Sleep and Qais Zakaria, Nomad Investment Partnership",
+     "result": null,
+     "rules": [
+      {
+       "field": "revenue_cagr",
+       "label": "Revenue grew more than 15% a year over 5 years",
+       "lookback_years": 5,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "margin_change",
+       "label": "EBITDA margin within 2 percentage points of 5 years ago",
+       "lookback_years": 5,
+       "operator": "abs_lte",
+       "threshold": 2
+      },
+      {
+       "field": "asset_turnover_change",
+       "label": "Asset turnover higher than 3 years ago",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "cannibal",
+     "idea": "Companies that shrink their own share count, so each remaining share owns more of the business.",
+     "min_coverage": 0.75,
+     "name": "Cannibal",
+     "originator": "Share-count reduction, as studied in William Thorndike's The Outsiders",
+     "result": null,
+     "rules": [
+      {
+       "field": "share_count_cagr",
+       "label": "Paid-up equity capital fell more than 2% a year over 3 years",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": -2
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "owner",
+     "idea": "Promoters own the majority, have pledged none of it, and have been adding to their stake.",
+     "min_coverage": 0.75,
+     "name": "Owner-Operator",
+     "originator": "Owner-operator investing, as studied in William Thorndike's The Outsiders",
+     "result": null,
+     "rules": [
+      {
+       "field": "promoter_pct",
+       "label": "Promoters hold more than 50%",
+       "lookback_years": 0,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "pledge_pct",
+       "label": "No promoter shares pledged",
+       "lookback_years": 0,
+       "operator": "==",
+       "threshold": 0
+      },
+      {
+       "field": "promoter_change",
+       "label": "Promoter stake higher than 4 quarters ago",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs a history of listed companies per industry, including those that delisted. The exchange list this site reads holds only companies listed today, so the number of competitors over time cannot be counted yet.",
+     "id": "capcycle",
+     "idea": "Industries where capacity is being withdrawn: capex falling against depreciation and fewer listed competitors.",
+     "min_coverage": 0.75,
+     "name": "Capital Cycle",
+     "originator": "Marathon Asset Management, Capital Returns",
+     "result": null,
+     "rules": [
+      {
+       "field": "industry_capex_dep_change",
+       "label": "Industry capex to depreciation lower than 3 years ago",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": 0
+      },
+      {
+       "field": "industry_peer_count_change",
+       "label": "Number of listed companies in the industry flat or lower over 3 years",
+       "lookback_years": 3,
+       "operator": "<=",
+       "threshold": 0
+      }
+     ],
+     "status": "coming_soon"
+    }
+   ],
+   "live_lenses": 7,
+   "meets": 0,
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   },
+   "symbol": "NOPE"
+  },
+  "STEADY": {
+   "covered": true,
+   "lenses": [
+    {
+     "coming_soon_reason": null,
+     "id": "gorilla",
+     "idea": "The market leader in its industry, growing fast, earning high returns on capital and holding a margin above the rest of its industry.",
+     "min_coverage": 0.75,
+     "name": "Gorilla",
+     "originator": "Geoffrey Moore, The Gorilla Game",
+     "result": {
+      "company": "Steady Foods Ltd",
+      "coverage": 0.5,
+      "failed": 2,
+      "industry": "Packaged Foods",
+      "na": 2,
+      "passed": 0,
+      "rules": [
+       {
+        "display": null,
+        "field": "industry_revenue_rank",
+        "label": "Revenue rank within its NSE industry is 1 or 2",
+        "lookback_years": 1,
+        "note": "Fewer than 3 listed companies in Packaged Foods",
+        "operator": "<=",
+        "result": "na",
+        "threshold": 2,
+        "value": null
+       },
+       {
+        "display": "8.0%",
+        "field": "revenue_cagr",
+        "label": "Revenue grew more than 15% a year over 5 years",
+        "lookback_years": 5,
+        "note": "FY21 \u20b9117 cr \u2192 FY26 \u20b9171 cr",
+        "operator": ">",
+        "result": "fail",
+        "threshold": 15,
+        "value": 8.0
+       },
+       {
+        "display": "10.7%",
+        "field": "roce",
+        "label": "Return on capital employed above 20%",
+        "lookback_years": 1,
+        "note": "FY26: EBIT \u20b926.7 cr \u00f7 capital employed \u20b9250 cr",
+        "operator": ">",
+        "result": "fail",
+        "threshold": 20,
+        "value": 10.68
+       },
+       {
+        "display": null,
+        "field": "margin_vs_industry_min",
+        "label": "EBITDA margin above the industry median in each of the last 3 years",
+        "lookback_years": 3,
+        "note": "Fewer than 3 listed companies in Packaged Foods",
+        "operator": ">",
+        "result": "na",
+        "threshold": 0,
+        "value": null
+       }
+      ],
+      "status": "insufficient",
+      "symbol": "STEADY",
+      "total": 4
+     },
+     "rules": [
+      {
+       "field": "industry_revenue_rank",
+       "label": "Revenue rank within its NSE industry is 1 or 2",
+       "lookback_years": 1,
+       "operator": "<=",
+       "threshold": 2
+      },
+      {
+       "field": "revenue_cagr",
+       "label": "Revenue grew more than 15% a year over 5 years",
+       "lookback_years": 5,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "roce",
+       "label": "Return on capital employed above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "margin_vs_industry_min",
+       "label": "EBITDA margin above the industry median in each of the last 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs 10 years of balance sheets and cash flows. Companies have filed balance sheets in machine-readable form only since September 2022 (4 years), and cash flows since FY21 (6 years). The data does not exist yet in the filings this site reads.",
+     "id": "moat",
+     "idea": "A business whose returns stay high for a decade, with little debt, steady free cash flow and unusually stable margins.",
+     "min_coverage": 0.75,
+     "name": "Moat",
+     "originator": "Warren Buffett and Pat Dorsey",
+     "result": null,
+     "rules": [
+      {
+       "field": "roe_min",
+       "label": "Return on equity above 15% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "debt_equity",
+       "label": "Debt to equity below 0.5",
+       "lookback_years": 1,
+       "operator": "<",
+       "threshold": 0.5
+      },
+      {
+       "field": "fcf_positive_years",
+       "label": "Free cash flow positive in at least 8 of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 8
+      },
+      {
+       "field": "margin_stdev_pctile",
+       "label": "10-year variation in EBITDA margin in the lowest third of the market",
+       "lookback_years": 10,
+       "operator": "<=",
+       "threshold": 33.33
+      }
+     ],
+     "status": "coming_soon"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "tenbagger",
+     "idea": "Smaller companies growing earnings quickly but not at a pace that rarely lasts, priced below their growth, and not yet widely held by institutions.",
+     "min_coverage": 0.75,
+     "name": "Tenbagger",
+     "originator": "Peter Lynch, One Up on Wall Street",
+     "result": {
+      "company": "Steady Foods Ltd",
+      "coverage": 0.75,
+      "failed": 1,
+      "industry": "Packaged Foods",
+      "na": 1,
+      "passed": 2,
+      "rules": [
+       {
+        "display": "25.0%",
+        "field": "eps_growth",
+        "label": "Trailing EPS grew between 20% and 50% over the year",
+        "lookback_years": 1,
+        "note": "FY26 EPS \u20b923.84 vs FY25 \u20b919.07",
+        "operator": "between",
+        "result": "pass",
+        "threshold": [
+         20,
+         50
+        ],
+        "value": 25.0
+       },
+       {
+        "display": "0.15",
+        "field": "peg",
+        "label": "PEG below 1 (P/E divided by EPS growth)",
+        "lookback_years": 1,
+        "note": "P/E 3.8 \u00f7 EPS growth 25.0%",
+        "operator": "<",
+        "result": "pass",
+        "threshold": 1,
+        "value": 0.151
+       },
+       {
+        "display": null,
+        "field": "size_band",
+        "label": "Small or mid cap by market value rank",
+        "lookback_years": 0,
+        "note": "Market-value ranks need a price and share count for most listed companies; 2 of 3 so far",
+        "operator": "in",
+        "result": "na",
+        "threshold": [
+         "small",
+         "mid"
+        ],
+        "value": null
+       },
+       {
+        "display": "30.0%",
+        "field": "fii_dii_pct",
+        "label": "Foreign and domestic institutions together hold less than 20%",
+        "lookback_years": 0,
+        "note": "FII 18.0% + DII 12.0%, quarter to 2026-06-30",
+        "operator": "<",
+        "result": "fail",
+        "threshold": 20,
+        "value": 30.0
+       }
+      ],
+      "status": "near_miss",
+      "symbol": "STEADY",
+      "total": 4
+     },
+     "rules": [
+      {
+       "field": "eps_growth",
+       "label": "Trailing EPS grew between 20% and 50% over the year",
+       "lookback_years": 1,
+       "operator": "between",
+       "threshold": [
+        20,
+        50
+       ]
+      },
+      {
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by EPS growth)",
+       "lookback_years": 1,
+       "operator": "<",
+       "threshold": 1
+      },
+      {
+       "field": "size_band",
+       "label": "Small or mid cap by market value rank",
+       "lookback_years": 0,
+       "operator": "in",
+       "threshold": [
+        "small",
+        "mid"
+       ]
+      },
+      {
+       "field": "fii_dii_pct",
+       "label": "Foreign and domestic institutions together hold less than 20%",
+       "lookback_years": 0,
+       "operator": "<",
+       "threshold": 20
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs 10 years of revenue and return on capital. Revenue goes back about 8 years in the filings this site reads, and the balance sheet needed for return on capital only 4.",
+     "id": "coffeecan",
+     "idea": "Companies that grew revenue and earned good returns on capital in every single year of the last decade.",
+     "min_coverage": 0.75,
+     "name": "Coffee Can",
+     "originator": "Robert Kirby; Saurabh Mukherjea in India",
+     "result": null,
+     "rules": [
+      {
+       "field": "revenue_growth_min",
+       "label": "Revenue grew at least 10% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 10
+      },
+      {
+       "field": "roce_min",
+       "label": "Return on capital employed at least 15% in every one of the last 10 years",
+       "lookback_years": 10,
+       "operator": ">=",
+       "threshold": 15
+      }
+     ],
+     "status": "coming_soon"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "qglp",
+     "idea": "Quality, Growth, Longevity and Price: high returns on equity, fast and consistent earnings growth, at a price below that growth.",
+     "min_coverage": 0.75,
+     "name": "QGLP",
+     "originator": "Raamdeo Agrawal, Motilal Oswal",
+     "result": {
+      "company": "Steady Foods Ltd",
+      "coverage": 1.0,
+      "failed": 1,
+      "industry": "Packaged Foods",
+      "na": 0,
+      "passed": 3,
+      "rules": [
+       {
+        "display": "9.4%",
+        "field": "roe",
+        "label": "Return on equity above 20%",
+        "lookback_years": 1,
+        "note": "FY26: profit after tax \u00f7 shareholders' equity",
+        "operator": ">",
+        "result": "fail",
+        "threshold": 20,
+        "value": 9.43
+       },
+       {
+        "display": "25.0%",
+        "field": "eps_cagr",
+        "label": "EPS grew more than 20% a year over 3 years",
+        "lookback_years": 3,
+        "note": "FY23 EPS \u20b912.21 \u2192 FY26 \u20b923.84",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 20,
+        "value": 25.0
+       },
+       {
+        "display": "3 of 3 years",
+        "field": "eps_rising_years",
+        "label": "EPS rose in each of the last 3 years",
+        "lookback_years": 3,
+        "note": null,
+        "operator": ">=",
+        "result": "pass",
+        "threshold": 3,
+        "value": 3
+       },
+       {
+        "display": "0.15",
+        "field": "peg",
+        "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+        "lookback_years": 3,
+        "note": "P/E 3.8 \u00f7 EPS growth 25.0%",
+        "operator": "<",
+        "result": "pass",
+        "threshold": 1,
+        "value": 0.151
+       }
+      ],
+      "status": "near_miss",
+      "symbol": "STEADY",
+      "total": 4
+     },
+     "rules": [
+      {
+       "field": "roe",
+       "label": "Return on equity above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "eps_cagr",
+       "label": "EPS grew more than 20% a year over 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "eps_rising_years",
+       "label": "EPS rose in each of the last 3 years",
+       "lookback_years": 3,
+       "operator": ">=",
+       "threshold": 3
+      },
+      {
+       "field": "peg",
+       "label": "PEG below 1 (P/E divided by 3-year EPS growth)",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": 1
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "akre",
+     "idea": "A high-return business, run by owners with a large unpledged stake, that reinvests most of its profit without its returns falling.",
+     "min_coverage": 0.75,
+     "name": "Akre",
+     "originator": "Chuck Akre's three-legged stool",
+     "result": {
+      "company": "Steady Foods Ltd",
+      "coverage": 0.8,
+      "failed": 3,
+      "industry": "Packaged Foods",
+      "na": 1,
+      "passed": 1,
+      "rules": [
+       {
+        "display": "10.7%",
+        "field": "roce",
+        "label": "Return on capital employed above 20%",
+        "lookback_years": 1,
+        "note": "FY26: EBIT \u20b926.7 cr \u00f7 capital employed \u20b9250 cr",
+        "operator": ">",
+        "result": "fail",
+        "threshold": 20,
+        "value": 10.68
+       },
+       {
+        "display": "44.0%",
+        "field": "promoter_pct",
+        "label": "Promoters hold more than 50%",
+        "lookback_years": 0,
+        "note": "Quarter to 2026-06-30",
+        "operator": ">",
+        "result": "fail",
+        "threshold": 50,
+        "value": 44.0
+       },
+       {
+        "display": "Yes",
+        "field": "pledge_pct",
+        "label": "No promoter shares pledged",
+        "lookback_years": 0,
+        "note": "The filing states promoter shares are pledged",
+        "operator": "==",
+        "result": "fail",
+        "threshold": 0,
+        "value": null
+       },
+       {
+        "display": null,
+        "field": "reinvestment_rate",
+        "label": "Reinvested more than 50% of operating profit after tax over 3 years",
+        "lookback_years": 3,
+        "note": "Not enough data to compute this",
+        "operator": ">",
+        "result": "na",
+        "threshold": 50,
+        "value": null
+       },
+       {
+        "display": "+2.1 pp",
+        "field": "roce_change",
+        "label": "Return on capital employed not lower than 3 years ago",
+        "lookback_years": 3,
+        "note": "FY26 10.7% vs FY23 8.6%",
+        "operator": ">=",
+        "result": "pass",
+        "threshold": 0,
+        "value": 2.12
+       }
+      ],
+      "status": "fail",
+      "symbol": "STEADY",
+      "total": 5
+     },
+     "rules": [
+      {
+       "field": "roce",
+       "label": "Return on capital employed above 20%",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 20
+      },
+      {
+       "field": "promoter_pct",
+       "label": "Promoters hold more than 50%",
+       "lookback_years": 0,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "pledge_pct",
+       "label": "No promoter shares pledged",
+       "lookback_years": 0,
+       "operator": "==",
+       "threshold": 0
+      },
+      {
+       "field": "reinvestment_rate",
+       "label": "Reinvested more than 50% of operating profit after tax over 3 years",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "roce_change",
+       "label": "Return on capital employed not lower than 3 years ago",
+       "lookback_years": 3,
+       "operator": ">=",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "nomad",
+     "idea": "Scale economics shared with customers: fast growth, margins held steady rather than expanded, and more sales from every rupee of assets.",
+     "min_coverage": 0.75,
+     "name": "Nomad",
+     "originator": "Nick Sleep and Qais Zakaria, Nomad Investment Partnership",
+     "result": {
+      "company": "Steady Foods Ltd",
+      "coverage": 1.0,
+      "failed": 1,
+      "industry": "Packaged Foods",
+      "na": 0,
+      "passed": 2,
+      "rules": [
+       {
+        "display": "8.0%",
+        "field": "revenue_cagr",
+        "label": "Revenue grew more than 15% a year over 5 years",
+        "lookback_years": 5,
+        "note": "FY21 \u20b9117 cr \u2192 FY26 \u20b9171 cr",
+        "operator": ">",
+        "result": "fail",
+        "threshold": 15,
+        "value": 8.0
+       },
+       {
+        "display": "+0.0 pp",
+        "field": "margin_change",
+        "label": "EBITDA margin within 2 percentage points of 5 years ago",
+        "lookback_years": 5,
+        "note": "EBITDA margin FY26 20.0% vs FY21 20.0%",
+        "operator": "abs_lte",
+        "result": "pass",
+        "threshold": 2,
+        "value": 0.0
+       },
+       {
+        "display": "+0.12x",
+        "field": "asset_turnover_change",
+        "label": "Asset turnover higher than 3 years ago",
+        "lookback_years": 3,
+        "note": "Revenue \u00f7 total assets FY26 0.57x vs FY23 0.45x",
+        "operator": ">",
+        "result": "pass",
+        "threshold": 0,
+        "value": 0.1178
+       }
+      ],
+      "status": "near_miss",
+      "symbol": "STEADY",
+      "total": 3
+     },
+     "rules": [
+      {
+       "field": "revenue_cagr",
+       "label": "Revenue grew more than 15% a year over 5 years",
+       "lookback_years": 5,
+       "operator": ">",
+       "threshold": 15
+      },
+      {
+       "field": "margin_change",
+       "label": "EBITDA margin within 2 percentage points of 5 years ago",
+       "lookback_years": 5,
+       "operator": "abs_lte",
+       "threshold": 2
+      },
+      {
+       "field": "asset_turnover_change",
+       "label": "Asset turnover higher than 3 years ago",
+       "lookback_years": 3,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "cannibal",
+     "idea": "Companies that shrink their own share count, so each remaining share owns more of the business.",
+     "min_coverage": 0.75,
+     "name": "Cannibal",
+     "originator": "Share-count reduction, as studied in William Thorndike's The Outsiders",
+     "result": {
+      "company": "Steady Foods Ltd",
+      "coverage": 1.0,
+      "failed": 1,
+      "industry": "Packaged Foods",
+      "na": 0,
+      "passed": 0,
+      "rules": [
+       {
+        "display": "+0.0% a year",
+        "field": "share_count_cagr",
+        "label": "Paid-up equity capital fell more than 2% a year over 3 years",
+        "lookback_years": 3,
+        "note": "Paid-up equity capital FY23 \u20b920.0 cr \u2192 FY26 \u20b920.0 cr. A bonus issue raises this without dilution.",
+        "operator": "<",
+        "result": "fail",
+        "threshold": -2,
+        "value": 0.0
+       }
+      ],
+      "status": "fail",
+      "symbol": "STEADY",
+      "total": 1
+     },
+     "rules": [
+      {
+       "field": "share_count_cagr",
+       "label": "Paid-up equity capital fell more than 2% a year over 3 years",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": -2
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": null,
+     "id": "owner",
+     "idea": "Promoters own the majority, have pledged none of it, and have been adding to their stake.",
+     "min_coverage": 0.75,
+     "name": "Owner-Operator",
+     "originator": "Owner-operator investing, as studied in William Thorndike's The Outsiders",
+     "result": {
+      "company": "Steady Foods Ltd",
+      "coverage": 1.0,
+      "failed": 3,
+      "industry": "Packaged Foods",
+      "na": 0,
+      "passed": 0,
+      "rules": [
+       {
+        "display": "44.0%",
+        "field": "promoter_pct",
+        "label": "Promoters hold more than 50%",
+        "lookback_years": 0,
+        "note": "Quarter to 2026-06-30",
+        "operator": ">",
+        "result": "fail",
+        "threshold": 50,
+        "value": 44.0
+       },
+       {
+        "display": "Yes",
+        "field": "pledge_pct",
+        "label": "No promoter shares pledged",
+        "lookback_years": 0,
+        "note": "The filing states promoter shares are pledged",
+        "operator": "==",
+        "result": "fail",
+        "threshold": 0,
+        "value": null
+       },
+       {
+        "display": "-1.00 pp",
+        "field": "promoter_change",
+        "label": "Promoter stake higher than 4 quarters ago",
+        "lookback_years": 1,
+        "note": "2026-06-30 44.00% vs 2025-06-30 45.00%",
+        "operator": ">",
+        "result": "fail",
+        "threshold": 0,
+        "value": -1.0
+       }
+      ],
+      "status": "fail",
+      "symbol": "STEADY",
+      "total": 3
+     },
+     "rules": [
+      {
+       "field": "promoter_pct",
+       "label": "Promoters hold more than 50%",
+       "lookback_years": 0,
+       "operator": ">",
+       "threshold": 50
+      },
+      {
+       "field": "pledge_pct",
+       "label": "No promoter shares pledged",
+       "lookback_years": 0,
+       "operator": "==",
+       "threshold": 0
+      },
+      {
+       "field": "promoter_change",
+       "label": "Promoter stake higher than 4 quarters ago",
+       "lookback_years": 1,
+       "operator": ">",
+       "threshold": 0
+      }
+     ],
+     "status": "live"
+    },
+    {
+     "coming_soon_reason": "Needs a history of listed companies per industry, including those that delisted. The exchange list this site reads holds only companies listed today, so the number of competitors over time cannot be counted yet.",
+     "id": "capcycle",
+     "idea": "Industries where capacity is being withdrawn: capex falling against depreciation and fewer listed competitors.",
+     "min_coverage": 0.75,
+     "name": "Capital Cycle",
+     "originator": "Marathon Asset Management, Capital Returns",
+     "result": null,
+     "rules": [
+      {
+       "field": "industry_capex_dep_change",
+       "label": "Industry capex to depreciation lower than 3 years ago",
+       "lookback_years": 3,
+       "operator": "<",
+       "threshold": 0
+      },
+      {
+       "field": "industry_peer_count_change",
+       "label": "Number of listed companies in the industry flat or lower over 3 years",
+       "lookback_years": 3,
+       "operator": "<=",
+       "threshold": 0
+      }
+     ],
+     "status": "coming_soon"
+    }
+   ],
+   "live_lenses": 7,
+   "meets": 0,
+   "notice": "Lenses are rules-based filters applied to historical financial data. They are not investment advice or recommendations.",
+   "run": {
+    "companies": 3,
+    "config_version": 1,
+    "finished_utc": "2026-09-23T16:13:53+00:00",
+    "note": "21 results in 0.0s",
+    "run_id": 1,
+    "started_utc": "2026-09-23T16:13:53+00:00",
+    "status": "ok",
+    "universe": 3
+   },
+   "symbol": "STEADY"
+  }
+ }
+}
