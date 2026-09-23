@@ -40,12 +40,10 @@ const fixture='<!doctype html><html data-theme="light"><head>'+head+'</head><bod
   await page.locator('.hm-route[data-home-destination=search]').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'sh-q','lower research card');
   await page.locator('.hh-portfolio').click({force:true});assert.equal(await page.evaluate(()=>window.destination[0]),'portfolio');
   await page.locator('[data-hh-go=ideas]').click();assert.equal(await page.evaluate(()=>window.destination[1]),'ideas');
-  await page.locator('.hm-motion').click();
-  assert.equal(await page.locator('html').getAttribute('data-motion'),'off');
-  assert.equal(await page.locator('.hh-signals').evaluate(el=>getComputedStyle(el).animationName),'none');
-  assert(await page.locator('.hh-head').isVisible());assert(await page.locator('.hh-btn-gold').isVisible());
-  await page.reload();assert.equal(await page.locator('html').getAttribute('data-motion'),'off');
-  await page.locator('.hm-motion').click();
+  assert.equal(await page.locator('.hm-motion').count(),0);
+  await page.evaluate(()=>localStorage.setItem('altaha-motion','off'));
+  await page.reload();
+  assert.equal(await page.locator('html').getAttribute('data-motion'),'on','legacy pause setting is ignored');
   await page.locator('.hh-head').scrollIntoViewIfNeeded();
   await page.waitForFunction(()=>document.querySelector('.hh-stage').classList.contains('hh-active'));
   assert.equal(await page.locator('.hh-signals').evaluate(el=>getComputedStyle(el).animationName),'hhFlow');

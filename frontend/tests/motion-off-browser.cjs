@@ -111,7 +111,7 @@ const SETTINGS = [
 
       // The promise itself, the way in, and the control for this very
       // setting all have to be on the screen whatever the setting is.
-      for (const sel of ['.hh-head', '.hh-sub', '.hh-cta .hh-btn', '.hm-motion']) {
+      for (const sel of ['.hh-head', '.hh-sub', '.hh-cta .hh-btn']) {
         assert.ok(await page.locator(sel).first().isVisible(), `${setting.name} @ ${width}px: ${sel} not visible`);
       }
       // Deliberately NOT the exact wording. This test asks whether the
@@ -119,6 +119,9 @@ const SETTINGS = [
       // headline's copy here meant a marketing edit registered as a motion
       // regression, which is what happened when the hero was reworded. What
       // matters is that the headline has words in it and they are on screen.
+      assert.equal(await page.locator('.hm-motion').count(), 0);
+      assert.equal(await page.evaluate(() => document.documentElement.dataset.motion),
+        setting.reduced === 'reduce' ? 'off' : 'on');
       const headline = (await page.locator('.hh-head').innerText()).trim();
       assert.ok(headline.length > 8,
         `${setting.name} @ ${width}px: the headline is empty — "${headline}"`);
