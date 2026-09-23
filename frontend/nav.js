@@ -94,6 +94,8 @@
       ],
       extras: [
         { id: 'funds',    label: 'Fund house portfolios', hint: 'What the mutual funds disclosed holding' },
+        { id: 'lenses',      label: 'Philosophy lenses', hint: 'Stocks screened the way great investors think' },
+        { id: 'convergence', label: 'Convergence',       hint: 'Stocks that clear three or more lenses' },
         { id: 'concalls', label: 'Concall summaries',     hint: 'Earnings call transcripts, digested' },
         { id: 'social',   label: 'News & post drafts',    hint: 'Read updates and prepare posts' },
         { id: 'vocab',    label: 'Glossary',              hint: 'Financial terms in plain language' }

@@ -1173,7 +1173,7 @@
 <link rel="stylesheet" href="premium-plus.css">
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
-<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="shell.css?v=20260923-lenses">
 <link rel="stylesheet" href="home.css">
 <link rel="stylesheet" href="special.css">
 <link rel="stylesheet" href="experience.css">
@@ -1189,6 +1189,7 @@
 }catch(e){}})();
 </script>
 <link rel="stylesheet" href="universe-scan.css?v=20260921-3d">
+<link rel="stylesheet" href="lenses.css?v=20260923-lenses">
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20260922-stock-copy"></script>
 <script src="universe-scan.js?v=20260922-stock-copy"></script>
@@ -1270,6 +1271,8 @@
         <button id="tab-concalls" role="menuitem">Concall summaries</button>
         <button id="tab-investors" role="menuitem">Investor portfolios</button>
         <button id="tab-funds" role="menuitem">Fund house portfolios</button>
+        <button id="tab-lenses" role="menuitem">Philosophy lenses</button>
+        <button id="tab-convergence" role="menuitem">Convergence</button>
         <div class="sep"></div>
         <button id="tab-vocab" role="menuitem">Vocabulary</button>
       </div>
@@ -1858,6 +1861,16 @@
   </div><!-- /view-investors -->
 
   <!-- Fund house portfolios, from the monthly disclosures SEBI requires. -->
+  <!-- Lenses: investing philosophies applied as rules to the filed statements.
+       Filled by lenses.js from the nightly run cached by the API. -->
+  <div id="view-lenses" style="display:none">
+    <div id="lenses-body"></div>
+  </div><!-- /view-lenses -->
+
+  <div id="view-convergence" style="display:none">
+    <div id="convergence-body"></div>
+  </div><!-- /view-convergence -->
+
   <div id="view-funds" style="display:none">
     <header class="tabhead">
       <h2>Fund house portfolios</h2>
@@ -2134,11 +2147,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors"];
+const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors"];
+const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -4410,7 +4423,7 @@ if(fcSymParam){
 <script src="tracker-fix.js" defer></script>
 <script src="portfolio-intelligence.js" defer></script>
 <script src="portfolio.js" defer></script>
-<script src="nav.js" defer></script>
+<script src="nav.js?v=20260923-lenses" defer></script>
 <script src="scoring.js" defer></script>
 <script src="social.js" defer></script>
 <script src="motion.js" defer></script>
@@ -4419,13 +4432,14 @@ if(fcSymParam){
 <script src="lab.js" defer></script>
 <script src="sectors-live.js?v=20260923-nse" defer></script>
 <script src="deals.js" defer></script>
-<script src="shell.js" defer></script>
+<script src="shell.js?v=20260923-lenses" defer></script>
 <script src="home.js" defer></script>
 <script src="special.js" defer></script>
 <script src="wow.js" defer></script>
 <script src="concalls.js" defer></script>
 <script src="investors.js" defer></script>
 <script src="funds.js" defer></script>
+<script src="lenses.js?v=20260923-lenses" defer></script>
 <script src="ledger-admin.js" defer></script>
 <script src="planner-risk.js" defer></script>
 <script src="discover.js" defer></script>
