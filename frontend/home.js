@@ -148,7 +148,9 @@
       var p = i.change_pct == null || i.change_pct === '' ? NaN : Number(i.change_pct);
       var t = p > 0 ? 'up' : (p < 0 ? 'dn' : '');
       var w = Math.min(100, (Math.abs(p) / biggest) * 100);
-      return '<div class="mb-card d3-card tilt reveal" data-i="' + n + '">' +
+      var indexName = i.label === 'BANK NIFTY' ? 'NIFTY BANK' : i.label;
+      var explore = /^NIFTY/i.test(indexName || '') ? ' role="button" tabindex="0" data-index-explore="' + esc(indexName) + '" aria-label="Explore ' + esc(indexName) + ' composition and returns"' : '';
+      return '<div class="mb-card d3-card tilt reveal" data-i="' + n + '"' + explore + '>' +
         '<div class="k">' + esc(i.label) + '</div>' +
         '<div class="v tnum">' + (i.level == null ? '—'
           : Number(i.level).toLocaleString('en-IN', { maximumFractionDigits: 2 })) + '</div>' +

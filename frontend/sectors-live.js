@@ -189,7 +189,7 @@
 
     el.innerHTML =
       '<div class="sb-hdr">' +
-        "<h3>NSE sector benchmarks</h3>" +
+        "<h3>NSE sector benchmarks</h3><button type=\"button\" class=\"sb-win\" data-explore-all>Explore all NSE indices ↗</button>" +
         '<div class="sb-bar">' +
           '<span class="sb-live"><i></i>' + status + "</span>" +
           ["1D", "1W", "1M"].map(function (w) {
@@ -265,6 +265,8 @@
     var el = document.getElementById("sb-board");
     if (!el || !ev.target.closest) return;
 
+    if (ev.target.closest('[data-explore-all]')) { window.AltahaIndex.open('NIFTY 50'); return; }
+
     var win = ev.target.closest(".sb-win[data-w]");
     if (win && el.contains(win)) {
       state.window = win.getAttribute("data-w");
@@ -278,6 +280,8 @@
     var tileEl = ev.target.closest(".sb-tile[data-sector]");
     if (tileEl && el.contains(tileEl)) {
       var s = tileEl.getAttribute("data-sector");
+      var row = (state.data.rows || []).find(function(r) { return r.sector === s; });
+      if (window.AltahaIndex && row) { window.AltahaIndex.open(row.index || s); return; }
       state.open = (state.open === s) ? null : s;
       render();
       var d = document.querySelector("#sb-board .sb-detail");
