@@ -135,6 +135,8 @@ def cached(symbol: str, horizon: str):
         out = json.loads(row["payload"])
     except ValueError:
         return None
+    if out.get("reason") == "withheld" and out.get("filter") != FILTER_VERSION:
+        return None
     out["cached"] = True
     return out
 
@@ -320,18 +322,39 @@ _ADVICE = re.compile(
     r"(?:you|investors?|one) (?:should|must|ought to))\b", re.I)
 
 
-# The disclaimer the prompt asks for — "this is not a recommendation", "it
-# does not tell you whether to buy or sell" — uses the same words. Negated
-# phrases are removed before the check, or every honest answer is withheld.
-_NEGATED = re.compile(
-    r"\b(?:not|never|no|nor|isn't|doesn't|whether to)\s+(?:\w+\s+){0,3}?"
-    r"(?:recommend\w*|buy|sell)\b"
-    r"(?:\s+(?:or|to)\s+(?:buy|sell|hold))*"
-    r"(?:\s+(?:call|signal|advice)s?)?", re.I)
+# The disclaimer the prompt asks for uses the same words as advice: "this
+# should not be taken as a recommendation", "it does not say whether to buy
+# or sell". The first version tried to cut negated phrases out with one
+# pattern and missed most real wordings, so honest answers were withheld.
+#
+# The rule now works a sentence at a time: a sentence is advice when it
+# contains an advice term and no negation comes BEFORE that term. "Nothing
+# here is a recommendation" passes; "Buy it — there is no downside" and
+# "You should buy. This is not a recommendation." do not.
+_NEGATION = re.compile(
+    r"\b(?:not|never|no|nothing|neither|nor|without|cannot)\b|n't\b", re.I)
+_SENTENCE = re.compile(r"(?<=[.!?])\s+|\n+")
+
+# Bumped whenever the check changes, so answers withheld under an older
+# check are written again rather than served from today's store.
+FILTER_VERSION = 2
+
+
+def advice_sentence(text: str):
+    """The first sentence that reads as advice, or None."""
+    for sentence in _SENTENCE.split(text or ""):
+        m = _ADVICE.search(sentence)
+        if not m:
+            continue
+        neg = _NEGATION.search(sentence)
+        if neg and neg.start() < m.start():
+            continue
+        return sentence.strip()
+    return None
 
 
 def advice_like(text: str) -> bool:
-    return bool(_ADVICE.search(_NEGATED.sub(" ", text or "")))
+    return advice_sentence(text) is not None
 
 
 def _post(url, headers, body, timeout):
@@ -465,14 +488,19 @@ def explain(symbol: str, horizon: str, analysis: dict, visitor=None) -> dict:
         # Asked for plain text; strip any markdown that arrives anyway, since
         # the page renders it as text and "**ROCE**" would show the stars.
         text = re.sub(r"[*#`]+", "", text)
-        if advice_like(text):
-            # Stored as withheld so the same stock does not spend the budget
-            # again today producing the same kind of answer.
+        flagged = advice_sentence(text)
+        if flagged:
+            # Logged so the owner can see in the server log what was held
+            # back and judge whether the check was right. Stored as withheld
+            # so the same stock does not spend the budget again today.
+            print("[explain] withheld %s/%s: %r" % (symbol, horizon, flagged[:200]),
+                  flush=True)
             out = _unavailable("withheld",
                                "The explanation was withheld because it read "
                                "like investment advice, which this site does "
                                "not give. The score and ledger below are "
                                "unaffected.")
+            out["filter"] = FILTER_VERSION
         else:
             paragraphs = [p.strip() for p in re.split(r"\n+", text) if p.strip()]
             out = {
