@@ -4,23 +4,29 @@ name: Fill the fundamentals tables
 # from its Regulation 33 filings into three tables (altaha_fundamentals.db on
 # the API's disk). Same shape as the holdings ledger workflow: the crawl runs
 # ON THE API, where the disk is, and this job only keeps asking for the next
-# bounded slice. The first read of a company is ~34 documents (back to 2018),
-# so the first sweep of ~2,300 companies takes about a week of nights; after
-# that each company is re-read once a fortnight, fetching only new filings.
+# bounded slice. The first read of a company is ~34 documents (back to 2018);
+# after that each company is re-read once a fortnight, fetching only new
+# filings.
+#
+# WHEN IT RUNS: AROUND THE CLOCK
+# A run every six hours, each lasting up to about six (GitHub's limit for one
+# job), queued behind the last so two never crawl at once. During market hours
+# (09:00–15:45 IST, weekdays) it keeps going but waits a minute between slices
+# instead of five seconds: the instance is 512 MB and half a CPU and serves the
+# live site, and the crawl reaches NSE from the same address as the live
+# features. The crawler itself also backs off when NSE starts refusing.
 #
 # Needs the same repository secret as the holdings workflow: ALTAHA_ADMIN_KEY.
 
 on:
   schedule:
-    # 23:30 UTC = 05:00 IST. After the holdings crawl, before market hours —
-    # two crawls at once would double the request rate at NSE.
-    - cron: "30 23 * * *"
+    - cron: "0 0,6,12,18 * * *"   # every six hours, around the clock
   workflow_dispatch:
     inputs:
       slices:
-        description: "How many crawl calls to make (8 companies each)"
+        description: "The most crawl calls to make (8 companies each)"
         type: string
-        default: "40"
+        default: "200"
 
 permissions:
   contents: read
@@ -32,16 +38,22 @@ concurrency:
 jobs:
   crawl:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 355
     steps:
       - name: Read the next slices of companies into the tables
-        timeout-minutes: 290
+        timeout-minutes: 300
         env:
           ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
           API: https://taha-project.onrender.com
-          SLICES: ${{ inputs.slices || '40' }}
+          SLICES: ${{ inputs.slices || '200' }}
         run: |
           set -uo pipefail
+          # Market hours: keep crawling, but give the live site room.
+          market() {
+            local now dow
+            now=$((10#$(TZ=Asia/Kolkata date +%H%M))); dow=$(TZ=Asia/Kolkata date +%u)
+            [ "${dow}" -le 5 ] && [ "${now}" -ge 900 ] && [ "${now}" -lt 1545 ]
+          }
           if [ -z "${ADMIN_KEY}" ]; then
             echo "::error::ALTAHA_ADMIN_KEY is not set. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render."
             exit 1
@@ -76,7 +88,7 @@ jobs:
               echo "nothing further is due — the table is current."
               break
             fi
-            if [ -n "${early}" ]; then sleep 60; else sleep 5; fi
+            if [ -n "${early}" ] || market; then sleep 60; else sleep 5; fi
           done
           echo "::notice::${rows} rows written."
 
@@ -91,6 +103,12 @@ jobs:
           SLICES: "15"
         run: |
           set -uo pipefail
+          # Market hours: keep crawling, but give the live site room.
+          market() {
+            local now dow
+            now=$((10#$(TZ=Asia/Kolkata date +%H%M))); dow=$(TZ=Asia/Kolkata date +%u)
+            [ "${dow}" -le 5 ] && [ "${now}" -ge 900 ] && [ "${now}" -lt 1545 ]
+          }
           failed=0
           for i in $(seq 1 "${SLICES}"); do
             code=$(curl -sS --max-time 900 -o yslice.json -w "%{http_code}" \
@@ -106,7 +124,7 @@ jobs:
             read -r attempted got early < <(python3 -c "import json;d=json.load(open('yslice.json'));print(d.get('attempted',0), d.get('rows',0), (d.get('stopped_early') or '').replace(' ','_'))")
             echo "yahoo slice ${i}: ${attempted} companies, ${got} values ${early:+— ${early}}"
             if [ "${attempted}" = "0" ]; then echo "nothing further is due from Yahoo."; break; fi
-            if [ -n "${early}" ]; then sleep 120; else sleep 5; fi
+            if [ -n "${early}" ]; then sleep 120; elif market; then sleep 60; else sleep 5; fi
           done
 
       - name: Report what the table now holds
