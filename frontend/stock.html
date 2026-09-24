@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20260923-lenses">
-<link rel="stylesheet" href="stock.css?v=20260923-delivery">
+<link rel="stylesheet" href="stock.css?v=20260924-explain">
 <link rel="stylesheet" href="lenses.css?v=20260924-run">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css">
@@ -158,6 +158,15 @@
         </div>
       </section>
 
+      <!-- The score in words. Written by an open model on Groq's free tier
+           from the numbers above, once per stock per day, and only when a
+           reader asks — see backend/score_explain.py. -->
+      <section class="stk-sec" id="s-explain" hidden>
+        <h2>In plain English</h2>
+        <p class="sub">An AI model reads the numbers above and explains what they add up to. It explains the score; it does not give advice.</p>
+        <div class="xpl" id="explain"></div>
+      </section>
+
       <section class="stk-sec">
         <h2>The ledger</h2>
         <p class="sub">Every check, the formula that turned it into points, and what the concept means. Open any row.</p>
@@ -221,7 +230,7 @@
 <script src="ownership-snapshot.js" defer></script>
 <script src="ownership.js" defer></script>
 <script src="delivery-ui.js?v=20260923" defer></script>
-<script src="stock.js?v=20260923-delivery" defer></script>
+<script src="stock.js?v=20260924-explain" defer></script>
 <script src="lenses.js?v=20260924-run" defer></script>
 <script src="experience.js" defer></script>
 </body>

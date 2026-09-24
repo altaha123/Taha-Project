@@ -242,6 +242,80 @@
 
   /* ── Levels ──────────────────────────────────────────────────────────────── */
 
+  /* ── The score in plain English ──────────────────────────────────────────
+     Nothing is requested until the reader asks. Each fresh explanation spends
+     part of a small free daily allowance, and most visitors never open the
+     Scores pane at all. */
+
+  function paintExplain(d) {
+    var sec = $('s-explain'), box = $('explain');
+    if (!sec || !box) return;
+    var sc = d.scoring || {};
+    // No score, nothing to explain — and the server would say the same after
+    // analysing the stock again.
+    if (sc.score == null) { sec.hidden = true; return; }
+    sec.hidden = false;
+    var horizon = sc.horizon || 'position';
+
+    function button(label) {
+      box.innerHTML = '<button type="button" class="xpl-go" id="xpl-go">' + esc(label) + '</button>';
+      $('xpl-go').addEventListener('click', ask);
+    }
+
+    function ask() {
+      box.innerHTML = '<p class="xpl-wait" role="status">Writing the explanation…</p>';
+      fetch(API + '/explain?ticker=' + encodeURIComponent(TICKER) +
+            '&horizon=' + encodeURIComponent(horizon))
+        .then(function (r) {
+          if (!r.ok) throw new Error('down');
+          return r.json();
+        })
+        .then(function (x) {
+          if (window.AltahaTrack) {
+            window.AltahaTrack('score_explained', {
+              ticker: TICKER, ok: !!x.available, reason: x.reason || null, cached: !!x.cached
+            });
+          }
+          if (!x.available) {
+            box.innerHTML = '<p class="xpl-note">' + esc(x.message || 'No explanation is available.') + '</p>';
+            if (x.reason === 'busy' || x.reason === 'error') {
+              box.insertAdjacentHTML('beforeend',
+                '<button type="button" class="xpl-go" id="xpl-go">Try again</button>');
+              $('xpl-go').addEventListener('click', ask);
+            }
+            return;
+          }
+          var when = '';
+          try {
+            // Written in IST on the server, and shown in IST whatever the
+            // reader's clock says — "written today" has to mean an Indian day.
+            when = new Date(x.generated_at).toLocaleString('en-IN',
+              { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                timeZone: 'Asia/Kolkata' }) + ' IST';
+          } catch (e) {}
+          // A stored explanation is from earlier today, and the score it was
+          // written against may have moved since. Say which score it read.
+          var drift = (x.score != null && sc.score != null &&
+                       Math.round(x.score) !== Math.round(sc.score))
+            ? ' It was written when the score was ' + Math.round(x.score) + '.' : '';
+          box.innerHTML =
+            '<div class="xpl-body">' + (x.paragraphs || []).map(function (p) {
+              return '<p>' + esc(p) + '</p>';
+            }).join('') + '</div>' +
+            '<p class="xpl-meta"><span class="xpl-tag">AI-written</span>' +
+            esc((when ? 'Written ' + when + '. ' : '') + (x.disclaimer || '') + drift) + '</p>';
+        })
+        .catch(function () {
+          box.innerHTML = '<p class="xpl-note">The explanation could not be loaded.</p>';
+          box.insertAdjacentHTML('beforeend',
+            '<button type="button" class="xpl-go" id="xpl-go">Try again</button>');
+          $('xpl-go').addEventListener('click', ask);
+        });
+    }
+
+    button('Explain this score in plain English');
+  }
+
   function paintLevels(d) {
     var lv = d.levels;
     if (!lv || (!lv.supports && !lv.resistances)) {
@@ -1335,6 +1409,7 @@
         paintScore(d);
         paintNumbers(d);
         paintLedger(d);
+        paintExplain(d);
         paintLevels(d);
         $('disc').textContent = d.disclaimer ||
           'Educational tool. Scores and evidence only — never a recommendation to buy or sell.';

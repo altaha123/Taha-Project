@@ -250,6 +250,30 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
   font-size:14px; line-height:1.6; color:var(--ink-2);
 }
 
+/* ── The score in plain English ──────────────────────────────────────────── */
+
+.xpl-go{
+  padding:10px 16px; border:1px solid var(--gold); border-radius:99px;
+  background:none; cursor:pointer; font-family:inherit; font-size:14px;
+  font-weight:500; color:var(--gold-dp);
+  transition:background 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.xpl-go:hover{ background:var(--gold); color:#fff }
+.xpl-go:focus-visible{ outline:2px solid var(--gold-dp); outline-offset:2px }
+.xpl-wait, .xpl-note{ font-size:14px; line-height:1.6; color:var(--mute); margin:0 0 12px }
+.xpl-body{
+  padding:15px 17px; border-left:2px solid var(--gold);
+  background:var(--paper-2); border-radius:0 10px 10px 0; max-width:78ch;
+}
+.xpl-body p{ margin:0 0 10px; font-size:15px; line-height:1.7; color:var(--ink-2) }
+.xpl-body p:last-child{ margin-bottom:0 }
+.xpl-meta{ margin:12px 0 0; font-size:12px; line-height:1.55; color:var(--mute); max-width:78ch }
+.xpl-tag{
+  display:inline-block; margin-right:8px; padding:2px 7px; border:1px solid var(--rule);
+  border-radius:99px; font:500 10px/1.4 var(--mono,'IBM Plex Mono',monospace);
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2);
+}
+
 /* ── Numbers grid ────────────────────────────────────────────────────────── */
 
 .nums{ display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:13px }

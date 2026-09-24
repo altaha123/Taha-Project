@@ -9,7 +9,7 @@ import os
 import threading
 import time
 
-from fastapi import FastAPI, HTTPException, Body, Response, Header
+from fastapi import FastAPI, HTTPException, Body, Response, Header, Request
 from typing import Optional
 from fastapi.responses import (JSONResponse, StreamingResponse,
                                HTMLResponse, PlainTextResponse)
@@ -153,6 +153,10 @@ try:
     import concalls as concall_source
 except Exception:
     concall_source = None
+try:
+    import score_explain
+except Exception:
+    score_explain = None
 try:
     import special as special_engine
 except Exception:
@@ -4773,6 +4777,41 @@ def analyze(ticker: str, horizon: str = "position"):
         "peers": _peer_context(sym, info.get("sector"), header_ratios),
         "disclaimer": DISCLAIMER,
     })
+
+
+@app.get("/explain")
+def explain_score(ticker: str, request: Request, horizon: str = "position"):
+    """The Altaha Score in plain English, written by an open model on Groq.
+
+    Off unless GROQ_API_KEY is set, and says so. A stock's explanation is
+    written once a day per horizon and stored, so the page reads the stored
+    copy for every visitor after the first — which is what keeps this inside
+    the provider's free allowance. The /analyze call below only happens on a
+    miss.
+    """
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    if score_explain is None:
+        return {"available": False, "reason": "not_configured",
+                "message": "Plain-English explanations are not available on this instance."}
+    horizon = horizon if horizon in PR.HORIZONS else "position"
+    key = ticker.strip().upper()
+    for suffix in (".NS", ".BO"):
+        if key.endswith(suffix):
+            key = key[:-len(suffix)]
+    if not score_explain.configured():
+        return score_explain.explain(key, horizon, {})
+    hit = score_explain.cached(key, horizon)
+    if hit:
+        return hit
+    # Render sits behind a proxy, so the visitor is the first forwarded
+    # address, not the socket's peer.
+    fwd = request.headers.get("x-forwarded-for") or ""
+    visitor = fwd.split(",")[0].strip() or (request.client.host if request.client else None)
+    blocked = score_explain.gate(visitor)
+    if blocked:
+        return blocked
+    return score_explain.explain(key, horizon, analyze(ticker, horizon), visitor=visitor)
 
 
 # ---------------------------------------------------------------------------
