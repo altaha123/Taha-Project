@@ -242,28 +242,56 @@
 
   /* ── Levels ──────────────────────────────────────────────────────────────── */
 
-  /* ── The score in plain English ──────────────────────────────────────────
-     Nothing is requested until the reader asks. Each fresh explanation spends
-     part of a small free daily allowance, and most visitors never open the
-     Scores pane at all. */
+  /* ── Smart AI: the score in plain English ─────────────────────────────────
+     A floating button, bottom right. Opening it offers one question; nothing
+     is requested from the server until the reader asks it. Each fresh
+     explanation spends part of a small free daily allowance, and most
+     visitors never ask. The answer stays in the panel for the visit, so
+     closing and reopening does not ask again. */
+
+  var QUESTION = 'What does this score mean, in simple words?';
 
   function paintExplain(d) {
-    var sec = $('s-explain'), box = $('explain');
-    if (!sec || !box) return;
+    var wrap = $('sai'), panel = $('sai-panel'), fab = $('sai-fab'), box = $('sai-body');
+    if (!wrap || !panel || !fab || !box) return;
     var sc = d.scoring || {};
     // No score, nothing to explain — and the server would say the same after
     // analysing the stock again.
-    if (sc.score == null) { sec.hidden = true; return; }
-    sec.hidden = false;
+    if (sc.score == null) { wrap.hidden = true; return; }
+    wrap.hidden = false;
     var horizon = sc.horizon || 'position';
+    var name = d.name || TICKER;
 
-    function button(label) {
-      box.innerHTML = '<button type="button" class="xpl-go" id="xpl-go">' + esc(label) + '</button>';
-      $('xpl-go').addEventListener('click', ask);
+    function setOpen(open) {
+      panel.hidden = !open;
+      fab.setAttribute('aria-expanded', open ? 'true' : 'false');
+      wrap.classList.toggle('open', open);
+      if (open) {
+        var first = box.querySelector('button') || $('sai-x');
+        if (first) first.focus();
+      } else {
+        fab.focus();
+      }
+    }
+
+    function offer() {
+      box.innerHTML =
+        '<p class="sai-hi">Ask about the Altaha Score for <b>' + esc(name) + '</b>.</p>' +
+        '<button type="button" class="sai-q" id="sai-q">' + esc(QUESTION) + '</button>';
+      $('sai-q').addEventListener('click', ask);
+    }
+
+    function retry(message) {
+      box.insertAdjacentHTML('beforeend', '<p class="sai-note">' + esc(message) + '</p>' +
+        '<button type="button" class="sai-q" id="sai-q">Try again</button>');
+      $('sai-q').addEventListener('click', ask);
     }
 
     function ask() {
-      box.innerHTML = '<p class="xpl-wait" role="status">Writing the explanation…</p>';
+      // The question stays on screen as the reader's side of the exchange.
+      box.innerHTML = '<p class="sai-you">' + esc(QUESTION) + '</p>' +
+        '<p class="sai-wait" role="status"><span class="sai-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+        'Reading the numbers…</p>';
       fetch(API + '/explain?ticker=' + encodeURIComponent(TICKER) +
             '&horizon=' + encodeURIComponent(horizon))
         .then(function (r) {
@@ -276,12 +304,14 @@
               ticker: TICKER, ok: !!x.available, reason: x.reason || null, cached: !!x.cached
             });
           }
+          var you = '<p class="sai-you">' + esc(QUESTION) + '</p>';
           if (!x.available) {
-            box.innerHTML = '<p class="xpl-note">' + esc(x.message || 'No explanation is available.') + '</p>';
+            box.innerHTML = you;
             if (x.reason === 'busy' || x.reason === 'error') {
-              box.insertAdjacentHTML('beforeend',
-                '<button type="button" class="xpl-go" id="xpl-go">Try again</button>');
-              $('xpl-go').addEventListener('click', ask);
+              retry(x.message || 'No explanation is available right now.');
+            } else {
+              box.insertAdjacentHTML('beforeend', '<p class="sai-note">' +
+                esc(x.message || 'No explanation is available.') + '</p>');
             }
             return;
           }
@@ -298,22 +328,25 @@
           var drift = (x.score != null && sc.score != null &&
                        Math.round(x.score) !== Math.round(sc.score))
             ? ' It was written when the score was ' + Math.round(x.score) + '.' : '';
-          box.innerHTML =
-            '<div class="xpl-body">' + (x.paragraphs || []).map(function (p) {
+          box.innerHTML = you +
+            '<div class="sai-ans">' + (x.paragraphs || []).map(function (p) {
               return '<p>' + esc(p) + '</p>';
             }).join('') + '</div>' +
-            '<p class="xpl-meta"><span class="xpl-tag">AI-written</span>' +
+            '<p class="sai-meta"><span class="sai-tag">AI-written</span>' +
             esc((when ? 'Written ' + when + '. ' : '') + (x.disclaimer || '') + drift) + '</p>';
         })
         .catch(function () {
-          box.innerHTML = '<p class="xpl-note">The explanation could not be loaded.</p>';
-          box.insertAdjacentHTML('beforeend',
-            '<button type="button" class="xpl-go" id="xpl-go">Try again</button>');
-          $('xpl-go').addEventListener('click', ask);
+          box.innerHTML = '<p class="sai-you">' + esc(QUESTION) + '</p>';
+          retry('The explanation could not be loaded.');
         });
     }
 
-    button('Explain this score in plain English');
+    offer();
+    fab.addEventListener('click', function () { setOpen(panel.hidden); });
+    $('sai-x').addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !panel.hidden) setOpen(false);
+    });
   }
 
   function paintLevels(d) {

@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20260923-lenses">
-<link rel="stylesheet" href="stock.css?v=20260924-explain">
+<link rel="stylesheet" href="stock.css?v=20260924-smartai">
 <link rel="stylesheet" href="lenses.css?v=20260924-run">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css">
@@ -158,15 +158,6 @@
         </div>
       </section>
 
-      <!-- The score in words. Written by an open model on Groq's free tier
-           from the numbers above, once per stock per day, and only when a
-           reader asks — see backend/score_explain.py. -->
-      <section class="stk-sec" id="s-explain" hidden>
-        <h2>In plain English</h2>
-        <p class="sub">An AI model reads the numbers above and explains what they add up to. It explains the score; it does not give advice.</p>
-        <div class="xpl" id="explain"></div>
-      </section>
-
       <section class="stk-sec">
         <h2>The ledger</h2>
         <p class="sub">Every check, the formula that turned it into points, and what the concept means. Open any row.</p>
@@ -223,14 +214,37 @@
     </div>
 
     <div class="stk-disc" id="disc"></div>
+
   </div>
 </main>
+
+<!-- Smart AI. A floating button, bottom right, that opens a small panel
+     over the page and explains the Altaha Score in plain English. Written
+     by an open model on Groq's free tier from the numbers on this page,
+     once per stock per day, and only when a reader asks — see
+     backend/score_explain.py. Hidden when the stock has no score. -->
+<div class="sai" id="sai" hidden>
+  <section class="sai-panel" id="sai-panel" role="dialog" aria-labelledby="sai-title" hidden>
+    <header class="sai-head">
+      <span class="sai-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.1 5.4 5.4 2.1-5.4 2.1L12 17.5l-2.1-5.4L4.5 10l5.4-2.1z"/><path d="M19 15l.9 2.1 2.1.9-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></span>
+      <h2 class="sai-title" id="sai-title">Smart AI</h2>
+      <button type="button" class="sai-x" id="sai-x" aria-label="Close Smart AI">&times;</button>
+    </header>
+    <div class="sai-body" id="sai-body"></div>
+    <p class="sai-foot">AI explains the score. It does not give advice.</p>
+  </section>
+  <button type="button" class="sai-fab" id="sai-fab" aria-expanded="false" aria-controls="sai-panel"
+          title="Ask AI about this score">
+    <span class="sai-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.1 5.4 5.4 2.1-5.4 2.1L12 17.5l-2.1-5.4L4.5 10l5.4-2.1z"/><path d="M19 15l.9 2.1 2.1.9-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></span>
+    <span class="sai-lbl">Smart AI</span>
+  </button>
+</div>
 
 <script src="shell.js?v=20260923-lenses" defer></script>
 <script src="ownership-snapshot.js" defer></script>
 <script src="ownership.js" defer></script>
 <script src="delivery-ui.js?v=20260923" defer></script>
-<script src="stock.js?v=20260924-explain" defer></script>
+<script src="stock.js?v=20260924-smartai" defer></script>
 <script src="lenses.js?v=20260924-run" defer></script>
 <script src="experience.js" defer></script>
 </body>

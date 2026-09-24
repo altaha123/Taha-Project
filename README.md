@@ -156,8 +156,10 @@ and the page says so.
 
 ### "Explain this score" — plain English, free (optional)
 
-The Scores pane on `stock.html` has an **In plain English** section. When a
-reader clicks it, `/explain?ticker=SYM&horizon=position` hands the numbers the
+Every scored stock page (`stock.html`) has a floating **Smart AI** button,
+bottom right. It opens a small panel over the page that offers one question —
+*"What does this score mean, in simple words?"* When a reader asks it,
+`/explain?ticker=SYM&horizon=position` hands the numbers the
 engine already computed — score, pillars, what helped, what hurt, the checks,
 the ratios — to OpenAI's open-weight `gpt-oss-120b` on **Groq's free tier**,
 and shows back three short paragraphs labelled as AI-written. The model sees
