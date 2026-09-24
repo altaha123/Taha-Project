@@ -163,13 +163,43 @@ def test_advice_is_withheld_not_shown(env, text):
     "It is not a recommendation to buy or sell.",
     "The score does not tell you whether to buy or sell the share.",
     "It is never a buy or sell signal.",
+    # Wordings the first version of the check withheld in production.
+    "This is not a buy or sell recommendation.",
+    "This should not be taken as a recommendation.",
+    "It is not investment advice or a recommendation.",
+    "The score is not intended to be a recommendation to buy or sell.",
+    "It does not suggest whether you should buy or sell.",
+    "Remember, this is not a recommendation to buy, sell or hold the stock.",
+    "Nothing here is a recommendation.",
+    "It doesn't tell you to buy or sell.",
 ])
 def test_ordinary_words_are_not_mistaken_for_advice(text):
     assert not SE.advice_like(text)
 
 
-def test_a_disclaimer_does_not_excuse_advice_elsewhere():
-    assert SE.advice_like("You should buy this. This is not a recommendation.")
+@pytest.mark.parametrize("text", [
+    "You should buy this. This is not a recommendation.",
+    "Buy it now, there is no downside.",
+    "Investors should accumulate. Nothing here is advice.",
+])
+def test_a_disclaimer_does_not_excuse_advice_elsewhere(text):
+    assert SE.advice_like(text)
+
+
+def test_an_answer_withheld_by_an_older_check_is_written_again(env):
+    calls, install = env
+    install(_reply(GOOD))
+    old = {"available": False, "reason": "withheld", "message": "withheld"}   # no filter version
+    SE._store("ARROWGREEN", "position", old)
+    out = SE.explain("ARROWGREEN", "position", _analysis())
+    assert out["available"] is True and len(calls) == 1
+
+
+def test_a_withheld_answer_records_the_check_that_withheld_it(env):
+    calls, install = env
+    install(_reply("You should buy this stock."))
+    SE.explain("RELIANCE", "position", _analysis())
+    assert SE.cached("RELIANCE", "position")["filter"] == SE.FILTER_VERSION
 
 
 def test_markdown_is_stripped_and_lines_become_paragraphs(env):
