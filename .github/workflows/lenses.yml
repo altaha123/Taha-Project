@@ -12,9 +12,10 @@ name: Compute the Lenses
 # WHY HERE AND WHY THEN
 # Same reasoning as the other scheduled jobs: Render's cron is a paid add-on
 # and an in-process timer dies with the worker, while a workflow is versioned
-# and a failed run is an email. It runs after the fundamentals crawl
-# (23:30 UTC, up to about six hours) so each night's compute sees that night's
-# filings. 05:45 UTC is 11:15 IST.
+# and a failed run is an email. It runs after the fundamentals crawl's
+# overnight and early-morning windows, so each day's compute sees what they
+# read; the fundamentals crawl keeps out of this window on weekends. 05:45 UTC
+# is 11:15 IST.
 #
 # Needs one repository secret: ALTAHA_ADMIN_KEY, the same value as ADMIN_KEY
 # on Render.

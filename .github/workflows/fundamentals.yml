@@ -4,23 +4,36 @@ name: Fill the fundamentals tables
 # from its Regulation 33 filings into three tables (altaha_fundamentals.db on
 # the API's disk). Same shape as the holdings ledger workflow: the crawl runs
 # ON THE API, where the disk is, and this job only keeps asking for the next
-# bounded slice. The first read of a company is ~34 documents (back to 2018),
-# so the first sweep of ~2,300 companies takes about a week of nights; after
-# that each company is re-read once a fortnight, fetching only new filings.
+# bounded slice. The first read of a company is ~34 documents (back to 2018);
+# after that each company is re-read once a fortnight, fetching only new
+# filings.
+#
+# WHEN IT RUNS: WHENEVER IT IS SAFE TO, NOT ONLY AT NIGHT
+# Two things decide it. The instance is 512 MB and half a CPU and it serves
+# the live site; and the crawl reaches NSE from the same address as the live
+# features, so a crawl that gets the address throttled mid-session breaks
+# them too. So the crawl stays out of:
+#   · market hours, 09:00–15:45 IST on weekdays;
+#   · the holdings crawl, 02:00 IST for up to 5½ hours (so 01:45–07:30);
+#   · the Lenses crawl on weekends, 11:15–15:15 IST (on weekdays it falls
+#     inside market hours anyway).
+# Everything else is fair game: three starts a day, and `blocked` below is
+# checked before every slice, so a run that starts late or runs long stops
+# itself at the edge of a window rather than trusting its schedule.
 #
 # Needs the same repository secret as the holdings workflow: ALTAHA_ADMIN_KEY.
 
 on:
   schedule:
-    # 23:30 UTC = 05:00 IST. After the holdings crawl, before market hours —
-    # two crawls at once would double the request rate at NSE.
-    - cron: "30 23 * * *"
+    - cron: "15 10 * * *"     # 15:45 IST — the market has closed
+    - cron: "30 15 * * *"     # 21:00 IST — carries on until 01:45
+    - cron: "0 2 * * *"       # 07:30 IST — until 09:00, or 11:15 on weekends
   workflow_dispatch:
     inputs:
       slices:
-        description: "How many crawl calls to make (8 companies each)"
+        description: "The most crawl calls to make (8 companies each)"
         type: string
-        default: "40"
+        default: "200"
 
 permissions:
   contents: read
@@ -32,16 +45,26 @@ concurrency:
 jobs:
   crawl:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 355
     steps:
       - name: Read the next slices of companies into the tables
-        timeout-minutes: 290
+        timeout-minutes: 330
         env:
           ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
           API: https://taha-project.onrender.com
-          SLICES: ${{ inputs.slices || '40' }}
+          SLICES: ${{ inputs.slices || '200' }}
         run: |
           set -uo pipefail
+          # Stops the loop at the edge of a window that belongs to someone
+          # else — see the header. Echoes which one.
+          blocked() {
+            local now dow
+            now=$((10#$(TZ=Asia/Kolkata date +%H%M))); dow=$(TZ=Asia/Kolkata date +%u)
+            if [ "${now}" -ge 145 ] && [ "${now}" -lt 730 ]; then echo "the holdings crawl's window (01:45–07:30 IST)"; return 0; fi
+            if [ "${dow}" -le 5 ] && [ "${now}" -ge 900 ] && [ "${now}" -lt 1545 ]; then echo "market hours (09:00–15:45 IST)"; return 0; fi
+            if [ "${dow}" -ge 6 ] && [ "${now}" -ge 1115 ] && [ "${now}" -lt 1515 ]; then echo "the Lenses crawl's window (11:15–15:15 IST)"; return 0; fi
+            return 1
+          }
           if [ -z "${ADMIN_KEY}" ]; then
             echo "::error::ALTAHA_ADMIN_KEY is not set. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render."
             exit 1
@@ -51,6 +74,10 @@ jobs:
 
           failed=0; rows=0
           for i in $(seq 1 "${SLICES}"); do
+            if why=$(blocked); then
+              echo "stopping before slice ${i}: this is ${why}."
+              break
+            fi
             code=$(curl -sS --max-time 1500 -o slice.json -w "%{http_code}" \
                    -X POST "${API}/admin/fundamentals/crawl?limit=8" \
                    -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
@@ -91,8 +118,19 @@ jobs:
           SLICES: "15"
         run: |
           set -uo pipefail
+          # Stops the loop at the edge of a window that belongs to someone
+          # else — see the header. Echoes which one.
+          blocked() {
+            local now dow
+            now=$((10#$(TZ=Asia/Kolkata date +%H%M))); dow=$(TZ=Asia/Kolkata date +%u)
+            if [ "${now}" -ge 145 ] && [ "${now}" -lt 730 ]; then echo "the holdings crawl's window (01:45–07:30 IST)"; return 0; fi
+            if [ "${dow}" -le 5 ] && [ "${now}" -ge 900 ] && [ "${now}" -lt 1545 ]; then echo "market hours (09:00–15:45 IST)"; return 0; fi
+            if [ "${dow}" -ge 6 ] && [ "${now}" -ge 1115 ] && [ "${now}" -lt 1515 ]; then echo "the Lenses crawl's window (11:15–15:15 IST)"; return 0; fi
+            return 1
+          }
           failed=0
           for i in $(seq 1 "${SLICES}"); do
+            if why=$(blocked); then echo "stopping: this is ${why}."; break; fi
             code=$(curl -sS --max-time 900 -o yslice.json -w "%{http_code}" \
                    -X POST "${API}/admin/fundamentals/crawl?source=yfinance&limit=30" \
                    -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")

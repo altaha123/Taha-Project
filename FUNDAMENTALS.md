@@ -186,7 +186,8 @@ Values are in rupees; divide by `unit_divisor` for crore. The page does.
 
 Every Reg 33 filing carries the quarter's P&L, and the March and September
 ones also carry the balance sheet at that date and the cash flow for the year
-to date. A nightly crawl reads every NSE company's filings into
+to date. A crawl — every weekday evening and night, and most of the weekend, never
+during market hours — reads every NSE company's filings into
 `altaha_fundamentals.db` on the data disk:
 
 | Table | One row per | History | Columns |
