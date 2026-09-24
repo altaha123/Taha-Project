@@ -238,7 +238,8 @@ def is_live(force=False) -> dict:
                 detail = "token valid"
             elif r.status_code in (401, 403):
                 detail = ("token expired or unauthorised — regenerate in the Dhan "
-                          "portal, or check DHAN_PIN / DHAN_TOTP_SECRET")
+                          "portal, or check DHAN_PIN / DHAN_TOTP_SECRET. Dhan said "
+                          f"HTTP {r.status_code}: {(r.text or '')[:160]}")
             else:
                 detail = f"HTTP {r.status_code}: {r.text[:120]}"
     except Exception as e:
@@ -289,7 +290,8 @@ def daily_ohlcv(symbol: str, days: int = 400):
                                   headers=_headers(), timeout=20)
             if r.status_code != 200:
                 _status.update({"ok": False, "checked": time.time(),
-                                "detail": "token expired or unauthorised"})
+                                "detail": f"token expired or unauthorised — Dhan said "
+                                          f"HTTP {r.status_code}: {(r.text or '')[:160]}"})
                 return None
         elif r.status_code != 200:
             return None
@@ -524,7 +526,7 @@ def bulk_quotes(symbols: list, mode: str = "ohlc") -> dict:
 # ---------------------------------------------------------------------------
 
 OC_GAP = 3.2                    # Dhan option-chain limit: 1 request / 3 s
-_last_oc = {"at": 0.0}
+_last_oc = {"at": 0.0, "error": None}   # error: Dhan's reply to the last failed call
 _exp_cache = {}                 # {SYMBOL: (expiries, fetched_at, seg_used)}
 _chain_cache = {}               # {SYMBOL|EXPIRY: (payload, fetched_at)}
 EXP_TTL = 3600                  # expiry dates change rarely
@@ -541,6 +543,7 @@ def _throttle_oc():
 def _oc_post(path: str, body: dict):
     """POST to an option-chain endpoint with throttle + one rate-limit retry."""
     _throttle_oc()
+    _last_oc["error"] = None
     try:
         r = requests.post(f"{BASE}/{path}", json=body, headers=_headers(), timeout=25)
         if r.status_code in (401, 403) and can_auto_refresh() and refresh_token(force=True):
@@ -551,10 +554,22 @@ def _oc_post(path: str, body: dict):
             _last_oc["at"] = time.time()
             r = requests.post(f"{BASE}/{path}", json=body, headers=_headers(), timeout=25)
         if r.status_code != 200:
+            # Keep Dhan's own words ("DH-901 ...", "DH-902 ...") so the caller
+            # can say why instead of claiming the symbol has no options.
+            # A 400 is usually "no such underlying" — a real non-F&O answer,
+            # not a feed fault — so only auth, rate and server errors count.
+            if r.status_code in (401, 403, 429) or r.status_code >= 500:
+                _last_oc["error"] = f"HTTP {r.status_code}: {(r.text or '')[:160]}"
             return None
         return r.json() or {}
-    except Exception:
+    except Exception as e:
+        _last_oc["error"] = str(e)[:160]
         return None
+
+
+def last_oc_error():
+    """Dhan's reply to the most recent failed option-chain call, or None."""
+    return _last_oc["error"]
 
 
 INDEX_UNDERLYING = {
