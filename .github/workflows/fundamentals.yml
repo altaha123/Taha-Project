@@ -73,11 +73,21 @@ jobs:
                 exit 1
               fi
               failed=$((failed + 1))
-              if [ "${failed}" -ge 3 ]; then
-                echo "::error::three slices in a row failed (last HTTP ${code}) — stopping."
+              # 502, 503 and no answer at all are what a Render deploy looks
+              # like: the instance restarts for a few minutes. Every merge
+              # deploys, so give it twelve minutes before calling the API
+              # down — three strikes at thirty seconds ended a run that had
+              # been reading happily for an hour, and nothing crawled again
+              # until the next scheduled start.
+              case "${code}" in
+                502|503|504|000) limit=12 ;;
+                *)               limit=3 ;;
+              esac
+              if [ "${failed}" -ge "${limit}" ]; then
+                echo "::error::${failed} slices in a row failed (last HTTP ${code}) — stopping."
                 exit 1
               fi
-              sleep 30
+              sleep 60
               continue
             fi
             failed=0
