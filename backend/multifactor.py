@@ -189,6 +189,35 @@ def rank(rows, horizon="short", weights=None):
             "caveat": "Fixed prior weights, not fitted. Scores are research rankings, not probabilities of profit."}
 
 
+PILLAR_NAMES = {"momentum": "price trend", "participation": "volume and ownership",
+                "quality": "business quality", "value": "valuation", "growth": "growth",
+                "acceleration": "acceleration", "financial_strength": "financial strength",
+                "risk": "risk"}
+
+
+def _headline(v4, s):
+    """One plain sentence on what drives the score. Data-quality caveats are
+    reported separately (confidence_notes); they are not the story."""
+    pillars = {k: v for k, v in (s.get("pillars") or {}).items() if F.finite(v) is not None}
+    if not pillars:
+        return "Not enough published data to say what drives this score."
+    best = max(pillars, key=pillars.get)
+    worst = min(pillars, key=pillars.get)
+    name = lambda k: PILLAR_NAMES.get(k, k.replace("_", " "))
+    if worst == best:
+        text = f"Scored on {name(best)} alone ({pillars[best]:.0f}/100)."
+    else:
+        text = (f"Strongest on {name(best)} ({pillars[best]:.0f}/100); "
+                f"weakest on {name(worst)} ({pillars[worst]:.0f}/100).")
+    helped, hurt = (v4.get("what_helped") or [])[:1], (v4.get("what_hurt") or [])[:1]
+    if helped:
+        text += f" {helped[0]['label']} beats {helped[0]['percentile']:.0f}% of peers"
+        text += (f", while {hurt[0]['label']} beats only {hurt[0]['percentile']:.0f}%." if hurt else ".")
+    elif hurt:
+        text += f" {hurt[0]['label']} beats only {hurt[0]['percentile']:.0f}% of peers."
+    return text
+
+
 def presentation(v4, horizon="position"):
     """Compatibility adapter for the existing scoring frontend, from v4 only."""
     h = horizon if horizon in P.V4_WEIGHTS else "position"
@@ -200,7 +229,8 @@ def presentation(v4, horizon="position"):
             "confidence": round(100*s["confidence"],1), "model": v4["model"], "horizon": h,
             "horizon_label": P.HORIZONS[h]["label"], "horizon_note": P.HORIZONS[h]["note"],
             "basis": "Altaha Score v4 · peer-relative · as of " + str(v4.get("as_of") or "scan date"),
-            "summary": "; ".join(v4["data_quality"]["confidence_reasons"]),
+            "summary": _headline(v4, s),
+            "confidence_notes": "; ".join(v4["data_quality"]["confidence_reasons"]),
             "pillars": s["pillars"], "weights": s["weights"], "contribution": s["contribution"],
             "factor_ledger": v4["factor_ledger"], "raw_score": s["raw_score"],
             "coverage": {"present": sum(e["percentile"] is not None for e in v4["factor_ledger"]),

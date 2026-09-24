@@ -261,7 +261,7 @@ def build_facts(d: dict) -> dict:
             "horizon": sc.get("horizon_label"),
             "business_model": ((sc.get("model") or {}).get("name")),
             "confidence_pct": _r(sc.get("confidence"), 0),
-            "confidence_notes": _clip(sc.get("summary"), 300),
+            "confidence_notes": _clip(sc.get("confidence_notes") or sc.get("summary"), 300),
             "pillars_out_of_100": {k: _r(v, 0) for k, v in (sc.get("pillars") or {}).items()},
             "factors_available": cov.get("present"),
             "factors_applicable": cov.get("total"),
