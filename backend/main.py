@@ -4401,6 +4401,15 @@ def options_expiries(ticker: str):
         raise HTTPException(503, "Options data needs the Dhan feed.")
     ex = dhan.expiry_list(ticker)
     if not ex:
+        # An empty list also comes back when Dhan rejects the call outright
+        # (expired token, lapsed Data API plan, rate limit). Say that, rather
+        # than telling the user NIFTY or TCS has no options.
+        err = dhan.last_oc_error()
+        if err:
+            raise HTTPException(503, "The Dhan options feed is rejecting requests right "
+                                     f"now ({err}). This is a data-feed problem, not "
+                                     f"the symbol — {ticker.upper()} will load once "
+                                     "the feed is back.")
         raise HTTPException(404, f"No option expiries found for {ticker.upper()}. "
                                  "Indices (NIFTY, BANKNIFTY, FINNIFTY, SENSEX) and "
                                  "F&O-listed stocks are supported — non-F&O stocks "
