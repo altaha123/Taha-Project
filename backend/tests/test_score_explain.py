@@ -44,7 +44,7 @@ def _analysis(score=68):
         "profile": {"sector": "Energy", "industry": "Oil & Gas"},
         "scoring": {"score": score, "label": "CONSTRUCTIVE", "horizon_label": "Position",
                     "model": {"name": "Corporate"}, "confidence": 74.0,
-                    "summary": "2 applicable factors unavailable",
+                    "confidence_notes": "2 applicable factors unavailable",
                     "pillars": {"quality": 71.2, "value": 38.9},
                     "coverage": {"present": 18, "total": 20}},
         "altaha_score_v4": {

@@ -2765,9 +2765,10 @@ async function loadIdeas(){
           </div>
         </div>`).join("");
 
-      /* Row click opens the ledger; the buttons and links must not bubble. */
+      /* Row click opens the company page; the buttons and links must not bubble. */
       document.querySelectorAll(".idea").forEach(el=>{
-        const go=()=>{ switchTab("screener"); analyse(el.dataset.t); };
+        const go=()=>{ window.AltahaOpenStock ? window.AltahaOpenStock(el.dataset.t, "ideas")
+                                              : location.href = "stock.html?ticker=" + encodeURIComponent(el.dataset.t); };
         el.addEventListener("click",ev=>{
           if(ev.target.closest("button") || ev.target.closest(".trackbtn") || ev.target.closest(".evbtn") ||
              ev.target.closest(".shbtn") || ev.target.closest("[data-share]") ||
@@ -2914,7 +2915,8 @@ async function loadFilings(retry){
 
     /* A filing is only useful if you can jump to the chart. */
     document.querySelectorAll("[data-open]").forEach(el=>
-      el.addEventListener("click", ()=>{ switchTab("screener"); analyse(el.dataset.open); }));
+      el.addEventListener("click", ()=>{ window.AltahaOpenStock ? window.AltahaOpenStock(el.dataset.open, "filings")
+                                          : location.href = "stock.html?ticker=" + encodeURIComponent(el.dataset.open); }));
   }catch(e){
     $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
   }

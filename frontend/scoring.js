@@ -195,6 +195,12 @@
       '</div>');
 
     if (m.matters) parts.push('<p class="whymatters">' + esc(m.matters) + '</p>');
+    // Data-quality caveats behind the confidence figure. Kept out of the
+    // headline, which describes the stock, not the gaps in its data.
+    if (s.confidence_notes) {
+      parts.push('<p class="whycycle"><b>Why confidence is ' + scoreTxt(conf) + '%.</b> ' +
+                 esc(s.confidence_notes) + '.</p>');
+    }
     if (s.cycle_note) {
       parts.push('<p class="whycycle"><b>Where in the cycle.</b> ' +
                  esc(s.cycle_note) + '</p>');
