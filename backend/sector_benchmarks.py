@@ -65,7 +65,7 @@ def parse_archive(text, expected_date):
         row = {k.strip(): v for k, v in raw.items() if k}
         key = name(row.get("Index Name"))
         close = number(row.get("Closing Index Value"))
-        if (key in INDICES or key == "NIFTY 50") and close and close > 0:
+        if (key.startswith("NIFTY")) and close and close > 0:
             if date(row.get("Index Date")) == expected_date:
                 result[key] = close
     return result
