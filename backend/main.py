@@ -3384,6 +3384,30 @@ def news_status():
         raise HTTPException(503, f"Press status unavailable: {str(e)[:120]}")
 
 
+@app.get("/index/catalog")
+def index_catalog():
+    import index_explorer as explorer
+    return explorer.catalog()
+
+
+@app.get("/index/composition")
+def index_composition(index: str, level: str = "sector"):
+    import index_explorer as explorer
+    try:
+        return explorer.composition(index, level)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+
+@app.get("/index/performance")
+def index_performance(index: str, window: str = "1D"):
+    import index_explorer as explorer
+    try:
+        return explorer.performance(index, window)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+
 @app.get("/sector/benchmarks")
 def sector_benchmarks(window: str = "1D"):
     """Published NSE index returns for the homepage benchmark snapshot."""
