@@ -86,7 +86,9 @@
     bars:     '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     shield:   '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
     plan:     '<path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-6"/>',
-    share:    '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>'
+    share:    '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>',
+    lens:     '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>',
+    converge: '<circle cx="8" cy="10" r="5"/><circle cx="16" cy="10" r="5"/><circle cx="12" cy="16" r="5"/>'
   };
 
   function svg(key) {
@@ -191,6 +193,12 @@
             hint: 'Read updates and prepare posts' },
           { tab: 'vocab', label: 'Glossary', icon: 'document',
             hint: 'Financial terms in plain language' }
+        ]},
+        { head: 'Lenses', items: [
+          { tab: 'lenses', label: 'Philosophy lenses', icon: 'lens',
+            hint: 'Stocks screened the way great investors think' },
+          { tab: 'convergence', label: 'Convergence', icon: 'converge',
+            hint: 'Stocks that clear three or more lenses' }
         ]}
       ]
     }

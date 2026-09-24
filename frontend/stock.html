@@ -16,8 +16,9 @@
 
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
-<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="shell.css?v=20260923-lenses">
 <link rel="stylesheet" href="stock.css?v=20260923-delivery">
+<link rel="stylesheet" href="lenses.css?v=20260923-lenses">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css">
 <link rel="stylesheet" href="type.css">
@@ -58,6 +59,10 @@
       </div>
     </div>
   </div>
+
+  <!-- Lenses: "Meets 3 of 10 lenses", a badge per lens. Filled by lenses.js;
+       stays hidden if the lens results cannot be read. -->
+  <div id="stk-lenses" hidden></div>
 
   <div id="state"></div>
 
@@ -212,11 +217,12 @@
   </div>
 </main>
 
-<script src="shell.js" defer></script>
+<script src="shell.js?v=20260923-lenses" defer></script>
 <script src="ownership-snapshot.js" defer></script>
 <script src="ownership.js" defer></script>
 <script src="delivery-ui.js?v=20260923" defer></script>
 <script src="stock.js?v=20260923-delivery" defer></script>
+<script src="lenses.js?v=20260923-lenses" defer></script>
 <script src="experience.js" defer></script>
 </body>
 </html>

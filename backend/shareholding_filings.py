@@ -566,14 +566,57 @@ def parse(xml_text: str) -> dict:
         "sub_categories": subs,
         "names": names,
         "filed_as_percent": scale == 1.0,
+        "pledge": _pledge(by_member, by_ctx, cats),
     }
+
+
+_PLEDGE_FLAG = "WhetherAnySharesHeldByPromotersAreEncumberedUnderPledged"
+
+
+def _pledge(by_member, by_ctx, cats):
+    """
+    Whether promoters have pledged shares, and how many.
+
+    The two taxonomies say it differently. The 2020 one files a pledged share
+    count against the promoter category (PledgedOrEncumberedNumberOfShares);
+    the 2025 one files a yes/no declaration (WhetherAnySharesHeldByPromoters
+    AreEncumberedUnderPledged…) and the count only when the answer is yes.
+    The count is preferred when both exist. The percentage is computed here as
+    pledged shares over the company's total shares, rather than read from a
+    filed percentage whose base (the promoter's holding or the whole company)
+    is not the same across filers. Anything not stated stays None — silence is
+    not a declaration of zero.
+    """
+    promoter = {}
+    for m in CATEGORIES["promoter"]:
+        if m in by_member:
+            promoter = by_member[m]
+            break
+    shares = None
+    for tag, val in promoter.items():
+        if "Pledg" in tag and "NumberOfShares" in tag:
+            shares = _fnum(val)
+            if shares is not None:
+                break
+    flags = [str(v).strip().lower() for facts in by_ctx.values()
+             for tag, v in facts.items() if tag.startswith(_PLEDGE_FLAG)]
+    if shares is not None:
+        pledged = 1 if shares > 0 else 0
+    elif flags:
+        pledged = 1 if any(f in ("true", "yes") for f in flags) else 0
+    else:
+        pledged = None
+    total = (cats.get("total") or {}).get("shares")
+    pct = round(shares / total * 100.0, 4) if shares is not None and total else None
+    return {"pledged": pledged, "pledged_shares": shares, "pledge_pct": pct}
 
 
 # ---------------------------------------------------------------------------
 # One filing, fetched and parsed, with the parse cached rather than the source
 # ---------------------------------------------------------------------------
 
-def filing(url: str, period: str = "", filed: str = "", revised: bool = False):
+def filing(url: str, period: str = "", filed: str = "", revised: bool = False,
+           need=()):
     """
     The parsed content of one filing.
 
@@ -581,9 +624,13 @@ def filing(url: str, period: str = "", filed: str = "", revised: bool = False):
     disk forever. Caching the parse rather than the 500KB of XML is what keeps
     a five-year history affordable on a small instance: the cached object is
     about two kilobytes.
+
+    `need` names keys a caller requires. A parse cached before the parser
+    learned to produce one of them is read again rather than returned without
+    it — which is how the pledge reaches filings cached before it was parsed.
     """
     hit = _cache_read(url)
-    if hit is not None:
+    if hit is not None and all(k in hit for k in need or ()):
         return hit
     r = _get(url, referer=NSE_HOME)
     if r is None:

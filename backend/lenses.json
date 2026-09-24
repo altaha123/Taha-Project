@@ -1,0 +1,349 @@
+{
+  "version": 1,
+  "market": "IN",
+  "defaults": {
+    "min_coverage": 0.75
+  },
+  "notes": [
+    "Every lens is a list of rules. Adding a lens or changing a threshold is an edit to this file and nothing else.",
+    "field: a metric computed by lens_metrics.py. lookback_years is passed to it, so '5y revenue CAGR' and '3y revenue CAGR' are the same field with a different lookback.",
+    "operator: one of >, >=, <, <=, ==, between (threshold [low, high], inclusive), in (threshold is a list), abs_lte.",
+    "status: live, or coming_soon with coming_soon_reason. A coming_soon lens is not computed and shows no stocks.",
+    "Copy on the site is factual only: a stock meets a lens's criteria or passes N of M rules. Nothing here is advice."
+  ],
+  "lenses": [
+    {
+      "id": "gorilla",
+      "name": "Gorilla",
+      "originator": "Geoffrey Moore, The Gorilla Game",
+      "idea": "The market leader in its industry, growing fast, earning high returns on capital and holding a margin above the rest of its industry.",
+      "status": "live",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "industry_revenue_rank",
+          "operator": "<=",
+          "threshold": 2,
+          "lookback_years": 1,
+          "label": "Revenue rank within its NSE industry is 1 or 2"
+        },
+        {
+          "field": "revenue_cagr",
+          "operator": ">",
+          "threshold": 15,
+          "lookback_years": 5,
+          "label": "Revenue grew more than 15% a year over 5 years"
+        },
+        {
+          "field": "roce",
+          "operator": ">",
+          "threshold": 20,
+          "lookback_years": 1,
+          "label": "Return on capital employed above 20%"
+        },
+        {
+          "field": "margin_vs_industry_min",
+          "operator": ">",
+          "threshold": 0,
+          "lookback_years": 3,
+          "label": "EBITDA margin above the industry median in each of the last 3 years"
+        }
+      ]
+    },
+    {
+      "id": "moat",
+      "name": "Moat",
+      "originator": "Warren Buffett and Pat Dorsey",
+      "idea": "A business whose returns stay high for a decade, with little debt, steady free cash flow and unusually stable margins.",
+      "status": "coming_soon",
+      "coming_soon_reason": "Needs 10 years of balance sheets and cash flows. Companies have filed balance sheets in machine-readable form only since September 2022 (4 years), and cash flows since FY21 (6 years). The data does not exist yet in the filings this site reads.",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "roe_min",
+          "operator": ">",
+          "threshold": 15,
+          "lookback_years": 10,
+          "label": "Return on equity above 15% in every one of the last 10 years"
+        },
+        {
+          "field": "debt_equity",
+          "operator": "<",
+          "threshold": 0.5,
+          "lookback_years": 1,
+          "label": "Debt to equity below 0.5"
+        },
+        {
+          "field": "fcf_positive_years",
+          "operator": ">=",
+          "threshold": 8,
+          "lookback_years": 10,
+          "label": "Free cash flow positive in at least 8 of the last 10 years"
+        },
+        {
+          "field": "margin_stdev_pctile",
+          "operator": "<=",
+          "threshold": 33.33,
+          "lookback_years": 10,
+          "label": "10-year variation in EBITDA margin in the lowest third of the market"
+        }
+      ]
+    },
+    {
+      "id": "tenbagger",
+      "name": "Tenbagger",
+      "originator": "Peter Lynch, One Up on Wall Street",
+      "idea": "Smaller companies growing earnings quickly but not at a pace that rarely lasts, priced below their growth, and not yet widely held by institutions.",
+      "status": "live",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "eps_growth",
+          "operator": "between",
+          "threshold": [
+            20,
+            50
+          ],
+          "lookback_years": 1,
+          "label": "Trailing EPS grew between 20% and 50% over the year"
+        },
+        {
+          "field": "peg",
+          "operator": "<",
+          "threshold": 1,
+          "lookback_years": 1,
+          "label": "PEG below 1 (P/E divided by EPS growth)"
+        },
+        {
+          "field": "size_band",
+          "operator": "in",
+          "threshold": [
+            "small",
+            "mid"
+          ],
+          "lookback_years": 0,
+          "label": "Small or mid cap by market value rank"
+        },
+        {
+          "field": "fii_dii_pct",
+          "operator": "<",
+          "threshold": 20,
+          "lookback_years": 0,
+          "label": "Foreign and domestic institutions together hold less than 20%"
+        }
+      ]
+    },
+    {
+      "id": "coffeecan",
+      "name": "Coffee Can",
+      "originator": "Robert Kirby; Saurabh Mukherjea in India",
+      "idea": "Companies that grew revenue and earned good returns on capital in every single year of the last decade.",
+      "status": "coming_soon",
+      "coming_soon_reason": "Needs 10 years of revenue and return on capital. Revenue goes back about 8 years in the filings this site reads, and the balance sheet needed for return on capital only 4.",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "revenue_growth_min",
+          "operator": ">=",
+          "threshold": 10,
+          "lookback_years": 10,
+          "label": "Revenue grew at least 10% in every one of the last 10 years"
+        },
+        {
+          "field": "roce_min",
+          "operator": ">=",
+          "threshold": 15,
+          "lookback_years": 10,
+          "label": "Return on capital employed at least 15% in every one of the last 10 years"
+        }
+      ]
+    },
+    {
+      "id": "qglp",
+      "name": "QGLP",
+      "originator": "Raamdeo Agrawal, Motilal Oswal",
+      "idea": "Quality, Growth, Longevity and Price: high returns on equity, fast and consistent earnings growth, at a price below that growth.",
+      "status": "live",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "roe",
+          "operator": ">",
+          "threshold": 20,
+          "lookback_years": 1,
+          "label": "Return on equity above 20%"
+        },
+        {
+          "field": "eps_cagr",
+          "operator": ">",
+          "threshold": 20,
+          "lookback_years": 3,
+          "label": "EPS grew more than 20% a year over 3 years"
+        },
+        {
+          "field": "eps_rising_years",
+          "operator": ">=",
+          "threshold": 3,
+          "lookback_years": 3,
+          "label": "EPS rose in each of the last 3 years"
+        },
+        {
+          "field": "peg",
+          "operator": "<",
+          "threshold": 1,
+          "lookback_years": 3,
+          "label": "PEG below 1 (P/E divided by 3-year EPS growth)"
+        }
+      ]
+    },
+    {
+      "id": "akre",
+      "name": "Akre",
+      "originator": "Chuck Akre's three-legged stool",
+      "idea": "A high-return business, run by owners with a large unpledged stake, that reinvests most of its profit without its returns falling.",
+      "status": "live",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "roce",
+          "operator": ">",
+          "threshold": 20,
+          "lookback_years": 1,
+          "label": "Return on capital employed above 20%"
+        },
+        {
+          "field": "promoter_pct",
+          "operator": ">",
+          "threshold": 50,
+          "lookback_years": 0,
+          "label": "Promoters hold more than 50%"
+        },
+        {
+          "field": "pledge_pct",
+          "operator": "==",
+          "threshold": 0,
+          "lookback_years": 0,
+          "label": "No promoter shares pledged"
+        },
+        {
+          "field": "reinvestment_rate",
+          "operator": ">",
+          "threshold": 50,
+          "lookback_years": 3,
+          "label": "Reinvested more than 50% of operating profit after tax over 3 years"
+        },
+        {
+          "field": "roce_change",
+          "operator": ">=",
+          "threshold": 0,
+          "lookback_years": 3,
+          "label": "Return on capital employed not lower than 3 years ago"
+        }
+      ]
+    },
+    {
+      "id": "nomad",
+      "name": "Nomad",
+      "originator": "Nick Sleep and Qais Zakaria, Nomad Investment Partnership",
+      "idea": "Scale economics shared with customers: fast growth, margins held steady rather than expanded, and more sales from every rupee of assets.",
+      "status": "live",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "revenue_cagr",
+          "operator": ">",
+          "threshold": 15,
+          "lookback_years": 5,
+          "label": "Revenue grew more than 15% a year over 5 years"
+        },
+        {
+          "field": "margin_change",
+          "operator": "abs_lte",
+          "threshold": 2,
+          "lookback_years": 5,
+          "label": "EBITDA margin within 2 percentage points of 5 years ago"
+        },
+        {
+          "field": "asset_turnover_change",
+          "operator": ">",
+          "threshold": 0,
+          "lookback_years": 3,
+          "label": "Asset turnover higher than 3 years ago"
+        }
+      ]
+    },
+    {
+      "id": "cannibal",
+      "name": "Cannibal",
+      "originator": "Share-count reduction, as studied in William Thorndike's The Outsiders",
+      "idea": "Companies that shrink their own share count, so each remaining share owns more of the business.",
+      "status": "live",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "share_count_cagr",
+          "operator": "<",
+          "threshold": -2,
+          "lookback_years": 3,
+          "label": "Paid-up equity capital fell more than 2% a year over 3 years"
+        }
+      ]
+    },
+    {
+      "id": "owner",
+      "name": "Owner-Operator",
+      "originator": "Owner-operator investing, as studied in William Thorndike's The Outsiders",
+      "idea": "Promoters own the majority, have pledged none of it, and have been adding to their stake.",
+      "status": "live",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "promoter_pct",
+          "operator": ">",
+          "threshold": 50,
+          "lookback_years": 0,
+          "label": "Promoters hold more than 50%"
+        },
+        {
+          "field": "pledge_pct",
+          "operator": "==",
+          "threshold": 0,
+          "lookback_years": 0,
+          "label": "No promoter shares pledged"
+        },
+        {
+          "field": "promoter_change",
+          "operator": ">",
+          "threshold": 0,
+          "lookback_years": 1,
+          "label": "Promoter stake higher than 4 quarters ago"
+        }
+      ]
+    },
+    {
+      "id": "capcycle",
+      "name": "Capital Cycle",
+      "originator": "Marathon Asset Management, Capital Returns",
+      "idea": "Industries where capacity is being withdrawn: capex falling against depreciation and fewer listed competitors.",
+      "status": "coming_soon",
+      "coming_soon_reason": "Needs a history of listed companies per industry, including those that delisted. The exchange list this site reads holds only companies listed today, so the number of competitors over time cannot be counted yet.",
+      "min_coverage": 0.75,
+      "rules": [
+        {
+          "field": "industry_capex_dep_change",
+          "operator": "<",
+          "threshold": 0,
+          "lookback_years": 3,
+          "label": "Industry capex to depreciation lower than 3 years ago"
+        },
+        {
+          "field": "industry_peer_count_change",
+          "operator": "<=",
+          "threshold": 0,
+          "lookback_years": 3,
+          "label": "Number of listed companies in the industry flat or lower over 3 years"
+        }
+      ]
+    }
+  ]
+}

@@ -297,6 +297,16 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 
 .sh-mega{ transform-origin:20% 0 }
 @media (max-width:1200px){ .sh-mega{ margin-left:0 } }
+/* Research carries five columns since Lenses joined it. Narrower columns and
+   a wider cap keep them on one row on a laptop screen instead of stranding the
+   fifth on a row of its own; below that width the grid wraps as before. */
+@media (min-width:1280px){
+  .sh-mega:has(> .sh-col:nth-of-type(5)){
+    grid-template-columns:repeat(5, minmax(0, 222px));
+    max-width:min(1270px, calc(100vw - 36px)); gap:22px 22px;
+  }
+}
+@media (max-width:1460px){ .sh-mega:has(> .sh-col:nth-of-type(5)){ margin-left:0 } }
 
 .sh-col h4{
   margin:0 0 12px; font:600 11px/1 'IBM Plex Mono',monospace;
@@ -338,6 +348,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-mega.open .sh-col:nth-child(2){ animation-delay:40ms }
 .sh-mega.open .sh-col:nth-child(3){ animation-delay:80ms }
 .sh-mega.open .sh-col:nth-child(4){ animation-delay:120ms }
+.sh-mega.open .sh-col:nth-child(5){ animation-delay:160ms }
 @keyframes shColIn{ from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:none } }
 
 /* ── 3e · Search in the bar ──────────────────────────────────────────────── */
