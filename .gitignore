@@ -23,6 +23,10 @@ wow_orders.db
 wow_orders.db-*
 concalls.db
 concalls.db-*
+# One plain-English score explanation per stock per day. A cache: rebuilt by
+# the next reader who asks.
+explanations.db
+explanations.db-*
 
 # Browser-test screenshots and traces. Output, never source.
 test-results/

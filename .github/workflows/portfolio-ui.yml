@@ -172,6 +172,19 @@ jobs:
         with:
           name: delivery-browser-verification
           path: test-results/delivery
+      - name: Verify the plain-English score explanation is lazy, labelled and escaped
+        if: always()
+        # It spends a small free daily allowance, so nothing may be requested
+        # until the reader asks; the words must always carry the AI-written
+        # label and disclaimer; and model output must render as text.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/stock-explain-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: explain-browser-verification
+          path: test-results/explain
       - name: Verify sign-in failures and link completion on phone and desktop
         if: always()
         env:

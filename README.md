@@ -152,6 +152,38 @@ instance for a column that is the product of two already held. The percentage
 is the exchange's own figure; the quantity carries that percentage's rounding,
 and the page says so.
 
+---
+
+### "Explain this score" — plain English, free (optional)
+
+The Scores pane on `stock.html` has an **In plain English** section. When a
+reader clicks it, `/explain?ticker=SYM&horizon=position` hands the numbers the
+engine already computed — score, pillars, what helped, what hurt, the checks,
+the ratios — to OpenAI's open-weight `gpt-oss-120b` on **Groq's free tier**,
+and shows back three short paragraphs labelled as AI-written. The model sees
+nothing else: not the news, and not the levels or observation plan, which it
+would turn into entry and exit talk. Code: `backend/score_explain.py`.
+
+**To switch it on:** create a free account at console.groq.com (no card),
+create an API key, and add it in the Render dashboard → Environment as
+`GROQ_API_KEY`. Unset, the section says it is off and nothing is called.
+
+**Staying inside the free allowance** (about 200,000 tokens a day, roughly a
+hundred fresh explanations):
+- One explanation per stock, per horizon, per IST day, stored in
+  `$DATA_DIR/explanations.db`. Every later reader that day costs nothing.
+- The service stops at `EXPLAIN_DAILY_TOKENS` (default 180,000) — before the
+  provider starts refusing — and says so on the page.
+- One visitor can cause at most `EXPLAIN_PER_VISITOR` (default 15) fresh
+  explanations a day, so a single person cannot spend everyone's allowance.
+- `EXPLAIN_MODEL` swaps the model without a code change.
+
+**The SEBI line holds here too.** The prompt forbids advice, and every reply is
+checked again before it is shown: one that reads as a buy/sell call, target,
+stop-loss or recommendation is withheld, not shown with a warning.
+`backend/tests/test_score_explain.py` and
+`frontend/tests/stock-explain-browser.cjs` pin all of the above.
+
 ## Where the accuracy lives (read before you market it)
 
 - "Accuracy" here means: textbook-correct indicator formulas (validated against

@@ -65,6 +65,9 @@ services:
       - key: SENTRY_DSN            # crash reporting. Unset = off, silently.
         sync: false                # an address rather than a secret, but it
                                    # belongs with the deploy, not in git.
+      - key: GROQ_API_KEY          # "Explain this score" on the stock page
+        sync: false                # (score_explain.py). Free Groq account;
+                                   # unset = the section says it is off.
 
       # Email. Unset means EMAIL_PROVIDER=console: sign-in links and digests
       # are printed to the log and delivered nowhere, which is a working
