@@ -16,6 +16,34 @@
 .ln-meta{ font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--mute); letter-spacing:.02em }
 .ln-small{ font-size:13px; color:var(--mute); line-height:1.55; max-width:72ch }
 
+/* ── The Run button ──────────────────────────────────────────────────────── */
+
+.ln-run{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; margin-top:16px;
+  padding:12px 14px; border-radius:14px; border:1px solid var(--rule);
+  background:var(--skin-card, #FFFDF8); max-width:72ch;
+}
+.ln-runbtn{
+  display:inline-flex; align-items:center; gap:8px; min-height:40px; padding:0 18px;
+  border:0; border-radius:999px; cursor:pointer; font:600 14px/1 Inter,system-ui,sans-serif;
+  color:#fff; background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt));
+  box-shadow:0 6px 16px color-mix(in srgb,var(--gold) 28%,transparent);
+  transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+:root[data-theme="dark"] .ln-runbtn{ color:#17140E }
+.ln-runbtn svg{ width:14px; height:14px; fill:currentColor }
+.ln-runbtn:hover:not(:disabled){ transform:translateY(-1px) }
+.ln-runbtn:focus-visible, .ln-stopbtn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.ln-runbtn:disabled{ cursor:progress; opacity:.85 }
+.ln-runbtn.is-busy svg{ animation:lnSpin 1.2s linear infinite; transform-origin:50% 50% }
+.ln-stopbtn{
+  min-height:40px; padding:0 14px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--rule); background:none; color:var(--ink-2);
+  font:500 13px/1 Inter,system-ui,sans-serif;
+}
+.ln-runst{ flex:1 1 260px; font-size:13px; line-height:1.45; color:var(--mute) }
+.ln-runst.is-error{ color:var(--fail) }
+
 /* ── The index: a grid of lens cards ─────────────────────────────────────── */
 
 .ln-grid{
@@ -260,4 +288,5 @@
   .ln-card, .ln-card::before, .ln-badge{ transition:none }
   .ln-card:hover{ transform:none }
   .ln-spin{ animation-duration:2s }
+  .ln-runbtn.is-busy svg{ animation:none }
 }

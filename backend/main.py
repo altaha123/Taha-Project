@@ -114,6 +114,10 @@ try:
 except Exception:
     lens_data_crawl = None
 try:
+    import lens_runner
+except Exception:
+    lens_runner = None
+try:
     # The holdings ledger and the curated investor table. Three modules, each
     # importable on its own: the store is stdlib-only, so a box without
     # curl_cffi can still SERVE what has already been collected even though it
@@ -2437,6 +2441,40 @@ def lenses_coverage():
     """What the Lens inputs hold, so a sparse page can say why it is sparse."""
     _lens_ready()
     return to_native({"store": lens_store.stats(), "notice": LENS_NOTICE})
+
+
+@app.get("/api/lenses/run")
+def lenses_run_status():
+    """Progress of the job the Run button starts. Public: it holds no data."""
+    if lens_runner is None:
+        return {"available": False}
+    return to_native({"available": True, **lens_runner.status()})
+
+
+@app.post("/admin/lenses/run")
+def admin_lenses_run(key: str = "", read_inputs: bool = True, max_slices: int = 0,
+                     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    The Run button: compute now, then read industry and ownership for the
+    companies not yet read, recomputing as it goes. Starts a background job
+    and returns at once; GET /api/lenses/run reports progress.
+    """
+    _require_admin(x_admin_key or key)
+    _lens_ready()
+    if lens_runner is None:
+        raise HTTPException(503, "The lens runner is not available.")
+    return to_native(lens_runner.start(read_inputs=bool(read_inputs),
+                                       max_slices=(int(max_slices) or None)))
+
+
+@app.post("/admin/lenses/run/stop")
+def admin_lenses_run_stop(key: str = "",
+                          x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Ask a running job to stop after its current slice."""
+    _require_admin(x_admin_key or key)
+    if lens_runner is None:
+        raise HTTPException(503, "The lens runner is not available.")
+    return to_native(lens_runner.stop())
 
 
 @app.get("/api/lenses/convergence")

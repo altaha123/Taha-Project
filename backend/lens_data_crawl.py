@@ -16,7 +16,7 @@ Three lenses need facts that are not in a results filing:
 
 This crawl reads both for a slice of companies per call, like the
 fundamentals and holdings crawls, and records what it tried in lens_coverage
-so each slice continues the last. It is driven by the lenses workflow.
+so each slice continues the last. It is driven by the Run button (lens_runner.py).
 """
 
 import time

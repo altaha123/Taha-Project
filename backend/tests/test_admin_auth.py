@@ -80,7 +80,8 @@ def client(tmp_path_factory):
                 return lambda *a, **kw: {}
 
         for name in ("holdings_crawl", "holdings_job", "fund_portfolios",
-                     "investors_source", "lens_data_crawl", "lens_job"):
+                     "investors_source", "lens_data_crawl", "lens_job",
+                     "lens_runner"):
             if getattr(mod, name, None) is not None:
                 stubbed[name] = getattr(mod, name)
                 setattr(mod, name, Inert())

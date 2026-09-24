@@ -36,8 +36,20 @@ const server = http.createServer((req, res) => {
   } catch (_) { res.writeHead(404).end(); }
 });
 
-function answer(u) {
+/* The Run job, as the API reports it. The test moves it through its states. */
+let runStatus = { available: true, running: false, phase: 'idle', computes: 0,
+                  profiled: 75, universe: 2319 };
+const runCalls = [];
+
+function answer(u, req) {
   const p = u.pathname;
+  if (p === '/admin/lenses/run' && req.method() === 'POST') {
+    runCalls.push(req.headers()['x-admin-key']);
+    runStatus = { ...runStatus, running: true, phase: 'reading', companies_read: 50, computes: 1,
+                  started: true };
+    return runStatus;
+  }
+  if (p === '/api/lenses/run') return runStatus;
   if (p === '/api/lenses') return fx.index;
   if (p === '/api/lenses/convergence') return fx.convergence[u.searchParams.get('min_lenses') || '3'];
   let m = p.match(/^\/api\/lenses\/stock\/(.+)$/);
@@ -54,7 +66,7 @@ async function wire(context) {
     const type = route.request().resourceType();
     if (['font', 'stylesheet', 'image'].includes(type)) return route.abort();
     if (type === 'script') return route.fulfill({ body: '', contentType: 'text/javascript' });
-    const body = answer(u);
+    const body = answer(u, route.request());
     if (body) return route.fulfill({ json: body });
     return route.fulfill({ json: { available: false, rows: [], items: [] } });
   });
@@ -123,6 +135,24 @@ async function viewText(page, id) {
   assert.match(await viewText(page, 'view-lenses'), NOTICE);
   assert.doesNotMatch(await viewText(page, 'view-lenses'), BANNED);
   await page.screenshot({ path: path.join(output, 'index-desktop.png'), fullPage: true });
+
+  // ── The Run button ─────────────────────────────────────────────────────
+  const runBtn = page.locator('#ln-runbtn');
+  assert.ok(await runBtn.isVisible(), 'the Lenses page has a Run button');
+  assert.match(await page.locator('#ln-runst').innerText(), /75 of 2,319 companies/);
+  page.once('dialog', d => d.accept('test-key'));
+  await runBtn.click();
+  await page.waitForFunction(() => /Reading industry and ownership: 50/.test(
+    document.getElementById('ln-runst').textContent));
+  assert.deepEqual(runCalls, ['test-key'], 'the key goes in the X-Admin-Key header');
+  assert.equal(await runBtn.isDisabled(), true, 'Run cannot be pressed twice while running');
+  assert.ok(await page.locator('#ln-stopbtn').isVisible());
+  runStatus = { ...runStatus, running: false, phase: 'done', computes: 3, profiled: 125,
+                message: 'Every company has been read.' };
+  await page.waitForFunction(() => /Every company has been read/.test(
+    (document.getElementById('ln-runst') || {}).textContent || ''), null, { timeout: 15000 });
+  assert.equal(await page.locator('#ln-runbtn').isDisabled(), false);
+  await page.screenshot({ path: path.join(output, 'run-desktop.png') });
 
   // ── One lens ───────────────────────────────────────────────────────────
   await qglp.click();

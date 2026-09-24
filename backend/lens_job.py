@@ -12,8 +12,8 @@ One pass over every company in the fundamentals tables:
 A coming-soon lens is not computed: it has no results, so no page can show a
 stock under it.
 
-Driven by .github/workflows/lenses.yml after the fundamentals crawl, through
-POST /admin/lenses/compute. It runs inside the API process because the
+Started by the Run button on the Lenses page (lens_runner.py), or directly
+through POST /admin/lenses/compute. It runs inside the API process because the
 tables live on the API's disk, and it is bounded: a few seconds of SQLite and
 arithmetic per thousand companies, no network.
 """
