@@ -368,3 +368,79 @@ def test_the_four_lens_endpoints(api):
     conv = api.get("/api/lenses/convergence?min_lenses=2").json()
     assert conv["stocks"][0]["symbol"] == "GROW"
     assert {l["id"] for l in conv["stocks"][0]["lenses"]} >= {"cannibal", "owner"}
+
+
+# ---------------------------------------------------------------------------
+# The Run button's job: compute, read inputs slice by slice, recompute
+# ---------------------------------------------------------------------------
+
+def test_the_run_job_computes_reads_and_recomputes(stores, monkeypatch):
+    fs, ls, job = stores
+    _load(fs, {"income_statement": grower("GROW")})
+    for mod in ("lens_runner",):
+        sys.modules.pop(mod, None)
+    import lens_runner
+    import lens_data_crawl
+    slices = iter([{"attempted": 25, "ok": 25}] * 5 + [{"attempted": 0, "stopped_early": "nothing due"}])
+    monkeypatch.setattr(lens_data_crawl, "run", lambda limit=25: next(slices))
+    monkeypatch.setattr(lens_data_crawl, "universe", lambda: ["GROW"])
+    import threading
+    gate = threading.Event()
+
+    def compute(**kw):
+        gate.wait(5)                             # hold the job open for the second press
+        return {"run_id": 7, "counts": {"cannibal": {"pass": 1}}}
+    monkeypatch.setattr(job, "compute", compute)
+
+    st = lens_runner.start()
+    assert st["started"] is True
+    again = lens_runner.start()
+    assert again["started"] is False            # one job at a time
+    gate.set()
+    st = lens_runner.wait()
+    assert st["phase"] == "done" and not st["running"] and st["error"] is None
+    assert st["companies_read"] == 125 and st["slices"] == 6
+    # Once at the start, once after four slices, once at the end.
+    assert st["computes"] == 3
+    assert st["last_run_id"] == 7
+
+
+def test_the_run_job_stops_when_the_exchange_keeps_refusing(stores, monkeypatch):
+    fs, ls, job = stores
+    sys.modules.pop("lens_runner", None)
+    import lens_runner
+    import lens_data_crawl
+    monkeypatch.setattr(lens_runner, "PAUSE_ON_REFUSAL", 0)
+    monkeypatch.setattr(lens_data_crawl, "run",
+                        lambda limit=25: {"attempted": 6, "ok": 0, "stopped_early": "refused"})
+    monkeypatch.setattr(lens_data_crawl, "universe", lambda: [])
+    monkeypatch.setattr(job, "compute", lambda **kw: {"run_id": 1, "counts": {}})
+    lens_runner.start()
+    st = lens_runner.wait()
+    assert st["phase"] == "done" and "refused" in st["message"]
+    assert st["slices"] == lens_runner.MAX_REFUSALS
+
+
+def test_run_endpoints_need_the_key_to_start_but_not_to_watch(api, monkeypatch):
+    import main
+    monkeypatch.setattr(main, "ADMIN_KEY", "k")
+    calls = []
+
+    class Runner:
+        def status(self):
+            return {"running": False, "phase": "idle", "computes": 0}
+
+        def start(self, **kw):
+            calls.append(kw)
+            return {"started": True, "running": True, "phase": "starting", "computes": 0}
+
+        def stop(self):
+            return {"running": False, "phase": "idle"}
+
+    monkeypatch.setattr(main, "lens_runner", Runner())
+    assert api.get("/api/lenses/run").json()["phase"] == "idle"
+    assert api.post("/admin/lenses/run").status_code == 401
+    r = api.post("/admin/lenses/run", headers={"X-Admin-Key": "k"})
+    assert r.status_code == 200 and r.json()["started"] is True
+    assert calls == [{"read_inputs": True, "max_slices": None}]
+    assert api.post("/admin/lenses/run/stop", headers={"X-Admin-Key": "k"}).status_code == 200

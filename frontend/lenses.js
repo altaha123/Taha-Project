@@ -141,7 +141,7 @@
       '<p class="ln-meta">' + esc(plural(d.lenses.length, 'lens', 'lenses')) + ' · ' + live + ' live' +
       (d.run ? ' · computed ' + esc(when(d.run)) + ' over ' +
         esc((d.run.companies || 0).toLocaleString('en-IN')) + ' companies' : ' · not yet computed') +
-      '</p></header>';
+      '</p>' + runPanel() + '</header>';
 
     html += '<div class="ln-grid">';
     d.lenses.forEach(function (l, i) {
@@ -170,6 +170,7 @@
     host.innerHTML = html;
 
     Array.prototype.forEach.call(host.querySelectorAll('.ln-count b'), countUp);
+    wireRun(host);
     Array.prototype.forEach.call(host.querySelectorAll('.ln-card'), function (a) {
       a.addEventListener('click', function (ev) {
         ev.preventDefault();
@@ -187,6 +188,131 @@
       cache.index = d;
       if (!lensFromHash()) renderIndex(host, d);
     }).catch(function () { failed(host, showIndex); });
+  }
+
+  /* ── The Run button ───────────────────────────────────────────────────────
+     Starts one background job on the API: compute every lens now, then read
+     industry and ownership for the companies not yet read, recomputing as it
+     goes. The page polls for progress, so the tab can be closed and reopened.
+     The admin key is asked for once, held in memory for this tab only, and
+     sent as a header, never stored and never put in a URL. */
+
+  var RUN_KEY = '';
+  var runTimer = null;
+  var lastComputes = null;
+  var runState = null;
+
+  function runKey(force) {
+    if (!RUN_KEY || force) {
+      RUN_KEY = window.prompt('Admin key: the value set as ADMIN_KEY on Render.\n\n' +
+        'Kept for this browser tab only and sent as a header.') || '';
+    }
+    return RUN_KEY;
+  }
+
+  function runPanel() {
+    return '<div class="ln-run" id="ln-run">' +
+      '<button type="button" class="ln-runbtn" id="ln-runbtn">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>' +
+        '<span>Run</span></button>' +
+      '<button type="button" class="ln-stopbtn" id="ln-stopbtn" hidden>Stop</button>' +
+      '<span class="ln-runst" id="ln-runst" aria-live="polite">' +
+        esc(runText(runState) || 'Computes every lens now, then reads industry and ownership ' +
+        'for companies not yet read.') + '</span></div>';
+  }
+
+  function n(v) { return Number(v || 0).toLocaleString('en-IN'); }
+
+  function runText(st) {
+    if (!st || !st.available) return '';
+    var read = st.profiled != null && st.universe
+      ? n(st.profiled) + ' of ' + n(st.universe) + ' companies have industry and ownership read'
+      : '';
+    if (st.running) {
+      var what = st.phase === 'computing' ? 'Computing the lenses'
+        : st.phase === 'waiting' ? 'The exchange is refusing; waiting before the next slice'
+        : st.phase === 'reading' ? 'Reading industry and ownership: ' + n(st.companies_read) +
+          ' companies this run'
+        : 'Starting';
+      return what + (read ? ' · ' + read : '') + ' · computed ' + n(st.computes) + '×';
+    }
+    if (st.error) return 'The last run stopped with an error: ' + st.error;
+    if (st.phase === 'done') {
+      return (st.message ? st.message + ' ' : 'Run finished. ') + (read ? read + '.' : '');
+    }
+    return read ? read + '.' : '';
+  }
+
+  function paintRun(st) {
+    runState = st;
+    var b = $('ln-runbtn'), x = $('ln-stopbtn'), t = $('ln-runst');
+    if (!b || !t) return;
+    var busy = !!(st && st.running);
+    b.disabled = busy;
+    b.classList.toggle('is-busy', busy);
+    b.querySelector('span').textContent = busy ? 'Running…' : 'Run';
+    if (x) x.hidden = !busy;
+    var txt = runText(st);
+    if (txt) t.textContent = txt;
+    t.classList.toggle('is-error', !!(st && st.error && !busy));
+  }
+
+  function pollRun() {
+    clearTimeout(runTimer);
+    getJSON('/api/lenses/run').then(function (st) {
+      paintRun(st);
+      /* Each finished compute changes the counts, so the cards are refreshed
+         while the job keeps going rather than only at the end. */
+      if (lastComputes !== null && st.computes !== lastComputes) refreshCounts();
+      lastComputes = st.computes;
+      if (st.running) runTimer = setTimeout(pollRun, 4000);
+      else if (st.phase === 'done' || st.phase === 'error') refreshCounts();
+    }).catch(function () { runTimer = setTimeout(pollRun, 10000); });
+  }
+
+  function refreshCounts() {
+    cache.lens = {};
+    cache.convergence = {};
+    getJSON('/api/lenses').then(function (d) {
+      cache.index = d;
+      var host = $('lenses-body');
+      if (host && !lensFromHash() && $('ln-run')) renderIndex(host, d);
+    }).catch(function () {});
+  }
+
+  function adminPost(path) {
+    var k = runKey();
+    if (!k) return Promise.reject(new Error('no key'));
+    return fetch(API + path, { method: 'POST', headers: { 'X-Admin-Key': k } }).then(function (r) {
+      if (r.status === 401) { RUN_KEY = ''; throw new Error('key'); }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  function wireRun(host) {
+    var b = host.querySelector('#ln-runbtn'), x = host.querySelector('#ln-stopbtn');
+    if (!b) return;
+    b.addEventListener('click', function () {
+      var t = $('ln-runst');
+      if (t) t.textContent = 'Starting…';
+      adminPost('/admin/lenses/run').then(function (st) {
+        lastComputes = 0;
+        paintRun(st);
+        pollRun();
+      }).catch(function (e) {
+        if (!t) return;
+        t.textContent = e.message === 'key' ? 'The admin key was not accepted. Press Run to try again.'
+          : e.message === 'no key' ? 'Run needs the admin key.'
+          : 'The run could not be started. The server may be waking up; try again in a minute.';
+        t.classList.add('is-error');
+      });
+    });
+    if (x) x.addEventListener('click', function () {
+      adminPost('/admin/lenses/run/stop').then(paintRun).catch(function () {});
+    });
+    if (runState) paintRun(runState);
+    else pollRun();
   }
 
   /* ── 2 · One lens ─────────────────────────────────────────────────────── */
