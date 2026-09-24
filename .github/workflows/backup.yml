@@ -1,0 +1,63 @@
+name: Back up the data disk to R2
+
+# Every database and data file on the Render disk — accounts, holdings,
+# fundamentals, the point-in-time store, the tracker — copied to Cloudflare R2
+# once a day, thirty days kept. The copy is taken ON THE API, where the disk
+# is (POST /admin/backup, see backup.py); this job only asks for it and
+# reports what landed.
+#
+# 21:00 UTC is 02:30 IST: the quietest hour for the site. A database is
+# snapshotted with SQLite's backup API, so a crawl writing at the same time
+# does not corrupt the copy.
+#
+# Needs ALTAHA_ADMIN_KEY here, and R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
+# R2_SECRET_ACCESS_KEY and R2_BUCKET on Render.
+
+on:
+  schedule:
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Copy the disk to R2
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+        run: |
+          set -uo pipefail
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render."
+            exit 1
+          fi
+          curl -sS --max-time 120 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+          code=$(curl -sS --max-time 2400 -o backup.json -w "%{http_code}" \
+                 -X POST "${API}/admin/backup" -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+          cat backup.json | head -c 400; echo
+          if [ "${code}" != "200" ]; then
+            echo "::error::The backup did not run (HTTP ${code}). If it says R2 variables are missing, set them on Render → Environment."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open("backup.json"))
+          for f in d.get("files", []):
+              print("%-32s %10.1f MB -> %8.1f MB gz" % (f["name"], f["bytes"] / 1e6, f["gzip_bytes"] / 1e6))
+          for e in d.get("errors", []):
+              print("::error::%s: %s" % (e["name"], e["error"]))
+          print("total %.1f MB, uploaded %.1f MB in %ss; %s old objects pruned"
+                % (d.get("total_bytes", 0) / 1e6, d.get("total_gzip_bytes", 0) / 1e6,
+                   d.get("seconds"), d.get("pruned")))
+          sys.exit(0 if d.get("ok") else 1)
+          PY

@@ -50,3 +50,6 @@ altaha_fundamentals.db-*
 # lives on the mounted disk in production and is rebuilt by the lens jobs.
 altaha_lenses.db
 altaha_lenses.db-*
+
+# The backup's scratch copies, deleted as soon as each file is uploaded.
+.backup-tmp/

@@ -51,6 +51,17 @@ services:
         value: "400"
       - key: ADMIN_KEY
         sync: false                # set this in the dashboard, never in git
+      # Daily backup of the data disk to Cloudflare R2 (backup.py). All four
+      # unset = backups off, and /admin/backup says which are missing. The
+      # bucket must stay private: it holds the accounts database.
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
       - key: SENTRY_DSN            # crash reporting. Unset = off, silently.
         sync: false                # an address rather than a secret, but it
                                    # belongs with the deploy, not in git.

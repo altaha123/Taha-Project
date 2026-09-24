@@ -95,6 +95,12 @@ try:
 except Exception:
     fundamentals_crawl = None
 try:
+    # A daily copy of the data disk in Cloudflare R2. Stdlib plus requests;
+    # inert until the R2_* variables are set.
+    import backup as backup_job
+except Exception:
+    backup_job = None
+try:
     # Lenses: named investing philosophies applied as rules to the
     # fundamentals tables. The engine and store are stdlib-only; the crawl
     # that fills industry and ownership needs NSE, like the others.
@@ -2309,6 +2315,46 @@ def fundamentals_coverage():
         out["universe"] = len(fundamentals_crawl.universe()) if fundamentals_crawl else None
     except Exception:
         out["universe"] = None
+    return to_native(out)
+
+
+@app.post("/admin/backup")
+def admin_backup(key: str = "",
+                 x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    Copy every database and data file on the disk to Cloudflare R2, under
+    daily/<date>/, and remove days older than thirty. Driven by the backup
+    workflow. Takes a minute or two; one at a time.
+    """
+    _require_admin(x_admin_key or key)
+    if backup_job is None:
+        raise HTTPException(503, "The backup module is not available.")
+    cfg = backup_job.config()
+    if cfg["missing"]:
+        raise HTTPException(503, "Backups are off: set %s on Render."
+                            % ", ".join(cfg["missing"]))
+    try:
+        return to_native(backup_job.run())
+    except Exception as e:
+        raise HTTPException(503, f"The backup failed: {str(e)[:200]}")
+
+
+@app.get("/admin/backup")
+def admin_backup_status(key: str = "",
+                        x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Whether backups are configured, which days R2 holds, and the last run."""
+    _require_admin(x_admin_key or key)
+    if backup_job is None:
+        raise HTTPException(503, "The backup module is not available.")
+    cfg = backup_job.config()
+    out = {"configured": not cfg["missing"], "missing": cfg["missing"],
+           "bucket": cfg["R2_BUCKET"] or None, "keep_days": backup_job.KEEP_DAYS,
+           "last_run": backup_job.last_result()}
+    if not cfg["missing"]:
+        try:
+            out["days"] = backup_job.days()
+        except Exception as e:
+            out["error"] = str(e)[:200]
     return to_native(out)
 
 
