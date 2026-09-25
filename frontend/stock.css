@@ -399,6 +399,10 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
 .sc-plot.up .sc-sel-line{ stroke:var(--sh-up) } .sc-plot.dn .sc-sel-line{ stroke:var(--sh-dn) }
 .sc-plot.up .sc-sel-stop{ stop-color:var(--sh-up) } .sc-plot.dn .sc-sel-stop{ stop-color:var(--sh-dn) }
 
+.sc-base-line{ position:absolute; left:0; right:0; height:0; pointer-events:none;
+  border-top:1px dotted var(--mute); opacity:.7 }
+.sc-base-line span{ position:absolute; right:0; bottom:3px; padding:1px 5px; border-radius:4px;
+  background:var(--skin-card); font:500 10px/1.3 'IBM Plex Mono',monospace; color:var(--mute) }
 .sc-band{ position:absolute; top:0; bottom:0; opacity:0; pointer-events:none;
   background:var(--sh-up); transition:opacity 180ms var(--ease), background-color 160ms var(--ease) }
 .sc-plot.measuring .sc-band{ opacity:.07 }
