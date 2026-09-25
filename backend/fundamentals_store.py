@@ -87,6 +87,8 @@ INCOME_LINES = [
     "finance_cost", "depreciation", "other_expenses", "total_expenses",
     "operating_profit_pre_provision", "provisions", "ebitda",
     "pbt_before_exceptional", "exceptional", "pbt", "tax", "pat",
+    "pat_continuing", "discontinued_pat", "share_of_associates",
+    "regulatory_deferral", "pat_owners", "pat_minority",
 ]
 INCOME_RATIOS = ["opm_pct", "net_margin_pct", "tax_rate_pct",
                  "other_income_share_pct", "interest_cover_x", "employee_cost_pct"]
@@ -113,7 +115,7 @@ CASHFLOW_LINES = [
     "fcf", "asset_sale_proceeds", "income_tax_paid", "dividends_paid",
     "interest_paid", "borrowings_raised", "borrowings_repaid",
     "lease_payments", "share_buyback", "shares_issued",
-    "net_change_in_cash", "closing_cash",
+    "net_change_in_cash", "fx_effect_on_cash", "closing_cash",
 ]
 
 _MONEY = {"income": INCOME_LINES, "balance": BALANCE_LINES, "cashflow": CASHFLOW_LINES}
@@ -189,6 +191,7 @@ CREATE TABLE IF NOT EXISTS docs (
   source_url  TEXT NOT NULL,
   period_end  TEXT,
   read_utc    TEXT NOT NULL,
+  version     INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (symbol, source_url)
 ) WITHOUT ROWID;
 
@@ -272,8 +275,27 @@ def _ensure(conn):
         if _ready["done"]:
             return
         conn.executescript(SCHEMA)
+        _migrate(conn)
         conn.commit()
         _ready["done"] = True
+
+
+def _migrate(conn):
+    """
+    Add any column a later version introduced. CREATE TABLE IF NOT EXISTS does
+    nothing to a table that already exists, so the tables on the live disk keep
+    their first shape unless this adds to it. Idempotent; never drops or
+    rewrites anything.
+    """
+    wanted = {t["name"]: [(c, "REAL") for c in t["values"]] for t in TABLES.values()}
+    wanted["docs"] = [("version", "INTEGER NOT NULL DEFAULT 0")]
+    wanted["coverage"] = [("version", "INTEGER NOT NULL DEFAULT 0")]
+    wanted["yf_coverage"] = [("version", "INTEGER NOT NULL DEFAULT 0")]
+    for table, cols in wanted.items():
+        have = {r[1] for r in conn.execute("PRAGMA table_info(%s)" % table)}
+        for col, decl in cols:
+            if col not in have:
+                conn.execute("ALTER TABLE %s ADD COLUMN %s %s" % (table, col, decl))
 
 
 @contextmanager
@@ -410,16 +432,26 @@ def recompute_yoy(symbol):
             % ", ".join("%s_yoy_pct=?" % k for k in INCOME_YOY), updates)
 
 
+# Bumped whenever the parser learns to read something new from a filing. A
+# document read under an older version is read again, once, so the new
+# columns fill in for every period rather than only for filings made from now
+# on. 2: the profit reconciliation lines and the FX effect on cash.
+DOC_VERSION = 2
+
+
 def read_docs(symbol):
-    """The filing documents already read for one company."""
+    """The filing documents already read, by the current parser, for one company."""
     return {r["source_url"] for r in _connect().execute(
-        "SELECT source_url FROM docs WHERE symbol=?", ((symbol or "").strip().upper(),))}
+        "SELECT source_url FROM docs WHERE symbol=? AND version>=?",
+        ((symbol or "").strip().upper(), DOC_VERSION))}
 
 
 def mark_doc(symbol, source_url, period_end=None):
     with _tx() as conn:
-        conn.execute("INSERT OR REPLACE INTO docs VALUES (?,?,?,?)",
-                     ((symbol or "").strip().upper(), source_url, period_end, _utcnow()))
+        conn.execute("INSERT OR REPLACE INTO docs (symbol, source_url, period_end,"
+                     " read_utc, version) VALUES (?,?,?,?,?)",
+                     ((symbol or "").strip().upper(), source_url, period_end,
+                      _utcnow(), DOC_VERSION))
 
 
 _COVERAGE = {"nse": "coverage", "yfinance": "yf_coverage"}
@@ -441,6 +473,9 @@ def mark_coverage(symbol, status, latest_period=None, quarters=0, basis=None,
              " status=excluded.status, note=excluded.note").format(t=_COVERAGE[source]),
             ((symbol or "").strip().upper(), now, now if ok else None,
              latest_period, int(quarters or 0), basis, status, (note or "")[:200]))
+        if ok:
+            conn.execute("UPDATE %s SET version=? WHERE symbol=?" % _COVERAGE[source],
+                         (DOC_VERSION, (symbol or "").strip().upper()))
 
 
 def due_symbols(universe, limit=40, stale_hours=24 * 14, source="nse"):
@@ -450,14 +485,15 @@ def due_symbols(universe, limit=40, stale_hours=24 * 14, source="nse"):
     `docs`, so a fortnight keeps the tables current through a results season.
     """
     conn = _connect()
-    seen = {r["symbol"]: ((r["last_try_utc"] or ""), r["status"]) for r in conn.execute(
-        "SELECT symbol, last_try_utc, status FROM %s" % _COVERAGE[source]).fetchall()}
+    seen = {r["symbol"]: ((r["last_try_utc"] or ""), r["status"], r["version"])
+            for r in conn.execute("SELECT symbol, last_try_utc, status, version FROM %s"
+                                  % _COVERAGE[source]).fetchall()}
     now = datetime.now(timezone.utc)
     cutoff = (now - timedelta(hours=stale_hours)).isoformat(timespec="seconds")
     # A company left half-read because the exchange started refusing is
     # retried the next day, not a fortnight later.
     retry = (now - timedelta(hours=20)).isoformat(timespec="seconds")
-    never, stale = [], []
+    never, outdated, stale = [], [], []
     for sym in universe or []:
         s = (sym or "").strip().upper()
         if not s:
@@ -465,11 +501,16 @@ def due_symbols(universe, limit=40, stale_hours=24 * 14, source="nse"):
         if s not in seen:
             never.append(s)
             continue
-        tried, status = seen[s]
-        if tried < (retry if status in ("partial", "unreadable", "error") else cutoff):
+        tried, status, version = seen[s]
+        if source == "nse" and status in ("ok", "partial") and (version or 0) < DOC_VERSION:
+            # Read by an older parser: its filings hold lines the tables do
+            # not have yet. After the never-tried, before the merely stale.
+            outdated.append((tried, s))
+        elif tried < (retry if status in ("partial", "unreadable", "error") else cutoff):
             stale.append((tried, s))
+    outdated.sort()
     stale.sort()
-    return (never + [s for _t, s in stale])[: max(1, int(limit))]
+    return (never + [s for _t, s in outdated] + [s for _t, s in stale])[: max(1, int(limit))]
 
 
 # ---------------------------------------------------------------------------

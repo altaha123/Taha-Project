@@ -137,6 +137,29 @@ jobs:
             if [ -n "${early}" ]; then sleep 120; elif market; then sleep 60; else sleep 5; fi
           done
 
+      - name: Check the tables against accounting identities
+        # Quarters add up to the year, the balance sheet balances, PAT
+        # reconciles — see backend/fundamentals_checks.py. Seconds, and it
+        # reflects whatever this run added.
+        if: always()
+        continue-on-error: true
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+        run: |
+          curl -sS --max-time 300 -X POST "${API}/admin/fundamentals/checks" \
+               -H "X-Admin-Key: ${ADMIN_KEY}" -o checks.json || exit 0
+          python3 - <<'PY' || true
+          import json
+          d = json.load(open("checks.json"))
+          for c in d.get("checks", []):
+              print("%-24s %-11s tested %7s  major %5s  minor %5s  warnings %4s  pass %s%%"
+                    % (c["id"], c["kind"], c["tested"], c["major"], c["minor"],
+                       c["warnings"], c["pass_pct"]))
+          print("identity checks passing: %s%% of %s; companies with a major gap: %s"
+                % (d.get("identity_pass_pct"), d.get("identity_tests"), d.get("companies_with_major")))
+          PY
+
       - name: Report what the table now holds
         if: always()
         env:

@@ -490,6 +490,22 @@ FIELDS = {
     "tax":              ["TaxExpense"],
     "pat":              ["ProfitLossForPeriod", "ProfitLossForPeriodFromContinuingOperations",
                          "ProfitLossForThePeriod"],
+    # What reconciles profit before tax to profit after tax in a group's
+    # accounts, and what splits it between the shareholders and the minority.
+    # Without these a consolidated PAT cannot be checked: Tata Power's FY23
+    # PAT of ₹3,810 cr is ₹610 cr of its own after tax plus ₹3,200 cr share of
+    # its joint ventures, and L&T Finance's is a continuing loss plus a
+    # discontinued gain. Banking-format names follow the Ind AS ones.
+    "pat_continuing":   ["ProfitLossForPeriodFromContinuingOperations",
+                         "ProfitLossFromOrdinaryActivitiesAfterTax"],
+    "discontinued_pat": ["ProfitLossFromDiscontinuedOperationsAfterTax"],
+    "share_of_associates": ["ShareOfProfitLossOfAssociatesAndJointVenturesAccountedForUsingEquityMethod",
+                            "ShareOfProfitLossOfAssociates"],
+    "regulatory_deferral": ["NetMovementInRegulatoryDeferralAccountBalancesRelatedToProfitOrLossAndTheRelatedDeferredTaxMovement"],
+    "pat_owners":       ["ProfitOrLossAttributableToOwnersOfParent",
+                         "ProfitLossAfterTaxesMinorityInterestAndShareOfProfitLossOfAssociates"],
+    "pat_minority":     ["ProfitOrLossAttributableToNonControllingInterests",
+                         "ProfitLossOfMinorityInterest"],
     "comprehensive_income": ["ComprehensiveIncomeForThePeriod"],
     "eps_basic":        ["BasicEarningsLossPerShareFromContinuingAndDiscontinuedOperations",
                          "BasicEarningsLossPerShareFromContinuingOperations",
@@ -573,12 +589,13 @@ CASHFLOW_FIELDS = {
     "shares_issued":       ["ProceedsFromIssuingSharesClassifiedAsFinancingActivities",
                             "ProceedsFromIssuingShares"],
     "net_change_in_cash":  ["IncreaseDecreaseInCashAndCashEquivalents"],
+    "fx_effect_on_cash":   ["EffectOfExchangeRateChangesOnCashAndCashEquivalents"],
     "closing_cash":        ["CashAndCashEquivalentsCashFlowStatement"],
 }
 
 # Bumped whenever normalise() starts returning something new, so fetch() can
 # tell a cached parse that predates it from one that does not.
-SCHEMA = 5
+SCHEMA = 6
 
 
 def _pick(f, fields):

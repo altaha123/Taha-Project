@@ -95,6 +95,12 @@ try:
 except Exception:
     fundamentals_crawl = None
 try:
+    # Accounting identities run over the three tables: which figures disagree
+    # with what, and by how much.
+    import fundamentals_checks
+except Exception:
+    fundamentals_checks = None
+try:
     # A daily copy of the data disk in Cloudflare R2. Stdlib plus requests;
     # inert until the R2_* variables are set.
     import backup as backup_job
@@ -2307,6 +2313,52 @@ def fundamentals_statements(symbol: str, statement: str = "income",
                         media_type="text/csv",
                         headers={"Content-Disposition": f'attachment; filename="{name}"'})
     return to_native(table)
+
+
+@app.get("/fundamentals/checks")
+def fundamentals_checks_view(symbol: str = "", check: str = "", severity: str = "",
+                             format: str = "json", limit: int = 100):
+    """
+    How far the three tables can be trusted, and where not.
+
+    Without `symbol`: the latest run's pass rate for every check and the
+    largest failures. With it: every failure for that company. `severity` is
+    major (a gap over 5%), minor, or warning (a disagreement with Yahoo, which
+    is a second opinion, not a verdict). `format=csv` downloads the list, each
+    row carrying the link to the filing it came from.
+    """
+    if fundamentals_checks is None:
+        raise HTTPException(503, "The checks are not available.")
+    sym = symbol.strip().upper().replace(".NS", "").replace(".BO", "")
+    if len(sym) > 20 or (check and check not in fundamentals_checks.CHECKS) or \
+            severity not in ("", "major", "minor", "warning"):
+        raise HTTPException(400, "Unknown symbol, check or severity.")
+    rows = fundamentals_checks.failures(symbol=sym or None, check_id=check or None,
+                                        severity=severity or None,
+                                        limit=max(0, min(int(limit), 100000)) or None)
+    if format == "csv":
+        buf = io.StringIO()
+        w = csv.DictWriter(buf, fieldnames=fundamentals_checks.COLUMNS, extrasaction="ignore")
+        w.writeheader()
+        w.writerows(rows)
+        return Response(content=buf.getvalue(), media_type="text/csv",
+                        headers={"Content-Disposition":
+                                 'attachment; filename="fundamentals-checks-%s.csv"' % (sym or "all")})
+    return to_native({"summary": fundamentals_checks.latest_summary(),
+                      "count": len(rows), "failures": rows})
+
+
+@app.post("/admin/fundamentals/checks")
+def admin_fundamentals_checks(key: str = "",
+                              x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Run every check over the three tables again. A few seconds."""
+    _require_admin(x_admin_key or key)
+    if fundamentals_checks is None:
+        raise HTTPException(503, "The checks are not available.")
+    try:
+        return to_native(fundamentals_checks.run())
+    except Exception as e:
+        raise HTTPException(503, f"The checks failed: {str(e)[:150]}")
 
 
 @app.get("/fundamentals/coverage")

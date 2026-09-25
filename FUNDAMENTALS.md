@@ -221,3 +221,29 @@ the filings — four annual balance sheets — and is never mixed into the three
 tables above.
 
 * `GET /fundamentals/statements?symbol=TCS&statement=balance&freq=annual&format=csv`
+
+### How accurate it is: `/fundamentals/checks`
+
+`backend/fundamentals_checks.py` runs accounting identities over all three
+tables after every crawl run: four quarters add up to the year; assets equal
+equity plus liabilities; PBT − tax + share of associates + discontinued
+operations + regulatory deferral is PAT; owners' + minority share is PAT;
+revenue + other income is total income; operating + investing + financing +
+FX is the change in cash; and PAT ÷ EPS (the implied share count) stays in
+line with the company's own. Yahoo Finance is compared too, as a warning
+only — it reports some companies in dollars and defines revenue differently
+for banks and for anyone paying excise.
+
+A gap over 5% is **major**, under it **minor** (usually a year-end
+restatement), and a Yahoo disagreement a **warning**. Every failure names the
+figures, the gap, a diagnosis where the numbers give one ("the Q4 FY22 filing
+— fourth quarter and year together — looks 100x too small"), and the filing
+link. On the first full sweep most major gaps were errors in companies' own
+filings, read correctly: Trent's FY22 and Marksans' FY25 March filings are
+100x and 10x too small, Aarti's Q4 FY21 PAT contradicts its own owners/minority
+split, Aarey Drugs' FY23 year is smaller than its fourth quarter.
+
+* `GET /fundamentals/checks` — pass rate per check and the largest failures
+* `GET /fundamentals/checks?symbol=TRENT` — one company's failures
+* `GET /fundamentals/checks?severity=major&format=csv` — the review list
+* `POST /admin/fundamentals/checks` — run again (admin key)

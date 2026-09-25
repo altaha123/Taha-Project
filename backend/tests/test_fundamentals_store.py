@@ -252,3 +252,49 @@ def test_a_run_of_empty_yahoo_answers_is_treated_as_throttling(store, monkeypatc
     monkeypatch.setattr(fc, "universe", lambda: ["S%02d" % i for i in range(20)])
     out = fc.run(limit=20, pause=0, source="yfinance")
     assert out["attempted"] == fc.GIVE_UP_AFTER
+
+
+# ---------------------------------------------------------------------------
+# Upgrading a database built by an earlier version
+# ---------------------------------------------------------------------------
+
+def test_an_old_database_gains_the_new_columns_and_its_filings_come_due(tmp_path, monkeypatch):
+    """The live disk holds tables from before the profit-reconciliation lines
+    and before docs had a version. Opening it must add both, keep every row,
+    and put the companies read by the old parser back in the queue — ahead of
+    the merely stale, behind the never-tried."""
+    import sqlite3
+    db = tmp_path / "old.db"
+    c = sqlite3.connect(db)
+    c.executescript("""
+      CREATE TABLE income_statement (symbol TEXT NOT NULL, company TEXT, basis TEXT NOT NULL,
+        freq TEXT NOT NULL, label TEXT, period_from TEXT, period_end TEXT NOT NULL,
+        months INTEGER NOT NULL DEFAULT 0, filed_at TEXT, audited TEXT, revenue_cr REAL,
+        pat_cr REAL, source_url TEXT, updated_utc TEXT NOT NULL, first_seen_utc TEXT NOT NULL,
+        PRIMARY KEY (symbol, basis, freq, period_end));
+      CREATE TABLE docs (symbol TEXT NOT NULL, source_url TEXT NOT NULL, period_end TEXT,
+        read_utc TEXT NOT NULL, PRIMARY KEY (symbol, source_url)) WITHOUT ROWID;
+      CREATE TABLE coverage (symbol TEXT PRIMARY KEY, last_try_utc TEXT, last_ok_utc TEXT,
+        latest_period TEXT, quarters INTEGER NOT NULL DEFAULT 0, basis TEXT, status TEXT, note TEXT);
+      INSERT INTO income_statement VALUES ('OLD','Old','consolidated','annual','FY26',
+        '2025-04-01','2026-03-31',12,'2026-05-01',NULL,100,10,'u','2026-05-02','2026-05-02');
+      INSERT INTO docs VALUES ('OLD','https://x/1.xml','2026-03-31','2026-09-24T00:00:00+00:00');
+      INSERT INTO coverage VALUES ('OLD','2099-01-01T00:00:00+00:00',NULL,NULL,1,'consolidated','ok','');
+      INSERT INTO coverage VALUES ('STALE','2000-01-01T00:00:00+00:00',NULL,NULL,1,'consolidated','ok','');
+    """)
+    c.commit(); c.close()
+    monkeypatch.setenv("ALTAHA_FUNDAMENTALS_DB", str(db))
+    for m in ("fundamentals_store", "fundamentals_crawl"):
+        sys.modules.pop(m, None)
+    import fundamentals_store as fs
+
+    (row,) = fs.rows("income", "OLD")
+    assert row["revenue_cr"] == 100 and row["pat_owners_cr"] is None     # kept; new column there
+    assert fs.read_docs("OLD") == set()                                  # read by the old parser
+    # Both were read by the old parser, so both are due — OLD although it was
+    # "tried" in the future — never-tried first, then oldest attempt first.
+    assert fs.due_symbols(["OLD", "STALE", "NEW"], limit=5) == ["NEW", "STALE", "OLD"]
+    fs.mark_doc("OLD", "https://x/1.xml", "2026-03-31")
+    fs.mark_coverage("OLD", "ok", ok=True)
+    assert fs.read_docs("OLD") == {"https://x/1.xml"}
+    assert "OLD" not in fs.due_symbols(["OLD"], limit=5)
