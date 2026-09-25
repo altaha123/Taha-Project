@@ -98,3 +98,47 @@ def test_a_short_window_still_carries_the_days_move(main_mod, history):
     assert payload["day_change_pct"] is not None
     assert payload["day_change_pct"] == main_mod.chart(ticker="TEST",
                                                        range="5Y")["day_change_pct"]
+
+
+class _FakeDhan:
+    """Three sessions of five-minute bars, stamped in naive exchange time."""
+    def __init__(self):
+        idx = []
+        for day in ("2020-01-06", "2020-01-07", "2020-01-08"):
+            idx += list(pd.date_range(day + " 09:15", periods=75, freq="5min"))
+        closes = [500.0 + i for i in range(len(idx))]
+        self.df = pd.DataFrame({"Open": closes, "High": closes, "Low": closes,
+                                "Close": closes, "Volume": [1] * len(idx)},
+                               index=pd.DatetimeIndex(idx))
+
+    def configured(self):
+        return True
+
+    def intraday_ohlcv(self, symbol, interval="5", days=5):
+        return self.df
+
+
+def test_one_day_is_the_last_session_measured_from_the_close_before_it(
+        main_mod, history, monkeypatch):
+    monkeypatch.setattr(main_mod, "dhan", _FakeDhan())
+    payload = main_mod.chart(ticker="TEST", range="1DAY")
+    assert payload["label"] == "1 day"
+    assert len(payload["candles"]) == 75
+    # The daily close on 7 Jan 2020 — the session before the one drawn.
+    prev = float(history.loc["2020-01-07", "Close"])
+    assert payload["base_close"] == round(prev, 2)
+    last = payload["candles"][-1][4]
+    assert payload["change_pct"] == round(100 * (last - prev) / prev, 2)
+
+
+def test_five_days_keeps_every_session_it_was_given(main_mod, history, monkeypatch):
+    monkeypatch.setattr(main_mod, "dhan", _FakeDhan())
+    payload = main_mod.chart(ticker="TEST", range="5DAY")
+    assert payload["label"] == "5 days"
+    assert len(payload["candles"]) == 225
+
+
+def test_the_short_windows_do_not_steal_the_candle_size_keys(main_mod):
+    assert main_mod._pick_range("1D")[0] == "1D"
+    assert main_mod._pick_range("1DAY")[0] == "1DAY"
+    assert main_mod._pick_range("5day")[0] == "5DAY"

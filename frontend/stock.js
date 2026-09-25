@@ -516,9 +516,20 @@
 
      All five are daily-resolution windows now, which need no live feed. The
      intraday timeframes still exist and still belong to the charting
-     workspace, where the control is explicitly a bar size. */
-  var RANGES = [['1M', '1 month'], ['3M', '3 months'], ['6M', '6 months'],
+     workspace, where the control is explicitly a bar size.
+
+     1D and 5D are the exception: a day drawn from daily bars is one point.
+     They ask for '1DAY' and '5DAY' — intraday bars trimmed to the last one
+     and five sessions — because '1D' on this API is still the daily candle
+     size. Those two need the live feed; the rest never do. */
+  var RANGES = [['1D', '1 day', '1DAY'], ['5D', '5 days', '5DAY'],
+                ['1M', '1 month'], ['3M', '3 months'], ['6M', '6 months'],
                 ['1Y', '1 year'], ['5Y', '5 years']];
+  function rangeKey(r) {
+    var hit = RANGES.filter(function (x) { return x[0] === r; })[0];
+    return (hit && hit[2]) || r;
+  }
+  function isIntraday(r) { return rangeKey(r) !== r; }
   var chartRange = '6M', chartRequest = 0;
 
   function paintRanges() {
@@ -572,10 +583,11 @@
     var request = ++chartRequest;
     box.setAttribute('aria-busy', 'true');
     box.innerHTML = '<div class="skel" style="height:250px"></div>';
-    var asked = chartRange;
-    fetch(API + '/chart?ticker=' + encodeURIComponent(TICKER) + '&range=' + chartRange)
+    var asked = chartRange, failStatus = 0;
+    fetch(API + '/chart?ticker=' + encodeURIComponent(TICKER) + '&range=' + rangeKey(chartRange))
       .then(function (r) {
         if (!r.ok) {
+          failStatus = r.status;
           if (window.AltahaTrack) {
             window.AltahaTrack('chart_failed', { range: asked, status: r.status });
             window.AltahaTrack('api_error', { endpoint: '/chart', status: r.status });
@@ -593,7 +605,9 @@
         if (request !== chartRequest) return;
         box.setAttribute('aria-busy', 'false');
         box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--mute);' +
-          'font-size:13px">Price history is not available right now.</div>';
+          'font-size:13px">' + (isIntraday(asked) && failStatus
+            ? 'Intraday prices for this stock are not available right now. Try 1M or longer.'
+            : 'Price history is not available right now.') + '</div>';
       });
   }
 
@@ -615,6 +629,24 @@
     if (!dt) return 'Date unavailable';
     return dt.getUTCDate() + ' ' + MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCFullYear();
   }
+  /* Intraday bars are stamped from naive exchange time read as UTC, so their
+     wall-clock time is the UTC reading, unshifted. */
+  function barTime(raw, withDate) {
+    var t = typeof raw === 'number' ? (raw > 1e12 ? raw : raw * 1000) : Date.parse(raw);
+    if (t == null || isNaN(t)) return 'Time unavailable';
+    var dt = new Date(t), hh = dt.getUTCHours(), mm = dt.getUTCMinutes();
+    var clock = (hh % 12 || 12) + ':' + (mm < 10 ? '0' : '') + mm + (hh < 12 ? ' am' : ' pm');
+    return withDate ? dt.getUTCDate() + ' ' + MONTHS[dt.getUTCMonth()] + ', ' + clock : clock;
+  }
+  function span(a, b) {
+    var ta = typeof a === 'number' ? a * (a > 1e12 ? 1 : 1000) : Date.parse(a);
+    var tb = typeof b === 'number' ? b * (b > 1e12 ? 1 : 1000) : Date.parse(b);
+    if (isNaN(ta) || isNaN(tb)) return '';
+    var da = Math.floor(ta / 86400000), db = Math.floor(tb / 86400000);
+    if (da !== db) { var k = Math.abs(db - da); return k + (k === 1 ? ' day' : ' days'); }
+    var m = Math.round(Math.abs(tb - ta) / 60000);
+    return (m >= 60 ? Math.floor(m / 60) + 'h ' : '') + (m % 60) + 'm';
+  }
   function daysBetween(a, b) {
     var da = candleDate(a), db = candleDate(b);
     if (!da || !db) return null;
@@ -633,7 +665,14 @@
     }
     var closes = rows.map(function (r) { return r[4]; });
     var n = closes.length, cur = d.currency;
-    var lo = Math.min.apply(null, closes), hi = Math.max.apply(null, closes);
+    var intraday = isIntraday(chartRange);
+    /* What a move is measured from: the close before the window when the API
+       sends one (the intraday windows), else the window's first close. On 1D
+       that is yesterday's close, drawn as a dashed line, as a quote screen does. */
+    var base = (intraday && typeof d.base_close === 'number') ? d.base_close : closes[0];
+    var showBase = chartRange === '1D' && base !== closes[0];
+    var lo = Math.min.apply(null, closes.concat(showBase ? [base] : []));
+    var hi = Math.max.apply(null, closes.concat(showBase ? [base] : []));
     var pad = (hi - lo) * 0.08 || 1;
     lo -= pad; hi += pad;
 
@@ -644,7 +683,7 @@
     var pts = closes.map(function (v, i) { return x(i).toFixed(1) + ',' + y(v).toFixed(1); });
     var line = 'M' + pts.join(' L');
     var area = line + ' L' + W + ',' + H + ' L0,' + H + ' Z';
-    var rising = closes[n - 1] >= closes[0];
+    var rising = closes[n - 1] >= base;
     var stroke = rising ? 'var(--sh-up)' : 'var(--sh-dn)';
     var label = (RANGES.filter(function (r) { return r[0] === chartRange; })[0] || [])[1] || '';
 
@@ -678,15 +717,17 @@
           '<path class="sc-sel-line" d="' + line + '"/>' +
         '</g>' +
         '</svg>' +
+        (showBase ? '<div class="sc-base-line" style="top:' + (100 * y(base) / H).toFixed(2) + '%">' +
+          '<span>Prev close ' + esc(money(base, cur)) + '</span></div>' : '') +
         '<div class="sc-band"></div>' +
         '<div class="sc-x sc-x-a"></div><div class="sc-x sc-x-b"></div>' +
         '<div class="sc-dot sc-dot-a"></div><div class="sc-dot sc-dot-b"></div>' +
         '<div class="sc-tip" role="presentation"></div>' +
       '</div>' +
       '<div class="sc-foot">' +
-        '<span>' + money(lo + pad, cur) + '</span>' +
+        '<span>' + money(Math.min.apply(null, closes), cur) + '</span>' +
         '<span class="sc-hint">Hover to read a close · drag to measure a move</span>' +
-        '<span>' + money(hi - pad, cur) + '</span></div>' +
+        '<span>' + money(Math.max.apply(null, closes), cur) + '</span></div>' +
       '<output class="ux-chart-value sc-sr" id="chart-close-value" aria-live="polite"></output>';
 
     var plot = box.querySelector('.sc-plot');
@@ -699,6 +740,8 @@
     };
 
     function pctOf(a, b) { return closes[a] ? 100 * (closes[b] - closes[a]) / closes[a] : null; }
+    function fromBase(i) { return base ? 100 * (closes[i] - base) / base : null; }
+    function when(i) { return intraday ? barTime(rows[i][0], chartRange !== '1D') : dayLabel(rows[i][0]); }
     function signed(v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + money(Math.abs(v), cur); }
     function arrow(v) { return v > 0 ? '▲ ' : v < 0 ? '▼ ' : ''; }
     function place(node, i) {
@@ -723,17 +766,18 @@
 
     function rest() {
       plot.classList.remove('hovering', 'measuring', 'up', 'dn');
-      var ch = closes[n - 1] - closes[0];
-      setRead(closes[n - 1], ch, pctOf(0, n - 1), label ? 'past ' + label : '');
+      var ch = closes[n - 1] - base;
+      setRead(closes[n - 1], ch, fromBase(n - 1),
+        chartRange === '1D' ? 'today' : (label ? 'past ' + label : ''));
     }
 
     function hover(i) {
       plot.classList.remove('measuring', 'up', 'dn');
       plot.classList.add('hovering');
       place(el.xa, i); place(el.da, i);
-      var date = dayLabel(rows[i][0]);
-      var ch = closes[i] - closes[0];
-      setRead(closes[i], ch, pctOf(0, i), date);
+      var date = when(i);
+      var ch = closes[i] - base;
+      setRead(closes[i], ch, fromBase(i), date);
       tipAt(i, '<b class="tnum">' + esc(money(closes[i], cur)) + '</b><span>' + esc(date) + '</span>');
       el.out.textContent = date + ' · Close ' + money(closes[i], cur);
     }
@@ -751,12 +795,16 @@
       el.band.style.width = (100 * (to - from) / (n - 1)) + '%';
       el.clip.setAttribute('x', x(from).toFixed(1));
       el.clip.setAttribute('width', (x(to) - x(from)).toFixed(1));
-      var d0 = dayLabel(rows[from][0]), d1 = dayLabel(rows[to][0]);
-      var days = daysBetween(rows[from][0], rows[to][0]);
+      var d0 = when(from), d1 = when(to);
+      var gap = intraday ? span(rows[from][0], rows[to][0]) : '';
+      if (!intraday) {
+        var days = daysBetween(rows[from][0], rows[to][0]);
+        gap = days == null ? '' : days + (days === 1 ? ' day' : ' days');
+      }
       setRead(closes[to], ch, p, d0 + ' → ' + d1);
       tipAt((from + to) / 2,
         '<b class="tnum ' + tone(ch) + '">' + arrow(ch) + esc(pct(p)) + '</b>' +
-        '<span class="tnum">' + esc(signed(ch)) + (days != null ? ' · ' + days + (days === 1 ? ' day' : ' days') : '') + '</span>');
+        '<span class="tnum">' + esc(signed(ch)) + (gap ? ' · ' + esc(gap) : '') + '</span>');
       el.out.textContent = 'From ' + d0 + ' to ' + d1 + ': ' + pct(p) + ', ' + signed(ch);
     }
 

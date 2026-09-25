@@ -4210,6 +4210,14 @@ RANGES = {
     "6M":  {"mode": "daily",    "sessions": 126,  "label": "6 months"},
     "1Y":  {"mode": "daily",    "sessions": 252,  "label": "1 year"},
     "5Y":  {"mode": "daily",    "sessions": 1260, "label": "5 years"},
+
+    # Windows shorter than a month are drawn from intraday bars, so they need
+    # the live feed. Their keys are spelled out because "1D" is taken by the
+    # candle size above. `keep` trims to the last N trading sessions; `days`
+    # is only the calendar lookback that guarantees N sessions exist across a
+    # weekend or a holiday.
+    "1DAY": {"mode": "intraday", "interval": "5",  "days": 7,  "keep": 1, "label": "1 day"},
+    "5DAY": {"mode": "intraday", "interval": "15", "days": 12, "keep": 5, "label": "5 days"},
 }
 
 
@@ -4300,7 +4308,10 @@ def chart(ticker: str, range: str = "1D"):
             df = dhan.intraday_ohlcv(base, interval=cfg["interval"], days=cfg["days"])
         except Exception:
             df = None
-        if df is None or len(df) < 5:
+        if df is not None and cfg.get("keep") and isinstance(df.index, pd.DatetimeIndex) and len(df):
+            sessions = sorted(set(df.index.normalize()))
+            df = df[df.index.normalize() >= sessions[-min(cfg["keep"], len(sessions))]]
+        if df is None or len(df) < (2 if cfg.get("keep") else 5):
             raise HTTPException(404, f"No intraday data available for {base}. "
                                      "It may be a holiday, or the symbol may be unlisted.")
         live = True
@@ -4362,6 +4373,13 @@ def chart(ticker: str, range: str = "1D"):
     except Exception:
         lv = None
 
+    # For the intraday windows the move is measured the way a quote screen
+    # measures it: from the last close BEFORE the window, not from the first
+    # five-minute bar. "1 day" starting at 09:15's price would miss the gap.
+    base_close = _close_before(base, df.index[0]) if cfg.get("keep") else None
+    if base_close:
+        first = base_close
+
     # `change_pct` is the move ACROSS THE RANGE DRAWN — a year of return on
     # range=1D, which is four hundred daily candles. `day_change_pct` is the
     # move today. They are different questions and now have different names;
@@ -4379,8 +4397,27 @@ def chart(ticker: str, range: str = "1D"):
         "day_change": (day or {}).get("change"),
         "day_change_pct": (day or {}).get("change_pct"),
         "as_of": str(df.index[-1])[:19] if len(df) else None,
+        "base_close": round(base_close, 2) if base_close else None,
         "levels": lv,
     })
+
+
+def _close_before(base: str, start):
+    """The last daily close strictly before `start`'s session, or None.
+
+    Intraday stamps are naive exchange time; daily ones may carry a zone, so
+    both are compared as naive exchange-local dates."""
+    try:
+        _, _, hist = resolve(base)
+        close = hist["Close"].dropna()
+        idx = close.index
+        if getattr(idx, "tz", None) is not None:
+            idx = idx.tz_convert("Asia/Kolkata").tz_localize(None)
+        day = pd.Timestamp(start).normalize()
+        prior = close[idx.normalize() < day]
+        return float(prior.iloc[-1]) if len(prior) else None
+    except Exception:
+        return None
 
 
 @app.get("/quote")
