@@ -1461,7 +1461,129 @@
         : '');
   }
 
+  /* ── Against its industry ────────────────────────────────────────────────
+     Each measure beside the median of the company's NSE industry and how many
+     peers it is ahead of. The API shows a measure only when enough of the
+     industry has recent results held, and says how much of it was read; this
+     prints that rather than implying the whole industry. Whether higher is
+     better is stated per row, never coloured as good or bad: a current ratio
+     can be too high as easily as too low. */
+
+  function peerVal(m, v) {
+    if (v == null) return '—';
+    return plain(v, 1) + (m.key.slice(-2) === '_x' ? '×' : '%');
+  }
+
+  function paintPeers(d) {
+    var box = $('funda-peers');
+    if (!box) return;
+    if (!d || !d.available) {
+      box.innerHTML = d && d.industry
+        ? '<p class="fu-cap">' + esc(d.message || '') + '</p>' : '';
+      return;
+    }
+    var body = d.measures.map(function (m) {
+      var rank = m.above + ' of ' + m.peers;
+      var dir = m.higher_is_better === true ? 'higher is better'
+        : m.higher_is_better === false ? 'lower is better' : '';
+      return '<tr>' +
+        '<th scope="row" class="fu-line">' + esc(m.label) +
+          (dir ? '<em>' + esc(dir) + '</em>' : '') + '</th>' +
+        '<td class="fu-now tnum">' + peerVal(m, m.value) + '</td>' +
+        '<td class="tnum">' + peerVal(m, m.median) + '</td>' +
+        '<td class="tnum">' + esc(rank) + '</td></tr>';
+    }).join('');
+    box.innerHTML = '<h3 class="fu-h3">Against its industry</h3>' +
+      '<p class="fu-cap" id="fu-cap-peers">' + esc(d.industry) + ', as NSE ' +
+      'classifies it. This company on its ' + esc(d.as_of || 'latest') +
+      ' results against the median of the peers with recent results held, and ' +
+      'how many of those peers it is above.</p>' +
+      '<div class="fu-block"><div class="fu-wrap">' +
+      '<table class="fu-table fu-peers" aria-describedby="fu-cap-peers">' +
+      '<caption class="fu-vh">Against the industry median</caption>' +
+      '<thead><tr><th scope="col" class="fu-line">Measure</th>' +
+      '<th scope="col" class="fu-now">This company</th>' +
+      '<th scope="col">Industry median</th>' +
+      '<th scope="col">Above</th></tr></thead>' +
+      '<tbody>' + body + '</tbody></table></div></div>' +
+      '<div class="own-notes">' + (d.notes || []).map(function (n) {
+        return '<p>' + esc(n) + '</p>';
+      }).join('') + '</div>';
+  }
+
+  /* ── Balance sheet and cash flow ─────────────────────────────────────────
+     Values arrive in ₹ crore already (the stored tables keep crore), so they
+     are printed with plain() rather than cr(), which divides rupees. A line
+     the company never filed is left out by the API, so a bank shows deposits
+     and loans and a manufacturer inventories and receivables. */
+
+  function statementTable(id, title, cap, part) {
+    var rows = part.rows || [];
+    if (!rows.length) return '';
+    var head = '<tr><th scope="col" class="fu-line">₹ crore</th>' +
+      rows.map(function (r, i) {
+        return '<th scope="col"' + (i ? '' : ' class="fu-now"') + '>' +
+          esc(r.label || r.period_end) + '</th>';
+      }).join('') + '</tr>';
+    function money(r, k) { return plain((r.values || {})[k], 0); }
+    var lines = (part.lines || []).map(function (ln) {
+      var isKey = ['total_assets', 'total_equity', 'total_borrowings', 'cfo', 'fcf']
+        .indexOf(ln.key) >= 0;
+      return '<tr' + (isKey ? ' class="key"' : '') + '>' +
+        '<th scope="row" class="fu-line">' + esc(ln.label) + '</th>' +
+        rows.map(function (r, i) {
+          return '<td class="tnum' + (i ? '' : ' fu-now') + '">' + money(r, ln.key) + '</td>';
+        }).join('') + '</tr>';
+    }).join('');
+    var ratios = (part.ratio_defs || []).filter(function (rd) {
+      return rows.some(function (r) { return (r.ratios || {})[rd.key] != null; });
+    }).map(function (rd) {
+      var unit = rd.key.slice(-2) === '_x' ? '×' : '%';
+      return '<tr><th scope="row" class="fu-line">' + esc(rd.label) +
+        '<em>' + esc(rd.formula) + ', ' + unit + '</em></th>' +
+        rows.map(function (r, i) {
+          var v = (r.ratios || {})[rd.key];
+          return '<td class="tnum' + (i ? '' : ' fu-now') + '">' +
+            (v == null ? '—' : plain(v, 2)) + '</td>';
+        }).join('') + '</tr>';
+    }).join('');
+    return '<h3 class="fu-h3">' + esc(title) + '</h3>' +
+      '<p class="fu-cap" id="' + id + '">' + esc(cap) + '</p>' +
+      '<div class="fu-block"><div class="fu-wrap">' +
+      '<table class="fu-table fu-stmt" aria-describedby="' + id + '">' +
+      '<caption class="fu-vh">' + esc(title) + ', in rupees crore</caption>' +
+      '<thead>' + head + '</thead><tbody>' + lines + ratios + '</tbody></table></div></div>';
+  }
+
+  function paintPosition(d) {
+    var box = $('funda-position');
+    if (!box) return;
+    if (!d || !d.available) { box.innerHTML = ''; return; }
+    box.innerHTML =
+      statementTable('fu-cap-bs', 'Balance sheet',
+        'As filed at each March and September, ' + d.basis + ', in ₹ crore.', d.balance) +
+      statementTable('fu-cap-cf', 'Cash flow',
+        'Each full financial year as filed, ' + d.basis + ', in ₹ crore. ' +
+        'Capital expenditure is the cash paid, so it is shown positive.', d.cashflow) +
+      '<div class="own-notes">' + (d.notes || []).map(function (n) {
+        return '<p>' + esc(n) + '</p>';
+      }).join('') + '</div>';
+  }
+
+  function loadFundaExtras() {
+    var q = '?ticker=' + encodeURIComponent(TICKER);
+    fetch(API + '/fundamentals/peers' + q)
+      .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
+      .then(paintPeers)
+      .catch(function () { paintPeers(null); });
+    fetch(API + '/fundamentals/position' + q)
+      .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
+      .then(paintPosition)
+      .catch(function () { paintPosition(null); });
+  }
+
   function loadFunda() {
+    loadFundaExtras();
     var box = $('funda-body');
     if (box) {
       box.innerHTML = '<div class="own-empty is-loading" aria-busy="true">' +

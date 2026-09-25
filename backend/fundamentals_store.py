@@ -627,3 +627,123 @@ def stats():
         "unit": ("₹ crore for *_cr columns; eps_basic in ₹ per share; *_pct a "
                  "percentage; *_x a multiple"),
     }
+
+
+# ---------------------------------------------------------------------------
+# Readers for the rest of the site
+#
+# The tables were filled so that the pages reading a company's statements need
+# not go back to the exchange or to Yahoo for them. These shape what is held
+# into what each consumer already expects.
+# ---------------------------------------------------------------------------
+
+def _latest_basis(recs):
+    """Consolidated where held, else standalone — one basis, never both."""
+    held = {r.get("basis") for r in recs}
+    return "consolidated" if "consolidated" in held else \
+        ("standalone" if "standalone" in held else None)
+
+
+def _nse_time(iso):
+    """The exchange's own '23-Apr-2026 18:00:00' back from the stored ISO
+    text, so the point-in-time store keys a stored row and the same filing
+    read live as one version rather than two."""
+    try:
+        return datetime.fromisoformat(str(iso)).strftime("%d-%b-%Y %H:%M:%S")
+    except (TypeError, ValueError):
+        return iso
+
+
+def scoring_quarters(symbol, limit=16):
+    """
+    One company's quarters in the shape xbrl.statements() returns, for the
+    factor library: rupees for money, `period`, `filed_at`, `consolidated`,
+    `ebitda_margin_pct`, and return on assets annualised against the balance
+    sheet filed at or before the quarter (within seven months), exactly as
+    xbrl.normalise() derives it from a filing's own total assets.
+
+    Each row is the latest filing for its period, so this is for scoring
+    today. A historical as-of read needs every revision and stays on the
+    point-in-time path.
+    """
+    sym = (symbol or "").strip().upper()
+    recs = rows("income", symbol=sym, freq="quarterly")
+    basis = _latest_basis(recs)
+    if not basis:
+        return []
+    recs = [r for r in recs if r.get("basis") == basis][: max(1, int(limit))]
+    sheets = sorted(((_date(b["period_end"]), b.get("total_assets_cr"))
+                     for b in rows("balance", symbol=sym)
+                     if b.get("basis") == basis and b.get("total_assets_cr")),
+                    key=lambda x: x[0] or date.min, reverse=True)
+    out = []
+    for r in recs:
+        end = _date(r["period_end"])
+        q = {"period": {"from": r.get("period_from"), "to": r["period_end"]},
+             "to": r["period_end"], "from": r.get("period_from"),
+             "filed_at": _nse_time(r.get("filed_at")), "audited": r.get("audited"),
+             "consolidated": basis == "consolidated", "company": r.get("company"),
+             "source_url": r.get("source_url"), "regime": "stored"}
+        for k in INCOME_LINES:
+            v = r.get("%s_cr" % k)
+            q[k] = None if v is None else v * CRORE
+        q["eps_basic"] = r.get("eps_basic")
+        q["ebitda_margin_pct"] = r.get("opm_pct")
+        q["net_margin_pct"] = r.get("net_margin_pct")
+        ta = next((a for d, a in sheets if d and end and 0 <= (end - d).days <= 215), None)
+        if ta and r.get("pat_cr") is not None:
+            q["roa_annualised_pct"] = round(r["pat_cr"] * 4 / ta * 100, 2)
+        for k in INCOME_YOY:
+            if r.get("%s_yoy_pct" % k) is not None:
+                q["%s_yoy_pct" % k] = r["%s_yoy_pct" % k]
+        out.append(q)
+    return out
+
+
+def latest_for(symbols, fresh_after=None):
+    """
+    Each company's newest quarter and newest balance sheet, on its own basis,
+    for comparing a company with its peers. One query per table however many
+    companies are asked for. `fresh_after` (ISO date) drops a company whose
+    newest quarter ended before it, so a peer that has stopped filing does not
+    drag the median towards an old year.
+    """
+    syms = sorted({(s or "").strip().upper() for s in symbols or [] if s})
+    if not syms:
+        return {}
+    conn = _connect()
+    out = {}
+    for i in range(0, len(syms), 500):
+        part = syms[i:i + 500]
+        marks = ",".join("?" * len(part))
+        inc = conn.execute(
+            "SELECT symbol, basis, period_end, label, revenue_cr, pat_cr, opm_pct,"
+            " net_margin_pct, revenue_yoy_pct, pat_yoy_pct, ebitda_yoy_pct"
+            " FROM income_statement WHERE freq='quarterly' AND symbol IN (%s)"
+            " ORDER BY symbol, period_end DESC" % marks, part).fetchall()
+        by = {}
+        for r in inc:
+            by.setdefault(r["symbol"], []).append(dict(r))
+        for sym, recs in by.items():
+            basis = _latest_basis(recs)
+            top = next(r for r in recs if r["basis"] == basis)
+            if fresh_after and str(top["period_end"]) < fresh_after:
+                continue
+            out[sym] = {"basis": basis, "quarter": top}
+        bal = conn.execute(
+            "SELECT symbol, basis, period_end, debt_equity_x, current_ratio_x,"
+            " total_equity_cr, net_debt_cr FROM balance_sheet WHERE symbol IN (%s)"
+            " ORDER BY symbol, period_end DESC" % marks, part).fetchall()
+        for r in bal:
+            o = out.get(r["symbol"])
+            if o is not None and "balance" not in o and r["basis"] == o["basis"]:
+                o["balance"] = dict(r)
+        ann = conn.execute(
+            "SELECT symbol, basis, period_end, pat_cr FROM income_statement"
+            " WHERE freq='annual' AND symbol IN (%s) ORDER BY symbol, period_end DESC"
+            % marks, part).fetchall()
+        for r in ann:
+            o = out.get(r["symbol"])
+            if o is not None and "annual" not in o and r["basis"] == o["basis"]:
+                o["annual"] = dict(r)
+    return out

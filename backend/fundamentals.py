@@ -508,3 +508,242 @@ def series_from_store(symbol, quarters: int = 8, basis: str = None,
                         "one may have been filed since." % res.get("latest")] \
             + res.get("notes", [])
     return res
+
+
+# ---------------------------------------------------------------------------
+# Balance sheet and cash flow, from the stored tables
+# ---------------------------------------------------------------------------
+
+# What a reader looks for, in statement order. A bank files deposits and loans
+# where a manufacturer files inventories and receivables; the page leaves out
+# any line a company never filed, so one list serves both.
+BALANCE_VIEW = [
+    ("total_assets",        "Total assets"),
+    ("ppe",                 "Property, plant and equipment"),
+    ("cwip",                "Capital work in progress"),
+    ("goodwill",            "Goodwill"),
+    ("investments",         "Investments"),
+    ("loans",               "Loans (advances)"),
+    ("inventories",         "Inventories"),
+    ("trade_receivables",   "Trade receivables"),
+    ("cash_and_equivalents", "Cash and equivalents"),
+    ("current_assets",      "Current assets"),
+    ("total_equity",        "Total equity"),
+    ("minority_interest",   "Minority interest"),
+    ("deposits",            "Deposits"),
+    ("total_borrowings",    "Total borrowings"),
+    ("net_debt",            "Net debt"),
+    ("trade_payables",      "Trade payables"),
+    ("current_liabilities", "Current liabilities"),
+]
+BALANCE_RATIO_VIEW = [
+    ("debt_equity_x",   "Debt to equity",  "total borrowings ÷ total equity"),
+    ("current_ratio_x", "Current ratio",   "current assets ÷ current liabilities"),
+]
+CASHFLOW_VIEW = [
+    ("cfo",               "Cash from operations"),
+    ("capex",             "Capital expenditure"),
+    ("fcf",               "Free cash flow"),
+    ("cfi",               "Cash from investing"),
+    ("cff",               "Cash from financing"),
+    ("dividends_paid",    "Dividends paid"),
+    ("share_buyback",     "Share buyback"),
+    ("interest_paid",     "Interest paid"),
+    ("income_tax_paid",   "Income tax paid"),
+    ("borrowings_raised", "Borrowings raised"),
+    ("borrowings_repaid", "Borrowings repaid"),
+]
+CASHFLOW_RATIO_VIEW = [
+    ("cash_conversion_pct", "Cash conversion", "cash from operations ÷ profit after tax"),
+    ("fcf_margin_pct",      "Free cash flow margin", "free cash flow ÷ revenue"),
+]
+
+
+def position_from_store(symbol, periods: int = 6) -> dict:
+    """
+    The balance sheet at each March and September, and the cash flow for each
+    financial year, as filed and stored by the market-wide crawl. Money in
+    ₹ crore. Always returns a dict; `available` is False when nothing is held.
+
+    Only full years of cash flow are shown: a half-year's operating cash flow
+    set beside a year's would read as a collapse.
+    """
+    sym = (symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
+    out = {"symbol": sym, "available": False, "unit": "crore",
+           "source": "NSE corporate filings (XBRL, LODR Reg 33), "
+                     "as stored by the market-wide crawl",
+           "balance": {"rows": [], "lines": [], "ratio_defs": []},
+           "cashflow": {"rows": [], "lines": [], "ratio_defs": []}}
+    try:
+        import fundamentals_store as store
+        bal = store.rows("balance", symbol=sym)
+        cfl = store.rows("cashflow", symbol=sym)
+        ann = store.rows("income", symbol=sym, freq="annual")
+    except Exception:
+        out["message"] = "The stored statements are not available."
+        return out
+    n = max(1, min(int(periods or 6), 12))
+
+    # One basis across both statements: the one the income statement uses.
+    held = {r.get("basis") for r in bal + cfl + ann}
+    basis = "consolidated" if "consolidated" in held else \
+        ("standalone" if "standalone" in held else None)
+    if basis is None:
+        out["message"] = ("The balance sheet and cash flow for %s have not been "
+                          "read yet." % sym)
+        return out
+    bal = [r for r in bal if r.get("basis") == basis][:n]
+    cfl = [r for r in cfl if r.get("basis") == basis and r.get("months") == 12][:n]
+    pat = {r["period_end"]: r for r in ann if r.get("basis") == basis}
+
+    def pick(r, view, ratios):
+        return {"period_end": r["period_end"], "label": r.get("label"),
+                "filed_at": r.get("filed_at"), "audited": r.get("audited"),
+                "source": r.get("source_url"),
+                "values": {k: _f(r.get("%s_cr" % k)) for k, _l in view},
+                "ratios": {k: _f(r.get(k)) for k, _l, _f2 in ratios}}
+
+    brows = [pick(r, BALANCE_VIEW, BALANCE_RATIO_VIEW) for r in bal]
+    crows = []
+    for r in cfl:
+        row = pick(r, CASHFLOW_VIEW, [])
+        year = pat.get(r["period_end"]) or {}
+        row["ratios"] = {
+            "cash_conversion_pct": _div(r.get("cfo_cr"), year.get("pat_cr")),
+            "fcf_margin_pct": _div(r.get("fcf_cr"), year.get("revenue_cr"))
+            if r.get("fcf_cr") is not None and r["fcf_cr"] >= 0 else None,
+        }
+        crows.append(row)
+
+    def used(view, rows_):
+        return [{"key": k, "label": l} for k, l in view
+                if any(x["values"].get(k) is not None for x in rows_)]
+
+    out["balance"] = {"rows": brows, "lines": used(BALANCE_VIEW, brows),
+                      "ratio_defs": [{"key": k, "label": l, "formula": f}
+                                     for k, l, f in BALANCE_RATIO_VIEW]}
+    out["cashflow"] = {"rows": crows, "lines": used(CASHFLOW_VIEW, crows),
+                       "ratio_defs": [{"key": k, "label": l, "formula": f}
+                                      for k, l, f in CASHFLOW_RATIO_VIEW]}
+    out.update({
+        "available": bool(brows or crows),
+        "basis": basis,
+        "company": next((r.get("company") for r in bal + cfl if r.get("company")), None),
+        "notes": [
+            "The balance sheet is filed twice a year, at March and September; "
+            "the cash flow once a year in full. Both are on the %s basis, the "
+            "same as the quarterly results above." % basis,
+            "Capital expenditure is shown as the cash paid, so it is positive; "
+            "free cash flow is cash from operations less that capital expenditure.",
+            "Cash conversion is shown only where profit after tax was positive, "
+            "and free cash flow margin only where free cash flow was.",
+        ],
+    })
+    if not out["available"]:
+        out["message"] = ("The balance sheet and cash flow for %s have not been "
+                          "read yet." % sym)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Against its industry
+# ---------------------------------------------------------------------------
+
+# Fewer peers than this and a median is a statement about two or three other
+# companies, not an industry.
+PEER_MIN = 5
+
+PEER_VIEW = [
+    # key, label, where it comes from, higher is better (None: neither)
+    ("opm_pct",         "Operating margin",       "quarter", True),
+    ("net_margin_pct",  "Net margin",             "quarter", True),
+    ("revenue_yoy_pct", "Revenue growth, YoY",    "quarter", True),
+    ("pat_yoy_pct",     "Profit growth, YoY",     "quarter", True),
+    ("roe_pct",         "Return on equity",       "derived", True),
+    ("debt_equity_x",   "Debt to equity",         "balance", False),
+    ("current_ratio_x", "Current ratio",          "balance", None),
+]
+
+
+def _peer_values(rec):
+    q, b, a = rec.get("quarter") or {}, rec.get("balance") or {}, rec.get("annual") or {}
+    out = {k: _f(q.get(k)) for k, _l, src, _h in PEER_VIEW if src == "quarter"}
+    out.update({k: _f(b.get(k)) for k, _l, src, _h in PEER_VIEW if src == "balance"})
+    out["roe_pct"] = _div(a.get("pat_cr"), b.get("total_equity_cr"))
+    return out
+
+
+def _median(vals):
+    vals = sorted(vals)
+    n = len(vals)
+    if not n:
+        return None
+    mid = n // 2
+    return round(vals[mid] if n % 2 else (vals[mid - 1] + vals[mid]) / 2.0, 2)
+
+
+def peers_from_store(symbol, industry, members, today: dt.date = None) -> dict:
+    """
+    How one company's latest figures sit against the rest of its NSE industry:
+    the industry median and how many peers it is ahead of, per measure.
+
+    `members` is every symbol NSE classes in `industry`. A peer counts only if
+    its newest stored quarter ended within STORE_FRESH_DAYS, so a company that
+    stopped filing does not pull the median towards an old year, and a measure
+    is compared only when at least PEER_MIN peers have a value for it. How much
+    of the industry was read is stated, never implied to be all of it.
+    """
+    sym = (symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
+    out = {"symbol": sym, "industry": industry, "available": False, "measures": []}
+    if not industry:
+        out["message"] = "NSE's industry for %s is not held yet." % sym
+        return out
+    today = today or dt.date.today()
+    fresh = (today - dt.timedelta(days=STORE_FRESH_DAYS)).isoformat()
+    try:
+        import fundamentals_store as store
+        held = store.latest_for(set(members or []) | {sym}, fresh_after=fresh)
+    except Exception:
+        out["message"] = "The stored statements are not available."
+        return out
+    me = held.pop(sym, None)
+    if me is None:
+        out["message"] = "%s's own results are not held, or not recent." % sym
+        return out
+    mine = _peer_values(me)
+    theirs = {s: _peer_values(r) for s, r in held.items()}
+
+    measures = []
+    for key, label, _src, higher in PEER_VIEW:
+        vals = [v[key] for v in theirs.values() if v.get(key) is not None]
+        own = mine.get(key)
+        if len(vals) < PEER_MIN or own is None:
+            continue
+        m = {"key": key, "label": label, "value": own, "median": _median(vals),
+             "peers": len(vals), "higher_is_better": higher,
+             "above": sum(1 for v in vals if own > v),
+             "below": sum(1 for v in vals if own < v)}
+        measures.append(m)
+
+    others = [s for s in (members or []) if s and s.upper() != sym]
+    out.update({
+        "available": bool(measures),
+        "measures": measures,
+        "as_of": me["quarter"].get("label"),
+        "basis": me.get("basis"),
+        "industry_members": len(others),
+        "peers_read": len(held),
+        "notes": [
+            "Each company is compared on its own newest quarter and balance "
+            "sheet, on the basis it files. Peers whose newest results are more "
+            "than five months old are left out.",
+            "Return on equity is the latest full year's profit after tax over "
+            "the latest balance sheet's equity.",
+            "%d of the %d other companies NSE classes in %s have recent "
+            "results held." % (len(held), len(others), industry),
+        ],
+    })
+    if not measures:
+        out["message"] = ("Too few of %s's peers have recent results held to "
+                          "compare against." % industry)
+    return out

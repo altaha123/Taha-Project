@@ -1,0 +1,86 @@
+{
+ "symbol": "RELIANCE",
+ "industry": "Refineries & Marketing",
+ "available": true,
+ "measures": [
+  {
+   "key": "opm_pct",
+   "label": "Operating margin",
+   "value": 17.1,
+   "median": 11.25,
+   "peers": 6,
+   "higher_is_better": true,
+   "above": 6,
+   "below": 0
+  },
+  {
+   "key": "net_margin_pct",
+   "label": "Net margin",
+   "value": 8.55,
+   "median": 5.62,
+   "peers": 6,
+   "higher_is_better": true,
+   "above": 6,
+   "below": 0
+  },
+  {
+   "key": "revenue_yoy_pct",
+   "label": "Revenue growth, YoY",
+   "value": 4.0,
+   "median": 7.5,
+   "peers": 6,
+   "higher_is_better": true,
+   "above": 0,
+   "below": 6
+  },
+  {
+   "key": "pat_yoy_pct",
+   "label": "Profit growth, YoY",
+   "value": 10.0,
+   "median": 6.5,
+   "peers": 6,
+   "higher_is_better": true,
+   "above": 6,
+   "below": 0
+  },
+  {
+   "key": "roe_pct",
+   "label": "Return on equity",
+   "value": 10.0,
+   "median": 13.5,
+   "peers": 6,
+   "higher_is_better": true,
+   "above": 0,
+   "below": 6
+  },
+  {
+   "key": "debt_equity_x",
+   "label": "Debt to equity",
+   "value": 0.44,
+   "median": 0.65,
+   "peers": 6,
+   "higher_is_better": false,
+   "above": 1,
+   "below": 5
+  },
+  {
+   "key": "current_ratio_x",
+   "label": "Current ratio",
+   "value": 1.08,
+   "median": 1.35,
+   "peers": 6,
+   "higher_is_better": null,
+   "above": 0,
+   "below": 6
+  }
+ ],
+ "as_of": "Q1 FY27",
+ "basis": "consolidated",
+ "industry_members": 6,
+ "peers_read": 6,
+ "notes": [
+  "Each company is compared on its own newest quarter and balance sheet, on the basis it files. Peers whose newest results are more than five months old are left out.",
+  "Return on equity is the latest full year's profit after tax over the latest balance sheet's equity.",
+  "6 of the 6 other companies NSE classes in Refineries & Marketing have recent results held."
+ ]
+}

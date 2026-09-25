@@ -593,8 +593,17 @@ def deep_score(cand, selection="ranked"):
     if df is None or len(df) < 120:
         return None
     tech = technical_score(df.dropna(subset=["Close"]))
+    # The three statements from the stored Yahoo tables where the crawl holds
+    # them — three provider calls saved per shortlisted company. `info` is
+    # still read live: valuation and ownership move daily.
+    held = None
     try:
-        fin, bs, cf = t.financials, t.balance_sheet, t.cashflow
+        from data_source import stored_statements
+        held = stored_statements(f"{s}.NS")
+    except Exception:
+        held = None
+    try:
+        fin, bs, cf = held if held is not None else (t.financials, t.balance_sheet, t.cashflow)
         info = dict(t.info or {})
     except Exception:
         fin = bs = cf = None

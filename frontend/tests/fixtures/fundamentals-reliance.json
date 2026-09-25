@@ -881,6 +881,7 @@
   }
  ],
  "source": "NSE corporate filings (XBRL, LODR Reg 33)",
+ "served_from": "exchange",
  "company": "Reliance Industries Limited",
  "basis": "consolidated",
  "basis_reason": "the company files consolidated results",
