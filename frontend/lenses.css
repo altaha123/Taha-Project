@@ -290,3 +290,22 @@
   .ln-spin{ animation-duration:2s }
   .ln-runbtn.is-busy svg{ animation:none }
 }
+
+/* ── Quarterly screens (screens.js) ─────────────────────────────────────── */
+.sc-wrap{ margin-top:40px }
+.sc-h{
+  margin:0 0 6px; font:500 11px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
+}
+.sc-item{ margin:12px 0 0; border:1px solid var(--rule); border-radius:14px; padding:4px 14px 12px }
+.sc-item summary{
+  cursor:pointer; padding:12px 0; font:400 22px/1.2 'Instrument Serif',Georgia,serif;
+  list-style-position:outside;
+}
+.sc-item summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--mute); margin-left:8px }
+.sc-rule{ margin:10px 0 }
+.sc-co{ display:block; font-size:12px; font-weight:400; color:var(--mute) }
+.sc-asof{ white-space:nowrap; font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.sc-figs span{ display:inline-block; margin:0 14px 4px 0; font-variant-numeric:tabular-nums }
+.sc-figs i{ font-style:normal; color:var(--mute); font-size:12px }
+.sc-vh{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0) }

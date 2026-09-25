@@ -95,6 +95,11 @@ try:
 except Exception:
     fundamentals_crawl = None
 try:
+    # Quarterly questions asked of every company at once, from the tables.
+    import fundamentals_screens
+except Exception:
+    fundamentals_screens = None
+try:
     # A daily copy of the data disk in Cloudflare R2. Stdlib plus requests;
     # inert until the R2_* variables are set.
     import backup as backup_job
@@ -2231,11 +2236,112 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
     if not ticker or len(ticker) > 20:
         raise HTTPException(400, "Provide a valid ticker symbol.")
     want = basis if basis in ("consolidated", "standalone") else None
+    n = max(2, min(quarters, 16))
+    # The market-wide crawl already holds these filings in
+    # altaha_fundamentals.db, so a crawled company is answered from the disk
+    # in milliseconds rather than an index call plus a document per quarter
+    # against a throttled exchange. The exchange is read only for a company
+    # the crawl has not reached, the basis it does not keep, or a series whose
+    # newest quarter looks overdue.
     try:
-        out = fundamentals_source.series(
-            ticker, quarters=max(2, min(quarters, 16)), basis=want)
+        held = fundamentals_source.series_from_store(ticker, quarters=n, basis=want)
+    except Exception:
+        held = None
+    if held and held.get("available"):
+        return to_native(held)
+    try:
+        out = fundamentals_source.series(ticker, quarters=n, basis=want)
     except Exception as e:
-        raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+        out = {"available": False, "message": f"Could not read the filings: {str(e)[:110]}"}
+    if not out.get("available"):
+        # The exchange refused or is down: an older stored series, labelled
+        # as such, beats an empty pane.
+        try:
+            held = fundamentals_source.series_from_store(
+                ticker, quarters=n, basis=want, allow_stale=True)
+        except Exception:
+            held = None
+        if held and held.get("available"):
+            return to_native(held)
+        if "Could not read the filings" in (out.get("message") or ""):
+            raise HTTPException(503, out["message"])
+    return to_native(out)
+
+
+def _fund_symbol(ticker):
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    return ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+
+
+@app.get("/fundamentals/position")
+def fundamentals_position(ticker: str, periods: int = 6):
+    """
+    The balance sheet at each March and September, and the cash flow for each
+    full year, as filed and held by the market-wide crawl. Read from the disk
+    only: these come from the same Reg 33 filings, and the crawl has already
+    read them, so there is nothing to fetch.
+    """
+    if fundamentals_source is None:
+        return {"available": False, "message": "The fundamentals reader is not available."}
+    return to_native(fundamentals_source.position_from_store(
+        _fund_symbol(ticker), periods=max(1, min(periods, 12))))
+
+
+def _industry_members(sym):
+    """NSE's industry for a company, and every company NSE puts in it."""
+    if lens_store is None:
+        return None, []
+    try:
+        conn = lens_store._connect()
+        row = conn.execute("SELECT industry FROM lens_company WHERE symbol=?", (sym,)).fetchone()
+        ind = row["industry"] if row else None
+        if not ind:
+            return None, []
+        return ind, [r["symbol"] for r in conn.execute(
+            "SELECT symbol FROM lens_company WHERE industry=?", (ind,))]
+    except Exception:
+        return None, []
+
+
+@app.get("/fundamentals/peers")
+def fundamentals_peers(ticker: str):
+    """
+    The company's latest margins, growth, return on equity and leverage
+    against the median of its NSE industry, with how many peers it is ahead
+    of. Every figure is from the stored filings; a measure is shown only when
+    enough of the industry has recent results held to make a median mean
+    something, and the share of the industry read is stated.
+    """
+    if fundamentals_source is None:
+        return {"available": False, "message": "The fundamentals reader is not available."}
+    sym = _fund_symbol(ticker)
+    industry, members = _industry_members(sym)
+    return to_native(fundamentals_source.peers_from_store(sym, industry, members))
+
+
+@app.get("/fundamentals/screens")
+def fundamentals_screens_index():
+    """Every quarterly screen over the whole store, with how many meet it."""
+    if fundamentals_screens is None:
+        return {"available": False, "message": "The screens are not available."}
+    try:
+        return to_native(fundamentals_screens.index())
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the tables: {str(e)[:110]}")
+
+
+@app.get("/fundamentals/screens/{screen_id}")
+def fundamentals_screen(screen_id: str, limit: int = 200):
+    """One screen: its rule and every company meeting it, with the figures."""
+    if fundamentals_screens is None:
+        return {"available": False, "message": "The screens are not available."}
+    try:
+        out = fundamentals_screens.detail(screen_id, limit=limit)
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the tables: {str(e)[:110]}")
+    if out is None:
+        raise HTTPException(404, "No screen with that id.")
     return to_native(out)
 
 

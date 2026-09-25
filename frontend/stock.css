@@ -855,6 +855,10 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
   .fu-table .fu-now{ position:static; box-shadow:none }
   .fu-table .fu-sp{ width:88px; min-width:88px }
   .fu-spark{ width:80px }
+  /* Four columns fit a phone outright: the median and the rank belong on
+     screen beside the company's own figure, not behind a scroll. */
+  .fu-table.fu-peers{ min-width:0; width:100% }
+  .fu-table.fu-peers .fu-line{ width:auto; min-width:0; max-width:none }
   /* Narrower, because at this width the fade is sitting on the change column
      it exists to advertise. */
   .fu-block::after{ width:15px }

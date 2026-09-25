@@ -920,6 +920,32 @@ def summary(symbol, limit=8, consolidated=None):
     }
 
 
+# A stored series whose newest quarter ended longer ago than this has
+# probably missed a filing since the last crawl; read the exchange instead.
+STORED_FRESH_DAYS = 92 + 62
+
+
+def _stored_scoring(symbol, limit):
+    """
+    Today's scoring history from altaha_fundamentals.db, or None to read the
+    exchange. The crawl already holds every company's filings, so the scan no
+    longer needs an index call and a document fetch per company to score it.
+    Historical (as_of) reads never come here: the table keeps only the latest
+    revision of each quarter, and a backtest needs the one known at the time.
+    """
+    try:
+        import fundamentals_store
+        rows = fundamentals_store.scoring_quarters(symbol, limit=limit)
+    except Exception:
+        return None
+    if not rows:
+        return None
+    age = _age_days(rows[0].get("to"))
+    if age is None or age > STORED_FRESH_DAYS:
+        return None
+    return rows
+
+
 _scoring_cache = {}
 _scoring_lock = threading.Lock()
 
@@ -937,7 +963,9 @@ def scoring_statements(symbol, as_of=None, limit=16):
         cached = _scoring_cache.get(key)
         if cached and time.time()-cached[0] < 3600:
             return cached[1]
-    rows = statements(symbol, limit=limit, as_of=key[1], retain_versions=True)
+    rows = _stored_scoring(symbol, limit) if as_of is None else None
+    if rows is None:
+        rows = statements(symbol, limit=limit, as_of=key[1], retain_versions=True)
     try:
         import pit_store
         from factors import known_quarters

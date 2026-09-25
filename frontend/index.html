@@ -1189,7 +1189,7 @@
 }catch(e){}})();
 </script>
 <link rel="stylesheet" href="universe-scan.css?v=20260921-3d">
-<link rel="stylesheet" href="lenses.css?v=20260924-run">
+<link rel="stylesheet" href="lenses.css?v=20260925-screens">
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20260922-stock-copy"></script>
 <script src="universe-scan.js?v=20260922-stock-copy"></script>
@@ -1865,6 +1865,9 @@
        Filled by lenses.js from the nightly run cached by the API. -->
   <div id="view-lenses" style="display:none">
     <div id="lenses-body"></div>
+    <!-- Quarterly screens over the stored statements. Filled by screens.js,
+         on the lens index only. -->
+    <div id="screens-body" hidden></div>
   </div><!-- /view-lenses -->
 
   <div id="view-convergence" style="display:none">
@@ -4444,6 +4447,7 @@ if(fcSymParam){
 <script src="investors.js" defer></script>
 <script src="funds.js" defer></script>
 <script src="lenses.js?v=20260924-run" defer></script>
+<script src="screens.js?v=20260925" defer></script>
 <script src="ledger-admin.js" defer></script>
 <script src="planner-risk.js" defer></script>
 <script src="discover.js" defer></script>

@@ -1,0 +1,176 @@
+{
+ "index": {
+  "available": true,
+  "companies_held": 4,
+  "computed_utc": "2026-09-25T13:01:42+00:00",
+  "notice": "Screens are filters applied to the companies' filed statements. A company listed meets the stated condition on the figures shown; it is not a recommendation.",
+  "screens": [
+   {
+    "id": "steady_growers",
+    "name": "Four quarters of 20%+ revenue growth",
+    "rule": "Revenue up more than 20% on the same quarter a year earlier, in each of the last four quarters.",
+    "count": 1
+   },
+   {
+    "id": "turnarounds",
+    "name": "Back to profit",
+    "rule": "A profit after tax in the latest quarter, against a loss in the same quarter a year earlier.",
+    "count": 1
+   },
+   {
+    "id": "margin_expanders",
+    "name": "Operating margin up 3 points or more",
+    "rule": "Operating margin at least 3 percentage points above the same quarter a year earlier, with revenue also higher.",
+    "count": 1
+   },
+   {
+    "id": "net_cash",
+    "name": "More cash than debt, and profitable",
+    "rule": "Cash and current investments above total borrowings on the latest balance sheet, and a profit after tax in the latest full year.",
+    "count": 0
+   },
+   {
+    "id": "fcf_compounders",
+    "name": "Three years of free cash flow",
+    "rule": "Free cash flow positive in each of the last three full years, and operating cash flow above profit after tax in the latest one.",
+    "count": 0
+   }
+  ]
+ },
+ "detail": {
+  "steady_growers": {
+   "available": true,
+   "screen": {
+    "id": "steady_growers",
+    "name": "Four quarters of 20%+ revenue growth",
+    "rule": "Revenue up more than 20% on the same quarter a year earlier, in each of the last four quarters."
+   },
+   "count": 1,
+   "companies_held": 4,
+   "computed_utc": "2026-09-25T13:01:42+00:00",
+   "notice": "Screens are filters applied to the companies' filed statements. A company listed meets the stated condition on the figures shown; it is not a recommendation.",
+   "matches": [
+    {
+     "symbol": "TRENT",
+     "company": "Trent Limited",
+     "as_of": "Q1 FY27",
+     "figures": [
+      {
+       "label": "Revenue YoY, Q1 FY27",
+       "value": 26.83,
+       "unit": "pct"
+      },
+      {
+       "label": "Revenue YoY, Q4 FY26",
+       "value": 26.83,
+       "unit": "pct"
+      },
+      {
+       "label": "Revenue YoY, Q3 FY26",
+       "value": 26.83,
+       "unit": "pct"
+      },
+      {
+       "label": "Revenue YoY, Q2 FY26",
+       "value": 26.83,
+       "unit": "pct"
+      }
+     ]
+    }
+   ]
+  },
+  "turnarounds": {
+   "available": true,
+   "screen": {
+    "id": "turnarounds",
+    "name": "Back to profit",
+    "rule": "A profit after tax in the latest quarter, against a loss in the same quarter a year earlier."
+   },
+   "count": 1,
+   "companies_held": 4,
+   "computed_utc": "2026-09-25T13:01:42+00:00",
+   "notice": "Screens are filters applied to the companies' filed statements. A company listed meets the stated condition on the figures shown; it is not a recommendation.",
+   "matches": [
+    {
+     "symbol": "VODAIDEA",
+     "company": "Vodafone Idea Limited",
+     "as_of": "Q1 FY27",
+     "figures": [
+      {
+       "label": "PAT, Q1 FY27",
+       "value": 310.0,
+       "unit": "cr"
+      },
+      {
+       "label": "PAT, Q1 FY26",
+       "value": -6400.0,
+       "unit": "cr"
+      }
+     ]
+    }
+   ]
+  },
+  "margin_expanders": {
+   "available": true,
+   "screen": {
+    "id": "margin_expanders",
+    "name": "Operating margin up 3 points or more",
+    "rule": "Operating margin at least 3 percentage points above the same quarter a year earlier, with revenue also higher."
+   },
+   "count": 1,
+   "companies_held": 4,
+   "computed_utc": "2026-09-25T13:01:42+00:00",
+   "notice": "Screens are filters applied to the companies' filed statements. A company listed meets the stated condition on the figures shown; it is not a recommendation.",
+   "matches": [
+    {
+     "symbol": "TATASTEEL",
+     "company": "Tata Steel Limited",
+     "as_of": "Q1 FY27",
+     "figures": [
+      {
+       "label": "Operating margin, Q1 FY27",
+       "value": 15.8,
+       "unit": "pct"
+      },
+      {
+       "label": "Operating margin, Q1 FY26",
+       "value": 11.2,
+       "unit": "pct"
+      },
+      {
+       "label": "Revenue YoY",
+       "value": 3.7,
+       "unit": "pct"
+      }
+     ]
+    }
+   ]
+  },
+  "net_cash": {
+   "available": true,
+   "screen": {
+    "id": "net_cash",
+    "name": "More cash than debt, and profitable",
+    "rule": "Cash and current investments above total borrowings on the latest balance sheet, and a profit after tax in the latest full year."
+   },
+   "count": 0,
+   "companies_held": 4,
+   "computed_utc": "2026-09-25T13:01:42+00:00",
+   "notice": "Screens are filters applied to the companies' filed statements. A company listed meets the stated condition on the figures shown; it is not a recommendation.",
+   "matches": []
+  },
+  "fcf_compounders": {
+   "available": true,
+   "screen": {
+    "id": "fcf_compounders",
+    "name": "Three years of free cash flow",
+    "rule": "Free cash flow positive in each of the last three full years, and operating cash flow above profit after tax in the latest one."
+   },
+   "count": 0,
+   "companies_held": 4,
+   "computed_utc": "2026-09-25T13:01:42+00:00",
+   "notice": "Screens are filters applied to the companies' filed statements. A company listed meets the stated condition on the figures shown; it is not a recommendation.",
+   "matches": []
+  }
+ }
+}

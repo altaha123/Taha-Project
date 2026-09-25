@@ -118,6 +118,57 @@ four quarters as though that were the whole history is the kind of quiet lie
 this project keeps trying not to tell. Filings already read are kept, so the
 history fills in rather than being re-fetched.
 
+## Served from the disk first
+
+The market-wide crawl (below) already holds every company's filings in
+`altaha_fundamentals.db`, so `/fundamentals` reads that before it goes near
+the exchange: `fundamentals.series_from_store()` builds the identical payload
+from `income_statement` — same ratios, same `change()`, same year-ago lookup,
+through the same `_assemble()` the live reader uses — in milliseconds instead
+of an index call plus one document per quarter. `served_from` says which
+(`store` or `exchange`).
+
+The exchange is still read when the store cannot answer honestly:
+
+* the crawl has not reached the company yet;
+* `?basis=` asks for the basis the crawl does not keep (it keeps one);
+* the newest stored quarter ended more than `STORE_FRESH_DAYS` (154) ago, so a
+  newer filing has probably been made since the last crawl.
+
+If that live read then fails, an older stored series is served anyway with
+`stale: true` and a note naming its newest quarter, rather than an empty pane.
+From the store `basis_alternatives` lists only what is held, so the pane does
+not claim the company also files the other basis.
+
+## Everything else that reads the tables
+
+The same principle — the crawl has already read it, so do not read it again —
+now covers every other consumer of a company's statements. Each one falls back
+to the live source when the store cannot answer honestly, and says which
+answered where the caller can see it.
+
+| What | Reads | Falls back to live when |
+|---|---|---|
+| **Fundamental score** (Piotroski checks, stock page, portfolio rows, scan Phase 2) — `data_source.stored_statements()` | `yf_statements`, rebuilt into the exact frames yfinance returns | not an `.NS` listing (a bare ticker is a US one — AGI is Alamos Gold, not AGI Greenpac), any of the three statements missing, or the newest annual period older than 515 days. `info` (valuation, ownership) is still read live. |
+| **Factor history** for the scan and `/factors` — `xbrl.scoring_statements()` → `fundamentals_store.scoring_quarters()` | `income_statement` quarters in `xbrl.statements()`'s shape; return on assets annualised against the balance sheet at or before the quarter, as `normalise()` derives it | a historical `as_of` read (the table keeps only the latest revision, and a backtest needs the one known at the time), the company not crawled, or the newest quarter older than 154 days. Filing times are written back in NSE's own format so the point-in-time store keys a stored row and the same filing read live as one version. |
+| **Balance sheet and cash flow** on the stock page — `GET /fundamentals/position` | `balance_sheet` (March and September), `cash_flow` (full years only — a half-year beside a year reads as a collapse) | nothing to fall back to; the pane says the company has not been read yet. Lines a company never filed are not drawn, so a bank shows deposits and a manufacturer inventories. Cash conversion and FCF margin only over a positive base. |
+| **Against its industry** — `GET /fundamentals/peers` | each peer's newest quarter, balance sheet and year, one query per table; NSE industry from `lens_company` | a measure is shown only when at least 5 peers with results in the last 154 days have a value for it; how many of the industry were read is printed. |
+| **Quarterly screens** under the lens cards — `GET /fundamentals/screens`, `/fundamentals/screens/{id}` | the whole store, cached for an hour and until the tables change | a company whose newest quarter is more than 154 days old is left out, not failed. Every match carries the figures that met the condition. |
+
+The five screens (`fundamentals_screens.py`): four quarters in a row of revenue
+up more than 20% YoY; back to profit against a loss a year earlier; operating
+margin up 3+ points YoY with revenue higher; cash and current investments above
+borrowings with a profitable latest year; free cash flow positive three full
+years running with operating cash flow above profit in the latest. The lenses
+do the same for investing philosophies over full years; these answer what
+changed in the latest quarters.
+
+Tests: `backend/tests/test_fundamentals_uses.py` for each reader;
+`frontend/tests/stock-fundamentals-browser.cjs` and
+`frontend/tests/lenses-browser.cjs` for the pages, against fixtures that
+`make_fundamentals_fixture.py` produces from the real modules over a temporary
+store.
+
 ## Reaching NSE at all
 
 `backend/nse_http.py` is the shared transport. Plain `requests` gets a 403 from

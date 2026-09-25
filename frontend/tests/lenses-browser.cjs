@@ -19,6 +19,11 @@ const { chromium } = require('playwright');
 const root = path.resolve('frontend'), output = path.resolve('test-results/lenses');
 fs.mkdirSync(output, { recursive: true });
 const fx = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/lenses.json'), 'utf8'));
+// The quarterly screens under the lens cards (screens.js), produced by the
+// real module in backend/tests/make_fundamentals_fixture.py.
+const screensFx = JSON.parse(fs.readFileSync(
+  path.join(root, 'tests/fixtures/fundamentals-screens.json'), 'utf8'));
+const screenCalls = [];
 const NOTICE = /rules-based filters applied to historical financial data\. They are not investment advice or recommendations\./;
 const BANNED = /\b(buy|sell|target|recommend|top picks|best stocks|should|opportunity)\b/i;
 
@@ -50,6 +55,9 @@ function answer(u, req) {
     return runStatus;
   }
   if (p === '/api/lenses/run') return runStatus;
+  if (p === '/fundamentals/screens') { screenCalls.push('index'); return screensFx.index; }
+  let sm = p.match(/^\/fundamentals\/screens\/([a-z_]+)$/);
+  if (sm) { screenCalls.push(sm[1]); return screensFx.detail[sm[1]]; }
   if (p === '/api/lenses') return fx.index;
   if (p === '/api/lenses/convergence') return fx.convergence[u.searchParams.get('min_lenses') || '3'];
   let m = p.match(/^\/api\/lenses\/stock\/(.+)$/);
@@ -136,6 +144,27 @@ async function viewText(page, id) {
   assert.doesNotMatch(await viewText(page, 'view-lenses'), BANNED);
   await page.screenshot({ path: path.join(output, 'index-desktop.png'), fullPage: true });
 
+  // ── Quarterly screens, under the cards ─────────────────────────────────
+  // Every screen with its count; matches fetched only when one is opened,
+  // each carrying the figures that met the condition. A stale company that
+  // would otherwise match is not listed.
+  const items = page.locator('#screens-body details.sc-item');
+  await items.first().waitFor({ state: 'visible' });
+  assert.equal(await items.count(), 5);
+  assert.deepEqual(screenCalls, ['index'], 'no screen is fetched until it is opened');
+  const turn = page.locator('#screens-body details[data-screen="turnarounds"]');
+  assert.match(await turn.locator('summary').innerText(), /Back to profit\s+1 company/);
+  await turn.locator('summary').click();
+  await turn.locator('.sc-table tbody tr').first().waitFor();
+  assert.equal(await turn.locator('.sc-table tbody tr').count(), 1);
+  const turnRow = await turn.locator('.sc-table tbody tr').innerText();
+  assert.match(turnRow, /VODAIDEA/);
+  assert.match(turnRow, /-₹6,400 cr/, 'the year-ago loss is printed, not implied');
+  assert.doesNotMatch(await page.locator('#screens-body').innerText(), /OLDCO/);
+  assert.match(await page.locator('#screens-body').innerText(), /not a recommendation/);
+  assert.doesNotMatch(await viewText(page, 'view-lenses'), BANNED);
+  await page.screenshot({ path: path.join(output, 'screens-desktop.png'), fullPage: true });
+
   // ── The Run button ─────────────────────────────────────────────────────
   const runBtn = page.locator('#ln-runbtn');
   assert.ok(await runBtn.isVisible(), 'the Lenses page has a Run button');
@@ -158,6 +187,8 @@ async function viewText(page, id) {
   await qglp.click();
   await page.locator('.ln-hero').waitFor({ state: 'visible' });
   assert.match(page.url(), /#research\/lenses\/qglp$/);
+  assert.equal(await page.locator('#screens-body').isVisible(), false,
+    'the screens belong to the lens index, not a lens page');
   assert.equal(await page.locator('.ln-rulelist li').count(), 4);
   const passRow = page.locator('.ln-results .ln-table tbody tr').first();
   assert.match(await passRow.innerText(), /GROW/);

@@ -259,15 +259,65 @@ def shareholding(t) -> dict:
     return out
 
 
+# An annual statement is refreshed once a year; one whose newest year ended
+# longer ago than this has missed an annual report and is read live instead.
+STORED_ANNUAL_FRESH_DAYS = 365 + 150
+
+
+def stored_statements(sym: str, today=None):
+    """
+    (financials, balance_sheet, cashflow) as yfinance shapes them — line items
+    down the index, period-end Timestamps across the columns, newest first —
+    from the Yahoo statements the fundamentals crawl already stored, or None.
+
+    None whenever any of the three is missing or the income statement's newest
+    year looks overdue, so the caller reads Yahoo live instead. Never raises.
+    """
+    # Only an NSE listing: the store is keyed by the bare NSE symbol, and a
+    # bare ticker here is a US one — AGI is Alamos Gold, not AGI Greenpac.
+    raw = (sym or "").strip().upper()
+    if not raw.endswith(".NS"):
+        return None
+    base = raw[:-3]
+    try:
+        import fundamentals_store
+        frames = []
+        for statement in ("income", "balance", "cashflow"):
+            grid = fundamentals_store.yf_statement(base, statement, "annual")
+            if not grid["periods"] or not grid["rows"]:
+                return None
+            cols = [pd.Timestamp(p) for p in grid["periods"]]
+            data = {pd.Timestamp(p): [r.get(p) for r in grid["rows"]]
+                    for p in grid["periods"]}
+            frames.append(pd.DataFrame(data, index=[r["item"] for r in grid["rows"]],
+                                       columns=cols, dtype=float))
+    except Exception:
+        return None
+    newest = frames[0].columns[0].date()
+    today = today or pd.Timestamp.today().date()
+    if (today - newest).days > STORED_ANNUAL_FRESH_DAYS:
+        return None
+    return tuple(frames)
+
+
 def fundamentals(sym: str, t):
-    """Return (financials, balance_sheet, cashflow, info_dict). Never raises."""
+    """Return (financials, balance_sheet, cashflow, info_dict). Never raises.
+
+    The three statements come from the stored Yahoo tables where the crawl
+    holds them, which saves three provider calls on every cold stock page and
+    portfolio row; `info` (valuation, sector, ownership) is still read live.
+    """
     cached = _cget(f"fn::{sym}")
     if cached is not None:
         return cached
 
     fin = bs = cf = pd.DataFrame()
     info = {}
-    for attr, target in (("financials", "fin"), ("balance_sheet", "bs"), ("cashflow", "cf")):
+    held = stored_statements(sym)
+    if held is not None:
+        fin, bs, cf = held
+    for attr, target in (() if held is not None else
+                         (("financials", "fin"), ("balance_sheet", "bs"), ("cashflow", "cf"))):
         try:
             val = getattr(t, attr)
             if target == "fin":

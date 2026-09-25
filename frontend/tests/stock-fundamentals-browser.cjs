@@ -24,6 +24,13 @@ fs.mkdirSync(output, { recursive: true });
 const fundamentals = JSON.parse(
   fs.readFileSync(path.join(root, 'tests/fixtures/fundamentals-reliance.json'), 'utf8'));
 
+// Balance sheet, cash flow and the industry comparison — also produced by the
+// real module, from a temporary store (make_fundamentals_fixture.stored()).
+const position = JSON.parse(
+  fs.readFileSync(path.join(root, 'tests/fixtures/fundamentals-reliance-position.json'), 'utf8'));
+const peers = JSON.parse(
+  fs.readFileSync(path.join(root, 'tests/fixtures/fundamentals-reliance-peers.json'), 'utf8'));
+
 const analyze = {
   ticker: 'RELIANCE', name: 'Reliance Industries Limited', currency: 'INR', price: 1402.5,
   scoring: { score: 61, label: 'Watch', pillars: {}, checks: [] },
@@ -57,7 +64,7 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   });
   const context = await browser.newContext({ viewport: { width: 1280, height: 1000 } });
   const page = await context.newPage(), errors = [];
-  let calls = 0;
+  let calls = 0, extras = 0;
   page.on('pageerror', e => errors.push(String(e.stack)));
 
   await context.route('**/*', route => {
@@ -65,6 +72,8 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
     if (u.hostname === '127.0.0.1') return route.continue();
     if (['font', 'stylesheet', 'image'].includes(route.request().resourceType())) return route.abort();
     if (u.pathname === '/fundamentals') { calls++; return route.fulfill({ json: fundamentals }); }
+    if (u.pathname === '/fundamentals/position') { extras++; return route.fulfill({ json: position }); }
+    if (u.pathname === '/fundamentals/peers') { extras++; return route.fulfill({ json: peers }); }
     if (u.pathname === '/analyze') return route.fulfill({ json: analyze });
     return route.fulfill({ json: { available: false, rows: [], items: [] } });
   });
@@ -81,6 +90,7 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   // Nothing is fetched until the pane is asked for. Six quarters is six
   // documents on the exchange; a stock page must not pull them to show a price.
   assert.equal(calls, 0, 'fundamentals must not load before its pane is opened');
+  assert.equal(extras, 0, 'nor the balance sheet or the industry comparison');
 
   await page.locator('#pane-btn-funda').click();
   await page.locator('.fu-table').first().waitFor();
@@ -191,6 +201,45 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
 
   // Provenance: the filing it came from is one click away.
   assert.ok(await page.locator('#pane-funda .own-asof a[href*="nseindia"]').count() >= 1);
+
+  // ── Against its industry ────────────────────────────────────────────────
+  // The industry is named, the median printed beside the company's own
+  // figure, and the rank is "N of M" peers — never a verdict.
+  await page.locator('#funda-peers .fu-peers').waitFor();
+  assert.match(await page.locator('#funda-peers .fu-cap').innerText(), /Refineries & Marketing/);
+  const opmRow = page.locator('#funda-peers tbody tr', { hasText: 'Operating margin' });
+  const opmCells = await opmRow.locator('td').allInnerTexts();
+  assert.equal(opmCells[0], '17.1%');
+  assert.equal(opmCells[1], '11.3%', 'the median of six peers at 7.5 to 15% is 11.25');
+  assert.equal(opmCells[2], '6 of 6');
+  assert.match(await page.locator('#funda-peers').innerText(), /6 of the 6 other companies/);
+  assert.match(await page.locator('#funda-peers tbody tr', { hasText: 'Debt to equity' })
+    .locator('th').innerText(), /lower is better/i);
+
+  // ── Balance sheet and cash flow ─────────────────────────────────────────
+  // Crore values printed as crore (not divided again), full years only in the
+  // cash flow — a half-year beside a year would read as a collapse — and a
+  // line the company never filed is not drawn as a row of dashes.
+  await page.locator('#funda-position .fu-stmt').first().waitFor();
+  assert.equal(extras, 2);
+  const tables = page.locator('#funda-position .fu-stmt');
+  assert.equal(await tables.count(), 2);
+  const bsHead = await tables.nth(0).locator('thead th').allInnerTexts();
+  // Headers are uppercased by CSS; compare the words.
+  assert.deepEqual(bsHead.slice(1).map(t => t.toUpperCase()),
+    ['MAR 2026', 'SEP 2025', 'MAR 2025', 'SEP 2024']);
+  const assets = await tables.nth(0).locator('tbody tr', { hasText: 'Total assets' })
+    .locator('td').allInnerTexts();
+  assert.equal(num(assets[0]), 1950000, `total assets read ${assets[0]}`);
+  assert.equal(await tables.nth(0).locator('tbody tr', { hasText: 'Deposits' }).count(), 0);
+  const cfHead = await tables.nth(1).locator('thead th').allInnerTexts();
+  assert.deepEqual(cfHead.slice(1).map(t => t.toUpperCase()), ['FY26', 'FY25', 'FY24']);
+  const fcf = await tables.nth(1).locator('tbody tr', { hasText: 'Free cash flow' }).first()
+    .locator('td').allInnerTexts();
+  assert.equal(num(fcf[0]), 47000);
+  const conv = await tables.nth(1).locator('tbody tr', { hasText: 'Cash conversion' })
+    .locator('td').allInnerTexts();
+  assert.equal(num(conv[0]), 209.42);
 
   // ── Phone through desktop, both themes ───────────────────────────────────
   for (const width of [320, 390, 768, 1280]) {
