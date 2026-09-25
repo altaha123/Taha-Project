@@ -1,0 +1,16 @@
+{
+  "name": "Altaha Screener",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "backend (FastAPI :8000)",
+      "command": "cd backend && DATA_DIR=\"$PWD/../.data\" MALLOC_ARENA_MAX=2 WEB_CONCURRENCY=1 PYTHONUNBUFFERED=1 ../.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000"
+    },
+    {
+      "name": "frontend (static :3000)",
+      "command": "cd frontend && python3 -m http.server 3000 --bind 0.0.0.0"
+    }
+  ],
+  "ports": [8000, 3000]
+}
