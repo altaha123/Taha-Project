@@ -687,7 +687,14 @@
     var stroke = rising ? 'var(--sh-up)' : 'var(--sh-dn)';
     var label = (RANGES.filter(function (r) { return r[0] === chartRange; })[0] || [])[1] || '';
 
+    var periodLow = Math.min.apply(null, closes), periodHigh = Math.max.apply(null, closes);
+    var last = closes[n - 1], position = periodHigh === periodLow ? 50 : 100 * (last - periodLow) / (periodHigh - periodLow);
+    var pullback = periodHigh ? 100 * (last / periodHigh - 1) : null;
+    var guides = [0.15, 0.5, 0.85].map(function (f) {
+      return '<div class="sc-guide" style="top:' + (f * 100) + '%"><span>' + esc(money(hi - f * (hi - lo), cur)) + '</span></div>';
+    }).join('');
     box.innerHTML =
+      '<div class="sc-eyebrow"><span>PRICE JOURNEY</span><span>' + esc(cur || 'Price') + ' · ' + n + ' observations</span></div>' +
       '<div class="sc-read" aria-hidden="true">' +
         '<div class="sc-price tnum"></div>' +
         '<div class="sc-sub"><span class="sc-chg tnum"></span><span class="sc-when"></span></div>' +
@@ -716,7 +723,8 @@
           '<path class="sc-sel-fill" d="' + area + '" fill="url(#scSelG)"/>' +
           '<path class="sc-sel-line" d="' + line + '"/>' +
         '</g>' +
-        '</svg>' +
+        '</svg>' + guides +
+        '<div class="sc-latest" aria-hidden="true" style="top:' + (100 * y(last) / H).toFixed(2) + '%;color:' + stroke + '"><i></i></div>' +
         (showBase ? '<div class="sc-base-line" style="top:' + (100 * y(base) / H).toFixed(2) + '%">' +
           '<span>Prev close ' + esc(money(base, cur)) + '</span></div>' : '') +
         '<div class="sc-band"></div>' +
@@ -724,10 +732,17 @@
         '<div class="sc-dot sc-dot-a"></div><div class="sc-dot sc-dot-b"></div>' +
         '<div class="sc-tip" role="presentation"></div>' +
       '</div>' +
-      '<div class="sc-foot">' +
-        '<span>' + money(Math.min.apply(null, closes), cur) + '</span>' +
-        '<span class="sc-hint">Hover to read a close · drag to measure a move</span>' +
-        '<span>' + money(Math.max.apply(null, closes), cur) + '</span></div>' +
+      '<div class="sc-foot"><span>' + esc(when(0)) + '</span><span>' + esc(when(n - 1)) + '</span></div>' +
+      '<div class="sc-tools"><span class="sc-hint">Hover to inspect · drag to measure</span>' +
+        '<button type="button" class="sc-reset">Reset view</button></div>' +
+      '<div class="sc-insights">' +
+        '<div><span>Lowest close</span><strong>' + esc(money(periodLow, cur)) + '</strong><small>' + esc(when(closes.indexOf(periodLow))) + '</small></div>' +
+        '<div><span>Highest close</span><strong>' + esc(money(periodHigh, cur)) + '</strong><small>' + esc(when(closes.indexOf(periodHigh))) + '</small></div>' +
+        '<div><span>From highest close</span><strong>' + esc(pct(pullback)) + '</strong><small>Latest close vs period high</small></div>' +
+      '</div>' +
+      '<div class="sc-position"><div><span>Latest close in this range</span><b>' + (periodHigh === periodLow ? 'Unchanged throughout' : Math.round(position) + '% of the way from low to high') + '</b></div>' +
+        '<div class="sc-rail"><i style="--position:' + position.toFixed(2) + '%"></i></div>' +
+      '</div><p class="sc-source">Latest observation: ' + esc(when(n - 1)) + '. Based on returned closing prices; not a live tick.</p>' +
       '<output class="ux-chart-value sc-sr" id="chart-close-value" aria-live="polite"></output>';
 
     var plot = box.querySelector('.sc-plot');
@@ -766,6 +781,7 @@
 
     function rest() {
       plot.classList.remove('hovering', 'measuring', 'up', 'dn');
+      el.out.textContent = 'Latest close ' + money(last, cur) + ' · ' + when(n - 1);
       var ch = closes[n - 1] - base;
       setRead(closes[n - 1], ch, fromBase(n - 1),
         chartRange === '1D' ? 'today' : (label ? 'past ' + label : ''));
@@ -832,13 +848,13 @@
       dragging = false;
       try { plot.releasePointerCapture(e.pointerId); } catch (err) {}
       // A tap or click is not a measurement; a finished drag stays up to be read.
-      if (anchor === head) { anchor = null; if (e.pointerType !== 'mouse') rest(); }
+      if (anchor === head) { anchor = null; }
     }
     plot.addEventListener('pointerup', release);
     plot.addEventListener('pointercancel', function (e) { release(e); anchor = null; rest(); });
-    plot.addEventListener('pointerleave', function () {
-      if (dragging) return;
-      anchor = null; rest();
+    plot.addEventListener('pointerleave', function (e) {
+      if (dragging || e.pointerType !== 'mouse' || anchor !== null) return;
+      rest();
     });
 
     // Keyboard: arrows move, Shift+arrows measure from where Shift was first held.
@@ -857,6 +873,7 @@
     });
     plot.addEventListener('blur', function () { if (!dragging) { anchor = null; rest(); } });
 
+    q('.sc-reset').addEventListener('click', function () { anchor = null; head = n - 1; rest(); });
     rest();
 
     if (!REDUCED) {

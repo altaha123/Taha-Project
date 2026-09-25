@@ -1015,3 +1015,55 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
 @media(prefers-reduced-motion:reduce) {
   .dv-experience *, .dv-experience *::before, .dv-experience *::after { animation:none !important; transition:none !important; }
 }
+
+/* Price journey: movement reveals the series; the data itself never moves. */
+#pane-chart .chartbox{padding:26px;border-radius:22px;background:radial-gradient(ellipse at 90% 0%,color-mix(in srgb,var(--gold) 9%,transparent),transparent 55%),var(--skin-card);box-shadow:0 12px 40px #00000006}
+.sc-eyebrow{display:flex;justify-content:space-between;gap:12px;font:500 10px/1.5 var(--mono,monospace);letter-spacing:.12em;color:var(--mute);margin-bottom:16px}
+.sc-eyebrow>span:first-child{color:var(--gold-dp)}
+#pane-chart .sc-read{display:block;margin-bottom:30px}
+#pane-chart .sc-price{font-size:clamp(28px,4vw,42px);line-height:1.2;letter-spacing:-.05em}
+#pane-chart .sc-sub{margin-top:10px;gap:12px}
+#pane-chart .sc-chg{padding:5px 9px;border-radius:7px;background:color-mix(in srgb,var(--gold) 9%,transparent)}
+#pane-chart .sc-plot{margin-right:66px;margin-top:8px}
+#pane-chart .sc-plot svg{height:300px}
+#pane-chart .spark-line{stroke-width:2.6;vector-effect:non-scaling-stroke}
+#pane-chart .spark-fill{opacity:.85;animation:scAreaIn 1.6s ease both}
+.sc-guide{position:absolute;left:0;right:0;border-top:1px dashed var(--rule);pointer-events:none;z-index:0}
+.sc-guide span{position:absolute;left:calc(100% + 9px);top:-7px;font:10px/1.4 var(--mono,monospace);white-space:nowrap;color:var(--mute)}
+.sc-latest{position:absolute;right:0;width:9px;height:9px;border-radius:50%;background:currentColor;transform:translate(50%,-50%);pointer-events:none;animation:scAreaIn 1.7s ease both}
+.sc-latest i{position:absolute;inset:-6px;border:1px solid currentColor;border-radius:50%;animation:scBeacon 3s ease-out infinite}
+.sc-plot.hovering .sc-latest{opacity:.25}
+.sc-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;color:var(--mute);font-size:12px}
+.sc-reset{border:1px solid var(--rule);border-radius:20px;background:var(--skin-card);padding:8px 13px;color:var(--ink-2);cursor:pointer;min-height:40px}
+.sc-reset:hover,.sc-reset:focus-visible{border-color:var(--gold);color:var(--gold-dp)}
+.sc-insights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border-top:1px solid var(--rule);padding-top:20px}
+.sc-insights>div{padding:14px;border-radius:12px;background:color-mix(in srgb,var(--gold) 5%,transparent);animation:scCardIn .6s ease both}
+.sc-insights>div:nth-child(2){animation-delay:.1s}.sc-insights>div:nth-child(3){animation-delay:.2s}
+.sc-insights span,.sc-insights small{display:block;font-size:11px;color:var(--mute);line-height:1.5}
+.sc-insights strong{display:block;margin:7px 0;font:600 clamp(14px,2vw,20px)/1.3 var(--mono,monospace);color:var(--ink)}
+.sc-position{margin-top:22px}.sc-position>div:first-child{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mute)}
+.sc-position b{font-weight:500;color:var(--ink-2);text-align:right}
+.sc-rail{height:5px;border-radius:9px;background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 20%,var(--skin-card)),var(--gold));margin:14px 5px}
+.sc-rail i{position:relative;display:block;left:var(--position);top:-4px;width:13px;height:13px;border:3px solid var(--skin-card);border-radius:50%;background:var(--gold-dp);box-shadow:0 0 0 1px var(--gold);transform:translateX(-50%);animation:scRangeIn 1.4s ease both}
+.sc-source{font-size:11px;line-height:1.5;color:var(--mute);margin:16px 0 0}
+#pane-chart .ranges{gap:6px;padding:5px;border:1px solid var(--rule);border-radius:14px;width:fit-content;background:var(--skin-card)}
+#pane-chart .ranges button{min-height:40px;border:0;border-radius:10px}
+#pane-chart .ranges button.on{box-shadow:0 3px 10px color-mix(in srgb,var(--gold) 25%,transparent)}
+@keyframes scAreaIn{from{opacity:0}to{opacity:1}}
+@keyframes scCardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scBeacon{0%{transform:scale(.5);opacity:.65}80%,100%{transform:scale(1.7);opacity:0}}
+@keyframes scRangeIn{from{left:0}to{left:var(--position)}}
+@media(max-width:600px){
+ #pane-chart .chartbox{padding:18px 14px;border-radius:17px}
+ #pane-chart .sc-plot{margin-right:59px}
+ #pane-chart .sc-plot svg{height:260px}
+ .sc-insights{gap:6px}.sc-insights>div{padding:10px 7px}
+ .sc-insights span,.sc-insights small{font-size:10px}.sc-insights strong{font-size:13px}
+ .sc-position>div:first-child{font-size:11px}.sc-eyebrow{font-size:9px;letter-spacing:.07em}
+ #pane-chart .ranges{display:flex;width:100%;box-sizing:border-box;gap:2px}
+ #pane-chart .ranges button{flex:1;padding:6px 4px;font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ #pane-chart *,#pane-chart *::before,#pane-chart *::after{animation:none!important;transition:none!important}
+ #pane-chart .spark-draw{stroke-dashoffset:0}
+}
