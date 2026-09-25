@@ -55,6 +55,12 @@ TIMEOUT = int(os.environ.get("FILING_TIMEOUT", "60"))
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/122.0 Safari/537.36")
 BSE_REFERER = "https://www.bseindia.com/"
+# NSE's archive answers 403 to anything not referred from nseindia.com.
+NSE_REFERER = "https://www.nseindia.com/"
+
+
+def _referer(url: str) -> str:
+    return NSE_REFERER if "nseindia.com" in (url or "") else BSE_REFERER
 
 _lock = threading.Lock()
 
@@ -152,7 +158,7 @@ def _download(url: str):
     except Exception:
         return None
     try:
-        with requests.get(url, headers={"User-Agent": UA, "Referer": BSE_REFERER},
+        with requests.get(url, headers={"User-Agent": UA, "Referer": _referer(url)},
                           timeout=TIMEOUT, stream=True) as r:
             if r.status_code != 200:
                 return None

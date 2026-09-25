@@ -86,6 +86,11 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 _lock = threading.Lock()
 _state = {
     "items": [],            # newest first
+    # Order wins kept apart from the general feed. A week of NSE filings is
+    # ~5,000 rows, most of them trading-window notices, so the MAX_STORED cap
+    # on "items" would push a Monday order out before Friday. The WOW view
+    # reads from here.
+    "orders": [],
     "by_symbol": {},        # SYMBOL -> [item, ...]
     "isin_to_symbol": {},
     "scrip_to_isin": {},
@@ -109,7 +114,7 @@ RULES = [
     # classified as an order WIN, which is close to the opposite of the truth.
     ("Regulatory action", 5, r"\b(penalt\w*|show cause|SEBI order|adjudicat\w*|prosecution|"
                              r"warning letter|USFDA|US ?FDA|import alert|Form 483|"
-                             r"insolvency|NCLT|CIRP|freez\w* of|suspension of trading|"
+                             r"insolvency|NCLT|NCLAT|CIRP|freez\w* of|suspension of trading|"
                              r"search and seizure|income tax (raid|survey|search))\b"),
     ("Results", 5, r"\b(financial results?|quarterly results?|un-?audited results?|"
                    r"audited results?|earnings release|standalone and consolidated results?)\b"),
@@ -241,7 +246,7 @@ def symbol_for(scrip_code) -> str:
 
 def _parse_dt(s):
     for fmt in ("%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%d %b %Y %H:%M:%S",
-                "%Y-%m-%d %H:%M:%S"):
+                "%Y-%m-%d %H:%M:%S", "%d-%b-%Y %H:%M:%S"):   # last one is NSE's an_dt
         try:
             return dt.datetime.strptime(str(s)[:26], fmt).replace(tzinfo=IST)
         except Exception:
@@ -395,50 +400,15 @@ def poll(days: int = None) -> dict:
     if got:
         _state["error"] = None
         _state["variant"] = "BSE single-day"
-        with _lock:
-            # De-duplicate against storage AND within this batch — pages overlap
-            # when a filing lands mid-poll.
-            seen = {(i["scrip_code"], i["headline"], i["at"]) for i in _state["items"]}
-            fresh = []
-            for i in got:
-                k = (i["scrip_code"], i["headline"], i["at"])
-                if k not in seen:
-                    seen.add(k)
-                    fresh.append(i)
-            merged = fresh + _state["items"]
-            merged.sort(key=lambda i: i["epoch"], reverse=True)
-            _state["items"] = merged[:MAX_STORED]
-
-            idx = {}
-            for i in _state["items"]:
-                if i["symbol"]:
-                    idx.setdefault(i["symbol"], []).append(i)
-            _state["by_symbol"] = idx
-            _state["fetched"] = len(_state["items"])
+        _merge(got, lambda i: (i["scrip_code"], i["headline"], i["at"]))
     else:
-        nse_rows, nse_note = _nse_rows()
+        nse_rows, nse_note = _nse_rows(days)
         notes.append(nse_note)
         if nse_rows:
             got = nse_rows
             _state["variant"] = "NSE fallback"
             _state["error"] = None
-            with _lock:
-                seen = {(i["symbol"], i["headline"], i["at"]) for i in _state["items"]}
-                fresh = []
-                for i in got:
-                    k = (i["symbol"], i["headline"], i["at"])
-                    if k not in seen:
-                        seen.add(k)
-                        fresh.append(i)
-                merged = fresh + _state["items"]
-                merged.sort(key=lambda i: i["epoch"], reverse=True)
-                _state["items"] = merged[:MAX_STORED]
-                idx = {}
-                for i in _state["items"]:
-                    if i["symbol"]:
-                        idx.setdefault(i["symbol"], []).append(i)
-                _state["by_symbol"] = idx
-                _state["fetched"] = len(_state["items"])
+            _merge(got, lambda i: (i["symbol"], i["headline"], i["at"]))
 
     _state["attempts"] = notes
     if not _state["items"]:
@@ -451,11 +421,66 @@ def poll(days: int = None) -> dict:
             "attempts": notes, "error": _state["error"]}
 
 
+def _merge(got, key):
+    """
+    Fold freshly fetched items into storage. De-duplicates against storage AND
+    within the batch — pages overlap when a filing lands mid-poll.
+    """
+    with _lock:
+        seen = {key(i) for i in _state["items"]}
+        fresh = []
+        for i in got:
+            k = key(i)
+            if k not in seen:
+                seen.add(k)
+                fresh.append(i)
+        merged = fresh + _state["items"]
+        merged.sort(key=lambda i: i["epoch"], reverse=True)
+        _state["items"] = merged[:MAX_STORED]
+
+        idx = {}
+        for i in _state["items"]:
+            if i["symbol"]:
+                idx.setdefault(i["symbol"], []).append(i)
+        _state["by_symbol"] = idx
+        _state["fetched"] = len(_state["items"])
+
+        seen_o = {key(i) for i in _state["orders"]}
+        new_o = []
+        for i in got:
+            if i.get("category") != "Order win":
+                continue
+            k = key(i)
+            if k not in seen_o:
+                seen_o.add(k)
+                new_o.append(i)
+        orders = new_o + _state["orders"]
+        orders.sort(key=lambda i: i["epoch"], reverse=True)
+        _state["orders"] = orders[:MAX_ORDERS]
+
+
+def orders(days: int = 7):
+    """Order wins filed in the last `days` days, newest first."""
+    cutoff = time.time() - days * 86400
+    return [i for i in _state["orders"] if i["epoch"] and i["epoch"] >= cutoff]
+
+
+MAX_ORDERS = int(os.environ.get("ANN_MAX_ORDERS", "600") or 600)
+
 NSE_ANN = "https://www.nseindia.com/api/corporate-announcements?index=equities"
+
+# NSE files every Reg 30 disclosure under a fixed subject. For orders the
+# subject is the whole signal: the free text is often just "has informed the
+# Exchange about Bagging/Receiving of orders/contracts", which the keyword
+# rules would read as nothing. "Awarding" is NSE's label for the same event
+# seen from the side of the company that was awarded the work.
+NSE_ORDER_SUBJECTS = re.compile(
+    r"^(bagging/receiving of orders/contracts|awarding of order\(s\)/contract\(s\))",
+    re.I)
 _nse_warm = {"at": 0.0}
 
 
-def _nse_rows():
+def _nse_rows(days: int = None):
     """
     Fallback source. NSE needs a browser-shaped session before its API answers,
     which is why BSE was chosen as primary — but a fallback that works only
@@ -464,17 +489,28 @@ def _nse_rows():
     NSE keys announcements by symbol directly, so no ISIN join is needed here.
     """
     try:
-        if time.time() - _nse_warm["at"] > 900:
-            _session.get("https://www.nseindia.com/companies-listing/corporate-filings-announcements",
-                         headers={"User-Agent": HEAD["User-Agent"],
-                                  "Accept": "text/html,application/xhtml+xml",
-                                  "Referer": "https://www.nseindia.com/"}, timeout=20)
-            _nse_warm["at"] = time.time()
-        r = _session.get(NSE_ANN, headers={"User-Agent": HEAD["User-Agent"],
-                                           "Accept": "application/json",
-                                           "Referer": "https://www.nseindia.com/companies-listing/"
-                                                      "corporate-filings-announcements"},
-                         timeout=25)
+        # Without a date range NSE returns only its latest few dozen filings,
+        # which on a busy evening is thirty minutes of AGM voting results.
+        today = dt.datetime.now(IST).date()
+        start = today - dt.timedelta(days=max(1, days or LOOKBACK_DAYS) - 1)
+        # NSE's cookies expire without notice and the API answers 403 until
+        # the session is re-warmed, so one re-warm and one retry.
+        for attempt in range(2):
+            if attempt or time.time() - _nse_warm["at"] > 900:
+                _session.get("https://www.nseindia.com/companies-listing/corporate-filings-announcements",
+                             headers={"User-Agent": HEAD["User-Agent"],
+                                      "Accept": "text/html,application/xhtml+xml",
+                                      "Referer": "https://www.nseindia.com/"}, timeout=20)
+                _nse_warm["at"] = time.time()
+            r = _session.get(NSE_ANN, params={"from_date": start.strftime("%d-%m-%Y"),
+                                              "to_date": today.strftime("%d-%m-%Y")},
+                             headers={"User-Agent": HEAD["User-Agent"],
+                                      "Accept": "application/json",
+                                      "Referer": "https://www.nseindia.com/companies-listing/"
+                                                 "corporate-filings-announcements"},
+                             timeout=45)
+            if r.status_code == 200:
+                break
         if r.status_code != 200:
             return [], f"NSE: HTTP {r.status_code}"
         data = r.json()
@@ -483,18 +519,26 @@ def _nse_rows():
             return [], "NSE: 200 but no rows"
         out = []
         for row in rows:
-            head = (row.get("desc") or row.get("subject") or "").strip()
+            subject = re.sub(r"\s+", " ", (row.get("desc") or "")).strip()
+            text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ",
+                                              row.get("attchmntText") or "")).strip()
             sym = (row.get("symbol") or "").strip().upper()
+            # The subject is a category ("General Updates"); the text is what
+            # the company actually said. Show the text when there is one.
+            head = text or subject
             if not head or not sym:
                 continue
-            head = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", head)).strip()
-            when = _parse_dt((row.get("an_dt") or row.get("sort_date") or "").replace(" ", "T"))
-            cat, imp, weight = classify(head + " " + str(row.get("smIndustry") or ""))
+            when = (_parse_dt(row.get("an_dt")) or _parse_dt(row.get("sort_date"))
+                    or _parse_dt(row.get("exchdisstime")))
+            if NSE_ORDER_SUBJECTS.match(subject):
+                cat, imp, weight = "Order win", IMPORTANCE[5], 5
+            else:
+                cat, imp, weight = classify(subject + " " + text)
             out.append({
                 "symbol": sym, "scrip_code": "",
                 "company": (row.get("sm_name") or sym).strip(),
                 "headline": head[:400],
-                "exchange_category": (row.get("attchmntText") or "")[:80],
+                "exchange_category": subject[:80],
                 "category": cat, "importance": imp, "weight": weight,
                 "at": when.isoformat() if when else None,
                 "epoch": when.timestamp() if when else 0,
