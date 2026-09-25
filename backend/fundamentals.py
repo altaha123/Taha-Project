@@ -222,7 +222,8 @@ def series(symbol, quarters: int = 8, basis: str = None) -> dict:
     """
     sym = (symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
     out = {"symbol": sym, "available": False, "rows": [], "lines": [],
-           "source": "NSE corporate filings (XBRL, LODR Reg 33)"}
+           "source": "NSE corporate filings (XBRL, LODR Reg 33)",
+           "served_from": "exchange"}
     if not sym:
         out["message"] = "No symbol was given."
         return out
@@ -296,6 +297,24 @@ def series(symbol, quarters: int = 8, basis: str = None) -> dict:
                           % (label, sym))
         return out
 
+    alternatives = sorted({("consolidated" if f.get("consolidated")
+                            else "standalone") for f in idx})
+    return _assemble(out, rows, want, label, why, alternatives)
+
+
+_SHORT_LIVE = ("Only %d of the %d quarters asked for could be read on this view. "
+               "Each quarter is a separate document on the exchange and they are "
+               "fetched as they are needed; filings already read are kept, so the "
+               "history fills in rather than being re-fetched.")
+
+
+def _assemble(out, rows, want, label, why, alternatives, short_note=_SHORT_LIVE):
+    """
+    The payload the pane reads, from rows newest first, one per quarter, each
+    carrying `to`, `from`, `filed_at`, `audited`, `source_url`, `company` and
+    the LINES keys in rupees. Shared by the live reader and the stored one, so
+    the two can never disagree on a ratio or a change.
+    """
     by_end = {_end(r): r for r in rows}
 
     def _year_before(end):
@@ -353,8 +372,7 @@ def series(symbol, quarters: int = 8, basis: str = None) -> dict:
         # From the INDEX, not the filtered set: the filtered set only ever
         # contains the basis in use, so reading it back would always claim the
         # other one does not exist.
-        "basis_alternatives": sorted({("consolidated" if f.get("consolidated")
-                                       else "standalone") for f in idx}),
+        "basis_alternatives": alternatives,
         "rows": built,
         "count": len(built),
         "latest": built[0]["label"] if built else None,
@@ -380,11 +398,113 @@ def series(symbol, quarters: int = 8, basis: str = None) -> dict:
             "positive. A company that lost money and then made money has not "
             "grown by a percentage, and the move is described instead.",
         ] + ([
-            "Only %d of the %d quarters asked for could be read on this view. "
-            "Each quarter is a separate document on the exchange and they are "
-            "fetched as they are needed; filings already read are kept, so the "
-            "history fills in rather than being re-fetched."
-            % (len(built), want)
+            short_note % (len(built), want)
         ] if len(built) < want else []),
     })
     return out
+
+
+# ---------------------------------------------------------------------------
+# From the stored tables
+# ---------------------------------------------------------------------------
+
+# A quarter's results are due 45 days after it ends, the March quarter 60.
+# A stored series whose newest quarter ended longer ago than this has probably
+# missed a filing, so the caller should look at the exchange before serving it.
+STORE_FRESH_DAYS = 92 + 62
+
+_SHORT_STORE = ("Only %d of the %d quarters asked for are held for this company "
+                "so far. The market-wide crawl reads every company's filings "
+                "back to 2018 and fills the history in as it goes.")
+
+
+def series_from_store(symbol, quarters: int = 8, basis: str = None,
+                      today: dt.date = None, allow_stale: bool = False) -> dict:
+    """
+    The same payload as series(), read from altaha_fundamentals.db instead of
+    the exchange: no index call, no document fetch, a few milliseconds.
+
+    Returns None whenever the store cannot answer honestly, so the caller goes
+    to the exchange instead:
+      * the company has not been crawled yet;
+      * the other basis was asked for — the crawl keeps one per company;
+      * the newest stored quarter is older than STORE_FRESH_DAYS, so a newer
+        filing has probably been made since the last crawl.
+    `allow_stale` skips that last check, for when the exchange has just failed
+    and an older stored series beats an error.
+    """
+    try:
+        import fundamentals_store as store
+    except Exception:
+        return None
+    sym = (symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
+    if not sym:
+        return None
+    try:
+        recs = store.rows("income", symbol=sym, freq="quarterly")
+    except Exception:
+        return None
+    if not recs:
+        return None
+
+    # The crawl keeps one basis per company, but a basis change (a company
+    # starting to file consolidated) can leave rows of both; never mix them.
+    held = {r.get("basis") for r in recs if r.get("basis")}
+    if basis in ("consolidated", "standalone"):
+        if basis not in held:
+            return None
+        label, why = basis, "as requested"
+    else:
+        label = "consolidated" if "consolidated" in held else \
+            ("standalone" if "standalone" in held else None)
+        if label is None:
+            return None
+        why = ("the company files consolidated results" if label == "consolidated"
+               else "the company files standalone results only")
+
+    want = max(2, min(int(quarters or 8), 16))
+    picked = [r for r in recs if r.get("basis") == label]
+    picked.sort(key=lambda r: str(r.get("period_end") or ""), reverse=True)
+
+    newest = None
+    try:
+        newest = dt.date.fromisoformat(str(picked[0]["period_end"])[:10])
+    except (TypeError, ValueError, IndexError, KeyError):
+        pass
+    today = today or dt.date.today()
+    if newest is None:
+        return None
+    stale = (today - newest).days > STORE_FRESH_DAYS
+    if stale and not allow_stale:
+        return None
+
+    rows = []
+    for r in picked[:want]:
+        row = {"to": r.get("period_end"), "from": r.get("period_from"),
+               "filed_at": r.get("filed_at"), "audited": r.get("audited"),
+               "source_url": r.get("source_url"), "company": r.get("company")}
+        for key, _lbl, unit in LINES:
+            if unit == "money":
+                v = _f(r.get("%s_cr" % key))
+                row[key] = None if v is None else v * CRORE
+            else:
+                row[key] = _f(r.get(key))
+        rows.append(row)
+
+    out = {"symbol": sym, "available": False, "rows": [], "lines": [],
+           "source": "NSE corporate filings (XBRL, LODR Reg 33), "
+                     "as stored by the market-wide crawl",
+           "served_from": "store",
+           "store_updated": max((str(r.get("updated_utc") or "") for r in picked),
+                                default=None) or None}
+    # The crawl reads one basis, so the store cannot say whether the company
+    # also files the other; the pane then simply does not offer it.
+    res = _assemble(out, rows, want, label, why, sorted(held),
+                    short_note=_SHORT_STORE)
+    if stale:
+        res["stale"] = True
+        res["notes"] = ["The exchange could not be reached, so this is the "
+                        "stored history; its newest quarter is %s and a later "
+                        "one may have been filed since." % res.get("latest")] \
+            + res.get("notes", [])
+    return res

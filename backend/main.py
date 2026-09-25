@@ -2231,11 +2231,35 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
     if not ticker or len(ticker) > 20:
         raise HTTPException(400, "Provide a valid ticker symbol.")
     want = basis if basis in ("consolidated", "standalone") else None
+    n = max(2, min(quarters, 16))
+    # The market-wide crawl already holds these filings in
+    # altaha_fundamentals.db, so a crawled company is answered from the disk
+    # in milliseconds rather than an index call plus a document per quarter
+    # against a throttled exchange. The exchange is read only for a company
+    # the crawl has not reached, the basis it does not keep, or a series whose
+    # newest quarter looks overdue.
     try:
-        out = fundamentals_source.series(
-            ticker, quarters=max(2, min(quarters, 16)), basis=want)
+        held = fundamentals_source.series_from_store(ticker, quarters=n, basis=want)
+    except Exception:
+        held = None
+    if held and held.get("available"):
+        return to_native(held)
+    try:
+        out = fundamentals_source.series(ticker, quarters=n, basis=want)
     except Exception as e:
-        raise HTTPException(503, f"Could not read the filings: {str(e)[:110]}")
+        out = {"available": False, "message": f"Could not read the filings: {str(e)[:110]}"}
+    if not out.get("available"):
+        # The exchange refused or is down: an older stored series, labelled
+        # as such, beats an empty pane.
+        try:
+            held = fundamentals_source.series_from_store(
+                ticker, quarters=n, basis=want, allow_stale=True)
+        except Exception:
+            held = None
+        if held and held.get("available"):
+            return to_native(held)
+        if "Could not read the filings" in (out.get("message") or ""):
+            raise HTTPException(503, out["message"])
     return to_native(out)
 
 

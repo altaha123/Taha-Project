@@ -118,6 +118,28 @@ four quarters as though that were the whole history is the kind of quiet lie
 this project keeps trying not to tell. Filings already read are kept, so the
 history fills in rather than being re-fetched.
 
+## Served from the disk first
+
+The market-wide crawl (below) already holds every company's filings in
+`altaha_fundamentals.db`, so `/fundamentals` reads that before it goes near
+the exchange: `fundamentals.series_from_store()` builds the identical payload
+from `income_statement` — same ratios, same `change()`, same year-ago lookup,
+through the same `_assemble()` the live reader uses — in milliseconds instead
+of an index call plus one document per quarter. `served_from` says which
+(`store` or `exchange`).
+
+The exchange is still read when the store cannot answer honestly:
+
+* the crawl has not reached the company yet;
+* `?basis=` asks for the basis the crawl does not keep (it keeps one);
+* the newest stored quarter ended more than `STORE_FRESH_DAYS` (154) ago, so a
+  newer filing has probably been made since the last crawl.
+
+If that live read then fails, an older stored series is served anyway with
+`stale: true` and a note naming its newest quarter, rather than an empty pane.
+From the store `basis_alternatives` lists only what is held, so the pane does
+not claim the company also files the other basis.
+
 ## Reaching NSE at all
 
 `backend/nse_http.py` is the shared transport. Plain `requests` gets a 403 from
