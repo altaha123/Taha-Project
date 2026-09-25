@@ -54,7 +54,7 @@ WOW_MIN_PCT = float(os.environ.get("WOW_MIN_PCT", "10") or 10)
 NEAR = int(os.environ.get("WOW_NEAR_CHARS", "260") or 260)
 
 MAX_PDFS = int(os.environ.get("WOW_MAX_PDFS", "40") or 40)
-CACHE_TTL = int(os.environ.get("WOW_CACHE_TTL", "1800") or 1800)
+CACHE_TTL = int(os.environ.get("WOW_CACHE_TTL", "600") or 600)
 
 _lock = threading.Lock()
 _cache = {"at": 0.0, "rows": [], "note": ""}
@@ -258,9 +258,7 @@ def _order_items(days: int):
         announcements.poll(days=days)
     except Exception as e:
         return [], "Could not refresh announcements: %s" % str(e)[:90]
-    items = list(announcements._state.get("items") or [])
-    orders = [i for i in items if i.get("category") == "Order win"]
-    return orders, ""
+    return list(announcements.orders(days)), ""
 
 
 def _as_date(iso):
@@ -369,7 +367,8 @@ def _payload(rows, note):
             "wow": len(wow),
         },
         "note": note or "",
-        "source": ("BSE corporate announcements, Regulation 30. Order values "
+        "source": ("Exchange corporate announcements (BSE, or NSE when BSE is "
+                   "unreachable), Regulation 30. Order values "
                    "are read from the filed document, not the headline."),
         "explain": (
             "An order is called WOW when its disclosed value is at least %g%% "
