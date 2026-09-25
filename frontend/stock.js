@@ -597,6 +597,33 @@
       });
   }
 
+  /* A candle's calendar date. The API stamps daily bars at the exchange's
+     midnight — 18:30Z the evening before for NSE — so formatting the raw
+     instant in UTC printed yesterday, and formatting it in the reader's zone
+     only worked for readers in the exchange's zone. Six hours forward lands
+     IST, New York and UTC midnights all on their own day, read in UTC. */
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function candleDate(raw) {
+    var t = null;
+    if (typeof raw === 'number') t = raw > 1e12 ? raw : raw * 1000;
+    else if (raw != null) t = Date.parse(raw);
+    if (t == null || isNaN(t)) return null;
+    return new Date(t + 6 * 3600 * 1000);
+  }
+  function dayLabel(raw) {
+    var dt = candleDate(raw);
+    if (!dt) return 'Date unavailable';
+    return dt.getUTCDate() + ' ' + MONTHS[dt.getUTCMonth()] + ' ' + dt.getUTCFullYear();
+  }
+  function daysBetween(a, b) {
+    var da = candleDate(a), db = candleDate(b);
+    if (!da || !db) return null;
+    return Math.round(Math.abs(db - da) / 86400000);
+  }
+
+  /* The line, plus the two things a reader does with it: hover to read a
+     close off any day, and drag across a stretch to read the move between
+     its ends — what Google Finance does, measured on the same closes. */
   function drawChart(d, box) {
     var rows = ((d && d.candles) || []).filter(function (r) { return r && typeof r[4] === 'number' && isFinite(r[4]); });
     if (rows.length < 2) {
@@ -604,61 +631,185 @@
         'font-size:13px">Not enough history to draw this range.</div>';
       return;
     }
-    var closes = rows.map(function (r) { return r[4]; }).filter(function (v) { return v != null; });
+    var closes = rows.map(function (r) { return r[4]; });
+    var n = closes.length, cur = d.currency;
     var lo = Math.min.apply(null, closes), hi = Math.max.apply(null, closes);
     var pad = (hi - lo) * 0.08 || 1;
     lo -= pad; hi += pad;
 
     var W = 1000, H = 250;
-    var x = function (i) { return (i / (closes.length - 1)) * W; };
+    var x = function (i) { return (i / (n - 1)) * W; };
     var y = function (v) { return H - ((v - lo) / (hi - lo)) * H; };
 
     var pts = closes.map(function (v, i) { return x(i).toFixed(1) + ',' + y(v).toFixed(1); });
     var line = 'M' + pts.join(' L');
     var area = line + ' L' + W + ',' + H + ' L0,' + H + ' Z';
-    var rising = closes[closes.length - 1] >= closes[0];
+    var rising = closes[n - 1] >= closes[0];
     var stroke = rising ? 'var(--sh-up)' : 'var(--sh-dn)';
+    var label = (RANGES.filter(function (r) { return r[0] === chartRange; })[0] || [])[1] || '';
 
     box.innerHTML =
-      '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" ' +
-      'aria-label="Price line for ' + esc(TICKER) + '">' +
-      '<defs><linearGradient id="sparkG" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="' + stroke + '" stop-opacity=".26"/>' +
-        '<stop offset="1" stop-color="' + stroke + '" stop-opacity="0"/>' +
-      '</linearGradient></defs>' +
-      '<path class="spark-fill" d="' + area + '"/>' +
-      '<path class="spark-line' + (REDUCED ? '' : ' spark-draw') + '" d="' + line +
-        '" style="stroke:' + stroke + '"/>' +
-      '</svg>' +
-      '<div style="display:flex;justify-content:space-between;margin-top:12px;' +
-        'font:500 11px/1 \'IBM Plex Mono\',monospace;color:var(--mute)">' +
-        '<span>' + money(lo + pad, d.currency) + '</span>' +
-        '<span>' + esc(d.source || '') + (d.as_of ? ' · ' + esc(d.as_of) : '') + '</span>' +
-        '<span>' + money(hi - pad, d.currency) + '</span></div>';
+      '<div class="sc-read" aria-hidden="true">' +
+        '<div class="sc-price tnum"></div>' +
+        '<div class="sc-sub"><span class="sc-chg tnum"></span><span class="sc-when"></span></div>' +
+      '</div>' +
+      '<div class="sc-plot ' + (rising ? 'rise' : 'fall') + '" tabindex="0" role="application" ' +
+        'aria-roledescription="price chart" aria-describedby="chart-close-value" ' +
+        'aria-label="Closing prices for ' + esc(TICKER) + '. Arrow keys move through days; ' +
+        'hold Shift to measure the change across a stretch.">' +
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+        '<defs><linearGradient id="sparkG" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="' + stroke + '" stop-opacity=".26"/>' +
+          '<stop offset="1" stop-color="' + stroke + '" stop-opacity="0"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="scSelG" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop class="sc-sel-stop" offset="0" stop-opacity=".32"/>' +
+          '<stop class="sc-sel-stop" offset="1" stop-opacity="0"/>' +
+        '</linearGradient>' +
+        '<clipPath id="scClip"><rect class="sc-clip" x="0" y="-10" width="0" height="' + (H + 20) + '"/></clipPath>' +
+        '</defs>' +
+        '<g class="sc-base">' +
+          '<path class="spark-fill" d="' + area + '"/>' +
+          '<path class="spark-line' + (REDUCED ? '' : ' spark-draw') + '" d="' + line +
+            '" style="stroke:' + stroke + '"/>' +
+        '</g>' +
+        '<g class="sc-sel" clip-path="url(#scClip)">' +
+          '<path class="sc-sel-fill" d="' + area + '" fill="url(#scSelG)"/>' +
+          '<path class="sc-sel-line" d="' + line + '"/>' +
+        '</g>' +
+        '</svg>' +
+        '<div class="sc-band"></div>' +
+        '<div class="sc-x sc-x-a"></div><div class="sc-x sc-x-b"></div>' +
+        '<div class="sc-dot sc-dot-a"></div><div class="sc-dot sc-dot-b"></div>' +
+        '<div class="sc-tip" role="presentation"></div>' +
+      '</div>' +
+      '<div class="sc-foot">' +
+        '<span>' + money(lo + pad, cur) + '</span>' +
+        '<span class="sc-hint">Hover to read a close · drag to measure a move</span>' +
+        '<span>' + money(hi - pad, cur) + '</span></div>' +
+      '<output class="ux-chart-value sc-sr" id="chart-close-value" aria-live="polite"></output>';
 
+    var plot = box.querySelector('.sc-plot');
+    var q = function (s) { return box.querySelector(s); };
+    var el = {
+      price: q('.sc-price'), chg: q('.sc-chg'), when: q('.sc-when'),
+      band: q('.sc-band'), xa: q('.sc-x-a'), xb: q('.sc-x-b'),
+      da: q('.sc-dot-a'), db: q('.sc-dot-b'), tip: q('.sc-tip'),
+      clip: q('.sc-clip'), out: q('#chart-close-value')
+    };
 
-    // A scrubber exposes the same closes to touch and keyboard users.
-    var output = document.createElement('output');
-    output.className = 'ux-chart-value';
-    output.id = 'chart-close-value';
-    var scrub = document.createElement('input');
-    scrub.type = 'range'; scrub.min = '0'; scrub.max = String(rows.length - 1);
-    scrub.step = '1'; scrub.value = String(rows.length - 1);
-    scrub.setAttribute('aria-label', 'Inspect closing prices');
-    scrub.setAttribute('aria-describedby', output.id);
-    function inspect() {
-      var row = rows[Number(scrub.value)];
-      var raw = row[0];
-      var date = String(raw == null ? 'Date unavailable' : raw);
-      if (typeof raw === 'number') {
-        var parsed = new Date(raw > 1e12 ? raw : raw * 1000);
-        date = isNaN(parsed.getTime()) ? 'Date unavailable' : parsed.toISOString();
-      }
-      output.textContent = date + ' · Close ' + money(row[4], d.currency);
-      scrub.setAttribute('aria-valuetext', output.textContent);
+    function pctOf(a, b) { return closes[a] ? 100 * (closes[b] - closes[a]) / closes[a] : null; }
+    function signed(v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + money(Math.abs(v), cur); }
+    function arrow(v) { return v > 0 ? '▲ ' : v < 0 ? '▼ ' : ''; }
+    function place(node, i) {
+      node.style.left = (100 * i / (n - 1)) + '%';
+      node.style.top = (100 * y(closes[i]) / H) + '%';
     }
-    scrub.addEventListener('input', inspect);
-    box.appendChild(output); box.appendChild(scrub); inspect();
+    function setRead(price, chgV, chgP, when) {
+      el.price.textContent = money(price, cur);
+      el.chg.className = 'sc-chg tnum ' + tone(chgV);
+      el.chg.textContent = chgP == null ? '' : arrow(chgV) + signed(chgV) + ' (' + pct(Math.abs(chgP)).replace('+', '') + ')';
+      el.when.textContent = when;
+    }
+    function tipAt(i, html) {
+      el.tip.innerHTML = html;
+      var f = i / (n - 1);
+      el.tip.style.left = (100 * f) + '%';
+      // Keep the card inside the box at both edges.
+      el.tip.style.transform = 'translateX(' + (f < 0.12 ? '0' : f > 0.88 ? '-100%' : '-50%') + ')';
+      el.tip.classList.toggle('edge-l', f < 0.12);
+      el.tip.classList.toggle('edge-r', f > 0.88);
+    }
+
+    function rest() {
+      plot.classList.remove('hovering', 'measuring', 'up', 'dn');
+      var ch = closes[n - 1] - closes[0];
+      setRead(closes[n - 1], ch, pctOf(0, n - 1), label ? 'past ' + label : '');
+    }
+
+    function hover(i) {
+      plot.classList.remove('measuring', 'up', 'dn');
+      plot.classList.add('hovering');
+      place(el.xa, i); place(el.da, i);
+      var date = dayLabel(rows[i][0]);
+      var ch = closes[i] - closes[0];
+      setRead(closes[i], ch, pctOf(0, i), date);
+      tipAt(i, '<b class="tnum">' + esc(money(closes[i], cur)) + '</b><span>' + esc(date) + '</span>');
+      el.out.textContent = date + ' · Close ' + money(closes[i], cur);
+    }
+
+    function measure(a, b) {
+      if (a === b) return hover(b);
+      var from = Math.min(a, b), to = Math.max(a, b);
+      var ch = closes[to] - closes[from], p = pctOf(from, to);
+      var dir = ch >= 0 ? 'up' : 'dn';
+      plot.classList.add('hovering', 'measuring');
+      plot.classList.toggle('up', dir === 'up');
+      plot.classList.toggle('dn', dir === 'dn');
+      place(el.xa, a); place(el.da, a); place(el.xb, b); place(el.db, b);
+      el.band.style.left = (100 * from / (n - 1)) + '%';
+      el.band.style.width = (100 * (to - from) / (n - 1)) + '%';
+      el.clip.setAttribute('x', x(from).toFixed(1));
+      el.clip.setAttribute('width', (x(to) - x(from)).toFixed(1));
+      var d0 = dayLabel(rows[from][0]), d1 = dayLabel(rows[to][0]);
+      var days = daysBetween(rows[from][0], rows[to][0]);
+      setRead(closes[to], ch, p, d0 + ' → ' + d1);
+      tipAt((from + to) / 2,
+        '<b class="tnum ' + tone(ch) + '">' + arrow(ch) + esc(pct(p)) + '</b>' +
+        '<span class="tnum">' + esc(signed(ch)) + (days != null ? ' · ' + days + (days === 1 ? ' day' : ' days') : '') + '</span>');
+      el.out.textContent = 'From ' + d0 + ' to ' + d1 + ': ' + pct(p) + ', ' + signed(ch);
+    }
+
+    // Pointer: move to read, press and drag to measure.
+    var anchor = null, head = n - 1, dragging = false;
+    function idxAt(e) {
+      var r = plot.getBoundingClientRect();
+      var f = Math.max(0, Math.min(1, (e.clientX - r.left) / (r.width || 1)));
+      return Math.round(f * (n - 1));
+    }
+    plot.addEventListener('pointermove', function (e) {
+      head = idxAt(e);
+      if (dragging) measure(anchor, head); else if (e.pointerType === 'mouse') hover(head);
+    });
+    plot.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      dragging = true;
+      anchor = head = idxAt(e);
+      try { plot.setPointerCapture(e.pointerId); } catch (err) {}
+      hover(head);
+      if (window.AltahaTrack) window.AltahaTrack('chart_measure_started', { range: chartRange });
+    });
+    function release(e) {
+      if (!dragging) return;
+      dragging = false;
+      try { plot.releasePointerCapture(e.pointerId); } catch (err) {}
+      // A tap or click is not a measurement; a finished drag stays up to be read.
+      if (anchor === head) { anchor = null; if (e.pointerType !== 'mouse') rest(); }
+    }
+    plot.addEventListener('pointerup', release);
+    plot.addEventListener('pointercancel', function (e) { release(e); anchor = null; rest(); });
+    plot.addEventListener('pointerleave', function () {
+      if (dragging) return;
+      anchor = null; rest();
+    });
+
+    // Keyboard: arrows move, Shift+arrows measure from where Shift was first held.
+    plot.addEventListener('keydown', function (e) {
+      var k = e.key, step = e.ctrlKey || e.metaKey ? Math.max(1, Math.round(n / 10)) : 1, next = head;
+      if (k === 'ArrowLeft') next = head - step;
+      else if (k === 'ArrowRight') next = head + step;
+      else if (k === 'Home') next = 0;
+      else if (k === 'End') next = n - 1;
+      else if (k === 'Escape') { anchor = null; rest(); return; }
+      else return;
+      e.preventDefault();
+      next = Math.max(0, Math.min(n - 1, next));
+      if (e.shiftKey) { if (anchor == null) anchor = head; head = next; measure(anchor, head); }
+      else { anchor = null; head = next; hover(head); }
+    });
+    plot.addEventListener('blur', function () { if (!dragging) { anchor = null; rest(); } });
+
+    rest();
 
     if (!REDUCED) {
       var path = box.querySelector('.spark-draw');
@@ -668,7 +819,6 @@
       }
     }
   }
-
 
   /* ── Ownership ────────────────────────────────────────────────────────────
      The shareholding pattern, read from the company's own Reg 31 filing.

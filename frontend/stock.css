@@ -379,6 +379,63 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
   animation:sparkIn 1500ms var(--ease-out) forwards }
 @keyframes sparkIn{ to{ stroke-dashoffset:0 } }
 
+/* Interactive chart: hover reads a close, drag measures a move. Overlays are
+   HTML over a stretched SVG, placed in percent, so dots stay round at any width. */
+.sc-read{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin:0 0 12px; min-height:30px }
+.sc-price{ font:600 24px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em; color:var(--ink) }
+.sc-sub{ display:flex; gap:10px; flex-wrap:wrap; align-items:baseline;
+  font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--mute) }
+.sc-chg{ font-weight:600; transition:color 160ms var(--ease) }
+.sc-plot{ position:relative; cursor:crosshair; touch-action:pan-y; user-select:none;
+  -webkit-user-select:none; border-radius:8px; outline:none }
+.sc-plot:focus-visible{ box-shadow:0 0 0 2px var(--gold) }
+.sc-plot svg{ pointer-events:none }
+.sc-base{ transition:opacity 220ms var(--ease) }
+.sc-plot.measuring .sc-base{ opacity:.35 }
+.sc-sel{ opacity:0; transition:opacity 180ms var(--ease) }
+.sc-plot.measuring .sc-sel{ opacity:1 }
+.sc-sel-line{ fill:none; stroke-width:2.6; stroke-linejoin:round; stroke-linecap:round;
+  vector-effect:non-scaling-stroke; transition:stroke 160ms var(--ease) }
+.sc-plot.up .sc-sel-line{ stroke:var(--sh-up) } .sc-plot.dn .sc-sel-line{ stroke:var(--sh-dn) }
+.sc-plot.up .sc-sel-stop{ stop-color:var(--sh-up) } .sc-plot.dn .sc-sel-stop{ stop-color:var(--sh-dn) }
+
+.sc-band{ position:absolute; top:0; bottom:0; opacity:0; pointer-events:none;
+  background:var(--sh-up); transition:opacity 180ms var(--ease), background-color 160ms var(--ease) }
+.sc-plot.measuring .sc-band{ opacity:.07 }
+.sc-plot.dn .sc-band{ background:var(--sh-dn) }
+
+.sc-x{ position:absolute; top:0 !important; bottom:0; width:0; pointer-events:none; opacity:0;
+  border-left:1px dashed var(--ink-2); transition:opacity 160ms var(--ease), left 70ms linear }
+.sc-plot.hovering .sc-x-a, .sc-plot.measuring .sc-x-b{ opacity:.45 }
+.sc-dot{ position:absolute; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%;
+  pointer-events:none; background:var(--skin-card); border:2.5px solid var(--gold);
+  opacity:0; transform:scale(.3);
+  transition:opacity 160ms var(--ease), transform 220ms cubic-bezier(.34,1.56,.64,1),
+    left 70ms linear, top 70ms linear, border-color 160ms var(--ease) }
+.sc-plot.hovering .sc-dot-a, .sc-plot.measuring .sc-dot-b{ opacity:1; transform:scale(1) }
+.sc-plot.rise .sc-dot{ border-color:var(--sh-up) } .sc-plot.fall .sc-dot{ border-color:var(--sh-dn) }
+.sc-plot.up .sc-dot{ border-color:var(--sh-up) } .sc-plot.dn .sc-dot{ border-color:var(--sh-dn) }
+
+.sc-tip{ position:absolute; top:-6px; pointer-events:none; white-space:nowrap; z-index:2;
+  display:flex; flex-direction:column; gap:3px; padding:7px 10px; border-radius:9px;
+  background:var(--skin-card); border:1px solid var(--rule); box-shadow:var(--e2);
+  font:500 11px/1.2 'IBM Plex Mono',monospace; color:var(--mute);
+  opacity:0; margin-top:-8px; transition:opacity 160ms var(--ease), margin-top 200ms var(--ease), left 70ms linear }
+.sc-tip b{ font-size:14px; font-weight:600; color:var(--ink) }
+.sc-tip b.up{ color:var(--sh-up) } .sc-tip b.dn{ color:var(--sh-dn) }
+.sc-plot.hovering .sc-tip{ opacity:1; margin-top:0 }
+.sc-plot.measuring .sc-tip{ top:8px; padding:9px 13px }
+.sc-plot.measuring .sc-tip b{ font-size:17px }
+.sc-plot.measuring .sc-tip{ animation:scPop 260ms cubic-bezier(.34,1.56,.64,1) }
+@keyframes scPop{ from{ scale:.9 } to{ scale:1 } }
+
+.sc-foot{ display:flex; justify-content:space-between; gap:10px; margin-top:12px;
+  font:500 11px/1.3 'IBM Plex Mono',monospace; color:var(--mute) }
+.sc-hint{ text-align:center }
+@media (hover:none){ .sc-hint{ font-size:0 } .sc-hint::after{ content:'Drag across the chart to measure a move'; font-size:11px } }
+.sc-sr{ position:absolute !important; width:1px; height:1px; padding:0 !important; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0 }
+
 /* ── The ledger — the reason this product exists ─────────────────────────── */
 
 .ledger{ display:grid; gap:9px }
@@ -450,6 +507,7 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
 @media (prefers-reduced-motion: reduce){
   .dial .arc, .pill .fill{ transition:none }
   .spark-draw{ animation:none; stroke-dashoffset:0 }
+  .sc-plot *, .sc-plot{ transition:none !important; animation:none !important }
   .skel{ animation:none }
 }
 
