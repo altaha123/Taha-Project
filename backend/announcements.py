@@ -480,6 +480,37 @@ NSE_ORDER_SUBJECTS = re.compile(
 _nse_warm = {"at": 0.0}
 
 
+def nse_item(row):
+    """One NSE announcement row -> our shape. None when unusable."""
+    if not isinstance(row, dict):
+        return None
+    subject = re.sub(r"\s+", " ", (row.get("desc") or "")).strip()
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ",
+                                      row.get("attchmntText") or "")).strip()
+    sym = (row.get("symbol") or "").strip().upper()
+    # The subject is a category ("General Updates"); the text is what the
+    # company actually said. Show the text when there is one.
+    head = text or subject
+    if not head or not sym:
+        return None
+    when = (_parse_dt(row.get("an_dt")) or _parse_dt(row.get("sort_date"))
+            or _parse_dt(row.get("exchdisstime")))
+    if NSE_ORDER_SUBJECTS.match(subject):
+        cat, imp, weight = "Order win", IMPORTANCE[5], 5
+    else:
+        cat, imp, weight = classify(subject + " " + text)
+    return {
+        "symbol": sym, "scrip_code": "",
+        "company": (row.get("sm_name") or sym).strip(),
+        "headline": head[:400],
+        "exchange_category": subject[:80],
+        "category": cat, "importance": imp, "weight": weight,
+        "at": when.isoformat() if when else None,
+        "epoch": when.timestamp() if when else 0,
+        "pdf": row.get("attchmntFile") or None,
+    }
+
+
 def _nse_rows(days: int = None):
     """
     Fallback source. NSE needs a browser-shaped session before its API answers,
@@ -517,33 +548,7 @@ def _nse_rows(days: int = None):
         rows = data if isinstance(data, list) else _rows_from(data)
         if not rows:
             return [], "NSE: 200 but no rows"
-        out = []
-        for row in rows:
-            subject = re.sub(r"\s+", " ", (row.get("desc") or "")).strip()
-            text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ",
-                                              row.get("attchmntText") or "")).strip()
-            sym = (row.get("symbol") or "").strip().upper()
-            # The subject is a category ("General Updates"); the text is what
-            # the company actually said. Show the text when there is one.
-            head = text or subject
-            if not head or not sym:
-                continue
-            when = (_parse_dt(row.get("an_dt")) or _parse_dt(row.get("sort_date"))
-                    or _parse_dt(row.get("exchdisstime")))
-            if NSE_ORDER_SUBJECTS.match(subject):
-                cat, imp, weight = "Order win", IMPORTANCE[5], 5
-            else:
-                cat, imp, weight = classify(subject + " " + text)
-            out.append({
-                "symbol": sym, "scrip_code": "",
-                "company": (row.get("sm_name") or sym).strip(),
-                "headline": head[:400],
-                "exchange_category": subject[:80],
-                "category": cat, "importance": imp, "weight": weight,
-                "at": when.isoformat() if when else None,
-                "epoch": when.timestamp() if when else 0,
-                "pdf": row.get("attchmntFile") or None,
-            })
+        out = [i for i in (nse_item(row) for row in rows) if i]
         return out, f"NSE: {len(out)} rows"
     except Exception as e:
         return [], f"NSE: {type(e).__name__} {str(e)[:80]}"

@@ -70,14 +70,30 @@ VALUE_CUE = re.compile(
     r"\b(order value|contract value|value of the (?:order|contract|project|work)"
     r"|total value|aggregate value|aggregating to|valued at|worth(?: of)?"
     r"|order (?:worth|of|for)|contract (?:worth|of|for)|consideration of"
-    r"|estimated (?:value|cost)|project cost|size of the order)\b", re.I)
+    r"|estimated (?:value|cost)|project cost|size of the order"
+    r"|totall?ing|amounting to|orders? wins? of)\b", re.I)
 
 # Figures that are emphatically NOT the order, even when they are the largest
 # number on the page.
 ANTI_CUE = re.compile(
     r"\b(paid-?up|share capital|authorised capital|turnover|revenue from operations"
     r"|net worth|market capitali[sz]ation|order book|outstanding orders"
-    r"|previous year|corresponding quarter|face value|authorized capital)\b", re.I)
+    r"|previous year|corresponding quarter|face value|authorized capital"
+    # Running totals. "We have secured orders worth Rs 13,219 crore so far in
+    # the current fiscal" is the year's inflow, not this order — and it is
+    # usually the largest labelled figure in a press release.
+    r"|so far|till date|to date|year[- ]to[- ]date|ytd|cumulative"
+    r"|order inflow"
+    # Bids, not wins. "Favourably placed / L1 for orders exceeding Rs 12,000
+    # crore" is the pipeline, and it is bigger than the order being announced.
+    r"|L-?1|lowest bidder|favou?rably placed|pipeline|bids? submitted)\b", re.I)
+
+# The company is the BUYER. "Approval for placement of the purchase order on
+# M/s Larsen and Toubro for Rs 797 crore" is a Reg 30 order disclosure filed
+# under the same NSE subject as a win, and is the opposite event.
+PLACED_BY_COMPANY = re.compile(
+    r"\b(placement\s+of\s+(?:the\s+|a\s+|an\s+)?(?:purchase\s+|work\s+)?orders?"
+    r"|placed\s+(?:an?\s+|the\s+)?(?:purchase\s+|work\s+)?orders?\s+on\s+m/?s)\b", re.I)
 
 
 # A sentence break, except after the abbreviations an Indian filing is full
@@ -180,13 +196,20 @@ def order_value_cr(text: str):
     }
 
 
+def placed_by_company(text: str) -> bool:
+    """True when the filing is the company placing an order, not winning one.
+    Only the opening of the document is read: that is where the subject is."""
+    return bool(text) and bool(PLACED_BY_COMPANY.search(text[:6000]))
+
+
 # ---------------------------------------------------------------------------
 # Market cap
 # ---------------------------------------------------------------------------
 
 def market_cap_cr(symbol: str):
     """
-    Market capitalisation in crore, Dhan first and the provider after.
+    Market capitalisation in crore: NSE's daily market-cap file first (see
+    nse_mcap.py for why), then the older sources.
 
     Cached for the life of the process: it moves with the price, and a figure
     that is a day stale changes "12% of market value" to "12.4% of market
@@ -196,13 +219,21 @@ def market_cap_cr(symbol: str):
         return None
     with _lock:
         hit = _mcap_cache.get(symbol)
-    if hit and time.time() - hit[0] < 6 * 3600:
+    # A miss is retried after fifteen minutes, not six hours: a failed lookup
+    # at startup used to pin "market cap unavailable" on a symbol all day.
+    if hit and time.time() - hit[0] < (6 * 3600 if hit[1] else 900):
         return hit[1]
 
     value = None
     try:
-        import social_posts
-        value = social_posts._market_cap_cr(symbol)
+        import nse_mcap
+        value, _close = nse_mcap.market_cap_cr(symbol)
+    except Exception:
+        value = None
+    try:
+        if value is None:
+            import social_posts
+            value = social_posts._market_cap_cr(symbol)
     except Exception:
         value = None
     if value is None:
@@ -307,6 +338,7 @@ def scan(days: int = 7, force: bool = False) -> dict:
             "market_cap_cr": None,
             "pct_of_market_cap": None,
             "wow": False,
+            "placed_by_company": False,
         }
 
         if can_read and item.get("pdf") and read < MAX_PDFS:
@@ -315,6 +347,8 @@ def scan(days: int = 7, force: bool = False) -> dict:
                 read += 1
             text = filings_text.extract(item["pdf"])
             found = order_value_cr(text) if text else None
+            row["placed_by_company"] = placed_by_company(
+                (item.get("headline") or "") + "\n" + (text or ""))
             if found:
                 row.update({
                     "value_cr": found["value_cr"],
@@ -329,7 +363,8 @@ def scan(days: int = 7, force: bool = False) -> dict:
             if cap and cap > 0:
                 row["market_cap_cr"] = round(cap, 2)
                 row["pct_of_market_cap"] = round(100.0 * row["value_cr"] / cap, 2)
-                row["wow"] = row["pct_of_market_cap"] >= WOW_MIN_PCT
+                row["wow"] = (row["pct_of_market_cap"] >= WOW_MIN_PCT
+                              and not row["placed_by_company"])
         rows.append(row)
 
     rows.sort(key=lambda r: (r["pct_of_market_cap"] is None,

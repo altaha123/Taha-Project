@@ -155,6 +155,10 @@ try:
 except Exception:
     wow_orders = None
 try:
+    import order_alerts
+except Exception:
+    order_alerts = None
+try:
     import concalls as concall_source
 except Exception:
     concall_source = None
@@ -289,6 +293,16 @@ def _apply_thread_cap():
 @app.on_event("startup")
 async def _cap_request_threadpool():
     _apply_thread_cap()
+
+
+@app.on_event("startup")
+async def _start_order_alerts():
+    # One small thread. /cron/tick and /wow-orders restart it if it dies.
+    if order_alerts is not None:
+        try:
+            order_alerts.ensure_running()
+        except Exception:
+            pass
 
 
 @app.middleware("http")
@@ -3111,12 +3125,35 @@ def wow_orders_feed(days: int = 7, refresh: bool = False):
     """
     if wow_orders is None:
         return {"available": False, "message": "The orders reader is not available."}
+    if order_alerts is not None:
+        try:
+            order_alerts.ensure_running()
+        except Exception:
+            pass
     try:
         payload = wow_orders.scan(days=max(1, min(days, 30)), force=bool(refresh))
         payload["quarter"] = wow_orders.quarter_comparison()
         return to_native(payload)
     except Exception as e:
         raise HTTPException(503, f"Could not read the orders: {str(e)[:110]}")
+
+
+@app.get("/order-alerts/status")
+def order_alerts_status():
+    """Is the WOW order poller alive, how fast was the last alert, what did it decide."""
+    if order_alerts is None:
+        return {"available": False}
+    order_alerts.ensure_running()
+    return to_native(dict(order_alerts.status(), recent=order_alerts.recent(15)))
+
+
+@app.get("/order-alerts/test")
+def order_alerts_test(key: str = ""):
+    """Send one message to the Telegram chat, so delivery can be checked now."""
+    _require_admin(key)
+    if order_alerts is None:
+        raise HTTPException(503, "Order alerts are not available.")
+    return order_alerts.test_message()
 
 
 @app.post("/jobs/wow-backfill")
@@ -5049,6 +5086,11 @@ def cron_tick():
         ann.poll_if_stale()
     except Exception:
         pass
+    if order_alerts is not None:
+        try:
+            order_alerts.ensure_running()
+        except Exception:
+            pass
 
     # Attach forward returns to anything whose horizon has now elapsed. This
     # has to be unattended: a label can only be written days or months after
