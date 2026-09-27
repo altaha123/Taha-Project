@@ -228,6 +228,23 @@ CREATE VIEW IF NOT EXISTS yf_statements_v AS
   SELECT s.symbol, s.statement, s.freq, s.period_end, i.name AS item, s.value
     FROM yf_statements s JOIN yf_items i USING (item_id);
 
+-- Yahoo's profile of each company: its sector and industry, and the share
+-- count and price the lenses size a company by. NSE's own classification
+-- comes from its quote API, which refuses a datacenter address; Yahoo's is
+-- the one that can actually be read for the whole list. See industry.py for
+-- which of the two is used, and why never both at once.
+CREATE TABLE IF NOT EXISTS yf_profile (
+  symbol        TEXT PRIMARY KEY,
+  company       TEXT,
+  sector        TEXT,
+  industry      TEXT,
+  shares        REAL,
+  price         REAL,
+  market_cap    REAL,
+  currency      TEXT,
+  updated_utc   TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS yf_coverage (
   symbol         TEXT PRIMARY KEY,
   last_try_utc   TEXT,
@@ -556,6 +573,58 @@ def record_yf(symbol, statement, freq, values):
         return conn.total_changes - before
 
 
+def record_yf_profile(symbol, info):
+    """
+    One company's Yahoo profile from a yfinance `info` dict. Returns True if
+    anything useful was stored. A profile with neither an industry nor a share
+    count says nothing, and an empty one must not overwrite a good one.
+    """
+    sym = (symbol or "").strip().upper()
+    info = info or {}
+    row = {
+        "company": info.get("longName") or info.get("shortName"),
+        "sector": (info.get("sector") or "").strip() or None,
+        "industry": (info.get("industry") or "").strip() or None,
+        "shares": _num(info.get("sharesOutstanding") or info.get("impliedSharesOutstanding")),
+        "price": _num(info.get("currentPrice") or info.get("regularMarketPrice")),
+        "market_cap": _num(info.get("marketCap")),
+        "currency": info.get("currency"),
+    }
+    if not sym or not (row["industry"] or row["shares"]):
+        return False
+    with _tx() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO yf_profile (symbol, company, sector, industry,"
+            " shares, price, market_cap, currency, updated_utc) VALUES (?,?,?,?,?,?,?,?,?)",
+            (sym, row["company"], row["sector"], row["industry"], row["shares"],
+             row["price"], row["market_cap"], row["currency"], _utcnow()))
+    return True
+
+
+def yf_profiles():
+    """{symbol: profile} for every company with a Yahoo profile."""
+    return {r["symbol"]: dict(r) for r in _connect().execute("SELECT * FROM yf_profile")}
+
+
+def profile_due(universe, limit=40, stale_days=30):
+    """Companies with no Yahoo profile first, then the oldest; a month keeps a
+    share count and a classification current."""
+    held = {r["symbol"]: r["updated_utc"] for r in _connect().execute(
+        "SELECT symbol, updated_utc FROM yf_profile")}
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=stale_days)).isoformat(timespec="seconds")
+    never, stale = [], []
+    for sym in universe or []:
+        s = (sym or "").strip().upper()
+        if not s:
+            continue
+        if s not in held:
+            never.append(s)
+        elif held[s] < cutoff:
+            stale.append((held[s], s))
+    stale.sort()
+    return (never + [s for _t, s in stale])[: max(1, int(limit))]
+
+
 def yf_statement(symbol, statement="income", freq="annual", crore=False):
     """
     One company's statement laid out the way it is read: a row per line item,
@@ -623,6 +692,9 @@ def stats():
             "companies": one("SELECT COUNT(DISTINCT symbol) FROM yf_statements"),
             "latest_period": one("SELECT MAX(period_end) FROM yf_statements") or None,
             "coverage": cov("yf_coverage"),
+            "profiles": one("SELECT COUNT(*) FROM yf_profile"),
+            "profiles_with_industry": one(
+                "SELECT COUNT(*) FROM yf_profile WHERE industry IS NOT NULL AND industry != ''"),
         },
         "unit": ("₹ crore for *_cr columns; eps_basic in ₹ per share; *_pct a "
                  "percentage; *_x a multiple"),

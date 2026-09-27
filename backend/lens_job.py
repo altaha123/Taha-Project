@@ -49,7 +49,13 @@ def compute(cfg=None, today=None, prices=None, universe_size=None):
     if fundamentals_store is None:
         raise RuntimeError("The fundamentals tables are not available")
 
-    profiles = lens_store.companies()
+    # NSE's profile where it was read, Yahoo's industry, shares and price
+    # where it was not — one classifier for the whole market (industry.py).
+    try:
+        import industry
+        profiles = industry.lens_profiles()
+    except Exception:
+        profiles = lens_store.companies()
     holdings = lens_store.shareholding()
     prices = lens_metrics.latest_prices() if prices is None else prices
     if universe_size is None:

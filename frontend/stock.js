@@ -1494,8 +1494,9 @@
         '<td class="tnum">' + esc(rank) + '</td></tr>';
     }).join('');
     box.innerHTML = '<h3 class="fu-h3">Against its industry</h3>' +
-      '<p class="fu-cap" id="fu-cap-peers">' + esc(d.industry) + ', as NSE ' +
-      'classifies it. This company on its ' + esc(d.as_of || 'latest') +
+      '<p class="fu-cap" id="fu-cap-peers">' + esc(d.industry) + ', as ' +
+      esc(d.classifier || 'NSE') + ' classifies it. This company on its ' +
+      esc(d.as_of || 'latest') +
       ' results against the median of the peers with recent results held, and ' +
       'how many of those peers it is above.</p>' +
       '<div class="fu-block"><div class="fu-wrap">' +
