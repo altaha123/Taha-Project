@@ -112,14 +112,24 @@ const server=http.createServer((req,res)=>{
  await page.evaluate(d=>window.dispatchEvent(new CustomEvent('altaha:market',{detail:d})),{indices:indices.map((x,i)=>i===0?{...x,change_pct:2.5}:x),sectors:sector});
  await page.waitForFunction(()=>document.querySelector('[data-motion-key="index:NIFTY 50"]').getAnimations().length>0);
  assert.match(await page.locator('.mb-card').first().innerText(),/\+2\.50%/);
- // Tap disclosure and verify keyboard focus survives its redraw.
- await page.locator('[data-sector="Nifty Financial Services"]').tap();
- assert.equal(await page.locator('[data-sector="Nifty Financial Services"]').getAttribute('aria-expanded'),'true');
- assert.ok(await page.locator('.sb-detail').isVisible());
- await page.locator('[data-sector="Nifty Financial Services"]').focus();
- await page.keyboard.press('Enter');
+ // A sector tile opens that index in the explorer, by tap and by keyboard,
+ // and closing the explorer hands focus back to the tile. 2a7eb0f made the
+ // tile open the explorer instead of expanding in place; this step still
+ // expected the old disclosure, so it had been red on main ever since.
+ const tileSel='[data-sector="Nifty Financial Services"]', atlas=page.locator('dialog.ix-dialog');
+ assert.equal(await page.locator(tileSel).getAttribute('aria-haspopup'),'dialog');
+ assert.equal(await page.locator(tileSel).getAttribute('aria-expanded'),null);
+ await page.locator(tileSel).tap();
+ await atlas.waitFor({state:'visible'});
+ assert.match(await atlas.locator('.ix-hero h2').innerText(),/NIFTY FINANCIAL SERVICES/);
+ await atlas.locator('[data-key="close"]').click();
+ await atlas.waitFor({state:'hidden'});
  assert.equal(await page.evaluate(()=>document.activeElement.dataset.sector),'Nifty Financial Services');
- assert.equal(await page.locator('[data-sector="Nifty Financial Services"]').getAttribute('aria-expanded'),'false');
+ await page.keyboard.press('Enter');
+ await atlas.waitFor({state:'visible'});
+ await page.keyboard.press('Escape');
+ await atlas.waitFor({state:'hidden'});
+ assert.equal(await page.evaluate(()=>document.activeElement.dataset.sector),'Nifty Financial Services');
  await page.evaluate(()=>window.AltahaNav.go('screener','screener',true));
  // Motion stays enabled across navigation and ignores an obsolete stored pause.
  assert.equal(await page.locator('.hm-motion').count(),0);
