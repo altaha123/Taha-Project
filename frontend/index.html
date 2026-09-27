@@ -1191,6 +1191,7 @@
 <link rel="stylesheet" href="universe-scan.css?v=20260921-3d">
 <link rel="stylesheet" href="lenses.css?v=20260925-screens">
 <link rel="stylesheet" href="query.css?v=20260927">
+<link rel="stylesheet" href="idea-card.css?v=20260927b">
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20260922-stock-copy"></script>
 <script src="universe-scan.js?v=20260922-stock-copy"></script>
@@ -2750,30 +2751,33 @@ async function loadIdeas(){
       $("idearows").innerHTML = d.rows.map((s,i)=>`
         <div class="idea rise" style="--i:${Math.min(i,10)}" data-t="${esc(s.symbol)}" data-score="${esc(s.conviction ?? s.setup_fit ?? "")}" data-name="${esc(s.name)}" role="group" aria-label="${esc(s.name)}">
           <div class="top">
-            <span class="nm"><a href="stock.html?ticker=${encodeURIComponent(s.symbol)}">${i+1}. ${esc(s.name)}</a>${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}<small>${esc(s.symbol)} · NSE · ₹${s.price ?? "—"}${s.avg_turnover_cr!=null?` · ₹${s.avg_turnover_cr}cr/day`:""}</small></span>
-            <span class="conv">${scoreTxt(s.conviction ?? s.setup_fit)}<small>conviction</small></span>
+            <span class="nm"><a href="stock.html?ticker=${encodeURIComponent(s.symbol)}">${i+1}. ${esc(s.name)}</a><small>${esc(s.symbol)} · ₹${s.price ?? "—"}</small></span>
+            <span class="conv">${scoreTxt(s.conviction ?? s.setup_fit)}<small>score</small></span>
           </div>
-          <div class="arch">${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${scoreTxt(s.setup_fit, 0)}/100${s.filing?`<span class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</span>`:""}</div>
-          ${catalystChips(s)}
-          ${s.plan ? `<div class="ideaplan"><span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>` +
-            (s.plan.entry!=null ? `<span>Entry ₹${Number(s.plan.entry).toLocaleString("en-IN")}</span><span>SL ₹${Number(s.plan.stop).toLocaleString("en-IN")}${s.plan.risk_pct!=null?` (−${s.plan.risk_pct}%)`:""}</span>` +
-              (s.plan.t1!=null?`<span>T1 ₹${Number(s.plan.t1).toLocaleString("en-IN")}</span>`:"") +
-              (s.plan.rr!=null?`<span>R:R 1:${s.plan.rr}</span>`:"") : `<span>${esc((s.plan.note||"").split("—")[0])}</span>`) + `</div>` : ""}
-          <div class="ln"><span>Composite ${scoreTxt(s.composite)}</span><span>Technical ${scoreTxt(s.technical, 0)}</span>
-            <span>Fundamental ${scoreTxt(s.fundamental, 0)}</span><span>Piotroski ${s.f_score ?? "—"}/9</span></div>
+          ${planGrid(s.plan)}
           ${s.adverse_filing ? `<div class="badbox"><b>Adverse filing.</b> ${esc((s.catalyst&&s.catalyst.headline)||(s.catalyst&&s.catalyst.line)||"")} — scored against this idea, not for it.</div>` : ""}
-          ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
-          ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
-          ${newsHTML(s)}
-          <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">Why this scored ${scoreTxt(s.conviction)} — show the ledger</button>
-          ${evidenceHTML(s.evidence)}
           <div class="idearow-actions">
-            <button class="trackbtn${s.tracked?" done":""}" data-track="${esc(s.symbol)}">${s.tracked?"Tracking":"Add to tracker"}</button>
-            <button class="shbtn" type="button" ${shareAttr({kind:"idea", ticker:s.symbol,
-              horizon_key:horizon, conviction:s.conviction, conviction_band:s.conviction_band,
-              setup:s.setup, horizon:s.horizon})}>${SHARE_ICON}Share</button>
-            <button class="shbtn" type="button" ${shareAttr({kind:"chart", ticker:s.symbol, range:"1D"})}>${SHARE_ICON}Chart</button>
+            <button class="trackbtn${s.tracked?" done":""}" type="button" data-track="${esc(s.symbol)}">${trackInner(s.tracked?"Tracking":"Track")}</button>
+            <button class="morebtn" type="button" aria-expanded="false">Details<i aria-hidden="true"></i></button>
           </div>
+          <div class="ideamore"><div class="ideamore-in">
+            <div class="arch">${s.plan&&s.plan.stance?`<span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>`:""}${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${scoreTxt(s.setup_fit, 0)}/100${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}</div>
+            ${s.filing?`<div class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</div>`:""}
+            ${catalystChips(s)}
+            <div class="ln"><span>Composite ${scoreTxt(s.composite)}</span><span>Technical ${scoreTxt(s.technical, 0)}</span>
+              <span>Fundamental ${scoreTxt(s.fundamental, 0)}</span><span>Piotroski ${s.f_score ?? "—"}/9</span>${s.avg_turnover_cr!=null?`<span>₹${s.avg_turnover_cr}cr/day</span>`:""}</div>
+            ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
+            ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
+            ${newsHTML(s)}
+            <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">Why this scored ${scoreTxt(s.conviction)} — show the ledger</button>
+            ${evidenceHTML(s.evidence)}
+            <div class="idearow-actions">
+              <button class="shbtn" type="button" ${shareAttr({kind:"idea", ticker:s.symbol,
+                horizon_key:horizon, conviction:s.conviction, conviction_band:s.conviction_band,
+                setup:s.setup, horizon:s.horizon})}>${SHARE_ICON}Share</button>
+              <button class="shbtn" type="button" ${shareAttr({kind:"chart", ticker:s.symbol, range:"1D"})}>${SHARE_ICON}Chart</button>
+            </div>
+          </div></div>
         </div>`).join("");
 
       /* Row click opens the company page; the buttons and links must not bubble. */
@@ -2789,6 +2793,15 @@ async function loadIdeas(){
 
       });
 
+      document.querySelectorAll("#idearows .morebtn").forEach(btn=>{
+        btn.addEventListener("click", ev=>{
+          ev.stopPropagation();
+          const card = btn.closest(".idea");
+          const opened = card.classList.toggle("open");
+          btn.setAttribute("aria-expanded", String(opened));
+        });
+      });
+
       document.querySelectorAll(".evbtn").forEach(btn=>{
         const shut = btn.textContent;
         btn.addEventListener("click", ev=>{
@@ -2801,23 +2814,33 @@ async function loadIdeas(){
         });
       });
 
-      document.querySelectorAll(".trackbtn").forEach(btn=>{
+      document.querySelectorAll("#idearows .trackbtn").forEach(btn=>{
         const sym = btn.dataset.track;
-        if(trackedNow.has(sym)){ btn.textContent="Tracking"; btn.classList.add("done"); }
+        const set = (label, cls) => {
+          btn.innerHTML = trackInner(label);
+          btn.classList.remove("busy");
+          if(cls) btn.classList.add(cls);
+        };
+        if(trackedNow.has(sym)){ set("Tracking", "done"); }
         btn.addEventListener("click", async ev=>{
           ev.stopPropagation();
-          if(btn.classList.contains("done")) return;
+          if(btn.classList.contains("done") || btn.classList.contains("busy")) return;
           const row = d.rows.find(r=>r.symbol===sym);
-          btn.textContent="Adding…";
+          btn.classList.add("busy");
+          btn.querySelector(".tb-lbl").textContent = "Adding";
           try{
             const r = await fetch(`${API_BASE}/tracker/add`,{
               method:"POST", headers:{"Content-Type":"application/json"},
               body: JSON.stringify(row)});
             const j = await r.json();
-            btn.textContent = j.added ? "Tracking" : (j.reason || "Already tracked");
-            btn.classList.add("done");
+            set(j.added ? "Tracking" : (j.reason || "Tracking"), "done");
+            /* Restart the landing animation on the element that just changed. */
+            btn.classList.remove("landed"); void btn.offsetWidth; btn.classList.add("landed");
             trackedNow.add(sym);
-          }catch(e){ btn.textContent="Couldn’t add"; }
+          }catch(e){
+            set("Retry", "fail");
+            setTimeout(()=>{ btn.classList.remove("fail"); btn.innerHTML = trackInner("Track"); }, 1600);
+          }
         });
       });
     }
@@ -3784,6 +3807,30 @@ async function analyse(sym){
 }
 
 /* \u2500\u2500 Trade plan card \u2500\u2500 */
+/* The card shows only what a trade needs: where to buy, where it's wrong,
+   where it pays, and whether the payoff is worth the risk. The buy range
+   is the entry give-or-take a quarter ATR, never reaching the stop. */
+function inrTxt(v){ return "₹" + Number(v).toLocaleString("en-IN", {maximumFractionDigits:2}); }
+function planGrid(p){
+  if(!p) return "";
+  if(p.entry==null || p.stop==null){
+    return `<div class="ideaplan2 wait"><span>${esc(p.stance || "Wait")}</span><em>${esc((p.note||p.entry_note||"No clean entry yet").split("—")[0])}</em></div>`;
+  }
+  const e = Number(p.entry), st = Number(p.stop);
+  const band = p.atr ? Number(p.atr) * 0.25 : (e - st) * 0.2;
+  const lo = Math.max(e - band, st + (e - st) * 0.5), hi = e + band;
+  const buy = band > 0 ? `${inrTxt(lo.toFixed(2))}–${inrTxt(hi.toFixed(2))}` : inrTxt(e);
+  const t1 = p.t1 ?? (p.targets && p.targets[0]);
+  return `<div class="ideaplan2">
+    <div class="pc buy"><b>Buy range</b><span>${buy}</span></div>
+    <div class="pc sl"><b>Stop loss</b><span>${inrTxt(st)}${p.risk_pct!=null?`<small>−${p.risk_pct}%</small>`:""}</span></div>
+    <div class="pc tg"><b>Target</b><span>${t1!=null?inrTxt(t1):"—"}</span></div>
+    <div class="pc rr"><b>R:R</b><span>${p.rr!=null?`1:${p.rr}`:"—"}</span></div>
+  </div>`;
+}
+function trackInner(label){
+  return `<span class="tb-ic" aria-hidden="true"><svg viewBox="0 0 16 16"><path class="tb-plus" d="M8 3v10M3 8h10"/><path class="tb-check" d="M3.5 8.5l3 3 6-7"/></svg></span><span class="tb-lbl">${esc(label)}</span>`;
+}
 function stanceCls(s){ return s==="BUY ZONE"?"buy":(s==="BREAKOUT WATCH"?"watch":(s==="AVOID"?"avoid":"wait")); }
 let _plan = null;
 function sizePosition(){

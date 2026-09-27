@@ -1,0 +1,109 @@
+/* Idea card — trimmed to score, buy range, stop, target and R:R.
+   Everything else lives behind "Details". */
+#idearows .idea .top{align-items:flex-start}
+#idearows .idea .nm small{margin-top:6px}
+#idearows .idea .conv{font-size:34px;line-height:1}
+
+.ideaplan2{display:grid;grid-template-columns:1.6fr 1.2fr 1fr .7fr;gap:1px;margin-top:16px;
+  background:var(--rule-2);border:1px solid var(--rule-2);border-radius:12px;overflow:hidden}
+.ideaplan2 .pc{background:var(--skin-card,var(--paper));padding:11px 14px;min-width:0}
+.ideaplan2 .pc b{display:block;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--mute)}
+.ideaplan2 .pc span{display:block;margin-top:8px;font:600 15px/1.2 'IBM Plex Mono',monospace;
+  color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ideaplan2 .pc small{font-weight:400;font-size:11px;color:var(--fail,#a11);margin-left:6px}
+.ideaplan2 .buy span{color:var(--pass,#1f6f43)}
+.ideaplan2 .sl span{color:var(--fail,#a11)}
+.ideaplan2 .rr span{color:var(--gold-dp)}
+.ideaplan2.wait{display:flex;gap:12px;align-items:baseline;padding:11px 14px;background:var(--paper-2)}
+.ideaplan2.wait span{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#8a7a4a}
+.ideaplan2.wait em{font-style:normal;font-size:13px;color:var(--mute)}
+@media(max-width:620px){
+  .ideaplan2{grid-template-columns:1fr 1fr}
+}
+
+#idearows .idea > .idearow-actions{align-items:center;margin-top:14px}
+
+/* Details disclosure — grid-rows trick animates to the content's height. */
+.morebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;
+  font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;
+  background:none;border:none;color:var(--mute);cursor:pointer;padding:0 4px}
+.morebtn:hover{color:var(--ink)}
+.morebtn i{width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+  transform:translateY(-2px) rotate(45deg);transition:transform .28s var(--ease-soft,ease)}
+.idea.open .morebtn i{transform:translateY(1px) rotate(-135deg)}
+.ideamore{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s var(--ease-soft,ease)}
+.ideamore-in{min-height:0;overflow:hidden;opacity:0;transition:opacity .22s ease}
+.idea.open .ideamore{grid-template-rows:1fr}
+.idea.open .ideamore-in{opacity:1;padding-top:6px}
+.ideamore .arch{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ideamore .arch .ip{padding:2px 8px;border:1px solid;font-weight:600;letter-spacing:.08em;margin-right:6px}
+.ideamore .ip.buy{color:var(--pass);border-color:var(--pass)}
+.ideamore .ip.watch{color:var(--gold);border-color:var(--gold)}
+.ideamore .ip.wait{color:#8a7a4a;border-color:#8a7a4a}
+.ideamore .ip.avoid{color:var(--fail);border-color:var(--fail)}
+.ideamore .filingtag{margin-top:10px}
+
+/* ── Save: the star pops, spins and throws a ring when a stock is saved ── */
+.svbtn{display:inline-flex;align-items:center;gap:8px;position:relative;
+  border-radius:var(--r-pill,999px)}
+.svbtn .sv-star{display:inline-block;font-size:17px;line-height:1;color:var(--mute);
+  transition:color .2s ease,transform .2s ease}
+.svbtn:hover .sv-star{transform:scale(1.15) rotate(-8deg)}
+.svbtn.on{border-color:var(--gold);color:var(--gold-dp)}
+.svbtn.on .sv-star{color:var(--gold)}
+.svbtn.pop .sv-star{animation:svPop .6s cubic-bezier(.2,1.6,.4,1) both}
+.svbtn::after{content:"";position:absolute;left:18px;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;
+  border-radius:50%;border:2px solid var(--gold);opacity:0;pointer-events:none}
+.svbtn.pop::after{animation:svRing .6s ease-out both}
+@keyframes svPop{0%{transform:scale(.4) rotate(-90deg)}60%{transform:scale(1.45) rotate(20deg)}
+  100%{transform:scale(1) rotate(0)}}
+@keyframes svRing{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(2)}}
+
+/* ── Track: "+" morphs into a drawn check; spinner while adding ────────── */
+#idearows .trackbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:7px 16px}
+.trackbtn .tb-ic{width:16px;height:16px;display:inline-grid;place-items:center;border-radius:50%;
+  transition:background .25s ease}
+.trackbtn .tb-ic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.trackbtn .tb-plus{transform-origin:8px 8px;transition:transform .3s var(--ease-soft,ease),opacity .2s}
+.trackbtn:hover .tb-plus{transform:rotate(90deg)}
+.trackbtn .tb-check{stroke-dasharray:14;stroke-dashoffset:14;opacity:0}
+.trackbtn.busy{cursor:progress}
+.trackbtn.busy .tb-ic{border:1.6px solid currentColor;border-right-color:transparent;
+  animation:tbSpin .7s linear infinite}
+.trackbtn.busy .tb-ic svg{opacity:0}
+.trackbtn.done .tb-plus{opacity:0;transform:rotate(90deg) scale(.2)}
+.trackbtn.done .tb-check{opacity:1;stroke-dashoffset:0}
+.trackbtn.done .tb-ic{background:rgba(31,111,67,.12)}
+.trackbtn.landed .tb-check{animation:tbDraw .45s .05s ease-out both}
+.trackbtn.landed{animation:tbLand .5s cubic-bezier(.2,1.4,.4,1)}
+.trackbtn.fail{border-color:var(--fail,#a11);color:var(--fail,#a11);animation:tbShake .4s ease}
+@keyframes tbSpin{to{transform:rotate(360deg)}}
+@keyframes tbDraw{from{stroke-dashoffset:14}to{stroke-dashoffset:0}}
+@keyframes tbLand{0%{transform:scale(.94)}55%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes tbShake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+@media (prefers-reduced-motion:reduce){
+  .svbtn.pop .sv-star,.svbtn.pop::after,.trackbtn.landed,.trackbtn.landed .tb-check,
+  .trackbtn.fail,.trackbtn.busy .tb-ic{animation:none}
+  .ideamore,.ideamore-in,.morebtn i{transition:none}
+}
+
+/* Save and Track read as one pair on the card. */
+#idearows .svbtn{min-height:44px;padding:7px 16px;font:500 10px 'IBM Plex Mono',monospace;
+  letter-spacing:.14em;text-transform:uppercase}
+#idearows .svbtn .sv-star{font-size:15px}
+/* Two older sheets disagree on hover (ink background vs ink text), which
+   left the label invisible; settle it here. */
+#idearows .trackbtn:hover{background:var(--paper-2);border-color:var(--ink-2);color:var(--ink)}
+#idearows .trackbtn.done,#idearows .trackbtn.done:hover{background:rgba(31,111,67,.06);border-color:#1f6f43;color:#1f6f43}
+
+/* Universe Scan shows the list, not the commentary around it. The market
+   backdrop, regime line, sector-mix chip, selection notes and horizon blurb
+   are hidden; "Still loading" (#stalebox) stays because it explains a
+   degraded list. */
+#view-ideas #hznote,#view-ideas #mktctx,#view-ideas #regimebox,
+#view-ideas #secmix,#view-ideas #selnotes{display:none!important}
+/* The live-discoveries panel is an empty frame until the scan finds cards. */
+.su-discoveries:not(:has(.su-card)){display:none}
