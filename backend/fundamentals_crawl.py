@@ -296,6 +296,12 @@ def crawl_yf_symbol(symbol, **_kw):
             got += 1
         wrote += n
         latest = max([latest or ""] + [p for p, _i in values]) or None
+    # The profile rides along: one more call, and it keeps the classification
+    # and share count as current as the statements.
+    try:
+        res["profile"] = store.record_yf_profile(sym, t.info)
+    except Exception as e:
+        errors.append("info: %s" % str(e)[:60])
     if got:
         res.update({"ok": True, "rows": wrote, "statements": got, "status": "ok"})
         store.mark_coverage(sym, "ok", latest_period=latest, quarters=got,
@@ -306,6 +312,31 @@ def crawl_yf_symbol(symbol, **_kw):
         res["status"] = "error" if errors else "no-data"
         res["note"] = "; ".join(errors)[:180] or "Yahoo returned no statements"
         store.mark_coverage(sym, res["status"], note=res["note"], source="yfinance")
+    return res
+
+
+def crawl_yf_profile(symbol, **_kw):
+    """
+    Only the Yahoo profile — sector, industry, shares, price — for one
+    company. The backfill for companies whose statements were read before the
+    profile was, so the classification does not wait a fortnight for the
+    statement sweep to come round again. Never raises.
+    """
+    sym = (symbol or "").strip().upper()
+    res = {"symbol": sym, "ok": False, "rows": 0, "status": "error", "note": ""}
+    if not sym or store is None:
+        res["note"] = "store unavailable"
+        return res
+    try:
+        info = _ticker(sym).info
+    except Exception as e:
+        res["note"] = ("info: %s" % e)[:180]
+        return res
+    if store.record_yf_profile(sym, info):
+        res.update({"ok": True, "rows": 1, "status": "ok"})
+    else:
+        # Yahoo throttles with an empty dict, so this counts towards giving up.
+        res.update({"status": "no-data", "note": "Yahoo returned no profile"})
     return res
 
 
@@ -326,10 +357,15 @@ def run(limit=DEFAULT_LIMIT, symbols=None, pause=PAUSE, source="nse"):
                 return out
         except Exception:
             pass
-    crawl = crawl_yf_symbol if source == "yfinance" else crawl_symbol
+    crawl = {"yfinance": crawl_yf_symbol,
+             "yfinance-profile": crawl_yf_profile}.get(source, crawl_symbol)
 
-    queue = [s.strip().upper() for s in symbols if s] if symbols else \
-        store.due_symbols(universe(), limit=limit, source=source)
+    if symbols:
+        queue = [s.strip().upper() for s in symbols if s]
+    elif source == "yfinance-profile":
+        queue = store.profile_due(universe(), limit=limit)
+    else:
+        queue = store.due_symbols(universe(), limit=limit, source=source)
     if not queue:
         out["stopped_early"] = "nothing due"
         return out
@@ -348,7 +384,7 @@ def run(limit=DEFAULT_LIMIT, symbols=None, pause=PAUSE, source="nse"):
             # Yahoo throttles by returning empty frames rather than an error,
             # so for it a run of "no data" is the refusal to back off from.
             if r["status"] in ("error", "unreadable") or \
-                    (source == "yfinance" and r["status"] == "no-data"):
+                    (source.startswith("yfinance") and r["status"] == "no-data"):
                 misses += 1
         if misses >= GIVE_UP_AFTER:
             out["stopped_early"] = (

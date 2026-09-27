@@ -682,21 +682,24 @@ def _median(vals):
     return round(vals[mid] if n % 2 else (vals[mid - 1] + vals[mid]) / 2.0, 2)
 
 
-def peers_from_store(symbol, industry, members, today: dt.date = None) -> dict:
+def peers_from_store(symbol, industry, members, today: dt.date = None,
+                     classifier: str = "NSE") -> dict:
     """
-    How one company's latest figures sit against the rest of its NSE industry:
+    How one company's latest figures sit against the rest of its industry, as
+    `classifier` (NSE or Yahoo Finance — never a mix, see industry.py) puts it:
     the industry median and how many peers it is ahead of, per measure.
 
-    `members` is every symbol NSE classes in `industry`. A peer counts only if
+    `members` is every symbol the classifier puts in `industry`. A peer counts only if
     its newest stored quarter ended within STORE_FRESH_DAYS, so a company that
     stopped filing does not pull the median towards an old year, and a measure
     is compared only when at least PEER_MIN peers have a value for it. How much
     of the industry was read is stated, never implied to be all of it.
     """
     sym = (symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
-    out = {"symbol": sym, "industry": industry, "available": False, "measures": []}
+    out = {"symbol": sym, "industry": industry, "classifier": classifier,
+           "available": False, "measures": []}
     if not industry:
-        out["message"] = "NSE's industry for %s is not held yet." % sym
+        out["message"] = "The industry for %s is not held yet." % sym
         return out
     today = today or dt.date.today()
     fresh = (today - dt.timedelta(days=STORE_FRESH_DAYS)).isoformat()
@@ -739,8 +742,8 @@ def peers_from_store(symbol, industry, members, today: dt.date = None) -> dict:
             "than five months old are left out.",
             "Return on equity is the latest full year's profit after tax over "
             "the latest balance sheet's equity.",
-            "%d of the %d other companies NSE classes in %s have recent "
-            "results held." % (len(held), len(others), industry),
+            "%d of the %d other companies %s classes in %s have recent "
+            "results held." % (len(held), len(others), classifier, industry),
         ],
     })
     if not measures:

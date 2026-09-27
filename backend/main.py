@@ -2289,19 +2289,14 @@ def fundamentals_position(ticker: str, periods: int = 6):
 
 
 def _industry_members(sym):
-    """NSE's industry for a company, and every company NSE puts in it."""
-    if lens_store is None:
-        return None, []
+    """(classifier, industry, members): one classifier for the whole market,
+    NSE's where it is held for most companies and Yahoo's otherwise — see
+    industry.py for why the two are never mixed."""
     try:
-        conn = lens_store._connect()
-        row = conn.execute("SELECT industry FROM lens_company WHERE symbol=?", (sym,)).fetchone()
-        ind = row["industry"] if row else None
-        if not ind:
-            return None, []
-        return ind, [r["symbol"] for r in conn.execute(
-            "SELECT symbol FROM lens_company WHERE industry=?", (ind,))]
+        import industry
+        return industry.members(sym)
     except Exception:
-        return None, []
+        return None, None, []
 
 
 @app.get("/fundamentals/peers")
@@ -2316,8 +2311,9 @@ def fundamentals_peers(ticker: str):
     if fundamentals_source is None:
         return {"available": False, "message": "The fundamentals reader is not available."}
     sym = _fund_symbol(ticker)
-    industry, members = _industry_members(sym)
-    return to_native(fundamentals_source.peers_from_store(sym, industry, members))
+    source, ind, members = _industry_members(sym)
+    return to_native(fundamentals_source.peers_from_store(
+        sym, ind, members, classifier=source or "NSE"))
 
 
 @app.get("/fundamentals/screens")
@@ -2479,13 +2475,15 @@ def admin_fundamentals_crawl(key: str = "", limit: int = 8,
     reasons. Bounded per call: the first sweep is about thirty-four documents
     for each of two thousand companies, and it is meant to take many nights.
 
-    `source=yfinance` reads Yahoo's statements into their own table instead.
+    `source=yfinance` reads Yahoo's statements into their own table instead;
+    `source=yfinance-profile` reads only Yahoo's profile (sector, industry,
+    shares, price) for companies that have none yet — the industry backfill.
     """
     _require_admin(x_admin_key or key)
     if fundamentals_crawl is None:
         raise HTTPException(503, "The fundamentals crawler is not available.")
-    if source not in ("nse", "yfinance"):
-        raise HTTPException(400, "source must be nse or yfinance.")
+    if source not in ("nse", "yfinance", "yfinance-profile"):
+        raise HTTPException(400, "source must be nse, yfinance or yfinance-profile.")
     syms = [s.strip().upper() for s in (symbols or "").split(",") if s.strip()]
     try:
         return to_native(fundamentals_crawl.run(

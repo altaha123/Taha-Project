@@ -152,8 +152,22 @@ answered where the caller can see it.
 | **Fundamental score** (Piotroski checks, stock page, portfolio rows, scan Phase 2) — `data_source.stored_statements()` | `yf_statements`, rebuilt into the exact frames yfinance returns | not an `.NS` listing (a bare ticker is a US one — AGI is Alamos Gold, not AGI Greenpac), any of the three statements missing, or the newest annual period older than 515 days. `info` (valuation, ownership) is still read live. |
 | **Factor history** for the scan and `/factors` — `xbrl.scoring_statements()` → `fundamentals_store.scoring_quarters()` | `income_statement` quarters in `xbrl.statements()`'s shape; return on assets annualised against the balance sheet at or before the quarter, as `normalise()` derives it | a historical `as_of` read (the table keeps only the latest revision, and a backtest needs the one known at the time), the company not crawled, or the newest quarter older than 154 days. Filing times are written back in NSE's own format so the point-in-time store keys a stored row and the same filing read live as one version. |
 | **Balance sheet and cash flow** on the stock page — `GET /fundamentals/position` | `balance_sheet` (March and September), `cash_flow` (full years only — a half-year beside a year reads as a collapse) | nothing to fall back to; the pane says the company has not been read yet. Lines a company never filed are not drawn, so a bank shows deposits and a manufacturer inventories. Cash conversion and FCF margin only over a positive base. |
-| **Against its industry** — `GET /fundamentals/peers` | each peer's newest quarter, balance sheet and year, one query per table; NSE industry from `lens_company` | a measure is shown only when at least 5 peers with results in the last 154 days have a value for it; how many of the industry were read is printed. |
+| **Against its industry** — `GET /fundamentals/peers` | each peer's newest quarter, balance sheet and year, one query per table; industry from `industry.py` (below) | a measure is shown only when at least 5 peers with results in the last 154 days have a value for it; how many of the industry were read is printed. |
 | **Quarterly screens** under the lens cards — `GET /fundamentals/screens`, `/fundamentals/screens/{id}` | the whole store, cached for an hour and until the tables change | a company whose newest quarter is more than 154 days old is left out, not failed. Every match carries the figures that met the condition. |
+
+### Where the industry comes from
+
+NSE's quote API carries the exchange's own classification, but it refuses the
+API's datacenter address — in production the lens crawl read it for no company
+at all. Yahoo's profile (`yf_profile`: sector, industry, shares, price) is read
+for every company by the Yahoo sweep, and backfilled on its own with
+`POST /admin/fundamentals/crawl?source=yfinance-profile` (the first step of the
+fundamentals workflow). `industry.py` then uses ONE classifier for the whole
+market: NSE's where it covers at least 80% of what Yahoo covers, Yahoo's
+otherwise. Mixing them would split a real industry into two half-groups, since
+the two name industries differently. The payload's `classifier` says which.
+The lenses get the same classification, plus Yahoo's share count and price
+wherever NSE's are missing.
 
 The five screens (`fundamentals_screens.py`): four quarters in a row of revenue
 up more than 20% YoY; back to profit against a loss a year earlier; operating

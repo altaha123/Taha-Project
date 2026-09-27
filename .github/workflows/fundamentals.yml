@@ -40,6 +40,40 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 355
     steps:
+      # Yahoo's profile of each company: sector, industry, share count and
+      # price. The industry comparison on the stock page and the lenses need
+      # an industry for every company, and NSE's quote API — the other place
+      # to get one — refuses the API's datacenter address. One light call per
+      # company; the first run backfills everyone, later runs refresh monthly.
+      - name: Read Yahoo profiles (industry, shares)
+        # First, and bounded: it is quick once the backfill is done, and the
+        # exchange sweep after it can use the rest of the job's six hours.
+        continue-on-error: true
+        timeout-minutes: 45
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          SLICES: "40"
+        run: |
+          set -uo pipefail
+          failed=0
+          for i in $(seq 1 "${SLICES}"); do
+            code=$(curl -sS --max-time 900 -o pslice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/fundamentals/crawl?source=yfinance-profile&limit=60" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+            if [ "${code}" != "200" ]; then
+              echo "profile slice ${i}: HTTP ${code}"
+              failed=$((failed + 1))
+              if [ "${failed}" -ge 3 ]; then echo "::warning::three profile slices failed — stopping."; exit 0; fi
+              sleep 30; continue
+            fi
+            failed=0
+            read -r attempted ok early < <(python3 -c "import json;d=json.load(open('pslice.json'));print(d.get('attempted',0), d.get('ok',0), (d.get('stopped_early') or '').replace(' ','_'))")
+            echo "profile slice ${i}: ${attempted} companies, ${ok} profiles ${early:+— ${early}}"
+            if [ "${attempted}" = "0" ]; then echo "every profile is current."; break; fi
+            if [ -n "${early}" ]; then sleep 120; else sleep 5; fi
+          done
+
       - name: Read the next slices of companies into the tables
         timeout-minutes: 300
         env:
