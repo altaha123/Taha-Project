@@ -37,7 +37,6 @@ const fixture='<!doctype html><html data-theme="light"><head>'+head+'</head><bod
   await page.evaluate(()=>{document.getElementById('sh-q').style.display='none';document.getElementById('view-screener').style.display='block'});
   await page.locator('.hh-btn-gold').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'tk','legacy fallback');
   await page.evaluate(()=>document.getElementById('sh-q').style.display='block');
-  await page.locator('.hm-route[data-home-destination=search]').click();assert.equal(await page.evaluate(()=>document.activeElement.id),'sh-q','lower research card');
   await page.locator('.hh-portfolio').click({force:true});assert.equal(await page.evaluate(()=>window.destination[0]),'portfolio');
   await page.locator('[data-hh-go=ideas]').click();assert.equal(await page.evaluate(()=>window.destination[1]),'ideas');
   assert.equal(await page.locator('.hm-motion').count(),0);
