@@ -48,3 +48,94 @@
 
 .su-texture-credit{padding:0 26px 16px;font:10px/1.5 sans-serif;color:#a8b3c6;text-decoration:underline;justify-self:start}
 .su-texture-credit:focus-visible{outline:2px solid #e4c785;outline-offset:3px}
+
+/* ── Weekday planets ─────────────────────────────────────────────────── */
+.su-planet span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15}
+.su-planet span b{font:600 11px monospace;letter-spacing:1.5px;color:#e6dcc6}
+.su-planet span small{font:10px monospace;color:#8f99ab}
+.su-planet span small:empty{display:none}
+.su-planet.is-up i{box-shadow:inset -3px -3px 8px #0009,0 0 0 2px #3fbf8055,0 0 14px #3fbf8040}
+.su-planet.is-down i{box-shadow:inset -3px -3px 8px #0009,0 0 0 2px #e0605855,0 0 14px #e0605840}
+.su-planet:hover i{transform:scale(1.12) rotate(-12deg)}
+.su-planet i{transition:transform .35s cubic-bezier(.2,1.5,.4,1),box-shadow .3s}
+.su-planet[aria-expanded=true] i{transform:scale(1.18);animation:su-pulse 2.2s ease-in-out infinite}
+.su-day-open .su-voyage-hud,.su-day-open .su-scene-heading{opacity:0!important;transition:opacity .25s}
+
+/* ── The synopsis: a cartoon bull pops up and presents the day ─────────── */
+.su-day{position:absolute;left:50%;bottom:98px;transform:translateX(-50%);z-index:4;
+  width:min(640px,calc(100% - 32px));display:flex;align-items:flex-end;gap:6px;pointer-events:none}
+.su-day>*{pointer-events:auto}
+.su-mascot{flex:0 0 96px;height:110px;transform-origin:50% 100%;animation:su-m-in .6s cubic-bezier(.2,1.6,.4,1) both}
+.su-mascot svg{width:100%;height:100%;overflow:visible;animation:su-m-bob 2.8s ease-in-out .6s infinite}
+.su-mascot .m-shadow{fill:#0006}
+.su-mascot .m-helmet{fill:#bfe3ff1c;stroke:#d9eefe99;stroke-width:2}
+.su-mascot .m-glare{fill:none;stroke:#ffffffa0;stroke-width:3;stroke-linecap:round}
+.su-mascot .m-face{fill:#9a6a44}.su-mascot .m-ear{fill:#7d5234}
+.su-mascot .m-horn{fill:#f1e2c0;stroke:#c9b48a;stroke-width:1}
+.su-mascot .m-snout{fill:#d9a57c}.su-mascot .m-nostril{fill:#6b3f22}
+.su-mascot .m-eyes circle{fill:#1b1410;transform-box:fill-box;transform-origin:center;animation:su-m-blink 4s 1s infinite}
+.su-mascot .m-mouth{fill:none;stroke:#3a2414;stroke-width:2.4;stroke-linecap:round}
+.su-mascot .m-body{fill:#e8e1d2;stroke:#b9ad95;stroke-width:1.5}
+.su-mascot .m-arm{fill:none;stroke:#e8e1d2;stroke-width:7;stroke-linecap:round;transform-origin:78px 72px;animation:su-m-wave 1.1s ease-in-out .5s 2}
+.su-day[data-mood=up] .su-mascot svg{animation:su-m-hop 1.4s ease-in-out .6s infinite}
+.su-day[data-mood=down] .m-face{fill:#86603f}
+.su-day[data-mood=wait] .m-eyes{animation:su-m-look 1.6s ease-in-out infinite}
+.su-bubble{position:relative;flex:1;min-width:0;max-height:min(380px,calc(540px - 150px));overflow:auto;
+  background:linear-gradient(160deg,#152033f7,#0c1322f7);border:1px solid #d8bd8266;border-radius:18px;
+  padding:16px 18px 14px;box-shadow:0 18px 50px #000a;color:#e9e1d0;margin-bottom:26px;
+  transform-origin:0 100%;animation:su-b-in .45s cubic-bezier(.2,1.4,.4,1) .12s both}
+.su-bubble:before{content:'';position:absolute;left:-9px;bottom:22px;width:16px;height:16px;background:#0e1626;
+  border-left:1px solid #d8bd8266;border-bottom:1px solid #d8bd8266;transform:rotate(45deg)}
+.su-day.leaving .su-mascot{animation:su-m-out .25s ease-in both}
+.su-day.leaving .su-bubble{animation:su-b-out .2s ease-in both}
+.su-day-x{position:absolute;top:6px;right:8px;width:34px;height:34px;border:0;border-radius:50%;
+  background:transparent;color:#c9bfa9;font-size:20px;cursor:pointer}
+.su-day-x:hover{background:#ffffff14;color:#fff}
+.su-day-x:focus-visible{outline:2px solid #e4c785}
+.su-day-date{font:600 10px monospace;letter-spacing:2px;text-transform:uppercase;color:#d9bd80}
+.su-day-syn{margin:7px 34px 12px 0;font:15px/1.55 Georgia,serif;color:#f1e8d6}
+.su-day-idx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.su-day-idx div{background:#ffffff0a;border:1px solid #ffffff12;border-radius:10px;padding:8px 10px;min-width:0}
+.su-day-idx b{display:block;font:9px monospace;letter-spacing:1.2px;color:#9aa3b3}
+.su-day-idx span{display:block;font:600 13px monospace;color:#f0e6d2;margin-top:4px}
+.su-day-idx em,.su-flow em{font:11px monospace;font-style:normal;color:#b9b3a6}
+.su-bubble .up{color:#5fd39a}.su-bubble .dn{color:#f08a80}
+.su-flows{margin-top:12px;display:grid;gap:7px}
+.su-flows-h{font:9px monospace;letter-spacing:1.5px;text-transform:uppercase;color:#9aa3b3}
+.su-flow{display:grid;grid-template-columns:72px 1fr 96px;gap:10px;align-items:center}
+.su-flow b{font:500 11px monospace;color:#e2d8c3}
+.su-flow em{text-align:right;font-size:12px}
+.su-flow-bar{position:relative;height:10px;border-radius:5px;background:#ffffff0d}
+.su-flow-bar:after{content:'';position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:#ffffff40}
+.su-flow-bar i{position:absolute;top:0;bottom:0;width:0;border-radius:5px;animation:su-bar .7s cubic-bezier(.2,1,.3,1) .35s forwards}
+.su-flow-bar i.buy{left:50%;background:linear-gradient(90deg,#2f9c68,#5fd39a)}
+.su-flow-bar i.sell{right:50%;background:linear-gradient(270deg,#b3453d,#f08a80)}
+.su-flow-none{margin:0;font-size:12px;line-height:1.6;color:#a9a497}
+.su-day-src{display:block;margin-top:10px;font-size:10px;color:#8f97a6}
+@keyframes su-bar{to{width:var(--w)}}
+@keyframes su-m-in{0%{opacity:0;transform:translateY(60px) scale(.3) rotate(-20deg)}70%{opacity:1;transform:translateY(-8px) scale(1.08) rotate(4deg)}100%{transform:none}}
+@keyframes su-m-out{to{opacity:0;transform:translateY(40px) scale(.4)}}
+@keyframes su-b-in{0%{opacity:0;transform:scale(.4) translateY(20px)}100%{opacity:1;transform:none}}
+@keyframes su-b-out{to{opacity:0;transform:scale(.8)}}
+@keyframes su-m-bob{50%{transform:translateY(-5px) rotate(-2deg)}}
+@keyframes su-m-hop{0%,100%{transform:none}30%{transform:translateY(-10px) rotate(-4deg)}45%{transform:translateY(0) scaleY(.94)}}
+@keyframes su-m-blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes su-m-wave{0%,100%{transform:rotate(0)}25%{transform:rotate(-28deg)}75%{transform:rotate(18deg)}}
+@keyframes su-m-look{50%{transform:translateX(3px)}}
+@media(max-width:700px){
+  .su-planet span{align-items:center}
+  .su-day{bottom:96px;width:calc(100% - 20px);gap:0}
+  .su-mascot{flex-basis:62px;height:74px}
+  .su-bubble{max-height:calc(470px - 120px);padding:14px 14px 12px;margin-bottom:18px}
+  .su-day-syn{font-size:14px}
+  .su-day-idx{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .su-flow{grid-template-columns:58px 1fr 84px;gap:8px}
+}
+@media(prefers-reduced-motion:reduce){.su-flow-bar i{width:var(--w)}}
+@media(max-width:700px){
+  .su-scene{transition:height .35s ease}
+  .su-day-open .su-scene{height:640px}
+  .su-day-open .su-bubble{max-height:520px}
+  .su-flow b{white-space:nowrap;font-size:10px}
+  .su-flow{grid-template-columns:62px 1fr 82px}
+}

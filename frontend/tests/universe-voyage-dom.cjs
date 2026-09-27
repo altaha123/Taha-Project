@@ -43,8 +43,11 @@ try{
   f.setVisible(false);assert.equal(f.queue.size,0);before=f.draws;f.advance();assert.equal(f.draws,before);f.setVisible(true);f.advance();assert(f.draws>before);
   f.setReduced(true);before=f.draws;f.advance();assert.equal(f.draws,before);assert.equal(f.queue.size,0);f.setReduced(false);assert.equal(f.queue.size,1);
   const row={symbol:'TEST',name:'Test stock',sector:'Test',score:75,finding:'Fixture finding'};
-  f.update({status:'running',run_id:'one',done:60,total:100,discoveries:[row],planet_batches:[{number:1,count:8,rows:[row]}]});f.$('.su-planet').click();assert.match(f.$('.su-batch').textContent,/Checkpoint 1/);assert.match(f.$('.su-batch').textContent,/TEST/);
-  f.update({status:'starting'});assert.equal(f.$('.su-card'),null);assert.equal(f.$('.su-batch').hidden,true,'new run resets previous checkpoint');
+  f.update({status:'running',run_id:'one',done:60,total:100,discoveries:[row]});assert.match(f.$('.su-cards').textContent,/TEST/);
+  assert.equal(f.w.document.querySelectorAll('.su-planet').length,5,'one planet per weekday');
+  f.w.document.querySelectorAll('.su-planet')[2].click();assert.match(f.$('.su-day').textContent,/Wednesday/,'a planet opens its day');
+  f.w.document.querySelectorAll('.su-planet')[2].click();assert.equal(f.$('.su-planet[aria-expanded=true]'),null,'second click closes');
+  f.update({status:'starting'});assert.equal(f.$('.su-card'),null,'new run resets discoveries');
   f.update({status:'done',error:'interrupted'});assert.equal(f.$('#scan-universe').dataset.state,'partial');assert.doesNotMatch(f.$('.su-status').textContent,/stock rankings are ready/);
   f.update({status:'reconnecting'});assert.match(f.$('.su-voyage-mode').textContent,/INTERRUPTED/);
   f.w.dispatchEvent(new f.w.PageTransitionEvent('pagehide',{persisted:false}));assert.equal(f.queue.size,0,'destroy cancels loop');
