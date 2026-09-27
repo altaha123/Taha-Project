@@ -104,11 +104,11 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
     assert.ok(owners[t], `${t} lost its home in the restructure`);
   });
 
-  /* The eight destinations Research is meant to carry in its visible row. */
+  /* The destinations Research is meant to carry in its visible row. */
   const research = sections.filter(s => s.id === 'research')[0];
   assert.deepEqual(research.tabs,
-    ['screener', 'score', 'factors', 'results', 'investors', 'charts', 'filings'],
-    'the Research row is not the eight named destinations');
+    ['screener', 'query', 'score', 'factors', 'results', 'investors', 'charts', 'filings'],
+    'the Research row is not the named destinations');
 
   assert.deepEqual(sections.find(s => s.id === 'discover').tabs.slice(0, 3), ['ideas', 'live', 'tracker']);
   assert.equal(owners.ideas, 'discover');

@@ -100,6 +100,10 @@ try:
 except Exception:
     fundamentals_screens = None
 try:
+    import fundamentals_query
+except Exception:
+    fundamentals_query = None
+try:
     # A daily copy of the data disk in Cloudflare R2. Stdlib plus requests;
     # inert until the R2_* variables are set.
     import backup as backup_job
@@ -2342,6 +2346,36 @@ def fundamentals_screen(screen_id: str, limit: int = 200):
         raise HTTPException(503, f"Could not read the tables: {str(e)[:110]}")
     if out is None:
         raise HTTPException(404, "No screen with that id.")
+    return to_native(out)
+
+
+@app.get("/fundamentals/query/fields")
+def fundamentals_query_fields():
+    """The fields a query can name, grouped, with aliases and examples."""
+    if fundamentals_query is None:
+        return {"available": False, "message": "The query screener is not available."}
+    return to_native(fundamentals_query.meta())
+
+
+@app.get("/fundamentals/query")
+def fundamentals_query_run(q: str = "", sort: str = "", order: str = "desc",
+                           limit: int = 50, offset: int = 0, columns: str = ""):
+    """
+    Every company whose stored figures meet a typed condition, for example
+    `ROE > 15 AND Debt to equity < 0.5`. A query that cannot be read comes
+    back as a 400 with the reason, where it went wrong and any field names
+    it probably meant.
+    """
+    if fundamentals_query is None:
+        return {"available": False, "message": "The query screener is not available."}
+    cols = [c for c in (columns or "").split(",") if c.strip()]
+    try:
+        out = fundamentals_query.run(q, sort=sort or None, order=order, limit=limit,
+                                     offset=offset, columns=cols or None)
+    except fundamentals_query.QueryError as e:
+        return JSONResponse(status_code=400, content={"error": e.as_dict()})
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the tables: {str(e)[:110]}")
     return to_native(out)
 
 

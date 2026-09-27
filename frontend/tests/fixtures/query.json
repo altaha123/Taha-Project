@@ -1,0 +1,1163 @@
+{
+ "fields": {
+  "available": true,
+  "fields": [
+   {
+    "id": "price",
+    "label": "Current price",
+    "unit": "inr",
+    "group": "Valuation",
+    "description": "Latest closing price.",
+    "aliases": [
+     "price",
+     "cmp",
+     "ltp",
+     "share price"
+    ]
+   },
+   {
+    "id": "market_cap",
+    "label": "Market cap",
+    "unit": "cr",
+    "group": "Valuation",
+    "description": "Price × issued shares, in ₹ crore.",
+    "aliases": [
+     "market capitalization",
+     "market capitalisation",
+     "mcap",
+     "m cap",
+     "mkt cap"
+    ]
+   },
+   {
+    "id": "pe",
+    "label": "PE",
+    "unit": "x",
+    "group": "Valuation",
+    "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive.",
+    "aliases": [
+     "price to earning",
+     "price to earnings",
+     "p/e",
+     "pe ratio",
+     "stock pe"
+    ]
+   },
+   {
+    "id": "pb",
+    "label": "Price to book",
+    "unit": "x",
+    "group": "Valuation",
+    "description": "Market cap ÷ shareholders' equity on the latest balance sheet.",
+    "aliases": [
+     "pb",
+     "p/b",
+     "price to book value",
+     "pbv"
+    ]
+   },
+   {
+    "id": "earnings_yield",
+    "label": "Earnings yield",
+    "unit": "pct",
+    "group": "Valuation",
+    "description": "Trailing earnings per share ÷ price. The inverse of PE.",
+    "aliases": [
+     "ey"
+    ]
+   },
+   {
+    "id": "ev_ebitda",
+    "label": "EV to EBITDA",
+    "unit": "x",
+    "group": "Valuation",
+    "description": "(Market cap + debt − cash) ÷ latest full-year EBITDA.",
+    "aliases": [
+     "ev/ebitda",
+     "enterprise value to ebitda",
+     "ev ebitda"
+    ]
+   },
+   {
+    "id": "enterprise_value",
+    "label": "Enterprise value",
+    "unit": "cr",
+    "group": "Valuation",
+    "description": "Market cap + borrowings − cash and current investments.",
+    "aliases": [
+     "ev"
+    ]
+   },
+   {
+    "id": "roe",
+    "label": "ROE",
+    "unit": "pct",
+    "group": "Returns",
+    "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity.",
+    "aliases": [
+     "return on equity"
+    ]
+   },
+   {
+    "id": "roce",
+    "label": "ROCE",
+    "unit": "pct",
+    "group": "Returns",
+    "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities).",
+    "aliases": [
+     "return on capital employed"
+    ]
+   },
+   {
+    "id": "roe_3y",
+    "label": "ROE 3Y avg",
+    "unit": "pct",
+    "group": "Returns",
+    "description": "Average ROE over the last three full years.",
+    "aliases": [
+     "average return on equity 3years",
+     "avg roe 3y",
+     "roe 3 year",
+     "roe 3years"
+    ]
+   },
+   {
+    "id": "roce_3y",
+    "label": "ROCE 3Y avg",
+    "unit": "pct",
+    "group": "Returns",
+    "description": "Average ROCE over the last three full years.",
+    "aliases": [
+     "average return on capital employed 3years",
+     "avg roce 3y",
+     "roce 3 year",
+     "roce 3years"
+    ]
+   },
+   {
+    "id": "roa",
+    "label": "ROA",
+    "unit": "pct",
+    "group": "Returns",
+    "description": "Return on assets, latest full year: profit after tax ÷ total assets.",
+    "aliases": [
+     "return on assets"
+    ]
+   },
+   {
+    "id": "sales",
+    "label": "Sales",
+    "unit": "cr",
+    "group": "Profit & loss",
+    "description": "Revenue from operations, latest full year.",
+    "aliases": [
+     "revenue",
+     "sales annual",
+     "turnover"
+    ]
+   },
+   {
+    "id": "ebitda",
+    "label": "EBITDA",
+    "unit": "cr",
+    "group": "Profit & loss",
+    "description": "Operating profit before depreciation, latest full year.",
+    "aliases": [
+     "operating profit"
+    ]
+   },
+   {
+    "id": "net_profit",
+    "label": "Net profit",
+    "unit": "cr",
+    "group": "Profit & loss",
+    "description": "Profit after tax, latest full year.",
+    "aliases": [
+     "pat",
+     "profit after tax",
+     "profit"
+    ]
+   },
+   {
+    "id": "eps",
+    "label": "EPS",
+    "unit": "inr",
+    "group": "Profit & loss",
+    "description": "Basic earnings per share, latest full year.",
+    "aliases": [
+     "earnings per share"
+    ]
+   },
+   {
+    "id": "opm",
+    "label": "OPM",
+    "unit": "pct",
+    "group": "Profit & loss",
+    "description": "EBITDA ÷ sales, latest full year.",
+    "aliases": [
+     "operating profit margin",
+     "ebitda margin",
+     "operating margin"
+    ]
+   },
+   {
+    "id": "npm",
+    "label": "Net margin",
+    "unit": "pct",
+    "group": "Profit & loss",
+    "description": "Profit after tax ÷ sales, latest full year.",
+    "aliases": [
+     "npm",
+     "net profit margin",
+     "pat margin"
+    ]
+   },
+   {
+    "id": "interest_coverage",
+    "label": "Interest coverage",
+    "unit": "x",
+    "group": "Profit & loss",
+    "description": "EBIT ÷ finance cost, latest full year.",
+    "aliases": [
+     "interest cover",
+     "icr"
+    ]
+   },
+   {
+    "id": "sales_ttm",
+    "label": "Sales TTM",
+    "unit": "cr",
+    "group": "Trailing 12 months",
+    "description": "Revenue over the last four quarters.",
+    "aliases": [
+     "revenue ttm",
+     "sales 12m"
+    ]
+   },
+   {
+    "id": "net_profit_ttm",
+    "label": "Net profit TTM",
+    "unit": "cr",
+    "group": "Trailing 12 months",
+    "description": "Profit after tax over the last four quarters.",
+    "aliases": [
+     "pat ttm",
+     "profit ttm"
+    ]
+   },
+   {
+    "id": "eps_ttm",
+    "label": "EPS TTM",
+    "unit": "inr",
+    "group": "Trailing 12 months",
+    "description": "Earnings per share over the last four quarters.",
+    "aliases": [
+     "ttm eps"
+    ]
+   },
+   {
+    "id": "sales_growth",
+    "label": "Sales growth",
+    "unit": "pct",
+    "group": "Growth",
+    "description": "Revenue, latest full year against the one before.",
+    "aliases": [
+     "revenue growth",
+     "sales growth 1y",
+     "sales growth 1 year"
+    ]
+   },
+   {
+    "id": "sales_growth_3y",
+    "label": "Sales growth 3Y",
+    "unit": "pct",
+    "group": "Growth",
+    "description": "Revenue CAGR over three full years.",
+    "aliases": [
+     "sales growth 3years",
+     "revenue growth 3y",
+     "sales cagr 3y",
+     "revenue cagr 3y"
+    ]
+   },
+   {
+    "id": "sales_growth_5y",
+    "label": "Sales growth 5Y",
+    "unit": "pct",
+    "group": "Growth",
+    "description": "Revenue CAGR over five full years.",
+    "aliases": [
+     "sales growth 5years",
+     "revenue growth 5y",
+     "sales cagr 5y",
+     "revenue cagr 5y"
+    ]
+   },
+   {
+    "id": "profit_growth",
+    "label": "Profit growth",
+    "unit": "pct",
+    "group": "Growth",
+    "description": "Profit after tax, latest full year against the one before. Unknown when the earlier year was a loss.",
+    "aliases": [
+     "pat growth",
+     "profit growth 1y",
+     "net profit growth"
+    ]
+   },
+   {
+    "id": "profit_growth_3y",
+    "label": "Profit growth 3Y",
+    "unit": "pct",
+    "group": "Growth",
+    "description": "Profit after tax CAGR over three full years.",
+    "aliases": [
+     "profit growth 3years",
+     "pat growth 3y",
+     "profit cagr 3y"
+    ]
+   },
+   {
+    "id": "profit_growth_5y",
+    "label": "Profit growth 5Y",
+    "unit": "pct",
+    "group": "Growth",
+    "description": "Profit after tax CAGR over five full years.",
+    "aliases": [
+     "profit growth 5years",
+     "pat growth 5y",
+     "profit cagr 5y"
+    ]
+   },
+   {
+    "id": "eps_growth_3y",
+    "label": "EPS growth 3Y",
+    "unit": "pct",
+    "group": "Growth",
+    "description": "EPS CAGR over three full years.",
+    "aliases": [
+     "eps growth 3years",
+     "eps cagr 3y"
+    ]
+   },
+   {
+    "id": "sales_qtr",
+    "label": "Sales latest quarter",
+    "unit": "cr",
+    "group": "Latest quarter",
+    "description": "Revenue in the latest quarter.",
+    "aliases": [
+     "sales quarter",
+     "revenue quarter",
+     "qtr sales"
+    ]
+   },
+   {
+    "id": "net_profit_qtr",
+    "label": "Net profit latest quarter",
+    "unit": "cr",
+    "group": "Latest quarter",
+    "description": "Profit after tax in the latest quarter.",
+    "aliases": [
+     "profit quarter",
+     "pat quarter",
+     "qtr profit"
+    ]
+   },
+   {
+    "id": "opm_qtr",
+    "label": "OPM latest quarter",
+    "unit": "pct",
+    "group": "Latest quarter",
+    "description": "Operating margin in the latest quarter.",
+    "aliases": [
+     "opm quarter",
+     "qtr opm"
+    ]
+   },
+   {
+    "id": "sales_growth_qtr",
+    "label": "Sales growth YoY quarter",
+    "unit": "pct",
+    "group": "Latest quarter",
+    "description": "Latest quarter's revenue against the same quarter a year earlier.",
+    "aliases": [
+     "yoy quarterly sales growth",
+     "quarterly sales growth",
+     "qtr sales growth",
+     "sales yoy"
+    ]
+   },
+   {
+    "id": "profit_growth_qtr",
+    "label": "Profit growth YoY quarter",
+    "unit": "pct",
+    "group": "Latest quarter",
+    "description": "Latest quarter's profit against the same quarter a year earlier.",
+    "aliases": [
+     "yoy quarterly profit growth",
+     "quarterly profit growth",
+     "qtr profit growth",
+     "profit yoy"
+    ]
+   },
+   {
+    "id": "debt",
+    "label": "Debt",
+    "unit": "cr",
+    "group": "Balance sheet",
+    "description": "Total borrowings on the latest balance sheet.",
+    "aliases": [
+     "borrowings",
+     "total debt"
+    ]
+   },
+   {
+    "id": "cash",
+    "label": "Cash",
+    "unit": "cr",
+    "group": "Balance sheet",
+    "description": "Cash, bank balances and current investments on the latest balance sheet.",
+    "aliases": [
+     "cash and equivalents"
+    ]
+   },
+   {
+    "id": "net_debt",
+    "label": "Net debt",
+    "unit": "cr",
+    "group": "Balance sheet",
+    "description": "Debt − cash. Negative means more cash than debt.",
+    "aliases": []
+   },
+   {
+    "id": "debt_to_equity",
+    "label": "Debt to equity",
+    "unit": "x",
+    "group": "Balance sheet",
+    "description": "Borrowings ÷ shareholders' equity, latest balance sheet.",
+    "aliases": [
+     "de",
+     "d/e",
+     "debt equity",
+     "debt/equity"
+    ]
+   },
+   {
+    "id": "current_ratio",
+    "label": "Current ratio",
+    "unit": "x",
+    "group": "Balance sheet",
+    "description": "Current assets ÷ current liabilities, latest balance sheet.",
+    "aliases": [
+     "cr ratio"
+    ]
+   },
+   {
+    "id": "net_worth",
+    "label": "Net worth",
+    "unit": "cr",
+    "group": "Balance sheet",
+    "description": "Shareholders' equity on the latest balance sheet.",
+    "aliases": [
+     "book value",
+     "equity",
+     "shareholders equity"
+    ]
+   },
+   {
+    "id": "total_assets",
+    "label": "Total assets",
+    "unit": "cr",
+    "group": "Balance sheet",
+    "description": "Total assets on the latest balance sheet.",
+    "aliases": [
+     "assets"
+    ]
+   },
+   {
+    "id": "cfo",
+    "label": "Operating cash flow",
+    "unit": "cr",
+    "group": "Cash flow",
+    "description": "Cash from operations, latest full year.",
+    "aliases": [
+     "cash from operations",
+     "ocf"
+    ]
+   },
+   {
+    "id": "fcf",
+    "label": "Free cash flow",
+    "unit": "cr",
+    "group": "Cash flow",
+    "description": "Operating cash flow − capex, latest full year.",
+    "aliases": [
+     "free cash flow 1y"
+    ]
+   },
+   {
+    "id": "fcf_3y",
+    "label": "Free cash flow 3Y",
+    "unit": "cr",
+    "group": "Cash flow",
+    "description": "Free cash flow summed over the last three full years.",
+    "aliases": [
+     "free cash flow 3years",
+     "fcf 3 years"
+    ]
+   },
+   {
+    "id": "cfo_to_pat",
+    "label": "Cash conversion",
+    "unit": "x",
+    "group": "Cash flow",
+    "description": "Operating cash flow ÷ profit after tax, latest full year.",
+    "aliases": [
+     "cfo to pat",
+     "ocf to pat",
+     "cfo/pat"
+    ]
+   },
+   {
+    "id": "dividend_payout",
+    "label": "Dividend payout",
+    "unit": "pct",
+    "group": "Cash flow",
+    "description": "Dividends paid ÷ profit after tax, latest full year.",
+    "aliases": [
+     "dividend payout ratio",
+     "payout"
+    ]
+   },
+   {
+    "id": "dividend_yield",
+    "label": "Dividend yield",
+    "unit": "pct",
+    "group": "Cash flow",
+    "description": "Dividends paid in the latest full year ÷ market cap.",
+    "aliases": [
+     "yield"
+    ]
+   },
+   {
+    "id": "promoter_holding",
+    "label": "Promoter holding",
+    "unit": "pct",
+    "group": "Ownership",
+    "description": "Promoter and promoter group stake, latest shareholding filing.",
+    "aliases": [
+     "promoter",
+     "promoters",
+     "promoter stake"
+    ]
+   },
+   {
+    "id": "promoter_change",
+    "label": "Promoter holding change 1Y",
+    "unit": "pct",
+    "group": "Ownership",
+    "description": "Change in promoter stake over a year, percentage points.",
+    "aliases": [
+     "change in promoter holding",
+     "promoter change"
+    ]
+   },
+   {
+    "id": "pledged",
+    "label": "Pledged percentage",
+    "unit": "pct",
+    "group": "Ownership",
+    "description": "Promoter shares pledged, as a percentage of all shares.",
+    "aliases": [
+     "pledge",
+     "pledged",
+     "pledge pct",
+     "promoter pledge"
+    ]
+   },
+   {
+    "id": "fii_holding",
+    "label": "FII holding",
+    "unit": "pct",
+    "group": "Ownership",
+    "description": "Foreign institutional stake, latest shareholding filing.",
+    "aliases": [
+     "fii",
+     "fpi",
+     "fpi holding"
+    ]
+   },
+   {
+    "id": "dii_holding",
+    "label": "DII holding",
+    "unit": "pct",
+    "group": "Ownership",
+    "description": "Domestic institutional stake, latest shareholding filing.",
+    "aliases": [
+     "dii"
+    ]
+   },
+   {
+    "id": "name",
+    "label": "Name",
+    "unit": "text",
+    "group": "Company",
+    "description": "Company name.",
+    "aliases": [
+     "company",
+     "company name"
+    ]
+   },
+   {
+    "id": "industry",
+    "label": "Industry",
+    "unit": "text",
+    "group": "Company",
+    "description": "NSE industry classification.",
+    "aliases": []
+   },
+   {
+    "id": "sector",
+    "label": "Sector",
+    "unit": "text",
+    "group": "Company",
+    "description": "NSE sector classification.",
+    "aliases": []
+   }
+  ],
+  "examples": [
+   {
+    "name": "Profitable and lightly borrowed",
+    "query": "ROCE > 20\nDebt to equity < 0.5\nMarket cap > 1000"
+   },
+   {
+    "name": "Growing sales and profits",
+    "query": "Sales growth 3Y > 15\nProfit growth 3Y > 15\nROE > 15"
+   },
+   {
+    "name": "Low PE with a return on capital",
+    "query": "PE < 15\nPE > 0\nROCE > 15\nMarket cap > 500"
+   },
+   {
+    "name": "Latest quarter: sales and profit up 25%",
+    "query": "Sales growth YoY quarter > 25\nProfit growth YoY quarter > 25"
+   },
+   {
+    "name": "Cash generative",
+    "query": "Free cash flow 3Y > 0\nCash conversion > 1\nNet debt < 0"
+   },
+   {
+    "name": "High promoter stake, nothing pledged",
+    "query": "Promoter holding > 60\nPledged percentage = 0\nROE > 12"
+   },
+   {
+    "name": "Paying dividends out of earnings",
+    "query": "Dividend yield > 2\nDividend payout < 70\nProfit growth 3Y > 5"
+   }
+  ],
+  "default_columns": [
+   "price",
+   "market_cap",
+   "pe",
+   "roce",
+   "roe",
+   "sales_growth_3y"
+  ],
+  "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+ },
+ "queries": {
+  "ROCE > 20\nDebt to equity < 0.5\nMarket cap > 1000||": {
+   "status": 200,
+   "body": {
+    "query": "ROCE > 20\nDebt to equity < 0.5\nMarket cap > 1000",
+    "fields_used": [
+     "roce",
+     "debt_to_equity",
+     "market_cap"
+    ],
+    "columns": [
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "debt_to_equity",
+      "label": "Debt to equity",
+      "unit": "x",
+      "group": "Balance sheet",
+      "description": "Borrowings ÷ shareholders' equity, latest balance sheet."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roce",
+    "order": "desc",
+    "count": 2,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 28.4,
+      "debt_to_equity": 0.12,
+      "market_cap": 12500.0,
+      "price": 812.5,
+      "pe": 24.1,
+      "roe": 21.2,
+      "sales_growth_3y": 18.5
+     },
+     {
+      "symbol": "BETA",
+      "name": "Beta Pharma Ltd",
+      "industry": "Pharmaceuticals",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 22.0,
+      "debt_to_equity": 0.3,
+      "market_cap": 38000.0,
+      "price": 1420.0,
+      "pe": 31.0,
+      "roe": 17.5,
+      "sales_growth_3y": 12.2
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "ROCE > 20||": {
+   "status": 200,
+   "body": {
+    "query": "ROCE > 20",
+    "fields_used": [
+     "roce"
+    ],
+    "columns": [
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roce",
+    "order": "desc",
+    "count": 3,
+    "unknown": 0,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 28.4,
+      "price": 812.5,
+      "market_cap": 12500.0,
+      "pe": 24.1,
+      "roe": 21.2,
+      "sales_growth_3y": 18.5
+     },
+     {
+      "symbol": "DELTA",
+      "name": "Delta Infra Ltd",
+      "industry": "Construction",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 26.0,
+      "price": null,
+      "market_cap": null,
+      "pe": null,
+      "roe": null,
+      "sales_growth_3y": 30.0
+     },
+     {
+      "symbol": "BETA",
+      "name": "Beta Pharma Ltd",
+      "industry": "Pharmaceuticals",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 22.0,
+      "price": 1420.0,
+      "market_cap": 38000.0,
+      "pe": 31.0,
+      "roe": 17.5,
+      "sales_growth_3y": 12.2
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "ROCE > 20|roe|desc": {
+   "status": 200,
+   "body": {
+    "query": "ROCE > 20",
+    "fields_used": [
+     "roce"
+    ],
+    "columns": [
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roe",
+    "order": "desc",
+    "count": 3,
+    "unknown": 0,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 28.4,
+      "price": 812.5,
+      "market_cap": 12500.0,
+      "pe": 24.1,
+      "roe": 21.2,
+      "sales_growth_3y": 18.5
+     },
+     {
+      "symbol": "BETA",
+      "name": "Beta Pharma Ltd",
+      "industry": "Pharmaceuticals",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 22.0,
+      "price": 1420.0,
+      "market_cap": 38000.0,
+      "pe": 31.0,
+      "roe": 17.5,
+      "sales_growth_3y": 12.2
+     },
+     {
+      "symbol": "DELTA",
+      "name": "Delta Infra Ltd",
+      "industry": "Construction",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 26.0,
+      "price": null,
+      "market_cap": null,
+      "pe": null,
+      "roe": null,
+      "sales_growth_3y": 30.0
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "ROCE > 20|roe|asc": {
+   "status": 200,
+   "body": {
+    "query": "ROCE > 20",
+    "fields_used": [
+     "roce"
+    ],
+    "columns": [
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roe",
+    "order": "asc",
+    "count": 3,
+    "unknown": 0,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "BETA",
+      "name": "Beta Pharma Ltd",
+      "industry": "Pharmaceuticals",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 22.0,
+      "price": 1420.0,
+      "market_cap": 38000.0,
+      "pe": 31.0,
+      "roe": 17.5,
+      "sales_growth_3y": 12.2
+     },
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 28.4,
+      "price": 812.5,
+      "market_cap": 12500.0,
+      "pe": 24.1,
+      "roe": 21.2,
+      "sales_growth_3y": 18.5
+     },
+     {
+      "symbol": "DELTA",
+      "name": "Delta Infra Ltd",
+      "industry": "Construction",
+      "fy": "FY26",
+      "quarter": null,
+      "roce": 26.0,
+      "price": null,
+      "market_cap": null,
+      "pe": null,
+      "roe": null,
+      "sales_growth_3y": 30.0
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "ROEE > 15||": {
+   "status": 400,
+   "body": {
+    "error": {
+     "message": "'ROEE' is not a field. Did you mean 'ROE' or 'ROCE' or 'ROE 3Y avg'?",
+     "position": 0,
+     "suggestions": [
+      "ROE",
+      "ROCE",
+      "ROE 3Y avg"
+     ]
+    }
+   }
+  },
+  "ROE > 100||": {
+   "status": 200,
+   "body": {
+    "query": "ROE > 100",
+    "fields_used": [
+     "roe"
+    ],
+    "columns": [
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roe",
+    "order": "desc",
+    "count": 0,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  }
+ }
+}
