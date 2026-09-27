@@ -169,5 +169,5 @@ def compact_plan(df, levels):
     p = build_plan(df, levels)
     if not p:
         return None
-    return {k: p.get(k) for k in ("stance", "entry", "stop", "risk_pct", "rr", "confidence")} | \
+    return {k: p.get(k) for k in ("stance", "entry", "stop", "risk_pct", "rr", "confidence", "atr")} | \
            {"t1": (p.get("targets") or [None])[0], "note": p.get("entry_note", "")[:140]}
