@@ -239,3 +239,17 @@ jobs:
         with:
           name: lenses-browser-verification
           path: test-results/lenses
+      - name: Verify the query screener
+        if: always()
+        # The reader's own conditions over every stored company. Guards the
+        # parts that fail quietly: a missing figure printed as 0, a bad field
+        # name swallowed instead of explained, a sort that does not reach the
+        # server, and a query that is lost from the address on reload.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/query-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: query-browser-verification
+          path: test-results/query

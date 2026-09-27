@@ -1,0 +1,155 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Altaha Screener — query.css
+
+   The query screener (#research/query). Colours are the tokens from
+   altaha-skin.css, so the dark theme needs nothing of its own; the results
+   table reuses .ln-table from lenses.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.qs-head h2{ font-size:clamp(28px,4vw,44px); line-height:1.08; margin:0 0 10px }
+.qs-head p{ max-width:68ch; line-height:1.65; color:var(--ink-2) }
+
+.qs-examples{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:18px 0 14px }
+.qs-exlab{ font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--mute); margin-right:2px }
+.qs-chip{
+  min-height:34px; padding:0 14px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--rule); background:var(--skin-card,#FFFDF8); color:var(--ink);
+  font:500 13px/1 Inter,system-ui,sans-serif; transition:border-color .15s ease, background .15s ease;
+}
+.qs-chip:hover{ border-color:var(--gold); background:color-mix(in srgb,var(--gold) 8%,transparent) }
+.qs-chip:focus-visible, .qs-btn:focus-visible, .qs-sort:focus-visible, .qs-fbtn:focus-visible{
+  outline:2px solid var(--gold); outline-offset:2px }
+
+.qs-card{
+  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFDF8);
+  box-shadow:var(--skin-shadow); overflow:visible;
+}
+
+/* ── The three-box builder ─────────────────────────────────────────────── */
+
+.qs-builder{
+  display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) auto;
+  gap:10px; align-items:end; padding:16px 16px 14px; border-bottom:1px solid var(--rule-2);
+}
+.qs-lab{ display:flex; flex-direction:column; gap:6px; min-width:0 }
+.qs-lab > span{ font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--mute) }
+.qs-lab > span i{ font-style:normal; text-transform:none; letter-spacing:0 }
+.qs-lab select, .qs-lab input, .qs-find{
+  width:100%; min-height:40px; padding:0 10px; border-radius:10px; box-sizing:border-box;
+  border:1px solid var(--rule); background:var(--paper); color:var(--ink);
+  font:400 14px/1.2 Inter,system-ui,sans-serif;
+}
+.qs-lab select:focus, .qs-lab input:focus, .qs-find:focus, .qs-editor textarea:focus{
+  outline:none; border-color:var(--gold); box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 18%,transparent) }
+
+/* ── The editor ────────────────────────────────────────────────────────── */
+
+.qs-editor{ padding:14px 16px 16px }
+.qs-edlab{ display:block; margin-bottom:8px; font-weight:600; font-size:14px; color:var(--ink) }
+.qs-edlab span{ font-weight:400; font-size:12.5px; color:var(--mute); margin-left:6px }
+.qs-edwrap{ position:relative }
+.qs-editor textarea{
+  width:100%; box-sizing:border-box; min-height:128px; resize:vertical; padding:12px 14px;
+  border-radius:12px; border:1px solid var(--rule); background:var(--paper); color:var(--ink);
+  font:500 15px/1.65 'IBM Plex Mono',ui-monospace,monospace;
+}
+.qs-ac{
+  position:absolute; left:0; right:0; top:100%; z-index:20; margin:4px 0 0; padding:4px;
+  list-style:none; border-radius:12px; border:1px solid var(--rule); background:var(--skin-card,#FFFDF8);
+  box-shadow:var(--skin-lift); max-height:300px; overflow:auto;
+}
+.qs-ac li{ padding:8px 10px; border-radius:8px; cursor:pointer; display:flex; gap:10px; align-items:baseline }
+.qs-ac li b{ font:600 13.5px/1.3 'IBM Plex Mono',monospace; white-space:nowrap }
+.qs-ac li span{ font-size:12.5px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.qs-ac li.on, .qs-ac li:hover{ background:color-mix(in srgb,var(--gold) 12%,transparent) }
+
+.qs-hint{ margin:8px 0 0; font-size:12.5px; line-height:1.6; color:var(--mute) }
+.qs-hint code, .qs-hint kbd{
+  font:500 12px/1 'IBM Plex Mono',monospace; padding:2px 5px; border-radius:5px;
+  background:var(--paper-2); color:var(--ink-2);
+}
+
+.qs-err{
+  margin:12px 0 0; padding:12px 14px; border-radius:12px; font-size:14px; line-height:1.5;
+  border:1px solid color-mix(in srgb,var(--fail) 45%,transparent);
+  background:color-mix(in srgb,var(--fail) 8%,transparent); color:var(--ink);
+}
+.qs-err b{ color:var(--fail); font-weight:600 }
+.qs-where{ margin:8px 0 0; font:500 13px/1.45 'IBM Plex Mono',monospace; white-space:pre;
+  overflow-x:auto; color:var(--ink-2) }
+.qs-sug{ margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13px }
+
+.qs-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px }
+.qs-btn{
+  min-height:40px; padding:0 18px; border-radius:999px; cursor:pointer;
+  font:600 14px/1 Inter,system-ui,sans-serif;
+}
+.qs-btn-go{
+  border:0; color:#fff; background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt));
+  box-shadow:0 6px 16px color-mix(in srgb,var(--gold) 28%,transparent);
+  transition:transform .15s ease, opacity .15s ease;
+}
+:root[data-theme="dark"] .qs-btn-go{ color:#17140E }
+.qs-btn-go:hover:not(:disabled){ transform:translateY(-1px) }
+.qs-btn-go:disabled{ cursor:progress; opacity:.8 }
+.qs-btn-ghost{ border:1px solid var(--rule); background:none; color:var(--ink-2); font-weight:500 }
+.qs-btn-ghost:hover{ border-color:var(--gold); color:var(--ink) }
+
+/* ── Results ───────────────────────────────────────────────────────────── */
+
+.qs-out{ margin-top:24px; transition:opacity .2s ease }
+.qs-out.is-stale{ opacity:.5 }
+.qs-sum{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; margin-bottom:4px }
+.qs-sum p{ margin:0 }
+.qs-sum p:first-child{ font:400 26px/1.2 'Instrument Serif',Georgia,serif }
+.qs-sum p:first-child span{ font:400 14px/1 Inter,system-ui,sans-serif; color:var(--mute) }
+.qs-unk{ font-size:13px; color:var(--mute); flex:1 1 260px }
+.qs-csv{ margin-left:auto; min-height:34px; font-size:13px }
+
+.qs-table thead th{ cursor:default; padding:0 }
+.qs-table thead th.qs-co, .qs-table thead th.qs-n{ padding:12px 10px }
+.qs-sort{
+  all:unset; box-sizing:border-box; display:block; width:100%; padding:12px 10px; cursor:pointer;
+  font:600 11px/1.2 'IBM Plex Mono',monospace; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--mute); text-align:right; white-space:nowrap;
+}
+.qs-sort:hover, th[aria-sort] .qs-sort{ color:var(--gold) }
+.qs-num{ text-align:right; padding:9px 12px; font:500 13.5px/1.2 'IBM Plex Mono',monospace;
+  white-space:nowrap; font-variant-numeric:tabular-nums }
+.qs-num.qs-txt{ text-align:left; font-family:Inter,system-ui,sans-serif; white-space:normal; min-width:140px }
+.qs-na{ color:var(--mute) }
+.qs-n{ width:1%; text-align:right; padding:9px 4px 9px 12px; color:var(--mute);
+  font:500 12px/1 'IBM Plex Mono',monospace }
+.qs-more{ display:block; margin:12px auto 4px }
+
+/* ── Field reference ───────────────────────────────────────────────────── */
+
+.qs-ref{ margin:26px 0 0; border:1px solid var(--rule); border-radius:14px; padding:4px 16px 14px }
+.qs-ref summary{ cursor:pointer; padding:12px 0; font:400 22px/1.2 'Instrument Serif',Georgia,serif }
+.qs-ref summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--mute); margin-left:6px }
+.qs-find{ margin:4px 0 14px; max-width:420px }
+#qs-fields{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:6px 24px }
+.qs-fgroup h4{ margin:10px 0 6px; font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--gold) }
+.qs-fgroup ul{ list-style:none; margin:0; padding:0 }
+.qs-fgroup li{ padding:7px 0; border-top:1px solid var(--rule-2) }
+.qs-fgroup li p{ margin:3px 0 0; font-size:12.5px; line-height:1.5; color:var(--ink-2) }
+.qs-fgroup li em{ font-style:normal; color:var(--mute) }
+.qs-fgroup li small{ font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute) }
+.qs-fbtn{
+  all:unset; cursor:pointer; font:600 13.5px/1.3 'IBM Plex Mono',monospace; color:var(--ink);
+  border-bottom:1px dashed var(--gold);
+}
+.qs-fbtn:hover{ color:var(--gold) }
+.qs-fbtn::after{ content:" +"; color:var(--gold) }
+.qs-notice{ margin-top:18px }
+
+@media (max-width:720px){
+  .qs-builder{ grid-template-columns:1fr 1fr }
+  .qs-lab:first-child{ grid-column:1 / -1 }
+  .qs-builder .qs-btn{ grid-column:1 / -1 }
+  .qs-ac li span{ display:none }
+  .qs-csv{ margin-left:0 }
+}

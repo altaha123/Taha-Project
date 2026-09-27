@@ -167,6 +167,8 @@
         { head: 'Stocks', items: [
           { tab: 'screener', label: 'Stock analysis', icon: 'ledger',
             hint: 'One company, scored, with the ledger' },
+          { tab: 'query', label: 'Query screener', icon: 'lens',
+            hint: 'Filter every company by its fundamentals' },
           { tab: 'charts', label: 'Technicals', icon: 'candles',
             hint: 'Price charts, levels and indicators' }
         ]},

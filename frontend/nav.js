@@ -85,6 +85,7 @@
       icon: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/>',
       tabs: [
         { id: 'screener',  label: 'Stock analysis',  hint: 'One company, scored, with the ledger' },
+        { id: 'query',     label: 'Query screener',  hint: 'Filter every company by its fundamentals' },
         { id: 'score',     label: 'Altaha Score',    hint: 'How the score is built and what it has been worth' },
         { id: 'factors',   label: 'Factors',         hint: 'What each factor has actually predicted' },
         { id: 'results',   label: 'Fundamentals',    hint: 'Quarterly numbers and the year-ago comparison' },

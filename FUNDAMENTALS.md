@@ -286,3 +286,48 @@ the filings — four annual balance sheets — and is never mixed into the three
 tables above.
 
 * `GET /fundamentals/statements?symbol=TCS&statement=balance&freq=annual&format=csv`
+
+## The query screener — your own question of every company
+
+`backend/fundamentals_query.py` · `/fundamentals/query` · `/fundamentals/query/fields`
+· Research → Query screener (`#research/query`, `frontend/query.js`)
+
+The screens and the lenses answer questions somebody else wrote. The query
+screener answers the reader's own, typed the way a screener's query box takes
+them:
+
+```
+Market cap > 500
+ROE > 15
+Debt to equity < 0.5
+(Sales growth 3Y > 15 OR Profit growth 3Y > 20) AND PE < 30
+Industry contains "pharma" AND Market cap / Sales < 3
+```
+
+* **55 fields** across valuation, returns, the full-year P&L, trailing twelve
+  months, growth (1/3/5-year CAGRs), the latest quarter, the balance sheet,
+  cash flow and ownership. Each is computed from the stored statements with
+  the same `lens_metrics.Company` arithmetic the lenses use, so an ROE here is
+  the ROE a lens tested. Names are forgiving: case, spacing and punctuation do
+  not matter, and every field has aliases ("Return on equity", "roe").
+* **The grammar** is AND / OR / NOT, brackets, `> >= < <= = !=`, `CONTAINS`
+  for text, and `+ - * /` between fields and numbers. A line break means AND.
+  It is parsed by a small recursive-descent parser — never `eval`.
+* **A missing figure is unknown, not zero.** Logic is three-valued, so a
+  company without an ROE neither passes nor fails `ROE > 15`. The response
+  counts those companies (`unknown`) so "12 match" is never read as
+  "everything else failed". Growth from a loss base and division by zero are
+  unknown for the same reason.
+* **Errors explain themselves**: a 400 carries the message, the character
+  position (the page draws a caret under it) and the field names the reader
+  probably meant, each one click to substitute.
+* The per-company rows are built once and cached until the tables change or
+  an hour passes; a query is then a scan of a few thousand small dicts.
+
+The page adds what makes it usable without learning the syntax: example
+queries, a field / comparison / value builder that writes a line, suggestions
+while typing, a searchable list of every field with what it means, sortable
+columns, CSV download, and the query kept in the address so a result can be
+shared. `frontend/tests/query-browser.cjs` drives all of that in Chromium
+against responses from the real endpoints
+(`backend/tests/make_query_fixture.py`).
