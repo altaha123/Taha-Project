@@ -98,3 +98,12 @@
    left the label invisible; settle it here. */
 #idearows .trackbtn:hover{background:var(--paper-2);border-color:var(--ink-2);color:var(--ink)}
 #idearows .trackbtn.done,#idearows .trackbtn.done:hover{background:rgba(31,111,67,.06);border-color:#1f6f43;color:#1f6f43}
+
+/* Universe Scan shows the list, not the commentary around it. The market
+   backdrop, regime line, sector-mix chip, selection notes and horizon blurb
+   are hidden; "Still loading" (#stalebox) stays because it explains a
+   degraded list. */
+#view-ideas #hznote,#view-ideas #mktctx,#view-ideas #regimebox,
+#view-ideas #secmix,#view-ideas #selnotes{display:none!important}
+/* The live-discoveries panel is an empty frame until the scan finds cards. */
+.su-discoveries:not(:has(.su-card)){display:none}
