@@ -709,6 +709,14 @@ def market():
                       "ist": now.strftime("%d %b %Y, %H:%M IST")})
 
 
+@app.get("/market/week")
+def market_week_route():
+    """The last five sessions: index closes, FII/DII flows and a synopsis.
+    Feeds the weekday planets on the Universe Scan page."""
+    import market_week
+    return to_native(market_week.week())
+
+
 @app.get("/datasource")
 def datasource():
     """Which price feed is live right now, and why."""

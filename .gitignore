@@ -57,3 +57,4 @@ altaha_lenses.db-*
 
 # The backup's scratch copies, deleted as soon as each file is uploaded.
 .backup-tmp/
+backend/market_flows.json
