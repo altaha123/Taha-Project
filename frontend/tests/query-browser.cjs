@@ -60,8 +60,8 @@ async function wire(context) {
 (async () => {
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const base = 'http://127.0.0.1:' + server.address().port;
-  const browser = await chromium.launch(
-    process.env.PLAYWRIGHT_BROWSERS_PATH ? {} : { executablePath: '/opt/pw-browsers/chromium' });
+  const browser = await chromium.launch({ headless: true,
+    executablePath: process.env.CHROMIUM_PATH || undefined });
   const errors = [];
   try {
     for (const width of [1280, 390]) {
