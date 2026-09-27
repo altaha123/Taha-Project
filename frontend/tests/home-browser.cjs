@@ -90,7 +90,7 @@ const server=http.createServer((req,res)=>{
  await page.locator('#tk').fill('');
  await page.locator('.mb-card').first().waitFor();
  await page.locator('.sb-tile').first().waitFor();
- assert.equal(await page.locator('.hm-route svg').count(),3);
+ assert.equal(await page.locator('.hm-tools').count(),0,'research tool cards removed');
  assert.match(await page.locator('.mb-card').nth(2).innerText(),/—/);
  assert.doesNotMatch(await page.locator('.mb-card').nth(2).innerText(),/0\.00%/);
  assert.match(await page.locator('[data-sector="Nifty Healthcare Index"]').innerText(),/Return unavailable/i);
@@ -105,10 +105,6 @@ const server=http.createServer((req,res)=>{
      const bars=await page.locator('.mb-card .spark').evaluateAll(list=>list.map(n=>({w:n.clientWidth,h:n.clientHeight})));
      bars.forEach(b=>assert.ok(b.w>60&&b.h>=6,JSON.stringify(b)));
      await page.screenshot({path:path.join(output,`${width}-${theme}-market.png`)});
-     if(width===390||width===1280){
-       await page.locator('.hm-tools').scrollIntoViewIfNeeded();
-       await page.screenshot({path:path.join(output,`${width}-${theme}-research.png`)});
-     }
    }
  }
  // Exact labels during the animation; changes originate in received snapshots.
@@ -124,17 +120,6 @@ const server=http.createServer((req,res)=>{
  await page.keyboard.press('Enter');
  assert.equal(await page.evaluate(()=>document.activeElement.dataset.sector),'Nifty Financial Services');
  assert.equal(await page.locator('[data-sector="Nifty Financial Services"]').getAttribute('aria-expanded'),'false');
- await page.locator('[data-home-destination="search"]').tap();
- // The shell search, not the in-page field. b6ec626 moved the destination
- // deliberately and says why where it made the change: "The shell search is
- // the primary visible search. The legacy field can live in a hidden tab;
- // focusing it without activating that tab does nothing." This line still
- // expected #tk afterwards, so the step has been red on main ever since --
- // failing on a stale expectation rather than on a broken destination.
- assert.equal(await page.evaluate(()=>document.activeElement.id),'sh-q');
- await page.locator('[data-home-destination="portfolio"]').tap();
- await page.locator('#pf_go').waitFor();
- assert.ok(await page.locator('#view-portfolio').isVisible());
  await page.evaluate(()=>window.AltahaNav.go('screener','screener',true));
  // Motion stays enabled across navigation and ignores an obsolete stored pause.
  assert.equal(await page.locator('.hm-motion').count(),0);

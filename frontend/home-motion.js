@@ -50,47 +50,9 @@
       if (observer) observer.observe(node); else reveal(node);
     });
   }
-  const art = {
-    research: '<rect x="26" y="14" width="118" height="100" rx="9"/><path d="M44 35h45M44 44h26"/>' +
-      '<path class="hm-draw" pathLength="1" d="M44 88l17-18 18 8 20-30"/><circle cx="124" cy="83" r="25"/><path d="m142 101 20 20"/>',
-    sectors: '<path d="M28 102h138"/><rect class="hm-illustrated-bar" x="40" y="65" width="22" height="37" rx="3"/>' +
-      '<rect class="hm-illustrated-bar" x="77" y="44" width="22" height="58" rx="3"/><rect class="hm-illustrated-bar" x="114" y="23" width="22" height="79" rx="3"/>' +
-      '<path class="hm-draw" pathLength="1" d="M40 43 77 25 108 32 143 13"/>',
-    portfolio: '<circle cx="88" cy="65" r="43"/><path class="hm-draw" pathLength="1" d="M88 22v43l37 22M88 65 55 94"/>' +
-      '<rect x="118" y="80" width="45" height="36" rx="7"/><path d="m129 98 7 7 15-17"/>'
-  };
-  function route(href, label, description, icon, section) {
-    return '<a class="hm-route" href="' + href + '"' + (section ? ' data-home-destination="' + section + '"' : '') + '>' +
-      '<svg viewBox="0 0 190 135" aria-hidden="true" focusable="false">' + art[icon] + '</svg>' +
-      '<div><h3>' + label + '<span aria-hidden="true"> ↗</span></h3><p>' + description + '</p></div></a>';
-  }
   function start() {
     const host = document.getElementById('view-screener');
     if (!host) return;
-    const tools = document.createElement('nav');
-    tools.className = 'hm-tools'; tools.setAttribute('aria-label', 'Research tools');
-    tools.innerHTML = route('#tk', 'Research a stock', 'Understand the score. Inspect the evidence.', 'research', 'search') +
-      route('#sb-board', 'Explore sectors', 'Compare the market using official Nifty benchmarks.', 'sectors', 'sectors') +
-      route('index.html?go=portfolio', 'Portfolio Intelligence', 'See how your holdings work together.', 'portfolio', 'portfolio');
-    host.appendChild(tools);
-    tools.addEventListener('click', e => {
-      const a = e.target.closest('[data-home-destination]'); if (!a) return;
-      const dest = a.dataset.homeDestination;
-      if (dest === 'portfolio' && window.AltahaNav) {
-        e.preventDefault(); window.AltahaNav.go('portfolio', 'portfolio', true);
-      } else if (dest !== 'portfolio') {
-        if (dest === 'search' && window.AltahaNav) window.AltahaNav.go('research', 'screener', false);
-        const target = dest === 'search'
-          ? [document.getElementById('sh-q'), document.getElementById('tk')].find(el => el && !el.disabled && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden')
-          : document.getElementById('sb-board');
-        if (!target) return;
-        e.preventDefault(); target.scrollIntoView({behavior:'auto', block:'center'});
-        if (dest === 'search') {
-          target.focus({preventScroll:true});
-          target.closest('.sh-search,.searchrow')?.classList.add('hh-search-target');
-        } else target.querySelector('button')?.focus({preventScroll:true});
-      }
-    });
     const header = document.querySelector('header.wrap');
     if (header) {
       header.classList.add('hm-masthead');

@@ -118,23 +118,22 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   await page.evaluate(() => window.AltahaNav.go('discover', null, true));
   assert.ok(await page.locator('#view-ideas').isVisible());
   await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100,scored:42}));
-  assert.equal(await page.locator('.su-planet.is-scanned').count(), 3);
-  assert.equal(await page.locator('.su-planet.is-scanning').count(), 1);
+  assert.equal(await page.locator('.su-progress').evaluate(el=>el.value), 50, 'progress bar carries scan progress');
   assert.match(await page.locator('.su-detail').innerText(), /50 \/ 100/);
   await page.evaluate(() => window.AltahaUniverse.update({status:'done'}));
-  assert.equal(await page.locator('.su-planet.is-scanned').count(), 6);
+  assert.equal(await page.locator('.su-progress').evaluate(el=>el.value), 100);
   await page.evaluate(() => window.AltahaUniverse.update({status:'done',stopped_early:true}));
   assert.match(await page.locator('.su-status').innerText(), /stopped before completion/);
   await page.evaluate(() => window.AltahaUniverse.update({status:'error'}));
-  assert.equal(await page.locator('.su-planet.is-scanning').count(), 0);
   await page.evaluate(() => window.AltahaUniverse.update({status:'cached'}));
   assert.match(await page.locator('.su-status').innerText(), /saved/);
   // Motion allowed first, so the assertion below is a comparison rather than a
   // sentence that would pass just as happily against a stylesheet that never
   // animated anything.
   await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100}));
+  await page.locator('.su-planet').first().click();
   assert.equal(
-    await page.locator('.su-planet.is-scanning i').first()
+    await page.locator('.su-planet[aria-expanded=true] i').first()
       .evaluate(el => getComputedStyle(el).animationName), 'su-pulse',
     'the scan must animate when motion is allowed, or the next assertion proves nothing');
 
@@ -148,9 +147,10 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   // which universe-scan.css enforces with `.scan-universe *`. Asserted now on
   // a pulsing planet, which is the animation that actually exists.
   assert.equal(
-    await page.locator('.su-planet.is-scanning i').first()
+    await page.locator('.su-planet[aria-expanded=true] i').first()
       .evaluate(el => getComputedStyle(el).animationName), 'none');
   await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.locator('.su-planet').first().click();
 
   // Exercise the real start/poll controller with mocked backend checkpoints.
   let phase = 'running';
@@ -172,8 +172,7 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   assert.match(await page.locator('.su-card').first().innerText(), /Setup: Momentum/);
   await page.locator('.su-motion').click();
   assert.equal(await page.locator('#scan-universe').evaluate(el=>el.classList.contains('su-paused')),true);
-  await page.locator('.su-planet').first().click();
-  assert.match(await page.locator('.su-batch').innerText(), /15 newly analysed stocks/);
+  assert.equal(await page.locator('.su-planet').count(),5,'one planet per weekday');
   await page.evaluate(() => window.AltahaNav.go('research','screener',true));
   await page.locator('#su-dock').waitFor();
   phase='done'; await page.evaluate(() => pollScan());
