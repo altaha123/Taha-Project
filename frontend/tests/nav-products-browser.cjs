@@ -68,6 +68,15 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
     if (u.pathname === '/planner/questions') {
       return route.fulfill({ json: { questions: [], bands: [] } });
     }
+    // The weekday planets (#134) read the last five sessions from here; the
+    // shape is market_week.build_week's.
+    if (u.pathname === '/market/week') {
+      return route.fulfill({ json: { flows_source: 'NSE provisional cash-market figures, ₹ crore',
+        sessions: [{ date: '2026-09-23', weekday: 'Wed', label: 'Wed 23 Sep', mood: 'up',
+          indices: { 'NIFTY 50': { close: 25150, change_pct: 0.84 } },
+          flows: { fii: { net: -3693.93 }, dii: { net: 2838.17 } },
+          synopsis: 'Nifty rose 0.8% to 25,150.' }] } });
+    }
     return route.fulfill({ json: { available: false, rows: [], symbols: [], book: [],
                                    items: [], sectors: [], rankings: [], status: 'idle' } });
   });
@@ -117,39 +126,40 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
 
   await page.evaluate(() => window.AltahaNav.go('discover', null, true));
   assert.ok(await page.locator('#view-ideas').isVisible());
+  // Since #134 the planets are the week (Mon–Fri), each opening that
+  // session's synopsis; scan progress is carried by the meter alone. These
+  // lines still counted planets lit as scan checkpoints, so the step went red
+  // on main the moment the planets changed meaning.
+  assert.deepEqual(await page.locator('.su-planet b').allInnerTexts(), ['MON','TUE','WED','THU','FRI']);
   await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100,scored:42}));
-  assert.equal(await page.locator('.su-planet.is-scanned').count(), 3);
-  assert.equal(await page.locator('.su-planet.is-scanning').count(), 1);
+  assert.equal(await page.locator('.su-progress').evaluate(el => el.value), 50);
   assert.match(await page.locator('.su-detail').innerText(), /50 \/ 100/);
   await page.evaluate(() => window.AltahaUniverse.update({status:'done'}));
-  assert.equal(await page.locator('.su-planet.is-scanned').count(), 6);
+  assert.equal(await page.locator('.su-progress').evaluate(el => el.value), 100);
   await page.evaluate(() => window.AltahaUniverse.update({status:'done',stopped_early:true}));
   assert.match(await page.locator('.su-status').innerText(), /stopped before completion/);
   await page.evaluate(() => window.AltahaUniverse.update({status:'error'}));
-  assert.equal(await page.locator('.su-planet.is-scanning').count(), 0);
   await page.evaluate(() => window.AltahaUniverse.update({status:'cached'}));
   assert.match(await page.locator('.su-status').innerText(), /saved/);
   // Motion allowed first, so the assertion below is a comparison rather than a
   // sentence that would pass just as happily against a stylesheet that never
   // animated anything.
-  await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100}));
+  // The one planet animation left is the opened day's pulse, so that is what
+  // is asserted under both motion settings.
+  const wed = page.locator('.su-planet').nth(2);
+  await wed.click();
+  assert.equal(await wed.getAttribute('aria-expanded'), 'true');
   assert.equal(
-    await page.locator('.su-planet.is-scanning i').first()
-      .evaluate(el => getComputedStyle(el).animationName), 'su-pulse',
-    'the scan must animate when motion is allowed, or the next assertion proves nothing');
+    await wed.locator('i').evaluate(el => getComputedStyle(el).animationName), 'su-pulse',
+    'the planet must animate when motion is allowed, or the next assertion proves nothing');
 
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100}));
-  // .su-sweep was removed in 9dd183c ("Replace static universe panel with
-  // animated galaxy flythrough") and this line kept asserting against it, so
-  // the step has been failing on main ever since — on an element that is not
-  // there rather than on the thing it was written to protect. The intent is
-  // unchanged: under prefers-reduced-motion nothing in the scan animates,
-  // which universe-scan.css enforces with `.scan-universe *`. Asserted now on
-  // a pulsing planet, which is the animation that actually exists.
-  assert.equal(
-    await page.locator('.su-planet.is-scanning i').first()
-      .evaluate(el => getComputedStyle(el).animationName), 'none');
+  // .su-sweep was removed in 9dd183c and the checkpoint pulse in #134; the
+  // intent is unchanged: under prefers-reduced-motion nothing in the scan
+  // animates, which universe-scan.css enforces with `.scan-universe *`.
+  assert.equal(await wed.locator('i').evaluate(el => getComputedStyle(el).animationName), 'none');
+  await wed.click();
+  assert.equal(await wed.getAttribute('aria-expanded'), 'false');
   await page.emulateMedia({reducedMotion:'no-preference'});
 
   // Exercise the real start/poll controller with mocked backend checkpoints.
@@ -172,8 +182,18 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   assert.match(await page.locator('.su-card').first().innerText(), /Setup: Momentum/);
   await page.locator('.su-motion').click();
   assert.equal(await page.locator('#scan-universe').evaluate(el=>el.classList.contains('su-paused')),true);
-  await page.locator('.su-planet').first().click();
-  assert.match(await page.locator('.su-batch').innerText(), /15 newly analysed stocks/);
+  await page.locator('.su-planet').nth(2).click();
+  const day = page.locator('.su-day');
+  await day.waitFor();
+  assert.match(await day.getAttribute('aria-label'), /Wednesday/);
+  assert.match(await day.innerText(), /Nifty rose 0\.8% to 25,150\./);
+  assert.match(await day.innerText(), /FII \/ FPI[\s\S]*−₹3,694 cr/);
+  // A day with no session on record says so rather than inventing one.
+  await page.locator('.su-planet').nth(0).click();
+  await page.waitForFunction(() => /Monday/.test(document.querySelector('.su-day')?.getAttribute('aria-label') || ''));
+  assert.match(await page.locator('.su-day').innerText(), /No session on record/);
+  await page.locator('.su-day-x').click();
+  assert.equal(await page.locator('.su-planet[aria-expanded=true]').count(), 0);
   await page.evaluate(() => window.AltahaNav.go('research','screener',true));
   await page.locator('#su-dock').waitFor();
   phase='done'; await page.evaluate(() => pollScan());

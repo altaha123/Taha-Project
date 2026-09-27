@@ -137,9 +137,14 @@
   function tile(r, i) {
     var t = tone(r.change_pct);
     var open = state.open === r.sector;
+    // With the index explorer loaded a tile opens its dialog rather than
+    // expanding in place, so it says so instead of claiming to be collapsed.
+    var opens = window.AltahaIndex
+      ? ' aria-haspopup="dialog"'
+      : ' aria-expanded="' + (open ? "true" : "false") + '"';
     return '<button class="sb-tile ' + t + (open ? " open" : "") + '" type="button"' +
       ' data-sector="' + esc(r.sector) + '" style="--i:' + Math.min(i, 11) + '"' +
-      ' aria-expanded="' + (open ? "true" : "false") + '">' +
+      opens + '>' +
       '<span class="sb-head">' + icon(r.icon) +
         '<span class="sb-name">' + esc(r.sector) + "</span></span>" +
       '<span class="sb-pct ' + t + '" data-v="' + (r.change_pct == null ? "" : r.change_pct) + '">' +
