@@ -130,6 +130,7 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   // session's synopsis; scan progress is carried by the meter alone. These
   // lines still counted planets lit as scan checkpoints, so the step went red
   // on main the moment the planets changed meaning.
+  assert.equal(await page.locator('.su-planet').count(), 5, 'one planet per weekday');
   assert.deepEqual(await page.locator('.su-planet b').allInnerTexts(), ['MON','TUE','WED','THU','FRI']);
   await page.evaluate(() => window.AltahaUniverse.update({status:'running',done:50,total:100,scored:42}));
   assert.equal(await page.locator('.su-progress').evaluate(el => el.value), 50);
