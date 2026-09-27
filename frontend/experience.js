@@ -96,7 +96,15 @@
   function sync() {
     document.querySelectorAll('[data-save-stock]').forEach(b => {
       const on = saved.includes(b.dataset.saveStock);
-      b.textContent = on ? '★ Saved' : '☆ Save'; b.setAttribute('aria-pressed', String(on));
+      // Star + label as separate nodes so the star can animate on its own.
+      if (!b.querySelector('.sv-star')) {
+        b.textContent = '';
+        b.append(node('span', 'sv-star'), node('span', 'sv-lbl'));
+        b.firstChild.setAttribute('aria-hidden', 'true');
+      }
+      b.querySelector('.sv-star').textContent = on ? '★' : '☆';
+      b.querySelector('.sv-lbl').textContent = on ? 'Saved' : 'Save';
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
       b.setAttribute('aria-label', (on ? 'Remove ' : 'Save ') + b.dataset.saveStock + (on ? ' from' : ' to') + ' watchlist');
     }); renderSaved();
   }
@@ -118,7 +126,13 @@
     return true;
   }
   function saveButton(sym) {
-    const b = button('☆ Save', e => { e.stopPropagation(); toggle(sym); });
+    const b = button('☆ Save', e => {
+      e.stopPropagation();
+      if (toggle(sym) && b.classList.contains('on')) {
+        // Replay the pop only when a stock is added, not when it is removed.
+        b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      }
+    }, 'ux-button svbtn');
     b.dataset.saveStock = normalise(sym); return b;
   }
   /* ── The account copy ───────────────────────────────────────────────────
