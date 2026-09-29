@@ -1113,10 +1113,40 @@
     host.style.display = 'block';
     if (window.PortfolioIntelligence && d.intelligence_version) window.PortfolioIntelligence.mount(d);
     else host.innerHTML = buildReport(d, false);
+    // The review opens as a story; the full report waits behind one button
+    // until the reader asks for it (portfolio-story.js says why). Without
+    // the story — script missing, or nothing to tell yet — the report shows
+    // exactly as it always did.
+    var told = !!(window.PortfolioStory && $('pf_story') &&
+                  window.PortfolioStory.mount($('pf_story'), d, { onFull: function (from) { setFull(true, from); } }));
+    var fullbar = $('pf_fullbar');
+    if (fullbar) fullbar.hidden = !told;
+    host.style.display = (!told || fullOpen) ? 'block' : 'none';
     var bar = $('pf_reportact');
     if (bar) bar.style.display = 'flex';
     bindReport();
     // Staged updates retain the reader’s scroll position.
+  }
+
+  var fullOpen = false;
+  function setFull(open, from) {
+    var host = $('pf_report'), btn = $('pf_full');
+    var opening = open && !fullOpen;
+    fullOpen = open;
+    if (host) host.style.display = open ? 'block' : 'none';
+    if (btn) {
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.textContent = open ? 'Hide the full report' : 'Read the full report';
+    }
+    if (!opening || !host) return;
+    // Charts measure their container when they draw; one drawn while the
+    // report was hidden measured nothing. Redraw now it can be seen.
+    if (window.PortfolioIntelligence && state.report && state.report.intelligence_version) {
+      window.PortfolioIntelligence.mount(state.report);
+    }
+    if (window.AltahaTrack) window.AltahaTrack('portfolio_full_report_opened', { from: from || 'button' });
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    host.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   }
 
   /* One builder for both the on-page report and the downloadable file, so
@@ -1328,6 +1358,8 @@
   function bindReport() {
     if (reportBound) return;          // buttons live outside #pf_report and survive re-renders
     reportBound = true;
+    var full = $('pf_full');
+    if (full) full.addEventListener('click', function () { setFull(!fullOpen, 'button'); });
     var btn = $('pf_dl');
     if (btn) btn.addEventListener('click', downloadReport);
     var pr = $('pf_print');
@@ -1566,6 +1598,8 @@
       try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
       addRow(); refreshSaved(); clearNote();
       var rep = $('pf_report'); if (rep) rep.style.display = 'none';
+      if (window.PortfolioStory) window.PortfolioStory.destroy($('pf_story'));
+      var fb = $('pf_fullbar'); if (fb) fb.hidden = true;
     });
     var exp = $('pf_export');
     if (exp) exp.addEventListener('click', exportCSV);

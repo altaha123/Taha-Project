@@ -34,6 +34,10 @@ here first, and `frontend/analytics.test.js` fails CI if the two drift.
 | `digest_opt_in_changed` | opt_in | Whether people keep the daily email on |
 | `view_opened` | section, tab | Which of the forty-odd modules earn their keep |
 | `share_clicked` | kind, action | Whether the growth loop turns at all |
+| `portfolio_story_viewed` | chapter, index, total | How far people read the portfolio story, chapter by chapter |
+| `portfolio_full_report_opened` | from | Whether anyone still wants the full report after the story, and from where |
+| `pro_cta_clicked` | from | Who looks at the Pro price, and from which page |
+| `pro_waitlist_joined` | from, signed_in | Who would pay: the one number the Pro waitlist exists to measure |
 | `api_error` | endpoint, status | The API's real error rate, seen from the browser |
 
 Automatic on top of that: page views, page leaves, and autocapture (clicks on
@@ -44,7 +48,10 @@ the first thing to switch off if the free quota ever tightens.
 
 - No names, emails, phone numbers or any other identifier a person types.
 - No portfolio holdings, quantities or values. No planner inputs — savings,
-  income, goals.
+  income, goals. The portfolio story reports which chapter was read, never
+  a figure from it.
+- The Pro waitlist address goes to our own API (`POST /pro/waitlist`), never
+  to PostHog; `pro_waitlist_joined` carries only where it came from.
 - No free text except the search box, capped at 40 characters.
 - **No email addresses.** `signed_in` records the method, never the address.
   PostHog identifies people by an anonymous id, and nothing links it to an

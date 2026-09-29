@@ -109,6 +109,15 @@
     // The growth loop: does anything actually get shared?
     share_clicked:         ['kind', 'action'],
 
+    // Does the portfolio story get read, how far, and does anyone still
+    // want the full report after it? Chapter ids only — never a figure.
+    portfolio_story_viewed:       ['chapter', 'index', 'total'],
+    portfolio_full_report_opened: ['from'],
+
+    // Would anyone pay? Who looks at the price, and who leaves an address.
+    pro_cta_clicked:       ['from'],
+    pro_waitlist_joined:   ['from', 'signed_in'],
+
     // Every non-200 the frontend sees, so the API's real error rate is known
     // from the browser's side and not only from the server's logs.
     api_error:             ['endpoint', 'status']
