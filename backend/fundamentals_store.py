@@ -245,6 +245,16 @@ CREATE TABLE IF NOT EXISTS yf_profile (
   updated_utc   TEXT NOT NULL
 );
 
+-- Every profile attempt, including the ones Yahoo answered with nothing.
+-- Without it a company Yahoo has no profile for stays "never profiled" and is
+-- picked first by every slice, forever — six of them in a row trip the
+-- crawl's give-up rule, and nobody behind them is ever reached.
+CREATE TABLE IF NOT EXISTS yf_profile_tries (
+  symbol      TEXT PRIMARY KEY,
+  tried_utc   TEXT NOT NULL,
+  status      TEXT
+);
+
 CREATE TABLE IF NOT EXISTS yf_coverage (
   symbol         TEXT PRIMARY KEY,
   last_try_utc   TEXT,
@@ -606,23 +616,42 @@ def yf_profiles():
     return {r["symbol"]: dict(r) for r in _connect().execute("SELECT * FROM yf_profile")}
 
 
-def profile_due(universe, limit=40, stale_days=30):
-    """Companies with no Yahoo profile first, then the oldest; a month keeps a
-    share count and a classification current."""
-    held = {r["symbol"]: r["updated_utc"] for r in _connect().execute(
+def mark_profile_try(symbol, status):
+    with _tx() as conn:
+        conn.execute("INSERT OR REPLACE INTO yf_profile_tries VALUES (?,?,?)",
+                     ((symbol or "").strip().upper(), _utcnow(), status))
+
+
+def profile_due(universe, limit=40, stale_days=30, retry_days=7):
+    """
+    What the profile backfill reads next: companies never tried first, then
+    profiles older than a month, then companies Yahoo had nothing for, once a
+    week. A failed company goes to the back of the queue rather than the
+    front, so a handful Yahoo has no profile for can never block the rest.
+    """
+    conn = _connect()
+    held = {r["symbol"]: r["updated_utc"] for r in conn.execute(
         "SELECT symbol, updated_utc FROM yf_profile")}
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=stale_days)).isoformat(timespec="seconds")
-    never, stale = [], []
+    tried = {r["symbol"]: r["tried_utc"] for r in conn.execute(
+        "SELECT symbol, tried_utc FROM yf_profile_tries")}
+    now = datetime.now(timezone.utc)
+    stale_cut = (now - timedelta(days=stale_days)).isoformat(timespec="seconds")
+    retry_cut = (now - timedelta(days=retry_days)).isoformat(timespec="seconds")
+    never, stale, retry = [], [], []
     for sym in universe or []:
         s = (sym or "").strip().upper()
         if not s:
             continue
-        if s not in held:
+        if s in held:
+            if held[s] < stale_cut:
+                stale.append((held[s], s))
+        elif s not in tried:
             never.append(s)
-        elif held[s] < cutoff:
-            stale.append((held[s], s))
+        elif tried[s] < retry_cut:
+            retry.append((tried[s], s))
     stale.sort()
-    return (never + [s for _t, s in stale])[: max(1, int(limit))]
+    retry.sort()
+    return (never + [s for _t, s in stale] + [s for _t, s in retry])[: max(1, int(limit))]
 
 
 def yf_statement(symbol, statement="income", freq="annual", crore=False):
