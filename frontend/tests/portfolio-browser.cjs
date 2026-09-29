@@ -36,7 +36,11 @@ const server=http.createServer((req,res)=>{
  // The review opens on the action plan; the full report waits behind one button.
  await page.locator('#pf_plan .pp').waitFor();
  assert.equal(await page.locator('#pf_report').isVisible(),false,'the full report stays closed until asked for');
+ // The full report is the visual one; the detailed analysis is one more tap.
  await page.locator('#pf_full').click();
+ await page.locator('#pf_visual .ar-root').waitFor();
+ assert.equal(await page.locator('#pf_report').isVisible(),false,'the detailed analysis waits behind its own button');
+ await page.locator('#pf_detail').click();
  await page.locator('#pi-money-map').waitFor();
  for(const width of [320,390,768,1280]){
    await page.setViewportSize({width,height:900});
@@ -87,7 +91,9 @@ const server=http.createServer((req,res)=>{
  // Use actual report download, not private UI state.
  const downloadPromise=page.waitForEvent('download');await page.locator('#pf_dl').click();const download=await downloadPromise;
  const exportPath=path.join(output,'report.html');await download.saveAs(exportPath);
- const html=fs.readFileSync(exportPath,'utf8');assert.ok(html.includes('data:image/png'));assert.ok(!html.includes('<canvas'));assert.ok(html.includes('Holding-level Review'));
+ const html=fs.readFileSync(exportPath,'utf8');assert.ok(!html.includes('<canvas'));assert.ok(!html.includes('<script'),'the file runs nothing');
+ assert.ok(html.includes('class="ar-root"')&&html.includes('What exactly, stock by stock?')&&html.includes('not registered with SEBI'));
+ assert.ok(html.includes('https://altahascreener.in/stock.html?ticker=HDFCBANK'),'links in the file work from anywhere');
  // 50 holdings: actual analysis button runs the same render path.
  activeReport=report50;await page.locator('#pf_go').click();await page.waitForFunction(()=>document.querySelectorAll('.pi-holding').length===50);
  await page.waitForTimeout(450);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
@@ -100,6 +106,9 @@ const server=http.createServer((req,res)=>{
  await fallback.locator('#pf_rows .pf_qty').first().fill('10');
  await fallback.locator('#pf_go').click();
  await fallback.locator('#pf_full').click();
+ await fallback.locator('#pf_visual .ar-root').waitFor();
+ assert.equal(await fallback.locator('#pf_visual canvas').count(),0,'the visual report needs no chart library');
+ await fallback.locator('#pf_detail').click();
  await fallback.getByRole('button',{name:'Advanced analysis',exact:true}).click();
  await fallback.getByText('Chart unavailable. Open “View chart data” below for the full figures.').first().waitFor();
  assert.equal(await fallback.locator('#pf_report canvas').count(),0);

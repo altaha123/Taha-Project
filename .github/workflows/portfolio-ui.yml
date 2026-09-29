@@ -56,6 +56,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/portfolio-plan-browser.cjs
+      - name: Verify the report is visual, stands on its own as a file, and prints
+        if: always()
+        # The full report, the download and the print are one visual report:
+        # every section, a line per holding, charts in HTML and SVG with no
+        # chart library; the file runs no script and links to the live site;
+        # it fits A4 with the tables left off paper; motion-off draws it all.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/portfolio-report-browser.cjs
       - name: Verify the Pro waitlist sends what it says, and saved screens sync
         if: always()
         env:
@@ -68,6 +77,7 @@ jobs:
           path: |
             test-results/portfolio-story
             test-results/portfolio-plan
+            test-results/portfolio-report
             test-results/pro
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4

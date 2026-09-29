@@ -124,18 +124,22 @@ const current = page => page.locator('.ps-ch:not([hidden])').getAttribute('data-
     assert.equal(new Set(story.map(t => t[1].chapter)).size, story.length, 'once per chapter');
     assert.ok(!JSON.stringify(tracked).match(/25,00,000|2500000|HDFCBANK/), 'no figures or holdings in analytics');
 
-    // The last chapter opens the full report, with its charts drawn.
+    // The last chapter opens the full report; the detailed analysis behind
+    // it opens with its charts drawn.
     await page.locator('.ps-ch[data-ch="recap"] [data-ps="full"]').click();
-    await page.locator('#pi-money-map').waitFor();
+    await page.locator('#pf_visual .ar-root').waitFor();
     assert.equal(await page.locator('#pf_full').getAttribute('aria-expanded'), 'true');
     assert.ok((await page.evaluate(() => window.__tracked)).some(t => t[0] === 'portfolio_full_report_opened' && t[1].from === 'story_end'));
+    await page.locator('#pf_detail').click();
+    await page.locator('#pi-money-map').waitFor();
     await page.getByRole('button', { name: 'Advanced analysis', exact: true }).click();
     await page.waitForFunction(() => window.Chart && Object.keys(Chart.instances).length === 7);
     const blank = await page.evaluate(() => [...document.querySelectorAll('#pf_report canvas')]
       .filter(c => !c.getContext('2d').getImageData(0, 0, c.width, c.height).data.some(v => v !== 0)).map(c => c.id));
     assert.deepEqual(blank, [], 'charts drawn after the report opens');
-    // And it closes again.
+    // And it closes again, the detailed analysis with it.
     await page.locator('#pf_full').click();
+    assert.equal(await page.locator('#pf_visual').isVisible(), false);
     assert.equal(await page.locator('#pf_report').isVisible(), false);
     assert.deepEqual(errors.filter(e => /portfolio/.test(e)), []);
     await context.close();
@@ -166,7 +170,7 @@ const current = page => page.locator('.ps-ch:not([hidden])').getAttribute('data-
     assert.equal(await current(page), 'sectors', 'swipe left turns to the next chapter');
     // The skip link opens the full report from anywhere.
     await page.locator('.ps-skip').click();
-    await page.locator('#pi-money-map').waitFor();
+    await page.locator('#pf_visual .ar-root').waitFor();
     assert.ok((await page.evaluate(() => window.__tracked)).some(t => t[0] === 'portfolio_full_report_opened' && t[1].from === 'story_skip'));
     assert.deepEqual(errors.filter(e => /portfolio/.test(e)), []);
     await context.close();

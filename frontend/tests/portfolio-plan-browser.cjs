@@ -70,7 +70,8 @@ async function open(browser, port, opts) {
   {
     const { context, page, errors } = await open(browser, port);
     assert.equal(await page.locator('#pf_story').isVisible(), false, 'story closed');
-    assert.equal(await page.locator('#pf_report').isVisible(), false, 'full report closed');
+    assert.equal(await page.locator('#pf_report').isVisible(), false, 'detailed analysis closed');
+    assert.equal(await page.locator('#pf_visual').isVisible(), false, 'full report closed');
     assert.equal(await page.locator('#pf_storybtn').isVisible(), true);
     assert.equal(await page.locator('#pf_full').isVisible(), true);
 
@@ -128,6 +129,8 @@ async function open(browser, port, opts) {
     await page.locator('#pf_storybtn').click();
     await page.locator('#pf_story .ps').waitFor();
     await page.locator('#pf_full').click();
+    await page.locator('#pf_visual .ar-root').waitFor();
+    await page.locator('#pf_detail').click();
     await page.locator('#pi-money-map').waitFor();
 
     const tracked = await page.evaluate(() => window.__tracked);

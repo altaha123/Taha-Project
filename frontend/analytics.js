@@ -117,6 +117,10 @@
     // Counts only — never a symbol, a call or a rupee figure.
     portfolio_plan_viewed:        ['moves', 'holdings'],
     portfolio_story_opened:       ['from'],
+    // Is the report read, kept and printed, and does anyone still want the
+    // detailed analysis behind it? The format only — never a figure.
+    portfolio_report_downloaded:  ['format'],
+    portfolio_detail_opened:      ['from'],
 
     // Would anyone pay? Who looks at the price, and who leaves an address.
     pro_cta_clicked:       ['from'],

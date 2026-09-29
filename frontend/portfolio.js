@@ -1124,11 +1124,18 @@
     var planned = !!(window.PortfolioPlan && $('pf_plan') && window.PortfolioPlan.mount($('pf_plan'), d));
     var told = !!(window.PortfolioStory && $('pf_story') &&
                   window.PortfolioStory.mount($('pf_story'), d, { onFull: function (from) { setFull(true, from); } }));
+    // The full report is the visual one (portfolio-report.js): the same page
+    // the reader downloads and prints. The detailed analysis behind it —
+    // every table and measure — is one more button, closed until asked for.
+    reported = !!(window.PortfolioReport && $('pf_visual') &&
+                  window.PortfolioReport.mount($('pf_visual'), d, { onDownload: downloadReport, onPrint: printReport }));
     if ($('pf_story')) $('pf_story').hidden = !(told && storyOpen);
     if ($('pf_storybtn')) $('pf_storybtn').hidden = !told;
+    if ($('pf_visual')) $('pf_visual').hidden = !(reported && fullOpen);
+    if ($('pf_detailbar')) $('pf_detailbar').hidden = !(reported && fullOpen);
     var fullbar = $('pf_fullbar');
-    if (fullbar) fullbar.hidden = !(planned || told);
-    host.style.display = (!(planned || told) || fullOpen) ? 'block' : 'none';
+    if (fullbar) fullbar.hidden = !(planned || told || reported);
+    host.style.display = (!(planned || told || reported) || detailOpen || (fullOpen && !reported)) ? 'block' : 'none';
     var bar = $('pf_reportact');
     if (bar) bar.style.display = 'flex';
     bindReport();
@@ -1152,12 +1159,16 @@
     host.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   }
 
-  var fullOpen = false;
+  var fullOpen = false, detailOpen = false, reported = false;
   function setFull(open, from) {
-    var host = $('pf_report'), btn = $('pf_full');
+    var host = reported ? $('pf_visual') : $('pf_report'), btn = $('pf_full');
     var opening = open && !fullOpen;
     fullOpen = open;
-    if (host) host.style.display = open ? 'block' : 'none';
+    if (reported) {
+      host.hidden = !open;
+      if ($('pf_detailbar')) $('pf_detailbar').hidden = !open;
+      if (!open) setDetail(false);
+    } else if (host) host.style.display = open ? 'block' : 'none';
     if (btn) {
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
       btn.textContent = open ? 'Hide the full report' : 'Read the full report';
@@ -1165,10 +1176,29 @@
     if (!opening || !host) return;
     // Charts measure their container when they draw; one drawn while the
     // report was hidden measured nothing. Redraw now it can be seen.
-    if (window.PortfolioIntelligence && state.report && state.report.intelligence_version) {
+    if (!reported && window.PortfolioIntelligence && state.report && state.report.intelligence_version) {
       window.PortfolioIntelligence.mount(state.report);
     }
     if (window.AltahaTrack) window.AltahaTrack('portfolio_full_report_opened', { from: from || 'button' });
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    host.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  // The detailed analysis: every table, chart and measure behind the report.
+  function setDetail(open, from) {
+    var host = $('pf_report'), btn = $('pf_detail');
+    var opening = open && !detailOpen;
+    detailOpen = open;
+    if (host) host.style.display = open ? 'block' : 'none';
+    if (btn) {
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.textContent = open ? 'Hide the detailed analysis' : 'See the detailed analysis — every number';
+    }
+    if (!opening || !host) return;
+    if (window.PortfolioIntelligence && state.report && state.report.intelligence_version) {
+      window.PortfolioIntelligence.mount(state.report);
+    }
+    if (window.AltahaTrack) window.AltahaTrack('portfolio_detail_opened', { from: from || 'button' });
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     host.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   }
@@ -1386,6 +1416,8 @@
     if (full) full.addEventListener('click', function () { setFull(!fullOpen, 'button'); });
     var story = $('pf_storybtn');
     if (story) story.addEventListener('click', function () { setStory(!storyOpen); });
+    var detail = $('pf_detail');
+    if (detail) detail.addEventListener('click', function () { setDetail(!detailOpen, 'button'); });
     var btn = $('pf_dl');
     if (btn) btn.addEventListener('click', downloadReport);
     var pr = $('pf_print');
@@ -1400,6 +1432,7 @@
      to on the Screener. */
 
   function reportDocument(d) {
+    if (window.PortfolioReport) return window.PortfolioReport.documentHTML(d);
     if (window.PortfolioIntelligence && d.intelligence_version) return window.PortfolioIntelligence.exportHTML(d, collectStyles());
     var when = new Date().toLocaleString('en-IN',
       { dateStyle: 'medium', timeStyle: 'short' });
@@ -1461,6 +1494,7 @@
       new Date().toISOString().slice(0, 10) + '.html';
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
+    if (window.AltahaTrack) window.AltahaTrack('portfolio_report_downloaded', { format: 'html' });
     note('Report saved. Open it in any browser, or attach it to a message.', 'good');
   }
 
@@ -1470,6 +1504,7 @@
     if (!w) { note('Your browser blocked the popup \u2014 allow it and try again.', 'warn'); return; }
     w.document.write(reportDocument(state.report));
     w.document.close();
+    if (window.AltahaTrack) window.AltahaTrack('portfolio_report_downloaded', { format: 'print' });
     // Let the SVG lay out before the print dialog measures the page.
     setTimeout(function () { w.focus(); w.print(); }, 700);
   }
@@ -1626,7 +1661,8 @@
       var rep = $('pf_report'); if (rep) rep.style.display = 'none';
       if (window.PortfolioStory) window.PortfolioStory.destroy($('pf_story'));
       if (window.PortfolioPlan) window.PortfolioPlan.destroy($('pf_plan'));
-      var fb = $('pf_fullbar'); if (fb) fb.hidden = true;
+      if (window.PortfolioReport) window.PortfolioReport.mount($('pf_visual'), null);
+      ['pf_fullbar', 'pf_visual', 'pf_detailbar'].forEach(function (id) { if ($(id)) $(id).hidden = true; });
     });
     var exp = $('pf_export');
     if (exp) exp.addEventListener('click', exportCSV);

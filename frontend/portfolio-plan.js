@@ -6,7 +6,7 @@
    one never. This file answers it at the top of the page, in one card per
    holding: EXIT, TRIM, AVERAGE DOWN, ADD or HOLD, the exact shares and
    rupees, one plain sentence saying why, and where a stronger company exists
-   in the same industry, its name. Then the industries doing well where the
+   in the same industry, its name. Then the sectors doing well where the
    reader holds little, with the best-scoring stocks in each.
 
    The calls themselves are made on the server (backend/action_plan.py), from
@@ -131,11 +131,11 @@
         }).join('') + '</ul></div>';
     }
     if (!body) {
-      body = '<p class="pp-calm">No industry stands out right now: the ones beating the market are ones you already hold ' +
+      body = '<p class="pp-calm">No sector stands out right now: the ones beating the market are ones you already hold ' +
         'in proportion, or have no strongly scored stocks to suggest. Nothing to move for its own sake.</p>';
     }
     return '<section class="pp-where"><h3>Where the money could go</h3>' +
-      '<p class="pp-sub">Industries doing better than the market where you hold less than the market does — and the best-scoring stocks in each.</p>' +
+      '<p class="pp-sub">Sectors doing better than the market where you hold less than the market does — and the best-scoring stocks in each.</p>' +
       body + '</section>';
   }
 

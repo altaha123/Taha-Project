@@ -1684,9 +1684,14 @@
     <div class="pf-fullbar" id="pf_fullbar" hidden>
       <button type="button" id="pf_storybtn" aria-expanded="false" aria-controls="pf_story">Watch the 2-minute story</button>
       <button type="button" id="pf_full" aria-expanded="false" aria-controls="pf_report">Read the full report</button>
-      <span>The story explains your portfolio in plain words; the report has every number behind the plan.</span>
+      <span>The story explains your portfolio in plain words; the report shows it in charts, and downloads or prints as a file.</span>
     </div>
     <section id="pf_story" class="pf-story-host" hidden aria-label="Your portfolio story"></section>
+    <section id="pf_visual" class="pf-visual-host" hidden aria-label="Your portfolio report"></section>
+    <div class="pf-fullbar pf-detailbar" id="pf_detailbar" hidden>
+      <button type="button" id="pf_detail" aria-expanded="false" aria-controls="pf_report">See the detailed analysis — every number</button>
+      <span>For the analyst in you: every table, measure and source date behind the report.</span>
+    </div>
     <section id="pf_report" style="display:none"></section>
     <div class="pfinrow pfreport-act" id="pf_reportact" style="display:none">
       <button class="pfbtn primary" type="button" id="pf_dl">Download report</button>
@@ -4496,6 +4501,7 @@ if(fcSymParam){
 <script src="portfolio-intelligence.js" defer></script>
 <script src="portfolio-story.js" defer></script>
 <script src="portfolio-plan.js" defer></script>
+<script src="portfolio-report.js" defer></script>
 <script src="portfolio.js" defer></script>
 <script src="nav.js?v=20260923-lenses" defer></script>
 <script src="scoring.js" defer></script>
