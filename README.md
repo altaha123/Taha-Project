@@ -6,8 +6,16 @@ position) and a fundamental engine (full 9-point Piotroski F-Score, ROCE, levera
 growth, valuation). Every score expands into an audit trail: inputs → formula → points.
 Every check teaches the concept in one plain-English line.
 
-**This is an educational tool. It shows scores and evidence, never buy/sell directives.**
-Keep it that way — issuing recommendations to the public requires SEBI RA registration.
+**Scores and evidence everywhere; calls in one place.** Stock pages, the scan, the
+screener and the daily email show scores and evidence, never buy/sell directives.
+The **portfolio review** is the exception: it gives every holding a rule-based call —
+hold, trim, average down, add or exit — with stronger alternatives and industries to
+move into (`backend/action_plan.py`). That was the owner's decision, taken knowing that
+in India advice on someone's holdings is regulated by SEBI (Investment Advisers
+Regulations) and stock recommendations are research (Research Analysts Regulations),
+and that this project is not registered under either. The page says so in plain words
+(`action_plan.DISCLAIMER`); keep that sentence true, and take legal advice before
+charging for the calls.
 
 ---
 

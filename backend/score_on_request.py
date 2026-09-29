@@ -192,7 +192,7 @@ class OnRequestScorer:
             while len(self._cache) > self.cache_max:
                 self._cache.popitem(last=False)
 
-    def score(self, symbol, payload, fetch):
+    def score(self, symbol, payload, fetch, wait=None):
         """
         v4 for an Indian listing outside the cohort, or an `unavailable` dict
         saying why not. `fetch()` returns (hist, quarters, info) and is only
@@ -242,7 +242,7 @@ class OnRequestScorer:
                 fut = pool.submit(work)
                 self._inflight[ck] = fut
         try:
-            v4 = fut.result(timeout=self.wait)
+            v4 = fut.result(timeout=self.wait if wait is None else wait)
         except _FutureTimeout:
             return unavailable(
                 f"Scoring {base} against the scan's {len(rows)} companies — this "

@@ -1,7 +1,22 @@
 """Generate synthetic QA data; never imported by the production API."""
 import json
 from pathlib import Path
-from test_portfolio_intelligence import row, frame, report, NOW
+from test_portfolio_intelligence import row, frame, report, NOW, SCAN
+import portfolio
+
+# A small scanned cohort, so the action plan has stronger same-industry
+# companies to suggest and underweight industries to point at. Holdings and
+# their figures are unchanged; only the plan reads this.
+UNIVERSE = [
+    {'symbol': 'AXISBANK', 'name': 'Axis Bank', 'sector': 'Financial Services', 'position_score': 66},
+    {'symbol': 'KOTAKBANK', 'name': 'Kotak Mahindra Bank', 'sector': 'Financial Services', 'position_score': 61},
+    {'symbol': 'M&M', 'name': 'Mahindra & Mahindra', 'sector': 'Consumer Cyclical', 'position_score': 68},
+    {'symbol': 'MARUTI', 'name': 'Maruti Suzuki', 'sector': 'Consumer Cyclical', 'position_score': 63},
+    {'symbol': 'JSWSTEEL', 'name': 'JSW Steel', 'sector': 'Basic Materials', 'position_score': 64},
+    {'symbol': 'HINDALCO', 'name': 'Hindalco', 'sector': 'Basic Materials', 'position_score': 59},
+    {'symbol': 'HCLTECH', 'name': 'HCL Technologies', 'sector': 'Technology', 'position_score': 63},
+    {'symbol': 'WEAKCO', 'name': 'Weak Co', 'sector': 'Technology', 'position_score': 41},
+]
 
 
 def fixture(count=12):
@@ -22,7 +37,8 @@ def fixture(count=12):
          'relative':{'3M':4.2},'returns':{'1M':2.1,'3M':7.2,'6M':11.4}} for s in set(sectors)]}
     news=[{'headline':'TEST FIXTURE: HDFC Bank quarterly update','source':'Test exchange feed','url':'https://example.com/test-filing',
            'published_at':'2026-09-10T10:00:00Z','symbols':['HDFCBANK'],'importance':'high'}]
-    r=report(rows,histories=histories,news_items=news,sector_momentum=mom)
+    r=portfolio.build_report(rows,dict(SCAN,factor_universe=UNIVERSE),now=NOW,histories=histories,
+                             news_items=news,sector_momentum=mom)
     r['stage']='Complete'
     return r
 

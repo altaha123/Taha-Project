@@ -36,6 +36,8 @@ here first, and `frontend/analytics.test.js` fails CI if the two drift.
 | `share_clicked` | kind, action | Whether the growth loop turns at all |
 | `portfolio_story_viewed` | chapter, index, total | How far people read the portfolio story, chapter by chapter |
 | `portfolio_full_report_opened` | from | Whether anyone still wants the full report after the story, and from where |
+| `portfolio_plan_viewed` | moves, holdings | Whether the action plan is seen, and how many of its calls ask for a move — counts only |
+| `portfolio_story_opened` | from | Whether anyone opens the story once it is optional |
 | `pro_cta_clicked` | from | Who looks at the Pro price, and from which page |
 | `pro_waitlist_joined` | from, signed_in | Who would pay: the one number the Pro waitlist exists to measure |
 | `api_error` | endpoint, status | The API's real error rate, seen from the browser |
