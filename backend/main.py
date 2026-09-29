@@ -3369,6 +3369,17 @@ def _pf_inputs(payload, limit=MAX_HOLDINGS):
              "buy_price":r["_cost"]/r["qty"] if r["_complete"] else None} for r in merged.values()]
 
 
+def _pf_disclaimer():
+    """The portfolio review makes calls (action_plan.py), so the site-wide
+    "never a recommendation" sentence would be false on it. Its own disclaimer
+    says what the calls are and that Altaha is not SEBI-registered."""
+    try:
+        import action_plan
+        return action_plan.DISCLAIMER
+    except Exception:                                       # pragma: no cover
+        return DISCLAIMER
+
+
 def _pf_row(item, scan_row=None, quote=None, checked_at=None):
     scan_row, quote = scan_row or {}, quote or {}
     qprice = PI.number(quote.get("ltp"))
@@ -3431,6 +3442,20 @@ def _analyse_holding(item, cached=None):
                               'market_cap':PI.number(info.get('marketCap'))})
     except Exception:
         row['warnings'] = row.get('warnings', []) + ['Fundamental enrichment unavailable.']
+        info = {}
+    # A holding outside the scan's cohort is scored on request against it —
+    # the same number it would have had inside the scan (score_on_request.py).
+    # Without a score a holding cannot get a call in the action plan. A short
+    # wait: a portfolio of fifty must not spend its deadline here, and a score
+    # still being computed lands in the cache for the next run.
+    if row.get('composite') is None:
+        try:
+            v4 = _v4_for(sym, t, hist, info if isinstance(info, dict) else {}, wait=4)
+            if 'position' in v4:
+                row.update(composite=PI.number(v4['position'].get('final_score')), altaha_score_v4=v4,
+                           score_source='ranked on request against the scan cohort')
+        except Exception:
+            pass
     return row
 
 
@@ -3471,7 +3496,7 @@ def _pf_run(job_id, holdings, policy):
     rows = [_pf_row(h, scan_map.get(h['symbol']), checked_at=scan.get('scanned_at')) for h in holdings]
     def publish(stage, report, done, final=False):
         report['stage'] = stage
-        report['disclaimer'] = DISCLAIMER
+        report['disclaimer'] = _pf_disclaimer()
         with _pf_lock:
             job = _pf_jobs.get(job_id)
             if job is not None:
@@ -3592,7 +3617,7 @@ def portfolio(payload: dict = Body(...)):
         benchmark_history = None
     report = build_report(rows,scan,payload.get('policy'),histories=histories,news_items=items,
                           news_status=status,benchmark_history=benchmark_history)
-    report['disclaimer'] = DISCLAIMER
+    report['disclaimer'] = _pf_disclaimer()
     return to_native(report)
 
 
@@ -4799,7 +4824,7 @@ def _cached_v4(symbol):
             "message": "No v4 universe score for this stock yet; run a new universe scan."}
 
 
-def _v4_for(sym, t, hist, info):
+def _v4_for(sym, t, hist, info, wait=None):
     """
     The v4 score for any stock page: the scan's own score for a cohort member,
     and for everything else the score it would have had inside the scan —
@@ -4832,7 +4857,7 @@ def _v4_for(sym, t, hist, info):
                 quarters = []
         return h, quarters, info
 
-    return _on_request.score(sym, _state.get("payload"), fetch)
+    return _on_request.score(sym, _state.get("payload"), fetch, wait=wait)
 
 
 # How each header figure is read against its peers. `higher` says which

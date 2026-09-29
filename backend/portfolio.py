@@ -472,5 +472,15 @@ def build_report(rows: list, scan_payload: dict | None,
         "peer_source": (scan_payload or {}).get("scanned_at"),
     }
 
-    return intelligence.enrich(report, histories, news_items, news_status, now, scan_payload,
-                               benchmark_history=benchmark_history)
+    out = intelligence.enrich(report, histories, news_items, news_status, now, scan_payload,
+                              benchmark_history=benchmark_history)
+    # What to do with each holding, and where the money could go. Built last,
+    # from the finished report, so every figure it quotes is one the report
+    # already shows. A failure here costs the plan, never the report.
+    try:
+        import action_plan
+        out["action_plan"] = action_plan.plan(out, scan_payload, pol)
+    except Exception as e:                                  # pragma: no cover
+        out["action_plan"] = {"available": False,
+                              "message": f"The action plan could not be built ({type(e).__name__})."}
+    return out
