@@ -665,10 +665,12 @@ def deep_score(cand, selection="ranked"):
     # is strong for a utility and weak for a software company, and that is the
     # question the figure is actually being read to answer.
     fx = fund.get("extras") or {}
+    # The stock page reads the same helper, so a name's yield and the peer
+    # percentile printed under it are measured the same way.
     try:
-        dy = info.get("dividendYield")
-        dy = None if dy is None else (float(dy) * 100 if float(dy) <= 1 else float(dy))
-    except (TypeError, ValueError):
+        from data_source import dividend_yield_pct
+        dy = dividend_yield_pct(info, tech.get("price"))
+    except Exception:
         dy = None
     grid_ratios = {
         "roce": fx.get("roce"), "roe": fx.get("roe"), "de": fx.get("de"),

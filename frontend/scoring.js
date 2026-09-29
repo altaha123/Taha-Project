@@ -272,7 +272,9 @@
 
       var unavailable = d && d.altaha_score_v4 && d.altaha_score_v4.available === false;
       if (unavailable) {
-        d.verdict = { score: null, label: 'AWAITING SCAN', tone: 'mixed',
+        // The API names which "no score" this is: SCORING (being ranked right
+        // now), NOT RANKED (no peer cohort for this market) or AWAITING SCAN.
+        d.verdict = { score: null, label: (d.scoring && d.scoring.label) || 'AWAITING SCAN', tone: 'mixed',
           summary: d.altaha_score_v4.message, basis: 'Altaha Score v4 unavailable' };
       }
       var out = orig.apply(this, arguments);

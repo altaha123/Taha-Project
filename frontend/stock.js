@@ -105,7 +105,10 @@
 
     if (score == null) {
       $('scoren').textContent = '—';
-      $('scorelb').textContent = 'NOT SCORED';
+      // The API says which kind of "no score" this is — being scored right
+      // now, no peer cohort for this market, or no scan yet — and each one
+      // asks something different of the reader.
+      $('scorelb').textContent = sc.label || 'NOT SCORED';
     } else {
       if (window.AltahaShell) window.AltahaShell.countUp($('scoren'), score, 0, 1100);
       else $('scoren').textContent = Math.round(score);
@@ -160,6 +163,7 @@
     if (d.percentile != null) {
       bits.push('It ranks above <b>' + d.percentile + '%</b> of the names in the last universe scan.');
     }
+    if (sc.cohort_note) bits.push(esc(sentence(sc.cohort_note)));
     if (sc.valuation_note) bits.push(esc(sentence(sc.valuation_note)));
     $('basis').innerHTML = bits.join(' ') ||
       'Every point behind this number is itemised in the ledger below.';
@@ -396,10 +400,15 @@
     return sym + n.toLocaleString();
   }
 
-  function plain(v, unit, nd) {
+  /* A header figure with its unit. Not called `plain`: the Fundamentals pane
+     further down this same closure declares a `plain(v, d)` of its own, and a
+     function declaration hoists over an earlier one of the same name. That is
+     how every ratio in the header strip came to be printed by the other
+     function — rounded to whole numbers, units dropped, debt/equity 0.3 as "0". */
+  function withUnit(v, unit, nd) {
     var n = num(v, nd == null ? 2 : nd);
     if (n == null) return '—';
-    return n.toLocaleString() + (unit || '');
+    return n.toLocaleString('en-IN', { maximumFractionDigits: nd == null ? 2 : nd }) + (unit || '');
   }
 
   function paintKey(d) {
@@ -423,12 +432,12 @@
       { label: 'Market cap',     value: compactMoney(r.market_cap, cur) },
       { label: 'Price',          value: money(r.price != null ? r.price : d.price, cur) },
       { label: '52-week range',  value: band, small: true },
-      { label: 'P/E',            value: plain(r.pe, '', 1),             key: 'pe' },
+      { label: 'P/E',            value: withUnit(r.pe, '', 1),             key: 'pe' },
       { label: 'Book value',     value: r.book_value == null ? '—' : money(r.book_value, cur) },
-      { label: 'Dividend yield', value: plain(r.dividend_yield, '%', 2), key: 'dividend_yield' },
-      { label: 'ROCE',           value: plain(r.roce, '%', 1),          key: 'roce' },
-      { label: 'ROE',            value: plain(r.roe, '%', 1),           key: 'roe' },
-      { label: 'Debt / equity',  value: plain(r.debt_to_equity, '', 2), key: 'debt_to_equity' }
+      { label: 'Dividend yield', value: withUnit(r.dividend_yield, '%', 2), key: 'dividend_yield' },
+      { label: 'ROCE',           value: withUnit(r.roce, '%', 1),          key: 'roce' },
+      { label: 'ROE',            value: withUnit(r.roe, '%', 1),           key: 'roe' },
+      { label: 'Debt / equity',  value: withUnit(r.debt_to_equity, '', 2), key: 'debt_to_equity' }
     ];
 
     $('kgrid').innerHTML = tiles.map(function (t) {
@@ -1753,6 +1762,27 @@
       failed('No stock was named. Try searching for one.');
       return;
     }
+    /* A company outside the scan's cohort is ranked against it the first time
+       anyone opens it, and that can outlast the API's short wait. The API then
+       answers "SCORING" and finishes the work behind the response; asking
+       again a few seconds later finds it cached. Bounded: three tries, then the
+       page leaves the honest message in place rather than polling forever. */
+    function awaitScore(d, tries) {
+      if (!(d && d.scoring && d.scoring.pending) || tries >= 3) return;
+      setTimeout(function () {
+        fetch(API + '/analyze?ticker=' + encodeURIComponent(TICKER))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d2) {
+            if (!d2) return;
+            paintScore(d2);
+            paintLedger(d2);
+            paintExplain(d2);
+            awaitScore(d2, tries + 1);
+          })
+          .catch(function () {});
+      }, 6000);
+    }
+
     loading();
     fetch(API + '/analyze?ticker=' + encodeURIComponent(TICKER))
       .then(function (r) {
@@ -1782,6 +1812,7 @@
         paintLedger(d);
         paintExplain(d);
         paintLevels(d);
+        awaitScore(d, 0);
         $('disc').textContent = d.disclaimer ||
           'Educational tool. Scores and evidence only — never a recommendation to buy or sell.';
         // The chart pane draws itself when it is first opened; only the

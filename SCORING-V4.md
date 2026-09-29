@@ -18,8 +18,24 @@ conditioned on liquidity and technical screening: it is not a census of NSE.
 `factor_universe` preserves all analysed names and their scores in the scan
 cache. Analysis reads the same dated result. No per-request NSE-wide rerank,
 no scoring a live company against yesterday's selectively retained top 60.
-A stock outside that cohort needs a scan including it; the UI says awaiting
-scan instead of substituting a competing headline score.
+
+**A company outside the cohort is scored on request** (`score_on_request.py`),
+and gets the score it would have had inside the scan, not a lookalike. Its row
+is built as `scan.deep_score` builds one (same factor and data-quality
+functions, same stored XBRL quarters, same classification fields), with
+prices and filings cut off at the cohort's own as-of date, and it is ranked
+by `multifactor.rank` over the full retained cohort (every analysed name,
+controls included, never the top 60) plus that one row. The cohort is never
+modified: the row is not added to the payload, the point-in-time store or
+the ideas list, and a member is never re-ranked, so it keeps its cached
+score. `test_score_on_request.py` pins the claim by removing a company from
+a cohort, scoring it on request against the rest, and requiring the identical
+score, confidence and factor ledger. The response names its provenance
+(`altaha_score_v4.cohort`, and "ranked on request" in `scoring.basis`).
+Scores are cached per company per scan, so a new scan re-ranks them. The
+scan's 120-session history floor applies. Indian listings only: the cohort is
+NSE companies, and a US listing reads NOT RANKED rather than being given a
+score with no peer group behind it.
 
 `composite` on v4 scan rows aliases the position score; `factor_score` aliases
 the requested horizon. `legacy_composite`, technical/fundamental scores,
