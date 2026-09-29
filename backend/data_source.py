@@ -103,6 +103,44 @@ def resolve(raw: str):
     raise NotFound(raw)
 
 
+def dividend_yield_pct(info, price=None):
+    """
+    Dividend yield as a PERCENTAGE (0.49 means 0.49%), or None.
+
+    Computed as the annual dividend per share over the price wherever both are
+    known, because that division has no unit convention to get wrong. Yahoo's
+    own `dividendYield` does: it is a percentage today (RELIANCE 0.49, TCS
+    3.12) and used to be a fraction. Code that told the two apart by magnitude
+    — "anything at or below 1 must be a fraction" — multiplied every yield
+    under 1% by a hundred and printed Reliance's 0.49% as 49%. No threshold
+    can separate 0.49% from 49%, so none is used: the reported field is the
+    fallback, read as the percentage the provider now sends.
+
+    `trailingAnnualDividendYield` is not used: it is a fraction, and it reads
+    0.0 for companies that plainly pay a dividend.
+    """
+    info = info or {}
+
+    def pos(v):
+        try:
+            f = float(v)
+        except (TypeError, ValueError):
+            return None
+        return f if f == f and 0 < f < float("inf") else None
+
+    px = pos(price) or pos(info.get("currentPrice")) or pos(info.get("regularMarketPrice"))
+    rate = pos(info.get("dividendRate")) or pos(info.get("trailingAnnualDividendRate"))
+    if px and rate:
+        return round(rate / px * 100, 2)
+    try:
+        dy = float(info.get("dividendYield"))
+    except (TypeError, ValueError):
+        return None
+    if dy != dy or dy < 0 or dy == float("inf"):
+        return None
+    return round(dy, 2)
+
+
 def _pct(val):
     """Normalise a holding figure to a 0-1 fraction, or None."""
     try:

@@ -25,7 +25,7 @@ import ythreads
 ythreads.serial_downloads()
 
 from engine import technical_score, fundamental_score, composite
-from data_source import resolve, fundamentals, shareholding, NotFound
+from data_source import resolve, fundamentals, shareholding, NotFound, dividend_yield_pct
 try:
     import dhan_source as dhan
 except Exception:
@@ -60,6 +60,11 @@ try:
     import multifactor
 except Exception:
     multifactor = None
+try:
+    import score_on_request
+    _on_request = score_on_request.OnRequestScorer()
+except Exception:
+    score_on_request = _on_request = None
 try:
     import attention as attention_mod
 except Exception:
@@ -4670,9 +4675,50 @@ def _cached_v4(symbol):
     row = next((r for r in rows if r.get("symbol") == symbol), {})
     result = row.get("altaha_score_v4")
     if result:
+        # Where the peer group came from, on a copy: the cached row is shared
+        # with the ideas list, the tracker and every other reader of the scan.
+        cohort = score_on_request.cohort_of(payload) if score_on_request else None
+        if cohort is not None:
+            return score_on_request.with_cohort(result, cohort[1], len(cohort[0]), on_request=False)
         return result
     return {"available": False, "methodology_version": "v4",
             "message": "No v4 universe score for this stock yet; run a new universe scan."}
+
+
+def _v4_for(sym, t, hist, info):
+    """
+    The v4 score for any stock page: the scan's own score for a cohort member,
+    and for everything else the score it would have had inside the scan —
+    ranked against the same cohort, on the same date, by the same ranker.
+    See score_on_request.py for why that is the same number and not a guess.
+    """
+    base = sym.replace(".NS", "").replace(".BO", "")
+    v4 = _cached_v4(base)
+    if "position" in v4 or _on_request is None or factor_lib is None or multifactor is None:
+        return v4
+
+    def fetch():
+        # The scan reads two years (or Dhan's 400 days); the stock page's
+        # resolve() reads one from Yahoo. One year is too short to measure
+        # 12-1 momentum, and a company scored without it would be scored
+        # without a pillar its cohort peers all had.
+        h = hist
+        if (h is None or len(h) < score_on_request.MIN_HISTORY_ROWS) and t is not None:
+            try:
+                longer = t.history(period="2y", auto_adjust=True)
+                if longer is not None and len(longer.dropna(subset=["Close"])) > len(h if h is not None else []):
+                    h = longer.dropna(subset=["Close"])
+            except Exception:
+                pass
+        quarters = []
+        if xbrl_source is not None:
+            try:
+                quarters = xbrl_source.scoring_statements(base)
+            except Exception:
+                quarters = []
+        return h, quarters, info
+
+    return _on_request.score(sym, _state.get("payload"), fetch)
 
 
 # How each header figure is read against its peers. `higher` says which
@@ -4788,12 +4834,9 @@ def _header_ratios(info, tech, fund):
             return None
         return round(f, nd)
 
-    # yfinance reports the dividend yield as a fraction on some feeds and as a
-    # percentage on others. Anything above 1 is already a percentage — a 100%+
-    # dividend yield does not occur, and reading 0.013 as 0.013% would.
-    dy = num(info.get("dividendYield"), 2)
-    if dy is not None and dy <= 1:
-        dy = round(dy * 100, 2)
+    # Per share over price — see dividend_yield_pct for why the provider's own
+    # yield field cannot be told apart from a fraction by its size.
+    dy = dividend_yield_pct(info, (tech or {}).get("price"))
 
     # The engine's ROE is computed from the filed statements; the provider's
     # summary figure is the fallback, not the other way round, because the
@@ -4860,23 +4903,28 @@ def analyze(ticker: str, horizon: str = "position"):
         plan = build_plan(hist, lv, tech)
     except Exception:
         plan = None
-    # Percentile vs the scanned universe — makes the score mean something.
-    pct = None
-    try:
-        rows = (_state.get("payload") or {}).get("factor_universe") or []
-        base = sym.replace(".NS", "").replace(".BO", "")
-        mine = next((r for r in rows if r.get("symbol") == base), None)
-        field = (horizon if horizon in PR.HORIZONS else "position") + "_score"
-        if mine and mine.get(field) is not None and len(rows) >= multifactor.MIN_PEERS:
-            comps = [r[field] for r in rows if r.get(field) is not None]
-            pct = round(sum(1 for c in comps if c < mine[field]) / len(comps) * 100)
-    except Exception:
-        pct = None
-
     verdict = composite(tech, fund)
 
     base = sym.replace(".NS", "").replace(".BO", "")
-    v4 = _cached_v4(base)
+    v4 = _v4_for(sym, t, hist, info)
+
+    # Percentile vs the scanned universe — makes the score mean something. A
+    # company ranked on request is placed in the same distribution its score
+    # was measured against; it is not one of the names it is compared with.
+    pct = None
+    try:
+        rows = (_state.get("payload") or {}).get("factor_universe") or []
+        hz = horizon if horizon in PR.HORIZONS else "position"
+        field = hz + "_score"
+        mine = next((r.get(field) for r in rows if r.get("symbol") == base), None)
+        if mine is None and hz in v4:
+            mine = v4[hz]["final_score"]
+        if mine is not None and len(rows) >= multifactor.MIN_PEERS:
+            comps = [r[field] for r in rows if r.get(field) is not None]
+            pct = round(sum(1 for c in comps if c < mine) / len(comps) * 100)
+    except Exception:
+        pct = None
+
     try:
         legacy_scoring = PR.score(tech, fund, info, fin, bs, cf, horizon=horizon)
     except Exception:
@@ -4884,9 +4932,20 @@ def analyze(ticker: str, horizon: str = "position"):
     if "position" in v4:
         scoring = multifactor.presentation(v4, horizon)
         horizons = {h: multifactor.presentation(v4, h) for h in PR.HORIZONS}
+        note = (v4.get("cohort") or {}).get("note")
+        if note:
+            scoring["cohort_note"] = note
+            if (v4.get("cohort") or {}).get("basis") == "on_request":
+                # The headline's provenance travels with it, in the one line
+                # both front ends already print under the number.
+                for s in (scoring, *horizons.values()):
+                    s["basis"] += " · ranked on request against the scan cohort"
+                    s["cohort_note"] = note
     else:
-        scoring = {"score": None, "methodology_version": "v4", "label": "AWAITING SCAN",
-                   "basis": v4["message"], "summary": v4["message"], "confidence": 0}
+        label = "SCORING" if v4.get("pending") else "NOT RANKED" if v4.get("reason") == "no_cohort_for_market" else "AWAITING SCAN"
+        scoring = {"score": None, "methodology_version": "v4", "label": label,
+                   "basis": "Altaha Score v4 unavailable", "summary": v4["message"],
+                   "confidence": 0, "pending": bool(v4.get("pending"))}
         horizons = None
 
     try:

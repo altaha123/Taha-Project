@@ -180,6 +180,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/stock-explain-browser.cjs
+      - name: Verify the header ratios print as sent and an on-request score says how it was made
+        if: always()
+        # Two functions named `plain` in one closure once rounded every header
+        # ratio and dropped its unit. A company outside the scan is ranked on
+        # request: "SCORING" until it lands, a bounded retry, then the number
+        # with its provenance. A US listing says why it has no score.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/stock-score-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
