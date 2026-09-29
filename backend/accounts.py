@@ -165,6 +165,29 @@ CREATE TABLE IF NOT EXISTS risk_profiles (
   assessed_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_risk_user ON risk_profiles(user_id, id);
+-- The Pro waitlist: who said they would pay, and from where. Keyed on the
+-- address so joining twice is one row, and so a person who joins signed out
+-- and later signs in is still one person. `plan` is the price they were shown
+-- when they joined ("annual" / "monthly"), which is the whole experiment.
+CREATE TABLE IF NOT EXISTS pro_waitlist (
+  email      TEXT PRIMARY KEY,
+  user_id    INTEGER,
+  source     TEXT,
+  plan       TEXT,
+  created_at TEXT NOT NULL
+);
+-- Saved query-screener screens, per account. A name is unique per person so
+-- saving "Cheap compounders" again updates it rather than adding a second.
+CREATE TABLE IF NOT EXISTS saved_screens (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL,
+  name       TEXT NOT NULL,
+  query      TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  UNIQUE (user_id, name)
+);
+CREATE INDEX IF NOT EXISTS idx_screens_user ON saved_screens(user_id, updated_at);
 -- What was sent, so a retry after a crash cannot mail the same person the
 -- same day twice. The digest job is not transactional; this table is what
 -- makes it safe to run again.
@@ -612,6 +635,117 @@ def merge_watchlist(user_id: int, symbols) -> dict:
             [(user_id, sym, tail + 1 + i, _iso(now)) for i, sym in enumerate(added)])
     return {"added": len(added), "rejected": rejected,
             "symbols": get_watchlist(user_id)}
+
+
+# ---------------------------------------------------------------------------
+# Saved screens
+# ---------------------------------------------------------------------------
+
+MAX_SCREENS = 25
+MAX_SCREEN_NAME = 60
+MAX_SCREEN_QUERY = 2000
+
+
+def _screen_dict(row) -> dict:
+    return {"id": row["id"], "name": row["name"], "query": row["query"],
+            "created_at": row["created_at"], "updated_at": row["updated_at"]}
+
+
+def list_screens(user_id: int) -> list:
+    conn = _connect()
+    return [_screen_dict(r) for r in conn.execute(
+        "SELECT * FROM saved_screens WHERE user_id=? ORDER BY updated_at DESC, id DESC",
+        (user_id,)).fetchall()]
+
+
+def save_screen(user_id: int, name, query) -> dict:
+    """Save or update a screen by name. Raises ValueError with a sentence a
+    reader can act on: empty, too long, or over the per-account limit."""
+    name = " ".join(str(name or "").split())
+    query = str(query or "").strip()
+    if not name:
+        raise ValueError("Give the screen a name.")
+    if len(name) > MAX_SCREEN_NAME:
+        raise ValueError(f"Keep the name under {MAX_SCREEN_NAME} characters.")
+    if not query:
+        raise ValueError("There is no query to save.")
+    if len(query) > MAX_SCREEN_QUERY:
+        raise ValueError(f"The query is over {MAX_SCREEN_QUERY} characters.")
+    conn = _connect()
+    # Microseconds, unlike the rest of this file: the list is ordered by it,
+    # and a screen saved and then updated within one second would otherwise
+    # tie with its neighbours and sort by insertion instead of by use.
+    now = _now().isoformat()
+    existing = conn.execute("SELECT id FROM saved_screens WHERE user_id=? AND name=?",
+                            (user_id, name)).fetchone()
+    if existing is None:
+        count = conn.execute("SELECT COUNT(*) AS n FROM saved_screens WHERE user_id=?",
+                             (user_id,)).fetchone()["n"]
+        if count >= MAX_SCREENS:
+            raise ValueError(f"You have {MAX_SCREENS} saved screens — delete one to save another.")
+    with conn:
+        conn.execute(
+            "INSERT INTO saved_screens(user_id,name,query,created_at,updated_at) VALUES(?,?,?,?,?) "
+            "ON CONFLICT(user_id,name) DO UPDATE SET query=excluded.query, updated_at=excluded.updated_at",
+            (user_id, name, query, now, now))
+    row = conn.execute("SELECT * FROM saved_screens WHERE user_id=? AND name=?",
+                       (user_id, name)).fetchone()
+    return _screen_dict(row)
+
+
+def delete_screen(user_id: int, screen_id: int) -> bool:
+    conn = _connect()
+    with conn:
+        cur = conn.execute("DELETE FROM saved_screens WHERE user_id=? AND id=?",
+                           (user_id, int(screen_id)))
+    return cur.rowcount > 0
+
+
+# ---------------------------------------------------------------------------
+# The Pro waitlist
+# ---------------------------------------------------------------------------
+
+WAITLIST_PLANS = ("annual", "monthly")
+
+
+def join_waitlist(email, source: str = "", plan: str = "", user_id=None) -> dict:
+    """Add an address to the Pro waitlist. Joining twice is not an error and
+    does not move anyone up or down; it returns already=True. The source and
+    plan of the FIRST join are kept — that is the answer to "what made this
+    person say yes", and a later click from another page does not change it."""
+    addr = valid_email(email)
+    if not addr:
+        raise ValueError("That does not look like an email address.")
+    src = "".join(ch for ch in str(source or "")[:40] if ch.isalnum() or ch in "-_") or None
+    pl = plan if plan in WAITLIST_PLANS else None
+    conn = _connect()
+    with conn:
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO pro_waitlist(email,user_id,source,plan,created_at) VALUES(?,?,?,?,?)",
+            (addr, user_id, src, pl, _iso(_now())))
+        if user_id is not None:
+            conn.execute("UPDATE pro_waitlist SET user_id=? WHERE email=? AND user_id IS NULL",
+                         (user_id, addr))
+    return {"joined": True, "already": cur.rowcount == 0}
+
+
+def on_waitlist(email) -> bool:
+    addr = valid_email(email)
+    if not addr:
+        return False
+    return _connect().execute("SELECT 1 FROM pro_waitlist WHERE email=?", (addr,)).fetchone() is not None
+
+
+def waitlist_summary() -> dict:
+    """For the owner: how many, from where, at which price, and who."""
+    conn = _connect()
+    rows = [dict(r) for r in conn.execute(
+        "SELECT email, user_id, source, plan, created_at FROM pro_waitlist ORDER BY created_at")]
+    for r in rows:
+        r["source"] = r["source"] or "unknown"
+        r["plan"] = r["plan"] or "unknown"
+    by = lambda k: {v: sum(1 for r in rows if r[k] == v) for v in sorted({r[k] for r in rows})}
+    return {"count": len(rows), "by_source": by("source"), "by_plan": by("plan"), "people": rows}
 
 
 # ---------------------------------------------------------------------------

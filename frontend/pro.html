@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Altaha Pro — Altaha Screener</title>
+<meta name="description" content="Altaha Pro: your portfolio told as a story, watchlist alerts in a daily email, saved screens and exports. Join the founding list — nothing is charged today." />
+<meta name="referrer" content="no-referrer" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css?v=20260929-pro">
+<link rel="stylesheet" href="type.css">
+<script>
+  /* Theme before first paint, as every page here does. */
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+<style>
+  body{margin:0;background:var(--paper);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .pro{--pro-card:var(--skin-card,#FFFDF8);font-family:Inter,system-ui,sans-serif;max-width:1080px;margin:0 auto;padding:40px clamp(16px,4vw,32px) 72px;box-sizing:border-box;color:var(--ink)}
+  .pro *{box-sizing:border-box}
+  .pro-eyebrow{font:500 11px/1.5 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 16px}
+  .pro-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(28px,5vw,64px);align-items:start}
+  .pro h1{font:400 clamp(40px,5.4vw,66px)/1.04 'Instrument Serif',Georgia,serif;letter-spacing:-.03em;margin:0}
+  .pro h1 em{color:var(--gold);font-style:italic}
+  .pro-lede{font-size:17px;line-height:1.65;color:var(--ink-2);margin:20px 0 0;max-width:520px}
+  .pro-free{margin:22px 0 0;padding:14px 16px;border-left:3px solid var(--gold);background:var(--paper-2);border-radius:0 12px 12px 0;font-size:14px;line-height:1.6;color:var(--ink-2);max-width:520px}
+  .pro-card{background:var(--pro-card);border:1px solid var(--rule);border-radius:22px;padding:26px;box-shadow:var(--skin-shadow)}
+  .pro-plans{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px;border:0;padding:0}
+  .pro-plans legend{font:600 13px Inter,system-ui,sans-serif;margin-bottom:10px;padding:0}
+  .pro-plan{position:relative;display:block;border:1.5px solid var(--rule);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .15s}
+  .pro-plan input{position:absolute;opacity:0;pointer-events:none}
+  .pro-plan:has(input:checked){border-color:var(--gold);background:var(--paper-2)}
+  .pro-plan:has(input:focus-visible){outline:2px solid var(--gold);outline-offset:2px}
+  .pro-plan b{display:block;font:400 30px/1.1 'Instrument Serif',Georgia,serif}
+  .pro-plan span{display:block;font-size:12.5px;color:var(--mute);margin-top:4px}
+  .pro-plan small{position:absolute;top:10px;right:10px;font:700 10px/1 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;background:var(--gold);color:#17140E;padding:4px 6px;border-radius:5px}
+  .pro-field{display:grid;gap:6px;margin:0 0 14px;font-size:13px;font-weight:600}
+  .pro-field[hidden],.pro-signedin[hidden]{display:none}
+  .pro-field input{font:400 16px Inter,system-ui,sans-serif;padding:13px 14px;border-radius:11px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);min-height:48px}
+  .pro-field input:focus{outline:2px solid var(--gold);outline-offset:1px}
+  .pro-go{width:100%;font:700 15px/1 Inter,system-ui,sans-serif;padding:16px;border-radius:12px;border:0;background:var(--gold);color:#17140E;cursor:pointer;min-height:52px}
+  .pro-go:disabled{opacity:.6;cursor:default}
+  .pro-fine{font-size:12.5px;line-height:1.55;color:var(--mute);margin:12px 0 0}
+  .pro-msg{font-size:14px;line-height:1.55;margin:12px 0 0}
+  .pro-msg.err{color:var(--fail)}
+  .pro-done{text-align:center;padding:12px 4px}
+  .pro-done b{display:block;font:400 32px/1.15 'Instrument Serif',Georgia,serif;margin:6px 0 10px}
+  .pro-done p{color:var(--ink-2);font-size:14.5px;line-height:1.6;margin:0}
+  .pro-tick{width:58px;height:58px;margin:0 auto;border-radius:50%;background:var(--pass);display:grid;place-items:center;color:#fff;font-size:28px;animation:pro-pop .45s cubic-bezier(.34,1.56,.64,1) backwards}
+  .pro-signedin{font-size:13.5px;color:var(--ink-2);margin:0 0 14px}
+  .pro h2{font:400 clamp(30px,3.6vw,42px)/1.1 'Instrument Serif',Georgia,serif;letter-spacing:-.02em;margin:72px 0 8px}
+  .pro-sub{color:var(--mute);font-size:15px;margin:0 0 26px}
+  .pro-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+  .pro-feat{background:var(--pro-card);border:1px solid var(--rule);border-radius:18px;padding:22px}
+  .pro-feat i{display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:var(--paper-2);color:var(--gold);font-style:normal;font-size:19px;margin-bottom:12px}
+  .pro-feat h3{font-size:17px;margin:0 0 6px}
+  .pro-feat p{font-size:14px;line-height:1.6;color:var(--ink-2);margin:0}
+  .pro-feat a{display:inline-block;margin-top:10px;font-size:13.5px;font-weight:600;color:var(--gold)}
+  .pro-beta{display:inline-block;font:600 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--pass);border:1px solid currentColor;border-radius:5px;padding:3px 6px;margin-left:6px;vertical-align:2px}
+  .pro-always{columns:2 260px;gap:28px;padding:0;margin:0;list-style:none}
+  .pro-always li{break-inside:avoid;padding:9px 0 9px 26px;position:relative;font-size:14.5px;line-height:1.5;border-bottom:1px solid var(--rule-2)}
+  .pro-always li::before{content:"✓";position:absolute;left:2px;color:var(--pass);font-weight:700}
+  .pro-faq details{border-bottom:1px solid var(--rule);padding:16px 0}
+  .pro-faq summary{font-weight:600;font-size:16px;cursor:pointer}
+  .pro-faq p{color:var(--ink-2);line-height:1.65;font-size:14.5px;margin:10px 0 0;max-width:760px}
+  @keyframes pro-pop{from{opacity:0;transform:scale(.3)}}
+  @media (prefers-reduced-motion:reduce){.pro-tick{animation:none}}
+  @media (max-width:860px){.pro-hero{grid-template-columns:minmax(0,1fr)}.pro{padding-top:24px}}
+  @media (max-width:380px){.pro-plans{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="pro" id="pro">
+  <section class="pro-hero">
+    <div>
+      <p class="pro-eyebrow">Altaha Pro · founding list</p>
+      <h1>Your money, <em>explained</em> — and watched while you get on with your day.</h1>
+      <p class="pro-lede">Pro turns Altaha from something you look things up on into something that works for you:
+        your portfolio told as a short story, an email after the close about the stocks you follow,
+        and your screens saved to your account.</p>
+      <p class="pro-free"><b>Everything that is free today stays free</b> — every stock page, the 0–100 score for every
+        Indian stock and the ledger behind it. The Pro features below are live now and free during the founding beta.</p>
+    </div>
+
+    <div class="pro-card" id="pro-card" aria-live="polite">
+      <form id="pro-form" novalidate>
+        <fieldset class="pro-plans">
+          <legend>Which would you choose?</legend>
+          <label class="pro-plan"><input type="radio" name="plan" value="annual" checked>
+            <small>Save 33%</small><b>₹1,999</b><span>a year · about ₹167 a month</span></label>
+          <label class="pro-plan"><input type="radio" name="plan" value="monthly">
+            <b>₹249</b><span>a month · cancel any time</span></label>
+        </fieldset>
+        <p class="pro-signedin" id="pro-signedin" hidden></p>
+        <label class="pro-field" id="pro-email-field">Email
+          <input type="email" id="pro-email" name="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required>
+        </label>
+        <button class="pro-go" id="pro-go" type="submit">Join the founding list</button>
+        <p class="pro-msg" id="pro-msg" role="status"></p>
+        <p class="pro-fine">Nothing is charged today, and no card is asked for. Founding members are offered this price
+          first, by email, before Pro launches — you decide then.</p>
+      </form>
+    </div>
+  </section>
+
+  <h2>What Pro adds</h2>
+  <p class="pro-sub">Each one is live. Try them now, free, while the beta runs.</p>
+  <div class="pro-features">
+    <article class="pro-feat"><i aria-hidden="true">◐</i>
+      <h3>Your portfolio, as a story <span class="pro-beta">Live</span></h3>
+      <p>Upload what you hold and get ten short chapters: what it is worth, where your money lives, your biggest bet,
+        how spread out you really are, what a rough patch looks like — in plain words, with the arithmetic shown.</p>
+      <a href="index.html#portfolio">Try it with your portfolio →</a></article>
+    <article class="pro-feat"><i aria-hidden="true">✉</i>
+      <h3>Watchlist alerts, after the close <span class="pro-beta">Live</span></h3>
+      <p>One email a day. Your holdings, and the stocks you follow that filed something with the exchange, crossed a
+        line on the chart, or moved 3% or more. Quiet stocks are left out.</p>
+      <a href="signin.html">Sign in to turn it on →</a></article>
+    <article class="pro-feat"><i aria-hidden="true">⌕</i>
+      <h3>Saved screens <span class="pro-beta">Live</span></h3>
+      <p>Name the screens you build in the query screener and keep them on your account — on every device, one tap
+        to run again.</p>
+      <a href="index.html#research/query">Open the query screener →</a></article>
+    <article class="pro-feat"><i aria-hidden="true">⇩</i>
+      <h3>Exports <span class="pro-beta">Live</span></h3>
+      <p>Screens and ideas as CSV, and your portfolio review as a report file you can keep, print or send.</p></article>
+    <article class="pro-feat"><i aria-hidden="true">✦</i>
+      <h3>Every score, in plain English <span class="pro-beta">Live</span></h3>
+      <p>On any stock page, ask what the score means and get three short paragraphs — clearly labelled as AI-written,
+        and never a buy or sell call.</p></article>
+  </div>
+
+  <h2>Always free</h2>
+  <p class="pro-sub">Pro pays for more; it never takes anything away.</p>
+  <ul class="pro-always">
+    <li>A 0–100 Altaha Score for every Indian stock</li>
+    <li>The ledger behind every score: inputs, formula, points</li>
+    <li>Fundamentals, ownership, delivery and charts</li>
+    <li>The query screener and the universe scan</li>
+    <li>Bulk and block deals, and order wins</li>
+    <li>Your watchlist, on this device or your account</li>
+  </ul>
+
+  <h2>Questions</h2>
+  <div class="pro-faq">
+    <details><summary>What happens when I join the list?</summary>
+      <p>Your address is saved with the plan you picked, and nothing else happens. Before Pro launches you get one
+        email with the final price and what it includes. Nothing is charged unless you choose to subscribe then.</p></details>
+    <details><summary>Is Pro investment advice?</summary>
+      <p>No. Altaha shows scores, evidence and observations, with the working shown — never a recommendation to buy or
+        sell. That is true of the free site and of Pro alike. For advice, consult a SEBI-registered adviser.</p></details>
+    <details><summary>Why would I pay for this?</summary>
+      <p>Because the free site answers questions when you ask them, and Pro keeps answering them when you do not: the
+        email after the close, the story of your own portfolio, the screens you keep coming back to.</p></details>
+    <details><summary>Can I leave the list?</summary>
+      <p>Yes — reply to any email from us, or write to us, and your address is removed.</p></details>
+  </div>
+</main>
+
+<script src="shell.js?v=20260929-pro" defer></script>
+<script>
+(function () {
+  'use strict';
+  var API = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : 'https://taha-project.onrender.com';
+  function param(k) { try { return new URL(location.href).searchParams.get(k) || ''; } catch (e) { return ''; } }
+  var from = (param('from') || 'direct').replace(/[^a-z0-9_-]/gi, '').slice(0, 40) || 'direct';
+  var form = document.getElementById('pro-form'), msg = document.getElementById('pro-msg'),
+      go = document.getElementById('pro-go'), email = document.getElementById('pro-email');
+
+  function signedIn() {
+    var a = window.AltahaAuth;
+    return a && a.authed && a.authed() ? (a.user && a.user()) : null;
+  }
+  function paintUser() {
+    var u = signedIn(), note = document.getElementById('pro-signedin'), field = document.getElementById('pro-email-field');
+    if (u && u.email) {
+      note.hidden = false;
+      note.textContent = 'Signed in as ' + u.email + ' — we will use this address.';
+      field.hidden = true;
+    } else {
+      note.hidden = true;
+      field.hidden = false;
+    }
+  }
+  window.addEventListener('altaha-auth', paintUser);
+  document.addEventListener('DOMContentLoaded', paintUser);
+
+  function done(addr, already) {
+    var card = document.getElementById('pro-card');
+    var plan = (form.querySelector('input[name="plan"]:checked') || {}).value;
+    card.innerHTML = '<div class="pro-done"><div class="pro-tick" aria-hidden="true">✓</div>' +
+      '<b>' + (already ? 'You were already on the list' : 'You are on the founding list') + '</b>' +
+      '<p></p></div>';
+    card.querySelector('p').textContent = 'We will write to ' + (addr || 'you') +
+      ' before Pro launches, with the ' + (plan === 'monthly' ? 'monthly' : 'annual') +
+      ' founding price. Nothing is charged until you say yes. Meanwhile, every Pro feature on this page is free to use.';
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    msg.textContent = ''; msg.className = 'pro-msg';
+    var u = signedIn();
+    var addr = u && u.email ? u.email : String(email.value || '').trim();
+    if (!u && !/^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(addr)) {
+      msg.textContent = 'That does not look like an email address.'; msg.className = 'pro-msg err';
+      email.focus();
+      return;
+    }
+    var plan = (form.querySelector('input[name="plan"]:checked') || {}).value || 'annual';
+    go.disabled = true; go.textContent = 'Adding you…';
+    var headers = { 'Content-Type': 'application/json' };
+    var token = window.AltahaAuth && window.AltahaAuth.token && window.AltahaAuth.token();
+    if (token) headers.Authorization = 'Bearer ' + token;
+    fetch(API + '/pro/waitlist', { method: 'POST', headers: headers,
+      body: JSON.stringify({ email: u ? undefined : addr, source: from, plan: plan }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error((res.j && res.j.detail) || 'Something went wrong.');
+        if (window.AltahaTrack) window.AltahaTrack('pro_waitlist_joined', { from: from, signed_in: !!res.j.signed_in });
+        done(addr, res.j.already);
+      })
+      .catch(function (err) {
+        go.disabled = false; go.textContent = 'Join the founding list';
+        msg.textContent = (err && err.message && err.message !== 'Failed to fetch') ? err.message
+          : 'The list could not be reached just now. Try again in a minute.';
+        msg.className = 'pro-msg err';
+      });
+  });
+})();
+</script>
+</body>
+</html>

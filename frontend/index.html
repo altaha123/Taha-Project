@@ -39,6 +39,7 @@
 <link rel="stylesheet" href="patterns.css">
 <link rel="stylesheet" href="portfolio.css">
 <link rel="stylesheet" href="portfolio-intelligence.css">
+<link rel="stylesheet" href="portfolio-story.css">
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="share.css">
 <link rel="stylesheet" href="lab.css">
@@ -1173,7 +1174,7 @@
 <link rel="stylesheet" href="premium-plus.css">
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
-<link rel="stylesheet" href="shell.css?v=20260923-lenses">
+<link rel="stylesheet" href="shell.css?v=20260929-pro">
 <link rel="stylesheet" href="home.css">
 <link rel="stylesheet" href="special.css">
 <link rel="stylesheet" href="experience.css">
@@ -1675,6 +1676,13 @@
       <div class="state" id="pf_state" style="display:none"></div>
     </div>
 
+    <!-- The review opens as a story (portfolio-story.js); the full report sits
+         behind one button. See the header of portfolio-story.js for why. -->
+    <section id="pf_story" class="pf-story-host" hidden aria-label="Your portfolio story"></section>
+    <div class="pf-fullbar" id="pf_fullbar" hidden>
+      <button type="button" id="pf_full" aria-expanded="false" aria-controls="pf_report">Read the full report</button>
+      <span>Every number behind the story: each holding, each measurement, and how it was worked out.</span>
+    </div>
     <section id="pf_report" style="display:none"></section>
     <div class="pfinrow pfreport-act" id="pf_reportact" style="display:none">
       <button class="pfbtn primary" type="button" id="pf_dl">Download report</button>
@@ -4482,6 +4490,7 @@ if(fcSymParam){
 <script src="charts.js" defer></script>
 <script src="tracker-fix.js" defer></script>
 <script src="portfolio-intelligence.js" defer></script>
+<script src="portfolio-story.js" defer></script>
 <script src="portfolio.js" defer></script>
 <script src="nav.js?v=20260923-lenses" defer></script>
 <script src="scoring.js" defer></script>
@@ -4494,7 +4503,7 @@ if(fcSymParam){
 <script src="index-explorer.js?v=20260924-atlas" defer></script>
 <script src="sectors-live.js?v=20260927-dialog" defer></script>
 <script src="deals.js" defer></script>
-<script src="shell.js?v=20260923-lenses" defer></script>
+<script src="shell.js?v=20260929-pro" defer></script>
 <script src="home.js" defer></script>
 <script src="special.js" defer></script>
 <script src="wow.js" defer></script>

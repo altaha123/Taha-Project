@@ -608,6 +608,13 @@ def deep_score(cand, selection="ranked"):
     except Exception:
         fin = bs = cf = None
         info = {}
+    # A refused live read used to bank the company with no sector, no
+    # industry and its ticker for a name. See with_stored_profile.
+    try:
+        from data_source import with_stored_profile
+        info = with_stored_profile(s, info, tech.get("price"))
+    except Exception:
+        pass
     try:
         fund = fundamental_score(fin, bs, cf, info)
     except Exception:

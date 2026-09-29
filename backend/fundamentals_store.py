@@ -616,6 +616,14 @@ def yf_profiles():
     return {r["symbol"]: dict(r) for r in _connect().execute("SELECT * FROM yf_profile")}
 
 
+def yf_profile(symbol):
+    """One company's stored Yahoo profile, or None. A primary-key read, so the
+    scan can ask for each of its two hundred names without loading all of them."""
+    row = _connect().execute("SELECT * FROM yf_profile WHERE symbol = ?",
+                             ((symbol or "").strip().upper(),)).fetchone()
+    return dict(row) if row else None
+
+
 def mark_profile_try(symbol, status):
     with _tx() as conn:
         conn.execute("INSERT OR REPLACE INTO yf_profile_tries VALUES (?,?,?)",

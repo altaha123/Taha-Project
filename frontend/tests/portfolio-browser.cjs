@@ -33,6 +33,10 @@ const server=http.createServer((req,res)=>{
  await page.locator('#pf_rows .pf_sym').first().fill('HDFCBANK');
  await page.locator('#pf_rows .pf_qty').first().fill('10');
  await page.locator('#pf_go').click();
+ // The review opens as a story; the full report waits behind one button.
+ await page.locator('#pf_story .ps').waitFor();
+ assert.equal(await page.locator('#pf_report').isVisible(),false,'the full report stays closed until asked for');
+ await page.locator('#pf_full').click();
  await page.locator('#pi-money-map').waitFor();
  for(const width of [320,390,768,1280]){
    await page.setViewportSize({width,height:900});
@@ -95,6 +99,7 @@ const server=http.createServer((req,res)=>{
  await fallback.locator('#pf_rows .pf_sym').first().fill('HDFCBANK');
  await fallback.locator('#pf_rows .pf_qty').first().fill('10');
  await fallback.locator('#pf_go').click();
+ await fallback.locator('#pf_full').click();
  await fallback.getByRole('button',{name:'Advanced analysis',exact:true}).click();
  await fallback.getByText('Chart unavailable. Open “View chart data” below for the full figures.').first().waitFor();
  assert.equal(await fallback.locator('#pf_report canvas').count(),0);
@@ -102,7 +107,7 @@ const server=http.createServer((req,res)=>{
  assert.ok(await fallback.locator('#pi-money-map .pi-story-track').count()>0);
  assert.ok(await fallback.locator('#pf_report').getByText('View chart data',{exact:true}).count()>=5);
  // Ignore known unrelated optional shell failures; portfolio errors fail CI.
- const relevant=errors.filter(e=>/portfolio(?:-intelligence)?\.js/.test(e));assert.deepEqual(relevant,[]);
+ const relevant=errors.filter(e=>/portfolio(?:-intelligence|-story)?\.js/.test(e));assert.deepEqual(relevant,[]);
  fs.writeFileSync(path.join(output,'verification.json'),JSON.stringify({viewports:[320,390,768,1280],themes:['light','dark'],charts:7,holdings:[12,50],tapFiltering:true,exports:true,chartFailureFallback:true,portfolioErrors:relevant,otherShellErrors:errors},null,2));
  await browser.close();server.close();console.log('Portfolio Chromium checks passed');
 })().catch(e=>{console.error(e);server.close();process.exit(1);});

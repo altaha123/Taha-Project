@@ -78,7 +78,7 @@
     summary.appendChild(node('span','su-card-symbol',row.symbol));
     summary.appendChild(node('b','su-card-score',Number.isFinite(row.score) ? row.score + '/100' : 'Unscored'));
     summary.appendChild(node('span','su-card-name',row.name));
-    summary.appendChild(node('span','su-card-sector',row.sector));
+    if (row.sector) summary.appendChild(node('span','su-card-sector',row.sector));
     summary.appendChild(node('span','su-card-open','Explore finding ↗'));
     item.appendChild(summary);
     item.appendChild(node('p','su-card-finding',row.finding));

@@ -38,6 +38,27 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/portfolio-browser.cjs
+      - name: Verify the portfolio story reads, turns, keeps its place and respects motion-off
+        if: always()
+        # The review opens as a story; the full report stays closed until
+        # asked for and opens with its charts drawn. Staged updates keep the
+        # reader's chapter; with reduced motion nothing animates or hides.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/portfolio-story-browser.cjs
+      - name: Verify the Pro waitlist sends what it says, and saved screens sync
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/pro-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: story-and-pro-screenshots
+          path: |
+            test-results/portfolio-story
+            test-results/pro
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: always()
         with:

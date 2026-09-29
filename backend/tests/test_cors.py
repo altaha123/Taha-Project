@@ -33,13 +33,22 @@ def test_every_method_the_api_serves_is_allowed_through_cors():
     )
 
 
-def test_the_two_put_routes_are_the_ones_that_save_to_an_account():
+def test_the_put_routes_are_the_ones_that_save_to_an_account():
     """If these stop being PUT the comment above stops being true, and the
     next person reading it is misled about why this file exists."""
     puts = {r.path for r in main.app.routes
             if "PUT" in (getattr(r, "methods", None) or ())}
-    assert puts == {"/me/portfolio", "/me/watchlist"}
+    assert puts == {"/me/portfolio", "/me/watchlist", "/me/screens"}
     assert "PUT" in main.ALLOWED_METHODS
+
+
+def test_deleting_a_saved_screen_is_allowed_through_cors():
+    """DELETE arrived with saved screens. Left off the allow-list, the
+    browser's preflight would refuse it and the screen would never go."""
+    deletes = {r.path for r in main.app.routes
+               if "DELETE" in (getattr(r, "methods", None) or ())}
+    assert deletes == {"/me/screens/{screen_id}"}
+    assert "DELETE" in main.ALLOWED_METHODS
 
 
 def test_the_allow_list_is_what_the_middleware_was_given():

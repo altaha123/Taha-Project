@@ -165,6 +165,44 @@ The next load retries it instead of adopting the older copy.
 `frontend/tests/watchlist-browser.cjs` drives all three of those in a real
 browser, because every one of them fails silently: the star still turns gold.
 
+## The watchlist in the daily email
+
+The daily email now ends with **On your watchlist**: the stocks a subscriber
+follows but does not own, and only the ones that did something — a filing, one
+of the checkable observations (a 52-week high, a moving-average crossing, a
+volume spike, a gap), or a move of 3% or more. A list of every starred name
+with a price beside it is a list nobody reads by the third day, so quiet stocks
+are left out; at most six are shown, filings first (`digest.watchlist_section`).
+
+Watched and held stocks are priced in the same pass, so a stock both owned and
+followed is fetched once. **Who gets the email has not changed**: it still goes
+to subscribers with a saved portfolio. Somebody who has only starred stocks gets
+no email yet — turning that on would start mailing people who never received
+one, and is a decision to make on purpose.
+
+## Saved screens
+
+The query screener can name and keep a screen (`/me/screens`: GET, PUT by name,
+DELETE by id; 25 per account). Signed out, screens are kept in the browser;
+the first sign-in on that browser moves them to the account. The DELETE is why
+`ALLOWED_METHODS` in `main.py` now includes it — `test_cors.py` failed until it
+did, which is exactly the failure that file exists to catch.
+
+## The Pro waitlist
+
+`pro.html` shows the price and collects an address — a fake door, on purpose:
+the cheapest honest measure of whether anybody would pay before anything is
+built to take the money. Nothing is charged, and the page says so.
+
+- `POST /pro/waitlist` `{email, source, plan}`. Signed in, the account's
+  address is used. Joining twice is one row; the first source and plan are
+  kept. Five joins an hour per visitor.
+- `GET /admin/pro-waitlist` with `X-Admin-Key` — the count, by source and by
+  plan, and the addresses. **Closed when `ADMIN_KEY` is unset**, unlike the
+  control endpoints, because it returns personal data.
+- `source` says where the reader came from: `header`, `menu`, `story`
+  (the portfolio story's last chapter), `direct`.
+
 ## Design decisions worth knowing
 
 **Bearer tokens, not cookies.** The site and the API are on different origins.

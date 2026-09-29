@@ -103,6 +103,59 @@ def resolve(raw: str):
     raise NotFound(raw)
 
 
+def with_stored_profile(symbol, info, price=None):
+    """
+    `info` with its identity fields filled from the stored Yahoo profile where
+    the live read left them empty. Never overrides a live value. Never raises.
+
+    Yahoo's live `info` call is the one most often refused from a datacenter
+    address, and when it fails the scan banked the company with no sector, no
+    industry and its ticker for a name — the Universe Scan then printed
+    "Sector unavailable" on every row, and the v4 ranker lost the sector and
+    business-model peer pools for those names. The fundamentals crawl already
+    stores the same Yahoo fields for almost every NSE company, so a refusal
+    no longer costs the classification.
+
+    Same source, same taxonomy: yf_profile holds Yahoo's own sector and
+    industry, so a filled row is grouped with its live-read peers, never
+    beside them under a different name for the same industry.
+    """
+    out = dict(info or {})
+    raw = (symbol or "").strip().upper()
+    if raw.startswith("^") or (("." in raw) and not raw.endswith((".NS", ".BO"))):
+        return out
+    base = raw.replace(".NS", "").replace(".BO", "")
+    if all(out.get(k) for k in ("sector", "industry", "longName", "marketCap")):
+        return out
+    try:
+        import fundamentals_store
+        p = fundamentals_store.yf_profile(base)
+    except Exception:
+        p = None
+    if not p:
+        return out
+    if not out.get("sector") and p.get("sector"):
+        out["sector"] = p["sector"]
+    if not out.get("industry") and p.get("industry"):
+        out["industry"] = p["industry"]
+    if not (out.get("longName") or out.get("shortName")) and p.get("company"):
+        out["longName"] = p["company"]
+    if not out.get("marketCap"):
+        # Issued shares do not move with the market; the price does. Today's
+        # price times the stored share count is today's size, where the stored
+        # market cap is the size on the day the profile was read.
+        try:
+            shares, px = float(p.get("shares") or 0), float(price or 0)
+        except (TypeError, ValueError):
+            shares = px = 0
+        if shares > 0 and px > 0:
+            out["marketCap"] = shares * px
+        elif p.get("market_cap"):
+            out["marketCap"] = p["market_cap"]
+    out.setdefault("profile_source", "stored Yahoo profile")
+    return out
+
+
 def dividend_yield_pct(info, price=None):
     """
     Dividend yield as a PERCENTAGE (0.49 means 0.49%), or None.
@@ -370,6 +423,7 @@ def fundamentals(sym: str, t):
         info = dict(t.info or {})
     except Exception:
         info = {}
+    info = with_stored_profile(sym, info)
 
     info.update(ownership(t))
     out = (fin, bs, cf, info)

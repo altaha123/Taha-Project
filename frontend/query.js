@@ -95,6 +95,92 @@
   function remember(q) { try { localStorage.setItem(KEY, q); } catch (e) {} }
   function recall() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
 
+  /* ── Saved screens ──────────────────────────────────────────────────────
+     Named queries the reader keeps. Signed in they live on the account
+     (/me/screens) and follow the reader to every device; signed out they are
+     kept in this browser, and move to the account the first time the reader
+     signs in here. One list either way — the reader never has to know which
+     store it came from. */
+
+  var SAVED_KEY = 'altaha.query.saved';
+  var saved = [];
+
+  function signedIn() { return !!(window.AltahaAuth && window.AltahaAuth.authed && window.AltahaAuth.authed()); }
+  function localScreens() {
+    try { var v = JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function writeLocal(list) { try { localStorage.setItem(SAVED_KEY, JSON.stringify(list.slice(0, 25))); } catch (e) {} }
+  function api(path, opts) {
+    return window.AltahaAuth.fetch(path, opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) throw new Error(typeof d.detail === 'string' ? d.detail : 'Could not reach your account.');
+        return d;
+      });
+    });
+  }
+
+  function loadSaved() {
+    if (!signedIn()) { saved = localScreens(); paintSaved(); return Promise.resolve(saved); }
+    // Screens kept in this browser before signing in go to the account once.
+    var pending = localScreens();
+    var upload = pending.reduce(function (p, sc) {
+      return p.then(function () {
+        return api('/me/screens', { method: 'PUT', body: JSON.stringify({ name: sc.name, query: sc.query }) })
+          .catch(function () {});
+      });
+    }, Promise.resolve());
+    return upload.then(function () {
+      if (pending.length) writeLocal([]);
+      return api('/me/screens');
+    }).then(function (d) { saved = d.screens || []; paintSaved(); return saved; })
+      .catch(function () { saved = localScreens(); paintSaved(); return saved; });
+  }
+
+  function paintSaved() {
+    var box = $('qs-saved');
+    if (!box) return;
+    if (!saved.length) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    box.innerHTML = '<span class="qs-exlab">Your screens</span>' + saved.map(function (sc, i) {
+      return '<span class="qs-schip"><button type="button" class="qs-chip" data-saved="' + i + '" title="' +
+        esc(String(sc.query).replace(/\n/g, ' AND ')) + '">' + esc(sc.name) + '</button>' +
+        '<button type="button" class="qs-sdel" data-delsaved="' + i + '" aria-label="Delete saved screen ' +
+        esc(sc.name) + '">×</button></span>';
+    }).join('') + (signedIn() ? '' : '<a class="qs-ssign" href="signin.html">Sign in to keep them on every device</a>');
+  }
+
+  function saveScreen(name, query) {
+    name = String(name || '').replace(/\s+/g, ' ').trim();
+    if (!name) return Promise.reject(new Error('Give the screen a name.'));
+    if (!query) return Promise.reject(new Error('There is no query to save.'));
+    if (signedIn()) {
+      return api('/me/screens', { method: 'PUT', body: JSON.stringify({ name: name, query: query }) })
+        .then(function (d) { saved = d.screens || []; paintSaved(); });
+    }
+    var list = localScreens().filter(function (sc) { return sc.name !== name; });
+    if (list.length >= 25) return Promise.reject(new Error('You have 25 saved screens — delete one to save another.'));
+    list.unshift({ name: name, query: query, updated_at: new Date().toISOString() });
+    writeLocal(list);
+    saved = list; paintSaved();
+    return Promise.resolve();
+  }
+
+  function deleteSaved(i) {
+    var sc = saved[i];
+    if (!sc) return;
+    if (signedIn() && sc.id != null) {
+      api('/me/screens/' + encodeURIComponent(sc.id), { method: 'DELETE' })
+        .then(function (d) { saved = d.screens || []; paintSaved(); })
+        .catch(function () {});
+      return;
+    }
+    var list = localScreens().filter(function (x) { return x.name !== sc.name; });
+    writeLocal(list); saved = list; paintSaved();
+  }
+
+  window.addEventListener('altaha-auth', function () { if (built) loadSaved(); });
+
   /* ── The page ────────────────────────────────────────────────────────── */
 
   function skeleton(host) {
@@ -106,6 +192,7 @@
         'margins, debt, cash flow, valuation and ownership — and see every company that ' +
         'meets them. Start from an example, build a line with the boxes, or just type.</p>' +
       '</header>' +
+      '<div class="qs-saved" id="qs-saved" aria-label="Your saved screens" hidden></div>' +
       '<div class="qs-examples" id="qs-examples" aria-label="Example queries"></div>' +
       '<div class="qs-card">' +
         '<div class="qs-builder" role="group" aria-label="Add a condition">' +
@@ -136,7 +223,15 @@
             '<button type="button" class="qs-btn qs-btn-go" id="qs-run">Run query</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-clear">Clear</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-copy" hidden>Copy link</button>' +
+            '<button type="button" class="qs-btn qs-btn-ghost" id="qs-save">Save screen</button>' +
           '</div>' +
+          '<form class="qs-saveform" id="qs-saveform" hidden>' +
+            '<label for="qs-savename">Name this screen</label>' +
+            '<input id="qs-savename" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Cheap compounders">' +
+            '<button type="submit" class="qs-btn qs-btn-go" id="qs-savego">Save</button>' +
+            '<button type="button" class="qs-btn qs-btn-ghost" id="qs-savecancel">Cancel</button>' +
+            '<p class="qs-savemsg" id="qs-savemsg" role="status"></p>' +
+          '</form>' +
         '</div>' +
       '</div>' +
       '<div id="qs-out" class="qs-out" aria-live="polite"></div>' +
@@ -535,7 +630,34 @@
         run(true);
       } else if (b.id === 'qs-csv') {
         downloadCsv();
+      } else if (b.hasAttribute('data-saved')) {
+        var sc = saved[+b.getAttribute('data-saved')];
+        if (sc) { t.value = sc.query; state.sort = ''; run(false); }
+      } else if (b.hasAttribute('data-delsaved')) {
+        deleteSaved(+b.getAttribute('data-delsaved'));
       }
+    });
+    $('qs-save').addEventListener('click', function () {
+      var f = $('qs-saveform');
+      $('qs-savemsg').textContent = '';
+      if (!t.value.trim()) {
+        f.hidden = false;
+        $('qs-savemsg').textContent = 'Write or pick a query first, then save it.';
+        return;
+      }
+      f.hidden = false;
+      $('qs-savename').focus();
+    });
+    $('qs-savecancel').addEventListener('click', function () { $('qs-saveform').hidden = true; });
+    $('qs-saveform').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = $('qs-savemsg');
+      msg.textContent = '';
+      saveScreen($('qs-savename').value, t.value.trim()).then(function () {
+        msg.textContent = 'Saved.';
+        $('qs-savename').value = '';
+        setTimeout(function () { $('qs-saveform').hidden = true; msg.textContent = ''; }, 900);
+      }).catch(function (err) { msg.textContent = err.message || 'Could not save that screen.'; });
     });
   }
 
@@ -546,6 +668,7 @@
       built = true;
       skeleton(host);
       wire(host);
+      loadSaved();
     }
     var fromHash = queryFromHash();
     if (meta) { start(fromHash); return; }

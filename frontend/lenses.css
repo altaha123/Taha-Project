@@ -251,8 +251,6 @@
 .ln-strip-n{ font:400 20px/1.1 'Instrument Serif',Georgia,serif }
 .ln-strip-n b{ font-weight:400; color:var(--gold) }
 .ln-strip-note{ flex-basis:100%; margin:0; font-size:11.5px; color:var(--mute); line-height:1.4 }
-.ln-strip.is-empty{ font-size:13px; color:var(--mute) }
-.ln-strip.is-empty a{ color:var(--gold) }
 
 /* ── States and the notice ───────────────────────────────────────────────── */
 

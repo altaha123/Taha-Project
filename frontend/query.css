@@ -153,3 +153,24 @@
   .qs-ac li span{ display:none }
   .qs-csv{ margin-left:0 }
 }
+
+/* Saved screens: the reader's own chips above the examples, and the small
+   inline form that names one. */
+.qs-saved{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:18px 0 0 }
+.qs-saved[hidden]{ display:none }
+.qs-schip{ display:inline-flex; align-items:stretch }
+.qs-schip .qs-chip{ border-top-right-radius:0; border-bottom-right-radius:0; border-color:var(--gold) }
+.qs-sdel{ border:1px solid var(--gold); border-left:0; background:var(--paper-2); color:var(--mute);
+  border-radius:0 999px 999px 0; padding:0 10px; cursor:pointer; font-size:15px; line-height:1; min-width:32px }
+.qs-sdel:hover{ color:var(--fail) }
+.qs-sdel:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.qs-ssign{ font-size:12.5px; color:var(--mute); margin-left:4px }
+.qs-saveform{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px;
+  padding:12px; border:1px dashed var(--rule); border-radius:12px }
+.qs-saveform[hidden]{ display:none }
+.qs-saveform label{ font-size:13px; font-weight:600; width:100% }
+.qs-saveform input{ flex:1 1 220px; min-height:42px; padding:9px 12px; border-radius:10px;
+  border:1px solid var(--rule); background:var(--paper); color:var(--ink); font:400 15px Inter,system-ui,sans-serif }
+.qs-saveform input:focus{ outline:2px solid var(--gold); outline-offset:1px }
+.qs-savemsg{ width:100%; margin:0; font-size:13px; color:var(--mute) }
+.qs-savemsg:empty{ display:none }

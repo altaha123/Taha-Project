@@ -356,8 +356,9 @@ app.include_router(news_routes.router)
 # for every watchlist edit alike.
 #
 # test_cors.py derives this from the app's own routing table, so adding a route
-# with a new method fails there rather than in somebody's browser.
-ALLOWED_METHODS = ["GET", "POST", "PUT", "OPTIONS"]
+# with a new method fails there rather than in somebody's browser. (It did,
+# for DELETE /me/screens/{id}, before a browser ever saw it.)
+ALLOWED_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -4086,6 +4087,116 @@ def merge_my_watchlist(payload: dict = Body(...),
     return accounts.merge_watchlist(user["id"], symbols)
 
 
+# ---------------------------------------------------------------------------
+# Saved screens (the query screener)
+# ---------------------------------------------------------------------------
+
+@app.get("/me/screens")
+def my_screens(authorization: Optional[str] = Header(None)):
+    import accounts
+    user = _require_user(authorization)
+    return {"screens": accounts.list_screens(user["id"]), "limit": accounts.MAX_SCREENS}
+
+
+@app.put("/me/screens")
+def save_my_screen(payload: dict = Body(...), authorization: Optional[str] = Header(None)):
+    """Save a screen by name; saving the same name again updates it."""
+    import accounts
+    user = _require_user(authorization)
+    try:
+        screen = accounts.save_screen(user["id"], payload.get("name"), payload.get("query"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"screen": screen, "screens": accounts.list_screens(user["id"])}
+
+
+@app.delete("/me/screens/{screen_id}")
+def delete_my_screen(screen_id: int, authorization: Optional[str] = Header(None)):
+    import accounts
+    user = _require_user(authorization)
+    if not accounts.delete_screen(user["id"], screen_id):
+        raise HTTPException(404, "No such saved screen.")
+    return {"screens": accounts.list_screens(user["id"])}
+
+
+# ---------------------------------------------------------------------------
+# The Pro waitlist
+#
+# A fake door, on purpose: the price is shown, the button is real, and what it
+# collects is an address and where it came from — the cheapest honest measure
+# of whether anybody would pay before anything is built to take the money.
+# No payment is taken and none is implied; the page says so.
+# ---------------------------------------------------------------------------
+
+_waitlist_hits = {}
+_waitlist_lock = threading.Lock()
+WAITLIST_PER_HOUR = 5
+
+
+def _waitlist_throttle(visitor: str) -> bool:
+    """True when this visitor has joined too often in the last hour. A public
+    form that writes a row per request needs a ceiling, or it is a way to fill
+    the disk."""
+    now = time.time()
+    with _waitlist_lock:
+        hits = [t for t in _waitlist_hits.get(visitor, []) if now - t < 3600]
+        if len(hits) >= WAITLIST_PER_HOUR:
+            _waitlist_hits[visitor] = hits
+            return True
+        hits.append(now)
+        _waitlist_hits[visitor] = hits
+        if len(_waitlist_hits) > 5000:           # bounded, like every cache here
+            for k in list(_waitlist_hits)[:1000]:
+                _waitlist_hits.pop(k, None)
+    return False
+
+
+@app.post("/pro/waitlist")
+def join_pro_waitlist(request: Request, payload: dict = Body(...),
+                      authorization: Optional[str] = Header(None)):
+    """Join the Pro waitlist. Signed in, the account's address is used and
+    none need be typed."""
+    import accounts
+    user = None
+    if authorization:
+        try:
+            user = accounts.user_for_session(_bearer(authorization))
+        except Exception:
+            user = None
+    email = (user or {}).get("email") or payload.get("email")
+    fwd = request.headers.get("x-forwarded-for") or ""
+    visitor = fwd.split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    if _waitlist_throttle(visitor):
+        raise HTTPException(429, "That is a lot of sign-ups from one place. Try again in an hour.")
+    try:
+        out = accounts.join_waitlist(email, source=payload.get("source") or "",
+                                     plan=payload.get("plan") or "",
+                                     user_id=(user or {}).get("id"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {**out, "signed_in": bool(user)}
+
+
+@app.get("/pro/waitlist/me")
+def my_waitlist_status(authorization: Optional[str] = Header(None)):
+    import accounts
+    user = _require_user(authorization)
+    return {"on_waitlist": accounts.on_waitlist(user["email"])}
+
+
+@app.get("/admin/pro-waitlist")
+def admin_pro_waitlist(key: str = "", x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Everyone who joined, for the owner. Addresses are personal data, so
+    unlike the control endpoints this one is CLOSED when ADMIN_KEY is unset."""
+    import accounts
+    if not ADMIN_KEY or (x_admin_key or key) != ADMIN_KEY:
+        raise HTTPException(401, "This needs the admin key (X-Admin-Key, or ?key=).")
+    try:
+        return accounts.waitlist_summary()
+    except Exception as e:
+        raise HTTPException(503, f"The accounts database is unavailable: {type(e).__name__}")
+
+
 @app.post("/me/digest/settings")
 def my_digest_settings(payload: dict = Body(...),
                        authorization: Optional[str] = Header(None)):
@@ -4124,7 +4235,7 @@ def unsubscribe_post(token: str = ""):
 # The daily send
 # ---------------------------------------------------------------------------
 
-def _build_one_digest(holdings: list, index_pct=None):
+def _build_one_digest(holdings: list, index_pct=None, watchlist=None):
     import digest as digest_mod
     ann_window = digest_mod.FILING_WINDOW_MINUTES
 
@@ -4135,7 +4246,8 @@ def _build_one_digest(holdings: list, index_pct=None):
             return []
 
     return digest_mod.build_digest(holdings, resolve=resolve,
-                                   filings_for=_filings, index_pct=index_pct)
+                                   filings_for=_filings, index_pct=index_pct,
+                                   watchlist=watchlist)
 
 
 def _index_day_pct():
@@ -4179,7 +4291,8 @@ def send_my_digest_now(authorization: Optional[str] = Header(None)):
     if not holdings:
         raise HTTPException(400, "Save a portfolio first.")
 
-    d = _build_one_digest(holdings, _index_day_pct())
+    d = _build_one_digest(holdings, _index_day_pct(),
+                          watchlist=accounts.get_watchlist(user["id"]))
     unsub = f"{_site()}/unsubscribe?token={user['unsub_token']}"
     ok, detail = mailer.send(
         user["email"], email_render.subject(d),
@@ -4227,7 +4340,8 @@ def run_daily_digest(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Ke
             skipped += 1
             continue
         try:
-            d = _build_one_digest(holdings, index_pct)
+            d = _build_one_digest(holdings, index_pct,
+                                  watchlist=accounts.get_watchlist(person["id"]))
         except Exception as e:
             failed += 1
             accounts.record_send(person["id"], "daily", today, False,
