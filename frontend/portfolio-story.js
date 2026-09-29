@@ -526,7 +526,8 @@
     return '<dl class="ps-recap">' + v.facts.map(function (f, i) {
       return '<div style="--i:' + i + '"><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>';
     }).join('') + '</dl><div class="ps-end"><button type="button" class="ps-btn primary" data-ps="full">Read the full report</button>' +
-      '<button type="button" class="ps-btn" data-ps="replay">Watch again</button></div>';
+      '<button type="button" class="ps-btn" data-ps="replay">Watch again</button></div>' +
+      '<a class="ps-pro" href="pro.html?from=story" data-ps-pro>Altaha Pro: this story, plus an email about your holdings and watchlist after every close <span aria-hidden="true">→</span></a>';
   }
 
   /* ── The player ───────────────────────────────────────────────────────── */
@@ -607,6 +608,8 @@
     host.addEventListener('click', function (e) {
       var st = state();
       if (!st) return;
+      var pro = e.target.closest ? e.target.closest('[data-ps-pro]') : null;
+      if (pro && root.AltahaTrack) root.AltahaTrack('pro_cta_clicked', { from: 'story' });
       var t = e.target.closest ? e.target.closest('[data-ps],[data-ps-go]') : null;
       if (!t || !host.contains(t)) return;
       var act = t.getAttribute('data-ps');

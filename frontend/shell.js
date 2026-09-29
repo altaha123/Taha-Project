@@ -307,6 +307,16 @@
     account.id = 'sh-account';
     account.href = 'signin.html';
     account.textContent = 'Sign in';
+    // Pro: what it costs and what it adds, one tap from anywhere. The page
+    // behind it is a waitlist — nothing is sold yet (see pro.html).
+    var pro = el('a', 'sh-pro');
+    pro.id = 'sh-pro';
+    pro.href = 'pro.html?from=header';
+    pro.textContent = 'Pro';
+    pro.addEventListener('click', function () {
+      if (window.AltahaTrack) window.AltahaTrack('pro_cta_clicked', { from: 'header' });
+    });
+    right.appendChild(pro);
     right.appendChild(account);
 
     right.appendChild(themeBtn);
@@ -434,7 +444,9 @@
         sec.cols.map(function (c) {
           return c.items.map(function (it) { return itemHTML(sec.id, it); }).join('');
         }).join('') + '</div>';
-    }).join('');
+    }).join('') +
+      '<div class="sh-col"><a class="sh-dpro" href="pro.html?from=menu"><b>Altaha Pro</b>' +
+      '<span>The portfolio story, watchlist alerts and saved screens — ₹1,999 a year</span></a></div>';
 
     var burger = document.getElementById('sh-burger');
     var drawerClose = el('button', 'ux-button', 'Close menu');

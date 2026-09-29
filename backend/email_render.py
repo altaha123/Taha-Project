@@ -179,6 +179,30 @@ def render_html(digest: dict, *, site: str = "https://altahascreener.in",
         f'Observations, not instructions. Each one is checkable on the chart.</p>'
     ) if obs else ""
 
+    # The watchlist: only stocks that did something today. See digest.py.
+    watch = ""
+    for w in (digest.get("watchlist") or []):
+        move = w.get("day_change_pct")
+        bits = []
+        if w.get("filing"):
+            bits.append(f'{_esc(w["filing"].get("category") or "Filing")}: {_esc(w["filing"].get("headline"))}')
+        bits += [_esc(o) for o in (w.get("observations") or [])]
+        watch += (
+            f'<tr><td style="padding:8px 0;border-bottom:1px solid {LINE}">'
+            f'<span style="font:600 13px Georgia,serif;color:{INK}">{_esc(w["symbol"])}</span> '
+            f'<span style="font:400 13px Arial,sans-serif;color:{_tone(move)}">{pct(move)}</span>'
+            + (f'<div style="font:400 13px Arial,sans-serif;color:{INK};padding-top:3px">{" · ".join(bits)}</div>' if bits else "")
+            + (f'<a href="{_esc(w["filing"]["pdf"])}" style="font:400 12px Arial,sans-serif;color:{MUTE}">Open the filing →</a>'
+               if (w.get("filing") or {}).get("pdf") else "")
+            + "</td></tr>"
+        )
+    watch_block = (
+        f'<h2 style="font:400 17px Georgia,serif;color:{INK};margin:30px 0 4px">On your watchlist</h2>'
+        f'<p style="font:400 12px Arial,sans-serif;color:{MUTE};margin:0 0 6px">'
+        f'Stocks you follow that filed something, crossed a line on the chart, or moved 3% or more.</p>'
+        f'<table width="100%" cellpadding="0" cellspacing="0">{watch}</table>'
+    ) if watch else ""
+
     rows = "".join(_row_cells(r) for r in (digest.get("rows") or []))
     missing = digest.get("missing") or []
     missing_block = (
@@ -215,6 +239,7 @@ Altaha Screener · {_esc(digest.get("date", ""))}</div>
 
 {events_block}
 {obs_block}
+{watch_block}
 
 <div style="padding-top:28px">
 <a href="{_esc(site)}" style="font:600 13px Arial,sans-serif;color:#ffffff;background:{INK};
@@ -255,6 +280,15 @@ def render_text(digest: dict, *, site: str = "https://altahascreener.in",
         out += ["", "WORTH A LOOK (observations, not instructions)"]
         for o in digest["observations"][:5]:
             out.append(f"  {o['symbol']} {o['line']}")
+    if digest.get("watchlist"):
+        out += ["", "ON YOUR WATCHLIST"]
+        for w in digest["watchlist"]:
+            line = f"  {w['symbol']} {pct(w.get('day_change_pct'))}"
+            if w.get("filing"):
+                line += f" — {w['filing'].get('category') or 'filing'}: {w['filing'].get('headline')}"
+            for o in w.get("observations") or []:
+                line += f" · {o}"
+            out.append(line)
     out += ["", f"Full report: {site}", "",
             "Educational analysis only — scores and evidence, never a "
             "recommendation to buy or sell."]

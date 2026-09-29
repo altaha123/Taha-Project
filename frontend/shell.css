@@ -431,6 +431,21 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
   transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 .sh-account:hover{ background:var(--paper-2); color:var(--ink) }
+.sh-pro{
+  font:700 12px/1 Inter, system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase;
+  color:#17140E; background:var(--gold); text-decoration:none; padding:9px 12px;
+  border:1px solid var(--gold); border-radius:9px; white-space:nowrap;
+  transition:filter var(--t-fast) var(--ease);
+}
+.sh-pro:hover{ filter:brightness(1.08) }
+.sh-pro:focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
+.sh-dpro{ display:grid; gap:4px; padding:14px; border-radius:12px; border:1px solid var(--gold);
+  text-decoration:none; color:var(--ink); background:var(--paper-2) }
+.sh-dpro b{ color:var(--gold); font-size:15px }
+.sh-dpro span{ font-size:13px; color:var(--mute) }
+/* On the narrowest phones (320px) the header row has room for sign-in, theme
+   and the menu and no more; Pro is in the menu there. */
+@media (max-width:359px){ .sh-bar .sh-right .sh-pro{ display:none } }
 /* Keep account access visible on phones. Give search its own full-width
    row so sign-in, theme and menu remain usable even at 320px. The shared
    height token also positions the page and mobile drawer below both rows. */
@@ -453,6 +468,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
     background:var(--paper-2); border-color:var(--gold);
   }
   .sh-bar .sh-account:focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
+  .sh-bar .sh-pro{ min-height:44px; display:grid; place-items:center; padding:0 12px }
 }
 
 .sh-burger{ display:none }

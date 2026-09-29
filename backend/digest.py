@@ -175,8 +175,54 @@ def symbol_facts_bulk(symbols: Iterable[str], *, resolve, filings_for=None) -> d
 # The digest
 # ---------------------------------------------------------------------------
 
+# A watched stock earns a line in the email only when something happened to
+# it: a filing, one of the checkable observations above, or a move at least
+# this big. A list of every starred name with a price beside it is a list
+# nobody reads by the third day.
+WATCH_MOVE_PCT = 3.0
+WATCH_MAX = 6
+
+
+def watchlist_section(symbols, facts: dict, held=()) -> list:
+    """What happened today to the stocks a reader follows but does not own.
+
+    Uses the facts the holdings were priced from, so a watched stock costs
+    nothing when it is also held and one fetch when it is not. Held names are
+    left out: the holdings table already covers them. Filings first, then the
+    biggest moves — the same order of attention as the rest of the email.
+    """
+    held = {_sym(s) for s in held}
+    order = {"critical": 4, "high": 3, "medium": 2, "low": 1, "routine": 0}
+    out, seen = [], set()
+    for raw in symbols or []:
+        sym = _sym(raw)
+        if not sym or sym in held or sym in seen:
+            continue
+        seen.add(sym)
+        f = facts.get(sym) or {}
+        if f.get("error") or f.get("price") is None:
+            continue
+        move = _num(f.get("day_change_pct"))
+        filings = [x for x in (f.get("filings") or []) if isinstance(x, dict)]
+        obs = list(f.get("observations") or [])
+        if not filings and not obs and (move is None or abs(move) < WATCH_MOVE_PCT):
+            continue
+        top = max(filings, key=lambda x: order.get(x.get("importance"), 0)) if filings else None
+        out.append({
+            "symbol": sym, "price": f["price"], "day_change_pct": move,
+            "observations": obs[:2],
+            "filing": ({"category": top.get("category"), "headline": top.get("headline"),
+                        "pdf": top.get("pdf")} if top else None),
+            "_rank": (order.get((top or {}).get("importance"), -1) if top else -1, abs(move or 0)),
+        })
+    out.sort(key=lambda w: w["_rank"], reverse=True)
+    for w in out:
+        w.pop("_rank", None)
+    return out[:WATCH_MAX]
+
+
 def build_digest(holdings: list, *, resolve, filings_for=None, now=None,
-                 index_pct=None, movers: int = 3) -> dict:
+                 index_pct=None, movers: int = 3, watchlist=None) -> dict:
     """One reader's day.
 
     holdings: [{"symbol": "INFY", "qty": 10, "avg_price": 1400.0}, ...]
@@ -188,7 +234,10 @@ def build_digest(holdings: list, *, resolve, filings_for=None, now=None,
     rows, missing = [], []
 
     wanted = [_sym(h.get("symbol")) for h in holdings if isinstance(h, dict)]
-    facts = symbol_facts_bulk(wanted, resolve=resolve, filings_for=filings_for)
+    watched = [_sym(s) for s in (watchlist or []) if _sym(s)]
+    # One fetch for the union: a stock both held and watched is read once.
+    facts = symbol_facts_bulk(wanted + [s for s in watched if s not in wanted],
+                              resolve=resolve, filings_for=filings_for)
 
     for h in holdings:
         if not isinstance(h, dict):
@@ -285,6 +334,7 @@ def build_digest(holdings: list, *, resolve, filings_for=None, now=None,
         "observations": notes[:8],
         "rows": sorted(rows, key=lambda r: r["value"], reverse=True),
         "missing": missing,
+        "watchlist": watchlist_section(watched, facts, held=[r["symbol"] for r in rows]),
     }
 
 
@@ -298,7 +348,7 @@ def is_worth_sending(digest: dict, *, min_move_pct: float = 0.0) -> bool:
     """
     if not digest or not digest.get("holdings_counted"):
         return False
-    if digest.get("events") or digest.get("observations"):
+    if digest.get("events") or digest.get("observations") or digest.get("watchlist"):
         return True
     move = abs(_num(digest.get("totals", {}).get("day_change_pct")) or 0)
     return move >= min_move_pct

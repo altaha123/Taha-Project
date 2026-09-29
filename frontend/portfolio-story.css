@@ -168,6 +168,10 @@
 .ps-recap dd{margin:5px 0 0;font-size:16px;font-weight:650;overflow-wrap:anywhere}
 .ps-end{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 .ps-ch.is-on .ps-recap div{animation:ps-rise .45s ease-out backwards;animation-delay:calc(.2s + var(--i) * 80ms)}
+.ps-pro{display:block;margin-top:14px;padding:12px 14px;border-radius:12px;border:1px dashed var(--gold,#A8801C);
+  color:var(--ink,#17140E);text-decoration:none;font-size:13.5px;line-height:1.45}
+.ps-pro:hover{background:var(--paper-2,#F3EFE4)}
+.ps-pro span{color:var(--gold,#A8801C);font-weight:700}
 
 /* navigation */
 .ps-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--rule,#E2DACA);padding-top:14px;margin-top:4px}
