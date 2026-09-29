@@ -199,6 +199,24 @@ def test_a_switch_is_only_ever_into_the_same_industry():
         "with no industry known there is no switch, not a sector guess"
 
 
+def test_a_switch_is_into_a_company_of_similar_size():
+    """Live, 29 Sep 2026: Tata Steel (about ₹2.3 lakh crore) was offered
+    Steelcast, a hundredth its size, and Reliance was offered Castrol. Same
+    industry label; not the same bet."""
+    uni = [{"symbol": "STEELCAS", "name": "Steelcast", "sector": "Basic Materials", "industry": "Steel",
+            "position_score": 66, "market_cap": 1.6e10},
+           {"symbol": "JSWSTEEL", "name": "JSW Steel", "sector": "Basic Materials", "industry": "Steel",
+            "position_score": 60, "market_cap": 2.6e12}]
+    r, _ = row("TATASTEEL", score=32, sector="Basic Materials")
+    r.update(industry="Steel", valuation={"market_cap": 2.35e12})
+    alts = P.alternatives_for(r, P._universe({"factor_universe": uni}), held={"TATASTEEL"})
+    assert [a["symbol"] for a in alts] == ["JSWSTEEL"], "the hundred-times-smaller foundry is not offered"
+    assert P.alternatives_for(r, P._universe({"factor_universe": uni[:1]}), held={"TATASTEEL"}) == []
+    r.pop("valuation")
+    alts = P.alternatives_for(r, P._universe({"factor_universe": uni}), held={"TATASTEEL"})
+    assert [a["symbol"] for a in alts] == ["STEELCAS", "JSWSTEEL"], "an unknown size is not held against a company"
+
+
 def test_pace_digitek_is_never_offered_emudhra():
     """Reported by the owner: Pace Digitek (communication equipment — telecom
     towers) was offered eMudhra (application software — digital signatures).

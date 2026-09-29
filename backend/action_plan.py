@@ -7,7 +7,7 @@ One call per holding — EXIT, TRIM, AVERAGE, ADD or HOLD — with the exact
 number of shares and rupees, one plain sentence saying why, the evidence
 behind it, and where a stronger stock exists in exactly the same industry,
 its name.
-Then the industries that are doing well where the reader holds little, with
+Then the sectors that are doing well where the reader holds little, with
 the best-scoring stocks in each.
 
 This is advice, deliberately. The owner chose to show it to every visitor,
@@ -22,8 +22,8 @@ Fixed, written-down rules — no model, no fitted weights — over five inputs:
   score      the holding's Altaha Score v4 (0-100, peer-relative)
   size       its share of the reader's money, against THEIR per-stock limit
   P&L        how far it is above or below what they paid
-  industry   whether its sector index is beating or trailing the Nifty 50
-  stronger   whether a company in exactly the same industry ("Steel",
+  sector     whether its sector index is beating or trailing the Nifty 50
+  stronger   whether a similar-sized company in exactly the same industry ("Steel",
              "Communication Equipment") scores clearly better. Never the broad
              sector: "Technology" holds a telecom-tower builder and a
              digital-signature software house, and offering one for the
@@ -39,12 +39,12 @@ evidence toward 50, so 45 is not "bad", it is ordinary. Calling EXIT below
   WEAK    <40   (or the reader's own floor, if lower)
   POOR    <33   bottom ~5%
 
-  EXIT     POOR; or WEAK and (industry trailing, or down past the reader's
+  EXIT     POOR; or WEAK and (sector trailing, or down past the reader's
            review mark); or WEAK and too small to matter
   TRIM     WEAK (sell half); or above the reader's per-stock limit (sell
            down to it)
-  AVERAGE  GOOD, 10%+ below cost, industry not trailing, room under the limit
-  ADD      STRONG, under the add target, industry not trailing
+  AVERAGE  GOOD, 10%+ below cost, sector not trailing, room under the limit
+  ADD      STRONG, under the add target, sector not trailing
   HOLD     everything else
 
 Every figure a call prints is arithmetic on the report the reader already
@@ -68,6 +68,7 @@ SMALL_PCT = 3.0          # a position this small cannot move the portfolio
 ADD_TARGET_PCT = 10.0    # ADD works up toward this, or the reader's limit if lower
 AVERAGE_BELOW_PCT = 10.0 # averaging needs the price at least this far under cost
 PEER_GAP = 8.0           # a stronger alternative must beat the holding by this much
+SIZE_BAND = 5.0          # ...and be within this factor of its market value, either way
 MAX_ADDS = 3             # new-money calls per plan, strongest first
 TRAILING = ("Lagging", "Weakening")
 LEADING = ("Leading", "Improving")
@@ -75,17 +76,17 @@ ORDER = ["EXIT", "TRIM", "AVERAGE", "ADD", "HOLD"]
 
 DISCLAIMER = (
     "These calls come from fixed rules applied to each company's Altaha Score, its "
-    "industry's trend and the limits you set — the rules are written out on the page. "
+    "sector's trend and the limits you set — the rules are written out on the page. "
     "Altaha is not registered with SEBI as an investment adviser or research analyst, and "
     "the rules do not know your goals, tax position or other savings. Treat each call as a "
     "starting point, read its reasons, and decide for yourself. Markets carry risk of loss.")
 
 METHOD = (
     "Strong = score 60+, good = 55+, weak = under 40 (or your own floor if lower), poor = "
-    "under 33. Exit: poor, or weak with a trailing industry or a loss past your review "
+    "under 33. Exit: poor, or weak with a trailing sector or a loss past your review "
     "mark. Trim: weak (sell half), or above your per-stock limit (sell down to it). "
-    "Average down: good score, 10%+ below your cost, industry not trailing. Add: strong "
-    "score, below 10% of your money (or your limit), industry not trailing. Otherwise hold.")
+    "Average down: good score, 10%+ below your cost, sector not trailing. Add: strong "
+    "score, below 10% of your money (or your limit), sector not trailing. Otherwise hold.")
 
 
 def _num(v):
@@ -243,7 +244,7 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
         reasons.append(f"{'Up' if p >= 0 else 'Down'} {_pct(p)} from what you paid.")
     if sector_state and sector_rel_3m is not None:
         side = "ahead of" if sector_rel_3m >= 0 else "behind"
-        reasons.append(f"Its industry is {_pct(sector_rel_3m)} {side} the Nifty 50 over three months "
+        reasons.append(f"Its sector is {_pct(sector_rel_3m)} {side} the Nifty 50 over three months "
                        f"({sector_state.lower()}).")
 
     # ── The call ───────────────────────────────────────────────────────────
@@ -269,7 +270,7 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
         why = f"Its evidence is poor: a score of {s:.0f}/100" + tail
     elif s < weak_below and trailing:
         action, conviction = "EXIT", "high"
-        why = f"Weak evidence (score {s:.0f}) and its industry is trailing the market."
+        why = f"Weak evidence (score {s:.0f}) and its sector is trailing the market."
     elif s < weak_below and p is not None and p <= -review:
         action, conviction = "EXIT", "medium"
         why = (f"Weak evidence (score {s:.0f}) and it is {_pct(p)} below what you paid — past the "
@@ -321,14 +322,14 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
             conviction = "high" if leading else "medium"
             move = _move("buy", n, row, total)
             why = (f"One of your strongest holdings (score {s:.0f}) but only {w:.1f}% of your money"
-                   + (", in an industry beating the market." if leading else "."))
+                   + (", in a sector beating the market." if leading else "."))
     if action == "HOLD" and not why:
         if s >= GOOD:
             conviction = "high"
             why = f"Solid evidence (score {s:.0f}) at a sensible size. Nothing to do."
         elif trailing:
             conviction = "low"
-            why = (f"Middling evidence (score {s:.0f}) and its industry is trailing. Keep it for now, "
+            why = (f"Middling evidence (score {s:.0f}) and its sector is trailing. Keep it for now, "
                    f"but it is first in line if you need to free money.")
         else:
             why = (f"Middling evidence (score {s:.0f}). Keep it, and look again after the next "
@@ -389,6 +390,19 @@ def _industry_of(row, industries=None):
     return _industry((industries or {}).get(sym)) or _industry((row or {}).get("industry"))
 
 
+def _cap(v):
+    v = _num(v)
+    return v if v and v > 0 else None
+
+
+def _similar_size(a, b):
+    """Within SIZE_BAND of each other, or unknown. Tata Steel (about ₹2.3 lakh
+    crore) was offered Steelcast (about a hundredth of that): same industry
+    label, but swapping a giant for a small-cap is a different bet, not a
+    better version of the same one."""
+    return a is None or b is None or 1.0 / SIZE_BAND <= b / a <= SIZE_BAND
+
+
 def _universe(scan_payload, industries=None):
     rows = (scan_payload or {}).get("factor_universe") or (scan_payload or {}).get("rankings") or []
     out = []
@@ -399,22 +413,24 @@ def _universe(scan_payload, industries=None):
         if r.get("symbol") and s is not None:
             out.append({"symbol": r["symbol"], "name": r.get("name") or r["symbol"],
                         "sector": _canon(r.get("sector")), "industry": _industry_of(r, industries),
-                        "score": s})
+                        "market_cap": _cap(r.get("market_cap")), "score": s})
     return out
 
 
 def alternatives_for(row, universe, held, limit=3, industries=None):
-    """Stronger companies in exactly the same industry, or none. A broad
-    sector is not a substitute: Pace Digitek (communication equipment) was
-    once offered eMudhra (application software) because both are
-    "Technology". No switch is better than a wrong one; the industries doing
+    """Stronger, similar-sized companies in exactly the same industry, or
+    none. A broad sector is not a substitute: Pace Digitek (communication
+    equipment) was once offered eMudhra (application software) because both
+    are "Technology". No switch is better than a wrong one; the sectors doing
     well are suggested separately, as what they are."""
     s = _num(row.get("composite"))
     ind = _industry_of(row, industries)
     if not ind:
         return []
+    cap = _cap((row.get("valuation") or {}).get("market_cap")) or _cap(row.get("market_cap"))
     floor = max(GOOD, (s or 0) + PEER_GAP)
-    pool = [u for u in universe if u.get("industry") == ind and u["symbol"] not in held and u["score"] >= floor]
+    pool = [u for u in universe if u.get("industry") == ind and u["symbol"] not in held and u["score"] >= floor
+            and _similar_size(cap, u.get("market_cap"))]
     pool.sort(key=lambda u: (-u["score"], u["symbol"]))
     return [{"symbol": u["symbol"], "name": u["name"], "score": round(u["score"], 1),
              "gap": round(u["score"] - (s or 0), 1) if s is not None else None,
@@ -422,7 +438,7 @@ def alternatives_for(row, universe, held, limit=3, industries=None):
 
 
 def rotation(report, universe, held, limit=3):
-    """Industries doing well where the reader holds less than the market does,
+    """Sectors doing well where the reader holds less than the market does,
     and the best-scoring stocks in each."""
     states = {_canon(m.get("sector")): m for m in ((report.get("sector_momentum") or {}).get("sectors") or [])}
     comp = report.get("sector_comparison") or []
