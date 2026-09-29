@@ -167,7 +167,7 @@ def build_report(rows: list, scan_payload: dict | None,
                  sector_momentum: dict | None = None,
                  news_by_symbol: dict | None = None, *, histories=None,
                  news_items=None, news_status=None, now=None,
-                 benchmark_history=None) -> dict:
+                 benchmark_history=None, industries=None) -> dict:
     """rows: per-holding dicts already scored. Assembles the portfolio view."""
     pol = clean_policy(policy)
     rows = [deepcopy(r) for r in rows if isinstance(r, dict)]
@@ -479,7 +479,7 @@ def build_report(rows: list, scan_payload: dict | None,
     # already shows. A failure here costs the plan, never the report.
     try:
         import action_plan
-        out["action_plan"] = action_plan.plan(out, scan_payload, pol)
+        out["action_plan"] = action_plan.plan(out, scan_payload, pol, industries=industries)
     except Exception as e:                                  # pragma: no cover
         out["action_plan"] = {"available": False,
                               "message": f"The action plan could not be built ({type(e).__name__})."}

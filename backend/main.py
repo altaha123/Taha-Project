@@ -3369,6 +3369,18 @@ def _pf_inputs(payload, limit=MAX_HOLDINGS):
              "buy_price":r["_cost"]/r["qty"] if r["_complete"] else None} for r in merged.values()]
 
 
+def _pf_industries():
+    """{symbol: industry} from the one market-wide classifier (industry.py),
+    so a holding and a switch idea are named by the same scheme. Empty when
+    the stores are unavailable: the plan then offers fewer switches, never a
+    wrong one."""
+    try:
+        import industry
+        return industry.classification()[1] or {}
+    except Exception:
+        return {}
+
+
 def _pf_disclaimer():
     """The portfolio review makes calls (action_plan.py), so the site-wide
     "never a recommendation" sentence would be false on it. Its own disclaimer
@@ -3435,7 +3447,7 @@ def _analyse_holding(item, cached=None):
         fund = fundamental_score(fin, bs, cf, info)
         sec, source = sectors.resolve_sector(item['symbol'], info)
         row.update(name=info.get('longName') or info.get('shortName') or row['name'],
-                   sector=sec, sector_source=source, fundamental=fund.get('score'),
+                   sector=sec, sector_source=source, industry=info.get('industry'), fundamental=fund.get('score'),
                    fundamental_extras=fund.get('extras') or {}, fundamental_checks=fund.get('checks') or [],
                    fundamental_source='Provider annual statements; Altaha v4 factors use the dated universe scan / XBRL',
                    valuation={'pe':PI.number(info.get('trailingPE')), 'pb':PI.number(info.get('priceToBook')),
@@ -3503,7 +3515,8 @@ def _pf_run(job_id, holdings, policy):
                 job.update(status='done' if final else 'running', report=to_native(report),
                            stage=stage, done=done, revision=job.get('revision',0)+1, touched=time.time())
     try:
-        publish('Cached valuation', build_report(rows, scan, policy), 0)
+        inds = _pf_industries()
+        publish('Cached valuation', build_report(rows, scan, policy, industries=inds), 0)
         # Quotes are batched; their timeout cannot consume the report deadline.
         def quotes():
             import dhan_source
@@ -3515,7 +3528,7 @@ def _pf_run(job_id, holdings, policy):
         except Exception:
             quote_data = {}
         rows = [_pf_row(h, scan_map.get(h['symbol']), quote_data.get(h['symbol']), scan.get('scanned_at')) for h in holdings]
-        publish('Prices & scores', build_report(rows, scan, policy), 0)
+        publish('Prices & scores', build_report(rows, scan, policy, industries=inds), 0)
         pending = {_pf_workers.submit(_analyse_holding, h, r):i for i,(h,r) in enumerate(zip(holdings, rows))}
         sector_task = _pf_enrichment.submit(sectors.momentum)
         deadline = time.monotonic()+PF_ANALYSIS_TIMEOUT
@@ -3550,7 +3563,7 @@ def _pf_run(job_id, holdings, policy):
         except Exception:
             benchmark_history = None
         report = build_report(rows, scan, policy, sector_data, histories=histories, news_items=items,
-                              news_status=status, benchmark_history=benchmark_history)
+                              news_status=status, benchmark_history=benchmark_history, industries=inds)
         report['enrichment_incomplete'] = bool(pending)
         publish('Complete' if not pending else 'Complete with unavailable enrichment', report, done, True)
     except Exception:
@@ -3616,7 +3629,7 @@ def portfolio(payload: dict = Body(...)):
     except Exception:
         benchmark_history = None
     report = build_report(rows,scan,payload.get('policy'),histories=histories,news_items=items,
-                          news_status=status,benchmark_history=benchmark_history)
+                          news_status=status,benchmark_history=benchmark_history,industries=_pf_industries())
     report['disclaimer'] = _pf_disclaimer()
     return to_native(report)
 
