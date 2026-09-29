@@ -171,6 +171,29 @@ jobs:
             if [ -n "${early}" ]; then sleep 120; elif market; then sleep 60; else sleep 5; fi
           done
 
+      # The lenses are judged on these tables, but only recompute when asked.
+      # Asking here keeps them as current as the statements, industries and
+      # share counts this run just read. read_inputs=false: recompute from
+      # what is held — the NSE quote crawl it would otherwise start is
+      # refused from the API's address anyway.
+      - name: Recompute the lenses
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+        run: |
+          set -uo pipefail
+          curl -sS --max-time 120 -X POST "${API}/admin/lenses/run?read_inputs=false" \
+               -H "X-Admin-Key: ${ADMIN_KEY}" -o run.json -w "HTTP %{http_code}\n" || true
+          for i in $(seq 1 30); do
+            sleep 10
+            phase=$(curl -sS --max-time 60 "${API}/api/lenses/run" | python3 -c "import json,sys;d=json.load(sys.stdin);print(d.get('phase'), d.get('running'), d.get('error') or '')" || echo "unknown")
+            echo "lenses: ${phase}"
+            case "${phase}" in done*|error*|idle\ False*) break ;; esac
+          done
+
       - name: Report what the table now holds
         if: always()
         env:

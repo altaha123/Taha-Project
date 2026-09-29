@@ -80,7 +80,8 @@ def test_the_backfill_queue_and_crawl(store, monkeypatch):
     out = fc.run(limit=5, pause=0, source="yfinance-profile")
     assert out["attempted"] == 2 and out["ok"] == 1
     assert "HDFCBANK" in store.yf_profiles()
-    assert store.profile_due(["TCS", "INFY", "HDFCBANK"]) == ["INFY"]
+    # INFY had no profile: it waits a week rather than heading the next slice.
+    assert store.profile_due(["TCS", "INFY", "HDFCBANK"]) == []
 
 
 def test_peers_name_their_classifier(store):
@@ -88,3 +89,28 @@ def test_peers_name_their_classifier(store):
     out = F.peers_from_store("TCS", None, [], classifier="Yahoo Finance")
     assert out["classifier"] == "Yahoo Finance" and not out["available"]
     assert "industry for TCS is not held" in out["message"]
+
+
+def test_companies_yahoo_has_nothing_for_never_block_the_queue(store, monkeypatch):
+    """The production failure: six unprofilable companies at the head of the
+    queue tripped the give-up rule on every slice, so nobody behind them was
+    ever reached and the backfill sat at the same count for days."""
+    import fundamentals_crawl as fc
+    dead = ["DEAD%d" % i for i in range(6)]
+    live = ["TCS", "SUNPHARMA"]
+    universe = dead + live
+
+    class T:
+        def __init__(self, sym):
+            self.info = {"industry": "Something"} if sym in live else {}
+    monkeypatch.setattr(fc, "_ticker", T)
+    monkeypatch.setattr(fc, "universe", lambda: universe)
+    first = fc.run(limit=60, pause=0, source="yfinance-profile")
+    assert first["attempted"] == 6 and first["ok"] == 0 and first["stopped_early"]
+    # The next slice starts where the last one gave up, not at the same six.
+    second = fc.run(limit=60, pause=0, source="yfinance-profile")
+    assert second["ok"] == 2
+    assert set(store.yf_profiles()) == set(live)
+    # And the dead ones are retried weekly, not on every slice.
+    assert store.profile_due(universe) == []
+    assert fc.run(limit=60, pause=0, source="yfinance-profile")["stopped_early"] == "nothing due"

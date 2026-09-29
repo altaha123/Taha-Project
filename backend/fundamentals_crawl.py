@@ -331,12 +331,16 @@ def crawl_yf_profile(symbol, **_kw):
         info = _ticker(sym).info
     except Exception as e:
         res["note"] = ("info: %s" % e)[:180]
+        store.mark_profile_try(sym, "error")
         return res
     if store.record_yf_profile(sym, info):
         res.update({"ok": True, "rows": 1, "status": "ok"})
     else:
         # Yahoo throttles with an empty dict, so this counts towards giving up.
         res.update({"status": "no-data", "note": "Yahoo returned no profile"})
+    # Recorded either way, so a company Yahoo has nothing for moves to the
+    # back of the queue instead of heading every slice.
+    store.mark_profile_try(sym, res["status"])
     return res
 
 
