@@ -10,7 +10,9 @@ def preview_row(row):
         'symbol': str(row.get('symbol') or '')[:40],
         'name': str(row.get('name') or row.get('symbol') or '')[:140],
         'score': round(score, 1) if score is not None else None,
-        'sector': str(row.get('sector') or 'Sector unavailable')[:100],
+        # Empty when unknown, and the card leaves it out: "Sector unavailable"
+        # printed on a row reads as a fault in the product, not a gap in a feed.
+        'sector': str(row.get('sector') or '')[:100],
         'finding': ('Setup: ' + str(row['setup'])[:120]) if row.get('setup') else
                    ('Fundamental data unavailable' if row.get('fundamental') is None else
                     'Technical and fundamental analysis available'),

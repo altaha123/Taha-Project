@@ -251,8 +251,14 @@ async function viewText(page, id) {
   assert.match(strip, NOTICE);
   assert.doesNotMatch(strip, BANNED);
   await sp.screenshot({ path: path.join(output, 'stock-strip.png') });
+  // A company the lenses have not reached shows no strip at all, not a
+  // notice about the pipeline above everything the reader came for.
+  const answered = sp.waitForResponse(r => r.url().includes('/api/lenses/stock/NOPE'));
   await sp.goto('http://127.0.0.1:8781/stock.html?ticker=NOPE', { waitUntil: 'load' });
-  await sp.locator('#stk-lenses .ln-strip.is-empty').waitFor({ state: 'visible' });
+  await answered;
+  await sp.waitForTimeout(300);
+  assert.equal(await sp.locator('#stk-lenses .ln-strip').count(), 0, 'no empty lenses strip');
+  assert.equal(await sp.locator('#stk-lenses').isVisible(), false);
 
   // ── Mobile: the drawer carries the same column, and the views fit ──────
   const mob = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });

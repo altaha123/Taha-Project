@@ -504,11 +504,13 @@
     getJSON('/api/lenses/stock/' + encodeURIComponent(symbol)).then(function (d) {
       if (!d || !d.lenses) return;
       var total = d.lenses.length;
+      // A company the lenses have not reached shows nothing. The notice that
+      // used to stand here ("Not yet computed ...") was the first block under
+      // the price on Reliance's page: a statement about our pipeline, placed
+      // above everything a reader came for.
       if (!d.covered) {
-        host.innerHTML = '<div class="ln-strip is-empty"><span class="ln-strip-k">Lenses</span>' +
-          '<span>Not yet computed for this company: its filed statements have not been read into ' +
-          'the fundamentals tables.</span><a href="index.html#research/lenses">About lenses</a></div>';
-        host.hidden = false;
+        host.innerHTML = '';
+        host.hidden = true;
         return;
       }
       var badges = d.lenses.map(function (l) {
