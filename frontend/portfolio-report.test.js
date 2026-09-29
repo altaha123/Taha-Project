@@ -59,7 +59,7 @@ function report() {
 
 // Rupees, the Indian way, and never a unit wrapped away from its number.
 assert.equal(R._inr(1234567), '₹12,34,567');
-assert.equal(R._inr(-48000), '−₹48,000');
+assert.equal(R._inr(-48000), '−\u2060₹48,000', 'the sign stays with its number');
 assert.equal(R._short(48000), '₹48,000');
 assert.equal(R._short(250000), '₹2.5 L');
 assert.equal(R._short(2208000), '₹22.08 L');

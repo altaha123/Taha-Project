@@ -61,17 +61,18 @@
     if (rest) last = ',' + last;
     return rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + last;
   }
-  function inr(v) { v = num(v); return v === null ? '—' : (v < 0 ? '−' : '') + '₹' + group(v); }
+  // A sign never wraps away from its number (U+2060, the word joiner).
+  function inr(v) { v = num(v); return v === null ? '—' : (v < 0 ? '−\u2060' : '') + '₹' + group(v); }
   function short(v) {
     v = num(v);
     if (v === null) return '—';
-    var a = Math.abs(v), s = v < 0 ? '−' : '';
+    var a = Math.abs(v), s = v < 0 ? '−\u2060' : '';
     if (a >= 1e7) return s + '₹' + (a / 1e7).toFixed(a >= 1e9 ? 0 : 2).replace(/\.?0+$/, '') + '\u00a0Cr';
     if (a >= 1e5) return s + '₹' + (a / 1e5).toFixed(2).replace(/\.?0+$/, '') + '\u00a0L';
     return s + '₹' + group(a);
   }
   function pct(v, d) { v = num(v); return v === null ? '—' : v.toFixed(d === undefined ? 1 : d).replace(/\.0$/, '') + '%'; }
-  function signed(v, fmt) { v = num(v); return v === null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v)); }
+  function signed(v, fmt) { v = num(v); return v === null ? '—' : (v > 0 ? '+\u2060' : v < 0 ? '−\u2060' : '') + fmt(Math.abs(v)); }
   function when(iso) {
     var d = iso ? new Date(iso) : null;
     if (!d || isNaN(d)) return null;
@@ -544,7 +545,7 @@
     '.ar-ring-bg{stroke:rgba(251,248,241,.14)}.ar-ring-fg{stroke:#D9BC6A;stroke-linecap:round}',
     '.ar-ring div{position:absolute;inset:0;display:grid;place-content:center;text-align:center}',
     '.ar-ring b{font:600 clamp(34px,4.6vw,48px)/1 var(--ar-sans);letter-spacing:-.02em}',
-    '.ar-ring span{font:500 10px/1.3 var(--ar-mono);letter-spacing:.1em;text-transform:uppercase;color:rgba(251,248,241,.7);margin-top:4px}',
+    '.ar-ring span{font:500 9px/1.3 var(--ar-mono);letter-spacing:.05em;text-transform:uppercase;color:rgba(251,248,241,.7);margin-top:4px}',
     '.ar-eyebrow{font:500 11px/1 var(--ar-mono);letter-spacing:.16em;text-transform:uppercase;color:#D9BC6A}',
     '.ar-cover h1{font:400 clamp(24px,3.3vw,36px)/1.15 var(--ar-serif);letter-spacing:-.015em;margin:10px 0 10px;color:#FBF8F1}',
     '.ar-money,.ar-scoreline{margin:0 0 6px;color:rgba(251,248,241,.8)}.ar-scoreline b{color:#FBF8F1}',
@@ -556,12 +557,12 @@
     '.ar-tiles.three{grid-template-columns:repeat(3,minmax(0,1fr));margin:18px 0 4px}',
     '.ar-tiles.three+.ar-fig{margin-top:22px}',
     '.ar-tile{padding:14px 16px;border-radius:14px;background:rgba(251,248,241,.07);border:1px solid rgba(251,248,241,.1);min-width:0}',
-    '.ar-tile span{display:block;font:500 11px/1.3 var(--ar-mono);letter-spacing:.08em;text-transform:uppercase;color:rgba(251,248,241,.62)}',
+    '.ar-tile>span{display:block;font:500 11px/1.3 var(--ar-mono);letter-spacing:.08em;text-transform:uppercase;color:rgba(251,248,241,.62)}',
     '.ar-tile b{display:block;font:600 clamp(20px,2.4vw,26px)/1.15 var(--ar-sans);margin:6px 0 2px;overflow-wrap:anywhere}',
-    '.ar-tile small{display:block;font-size:12.5px;line-height:1.4;color:rgba(251,248,241,.66)}',
+    '.ar-tile>small{display:block;font-size:12.5px;line-height:1.4;color:rgba(251,248,241,.66)}',
     '.ar-cover .ar-tile b.up{color:#7FD9AE}.ar-cover .ar-tile b.down{color:#F08A7A}.ar-cover .ar-tile b.warn{color:#F2C46A}',
     '.ar-sec .ar-tile{background:var(--ar-panel);border-color:var(--ar-rule)}',
-    '.ar-sec .ar-tile span{color:var(--ar-mute)}.ar-sec .ar-tile small{color:var(--ar-mute)}',
+    '.ar-sec .ar-tile>span{color:var(--ar-mute)}.ar-sec .ar-tile>small{color:var(--ar-mute)}',
     '.ar-sec .ar-tile b.up{color:var(--ar-up)}.ar-sec .ar-tile b.down{color:var(--ar-down)}',
 
     /* Sections */
@@ -715,7 +716,7 @@
     /* Phones */
     '@media (max-width:760px){',
     '.ar-root{border-radius:18px;font-size:14.5px}',
-    '.ar-cover-main{grid-template-columns:1fr}.ar-ring{width:136px}.ar-ring span{font-size:9px;letter-spacing:.06em}',
+    '.ar-cover-main{grid-template-columns:1fr}.ar-ring{width:136px}',
     '.ar-brand em{margin-left:0;width:100%}',
     '.ar-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-tiles.three{grid-template-columns:1fr}',
     '.ar-tile b{font-size:19px}.ar-sym{font-size:clamp(13px,4.2vw,17px);letter-spacing:-.01em;overflow-wrap:normal}',
