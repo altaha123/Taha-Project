@@ -113,6 +113,10 @@
     // want the full report after it? Chapter ids only — never a figure.
     portfolio_story_viewed:       ['chapter', 'index', 'total'],
     portfolio_full_report_opened: ['from'],
+    // Does the action plan get seen, and how much of it asks for a move?
+    // Counts only — never a symbol, a call or a rupee figure.
+    portfolio_plan_viewed:        ['moves', 'holdings'],
+    portfolio_story_opened:       ['from'],
 
     // Would anyone pay? Who looks at the price, and who leaves an address.
     pro_cta_clicked:       ['from'],

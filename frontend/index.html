@@ -40,6 +40,7 @@
 <link rel="stylesheet" href="portfolio.css">
 <link rel="stylesheet" href="portfolio-intelligence.css">
 <link rel="stylesheet" href="portfolio-story.css">
+<link rel="stylesheet" href="portfolio-plan.css">
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="share.css">
 <link rel="stylesheet" href="lab.css">
@@ -1620,7 +1621,7 @@
   <div id="view-portfolio" style="display:none" data-private>
     <header class="tabhead">
       <h2>My portfolio</h2>
-      <p id="pf_lede">Your holdings against their scores, sectors and exposures. Saved in this browser — <a href="signin.html">sign in</a> to keep them on your account.</p>
+      <p id="pf_lede">Add the stocks you own and press Analyse. You get a clear call on each one — hold, trim, average down, add or exit — and where your money could go instead. Saved in this browser; <a href="signin.html">sign in</a> to keep it on your account.</p>
     </header>
 
     <!-- Asked once, remembered after. Somebody with nothing to review should
@@ -1676,13 +1677,16 @@
       <div class="state" id="pf_state" style="display:none"></div>
     </div>
 
-    <!-- The review opens as a story (portfolio-story.js); the full report sits
-         behind one button. See the header of portfolio-story.js for why. -->
-    <section id="pf_story" class="pf-story-host" hidden aria-label="Your portfolio story"></section>
+    <!-- The review opens on the action plan: what to do with each holding
+         (portfolio-plan.js). The story and the full report are there for
+         anyone who wants them, one button each, closed until asked for. -->
+    <section id="pf_plan" class="pf-plan-host" hidden aria-label="Your action plan"></section>
     <div class="pf-fullbar" id="pf_fullbar" hidden>
+      <button type="button" id="pf_storybtn" aria-expanded="false" aria-controls="pf_story">Watch the 2-minute story</button>
       <button type="button" id="pf_full" aria-expanded="false" aria-controls="pf_report">Read the full report</button>
-      <span>Every number behind the story: each holding, each measurement, and how it was worked out.</span>
+      <span>The story explains your portfolio in plain words; the report has every number behind the plan.</span>
     </div>
+    <section id="pf_story" class="pf-story-host" hidden aria-label="Your portfolio story"></section>
     <section id="pf_report" style="display:none"></section>
     <div class="pfinrow pfreport-act" id="pf_reportact" style="display:none">
       <button class="pfbtn primary" type="button" id="pf_dl">Download report</button>
@@ -4491,6 +4495,7 @@ if(fcSymParam){
 <script src="tracker-fix.js" defer></script>
 <script src="portfolio-intelligence.js" defer></script>
 <script src="portfolio-story.js" defer></script>
+<script src="portfolio-plan.js" defer></script>
 <script src="portfolio.js" defer></script>
 <script src="nav.js?v=20260923-lenses" defer></script>
 <script src="scoring.js" defer></script>

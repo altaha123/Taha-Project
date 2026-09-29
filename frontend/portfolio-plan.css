@@ -1,0 +1,140 @@
+/* Your action plan — see portfolio-plan.js.
+   Every animation fills `backwards` only (never forwards/both): with motion
+   off, removing it leaves every card complete and visible. */
+
+.pf-plan-host{max-width:1180px;margin:28px auto 8px}
+.pp{
+  --pp-exit:#B03A2B;--pp-trim:#C06A1F;--pp-avg:#3F6FB0;--pp-add:#1F7A55;--pp-hold:#7A7263;
+  --pp-card:var(--skin-card,#FFFDF8);color:var(--ink,#17140E);font-family:var(--sans,Inter,system-ui,sans-serif)
+}
+:root[data-theme="dark"] .pp{--pp-exit:#E0614F;--pp-trim:#E89A52;--pp-avg:#7FA6E0;--pp-add:#3FBF87;--pp-hold:#A59C8A}
+.pp *{box-sizing:border-box}
+
+/* ── The verdict ─────────────────────────────────────────────────────────── */
+.pp-hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(20px,4vw,44px);align-items:center;
+  padding:clamp(22px,3.5vw,36px);border-radius:24px;color:#FBF8F1;position:relative;overflow:hidden;
+  background:radial-gradient(120% 140% at 0% 0%,#3a2f14 0%,#17140E 55%),#17140E;box-shadow:0 22px 50px rgba(23,20,14,.22)}
+.pp-hero::after{content:"";position:absolute;inset:auto -10% -60% 40%;height:120%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(217,188,106,.18),transparent);pointer-events:none}
+.pp-ring{position:relative;width:clamp(128px,16vw,172px);aspect-ratio:1}
+.pp-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.pp-ring circle{fill:none;stroke-width:10}
+.pp-ring-bg{stroke:rgba(251,248,241,.14)}
+.pp-ring-fg{stroke:#D9BC6A;stroke-linecap:round;stroke-dasharray:var(--s) 100}
+.pp-ring-mid{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.pp-ring-mid b{font:600 clamp(36px,4.6vw,50px)/1 var(--serif,Georgia,serif);letter-spacing:-.02em}
+.pp-ring-mid span{font:500 10.5px/1.3 var(--mono,'IBM Plex Mono',monospace);letter-spacing:.1em;text-transform:uppercase;color:rgba(251,248,241,.7);margin:6px auto 0;max-width:6.5em}
+.pp-eyebrow{font:500 11px/1 var(--mono,'IBM Plex Mono',monospace);letter-spacing:.16em;text-transform:uppercase;color:#D9BC6A}
+.pp-hero h2{font:400 clamp(24px,3.2vw,36px)/1.15 var(--serif,Georgia,serif);letter-spacing:-.015em;margin:10px 0 8px;color:#FBF8F1}
+.pp-money{margin:0 0 16px;color:rgba(251,248,241,.78);font-size:15px;line-height:1.55}
+.pp-tally{display:flex;flex-wrap:wrap;gap:8px;position:relative;z-index:1}
+.pp-chip{display:inline-flex;align-items:baseline;gap:7px;padding:9px 14px;border-radius:999px;border:0;cursor:pointer;
+  font:600 13px/1 var(--sans,Inter,system-ui,sans-serif);color:#fff;background:var(--pp-hold);min-height:40px}
+.pp-chip b{font-size:17px}
+.pp-chip.t-exit{background:var(--pp-exit)}.pp-chip.t-trim{background:var(--pp-trim)}.pp-chip.t-avg{background:var(--pp-avg)}
+.pp-chip.t-add{background:var(--pp-add)}.pp-chip.t-hold{background:#5f584b}
+.pp-chip.zero{opacity:.35;cursor:default}
+.pp-chip:not(.zero):hover{filter:brightness(1.1);transform:translateY(-1px)}
+.pp-chip:focus-visible,.pp-filter button:focus-visible{outline:2px solid #D9BC6A;outline-offset:2px}
+
+/* ── Filter ──────────────────────────────────────────────────────────────── */
+.pp-filter{display:flex;gap:6px;flex-wrap:wrap;margin:22px 0 14px}
+.pp-filter button{font:600 13.5px/1 var(--sans,Inter,system-ui,sans-serif);padding:10px 16px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--rule,#E2DACA);background:var(--pp-card);color:var(--ink,#17140E);min-height:40px}
+.pp-filter button.on{background:var(--ink,#17140E);color:var(--paper,#FBF8F1);border-color:var(--ink,#17140E)}
+
+/* ── The cards ───────────────────────────────────────────────────────────── */
+.pp-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px;perspective:1200px}
+.pp-card{--tone:var(--pp-hold);position:relative;background:var(--pp-card);border:1px solid var(--rule,#E2DACA);border-radius:18px;
+  padding:18px 18px 14px;box-shadow:var(--skin-shadow,0 12px 34px rgba(23,20,14,.07));border-top:5px solid var(--tone);
+  transition:transform .2s ease,box-shadow .2s ease}
+.pp-card[hidden]{display:none}
+.pp-card:hover{transform:translateY(-3px);box-shadow:var(--skin-lift,0 22px 50px rgba(23,20,14,.11))}
+.pp-card.t-exit{--tone:var(--pp-exit)}.pp-card.t-trim{--tone:var(--pp-trim)}.pp-card.t-avg{--tone:var(--pp-avg)}.pp-card.t-add{--tone:var(--pp-add)}
+.pp-card header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.pp-stamp{display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 10px;border:2.5px solid var(--tone);color:var(--tone);border-radius:8px;
+  font:800 14px/1 var(--sans,Inter,system-ui,sans-serif);letter-spacing:.08em;text-transform:uppercase;transform:rotate(-3deg)}
+.pp-stamp i{font-style:normal;font-size:13px}
+.pp-conv{font:500 11px/1.3 var(--mono,'IBM Plex Mono',monospace);color:var(--mute,#8A8171);text-align:right}
+.pp-conv.c-high{color:var(--ink-2,#4B4438)}
+.pp-card h3{margin:0 0 8px;font:600 19px/1.25 var(--sans,Inter,system-ui,sans-serif)}
+.pp-card h3 a{color:var(--ink,#17140E);text-decoration:none}
+.pp-card h3 a:hover{text-decoration:underline}
+.pp-card h3 small{display:block;font:400 12.5px/1.4 var(--sans,Inter,system-ui,sans-serif);color:var(--mute,#8A8171);margin-top:2px}
+.pp-todo{margin:0 0 8px;font:650 16px/1.45 var(--sans,Inter,system-ui,sans-serif);color:var(--tone)}
+.t-hold .pp-todo{color:var(--ink-2,#4B4438)}
+.pp-why{margin:0 0 12px;font-size:14px;line-height:1.55;color:var(--ink-2,#4B4438)}
+.pp-stats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.pp-stat{font-size:12px;color:var(--mute,#8A8171);background:var(--paper-2,#F3EFE4);border-radius:8px;padding:5px 8px}
+.pp-stat b{color:var(--ink,#17140E);font-size:12.5px}
+.pp-stat.up b{color:var(--pp-add)}.pp-stat.down b{color:var(--pp-exit)}
+.pp-switch{display:grid;grid-template-columns:28px minmax(0,1fr);gap:4px 10px;align-items:start;padding:11px 12px;margin-bottom:10px;
+  border-radius:12px;background:color-mix(in srgb,var(--pp-add) 9%,transparent);border:1px dashed color-mix(in srgb,var(--pp-add) 55%,transparent)}
+.pp-swap{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--pp-add);color:#fff;font-weight:700}
+.pp-switch p{margin:3px 0 0;font-size:13.5px;line-height:1.45}
+.pp-alts{grid-column:2;display:flex;flex-wrap:wrap;gap:6px}
+.pp-alt{font:600 12px/1 var(--mono,'IBM Plex Mono',monospace);padding:6px 9px;border-radius:999px;border:1px solid var(--rule,#E2DACA);
+  background:var(--pp-card);color:var(--ink,#17140E);text-decoration:none}
+.pp-alt b{color:var(--pp-add)}
+.pp-alt:hover{border-color:var(--pp-add)}
+.pp-more summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--mute,#8A8171);padding:4px 0}
+.pp-more ul{margin:6px 0 2px;padding-left:18px;font-size:13px;line-height:1.55;color:var(--ink-2,#4B4438)}
+
+/* ── Where the money could go ────────────────────────────────────────────── */
+.pp-where{margin-top:34px}
+.pp-where h3{font:400 clamp(26px,3vw,34px)/1.15 var(--serif,Georgia,serif);margin:0 0 6px}
+.pp-sub{color:var(--mute,#8A8171);font-size:14.5px;margin:0 0 16px}
+.pp-rots{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.pp-rot{background:var(--pp-card);border:1px solid var(--rule,#E2DACA);border-radius:18px;padding:18px;box-shadow:var(--skin-shadow,0 12px 34px rgba(23,20,14,.07))}
+.pp-rotup{display:inline-flex;gap:6px;align-items:center;font:600 12px/1 var(--mono,'IBM Plex Mono',monospace);color:var(--pp-add)}
+.pp-rot h4{margin:8px 0 6px;font:600 19px/1.3 var(--sans,Inter,system-ui,sans-serif)}
+.pp-rot p{margin:0 0 12px;font-size:13.5px;line-height:1.55;color:var(--ink-2,#4B4438)}
+.pp-wbars{display:grid;gap:6px;margin-bottom:12px}
+.pp-wbars div{display:grid;grid-template-columns:56px minmax(0,1fr) 46px;gap:8px;align-items:center;font-size:12px;color:var(--mute,#8A8171)}
+.pp-wbars i{display:block;height:10px;border-radius:5px;width:var(--w);background:var(--gold,#A8801C);transform-origin:left;min-width:3px}
+.pp-wbars .mkt i{background:var(--pp-add)}
+.pp-wbars b{color:var(--ink,#17140E);text-align:right}
+.pp-picks{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pp-picks span{font-size:12px;color:var(--mute,#8A8171);width:100%}
+.pp-swaps{margin-top:16px;padding:16px 18px;border-radius:16px;background:var(--paper-2,#F3EFE4)}
+.pp-swaps h4{margin:0 0 10px;font-size:15px}
+.pp-swaps ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pp-swaps li{display:flex;align-items:center;gap:10px;font:500 13.5px/1.3 var(--mono,'IBM Plex Mono',monospace)}
+.pp-swaps li span{color:var(--mute,#8A8171);text-decoration:line-through}
+.pp-swaps li i{font-style:normal;color:var(--pp-add);font-weight:700}
+.pp-swaps li a{color:var(--ink,#17140E);font-weight:700}
+.pp-swaps small{color:var(--mute,#8A8171)}
+.pp-calm{padding:16px 18px;border-radius:16px;background:var(--paper-2,#F3EFE4);color:var(--ink-2,#4B4438);font-size:14.5px;line-height:1.55;margin:0}
+.pp-how{margin-top:24px;padding:14px 18px;border-radius:14px;border:1px solid var(--rule,#E2DACA)}
+.pp-how summary{cursor:pointer;font-weight:600;font-size:14.5px}
+.pp-how p{font-size:13.5px;line-height:1.6;color:var(--ink-2,#4B4438);margin:10px 0 0}
+.pp-disc{padding:10px 12px;border-left:3px solid var(--pp-trim);background:var(--paper-2,#F3EFE4);border-radius:0 10px 10px 0}
+
+/* ── Motion ──────────────────────────────────────────────────────────────── */
+.pp:not(.settled) .pp-ring-fg{animation:pp-draw 1.3s cubic-bezier(.22,.61,.36,1) .15s backwards}
+.pp:not(.settled) .pp-hero h2,.pp:not(.settled) .pp-eyebrow,.pp:not(.settled) .pp-money{animation:pp-rise .6s cubic-bezier(.22,.61,.36,1) backwards}
+.pp:not(.settled) .pp-hero h2{animation-delay:.1s}.pp:not(.settled) .pp-money{animation-delay:.25s}
+.pp:not(.settled) .pp-chip{animation:pp-pop .5s cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:calc(.45s + var(--i) * 90ms)}
+.pp-card.in{animation:pp-deal .6s cubic-bezier(.22,.61,.36,1) backwards;animation-delay:calc(min(var(--i), 8) * 70ms)}
+.pp-card.in .pp-stamp{animation:pp-stamp .55s cubic-bezier(.34,1.56,.64,1) backwards;animation-delay:calc(min(var(--i), 8) * 70ms + .3s)}
+.pp-card.in .pp-switch{animation:pp-rise .5s ease-out backwards;animation-delay:calc(min(var(--i), 8) * 70ms + .45s)}
+.pp-rot.in{animation:pp-deal .6s cubic-bezier(.22,.61,.36,1) backwards;animation-delay:calc(var(--i) * 110ms)}
+.pp-rot.in .pp-wbars i{animation:pp-grow .9s cubic-bezier(.22,.61,.36,1) backwards;animation-delay:calc(var(--i) * 110ms + .3s)}
+.pp-rot.in .pp-rotup i{display:inline-block;animation:pp-bob 1.2s ease-in-out .6s 2 backwards}
+.settled .pp-card.in,.settled .pp-card.in .pp-stamp,.settled .pp-card.in .pp-switch,.settled .pp-rot.in,.settled .pp-rot.in .pp-wbars i{animation:none}
+
+@keyframes pp-draw{from{stroke-dasharray:0 100}}
+@keyframes pp-rise{from{opacity:0;transform:translateY(14px)}}
+@keyframes pp-pop{from{opacity:0;transform:scale(.4)}}
+@keyframes pp-deal{from{opacity:0;transform:translateY(34px) rotateX(16deg) scale(.96)}}
+@keyframes pp-stamp{0%{opacity:0;transform:scale(2.3) rotate(-14deg)}60%{opacity:1;transform:scale(.92) rotate(-2deg)}100%{transform:rotate(-3deg)}}
+@keyframes pp-grow{from{transform:scaleX(0)}}
+@keyframes pp-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+@media (max-width:640px){
+  .pp-hero{grid-template-columns:minmax(0,1fr);justify-items:start;border-radius:20px}
+  .pp-ring{width:124px}
+  .pp-card{padding:16px 15px 12px}
+}
+@media (prefers-reduced-motion:reduce){.pp *,.pp *::before,.pp *::after{animation:none !important;transition:none !important}}
+html[data-motion="off"] .pp *,html[data-motion="off"] .pp *::before,html[data-motion="off"] .pp *::after{animation:none !important;transition:none !important}

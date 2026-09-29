@@ -317,7 +317,7 @@
     out.push({
       id: 'recap', kicker: 'In one breath', title: 'Your portfolio, in one breath',
       lede: 'That is the story. The full report has every number behind it — each holding, each measurement, and how it was worked out.',
-      why: 'Educational analysis of what you hold — not a recommendation to buy or sell anything.',
+      why: 'This story describes what you hold. What to do with each stock is in your action plan, above.',
       visual: { type: 'recap', facts: facts }
     });
 

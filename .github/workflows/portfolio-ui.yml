@@ -4,6 +4,7 @@ on:
     paths:
       - 'frontend/**'
       - 'backend/portfolio*.py'
+      - 'backend/action_plan.py'
       - 'backend/shareholding_filings.py'
       - 'backend/wow_orders.py'
       - 'backend/concalls.py'
@@ -46,6 +47,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/portfolio-story-browser.cjs
+      - name: Verify the action plan answers "what do I do" first, filters, links and respects motion-off
+        if: always()
+        # A call on every holding, most urgent first, each with its trade and
+        # reason; switches and industries link to real stock pages; the
+        # not-SEBI-registered disclaimer is on the page; story and full report
+        # stay closed until asked for.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/portfolio-plan-browser.cjs
       - name: Verify the Pro waitlist sends what it says, and saved screens sync
         if: always()
         env:
@@ -57,6 +67,7 @@ jobs:
           name: story-and-pro-screenshots
           path: |
             test-results/portfolio-story
+            test-results/portfolio-plan
             test-results/pro
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4

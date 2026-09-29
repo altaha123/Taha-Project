@@ -33,8 +33,8 @@ const server=http.createServer((req,res)=>{
  await page.locator('#pf_rows .pf_sym').first().fill('HDFCBANK');
  await page.locator('#pf_rows .pf_qty').first().fill('10');
  await page.locator('#pf_go').click();
- // The review opens as a story; the full report waits behind one button.
- await page.locator('#pf_story .ps').waitFor();
+ // The review opens on the action plan; the full report waits behind one button.
+ await page.locator('#pf_plan .pp').waitFor();
  assert.equal(await page.locator('#pf_report').isVisible(),false,'the full report stays closed until asked for');
  await page.locator('#pf_full').click();
  await page.locator('#pi-money-map').waitFor();

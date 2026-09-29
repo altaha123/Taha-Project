@@ -712,6 +712,10 @@
       }).join('');
     var del = $('pf_delete');
     if (del) del.disabled = !state.activeName;
+    // A picker with nothing in it is one more control to puzzle over.
+    sel.hidden = !names.length;
+    var lab = document.querySelector('label[for="pf_saved"]');
+    if (lab) lab.hidden = !names.length;
   }
 
   function saveCurrent() {
@@ -1113,19 +1117,39 @@
     host.style.display = 'block';
     if (window.PortfolioIntelligence && d.intelligence_version) window.PortfolioIntelligence.mount(d);
     else host.innerHTML = buildReport(d, false);
-    // The review opens as a story; the full report waits behind one button
-    // until the reader asks for it (portfolio-story.js says why). Without
-    // the story — script missing, or nothing to tell yet — the report shows
-    // exactly as it always did.
+    // The review opens on the action plan (portfolio-plan.js): what to do
+    // with each holding. The story and the full report are one button each,
+    // closed until asked for. With neither plan nor story — scripts missing,
+    // or nothing to tell yet — the report shows exactly as it always did.
+    var planned = !!(window.PortfolioPlan && $('pf_plan') && window.PortfolioPlan.mount($('pf_plan'), d));
     var told = !!(window.PortfolioStory && $('pf_story') &&
                   window.PortfolioStory.mount($('pf_story'), d, { onFull: function (from) { setFull(true, from); } }));
+    if ($('pf_story')) $('pf_story').hidden = !(told && storyOpen);
+    if ($('pf_storybtn')) $('pf_storybtn').hidden = !told;
     var fullbar = $('pf_fullbar');
-    if (fullbar) fullbar.hidden = !told;
-    host.style.display = (!told || fullOpen) ? 'block' : 'none';
+    if (fullbar) fullbar.hidden = !(planned || told);
+    host.style.display = (!(planned || told) || fullOpen) ? 'block' : 'none';
     var bar = $('pf_reportact');
     if (bar) bar.style.display = 'flex';
     bindReport();
     // Staged updates retain the reader’s scroll position.
+  }
+
+  var storyOpen = false;
+  function setStory(open) {
+    var host = $('pf_story'), btn = $('pf_storybtn');
+    if (!host || !host.innerHTML) return;
+    var opening = open && !storyOpen;
+    storyOpen = open;
+    host.hidden = !open;
+    if (btn) {
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.textContent = open ? 'Hide the story' : 'Watch the 2-minute story';
+    }
+    if (!opening) return;
+    if (window.AltahaTrack) window.AltahaTrack('portfolio_story_opened', { from: 'button' });
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    host.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   }
 
   var fullOpen = false;
@@ -1360,6 +1384,8 @@
     reportBound = true;
     var full = $('pf_full');
     if (full) full.addEventListener('click', function () { setFull(!fullOpen, 'button'); });
+    var story = $('pf_storybtn');
+    if (story) story.addEventListener('click', function () { setStory(!storyOpen); });
     var btn = $('pf_dl');
     if (btn) btn.addEventListener('click', downloadReport);
     var pr = $('pf_print');
@@ -1599,6 +1625,7 @@
       addRow(); refreshSaved(); clearNote();
       var rep = $('pf_report'); if (rep) rep.style.display = 'none';
       if (window.PortfolioStory) window.PortfolioStory.destroy($('pf_story'));
+      if (window.PortfolioPlan) window.PortfolioPlan.destroy($('pf_plan'));
       var fb = $('pf_fullbar'); if (fb) fb.hidden = true;
     });
     var exp = $('pf_export');

@@ -59,6 +59,10 @@ async function open(browser, port, opts) {
   // Record what would be sent to analytics.
   await page.evaluate(() => { window.__tracked = []; window.AltahaTrack = (n, p) => window.__tracked.push([n, p]); });
   await page.locator('#pf_go').click();
+  // The review opens on the action plan; the story is one button away.
+  await page.locator('#pf_plan .pp').waitFor();
+  assert.equal(await page.locator('#pf_story').isVisible(), false, 'the story waits to be asked for');
+  await page.locator('#pf_storybtn').click();
   await page.locator('#pf_story .ps').waitFor();
   return { context, page, errors };
 }
