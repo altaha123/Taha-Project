@@ -92,7 +92,12 @@ async function open(browser, port, opts) {
 
     // A switch links to the stronger company's page.
     const swap = page.locator('.pp-card[data-act="TRIM"]', { hasText: 'TATAMOTORS' }).locator('.pp-switch');
-    assert.match(await swap.innerText(), /Consider switching to M&M/);
+    // Same business first: a car maker for a car maker, and the page says so.
+    assert.match(await swap.innerText(), /Consider switching to M&M — same industry \(Auto Manufacturers\)/);
+    const steel = page.locator('.pp-card', { hasText: 'TATASTEEL' }).locator('.pp-switch');
+    assert.match(await steel.innerText(), /JSWSTEEL — same industry \(Steel\)/);
+    assert.doesNotMatch(await steel.innerText(), /HINDALCO/, 'an aluminium maker is not a steel maker');
+    assert.match(await page.locator('.pp-swaps').innerText(), /same industry/);
     assert.match(await swap.locator('.pp-alt').first().getAttribute('href'), /stock\.html\?ticker=M%26M/);
 
     // Where the money could go: underweight industries doing well.

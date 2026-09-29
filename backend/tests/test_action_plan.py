@@ -174,6 +174,31 @@ def test_a_switch_is_into_a_clearly_stronger_company_in_the_same_industry_not_al
     assert all(a["score"] >= max(P.GOOD, 38 + P.PEER_GAP) for a in alts)
 
 
+STEEL = [
+    {"symbol": "GNFC", "name": "GNFC", "sector": "Basic Materials", "industry": "Agricultural Inputs", "position_score": 68},
+    {"symbol": "JSWSTEEL", "name": "JSW Steel", "sector": "Basic Materials", "industry": "Steel", "position_score": 60},
+]
+
+
+def test_a_switch_names_the_same_business_before_a_merely_same_sector_one():
+    """Live, 29 Sep 2026: Tata Steel's switch was GNFC, a fertiliser maker,
+    labelled "same industry" because both sit in Basic Materials. A steel
+    maker is preferred even when the fertiliser maker scores higher; with no
+    steel maker to offer, the sector suggestion says it is a different business."""
+    r, t = row("TATASTEEL", score=32, weight=4, pnl_pct=-20, sector="Basic Materials")
+    r["industry"] = "Steel"
+    alts = P.alternatives_for(r, P._universe({"factor_universe": STEEL}), held={"TATASTEEL"})
+    assert [(a["symbol"], a["match"], a["group"]) for a in alts] == [("JSWSTEEL", "industry", "Steel")]
+    out = c(r, t, sector_state="Improving", sector_rel_3m=1.0, alternatives=alts)
+    assert out["switch"] == "Consider switching to JSWSTEEL — same industry (Steel), score 60 vs 32 for TATASTEEL."
+
+    alts = P.alternatives_for(r, P._universe({"factor_universe": STEEL[:1]}), held={"TATASTEEL"})
+    assert [(a["symbol"], a["match"], a["group"]) for a in alts] == [("GNFC", "sector", "Basic Materials")]
+    out = c(r, t, sector_state="Improving", sector_rel_3m=1.0, alternatives=alts)
+    assert "same industry" not in out["switch"]
+    assert "same broad sector (Basic Materials) but a different business" in out["switch"]
+
+
 def test_industries_doing_well_where_you_hold_little_come_with_their_best_stocks():
     uni = P._universe({"factor_universe": UNIVERSE})
     report = {
@@ -248,7 +273,7 @@ def test_a_holding_outside_the_scan_is_scored_on_request(monkeypatch):
     from conftest import ohlcv, ramp
     hist = ohlcv(ramp(100, 150, 300))
     monkeypatch.setattr(main, "resolve", lambda s: ("NEWCO.NS", None, hist))
-    monkeypatch.setattr(main, "fundamentals", lambda sym, t: (None, None, None, {"sector": "Technology"}))
+    monkeypatch.setattr(main, "fundamentals", lambda sym, t: (None, None, None, {"sector": "Technology", "industry": "Information Technology Services"}))
     seen = {}
 
     def fake_v4(sym, t, h, info, wait=None):
@@ -259,6 +284,7 @@ def test_a_holding_outside_the_scan_is_scored_on_request(monkeypatch):
     assert row_["composite"] == 61.5
     assert row_["score_source"].startswith("ranked on request")
     assert seen["wait"] == 4, "a portfolio must not spend its deadline waiting on one score"
+    assert row_["industry"] == "Information Technology Services", "switches match on it"
 
 
 def test_a_percentile_is_only_quoted_against_a_real_cohort():

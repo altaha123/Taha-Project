@@ -121,10 +121,11 @@
       }).join('') + '</div>';
     }
     if (swaps.length) {
-      body += '<div class="pp-swaps"><h4>Stronger companies in the industries you already own</h4><ul>' +
+      body += '<div class="pp-swaps"><h4>Stronger companies to consider instead</h4><ul>' +
         swaps.map(function (s) {
+          var kin = { industry: ' · same industry', sector: ' · same sector, different business' }[s.to.match] || '';
           return '<li><span>' + esc(s.from) + '</span><i aria-hidden="true">→</i>' + stockLink(s.to.symbol) +
-            ' <small>score ' + Math.round(s.to.score) + '</small></li>';
+            ' <small>score ' + Math.round(s.to.score) + kin + '</small></li>';
         }).join('') + '</ul></div>';
     }
     if (!body) {

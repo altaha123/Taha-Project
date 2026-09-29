@@ -3435,7 +3435,7 @@ def _analyse_holding(item, cached=None):
         fund = fundamental_score(fin, bs, cf, info)
         sec, source = sectors.resolve_sector(item['symbol'], info)
         row.update(name=info.get('longName') or info.get('shortName') or row['name'],
-                   sector=sec, sector_source=source, fundamental=fund.get('score'),
+                   sector=sec, sector_source=source, industry=info.get('industry'), fundamental=fund.get('score'),
                    fundamental_extras=fund.get('extras') or {}, fundamental_checks=fund.get('checks') or [],
                    fundamental_source='Provider annual statements; Altaha v4 factors use the dated universe scan / XBRL',
                    valuation={'pe':PI.number(info.get('trailingPE')), 'pb':PI.number(info.get('priceToBook')),

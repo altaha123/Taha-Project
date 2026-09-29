@@ -5,7 +5,8 @@ could go instead.
 WHAT THIS IS
 One call per holding — EXIT, TRIM, AVERAGE, ADD or HOLD — with the exact
 number of shares and rupees, one plain sentence saying why, the evidence
-behind it, and where a stronger stock exists in the same industry, its name.
+behind it, and where a stronger stock exists in the same industry (or, if
+none, the same broad sector — and it says which), its name.
 Then the industries that are doing well where the reader holds little, with
 the best-scoring stocks in each.
 
@@ -22,7 +23,9 @@ Fixed, written-down rules — no model, no fitted weights — over five inputs:
   size       its share of the reader's money, against THEIR per-stock limit
   P&L        how far it is above or below what they paid
   industry   whether its sector index is beating or trailing the Nifty 50
-  stronger   whether a same-industry company scores clearly better
+  stronger   whether a same-industry company scores clearly better (the
+             provider's industry, e.g. "Steel"; else the broad sector, which
+             can hold very different businesses, and the wording says so)
 
 The thresholds come from where the scores actually fall. Across today's
 analysed cohort the median is about 51, the top tenth starts near 62 and
@@ -355,9 +358,12 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
     switch = None
     if alts:
         best = alts[0]
-        switch = (f"Consider switching to {best['symbol']} — same industry, score {best['score']:.0f} "
-                  f"vs {s:.0f} for {sym}." if s is not None else
-                  f"A stronger name in the same industry: {best['symbol']} (score {best['score']:.0f}).")
+        vs = f"score {best['score']:.0f} vs {s:.0f} for {sym}" if s is not None else f"score {best['score']:.0f}"
+        if best.get("match") == "industry":
+            switch = f"Consider switching to {best['symbol']} — same industry ({best['group']}), {vs}."
+        else:
+            switch = (f"Consider switching to {best['symbol']} — {vs}. It is in the same broad sector "
+                      f"({best['group']}) but a different business, so read what it does first.")
 
     return {
         "symbol": sym, "name": row.get("name") or sym, "sector": row.get("sector"),
@@ -372,6 +378,11 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
 # The whole portfolio
 # ---------------------------------------------------------------------------
 
+def _industry(v):
+    v = " ".join(str(v or "").split())
+    return v if v and v.lower() not in {"unknown", "other", "n/a", "none"} else None
+
+
 def _universe(scan_payload):
     rows = (scan_payload or {}).get("factor_universe") or (scan_payload or {}).get("rankings") or []
     out = []
@@ -381,19 +392,29 @@ def _universe(scan_payload):
             s = _score_of(r)
         if r.get("symbol") and s is not None:
             out.append({"symbol": r["symbol"], "name": r.get("name") or r["symbol"],
-                        "sector": _canon(r.get("sector")), "score": s})
+                        "sector": _canon(r.get("sector")), "industry": _industry(r.get("industry")),
+                        "score": s})
     return out
 
 
 def alternatives_for(row, universe, held, limit=3):
+    """Stronger companies doing the same kind of business. The provider's
+    industry ("Steel") first; only when none qualifies, the broad sector
+    ("Basic Materials" also holds fertiliser and cement makers), marked as
+    such so the reader is never told a fertiliser maker is in steel."""
     sec, s = _canon(row.get("sector")), _num(row.get("composite"))
-    if not sec or sec == "Unclassified":
-        return []
+    ind = _industry(row.get("industry"))
     floor = max(GOOD, (s or 0) + PEER_GAP)
-    pool = [u for u in universe if u["sector"] == sec and u["symbol"] not in held and u["score"] >= floor]
+    base = [u for u in universe if u["symbol"] not in held and u["score"] >= floor]
+    pool, match = [u for u in base if ind and u.get("industry") == ind], "industry"
+    if not pool:
+        if not sec or sec == "Unclassified":
+            return []
+        pool, match = [u for u in base if u["sector"] == sec], "sector"
     pool.sort(key=lambda u: (-u["score"], u["symbol"]))
     return [{"symbol": u["symbol"], "name": u["name"], "score": round(u["score"], 1),
-             "gap": round(u["score"] - (s or 0), 1) if s is not None else None} for u in pool[:limit]]
+             "gap": round(u["score"] - (s or 0), 1) if s is not None else None,
+             "match": match, "group": ind if match == "industry" else sec} for u in pool[:limit]]
 
 
 def rotation(report, universe, held, limit=3):

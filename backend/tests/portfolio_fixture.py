@@ -8,26 +8,30 @@ import portfolio
 # companies to suggest and underweight industries to point at. Holdings and
 # their figures are unchanged; only the plan reads this.
 UNIVERSE = [
-    {'symbol': 'AXISBANK', 'name': 'Axis Bank', 'sector': 'Financial Services', 'position_score': 66},
-    {'symbol': 'KOTAKBANK', 'name': 'Kotak Mahindra Bank', 'sector': 'Financial Services', 'position_score': 61},
-    {'symbol': 'M&M', 'name': 'Mahindra & Mahindra', 'sector': 'Consumer Cyclical', 'position_score': 68},
-    {'symbol': 'MARUTI', 'name': 'Maruti Suzuki', 'sector': 'Consumer Cyclical', 'position_score': 63},
-    {'symbol': 'JSWSTEEL', 'name': 'JSW Steel', 'sector': 'Basic Materials', 'position_score': 64},
-    {'symbol': 'HINDALCO', 'name': 'Hindalco', 'sector': 'Basic Materials', 'position_score': 59},
-    {'symbol': 'HCLTECH', 'name': 'HCL Technologies', 'sector': 'Technology', 'position_score': 63},
-    {'symbol': 'WEAKCO', 'name': 'Weak Co', 'sector': 'Technology', 'position_score': 41},
+    {'symbol': 'AXISBANK', 'name': 'Axis Bank', 'sector': 'Financial Services', 'industry': 'Banks - Regional', 'position_score': 66},
+    {'symbol': 'KOTAKBANK', 'name': 'Kotak Mahindra Bank', 'sector': 'Financial Services', 'industry': 'Banks - Regional', 'position_score': 61},
+    {'symbol': 'M&M', 'name': 'Mahindra & Mahindra', 'sector': 'Consumer Cyclical', 'industry': 'Auto Manufacturers', 'position_score': 68},
+    {'symbol': 'MARUTI', 'name': 'Maruti Suzuki', 'sector': 'Consumer Cyclical', 'industry': 'Auto Manufacturers', 'position_score': 63},
+    {'symbol': 'JSWSTEEL', 'name': 'JSW Steel', 'sector': 'Basic Materials', 'industry': 'Steel', 'position_score': 64},
+    {'symbol': 'HINDALCO', 'name': 'Hindalco', 'sector': 'Basic Materials', 'industry': 'Aluminum', 'position_score': 59},
+    {'symbol': 'HCLTECH', 'name': 'HCL Technologies', 'sector': 'Technology', 'industry': 'Information Technology Services', 'position_score': 63},
+    {'symbol': 'WEAKCO', 'name': 'Weak Co', 'sector': 'Technology', 'industry': 'Information Technology Services', 'position_score': 41},
 ]
 
 
 def fixture(count=12):
     names=['HDFCBANK','RELIANCE','TCS','ICICIBANK','LT','INFY','SUNPHARMA','ITC','TATAMOTORS','NTPC','BHARTIARTL','TATASTEEL']
     sectors=['Financial Services','Energy','Technology','Financial Services','Industrials','Technology','Healthcare','Consumer Defensive','Consumer Cyclical','Utilities','Communication Services','Basic Materials']
+    industries=['Banks - Regional','Oil & Gas Refining & Marketing','Information Technology Services','Banks - Regional',
+                'Engineering & Construction','Information Technology Services','Drug Manufacturers - Specialty & Generic',
+                'Tobacco','Auto Manufacturers','Utilities - Independent Power Producers','Telecom Services','Steel']
     weights=[24,16,12,10,8,7,6,5,4,3,3,2]
     rows=[]
     for i in range(count):
         sym=names[i] if i < len(names) else 'TEST'+str(i)
         w=weights[i] if i < len(weights) else 1
         r=row(sym,w*25000,w*23000 if i != 8 else None,[78,68,75,82,72,48,79,61,35,55,65,42][i%12],sectors[i%12])
+        r['industry']=industries[i%12]
         r.update(score_as_of=NOW.isoformat(),price_checked_at=NOW.isoformat(),trend='Above 200-day average',
                  moving_averages={'20':2.3,'50':4.1,'200':8.5}, technical_extras={'drawdown_from_high':-8.2,'range_position':72})
         r['altaha_score_v4']['position']['pillars'].update(momentum=55,financial_strength=65,acceleration=62,risk=60,participation=70)
