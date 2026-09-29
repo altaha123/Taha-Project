@@ -156,19 +156,20 @@ def test_every_call_says_why_and_shows_its_evidence():
 # ── Where the money could go ──────────────────────────────────────────────
 
 UNIVERSE = [
-    {"symbol": "ICICIBANK", "name": "ICICI Bank", "sector": "Financial Services", "position_score": 68},
-    {"symbol": "KOTAKBANK", "name": "Kotak", "sector": "Financial Services", "position_score": 58},
-    {"symbol": "HDFCBANK", "name": "HDFC Bank", "sector": "Financial Services", "position_score": 70},
-    {"symbol": "WEAKBANK", "name": "Weak", "sector": "Financial Services", "position_score": 44},
-    {"symbol": "SUNPHARMA", "name": "Sun Pharma", "sector": "Healthcare", "position_score": 66},
-    {"symbol": "CIPLA", "name": "Cipla", "sector": "Healthcare", "position_score": 61},
-    {"symbol": "LOWPHARMA", "name": "Low", "sector": "Healthcare", "position_score": 40},
+    {"symbol": "ICICIBANK", "name": "ICICI Bank", "sector": "Financial Services", "industry": "Banks - Regional", "position_score": 68},
+    {"symbol": "KOTAKBANK", "name": "Kotak", "sector": "Financial Services", "industry": "Banks - Regional", "position_score": 58},
+    {"symbol": "HDFCBANK", "name": "HDFC Bank", "sector": "Financial Services", "industry": "Banks - Regional", "position_score": 70},
+    {"symbol": "WEAKBANK", "name": "Weak", "sector": "Financial Services", "industry": "Banks - Regional", "position_score": 44},
+    {"symbol": "SUNPHARMA", "name": "Sun Pharma", "sector": "Healthcare", "industry": "Drug Manufacturers - Specialty & Generic", "position_score": 66},
+    {"symbol": "CIPLA", "name": "Cipla", "sector": "Healthcare", "industry": "Drug Manufacturers - Specialty & Generic", "position_score": 61},
+    {"symbol": "LOWPHARMA", "name": "Low", "sector": "Healthcare", "industry": "Drug Manufacturers - Specialty & Generic", "position_score": 40},
 ]
 
 
 def test_a_switch_is_into_a_clearly_stronger_company_in_the_same_industry_not_already_held():
     uni = P._universe({"factor_universe": UNIVERSE})
     r, _ = row("YESBANK", score=38, sector="Financial Services")
+    r["industry"] = "Banks - Regional"
     alts = P.alternatives_for(r, uni, held={"YESBANK", "HDFCBANK"})
     assert [a["symbol"] for a in alts] == ["ICICIBANK", "KOTAKBANK"]
     assert all(a["score"] >= max(P.GOOD, 38 + P.PEER_GAP) for a in alts)
@@ -180,23 +181,49 @@ STEEL = [
 ]
 
 
-def test_a_switch_names_the_same_business_before_a_merely_same_sector_one():
+def test_a_switch_is_only_ever_into_the_same_industry():
     """Live, 29 Sep 2026: Tata Steel's switch was GNFC, a fertiliser maker,
     labelled "same industry" because both sit in Basic Materials. A steel
-    maker is preferred even when the fertiliser maker scores higher; with no
-    steel maker to offer, the sector suggestion says it is a different business."""
+    maker is offered even when the fertiliser maker scores higher; with no
+    steel maker to offer, there is no switch at all."""
     r, t = row("TATASTEEL", score=32, weight=4, pnl_pct=-20, sector="Basic Materials")
     r["industry"] = "Steel"
     alts = P.alternatives_for(r, P._universe({"factor_universe": STEEL}), held={"TATASTEEL"})
-    assert [(a["symbol"], a["match"], a["group"]) for a in alts] == [("JSWSTEEL", "industry", "Steel")]
+    assert [(a["symbol"], a["group"]) for a in alts] == [("JSWSTEEL", "Steel")]
     out = c(r, t, sector_state="Improving", sector_rel_3m=1.0, alternatives=alts)
     assert out["switch"] == "Consider switching to JSWSTEEL — same industry (Steel), score 60 vs 32 for TATASTEEL."
 
-    alts = P.alternatives_for(r, P._universe({"factor_universe": STEEL[:1]}), held={"TATASTEEL"})
-    assert [(a["symbol"], a["match"], a["group"]) for a in alts] == [("GNFC", "sector", "Basic Materials")]
-    out = c(r, t, sector_state="Improving", sector_rel_3m=1.0, alternatives=alts)
-    assert "same industry" not in out["switch"]
-    assert "same broad sector (Basic Materials) but a different business" in out["switch"]
+    assert P.alternatives_for(r, P._universe({"factor_universe": STEEL[:1]}), held={"TATASTEEL"}) == []
+    r.pop("industry")
+    assert P.alternatives_for(r, P._universe({"factor_universe": STEEL}), held={"TATASTEEL"}) == [], \
+        "with no industry known there is no switch, not a sector guess"
+
+
+def test_pace_digitek_is_never_offered_emudhra():
+    """Reported by the owner: Pace Digitek (communication equipment — telecom
+    towers) was offered eMudhra (application software — digital signatures).
+    Both are Yahoo "Technology"; they are not the same business."""
+    uni = [{"symbol": "EMUDHRA", "name": "eMudhra", "sector": "Technology",
+            "industry": "Software - Application", "position_score": 70}]
+    r, t = row("PACEDIGITK", score=30, weight=5, pnl_pct=-25, sector="Technology")
+    r["industry"] = "Communication Equipment"
+    assert P.alternatives_for(r, P._universe({"factor_universe": uni}), held={"PACEDIGITK"}) == []
+    out = P.plan(_report([r], t), {"factor_universe": uni})
+    assert out["actions"][0]["switch"] is None and out["actions"][0]["alternatives"] == []
+    assert "EMUDHRA" not in str(out["actions"])
+
+
+def test_one_classifier_names_both_sides():
+    """The market-wide classifier (industry.py) names the holding and the
+    candidates alike, and fills in a row that carries no industry of its own."""
+    industries = {"PACEDIGITK": "Communication Equipment", "HFCL": "Communication Equipment",
+                  "EMUDHRA": "Software - Application"}
+    uni = [{"symbol": "HFCL", "name": "HFCL", "sector": "Technology", "position_score": 64},
+           {"symbol": "EMUDHRA", "name": "eMudhra", "sector": "Technology", "position_score": 70}]
+    r, t = row("PACEDIGITK", score=30, weight=5, pnl_pct=-25, sector="Technology")
+    out = P.plan(_report([r], t), {"factor_universe": uni}, industries=industries)
+    assert [x["symbol"] for x in out["actions"][0]["alternatives"]] == ["HFCL"]
+    assert "same industry (Communication Equipment)" in out["actions"][0]["switch"]
 
 
 def test_industries_doing_well_where_you_hold_little_come_with_their_best_stocks():

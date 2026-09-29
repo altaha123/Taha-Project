@@ -5,8 +5,8 @@ could go instead.
 WHAT THIS IS
 One call per holding — EXIT, TRIM, AVERAGE, ADD or HOLD — with the exact
 number of shares and rupees, one plain sentence saying why, the evidence
-behind it, and where a stronger stock exists in the same industry (or, if
-none, the same broad sector — and it says which), its name.
+behind it, and where a stronger stock exists in exactly the same industry,
+its name.
 Then the industries that are doing well where the reader holds little, with
 the best-scoring stocks in each.
 
@@ -23,9 +23,11 @@ Fixed, written-down rules — no model, no fitted weights — over five inputs:
   size       its share of the reader's money, against THEIR per-stock limit
   P&L        how far it is above or below what they paid
   industry   whether its sector index is beating or trailing the Nifty 50
-  stronger   whether a same-industry company scores clearly better (the
-             provider's industry, e.g. "Steel"; else the broad sector, which
-             can hold very different businesses, and the wording says so)
+  stronger   whether a company in exactly the same industry ("Steel",
+             "Communication Equipment") scores clearly better. Never the broad
+             sector: "Technology" holds a telecom-tower builder and a
+             digital-signature software house, and offering one for the
+             other is not a switch, it is a different bet
 
 The thresholds come from where the scores actually fall. Across today's
 analysed cohort the median is about 51, the top tenth starts near 62 and
@@ -359,11 +361,7 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
     if alts:
         best = alts[0]
         vs = f"score {best['score']:.0f} vs {s:.0f} for {sym}" if s is not None else f"score {best['score']:.0f}"
-        if best.get("match") == "industry":
-            switch = f"Consider switching to {best['symbol']} — same industry ({best['group']}), {vs}."
-        else:
-            switch = (f"Consider switching to {best['symbol']} — {vs}. It is in the same broad sector "
-                      f"({best['group']}) but a different business, so read what it does first.")
+        switch = f"Consider switching to {best['symbol']} — same industry ({best['group']}), {vs}."
 
     return {
         "symbol": sym, "name": row.get("name") or sym, "sector": row.get("sector"),
@@ -383,7 +381,15 @@ def _industry(v):
     return v if v and v.lower() not in {"unknown", "other", "n/a", "none"} else None
 
 
-def _universe(scan_payload):
+def _industry_of(row, industries=None):
+    """One classifier for everybody where the market-wide one knows the
+    company (industry.py), so a holding and a candidate are never named by
+    two different schemes; the row's own provider field otherwise."""
+    sym = str((row or {}).get("symbol") or "").upper()
+    return _industry((industries or {}).get(sym)) or _industry((row or {}).get("industry"))
+
+
+def _universe(scan_payload, industries=None):
     rows = (scan_payload or {}).get("factor_universe") or (scan_payload or {}).get("rankings") or []
     out = []
     for r in rows:
@@ -392,29 +398,27 @@ def _universe(scan_payload):
             s = _score_of(r)
         if r.get("symbol") and s is not None:
             out.append({"symbol": r["symbol"], "name": r.get("name") or r["symbol"],
-                        "sector": _canon(r.get("sector")), "industry": _industry(r.get("industry")),
+                        "sector": _canon(r.get("sector")), "industry": _industry_of(r, industries),
                         "score": s})
     return out
 
 
-def alternatives_for(row, universe, held, limit=3):
-    """Stronger companies doing the same kind of business. The provider's
-    industry ("Steel") first; only when none qualifies, the broad sector
-    ("Basic Materials" also holds fertiliser and cement makers), marked as
-    such so the reader is never told a fertiliser maker is in steel."""
-    sec, s = _canon(row.get("sector")), _num(row.get("composite"))
-    ind = _industry(row.get("industry"))
+def alternatives_for(row, universe, held, limit=3, industries=None):
+    """Stronger companies in exactly the same industry, or none. A broad
+    sector is not a substitute: Pace Digitek (communication equipment) was
+    once offered eMudhra (application software) because both are
+    "Technology". No switch is better than a wrong one; the industries doing
+    well are suggested separately, as what they are."""
+    s = _num(row.get("composite"))
+    ind = _industry_of(row, industries)
+    if not ind:
+        return []
     floor = max(GOOD, (s or 0) + PEER_GAP)
-    base = [u for u in universe if u["symbol"] not in held and u["score"] >= floor]
-    pool, match = [u for u in base if ind and u.get("industry") == ind], "industry"
-    if not pool:
-        if not sec or sec == "Unclassified":
-            return []
-        pool, match = [u for u in base if u["sector"] == sec], "sector"
+    pool = [u for u in universe if u.get("industry") == ind and u["symbol"] not in held and u["score"] >= floor]
     pool.sort(key=lambda u: (-u["score"], u["symbol"]))
     return [{"symbol": u["symbol"], "name": u["name"], "score": round(u["score"], 1),
              "gap": round(u["score"] - (s or 0), 1) if s is not None else None,
-             "match": match, "group": ind if match == "industry" else sec} for u in pool[:limit]]
+             "match": "industry", "group": ind} for u in pool[:limit]]
 
 
 def rotation(report, universe, held, limit=3):
@@ -450,14 +454,16 @@ def rotation(report, universe, held, limit=3):
     return out[:limit]
 
 
-def plan(report, scan_payload=None, policy=None) -> dict:
-    """The action plan for a built portfolio report."""
+def plan(report, scan_payload=None, policy=None, industries=None) -> dict:
+    """The action plan for a built portfolio report. `industries` is the
+    market-wide {symbol: industry} map (industry.classification), passed in so
+    this module stays pure."""
     rows = [r for r in (report or {}).get("holdings") or [] if r.get("value")]
     if not rows:
         return {"available": False, "message": "No priced holdings to plan for."}
     total = _num(report.get("total_value")) or sum(r["value"] for r in rows)
     policy = policy or report.get("policy") or {}
-    universe = _universe(scan_payload)
+    universe = _universe(scan_payload, industries)
     held = {r["symbol"] for r in rows}
     cohort = [u["score"] for u in universe]
     states = {_canon(s.get("sector")): s for s in (report.get("sectors") or [])}
@@ -467,7 +473,7 @@ def plan(report, scan_payload=None, policy=None) -> dict:
         sec = states.get(_canon(r.get("sector"))) or {}
         rel = _num((sec.get("relative") or {}).get("3M"))
         actions.append(call(r, total, policy, sec.get("state"), rel,
-                            alternatives_for(r, universe, held), cohort))
+                            alternatives_for(r, universe, held, industries=industries), cohort))
     # At most MAX_ADDS adds, the strongest first: a plan that asks for new money
     # in six places at once is a shopping list, not a plan. The rest hold.
     adds = sorted((a for a in actions if a["action"] == "ADD"), key=lambda a: -(a["score"] or 0))

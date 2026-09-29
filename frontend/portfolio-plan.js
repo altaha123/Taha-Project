@@ -123,7 +123,9 @@
     if (swaps.length) {
       body += '<div class="pp-swaps"><h4>Stronger companies to consider instead</h4><ul>' +
         swaps.map(function (s) {
-          var kin = { industry: ' · same industry', sector: ' · same sector, different business' }[s.to.match] || '';
+          // Only ever the same industry; a report cached before that rule
+          // carries no `match` and gets no label rather than a wrong one.
+          var kin = s.to.match === 'industry' ? ' · same industry' : '';
           return '<li><span>' + esc(s.from) + '</span><i aria-hidden="true">→</i>' + stockLink(s.to.symbol) +
             ' <small>score ' + Math.round(s.to.score) + kin + '</small></li>';
         }).join('') + '</ul></div>';
