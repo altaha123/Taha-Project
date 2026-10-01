@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Advisors — Altaha Screener</title>
+<meta name="description" content="Chat with SEBI-registered investment advisers, research analysts and well-known market educators about your portfolio, a stock, a fund or your career. Every registration is checked. Chats are free." />
+<meta name="referrer" content="no-referrer" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css?v=20261001-advisors">
+<link rel="stylesheet" href="type.css">
+<link rel="stylesheet" href="advisors.css?v=20261001">
+<script>
+  /* Theme before first paint, as every page here does. */
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+</head>
+<body>
+<main class="adv" id="adv">
+  <header class="adv-top">
+    <p class="adv-eyebrow">Altaha Advisors</p>
+    <nav class="adv-tabs" aria-label="Advisors">
+      <a href="#" data-view="list" id="adv-tab-list">Find someone</a>
+      <a href="#chats" data-view="chats" id="adv-tab-chats">My chats <span class="adv-badge" id="adv-unread" hidden></span></a>
+      <a href="#join" data-view="join" id="adv-tab-join">For advisers</a>
+    </nav>
+  </header>
+  <div id="adv-view" aria-live="polite"></div>
+</main>
+
+<script src="shell.js?v=20261001-advisors" defer></script>
+<script src="advisors.js?v=20261001" defer></script>
+</body>
+</html>

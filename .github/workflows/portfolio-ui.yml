@@ -5,6 +5,7 @@ on:
       - 'frontend/**'
       - 'backend/portfolio*.py'
       - 'backend/action_plan.py'
+      - 'backend/advisor*.py'
       - 'backend/shareholding_filings.py'
       - 'backend/wow_orders.py'
       - 'backend/concalls.py'
@@ -61,6 +62,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/pro-browser.cjs
+      - name: Verify Advisors finds people, chats live, refuses with a reason, and keeps markup as text
+        if: always()
+        # A chat starts with what the reader chose, a reply arrives by polling,
+        # a refused message keeps its draft, the adviser sees only what was
+        # shared, an educator cannot take portfolio reviews, and sign-in
+        # returns here but never to another site.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/advisors-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -68,6 +78,7 @@ jobs:
           path: |
             test-results/portfolio-story
             test-results/portfolio-plan
+            test-results/advisors
             test-results/pro
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4

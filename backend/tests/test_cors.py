@@ -38,7 +38,8 @@ def test_the_put_routes_are_the_ones_that_save_to_an_account():
     next person reading it is misled about why this file exists."""
     puts = {r.path for r in main.app.routes
             if "PUT" in (getattr(r, "methods", None) or ())}
-    assert puts == {"/me/portfolio", "/me/watchlist", "/me/screens"}
+    assert puts == {"/me/portfolio", "/me/watchlist", "/me/screens",
+                    "/advisors/me/profile"}
     assert "PUT" in main.ALLOWED_METHODS
 
 

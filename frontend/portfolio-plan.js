@@ -153,6 +153,9 @@
       rotation(plan) +
       '<details class="pp-how"><summary>How these calls are made — and what they are not</summary>' +
         '<p>' + esc(plan.method) + '</p><p class="pp-disc">' + esc(plan.disclaimer) + '</p></details>' +
+      // The disclaimer says to consult a registered adviser; this is where one is.
+      '<p class="pp-ask">Want a person to look at this? <a href="advisors.html?kind=ria&amp;topic=portfolio">' +
+        'Chat with a SEBI-registered investment adviser →</a> You choose whether they see your portfolio.</p>' +
     '</div>';
   }
 

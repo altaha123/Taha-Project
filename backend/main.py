@@ -346,6 +346,15 @@ import news_routes
 app.include_router(social_routes.router)
 app.include_router(news_routes.router)
 
+# Advisors: registered advisers and educators, and chats with them. Stdlib
+# plus the accounts database; guarded anyway, because a feature that fails to
+# import must not take the screener down with it.
+try:
+    import advisor_routes
+    app.include_router(advisor_routes.router)
+except Exception as _e:                                      # pragma: no cover
+    print(f"[advisors] not loaded: {type(_e).__name__}: {_e}", flush=True)
+
 # Every method this API actually serves.
 #
 # This read ["GET", "POST"] while /me/portfolio and /me/watchlist were PUT. An

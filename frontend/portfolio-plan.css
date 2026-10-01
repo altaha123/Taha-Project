@@ -108,6 +108,8 @@
 .pp-how{margin-top:24px;padding:14px 18px;border-radius:14px;border:1px solid var(--rule,#E2DACA)}
 .pp-how summary{cursor:pointer;font-weight:600;font-size:14.5px}
 .pp-how p{font-size:13.5px;line-height:1.6;color:var(--ink-2,#4B4438);margin:10px 0 0}
+.pp-ask{margin:14px 0 0;font-size:14px;line-height:1.6;color:var(--ink-2,#4B4438)}
+.pp-ask a{font-weight:600;color:var(--gold,#A8801C)}
 .pp-disc{padding:10px 12px;border-left:3px solid var(--pp-trim);background:var(--paper-2,#F3EFE4);border-radius:0 10px 10px 0}
 
 /* ── Motion ──────────────────────────────────────────────────────────────── */
