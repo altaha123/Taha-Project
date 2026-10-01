@@ -48,6 +48,26 @@ product or issues a recommendation — see the SEBI note above.
 
 ---
 
+## Advisors — talk to a person
+
+`advisors.html` lists SEBI-registered investment advisers, registered research
+analysts and well-known market educators, and lets any signed-in reader chat
+with them about their portfolio, a stock, a fund, retirement or a career.
+People register themselves; nobody is listed until the owner has checked the
+registration number on SEBI's register (`advisors.html#admin`). Chats are free.
+
+A call made in a chat is the adviser's, under their own registration — not
+Altaha's. Educators are not registered, so a message from one that reads as a
+buy or sell call is not sent; nobody may promise returns or move a reader to a
+phone, a payment app or WhatsApp. A reader can show their saved portfolio to a
+registered investment adviser and take it back at any time.
+
+Everything — the three kinds and what each may do, what may be said, why it
+polls instead of holding sockets, why there are no star ratings, and the
+decisions paid chats would need — is in [`ADVISORS.md`](ADVISORS.md).
+
+---
+
 ## Folder map
 
 ```

@@ -202,6 +202,25 @@
     });
   }
 
+  /* Where to go once signed in. A page that sent the reader here to sign in
+     (an adviser they were about to message) passes ?next=, and they go back
+     to it rather than to the portfolio. Only a page on this site, by name —
+     an open redirect on a sign-in page is a phishing kit's favourite tool.
+     Kept in sessionStorage too, because the emailed link reopens this page
+     without the parameter. */
+  var HOME = 'index.html#portfolio', NEXT_KEY = 'altaha-signin-next';
+  function safeNext(v) {
+    return /^[a-z][a-z0-9-]*\.html(#[A-Za-z0-9\/_-]*)?$/.test(v || '') ? v : '';
+  }
+  var DEST = (function () {
+    var n = safeNext(param('next'));
+    try {
+      if (n) sessionStorage.setItem(NEXT_KEY, n);
+      else n = safeNext(sessionStorage.getItem(NEXT_KEY));
+    } catch (e) {}
+    return n || HOME;
+  })();
+
   function panel(html) { $('si-state').innerHTML = html; }
 
   /* The link from the email lands here. Spend the token, keep the session,
@@ -212,11 +231,12 @@
   function signedIn(user, method) {
     track('signed_in', { method: method });
     try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
+    try { sessionStorage.removeItem(NEXT_KEY); } catch (e) {}
     panel('<h1>You are signed in</h1>' +
           '<p class="si-lede">Signed in as <b>' + escapeHTML(user && user.email) +
-          '</b>. Taking you to your portfolio…</p>' +
-          '<a class="si-back" href="index.html#portfolio">Go now →</a>');
-    setTimeout(function () { location.href = 'index.html#portfolio'; }, 1200);
+          '</b>. ' + (DEST === HOME ? 'Taking you to your portfolio…' : 'Taking you back…') + '</p>' +
+          '<a class="si-back" href="' + escapeHTML(DEST) + '">Go now →</a>');
+    setTimeout(function () { location.href = DEST; }, 1200);
   }
 
   function completeFromLink(token) {
@@ -382,7 +402,8 @@
       panel('<h1>You are already signed in</h1>' +
             '<p class="si-lede">Your portfolio is saved to your account.</p>' +
             '<a class="si-btn" style="display:block;text-align:center;text-decoration:none;' +
-            'box-sizing:border-box" href="index.html#portfolio">Open your portfolio</a>' +
+            'box-sizing:border-box" href="' + escapeHTML(DEST) + '">' +
+            (DEST === HOME ? 'Open your portfolio' : 'Carry on') + '</a>' +
             '<a class="si-back" href="#" id="si-out">Sign out</a>');
       var out = $('si-out');
       if (out) out.addEventListener('click', function (e) {

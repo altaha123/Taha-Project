@@ -87,6 +87,7 @@
     shield:   '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
     plan:     '<path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-6"/>',
     share:    '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>',
+    chat:     '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/>',
     lens:     '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>',
     converge: '<circle cx="8" cy="10" r="5"/><circle cx="16" cy="10" r="5"/><circle cx="12" cy="16" r="5"/>'
   };
@@ -157,6 +158,12 @@
         { head: 'Your investments', items: [
           { tab: 'portfolio', label: 'Holdings review', icon: 'bars',
             hint: 'Your holdings against their scores and exposures' }
+        ]},
+        // A page of its own rather than a tab: advisors.html. `href` items
+        // are plain links, so the menu does not try to route them.
+        { head: 'Ask a person', items: [
+          { href: 'advisors.html', label: 'Chat with an adviser', icon: 'chat',
+            hint: 'SEBI-registered advisers and market educators' }
         ]}
       ]
     },
@@ -316,6 +323,17 @@
     pro.addEventListener('click', function () {
       if (window.AltahaTrack) window.AltahaTrack('pro_cta_clicked', { from: 'header' });
     });
+    // Advisors: people to talk to. In the header only on wide screens (the
+    // CSS hides it below 1340px); everywhere else it is in the Portfolio
+    // menu and the drawer.
+    var adv = el('a', 'sh-adv');
+    adv.id = 'sh-adv';
+    adv.href = 'advisors.html';
+    adv.textContent = 'Advisors';
+    adv.addEventListener('click', function () {
+      if (window.AltahaTrack) window.AltahaTrack('advisors_cta_clicked', { from: 'header' });
+    });
+    right.appendChild(adv);
     right.appendChild(pro);
     right.appendChild(account);
 
@@ -359,6 +377,11 @@
   // One builder for both the desktop panel and the mobile drawer, so an icon
   // can never appear in one and be missing from the other.
   function itemHTML(secId, it) {
+    if (it.href) {
+      return '<a class="sh-item" href="' + esc(it.href) + '">' + svg(it.icon) +
+        '<span class="sh-txt"><b>' + esc(it.label) + '</b>' +
+        '<span>' + esc(it.hint) + '</span></span></a>';
+    }
     return '<button class="sh-item" type="button" data-sec="' + esc(it.section || secId) +
       '" data-tab="' + esc(it.tab) + '">' + svg(it.icon) +
       '<span class="sh-txt"><b>' + esc(it.label) + '</b>' +
@@ -433,6 +456,7 @@
       var it = e.target.closest('.sh-item');
       if (!it) return;
       close();
+      if (it.tagName === 'A') return;
       navigate(it.dataset.sec, it.dataset.tab);
     });
 
@@ -483,6 +507,7 @@
       var it = e.target.closest('.sh-item');
       if (!it) return;
       setDrawer(false);
+      if (it.tagName === 'A') return;
       navigate(it.dataset.sec, it.dataset.tab);
     });
   }
