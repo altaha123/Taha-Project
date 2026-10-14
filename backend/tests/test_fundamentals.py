@@ -243,6 +243,30 @@ def test_alternatives_come_from_the_index_not_the_filtered_set(monkeypatch):
     assert d["basis_alternatives"] == ["consolidated", "standalone"]
 
 
+def test_the_company_name_comes_from_the_index_when_the_filing_lacks_it(monkeypatch):
+    """A parsed filing has no company name; the results card titled TARIL
+    'TARIL' until the index's name was used."""
+    quarters = [_quarter(e, s, True, 100e7, 10e7) for e, s in zip(ENDS, STARTS)]
+    index = [dict(q, company="Transformers And Rectifiers (India) Limited")
+             for q in quarters]
+    _stub_xbrl(monkeypatch, quarters, index=index)
+    d = fundamentals.series("TARIL", quarters=4)
+    assert d["company"] == "Transformers And Rectifiers (India) Limited"
+
+
+def test_the_newest_listed_quarter_is_reported_even_when_unread(monkeypatch):
+    """The index lists September; only June could be read. A results card
+    needs to know, or it shows June as the latest without a word."""
+    quarters = [_quarter(e, s, True, 100e7, 10e7) for e, s in zip(ENDS, STARTS)]
+    index = [_quarter("30-SEP-2026", "2026-07-01", True, 0, 0)] + quarters + \
+        [_quarter("31-DEC-2026", "2026-10-01", False, 0, 0)]
+    _stub_xbrl(monkeypatch, quarters, index=index)
+    d = fundamentals.series("X", quarters=4)
+    assert d["rows"][0]["period_end"] == "2026-06-30"
+    # On the basis in use: a standalone filing for a later quarter is not it.
+    assert d["filed_latest"] == "2026-09-30"
+
+
 def test_a_standalone_only_company_is_served_standalone(monkeypatch):
     quarters = [_quarter(e, s, False, 100e7, 10e7) for e, s in zip(ENDS, STARTS)]
     _stub_xbrl(monkeypatch, quarters)

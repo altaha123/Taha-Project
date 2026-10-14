@@ -1604,7 +1604,7 @@
           <div class="rq"><span id="rquarter"></span><span class="ras" id="ras"></span></div>
         </div>
         <div class="rpat">
-          <span class="sk">Consolidated / standalone PAT (as published)</span>
+          <span class="sk" id="rpatk">Consolidated / standalone PAT (as published)</span>
           <div class="rpatline"><span class="rpatval" id="rpat"></span><span class="ryoy" id="rpatyoy"></span></div>
           <span class="rvs" id="rpatvs"></span>
         </div>
@@ -2474,7 +2474,12 @@ function renderResults(d){
   $("rsym").textContent = d.symbol.replace(".NS","").replace(".BO","");
   $("rname").textContent = d.name;
   $("rquarter").textContent = d.quarter;
-  $("ras").textContent = "Statements dated " + d.as_of;
+  // A card read from the exchange says when the company filed; the Yahoo
+  // fallback can only say which quarter its statements cover.
+  $("ras").textContent = d.filed_at
+    ? "Filed with NSE " + String(d.filed_at).replace(/(\d\d:\d\d):\d\d$/, "$1") + " IST"
+    : "Statements dated " + d.as_of;
+  $("rpatk").textContent = d.pat_label || "Consolidated / standalone PAT (as published)";
   $("rpat").textContent = fmtCr(d.pat_cr);
   const y = d.pat_yoy_pct;
   const badge = $("rpatyoy");

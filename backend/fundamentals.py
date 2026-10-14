@@ -299,7 +299,19 @@ def series(symbol, quarters: int = 8, basis: str = None) -> dict:
 
     alternatives = sorted({("consolidated" if f.get("consolidated")
                             else "standalone") for f in idx})
-    return _assemble(out, rows, want, label, why, alternatives)
+    res = _assemble(out, rows, want, label, why, alternatives)
+    # A parsed filing does not carry the company's name; the index does.
+    if not res.get("company"):
+        res["company"] = next((f.get("company") for f in idx
+                               if f.get("company")), None)
+    # The newest quarter the index lists on this basis. When it is newer than
+    # the newest row, that document could not be read (NSE throttles bursts),
+    # and a caller showing "the latest results" has to say so.
+    listed = [_end(f) for f in idx if f.get("consolidated") is con]
+    listed = [d for d in listed if d]
+    if listed:
+        res["filed_latest"] = max(listed).isoformat()
+    return res
 
 
 _SHORT_LIVE = ("Only %d of the %d quarters asked for could be read on this view. "
@@ -413,6 +425,15 @@ def _assemble(out, rows, want, label, why, alternatives, short_note=_SHORT_LIVE)
 # missed a filing, so the caller should look at the exchange before serving it.
 STORE_FRESH_DAYS = 92 + 62
 
+
+def last_quarter_end(today: dt.date) -> dt.date:
+    """The most recent quarter end strictly before `today`."""
+    for m, d in ((12, 31), (9, 30), (6, 30), (3, 31)):
+        end = dt.date(today.year, m, d)
+        if end < today:
+            return end
+    return dt.date(today.year - 1, 12, 31)
+
 _SHORT_STORE = ("Only %d of the %d quarters asked for are held for this company "
                 "so far. The market-wide crawl reads every company's filings "
                 "back to 2018 and fills the history in as it goes.")
@@ -429,9 +450,14 @@ def series_from_store(symbol, quarters: int = 8, basis: str = None,
       * the company has not been crawled yet;
       * the other basis was asked for — the crawl keeps one per company;
       * the newest stored quarter is older than STORE_FRESH_DAYS, so a newer
-        filing has probably been made since the last crawl.
-    `allow_stale` skips that last check, for when the exchange has just failed
-    and an older stored series beats an error.
+        filing has probably been made since the last crawl;
+      * a quarter has ended since the newest stored one, so its results may
+        already be on the exchange. The crawl re-reads a company once a
+        fortnight; a result filed yesterday is not in the store yet, and
+        serving the store then is how a stock page goes on showing June's
+        quarter after September's was filed.
+    `allow_stale` skips those last two checks, for when the exchange has just
+    failed and an older stored series beats an error.
     """
     try:
         import fundamentals_store as store
@@ -474,7 +500,8 @@ def series_from_store(symbol, quarters: int = 8, basis: str = None,
     today = today or dt.date.today()
     if newest is None:
         return None
-    stale = (today - newest).days > STORE_FRESH_DAYS
+    stale = ((today - newest).days > STORE_FRESH_DAYS
+             or newest < last_quarter_end(today))
     if stale and not allow_stale:
         return None
 
