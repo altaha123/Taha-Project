@@ -34,6 +34,7 @@ without it rather than 500ing the share route.
 
 import datetime as dt
 import io
+import json
 import os
 import threading
 
@@ -392,6 +393,14 @@ def share_page(title, description, image, target):
         return (str(t).replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace('"', "&quot;"))
     t, d, i, u = esc(title), esc(description), esc(image), esc(target)
+    # The script gets the raw URL as a JS string, not the HTML-escaped one:
+    # inside <script> an entity is never decoded, so `&amp;` reached
+    # location.replace literally and every parameter after the first was
+    # lost — /?go=results&q=TARIL opened Results with nothing in it, and a
+    # chart link lost its tab and its range. The \u escapes keep the raw URL
+    # from closing the script element whatever it contains.
+    js = (json.dumps(str(target)).replace("<", "\\u003c").replace(">", "\\u003e")
+          .replace("&", "\\u0026"))
 
     # The mark, so the tab, the bookmark and every chat client that shows a
     # site icon beside the unfurled card get the brand rather than a blank
@@ -427,7 +436,7 @@ def share_page(title, description, image, target):
 <meta http-equiv="refresh" content="0; url={u}">
 </head><body>
 <p>Opening <a href="{u}">{t}</a>&hellip;</p>
-<script>location.replace({u!r});</script>
+<script>location.replace({js});</script>
 </body></html>"""
 
 
@@ -826,6 +835,180 @@ def holding_card(row: dict) -> bytes:
               mono(14), MUTE, 2.4)
 
     _footer(d, dt.date.today().strftime("%d %b %Y"))
+    buf = io.BytesIO()
+    img.save(buf, "PNG", optimize=True)
+    return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Results cards
+#
+# A quarter as the company filed it: profit, revenue, margin and the same
+# quarter a year earlier. Every figure on it is the company's own, so it is a
+# statement of fact rather than an opinion — the safest card on the site to
+# post, and the one people most want to post on the evening results land.
+# ---------------------------------------------------------------------------
+
+def _crore(v):
+    """₹ crore, Indian grouping is the site's job; the card keeps it plain."""
+    if v is None:
+        return "—"
+    return f"{float(v):,.2f}"
+
+
+def _pct_txt(v):
+    return "—" if v is None else f"{float(v):+.1f}%".replace("+-", "-")
+
+
+def _filed_on(filed_at):
+    """'13-Oct-2026 16:34:09' -> '13 OCT 2026, 16:34 IST'; anything else as given."""
+    s = str(filed_at or "").strip()
+    for fmt, out in (("%d-%b-%Y %H:%M:%S", "%d %b %Y, %H:%M IST"),
+                     ("%d-%b-%Y %H:%M", "%d %b %Y, %H:%M IST"),
+                     ("%d-%b-%Y", "%d %b %Y"), ("%Y-%m-%d", "%d %b %Y")):
+        try:
+            return dt.datetime.strptime(s, fmt).strftime(out).upper()
+        except ValueError:
+            continue
+    return s.upper()
+
+
+def _year_ago(series):
+    """The same fiscal quarter a year before the newest, by label."""
+    if not series:
+        return None
+    head = str(series[0].get("period") or "")
+    parts = head.split("FY")
+    if len(parts) != 2 or not parts[1].strip().isdigit():
+        return None
+    want = f"{parts[0].strip()} FY{(int(parts[1]) - 1) % 100:02d}"
+    for item in series[1:]:
+        if str(item.get("period") or "").strip() == want:
+            return item
+    return None
+
+
+def results_card(r: dict) -> bytes:
+    """
+    One quarter's results. `r` is a /results payload, from the exchange filing
+    or the Yahoo fallback; the card says which by what it can state.
+    """
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGB", (W, H), PAPER)
+    d = ImageDraw.Draw(img)
+    _shell(d, img)
+
+    sym = str(r.get("symbol") or "").upper().replace(".NS", "").replace(".BO", "")
+    name = str(r.get("name") or sym or "—")
+    quarter = str(r.get("quarter") or "")
+    filed = bool(r.get("filed_at"))
+
+    # The quarter, top right, where the eye lands after the mark.
+    tag = f"{quarter} RESULTS" if quarter else "QUARTERLY RESULTS"
+    tw = _tracked_width(d, tag, mono(20, True), 3)
+    _tracking(d, (W - 64 - tw, 60), tag, mono(20, True), GOLD, 3)
+    sub = (f"FILED WITH NSE {_filed_on(r.get('filed_at'))}" if filed
+           else (f"STATEMENTS DATED {_filed_on(r.get('as_of'))}" if r.get("as_of") else ""))
+    if sub:
+        sw = _tracked_width(d, sub, mono(14), 2.2)
+        _tracking(d, (W - 64 - sw, 96), sub, mono(14), MUTE, 2.2)
+
+    f = serif(54)
+    if d.textlength(name, font=f) > W - 128:
+        while name and d.textlength(name + "…", font=f) > W - 128:
+            name = name[:-1]
+        name = name.rstrip() + "…"
+    d.text((64, 160), name, font=f, fill=INK)
+    bits = [sym] if sym else []
+    if filed:
+        bits.append("NSE")
+    if r.get("basis") and filed:
+        bits.append(str(r["basis"]).upper())
+    if r.get("as_of"):
+        bits.append("QUARTER ENDED " + _filed_on(r.get("as_of")))
+    _tracking(d, (66, 228), "  ·  ".join(bits), mono(15), MUTE, 2.6)
+    d.line([(64, 270), (W - 64, 270)], fill=RULE, width=1)
+
+    # Left: profit after tax, the headline.
+    pat, yoy = r.get("pat_cr"), r.get("pat_yoy_pct")
+    # A loss is named as one and set in red. A minus sign in front of a
+    # rupee figure is the easiest thing on a card to miss at thumbnail size.
+    loss = pat is not None and float(pat) < 0
+    _tracking(d, (66, 296), "NET LOSS" if loss else "PROFIT AFTER TAX",
+              mono(15), FAIL if loss else MUTE, 2.6)
+    big = serif(112)
+    sign, unit = mono(52, True), serif(48)
+    y0 = 318
+    x = 64
+    d.text((x, y0 + 36), "₹", font=sign, fill=INK_2)
+    x += d.textlength("₹", font=sign) + 8
+    fig = "—" if pat is None else _crore(abs(float(pat)))
+    d.text((x, y0), fig, font=big, fill=FAIL if loss else INK)
+    x += d.textlength(fig, font=big) + 14
+    d.text((x, y0 + 52), "Cr", font=unit, fill=INK_2)
+
+    base = r.get("pat_yoy_base_cr")
+    then = None
+    if base is not None:
+        if float(base) < 0:
+            then = f"vs a loss of ₹{_crore(abs(float(base)))} Cr a year earlier"
+        elif loss:
+            then = f"vs a profit of ₹{_crore(base)} Cr a year earlier"
+        else:
+            then = f"vs ₹{_crore(base)} Cr a year earlier"
+    if yoy is not None:
+        col = PASS if yoy >= 0 else FAIL
+        pill = f"{_pct_txt(yoy)} YoY"
+        pf = mono(22, True)
+        pw = d.textlength(pill, font=pf)
+        d.rounded_rectangle([64, 452, 64 + pw + 28, 492], radius=6, outline=col, width=2)
+        d.text((78, 458), pill, font=pf, fill=col)
+        if then:
+            d.text((64 + pw + 46, 461), then, font=mono(18), fill=MUTE)
+    elif then:
+        # Across zero a percentage means nothing; the two figures say it.
+        d.text((64, 461), then, font=mono(18), fill=MUTE)
+    elif pat is not None:
+        d.text((64, 461), "Year-ago quarter not published", font=mono(18), fill=MUTE)
+
+    # Right: revenue and net profit, the same quarter a year apart.
+    def bars(top, title, series, now):
+        if not series:
+            return top
+        _tracking(d, (700, top), f"{title} — ₹ CRORE", mono(14), MUTE, 2.4)
+        then = _year_ago(series or [])
+        rows = [(then.get("period"), then.get("value_cr"), False)] if then else []
+        if series:
+            rows.append((series[0].get("period"), now, True))
+        vals = [abs(float(v)) for _p, v, _c in rows if v is not None] or [1.0]
+        top_v = max(vals) or 1.0
+        y = top + 30
+        for period, v, cur in rows:
+            d.text((700, y - 2), str(period or ""), font=mono(15), fill=INK_2 if cur else MUTE)
+            bx0, bx1 = 800, 1036
+            d.rectangle([bx0, y + 2, bx1, y + 16], fill=PAPER_2)
+            if v is not None:
+                w = max(3, (bx1 - bx0) * abs(float(v)) / top_v)
+                d.rectangle([bx0, y + 2, bx0 + w, y + 16],
+                            fill=(PASS if float(v) >= 0 else FAIL) if cur else RULE)
+            tail = _crore(v)
+            vw = d.textlength(tail, font=mono(15, cur))
+            d.text((W - 64 - vw, y - 2), tail, font=mono(15, cur), fill=INK if cur else MUTE)
+            y += 30
+        return y
+
+    y = bars(296, "REVENUE", r.get("revenue_series"), r.get("revenue_cr"))
+    y = bars(y + 14, "NET PROFIT", r.get("pat_series"), pat)
+
+    m_now, m_then = r.get("net_margin_pct"), r.get("net_margin_yoy_pct")
+    if m_now is not None:
+        line = f"NET MARGIN {m_now:.1f}%"
+        if m_then is not None:
+            line += f"  ·  {m_then:.1f}% A YEAR EARLIER"
+        _tracking(d, (700, y + 12), line, mono(14), INK_2, 2.2)
+
+    _footer(d, "AS FILED · REG 33" if filed else dt.date.today().strftime("%d %b %Y"))
     buf = io.BytesIO()
     img.save(buf, "PNG", optimize=True)
     return buf.getvalue()

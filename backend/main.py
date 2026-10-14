@@ -1790,6 +1790,64 @@ def share_holding(ticker: str):
         media_type="text/html")
 
 
+def _results_for_card(ticker):
+    """The /results payload for a card, or a 404 when there is nothing to draw."""
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    r = results(ticker)
+    if not r or not r.get("available"):
+        raise HTTPException(404, (r or {}).get("message") or "No results for this stock.")
+    return r
+
+
+@app.get("/og/results.png")
+def og_results(ticker: str, period: str = ""):
+    """
+    One quarter's results as a picture: profit, revenue, margin and the same
+    quarter a year earlier, as filed.
+
+    `period` is not read. The page puts the quarter in the URL so that a new
+    quarter is a new address: X and the CDN in front of /og/ both cache an
+    image by its URL, and without it the card shared the evening results land
+    would be the one rendered that morning.
+    """
+    r = _results_for_card(ticker)
+    key = "results:%s:%s:%s:%s:%s" % (r.get("symbol"), r.get("quarter"), r.get("pat_cr"),
+                                     r.get("revenue_cr"), r.get("filed_at"))
+    try:
+        png = og_cards.cached(key, lambda: og_cards.results_card(r))
+    except Exception as e:
+        raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
+    return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
+
+
+@app.get("/share/results/{ticker}")
+def share_results(ticker: str, period: str = ""):
+    r = _results_for_card(ticker)
+    sym = str(r.get("symbol") or ticker).upper().replace(".NS", "").replace(".BO", "")
+    name = r.get("name") or sym
+    quarter = r.get("quarter") or "Latest"
+
+    def cr(v):
+        return "—" if v is None else f"₹{float(v):,.2f} Cr"
+
+    def pct(v):
+        return "" if v is None else f" ({float(v):+.1f}% YoY)".replace("+-", "-")
+
+    pat = r.get("pat_cr")
+    desc = (f"{'Net loss' if pat is not None and pat < 0 else 'Profit after tax'} "
+            f"{cr(abs(pat) if pat is not None else None)}{pct(r.get('pat_yoy_pct'))}. "
+            f"Revenue {cr(r.get('revenue_cr'))}{pct(r.get('revenue_yoy_pct'))}.")
+    if r.get("filed_at"):
+        desc += f" As filed with NSE on {str(r['filed_at'])[:11]}."
+    tag = str(quarter).replace(" ", "-")
+    return Response(content=og_cards.share_page(
+        f"{name} ({sym}) — {quarter} results", desc,
+        f"{SHARE_ORIGIN}/og/results.png?ticker={sym}&period={tag}",
+        f"{SITE_URL}/?go=results&q={sym}"),
+        media_type="text/html")
+
+
 @app.get("/share/{ticker}")
 def share_stock(ticker: str):
     if not ticker or len(ticker) > 20:

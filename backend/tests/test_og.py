@@ -316,6 +316,70 @@ def test_the_idea_card_never_carries_a_price_level():
 # indistinguishable from a screenshot somebody else made.
 # ---------------------------------------------------------------------------
 
+RESULTS = {
+    "symbol": "TARIL", "name": "Transformers And Rectifiers (India) Limited",
+    "quarter": "Q2 FY27", "as_of": "2026-09-30", "filed_at": "13-Oct-2026 16:34:09",
+    "basis": "consolidated", "pat_cr": 81.38, "pat_yoy_pct": 117.9,
+    "pat_yoy_base_cr": 37.35, "revenue_cr": 739.44, "revenue_yoy_pct": 60.7,
+    "net_margin_pct": 11.0, "net_margin_yoy_pct": 8.1,
+    "revenue_series": [{"period": "Q2 FY27", "value_cr": 739.44},
+                       {"period": "Q1 FY27", "value_cr": 572.34},
+                       {"period": "Q2 FY26", "value_cr": 460.03}],
+    "pat_series": [{"period": "Q2 FY27", "value_cr": 81.38},
+                   {"period": "Q1 FY27", "value_cr": 64.29},
+                   {"period": "Q2 FY26", "value_cr": 37.35}],
+}
+
+
+def _drawn(build):
+    """Every string a card draws, in order."""
+    from PIL import ImageDraw
+    seen = []
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        seen.append(str(text))
+        return original(self, xy, text, *a, **k)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        png = build()
+    finally:
+        ImageDraw.ImageDraw.text = original
+    return png, "".join(seen)
+
+
+def test_results_card_carries_the_quarter_as_filed():
+    png, text = _drawn(lambda: og.results_card(RESULTS))
+    assert _png_size(png) == (1200, 630)
+    for want in ("Q2 FY27 RESULTS", "FILED WITH NSE 13 OCT 2026, 16:34 IST",
+                 "Transformers And Rectifiers", "CONSOLIDATED", "81.38",
+                 "+117.9% YoY", "37.35", "739.44", "460.03", "NET MARGIN 11.0%"):
+        assert want.replace(" ", "") in text.replace(" ", ""), want
+    # The year-ago bar is the same quarter a year back, not the last one.
+    assert "Q2 FY26" in text and "572.34" not in text
+
+
+def test_a_loss_is_named_and_never_given_a_percentage():
+    loss = dict(RESULTS, pat_cr=-12.5, pat_yoy_pct=None, pat_yoy_base_cr=5.2)
+    png, text = _drawn(lambda: og.results_card(loss))
+    assert _png_size(png) == (1200, 630)
+    assert "NETLOSS" in text.replace(" ", "")
+    assert "a profit of ₹5.20 Cr" in text
+    assert "YoY" not in text.split("NET MARGIN")[0].replace("REVENUE", "")
+
+
+def test_a_yahoo_card_does_not_claim_an_exchange_filing():
+    yahoo = {k: v for k, v in RESULTS.items() if k not in ("filed_at", "basis")}
+    _png, text = _drawn(lambda: og.results_card(yahoo))
+    assert "NSE" not in text and "REG 33" not in text.replace("  ", " ")
+    assert "STATEMENTS DATED 30 SEP 2026" in text.replace("  ", " ")
+
+
+def test_a_sparse_results_payload_still_renders():
+    assert _png_size(og.results_card({"symbol": "X"})) == (1200, 630)
+
+
 def test_every_card_carries_the_mark():
     """The gold arrow only exists in the logo, so its pixels prove it landed."""
     from PIL import Image
@@ -327,6 +391,7 @@ def test_every_card_carries_the_mark():
         "idea": og.idea_card(IDEA),
         "holding": og.holding_card(HOLDING),
         "chart": og.chart_card(CHART),
+        "results": og.results_card(RESULTS),
     }
     for name, png in cards.items():
         im = Image.open(_io.BytesIO(png)).convert("RGB")
@@ -378,6 +443,28 @@ def test_a_missing_logo_file_costs_the_mark_and_nothing_else():
     finally:
         og.LOGO_PATH = original
         og._logo_cache = cache
+
+
+def test_the_redirect_keeps_every_parameter():
+    """
+    An HTML entity is not decoded inside <script>. The redirect used the
+    escaped URL, so `&amp;` reached location.replace and everything after the
+    first parameter was lost: a shared results link opened an empty Results
+    tab, and a chart link lost its tab and its range.
+    """
+    import json as _json
+    target = "https://site.example/?go=results&q=TARIL"
+    html = og.share_page("T", "D", "https://site.example/og.png", target)
+    script = re.search(r"<script>location\.replace\((.*?)\);</script>", html).group(1)
+    assert _json.loads(script) == target
+    assert 'url=https://site.example/?go=results&amp;q=TARIL"' in html
+
+
+def test_the_redirect_cannot_close_its_script():
+    html = og.share_page("T", "D", "i.png", "https://x/?q=</script><script>alert(1)//&a='\"")
+    script = re.search(r"<script>location\.replace\((.*?)\);</script>", html, re.S).group(1)
+    assert "</script>" not in script and "<" not in script
+    assert html.count("<script>") == 1
 
 
 def test_the_share_page_points_a_crawler_at_the_icon():

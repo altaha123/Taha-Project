@@ -100,6 +100,21 @@ jobs:
         with:
           name: nav-products-verification
           path: test-results/nav-products
+      - name: Verify the results card shares to every network, with its logo
+        if: always()
+        # Four silent ones: a logo in the markup that draws nothing (or
+        # vanishes on the dark theme), a network button whose address drops
+        # the card's link — the only way the picture reaches X or Telegram —
+        # a shared link that opens an empty results box, and a confirmation
+        # that wipes the logo off the button it confirms.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/results-share-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-share-verification
+          path: test-results/results-share
       - name: Verify homepage visuals, motion and accessibility
         if: always()
         env:

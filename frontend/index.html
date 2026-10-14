@@ -374,6 +374,8 @@
     border-bottom:1px solid var(--rule-2);position:relative}
   .rbul li:before{content:"";position:absolute;left:0;top:16px;width:6px;height:1px;background:var(--gold)}
   .rnote{font-size:12px;line-height:1.7;color:var(--mute);margin-top:16px}
+  .rshare{margin-top:22px;padding-top:18px;border-top:1px solid var(--rule-2)}
+  .rshare .sk{display:block;margin-bottom:11px}
   /* ── Share row on the analysis ─────────────────────────────────────── */
   .sharerow{margin:34px auto 0;max-width:640px;border:1px solid var(--rule-2);
             border-radius:var(--r-card);background:var(--skin-card,#fff);
@@ -1612,7 +1614,10 @@
         <div class="rgrid" id="rgrid"></div>
         <ul class="rbul" id="rbul"></ul>
         <p class="rnote" id="rnote"></p>
-        <button class="wabtn" id="washare">Share on WhatsApp</button>
+        <div class="rshare">
+          <span class="sk">Share this result</span>
+          <div class="shlogos" id="rsharebar"></div>
+        </div>
       </div>
       <p class="disc" id="rdisc"></p>
     </section>
@@ -2501,6 +2506,7 @@ function renderResults(d){
   $("rbul").innerHTML = (d.bullets||[]).map(b=>`<li>${esc(b)}</li>`).join("");
   $("rnote").textContent = d.note || "";
   $("rdisc").textContent = d.disclaimer || "";
+  wireResultsShare();
   $("rcardwrap").scrollIntoView({behavior:"smooth", block:"start"});
 }
 
@@ -2524,20 +2530,21 @@ async function getResults(sym){
   }
 }
 
-function shareWhatsApp(){
-  if(!lastResult) return;
+/* The card's own share row: X, WhatsApp, Telegram, LinkedIn and Facebook,
+   each one press, plus the image itself. share.js draws the logos and the
+   card image; this only says what the card is showing now. */
+function resultsShare(){
   const d = lastResult;
-  const arrow = (d.pat_yoy_pct??0) >= 0 ? "\u25B2" : "\u25BC";
-  const lines = [
-    `*${d.symbol.replace(".NS","").replace(".BO","")}* \u2014 ${d.quarter} results`,
-    `PAT: ${fmtCr(d.pat_cr)}${d.pat_yoy_pct!==null&&d.pat_yoy_pct!==undefined ? ` (${arrow} ${d.pat_yoy_pct>=0?"+":""}${d.pat_yoy_pct}% YoY)` : ""}`,
-    `Revenue: ${fmtCr(d.revenue_cr)}${d.revenue_yoy_pct!==null&&d.revenue_yoy_pct!==undefined ? ` (${d.revenue_yoy_pct>=0?"+":""}${d.revenue_yoy_pct}% YoY)` : ""}`,
-    ...(d.bullets||[]).slice(0,2).map(b=>"\u2022 "+b),
-    "",
-    "Altaha Screener \u2014 Where Logic Meets Validations",
-    location.origin
-  ];
-  window.open("https://wa.me/?text="+encodeURIComponent(lines.join("\n")), "_blank");
+  if(!d) return null;
+  return Object.assign({}, d, {kind:"results", ticker:d.symbol});
+}
+
+function wireResultsShare(){
+  if(!window.AltahaShare) return;
+  window.AltahaShare.bar($("rsharebar"), resultsShare);
+  // Share image has to call navigator.share inside the tap, and Safari
+  // forgets the tap while the card renders, so fetch it first where it is used.
+  if(navigator.share) window.AltahaShare.prefetch(resultsShare());
 }
 
 /* ── Ideas view ─────────────────────────────────────────────────────── */
@@ -4454,7 +4461,6 @@ $("showfull").addEventListener("click",()=>{
 TABS.forEach(t=>$("tab-"+t).addEventListener("click",()=>switchTab(t)));
 $("rgo").addEventListener("click",()=>getResults());
 $("rtk").addEventListener("keydown",e=>{ if(e.key==="Enter") getResults(); });
-$("washare").addEventListener("click",shareWhatsApp);
 $("genbtn2").addEventListener("click",()=>startScan($("genbtn2").textContent.includes("Refresh"), false));
 /* -- Full-window chart mode: ?chart=SYMBOL opens a TradingView-style tab -- */
 const fcParams = new URLSearchParams(location.search);
@@ -4541,6 +4547,7 @@ if(fcSymParam){
    link to. Two parameters now:
      ?q=RELIANCE      fill the search box and run the analysis
      ?go=filings      open a specific tab on arrival
+     ?go=results&q=TARIL   open that stock's latest results (a shared card)
    Both are sanitised, and neither runs unless present, so an ordinary
    visit to the site behaves exactly as it did before.               */
 (function(){
@@ -4573,7 +4580,14 @@ if(fcSymParam){
         });
       }
     }
-    if (q) {
+    if (q && go === "results") {
+      /* A shared results card links here. The symbol belongs in the results
+         box, not the analysis one: running the analysis would carry the
+         reader off to a scorecard they did not ask for. */
+      setTimeout(function(){
+        if (typeof getResults === "function") getResults(q);
+      }, 220);
+    } else if (q) {
       var tk = document.getElementById("tk"), btn = document.getElementById("go");
       if (tk && btn) {
         tk.value = q;
