@@ -78,6 +78,12 @@ try:
 except Exception:
     xbrl_source = None
 try:
+    # Who reports when: board meetings to approve results, and the filings
+    # as they reach NSE, for the Results page's Today / Tomorrow submenu.
+    import results_calendar
+except Exception:
+    results_calendar = None
+try:
     # Named for the filing, not for the concept: `shareholding` is already a
     # function on data_source (the provider's thin two-line version). This is
     # the company's own Reg 31 document, and the two must not be confused.
@@ -4525,6 +4531,24 @@ def digest_preview(holdings: str = "", format: str = "html", name: str = ""):
 def portfolio_policy():
     """The default rulebook, so the UI can render it without hardcoding."""
     return {"defaults": DEFAULT_POLICY}
+
+
+@app.get("/results/calendar")
+def results_calendar_view():
+    """
+    Yesterday to the end of next week: every company whose board meets to
+    approve results, and every results filing as it reaches NSE.
+
+    Declared means the filing itself is on the exchange, with the time it
+    arrived. A company whose board has met but whose filing has not arrived
+    is "awaited", never "declared" on the strength of the meeting alone.
+    """
+    if results_calendar is None:
+        return {"available": False, "message": "The results calendar is not available."}
+    try:
+        return to_native(results_calendar.calendar())
+    except Exception as e:
+        raise HTTPException(503, f"Could not read the results calendar: {str(e)[:100]}")
 
 
 # A filing read from the exchange, held briefly. Results are read when they

@@ -185,7 +185,7 @@
           { tab: 'factors', label: 'Factors', icon: 'target',
             hint: 'What each factor has actually predicted' },
           { tab: 'results', label: 'Fundamentals', icon: 'document',
-            hint: 'Quarterly numbers and the year-ago comparison' }
+            hint: 'Quarterly numbers, and who reports today and this week' }
         ]},
         { head: 'Ownership', items: [
           { tab: 'investors', label: 'Investor portfolios', icon: 'ledger',

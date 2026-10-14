@@ -115,6 +115,22 @@ jobs:
         with:
           name: results-share-verification
           path: test-results/results-share
+      - name: Verify the results calendar says only what NSE has
+        if: always()
+        # "Filed" must only ever mean the document is on NSE — a board that
+        # has met is "not filed yet" until it arrives. Also: tab counts that
+        # disagree with their rows, "today" taken from the reader's clock
+        # rather than IST, a filing the morning after listed under the wrong
+        # day, an address that does not open its tab, and a company name
+        # rendered as markup.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/results-calendar-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-calendar-verification
+          path: test-results/results-calendar
       - name: Verify homepage visuals, motion and accessibility
         if: always()
         env:
