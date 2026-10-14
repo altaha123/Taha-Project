@@ -78,6 +78,27 @@ def test_an_overdue_series_is_not_served_as_current(store):
     assert "Q3 FY26" in held["notes"][0]
 
 
+def test_a_quarter_ended_since_the_newest_row_goes_to_the_exchange(store):
+    """TARIL filed September's quarter on 13 October; the crawl re-reads a
+    company once a fortnight. The store holding June is not current then,
+    though June is well inside STORE_FRESH_DAYS."""
+    import fundamentals as F
+    store.upsert("income", [_q(store, e, 1000, 100) for e in ENDS])
+    assert F.series_from_store("ACME", today=dt.date(2026, 9, 30))["available"]
+    assert F.series_from_store("ACME", today=dt.date(2026, 10, 14)) is None
+    held = F.series_from_store("ACME", today=dt.date(2026, 10, 14),
+                               allow_stale=True)
+    assert held["available"] and held["stale"]
+
+
+def test_last_quarter_end():
+    import fundamentals as F
+    assert F.last_quarter_end(dt.date(2026, 10, 14)) == dt.date(2026, 9, 30)
+    assert F.last_quarter_end(dt.date(2026, 9, 30)) == dt.date(2026, 6, 30)
+    assert F.last_quarter_end(dt.date(2026, 1, 5)) == dt.date(2025, 12, 31)
+    assert F.last_quarter_end(dt.date(2026, 4, 1)) == dt.date(2026, 3, 31)
+
+
 def test_a_short_history_says_so(store):
     import fundamentals as F
     store.upsert("income", [_q(store, e, 1000, 100) for e in ENDS[:3]])

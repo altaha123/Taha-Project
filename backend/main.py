@@ -178,7 +178,7 @@ except Exception:
 import patterns as pattern_engine
 import forward as forward_engine
 import tracker
-from results import quarterly_results
+from results import quarterly_results, filed_results
 from levels import compute_levels
 from tradeplan import build_plan
 
@@ -2268,8 +2268,8 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
     # altaha_fundamentals.db, so a crawled company is answered from the disk
     # in milliseconds rather than an index call plus a document per quarter
     # against a throttled exchange. The exchange is read only for a company
-    # the crawl has not reached, the basis it does not keep, or a series whose
-    # newest quarter looks overdue.
+    # the crawl has not reached, the basis it does not keep, or a series that
+    # may be missing a quarter — one has ended since its newest row.
     try:
         held = fundamentals_source.series_from_store(ticker, quarters=n, basis=want)
     except Exception:
@@ -2277,7 +2277,7 @@ def fundamentals_series(ticker: str, quarters: int = 8, basis: str = None):
     if held and held.get("available"):
         return to_native(held)
     try:
-        out = fundamentals_source.series(ticker, quarters=n, basis=want)
+        out = _filed_series(ticker, n, want)
     except Exception as e:
         out = {"available": False, "message": f"Could not read the filings: {str(e)[:110]}"}
     if not out.get("available"):
@@ -4469,10 +4469,65 @@ def portfolio_policy():
     return {"defaults": DEFAULT_POLICY}
 
 
+# A filing read from the exchange, held briefly. Results are read when they
+# are asked for so that one filed this afternoon is on the page this
+# afternoon; the memo only stops a popular stock from sending NSE the same
+# index calls on every view, and holds nothing longer than this.
+FILED_TTL = int(os.environ.get("FILED_RESULTS_TTL", "300") or 300)
+_filed_memo = {}
+_filed_lock = threading.Lock()
+
+
+def _filed_series(ticker, quarters, basis=None):
+    """fundamentals.series(), memoised for FILED_TTL. Only complete reads are
+    kept: a refusal, a short history, or a newest quarter the index lists but
+    NSE would not hand over is read again on the next view, not remembered."""
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    key = (sym, quarters, basis)
+    with _filed_lock:
+        hit = _filed_memo.get(key)
+        if hit and time.time() - hit[0] < FILED_TTL:
+            return hit[1]
+    out = fundamentals_source.series(sym, quarters=quarters, basis=basis)
+    newest = ((out.get("rows") or [{}])[0] or {}).get("period_end") or ""
+    if (out.get("available") and not out.get("partial")
+            and (out.get("filed_latest") or "") <= newest):
+        with _filed_lock:
+            if len(_filed_memo) >= 256:
+                oldest = min(_filed_memo, key=lambda k: _filed_memo[k][0])
+                _filed_memo.pop(oldest, None)
+            _filed_memo[key] = (time.time(), out)
+    return out
+
+
 @app.get("/results")
 def results(ticker: str):
+    """
+    The latest quarter, read from the company's own filing on NSE.
+
+    This used to read Yahoo's quarterly statements, which arrive days after
+    the exchange filing: TARIL filed its September 2026 quarter on 13 October
+    and the card still showed June the next day. The filing is now read when
+    the card is asked for. Yahoo answers only what the exchange cannot — a US
+    ticker, an explicit non-NSE suffix, or NSE refusing the call.
+    """
     if not ticker or len(ticker) > 20:
         raise HTTPException(400, "Provide a valid ticker symbol.")
+    raw = ticker.strip().upper()
+    # Bare symbols and .NS only, matching resolve(): an Indian listing wins a
+    # collision with a US ticker, and an explicit other suffix means what it
+    # says.
+    nse_symbol = (fundamentals_source is not None and not raw.startswith("^")
+                  and ("." not in raw or raw.endswith(".NS")))
+    if nse_symbol:
+        try:
+            out = filed_results(_filed_series(raw, 5),
+                                sym=raw.replace(".NS", ""))
+        except Exception:
+            out = None
+        if out and out.get("available"):
+            out["disclaimer"] = DISCLAIMER
+            return to_native(out)
     try:
         sym, t, hist = resolve(ticker)
     except NotFound:
