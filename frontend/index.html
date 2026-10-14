@@ -376,6 +376,52 @@
   .rnote{font-size:12px;line-height:1.7;color:var(--mute);margin-top:16px}
   .rshare{margin-top:22px;padding-top:18px;border-top:1px solid var(--rule-2)}
   .rshare .sk{display:block;margin-bottom:11px}
+
+  /* The results calendar. Rows are buttons: the whole row opens the company's
+     card, which is the one thing a reader wants from a name on this list. */
+  .rcal{margin-top:34px}
+  .rcal-h{font-family:var(--serif);font-weight:400;font-size:26px;margin:0 0 6px;color:var(--ink)}
+  .rcal-sub{font-size:13px;line-height:1.6;color:var(--mute);margin:0 0 16px;max-width:62ch}
+  .rcal-seg button b{font-family:var(--mono);font-weight:500;font-size:11px;margin-left:7px;
+       opacity:.62}
+  .rcal-seg button b:empty{display:none}
+  .rcal-tools{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 0 10px}
+  .rcal-tools input{flex:1 1 240px;max-width:340px;font:inherit;font-size:14px;padding:9px 14px;
+       border:1px solid var(--rule);border-radius:var(--r-pill);background:var(--paper);color:var(--ink)}
+  .rcal-tools input:focus-visible{outline:none;box-shadow:var(--ring)}
+  .rcal-sum{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--mute)}
+  .rcal-day{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+       color:var(--ink-2);margin:20px 0 6px;display:flex;gap:10px;align-items:baseline}
+  .rcal-day i{font-style:normal;color:var(--mute)}
+  .rcal-rows{border-top:1px solid var(--rule-2)}
+  .rcal-row{display:grid;grid-template-columns:118px minmax(0,1fr) auto;gap:4px 16px;
+       align-items:baseline;width:100%;text-align:left;background:none;border:0;
+       border-bottom:1px solid var(--rule-2);padding:12px 6px;cursor:pointer;color:var(--ink);
+       font:inherit;transition:background var(--t-fast) var(--ease)}
+  .rcal-row:hover{background:var(--paper-2)}
+  .rcal-row:focus-visible{outline:none;box-shadow:var(--ring);border-radius:6px}
+  .rcal-sym{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.04em;
+       color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rcal-co{font-size:14px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rcal-st{font-family:var(--mono);font-size:11px;letter-spacing:.06em;white-space:nowrap;
+       display:inline-flex;align-items:center;gap:7px;color:var(--mute)}
+  .rcal-st:before{content:"";width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor}
+  .rcal-st.declared{color:var(--pass)}
+  .rcal-st.declared:before{background:currentColor}
+  .rcal-st.today{color:var(--gold-dp)}
+  .rcal-st.awaited{color:var(--ink-2)}
+  .rcal-meta{grid-column:2 / -1;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+       color:var(--mute)}
+  .rcal-empty{padding:26px 6px;color:var(--mute);font-size:14px;line-height:1.6;
+       border-top:1px solid var(--rule-2)}
+  .rcal-note{font-size:12px;line-height:1.7;color:var(--mute);margin-top:14px}
+  html[data-theme="dark"] .rcal-st.today{color:var(--gold-lt)}
+  @media(max-width:560px){
+    .rcal-row{grid-template-columns:minmax(0,1fr) auto;padding:12px 4px}
+    .rcal-co{grid-column:1 / -1;grid-row:2;white-space:normal}
+    .rcal-meta{grid-column:1 / -1}
+    .rcal-tools input{max-width:none}
+  }
   /* ── Share row on the analysis ─────────────────────────────────────── */
   .sharerow{margin:34px auto 0;max-width:640px;border:1px solid var(--rule-2);
             border-radius:var(--r-card);background:var(--skin-card,#fff);
@@ -1591,7 +1637,7 @@
   <div id="view-results" style="display:none">
     <header class="tabhead">
       <h2>Quarterly results</h2>
-      <p>The latest reported quarter for any NSE or US stock — profit, revenue, margin and the year-ago comparison.</p>
+      <p>The latest reported quarter for any NSE or US stock — profit, revenue, margin and the year-ago comparison — and the calendar of who reports today, tomorrow and this week.</p>
     </header>
     <div class="searchrow" style="margin-top:0">
       <input id="rtk" placeholder="Enter a stock — GULPOLY, RELIANCE, TCS…" autocomplete="off"
@@ -1620,6 +1666,28 @@
         </div>
       </div>
       <p class="disc" id="rdisc"></p>
+    </section>
+
+    <!-- Who reports when. Board meetings the companies announced to NSE, and
+         each results filing as it reaches the exchange. -->
+    <section class="rcal" id="rcal" aria-labelledby="rcalh">
+      <h3 class="rcal-h" id="rcalh">Results calendar</h3>
+      <p class="rcal-sub">Board meetings to approve results, as the companies announced them to NSE,
+        and each filing the moment it reaches the exchange. Press a company for its numbers.</p>
+      <div class="seg mono rcal-seg" id="rcalseg" role="tablist" aria-label="Results calendar">
+        <button type="button" role="tab" data-rcal="yesterday" aria-selected="false">Yesterday<b></b></button>
+        <button type="button" role="tab" data-rcal="today" class="active" aria-selected="true">Today<b></b></button>
+        <button type="button" role="tab" data-rcal="tomorrow" aria-selected="false">Tomorrow<b></b></button>
+        <button type="button" role="tab" data-rcal="week" aria-selected="false">This week<b></b></button>
+        <button type="button" role="tab" data-rcal="next" aria-selected="false">Next week<b></b></button>
+      </div>
+      <div class="rcal-tools">
+        <input id="rcalq" type="search" placeholder="Filter by company or symbol" autocomplete="off"
+               spellcheck="false" aria-label="Filter the results calendar" />
+        <span class="rcal-sum" id="rcalsum" aria-live="polite"></span>
+      </div>
+      <div class="rcal-list" id="rcallist" role="tabpanel" aria-labelledby="rcalh"></div>
+      <p class="rcal-note" id="rcalnote"></p>
     </section>
   </div><!-- /view-results -->
 
@@ -2319,6 +2387,7 @@ function switchTab(which){
   if(which==="ideas") loadIdeas();
   if(which==="tracker") loadTracker();
   if(which==="filings") loadFilings();
+  if(which==="results") loadResultsCalendar();
   /* The two product hubs build themselves on first sight rather than on page
      load: neither is the landing view, and both fan out to several feeds. */
   if(which==="discover" && window.AltahaDiscover) window.AltahaDiscover.open();
@@ -2546,6 +2615,177 @@ function wireResultsShare(){
   // forgets the tap while the card renders, so fetch it first where it is used.
   if(navigator.share) window.AltahaShare.prefetch(resultsShare());
 }
+
+/* ── Results calendar ──────────────────────────────────────────────────
+   One request covers yesterday to the end of next week; the submenu only
+   chooses which days of it to show, so switching is instant and every tab
+   can carry its count. Refetched when the view is opened again after
+   RCAL_TTL, because filings land all evening. */
+const RCAL_TTL = 5 * 60 * 1000;
+const RCAL_TABS = ["yesterday","today","tomorrow","week","next"];
+let rcalData = null, rcalAt = 0, rcalTab = "today", rcalReq = 0;
+
+/* #research/results/tomorrow opens on that tab. Read before nav.js has had
+   a chance to rewrite the address to its two-part form. */
+(function(){
+  const want = (location.hash || "").replace(/^#/, "").split("/")[2];
+  if(RCAL_TABS.includes(want)) rcalTab = want;
+})();
+
+function rcalIso(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" +
+         String(d.getDate()).padStart(2,"0");
+}
+function rcalDate(iso){ const p = iso.split("-").map(Number); return new Date(p[0], p[1]-1, p[2]); }
+function rcalAdd(iso, n){ const d = rcalDate(iso); d.setDate(d.getDate()+n); return rcalIso(d); }
+
+/* The days a tab covers, as ISO dates, from the server's idea of today (IST)
+   rather than the reader's clock. */
+function rcalRange(tab, today){
+  const monday = rcalAdd(today, -((rcalDate(today).getDay()+6) % 7));
+  if(tab==="yesterday") return [rcalAdd(today,-1), rcalAdd(today,-1)];
+  if(tab==="tomorrow") return [rcalAdd(today,1), rcalAdd(today,1)];
+  if(tab==="week") return [monday, rcalAdd(monday,6)];
+  if(tab==="next") return [rcalAdd(monday,7), rcalAdd(monday,13)];
+  return [today, today];
+}
+
+function rcalDays(tab){
+  if(!rcalData || !rcalData.days) return [];
+  const [a, b] = rcalRange(tab, rcalData.today);
+  return rcalData.days.filter(d => d.date >= a && d.date <= b);
+}
+
+function rcalDayLabel(iso){
+  const t = rcalData && rcalData.today;
+  const name = iso===t ? "Today" : iso===rcalAdd(t||iso,1) ? "Tomorrow"
+             : iso===rcalAdd(t||iso,-1) ? "Yesterday"
+             : rcalDate(iso).toLocaleDateString("en-IN",{weekday:"short"});
+  return name + " · " + rcalDate(iso).toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+}
+
+function rcalTime(stamp, dayIso){
+  // "16:34", or "14 Oct, 09:05" when it was filed after the meeting's day.
+  const [date, time] = String(stamp||"").split("T");
+  const hm = (time||"").slice(0,5);
+  if(!date || date===dayIso) return hm;
+  return rcalDate(date).toLocaleDateString("en-IN",{day:"numeric",month:"short"}) + ", " + hm;
+}
+
+function rcalStatus(r, dayIso){
+  if(r.status==="declared")
+    return "Filed " + rcalTime(r.filed_at, dayIso) + (r.revised ? " · revised" : "");
+  if(r.status==="today") return "Board meets today";
+  if(r.status==="awaited") return "Board met · not filed yet";
+  return "Board meeting";
+}
+
+function rcalMeta(r){
+  const bits = [];
+  if(r.quarter) bits.push(r.quarter);
+  if(r.bases && r.bases.length) bits.push(r.bases.join(" & "));
+  // Whatever else the board will consider, from the purpose NSE lists.
+  const extra = String(r.purpose||"").split("/").map(x=>x.trim())
+    .filter(x => x && !/financial results?/i.test(x) && !/other business/i.test(x));
+  if(extra.length) bits.push("also " + extra.join(", ").toLowerCase());
+  return bits.join(" · ");
+}
+
+function rcalRow(r, dayIso){
+  return `<button class="rcal-row" type="button" data-sym="${esc(r.symbol)}"
+            aria-label="${esc(r.company)}, ${esc(rcalStatus(r, dayIso))} — open results">
+    <span class="rcal-sym">${esc(r.symbol)}</span>
+    <span class="rcal-co">${esc(r.company)}</span>
+    <span class="rcal-st ${esc(r.status)}">${esc(rcalStatus(r, dayIso))}</span>
+    ${rcalMeta(r) ? `<span class="rcal-meta">${esc(rcalMeta(r))}</span>` : ""}
+  </button>`;
+}
+
+function renderCalendar(){
+  const list = $("rcallist");
+  if(!list) return;
+  document.querySelectorAll("#rcalseg [data-rcal]").forEach(b => {
+    const on = b.dataset.rcal===rcalTab;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on);
+    const n = rcalDays(b.dataset.rcal).reduce((s,d) => s + d.rows.length, 0);
+    b.querySelector("b").textContent = rcalData && rcalData.available ? String(n) : "";
+  });
+  if(typeof refreshSegsSoon==="function") refreshSegsSoon();
+  if(!rcalData){ list.innerHTML = `<div class="rcal-empty">Reading the exchange calendar…</div>`; return; }
+  if(!rcalData.available){
+    list.innerHTML = `<div class="rcal-empty">${esc(rcalData.message || "The results calendar could not be read just now.")}</div>`;
+    $("rcalsum").textContent = ""; $("rcalnote").textContent = "";
+    return;
+  }
+
+  const q = ($("rcalq").value || "").trim().toLowerCase();
+  const match = r => !q || r.symbol.toLowerCase().includes(q) || r.company.toLowerCase().includes(q);
+  const days = rcalDays(rcalTab).map(d => ({date:d.date, rows:d.rows.filter(match)}))
+                                .filter(d => d.rows.length);
+  const several = rcalRange(rcalTab, rcalData.today)[0] !== rcalRange(rcalTab, rcalData.today)[1];
+  const all = days.flatMap(d => d.rows);
+  const filed = all.filter(r => r.status==="declared").length;
+
+  if(!all.length){
+    const label = {yesterday:"yesterday", today:"today", tomorrow:"tomorrow",
+                   week:"this week", next:"next week"}[rcalTab];
+    list.innerHTML = `<div class="rcal-empty">${q
+      ? `Nothing ${esc(label)} matches “${esc(q)}”.`
+      : `No company has announced a results board meeting for ${esc(label)}, and no results were filed.`}</div>`;
+  } else {
+    list.innerHTML = days.map(d =>
+      (several ? `<div class="rcal-day">${esc(rcalDayLabel(d.date))}<i>${d.rows.length}</i></div>` : "") +
+      `<div class="rcal-rows">${d.rows.map(r => rcalRow(r, d.date)).join("")}</div>`).join("");
+  }
+  $("rcalsum").textContent = all.length
+    ? `${all.length} compan${all.length===1?"y":"ies"} · ${filed} filed` : "";
+  const when = rcalData.checked_at ? String(rcalData.checked_at).slice(11,16) + " IST" : "";
+  $("rcalnote").textContent = [
+    ...(rcalData.notes || []),
+    "Filed means the results document is on NSE. Dates are the board meetings companies " +
+    "announced to the exchange" + (when ? "; checked " + when : "") + "."
+  ].join(" ");
+}
+
+async function loadResultsCalendar(force){
+  if(!force && rcalData && rcalData.available && Date.now() - rcalAt < RCAL_TTL){
+    renderCalendar(); return;
+  }
+  const mine = ++rcalReq;
+  if(!rcalData) renderCalendar();
+  try{
+    const res = await fetch(`${API_BASE}/results/calendar`);
+    const d = await res.json();
+    if(mine !== rcalReq) return;
+    rcalData = res.ok ? d : {available:false, message:d.detail || "The results calendar could not be read just now."};
+    if(rcalData.available) rcalAt = Date.now();
+  }catch(e){
+    if(mine !== rcalReq) return;
+    if(!rcalData || !rcalData.available)
+      rcalData = {available:false, message:"Couldn\u2019t reach the engine \u2014 it may be waking from sleep. Try again in ~30 seconds."};
+  }
+  renderCalendar();
+}
+
+$("rcalseg").addEventListener("click", e => {
+  const b = e.target.closest("[data-rcal]");
+  if(!b) return;
+  rcalTab = b.dataset.rcal;
+  // The address names the tab, so a link to "results tomorrow" opens there.
+  if(/^#research\/results(\/|$)/.test(location.hash))
+    history.replaceState(null, "", "#research/results/" + rcalTab);
+  renderCalendar();
+});
+$("rcalq").addEventListener("input", renderCalendar);
+window.addEventListener("hashchange", () => {
+  const want = (location.hash || "").replace(/^#/, "").split("/")[2];
+  if(RCAL_TABS.includes(want) && want !== rcalTab){ rcalTab = want; renderCalendar(); }
+});
+$("rcallist").addEventListener("click", e => {
+  const row = e.target.closest(".rcal-row");
+  if(row) getResults(row.dataset.sym);
+});
 
 /* ── Ideas view ─────────────────────────────────────────────────────── */
 let horizon = "short", pollTimer = null, ideasReq = 0;

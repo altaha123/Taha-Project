@@ -88,7 +88,7 @@
         { id: 'query',     label: 'Query screener',  hint: 'Filter every company by its fundamentals' },
         { id: 'score',     label: 'Altaha Score',    hint: 'How the score is built and what it has been worth' },
         { id: 'factors',   label: 'Factors',         hint: 'What each factor has actually predicted' },
-        { id: 'results',   label: 'Fundamentals',    hint: 'Quarterly numbers and the year-ago comparison' },
+        { id: 'results',   label: 'Fundamentals',    hint: 'Quarterly numbers, and who reports today and this week' },
         { id: 'investors', label: 'Ownership',       hint: 'What well-known investors disclosed holding' },
         { id: 'charts',    label: 'Technicals',      hint: 'Price charts, levels and indicators' },
         { id: 'filings',   label: 'News',            hint: 'Company announcements as they are filed' }
