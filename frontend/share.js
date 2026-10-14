@@ -13,11 +13,16 @@
    and frequently just doesn't appear for a domain it has never seen, so a
    WhatsApp share that hands over only a URL arrives as a bare blue link. So:
 
-     · Post on X       — link + text. X does the unfurling.
+     · X, Telegram,    — link + text. Each network fetches the link's page
+       LinkedIn,         and draws its og:image under the post, so the card
+       Facebook          reaches the timeline without being uploaded.
      · Share…          — navigator.share() with the PNG attached, where the
                          browser supports files (every current mobile browser).
                          This opens the OS share sheet, and the image itself
                          travels into WhatsApp, Instagram, Signal, anywhere.
+     · Copy image      — the PNG on the clipboard, for pasting into X,
+                         Telegram or WhatsApp Web on a desktop, where no
+                         network's share link can carry a picture.
      · Download card   — the image on disk, to attach by hand. The one route
                          that works in every browser ever written, including
                          the in-app ones that block both of the above.
@@ -84,6 +89,78 @@
     }
     return out.length ? "?" + out.join("&") : "";
   }
+
+  /* ---- the marks ---------------------------------------------------------
+     Brand marks from Simple Icons (CC0), drawn on a 24-unit square. A bare
+     word on a button makes a reader parse four of them to find the one they
+     want; the logo is found before it is read. The utility glyphs are
+     stroked line icons, so they never compete with a brand. */
+
+  var BRAND = {
+    x: "M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z",
+    whatsapp: "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z",
+    telegram: "M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z",
+    linkedin: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
+    facebook: "M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"
+  };
+
+  var GLYPH = {
+    share: "M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5",
+    download: "M12 3v12M7.5 10.5 12 15l4.5-4.5M5 20h14",
+    image: "M4 4h16v16H4zM4 16l4.5-4.5 3.5 3.5 2.5-2.5L20 18M15.5 8.5h.01",
+    copy: "M9 9h11v11H9zM5 15H4V4h11v1",
+    link: "M10 13.5a4.5 4.5 0 0 0 6.36.36l3-3a4.5 4.5 0 0 0-6.36-6.36l-1.5 1.5M14 10.5a4.5 4.5 0 0 0-6.36-.36l-3 3a4.5 4.5 0 0 0 6.36 6.36l1.5-1.5"
+  };
+
+  function icon(name) {
+    if (BRAND[name]) {
+      return '<svg class="shico shico-' + name + '" viewBox="0 0 24 24" aria-hidden="true" ' +
+             'focusable="false"><path fill="currentColor" d="' + BRAND[name] + '"/></svg>';
+    }
+    if (GLYPH[name]) {
+      return '<svg class="shico shico-line" viewBox="0 0 24 24" aria-hidden="true" ' +
+             'focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.9" ' +
+             'stroke-linecap="round" stroke-linejoin="round" d="' + GLYPH[name] + '"/></svg>';
+    }
+    return "";
+  }
+
+  /* Where a post goes. Each network's own share address, which takes the link
+     (and, where it accepts one, the text) and fetches the card itself. */
+  var NETS = {
+    x: { label: "X", icon: "x",
+         url: function (t, u) {
+           /* x.com/intent/post is the current form; twitter.com/intent/tweet
+              still redirects to it, so either works and this is the one that
+              will not need changing again. */
+           return "https://x.com/intent/post?text=" + encodeURIComponent(t)
+                + "&url=" + encodeURIComponent(u);
+         },
+         win: "noopener,width=600,height=680",
+         note: "X unfurls the link into the card above. Give it a second to fetch." },
+    wa: { label: "WhatsApp", icon: "whatsapp",
+          url: function (t, u) { return "https://wa.me/?text=" + encodeURIComponent(t + "\n" + u); },
+          note: null },
+    tg: { label: "Telegram", icon: "telegram",
+          url: function (t, u) {
+            return "https://t.me/share/url?url=" + encodeURIComponent(u)
+                 + "&text=" + encodeURIComponent(t);
+          },
+          note: "Telegram shows the card under the link once it has fetched it." },
+    li: { label: "LinkedIn", icon: "linkedin",
+          url: function (t, u) {
+            return "https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent(u);
+          },
+          win: "noopener,width=640,height=680",
+          note: "LinkedIn takes only the link and draws the card from it; add your own words there." },
+    fb: { label: "Facebook", icon: "facebook",
+          url: function (t, u) {
+            return "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(u);
+          },
+          win: "noopener,width=640,height=680",
+          note: "Facebook draws the card from the link." }
+  };
+  var NET_ORDER = ["x", "wa", "tg", "li", "fb"];
 
   /* ---- what each kind of card is ---------------------------------------
      One table rather than five branches scattered through the file. Adding a
@@ -211,8 +288,58 @@
         lines.push("Every idea is logged the day it is generated. Winners and losers.");
         return lines.join("\n");
       }
+    },
+
+    /* A quarter as the company filed it. `period` is the quarter, in the URL
+       only so that a new quarter is a new address — X and the CDN cache a
+       card by URL, and the one posted the evening results land must not be
+       the one rendered that morning. */
+    results: {
+      png: function (d) {
+        return "/og/results.png" + qs({ ticker: clean(d.ticker || d.symbol), period: period(d) });
+      },
+      page: function (d) {
+        return "/share/results/" + encodeURIComponent(clean(d.ticker || d.symbol))
+             + qs({ period: period(d) });
+      },
+      file: function (d) {
+        return "altaha-" + clean(d.ticker || d.symbol).toLowerCase()
+             + (period(d) ? "-" + period(d).toLowerCase() : "") + "-results.png";
+      },
+      title: function (d) {
+        return clean(d.ticker || d.symbol) + " — " + (d.quarter || "latest") + " results";
+      },
+      text: function (d) {
+        function cr(v) {
+          return "\u20B9" + Math.abs(Number(v)).toLocaleString("en-IN", { maximumFractionDigits: 2 })
+               + " Cr";
+        }
+        function yoy(v) {
+          return v == null ? "" : " (" + (Number(v) >= 0 ? "+" : "") + Number(v).toFixed(1) + "% YoY)";
+        }
+        var sym = clean(d.ticker || d.symbol);
+        var lines = [sym + " — " + (d.quarter || "latest") + " results"
+                     + (d.filed_at ? ", as filed with NSE." : ".")];
+        var bits = [];
+        if (d.pat_cr != null) {
+          bits.push((Number(d.pat_cr) < 0 ? "Net loss " : "Profit ") + cr(d.pat_cr) + yoy(d.pat_yoy_pct));
+        }
+        if (d.revenue_cr != null) bits.push("Revenue " + cr(d.revenue_cr) + yoy(d.revenue_yoy_pct));
+        if (bits.length) lines.push(bits.join(" · "));
+        if (d.net_margin_pct != null) {
+          lines.push("Net margin " + Number(d.net_margin_pct).toFixed(1) + "%"
+                     + (d.net_margin_yoy_pct != null
+                        ? ", from " + Number(d.net_margin_yoy_pct).toFixed(1) + "% a year earlier."
+                        : "."));
+        }
+        return lines.join("\n");
+      }
     }
   };
+
+  function period(d) {
+    return String((d && d.quarter) || "").trim().replace(/\s+/g, "-").replace(/[^A-Za-z0-9\-]/g, "");
+  }
 
   function kindOf(d) {
     return KINDS[(d && d.kind) || "stock"] || KINDS.stock;
@@ -242,7 +369,31 @@
 
   var sheet = null;
   var current = null;
-  var currentBlob = null;
+
+  /* The PNG, kept per card URL. Share image, Copy image and Download all
+     need the bytes, a card takes a moment to render server-side, and asking
+     twice would make the second button feel broken. Keyed by URL rather than
+     held as "the current one" because the inline bar and the sheet can be
+     looking at different cards. */
+  var blobs = {};
+  var blobOrder = [];
+
+  function blobNow(d) {
+    return d ? blobs[cardCandidates(d)[0]] || null : null;
+  }
+
+  function blobFor(d) {
+    var key = cardCandidates(d)[0];
+    if (blobs[key]) return Promise.resolve(blobs[key]);
+    return fetchCard(d).then(function (res) {
+      var b = res.blob.type === "image/png" ? res.blob
+            : new Blob([res.blob], { type: "image/png" });
+      blobs[key] = b;
+      blobOrder.push(key);
+      while (blobOrder.length > 8) delete blobs[blobOrder.shift()];
+      return b;
+    });
+  }
 
   function build() {
     if (sheet) return sheet;
@@ -261,12 +412,23 @@
         '<p class="shsub" id="shsub"></p>' +
         '<div class="shcardwrap"><div class="shspin" id="shspin">Rendering the card…</div>' +
           '<img class="shcard" id="shcardimg" alt="" hidden></div>' +
+        '<p class="shgrp">Post the card</p>' +
         '<div class="shbtns">' +
-          '<button class="sharebtn x" type="button" data-do="x">Post on X</button>' +
-          '<button class="sharebtn" type="button" data-do="native" hidden>Share…</button>' +
-          '<button class="sharebtn" type="button" data-do="wa">WhatsApp</button>' +
-          '<button class="sharebtn" type="button" data-do="dl">Download card</button>' +
-          '<button class="sharebtn" type="button" data-do="copy">Copy link</button>' +
+          NET_ORDER.map(function (k) {
+            return '<button class="sharebtn shnet shnet-' + k + '" type="button" data-do="' + k +
+                   '">' + icon(NETS[k].icon) + '<span class="lbl">' + NETS[k].label + '</span></button>';
+          }).join("") +
+        '</div>' +
+        '<p class="shgrp">Or take the image</p>' +
+        '<div class="shbtns">' +
+          '<button class="sharebtn" type="button" data-do="native" hidden>' + icon("share") +
+            '<span class="lbl">Share image…</span></button>' +
+          '<button class="sharebtn" type="button" data-do="copyimg" hidden>' + icon("copy") +
+            '<span class="lbl">Copy image</span></button>' +
+          '<button class="sharebtn" type="button" data-do="dl">' + icon("download") +
+            '<span class="lbl">Download image</span></button>' +
+          '<button class="sharebtn" type="button" data-do="copy">' + icon("link") +
+            '<span class="lbl">Copy link</span></button>' +
         '</div>' +
         '<p class="shnote" id="shnote"></p>' +
       '</div>';
@@ -281,10 +443,10 @@
         window.AltahaTrack('share_clicked',
           { kind: (current && current.kind) || 'stock', action: act });
       }
-      if (act === "x") onX();
-      else if (act === "wa") onWhatsApp();
+      if (NETS[act]) post(act, current, btn);
       else if (act === "dl") onDownload(btn);
       else if (act === "copy") onCopy(btn);
+      else if (act === "copyimg") onCopyImage(btn);
       else if (act === "native") onNative(btn);
     });
     document.addEventListener("keydown", function (ev) {
@@ -301,10 +463,26 @@
 
   function flash(btn, text) {
     if (!btn) return;
-    var was = btn.textContent;
-    btn.textContent = text;
+    /* Only the label changes: rewriting the whole button would take its
+       logo with it. */
+    var lbl = btn.querySelector ? btn.querySelector(".lbl") : null;
+    if (!lbl && btn.querySelector && btn.querySelector("svg")) {
+      // A logo with no words: the ring says it, and the logo stays put.
+      btn.classList.add("done");
+      clearTimeout(btn.__ring);
+      btn.__ring = setTimeout(function () { btn.classList.remove("done"); }, 2200);
+      return;
+    }
+    var target = lbl || btn;
+    if (btn.__flashing) clearTimeout(btn.__flashing.t);
+    var was = btn.__flashing ? btn.__flashing.was : target.textContent;
+    target.textContent = text;
     btn.classList.add("done");
-    setTimeout(function () { btn.textContent = was; btn.classList.remove("done"); }, 2200);
+    btn.__flashing = { was: was, t: setTimeout(function () {
+      target.textContent = was;
+      btn.classList.remove("done");
+      btn.__flashing = null;
+    }, 2200) };
   }
 
   function note(msg) {
@@ -345,45 +523,74 @@
     } catch (e) { return false; }
   }
 
-  function onX() {
-    if (!current) return;
-    /* x.com/intent/post is the current form; twitter.com/intent/tweet still
-       redirects to it, so either works and this is the one that will not need
-       changing again. */
-    var url = "https://x.com/intent/post?text=" + encodeURIComponent(compose(current))
-            + "&url=" + encodeURIComponent(link(current));
-    window.open(url, "_blank", "noopener,width=600,height=680");
-    note("X unfurls the link into the card above. Give it a second to fetch.");
+  /* Hand the post to a network. The card itself travels as the link's
+     og:image, which every one of these fetches and draws under the post. */
+  function post(net, d, btn) {
+    var n = NETS[net];
+    d = d || current;
+    if (!n || !d) return;
+    current = d;
+    window.open(n.url(compose(d), link(d)), "_blank", n.win || "noopener");
+    if (net === "wa") {
+      note("WhatsApp previews links unreliably. For the picture itself, use " +
+           (canShareFiles() ? "Share image…" : "Download image") + " and attach it.");
+    } else {
+      note(n.note || "");
+    }
+    if (btn) flash(btn, "Opened");
   }
 
-  function onWhatsApp() {
-    if (!current) return;
-    var text = compose(current) + "\n" + link(current);
-    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
-    note("WhatsApp previews links unreliably. For the picture itself, use " +
-         (canShareFiles() ? "Share…" : "Download card") + " and attach it.");
-  }
+  function onX() { post("x"); }
 
-  function onNative(btn) {
-    if (!current || !navigator.share) return;
-    var d = current;
+  function onWhatsApp() { post("wa"); }
+
+  function onNative(btn, d) {
+    d = d || current;
+    if (!d || !navigator.share) return;
     var payload = { title: kindOf(d).title(d), text: compose(d), url: link(d) };
     var go = function (files) {
       var data = files ? { files: files, title: payload.title, text: payload.text } : payload;
       navigator.share(data).catch(function () { /* the user dismissed the sheet */ });
     };
-    if (currentBlob && canShareFiles()) {
+    var ready = blobNow(d);
+    if (ready && canShareFiles()) {
       try {
-        go([new File([currentBlob], kindOf(d).file(d), { type: "image/png" })]);
+        go([new File([ready], kindOf(d).file(d), { type: "image/png" })]);
         return;
       } catch (e) { /* fall through to the link-only share */ }
     }
     flash(btn, "Preparing…");
-    fetchCard(d).then(function (res) {
-      currentBlob = res.blob;
-      try { go([new File([res.blob], kindOf(d).file(d), { type: "image/png" })]); }
+    blobFor(d).then(function (b) {
+      try { go([new File([b], kindOf(d).file(d), { type: "image/png" })]); }
       catch (e) { go(null); }
     }).catch(function () { go(null); });
+  }
+
+  function canCopyImage() {
+    return !!(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write);
+  }
+
+  /* The picture on the clipboard. On a desktop this is the only way to put
+     the image itself into a post on X or Telegram — their share links carry
+     text and a URL and nothing else. */
+  function onCopyImage(btn, d) {
+    d = d || current;
+    if (!d || !canCopyImage()) return;
+    var ready = blobNow(d);
+    var item;
+    try {
+      // A ready Blob where there is one: older Chromium refuses a promise.
+      item = new window.ClipboardItem({ "image/png": ready || blobFor(d) });
+    } catch (e) {
+      flash(btn, "Not supported here");
+      return;
+    }
+    navigator.clipboard.write([item]).then(function () {
+      flash(btn, "Copied");
+      note("Paste it straight into a post on X, Telegram or WhatsApp Web.");
+    }).catch(function () {
+      flash(btn, "Blocked — use Download");
+    });
   }
 
   function saveBlob(blob, filename) {
@@ -398,15 +605,15 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
 
-  function onDownload(btn) {
-    if (!current) return;
-    var d = current;
+  function onDownload(btn, d) {
+    d = d || current;
+    if (!d) return;
     var name = kindOf(d).file(d);
-    if (currentBlob) { saveBlob(currentBlob, name); flash(btn, "Saved"); return; }
+    var ready = blobNow(d);
+    if (ready) { saveBlob(ready, name); flash(btn, "Saved"); return; }
     flash(btn, "Rendering…");
-    fetchCard(d).then(function (res) {
-      currentBlob = res.blob;
-      saveBlob(res.blob, name);
+    blobFor(d).then(function (b) {
+      saveBlob(b, name);
       flash(btn, "Saved");
     }).catch(function () {
       /* Some in-app browsers block both fetch and programmatic downloads.
@@ -416,9 +623,10 @@
     });
   }
 
-  function onCopy(btn) {
-    if (!current) return;
-    var url = link(current);
+  function onCopy(btn, d) {
+    d = d || current;
+    if (!d) return;
+    var url = link(d);
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(function () { flash(btn, "Copied"); })
         .catch(function () { fallbackCopy(url, btn); });
@@ -452,14 +660,15 @@
            "measured move stay on the site, beside the base rate that qualifies them.",
     idea: "The conviction number and the seven weighted inputs that add up to it.",
     holding: "Marked to market against the index over the identical window.",
-    record: "The whole ledger — every idea logged the day it was generated."
+    record: "The whole ledger — every idea logged the day it was generated.",
+    results: "The quarter as the company filed it — profit, revenue, margin and the " +
+             "same quarter a year earlier. Every figure on it is the company's own."
   };
 
   function open(d) {
     if (!d) return;
     build();
     current = d;
-    currentBlob = null;
 
     var k = kindOf(d);
     $("shttl").textContent = k.title(d);
@@ -487,13 +696,62 @@
 
     var nat = sheet.querySelector('[data-do="native"]');
     if (nat) nat.hidden = !(navigator.share);
+    var cpi = sheet.querySelector('[data-do="copyimg"]');
+    if (cpi) cpi.hidden = !canCopyImage();
 
     sheet.hidden = false;
     document.body.classList.add("sh-open");
 
     /* Warm the blob so Share… and Download are instant when they are pressed.
        Failure here is silent by design — the buttons handle it themselves. */
-    fetchCard(d).then(function (res) { currentBlob = res.blob; }).catch(function () {});
+    blobFor(d).catch(function () {});
+  }
+
+  /* ---- a row of logos, on the card itself ---------------------------------
+     For a card that is the whole point of its page — a quarter's results —
+     the networks belong on the card, one press each, rather than behind a
+     Share button. `getPayload` is asked at press time, so the row follows
+     whatever the card is showing now. */
+
+  function bar(host, getPayload) {
+    if (!host || host.__shareBar) return;
+    host.__shareBar = getPayload;
+    var html = NET_ORDER.map(function (k) {
+      return '<button class="shround shnet-' + k + '" type="button" data-to="' + k +
+             '" title="Share on ' + NETS[k].label + '" aria-label="Share on ' + NETS[k].label +
+             '">' + icon(NETS[k].icon) + '</button>';
+    }).join("");
+    html += '<span class="shlogos-gap" aria-hidden="true"></span>';
+    if (navigator.share) {
+      html += '<button class="shpill" type="button" data-to="native">' + icon("share") +
+              '<span class="lbl">Share image</span></button>';
+    }
+    html += '<button class="shpill" type="button" data-to="sheet">' + icon("image") +
+            '<span class="lbl">Image</span></button>';
+    html += '<button class="shpill" type="button" data-to="copy">' + icon("link") +
+            '<span class="lbl">Copy link</span></button>';
+    host.innerHTML = html;
+    host.addEventListener("click", function (ev) {
+      var b = ev.target.closest ? ev.target.closest("[data-to]") : null;
+      if (!b) return;
+      var d = host.__shareBar && host.__shareBar();
+      if (!d) return;
+      var to = b.getAttribute("data-to");
+      if (window.AltahaTrack) {
+        window.AltahaTrack("share_clicked", { kind: d.kind || "stock", action: to, from: "bar" });
+      }
+      if (NETS[to]) post(to, d, b);
+      else if (to === "sheet") open(d);
+      else if (to === "native") onNative(b, d);
+      else if (to === "copy") onCopy(b, d);
+    });
+  }
+
+  /* Fetch a card's image ahead of the press. Share image has to call
+     navigator.share inside the tap that asked for it, and Safari forgets the
+     tap while a render is in flight. */
+  function prefetch(d) {
+    if (d) blobFor(d).catch(function () {});
   }
 
   /* ---- the button that appears on every card ----------------------------
@@ -573,7 +831,7 @@
     if (dl && !dl.dataset.wired) {
       dl.dataset.wired = "1";
       dl.addEventListener("click", function () {
-        if (row && row.__payload) { current = row.__payload; currentBlob = null; }
+        if (row && row.__payload) { current = row.__payload; }
         onDownload(dl);
       });
     }
@@ -589,6 +847,7 @@
   window.AltahaShare = {
     show: show, open: open, compose: compose, link: link,
     card: function (d) { return cardCandidates(d)[0]; },
-    close: close
+    close: close, post: post, bar: bar, prefetch: prefetch, icon: icon,
+    shareUrl: function (net, d) { return NETS[net] ? NETS[net].url(compose(d), link(d)) : null; }
   };
 })();

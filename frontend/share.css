@@ -76,3 +76,50 @@ body.sh-open{overflow:hidden}
 
 /* The share control on a pattern card in the chart panel. */
 .patshare{margin-top:13px;display:flex;justify-content:flex-end}
+
+/* ---- the logos ------------------------------------------------------------
+   Every share control carries the network's mark. Brand colours are the
+   networks' own; X's mark is black, so it follows the ink and flips with the
+   theme rather than vanishing on the dark paper. */
+.shico{width:15px;height:15px;flex:0 0 auto;display:block}
+.shnet-x{--brand:var(--ink)}
+.shnet-wa{--brand:#25D366}
+.shnet-tg{--brand:#26A5E4}
+.shnet-li{--brand:#0A66C2}
+.shnet-fb{--brand:#0866FF}
+html[data-theme="dark"] .shnet-li{--brand:#3d8fe0}
+html[data-theme="dark"] .shnet-fb{--brand:#4b8dff}
+
+.shgrp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mute);margin:16px 0 0}
+.shgrp + .shbtns{margin-top:8px}
+.shbtns .sharebtn{display:inline-flex;align-items:center;gap:8px}
+.shbtns .sharebtn.shnet .shico{color:var(--brand)}
+.shbtns .sharebtn.shnet:hover{border-color:var(--brand);color:var(--ink)}
+.shbtns .sharebtn.shnet.done .shico{color:var(--pass)}
+
+/* ---- the row of logos on a card ------------------------------------------- */
+.shlogos{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.shlogos-gap{width:6px}
+.shround{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;border:1px solid var(--rule);background:var(--paper);color:var(--brand);
+  cursor:pointer;padding:0;
+  transition:transform var(--t-fast,.15s) ease,background .15s ease,color .15s ease,
+             border-color .15s ease}
+.shround .shico{width:18px;height:18px}
+.shround:hover{background:var(--brand);border-color:var(--brand);color:#fff;transform:translateY(-1px)}
+.shround.shnet-x:hover{color:var(--paper)}
+.shround:focus-visible,.shpill:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.shround.done{border-color:var(--pass);box-shadow:0 0 0 2px var(--pass)}
+.shpill{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 15px;
+  border-radius:999px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);
+  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  cursor:pointer;transition:border-color .15s ease,color .15s ease}
+.shpill:hover{border-color:var(--ink);color:var(--ink)}
+.shpill.done{border-color:var(--pass);color:var(--pass)}
+@media (prefers-reduced-motion: reduce){ .shround{transition:none} .shround:hover{transform:none} }
+@media (max-width:520px){
+  .shlogos-gap{flex-basis:100%;height:0}
+  .shround{width:44px;height:44px}
+  .shpill{height:44px;flex:1 1 auto;justify-content:center}
+}

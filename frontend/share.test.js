@@ -68,6 +68,15 @@ assert.strictEqual(S.card(analysis),
 
 /* ── every kind produces a link, a card and a post ─────────────────────── */
 
+// A results card as /results returns it, filed with NSE.
+const RESULTS = {
+  kind: "results", ticker: "TARIL", symbol: "TARIL",
+  name: "Transformers And Rectifiers (India) Limited",
+  quarter: "Q2 FY27", as_of: "2026-09-30", filed_at: "13-Oct-2026 16:34:09",
+  pat_cr: 81.38, pat_yoy_pct: 117.9, revenue_cr: 739.44, revenue_yoy_pct: 60.7,
+  net_margin_pct: 11.0, net_margin_yoy_pct: 8.1,
+};
+
 const cases = [
   { d: { kind: "stock", ticker: "TCS" },
     link: "https://site.example/share/TCS",
@@ -88,6 +97,9 @@ const cases = [
          overall: { beat_index_pct: 56, avg_alpha_pct: 1.15 } },
     link: "https://site.example/share/record",
     card: "https://site.example/og/record.png" },
+  { d: RESULTS,
+    link: "https://site.example/share/results/TARIL?period=Q2-FY27",
+    card: "https://site.example/og/results.png?ticker=TARIL&period=Q2-FY27" },
 ];
 
 for (const c of cases) {
@@ -106,6 +118,48 @@ assert.ok(S.compose(cases[1].d).includes("Cup and Handle"),
   "the chart post drops the pattern it found");
 assert.ok(/no textbook pattern/i.test(S.compose({ kind: "chart", ticker: "X", range: "1D" })),
   "a chart with no pattern must say so rather than say nothing");
+
+/* ── a results post carries the quarter's own numbers ─────────────────── */
+
+const rpost = S.compose(RESULTS);
+for (const want of ["TARIL", "Q2 FY27", "as filed with NSE", "\u20B981.38 Cr",
+                    "+117.9% YoY", "\u20B9739.44 Cr", "+60.7% YoY", "11.0%", "8.1%"]) {
+  assert.ok(rpost.includes(want), `results post is missing "${want}":\n${rpost}`);
+}
+const lossPost = S.compose(Object.assign({}, RESULTS, { pat_cr: -12.5, pat_yoy_pct: null }));
+assert.ok(lossPost.includes("Net loss \u20B912.5 Cr"), `a loss must say so:\n${lossPost}`);
+assert.ok(!/undefined|NaN|null/.test(S.compose({ kind: "results", ticker: "X" })),
+  "a sparse results payload leaked a raw value");
+
+/* ── every network gets the link, and the card travels with it ─────────── */
+
+const rlink = encodeURIComponent(S.link(RESULTS));
+const nets = {
+  x: "https://x.com/intent/post?text=",
+  wa: "https://wa.me/?text=",
+  tg: "https://t.me/share/url?url=",
+  li: "https://www.linkedin.com/sharing/share-offsite/?url=",
+  fb: "https://www.facebook.com/sharer/sharer.php?u=",
+};
+for (const [net, prefix] of Object.entries(nets)) {
+  const u = S.shareUrl(net, RESULTS);
+  assert.ok(u && u.startsWith(prefix), `${net}: wrong share address ${u}`);
+  assert.ok(u.includes(rlink), `${net}: the share address drops the card's link`);
+}
+assert.strictEqual(S.shareUrl("myspace", RESULTS), null);
+
+/* ── every network has its logo ────────────────────────────────────────── */
+
+for (const name of ["x", "whatsapp", "telegram", "linkedin", "facebook"]) {
+  const svg = S.icon(name);
+  assert.ok(/^<svg[^>]*viewBox="0 0 24 24"[^>]*aria-hidden="true"/.test(svg),
+    `${name}: no decorative svg`);
+  assert.ok(/<path fill="currentColor" d="M[^"]{40,}"/.test(svg), `${name}: no mark`);
+}
+for (const name of ["share", "download", "image", "copy", "link"]) {
+  assert.ok(S.icon(name).includes('stroke="currentColor"'), `${name}: no glyph`);
+}
+assert.strictEqual(S.icon("nope"), "");
 
 /* ── the tracked position posts its loss as readily as its gain ────────── */
 

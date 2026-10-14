@@ -166,3 +166,40 @@ def test_a_read_missing_the_newest_quarter_is_not_held(app):
     assert first["newer_filing"] == "2026-09-30"
     app.results(ticker="BEHIND")
     assert app._calls["series"].count("BEHIND") == 2
+
+
+# ---------------------------------------------------------------------------
+# The card and the link a post carries
+# ---------------------------------------------------------------------------
+
+def test_the_results_card_renders_from_the_filing(app):
+    r = app.og_results(ticker="TARIL", period="Q2-FY27")
+    assert r.media_type == "image/png" and r.body[:8] == b"\x89PNG\r\n\x1a\n"
+    assert (int.from_bytes(r.body[16:20], "big"),
+            int.from_bytes(r.body[20:24], "big")) == (1200, 630)
+    assert app._calls["resolve"] == []
+
+
+def test_a_stock_with_no_results_has_no_card(app, monkeypatch):
+    from fastapi import HTTPException
+
+    class _Empty:
+        quarterly_financials = pd.DataFrame()
+        info = {}
+
+    monkeypatch.setattr(app, "resolve", lambda raw: (raw, _Empty(), None))
+    with pytest.raises(HTTPException) as e:
+        app.og_results(ticker="NOPE")
+    assert e.value.status_code == 404
+
+
+def test_the_share_page_unfurls_into_the_card_and_opens_the_results(app):
+    html = app.share_results("TARIL", period="Q2-FY27").body.decode()
+    assert "Q2 FY27 results" in html
+    assert "Profit after tax ₹81.38 Cr (+117.9% YoY)" in html
+    assert "As filed with NSE on 13-Oct-2026" in html
+    assert "/og/results.png?ticker=TARIL&amp;period=Q2-FY27" in html
+    assert 'name="twitter:card" content="summary_large_image"' in html
+    # Opens the results view on that stock, not the analysis page.
+    assert "/?go=results&amp;q=TARIL" in html
+    assert "onrender.com" not in html
