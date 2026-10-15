@@ -92,11 +92,21 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   await page.locator('#view-today .dr-title').waitFor();
   assert.equal((await page.locator('#view-today .dr-title').innerText()).trim(), 'Today');
   assert.equal(await page.locator('header.wrap').isVisible(), false, 'the old landing banner is gone');
-  for (const go of ['portfolio', 'discover', 'allocate', 'research']) {
+  /* ?go= opens the tool it names, every time. index.html clicks the named tab
+     on a timer of its own and the router opens the landing view as it
+     starts; when the router came second, a shared ?go=portfolio link opened
+     on Today instead (it failed CI that way, not locally). The router is
+     slowed down here so it always comes second. */
+  await page.route('**/nav.js*', async r => { await new Promise(res => setTimeout(res, 600)); await r.continue(); });
+  for (const [go, view] of [['portfolio', 'view-portfolio'], ['discover', 'view-discover'],
+                            ['allocate', 'view-allocate'], ['research', 'view-ideahub'], ['ideas', 'view-ideas']]) {
     await page.goto('http://127.0.0.1:8768/?go=' + go, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => !!window.AltahaNav);
+    await page.waitForTimeout(400);
     assert.equal(await page.locator('header.wrap').isVisible(), false, `?go=${go} opens on the product, not a banner`);
+    assert.ok(await page.locator('#' + view).isVisible(), `?go=${go} did not open #${view}`);
   }
+  await page.unroute('**/nav.js*');
   await page.goto('http://127.0.0.1:8768/', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!window.AltahaNav);
 

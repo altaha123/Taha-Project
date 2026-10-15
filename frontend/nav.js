@@ -183,6 +183,14 @@
     return null;
   }
 
+  function queryGo() {
+    try {
+      return (new URLSearchParams(location.search).get('go') || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+    } catch (e) {
+      return '';
+    }
+  }
+
   function queryChartsSymbol() {
     try {
       var q = new URLSearchParams(location.search).get('charts');
@@ -480,7 +488,19 @@
 
     var qCharts = queryChartsSymbol();
     var r = readHash();
+    var qGo = queryGo();
+    /* ?go=portfolio and friends. index.html also clicks the named tab, but
+       on its own timer; now that the landing view is routed rather than
+       merely painted, whichever ran second used to win, and a shared link
+       could open on Today instead of the tool it named. Honouring it here
+       makes the answer the same every time. A tab id wins, as everywhere,
+       and an explicit #hash wins over both (readHash answers HOME when
+       there is no hash at all, so it is asked only when there is one). */
+    var hasHash = !!(location.hash || '').replace(/^#/, '');
     if (qCharts != null) go('research', 'charts', false);
+    else if (hasHash && r) go(r.section, r.tab, false);
+    else if (qGo && ownerOf(qGo)) go(ownerOf(qGo).id, qGo, false);
+    else if (qGo && (rawSection(qGo) || ALIASES[qGo])) go(qGo, null, false);
     else if (r) go(r.section, r.tab, false);
     else go(HOME.section, HOME.tab, false);
 
