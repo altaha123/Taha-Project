@@ -131,9 +131,17 @@ const current = page => page.locator('.ps-ch:not([hidden])').getAttribute('data-
     assert.ok((await page.evaluate(() => window.__tracked)).some(t => t[0] === 'portfolio_full_report_opened' && t[1].from === 'story_end'));
     await page.getByRole('button', { name: 'Advanced analysis', exact: true }).click();
     await page.waitForFunction(() => window.Chart && Object.keys(Chart.instances).length === 7);
-    const blank = await page.evaluate(() => [...document.querySelectorAll('#pf_report canvas')]
-      .filter(c => !c.getContext('2d').getImageData(0, 0, c.width, c.height).data.some(v => v !== 0)).map(c => c.id));
-    assert.deepEqual(blank, [], 'charts drawn after the report opens');
+    // Chart.js paints on a later animation frame, not when the instance is
+    // made; on a loaded CI runner all seven were still blank at that moment.
+    // Wait for the paint, and only then call a canvas that stayed empty a
+    // failure.
+    const blankCanvases = () => page.evaluate(() => [...document.querySelectorAll('#pf_report canvas')]
+      .filter(c => !c.width || !c.height || !c.getContext('2d').getImageData(0, 0, c.width, c.height).data.some(v => v !== 0))
+      .map(c => c.id + ' (' + c.width + 'x' + c.height + ')'));
+    await page.waitForFunction(() => [...document.querySelectorAll('#pf_report canvas')]
+      .every(c => c.width && c.height && c.getContext('2d').getImageData(0, 0, c.width, c.height).data.some(v => v !== 0)),
+      null, { timeout: 10000 }).catch(() => {});
+    assert.deepEqual(await blankCanvases(), [], 'charts drawn after the report opens');
     // And it closes again.
     await page.locator('#pf_full').click();
     assert.equal(await page.locator('#pf_report').isVisible(), false);
