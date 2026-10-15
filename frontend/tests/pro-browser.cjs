@@ -163,9 +163,11 @@ function fresh() { return { user: null, joins: [], puts: [], deletes: [], screen
     page.on('pageerror', e => errors.push(String(e.stack || e)));
     await page.goto(base + '/#research/query', { waitUntil: 'load' });
     await page.locator('#qs-q').waitFor();
-    // The header carries Pro on a desktop.
+    // Pro is in the Me menu on a desktop, one click from anywhere.
+    await page.locator('#sh-me').click();
     assert.equal(await page.locator('#sh-pro').isVisible(), true);
     assert.match(await page.locator('#sh-pro').getAttribute('href'), /pro\.html\?from=header/);
+    await page.keyboard.press('Escape');
 
     // Nothing to save yet: say so instead of saving an empty screen.
     await page.locator('#qs-save').click();
@@ -203,24 +205,18 @@ function fresh() { return { user: null, joins: [], puts: [], deletes: [], screen
     await context.close();
   }
 
-  // ── Phones: in the header at 390px, in the menu at 320px ────────────────
+  // ── Phones: in the Me sheet, at 390px and 320px ─────────────────────────
   for (const width of [390, 320]) {
     const context = await browser.newContext({ viewport: { width, height: 740 }, isMobile: true, hasTouch: true });
     await wire(context, fresh());
     const page = await context.newPage();
     page.on('pageerror', e => errors.push(String(e.stack || e)));
     await page.goto(base + '/', { waitUntil: 'load' });
-    await page.locator('#sh-burger').waitFor();
+    await page.locator('#sh-me').waitFor();
     const overflowTop = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     assert.ok(overflowTop <= 1, width + 'px: the header row fits: ' + overflowTop);
-    if (width === 390) {
-      assert.equal(await page.locator('#sh-pro').isVisible(), true, 'room for Pro beside Sign in at 390px');
-      await page.screenshot({ path: path.join(output, 'header-390.png') });
-      await context.close();
-      continue;
-    }
-    assert.equal(await page.locator('#sh-pro').isVisible(), false, 'no room in the header row at 320px');
-    await page.locator('#sh-burger').click();
+    if (width === 390) await page.screenshot({ path: path.join(output, 'header-390.png') });
+    await page.locator('#sh-me').click();
     await page.locator('#sh-drawer .sh-dpro').waitFor({ state: 'visible' });
     assert.match(await page.locator('#sh-drawer .sh-dpro').getAttribute('href'), /pro\.html\?from=menu/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);

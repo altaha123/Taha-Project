@@ -364,22 +364,27 @@ async function noSideways(page, label) {
     await context.close();
   }
 
-  // ── The ways in: header on wide screens, the menu, the phone drawer ────
+  // ── The ways in: the Me menu, the My money door, the phone sheet ───────
   {
     const context = await browser.newContext({ viewport: { width: 1440, height: 800 } });
     await wire(context, fresh());
     const page = await context.newPage(); watch(page);
     await page.goto(base + '/', { waitUntil: 'load' });
-    await page.locator('#sh-adv').waitFor();
+    await page.locator('#sh-me').click();
+    await page.locator('#sh-adv').waitFor({ state: 'visible' });
     assert.equal(await page.locator('#sh-adv').getAttribute('href'), 'advisors.html');
-    await noSideways(page, 'header at 1440px');
-    await page.locator('.sh-top[data-sec="portfolio"]').hover();
-    await page.locator('.sh-mega.open a.sh-item[href="advisors.html"]').click();
+    await noSideways(page, 'Me menu at 1440px');
+    await page.locator('#sh-adv').click();
+    await page.waitForURL(/\/advisors\.html$/);
+    // My money: the door bar and the door page both carry it.
+    await page.goto(base + '/#portfolio/money', { waitUntil: 'load' });
+    await page.locator('#sh-doorbar a.sh-pill[href="advisors.html"]').waitFor();
+    await page.locator('#view-money a.dr-card[href="advisors.html"]').click();
     await page.waitForURL(/\/advisors\.html$/);
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(base + '/');
-    await page.locator('#sh-burger').waitFor({ state: 'attached' });
-    assert.equal(await page.locator('#sh-adv').isVisible(), false, 'no room in the header row at 1280px');
+    await page.locator('#sh-me').waitFor();
+    assert.equal(await page.locator('#sh-adv').isVisible(), false, 'inside the Me menu until it is opened');
     await noSideways(page, 'header at 1280px');
     await context.close();
   }
@@ -388,8 +393,8 @@ async function noSideways(page, label) {
     await wire(context, fresh());
     const page = await context.newPage(); watch(page);
     await page.goto(base + '/', { waitUntil: 'load' });
-    await page.locator('#sh-burger').click();
-    const link = page.locator('#sh-drawer a.sh-item[href="advisors.html"]');
+    await page.locator('#sh-me').click();
+    const link = page.locator('#sh-drawer a.sh-item[href="advisors.html"]').first();
     await link.scrollIntoViewIfNeeded();
     await link.click();
     await page.waitForURL(/\/advisors\.html$/);

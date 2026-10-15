@@ -35,9 +35,10 @@
 
 :root{
   --sh-bar-h: 58px;
-  --sh-ribbon-h: 34px;
-  --sh-ticker-h: 40px;
-  --sh-chrome-h: calc(var(--sh-ribbon-h) + var(--sh-ticker-h) + var(--sh-bar-h));
+  --sh-ribbon-h: 0px;            /* the headline ribbon is the Today page's Headlines card now */
+  --sh-ticker-h: 38px;
+  --sh-doorbar-h: 0px;           /* only pages with doors (index) get the door bar */
+  --sh-chrome-h: calc(var(--sh-ticker-h) + var(--sh-bar-h) + var(--sh-doorbar-h));
 
   /* Three elevations. A fourth would stop meaning anything. */
   --e1: 0 1px 2px rgba(23,20,14,.05);
@@ -448,44 +449,13 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-adv:focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
 /* Measured on the homepage, which also carries Watchlist: below 1340px the
    link pushes the search box into the Research label. */
-@media (max-width:1339px){ .sh-bar .sh-right .sh-adv{ display:none } }
+
 /* Menu items that are links to another page, not tabs. */
 a.sh-item{ text-decoration:none; color:inherit }
 .sh-dpro{ display:grid; gap:4px; padding:14px; border-radius:12px; border:1px solid var(--gold);
   text-decoration:none; color:var(--ink); background:var(--paper-2) }
 .sh-dpro b{ color:var(--gold); font-size:15px }
 .sh-dpro span{ font-size:13px; color:var(--mute) }
-/* On the narrowest phones (320px) the header row has room for sign-in, theme
-   and the menu and no more; Pro is in the menu there. */
-@media (max-width:359px){ .sh-bar .sh-right .sh-pro{ display:none } }
-/* Keep account access visible on phones. Give search its own full-width
-   row so sign-in, theme and menu remain usable even at 320px. The shared
-   height token also positions the page and mobile drawer below both rows. */
-@media (max-width:560px){
-  :root{ --sh-bar-h:114px }
-  .sh-bar{
-    box-sizing:border-box; display:grid;
-    grid-template-columns:minmax(0,1fr) auto;
-    grid-template-rows:44px 44px; gap:8px 10px; padding:8px 12px;
-  }
-  .sh-bar .sh-brand{ grid-column:1; grid-row:1 }
-  .sh-bar .sh-right{ grid-column:2; grid-row:1; gap:8px }
-  .sh-bar .sh-search{ grid-column:1 / -1; grid-row:2; width:100% }
-  .sh-bar .sh-search input{ height:44px; font-size:16px; padding-right:12px }
-  .sh-bar .sh-search .kbd{ display:none }
-  .sh-bar .sh-icon{ min-width:44px; min-height:44px }
-  .sh-bar .sh-account{
-    display:block; box-sizing:border-box; min-height:44px;
-    max-width:140px; padding:14px 12px;
-    background:var(--paper-2); border-color:var(--gold);
-  }
-  .sh-bar .sh-account:focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
-  .sh-bar .sh-pro{ min-height:44px; display:grid; place-items:center; padding:0 12px }
-}
-
-.sh-burger{ display:none }
-@media (max-width:1040px){ .sh-burger{ display:grid } }
-
 /* ── 3g · Mobile drawer ──────────────────────────────────────────────────── */
 
 .sh-drawer{
@@ -578,3 +548,123 @@ a.sh-item{ text-decoration:none; color:inherit }
   border-bottom:0; padding:0 0 10px;
   font-size:13.5px; color:var(--mute);
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   THREE DOORS — the header since the navigation was rebuilt (shell.js)
+   tape · brand, Today / Ideas / My money, search, Me · the door bar
+   ════════════════════════════════════════════════════════════════════════════ */
+
+html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
+
+/* The tape: a gold Live tag, the moving rail, the IST clock. */
+.sh-ticker::before, .sh-ticker::after{ display:none }
+.sh-livetag{ flex:none; display:flex; align-items:center; gap:8px; align-self:stretch; padding:0 14px;
+  background:var(--gold); color:#17140E; font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em; text-transform:uppercase }
+.sh-livetag .sh-dot{ position:relative; width:7px; height:7px; border-radius:50%; background:#17140E }
+.sh-livetag .sh-dot::after{ content:''; position:absolute; inset:0; border-radius:50%; background:inherit; animation:shPing 1.7s ease-out infinite }
+@keyframes shPing{ 0%{ transform:scale(1); opacity:.7 } 100%{ transform:scale(3.2); opacity:0 } }
+.sh-railbox{ position:relative; flex:1 1 auto; min-width:0; height:100%; display:flex; align-items:center; overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent) }
+.sh-ticker .sh-ribbon-clock{ flex:none; padding:0 14px; font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute); letter-spacing:.04em }
+
+/* The bar: one row at every width. */
+.sh-bar{ gap:16px }
+.sh-doors{ position:relative; flex:0 0 auto; display:flex; height:100% }
+.sh-door{ position:relative; padding:0 16px; border:0; background:none; font:500 15px/1 var(--sans, Inter, system-ui, sans-serif);
+  color:var(--ink-2); cursor:pointer; transition:color .25s }
+.sh-door::after{ display:none !important }
+.sh-door:hover, .sh-door.on{ color:var(--ink) }
+.sh-door.on{ font-weight:600 }
+.sh-door:focus-visible{ outline:2px solid var(--gold); outline-offset:-6px; border-radius:10px }
+.sh-door-ind{ position:absolute; left:0; bottom:0; height:3px; width:0; border-radius:3px 3px 0 0; background:var(--gold);
+  opacity:0; transition:transform .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1), opacity .25s }
+.sh-search{ flex:1 1 380px; max-width:560px }
+.sh-search input{ padding-right:64px }
+.sh-search .kbd{ letter-spacing:.02em }
+
+/* Search results: grouped, tools beside companies. */
+.sh-ac{ max-height:min(70vh, 520px) }
+.sh-ac .hd{ display:block; padding:10px 13px 4px; font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--mute) }
+.sh-ac b.row.tool{ align-items:center }
+.sh-ac b.row.tool .sh-ico{ width:30px; height:30px; flex:none }
+.sh-ac .tl{ display:flex; flex-direction:column; gap:2px; min-width:0 }
+.sh-ac .tn{ font-size:13px; font-weight:500; color:var(--ink) }
+.sh-ac .th{ font-size:11.5px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.sh-ac b.row{ animation: shRowIn .22s ease-out both }
+@keyframes shRowIn{ from{ transform:translateX(8px) } to{ transform:none } }
+
+/* Me: one button, one menu. */
+.sh-mewrap{ position:relative; flex:0 0 auto; margin-left:auto }
+.sh-me{ width:42px; height:42px; border-radius:50%; background:var(--paper-2); color:var(--gold-dp, var(--gold)) }
+.sh-me[aria-expanded="true"]{ box-shadow:0 0 0 3px rgba(168,128,28,.25) }
+.sh-memenu{ position:absolute; top:calc(100% + 10px); right:0; z-index:60; width:310px; padding:8px;
+  background:var(--skin-card, var(--paper)); border:1px solid var(--rule); border-radius:18px; box-shadow:var(--e3);
+  display:none; transform-origin:100% 0 }
+.sh-memenu.open{ display:block; animation:shMeIn .22s cubic-bezier(.2,.7,.2,1) both }
+@keyframes shMeIn{ from{ transform:translateY(-8px) scale(.97) } to{ transform:none } }
+.sh-memenu .sh-right{ display:flex !important; flex-direction:column; align-items:stretch; gap:2px; margin:0 }
+.sh-memenu .sh-right > *{ display:flex !important; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px;
+  width:100%; min-height:48px; box-sizing:border-box; padding:8px 12px; border:0 !important; border-radius:12px;
+  background:transparent !important; color:var(--ink) !important; font:500 14px/1.2 var(--sans, Inter, sans-serif) !important;
+  text-align:left; text-decoration:none; filter:none !important; max-width:none !important }
+.sh-memenu .sh-right > *:hover{ background:var(--paper-2) !important }
+.sh-memenu .sh-right small{ font-size:12px; font-weight:400; color:var(--mute) }
+.sh-memenu .sh-right .sh-pro{ color:var(--gold-dp, var(--gold)) !important; font-weight:600 !important }
+.sh-memenu .sh-merow{ display:flex; align-items:center; justify-content:space-between; padding:6px 12px; margin:4px 0;
+  border-top:1px solid var(--rule-2); border-bottom:1px solid var(--rule-2); font-size:14px }
+.sh-melearn h4{ margin:8px 12px 2px; font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--mute) }
+.sh-melearn .sh-item{ width:100%; padding:8px 10px }
+
+/* The door bar. */
+.sh-doorbar{ height:var(--sh-doorbar-h); display:flex; align-items:center; gap:10px; padding:0 18px;
+  background:var(--sh-glass); backdrop-filter:blur(18px) saturate(1.6); -webkit-backdrop-filter:blur(18px) saturate(1.6);
+  border-bottom:1px solid var(--rule) }
+.sh-doorbar-in{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:6px; overflow-x:auto; scrollbar-width:none; scroll-behavior:smooth }
+.sh-doorbar-in::-webkit-scrollbar{ display:none }
+.sh-pill{ flex:none; display:inline-flex; align-items:center; height:32px; padding:0 14px; border:1px solid var(--rule); border-radius:16px;
+  background:var(--paper); color:var(--ink-2); font:500 13px/1 var(--sans, Inter, sans-serif); text-decoration:none; cursor:pointer;
+  transition:background-color .25s, color .25s, border-color .25s, transform .2s;
+  animation:shPillIn .35s cubic-bezier(.2,.7,.2,1) backwards; animation-delay:calc(var(--i,0) * 30ms) }
+.sh-pill:hover{ border-color:var(--gold); color:var(--ink); transform:translateY(-1px) }
+.sh-pill.on{ background:var(--ink); border-color:var(--ink); color:var(--paper); font-weight:600 }
+.sh-pill:focus-visible, .sh-pin:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+@keyframes shPillIn{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:none } }
+.sh-pin{ flex:none; display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border:1px dashed var(--gold);
+  border-radius:16px; background:transparent; color:var(--gold-dp, var(--gold)); font:500 12px/1 var(--sans, Inter, sans-serif); cursor:pointer }
+.sh-pin.on{ border-style:solid; background:rgba(168,128,28,.14) }
+
+/* The phone sheet: Me first, then every door. */
+.sh-dme .sh-dpro{ margin:6px 0 10px }
+.sh-drawer .sh-col h4{ font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--mute) }
+
+@media (max-width:1040px){
+  .sh-doors{ display:none }
+  .sh-search{ max-width:none }
+}
+@media (max-width:720px){
+  :root{ --sh-bar-h:58px; --sh-ticker-h:32px }
+  html.sh-has-doorbar{ --sh-doorbar-h:44px }
+  .sh-bar{ gap:10px; padding:0 12px }
+  .sh-brand .nm{ display:none }
+  .sh-search input{ height:42px; font-size:16px; padding-right:12px }
+  .sh-search .kbd{ display:none }
+  .sh-ticker .sh-ribbon-clock{ display:none }
+  .sh-doorbar{ padding:0 10px }
+  .sh-memenu{ display:none !important }
+}
+@media (prefers-reduced-motion: reduce){
+  .sh-livetag .sh-dot::after{ animation:none }
+  .sh-door-ind, .sh-pill, .sh-ac b.row, .sh-memenu.open{ transition:none; animation:none }
+}
+html[data-motion="off"] .sh-door-ind, html[data-motion="off"] .sh-pill, html[data-motion="off"] .sh-ac b.row,
+html[data-motion="off"] .sh-memenu.open, html[data-motion="off"] .sh-livetag .sh-dot::after{ transition:none; animation:none }
+.sh-bar .sh-door.on{ background:none }
+.sh-doorbar.sh-played .sh-pill{ animation:none }
+/* The bar's popups (search results, the Me menu) open over the door bar.
+   Both rows blur what is behind them, which gives each its own stacking
+   context, and the later row would otherwise paint on top. */
+.sh-bar{ position:relative; z-index:3 }
+.sh-doorbar{ position:relative; z-index:1 }
+.sh-memenu .sh-right .sh-pro{ text-transform:none !important; letter-spacing:normal !important }
+.sh-memenu .sh-right .sh-pro small{ text-transform:none; letter-spacing:normal; color:var(--mute); font-weight:400 }

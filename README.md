@@ -19,32 +19,40 @@ charging for the calls.
 
 ---
 
-## The four products
+## Three doors
 
-The site is not one screener with a row of tabs. It is four products, and each
-one exists to answer a single question somebody actually arrives with. Where a
-destination goes is decided by which question it answers — not by which feed it
-happens to read.
+Everything on the site sits behind one of three doors, each the answer to a
+question somebody actually arrives with, plus a Me menu. Nothing was removed
+when the doors replaced the old four menus: every tool still has its own tab
+and its own address, in exactly one door.
 
-| Product | The question it answers | What lives there |
+| Door | The question it answers | What lives behind it |
 |---|---|---|
-| **Discover** | *Where are opportunities now?* | The opportunities hub, the live intraday scanner, delivery trends, bulk & block deals, WOW orders, options activity |
-| **Allocate** | *What should I do with my money?* | The guided card — how much, what risk it can carry, which asset classes follow ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)) — and the money planner behind it |
-| **Portfolio** | *How are my existing investments doing?* | The holdings review — see [`IC-REVIEW.md`](IC-REVIEW.md) for what happens to an uploaded file, end to end — and the record of ideas you added |
-| **Research** | *What does the evidence say?* | The stock screener, stock analysis, the Altaha Score, factors, fundamentals, ownership, technicals, delivery, news — and the glossary |
+| **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Setups, Options and the Market board |
+| **Ideas** (`#research`) | *What should I look at?* | The Universe scan, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, Concalls |
+| **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio and watchlist, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner, and Advisors |
+| **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
+
+Each door opens on a page of its own (`frontend/doors.js`) that previews every
+tool behind it with one live number or one line, and opens the tool on a tap.
+Inside a tool, the door bar under the header lists the other tools behind the
+same door, so switching never needs a menu, and any tool can be pinned to the
+desk on Today. One search box finds companies, tools and actions alike — "bulk"
+finds Big trades, "pledge" finds the Screener — and opens with Ctrl+K or `/`.
+On a phone the bottom bar is Today · Ideas · Search · My money · Me.
 
 `frontend/nav.js` holds the map and owns routing; `frontend/shell.js` renders
-the same map as the header menu. A destination has exactly one owner, and every
-address the site has ever published still resolves — `#screener`, `#ideas`,
-`#planner`, `#social` and the `#section/tab` pairs all map onto the product that
-now owns them. `frontend/tests/nav-products-browser.cjs` asserts all of that in
-a real browser, because none of it throws when it breaks.
-
-The two hubs are new surfaces rather than renamed tabs: `frontend/discover.js`
-builds Discover out of the feeds that already have tabs of their own, and
-`frontend/allocate-flow.js` asks for an amount, profiles the risk it can carry
-and turns the two into asset classes, entirely in the browser. Neither names a
-product or issues a recommendation — see the SEBI note above.
+the header, the door bar, search and Me from the same map. The section ids did
+not change, and every address the site has ever published still resolves —
+`#screener`, `#ideas`, `#planner`, `#portfolio`, `#social` and the
+`#section/tab` pairs all land on the tool that now owns them.
+`frontend/tests/nav-products-browser.cjs` asserts all of that in a real
+browser, because none of it throws when it breaks. Every figure on the door
+pages comes from an endpoint another view already uses; a sleeping feed blanks
+its own card and nothing else. The motion (cards rising in, counts counting,
+the chart drawing itself, the planets turning) stops for reduced motion and
+the site's own motion switch, and `motion-off-browser.cjs` checks that nothing
+is ever left invisible.
 
 ---
 

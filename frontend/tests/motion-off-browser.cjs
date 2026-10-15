@@ -1,21 +1,21 @@
 /* Nothing on the opening screen is invisible, under any motion setting.
  *
- * This exists because of a bug that shipped. premium.css reveals the
+ * This exists because of a bug that shipped. premium.css revealed the old
  * masthead's children with `.hero-in > * { animation: heroIn ... both }`,
- * and home-motion.css stops motion with
+ * and home-motion.css stopped motion with
  *
  *     html[data-motion="off"] .hm-masthead * { animation-play-state:paused }
  *
  * Pausing a loop is right. Pausing a `both`-filled reveal holds it at its
- * `from` state, which is opacity:0 — so with motion off the entire hero,
- * and before it the entire masthead, rendered as blank paper. The Motion
- * toggle sits in the same header, so it disappeared too and the setting
- * could not be undone from the page it had emptied.
+ * `from` state, which is opacity:0 — so with motion off the entire hero
+ * rendered as blank paper.
  *
- * Nothing threw, nothing logged, and every element reported the right
- * computed opacity: the zero was on an ancestor. So this walks the header,
- * multiplies opacity down the tree the way the compositor does, and fails
- * on any element that has text and cannot be seen.
+ * The opening screen is the Today door now (doors.js), and every card on it
+ * rises in from opacity 0, so the same trap is waiting. This walks the
+ * header and the Today page, multiplies opacity down the tree the way the
+ * compositor does, and fails on any element that has text and cannot be
+ * seen — with motion on, off, reduced, and with every animation on the page
+ * paused by a stylesheet nobody here wrote.
  */
 const fs = require('node:fs'), path = require('node:path'), http = require('node:http');
 const assert = require('node:assert/strict');
@@ -45,7 +45,7 @@ const SETTINGS = [
   // The case the stylesheet cannot name. Both blank screens that shipped
   // came from a pause rule written somewhere else, so this stops guessing
   // which rule and pauses EVERYTHING, then checks the page is still
-  // readable. home-hero.js's hh-played timer is what has to save it.
+  // readable. doors.js's played() timer is what has to save it.
   { name: 'everything paused', stored: null, reduced: 'no-preference', paused: true }
 ];
 
@@ -80,19 +80,19 @@ const SETTINGS = [
       const page = await context.newPage();
       page.on('pageerror', e => errors.push(String(e.stack)));
       // No network: a cold free instance is the normal first visit, and the
-      // hero must not depend on the engine answering.
+      // opening screen must not depend on the engine answering.
       await context.route('**/*', r =>
         r.request().url().includes('127.0.0.1') ? r.continue() : r.abort());
       await page.goto('http://127.0.0.1:8767/', { waitUntil: 'domcontentloaded' });
-      await page.locator('.hh-head').waitFor();
-      // Past the hh-played timer, which is the last thing that can rescue a
+      await page.locator('#view-today .dr-title').waitFor();
+      // Past the played() timer, which is the last thing that can rescue a
       // reveal somebody else has frozen.
-      await page.waitForTimeout(4200);
+      await page.waitForTimeout(3200);
 
       const hidden = await page.evaluate(() => {
         const out = new Set();
-        document.querySelectorAll('header.wrap, header.wrap *').forEach(node => {
-          if (node.id === 'skin-art' || node.closest('#skin-art')) return;
+        document.querySelectorAll('.sh-chrome *, #view-today, #view-today *').forEach(node => {
+          if (node.closest('.sh-ac, .sh-memenu, .sh-railbox')) return;   // closed popups; the moving tape
           if (node.closest('[aria-hidden="true"]')) return;      // decoration
           const style = getComputedStyle(node);
           if (style.display === 'none' || style.visibility === 'hidden') return;
@@ -107,11 +107,11 @@ const SETTINGS = [
         });
         return [...out];
       });
-      assert.deepEqual(hidden, [], `${setting.name} @ ${width}px: masthead content is invisible`);
+      assert.deepEqual(hidden, [], `${setting.name} @ ${width}px: opening-screen content is invisible`);
 
-      // The promise itself, the way in, and the control for this very
-      // setting all have to be on the screen whatever the setting is.
-      for (const sel of ['.hh-head', '.hh-sub', '.hh-cta .hh-btn']) {
+      // The door's name, its question, the market panel and the tool cards
+      // all have to be on the screen whatever the setting is.
+      for (const sel of ['#view-today .dr-title', '#view-today .dr-q', '#view-today .dr-hero', '#view-today .dr-tool', '#sh-q']) {
         assert.ok(await page.locator(sel).first().isVisible(), `${setting.name} @ ${width}px: ${sel} not visible`);
       }
       // Deliberately NOT the exact wording. This test asks whether the
@@ -122,7 +122,7 @@ const SETTINGS = [
       assert.equal(await page.locator('.hm-motion').count(), 0);
       assert.equal(await page.evaluate(() => document.documentElement.dataset.motion),
         setting.reduced === 'reduce' ? 'off' : 'on');
-      const headline = (await page.locator('.hh-head').innerText()).trim();
+      const headline = (await page.locator('#view-today .dr-q').innerText()).trim();
       assert.ok(headline.length > 8,
         `${setting.name} @ ${width}px: the headline is empty — "${headline}"`);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
@@ -132,7 +132,7 @@ const SETTINGS = [
     }
   }
 
-  const relevant = errors.filter(e => /home-hero\.js|home-motion\.js|home\.js/.test(e));
+  const relevant = errors.filter(e => /doors\.js|shell\.js|home-motion\.js|home\.js/.test(e));
   assert.deepEqual(relevant, []);
   await browser.close(); server.close();
   console.log('Opening screen is visible under motion on, motion off and reduced motion');

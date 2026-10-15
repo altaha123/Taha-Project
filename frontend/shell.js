@@ -98,120 +98,80 @@
       (ICON[key] || '') + '</svg></span>';
   }
 
-  /* ── The menu map ──────────────────────────────────────────────────────────
-     Four products, each one the answer to a question somebody actually walks
-     in with. Grouped into columns, which is the whole reason the old bar
-     failed: eleven flat destinations tell a first-time visitor that everything
-     matters equally, so nothing does. `tab` values are the ids nav.js already
-     knows, and nav.js resolves a tab to its owning product, so a column can
-     be moved between products here without breaking a single link. */
+  /* ── The door map ──────────────────────────────────────────────────────────
+     Three doors, each the answer to one question, and a Me menu. Mirrors the
+     sections in nav.js (same section and tab ids) because this file also runs
+     on pages without nav.js — the stock page, Pro, Advisors — where a door is
+     a link back to index.html#section/tab. Every item has a few `kw` words so
+     the search box finds a tool by what people call it, not only by its
+     label: "bulk" finds Big trades, "pledge" finds the Screener. */
 
-  var MENU = [
+  var DOORS = [
     {
-      id: 'discover', label: 'Discover',
-      question: 'Where are opportunities now?',
-      cols: [
-        { head: 'Explore & follow', items: [
-          { tab: 'ideas', label: 'Universe Scan', icon: 'bulb',
-            hint: 'Explore the NSE universe and reveal ranked stocks' },
-          { tab: 'live', label: 'Alerts', icon: 'bell',
-            hint: 'Intraday alerts as they fire' },
-          { tab: 'tracker', label: 'Tracker', icon: 'target',
-            hint: 'Follow discovered stocks and their performance' }
-        ]},
-        { head: 'Right now', items: [
-          { tab: 'discover', label: 'Opportunities now', icon: 'target',
-            hint: 'Today’s setups, movers and unusual activity' }
-        ]},
-        { head: 'Unusual activity', items: [
-          { tab: 'special', label: 'Delivery trends', icon: 'bars',
-            hint: 'Price momentum backed by delivered volume' },
-          { tab: 'deals', label: 'Bulk & block deals', icon: 'exchange',
-            hint: 'Large trades and their participants' },
-          { tab: 'wow', label: 'WOW orders', icon: 'target',
-            hint: 'Order wins measured against company size' }
-        ]},
-        { head: 'Derivatives', items: [
-          { tab: 'options', label: 'Options activity', icon: 'layers',
-            hint: 'Option prices and open interest' }
-        ]}
+      id: 'discover', label: 'Today', question: 'What is the market doing?',
+      items: [
+        { tab: 'today', label: 'Overview', icon: 'pulse', hint: 'The market at a glance, live', kw: 'home market nifty sensex index sectors heatmap fii dii' },
+        { tab: 'live', label: 'Alerts', icon: 'bell', hint: 'Intraday signals as they fire', kw: 'live scanner intraday volume breakout' },
+        { tab: 'deals', label: 'Big trades', icon: 'exchange', hint: 'Bulk and block deals, and who made them', kw: 'bulk block deals' },
+        { tab: 'wow', label: 'Order wins', icon: 'target', hint: 'New orders measured against company size', kw: 'wow orders contract' },
+        { tab: 'special', label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
+        { tab: 'results', label: 'Results calendar', icon: 'document', hint: 'Who reports yesterday, today and this week', kw: 'results earnings quarterly calendar' },
+        { tab: 'filings', label: 'Filings & news', icon: 'document', hint: 'Company announcements as they are filed', kw: 'news announcements filings exchange' },
+        { tab: 'discover', label: 'Setups', icon: 'target', hint: 'Today’s strongest setups and unusual activity', kw: 'opportunities setups ideas today' },
+        { tab: 'options', label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
+        { tab: 'screener', label: 'Market board', icon: 'bars', hint: 'The market board and a stock search box', kw: 'analysis board movers', quiet: true }
       ]
     },
     {
-      id: 'allocate', label: 'Allocate',
-      question: 'What should I do with my money?',
-      cols: [
-        { head: 'The plan', items: [
-          { tab: 'allocate', label: 'Allocation plan', icon: 'plan',
-            hint: 'What the next rupee should do, in order' }
-        ]},
-        { head: 'Your household', items: [
-          { tab: 'planner', label: 'Money planner', icon: 'ledger',
-            hint: 'Income, expenses, tax and the cushion' }
-        ]}
+      id: 'research', label: 'Ideas', question: 'What should I look at?',
+      items: [
+        { tab: 'ideahub', label: 'Overview', icon: 'bulb', hint: 'Every way to find a stock, in one place', kw: 'ideas find discover' },
+        { tab: 'ideas', label: 'Universe scan', icon: 'bulb', hint: 'NSE stocks ranked by the Altaha Score', kw: 'universe scan ranked top best planets' },
+        { tab: 'query', label: 'Screener', icon: 'lens', hint: 'Filter every company by your own rules', kw: 'query filter screen roe roce pe debt pledge promoter' },
+        { tab: 'lenses', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them', kw: 'lenses philosophy coffee can moat qglp' },
+        { tab: 'convergence', label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
+        { tab: 'investors', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
+        { tab: 'funds', label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
+        { tab: 'charts', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
+        { tab: 'tracker', label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
+        { tab: 'factors', label: 'Factors', icon: 'plan', hint: 'What each factor has actually predicted', kw: 'factors ic accuracy' },
+        { tab: 'concalls', label: 'Concalls', icon: 'chat', hint: 'Earnings call transcripts, digested', kw: 'concall earnings call transcript' }
       ]
     },
     {
-      id: 'portfolio', label: 'Portfolio',
-      question: 'How are my existing investments doing?',
-      cols: [
-        { head: 'Your investments', items: [
-          { tab: 'portfolio', label: 'Holdings review', icon: 'bars',
-            hint: 'Your holdings against their scores and exposures' }
-        ]},
-        // A page of its own rather than a tab: advisors.html. `href` items
-        // are plain links, so the menu does not try to route them.
-        { head: 'Ask a person', items: [
-          { href: 'advisors.html', label: 'Chat with an adviser', icon: 'chat',
-            hint: 'SEBI-registered advisers and market educators' }
-        ]}
-      ]
-    },
-    {
-      id: 'research', label: 'Research',
-      question: 'What does the evidence say?',
-      cols: [
-        { head: 'Stocks', items: [
-          { tab: 'screener', label: 'Stock analysis', icon: 'ledger',
-            hint: 'One company, scored, with the ledger' },
-          { tab: 'query', label: 'Query screener', icon: 'lens',
-            hint: 'Filter every company by its fundamentals' },
-          { tab: 'charts', label: 'Technicals', icon: 'candles',
-            hint: 'Price charts, levels and indicators' }
-        ]},
-        { head: 'The evidence', items: [
-          { tab: 'score', label: 'Altaha Score', icon: 'shield',
-            hint: 'How the score is built and what it has been worth' },
-          { tab: 'factors', label: 'Factors', icon: 'target',
-            hint: 'What each factor has actually predicted' },
-          { tab: 'results', label: 'Fundamentals', icon: 'document',
-            hint: 'Quarterly numbers, and who reports today and this week' }
-        ]},
-        { head: 'Ownership', items: [
-          { tab: 'investors', label: 'Investor portfolios', icon: 'ledger',
-            hint: 'What well-known investors disclosed holding' },
-          { tab: 'funds', label: 'Fund house portfolios', icon: 'ledger',
-            hint: 'What the mutual funds disclosed holding' }
-        ]},
-        { head: 'News', items: [
-          { tab: 'filings', label: 'Company announcements', icon: 'bell',
-            hint: 'Updates filed with the exchange' },
-          { tab: 'concalls', label: 'Concall summaries', icon: 'document',
-            hint: 'Earnings call transcripts, digested' },
-          { tab: 'social', label: 'News & post drafts', icon: 'share',
-            hint: 'Read updates and prepare posts' },
-          { tab: 'vocab', label: 'Glossary', icon: 'document',
-            hint: 'Financial terms in plain language' }
-        ]},
-        { head: 'Lenses', items: [
-          { tab: 'lenses', label: 'Philosophy lenses', icon: 'lens',
-            hint: 'Stocks screened the way great investors think' },
-          { tab: 'convergence', label: 'Convergence', icon: 'converge',
-            hint: 'Stocks that clear three or more lenses' }
-        ]}
+      id: 'portfolio', label: 'My money', question: 'How am I doing, and what next?',
+      items: [
+        { tab: 'money', label: 'Overview', icon: 'shield', hint: 'Your portfolio, watchlist and plans', kw: 'money mine' },
+        { tab: 'portfolio', label: 'Portfolio review', icon: 'plan', hint: 'A clear call on every holding', kw: 'portfolio holdings review plan hold trim exit' },
+        { tab: 'allocate', label: 'Allocation plan', icon: 'shield', hint: 'Where your next rupee should go', kw: 'allocate asset allocation invest' },
+        { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'Income, expenses, tax and your cushion', kw: 'planner budget tax emergency' },
+        { href: 'advisors.html', label: 'Talk to an adviser', icon: 'chat', hint: 'Chat with SEBI-registered advisers', kw: 'advisor adviser sebi chat expert' }
       ]
     }
   ];
+
+  var ME_ITEMS = [
+    { section: 'me', tab: 'score', label: 'How the score works', icon: 'target', hint: 'Every pillar and weight, in plain words', kw: 'altaha score methodology' },
+    { section: 'me', tab: 'vocab', label: 'Glossary', icon: 'document', hint: 'Market terms in plain language', kw: 'glossary vocabulary terms meaning' },
+    { section: 'me', tab: 'social', label: 'Post drafts', icon: 'share', hint: 'Prepare posts for X and Telegram', kw: 'social posts drafts twitter telegram' }
+  ];
+
+  /* Everything the search box can open that is not a company. */
+  function allTools() {
+    var out = [];
+    DOORS.forEach(function (d) {
+      d.items.forEach(function (it) {
+        out.push({ section: d.id, door: d.label, tab: it.tab, href: it.href, label: it.tab && /^(today|ideahub|money)$/.test(it.tab) ? d.label : it.label,
+                   hint: it.hint, icon: it.icon, kw: it.kw || '' });
+      });
+    });
+    ME_ITEMS.forEach(function (it) {
+      out.push({ section: 'me', door: 'Me', tab: it.tab, label: it.label, hint: it.hint, icon: it.icon, kw: it.kw || '' });
+    });
+    out.push({ door: 'Me', href: 'pro.html?from=search', label: 'Altaha Pro', hint: 'Saved screens and the daily email', icon: 'bulb', kw: 'pro premium subscribe price' });
+    out.push({ door: 'Me', href: 'signin.html', label: 'Sign in', hint: 'Keep your portfolio and watchlist on your account', icon: 'shield', kw: 'login account sign' });
+    return out;
+  }
 
   /* ── Navigation hand-off ─────────────────────────────────────────────────── */
 
@@ -238,28 +198,33 @@
   }
   window.AltahaOpenStock = openStock;
 
-  /* ── Build the chrome ────────────────────────────────────────────────────── */
+  /* ── Build the chrome ──────────────────────────────────────────────────────
+     Three rows, top to bottom:
+       1  the live tape    prices moving now (startTicker)
+       2  the bar          brand · three doors · search · Me
+       3  the door bar     the tools behind the door you are in (index only)
+     The headline ribbon that used to sit above the tape now lives on the
+     Today page as its Headlines card, and the row of Watchlist, Advisors,
+     Pro, Sign in and theme buttons is the Me menu. */
 
   var CHROME = null;
+  var PIN_KEY = 'altaha-pins-v1';
+
+  function onIndex() { return !!document.getElementById('tab-screener'); }
+  function narrow() { return window.matchMedia && window.matchMedia('(max-width:1040px)').matches; }
 
   function build() {
     if (document.querySelector('.sh-chrome')) return;
 
     var chrome = el('div', 'sh-chrome');
 
-    /* 1 · ribbon */
-    var ribbon = el('div', 'sh-ribbon');
-    ribbon.innerHTML =
-      '<span class="sh-ribbon-tag"><i class="sh-dot"></i>Live</span>' +
-      '<div class="sh-ribbon-slot" id="sh-slot"></div>' +
-      '<span class="sh-ribbon-clock" id="sh-clock"></span>';
-
-    /* 2 · ticker */
     var ticker = el('div', 'sh-ticker');
     ticker.setAttribute('aria-label', 'Live market prices');
-    ticker.innerHTML = '<div class="sh-rail" id="sh-rail"></div>';
+    ticker.innerHTML =
+      '<span class="sh-livetag"><i class="sh-dot"></i>Live</span>' +
+      '<div class="sh-railbox"><div class="sh-rail" id="sh-rail"></div></div>' +
+      '<span class="sh-ribbon-clock" id="sh-clock"></span>';
 
-    /* 3 · menu bar */
     var bar = el('div', 'sh-bar');
 
     var brand = el('a', 'sh-brand');
@@ -269,76 +234,73 @@
       '<span class="mk" aria-hidden="true"></span>' +
       '<span class="nm">Altaha <i>Screener</i></span>';
 
-    var nav = el('nav', 'sh-nav');
+    var nav = el('nav', 'sh-nav sh-doors');
     nav.setAttribute('aria-label', 'Main');
-    MENU.forEach(function (sec) {
-      var b = el('button', 'sh-top');
-      b.type = 'button';
-      b.dataset.sec = sec.id;
-      b.setAttribute('aria-expanded', 'false');
-      b.setAttribute('aria-haspopup', 'true');
-      b.title = sec.question || '';
-      b.innerHTML = esc(sec.label) +
-        '<svg class="cv" width="10" height="10" viewBox="0 0 24 24" fill="none" ' +
-        'stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>';
-      nav.appendChild(b);
-    });
+    nav.innerHTML = '<span class="sh-door-ind" aria-hidden="true"></span>' + DOORS.map(function (d) {
+      return '<button type="button" class="sh-top sh-door" data-sec="' + esc(d.id) + '" title="' + esc(d.question) + '">' +
+        esc(d.label) + '</button>';
+    }).join('');
 
     var search = el('div', 'sh-search');
     search.innerHTML =
       '<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
       'stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/></svg>' +
-      '<input id="sh-q" type="text" autocomplete="off" spellcheck="false" ' +
-      'placeholder="Search a stock" aria-label="Search for a stock" />' +
-      '<span class="kbd">/</span><div class="sh-ac" id="sh-ac" role="listbox"></div>';
+      '<input id="sh-q" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" ' +
+      'aria-controls="sh-ac" placeholder="Search stocks, tools, or what you want to do" aria-label="Search stocks and tools" />' +
+      '<span class="kbd">Ctrl K</span><div class="sh-ac" id="sh-ac" role="listbox"></div>';
 
-    var right = el('div', 'sh-right');
-    var themeBtn = el('button', 'sh-icon');
-    themeBtn.type = 'button';
-    themeBtn.id = 'sh-theme';
-    themeBtn.setAttribute('aria-label', 'Switch appearance');
-    var burger = el('button', 'sh-icon sh-burger');
-    burger.type = 'button';
-    burger.id = 'sh-burger';
-    burger.setAttribute('aria-label', 'Open navigation menu');
-    burger.setAttribute('aria-controls', 'sh-drawer');
-    burger.setAttribute('aria-expanded', 'false');
-    burger.innerHTML =
-      '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-      'stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>';
-    // Signed out it says "Sign in"; signed in it shows the address, and
-    // clicking it goes to the page that can sign you out. Deliberately plain:
-    // an account control that shouts competes with the search box, which is
-    // what people actually came for.
+    /* Me: account, Pro, Advisors, the watchlist, appearance and learning.
+       The ids are the ones the rest of the site and its tests already know. */
+    var meWrap = el('div', 'sh-mewrap');
+    var me = el('button', 'sh-icon sh-me');
+    me.type = 'button';
+    me.id = 'sh-me';
+    me.setAttribute('aria-label', 'Me: account, settings and learning');
+    me.setAttribute('aria-haspopup', 'true');
+    me.setAttribute('aria-expanded', 'false');
+    me.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+    var menu = el('div', 'sh-memenu');
+    menu.id = 'sh-memenu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', 'Me');
+
+    var right = el('div', 'sh-right');      // experience.js adds the Watchlist button here
     var account = el('a', 'sh-account');
     account.id = 'sh-account';
     account.href = 'signin.html';
     account.textContent = 'Sign in';
-    // Pro: what it costs and what it adds, one tap from anywhere. The page
-    // behind it is a waitlist — nothing is sold yet (see pro.html).
     var pro = el('a', 'sh-pro');
     pro.id = 'sh-pro';
     pro.href = 'pro.html?from=header';
-    pro.textContent = 'Pro';
+    pro.innerHTML = 'Altaha Pro<small>Saved screens and the daily email</small>';
     pro.addEventListener('click', function () {
       if (window.AltahaTrack) window.AltahaTrack('pro_cta_clicked', { from: 'header' });
     });
-    // Advisors: people to talk to. In the header only on wide screens (the
-    // CSS hides it below 1340px); everywhere else it is in the Portfolio
-    // menu and the drawer.
     var adv = el('a', 'sh-adv');
     adv.id = 'sh-adv';
     adv.href = 'advisors.html';
-    adv.textContent = 'Advisors';
+    adv.innerHTML = 'Talk to an adviser<small>SEBI-registered, free to chat</small>';
     adv.addEventListener('click', function () {
       if (window.AltahaTrack) window.AltahaTrack('advisors_cta_clicked', { from: 'header' });
     });
-    right.appendChild(adv);
-    right.appendChild(pro);
+    var themeBtn = el('button', 'sh-icon sh-themebtn');
+    themeBtn.type = 'button';
+    themeBtn.id = 'sh-theme';
+    themeBtn.setAttribute('aria-label', 'Switch appearance');
     right.appendChild(account);
-
-    right.appendChild(themeBtn);
-    right.appendChild(burger);
+    right.appendChild(pro);
+    right.appendChild(adv);
+    var themeRow = el('div', 'sh-merow');
+    themeRow.innerHTML = '<span>Appearance</span>';
+    themeRow.appendChild(themeBtn);
+    var learn = el('div', 'sh-melearn');
+    learn.innerHTML = '<h4>Learn</h4>' + ME_ITEMS.map(function (it) { return itemHTML('me', it); }).join('');
+    menu.appendChild(right);
+    menu.appendChild(themeRow);
+    menu.appendChild(learn);
+    meWrap.appendChild(me);
+    meWrap.appendChild(menu);
 
     paintAccount();
     window.addEventListener('altaha-auth', paintAccount);
@@ -346,36 +308,41 @@
     bar.appendChild(brand);
     bar.appendChild(nav);
     bar.appendChild(search);
-    bar.appendChild(right);
+    bar.appendChild(meWrap);
 
-    var megawrap = el('div', 'sh-megawrap');
-    megawrap.id = 'sh-megawrap';
-
-    chrome.appendChild(ribbon);
     chrome.appendChild(ticker);
     chrome.appendChild(bar);
-    chrome.appendChild(megawrap);
+
+    if (onIndex()) {
+      var doorbar = el('nav', 'sh-doorbar');
+      doorbar.id = 'sh-doorbar';
+      doorbar.setAttribute('aria-label', 'Tools behind this door');
+      chrome.appendChild(doorbar);
+      document.documentElement.classList.add('sh-has-doorbar');
+    }
 
     document.body.insertBefore(chrome, document.body.firstChild);
 
+    /* On a phone, Me opens as a sheet that also carries the whole map: every
+       tool behind every door, for the reader who would rather browse than
+       search. */
     var drawer = el('dialog', 'sh-drawer');
-    drawer.setAttribute('aria-label', 'Navigation menu');
+    drawer.setAttribute('aria-label', 'Me and every tool');
     drawer.id = 'sh-drawer';
     document.body.appendChild(drawer);
 
     document.body.classList.add('sh-on');
     CHROME = chrome;
 
-    wireMenu(megawrap, drawer);
+    wireDoors();
+    wireMe(drawer);
     wireSearch();
     wireTheme();
     wireScroll();
   }
 
-  /* ── Mega menu ───────────────────────────────────────────────────────────── */
-
-  // One builder for both the desktop panel and the mobile drawer, so an icon
-  // can never appear in one and be missing from the other.
+  // One builder for the Me menu, the phone sheet and the door bar, so an item
+  // can never appear in one and be missing from another.
   function itemHTML(secId, it) {
     if (it.href) {
       return '<a class="sh-item" href="' + esc(it.href) + '">' + svg(it.icon) +
@@ -388,128 +355,220 @@
       '<span>' + esc(it.hint) + '</span></span></button>';
   }
 
-  /* The question sits above the columns, not in a tooltip. It is the only
-     thing on the panel that tells a first-time reader why these particular
-     destinations are filed together. */
-  function columnsHTML(sec) {
-    return (sec.question ? '<p class="sh-megaq">' + esc(sec.question) + '</p>' : '') +
-      sec.cols.map(function (c) {
-        return '<div class="sh-col"><h4>' + esc(c.head) + '</h4>' +
-          c.items.map(function (it) { return itemHTML(sec.id, it); }).join('') + '</div>';
-      }).join('');
+  /* ── The doors ───────────────────────────────────────────────────────────── */
+
+  var activeDoor = null, activeTab = null;
+
+  function wireDoors() {
+    document.querySelectorAll('.sh-door').forEach(function (b) {
+      b.addEventListener('click', function () { navigate(b.dataset.sec, null); });
+    });
+    window.addEventListener('altaha:navigate', function (e) {
+      var d = (e && e.detail) || {};
+      activeDoor = d.section || null;
+      activeTab = d.tab || null;
+      paintDoors();
+      paintDoorbar();
+    });
+    window.addEventListener('resize', function () { paintDoors(true); });
+    // nav.js routes the first view before this header exists, so its first
+    // announcement is missed; ask it where we are instead. On the stock page
+    // and the others there is no router, no door is open, and the indicator
+    // simply stays hidden.
+    function sync() {
+      var nav = window.AltahaNav;
+      if (!nav || typeof nav.current !== 'function') return;
+      var c = nav.current();
+      if (!c || (c.section === activeDoor && c.tab === activeTab)) return;
+      activeDoor = c.section;
+      activeTab = c.tab;
+      paintDoors(true);
+      paintDoorbar();
+    }
+    paintDoors();
+    sync();
+    setTimeout(sync, 250);
+    setTimeout(sync, 1200);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { paintDoors(true); });
   }
 
-  function wireMenu(megawrap, drawer) {
-    var panel = el('div', 'sh-mega');
-    megawrap.appendChild(panel);
-    var openId = null, closeTimer = null;
+  function paintDoors(instant) {
+    var ind = document.querySelector('.sh-door-ind');
+    var on = null;
+    document.querySelectorAll('.sh-door').forEach(function (b) {
+      var is = b.dataset.sec === activeDoor;
+      b.classList.toggle('on', is);
+      if (is) { b.setAttribute('aria-current', 'page'); on = b; } else b.removeAttribute('aria-current');
+    });
+    if (!ind) return;
+    if (!on) { ind.style.opacity = '0'; return; }
+    if (instant) ind.style.transition = 'none';
+    ind.style.opacity = '1';
+    ind.style.width = on.offsetWidth + 'px';
+    ind.style.transform = 'translateX(' + on.offsetLeft + 'px)';
+    if (instant) { void ind.offsetWidth; ind.style.transition = ''; }
+  }
 
-    function close() {
-      openId = null;
-      panel.classList.remove('open');
-      document.querySelectorAll('.sh-top').forEach(function (b) {
-        b.setAttribute('aria-expanded', 'false');
-      });
+  function readPins() {
+    try { var p = JSON.parse(localStorage.getItem(PIN_KEY) || '[]'); return Array.isArray(p) ? p : []; }
+    catch (e) { return []; }
+  }
+
+  /* The door bar: the tools behind the door you are in, the one you are on
+     lit, and a pin for it. Switching between two tools in one door never
+     needs a menu. */
+  function paintDoorbar() {
+    var bar = document.getElementById('sh-doorbar');
+    if (!bar) return;
+    var door = DOORS.filter(function (d) { return d.id === activeDoor; })[0];
+    var items = door ? door.items.filter(function (it) { return !it.quiet || it.tab === activeTab; })
+                     : activeDoor === 'me' ? ME_ITEMS : [];
+    if (!items.length) { bar.innerHTML = ''; bar.classList.remove('on'); return; }
+    var pinned = readPins();
+    var pinnable = activeTab && !/^(today|ideahub|money)$/.test(activeTab);
+    bar.innerHTML = '<div class="sh-doorbar-in">' + items.map(function (it, i) {
+      var on = it.tab && it.tab === activeTab;
+      if (it.href) {
+        return '<a class="sh-pill" style="--i:' + i + '" href="' + esc(it.href) + '">' + esc(it.label) + '</a>';
+      }
+      return '<button type="button" class="sh-pill' + (on ? ' on' : '') + '" style="--i:' + i + '" data-sec="' +
+        esc(door ? door.id : 'me') + '" data-tab="' + esc(it.tab) + '"' + (on ? ' aria-current="page"' : '') + '>' +
+        esc(it.label) + '</button>';
+    }).join('') + '</div>' +
+      (pinnable ? '<button type="button" class="sh-pin' + (pinned.indexOf(activeTab) > -1 ? ' on' : '') + '" id="sh-pin" ' +
+        'aria-pressed="' + (pinned.indexOf(activeTab) > -1 ? 'true' : 'false') + '" title="Pin this tool to your desk on Today">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
+        'stroke-linejoin="round"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/></svg><span>' +
+        (pinned.indexOf(activeTab) > -1 ? 'Pinned' : 'Pin') + '</span></button>' : '');
+    bar.classList.add('on');
+    // Same backstop as the doors: the pills rise in from opacity 0, so once
+    // they have had time to, the entrance is switched off.
+    bar.classList.remove('sh-played');
+    clearTimeout(bar._played);
+    bar._played = setTimeout(function () { bar.classList.add('sh-played'); }, 1500);
+    var cur = bar.querySelector('.sh-pill.on');
+    if (cur && cur.scrollIntoView) {
+      var box = bar.querySelector('.sh-doorbar-in');
+      if (box && box.scrollWidth > box.clientWidth) box.scrollLeft = cur.offsetLeft - 40;
     }
-    function open(secId) {
-      var sec = MENU.filter(function (s) { return s.id === secId; })[0];
-      if (!sec) return;
-      openId = secId;
-      panel.innerHTML = columnsHTML(sec);
-      panel.classList.add('open');
-      document.querySelectorAll('.sh-top').forEach(function (b) {
-        b.setAttribute('aria-expanded', b.dataset.sec === secId ? 'true' : 'false');
-      });
+  }
+
+  function wireDoorbar() {
+    var bar = document.getElementById('sh-doorbar');
+    if (!bar) return;
+    bar.addEventListener('click', function (e) {
+      var pin = e.target.closest('#sh-pin');
+      if (pin) {
+        var p = readPins(), i = p.indexOf(activeTab);
+        if (i > -1) p.splice(i, 1); else p.unshift(activeTab);
+        try { localStorage.setItem(PIN_KEY, JSON.stringify(p.slice(0, 8))); } catch (err) {}
+        window.dispatchEvent(new CustomEvent('altaha:pins'));
+        paintDoorbar();
+        return;
+      }
+      var b = e.target.closest('.sh-pill[data-tab]');
+      if (b) navigate(b.dataset.sec, b.dataset.tab);
+    });
+  }
+
+  /* ── Me ──────────────────────────────────────────────────────────────────── */
+
+  function wireMe(drawer) {
+    var me = document.getElementById('sh-me');
+    var menu = document.getElementById('sh-memenu');
+    wireDoorbar();
+
+    function setMenu(on) {
+      menu.classList.toggle('open', on);
+      me.setAttribute('aria-expanded', on ? 'true' : 'false');
     }
 
-    document.querySelectorAll('.sh-top').forEach(function (b) {
-      // Hover opens, because that is what a mega menu is for; click still
-      // works and is what a keyboard and a touchscreen actually use.
-      b.addEventListener('mouseenter', function () {
-        clearTimeout(closeTimer);
-        open(b.dataset.sec);
-      });
-      b.addEventListener('click', function (e) {
-        e.preventDefault();
-        if (openId === b.dataset.sec) close();
-        else open(b.dataset.sec);
-      });
-      b.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') close();
-      });
-    });
+    drawer.innerHTML =
+      '<div class="sh-col sh-dme"><h4>Me</h4>' +
+        '<div class="sh-dacct"><a class="sh-item sh-dacc" href="signin.html">' + svg('shield') +
+          '<span class="sh-txt"><b class="sh-dacc-name">Sign in</b><span>Keep your portfolio and watchlist on your account</span></span></a></div>' +
+        '<a class="sh-dpro" href="pro.html?from=menu"><b>Altaha Pro</b>' +
+          '<span>The portfolio story, watchlist alerts and saved screens — ₹1,999 a year</span></a>' +
+        '<a class="sh-item" href="advisors.html">' + svg('chat') +
+          '<span class="sh-txt"><b>Talk to an adviser</b><span>SEBI-registered advisers, free to chat</span></span></a>' +
+        '<button class="sh-item sh-dwatch" type="button">' + svg('target') +
+          '<span class="sh-txt"><b>Watchlist</b><span>Stocks you follow</span></span></button>' +
+        '<button class="sh-item sh-dtheme" type="button">' + svg('layers') +
+          '<span class="sh-txt"><b>Appearance</b><span>Switch between light and dark</span></span></button>' +
+        ME_ITEMS.map(function (it) { return itemHTML('me', it); }).join('') +
+      '</div>' +
+      DOORS.map(function (d) {
+        return '<div class="sh-col"><h4>' + esc(d.label) + '</h4>' +
+          '<p class="sh-megaq">' + esc(d.question) + '</p>' +
+          d.items.filter(function (it) { return !it.quiet; }).map(function (it) { return itemHTML(d.id, it); }).join('') + '</div>';
+      }).join('');
 
-    [panel, megawrap].forEach(function (n) {
-      n.addEventListener('mouseenter', function () { clearTimeout(closeTimer); });
-    });
-    if (CHROME) {
-      CHROME.addEventListener('mouseleave', function () {
-        closeTimer = setTimeout(close, 180);
-      });
-    }
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest || (!e.target.closest('.sh-chrome'))) close();
-    });
-
-    panel.addEventListener('click', function (e) {
-      var it = e.target.closest('.sh-item');
-      if (!it) return;
-      close();
-      if (it.tagName === 'A') return;
-      navigate(it.dataset.sec, it.dataset.tab);
-    });
-
-    /* Mobile drawer — the same map, stacked, so there is one source of truth
-       for what the destinations are. */
-    drawer.innerHTML = MENU.map(function (sec) {
-      return '<div class="sh-col"><h4>' + esc(sec.label) + '</h4>' +
-        (sec.question ? '<p class="sh-megaq">' + esc(sec.question) + '</p>' : '') +
-        sec.cols.map(function (c) {
-          return c.items.map(function (it) { return itemHTML(sec.id, it); }).join('');
-        }).join('') + '</div>';
-    }).join('') +
-      '<div class="sh-col"><a class="sh-dpro" href="pro.html?from=menu"><b>Altaha Pro</b>' +
-      '<span>The portfolio story, watchlist alerts and saved screens — ₹1,999 a year</span></a></div>';
-
-    var burger = document.getElementById('sh-burger');
-    var drawerClose = el('button', 'ux-button', 'Close menu');
+    var drawerClose = el('button', 'ux-button', 'Close');
     drawerClose.type = 'button';
     drawerClose.addEventListener('click', function () { setDrawer(false); });
     drawer.prepend(drawerClose);
     drawer.addEventListener('close', function () {
       drawer.classList.remove('open');
-      burger.setAttribute('aria-expanded', 'false');
-      burger.setAttribute('aria-label', 'Open navigation menu');
+      me.setAttribute('aria-expanded', 'false');
       document.body.style.overflow = '';
     });
+    function setDrawer(on) {
+      try {
+        if (on && !drawer.open) drawer.showModal();
+        if (!on && drawer.open) drawer.close();
+      } catch (e) {}
+      drawer.classList.toggle('open', on);
+      me.setAttribute('aria-expanded', on ? 'true' : 'false');
+      document.body.style.overflow = on ? 'hidden' : '';
+      if (on) paintAccount();
+    }
     window.matchMedia('(max-width:1040px)').addEventListener('change', function (e) {
       if (!e.matches && drawer.open) setDrawer(false);
+      if (e.matches) setMenu(false);
     });
-    function setDrawer(on) {
-      if (on && !drawer.open) drawer.showModal();
-      if (!on && drawer.open) drawer.close();
-      drawer.classList.toggle('open', on);
-      burger.setAttribute('aria-expanded', on ? 'true' : 'false');
-      burger.setAttribute('aria-label', on ? 'Close navigation menu' : 'Open navigation menu');
-      document.body.style.overflow = on ? 'hidden' : '';
-    }
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && drawer.classList.contains('open')) {
-        setDrawer(false);
-        burger.focus();
+
+    me.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (narrow()) setDrawer(!drawer.classList.contains('open'));
+      else setMenu(!menu.classList.contains('open'));
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.classList.contains('open')) return;
+      if (e.target.closest && e.target.closest('.sh-mewrap')) {
+        var it = e.target.closest('.sh-item[data-tab], a, .ux-desktop-save');
+        if (it) setMenu(false);
+        return;
       }
+      setMenu(false);
     });
-    burger.addEventListener('click', function () {
-      setDrawer(!drawer.classList.contains('open'));
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      if (menu.classList.contains('open')) { setMenu(false); me.focus(); }
+      if (drawer.classList.contains('open')) { setDrawer(false); me.focus(); }
+    });
+    menu.addEventListener('click', function (e) {
+      var it = e.target.closest('.sh-item[data-tab]');
+      if (!it) return;
+      navigate(it.dataset.sec, it.dataset.tab);
     });
     drawer.addEventListener('click', function (e) {
-      var it = e.target.closest('.sh-item');
+      if (e.target.closest('.sh-dtheme')) { toggleTheme(); return; }
+      if (e.target.closest('.sh-dwatch')) {
+        setDrawer(false);
+        if (window.AltahaWatchlist) window.AltahaWatchlist.open();
+        return;
+      }
+      var it = e.target.closest('.sh-item, .sh-dpro');
       if (!it) return;
       setDrawer(false);
       if (it.tagName === 'A') return;
       navigate(it.dataset.sec, it.dataset.tab);
     });
+
+    window.AltahaShell = window.AltahaShell || {};
+    window.AltahaShell.openMe = function () {
+      if (narrow()) setDrawer(true); else setMenu(true);
+    };
   }
 
   /* ── Search + typeahead ──────────────────────────────────────────────────── */
@@ -593,6 +652,34 @@
     return hits.slice(0, 9).map(function (h) { return h.r; });
   }
 
+  /* Tools ranked the same way: the label first, then the words people use
+     for it. */
+  function matchTools(q) {
+    q = q.trim().toLowerCase();
+    if (!q) return [];
+    var words = q.split(/\s+/);
+    return allTools().map(function (t) {
+      var label = t.label.toLowerCase(), hay = (label + ' ' + t.kw + ' ' + t.hint + ' ' + t.door).toLowerCase();
+      if (!words.every(function (w) { return hay.indexOf(w) > -1; })) return null;
+      var sc = label.indexOf(q) === 0 ? 300 : label.indexOf(q) > -1 ? 200 : (' ' + t.kw + ' ').indexOf(' ' + words[0]) > -1 ? 120 : 60;
+      return { t: t, sc: sc };
+    }).filter(Boolean).sort(function (a, b) { return b.sc - a.sc; }).slice(0, 6).map(function (h) { return h.t; });
+  }
+
+  var RECENT_KEY = 'altaha-recent-v1';
+  function recents() {
+    try { var r = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); return Array.isArray(r) ? r : []; }
+    catch (e) { return []; }
+  }
+  function remember(entry) {
+    var r = recents().filter(function (x) { return !(x.kind === entry.kind && x.id === entry.id); });
+    r.unshift(entry);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(r.slice(0, 6))); } catch (e) {}
+  }
+
+  /* One box for everything: companies, every tool behind every door, and a
+     few things you might want to do. Empty, it offers what you opened last
+     and the three doors. */
   function wireSearch() {
     var input = document.getElementById('sh-q');
     var ac = document.getElementById('sh-ac');
@@ -609,69 +696,158 @@
         '</i>' + esc(text.slice(i + needle.length));
     }
 
-    function paint() {
-      if (!q) { ac.classList.remove('open'); ac.innerHTML = ''; return; }
-      if (!rows.length) {
-        // An empty box and a broken box used to look identical. Say which.
-        ac.innerHTML = '<b class="row empty">' + (UNIVERSE === null
-          ? 'Loading the NSE list\u2026'
-          : 'No NSE listing matches \u201c' + esc(q) + '\u201d') + '</b>';
-        ac.classList.add('open');
-        return;
+    function toolRow(t) {
+      return { kind: 'tool', id: (t.section || '') + '/' + (t.tab || t.href), t: t };
+    }
+    function build() {
+      var out = [];
+      if (!q) {
+        recents().forEach(function (r) {
+          if (r.kind === 'stock') out.push({ kind: 'stock', id: r.id, s: r.id, n: r.n || '', head: 'Recent' });
+          else {
+            var t = allTools().filter(function (x) { return (x.section || '') + '/' + (x.tab || x.href) === r.id; })[0];
+            if (t) { var tr = toolRow(t); tr.head = 'Recent'; out.push(tr); }
+          }
+        });
+        DOORS.forEach(function (d) {
+          out.push({ kind: 'tool', id: d.id + '/door', head: 'Go to',
+                     t: { section: d.id, tab: null, label: d.label, hint: d.question, icon: d.items[0].icon, door: '' } });
+        });
+        return out;
       }
-      ac.innerHTML = rows.map(function (r, i) {
-        return '<b class="row' + (i === sel ? ' sel' : '') + '" role="option" data-s="' +
-          esc(r.s) + '"><span class="s">' + mark(r.s, q) + '</span>' +
-          '<span class="n">' + mark(r.n, q) + '</span>' +
-          '<span class="x">' + esc(r.x) + '</span></b>';
-      }).join('');
-      ac.classList.add('open');
+      match(q).slice(0, 6).forEach(function (r) { out.push({ kind: 'stock', id: r.s, s: r.s, n: r.n, x: r.x, head: 'Stocks' }); });
+      matchTools(q).forEach(function (t) { var tr = toolRow(t); tr.head = 'Tools'; out.push(tr); });
+      out.push({ kind: 'screen', id: 'screen', head: 'Do', q: q });
+      if (/portf|holding|my stock/i.test(q)) out.push({ kind: 'tool', id: 'portfolio/portfolio', head: 'Do',
+        t: { section: 'portfolio', tab: 'portfolio', label: 'Review my portfolio', hint: 'A call on every holding', icon: 'plan', door: 'My money' } });
+      return out;
+    }
+
+    function rowHTML(r, i) {
+      var cls = 'row' + (i === sel ? ' sel' : '');
+      if (r.kind === 'stock') {
+        return '<b class="' + cls + '" role="option" data-i="' + i + '"><span class="s">' + mark(r.s, q) + '</span>' +
+          '<span class="n">' + mark(r.n || '', q) + '</span>' +
+          '<span class="x">' + esc(r.x || 'NSE') + '</span></b>';
+      }
+      if (r.kind === 'screen') {
+        return '<b class="' + cls + ' tool" role="option" data-i="' + i + '">' + svg('lens') +
+          '<span class="tl"><span class="tn">Screen every company for “' + esc(r.q) + '”</span>' +
+          '<span class="th">Ideas · Screener</span></span></b>';
+      }
+      return '<b class="' + cls + ' tool" role="option" data-i="' + i + '">' + svg(r.t.icon) +
+        '<span class="tl"><span class="tn">' + mark(r.t.label, q) + '</span>' +
+        '<span class="th">' + esc((r.t.door ? r.t.door + ' · ' : '') + (r.t.hint || '')) + '</span></span></b>';
+    }
+
+    function paint() {
+      if (document.activeElement !== input) { ac.classList.remove('open'); input.setAttribute('aria-expanded', 'false'); return; }
+      if (q && !rows.some(function (r) { return r.kind === 'stock'; }) && UNIVERSE === null) {
+        rows.unshift({ kind: 'loading', head: 'Stocks' });
+      }
+      var html = '', head = null;
+      rows.forEach(function (r, i) {
+        if (r.head !== head) { head = r.head; html += '<span class="hd">' + esc(head) + '</span>'; }
+        if (r.kind === 'loading') { html += '<b class="row empty">Loading the NSE list…</b>'; return; }
+        html += rowHTML(r, i);
+      });
+      ac.innerHTML = html;
+      ac.classList.toggle('open', !!html);
+      input.setAttribute('aria-expanded', html ? 'true' : 'false');
+    }
+
+    function pick(r) {
+      if (!r || r.kind === 'loading') return;
+      ac.classList.remove('open');
+      input.blur();
+      if (r.kind === 'stock') {
+        remember({ kind: 'stock', id: r.s, n: r.n });
+        openStock(r.s, 'search');
+      } else if (r.kind === 'screen') {
+        if (window.AltahaTrack) window.AltahaTrack('search_screen', {});
+        navigate('research', 'query');
+      } else if (r.t.href) {
+        remember({ kind: 'tool', id: r.id });
+        location.href = r.t.href;
+      } else {
+        if (r.t.tab) remember({ kind: 'tool', id: r.id });
+        navigate(r.t.section, r.t.tab);
+      }
+      input.value = '';
+      q = '';
+    }
+
+    function refresh() {
+      sel = -1;
+      q = input.value.trim();
+      rows = build();
+      paint();
     }
 
     var missTimer = null, missReported = '';
     input.addEventListener('input', function () {
-      sel = -1;
-      q = input.value.trim();
-      rows = match(q);
-      paint();
-
+      refresh();
       if (missTimer) clearTimeout(missTimer);
       missTimer = setTimeout(function () {
-        if (!q || q.length < 2 || rows.length || UNIVERSE === null) return;
+        if (!q || q.length < 2 || UNIVERSE === null) return;
+        if (rows.some(function (r) { return r.kind === 'stock' || r.kind === 'tool'; })) return;
         if (q.toUpperCase() === missReported) return;
         missReported = q.toUpperCase();
         if (window.AltahaTrack) window.AltahaTrack('search_no_match', { query: q });
       }, 900);
     });
+    input.addEventListener('focus', function () {
+      document.body.classList.add('sh-searching');
+      refresh();
+    });
     input.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, rows.length - 1); paint(); }
+      var live = rows.filter(function (r) { return r.kind !== 'loading'; }).length;
+      if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, rows.length - 1); while (rows[sel] && rows[sel].kind === 'loading') sel++; paint(); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, -1); paint(); }
       else if (e.key === 'Enter') {
         e.preventDefault();
-        var pick = (sel >= 0 && rows[sel]) ? rows[sel].s
-          : (rows[0] ? rows[0].s : input.value.trim());
-        openStock(pick, 'search');
+        if (sel >= 0 && rows[sel]) return pick(rows[sel]);
+        // Enter on a typed symbol with nothing selected opens the best
+        // company, as the box always has; failing a company, the best tool.
+        var first = rows.filter(function (r) { return r.kind === 'stock'; })[0] ||
+                    rows.filter(function (r) { return r.kind === 'tool'; })[0];
+        if (first) return pick(first);
+        if (q && live) return;
+        if (q) openStock(q, 'search');
       } else if (e.key === 'Escape') { ac.classList.remove('open'); input.blur(); }
     });
     ac.addEventListener('mousedown', function (e) {
-      var r = e.target.closest('.row');
-      if (r) { e.preventDefault(); openStock(r.dataset.s, 'search'); }
+      var r = e.target.closest('.row[data-i]');
+      if (r) { e.preventDefault(); pick(rows[+r.dataset.i]); }
     });
     input.addEventListener('blur', function () {
-      setTimeout(function () { ac.classList.remove('open'); }, 120);
+      setTimeout(function () {
+        ac.classList.remove('open');
+        input.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('sh-searching');
+      }, 140);
     });
 
-    // "/" focuses search, the convention every data product on the web uses.
+    // "/" and Ctrl/Cmd+K focus search, the two conventions people already know.
     document.addEventListener('keydown', function (e) {
-      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+      var k = (e.key || '').toLowerCase();
       var t = e.target;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      var typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+      if (k === 'k' && (e.metaKey || e.ctrlKey) && !e.altKey) { e.preventDefault(); focusSearch(); return; }
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey || typing) return;
       e.preventDefault();
-      input.focus();
-      input.select();
+      focusSearch();
     });
 
     loadUniverse();
+  }
+
+  function focusSearch() {
+    var input = document.getElementById('sh-q');
+    if (!input) return;
+    if (window.scrollY > 0 && window.matchMedia('(max-width:720px)').matches) window.scrollTo({ top: 0 });
+    input.focus();
+    input.select();
   }
 
   /* Redrawn whenever auth.js announces a change — signing in on the sign-in
@@ -680,6 +856,8 @@
     var a = document.getElementById('sh-account');
     if (!a || !window.AltahaAuth) return;
     var user = window.AltahaAuth.user();
+    var d = document.querySelector('#sh-drawer .sh-dacc-name');
+    if (d) d.textContent = user && user.email ? user.email : 'Sign in';
     if (user && user.email) {
       a.textContent = user.email.split('@')[0];
       a.title = 'Signed in as ' + user.email;
@@ -705,19 +883,20 @@
       : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>';
     b.setAttribute('aria-label', dark ? 'Switch to light appearance' : 'Switch to dark appearance');
   }
+  function toggleTheme() {
+    // Same attribute, same storage key and same event as premium.js, so the
+    // charts and the segmented control stay in step with this button.
+    var t = currentTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem('altaha-theme', t); } catch (e) {}
+    window.dispatchEvent(new CustomEvent('altaha:theme', { detail: { theme: t } }));
+    paintThemeBtn();
+  }
   function wireTheme() {
     var b = document.getElementById('sh-theme');
     if (!b) return;
     paintThemeBtn();
-    b.addEventListener('click', function () {
-      // Same attribute, same storage key and same event as premium.js, so the
-      // charts and the segmented control stay in step with this button.
-      var t = currentTheme() === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', t);
-      try { localStorage.setItem('altaha-theme', t); } catch (e) {}
-      window.dispatchEvent(new CustomEvent('altaha:theme', { detail: { theme: t } }));
-      paintThemeBtn();
-    });
+    b.addEventListener('click', toggleTheme);
     window.addEventListener('altaha:theme', paintThemeBtn);
   }
 
@@ -730,72 +909,22 @@
     }, { passive: true });
   }
 
-  /* ── The headline ribbon ─────────────────────────────────────────────────── */
+  /* ── The IST clock at the end of the tape ─────────────────────────────────
+     The headline ribbon that used to own this clock is the Headlines card on
+     the Today page now. */
 
-  function startRibbon() {
-    var slot = document.getElementById('sh-slot');
+  function startClock() {
     var clock = document.getElementById('sh-clock');
-    if (!slot) return;
-    var heads = [], idx = 0, showing = null;
-
-    function tick() {
-      if (!heads.length) return;
-      var h = heads[idx % heads.length];
-      idx++;
-      var node = el('div', 'sh-head');
-      node.innerHTML =
-        '<span class="src">' + esc(h.pub) + '</span>' +
-        '<a href="' + esc(h.url || '#') + '" target="_blank" rel="noopener noreferrer">' +
-        esc(h.title) + '</a>' +
-        (h.corr > 1 ? '<span class="corr">' + h.corr + ' outlets</span>' : '');
-      slot.appendChild(node);
-      // Two frames, not one: the browser needs to have committed the start
-      // state before the transition to the end state means anything.
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () { node.classList.add('on'); });
-      });
-      if (showing) {
-        var old = showing;
-        old.classList.remove('on');
-        old.classList.add('out');
-        setTimeout(function () { if (old.parentNode) old.parentNode.removeChild(old); }, 420);
-      }
-      showing = node;
-    }
-
-    function load() {
-      get('/social/news/feed?limit=14&sort=latest', 11000).then(function (d) {
-        var cs = (d && d.clusters) || [];
-        heads = cs.map(function (c) {
-          var L = c.lead || {};
-          return {
-            title: L.title || '',
-            pub: L.publication || '',
-            url: L.url || '',
-            corr: c.corroboration || 1
-          };
-        }).filter(function (h) { return h.title; });
-        if (heads.length && !showing) tick();
-      }).catch(function () { /* ribbon stays empty rather than saying "error" */ });
-    }
-
+    if (!clock) return;
     function stamp() {
-      if (!clock) return;
       try {
         clock.textContent = new Date().toLocaleTimeString('en-IN', {
           hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata'
         }) + ' IST';
       } catch (e) {}
     }
-
-    load();
     stamp();
-    // Nothing polls while the tab is in the background. Browsers keep timers
-    // alive there, so an open tab left overnight was hitting the backend a few
-    // thousand times for a page nobody was looking at.
     setInterval(stamp, 30000);
-    setInterval(function () { if (!document.hidden) load(); }, 300000);
-    if (!REDUCED) setInterval(function () { if (!document.hidden) tick(); }, 7000);
   }
 
   /* ── The live ticker ─────────────────────────────────────────────────────── */
@@ -842,9 +971,10 @@
     }
 
     function load() {
-      var chips = [], idx = [], sec = null;
+      var chips = [], idx = [], sec = null, status = null;
       get('/market', 11000).then(function (d) {
         idx = (d && d.indices) || [];
+        status = (d && d.status) || null;
         (d && d.indices || []).forEach(function (i) {
           chips.push({ key: 'i:' + i.label, sym: i.label, level: i.level,
                        pct: i.change_pct, link: false });
@@ -872,9 +1002,13 @@
         render(chips.slice(0, 40));
         // One fetch, two consumers: the homepage board listens for this
         // instead of pulling /market and /sector/overview again on its own.
+        // Kept on AltahaShell too, so a page that mounts after this read (the
+        // Today door) can use it instead of asking again.
         try {
+          window.AltahaShell = window.AltahaShell || {};
+          window.AltahaShell.market = { indices: idx, sectors: sec, status: status };
           window.dispatchEvent(new CustomEvent('altaha:market',
-            { detail: { indices: idx, sectors: sec } }));
+            { detail: { indices: idx, sectors: sec, status: status } }));
         } catch (e) {}
       });
     }
@@ -943,18 +1077,18 @@
     node.textContent = to.toFixed(decimals);
   }
 
-  window.AltahaShell = {
-    countUp: countUp,
-    reveal: startReveal,
-    reduced: function () { return REDUCED; },
-    api: function () { return API; }
-  };
+  window.AltahaShell = window.AltahaShell || {};
+  window.AltahaShell.countUp = countUp;
+  window.AltahaShell.reveal = startReveal;
+  window.AltahaShell.reduced = function () { return REDUCED; };
+  window.AltahaShell.api = function () { return API; };
+  window.AltahaShell.focusSearch = focusSearch;
 
   /* ── Boot ────────────────────────────────────────────────────────────────── */
 
   function start() {
     build();
-    startRibbon();
+    startClock();
     startTicker();
     startTilt();
     startReveal();

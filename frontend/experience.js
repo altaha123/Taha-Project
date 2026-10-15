@@ -208,37 +208,54 @@
     if (window.AltahaNav) window.AltahaNav.go(section, null, true);
     else location.href = 'index.html#' + section;
   }
-  /* The phone bar carries the four products and nothing else but the
-     watchlist. It used to carry Home, Discover, Watchlist and More, which
-     meant the primary navigation on a phone and the primary navigation on a
-     desktop named different things — and "More" was doing the work of three
-     of the four products. The burger in the header still opens the full menu
-     at this width, so nothing is lost by giving that slot to a product. */
-  const PRODUCTS = [
-    ['discover',  'Discover'],
-    ['allocate',  'Allocate'],
-    ['portfolio', 'Portfolio'],
-    ['research',  'Research']
+  /* The phone bar: the three doors, search in the middle where a thumb
+     rests, and Me. It names exactly what the desktop header names, so a
+     reader who learns one has learned the other. The watchlist lives in Me
+     and on My money; the Watchlist button below stays in the Me menu on a
+     desktop, where it always was. */
+  const DOORS = [
+    ['discover',  'Today',    '<path d="M3 12h4l3-8 4 16 3-8h4"/>'],
+    ['research',  'Ideas',    '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>'],
+    ['portfolio', 'My money', '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>']
   ];
-  const bar = node('nav', 'ux-bottom'); bar.setAttribute('aria-label', 'Products');
-  const productButtons = PRODUCTS.map(([id, label]) => button(label, () => go(id)));
-  const savedButton = button('Watchlist', () => open(watch));
-  bar.append(...productButtons, savedButton); document.body.append(bar);
+  const icon = d => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  const bar = node('nav', 'ux-bottom'); bar.setAttribute('aria-label', 'Main');
+  const ind = node('span', 'ux-bottom-ind'); ind.setAttribute('aria-hidden', 'true');
+  function barButton(label, svgPath, fn, cls) {
+    const b = button('', fn, cls || 'ux-tab'); b.innerHTML = icon(svgPath) + '<span>' + label + '</span>';
+    b.setAttribute('aria-label', label); return b;
+  }
+  const doorButtons = DOORS.map(([id, label, path]) => barButton(label, path, () => go(id)));
+  const searchButton = barButton('Search', '<circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/>',
+    () => (window.AltahaShell && window.AltahaShell.focusSearch ? window.AltahaShell.focusSearch() : document.getElementById('sh-q')?.focus()),
+    'ux-tab ux-fab');
+  const meButton = barButton('Me', '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+    () => (window.AltahaShell && window.AltahaShell.openMe ? window.AltahaShell.openMe() : document.getElementById('sh-me')?.click()));
+  bar.append(ind, doorButtons[0], doorButtons[1], searchButton, doorButtons[2], meButton); document.body.append(bar);
   const desktopSave = button('Watchlist', () => open(watch), 'ux-button ux-desktop-save');
   document.querySelector('.sh-right')?.prepend(desktopSave);
+  // One way in for the Me menu, the phone sheet and the My money door.
+  window.AltahaWatchlist = { open: () => open(watch) };
+  const SLOT = { discover: 0, research: 1, portfolio: 3, me: 4 };
   function active(section) {
-    productButtons.forEach((b, i) => {
-      if (section === PRODUCTS[i][0]) b.setAttribute('aria-current', 'page');
+    doorButtons.forEach((b, i) => {
+      if (section === DOORS[i][0]) b.setAttribute('aria-current', 'page');
       else b.removeAttribute('aria-current');
     });
+    if (section === 'me') meButton.setAttribute('aria-current', 'page'); else meButton.removeAttribute('aria-current');
+    const slot = SLOT[section];
+    ind.style.opacity = slot === undefined ? '0' : '1';
+    if (slot !== undefined) ind.style.transform = 'translateX(' + (slot * 100) + '%)';
   }
   /* An old hash still says #screener or #ideas. nav.js publishes the map from
-     those to the product that now owns them; reading it here beats keeping a
+     those to the door that now owns them; reading it here beats keeping a
      second copy that can drift. */
   function product(raw) {
-    if (!raw) return 'research';
+    if (!raw) return 'discover';
     const aliases = (window.AltahaNav && window.AltahaNav.aliases) || {};
-    return aliases[raw] || raw;
+    const owner = window.AltahaNav && window.AltahaNav.ownerOf ? window.AltahaNav.ownerOf(raw) : null;
+    return aliases[raw] || owner || raw;
   }
   active(location.pathname.endsWith('stock.html') ? '' : product(location.hash.slice(1).split('/')[0]));
   window.addEventListener('altaha:navigate', e => active(e.detail.section));

@@ -98,33 +98,19 @@ async function viewText(page, id) {
   await page.goto('http://127.0.0.1:8781/', { waitUntil: 'load' });
   await page.waitForTimeout(1200);
 
-  await page.locator('.sh-top[data-sec="research"]').hover();
-  const mega = page.locator('.sh-mega.open');
-  await mega.waitFor({ state: 'visible' });
-  const heads = await mega.locator('.sh-col h4').allInnerTexts();
-  assert.deepEqual(heads.map(h => h.toUpperCase()),
-    ['STOCKS', 'THE EVIDENCE', 'OWNERSHIP', 'NEWS', 'LENSES']);
-  const col = mega.locator('.sh-col').nth(4);
-  assert.equal(await col.locator('.sh-item').count(), 2);
-  assert.equal(await col.locator('.sh-item .sh-ico svg').count(), 2, 'each item has an icon tile');
-  const colText = await col.innerText();
-  assert.match(colText, /Philosophy lenses/);
-  assert.match(colText, /Stocks screened the way great investors think/);
-  assert.match(colText, /Convergence/);
-  assert.match(colText, /Stocks that clear three or more lenses/);
-  // Same shape as its neighbours: the heading is mono uppercase.
-  const h4 = await col.locator('h4').evaluate(n => {
-    const s = getComputedStyle(n); return [s.textTransform, s.fontFamily];
-  });
-  assert.equal(h4[0], 'uppercase');
-  // All five columns sit on one row at this width.
-  const tops = await mega.locator('.sh-col').evaluateAll(ns => ns.map(n => Math.round(n.getBoundingClientRect().top)));
-  assert.equal(new Set(tops).size, 1, 'the five Research columns share one row at 1440px: ' + tops);
-  await page.waitForTimeout(700);     // the columns lift in on staggered delays
+  // The Ideas door: its page has a card for the styles, and its door bar
+  // carries both tools, each with its own pill.
+  await page.locator('.sh-door[data-sec="research"]').click();
+  await page.locator('#view-ideahub .dr-tool[data-goto="research/lenses"]').waitFor({ state: 'visible' });
+  assert.match(await page.locator('#view-ideahub .dr-tool[data-goto="research/lenses"]').innerText(), /Investor styles/);
+  const bar = page.locator('#sh-doorbar');
+  await bar.locator('.sh-pill[data-tab="lenses"]').waitFor({ state: 'visible' });
+  assert.match(await bar.locator('.sh-pill[data-tab="lenses"]').innerText(), /Investor styles/);
+  assert.match(await bar.locator('.sh-pill[data-tab="convergence"]').innerText(), /Convergence/);
   await page.screenshot({ path: path.join(output, 'menu-desktop.png') });
 
   // ── The index ──────────────────────────────────────────────────────────
-  await col.locator('.sh-item').first().click();
+  await bar.locator('.sh-pill[data-tab="lenses"]').click();
   await page.locator('#view-lenses .ln-card').first().waitFor({ state: 'visible' });
   assert.ok(await page.locator('#view-lenses').isVisible());
   assert.match(page.url(), /#research\/lenses$/);
@@ -260,18 +246,18 @@ async function viewText(page, id) {
   assert.equal(await sp.locator('#stk-lenses .ln-strip').count(), 0, 'no empty lenses strip');
   assert.equal(await sp.locator('#stk-lenses').isVisible(), false);
 
-  // ── Mobile: the drawer carries the same column, and the views fit ──────
+  // ── Mobile: the Me sheet carries every door, and the views fit ─────────
   const mob = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await wire(mob);
   const mp = await mob.newPage();
   mp.on('pageerror', e => errors.push(String(e && (e.stack || e.message || e))));
   await mp.goto('http://127.0.0.1:8781/', { waitUntil: 'load' });
   await mp.waitForTimeout(1200);
-  await mp.locator('#sh-burger').click();
+  await mp.locator('#sh-me').click();
   const drawer = mp.locator('#sh-drawer');
   await drawer.waitFor({ state: 'visible' });
   const dtext = await drawer.innerText();
-  assert.match(dtext, /Philosophy lenses/);
+  assert.match(dtext, /Investor styles/);
   assert.match(dtext, /Convergence/);
   await mp.screenshot({ path: path.join(output, 'menu-mobile.png') });
   await drawer.locator('.sh-item[data-tab="lenses"]').click();

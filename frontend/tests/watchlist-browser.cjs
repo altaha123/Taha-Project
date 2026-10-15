@@ -68,7 +68,10 @@ const HARNESS = `<!doctype html><meta charset="utf-8"><title>watchlist harness</
       throw new Error('timed out waiting for ' + what);
     };
     const signIn = () => page.evaluate(() => localStorage.setItem('altaha-session-v1', 'a-session'));
-    const openList = () => page.locator('.ux-bottom button', { hasText: 'Watchlist' }).click();
+    // The list opens from Me (the phone sheet, the desktop menu) and from the
+    // My money door; all three call this. The harness has no header, so the
+    // test calls it directly.
+    const openList = () => page.evaluate(() => window.AltahaWatchlist.open());
     const closeList = () => page.locator('.ux-dialog-head button').click();
 
     // 1. Signed out, the list is this browser's and nothing is sent anywhere.

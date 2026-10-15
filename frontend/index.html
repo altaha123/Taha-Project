@@ -1223,10 +1223,10 @@
 <link rel="stylesheet" href="premium-plus.css">
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
-<link rel="stylesheet" href="shell.css?v=20261001-advisors">
+<link rel="stylesheet" href="shell.css?v=20261015-doors">
 <link rel="stylesheet" href="home.css">
 <link rel="stylesheet" href="special.css">
-<link rel="stylesheet" href="experience.css">
+<link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="home-motion.css">
 <link rel="stylesheet" href="home-hero.css?v=20260922-explore">
 <link rel="stylesheet" href="filings-views.css">
@@ -1242,6 +1242,7 @@
 <link rel="stylesheet" href="lenses.css?v=20260925-screens">
 <link rel="stylesheet" href="query.css?v=20260927">
 <link rel="stylesheet" href="idea-card.css?v=20260927b">
+<link rel="stylesheet" href="doors.css?v=20261015">
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20260922-stock-copy"></script>
 <script src="universe-scan.js?v=20260927-week"></script>
@@ -1310,6 +1311,9 @@
     <span class="moreWrap">
       <button class="tab" id="tab-more" aria-haspopup="true" aria-expanded="false">More ▾</button>
       <div class="moreMenu" id="moreMenu" role="menu">
+        <button id="tab-today" role="menuitem">Today</button>
+        <button id="tab-ideahub" role="menuitem">Ideas</button>
+        <button id="tab-money" role="menuitem">My money</button>
         <button id="tab-discover" role="menuitem">Opportunities now</button>
         <button id="tab-allocate" role="menuitem">Allocation plan</button>
         <button id="tab-score" role="menuitem">Altaha Score</button>
@@ -1333,7 +1337,12 @@
   </nav>
   </div>
 
-  <div id="view-screener">
+  <!-- The three doors (doors.js). Today is the landing view. -->
+  <div id="view-today" class="dr-view" aria-label="Today"></div>
+  <div id="view-ideahub" class="dr-view" style="display:none" aria-label="Ideas"></div>
+  <div id="view-money" class="dr-view" style="display:none" aria-label="My money"></div>
+
+  <div id="view-screener" style="display:none">
   <div class="searchrow">
     <input id="tk" placeholder="Enter a stock — RELIANCE, TCS, NVDA…" autocomplete="off"
            spellcheck="false" aria-label="Stock ticker symbol" />
@@ -2244,11 +2253,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query"];
+const TABS = ["today","ideahub","money","screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query"];
+const OVERFLOW_TABS = ["today","ideahub","money","deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -2391,6 +2400,7 @@ function switchTab(which){
   /* The two product hubs build themselves on first sight rather than on page
      load: neither is the landing view, and both fan out to several feeds. */
   if(which==="discover" && window.AltahaDiscover) window.AltahaDiscover.open();
+  if((which==="today"||which==="ideahub"||which==="money") && window.AltahaDoors) window.AltahaDoors.open(which);
   refreshSegsSoon();
   if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
   if(which==="live"){ loadLive();
@@ -4748,7 +4758,7 @@ if(fcSymParam){
 <script src="portfolio-story.js" defer></script>
 <script src="portfolio-plan.js" defer></script>
 <script src="portfolio.js" defer></script>
-<script src="nav.js?v=20260923-lenses" defer></script>
+<script src="nav.js?v=20261015-doors" defer></script>
 <script src="scoring.js" defer></script>
 <script src="social.js" defer></script>
 <script src="motion.js" defer></script>
@@ -4759,7 +4769,7 @@ if(fcSymParam){
 <script src="index-explorer.js?v=20260924-atlas" defer></script>
 <script src="sectors-live.js?v=20260927-dialog" defer></script>
 <script src="deals.js" defer></script>
-<script src="shell.js?v=20261001-advisors" defer></script>
+<script src="shell.js?v=20261015-doors" defer></script>
 <script src="home.js" defer></script>
 <script src="special.js" defer></script>
 <script src="wow.js" defer></script>
@@ -4772,12 +4782,13 @@ if(fcSymParam){
 <script src="ledger-admin.js" defer></script>
 <script src="planner-risk.js" defer></script>
 <script src="discover.js" defer></script>
+<script src="doors.js?v=20261015" defer></script>
 <script src="adviser.js" defer></script>
 <script src="question-art.js" defer></script>
 <script src="money-fx.js" defer></script>
 <script src="risk-math.js" defer></script>
 <script src="allocate-flow.js" defer></script>
-<script src="experience.js" defer></script>
+<script src="experience.js?v=20261015-doors" defer></script>
 <script src="home-motion.js?v=20260923-always-on" defer></script>
 <script src="home-hero.js?v=20260922-explore" defer></script>
 <script>
