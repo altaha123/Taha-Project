@@ -13,11 +13,12 @@ from urllib.parse import urlparse
 import numpy as np
 import pandas as pd
 import sectors
+import score_bands
 
 VERSION = 'portfolio-intelligence-1'
 WINDOWS = {'1M': 21, '3M': 63, '6M': 126, '1Y': 252}
-BANDS = [(80, 'Exceptional'), (70, 'Strong'), (60, 'Good'), (50, 'Average'),
-         (40, 'Weak'), (0, 'High concern')]
+# One scale for the whole review: score_bands.py says why.
+BANDS = score_bands.BANDS
 
 
 def number(value):
@@ -76,7 +77,7 @@ def weighted(rows, getter):
 
 
 def band(score):
-    return next((label for floor, label in BANDS if score >= floor), 'Unavailable') if score is not None else 'Unscored'
+    return score_bands.band(score)
 
 
 def price_series(frame):
@@ -378,7 +379,7 @@ def enrich(report, histories=None, news_items=None, news_status=None, now=None, 
     else:
         sentences = ['No holdings could be valued. Review the individual errors and retry; portfolio metrics are unavailable.']
     report.update({'intelligence_version': VERSION, 'generated_at': now.isoformat(), 'data_quality': quality,
-                   'weighted_score': score['value'], 'grade': ('—' if score['value'] is None else 'A' if score['value'] >= 72 else 'B+' if score['value'] >= 60 else 'B' if score['value'] >= 50 else 'C' if score['value'] >= 40 else 'D'), 'health': {'label':health, 'provisional':provisional},
+                   'weighted_score': score['value'], 'grade': score_bands.grade(score['value']), 'health': {'label':health, 'provisional':provisional},
                    'risk': {'grade':risk_grade, 'rules':rules, 'triggered_count':hits, 'method':'0 triggers: Low observed; 1: Moderate; 2: Elevated; 3+: High. Missing inputs are unassessed. Risk is not a loss probability.',
                             'unassessed':['Market beta', 'Oil / FX / interest-rate sensitivity', 'Official market-cap classification']},
                    'benchmark':bench, 'sector_comparison':comparison, 'factor_exposure':factors,

@@ -67,6 +67,7 @@ import numpy as np
 import pandas as pd
 
 import portfolio_intelligence as pi
+import score_bands
 
 VERSION = 'ic-review-1'
 
@@ -751,7 +752,7 @@ def memo(report, risk, valuation, plan, card, now):
 
     # 5. Quality and valuation ------------------------------------------------
     weak_weight = sum(_num(r.get('weight_pct')) or 0 for r in rows
-                      if _num(r.get('composite')) is not None and r['composite'] < (pol.get('min_composite') or 45))
+                      if _num(r.get('composite')) is not None and r['composite'] < (pol.get('min_composite') or score_bands.DEFAULT_FLOOR))
     val_txt = 'Aggregate multiples are unavailable for this book.'
     if valuation.get('portfolio_pe'):
         val_txt = (f"The book trades at {valuation['portfolio_pe']}× trailing earnings — "

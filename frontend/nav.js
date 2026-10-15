@@ -325,6 +325,10 @@
 
   function paint(section, tabId) {
     document.body.dataset.tab = tabId || "";
+    // The landing banner belongs to the landing page. Asked for a product —
+    // by a link (?go=), an address (#portfolio) or a click — the reader gets
+    // the product, not 600px of welcome above it.
+    document.body.classList.toggle('at-home', !location.hash && !/[?&]go=/.test(location.search));
     document.querySelectorAll('.navmain-btn').forEach(function (b) {
       var on = b.dataset.section === section.id;
       b.classList.toggle('on', on);
@@ -382,6 +386,7 @@
     var h = hashFor(sectionId, tabId);
     lastWritten = h;
     if (location.hash !== h) history.pushState(null, '', h);
+    document.body.classList.remove('at-home');
   }
 
   function readHash() {

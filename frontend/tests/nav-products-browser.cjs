@@ -84,6 +84,19 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   await page.goto('http://127.0.0.1:8768/', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!window.AltahaNav);
 
+  /* ── 0 · The landing banner is on the landing page only ───────────────── */
+
+  assert.ok(await page.locator('header.wrap').isVisible(), 'the landing page opens on its banner');
+  for (const go of ['portfolio', 'discover', 'allocate', 'research']) {
+    await page.goto('http://127.0.0.1:8768/?go=' + go, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => !!window.AltahaNav);
+    assert.equal(await page.locator('header.wrap').isVisible(), false, `?go=${go} opens on the product, not the banner`);
+  }
+  await page.goto('http://127.0.0.1:8768/', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !!window.AltahaNav);
+  await page.evaluate(() => window.AltahaNav.go('portfolio', 'portfolio', true));
+  assert.equal(await page.locator('header.wrap').isVisible(), false, 'a click into a product leaves the banner behind');
+
   /* ── 1 · Exactly four products, named and in order ───────────────────── */
 
   const sections = await page.evaluate(() => window.AltahaNav.sections.map(s => ({

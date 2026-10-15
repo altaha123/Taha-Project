@@ -192,6 +192,28 @@ class OnRequestScorer:
             while len(self._cache) > self.cache_max:
                 self._cache.popitem(last=False)
 
+    def join(self, symbol, payload, wait):
+        """The cached score, or the result of a computation already running
+        for this company — never a new one. None when there is neither, or it
+        is still running after `wait` seconds. For a caller that started the
+        score earlier with a full fetch and only wants to wait longer for it:
+        starting again from here could rank the company on thinner inputs."""
+        cohort = cohort_of(payload)
+        if cohort is None:
+            return None
+        ck = (_base(symbol), cohort[1])
+        hit = self.cached(symbol, cohort[1])
+        if hit is not None:
+            return hit
+        with self._lock:
+            fut = self._inflight.get(ck)
+        if fut is None:
+            return None
+        try:
+            return fut.result(timeout=max(0.0, wait))
+        except Exception:
+            return None
+
     def score(self, symbol, payload, fetch, wait=None):
         """
         v4 for an Indian listing outside the cohort, or an `unavailable` dict

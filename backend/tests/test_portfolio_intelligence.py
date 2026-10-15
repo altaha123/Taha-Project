@@ -203,13 +203,14 @@ class NewsTests(unittest.TestCase):
 # This keeps unittest runnable without FastAPI; pytest CI also imports main.
 def wire():
     source=ast.parse((Path(__file__).resolve().parents[1]/'main.py').read_text())
-    names={'_pf_inputs','_pf_row','_analyse_holding','portfolio_status'}
+    names={'_pf_inputs','_pf_row','_analyse_holding','portfolio_status','_pf_cached_on_request','_pf_collect_scores'}
     nodes=[n for n in source.body if isinstance(n,ast.FunctionDef) and n.name in names]
     for n in nodes:n.decorator_list=[]
     class HTTPException(Exception):
         def __init__(self,status_code,detail):self.status_code=status_code;self.detail=detail
     env={'PI':pi,'sectors':pi.sectors,'MAX_HOLDINGS':50,'HTTPException':HTTPException,'datetime':datetime,'timezone':timezone,
-         '_pf_lock':threading.Lock(),'_pf_jobs':{},'time':__import__('time')}
+         '_pf_lock':threading.Lock(),'_pf_jobs':{},'time':__import__('time'),
+         '_on_request':None,'score_on_request':None,'_state':{}}
     exec(compile(ast.Module(body=nodes,type_ignores=[]),'<portfolio production functions>','exec'),env)
     return types.SimpleNamespace(**env)
 

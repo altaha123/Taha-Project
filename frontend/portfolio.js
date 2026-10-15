@@ -372,8 +372,14 @@
     catch (e) { return false; }
   }
   function readPolicy() {
-    try { return JSON.parse(localStorage.getItem(POLICY_KEY) || 'null'); }
+    var p = null;
+    try { p = JSON.parse(localStorage.getItem(POLICY_KEY) || 'null'); }
     catch (e) { return null; }
+    // 45 was the form's default floor before the review moved to one scale
+    // (backend/score_bands.py), where weak starts below 40. A stored 45 is
+    // that untouched default, so it moves with the scale once.
+    if (p && p.min_composite === 45 && !p.scale) { p.min_composite = 40; p.scale = 1; writePolicy(p); }
+    return p;
   }
   function writePolicy(p) {
     try { localStorage.setItem(POLICY_KEY, JSON.stringify(p)); } catch (e) {}
@@ -1259,7 +1265,7 @@
         sectorTable(d.sectors || []) + '</section>';
     }
 
-    var qw = chartQualityWeight(d.holdings || [], { max_stock_pct: 15, min_composite: 45 });
+    var qw = chartQualityWeight(d.holdings || [], { max_stock_pct: 15, min_composite: (d.score_bands && d.score_bands.weak) || 40 });
     if (qw) {
       html += '<section class="psec"><div class="lh"><h3>Score against weight</h3>' +
         '<span>The corner that costs money</span></div>' +
@@ -1635,7 +1641,7 @@
     var panel = el('details','pi-policy');
     panel.innerHTML = '<summary>Your portfolio policy</summary><div class="pi-policy-grid">'+[
       ['max_stock_pct','Maximum stock weight %',15,2,100],['max_sector_pct','Maximum sector weight %',35,5,100],
-      ['min_composite','Minimum Altaha Score',45,0,100],['review_drawdown','Review drawdown %',25,5,90],
+      ['min_composite','Minimum Altaha Score',40,0,100],['review_drawdown','Review drawdown %',25,5,90],
       ['min_holdings','Minimum effective holdings',8,1,50],['max_unclassified_pct','Maximum unclassified %',20,0,100]
     ].map(function(p){return '<label>'+p[1]+'<input type="number" data-pf-policy="'+p[0]+'" min="'+p[3]+'" max="'+p[4]+'" value="'+esc(policy[p[0]] === undefined ? p[2] : policy[p[0]])+'"></label>';}).join('')+'</div>';
     $('pf_rows').parentElement.insertBefore(panel,$('pf_rows').nextSibling);

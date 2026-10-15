@@ -3406,6 +3406,7 @@ _pf_jobs = {}
 _pf_lock = threading.Lock()
 PF_JOB_TTL = 900
 PF_ANALYSIS_TIMEOUT = 100
+PF_SCORE_GRACE = 45      # most extra seconds spent waiting for on-request scores
 PF_MAX_ACTIVE = 2
 PF_MAX_JOBS = 20
 
@@ -3465,11 +3466,55 @@ def _pf_disclaimer():
         return DISCLAIMER
 
 
+def _pf_cached_on_request(symbol):
+    """A score already ranked on request against today's cohort, or None.
+    Cache only: never starts a computation."""
+    if _on_request is None or score_on_request is None:
+        return None
+    try:
+        cohort = score_on_request.cohort_of(_state.get("payload"))
+        v4 = _on_request.cached(symbol, cohort[1]) if cohort else None
+    except Exception:
+        return None
+    return v4 if v4 and "position" in v4 else None
+
+
+def _pf_collect_scores(rows, deadline):
+    """Wait, within the review's own deadline, for the holdings whose score
+    was still being computed when their research finished.
+
+    A holding outside the scan's cohort is ranked on request, two at a time,
+    and each one only waited four seconds — so in a portfolio of mostly
+    smaller companies most of them came back unscored, and the plan told the
+    reader to "check back after the next scan" for a number that was ready a
+    few seconds later. The request is single-flight, so asking again joins
+    the computation already running instead of starting another."""
+    for row in rows:
+        if row.get("composite") is not None or not row.pop("score_pending", False):
+            continue
+        left = deadline - time.monotonic()
+        if left <= 0.5:
+            row["score_pending"] = True
+            continue
+        try:
+            v4 = _on_request.join(row["symbol"], _state.get("payload"), wait=left) if _on_request else None
+        except Exception:
+            v4 = None
+        if v4 and "position" in v4:
+            row.update(composite=PI.number(v4["position"].get("final_score")), altaha_score_v4=v4,
+                       score_source="ranked on request against the scan cohort")
+        elif time.monotonic() >= deadline - 0.5:
+            row["score_pending"] = True         # still running: say so, not "next scan"
+    return rows
+
+
 def _pf_row(item, scan_row=None, quote=None, checked_at=None):
     scan_row, quote = scan_row or {}, quote or {}
     qprice = PI.number(quote.get("ltp"))
     price = qprice if qprice is not None and qprice > 0 else PI.number(scan_row.get("price"))
     v4 = scan_row.get("altaha_score_v4") or {}
+    if "position" not in v4:
+        v4 = _pf_cached_on_request(item["symbol"]) or v4
     score = PI.number(v4.get("position", {}).get("final_score"))
     sec, src = sectors.resolve_sector(item["symbol"], scan_row)
     buy, qty = item.get("buy_price"), item["qty"]
@@ -3539,6 +3584,8 @@ def _analyse_holding(item, cached=None):
             if 'position' in v4:
                 row.update(composite=PI.number(v4['position'].get('final_score')), altaha_score_v4=v4,
                            score_source='ranked on request against the scan cohort')
+            elif v4.get('pending'):
+                row['score_pending'] = True     # collected before the final report
         except Exception:
             pass
     return row
@@ -3623,6 +3670,10 @@ def _pf_run(job_id, holdings, policy):
         for future,i in pending.items():
             future.cancel()
             rows[i]['warnings'].append('Enrichment deadline reached; available valuation retained. Retry to refresh.')
+        if any(r.get('score_pending') for r in rows):
+            with _pf_lock:
+                if job_id in _pf_jobs: _pf_jobs[job_id].update(stage='Scoring holdings outside the scan', touched=time.time())
+            _pf_collect_scores(rows, min(deadline, time.monotonic() + PF_SCORE_GRACE))
         try:
             sector_data = sector_task.result(timeout=0) if sector_task.done() else {'available':False, 'message':'Sector index enrichment timed out; allocation proxy remains available.'}
         except Exception:

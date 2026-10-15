@@ -7,7 +7,7 @@ const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'i
 const head=source.slice(source.indexOf('<head>')+6,source.indexOf('</head>')).replace(/<script\b[\s\S]*?<\/script>/g,'');
 const start=source.indexOf('<header class="wrap">');
 const header=source.slice(start,source.indexOf('</header>',start)+9);
-const fixture='<!doctype html><html data-theme="light"><head>'+head+'</head><body class="sh-on" data-tab="screener">'+'<div class="sh-search"><input id="sh-q" aria-label="Search a stock"></div>'+header+
+const fixture='<!doctype html><html data-theme="light"><head>'+head+'</head><body class="sh-on at-home" data-tab="screener">'+'<div class="sh-search"><input id="sh-q" aria-label="Search a stock"></div>'+header+
  '<main id="view-screener" class="wrap"><div class="searchrow"><input id="tk"><button id="go">Analyse</button></div></main><script src="home-motion.js"></script><script src="home-hero.js"></script></body></html>';
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.ALTAHA_CHROMIUM||undefined,args:['--no-sandbox','--disable-dev-shm-usage']});
