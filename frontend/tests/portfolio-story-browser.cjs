@@ -196,4 +196,14 @@ const current = page => page.locator('.ps-ch:not([hidden])').getAttribute('data-
   await browser.close();
   server.close();
   console.log('portfolio story browser checks passed');
-})().catch(e => { console.error(e); server.close(); process.exit(1); });
+})().catch(e => {
+  console.error(e);
+  // CI logs are not always reachable, but check-run annotations are: say
+  // what failed, and where, as one.
+  if (process.env.GITHUB_ACTIONS) {
+    const where = String(e.stack || '').split('\n').filter(l => /portfolio-story-browser/.test(l)).slice(0, 2).join(' | ');
+    console.log('::error title=portfolio story::' + (String(e.message || e) + ' @ ' + where)
+      .replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A'));
+  }
+  server.close(); process.exit(1);
+});
