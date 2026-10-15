@@ -2633,7 +2633,7 @@ function wireResultsShare(){
    RCAL_TTL, because filings land all evening. */
 const RCAL_TTL = 5 * 60 * 1000;
 const RCAL_TABS = ["yesterday","today","tomorrow","week","next"];
-let rcalData = null, rcalAt = 0, rcalTab = "today", rcalReq = 0;
+let rcalData = null, rcalAt = 0, rcalTab = "today", rcalReq = 0, rcalInflight = null;
 
 /* #research/results/tomorrow opens on that tab. Read before nav.js has had
    a chance to rewrite the address to its two-part form. */
@@ -2762,20 +2762,29 @@ async function loadResultsCalendar(force){
   if(!force && rcalData && rcalData.available && Date.now() - rcalAt < RCAL_TTL){
     renderCalendar(); return;
   }
+  /* Opened twice before the first read lands (a ?go=results link is routed
+     by nav.js, then clicked again by the deep-link handler): share the read
+     already on the wire instead of asking NSE's proxy a second time. */
+  if(!force && rcalInflight) return rcalInflight;
   const mine = ++rcalReq;
   if(!rcalData) renderCalendar();
-  try{
-    const res = await fetch(`${API_BASE}/results/calendar`);
-    const d = await res.json();
-    if(mine !== rcalReq) return;
-    rcalData = res.ok ? d : {available:false, message:d.detail || "The results calendar could not be read just now."};
-    if(rcalData.available) rcalAt = Date.now();
-  }catch(e){
-    if(mine !== rcalReq) return;
-    if(!rcalData || !rcalData.available)
-      rcalData = {available:false, message:"Couldn\u2019t reach the engine \u2014 it may be waking from sleep. Try again in ~30 seconds."};
-  }
-  renderCalendar();
+  const read = (async () => {
+    try{
+      const res = await fetch(`${API_BASE}/results/calendar`);
+      const d = await res.json();
+      if(mine !== rcalReq) return;
+      rcalData = res.ok ? d : {available:false, message:d.detail || "The results calendar could not be read just now."};
+      if(rcalData.available) rcalAt = Date.now();
+    }catch(e){
+      if(mine !== rcalReq) return;
+      if(!rcalData || !rcalData.available)
+        rcalData = {available:false, message:"Couldn\u2019t reach the engine \u2014 it may be waking from sleep. Try again in ~30 seconds."};
+    }
+    renderCalendar();
+  })();
+  const settled = read.finally(() => { if(rcalInflight === settled) rcalInflight = null; });
+  rcalInflight = settled;
+  return settled;
 }
 
 $("rcalseg").addEventListener("click", e => {
@@ -4813,7 +4822,9 @@ if(fcSymParam){
   ready(function(){
     if (go) {
       var t = document.getElementById("tab-" + go);
-      if (t) setTimeout(function(){ t.click(); }, 60);
+      /* nav.js routes ?go= itself now; clicking a tab it has already opened
+         would only open it a second time and read its feeds twice. */
+      if (t) setTimeout(function(){ if (!t.classList.contains("active")) t.click(); }, 60);
       else {
         /* Not every tab is markup. Charts is inserted into the nav by
            charts.js once its bundle has mounted, so there is no #tab-charts

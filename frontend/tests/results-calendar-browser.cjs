@@ -115,7 +115,9 @@ const server = http.createServer((req, res) => {
     if (u.pathname === '/results/calendar') {
       calendarCalls += 1;
       if (calendarDown) return route.fulfill({ status: 503, json: { detail: 'Could not read the results calendar: NSE refused' } });
-      return route.fulfill({ json: CAL });
+      // Slow enough that a second open of the tab lands while the first
+      // read is still on the wire, as it does on a loaded machine.
+      return new Promise(res => setTimeout(res, 400)).then(() => route.fulfill({ json: CAL }));
     }
     if (u.pathname === '/results') {
       asked.push(u.searchParams.get('ticker'));
