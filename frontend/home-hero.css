@@ -143,3 +143,5 @@ header.wrap.hh-stage>.hm-motion{min-height:44px;padding:10px 18px;border-color:v
 @media(max-width:640px){.hh-explore{justify-content:center}button.hh-insight{padding:12px}.hh-explore a{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.hh-search-target{animation:none!important}button.hh-insight{transition:none!important}}
 html[data-motion="off"] .hh-search-target{animation:none}
+/* Only the landing page opens on the banner (nav.js sets .at-home). */
+body.sh-on:not(.at-home) header.wrap{display:none!important}

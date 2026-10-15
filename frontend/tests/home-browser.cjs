@@ -1,4 +1,4 @@
-/* Actual homepage in Chromium; deterministic provider fixtures, no live calls. */
+/* The market board (Today › Market board) in Chromium; deterministic provider fixtures, no live calls. */
 const fs=require('node:fs'), path=require('node:path'), http=require('node:http'), assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const root=path.resolve('frontend'), output=path.resolve('test-results/home');
@@ -57,7 +57,11 @@ const server=http.createServer((req,res)=>{
    }
    return route.fulfill({json:{available:false,rows:[],rankings:[],sectors:[],items:[],status:'idle'}});
  });
- await page.goto('http://127.0.0.1:8766/',{waitUntil:'domcontentloaded'});
+ // The market board and its search box used to be the landing view. The
+ // landing view is the Today door now (doors.js) and the board is one tool
+ // behind it, Today › Market board, at its own address.
+ await page.goto('http://127.0.0.1:8766/#discover/screener',{waitUntil:'domcontentloaded'});
+ await page.locator('#tk').waitFor();
  // Regression: suggestions must be hittable outside the rounded search bar.
  for (const width of [390, 1280]) {
    await page.setViewportSize({width, height:900});

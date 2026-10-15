@@ -1,17 +1,20 @@
-/* The four products, in a real browser.
+/* The three doors, in a real browser.
 
    Navigation is the one part of this site that every other part depends on,
    and the failure modes are all silent: a hash that used to open a view now
-   opens nothing, a destination is owned by two products at once, a phone bar
+   opens nothing, a destination is owned by two doors at once, a phone bar
    and a desktop bar name different things. None of that throws, so none of it
    shows up in a syntax check.
 
    What this asserts:
-     · the primary navigation is exactly Discover, Allocate, Portfolio, Research
+     · the site opens on Today, and the doors are exactly Today, Ideas and
+       My money, with Me beside them; header and phone bar agree
      · every destination has exactly one owner, and every one is reachable
      · every address the site has ever published still resolves to a visible
-       view — #screener, #ideas, #planner, #social, #funds, #screener/funds
-     · the two new hubs render rather than sitting empty
+       view — #screener, #ideas, #planner, #portfolio, #funds, #screener/funds
+     · the door pages and the older hubs render rather than sitting empty
+     · the door bar switches tools and pins them; search finds a tool by the
+       word people use for it
      · nothing overflows a 390px screen
 
    Provider calls are fulfilled from fixtures; nothing here touches a network. */
@@ -43,7 +46,7 @@ const server = http.createServer((req, res) => {
   } catch (_) { res.writeHead(404).end(); }
 });
 
-const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
+const DOORS = ['Today', 'Ideas', 'My money'];
 
 (async () => {
   await new Promise(resolve => server.listen(8768, '127.0.0.1', resolve));
@@ -84,21 +87,49 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   await page.goto('http://127.0.0.1:8768/', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!window.AltahaNav);
 
-  /* ── 1 · Exactly four products, named and in order ───────────────────── */
+  /* ── 0 · The site opens on Today, not on a banner ──────────────────────── */
+
+  await page.locator('#view-today .dr-title').waitFor();
+  assert.equal((await page.locator('#view-today .dr-title').innerText()).trim(), 'Today');
+  assert.equal(await page.locator('header.wrap').isVisible(), false, 'the old landing banner is gone');
+  /* ?go= opens the tool it names, every time. index.html clicks the named tab
+     on a timer of its own and the router opens the landing view as it
+     starts; when the router came second, a shared ?go=portfolio link opened
+     on Today instead (it failed CI that way, not locally). The router is
+     slowed down here so it always comes second. */
+  await page.route('**/nav.js*', async r => { await new Promise(res => setTimeout(res, 600)); await r.continue(); });
+  for (const [go, view] of [['portfolio', 'view-portfolio'], ['discover', 'view-discover'],
+                            ['allocate', 'view-allocate'], ['research', 'view-ideahub'], ['ideas', 'view-ideas']]) {
+    await page.goto('http://127.0.0.1:8768/?go=' + go, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => !!window.AltahaNav);
+    await page.waitForTimeout(400);
+    assert.equal(await page.locator('header.wrap').isVisible(), false, `?go=${go} opens on the product, not a banner`);
+    assert.ok(await page.locator('#' + view).isVisible(), `?go=${go} did not open #${view}`);
+  }
+  await page.unroute('**/nav.js*');
+  await page.goto('http://127.0.0.1:8768/', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !!window.AltahaNav);
+
+  /* ── 1 · Three doors and Me, named and in order ──────────────────────── */
 
   const sections = await page.evaluate(() => window.AltahaNav.sections.map(s => ({
     id: s.id, label: s.label, question: s.question,
     tabs: s.tabs.map(t => t.id), extras: (s.extras || []).map(t => t.id)
   })));
-  assert.deepEqual(sections.map(s => s.label), PRODUCTS, 'primary navigation is not the four products');
-  sections.forEach(s => assert.ok(s.question && s.question.endsWith('?'),
+  assert.deepEqual(sections.map(s => s.label), DOORS.concat(['Me']), 'the doors are not Today, Ideas, My money and Me');
+  assert.deepEqual(await page.evaluate(() => window.AltahaNav.doors), ['discover', 'research', 'portfolio']);
+  sections.slice(0, 3).forEach(s => assert.ok(s.question && s.question.endsWith('?'),
     `${s.label} does not state the question it answers`));
 
   /* Desktop bar and phone bar have to agree, or "where am I" has two answers. */
-  assert.deepEqual(await page.locator('.sh-top').allInnerTexts().then(x => x.map(t => t.trim())),
-                   PRODUCTS, 'the header bar does not match the products');
-  assert.deepEqual(await page.locator('.ux-bottom button').allInnerTexts(),
-                   PRODUCTS.concat(['Watchlist']), 'the phone bar does not match the products');
+  assert.deepEqual(await page.locator('.sh-door').allInnerTexts().then(x => x.map(t => t.trim())),
+                   DOORS, 'the header does not show the three doors');
+  assert.deepEqual(await page.locator('.ux-bottom button').evaluateAll(ns => ns.map(n => n.getAttribute('aria-label'))),
+                   ['Today', 'Ideas', 'Search', 'My money', 'Me'], 'the phone bar does not match the doors');
+  // Today is lit, in the header and in the door bar.
+  await page.waitForFunction(() => document.querySelector('.sh-door.on'));
+  assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Today');
+  assert.equal((await page.locator('#sh-doorbar .sh-pill.on').innerText()).trim(), 'Overview');
 
   /* ── 2 · One owner per destination, and no orphans ───────────────────── */
 
@@ -109,22 +140,24 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   }));
   ['ideas', 'screener', 'charts', 'results', 'investors', 'funds', 'filings', 'concalls',
    'social', 'vocab', 'tracker', 'portfolio', 'planner', 'live', 'deals', 'special',
-   'wow', 'options', 'discover', 'allocate', 'score', 'factors'].forEach(t => {
+   'wow', 'options', 'discover', 'allocate', 'score', 'factors', 'query', 'lenses',
+   'convergence', 'today', 'ideahub', 'money'].forEach(t => {
     assert.ok(owners[t], `${t} lost its home in the restructure`);
   });
 
-  /* The destinations Research is meant to carry in its visible row. */
-  const research = sections.filter(s => s.id === 'research')[0];
-  assert.deepEqual(research.tabs,
-    ['screener', 'query', 'score', 'factors', 'results', 'investors', 'charts', 'filings'],
-    'the Research row is not the named destinations');
+  /* Each door opens on its own page, and the tools land where their
+     question is answered. */
+  assert.equal(sections[0].tabs[0], 'today');
+  assert.equal(sections[1].tabs[0], 'ideahub');
+  assert.equal(sections[2].tabs[0], 'money');
+  ['live', 'deals', 'wow', 'special', 'results', 'filings', 'options', 'screener'].forEach(t =>
+    assert.equal(owners[t], 'discover', `${t} belongs behind Today`));
+  ['ideas', 'query', 'lenses', 'convergence', 'investors', 'funds', 'charts', 'tracker', 'factors', 'concalls'].forEach(t =>
+    assert.equal(owners[t], 'research', `${t} belongs behind Ideas`));
+  ['portfolio', 'allocate', 'planner'].forEach(t => assert.equal(owners[t], 'portfolio', `${t} belongs behind My money`));
+  ['score', 'vocab', 'social'].forEach(t => assert.equal(owners[t], 'me', `${t} belongs in Me`));
 
-  assert.deepEqual(sections.find(s => s.id === 'discover').tabs.slice(0, 3), ['ideas', 'live', 'tracker']);
-  assert.equal(owners.ideas, 'discover');
-  assert.equal(owners.live, 'discover');
-  assert.equal(owners.tracker, 'discover');
-
-  await page.evaluate(() => window.AltahaNav.go('discover', null, true));
+  await page.evaluate(() => window.AltahaNav.go('research', 'ideas', true));
   assert.ok(await page.locator('#view-ideas').isVisible());
   // Since #134 the planets are the week (Mon–Fri), each opening that
   // session's synopsis; scan progress is carried by the meter alone. These
@@ -195,7 +228,7 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   assert.match(await page.locator('.su-day').innerText(), /No session on record/);
   await page.locator('.su-day-x').click();
   assert.equal(await page.locator('.su-planet[aria-expanded=true]').count(), 0);
-  await page.evaluate(() => window.AltahaNav.go('research','screener',true));
+  await page.evaluate(() => window.AltahaNav.go('discover','screener',true));
   await page.locator('#su-dock').waitFor();
   phase='done'; await page.evaluate(() => pollScan());
   assert.match(await page.locator('#su-dock').innerText(), /Scan complete/);
@@ -224,7 +257,17 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   await shows('#screener/funds', 'view-funds');
   await shows('#screener/filings', 'view-filings');
   await shows('#planner', 'view-planner');
+  // #portfolio was always the holdings review; sign-in, Pro and Advisors
+  // link it. The door's own page has an address of its own.
   await shows('#portfolio', 'view-portfolio');
+  await shows('#portfolio/money', 'view-money');
+  await shows('#discover/today', 'view-today');
+  await shows('#today', 'view-today');
+  await shows('#research', 'view-ideahub');
+  await shows('#discover/deals', 'view-deals');
+  await shows('#research/query', 'view-query');
+  await shows('#research/charts', 'view-charts');
+  await shows('#me/vocab', 'view-vocab');
 
   /* The old pair form, where the section and the tab no longer agree with
      each other: the destination is what has to be honoured. */
@@ -239,7 +282,22 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   await page.waitForTimeout(400);
   assert.ok(await page.locator('#view-planner').isVisible(), "go('planner') stopped opening the planner");
 
-  /* ── 4 · The two new hubs actually render ────────────────────────────── */
+  /* ── 4 · The door pages and the older hubs actually render ────────────── */
+
+  await page.evaluate(() => window.AltahaNav.go('discover', null, true));
+  await page.locator('#view-today .dr-hero').waitFor({ state: 'visible' });
+  assert.match(await page.locator('#view-today .dr-hero').innerText(), /NIFTY 50/);
+  assert.match(await page.locator('#drt-level').innerText(), /25,150\.75/);
+  assert.equal(await page.locator('#view-today .dr-tool').count(), 8, 'Today lost one of its tool cards');
+  // A card is a door to its tool.
+  await page.locator('#view-today .dr-tool[data-goto="discover/live"]').click();
+  await page.locator('#view-live').waitFor({ state: 'visible' });
+  await page.evaluate(() => window.AltahaNav.go('research', null, true));
+  await page.locator('#view-ideahub .dr-universe').waitFor({ state: 'visible' });
+  assert.ok(await page.locator('#view-ideahub .dr-tool').count() >= 4);
+  await page.evaluate(() => window.AltahaNav.go('portfolio', null, true));
+  await page.locator('#view-money .dr-pfhero').waitFor({ state: 'visible' });
+  assert.match(page.url(), /#portfolio\/money$/);
 
   await page.evaluate(() => window.AltahaNav.go('discover', 'discover', true));
   await page.locator('#dsc-market .dsc-ix').first().waitFor();
@@ -266,32 +324,52 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
   assert.match(await page.locator('#acf_exact').innerText(), /₹/,
                'Allocate rendered without an amount');
 
-  /* ── 5 · The mega menu carries each product's question ───────────────── */
+  /* ── 5 · The door bar, pins, and search ──────────────────────────────── */
 
-  /* Hover opens the panel, which is what a mouse does before it clicks — a
-     click here would land on an already-open panel and toggle it shut. */
-  for (const label of PRODUCTS) {
-    await page.locator('.sh-top', { hasText: new RegExp('^' + label + '$') }).hover();
-    await page.locator('.sh-mega.open .sh-megaq').waitFor();
-    assert.match(await page.locator('.sh-mega.open .sh-megaq').innerText(), /\?$/,
-                 `${label} opens a panel that does not state its question`);
-    assert.ok(await page.locator('.sh-mega.open .sh-item').count() >= 1,
-              `${label} opens an empty panel`);
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(150);
-  }
+  await page.locator('.sh-door', { hasText: /^Ideas$/ }).click();
+  await page.locator('#sh-doorbar .sh-pill[data-tab="query"]').click();
+  await page.locator('#view-query').waitFor({ state: 'visible' });
+  assert.equal((await page.locator('#sh-doorbar .sh-pill.on').innerText()).trim(), 'Screener');
+  assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Ideas');
+  // Pin it, and it waits on Today's desk.
+  await page.locator('#sh-pin').click();
+  assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('altaha-pins-v1'))), ['query']);
+  assert.equal(await page.locator('#sh-pin').getAttribute('aria-pressed'), 'true');
+  await page.locator('.sh-door', { hasText: /^Today$/ }).click();
+  await page.locator('#dr-desk-pins .dr-pinchip[data-goto="research/query"]').waitFor({ state: 'visible' });
+
+  // Search finds a tool by the word people use for it, and Enter opens it.
+  await page.keyboard.press('Control+k');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'sh-q', 'Ctrl+K focuses search');
+  await page.locator('#sh-q').fill('bulk');
+  await page.locator('#sh-ac.open .row.tool', { hasText: 'Big trades' }).waitFor();
+  await page.locator('#sh-q').press('Enter');
+  await page.locator('#view-deals').waitFor({ state: 'visible' });
+  // Empty, it offers what was opened last and the three doors.
+  await page.locator('#sh-q').focus();
+  await page.locator('#sh-ac.open .hd', { hasText: 'Recent' }).waitFor();
+  assert.match(await page.locator('#sh-ac').innerText(), /Big trades/);
+  await page.locator('#sh-q').press('Escape');
+
+  // Me holds the account, Pro, Advisors, appearance and learning.
+  await page.locator('#sh-me').click();
+  await page.locator('#sh-memenu.open #sh-pro').waitFor({ state: 'visible' });
+  assert.ok(await page.locator('#sh-memenu #sh-account').isVisible());
+  assert.ok(await page.locator('#sh-memenu #sh-adv').isVisible());
+  await page.locator('#sh-memenu .sh-item[data-tab="vocab"]').click();
+  await page.locator('#view-vocab').waitFor({ state: 'visible' });
 
   /* ── 6 · Nothing overflows a phone ───────────────────────────────────── */
 
   for (const width of [390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
-    for (const view of ['ideas', 'discover', 'allocate', 'score', 'factors']) {
+    for (const view of ['today', 'ideahub', 'money', 'ideas', 'discover', 'allocate', 'score', 'factors']) {
       await page.evaluate(v => window.AltahaNav.go(null, v, true), view);
       await page.waitForTimeout(350);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
                    false, `${view} overflows at ${width}`);
     }
-    for (const view of ['ideas', 'discover', 'allocate']) {
+    for (const view of ['today', 'ideahub', 'money', 'ideas']) {
       await page.evaluate(v => window.AltahaNav.go(null, v, true), view);
       await page.waitForTimeout(400);
       await page.screenshot({ path: path.join(output, `${width}-${view}.png`), fullPage: true });
@@ -302,5 +380,5 @@ const PRODUCTS = ['Discover', 'Allocate', 'Portfolio', 'Research'];
 
   await browser.close();
   server.close();
-  console.log('four products ok — screenshots in test-results/nav-products');
+  console.log('three doors ok — screenshots in test-results/nav-products');
 })().catch(e => { console.error(e); process.exit(1); });

@@ -55,15 +55,17 @@ from __future__ import annotations
 
 import math
 
+import score_bands
+
 try:
     import sectors as _sectors
 except Exception:                               # pragma: no cover
     _sectors = None
 
-STRONG = 60.0
-GOOD = 55.0
-WEAK = 40.0
-POOR = 33.0
+STRONG = score_bands.STRONG
+GOOD = score_bands.GOOD
+WEAK = score_bands.WEAK
+POOR = score_bands.POOR
 SMALL_PCT = 3.0          # a position this small cannot move the portfolio
 ADD_TARGET_PCT = 10.0    # ADD works up toward this, or the reader's limit if lower
 AVERAGE_BELOW_PCT = 10.0 # averaging needs the price at least this far under cost
@@ -236,6 +238,8 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
         pl = _pillar_line(row)
         if pl:
             reasons.append(pl)
+    elif row.get("score_pending"):
+        reasons.append("Its Altaha Score was still being worked out when this review finished.")
     else:
         reasons.append("No Altaha Score yet — too little published data to rank it.")
     reasons.append(f"{w:.1f}% of your money (your limit for one stock is {cap:.0f}%).")
@@ -259,8 +263,10 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
                        f"is no score to argue for keeping it that big.")
         if action == "HOLD":
             conviction = "low"
-            why = ("We could not score it yet, so there is no case either way — keep it within "
-                   "your limits and check back after the next scan.")
+            why = (("Its score was still being worked out when this review finished — run the "
+                    "review again in a minute for a proper call.") if row.get("score_pending") else
+                   ("We could not score it yet, so there is no case either way — keep it within "
+                    "your limits and check back after the next scan."))
     elif s < POOR:
         action, conviction = "EXIT", "high"
         tail = ("." if pctile is None else

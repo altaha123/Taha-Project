@@ -221,15 +221,16 @@
     var scored = rows.filter(function (r) { return finite(r.composite); });
     if (finite(d.weighted_score) && scored.length) {
       var q = d.data_quality || {};
-      var strong = scored.filter(function (r) { return r.composite >= 70; }).length;
+      var cut = (d.score_bands && finite(d.score_bands.strong)) ? d.score_bands.strong : 60;
+      var strong = scored.filter(function (r) { return r.composite >= cut; }).length;
       var lede6 = 'Weighted by the money in each, your companies score **' + trimNum(d.weighted_score) + ' out of 100**. ' +
-        strong + ' of ' + scored.length + (strong === 1 ? ' is' : ' are') + ' rated Strong or better.';
+        strong + ' of ' + scored.length + (strong === 1 ? ' is' : ' are') + ' rated Strong.';
       if (finite(q.scored_value_pct) && q.scored_value_pct < 99.5) {
         lede6 += ' Scores cover ' + pct(q.scored_value_pct, 0) + ' of your money; the rest is unknown, not bad.';
       }
       var floors = (d.score_distribution || []).filter(function (b) { return finite(b.floor); })
         .sort(function (a, b) { return b.floor - a.floor; });
-      if (!floors.length) floors = [{ label: 'Strong', floor: 70 }, { label: 'Mixed', floor: 40 }, { label: 'Weak', floor: 0 }];
+      if (!floors.length) floors = [{ label: 'Strong', floor: 60 }, { label: 'Average', floor: 40 }, { label: 'Weak', floor: 0 }];
       var bands = floors.map(function (b) { return { label: b.label, floor: b.floor, symbols: [] }; });
       scored.slice().sort(function (a, b) { return b.composite - a.composite; }).forEach(function (r) {
         var band = bands.filter(function (b) { return r.composite >= b.floor; })[0];

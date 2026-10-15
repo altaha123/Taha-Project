@@ -31,12 +31,14 @@ says which window. Peer context comes from the last universe scan and says so.
 import math
 from copy import deepcopy
 import portfolio_intelligence as intelligence
+import score_bands
 
 MAX_HOLDINGS = 50            # raised from 20; prices are now fetched in one batch
 WORKERS = 4
 
-WEAK_SCORE = 40              # composite below this is a weak holding
-STRONG_SCORE = 72
+# One scale for the whole review: score_bands.py says why.
+WEAK_SCORE = score_bands.WEAK      # composite below this is a weak holding
+STRONG_SCORE = score_bands.STRONG
 
 # ---------------------------------------------------------------------------
 # The rulebook
@@ -51,7 +53,7 @@ STRONG_SCORE = 72
 DEFAULT_POLICY = {
     "max_stock_pct":   15.0,   # no single holding above this share of the book
     "max_sector_pct":  35.0,   # no single sector above this share
-    "min_composite":   45,     # holdings scoring below this get flagged
+    "min_composite":   score_bands.DEFAULT_FLOOR,   # holdings scoring below this get flagged
     "review_drawdown": 25.0,   # positions down more than this get flagged
     "min_holdings":    8,      # below this, single-stock risk dominates
     "max_unclassified_pct": 20.0,   # too much unsectored book weakens the read
@@ -253,18 +255,7 @@ def build_report(rows: list, scan_payload: dict | None,
     else:
         wscore = None
 
-    if wscore is None:
-        grade = "—"
-    elif wscore >= 72:
-        grade = "A"
-    elif wscore >= 60:
-        grade = "B+"
-    elif wscore >= 50:
-        grade = "B"
-    elif wscore >= 40:
-        grade = "C"
-    else:
-        grade = "D"
+    grade = score_bands.grade(wscore)
 
     conc = _concentration([100*r["value"]/total_value for r in ok])
 
@@ -372,10 +363,10 @@ def build_report(rows: list, scan_payload: dict | None,
 
     strong = [r for r in ok if (r.get("composite") or 0) >= STRONG_SCORE]
     if strong:
-        names = ", ".join(f"{r['symbol']} ({r['composite']})" for r in strong[:5])
+        names = ", ".join(f"{r['symbol']} ({r['composite']:.0f})" for r in strong[:5])
         observations.append({
             "level": "good", "title": "Strongest current evidence",
-            "text": (f"{names} — composite {STRONG_SCORE}+ on today's data, "
+            "text": (f"{names} — Altaha Score {STRONG_SCORE:.0f}+ on today's data, "
                      f"{sum(r['weight_pct'] for r in strong):.1f}% of the book combined.")
         })
 
@@ -455,6 +446,7 @@ def build_report(rows: list, scan_payload: dict | None,
         "concentration": conc,
         "policy": pol,
         "policy_defaults": DEFAULT_POLICY,
+        "score_bands": score_bands.as_payload(),
         "breaches": breaches,
         "breach_count": len([b for b in breaches if b["level"] == "breach"]),
         "observations": observations,

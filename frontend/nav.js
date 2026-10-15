@@ -1,38 +1,41 @@
 /* Altaha — Navigation
 
-   FOUR PRODUCTS, FOUR QUESTIONS
-   The site used to be one screener with eleven tabs hanging off it, which told
-   a first-time reader that everything mattered equally, so nothing did. The
-   primary navigation now names four products, and each one exists to answer a
-   single question a person actually arrives with:
+   THREE DOORS, ONE QUESTION EACH
+   The site used to show four menus, seven header buttons and two strips, and
+   a phone got one list of all twenty-five destinations. Everything was on
+   offer at once, so nothing stood out. Now there are three doors, each the
+   answer to a question somebody actually arrives with, plus a Me menu:
 
-     Discover   Where are opportunities now?
-     Allocate   What should I do with my money?
-     Portfolio  How are my existing investments doing?
-     Research   What does the evidence say about this company?
+     Today      What is the market doing?          (section id: discover)
+     Ideas      What should I look at?             (section id: research)
+     My money   How am I doing, and what next?     (section id: portfolio)
+     Me         Account, settings and learning     (section id: me)
 
-   A destination belongs to the product whose question it answers. The live
-   scanner and the deals board are Discover because they are about now; the
-   planner is Allocate because it is about the next rupee; the screener,
-   the score and the factor evidence are Research because they are about
-   what is true, not what to do about it.
+   Each door opens on a page of its own (today / ideahub / money, built by
+   doors.js) that previews every tool behind it with one live number or one
+   line, and the tool opens on a tap. Nothing was removed: every tool that
+   had a tab still has one, in exactly one door.
 
-   SUB-TABS ARE THE PRODUCT, EXTRAS ARE THE LONG TAIL
-   Each section carries a short `tabs` list — what belongs in the visible row
-   under the product name — and an `extras` list of destinations that are
-   owned by the section and fully routable but do not deserve a slot in the
-   row. The mega menu in shell.js shows both. This is what stops the Research
-   row from becoming the old eleven-tab bar with a new name on it.
+   THE SECTION IDS DID NOT CHANGE
+   Today is still `discover`, Ideas is still `research` and My money is still
+   `portfolio`, so #discover/deals, #research/query and #portfolio keep
+   working, and so does every caller of AltahaNav.go() in this codebase.
+   Only the labels and the tabs inside them moved.
+
+   TABS ARE THE DOOR, EXTRAS ARE RARE
+   `tabs` are the tools shown in the door bar (shell.js) and on the door
+   page. `extras` are routable but deliberately quiet: the old Stock
+   analysis view, whose search box and market board the header search and
+   the Today page now cover.
 
    OLD ADDRESSES STILL RESOLVE
-   Bookmarks, share links and the browser tests all carry the old section ids
-   (#screener, #ideas, #social, #planner). ALIASES maps every one of them onto
-   its new home, and a tab id always wins over the section id it arrived with,
-   so AltahaNav.go('screener', 'filings') lands on Research → News whether or
-   not the caller knows Research exists.
+   ALIASES maps every section id this site has ever put in a URL onto the
+   door that now owns it, and a tab id always wins over the section id it
+   arrived with, so AltahaNav.go('screener', 'filings') lands on Today ›
+   Filings & news whether or not the caller knows the doors exist.
 
-   shell.js provides the visible header; this module owns routing and
-   fallback navigation. Section and tab identifiers stay stable.
+   shell.js renders the visible header from this map; this module owns
+   routing and fallback navigation.
 */
 
 (function () {
@@ -40,80 +43,90 @@
 
   var SECTIONS = [
     {
-      id: 'discover', label: 'Discover',
-      question: 'Where are opportunities now?',
-      blurb: 'Where are opportunities now? — today’s setups, live alerts and unusual activity',
+      id: 'discover', label: 'Today',
+      question: 'What is the market doing?',
+      blurb: 'What is the market doing? — prices, sectors, flows, and everything that happened today',
+      icon: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+      tabs: [
+        { id: 'today',    label: 'Overview',          hint: 'The market at a glance, live' },
+        { id: 'live',     label: 'Alerts',            hint: 'Intraday signals as they fire' },
+        { id: 'deals',    label: 'Big trades',        hint: 'Bulk and block deals, and who made them' },
+        { id: 'wow',      label: 'Order wins',        hint: 'New orders measured against company size' },
+        { id: 'special',  label: 'Delivery trends',   hint: 'Price moves backed by delivered volume' },
+        { id: 'results',  label: 'Results calendar',  hint: 'Who reports yesterday, today and this week' },
+        { id: 'filings',  label: 'Filings & news',    hint: 'Company announcements as they are filed' },
+        { id: 'discover', label: 'Setups',            hint: 'Today’s strongest setups and unusual activity' },
+        { id: 'options',  label: 'Options',           hint: 'Option prices and open interest' }
+      ],
+      extras: [
+        { id: 'screener', label: 'Market board',      hint: 'The market board and a stock search box' }
+      ]
+    },
+    {
+      id: 'research', label: 'Ideas',
+      question: 'What should I look at?',
+      blurb: 'What should I look at? — the ranked universe, your own screens, and what great investors hold',
       icon: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
       tabs: [
-        { id: 'ideas', label: 'Universe Scan', hint: 'Explore the NSE universe and reveal ranked stocks' },
-        { id: 'live', label: 'Alerts', hint: 'Intraday alerts as they fire' },
-        { id: 'tracker', label: 'Tracker', hint: 'Follow discovered stocks and their performance' },
-        { id: 'discover', label: 'Opportunities now', hint: 'Today’s setups, movers and unusual activity' },
-        { id: 'special',  label: 'Delivery trends',   hint: 'Price momentum backed by delivered volume' },
-        { id: 'deals',    label: 'Bulk & block deals', hint: 'Large trades and their participants' },
-        { id: 'wow',      label: 'WOW orders',        hint: 'Order wins measured against company size' }
-      ],
-      extras: [
-        { id: 'options',  label: 'Options activity',  hint: 'Option prices and open interest' }
-      ]
-    },
-    {
-      id: 'allocate', label: 'Allocate',
-      question: 'What should I do with my money?',
-      blurb: 'What should I do with my money? — the order to put it to work in, and how much of it',
-      icon: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/><path d="M12 12 5.6 18.4"/>',
-      tabs: [
-        { id: 'allocate', label: 'Allocation plan', hint: 'What the next rupee should do, in order' },
-        { id: 'planner',  label: 'Money planner',   hint: 'Income, expenses, tax and the cushion', brand: 'planner' }
+        { id: 'ideahub',     label: 'Overview',        hint: 'Every way to find a stock, in one place' },
+        { id: 'ideas',       label: 'Universe scan',   hint: 'NSE stocks ranked by the Altaha Score' },
+        { id: 'query',       label: 'Screener',        hint: 'Filter every company by your own rules' },
+        { id: 'lenses',      label: 'Investor styles', hint: 'Stocks picked the way great investors pick them' },
+        { id: 'convergence', label: 'Convergence',     hint: 'Stocks that pass three or more investor styles' },
+        { id: 'investors',   label: 'Who owns what',   hint: 'What well-known investors disclosed holding' },
+        { id: 'funds',       label: 'Fund houses',     hint: 'What the mutual funds disclosed holding' },
+        { id: 'charts',      label: 'Charts',          hint: 'Price charts, drawings, levels and indicators' },
+        { id: 'tracker',     label: 'Track record',    hint: 'How past ideas have done since they were found' },
+        { id: 'factors',     label: 'Factors',         hint: 'What each factor has actually predicted' },
+        { id: 'concalls',    label: 'Concalls',        hint: 'Earnings call transcripts, digested' }
       ],
       extras: []
     },
     {
-      id: 'portfolio', label: 'Portfolio',
-      question: 'How are my existing investments doing?',
-      blurb: 'How are my existing investments doing? — holdings, exposures and the record of your picks',
-      icon: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+      id: 'portfolio', label: 'My money',
+      question: 'How am I doing, and what next?',
+      blurb: 'How am I doing, and what next? — your holdings, your plan and the next rupee',
+      icon: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>',
       tabs: [
-        { id: 'portfolio', label: 'Holdings review', hint: 'Your holdings against their scores and exposures' }
+        { id: 'money',     label: 'Overview',          hint: 'Your portfolio, watchlist and plans' },
+        { id: 'portfolio', label: 'Portfolio review',  hint: 'A clear call on every holding' },
+        { id: 'allocate',  label: 'Allocation plan',   hint: 'Where your next rupee should go' },
+        { id: 'planner',   label: 'Money planner',     hint: 'Income, expenses, tax and your cushion', brand: 'planner' }
       ],
       extras: []
     },
     {
-      id: 'research', label: 'Research',
-      question: 'What does the evidence say?',
-      blurb: 'The evidence — screener, scores, fundamentals, ownership, technicals and news',
-      icon: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/>',
+      id: 'me', label: 'Me',
+      question: 'Account, settings and learning',
+      blurb: 'How Altaha works, the glossary, and your account',
+      icon: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
       tabs: [
-        { id: 'screener',  label: 'Stock analysis',  hint: 'One company, scored, with the ledger' },
-        { id: 'query',     label: 'Query screener',  hint: 'Filter every company by its fundamentals' },
-        { id: 'score',     label: 'Altaha Score',    hint: 'How the score is built and what it has been worth' },
-        { id: 'factors',   label: 'Factors',         hint: 'What each factor has actually predicted' },
-        { id: 'results',   label: 'Fundamentals',    hint: 'Quarterly numbers, and who reports today and this week' },
-        { id: 'investors', label: 'Ownership',       hint: 'What well-known investors disclosed holding' },
-        { id: 'charts',    label: 'Technicals',      hint: 'Price charts, levels and indicators' },
-        { id: 'filings',   label: 'News',            hint: 'Company announcements as they are filed' }
+        { id: 'score',  label: 'How the score works', hint: 'Every pillar and weight, in plain words' },
+        { id: 'vocab',  label: 'Glossary',            hint: 'Market terms in plain language' },
+        { id: 'social', label: 'Post drafts',         hint: 'Prepare posts for X and Telegram' }
       ],
-      extras: [
-        { id: 'funds',    label: 'Fund house portfolios', hint: 'What the mutual funds disclosed holding' },
-        { id: 'lenses',      label: 'Philosophy lenses', hint: 'Stocks screened the way great investors think' },
-        { id: 'convergence', label: 'Convergence',       hint: 'Stocks that clear three or more lenses' },
-        { id: 'concalls', label: 'Concall summaries',     hint: 'Earnings call transcripts, digested' },
-        { id: 'social',   label: 'News & post drafts',    hint: 'Read updates and prepare posts' },
-        { id: 'vocab',    label: 'Glossary',              hint: 'Financial terms in plain language' }
-      ]
+      extras: []
     }
   ];
 
-  /* Every section id this site has ever put in a URL, pointed at the product
+  /* The three doors the header and the phone bar show. Me is reached from
+     its own button, not as a fourth door. */
+  var DOORS = ['discover', 'research', 'portfolio'];
+
+  /* Every section id this site has ever put in a URL, pointed at the door
      that now owns it. A hash is a promise; breaking one silently is how a
      shared link turns into a bounce. */
   var ALIASES = {
-    screener: 'research',
+    today:    'discover',
+    screener: 'discover',
     stocks:   'research',
-    ideas:    'discover',
-    social:   'research',
-    planner:  'allocate',
-    news:     'research'
+    ideas:    'research',
+    social:   'me',
+    news:     'discover',
+    planner:  'portfolio',
+    allocate: 'portfolio',
+    money:    'portfolio',
+    learn:    'me'
   };
 
   var reduced = false;
@@ -130,11 +143,10 @@
     return n;
   }
 
-  /* The first screen stays what it has always been: the search box, the
-     market board and the day's movers, which is Research → Stock analysis
-     under the new names. Discover is a place you choose to go, not a wall
-     put in front of somebody who arrived to look up one company. */
-  var HOME = { section: 'research', tab: 'screener' };
+  /* The first screen is Today: the market, live, with every tool behind the
+     door one tap away. Looking up one company is the header search, which is
+     on every page, so it no longer needs the landing view to itself. */
+  var HOME = { section: 'discover', tab: 'today' };
   var current = { section: HOME.section, tab: HOME.tab };
   var booting = true;
 
@@ -169,6 +181,14 @@
       if (t[i].id === tabId) return t[i];
     }
     return null;
+  }
+
+  function queryGo() {
+    try {
+      return (new URLSearchParams(location.search).get('go') || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+    } catch (e) {
+      return '';
+    }
   }
 
   function queryChartsSymbol() {
@@ -227,7 +247,7 @@
     learn.type = 'button';
     learn.innerHTML = '<span>Glossary</span>';
     learn.addEventListener('click', function () {
-      go('research', 'vocab', true);
+      go('me', 'vocab', true);
     });
     sub.appendChild(learn);
 
@@ -325,6 +345,10 @@
 
   function paint(section, tabId) {
     document.body.dataset.tab = tabId || "";
+    // The landing banner belongs to the landing page. Asked for a product —
+    // by a link (?go=), an address (#portfolio) or a click — the reader gets
+    // the product, not 600px of welcome above it.
+    document.body.classList.toggle('at-home', !location.hash && !/[?&]go=/.test(location.search));
     document.querySelectorAll('.navmain-btn').forEach(function (b) {
       var on = b.dataset.section === section.id;
       b.classList.toggle('on', on);
@@ -382,6 +406,7 @@
     var h = hashFor(sectionId, tabId);
     lastWritten = h;
     if (location.hash !== h) history.pushState(null, '', h);
+    document.body.classList.remove('at-home');
   }
 
   function readHash() {
@@ -400,6 +425,14 @@
     }
     var owner = ownerOf(sectionId);
     if (owner && !rawSection(sectionId)) return { section: owner.id, tab: sectionId };
+
+    /* A bare door id that is also one of its own tools is that tool, which is
+       what it meant before the doors had pages of their own: #portfolio has
+       always been the holdings review (sign-in, Pro and Advisors link it),
+       and #discover the Opportunities hub. A door's own page is
+       #portfolio/money, #discover/today, #research/ideahub. */
+    var self = rawSection(sectionId);
+    if (self && tabById(self, sectionId)) return { section: self.id, tab: sectionId };
 
     var known = rawSection(sectionId) || ALIASES[sectionId];
     return known ? { section: sectionById(sectionId).id, tab: tabId } : null;
@@ -455,9 +488,21 @@
 
     var qCharts = queryChartsSymbol();
     var r = readHash();
+    var qGo = queryGo();
+    /* ?go=portfolio and friends. index.html also clicks the named tab, but
+       on its own timer; now that the landing view is routed rather than
+       merely painted, whichever ran second used to win, and a shared link
+       could open on Today instead of the tool it named. Honouring it here
+       makes the answer the same every time. A tab id wins, as everywhere,
+       and an explicit #hash wins over both (readHash answers HOME when
+       there is no hash at all, so it is asked only when there is one). */
+    var hasHash = !!(location.hash || '').replace(/^#/, '');
     if (qCharts != null) go('research', 'charts', false);
+    else if (hasHash && r) go(r.section, r.tab, false);
+    else if (qGo && ownerOf(qGo)) go(ownerOf(qGo).id, qGo, false);
+    else if (qGo && (rawSection(qGo) || ALIASES[qGo])) go(qGo, null, false);
     else if (r) go(r.section, r.tab, false);
-    else paint(sectionById(HOME.section), HOME.tab);
+    else go(HOME.section, HOME.tab, false);
 
     var legacy = $('.legacy-nav');
     if (legacy) {
@@ -514,5 +559,9 @@
     start();
   }
 
-  window.AltahaNav = { go: go, sections: SECTIONS, aliases: ALIASES };
+  window.AltahaNav = {
+    go: go, sections: SECTIONS, aliases: ALIASES, doors: DOORS,
+    current: function () { return { section: current.section, tab: current.tab }; },
+    ownerOf: function (tabId) { var o = ownerOf(tabId); return o ? o.id : null; }
+  };
 })();
