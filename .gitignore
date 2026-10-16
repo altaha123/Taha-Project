@@ -2,6 +2,12 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Local development environment: the Python virtualenv and the local data
+# directory (the mounted disk's stand-in), both created by .cursor/install.sh
+# and .cursor/start.sh. Data, never source.
+.venv/
+.data/
+
 # The point-in-time store. Data, never source — it lives on the mounted
 # disk in production and is recreated locally by any test run.
 altaha_pit.db
