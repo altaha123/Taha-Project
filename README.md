@@ -29,8 +29,8 @@ and its own address, in exactly one door.
 | Door | The question it answers | What lives behind it |
 |---|---|---|
 | **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Setups, Options and the Market board |
-| **Ideas** (`#research`) | *What should I look at?* | The Universe scan, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, Concalls |
-| **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio and watchlist, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner, and Advisors |
+| **Ideas** (`#research`) | *What should I look at?* | The Universe scan, the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, Concalls |
+| **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner, and Advisors |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
 Each door opens on a page of its own (`frontend/doors.js`) that previews every
@@ -53,6 +53,37 @@ its own card and nothing else. The motion (cards rising in, counts counting,
 the chart drawing itself, the planets turning) stops for reduced motion and
 the site's own motion switch, and `motion-off-browser.cjs` checks that nothing
 is ever left invisible.
+
+---
+
+## The call log, the watchlists and the portfolio pulse
+
+**Call log** (`#research/calls`, `backend/call_log.py`). The Ideas list is
+rebuilt from the latest scan on every load, so on its own it cannot say when a
+call was made. The log records each scan's list once per horizon and keeps
+every call with the day, date, time (IST) and price it was made at, the stance
+and levels it carried, every change after (stance, redrawn levels) and how it
+ended — stop, target, or dropped from the list. Stops and targets are judged
+against the levels a call carried *before* a new scan redrew them, so a
+breached stop cannot be quietly moved. Each Universe scan row also carries a
+stamp: "Called Mon 26 Oct · 10:40 IST at ₹101 · +4.9% since".
+
+**Watchlists** (`#portfolio/watchlists`, `frontend/watchlists.js`). Any number
+of named lists with an emoji and a colour, renamed in place; live quotes for
+the whole list in one request (`/watchlist/quotes`, cached, at most 25 new
+names fetched per call); cards, a race and a heatmap; "since added" returns;
+share links that open the list for anyone (`?go=watchlists&wl=…`); featured
+lists everyone can see and copy (`/watchlist/featured`); and a daily game —
+pick the stock you think ends the day highest, scored after the close. The
+main list is still the one the ☆ Save button and the daily email use; the
+other lists sync to the account through `/me/watchlists`.
+
+**Portfolio pulse** (`backend/portfolio_pulse.py`). On the portfolio review:
+which holdings are in profit and in loss, today's move, and a lean for each —
+positive, mixed, negative or quiet — with every reason and its points.
+Filings are read by category with the same table the Ideas list uses; press
+counts only where its direction is verified. It is a tally of evidence, not a
+forecast, and the page says so.
 
 ---
 

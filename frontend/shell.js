@@ -127,6 +127,7 @@
       items: [
         { tab: 'ideahub', label: 'Overview', icon: 'bulb', hint: 'Every way to find a stock, in one place', kw: 'ideas find discover' },
         { tab: 'ideas', label: 'Universe scan', icon: 'bulb', hint: 'NSE stocks ranked by the Altaha Score', kw: 'universe scan ranked top best planets' },
+        { tab: 'calls', label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
         { tab: 'query', label: 'Screener', icon: 'lens', hint: 'Filter every company by your own rules', kw: 'query filter screen roe roce pe debt pledge promoter' },
         { tab: 'lenses', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them', kw: 'lenses philosophy coffee can moat qglp' },
         { tab: 'convergence', label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
@@ -143,6 +144,7 @@
       items: [
         { tab: 'money', label: 'Overview', icon: 'shield', hint: 'Your portfolio, watchlist and plans', kw: 'money mine' },
         { tab: 'portfolio', label: 'Portfolio review', icon: 'plan', hint: 'A clear call on every holding', kw: 'portfolio holdings review plan hold trim exit' },
+        { tab: 'watchlists', label: 'Watchlists', icon: 'target', hint: 'Your lists, live — make, rename, share and play', kw: 'watchlist watch list star saved follow rename share game' },
         { tab: 'allocate', label: 'Allocation plan', icon: 'shield', hint: 'Where your next rupee should go', kw: 'allocate asset allocation invest' },
         { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'Income, expenses, tax and your cushion', kw: 'planner budget tax emergency' },
         { href: 'advisors.html', label: 'Talk to an adviser', icon: 'chat', hint: 'Chat with SEBI-registered advisers', kw: 'advisor adviser sebi chat expert' }

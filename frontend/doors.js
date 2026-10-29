@@ -665,6 +665,7 @@
           '<img src="research-illustration.webp" alt="" width="132" height="88" loading="lazy"></span></button>'
     ].join('');
     var more = [
+      ['research/calls', 'record', 'Call log', 'Every call with its day, date and price — and what happened next'],
       ['research/convergence', 'converge', 'Convergence', 'Stocks that pass three or more investor styles'],
       ['research/funds', 'funds', 'Fund houses', 'What the mutual funds disclosed holding'],
       ['research/charts', 'charts', 'Charts', 'Drawings, levels and indicators for any stock'],

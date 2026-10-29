@@ -100,6 +100,19 @@ jobs:
         with:
           name: nav-products-verification
           path: test-results/nav-products
+      - name: Verify the call log dates every call, the watchlists save, share and score, and the pulse renders
+        if: always()
+        # A timeline with no days on it, a rename that does not stick, a
+        # shared link that opens empty, a game that never scores after the
+        # close. None of them throws. The clock is pinned to an IST session.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/calls-watchlists-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: calls-watchlists-verification
+          path: test-results/calls-watchlists
       - name: Verify the results card shares to every network, with its logo
         if: always()
         # Four silent ones: a logo in the markup that draws nothing (or

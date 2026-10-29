@@ -81,3 +81,28 @@ assert.ok(noRisk.includes('No usable trailing multiple.'));
 assert.ok(build({...sample,ic_review:{available:false,reason:'No priced holdings.'}},true).includes('No priced holdings.'));
 assert.ok(!build(sample,true).includes('Investment Committee Review'));  // absent payload renders nothing
 console.log('Investment Committee review: 18 frontend assertions passed');
+
+/* Who is up, who is down — and where the news leans. The payload is built in
+   portfolio_pulse.py; the page must split the columns, show every reason with
+   its points, escape what came from a feed, and refuse a link it cannot vouch for. */
+const pulsed={...sample,pulse:{winners:['SMALL'],losers:['LARGE'],no_cost:[],today:{up:1,down:1,best:'SMALL',worst:'LARGE'},
+  leans:{positive:['SMALL'],negative:[],mixed:['LARGE'],quiet:[]},method:'Lean = filings read by category.',disclaimer:'Not a forecast.',
+  holdings:{SMALL:{symbol:'SMALL',name:'Small Co',pnl_pct:2.5,pnl:100,day_change_pct:1.2,lean:'positive',lean_label:'Leaning positive',points:2.5,
+      reasons:[{sign:1,points:2.5,kind:'filing',text:'<img src=x onerror=alert(1)>Order win',url:'javascript:alert(1)',why:'Order win filed — counts for the stock.',source:'NSE filing'}]},
+    LARGE:{symbol:'LARGE',name:'Large Co',pnl_pct:-7.7,pnl:-500,day_change_pct:-0.8,lean:'mixed',lean_label:'Mixed signals',points:0,
+      reasons:[{sign:0,points:0,kind:'filing',text:'Results',url:'https://nseindia.com/r.pdf',why:'A real event whose direction the exchange headline does not give.'}]}}}};
+const ph=build(pulsed);
+assert.ok(ph.includes('id="pi-pulse"'));
+const pstart=ph.indexOf('id="pi-pulse"'), pcard=ph.slice(pstart, ph.indexOf('</section>', pstart)), upCol=pcard.slice(pcard.indexOf('pi-pulse-up'),pcard.indexOf('pi-pulse-dn')), dnCol=pcard.slice(pcard.indexOf('pi-pulse-dn'));
+assert.ok(upCol.includes('<b>SMALL</b>') && !upCol.includes('<b>LARGE</b>'));
+assert.ok(dnCol.includes('<b>LARGE</b>') && !dnCol.includes('<b>SMALL</b>'));
+assert.ok(ph.includes('Leaning positive') && ph.includes('Mixed signals'));
+assert.ok(ph.includes('&lt;img src=x'));
+assert.ok(!ph.includes('<img src=x'));
+assert.ok(!ph.includes('javascript:alert'));
+assert.ok(ph.includes('href="https://nseindia.com/r.pdf"'));
+assert.ok(ph.includes('Not a forecast.'));
+assert.ok(!ph.includes('NaN'));
+assert.ok(build({...sample,pulse:{available:false,reason:'Portfolio pulse unavailable: RuntimeError.'}}).includes('Portfolio pulse unavailable'));
+assert.ok(!build(sample).includes('id="pi-pulse"'));
+console.log('Portfolio pulse: columns, reasons, escaping and link safety assertions passed');

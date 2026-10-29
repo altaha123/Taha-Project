@@ -1243,6 +1243,8 @@
 <link rel="stylesheet" href="query.css?v=20260927">
 <link rel="stylesheet" href="idea-card.css?v=20260927b">
 <link rel="stylesheet" href="doors.css?v=20261015">
+<link rel="stylesheet" href="calls.css?v=20261029">
+<link rel="stylesheet" href="watchlists.css?v=20261029">
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20260922-stock-copy"></script>
 <script src="universe-scan.js?v=20260927-week"></script>
@@ -1321,6 +1323,8 @@
         <button id="tab-deals" role="menuitem">Deals</button>
         <button id="tab-special" role="menuitem">Altaha Special</button>
         <button id="tab-tracker" role="menuitem">Tracker</button>
+        <button id="tab-calls" role="menuitem">Call log</button>
+        <button id="tab-watchlists" role="menuitem">Watchlists</button>
         <button id="tab-results" role="menuitem">Results</button>
         <button id="tab-options" role="menuitem">Options</button>
         <button id="tab-wow" role="menuitem">WOW orders</button>
@@ -1341,6 +1345,9 @@
   <div id="view-today" class="dr-view" aria-label="Today"></div>
   <div id="view-ideahub" class="dr-view" style="display:none" aria-label="Ideas"></div>
   <div id="view-money" class="dr-view" style="display:none" aria-label="My money"></div>
+  <!-- Every Ideas call, dated (calls.js), and the watchlists (watchlists.js). -->
+  <div id="view-calls" style="display:none" aria-label="Call log"></div>
+  <div id="view-watchlists" style="display:none" aria-label="Watchlists"></div>
 
   <div id="view-screener" style="display:none">
   <div class="searchrow">
@@ -2253,11 +2260,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["today","ideahub","money","screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query"];
+const TABS = ["today","ideahub","money","screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query","calls","watchlists"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["today","ideahub","money","deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query"];
+const OVERFLOW_TABS = ["today","ideahub","money","deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query","calls","watchlists"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -2401,6 +2408,8 @@ function switchTab(which){
      load: neither is the landing view, and both fan out to several feeds. */
   if(which==="discover" && window.AltahaDiscover) window.AltahaDiscover.open();
   if((which==="today"||which==="ideahub"||which==="money") && window.AltahaDoors) window.AltahaDoors.open(which);
+  if(which==="calls" && window.AltahaCalls) window.AltahaCalls.open();
+  if(which==="watchlists" && window.AltahaWatchlists) window.AltahaWatchlists.open();
   refreshSegsSoon();
   if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
   if(which==="live"){ loadLive();
@@ -3037,6 +3046,7 @@ async function loadIdeas(){
             <span class="nm"><a href="stock.html?ticker=${encodeURIComponent(s.symbol)}">${i+1}. ${esc(s.name)}</a><small>${esc(s.symbol)} · ₹${s.price ?? "—"}</small></span>
             <span class="conv">${scoreTxt(s.conviction ?? s.setup_fit)}<small>score</small></span>
           </div>
+          ${window.AltahaCalls ? window.AltahaCalls.stamp(s.call, s.symbol) : ""}
           ${planGrid(s.plan)}
           ${s.adverse_filing ? `<div class="badbox"><b>Adverse filing.</b> ${esc((s.catalyst&&s.catalyst.headline)||(s.catalyst&&s.catalyst.line)||"")} — scored against this idea, not for it.</div>` : ""}
           <div class="idearow-actions">
@@ -4798,6 +4808,8 @@ if(fcSymParam){
 <script src="risk-math.js" defer></script>
 <script src="allocate-flow.js" defer></script>
 <script src="experience.js?v=20261015-doors" defer></script>
+<script src="calls.js?v=20261029" defer></script>
+<script src="watchlists.js?v=20261029" defer></script>
 <script src="home-motion.js?v=20260923-always-on" defer></script>
 <script src="home-hero.js?v=20260922-explore" defer></script>
 <script>

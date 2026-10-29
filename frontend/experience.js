@@ -235,8 +235,21 @@
   bar.append(ind, doorButtons[0], doorButtons[1], searchButton, doorButtons[2], meButton); document.body.append(bar);
   const desktopSave = button('Watchlist', () => open(watch), 'ux-button ux-desktop-save');
   document.querySelector('.sh-right')?.prepend(desktopSave);
-  // One way in for the Me menu, the phone sheet and the My money door.
-  window.AltahaWatchlist = { open: () => open(watch) };
+  // One way in for the Me menu, the phone sheet and the My money door. On the
+  // main page the Watchlists tab (watchlists.js) is the destination; this
+  // dialog is what pages without that tab still open.
+  window.AltahaWatchlist = {
+    open: () => (window.AltahaWatchlists ? window.AltahaWatchlists.show() : open(watch)),
+    // watchlists.js edits this same list from its own page, then asks this
+    // file to repaint the stars and send the account copy.
+    reload: () => { saved = read(); sync(); push(); },
+    symbols: () => saved.slice()
+  };
+  if (!document.getElementById('view-watchlists')) {
+    const all = node('a', 'ux-note', 'Open all your watchlists ›');
+    all.href = 'index.html?go=watchlists';
+    watch.append(all);
+  }
   const SLOT = { discover: 0, research: 1, portfolio: 3, me: 4 };
   function active(section) {
     doorButtons.forEach((b, i) => {

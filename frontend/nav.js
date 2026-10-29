@@ -70,6 +70,7 @@
       tabs: [
         { id: 'ideahub',     label: 'Overview',        hint: 'Every way to find a stock, in one place' },
         { id: 'ideas',       label: 'Universe scan',   hint: 'NSE stocks ranked by the Altaha Score' },
+        { id: 'calls',       label: 'Call log',        hint: 'Every call, the day it was made, and what happened next' },
         { id: 'query',       label: 'Screener',        hint: 'Filter every company by your own rules' },
         { id: 'lenses',      label: 'Investor styles', hint: 'Stocks picked the way great investors pick them' },
         { id: 'convergence', label: 'Convergence',     hint: 'Stocks that pass three or more investor styles' },
@@ -90,6 +91,7 @@
       tabs: [
         { id: 'money',     label: 'Overview',          hint: 'Your portfolio, watchlist and plans' },
         { id: 'portfolio', label: 'Portfolio review',  hint: 'A clear call on every holding' },
+        { id: 'watchlists', label: 'Watchlists',       hint: 'Your lists, live — make, rename, share and play' },
         { id: 'allocate',  label: 'Allocation plan',   hint: 'Where your next rupee should go' },
         { id: 'planner',   label: 'Money planner',     hint: 'Income, expenses, tax and your cushion', brand: 'planner' }
       ],

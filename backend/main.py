@@ -184,6 +184,12 @@ except Exception:
 import patterns as pattern_engine
 import forward as forward_engine
 import tracker
+# The dated record of every Ideas call. Optional: a log that cannot open its
+# database must cost the Call log tab, never the Ideas tab it describes.
+try:
+    import call_log
+except Exception:
+    call_log = None
 from results import quarterly_results, filed_results
 from levels import compute_levels
 from tradeplan import build_plan
@@ -604,6 +610,9 @@ def _worker():
         # default since 28 Aug 2026 — see the note in tracker.py.
         if tracker.AUTOTRACK:
             _autotrack(payload)
+        # The call log, by contrast, always records: it describes what the
+        # Ideas tab told everyone, not a personal list.
+        _log_scan_calls(payload)
     except MemoryError:
         _state["status"] = "done" if _state["payload"] else "error"
         _state["finished_at"] = time.time()
@@ -1145,12 +1154,19 @@ def ideas(horizon: str = "short", limit: int = 15,
         # one corroboration count — fails serialisation and returns 500, and
         # the failure happens after this function returns, so the except below
         # never sees it. This missing call is what broke the Ideas tab.
-        return to_native({**ideas_engine.select(p, horizon=horizon,
-                                                limit=max(1, min(limit, 25)),
-                                                min_tier=min_tier,
-                                                include_thin=bool(include_thin),
-                                                min_conviction=min_conviction),
-                          "disclaimer": DISCLAIMER})
+        result = ideas_engine.select(p, horizon=horizon,
+                                     limit=max(1, min(limit, 25)),
+                                     min_tier=min_tier,
+                                     include_thin=bool(include_thin),
+                                     min_conviction=min_conviction)
+        # Only the list everyone sees by default is the list of record. A
+        # reader who widens it to thin stocks has asked a different question,
+        # and logging that answer would open calls nobody else was shown.
+        if (limit == 15 and min_tier == "moderate" and not include_thin
+                and min_conviction is None):
+            _log_calls(horizon, result.get("rows") or [], p)
+        _attach_calls(horizon, result.get("rows") or [], p)
+        return to_native({**result, "disclaimer": DISCLAIMER})
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:
@@ -1170,6 +1186,105 @@ def ideas(horizon: str = "short", limit: int = 15,
                             "scoring layer, not a lost scan."),
                 "scanned_at": p.get("scanned_at"),
                 "market_context": _safe_context(horizon)})
+
+
+# ---------------------------------------------------------------------------
+# The call log — when each Ideas call was made, and what happened next
+#
+# The Ideas list is recomputed from the current scan on every load, so it has
+# no memory: it cannot say a name has been there since Monday, or that a call
+# was dropped. call_log.py is that memory. It records once per scan per
+# horizon — on the first /ideas read of a new scan, or in the background when
+# the scan finishes or the Call log tab is opened, whichever comes first.
+# ---------------------------------------------------------------------------
+
+_call_log_busy = threading.Lock()
+
+
+def _scan_prices(p):
+    """{SYMBOL: price} across the whole scored universe of one scan."""
+    rows = (p or {}).get("factor_universe") or (p or {}).get("rankings") or []
+    return {str(r.get("symbol") or "").upper(): r.get("price") for r in rows if r.get("symbol")}
+
+
+def _log_calls(horizon, rows, p):
+    if call_log is None or not p or p.get("partial"):
+        return None
+    try:
+        return call_log.record(horizon, rows, p.get("scanned_at"), _scan_prices(p))
+    except Exception:
+        import traceback
+        print(f"[call_log] record failed for horizon={horizon}\n{traceback.format_exc()}", flush=True)
+        return None
+
+
+def _attach_calls(horizon, rows, p):
+    """Give each Ideas row the date it was first called, if it is in the log."""
+    if call_log is None or not rows:
+        return
+    try:
+        index = call_log.open_index(horizon, _scan_prices(p))
+    except Exception:
+        return
+    for r in rows:
+        r["call"] = index.get((str(r.get("symbol") or "").upper(), r.get("setup_key") or ""))
+
+
+def _log_scan_calls(p):
+    """Record both horizons of a scan nobody has opened yet, off the request
+    thread: select() reaches the news, sector and regime feeds."""
+    if call_log is None or not p or p.get("partial"):
+        return False
+    try:
+        if all(call_log.recorded(h, p.get("scanned_at")) for h in call_log.HORIZONS):
+            return False
+    except Exception:
+        return False
+    if not _call_log_busy.acquire(blocking=False):
+        return True
+
+    def run():
+        try:
+            for h in call_log.HORIZONS:
+                if call_log.recorded(h, p.get("scanned_at")):
+                    continue
+                try:
+                    sel = ideas_engine.select(p, horizon=h, limit=15)
+                except Exception:
+                    continue
+                _log_calls(h, sel.get("rows") or [], p)
+        finally:
+            _call_log_busy.release()
+
+    threading.Thread(target=run, daemon=True, name="call-log").start()
+    return True
+
+
+@app.get("/calls")
+def calls(horizon: str = "", status: str = "", symbol: str = "", limit: int = 300):
+    """Every Ideas call, newest first: the day, date and time it was made, the
+    price and plan it carried, every change since, and how it ended."""
+    if call_log is None:
+        raise HTTPException(503, "The call log is unavailable on this server.")
+    p = _state["payload"]
+    recording = _log_scan_calls(p)
+    try:
+        out = call_log.listing(horizon=horizon, status=status, symbol=symbol,
+                               limit=limit, prices=_scan_prices(p))
+    except Exception as e:
+        raise HTTPException(503, f"The call log could not be read: {str(e)[:120]}")
+    out["latest_scan"] = (p or {}).get("scanned_at")
+    out["recording"] = bool(recording)
+    out["disclaimer"] = DISCLAIMER
+    return to_native(out)
+
+
+@app.get("/calls/export.csv")
+def calls_export():
+    if call_log is None:
+        raise HTTPException(503, "The call log is unavailable on this server.")
+    return Response(content=call_log.export_csv(), media_type="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=altaha-call-log.csv"})
 
 
 def _safe_context(horizon: str):
@@ -3557,6 +3672,10 @@ def _analyse_holding(item, cached=None):
         closes = hist['Close'].dropna()
         row['moving_averages'] = {str(n):round(100*(float(closes.iloc[-1])/float(closes.tail(n).mean())-1),2)
                                   for n in (20,50,200) if len(closes) >= n and closes.tail(n).mean() > 0}
+        # Today's move, for the winners-and-losers board: the last close
+        # against the one before it, from the same history the price came from.
+        if len(closes) >= 2 and float(closes.iloc[-2]) > 0:
+            row['day_change_pct'] = round(100*(float(closes.iloc[-1])/float(closes.iloc[-2])-1), 2)
         row['trend'] = 'Above 200-day average' if row['moving_averages'].get('200',0) > 0 else 'Below 200-day average' if '200' in row['moving_averages'] else 'Insufficient history'
     except Exception:
         row['warnings'] = row.get('warnings', []) + ['Technical scoring unavailable; position valuation retained.']
@@ -4247,6 +4366,57 @@ def merge_my_watchlist(payload: dict = Body(...),
     if not isinstance(symbols, list):
         raise HTTPException(400, "Send symbols: [\"RELIANCE\", ...].")
     return accounts.merge_watchlist(user["id"], symbols)
+
+
+@app.get("/me/watchlists")
+def my_watchlists(authorization: Optional[str] = Header(None)):
+    """The named lists beyond the main watchlist, and the main list's name."""
+    import accounts
+    user = _require_user(authorization)
+    return accounts.get_watchlist_sets(user["id"])
+
+
+@app.put("/me/watchlists")
+def save_my_watchlists(payload: dict = Body(...),
+                       authorization: Optional[str] = Header(None)):
+    """Replace the named lists. The main list's symbols are not in here —
+    PUT /me/watchlist still owns them, so the star and the email agree."""
+    import accounts
+    user = _require_user(authorization)
+    if not isinstance(payload.get("lists", []), list):
+        raise HTTPException(400, "Send lists: [{id, name, symbols}, ...].")
+    return accounts.save_watchlist_sets(user["id"], payload)
+
+
+# ---------------------------------------------------------------------------
+# Watchlist quotes and the lists everyone can see (watchlist_quotes.py)
+# ---------------------------------------------------------------------------
+
+@app.get("/watchlist/quotes")
+def watchlist_quotes(symbols: str = ""):
+    """Price, today's move, week, month and a sparkline for up to 100 names.
+    Names not fetched yet come back in `pending`; ask again for them."""
+    import watchlist_quotes as WQ
+    syms = [s for s in (symbols or "").split(",") if s.strip()]
+    if not syms:
+        raise HTTPException(400, "Send symbols=RELIANCE,TCS,...")
+    p = _state["payload"] or {}
+    return to_native(WQ.quotes(syms, scan_rows=p.get("factor_universe") or p.get("rankings")))
+
+
+@app.get("/watchlist/featured")
+def watchlist_featured():
+    """Watchlists anyone can open and copy: the open calls, the top of the
+    scan, and the market's giants."""
+    import watchlist_quotes as WQ
+    open_calls = []
+    if call_log is not None:
+        try:
+            rows = call_log.listing(status="open", limit=200)["rows"]
+            open_calls = sorted(rows, key=lambda r: -(r.get("conviction") or 0))
+        except Exception:
+            open_calls = []
+    return to_native(WQ.featured(_state["payload"], open_calls))
 
 
 # ---------------------------------------------------------------------------
