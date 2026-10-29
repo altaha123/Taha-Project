@@ -387,6 +387,15 @@ def enrich(report, histories=None, news_items=None, news_status=None, now=None, 
                    'groups':groups, 'scenarios':scenarios, 'committee_summary':' '.join(sentences),
                    'summary':{'text':' '.join(sentences)},
                    'snapshot_basis':{'version':VERSION, 'score_method':'v4-position', 'benchmark_as_of':bench['as_of']}})
+    # Up or down since bought and today, and where each holding's news leans.
+    # Same rule as the committee review below: an added layer that fails costs
+    # its own panel, never the report.
+    import portfolio_pulse
+    try:
+        report['pulse'] = portfolio_pulse.build(rows, news['events'], now)
+    except Exception as exc:
+        report['pulse'] = {'version': portfolio_pulse.VERSION, 'available': False,
+                           'reason': f'Portfolio pulse unavailable: {type(exc).__name__}.'}
     # The committee review reads the finished report and adds the judgement
     # layer: risk budget, aggregate multiples, pro-forma book and the memo.
     # Imported here rather than at module scope because it reads back from

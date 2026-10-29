@@ -164,6 +164,45 @@
     out+=card('pi-next','What should I look at next?','Review priorities based on your data and selected limits', '<ol class="pi-next-list">'+tips.slice(0,3).map(([title,body])=>'<li><h4>'+esc(title)+'</h4><p>'+esc(body)+'</p></li>').join('')+'</ol><p class="pi-note">Review prompts, not automatic buy or sell instructions. Open Advanced analysis for all checks and assumptions.</p>');
     return out;
   }
+  /* Who is up and who is down — since purchase and today — and where the
+     evidence on each holding leans (backend/portfolio_pulse.py). The lean is
+     a tally with every point shown, never a forecast, and says so. */
+  const LEAN={positive:['▲','pi-lean-pos'],negative:['▼','pi-lean-neg'],mixed:['◆','pi-lean-mix'],quiet:['○','pi-lean-quiet']};
+  function pulseRow(h,flat,max) {
+    const l=LEAN[h.lean]||LEAN.quiet, w=finite(h.pnl_pct)?Math.max(3,Math.min(100,Math.abs(h.pnl_pct)/max*100)):0;
+    const reasons=(h.reasons||[]).map(r=>{
+      const url=safeURL(r.url), text=esc(r.text||r.category||'');
+      const mark=r.sign>0?'<i class="pi-r-for" aria-label="counts for">+</i>':r.sign<0?'<i class="pi-r-against" aria-label="counts against">−</i>':'<i class="pi-r-none" aria-label="not scored">·</i>';
+      return '<li>'+mark+'<div><b>'+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">'+text+'</a>':text)+'</b><span>'+esc(r.why||'')+
+        (r.source?' · '+esc(r.source):'')+(r.at?' · '+esc(date(r.at)):'')+'</span></div><em>'+(finite(r.points)&&r.points!==0?sign(r.points):'0')+'</em></li>';
+    }).join('');
+    return '<details class="pi-pulse-row '+l[1]+'"'+(flat?' open':'')+'><summary>'+
+      '<span class="pi-pulse-sym"><b>'+esc(h.symbol)+'</b><small>'+esc(h.name||'')+'</small></span>'+
+      '<span class="pi-pulse-bar" aria-hidden="true"><i class="'+(h.pnl_pct<0?'dn':'up')+'" style="width:'+w.toFixed(1)+'%"></i></span>'+
+      '<span class="pi-pulse-pnl '+tone(h.pnl_pct)+'">'+(finite(h.pnl_pct)?sign(h.pnl_pct)+'%':'—')+'<small>'+(finite(h.pnl)?money(h.pnl):'no cost')+'</small></span>'+
+      '<span class="pi-pulse-day '+tone(h.day_change_pct)+'">'+(finite(h.day_change_pct)?sign(h.day_change_pct)+'%':'—')+'<small>today</small></span>'+
+      '<span class="pi-lean '+l[1]+'"><span aria-hidden="true">'+l[0]+'</span> '+esc(h.lean_label||'Quiet')+'</span>'+
+      '</summary><div class="pi-pulse-why">'+(reasons?'<ol class="pi-reasons">'+reasons+'</ol>':empty('Nothing filed or reported on '+h.symbol+' in the last seven days, and no score or trend to read. Quiet is not a signal either way.'))+
+      '<p class="pi-note">Total '+sign(h.points)+' points. Prices can move against every reason listed; read the filing before acting on it.</p></div></details>';
+  }
+  function pulse(d,flat) {
+    const p=d.pulse;
+    if(!p) return '';
+    if(p.available===false) return card('pi-pulse','Who is up, who is down','Since you bought, today, and the news on each',empty(p.reason||'Unavailable.'));
+    const H=p.holdings||{}, all=Object.values(H), max=Math.max(5,...all.map(h=>finite(h.pnl_pct)?Math.abs(h.pnl_pct):0));
+    const col=(title,cls,list,blank)=>'<div class="pi-pulse-col '+cls+'"><h4>'+title+' <span>'+list.length+'</span></h4>'+(list.length?list.map(s=>H[s]).filter(Boolean).map(h=>pulseRow(h,flat,max)).join(''):empty(blank))+'</div>';
+    const t=p.today||{}, best=H[t.best], worst=H[t.worst];
+    const lean=p.leans||{};
+    const today=(t.up||t.down)?'<div class="pi-pulse-today"><span>Today</span><b class="pi-positive">'+t.up+' up</b><b class="pi-negative">'+t.down+' down</b>'+
+      (best?'<span>Best <b>'+esc(best.symbol)+'</b> <em class="pi-positive">'+sign(best.day_change_pct)+'%</em></span>':'')+
+      (worst&&worst!==best?'<span>Worst <b>'+esc(worst.symbol)+'</b> <em class="'+tone(worst.day_change_pct)+'">'+sign(worst.day_change_pct)+'%</em></span>':'')+'</div>':'';
+    const leanStrip='<div class="pi-lean-strip">'+[['positive','Leaning positive'],['mixed','Mixed'],['negative','Leaning negative'],['quiet','Quiet']].map(([k,label])=>
+      '<span class="'+LEAN[k][1]+'"><b>'+((lean[k]||[]).length)+'</b> '+label+(lean[k]?.length?' <small>'+lean[k].slice(0,4).map(esc).join(', ')+'</small>':'')+'</span>').join('')+'</div>';
+    return card('pi-pulse','Who is up, who is down — and where the news leans','Since you bought, today, and the evidence on each holding. Tap a stock for its reasons.',
+      today+leanStrip+'<div class="pi-pulse-cols">'+col('▲ In profit','pi-pulse-up',p.winners||[],'No holding is above its purchase price.')+col('▼ In loss','pi-pulse-dn',p.losers||[],'No holding is below its purchase price.')+'</div>'+
+      ((p.no_cost||[]).length?'<div class="pi-pulse-col pi-pulse-nc"><h4>No purchase price <span>'+p.no_cost.length+'</span></h4>'+p.no_cost.map(s=>H[s]).filter(Boolean).map(h=>pulseRow(h,flat,max)).join('')+'</div>':'')+
+      '<p class="pi-note">'+esc(p.method||'')+' '+esc(p.disclaimer||'')+'</p>');
+  }
   function build(d,flat=false) {
     const q=d.data_quality||{}, c=d.concentration||{}, risk=d.risk||{}, health=d.health||{}, rows=d.holdings||[], alloc=allocation(d), comp=sectorComparison(d), factors=d.factor_exposure||[];
     let html='<div class="pi-root pi-mode-'+(flat?'advanced':state.mode)+'"><header class="pi-header"><div><span class="pi-eyebrow">ALTAHA / PORTFOLIO INTELLIGENCE</span><h2>Understand your portfolio.</h2><p>Where your money is. What needs attention. Why it matters.</p></div><span class="pi-badge">'+esc(health.label||'Awaiting data')+(health.provisional?' · Provisional':'')+'</span></header>';
@@ -172,6 +211,7 @@
     if(d.failed?.length) html+='<div class="pi-warning" role="alert"><b>Partial valuation — '+d.failed.length+' holdings unavailable.</b> Weights use priced capital only. '+d.failed.map(r=>esc(r.symbol)+': '+esc(r.error)).join(' · ')+'</div>';
     if(!flat) html+='<div class="pi-view-switch" role="group" aria-label="Report detail"><button type="button" data-review-mode="simple" aria-pressed="'+(state.mode==='simple')+'">Simple overview</button><button type="button" data-review-mode="advanced" aria-pressed="'+(state.mode==='advanced')+'">Advanced analysis</button></div>';
     html+=overview(d);
+    html+=pulse(d,flat);
     html+='<div class="pi-metrics">'+metric(q.valuation_complete?'Portfolio value':'Priced portfolio value',money(d.total_value),rows.length+' priced holdings')+metric('Gain / loss since purchase',money(d.total_pnl),pct(d.total_pnl_pct)+' on known costs · '+pct(q.cost_value_pct)+' cost coverage',tone(d.total_pnl))+metric('Altaha Portfolio Score',num(d.weighted_score)+' <em>/ 100</em>','Grade '+esc(d.grade)+' · '+pct(q.scored_value_pct)+' capital scored')+metric('Risk checks',esc(risk.grade||'Unavailable'),(risk.triggered_count??0)+' disclosed thresholds triggered')+'</div>';
     html+=card('pi-committee','Portfolio Investment Committee Summary','The portfolio in 30 seconds','<p class="pi-committee">'+esc(d.committee_summary)+'</p><div class="pi-confidence"><span>Score confidence <b>'+pct(q.weighted_confidence_pct)+'</b></span><span>Effective holdings <b>'+num(c.effective_n)+'</b></span><span>Top 3 <b>'+pct(c.top3_pct)+'</b></span><span>Score scan <b>'+esc(date(q.score_as_of))+'</b></span></div>');
     html+=icReview(d);

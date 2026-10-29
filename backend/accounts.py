@@ -69,6 +69,9 @@ MAX_HOLDINGS = 100
 # The watchlist the UI already enforces on this browser. Same number here
 # so a list that was legal offline does not get truncated on sign-in.
 MAX_WATCHLIST = 100
+# Named lists on top of the main one, and how long a list's name may be.
+MAX_LISTS = 20
+MAX_LIST_NAME = 40
 
 _local = threading.local()
 _state = {"path": DB_PATH, "fell_back": False, "last_error": None}
@@ -188,6 +191,16 @@ CREATE TABLE IF NOT EXISTS saved_screens (
   UNIQUE (user_id, name)
 );
 CREATE INDEX IF NOT EXISTS idx_screens_user ON saved_screens(user_id, updated_at);
+-- The named watchlists beyond the main one ("EV bets", "Results week"), plus
+-- the main list's own name, emoji and colour. One JSON document per person,
+-- replaced whole: lists are edited as a set — renamed, recoloured, emptied —
+-- and a row per field would need a migration every time a list grows one.
+-- The main list's SYMBOLS stay in `watchlist` above, where the digest reads them.
+CREATE TABLE IF NOT EXISTS watchlist_sets (
+  user_id    INTEGER PRIMARY KEY,
+  doc        TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 -- What was sent, so a retry after a crash cannot mail the same person the
 -- same day twice. The digest job is not transactional; this table is what
 -- makes it safe to run again.
@@ -635,6 +648,118 @@ def merge_watchlist(user_id: int, symbols) -> dict:
             [(user_id, sym, tail + 1 + i, _iso(now)) for i, sym in enumerate(added)])
     return {"added": len(added), "rejected": rejected,
             "symbols": get_watchlist(user_id)}
+
+
+# ---------------------------------------------------------------------------
+# Named watchlists
+#
+# The main list above is what the star on every stock page saves to, and what
+# the daily email reads, so it keeps its own table. Everything else a reader
+# builds — more lists, a name and an emoji for each, the price a stock was at
+# when it went on a list — is one document per person, validated here field by
+# field. Nothing in it is trusted as sent: it arrives from a browser.
+# ---------------------------------------------------------------------------
+
+LIST_COLORS = ("gold", "green", "blue", "rose", "violet", "slate")
+_LIST_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,31}$")
+
+
+def _clean_text(v, limit: int) -> str:
+    # Control characters out, whitespace collapsed, then cut to length.
+    text = "".join(ch for ch in str(v or "") if ch >= " " and ch != "\x7f")
+    return " ".join(text.split())[:limit]
+
+
+def _clean_added(raw, symbols) -> dict:
+    """{SYMBOL: {"at": "2026-10-29", "px": 1234.5}} for symbols still listed."""
+    out = {}
+    if not isinstance(raw, dict):
+        return out
+    keep = set(symbols)
+    for k, v in raw.items():
+        sym = _clean_symbol(k)
+        if sym not in keep or not isinstance(v, dict):
+            continue
+        at = str(v.get("at") or "")[:10]
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", at):
+            continue
+        try:
+            px = float(v.get("px"))
+        except (TypeError, ValueError):
+            px = None
+        out[sym] = {"at": at, "px": round(px, 2) if px and 0 < px < 1e9 else None}
+    return out
+
+
+def _clean_meta(raw, default_name: str) -> dict:
+    raw = raw if isinstance(raw, dict) else {}
+    color = raw.get("color") if raw.get("color") in LIST_COLORS else LIST_COLORS[0]
+    return {"name": _clean_text(raw.get("name"), MAX_LIST_NAME) or default_name,
+            "emoji": _clean_text(raw.get("emoji"), 8),
+            "color": color}
+
+
+def clean_watchlist_sets(doc) -> dict:
+    """The whole document, validated. Returns {"main", "lists", "rejected"}."""
+    doc = doc if isinstance(doc, dict) else {}
+    rejected = []
+    main_raw = doc.get("main") if isinstance(doc.get("main"), dict) else {}
+    main = _clean_meta(main_raw, "My watchlist")
+    main["added"] = _clean_added(main_raw.get("added"), [
+        _clean_symbol(k) for k in (main_raw.get("added") or {})])
+    lists, ids = [], set()
+    for raw in doc.get("lists") if isinstance(doc.get("lists"), list) else []:
+        if not isinstance(raw, dict):
+            continue
+        lid = str(raw.get("id") or "").strip().lower()
+        if not _LIST_ID.match(lid) or lid in ids or lid == "main":
+            rejected.append({"list": _clean_text(raw.get("name"), 40), "why": "unreadable id"})
+            continue
+        if len(lists) >= MAX_LISTS:
+            rejected.append({"list": _clean_text(raw.get("name"), 40),
+                             "why": f"over the {MAX_LISTS}-list limit"})
+            continue
+        kept, bad = _clean_symbols(raw.get("symbols"))
+        rejected.extend(bad)
+        meta = _clean_meta(raw, "Untitled list")
+        created = str(raw.get("created") or "")[:10]
+        lists.append({"id": lid, **meta, "symbols": kept,
+                      "added": _clean_added(raw.get("added"), kept),
+                      "created": created if re.match(r"^\d{4}-\d{2}-\d{2}$", created) else None})
+        ids.add(lid)
+    return {"main": main, "lists": lists, "rejected": rejected}
+
+
+def get_watchlist_sets(user_id: int) -> dict:
+    import json
+    row = _connect().execute("SELECT doc, updated_at FROM watchlist_sets WHERE user_id=?",
+                             (user_id,)).fetchone()
+    if row is None:
+        return {"main": _clean_meta({}, "My watchlist") | {"added": {}}, "lists": [],
+                "updated_at": None}
+    try:
+        doc = json.loads(row["doc"])
+    except ValueError:
+        doc = {}
+    clean = clean_watchlist_sets(doc)
+    return {"main": clean["main"], "lists": clean["lists"], "updated_at": row["updated_at"]}
+
+
+def save_watchlist_sets(user_id: int, doc) -> dict:
+    """Replace the document. Returns the cleaned copy and anything refused."""
+    import json
+    clean = clean_watchlist_sets(doc)
+    now = _iso(_now())
+    body = json.dumps({"main": clean["main"], "lists": clean["lists"]},
+                      ensure_ascii=False, separators=(",", ":"))
+    conn = _connect()
+    with conn:
+        conn.execute(
+            "INSERT INTO watchlist_sets(user_id,doc,updated_at) VALUES(?,?,?) "
+            "ON CONFLICT(user_id) DO UPDATE SET doc=excluded.doc, updated_at=excluded.updated_at",
+            (user_id, body, now))
+    return {"main": clean["main"], "lists": clean["lists"],
+            "rejected": clean["rejected"], "updated_at": now}
 
 
 # ---------------------------------------------------------------------------
