@@ -190,6 +190,12 @@ try:
     import call_log
 except Exception:
     call_log = None
+# The Strategy lab: textbook trading rules run on one stock's history, beside
+# buying and holding it. Optional, like every module a single tab depends on.
+try:
+    import strategy_lab
+except Exception:
+    strategy_lab = None
 from results import quarterly_results, filed_results
 from levels import compute_levels
 from tradeplan import build_plan
@@ -1545,6 +1551,50 @@ def chart_patterns(ticker: str, range: str = "1D", base_rates: bool = True):
     except Exception as e:
         raise HTTPException(500, f"Pattern analysis failed: {str(e)[:120]}")
     return to_native({**out, "range": key, "disclaimer_global": DISCLAIMER})
+
+
+@app.get("/strategies")
+def strategies(ticker: str, years: int = 10, cost: Optional[float] = None):
+    """
+    The Strategy lab: eleven fixed textbook rules run on one stock's daily
+    history, measured by the six numbers quants.md reports (return, CAGR,
+    Sharpe, maximum drawdown, win rate, profit factor) and set beside buying
+    and holding the same stock, with Indian costs, an after-tax CAGR for NSE
+    stocks, a two-halves consistency check and a luck bar for the best rule.
+
+    `years` is 3, 5, 10 or 15. `cost` overrides the round-trip cost in
+    percent (0 to 3); left out, it is 0.49% for Indian stocks.
+
+    It never says what a rule is doing today. See strategy_lab.py.
+    """
+    if strategy_lab is None:
+        raise HTTPException(503, "The Strategy lab is not available on this server.")
+    base = (ticker or "").strip().upper()
+    if not base:
+        raise HTTPException(400, "Give a stock symbol, for example ?ticker=RELIANCE.")
+    if years not in strategy_lab.YEAR_CHOICES:
+        raise HTTPException(400, "years must be one of "
+                                 + ", ".join(str(y) for y in strategy_lab.YEAR_CHOICES))
+    if cost is not None and not (0 <= cost <= 3):
+        raise HTTPException(400, "cost is a round-trip percentage between 0 and 3.")
+    try:
+        sym, t, _hist = resolve(base)
+    except NotFound:
+        raise HTTPException(404, f"Couldn't find '{base}'.")
+    except Exception:
+        raise HTTPException(503, "The data provider is busy. Try again in a minute.")
+    if t is None:
+        raise HTTPException(503, "The data provider is busy. Try again in a minute.")
+    try:
+        out = strategy_lab.report(sym, t, years=years, cost_round_trip_pct=cost,
+                                  ticker=sym.replace(".NS", "").replace(".BO", ""))
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    except LookupError:
+        raise HTTPException(404, f"No long price history is available for {base}.")
+    except Exception:
+        raise HTTPException(503, "The long price history could not be read. Try again in a minute.")
+    return to_native(out)
 
 
 # ---------------------------------------------------------------------------

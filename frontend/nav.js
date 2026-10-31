@@ -79,6 +79,7 @@
         { id: 'charts',      label: 'Charts',          hint: 'Price charts, drawings, levels and indicators' },
         { id: 'tracker',     label: 'Track record',    hint: 'How past ideas have done since they were found' },
         { id: 'factors',     label: 'Factors',         hint: 'What each factor has actually predicted' },
+        { id: 'strategies',  label: 'Strategy lab',    hint: 'Would a trading rule have beaten holding this stock?' },
         { id: 'concalls',    label: 'Concalls',        hint: 'Earnings call transcripts, digested' }
       ],
       extras: []

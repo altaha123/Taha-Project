@@ -10,6 +10,7 @@ on:
       - 'backend/wow_orders.py'
       - 'backend/concalls.py'
       - 'backend/filings_text.py'
+      - 'backend/strategy_lab.py'
       - 'backend/tests/*portfolio*'
       - 'backend/tests/*shareholding*'
       - 'backend/tests/*wow*'
@@ -113,6 +114,19 @@ jobs:
         with:
           name: calls-watchlists-verification
           path: test-results/calls-watchlists
+      - name: Verify the Strategy lab sorts, compares, sizes and fits a phone
+        if: always()
+        # A table sorted on the wrong column, a compare tick that draws no
+        # line, a calculator printing NaN, a chart spilling past a phone's
+        # edge. None of them throws. The fixture is the real report shape.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/strategy-lab-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: strategy-lab-verification
+          path: test-results/strategy-lab
       - name: Verify the results card shares to every network, with its logo
         if: always()
         # Four silent ones: a logo in the markup that draws nothing (or

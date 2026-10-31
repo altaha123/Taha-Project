@@ -1071,3 +1071,11 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
  #pane-chart *,#pane-chart *::before,#pane-chart *::after{animation:none!important;transition:none!important}
  #pane-chart .spark-draw{stroke-dashoffset:0}
 }
+
+/* The way into the Strategy lab from the Chart pane. */
+.stk-lab-link{ display:flex; flex-direction:column; gap:3px; margin:16px 0 0; padding:14px 16px; border:1px solid var(--rule);
+  border-radius:14px; background:var(--skin-card, var(--paper)); color:var(--ink); text-decoration:none }
+.stk-lab-link b{ font-weight:600; font-size:15px }
+.stk-lab-link span{ color:var(--mute); font-size:13.5px }
+.stk-lab-link:hover{ border-color:var(--gold) }
+.stk-lab-link:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }

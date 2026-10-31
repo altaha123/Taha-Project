@@ -89,7 +89,8 @@
     share:    '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>',
     chat:     '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/>',
     lens:     '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>',
-    converge: '<circle cx="8" cy="10" r="5"/><circle cx="16" cy="10" r="5"/><circle cx="12" cy="16" r="5"/>'
+    converge: '<circle cx="8" cy="10" r="5"/><circle cx="16" cy="10" r="5"/><circle cx="12" cy="16" r="5"/>',
+    flask:    '<path d="M9 3h6M10 3v6.5L4.6 18.4A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.4-2.6L14 9.5V3"/><path d="M7.5 15h9"/>'
   };
 
   function svg(key) {
@@ -136,6 +137,7 @@
         { tab: 'charts', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
         { tab: 'tracker', label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
         { tab: 'factors', label: 'Factors', icon: 'plan', hint: 'What each factor has actually predicted', kw: 'factors ic accuracy' },
+        { tab: 'strategies', label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
         { tab: 'concalls', label: 'Concalls', icon: 'chat', hint: 'Earnings call transcripts, digested', kw: 'concall earnings call transcript' }
       ]
     },

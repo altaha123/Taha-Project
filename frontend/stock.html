@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20261015-doors">
-<link rel="stylesheet" href="stock.css?v=20260925-stored">
+<link rel="stylesheet" href="stock.css?v=20261031-lab">
 <link rel="stylesheet" href="lenses.css?v=20260925-screens">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
@@ -126,6 +126,20 @@
         <p class="sub">Explore the move. Touch a point for its price, or drag to compare two moments.</p>
         <div class="ranges" id="ranges"></div>
         <div class="d3-card chartbox" id="chartbox"></div>
+        <!-- Into the Strategy lab with this stock filled in (strategy-lab.js). -->
+        <a class="stk-lab-link" id="stk-lab-link" href="index.html?go=strategies">
+          <b>Would a trading rule have beaten holding it?</b>
+          <span>Eleven textbook rules on this stock’s own history, with costs and tax, in the Strategy lab ›</span>
+        </a>
+        <script>
+          (function () {
+            try {
+              var t = (new URLSearchParams(location.search).get('ticker') || '').trim();
+              if (t) document.getElementById('stk-lab-link').href =
+                'index.html?go=strategies&lab=' + encodeURIComponent(t);
+            } catch (e) {}
+          })();
+        </script>
       </section>
     </div>
 
