@@ -67,6 +67,7 @@
     record:   '<path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/>',
     charts:   '<path d="M7 4v3M7 17v3M17 4v3M17 17v3"/><rect x="4.5" y="7" width="5" height="10" rx="1"/><rect x="14.5" y="7" width="5" height="10" rx="1"/>',
     factors:  '<path d="M4 6h16M4 12h10M4 18h6"/>',
+    flask:    '<path d="M9 3h6M10 3v6.5L4.6 18.4A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.4-2.6L14 9.5V3"/><path d="M7.5 15h9"/>',
     concalls: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14h4"/>',
     review:   '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11l2 2 4-4M9 17h6"/>',
     watch:    '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3l-5.5 2.9 1-6.2L3 9.6l6.2-.9z"/>',
@@ -669,6 +670,7 @@
       ['research/convergence', 'converge', 'Convergence', 'Stocks that pass three or more investor styles'],
       ['research/funds', 'funds', 'Fund houses', 'What the mutual funds disclosed holding'],
       ['research/charts', 'charts', 'Charts', 'Drawings, levels and indicators for any stock'],
+      ['research/strategies', 'flask', 'Strategy lab', 'Eleven trading rules on any stock, against simply holding it'],
       ['research/factors', 'factors', 'Factors', 'What each factor has actually predicted'],
       ['research/concalls', 'concalls', 'Concalls', 'Earnings call transcripts, digested']
     ].map(function (m, k) {

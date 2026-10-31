@@ -29,7 +29,7 @@ and its own address, in exactly one door.
 | Door | The question it answers | What lives behind it |
 |---|---|---|
 | **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Setups, Options and the Market board |
-| **Ideas** (`#research`) | *What should I look at?* | The Universe scan, the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, Concalls |
+| **Ideas** (`#research`) | *What should I look at?* | The Universe scan, the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, the Strategy lab — see [`STRATEGY-LAB.md`](STRATEGY-LAB.md) — Concalls |
 | **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner, and Advisors |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
@@ -84,6 +84,40 @@ positive, mixed, negative or quiet — with every reason and its points.
 Filings are read by category with the same table the Ideas list uses; press
 counts only where its direction is verified. It is a tally of evidence, not a
 forecast, and the page says so.
+
+---
+
+## Strategy lab — would a trading rule have beaten holding?
+
+`#research/strategies` (`backend/strategy_lab.py`, `/strategies`,
+`frontend/strategy-lab.js`). Pick any stock and eleven textbook rules run on
+its own daily history: golden cross, the 200-day filter, MACD, twelve-month
+momentum, RSI and Bollinger dips, a 20-day breakout, a trend with an ATR
+trailing exit, and two volatility-sized rules. Each is measured by the six
+numbers [quants.md](https://quants.md/) reports (return, CAGR, Sharpe,
+worst fall, win rate, profit factor) and set beside buying and holding the
+same stock.
+
+What it adds for an Indian investor:
+- **Costs:** 0.49% a round trip.
+- **Tax:** an after-tax CAGR at today's short- and long-term capital gains
+  rates.
+- **Risk-free rate:** Sharpe measured above 6%, not 2%.
+- **Consistency:** a two-halves check and every calendar year against
+  holding.
+- **A luck bar:** the Sharpe lead that the best of the few genuinely
+  different rules would show by chance.
+
+Rules decide at the close and fill at the next open; a test proves no rule
+sees a later bar. Parameters are textbook and never fitted to the stock. The
+report never says what a rule is doing today, because that would be a signal.
+The Chart pane on every stock page links straight in. On the stocks tried so
+far, no rule earned more than holding, and most had a shallower worst fall:
+a smoother ride, not a richer one.
+
+What quants.md is, what was taken from it, what was left out (bot building,
+shorts, intraday, parameter optimisation) and why:
+[`STRATEGY-LAB.md`](STRATEGY-LAB.md).
 
 ---
 

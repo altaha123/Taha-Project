@@ -141,7 +141,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   ['ideas', 'screener', 'charts', 'results', 'investors', 'funds', 'filings', 'concalls',
    'social', 'vocab', 'tracker', 'portfolio', 'planner', 'live', 'deals', 'special',
    'wow', 'options', 'discover', 'allocate', 'score', 'factors', 'query', 'lenses',
-   'convergence', 'today', 'ideahub', 'money'].forEach(t => {
+   'convergence', 'today', 'ideahub', 'money', 'strategies'].forEach(t => {
     assert.ok(owners[t], `${t} lost its home in the restructure`);
   });
 
@@ -152,7 +152,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.equal(sections[2].tabs[0], 'money');
   ['live', 'deals', 'wow', 'special', 'results', 'filings', 'options', 'screener'].forEach(t =>
     assert.equal(owners[t], 'discover', `${t} belongs behind Today`));
-  ['ideas', 'query', 'lenses', 'convergence', 'investors', 'funds', 'charts', 'tracker', 'factors', 'concalls'].forEach(t =>
+  ['ideas', 'query', 'lenses', 'convergence', 'investors', 'funds', 'charts', 'tracker', 'factors', 'strategies', 'concalls'].forEach(t =>
     assert.equal(owners[t], 'research', `${t} belongs behind Ideas`));
   ['portfolio', 'allocate', 'planner'].forEach(t => assert.equal(owners[t], 'portfolio', `${t} belongs behind My money`));
   ['score', 'vocab', 'social'].forEach(t => assert.equal(owners[t], 'me', `${t} belongs in Me`));
