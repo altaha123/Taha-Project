@@ -777,6 +777,13 @@
           '<span class="dr-tool-line">Chat with SEBI-registered advisers and research analysts. Free.</span>' +
           '<span class="dr-chat" aria-hidden="true"><span class="me">Is my portfolio too heavy in banks?</span><span class="them"><i></i><i></i><i></i></span></span>' +
         '</a>' +
+        '<a class="dr-card dr-tool dr-rise" style="--i:6" href="wealth.html">' +
+          '<span class="dr-sheen" aria-hidden="true"></span>' +
+          '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('review') + '</span></span>' +
+          '<span class="dr-tool-name">Wealth desk</span>' +
+          '<span class="dr-tool-line">Manage money for others? Every client’s portfolio, your calls against their buying price, and your profit-share commission.</span>' +
+          '<span class="dr-tool-chips"><span class="dr-chip">Clients</span><span class="dr-chip">Calls</span><span class="dr-chip">Commission</span></span>' +
+        '</a>' +
       '</div>' +
     '</div>';
   }

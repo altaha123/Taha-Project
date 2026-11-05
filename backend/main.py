@@ -373,6 +373,17 @@ try:
 except Exception as _e:                                      # pragma: no cover
     print(f"[advisors] not loaded: {type(_e).__name__}: {_e}", flush=True)
 
+# Wealth desk: a portfolio manager's book of clients, their trades, the price
+# each call was recommended at and the price each client got, and the fees a
+# profit-sharing agreement earns. Same database, same guard as Advisors.
+try:
+    import wealth_routes
+    wealth_routes.SCAN_ROWS = lambda: ((_state.get("payload") or {}).get("factor_universe")
+                                       or (_state.get("payload") or {}).get("rankings") or [])
+    app.include_router(wealth_routes.router)
+except Exception as _e:                                      # pragma: no cover
+    print(f"[wealth] not loaded: {type(_e).__name__}: {_e}", flush=True)
+
 # Every method this API actually serves.
 #
 # This read ["GET", "POST"] while /me/portfolio and /me/watchlist were PUT. An
@@ -4245,10 +4256,19 @@ def auth_google(payload: dict = Body(...)):
 def auth_me(authorization: Optional[str] = Header(None)):
     user = _require_user(authorization)
     import accounts
-    return {"email": user["email"], "digest_opt_in": user["digest_opt_in"],
-            "created_at": user["created_at"],
-            "holdings": len(accounts.get_holdings(user["id"])),
-            "watchlist": len(accounts.get_watchlist(user["id"]))}
+    out = {"email": user["email"], "digest_opt_in": user["digest_opt_in"],
+           "created_at": user["created_at"],
+           "holdings": len(accounts.get_holdings(user["id"])),
+           "watchlist": len(accounts.get_watchlist(user["id"]))}
+    # Whether this account runs a wealth desk, and how many managers show it a
+    # portfolio — so the header can offer the way in. Never a reason to fail.
+    try:
+        import wealth
+        out["wealth_desk"] = wealth.has_desk(user["id"])
+        out["wealth_shared"] = len(wealth.shared_with(user["email"]))
+    except Exception:
+        out["wealth_desk"], out["wealth_shared"] = False, 0
+    return out
 
 
 @app.post("/auth/logout")

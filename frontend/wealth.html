@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wealth desk — Altaha Screener</title>
+<meta name="description" content="For portfolio managers: every client's portfolio live, the price you recommended beside the price they bought at, and your profit-share commission worked out step by step — high-water mark, hurdle, fixed fee and GST." />
+<meta name="referrer" content="no-referrer" />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css?v=20261015-doors">
+<link rel="stylesheet" href="type.css">
+<link rel="stylesheet" href="wealth.css?v=20261105">
+<script>
+  /* Theme before first paint, as every page here does. */
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+</head>
+<body class="wd-page">
+<main class="wd" id="wd">
+  <div class="wd-skel" aria-label="Opening your desk">
+    <i style="height:70px"></i><i style="height:300px"></i><i style="height:180px"></i>
+  </div>
+</main>
+<!-- The client statement is drawn here and printed; nothing else prints. -->
+<div id="wd-print" class="wd-print" aria-hidden="true"></div>
+<dialog id="wd-modal" class="wd-modal" aria-labelledby="wd-mt"></dialog>
+<div id="wd-toast" class="wd-toast" role="status" aria-live="polite"></div>
+<datalist id="wd-syms"></datalist>
+
+<script src="shell.js?v=20261105-wealth" defer></script>
+<script src="wealth.js?v=20261105" defer></script>
+</body>
+</html>

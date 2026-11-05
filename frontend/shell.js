@@ -149,7 +149,9 @@
         { tab: 'watchlists', label: 'Watchlists', icon: 'target', hint: 'Your lists, live — make, rename, share and play', kw: 'watchlist watch list star saved follow rename share game' },
         { tab: 'allocate', label: 'Allocation plan', icon: 'shield', hint: 'Where your next rupee should go', kw: 'allocate asset allocation invest' },
         { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'Income, expenses, tax and your cushion', kw: 'planner budget tax emergency' },
-        { href: 'advisors.html', label: 'Talk to an adviser', icon: 'chat', hint: 'Chat with SEBI-registered advisers', kw: 'advisor adviser sebi chat expert' }
+        { href: 'advisors.html', label: 'Talk to an adviser', icon: 'chat', hint: 'Chat with SEBI-registered advisers', kw: 'advisor adviser sebi chat expert' },
+        { href: 'wealth.html', label: 'Wealth desk', icon: 'shield', hint: 'For portfolio managers: clients, calls and commission',
+          kw: 'wealth manager portfolio manager pms clients client book aum commission profit share sharing fee fees high water mark hurdle recommendation recommended price buying price statement' }
       ]
     }
   ];
@@ -288,6 +290,13 @@
     adv.addEventListener('click', function () {
       if (window.AltahaTrack) window.AltahaTrack('advisors_cta_clicked', { from: 'header' });
     });
+    // The wealth desk: a portfolio manager's book of clients. Its label
+    // follows the account (paintAccount): a desk, a portfolio somebody
+    // manages for this reader, or neither.
+    var wd = el('a', 'sh-adv sh-wd');
+    wd.id = 'sh-wd';
+    wd.href = 'wealth.html';
+    wd.innerHTML = 'Wealth desk<small>For portfolio managers</small>';
     var themeBtn = el('button', 'sh-icon sh-themebtn');
     themeBtn.type = 'button';
     themeBtn.id = 'sh-theme';
@@ -295,6 +304,7 @@
     right.appendChild(account);
     right.appendChild(pro);
     right.appendChild(adv);
+    right.appendChild(wd);
     var themeRow = el('div', 'sh-merow');
     themeRow.innerHTML = '<span>Appearance</span>';
     themeRow.appendChild(themeBtn);
@@ -495,6 +505,8 @@
           '<span>The portfolio story, watchlist alerts and saved screens — ₹1,999 a year</span></a>' +
         '<a class="sh-item" href="advisors.html">' + svg('chat') +
           '<span class="sh-txt"><b>Talk to an adviser</b><span>SEBI-registered advisers, free to chat</span></span></a>' +
+        '<a class="sh-item sh-dwd" href="wealth.html">' + svg('shield') +
+          '<span class="sh-txt"><b>Wealth desk</b><span>For portfolio managers: clients, calls and commission</span></span></a>' +
         '<button class="sh-item sh-dwatch" type="button">' + svg('target') +
           '<span class="sh-txt"><b>Watchlist</b><span>Stocks you follow</span></span></button>' +
         '<button class="sh-item sh-dtheme" type="button">' + svg('layers') +
@@ -856,10 +868,26 @@
 
   /* Redrawn whenever auth.js announces a change — signing in on the sign-in
      page and coming back should not need a reload to show it. */
+  function paintWealth(user) {
+    var desk = !!(user && user.wealth_desk), shared = !!(user && user.wealth_shared);
+    var label = desk ? ['Your wealth desk', 'Clients, calls and commission', 'wealth.html']
+      : shared ? ['Your portfolio manager', 'The portfolio they manage for you', 'wealth.html#mine']
+      : ['Wealth desk', 'For portfolio managers', 'wealth.html'];
+    var w = document.getElementById('sh-wd');
+    if (w) { w.href = label[2]; w.innerHTML = label[0] + '<small>' + label[1] + '</small>'; }
+    var d = document.querySelector('#sh-drawer .sh-dwd');
+    if (d) {
+      d.href = label[2];
+      d.querySelector('b').textContent = label[0];
+      d.querySelector('.sh-txt span').textContent = desk || shared ? label[1] : 'For portfolio managers: clients, calls and commission';
+    }
+  }
+
   function paintAccount() {
     var a = document.getElementById('sh-account');
     if (!a || !window.AltahaAuth) return;
     var user = window.AltahaAuth.user();
+    paintWealth(user);
     var d = document.querySelector('#sh-drawer .sh-dacc-name');
     if (d) d.textContent = user && user.email ? user.email : 'Sign in';
     if (user && user.email) {
