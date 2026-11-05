@@ -39,7 +39,10 @@ def test_the_put_routes_are_the_ones_that_save_to_an_account():
     puts = {r.path for r in main.app.routes
             if "PUT" in (getattr(r, "methods", None) or ())}
     assert puts == {"/me/portfolio", "/me/watchlist", "/me/watchlists", "/me/screens",
-                    "/advisors/me/profile"}
+                    "/advisors/me/profile",
+                    # The wealth desk: the desk itself, a client, a call, a hand price.
+                    "/wealth/desk", "/wealth/clients/{client_id}", "/wealth/recs/{rec_id}",
+                    "/wealth/prices"}
     assert "PUT" in main.ALLOWED_METHODS
 
 
@@ -48,7 +51,12 @@ def test_deleting_a_saved_screen_is_allowed_through_cors():
     browser's preflight would refuse it and the screen would never go."""
     deletes = {r.path for r in main.app.routes
                if "DELETE" in (getattr(r, "methods", None) or ())}
-    assert deletes == {"/me/screens/{screen_id}"}
+    assert deletes == {"/me/screens/{screen_id}",
+                       # The wealth desk's removals, each answering 404 for
+                       # anything that is not the caller's own.
+                       "/wealth/desk", "/wealth/clients/{client_id}",
+                       "/wealth/clients/{client_id}/events/{event_id}",
+                       "/wealth/settlements/{settlement_id}", "/wealth/recs/{rec_id}"}
     assert "DELETE" in main.ALLOWED_METHODS
 
 

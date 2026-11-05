@@ -11,6 +11,8 @@ on:
       - 'backend/concalls.py'
       - 'backend/filings_text.py'
       - 'backend/strategy_lab.py'
+      - 'backend/wealth*.py'
+      - 'backend/tests/*wealth*'
       - 'backend/tests/*portfolio*'
       - 'backend/tests/*shareholding*'
       - 'backend/tests/*wow*'
@@ -127,6 +129,20 @@ jobs:
         with:
           name: strategy-lab-verification
           path: test-results/strategy-lab
+      - name: Verify the Wealth desk sends what each form says, keeps a client's view read-only and fits a phone
+        if: always()
+        # A buy that loses its link to the call, a fee what-if that disagrees
+        # with the bill, a sample desk that writes, a client name that runs as
+        # markup, a client who can press Settle. None of them throws. The
+        # fixture is the real book shape from make_wealth_fixture.py.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/wealth-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wealth-desk-verification
+          path: test-results/wealth
       - name: Verify the results card shares to every network, with its logo
         if: always()
         # Four silent ones: a logo in the markup that draws nothing (or

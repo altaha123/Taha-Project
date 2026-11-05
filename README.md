@@ -30,7 +30,7 @@ and its own address, in exactly one door.
 |---|---|---|
 | **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Setups, Options and the Market board |
 | **Ideas** (`#research`) | *What should I look at?* | The Universe scan, the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, the Strategy lab — see [`STRATEGY-LAB.md`](STRATEGY-LAB.md) — Concalls |
-| **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner, and Advisors |
+| **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner, Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
 Each door opens on a page of its own (`frontend/doors.js`) that previews every
@@ -121,6 +121,34 @@ shorts, intraday, parameter optimisation) and why:
 
 ---
 
+## Wealth desk — for portfolio managers
+
+`wealth.html` (`backend/wealth.py`, `/wealth/*`, `frontend/wealth.js`).
+Someone who manages other people's money signs in with their Altaha email
+and sets up a desk once. From then on that account is a wealth manager's:
+
+- **Every client's portfolio, live.** Value, profit, return, XIRR, today's
+  move and a thirty-session chart, client by client and for the whole book.
+- **Recommended beside bought.** Each holding shows the price the manager
+  recommended next to the price the client actually bought at, the edge
+  between them, and where the price sits between the call's stop and target.
+  A call is made once and booked for many clients at once.
+- **The commission, worked out.** Profit share, fixed fee, hard or soft
+  hurdle, high-water mark, GST, on booked or total profit. Every step is shown
+  with its formula, and a what-if slider sits beside it. Periods are settled,
+  invoiced and marked paid, and the next period is measured from the last one.
+- **For the meeting:** a privacy blur, a printable client statement, CSV
+  exports.
+- **For the client:** switched on per client, they sign in with their own
+  email and see their portfolio read-only. They never see the manager's notes
+  or anyone else's portfolio.
+
+There is a sample desk anyone can open (`wealth.html?demo=1`). The engine,
+every rule, the fee arithmetic, what is stored about a client and the SEBI
+line on profit-sharing fees are all in [`WEALTH-DESK.md`](WEALTH-DESK.md).
+
+---
+
 ## Advisors — talk to a person
 
 `advisors.html` lists SEBI-registered investment advisers, registered research
@@ -148,9 +176,11 @@ altaha/
 ├── backend/          the scoring engine (Python / FastAPI)
 │   ├── engine.py     all indicator math + scoring, fully commented
 │   ├── main.py       the API server
+│   ├── wealth.py     the Wealth desk: ledger, fees, high-water mark, book
 │   └── requirements.txt
 ├── frontend/
-│   └── index.html    the whole website — one file, no build step
+│   ├── index.html    the whole website — one file, no build step
+│   └── wealth.html   the Wealth desk, for portfolio managers
 └── README.md
 ```
 
