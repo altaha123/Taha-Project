@@ -273,6 +273,20 @@ async function clean(page, label) {
       const rec = state.book.recs.find(r => r.status === 'open' && r.action === 'buy');
       await page.goto(`${base}/wealth.html#client/${c1.id}`);
       await page.waitForSelector('.wd-acts [data-act="add-event"]');
+
+      // A field tapped the moment the form opens keeps the cursor. A deferred
+      // focus once pulled it back to the first box, and on CI's slower
+      // machine the quantity landed in the stock symbol ("RELIANCE10").
+      await page.evaluate(() => {
+        document.querySelector('.wd-acts [data-act="add-event"]').click();
+        document.querySelector('#wd-modal [name=qty]').focus();
+      });
+      await page.waitForTimeout(150);
+      await page.keyboard.type('10');
+      assert.deepEqual(await page.evaluate(() => ({ symbol: document.querySelector('#wd-modal [name=symbol]').value,
+        qty: document.querySelector('#wd-modal [name=qty]').value })), { symbol: '', qty: '10' }, 'typing went to another field');
+      await page.click('#wd-modal [data-close]');
+      await page.waitForFunction(() => !document.getElementById('wd-modal').open);
       await page.click('.wd-acts [data-act="add-event"]');
       await page.waitForSelector('#wd-modal [name=symbol]');
       await page.fill('#wd-modal [name=symbol]', rec.symbol);

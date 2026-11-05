@@ -1347,7 +1347,10 @@
     wireTerms(m);
     if (o.wire) o.wire(m.querySelector('form'));
     var first = m.querySelector('.wd-mb input:not([type=hidden]):not([type=checkbox]):not([type=radio]), .wd-mb select, .wd-mb textarea');
-    if (first && !o.noFocus) setTimeout(function () { try { first.focus(); } catch (e) {} }, 30);
+    // Focused now, not on a timer: a deferred focus fired after the reader had
+    // already tapped another field and pulled the cursor back, so what they
+    // typed landed in the first box ("10" became part of the stock symbol).
+    if (first && !o.noFocus) { try { first.focus({ preventScroll: true }); } catch (e) {} }
   }
 
   function closeModal() {
