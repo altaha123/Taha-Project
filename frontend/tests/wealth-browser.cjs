@@ -20,7 +20,13 @@
      · PRIVACY BLURS, AND IS REMEMBERED.
      · A CLIENT SEES THEIR OWN PORTFOLIO, READ-ONLY: no trade, settle or edit.
      · THE STATEMENT PRINTS THE CLIENT, not the page.
-     · A PHONE FITS: no sideways scroll on any view. */
+     · A PHONE FITS: no sideways scroll on any view.
+     · A STATEMENT IS READ ON THE PAGE: an .xlsx holdings statement is read in
+       the browser, its stocks matched by ISIN or name, and what is sent is
+       stocks, quantities and prices — never the client's name or code from
+       the file. A statement for somebody else says so before anything is saved.
+     · EVERY PRICE CAN BE CORRECTED: a holding's average or recommended price,
+       one purchase on its own, any ledger entry — each sends what was changed. */
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
 const { chromium } = require('playwright');
@@ -75,7 +81,7 @@ async function wire(context, state) {
     const authed = !!state.user && /Bearer tok-test/.test(req.headers()['authorization'] || '');
     if (p === '/auth/me') return authed ? route.fulfill({ json: state.user }) : route.fulfill({ status: 401, json: { detail: 'Sign in.' } });
     if (p === '/wealth/demo') return route.fulfill({ json: BOOK });
-    if (p === '/universe') return route.fulfill({ json: { rows: [{ s: 'TCS', n: 'Tata Consultancy Services' }, { s: 'HAL', n: 'Hindustan Aeronautics' }] } });
+    if (p === '/universe') return route.fulfill({ json: { rows: [{ s: 'TCS', n: 'Tata Consultancy Services Limited' }, { s: 'HAL', n: 'Hindustan Aeronautics' }] } });
     if (!p.startsWith('/wealth/')) return route.fulfill({ status: 404, json: { detail: 'not here' } });
     if (!authed) return route.fulfill({ status: 401, json: { detail: 'Sign in to use your wealth desk.' } });
     if (m !== 'GET') state.writes.push({ m, p, body: m === 'DELETE' && !req.postData() ? {} : body() });
@@ -92,6 +98,25 @@ async function wire(context, state) {
       Object.assign(c, { id: 99, name: body().name, code: 'C-099' });
       state.book.clients.push(c);
       return route.fulfill({ json: { client: c } });
+    }
+    if (/\/events$/.test(p) && m === 'PUT') return route.fulfill({ json: { changed: body().edits.length, warning: null } });
+    if (/\/events\/\d+$/.test(p) && m === 'PUT') return route.fulfill({ json: { changed: 1, warning: null } });
+    if (/\/holdings\/[^/]+$/.test(p)) return route.fulfill({ json: { changed: 1, warning: null } });
+    if (p === '/wealth/isin') {
+      const known = { INE263A01024: 'BEL', INE129A01019: 'GAIL', INE040A01034: 'HDFCBANK', INE009A01021: 'INFY', INE154A01025: 'ITC' };
+      const map = {};
+      body().isins.forEach(i => { if (known[i]) map[i] = known[i]; });
+      return route.fulfill({ json: { map, missing: [] } });
+    }
+    if (/\/statement\/plan$/.test(p)) {
+      const b = body();
+      return route.fulfill({ json: { mode: b.mode, as_of: b.as_of, buy_date: b.buy_date, counts: { new: b.rows.length },
+        items: b.rows.map(r => ({ symbol: r.symbol, status: 'new', include: true, have: null, want: { qty: r.qty, avg: r.avg, close: r.close },
+          ops: [{ kind: 'buy', symbol: r.symbol, qty: r.qty, price: r.avg }], fix_avg: null, note: '' })) } });
+    }
+    if (/\/statement\/apply$/.test(p)) {
+      const n = body().rows.length - (body().skip || []).length;
+      return route.fulfill({ json: { added: n, corrected: 0, holdings: n, done: { new: n }, warning: null } });
     }
     if (/\/events$/.test(p)) return route.fulfill({ json: { ids: [501], added: 1, warning: null } });
     if (/\/settle$/.test(p)) return route.fulfill({ json: { settlement: { id: 77, amount: 11502.39, status: 'due' } } });
@@ -273,6 +298,20 @@ async function clean(page, label) {
       const rec = state.book.recs.find(r => r.status === 'open' && r.action === 'buy');
       await page.goto(`${base}/wealth.html#client/${c1.id}`);
       await page.waitForSelector('.wd-acts [data-act="add-event"]');
+
+      // A field tapped the moment the form opens keeps the cursor. A deferred
+      // focus once pulled it back to the first box, and on CI's slower
+      // machine the quantity landed in the stock symbol ("RELIANCE10").
+      await page.evaluate(() => {
+        document.querySelector('.wd-acts [data-act="add-event"]').click();
+        document.querySelector('#wd-modal [name=qty]').focus();
+      });
+      await page.waitForTimeout(150);
+      await page.keyboard.type('10');
+      assert.deepEqual(await page.evaluate(() => ({ symbol: document.querySelector('#wd-modal [name=symbol]').value,
+        qty: document.querySelector('#wd-modal [name=qty]').value })), { symbol: '', qty: '10' }, 'typing went to another field');
+      await page.click('#wd-modal [data-close]');
+      await page.waitForFunction(() => !document.getElementById('wd-modal').open);
       await page.click('.wd-acts [data-act="add-event"]');
       await page.waitForSelector('#wd-modal [name=symbol]');
       await page.fill('#wd-modal [name=symbol]', rec.symbol);
@@ -327,6 +366,95 @@ async function clean(page, label) {
       const mk = state.writes.find(w => w.p === `/wealth/settlements/${due.id}`);
       assert.equal(mk.body.status, 'paid');
       assert.match(mk.body.paid_on, /^\d{4}-\d{2}-\d{2}$/);
+      await ctx.close();
+    }
+
+    // ── A statement, and every correction ──────────────────────────────
+    {
+      const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+      const state = fresh({ user: { email: 'nadia@example.com', wealth_desk: true }, desk: true });
+      await wire(ctx, state);
+      const page = await ctx.newPage();
+      watch(page, 'statement');
+      const STMT = path.join(root, 'tests', 'fixtures', 'holdings-statement.xlsx');
+      const c1 = state.book.clients[0];
+
+      // Upload: read in the page, matched, reviewed, applied.
+      await page.goto(`${base}/wealth.html#client/${c1.id}`);
+      await page.waitForSelector('.wd-acts [data-act="upload"]');
+      await page.click('.wd-acts [data-act="upload"]');
+      await page.setInputFiles('#wd-modal input[name=file]', STMT);
+      await page.waitForSelector('#wd-modal .wd-plan tbody tr');
+      assert.match(await page.textContent('#wd-modal .wd-warn'), /Priya Raman/, 'a statement for somebody else says so');
+      assert.match(await page.textContent('#wd-modal .wd-mh'), /4 Nov 2026/, 'the statement’s own date is read');
+      const plan = state.writes.find(w => /statement\/plan$/.test(w.p));
+      assert.deepEqual(plan.body.rows.map(r => [r.symbol, r.qty, r.avg]),
+        [['BEL', 120, 268.4], ['GAIL', 300, 171.25], ['HDFCBANK', 25, 1612], ['INFY', 18, 1745.5], ['ITC', 210, 432.1], ['TCS', 6, 3890]],
+        'matched by ISIN, and by a name cut short');
+      assert.equal(plan.body.as_of, '2026-11-04');
+      await page.screenshot({ path: `${output}/statement-review.png` });
+      await page.uncheck('#wd-modal [data-take="ITC"]');
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForFunction(() => !document.getElementById('wd-modal').open);
+      const apply = state.writes.find(w => /statement\/apply$/.test(w.p));
+      assert.deepEqual(apply.body.skip, ['ITC'], 'an unticked holding is left out');
+      const sent = JSON.stringify(state.writes);
+      assert.ok(!/Priya|1234567890/.test(sent), 'the client’s name or code from the statement was sent');
+
+      // A holding's average and recommended price.
+      const h = c1.holdings[0];
+      await page.waitForSelector(`.wd-table [data-act="edit-hold"][data-sym="${h.symbol}"]`);
+      await page.click(`.wd-table [data-act="edit-hold"][data-sym="${h.symbol}"]`);
+      await page.waitForSelector('#wd-modal [name=avg]');
+      assert.equal(Number(await page.inputValue('#wd-modal [name=avg]')), h.avg);
+      await page.fill('#wd-modal [name=avg]', '1,111.50');
+      await page.fill('#wd-modal [name=rec]', '1100');
+      assert.match(await page.textContent('#wd-modal [data-prev]'), /invested/);
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForFunction(() => !document.getElementById('wd-modal').open);
+      const hold = state.writes.find(w => /\/holdings\//.test(w.p));
+      assert.equal(hold.p, `/wealth/clients/${c1.id}/holdings/${h.symbol}`);
+      assert.deepEqual(hold.body, { avg: '1111.50', rec_price: '1100' });
+
+      // One purchase on its own.
+      await page.click(`.wd-table [data-act="edit-hold"][data-sym="${h.symbol}"]`);
+      await page.waitForSelector('#wd-modal [data-pane="each"]');
+      await page.click('#wd-modal [data-pane="each"]');
+      await page.fill('#wd-modal tr[data-eid] [data-f="qty"]', '400');
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForFunction(() => !document.getElementById('wd-modal').open);
+      const each = state.writes.find(w => /\/events$/.test(w.p) && w.m === 'PUT');
+      assert.equal(each.body.edits.length, 1);
+      assert.equal(each.body.edits[0].qty, '400');
+      assert.deepEqual(Object.keys(each.body.edits[0]).sort(), ['id', 'qty'], 'only what was changed is sent');
+
+      // Any ledger entry.
+      await page.goto(`${base}/wealth.html#client/${c1.id}/ledger`);
+      const buy = c1.events.find(e => e.kind === 'buy');
+      await page.waitForSelector(`[data-act="edit-event"][data-eid="${buy.id}"]`);
+      await page.click(`[data-act="edit-event"][data-eid="${buy.id}"]`);
+      await page.waitForSelector('#wd-modal [name=price]');
+      assert.equal(Number(await page.inputValue('#wd-modal [name=price]')), buy.price, 'the entry opens as it is');
+      assert.equal(await page.inputValue('#wd-modal [name=on_date]'), buy.on_date);
+      await page.fill('#wd-modal [name=price]', '999');
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForFunction(() => !document.getElementById('wd-modal').open);
+      const one = state.writes.find(w => w.p === `/wealth/clients/${c1.id}/events/${buy.id}`);
+      assert.equal(one.m, 'PUT');
+      assert.equal(one.body.price, '999');
+      assert.equal(one.body.symbol, buy.symbol);
+      assert.equal(Number(one.body.rec_price), buy.rec_price, 'the recommended price is kept, not replaced by the call’s');
+
+      // A new client, started from their statement.
+      state.writes.length = 0;
+      await page.click('.wd-bar [data-act="add-client"]');
+      await page.setInputFiles('#wd-modal input[name=statement]', STMT);
+      await page.waitForFunction(() => document.querySelector('#wd-modal [name=name]').value === 'Priya Raman');
+      assert.equal(await page.inputValue('#wd-modal [name=since]'), '2026-11-04');
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForSelector('#wd-modal .wd-plan tbody tr', { timeout: 10000 });
+      assert.equal(state.writes.find(w => w.p === '/wealth/clients').body.name, 'Priya Raman');
+      assert.equal(await page.locator('#wd-modal .wd-warn').count(), 0, 'the right client’s statement raises no warning');
       await ctx.close();
     }
 

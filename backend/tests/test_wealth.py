@@ -497,3 +497,168 @@ def test_a_name_that_looks_like_a_formula_is_exported_as_text(routes, monkeypatc
     monkeypatch.setattr(routes, "QUOTES", {"TCS": quote("TCS", 3100)})
     body = routes.wealth_export("holdings", authorization=tok).body.decode()
     assert "'=HYPERLINK" in body
+
+
+# ── Correcting the ledger ────────────────────────────────────────────────
+
+def _held(uid, cid, sym):
+    st = W.replay(W._events_for(W._conn(), uid, cid))
+    lots = st.lots.get(sym) or []
+    q = sum(l[0] for l in lots)
+    return q, (sum(l[0] * l[1] for l in lots) / q if q else None), st
+
+
+def test_a_buying_price_typed_wrong_is_corrected_on_the_entry_and_everything_follows():
+    _, u = person("nadia@example.com")
+    desk(u["id"])
+    c = client(u["id"])
+    r = W.add_events(u["id"], c["id"], [ev("buy", days_ago(60), symbol="TCS", qty=10, price=3500)])
+    W.update_events(u["id"], c["id"], [{"id": r["ids"][0], "price": 3050, "rec_price": 3000}])
+    q, avg, st = _held(u["id"], c["id"], "TCS")
+    assert (q, avg) == (10, 3050)
+    book = W.compute_book(W.load(u["id"]), {"TCS": quote("TCS", 3400)})
+    h = book["clients"][0]["holdings"][0]
+    assert h["avg"] == 3050 and h["rec_price"] == 3000 and h["pnl"] == pytest.approx(3500)
+    # The capital follows the price: nothing was deposited, so the top-up is
+    # the corrected cost, and value less capital is still the profit.
+    cl = book["clients"][0]
+    assert cl["capital"] == pytest.approx(30500)
+    assert cl["profit"] == pytest.approx(cl["value"] - cl["capital"])
+
+
+def test_an_edit_that_would_break_a_later_sale_is_refused_and_nothing_changes():
+    _, u = person("nadia@example.com")
+    desk(u["id"])
+    c = client(u["id"])
+    r = W.add_events(u["id"], c["id"], [ev("buy", days_ago(60), symbol="TCS", qty=10, price=3500),
+                                         ev("sell", days_ago(20), symbol="TCS", qty=8, price=3600)])
+    with pytest.raises(ValueError, match="break the ledger"):
+        W.update_events(u["id"], c["id"], [{"id": r["ids"][0], "qty": 5}])
+    assert _held(u["id"], c["id"], "TCS")[0] == 2
+    with pytest.raises(LookupError):
+        W.update_events(u["id"], c["id"], [{"id": 999999, "price": 1}])
+
+
+def test_a_holdings_average_is_corrected_across_every_purchase_it_draws_on():
+    _, u = person("nadia@example.com")
+    desk(u["id"])
+    c = client(u["id"])
+    W.add_events(u["id"], c["id"], [ev("buy", days_ago(90), symbol="HAL", qty=10, price=4000),
+                                     ev("buy", days_ago(60), symbol="HAL", qty=30, price=4400)])
+    W.set_holding(u["id"], c["id"], "HAL", avg=4000)
+    q, avg, _ = _held(u["id"], c["id"], "HAL")
+    assert q == 40 and avg == pytest.approx(4000)
+    prices = sorted(e["price"] for e in W._events_for(W._conn(), u["id"], c["id"]))
+    assert prices[1] / prices[0] == pytest.approx(4400 / 4000)        # proportions kept
+
+
+def test_a_recommended_price_set_after_a_bonus_lands_in_each_purchases_own_terms():
+    _, u = person("nadia@example.com")
+    desk(u["id"])
+    c = client(u["id"])
+    W.add_events(u["id"], c["id"], [ev("buy", days_ago(90), symbol="ITC", qty=100, price=400),
+                                     ev("split", days_ago(30), symbol="ITC", qty=2)])
+    W.set_holding(u["id"], c["id"], "ITC", rec_price=195)            # today's terms, after the bonus
+    buy = [e for e in W._events_for(W._conn(), u["id"], c["id"]) if e["kind"] == "buy"][0]
+    assert buy["rec_price"] == pytest.approx(390)                     # the purchase's own day
+    h = W.compute_book(W.load(u["id"]), {"ITC": quote("ITC", 210)})["clients"][0]["holdings"][0]
+    assert h["rec_price"] == pytest.approx(195) and h["qty"] == 200
+
+
+# ── A holdings statement ─────────────────────────────────────────────────
+
+def _book_of(uid, cid):
+    st = W.replay(W._events_for(W._conn(), uid, cid))
+    out = {}
+    for s, lots in st.lots.items():
+        q = sum(l[0] for l in lots)
+        if q > 1e-6:
+            out[s] = (round(q, 4), round(sum(l[0] * l[1] for l in lots) / q, 2))
+    return out
+
+
+def test_a_statement_brings_the_book_to_match_it_holding_by_holding():
+    _, u = person("nadia@example.com")
+    desk(u["id"])
+    c = client(u["id"])
+    W.add_events(u["id"], c["id"], [ev("buy", days_ago(200), symbol="AAA", qty=50, price=100),   # more
+                                     ev("buy", days_ago(200), symbol="BBB", qty=40, price=200),   # fewer
+                                     ev("buy", days_ago(200), symbol="CCC", qty=10, price=300),   # price
+                                     ev("buy", days_ago(200), symbol="DDD", qty=5, price=400),    # same
+                                     ev("buy", days_ago(200), symbol="EEE", qty=7, price=500)])   # gone
+    rows = [{"symbol": "AAA", "qty": 80, "avg": 110, "close": 120},
+            {"symbol": "BBB", "qty": 25, "avg": 200, "close": 260},
+            {"symbol": "CCC", "qty": 10, "avg": 290, "close": 310},
+            {"symbol": "DDD", "qty": 5, "avg": 400, "close": 420},
+            {"symbol": "NEW", "qty": 12, "avg": 55.5, "close": 60}]
+    plan = W.statement_plan(u["id"], c["id"], {"rows": rows, "as_of": days_ago(1)}, {"EEE": {"ltp": 520}})
+    status = {it["symbol"]: it["status"] for it in plan["items"]}
+    assert status == {"AAA": "more", "BBB": "fewer", "CCC": "price", "DDD": "same", "NEW": "new", "EEE": "gone"}
+    more = [it for it in plan["items"] if it["symbol"] == "AAA"][0]
+    assert more["ops"][0]["qty"] == 30
+    assert more["ops"][0]["price"] == pytest.approx((80 * 110 - 50 * 100) / 30)   # makes the averages agree
+    fewer = [it for it in plan["items"] if it["symbol"] == "BBB"][0]
+    assert fewer["ops"][0] == dict(fewer["ops"][0], kind="sell", qty=15, price=260)
+    assert _book_of(u["id"], c["id"])["AAA"] == (50, 100)                       # a plan writes nothing
+    out = W.statement_apply(u["id"], c["id"], {"rows": rows, "as_of": days_ago(1)}, {"EEE": {"ltp": 520}})
+    assert out["done"] == {"more": 1, "fewer": 1, "price": 1, "new": 1, "gone": 1}
+    assert _book_of(u["id"], c["id"]) == {"AAA": (80, 110), "BBB": (25, 200), "CCC": (10, 290),
+                                          "DDD": (5, 400), "NEW": (12, 55.5)}
+
+
+def test_a_holding_left_out_or_with_no_price_is_not_touched():
+    _, u = person("nadia@example.com")
+    desk(u["id"])
+    c = client(u["id"])
+    W.add_events(u["id"], c["id"], [ev("buy", days_ago(200), symbol="AAA", qty=50, price=100),
+                                     ev("buy", days_ago(200), symbol="ZZZ", qty=3, price=900)])
+    rows = [{"symbol": "AAA", "qty": 60, "avg": 100}, {"symbol": "NEW", "qty": 1, "avg": 10}]
+    plan = W.statement_plan(u["id"], c["id"], {"rows": rows}, {})
+    gone = [it for it in plan["items"] if it["symbol"] == "ZZZ"][0]
+    assert gone["status"] == "gone" and not gone["include"] and gone["needs_price"]
+    W.statement_apply(u["id"], c["id"], {"rows": rows, "skip": ["NEW"]}, {})
+    assert _book_of(u["id"], c["id"]) == {"AAA": (60, 100), "ZZZ": (3, 900)}
+    # With the sale price given, the gone holding is sold.
+    W.statement_apply(u["id"], c["id"], {"rows": rows, "skip": ["NEW"], "prices": {"ZZZ": 950}}, {})
+    assert "ZZZ" not in _book_of(u["id"], c["id"])
+
+
+def test_a_first_statement_adds_every_row_and_the_same_stock_twice_is_one_holding():
+    _, u = person("nadia@example.com")
+    desk(u["id"])
+    c = client(u["id"])
+    rows = [{"symbol": "YESBANK", "qty": 548, "avg": 19.46}, {"symbol": "IDEA", "qty": 347, "avg": 12.94},
+            {"symbol": "YESBANK", "qty": 52, "avg": 20.5}]
+    out = W.statement_apply(u["id"], c["id"], {"rows": rows, "mode": "add", "as_of": days_ago(1),
+                                               "buy_date": days_ago(300)}, {})
+    assert out["added"] == 2
+    b = _book_of(u["id"], c["id"])
+    assert b["YESBANK"][0] == 600 and b["YESBANK"][1] == pytest.approx((548 * 19.46 + 52 * 20.5) / 600, abs=0.01)
+    assert {e["on_date"] for e in W._events_for(W._conn(), u["id"], c["id"])} == {days_ago(300)}
+
+
+def test_isins_map_to_symbols_and_nothing_else_is_asked(monkeypatch):
+    import fund_portfolios
+    monkeypatch.setattr(fund_portfolios, "isin_map", lambda *a, **k: ({"INE528G01035": "YESBANK",
+                                                                       "INE669E01016": "IDEA"}, {"stale": False}))
+    out = W.isin_symbols(["ine528g01035", "INE669E01016", "INE000000000", "not-an-isin"])
+    assert out["map"] == {"INE528G01035": "YESBANK", "INE669E01016": "IDEA"}
+    assert out["missing"] == ["INE000000000"]
+
+
+def test_corrections_and_statements_answer_404_for_another_managers_client(routes):
+    ta, a = person("nadia@example.com")
+    tb, b = person("other@example.com")
+    desk(a["id"])
+    desk(b["id"])
+    c = client(a["id"])
+    r = W.add_events(a["id"], c["id"], [ev("buy", days_ago(30), symbol="TCS", qty=1, price=3000)])
+    for call in (lambda: routes.wealth_edit_event(c["id"], r["ids"][0], {"price": 1}, authorization=tb),
+                 lambda: routes.wealth_edit_holding(c["id"], "TCS", {"avg": 1}, authorization=tb),
+                 lambda: routes.wealth_statement_plan(c["id"], {"rows": [{"symbol": "TCS", "qty": 1, "avg": 1}]},
+                                                      authorization=tb)):
+        with pytest.raises(HTTPException) as e:
+            call()
+        assert e.value.status_code == 404
+    out = routes.wealth_edit_event(c["id"], r["ids"][0], {"price": 3100}, authorization=ta)
+    assert out["changed"] == 1

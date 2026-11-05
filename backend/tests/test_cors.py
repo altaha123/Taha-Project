@@ -42,7 +42,11 @@ def test_the_put_routes_are_the_ones_that_save_to_an_account():
                     "/advisors/me/profile",
                     # The wealth desk: the desk itself, a client, a call, a hand price.
                     "/wealth/desk", "/wealth/clients/{client_id}", "/wealth/recs/{rec_id}",
-                    "/wealth/prices"}
+                    "/wealth/prices",
+                    # Corrections: one entry, several, a holding's prices.
+                    "/wealth/clients/{client_id}/events/{event_id}",
+                    "/wealth/clients/{client_id}/events",
+                    "/wealth/clients/{client_id}/holdings/{symbol}"}
     assert "PUT" in main.ALLOWED_METHODS
 
 

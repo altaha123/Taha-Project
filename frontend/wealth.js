@@ -65,6 +65,13 @@
     var s = Math.abs(v).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp });
     return (v < -0.005 ? '−' : '') + '₹' + s;
   }
+  /* A price per share, to the paisa — what a broker's statement shows and
+     what a manager checks against it. Amounts stay in whole rupees. */
+  function px(v) {
+    if (!finite(v)) return '—';
+    var r = Math.round(Number(v) * 100) / 100;
+    return inr(r, Math.abs(r - Math.round(r)) < 0.001 ? 0 : 2);
+  }
   function signed(v, dp) {
     if (!finite(v)) return '—';
     v = Number(v);
@@ -773,7 +780,7 @@
     var acts = ro ? '<button type="button" class="wd-act primary" data-act="statement" data-id="' + c.id + '">' + ic('print') + 'Statement</button>' :
       '<button type="button" class="wd-act primary" data-act="add-event" data-id="' + c.id + '" data-kind="buy">' + ic('trade') + 'Trade</button>' +
       '<button type="button" class="wd-act" data-act="add-event" data-id="' + c.id + '" data-kind="deposit">' + ic('rupee') + 'Money in / out</button>' +
-      '<button type="button" class="wd-act" data-act="import" data-id="' + c.id + '">' + ic('paste') + 'Paste holdings</button>' +
+      '<button type="button" class="wd-act" data-act="upload" data-id="' + c.id + '">' + ic('in') + 'Upload statement</button>' +
       '<button type="button" class="wd-act" data-act="settle" data-id="' + c.id + '">' + ic('bill') + 'Settle fee</button>' +
       '<button type="button" class="wd-act" data-act="statement" data-id="' + c.id + '">' + ic('print') + 'Statement</button>' +
       '<button type="button" class="wd-act" data-go="client/' + c.id + '/profile">' + ic('edit') + 'Edit</button>';
@@ -824,9 +831,17 @@
     if (!finite(h.target) || !finite(h.stop) || !finite(h.ltp) || h.target <= h.stop) return '<span class="wd-muted">—</span>';
     var span = h.target - h.stop;
     var at = Math.max(0, Math.min(1, (h.ltp - h.stop) / span)), rec = finite(h.rec_price) ? Math.max(0, Math.min(1, (h.rec_price - h.stop) / span)) : null;
-    return '<span class="wd-tt" title="Stop ' + esc(inr(h.stop)) + ' · target ' + esc(inr(h.target)) + '"><span class="bar"></span>' +
+    return '<span class="wd-tt" title="Stop ' + esc(px(h.stop)) + ' · target ' + esc(px(h.target)) + '"><span class="bar"></span>' +
       (rec !== null ? '<span class="rec" style="left:' + (100 * rec).toFixed(1) + '%"></span>' : '') +
       '<span class="at" style="left:' + (100 * at).toFixed(1) + '%"></span></span>';
+  }
+
+  /* A price in the holdings table is a button that opens the holding's
+     editor, except on a client's own read-only view. */
+  function editCell(c, h, html, ro, what) {
+    if (ro) return html;
+    return '<button type="button" class="wd-cellbtn" data-act="edit-hold" data-id="' + c.id + '" data-sym="' + esc(h.symbol) + '" ' +
+      'title="Edit the ' + what + ' price" aria-label="Edit ' + esc(h.symbol) + '’s ' + what + ' price">' + html + ic('edit') + '</button>';
   }
 
   function edge(h) {
@@ -839,17 +854,17 @@
   function holdingsTab(c, ro) {
     if (!c.holdings.length) {
       return '<div class="wd-empty"><div class="wd-art">📈</div><h3>Nothing held yet</h3><p>' + (ro ? 'Your manager has not recorded any holdings yet.' :
-        'Record a buy, book a recommendation for this client, or paste their holdings from a broker’s file or a spreadsheet.') + '</p>' +
+        'Upload their holdings statement from the broker (.xlsx or CSV), record a buy, or book a recommendation for them.') + '</p>' +
         (ro ? '' : '<button type="button" class="wd-btn primary" data-act="add-event" data-id="' + c.id + '" data-kind="buy">' + ic('trade') + 'Record a buy</button> ' +
-        '<button type="button" class="wd-btn" data-act="import" data-id="' + c.id + '">' + ic('paste') + 'Paste holdings</button>') + '</div>';
+        '<button type="button" class="wd-btn" data-act="upload" data-id="' + c.id + '">' + ic('in') + 'Upload a holdings statement</button>') + '</div>';
     }
     var rows = c.holdings.map(function (h) {
       return '<tr><td class="wd-sym"><a href="stock.html?ticker=' + encodeURIComponent(h.symbol) + '"><b>' + esc(h.symbol) + '</b></a>' + scoreChip(h.score) +
           '<small>' + esc(h.name || h.sector || '') + (h.price_source === 'manual' ? ' · hand-priced' : '') + '</small></td>' +
         '<td>' + esc(qty(h.qty)) + '</td>' +
-        '<td>' + (finite(h.rec_price) ? esc(inr(h.rec_price)) : '<span class="wd-muted">—</span>') + '</td>' +
-        '<td>' + esc(inr(h.avg)) + ' ' + edge(h) + '</td>' +
-        '<td>' + (h.priced ? esc(inr(h.ltp)) + '<small class="' + tone(h.change_pct) + '">' + esc(pct(h.change_pct)) + '</small>' : '<span class="wd-muted">no price</span>') + '</td>' +
+        '<td>' + editCell(c, h, finite(h.rec_price) ? esc(px(h.rec_price)) : '<span class="wd-muted">Add</span>', ro, 'recommended') + '</td>' +
+        '<td>' + editCell(c, h, esc(px(h.avg)), ro, 'buying') + ' ' + edge(h) + '</td>' +
+        '<td>' + (h.priced ? esc(px(h.ltp)) + '<small class="' + tone(h.change_pct) + '">' + esc(pct(h.change_pct)) + '</small>' : '<span class="wd-muted">no price</span>') + '</td>' +
         '<td>' + mini(h.spark) + '</td>' +
         '<td class="pv">' + esc(inr(h.value, 0)) + '</td>' +
         '<td class="' + tone(h.pnl) + '"><span class="pv">' + esc(signed(h.pnl, 0)) + '</span><small class="' + tone(h.pnl) + '">' + esc(pct(h.pnl_pct, 1)) + '</small></td>' +
@@ -875,9 +890,9 @@
         '<small>' + esc(qty(h.qty)) + ' shares · ' + esc(finite(h.weight) ? h.weight.toFixed(1) + '%' : '') + '</small></div>' +
         '<div style="text-align:right"><b class="pv">' + esc(inr(h.value, 0)) + '</b><small class="' + tone(h.pnl) + '" style="display:block"><span class="pv">' + esc(signed(h.pnl, 0)) + '</span> · ' + esc(pct(h.pnl_pct, 1)) + '</small></div>' +
         (ro ? '' : '<button type="button" class="wd-rowbtn" data-act="hold" data-id="' + c.id + '" data-sym="' + esc(h.symbol) + '" aria-label="Actions for ' + esc(h.symbol) + '">' + ic('dots') + '</button>') + '</div>' +
-        '<div class="wd-hcard-g"><div><small>Recommended</small><b>' + (finite(h.rec_price) ? esc(inr(h.rec_price)) : '—') + '</b></div>' +
-        '<div><small>Bought at</small><b>' + esc(inr(h.avg)) + '</b> ' + edge(h) + '</div>' +
-        '<div><small>Price</small><b>' + (h.priced ? esc(inr(h.ltp)) : '—') + '</b> <span class="' + tone(h.change_pct) + '">' + esc(pct(h.change_pct, 1)) + '</span></div></div></div>';
+        '<div class="wd-hcard-g"><div><small>Recommended</small><b>' + editCell(c, h, finite(h.rec_price) ? esc(px(h.rec_price)) : '—', ro, 'recommended') + '</b></div>' +
+        '<div><small>Bought at</small><b>' + editCell(c, h, esc(px(h.avg)), ro, 'buying') + '</b> ' + edge(h) + '</div>' +
+        '<div><small>Price</small><b>' + (h.priced ? esc(px(h.ltp)) : '—') + '</b> <span class="' + tone(h.change_pct) + '">' + esc(pct(h.change_pct, 1)) + '</span></div></div></div>';
     }).join('') + '</div>';
     var closed = (c.closed || []).filter(function (x) { return Math.abs(num(x.pnl)) > 0.005; });
     var side = '<div class="wd-panel"><h3>Booked so far <small>' + pv(esc(signed(c.realised, 0))) + '</small></h3>' +
@@ -904,7 +919,7 @@
       return true;
     });
     var html = '<div class="wd-tools">' + (ro ? '' : '<button type="button" class="wd-btn primary" data-act="add-event" data-id="' + c.id + '" data-kind="buy">' + ic('plus') + 'Add entry</button>' +
-      '<button type="button" class="wd-btn" data-act="import" data-id="' + c.id + '">' + ic('paste') + 'Paste from a spreadsheet</button>') +
+      '<button type="button" class="wd-btn" data-act="upload" data-id="' + c.id + '">' + ic('in') + 'Upload a statement</button>') +
       '<div class="wd-seg" role="group" aria-label="Show">' + segs.map(function (s) {
         return '<button type="button" data-act="ledfilter" data-v="' + s[0] + '" class="' + (S.ledFilter === s[0] ? 'on' : '') + '" aria-pressed="' + (S.ledFilter === s[0]) + '">' + s[1] + '</button>';
       }).join('') + '</div></div>';
@@ -917,8 +932,8 @@
       var title, sub = [dshort(e.on_date)], amt = '', amtSub = '';
       if (e.kind === 'buy' || e.kind === 'sell') {
         title = k[0] + ' ' + qty(e.qty) + ' ' + esc(e.symbol);
-        sub.push('at ' + inr(e.price));
-        if (finite(e.rec_price)) sub.push('recommended ' + inr(e.rec_price) + ' (' + pct(100 * (e.price / e.rec_price - 1), 1) + ')');
+        sub.push('at ' + px(e.price));
+        if (finite(e.rec_price)) sub.push('recommended ' + px(e.rec_price) + ' (' + pct(100 * (e.price / e.rec_price - 1), 1) + ')');
         if (num(e.charges)) sub.push('charges ' + inr(e.charges));
         amt = (e.kind === 'buy' ? '−' : '+') + inr(e.qty * e.price, 0).replace('−', '');
       } else if (e.kind === 'split') {
@@ -931,7 +946,8 @@
       if (e.note) sub.push(e.note);
       out += '<li class="wd-ev"><span class="k ' + k[2] + '">' + ic(k[1]) + '</span><span class="t"><b>' + title + '</b><small>' + esc(sub.join(' · ')) + '</small></span>' +
         '<span class="amt pv">' + esc(amt) + (amtSub ? '<small>' + amtSub + '</small>' : '') + '</span>' +
-        (ro || e.auto ? '<span></span>' : '<button type="button" class="wd-rowbtn del" data-act="del-event" data-id="' + c.id + '" data-eid="' + e.id + '" aria-label="Remove this entry">' + ic('trash') + '</button>') + '</li>';
+        (ro || e.auto ? '<span></span>' : '<span class="acts"><button type="button" class="wd-rowbtn" data-act="edit-event" data-id="' + c.id + '" data-eid="' + e.id + '" aria-label="Edit this entry">' + ic('edit') + '</button>' +
+          '<button type="button" class="wd-rowbtn" data-act="del-event" data-id="' + c.id + '" data-eid="' + e.id + '" aria-label="Remove this entry">' + ic('trash') + '</button></span>') + '</li>';
     });
     return html + '<div class="wd-panel" style="padding:8px"><ul class="wd-ledger">' + out + '</ul></div>' +
       (c.topups > 0.5 && !ro ? '<p class="wd-note">“Topped up” lines are added automatically: a buy that cost more than the cash on hand is counted as the client adding exactly the shortfall that day. Record money in and out to replace them.</p>' : '');
@@ -1045,17 +1061,17 @@
       var at = buy ? tr.at : 1 - tr.at, rec = buy ? tr.rec : 1 - tr.rec;
       track = '<div class="wd-rtrack" title="Where the price sits between the stop and the target"><span class="bar"></span>' +
         '<span class="rec" style="left:' + (100 * rec).toFixed(1) + '%"></span><span class="at" style="left:' + (100 * at).toFixed(1) + '%"></span>' +
-        '<span class="lo">Stop ' + esc(inr(r.stop)) + '</span><span class="hi">Target ' + esc(inr(r.target)) + '</span></div>';
+        '<span class="lo">Stop ' + esc(px(r.stop)) + '</span><span class="hi">Target ' + esc(px(r.target)) + '</span></div>';
     }
     var fills = r.fills || [];
-    var who = fills.slice(0, 6).map(function (f) { return '<span class="wd-av sm c-' + esc(f.color) + '" title="' + esc(f.name + ': ' + qty(f.qty) + ' at ' + inr(f.price)) + '">' + esc(initials(f.name)) + '</span>'; }).join('');
+    var who = fills.slice(0, 6).map(function (f) { return '<span class="wd-av sm c-' + esc(f.color) + '" title="' + esc(f.name + ': ' + qty(f.qty) + ' at ' + px(f.price)) + '">' + esc(initials(f.name)) + '</span>'; }).join('');
     var slip = finite(r.avg_fill) ? 100 * (r.avg_fill / r.price - 1) : null;
     return '<article class="wd-rec ' + esc(r.state) + ' wd-rise" style="--i:' + (i || 0) + '">' +
       '<div class="wd-rec-t"><div><b><span class="wd-side ' + esc(r.action) + '">' + esc(r.action.toUpperCase()) + '</span><a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '" style="text-decoration:none">' + esc(r.symbol) + '</a>' + scoreChip(r.score) + '</b>' +
         '<small>' + esc(r.name || '') + (r.name ? ' · ' : '') + 'called ' + esc(day(r.on_date)) + (r.horizon ? ' · ' + esc(r.horizon) : '') + '</small></div>' +
         '<span class="wd-state ' + esc(r.state) + '">' + esc(STATE_LABEL[r.state] || r.state) + '</span></div>' +
-      '<div class="wd-rec-p"><div><small>Called at</small><b>' + esc(inr(r.price)) + '</b></div>' +
-        '<div><small>' + (r.status === 'closed' ? 'Closed at' : 'Now') + '</small><b>' + esc(inr(r.status === 'closed' ? r.close_price : r.ltp)) + '</b></div>' +
+      '<div class="wd-rec-p"><div><small>Called at</small><b>' + esc(px(r.price)) + '</b></div>' +
+        '<div><small>' + (r.status === 'closed' ? 'Closed at' : 'Now') + '</small><b>' + esc(px(r.status === 'closed' ? r.close_price : r.ltp)) + '</b></div>' +
         '<div><small>Since the call</small><b class="' + tone(r.since_pct) + '">' + esc(pct(r.since_pct, 1)) + '</b></div></div>' +
       track + (r.thesis ? '<p class="wd-thesis">' + esc(r.thesis) + '</p>' : '') +
       '<div class="wd-fills">' + (fills.length ? '<span class="wd-stack">' + who + '</span><span>' + plural(fills.length, 'fill') + ' · ' + pv(esc(short(r.filled_value))) +
@@ -1136,7 +1152,7 @@
     var b = S.book, d = b.desk;
     var notes = (d.notes || []).map(function (n) { return '<div class="wd-demo" style="border-color:var(--dn)"><span>⚠️ ' + esc(n) + '</span></div>'; }).join('');
     var prices = (b.prices || []).length ? '<ul class="wd-stl">' + b.prices.map(function (p) {
-      return '<li><span><b>' + esc(p.symbol) + '</b><small>set ' + esc(day(p.as_of)) + '</small></span><span class="amt">' + esc(inr(p.price)) + '</span>' +
+      return '<li><span><b>' + esc(p.symbol) + '</b><small>set ' + esc(day(p.as_of)) + '</small></span><span class="amt">' + esc(px(p.price)) + '</span>' +
         '<span class="acts" style="display:flex;gap:6px;justify-content:flex-end"><button type="button" class="wd-btn sm" data-act="price" data-sym="' + esc(p.symbol) + '">Change</button></span></li>';
     }).join('') + '</ul>' : '<p class="wd-muted" style="margin:0">None. Anything listed on the NSE is priced live; set a price here for an unlisted share, a fund or a bond (from a holding’s ⋯ menu).</p>';
     return '<div class="wd-sec" style="margin-top:4px"><div><h2>Your desk</h2><p>Who you are, and the terms a new client starts on.</p></div></div>' + notes +
@@ -1347,7 +1363,10 @@
     wireTerms(m);
     if (o.wire) o.wire(m.querySelector('form'));
     var first = m.querySelector('.wd-mb input:not([type=hidden]):not([type=checkbox]):not([type=radio]), .wd-mb select, .wd-mb textarea');
-    if (first && !o.noFocus) setTimeout(function () { try { first.focus(); } catch (e) {} }, 30);
+    // Focused now, not on a timer: a deferred focus fired after the reader had
+    // already tapped another field and pulled the cursor back, so what they
+    // typed landed in the first box ("10" became part of the stock symbol).
+    if (first && !o.noFocus) { try { first.focus({ preventScroll: true }); } catch (e) {} }
   }
 
   function closeModal() {
@@ -1427,15 +1446,42 @@
   /* ── Modals, one per action ──────────────────────────────────────────── */
 
   function clientModal(c) {
+    var stmt = null;
+    var start = c ? '' : '<fieldset class="wd-fieldset full" style="margin-bottom:6px"><legend>Start from a holdings statement · optional</legend>' +
+      '<label class="wd-drop sm"><input type="file" name="statement" accept=".xlsx,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>' +
+      '<span class="wd-drop-ic">' + ic('in') + '</span><b data-stmt>Choose the client’s statement (.xlsx or .csv)</b><small>Fills in the name; you review the holdings after the client is added.</small></label></fieldset>';
     modal({
       title: c ? 'Edit ' + esc(c.name) : 'Add a client', wide: true, submit: c ? 'Save' : ic('plus') + 'Add client',
       sub: c ? '' : 'A name is enough to start. Fee terms start from your desk’s defaults.',
-      body: clientFields(c),
+      body: start + clientFields(c),
+      wire: function (form) {
+        if (!form.statement) return;
+        form.statement.addEventListener('change', function () {
+          var f = form.statement.files[0], label = form.querySelector('[data-stmt]');
+          if (!f) return;
+          label.textContent = 'Reading ' + f.name + '…';
+          readStatement(f).then(function (st) {
+            if (!st.holdings.length) throw new Error('No holdings found in ' + f.name + '.');
+            stmt = st;
+            if (st.meta.client && !String(form.name.value).trim()) form.name.value = titleCase(st.meta.client);
+            if (st.meta.as_of && form.since && form.since.value === today()) form.since.value = st.meta.as_of;
+            label.textContent = plural(st.holdings.length, 'holding') + (st.meta.as_of ? ', as on ' + day(st.meta.as_of) : '') + ' — reviewed after the client is added.';
+          }).catch(function (e) { stmt = null; label.textContent = e.message; });
+        });
+      },
       onSubmit: function (fd) {
         var body = readClient(fd);
         if (c) return api('/wealth/clients/' + c.id, { method: 'PUT', body: body }).then(function () { return 'Saved.'; });
         return api('/wealth/clients', { method: 'POST', body: body }).then(function (d) {
           S.after = 'client/' + d.client.id;
+          if (stmt) {
+            var st = stmt;
+            S.then = function () {
+              var nc = clientById(d.client.id);
+              if (nc) resolveStatement(st).then(function (x) { reviewModal(nc, x); }).catch(function (e) { toast(e.message, true); });
+            };
+            return d.client.name + ' added. Review the holdings from the statement.';
+          }
           return d.client.name + ' added. Record what they hold.';
         });
       }
@@ -1471,8 +1517,10 @@
 
   var EVKINDS = [['buy', 'Buy'], ['sell', 'Sell'], ['deposit', 'Money in'], ['withdrawal', 'Money out'], ['dividend', 'Dividend'], ['split', 'Bonus / split']];
 
-  function eventModal(c, kind, sym) {
+  function eventModal(c, kind, sym, ev) {
     fillSymbols();
+    if (ev) { kind = ev.kind; sym = ev.symbol; }
+    var autoPick = !ev;
     var open = (S.book.recs || []).filter(function (r) { return r.status === 'open'; });
     var held = {};
     c.holdings.forEach(function (h) { held[h.symbol] = h.qty; });
@@ -1493,8 +1541,21 @@
       field('Note <em>optional</em>', '<input name="note" maxlength="200">') +
       '</div><p class="wd-note" data-hint></p>';
     modal({
-      title: 'Add to ' + esc(c.name) + '’s ledger', color: c.color, submit: ic('check') + 'Add', body: body,
+      title: ev ? 'Edit this entry' : 'Add to ' + esc(c.name) + '’s ledger', color: c.color,
+      sub: ev ? 'Holdings, cash, profit and fees are worked out again with the change. If it would break a later entry, nothing is saved.' : '',
+      submit: ic('check') + (ev ? 'Save' : 'Add'), body: body,
       wire: function (form) {
+        if (ev) {
+          var set = function (n, v) { if (form[n] && v !== null && v !== undefined) form[n].value = v; };
+          set('symbol', ev.symbol); set('qty', ev.kind === 'split' ? '' : ev.qty); set('price', ev.price);
+          set('rec_price', ev.rec_price); set('charges', ev.charges || ''); set('amount', ev.amount);
+          set('on_date', ev.on_date); set('note', ev.note);
+          if (ev.kind === 'split' && form.factor) {
+            if (!form.factor.querySelector('option[value="' + ev.qty + '"]')) form.factor.insertAdjacentHTML('beforeend', opt(String(ev.qty), String(ev.qty), ''));
+            form.factor.value = String(ev.qty);
+          }
+          form.symbol.addEventListener('input', function () { autoPick = true; }, { once: true });
+        }
         function show() {
           var k = form.querySelector('[name=kind]:checked').value;
           var trade = k === 'buy' || k === 'sell';
@@ -1510,14 +1571,20 @@
           var mine = open.filter(function (r) { return r.symbol === s && r.action === k; });
           var sel = form.rec_id, was = sel.value;
           sel.innerHTML = '<option value="">None</option>' + mine.map(function (r) {
-            return '<option value="' + r.id + '">' + esc(r.action.toUpperCase() + ' at ' + inr(r.price) + ' · ' + day(r.on_date)) + '</option>';
+            return '<option value="' + r.id + '">' + esc(r.action.toUpperCase() + ' at ' + px(r.price) + ' · ' + day(r.on_date)) + '</option>';
           }).join('');
           // Typing rebuilds the list on every keystroke; a call already chosen
           // stays chosen while it still applies, and the first one is picked
           // for you when nothing was.
+          if (ev && ev.rec_id && s === ev.symbol && !mine.some(function (r) { return r.id === ev.rec_id; })) {
+            var lr = recById(ev.rec_id);
+            sel.insertAdjacentHTML('beforeend', '<option value="' + ev.rec_id + '">' + esc(lr ? lr.action.toUpperCase() + ' at ' + px(lr.price) + ' · ' + day(lr.on_date) : 'The linked call') + '</option>');
+            mine.push({ id: ev.rec_id });
+          }
+          if (ev && !was && !autoPick) was = ev.rec_id ? String(ev.rec_id) : '';
           var keep = was && mine.some(function (r) { return String(r.id) === was; });
           if (keep) sel.value = was;
-          else if (mine.length) { sel.value = String(mine[0].id); sel.dispatchEvent(new Event('change')); }
+          else if (mine.length && autoPick) { sel.value = String(mine[0].id); sel.dispatchEvent(new Event('change')); }
           var hint = form.querySelector('[data-hint]');
           hint.innerHTML = held[s] && (k === 'sell' || k === 'split') ? esc(c.name) + ' holds <b>' + esc(qty(held[s])) + '</b> ' + esc(s) +
             (k === 'sell' ? ' · <button type="button" class="wd-link" data-all>Sell all</button>' : '') : '';
@@ -1533,14 +1600,20 @@
         show();
       },
       onSubmit: function (fd) {
-        var k = fd.get('kind'), ev = { kind: k, on_date: fd.get('on_date'), note: fd.get('note') };
+        var k = fd.get('kind'), out = { kind: k, on_date: fd.get('on_date'), note: fd.get('note') };
         if (k === 'buy' || k === 'sell') {
-          Object.assign(ev, { symbol: fd.get('symbol'), qty: numv(fd.get('qty')), price: numv(fd.get('price')), charges: numv(fd.get('charges')),
-                              rec_price: numv(fd.get('rec_price')), rec_id: fd.get('rec_id') || null });
+          Object.assign(out, { symbol: fd.get('symbol'), qty: numv(fd.get('qty')), price: numv(fd.get('price')), charges: numv(fd.get('charges')),
+                               rec_price: numv(fd.get('rec_price')) || null, rec_id: fd.get('rec_id') || null });
         } else if (k === 'split') {
-          Object.assign(ev, { symbol: fd.get('symbol'), qty: fd.get('factor') });
-        } else ev.amount = numv(fd.get('amount'));
-        return api('/wealth/clients/' + c.id + '/events', { method: 'POST', body: { events: [ev] } }).then(function (d) {
+          Object.assign(out, { symbol: fd.get('symbol'), qty: fd.get('factor') });
+        } else out.amount = numv(fd.get('amount'));
+        if (ev) {
+          return api('/wealth/clients/' + c.id + '/events/' + ev.id, { method: 'PUT', body: out }).then(function (d) {
+            if (d.warning) toast(d.warning);
+            return d.warning ? '' : 'Saved.';
+          });
+        }
+        return api('/wealth/clients/' + c.id + '/events', { method: 'POST', body: { events: [out] } }).then(function (d) {
           if (d.warning) toast(d.warning);
           return d.warning ? '' : 'Added.';
         });
@@ -1548,23 +1621,310 @@
     });
   }
 
-  function importModal(c) {
+  /* ── Correcting a holding ───────────────────────────────────────────── */
+
+  function holdingEditModal(c, sym) {
+    var h = c.holdings.filter(function (x) { return x.symbol === sym; })[0];
+    if (!h) return;
+    var open = {};
+    (h.lots || []).forEach(function (l) { if (l.id) open[l.id] = (open[l.id] || 0) + l.qty; });
+    var buys = c.events.filter(function (e) { return e.kind === 'buy' && e.symbol === sym; }).slice().reverse();
+    var split = c.events.some(function (e) { return e.kind === 'split' && e.symbol === sym; });
+    var rows = buys.map(function (e) {
+      var held = open[e.id] || 0;
+      var tag = held > 0.0001 ? (Math.abs(held - e.qty) < 0.0001 || split ? 'Held' : 'Held ' + qty(held) + ' of ' + qty(e.qty)) : 'Sold';
+      return '<tr data-eid="' + e.id + '"><td><input type="date" max="' + today() + '" data-f="on_date" value="' + esc(e.on_date) + '" aria-label="Date"></td>' +
+        '<td><input inputmode="decimal" data-f="qty" value="' + esc(e.qty) + '" aria-label="Quantity"></td>' +
+        '<td><input inputmode="decimal" data-f="price" value="' + esc(e.price) + '" aria-label="Buying price"></td>' +
+        '<td><input inputmode="decimal" data-f="rec_price" value="' + esc(e.rec_price == null ? '' : e.rec_price) + '" placeholder="—" aria-label="Recommended price"></td>' +
+        '<td><span class="wd-pst ' + (tag === 'Sold' ? 'nil' : 'paid') + '">' + esc(tag) + '</span></td></tr>';
+    }).join('');
     modal({
-      title: 'Paste ' + esc(c.name) + '’s holdings', color: c.color, wide: true, submit: ic('paste') + 'Add them',
-      sub: 'From a broker’s holdings file or your own spreadsheet. Copy the rows, paste them here.',
-      body: field('Rows', '<textarea name="text" rows="9" style="font-family:\'IBM Plex Mono\',monospace;font-size:13px" placeholder="Symbol, Qty, Avg price, Date, Reco price\nRELIANCE, 50, 1250.50, 03/01/2025, 1240\nTCS, 12, 3305, 2025-02-11"></textarea>',
-        'A header row is recognised by its words. Without one the columns are symbol, quantity, buy price, date, recommended price. Comma, tab or semicolon.', 'full') +
-        field('Date for rows without one', '<input name="date" type="date" max="' + today() + '" value="' + today() + '">') +
-        '<p class="wd-note" data-count>Nothing pasted yet.</p>',
+      title: 'Edit ' + esc(sym), color: c.color, wide: true, submit: ic('check') + 'Save',
+      sub: esc(c.name) + ' holds ' + esc(qty(h.qty)) + ' shares' + (h.name ? ' of ' + esc(h.name) : '') + '.',
+      body: '<input type="hidden" name="pane" value="avg">' +
+        '<div class="wd-seg" role="tablist" aria-label="How to edit"><button type="button" class="on" data-pane="avg" aria-selected="true">Set the average</button>' +
+          '<button type="button" data-pane="each" aria-selected="false">Each purchase (' + buys.length + ')</button></div>' +
+        '<div data-panel="avg"><div class="wd-form">' +
+          field('Average buying price', '<input name="avg" inputmode="decimal" value="' + esc(h.avg) + '">', 'What the client paid per share, on average — the broker’s “avg. price”.') +
+          field('Recommended price', '<input name="rec" inputmode="decimal" value="' + esc(h.rec_price == null ? '' : h.rec_price) + '" placeholder="—">', 'The price you told them to buy at. Leave empty to remove it.') +
+        '</div><div class="wd-sum" data-prev></div>' +
+        (buys.length > 1 ? '<p class="wd-note">The ' + buys.length + ' purchases this holding is made of are all corrected by the same factor, so their proportions stay as recorded. Use “Each purchase” to change one on its own.</p>' : '') +
+        '</div>' +
+        '<div data-panel="each" hidden><div class="wd-table-wrap"><table class="wd-table wd-lots"><thead><tr><th scope="col">Date</th><th scope="col">Qty</th>' +
+          '<th scope="col">Bought at</th><th scope="col">Recommended</th><th scope="col"><span class="wd-sr">Still held</span></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+          (split ? '<p class="wd-note">Quantities and prices as recorded on the day of each purchase, before the bonus or split since.</p>' : '') + '</div>',
       wire: function (form) {
-        form.text.addEventListener('input', function () {
-          var n = String(form.text.value).split('\n').filter(function (l) { return l.trim(); }).length;
-          form.querySelector('[data-count]').textContent = n ? n + ' line' + (n === 1 ? '' : 's') + ' — every one is checked; if any is wrong, nothing is added and the row is named.' : 'Nothing pasted yet.';
+        function prev() {
+          var a = +numv(form.avg.value);
+          var box = form.querySelector('[data-prev]');
+          if (!a || a <= 0) { box.innerHTML = '<span>Enter a price above zero</span><b></b>'; return; }
+          var cost = a * h.qty, val = h.priced ? h.ltp * h.qty : null;
+          box.innerHTML = '<span>' + esc(qty(h.qty)) + ' × ' + esc(px(a)) + ' = <b class="pv">' + esc(inr(cost, 0)) + '</b> invested</span>' +
+            (val !== null ? '<b class="' + tone(val - cost) + ' pv">' + esc(signed(val - cost, 0)) + ' at ' + esc(px(h.ltp)) + '</b>' : '<b></b>');
+        }
+        form.avg.addEventListener('input', prev);
+        prev();
+        form.querySelectorAll('[data-pane]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            form.pane.value = b.dataset.pane;
+            form.querySelectorAll('[data-pane]').forEach(function (x) { var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
+            form.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== b.dataset.pane; });
+          });
         });
       },
-      onSubmit: function (fd) {
-        return api('/wealth/clients/' + c.id + '/import', { method: 'POST', body: { text: fd.get('text'), date: fd.get('date') } }).then(function (d) {
-          return plural(d.added, 'holding') + ' added to ' + c.name + '.';
+      onSubmit: function (fd, form) {
+        if (fd.get('pane') === 'each') {
+          var edits = [];
+          form.querySelectorAll('tr[data-eid]').forEach(function (tr) {
+            var e = buys.filter(function (x) { return String(x.id) === tr.dataset.eid; })[0], ch = { id: e.id }, any = false;
+            tr.querySelectorAll('[data-f]').forEach(function (inp) {
+              var f = inp.dataset.f, v = f === 'on_date' ? inp.value : numv(inp.value);
+              var was = e[f] == null ? '' : String(e[f]);
+              if (String(v) !== was && !(f !== 'on_date' && v !== '' && +v === +was)) { ch[f] = f === 'rec_price' && v === '' ? null : v; any = true; }
+            });
+            if (any) edits.push(ch);
+          });
+          if (!edits.length) return Promise.reject(new Error('Nothing was changed.'));
+          return api('/wealth/clients/' + c.id + '/events', { method: 'PUT', body: { edits: edits } }).then(function (d) {
+            if (d.warning) toast(d.warning);
+            return d.warning ? '' : sym + ' corrected.';
+          });
+        }
+        var body = {}, a = numv(fd.get('avg')), r = numv(fd.get('rec'));
+        if (a !== '' && Math.abs(+a - h.avg) > 0.004) body.avg = a;
+        if (r === '' && finite(h.rec_price)) body.rec_price = '';
+        else if (r !== '' && !(finite(h.rec_price) && Math.abs(+r - h.rec_price) < 0.004)) body.rec_price = r;
+        if (!Object.keys(body).length) return Promise.reject(new Error('Nothing was changed.'));
+        return api('/wealth/clients/' + c.id + '/holdings/' + encodeURIComponent(sym), { method: 'PUT', body: body }).then(function (d) {
+          if (d.warning) toast(d.warning);
+          return d.warning ? '' : sym + ' corrected.';
+        });
+      }
+    });
+  }
+
+  /* ── A broker's holdings statement ───────────────────────────────────── */
+
+  function titleCase(s) {
+    s = String(s || '').trim();
+    return s && s === s.toUpperCase() ? s.toLowerCase().replace(/\b[a-z]/g, function (m) { return m.toUpperCase(); }) : s;
+  }
+
+  function readStatement(file) {
+    var R = window.AltahaStatement;
+    if (!R) return Promise.reject(new Error('The statement reader did not load. Reload the page and try again.'));
+    return R.readFile(file).then(function (r) {
+      var st = R.extract(r.rows, file.name);
+      st.kind = r.kind;
+      st.file = file.name;
+      return st;
+    });
+  }
+
+  function resolveStatement(st) {
+    var R = window.AltahaStatement;
+    var isins = st.holdings.map(function (h) { return h.isin; }).filter(Boolean);
+    var lookup = isins.length && S.mode !== 'demo'
+      ? api('/wealth/isin', { method: 'POST', body: { isins: isins } }).catch(function () { return { map: {} }; })
+      : Promise.resolve({ map: {} });
+    return Promise.all([lookup, universe()]).then(function (got) {
+      var idx = R.indexUniverse(got[1]);
+      st.idx = idx;
+      st.rows = R.resolve(st.holdings, idx, (got[0] && got[0].map) || {});
+      return st;
+    });
+  }
+
+  function uploadModal(c, opts) {
+    opts = opts || {};
+    var accept = '.xlsx,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    modal({
+      title: 'Update ' + esc(c.name) + '’s portfolio', color: c.color, wide: true, noFocus: true,
+      sub: 'From the holdings statement their broker gives — Groww, Zerodha, Upstox, Angel One, Dhan, ICICI Direct — or your own spreadsheet. You see every change before anything is saved.',
+      body: '<label class="wd-drop" data-drop><input type="file" name="file" accept="' + accept + '" hidden>' +
+          '<span class="wd-drop-ic">' + ic('in') + '</span><b>Drop the statement here, or choose a file</b>' +
+          '<small>.xlsx or .csv · read on this device</small></label>' +
+        '<p class="wd-err" data-status role="status"></p>' +
+        '<details' + (opts.paste ? ' open' : '') + '><summary class="wd-link" style="display:inline-block;margin-bottom:8px">Or paste rows from a spreadsheet</summary>' +
+          field('Rows', '<textarea name="text" rows="7" style="font-family:\'IBM Plex Mono\',monospace;font-size:13px" placeholder="Symbol, Qty, Avg price, Date, Reco price\nRELIANCE, 50, 1250.50, 03/01/2025, 1240\nTCS, 12, 3305"></textarea>',
+            'A header row is recognised by its words; without one the columns are symbol, quantity, buying price, date, recommended price.', 'full') +
+          '<button type="button" class="wd-btn sm" data-read>Read these rows</button></details>' +
+        '<p class="wd-note">' + ic('lock') + ' The file is opened in this browser. Only each holding’s stock, quantity and prices are sent — not the name, client code or anything else in the statement.</p>',
+      wire: function (form) {
+        var status = form.querySelector('[data-status]'), drop = form.querySelector('[data-drop]');
+        function go(p) {
+          status.style.color = 'var(--mute)';
+          status.textContent = 'Reading…';
+          p.then(function (st) {
+            if (!st.holdings.length) throw new Error('No holdings found. The file needs a column of quantities and one of stock names, symbols or ISINs.');
+            status.textContent = 'Matching ' + plural(st.holdings.length, 'holding') + ' to NSE…';
+            return resolveStatement(st);
+          }).then(function (st) { reviewModal(c, st); }).catch(function (e) {
+            status.style.color = '';
+            status.textContent = e.message || 'That file could not be read.';
+          });
+        }
+        form.file.addEventListener('change', function () { if (form.file.files[0]) go(readStatement(form.file.files[0])); });
+        ['dragenter', 'dragover'].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+        ['dragleave', 'drop'].forEach(function (t) { drop.addEventListener(t, function () { drop.classList.remove('over'); }); });
+        drop.addEventListener('drop', function (e) {
+          e.preventDefault();
+          var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) go(readStatement(f));
+        });
+        form.querySelector('[data-read]').addEventListener('click', function () {
+          var R = window.AltahaStatement, text = form.text.value;
+          if (!String(text).trim()) { status.textContent = 'Paste at least one row.'; return; }
+          go(Promise.resolve().then(function () { var st = R.extract(R.parseCSV(text)); st.kind = 'paste'; return st; }));
+        });
+      }
+    });
+  }
+
+  var PLAN_LABEL = { new: 'New', add: 'Add', more: 'More shares', fewer: 'Fewer shares', price: 'Price differs',
+                     same: 'Matches', gone: 'Not in statement', error: 'Needs a price' };
+
+  function opText(item) {
+    var parts = (item.ops || []).map(function (o) {
+      if (o.kind === 'buy') return 'Buy ' + qty(o.qty) + ' at ' + px(o.price);
+      return 'Sell ' + qty(o.qty) + ' at ' + px(o.price) + (item.sell_price_from ? ' (' + item.sell_price_from + ')' : '');
+    });
+    if (item.fix_avg) parts.push('correct the buying price to ' + px(item.fix_avg));
+    if (item.status === 'same') parts.push('Already matches');
+    var t = parts.join(', then ');
+    return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+  }
+
+  function reviewModal(c, st) {
+    var R = window.AltahaStatement;
+    var rows = st.rows.map(function (r) { return Object.assign({}, r); });
+    var held = c.holdings.length > 0;
+    var P = { mode: 'sync', as_of: st.meta.as_of && st.meta.as_of <= today() ? st.meta.as_of : today(), buy_date: null,
+              prices: {}, skip: {}, plan: null, seq: 0 };
+    P.buy_date = held ? P.as_of : (c.since && c.since <= P.as_of ? c.since : P.as_of);
+    var other = st.meta.client && !R.sameName(st.meta.client, c.name);
+    var unresolved = rows.filter(function (r) { return !r.symbol; });
+    var by = { isin: 0, symbol: 0, name: 0 };
+    rows.forEach(function (r) { if (by[r.how] !== undefined) by[r.how]++; });
+    var fixHtml = unresolved.length ? '<div class="wd-fix"><h4>' + plural(unresolved.length, 'holding') + ' to match by hand</h4>' + unresolved.map(function (r) {
+      var i = rows.indexOf(r);
+      return '<div class="wd-fixrow"><span><b>' + esc(r.label) + '</b><small>' + esc(qty(r.qty)) + ' at ' + esc(px(r.avg)) + (r.isin ? ' · ' + esc(r.isin) : '') + '</small></span>' +
+        '<input data-sym="' + i + '" list="wd-syms" placeholder="NSE symbol" autocapitalize="characters" spellcheck="false" maxlength="20" aria-label="Symbol for ' + esc(r.label) + '">' +
+        (r.candidates.length ? '<span class="wd-cands">' + r.candidates.slice(0, 4).map(function (s) { return '<button type="button" class="wd-chip" data-pick="' + i + '" data-v="' + esc(s) + '">' + esc(s) + '</button>'; }).join('') + '</span>' : '') +
+        '</div>';
+    }).join('') + '<p class="wd-note">Not listed on the NSE? Type any short name for it — it is added and priced by hand at the statement’s closing price, which you can change later. Leave it empty to skip it.</p></div>' : '';
+    // What is sent: each matched holding's stock, quantity and prices.
+    function payloadRows() {
+      return rows.filter(function (r) { return r.symbol; }).map(function (r) {
+        return { symbol: r.symbol, qty: r.qty, avg: r.avg, close: r.close, rec_price: r.rec };
+      });
+    }
+    fillSymbols();
+    modal({
+      title: 'Review the changes', color: c.color, wide: true, submit: ic('check') + 'Update portfolio', noFocus: true,
+      sub: 'Statement' + (st.meta.as_of ? ' as on <b>' + esc(day(st.meta.as_of)) + '</b>' : '') + ' · ' + plural(rows.length, 'holding') + ' read' +
+        (by.isin ? ' · ' + by.isin + ' matched by ISIN' : '') + (by.name ? ' · ' + by.name + ' by name' : '') + '.',
+      body: (other ? '<div class="wd-warn">' + ic('alert') + '<span>This statement is for <b>' + esc(st.meta.client) + '</b>, and this is <b>' + esc(c.name) + '</b>’s portfolio. Check it is the right file before you update.</span></div>' : '') +
+        fixHtml +
+        '<div class="wd-form">' +
+          (held ? field('What to do', '<select name="mode">' + opt('sync', 'Update to match this statement', 'sync') + opt('add', 'Add every row as a new purchase', 'sync') + '</select>',
+            'Matching buys what is new, sells what is gone, and corrects quantities and buying prices.') : '') +
+          field('Statement date', '<input name="as_of" type="date" max="' + today() + '" value="' + esc(P.as_of) + '">', 'Sales are dated this day.') +
+          field('New purchases dated', '<input name="buy_date" type="date" max="' + today() + '" value="' + esc(P.buy_date) + '">',
+            held ? 'Usually the statement date.' : 'For a first statement, when the client started — returns and fees count from here.') +
+        '</div>' +
+        '<div class="wd-sum" data-summary><span>Working it out…</span><b></b></div>' +
+        '<div class="wd-table-wrap"><table class="wd-table wd-plan"><thead><tr><th scope="col"><span class="wd-sr">Include</span></th><th scope="col">Stock</th>' +
+          '<th scope="col">Change</th><th scope="col">Here now</th><th scope="col">Statement</th><th scope="col">What happens</th></tr></thead><tbody data-plan></tbody></table></div>',
+      wire: function (form) {
+        var timer = null;
+        function draw() {
+          var tb = form.querySelector('[data-plan]'), sum = form.querySelector('[data-summary]');
+          if (!P.plan) return;
+          var counts = {};
+          tb.innerHTML = P.plan.items.map(function (it) {
+            var on = it.include && !P.skip[it.symbol];
+            if (on) counts[it.status] = (counts[it.status] || 0) + 1;
+            var price = it.needs_price ? '<label class="wd-inl">Sold at <input inputmode="decimal" data-price="' + esc(it.symbol) + '" value="' + esc(P.prices[it.symbol] || '') + '" placeholder="₹"></label>' : '';
+            return '<tr class="' + (on ? '' : 'off') + '"><td><input type="checkbox" data-take="' + esc(it.symbol) + '"' + (on ? ' checked' : '') +
+                (it.include ? '' : ' disabled') + ' aria-label="Include ' + esc(it.symbol) + '"></td>' +
+              '<td class="wd-sym"><b>' + esc(it.symbol) + '</b></td>' +
+              '<td><span class="wd-ps ' + esc(it.status) + '">' + esc(PLAN_LABEL[it.status] || it.status) + '</span></td>' +
+              '<td>' + (it.have ? esc(qty(it.have.qty)) + '<small>at ' + esc(px(it.have.avg)) + '</small>' : '<span class="wd-muted">—</span>') + '</td>' +
+              '<td>' + (it.want ? esc(qty(it.want.qty)) + '<small>at ' + esc(px(it.want.avg)) + '</small>' : '<span class="wd-muted">—</span>') + '</td>' +
+              '<td class="wd-what">' + esc(opText(it)) + (it.note ? '<small>' + esc(it.note) + '</small>' : '') + price + '</td></tr>';
+          }).join('');
+          var bits = ['new', 'add', 'more', 'fewer', 'price', 'gone'].filter(function (k) { return counts[k]; })
+            .map(function (k) { return counts[k] + ' ' + PLAN_LABEL[k].toLowerCase(); });
+          var same = P.plan.counts.same || 0;
+          sum.innerHTML = '<span>' + (bits.length ? esc(bits.join(' · ')) : 'Nothing to change') + (same ? ' · ' + same + ' already match' : '') + '</span><b>' +
+            (bits.length ? plural(bits.reduce(function (n, b) { return n + parseInt(b, 10); }, 0), 'holding') + ' to update' : '') + '</b>';
+        }
+        function local() {
+          // The sample desk has nothing to compare with: show what was read.
+          P.plan = { counts: {}, items: payloadRows().map(function (r) {
+            return { symbol: r.symbol, status: 'new', include: true, have: null, want: { qty: r.qty, avg: r.avg },
+                     ops: [{ kind: 'buy', qty: r.qty, price: r.avg }], note: '' };
+          }) };
+          draw();
+        }
+        function refresh() {
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            var seq = ++P.seq, body = payloadRows();
+            if (!body.length) { form.querySelector('[data-summary]').innerHTML = '<span>Match at least one holding to a symbol.</span><b></b>'; form.querySelector('[data-plan]').innerHTML = ''; return; }
+            if (S.mode === 'demo') { local(); return; }
+            api('/wealth/clients/' + c.id + '/statement/plan', { method: 'POST', body: { rows: body, mode: P.mode, as_of: P.as_of, buy_date: P.buy_date, prices: P.prices } })
+              .then(function (d) { if (seq === P.seq) { P.plan = d; draw(); } })
+              .catch(function (e) { if (seq === P.seq) form.querySelector('[data-summary]').innerHTML = '<span class="wd-err">' + esc(e.message) + '</span><b></b>'; });
+          }, 250);
+        }
+        form.addEventListener('change', function (e) {
+          var t = e.target;
+          if (t.name === 'mode') { P.mode = t.value; refresh(); }
+          else if (t.name === 'as_of') { P.as_of = t.value; refresh(); }
+          else if (t.name === 'buy_date') { P.buy_date = t.value; refresh(); }
+          else if (t.dataset.take) { if (t.checked) delete P.skip[t.dataset.take]; else P.skip[t.dataset.take] = 1; draw(); }
+          else if (t.dataset.price) { P.prices[t.dataset.price] = numv(t.value); refresh(); }
+        });
+        form.addEventListener('input', function (e) {
+          var t = e.target;
+          if (t.dataset.sym !== undefined) { rows[+t.dataset.sym].symbol = R.cleanSymbol(t.value); refresh(); }
+        });
+        form.addEventListener('click', function (e) {
+          var b = e.target.closest && e.target.closest('[data-pick]');
+          if (!b) return;
+          var inp = form.querySelector('[data-sym="' + b.dataset.pick + '"]');
+          inp.value = b.dataset.v;
+          rows[+b.dataset.pick].symbol = b.dataset.v;
+          refresh();
+        });
+        refresh();
+      },
+      onSubmit: function () {
+        if (S.mode === 'demo') return Promise.reject(Object.assign(new Error('This is the sample desk — nothing is saved. Sign in and set up your own desk to import statements.'), { demo: true }));
+        if (!P.plan) return Promise.reject(new Error('The review is still being worked out.'));
+        var body = payloadRows();
+        // A symbol the NSE list does not know is priced by hand, at the
+        // statement's closing price, so it is valued rather than left at cost.
+        var manual = rows.filter(function (r) { return r.symbol && !r.how && st.idx && !st.idx.bySymbol[r.symbol] && finite(r.close); });
+        var first = manual.reduce(function (p, r) {
+          return p.then(function () { return api('/wealth/prices', { method: 'PUT', body: { symbol: r.symbol, price: r.close } }); });
+        }, Promise.resolve());
+        return first.then(function () {
+          return api('/wealth/clients/' + c.id + '/statement/apply', { method: 'POST',
+            body: { rows: body, mode: P.mode, as_of: P.as_of, buy_date: P.buy_date, prices: P.prices, skip: Object.keys(P.skip) } });
+        }).then(function (d) {
+          if (window.AltahaTrack) window.AltahaTrack('wealth_statement_applied', { holdings: d.holdings });
+          if (d.warning) toast(d.warning);
+          var n = (d.done.new || 0) + (d.done.add || 0), m = d.done.more || 0, f = (d.done.fewer || 0) + (d.done.gone || 0), p = d.done.price || 0;
+          var parts = [];
+          if (n) parts.push(n + ' added');
+          if (m) parts.push(m + ' topped up');
+          if (f) parts.push(f + ' sold');
+          if (p) parts.push(plural(p, 'price') + ' corrected');
+          return c.name + '’s portfolio updated' + (parts.length ? ': ' + parts.join(', ') : '') + '.';
         });
       }
     });
@@ -1623,7 +1983,7 @@
     }).join('');
     modal({
       title: 'Book ' + esc(r.action) + ' ' + esc(r.symbol) + ' for clients', wide: true, submit: ic('check') + 'Book', noFocus: true,
-      sub: 'Called at ' + esc(inr(r.price)) + '. Tick who acted on it, and how much. Every fill is checked before any is written.',
+      sub: 'Called at ' + esc(px(r.price)) + '. Tick who acted on it, and how much. Every fill is checked before any is written.',
       body: '<div class="wd-form">' + field('Fill price', '<input name="price" inputmode="decimal" value="' + esc(r.price) + '">', 'What they paid. Change it per client for a different fill.') +
         field('Date', '<input name="on_date" type="date" max="' + today() + '" value="' + today() + '">') + '</div>' +
         '<div class="wd-tools" style="margin:0"><button type="button" class="wd-btn sm" data-all-pick>Tick everyone</button></div>' +
@@ -1759,7 +2119,8 @@
     var b = function (act, icon, label) { return '<button type="button" class="wd-btn" style="justify-content:flex-start" data-act="' + act + '" data-id="' + c.id + '" data-sym="' + esc(sym) + '">' + ic(icon) + label + '</button>'; };
     modal({
       title: esc(sym), color: c.color, sub: esc((h.name || '') + ' · ' + qty(h.qty) + ' shares · ' + inr(h.value, 0)),
-      body: '<div style="display:grid;gap:8px">' + b('h-buy', 'up', 'Buy more') + b('h-sell', 'down', 'Sell') + b('h-split', 'split', 'Bonus or split') +
+      body: '<div style="display:grid;gap:8px">' + b('edit-hold', 'edit', 'Edit buying or recommended price') +
+        b('h-buy', 'up', 'Buy more') + b('h-sell', 'down', 'Sell') + b('h-split', 'split', 'Bonus or split') +
         b('price', 'rupee', h.price_source === 'manual' ? 'Change the hand-set price' : 'Set a price by hand') +
         '<a class="wd-btn" style="justify-content:flex-start" href="stock.html?ticker=' + encodeURIComponent(sym) + '">' + ic('call') + 'Open the stock page</a></div>'
     });
@@ -1780,8 +2141,8 @@
       '<div><small>Profit</small><b>' + esc(signed(c.profit, 0)) + '</b></div><div><small>Return · XIRR</small><b>' + esc(pct(c.profit_pct, 1)) + ' · ' + (c.xirr == null ? '—' : esc(pct(c.xirr, 1))) + '</b></div></div>' +
       '<h2>Holdings</h2><table><thead><tr><th>Stock</th><th>Qty</th><th>Recommended</th><th>Bought at</th><th>Price</th><th>Value</th><th>P&amp;L</th><th>Weight</th></tr></thead><tbody>' +
       c.holdings.map(function (h) {
-        return '<tr><td>' + esc(h.symbol) + '</td><td>' + esc(qty(h.qty)) + '</td><td>' + (finite(h.rec_price) ? esc(inr(h.rec_price)) : '—') + '</td><td>' + esc(inr(h.avg)) + '</td>' +
-          '<td>' + (h.priced ? esc(inr(h.ltp)) : 'at cost') + '</td><td>' + esc(inr(h.value, 0)) + '</td><td>' + esc(signed(h.pnl, 0)) + ' (' + esc(pct(h.pnl_pct, 1)) + ')</td><td>' + (finite(h.weight) ? h.weight.toFixed(1) + '%' : '') + '</td></tr>';
+        return '<tr><td>' + esc(h.symbol) + '</td><td>' + esc(qty(h.qty)) + '</td><td>' + (finite(h.rec_price) ? esc(px(h.rec_price)) : '—') + '</td><td>' + esc(px(h.avg)) + '</td>' +
+          '<td>' + (h.priced ? esc(px(h.ltp)) : 'at cost') + '</td><td>' + esc(inr(h.value, 0)) + '</td><td>' + esc(signed(h.pnl, 0)) + ' (' + esc(pct(h.pnl_pct, 1)) + ')</td><td>' + (finite(h.weight) ? h.weight.toFixed(1) + '%' : '') + '</td></tr>';
       }).join('') + (num(c.cash) > 0.5 ? '<tr><td>Cash</td><td></td><td></td><td></td><td></td><td>' + esc(inr(c.cash, 0)) + '</td><td></td><td></td></tr>' : '') + '</tbody></table>' +
       '<h2>Fee for the current period</h2><p>' + esc(t ? c.terms_label : '') + '</p><table><tbody>' + (f.steps || []).map(function (s) {
         return '<tr><td>' + esc(s.label) + '<br><small style="color:#777">' + esc(s.formula) + '</small></td><td>' + (s.unit === 'days' ? esc(plural(s.value, 'day')) : esc(inr(s.value))) + '</td></tr>';
@@ -1847,7 +2208,15 @@
       case 'add-client': clientModal(null); return;
       case 'new-rec': recModal(null); return;
       case 'add-event': if (c) eventModal(c, el.dataset.kind || 'buy'); return;
-      case 'import': if (c) importModal(c); return;
+      case 'import': if (c) uploadModal(c, { paste: true }); return;
+      case 'upload': if (c) uploadModal(c); return;
+      case 'edit-hold': closeModal(); if (c) holdingEditModal(c, el.dataset.sym); return;
+      case 'edit-event': {
+        if (!c) return;
+        var evx = c.events.filter(function (x) { return String(x.id) === String(el.dataset.eid); })[0];
+        if (evx) eventModal(c, evx.kind, evx.symbol, evx);
+        return;
+      }
       case 'settle': if (c) settleModal(c); return;
       case 'past': if (c) pastModal(c); return;
       case 'statement':

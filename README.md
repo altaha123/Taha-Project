@@ -137,6 +137,11 @@ and sets up a desk once. From then on that account is a wealth manager's:
   hurdle, high-water mark, GST, on booked or total profit. Every step is shown
   with its formula, and a what-if slider sits beside it. Periods are settled,
   invoiced and marked paid, and the next period is measured from the last one.
+- **Upload and edit.** A broker's holdings statement (`.xlsx` or CSV, from
+  Groww, Zerodha and the rest) updates a client's portfolio. Stocks are
+  matched by ISIN or name, every change is reviewed before it is saved, and
+  the file is read in the browser, so the client's name and code never leave
+  it. Any buying price, recommended price or ledger entry can be corrected.
 - **For the meeting:** a privacy blur, a printable client statement, CSV
   exports.
 - **For the client:** switched on per client, they sign in with their own

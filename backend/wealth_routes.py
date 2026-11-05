@@ -22,6 +22,12 @@ Routes
   POST   /wealth/clients/{id}/events           add trades / money / dividends / splits
   POST   /wealth/clients/{id}/import           paste rows from a spreadsheet
   DELETE /wealth/clients/{id}/events/{eid}     remove one ledger entry
+  PUT    /wealth/clients/{id}/events/{eid}     correct one ledger entry
+  PUT    /wealth/clients/{id}/events           correct several at once ({edits: [...]})
+  PUT    /wealth/clients/{id}/holdings/{sym}   a holding's average buying / recommended price
+  POST   /wealth/isin                          ISINs to NSE symbols, for a broker's statement
+  POST   /wealth/clients/{id}/statement/plan   what a holdings statement would change
+  POST   /wealth/clients/{id}/statement/apply  take it in
   POST   /wealth/clients/{id}/settle           crystallise the fee for the period
   POST   /wealth/clients/{id}/past             record a settlement made before Altaha
   POST   /wealth/settlements/{sid}             mark due / paid / waived
@@ -212,6 +218,62 @@ def wealth_import(client_id: int, payload: dict = Body(...), authorization: Opti
 def wealth_delete_event(client_id: int, event_id: int, authorization: Optional[str] = Header(None)):
     user = _manager(authorization)
     return _do(W.delete_event, user["id"], client_id, event_id)
+
+
+@router.put("/wealth/clients/{client_id}/events/{event_id}")
+def wealth_edit_event(client_id: int, event_id: int, payload: dict = Body(...),
+                      authorization: Optional[str] = Header(None)):
+    user = _manager(authorization)
+    return _do(W.update_events, user["id"], client_id, [dict(payload or {}, id=event_id)])
+
+
+@router.put("/wealth/clients/{client_id}/events")
+def wealth_edit_events(client_id: int, payload: dict = Body(...), authorization: Optional[str] = Header(None)):
+    user = _manager(authorization)
+    return _do(W.update_events, user["id"], client_id, (payload or {}).get("edits"))
+
+
+@router.put("/wealth/clients/{client_id}/holdings/{symbol}")
+def wealth_edit_holding(client_id: int, symbol: str, payload: dict = Body(...),
+                        authorization: Optional[str] = Header(None)):
+    """Correct a holding's average buying price (every purchase it draws on
+    is scaled by one factor) and/or the recommended price on them."""
+    user = _manager(authorization)
+    payload = payload or {}
+    return _do(W.set_holding, user["id"], client_id, symbol, payload.get("avg"),
+               payload.get("rec_price") if "rec_price" in payload else None)
+
+
+@router.post("/wealth/isin")
+def wealth_isin(payload: dict = Body(...), authorization: Optional[str] = Header(None)):
+    """ISINs to NSE symbols. Only the codes are sent: the statement they came
+    from, with the client's name and code on it, stays in the browser."""
+    _manager(authorization)
+    return _do(W.isin_symbols, (payload or {}).get("isins"))
+
+
+def _held_quotes(user_id: int, client_id: int):
+    data = _do(W.load, user_id)
+    syms = sorted({e["symbol"] for e in data["events"].get(client_id, []) if e.get("symbol")}
+                  - set(data["prices"]))
+    quotes, _, _ = _quotes(syms)
+    for s, p in (data["prices"] or {}).items():
+        quotes[s] = {"symbol": s, "ltp": p["price"]}
+    return quotes
+
+
+@router.post("/wealth/clients/{client_id}/statement/plan")
+def wealth_statement_plan(client_id: int, payload: dict = Body(...), authorization: Optional[str] = Header(None)):
+    user = _manager(authorization)
+    _do(W._client_row, W._conn(), user["id"], client_id)
+    return _do(W.statement_plan, user["id"], client_id, payload, _held_quotes(user["id"], client_id))
+
+
+@router.post("/wealth/clients/{client_id}/statement/apply")
+def wealth_statement_apply(client_id: int, payload: dict = Body(...), authorization: Optional[str] = Header(None)):
+    user = _manager(authorization)
+    _do(W._client_row, W._conn(), user["id"], client_id)
+    return _do(W.statement_apply, user["id"], client_id, payload, _held_quotes(user["id"], client_id))
 
 
 @router.post("/wealth/clients/{client_id}/settle")
