@@ -47,11 +47,62 @@ Every fill is checked before any is written, so a call is booked for all of
 them or for none. Each trade keeps the recommended price beside the fill.
 Typing a stock into the trade form picks up the open call on it by itself.
 
-**Paste holdings.** Rows from a broker's holdings file or a spreadsheet:
-comma, tab or semicolon separated. A header row is recognised by its words
-(symbol / qty / avg price / date / reco price). Without one the columns are
-symbol, quantity, buy price, date, recommended price. One bad row and nothing
-is added, and the row is named.
+**Upload a holdings statement.** *Upload statement* on a client takes the
+file their broker gives (Groww, Zerodha, Upstox, Angel One, Dhan, ICICI
+Direct), as `.xlsx` or CSV, or rows pasted from a spreadsheet. The page
+finds the table under the account lines, reads the statement's own date
+("as on 04-11-2026"), and matches each stock. It matches by **ISIN** first,
+which is exact, using NSE's own equity list. Failing that it matches by
+ticker, then by company name, including names the statement cuts short
+("TATA CONSULTANCY SERV LT", "TAMILNADU PETROPRODUCTS L"). Then it shows
+**every change before anything is saved**, holding by holding:
+
+| The statement shows | The desk does |
+|---|---|
+| a stock not held here | **buys** it at the statement's average price |
+| more shares | buys the difference at the price that makes the two averages agree |
+| fewer shares | sells the difference at the statement's closing price |
+| the same shares at a different average | corrects the buying price |
+| nothing for a stock held here | sells it at today's price; asks for one if there is none |
+| the same shares at the same price | nothing |
+
+Any row can be unticked. "Add every row as a new purchase" skips the
+comparison, which suits a client's first statement. New purchases are dated
+the statement's date, or the client's start date the first time; sales are
+dated the statement's date. A stock that matches no NSE symbol (a BSE-only
+share, say) can be given any short name. It is then added and **priced by
+hand** at the statement's closing price, so it is valued rather than left
+at cost. A statement whose account name is not this client's ("This
+statement is for Priya Raman, and this is Ayesha Kapoor's portfolio") is
+flagged before anything is saved.
+
+*Add client* can start from a statement as well. Choosing the file fills in
+the client's name and start date, and the review opens once the client is
+created.
+
+**The file never leaves the browser** (`frontend/statement-import.js`). A
+statement's first lines carry the client's name and client code, and none of
+that is needed to update a portfolio. The page reads the file itself (an
+`.xlsx` is a zip of XML, which modern browsers can unzip without a library)
+and sends each holding's stock, quantity and prices, plus the ISINs to look
+up. ISINs identify a security, not a person. The browser test checks that
+no request carries the client's name or code from the statement.
+
+**Edit anything.** Every price in a client's holdings is a button.
+*Recommended* and *Bought at* open the holding's editor, and so does the ⋯
+menu:
+- **Set the average:** type the broker's average buying price, or the
+  recommended price, and every purchase the holding is made of is corrected
+  by one factor, so their proportions stay as recorded. A bonus or split
+  since is accounted for, so the recommended price is typed in today's terms.
+- **Each purchase:** the date, quantity, buying price and recommended price
+  of every purchase, each editable, with which ones are still held.
+
+Every ledger entry has an edit button too. Every edit is checked the way a
+new entry is: the whole ledger is replayed with the change first. A
+correction that would leave a later sale selling shares that were never
+there is refused with the reason, and nothing is written. An edit to a
+period already settled says so; the settled amount stays as billed.
 
 **Privacy.** The eye in the desk bar blurs every amount and name, for
 screen-sharing in a client meeting. Hover over a figure to read it. It is
@@ -195,6 +246,11 @@ shows a 50% loss.
 | `POST /wealth/clients/{id}/events` `{events: [...]}` | trades, money, dividends, splits — all or nothing |
 | `POST /wealth/clients/{id}/import` `{text, date}` | pasted rows |
 | `DELETE /wealth/clients/{id}/events/{eid}` | one entry |
+| `PUT /wealth/clients/{id}/events/{eid}` · `PUT /wealth/clients/{id}/events` `{edits}` | correct one entry, or several at once |
+| `PUT /wealth/clients/{id}/holdings/{symbol}` `{avg, rec_price}` | a holding's average buying / recommended price |
+| `POST /wealth/isin` `{isins}` | ISINs to NSE symbols, from NSE's equity list |
+| `POST /wealth/clients/{id}/statement/plan` | what a holdings statement would change — nothing written |
+| `POST /wealth/clients/{id}/statement/apply` `{rows, mode, as_of, buy_date, skip, prices}` | take it in, in one transaction; the plan is worked out again on the server |
 | `POST /wealth/clients/{id}/settle` `{as_of, amount, note}` | crystallise the period |
 | `POST /wealth/clients/{id}/past` | record an earlier settlement |
 | `POST /wealth/settlements/{sid}` `{status, paid_on}` · `DELETE` | mark paid / waived / due; undo the latest |
@@ -256,7 +312,7 @@ page says to ask one.
 **Mutual funds by NAV.** A fund can be held at a hand-set price today. Live
 NAVs from AMFI's daily file would be the next step.
 
-**Broker connections.** Contract notes and holdings arrive by paste, not by
+**Broker connections.** Holdings arrive by uploading the broker's statement, not by
 logging into a broker on the client's behalf. Holding someone's broker
 credentials is not something this site should do.
 

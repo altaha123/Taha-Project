@@ -680,7 +680,7 @@ class State:
                  "sold", "last_date", "topup_events")
 
     def __init__(self):
-        self.lots = {}              # SYMBOL -> [[qty, cost_ps, date, rec_price, rec_id], ...]
+        self.lots = {}              # SYMBOL -> [[qty, cost_ps, date, rec_price, rec_id, event_id], ...]
         self.realised = {}          # SYMBOL -> rupees
         self.sold = {}              # SYMBOL -> {"qty", "proceeds", "cost"}
         self.buys = self.sells = self.charges = self.dividends = 0.0
@@ -772,8 +772,10 @@ def replay(events, until=None, strict=False) -> State:
             st.cash -= need
             st.buys += cost
             st.charges += e.get("charges") or 0
+            # The last slot is the ledger entry the lot came from, so a price
+            # can be corrected on the purchase that set it.
             st.lots.setdefault(sym, []).append(
-                [e["qty"], e["price"], d, e.get("rec_price"), e.get("rec_id")])
+                [e["qty"], e["price"], d, e.get("rec_price"), e.get("rec_id"), e.get("id")])
         elif k == "sell":
             held = st.qty(sym)
             q = e["qty"]
@@ -1018,6 +1020,423 @@ def delete_event(user_id: int, client_id, event_id) -> dict:
     with conn:
         conn.execute("DELETE FROM wm_events WHERE id=? AND user_id=? AND client_id=?", (eid, user_id, row["id"]))
     return {"deleted": eid}
+
+
+# ---------------------------------------------------------------------------
+# Editing the ledger
+#
+# A buying price typed wrong, a quantity off by one, a recommended price never
+# entered: each is corrected on the entry that holds it, and the whole ledger
+# is replayed with the change before anything is written, exactly as a new
+# entry is. Edits arrive together and land together, or not at all.
+# ---------------------------------------------------------------------------
+
+_EDITABLE = ("kind", "symbol", "qty", "price", "amount", "charges", "rec_id", "rec_price", "on_date", "note")
+_TEMP_ID = 10 ** 12
+
+
+def _clean_edit(conn, user_id, cur: dict, patch: dict) -> dict:
+    """The entry `cur` with the fields in `patch` replaced, cleaned as a new
+    entry would be. A recommendation linked by the edit lends its price only
+    when no recommended price was given with it."""
+    merged = {k: cur.get(k) for k in _EDITABLE}
+    for k in _EDITABLE:
+        if k in patch:
+            merged[k] = patch[k]
+    if merged.get("kind") == "split" and "factor" in patch:
+        merged["qty"] = patch["factor"]
+    ev = clean_event(merged)
+    rec = _rec_row(conn, user_id, ev["rec_id"])
+    if rec is not None:
+        if rec["symbol"] != ev["symbol"]:
+            raise ValueError(f"That recommendation is for {rec['symbol']}, not {ev['symbol']}.")
+        if ev["rec_price"] is None and "rec_price" not in patch:
+            ev["rec_price"] = rec["price"]
+    ev["id"] = cur["id"]
+    return ev
+
+
+def _write_events(conn, user_id, client_id, final: list, before: list) -> dict:
+    """Bring the stored ledger to `final`: insert the entries with a temporary
+    id, update the ones that changed. The caller holds the transaction."""
+    old = {e["id"]: e for e in before}
+    now = _now_iso()
+    ids, changed = [], 0
+    for ev in final:
+        if ev["id"] >= _TEMP_ID:
+            cur = conn.execute(
+                "INSERT INTO wm_events(user_id, client_id, kind, symbol, qty, price, amount, charges, "
+                "rec_id, rec_price, on_date, note, created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (user_id, client_id, ev["kind"], ev["symbol"], ev["qty"], ev["price"], ev["amount"],
+                 ev["charges"] or 0.0, ev["rec_id"], ev["rec_price"], ev["on_date"], ev["note"], now))
+            ids.append(cur.lastrowid)
+            continue
+        was = old.get(ev["id"])
+        if was is None or all(was.get(k) == ev.get(k) for k in _EDITABLE):
+            continue
+        conn.execute(
+            "UPDATE wm_events SET kind=?, symbol=?, qty=?, price=?, amount=?, charges=?, rec_id=?, rec_price=?, "
+            "on_date=?, note=? WHERE id=? AND user_id=? AND client_id=?",
+            (ev["kind"], ev["symbol"], ev["qty"], ev["price"], ev["amount"], ev["charges"] or 0.0, ev["rec_id"],
+             ev["rec_price"], ev["on_date"], ev["note"], ev["id"], user_id, client_id))
+        changed += 1
+    return {"ids": ids, "changed": changed}
+
+
+def _settled_warning(conn, user_id, client_id, dates) -> str | None:
+    settled = conn.execute("SELECT MAX(period_end) AS m FROM wm_settlements WHERE client_id=? AND user_id=?",
+                           (client_id, user_id)).fetchone()["m"]
+    if settled and any(d and d <= settled for d in dates):
+        return (f"This changes {settled} or earlier, a period you have already settled. "
+                "The settled amount stays as billed; the next period picks up the difference.")
+    return None
+
+
+def update_events(user_id: int, client_id, edits: list) -> dict:
+    """Correct one or many ledger entries: [{id, field: value, ...}, ...]."""
+    if not isinstance(edits, list) or not edits:
+        raise ValueError("Send at least one change.")
+    if len(edits) > MAX_IMPORT:
+        raise ValueError(f"At most {MAX_IMPORT} changes at a time.")
+    conn = _conn()
+    row = _client_row(conn, user_id, client_id)
+    have = _events_for(conn, user_id, row["id"])
+    by_id = {e["id"]: e for e in have}
+    repl = {}
+    for i, ed in enumerate(edits):
+        ed = ed if isinstance(ed, dict) else {}
+        try:
+            eid = int(ed.get("id"))
+        except (TypeError, ValueError):
+            raise LookupError("No such entry.")
+        if eid not in by_id:
+            raise LookupError("No such entry.")
+        try:
+            repl[eid] = _clean_edit(conn, user_id, repl.get(eid) or by_id[eid], ed)
+        except ValueError as e:
+            raise ValueError(f"Change {i + 1}: {e}" if len(edits) > 1 else str(e))
+    final = [repl.get(e["id"], e) for e in have]
+    try:
+        validate_ledger(final)
+    except ValueError as e:
+        raise ValueError(f"That change would break the ledger — {e}")
+    dates = [by_id[i]["on_date"] for i in repl] + [r["on_date"] for r in repl.values()]
+    with conn:
+        out = _write_events(conn, user_id, row["id"], final, have)
+    return {"changed": out["changed"], "warning": _settled_warning(conn, user_id, row["id"], dates)}
+
+
+def _scale_edits(events: list, symbol: str, avg=None, rec=None, rec_clear=False) -> dict:
+    """{event_id: {"price"?, "rec_price"?}} that make the shares of `symbol`
+    still held cost `avg` each on average, and carry `rec` as their
+    recommended price — both in today's terms, after any bonus or split.
+
+    The buying price is corrected on every purchase the holding still draws
+    on, scaled by one factor, so their proportions stay as recorded. A
+    purchase partly sold already is corrected too: if its price was wrong,
+    so was the profit booked on the part that was sold, and that is re-measured.
+    """
+    st = replay(events)
+    lots = st.lots.get(symbol) or []
+    if not lots:
+        raise LookupError(f"No {symbol} is held.")
+    q = sum(l[0] for l in lots)
+    cost = sum(l[0] * l[1] for l in lots)
+    if q <= _EPS or cost <= 0:
+        raise ValueError(f"{symbol} has no buying price to correct.")
+    by_id = {e["id"]: e for e in events}
+    out = {}
+    k = (avg / (cost / q)) if avg is not None else None
+    for l in lots:
+        eid = l[5]
+        ev = by_id.get(eid)
+        if ev is None or ev["kind"] != "buy":
+            continue
+        ch = out.setdefault(eid, {})
+        if k is not None:
+            ch["price"] = round(ev["price"] * k, 6)
+        if rec is not None or rec_clear:
+            # A split since the purchase divided the lot's price; the
+            # recommended price on the purchase is in its own day's terms.
+            f = ev["price"] / l[1] if l[1] else 1.0
+            ch["rec_price"] = None if rec_clear else round(rec * f, 6)
+    return out
+
+
+def _apply_scale(trial: list, edits: dict) -> None:
+    for e in trial:
+        ch = edits.get(e["id"])
+        if ch:
+            e.update(ch)
+
+
+def set_holding(user_id: int, client_id, symbol, avg=None, rec_price=None) -> dict:
+    """Correct a holding's average buying price and/or its recommended price."""
+    sym = clean_symbol(symbol)
+    a = _pos(avg, "Average buying price", 1e7, allow_none=True)
+    rec_clear = rec_price == "" or rec_price == 0 or rec_price == "0"
+    r = None if rec_clear else _pos(rec_price, "Recommended price", 1e7, allow_none=True)
+    if a is None and r is None and not rec_clear:
+        raise ValueError("Give a buying price, a recommended price, or both.")
+    conn = _conn()
+    row = _client_row(conn, user_id, client_id)
+    have = _events_for(conn, user_id, row["id"])
+    edits = _scale_edits(have, sym, a, r, rec_clear=rec_clear and rec_price is not None)
+    final = [dict(e) for e in have]
+    _apply_scale(final, edits)
+    validate_ledger(final)
+    with conn:
+        out = _write_events(conn, user_id, row["id"], final, have)
+    dates = [e["on_date"] for e in have if e["id"] in edits]
+    return {"changed": out["changed"], "symbol": sym,
+            "warning": _settled_warning(conn, user_id, row["id"], dates)}
+
+
+# ---------------------------------------------------------------------------
+# A broker's holdings statement
+#
+# The file is read in the browser (statement-import.js): a statement carries
+# the client's name, client code and often a phone number, and none of that
+# needs to leave the page. What arrives here is one row per holding — symbol,
+# quantity, average buying price, the statement's closing price — and the
+# date the statement is "as on".
+#
+# Two ways to take it in:
+#   add   every row is a purchase. For a client being brought onto the desk.
+#   sync  bring the book to match the statement, holding by holding:
+#           new     held there, not here          buy it
+#           more    more shares there             buy the difference, at the
+#                                                 price that makes the averages
+#                                                 agree
+#           fewer   fewer shares there            sell the difference at the
+#                                                 statement's closing price
+#           price   same shares, different price  correct the buying price
+#           same    nothing to do
+#           gone    held here, not there          sell it at today's price
+# Every proposal is shown before anything is written, any can be left out,
+# and the ones taken are written in one transaction.
+# ---------------------------------------------------------------------------
+
+PRICE_TOLERANCE = 0.0025      # 0.25%: a broker rounds its average to the paisa
+
+
+def _clean_rows(rows) -> list:
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("The statement has no holdings in it.")
+    if len(rows) > MAX_IMPORT:
+        raise ValueError(f"At most {MAX_IMPORT} holdings at a time.")
+    merged = {}
+    order = []
+    for i, r in enumerate(rows):
+        r = r if isinstance(r, dict) else {}
+        try:
+            sym = clean_symbol(r.get("symbol"))
+            q = _pos(r.get("qty"), "Quantity", 1e9)
+            a = _pos(r.get("avg"), "Average buying price", 1e7, allow_none=True)
+            c = _pos(r.get("close"), "Closing price", 1e7, allow_none=True)
+            rp = _pos(r.get("rec_price"), "Recommended price", 1e7, allow_none=True)
+        except ValueError as e:
+            raise ValueError(f"Row {i + 1} ({r.get('symbol') or '?'}): {e}")
+        if sym not in merged:
+            merged[sym] = {"symbol": sym, "qty": 0.0, "cost": 0.0, "priced": 0.0, "close": c, "rec_price": rp}
+            order.append(sym)
+        m = merged[sym]
+        # The same company listed twice (an NSE and a BSE line, two demat
+        # accounts) is one holding: quantities add, averages weight.
+        m["qty"] += q
+        if a is not None:
+            m["cost"] += q * a
+            m["priced"] += q
+        m["close"] = m["close"] or c
+        m["rec_price"] = m["rec_price"] or rp
+    out = []
+    for sym in order:
+        m = merged[sym]
+        out.append({"symbol": sym, "qty": m["qty"],
+                    "avg": (m["cost"] / m["priced"]) if m["priced"] > _EPS else None,
+                    "close": m["close"], "rec_price": m["rec_price"]})
+    return out
+
+
+def _r2(v):
+    return None if v is None else round(v, 2)
+
+
+def statement_plan(user_id: int, client_id, payload: dict, quotes: dict = None) -> dict:
+    """What taking this statement in would do, holding by holding. Nothing is
+    written. `quotes` prices a holding the statement no longer lists."""
+    payload = payload if isinstance(payload, dict) else {}
+    mode = str(payload.get("mode") or "sync").lower()
+    if mode not in ("sync", "add"):
+        raise ValueError("Mode must be sync or add.")
+    rows = _clean_rows(payload.get("rows"))
+    as_of = _date(payload.get("as_of"), "Statement date", default=today().isoformat())
+    buy_on = _date(payload.get("buy_date"), "Bought on", default=as_of)
+    prices = payload.get("prices") if isinstance(payload.get("prices"), dict) else {}
+    conn = _conn()
+    row = _client_row(conn, user_id, client_id)
+    have_events = _events_for(conn, user_id, row["id"])
+    st = replay(have_events)
+    held = {}
+    for sym, lots in st.lots.items():
+        q = sum(l[0] for l in lots)
+        if q > _EPS:
+            held[sym] = {"qty": q, "cost": sum(l[0] * l[1] for l in lots)}
+    items = []
+
+    def buy(sym, q, p, rec):
+        return {"kind": "buy", "symbol": sym, "qty": round(q, 6), "price": round(p, 6), "on_date": buy_on,
+                "rec_price": rec, "note": "From the holdings statement"}
+
+    def sell(sym, q, p):
+        return {"kind": "sell", "symbol": sym, "qty": round(q, 6), "price": round(p, 6), "on_date": as_of,
+                "note": "Not in the holdings statement" if sym not in want_syms else "From the holdings statement"}
+
+    def live(sym):
+        given = _num(prices.get(sym)) if sym in prices else None
+        if given and given > 0:
+            return given, "you"
+        q = (quotes or {}).get(sym) or {}
+        p = _num(q.get("ltp"))
+        return (p, "today’s price") if p else (None, None)
+
+    want_syms = {r["symbol"] for r in rows}
+    for w in rows:
+        sym, h = w["symbol"], held.get(w["symbol"])
+        item = {"symbol": sym, "want": {"qty": w["qty"], "avg": _r2(w["avg"]), "close": w["close"]},
+                "have": {"qty": round(h["qty"], 6), "avg": _r2(h["cost"] / h["qty"])} if h else None,
+                "ops": [], "fix_avg": None, "include": True, "note": ""}
+        if mode == "add" or not h:
+            if w["avg"] is None:
+                item.update(status="error", include=False, note="No buying price in the statement for this row.")
+            else:
+                item.update(status="new" if not h else "add")
+                item["ops"].append(buy(sym, w["qty"], w["avg"], w["rec_price"]))
+            items.append(item)
+            continue
+        dq = w["qty"] - h["qty"]
+        target = w["avg"] if w["avg"] is not None else h["cost"] / h["qty"]
+        if dq > _EPS:
+            implied = (w["qty"] * target - h["cost"]) / dq
+            ok = implied > 0 and (not w["close"] or w["close"] / 5 <= implied <= w["close"] * 5)
+            p = implied if ok else target
+            item["ops"].append(buy(sym, dq, p, w["rec_price"]))
+            item["status"] = "more"
+            if not ok:
+                item["fix_avg"] = target
+                item["note"] = "The averages could not be matched by one purchase; the buying price is corrected after it."
+        elif dq < -_EPS:
+            p, src = (w["close"], "the statement’s closing price") if w["close"] else live(sym)
+            if not p:
+                item.update(status="fewer", include=False, needs_price=True,
+                            note="No price to sell at. Enter the price the shares were sold for.")
+            else:
+                item["ops"].append(sell(sym, -dq, p))
+                item["status"] = "fewer"
+                item["sell_price_from"] = src
+                # FIFO takes the oldest shares; the broker's average for what
+                # is left may differ, and the statement is what the client sees.
+                trial = have_events + [dict(clean_event(item["ops"][0]), id=_TEMP_ID)]
+                t = replay(trial)
+                lots = t.lots.get(sym) or []
+                tq = sum(l[0] for l in lots)
+                if tq > _EPS and w["avg"] is not None:
+                    left = sum(l[0] * l[1] for l in lots) / tq
+                    if abs(left - w["avg"]) / w["avg"] > PRICE_TOLERANCE:
+                        item["fix_avg"] = w["avg"]
+                        item["note"] = (f"After the sale the shares left average ₹{left:,.2f} here; "
+                                        "the buying price is corrected to the statement’s.")
+        else:
+            cur = h["cost"] / h["qty"]
+            if w["avg"] is not None and abs(cur - w["avg"]) / w["avg"] > PRICE_TOLERANCE:
+                item["status"] = "price"
+                item["fix_avg"] = w["avg"]
+            else:
+                item["status"] = "same"
+                item["include"] = False
+        items.append(item)
+
+    if mode == "sync":
+        for sym, h in held.items():
+            if sym in want_syms:
+                continue
+            p, src = live(sym)
+            item = {"symbol": sym, "want": None, "have": {"qty": round(h["qty"], 6), "avg": _r2(h["cost"] / h["qty"])},
+                    "ops": [], "fix_avg": None, "status": "gone", "include": True, "note": ""}
+            if not p:
+                item.update(include=False, needs_price=True,
+                            note="Not in the statement. Enter the price it was sold for to record the sale.")
+            else:
+                item["ops"].append(sell(sym, h["qty"], p))
+                item["sell_price_from"] = src
+            items.append(item)
+
+    order = {"new": 0, "add": 0, "more": 1, "fewer": 2, "gone": 3, "price": 4, "error": 5, "same": 6}
+    items.sort(key=lambda it: (order.get(it["status"], 9), it["symbol"]))
+    counts = {}
+    for it in items:
+        counts[it["status"]] = counts.get(it["status"], 0) + 1
+    return {"mode": mode, "as_of": as_of, "buy_date": buy_on, "items": items, "counts": counts,
+            "client_id": row["id"], "held": len(held)}
+
+
+def statement_apply(user_id: int, client_id, payload: dict, quotes: dict = None) -> dict:
+    """Take the statement in. The plan is worked out again here from the same
+    rows, so what is written is what the rules say, not what a page sent;
+    the page sends only which holdings to leave out and any sale prices."""
+    payload = payload if isinstance(payload, dict) else {}
+    plan = statement_plan(user_id, client_id, payload, quotes)
+    skip = {str(s).upper() for s in (payload.get("skip") or [])}
+    take = [it for it in plan["items"] if it["include"] and it["symbol"] not in skip]
+    if not take:
+        raise ValueError("Nothing to change: every holding already matches, or all were left out.")
+    conn = _conn()
+    row = _client_row(conn, user_id, client_id)
+    have = _events_for(conn, user_id, row["id"])
+    if len(have) + sum(len(it["ops"]) for it in take) > MAX_EVENTS:
+        raise ValueError(f"A client's ledger holds up to {MAX_EVENTS} entries.")
+    trial = [dict(e) for e in have]
+    n = 0
+    for it in take:
+        for op in it["ops"]:
+            ev = clean_event(op)
+            ev["id"] = _TEMP_ID + n
+            n += 1
+            trial.append(ev)
+    for it in take:
+        if it["fix_avg"]:
+            _apply_scale(trial, _scale_edits(trial, it["symbol"], it["fix_avg"]))
+    validate_ledger(trial)
+    with conn:
+        out = _write_events(conn, user_id, row["id"], trial, have)
+    done = {}
+    for it in take:
+        done[it["status"]] = done.get(it["status"], 0) + 1
+    return {"added": len(out["ids"]), "corrected": out["changed"], "holdings": len(take), "done": done,
+            "warning": _settled_warning(conn, user_id, row["id"], [plan["as_of"], plan["buy_date"]])}
+
+
+def isin_symbols(isins) -> dict:
+    """{ISIN: NSE symbol} for the codes asked about, from NSE's own equity
+    list (fund_portfolios keeps it, cached on disk). An ISIN is a public
+    identifier of a security, not of a person, so it is safe to send."""
+    want = []
+    for raw in isins or []:
+        c = str(raw or "").strip().upper()
+        if re.match(r"^IN[A-Z0-9]{9}\d$", c) and c not in want:
+            want.append(c)
+    if not want:
+        return {"map": {}, "missing": []}
+    if len(want) > MAX_IMPORT:
+        raise ValueError(f"At most {MAX_IMPORT} ISINs at a time.")
+    try:
+        import fund_portfolios
+        table, meta = fund_portfolios.isin_map()
+    except Exception as e:                                    # pragma: no cover
+        print(f"[wealth] isin map: {type(e).__name__}: {e}", flush=True)
+        table, meta = {}, {"stale": True}
+    hit = {c: table[c] for c in want if c in table}
+    return {"map": hit, "missing": [c for c in want if c not in hit], "stale": bool(meta.get("stale"))}
 
 
 _HEAD = {"symbol": "symbol", "stock": "symbol", "scrip": "symbol", "ticker": "symbol", "instrument": "symbol",
@@ -1730,6 +2149,9 @@ def compute_client(client: dict, events: list, settles: list, quotes: dict, manu
             "priced": p is not None, "price_source": pm["source"].get(sym, "cost"),
             "spark": (qt.get("spark") or [])[-30:] if sym not in manual else [],
             "realised": _r(st.realised.get(sym, 0.0)),
+            # The purchases the holding still draws on, for correcting one.
+            "lots": [{"id": l[5], "qty": _r(l[0], 4), "price": _r(l[1]), "date": l[2], "rec_price": _r(l[3])}
+                     for l in lots],
         })
     for h in holdings:
         h["weight"] = _r(100 * h["value"] / value) if value > 0 else None
