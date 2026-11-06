@@ -413,6 +413,7 @@
       date: data.date || ''
     });
     renderRows();
+    return true;
   }
 
   function saveDraft() {
@@ -433,6 +434,332 @@
 
   var draftWired = false;
 
+  /* ── 3a. THE HOLDINGS LEDGER ─────────────────────────────────────────────
+     Readers said this editor was unattractive and took too much room: every
+     holding was a block of four labelled form boxes, so twenty-one stocks ran
+     to 2,300px on a laptop and 6,000px on a phone, and none of it said how the
+     portfolio was doing. Now each holding is one line of a ledger — a coloured
+     badge, the symbol with the company's name under it, quantity and average
+     cost typed in place, then today's price, value, profit and a 30-session
+     line — under one header instead of labels repeated on every row. Above it,
+     a board: what the holdings are worth now, what they cost, the profit, the
+     day's move and an allocation strip in the badges' colours.
+
+     The inputs are still real inputs (.pf_sym, .pf_qty, .pf_buy, .pf_date) and
+     the model is still state.rows, so saving, importing and analysing are
+     untouched. Prices come from /watchlist/quotes, the endpoint the watchlists
+     use (delayed, cached server-side). A price that has not arrived shows a
+     dash and the board says so; nothing is estimated. Nothing here is a call:
+     it is arithmetic on what the reader typed and the last traded price. */
+
+  var LIVE = { q: {}, names: null, inflight: {}, at: 0, timer: null, tick: null, sort: '' };
+  var SORT_KEY = 'altaha-pf-sort-v1';
+  try { LIVE.sort = localStorage.getItem(SORT_KEY) || ''; } catch (e) {}
+
+  // Ten tones that sit with the gold, each dark enough for white initials.
+  var TONES = ['#9A7420', '#2F6F6B', '#4A5BA8', '#86497A', '#A9502D',
+               '#5F7232', '#4C6275', '#A4475F', '#B0731F', '#2F7350'];
+  function tone(sym) {
+    var h = 0;
+    for (var i = 0; i < sym.length; i++) h = (h * 31 + sym.charCodeAt(i)) >>> 0;
+    return TONES[h % TONES.length];
+  }
+  function num(v) { var n = Number(v); return v !== '' && v !== null && v !== undefined && isFinite(n) ? n : null; }
+  function px(n) {
+    if (n === null || !isFinite(n)) return '—';
+    return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function signed(n, f) {
+    if (n === null || !isFinite(n)) return '—';
+    return (n > 0 ? '+' : n < 0 ? '−' : '') + f(Math.abs(n));
+  }
+  function upDn(n) { return n === null || !isFinite(n) || n === 0 ? '' : n > 0 ? ' up' : ' dn'; }
+  function still() {
+    try {
+      return document.documentElement.dataset.motion === 'off' ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch (e) { return false; }
+  }
+
+  function loadNames() {
+    if (LIVE.names) return;
+    LIVE.names = {};
+    loadUniverse().then(function (rows) {
+      var list = document.getElementById('pf_symlist');
+      if (!list) {
+        list = el('datalist');
+        list.id = 'pf_symlist';
+        document.body.appendChild(list);
+      }
+      var html = [];
+      (rows || []).forEach(function (r) {
+        if (!r || !r.s) return;
+        LIVE.names[r.s] = r.n || '';
+        html.push('<option value="' + esc(r.s) + '">' + esc(r.n || '') + '</option>');
+      });
+      list.innerHTML = html.join('');
+      paintBoard();
+    });
+  }
+
+  /* Prices for every symbol on screen that has none yet, or whose price is
+     older than two minutes. The server fetches at most a few new names per
+     call and names the rest as pending; those are asked for again shortly. */
+  function loadQuotes(force, tries) {
+    var now = Date.now();
+    var stale = force || now - LIVE.at > 120000;
+    var want = [];
+    state.rows.forEach(function (r) {
+      var s = r.symbol;
+      if (!s || s.length < 2 || LIVE.inflight[s] || want.indexOf(s) > -1) return;
+      if (stale || !LIVE.q[s]) want.push(s);
+    });
+    if (!want.length) return;
+    if (stale) LIVE.at = now;
+    var chunks = [];
+    for (var i = 0; i < want.length; i += 50) chunks.push(want.slice(i, i + 50));
+    chunks.forEach(function (chunk) {
+      chunk.forEach(function (s) { LIVE.inflight[s] = 1; });
+      var ctl = null, timer = null;
+      try { ctl = new AbortController(); timer = setTimeout(function () { ctl.abort(); }, 45000); } catch (e) {}
+      fetch(API + '/watchlist/quotes?symbols=' + encodeURIComponent(chunk.join(',')), ctl ? { signal: ctl.signal } : {})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; })
+        .then(function (d) {
+          if (timer) clearTimeout(timer);
+          chunk.forEach(function (s) { delete LIVE.inflight[s]; });
+          if (!d) return;
+          (d.rows || []).forEach(function (q) {
+            if (q && q.symbol && isFinite(q.ltp)) LIVE.q[q.symbol] = q;
+          });
+          if (d.rows && d.rows[0] && d.rows[0].source) LIVE.source = d.rows[0].source;
+          paintBoard();
+          if ((d.pending || []).length && (tries || 0) < 6) {
+            setTimeout(function () { loadQuotes(false, (tries || 0) + 1); }, 1500);
+          }
+        });
+    });
+  }
+
+  var quoteSoon = null;
+  function quotesSoon() {
+    clearTimeout(quoteSoon);
+    quoteSoon = setTimeout(function () { loadQuotes(false); }, 700);
+  }
+
+  /* While the review is on screen and the tab is visible, prices refresh
+     every two minutes. Nothing runs for a reader who is elsewhere. */
+  function startTicker() {
+    if (LIVE.tick) return;
+    LIVE.tick = setInterval(function () {
+      var v = $('view-portfolio');
+      if (document.visibilityState !== 'visible' || !v || v.offsetParent === null) return;
+      loadQuotes(true);
+    }, 120000);
+  }
+
+  function spark(vals, up) {
+    vals = (vals || []).filter(function (v) { return isFinite(v); });
+    if (vals.length < 2) return '';
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), rg = (mx - mn) || 1;
+    var pts = vals.map(function (v, i) {
+      return (i / (vals.length - 1) * 96).toFixed(1) + ',' + (2 + (1 - (v - mn) / rg) * 24).toFixed(1);
+    }).join(' ');
+    return '<svg viewBox="0 0 96 28" preserveAspectRatio="none" class="pf-spark' + (up ? ' up' : ' dn') +
+      '" aria-hidden="true"><polyline points="' + pts + '"/></svg>';
+  }
+
+  /* One pass over the model: every row's figures, and the totals. */
+  function figures() {
+    var out = { rows: [], value: 0, cost: 0, costed: 0, valuedCost: 0, day: 0, dayBase: 0,
+                priced: 0, named: 0, up: 0, dn: 0 };
+    state.rows.forEach(function (r) {
+      var q = r.symbol ? LIVE.q[r.symbol] : null;
+      var qty = num(r.qty), buy = num(r.buy);
+      var f = { r: r, q: q, qty: qty, buy: buy, ltp: q ? q.ltp : null, value: null, cost: null, pl: null, plPct: null, day: null };
+      if (r.symbol && qty > 0) {
+        out.named++;
+        if (buy !== null && buy > 0) { f.cost = qty * buy; out.cost += f.cost; }
+        if (q && isFinite(q.ltp)) {
+          out.priced++;
+          f.value = qty * q.ltp;
+          out.value += f.value;
+          if (isFinite(q.prev_close) && q.prev_close > 0) {
+            f.day = qty * (q.ltp - q.prev_close);
+            out.day += f.day;
+            out.dayBase += qty * q.prev_close;
+          }
+          if (f.cost !== null) {
+            f.pl = f.value - f.cost;
+            f.plPct = 100 * f.pl / f.cost;
+            out.costed += f.value;
+            out.valuedCost += f.cost;
+            if (f.pl > 0) out.up++; else if (f.pl < 0) out.dn++;
+          }
+        }
+      }
+      out.rows.push(f);
+    });
+    out.weightBase = out.value > 0 ? out.value : out.cost;
+    out.rows.forEach(function (f) {
+      var w = out.value > 0 ? f.value : f.cost;
+      f.weight = w && out.weightBase ? 100 * w / out.weightBase : null;
+    });
+    return out;
+  }
+
+  function paintBoard() {
+    var F = figures();
+    var host = $('pf_rows');
+    if (!host) return;
+
+    // Two small honours, only once there is a list to rank: the largest
+    // holding and the best return. They describe the past; neither is a call.
+    var big = null, best = null;
+    if (F.named >= 3) {
+      F.rows.forEach(function (f) {
+        if (f.weight !== null && (!big || f.weight > big.weight)) big = f;
+        if (f.plPct !== null && f.plPct > 0 && (!best || f.plPct > best.plPct)) best = f;
+      });
+    }
+
+    F.rows.forEach(function (f, i) {
+      var row = host.children[i];
+      if (!row) return;
+      var sym = f.r.symbol;
+      var av = row.querySelector('.pf-av');
+      if (av) {
+        av.textContent = sym ? sym.replace(/[^A-Z0-9]/g, '').slice(0, 2) : '+';
+        av.style.background = sym ? tone(sym) : '';
+        av.classList.toggle('empty', !sym);
+      }
+      var name = row.querySelector('.pf-name');
+      if (name) {
+        var nm = sym && LIVE.names ? (LIVE.names[sym] || '') : '';
+        var tags = '';
+        if (big && f === big) tags += '<i class="pf-tag">Biggest</i>';
+        if (best && f === best) tags += '<i class="pf-tag gold">Top gainer</i>';
+        name.innerHTML = tags + '<span>' + esc(nm || (sym ? '' : 'Type a symbol, e.g. RELIANCE')) + '</span>';
+      }
+      var price = row.querySelector('.pf-price');
+      if (price) {
+        if (f.q) {
+          price.innerHTML = '<b>' + px(f.ltp) + '</b><small class="' + upDn(f.q.change_pct).trim() + '">' +
+            signed(f.q.change_pct, function (v) { return v.toFixed(2) + '%'; }) + ' today</small>';
+        } else {
+          price.innerHTML = sym ? '<b class="pf-wait">—</b><small>' + (LIVE.inflight[sym] ? 'fetching' : 'no price yet') + '</small>' : '';
+        }
+      }
+      var val = row.querySelector('.pf-val');
+      if (val) {
+        if (f.value !== null) {
+          val.innerHTML = '<b>' + inr(f.value) + '</b>' + (f.pl !== null
+            ? '<small class="pf-pl' + upDn(f.pl) + '">' + signed(f.pl, inr) + '<span class="pf-sep"> ·</span> ' + signed(f.plPct, function (v) { return v.toFixed(1) + '%'; }) + '</small>'
+            : '<small>add avg cost for P&amp;L</small>');
+        } else if (f.cost !== null) {
+          val.innerHTML = '<b>' + inr(f.cost) + '</b><small>invested</small>';
+        } else {
+          val.innerHTML = '';
+        }
+      }
+      var tr = row.querySelector('.pf-trend');
+      if (tr) tr.innerHTML = f.q ? spark(f.q.spark, (f.q.spark || []).length < 2 || f.q.spark[f.q.spark.length - 1] >= f.q.spark[0]) : '';
+      var bar = row.querySelector('.pf-wbar');
+      if (bar) {
+        bar.style.width = f.weight !== null ? Math.max(1, Math.min(100, f.weight)).toFixed(1) + '%' : '0';
+        bar.style.background = sym ? tone(sym) : '';
+        row.title = f.weight !== null ? sym + ': ' + f.weight.toFixed(1) + '% of the portfolio' : '';
+      }
+      row.classList.toggle('has-date', !!f.r.date);
+    });
+
+    paintSummary(F);
+
+    var count = $('pf_count');
+    if (count) {
+      count.textContent = F.named
+        ? F.named + (F.named === 1 ? ' stock' : ' stocks') + ' · max ' + MAX_ROWS
+        : 'Add up to ' + MAX_ROWS + ' stocks';
+    }
+  }
+
+  function paintSummary(F) {
+    var host = $('pf_board');
+    if (!host) return;
+    if (!F.named) { host.innerHTML = ''; host.hidden = true; return; }
+    host.hidden = false;
+    var pl = F.valuedCost ? F.costed - F.valuedCost : null;
+    var plPct = F.valuedCost ? 100 * pl / F.valuedCost : null;
+    var dayPct = F.dayBase ? 100 * F.day / F.dayBase : null;
+    var shown = F.value > 0;
+    var segs = F.rows.filter(function (f) { return f.weight; })
+      .sort(function (a, b) { return b.weight - a.weight; });
+    var strip = segs.map(function (f) {
+      return '<i style="width:' + f.weight.toFixed(2) + '%;background:' + tone(f.r.symbol) + '" title="' +
+        esc(f.r.symbol + ' ' + f.weight.toFixed(1) + '%') + '"></i>';
+    }).join('');
+    var legend = segs.slice(0, 6).map(function (f) {
+      return '<span><i style="background:' + tone(f.r.symbol) + '"></i>' + esc(f.r.symbol) + ' <b>' + f.weight.toFixed(1) + '%</b></span>';
+    }).join('') + (segs.length > 6 ? '<span class="pf-more">+' + (segs.length - 6) + ' more</span>' : '');
+    var sorts = [['', 'As entered'], ['value', 'Biggest'], ['gain', 'Best return'], ['az', 'A–Z']];
+
+    host.innerHTML =
+      '<div class="pf-stats">' +
+        '<div class="pf-stat pf-stat-main"><span>' + (shown ? 'Worth now' : 'Invested') + '</span>' +
+          '<b>' + inrShort(shown ? F.value : F.cost) + '</b>' +
+          '<small>' + F.named + (F.named === 1 ? ' stock' : ' stocks') +
+          (F.up + F.dn ? ' · <em class="up">' + F.up + ' in profit</em> · <em class="dn">' + F.dn + ' in loss</em>' : '') + '</small></div>' +
+        (shown && F.cost ? '<div class="pf-stat"><span>Invested</span><b>' + inrShort(F.cost) + '</b><small>at your average cost</small></div>' : '') +
+        '<div class="pf-stat"><span>Profit / loss</span><b class="' + upDn(pl).trim() + '">' + (pl !== null ? signed(pl, inrShort) : '—') + '</b>' +
+          '<small class="' + upDn(pl).trim() + '">' + (plPct !== null ? signed(plPct, function (v) { return v.toFixed(1) + '%'; }) + ' overall' : 'add avg costs to see it') + '</small></div>' +
+        '<div class="pf-stat"><span>Today</span><b class="' + upDn(F.day).trim() + '">' + (F.dayBase ? signed(F.day, inrShort) : '—') + '</b>' +
+          '<small class="' + upDn(F.day).trim() + '">' + (dayPct !== null ? signed(dayPct, function (v) { return v.toFixed(2) + '%'; }) : 'waiting for prices') + '</small></div>' +
+      '</div>' +
+      (strip ? '<div class="pf-strip" role="img" aria-label="How the portfolio is split, largest first">' + strip + '</div>' +
+        '<div class="pf-legend">' + legend + '</div>' : '') +
+      '<div class="pf-boardfoot">' +
+        '<div class="pf-sort" role="group" aria-label="Sort holdings">' + sorts.map(function (s) {
+          return '<button type="button" data-pfsort="' + s[0] + '" aria-pressed="' + (LIVE.sort === s[0]) + '">' + s[1] + '</button>';
+        }).join('') + '</div>' +
+        '<span class="pf-src">' + (F.priced
+          ? 'Prices ' + esc(LIVE.source || 'delayed') + ' · ' + F.priced + ' of ' + F.named + ' priced'
+          : 'Reading prices…') + '</span>' +
+      '</div>';
+  }
+
+  /* Sorting reorders the list itself, so what is saved is what is seen.
+     Empty rows stay at the bottom, where a new one is being typed. */
+  function sortRows(by) {
+    LIVE.sort = by;
+    try { localStorage.setItem(SORT_KEY, by); } catch (e) {}
+    if (!by) { paintBoard(); return; }
+    var F = figures();
+    var key = {};
+    F.rows.forEach(function (f) {
+      key[state.rows.indexOf(f.r)] = by === 'value' ? -(f.value !== null ? f.value : (f.cost || 0))
+        : by === 'gain' ? -(f.plPct !== null ? f.plPct : -1e9) : 0;
+    });
+    var idx = state.rows.map(function (r, i) { return i; });
+    idx.sort(function (a, b) {
+      var ra = state.rows[a], rb = state.rows[b];
+      if (!ra.symbol !== !rb.symbol) return ra.symbol ? -1 : 1;
+      if (by === 'az') return ra.symbol < rb.symbol ? -1 : ra.symbol > rb.symbol ? 1 : 0;
+      return key[a] - key[b] || a - b;
+    });
+    state.rows = idx.map(function (i) { return state.rows[i]; });
+    renderRows();
+  }
+
+  function wireBoard() {
+    var b = $('pf_board');
+    if (!b || b._wired) return;
+    b._wired = true;
+    b.addEventListener('click', function (e) {
+      var s = e.target.closest && e.target.closest('[data-pfsort]');
+      if (s) sortRows(s.dataset.pfsort);
+    });
+  }
+
   function renderRows() {
     var host = $('pf_rows');
     if (!host) return;
@@ -444,19 +771,31 @@
       host.addEventListener('change', saveDraft);
       draftWired = true;
     }
+    loadNames();
+    wireBoard();
+    startTicker();
 
     state.rows.forEach(function (r, i) {
       var row = el('div', 'pfrow');
+      var n = i + 1;
       row.innerHTML =
-        '<label class="pf-field pf-field-symbol"><span>Stock symbol</span><input class="pf_sym" placeholder="RELIANCE" spellcheck="false" ' +
-          'aria-label="Symbol, row ' + (i + 1) + '" value="' + esc(r.symbol) + '">' +
-        '</label><label class="pf-field pf-field-qty"><span>Quantity</span><input inputmode="decimal" class="pf_qty" type="number" min="0" step="any" placeholder="10" ' +
-          'aria-label="Quantity, row ' + (i + 1) + '" value="' + esc(r.qty) + '">' +
-        '</label><label class="pf-field pf-field-buy"><span>Avg. buy price <small>(optional)</small></span><input inputmode="decimal" class="pf_buy" type="number" min="0" step="any" placeholder="2400" ' +
-          'aria-label="Average buy price, row ' + (i + 1) + '" value="' + esc(r.buy) + '">' +
-        '</label><label class="pf-field pf-field-date"><span>Buy date <small>(optional)</small></span><input class="pf_date" type="date" ' +
-          'aria-label="Buy date, row ' + (i + 1) + '" value="' + esc(r.date) + '">' +
-        '</label><button class="pfdel" type="button" aria-label="Remove row ' + (i + 1) + '">\u2715</button>';
+        '<span class="pf-av" aria-hidden="true"></span>' +
+        '<label class="pf-field pf-field-symbol"><span class="pf-lbl">Stock</span>' +
+          '<input class="pf_sym" list="pf_symlist" placeholder="Symbol" spellcheck="false" autocomplete="off" ' +
+          'aria-label="Symbol, row ' + n + '" value="' + esc(r.symbol) + '">' +
+          '<small class="pf-name"></small></label>' +
+        '<label class="pf-field pf-field-qty"><span class="pf-lbl">Qty</span><input inputmode="decimal" class="pf_qty" type="number" min="0" step="any" placeholder="0" ' +
+          'aria-label="Quantity, row ' + n + '" value="' + esc(r.qty) + '"></label>' +
+        '<label class="pf-field pf-field-buy"><span class="pf-lbl">Avg</span><input inputmode="decimal" class="pf_buy" type="number" min="0" step="any" placeholder="optional" ' +
+          'aria-label="Average buy price, row ' + n + '" value="' + esc(r.buy) + '"></label>' +
+        '<div class="pf-live pf-price"></div>' +
+        '<div class="pf-live pf-val"></div>' +
+        '<div class="pf-live pf-trend"></div>' +
+        '<label class="pf-field pf-field-date"><span class="pf-lbl">Bought</span><input class="pf_date" type="date" ' +
+          'aria-label="Buy date, row ' + n + '" value="' + esc(r.date) + '"></label>' +
+        '<button class="pfdel" type="button" aria-label="Remove row ' + n + '" title="Remove">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
+        '<span class="pf-wbar" aria-hidden="true"></span>';
 
       var sym = row.querySelector('.pf_sym');
       var qty = row.querySelector('.pf_qty');
@@ -465,16 +804,18 @@
         r.symbol = cleanSymbol(sym.value);
         validateRow(row, r);
         clearNote();
+        paintBoard();
+        quotesSoon();
       });
       sym.addEventListener('blur', function () { sym.value = r.symbol; });
       qty.addEventListener('input', function () {
-        r.qty = qty.value; validateRow(row, r); clearNote();
+        r.qty = qty.value; validateRow(row, r); clearNote(); paintBoard();
       });
       row.querySelector('.pf_buy').addEventListener('input', function () {
-        r.buy = this.value;
+        r.buy = this.value; paintBoard();
       });
       row.querySelector('.pf_date').addEventListener('input', function () {
-        r.date = this.value;
+        r.date = this.value; row.classList.toggle('has-date', !!r.date);
       });
       row.querySelector('.pfdel').addEventListener('click', function () {
         state.rows.splice(i, 1); renderRows(); clearNote();
@@ -483,13 +824,8 @@
       host.appendChild(row);
     });
 
-    var count = $('pf_count');
-    if (count) {
-      var filled = state.rows.filter(function (r) {
-        return r.symbol && Number(r.qty) > 0;
-      }).length;
-      count.textContent = filled + ' of ' + state.rows.length + ' rows ready';
-    }
+    paintBoard();
+    loadQuotes(false);
     saveDraft();
   }
 
@@ -1587,7 +1923,17 @@
     }
     if (!state.rows.length) addRow();
 
-    $('pf_addrow').addEventListener('click', function () { addRow(); });
+    $('pf_addrow').addEventListener('click', function () {
+      // The new line is at the bottom of a list that may be long: bring it to
+      // the reader and put the cursor in it.
+      if (!addRow()) return;
+      var rows = document.querySelectorAll('#pf_rows .pfrow');
+      var last = rows[rows.length - 1];
+      if (!last) return;
+      last.scrollIntoView({ block: 'center', behavior: still() ? 'auto' : 'smooth' });
+      var input = last.querySelector('.pf_sym');
+      if (input) input.focus({ preventScroll: true });
+    });
     $('pf_go').addEventListener('click', analyse);
 
     $('pf_file').addEventListener('change', function (ev) {
@@ -1797,11 +2143,17 @@
         '<a class="pfbtn" href="signin.html">Sign in with email</a></div>';
       return;
     }
-    box.innerHTML = '<div class="pfacct on"><b>Signed in as ' + esc(user.email) + '</b>' +
-      '<span>Saving stores this list on your account.</span>' +
-      '<label class="pfacct-opt"><input type="checkbox" id="pf_digest"' +
-      (user.digest_opt_in ? ' checked' : '') + '> Email me the daily portfolio card</label>' +
-      '<button class="pfbtn ghost" type="button" id="pf_sendtest">Send me today\'s email</button>' +
+    // One slim strip, not a panel: who is signed in, that saving goes to the
+    // account, and the daily email. It used to take a third of a laptop
+    // screen above the holdings it was about.
+    var initial = String(user.email || '?').charAt(0).toUpperCase();
+    box.innerHTML = '<div class="pfacct on">' +
+      '<span class="pfacct-av" aria-hidden="true">' + esc(initial) + '</span>' +
+      '<span class="pfacct-who"><b>Signed in as ' + esc(user.email) + '</b>' +
+      '<span>Saving stores this list on your account.</span></span>' +
+      '<label class="pfacct-opt pfacct-switch"><input type="checkbox" role="switch" id="pf_digest"' +
+      (user.digest_opt_in ? ' checked' : '') + '><i aria-hidden="true"></i> Daily portfolio email</label>' +
+      '<button class="pfbtn ghost" type="button" id="pf_sendtest">Send today\'s email</button>' +
       // The answer used to be written to the note beside the holdings table,
       // several screens below this button. Pressing it looked like pressing a
       // dead button, which is how a working feature gets reported as broken.
