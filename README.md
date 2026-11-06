@@ -236,7 +236,8 @@ altaha/
    | `MALLOC_ARENA_MAX` | `2` | glibc gives a threaded process up to 8 memory arenas **per CPU**. This app runs eight-plus threads. Measured on a scan-shaped workload: 93.2 MB unrestricted, 79.7 MB at 2. |
    | `WEB_CONCURRENCY` | `1` | One uvicorn worker. Two doubles the ~99 MB library floor (numpy + pandas + yfinance) before any data. |
    | `DATA_DIR` | `/data` | Must match the **mount path of your Render disk** (check Render → Disk; it cannot be changed after the disk is created). The tracker ledger, the point-in-time store and the Altaha Special delivery panels all live here and are otherwise rebuilt from nothing on every deploy. |
-   | `ADMIN_KEY` | your own secret | Guards the control endpoints. |
+   | `ADMIN_KEY` | your own secret | Guards the control endpoints, and is the key that opens **Ask AI** on the query screener. |
+   | `ANTHROPIC_API_KEY` | from console.anthropic.com | Optional. Switches on Ask AI on the query screener (Claude writes and checks queries; see FUNDAMENTALS.md) and the earnings-call summary. Billed per question; unset, both say they are off. |
 
    `render.yaml` in the repo root declares all of this — point Render at it as
    a Blueprint and it is applied for you.

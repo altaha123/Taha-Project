@@ -59,8 +59,73 @@ def main():
         r = c.get("/fundamentals/query", params=params)
         key = "%s|%s|%s" % (a["q"], a.get("sort", ""), a.get("order", ""))
         out["queries"][key] = {"status": r.status_code, "body": r.json()}
+    out["ai"] = ai_fixture(c)
     OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     print("wrote", OUT)
+
+
+AI_KEY = "fixture-admin-key"
+
+
+def ai_fixture(c):
+    """
+    Ask AI's answers, from the real routes and the real ask(), with only the
+    model scripted. The counts and the "does not run" verdict on each card are
+    therefore the screener's own, exactly as the page will receive them.
+    """
+    import os
+    from types import SimpleNamespace
+    import query_assistant as A
+
+    os.environ["ADMIN_KEY"] = AI_KEY
+    os.environ["ANTHROPIC_API_KEY"] = "sk-fixture-never-sent"
+    A._rows = lambda: (ROWS, "2026-09-27T06:00:00+00:00")
+    usage = SimpleNamespace(input_tokens=1, output_tokens=1,
+                            cache_read_input_tokens=0, cache_creation_input_tokens=0)
+
+    def turn(blocks, stop):
+        return SimpleNamespace(content=blocks, stop_reason=stop, model=A.MODEL, usage=usage)
+
+    def final(obj):
+        return turn([SimpleNamespace(type="text", text=json.dumps(obj))], "end_turn")
+
+    script = [
+        turn([SimpleNamespace(type="tool_use", id="tu_1", name="check_query",
+                              input={"query": "ROCE > 20"})], "tool_use"),
+        final({
+            "reply": ("Three companies earn more than 20% on the capital they use.\n\n"
+                      "- `ROCE` is operating profit over capital employed\n"
+                      "- **Debt to equity** under 0.5 keeps borrowing light\n\n"
+                      "Markup stays text: <img src=x onerror=alert(1)>"),
+            "queries": [
+                {"title": "High return on capital", "query": "ROCE > 20",
+                 "explanation": "Every company earning more than 20% on capital employed."},
+                {"title": "A typo, to show the check", "query": "ROEE > 15",
+                 "explanation": "Written with a misspelt field."},
+            ],
+            "follow_ups": ["Make it stricter on debt"],
+        }),
+        final({"reply": "Add `Debt to equity < 0.3` as a second line.",
+               "queries": [], "follow_ups": []}),
+    ]
+
+    class Scripted:
+        beta = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: script.pop(0)))
+
+    A._client = lambda: Scripted()
+    A._asked.clear()
+    h = {"X-Admin-Key": AI_KEY}
+    first = [{"role": "user", "content": "Companies with a high return on capital"}]
+    one = c.post("/admin/query/ai", headers=h, json={"messages": first, "query": "", "error": ""})
+    second = first + [{"role": "assistant", "content": "..."},
+                      {"role": "user", "content": "Make it stricter on debt"}]
+    two = c.post("/admin/query/ai", headers=h, json={"messages": second, "query": "", "error": ""})
+    return {
+        "key": AI_KEY,
+        "status": c.get("/admin/query/ai", headers=h).json(),
+        "answers": [one.json(), two.json()],
+        "refused": c.get("/admin/query/ai", headers={"X-Admin-Key": "wrong"}).json(),
+    }
 
 
 if __name__ == "__main__":
