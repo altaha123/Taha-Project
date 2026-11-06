@@ -333,6 +333,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/portfolio-persist-browser.cjs
+      - name: Verify the holdings ledger is compact, adds up and works on a phone
+        # One line per holding, under one header; a board whose totals come
+        # only from the quotes given; sorting that the draft keeps; no price
+        # means no estimate; a one-line signed-in strip; phone cards with no
+        # sideways scroll and no button over a figure.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/portfolio-ledger-browser.cjs
       - name: Verify the guided allocation card
         # Four silent ones: a slider whose figure disagrees with its handle, a
         # questionnaire that asks again for answers already given, asset

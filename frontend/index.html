@@ -37,7 +37,7 @@
 <link rel="stylesheet" href="charts.css">
 <link rel="stylesheet" href="motion.css">
 <link rel="stylesheet" href="patterns.css">
-<link rel="stylesheet" href="portfolio.css">
+<link rel="stylesheet" href="portfolio.css?v=20261106-ledger">
 <link rel="stylesheet" href="portfolio-intelligence.css">
 <link rel="stylesheet" href="portfolio-story.css">
 <link rel="stylesheet" href="portfolio-plan.css">
@@ -1753,7 +1753,10 @@
         </details>
       </div>
       <div id="pf_mapper" class="pfmapper"></div>
-      <div class="pfhead"><span>Symbol</span><span>Qty</span><span>Buy price <i>(optional)</i></span><span class="h-date">Buy date <i>(optional)</i></span><span></span></div>
+      <!-- What the holdings are worth now, the profit, today's move and how
+           the money is split (portfolio.js, paintSummary). -->
+      <div id="pf_board" class="pf-board" hidden></div>
+      <div class="pfhead" aria-hidden="true"><span></span><span>Stock</span><span>Qty</span><span>Avg cost</span><span>Price</span><span>Value &middot; P&amp;L</span><span class="h-trend">30 days</span><span class="h-date">Bought</span><span></span></div>
       <div id="pf_rows"></div>
       <div class="brun" style="margin-top:18px">
         <button id="pf_go" type="button">Analyse portfolio</button>
@@ -4781,7 +4784,7 @@ if(fcSymParam){
 <script src="portfolio-intelligence.js" defer></script>
 <script src="portfolio-story.js" defer></script>
 <script src="portfolio-plan.js" defer></script>
-<script src="portfolio.js" defer></script>
+<script src="portfolio.js?v=20261106-ledger" defer></script>
 <script src="nav.js?v=20261015-doors" defer></script>
 <script src="scoring.js" defer></script>
 <script src="social.js" defer></script>
@@ -4814,7 +4817,7 @@ if(fcSymParam){
 <script src="allocate-flow.js" defer></script>
 <script src="experience.js?v=20261015-doors" defer></script>
 <script src="calls.js?v=20261029" defer></script>
-<script src="watchlists.js?v=20261029" defer></script>
+<script src="watchlists.js?v=20261106-keep" defer></script>
 <script src="strategy-lab.js?v=20261031" defer></script>
 <script src="home-motion.js?v=20260923-always-on" defer></script>
 <script src="home-hero.js?v=20260922-explore" defer></script>

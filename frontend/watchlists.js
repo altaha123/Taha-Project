@@ -338,7 +338,7 @@
     })).then(function () {
       backfillAdded();
       resolveGame();
-      paintStage();
+      paintStage(true);
       paintShelf();
       S.flash = {};
     });
@@ -358,7 +358,7 @@
     return get('/watchlist/featured', 20000).then(function (d) {
       S.featured = ((d && d.lists) || []).map(function (l) { l.featured = true; l.added = {}; return l; });
       paintShelf();
-      if (listById(S.active) && listById(S.active).featured) paintStage();
+      if (listById(S.active) && listById(S.active).featured) paintStage(true);
     });
   }
 
@@ -775,9 +775,38 @@
     '</section>';
   }
 
-  function paintStage() {
+  /* A repaint the reader did not ask for — prices coming back, the featured
+     lists arriving — used to throw away whatever they were in the middle of:
+     a half-typed name in the add box, its suggestions, the style panel they
+     had just opened. Adding a stock asks for its price, and the answer lands
+     a moment later, so typing the next name straight after the first was
+     the usual way to lose it. Those repaints now carry the reader's place
+     across; a repaint from their own click still starts fresh, which is
+     what empties the add box after a stock is added. */
+  function uiState() {
+    var a = $('wl-add-in'), sg = $('wl-sugg'), st = $('wl-style');
+    var focused = !!a && document.activeElement === a;
+    return {
+      val: a ? a.value : '', focused: focused,
+      sel: focused ? [a.selectionStart, a.selectionEnd] : null,
+      sugg: sg && !sg.hidden ? sg.innerHTML : '', style: !!st && !st.hidden
+    };
+  }
+  function restoreUi(k) {
+    var a = $('wl-add-in'), sg = $('wl-sugg'), st = $('wl-style');
+    if (a && k.val) a.value = k.val;
+    if (sg && k.sugg) { sg.innerHTML = k.sugg; sg.hidden = false; if (a) a.setAttribute('aria-expanded', 'true'); }
+    if (st && k.style) st.hidden = false;
+    if (a && k.focused) {
+      a.focus({ preventScroll: true });
+      if (k.sel) { try { a.setSelectionRange(k.sel[0], k.sel[1]); } catch (e) {} }
+    }
+  }
+
+  function paintStage(keepPlace) {
     var host = $('wl-stage');
     if (!host) return;
+    var kept = keepPlace ? uiState() : null;
     var l = listById(S.active) || listById('main');
     S.active = l.id;
     var today = game().picks[istDate()];
@@ -788,6 +817,7 @@
       : S.mode === 'race' ? race(l, rows) : S.mode === 'heat' ? heat(l, rows) : cards(l, rows, today);
     host.innerHTML = hero(l) + toolbar(l) + body + gamePanel(l) +
       '<p class="wl-note">' + esc(S.note || 'Prices are delayed daily closes unless the live feed is connected.') + '</p>';
+    if (kept) restoreUi(kept);
     if (S.renaming) {
       var inp = $('wl-name-in');
       if (inp) { inp.focus(); inp.select(); }
