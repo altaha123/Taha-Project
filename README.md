@@ -89,6 +89,18 @@ pick the stock you think ends the day highest, scored after the close. The
 main list is still the one the ☆ Save button and the daily email use; the
 other lists sync to the account through `/me/watchlists`.
 
+**Holdings ledger** (`#portfolio`, `frontend/portfolio.js` section 3a). The
+holdings editor is one line per stock under one header. Each line has a
+coloured badge, the symbol with the company's name, and quantity and average
+cost typed in place. After those come today's price, value, profit and a
+30-session line, all from `/watchlist/quotes`. Above the list, a board shows
+the portfolio's worth now, the amount invested, profit, today's move and an
+allocation strip. The list sorts by size, return or A–Z, and the saved draft
+keeps the order. Before, 21 holdings took about 2,300px on a laptop and 6,000px
+on a phone; now they take 1,355px and 2,800px. A stock with no price shows a
+dash and its invested amount, never an estimate. `portfolio-ledger-browser.cjs`
+pins all of it.
+
 **Portfolio pulse** (`backend/portfolio_pulse.py`). On the portfolio review:
 which holdings are in profit and in loss, today's move, and a lean for each —
 positive, mixed, negative or quiet — with every reason and its points.
