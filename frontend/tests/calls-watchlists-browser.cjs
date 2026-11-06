@@ -130,6 +130,26 @@ const PULSE_REPORT = {
       localStorage.setItem('altaha-watchlist-v1', JSON.stringify(['TCS', 'INFY', 'ABB', 'RELIANCE']));
   });
   const errors = [], quoted = [];
+  /* The price for a stock just added arrives a moment after it is added, as
+     it does from the real server, and its repaint used to wipe the add box
+     and the style panel while the reader was using them. That failed this
+     test only on a slow runner, when the price happened to land mid-step.
+     hold() keeps a symbol's next price back; landPrice() lets it land at the
+     exact moment that used to break, so the case is tested every run. */
+  const held = {};
+  function hold(sym) {
+    const h = {};
+    h.gate = new Promise(r => { h.release = r; });
+    h.done = new Promise(r => { h.landed = r; });
+    held[sym] = h;
+  }
+  async function landPrice(sym) {
+    const h = held[sym];
+    delete held[sym];
+    h.release();
+    await h.done;
+    await page.waitForTimeout(150);      // the fetch resolves and the stage repaints
+  }
 
   await context.route('**/*', route => {
     const u = new URL(route.request().url());
@@ -141,7 +161,11 @@ const PULSE_REPORT = {
     if (u.pathname === '/watchlist/quotes') {
       const syms = (u.searchParams.get('symbols') || '').split(',').filter(Boolean);
       quoted.push(...syms);
-      return route.fulfill({ json: { rows: syms.map(quote), pending: [], market_open: false, note: 'Fixture prices.' } });
+      const body = { json: { rows: syms.map(quote), pending: [], market_open: false, note: 'Fixture prices.' } };
+      // A held price waits until the test lets it land (see hold() below).
+      const h = syms.length === 1 && held[syms[0]];
+      if (h) return h.gate.then(() => route.fulfill(body)).then(() => h.landed());
+      return route.fulfill(body);
     }
     if (u.pathname === '/market') return route.fulfill({ json: { indices: [], status: 'closed' } });
     return route.fulfill({ json: { available: false, rows: [], symbols: [], book: [], items: [],
@@ -211,23 +235,36 @@ const PULSE_REPORT = {
   await page.locator('#wl-name-in').fill('EV bets');
   await page.locator('#wl-name-in').press('Enter');
   assert.equal((await page.locator('.wl-name').innerText()).trim(), 'EV bets');
+  hold('TATAMOTORS');
   await page.locator('#wl-add-in').fill('tata mo');
   await page.locator('#wl-sugg li[data-add="TATAMOTORS"]').waitFor();
   await page.locator('#wl-add-in').press('Enter');
   await page.locator('.wl-card[data-sym="TATAMOTORS"]').waitFor();
   await page.locator('#wl-add-in').fill('reliance');
+  await page.locator('#wl-sugg li[data-add="RELIANCE"]').waitFor();
+  // TATAMOTORS' price lands while the next name is typed and its suggestion open.
+  await landPrice('TATAMOTORS');
+  assert.equal(await page.locator('#wl-add-in').inputValue(), 'reliance', 'a price arriving wiped the add box');
+  assert.ok(await page.locator('#wl-sugg li[data-add="RELIANCE"]').isVisible(), 'a price arriving closed the suggestions');
+  assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), 'wl-add-in',
+               'a price arriving took the cursor out of the add box');
   await page.locator('#wl-sugg li[data-add="RELIANCE"]').click();
   await page.locator('.wl-card[data-sym="RELIANCE"]').waitFor();
+  assert.equal(await page.locator('#wl-add-in').inputValue(), '', 'adding a stock leaves the add box empty for the next');
   await page.locator('#wl-add-in').fill('INFY');
   await page.locator('#wl-sugg li').first().waitFor();
+  hold('INFY');
   await page.locator('#wl-add-in').press('Enter');
   await page.locator('.wl-card[data-sym="INFY"]').waitFor();
   const doc = await page.evaluate(() => JSON.parse(localStorage.getItem('altaha-watchlists-v2')));
   assert.deepEqual(doc.lists[0].symbols, ['TATAMOTORS', 'RELIANCE', 'INFY']);
   assert.ok(doc.lists[0].added.TATAMOTORS.at === '2026-10-29');
 
-  // Emoji and colour.
+  // Emoji and colour. INFY's price lands while the style panel is open.
   await page.locator('[data-act="style"]').click();
+  await page.locator('#wl-style').waitFor({ state: 'visible' });
+  await landPrice('INFY');
+  assert.ok(await page.locator('#wl-style').isVisible(), 'a price arriving closed the style panel');
   await page.locator('[data-emoji="⚡"]').click();
   await page.locator('[data-color="green"]').click();
   assert.ok(await page.locator('.wl-hero.c-green').isVisible());
