@@ -331,3 +331,41 @@ columns, CSV download, and the query kept in the address so a result can be
 shared. `frontend/tests/query-browser.cjs` drives all of that in Chromium
 against responses from the real endpoints
 (`backend/tests/make_query_fixture.py`).
+
+### Ask AI — Claude writes the query (admin key only)
+
+`backend/query_assistant.py` · `backend/query_ai_routes.py` · `GET|POST /admin/query/ai`
+· the **✦ Ask AI** button beside *Run query*
+
+A conversation with Claude under the editor. Ask what you can screen on
+("What can I screen on?"), describe the companies you want ("debt-free
+companies growing profits fast"), or ask why the query in the editor fails or
+matches nothing — the editor's query and its last error go with every
+question. Each answer comes with up to four query cards: **Use and run** puts
+one in the editor and runs it, **Put in editor** lets you change it first, and
+suggested follow-ups carry the conversation on.
+
+* **Locked behind `ADMIN_KEY`, and closed when it is unset** — unlike the
+  control endpoints — because every question is billed. The page asks for the
+  key, checks it against the server, keeps it in `sessionStorage` for that tab
+  only and sends it as `X-Admin-Key`, never in a URL. **Lock** forgets it.
+* **Off until `ANTHROPIC_API_KEY` is set** on Render; the panel says which half
+  is missing. `QUERY_AI_HOURLY` (default 60) caps questions per hour so a
+  leaked key has a bounded bill. `QUERY_AI_MODEL` (default `claude-opus-5-5`)
+  and `QUERY_AI_EFFORT` (default `medium`) tune it.
+* **Claude cannot invent a field or a syntax.** Its instructions are built from
+  `fundamentals_query.FIELDS`, `EXAMPLES` and the grammar, so a field added
+  there is known to it on the next deploy. It has two tools that run this
+  code, not its own guesses: `check_query` (the real parser, then the real
+  tables: how many match, how many are unknown, the first few) and
+  `list_industries` (the industry and sector names the tables really use).
+* **The count on a card is the screener's, never the model's.** Every query in
+  the answer is parsed and run again after Claude has finished; one that does
+  not parse is shown with the parser's error and no Run button.
+* It writes filters, not recommendations, and is told never to call a company
+  or a query good. Refusals and API failures come back as a sentence. Requests
+  opt into server-side fallback (`fallbacks: "default"`), so a safety-classifier
+  decline is retried on another model rather than returned.
+
+`backend/tests/test_query_assistant.py` covers all of this with a stand-in for
+the SDK; no test calls Claude.

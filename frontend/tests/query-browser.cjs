@@ -11,7 +11,12 @@
      · a column header re-sorts on the server, and clicking again reverses;
      · the query is kept in the address, so a reload runs it again;
      · a missing figure prints as —, never as 0;
-     · no horizontal page scroll at phone width. */
+     · no horizontal page scroll at phone width;
+     · Ask AI stays locked until the server accepts the admin key, sends the
+       key as a header and never in a URL, shows Claude's reply as text (no
+       markup survives), shows each query with the screener's own count or
+       its parse error, puts a query in the editor and runs it, carries the
+       conversation into a follow-up, and Lock forgets the key. */
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
 const { chromium } = require('playwright');
@@ -20,6 +25,7 @@ const root = path.resolve('frontend'), output = path.resolve('test-results/query
 fs.mkdirSync(output, { recursive: true });
 const fx = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/query.json'), 'utf8'));
 const asked = [];
+const aiSeen = [];
 
 const server = http.createServer((req, res) => {
   const p = decodeURIComponent(req.url.split('?')[0]);
@@ -52,6 +58,15 @@ async function wire(context) {
       const hit = fx.queries[key];
       if (!hit) return route.fulfill({ status: 500, json: { detail: 'no fixture for ' + key } });
       return route.fulfill({ status: hit.status, json: hit.body });
+    }
+    if (u.pathname === '/admin/query/ai') {
+      const req = route.request(), key = req.headers()['x-admin-key'] || '';
+      const post = req.method() === 'POST';
+      aiSeen.push({ method: req.method(), url: req.url(), key, body: post ? req.postDataJSON() : null });
+      if (key !== fx.ai.key) return route.fulfill({ status: 401, json: fx.ai.refused });
+      if (!post) return route.fulfill({ json: fx.ai.status });
+      const n = aiSeen.filter(s => s.method === 'POST' && s.key === fx.ai.key).length;
+      return route.fulfill({ json: fx.ai.answers[Math.min(n, fx.ai.answers.length) - 1] });
     }
     return route.fulfill({ json: { available: false, rows: [], items: [] } });
   });
@@ -135,6 +150,68 @@ async function wire(context) {
         document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert.ok(overflow <= 1, `page scrolls sideways by ${overflow}px at ${width}px`);
       await page.screenshot({ path: path.join(output, width + '-query.png'), fullPage: true });
+
+      // 8 · Ask AI is locked until the server accepts the admin key
+      aiSeen.length = 0;
+      await page.locator('#qs-aibtn').click();
+      await page.waitForSelector('#qs-ai:not([hidden]) #qs-ai-keyin');
+      assert.ok(await page.locator('#qs-ai-chat').isHidden(), 'the chat shows before a key is given');
+      await page.fill('#qs-ai-keyin', 'wrong-key');
+      await page.locator('#qs-ai-keygo').click();
+      await page.waitForFunction(() => /not accepted/.test(document.getElementById('qs-ai-keymsg').textContent));
+      assert.ok(await page.locator('#qs-ai-chat').isHidden(), 'a wrong key opened the chat');
+      assert.equal(await page.evaluate(() => sessionStorage.getItem('altaha.query.aikey')), null,
+                   'a refused key was kept');
+      await page.fill('#qs-ai-keyin', fx.ai.key);
+      await page.locator('#qs-ai-keygo').click();
+      await page.waitForSelector('#qs-ai-chat:not([hidden]) #qs-ai-starters .qs-chip');
+
+      // 9 · a question: the reply as text, each query with the screener's own count
+      await page.fill('#qs-ai-in', 'Companies with a high return on capital');
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('.qs-ai-msg.is-ai .qs-ai-q');
+      const firstAsk = aiSeen.find(s => s.method === 'POST');
+      assert.equal(firstAsk.key, fx.ai.key);
+      assert.deepEqual(firstAsk.body.messages,
+                       [{ role: 'user', content: 'Companies with a high return on capital' }]);
+      assert.equal(firstAsk.body.query, 'ROCE > 20', "the editor's query did not go with the question");
+      assert.ok(aiSeen.every(s => !s.url.includes(fx.ai.key)), 'the admin key went into a URL');
+      const cards = page.locator('.qs-ai-q');
+      assert.equal(await cards.count(), 2);
+      assert.match(await cards.nth(0).innerText(), /3 companies match of 4/);
+      assert.match(await cards.nth(1).innerText(), /Does not run: 'ROEE' is not a field/);
+      assert.equal(await cards.nth(1).locator('[data-airun]').count(), 0,
+                   'a query that does not parse is offered to run');
+      assert.equal(await page.locator('.qs-ai-text img').count(), 0, 'markup in a reply was rendered');
+      assert.match(await page.locator('.qs-ai-text').innerText(), /<img src=x onerror=alert\(1\)>/);
+      assert.equal(await page.locator('.qs-ai-text li').count(), 2);
+      assert.equal(await page.locator('.qs-ai-text code').first().innerText(), 'ROCE');
+
+      // 10 · "Use and run" puts the query in the editor and runs it
+      await page.fill('#qs-q', '');
+      const ran = page.waitForResponse(r => r.url().includes('/fundamentals/query?'));
+      await cards.nth(0).locator('[data-airun]').click();
+      assert.equal(await page.inputValue('#qs-q'), 'ROCE > 20');
+      await ran;
+      await page.waitForFunction(() => document.querySelectorAll('.qs-table tbody tr').length === 3);
+
+      // 11 · a follow-up carries the conversation, queries included
+      await page.locator('.qs-ai-follow .qs-chip').click();
+      await page.waitForFunction(() => document.querySelectorAll('.qs-ai-msg.is-ai').length === 2 &&
+                                       !document.querySelector('.qs-ai-msg.is-busy'));
+      const secondAsk = aiSeen.filter(s => s.method === 'POST')[1];
+      assert.deepEqual(secondAsk.body.messages.map(m => m.role), ['user', 'assistant', 'user']);
+      assert.match(secondAsk.body.messages[1].content,
+                   /Query 1 — High return on capital \(3 matched\):\nROCE > 20/);
+      const aiOverflow = await page.evaluate(() =>
+        document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      assert.ok(aiOverflow <= 1, `Ask AI scrolls the page sideways by ${aiOverflow}px at ${width}px`);
+      await page.locator('#qs-ai').screenshot({ path: path.join(output, width + '-ask-ai.png') });
+
+      // 12 · Lock forgets the key
+      await page.locator('#qs-ai-lock').click();
+      assert.ok(await page.locator('#qs-ai-keyin').isVisible(), 'Lock did not ask for the key again');
+      assert.equal(await page.evaluate(() => sessionStorage.getItem('altaha.query.aikey')), null);
       await context.close();
     }
     assert.deepEqual(errors, [], 'page errors: ' + errors.join('\n'));

@@ -25,12 +25,14 @@ Pillow>=10.0
 # break a deploy on a free instance for want of a compiler.
 pypdf>=4.0
 
-# The optional written summary of an earnings call. Dormant: concalls.py
-# imports it lazily and only when ANTHROPIC_API_KEY is set, so until a key is
-# present this costs disk on the image and nothing at runtime. It is pinned
-# here rather than left out so that switching the feature on is one environment
-# variable, not a deploy.
-anthropic>=0.40
+# The optional written summary of an earnings call, and Ask AI on the query
+# screener. Dormant: concalls.py and query_assistant.py import it lazily and
+# only when ANTHROPIC_API_KEY is set, so until a key is present this costs disk
+# on the image and nothing at runtime. It is pinned here rather than left out so
+# that switching the features on is one environment variable, not a deploy.
+# 2.6 is the floor because Ask AI sends `fallbacks="default"`, `output_config`
+# and a top-level `cache_control`, which older releases reject as unknown.
+anthropic>=2.6
 
 # Crash reporting. Inert without SENTRY_DSN in the environment — main.py does
 # not import it at all in that case — so this costs disk on the image and

@@ -18,6 +18,10 @@
    The parsing and the figures live in backend/fundamentals_query.py; this
    file never evaluates anything. The query is kept in the address
    (#research/query/<query>) so a result can be bookmarked or shared.
+
+   Ask AI (admin key only) is a conversation with Claude that answers what
+   can be screened and writes queries, each checked by the screener's own
+   parser before it is shown — see backend/query_assistant.py.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -29,7 +33,7 @@
   var KEY = 'altaha.query.last';
 
   var meta = null, metaPending = null, built = false;
-  var state = { q: '', sort: '', order: 'desc', results: [], data: null, busy: false };
+  var state = { q: '', sort: '', order: 'desc', results: [], data: null, busy: false, err: '' };
   var ac = { items: [], active: 0, from: 0, to: 0, open: false };
 
   function $(id) { return document.getElementById(id); }
@@ -224,6 +228,9 @@
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-clear">Clear</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-copy" hidden>Copy link</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-save">Save screen</button>' +
+            '<button type="button" class="qs-btn qs-aibtn" id="qs-aibtn" aria-expanded="false" ' +
+              'aria-controls="qs-ai"><span class="qs-aispark" aria-hidden="true">✦</span>Ask AI' +
+              '<span class="qs-aitag">Admin</span></button>' +
           '</div>' +
           '<form class="qs-saveform" id="qs-saveform" hidden>' +
             '<label for="qs-savename">Name this screen</label>' +
@@ -233,6 +240,37 @@
             '<p class="qs-savemsg" id="qs-savemsg" role="status"></p>' +
           '</form>' +
         '</div>' +
+        '<section class="qs-ai" id="qs-ai" aria-labelledby="qs-ai-title" hidden>' +
+          '<div class="qs-ai-head">' +
+            '<div><h3 class="qs-ai-title" id="qs-ai-title"><span aria-hidden="true">✦</span> Ask AI</h3>' +
+              '<p class="qs-ai-sub">Ask what you can screen on, or describe the companies you want. ' +
+              'Claude writes the query and checks it against every company before you see it.</p></div>' +
+            '<div class="qs-ai-tools">' +
+              '<button type="button" class="qs-btn qs-btn-ghost qs-ai-mini" id="qs-ai-reset" hidden>New chat</button>' +
+              '<button type="button" class="qs-btn qs-btn-ghost qs-ai-mini" id="qs-ai-lock" hidden>Lock</button>' +
+              '<button type="button" class="qs-ai-x" id="qs-ai-close" aria-label="Close Ask AI">×</button>' +
+            '</div>' +
+          '</div>' +
+          '<form class="qs-ai-key" id="qs-ai-keyform" autocomplete="off">' +
+            '<label for="qs-ai-keyin">Admin key</label>' +
+            '<div class="qs-ai-keyrow">' +
+              '<input id="qs-ai-keyin" type="password" autocomplete="off" spellcheck="false" ' +
+                'placeholder="The ADMIN_KEY set on the server">' +
+              '<button type="submit" class="qs-btn qs-btn-go" id="qs-ai-keygo">Unlock</button>' +
+            '</div>' +
+            '<p class="qs-ai-fine" id="qs-ai-keymsg" role="status"></p>' +
+          '</form>' +
+          '<div class="qs-ai-chat" id="qs-ai-chat" hidden>' +
+            '<div class="qs-ai-log" id="qs-ai-log" aria-live="polite" hidden></div>' +
+            '<div class="qs-ai-starters" id="qs-ai-starters" aria-label="Questions to start with" hidden></div>' +
+            '<form class="qs-ai-ask" id="qs-ai-form">' +
+              '<textarea id="qs-ai-in" rows="2" aria-label="Ask Claude about the screener" ' +
+                'placeholder="e.g. Debt-free companies growing profits 20% a year"></textarea>' +
+              '<button type="submit" class="qs-btn qs-btn-go" id="qs-ai-send">Ask</button>' +
+            '</form>' +
+            '<p class="qs-ai-fine" id="qs-ai-foot"></p>' +
+          '</div>' +
+        '</section>' +
       '</div>' +
       '<div id="qs-out" class="qs-out" aria-live="polite"></div>' +
       '<details class="qs-ref" id="qs-ref"><summary>Every field you can use ' +
@@ -415,6 +453,8 @@
   function showError(e, q) {
     var box = $('qs-err');
     var info = (e && e.body && e.body.error) || null;
+    // Kept so Ask AI can be asked why the query did not run.
+    state.err = info ? info.message : ((e && e.message) || '');
     if (!info) {
       box.innerHTML = '<b>Could not run the query.</b> ' +
         esc((e && e.message) || 'The server did not answer.') + ' Try again in a moment.';
@@ -476,6 +516,7 @@
         return;
       }
       state.data = d;
+      state.err = '';
       state.sort = d.sort; state.order = d.order;
       state.results = append ? state.results.concat(d.results) : d.results;
       writeHash(state.q);
@@ -571,6 +612,255 @@
     }).catch(function (e) { showError(e, state.q); });
   }
 
+  /* ── Ask AI ─────────────────────────────────────────────────────────────
+     A conversation with Claude beside the editor (backend/query_assistant.py).
+     It is for the site owner: the panel opens only with the admin key, which
+     is checked against the server, kept in sessionStorage for this tab only
+     and sent as a header, never put in the address. Every query Claude
+     proposes comes back already run through the screener's own parser, with
+     the screener's own match count; this file shows them and puts one in the
+     editor, and evaluates nothing itself. */
+
+  var AI_KEY = 'altaha.query.aikey';
+  var AI_TURNS = 16;
+  var STARTERS = ['What can I screen on?', 'Explain my current query',
+    'Debt-free companies growing profits fast', 'Why does my query match nothing?'];
+  var ai = { open: false, unlocked: false, busy: false, gen: 0, status: null,
+             history: [], log: [], mem: '' };
+
+  function aiKey() {
+    try { return sessionStorage.getItem(AI_KEY) || ai.mem; } catch (e) { return ai.mem; }
+  }
+  function setAiKey(k) {
+    ai.mem = k || '';
+    try { if (k) sessionStorage.setItem(AI_KEY, k); else sessionStorage.removeItem(AI_KEY); } catch (e) {}
+  }
+
+  function aiRequest(body) {
+    var opts = { method: body ? 'POST' : 'GET',
+                 headers: { Accept: 'application/json', 'X-Admin-Key': aiKey() } };
+    if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    return fetch(API + '/admin/query/ai', opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) {
+          var err = new Error(typeof d.detail === 'string' ? d.detail : 'HTTP ' + r.status);
+          err.status = r.status;
+          throw err;
+        }
+        return d;
+      });
+    });
+  }
+
+  // Claude's reply is plain text: paragraphs, "- " bullets, `code` and **bold**.
+  // Everything is escaped first, so nothing it writes can become markup.
+  function inline(s) {
+    return esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  }
+  function prose(text) {
+    return String(text || '').replace(/\r/g, '').split(/\n{2,}/).map(function (block) {
+      var html = '', list = [], para = [];
+      var flush = function () {
+        if (para.length) { html += '<p>' + para.map(inline).join('<br>') + '</p>'; para = []; }
+        if (list.length) { html += '<ul>' + list.map(function (l) { return '<li>' + inline(l) + '</li>'; }).join('') + '</ul>'; list = []; }
+      };
+      block.split('\n').forEach(function (line) {
+        var m = line.match(/^\s*(?:[-•*]|\d+[.)])\s+(.*)$/);
+        if (m) { if (para.length) flush(); list.push(m[1]); }
+        else if (line.trim()) { if (list.length) flush(); para.push(line); }
+      });
+      flush();
+      return html;
+    }).join('');
+  }
+
+  function aiCard(q, i, j) {
+    var nf = function (x) { return Number(x || 0).toLocaleString('en-IN'); };
+    var badge = !q.valid
+      ? '<span class="qs-ai-n is-bad">Does not run: ' + esc(q.error || 'the screener could not read it') + '</span>'
+      : q.count == null ? '<span class="qs-ai-n">Reads correctly</span>'
+      : '<span class="qs-ai-n is-ok">' + nf(q.count) + (q.count === 1 ? ' company matches' : ' companies match') +
+        (q.screened ? ' of ' + nf(q.screened) : '') + '</span>';
+    var id = i + ':' + j;
+    return '<article class="qs-ai-q"><header><b>' + esc(q.title) + '</b>' + badge + '</header>' +
+      '<pre>' + esc(q.query) + '</pre>' +
+      (q.explanation ? '<p>' + esc(q.explanation) + '</p>' : '') +
+      (q.sample && q.sample.length ? '<p class="qs-ai-sample">First matches: ' +
+        q.sample.map(esc).join(', ') + '</p>' : '') +
+      '<div class="qs-ai-qbtns">' +
+        (q.valid ? '<button type="button" class="qs-btn qs-btn-go qs-ai-mini" data-airun="' + id +
+          '">Use and run</button>' : '') +
+        '<button type="button" class="qs-btn qs-btn-ghost qs-ai-mini" data-aiuse="' + id + '">' +
+          (q.valid ? 'Put in editor' : 'Put in editor to fix') + '</button>' +
+      '</div></article>';
+  }
+
+  function aiEntry(m, i) {
+    if (m.role === 'user') return '<div class="qs-ai-msg is-user"><p>' + esc(m.text) + '</p></div>';
+    if (m.role === 'note') return '<div class="qs-ai-msg is-note" role="alert">' + esc(m.text) + '</div>';
+    var cards = (m.queries || []).map(function (q, j) { return aiCard(q, i, j); }).join('');
+    var next = (m.follow_ups || []).map(function (t) {
+      return '<button type="button" class="qs-chip" data-aiask="' + esc(t) + '">' + esc(t) + '</button>';
+    }).join('');
+    return '<div class="qs-ai-msg is-ai"><span class="qs-ai-who">Claude</span>' +
+      '<div class="qs-ai-text">' + prose(m.reply) + '</div>' +
+      (cards ? '<div class="qs-ai-qs">' + cards + '</div>' : '') +
+      (next ? '<div class="qs-ai-follow" aria-label="Ask next">' + next + '</div>' : '') + '</div>';
+  }
+
+  function paintAiLog() {
+    var st = ai.status || {}, off = st.available === false, html = '';
+    if (off) html += '<div class="qs-ai-msg is-note">' + esc(st.message || 'Ask AI is switched off on the server.') + '</div>';
+    html += ai.log.map(aiEntry).join('');
+    if (ai.busy) {
+      html += '<div class="qs-ai-msg is-ai is-busy" role="status"><span class="qs-ai-dots" aria-hidden="true">' +
+        '<i></i><i></i><i></i></span>Claude is writing the query and checking it against every company…</div>';
+    }
+    var log = $('qs-ai-log');
+    log.innerHTML = html;
+    log.hidden = !html;
+    var starters = $('qs-ai-starters'), showStarters = !ai.log.length && !off;
+    starters.hidden = !showStarters;
+    starters.innerHTML = showStarters ? STARTERS.map(function (t) {
+      return '<button type="button" class="qs-chip" data-aiask="' + esc(t) + '">' + esc(t) + '</button>';
+    }).join('') : '';
+    $('qs-ai-reset').hidden = !ai.log.length;
+    $('qs-ai-in').disabled = off;
+    $('qs-ai-send').disabled = off || ai.busy;
+    $('qs-ai-foot').textContent = off ? '' : (st.disclaimer || '');
+    // Show the top of the newest entry, which is where an answer starts.
+    var last = log.lastElementChild;
+    if (last && ai.log.length) log.scrollTop = Math.max(0, last.offsetTop - 4);
+  }
+
+  function aiShowKey(msg, isErr) {
+    ai.unlocked = false;
+    $('qs-ai-keyform').hidden = false;
+    $('qs-ai-chat').hidden = true;
+    $('qs-ai-lock').hidden = true;
+    $('qs-ai-reset').hidden = true;
+    var m = $('qs-ai-keymsg');
+    m.textContent = msg || 'Ask AI is for the site owner. The key is checked on the server, ' +
+      'kept in this tab only, and forgotten when the tab closes.';
+    m.classList.toggle('is-err', !!isErr);
+    var inp = $('qs-ai-keyin');
+    inp.value = '';
+    if (ai.open) inp.focus();
+  }
+
+  function aiShowChat() {
+    ai.unlocked = true;
+    $('qs-ai-keyform').hidden = true;
+    $('qs-ai-chat').hidden = false;
+    $('qs-ai-lock').hidden = false;
+    paintAiLog();
+  }
+
+  function aiUnlock(key) {
+    setAiKey(key);
+    var go = $('qs-ai-keygo');
+    go.disabled = true; go.textContent = 'Checking…';
+    $('qs-ai-keymsg').textContent = 'Checking the key…';
+    $('qs-ai-keymsg').classList.remove('is-err');
+    return aiRequest(null).then(function (d) {
+      ai.status = d;
+      aiShowChat();
+      if (!$('qs-ai-in').disabled) $('qs-ai-in').focus();
+    }).catch(function (e) {
+      if (e.status === 401) {
+        setAiKey('');
+        aiShowKey('That key was not accepted. It is the ADMIN_KEY set on the server.', true);
+      } else {
+        aiShowKey('Could not reach the server — it may be waking up. Try again in a minute.', true);
+      }
+    }).then(function () { go.disabled = false; go.textContent = 'Unlock'; });
+  }
+
+  function aiOpen() {
+    ai.open = true;
+    $('qs-ai').hidden = false;
+    $('qs-aibtn').setAttribute('aria-expanded', 'true');
+    if (ai.unlocked) { aiShowChat(); if (!$('qs-ai-in').disabled) $('qs-ai-in').focus(); }
+    else if (aiKey()) { $('qs-ai-keyform').hidden = false; aiUnlock(aiKey()); }
+    else aiShowKey('');
+  }
+
+  function aiClose() {
+    ai.open = false;
+    $('qs-ai').hidden = true;
+    $('qs-aibtn').setAttribute('aria-expanded', 'false');
+    $('qs-aibtn').focus();
+  }
+
+  function aiForget(msg) {
+    ai.gen++;
+    ai.busy = false; ai.status = null; ai.history = []; ai.log = [];
+    setAiKey('');
+    aiShowKey(msg);
+  }
+
+  // What Claude said, as it goes back to it next turn: the reply and each
+  // query it proposed, so "make the second one stricter" has a referent.
+  function historyText(d) {
+    var t = d.reply || '';
+    (d.queries || []).forEach(function (q, k) {
+      t += '\n\nQuery ' + (k + 1) + ' — ' + q.title +
+        (!q.valid ? ' (did not parse: ' + (q.error || '') + ')'
+          : q.count != null ? ' (' + q.count + ' matched)' : '') + ':\n' + q.query;
+    });
+    return t;
+  }
+
+  function aiSend(text) {
+    text = String(text || '').trim();
+    if (!text || ai.busy) return;
+    if (!ai.unlocked) { aiOpen(); return; }
+    var gen = ai.gen, input = $('qs-ai-in');
+    ai.busy = true;
+    ai.log.push({ role: 'user', text: text });
+    ai.history.push({ role: 'user', content: text });
+    input.value = '';
+    paintAiLog();
+    if (window.AltahaTrack) window.AltahaTrack('query_ai_ask', { length: text.length });
+    var failed = function (msg) {
+      ai.history.pop();
+      ai.log.push({ role: 'note', text: msg });
+      if (!input.value) input.value = text;
+    };
+    aiRequest({ messages: ai.history.slice(-AI_TURNS), query: ta().value.trim(), error: state.err || '' })
+      .then(function (d) {
+        if (gen !== ai.gen) return;
+        if (!d.available) { failed(d.message || 'Ask AI could not answer that.'); return; }
+        ai.log.push({ role: 'ai', reply: d.reply, queries: d.queries || [], follow_ups: d.follow_ups || [] });
+        ai.history.push({ role: 'assistant', content: historyText(d) });
+      })
+      .catch(function (e) {
+        if (gen !== ai.gen) return;
+        if (e.status === 401) { aiForget('The admin key is no longer accepted. Enter it again.'); return; }
+        failed(e.status === 400 ? e.message
+          : 'Could not reach the server — it may be waking up. Try again in a minute.');
+      })
+      .then(function () {
+        if (gen !== ai.gen) return;
+        ai.busy = false;
+        paintAiLog();
+      });
+  }
+
+  function aiUse(id, andRun) {
+    var p = String(id).split(':'), m = ai.log[+p[0]];
+    var q = m && m.queries && m.queries[+p[1]];
+    if (!q) return;
+    var t = ta();
+    t.value = q.query;
+    state.sort = '';
+    closeAc();
+    $('qs-err').hidden = true;
+    t.scrollIntoView({ block: 'center' });
+    t.focus({ preventScroll: true });
+    if (andRun) run(false);
+  }
+
   /* ── Wiring ──────────────────────────────────────────────────────────── */
 
   function wire(host) {
@@ -597,7 +887,7 @@
     });
     $('qs-run').addEventListener('click', function () { state.sort = ''; run(false); });
     $('qs-clear').addEventListener('click', function () {
-      t.value = ''; $('qs-out').innerHTML = ''; $('qs-err').hidden = true;
+      t.value = ''; $('qs-out').innerHTML = ''; $('qs-err').hidden = true; state.err = '';
       $('qs-copy').hidden = true; state.data = null; writeHash(''); t.focus();
     });
     $('qs-copy').addEventListener('click', function () {
@@ -635,7 +925,36 @@
         if (sc) { t.value = sc.query; state.sort = ''; run(false); }
       } else if (b.hasAttribute('data-delsaved')) {
         deleteSaved(+b.getAttribute('data-delsaved'));
+      } else if (b.hasAttribute('data-aiask')) {
+        aiSend(b.getAttribute('data-aiask'));
+      } else if (b.hasAttribute('data-aiuse')) {
+        aiUse(b.getAttribute('data-aiuse'), false);
+      } else if (b.hasAttribute('data-airun')) {
+        aiUse(b.getAttribute('data-airun'), true);
       }
+    });
+    $('qs-aibtn').addEventListener('click', function () { if (ai.open) aiClose(); else aiOpen(); });
+    $('qs-ai-close').addEventListener('click', aiClose);
+    $('qs-ai-lock').addEventListener('click', function () {
+      aiForget('Locked. Enter the admin key to open Ask AI again.');
+    });
+    $('qs-ai-reset').addEventListener('click', function () {
+      ai.gen++; ai.busy = false; ai.history = []; ai.log = [];
+      paintAiLog();
+      $('qs-ai-in').focus();
+    });
+    $('qs-ai-keyform').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var k = $('qs-ai-keyin').value.trim();
+      if (!k) { $('qs-ai-keyin').focus(); return; }
+      aiUnlock(k);
+    });
+    $('qs-ai-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      aiSend($('qs-ai-in').value);
+    });
+    $('qs-ai-in').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); aiSend(this.value); }
     });
     $('qs-save').addEventListener('click', function () {
       var f = $('qs-saveform');

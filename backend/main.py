@@ -384,6 +384,15 @@ try:
 except Exception as _e:                                      # pragma: no cover
     print(f"[wealth] not loaded: {type(_e).__name__}: {_e}", flush=True)
 
+# Ask AI on the query screener: Claude writes and checks queries in the
+# screener's syntax. Admin key only, closed when ADMIN_KEY is unset, and off
+# until ANTHROPIC_API_KEY is set. Same guard as the two above.
+try:
+    import query_ai_routes
+    app.include_router(query_ai_routes.router)
+except Exception as _e:                                      # pragma: no cover
+    print(f"[query-ai] not loaded: {type(_e).__name__}: {_e}", flush=True)
+
 # Every method this API actually serves.
 #
 # This read ["GET", "POST"] while /me/portfolio and /me/watchlist were PUT. An

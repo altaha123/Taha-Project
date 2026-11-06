@@ -1159,5 +1159,79 @@
     "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
    }
   }
+ },
+ "ai": {
+  "key": "fixture-admin-key",
+  "status": {
+   "available": true,
+   "model": "claude-opus-5-5",
+   "hourly_limit": 60,
+   "used_this_hour": 2,
+   "disclaimer": "Written by Claude from the screener's field list. The match counts are the screener's own, checked after it answered. These are filters, not recommendations."
+  },
+  "answers": [
+   {
+    "available": true,
+    "reply": "Three companies earn more than 20% on the capital they use.\n\n- `ROCE` is operating profit over capital employed\n- **Debt to equity** under 0.5 keeps borrowing light\n\nMarkup stays text: <img src=x onerror=alert(1)>",
+    "queries": [
+     {
+      "title": "High return on capital",
+      "query": "ROCE > 20",
+      "explanation": "Every company earning more than 20% on capital employed.",
+      "valid": true,
+      "count": 3,
+      "unknown": 0,
+      "screened": 4,
+      "sample": [
+       "ACME",
+       "DELTA",
+       "BETA"
+      ]
+     },
+     {
+      "title": "A typo, to show the check",
+      "query": "ROEE > 15",
+      "explanation": "Written with a misspelt field.",
+      "valid": false,
+      "error": "'ROEE' is not a field. Did you mean 'ROE' or 'ROCE' or 'ROE 3Y avg'?",
+      "suggestions": [
+       "ROE",
+       "ROCE",
+       "ROE 3Y avg"
+      ]
+     }
+    ],
+    "follow_ups": [
+     "Make it stricter on debt"
+    ],
+    "model": "claude-opus-5-5",
+    "checks": 1,
+    "usage": {
+     "input_tokens": 2,
+     "output_tokens": 2,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 0
+    },
+    "disclaimer": "Written by Claude from the screener's field list. The match counts are the screener's own, checked after it answered. These are filters, not recommendations."
+   },
+   {
+    "available": true,
+    "reply": "Add `Debt to equity < 0.3` as a second line.",
+    "queries": [],
+    "follow_ups": [],
+    "model": "claude-opus-5-5",
+    "checks": 0,
+    "usage": {
+     "input_tokens": 1,
+     "output_tokens": 1,
+     "cache_read_input_tokens": 0,
+     "cache_creation_input_tokens": 0
+    },
+    "disclaimer": "Written by Claude from the screener's field list. The match counts are the screener's own, checked after it answered. These are filters, not recommendations."
+   }
+  ],
+  "refused": {
+   "detail": "Ask AI needs the admin key (X-Admin-Key)."
+  }
  }
 }
