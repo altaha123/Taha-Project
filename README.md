@@ -35,9 +35,20 @@ and its own address, in exactly one door.
 
 Each door opens on a page of its own (`frontend/doors.js`) that previews every
 tool behind it with one live number or one line, and opens the tool on a tap.
-Inside a tool, the door bar under the header lists the other tools behind the
-same door, so switching never needs a menu, and any tool can be pinned to the
-desk on Today. One search box finds companies, tools and actions alike — "bulk"
+Inside a tool, the door bar under the header lists the tools a newcomer needs
+first; the rest sit under **More**, each with its one-line hint, and a tool
+under More is shown in the bar while it is open. Which tools go under More is
+the `more: true` flag on the door map in `frontend/shell.js`. Any tool can be
+pinned to the desk on Today.
+
+**Built for the first visit.** People who were sent the site found it too
+complex to find their way around, so three things changed (Nov 2026):
+- Today opens with a *Start here* strip (`startHTML` in `doors.js`): one
+  sentence on what the site does and three tasks: check a stock, find stocks
+  to research, check my portfolio. It stays hidden once the reader hides it.
+- The door bars went from 9 and 13 pills to 5 and 6, plus More.
+- A stock page shows its Altaha Score under the name; it used to be behind
+  the Scores tab. The chip opens that tab. One search box finds companies, tools and actions alike — "bulk"
 finds Big trades, "pledge" finds the Screener — and opens with Ctrl+K or `/`.
 On a phone the bottom bar is Today · Ideas · Search · My money · Me.
 

@@ -167,6 +167,40 @@
     if (sc.valuation_note) bits.push(esc(sentence(sc.valuation_note)));
     $('basis').innerHTML = bits.join(' ') ||
       'Every point behind this number is itemised in the ledger below.';
+
+    paintScoreChip(score, label);
+  }
+
+  /* The score, under the name. It is the one number this site exists to
+     give, and it used to be two clicks away behind the Scores pane. The chip
+     only states it and opens that pane; nothing is worked out here. A stock
+     without a score yet shows no chip rather than a dash. */
+  function paintScoreChip(score, label) {
+    var chip = $('stk-scorechip');
+    if (!chip) return;
+    if (score == null) { chip.hidden = true; return; }
+    var lb = String(label || '').trim();
+    lb = lb ? lb.charAt(0).toUpperCase() + lb.slice(1).toLowerCase() : '';
+    $('stk-scorechip-n').textContent = Math.round(score);
+    $('stk-scorechip-lb').textContent = lb ? '· ' + lb : '';
+    chip.setAttribute('aria-label', 'Altaha Score ' + Math.round(score) + ' out of 100' +
+      (lb ? ', ' + lb : '') + '. Open the score breakdown.');
+    chip.hidden = false;
+  }
+
+  function wireScoreChip() {
+    var chip = $('stk-scorechip');
+    if (!chip) return;
+    chip.addEventListener('click', function () {
+      showPane('scores');
+      var bar = document.querySelector('.stk-panebar');
+      if (bar && bar.scrollIntoView) {
+        var still = false;
+        try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+        bar.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'start' });
+      }
+      if (window.AltahaTrack) window.AltahaTrack('stock_section_clicked', { section: 'score_chip' });
+    });
   }
 
   /* ── Numbers ─────────────────────────────────────────────────────────────── */
@@ -1819,6 +1853,7 @@
         // headline day-change is needed up front.
         loadDayChange();
         wirePanes();
+        wireScoreChip();
         if (param('pane') === 'owners') showPane('owners');
         if (window.AltahaShell) window.AltahaShell.reveal();
       })
