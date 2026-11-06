@@ -16,6 +16,7 @@
      · the door bar switches tools and pins them; search finds a tool by the
        word people use for it
      · nothing overflows a 390px screen
+     · the bottom bar is one evenly spaced row at every width it shows at
 
    Provider calls are fulfilled from fixtures; nothing here touches a network. */
 
@@ -428,6 +429,54 @@ const DOORS = ['Today', 'Ideas', 'My money'];
       await page.screenshot({ path: path.join(output, `${width}-${view}.png`), fullPage: true });
     }
   }
+
+  /* ── 6b · The bottom bar is one even row wherever it shows ─────────────
+     From 721 to 1040px it used to wrap: the gold marker span took the first
+     of the five grid cells and pushed Me onto a second row, and the door you
+     were in drew a gold box the width of its cell. Bottoms are compared, not
+     tops, because Search is raised above the row on purpose. */
+
+  await page.evaluate(() => window.AltahaNav.go('portfolio', null, true));
+  await page.waitForTimeout(600);
+  const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  for (const t of ['light', 'dark']) {
+    await page.evaluate(v => document.documentElement.setAttribute('data-theme', v), t);
+    for (const width of [390, 600, 820, 1024]) {
+      await page.setViewportSize({ width, height: 1000 });
+      // Coming back from the desktop, where the bar is display:none, replays
+      // Search's pop-in; measured mid-pop it is scaled and sits off the row.
+      await page.waitForFunction(() => !document.querySelector('.ux-bottom').getAnimations({ subtree: true }).length);
+      const { tabs, marker } = await page.evaluate(() => {
+        const bar = document.querySelector('.ux-bottom');
+        const centre = r => r.left + r.width / 2;
+        return {
+          tabs: [...bar.querySelectorAll('button')].map(n => {
+            const r = n.getBoundingClientRect();
+            return { label: n.getAttribute('aria-label'), bottom: Math.round(r.bottom), centre: centre(r),
+                     border: getComputedStyle(n).borderTopWidth, current: n.hasAttribute('aria-current') };
+          }),
+          marker: centre(bar.querySelector('.ux-bottom-ind').getBoundingClientRect())
+        };
+      });
+      const at = `at ${width}px, ${t}`;
+      assert.equal(new Set(tabs.map(b => b.bottom)).size, 1,
+                   `the bottom bar is not one row ${at}: ${tabs.map(b => b.label + '@' + b.bottom).join(', ')}`);
+      const steps = tabs.slice(1).map((b, i) => b.centre - tabs[i].centre);
+      assert.ok(steps.every(s => s > 0 && Math.abs(s - steps[0]) <= 1),
+                `the bottom bar is not evenly spaced ${at}: ${steps.map(Math.round).join(', ')}`);
+      assert.deepEqual(tabs.map(b => b.border), Array(5).fill('0px'), `a bottom bar button is drawn as a box ${at}`);
+      const here = tabs.find(b => b.current);
+      assert.equal(here && here.label, 'My money', `My money is not lit ${at}`);
+      assert.ok(Math.abs(marker - here.centre) <= 1, `the gold marker is not over My money ${at}`);
+      if (width === 820) {
+        await page.screenshot({ path: path.join(output, `820-${t}-bottom-bar.png`),
+                                clip: { x: 0, y: 1000 - 110, width, height: 110 } });
+      }
+    }
+  }
+  await page.evaluate(v => document.documentElement.setAttribute('data-theme', v), theme);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  assert.equal(await page.locator('.ux-bottom').isVisible(), false, 'the bottom bar shows on a desktop');
 
   assert.deepEqual(errors, [], 'the page threw while navigating');
 

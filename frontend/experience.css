@@ -52,9 +52,6 @@
 }
 @media (max-width: 1040px) {
   body.sh-on { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-  .ux-bottom { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; inset: auto 0 0; z-index: 950; gap: 4px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--paper); border-top: 1px solid var(--rule); box-shadow: var(--e2); }
-  .ux-bottom button { border-color: transparent; font-size: 12px; padding: 10px 4px; font-weight: 500; }
-  .ux-bottom button[aria-current], .ux-bottom button[aria-expanded="true"] { background: var(--paper-2); border-color: var(--gold); }
   .ux-desktop-save { display: none; }
   .ux-toast { bottom: calc(82px + env(safe-area-inset-bottom)); }
   .sh-drawer { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
@@ -96,10 +93,16 @@
 .ux-chart-value { display: block; padding-top: 20px; color: var(--ink); font: 12px/1.6 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
 .chartbox input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--gold); cursor: pointer; }
 
-/* The phone bar since the three doors: icon over label, search raised in the
-   middle, and a gold marker that slides to the door you are in. */
-@media (max-width: 720px) {
-  .ux-bottom { position: fixed; align-items: end; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); gap: 0; }
+/* The bottom bar since the three doors: icon over label, search raised in the
+   middle, and a gold marker that slides to the door you are in. One design
+   wherever the bar shows: when this stopped at 720px, the marker was a grid
+   item from 721 to 1040px, took the first cell and pushed Me to a second
+   row. On a tablet the five sit in a centred row at most 600px wide;
+   --ux-bar-pad is that inset, and the marker reads it to stay on its door. */
+@media (max-width: 1040px) {
+  .ux-bottom { --ux-bar-pad: max(8px, calc((100% - 600px) / 2));
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end; position: fixed; inset: auto 0 0; z-index: 950; gap: 0;
+    padding: 6px var(--ux-bar-pad) calc(8px + env(safe-area-inset-bottom)); background: var(--paper); border-top: 1px solid var(--rule); box-shadow: var(--e2); }
   .ux-bottom .ux-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px;
     padding: 6px 2px 4px; border: 0 !important; background: transparent !important; color: var(--mute, #6B6252); font-size: 11px; transition: color .3s; }
   .ux-bottom .ux-tab[aria-current] { color: var(--ink); font-weight: 600; }
@@ -107,7 +110,7 @@
     background: radial-gradient(circle at 35% 30%, #D9BC6A, #A8801C 62%) !important; color: #17140E; box-shadow: 0 8px 22px rgba(138,109,30,.45);
     animation: uxPop .5s cubic-bezier(.2,.7,.2,1) .2s backwards; }
   .ux-bottom .ux-fab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .ux-bottom-ind { position: absolute; top: -1px; left: 8px; width: calc((100% - 16px) / 5); height: 3px; display: flex; justify-content: center;
+  .ux-bottom-ind { position: absolute; top: -1px; left: var(--ux-bar-pad); width: calc((100% - 2 * var(--ux-bar-pad)) / 5); height: 3px; display: flex; justify-content: center;
     transition: transform .4s cubic-bezier(.2,.8,.2,1), opacity .3s; pointer-events: none; }
   .ux-bottom-ind::before { content: ''; width: 30px; height: 3px; border-radius: 0 0 3px 3px; background: var(--gold); }
 }
