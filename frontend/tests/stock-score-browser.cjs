@@ -129,6 +129,14 @@ async function open(browser, port, ticker, answers) {
     const basis = await page.locator('#basis').innerText();
     assert.match(basis, /ranked on request/i);
     assert.match(basis, /against its 200 companies/);
+    // The score is under the name, not two clicks away, and opens its pane.
+    const chip = page.locator('#stk-scorechip');
+    assert.ok(await chip.isVisible(), 'the score is not shown at the top of the page');
+    assert.equal(await page.locator('#stk-scorechip-n').innerText(), '47');
+    assert.match(await chip.innerText(), /Altaha Score · Mixed/);
+    assert.equal(await page.locator('#pane-scores').isVisible(), false);
+    await chip.click();
+    assert.ok(await page.locator('#pane-scores').isVisible(), 'the score chip does not open the Scores pane');
     assert.deepEqual(errors, []);
     await page.screenshot({ path: path.join(output, 'scored-on-request.png'), fullPage: false });
     await context.close();
@@ -139,12 +147,14 @@ async function open(browser, port, ticker, answers) {
     const { context, page, errors, seen } = await open(browser, port, 'RELIANCE', [pending, scored]);
     assert.equal(await page.locator('#scorelb').innerText(), 'SCORING');
     assert.equal(await page.locator('#scoren').innerText(), '—');
+    assert.equal(await page.locator('#stk-scorechip').isVisible(), false, 'a pending score shows a chip');
     assert.match(await page.locator('#basis').innerText(), /takes a few seconds the first time/);
     assert.equal(seen.analyze, 1);
     await page.clock.runFor(6500);
     await page.waitForFunction(() => document.getElementById('scorelb').textContent === 'MIXED');
     await page.clock.runFor(1500);
     assert.equal(seen.analyze, 2, 'one retry once the first answer said the score was pending');
+    assert.ok(await page.locator('#stk-scorechip').isVisible(), 'the chip did not appear once the score arrived');
     assert.match(await page.locator('#basis').innerText(), /ranked on request/i);
     // Scored now, so no further requests however long the reader stays.
     await page.clock.runFor(30000);

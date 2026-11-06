@@ -16,8 +16,8 @@
 
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
-<link rel="stylesheet" href="shell.css?v=20261015-doors">
-<link rel="stylesheet" href="stock.css?v=20261031-lab">
+<link rel="stylesheet" href="shell.css?v=20261106-easy">
+<link rel="stylesheet" href="stock.css?v=20261106-easy">
 <link rel="stylesheet" href="lenses.css?v=20260925-screens">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
@@ -58,6 +58,16 @@
         <div class="chg tnum" id="chg"></div>
       </div>
     </div>
+    <!-- The answer people came for, at the top. The full score, its pillars
+         and the ledger stay in the Scores pane; this opens it. Filled by
+         stock.js (paintScoreChip) and hidden until there is a score. -->
+    <button type="button" class="stk-scorechip" id="stk-scorechip" hidden>
+      <span class="stk-scorechip-n tnum" id="stk-scorechip-n">—</span>
+      <span class="stk-scorechip-t">
+        <b>Altaha Score <span id="stk-scorechip-lb"></span></b>
+        <small>out of 100 · see what helped and what hurt ›</small>
+      </span>
+    </button>
   </div>
 
   <!-- Lenses: "Meets 3 of 10 lenses", a badge per lens. Filled by lenses.js;
@@ -259,11 +269,11 @@
   </button>
 </div>
 
-<script src="shell.js?v=20261105-wealth" defer></script>
+<script src="shell.js?v=20261106-easy" defer></script>
 <script src="ownership-snapshot.js" defer></script>
 <script src="ownership.js" defer></script>
 <script src="delivery-ui.js?v=20260923" defer></script>
-<script src="stock.js?v=20260927-industry" defer></script>
+<script src="stock.js?v=20261106-easy" defer></script>
 <script src="lenses.js?v=20260924-run" defer></script>
 <script src="experience.js?v=20261015-doors" defer></script>
 </body>

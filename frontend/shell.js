@@ -105,7 +105,17 @@
      on pages without nav.js — the stock page, Pro, Advisors — where a door is
      a link back to index.html#section/tab. Every item has a few `kw` words so
      the search box finds a tool by what people call it, not only by its
-     label: "bulk" finds Big trades, "pledge" finds the Screener. */
+     label: "bulk" finds Big trades, "pledge" finds the Screener.
+
+     `more: true` puts a tool under the door bar's "More" button instead of in
+     the row itself. Visitors said the site was too complex to find their way
+     around: Ideas alone showed thirteen pills, and the row ran off the edge
+     of a laptop screen. The row now carries the few tools a newcomer needs;
+     the rest are one tap away under More, each with its one-line hint. A
+     tool under More is shown in the row while it is the one open, so the
+     reader always sees where they are. Nothing is removed: the door page,
+     the search box and the phone sheet still list every tool. To promote a
+     tool back into the row, delete its `more: true`. */
 
   var DOORS = [
     {
@@ -114,12 +124,12 @@
         { tab: 'today', label: 'Overview', icon: 'pulse', hint: 'The market at a glance, live', kw: 'home market nifty sensex index sectors heatmap fii dii' },
         { tab: 'live', label: 'Alerts', icon: 'bell', hint: 'Intraday signals as they fire', kw: 'live scanner intraday volume breakout' },
         { tab: 'deals', label: 'Big trades', icon: 'exchange', hint: 'Bulk and block deals, and who made them', kw: 'bulk block deals' },
-        { tab: 'wow', label: 'Order wins', icon: 'target', hint: 'New orders measured against company size', kw: 'wow orders contract' },
-        { tab: 'special', label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
+        { tab: 'wow', more: true, label: 'Order wins', icon: 'target', hint: 'New orders measured against company size', kw: 'wow orders contract' },
+        { tab: 'special', more: true, label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
         { tab: 'results', label: 'Results calendar', icon: 'document', hint: 'Who reports yesterday, today and this week', kw: 'results earnings quarterly calendar' },
         { tab: 'filings', label: 'Filings & news', icon: 'document', hint: 'Company announcements as they are filed', kw: 'news announcements filings exchange' },
-        { tab: 'discover', label: 'Setups', icon: 'target', hint: 'Today’s strongest setups and unusual activity', kw: 'opportunities setups ideas today' },
-        { tab: 'options', label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
+        { tab: 'discover', more: true, label: 'Setups', icon: 'target', hint: 'Today’s strongest setups and unusual activity', kw: 'opportunities setups ideas today' },
+        { tab: 'options', more: true, label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
         { tab: 'screener', label: 'Market board', icon: 'bars', hint: 'The market board and a stock search box', kw: 'analysis board movers', quiet: true }
       ]
     },
@@ -128,17 +138,17 @@
       items: [
         { tab: 'ideahub', label: 'Overview', icon: 'bulb', hint: 'Every way to find a stock, in one place', kw: 'ideas find discover' },
         { tab: 'ideas', label: 'Universe scan', icon: 'bulb', hint: 'NSE stocks ranked by the Altaha Score', kw: 'universe scan ranked top best planets' },
-        { tab: 'calls', label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
+        { tab: 'calls', more: true, label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
         { tab: 'query', label: 'Screener', icon: 'lens', hint: 'Filter every company by your own rules', kw: 'query filter screen roe roce pe debt pledge promoter' },
         { tab: 'lenses', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them', kw: 'lenses philosophy coffee can moat qglp' },
-        { tab: 'convergence', label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
+        { tab: 'convergence', more: true, label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
         { tab: 'investors', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
-        { tab: 'funds', label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
+        { tab: 'funds', more: true, label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
         { tab: 'charts', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
-        { tab: 'tracker', label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
-        { tab: 'factors', label: 'Factors', icon: 'plan', hint: 'What each factor has actually predicted', kw: 'factors ic accuracy' },
-        { tab: 'strategies', label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
-        { tab: 'concalls', label: 'Concalls', icon: 'chat', hint: 'Earnings call transcripts, digested', kw: 'concall earnings call transcript' }
+        { tab: 'tracker', more: true, label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
+        { tab: 'factors', more: true, label: 'Factors', icon: 'plan', hint: 'What each factor has actually predicted', kw: 'factors ic accuracy' },
+        { tab: 'strategies', more: true, label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
+        { tab: 'concalls', more: true, label: 'Concalls', icon: 'chat', hint: 'Earnings call transcripts, digested', kw: 'concall earnings call transcript' }
       ]
     },
     {
@@ -219,6 +229,13 @@
   function onIndex() { return !!document.getElementById('tab-screener'); }
   function narrow() { return window.matchMedia && window.matchMedia('(max-width:1040px)').matches; }
 
+  /* On a phone the long hint was cut off mid-word ("Search stocks, tools, o"),
+     which reads as broken. A short one that fits says the same thing. */
+  function searchHint() {
+    var phone = window.matchMedia && window.matchMedia('(max-width:720px)').matches;
+    return phone ? 'Search a stock or tool' : 'Search stocks, tools, or what you want to do';
+  }
+
   function build() {
     if (document.querySelector('.sh-chrome')) return;
 
@@ -252,7 +269,7 @@
       '<svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
       'stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/></svg>' +
       '<input id="sh-q" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" ' +
-      'aria-controls="sh-ac" placeholder="Search stocks, tools, or what you want to do" aria-label="Search stocks and tools" />' +
+      'aria-controls="sh-ac" placeholder="' + esc(searchHint()) + '" aria-label="Search stocks and tools" />' +
       '<span class="kbd">Ctrl K</span><div class="sh-ac" id="sh-ac" role="listbox"></div>';
 
     /* Me: account, Pro, Advisors, the watchlist, appearance and learning.
@@ -330,7 +347,7 @@
     if (onIndex()) {
       var doorbar = el('nav', 'sh-doorbar');
       doorbar.id = 'sh-doorbar';
-      doorbar.setAttribute('aria-label', 'Tools behind this door');
+      doorbar.setAttribute('aria-label', 'Tools in this section');
       chrome.appendChild(doorbar);
       document.documentElement.classList.add('sh-has-doorbar');
     }
@@ -440,15 +457,35 @@
     if (!items.length) { bar.innerHTML = ''; bar.classList.remove('on'); return; }
     var pinned = readPins();
     var pinnable = activeTab && !/^(today|ideahub|money)$/.test(activeTab);
-    bar.innerHTML = '<div class="sh-doorbar-in">' + items.map(function (it, i) {
-      var on = it.tab && it.tab === activeTab;
+    var sec = esc(door ? door.id : 'me');
+    function isOpen(it) { return !!(it.tab && it.tab === activeTab); }
+    var row = items.filter(function (it) { return !it.more || isOpen(it); });
+    var extra = items.filter(function (it) { return it.more && !isOpen(it); });
+    var moreHTML = extra.length
+      ? '<div class="sh-more">' +
+          '<button type="button" class="sh-morebtn" id="sh-morebtn" aria-haspopup="true" aria-expanded="false" ' +
+          'aria-controls="sh-morepanel">More<span class="sh-more-n">' + extra.length + '</span>' +
+          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+          'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' +
+          '<div class="sh-morepanel" id="sh-morepanel" role="menu" aria-label="More tools" hidden>' +
+          extra.map(function (it) {
+            var inner = '<b>' + esc(it.label) + '</b><small>' + esc(it.hint || '') + '</small>';
+            return it.href
+              ? '<a class="sh-pill sh-moreitem" role="menuitem" href="' + esc(it.href) + '">' + inner + '</a>'
+              : '<button type="button" class="sh-pill sh-moreitem" role="menuitem" data-sec="' + sec +
+                '" data-tab="' + esc(it.tab) + '">' + inner + '</button>';
+          }).join('') +
+          '</div></div>'
+      : '';
+    bar.innerHTML = '<div class="sh-doorbar-in">' + row.map(function (it, i) {
+      var on = isOpen(it);
       if (it.href) {
         return '<a class="sh-pill" style="--i:' + i + '" href="' + esc(it.href) + '">' + esc(it.label) + '</a>';
       }
       return '<button type="button" class="sh-pill' + (on ? ' on' : '') + '" style="--i:' + i + '" data-sec="' +
-        esc(door ? door.id : 'me') + '" data-tab="' + esc(it.tab) + '"' + (on ? ' aria-current="page"' : '') + '>' +
+        sec + '" data-tab="' + esc(it.tab) + '"' + (on ? ' aria-current="page"' : '') + '>' +
         esc(it.label) + '</button>';
-    }).join('') + '</div>' +
+    }).join('') + '</div>' + moreHTML +
       (pinnable ? '<button type="button" class="sh-pin' + (pinned.indexOf(activeTab) > -1 ? ' on' : '') + '" id="sh-pin" ' +
         'aria-pressed="' + (pinned.indexOf(activeTab) > -1 ? 'true' : 'false') + '" title="Pin this tool to your desk on Today">' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
@@ -467,10 +504,38 @@
     }
   }
 
+  function setMore(open, refocus) {
+    var btn = document.getElementById('sh-morebtn');
+    var panel = document.getElementById('sh-morepanel');
+    if (!btn || !panel) return;
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      var first = panel.querySelector('.sh-moreitem');
+      if (first) first.focus();
+    } else if (refocus) {
+      btn.focus();
+    }
+  }
+
   function wireDoorbar() {
     var bar = document.getElementById('sh-doorbar');
     if (!bar) return;
+    // The More menu closes on a tap anywhere else, and on Escape with focus
+    // returned to its button. It is rebuilt closed on every door bar paint.
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest || !e.target.closest('.sh-more')) setMore(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      var panel = document.getElementById('sh-morepanel');
+      if (e.key === 'Escape' && panel && !panel.hidden) setMore(false, true);
+    });
     bar.addEventListener('click', function (e) {
+      var mb = e.target.closest('#sh-morebtn');
+      if (mb) {
+        setMore(mb.getAttribute('aria-expanded') !== 'true');
+        return;
+      }
       var pin = e.target.closest('#sh-pin');
       if (pin) {
         var p = readPins(), i = p.indexOf(activeTab);

@@ -131,6 +131,59 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Today');
   assert.equal((await page.locator('#sh-doorbar .sh-pill.on').innerText()).trim(), 'Overview');
 
+  /* ── 1b · Built for the first visit ──────────────────────────────────────
+     People who were sent the site found it too complex to navigate. Today
+     now says what the site does and offers three tasks; the door bar shows
+     a short row with the rest under More. */
+
+  const start = page.locator('#view-today #dr-start');
+  await start.waitFor({ state: 'visible' });
+  assert.match(await start.innerText(), /0 to 100/, 'Start here does not say what the site does');
+  assert.deepEqual((await start.locator('.dr-task b').allInnerTexts()).map(t => t.trim()),
+                   ['Check a stock', 'Find stocks to research', 'Check my portfolio']);
+  assert.ok(await start.locator('a[href="stock.html?ticker=RELIANCE"]').count(), 'no example stock to try');
+
+  // A short row, and the rest one tap away under More, each with its hint.
+  assert.deepEqual(await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill').evaluateAll(ns => ns.map(n => n.dataset.tab)),
+                   ['today', 'live', 'deals', 'results', 'filings'], 'Today’s door bar row changed');
+  assert.equal(await page.locator('#sh-morepanel').isVisible(), false, 'More opened by itself');
+  await page.locator('#sh-morebtn').click();
+  await page.locator('#sh-morepanel').waitFor({ state: 'visible' });
+  assert.deepEqual(await page.locator('#sh-morepanel .sh-moreitem').evaluateAll(ns => ns.map(n => n.dataset.tab)),
+                   ['wow', 'special', 'discover', 'options']);
+  assert.match(await page.locator('#sh-morepanel .sh-moreitem[data-tab="options"]').innerText(), /open interest/i,
+               'a tool under More lost its hint');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#sh-morepanel').isVisible(), false, 'Escape did not close More');
+  assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), 'sh-morebtn');
+  // Ideas: thirteen pills became six; a tool opened from More is lit in the row.
+  await page.locator('.sh-door[data-sec="research"]').click();
+  await page.locator('#sh-morebtn').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill').count(), 6);
+  await page.locator('#sh-morebtn').click();
+  await page.locator('#sh-morepanel .sh-moreitem[data-tab="concalls"]').click();
+  await page.locator('#view-concalls').waitFor({ state: 'visible' });
+  assert.equal((await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill.on').innerText()).trim(), 'Concalls',
+               'a tool opened from More is not shown as the one open');
+  assert.equal(await page.locator('#sh-morepanel .sh-moreitem[data-tab="concalls"]').count(), 0,
+               'the open tool is listed twice');
+
+  // "Check a stock" puts the cursor in the search box; "Hide this" sticks.
+  await page.locator('.sh-door[data-sec="discover"]').click();
+  await start.waitFor({ state: 'visible' });
+  await start.locator('.dr-task[data-start="search"]').click();
+  assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), 'sh-q',
+               'Check a stock does not put the cursor in the search box');
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => document.activeElement && document.activeElement.blur());
+  await start.locator('#dr-start-x').click();
+  assert.equal(await page.locator('#dr-start').count(), 0, 'Hide this did not hide Start here');
+  assert.equal(await page.evaluate(() => localStorage.getItem('altaha-start-hidden-v1')), '1');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !!window.AltahaNav);
+  await page.locator('#view-today .dr-title').waitFor();
+  assert.equal(await page.locator('#dr-start').count(), 0, 'Start here came back after it was hidden');
+
   /* ── 2 · One owner per destination, and no orphans ───────────────────── */
 
   const owners = {};

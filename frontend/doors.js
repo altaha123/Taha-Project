@@ -74,6 +74,7 @@
     allocate: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9M12 12l-6.4 6.4"/>',
     planner:  '<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 15h2"/>',
     adviser:  '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/>',
+    search:   '<circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/>',
     pin:      '<path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/>',
     arrow:    '<path d="M5 12h14M13 6l6 6-6 6"/>'
   };
@@ -231,6 +232,7 @@
       '</div>';
     return '<div class="dr dr-today">' +
       head('Today', 'What is the market doing?', session) +
+      startHTML() +
       '<div class="dr-grid">' +
         '<div class="dr-main">' +
           '<section class="dr-hero dr-rise" style="--i:1" aria-label="The market now">' +
@@ -254,7 +256,7 @@
             '<div class="dr-heat" id="drt-heat"><p class="dr-quiet">Reading the sectors…</p></div>' +
           '</section>' +
           '<section class="dr-sec">' +
-            '<div class="dr-sec-h dr-rise" style="--i:3"><h2>Everything behind this door</h2><span>Tap a card to open the tool</span></div>' +
+            '<div class="dr-sec-h dr-rise" style="--i:3"><h2>More tools for today’s market</h2><span>Tap a card to open the tool</span></div>' +
             '<div class="dr-cards">' + TODAY_TOOLS.map(function (t, i) { return toolCard(t, i + 4); }).join('') + '</div>' +
           '</section>' +
         '</div>' +
@@ -278,6 +280,68 @@
       '</div>' +
       '<p class="dr-disc">Observations, not recommendations. Index levels and moves are the data feed’s; sector moves are equal-weight across the heavyweights tracked.</p>' +
     '</div>';
+  }
+
+  /* ── Start here ───────────────────────────────────────────────────────
+     People who were sent a link to this site said it was too complex to
+     find their way around. The first screen was a market dashboard — index
+     levels, FII/DII flows, eight tool cards — with nothing saying what the
+     site does or where to begin. This strip says it in one sentence and
+     offers the three things people actually come to do, each one tap away.
+     It stays until the reader hides it, and stays hidden after that. */
+
+  var START_KEY = 'altaha-start-hidden-v1';
+  var START_TRY = [['RELIANCE', 'Reliance'], ['TCS', 'TCS'], ['HDFCBANK', 'HDFC Bank'], ['INFY', 'Infosys']];
+
+  function startHidden() {
+    try { return localStorage.getItem(START_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  function startHTML() {
+    if (startHidden()) return '';
+    var task = function (attrs, icon, title, line) {
+      return '<button type="button" class="dr-task" ' + attrs + '>' +
+        '<span class="dr-task-ic">' + svg(icon, 22) + '</span>' +
+        '<span class="dr-task-t"><b>' + esc(title) + '</b><small>' + esc(line) + '</small></span>' +
+        '<span class="dr-task-go" aria-hidden="true">' + svg('arrow', 16) + '</span></button>';
+    };
+    return '<section class="dr-start dr-rise" style="--i:1" id="dr-start" aria-labelledby="dr-start-h">' +
+      '<div class="dr-start-top">' +
+        '<div><h2 id="dr-start-h">New here? Start with one of these.</h2>' +
+        '<p>Type any NSE, BSE or US stock and Altaha scores it from 0 to 100, then shows you exactly why.</p></div>' +
+        '<button type="button" class="dr-start-x" id="dr-start-x">Hide this</button>' +
+      '</div>' +
+      '<div class="dr-tasks">' +
+        task('data-start="search"', 'search', 'Check a stock', 'Type a name. See its score and what helped or hurt it.') +
+        task('data-goto="research/ideas"', 'converge', 'Find stocks to research', 'The whole market, ranked by score.') +
+        task('data-goto="portfolio/portfolio"', 'review', 'Check my portfolio', 'Add what you own and get a clear call on each.') +
+      '</div>' +
+      '<p class="dr-start-try"><span>Try one:</span>' +
+        START_TRY.map(function (t) {
+          return '<a href="stock.html?ticker=' + encodeURIComponent(t[0]) + '">' + esc(t[1]) + '</a>';
+        }).join('') +
+        '<button type="button" class="dr-link" data-goto="me/score">How the score works ›</button>' +
+      '</p>' +
+    '</section>';
+  }
+
+  function wireStart() {
+    var box = $('dr-start');
+    if (!box || box._wired) return;
+    box._wired = true;
+    box.addEventListener('click', function (e) {
+      if (e.target.closest('#dr-start-x')) {
+        try { localStorage.setItem(START_KEY, '1'); } catch (err) {}
+        if (box.parentNode) box.parentNode.removeChild(box);
+        var q = document.getElementById('sh-q');
+        if (q) q.focus();
+        return;
+      }
+      if (e.target.closest('[data-start="search"]')) {
+        if (window.AltahaShell && window.AltahaShell.focusSearch) window.AltahaShell.focusSearch();
+        else { var i = document.getElementById('sh-q'); if (i) i.focus(); }
+      }
+    });
   }
 
   function deskHTML() {
@@ -580,6 +644,7 @@
     if (!v) return;
     var now = Date.now();
     if (!v.firstChild) v.innerHTML = todayShell();
+    wireStart();
     paintDesk(T.quotes);
     startClock();
     if (!force && T.last && now - T.last < FRESH_MS) return;

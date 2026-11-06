@@ -634,6 +634,32 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
   border-radius:16px; background:transparent; color:var(--gold-dp, var(--gold)); font:500 12px/1 var(--sans, Inter, sans-serif); cursor:pointer }
 .sh-pin.on{ border-style:solid; background:rgba(168,128,28,.14) }
 
+/* "More": the door's less-used tools, each with its one-line hint (shell.js).
+   It follows the last pill rather than sitting at the far edge; the pin keeps
+   the right-hand end. */
+.sh-doorbar-in{ flex:0 1 auto }
+.sh-doorbar .sh-pin{ margin-left:auto }
+.sh-more{ position:relative; flex:none }
+.sh-morebtn{ display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px 0 14px; border:1px solid var(--rule);
+  border-radius:16px; background:var(--paper); color:var(--ink); font:600 13px/1 var(--sans, Inter, sans-serif); cursor:pointer }
+.sh-morebtn:hover{ border-color:var(--gold) }
+.sh-morebtn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.sh-morebtn[aria-expanded="true"]{ border-color:var(--ink) }
+.sh-morebtn[aria-expanded="true"] svg{ transform:rotate(180deg) }
+.sh-more-n{ display:inline-grid; place-items:center; min-width:18px; height:18px; padding:0 5px; box-sizing:border-box;
+  border-radius:9px; background:var(--rule-2, var(--rule)); color:var(--ink-2); font:600 11px/1 var(--sans, Inter, sans-serif) }
+.sh-morepanel{ position:absolute; top:calc(100% + 8px); right:0; z-index:60; width:min(340px, calc(100vw - 20px));
+  max-height:min(70vh, 520px); overflow-y:auto; padding:6px; box-sizing:border-box;
+  background:var(--skin-card, var(--paper)); border:1px solid var(--rule); border-radius:16px; box-shadow:var(--e3, 0 18px 40px #0002) }
+.sh-morepanel[hidden]{ display:none }
+.sh-morepanel .sh-pill.sh-moreitem{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:3px;
+  width:100%; height:auto; min-height:48px; padding:9px 12px; box-sizing:border-box; border:0; border-radius:11px;
+  background:transparent; color:var(--ink); text-align:left; animation:none; transform:none }
+.sh-moreitem b{ font:600 14px/1.25 var(--sans, Inter, sans-serif) }
+.sh-moreitem small{ font:400 12.5px/1.4 var(--sans, Inter, sans-serif); color:var(--ink-2); white-space:normal }
+.sh-morepanel .sh-pill.sh-moreitem:hover, .sh-morepanel .sh-pill.sh-moreitem:focus-visible{ background:var(--rule-2, rgba(0,0,0,.05)); outline:none }
+@media (prefers-reduced-motion: reduce){ .sh-morebtn svg{ transition:none } }
+
 /* The phone sheet: Me first, then every door. */
 .sh-dme .sh-dpro{ margin:6px 0 10px }
 .sh-drawer .sh-col h4{ font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--mute) }
