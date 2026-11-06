@@ -333,9 +333,6 @@
     meWrap.appendChild(me);
     meWrap.appendChild(menu);
 
-    paintAccount();
-    window.addEventListener('altaha-auth', paintAccount);
-
     bar.appendChild(brand);
     bar.appendChild(nav);
     bar.appendChild(search);
@@ -370,6 +367,14 @@
     wireSearch();
     wireTheme();
     wireScroll();
+
+    /* Painted only now, with the header and the sheet in the document:
+       paintAccount finds them by id, and before this they are not there to
+       find. It matters because auth.js asks /auth/me first and can have its
+       answer before this file runs, and then the altaha-auth event below has
+       already gone by. What auth.js knows must be drawn here, at build. */
+    paintAccount();
+    window.addEventListener('altaha-auth', paintAccount);
   }
 
   // One builder for the Me menu, the phone sheet and the door bar, so an item

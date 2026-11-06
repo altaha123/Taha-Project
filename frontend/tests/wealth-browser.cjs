@@ -26,7 +26,9 @@
        stocks, quantities and prices — never the client's name or code from
        the file. A statement for somebody else says so before anything is saved.
      · EVERY PRICE CAN BE CORRECTED: a holding's average or recommended price,
-       one purchase on its own, any ledger entry — each sends what was changed. */
+       one purchase on its own, any ledger entry — each sends what was changed.
+     · THE HEADER KNOWS WHO IS SIGNED IN even when /auth/me answers before
+       shell.js has run, so the altaha-auth event came and went unheard. */
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
 const { chromium } = require('playwright');
@@ -71,7 +73,12 @@ async function wire(context, state) {
   }
   await context.route('**/*', async route => {
     const req = route.request(), u = new URL(req.url()), m = req.method();
-    if (u.hostname === '127.0.0.1') return route.continue();
+    if (u.hostname === '127.0.0.1') {
+      // A block can hold one of the site's own files back to force an order.
+      const wait = state.hold && state.hold(u.pathname);
+      if (wait) await wait;
+      return route.continue();
+    }
     const type = req.resourceType();
     if (['font', 'image'].includes(type)) return route.abort();
     if (type === 'script' || type === 'stylesheet') {
@@ -488,12 +495,26 @@ async function clean(page, label) {
     {
       const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
       const state = fresh({ user: { email: 'nadia@example.com', wealth_desk: true }, desk: true });
+      // /auth/me can answer before shell.js has run — on a busy CI runner it
+      // sometimes did. The altaha-auth event has then been and gone, and the
+      // header must paint from what auth.js already knows. Hold shell.js until
+      // auth.js has announced, so that order happens on every run.
+      let announced;
+      const heard = new Promise(r => { announced = r; });
+      await ctx.exposeFunction('__authAnnounced', () => announced());
+      await ctx.addInitScript(() => window.addEventListener('altaha-auth', () => {
+        if (!('__shellAtAuth' in window)) window.__shellAtAuth = !!document.querySelector('.sh-chrome');
+        window.__authAnnounced();
+      }));
+      state.hold = p => p === '/shell.js' ? heard : null;
       await wire(ctx, state);
       const page = await ctx.newPage();
       watch(page, 'ways in');
       await page.goto(`${base}/wealth.html`);
       await page.waitForSelector('.wd-hero');
-      await page.waitForFunction(() => /Your wealth desk/.test((document.getElementById('sh-wd') || {}).textContent || ''));
+      assert.equal(await page.evaluate(() => window.__shellAtAuth), false, 'the sign-in answered before the header was built');
+      assert.match(await page.textContent('#sh-wd'), /^Your wealth desk/, 'a header built after the sign-in answered must still show it');
+      assert.equal(await page.textContent('#sh-account'), 'nadia');
       assert.equal(await page.getAttribute('#sh-wd', 'href'), 'wealth.html');
       state.user = { email: 'rohan@example.com', wealth_shared: 1 };
       await page.evaluate(() => window.AltahaAuth.refresh());
