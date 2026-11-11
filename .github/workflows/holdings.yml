@@ -139,16 +139,23 @@ jobs:
           echo "::notice::${ok} slices, ${rows} new rows."
 
       - name: Read the fund houses' monthly portfolios
-        if: ${{ inputs.funds != 'false' }}
-        continue-on-error: true       # the investor ledger is the primary job
+        # A boolean input compared with the string 'false' is never equal, so
+        # the old condition ran this step even when the box was unticked.
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.funds }}
+        continue-on-error: true       # the investor ledger is the primary job;
+                                      # the summary below is what fails loudly
         env:
           ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
           API: https://taha-project.onrender.com
         run: |
           set -uo pipefail
           # Each pack is a ~15 MB download parsed on a 512 MB instance, so
-          # these are taken four at a time with a pause between.
-          for i in $(seq 1 14); do
+          # these are taken four at a time with a pause between. The API keeps
+          # a cursor, so each call continues the last — before it did, every
+          # call read the same first four AMCs of the directory and the other
+          # fifty-one were never attempted. It stops when nothing is due.
+          echo '{"attempted": 0, "ok": 0, "rows": 0, "slices": 0, "failed": []}' > funds-run.json
+          for i in $(seq 1 16); do
             code=$(curl -sS --max-time 900 -o funds.json -w "%{http_code}" \
                    -X POST "${API}/admin/funds/ingest?limit=4" \
                    -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
@@ -158,12 +165,28 @@ jobs:
             python3 - <<'PY'
           import json
           d = json.load(open("funds.json"))
-          print("fund slice: %d attempted, %d read, %d rows"
-                % (d.get("attempted", 0), d.get("ok", 0), d.get("rows", 0)))
+          run = json.load(open("funds-run.json"))
+          run["slices"] += 1
+          for k in ("attempted", "ok", "rows"):
+              run[k] += int(d.get(k) or 0)
+          print("fund slice: %d attempted, %d read, %d rows, %s still due for %s"
+                % (d.get("attempted", 0), d.get("ok", 0), d.get("rows", 0),
+                   d.get("remaining", "?"), d.get("want_month")), flush=True)
           for r in d.get("results", []):
+              mark = "ok" if r.get("ok") else "--"
+              line = (r.get("as_of") or "") if r.get("ok") else (r.get("note") or "")
+              print("   %s %s: %s" % (mark, r.get("name"), line[:160]), flush=True)
               if not r.get("ok"):
-                  print("   -- %s: %s" % (r.get("name"), (r.get("note") or "")[:90]))
+                  run["failed"].append({"name": r.get("name"), "note": r.get("note")})
+          if d.get("note") and not d.get("attempted"):
+              print("   " + d["note"])
+          json.dump(run, open("funds-run.json", "w"))
+          open("funds-attempted.txt", "w").write(str(int(d.get("attempted") or 0)))
           PY
+            if [ "$(cat funds-attempted.txt 2>/dev/null || echo 0)" = "0" ]; then
+              echo "nothing further is due."
+              break
+            fi
             sleep 15
           done
 
@@ -171,12 +194,16 @@ jobs:
         if: always()
         env:
           API: https://taha-project.onrender.com
+          FUNDS: ${{ github.event_name != 'workflow_dispatch' || inputs.funds }}
         run: |
           set -uo pipefail
-          curl -sS --max-time 120 -o coverage.json "${API}/investors/coverage" || exit 0
+          curl -sS --max-time 120 -o coverage.json "${API}/investors/coverage" || echo '{}' > coverage.json
           python3 - <<'PY'
-          import json
-          d = json.load(open("coverage.json"))
+          import json, os, sys
+          try:
+              d = json.load(open("coverage.json"))
+          except Exception:
+              d = {}
           st = d.get("store", {}) or {}
           funds = st.get("funds", {}) or {}
           universe = d.get("universe")
@@ -188,7 +215,7 @@ jobs:
           print("fund houses    : %s (%s positions, %s)"
                 % (funds.get("amcs", 0), funds.get("rows", 0),
                    funds.get("latest_month")))
-          if not st.get("persistent"):
+          if d and not st.get("persistent"):
               print("::warning::the ledger is NOT on a persistent disk — "
                     "everything collected is lost on the next deploy. "
                     "Check DATA_DIR on Render.")
@@ -198,4 +225,45 @@ jobs:
                     "Either the crawl has not reached those companies yet, or "
                     "the spelling in investors.py is wrong."
                     % len(aliases["unmatched"]))
+
+          # FUND HOUSES: fail loudly. Fourteen nightly runs reported success
+          # while reading zero AMCs, because nothing here looked. Now: a ledger
+          # with no fund house in it fails the job, and so does a run that
+          # tried houses and read none of them when the ledger cannot be
+          # checked.
+          if os.environ.get("FUNDS") != "true":
+              sys.exit(0)
+          try:
+              run = json.load(open("funds-run.json"))
+          except Exception:
+              run = None
+          if run is not None:
+              print("this run       : %d fund houses tried, %d read, %d rows"
+                    % (run["attempted"], run["ok"], run["rows"]))
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary and run is not None:
+              with open(summary, "a") as fh:
+                  fh.write("### Fund houses\n\n%s in the ledger (latest month %s); "
+                           "this run tried %d and read %d.\n\n"
+                           % (funds.get("amcs", "unknown"), funds.get("latest_month"),
+                              run["attempted"], run["ok"]))
+                  if run["failed"]:
+                      fh.write("| Fund house | Why it was not read |\n|---|---|\n")
+                      for f in run["failed"]:
+                          fh.write("| %s | %s |\n" % (f["name"],
+                                   (f["note"] or "").replace("|", "/")[:200]))
+          ledger = funds.get("amcs") if "amcs" in funds else None
+          if ledger == 0:
+              print("::error::0 fund houses have been read into the ledger. "
+                    "The fund-house page is empty. See the per-AMC reasons in "
+                    "the step above and in this run's summary.")
+              sys.exit(1)
+          if ledger is None and run is not None and run["attempted"] and not run["ok"]:
+              print("::error::%d fund houses were tried and none was read, and "
+                    "the ledger's coverage could not be checked."
+                    % run["attempted"])
+              sys.exit(1)
+          if run is not None and run["attempted"] and not run["ok"]:
+              print("::warning::%d fund houses were due and none was read this "
+                    "run." % run["attempted"])
           PY

@@ -50,6 +50,13 @@ sentry-sdk>=2.0
 # Python, no build step.
 openpyxl>=3.1
 
+# The legacy binary .xls format, which openpyxl cannot read. Aditya Birla Sun
+# Life — one of the five largest fund houses — publishes its monthly pack in it,
+# inside a zip, and before this every one of its packs was refused for the
+# format alone. Imported lazily by fund_workbook.py, only when a pack is .xls.
+# Pure Python, no build step; 2.x reads .xls only, which is all it is for.
+xlrd>=2.0.1
+
 # Both arrive transitively today — anyio under fastapi/starlette, multitasking
 # under yfinance — and both are imported directly by this codebase, so an
 # upgrade that dropped either would break a deploy for a reason nothing in the

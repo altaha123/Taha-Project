@@ -3421,15 +3421,20 @@ def fund_portfolio(amc: str, month: str = None, min_pct: float = 0.0):
 
 @app.post("/admin/funds/ingest")
 def admin_funds_ingest(key: str = "", limit: int = 4, amc: str = "",
-                       url: str = "",
+                       url: str = "", force: bool = False,
                        x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     """
     Read the next few fund houses' monthly packs.
 
     Bounded hard: each pack is a fifteen-megabyte download and a few seconds of
-    parsing, and this may be running on a 512 MB instance. `url` reads one
-    workbook directly, for an AMC whose download list is built in JavaScript
-    and cannot be discovered from the HTML.
+    parsing, and this may be running on a 512 MB instance. Each call continues
+    the last — houses already read for the month, or tried within the day, are
+    skipped — and `attempted: 0` means the sweep has caught up. `force` ignores
+    that and takes the directory from the top.
+
+    `amc` alone reads that one fund house (by AMFI id) now. `url` reads one
+    workbook or zip directly, filed under `amc`, for a house whose download
+    list cannot be discovered at all.
     """
     _require_admin(x_admin_key or key)
     if fund_portfolios is None:
@@ -3441,7 +3446,22 @@ def admin_funds_ingest(key: str = "", limit: int = 4, amc: str = "",
                                              mapping=mapping)
             out["isin_map"] = meta
             return to_native(out)
-        return to_native(fund_portfolios.run(limit=max(1, min(int(limit), 20))))
+        if amc:
+            found = [a for a in fund_portfolios.amc_directory()
+                     if a["amc_id"] == amc.strip()]
+            if not found:
+                raise HTTPException(404, "AMFI lists no fund house with id %s." % amc[:12])
+            mapping, meta = fund_portfolios.isin_map()
+            out = fund_portfolios.ingest_amc(found[0], mapping=mapping)
+            if holdings_store is not None:
+                holdings_store.record_fund_try(found[0]["amc_id"], found[0]["name"],
+                                               out["ok"], out.get("as_of"), out.get("note"))
+            out["isin_map"] = meta
+            return to_native(out)
+        return to_native(fund_portfolios.run(limit=max(1, min(int(limit), 20)),
+                                             due_only=not force))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(503, f"The ingest failed: {str(e)[:150]}")
 
@@ -3449,11 +3469,31 @@ def admin_funds_ingest(key: str = "", limit: int = 4, amc: str = "",
 @app.get("/admin/funds/directory")
 def admin_funds_directory(key: str = "",
                           x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
-    """Every AMC AMFI lists, and whether its workbook can be found in HTML."""
+    """
+    Every AMC AMFI lists, with what happened the last time the sweep tried it
+    and the newest month read — the per-house coverage the nightly job's
+    single line of totals cannot show.
+    """
     _require_admin(x_admin_key or key)
     if fund_portfolios is None:
         raise HTTPException(503, "The fund portfolio reader is not available.")
-    return to_native({"amcs": fund_portfolios.amc_directory()})
+    amcs = fund_portfolios.amc_directory()
+    tries, latest = {}, {}
+    if holdings_store is not None:
+        try:
+            tries = holdings_store.fund_tries()
+            latest = holdings_store.fund_latest_by_amc()
+        except Exception:
+            pass
+    for a in amcs:
+        t = tries.get(a["amc_id"]) or {}
+        a["latest_month"] = latest.get(a["amc_id"])
+        a["last_try_utc"] = t.get("last_try_utc")
+        a["last_ok"] = bool(t.get("ok")) if t else None
+        a["last_note"] = t.get("note")
+        a["per_amc_source"] = bool((fund_portfolios.source_for(a) or {}).get("fetch"))
+    return to_native({"amcs": amcs, "want_month": fund_portfolios.expected_month(),
+                      "read": sum(1 for a in amcs if a["latest_month"])})
 
 
 @app.get("/wow-orders")
