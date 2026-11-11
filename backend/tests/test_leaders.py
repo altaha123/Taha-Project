@@ -64,6 +64,23 @@ def test_a_year_of_history_is_required():
     assert leaders.signals(None) is None
 
 
+def test_a_stock_halted_for_weeks_is_not_given_a_twelve_month_return():
+    """253 bars that took fourteen months to accumulate are not a year."""
+    df = frame(320)
+    assert leaders.signals(df) is not None
+    gappy = df.drop(df.index[200:240])            # forty sessions with no trade
+    assert len(gappy) >= leaders.MIN_SESSIONS
+    assert leaders.signals(gappy) is None
+    assert leaders.signals(df.reset_index(drop=True)) is not None, "an undated frame is not rejected"
+
+
+def test_a_cash_fund_is_not_a_company():
+    """A liquid ETF climbs in a straight line at 1% volatility, which would
+    rank first on every return-for-risk measure. It is not compared at all."""
+    blocks = leaders.rank(universe() + [cand("LIQUIDETF", drift=0.00025, noise=0.0002, seed=5)])
+    assert "LIQUIDETF" not in blocks
+
+
 def test_the_twelve_month_return_skips_the_last_month():
     df = frame(300, noise=0)
     c = df["Close"].values
@@ -99,14 +116,13 @@ def test_a_downtrend_is_on_no_list():
     assert "uptrend" in b["lists"]["momentum"]["why_not"]
 
 
-def test_the_most_volatile_fifth_is_gated_off_three_lists_and_ranked_on_the_fourth():
+def test_the_most_volatile_fifth_is_on_no_list():
     blocks = leaders.rank(universe() + [cand("WILD", drift=0.004, noise=0.05, seed=3)])
     b = blocks["WILD"]
     assert b["uptrend"] and not b["calm"]
-    for key in ("week", "month", "momentum"):
+    for key in leaders.ORDER:
         assert b["lists"][key]["rank"] is None
         assert "volatile" in b["lists"][key]["why_not"]
-    assert b["lists"]["long"]["eligible"], "the long-term list ranks on calm; it does not gate on it"
 
 
 def test_ranks_are_one_to_n_with_no_gaps_and_no_ties():
@@ -114,6 +130,16 @@ def test_ranks_are_one_to_n_with_no_gaps_and_no_ties():
     for key in leaders.ORDER:
         ranks = sorted(b["lists"][key]["rank"] for b in blocks.values() if b["lists"][key]["rank"])
         assert ranks == list(range(1, len(ranks) + 1))
+
+
+def test_two_scores_that_print_the_same_are_still_ranked_by_the_real_one():
+    """The page rounds to a decimal. The order must not."""
+    blocks = leaders.rank(universe(200))
+    for key in leaders.ORDER:
+        ranked = sorted((b["lists"][key] for b in blocks.values() if b["lists"][key]["rank"]),
+                        key=lambda e: e["rank"])
+        scores = [e["score"] for e in ranked]
+        assert scores == sorted(scores, reverse=True), key
 
 
 def test_ranking_is_the_same_whatever_order_the_scan_met_the_stocks_in():
@@ -184,7 +210,7 @@ def test_the_plan_has_an_exit_line_a_review_date_and_no_target():
     assert p["t1"] is None and p["rr"] is None
     assert p["review_on"] == "2027-02-09"
     assert leaders.plan("week", 100.0, dt.date(2026, 11, 10))["stop"] == 93.0
-    assert leaders.plan("long", 100.0)["stop"] == 75.0
+    assert leaders.plan("long", 100.0)["stop"] == 70.0
     assert leaders.plan("momentum", None) is None
     assert leaders.plan("nonsense", 100.0) is None
 

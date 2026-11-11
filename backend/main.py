@@ -1045,7 +1045,8 @@ def health():
 @app.post("/scan/start")
 @app.get("/scan/start")
 def scan_start(force: bool = False, key: str = "",
-               ignore_memory: bool = False, force_memory: bool = False):
+               ignore_memory: bool = False, force_memory: bool = False,
+               x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
     """
     Kick off a background scan. Returns immediately.
 
@@ -1069,7 +1070,9 @@ def scan_start(force: bool = False, key: str = "",
     force now means only "ignore the cache". A refresh with no room left is
     refused, in words, with the numbers behind the refusal.
     """
-    _require_admin(key)
+    # The header as well as ?key=, so the scheduled scan (ideas.yml) does not
+    # have to put the key in a URL.
+    _require_admin(x_admin_key or key)
     ignore_memory = bool(ignore_memory or force_memory)
     # Reclaim first, always. This runs before the heaviest job in the process,
     # and the caches it drops are rebuilt on demand — measuring headroom

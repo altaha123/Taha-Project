@@ -39,16 +39,21 @@ stock:
   This week    half leader score, half dip. A strong stock that just fell.
   This month   three parts leader score, one part dip.
   Momentum     the leader score. About three months.
-  Long term    12-month return, 52-week high, calm and straightness, equally.
-               About a year.
+  Long term    12-month return, 52-week high and straightness, equally: the
+               leader score without its six-month part. About a year.
 
 Gates, for every list: a typical day trades Rs 10 crore or more, the price is
-Rs 20 or more, and the stock is in an uptrend (price above its 200-day
-average, 50-day above 200-day). The first three lists also drop the most
-volatile fifth of liquid stocks; the long-term list ranks on calm instead.
+Rs 20 or more, the stock is in an uptrend (price above its 200-day average,
+50-day above 200-day) and it is not among the most volatile fifth of liquid
+stocks.
+
+A calmer long-term recipe, ranking on low volatility, was the first choice
+and was dropped: it looked best until exchange-traded cash funds were found
+in the data, and on company shares alone it trailed the index in 2017-2021.
+What held in both halves of the decade was the leaders, held longer.
 
 Each list's plan is the one the same test supports: hold for the period, and
-leave on a close a set distance under the call price (7%, 12%, 15%, 25%).
+leave on a close a set distance under the call price (7%, 12%, 15%, 30%).
 There is no target. A target caps the few large winners that carry the
 average, and it was the single most expensive rule tested.
 
@@ -75,7 +80,14 @@ except Exception:                                  # pragma: no cover
 MIN_TURNOVER_RS = float(10e7)      # Rs 10 crore: the median day over 60 sessions
 MIN_PRICE = 20.0
 MIN_SESSIONS = 253                 # twelve months of closes plus the base one
+MAX_SPAN_DAYS = 395                # calendar days those 253 closes may cover
 CALM_FLOOR = 0.20                  # calm percentile under which a name is out
+# Nothing that moves less than this in a year is a company share. A liquid-fund
+# ETF creeps up in a straight line at about 1% volatility, which every
+# return-for-its-risk measure here would rank first on the exchange. The scan
+# reads NSE's list of company shares, so one should never arrive; this is the
+# guard for the day a symbol list carries one anyway.
+MIN_VOLATILITY = 0.08
 LIST_SIZE = 15
 
 # The four lists. `mix` is the weight on each percentile; `calm_gate` says
@@ -107,9 +119,9 @@ LISTS = {
     },
     "long": {
         "label": "Long term", "setup": "Long-term pick", "setup_key": "pick_long",
-        "hold_sessions": 252, "hold_days": 365, "hold_text": "about a year", "exit_pct": 25.0,
-        "mix": {"m12": 0.25, "high": 0.25, "calm": 0.25, "trend": 0.25}, "calm_gate": False,
-        "idea": "Steady, calm climbers to hold for a year.",
+        "hold_sessions": 252, "hold_days": 365, "hold_text": "about a year", "exit_pct": 30.0,
+        "mix": {"m12": 1 / 3, "high": 1 / 3, "trend": 1 / 3}, "calm_gate": True,
+        "idea": "Steady year-long climbers near their highs.",
     },
 }
 ORDER = ("week", "month", "momentum", "long")
@@ -182,6 +194,16 @@ def signals(df):
     c = np.asarray(frame["Close"], dtype=float)
     if not np.all(np.isfinite(c[-MIN_SESSIONS:])) or np.any(c[-MIN_SESSIONS:] <= 0):
         return None
+    # A year of closes has to be a year of calendar. A stock that was halted
+    # or suspended for a month reaches 253 bars only by going back further,
+    # and its "12-month return" is then something else. The study left out
+    # anything that missed more than twenty of the last 260 sessions.
+    try:
+        span = (frame.index[-1] - frame.index[-MIN_SESSIONS]).days
+        if span > MAX_SPAN_DAYS:
+            return None
+    except Exception:
+        pass                                     # an undated frame cannot be checked
     price = float(c[-1])
 
     rets = np.diff(np.log(c[-MIN_SESSIONS:]))
@@ -258,6 +280,8 @@ def in_universe(sig):
         return False
     if (_finite(sig.get("price")) or 0) < MIN_PRICE:
         return False
+    if (_finite(sig.get("vol")) or 0) < MIN_VOLATILITY:
+        return False
     return all(_finite(sig.get(k)) is not None
                for k in ("va12", "va6", "near_high", "trend", "vol", "ret_5d"))
 
@@ -309,7 +333,7 @@ def rank(candidates):
     calm = _pct_ranks([-g["vol"] for _, g in pool])
     dip = _pct_ranks([-g["ret_5d"] for _, g in pool])
 
-    blocks = {}
+    blocks, exact = {}, {}
     for i, (sym, g) in enumerate(pool):
         part = {"m12": m12[i], "m6": m6[i], "high": high[i], "trend": trend[i],
                 "calm": calm[i], "dip": dip[i]}
@@ -323,6 +347,7 @@ def rank(candidates):
                 why_not = "Not in an uptrend: price or its 50-day average is under the 200-day average."
             elif spec["calm_gate"] and not is_calm:
                 why_not = "Among the most volatile fifth of liquid stocks."
+            exact[(sym, key)] = score
             lists[key] = {"score": round(score, 1), "eligible": why_not is None,
                           "why_not": why_not, "rank": None,
                           "why": _why(key, g, calm[i])}
@@ -349,8 +374,10 @@ def rank(candidates):
             "lists": lists,
         }
     for key in LISTS:
+        # Ordered on the exact score. The printed one is rounded to a decimal,
+        # and ranking on that would settle every near-tie alphabetically.
         ordered = sorted((s for s in blocks if blocks[s]["lists"][key]["eligible"]),
-                         key=lambda s: (-blocks[s]["lists"][key]["score"], s))
+                         key=lambda s: (-exact[(s, key)], s))
         for n, sym in enumerate(ordered, 1):
             blocks[sym]["lists"][key]["rank"] = n
     return blocks

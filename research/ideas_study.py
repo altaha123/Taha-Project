@@ -15,6 +15,10 @@ archives.nseindia.com. It lists every security that traded that day, so a
 company that was later delisted is in the test for as long as it traded. A
 list of today's survivors would flatter every method tested on it.
 
+Only company shares are kept (ISIN beginning INE). The same files carry
+exchange-traded funds, which are not what the lists are for and which a
+risk-adjusted ranking would put first.
+
 The bhavcopy is unadjusted and its PREVCLOSE is the raw previous close (ITC's
 1:2 bonus on 1 Jul 2016 prints 252.35 against 368.40). Every NSE stock outside
 F&O has a price band of at most 20%, so a session that OPENS more than 21%
@@ -122,6 +126,11 @@ def _read_day(path):
                             "isin": df["ISIN"], "o": df["OPEN"], "h": df["HIGH"], "l": df["LOW"],
                             "c": df["CLOSE"], "pc": df["PREVCLOSE"], "v": df["TOTTRDQTY"],
                             "val": df["TOTTRDVAL"]})
+    # Company shares only. The bhavcopy's EQ series also carries exchange-traded
+    # funds, and a liquid-fund ETF (a cash fund that creeps up in a straight
+    # line at 1% volatility) ranks first on every momentum-for-its-risk measure
+    # there is. Mutual-fund units carry an INF ISIN; a company's is INE.
+    out = out[out["isin"].astype(str).str.startswith("INE")]
     if not len(out):
         return None
     out = out.sort_values("ser").drop_duplicates("sym", keep="last")
@@ -249,7 +258,13 @@ class Panel:
         return self.N500.shift(-h) / self.N500 - 1
 
     def universe(self, min_cr=10, min_price=20):
-        return (self.turn60 >= min_cr * 1e7) & (self.RAW >= min_price) & (self.hist >= 240)
+        # vol_252 >= 8%: the engine's own guard against a cash fund that slips
+        # into a symbol list (leaders.MIN_VOLATILITY). No company share is that still.
+        # Every signal measurable, as leaders.in_universe requires: a company
+        # listed for under a year has no 12-month return and is not compared.
+        whole = (self.mom_12_1.notna() & self.mom_6_1.notna() & self.near_high.notna()
+                 & self.trend_q.notna() & self.ret_5.notna() & (self.vol_252 >= 0.08))
+        return (self.turn60 >= min_cr * 1e7) & (self.RAW >= min_price) & (self.hist >= 240) & whole
 
 
 def pct(f, U):
@@ -267,7 +282,7 @@ def recipes(P, U):
     return {"week": (0.5 * leader + 0.5 * dip).where(ok),
             "month": (0.75 * leader + 0.25 * dip).where(ok),
             "momentum": leader.where(ok),
-            "long": ((m12 + high + calm + trend) / 4).where(up)}
+            "long": ((m12 + high + trend) / 3).where(ok)}
 
 
 def top_picks(score, U, dates, n=15):
@@ -412,6 +427,7 @@ def old_picks(P, base):
     of the old trade score ranked inside that cohort.
     """
     out = []
+    base = base[base["name"].isin(P.C.columns)]          # company shares only
     for d, g in base.groupby("date"):
         pool = g.nlargest(150, "tech")
         pool = pool[pool["setup"].isin(["momentum_breakout", "institutional_accumulation"])]
@@ -432,7 +448,7 @@ def old_picks(P, base):
 # 5. The study
 # --------------------------------------------------------------------------
 
-LISTS = {"week": (5, 7.0), "month": (21, 12.0), "momentum": (63, 15.0), "long": (252, 25.0)}
+LISTS = {"week": (5, 7.0), "month": (21, 12.0), "momentum": (63, 15.0), "long": (252, 30.0)}
 
 
 def parity(P, U, scores):
@@ -445,8 +461,16 @@ def parity(P, U, scores):
             continue
         d, cands = P.C.index[i], []
         sl = slice(i - 299, i + 1)
-        for n in P.C.columns[(P.turn60.iloc[i] >= 3e7).values]:
-            df = pd.DataFrame({"High": P.H[n].values[sl], "Close": P.C[n].values[sl]}, index=P.C.index[sl])
+        # The scan's symbol list on that date: anything trading Rs 3 crore that
+        # had not missed more than twenty of the last 260 sessions (the engine
+        # reads that off the dates of a real feed; this panel has no gaps).
+        listed = (P.turn60.iloc[i] >= 3e7) & (P.hist.iloc[i] >= 240)
+        for n in P.C.columns[listed.values]:
+            # Prices as a feed showed them THAT day: adjusted for every split
+            # up to it and none after, so the last close is the traded price.
+            k = P.RAW.iat[i, P.C.columns.get_loc(n)] / P.C.iat[i, P.C.columns.get_loc(n)]
+            df = pd.DataFrame({"High": P.H[n].values[sl] * k, "Close": P.C[n].values[sl] * k},
+                              index=P.C.index[sl])
             df["Volume"] = P.VAL[n].values[sl] / df["Close"]
             cands.append({"symbol": n, "leader_sig": leaders.signals(df)})
         blocks = leaders.rank(cands)

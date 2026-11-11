@@ -1,0 +1,111 @@
+name: Keep the pick lists fresh and measured
+
+# Two things nothing was doing.
+#
+# 1. THE SCAN. The four pick lists (backend/leaders.py) are built by the
+#    universe scan, and the scan only ran when somebody pressed Refresh. The
+#    page was showing a list five days old with "Stale" printed above it.
+#    A one-week list has to be made every day.
+#
+# 2. THE RECORD. /cron/tick marks the tracker after the close and attaches
+#    forward returns to what each scan banked. It was written to be called by
+#    an outside cron that was never set up: by November 2026 the store held
+#    350,000 observations from 19 scans and 0 measured outcomes, and the
+#    tracker had not been marked for 26 days. A score that is never checked
+#    against what happened next cannot be improved.
+#
+# 11:20 UTC is 16:50 IST: after the 15:30 close, once the daily bars have
+# settled and the intraday scanner has stopped using memory. Weekdays only.
+# A market holiday costs one scan of unchanged prices.
+#
+# Needs one repository secret: ALTAHA_ADMIN_KEY, the same value as ADMIN_KEY
+# on Render. Settings → Secrets and variables → Actions.
+
+on:
+  schedule:
+    - cron: "20 11 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      scan:
+        description: "Start a new universe scan"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pick-lists
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      API: https://taha-project.onrender.com
+      ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+      SCAN: ${{ github.event_name == 'schedule' || inputs.scan }}
+    steps:
+      - name: Wake the API
+        run: |
+          curl -sS --max-time 90 --retry 3 --retry-delay 10 --retry-all-errors \
+               -o /dev/null "${API}/health" || true
+
+      - name: Mark the tracker and attach what happened next
+        # Before the scan, so yesterday's calls are judged against today's
+        # close before a new list replaces them. Labelling is done in slices:
+        # each call fetches one price history per company it labels.
+        run: |
+          set -u
+          curl -sS --max-time 600 "${API}/cron/tick" || echo "tick did not answer in time"
+          echo
+          for i in 1 2 3 4 5 6; do
+            out=$(curl -sS --max-time 900 "${API}/pit/label?limit_symbols=150" || echo '{}')
+            echo "$out"
+            written=$(echo "$out" | python3 -c "import sys,json; print((json.load(sys.stdin) or {}).get('written') or 0)" 2>/dev/null || echo 0)
+            [ "$written" = "0" ] && break
+          done
+
+      - name: Start the scan
+        if: env.SCAN == 'true'
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set, so no scan was started."
+            exit 1
+          fi
+          code=$(curl -sS --max-time 120 -o response.json -w "%{http_code}" \
+                 -X POST "${API}/scan/start?force=true" -H "X-Admin-Key: ${ADMIN_KEY}")
+          echo "HTTP ${code}"
+          cat response.json; echo
+          [ "${code}" = "200" ] || { echo "::error::The scan did not start (HTTP ${code})."; exit 1; }
+          python3 - <<'PY'
+          import json, sys
+          r = json.load(open("response.json"))
+          if r.get("started") or r.get("reason") == "already_running":
+              sys.exit(0)
+          print(f"::error::The scan did not start: {r.get('reason')}. {r.get('message', '')}")
+          sys.exit(1)
+          PY
+
+      - name: Wait for it, and say what it found
+        if: env.SCAN == 'true'
+        # The scan runs inside the API. This only watches, so that a scan
+        # that stops early is a failed run here and not a quiet stale page.
+        run: |
+          set -u
+          for i in $(seq 1 40); do
+            sleep 60
+            status=$(curl -sS --max-time 60 "${API}/scan/status" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status'), d.get('done'), d.get('total'), d.get('scored'))" 2>/dev/null || echo "unreachable")
+            echo "minute ${i}: ${status}"
+            case "${status}" in done*) break ;; error*) echo "::error::The scan ended in an error."; exit 1 ;; esac
+          done
+          for h in week month momentum long; do
+            curl -sS --max-time 90 "${API}/ideas?horizon=${h}" | python3 -c "
+          import sys, json
+          d = json.load(sys.stdin)
+          rows = d.get('rows') or []
+          print('${h}:', d.get('method_key'), d.get('scanned_at'), len(rows), 'picks:', ', '.join(r['symbol'] for r in rows[:15]))
+          " || echo "${h}: could not be read"
+          done
