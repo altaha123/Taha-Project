@@ -1,0 +1,646 @@
+{
+ "generated": "2026-11-11",
+ "rules": "As research/ideas_study.py: bought at the next open, held for the list's period, left on a close under its exit line, before costs and tax. excess_pct is the list's average pick less the average liquid stock held over the same dates; t is its Newey-West t-statistic.",
+ "trials": 20,
+ "recipes": {
+  "week: first version": {
+   "up_pct": 52.3,
+   "avg_pct": 0.42,
+   "index_avg_pct": 0.27,
+   "worst_5pct": -8.2,
+   "excess_pct": 0.32,
+   "t": 4.03,
+   "excess_2017_21": 0.41,
+   "excess_2022_26": 0.22
+  },
+  "month: first version": {
+   "up_pct": 54.7,
+   "avg_pct": 1.98,
+   "index_avg_pct": 1.08,
+   "worst_5pct": -13.8,
+   "excess_pct": 0.93,
+   "t": 3.13,
+   "excess_2017_21": 1.41,
+   "excess_2022_26": 0.43
+  },
+  "momentum: first version": {
+   "up_pct": 55.1,
+   "avg_pct": 6.39,
+   "index_avg_pct": 3.35,
+   "worst_5pct": -17.9,
+   "excess_pct": 2.75,
+   "t": 2.44,
+   "excess_2017_21": 4.86,
+   "excess_2022_26": 0.48
+  },
+  "long: first version": {
+   "up_pct": 58.2,
+   "avg_pct": 23.73,
+   "index_avg_pct": 13.79,
+   "worst_5pct": -32.9,
+   "excess_pct": 7.6,
+   "t": 2.16,
+   "excess_2017_21": 9.75,
+   "excess_2022_26": 4.83
+  },
+  "week: R1 five-day dip in a leader": {
+   "up_pct": 51.7,
+   "avg_pct": 0.36,
+   "index_avg_pct": 0.27,
+   "worst_5pct": -8.2,
+   "excess_pct": 0.25,
+   "t": 3.4,
+   "excess_2017_21": 0.36,
+   "excess_2022_26": 0.15
+  },
+  "week: R2 dip in its own volatility, in a leader": {
+   "up_pct": 51.7,
+   "avg_pct": 0.31,
+   "index_avg_pct": 0.27,
+   "worst_5pct": -8.0,
+   "excess_pct": 0.2,
+   "t": 2.71,
+   "excess_2017_21": 0.35,
+   "excess_2022_26": 0.05
+  },
+  "week: R3 quiet dip in a leader": {
+   "up_pct": 51.7,
+   "avg_pct": 0.3,
+   "index_avg_pct": 0.27,
+   "worst_5pct": -7.9,
+   "excess_pct": 0.19,
+   "t": 2.66,
+   "excess_2017_21": 0.39,
+   "excess_2022_26": -0.0
+  },
+  "month: R4 52-week high and calm": {
+   "up_pct": 53.5,
+   "avg_pct": 0.88,
+   "index_avg_pct": 1.08,
+   "worst_5pct": -12.2,
+   "excess_pct": -0.17,
+   "t": -0.48,
+   "excess_2017_21": 0.1,
+   "excess_2022_26": -0.45
+  },
+  "month: R5 52-week high, calm and dip": {
+   "up_pct": 54.5,
+   "avg_pct": 1.16,
+   "index_avg_pct": 1.08,
+   "worst_5pct": -12.3,
+   "excess_pct": 0.11,
+   "t": 0.33,
+   "excess_2017_21": 0.28,
+   "excess_2022_26": -0.06
+  },
+  "month: R6 month dip in a leader, 52-week high": {
+   "up_pct": 54.1,
+   "avg_pct": 1.74,
+   "index_avg_pct": 1.08,
+   "worst_5pct": -13.3,
+   "excess_pct": 0.69,
+   "t": 2.44,
+   "excess_2017_21": 1.25,
+   "excess_2022_26": 0.11
+  },
+  "momentum: R7 12-1, 6-1, straightness": {
+   "up_pct": 53.8,
+   "avg_pct": 6.43,
+   "index_avg_pct": 3.35,
+   "worst_5pct": -18.1,
+   "excess_pct": 2.75,
+   "t": 2.5,
+   "excess_2017_21": 4.85,
+   "excess_2022_26": 0.5
+  },
+  "momentum: R8 6-1 and straightness": {
+   "up_pct": 54.4,
+   "avg_pct": 6.4,
+   "index_avg_pct": 3.35,
+   "worst_5pct": -17.9,
+   "excess_pct": 2.75,
+   "t": 2.81,
+   "excess_2017_21": 4.44,
+   "excess_2022_26": 0.92
+  },
+  "long: R9 12-1, year straightness, calm": {
+   "up_pct": 61.3,
+   "avg_pct": 14.6,
+   "index_avg_pct": 13.79,
+   "worst_5pct": -32.0,
+   "excess_pct": -1.72,
+   "t": -0.31,
+   "excess_2017_21": -5.31,
+   "excess_2022_26": 2.92
+  },
+  "long: R10 12-1, year straightness, 52-week high": {
+   "up_pct": 58.3,
+   "avg_pct": 21.43,
+   "index_avg_pct": 13.79,
+   "worst_5pct": -32.8,
+   "excess_pct": 5.21,
+   "t": 1.85,
+   "excess_2017_21": 5.43,
+   "excess_2022_26": 4.92
+  },
+  "momentum: first version, held six months, line 20%": {
+   "up_pct": 57.2,
+   "avg_pct": 12.15,
+   "index_avg_pct": 6.6,
+   "worst_5pct": -23.4,
+   "excess_pct": 4.6,
+   "t": 2.48,
+   "excess_2017_21": 7.57,
+   "excess_2022_26": 1.22
+  },
+  "momentum: R7 12-1, 6-1, straightness, held six months, line 20%": {
+   "up_pct": 56.0,
+   "avg_pct": 12.17,
+   "index_avg_pct": 6.6,
+   "worst_5pct": -23.5,
+   "excess_pct": 4.59,
+   "t": 2.41,
+   "excess_2017_21": 7.96,
+   "excess_2022_26": 0.75
+  }
+ },
+ "separation": {
+  "first version: shared": {
+   "overlap": {
+    "week / month": 10.0,
+    "week / momentum": 3.0,
+    "week / long": 2.5,
+    "month / momentum": 6.2,
+    "month / long": 5.4,
+    "momentum / long": 12.0,
+    "distinct in all four": 31.3
+   },
+   "lists": {
+    "week": {
+     "up_pct": 52.3,
+     "avg_pct": 0.42,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.2,
+     "excess_pct": 0.32,
+     "t": 4.03,
+     "excess_2017_21": 0.41,
+     "excess_2022_26": 0.22
+    },
+    "month": {
+     "up_pct": 54.7,
+     "avg_pct": 1.98,
+     "index_avg_pct": 1.08,
+     "worst_5pct": -13.8,
+     "excess_pct": 0.93,
+     "t": 3.13,
+     "excess_2017_21": 1.41,
+     "excess_2022_26": 0.43
+    },
+    "momentum": {
+     "up_pct": 55.1,
+     "avg_pct": 6.39,
+     "index_avg_pct": 3.35,
+     "worst_5pct": -17.9,
+     "excess_pct": 2.75,
+     "t": 2.44,
+     "excess_2017_21": 4.86,
+     "excess_2022_26": 0.48
+    },
+    "long": {
+     "up_pct": 58.2,
+     "avg_pct": 23.73,
+     "index_avg_pct": 13.79,
+     "worst_5pct": -32.9,
+     "excess_pct": 7.6,
+     "t": 2.16,
+     "excess_2017_21": 9.75,
+     "excess_2022_26": 4.83
+    }
+   }
+  },
+  "E1 longest first": {
+   "overlap": {
+    "week / month": 0.0,
+    "week / momentum": 0.0,
+    "week / long": 0.0,
+    "month / momentum": 0.0,
+    "month / long": 0.0,
+    "momentum / long": 0.0,
+    "distinct in all four": 58.7
+   },
+   "lists": {
+    "week": {
+     "up_pct": 49.3,
+     "avg_pct": 0.06,
+     "index_avg_pct": 0.22,
+     "worst_5pct": -8.0,
+     "excess_pct": 0.02,
+     "t": 0.33,
+     "excess_2017_21": 0.12,
+     "excess_2022_26": -0.07
+    },
+    "month": {
+     "up_pct": 54.3,
+     "avg_pct": 1.69,
+     "index_avg_pct": 1.02,
+     "worst_5pct": -13.7,
+     "excess_pct": 0.75,
+     "t": 3.0,
+     "excess_2017_21": 1.14,
+     "excess_2022_26": 0.35
+    },
+    "momentum": {
+     "up_pct": 55.4,
+     "avg_pct": 5.59,
+     "index_avg_pct": 3.35,
+     "worst_5pct": -17.9,
+     "excess_pct": 2.01,
+     "t": 3.29,
+     "excess_2017_21": 3.57,
+     "excess_2022_26": 0.33
+    },
+    "long": {
+     "up_pct": 58.2,
+     "avg_pct": 23.73,
+     "index_avg_pct": 13.79,
+     "worst_5pct": -32.9,
+     "excess_pct": 7.6,
+     "t": 2.16,
+     "excess_2017_21": 9.75,
+     "excess_2022_26": 4.83
+    }
+   }
+  },
+  "E2 shortest first": {
+   "overlap": {
+    "week / month": 0.0,
+    "week / momentum": 0.0,
+    "week / long": 0.0,
+    "month / momentum": 0.0,
+    "month / long": 0.0,
+    "momentum / long": 0.0,
+    "distinct in all four": 58.7
+   },
+   "lists": {
+    "week": {
+     "up_pct": 52.3,
+     "avg_pct": 0.42,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.2,
+     "excess_pct": 0.32,
+     "t": 4.03,
+     "excess_2017_21": 0.41,
+     "excess_2022_26": 0.22
+    },
+    "month": {
+     "up_pct": 54.0,
+     "avg_pct": 1.63,
+     "index_avg_pct": 1.08,
+     "worst_5pct": -13.8,
+     "excess_pct": 0.61,
+     "t": 2.05,
+     "excess_2017_21": 1.14,
+     "excess_2022_26": 0.06
+    },
+    "momentum": {
+     "up_pct": 54.9,
+     "avg_pct": 5.28,
+     "index_avg_pct": 3.2,
+     "worst_5pct": -17.9,
+     "excess_pct": 1.85,
+     "t": 2.63,
+     "excess_2017_21": 3.65,
+     "excess_2022_26": -0.07
+    },
+    "long": {
+     "up_pct": 55.1,
+     "avg_pct": 14.29,
+     "index_avg_pct": 12.46,
+     "worst_5pct": -33.0,
+     "excess_pct": -0.29,
+     "t": -0.14,
+     "excess_2017_21": -0.52,
+     "excess_2022_26": -0.01
+    }
+   }
+  },
+  "E3 best fit": {
+   "overlap": {
+    "week / month": 0.0,
+    "week / momentum": 0.0,
+    "week / long": 0.0,
+    "month / momentum": 0.0,
+    "month / long": 0.0,
+    "momentum / long": 0.0,
+    "distinct in all four": 56.2
+   },
+   "lists": {
+    "week": {
+     "up_pct": 52.0,
+     "avg_pct": 0.36,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.0,
+     "excess_pct": 0.27,
+     "t": 3.63,
+     "excess_2017_21": 0.36,
+     "excess_2022_26": 0.18
+    },
+    "month": {
+     "up_pct": 52.7,
+     "avg_pct": 1.56,
+     "index_avg_pct": 1.08,
+     "worst_5pct": -13.8,
+     "excess_pct": 0.68,
+     "t": 2.23,
+     "excess_2017_21": 1.16,
+     "excess_2022_26": 0.17
+    },
+    "momentum": {
+     "up_pct": 54.1,
+     "avg_pct": 5.83,
+     "index_avg_pct": 3.35,
+     "worst_5pct": -18.1,
+     "excess_pct": 2.55,
+     "t": 3.06,
+     "excess_2017_21": 4.73,
+     "excess_2022_26": 0.21
+    },
+    "long": {
+     "up_pct": 57.6,
+     "avg_pct": 18.39,
+     "index_avg_pct": 13.79,
+     "worst_5pct": -32.7,
+     "excess_pct": 2.34,
+     "t": 0.81,
+     "excess_2017_21": 2.83,
+     "excess_2022_26": 1.72
+    }
+   }
+  },
+  "E4 long, momentum, week, month (post hoc)": {
+   "overlap": {
+    "week / month": 0.0,
+    "week / momentum": 0.0,
+    "week / long": 0.0,
+    "month / momentum": 0.0,
+    "month / long": 0.0,
+    "momentum / long": 0.0,
+    "distinct in all four": 58.7
+   },
+   "lists": {
+    "week": {
+     "up_pct": 51.7,
+     "avg_pct": 0.3,
+     "index_avg_pct": 0.26,
+     "worst_5pct": -8.0,
+     "excess_pct": 0.21,
+     "t": 2.93,
+     "excess_2017_21": 0.26,
+     "excess_2022_26": 0.15
+    },
+    "month": {
+     "up_pct": 52.9,
+     "avg_pct": 1.3,
+     "index_avg_pct": 0.9,
+     "worst_5pct": -13.7,
+     "excess_pct": 0.56,
+     "t": 2.18,
+     "excess_2017_21": 1.21,
+     "excess_2022_26": -0.06
+    },
+    "momentum": {
+     "up_pct": 55.4,
+     "avg_pct": 5.59,
+     "index_avg_pct": 3.35,
+     "worst_5pct": -17.9,
+     "excess_pct": 2.01,
+     "t": 3.29,
+     "excess_2017_21": 3.57,
+     "excess_2022_26": 0.33
+    },
+    "long": {
+     "up_pct": 58.2,
+     "avg_pct": 23.73,
+     "index_avg_pct": 13.79,
+     "worst_5pct": -32.9,
+     "excess_pct": 7.6,
+     "t": 2.16,
+     "excess_2017_21": 9.75,
+     "excess_2022_26": 4.83
+    }
+   }
+  },
+  "P1 momentum gives way to long, month to week (post hoc)": {
+   "overlap": {
+    "week / month": 0.0,
+    "week / momentum": 3.6,
+    "week / long": 2.5,
+    "month / momentum": 4.3,
+    "month / long": 6.2,
+    "momentum / long": 0.0,
+    "distinct in all four": 43.3
+   },
+   "lists": {
+    "week": {
+     "up_pct": 52.3,
+     "avg_pct": 0.42,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.2,
+     "excess_pct": 0.32,
+     "t": 4.03,
+     "excess_2017_21": 0.41,
+     "excess_2022_26": 0.22
+    },
+    "month": {
+     "up_pct": 54.0,
+     "avg_pct": 1.63,
+     "index_avg_pct": 1.08,
+     "worst_5pct": -13.8,
+     "excess_pct": 0.61,
+     "t": 2.05,
+     "excess_2017_21": 1.14,
+     "excess_2022_26": 0.06
+    },
+    "momentum": {
+     "up_pct": 55.4,
+     "avg_pct": 5.59,
+     "index_avg_pct": 3.35,
+     "worst_5pct": -17.9,
+     "excess_pct": 2.01,
+     "t": 3.29,
+     "excess_2017_21": 3.57,
+     "excess_2022_26": 0.33
+    },
+    "long": {
+     "up_pct": 58.2,
+     "avg_pct": 23.73,
+     "index_avg_pct": 13.79,
+     "worst_5pct": -32.9,
+     "excess_pct": 7.6,
+     "t": 2.16,
+     "excess_2017_21": 9.75,
+     "excess_2022_26": 4.83
+    }
+   }
+  },
+  "F1 R6 for month, momentum gives way to long (post hoc; the site runs this)": {
+   "overlap": {
+    "week / month": 3.7,
+    "week / momentum": 3.6,
+    "week / long": 2.5,
+    "month / momentum": 3.9,
+    "month / long": 2.7,
+    "momentum / long": 0.0,
+    "distinct in all four": 45.7
+   },
+   "lists": {
+    "week": {
+     "up_pct": 52.3,
+     "avg_pct": 0.42,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.2,
+     "excess_pct": 0.32,
+     "t": 4.03,
+     "excess_2017_21": 0.41,
+     "excess_2022_26": 0.22
+    },
+    "month": {
+     "up_pct": 54.1,
+     "avg_pct": 1.74,
+     "index_avg_pct": 1.08,
+     "worst_5pct": -13.3,
+     "excess_pct": 0.69,
+     "t": 2.44,
+     "excess_2017_21": 1.25,
+     "excess_2022_26": 0.11
+    },
+    "momentum": {
+     "up_pct": 55.4,
+     "avg_pct": 5.59,
+     "index_avg_pct": 3.35,
+     "worst_5pct": -17.9,
+     "excess_pct": 2.01,
+     "t": 3.29,
+     "excess_2017_21": 3.57,
+     "excess_2022_26": 0.33
+    },
+    "long": {
+     "up_pct": 58.2,
+     "avg_pct": 23.73,
+     "index_avg_pct": 13.79,
+     "worst_5pct": -32.9,
+     "excess_pct": 7.6,
+     "t": 2.16,
+     "excess_2017_21": 9.75,
+     "excess_2022_26": 4.83
+    }
+   }
+  },
+  "F2 F1, and month gives way to week (post hoc)": {
+   "overlap": {
+    "week / month": 0.0,
+    "week / momentum": 3.6,
+    "week / long": 2.5,
+    "month / momentum": 3.5,
+    "month / long": 2.7,
+    "momentum / long": 0.0,
+    "distinct in all four": 47.5
+   },
+   "lists": {
+    "week": {
+     "up_pct": 52.3,
+     "avg_pct": 0.42,
+     "index_avg_pct": 0.27,
+     "worst_5pct": -8.2,
+     "excess_pct": 0.32,
+     "t": 4.03,
+     "excess_2017_21": 0.41,
+     "excess_2022_26": 0.22
+    },
+    "month": {
+     "up_pct": 53.6,
+     "avg_pct": 1.56,
+     "index_avg_pct": 1.08,
+     "worst_5pct": -13.3,
+     "excess_pct": 0.54,
+     "t": 1.96,
+     "excess_2017_21": 1.12,
+     "excess_2022_26": -0.07
+    },
+    "momentum": {
+     "up_pct": 55.4,
+     "avg_pct": 5.59,
+     "index_avg_pct": 3.35,
+     "worst_5pct": -17.9,
+     "excess_pct": 2.01,
+     "t": 3.29,
+     "excess_2017_21": 3.57,
+     "excess_2022_26": 0.33
+    },
+    "long": {
+     "up_pct": 58.2,
+     "avg_pct": 23.73,
+     "index_avg_pct": 13.79,
+     "worst_5pct": -32.9,
+     "excess_pct": 7.6,
+     "t": 2.16,
+     "excess_2017_21": 9.75,
+     "excess_2022_26": 4.83
+    }
+   }
+  },
+  "F3 R6 for month, every list gives way, long first (post hoc)": {
+   "overlap": {
+    "week / month": 0.0,
+    "week / momentum": 0.0,
+    "week / long": 0.0,
+    "month / momentum": 0.0,
+    "month / long": 0.0,
+    "momentum / long": 0.0,
+    "distinct in all four": 57.8
+   },
+   "lists": {
+    "week": {
+     "up_pct": 51.7,
+     "avg_pct": 0.3,
+     "index_avg_pct": 0.26,
+     "worst_5pct": -8.0,
+     "excess_pct": 0.21,
+     "t": 2.93,
+     "excess_2017_21": 0.26,
+     "excess_2022_26": 0.15
+    },
+    "month": {
+     "up_pct": 51.9,
+     "avg_pct": 1.16,
+     "index_avg_pct": 0.9,
+     "worst_5pct": -13.6,
+     "excess_pct": 0.54,
+     "t": 2.07,
+     "excess_2017_21": 1.1,
+     "excess_2022_26": -0.0
+    },
+    "momentum": {
+     "up_pct": 55.4,
+     "avg_pct": 5.59,
+     "index_avg_pct": 3.35,
+     "worst_5pct": -17.9,
+     "excess_pct": 2.01,
+     "t": 3.29,
+     "excess_2017_21": 3.57,
+     "excess_2022_26": 0.33
+    },
+    "long": {
+     "up_pct": 58.2,
+     "avg_pct": 23.73,
+     "index_avg_pct": 13.79,
+     "worst_5pct": -32.9,
+     "excess_pct": 7.6,
+     "t": 2.16,
+     "excess_2017_21": 9.75,
+     "excess_2022_26": 4.83
+    }
+   }
+  }
+ }
+}

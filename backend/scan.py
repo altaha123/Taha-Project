@@ -214,7 +214,11 @@ CONTROL_PCT = float(os.environ.get("SCAN_CONTROL_PCT", "0.25") or 0.25)
 # given places in phase 2 before the technical ranking fills the rest. Without
 # this reservation a leader that does not also have one of the 150 hottest
 # charts never gets a row, and the list is drawn from the wrong pool again.
-LEADER_SLOTS = int(os.environ.get("SCAN_LEADER_SLOTS", "70") or 70)
+# 75 is the most the cohort allows (half the ranked places). Since the lists
+# stopped sharing most of their names (leaders.py, "one stock, one list") the
+# top 18 of all four come to about 72 different stocks; 70 left the last few
+# reserves of each list without a row.
+LEADER_SLOTS = int(os.environ.get("SCAN_LEADER_SLOTS", "75") or 75)
 # How far down each of the four lists a name may sit and still get a place.
 # The page shows 15; the rest are the reserve for the sector cap and for
 # names removed over an adverse filing.

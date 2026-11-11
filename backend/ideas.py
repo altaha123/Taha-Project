@@ -728,6 +728,7 @@ _EVIDENCE = (
     ("trend", "steady_trend", "How steady the climb was"),
     ("calm", "calm", "Calm: low volatility"),
     ("dip", "dip", "Dip over the last five sessions"),
+    ("dip21", "dip_month", "Dip over the last month"),
 )
 
 
@@ -753,6 +754,7 @@ def _pick_evidence(key, block):
         "trend": f"Straightness {facts.get('trend_straightness')}/100 over 90 sessions",
         "calm": f"{facts.get('volatility_pct')}% yearly volatility",
         "dip": f"{facts.get('return_5d_pct')}% over the last five sessions",
+        "dip21": f"{facts.get('return_1m_pct')}% over the last month",
     }
     out = []
     for k, part_key, label in _EVIDENCE:
@@ -780,6 +782,60 @@ def tested_record(key):
     return (leaders.TESTED.get("lists") or {}).get(key)
 
 
+def _choose_picks(rows_all, key, limit, hours, exclude=()):
+    """
+    Which rows one list shows, in order, before anything is decorated.
+
+    Cheap on purpose (no news, no regime, no sector feed), so a list that
+    gives way to another can work out what that list shows. Returns
+    (chosen, excluded_adverse, weak, capped, gave_way, per_sector, universe,
+    considered), where each chosen item is (row, entry, filing, adverse).
+    """
+    pool, excluded_adverse, weak, gave_way = [], [], [], []
+    universe = None
+    for r in rows_all:
+        block = r.get("leader") or {}
+        entry = (block.get("lists") or {}).get(key) or {}
+        if not entry.get("rank"):
+            continue
+        universe = universe or block.get("universe")
+        sym = (r.get("symbol") or "").upper()
+        if sym in exclude:
+            # Shown on the list this one gives way to. The engine already left
+            # out that list's top 15; this catches the names its sector cap or
+            # screens pulled up from further down.
+            gave_way.append(sym)
+            continue
+        filing = _filing_for(sym, hours, None)
+        adverse = bool(filing and filing.get("direction") == "adverse")
+        if adverse and (filing or {}).get("importance") in HARD_EXCLUDE_ADVERSE:
+            excluded_adverse.append({"symbol": sym, "name": r.get("name"),
+                                     "category": filing.get("category"),
+                                     "headline": filing.get("headline"),
+                                     "line": filing.get("line"),
+                                     "setup_fit": r.get("setup_fit")})
+            continue
+        if key == "long":
+            f, eps = r.get("f_score"), r.get("trailing_eps")
+            if (f is not None and f < LONG_MIN_PIOTROSKI) or (eps is not None and eps < 0):
+                weak.append(sym)
+                continue
+        pool.append((r, entry, filing, adverse))
+
+    pool.sort(key=lambda t: t[1]["rank"])
+    chosen, per_sector, capped = [], {}, 0
+    for item in pool:
+        if len(chosen) >= limit:
+            break
+        sec = item[0].get("sector") or "Unknown"
+        if sec != "Unknown" and per_sector.get(sec, 0) >= PICK_SECTOR_CAP:
+            capped += 1
+            continue
+        per_sector[sec] = per_sector.get(sec, 0) + 1
+        chosen.append(item)
+    return chosen, excluded_adverse, weak, capped, gave_way, per_sector, universe, len(pool)
+
+
 def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
     """One of the four tested lists, from a scan that carries leader ranks."""
     spec = leaders.LISTS[key]
@@ -802,29 +858,23 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
                              "Run a new scan before using it.")
     called_on = _scan_date(payload.get("scanned_at"))
 
-    pool, excluded_adverse, weak = [], [], []
-    universe = None
-    for r in rows_all:
-        block = r.get("leader") or {}
-        entry = (block.get("lists") or {}).get(key) or {}
-        if not entry.get("rank"):
-            continue
-        universe = universe or block.get("universe")
+    exclude = set()
+    other = spec.get("gives_way_to")
+    if other in leaders.LISTS:
+        o_hours = max(72, leaders.LISTS[other]["hold_days"] * 24)
+        shown = _choose_picks(rows_all, other, limit, o_hours)[0]
+        exclude = {(t[0].get("symbol") or "").upper() for t in shown}
+
+    (picked, excluded_adverse, weak, capped, gave_way, per_sector,
+     universe, considered) = _choose_picks(rows_all, key, limit, hours, exclude)
+    # A scan ranked under an earlier recipe (made before the last deploy) still
+    # answers, but the tested record printed beside it would be another list's.
+    stamps = {(r.get("leader") or {}).get("recipe") for r in rows_all if (r.get("leader") or {}).get("lists")}
+    recipe_current = stamps == {leaders.RECIPE}
+    chosen = []
+    for r, entry, filing, adverse in picked:
         sym = (r.get("symbol") or "").upper()
-        filing = _filing_for(sym, hours, None)
-        adverse = bool(filing and filing.get("direction") == "adverse")
-        if adverse and (filing or {}).get("importance") in HARD_EXCLUDE_ADVERSE:
-            excluded_adverse.append({"symbol": sym, "name": r.get("name"),
-                                     "category": filing.get("category"),
-                                     "headline": filing.get("headline"),
-                                     "line": filing.get("line"),
-                                     "setup_fit": r.get("setup_fit")})
-            continue
-        if key == "long":
-            f, eps = r.get("f_score"), r.get("trailing_eps")
-            if (f is not None and f < LONG_MIN_PIOTROSKI) or (eps is not None and eps < 0):
-                weak.append(sym)
-                continue
+        block = r.get("leader") or {}
         row = dict(r)
         tier, warn = liquidity_tier(row.get("avg_turnover_cr"))
         srow = _sector_row(outlook, row.get("sector"))
@@ -852,19 +902,7 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         row["conviction_band"] = band
         row["conviction_why"] = f"Ranked {entry['rank']} of the stocks that passed every gate."
         row["thesis"] = spec["idea"]
-        pool.append(row)
-
-    pool.sort(key=lambda r: r["pick_rank"])
-    chosen, per_sector, capped = [], {}, 0
-    for r in pool:
-        if len(chosen) >= limit:
-            break
-        sec = r.get("sector") or "Unknown"
-        if sec != "Unknown" and per_sector.get(sec, 0) >= PICK_SECTOR_CAP:
-            capped += 1
-            continue
-        per_sector[sec] = per_sector.get(sec, 0) + 1
-        chosen.append(r)
+        chosen.append(row)
 
     notes = []
     if excluded_adverse:
@@ -876,6 +914,12 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
     if capped:
         notes.append(f"{capped} more qualified but would have put more than "
                      f"{PICK_SECTOR_CAP} names in one sector.")
+    if other in leaders.LISTS:
+        notes.append(f"Stocks on the {leaders.LISTS[other]['label'].lower()} list are left off "
+                     "this one, so the two lists show different stocks.")
+    if not recipe_current:
+        notes.append("This scan was ranked with an earlier recipe, so its tested record is not "
+                     "shown. The next scan ranks it the current way.")
     if not chosen:
         notes.append("Nothing passed every gate in this scan.")
 
@@ -892,7 +936,8 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "note": spec["idea"],
         "horizon_note": (f"{spec['idea']} Hold {spec['hold_text']}; leave on a close "
                          f"{spec['exit_pct']:.0f}% under the call price."),
-        "tested": tested_record(key),
+        "tested": tested_record(key) if recipe_current else None,
+        "recipe_current": recipe_current,
         # The study's header only. Its tables are in research/ideas-study.json;
         # sending them with every list would triple the response for nobody.
         "study": {k: (leaders.TESTED or {}).get(k) for k in
@@ -921,7 +966,9 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "excluded_adverse": excluded_adverse,
         "rows": chosen,
         "count": len(chosen),
-        "considered": len(pool),
+        "considered": considered,
+        "gives_way_to": other if other in leaders.LISTS else None,
+        "gave_way": gave_way,
         "method": ("Every liquid NSE stock is ranked on the measurements in the ledger. "
                    "The list is the top of that ranking after the uptrend and volatility "
                    "gates. Tested on NSE prices from 2017 to 2026."),

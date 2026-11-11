@@ -123,6 +123,15 @@
     '</div>';
   }
 
+  /* A scan ranked before the recipes last changed. Its record would be another
+     list's, so the server sends none (`recipe_current` false); this says why. */
+  function recipeHTML(d) {
+    return d && d.recipe_current === false
+      ? '<p class="pk-quiet">Ranked with the previous recipe, so no tested record is shown. ' +
+        'The next scan, after the close, ranks it the current way.</p>'
+      : '';
+  }
+
   /* What the list's own calls have done since it went live. Shown only once
      there is something to show: five closed calls. */
   function liveHTML(d) {
@@ -194,7 +203,7 @@
     var out = '';
     if (isTested(d)) {
       out += '<p class="pk-idea">' + esc(d.idea || '') + ' <span>Hold ' + esc(d.hold_text || meta.hold) + '.</span></p>' +
-        recordHTML(d) + liveHTML(d);
+        recordHTML(d) + recipeHTML(d) + liveHTML(d);
     } else {
       out += '<p class="pk-quiet">These are from the last scan, made the old way. The four tested lists appear after the next scan.</p>';
     }
@@ -249,7 +258,7 @@
   var api = {
     LISTS: LISTS, valid: valid, chosen: chosen, remember: remember,
     isTested: isTested, whyHTML: whyHTML, planHTML: planHTML, recordHTML: recordHTML,
-    liveHTML: liveHTML, updatedText: updatedText, mount: mount, signed: signed, inr: inr
+    recipeHTML: recipeHTML, liveHTML: liveHTML, updatedText: updatedText, mount: mount, signed: signed, inr: inr
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.AltahaPicks = api;

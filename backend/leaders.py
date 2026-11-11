@@ -33,14 +33,34 @@ stock:
   · how straight the climb was (R-squared of log price over 90 sessions)
   · calm: low volatility over the past year
   · dip: how far it fell over the last five sessions
+  · month dip: how far it fell over the last twenty-one sessions
 
   LEADER SCORE  = the average of the first four.
 
   This week    half leader score, half dip. A strong stock that just fell.
-  This month   three parts leader score, one part dip.
-  Momentum     the leader score. About three months.
+  This month   a leader (leader score in the top 30%) that fell over the
+               last month: half month dip, half closeness to the 52-week high.
+  Momentum     the leader score, leaving out the long-term top 15. About
+               three months.
   Long term    12-month return, 52-week high and straightness, equally: the
                leader score without its six-month part. About a year.
+
+ONE STOCK, ONE LIST (November 2026)
+The first version of the four lists shared most of their names: on 484 past
+dates momentum and long term had 12 of their 15 stocks in common, and this
+week and this month 10. Readers saw the same stocks under four tabs. Two
+changes, both measured (research/IDEAS-STUDY.md, "One stock, one list"):
+
+  · This month became the month-dip recipe above. It shares about 4 names
+    with this week instead of 10, and it tested better on 2017-2021 than the
+    old month recipe did once that one was made to give way to this week.
+  · Momentum gives way to long term: a stock in the top 15 of the long-term
+    ranking is left off momentum, which takes its next names instead. Long
+    term is untouched. Momentum's average fell (+6.4% to +5.5% a pick) and its
+    lead over the average stock became steadier (t 2.4 to 3.3).
+
+Across all four lists that is about 46 different stocks in 60 places, where
+it was 31, and no two lists share more than about four.
 
 Gates, for every list: a typical day trades Rs 10 crore or more, the price is
 Rs 20 or more, the stock is in an uptrend (price above its 200-day average,
@@ -82,6 +102,7 @@ MIN_PRICE = 20.0
 MIN_SESSIONS = 253                 # twelve months of closes plus the base one
 MAX_SPAN_DAYS = 395                # calendar days those 253 closes may cover
 CALM_FLOOR = 0.20                  # calm percentile under which a name is out
+LEADER_FLOOR = 0.70                # leader percentile a month pick must reach
 # Nothing that moves less than this in a year is a company share. A liquid-fund
 # ETF creeps up in a straight line at about 1% volatility, which every
 # return-for-its-risk measure here would rank first on the exchange. The scan
@@ -89,9 +110,16 @@ CALM_FLOOR = 0.20                  # calm percentile under which a name is out
 # guard for the day a symbol list carries one anyway.
 MIN_VOLATILITY = 0.08
 LIST_SIZE = 15
+# Stamped on every block rank() writes. A scan made under an earlier recipe
+# still serves its lists after a deploy, but the page must not print this
+# recipe's tested record beside them. Change it whenever LISTS changes.
+RECIPE = "2026-11 one stock, one list"
 
 # The four lists. `mix` is the weight on each percentile; `calm_gate` says
 # whether the most volatile fifth is removed (True) or merely ranked lower.
+# `leader_floor`, where set, is the leader percentile a stock must reach to be
+# on the list at all. `gives_way_to` names a list whose top LIST_SIZE this
+# list leaves out, so the two never show the same stock.
 #
 # `tested` is what each recipe did when replayed on NSE's daily bhavcopy from
 # January 2017 to 2026: a list every five sessions, 15 picks, bought at the
@@ -108,14 +136,14 @@ LISTS = {
     "month": {
         "label": "This month", "setup": "Month pick", "setup_key": "pick_month",
         "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 12.0,
-        "mix": {"leader": 0.75, "dip": 0.25}, "calm_gate": True,
-        "idea": "Market leaders, with a tilt to the ones that just dipped.",
+        "mix": {"dip21": 0.5, "high": 0.5}, "calm_gate": True, "leader_floor": LEADER_FLOOR,
+        "idea": "Market leaders that pulled back over the last month.",
     },
     "momentum": {
         "label": "Momentum", "setup": "Momentum pick", "setup_key": "pick_momentum",
         "hold_sessions": 63, "hold_days": 91, "hold_text": "about 3 months", "exit_pct": 15.0,
-        "mix": {"leader": 1.0}, "calm_gate": True,
-        "idea": "The strongest steady uptrends on the exchange.",
+        "mix": {"leader": 1.0}, "calm_gate": True, "gives_way_to": "long",
+        "idea": "Strong steady uptrends, other than the long-term picks.",
     },
     "long": {
         "label": "Long term", "setup": "Long-term pick", "setup_key": "pick_long",
@@ -247,6 +275,7 @@ def signals(df):
         "turnover": turnover,
         "ret_12m": float(c[-1] / c[-253] - 1.0),
         "ret_3m": float(c[-1] / c[-64] - 1.0),
+        "ret_1m": float(c[-1] / c[-22] - 1.0),
         "ret_5d": float(c[-1] / c[-6] - 1.0),
     }
 
@@ -290,8 +319,11 @@ def _why(key, sig, calm):
     """The evidence in words a first-time reader can use. Facts, no advice."""
     out = []
     r5 = sig.get("ret_5d")
-    if key in ("week", "month") and r5 is not None and r5 <= -0.01:
+    if key == "week" and r5 is not None and r5 <= -0.01:
         out.append(f"Fell {abs(r5) * 100:.0f}% this week")
+    r21 = sig.get("ret_1m")
+    if key == "month" and r21 is not None and r21 <= -0.01:
+        out.append(f"Fell {abs(r21) * 100:.0f}% this month")
     r12 = sig.get("ret_12m")
     if r12 is not None:
         out.append(f"Up {r12 * 100:.0f}% in a year" if r12 >= 0 else f"Down {abs(r12) * 100:.0f}% in a year")
@@ -332,26 +364,34 @@ def rank(candidates):
     trend = _pct_ranks([g["trend"] for _, g in pool])
     calm = _pct_ranks([-g["vol"] for _, g in pool])
     dip = _pct_ranks([-g["ret_5d"] for _, g in pool])
+    # A frame from before ret_1m existed (an old checkpoint) ranks as no dip.
+    dip21 = _pct_ranks([-(g.get("ret_1m") if _finite(g.get("ret_1m")) is not None else 0.0)
+                        for _, g in pool])
 
     blocks, exact = {}, {}
     for i, (sym, g) in enumerate(pool):
         part = {"m12": m12[i], "m6": m6[i], "high": high[i], "trend": trend[i],
-                "calm": calm[i], "dip": dip[i]}
+                "calm": calm[i], "dip": dip[i], "dip21": dip21[i]}
         part["leader"] = (m12[i] + m6[i] + high[i] + trend[i]) / 4.0
         is_calm = calm[i] >= CALM_FLOOR
         lists = {}
         for key, spec in LISTS.items():
             score = sum(part[k] * w for k, w in spec["mix"].items()) * 100.0
             why_not = None
+            floor = spec.get("leader_floor")
             if not g["uptrend"]:
                 why_not = "Not in an uptrend: price or its 50-day average is under the 200-day average."
             elif spec["calm_gate"] and not is_calm:
                 why_not = "Among the most volatile fifth of liquid stocks."
+            elif floor is not None and part["leader"] < floor:
+                why_not = (f"Not a market leader: its leader score is under the top "
+                           f"{100 - floor * 100:.0f}% of liquid stocks.")
             exact[(sym, key)] = score
             lists[key] = {"score": round(score, 1), "eligible": why_not is None,
                           "why_not": why_not, "rank": None,
                           "why": _why(key, g, calm[i])}
         blocks[sym] = {
+            "recipe": RECIPE,
             "universe": len(pool),
             "uptrend": bool(g["uptrend"]),
             "calm": bool(is_calm),
@@ -360,10 +400,13 @@ def rank(candidates):
                 "momentum_12m": round(m12[i] * 100), "momentum_6m": round(m6[i] * 100),
                 "near_high": round(high[i] * 100), "steady_trend": round(trend[i] * 100),
                 "calm": round(calm[i] * 100), "dip": round(dip[i] * 100),
+                "dip_month": round(dip21[i] * 100), "leader": round(part["leader"] * 100),
             },
             "facts": {
                 "return_12m_pct": round(g["ret_12m"] * 100, 1),
                 "return_3m_pct": round(g["ret_3m"] * 100, 1),
+                "return_1m_pct": (round(g["ret_1m"] * 100, 1)
+                                  if _finite(g.get("ret_1m")) is not None else None),
                 "return_5d_pct": round(g["ret_5d"] * 100, 1),
                 "below_high_pct": round((1 - g["near_high"]) * 100, 1),
                 "trend_straightness": round(g["trend"], 0),
@@ -373,7 +416,22 @@ def rank(candidates):
             },
             "lists": lists,
         }
-    for key in LISTS:
+    # A list that gives way is ranked after the list it gives way to, so it
+    # knows which names that list's top LIST_SIZE took.
+    order = sorted(LISTS, key=lambda k: 1 if LISTS[k].get("gives_way_to") else 0)
+    for key in order:
+        taken = set()
+        other = LISTS[key].get("gives_way_to")
+        if other:
+            taken = {s for s in blocks if (blocks[s]["lists"][other]["rank"] or 0) and
+                     blocks[s]["lists"][other]["rank"] <= LIST_SIZE}
+            label = LISTS[other]["label"].lower()
+            for s in taken:
+                entry = blocks[s]["lists"][key]
+                if entry["eligible"]:
+                    entry.update(eligible=False, why_not=(
+                        f"On the {label} list. Each stock is on one of the two, so "
+                        f"{LISTS[key]['label'].lower()} shows different names."))
         # Ordered on the exact score. The printed one is rounded to a decimal,
         # and ranking on that would settle every near-tie alphabetically.
         ordered = sorted((s for s in blocks if blocks[s]["lists"][key]["eligible"]),

@@ -77,18 +77,27 @@ and **Long term**. Each shows what the list is in one line, how it tested in
 three numbers, and the picks, each with up to four reasons, a holding period
 and one exit price.
 
-| List | Hold | Exit line | Rose | Average | Nifty 500 |
-|---|---|---|---|---|---|
-| This week | 5 sessions | close 7% under | 52% | +0.4% | +0.3% |
-| This month | 21 | close 12% under | 55% | +2.0% | +1.1% |
-| Momentum | 63 | close 15% under | 55% | +6.4% | +3.4% |
-| Long term | 252 | close 30% under | 58% | +23.7% | +13.8% |
+| List | Hold | Exit line | Rose | Average | Nifty 500 | After costs |
+|---|---|---|---|---|---|---|
+| This week | 5 sessions | close 7% under | 52% | +0.4% | +0.3% | −0.1% |
+| This month | 21 | close 12% under | 54% | +1.7% | +1.1% | +1.3% |
+| Momentum | 63 | close 15% under | 55% | +5.5% | +3.2% | +5.0% |
+| Long term | 252 | close 30% under | 58% | +23.7% | +13.8% | +23.2% |
 
 Tested on NSE's daily files for 2017–2026, delisted companies included,
-before costs and tax. The old list, replayed the same way with its 8% stop:
-38% rose and it did not beat the index. What was wrong, what was tried, what
-was dropped and what the test does not show are in
+before tax; "after costs" takes off a 0.49% round trip. The old list, replayed
+the same way with its 8% stop: 38% rose and it did not beat the index. What was
+wrong, what was tried, what was dropped and what the test does not show are in
 [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md).
+
+**One stock, one list.** The lists as first built shared most of their names
+(momentum and long term 12 of 15). Momentum now leaves out the long-term top
+15, and this month buys a month's pullback in a market leader: about 46
+different stocks in the 60 places, where it was 31. It cost this month and
+momentum some of their average; all 20 trials are in
+[`research/separation_lab.py`](research/separation_lab.py). A scan ranked
+before a recipe changed still serves its lists after a deploy, without the
+tested record, until the next scan (`leaders.RECIPE`).
 
 - **The page prints only the study's numbers.** `research/ideas_study.py`
   writes them; `leaders.py` reads them; a test fails if the hold or exit line
