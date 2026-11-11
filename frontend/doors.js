@@ -205,21 +205,21 @@
 
   var TODAY_TOOLS = [
     { id: 'drt-live', goto: 'discover/live', icon: 'alerts', name: 'Alerts', unit: 'fired today', live: true,
-      line: 'Volume spikes, opening-range and level breaks as they happen.' },
+      line: 'Unusual moves, as they happen.' },
     { id: 'drt-deals', goto: 'discover/deals', icon: 'deals', name: 'Big trades', unit: 'stocks with deals',
-      line: 'Bulk and block deals, netted per stock.' },
+      line: 'Bulk and block deals.' },
     { id: 'drt-wow', goto: 'discover/wow', icon: 'wow', name: 'Order wins', unit: '',
-      line: 'New orders measured against the size of the company that won them.' },
+      line: 'New orders, sized against the company.' },
     { id: 'drt-special', goto: 'discover/special', icon: 'delivery', name: 'Delivery trends', unit: 'in the book',
-      line: 'Advances carried on delivered volume rather than intraday churn.' },
+      line: 'Stocks rising on real buying.' },
     { id: 'drt-results', goto: 'discover/results', icon: 'results', name: 'Results calendar', unit: 'today',
-      line: 'Who reports yesterday, today and this week.' },
+      line: 'Who reports this week.' },
     { id: 'drt-filings', goto: 'discover/filings', icon: 'filings', name: 'Filings & news', unit: 'filings in the feed', live: true,
-      line: 'Company announcements as they reach the exchange.' },
-    { id: 'drt-setups', goto: 'discover/discover', icon: 'setups', name: 'Setups', unit: 'strong setups',
-      line: 'The screener’s strongest setups for the short horizon.' },
+      line: 'Company announcements, live.' },
+    { id: 'drt-setups', goto: 'discover/discover', icon: 'setups', name: 'Setups', unit: 'top picks',
+      line: 'The momentum list, top of the ranking.' },
     { id: 'drt-options', goto: 'discover/options', icon: 'options', name: 'Options', unit: '',
-      line: 'Option chains, open interest and the expiries ahead.' }
+      line: 'Option chains and open interest.' }
   ];
 
   function todayShell() {
@@ -270,7 +270,7 @@
                 '<button type="button" role="tab" data-movers="dn" aria-selected="false">Losers</button>' +
               '</div></div>' +
             '<div id="drt-movers"><p class="dr-quiet">Reading the heavyweights…</p></div>' +
-            '<p class="dr-fine">Among the sector heavyweights the site tracks live.</p>' +
+            '<p class="dr-fine">Among tracked large companies.</p>' +
           '</section>' +
           '<section class="dr-card dr-heads dr-rise" style="--i:6" aria-label="Headlines">' +
             '<div class="dr-card-h"><h2>Headlines</h2><button type="button" class="dr-link" data-goto="discover/filings">Filings ›</button></div>' +
@@ -278,7 +278,7 @@
           '</section>' +
         '</aside>' +
       '</div>' +
-      '<p class="dr-disc">Observations, not recommendations. Index levels and moves are the data feed’s; sector moves are equal-weight across the heavyweights tracked.</p>' +
+      '<p class="dr-disc">Observations, not recommendations.</p>' +
     '</div>';
   }
 
@@ -308,13 +308,13 @@
     return '<section class="dr-start dr-rise" style="--i:1" id="dr-start" aria-labelledby="dr-start-h">' +
       '<div class="dr-start-top">' +
         '<div><h2 id="dr-start-h">New here? Start with one of these.</h2>' +
-        '<p>Type any NSE, BSE or US stock and Altaha scores it from 0 to 100, then shows you exactly why.</p></div>' +
+        '<p>Altaha scores any stock from 0 to 100, and picks stocks to hold for a week, a month or longer.</p></div>' +
         '<button type="button" class="dr-start-x" id="dr-start-x">Hide this</button>' +
       '</div>' +
       '<div class="dr-tasks">' +
-        task('data-start="search"', 'search', 'Check a stock', 'Type a name. See its score and what helped or hurt it.') +
-        task('data-goto="research/ideas"', 'converge', 'Find stocks to research', 'The whole market, ranked by score.') +
-        task('data-goto="portfolio/portfolio"', 'review', 'Check my portfolio', 'Add what you own and get a clear call on each.') +
+        task('data-start="search"', 'search', 'Check a stock', 'Its score, and why.') +
+        task('data-goto="research/ideas"', 'converge', 'Get stock picks', 'For a week, a month or longer.') +
+        task('data-goto="portfolio/portfolio"', 'review', 'Check my portfolio', 'A clear call on each holding.') +
       '</div>' +
       '<p class="dr-start-try"><span>Try one:</span>' +
         START_TRY.map(function (t) {
@@ -370,7 +370,7 @@
       var rows = readJSON(WATCH_KEY, []);
       rows = Array.isArray(rows) ? rows : [];
       if (!rows.length) {
-        w.innerHTML = '<p class="dr-quiet">Nothing saved yet. Tap ☆ on any stock page to follow it.</p>';
+        w.innerHTML = '<p class="dr-quiet">Tap ☆ on a stock to follow it.</p>';
       } else {
         w.innerHTML = rows.slice(0, 6).map(function (r) {
           var sym = String(r.symbol || r).toUpperCase(), q = (quotes || {})[sym];
@@ -387,7 +387,7 @@
       p.innerHTML = list.length ? list.map(function (t) {
         return '<button type="button" class="dr-pinchip" data-goto="' + esc(t.section + '/' + t.tab.id) + '">' +
           svg('pin', 14) + esc(t.tab.label) + '</button>';
-      }).join('') : '<p class="dr-quiet">Pin any tool from the bar above it and it waits for you here.</p>';
+      }).join('') : '<p class="dr-quiet">Pin a tool to keep it here.</p>';
     }
   }
 
@@ -599,7 +599,7 @@
       if (!d) return fillTool('drt-live', null, 'The scanner could not be reached just now.');
       var a = d.alerts_today || [];
       fillTool('drt-live', a.length, d.market_open ? 'Watching ' + (d.watchlist_size || 0) + ' names right now.'
-        : 'The market is closed; today’s alerts stay on the scanner.',
+        : 'Market closed.',
         a.slice(-4).reverse().map(function (x) { return { text: x.symbol }; }));
     });
     get('/deals?limit=6', 15000).then(function (d) {
@@ -623,7 +623,7 @@
       var day = (d.days || []).filter(function (x) { return x.date === d.today; })[0];
       var week = (d.days || []).reduce(function (n, x) { return n + (x.declared || 0) + (x.pending || 0); }, 0);
       fillTool('drt-results', day ? (day.declared || 0) + (day.pending || 0) : 0,
-        week + ' companies between yesterday and the end of next week.',
+        week + ' companies report this week.',
         day ? (day.rows || []).slice(0, 4).map(function (r) { return { text: r.symbol, tone: r.status === 'declared' ? 'up' : '' }; }) : []);
     });
     get('/announcements?limit=60&min_importance=medium', 12000).then(function (d) {
@@ -705,7 +705,7 @@
         '<span class="dr-sheen" aria-hidden="true"></span>' +
         '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('query') + '</span></span>' +
         '<span class="dr-tool-name">Screener</span>' +
-        '<span class="dr-tool-line">Your own rules over every stored company — 55 fields, from ROE to pledged shares.</span>' +
+        '<span class="dr-tool-line">Filter every company by your own rules.</span>' +
         '<span class="dr-term"><span class="dr-type">ROE &gt; 20 AND Debt to equity &lt; 0.5</span></span></button>',
       '<button type="button" class="dr-card dr-tool dr-rise" style="--i:3" data-goto="research/lenses">' +
         '<span class="dr-sheen" aria-hidden="true"></span>' +
@@ -720,24 +720,24 @@
         '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('owners') + '</span></span>' +
         '<span class="dr-tool-name">Who owns what</span>' +
         '<span class="dr-tool-count"><b class="dr-n" data-count>—</b><small>well-known investors tracked</small></span>' +
-        '<span class="dr-tool-line" data-line>Their disclosed holdings, quarter by quarter. Fund houses are one door along.</span>' +
+        '<span class="dr-tool-line" data-line>What well-known investors hold.</span>' +
         '<span class="dr-tool-chips" data-chips></span></button>',
       '<button type="button" class="dr-card dr-tool dr-rise dr-record" style="--i:5" data-goto="research/tracker">' +
         '<span class="dr-sheen" aria-hidden="true"></span>' +
         '<span class="dr-record-row"><span>' +
           '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('record') + '</span></span>' +
           '<span class="dr-tool-name">Track record</span>' +
-          '<span class="dr-tool-line">Every idea the site has shown, and how it has done since.</span></span>' +
+          '<span class="dr-tool-line">How every pick has done since.</span></span>' +
           '<img src="research-illustration.webp" alt="" width="132" height="88" loading="lazy"></span></button>'
     ].join('');
     var more = [
-      ['research/calls', 'record', 'Call log', 'Every call with its day, date and price — and what happened next'],
-      ['research/convergence', 'converge', 'Convergence', 'Stocks that pass three or more investor styles'],
-      ['research/funds', 'funds', 'Fund houses', 'What the mutual funds disclosed holding'],
-      ['research/charts', 'charts', 'Charts', 'Drawings, levels and indicators for any stock'],
-      ['research/strategies', 'flask', 'Strategy lab', 'Eleven trading rules on any stock, against simply holding it'],
-      ['research/factors', 'factors', 'Factors', 'What each factor has actually predicted'],
-      ['research/concalls', 'concalls', 'Concalls', 'Earnings call transcripts, digested']
+      ['research/calls', 'record', 'Call log', 'Every pick, dated, and what happened next'],
+      ['research/convergence', 'converge', 'Convergence', 'Stocks several investor styles agree on'],
+      ['research/funds', 'funds', 'Fund houses', 'What mutual funds hold'],
+      ['research/charts', 'charts', 'Charts', 'Chart any stock'],
+      ['research/strategies', 'flask', 'Strategy lab', 'Trading rules, tested on any stock'],
+      ['research/factors', 'factors', 'Factors', 'Which signals have worked'],
+      ['research/concalls', 'concalls', 'Concalls', 'Earnings calls, summarised']
     ].map(function (m, k) {
       return '<button type="button" class="dr-card dr-row dr-rise" style="--i:' + (6 + k) + '" data-goto="' + m[0] + '">' +
         '<span class="dr-tool-ic">' + svg(m[1]) + '</span><span><b>' + esc(m[2]) + '</b><small>' + esc(m[3]) + '</small></span>' +
@@ -746,7 +746,12 @@
 
     return '<div class="dr dr-ideas">' +
       head('Ideas', 'What should I look at?') +
-      '<button type="button" class="dr-universe dr-rise" style="--i:1" data-goto="research/ideas">' +
+      /* The door answers its own question first: four pick lists, one per
+         holding period (picks.js). It used to open on a picture of a planet
+         and a button, and a reader had to open a tool and scroll past the
+         planet again before seeing a single stock. */
+      '<section class="pk-panel dr-rise" id="dri-picks" style="--i:1" aria-label="Stock picks"></section>' +
+      '<button type="button" class="dr-universe dr-rise" style="--i:2" data-goto="research/ideas">' +
         '<span class="dr-sky" aria-hidden="true">' + stars + '</span>' +
         '<span class="dr-orbits" aria-hidden="true">' +
           '<span class="dr-ring r1"></span><span class="dr-ring r2"></span>' +
@@ -756,10 +761,10 @@
         '</span>' +
         '<span class="dr-universe-t">' +
           '<span class="dr-label gold">Universe scan</span>' +
-          '<span class="dr-universe-h">Explore the whole NSE universe</span>' +
-          '<span class="dr-universe-p">Every listed company, ranked by the Altaha Score and grouped by industry. Fly in, filter, and open any stock.</span>' +
+          '<span class="dr-universe-h">Scan the whole NSE</span>' +
+          '<span class="dr-universe-p">Every listed company, scored and ranked.</span>' +
           (universe ? '<span class="dr-universe-n"><b class="dr-n" data-count-to="' + universe + '">' + inr(universe, 0) + '</b> companies on NSE today</span>' : '') +
-          '<span class="dr-cta">Start the scan ' + svg('arrow', 16) + '</span>' +
+          '<span class="dr-cta">Open the scan ' + svg('arrow', 16) + '</span>' +
         '</span>' +
         '<span class="dr-credit">Planet textures: Solar System Scope, CC BY 4.0</span>' +
       '</button>' +
@@ -779,6 +784,7 @@
     if (!I.built) {
       v.innerHTML = ideasShell();
       I.built = true;
+      if (window.AltahaPicks) window.AltahaPicks.mount($('dri-picks'));
       v.querySelectorAll('[data-count-to]').forEach(function (n) { countUp(n, n.dataset.countTo); });
       get('/investors', 15000).then(function (d) {
         var list = (d && (d.investors || d.rows || d.directory)) || [];
@@ -808,8 +814,8 @@
         '<span class="dr-pf-t">' +
           '<span class="dr-label gold">Portfolio review</span>' +
           '<span class="dr-pf-h">' + (n ? 'Your portfolio is saved here' : 'See what to do with every stock you own') + '</span>' +
-          '<span class="dr-pf-p">' + (n ? 'Run the review for a hold, trim, average, add or exit call on each holding, with the reasons.'
-            : 'Add your holdings or import your broker’s file. You get a call on each one — hold, trim, average down, add or exit — and the reasons.') + '</span>' +
+          '<span class="dr-pf-p">' + (n ? 'Get a hold, trim, add or exit call on each holding.'
+            : 'Add your holdings or your broker’s file. Get a hold, trim, add or exit call on each.') + '</span>' +
           '<span class="dr-cta">' + (n ? 'Review my portfolio' : 'Add my holdings') + ' ' + svg('arrow', 16) + '</span>' +
         '</span>' +
       '</button>' +
@@ -825,28 +831,28 @@
           '<span class="dr-sheen" aria-hidden="true"></span>' +
           '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('allocate') + '</span></span>' +
           '<span class="dr-tool-name">Allocation plan</span>' +
-          '<span class="dr-tool-line">How much, what risk it can carry, and which asset classes follow.</span>' +
+          '<span class="dr-tool-line">How to split your money by risk.</span>' +
           '<span class="dr-stack" aria-hidden="true"><i style="--w:52%;--i:0"></i><i style="--w:26%;--i:1"></i><i style="--w:12%;--i:2"></i><i style="--w:10%;--i:3"></i></span>' +
         '</button>' +
         '<button type="button" class="dr-card dr-tool dr-rise" style="--i:4" data-goto="portfolio/planner">' +
           '<span class="dr-sheen" aria-hidden="true"></span>' +
           '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('planner') + '</span></span>' +
           '<span class="dr-tool-name">Money planner</span>' +
-          '<span class="dr-tool-line">Income, expenses, tax and the cushion to keep before investing.</span>' +
+          '<span class="dr-tool-line">Income, expenses, tax and your safety cushion.</span>' +
           '<svg class="dr-gauge" viewBox="0 0 200 104" aria-hidden="true"><path class="bg" d="M16 96 A84 84 0 0 1 184 96"/><path class="fg dr-draw" pathLength="1" d="M16 96 A84 84 0 0 1 152 40"/></svg>' +
         '</button>' +
         '<a class="dr-card dr-tool dr-rise" style="--i:5" href="advisors.html">' +
           '<span class="dr-sheen" aria-hidden="true"></span>' +
           '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('adviser') + '</span></span>' +
           '<span class="dr-tool-name">Talk to an adviser</span>' +
-          '<span class="dr-tool-line">Chat with SEBI-registered advisers and research analysts. Free.</span>' +
+          '<span class="dr-tool-line">Chat with SEBI-registered advisers. Free.</span>' +
           '<span class="dr-chat" aria-hidden="true"><span class="me">Is my portfolio too heavy in banks?</span><span class="them"><i></i><i></i><i></i></span></span>' +
         '</a>' +
         '<a class="dr-card dr-tool dr-rise" style="--i:6" href="wealth.html">' +
           '<span class="dr-sheen" aria-hidden="true"></span>' +
           '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('review') + '</span></span>' +
           '<span class="dr-tool-name">Wealth desk</span>' +
-          '<span class="dr-tool-line">Manage money for others? Every client’s portfolio, your calls against their buying price, and your profit-share commission.</span>' +
+          '<span class="dr-tool-line">Manage money for others? Clients, calls and commission in one place.</span>' +
           '<span class="dr-tool-chips"><span class="dr-chip">Clients</span><span class="dr-chip">Calls</span><span class="dr-chip">Commission</span></span>' +
         '</a>' +
       '</div>' +

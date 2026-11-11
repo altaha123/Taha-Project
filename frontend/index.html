@@ -1242,13 +1242,15 @@
 <link rel="stylesheet" href="lenses.css?v=20260925-screens">
 <link rel="stylesheet" href="query.css?v=20261106">
 <link rel="stylesheet" href="idea-card.css?v=20260927b">
-<link rel="stylesheet" href="doors.css?v=20261106-easy">
+<link rel="stylesheet" href="doors.css?v=20261111">
 <link rel="stylesheet" href="calls.css?v=20261029">
 <link rel="stylesheet" href="watchlists.css?v=20261029">
 <link rel="stylesheet" href="strategy-lab.css?v=20261031">
+<link rel="stylesheet" href="picks.css?v=20261111">
+<script src="picks.js?v=20261111"></script>
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20260922-stock-copy"></script>
-<script src="universe-scan.js?v=20260927-week"></script>
+<script src="universe-scan.js?v=20261111"></script>
 </head>
 <body>
 
@@ -1561,9 +1563,7 @@
   <div id="view-discover" style="display:none">
     <header class="tabhead">
       <h2>Opportunities now</h2>
-      <p>What the market is actually doing today, and the handful of names where
-         something unusual is happening. Nothing here is a recommendation — it is
-         where to point the research at.</p>
+      <p>What the market is doing today, and where something unusual is happening.</p>
     </header>
     <div id="dsc-market"></div>
     <div id="dsc-setups"></div>
@@ -1588,10 +1588,7 @@
   <div id="view-allocate" style="display:none" data-private>
     <header class="tabhead">
       <h2>Allocation plan</h2>
-      <p>How much you are putting to work, what kind of risk it can carry, and
-         which asset classes follow from that. Everything computes in this
-         browser, nothing you type is sent anywhere, and no product is ever
-         named.</p>
+      <p>How to split your money by risk. Nothing you type leaves this browser.</p>
     </header>
     <div id="alc-flow"></div>
   </div><!-- /view-allocate -->
@@ -1599,7 +1596,7 @@
   <div id="view-live" style="display:none">
     <header class="tabhead">
       <h2>Live scanner</h2>
-      <p>Three intraday signals, all gated on unusual volume. Every alert carries an entry, a stop and a target, and every one is logged so its hit rate can be measured.</p>
+      <p>Intraday alerts on unusual volume. Each is logged, so its hit rate can be measured.</p>
     </header>
 
     <div class="livehead">
@@ -1623,41 +1620,48 @@
 
   <div id="view-ideas" style="display:none">
     <header class="tabhead">
-      <h2>Universe Scan</h2>
-      <p>The NSE universe classified by setup and scored out of 100. Every score opens into the ledger that produced it.</p>
+      <h2>Stock picks</h2>
+      <p>Four lists. Pick how long you want to hold.</p>
     </header>
-    <div id="scan-universe"></div>
+    <!-- The four lists (picks.js). The list comes first and the scan that
+         makes it comes after: a reader came for stocks, and used to scroll
+         past a full screen of planets to reach one. -->
     <div class="hzrow">
-      <div class="seg" id="hzseg">
-        <button class="hz active" data-h="short">Short term</button>
-        <button class="hz" data-h="medium">Medium term</button>
+      <div class="pk-tabs page" id="hzseg" role="tablist" aria-label="Holding period">
+        <button type="button" role="tab" class="pk-tab hz" data-h="week"><i>This </i>week</button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="month"><i>This </i>month</button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="momentum">Momentum</button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="long">Long term</button>
       </div>
     </div>
-    <div class="brun">
-      <button id="genbtn2">Generate from universe</button>
-      <span class="brun-note" id="gennote2"></span>
-    </div>
-    <div id="progwrap2"><div class="progbar"><i></i></div><div class="progtxt"></div></div>
     <div id="scan-results">
+    <div id="pickhead"></div>
     <div class="ideas-note" id="hznote"></div>
     <div id="mktctx"></div>
     <div id="stalebox"></div>
     <div id="regimebox"></div>
     <div class="secmix" id="secmix"></div>
     <div class="selnotes" id="selnotes"></div>
+    <div id="idearows"></div>
     <div class="toolbar" id="ideatools" style="display:none">
       <button class="act" id="thintoggle">Include thin stocks</button>
       <a class="act" id="ideacsv" href="#" download>Download CSV</a>
     </div>
-    <div id="idearows"></div>
     <p class="disc" id="ideadisc"></p>
     </div>
+    <h3 class="pk-again">Scan the market again</h3>
+    <div id="scan-universe"></div>
+    <div class="brun">
+      <button id="genbtn2">Generate from universe</button>
+      <span class="brun-note" id="gennote2"></span>
+    </div>
+    <div id="progwrap2"><div class="progbar"><i></i></div><div class="progtxt"></div></div>
   </div><!-- /view-ideas -->
 
   <div id="view-results" style="display:none">
     <header class="tabhead">
       <h2>Quarterly results</h2>
-      <p>The latest reported quarter for any NSE or US stock — profit, revenue, margin and the year-ago comparison — and the calendar of who reports today, tomorrow and this week.</p>
+      <p>The latest quarter for any stock, and who reports this week.</p>
     </header>
     <div class="searchrow" style="margin-top:0">
       <input id="rtk" placeholder="Enter a stock — GULPOLY, RELIANCE, TCS…" autocomplete="off"
@@ -1794,7 +1798,7 @@
 <div id="view-planner" style="display:none" data-private>
   <header class="tabhead">
     <h2>Planner</h2>
-    <p>Your household numbers, with the working shown. Everything computes in this browser; nothing you type is sent anywhere.</p>
+    <p>Your household numbers, with the working shown. Nothing you type leaves this browser.</p>
   </header>
 
   <!-- Income -->
@@ -1878,7 +1882,7 @@
   <div id="view-options" style="display:none">
     <header class="tabhead">
       <h2>Options</h2>
-      <p>Live option chain with open interest, implied volatility and Greeks, plus put-call ratio and max pain.</p>
+      <p>Option chain, open interest, put-call ratio and max pain.</p>
     </header>
     <div class="hzrow" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">
       <button class="hz active" data-u="NIFTY">NIFTY<small>Index</small></button>
@@ -1902,7 +1906,7 @@
   <div id="view-filings" style="display:none">
     <header class="tabhead">
       <h2>Company announcements</h2>
-      <p>Exchange filings as they land, ahead of the news sites. Categories are keyword rules on the exchange’s own headline — never a summary of it.</p>
+      <p>Exchange filings as they land, sorted by type.</p>
     </header>
     <div class="fbar" id="fimpbar"></div>
     <div class="fbar" id="fcatbar"></div>
@@ -1914,7 +1918,7 @@
   <div id="view-deals" style="display:none">
     <header class="tabhead">
       <h2>Bulk &amp; block deals</h2>
-      <p>Large trades the exchange discloses after they happen, netted by counterparty so crossing is separated from accumulation.</p>
+      <p>Large disclosed trades, netted by buyer and seller.</p>
     </header>
     <details class="tabnote">
       <summary>What counts as a bulk or block deal</summary>
@@ -1928,7 +1932,7 @@
   <div id="view-wow" style="display:none">
     <header class="tabhead">
       <h2>WOW orders</h2>
-      <p>Order wins measured against the size of the company that won them. The value is read from the filed document, because the exchange headline almost never carries it.</p>
+      <p>Order wins, sized against the company that won them.</p>
     </header>
     <details class="tabnote">
       <summary>How an order gets called WOW, and what is left out</summary>
@@ -1941,7 +1945,7 @@
   <div id="view-concalls" style="display:none">
     <header class="tabhead">
       <h2>Concall summaries</h2>
-      <p>Earnings call transcripts, digested — who was on the call, what management committed to in their own words, and what the call spent its time on compared with last quarter.</p>
+      <p>Earnings calls, summarised: who spoke, what was promised, what changed.</p>
     </header>
     <details class="tabnote">
       <summary>What is extracted, and what is not</summary>
@@ -1954,7 +1958,7 @@
   <div id="view-investors" style="display:none">
     <header class="tabhead">
       <h2>Investor portfolios</h2>
-      <p>What well-known investors hold, taken from the companies&rsquo; own shareholding filings. Each position links back to the document it came from.</p>
+      <p>What well-known investors hold, from company filings.</p>
     </header>
     <details class="tabnote">
       <summary>What this can and cannot show &mdash; read this first</summary>
@@ -1994,7 +1998,7 @@
   <div id="view-funds" style="display:none">
     <header class="tabhead">
       <h2>Fund house portfolios</h2>
-      <p>What the mutual funds hold, from each asset manager&rsquo;s own monthly portfolio disclosure &mdash; the whole book, not just the stakes big enough to be named in a company&rsquo;s filing.</p>
+      <p>What each mutual fund holds, from its monthly disclosure.</p>
     </header>
     <details class="tabnote">
       <summary>Where this comes from, and how complete it is</summary>
@@ -2012,7 +2016,7 @@
   <div id="view-special" style="display:none">
     <header class="tabhead">
       <h2>Altaha <i>Special</i></h2>
-      <p>Momentum ranked by how much a stock rose <b>on days when ownership actually changed hands</b> — not by how much it rose.</p>
+      <p>Stocks ranked by how much they rose <b>on days of real buying</b>.</p>
     </header>
     <div class="sp-formula mono">score&nbsp;=&nbsp;mean&nbsp;of&nbsp;five&nbsp;percentile&nbsp;ranks&nbsp;&nbsp;&middot;&nbsp;&nbsp;liquid,&nbsp;above&nbsp;its&nbsp;200-day</div>
     <details class="tabnote">
@@ -2031,7 +2035,7 @@
   <div id="view-tracker" style="display:none">
     <header class="tabhead">
       <h2>Score history</h2>
-      <p>Ideas you have added and what happened next. Alpha — the return beyond the index over the same days — is the number that says anything about the engine.</p>
+      <p>The ideas you track, and how each did against the index.</p>
     </header>
     <div class="toolbar">
       <div class="seg mono" id="tkfilter">
@@ -2060,10 +2064,7 @@
   <div id="view-score" style="display:none">
     <header class="tabhead">
       <h2>The Altaha Score</h2>
-      <p>A 0–100 interpretable research ranking. It is not a probability of
-         profit, not a price forecast, and not a measured improvement in
-         predictive accuracy. It is a way of holding twenty-odd observations
-         about a company in one place with the arithmetic left open.</p>
+      <p>A 0–100 research ranking with its arithmetic left open. Not a forecast, and not a probability of profit.</p>
     </header>
 
     <div class="psec">
@@ -2100,14 +2101,15 @@
             <tr><th scope="row">Acceleration</th><td>Is the rate of improvement itself improving?</td><td>5</td><td>15</td><td>10</td></tr>
             <tr><th scope="row">Value</th><td>What are you paying for those earnings?</td><td>5</td><td>15</td><td>20</td></tr>
             <tr><th scope="row">Financial strength</th><td>Can it service what it owes?</td><td>5</td><td>10</td><td>15</td></tr>
-            <tr><th scope="row">Momentum</th><td>Has the price been going up, and in a straight line?</td><td>20</td><td>15</td><td>8</td></tr>
-            <tr><th scope="row">Risk</th><td>How violently does it move, and has it just spiked?</td><td>30</td><td>5</td><td>5</td></tr>
-            <tr><th scope="row">Participation</th><td>Is turnover unusual against its own history?</td><td>20</td><td>5</td><td>2</td></tr>
+            <tr><th scope="row">Momentum</th><td>Has the price been going up, in a straight line, and is it near its high?</td><td>30</td><td>20</td><td>10</td></tr>
+            <tr><th scope="row">Risk</th><td>How violently does it move, and has it just spiked?</td><td>35</td><td>5</td><td>5</td></tr>
+            <tr><th scope="row">Participation</th><td>Is turnover unusual against its own history?</td><td>5</td><td>0</td><td>0</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="lsub">Participation is an attention prior, not evidence of
-         institutional buying, and never a standalone reason to buy anything.</p>
+      <p class="lsub">The three price pillars were re-weighted in November 2026
+         after a test on NSE prices from 2017 to 2026. Unusual turnover predicted
+         little, so Participation lost most of its weight.</p>
     </div>
 
     <div class="psec">
@@ -2115,7 +2117,7 @@
       <ul class="scr-not">
         <li><b>Not a forecast.</b> A high score describes the evidence available today. It says nothing about what the price will do.</li>
         <li><b>Not a probability.</b> 82 is not an 82% chance of anything. It is a rank against peers, on disclosed weights.</li>
-        <li><b>Not validated by the older study.</b> The technical-engine results in the accuracy notes concern a different engine and do not carry over.</li>
+        <li><b>Only partly measured.</b> The three price pillars were tested on ten years of NSE prices. The five business pillars have no such history to test against, and remain judgement.</li>
         <li><b>Not comparable across versions.</b> An old composite and a v4 score are different measurements and must never be pooled as one record.</li>
       </ul>
       <p class="lsub">What the score <i>has</i> been worth is a measurement, not a
@@ -2139,10 +2141,7 @@
   <div id="view-factors" style="display:none">
     <header class="tabhead">
       <h2>Factors</h2>
-      <p>What each individual factor has actually predicted, measured against a
-         point-in-time record rather than against the past rewritten. An
-         information coefficient of 0.03 to 0.05 is what a real, professionally
-         traded equity factor looks like — it means right about 52% of the time.</p>
+      <p>How well each signal has predicted returns, measured on a point-in-time record.</p>
     </header>
     <div id="fct-host"></div>
   </div><!-- /view-factors -->
@@ -2824,7 +2823,16 @@ $("rcallist").addEventListener("click", e => {
 });
 
 /* ── Ideas view ─────────────────────────────────────────────────────── */
-let horizon = "short", pollTimer = null, ideasReq = 0;
+/* One of week, month, momentum, long (picks.js). The server still answers
+   to short and medium, which is what older links ask for. */
+let horizon = (window.AltahaPicks ? window.AltahaPicks.chosen() : "month"), pollTimer = null, ideasReq = 0;
+function markHorizon(){
+  document.querySelectorAll("#hzseg .hz[data-h]").forEach(x=>{
+    const on = x.dataset.h === horizon;
+    x.classList.toggle("on", on); x.classList.toggle("active", on);
+    x.setAttribute("aria-selected", String(on));
+  });
+}
 
 const SKEL = n => Array.from({length:n}, () =>
   `<div class="skel"><i class="w40"></i><i class="w70"></i><i class="w55"></i><i class="w25"></i></div>`).join("");
@@ -2942,10 +2950,14 @@ function newsHTML(s){
 }
 
 async function loadIdeas(){
+  /* The door and this tab share one chosen list. Picking Momentum on the
+     door and pressing "See all" has to open Momentum here, not whichever
+     list this tab last showed. */
+  if(window.AltahaPicks){ horizon = window.AltahaPicks.chosen(); markHorizon(); }
   const req = ++ideasReq;
   $("idearows").innerHTML = SKEL(4);
   $("hznote").textContent = "";
-  ["stalebox","regimebox","secmix","selnotes"].forEach(id=>$(id).innerHTML="");
+  ["pickhead","stalebox","regimebox","secmix","selnotes"].forEach(id=>$(id).innerHTML="");
   $("ideatools").style.display="none";
   try{
     const qs = `horizon=${horizon}&limit=15&include_thin=${includeThin?1:0}`;
@@ -2994,9 +3006,25 @@ async function loadIdeas(){
       return;
     }
 
-    $("hznote").textContent = `${d.horizon_note || d.note}  ·  Scanned ${d.scanned_at}` +
-      (d.universe_source ? "  ·  " + d.universe_source : "") +
-      (d.partial ? "  ·  scan still running — the list improves as it goes" : "");
+    /* A tested list (picks.js) says what it is in one line and how it did in
+       one more. A scan from before the lists keeps the old header. */
+    const PK = window.AltahaPicks, picks = !!(PK && PK.isTested(d));
+    $("view-ideas").classList.toggle("is-picks", picks);
+    if(picks){
+      /* The reasons a name was left out are worth having and not worth
+         reading before the list, so they are folded. */
+      const why = d.selection_notes || [];
+      $("pickhead").innerHTML = `<p class="pk-idea">${esc(d.idea||"")} <span>Hold ${esc(d.hold_text||"")}.</span></p>`
+        + PK.recordHTML(d) + PK.liveHTML(d)
+        + `<p class="pk-updated">${esc(PK.updatedText(d))}${d.universe ? ` · ${d.universe} stocks compared` : ""}${d.partial ? " · scan still running" : ""}</p>`
+        + (why.length ? `<details class="pk-notes"><summary>${why.length} note${why.length>1?"s":""} on this list</summary><ul>`
+            + why.map(n=>`<li>${esc(n)}</li>`).join("") + `</ul></details>` : "");
+    }else{
+      $("hznote").textContent = `${d.horizon_note || d.note}  ·  Scanned ${d.scanned_at}` +
+        (d.universe_source ? "  ·  " + d.universe_source : "") +
+        (d.partial ? "  ·  scan still running — the list improves as it goes" : "");
+      if(PK) $("pickhead").innerHTML = `<p class="pk-quiet">These are from the last scan, made the old way. The four tested lists appear after the next scan.</p>`;
+    }
 
     /* Staleness. A momentum idea nine days old is not the same object as a
        fresh one, and the old UI showed them identically. */
@@ -3009,7 +3037,7 @@ async function loadIdeas(){
       $("regimebox").innerHTML = `<div class="staleflag" style="border-left-color:#b26a00;background:#fdf8f0;color:#5c4520"><b>Market regime.</b> ${esc(d.regime.label)}</div>`;
     }
 
-    if(d.sector_mix && d.sector_mix.length){
+    if(!picks && d.sector_mix && d.sector_mix.length){
       $("secmix").innerHTML = d.sector_mix
         .map(([sec,n])=>`<span class="secchip">${esc(sec)} · ${n}</span>`).join("");
     }
@@ -3022,11 +3050,11 @@ async function loadIdeas(){
         + `list was scored, so those factors scored neutral. It is loading now \u2014 reload in a moment.</div>`;
     }
     const notes = (d.selection_notes || []).slice();
-    if(d.considered!=null && d.count!=null){
+    if(!picks && d.considered!=null && d.count!=null){
       notes.unshift(`${d.count} of ${d.considered} names matching this horizon’s setups cleared the `
         + `${d.conviction_floor}-point conviction floor.`);
     }
-    if(notes.length){
+    if(!picks && notes.length){
       $("selnotes").innerHTML = "<ul>" + notes.map(n=>`<li>${esc(n)}</li>`).join("") + "</ul>"
         + (d.method ? `<p style="margin-top:8px">${esc(d.method)}</p>` : "");
     }
@@ -3042,11 +3070,12 @@ async function loadIdeas(){
     }
 
     $("ideatools").style.display="flex";
+    $("thintoggle").style.display = picks ? "none" : "";
     $("ideacsv").href = `${API_BASE}/ideas/export.csv?${qs}`;
     $("thintoggle").textContent = includeThin ? "Hide thin stocks" : "Include thin stocks";
 
     if(!d.rows || !d.rows.length){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing clears the bar for this horizon right now. That is a real answer, not an error — forcing a list when the evidence is absent is how screeners lose money for people.</div>`;
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing passed every test in this scan.</div>`;
     }else{
       $("idearows").innerHTML = d.rows.map((s,i)=>`
         <div class="idea rise" style="--i:${Math.min(i,10)}" data-t="${esc(s.symbol)}" data-score="${esc(s.conviction ?? s.setup_fit ?? "")}" data-name="${esc(s.name)}" role="group" aria-label="${esc(s.name)}">
@@ -3054,15 +3083,18 @@ async function loadIdeas(){
             <span class="nm"><a href="stock.html?ticker=${encodeURIComponent(s.symbol)}">${i+1}. ${esc(s.name)}</a><small>${esc(s.symbol)} · ₹${s.price ?? "—"}</small></span>
             <span class="conv">${scoreTxt(s.conviction ?? s.setup_fit)}<small>score</small></span>
           </div>
+          ${picks ? PK.whyHTML(s) : ""}
           ${window.AltahaCalls ? window.AltahaCalls.stamp(s.call, s.symbol) : ""}
-          ${planGrid(s.plan)}
+          ${picks ? PK.planHTML(s.plan) : planGrid(s.plan)}
           ${s.adverse_filing ? `<div class="badbox"><b>Adverse filing.</b> ${esc((s.catalyst&&s.catalyst.headline)||(s.catalyst&&s.catalyst.line)||"")} — scored against this idea, not for it.</div>` : ""}
           <div class="idearow-actions">
             <button class="trackbtn${s.tracked?" done":""}" type="button" data-track="${esc(s.symbol)}">${trackInner(s.tracked?"Tracking":"Track")}</button>
             <button class="morebtn" type="button" aria-expanded="false">Details<i aria-hidden="true"></i></button>
           </div>
           <div class="ideamore"><div class="ideamore-in">
-            <div class="arch">${s.plan&&s.plan.stance?`<span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>`:""}${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${scoreTxt(s.setup_fit, 0)}/100${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}</div>
+            ${picks
+              ? `<div class="arch">Ranked ${s.pick_rank} of the stocks that passed every test${s.sector?` · ${esc(s.sector)}`:""}${s.plan&&s.plan.review_on?` · review by ${esc(s.plan.review_on)}`:""}</div>`
+              : `<div class="arch">${s.plan&&s.plan.stance?`<span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>`:""}${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${scoreTxt(s.setup_fit, 0)}/100${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}</div>`}
             ${s.filing?`<div class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</div>`:""}
             ${catalystChips(s)}
             <div class="ln"><span>Composite ${scoreTxt(s.composite)}</span><span>Technical ${scoreTxt(s.technical, 0)}</span>
@@ -3070,7 +3102,7 @@ async function loadIdeas(){
             ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
             ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
             ${newsHTML(s)}
-            <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">Why this scored ${scoreTxt(s.conviction)} — show the ledger</button>
+            <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">${picks ? `How it scored ${scoreTxt(s.conviction)}` : `Why this scored ${scoreTxt(s.conviction)} — show the ledger`}</button>
             ${evidenceHTML(s.evidence)}
             <div class="idearow-actions">
               <button class="shbtn" type="button" ${shareAttr({kind:"idea", ticker:s.symbol,
@@ -4258,11 +4290,13 @@ function render(d){
 $("go").addEventListener("click", ()=>analyse());
 $("tk").addEventListener("keydown", e=>{ if(e.key==="Enter") analyse(); });
 document.querySelectorAll(".hint b").forEach(b=>b.addEventListener("click",()=>analyse(b.dataset.t)));
-document.querySelectorAll(".hz[data-h]").forEach(b=>b.addEventListener("click",()=>{
+document.querySelectorAll("#hzseg .hz[data-h]").forEach(b=>b.addEventListener("click",()=>{
   horizon = b.dataset.h;
-  document.querySelectorAll(".hz[data-h]").forEach(x=>x.classList.toggle("active", x===b));
+  if(window.AltahaPicks) window.AltahaPicks.remember(horizon);
+  markHorizon();
   loadIdeas();
 }));
+markHorizon();
 
 /* ── Page wiring ────────────────────────────────────────────────────────
    These listeners were, in an earlier pass, accidentally nested INSIDE the
@@ -4785,7 +4819,7 @@ if(fcSymParam){
 <script src="portfolio-story.js" defer></script>
 <script src="portfolio-plan.js" defer></script>
 <script src="portfolio.js?v=20261106-ledger" defer></script>
-<script src="nav.js?v=20261015-doors" defer></script>
+<script src="nav.js?v=20261111" defer></script>
 <script src="scoring.js" defer></script>
 <script src="social.js" defer></script>
 <script src="motion.js" defer></script>
@@ -4796,7 +4830,7 @@ if(fcSymParam){
 <script src="index-explorer.js?v=20260924-atlas" defer></script>
 <script src="sectors-live.js?v=20260927-dialog" defer></script>
 <script src="deals.js" defer></script>
-<script src="shell.js?v=20261106-easy" defer></script>
+<script src="shell.js?v=20261111" defer></script>
 <script src="home.js" defer></script>
 <script src="special.js" defer></script>
 <script src="wow.js" defer></script>
@@ -4808,8 +4842,8 @@ if(fcSymParam){
 <script src="query.js?v=20261106" defer></script>
 <script src="ledger-admin.js" defer></script>
 <script src="planner-risk.js" defer></script>
-<script src="discover.js" defer></script>
-<script src="doors.js?v=20261106-easy" defer></script>
+<script src="discover.js?v=20261111" defer></script>
+<script src="doors.js?v=20261111" defer></script>
 <script src="adviser.js" defer></script>
 <script src="question-art.js" defer></script>
 <script src="money-fx.js" defer></script>

@@ -58,3 +58,6 @@ altaha_lenses.db-*
 # The backup's scratch copies, deleted as soon as each file is uploaded.
 .backup-tmp/
 backend/market_flows.json
+
+# The Ideas study downloads ~2,700 NSE daily files here (research/ideas_study.py).
+research/.ideas-data/

@@ -118,9 +118,14 @@ def rank(rows, horizon="short", weights=None):
             for family, gs in group_scores.items():
                 # Reversal is strongest at days/weeks; fixed subweights prevent
                 # adding duplicate risk metrics from creating another vote.
+                # Measured on NSE 2017-2026: one-week reversal has a rank
+                # correlation of 0.03 with the next week, 0.01 with the next
+                # month and is negative by a quarter, where low volatility
+                # holds 0.05-0.07 throughout. So reversal is a quarter of risk
+                # for a trade (it was 65%) and none of it beyond.
                 if family == "risk":
-                    rw = {"reversal": .65 if hz == "trade" else .20 if hz == "position" else 0.,
-                          "volatility": .35 if hz == "trade" else .80 if hz == "position" else 1.}
+                    rw = {"reversal": .25 if hz == "trade" else 0.,
+                          "volatility": .75 if hz == "trade" else 1.}
                     den = sum(rw[g] for g in gs)
                     if den: fs[family] = sum(v*rw[g] for g,v in gs.items()) / den
                 else:
@@ -141,7 +146,7 @@ def rank(rows, horizon="short", weights=None):
             contributions = []
             for family in w:
                 required = {s.group for n,s in F.SPEC.items() if s.family == family and F.eligible(n, model["key"])}
-                if hz == "invest" and family == "risk": required.discard("reversal")
+                if hz != "trade" and family == "risk": required.discard("reversal")
                 have = {g for g in group_scores.get(family,{}) if g in required}
                 group_cov = len(have)/len(required) if required else 0.
                 entries = [e for e in ledger if e["family"] == family and e["percentile"] is not None and e["group"] in required]

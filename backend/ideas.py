@@ -96,6 +96,11 @@ try:
 except Exception:
     _resolve = None
 
+try:
+    import leaders
+except Exception:
+    leaders = None
+
 BENCHMARK = os.environ.get("INDEX_PROXY", "NIFTYBEES").strip().upper()
 
 SECTOR_CAP = int(os.environ.get("IDEAS_SECTOR_CAP", "3") or 3)
@@ -698,6 +703,231 @@ def market_context(horizon: str = "short"):
     }
 
 
+# ---------------------------------------------------------------------------
+# The four tested lists: this week, this month, momentum, long term
+#
+# leaders.py ranks every liquid stock in phase 1 of the scan and each analysed
+# row carries the result. This is the layer that turns those ranks into a
+# list: it removes names with a serious adverse filing, caps any one sector,
+# writes the evidence in plain words and attaches the plan the test supports.
+# It adds nothing to the score. The order on the page is the order the recipe
+# gave, because that order is the thing that was measured.
+# ---------------------------------------------------------------------------
+
+PICK_SECTOR_CAP = int(os.environ.get("IDEAS_PICK_SECTOR_CAP", "4") or 4)
+PICK_STALE_DAYS = {"week": 2, "month": 5, "momentum": 7, "long": 14}
+# A long-term pick with these on its record is left out. Not measured by the
+# price study (no ten-year fundamentals history exists to test it on); kept as
+# a plain safety screen and reported in the notes whenever it removes a name.
+LONG_MIN_PIOTROSKI = 4
+
+_EVIDENCE = (
+    ("m12", "momentum_12m", "12-month return for its risk"),
+    ("m6", "momentum_6m", "6-month return for its risk"),
+    ("high", "near_high", "Closeness to the 52-week high"),
+    ("trend", "steady_trend", "How steady the climb was"),
+    ("calm", "calm", "Calm: low volatility"),
+    ("dip", "dip", "Dip over the last five sessions"),
+)
+
+
+def has_picks(payload):
+    """Does this scan carry the leader ranks the four lists are built from?"""
+    rows = (payload or {}).get("factor_universe") or (payload or {}).get("rankings") or []
+    return any((r.get("leader") or {}).get("lists") for r in rows)
+
+
+def _pick_evidence(key, block):
+    """The ledger: each measurement's percentile and its share of the score."""
+    spec = leaders.LISTS[key]
+    mix = dict(spec["mix"])
+    if "leader" in mix:                       # the leader score is four parts
+        w = mix.pop("leader")
+        for k in ("m12", "m6", "high", "trend"):
+            mix[k] = mix.get(k, 0) + w / 4.0
+    parts, facts, n = block.get("parts") or {}, block.get("facts") or {}, block.get("universe")
+    detail = {
+        "m12": f"{facts.get('return_12m_pct')}% over 12 months, at {facts.get('volatility_pct')}% yearly volatility",
+        "m6": "Return over the last six months, last month skipped, for the same volatility",
+        "high": f"{facts.get('below_high_pct')}% below its 52-week high",
+        "trend": f"Straightness {facts.get('trend_straightness')}/100 over 90 sessions",
+        "calm": f"{facts.get('volatility_pct')}% yearly volatility",
+        "dip": f"{facts.get('return_5d_pct')}% over the last five sessions",
+    }
+    out = []
+    for k, part_key, label in _EVIDENCE:
+        w = mix.get(k)
+        if not w:
+            continue
+        pct = parts.get(part_key)
+        if pct is None:
+            continue
+        of = round(w * 100, 1)
+        out.append({"factor": label, "points": round(pct * w, 1), "of": of, "share_pct": pct,
+                    "detail": f"{detail[k]}. Ahead of {pct}% of {n} liquid stocks."})
+    return out
+
+
+def _scan_date(scanned_at):
+    d = _scan_datetime(scanned_at)
+    return d.date() if d else dt.date.today()
+
+
+def tested_record(key):
+    """What the study measured for one list, or None when the file is absent."""
+    if leaders is None:
+        return None
+    return (leaders.TESTED.get("lists") or {}).get(key)
+
+
+def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
+    """One of the four tested lists, from a scan that carries leader ranks."""
+    spec = leaders.LISTS[key]
+    rows_all = payload.get("factor_universe") or payload.get("rankings") or []
+    regime, _ok = _soft("regime", market_regime, None)
+    outlook, _ok = _soft("sector_outlook", sector_outlook, {})
+    hours = max(72, spec["hold_days"] * 24)
+    (news_idx, headlines), _ok = _soft("news", lambda: _news_index(hours), ({}, []))
+    try:
+        tracked = tracker.tracked_symbols(source="manual") if tracker else set()
+    except Exception:
+        tracked = set()
+    _leaders = _leaders_laggards(outlook)
+    stale = _staleness(payload.get("scanned_at"))
+    if stale and stale.get("days") is not None:
+        limit_days = PICK_STALE_DAYS[key]
+        stale = dict(stale, warn=stale["days"] > limit_days)
+        if stale["warn"]:
+            stale["text"] = (f"This list is {stale['days']} days old. "
+                             "Run a new scan before using it.")
+    called_on = _scan_date(payload.get("scanned_at"))
+
+    pool, excluded_adverse, weak = [], [], []
+    universe = None
+    for r in rows_all:
+        block = r.get("leader") or {}
+        entry = (block.get("lists") or {}).get(key) or {}
+        if not entry.get("rank"):
+            continue
+        universe = universe or block.get("universe")
+        sym = (r.get("symbol") or "").upper()
+        filing = _filing_for(sym, hours, None)
+        adverse = bool(filing and filing.get("direction") == "adverse")
+        if adverse and (filing or {}).get("importance") in HARD_EXCLUDE_ADVERSE:
+            excluded_adverse.append({"symbol": sym, "name": r.get("name"),
+                                     "category": filing.get("category"),
+                                     "headline": filing.get("headline"),
+                                     "line": filing.get("line"),
+                                     "setup_fit": r.get("setup_fit")})
+            continue
+        if key == "long":
+            f, eps = r.get("f_score"), r.get("trailing_eps")
+            if (f is not None and f < LONG_MIN_PIOTROSKI) or (eps is not None and eps < 0):
+                weak.append(sym)
+                continue
+        row = dict(r)
+        tier, warn = liquidity_tier(row.get("avg_turnover_cr"))
+        srow = _sector_row(outlook, row.get("sector"))
+        row.update({
+            "list": key,
+            "chart_setup": row.get("setup"), "chart_setup_key": row.get("setup_key"),
+            "setup": spec["setup"], "setup_key": spec["setup_key"],
+            "horizon": spec["hold_text"],
+            "liquidity_tier": tier, "liquidity_note": warn,
+            "tracked": sym in tracked,
+            "pick_rank": entry["rank"],
+            "conviction": entry["score"], "rank_score": entry["score"],
+            "why": entry.get("why") or [],
+            "evidence": _pick_evidence(key, block),
+            "plan": leaders.plan(key, row.get("price"), called_on),
+            "catalyst": filing, "filing": filing, "adverse_filing": adverse,
+            "news": (news_idx.get(sym) or [])[:3],
+            "sector_outlook": ({"state": srow.get("state"), "index_name": srow.get("index_name"),
+                                "rel_3m": (srow.get("relative") or {}).get("3M"),
+                                "rel_1m": (srow.get("relative") or {}).get("1M"),
+                                "above_200dma_pct": srow.get("above_200dma_pct"),
+                                "why": srow.get("state_why")} if srow else None),
+        })
+        band = "High" if entry["score"] >= 85 else ("Moderate" if entry["score"] >= 70 else "Speculative")
+        row["conviction_band"] = band
+        row["conviction_why"] = f"Ranked {entry['rank']} of the stocks that passed every gate."
+        row["thesis"] = spec["idea"]
+        pool.append(row)
+
+    pool.sort(key=lambda r: r["pick_rank"])
+    chosen, per_sector, capped = [], {}, 0
+    for r in pool:
+        if len(chosen) >= limit:
+            break
+        sec = r.get("sector") or "Unknown"
+        if sec != "Unknown" and per_sector.get(sec, 0) >= PICK_SECTOR_CAP:
+            capped += 1
+            continue
+        per_sector[sec] = per_sector.get(sec, 0) + 1
+        chosen.append(r)
+
+    notes = []
+    if excluded_adverse:
+        notes.append("Removed for a serious adverse filing: "
+                     + ", ".join(f"{e['symbol']} ({e['category']})" for e in excluded_adverse[:4]) + ".")
+    if weak:
+        notes.append("Left out of the long-term list for weak fundamentals "
+                     f"(Piotroski under {LONG_MIN_PIOTROSKI} or a loss): " + ", ".join(weak[:6]) + ".")
+    if capped:
+        notes.append(f"{capped} more qualified but would have put more than "
+                     f"{PICK_SECTOR_CAP} names in one sector.")
+    if not chosen:
+        notes.append("Nothing passed every gate in this scan.")
+
+    return {
+        "available": True,
+        "degraded": [],
+        "method_key": "tested_lists",
+        "list": key,
+        "horizon": key,
+        "label": spec["label"],
+        "idea": spec["idea"],
+        "hold_text": spec["hold_text"],
+        "exit_pct": spec["exit_pct"],
+        "note": spec["idea"],
+        "horizon_note": (f"{spec['idea']} Hold {spec['hold_text']}; leave on a close "
+                         f"{spec['exit_pct']:.0f}% under the call price."),
+        "tested": tested_record(key),
+        # The study's header only. Its tables are in research/ideas-study.json;
+        # sending them with every list would triple the response for nobody.
+        "study": {k: (leaders.TESTED or {}).get(k) for k in
+                  ("generated", "source", "from", "to", "sessions", "companies",
+                   "universe", "universe_median", "rules")},
+        "lists": [{"key": k, "label": leaders.LISTS[k]["label"],
+                   "hold_text": leaders.LISTS[k]["hold_text"]} for k in leaders.ORDER],
+        "scanned_at": payload.get("scanned_at"),
+        "staleness": stale,
+        "partial": bool(payload.get("partial")),
+        "scored": payload.get("scored"),
+        "universe_source": payload.get("universe_source"),
+        "universe": universe,
+        "regime": regime,
+        "market_context": {"regime": regime, "leaders": _leaders[0], "laggards": _leaders[1],
+                           "sectors_measured": _leaders[2], "headlines": headlines},
+        "weights": spec["mix"],
+        "conviction_floor": 0,
+        "layers": {"sector_outlook": bool(outlook), "market_regime": bool(regime),
+                   "news": bool(news_idx or headlines), "filings": ann is not None,
+                   "track_record": False},
+        "sector_mix": sorted(per_sector.items(), key=lambda kv: -kv[1]),
+        "sector_cap": PICK_SECTOR_CAP,
+        "expectancy_applied": False,
+        "selection_notes": notes,
+        "excluded_adverse": excluded_adverse,
+        "rows": chosen,
+        "count": len(chosen),
+        "considered": len(pool),
+        "method": ("Every liquid NSE stock is ranked on the measurements in the ledger. "
+                   "The list is the top of that ranking after the uptrend and volatility "
+                   "gates. Tested on NSE prices from 2017 to 2026."),
+    }
+
+
 def select(payload: dict, horizon: str = "short", limit: int = 15,
            min_tier: str = "moderate", include_thin: bool = False,
            min_conviction: float = None) -> dict:
@@ -707,9 +937,17 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
     Returns fewer rows than `limit` when fewer genuinely qualify. That is the
     point: an empty week is information, and padding destroys it.
     """
+    # A scan that carries leader ranks serves the four tested lists. A scan
+    # from before they existed still answers with the old short and medium
+    # lists, so a deploy never blanks the page while the next scan runs.
+    key = leaders.resolve(horizon) if leaders is not None else None
+    if key and has_picks(payload):
+        return select_picks(payload, key, limit=limit)
+    if key and horizon not in HORIZONS:
+        horizon = "short" if key in ("week", "month", "momentum") else "medium"
     h = HORIZONS.get(horizon)
     if not h:
-        raise ValueError("horizon must be 'short' or 'medium'")
+        raise ValueError("horizon must be one of week, month, momentum or long")
 
     floor = MIN_CONVICTION if min_conviction is None else float(min_conviction)
     weights = h["weights"]

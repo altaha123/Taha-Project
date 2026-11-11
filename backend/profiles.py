@@ -800,13 +800,33 @@ def compare_horizons(tech, fund, info, fin=None, bs=None, cf=None) -> dict:
 
 # Canonical v4 horizon priors. Classification and business biases remain here.
 # Risk combines reversal and volatility before receiving ONE pillar vote.
+#
+# The three PRICE pillars were re-weighted in November 2026 from a measurement,
+# the first this score has had: ten years of NSE daily files, every liquid
+# stock, each factor's rank correlation with what the stock did next
+# (research/IDEAS-STUDY.md). What it showed, in both 2017-21 and 2022-26:
+#
+#   · participation (turnover against its own history) carried nothing at a
+#     week to a month and little after. It held 20 of the trade score's 100
+#     points. It now holds 5, and none at the longer horizons.
+#   · momentum, with closeness to the 52-week high added, was the strongest
+#     family at every horizon. Trade 20 -> 30, position 15 -> 20, invest 8 -> 10.
+#   · inside risk, low volatility beat one-week reversal at every horizon past
+#     a week (the sub-weights are in multifactor.rank).
+#
+# With these weights the price part of the score ranked stocks better at
+# every horizon: rank correlation with the next 21 sessions rose from 0.052
+# to 0.076 (trade), with the next 63 from 0.089 to 0.105 (position), with the
+# next 252 from 0.128 to 0.141 (invest). The fundamental pillars are
+# untouched: there is no ten-year point-in-time filing history to measure
+# them on, so they remain priors.
 V4_WEIGHTS = {
     "trade": dict(quality=10, growth=5, acceleration=5, value=5,
-                  financial_strength=5, momentum=20, risk=30, participation=20),
+                  financial_strength=5, momentum=30, risk=35, participation=5),
     "position": dict(quality=20, growth=15, acceleration=15, value=15,
-                     financial_strength=10, momentum=15, risk=5, participation=5),
+                     financial_strength=10, momentum=20, risk=5, participation=0),
     "invest": dict(quality=25, growth=15, acceleration=10, value=20,
-                   financial_strength=15, momentum=8, risk=5, participation=2),
+                   financial_strength=15, momentum=10, risk=5, participation=0),
 }
 V4_BIAS_MAP = {"growth": "improvement", "acceleration": "improvement",
                "value": "valuation", "financial_strength": "quality"}

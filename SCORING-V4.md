@@ -73,6 +73,7 @@ large positive score. Parameters are disclosed priors, not estimated truths.
 | Financial Strength | leverage | Negative reported debt/equity, only with explicitly validated ratio units; current feed withholds |
 | Financial Strength | coverage | Operating coverage `(PBT before exceptional + finance cost - other income)/finance cost` and its same-quarter YoY change; all lines required, positive finance cost; averaged together |
 | Momentum | trend | Existing 12–1 momentum and signed R² of log prices, averaged together |
+| Momentum | high | Last close as a percentage of the highest high of the past 252 sessions; needs 200 closes |
 | Risk | reversal / volatility | Existing negative 5-session return and negative realised annualised volatility |
 | Participation | turnover | Existing `100*log(recent turnover / historical median turnover)` |
 
@@ -142,12 +143,23 @@ Base weights, before the **existing business-model bias** and renormalisation:
 
 | Horizon | Quality | Growth | Acceleration | Value | Strength | Momentum | Risk | Participation |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Trade | 10 | 5 | 5 | 5 | 5 | 20 | 30 | 20 |
-| Position | 20 | 15 | 15 | 15 | 10 | 15 | 5 | 5 |
-| Invest | 25 | 15 | 10 | 20 | 15 | 8 | 5 | 2 |
+| Trade | 10 | 5 | 5 | 5 | 5 | 30 | 35 | 5 |
+| Position | 20 | 15 | 15 | 15 | 10 | 20 | 5 | 0 |
+| Invest | 25 | 15 | 10 | 20 | 15 | 10 | 5 | 0 |
 
-Trade/position/invest risk internally weights reversal at 65%/20%/0%, with
-volatility taking the remainder. `short` and `medium` alias trade and position.
+Trade/position/invest risk internally weights reversal at 25%/0%/0%, with
+volatility taking the remainder.
+
+**November 2026: the three price pillars are measured, not priors.** They were
+re-weighted from ten years of NSE daily files (research/IDEAS-STUDY.md).
+Momentum gained a second group, closeness to the 52-week high (`high_52w`),
+the strongest single price factor at every horizon tested. Participation and
+one-week reversal lost the weight the data did not support. Rank correlation
+of the price part of the score with the next 21 / 63 / 252 sessions rose from
+0.052 / 0.089 / 0.128 to 0.076 / 0.105 / 0.141, in both 2017–21 and 2022–26.
+The five fundamental pillars are untouched and remain priors. Before this
+change the weights were 20/30/20 (trade), 15/5/5 (position) and 8/5/2 (invest)
+for Momentum/Risk/Participation, with reversal at 65%/20%/0% of Risk. `short` and `medium` alias trade and position.
 Growth/acceleration inherit the profile's improvement bias, value its valuation
 bias, and strength its quality bias. These fixed priors are not optimised.
 

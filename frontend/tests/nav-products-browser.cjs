@@ -140,7 +140,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   await start.waitFor({ state: 'visible' });
   assert.match(await start.innerText(), /0 to 100/, 'Start here does not say what the site does');
   assert.deepEqual((await start.locator('.dr-task b').allInnerTexts()).map(t => t.trim()),
-                   ['Check a stock', 'Find stocks to research', 'Check my portfolio']);
+                   ['Check a stock', 'Get stock picks', 'Check my portfolio']);
   assert.ok(await start.locator('a[href="stock.html?ticker=RELIANCE"]').count(), 'no example stock to try');
 
   // A short row, and the rest one tap away under More, each with its hint.

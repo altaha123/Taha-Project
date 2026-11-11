@@ -17,6 +17,7 @@ def _rows(n=40):
         out.append({"symbol": f"S{i:02d}", "factors": {
             "momentum_12_1": float(i),
             "trend_quality": float(i),          # correlated 1.0 with momentum
+            "high_52w": float(i),               # a stock near its high has momentum
             "reversal_5d": float(-i),
             "low_volatility": float(i % 7),
             "volume_shock": float((i * 3) % 11),
@@ -102,8 +103,8 @@ def test_a_missing_family_does_not_silently_push_a_stock_down():
     # Strong on every price family, no fundamentals at all — but still over
     # the coverage floor.
     rows.append({"symbol": "PRICEONLY", "factors": {
-        "momentum_12_1": 999.0, "trend_quality": 999.0, "reversal_5d": 999.0,
-        "low_volatility": 999.0, "volume_shock": 999.0}})
+        "momentum_12_1": 999.0, "trend_quality": 999.0, "high_52w": 999.0,
+        "reversal_5d": 999.0, "low_volatility": 999.0, "volume_shock": 999.0}})
     out = M.rank(rows, horizon="short")
     p = [r for r in out["rows"] if r["symbol"] == "PRICEONLY"][0]
     assert p["factor_score"] is not None

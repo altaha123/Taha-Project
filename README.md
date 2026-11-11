@@ -29,7 +29,7 @@ and its own address, in exactly one door.
 | Door | The question it answers | What lives behind it |
 |---|---|---|
 | **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Setups, Options and the Market board |
-| **Ideas** (`#research`) | *What should I look at?* | The Universe scan, the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, the Strategy lab — see [`STRATEGY-LAB.md`](STRATEGY-LAB.md) — Concalls |
+| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
 | **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner, Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
@@ -44,8 +44,10 @@ pinned to the desk on Today.
 **Built for the first visit.** People who were sent the site found it too
 complex to find their way around, so three things changed (Nov 2026):
 - Today opens with a *Start here* strip (`startHTML` in `doors.js`): one
-  sentence on what the site does and three tasks: check a stock, find stocks
-  to research, check my portfolio. It stays hidden once the reader hides it.
+  sentence on what the site does and three tasks: check a stock, get stock
+  picks, check my portfolio. It stays hidden once the reader hides it.
+- Ideas opens on the picks. It used to open on a picture of a planet.
+- Less writing. Sixteen tool intros went from 452 words to 177.
 - The door bars went from 9 and 13 pills to 5 and 6, plus More.
 - A stock page shows its Altaha Score under the name; it used to be behind
   the Scores tab. The chip opens that tab. One search box finds companies, tools and actions alike — "bulk"
@@ -64,6 +66,43 @@ its own card and nothing else. The motion (cards rising in, counts counting,
 the chart drawing itself, the planets turning) stops for reduced motion and
 the site's own motion switch, and `motion-off-browser.cjs` checks that nothing
 is ever left invisible.
+
+---
+
+## Stock picks — four lists, tested
+
+`#research` and `#research/ideas` (`backend/leaders.py`, `frontend/picks.js`).
+The Ideas door opens on four tabs: **This week**, **This month**, **Momentum**
+and **Long term**. Each shows what the list is in one line, how it tested in
+three numbers, and the picks, each with up to four reasons, a holding period
+and one exit price.
+
+| List | Hold | Exit line | Rose | Average | Nifty 500 |
+|---|---|---|---|---|---|
+| This week | 5 sessions | close 7% under | 52% | +0.4% | +0.3% |
+| This month | 21 | close 12% under | 55% | +2.0% | +1.1% |
+| Momentum | 63 | close 15% under | 55% | +6.4% | +3.4% |
+| Long term | 252 | close 30% under | 58% | +23.7% | +13.8% |
+
+Tested on NSE's daily files for 2017–2026, delisted companies included,
+before costs and tax. The old list, replayed the same way with its 8% stop:
+38% rose and it did not beat the index. What was wrong, what was tried, what
+was dropped and what the test does not show are in
+[`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md).
+
+- **The page prints only the study's numbers.** `research/ideas_study.py`
+  writes them; `leaders.py` reads them; a test fails if the hold or exit line
+  in the code differs from the one tested, and the study refuses to write
+  anything unless the engine picks the same 360 stocks it did.
+- **The lists stay fresh.** `.github/workflows/ideas.yml` runs the scan after
+  each close, marks the tracker and attaches forward returns. It needs the
+  `ALTAHA_ADMIN_KEY` repository secret.
+- **A pick keeps its exit line.** The call log records it at the call and
+  never redraws it.
+- **No target.** A target sold the few large winners that carry each list.
+
+The Altaha Score's three price pillars were re-weighted from the same data
+([`SCORING-V4.md`](SCORING-V4.md)).
 
 ---
 
