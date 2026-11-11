@@ -1188,10 +1188,14 @@ def ideas(horizon: str = "short", limit: int = 15,
         # Only the list everyone sees by default is the list of record. A
         # reader who widens it to thin stocks has asked a different question,
         # and logging that answer would open calls nobody else was shown.
+        # The four tested lists log under their own names; a scan from before
+        # they existed still logs under the name it was asked for.
+        log_as = result.get("list") or horizon
         if (limit == 15 and min_tier == "moderate" and not include_thin
                 and min_conviction is None):
-            _log_calls(horizon, result.get("rows") or [], p)
-        _attach_calls(horizon, result.get("rows") or [], p)
+            _log_calls(log_as, result.get("rows") or [], p)
+        _attach_calls(log_as, result.get("rows") or [], p)
+        result["live"] = _live_record(log_as)
         return to_native({**result, "disclaimer": DISCLAIMER})
     except ValueError as e:
         raise HTTPException(400, str(e))
@@ -1233,10 +1237,44 @@ def _scan_prices(p):
     return {str(r.get("symbol") or "").upper(): r.get("price") for r in rows if r.get("symbol")}
 
 
+def _call_horizons(p):
+    """The lists a scan produces: the four tested ones once it carries leader
+    ranks, the old pair before that."""
+    if call_log is None:
+        return ()
+    return call_log.PICK_HORIZONS if ideas_engine.has_picks(p) else call_log.LEGACY_HORIZONS
+
+
+def _live_record(horizon):
+    """How this list's own calls have done since it went live. Counts only;
+    None when the log cannot be read, so the page says nothing, not zero."""
+    if call_log is None or horizon not in getattr(call_log, "PICK_HORIZONS", ()):
+        return None
+    try:
+        rows = (call_log.listing(horizon=horizon, limit=2000) or {}).get("rows") or []
+    except Exception:
+        return None
+    priced = [r for r in rows if r.get("move_pct") is not None]
+    closed = [r for r in priced if r.get("status") == "closed"]
+    return {
+        "calls": len(rows),
+        "closed": len(closed),
+        "closed_up": sum(1 for r in closed if r["move_pct"] > 0),
+        "closed_avg_pct": round(sum(r["move_pct"] for r in closed) / len(closed), 2) if closed else None,
+        "open": len(priced) - len(closed),
+        "open_up": sum(1 for r in priced if r.get("status") != "closed" and r["move_pct"] > 0),
+        "since": min((r["called"]["date"] for r in rows if r.get("called")), default=None),
+    }
+
+
 def _log_calls(horizon, rows, p):
     if call_log is None or not p or p.get("partial"):
         return None
     try:
+        if horizon in call_log.PICK_HORIZONS:
+            # The first scan with the tested lists closes what is still open
+            # on the two lists they replaced. Nothing would ever drop those.
+            call_log.retire(call_log.LEGACY_HORIZONS, p.get("scanned_at"), _scan_prices(p))
         return call_log.record(horizon, rows, p.get("scanned_at"), _scan_prices(p))
     except Exception:
         import traceback
@@ -1254,6 +1292,23 @@ def _attach_calls(horizon, rows, p):
         return
     for r in rows:
         r["call"] = index.get((str(r.get("symbol") or "").upper(), r.get("setup_key") or ""))
+        # A tested pick shows the exit line it was called with, not one
+        # recomputed from today's price.
+        c, plan = r["call"], r.get("plan")
+        if c and plan and plan.get("style") == "hold" and c.get("stop") is not None:
+            plan = dict(plan, entry=c.get("entry") or plan.get("entry"), stop=c["stop"])
+            when_called = ((c.get("called") or {}).get("date"))
+            try:
+                import leaders as _leaders
+                spec = _leaders.LISTS.get(r.get("list") or "")
+                if spec and when_called:
+                    day = _dt_mod.date.fromisoformat(when_called)
+                    plan["review_on"] = (day + _dt_mod.timedelta(days=spec["hold_days"])).isoformat()
+                    plan["note"] = (f"Hold {spec['hold_text']}. Leave if it closes below "
+                                    f"\u20b9{c['stop']:,.2f}, {spec['exit_pct']:.0f}% under the call price.")
+            except Exception:
+                pass
+            r["plan"] = plan
 
 
 def _log_scan_calls(p):
@@ -1262,7 +1317,7 @@ def _log_scan_calls(p):
     if call_log is None or not p or p.get("partial"):
         return False
     try:
-        if all(call_log.recorded(h, p.get("scanned_at")) for h in call_log.HORIZONS):
+        if all(call_log.recorded(h, p.get("scanned_at")) for h in _call_horizons(p)):
             return False
     except Exception:
         return False
@@ -1271,7 +1326,7 @@ def _log_scan_calls(p):
 
     def run():
         try:
-            for h in call_log.HORIZONS:
+            for h in _call_horizons(p):
                 if call_log.recorded(h, p.get("scanned_at")):
                     continue
                 try:

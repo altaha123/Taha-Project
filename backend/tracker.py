@@ -116,7 +116,17 @@ HORIZON_DAYS = {
     "institutional_accumulation": 180,  # 2-6 months
     "quality_at_discount": 365,
     "turnaround": 365,
+    # The four tested lists (leaders.py). Each is held for its period and the
+    # exit line is read on the close, which is how the study measured it.
+    "pick_week": 9,
+    "pick_month": 32,
+    "pick_momentum": 93,
+    "pick_long": 370,
 }
+
+
+def _is_pick(setup_key):
+    return str(setup_key or "").startswith("pick_")
 
 _lock = threading.Lock()
 _cache = {"rows": None}
@@ -517,7 +527,7 @@ def _check_invalidation(key, df, entry=None):
     return None
 
 
-def _first_touch(win, target, stop):
+def _first_touch(win, target, stop, on_close=False):
     """
     Walk the window in order and report which level was reached first.
 
@@ -534,6 +544,10 @@ def _first_touch(win, target, stop):
     idx = _dated_index(win)
     highs = win["High"] if "High" in win else win["Close"]
     lows = win["Low"] if "Low" in win else win["Close"]
+    if on_close:
+        # A tested pick leaves on a CLOSE under its exit line. An intraday dip
+        # through the line that recovers by the close is not an exit.
+        lows = win["Close"]
     for i in range(len(win)):
         try:
             hi, lo = float(highs.iloc[i]), float(lows.iloc[i])
@@ -643,19 +657,23 @@ def update_one(rec):
         # carried one. "No plan" is a different state from "target missed".
         rec["outcome"] = "NO_PLAN"
     elif win is not None and not win.empty:
-        hit_t, hit_s = _first_touch(win, target, stop)
+        pick = _is_pick(rec.get("setup_key"))
+        hit_t, hit_s = _first_touch(win, target, stop, on_close=pick)
         rec["target_hit"], rec["stop_hit"] = hit_t, hit_s
         rec["outcome"] = "TARGET" if hit_t else ("STOP" if hit_s else "OPEN")
         if hit_s and rec.get("status") == "LIVE":
             on = f" on {hit_s['on']}" if hit_s.get("on") else ""
             rec["status"] = "INVALIDATED"
-            rec["invalidated_by"] = (f"Stop \u20b9{hit_s['price']} broke{on} — the plan's own "
-                                    "invalidation level, reached before the target")
+            rec["invalidated_by"] = (
+                f"Closed under the \u20b9{hit_s['price']} exit line{on}" if pick else
+                f"Stop \u20b9{hit_s['price']} broke{on} — the plan's own "
+                "invalidation level, reached before the target")
 
     if rec.get("status") == "LIVE":
         if rec["days_held"] > HORIZON_DAYS.get(rec.get("setup_key"), 365):
             rec["status"] = "EXPIRED"
-            rec["invalidated_by"] = "Horizon elapsed without the premise playing out"
+            rec["invalidated_by"] = ("Holding period over" if _is_pick(rec.get("setup_key"))
+                                     else "Horizon elapsed without the premise playing out")
         elif rec["days_held"] >= MIN_DAYS_BEFORE_INVALIDATION:
             bad = _check_invalidation(rec.get("setup_key"), df, entry=entry)
             if bad:

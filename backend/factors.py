@@ -88,6 +88,10 @@ class FactorSpec:
 SPEC = {
     "momentum_12_1": FactorSpec("momentum", "12-month momentum, last month skipped", ("Close",), 260, "trend"),
     "trend_quality": FactorSpec("momentum", "Signed straightness of the trend", ("Close",), 90, "trend"),
+    # Its own group, so it is half the momentum pillar and not a third voice in
+    # the trend group. Over 2017-2026 it was the strongest single price factor
+    # measured at every horizon from a week to a year (research/IDEAS-STUDY.md).
+    "high_52w": FactorSpec("momentum", "Closeness to the 52-week high", ("Close", "High"), 200, "high"),
     "reversal_5d": FactorSpec("risk", "One-week reversal", ("Close",), 8, "reversal"),
     "low_volatility": FactorSpec("risk", "Realised volatility (negated)", ("Close",), 61, "volatility"),
     "volume_shock": FactorSpec("participation", "Log turnover against its history", ("Close", "Volume"), 65, "turnover"),
@@ -200,6 +204,29 @@ def trend_quality(df, window=90):
     # Signed: a straight line DOWN is a high-quality downtrend, and rewarding
     # it as though it were an uptrend is the obvious way to get this wrong.
     return (r ** 2) * 100.0 * (1.0 if r > 0 else -1.0)
+
+
+def high_52w(df, window=252):
+    """
+    Last close as a percentage of the highest high of the past year.
+
+    One hundred is a stock at its high. George and Hwang (2004) found this
+    simple distance predicts returns better than past return itself; on NSE
+    from 2017 to 2026 it carried the highest rank correlation with the next
+    one to twelve months of any price factor here.
+    """
+    c = _closes(df)
+    if c is None or len(c) < 200:
+        return None
+    high = df["High"] if "High" in getattr(df, "columns", []) else df["Close"]
+    h = np.asarray(high.dropna().iloc[-window:], dtype=float)
+    h = h[np.isfinite(h)]
+    if not len(h):
+        return None
+    top, last = float(h.max()), float(c.iloc[-1])
+    if top <= 0 or last <= 0:
+        return None
+    return min(100.0, last / top * 100.0)
 
 
 def low_volatility(df, window=60):
@@ -523,6 +550,7 @@ def compute(df, quarters=None, price=None, as_of=None, consolidated=None):
     out = {
         "momentum_12_1": safe(momentum_12_1, df),
         "trend_quality": safe(trend_quality, df),
+        "high_52w": safe(high_52w, df),
         "reversal_5d": safe(reversal_5d, df),
         "low_volatility": safe(low_volatility, df),
         "volume_shock": safe(volume_shock, df),

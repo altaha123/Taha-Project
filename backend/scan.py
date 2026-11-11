@@ -48,6 +48,7 @@ import archetypes as A
 import profiles as PR
 import multifactor
 import xbrl
+import leaders
 
 # The point-in-time ledger. Optional import: if pit_store.py isn't present
 # the scan still runs exactly as before, it just records nothing.
@@ -207,6 +208,17 @@ PHASE2_SIZE = int(os.environ.get("SCAN_DEPTH", "200") or 200)
 # about 25% more scan time and they are what makes every future factor
 # statistic meaningful rather than decorative.
 CONTROL_PCT = float(os.environ.get("SCAN_CONTROL_PCT", "0.25") or 0.25)
+# STEADY LEADERS — the names the Ideas list is built from (leaders.py).
+#
+# They are chosen in phase 1, from every liquid stock on the exchange, and are
+# given places in phase 2 before the technical ranking fills the rest. Without
+# this reservation a leader that does not also have one of the 150 hottest
+# charts never gets a row, and the list is drawn from the wrong pool again.
+LEADER_SLOTS = int(os.environ.get("SCAN_LEADER_SLOTS", "70") or 70)
+# How far down each of the four lists a name may sit and still get a place.
+# The page shows 15; the rest are the reserve for the sector cap and for
+# names removed over an adverse filing.
+LEADER_DEPTH = int(os.environ.get("SCAN_LEADER_DEPTH", "22") or 22)
 PHASE2_WORKERS = 3         # polite concurrency for per-stock fundamentals
 MIN_ROWS = 120             # minimum trading days of history
 MIN_TURNOVER = 2e7         # legacy constant, retained for the payload label
@@ -508,7 +520,10 @@ def phase1(symbols, progress, state, chunk_size=None):
                 # ~45 MB of headroom that is what was killing the scan
                 # part-way through. Sequential is slower per chunk and is the
                 # difference between a scan that finishes and one that does not.
-                data = yf.download(" ".join(tickers), period="1y", interval="1d",
+                # Two years, not one. A 12-month return needs a close from
+                # 252 sessions back, and Yahoo's "1y" is about 248 rows, so
+                # every 12-month figure in phase 1 was unmeasurable.
+                data = yf.download(" ".join(tickers), period="2y", interval="1d",
                                    group_by="ticker", auto_adjust=True,
                                    threads=False, progress=False)
             except Exception:
@@ -543,7 +558,12 @@ def phase1(symbols, progress, state, chunk_size=None):
                 # for every candidate cost ~9 MB and is recomputed cheaply in
                 # phase 2 for the few hundred that actually advance.
                 tech = technical_score(df)
-                candidates.append({"symbol": s, "score": tech["score"], "turnover": turnover})
+                try:
+                    sig = leaders.signals(df)
+                except Exception:
+                    sig = None
+                candidates.append({"symbol": s, "score": tech["score"], "turnover": turnover,
+                                   "leader_sig": sig})
                 del tech
             except Exception:
                 skipped_nodata += 1
@@ -704,6 +724,10 @@ def deep_score(cand, selection="ranked"):
         "setup": (setup or {}).get("name"), "setup_key": (setup or {}).get("key"),
         "setup_fit": (setup or {}).get("fit"), "horizon": (setup or {}).get("horizon"),
         "avg_turnover_cr": round(cand["turnover"] / 1e7, 1),
+        # Where this name stands among every liquid stock on the four leader
+        # signals (leaders.py), measured in phase 1. None for a stock outside
+        # that universe; the Ideas list is the rows whose block has a rank.
+        "leader": cand.get("leader"),
         # --- research metadata: never shown in the UI, essential for analysis
         "selection": selection,              # "ranked" or "control"
         "fundamental_quality": quality,      # "VALID" or "MISSING"
@@ -735,7 +759,20 @@ def pick_phase2_cohort(candidates, n_total, control_pct=CONTROL_PCT):
     n_control = int(n_total * control_pct)
     n_ranked = n_total - n_control
 
-    ranked = candidates[:n_ranked]
+    # The names near the top of any of the four pick lists take their places
+    # first, best rank first, then the technical ranking fills what is left.
+    # They never take more than half: the rest of the site (setups, the
+    # screener's peer groups) is built on the technical cohort.
+    # With no leader blocks on the candidates (a short test list, or
+    # leaders.rank() declining to rank fewer than thirty names) this is
+    # exactly the old behaviour.
+    def _best(c):
+        return leaders.best_rank(c.get("leader"))
+    lead = sorted((c for c in candidates if _best(c) and _best(c) <= LEADER_DEPTH),
+                  key=lambda c: (_best(c), c["symbol"]))[:min(LEADER_SLOTS, n_ranked // 2)]
+    lead_syms = {c["symbol"] for c in lead}
+    rest = [c for c in candidates if c["symbol"] not in lead_syms][:n_ranked - len(lead)]
+    ranked = lead + rest
     ranked_syms = {c["symbol"] for c in ranked}
     pool = [c for c in candidates if c["symbol"] not in ranked_syms]
 
@@ -769,7 +806,9 @@ def pick_phase2_cohort(candidates, n_total, control_pct=CONTROL_PCT):
                 rng.shuffle(rest)
                 control.extend(rest[:n_control - len(control)])
 
-    cohort = ([(c, "ranked") for c in ranked] +
+    # "leader" is its own label, not "ranked": research on this data has to be
+    # able to tell which rule put a name in the cohort.
+    cohort = ([(c, "leader" if c["symbol"] in lead_syms else "ranked") for c in ranked] +
               [(c, "control") for c in control])
     return cohort, len(ranked), len(control)
 
@@ -812,6 +851,16 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
                 "fundamental_quality": r.get("fundamental_quality"),
                 "label": r.get("label"),
             }
+            # Each list's score, banked so the Factor Lab can measure the four
+            # lists on live data the way the study measured them on history.
+            lead = r.get("leader") or {}
+            if lead.get("score") is not None:
+                records[r["symbol"]]["leader_score"] = lead["score"]
+            for key, entry in (lead.get("lists") or {}).items():
+                if entry.get("score") is not None:
+                    records[r["symbol"]][f"pick_{key}_score"] = entry["score"]
+                if entry.get("rank"):
+                    records[r["symbol"]][f"pick_{key}_rank"] = entry["rank"]
             # Orthogonal factors and the individual technical checks. Recorded
             # flat alongside everything else — factor_snapshots is long-format
             # precisely so new factors never need a migration.
@@ -996,6 +1045,16 @@ def run_scan(progress=None, names=None, checkpoint=None):
 
     cands, ill, nod, stopped = phase1(symbols, progress, state, chunk_size)
     ill += prefiltered
+    # Rank the leaders against the whole liquid universe while phase 1's
+    # inputs are still held, then drop the inputs: the block is all a row needs.
+    try:
+        blocks = leaders.rank(cands)
+    except Exception:
+        blocks = {}
+    for c in cands:
+        c["leader"] = blocks.get(str(c["symbol"]).upper())
+        c.pop("leader_sig", None)
+    del blocks
     _note_attempt(phase="phase 2 — fundamentals and archetypes",
                   candidates=len(cands))
 

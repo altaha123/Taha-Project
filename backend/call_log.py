@@ -65,8 +65,19 @@ except Exception:
 DB_PATH = os.environ.get("ALTAHA_CALL_DB", "").strip() or os.path.join(DATA_DIR, "call_log.db")
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
-HORIZONS = ("short", "medium")
-HORIZON_LABEL = {"short": "Short term", "medium": "Medium term"}
+# The four tested lists (leaders.py), then the two lists they replaced. The
+# old keys stay valid so the calls already in the log keep their labels.
+PICK_HORIZONS = ("week", "month", "momentum", "long")
+LEGACY_HORIZONS = ("short", "medium")
+HORIZONS = PICK_HORIZONS + LEGACY_HORIZONS
+HORIZON_LABEL = {"week": "This week", "month": "This month", "momentum": "Momentum",
+                 "long": "Long term", "short": "Short term", "medium": "Medium term"}
+
+
+def _anchored(setup_key):
+    """A tested pick keeps the exit line it was called with. Redrawing it from
+    each new scan's price would move a line the reader was told to act on."""
+    return str(setup_key or "").startswith("pick_")
 
 # A redrawn level that moved less than this is rounding, not a new plan, and
 # logging it would bury the events that matter.
@@ -346,6 +357,9 @@ def record(horizon: str, rows: list, scanned_at: str, prices: dict | None = None
                        _plan_line(lv["stance"], lv["entry"], lv["stop"], lv["target"]))
                 opened += 1
                 continue
+            if _anchored(setup_key):
+                lv = {"stance": c["stance"], "entry": c["entry"], "stop": c["stop"],
+                      "target": c["target"], "rr": c["rr"]}
             if lv["stance"] != c["stance"]:
                 _event(conn, c["id"], at, "stance", lv["stance"], price,
                        f"{c['stance'] or 'On the list'} → {lv['stance'] or 'On the list'}")
@@ -485,8 +499,30 @@ def open_index(horizon: str, prices: dict | None = None) -> dict:
         out[(c["symbol"], c["setup_key"] or "")] = {
             "id": c["id"], "called": when(c["called_at"]), "called_price": c["called_price"],
             "called_stance": c["called_stance"], "scans_seen": c["scans_seen"],
+            "entry": c["entry"], "stop": c["stop"],
             "move_pct": _pct(now_px, c["called_price"])}
     return out
+
+
+def retire(horizons, scanned_at: str, prices: dict | None = None, note: str = "") -> int:
+    """
+    Close every open call of the given horizons as dropped. Idempotent.
+
+    Used once, when the short- and medium-term lists were replaced: their open
+    calls would otherwise stay open for ever, because no scan would list or
+    drop them again.
+    """
+    prices = {str(k).upper(): _num(v) for k, v in (prices or {}).items()}
+    at = _iso(scan_time(scanned_at) or dt.datetime.now(dt.timezone.utc))
+    n = 0
+    with _tx() as conn:
+        for h in horizons:
+            for c in conn.execute("SELECT * FROM calls WHERE status='open' AND horizon=?", (h,)).fetchall():
+                price = prices.get(c["symbol"], c["last_price"])
+                _close(conn, c, at, price, "dropped",
+                       note or "This list was replaced by the four tested lists.")
+                n += 1
+    return n
 
 
 def export_csv() -> str:
