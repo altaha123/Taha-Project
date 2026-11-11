@@ -193,11 +193,32 @@ Kotak              not    bot challenge (ShieldSquare / hCaptcha)
 Axis               not    CMS API needs a site-issued session token
 ```
 
-The generic reader — workbook links in the page's own HTML — covers the
-smaller houses that serve them that way. The rest build their list in
-JavaScript, refuse cloud addresses (Edelweiss, Navi: 403) or link files that
-are not portfolios; each house's last try and the reason it failed are in
-`GET /admin/funds/directory` and in the nightly job's run summary.
+The whole directory, swept live the same day with the finished code (from a
+cloud address — the deployed instance's may be refused by different CDNs):
+
+```
+20 read          the six above; DSP 3,436 · Groww 3,175 · Baroda BNP 1,712 ·
+                 Angel One 1,703 · HSBC 1,492 (August: the newest complete
+                 month its page links) · Samco 514 · Helios 425 · Shriram 425 ·
+                 NJ 375 · Quantum 367 · PPFAS 310 · Unifi 162 · Old Bridge 154 ·
+                 Capitalmind 147                        ~42,700 positions
+20 JavaScript    no workbook link in the HTML: 360 ONE, ASK, AlphaGrep,
+                 Bandhan, Bank of India, Canara Robeco, Carnelian, Franklin
+                 Templeton, Invesco, ITI, JM Financial, Jio BlackRock,
+                 Mahindra Manulife, Mirae, Motilal Oswal, PGIM, Taurus,
+                 The Wealth Company, Trust, WhiteOak
+ 5 blocked       Edelweiss, Navi (403) · Kotak (bot challenge) · Union
+                 (connection reset) · IL&FS (503)
+ 9 no portfolio  the page links workbooks, none of them a portfolio: Abakkus
+                 (scheme summaries), Bajaj, Choice, LIC, Monarch, Sundaram,
+                 Tata, Zerodha, quant
+ 1 token         Axis: a CMS API that wants a site-issued session token
+ 2 no page       Lakshya, Nuvama: AMFI lists no disclosure link
+```
+
+The JavaScript group is where a headless browser in the scheduled workflow
+would pay off; the per-AMC sources above are what that costs per house when
+it is done by hand instead — the endpoint each page calls, found once.
 
 Coverage is therefore **published on the page**: the number of fund houses
 read, out of those AMFI lists. A fund house that is absent is absent because

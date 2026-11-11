@@ -801,3 +801,51 @@ def test_a_link_with_spaces_is_requested_escaped(fp, monkeypatch):
                         b'<a href="/reports/ZN250 - Monthly Portfolio October 2026.xlsx">x</a>')
     assert fp.find_workbooks("https://z.test/d") == [
         "https://z.test/reports/ZN250%20-%20Monthly%20Portfolio%20October%202026.xlsx"]
+
+
+def test_a_file_served_through_a_script_is_named_by_its_file_parameter(fp):
+    """NJ's links are "viewfile.php?file=NJ-MF-Monthly-Portfolio-...xlsx": the
+    path names a script, and the month is in the file parameter."""
+    links = ["https://downloads.njmutualfund.com/viewfile.php?file="
+             "NJ-MF-Monthly-Portfolio-NJFCP-October-2026-20261107.xlsx",
+             "https://downloads.njmutualfund.com/viewfile.php?file="
+             "Monthly-Portfolio-March-31-2022-20220411.xlsx"]
+    groups = fp.month_candidates(links, today=TODAY)
+    assert groups[0]["as_of"] == "2026-10-31" and len(groups[0]["sources"]) == 1
+
+
+def test_mid_month_and_daily_files_are_not_the_month_end_portfolio(fp):
+    """Old Bridge posts an "IR_" file every working day beside its monthly
+    portfolios ("..._Portfolio_Oct_26", no day at all); HSBC's month has an
+    FMP statement dated the 15th."""
+    daily = ["https://ob.test/IR_Old_Bridge_Mutual_Fund_%02d102026_x.xlsx" % d
+             for d in range(13, 31)]
+    monthly = ["https://ob.test/OBMF_Flexi_Cap_Portfolio_Oct_26_394d44fbd0.xlsx",
+               "https://ob.test/OBMF_Focused_Portfolio_Oct_26_5fbc27763f.xlsx"]
+    mid = ["https://h.test/hsbc-equity-fund-oct-15-2026.xlsx"]
+    g = fp.month_candidates(daily + monthly + mid, today=TODAY)[0]
+    names = [fp._filename(s["url"]) for s in g["sources"]]
+    assert g["as_of"] == "2026-10-31"
+    assert set(names) == {"IR_Old_Bridge_Mutual_Fund_30102026_x.xlsx",
+                          "OBMF_Flexi_Cap_Portfolio_Oct_26_394d44fbd0.xlsx",
+                          "OBMF_Focused_Portfolio_Oct_26_5fbc27763f.xlsx"}
+
+
+@pytest.mark.parametrize("name", ["hsbc-fmp-series-xiv-october-30-2026.xlsx",
+                                  "investor-complaints-october-2026.xlsx",
+                                  "top-07-issuer-sectorwise-breakup-sep-30-2026.xlsx"])
+def test_debt_plans_and_other_statements_are_skipped(fp, name):
+    assert fp.month_candidates(["https://h.test/" + name], today=TODAY) == []
+
+
+def test_a_stale_month_is_not_recorded_as_a_houses_latest(fp, monkeypatch):
+    """The newest pack NJ's page let this date, before its links were read
+    properly, was March 2024. Recorded, it would sit in the ledger as that
+    house's current month."""
+    _stub_ingest(fp, monkeypatch)
+    monkeypatch.setattr(fp, "find_workbooks",
+                        lambda page: ["https://amc.test/Monthly-Portfolio-March-31-2024.xlsx"])
+    r = fp.ingest_amc({"amc_id": "73", "name": "NJ Mutual Fund",
+                       "monthly_url": "https://nj.test/"}, mapping=MAP, today=TODAY)
+    assert r["ok"] is False and "too old" in r["note"]
+    assert fp.oldest_current_month(TODAY) == "2026-07-31"

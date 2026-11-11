@@ -224,7 +224,8 @@ _NOT_MONTHLY = re.compile(
     r"divmast|\bnav\b|overlap|\baum\b|commission|voting|stewardship|"
     r"transaction|futures?[-_ ]?disclo|weblink|dashboard|aaum|replication|"
     r"tracking[-_ ]?(?:error|difference)|performance|branches|bank[-_ ]?list|"
-    r"summary[-_ ]?document", re.I)
+    r"summary[-_ ]?document|complaint|top[-_ ]?\d+[-_ ]?issuer|\bfmp\b|"
+    r"fixed[-_ ]?maturity", re.I)
 
 # What a bot-challenge or access-denied page looks like, so that a blocked
 # request is reported as blocked and not as "this AMC uses JavaScript".
@@ -278,7 +279,18 @@ def _absolute(base, href):
 
 
 def _filename(url):
-    return unquote(urlparse(url).path.rsplit("/", 1)[-1])
+    """The file a link serves. Usually the last path segment; when that is a
+    script (NJ's "viewfile.php?file=NJ-MF-Monthly-Portfolio-...xlsx"), the
+    query value that names a workbook. Never the rest of the query string —
+    PPFAS appends its upload date there ("?09112026")."""
+    p = urlparse(url)
+    name = unquote(p.path.rsplit("/", 1)[-1])
+    if not re.search(r"\.(?:xlsx|xlsm|xls|zip)$", name, re.I) and p.query:
+        for part in p.query.split("&"):
+            value = unquote(part.split("=", 1)[-1])
+            if re.search(r"\.(?:xlsx|xlsm|xls|zip)$", value, re.I):
+                return value.rsplit("/", 1)[-1]
+    return name
 
 
 def month_candidates(urls, max_files=160, today=None):
@@ -297,19 +309,29 @@ def month_candidates(urls, max_files=160, today=None):
         name = _filename(u)
         if _NOT_MONTHLY.search(name):
             continue
-        # From the path only, never the query string: PPFAS appends the upload
-        # date ("?09112026"), which read as a date files October's pack under
-        # November.
-        m = month_end_from(name) or month_end_from(unquote(urlparse(u).path))
+        # The file's name only, never the rest of the query string: PPFAS
+        # appends the upload date ("?09112026"), which read as a date filed
+        # October's pack under November.
+        m, day = date_parts(name)
         if m and m > latest:
             continue                    # a month that has not ended yet
         if m:
-            by_month.setdefault(m, []).append(u)
+            by_month.setdefault(m, []).append((u, day))
         else:
             undated.append(u)
     out = []
     for m in sorted(by_month, reverse=True):
-        files = by_month[m]
+        # A file dated mid-month is not the month-end portfolio: a fortnightly
+        # pack dated the 15th, an FMP's interim statement.
+        items = [(u, d) for u, d in by_month[m] if d is None or d >= 25]
+        # A daily series — Old Bridge posts an "IR_..." file every working day
+        # — keeps only its last day, beside the files that carry no day.
+        days = {d for _u, d in items if d}
+        if len(days) > 3:
+            items = [(u, d) for u, d in items if d is None or d == max(days)]
+        files = [u for u, _d in items]
+        if not files:
+            continue
         whole = [u for u in files if re.search(
             r"all[-_ ]?schemes?|consolidat|complete|combined", _filename(u), re.I)]
         files = whole[:1] if whole else files[:max_files]
@@ -424,54 +446,67 @@ def month_end_from(text):
     The month a pack describes, from its filename, link text or a header line.
 
     Reads 31-08-2026, 2026-08-31, 31.10.2026, 31Aug2026, 31st-october-2026,
-    October 31, 2026, October_31_2026, August 2026, 31-Oct-26 and 31102026,
-    and returns the
-    LAST day of that month — which is the date the portfolio is as at,
-    whatever day the file happens to be named for.
+    October 31, 2026, October_31_2026, August 2026, 31-Oct-26, Oct_26 and
+    31102026, and returns the LAST day of that month — which is the date the
+    portfolio is as at, whatever day the file happens to be named for.
 
     When a name carries more than one date the most specific one wins, and
     among those the last: HDFC's "Monthly HDFC Nifty G-Sec Dec 2026 Index
     Fund - 31 October 2026.xlsx" is October's portfolio of a fund named for
     December.
     """
+    return date_parts(text)[0]
+
+
+def date_parts(text):
+    """(month end, day of month or None) — the day only when the text names
+    one, which is what tells a month-end pack from a fortnightly one dated the
+    15th or a daily file."""
     s = str(text or "")
     # A full numeric date that is impossible is refused outright rather than
     # read some other way: 31-13-2026 is a typo, not a hint.
     m = re.search(r"(20\d{2})[-_/.](\d{1,2})[-_/.](\d{1,2})", s)
     if m:
-        return _month_end(int(m.group(1)), int(m.group(2)))
+        return _month_end(int(m.group(1)), int(m.group(2))), int(m.group(3))
     m = re.search(r"(?<!\d)(\d{1,2})[-_/.](\d{1,2})[-_/.](20\d{2})", s)
     if m:
-        return _month_end(int(m.group(3)), int(m.group(2)))
+        return _month_end(int(m.group(3)), int(m.group(2))), int(m.group(1))
 
-    found = []                                  # (specificity, position, date)
+    found = []                          # (specificity, position, date, day)
 
-    def add(spec, m, year, mon):
+    def add(spec, m, year, mon, day=None):
         d = _month_end(year, mon)
         if d:
-            found.append((spec, m.start(), d))
+            found.append((spec, m.start(), d, day))
+
+    def mon(g):
+        return _MONTHS.index(g[:3].lower()) + 1
 
     for m in re.finditer(_MON + r"[-_ ]*(\d{1,2})(?:st|nd|rd|th)?[-_ ]*,?[-_ ]*(20\d{2})",
                          s, re.I):              # October 31, 2026 / October_31_2026
-        add(3, m, int(m.group(3)), _MONTHS.index(m.group(1)[:3].lower()) + 1)
-    for m in re.finditer(r"(?<!\d)\d{1,2}(?:st|nd|rd|th)?[-_ ]*" + _MON +
+        add(3, m, int(m.group(3)), mon(m.group(1)), int(m.group(2)))
+    for m in re.finditer(r"(?<!\d)(\d{1,2})(?:st|nd|rd|th)?[-_ ]*" + _MON +
                          r"[-_ ,]*(20\d{2})", s, re.I):     # 31 October 2026
-        add(3, m, int(m.group(2)), _MONTHS.index(m.group(1)[:3].lower()) + 1)
+        add(3, m, int(m.group(3)), mon(m.group(2)), int(m.group(1)))
     for m in re.finditer(_MON + r"[-_ ,]*(20\d{2})", s, re.I):   # August 2026
-        add(2, m, int(m.group(2)), _MONTHS.index(m.group(1)[:3].lower()) + 1)
+        add(2, m, int(m.group(2)), mon(m.group(1)))
     if not found:
         # Two-digit years only when nothing better is there: Nippon India's
-        # "NIMF-MONTHLY-PORTFOLIO-31-Oct-26.xls".
-        for m in re.finditer(r"(?<!\d)\d{1,2}[-_ ]?" + _MON + r"[-_ ]?(\d{2})(?!\d)",
+        # "NIMF-MONTHLY-PORTFOLIO-31-Oct-26.xls"...
+        for m in re.finditer(r"(?<!\d)(\d{1,2})[-_ ]?" + _MON + r"[-_ ]?(\d{2})(?!\d)",
                              s, re.I):
-            add(1, m, 2000 + int(m.group(2)), _MONTHS.index(m.group(1)[:3].lower()) + 1)
-        # Aditya Birla Sun Life's "31102026_abslmf_monthlydisclosure.zip".
+            add(1, m, 2000 + int(m.group(3)), mon(m.group(2)), int(m.group(1)))
+        # ...Aditya Birla Sun Life's "31102026_abslmf_monthlydisclosure.zip"...
         for m in re.finditer(r"(?<!\d)(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])(20\d{2})(?!\d)", s):
-            add(1, m, int(m.group(3)), int(m.group(2)))
+            add(1, m, int(m.group(3)), int(m.group(2)), int(m.group(1)))
     if not found:
-        return None
-    found.sort()
-    return found[-1][2]
+        # ...and, last of all, Old Bridge's "OBMF_Flexi_Cap_Portfolio_Oct_26".
+        for m in re.finditer(_MON + r"[-_ ]?(\d{2})(?!\d)", s, re.I):
+            add(0, m, 2000 + int(m.group(2)), mon(m.group(1)))
+    if not found:
+        return None, None
+    found.sort(key=lambda f: f[:2])
+    return found[-1][2], found[-1][3]
 
 
 def _month_end(year, month):
@@ -498,6 +533,13 @@ def recent_month_ends(today=None, n=2):
 def latest_possible_month(today=None):
     """No portfolio can be as at a month that has not ended."""
     return recent_month_ends(today, 1)[0].isoformat()
+
+
+def oldest_current_month(today=None):
+    """The oldest month still worth recording as a house's latest: three
+    months before the one every house owes by now."""
+    owed = dt.date.fromisoformat(expected_month(today))
+    return recent_month_ends(owed + dt.timedelta(days=1), 4)[-1].isoformat()
 
 
 def expected_month(today=None):
@@ -867,9 +909,9 @@ def _read_file(path, src):
                 is_book = "[Content_Types].xml" in z.namelist()
             if not is_book:
                 return _read_archive(path, src.get("members"))
-        return _read_book(path, label=src.get("title") or _stem(src["url"]))
+        return _read_book(path, label=src.get("title") or _stem(_filename(src["url"])))
     if getattr(fund_workbook, "looks_like_xls", lambda b: False)(head):
-        return _read_book(path, label=src.get("title") or _stem(src["url"]))
+        return _read_book(path, label=src.get("title") or _stem(_filename(src["url"])))
     raise ValueError("not an xlsx workbook (nor the legacy .xls format) — "
                      "the link served something else")
 
@@ -878,7 +920,8 @@ def _read_file(path, src):
 # Ingest
 # ---------------------------------------------------------------------------
 
-def ingest_month(amc_id, amc_name, group, mapping=None, keep_debt=False):
+def ingest_month(amc_id, amc_name, group, mapping=None, keep_debt=False,
+                 oldest=None):
     """
     Read one month's files for one AMC into the ledger, as one pack.
 
@@ -932,7 +975,7 @@ def ingest_month(amc_id, amc_name, group, mapping=None, keep_debt=False):
             not_portfolio += 1
             continue
 
-        month = as_of or month_end_from(src.get("title")) or month_end_from(_stem(src["url"]))
+        month = as_of or month_end_from(src.get("title")) or month_end_from(_filename(src["url"]))
         if not month:
             # The filename carried no date — about one AMC in eight. Fall back
             # to the line inside the pack, which reads "Monthly Portfolio
@@ -1005,6 +1048,13 @@ def ingest_month(amc_id, amc_name, group, mapping=None, keep_debt=False):
         out["note"] = ("refused: the pack reads as %s, a month that has not "
                        "ended — the date was taken from something that is not "
                        "the portfolio's" % as_of)
+        return out
+    if oldest and as_of < oldest:
+        # NJ's page lists packs back to 2021 among files with no date in the
+        # name; the newest it could date was March 2024. Recorded, that would
+        # sit in the ledger as this house's latest month.
+        out["note"] = ("the newest portfolio found is for %s — too old to be "
+                       "this house's current month; not recorded" % as_of)
         return out
     if not shaped:
         # A real outcome, not a failure to report: a debt-only house, or a
@@ -1088,8 +1138,18 @@ def ingest_amc(amc, mapping=None, today=None):
                            "portfolios (fortnightly packs, risk parameters, "
                            "factsheets)")
             return out
-    for g in groups[:3]:
-        r = ingest_month(amc["amc_id"], amc.get("name"), g, mapping=mapping)
+    oldest = oldest_current_month(today)
+    dated = [g for g in groups if g.get("as_of") is None or g["as_of"] >= oldest]
+    if not dated:
+        out["note"] = ("the newest monthly portfolio linked is for %s — too old "
+                       "to be this house's current month" % groups[0]["as_of"])
+        return out
+    # The three newest months, then the undated files if those all failed.
+    tries = [g for g in dated if g.get("as_of")][:3] + \
+        [g for g in dated if not g.get("as_of")][:1]
+    for g in tries:
+        r = ingest_month(amc["amc_id"], amc.get("name"), g, mapping=mapping,
+                         oldest=oldest)
         if r["ok"]:
             out.update(r)
             out["via"] = via
