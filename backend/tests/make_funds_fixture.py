@@ -7,6 +7,13 @@ against a stale JSON literal. Includes the three cases the page exists to get
 right: a company held by several schemes, a debt row that must not become an
 equity position, and a holding whose ISIN is not on NSE's equity list.
 
+It also writes backend/tests/fixtures/funds_legacy_pack.xls: a small pack in
+the legacy binary .xls format, laid out the way Aditya Birla Sun Life's is
+(an index sheet, then one sheet per scheme whose rows carry an internal code
+before the name, so the header is one column off its data). Writing that
+format needs xlwt, which is a development tool only and not in
+requirements.txt; reading it needs xlrd, which is.
+
     python backend/tests/make_funds_fixture.py
 """
 
@@ -67,7 +74,13 @@ def main():
         import fund_portfolios as fp
         import fund_workbook
 
-        fp._http = lambda url, timeout=40: b"PK\x03\x04fake"
+        def _download(url, timeout=180, headers=None):
+            fh = tempfile.NamedTemporaryFile(suffix=".dl", delete=False)
+            fh.write(b"PK\x03\x04fake")
+            fh.close()
+            return fh.name, None
+
+        fp._download = _download
         fund_workbook.looks_like_xlsx = lambda b: True
         fund_workbook.parse_workbook = lambda path, **kw: SHEETS
         fund_workbook.scheme_names = lambda path: NAMES
@@ -102,6 +115,58 @@ def main():
             "a debenture must never appear as an equity position"
         print("wrote 2 fixtures to %s (%d companies)"
               % (OUT.relative_to(ROOT), one["count"]))
+    write_legacy_xls(LEGACY_XLS)
+
+
+LEGACY_XLS = ROOT / "backend" / "tests" / "fixtures" / "funds_legacy_pack.xls"
+
+LEGACY_HEADER = ("Name of the Instrument / Issuer", "ISIN", "Industry^ / Rating",
+                 "Quantity", "Market value\n(Rs. in Lakhs)", "% to AUM", "YTM %")
+
+LEGACY_SCHEMES = {
+    "BSL95F": ("ADITYA BIRLA SUN LIFE AGGRESSIVE HYBRID FUND (FORMERLY KNOWN AS "
+               "ADITYA BIRLA SUN LIFE EQUITY HYBRID '95 FUND)", [
+        ("100012", "ICICI Bank Ltd.", "INE090A01021", "Banks", 3000001, 41940.01, 0.0621),
+        ("100034", "Reliance Industries Ltd.", "INE002A01018", "Petroleum Products", 1500000, 21490.5, 0.0318),
+        ("200001", "7.18% GOI 2033", "IN0020230085", "SOVEREIGN", 5000000, 5100.2, 0.0075),
+    ]),
+    "ADVG": ("ADITYA BIRLA SUN LIFE LARGE & MID CAP FUND", [
+        ("100012", "ICICI Bank Ltd.", "INE090A01021", "Banks", 900000, 12582.0, 0.0512),
+        ("100077", "Larsen & Toubro Ltd.", "INE018A01030", "Construction", 200000, 7000.0, 0.0285),
+    ]),
+}
+
+
+def write_legacy_xls(path):
+    """A two-scheme pack in the legacy .xls format. Needs xlwt (dev only)."""
+    try:
+        import xlwt
+    except ImportError:
+        print("skipped %s: pip install xlwt to regenerate it" % path.name)
+        return
+    wb = xlwt.Workbook()
+    idx = wb.add_sheet("Index")
+    idx.write(0, 0, "Index")
+    for j, h in enumerate(("Scheme Code", "Scheme Short code", "Scheme Name")):
+        idx.write(2, j, h)
+    for i, (code, (name, _rows)) in enumerate(LEGACY_SCHEMES.items()):
+        idx.write(3 + i, 0, "AB%03d" % (i + 1))
+        idx.write(3 + i, 1, code)
+        idx.write(3 + i, 2, name)
+    for code, (name, rows) in LEGACY_SCHEMES.items():
+        ws = wb.add_sheet(code)
+        ws.write(0, 0, code)
+        ws.write(0, 1, name)
+        ws.write(2, 0, "Portfolio Statement as on October 31, 2026")
+        for j, h in enumerate(LEGACY_HEADER):
+            ws.write(3, j, h)
+        ws.write(5, 0, "Equity & Equity Related")
+        for i, r in enumerate(rows):
+            for j, v in enumerate(r):
+                ws.write(6 + i, j, v)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(str(path))
+    print("wrote %s" % path.relative_to(ROOT))
 
 
 if __name__ == "__main__":

@@ -177,6 +177,20 @@ CREATE TABLE IF NOT EXISTS fund_packs (
   read_utc    TEXT NOT NULL,
   PRIMARY KEY (amc_id, as_of)
 );
+
+-- One row per fund house: when the sweep last tried it, whether that worked,
+-- and why not. The sweep reads this to continue where the last slice stopped
+-- rather than re-reading the first few houses in the directory every time,
+-- which is what it did before this table existed: every nightly slice took
+-- the same four AMCs and the other fifty-one were never attempted.
+CREATE TABLE IF NOT EXISTS fund_tries (
+  amc_id        TEXT PRIMARY KEY,
+  name          TEXT,
+  last_try_utc  TEXT NOT NULL,
+  ok            INTEGER NOT NULL DEFAULT 0,
+  as_of         TEXT,
+  note          TEXT
+);
 """
 
 # Columns added after the first release. CREATE TABLE IF NOT EXISTS does
@@ -663,6 +677,35 @@ def record_fund_pack(amc_id, amc_name, as_of, schemes, source_url=None,
              len(rows), unmapped, now))
     return {"rows": written, "schemes": len(schemes or []),
             "unmapped": unmapped, "seen": len(rows)}
+
+
+def record_fund_try(amc_id, name, ok, as_of=None, note=None):
+    """What happened the last time the sweep tried one fund house."""
+    amc_id = (amc_id or "").strip()
+    if not amc_id:
+        return
+    with _tx() as conn:
+        conn.execute(
+            "INSERT INTO fund_tries (amc_id, name, last_try_utc, ok, as_of, note)"
+            " VALUES (?,?,?,?,?,?) ON CONFLICT(amc_id) DO UPDATE SET"
+            "   name=excluded.name, last_try_utc=excluded.last_try_utc,"
+            "   ok=excluded.ok, as_of=excluded.as_of, note=excluded.note",
+            (amc_id, name, _utcnow(), 1 if ok else 0, as_of, (note or "")[:300]))
+
+
+def fund_tries():
+    """{amc_id: last try} for every house the sweep has attempted."""
+    conn = _connect()
+    return {r["amc_id"]: dict(r) for r in conn.execute(
+        "SELECT * FROM fund_tries").fetchall()}
+
+
+def fund_latest_by_amc():
+    """{amc_id: newest month read} across the whole ledger."""
+    conn = _connect()
+    return {r["amc_id"]: r["m"] for r in conn.execute(
+        "SELECT amc_id, MAX(as_of) AS m FROM fund_packs WHERE rows > 0"
+        " GROUP BY amc_id").fetchall()}
 
 
 def fund_months(limit=12):
