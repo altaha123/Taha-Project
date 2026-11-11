@@ -176,30 +176,32 @@ workflow calls it before crawling; it is a no-op once clean.
 
 SEBI requires every asset manager to publish each scheme's full portfolio
 monthly. AMFI lists who must do it and **aggregates nothing**: its
-portfolio-disclosure page is a directory, and all 53 links point at 53
-different websites.
+portfolio-disclosure page is a directory — 57 entries in November 2026, 55
+with a link — and every link points at a different website.
 
-Measured across all 53 from this project's host, end to end — not "can a link
-be found" but "did a month's portfolio actually land in the ledger":
+Measured on 11 November 2026, end to end — not "can a link be found" but "did
+October's portfolio actually land in the ledger". The eight largest houses:
 
 ```
- 7  read                        4,868 positions across 91 schemes
-30  build the download list in JavaScript, so the HTML has no link
- 8  a workbook was read but held no listed equity (factsheets, debt houses)
- 5  no date in the filename or in the sheets
- 2  a genuine legacy .xls, which this does not read
- 1  the download failed
+SBI                read   POST the page makes -> "All Schemes" xlsx   4,413 positions
+ICICI Prudential   read   fixed monthly zip of 151 workbooks          6,529
+HDFC               read   site answers 403; files fetched by name     3,933
+Nippon India       read   plain HTML links                            3,985
+UTI                read   public JSON API -> zip, one sheet per house 4,332
+Aditya Birla SL    read   accordion API -> zip with a legacy .xls     5,231
+Kotak              not    bot challenge (ShieldSquare / hCaptcha)
+Axis               not    CMS API needs a site-issued session token
 ```
 
-Thirteen per cent, and the page says thirteen per cent. The dominant blocker is
-client-side rendering: reaching those thirty needs a headless browser per AMC,
-which is reasonable inside the scheduled workflow and is not reasonable inside
-a request on a 512 MB instance. It is the obvious next step, not a thing this
-pretends to have done.
+The generic reader — workbook links in the page's own HTML — covers the
+smaller houses that serve them that way. The rest build their list in
+JavaScript, refuse cloud addresses (Edelweiss, Navi: 403) or link files that
+are not portfolios; each house's last try and the reason it failed are in
+`GET /admin/funds/directory` and in the nightly job's run summary.
 
 Coverage is therefore **published on the page**: the number of fund houses
-read, out of 53. A fund house that is absent is absent because it has **not
-been read**, never because it holds nothing.
+read, out of those AMFI lists. A fund house that is absent is absent because
+it has **not been read**, never because it holds nothing.
 
 ### One parser, not fifty-three
 
@@ -221,7 +223,22 @@ file out differently. `fund_workbook.py` parses the content:
   apart to tell apart safely. Taking either at face value is a hundredfold
   error in the column readers compare across funds.
 * **An .xlsx served under an .xls name** is recognised by sniffing the
-  container. Baroda BNP's pack is one.
+  container. Baroda BNP's pack is one. **A genuine legacy .xls** is read too,
+  with xlrd — Aditya Birla Sun Life publishes one inside a zip, and before
+  that one of the five largest houses was refused for its file format alone.
+* **A zip of workbooks** is read member by member: ICICI Prudential's month is
+  151 per-scheme workbooks; UTI's zip holds the portfolio beside futures,
+  dividend and risk-o-meter files, which are skipped.
+* **A whole house in one sheet** is cut at its `SCHEME:` lines. UTI publishes
+  every scheme that way; read as one table, ninety schemes become one and a
+  company held by forty of them is one position.
+* **Scheme names** come from the index sheet, found by matching its codes to
+  the workbook's sheet names rather than by its header wording (SBI says
+  "Scheme Short code", Nippon India has no header at all), or from the sheet's
+  own title line, with the regulatory "(An open ended …)" description removed.
+* **The weight column** is "% to Net Assets", "% to NAV" or "% to AUM" (SBI,
+  Aditya Birla) — the last went unrecognised, and every weight in those packs
+  came out empty.
 * Section headings and totals (`Equity & Equity related`, `TREPS`, `Grand
   Total`) are not holdings.
 
@@ -298,14 +315,26 @@ Both collectors are driven by scheduled workflows rather than in-process timers
 
 ```
 POST /admin/holdings/crawl?limit=40&quarters=4   # next slice of companies
-POST /admin/funds/ingest?limit=4                 # next few AMC packs
-POST /admin/funds/ingest?amc=20&url=…            # one workbook directly, for
-                                                 # an AMC with a JS-built page
+POST /admin/funds/ingest?limit=4                 # next few AMC packs that are due
+POST /admin/funds/ingest?limit=4&force=true      # from the top, ignoring the cursor
+POST /admin/funds/ingest?amc=22                  # one fund house, now
+POST /admin/funds/ingest?amc=20&url=…            # one workbook or zip directly
+GET  /admin/funds/directory                      # every AMC, last try and why
 GET  /admin/holdings/unclaimed                   # holders to consider adding
 GET  /investors/coverage                         # published, not admin
 ```
 
-All four take the key as `X-Admin-Key:` (preferred) or `?key=`.
+All of them take the key as `X-Admin-Key:` (preferred) or `?key=`.
+
+**The fund ingest keeps a cursor** (`fund_tries`). Each call skips houses
+already read for the month every AMC owes by now (October, from 11 November)
+and houses tried within the last day, largest houses first — so one night's
+slices walk the directory once and `attempted: 0` means it has caught up.
+Before it did, every call took the first four AMCs of the directory: fourteen
+nightly slices read 360 ONE, Abakkus, Aditya Birla and AlphaGrep fourteen
+times and never reached the other fifty-one, which is why the live page said
+"0 of 53". The nightly job now **fails** when the ledger holds no fund house,
+and writes the per-AMC reasons into the run summary.
 
 Each run is bounded. The shareholding crawl stops early after eight consecutive
 unreadable companies — a crawler that keeps asking after the exchange starts
@@ -326,9 +355,14 @@ because each pack is a fifteen-megabyte download.
 * `backend/tests/test_holdings_crawl.py` — bounds, resumption, interim filings
   excluded, and that "no filings" never counts towards giving up.
 * `backend/tests/test_fund_workbook.py` — the header offset, the scale trap,
-  section headings, and the .xlsx-named-.xls case.
+  section headings, the .xlsx-named-.xls case, a real legacy .xls
+  (`fixtures/funds_legacy_pack.xls`, written by `make_funds_fixture.py`), the
+  one-sheet house, index sheets in every shape, and every date wording.
 * `backend/tests/test_fund_portfolios.py` — month normalisation, the AMFI
-  payload, ISIN map caching and staleness, and that debt never becomes equity.
+  payload, ISIN map caching and staleness, that debt never becomes equity, the
+  cursor (each house once per night, none twice), each per-AMC source against
+  the shape its site serves, zips, per-scheme files recorded as one pack, and
+  blocked pages reported as blocked.
 * `frontend/tests/investors-browser.cjs` and `funds-browser.cjs` — the same
   guards on the rendered page, at 320–1280px in both themes.
 
