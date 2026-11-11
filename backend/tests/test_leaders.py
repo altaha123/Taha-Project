@@ -22,10 +22,13 @@ import ideas
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def frame(n=320, drift=0.001, noise=0.01, turnover=5e8, price=100.0, seed=1, last5=None):
+def frame(n=320, drift=0.001, noise=0.01, turnover=5e8, price=100.0, seed=1, last5=None,
+          last21=None):
     """A daily frame: steady drift, some noise, a given rupee turnover."""
     rng = np.random.default_rng(seed)
     r = drift + rng.normal(0, noise, n)
+    if last21 is not None:
+        r[-21:] = last21 / 21.0
     if last5 is not None:
         r[-5:] = last5 / 5.0
     c = price * np.exp(np.cumsum(r))
@@ -159,6 +162,69 @@ def test_a_dip_lifts_a_stock_on_the_week_list_and_not_on_the_momentum_list():
     assert gain_week > 0 and gain_week > gain_mom
 
 
+# --- one stock, one list --------------------------------------------------------
+
+def test_momentum_gives_way_to_long_term():
+    """Momentum and long term shared 12 of 15 names. Now they share none."""
+    blocks = leaders.rank(universe(120))
+    top = lambda key: {s for s, b in blocks.items() if (b["lists"][key]["rank"] or 99) <= leaders.LIST_SIZE}
+    long_top, mom_top = top("long"), top("momentum")
+    assert len(long_top) == leaders.LIST_SIZE and len(mom_top) == leaders.LIST_SIZE
+    assert not long_top & mom_top
+    for s in long_top:
+        e = blocks[s]["lists"]["momentum"]
+        assert e["rank"] is None and not e["eligible"]
+        assert "long term list" in e["why_not"]
+
+
+def test_long_term_and_the_short_lists_are_not_changed_by_giving_way():
+    """Only momentum gives way: the other three rank every eligible stock."""
+    blocks = leaders.rank(universe(120))
+    for key in ("week", "month", "long"):
+        for b in blocks.values():
+            e = b["lists"][key]
+            assert (e["rank"] is not None) == e["eligible"]
+            assert e["why_not"] is None or "list. Each stock" not in e["why_not"]
+
+
+def test_a_month_pick_has_to_be_a_market_leader():
+    blocks = leaders.rank(universe(120))
+    ranked = [b for b in blocks.values() if b["lists"]["month"]["rank"]]
+    assert ranked
+    assert all(b["score"] >= leaders.LEADER_FLOOR * 100 - 0.05 for b in ranked)
+    followers = [b for b in blocks.values()
+                 if b["uptrend"] and b["calm"] and b["score"] < leaders.LEADER_FLOOR * 100 - 0.05]
+    assert followers
+    assert all(b["lists"]["month"]["rank"] is None and "leader" in b["lists"]["month"]["why_not"]
+               for b in followers)
+
+
+def test_a_month_long_pullback_lifts_a_leader_on_the_month_list():
+    base = universe()
+    flat = leaders.rank(base + [cand("X", drift=0.004, noise=0.006, seed=99)])["X"]
+    dipped = leaders.rank(base + [cand("X", drift=0.004, noise=0.006, seed=99, last21=-0.03)])["X"]
+    assert dipped["parts"]["dip_month"] > flat["parts"]["dip_month"]
+    assert dipped["lists"]["month"]["rank"] < flat["lists"]["month"]["rank"]
+    assert dipped["lists"]["month"]["score"] > flat["lists"]["month"]["score"]
+    assert any("this month" in w for w in dipped["lists"]["month"]["why"])
+    assert dipped["facts"]["return_1m_pct"] == pytest.approx(-3.0, abs=0.3)
+
+
+def test_a_fall_deep_enough_to_lose_the_lead_takes_a_stock_off_the_month_list():
+    """The month list buys a pullback in a leader, not a stock that stopped leading."""
+    deep = leaders.rank(universe() + [cand("X", drift=0.004, noise=0.006, seed=99, last21=-0.10)])["X"]
+    assert deep["lists"]["month"]["rank"] is None
+    assert "leader" in deep["lists"]["month"]["why_not"]
+
+
+def test_the_published_record_is_for_lists_that_do_not_share_names():
+    with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
+        study = json.load(f)
+    now = study["overlap"]["now"]
+    assert now["momentum / long"] == 0
+    assert now["distinct in all four"] > study["overlap"]["first version"]["distinct in all four"]
+
+
 # --- the recipes are the ones the study measured ----------------------------
 
 def test_every_mix_sums_to_one():
@@ -286,6 +352,43 @@ def test_the_long_term_list_leaves_out_a_loss_maker_and_the_others_do_not(quiet)
     assert any(top in n for n in ideas.select(p, horizon="long")["selection_notes"])
     if blocks[top]["lists"]["momentum"]["rank"] and blocks[top]["lists"]["momentum"]["rank"] <= 15:
         assert top in [r["symbol"] for r in ideas.select(p, horizon="momentum")["rows"]]
+
+
+def test_momentum_never_shows_a_stock_the_long_term_list_shows(quiet):
+    """The engine leaves out long term's top 15. The page can reach further
+    down long term (its sector cap and its fundamentals screen), so the page
+    checks what long term actually shows as well."""
+    blocks = leaders.rank(universe(120))
+    order = sorted((s for s in blocks if blocks[s]["lists"]["long"]["rank"]),
+                   key=lambda s: blocks[s]["lists"]["long"]["rank"])
+    p = scan_payload(blocks, sectors={s: "One sector" for s in order[:8]})
+    long_sel = ideas.select(p, horizon="long")
+    shown = {r["symbol"] for r in long_sel["rows"]}
+    assert any(blocks[s]["lists"]["long"]["rank"] > leaders.LIST_SIZE for s in shown), \
+        "the sector cap should have reached past long term's top 15"
+    mom = ideas.select(p, horizon="momentum")
+    assert len(mom["rows"]) == 15
+    assert not shown & {r["symbol"] for r in mom["rows"]}
+    assert mom["gives_way_to"] == "long"
+    assert any("long term list" in n for n in mom["selection_notes"])
+
+
+@pytest.mark.parametrize("stamp", ["an older recipe", None])
+def test_a_scan_ranked_with_an_earlier_recipe_does_not_print_this_recipes_record(quiet, stamp):
+    """After a deploy that changes a recipe, the scan on disk still has the old
+    ranks until the next scan. It answers, but without the new record."""
+    blocks = leaders.rank(universe())
+    for b in blocks.values():
+        if stamp is None:
+            b.pop("recipe")                  # ranked before blocks carried a stamp
+        else:
+            b["recipe"] = stamp
+    sel = ideas.select(scan_payload(blocks), horizon="month")
+    assert sel["method_key"] == "tested_lists" and len(sel["rows"]) == 15
+    assert sel["tested"] is None and sel["recipe_current"] is False
+    assert any("earlier recipe" in n for n in sel["selection_notes"])
+    fresh = ideas.select(scan_payload(leaders.rank(universe())), horizon="month")
+    assert fresh["recipe_current"] is True and fresh["tested"]
 
 
 def test_a_scan_from_before_the_lists_still_answers(quiet):

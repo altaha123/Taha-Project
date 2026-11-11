@@ -238,6 +238,7 @@ class Panel:
         self.mom_12_1 = C.shift(21) / C.shift(252) - 1
         self.mom_6_1 = C.shift(21) / C.shift(126) - 1
         self.ret_5 = C / C.shift(5) - 1
+        self.ret_21 = C / C.shift(21) - 1
         self.vol_252 = lr.rolling(252, min_periods=200).std() * np.sqrt(252)
         self.vol_60 = lr.rolling(60, min_periods=50).std() * np.sqrt(252)
         self.sma50 = C.rolling(50, min_periods=45).mean()
@@ -271,26 +272,69 @@ def pct(f, U):
     return f.where(U).rank(axis=1, pct=True)
 
 
-def recipes(P, U):
-    """The four lists, exactly as backend/leaders.py mixes them."""
+def recipes(P, U, shared=False):
+    """
+    The four lists, exactly as backend/leaders.py mixes them.
+
+    shared=True gives the first version (November 2026, before "one stock, one
+    list"): this month was three parts leader score and one part five-day dip,
+    and nothing gave way. Kept so the cost of separating the lists is measured
+    against what they replaced.
+    """
     m12, m6 = pct(P.mom_12_1 / P.vol_252, U), pct(P.mom_6_1 / P.vol_252, U)
     high, trend = pct(P.near_high, U), pct(P.trend_q, U)
     calm, dip = pct(-P.vol_252, U), pct(-P.ret_5, U)
+    dip21 = pct(-P.ret_21, U)
     leader = (m12 + m6 + high + trend) / 4
     up = (P.C > P.sma200) & (P.sma50 > P.sma200)
     ok = up & (calm >= 0.20)
+    month = ((0.75 * leader + 0.25 * dip).where(ok) if shared
+             else (0.5 * dip21 + 0.5 * high).where(ok & (leader >= 0.70)))
     return {"week": (0.5 * leader + 0.5 * dip).where(ok),
-            "month": (0.75 * leader + 0.25 * dip).where(ok),
+            "month": month,
             "momentum": leader.where(ok),
             "long": ((m12 + high + trend) / 3).where(ok)}
 
 
-def top_picks(score, U, dates, n=15):
+# A list that leaves out another list's top 15, as leaders.LISTS[...]["gives_way_to"].
+GIVES_WAY = {"momentum": "long"}
+
+
+def top_picks(score, U, dates, n=15, exclude=None):
+    """The top n on each date; `exclude` maps a date to names left out."""
     out = []
     for d in dates:
         s = score.loc[d].where(U.loc[d]).dropna()
+        if exclude and d in exclude:
+            s = s.drop(list(exclude[d] & set(s.index)))
         if len(s) >= n:
             out.append((d, list(s.nlargest(n).index)))
+    return out
+
+
+def list_picks(scores, U, dates, key, n=15, gives_way=GIVES_WAY):
+    """One list's picks, leaving out the top n of any list it gives way to."""
+    other = gives_way.get(key)
+    exclude = None
+    if other:
+        exclude = {d: set(names) for d, names in top_picks(scores[other], U, dates, n)}
+    return top_picks(scores[key], U, dates, n, exclude)
+
+
+def overlap(scores, U, dates, gives_way=GIVES_WAY, n=15):
+    """Names two lists share on the same date, out of n, and distinct names in all four."""
+    picks = {k: dict(list_picks(scores, U, dates, k, n, gives_way)) for k in LISTS}
+    common = set.intersection(*(set(v) for v in picks.values()))
+    out = {}
+    keys = list(LISTS)
+    for i, a in enumerate(keys):
+        for b in keys[i + 1:]:
+            out[f"{a} / {b}"] = round(float(np.mean(
+                [len(set(picks[a][d]) & set(picks[b][d])) for d in common])), 1)
+    out["distinct in all four"] = round(float(np.mean(
+        [len(set().union(*(set(picks[k][d]) for k in keys))) for d in common])), 1)
+    out["places"] = n * len(keys)
+    out["dates"] = len(common)
     return out
 
 
@@ -361,6 +405,44 @@ def describe(df):
         "exit_hit_pct": round(float(df["exited"].mean() * 100), 1),
         "lists_ahead_of_index_pct": round(float((per_date["ret"] > per_date["bench"]).mean() * 100), 1),
     }
+
+
+def newey_west_t(x, lags):
+    """Mean over its standard error, the error widened for overlapping holds."""
+    x = np.asarray(x, dtype=float)
+    x = x[np.isfinite(x)]
+    n = len(x)
+    if n < 10:
+        return None
+    e = x - x.mean()
+    s = (e @ e) / n
+    for k in range(1, lags + 1):
+        s += 2 * (1 - k / (lags + 1)) * (e[k:] @ e[:-k]) / n
+    return float(x.mean() / np.sqrt(max(s, 1e-18) / n))
+
+
+def vs_average_stock(P, U, df, hold):
+    """
+    Each list against the average liquid stock on the same dates, held the
+    same period: the bar that matters, because the Nifty 500 is weighted to
+    the largest companies and these lists are mostly not. The t-statistic is
+    over list dates, with Newey-West errors because lists five sessions apart
+    hold overlapping periods.
+    """
+    if not len(df):
+        return None
+    ew = (P.C.shift(-hold) / P.entry - 1).where(U).mean(axis=1)
+    per = df.groupby("date")["ret"].mean()
+    ex = (per - ew.reindex(per.index)).dropna()
+    lags = max(1, int(np.ceil(hold / 5)))
+
+    def one(e):
+        t = newey_west_t(e.values, lags)
+        return {"excess_pct": round(float(e.mean() * 100), 2),
+                "t": None if t is None else round(t, 2),
+                "lists_ahead_pct": round(float((e > 0).mean() * 100), 1)}
+    return {**one(ex), "by_half": {"2017-21": one(ex[ex.index < SPLIT]),
+                                   "2022-26": one(ex[ex.index >= SPLIT])}}
 
 
 def with_breakdowns(df):
@@ -455,6 +537,9 @@ def old_picks(P, base):
 # --------------------------------------------------------------------------
 
 LISTS = {"week": (5, 7.0), "month": (21, 12.0), "momentum": (63, 15.0), "long": (252, 30.0)}
+# Brokerage, STT, exchange charges, stamp duty, GST and a little slippage for
+# one buy and one sell of a delivery trade: the figure the Strategy lab uses.
+ROUND_TRIP_COST_PCT = 0.49
 
 
 def parity(P, U, scores):
@@ -480,8 +565,8 @@ def parity(P, U, scores):
             df["Volume"] = P.VAL[n].values[sl] / df["Close"]
             cands.append({"symbol": n, "leader_sig": leaders.signals(df)})
         blocks = leaders.rank(cands)
-        for key, sc in scores.items():
-            want = set(sc.loc[d].where(U.loc[d]).dropna().nlargest(15).index)
+        for key in scores:
+            want = set((list_picks(scores, U, [d], key) or [(d, [])])[0][1])
             got = {s for s, b in blocks.items() if (b["lists"][key]["rank"] or 99) <= 15}
             same += len(want & got)
             total += 15
@@ -506,15 +591,35 @@ def study():
         "rules": "Bought at the next session's open, held for the period, left on a close "
                  "under the exit line. Price returns before costs and tax. Index: Nifty 500.",
         "engine_parity": f"{same}/{total}",
+        "round_trip_cost_pct": ROUND_TRIP_COST_PCT,
         "lists": {}, "exits": {}, "before": {}, "score": {}, "factors": {},
+    }
+
+    # How many names the lists share, as run and as first built.
+    shared = recipes(P, U, shared=True)
+    every = P.C.index[262:-1:5]
+    result["overlap"] = {"now": overlap(scores, U, every),
+                         "first version": overlap(shared, U, every, gives_way={})}
+    print("overlap:", json.dumps(result["overlap"], indent=1))
+    result["first_version"] = {
+        "what": ("The lists as first built: this month was three parts leader score and one "
+                 "part five-day dip, and momentum did not give way to long term. Same dates, "
+                 "same rules."),
+        "lists": {},
     }
 
     for key, (hold, exit_pct) in LISTS.items():
         dates = P.C.index[262:-(hold + 1):5]
-        picks = top_picks(scores[key], U, dates)
-        rec = with_breakdowns(run_list(P, picks, hold, exit_pct))
-        rec.update(hold_sessions=hold, exit_pct=exit_pct)
+        picks = list_picks(scores, U, dates, key)
+        ran = run_list(P, picks, hold, exit_pct)
+        rec = with_breakdowns(ran)
+        rec.update(hold_sessions=hold, exit_pct=exit_pct,
+                   avg_after_costs_pct=round(rec["avg_pct"] - ROUND_TRIP_COST_PCT, 2),
+                   vs_average_stock=vs_average_stock(P, U, ran, hold))
         result["lists"][key] = rec
+        first = run_list(P, top_picks(shared[key], U, dates), hold, exit_pct)
+        result["first_version"]["lists"][key] = {**describe(first),
+                                                 "vs_average_stock": vs_average_stock(P, U, first, hold)}
         result["exits"][key] = {"no exit line": describe(run_list(P, picks, hold))}
         for alt in sorted({exit_pct / 2, exit_pct, exit_pct * 1.5}):
             result["exits"][key][f"close {alt:g}% under"] = describe(run_list(P, picks, hold, alt))
@@ -524,6 +629,13 @@ def study():
                 run_list(P, picks, hold, exit_pct, target_pct=exit_pct * mult))
         print(f"\n{key}: hold {hold}, exit {exit_pct}%")
         print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year",)}, indent=1))
+
+    # Momentum held six months instead of three: the same picks, a wider line.
+    dates = P.C.index[262:-(126 + 1):5]
+    result["momentum_six_months"] = {
+        "hold_sessions": 126, "exit_pct": 20.0,
+        **describe(run_list(P, list_picks(scores, U, dates, "momentum"), 126, 20.0))}
+    print("\nmomentum held six months:", json.dumps(result["momentum_six_months"], indent=1))
 
     # What a random pick did: the bar every list has to clear.
     rng = np.random.default_rng(7)
@@ -544,7 +656,7 @@ def study():
             "held_42_sessions_no_stop": describe(run_list(P, op, 42)),
             "held_63_sessions_no_stop": describe(run_list(P, op, 63)),
             "new_momentum_list_same_dates_stop_8pct": describe(run_list(
-                P, top_picks(scores["momentum"], U, [d for d, _ in op]), 42, 8.0, on_low=True)),
+                P, list_picks(scores, U, [d for d, _ in op], "momentum"), 42, 8.0, on_low=True)),
         }
         print("\nbefore:", json.dumps(result["before"], indent=1))
 

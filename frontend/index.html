@@ -3015,7 +3015,7 @@ async function loadIdeas(){
          reading before the list, so they are folded. */
       const why = d.selection_notes || [];
       $("pickhead").innerHTML = `<p class="pk-idea">${esc(d.idea||"")} <span>Hold ${esc(d.hold_text||"")}.</span></p>`
-        + PK.recordHTML(d) + PK.liveHTML(d)
+        + PK.recordHTML(d) + (PK.recipeHTML ? PK.recipeHTML(d) : "") + PK.liveHTML(d)
         + `<p class="pk-updated">${esc(PK.updatedText(d))}${d.universe ? ` · ${d.universe} stocks compared` : ""}${d.partial ? " · scan still running" : ""}</p>`
         + (why.length ? `<details class="pk-notes"><summary>${why.length} note${why.length>1?"s":""} on this list</summary><ul>`
             + why.map(n=>`<li>${esc(n)}</li>`).join("") + `</ul></details>` : "");

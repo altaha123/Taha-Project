@@ -46,7 +46,8 @@ const server = http.createServer((req, res) => {
 });
 
 /* mode: 'picks' (the four lists), 'legacy' (a scan from before them),
-   'down' (the API does not answer). */
+   'oldrecipe' (the lists, ranked before a recipe changed), 'down' (the API
+   does not answer). */
 async function open(browser, size, mode) {
   const context = await browser.newContext({ viewport: size, hasTouch: size.width < 600 });
   await context.addInitScript(() => localStorage.setItem('altaha-guide-dismissed', '1'));
@@ -61,6 +62,10 @@ async function open(browser, size, mode) {
       state.asked.push(h);
       if (state.mode === 'down') return route.abort();
       if (state.mode === 'legacy') return route.fulfill({ json: FIX.legacy, headers: cors });
+      if (state.mode === 'oldrecipe') {
+        return route.fulfill({ json: { ...(FIX[h] || FIX.month), tested: null, recipe_current: false },
+                               headers: cors });
+      }
       return route.fulfill({ json: FIX[h] || FIX.month, headers: cors });
     }
     if (u.pathname === '/scan/status') {
@@ -212,6 +217,22 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.deepEqual(state.errors, [], 'the page threw on an old scan');
   await context.close();
 
+  /* ── 4b · A scan ranked with an earlier recipe shows no record ────────── */
+  // After a deploy that changes a recipe, the scan on disk keeps its old ranks
+  // until the next one. The server sends no record; the page says why.
+
+  ({ context, page, state } = await open(browser, { width: 1280, height: 900 }, 'oldrecipe'));
+  await page.goto(url('#research'));
+  await page.locator('#dri-picks .pk-card').first().waitFor();
+  assert.equal(await page.locator('#dri-picks .pk-record').count(), 0, 'a record was printed beside an older recipe');
+  assert.match(await page.locator('#dri-picks .pk-body').innerText(), /previous recipe/);
+  await page.goto(url('#research/ideas'));
+  await page.locator('#idearows .idea').first().waitFor();
+  assert.equal(await page.locator('#pickhead .pk-record').count(), 0);
+  assert.match(await page.locator('#pickhead').innerText(), /previous recipe/);
+  assert.deepEqual(state.errors, [], 'the page threw on an older recipe');
+  await context.close();
+
   /* ── 5 · An API that does not answer says so ──────────────────────────── */
 
   ({ context, page, state } = await open(browser, { width: 1280, height: 900 }, 'down'));
@@ -255,7 +276,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
 
   await browser.close();
   server.close();
-  console.log('picks: door, tabs, full list, old scan, unreachable API and phone all hold');
+  console.log('picks: door, tabs, full list, old scan, older recipe, unreachable API and phone all hold');
 })().catch(err => {
   console.error(err && err.stack || err);
   console.log(`::error title=Stock picks::${String(err && err.message || err).split('\n')[0]}`);
