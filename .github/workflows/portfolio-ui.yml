@@ -98,6 +98,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/nav-products-browser.cjs
+      - name: Verify the stock picks lead Ideas, keep their exit line and fit a phone
+        if: always()
+        # Ideas answered "what should I look at?" with a picture of a planet.
+        # The first pick has to be on the first screen, above the scan, with
+        # its reasons and one exit price, and the record beside it has to be
+        # the study's own numbers. None of that throws when it breaks.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/picks-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

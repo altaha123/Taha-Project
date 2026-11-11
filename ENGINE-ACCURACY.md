@@ -2,6 +2,10 @@
 > The historical measurements below concern the previous engine and do not
 > establish v4 performance. IC is not directly convertible to a win rate.
 > No new predictive-accuracy claim is made by this change.
+>
+> **November 2026:** the Ideas list and the score's price pillars were measured
+> on ten years of NSE daily files and rebuilt from the result. See
+> [research/IDEAS-STUDY.md](research/IDEAS-STUDY.md).
 
 # Measuring the engine
 

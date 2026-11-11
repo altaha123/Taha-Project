@@ -294,13 +294,14 @@ def top_picks(score, U, dates, n=15):
     return out
 
 
-def run_list(P, picks, hold, exit_pct=None, on_low=False):
+def run_list(P, picks, hold, exit_pct=None, on_low=False, target_pct=None):
     """
     Hold each pick `hold` sessions from the next open. With `exit_pct`, leave
     at the first close that far under the entry (or, for the old method's
     stop, the first LOW through it, filled at the stop or a lower open).
+    With `target_pct`, sell at the first HIGH that far above the entry.
     """
-    Cn, On, Ln = P.C.values, P.O.values, P.L.values
+    Cn, On, Ln, Hn = P.C.values, P.O.values, P.L.values, P.H.values
     col = {n: i for i, n in enumerate(P.C.columns)}
     row = {d: i for i, d in enumerate(P.C.index)}
     recs = []
@@ -316,12 +317,17 @@ def run_list(P, picks, hold, exit_pct=None, on_low=False):
             if not np.isfinite(e) or e <= 0:
                 continue
             ret, out_early = None, False
-            if exit_pct:
-                line = e * (1 - exit_pct / 100.0)
+            if exit_pct or target_pct:
+                line = e * (1 - exit_pct / 100.0) if exit_pct else -1.0
+                goal = e * (1 + target_pct / 100.0) if target_pct else None
                 for k in range(i + 1, last + 1):
                     c = Cn[k, j]
                     if not np.isfinite(c):
                         continue
+                    if goal and Hn[k, j] >= goal:
+                        ret = (max(On[k, j], goal) if k > i + 1 else goal) / e - 1
+                        out_early = True
+                        break
                     if on_low and Ln[k, j] <= line:
                         ret = (min(On[k, j], line) if k > i + 1 else line) / e - 1
                         out_early = True
@@ -512,6 +518,10 @@ def study():
         result["exits"][key] = {"no exit line": describe(run_list(P, picks, hold))}
         for alt in sorted({exit_pct / 2, exit_pct, exit_pct * 1.5}):
             result["exits"][key][f"close {alt:g}% under"] = describe(run_list(P, picks, hold, alt))
+        # A target as far above as the exit line is below, and one twice as far.
+        for mult in (1, 2):
+            result["exits"][key][f"close {exit_pct:g}% under, target {exit_pct * mult:g}% over"] = describe(
+                run_list(P, picks, hold, exit_pct, target_pct=exit_pct * mult))
         print(f"\n{key}: hold {hold}, exit {exit_pct}%")
         print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year",)}, indent=1))
 

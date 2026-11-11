@@ -10,7 +10,7 @@ session from 2016 to 2026, delisted companies included:
 
   1. THE STOP. Every plan carried an 8% stop and a target at the nearest
      resistance, often closer than the stop. Replayed over ten years, the old
-     list's stop was hit on 54% of its picks: 39% ended up, against 56% of the
+     list's stop was hit on 57% of its picks: 38% ended up, against 54% of the
      very same picks simply held. This was the largest single cause.
   2. THE ORDER. Rows were ordered by a score that leaned on "fell last week"
      and "unusual volume". Over ten years the first carried almost no

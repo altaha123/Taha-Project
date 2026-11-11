@@ -1,0 +1,5255 @@
+{
+"week":{
+"available":true,
+"degraded":[],
+"method_key":"tested_lists",
+"list":"week",
+"horizon":"week",
+"label":"This week",
+"idea":"Strong stocks that fell this week.",
+"hold_text":"about a week",
+"exit_pct":7.0,
+"tested":{
+"list_dates":483,
+"picks":7243,
+"up_pct":52.3,
+"beat_index_pct":49.0,
+"avg_pct":0.42,
+"median_pct":0.26,
+"index_avg_pct":0.27,
+"worst_5pct":-8.2,
+"best_5pct":9.1,
+"exit_hit_pct":9.0,
+"lists_ahead_of_index_pct":52.4,
+"by_half":{
+"2017-21":{
+"list_dates":244,
+"picks":3658,
+"up_pct":53.5,
+"beat_index_pct":48.8,
+"avg_pct":0.55,
+"median_pct":0.37,
+"index_avg_pct":0.33,
+"worst_5pct":-7.8,
+"best_5pct":8.7,
+"exit_hit_pct":7.4,
+"lists_ahead_of_index_pct":51.2
+},
+"2022-26":{
+"list_dates":239,
+"picks":3585,
+"up_pct":51.2,
+"beat_index_pct":49.2,
+"avg_pct":0.3,
+"median_pct":0.09,
+"index_avg_pct":0.2,
+"worst_5pct":-8.6,
+"best_5pct":9.5,
+"exit_hit_pct":10.7,
+"lists_ahead_of_index_pct":53.6
+}
+},
+"hold_sessions":5,
+"exit_pct":7.0
+},
+"study":{
+"generated":"2026-11-11",
+"source":"NSE daily bhavcopy, every session, delisted companies included",
+"from":"2017-01-24",
+"to":"2026-11-09",
+"sessions":2679,
+"companies":3276,
+"universe":"NSE stocks trading Rs 10 crore a day or more, priced Rs 20 or more",
+"universe_median":386,
+"rules":"Bought at the next session's open, held for the period, left on a close under the exit line. Price returns before costs and tax. Index: Nifty 500."
+},
+"scanned_at":"09 Nov 2026, 11:30",
+"partial":false,
+"scored":200,
+"universe_source":"NSE official list (2393 EQ-series symbols)",
+"universe":721,
+"regime":{
+"ok":true,
+"stance":"Tailwind",
+"pct_vs_50dma":3.1,
+"pct_vs_200dma":4.5,
+"change_5d_pct":1.2,
+"label":"Index above its 50-day average.",
+"benchmark":"NIFTYBEES",
+"source":"test"
+},
+"sector_mix":[
+[
+"Unknown",
+10
+],
+[
+"Capital Goods",
+3
+],
+[
+"Power",
+1
+],
+[
+"Information Technology",
+1
+]
+],
+"sector_cap":4,
+"selection_notes":[],
+"excluded_adverse":[],
+"count":15,
+"considered":46,
+"method":"Every liquid NSE stock is ranked on the measurements in the ledger. The list is the top of that ranking after the uptrend and volatility gates. Tested on NSE prices from 2017 to 2026.",
+"live":null,
+"disclaimer":"Educational analysis. Not investment advice.",
+"staleness":{
+"days":1,
+"hours":30.0,
+"warn":false,
+"text":"Scanned 1 day ago."
+},
+"market_context":null,
+"rows":[
+{
+"symbol":"LOTUSDEV",
+"name":"Sri Lotus Developers and Realty Limited",
+"sector":null,
+"price":224.14,
+"avg_turnover_cr":19.2,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":1,
+"conviction":90.7,
+"conviction_band":"High",
+"why":[
+"Fell 10% this week",
+"Up 22% in a year",
+"11% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":8.6,
+"of":12.5,
+"share_pct":69,
+"detail":"21.9% over 12 months, at 45.7% yearly volatility. Ahead of 69% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.6,
+"of":12.5,
+"share_pct":93,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 93% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":9.5,
+"of":12.5,
+"share_pct":76,
+"detail":"11.2% below its 52-week high. Ahead of 76% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":12.2,
+"of":12.5,
+"share_pct":98,
+"detail":"Straightness 84.0/100 over 90 sessions. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":48.5,
+"of":50.0,
+"share_pct":97,
+"detail":"-9.6% over the last five sessions. Ahead of 97% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":224.14,
+"stop":208.45,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹208.45, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":59.0,
+"technical":75,
+"fundamental":74,
+"f_score":5,
+"setup_fit":85,
+"call":null,
+"news":[]
+},
+{
+"symbol":"WELCORP",
+"name":"Welspun Corp Limited",
+"sector":"Capital Goods",
+"price":2202.1,
+"avg_turnover_cr":369.6,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":2,
+"conviction":88.0,
+"conviction_band":"High",
+"why":[
+"Fell 5% this week",
+"Up 138% in a year",
+"24% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":12.2,
+"of":12.5,
+"share_pct":98,
+"detail":"137.8% over 12 months, at 46.1% yearly volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":12.2,
+"of":12.5,
+"share_pct":98,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":4.9,
+"of":12.5,
+"share_pct":39,
+"detail":"24.1% below its 52-week high. Ahead of 39% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":11.8,
+"of":12.5,
+"share_pct":94,
+"detail":"Straightness 70.0/100 over 90 sessions. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":47.0,
+"of":50.0,
+"share_pct":94,
+"detail":"-4.9% over the last five sessions. Ahead of 94% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2202.1,
+"stop":2047.95,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹2,047.95, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":67.0,
+"technical":92,
+"fundamental":58,
+"f_score":6,
+"setup_fit":81,
+"call":null,
+"news":[]
+},
+{
+"symbol":"THELEELA",
+"name":"Leela Palaces Hotels & Resorts Limited",
+"sector":null,
+"price":660.25,
+"avg_turnover_cr":25.4,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":3,
+"conviction":87.6,
+"conviction_band":"High",
+"why":[
+"Fell 2% this week",
+"Up 51% in a year",
+"7% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":9.9,
+"of":12.5,
+"share_pct":79,
+"detail":"51.3% over 12 months, at 32.8% yearly volatility. Ahead of 79% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.4,
+"of":12.5,
+"share_pct":91,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 91% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":10.8,
+"of":12.5,
+"share_pct":86,
+"detail":"6.6% below its 52-week high. Ahead of 86% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":12.2,
+"of":12.5,
+"share_pct":98,
+"detail":"Straightness 84.0/100 over 90 sessions. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":43.5,
+"of":50.0,
+"share_pct":87,
+"detail":"-1.6% over the last five sessions. Ahead of 87% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":660.25,
+"stop":614.03,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹614.03, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":75.0,
+"technical":94,
+"fundamental":77,
+"f_score":7,
+"setup_fit":72,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SHREEJISPG",
+"name":"Shreeji Shipping Global Limited",
+"sector":null,
+"price":881.3,
+"avg_turnover_cr":76.9,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":4,
+"conviction":86.7,
+"conviction_band":"High",
+"why":[
+"Up 232% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":12.4,
+"of":12.5,
+"share_pct":99,
+"detail":"232.4% over 12 months, at 42.3% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":12.2,
+"of":12.5,
+"share_pct":98,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":11.9,
+"of":12.5,
+"share_pct":95,
+"detail":"2.0% below its 52-week high. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":12.5,
+"of":12.5,
+"share_pct":100,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":37.5,
+"of":50.0,
+"share_pct":75,
+"detail":"0.9% over the last five sessions. Ahead of 75% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":881.3,
+"stop":819.61,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹819.61, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":75,
+"fundamental":58,
+"f_score":7,
+"setup_fit":71,
+"call":null,
+"news":[]
+},
+{
+"symbol":"NRBBEARING",
+"name":"NRB Bearing Limited",
+"sector":null,
+"price":433.55,
+"avg_turnover_cr":16.9,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":5,
+"conviction":86.4,
+"conviction_band":"High",
+"why":[
+"Fell 8% this week",
+"Up 59% in a year",
+"23% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":11.6,
+"of":12.5,
+"share_pct":93,
+"detail":"59.4% over 12 months, at 43.3% yearly volatility. Ahead of 93% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.8,
+"of":12.5,
+"share_pct":94,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":5.4,
+"of":12.5,
+"share_pct":43,
+"detail":"22.6% below its 52-week high. Ahead of 43% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":9.8,
+"of":12.5,
+"share_pct":78,
+"detail":"Straightness 33.0/100 over 90 sessions. Ahead of 78% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":48.0,
+"of":50.0,
+"share_pct":96,
+"detail":"-7.5% over the last five sessions. Ahead of 96% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":433.55,
+"stop":403.2,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹403.20, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":60.0,
+"technical":87,
+"fundamental":79,
+"f_score":6,
+"setup_fit":84,
+"call":null,
+"news":[]
+},
+{
+"symbol":"PAISALO",
+"name":"Paisalo Digital Limited",
+"sector":null,
+"price":76.94,
+"avg_turnover_cr":67.2,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":6,
+"conviction":86.2,
+"conviction_band":"High",
+"why":[
+"Fell 3% this week",
+"Up 101% in a year",
+"19% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":12.0,
+"of":12.5,
+"share_pct":96,
+"detail":"100.7% over 12 months, at 43.1% yearly volatility. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.9,
+"of":12.5,
+"share_pct":95,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":6.9,
+"of":12.5,
+"share_pct":55,
+"detail":"18.9% below its 52-week high. Ahead of 55% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":10.0,
+"of":12.5,
+"share_pct":80,
+"detail":"Straightness 36.0/100 over 90 sessions. Ahead of 80% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":45.5,
+"of":50.0,
+"share_pct":91,
+"detail":"-3.0% over the last five sessions. Ahead of 91% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":76.94,
+"stop":71.55,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹71.55, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":79.0,
+"technical":93,
+"fundamental":73,
+"f_score":5,
+"setup_fit":81,
+"call":null,
+"news":[]
+},
+{
+"symbol":"WSTCSTPAPR",
+"name":"West Coast Paper Mills Limited",
+"sector":null,
+"price":704.3,
+"avg_turnover_cr":19.2,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":7,
+"conviction":86.0,
+"conviction_band":"High",
+"why":[
+"Fell 13% this week",
+"Up 54% in a year",
+"28% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":10.1,
+"of":12.5,
+"share_pct":81,
+"detail":"54.5% over 12 months, at 48.2% yearly volatility. Ahead of 81% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":10.4,
+"of":12.5,
+"share_pct":83,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 83% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":3.8,
+"of":12.5,
+"share_pct":30,
+"detail":"28.0% below its 52-week high. Ahead of 30% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":12.5,
+"of":12.5,
+"share_pct":100,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":49.5,
+"of":50.0,
+"share_pct":99,
+"detail":"-13.2% over the last five sessions. Ahead of 99% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":704.3,
+"stop":655.0,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹655.00, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":69.0,
+"technical":89,
+"fundamental":49,
+"f_score":7,
+"setup_fit":73,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SYRMA",
+"name":"Syrma SGS Technology Limited",
+"sector":"Capital Goods",
+"price":1462.0,
+"avg_turnover_cr":175.5,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":8,
+"conviction":85.9,
+"conviction_band":"High",
+"why":[
+"Fell 3% this week",
+"Up 78% in a year",
+"20% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":11.9,
+"of":12.5,
+"share_pct":95,
+"detail":"77.6% over 12 months, at 45.4% yearly volatility. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.4,
+"of":12.5,
+"share_pct":91,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 91% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":6.5,
+"of":12.5,
+"share_pct":52,
+"detail":"19.8% below its 52-week high. Ahead of 52% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":10.5,
+"of":12.5,
+"share_pct":84,
+"detail":"Straightness 45.0/100 over 90 sessions. Ahead of 84% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":45.5,
+"of":50.0,
+"share_pct":91,
+"detail":"-3.3% over the last five sessions. Ahead of 91% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1462.0,
+"stop":1359.66,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹1,359.66, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":78.0,
+"technical":75,
+"fundamental":78,
+"f_score":8,
+"setup_fit":70,
+"call":null,
+"news":[]
+},
+{
+"symbol":"ACMESOLAR",
+"name":"Acme Solar Holdings Limited",
+"sector":"Power",
+"price":407.25,
+"avg_turnover_cr":45.8,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":9,
+"conviction":85.4,
+"conviction_band":"High",
+"why":[
+"Fell 3% this week",
+"Up 41% in a year",
+"15% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":10.1,
+"of":12.5,
+"share_pct":81,
+"detail":"41.1% over 12 months, at 39.4% yearly volatility. Ahead of 81% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.5,
+"of":12.5,
+"share_pct":92,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":8.6,
+"of":12.5,
+"share_pct":69,
+"detail":"14.6% below its 52-week high. Ahead of 69% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":10.4,
+"of":12.5,
+"share_pct":83,
+"detail":"Straightness 45.0/100 over 90 sessions. Ahead of 83% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":45.0,
+"of":50.0,
+"share_pct":90,
+"detail":"-2.7% over the last five sessions. Ahead of 90% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":407.25,
+"stop":378.74,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹378.74, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":57.0,
+"technical":78,
+"fundamental":54,
+"f_score":5,
+"setup_fit":86,
+"call":null,
+"news":[]
+},
+{
+"symbol":"DEEPINDS",
+"name":"Deep Industries Limited",
+"sector":null,
+"price":650.0,
+"avg_turnover_cr":20.3,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":10,
+"conviction":85.2,
+"conviction_band":"High",
+"why":[
+"Fell 4% this week",
+"Up 38% in a year",
+"21% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":10.4,
+"of":12.5,
+"share_pct":83,
+"detail":"37.9% over 12 months, at 48.6% yearly volatility. Ahead of 83% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.8,
+"of":12.5,
+"share_pct":94,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":5.9,
+"of":12.5,
+"share_pct":47,
+"detail":"21.2% below its 52-week high. Ahead of 47% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":10.9,
+"of":12.5,
+"share_pct":87,
+"detail":"Straightness 54.0/100 over 90 sessions. Ahead of 87% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":46.5,
+"of":50.0,
+"share_pct":93,
+"detail":"-3.9% over the last five sessions. Ahead of 93% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":650.0,
+"stop":604.5,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹604.50, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":74.0,
+"technical":84,
+"fundamental":46,
+"f_score":6,
+"setup_fit":73,
+"call":null,
+"news":[]
+},
+{
+"symbol":"RPTECH",
+"name":"Rashi Peripherals Limited",
+"sector":null,
+"price":672.55,
+"avg_turnover_cr":23.1,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":11,
+"conviction":84.9,
+"conviction_band":"Moderate",
+"why":[
+"Fell 15% this week",
+"Up 104% in a year",
+"33% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":12.2,
+"of":12.5,
+"share_pct":98,
+"detail":"103.9% over 12 months, at 48.9% yearly volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.8,
+"of":12.5,
+"share_pct":94,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":2.5,
+"of":12.5,
+"share_pct":20,
+"detail":"33.1% below its 52-week high. Ahead of 20% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":8.8,
+"of":12.5,
+"share_pct":70,
+"detail":"Straightness 12.0/100 over 90 sessions. Ahead of 70% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":49.5,
+"of":50.0,
+"share_pct":99,
+"detail":"-14.6% over the last five sessions. Ahead of 99% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":672.55,
+"stop":625.47,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹625.47, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":71.0,
+"technical":87,
+"fundamental":59,
+"f_score":5,
+"setup_fit":75,
+"call":null,
+"news":[]
+},
+{
+"symbol":"MARKSANS",
+"name":"Marksans Pharma Limited",
+"sector":null,
+"price":308.75,
+"avg_turnover_cr":56.0,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":12,
+"conviction":84.5,
+"conviction_band":"Moderate",
+"why":[
+"Fell 1% this week",
+"Up 68% in a year",
+"12% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":10.9,
+"of":12.5,
+"share_pct":87,
+"detail":"68.3% over 12 months, at 43.5% yearly volatility. Ahead of 87% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":11.6,
+"of":12.5,
+"share_pct":93,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 93% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":9.2,
+"of":12.5,
+"share_pct":74,
+"detail":"12.0% below its 52-week high. Ahead of 74% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":10.2,
+"of":12.5,
+"share_pct":82,
+"detail":"Straightness 40.0/100 over 90 sessions. Ahead of 82% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":42.5,
+"of":50.0,
+"share_pct":85,
+"detail":"-1.1% over the last five sessions. Ahead of 85% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":308.75,
+"stop":287.14,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹287.14, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":69.0,
+"technical":93,
+"fundamental":81,
+"f_score":6,
+"setup_fit":76,
+"call":null,
+"news":[]
+},
+{
+"symbol":"COFORGE",
+"name":"Coforge Limited",
+"sector":"Information Technology",
+"price":2047.0,
+"avg_turnover_cr":377.0,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":13,
+"conviction":84.5,
+"conviction_band":"Moderate",
+"why":[
+"Fell 2% this week",
+"Up 13% in a year",
+"4% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":6.4,
+"of":12.5,
+"share_pct":51,
+"detail":"13.2% over 12 months, at 39.0% yearly volatility. Ahead of 51% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":10.6,
+"of":12.5,
+"share_pct":85,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 85% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":11.4,
+"of":12.5,
+"share_pct":91,
+"detail":"3.8% below its 52-week high. Ahead of 91% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":11.6,
+"of":12.5,
+"share_pct":93,
+"detail":"Straightness 68.0/100 over 90 sessions. Ahead of 93% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":44.5,
+"of":50.0,
+"share_pct":89,
+"detail":"-2.5% over the last five sessions. Ahead of 89% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2047.0,
+"stop":1903.71,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹1,903.71, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":72.0,
+"technical":92,
+"fundamental":56,
+"f_score":8,
+"setup_fit":83,
+"call":null,
+"news":[]
+},
+{
+"symbol":"APARINDS",
+"name":"Apar Industries Limited",
+"sector":"Capital Goods",
+"price":14205.0,
+"avg_turnover_cr":224.8,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":14,
+"conviction":84.1,
+"conviction_band":"Moderate",
+"why":[
+"Fell 10% this week",
+"Up 54% in a year",
+"26% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":11.4,
+"of":12.5,
+"share_pct":91,
+"detail":"53.5% over 12 months, at 47.8% yearly volatility. Ahead of 91% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":10.5,
+"of":12.5,
+"share_pct":84,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 84% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":4.2,
+"of":12.5,
+"share_pct":34,
+"detail":"26.3% below its 52-week high. Ahead of 34% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":9.2,
+"of":12.5,
+"share_pct":74,
+"detail":"Straightness 21.0/100 over 90 sessions. Ahead of 74% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":48.5,
+"of":50.0,
+"share_pct":97,
+"detail":"-9.6% over the last five sessions. Ahead of 97% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":14205.0,
+"stop":13210.65,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹13,210.65, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":66.0,
+"technical":80,
+"fundamental":51,
+"f_score":7,
+"setup_fit":82,
+"call":null,
+"news":[]
+},
+{
+"symbol":"GCSL",
+"name":"Gretex Corporate Services Limited",
+"sector":null,
+"price":784.6,
+"avg_turnover_cr":27.2,
+"list":"week",
+"setup":"Week pick",
+"setup_key":"pick_week",
+"horizon":"about a week",
+"pick_rank":15,
+"conviction":83.3,
+"conviction_band":"Moderate",
+"why":[
+"Up 242% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":12.4,
+"of":12.5,
+"share_pct":99,
+"detail":"242.2% over 12 months, at 44.1% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":12.1,
+"of":12.5,
+"share_pct":97,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":12.1,
+"of":12.5,
+"share_pct":97,
+"detail":"1.6% below its 52-week high. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":12.4,
+"of":12.5,
+"share_pct":99,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":34.5,
+"of":50.0,
+"share_pct":69,
+"detail":"1.8% over the last five sessions. Ahead of 69% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":784.6,
+"stop":729.68,
+"risk_pct":7.0,
+"rr":null,
+"t1":null,
+"hold_sessions":5,
+"hold_text":"about a week",
+"review_on":"2026-11-16",
+"note":"Hold about a week. Leave if it closes below ₹729.68, 7% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":60.0,
+"technical":82,
+"fundamental":78,
+"f_score":8,
+"setup_fit":83,
+"call":null,
+"news":[]
+}
+]
+},
+"month":{
+"available":true,
+"degraded":[],
+"method_key":"tested_lists",
+"list":"month",
+"horizon":"month",
+"label":"This month",
+"idea":"Market leaders, with a tilt to the ones that just dipped.",
+"hold_text":"about a month",
+"exit_pct":12.0,
+"tested":{
+"list_dates":479,
+"picks":7177,
+"up_pct":54.7,
+"beat_index_pct":49.7,
+"avg_pct":1.98,
+"median_pct":1.0,
+"index_avg_pct":1.08,
+"worst_5pct":-13.8,
+"best_5pct":21.3,
+"exit_hit_pct":13.9,
+"lists_ahead_of_index_pct":58.5,
+"by_half":{
+"2017-21":{
+"list_dates":244,
+"picks":3652,
+"up_pct":56.8,
+"beat_index_pct":50.1,
+"avg_pct":2.6,
+"median_pct":1.47,
+"index_avg_pct":1.46,
+"worst_5pct":-13.4,
+"best_5pct":21.9,
+"exit_hit_pct":11.0,
+"lists_ahead_of_index_pct":56.6
+},
+"2022-26":{
+"list_dates":235,
+"picks":3525,
+"up_pct":52.5,
+"beat_index_pct":49.4,
+"avg_pct":1.34,
+"median_pct":0.52,
+"index_avg_pct":0.69,
+"worst_5pct":-14.1,
+"best_5pct":21.0,
+"exit_hit_pct":16.9,
+"lists_ahead_of_index_pct":60.4
+}
+},
+"hold_sessions":21,
+"exit_pct":12.0
+},
+"study":{
+"generated":"2026-11-11",
+"source":"NSE daily bhavcopy, every session, delisted companies included",
+"from":"2017-01-24",
+"to":"2026-11-09",
+"sessions":2679,
+"companies":3276,
+"universe":"NSE stocks trading Rs 10 crore a day or more, priced Rs 20 or more",
+"universe_median":386,
+"rules":"Bought at the next session's open, held for the period, left on a close under the exit line. Price returns before costs and tax. Index: Nifty 500."
+},
+"scanned_at":"09 Nov 2026, 11:30",
+"partial":false,
+"scored":200,
+"universe_source":"NSE official list (2393 EQ-series symbols)",
+"universe":721,
+"regime":{
+"ok":true,
+"stance":"Tailwind",
+"pct_vs_50dma":3.1,
+"pct_vs_200dma":4.5,
+"change_5d_pct":1.2,
+"label":"Index above its 50-day average.",
+"benchmark":"NIFTYBEES",
+"source":"test"
+},
+"sector_mix":[
+[
+"Unknown",
+9
+],
+[
+"Capital Goods",
+2
+],
+[
+"Healthcare",
+2
+],
+[
+"Automobile and Auto Components",
+1
+],
+[
+"Power",
+1
+]
+],
+"sector_cap":4,
+"selection_notes":[],
+"excluded_adverse":[],
+"count":15,
+"considered":46,
+"method":"Every liquid NSE stock is ranked on the measurements in the ledger. The list is the top of that ranking after the uptrend and volatility gates. Tested on NSE prices from 2017 to 2026.",
+"live":{
+"calls":21,
+"closed":8,
+"closed_up":5,
+"closed_avg_pct":2.4,
+"open":13,
+"open_up":7,
+"since":"2026-11-09"
+},
+"disclaimer":"Educational analysis. Not investment advice.",
+"staleness":{
+"days":1,
+"hours":30.0,
+"warn":false,
+"text":"Scanned 1 day ago."
+},
+"market_context":null,
+"rows":[
+{
+"symbol":"SHREEJISPG",
+"name":"Shreeji Shipping Global Limited",
+"sector":null,
+"price":881.3,
+"avg_turnover_cr":76.9,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":1,
+"conviction":92.3,
+"conviction_band":"High",
+"why":[
+"Up 232% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"232.4% over 12 months, at 42.3% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":18.4,
+"of":18.8,
+"share_pct":98,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":17.8,
+"of":18.8,
+"share_pct":95,
+"detail":"2.0% below its 52-week high. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":18.8,
+"of":18.8,
+"share_pct":100,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":18.8,
+"of":25.0,
+"share_pct":75,
+"detail":"0.9% over the last five sessions. Ahead of 75% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":881.3,
+"stop":775.54,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹775.54, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":75,
+"fundamental":58,
+"f_score":7,
+"setup_fit":71,
+"call":null,
+"news":[]
+},
+{
+"symbol":"GCSL",
+"name":"Gretex Corporate Services Limited",
+"sector":null,
+"price":784.6,
+"avg_turnover_cr":27.2,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":2,
+"conviction":90.7,
+"conviction_band":"High",
+"why":[
+"Up 242% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"242.2% over 12 months, at 44.1% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":18.2,
+"of":18.8,
+"share_pct":97,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":18.2,
+"of":18.8,
+"share_pct":97,
+"detail":"1.6% below its 52-week high. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":17.2,
+"of":25.0,
+"share_pct":69,
+"detail":"1.8% over the last five sessions. Ahead of 69% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":784.6,
+"stop":690.45,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹690.45, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":60.0,
+"technical":82,
+"fundamental":78,
+"f_score":8,
+"setup_fit":83,
+"call":null,
+"news":[]
+},
+{
+"symbol":"THELEELA",
+"name":"Leela Palaces Hotels & Resorts Limited",
+"sector":null,
+"price":660.25,
+"avg_turnover_cr":25.4,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":3,
+"conviction":88.0,
+"conviction_band":"High",
+"why":[
+"Fell 2% this week",
+"Up 51% in a year",
+"7% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":14.8,
+"of":18.8,
+"share_pct":79,
+"detail":"51.3% over 12 months, at 32.8% yearly volatility. Ahead of 79% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":17.1,
+"of":18.8,
+"share_pct":91,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 91% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":16.1,
+"of":18.8,
+"share_pct":86,
+"detail":"6.6% below its 52-week high. Ahead of 86% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":18.4,
+"of":18.8,
+"share_pct":98,
+"detail":"Straightness 84.0/100 over 90 sessions. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":21.8,
+"of":25.0,
+"share_pct":87,
+"detail":"-1.6% over the last five sessions. Ahead of 87% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":660.25,
+"stop":581.02,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹581.02, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":75.0,
+"technical":94,
+"fundamental":77,
+"f_score":7,
+"setup_fit":72,
+"call":null,
+"news":[]
+},
+{
+"symbol":"LOTUSDEV",
+"name":"Sri Lotus Developers and Realty Limited",
+"sector":null,
+"price":224.14,
+"avg_turnover_cr":19.2,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":4,
+"conviction":87.3,
+"conviction_band":"High",
+"why":[
+"Fell 10% this week",
+"Up 22% in a year",
+"11% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":12.9,
+"of":18.8,
+"share_pct":69,
+"detail":"21.9% over 12 months, at 45.7% yearly volatility. Ahead of 69% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":17.4,
+"of":18.8,
+"share_pct":93,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 93% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":14.2,
+"of":18.8,
+"share_pct":76,
+"detail":"11.2% below its 52-week high. Ahead of 76% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":18.4,
+"of":18.8,
+"share_pct":98,
+"detail":"Straightness 84.0/100 over 90 sessions. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"-9.6% over the last five sessions. Ahead of 97% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":224.14,
+"stop":197.24,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹197.24, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":59.0,
+"technical":75,
+"fundamental":74,
+"f_score":5,
+"setup_fit":85,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SONACOMS",
+"name":"Sona BLW Precision Forgings Limited",
+"sector":"Automobile and Auto Components",
+"price":924.0,
+"avg_turnover_cr":159.7,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":5,
+"conviction":86.7,
+"conviction_band":"High",
+"why":[
+"Up 91% in a year",
+"At its 52-week high",
+"A steady climb",
+"Calmer than 7 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":17.2,
+"of":18.8,
+"share_pct":92,
+"detail":"91.3% over 12 months, at 32.1% yearly volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":16.9,
+"of":18.8,
+"share_pct":90,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 90% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":18.8,
+"of":18.8,
+"share_pct":100,
+"detail":"0.0% below its 52-week high. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":17.1,
+"of":18.8,
+"share_pct":91,
+"detail":"Straightness 63.0/100 over 90 sessions. Ahead of 91% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":16.8,
+"of":25.0,
+"share_pct":67,
+"detail":"2.0% over the last five sessions. Ahead of 67% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":924.0,
+"stop":813.12,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹813.12, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":67.0,
+"technical":76,
+"fundamental":48,
+"f_score":6,
+"setup_fit":79,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SHILPAMED",
+"name":"Shilpa Medicare Limited",
+"sector":null,
+"price":933.85,
+"avg_turnover_cr":74.1,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":6,
+"conviction":86.2,
+"conviction_band":"High",
+"why":[
+"Up 159% in a year",
+"15% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"158.8% over 12 months, at 43.1% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":12.8,
+"of":18.8,
+"share_pct":68,
+"detail":"14.7% below its 52-week high. Ahead of 68% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":17.6,
+"of":18.8,
+"share_pct":94,
+"detail":"Straightness 70.0/100 over 90 sessions. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":18.5,
+"of":25.0,
+"share_pct":74,
+"detail":"1.0% over the last five sessions. Ahead of 74% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":933.85,
+"stop":821.79,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹821.79, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":94,
+"fundamental":60,
+"f_score":6,
+"setup_fit":83,
+"call":null,
+"news":[]
+},
+{
+"symbol":"PTCIL",
+"name":"PTC Industries Limited",
+"sector":"Capital Goods",
+"price":24745.0,
+"avg_turnover_cr":56.3,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":7,
+"conviction":85.4,
+"conviction_band":"High",
+"why":[
+"Up 45% in a year",
+"5% below its 52-week high",
+"A steady climb",
+"Calmer than 5 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":15.2,
+"of":18.8,
+"share_pct":81,
+"detail":"45.3% over 12 months, at 36.9% yearly volatility. Ahead of 81% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":17.2,
+"of":18.8,
+"share_pct":92,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":16.7,
+"of":18.8,
+"share_pct":89,
+"detail":"5.1% below its 52-week high. Ahead of 89% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"Straightness 88.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":17.8,
+"of":25.0,
+"share_pct":71,
+"detail":"1.5% over the last five sessions. Ahead of 71% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":24745.0,
+"stop":21775.6,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹21,775.60, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":68.0,
+"technical":93,
+"fundamental":73,
+"f_score":8,
+"setup_fit":84,
+"call":null,
+"news":[]
+},
+{
+"symbol":"LAURUSLABS",
+"name":"Laurus Labs Limited",
+"sector":"Healthcare",
+"price":2454.0,
+"avg_turnover_cr":313.8,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":8,
+"conviction":85.4,
+"conviction_band":"High",
+"why":[
+"Up 153% in a year",
+"1% below its 52-week high",
+"A steady climb",
+"Calmer than 7 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":18.4,
+"of":18.8,
+"share_pct":98,
+"detail":"152.9% over 12 months, at 30.4% yearly volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":18.2,
+"of":18.8,
+"share_pct":97,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":18.4,
+"of":18.8,
+"share_pct":98,
+"detail":"1.0% below its 52-week high. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"Straightness 89.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":12.0,
+"of":25.0,
+"share_pct":48,
+"detail":"4.5% over the last five sessions. Ahead of 48% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2454.0,
+"stop":2159.52,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹2,159.52, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":77,
+"fundamental":69,
+"f_score":8,
+"setup_fit":77,
+"call":null,
+"news":[]
+},
+{
+"symbol":"WELCORP",
+"name":"Welspun Corp Limited",
+"sector":"Capital Goods",
+"price":2202.1,
+"avg_turnover_cr":369.6,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":9,
+"conviction":85.1,
+"conviction_band":"High",
+"why":[
+"Fell 5% this week",
+"Up 138% in a year",
+"24% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":18.4,
+"of":18.8,
+"share_pct":98,
+"detail":"137.8% over 12 months, at 46.1% yearly volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":18.4,
+"of":18.8,
+"share_pct":98,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":7.3,
+"of":18.8,
+"share_pct":39,
+"detail":"24.1% below its 52-week high. Ahead of 39% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":17.6,
+"of":18.8,
+"share_pct":94,
+"detail":"Straightness 70.0/100 over 90 sessions. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":23.5,
+"of":25.0,
+"share_pct":94,
+"detail":"-4.9% over the last five sessions. Ahead of 94% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2202.1,
+"stop":1937.85,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹1,937.85, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":67.0,
+"technical":92,
+"fundamental":58,
+"f_score":6,
+"setup_fit":81,
+"call":null,
+"news":[]
+},
+{
+"symbol":"IPCALAB",
+"name":"IPCA Laboratories Limited",
+"sector":"Healthcare",
+"price":1959.7,
+"avg_turnover_cr":50.5,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":10,
+"conviction":85.0,
+"conviction_band":"High",
+"why":[
+"Up 52% in a year",
+"4% below its 52-week high",
+"Calmer than 7 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":16.7,
+"of":18.8,
+"share_pct":89,
+"detail":"52.0% over 12 months, at 29.8% yearly volatility. Ahead of 89% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":15.9,
+"of":18.8,
+"share_pct":85,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 85% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":17.1,
+"of":18.8,
+"share_pct":91,
+"detail":"3.8% below its 52-week high. Ahead of 91% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":15.9,
+"of":18.8,
+"share_pct":85,
+"detail":"Straightness 47.0/100 over 90 sessions. Ahead of 85% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":19.5,
+"of":25.0,
+"share_pct":78,
+"detail":"0.5% over the last five sessions. Ahead of 78% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1959.7,
+"stop":1724.54,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹1,724.54, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":76.0,
+"technical":88,
+"fundamental":60,
+"f_score":8,
+"setup_fit":81,
+"call":null,
+"news":[]
+},
+{
+"symbol":"NAZARA",
+"name":"Nazara Technologies Limited",
+"sector":null,
+"price":407.9,
+"avg_turnover_cr":49.7,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":11,
+"conviction":84.5,
+"conviction_band":"Moderate",
+"why":[
+"Up 51% in a year",
+"4% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":14.8,
+"of":18.8,
+"share_pct":79,
+"detail":"50.9% over 12 months, at 38.5% yearly volatility. Ahead of 79% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":16.7,
+"of":18.8,
+"share_pct":89,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 89% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":16.9,
+"of":18.8,
+"share_pct":90,
+"detail":"4.4% below its 52-week high. Ahead of 90% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"Straightness 89.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":17.5,
+"of":25.0,
+"share_pct":70,
+"detail":"1.6% over the last five sessions. Ahead of 70% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":407.9,
+"stop":358.95,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹358.95, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":76,
+"fundamental":48,
+"f_score":6,
+"setup_fit":80,
+"call":null,
+"news":[]
+},
+{
+"symbol":"MARKSANS",
+"name":"Marksans Pharma Limited",
+"sector":null,
+"price":308.75,
+"avg_turnover_cr":56.0,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":12,
+"conviction":84.2,
+"conviction_band":"Moderate",
+"why":[
+"Fell 1% this week",
+"Up 68% in a year",
+"12% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":16.3,
+"of":18.8,
+"share_pct":87,
+"detail":"68.3% over 12 months, at 43.5% yearly volatility. Ahead of 87% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":17.4,
+"of":18.8,
+"share_pct":93,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 93% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":13.9,
+"of":18.8,
+"share_pct":74,
+"detail":"12.0% below its 52-week high. Ahead of 74% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":15.4,
+"of":18.8,
+"share_pct":82,
+"detail":"Straightness 40.0/100 over 90 sessions. Ahead of 82% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":21.2,
+"of":25.0,
+"share_pct":85,
+"detail":"-1.1% over the last five sessions. Ahead of 85% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":308.75,
+"stop":271.7,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹271.70, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":69.0,
+"technical":93,
+"fundamental":81,
+"f_score":6,
+"setup_fit":76,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SBC",
+"name":"SBC Exports Limited",
+"sector":null,
+"price":68.73,
+"avg_turnover_cr":69.3,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":13,
+"conviction":84.0,
+"conviction_band":"Moderate",
+"why":[
+"Up 189% in a year",
+"2% below its 52-week high",
+"A steady climb",
+"Calmer than 8 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":18.8,
+"of":18.8,
+"share_pct":100,
+"detail":"188.7% over 12 months, at 29.2% yearly volatility. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":18.6,
+"of":18.8,
+"share_pct":99,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":18.0,
+"of":18.8,
+"share_pct":96,
+"detail":"1.9% below its 52-week high. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":18.0,
+"of":18.8,
+"share_pct":96,
+"detail":"Straightness 79.0/100 over 90 sessions. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":10.8,
+"of":25.0,
+"share_pct":43,
+"detail":"5.2% over the last five sessions. Ahead of 43% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":68.73,
+"stop":60.48,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹60.48, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":74.0,
+"technical":84,
+"fundamental":60,
+"f_score":7,
+"setup_fit":84,
+"call":null,
+"news":[]
+},
+{
+"symbol":"PAISALO",
+"name":"Paisalo Digital Limited",
+"sector":null,
+"price":76.94,
+"avg_turnover_cr":67.2,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":14,
+"conviction":83.9,
+"conviction_band":"Moderate",
+"why":[
+"Fell 3% this week",
+"Up 101% in a year",
+"19% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":18.0,
+"of":18.8,
+"share_pct":96,
+"detail":"100.7% over 12 months, at 43.1% yearly volatility. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":17.8,
+"of":18.8,
+"share_pct":95,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":10.3,
+"of":18.8,
+"share_pct":55,
+"detail":"18.9% below its 52-week high. Ahead of 55% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":15.0,
+"of":18.8,
+"share_pct":80,
+"detail":"Straightness 36.0/100 over 90 sessions. Ahead of 80% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":22.8,
+"of":25.0,
+"share_pct":91,
+"detail":"-3.0% over the last five sessions. Ahead of 91% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":76.94,
+"stop":67.71,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹67.71, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":79.0,
+"technical":93,
+"fundamental":73,
+"f_score":5,
+"setup_fit":81,
+"call":null,
+"news":[]
+},
+{
+"symbol":"ACMESOLAR",
+"name":"Acme Solar Holdings Limited",
+"sector":"Power",
+"price":407.25,
+"avg_turnover_cr":45.8,
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":15,
+"conviction":83.3,
+"conviction_band":"Moderate",
+"why":[
+"Fell 3% this week",
+"Up 41% in a year",
+"15% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":15.2,
+"of":18.8,
+"share_pct":81,
+"detail":"41.1% over 12 months, at 39.4% yearly volatility. Ahead of 81% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":17.2,
+"of":18.8,
+"share_pct":92,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":12.9,
+"of":18.8,
+"share_pct":69,
+"detail":"14.6% below its 52-week high. Ahead of 69% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":15.6,
+"of":18.8,
+"share_pct":83,
+"detail":"Straightness 45.0/100 over 90 sessions. Ahead of 83% of 721 liquid stocks."
+},
+{
+"factor":"Dip over the last five sessions",
+"points":22.5,
+"of":25.0,
+"share_pct":90,
+"detail":"-2.7% over the last five sessions. Ahead of 90% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":407.25,
+"stop":358.38,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"note":"Hold about a month. Leave if it closes below ₹358.38, 12% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":57.0,
+"technical":78,
+"fundamental":54,
+"f_score":5,
+"setup_fit":86,
+"call":null,
+"news":[]
+}
+]
+},
+"momentum":{
+"available":true,
+"degraded":[],
+"method_key":"tested_lists",
+"list":"momentum",
+"horizon":"momentum",
+"label":"Momentum",
+"idea":"The strongest steady uptrends on the exchange.",
+"hold_text":"about 3 months",
+"exit_pct":15.0,
+"tested":{
+"list_dates":471,
+"picks":7046,
+"up_pct":55.1,
+"beat_index_pct":48.8,
+"avg_pct":6.39,
+"median_pct":2.42,
+"index_avg_pct":3.35,
+"worst_5pct":-17.9,
+"best_5pct":46.7,
+"exit_hit_pct":24.5,
+"lists_ahead_of_index_pct":58.0,
+"by_half":{
+"2017-21":{
+"list_dates":244,
+"picks":3644,
+"up_pct":58.6,
+"beat_index_pct":51.7,
+"avg_pct":8.14,
+"median_pct":4.2,
+"index_avg_pct":4.0,
+"worst_5pct":-18.0,
+"best_5pct":47.8,
+"exit_hit_pct":21.7,
+"lists_ahead_of_index_pct":58.2
+},
+"2022-26":{
+"list_dates":227,
+"picks":3402,
+"up_pct":51.4,
+"beat_index_pct":45.7,
+"avg_pct":4.52,
+"median_pct":0.71,
+"index_avg_pct":2.66,
+"worst_5pct":-17.9,
+"best_5pct":45.5,
+"exit_hit_pct":27.4,
+"lists_ahead_of_index_pct":57.7
+}
+},
+"hold_sessions":63,
+"exit_pct":15.0
+},
+"study":{
+"generated":"2026-11-11",
+"source":"NSE daily bhavcopy, every session, delisted companies included",
+"from":"2017-01-24",
+"to":"2026-11-09",
+"sessions":2679,
+"companies":3276,
+"universe":"NSE stocks trading Rs 10 crore a day or more, priced Rs 20 or more",
+"universe_median":386,
+"rules":"Bought at the next session's open, held for the period, left on a close under the exit line. Price returns before costs and tax. Index: Nifty 500."
+},
+"scanned_at":"09 Nov 2026, 11:30",
+"partial":false,
+"scored":200,
+"universe_source":"NSE official list (2393 EQ-series symbols)",
+"universe":721,
+"regime":{
+"ok":true,
+"stance":"Tailwind",
+"pct_vs_50dma":3.1,
+"pct_vs_200dma":4.5,
+"change_5d_pct":1.2,
+"label":"Index above its 50-day average.",
+"benchmark":"NIFTYBEES",
+"source":"test"
+},
+"sector_mix":[
+[
+"Unknown",
+7
+],
+[
+"Healthcare",
+3
+],
+[
+"Automobile and Auto Components",
+3
+],
+[
+"Textiles",
+1
+],
+[
+"Financial Services",
+1
+]
+],
+"sector_cap":4,
+"selection_notes":[
+"Removed for a serious adverse filing: BADCO (Regulatory action)."
+],
+"excluded_adverse":[],
+"count":15,
+"considered":46,
+"method":"Every liquid NSE stock is ranked on the measurements in the ledger. The list is the top of that ranking after the uptrend and volatility gates. Tested on NSE prices from 2017 to 2026.",
+"live":null,
+"disclaimer":"Educational analysis. Not investment advice.",
+"staleness":{
+"days":1,
+"hours":30.0,
+"warn":false,
+"text":"Scanned 1 day ago."
+},
+"market_context":null,
+"rows":[
+{
+"symbol":"SHREEJISPG",
+"name":"Shreeji Shipping Global Limited",
+"sector":null,
+"price":881.3,
+"avg_turnover_cr":76.9,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":1,
+"conviction":98.0,
+"conviction_band":"High",
+"why":[
+"Up 232% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":24.8,
+"of":25.0,
+"share_pct":99,
+"detail":"232.4% over 12 months, at 42.3% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":24.5,
+"of":25.0,
+"share_pct":98,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":23.8,
+"of":25.0,
+"share_pct":95,
+"detail":"2.0% below its 52-week high. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":25.0,
+"of":25.0,
+"share_pct":100,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 100% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":881.3,
+"stop":749.1,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹749.10, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":75,
+"fundamental":58,
+"f_score":7,
+"setup_fit":71,
+"call":null,
+"news":[]
+},
+{
+"symbol":"GCSL",
+"name":"Gretex Corporate Services Limited",
+"sector":null,
+"price":784.6,
+"avg_turnover_cr":27.2,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":2,
+"conviction":98.0,
+"conviction_band":"High",
+"why":[
+"Up 242% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":24.8,
+"of":25.0,
+"share_pct":99,
+"detail":"242.2% over 12 months, at 44.1% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"1.6% below its 52-week high. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":24.8,
+"of":25.0,
+"share_pct":99,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":784.6,
+"stop":666.91,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹666.91, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":60.0,
+"technical":82,
+"fundamental":78,
+"f_score":8,
+"setup_fit":83,
+"call":null,
+"news":[]
+},
+{
+"symbol":"LAURUSLABS",
+"name":"Laurus Labs Limited",
+"sector":"Healthcare",
+"price":2454.0,
+"avg_turnover_cr":313.8,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":3,
+"conviction":97.9,
+"conviction_band":"High",
+"why":[
+"Up 153% in a year",
+"1% below its 52-week high",
+"A steady climb",
+"Calmer than 7 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":24.5,
+"of":25.0,
+"share_pct":98,
+"detail":"152.9% over 12 months, at 30.4% yearly volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":24.5,
+"of":25.0,
+"share_pct":98,
+"detail":"1.0% below its 52-week high. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":24.8,
+"of":25.0,
+"share_pct":99,
+"detail":"Straightness 89.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2454.0,
+"stop":2085.9,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹2,085.90, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":77,
+"fundamental":69,
+"f_score":8,
+"setup_fit":77,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SBC",
+"name":"SBC Exports Limited",
+"sector":null,
+"price":68.73,
+"avg_turnover_cr":69.3,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":4,
+"conviction":97.7,
+"conviction_band":"High",
+"why":[
+"Up 189% in a year",
+"2% below its 52-week high",
+"A steady climb",
+"Calmer than 8 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":25.0,
+"of":25.0,
+"share_pct":100,
+"detail":"188.7% over 12 months, at 29.2% yearly volatility. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":24.8,
+"of":25.0,
+"share_pct":99,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":24.0,
+"of":25.0,
+"share_pct":96,
+"detail":"1.9% below its 52-week high. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":24.0,
+"of":25.0,
+"share_pct":96,
+"detail":"Straightness 79.0/100 over 90 sessions. Ahead of 96% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":68.73,
+"stop":58.42,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹58.42, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":74.0,
+"technical":84,
+"fundamental":60,
+"f_score":7,
+"setup_fit":84,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SANSERA",
+"name":"Sansera Engineering Limited",
+"sector":"Automobile and Auto Components",
+"price":4653.4,
+"avg_turnover_cr":83.7,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":5,
+"conviction":96.2,
+"conviction_band":"High",
+"why":[
+"Up 208% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":24.5,
+"of":25.0,
+"share_pct":98,
+"detail":"207.7% over 12 months, at 43.3% yearly volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":23.8,
+"of":25.0,
+"share_pct":95,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":24.0,
+"of":25.0,
+"share_pct":96,
+"detail":"1.9% below its 52-week high. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":24.0,
+"of":25.0,
+"share_pct":96,
+"detail":"Straightness 77.0/100 over 90 sessions. Ahead of 96% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":4653.4,
+"stop":3955.39,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹3,955.39, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":58.0,
+"technical":93,
+"fundamental":64,
+"f_score":8,
+"setup_fit":82,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SSWL",
+"name":"Steel Strips Wheels Limited",
+"sector":null,
+"price":548.95,
+"avg_turnover_cr":35.9,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":6,
+"conviction":95.5,
+"conviction_band":"High",
+"why":[
+"Up 142% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":22.2,
+"of":25.0,
+"share_pct":89,
+"detail":"141.8% over 12 months, at 48.2% yearly volatility. Ahead of 89% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":24.0,
+"of":25.0,
+"share_pct":96,
+"detail":"1.7% below its 52-week high. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":25.0,
+"of":25.0,
+"share_pct":100,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 100% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":548.95,
+"stop":466.61,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹466.61, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":78.0,
+"technical":92,
+"fundamental":67,
+"f_score":7,
+"setup_fit":71,
+"call":null,
+"news":[]
+},
+{
+"symbol":"GLAND",
+"name":"Gland Pharma Limited",
+"sector":"Healthcare",
+"price":3302.4,
+"avg_turnover_cr":110.5,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":7,
+"conviction":94.4,
+"conviction_band":"High",
+"why":[
+"Up 73% in a year",
+"2% below its 52-week high",
+"A steady climb",
+"Calmer than 6 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":22.5,
+"of":25.0,
+"share_pct":90,
+"detail":"73.3% over 12 months, at 33.8% yearly volatility. Ahead of 90% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":23.8,
+"of":25.0,
+"share_pct":95,
+"detail":"2.1% below its 52-week high. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":24.0,
+"of":25.0,
+"share_pct":96,
+"detail":"Straightness 79.0/100 over 90 sessions. Ahead of 96% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":3302.4,
+"stop":2807.04,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹2,807.04, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":72.0,
+"technical":79,
+"fundamental":77,
+"f_score":8,
+"setup_fit":70,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SONACOMS",
+"name":"Sona BLW Precision Forgings Limited",
+"sector":"Automobile and Auto Components",
+"price":924.0,
+"avg_turnover_cr":159.7,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":8,
+"conviction":93.3,
+"conviction_band":"High",
+"why":[
+"Up 91% in a year",
+"At its 52-week high",
+"A steady climb",
+"Calmer than 7 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":23.0,
+"of":25.0,
+"share_pct":92,
+"detail":"91.3% over 12 months, at 32.1% yearly volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":22.5,
+"of":25.0,
+"share_pct":90,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 90% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":25.0,
+"of":25.0,
+"share_pct":100,
+"detail":"0.0% below its 52-week high. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":22.8,
+"of":25.0,
+"share_pct":91,
+"detail":"Straightness 63.0/100 over 90 sessions. Ahead of 91% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":924.0,
+"stop":785.4,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹785.40, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":67.0,
+"technical":76,
+"fundamental":48,
+"f_score":6,
+"setup_fit":79,
+"call":null,
+"news":[]
+},
+{
+"symbol":"DIVISLAB",
+"name":"Divi's Laboratories Limited",
+"sector":"Healthcare",
+"price":11565.5,
+"avg_turnover_cr":465.1,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":9,
+"conviction":93.2,
+"conviction_band":"High",
+"why":[
+"Up 74% in a year",
+"2% below its 52-week high",
+"A steady climb",
+"Calmer than 9 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":21.5,
+"of":25.0,
+"share_pct":86,
+"detail":"73.8% over 12 months, at 26.4% yearly volatility. Ahead of 86% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":23.8,
+"of":25.0,
+"share_pct":95,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":23.8,
+"of":25.0,
+"share_pct":95,
+"detail":"2.2% below its 52-week high. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"Straightness 81.0/100 over 90 sessions. Ahead of 97% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":11565.5,
+"stop":9830.67,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹9,830.67, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":78.0,
+"technical":93,
+"fundamental":53,
+"f_score":7,
+"setup_fit":80,
+"call":null,
+"news":[]
+},
+{
+"symbol":"ATHERENERG",
+"name":"Ather Energy Limited",
+"sector":"Automobile and Auto Components",
+"price":1859.8,
+"avg_turnover_cr":458.8,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":10,
+"conviction":92.6,
+"conviction_band":"High",
+"why":[
+"Up 163% in a year",
+"At its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":23.2,
+"of":25.0,
+"share_pct":93,
+"detail":"162.9% over 12 months, at 48.1% yearly volatility. Ahead of 93% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":22.5,
+"of":25.0,
+"share_pct":90,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 90% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":24.8,
+"of":25.0,
+"share_pct":99,
+"detail":"0.6% below its 52-week high. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":22.2,
+"of":25.0,
+"share_pct":89,
+"detail":"Straightness 58.0/100 over 90 sessions. Ahead of 89% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1859.8,
+"stop":1580.83,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹1,580.83, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":57.0,
+"technical":84,
+"fundamental":60,
+"f_score":8,
+"setup_fit":70,
+"call":null,
+"news":[]
+},
+{
+"symbol":"MBAPL",
+"name":"Madhya Bharat Agro Products Limited",
+"sector":null,
+"price":197.69,
+"avg_turnover_cr":13.4,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":11,
+"conviction":92.4,
+"conviction_band":"High",
+"why":[
+"Up 142% in a year",
+"2% below its 52-week high",
+"Calmer than 5 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"142.4% over 12 months, at 37.8% yearly volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":22.5,
+"of":25.0,
+"share_pct":90,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 90% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":23.5,
+"of":25.0,
+"share_pct":94,
+"detail":"2.4% below its 52-week high. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":22.2,
+"of":25.0,
+"share_pct":89,
+"detail":"Straightness 59.0/100 over 90 sessions. Ahead of 89% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":197.69,
+"stop":168.04,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹168.04, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":76.0,
+"technical":86,
+"fundamental":51,
+"f_score":8,
+"setup_fit":75,
+"call":null,
+"news":[]
+},
+{
+"symbol":"WELSPUNLIV",
+"name":"Welspun Living Limited",
+"sector":"Textiles",
+"price":252.21,
+"avg_turnover_cr":75.1,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":12,
+"conviction":91.2,
+"conviction_band":"High",
+"why":[
+"Up 91% in a year",
+"6% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":21.2,
+"of":25.0,
+"share_pct":85,
+"detail":"90.5% over 12 months, at 46.9% yearly volatility. Ahead of 85% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":23.5,
+"of":25.0,
+"share_pct":94,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":22.0,
+"of":25.0,
+"share_pct":88,
+"detail":"5.7% below its 52-week high. Ahead of 88% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":24.5,
+"of":25.0,
+"share_pct":98,
+"detail":"Straightness 83.0/100 over 90 sessions. Ahead of 98% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":252.21,
+"stop":214.38,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹214.38, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":69.0,
+"technical":84,
+"fundamental":57,
+"f_score":7,
+"setup_fit":79,
+"call":null,
+"news":[]
+},
+{
+"symbol":"KRISHANA",
+"name":"Krishana Phoschem Limited",
+"sector":null,
+"price":245.21,
+"avg_turnover_cr":15.4,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":13,
+"conviction":91.0,
+"conviction_band":"High",
+"why":[
+"Up 141% in a year",
+"3% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":23.0,
+"of":25.0,
+"share_pct":92,
+"detail":"140.6% over 12 months, at 42.3% yearly volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":21.0,
+"of":25.0,
+"share_pct":84,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 84% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":23.0,
+"of":25.0,
+"share_pct":92,
+"detail":"3.5% below its 52-week high. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":23.8,
+"of":25.0,
+"share_pct":95,
+"detail":"Straightness 75.0/100 over 90 sessions. Ahead of 95% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":245.21,
+"stop":208.43,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹208.43, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":58.0,
+"technical":79,
+"fundamental":72,
+"f_score":8,
+"setup_fit":77,
+"call":null,
+"news":[]
+},
+{
+"symbol":"DIACABS",
+"name":"Diamond Power Infrastructure Limited",
+"sector":null,
+"price":371.65,
+"avg_turnover_cr":30.7,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":14,
+"conviction":90.7,
+"conviction_band":"High",
+"why":[
+"Up 143% in a year",
+"8% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":24.2,
+"of":25.0,
+"share_pct":97,
+"detail":"143.1% over 12 months, at 47.8% yearly volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":24.5,
+"of":25.0,
+"share_pct":98,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":20.8,
+"of":25.0,
+"share_pct":83,
+"detail":"8.0% below its 52-week high. Ahead of 83% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":21.2,
+"of":25.0,
+"share_pct":85,
+"detail":"Straightness 50.0/100 over 90 sessions. Ahead of 85% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":371.65,
+"stop":315.9,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹315.90, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":80,
+"fundamental":48,
+"f_score":7,
+"setup_fit":80,
+"call":null,
+"news":[]
+},
+{
+"symbol":"ANANDRATHI",
+"name":"Anand Rathi Wealth Limited",
+"sector":"Financial Services",
+"price":2370.0,
+"avg_turnover_cr":58.9,
+"list":"momentum",
+"setup":"Momentum pick",
+"setup_key":"pick_momentum",
+"horizon":"about 3 months",
+"pick_rank":15,
+"conviction":90.3,
+"conviction_band":"High",
+"why":[
+"Up 51% in a year",
+"At its 52-week high",
+"Calmer than 9 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":22.8,
+"of":25.0,
+"share_pct":91,
+"detail":"51.0% over 12 months, at 19.5% yearly volatility. Ahead of 91% of 721 liquid stocks."
+},
+{
+"factor":"6-month return for its risk",
+"points":21.8,
+"of":25.0,
+"share_pct":87,
+"detail":"Return over the last six months, last month skipped, for the same volatility. Ahead of 87% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":24.5,
+"of":25.0,
+"share_pct":98,
+"detail":"0.8% below its 52-week high. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":21.2,
+"of":25.0,
+"share_pct":85,
+"detail":"Straightness 49.0/100 over 90 sessions. Ahead of 85% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2370.0,
+"stop":2014.5,
+"risk_pct":15.0,
+"rr":null,
+"t1":null,
+"hold_sessions":63,
+"hold_text":"about 3 months",
+"review_on":"2027-02-08",
+"note":"Hold about 3 months. Leave if it closes below ₹2,014.50, 15% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":69.0,
+"technical":75,
+"fundamental":48,
+"f_score":6,
+"setup_fit":87,
+"call":null,
+"news":[]
+}
+]
+},
+"long":{
+"available":true,
+"degraded":[],
+"method_key":"tested_lists",
+"list":"long",
+"horizon":"long",
+"label":"Long term",
+"idea":"Steady year-long climbers near their highs.",
+"hold_text":"about a year",
+"exit_pct":30.0,
+"tested":{
+"list_dates":433,
+"picks":6434,
+"up_pct":58.2,
+"beat_index_pct":46.5,
+"avg_pct":23.73,
+"median_pct":8.1,
+"index_avg_pct":13.79,
+"worst_5pct":-32.9,
+"best_5pct":132.3,
+"exit_hit_pct":23.2,
+"lists_ahead_of_index_pct":53.3,
+"by_half":{
+"2017-21":{
+"list_dates":244,
+"picks":3629,
+"up_pct":56.7,
+"beat_index_pct":44.1,
+"avg_pct":22.32,
+"median_pct":6.24,
+"index_avg_pct":14.19,
+"worst_5pct":-33.3,
+"best_5pct":136.4,
+"exit_hit_pct":25.1,
+"lists_ahead_of_index_pct":49.2
+},
+"2022-26":{
+"list_dates":189,
+"picks":2805,
+"up_pct":60.0,
+"beat_index_pct":49.5,
+"avg_pct":25.55,
+"median_pct":11.32,
+"index_avg_pct":13.29,
+"worst_5pct":-32.1,
+"best_5pct":128.9,
+"exit_hit_pct":20.7,
+"lists_ahead_of_index_pct":58.7
+}
+},
+"hold_sessions":252,
+"exit_pct":30.0
+},
+"study":{
+"generated":"2026-11-11",
+"source":"NSE daily bhavcopy, every session, delisted companies included",
+"from":"2017-01-24",
+"to":"2026-11-09",
+"sessions":2679,
+"companies":3276,
+"universe":"NSE stocks trading Rs 10 crore a day or more, priced Rs 20 or more",
+"universe_median":386,
+"rules":"Bought at the next session's open, held for the period, left on a close under the exit line. Price returns before costs and tax. Index: Nifty 500."
+},
+"scanned_at":"09 Nov 2026, 11:30",
+"partial":false,
+"scored":200,
+"universe_source":"NSE official list (2393 EQ-series symbols)",
+"universe":721,
+"regime":{
+"ok":true,
+"stance":"Tailwind",
+"pct_vs_50dma":3.1,
+"pct_vs_200dma":4.5,
+"change_5d_pct":1.2,
+"label":"Index above its 50-day average.",
+"benchmark":"NIFTYBEES",
+"source":"test"
+},
+"sector_mix":[
+[
+"Unknown",
+7
+],
+[
+"Healthcare",
+4
+],
+[
+"Automobile and Auto Components",
+3
+],
+[
+"Financial Services",
+1
+]
+],
+"sector_cap":4,
+"selection_notes":[],
+"excluded_adverse":[],
+"count":15,
+"considered":46,
+"method":"Every liquid NSE stock is ranked on the measurements in the ledger. The list is the top of that ranking after the uptrend and volatility gates. Tested on NSE prices from 2017 to 2026.",
+"live":null,
+"disclaimer":"Educational analysis. Not investment advice.",
+"staleness":{
+"days":1,
+"hours":30.0,
+"warn":false,
+"text":"Scanned 1 day ago."
+},
+"market_context":null,
+"rows":[
+{
+"symbol":"GCSL",
+"name":"Gretex Corporate Services Limited",
+"sector":null,
+"price":784.6,
+"avg_turnover_cr":27.2,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":1,
+"conviction":98.3,
+"conviction_band":"High",
+"why":[
+"Up 242% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":33.0,
+"of":33.3,
+"share_pct":99,
+"detail":"242.2% over 12 months, at 44.1% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":32.3,
+"of":33.3,
+"share_pct":97,
+"detail":"1.6% below its 52-week high. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":33.0,
+"of":33.3,
+"share_pct":99,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":784.6,
+"stop":549.22,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹549.22, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":60.0,
+"technical":82,
+"fundamental":78,
+"f_score":8,
+"setup_fit":83,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SHREEJISPG",
+"name":"Shreeji Shipping Global Limited",
+"sector":null,
+"price":881.3,
+"avg_turnover_cr":76.9,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":2,
+"conviction":98.1,
+"conviction_band":"High",
+"why":[
+"Up 232% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":33.0,
+"of":33.3,
+"share_pct":99,
+"detail":"232.4% over 12 months, at 42.3% yearly volatility. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":31.7,
+"of":33.3,
+"share_pct":95,
+"detail":"2.0% below its 52-week high. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":33.3,
+"of":33.3,
+"share_pct":100,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 100% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":881.3,
+"stop":616.91,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹616.91, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":75,
+"fundamental":58,
+"f_score":7,
+"setup_fit":71,
+"call":null,
+"news":[]
+},
+{
+"symbol":"LAURUSLABS",
+"name":"Laurus Labs Limited",
+"sector":"Healthcare",
+"price":2454.0,
+"avg_turnover_cr":313.8,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":3,
+"conviction":98.1,
+"conviction_band":"High",
+"why":[
+"Up 153% in a year",
+"1% below its 52-week high",
+"A steady climb",
+"Calmer than 7 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":32.7,
+"of":33.3,
+"share_pct":98,
+"detail":"152.9% over 12 months, at 30.4% yearly volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":32.7,
+"of":33.3,
+"share_pct":98,
+"detail":"1.0% below its 52-week high. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":33.0,
+"of":33.3,
+"share_pct":99,
+"detail":"Straightness 89.0/100 over 90 sessions. Ahead of 99% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2454.0,
+"stop":1717.8,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹1,717.80, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":64.0,
+"technical":77,
+"fundamental":69,
+"f_score":8,
+"setup_fit":77,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SBC",
+"name":"SBC Exports Limited",
+"sector":null,
+"price":68.73,
+"avg_turnover_cr":69.3,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":4,
+"conviction":97.2,
+"conviction_band":"High",
+"why":[
+"Up 189% in a year",
+"2% below its 52-week high",
+"A steady climb",
+"Calmer than 8 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":33.3,
+"of":33.3,
+"share_pct":100,
+"detail":"188.7% over 12 months, at 29.2% yearly volatility. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":32.0,
+"of":33.3,
+"share_pct":96,
+"detail":"1.9% below its 52-week high. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":32.0,
+"of":33.3,
+"share_pct":96,
+"detail":"Straightness 79.0/100 over 90 sessions. Ahead of 96% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":68.73,
+"stop":48.11,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹48.11, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":74.0,
+"technical":84,
+"fundamental":60,
+"f_score":7,
+"setup_fit":84,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SANSERA",
+"name":"Sansera Engineering Limited",
+"sector":"Automobile and Auto Components",
+"price":4653.4,
+"avg_turnover_cr":83.7,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":5,
+"conviction":96.7,
+"conviction_band":"High",
+"why":[
+"Up 208% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":32.7,
+"of":33.3,
+"share_pct":98,
+"detail":"207.7% over 12 months, at 43.3% yearly volatility. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":32.0,
+"of":33.3,
+"share_pct":96,
+"detail":"1.9% below its 52-week high. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":32.0,
+"of":33.3,
+"share_pct":96,
+"detail":"Straightness 77.0/100 over 90 sessions. Ahead of 96% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":4653.4,
+"stop":3257.38,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹3,257.38, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":58.0,
+"technical":93,
+"fundamental":64,
+"f_score":8,
+"setup_fit":82,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SSWL",
+"name":"Steel Strips Wheels Limited",
+"sector":null,
+"price":548.95,
+"avg_turnover_cr":35.9,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":6,
+"conviction":94.9,
+"conviction_band":"High",
+"why":[
+"Up 142% in a year",
+"2% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":29.7,
+"of":33.3,
+"share_pct":89,
+"detail":"141.8% over 12 months, at 48.2% yearly volatility. Ahead of 89% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":32.0,
+"of":33.3,
+"share_pct":96,
+"detail":"1.7% below its 52-week high. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":33.3,
+"of":33.3,
+"share_pct":100,
+"detail":"Straightness 91.0/100 over 90 sessions. Ahead of 100% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":548.95,
+"stop":384.26,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹384.26, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":78.0,
+"technical":92,
+"fundamental":67,
+"f_score":7,
+"setup_fit":71,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SONACOMS",
+"name":"Sona BLW Precision Forgings Limited",
+"sector":"Automobile and Auto Components",
+"price":924.0,
+"avg_turnover_cr":159.7,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":7,
+"conviction":94.2,
+"conviction_band":"High",
+"why":[
+"Up 91% in a year",
+"At its 52-week high",
+"A steady climb",
+"Calmer than 7 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":30.7,
+"of":33.3,
+"share_pct":92,
+"detail":"91.3% over 12 months, at 32.1% yearly volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":33.3,
+"of":33.3,
+"share_pct":100,
+"detail":"0.0% below its 52-week high. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":30.3,
+"of":33.3,
+"share_pct":91,
+"detail":"Straightness 63.0/100 over 90 sessions. Ahead of 91% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":924.0,
+"stop":646.8,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹646.80, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":67.0,
+"technical":76,
+"fundamental":48,
+"f_score":6,
+"setup_fit":79,
+"call":null,
+"news":[]
+},
+{
+"symbol":"GLAND",
+"name":"Gland Pharma Limited",
+"sector":"Healthcare",
+"price":3302.4,
+"avg_turnover_cr":110.5,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":8,
+"conviction":93.7,
+"conviction_band":"High",
+"why":[
+"Up 73% in a year",
+"2% below its 52-week high",
+"A steady climb",
+"Calmer than 6 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":30.0,
+"of":33.3,
+"share_pct":90,
+"detail":"73.3% over 12 months, at 33.8% yearly volatility. Ahead of 90% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":31.7,
+"of":33.3,
+"share_pct":95,
+"detail":"2.1% below its 52-week high. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":32.0,
+"of":33.3,
+"share_pct":96,
+"detail":"Straightness 79.0/100 over 90 sessions. Ahead of 96% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":3302.4,
+"stop":2311.68,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹2,311.68, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":72.0,
+"technical":79,
+"fundamental":77,
+"f_score":8,
+"setup_fit":70,
+"call":null,
+"news":[]
+},
+{
+"symbol":"ATHERENERG",
+"name":"Ather Energy Limited",
+"sector":"Automobile and Auto Components",
+"price":1859.8,
+"avg_turnover_cr":458.8,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":9,
+"conviction":93.5,
+"conviction_band":"High",
+"why":[
+"Up 163% in a year",
+"At its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":31.0,
+"of":33.3,
+"share_pct":93,
+"detail":"162.9% over 12 months, at 48.1% yearly volatility. Ahead of 93% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":33.0,
+"of":33.3,
+"share_pct":99,
+"detail":"0.6% below its 52-week high. Ahead of 99% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":29.7,
+"of":33.3,
+"share_pct":89,
+"detail":"Straightness 58.0/100 over 90 sessions. Ahead of 89% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1859.8,
+"stop":1301.86,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹1,301.86, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":57.0,
+"technical":84,
+"fundamental":60,
+"f_score":8,
+"setup_fit":70,
+"call":null,
+"news":[]
+},
+{
+"symbol":"MCX",
+"name":"Multi Commodity Exchange of India Limited",
+"sector":"Financial Services",
+"price":3545.0,
+"avg_turnover_cr":625.1,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":10,
+"conviction":93.4,
+"conviction_band":"High",
+"why":[
+"Up 95% in a year",
+"1% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":30.7,
+"of":33.3,
+"share_pct":92,
+"detail":"94.7% over 12 months, at 39.3% yearly volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":32.7,
+"of":33.3,
+"share_pct":98,
+"detail":"1.0% below its 52-week high. Ahead of 98% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":30.0,
+"of":33.3,
+"share_pct":90,
+"detail":"Straightness 62.0/100 over 90 sessions. Ahead of 90% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":3545.0,
+"stop":2481.5,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹2,481.50, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":70.0,
+"technical":94,
+"fundamental":69,
+"f_score":7,
+"setup_fit":89,
+"call":null,
+"news":[]
+},
+{
+"symbol":"KRISHANA",
+"name":"Krishana Phoschem Limited",
+"sector":null,
+"price":245.21,
+"avg_turnover_cr":15.4,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":11,
+"conviction":93.3,
+"conviction_band":"High",
+"why":[
+"Up 141% in a year",
+"3% below its 52-week high",
+"A steady climb"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":30.7,
+"of":33.3,
+"share_pct":92,
+"detail":"140.6% over 12 months, at 42.3% yearly volatility. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":30.7,
+"of":33.3,
+"share_pct":92,
+"detail":"3.5% below its 52-week high. Ahead of 92% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":31.7,
+"of":33.3,
+"share_pct":95,
+"detail":"Straightness 75.0/100 over 90 sessions. Ahead of 95% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":245.21,
+"stop":171.65,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹171.65, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":58.0,
+"technical":79,
+"fundamental":72,
+"f_score":8,
+"setup_fit":77,
+"call":null,
+"news":[]
+},
+{
+"symbol":"MBAPL",
+"name":"Madhya Bharat Agro Products Limited",
+"sector":null,
+"price":197.69,
+"avg_turnover_cr":13.4,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":12,
+"conviction":93.3,
+"conviction_band":"High",
+"why":[
+"Up 142% in a year",
+"2% below its 52-week high",
+"Calmer than 5 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":32.3,
+"of":33.3,
+"share_pct":97,
+"detail":"142.4% over 12 months, at 37.8% yearly volatility. Ahead of 97% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":31.3,
+"of":33.3,
+"share_pct":94,
+"detail":"2.4% below its 52-week high. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":29.7,
+"of":33.3,
+"share_pct":89,
+"detail":"Straightness 59.0/100 over 90 sessions. Ahead of 89% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":197.69,
+"stop":138.38,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹138.38, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":76.0,
+"technical":86,
+"fundamental":51,
+"f_score":8,
+"setup_fit":75,
+"call":null,
+"news":[]
+},
+{
+"symbol":"SGMART",
+"name":"SG Mart Limited",
+"sector":null,
+"price":902.45,
+"avg_turnover_cr":23.4,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":13,
+"conviction":92.9,
+"conviction_band":"High",
+"why":[
+"Up 152% in a year",
+"3% below its 52-week high"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":32.0,
+"of":33.3,
+"share_pct":96,
+"detail":"151.5% over 12 months, at 41.3% yearly volatility. Ahead of 96% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":31.3,
+"of":33.3,
+"share_pct":94,
+"detail":"2.8% below its 52-week high. Ahead of 94% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":29.7,
+"of":33.3,
+"share_pct":89,
+"detail":"Straightness 58.0/100 over 90 sessions. Ahead of 89% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":902.45,
+"stop":631.72,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹631.72, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":68.0,
+"technical":77,
+"fundamental":53,
+"f_score":5,
+"setup_fit":82,
+"call":null,
+"news":[]
+},
+{
+"symbol":"DIVISLAB",
+"name":"Divi's Laboratories Limited",
+"sector":"Healthcare",
+"price":11565.5,
+"avg_turnover_cr":465.1,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":14,
+"conviction":92.6,
+"conviction_band":"High",
+"why":[
+"Up 74% in a year",
+"2% below its 52-week high",
+"A steady climb",
+"Calmer than 9 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":28.7,
+"of":33.3,
+"share_pct":86,
+"detail":"73.8% over 12 months, at 26.4% yearly volatility. Ahead of 86% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":31.7,
+"of":33.3,
+"share_pct":95,
+"detail":"2.2% below its 52-week high. Ahead of 95% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":32.3,
+"of":33.3,
+"share_pct":97,
+"detail":"Straightness 81.0/100 over 90 sessions. Ahead of 97% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":11565.5,
+"stop":8095.85,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹8,095.85, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":78.0,
+"technical":93,
+"fundamental":53,
+"f_score":7,
+"setup_fit":80,
+"call":null,
+"news":[]
+},
+{
+"symbol":"AUROPHARMA",
+"name":"Aurobindo Pharma Limited",
+"sector":"Healthcare",
+"price":1855.3,
+"avg_turnover_cr":134.1,
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":15,
+"conviction":92.0,
+"conviction_band":"High",
+"why":[
+"Up 68% in a year",
+"At its 52-week high",
+"Calmer than 8 in 10 stocks"
+],
+"evidence":[
+{
+"factor":"12-month return for its risk",
+"points":30.0,
+"of":33.3,
+"share_pct":90,
+"detail":"68.3% over 12 months, at 26.7% yearly volatility. Ahead of 90% of 721 liquid stocks."
+},
+{
+"factor":"Closeness to the 52-week high",
+"points":33.3,
+"of":33.3,
+"share_pct":100,
+"detail":"0.0% below its 52-week high. Ahead of 100% of 721 liquid stocks."
+},
+{
+"factor":"How steady the climb was",
+"points":28.7,
+"of":33.3,
+"share_pct":86,
+"detail":"Straightness 51.0/100 over 90 sessions. Ahead of 86% of 721 liquid stocks."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1855.3,
+"stop":1298.71,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-09",
+"note":"Hold about a year. Leave if it closes below ₹1,298.71, 30% under the call price."
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":65.0,
+"technical":88,
+"fundamental":68,
+"f_score":5,
+"setup_fit":78,
+"call":null,
+"news":[]
+}
+]
+},
+"legacy":{
+"available":true,
+"degraded":[],
+"horizon":"short",
+"label":"Short-term setups",
+"note":"Setups whose premise plays out in weeks to a few months: strong trends with volume behind them, and accumulation footprints that haven't fully moved yet. These decay fastest — re-scan often.",
+"horizon_note":"Scored for the next few weeks: the market regime and any filing in the last three days carry real weight, because a breakout that has to fight the index usually loses.",
+"scanned_at":"05 Nov 2026, 10:00",
+"staleness":{
+"days":5,
+"hours":122.7,
+"warn":true,
+"text":"Scanned 5 days ago. Short-term setups decay in days — re-run the universe scan before acting on these."
+},
+"partial":false,
+"scored":200,
+"universe_source":"NSE official list (2393 EQ-series symbols)",
+"regime":{
+"ok":true,
+"stance":"Tailwind",
+"pct_vs_50dma":7.4,
+"pct_vs_200dma":4.55,
+"change_5d_pct":7.19,
+"label":"Index comfortably above its 50-day average — trend setups have tailwind.",
+"benchmark":"NIFTYBEES",
+"source":"daily feed"
+},
+"sector_mix":[
+[
+"Consumer Cyclical",
+3
+],
+[
+"Healthcare",
+3
+],
+[
+"Basic Materials",
+2
+],
+[
+"Real Estate",
+2
+],
+[
+"Communication Services",
+1
+],
+[
+"Industrials",
+1
+],
+[
+"Consumer Defensive",
+1
+],
+[
+"Financial Services",
+1
+],
+[
+"Utilities",
+1
+]
+],
+"sector_cap":3,
+"selection_notes":[
+"3 further names met the setup but were held back by the 3-per-sector cap.",
+"4 qualifying names excluded for thin liquidity — switch on 'include thin' to see them."
+],
+"count":6,
+"considered":47,
+"method":"Every row is scored out of 100 across seven factors weighted for this horizon: setup fit, engine composite, sector outlook, market regime, catalyst, liquidity and the archetype's measured record. Open a row to see the points each factor contributed. A factor whose feed is unavailable scores neutral and says so.",
+"conviction_floor":45.0,
+"rows":[
+{
+"symbol":"NITINSPIN",
+"name":"Nitin Spinners Limited",
+"sector":"Consumer Cyclical",
+"price":664.75,
+"avg_turnover_cr":12.8,
+"setup":"Momentum Breakout",
+"setup_key":"momentum_breakout",
+"horizon":"3–8 weeks",
+"conviction":74.6,
+"conviction_band":"High",
+"plan":{
+"stance":"WAIT",
+"entry":null,
+"stop":null,
+"risk_pct":null,
+"rr":null,
+"confidence":"MEDIUM",
+"atr":33.26,
+"t1":null,
+"note":"price is mid-range, 7.2% above support — a better entry exists at 617; buying here widens the stop for no extra reward"
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":72.14104520013873,
+"technical":87,
+"fundamental":58,
+"f_score":5,
+"setup_fit":80,
+"news":[],
+"evidence":[
+{
+"factor":"Altaha Score v4",
+"points":74.6,
+"of":100,
+"share_pct":75,
+"detail":"trade score; confidence 97.4%; peer-relative as of 2026-11-05"
+}
+],
+"call":null
+},
+{
+"symbol":"SHREEPUSHK",
+"name":"Shree Pushkar Chemicals & Fertilisers Limited",
+"sector":"Basic Materials",
+"price":575.0,
+"avg_turnover_cr":6.2,
+"setup":"Momentum Breakout",
+"setup_key":"momentum_breakout",
+"horizon":"3–8 weeks",
+"conviction":73.3,
+"conviction_band":"High",
+"plan":{
+"stance":"WAIT",
+"entry":null,
+"stop":null,
+"risk_pct":null,
+"rr":null,
+"confidence":"MEDIUM",
+"atr":44.17,
+"t1":null,
+"note":"price is mid-range, 9.2% above support — a better entry exists at 522; buying here widens the stop for no extra reward"
+},
+"tracked":true,
+"liquidity_tier":"moderate",
+"adverse_filing":false,
+"composite":65.73459666506034,
+"technical":91,
+"fundamental":79,
+"f_score":7,
+"setup_fit":87,
+"news":[],
+"evidence":[
+{
+"factor":"Altaha Score v4",
+"points":73.3,
+"of":100,
+"share_pct":73,
+"detail":"trade score; confidence 82.8%; peer-relative as of 2026-11-05"
+}
+],
+"call":null
+},
+{
+"symbol":"KROSS",
+"name":"Kross Limited",
+"sector":"Consumer Cyclical",
+"price":294.05,
+"avg_turnover_cr":49.1,
+"setup":"Institutional Accumulation",
+"setup_key":"institutional_accumulation",
+"horizon":"2–6 months",
+"conviction":68.4,
+"conviction_band":"Moderate",
+"plan":{
+"stance":"WAIT",
+"entry":null,
+"stop":null,
+"risk_pct":null,
+"rr":null,
+"confidence":"MEDIUM",
+"atr":21.52,
+"t1":null,
+"note":"price is mid-range, 8.6% above support — a better entry exists at 269; buying here widens the stop for no extra reward"
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":67.66320805341815,
+"technical":87,
+"fundamental":68,
+"f_score":6,
+"setup_fit":86,
+"news":[],
+"evidence":[
+{
+"factor":"Altaha Score v4",
+"points":68.4,
+"of":100,
+"share_pct":68,
+"detail":"trade score; confidence 94.3%; peer-relative as of 2026-11-05"
+}
+],
+"call":null
+},
+{
+"symbol":"ALIVUS",
+"name":"Alivus Life Sciences Limited",
+"sector":"Healthcare",
+"price":1497.7,
+"avg_turnover_cr":24.8,
+"setup":"Momentum Breakout",
+"setup_key":"momentum_breakout",
+"horizon":"3–8 weeks",
+"conviction":68.3,
+"conviction_band":"Moderate",
+"plan":{
+"stance":"WAIT",
+"entry":null,
+"stop":null,
+"risk_pct":null,
+"rr":null,
+"confidence":"MEDIUM",
+"atr":70.97,
+"t1":null,
+"note":"price is mid-range, 12.0% above support — a better entry exists at 1,317; buying here widens the stop for no extra reward"
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":74.26166698198871,
+"technical":91,
+"fundamental":81,
+"f_score":7,
+"setup_fit":88,
+"news":[],
+"evidence":[
+{
+"factor":"Altaha Score v4",
+"points":68.3,
+"of":100,
+"share_pct":68,
+"detail":"trade score; confidence 95.9%; peer-relative as of 2026-11-05"
+}
+],
+"call":null
+},
+{
+"symbol":"LAURUSLABS",
+"name":"Laurus Labs Limited",
+"sector":"Healthcare",
+"price":2346.0,
+"avg_turnover_cr":497.6,
+"setup":"Momentum Breakout",
+"setup_key":"momentum_breakout",
+"horizon":"3–8 weeks",
+"conviction":68.1,
+"conviction_band":"Moderate",
+"plan":{
+"stance":"WAIT",
+"entry":null,
+"stop":null,
+"risk_pct":null,
+"rr":null,
+"confidence":"MEDIUM",
+"atr":84.25,
+"t1":null,
+"note":"price is mid-range, 11.8% above support — a better entry exists at 2,069; buying here widens the stop for no extra reward"
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":65.02786587561907,
+"technical":82,
+"fundamental":92,
+"f_score":9,
+"setup_fit":80,
+"news":[],
+"evidence":[
+{
+"factor":"Altaha Score v4",
+"points":68.1,
+"of":100,
+"share_pct":68,
+"detail":"trade score; confidence 96.4%; peer-relative as of 2026-11-05"
+}
+],
+"call":null
+},
+{
+"symbol":"ACUTAAS",
+"name":"Acutaas Chemicals Limited",
+"sector":"Basic Materials",
+"price":3755.0,
+"avg_turnover_cr":176.8,
+"setup":"Momentum Breakout",
+"setup_key":"momentum_breakout",
+"horizon":"3–8 weeks",
+"conviction":66.5,
+"conviction_band":"Moderate",
+"plan":{
+"stance":"WAIT",
+"entry":null,
+"stop":null,
+"risk_pct":null,
+"rr":null,
+"confidence":"MEDIUM",
+"atr":209.36,
+"t1":null,
+"note":"price is mid-range, 10.7% above support — a better entry exists at 3,354; buying here widens the stop for no extra reward"
+},
+"tracked":false,
+"liquidity_tier":"liquid",
+"adverse_filing":false,
+"composite":61.001082990914696,
+"technical":94,
+"fundamental":74,
+"f_score":6,
+"setup_fit":90,
+"news":[],
+"evidence":[
+{
+"factor":"Altaha Score v4",
+"points":66.5,
+"of":100,
+"share_pct":66,
+"detail":"trade score; confidence 82.8%; peer-relative as of 2026-11-05"
+}
+],
+"call":null
+}
+],
+"market_context":null,
+"excluded_adverse":[],
+"disclaimer":"Educational analysis. Not investment advice."
+}
+}

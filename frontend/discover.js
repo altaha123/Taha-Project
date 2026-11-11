@@ -136,7 +136,7 @@
   function setups() {
     var host = $('dsc-setups');
     if (!host) return;
-    host.innerHTML = card('is-setups', 'Strongest setups today', '', loading('the ranking'), null);
+    host.innerHTML = card('is-setups', 'Top momentum picks', '', loading('the ranking'), null);
     get('/ideas?horizon=short&limit=6', 45000).then(function (d) {
       var body, sub = '';
       if (!d) {
@@ -144,7 +144,7 @@
       } else if (!d.available) {
         body = quiet(d.message || 'No scan has been run yet, so there is no ranking to show. The screener builds one from the universe.');
       } else if (!(d.rows || []).length) {
-        body = quiet('Nothing clears the conviction floor for this horizon today. That is a real answer, not an error — a screener that always finds something is not screening.');
+        body = quiet('Nothing passed every test in this scan.');
       } else {
         sub = d.scanned_at ? 'scanned ' + d.scanned_at : '';
         body = '<ol class="dsc-rows">' + d.rows.slice(0, 6).map(function (r) {
@@ -160,8 +160,8 @@
           body += '<p class="dsc-warn"><b>Market regime.</b> ' + esc(d.regime.label) + '</p>';
         }
       }
-      host.innerHTML = card('is-setups', 'Strongest setups today', sub, body,
-                            'research/ideas', 'Open the stock screener');
+      host.innerHTML = card('is-setups', 'Top momentum picks', sub, body,
+                            'research/ideas', 'See all the picks');
     });
   }
 

@@ -2101,14 +2101,15 @@
             <tr><th scope="row">Acceleration</th><td>Is the rate of improvement itself improving?</td><td>5</td><td>15</td><td>10</td></tr>
             <tr><th scope="row">Value</th><td>What are you paying for those earnings?</td><td>5</td><td>15</td><td>20</td></tr>
             <tr><th scope="row">Financial strength</th><td>Can it service what it owes?</td><td>5</td><td>10</td><td>15</td></tr>
-            <tr><th scope="row">Momentum</th><td>Has the price been going up, and in a straight line?</td><td>20</td><td>15</td><td>8</td></tr>
-            <tr><th scope="row">Risk</th><td>How violently does it move, and has it just spiked?</td><td>30</td><td>5</td><td>5</td></tr>
-            <tr><th scope="row">Participation</th><td>Is turnover unusual against its own history?</td><td>20</td><td>5</td><td>2</td></tr>
+            <tr><th scope="row">Momentum</th><td>Has the price been going up, in a straight line, and is it near its high?</td><td>30</td><td>20</td><td>10</td></tr>
+            <tr><th scope="row">Risk</th><td>How violently does it move, and has it just spiked?</td><td>35</td><td>5</td><td>5</td></tr>
+            <tr><th scope="row">Participation</th><td>Is turnover unusual against its own history?</td><td>5</td><td>0</td><td>0</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="lsub">Participation is an attention prior, not evidence of
-         institutional buying, and never a standalone reason to buy anything.</p>
+      <p class="lsub">The three price pillars were re-weighted in November 2026
+         after a test on NSE prices from 2017 to 2026. Unusual turnover predicted
+         little, so Participation lost most of its weight.</p>
     </div>
 
     <div class="psec">
@@ -2116,7 +2117,7 @@
       <ul class="scr-not">
         <li><b>Not a forecast.</b> A high score describes the evidence available today. It says nothing about what the price will do.</li>
         <li><b>Not a probability.</b> 82 is not an 82% chance of anything. It is a rank against peers, on disclosed weights.</li>
-        <li><b>Not validated by the older study.</b> The technical-engine results in the accuracy notes concern a different engine and do not carry over.</li>
+        <li><b>Only partly measured.</b> The three price pillars were tested on ten years of NSE prices. The five business pillars have no such history to test against, and remain judgement.</li>
         <li><b>Not comparable across versions.</b> An old composite and a v4 score are different measurements and must never be pooled as one record.</li>
       </ul>
       <p class="lsub">What the score <i>has</i> been worth is a measurement, not a
@@ -2949,6 +2950,10 @@ function newsHTML(s){
 }
 
 async function loadIdeas(){
+  /* The door and this tab share one chosen list. Picking Momentum on the
+     door and pressing "See all" has to open Momentum here, not whichever
+     list this tab last showed. */
+  if(window.AltahaPicks){ horizon = window.AltahaPicks.chosen(); markHorizon(); }
   const req = ++ideasReq;
   $("idearows").innerHTML = SKEL(4);
   $("hznote").textContent = "";
@@ -4814,7 +4819,7 @@ if(fcSymParam){
 <script src="portfolio-story.js" defer></script>
 <script src="portfolio-plan.js" defer></script>
 <script src="portfolio.js?v=20261106-ledger" defer></script>
-<script src="nav.js?v=20261015-doors" defer></script>
+<script src="nav.js?v=20261111" defer></script>
 <script src="scoring.js" defer></script>
 <script src="social.js" defer></script>
 <script src="motion.js" defer></script>
@@ -4825,7 +4830,7 @@ if(fcSymParam){
 <script src="index-explorer.js?v=20260924-atlas" defer></script>
 <script src="sectors-live.js?v=20260927-dialog" defer></script>
 <script src="deals.js" defer></script>
-<script src="shell.js?v=20261106-easy" defer></script>
+<script src="shell.js?v=20261111" defer></script>
 <script src="home.js" defer></script>
 <script src="special.js" defer></script>
 <script src="wow.js" defer></script>
@@ -4837,7 +4842,7 @@ if(fcSymParam){
 <script src="query.js?v=20261106" defer></script>
 <script src="ledger-admin.js" defer></script>
 <script src="planner-risk.js" defer></script>
-<script src="discover.js" defer></script>
+<script src="discover.js?v=20261111" defer></script>
 <script src="doors.js?v=20261111" defer></script>
 <script src="adviser.js" defer></script>
 <script src="question-art.js" defer></script>

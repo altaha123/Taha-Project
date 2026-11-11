@@ -816,8 +816,8 @@ def compare_horizons(tech, fund, info, fin=None, bs=None, cf=None) -> dict:
 #
 # With these weights the price part of the score ranked stocks better at
 # every horizon: rank correlation with the next 21 sessions rose from 0.052
-# to 0.076 (trade), with the next 63 from 0.090 to 0.106 (position), with the
-# next 252 from 0.129 to 0.142 (invest). The fundamental pillars are
+# to 0.076 (trade), with the next 63 from 0.089 to 0.105 (position), with the
+# next 252 from 0.128 to 0.141 (invest). The fundamental pillars are
 # untouched: there is no ten-year point-in-time filing history to measure
 # them on, so they remain priors.
 V4_WEIGHTS = {
