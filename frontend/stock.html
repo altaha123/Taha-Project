@@ -119,13 +119,13 @@
     <div class="stk-pane" id="pane-info" role="tabpanel" aria-labelledby="pane-btn-info">
       <section class="stk-sec">
         <h2>The numbers</h2>
-        <p class="sub">Everything the engine measured before it scored anything.</p>
+        <p class="sub">What the engine measured.</p>
         <div class="nums d3-stage" id="nums"></div>
       </section>
 
       <section class="stk-sec" id="s-levels">
         <h2>Levels</h2>
-        <p class="sub">Support, resistance and volatility, computed from the price series. Observations, not instructions.</p>
+        <p class="sub">Support and resistance from the price history. Observations, not instructions.</p>
         <div class="lvls" id="levels"></div>
       </section>
     </div>
@@ -133,7 +133,7 @@
     <div class="stk-pane" id="pane-chart" role="tabpanel" aria-labelledby="pane-btn-chart" hidden>
       <section class="stk-sec">
         <h2>The price journey</h2>
-        <p class="sub">Explore the move. Touch a point for its price, or drag to compare two moments.</p>
+        <p class="sub">Touch a point for its price. Drag to compare two.</p>
         <div class="ranges" id="ranges"></div>
         <div class="d3-card chartbox" id="chartbox"></div>
         <!-- Into the Strategy lab with this stock filled in (strategy-lab.js). -->
@@ -156,7 +156,7 @@
     <div class="stk-pane" id="pane-scores" role="tabpanel" aria-labelledby="pane-btn-scores" hidden>
       <section class="stk-sec">
         <h2>The score</h2>
-        <p class="sub" id="score-sub">Weighted for the kind of business, and for the horizon you are reading it over.</p>
+        <p class="sub" id="score-sub">Weighted for the business and the holding period.</p>
         <div class="stk-scorewrap">
           <div class="dial" id="dial">
             <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -184,7 +184,7 @@
 
       <section class="stk-sec">
         <h2>The ledger</h2>
-        <p class="sub">Every check, the formula that turned it into points, and what the concept means. Open any row.</p>
+        <p class="sub">Every check and its formula. Open any row.</p>
         <div class="ledger" id="ledger"></div>
       </section>
     </div>
@@ -197,9 +197,7 @@
     <div class="stk-pane" id="pane-owners" role="tabpanel" aria-labelledby="pane-btn-owners" hidden>
       <section class="stk-sec">
         <h2>Who owns this company</h2>
-        <p class="sub">From the shareholding pattern the company files with the
-          exchange each quarter under Regulation 31 — not a provider's summary.
-          Every figure links back to the filing it was read from.</p>
+        <p class="sub">From the company's own quarterly filing. Every figure links to it.</p>
         <div id="own-body"></div>
       </section>
     </div>
@@ -211,9 +209,7 @@
     <div class="stk-pane" id="pane-funda" role="tabpanel" aria-labelledby="pane-btn-funda" hidden>
       <section class="stk-sec">
         <h2>Fundamentals</h2>
-        <p class="sub">The quarterly profit and loss account as the company filed
-          it with the exchange under Regulation 33, the ratios that follow from
-          it, and how each line moved against the same quarter a year earlier.</p>
+        <p class="sub">Quarterly results as filed, with the change from a year earlier.</p>
         <div id="funda-body"></div>
         <!-- Against its NSE industry, then the balance sheet and cash flow.
              Both are read from the stored filings, so opening the pane costs
@@ -232,11 +228,7 @@
     <div class="stk-pane" id="pane-deliv" role="tabpanel" aria-labelledby="pane-btn-deliv" hidden>
       <section class="stk-sec">
         <h2>Delivery</h2>
-        <p class="sub">How much of each day's volume was actually delivered —
-          settled into a demat account — rather than traded out again before
-          the close. Published by NSE per stock per session in the full
-          bhavcopy. A high share means ownership changed hands; a low one
-          means the day was churn.</p>
+        <p class="sub">The share of each day's volume that was bought to keep, not traded out the same day. High means real buying.</p>
         <div class="ranges dv-ranges" id="dv-ranges"></div>
         <div id="dv-body"></div>
       </section>

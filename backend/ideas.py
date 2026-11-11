@@ -893,7 +893,11 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "horizon_note": (f"{spec['idea']} Hold {spec['hold_text']}; leave on a close "
                          f"{spec['exit_pct']:.0f}% under the call price."),
         "tested": tested_record(key),
-        "study": {k: v for k, v in (leaders.TESTED or {}).items() if k != "lists"},
+        # The study's header only. Its tables are in research/ideas-study.json;
+        # sending them with every list would triple the response for nobody.
+        "study": {k: (leaders.TESTED or {}).get(k) for k in
+                  ("generated", "source", "from", "to", "sessions", "companies",
+                   "universe", "universe_median", "rules")},
         "lists": [{"key": k, "label": leaders.LISTS[k]["label"],
                    "hold_text": leaders.LISTS[k]["hold_text"]} for k in leaders.ORDER],
         "scanned_at": payload.get("scanned_at"),
