@@ -15,10 +15,19 @@
        reasons and its plan, and the ledger adds up to the score
      · a scan from before the lists still draws, the old way, and says so
      · an unreachable API says so and offers a retry
-     · on a 390px phone all four tabs fit and nothing scrolls sideways
+     · on a 390px phone all five tabs fit and nothing scrolls sideways
+     · the results list says what it is ranked on, shows the result each pick
+       was priced on, and says why it is empty between results seasons
+     · the chart and volume facts are in Details with the line saying they
+       rank nothing, and a list from before they existed still draws
+     · the old "trend setups fail in a weak market" warning is gone from the
+       tested lists; what the test found is printed instead, only when the
+       index is under its 200-day average
 
    /ideas is fulfilled from fixtures/picks.json, which is the real endpoint's
-   answer for 9 Nov 2026 trimmed to the fields the page reads. */
+   answer for 9 Nov 2026 trimmed to the fields the page reads. The results
+   list is the real engine's answer for the same day
+   (backend/tests/make_picks_fixture.py). */
 
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
@@ -28,7 +37,7 @@ const root = path.resolve('frontend');
 const output = path.resolve('test-results/picks');
 fs.mkdirSync(output, { recursive: true });
 const FIX = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/picks.json'), 'utf8'));
-const KEYS = ['week', 'month', 'momentum', 'long'];
+const KEYS = ['week', 'month', 'results', 'momentum', 'long'];
 const PORT = 8793;
 
 const server = http.createServer((req, res) => {
@@ -45,9 +54,10 @@ const server = http.createServer((req, res) => {
   } catch (_) { res.writeHead(404).end(); }
 });
 
-/* mode: 'picks' (the four lists), 'legacy' (a scan from before them),
+/* mode: 'picks' (the lists), 'legacy' (a scan from before them),
    'oldrecipe' (the lists, ranked before a recipe changed), 'down' (the API
-   does not answer). */
+   does not answer), 'offseason' (nobody has reported lately), 'weak' (the
+   index is under its 200-day average). */
 async function open(browser, size, mode) {
   const context = await browser.newContext({ viewport: size, hasTouch: size.width < 600 });
   await context.addInitScript(() => localStorage.setItem('altaha-guide-dismissed', '1'));
@@ -64,6 +74,14 @@ async function open(browser, size, mode) {
       if (state.mode === 'legacy') return route.fulfill({ json: FIX.legacy, headers: cors });
       if (state.mode === 'oldrecipe') {
         return route.fulfill({ json: { ...(FIX[h] || FIX.month), tested: null, recipe_current: false },
+                               headers: cors });
+      }
+      if (state.mode === 'offseason' && h === 'results') {
+        return route.fulfill({ json: FIX.results_empty, headers: cors });
+      }
+      if (state.mode === 'weak') {
+        return route.fulfill({ json: { ...(FIX[h] || FIX.month), regime: { ok: false, label: 'Index below its 50-day average — trend setups fail more often here.' },
+          market_test: { state: 'below_200d', text: 'The index is under its 200-day average. In the test, picks made on days like this averaged +9.2% (64 in 100 rose), against +4.4% on the other days. The list is not held back in either.' } },
                                headers: cors });
       }
       return route.fulfill({ json: FIX[h] || FIX.month, headers: cors });
@@ -94,7 +112,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   await panel.locator('.pk-card').first().waitFor({ state: 'visible' });
 
   assert.deepEqual(await panel.locator('.pk-tab').evaluateAll(ns => ns.map(n => n.getAttribute('aria-label'))),
-                   ['This week', 'This month', 'Momentum', 'Long term']);
+                   ['This week', 'This month', 'After results', 'Momentum', 'Long term']);
   assert.equal(await panel.locator('.pk-tab[aria-selected="true"]').getAttribute('data-pick'), 'month',
                'a first visit should open on the month list');
 
@@ -186,6 +204,45 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.ok(Math.abs(pts.reduce((a, b) => a + b, 0) - first.conviction) < 1.5, 'the ledger no longer adds up to the score');
   await page.screenshot({ path: path.join(output, 'list-desktop.png') });
 
+  // A list from before the chart facts existed still draws, without them.
+  assert.equal(await rows.first().locator('.pk-chart').count(), 0);
+
+  /* ── 3b · The results list ─────────────────────────────────────────────── */
+
+  await page.locator('#hzseg .hz[data-h="results"]').click();
+  const res = FIX.results;
+  await page.locator(`#idearows .idea[data-t="${res.rows[0].symbol}"]`).waitFor();
+  assert.deepEqual(await page.locator('#idearows .idea').evaluateAll(ns => ns.map(n => n.dataset.t)),
+                   res.rows.map(r => r.symbol), 'the page reordered the results list');
+  assert.match(await page.locator('#pickhead').innerText(), /jumped on their quarterly results/);
+  assert.match(await page.locator('#pickhead .pk-how summary').innerText(), /2018–2026/,
+               'the results record should say its test began in 2018');
+  await page.locator('#pickhead .pk-how summary').click();
+  assert.match(await page.locator('#pickhead .pk-how').innerText(), /2018–21/);
+  assert.equal((await page.locator('#pickhead .pk-record-n b').first().innerText()).trim(),
+               String(Math.round(res.tested.up_pct)));
+  // Above its 200-day average: nothing to explain, so no market line.
+  assert.equal(await page.locator('#pickhead .pk-market').count(), 0);
+  const r0 = page.locator('#idearows .idea').first();
+  assert.match(await r0.locator('.pk-why').innerText(), /Results on/);
+  assert.match(await r0.locator('.pk-plan').innerText(), /about a month/);
+  assert.match(await r0.locator('.pk-plan').innerText(), /−12%/);
+  await r0.locator('.morebtn').click();
+  const fact = await r0.locator('.pk-fact').first().innerText();
+  const [, mm, dd] = res.rows[0].results.session.split('-');
+  const mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(mm) - 1];
+  assert.match(fact, new RegExp('Priced on ' + Number(dd) + ' ' + mon + ':'), 'the result date should read as a day and a month');
+  assert.match(fact, /the average stock/);
+  // The chart and the tape, as facts, with the line that says they rank nothing.
+  const chart = r0.locator('.pk-chart');
+  assert.equal(await chart.locator('dt').count(), res.rows[0].chart.length);
+  assert.deepEqual(await chart.locator('dt').allInnerTexts(), res.rows[0].chart.map(c => c.k));
+  assert.match(await chart.locator('p').innerText(), /none of them changes a rank/);
+  // One row in the ledger, and it is the result-day move.
+  await r0.locator('.evbtn').click();
+  assert.match(await r0.locator('.evrow').first().innerText(), /results reached the exchange/);
+  await page.screenshot({ path: path.join(output, 'results-desktop.png') });
+
   // Another tab on the full list asks the server for that list.
   await page.locator('#hzseg .hz[data-h="week"]').click();
   await page.locator(`#idearows .idea[data-t="${FIX.week.rows[0].symbol}"]`).waitFor();
@@ -233,6 +290,35 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.deepEqual(state.errors, [], 'the page threw on an older recipe');
   await context.close();
 
+  /* ── 4c · Between results seasons the results list says why it is empty ── */
+
+  ({ context, page, state } = await open(browser, { width: 1280, height: 900 }, 'offseason'));
+  await page.addInitScript(() => localStorage.setItem('altaha-pick-list', 'results'));
+  await page.goto(url('#research'));
+  await page.locator('#dri-picks .pk-record').waitFor();
+  assert.equal(await page.locator('#dri-picks .pk-card').count(), 0);
+  assert.match(await page.locator('#dri-picks .pk-body').innerText(), /fills in the weeks companies report/);
+  await page.goto(url('#research/ideas'));
+  await page.locator('#idearows .ideas-note').waitFor();
+  assert.match(await page.locator('#idearows').innerText(), /fills in the weeks companies report/);
+  assert.deepEqual(state.errors, [], 'the page threw on an empty results list');
+  await context.close();
+
+  /* ── 4d · A weak market: what the test found, not the old warning ──────── */
+
+  ({ context, page, state } = await open(browser, { width: 1280, height: 900 }, 'weak'));
+  await page.addInitScript(() => localStorage.setItem('altaha-pick-list', 'momentum'));
+  await page.goto(url('#research'));
+  await page.locator('#dri-picks .pk-card').first().waitFor();
+  assert.match(await page.locator('#dri-picks .pk-market').innerText(), /not held back/);
+  await page.goto(url('#research/ideas'));
+  await page.locator('#idearows .idea').first().waitFor();
+  assert.match(await page.locator('#pickhead .pk-market').innerText(), /under its 200-day average/);
+  assert.doesNotMatch(await page.locator('#view-ideas').innerText(), /trend setups fail more often/,
+                      'the untested warning is back on a tested list');
+  assert.deepEqual(state.errors, [], 'the page threw in a weak market');
+  await context.close();
+
   /* ── 5 · An API that does not answer says so ──────────────────────────── */
 
   ({ context, page, state } = await open(browser, { width: 1280, height: 900 }, 'down'));
@@ -255,7 +341,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   const tabs = await page.locator('#dri-picks .pk-tab').evaluateAll(ns => ns.map(n => {
     const b = n.getBoundingClientRect(); return { left: b.left, right: b.right, h: b.height };
   }));
-  assert.equal(tabs.length, 4);
+  assert.equal(tabs.length, 5);
   tabs.forEach((t, i) => {
     assert.ok(t.left >= 0 && t.right <= 390, `tab ${i + 1} runs off a phone screen (${Math.round(t.right)}px)`);
     assert.ok(t.h >= 38, `tab ${i + 1} is ${Math.round(t.h)}px tall: too small to tap`);
@@ -267,7 +353,17 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   await page.goto(url('#research/ideas'));
   await page.locator('#idearows .idea').first().waitFor();
   const pageTabs = await page.locator('#hzseg .hz').evaluateAll(ns => ns.map(n => n.getBoundingClientRect().right));
+  assert.equal(pageTabs.length, 5);
   pageTabs.forEach((r, i) => assert.ok(r <= 390, `list tab ${i + 1} runs off a phone screen`));
+  // The results list on a phone: the chart facts stack and nothing runs wide.
+  await page.locator('#hzseg .hz[data-h="results"]').click();
+  await page.locator(`#idearows .idea[data-t="${FIX.results.rows[0].symbol}"]`).waitFor();
+  await page.locator('#idearows .idea').first().locator('.morebtn').click();
+  await page.locator('#idearows .idea').first().locator('.pk-chart').waitFor({ state: 'visible' });
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= 390, 'the results list scrolls sideways on a phone');
+  await page.screenshot({ path: path.join(output, 'results-phone.png') });
+  await page.locator('#hzseg .hz[data-h="month"]').click();
+  await page.locator(`#idearows .idea[data-t="${FIX.month.rows[0].symbol}"]`).waitFor();
   assert.ok((await page.locator('#idearows .idea').first().boundingBox()).y < 800, 'no stock on a phone’s first screen of the list');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= 390, 'the list scrolls sideways on a phone');
   await page.screenshot({ path: path.join(output, 'list-phone.png') });
@@ -276,7 +372,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
 
   await browser.close();
   server.close();
-  console.log('picks: door, tabs, full list, old scan, older recipe, unreachable API and phone all hold');
+  console.log('picks: door, tabs, full list, results list, chart facts, weak market, old scan, older recipe, unreachable API and phone all hold');
 })().catch(err => {
   console.error(err && err.stack || err);
   console.log(`::error title=Stock picks::${String(err && err.message || err).split('\n')[0]}`);

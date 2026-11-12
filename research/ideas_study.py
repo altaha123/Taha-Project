@@ -27,6 +27,16 @@ removed; gaps within 5% of a simple split or bonus ratio are snapped to it.
 Dividends are not adjusted for: every figure is a price return and the
 benchmark is the Nifty 500 price index, which is not adjusted for them either.
 
+THE RESULTS LIST'S OWN DATA
+The fifth list ranks companies on how their stock moved the day their
+quarterly results were priced, so it needs to know when each result reached
+the exchange. That is the site's own fundamentals table (every Regulation 33
+filing read from NSE, with its timestamp), downloaded by --fetch from
+/fundamentals/table into income_quarterly.csv. It holds companies listed
+TODAY, so one delisted after a bad quarter is missing; the list is therefore
+compared with the other companies that had just reported, as well as with the
+whole exchange. Without the file --study keeps the record it last wrote.
+
 RULES OF THE TEST
 A signal on day t uses bars up to and including t. The pick is bought at the
 OPEN of t+1 and held h sessions; an exit line is read on the close. Lists are
@@ -55,6 +65,9 @@ warnings.filterwarnings("ignore")
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.environ.get("IDEAS_DATA", "").strip() or os.path.join(HERE, ".ideas-data")
 OUT = os.path.join(HERE, "ideas-study.json")
+RESULTS_CSV = os.environ.get("IDEAS_RESULTS_CSV", "").strip() or os.path.join(DATA, "income_quarterly.csv")
+RESULTS_URL = ("https://taha-project.onrender.com/fundamentals/table"
+               "?table=income&freq=quarterly&format=csv")
 sys.path.insert(0, os.path.join(HERE, "..", "backend"))
 
 START = dt.date(2016, 1, 1)
@@ -101,6 +114,8 @@ def fetch():
             time.sleep(0.15)                 # one reader, politely
         day += dt.timedelta(days=1)
     print("sessions on disk:", got)
+    ok = _get(RESULTS_URL, RESULTS_CSV)
+    print("quarterly results table:", "on disk" if ok else "could not be downloaded")
 
 
 # --------------------------------------------------------------------------
@@ -296,6 +311,72 @@ def recipes(P, U, shared=False):
             "long": ((m12 + high + trend) / 3).where(ok)}
 
 
+# Companies listed six to twelve months, as leaders.MIN_YOUNG_SESSIONS and
+# leaders.YOUNG_LISTS: admitted to the week and momentum lists, placed against
+# the established universe so that no established stock's score changes.
+YOUNG_MIN, YOUNG_LISTS = 127, ("week", "momentum")
+
+
+def young_universe(P, U):
+    """(mask, measures) for liquid companies with 127 to 252 sessions since
+    their first trade. Volatility, the 52-week high and the 200-day average
+    are taken over the history there is."""
+    C = P.C
+    age = (P.traded.cumsum() > 0).cumsum()            # sessions since the first trade, that one included
+    lr = np.log(C / C.shift(1))
+    vol = lr.rolling(252, min_periods=100).std() * np.sqrt(252)
+    near = C / P.H.rolling(252, min_periods=100).max()
+    sma200 = C.rolling(200, min_periods=100).mean()
+    whole = P.mom_6_1.notna() & near.notna() & P.trend_q.notna() & P.ret_5.notna() & (vol >= 0.08)
+    Y = (P.turn60 >= 10e7) & (P.RAW >= 20) & (age >= YOUNG_MIN) & (age < 253) & whole & ~U
+    return Y, {"vol": vol, "near": near, "sma200": sma200}
+
+
+def add_young(P, U, scores):
+    """
+    The week and momentum scores with the young companies placed in them.
+
+    A young company's percentile on each measure is the share of the
+    ESTABLISHED universe at or below its figure, its 6-month return-for-risk
+    standing in for the 12-month one. Returns (scores, the universe to pick
+    from, the young mask).
+    """
+    Y, m = young_universe(P, U)
+    Uv, Yv = U.values, Y.values
+    va_y = (P.mom_6_1 / m["vol"]).values
+    seasoned = {"m12": (P.mom_12_1 / P.vol_252).values, "m6": (P.mom_6_1 / P.vol_252).values,
+                "high": P.near_high.values, "trend": P.trend_q.values,
+                "calm": (-P.vol_252).values, "dip": (-P.ret_5).values}
+    theirs = {"m12": va_y, "m6": va_y, "high": m["near"].values, "trend": P.trend_q.values,
+              "calm": (-m["vol"]).values, "dip": (-P.ret_5).values}
+    Cv, s50, s200 = P.C.values, P.sma50.values, m["sma200"].values
+    week, mom = scores["week"].values.copy(), scores["momentum"].values.copy()
+    for i in range(262, len(Cv)):
+        ys, us = np.flatnonzero(Yv[i]), np.flatnonzero(Uv[i])
+        if not len(ys) or len(us) < 30:
+            continue
+        p = {k: np.maximum(1, np.searchsorted(np.sort(seasoned[k][i, us]), theirs[k][i, ys], side="right"))
+             / len(us) for k in seasoned}
+        leader = (p["m12"] + p["m6"] + p["high"] + p["trend"]) / 4
+        ok = (Cv[i, ys] > s200[i, ys]) & (s50[i, ys] > s200[i, ys]) & (p["calm"] >= 0.20)
+        week[i, ys] = np.where(ok, 0.5 * leader + 0.5 * p["dip"], np.nan)
+        mom[i, ys] = np.where(ok, leader, np.nan)
+    out = dict(scores)
+    out["week"] = pd.DataFrame(week, index=P.C.index, columns=P.C.columns)
+    out["momentum"] = pd.DataFrame(mom, index=P.C.index, columns=P.C.columns)
+    return out, (U | Y), Y
+
+
+def young_only(df, Y):
+    """The rows of a run whose pick was a young company on its list date."""
+    if not len(df):
+        return df
+    yv = Y.values
+    row = {d: i for i, d in enumerate(Y.index)}
+    col = {n: j for j, n in enumerate(Y.columns)}
+    return df[np.asarray([bool(yv[row[d], col[n]]) for d, n in zip(df["date"], df["name"])], dtype=bool)]
+
+
 # A list that leaves out another list's top 15, as leaders.LISTS[...]["gives_way_to"].
 GIVES_WAY = {"momentum": "long"}
 
@@ -335,6 +416,129 @@ def overlap(scores, U, dates, gives_way=GIVES_WAY, n=15):
         [len(set().union(*(set(picks[k][d]) for k in keys))) for d in common])), 1)
     out["places"] = n * len(keys)
     out["dates"] = len(common)
+    return out
+
+
+# --------------------------------------------------------------------------
+# The results list. backend/leaders.result_reactions is the engine's version;
+# parity() below proves the two pick the same stocks.
+# --------------------------------------------------------------------------
+
+RESULTS_WINDOW, RESULTS_MIN_POOL = 10, 8
+
+
+def load_results(P):
+    """One row per quarterly filing, with `i`: the first session whose close
+    came after the filing reached the exchange. None without the table."""
+    if not os.path.exists(RESULTS_CSV):
+        return None
+    df = pd.read_csv(RESULTS_CSV, usecols=["symbol", "period_end", "filed_at", "revenue_yoy_pct",
+                                           "ebitda_yoy_pct", "pat_yoy_pct", "pat_cr", "opm_pct"])
+    df["filed"] = pd.to_datetime(df["filed_at"], errors="coerce")
+    df["period_end"] = pd.to_datetime(df["period_end"], errors="coerce")
+    df = df.dropna(subset=["filed", "period_end"])
+    lag = (df["filed"] - df["period_end"]).dt.days
+    # A filing later than this is a revision or a refiling, and its date is
+    # not when the market learned the numbers.
+    df = df[(lag >= 5) & (lag <= 130)]
+    df = df[df["symbol"].isin(P.C.columns)]
+    idx = P.C.index
+    # Filed at or before 15:30 on a session: that session's close has seen it.
+    # Anything later: the next session's.
+    day = df["filed"].dt.normalize()
+    after = (df["filed"].dt.hour * 60 + df["filed"].dt.minute) > (15 * 60 + 30)
+    pos = idx.searchsorted(day.values, side="left")
+    same_day = (pos < len(idx)) & (idx[np.minimum(pos, len(idx) - 1)] == day.values) & ~after.values
+    pos = np.where(same_day, pos, idx.searchsorted(day.values, side="right"))
+    df = df[pos < len(idx)].copy()
+    pos = pos[pos < len(idx)]
+    df["i"] = pos
+    df["d0"] = idx[pos]
+    df = df.sort_values(["symbol", "period_end"])
+    df["opm_change"] = df["opm_pct"] - df.groupby("symbol")["opm_pct"].shift(4)
+    df["pat_accel"] = df["pat_yoy_pct"] - df.groupby("symbol")["pat_yoy_pct"].shift(1)
+    return df.drop_duplicates(["symbol", "d0"], keep="last").sort_values(["i", "filed"]).reset_index(drop=True)
+
+
+def results_picks(P, U, R, dates, n=15):
+    """
+    The results list on each date, exactly as the engine builds it: the
+    liquid companies whose results were first priced in the last ten
+    sessions, ordered by that session's move less the average liquid stock's.
+    Returns (picks, pools): pools maps a date to every company that was
+    ranked, which is what the list is compared with.
+    """
+    ret = (P.C / P.C.shift(1) - 1).values
+    Uv = U.values
+    col = {name: j for j, name in enumerate(P.C.columns)}
+    row = {d: i for i, d in enumerate(P.C.index)}
+    pos_all, sym_all = R["i"].values, R["symbol"].values
+    picks, pools = [], {}
+    for d in dates:
+        i = row[d]
+        a, b = np.searchsorted(pos_all, i - (RESULTS_WINDOW - 1), "left"), np.searchsorted(pos_all, i, "right")
+        latest = {}
+        for k in range(a, b):                          # ordered by session: the later filing wins
+            latest[sym_all[k]] = int(pos_all[k])
+        members = np.flatnonzero(Uv[i])
+        inside = set(members.tolist())
+        market = {}
+        cand = []
+        for sym, pos in latest.items():
+            j = col[sym]
+            move = ret[pos, j]
+            if j not in inside or not np.isfinite(move):
+                continue
+            if pos not in market:
+                market[pos] = float(np.nanmean(ret[pos, members]))
+            cand.append((float(move - market[pos]), sym))
+        pools[d] = [sym for _r, sym in cand]
+        if len(cand) >= RESULTS_MIN_POOL:
+            cand.sort(key=lambda t: (-t[0], t[1]))
+            picks.append((d, [sym for _r, sym in cand[:n]]))
+    return picks, pools
+
+
+def vs_pool(P, df, hold, pools):
+    """A results list against every company it was chosen from that day, held
+    the same period. Newey-West errors, as for the other lists."""
+    if not len(df):
+        return None
+    fwd = P.C.shift(-hold) / P.entry - 1
+    col = {name: j for j, name in enumerate(P.C.columns)}
+    row = {d: i for i, d in enumerate(P.C.index)}
+    fv = fwd.values
+    base = {}
+    for d in df["date"].unique():
+        d = pd.Timestamp(d)
+        vals = [fv[row[d], col[sym]] for sym in pools.get(d, [])]
+        vals = [v for v in vals if np.isfinite(v)]
+        if vals:
+            base[d] = float(np.mean(vals))
+    per = df.groupby("date")["ret"].mean()
+    ex = (per - pd.Series(base).reindex(per.index)).dropna()
+    lags = max(1, int(np.ceil(hold / 5)))
+
+    def one(e):
+        t = newey_west_t(e.values, lags)
+        return {"excess_pct": round(float(e.mean() * 100), 2) if len(e) else None,
+                "t": None if t is None else round(t, 2),
+                "lists_ahead_pct": round(float((e > 0).mean() * 100), 1) if len(e) else None}
+    return {**one(ex), "by_half": {"2018-21": one(ex[ex.index < SPLIT]), "2022-26": one(ex[ex.index >= SPLIT])}}
+
+
+def by_market(P, df):
+    """A list's picks split by where the Nifty 500 stood, against its own
+    200-day average, on the day the list was made."""
+    if not len(df):
+        return None
+    above = (P.N500 > P.N500.rolling(200, min_periods=180).mean())
+    flag = above.reindex(df["date"]).fillna(False).astype(bool).values
+    out = {}
+    for label, part in (("above_200d", df[flag]), ("below_200d", df[~flag])):
+        d = describe(part)
+        out[label] = None if d is None else {k: d[k] for k in
+                                             ("list_dates", "picks", "up_pct", "avg_pct", "index_avg_pct")}
     return out
 
 
@@ -421,7 +625,7 @@ def newey_west_t(x, lags):
     return float(x.mean() / np.sqrt(max(s, 1e-18) / n))
 
 
-def vs_average_stock(P, U, df, hold):
+def vs_average_stock(P, U, df, hold, first="2017-21"):
     """
     Each list against the average liquid stock on the same dates, held the
     same period: the bar that matters, because the Nifty 500 is weighted to
@@ -441,15 +645,15 @@ def vs_average_stock(P, U, df, hold):
         return {"excess_pct": round(float(e.mean() * 100), 2),
                 "t": None if t is None else round(t, 2),
                 "lists_ahead_pct": round(float((e > 0).mean() * 100), 1)}
-    return {**one(ex), "by_half": {"2017-21": one(ex[ex.index < SPLIT]),
+    return {**one(ex), "by_half": {first: one(ex[ex.index < SPLIT]),
                                    "2022-26": one(ex[ex.index >= SPLIT])}}
 
 
-def with_breakdowns(df):
+def with_breakdowns(df, first="2017-21"):
     out = describe(df)
     if out is None:
         return None
-    out["by_half"] = {"2017-21": describe(df[df["date"] < SPLIT]), "2022-26": describe(df[df["date"] >= SPLIT])}
+    out["by_half"] = {first: describe(df[df["date"] < SPLIT]), "2022-26": describe(df[df["date"] >= SPLIT])}
     out["by_year"] = {}
     for y, g in df.groupby(df["date"].dt.year):
         d = describe(g)
@@ -537,47 +741,102 @@ def old_picks(P, base):
 # --------------------------------------------------------------------------
 
 LISTS = {"week": (5, 7.0), "month": (21, 12.0), "momentum": (63, 15.0), "long": (252, 30.0)}
+# The fifth list is made from results filings, not from the price recipes
+# above, so it is run on its own in study() and joins the same output.
+RESULTS_LIST = ("results", 21, 12.0)
 # Brokerage, STT, exchange charges, stamp duty, GST and a little slippage for
 # one buy and one sell of a delivery trade: the figure the Strategy lab uses.
 ROUND_TRIP_COST_PCT = 0.49
 
 
-def parity(P, U, scores):
-    """backend/leaders.py must pick what this file picked, or the page is
-    printing the record of a recipe the site does not run."""
+def _engine_candidates(P, i, young=None):
+    """Every stock the scan would have met on session i, as the engine's own
+    signals() reads it from a frame cut at that session."""
     import leaders
+    cands = []
+    sl = slice(max(0, i - 299), i + 1)        # the first list date has only 263 sessions behind it
+    # The scan's symbol list on that date: anything trading Rs 3 crore that
+    # had not missed more than twenty of the last 260 sessions (the engine
+    # reads that off the dates of a real feed; this panel has no gaps), and
+    # the companies listed six to twelve months.
+    listed = (P.turn60.iloc[i] >= 3e7) & (P.hist.iloc[i] >= 240)
+    if young is not None:
+        listed = listed | young.iloc[i]
+    for n in P.C.columns[listed.values]:
+        # Prices as a feed showed them THAT day: adjusted for every split
+        # up to it and none after, so the last close is the traded price.
+        j = P.C.columns.get_loc(n)
+        k = P.RAW.iat[i, j] / P.C.iat[i, j]
+        df = pd.DataFrame({"High": P.H[n].values[sl] * k, "Low": P.L[n].values[sl] * k,
+                           "Close": P.C[n].values[sl] * k}, index=P.C.index[sl])
+        df["Volume"] = P.VAL[n].values[sl] / df["Close"]
+        cands.append({"symbol": n, "leader_sig": leaders.signals(df)})
+    return cands
+
+
+def parity(P, U, scores, R=None, results=None, W=None, Y=None):
+    """backend/leaders.py must pick what this file picked, or the page is
+    printing the record of a recipe the site does not run. `W` is the
+    universe the lists are picked from (the established and the young), `Y`
+    the young alone; `U` stays the established universe."""
+    import leaders
+    W = U if W is None else W
     same = total = 0
-    for i in (400, 900, 1400, 1900, 2300, 2600):
+    spots = [400, 900, 1400, 1900, 2300, 2600]
+    if Y is not None:
+        # And six dates on which a young company made a list, so the path
+        # that places them is under the same check as everything else.
+        hit = [i for i in range(262, len(P.C) - 1, 5)
+               if any(Y.iat[i, P.C.columns.get_loc(n)]
+                      for k in YOUNG_LISTS
+                      for n in (list_picks(scores, W, [P.C.index[i]], k) or [(0, [])])[0][1])]
+        spots += [hit[int(k)] for k in np.linspace(0, len(hit) - 1, 6)] if hit else []
+    for i in sorted(set(spots)):
         if i >= len(P.C):
             continue
-        d, cands = P.C.index[i], []
-        sl = slice(i - 299, i + 1)
-        # The scan's symbol list on that date: anything trading Rs 3 crore that
-        # had not missed more than twenty of the last 260 sessions (the engine
-        # reads that off the dates of a real feed; this panel has no gaps).
-        listed = (P.turn60.iloc[i] >= 3e7) & (P.hist.iloc[i] >= 240)
-        for n in P.C.columns[listed.values]:
-            # Prices as a feed showed them THAT day: adjusted for every split
-            # up to it and none after, so the last close is the traded price.
-            k = P.RAW.iat[i, P.C.columns.get_loc(n)] / P.C.iat[i, P.C.columns.get_loc(n)]
-            df = pd.DataFrame({"High": P.H[n].values[sl] * k, "Close": P.C[n].values[sl] * k},
-                              index=P.C.index[sl])
-            df["Volume"] = P.VAL[n].values[sl] / df["Close"]
-            cands.append({"symbol": n, "leader_sig": leaders.signals(df)})
-        blocks = leaders.rank(cands)
+        d = P.C.index[i]
+        blocks = leaders.rank(_engine_candidates(P, i, Y))
         for key in scores:
-            want = set((list_picks(scores, U, [d], key) or [(d, [])])[0][1])
+            want = set((list_picks(scores, W, [d], key) or [(d, [])])[0][1])
             got = {s for s, b in blocks.items() if (b["lists"][key]["rank"] or 99) <= 15}
             same += len(want & got)
             total += 15
+    # The results list, on six dates it made a list. The engine is told only
+    # what had reached the exchange by each date, with the real timestamps.
+    if R is not None and results:
+        row = {d: i for i, d in enumerate(P.C.index)}
+        made = dict(results)
+        for d in [list(made)[int(k)] for k in np.linspace(0, len(made) - 1, 6)]:
+            i = row[d]
+            known = R[R["i"] <= i].drop_duplicates("symbol", keep="last")
+            filed = {sym: {"filed_at": str(when)[:19]} for sym, when in zip(known["symbol"], known["filed"])}
+            blocks = leaders.rank(_engine_candidates(P, i, Y), results=filed)
+            want = set(made[d])
+            got = {s for s, b in blocks.items() if (b["lists"]["results"]["rank"] or 99) <= 15}
+            same += len(want & got)
+            total += max(len(want), len(got))
     return same, total
 
 
 def study():
     P = Panel()
     U = P.universe(10)
-    scores = recipes(P, U)
-    same, total = parity(P, U, scores)
+    plain = recipes(P, U)                      # the four lists on established companies alone
+    scores, W, Y = add_young(P, U, plain)      # W: who a list may pick; U: who it is compared with
+    try:
+        with open(OUT, encoding="utf-8") as f:
+            previous = json.load(f)
+    except Exception:
+        previous = {}
+    R = load_results(P)
+    r_key, r_hold, r_exit = RESULTS_LIST
+    r_picks = r_pools = r_dates = None
+    if R is not None:
+        first = max(262, int(R["i"].min()) + RESULTS_WINDOW)
+        first += (-(first - 262)) % 5                  # on the same five-session grid as the others
+        r_dates = P.C.index[first:-(r_hold + 1):5]
+        r_picks, r_pools = results_picks(P, U, R, r_dates)
+    same, total = parity(P, U, scores, R, r_picks, W, Y)
     print(f"engine parity: {same} of {total} picks identical")
     assert same == total, "backend/leaders.py no longer matches the tested recipes"
 
@@ -598,7 +857,7 @@ def study():
     # How many names the lists share, as run and as first built.
     shared = recipes(P, U, shared=True)
     every = P.C.index[262:-1:5]
-    result["overlap"] = {"now": overlap(scores, U, every),
+    result["overlap"] = {"now": overlap(scores, W, every),
                          "first version": overlap(shared, U, every, gives_way={})}
     print("overlap:", json.dumps(result["overlap"], indent=1))
     result["first_version"] = {
@@ -610,12 +869,31 @@ def study():
 
     for key, (hold, exit_pct) in LISTS.items():
         dates = P.C.index[262:-(hold + 1):5]
-        picks = list_picks(scores, U, dates, key)
+        picks = list_picks(scores, W, dates, key)
         ran = run_list(P, picks, hold, exit_pct)
         rec = with_breakdowns(ran)
         rec.update(hold_sessions=hold, exit_pct=exit_pct,
                    avg_after_costs_pct=round(rec["avg_pct"] - ROUND_TRIP_COST_PCT, 2),
-                   vs_average_stock=vs_average_stock(P, U, ran, hold))
+                   vs_average_stock=vs_average_stock(P, U, ran, hold),
+                   market=by_market(P, ran))
+        if key in YOUNG_LISTS:
+            # The list with companies listed six to twelve months let in,
+            # beside the same list without them and the young picks alone.
+            was = run_list(P, list_picks(plain, U, dates, key), hold, exit_pct)
+            yo = young_only(ran, Y)
+            d_yo, v_yo = describe(yo), vs_average_stock(P, U, yo, hold)
+            rec["young"] = {
+                "what": "Companies listed six to twelve months, their 6-month return standing in "
+                        "for the 12-month one, placed against the established universe.",
+                "picks": d_yo["picks"], "list_dates": d_yo["list_dates"], "up_pct": d_yo["up_pct"],
+                "avg_pct": d_yo["avg_pct"], "median_pct": d_yo["median_pct"],
+                "index_avg_pct": d_yo["index_avg_pct"], "worst_5pct": d_yo["worst_5pct"],
+                "vs_average_stock": v_yo,
+                "list_without_them": {**{k: describe(was)[k] for k in ("picks", "up_pct", "avg_pct")},
+                                      "vs_average_stock": vs_average_stock(P, U, was, hold)},
+            }
+            led = all((v_yo["by_half"][h]["excess_pct"] or -9) > 0 for h in ("2017-21", "2022-26"))
+            assert led, f"young companies did not lead on the {key} list in both halves; do not admit them"
         result["lists"][key] = rec
         first = run_list(P, top_picks(shared[key], U, dates), hold, exit_pct)
         result["first_version"]["lists"][key] = {**describe(first),
@@ -630,11 +908,42 @@ def study():
         print(f"\n{key}: hold {hold}, exit {exit_pct}%")
         print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year",)}, indent=1))
 
+    # The results list: made from filings, so it has its own picker.
+    if r_picks is not None:
+        ran = run_list(P, r_picks, r_hold, r_exit)
+        rec = with_breakdowns(ran, first="2018-21")
+        rec.update(hold_sessions=r_hold, exit_pct=r_exit,
+                   avg_after_costs_pct=round(rec["avg_pct"] - ROUND_TRIP_COST_PCT, 2),
+                   vs_average_stock=vs_average_stock(P, U, ran, r_hold, first="2018-21"),
+                   vs_reporters=vs_pool(P, ran, r_hold, r_pools),
+                   market=by_market(P, ran),
+                   **{"from": str(r_dates[0].date()),
+                      "dates_tried": int(len(r_dates)),
+                      "filings": int(len(R)), "companies": int(R["symbol"].nunique()),
+                      "window_sessions": RESULTS_WINDOW, "min_companies": RESULTS_MIN_POOL,
+                      "what": ("Liquid companies whose quarterly results were first priced in the last "
+                               f"{RESULTS_WINDOW} sessions, ordered by that session's move less the average "
+                               "liquid stock's. A list is made only when eight or more qualify."),
+                      "bias": ("The results table holds companies listed today. vs_reporters compares the "
+                               "list with every company it was chosen from, which shares that bias.")})
+        result["lists"][r_key] = rec
+        result["exits"][r_key] = {"no exit line": describe(run_list(P, r_picks, r_hold))}
+        for alt in sorted({r_exit / 2, r_exit, r_exit * 1.5}):
+            result["exits"][r_key][f"close {alt:g}% under"] = describe(run_list(P, r_picks, r_hold, alt))
+        print(f"\n{r_key}: hold {r_hold}, exit {r_exit}%")
+        print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year",)}, indent=1))
+    elif (previous.get("lists") or {}).get(r_key):
+        # No results table on this machine: keep the record last written, and say so.
+        result["lists"][r_key] = dict(previous["lists"][r_key], carried_over=True)
+        if (previous.get("exits") or {}).get(r_key):
+            result["exits"][r_key] = previous["exits"][r_key]
+        print(f"\n{r_key}: no results table at {RESULTS_CSV}; the last record is kept.")
+
     # Momentum held six months instead of three: the same picks, a wider line.
     dates = P.C.index[262:-(126 + 1):5]
     result["momentum_six_months"] = {
         "hold_sessions": 126, "exit_pct": 20.0,
-        **describe(run_list(P, list_picks(scores, U, dates, "momentum"), 126, 20.0))}
+        **describe(run_list(P, list_picks(scores, W, dates, "momentum"), 126, 20.0))}
     print("\nmomentum held six months:", json.dumps(result["momentum_six_months"], indent=1))
 
     # What a random pick did: the bar every list has to clear.
@@ -656,9 +965,13 @@ def study():
             "held_42_sessions_no_stop": describe(run_list(P, op, 42)),
             "held_63_sessions_no_stop": describe(run_list(P, op, 63)),
             "new_momentum_list_same_dates_stop_8pct": describe(run_list(
-                P, list_picks(scores, U, [d for d, _ in op], "momentum"), 42, 8.0, on_low=True)),
+                P, list_picks(scores, W, [d for d, _ in op], "momentum"), 42, 8.0, on_low=True)),
         }
         print("\nbefore:", json.dumps(result["before"], indent=1))
+    elif previous.get("before"):
+        # The replay of the old method takes half an hour and its subject no
+        # longer changes. Without it on disk, the last replay is kept.
+        result["before"] = previous["before"]
 
     # The price part of the score, before and after the re-weighting.
     U5 = P.universe(5)

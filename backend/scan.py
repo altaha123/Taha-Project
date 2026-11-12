@@ -214,11 +214,17 @@ CONTROL_PCT = float(os.environ.get("SCAN_CONTROL_PCT", "0.25") or 0.25)
 # given places in phase 2 before the technical ranking fills the rest. Without
 # this reservation a leader that does not also have one of the 150 hottest
 # charts never gets a row, and the list is drawn from the wrong pool again.
-# 75 is the most the cohort allows (half the ranked places). Since the lists
-# stopped sharing most of their names (leaders.py, "one stock, one list") the
-# top 18 of all four come to about 72 different stocks; 70 left the last few
-# reserves of each list without a row.
-LEADER_SLOTS = int(os.environ.get("SCAN_LEADER_SLOTS", "75") or 75)
+# Since the lists stopped sharing most of their names (leaders.py, "one
+# stock, one list") the top 18 of the four price lists come to about 72
+# different stocks, and the results list adds up to 18 more in the weeks
+# companies report. So the leaders may take up to three-fifths of the ranked
+# places (90 of 150), where it was half: fewer, and the last names of each
+# list have no row to be shown from.
+LEADER_SLOTS = int(os.environ.get("SCAN_LEADER_SLOTS", "90") or 90)
+LEADER_SHARE = 0.6
+# How far back to ask for results filings: ten sessions is a fortnight, and a
+# week more covers a run of holidays.
+RESULTS_LOOKBACK_DAYS = 21
 # How far down each of the four lists a name may sit and still get a place.
 # The page shows 15; the rest are the reserve for the sector cap and for
 # names removed over an adverse filing.
@@ -732,11 +738,87 @@ def deep_score(cand, selection="ranked"):
         # signals (leaders.py), measured in phase 1. None for a stock outside
         # that universe; the Ideas list is the rows whose block has a rank.
         "leader": cand.get("leader"),
+        # The clearest chart pattern in the bars, for names on a pick list
+        # only: fifty milliseconds a stock is worth it for those and not for
+        # the two hundred others.
+        "chart_pattern": (_chart_pattern(df, s) if leaders.best_rank(cand.get("leader")) else None),
         # --- research metadata: never shown in the UI, essential for analysis
         "selection": selection,              # "ranked" or "control"
         "fundamental_quality": quality,      # "VALID" or "MISSING"
         "rankable": not fund_missing,        # excluded from the leaderboard if False
     }
+
+
+def recent_results(today=None):
+    """
+    When each company's latest quarterly results reached the exchange, for
+    the results pick list: {SYMBOL: {"filed_at", "quarter", "pat_yoy_pct",
+    "revenue_yoy_pct"}} over the last three weeks.
+
+    Two sources, because neither is enough alone. NSE's filing index is the
+    fresh one: a result filed this evening is in it tonight, with its time.
+    The fundamentals tables are read from the same filings a few hours to a
+    day later, and carry what the result said. A filing only the tables know
+    of still counts; a growth figure only the tables have is added to a
+    filing the index reported. Either source failing leaves the other, and
+    both failing leaves the list empty, which is what it should be when
+    nobody can say who reported.
+    """
+    day = today or dt.date.today()
+    since = day - dt.timedelta(days=RESULTS_LOOKBACK_DAYS)
+    out = {}
+    try:
+        import results_calendar
+        for f in results_calendar.filings(since, day) or []:
+            # A revision is not the day the market learned the numbers.
+            if f.get("revised") or not f.get("at"):
+                continue
+            sym = str(f.get("symbol") or "").upper()
+            at = f["at"].replace(tzinfo=None) if hasattr(f["at"], "replace") else f["at"]
+            cur = out.get(sym)
+            qe = f.get("quarter_end")
+            # The newest quarter a company filed; within it, the first filing.
+            if cur is None or (qe and cur["_qe"] and qe > cur["_qe"]) or \
+                    (qe == cur["_qe"] and at < cur["_at"]):
+                out[sym] = {"filed_at": at.strftime("%Y-%m-%d %H:%M:%S"), "_at": at, "_qe": qe,
+                            "quarter": None, "pat_yoy_pct": None, "revenue_yoy_pct": None}
+    except Exception:
+        pass
+    try:
+        import fundamentals_store
+        for r in fundamentals_store.recent_quarterly(since.isoformat()):
+            sym = str(r.get("symbol") or "").upper()
+            cur = out.get(sym)
+            if cur is None:
+                cur = out[sym] = {"filed_at": str(r.get("filed_at"))[:19], "_at": None, "_qe": None}
+            cur.update(quarter=r.get("label"), pat_yoy_pct=r.get("pat_yoy_pct"),
+                       revenue_yoy_pct=r.get("revenue_yoy_pct"))
+    except Exception:
+        pass
+    return {s: {k: v for k, v in r.items() if not k.startswith("_")} for s, r in out.items()}
+
+
+def _chart_pattern(df, symbol):
+    """
+    The clearest classical chart pattern in the bars, or None: its name,
+    whether it has confirmed, and the price that confirms it. Shown beside a
+    pick as a fact about the chart. No base rate is computed here (that is
+    the stock page's job and costs far more), and no measured-move target is
+    passed on: a pick carries an exit line and no target.
+    """
+    try:
+        import patterns
+        res = patterns.analyse(df, symbol=symbol, with_base_rates=False)
+        top = (res.get("patterns") or [None])[0]
+        if not top:
+            return None
+        return {"name": top.get("name"), "key": top.get("key"), "direction": top.get("direction"),
+                "status": top.get("status"), "confidence": top.get("confidence"),
+                "trigger": top.get("trigger"), "invalidation": top.get("invalidation"),
+                "distance_to_trigger_pct": top.get("distance_to_trigger_pct"),
+                "formed_at": top.get("formed_at")}
+    except Exception:
+        return None
 
 
 def pick_phase2_cohort(candidates, n_total, control_pct=CONTROL_PCT):
@@ -763,9 +845,9 @@ def pick_phase2_cohort(candidates, n_total, control_pct=CONTROL_PCT):
     n_control = int(n_total * control_pct)
     n_ranked = n_total - n_control
 
-    # The names near the top of any of the four pick lists take their places
-    # first, best rank first, then the technical ranking fills what is left.
-    # They never take more than half: the rest of the site (setups, the
+    # The names near the top of any pick list take their places first, best
+    # rank first, then the technical ranking fills what is left. They never
+    # take more than three-fifths: the rest of the site (setups, the
     # screener's peer groups) is built on the technical cohort.
     # With no leader blocks on the candidates (a short test list, or
     # leaders.rank() declining to rank fewer than thirty names) this is
@@ -773,7 +855,7 @@ def pick_phase2_cohort(candidates, n_total, control_pct=CONTROL_PCT):
     def _best(c):
         return leaders.best_rank(c.get("leader"))
     lead = sorted((c for c in candidates if _best(c) and _best(c) <= LEADER_DEPTH),
-                  key=lambda c: (_best(c), c["symbol"]))[:min(LEADER_SLOTS, n_ranked // 2)]
+                  key=lambda c: (_best(c), c["symbol"]))[:min(LEADER_SLOTS, int(n_ranked * LEADER_SHARE))]
     lead_syms = {c["symbol"] for c in lead}
     rest = [c for c in candidates if c["symbol"] not in lead_syms][:n_ranked - len(lead)]
     ranked = lead + rest
@@ -865,6 +947,21 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
                     records[r["symbol"]][f"pick_{key}_score"] = entry["score"]
                 if entry.get("rank"):
                     records[r["symbol"]][f"pick_{key}_rank"] = entry["rank"]
+            # The chart and tape measurements, and the result-day move, banked
+            # the same way: they move no rank today because they did not earn
+            # one on history, and this is what lets the live record say
+            # otherwise if it ever does.
+            tech = lead.get("technicals") or {}
+            for k in ("rsi", "adx", "macd_hist_pct", "above_20d_pct", "rel_volume", "up_down_volume",
+                      "dry_up", "squeeze", "range_15_60", "below_60d_high_pct", "below_6m_high_pct"):
+                if tech.get(k) is not None:
+                    records[r["symbol"]][f"tech_{k}"] = tech[k]
+            if tech.get("breakout"):
+                records[r["symbol"]]["tech_breakout_sessions_ago"] = tech["breakout"].get("sessions_ago")
+                if tech["breakout"].get("rel_volume") is not None:
+                    records[r["symbol"]]["tech_breakout_rel_volume"] = tech["breakout"]["rel_volume"]
+            if (lead.get("results") or {}).get("reaction_pct") is not None:
+                records[r["symbol"]]["results_reaction_pct"] = lead["results"]["reaction_pct"]
             # Orthogonal factors and the individual technical checks. Recorded
             # flat alongside everything else — factor_snapshots is long-format
             # precisely so new factors never need a migration.
@@ -1052,7 +1149,7 @@ def run_scan(progress=None, names=None, checkpoint=None):
     # Rank the leaders against the whole liquid universe while phase 1's
     # inputs are still held, then drop the inputs: the block is all a row needs.
     try:
-        blocks = leaders.rank(cands)
+        blocks = leaders.rank(cands, results=recent_results())
     except Exception:
         blocks = {}
     for c in cands:

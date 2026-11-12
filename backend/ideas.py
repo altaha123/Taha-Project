@@ -52,6 +52,8 @@ than a full one built from the least-bad names available.
 """
 
 import datetime as dt
+import math
+import time
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeout
@@ -90,6 +92,11 @@ try:
     import archetypes as A
 except Exception:
     A = None
+
+try:
+    import wow_orders
+except Exception:
+    wow_orders = None
 
 try:
     from data_source import resolve as _resolve
@@ -715,7 +722,7 @@ def market_context(horizon: str = "short"):
 # ---------------------------------------------------------------------------
 
 PICK_SECTOR_CAP = int(os.environ.get("IDEAS_PICK_SECTOR_CAP", "4") or 4)
-PICK_STALE_DAYS = {"week": 2, "month": 5, "momentum": 7, "long": 14}
+PICK_STALE_DAYS = {"week": 2, "month": 5, "results": 3, "momentum": 7, "long": 14}
 # A long-term pick with these on its record is left out. Not measured by the
 # price study (no ten-year fundamentals history exists to test it on); kept as
 # a plain safety screen and reported in the notes whenever it removes a name.
@@ -729,7 +736,142 @@ _EVIDENCE = (
     ("calm", "calm", "Calm: low volatility"),
     ("dip", "dip", "Dip over the last five sessions"),
     ("dip21", "dip_month", "Dip over the last month"),
+    ("reaction", "reaction", "Move on the day its results were priced"),
 )
+
+# What the chart and the tape say about a pick, in the reader's words. These
+# are printed as facts and move no rank: research/signals_lab.py tried each of
+# them as a gate or a tilt on the lists, and breakouts as lists of their own,
+# and none earned a place (research/IDEAS-STUDY.md, "What did not earn a place").
+CHART_NOTE = ("Facts about the chart, not reasons for the pick. Tested over ten years, none of "
+              "these improved a list, so none of them changes a rank.")
+_orders_cache = {"at": 0.0, "by_symbol": {}}
+ORDER_LOOKBACK_DAYS = 45
+
+
+def chart_facts(tech, facts=None, pattern=None, price=None):
+    """Rows of (what, what it says) for a pick's Details, or []."""
+    if not tech:
+        return []
+    out = []
+
+    def num(v):
+        return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+    b = tech.get("breakout")
+    if b:
+        ago = b.get("sessions_ago")
+        when = "today" if ago == 0 else ("yesterday" if ago == 1 else f"{ago} sessions ago")
+        vol = f", on {b['rel_volume']:.1f} times its usual volume" if num(b.get("rel_volume")) else ""
+        out.append({"k": "Breakout", "v": f"Closed at a six-month high {when}{vol}, the first in over 20 sessions."})
+    elif num(tech.get("below_60d_high_pct")):
+        gap = tech["below_60d_high_pct"]
+        out.append({"k": "Price", "v": ("At its 60-day high." if gap < 0.5 else
+                                         f"{gap:.0f}% under its 60-day high.")})
+    f = facts or {}
+    above = []
+    if num(tech.get("above_20d_pct")):
+        above.append(("20", tech["above_20d_pct"] > 0))
+    if num(price) and num(f.get("sma50")):
+        above.append(("50", price > f["sma50"]))
+    if num(price) and num(f.get("sma200")):
+        above.append(("200", price > f["sma200"]))
+    if above:
+        over = [n for n, ok in above if ok]
+        under = [n for n, ok in above if not ok]
+
+        def join(xs):
+            return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
+        text = (f"Above its {join(over)}-day average{'s' if len(over) > 1 else ''}" if over else "")
+        if under:
+            text += (", under" if text else "Under") + f" its {join(under)}-day"
+            text += "" if over else f" average{'s' if len(under) > 1 else ''}"
+        out.append({"k": "Averages", "v": text + "."})
+    gauges = []
+    if num(tech.get("rsi")):
+        gauges.append(f"RSI {tech['rsi']:.0f}")
+    if num(tech.get("macd_hist_pct")):
+        side = "above" if tech["macd_hist_pct"] > 0 else "below"
+        gauges.append(f"MACD {side} its signal line{' and rising' if tech.get('macd_rising') else ''}")
+    if num(tech.get("adx")):
+        gauges.append(f"ADX {tech['adx']:.0f}")
+    if gauges:
+        out.append({"k": "Indicators", "v": " · ".join(gauges) + "."})
+    vol = []
+    if num(tech.get("rel_volume")):
+        vol.append(f"{tech['rel_volume']:.1f} times its usual volume in the last session")
+    if num(tech.get("up_down_volume")):
+        r = tech["up_down_volume"]
+        vol.append(f"{r:.1f} times as much volume on rising days as on falling days over 50 sessions"
+                   if r >= 1 else
+                   f"more volume on falling days than rising days over 50 sessions ({r:.1f} to 1)")
+    if vol:
+        text = "; ".join(vol)
+        out.append({"k": "Volume", "v": text[0].upper() + text[1:] + "."})
+    if num(tech.get("squeeze")) and tech["squeeze"] <= 0.75:
+        out.append({"k": "Range", "v": (f"Tightening: the last ten sessions moved {tech['squeeze'] * 100:.0f}% "
+                                         "as much as the last sixty.")})
+    if pattern and pattern.get("name"):
+        status = str(pattern.get("status") or "").lower()
+        text = f"{pattern['name']}, {status or 'seen'}"
+        if status == "forming" and num(pattern.get("trigger")):
+            away = pattern.get("distance_to_trigger_pct")
+            text += f". It confirms on a close through \u20b9{pattern['trigger']:,.2f}"
+            if num(away):
+                text += f", {abs(away):.1f}% away"
+        out.append({"k": "Pattern", "v": text + "."})
+    return out
+
+
+def _order_for(symbol):
+    """The largest order this company disclosed in the last few weeks, with
+    its size against the company's market value, or None. Read from the order
+    ledger (wow_orders), which reads the amount out of the filing itself."""
+    if wow_orders is None or not symbol:
+        return None
+    now = time.time()
+    if now - _orders_cache["at"] > 600:
+        by = {}
+        try:
+            today = dt.date.today()
+            for r in wow_orders.history(today - dt.timedelta(days=ORDER_LOOKBACK_DAYS), today) or []:
+                sym = str(r.get("symbol") or "").upper()
+                pct = r.get("pct_of_market_cap")
+                if not sym or r.get("value_cr") is None:
+                    continue
+                cur = by.get(sym)
+                if cur is None or (pct or 0) > (cur.get("pct_of_market_cap") or 0):
+                    by[sym] = {"date": r.get("date"), "value_cr": r.get("value_cr"),
+                               "pct_of_market_cap": pct, "headline": r.get("headline"),
+                               "pdf": r.get("pdf"), "confident": bool(r.get("value_confident"))}
+        except Exception:
+            by = _orders_cache["by_symbol"]
+        _orders_cache.update(at=now, by_symbol=by)
+    return _orders_cache["by_symbol"].get(str(symbol).upper())
+
+
+def market_test(key, regime):
+    """
+    What the test found for this list in a market like today's, in a sentence,
+    or None. The old Ideas page warned that trend setups fail when the index
+    is weak. Measured on these lists, picks made while the Nifty 500 was under
+    its 200-day average did not do worse, so the page says what was measured
+    instead of repeating the warning.
+    """
+    rec = tested_record(key) or {}
+    split = rec.get("market") or {}
+    vs200 = (regime or {}).get("pct_vs_200dma")
+    if vs200 is None or not split.get("above_200d") or not split.get("below_200d"):
+        return None
+    under = vs200 < 0
+    here, other = (split["below_200d"], split["above_200d"]) if under else (split["above_200d"], split["below_200d"])
+    where = "under" if under else "above"
+    return {
+        "state": "below_200d" if under else "above_200d",
+        "text": (f"The index is {where} its 200-day average. In the test, picks made on days like "
+                 f"this averaged {here['avg_pct']:+.1f}% ({here['up_pct']:.0f} in 100 rose), against "
+                 f"{other['avg_pct']:+.1f}% on the other days. The list is not held back in either."),
+        "lists": here.get("list_dates"),
+    }
 
 
 def has_picks(payload):
@@ -748,7 +890,10 @@ def _pick_evidence(key, block):
             mix[k] = mix.get(k, 0) + w / 4.0
     parts, facts, n = block.get("parts") or {}, block.get("facts") or {}, block.get("universe")
     detail = {
-        "m12": f"{facts.get('return_12m_pct')}% over 12 months, at {facts.get('volatility_pct')}% yearly volatility",
+        "m12": ((f"Listed under a year, so its 6-month return ({facts.get('return_6m_pct')}%) stands in "
+                 f"for the 12-month one, at {facts.get('volatility_pct')}% yearly volatility")
+                if block.get("young") else
+                f"{facts.get('return_12m_pct')}% over 12 months, at {facts.get('volatility_pct')}% yearly volatility"),
         "m6": "Return over the last six months, last month skipped, for the same volatility",
         "high": f"{facts.get('below_high_pct')}% below its 52-week high",
         "trend": f"Straightness {facts.get('trend_straightness')}/100 over 90 sessions",
@@ -756,6 +901,7 @@ def _pick_evidence(key, block):
         "dip": f"{facts.get('return_5d_pct')}% over the last five sessions",
         "dip21": f"{facts.get('return_1m_pct')}% over the last month",
     }
+    res = block.get("results") or {}
     out = []
     for k, part_key, label in _EVIDENCE:
         w = mix.get(k)
@@ -765,8 +911,15 @@ def _pick_evidence(key, block):
         if pct is None:
             continue
         of = round(w * 100, 1)
+        if k == "reaction":
+            text = (f"{res.get('move_pct', 0):+.1f}% on {leaders._short_day(res.get('session'))}, the first session after its "
+                    f"results reached the exchange; the average liquid stock moved "
+                    f"{res.get('market_move_pct', 0):+.1f}%. Ahead of {pct}% of the "
+                    f"{res.get('reported')} companies priced on results in the last ten sessions.")
+        else:
+            text = f"{detail[k]}. Ahead of {pct}% of {n} liquid stocks."
         out.append({"factor": label, "points": round(pct * w, 1), "of": of, "share_pct": pct,
-                    "detail": f"{detail[k]}. Ahead of {pct}% of {n} liquid stocks."})
+                    "detail": text})
     return out
 
 
@@ -886,11 +1039,22 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
             "liquidity_tier": tier, "liquidity_note": warn,
             "tracked": sym in tracked,
             "pick_rank": entry["rank"],
+            "young": bool(block.get("young")),
             "conviction": entry["score"], "rank_score": entry["score"],
             "why": entry.get("why") or [],
             "evidence": _pick_evidence(key, block),
             "plan": leaders.plan(key, row.get("price"), called_on),
             "catalyst": filing, "filing": filing, "adverse_filing": adverse,
+            # The result this stock was last priced on (ranked on, for the
+            # results list; a dated fact on every other).
+            "results": block.get("results"),
+            # An order it disclosed lately, with its size against the
+            # company's market value. A fact beside the pick; not ranked.
+            "order": _order_for(sym),
+            # The chart and the tape, as facts (see CHART_NOTE).
+            "technicals": block.get("technicals"),
+            "chart": chart_facts(block.get("technicals"), block.get("facts"),
+                                 row.get("chart_pattern"), row.get("price")),
             "news": (news_idx.get(sym) or [])[:3],
             "sector_outlook": ({"state": srow.get("state"), "index_name": srow.get("index_name"),
                                 "rel_3m": (srow.get("relative") or {}).get("3M"),
@@ -920,8 +1084,29 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
     if not recipe_current:
         notes.append("This scan was ranked with an earlier recipe, so its tested record is not "
                      "shown. The next scan ranks it the current way.")
+    event = spec.get("event") == "results"
+    reported = max([((r.get("leader") or {}).get("results") or {}).get("reported") or 0
+                    for r in rows_all] or [0])
+    empty_text = "Nothing passed every test in this scan."
+    if event and not chosen:
+        empty_text = (
+            f"Only {reported} liquid compan{'y has' if reported == 1 else 'ies have'} had results priced in "
+            f"the last {leaders.RESULTS_WINDOW} sessions, and the list needs {leaders.RESULTS_MIN_POOL} to rank. "
+            "It fills in the weeks companies report."
+            if reported else
+            f"No liquid company's results were priced in the last {leaders.RESULTS_WINDOW} sessions. "
+            "The list fills in the weeks companies report.")
+    young_shown = [r.get("symbol") for r in chosen if (r.get("leader") or {}).get("young")]
+    if young_shown:
+        notes.append("Listed under a year, ranked on six months of prices in place of twelve: "
+                     + ", ".join(young_shown[:6]) + ". In the test such companies led the average "
+                     "stock on this list in both halves.")
+    if event and chosen:
+        notes.append(f"{reported} liquid companies had results priced in the last "
+                     f"{leaders.RESULTS_WINDOW} sessions; these moved the most that day against the "
+                     "average stock. Not limited to stocks in an uptrend: that is how it was tested.")
     if not chosen:
-        notes.append("Nothing passed every gate in this scan.")
+        notes.append(empty_text)
 
     return {
         "available": True,
@@ -952,6 +1137,12 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "universe_source": payload.get("universe_source"),
         "universe": universe,
         "regime": regime,
+        # What the test found for this list in a market like today's. The page
+        # shows this where it used to show a warning the test did not bear out.
+        "market_test": market_test(key, regime) if recipe_current else None,
+        "chart_note": CHART_NOTE,
+        "empty_text": None if chosen else empty_text,
+        "event": spec.get("event"),
         "market_context": {"regime": regime, "leaders": _leaders[0], "laggards": _leaders[1],
                            "sectors_measured": _leaders[2], "headlines": headlines},
         "weights": spec["mix"],
@@ -969,9 +1160,13 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "considered": considered,
         "gives_way_to": other if other in leaders.LISTS else None,
         "gave_way": gave_way,
-        "method": ("Every liquid NSE stock is ranked on the measurements in the ledger. "
-                   "The list is the top of that ranking after the uptrend and volatility "
-                   "gates. Tested on NSE prices from 2017 to 2026."),
+        "method": (("Every liquid NSE company whose quarterly results reached the exchange in the "
+                    "last ten sessions is ranked on how its stock moved, against the average stock, "
+                    "on the first session that could price them. Tested on NSE prices and filings "
+                    "from 2018 to 2026.") if event else
+                   ("Every liquid NSE stock is ranked on the measurements in the ledger. "
+                    "The list is the top of that ranking after the uptrend and volatility "
+                    "gates. Tested on NSE prices from 2017 to 2026.")),
     }
 
 

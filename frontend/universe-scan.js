@@ -48,7 +48,7 @@
     if(window.AltahaVoyage) voyage=window.AltahaVoyage.create(host,canvas);
     // Move existing controls, retaining their IDs and event handlers.
     var controls = host.querySelector('.su-controls');
-    // The scan button moves in. The four list tabs stay above the list they switch.
+    // The scan button moves in. The list tabs stay above the list they switch.
     ['.brun'].forEach(function (sel) { var el = document.querySelector('#view-ideas ' + sel); if (el) controls.appendChild(el); });
     host.querySelectorAll('.su-planet').forEach(function (planet, i) {
       planet.addEventListener('click', function () { selected = selected === i ? -1 : i; renderDay(host); });
@@ -205,13 +205,13 @@
     host.querySelector('.su-voyage-mode').textContent=running?'LIVE SCAN · '+pct+'%':state==='starting'?'CONNECTING TO SCAN':state==='reconnecting'?'SCAN CONNECTION INTERRUPTED':'STOCK SCREENER';
     if(voyage) voyage.sync();
     var results=document.getElementById('scan-results');if(results) results.hidden=['starting','running','reconnecting'].includes(state);
-    var title='Scan for fresh picks.',detail='It takes a few minutes and updates all four lists.';
+    var title='Scan for fresh picks.',detail='It takes a few minutes and updates every list.';
     if(state==='starting'){title='Starting your stock scan…';detail='Waiting for the engine to confirm the scan.';}
     if(running){title=discoveries.length?'New stock findings are available.':'Exploring the stock universe…';detail=total?done.toLocaleString('en-IN')+' / '+total.toLocaleString('en-IN')+' analysis checks · '+(Number(s.scored)||0).toLocaleString('en-IN')+' scored':'Preparing the stock scan. Waiting for engine progress.';}
-    if(complete){title='The scan is done.';detail='All four lists above are updated.';}
+    if(complete){title='The scan is done.';detail='Every list above is updated.';}
     if(state==='partial'){title='The scan stopped before completion.';detail='The lists above show what it finished.';}
     if(state==='cached'){title='The last scan is saved.';detail='Refresh to scan again.';}
-    if(state==='idle'){title='Scan for fresh picks.';detail='It takes a few minutes and updates all four lists.';}
+    if(state==='idle'){title='Scan for fresh picks.';detail='It takes a few minutes and updates every list.';}
     if(state==='reconnecting'){title='Reconnecting to the engine…';detail='Progress is unconfirmed. These previews are from the last received checkpoint.';}
     if(state==='error'){title='The scan needs your attention.';detail='See the message below. Available checkpoint previews are retained.';}
     host.querySelector('.su-status').textContent=title;host.querySelector('.su-detail').textContent=detail;

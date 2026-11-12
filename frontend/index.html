@@ -1246,11 +1246,11 @@
 <link rel="stylesheet" href="calls.css?v=20261029">
 <link rel="stylesheet" href="watchlists.css?v=20261029">
 <link rel="stylesheet" href="strategy-lab.css?v=20261031">
-<link rel="stylesheet" href="picks.css?v=20261111">
-<script src="picks.js?v=20261111"></script>
+<link rel="stylesheet" href="picks.css?v=20261112">
+<script src="picks.js?v=20261112"></script>
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20260922-stock-copy"></script>
-<script src="universe-scan.js?v=20261111"></script>
+<script src="universe-scan.js?v=20261112"></script>
 </head>
 <body>
 
@@ -1621,15 +1621,16 @@
   <div id="view-ideas" style="display:none">
     <header class="tabhead">
       <h2>Stock picks</h2>
-      <p>Four lists. Pick how long you want to hold.</p>
+      <p>Five lists. Pick how long you want to hold.</p>
     </header>
-    <!-- The four lists (picks.js). The list comes first and the scan that
+    <!-- The pick lists (picks.js). The list comes first and the scan that
          makes it comes after: a reader came for stocks, and used to scroll
          past a full screen of planets to reach one. -->
     <div class="hzrow">
       <div class="pk-tabs page" id="hzseg" role="tablist" aria-label="Holding period">
         <button type="button" role="tab" class="pk-tab hz" data-h="week"><i>This </i>week</button>
         <button type="button" role="tab" class="pk-tab hz" data-h="month"><i>This </i>month</button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="results"><i>After </i>results</button>
         <button type="button" role="tab" class="pk-tab hz" data-h="momentum">Momentum</button>
         <button type="button" role="tab" class="pk-tab hz" data-h="long">Long term</button>
       </div>
@@ -3016,6 +3017,7 @@ async function loadIdeas(){
       const why = d.selection_notes || [];
       $("pickhead").innerHTML = `<p class="pk-idea">${esc(d.idea||"")} <span>Hold ${esc(d.hold_text||"")}.</span></p>`
         + PK.recordHTML(d) + (PK.recipeHTML ? PK.recipeHTML(d) : "") + PK.liveHTML(d)
+        + (PK.marketHTML ? PK.marketHTML(d) : "")
         + `<p class="pk-updated">${esc(PK.updatedText(d))}${d.universe ? ` · ${d.universe} stocks compared` : ""}${d.partial ? " · scan still running" : ""}</p>`
         + (why.length ? `<details class="pk-notes"><summary>${why.length} note${why.length>1?"s":""} on this list</summary><ul>`
             + why.map(n=>`<li>${esc(n)}</li>`).join("") + `</ul></details>` : "");
@@ -3023,7 +3025,7 @@ async function loadIdeas(){
       $("hznote").textContent = `${d.horizon_note || d.note}  ·  Scanned ${d.scanned_at}` +
         (d.universe_source ? "  ·  " + d.universe_source : "") +
         (d.partial ? "  ·  scan still running — the list improves as it goes" : "");
-      if(PK) $("pickhead").innerHTML = `<p class="pk-quiet">These are from the last scan, made the old way. The four tested lists appear after the next scan.</p>`;
+      if(PK) $("pickhead").innerHTML = `<p class="pk-quiet">These are from the last scan, made the old way. The tested lists appear after the next scan.</p>`;
     }
 
     /* Staleness. A momentum idea nine days old is not the same object as a
@@ -3032,8 +3034,11 @@ async function loadIdeas(){
       $("stalebox").innerHTML = `<div class="staleflag"><b>Stale.</b> ${esc(d.staleness.text)}</div>`;
     }
 
-    /* Market regime, shown once at the top and again on each affected row. */
-    if(d.regime && !d.regime.ok){
+    /* Market regime, shown once at the top and again on each affected row.
+       Not on the tested lists: its warning ("trend setups fail more often
+       here") was measured on them and did not hold, so they print what the
+       test found instead (picks.js, marketHTML). */
+    if(!picks && d.regime && !d.regime.ok){
       $("regimebox").innerHTML = `<div class="staleflag" style="border-left-color:#b26a00;background:#fdf8f0;color:#5c4520"><b>Market regime.</b> ${esc(d.regime.label)}</div>`;
     }
 
@@ -3075,7 +3080,7 @@ async function loadIdeas(){
     $("thintoggle").textContent = includeThin ? "Hide thin stocks" : "Include thin stocks";
 
     if(!d.rows || !d.rows.length){
-      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing passed every test in this scan.</div>`;
+      $("idearows").innerHTML = `<div class="ideas-note" style="padding:14px 0">${esc(d.empty_text || "Nothing passed every test in this scan.")}</div>`;
     }else{
       $("idearows").innerHTML = d.rows.map((s,i)=>`
         <div class="idea rise" style="--i:${Math.min(i,10)}" data-t="${esc(s.symbol)}" data-score="${esc(s.conviction ?? s.setup_fit ?? "")}" data-name="${esc(s.name)}" role="group" aria-label="${esc(s.name)}">
@@ -3095,6 +3100,7 @@ async function loadIdeas(){
             ${picks
               ? `<div class="arch">Ranked ${s.pick_rank} of the stocks that passed every test${s.sector?` · ${esc(s.sector)}`:""}${s.plan&&s.plan.review_on?` · review by ${esc(s.plan.review_on)}`:""}</div>`
               : `<div class="arch">${s.plan&&s.plan.stance?`<span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>`:""}${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${scoreTxt(s.setup_fit, 0)}/100${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}</div>`}
+            ${picks && PK.resultsHTML ? PK.resultsHTML(s) + PK.orderHTML(s) : ""}
             ${s.filing?`<div class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</div>`:""}
             ${catalystChips(s)}
             <div class="ln"><span>Composite ${scoreTxt(s.composite)}</span><span>Technical ${scoreTxt(s.technical, 0)}</span>
@@ -3102,6 +3108,7 @@ async function loadIdeas(){
             ${s.liquidity_note && (s.liquidity_tier==="thin"||s.liquidity_tier==="untradeable") ? `<div class="warnbox">${esc(s.liquidity_note)}</div>` : ""}
             ${s.regime_warning ? `<div class="warnbox">${esc(s.regime_warning)}</div>` : ""}
             ${newsHTML(s)}
+            ${picks && PK.chartHTML ? PK.chartHTML(s, d.chart_note) : ""}
             <button class="evbtn" type="button" aria-expanded="false" data-ev="${i}">${picks ? `How it scored ${scoreTxt(s.conviction)}` : `Why this scored ${scoreTxt(s.conviction)} — show the ledger`}</button>
             ${evidenceHTML(s.evidence)}
             <div class="idearow-actions">
