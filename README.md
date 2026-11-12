@@ -69,23 +69,25 @@ is ever left invisible.
 
 ---
 
-## Stock picks — four lists, tested
+## Stock picks — five lists, tested
 
 `#research` and `#research/ideas` (`backend/leaders.py`, `frontend/picks.js`).
-The Ideas door opens on four tabs: **This week**, **This month**, **Momentum**
-and **Long term**. Each shows what the list is in one line, how it tested in
-three numbers, and the picks, each with up to four reasons, a holding period
-and one exit price.
+The Ideas door opens on five tabs: **This week**, **This month**, **After
+results**, **Momentum** and **Long term**. Each shows what the list is in one
+line, how it tested in three numbers, and the picks, each with up to four
+reasons, a holding period and one exit price.
 
 | List | Hold | Exit line | Rose | Average | Nifty 500 | After costs |
 |---|---|---|---|---|---|---|
 | This week | 5 sessions | close 7% under | 52% | +0.4% | +0.3% | −0.1% |
 | This month | 21 | close 12% under | 54% | +1.7% | +1.1% | +1.3% |
-| Momentum | 63 | close 15% under | 55% | +5.5% | +3.2% | +5.0% |
+| After results | 21 | close 12% under | 54% | +1.8% | +1.0% | +1.3% |
+| Momentum | 63 | close 15% under | 55.5% | +5.6% | +3.2% | +5.1% |
 | Long term | 252 | close 30% under | 58% | +23.7% | +13.8% | +23.2% |
 
-Tested on NSE's daily files for 2017–2026, delisted companies included,
-before tax; "after costs" takes off a 0.49% round trip. The old list, replayed
+Tested on NSE's daily files for 2017–2026 (the results list from 2018, where
+its filings start), delisted companies included, before tax; "after costs"
+takes off a 0.49% round trip. The old list, replayed
 the same way with its 8% stop: 38% rose and it did not beat the index. What was
 wrong, what was tried, what was dropped and what the test does not show are in
 [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md).
@@ -99,10 +101,21 @@ momentum some of their average; all 20 trials are in
 before a recipe changed still serves its lists after a deploy, without the
 tested record, until the next scan (`leaders.RECIPE`).
 
+**After results, younger companies, and what was tested and left out.**
+*After results* ranks liquid companies on how their stock moved the day their
+quarterly results were priced; it fills in the weeks companies report.
+Companies listed six to twelve months are on the week and momentum lists,
+ranked on six months of prices in place of twelve. Breakouts, RSI, MACD, ADX,
+volume and a weak-market filter were each tested as a rule and none improved a
+list, so each pick shows them as facts under a line saying they change no
+rank, beside the result it was last priced on and any order it disclosed. All
+of it is in [`research/signals_lab.py`](research/signals_lab.py) and the
+study's "What a reader asked for, tested".
+
 - **The page prints only the study's numbers.** `research/ideas_study.py`
   writes them; `leaders.py` reads them; a test fails if the hold or exit line
   in the code differs from the one tested, and the study refuses to write
-  anything unless the engine picks the same 360 stocks it did.
+  anything unless the engine picks the same 810 stocks it did.
 - **The lists stay fresh.** `.github/workflows/ideas.yml` runs the scan after
   each close, marks the tracker and attaches forward returns. It needs the
   `ALTAHA_ADMIN_KEY` repository secret.

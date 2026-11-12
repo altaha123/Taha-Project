@@ -21,9 +21,9 @@ session from 2016 to 2026, delisted companies included:
 
 WHAT IT DOES INSTEAD
 --------------------
-Four lists, one per holding period, because "what should I buy for a week"
-and "what should I hold for a year" are different questions. All four are
-built from the same five measurements, each a published, decades-old effect
+Five lists. Four are one per holding period, because "what should I buy for
+a week" and "what should I hold for a year" are different questions. Those
+four are built from the same measurements, each a published, decades-old effect
 that also held on our own data, turned into a percentile among every liquid
 stock:
 
@@ -62,10 +62,42 @@ changes, both measured (research/IDEAS-STUDY.md, "One stock, one list"):
 Across all four lists that is about 46 different stocks in 60 places, where
 it was 31, and no two lists share more than about four.
 
-Gates, for every list: a typical day trades Rs 10 crore or more, the price is
-Rs 20 or more, the stock is in an uptrend (price above its 200-day average,
-50-day above 200-day) and it is not among the most volatile fifth of liquid
-stocks.
+Gates, for the four price lists: a typical day trades Rs 10 crore or more,
+the price is Rs 20 or more, the stock is in an uptrend (price above its
+200-day average, 50-day above 200-day) and it is not among the most volatile
+fifth of liquid stocks.
+
+AFTER RESULTS, THE FIFTH LIST (November 2026)
+Not a price recipe: it is made from a filing. Every liquid company whose
+quarterly results were first priced in the last ten sessions is ordered by how
+its stock moved that session, less the average liquid stock's move. The
+session is the first whose close came after the filing reached the exchange,
+so a result filed in the evening is read against the next day. Held about a
+month, left on a close 12% under. It has the liquidity and price gates and no
+others, because that is how it was tested, and it is empty between results
+seasons: with fewer than eight such companies there is no list.
+
+Replayed on 47,115 filings from 2018 to 2026 it led the other companies that
+had just reported in both halves (research/IDEAS-STUDY.md, "After results").
+The reported growth itself carried nothing for a month: by that session's
+close the price had read it.
+
+COMPANIES LISTED UNDER A YEAR (November 2026)
+A company with six to twelve months of prices has no 12-month return, so its
+6-month one stands in. It is placed against the established universe (its
+percentile on each measure is the share of established stocks at or below its
+figure) so that letting it in changes no established stock's score. Such
+companies are on the week and momentum lists, where their picks led the
+average stock in both halves of the test, and on no other, where they did not.
+Under six months nothing ranks them.
+
+WHAT DID NOT EARN A PLACE
+Asked for, tested, and shown beside a pick as facts that move no rank:
+breakouts (nine recipes, none led the average stock in both halves), RSI,
+MACD, ADX, the 20-day average and three volume measures (one of twenty-one
+trials raised a list in both halves, by 0.05 of a point), and holding a list
+back in a weak market (picks made under a falling index did better, not
+worse). technicals() computes them; research/signals_lab.py is every trial.
 
 A calmer long-term recipe, ranking on low volatility, was the first choice
 and was dropped: it looked best until exchange-traded cash funds were found
@@ -79,7 +111,7 @@ average, and it was the single most expensive rule tested.
 
 WHAT IT IS NOT
 --------------
-A forecast. Between three and five picks in ten still lost money in the test,
+A forecast. Between four and five picks in ten still lost money in the test,
 the one-week edge is smaller than a careless trader's costs, and 2018 and 2022
 were flat against the index. The numbers are in LISTS below, the page prints
 them, and the tracker keeps the live record beside them.
@@ -561,7 +593,7 @@ def _why(key, sig, calm, ev=None):
 
 def _parse_filed(value):
     """When a filing reached the exchange, as a datetime, or None. A bare date
-    is read as after the close: three results in five arrive in the evening."""
+    is read as after the close: two results in three arrive after the close."""
     if isinstance(value, dt.datetime):
         return value.replace(tzinfo=None)
     if isinstance(value, dt.date):

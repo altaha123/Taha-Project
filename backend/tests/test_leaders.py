@@ -591,7 +591,7 @@ def test_companies_are_ranked_on_the_day_their_results_were_priced():
 
 
 def test_a_result_filed_before_the_close_is_priced_that_session_and_after_it_the_next():
-    """Three results in five reach the exchange in the evening. Read against
+    """Two results in three reach the exchange after the close. Read against
     the wrong session, the 'reaction' is a day the market had not seen them."""
     cands, results = reporters(n=12)
     results["S05"] = filed(3, "14:10")          # during the session three back
