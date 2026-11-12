@@ -120,6 +120,7 @@ HORIZON_DAYS = {
     # exit line is read on the close, which is how the study measured it.
     "pick_week": 9,
     "pick_month": 32,
+    "pick_results": 32,
     "pick_momentum": 93,
     "pick_long": 370,
 }
