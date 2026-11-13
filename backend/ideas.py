@@ -723,7 +723,7 @@ def market_context(horizon: str = "short"):
 
 PICK_SECTOR_CAP = int(os.environ.get("IDEAS_PICK_SECTOR_CAP", "4") or 4)
 PICK_STALE_DAYS = {"week": 2, "month": 5, "results": 3, "momentum": 7, "long": 14,
-                   "breakout": 2, "technical": 3, "quick": 1, "flow": 5, "emerging": 5}
+                   "short": 2, "breakout": 2, "technical": 3, "quick": 1, "flow": 5, "emerging": 5}
 # A long-term pick with these on its record is left out. Not measured by the
 # price study (no ten-year fundamentals history exists to test it on); kept as
 # a plain safety screen and reported in the notes whenever it removes a name.
@@ -894,7 +894,33 @@ def _setup_evidence(key, block):
                     "points": None if met is None else (1 if met else 0),
                     "of": None if met is None else 1})
     lead = f"Leader score ahead of {parts.get('leader')}% of {n} liquid stocks."
-    if key == "breakout":
+    if key == "short":
+        b, f, q = t.get("box") or {}, block.get("sector_flow") or {}, block.get("quarter") or {}
+        res = block.get("results") or {}
+        ago = b.get("sessions_ago")
+        line("Consolidation", f"{leaders.BOX_SESSIONS} sessions between \u20b9{b.get('low')} and \u20b9{b.get('top')}: "
+                              f"a {b.get('width_pct')}% range.", True)
+        line("Breakout", ("Closed" if not ago else f"{ago} session{'s' if ago != 1 else ''} ago it closed")
+             + f" at \u20b9{b.get('close')}, above the range, on {b.get('rel_volume')} times its usual volume. "
+               "Still above it.", True)
+        met = t.get("scorecard_met") or []
+        line("Technicals", f"{t.get('scorecard')} of 9 chart conditions: " + "; ".join(met) + ".", True)
+        line("Trend", f"Above its 200-day average (\u20b9{facts.get('sma200')}). " + lead, True)
+        line("Industry", f"{f.get('sector')} ranks {f.get('rank')} of {f.get('of')} on money flow: "
+                         f"{f.get('breadth_pct')}% of its stocks are above their 50-day average and its "
+                         f"median stock moved {f.get('month_pct')}% this month.", True)
+        if q.get("pat_yoy_pct") is not None:
+            rv = q.get("revenue_yoy_pct")
+            line("Fundamentals", f"Last quarter's profit {'rose' if q['pat_yoy_pct'] >= 0 else 'fell'} "
+                                 f"{abs(q['pat_yoy_pct']):.0f}% on a year ago"
+                                 + (f", sales {'rose' if rv >= 0 else 'fell'} {abs(rv):.0f}%" if rv is not None else "")
+                                 + ".", q["pat_yoy_pct"] >= 0)
+        else:
+            line("Fundamentals", "No quarterly result on file in the last five months, so this screen passed it unread.")
+        if res.get("move_pct") is not None:
+            line("Results", f"Priced on {leaders._short_day(res.get('session'))}: {res['move_pct']:+.1f}% that day, "
+                            f"the average stock {res['market_move_pct']:+.1f}%.", res.get("reaction_pct", 0) >= -2)
+    elif key == "breakout":
         b = t.get("box") or {}
         line("The base", f"{leaders.BOX_SESSIONS} sessions between \u20b9{b.get('low')} and \u20b9{b.get('top')}: "
                          f"a {b.get('width_pct')}% range. The list needs {leaders.BOX_MAX_WIDTH * 100:.0f}% or tighter.", True)
@@ -1049,6 +1075,13 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
 _REPLAYED = (" The record beside the list is this rule replayed on NSE prices from 2017 to 2026: "
              "the list as it stood every fifth session, bought at the next open.")
 SETUP_METHOD = {
+    "short": ("A stock is here when it spent 40 sessions inside a range 18% wide or tighter and then closed "
+              "above it on at least twice its usual volume in the last five sessions, and is still above it. "
+              "It must also pass five screens: above its 200-day average and in the stronger half of liquid "
+              "stocks; six or more of nine chart conditions; its industry in the top half on money flow; no "
+              "fall in profit last quarter; and results, if just out, not sold by the market. A serious "
+              "adverse filing removes it. Picks are ordered on strength, chart, industry and profit growth "
+              "together." + _REPLAYED),
     "breakout": ("A stock is here when it spent 40 sessions inside a range 18% wide or tighter, then "
                  "closed above the top of that range on at least twice its usual volume in the last five "
                  "sessions. It must be above its 200-day average and in the stronger half of liquid stocks. "
@@ -1072,6 +1105,9 @@ SETUP_METHOD = {
                  "Their 6-month return stands in for the 12-month one." + _REPLAYED),
 }
 SETUP_EMPTY = {
+    "short": ("No stock passes every screen today. A breakout from a tight base, in a strong industry, with "
+              "profit not falling, is uncommon: in the test about one list in four was empty. An empty list "
+              "is the answer, not a fault."),
     "breakout": "No stock has broken out of a tight 40-session base on heavy volume in the last five sessions.",
     "technical": "No liquid stock meets seven of the nine chart conditions in this scan.",
     "quick": ("No market leader is this oversold today. The setup needs a two-day RSI under 10 in a "
@@ -1080,6 +1116,8 @@ SETUP_EMPTY = {
     "emerging": "No company listed six to twelve months passes the tests in this scan.",
 }
 SETUP_NOTE = {
+    "short": ("Stocks on the verge of a breakout are shown under the list, to watch. In the test, buying "
+              "before the breakout did no better than chance, so the list waits for it."),
     "quick": ("A quick trade lasts about three sessions. In the test two in three rose, but the average gain "
               "was smaller than the cost of buying and selling: see the record before trading it."),
     "emerging": ("Listed under a year, so each has six to twelve months of prices. Less history means "
@@ -1244,7 +1282,8 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "flow_sectors": leaders.FLOW_SECTORS if key == "flow" else None,
         # Tight bases not yet broken, nearest their top first: the breakout
         # list's waiting room. Watched, not picked.
-        "watch": (payload.get("breakout_watch") or []) if key == "breakout" else None,
+        "watch": (payload.get("breakout_watch") or []) if key in ("breakout", "short") else None,
+        "primary": [{"key": k, "label": leaders.LISTS[k]["label"]} for k in leaders.PRIMARY],
         "scanned_at": payload.get("scanned_at"),
         "staleness": stale,
         "partial": bool(payload.get("partial")),
@@ -1303,7 +1342,7 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
     if key and has_picks(payload):
         return select_picks(payload, key, limit=limit)
     if key and horizon not in HORIZONS:
-        horizon = "short" if key in ("week", "month", "momentum") else "medium"
+        horizon = "short" if key in ("week", "month", "momentum", "short") else "medium"
     h = HORIZONS.get(horizon)
     if not h:
         raise ValueError("horizon must be one of week, month, momentum or long")

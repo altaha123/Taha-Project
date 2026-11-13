@@ -37,22 +37,16 @@
   'use strict';
   if (typeof window !== 'undefined' && window.AltahaPicks) return;
 
+  /* Two lists. There were ten, and ten is a menu, not an answer. The other
+     eight are still ranked by the engine and answer by name on the API;
+     nothing on the page asks a reader to choose between them. */
   var LISTS = [
-    { key: 'week',     label: 'This week',     lead: 'This ',  short: 'week',    hold: 'about a week' },
-    { key: 'month',    label: 'This month',    lead: 'This ',  short: 'month',   hold: 'about a month' },
-    { key: 'results',  label: 'After results', lead: 'After ', short: 'results', hold: 'about a month' },
-    { key: 'momentum', label: 'Momentum',      hold: 'about 3 months' },
-    { key: 'long',     label: 'Long term',     hold: 'about a year' },
-    /* The setup lists: picked on what the chart or the tape is doing now. */
-    { key: 'breakout',  label: 'Breakouts',    group: 'setup', hold: 'about a month' },
-    { key: 'technical', label: 'Technicals',   group: 'setup', hold: 'about a month' },
-    { key: 'quick',     label: 'Quick trades', lead: 'Quick ', short: 'trades', group: 'setup', hold: 'a few days' },
-    { key: 'flow',      label: 'Money flow',   lead: 'Money ', short: 'flow', group: 'setup', hold: 'about a month' },
-    { key: 'emerging',  label: 'Emerging',     group: 'setup', hold: 'about a month' }
+    { key: 'short', label: 'Short term', hold: 'about a month' },
+    { key: 'long',  label: 'Long term',  hold: 'about a year' }
   ];
   var KEYS = LISTS.map(function (l) { return l.key; });
   var STORE = 'altaha-pick-list';
-  var DEFAULT = 'month';
+  var DEFAULT = 'short';
   var FRESH_MS = 120000;
 
   function esc(s) {
@@ -218,20 +212,20 @@
       'The list takes the strongest stocks from the top ' + top + '.</p></details>';
   }
 
-  /* Breakouts: tight bases that have not broken yet. Watched, not picked. */
+  /* On the verge: tight bases not yet broken. Shown to watch, never as picks:
+     bought before the breakout, such stocks did no better than chance. */
   function watchHTML(d) {
     var rows = (d && d.watch) || [];
     if (!rows.length) return '';
-    return '<details class="pk-sectors pk-watch"><summary>Setting up: ' + rows.length + ' tight bases not yet broken</summary>' +
-      '<div class="pk-sectors-scroll"><table><thead><tr><th>Stock</th><th>Top of base</th><th>Away</th><th>Range</th></tr></thead><tbody>' +
+    return '<details class="pk-sectors pk-watch"><summary>On the verge: ' + rows.length + ' to watch</summary>' +
+      '<div class="pk-sectors-scroll"><table><thead><tr><th>Stock</th><th>Breaks out above</th><th>Away</th></tr></thead><tbody>' +
       rows.map(function (r) {
         return '<tr><td><a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '">' + esc(r.symbol) + '</a>' +
           (r.sector ? ' <small>' + esc(r.sector) + '</small>' : '') + '</td><td>' + inr(r.top) + '</td><td>' +
-          (finite(r.to_top_pct) ? Number(r.to_top_pct).toFixed(1) + '%' : '—') + '</td><td>' +
-          (finite(r.width_pct) ? Number(r.width_pct).toFixed(0) + '%' : '—') + '</td></tr>';
+          (finite(r.to_top_pct) ? Number(r.to_top_pct).toFixed(1) + '%' : '—') + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
-      '<p>Forty sessions inside a range 18% wide or tighter, within 4% of its top. None has broken out: ' +
-      'a stock joins the list above only after it closes over the top on twice its usual volume.</p></details>';
+      '<p>Consolidating in a tight range and within 3% of its top. Not picks: a stock joins the list only ' +
+      'after it closes above that price on heavy volume.</p></details>';
   }
 
   /* A scan ranked before the recipes last changed. Its record would be another
@@ -253,16 +247,11 @@
   }
 
   function tabsHTML(active, cls) {
-    return tabRow(active, cls, false, 'Holding period') + tabRow(active, (cls || '') + ' setups', true, 'Setup');
-  }
-  function tabRow(active, cls, setups, label) {
-    return '<div class="pk-tabs ' + (cls || '') + '" role="tablist" aria-label="' + label + '">' +
-      LISTS.filter(function (l) { return (l.group === 'setup') === setups; }).map(function (l) {
+    return '<div class="pk-tabs two ' + (cls || '') + '" role="tablist" aria-label="Holding period">' +
+      LISTS.map(function (l) {
         var on = l.key === active;
-        /* The first word drops out on a phone, where five full labels do not fit. */
-        var text = l.short ? '<i>' + esc(l.lead) + '</i>' + esc(l.short) : esc(l.label);
         return '<button type="button" role="tab" class="pk-tab' + (on ? ' on' : '') + '" data-pick="' + l.key +
-          '" aria-selected="' + on + '" aria-label="' + esc(l.label) + '">' + text + '</button>';
+          '" aria-selected="' + on + '" aria-label="' + esc(l.label) + '">' + esc(l.label) + '</button>';
       }).join('') + '</div>';
   }
 

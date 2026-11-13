@@ -237,6 +237,17 @@ LISTS.update({
         "mix": {"flow": 1.0}, "calm_gate": True, "trend_gate": True,
         "idea": "The strongest stocks in the four sectors money is moving into.",
     },
+    # The short-term list: the one the Ideas page leads with. A breakout from a
+    # consolidation, screened on the chart, the industry, the last quarter and
+    # the market's reading of the latest results. research/short_term_lab.py
+    # tried sixty versions; this is the full combination that was asked for,
+    # and it tested the same as the best of them.
+    "short": {
+        "label": "Short term", "setup": "Short-term pick", "setup_key": "pick_short", "kind": "setup",
+        "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 8.0,
+        "mix": {"short": 1.0}, "calm_gate": False, "trend_gate": False,
+        "idea": "Stocks breaking out of a consolidation, in industries money is moving into.",
+    },
     "emerging": {
         "label": "Emerging", "setup": "Emerging company", "setup_key": "pick_emerging", "kind": "setup",
         "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 10.0,
@@ -245,11 +256,13 @@ LISTS.update({
     },
 })
 ORDER = ("week", "month", "results", "momentum", "long")
-SETUPS = ("breakout", "technical", "quick", "flow", "emerging")
+SETUPS = ("short", "breakout", "technical", "quick", "flow", "emerging")
+# The two the Ideas page shows. The rest are still ranked and still answer by name.
+PRIMARY = ("short", "long")
 ALL = ORDER + SETUPS
 SETUP_KEYS = {v["setup_key"]: k for k, v in LISTS.items()}
 # Older links and the old two-way switch still ask for these.
-ALIASES = {"short": "momentum", "medium": "long", "trade": "week", "position": "momentum",
+ALIASES = {"medium": "long", "trade": "week", "position": "momentum",
            "invest": "long"}
 
 TESTED = {}     # filled from research/ideas-study.json by _load_tested()
@@ -400,7 +413,11 @@ SCORECARD_LABELS = (
 FLOW_SECTORS = 4           # the sectors money is moving into
 FLOW_PER_SECTOR = 4        # and the strongest stocks taken from each
 FLOW_MIN_MEMBERS = 8
-EMERGING_FLOOR = 0.50       # a sector needs this many liquid stocks to be ranked
+EMERGING_FLOOR = 0.50
+SHORT_SCORECARD = 6        # chart conditions the short-term list needs, of nine
+SHORT_SECTOR_FLOOR = 50.0  # its industry in the top half on money flow
+SHORT_BAD_REACTION = -0.02 # results the market sold this hard are a no
+VERGE_PCT = 3.0            # how near the top of its base counts as on the verge       # a sector needs this many liquid stocks to be ranked
 
 # How far back a breakout may be and still be "fresh", and how long the price
 # must have gone without a six-month closing high for a new one to count as a
@@ -679,6 +696,20 @@ def _why(key, sig, calm, ev=None):
         if _finite(b.get("rel_volume")) is not None:
             out.append(f"On {b['rel_volume']:.1f} times its usual volume")
         out.append(f"{BOX_SESSIONS} sessions inside a {b['width'] * 100:.0f}% range")
+    if key == "short" and t.get("box"):
+        b = t["box"]
+        ago = b["sessions_ago"]
+        out.append("Broke out today" if ago == 0 else
+                   ("Broke out yesterday" if ago == 1 else f"Broke out {ago} sessions ago"))
+        if _finite(b.get("rel_volume")) is not None:
+            out.append(f"{b['rel_volume']:.1f}\u00d7 usual volume")
+        row = (ev or {}).get("sector_row")
+        if row:
+            out.append(f"{row['sector']}: ranked {row['rank']} of {row['of']} on money flow")
+        p = (ev or {}).get("pat_yoy_pct")
+        if p is not None and p > 0:
+            out.append(f"Profit up {min(p, 999):.0f}% on a year ago")
+        return out[:4]
     if key == "technical" and t.get("scorecard") is not None:
         out.append(f"{t['scorecard']} of 9 chart conditions")
         if _finite(t.get("rsi")) is not None:
@@ -897,6 +928,47 @@ def sector_flow(pool, sectors):
     return rows
 
 
+def _short(sym, g, part, sectors, flow_by, pat_yoy, growth, ev):
+    """(score, why not or None, order) for the short-term list: a breakout
+    from a tight base that is still holding, passed through five screens."""
+    t = g.get("tech") or {}
+    b = t.get("box")
+    row = flow_by.get(sectors.get(sym))
+    card = t.get("scorecard") or 0
+    sec = (row["score"] / 100.0) if row else 0.5
+    score = (part["leader"] + card / 9.0 + sec + (growth if growth is not None else 0.5)) / 4.0 * 100.0
+    why = None
+    if not b:
+        base = t.get("base")
+        if base and base["width"] <= BOX_MAX_WIDTH and base["to_top"] * 100 <= VERGE_PCT:
+            why = (f"On the verge: {base['to_top'] * 100:.1f}% under the top of its base, not yet through it. "
+                   "The list waits for the breakout.")
+        else:
+            why = f"No breakout from a {BOX_SESSIONS}-session base in the last {BOX_LOOKBACK} sessions."
+    elif b["width"] > BOX_MAX_WIDTH:
+        why = f"The range it broke out of was {b['width'] * 100:.0f}% wide; a base is {BOX_MAX_WIDTH * 100:.0f}% or tighter."
+    elif (_finite(b.get("rel_volume")) or 0.0) < BOX_MIN_VOLUME:
+        why = f"The breakout came on {(_finite(b.get('rel_volume')) or 0.0):.1f} times its usual volume; it needs {BOX_MIN_VOLUME:.0f}."
+    elif not b["holding"]:
+        why = "It has closed back under the top of its base since breaking out."
+    elif not g["price"] > g["sma200"]:
+        why = "Under its 200-day average."
+    elif part["leader"] < BOX_LEADER_FLOOR:
+        why = "Its leader score is in the bottom half of liquid stocks."
+    elif card < SHORT_SCORECARD:
+        why = f"Meets {card} of the nine chart conditions; the list needs {SHORT_SCORECARD}."
+    elif row is None:
+        why = "Its industry could not be ranked on money flow."
+    elif row["score"] < SHORT_SECTOR_FLOOR:
+        why = f"Its industry, {row['sector']}, ranks {row['rank']} of {row['of']} on money flow: the bottom half."
+    elif pat_yoy is not None and pat_yoy < 0:
+        why = f"Profit fell {abs(pat_yoy):.0f}% on a year ago in its last quarter."
+    elif ev and ev["reaction"] < SHORT_BAD_REACTION:
+        why = (f"Its results were sold: {ev['move'] * 100:+.1f}% the day they were priced, against "
+               f"{ev['market_move'] * 100:+.1f}% for the average stock.")
+    return score, why, score
+
+
 def _setup(key, sym, g, part, is_calm, sectors, flow_by, flow_top, flow_pick):
     """(score out of 100, why it is not on the list or None, the figure it is
     ordered on) for one stock on one of the four setup lists."""
@@ -960,7 +1032,7 @@ def _setup(key, sym, g, part, is_calm, sectors, flow_by, flow_top, flow_pick):
     return score, None, (FLOW_SECTORS - flow_top.index(sec)) * 10.0 + leader
 
 
-def rank(candidates, results=None, sectors=None):
+def rank(candidates, results=None, sectors=None, fundamentals=None):
     """
     Score every candidate against the whole liquid universe, for every list.
 
@@ -968,7 +1040,10 @@ def rank(candidates, results=None, sectors=None):
     output of signals(), or None). `results` maps a symbol to when its latest
     quarterly results reached the exchange ({"filed_at": ...}); without it the
     results list is simply empty. `sectors` maps a symbol to its sector;
-    without it the money-flow list is empty. Returns {SYMBOL: block}. A stock outside
+    without it the money-flow list is empty. `fundamentals` maps a symbol to
+    its latest quarter ({"pat_yoy_pct", "revenue_yoy_pct"}); the short-term
+    list refuses a known fall in profit and ranks growth higher.
+    Returns {SYMBOL: block}. A stock outside
     the universe gets no block: it was not compared, which is different from
     being compared and failing a gate.
     """
@@ -1034,6 +1109,13 @@ def rank(candidates, results=None, sectors=None):
         for _lead, sym in sorted(members)[:FLOW_PER_SECTOR]:
             flow_pick[sym] = sec
 
+    # The last quarter, where it is known: profit growth as a percentile
+    # among the established stocks that have one.
+    fundamentals = {str(k).upper(): v for k, v in (fundamentals or {}).items() if v}
+    pat = {sym: _finite((fundamentals.get(sym) or {}).get("pat_yoy_pct")) for sym, _g in pool}
+    have = [sym for sym, v in pat.items() if v is not None]
+    growth = dict(zip(have, _pct_ranks([max(-100.0, min(300.0, pat[x])) for x in have]))) if have else {}
+
     blocks, exact = {}, {}
     for i, (sym, g) in enumerate(pool + newcomers):
         young = bool(g.get("young"))
@@ -1070,8 +1152,12 @@ def rank(candidates, results=None, sectors=None):
                            "and emerging.")
                 exact[(sym, key)] = -1.0
             elif spec.get("kind") == "setup":
-                score, why_not, exact[(sym, key)] = _setup(key, sym, g, part, is_calm,
-                                                            sectors, flow_by, flow_top, flow_pick)
+                if key == "short":
+                    score, why_not, exact[(sym, key)] = _short(sym, g, part, sectors, flow_by,
+                                                                pat.get(sym), growth.get(sym), ev)
+                else:
+                    score, why_not, exact[(sym, key)] = _setup(key, sym, g, part, is_calm,
+                                                                sectors, flow_by, flow_top, flow_pick)
                 part[key] = score / 100.0
             elif spec.get("event") == "results":
                 score = (part["reaction"] or 0.0) * 100.0
@@ -1093,6 +1179,8 @@ def rank(candidates, results=None, sectors=None):
                                f"{100 - floor * 100:.0f}% of liquid stocks.")
                 exact[(sym, key)] = score
             fact = ev
+            if key == "short":
+                fact = {"sector_row": flow_by.get(sectors.get(sym)), "pat_yoy_pct": pat.get(sym)}
             if key == "flow" and sectors.get(sym) in flow_by:
                 fact = flow_by[sectors[sym]]
             lists[key] = {"score": round(score, 1), "eligible": why_not is None,
@@ -1136,6 +1224,11 @@ def rank(candidates, results=None, sectors=None):
             "technicals": _tech_block(g.get("tech")),
             # Its sector (NSE's own), and where that sector stands on money flow.
             "sector": sectors.get(sym),
+            # The last quarter against the same quarter a year before.
+            "quarter": (None if sym not in fundamentals else {
+                "pat_yoy_pct": _finite(fundamentals[sym].get("pat_yoy_pct")),
+                "revenue_yoy_pct": _finite(fundamentals[sym].get("revenue_yoy_pct")),
+                "label": fundamentals[sym].get("quarter")}),
             "sector_flow": flow_by.get(sectors.get(sym)),
             # The result this stock was last priced on, if it was in the last
             # ten sessions, with how many companies it was ranked among.
@@ -1178,7 +1271,8 @@ def breakout_watch(blocks, limit=20):
     """
     Tight bases not yet broken: stocks whose last 40 sessions fit inside an
     18% range, above their 200-day average, in the stronger half on the
-    leader score, and within 4% of the top of the base. Nearest the top
+    leader score, within 3% of the top of the base, not in an industry in
+    the bottom half on money flow, and without a fall in profit last quarter. Nearest the top
     first. Watched, not picked: nothing here has broken out.
     """
     out = []
@@ -1187,7 +1281,13 @@ def breakout_watch(blocks, limit=20):
         base = t.get("base")
         if not base or b.get("young") or t.get("box"):
             continue
-        if base["width_pct"] > BOX_MAX_WIDTH * 100 or base["to_top_pct"] > 4.0:
+        if base["width_pct"] > BOX_MAX_WIDTH * 100 or base["to_top_pct"] > VERGE_PCT:
+            continue
+        # The same screens the short-term list applies after a breakout.
+        flow, q = b.get("sector_flow"), b.get("quarter") or {}
+        if flow is not None and flow["score"] < SHORT_SECTOR_FLOOR:
+            continue
+        if q.get("pat_yoy_pct") is not None and q["pat_yoy_pct"] < 0:
             continue
         if (b.get("score") or 0) < BOX_LEADER_FLOOR * 100 or not t.get("above_200d"):
             continue

@@ -1246,8 +1246,8 @@
 <link rel="stylesheet" href="calls.css?v=20261029">
 <link rel="stylesheet" href="watchlists.css?v=20261029">
 <link rel="stylesheet" href="strategy-lab.css?v=20261031">
-<link rel="stylesheet" href="picks.css?v=20261112b">
-<script src="picks.js?v=20261112b"></script>
+<link rel="stylesheet" href="picks.css?v=20261113">
+<script src="picks.js?v=20261113"></script>
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20260922-stock-copy"></script>
 <script src="universe-scan.js?v=20261112"></script>
@@ -1621,25 +1621,15 @@
   <div id="view-ideas" style="display:none">
     <header class="tabhead">
       <h2>Stock picks</h2>
-      <p>Ten lists: five by how long you hold, five by what the chart or the money is doing.</p>
+      <p>Two lists: stocks for the next month, and stocks for the next year.</p>
     </header>
     <!-- The pick lists (picks.js). The list comes first and the scan that
          makes it comes after: a reader came for stocks, and used to scroll
          past a full screen of planets to reach one. -->
     <div class="hzrow" style="flex-direction:column;align-items:flex-start;gap:0">
-      <div class="pk-tabs page" id="hzseg" role="tablist" aria-label="Holding period">
-        <button type="button" role="tab" class="pk-tab hz" data-h="week"><i>This </i>week</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="month"><i>This </i>month</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="results"><i>After </i>results</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="momentum">Momentum</button>
+      <div class="pk-tabs two page" id="hzseg" role="tablist" aria-label="Holding period">
+        <button type="button" role="tab" class="pk-tab hz" data-h="short">Short term</button>
         <button type="button" role="tab" class="pk-tab hz" data-h="long">Long term</button>
-      </div>
-      <div class="pk-tabs page setups" id="hzseg2" role="tablist" aria-label="Setup">
-        <button type="button" role="tab" class="pk-tab hz" data-h="breakout">Breakouts</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="technical">Technicals</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="quick"><i>Quick </i>trades</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="flow"><i>Money </i>flow</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="emerging">Emerging</button>
       </div>
     </div>
     <p class="pk-brief"><a href="brief.html">Today&rsquo;s policy brief</a>: every new DGFT, RBI, SEBI and government circular, and the stocks it touches.</p>
@@ -2834,9 +2824,9 @@ $("rcallist").addEventListener("click", e => {
 /* ── Ideas view ─────────────────────────────────────────────────────── */
 /* One of week, month, momentum, long (picks.js). The server still answers
    to short and medium, which is what older links ask for. */
-let horizon = (window.AltahaPicks ? window.AltahaPicks.chosen() : "month"), pollTimer = null, ideasReq = 0;
+let horizon = (window.AltahaPicks ? window.AltahaPicks.chosen() : "short"), pollTimer = null, ideasReq = 0;
 function markHorizon(){
-  document.querySelectorAll("#hzseg .hz[data-h], #hzseg2 .hz[data-h]").forEach(x=>{
+  document.querySelectorAll("#hzseg .hz[data-h]").forEach(x=>{
     const on = x.dataset.h === horizon;
     x.classList.toggle("on", on); x.classList.toggle("active", on);
     x.setAttribute("aria-selected", String(on));
@@ -4311,7 +4301,7 @@ function render(d){
 $("go").addEventListener("click", ()=>analyse());
 $("tk").addEventListener("keydown", e=>{ if(e.key==="Enter") analyse(); });
 document.querySelectorAll(".hint b").forEach(b=>b.addEventListener("click",()=>analyse(b.dataset.t)));
-document.querySelectorAll("#hzseg .hz[data-h], #hzseg2 .hz[data-h]").forEach(b=>b.addEventListener("click",()=>{
+document.querySelectorAll("#hzseg .hz[data-h]").forEach(b=>b.addEventListener("click",()=>{
   horizon = b.dataset.h;
   if(window.AltahaPicks) window.AltahaPicks.remember(horizon);
   markHorizon();
