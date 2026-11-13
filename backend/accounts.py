@@ -357,6 +357,50 @@ def complete_login(token: str) -> dict:
     return {"session": session, "user": _user_dict(user)}
 
 
+def gmail_key(email: str) -> str:
+    """One key for every spelling of a Gmail inbox, or "" for any other address.
+
+    Gmail delivers a.b@gmail.com, ab@gmail.com, ab+tag@gmail.com and
+    ab@googlemail.com to the same person. Google sign-in reports the address
+    as it was registered, dots and all; a reader typing it for a code often
+    leaves the dots out. Keyed on the raw string, that was two accounts for
+    one person: the desk they built signed in with Google was not there when
+    they signed in by email.
+    """
+    local, _, domain = str(email or "").strip().lower().partition("@")
+    if domain not in ("gmail.com", "googlemail.com") or not local:
+        return ""
+    return local.split("+", 1)[0].replace(".", "") + "@gmail.com"
+
+
+def _same_inbox(conn, email: str):
+    """The account this Gmail inbox already has, under whichever spelling, or
+    None. Where earlier sign-ins left more than one, the one holding the
+    reader's work wins (a wealth desk, then holdings, watchlist), then the
+    oldest, so every spelling lands on the same account from now on."""
+    key = gmail_key(email)
+    if not key:
+        return None
+    twins = [u for u in conn.execute(
+        "SELECT * FROM users WHERE email LIKE '%@gmail.com' OR email LIKE '%@googlemail.com'")
+        if gmail_key(u["email"]) == key]
+    if not twins:
+        return None
+
+    def weight(u):
+        n = 0
+        for sql, w in (("SELECT COUNT(*) FROM wm_desks WHERE user_id=?", 1000),
+                       ("SELECT COUNT(*) FROM wm_clients WHERE user_id=?", 10),
+                       ("SELECT COUNT(*) FROM holdings WHERE user_id=?", 1),
+                       ("SELECT COUNT(*) FROM watchlist WHERE user_id=?", 1)):
+            try:
+                n += w * conn.execute(sql, (u["id"],)).fetchone()[0]
+            except sqlite3.OperationalError:          # the wealth tables are made on first use
+                pass
+        return n
+    return sorted(twins, key=lambda u: (-weight(u), u["id"]))[0]
+
+
 def _issue_session(conn, email: str, now) -> tuple:
     """The account, and a session for it. Caller owns the transaction.
 
@@ -365,7 +409,8 @@ def _issue_session(conn, email: str, now) -> tuple:
     this reader owns this address. What follows must not differ between them,
     so it is written once.
     """
-    user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+    user = _same_inbox(conn, email) or \
+        conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
     if user is None:
         conn.execute(
             "INSERT INTO users(email,created_at,last_login_at,unsub_token) "
