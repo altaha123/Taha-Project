@@ -840,8 +840,17 @@ def load_sectors():
 
 def _replay_date(i):
     import leaders
-    P, Y, sectors = _REPLAY["P"], _REPLAY["Y"], _REPLAY["sectors"]
-    blocks = leaders.rank(_engine_candidates(P, i, Y), sectors=sectors)
+    P, Y, sectors, R = _REPLAY["P"], _REPLAY["Y"], _REPLAY["sectors"], _REPLAY.get("R")
+    filed = growth = None
+    if R is not None:
+        # Only what had reached the exchange by this session; a quarter's
+        # numbers stand for a hundred sessions, as the scan's do.
+        known = R[R["i"] <= i].drop_duplicates("symbol", keep="last")
+        filed = {r.symbol: {"filed_at": str(r.filed)[:19]} for r in known.itertuples(index=False)}
+        growth = {r.symbol: {"pat_yoy_pct": None if pd.isna(r.pat_yoy_pct) else float(r.pat_yoy_pct),
+                             "revenue_yoy_pct": None if pd.isna(r.revenue_yoy_pct) else float(r.revenue_yoy_pct)}
+                  for r in known[known["i"] >= i - 100].itertuples(index=False)}
+    blocks = leaders.rank(_engine_candidates(P, i, Y), results=filed, sectors=sectors, fundamentals=growth)
     out = {}
     for key in leaders.SETUPS:
         top = sorted((b["lists"][key]["rank"], s) for s, b in blocks.items()
@@ -850,7 +859,7 @@ def _replay_date(i):
     return i, out
 
 
-def setup_picks(P, Y, sectors, procs=4):
+def setup_picks(P, Y, sectors, procs=4, R=None):
     """{list: [(date, [names])]} from the engine itself, cached on the
     engine's source so a changed rule is never read from an old replay."""
     import hashlib
@@ -858,14 +867,15 @@ def setup_picks(P, Y, sectors, procs=4):
     import pickle
     import leaders
     with open(leaders.__file__, "rb") as f:
-        stamp = hashlib.sha1(f.read() + str(len(P.C)).encode() + str(len(sectors)).encode()).hexdigest()[:16]
+        stamp = hashlib.sha1(f.read() + str(len(P.C)).encode() + str(len(sectors)).encode()
+                             + str(0 if R is None else len(R)).encode()).hexdigest()[:16]
     cache = os.path.join(DATA, "setup_picks.pkl")
     if os.path.exists(cache):
         with open(cache, "rb") as f:
             got = pickle.load(f)
         if got.get("stamp") == stamp:
             return got["picks"]
-    _REPLAY.update(P=P, Y=Y, sectors=sectors)
+    _REPLAY.update(P=P, Y=Y, sectors=sectors, R=R)
     days = list(range(262, len(P.C) - 2, 5))
     with mp.get_context("fork").Pool(procs) as pool:
         rows = pool.map(_replay_date, days, chunksize=4)
@@ -917,6 +927,10 @@ def run_setup(P, picks, hold, exit_pct, above_sma5=False):
 
 
 SETUP_NOTES = {
+    "short": "A close above a 40-session range 18% wide or tighter on twice the usual volume in the last "
+             "five sessions, still above it; above the 200-day average; leader score in the top half; six "
+             "or more of nine chart conditions; its industry in the top half on money flow; no fall in "
+             "profit last quarter; results, if just out, not sold by the market.",
     "breakout": "Forty sessions inside an 18% range, then a close above its top on twice the usual "
                 "volume within the last five sessions; above the 200-day average; leader score in the top half.",
     "technical": "Seven or more of nine chart conditions met: price above the 20-day average, the 20 "
@@ -933,11 +947,11 @@ SETUP_NOTES = {
 }
 
 
-def setup_records(P, U, Y):
+def setup_records(P, U, Y, R=None):
     """The record of each setup list, keyed as result['lists'] is."""
     import leaders
     sectors = load_sectors()
-    picks = setup_picks(P, Y, sectors)
+    picks = setup_picks(P, Y, sectors, R=R)
     out, exits = {}, {}
     for key in leaders.SETUPS:
         spec = leaders.LISTS[key]
@@ -959,6 +973,9 @@ def setup_records(P, U, Y):
                           "the next open.")
         if sma5:
             rec["avg_sessions_held"] = round(float(ran["held"].mean()), 1)
+        if key == "short":
+            rec["bias"] = ("Industries are NSE's list as it stands today, and quarterly results start in 2018 "
+                           "and cover companies listed today. Before 2018 the profit screen passes everyone.")
         if key == "flow":
             rec["bias"] = ("Sectors are NSE's list as it stands today, so a company since delisted has "
                            "no sector here and could not be picked.")
@@ -977,7 +994,7 @@ def setups_only():
     Y, _m = young_universe(P, U)
     with open(OUT, encoding="utf-8") as f:
         result = json.load(f)
-    recs, exits = setup_records(P, U, Y)
+    recs, exits = setup_records(P, U, Y, load_results(P))
     result["lists"].update(recs)
     result["exits"].update(exits)
     for path in (OUT, os.path.join(HERE, "..", "backend", "ideas_study.json")):
@@ -1107,7 +1124,7 @@ def study():
         print(f"\n{r_key}: no results table at {RESULTS_CSV}; the last record is kept.")
 
     # The setup lists, replayed through the engine itself.
-    s_recs, s_exits = setup_records(P, U, Y)
+    s_recs, s_exits = setup_records(P, U, Y, R)
     result["lists"].update(s_recs)
     result["exits"].update(s_exits)
 

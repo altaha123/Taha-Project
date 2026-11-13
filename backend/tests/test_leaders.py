@@ -317,7 +317,7 @@ def test_the_record_shown_is_read_from_the_study_file():
 
 
 def test_every_old_horizon_name_still_resolves():
-    assert leaders.resolve("short") == "momentum"
+    assert leaders.resolve("short") == "short"        # its own list now, not a name for momentum
     assert leaders.resolve("medium") == "long"
     assert leaders.resolve("WEEK") == "week"
     assert leaders.resolve("nonsense") is None
@@ -465,7 +465,7 @@ def test_a_scan_from_before_the_lists_still_answers(quiet):
 
 def test_the_old_switch_positions_reach_the_new_lists(quiet):
     p = scan_payload(leaders.rank(universe()))
-    assert ideas.select(p, horizon="short")["list"] == "momentum"
+    assert ideas.select(p, horizon="short")["list"] == "short"
     assert ideas.select(p, horizon="medium")["list"] == "long"
 
 
@@ -1031,3 +1031,84 @@ def test_the_breakout_watch_lists_only_unbroken_tight_bases():
                       "technicals": {"box": None, "above_200d": True,
                                      "base": {"top": 100, "low": 95, "width_pct": 5.0, "to_top_pct": 1.0}}}}
     assert [r["symbol"] for r in leaders.breakout_watch(blocks)] == ["AAA"]
+
+
+# --- the short-term list: a breakout, passed through five screens -----------------
+
+def _short_case(**over):
+    g = {"price": 110.0, "sma200": 90.0,
+         "tech": {"scorecard": 8, "box": {"sessions_ago": 1, "top": 105.0, "low": 95.0, "width": 0.105,
+                                           "rel_volume": 3.0, "close": 108.0, "holding": True}}}
+    part = {"leader": 0.8}
+    flow = {"Alpha": {"sector": "Alpha", "score": 80.0, "rank": 2, "of": 18}}
+    kw = dict(pat_yoy=20.0, growth=0.7, ev=None)
+    for k, v in over.items():
+        if k in kw:
+            kw[k] = v
+        elif k == "leader":
+            part["leader"] = v
+        elif k == "sector_score":
+            flow["Alpha"]["score"] = v
+        elif k in ("scorecard",):
+            g["tech"][k] = v
+        elif k in ("holding", "rel_volume", "width"):
+            g["tech"]["box"][k] = v
+        elif k == "box":
+            g["tech"]["box"] = v
+        elif k == "base":
+            g["tech"]["base"] = v
+        else:
+            g[k] = v
+    return leaders._short("AAA", g, part, {"AAA": "Alpha"}, flow, kw["pat_yoy"], kw["growth"], kw["ev"])
+
+
+def test_a_breakout_that_passes_every_screen_is_a_short_term_pick():
+    score, why, order = _short_case()
+    assert why is None and 0 < score <= 100 and order == score
+
+
+def test_each_screen_of_the_short_term_list_refuses_in_words():
+    cases = {
+        "200-day": dict(sma200=120.0),
+        "bottom half of liquid": dict(leader=0.3),
+        "chart conditions": dict(scorecard=4),
+        "bottom half": dict(sector_score=30.0),
+        "Profit fell": dict(pat_yoy=-12.0),
+        "closed back under": dict(holding=False),
+        "usual volume": dict(rel_volume=1.2),
+        "wide": dict(width=0.30),
+        "results were sold": dict(ev={"reaction": -0.05, "move": -0.06, "market_move": -0.01}),
+    }
+    for text, over in cases.items():
+        _s, why, _o = _short_case(**over)
+        assert why and text in why, (text, why)
+
+
+def test_a_company_with_no_quarter_on_file_is_not_refused_for_it():
+    assert _short_case(pat_yoy=None, growth=None)[1] is None
+
+
+def test_a_stock_on_the_verge_is_named_as_such_and_not_picked():
+    _s, why, _o = _short_case(box=None, base={"top": 105.0, "low": 95.0, "width": 0.105, "to_top": 0.012})
+    assert why.startswith("On the verge") and "waits for the breakout" in why
+    assert "No breakout" in _short_case(box=None, base=None)[1]
+
+
+def test_stronger_industry_and_faster_growth_rank_a_pick_higher():
+    assert _short_case(sector_score=95.0)[0] > _short_case(sector_score=55.0)[0]
+    assert _short_case(growth=0.9)[0] > _short_case(growth=0.2)[0]
+
+
+def test_the_page_shows_two_lists_and_short_is_its_own():
+    assert leaders.PRIMARY == ("short", "long")
+    assert leaders.resolve("short") == "short" and leaders.resolve("medium") == "long"
+    assert leaders.plan("short", 100.0)["stop"] == 92.0
+
+
+def test_the_short_term_record_is_the_engines_and_is_read_from_the_study():
+    with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
+        rec = json.load(f)["lists"]["short"]
+    assert rec["kind"] == "setup" and rec["picks"] > 500 and rec["bias"]
+    assert rec["hold_sessions"] == 21 and rec["exit_pct"] == 8.0
+    # Led the average stock in both halves: the reason it is the list the page leads with.
+    assert all(h["excess_pct"] > 0 for h in rec["vs_average_stock"]["by_half"].values())

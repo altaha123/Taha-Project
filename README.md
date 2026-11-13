@@ -72,7 +72,7 @@ is ever left invisible.
 ## Stock picks — five lists, tested
 
 `#research` and `#research/ideas` (`backend/leaders.py`, `frontend/picks.js`).
-The Ideas door opens on five tabs: **This week**, **This month**, **After
+The Ideas door once opened on five tabs (now two, see below): **This week**, **This month**, **After
 results**, **Momentum** and **Long term**. Each shows what the list is in one
 line, how it tested in three numbers, and the picks, each with up to four
 reasons, a holding period and one exit price.
@@ -112,15 +112,19 @@ rank, beside the result it was last priced on and any order it disclosed. All
 of it is in [`research/signals_lab.py`](research/signals_lab.py) and the
 study's "What a reader asked for, tested".
 
-- **Five setup lists sit under the five horizon lists:** Breakouts (a close
-  above a tight 40-session base on twice the usual volume, with the unbroken
-  bases shown as *Setting up*), Technicals (seven of nine chart conditions),
-  Quick trades (an oversold leader, sold on the first close above its 5-day
-  average), Money flow (every NSE sector ranked on turnover share, breadth
-  and its month; the strongest stocks in the top four) and Emerging
-  (companies listed six to twelve months). Each prints its own replayed
-  record; none is a strong edge and the quick trade does not cover its
-  costs, and the page says so.
+- **The page shows two lists.** *Short term*: stocks that closed above a
+  tight 40-session base on twice the usual volume and are still above it,
+  kept only if they pass five screens (trend and strength, six of nine chart
+  conditions, an industry in the top half on money flow, no fall in profit
+  last quarter, results not sold by the market). Held about a month, exit on
+  a close 8% under. Stocks on the verge of a breakout are listed under it to
+  watch, not as picks: bought early they did no better than chance.
+  *Long term*: steady year-long climbers, held about a year. In the test 54
+  short-term picks in 100 rose, about a point a month ahead of the average
+  stock in both halves; the page says that this is an edge in the average,
+  not a high hit rate. Eight other lists (this week, this month, after
+  results, momentum, breakouts, technicals, quick trades, money flow,
+  emerging) are still ranked and answer by name on `/ideas?horizon=`.
 - **A daily brief** (`brief.html`, `backend/policy_brief.py`,
   `GET /brief`) reads every new DGFT, RBI, SEBI and PIB circular for the
   sectors and stocks it touches: by Claude when `ANTHROPIC_API_KEY` is set,

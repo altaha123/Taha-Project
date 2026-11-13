@@ -150,3 +150,8 @@ html[data-theme="dark"] .pk-all { background: var(--gold-lt); color: #16130E; }
 }
 .pk-brief { margin: 2px 0 14px; font-size: 13.5px; color: var(--ink-2); }
 .pk-brief a { color: var(--ink); font-weight: 600; }
+/* Two tabs: short term and long term. */
+.pk-tabs.two { max-width: 340px; }
+.pk-tabs.two .pk-tab { flex: 1 1 0; font-size: 14px; }
+#view-ideas .pk-tabs.two.page { max-width: 340px; }
+.pk-tabs.two .pk-tab { text-align: center; justify-content: center; }

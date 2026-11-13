@@ -839,6 +839,32 @@ def recent_results(today=None):
     return {s: {k: v for k, v in r.items() if not k.startswith("_")} for s, r in out.items()}
 
 
+# A quarter's numbers stand until the next quarter's: five months covers a
+# company that reports late, as the study's hundred sessions do.
+GROWTH_LOOKBACK_DAYS = 150
+
+
+def latest_growth(today=None):
+    """{SYMBOL: {"pat_yoy_pct", "revenue_yoy_pct", "quarter"}} for each
+    company's most recent quarterly filing in the last five months. What the
+    short-term list reads for "did profit grow". {} when the tables cannot be
+    read, and the list then passes everyone on that screen, as it does for a
+    company with no filing."""
+    day = today or dt.date.today()
+    out = {}
+    try:
+        import fundamentals_store
+        since = (day - dt.timedelta(days=GROWTH_LOOKBACK_DAYS)).isoformat()
+        for r in fundamentals_store.recent_quarterly(since):       # oldest first: the last one wins
+            sym = str(r.get("symbol") or "").upper()
+            if sym:
+                out[sym] = {"pat_yoy_pct": r.get("pat_yoy_pct"), "revenue_yoy_pct": r.get("revenue_yoy_pct"),
+                            "quarter": r.get("label")}
+    except Exception:
+        return {}
+    return out
+
+
 def _chart_pattern(df, symbol):
     """
     The clearest classical chart pattern in the bars, or None: its name,
@@ -1198,7 +1224,8 @@ def run_scan(progress=None, names=None, checkpoint=None):
     # Rank the leaders against the whole liquid universe while phase 1's
     # inputs are still held, then drop the inputs: the block is all a row needs.
     try:
-        blocks = leaders.rank(cands, results=recent_results(), sectors=sector_map())
+        blocks = leaders.rank(cands, results=recent_results(), sectors=sector_map(),
+                              fundamentals=latest_growth())
     except Exception:
         blocks = {}
     # Every sector's standing on money flow, once, for the page's table.

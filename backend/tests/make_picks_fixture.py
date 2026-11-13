@@ -35,7 +35,7 @@ TOP_KEYS = ("available", "degraded", "method_key", "list", "horizon", "label", "
             "exit_pct", "tested", "study", "scanned_at", "partial", "scored", "universe_source",
             "universe", "regime", "market_test", "chart_note", "empty_text", "event", "sector_mix",
             "sector_cap", "selection_notes", "excluded_adverse", "count", "considered", "method",
-            "recipe_current", "kind", "sell_rule", "sector_flow", "flow_sectors", "watch", "lists")
+            "recipe_current", "primary", "kind", "sell_rule", "sector_flow", "flow_sectors", "watch", "lists")
 
 
 def main():
@@ -77,9 +77,14 @@ def main():
     ideas.tracker = None
 
     sectors = S.load_sectors()
+    # Each company's last quarter, as the scan reads it: a hundred sessions back at most.
+    growth = {r.symbol: {"pat_yoy_pct": None if pd.isna(r.pat_yoy_pct) else float(r.pat_yoy_pct),
+                         "revenue_yoy_pct": None if pd.isna(r.revenue_yoy_pct) else float(r.revenue_yoy_pct),
+                         "quarter": "Q2 FY27"}
+              for r in known[known["i"] >= i - 100].itertuples(index=False)}
 
     def payload(results):
-        blocks = leaders.rank(cands, results=results, sectors=sectors)
+        blocks = leaders.rank(cands, results=results, sectors=sectors, fundamentals=growth)
         flow = {}
         for b in blocks.values():
             if b.get("sector_flow"):
@@ -123,6 +128,13 @@ def main():
         fix[key] = trimmed(sel)
         made.append("%s %d" % (key, sel["count"]))
     print("setup lists: " + ", ".join(made))
+    # The two lists the page shows. Long term is ranked the same day; the
+    # short list is also kept as it reads on a day nothing passes.
+    fix["long"] = trimmed(ideas.select(payload(filed), horizon="long", limit=15))
+    assert fix["long"]["count"] >= 10 and fix["long"]["tested"]
+    none = dict(fix["short"], rows=[], count=0, watch=fix["short"].get("watch"),
+                empty_text=ideas.SETUP_EMPTY["short"], selection_notes=[ideas.SETUP_EMPTY["short"]])
+    fix["short_empty"] = none
     # The file's own layout (one value a line, no padding), so a regenerated
     # fixture differs from the last one only where the lists do.
     OUT.write_text(json.dumps(fix, indent=0, separators=(",", ":"), ensure_ascii=False) + "\n",

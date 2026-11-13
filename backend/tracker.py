@@ -123,6 +123,7 @@ HORIZON_DAYS = {
     "pick_results": 32,
     "pick_momentum": 93,
     "pick_long": 370,
+    "pick_short": 32,
     "pick_breakout": 32,
     "pick_technical": 32,
     "pick_quick": 11,
