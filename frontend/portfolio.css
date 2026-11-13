@@ -707,9 +707,9 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
   }
   #view-portfolio .pfhead .h-trend, #view-portfolio .pfhead .h-date, #view-portfolio .pf-trend{ display:none }
   #view-portfolio .pf-field-date{ display:none }
-  #view-portfolio .pfrow:focus-within, #view-portfolio .pfrow.has-date{ grid-template-areas:"av sym qty buy price val del" ". date date date . . ."; row-gap:4px }
-  #view-portfolio .pfrow:focus-within .pf-field-date, #view-portfolio .pfrow.has-date .pf-field-date{ display:flex; align-items:center; gap:8px }
-  #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 12px/1 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
+  #view-portfolio .pfrow:focus-within, #view-portfolio .pfrow.is-open, #view-portfolio .pfrow.has-date{ grid-template-areas:"av sym qty buy price val del" ". date date date . . ."; row-gap:4px }
+  #view-portfolio .pfrow:focus-within .pf-field-date, #view-portfolio .pfrow.is-open .pf-field-date, #view-portfolio .pfrow.has-date .pf-field-date{ display:flex; align-items:center; gap:8px }
+  #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 12px/1 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
   #view-portfolio .pfrow .pf_date{ width:auto; height:32px }
 }
 
@@ -718,7 +718,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 @container pfed (max-width: 620px){
   #view-portfolio .pfhead{ display:none }
   #view-portfolio #pf_rows{ display:grid; gap:12px; padding-top:6px }
-  #view-portfolio .pfrow, #view-portfolio .pfrow:focus-within, #view-portfolio .pfrow.has-date{
+  #view-portfolio .pfrow, #view-portfolio .pfrow:focus-within, #view-portfolio .pfrow.is-open, #view-portfolio .pfrow.has-date{
     grid-template-columns:repeat(12,minmax(0,1fr)); grid-template-areas:none;
     column-gap:4px; row-gap:6px; padding:16px 12px 12px; border:1px solid var(--rule); border-radius:14px; background:var(--skin-card,var(--paper));
   }
@@ -742,8 +742,8 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
   #view-portfolio .pf-live small{ font-size:11.5px }
   #view-portfolio .pf-pl{ padding:1px 6px; font-size:11px !important }
   #view-portfolio .pf-sep{ display:none }
-  #view-portfolio .pfrow:focus-within .pf-field-date, #view-portfolio .pfrow.has-date .pf-field-date{ display:flex; align-items:center; gap:8px }
-  #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 12px/1 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
+  #view-portfolio .pfrow:focus-within .pf-field-date, #view-portfolio .pfrow.is-open .pf-field-date, #view-portfolio .pfrow.has-date .pf-field-date{ display:flex; align-items:center; gap:8px }
+  #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 12px/1 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
   #view-portfolio .pfrow .pf_date{ width:auto; flex:1 1 auto; height:34px; font-size:14px }
   #view-portfolio .pfdel{ grid-area:auto; position:absolute; top:-10px; right:-10px; width:24px; height:24px; border-radius:50%; opacity:1;
     border:1px solid var(--rule); background:var(--skin-card,var(--paper)); box-shadow:0 2px 6px #2a200c1a; z-index:1 }
