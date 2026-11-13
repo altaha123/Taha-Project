@@ -801,6 +801,23 @@
       var sym = row.querySelector('.pf_sym');
       var qty = row.querySelector('.pf_qty');
 
+      /* On a phone a row opens a second line (the buy date) while it has
+         focus. Closing it the instant focus leaves moved everything below
+         it, including Analyse, between the finger going down and coming up:
+         the tap landed on empty space and did nothing. The row now stays
+         open a moment after focus leaves, so the tap that took the focus
+         lands on what was under it. */
+      row.addEventListener('focusin', function () {
+        clearTimeout(row._closing);
+        row.classList.add('is-open');
+      });
+      row.addEventListener('focusout', function () {
+        clearTimeout(row._closing);
+        row._closing = setTimeout(function () {
+          if (!row.contains(document.activeElement)) row.classList.remove('is-open');
+        }, 400);
+      });
+
       sym.addEventListener('input', function () {
         r.symbol = cleanSymbol(sym.value);
         validateRow(row, r);
