@@ -192,7 +192,7 @@ def persistence_health():
 CHUNK = 40                 # symbols per bulk price request
 # Candidates that get full fundamental analysis. Overridable so a 512 MB
 # Render instance can be told to go lighter: set SCAN_DEPTH=120 in the env.
-PHASE2_SIZE = int(os.environ.get("SCAN_DEPTH", "200") or 200)
+PHASE2_SIZE = int(os.environ.get("SCAN_DEPTH", "260") or 260)
 
 # CONTROL COHORT — the most important line in this file for research purposes.
 #
@@ -220,8 +220,19 @@ CONTROL_PCT = float(os.environ.get("SCAN_CONTROL_PCT", "0.25") or 0.25)
 # companies report. So the leaders may take up to three-fifths of the ranked
 # places (90 of 150), where it was half: fewer, and the last names of each
 # list have no row to be shown from.
-LEADER_SLOTS = int(os.environ.get("SCAN_LEADER_SLOTS", "90") or 90)
-LEADER_SHARE = 0.6
+#
+# The five setup lists (breakouts, technicals, quick trades, money flow,
+# emerging) are drawn from the same phase 1 and need rows of their own: up to
+# about 60 more names on a busy day. The scan went from 200 to 260 deep and
+# the leaders' share to two-thirds, so the technical cohort keeps the 65
+# places it had.
+LEADER_SLOTS = int(os.environ.get("SCAN_LEADER_SLOTS", "130") or 130)
+LEADER_SHARE = 0.67
+# NSE's industry for each company in its Nifty Total Market index: the sector
+# map the money-flow list is measured on. Read fresh each scan; the copy
+# beside this file is what a scan uses when NSE does not answer.
+SECTORS_URL = "https://archives.nseindia.com/content/indices/ind_niftytotalmarket_list.csv"
+SECTORS_FILE = os.path.join(_HERE, "nse_industries.csv")
 # How far back to ask for results filings: ten sessions is a fortnight, and a
 # week more covers a run of holidays.
 RESULTS_LOOKBACK_DAYS = 21
@@ -749,6 +760,36 @@ def deep_score(cand, selection="ranked"):
     }
 
 
+def _read_sectors(text):
+    import csv
+    import io
+    out = {}
+    for row in csv.DictReader(io.StringIO(text)):
+        row = {(k or "").strip(): (v or "").strip() for k, v in row.items()}
+        if row.get("Symbol") and row.get("Industry"):
+            out[row["Symbol"].upper()] = row["Industry"]
+    return out
+
+
+def sector_map():
+    """{SYMBOL: NSE industry}. NSE's list when it answers with a full one,
+    else the copy shipped with the code; {} only if both are unreadable."""
+    try:
+        import requests
+        r = requests.get(SECTORS_URL, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
+        if r.ok:
+            got = _read_sectors(r.text)
+            if len(got) >= 400:
+                return got
+    except Exception:
+        pass
+    try:
+        with open(SECTORS_FILE, encoding="utf-8") as f:
+            return _read_sectors(f.read())
+    except Exception:
+        return {}
+
+
 def recent_results(today=None):
     """
     When each company's latest quarterly results reached the exchange, for
@@ -986,6 +1027,12 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
         pass
 
 
+# The sectors ranked on money flow by the scan now running (leaders.sector_flow).
+_SECTOR_FLOW = []
+# Tight bases not yet broken (leaders.breakout_watch), from the same scan.
+_WATCH = []
+
+
 def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
                    ill, nod, n_deep, failed, partial=False, stopped=None):
     all_rows = list(rows)
@@ -1020,6 +1067,8 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
                         "it is not the complete NSE universe."),
         "methodology_version": "v4",
         "factor_universe": rows,
+        "sector_flow": list(_SECTOR_FLOW),
+        "breakout_watch": list(_WATCH),
         "rankings": rows[:STORE_TOP],
         "skipped": failed,
         # Set when the scan ended itself rather than finishing. A short list
@@ -1149,9 +1198,20 @@ def run_scan(progress=None, names=None, checkpoint=None):
     # Rank the leaders against the whole liquid universe while phase 1's
     # inputs are still held, then drop the inputs: the block is all a row needs.
     try:
-        blocks = leaders.rank(cands, results=recent_results())
+        blocks = leaders.rank(cands, results=recent_results(), sectors=sector_map())
     except Exception:
         blocks = {}
+    # Every sector's standing on money flow, once, for the page's table.
+    flow_table = {}
+    for b in blocks.values():
+        row = b.get("sector_flow")
+        if row:
+            flow_table[row["sector"]] = row
+    _SECTOR_FLOW[:] = sorted(flow_table.values(), key=lambda r: r["rank"])
+    try:
+        _WATCH[:] = leaders.breakout_watch(blocks)
+    except Exception:
+        _WATCH[:] = []
     for c in cands:
         c["leader"] = blocks.get(str(c["symbol"]).upper())
         c.pop("leader_sig", None)

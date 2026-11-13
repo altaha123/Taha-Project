@@ -162,7 +162,7 @@ DAYS_KEPT = 12                     # recent daily moves each stock carries for t
 # Stamped on every block rank() writes. A scan made under an earlier recipe
 # still serves its lists after a deploy, but the page must not print this
 # recipe's tested record beside them. Change it whenever LISTS changes.
-RECIPE = "2026-11 results list, younger companies"
+RECIPE = "2026-11 setup lists"
 
 # The four lists. `mix` is the weight on each percentile; `calm_gate` says
 # whether the most volatile fifth is removed (True) or merely ranked lower.
@@ -207,7 +207,46 @@ LISTS = {
         "idea": "Steady year-long climbers near their highs.",
     },
 }
+# The four setup lists. Each was asked for by name and is built as a list of
+# its own; research/setups_lab.py chose which version of each, and its record
+# is printed beside it whatever it is. They are ranked on what the setup
+# itself measures, not on the price recipes above.
+LISTS.update({
+    "breakout": {
+        "label": "Breakouts", "setup": "Breakout", "setup_key": "pick_breakout", "kind": "setup",
+        "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 8.0,
+        "mix": {"breakout": 1.0}, "calm_gate": False, "trend_gate": False,
+        "idea": "Forty sessions in a tight range, then a close above it on twice the usual volume.",
+    },
+    "technical": {
+        "label": "Technicals", "setup": "Technical pick", "setup_key": "pick_technical", "kind": "setup",
+        "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 10.0,
+        "mix": {"technical": 1.0}, "calm_gate": False, "trend_gate": False,
+        "idea": "Stocks meeting seven or more of nine chart conditions: the averages, RSI, MACD, ADX and volume.",
+    },
+    "quick": {
+        "label": "Quick trades", "setup": "Quick trade", "setup_key": "pick_quick", "kind": "setup",
+        "hold_sessions": 7, "hold_days": 10, "hold_text": "a few days", "exit_pct": 7.0,
+        "sell_rule": "sma5",
+        "mix": {"quick": 1.0}, "calm_gate": False, "trend_gate": True,
+        "idea": "Market leaders sold off hard for a day or two.",
+    },
+    "flow": {
+        "label": "Money flow", "setup": "Money-flow pick", "setup_key": "pick_flow", "kind": "setup",
+        "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 10.0,
+        "mix": {"flow": 1.0}, "calm_gate": True, "trend_gate": True,
+        "idea": "The strongest stocks in the four sectors money is moving into.",
+    },
+    "emerging": {
+        "label": "Emerging", "setup": "Emerging company", "setup_key": "pick_emerging", "kind": "setup",
+        "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 10.0,
+        "mix": {"emerging": 1.0}, "calm_gate": False, "trend_gate": False,
+        "idea": "Companies listed six to twelve months that already stand among the market's leaders.",
+    },
+})
 ORDER = ("week", "month", "results", "momentum", "long")
+SETUPS = ("breakout", "technical", "quick", "flow", "emerging")
+ALL = ORDER + SETUPS
 SETUP_KEYS = {v["setup_key"]: k for k, v in LISTS.items()}
 # Older links and the old two-way switch still ask for these.
 ALIASES = {"short": "momentum", "medium": "long", "trade": "week", "position": "momentum",
@@ -344,6 +383,24 @@ def signals(df):
         "days": _recent_days(frame, c),
     }
 
+
+# The four setup lists (research/setups_lab.py chose each version).
+BOX_SESSIONS = 40          # how long the base is
+BOX_MAX_WIDTH = 0.18       # high over low of the base, less one
+BOX_MIN_VOLUME = 2.0       # the breakout session's volume against its usual
+BOX_LOOKBACK = 5           # how many sessions back a breakout is still listed
+BOX_LEADER_FLOOR = 0.50
+QUICK_RSI2 = 10.0          # the two-day RSI under which a leader counts as sold off
+QUICK_LEADER_FLOOR = 0.70
+SCORECARD_MIN = 7          # of nine technical conditions
+SCORECARD_LABELS = (
+    "Above its 20-day average", "20-day average above the 50-day", "50-day average above the 200-day",
+    "RSI over 55", "MACD above its signal line", "ADX at 25 or more, buyers ahead",
+    "More volume on up days", "Volume above its usual this week", "Within 5% of its 52-week high")
+FLOW_SECTORS = 4           # the sectors money is moving into
+FLOW_PER_SECTOR = 4        # and the strongest stocks taken from each
+FLOW_MIN_MEMBERS = 8
+EMERGING_FLOOR = 0.50       # a sector needs this many liquid stocks to be ranked
 
 # How far back a breakout may be and still be "fresh", and how long the price
 # must have gone without a six-month closing high for a new one to count as a
@@ -485,6 +542,63 @@ def technicals(df):
     dx = np.where(np.isfinite(dx), dx, 0.0)
     out["adx"] = float(_wilder(dx)[-1])
     out["atr_pct"] = float(atr[-1] / price * 100) if np.isfinite(atr[-1]) else None
+    out["di_spread"] = float(pdi[-1] - mdi[-1]) if np.isfinite(pdi[-1]) and np.isfinite(mdi[-1]) else None
+
+    # ---- what the four setup lists read ------------------------------------
+    # Quick trades: the two-day RSI and the 5-day average the trade is sold at.
+    g2, l2 = _wilder(np.clip(d, 0, None), 2), _wilder(np.clip(-d, 0, None), 2)
+    out["rsi2"] = float(100 - 100 / (1 + g2[-1] / l2[-1])) if l2[-1] > 0 else 100.0
+    out["sma5"] = float(c[-5:].mean())
+    sma50, sma200 = float(c[-50:].mean()), float(c[-200:].mean())
+    out["above_50d"] = bool(price > sma50)
+    out["above_200d"] = bool(price > sma200)
+
+    # Money flow: this week's rupee turnover and the last sixty sessions'.
+    turn = c * v
+    out["turnover_5"] = float(turn[-5:].mean()) if has_vol else None
+    out["turnover_60"] = float(turn[-60:].mean()) if has_vol else None
+    usual5 = float(np.median(v[-55:-5])) if has_vol and n >= 55 else 0.0
+    out["rel_volume_5"] = float(v[-5:].mean() / usual5) if usual5 > 0 else None
+
+    # The 40-session base. `box` is a close above it in the last five sessions,
+    # the earliest if there were two: the top and bottom of the base it broke
+    # out of, how wide that was, and the breakout session's volume against the
+    # median of the fifty before it.
+    out["box"] = None
+    for k in range(BOX_LOOKBACK - 1, -1, -1):
+        t = n - 1 - k
+        if t - BOX_SESSIONS < 0:
+            continue
+        top, bot = float(h[t - BOX_SESSIONS:t].max()), float(low[t - BOX_SESSIONS:t].min())
+        if bot <= 0 or c[t] <= top:
+            continue
+        before = v[max(0, t - 50):t]
+        med = float(np.median(before)) if len(before) >= 40 else 0.0
+        out["box"] = {"sessions_ago": int(k), "top": top, "low": bot, "width": (top - bot) / bot,
+                      "rel_volume": float(v[t] / med) if med > 0 else None,
+                      "close": float(c[t]), "holding": bool(price >= top)}
+        break
+    # The base as it stands today, for a stock still inside one.
+    top, bot = float(h[-BOX_SESSIONS - 1:-1].max()), float(low[-BOX_SESSIONS - 1:-1].min())
+    out["base"] = ({"top": top, "low": bot, "width": (top - bot) / bot, "to_top": float(top / price - 1)}
+                   if bot > 0 and price <= top else None)
+
+    # The technical scorecard: nine textbook conditions, and which hold.
+    near_52w = float(price / h[-252:].max())
+    checks = [
+        ("Above its 20-day average", price > ema20[-1]),
+        ("20-day average above the 50-day", ema20[-1] > sma50),
+        ("50-day average above the 200-day", sma50 > sma200),
+        ("RSI over 55", out["rsi"] > 55),
+        ("MACD above its signal line", hist[-1] > 0),
+        ("ADX at 25 or more, buyers ahead", out["adx"] >= 25 and (out["di_spread"] or 0) > 0),
+        ("More volume on up days", (out.get("up_down_volume") or 0) > 1.2),
+        ("Volume above its usual this week", (out.get("rel_volume_5") or 0) > 1.2),
+        ("Within 5% of its 52-week high", near_52w >= 0.95),
+    ]
+    assert tuple(label for label, _ok in checks) == SCORECARD_LABELS
+    out["scorecard"] = int(sum(1 for _label, ok in checks if ok))
+    out["scorecard_met"] = [label for label, ok in checks if ok]
     return out
 
 
@@ -556,7 +670,32 @@ def _short_day(iso):
 def _why(key, sig, calm, ev=None):
     """The evidence in words a first-time reader can use. Facts, no advice."""
     out = []
-    if key == "results" and ev:
+    t = sig.get("tech") or {}
+    if key == "breakout" and t.get("box"):
+        b = t["box"]
+        ago = b["sessions_ago"]
+        out.append("Broke out today" if ago == 0 else
+                   ("Broke out yesterday" if ago == 1 else f"Broke out {ago} sessions ago"))
+        if _finite(b.get("rel_volume")) is not None:
+            out.append(f"On {b['rel_volume']:.1f} times its usual volume")
+        out.append(f"{BOX_SESSIONS} sessions inside a {b['width'] * 100:.0f}% range")
+    if key == "technical" and t.get("scorecard") is not None:
+        out.append(f"{t['scorecard']} of 9 chart conditions")
+        if _finite(t.get("rsi")) is not None:
+            out.append(f"RSI {t['rsi']:.0f}")
+    if key == "quick" and _finite(t.get("rsi2")) is not None:
+        out.append(f"Two-day RSI {t['rsi2']:.0f}")
+        r5q = sig.get("ret_5d")
+        if r5q is not None and r5q <= -0.01:
+            out.append(f"Fell {abs(r5q) * 100:.0f}% this week")
+    if key == "emerging" and sig.get("young"):
+        r3e = sig.get("ret_3m")
+        if r3e is not None:
+            out.append(f"{'Up' if r3e >= 0 else 'Down'} {abs(r3e) * 100:.0f}% in three months")
+    if key == "flow" and ev and ev.get("sector"):
+        out.append(f"{ev['sector']}: money moving in")
+        out.append(f"Sector ranked {ev['rank']} of {ev['of']}")
+    if key == "results" and ev and ev.get("filed_at"):
         out.append(f"Results on {_short_day(ev['filed_at'])}")
         move = ev["move"] * 100
         out.append(f"{'Rose' if move >= 0 else 'Fell'} {abs(move):.0f}% the day they were priced")
@@ -687,17 +826,149 @@ def _tech_block(t):
         "rsi": r(t.get("rsi"), 0), "macd_hist_pct": r(t.get("macd_hist_pct")),
         "macd_rising": t.get("macd_rising"), "above_20d_pct": r(t.get("above_20d_pct"), 1),
         "adx": r(t.get("adx"), 0), "atr_pct": r(t.get("atr_pct"), 1),
+        "rsi2": r(t.get("rsi2"), 0), "sma5": r(t.get("sma5")),
+        "rel_volume_5": r(t.get("rel_volume_5"), 1),
+        "above_50d": t.get("above_50d"), "above_200d": t.get("above_200d"),
+        "scorecard": t.get("scorecard"), "scorecard_met": t.get("scorecard_met"),
+        "box": (None if not t.get("box") else {
+            "sessions_ago": t["box"]["sessions_ago"], "top": r(t["box"]["top"]), "low": r(t["box"]["low"]),
+            "width_pct": r(t["box"]["width"] * 100, 1), "rel_volume": r(t["box"].get("rel_volume"), 1),
+            "close": r(t["box"]["close"]), "holding": t["box"]["holding"]}),
+        "base": (None if not t.get("base") else {
+            "top": r(t["base"]["top"]), "low": r(t["base"]["low"]),
+            "width_pct": r(t["base"]["width"] * 100, 1), "to_top_pct": r(t["base"]["to_top"] * 100, 1)}),
     }
 
 
-def rank(candidates, results=None):
+def sector_flow(pool, sectors):
+    """
+    Where money is moving: every sector with enough liquid stocks, ranked.
+
+    `pool` is [(SYMBOL, signals)] for the established universe; `sectors`
+    maps a symbol to its sector. Three measurements, each turned into a
+    rank among the sectors and averaged:
+
+      shift    the sector's share of all rupee turnover this week, over its
+               share across the last sixty sessions (above 1: money moving in)
+      breadth  the share of its stocks above their own 50-day average
+      month    the median move of its stocks over the last 21 sessions
+
+    Returns the sectors best first, each with its three figures, its score
+    and its rank. Empty when no sector list was given.
+    """
+    if not sectors:
+        return []
+    groups, tot5, tot60 = {}, 0.0, 0.0
+    for sym, g in pool:
+        t = g.get("tech") or {}
+        t5, t60 = _finite(t.get("turnover_5")), _finite(t.get("turnover_60"))
+        if t5 is None or not t60:
+            continue
+        tot5 += t5
+        tot60 += t60
+        sec = sectors.get(sym)
+        if sec:
+            groups.setdefault(sec, []).append((sym, g, t5, t60, bool(t.get("above_50d"))))
+    rows = []
+    for sec, members in groups.items():
+        if len(members) < FLOW_MIN_MEMBERS or tot5 <= 0 or tot60 <= 0:
+            continue
+        s5, s60 = sum(m[2] for m in members), sum(m[3] for m in members)
+        month = sorted(_finite(m[1].get("ret_1m")) or 0.0 for m in members)
+        mid = len(month) // 2
+        rows.append({
+            "sector": sec, "stocks": len(members),
+            "shift": (s5 / tot5) / (s60 / tot60) if s60 > 0 else None,
+            "breadth": sum(1 for m in members if m[4]) / len(members),
+            "month": month[mid] if len(month) % 2 else (month[mid - 1] + month[mid]) / 2.0,
+        })
+    if not rows:
+        return []
+    ranks = [_pct_ranks([r[k] for r in rows]) for k in ("shift", "breadth", "month")]
+    for i, r in enumerate(rows):
+        parts = [x[i] for x in ranks if x[i] is not None]
+        r["score"] = sum(parts) / len(parts) if parts else 0.0
+    rows.sort(key=lambda r: (-r["score"], r["sector"]))
+    for n, r in enumerate(rows, 1):
+        r.update(rank=n, of=len(rows),
+                 shift=None if r["shift"] is None else round(r["shift"], 3),
+                 breadth_pct=round(r.pop("breadth") * 100, 1),
+                 month_pct=round(r.pop("month") * 100, 1), score=round(r["score"] * 100, 1))
+    return rows
+
+
+def _setup(key, sym, g, part, is_calm, sectors, flow_by, flow_top, flow_pick):
+    """(score out of 100, why it is not on the list or None, the figure it is
+    ordered on) for one stock on one of the four setup lists."""
+    t = g.get("tech") or {}
+    leader = part["leader"]
+    if key == "breakout":
+        b = t.get("box")
+        if not b:
+            return 0.0, f"No close above a {BOX_SESSIONS}-session range in the last {BOX_LOOKBACK} sessions.", -1.0
+        vol = _finite(b.get("rel_volume")) or 0.0
+        score = min(vol, 6.0) / 6.0 * 100.0
+        why = None
+        if b["width"] > BOX_MAX_WIDTH:
+            why = (f"The range it broke out of was {b['width'] * 100:.0f}% wide; a base is "
+                   f"{BOX_MAX_WIDTH * 100:.0f}% or tighter.")
+        elif vol < BOX_MIN_VOLUME:
+            why = f"The breakout came on {vol:.1f} times its usual volume; it needs {BOX_MIN_VOLUME:.0f}."
+        elif not g["price"] > g["sma200"]:
+            why = "Under its 200-day average."
+        elif leader < BOX_LEADER_FLOOR:
+            why = "Its leader score is in the bottom half of liquid stocks."
+        # Still above the base first, then the newest, then the heaviest volume.
+        order = (1000.0 if b["holding"] else 0.0) + (BOX_LOOKBACK - b["sessions_ago"]) * 10.0 + min(vol, 9.9)
+        return score, why, order
+    if key == "technical":
+        n = t.get("scorecard")
+        if n is None:
+            return 0.0, "Not enough history to read the chart.", -1.0
+        why = None if n >= SCORECARD_MIN else f"Meets {n} of the nine chart conditions; the list needs {SCORECARD_MIN}."
+        return n / 9.0 * 100.0, why, n + 0.5 * part["high"]
+    if key == "quick":
+        r2 = _finite(t.get("rsi2"))
+        if r2 is None:
+            return 0.0, "Not enough history to read the chart.", -1.0
+        why = None
+        if not g["uptrend"]:
+            why = "Not in an uptrend: price or its 50-day average is under the 200-day average."
+        elif r2 >= QUICK_RSI2:
+            why = f"Two-day RSI is {r2:.0f}; the setup is under {QUICK_RSI2:.0f}."
+        elif leader < QUICK_LEADER_FLOOR:
+            why = "Not a market leader: its leader score is under the top 30% of liquid stocks."
+        return max(0.0, (QUICK_RSI2 - r2) / QUICK_RSI2) * 100.0, why, -r2
+    # Money flow.
+    sec = sectors.get(sym)
+    score = leader * 100.0
+    if not sectors:
+        return score, "No sector list was available for this scan.", -1.0
+    if not sec:
+        return score, "Not in NSE's sector list.", -1.0
+    if sec not in flow_by:
+        return score, f"Fewer than {FLOW_MIN_MEMBERS} liquid stocks in its sector to measure a flow on.", -1.0
+    if sec not in flow_top:
+        row = flow_by[sec]
+        return score, (f"Its sector, {sec}, ranks {row['rank']} of {row['of']} on money flow; "
+                       f"the list takes the top {FLOW_SECTORS}."), -1.0
+    if sym not in flow_pick:
+        why = ("Not in an uptrend." if not g["uptrend"] else
+               ("Among the most volatile fifth of liquid stocks." if not is_calm else
+                f"Not among the {FLOW_PER_SECTOR} strongest in {sec}."))
+        return score, why, -1.0
+    return score, None, (FLOW_SECTORS - flow_top.index(sec)) * 10.0 + leader
+
+
+def rank(candidates, results=None, sectors=None):
     """
     Score every candidate against the whole liquid universe, for every list.
 
     `candidates` is a list of dicts carrying `symbol` and `leader_sig` (the
     output of signals(), or None). `results` maps a symbol to when its latest
     quarterly results reached the exchange ({"filed_at": ...}); without it the
-    results list is simply empty. Returns {SYMBOL: block}. A stock outside
+    results list is simply empty. `sectors` maps a symbol to its sector;
+    without it the money-flow list is empty. Returns {SYMBOL: block}. A stock outside
     the universe gets no block: it was not compared, which is different from
     being compared and failing a gate.
     """
@@ -748,6 +1019,21 @@ def rank(candidates, results=None):
         syms = sorted(events)
         reaction = dict(zip(syms, _pct_ranks([events[x]["reaction"] for x in syms])))
 
+    # Where money is moving, and the strongest established stocks in each of
+    # those sectors: uptrend, outside the most volatile fifth, best leader
+    # score first.
+    sectors = {str(k).upper(): v for k, v in (sectors or {}).items() if v}
+    flow_rows = sector_flow(pool, sectors)
+    flow_by = {r["sector"]: r for r in flow_rows}
+    flow_top = [r["sector"] for r in flow_rows[:FLOW_SECTORS]]
+    flow_pick = {}
+    for sec in flow_top:
+        members = [(-(m12[i] + m6[i] + high[i] + trend[i]) / 4.0, sym)
+                   for i, (sym, g) in enumerate(pool)
+                   if sectors.get(sym) == sec and g["uptrend"] and calm[i] >= CALM_FLOOR]
+        for _lead, sym in sorted(members)[:FLOW_PER_SECTOR]:
+            flow_pick[sym] = sec
+
     blocks, exact = {}, {}
     for i, (sym, g) in enumerate(pool + newcomers):
         young = bool(g.get("young"))
@@ -761,13 +1047,32 @@ def rank(candidates, results=None):
         for key, spec in LISTS.items():
             why_not = None
             floor = spec.get("leader_floor")
-            if young and key not in YOUNG_LISTS:
+            if key == "emerging":
+                # Newly listed companies alone, placed against the established
+                # universe: above their own 50-day average, in its top half
+                # on the leader score, strongest first.
+                score = part["leader"] * 100.0
+                t = g.get("tech") or {}
+                if not young:
+                    why_not = "Listed more than a year: this list is for companies listed six to twelve months."
+                elif not t.get("above_50d"):
+                    why_not = "Under its own 50-day average."
+                elif part["leader"] < EMERGING_FLOOR:
+                    why_not = "Its leader score is in the bottom half of liquid stocks."
+                exact[(sym, key)] = part["leader"] if young else -1.0
+                part[key] = part["leader"]
+            elif young and key not in YOUNG_LISTS:
                 # Tested and not admitted: on these lists the younger picks
                 # trailed the average stock in at least one half.
                 score = 0.0
                 why_not = ("Listed under a year. This list needs twelve months of prices; "
-                           f"younger companies are on {' and '.join(LISTS[k]['label'].lower() for k in YOUNG_LISTS)}.")
+                           f"younger companies are on {', '.join(LISTS[k]['label'].lower() for k in YOUNG_LISTS)} "
+                           "and emerging.")
                 exact[(sym, key)] = -1.0
+            elif spec.get("kind") == "setup":
+                score, why_not, exact[(sym, key)] = _setup(key, sym, g, part, is_calm,
+                                                            sectors, flow_by, flow_top, flow_pick)
+                part[key] = score / 100.0
             elif spec.get("event") == "results":
                 score = (part["reaction"] or 0.0) * 100.0
                 if ev is None:
@@ -787,9 +1092,12 @@ def rank(candidates, results=None):
                     why_not = (f"Not a market leader: its leader score is under the top "
                                f"{100 - floor * 100:.0f}% of liquid stocks.")
                 exact[(sym, key)] = score
+            fact = ev
+            if key == "flow" and sectors.get(sym) in flow_by:
+                fact = flow_by[sectors[sym]]
             lists[key] = {"score": round(score, 1), "eligible": why_not is None,
                           "why_not": why_not, "rank": None,
-                          "why": _why(key, g, calm[i], ev)}
+                          "why": _why(key, g, calm[i], fact)}
         blocks[sym] = {
             "recipe": RECIPE,
             "universe": len(pool),
@@ -826,6 +1134,9 @@ def rank(candidates, results=None):
             # none of it moves a rank (research/IDEAS-STUDY.md, "What did not
             # earn a place").
             "technicals": _tech_block(g.get("tech")),
+            # Its sector (NSE's own), and where that sector stands on money flow.
+            "sector": sectors.get(sym),
+            "sector_flow": flow_by.get(sectors.get(sym)),
             # The result this stock was last priced on, if it was in the last
             # ten sessions, with how many companies it was ranked among.
             "results": (None if ev is None else {
@@ -863,6 +1174,31 @@ def rank(candidates, results=None):
     return blocks
 
 
+def breakout_watch(blocks, limit=20):
+    """
+    Tight bases not yet broken: stocks whose last 40 sessions fit inside an
+    18% range, above their 200-day average, in the stronger half on the
+    leader score, and within 4% of the top of the base. Nearest the top
+    first. Watched, not picked: nothing here has broken out.
+    """
+    out = []
+    for sym, b in (blocks or {}).items():
+        t, facts = b.get("technicals") or {}, b.get("facts") or {}
+        base = t.get("base")
+        if not base or b.get("young") or t.get("box"):
+            continue
+        if base["width_pct"] > BOX_MAX_WIDTH * 100 or base["to_top_pct"] > 4.0:
+            continue
+        if (b.get("score") or 0) < BOX_LEADER_FLOOR * 100 or not t.get("above_200d"):
+            continue
+        out.append({"symbol": sym, "sector": b.get("sector"), "top": base["top"], "low": base["low"],
+                    "width_pct": base["width_pct"], "to_top_pct": base["to_top_pct"],
+                    "rel_volume_5": t.get("rel_volume_5"), "leader": b.get("score"),
+                    "turnover_cr": facts.get("turnover_cr")})
+    out.sort(key=lambda r: (r["to_top_pct"], -(r["leader"] or 0), r["symbol"]))
+    return out[:limit]
+
+
 def best_rank(block):
     """The best standing a stock has on any list, or None if it is on none."""
     ranks = [v.get("rank") for v in ((block or {}).get("lists") or {}).values() if v.get("rank")]
@@ -885,6 +1221,12 @@ def plan(key, price, called_on=None):
     if isinstance(day, dt.datetime):
         day = day.date()
     line = p * (1 - spec["exit_pct"] / 100.0)
+    note = (f"Hold {spec['hold_text']}. Leave if it closes below "
+            f"\u20b9{line:,.2f}, {spec['exit_pct']:.0f}% under this price.")
+    if spec.get("sell_rule") == "sma5":
+        note = (f"Sell at the first close above its 5-day average, or after {spec['hold_sessions']} "
+                f"sessions. Leave if it closes below \u20b9{line:,.2f}, "
+                f"{spec['exit_pct']:.0f}% under this price.")
     return {
         "style": "hold",
         "stance": "HOLD",
@@ -896,6 +1238,6 @@ def plan(key, price, called_on=None):
         "hold_sessions": spec["hold_sessions"],
         "hold_text": spec["hold_text"],
         "review_on": (day + dt.timedelta(days=spec["hold_days"])).isoformat(),
-        "note": (f"Hold {spec['hold_text']}. Leave if it closes below "
-                 f"\u20b9{line:,.2f}, {spec['exit_pct']:.0f}% under this price."),
+        "sell_rule": spec.get("sell_rule"),
+        "note": note,
     }

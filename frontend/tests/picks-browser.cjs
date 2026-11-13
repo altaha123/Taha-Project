@@ -112,7 +112,8 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   await panel.locator('.pk-card').first().waitFor({ state: 'visible' });
 
   assert.deepEqual(await panel.locator('.pk-tab').evaluateAll(ns => ns.map(n => n.getAttribute('aria-label'))),
-                   ['This week', 'This month', 'After results', 'Momentum', 'Long term']);
+                   ['This week', 'This month', 'After results', 'Momentum', 'Long term',
+                    'Breakouts', 'Technicals', 'Quick trades', 'Money flow', 'Emerging']);
   assert.equal(await panel.locator('.pk-tab[aria-selected="true"]').getAttribute('data-pick'), 'month',
                'a first visit should open on the month list');
 
@@ -243,6 +244,36 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.match(await r0.locator('.evrow').first().innerText(), /results reached the exchange/);
   await page.screenshot({ path: path.join(output, 'results-desktop.png') });
 
+  /* ── The setup lists: a second row of tabs, each with its own record ── */
+  for (const key of ['breakout', 'technical', 'quick', 'flow', 'emerging']) {
+    await page.locator(`#hzseg2 .hz[data-h="${key}"]`).click();
+    await page.locator(`#idearows .idea[data-t="${FIX[key].rows[0].symbol}"]`).waitFor();
+    assert.ok(await page.locator('#pickhead .pk-record-n').count() === 1, `${key}: the tested record is beside the list`);
+    assert.ok((await page.locator('#idearows .idea').count()) === FIX[key].rows.length, `${key}: every pick is drawn`);
+    assert.ok(await page.locator(`#hzseg2 .hz[data-h="${key}"]`).getAttribute('aria-selected') === 'true'
+      && (await page.locator('#hzseg .hz[aria-selected="true"]').count()) === 0, `${key}: only its tab is selected`);
+  }
+  /* Quick trades: the plan says when to sell, and the cost of trading is in the open. */
+  await page.locator('#hzseg2 .hz[data-h="quick"]').click();
+  await page.locator(`#idearows .idea[data-t="${FIX.quick.rows[0].symbol}"]`).waitFor();
+  assert.ok(/5-day average/.test(await page.locator('#idearows .idea .pk-plan').first().innerText()), 'quick: the plan names the sell rule');
+  assert.ok(/lost/.test(await page.locator('#pickhead .pk-cost').innerText()), 'quick: says the average pick did not cover costs');
+  /* Money flow: the sector table, top sectors marked. */
+  await page.locator('#hzseg2 .hz[data-h="flow"]').click();
+  await page.locator('#pickhead .pk-sectors table').waitFor();
+  assert.ok((await page.locator('#pickhead .pk-sectors tbody tr').count()) === FIX.flow.sector_flow.length, 'flow: every sector is ranked');
+  assert.ok((await page.locator('#pickhead .pk-sectors tbody tr.on').count()) === 4, 'flow: the four sectors picked from are marked');
+  /* Breakouts: the ledger is pass or fail, and the watch list is separate. */
+  await page.locator('#hzseg2 .hz[data-h="breakout"]').click();
+  const b0 = page.locator(`#idearows .idea[data-t="${FIX.breakout.rows[0].symbol}"]`);
+  await b0.waitFor();
+  assert.ok((await page.locator('#pickhead .pk-watch tbody tr').count()) === FIX.breakout.watch.length, 'breakout: the unbroken bases are listed apart');
+  await b0.locator('.morebtn').click();
+  await b0.locator('.evbtn').click();
+  assert.ok(/Yes/.test(await b0.locator('.evwrap').innerText()) && !/null|undefined|NaN/.test(await b0.locator('.evwrap').innerText()),
+    'breakout: the ledger reads as conditions met');
+  await page.screenshot({ path: path.join(output, 'breakout-desktop.png') });
+
   // Another tab on the full list asks the server for that list.
   await page.locator('#hzseg .hz[data-h="week"]').click();
   await page.locator(`#idearows .idea[data-t="${FIX.week.rows[0].symbol}"]`).waitFor();
@@ -341,7 +372,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   const tabs = await page.locator('#dri-picks .pk-tab').evaluateAll(ns => ns.map(n => {
     const b = n.getBoundingClientRect(); return { left: b.left, right: b.right, h: b.height };
   }));
-  assert.equal(tabs.length, 5);
+  assert.equal(tabs.length, 10);
   tabs.forEach((t, i) => {
     assert.ok(t.left >= 0 && t.right <= 390, `tab ${i + 1} runs off a phone screen (${Math.round(t.right)}px)`);
     assert.ok(t.h >= 38, `tab ${i + 1} is ${Math.round(t.h)}px tall: too small to tap`);
@@ -352,9 +383,14 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
 
   await page.goto(url('#research/ideas'));
   await page.locator('#idearows .idea').first().waitFor();
-  const pageTabs = await page.locator('#hzseg .hz').evaluateAll(ns => ns.map(n => n.getBoundingClientRect().right));
-  assert.equal(pageTabs.length, 5);
+  const pageTabs = await page.locator('#hzseg .hz, #hzseg2 .hz').evaluateAll(ns => ns.map(n => n.getBoundingClientRect().right));
+  assert.equal(pageTabs.length, 10);
   pageTabs.forEach((r, i) => assert.ok(r <= 390, `list tab ${i + 1} runs off a phone screen`));
+  // Money flow on a phone: the sector table fits or scrolls inside its own box.
+  await page.locator('#hzseg2 .hz[data-h="flow"]').click();
+  await page.locator('#pickhead .pk-sectors table').waitFor();
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth) <= 390, 'the money-flow list scrolls sideways on a phone');
+  await page.screenshot({ path: path.join(output, 'flow-phone.png') });
   // The results list on a phone: the chart facts stack and nothing runs wide.
   await page.locator('#hzseg .hz[data-h="results"]').click();
   await page.locator(`#idearows .idea[data-t="${FIX.results.rows[0].symbol}"]`).waitFor();

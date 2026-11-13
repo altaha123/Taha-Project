@@ -1,0 +1,75 @@
+name: Daily policy brief
+
+# Reads every new DGFT, RBI, SEBI and PIB circular and says what it does to
+# listed companies (backend/policy_brief.py). Three runs a weekday, because
+# circulars appear through the day and each is read once:
+#
+#   03:10 UTC  08:40 IST  before the open: last evening's notifications
+#   09:40 UTC  15:10 IST  the day's releases so far
+#   13:40 UTC  19:10 IST  after the close: the full day, and the email
+#
+# and one on Saturday morning for Friday night's. Needs the repository secret
+# ALTAHA_ADMIN_KEY (the same value as ADMIN_KEY on Render). With
+# ANTHROPIC_API_KEY set on Render each circular is read by Claude; without it
+# a keyword table reads the titles, and the brief says which did the reading.
+
+on:
+  schedule:
+    - cron: "10 3 * * 1-6"
+    - cron: "40 9 * * 1-5"
+    - cron: "40 13 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      send:
+        description: "Also email the brief"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Ask the API to read today's circulars
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          MANUAL_SEND: ${{ inputs.send && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set, so nothing was read."
+            exit 1
+          fi
+          SEND="${MANUAL_SEND}"
+          # The evening run is the one that mails.
+          if [ "${{ github.event.schedule }}" = "40 13 * * 1-5" ]; then SEND=true; fi
+
+          curl -sS --max-time 90 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+
+          code=$(curl -sS --max-time 1500 -o response.json -w "%{http_code}" \
+                 -X POST "${API}/jobs/policy-brief?send=${SEND}" \
+                 -H "X-Admin-Key: ${ADMIN_KEY}")
+          echo "HTTP ${code}"
+          cat response.json
+          echo
+          if [ "${code}" != "200" ]; then
+            echo "::error::The brief job answered ${code}."
+            exit 1
+          fi
+          # Every source failing is a broken reader, not a quiet day.
+          python3 - <<'EOF'
+          import json, sys
+          src = json.load(open("response.json"))["run"]["sources"]
+          bad = [k for k, v in src.items() if isinstance(v, str)]
+          print("sources:", src)
+          if len(bad) == len(src):
+              print("::error::No source could be read: " + ", ".join(bad))
+              sys.exit(1)
+          for k in bad:
+              print(f"::warning::{k} could not be read this run ({src[k]}).")
+          EOF

@@ -1,0 +1,3819 @@
+{
+ "generated": "2026-11-12",
+ "from": "2017-01-24",
+ "to": "2026-11-09",
+ "rules": "Signal on day t, bought at the next open. Returns before costs; after_costs takes off 0.49% a round trip. index_pct and lead_pct are against the Nifty 500 over the sessions each pick was held.",
+ "choice_rule": "For each list the version taken is the best on 2017-2021 (lead over the index for lists 1, 2 and 4; share of picks that rose, among versions still profitable after costs, for list 3). Its 2022-2026 record is printed whatever it is.",
+ "breakouts": {
+  "box_20_tight": {
+   "what": "Twenty sessions inside a 12% range, then a close above it on twice the usual volume, finishing in the top 30% of the day's range. Above the 200-day average.",
+   "exits": {
+    "21 sessions, or a close back under the base": {
+     "picks": 4173,
+     "up_pct": 29.4,
+     "avg_pct": 0.28,
+     "median_pct": -2.0,
+     "after_costs_pct": -0.21,
+     "index_pct": 0.47,
+     "lead_pct": -0.19,
+     "lead_raw": -0.18522534418868242,
+     "worst_5pct": -6.8,
+     "best_5pct": 15.2,
+     "days_held": 10.5,
+     "lead_t": -1.07,
+     "days_with_a_pick_pct": 61.6,
+     "picks_a_day": 2.8,
+     "exits": {
+      "failed": 2771,
+      "time": 1402
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1458,
+       "up_pct": 31.3,
+       "avg_pct": 0.35,
+       "median_pct": -1.98,
+       "after_costs_pct": -0.14,
+       "index_pct": 0.84,
+       "lead_pct": -0.41,
+       "lead_raw": -0.4112546642362268,
+       "worst_5pct": -6.8,
+       "best_5pct": 14.6,
+       "days_held": 11.2
+      },
+      "2022-26": {
+       "picks": 2715,
+       "up_pct": 28.3,
+       "avg_pct": 0.24,
+       "median_pct": -2.01,
+       "after_costs_pct": -0.25,
+       "index_pct": 0.27,
+       "lead_pct": -0.01,
+       "lead_raw": -0.007708312256857816,
+       "worst_5pct": -6.7,
+       "best_5pct": 15.4,
+       "days_held": 10.2
+      }
+     }
+    },
+    "10 sessions, or a close back under the base": {
+     "picks": 4176,
+     "up_pct": 35.8,
+     "avg_pct": 0.11,
+     "median_pct": -1.48,
+     "after_costs_pct": -0.38,
+     "index_pct": 0.27,
+     "lead_pct": -0.14,
+     "lead_raw": -0.13605249502567054,
+     "worst_5pct": -6.3,
+     "best_5pct": 11.1,
+     "days_held": 6.3,
+     "lead_t": -1.07,
+     "days_with_a_pick_pct": 61.7,
+     "picks_a_day": 2.8,
+     "exits": {
+      "failed": 2309,
+      "time": 1867
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1459,
+       "up_pct": 36.8,
+       "avg_pct": 0.19,
+       "median_pct": -1.42,
+       "after_costs_pct": -0.3,
+       "index_pct": 0.51,
+       "lead_pct": -0.22,
+       "lead_raw": -0.2196935981673257,
+       "worst_5pct": -6.3,
+       "best_5pct": 11.3,
+       "days_held": 6.6
+      },
+      "2022-26": {
+       "picks": 2717,
+       "up_pct": 35.3,
+       "avg_pct": 0.06,
+       "median_pct": -1.52,
+       "after_costs_pct": -0.43,
+       "index_pct": 0.15,
+       "lead_pct": -0.07,
+       "lead_raw": -0.07044180932772544,
+       "worst_5pct": -6.2,
+       "best_5pct": 11.0,
+       "days_held": 6.2
+      }
+     }
+    },
+    "42 sessions, or a close back under the base": {
+     "picks": 4172,
+     "up_pct": 24.3,
+     "avg_pct": 0.8,
+     "median_pct": -2.35,
+     "after_costs_pct": 0.31,
+     "index_pct": 0.66,
+     "lead_pct": -0.01,
+     "lead_raw": -0.00977921349018225,
+     "worst_5pct": -7.3,
+     "best_5pct": 21.5,
+     "days_held": 16.5,
+     "lead_t": -0.05,
+     "days_with_a_pick_pct": 61.6,
+     "picks_a_day": 2.8,
+     "exits": {
+      "failed": 3102,
+      "time": 1070
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1458,
+       "up_pct": 24.4,
+       "avg_pct": 0.44,
+       "median_pct": -2.42,
+       "after_costs_pct": -0.05,
+       "index_pct": 1.05,
+       "lead_pct": -0.53,
+       "lead_raw": -0.5321173980106165,
+       "worst_5pct": -7.5,
+       "best_5pct": 19.2,
+       "days_held": 17.7
+      },
+      "2022-26": {
+       "picks": 2714,
+       "up_pct": 24.2,
+       "avg_pct": 0.99,
+       "median_pct": -2.3,
+       "after_costs_pct": 0.5,
+       "index_pct": 0.45,
+       "lead_pct": 0.4,
+       "lead_raw": 0.40045041583941543,
+       "worst_5pct": -7.2,
+       "best_5pct": 22.9,
+       "days_held": 15.9
+      }
+     }
+    },
+    "21 sessions, or a close 8% under the entry": {
+     "picks": 4172,
+     "up_pct": 48.8,
+     "avg_pct": 0.68,
+     "median_pct": -0.24,
+     "after_costs_pct": 0.19,
+     "index_pct": 0.75,
+     "lead_pct": -0.13,
+     "lead_raw": -0.13389724088971194,
+     "worst_5pct": -10.1,
+     "best_5pct": 17.3,
+     "days_held": 18.4,
+     "lead_t": -0.6,
+     "days_with_a_pick_pct": 61.6,
+     "picks_a_day": 2.8,
+     "exits": {
+      "time": 3093,
+      "stop": 1079
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1458,
+       "up_pct": 50.5,
+       "avg_pct": 0.9,
+       "median_pct": 0.08,
+       "after_costs_pct": 0.41,
+       "index_pct": 1.32,
+       "lead_pct": -0.38,
+       "lead_raw": -0.38048004043728645,
+       "worst_5pct": -10.0,
+       "best_5pct": 17.4,
+       "days_held": 18.6
+      },
+      "2022-26": {
+       "picks": 2714,
+       "up_pct": 48.0,
+       "avg_pct": 0.56,
+       "median_pct": -0.46,
+       "after_costs_pct": 0.07,
+       "index_pct": 0.44,
+       "lead_pct": 0.06,
+       "lead_raw": 0.0597619122321841,
+       "worst_5pct": -10.1,
+       "best_5pct": 17.2,
+       "days_held": 18.2
+      }
+     }
+    }
+   }
+  },
+  "box_40": {
+   "what": "Forty sessions inside an 18% range, then a close above it on twice the usual volume. Above the 200-day average.",
+   "exits": {
+    "21 sessions, or a close back under the base": {
+     "picks": 4716,
+     "up_pct": 29.8,
+     "avg_pct": 0.53,
+     "median_pct": -1.82,
+     "after_costs_pct": 0.04,
+     "index_pct": 0.54,
+     "lead_pct": -0.05,
+     "lead_raw": -0.05236196909836635,
+     "worst_5pct": -6.4,
+     "best_5pct": 14.9,
+     "days_held": 10.1,
+     "lead_t": -0.35,
+     "days_with_a_pick_pct": 65.5,
+     "picks_a_day": 3.0,
+     "exits": {
+      "failed": 3188,
+      "time": 1528
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1708,
+       "up_pct": 31.1,
+       "avg_pct": 0.68,
+       "median_pct": -1.67,
+       "after_costs_pct": 0.19,
+       "index_pct": 0.68,
+       "lead_pct": -0.02,
+       "lead_raw": -0.023158443950422693,
+       "worst_5pct": -6.3,
+       "best_5pct": 14.6,
+       "days_held": 10.6
+      },
+      "2022-26": {
+       "picks": 3008,
+       "up_pct": 29.1,
+       "avg_pct": 0.45,
+       "median_pct": -1.89,
+       "after_costs_pct": -0.04,
+       "index_pct": 0.46,
+       "lead_pct": -0.08,
+       "lead_raw": -0.07533584836260637,
+       "worst_5pct": -6.5,
+       "best_5pct": 15.1,
+       "days_held": 9.9
+      }
+     }
+    },
+    "10 sessions, or a close back under the base": {
+     "picks": 4723,
+     "up_pct": 35.9,
+     "avg_pct": 0.23,
+     "median_pct": -1.3,
+     "after_costs_pct": -0.26,
+     "index_pct": 0.36,
+     "lead_pct": -0.16,
+     "lead_raw": -0.1639626432372919,
+     "worst_5pct": -5.8,
+     "best_5pct": 10.6,
+     "days_held": 6.1,
+     "lead_t": -1.46,
+     "days_with_a_pick_pct": 65.6,
+     "picks_a_day": 3.0,
+     "exits": {
+      "failed": 2688,
+      "time": 2035
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1711,
+       "up_pct": 36.9,
+       "avg_pct": 0.39,
+       "median_pct": -1.15,
+       "after_costs_pct": -0.1,
+       "index_pct": 0.48,
+       "lead_pct": -0.14,
+       "lead_raw": -0.1426555163530654,
+       "worst_5pct": -5.6,
+       "best_5pct": 10.4,
+       "days_held": 6.3
+      },
+      "2022-26": {
+       "picks": 3012,
+       "up_pct": 35.4,
+       "avg_pct": 0.14,
+       "median_pct": -1.39,
+       "after_costs_pct": -0.35,
+       "index_pct": 0.28,
+       "lead_pct": -0.18,
+       "lead_raw": -0.18075371617085942,
+       "worst_5pct": -5.8,
+       "best_5pct": 10.6,
+       "days_held": 6.0
+      }
+     }
+    },
+    "42 sessions, or a close back under the base": {
+     "picks": 4714,
+     "up_pct": 23.6,
+     "avg_pct": 0.93,
+     "median_pct": -2.13,
+     "after_costs_pct": 0.44,
+     "index_pct": 0.72,
+     "lead_pct": 0.07,
+     "lead_raw": 0.06583556157603297,
+     "worst_5pct": -6.8,
+     "best_5pct": 21.3,
+     "days_held": 15.9,
+     "lead_t": 0.34,
+     "days_with_a_pick_pct": 65.5,
+     "picks_a_day": 3.0,
+     "exits": {
+      "failed": 3558,
+      "time": 1156
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1708,
+       "up_pct": 23.5,
+       "avg_pct": 0.67,
+       "median_pct": -2.07,
+       "after_costs_pct": 0.18,
+       "index_pct": 0.83,
+       "lead_pct": -0.05,
+       "lead_raw": -0.05454163707947697,
+       "worst_5pct": -6.9,
+       "best_5pct": 19.3,
+       "days_held": 16.7
+      },
+      "2022-26": {
+       "picks": 3006,
+       "up_pct": 23.7,
+       "avg_pct": 1.08,
+       "median_pct": -2.15,
+       "after_costs_pct": 0.59,
+       "index_pct": 0.65,
+       "lead_pct": 0.16,
+       "lead_raw": 0.1605341027305367,
+       "worst_5pct": -6.8,
+       "best_5pct": 22.4,
+       "days_held": 15.4
+      }
+     }
+    },
+    "21 sessions, or a close 8% under the entry": {
+     "picks": 4715,
+     "up_pct": 49.6,
+     "avg_pct": 0.89,
+     "median_pct": -0.07,
+     "after_costs_pct": 0.4,
+     "index_pct": 0.81,
+     "lead_pct": -0.01,
+     "lead_raw": -0.005886702373391175,
+     "worst_5pct": -10.1,
+     "best_5pct": 17.2,
+     "days_held": 18.3,
+     "lead_t": -0.03,
+     "days_with_a_pick_pct": 65.5,
+     "picks_a_day": 3.0,
+     "exits": {
+      "time": 3546,
+      "stop": 1169
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1708,
+       "up_pct": 50.9,
+       "avg_pct": 1.06,
+       "median_pct": 0.1,
+       "after_costs_pct": 0.57,
+       "index_pct": 1.14,
+       "lead_pct": -0.13,
+       "lead_raw": -0.13037045120709817,
+       "worst_5pct": -10.1,
+       "best_5pct": 17.1,
+       "days_held": 18.7
+      },
+      "2022-26": {
+       "picks": 3007,
+       "up_pct": 48.8,
+       "avg_pct": 0.8,
+       "median_pct": -0.22,
+       "after_costs_pct": 0.31,
+       "index_pct": 0.62,
+       "lead_pct": 0.09,
+       "lead_raw": 0.09215304105835326,
+       "worst_5pct": -10.1,
+       "best_5pct": 17.4,
+       "days_held": 18.1
+      }
+     }
+    }
+   }
+  },
+  "box_60": {
+   "what": "Sixty sessions inside a 25% range, then a close above it on twice the usual volume. Above the 200-day average.",
+   "exits": {
+    "21 sessions, or a close back under the base": {
+     "picks": 4989,
+     "up_pct": 27.8,
+     "avg_pct": 0.24,
+     "median_pct": -1.87,
+     "after_costs_pct": -0.25,
+     "index_pct": 0.5,
+     "lead_pct": -0.23,
+     "lead_raw": -0.22883019104078048,
+     "worst_5pct": -6.6,
+     "best_5pct": 14.4,
+     "days_held": 9.6,
+     "lead_t": -1.47,
+     "days_with_a_pick_pct": 67.2,
+     "picks_a_day": 3.1,
+     "exits": {
+      "failed": 3482,
+      "time": 1507
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1764,
+       "up_pct": 27.1,
+       "avg_pct": 0.01,
+       "median_pct": -1.87,
+       "after_costs_pct": -0.48,
+       "index_pct": 0.54,
+       "lead_pct": -0.5,
+       "lead_raw": -0.4996375217626905,
+       "worst_5pct": -6.4,
+       "best_5pct": 13.0,
+       "days_held": 9.8
+      },
+      "2022-26": {
+       "picks": 3225,
+       "up_pct": 28.2,
+       "avg_pct": 0.36,
+       "median_pct": -1.87,
+       "after_costs_pct": -0.13,
+       "index_pct": 0.48,
+       "lead_pct": -0.02,
+       "lead_raw": -0.019516227993714545,
+       "worst_5pct": -6.6,
+       "best_5pct": 15.1,
+       "days_held": 9.5
+      }
+     }
+    },
+    "10 sessions, or a close back under the base": {
+     "picks": 4995,
+     "up_pct": 33.4,
+     "avg_pct": 0.02,
+     "median_pct": -1.42,
+     "after_costs_pct": -0.47,
+     "index_pct": 0.32,
+     "lead_pct": -0.21,
+     "lead_raw": -0.20765593619308473,
+     "worst_5pct": -5.9,
+     "best_5pct": 10.2,
+     "days_held": 5.9,
+     "lead_t": -1.8,
+     "days_with_a_pick_pct": 67.3,
+     "picks_a_day": 3.1,
+     "exits": {
+      "failed": 2987,
+      "time": 2008
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1767,
+       "up_pct": 33.5,
+       "avg_pct": 0.04,
+       "median_pct": -1.35,
+       "after_costs_pct": -0.45,
+       "index_pct": 0.39,
+       "lead_pct": -0.32,
+       "lead_raw": -0.3237583077336569,
+       "worst_5pct": -5.8,
+       "best_5pct": 9.7,
+       "days_held": 6.0
+      },
+      "2022-26": {
+       "picks": 3228,
+       "up_pct": 33.4,
+       "avg_pct": 0.01,
+       "median_pct": -1.46,
+       "after_costs_pct": -0.48,
+       "index_pct": 0.28,
+       "lead_pct": -0.12,
+       "lead_raw": -0.11766392331775033,
+       "worst_5pct": -6.0,
+       "best_5pct": 10.4,
+       "days_held": 5.8
+      }
+     }
+    },
+    "42 sessions, or a close back under the base": {
+     "picks": 4986,
+     "up_pct": 22.4,
+     "avg_pct": 0.77,
+     "median_pct": -2.15,
+     "after_costs_pct": 0.28,
+     "index_pct": 0.74,
+     "lead_pct": -0.05,
+     "lead_raw": -0.05343505081581535,
+     "worst_5pct": -6.8,
+     "best_5pct": 20.5,
+     "days_held": 14.9,
+     "lead_t": -0.24,
+     "days_with_a_pick_pct": 67.2,
+     "picks_a_day": 3.1,
+     "exits": {
+      "failed": 3828,
+      "time": 1158
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1764,
+       "up_pct": 20.7,
+       "avg_pct": 0.23,
+       "median_pct": -2.23,
+       "after_costs_pct": -0.26,
+       "index_pct": 0.75,
+       "lead_pct": -0.4,
+       "lead_raw": -0.39912155891452344,
+       "worst_5pct": -6.8,
+       "best_5pct": 18.2,
+       "days_held": 15.1
+      },
+      "2022-26": {
+       "picks": 3222,
+       "up_pct": 23.3,
+       "avg_pct": 1.07,
+       "median_pct": -2.11,
+       "after_costs_pct": 0.58,
+       "index_pct": 0.73,
+       "lead_pct": 0.21,
+       "lead_raw": 0.21375495762729094,
+       "worst_5pct": -6.8,
+       "best_5pct": 22.2,
+       "days_held": 14.8
+      }
+     }
+    },
+    "21 sessions, or a close 8% under the entry": {
+     "picks": 4987,
+     "up_pct": 48.9,
+     "avg_pct": 0.61,
+     "median_pct": -0.23,
+     "after_costs_pct": 0.12,
+     "index_pct": 0.84,
+     "lead_pct": -0.28,
+     "lead_raw": -0.27763141427573185,
+     "worst_5pct": -10.2,
+     "best_5pct": 16.5,
+     "days_held": 18.2,
+     "lead_t": -1.28,
+     "days_with_a_pick_pct": 67.2,
+     "picks_a_day": 3.1,
+     "exits": {
+      "time": 3691,
+      "stop": 1296
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1764,
+       "up_pct": 47.9,
+       "avg_pct": 0.31,
+       "median_pct": -0.46,
+       "after_costs_pct": -0.18,
+       "index_pct": 0.98,
+       "lead_pct": -0.57,
+       "lead_raw": -0.5654693089966707,
+       "worst_5pct": -10.3,
+       "best_5pct": 15.4,
+       "days_held": 18.3
+      },
+      "2022-26": {
+       "picks": 3223,
+       "up_pct": 49.4,
+       "avg_pct": 0.78,
+       "median_pct": -0.1,
+       "after_costs_pct": 0.29,
+       "index_pct": 0.77,
+       "lead_pct": -0.05,
+       "lead_raw": -0.05491094491789068,
+       "worst_5pct": -10.2,
+       "best_5pct": 16.9,
+       "days_held": 18.1
+      }
+     }
+    }
+   }
+  },
+  "box_40_any_trend": {
+   "what": "The forty-session box, whatever the longer trend.",
+   "exits": {
+    "21 sessions, or a close back under the base": {
+     "picks": 5278,
+     "up_pct": 29.2,
+     "avg_pct": 0.43,
+     "median_pct": -1.82,
+     "after_costs_pct": -0.06,
+     "index_pct": 0.53,
+     "lead_pct": -0.15,
+     "lead_raw": -0.1534789332194202,
+     "worst_5pct": -6.4,
+     "best_5pct": 14.4,
+     "days_held": 10.0,
+     "lead_t": -1.11,
+     "days_with_a_pick_pct": 68.3,
+     "picks_a_day": 3.2,
+     "exits": {
+      "failed": 3612,
+      "time": 1666
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1868,
+       "up_pct": 30.2,
+       "avg_pct": 0.55,
+       "median_pct": -1.73,
+       "after_costs_pct": 0.06,
+       "index_pct": 0.68,
+       "lead_pct": -0.12,
+       "lead_raw": -0.11589303386626156,
+       "worst_5pct": -6.4,
+       "best_5pct": 14.2,
+       "days_held": 10.4
+      },
+      "2022-26": {
+       "picks": 3410,
+       "up_pct": 28.6,
+       "avg_pct": 0.36,
+       "median_pct": -1.85,
+       "after_costs_pct": -0.13,
+       "index_pct": 0.45,
+       "lead_pct": -0.18,
+       "lead_raw": -0.1831241496106439,
+       "worst_5pct": -6.4,
+       "best_5pct": 14.6,
+       "days_held": 9.7
+      }
+     }
+    },
+    "10 sessions, or a close back under the base": {
+     "picks": 5285,
+     "up_pct": 35.3,
+     "avg_pct": 0.16,
+     "median_pct": -1.34,
+     "after_costs_pct": -0.33,
+     "index_pct": 0.35,
+     "lead_pct": -0.25,
+     "lead_raw": -0.2509071652053977,
+     "worst_5pct": -5.8,
+     "best_5pct": 10.3,
+     "days_held": 6.0,
+     "lead_t": -2.43,
+     "days_with_a_pick_pct": 68.5,
+     "picks_a_day": 3.2,
+     "exits": {
+      "failed": 3058,
+      "time": 2227
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1871,
+       "up_pct": 36.2,
+       "avg_pct": 0.32,
+       "median_pct": -1.2,
+       "after_costs_pct": -0.17,
+       "index_pct": 0.49,
+       "lead_pct": -0.21,
+       "lead_raw": -0.21434069784077517,
+       "worst_5pct": -5.7,
+       "best_5pct": 10.4,
+       "days_held": 6.2
+      },
+      "2022-26": {
+       "picks": 3414,
+       "up_pct": 34.8,
+       "avg_pct": 0.08,
+       "median_pct": -1.41,
+       "after_costs_pct": -0.41,
+       "index_pct": 0.27,
+       "lead_pct": -0.28,
+       "lead_raw": -0.2797962573874046,
+       "worst_5pct": -5.8,
+       "best_5pct": 10.3,
+       "days_held": 5.9
+      }
+     }
+    },
+    "42 sessions, or a close back under the base": {
+     "picks": 5276,
+     "up_pct": 23.0,
+     "avg_pct": 0.78,
+     "median_pct": -2.11,
+     "after_costs_pct": 0.29,
+     "index_pct": 0.7,
+     "lead_pct": -0.11,
+     "lead_raw": -0.11452818692101667,
+     "worst_5pct": -6.8,
+     "best_5pct": 20.5,
+     "days_held": 15.5,
+     "lead_t": -0.63,
+     "days_with_a_pick_pct": 68.3,
+     "picks_a_day": 3.2,
+     "exits": {
+      "failed": 4020,
+      "time": 1256
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1868,
+       "up_pct": 22.4,
+       "avg_pct": 0.49,
+       "median_pct": -2.12,
+       "after_costs_pct": 0.0,
+       "index_pct": 0.83,
+       "lead_pct": -0.23,
+       "lead_raw": -0.22988435166926385,
+       "worst_5pct": -6.9,
+       "best_5pct": 19.1,
+       "days_held": 16.3
+      },
+      "2022-26": {
+       "picks": 3408,
+       "up_pct": 23.3,
+       "avg_pct": 0.94,
+       "median_pct": -2.11,
+       "after_costs_pct": 0.45,
+       "index_pct": 0.64,
+       "lead_pct": -0.02,
+       "lead_raw": -0.023543042894230128,
+       "worst_5pct": -6.7,
+       "best_5pct": 21.7,
+       "days_held": 15.1
+      }
+     }
+    },
+    "21 sessions, or a close 8% under the entry": {
+     "picks": 5277,
+     "up_pct": 49.1,
+     "avg_pct": 0.72,
+     "median_pct": -0.19,
+     "after_costs_pct": 0.23,
+     "index_pct": 0.79,
+     "lead_pct": -0.21,
+     "lead_raw": -0.20796180087225813,
+     "worst_5pct": -10.2,
+     "best_5pct": 16.6,
+     "days_held": 18.3,
+     "lead_t": -1.0,
+     "days_with_a_pick_pct": 68.3,
+     "picks_a_day": 3.2,
+     "exits": {
+      "time": 3936,
+      "stop": 1341
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1868,
+       "up_pct": 50.1,
+       "avg_pct": 0.85,
+       "median_pct": 0.02,
+       "after_costs_pct": 0.36,
+       "index_pct": 1.1,
+       "lead_pct": -0.26,
+       "lead_raw": -0.2629712341305498,
+       "worst_5pct": -10.2,
+       "best_5pct": 16.9,
+       "days_held": 18.6
+      },
+      "2022-26": {
+       "picks": 3409,
+       "up_pct": 48.5,
+       "avg_pct": 0.65,
+       "median_pct": -0.25,
+       "after_costs_pct": 0.16,
+       "index_pct": 0.63,
+       "lead_pct": -0.16,
+       "lead_raw": -0.16452702059889984,
+       "worst_5pct": -10.1,
+       "best_5pct": 16.4,
+       "days_held": 18.1
+      }
+     }
+    }
+   }
+  },
+  "box_40_lighter_volume": {
+   "what": "The forty-session box on one and a half times the usual volume.",
+   "exits": {
+    "21 sessions, or a close back under the base": {
+     "picks": 6105,
+     "up_pct": 28.0,
+     "avg_pct": 0.48,
+     "median_pct": -1.67,
+     "after_costs_pct": -0.01,
+     "index_pct": 0.5,
+     "lead_pct": -0.03,
+     "lead_raw": -0.03496608729256881,
+     "worst_5pct": -6.0,
+     "best_5pct": 14.2,
+     "days_held": 9.6,
+     "lead_t": -0.26,
+     "days_with_a_pick_pct": 71.6,
+     "picks_a_day": 3.5,
+     "exits": {
+      "failed": 4272,
+      "time": 1833
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2294,
+       "up_pct": 28.6,
+       "avg_pct": 0.48,
+       "median_pct": -1.55,
+       "after_costs_pct": -0.01,
+       "index_pct": 0.61,
+       "lead_pct": -0.14,
+       "lead_raw": -0.1399477588820526,
+       "worst_5pct": -5.8,
+       "best_5pct": 13.6,
+       "days_held": 9.8
+      },
+      "2022-26": {
+       "picks": 3811,
+       "up_pct": 27.6,
+       "avg_pct": 0.47,
+       "median_pct": -1.74,
+       "after_costs_pct": -0.02,
+       "index_pct": 0.44,
+       "lead_pct": 0.05,
+       "lead_raw": 0.05356323277916,
+       "worst_5pct": -6.2,
+       "best_5pct": 14.7,
+       "days_held": 9.4
+      }
+     }
+    },
+    "10 sessions, or a close back under the base": {
+     "picks": 6112,
+     "up_pct": 34.0,
+     "avg_pct": 0.18,
+     "median_pct": -1.27,
+     "after_costs_pct": -0.31,
+     "index_pct": 0.33,
+     "lead_pct": -0.17,
+     "lead_raw": -0.16738948334516,
+     "worst_5pct": -5.4,
+     "best_5pct": 10.1,
+     "days_held": 5.8,
+     "lead_t": -1.66,
+     "days_with_a_pick_pct": 71.6,
+     "picks_a_day": 3.5,
+     "exits": {
+      "failed": 3678,
+      "time": 2434
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2297,
+       "up_pct": 34.4,
+       "avg_pct": 0.28,
+       "median_pct": -1.17,
+       "after_costs_pct": -0.21,
+       "index_pct": 0.44,
+       "lead_pct": -0.2,
+       "lead_raw": -0.2048813344762264,
+       "worst_5pct": -5.1,
+       "best_5pct": 10.0,
+       "days_held": 5.9
+      },
+      "2022-26": {
+       "picks": 3815,
+       "up_pct": 33.7,
+       "avg_pct": 0.11,
+       "median_pct": -1.35,
+       "after_costs_pct": -0.38,
+       "index_pct": 0.26,
+       "lead_pct": -0.14,
+       "lead_raw": -0.13573325083364113,
+       "worst_5pct": -5.6,
+       "best_5pct": 10.2,
+       "days_held": 5.8
+      }
+     }
+    },
+    "42 sessions, or a close back under the base": {
+     "picks": 6103,
+     "up_pct": 22.1,
+     "avg_pct": 0.8,
+     "median_pct": -1.94,
+     "after_costs_pct": 0.31,
+     "index_pct": 0.69,
+     "lead_pct": 0.04,
+     "lead_raw": 0.03574482985538821,
+     "worst_5pct": -6.4,
+     "best_5pct": 20.1,
+     "days_held": 14.9,
+     "lead_t": 0.21,
+     "days_with_a_pick_pct": 71.6,
+     "picks_a_day": 3.5,
+     "exits": {
+      "failed": 4728,
+      "time": 1375
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2294,
+       "up_pct": 21.4,
+       "avg_pct": 0.47,
+       "median_pct": -1.9,
+       "after_costs_pct": -0.02,
+       "index_pct": 0.78,
+       "lead_pct": -0.17,
+       "lead_raw": -0.1726217070373271,
+       "worst_5pct": -6.4,
+       "best_5pct": 18.4,
+       "days_held": 15.3
+      },
+      "2022-26": {
+       "picks": 3809,
+       "up_pct": 22.5,
+       "avg_pct": 0.99,
+       "median_pct": -1.97,
+       "after_costs_pct": 0.5,
+       "index_pct": 0.63,
+       "lead_pct": 0.21,
+       "lead_raw": 0.2114569094738721,
+       "worst_5pct": -6.5,
+       "best_5pct": 21.4,
+       "days_held": 14.6
+      }
+     }
+    },
+    "21 sessions, or a close 8% under the entry": {
+     "picks": 6103,
+     "up_pct": 49.8,
+     "avg_pct": 0.89,
+     "median_pct": -0.03,
+     "after_costs_pct": 0.4,
+     "index_pct": 0.82,
+     "lead_pct": 0.01,
+     "lead_raw": 0.00698514177425588,
+     "worst_5pct": -10.0,
+     "best_5pct": 16.6,
+     "days_held": 18.5,
+     "lead_t": 0.03,
+     "days_with_a_pick_pct": 71.5,
+     "picks_a_day": 3.5,
+     "exits": {
+      "time": 4671,
+      "stop": 1432
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2294,
+       "up_pct": 51.1,
+       "avg_pct": 1.03,
+       "median_pct": 0.15,
+       "after_costs_pct": 0.54,
+       "index_pct": 1.13,
+       "lead_pct": -0.15,
+       "lead_raw": -0.15390686447421048,
+       "worst_5pct": -9.9,
+       "best_5pct": 16.5,
+       "days_held": 18.9
+      },
+      "2022-26": {
+       "picks": 3809,
+       "up_pct": 49.0,
+       "avg_pct": 0.81,
+       "median_pct": -0.19,
+       "after_costs_pct": 0.32,
+       "index_pct": 0.64,
+       "lead_pct": 0.14,
+       "lead_raw": 0.14280752911954592,
+       "worst_5pct": -10.1,
+       "best_5pct": 16.9,
+       "days_held": 18.3
+      }
+     }
+    }
+   }
+  },
+  "box_40_leader": {
+   "what": "The forty-session box, only in stocks whose leader score is in the top half.",
+   "exits": {
+    "21 sessions, or a close back under the base": {
+     "picks": 2973,
+     "up_pct": 31.0,
+     "avg_pct": 0.65,
+     "median_pct": -1.72,
+     "after_costs_pct": 0.16,
+     "index_pct": 0.45,
+     "lead_pct": 0.27,
+     "lead_raw": 0.271051144625985,
+     "worst_5pct": -6.3,
+     "best_5pct": 15.1,
+     "days_held": 10.3,
+     "lead_t": 1.35,
+     "days_with_a_pick_pct": 56.0,
+     "picks_a_day": 2.2,
+     "exits": {
+      "failed": 1972,
+      "time": 1001
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1124,
+       "up_pct": 32.1,
+       "avg_pct": 0.67,
+       "median_pct": -1.54,
+       "after_costs_pct": 0.18,
+       "index_pct": 0.47,
+       "lead_pct": 0.31,
+       "lead_raw": 0.30521191219603,
+       "worst_5pct": -6.0,
+       "best_5pct": 14.6,
+       "days_held": 10.8
+      },
+      "2022-26": {
+       "picks": 1849,
+       "up_pct": 30.4,
+       "avg_pct": 0.64,
+       "median_pct": -1.79,
+       "after_costs_pct": 0.15,
+       "index_pct": 0.44,
+       "lead_pct": 0.24,
+       "lead_raw": 0.2449517837445686,
+       "worst_5pct": -6.5,
+       "best_5pct": 15.5,
+       "days_held": 10.0
+      }
+     }
+    },
+    "10 sessions, or a close back under the base": {
+     "picks": 2980,
+     "up_pct": 37.5,
+     "avg_pct": 0.39,
+     "median_pct": -1.15,
+     "after_costs_pct": -0.1,
+     "index_pct": 0.3,
+     "lead_pct": 0.12,
+     "lead_raw": 0.11998509687062948,
+     "worst_5pct": -5.6,
+     "best_5pct": 10.6,
+     "days_held": 6.2,
+     "lead_t": 0.82,
+     "days_with_a_pick_pct": 56.1,
+     "picks_a_day": 2.2,
+     "exits": {
+      "failed": 1664,
+      "time": 1316
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1127,
+       "up_pct": 38.7,
+       "avg_pct": 0.53,
+       "median_pct": -1.02,
+       "after_costs_pct": 0.04,
+       "index_pct": 0.37,
+       "lead_pct": 0.22,
+       "lead_raw": 0.21997099074743476,
+       "worst_5pct": -5.3,
+       "best_5pct": 10.4,
+       "days_held": 6.4
+      },
+      "2022-26": {
+       "picks": 1853,
+       "up_pct": 36.8,
+       "avg_pct": 0.3,
+       "median_pct": -1.29,
+       "after_costs_pct": -0.19,
+       "index_pct": 0.27,
+       "lead_pct": 0.04,
+       "lead_raw": 0.04343339687120044,
+       "worst_5pct": -5.7,
+       "best_5pct": 10.6,
+       "days_held": 6.0
+      }
+     }
+    },
+    "42 sessions, or a close back under the base": {
+     "picks": 2971,
+     "up_pct": 24.7,
+     "avg_pct": 0.99,
+     "median_pct": -2.06,
+     "after_costs_pct": 0.5,
+     "index_pct": 0.51,
+     "lead_pct": 0.49,
+     "lead_raw": 0.4873892960389106,
+     "worst_5pct": -6.7,
+     "best_5pct": 20.9,
+     "days_held": 16.2,
+     "lead_t": 1.94,
+     "days_with_a_pick_pct": 56.0,
+     "picks_a_day": 2.2,
+     "exits": {
+      "failed": 2220,
+      "time": 751
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1124,
+       "up_pct": 24.1,
+       "avg_pct": 0.73,
+       "median_pct": -2.04,
+       "after_costs_pct": 0.24,
+       "index_pct": 0.39,
+       "lead_pct": 0.54,
+       "lead_raw": 0.5380378629959102,
+       "worst_5pct": -6.7,
+       "best_5pct": 19.1,
+       "days_held": 17.0
+      },
+      "2022-26": {
+       "picks": 1847,
+       "up_pct": 25.1,
+       "avg_pct": 1.14,
+       "median_pct": -2.07,
+       "after_costs_pct": 0.65,
+       "index_pct": 0.58,
+       "lead_pct": 0.45,
+       "lead_raw": 0.44864248110836014,
+       "worst_5pct": -6.7,
+       "best_5pct": 22.3,
+       "days_held": 15.6
+      }
+     }
+    },
+    "21 sessions, or a close 8% under the entry": {
+     "picks": 2972,
+     "up_pct": 51.2,
+     "avg_pct": 1.13,
+     "median_pct": 0.21,
+     "after_costs_pct": 0.64,
+     "index_pct": 0.68,
+     "lead_pct": 0.51,
+     "lead_raw": 0.5084395929795464,
+     "worst_5pct": -10.1,
+     "best_5pct": 17.2,
+     "days_held": 18.5,
+     "lead_t": 1.87,
+     "days_with_a_pick_pct": 56.0,
+     "picks_a_day": 2.2,
+     "exits": {
+      "time": 2284,
+      "stop": 688
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1124,
+       "up_pct": 53.5,
+       "avg_pct": 1.35,
+       "median_pct": 0.5,
+       "after_costs_pct": 0.86,
+       "index_pct": 0.83,
+       "lead_pct": 0.64,
+       "lead_raw": 0.6422951140931712,
+       "worst_5pct": -10.0,
+       "best_5pct": 17.1,
+       "days_held": 19.0
+      },
+      "2022-26": {
+       "picks": 1848,
+       "up_pct": 49.8,
+       "avg_pct": 1.0,
+       "median_pct": -0.03,
+       "after_costs_pct": 0.51,
+       "index_pct": 0.6,
+       "lead_pct": 0.41,
+       "lead_raw": 0.4060383718665119,
+       "worst_5pct": -10.2,
+       "best_5pct": 17.4,
+       "days_held": 18.1
+      }
+     }
+    }
+   }
+  },
+  "box_40_tightest": {
+   "what": "A close above a forty-session range that was among the tightest 30% on the exchange that day, on one and a half times the usual volume.",
+   "exits": {
+    "21 sessions, or a close back under the base": {
+     "picks": 7285,
+     "up_pct": 27.9,
+     "avg_pct": 0.47,
+     "median_pct": -1.75,
+     "after_costs_pct": -0.02,
+     "index_pct": 0.61,
+     "lead_pct": -0.23,
+     "lead_raw": -0.22840113375247037,
+     "worst_5pct": -6.3,
+     "best_5pct": 15.0,
+     "days_held": 9.5,
+     "lead_t": -1.75,
+     "days_with_a_pick_pct": 78.5,
+     "picks_a_day": 3.8,
+     "exits": {
+      "failed": 5101,
+      "time": 2184
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2665,
+       "up_pct": 28.3,
+       "avg_pct": 0.49,
+       "median_pct": -1.67,
+       "after_costs_pct": -0.0,
+       "index_pct": 0.78,
+       "lead_pct": -0.26,
+       "lead_raw": -0.2570460909776361,
+       "worst_5pct": -6.2,
+       "best_5pct": 14.6,
+       "days_held": 9.7
+      },
+      "2022-26": {
+       "picks": 4620,
+       "up_pct": 27.7,
+       "avg_pct": 0.45,
+       "median_pct": -1.79,
+       "after_costs_pct": -0.04,
+       "index_pct": 0.51,
+       "lead_pct": -0.2,
+       "lead_raw": -0.2035623470247428,
+       "worst_5pct": -6.3,
+       "best_5pct": 15.2,
+       "days_held": 9.4
+      }
+     }
+    },
+    "10 sessions, or a close back under the base": {
+     "picks": 7294,
+     "up_pct": 33.6,
+     "avg_pct": 0.16,
+     "median_pct": -1.36,
+     "after_costs_pct": -0.33,
+     "index_pct": 0.4,
+     "lead_pct": -0.3,
+     "lead_raw": -0.3049341878281927,
+     "worst_5pct": -5.7,
+     "best_5pct": 10.6,
+     "days_held": 5.8,
+     "lead_t": -3.17,
+     "days_with_a_pick_pct": 78.6,
+     "picks_a_day": 3.8,
+     "exits": {
+      "failed": 4417,
+      "time": 2877
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2669,
+       "up_pct": 34.2,
+       "avg_pct": 0.26,
+       "median_pct": -1.25,
+       "after_costs_pct": -0.23,
+       "index_pct": 0.55,
+       "lead_pct": -0.29,
+       "lead_raw": -0.29169510390692566,
+       "worst_5pct": -5.7,
+       "best_5pct": 10.7,
+       "days_held": 5.8
+      },
+      "2022-26": {
+       "picks": 4625,
+       "up_pct": 33.3,
+       "avg_pct": 0.1,
+       "median_pct": -1.41,
+       "after_costs_pct": -0.39,
+       "index_pct": 0.31,
+       "lead_pct": -0.32,
+       "lead_raw": -0.31642717209842636,
+       "worst_5pct": -5.6,
+       "best_5pct": 10.5,
+       "days_held": 5.8
+      }
+     }
+    },
+    "42 sessions, or a close back under the base": {
+     "picks": 7282,
+     "up_pct": 22.5,
+     "avg_pct": 0.93,
+     "median_pct": -2.01,
+     "after_costs_pct": 0.44,
+     "index_pct": 0.86,
+     "lead_pct": -0.06,
+     "lead_raw": -0.06302178479444462,
+     "worst_5pct": -6.7,
+     "best_5pct": 20.8,
+     "days_held": 14.9,
+     "lead_t": -0.37,
+     "days_with_a_pick_pct": 78.5,
+     "picks_a_day": 3.8,
+     "exits": {
+      "failed": 5608,
+      "time": 1674
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2665,
+       "up_pct": 22.5,
+       "avg_pct": 0.87,
+       "median_pct": -1.93,
+       "after_costs_pct": 0.38,
+       "index_pct": 1.19,
+       "lead_pct": -0.14,
+       "lead_raw": -0.14285885161044004,
+       "worst_5pct": -6.6,
+       "best_5pct": 20.0,
+       "days_held": 15.4
+      },
+      "2022-26": {
+       "picks": 4617,
+       "up_pct": 22.6,
+       "avg_pct": 0.97,
+       "median_pct": -2.04,
+       "after_costs_pct": 0.48,
+       "index_pct": 0.67,
+       "lead_pct": 0.01,
+       "lead_raw": 0.006207010348165525,
+       "worst_5pct": -6.8,
+       "best_5pct": 21.5,
+       "days_held": 14.6
+      }
+     }
+    },
+    "21 sessions, or a close 8% under the entry": {
+     "picks": 7282,
+     "up_pct": 49.9,
+     "avg_pct": 0.95,
+     "median_pct": -0.01,
+     "after_costs_pct": 0.46,
+     "index_pct": 1.0,
+     "lead_pct": -0.21,
+     "lead_raw": -0.2104491766582926,
+     "worst_5pct": -10.2,
+     "best_5pct": 17.3,
+     "days_held": 18.3,
+     "lead_t": -1.04,
+     "days_with_a_pick_pct": 78.5,
+     "picks_a_day": 3.8,
+     "exits": {
+      "time": 5474,
+      "stop": 1808
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2665,
+       "up_pct": 51.6,
+       "avg_pct": 1.21,
+       "median_pct": 0.29,
+       "after_costs_pct": 0.72,
+       "index_pct": 1.47,
+       "lead_pct": -0.29,
+       "lead_raw": -0.2922916458263881,
+       "worst_5pct": -10.0,
+       "best_5pct": 17.2,
+       "days_held": 18.7
+      },
+      "2022-26": {
+       "picks": 4617,
+       "up_pct": 49.0,
+       "avg_pct": 0.8,
+       "median_pct": -0.22,
+       "after_costs_pct": 0.31,
+       "index_pct": 0.73,
+       "lead_pct": -0.14,
+       "lead_raw": -0.13941152607987672,
+       "worst_5pct": -10.3,
+       "best_5pct": 17.5,
+       "days_held": 18.1
+      }
+     }
+    }
+   }
+  }
+ },
+ "breakout_choice": "box_40_leader",
+ "technicals": {
+  "ema20_pullback": {
+   "what": "An uptrend that dipped to its 20-day average in the last three sessions and closed back above it, above the previous day's high.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 29445,
+     "up_pct": 49.2,
+     "avg_pct": 0.95,
+     "median_pct": -0.2,
+     "after_costs_pct": 0.46,
+     "index_pct": 0.92,
+     "lead_pct": -0.01,
+     "lead_raw": -0.005434649763571268,
+     "worst_5pct": -12.7,
+     "best_5pct": 21.1,
+     "days_held": 18.5,
+     "lead_t": -0.03,
+     "days_with_a_pick_pct": 98.3,
+     "picks_a_day": 12.4,
+     "exits": {
+      "time": 22322,
+      "stop": 7123
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 13407,
+       "up_pct": 51.8,
+       "avg_pct": 1.51,
+       "median_pct": 0.42,
+       "after_costs_pct": 1.02,
+       "index_pct": 1.41,
+       "lead_pct": 0.14,
+       "lead_raw": 0.13782729475882205,
+       "worst_5pct": -12.3,
+       "best_5pct": 21.0,
+       "days_held": 19.0
+      },
+      "2022-26": {
+       "picks": 16038,
+       "up_pct": 47.0,
+       "avg_pct": 0.48,
+       "median_pct": -0.84,
+       "after_costs_pct": -0.01,
+       "index_pct": 0.51,
+       "lead_pct": -0.15,
+       "lead_raw": -0.1502735674263466,
+       "worst_5pct": -13.0,
+       "best_5pct": 21.1,
+       "days_held": 18.1
+      }
+     }
+    },
+    "42 sessions, or a close 14% under": {
+     "picks": 29425,
+     "up_pct": 51.0,
+     "avg_pct": 2.37,
+     "median_pct": 0.32,
+     "after_costs_pct": 1.88,
+     "index_pct": 1.79,
+     "lead_pct": 0.57,
+     "lead_raw": 0.5655083159738028,
+     "worst_5pct": -16.8,
+     "best_5pct": 32.3,
+     "days_held": 36.7,
+     "lead_t": 1.36,
+     "days_with_a_pick_pct": 98.3,
+     "picks_a_day": 12.4,
+     "exits": {
+      "time": 22203,
+      "stop": 7222
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 13404,
+       "up_pct": 53.8,
+       "avg_pct": 3.12,
+       "median_pct": 1.33,
+       "after_costs_pct": 2.63,
+       "index_pct": 2.63,
+       "lead_pct": 0.65,
+       "lead_raw": 0.6481329497250272,
+       "worst_5pct": -16.6,
+       "best_5pct": 32.1,
+       "days_held": 37.8
+      },
+      "2022-26": {
+       "picks": 16021,
+       "up_pct": 48.6,
+       "avg_pct": 1.75,
+       "median_pct": -0.52,
+       "after_costs_pct": 1.26,
+       "index_pct": 1.09,
+       "lead_pct": 0.48,
+       "lead_raw": 0.48197418159703564,
+       "worst_5pct": -16.9,
+       "best_5pct": 32.4,
+       "days_held": 35.7
+      }
+     }
+    }
+   }
+  },
+  "golden_cross": {
+   "what": "The 50-day average crossed above the 200-day in the last five sessions.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 9849,
+     "up_pct": 50.0,
+     "avg_pct": 0.82,
+     "median_pct": 0.0,
+     "after_costs_pct": 0.33,
+     "index_pct": 0.89,
+     "lead_pct": -0.38,
+     "lead_raw": -0.3759632334069242,
+     "worst_5pct": -12.2,
+     "best_5pct": 18.9,
+     "days_held": 19.1,
+     "lead_t": -1.26,
+     "days_with_a_pick_pct": 82.1,
+     "picks_a_day": 5.0,
+     "exits": {
+      "time": 7775,
+      "stop": 2074
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3375,
+       "up_pct": 51.9,
+       "avg_pct": 0.73,
+       "median_pct": 0.39,
+       "after_costs_pct": 0.24,
+       "index_pct": 1.62,
+       "lead_pct": -1.21,
+       "lead_raw": -1.2116380056024658,
+       "worst_5pct": -12.4,
+       "best_5pct": 17.6,
+       "days_held": 19.1
+      },
+      "2022-26": {
+       "picks": 6474,
+       "up_pct": 49.0,
+       "avg_pct": 0.87,
+       "median_pct": -0.19,
+       "after_costs_pct": 0.38,
+       "index_pct": 0.51,
+       "lead_pct": 0.33,
+       "lead_raw": 0.3270278005848687,
+       "worst_5pct": -12.0,
+       "best_5pct": 19.4,
+       "days_held": 19.1
+      }
+     }
+    },
+    "42 sessions, or a close 14% under": {
+     "picks": 9849,
+     "up_pct": 50.8,
+     "avg_pct": 2.03,
+     "median_pct": 0.23,
+     "after_costs_pct": 1.54,
+     "index_pct": 1.8,
+     "lead_pct": -0.13,
+     "lead_raw": -0.12602563225545108,
+     "worst_5pct": -16.2,
+     "best_5pct": 29.8,
+     "days_held": 37.9,
+     "lead_t": -0.26,
+     "days_with_a_pick_pct": 82.1,
+     "picks_a_day": 5.0,
+     "exits": {
+      "time": 7758,
+      "stop": 2091
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3375,
+       "up_pct": 54.2,
+       "avg_pct": 2.28,
+       "median_pct": 1.48,
+       "after_costs_pct": 1.79,
+       "index_pct": 3.12,
+       "lead_pct": -1.11,
+       "lead_raw": -1.1107881320996336,
+       "worst_5pct": -16.6,
+       "best_5pct": 29.2,
+       "days_held": 37.6
+      },
+      "2022-26": {
+       "picks": 6474,
+       "up_pct": 49.0,
+       "avg_pct": 1.9,
+       "median_pct": -0.44,
+       "after_costs_pct": 1.41,
+       "index_pct": 1.1,
+       "lead_pct": 0.7,
+       "lead_raw": 0.702381818866953,
+       "worst_5pct": -15.9,
+       "best_5pct": 30.1,
+       "days_held": 38.0
+      }
+     }
+    }
+   }
+  },
+  "ema_20_50_cross": {
+   "what": "The 20-day average crossed above the 50-day in the last five sessions, above the 200-day average.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 18563,
+     "up_pct": 48.3,
+     "avg_pct": 0.55,
+     "median_pct": -0.45,
+     "after_costs_pct": 0.06,
+     "index_pct": 0.84,
+     "lead_pct": -0.34,
+     "lead_raw": -0.3409825488452981,
+     "worst_5pct": -12.3,
+     "best_5pct": 19.2,
+     "days_held": 18.8,
+     "lead_t": -1.47,
+     "days_with_a_pick_pct": 94.5,
+     "picks_a_day": 8.1,
+     "exits": {
+      "time": 14309,
+      "stop": 4254
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 7203,
+       "up_pct": 50.0,
+       "avg_pct": 0.92,
+       "median_pct": 0.0,
+       "after_costs_pct": 0.43,
+       "index_pct": 1.57,
+       "lead_pct": -0.72,
+       "lead_raw": -0.7232347773018454,
+       "worst_5pct": -12.1,
+       "best_5pct": 19.3,
+       "days_held": 19.1
+      },
+      "2022-26": {
+       "picks": 11360,
+       "up_pct": 47.3,
+       "avg_pct": 0.32,
+       "median_pct": -0.77,
+       "after_costs_pct": -0.17,
+       "index_pct": 0.38,
+       "lead_pct": 0.02,
+       "lead_raw": 0.024237018189020822,
+       "worst_5pct": -12.4,
+       "best_5pct": 19.2,
+       "days_held": 18.6
+      }
+     }
+    },
+    "42 sessions, or a close 14% under": {
+     "picks": 18563,
+     "up_pct": 48.4,
+     "avg_pct": 1.23,
+     "median_pct": -0.57,
+     "after_costs_pct": 0.74,
+     "index_pct": 1.58,
+     "lead_pct": -0.54,
+     "lead_raw": -0.5375523612514833,
+     "worst_5pct": -16.5,
+     "best_5pct": 29.1,
+     "days_held": 36.9,
+     "lead_t": -1.4,
+     "days_with_a_pick_pct": 94.5,
+     "picks_a_day": 8.1,
+     "exits": {
+      "time": 13896,
+      "stop": 4667
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 7203,
+       "up_pct": 48.9,
+       "avg_pct": 1.39,
+       "median_pct": -0.35,
+       "after_costs_pct": 0.9,
+       "index_pct": 2.56,
+       "lead_pct": -1.22,
+       "lead_raw": -1.2182565656155584,
+       "worst_5pct": -16.5,
+       "best_5pct": 28.2,
+       "days_held": 37.8
+      },
+      "2022-26": {
+       "picks": 11360,
+       "up_pct": 48.0,
+       "avg_pct": 1.13,
+       "median_pct": -0.73,
+       "after_costs_pct": 0.64,
+       "index_pct": 0.96,
+       "lead_pct": 0.11,
+       "lead_raw": 0.11282055037314677,
+       "worst_5pct": -16.4,
+       "best_5pct": 30.0,
+       "days_held": 36.4
+      }
+     }
+    }
+   }
+  },
+  "stack_and_strength": {
+   "what": "Price above its 20-, 50- and 200-day averages in order, RSI between 55 and 70, MACD above its signal line and rising, ADX at 25 or more.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 15070,
+     "up_pct": 46.7,
+     "avg_pct": 0.61,
+     "median_pct": -0.8,
+     "after_costs_pct": 0.12,
+     "index_pct": 0.78,
+     "lead_pct": -0.13,
+     "lead_raw": -0.1304256482892262,
+     "worst_5pct": -12.7,
+     "best_5pct": 21.3,
+     "days_held": 18.4,
+     "lead_t": -0.44,
+     "days_with_a_pick_pct": 90.4,
+     "picks_a_day": 6.9,
+     "exits": {
+      "time": 11230,
+      "stop": 3840
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 5677,
+       "up_pct": 49.7,
+       "avg_pct": 1.41,
+       "median_pct": -0.06,
+       "after_costs_pct": 0.92,
+       "index_pct": 1.35,
+       "lead_pct": 0.04,
+       "lead_raw": 0.03896073557591127,
+       "worst_5pct": -12.1,
+       "best_5pct": 21.6,
+       "days_held": 19.0
+      },
+      "2022-26": {
+       "picks": 9393,
+       "up_pct": 44.9,
+       "avg_pct": 0.13,
+       "median_pct": -1.35,
+       "after_costs_pct": -0.36,
+       "index_pct": 0.43,
+       "lead_pct": -0.29,
+       "lead_raw": -0.2869774691478424,
+       "worst_5pct": -13.0,
+       "best_5pct": 20.9,
+       "days_held": 18.0
+      }
+     }
+    },
+    "42 sessions, or a close 14% under": {
+     "picks": 15059,
+     "up_pct": 49.0,
+     "avg_pct": 2.27,
+     "median_pct": -0.39,
+     "after_costs_pct": 1.78,
+     "index_pct": 1.7,
+     "lead_pct": 0.59,
+     "lead_raw": 0.5903929760482023,
+     "worst_5pct": -16.7,
+     "best_5pct": 34.5,
+     "days_held": 36.6,
+     "lead_t": 1.08,
+     "days_with_a_pick_pct": 90.4,
+     "picks_a_day": 6.9,
+     "exits": {
+      "time": 11271,
+      "stop": 3788
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 5676,
+       "up_pct": 51.6,
+       "avg_pct": 3.17,
+       "median_pct": 0.54,
+       "after_costs_pct": 2.68,
+       "index_pct": 2.73,
+       "lead_pct": 0.51,
+       "lead_raw": 0.511929150990096,
+       "worst_5pct": -16.3,
+       "best_5pct": 34.1,
+       "days_held": 38.2
+      },
+      "2022-26": {
+       "picks": 9383,
+       "up_pct": 47.3,
+       "avg_pct": 1.73,
+       "median_pct": -0.98,
+       "after_costs_pct": 1.24,
+       "index_pct": 1.07,
+       "lead_pct": 0.66,
+       "lead_raw": 0.6629115244939763,
+       "worst_5pct": -16.8,
+       "best_5pct": 34.7,
+       "days_held": 35.6
+      }
+     }
+    }
+   }
+  },
+  "scorecard": {
+   "what": "Nine textbook conditions (above the 20-, 50- and 200-day averages in order, RSI over 55, MACD above its signal line, ADX at 25 with +DI ahead, more volume on up days, volume above its usual, within 5% of the 52-week high). The fifteen stocks meeting the most, seven at least, every five sessions.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 6986,
+     "up_pct": 52.0,
+     "avg_pct": 1.34,
+     "median_pct": 0.5,
+     "after_costs_pct": 0.85,
+     "index_pct": 1.05,
+     "lead_pct": 0.34,
+     "lead_raw": 0.34219286273960464,
+     "worst_5pct": -12.7,
+     "best_5pct": 20.1,
+     "days_held": 18.7,
+     "lead_t": 1.49,
+     "days_with_a_pick_pct": 99.4,
+     "picks_a_day": 14.5,
+     "exits": {
+      "time": 5471,
+      "stop": 1515
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3449,
+       "up_pct": 53.1,
+       "avg_pct": 1.55,
+       "median_pct": 0.8,
+       "after_costs_pct": 1.06,
+       "index_pct": 1.47,
+       "lead_pct": 0.14,
+       "lead_raw": 0.13870817228962654,
+       "worst_5pct": -12.2,
+       "best_5pct": 19.5,
+       "days_held": 19.1
+      },
+      "2022-26": {
+       "picks": 3537,
+       "up_pct": 50.8,
+       "avg_pct": 1.13,
+       "median_pct": 0.24,
+       "after_costs_pct": 0.64,
+       "index_pct": 0.64,
+       "lead_pct": 0.55,
+       "lead_raw": 0.5482317543249382,
+       "worst_5pct": -13.1,
+       "best_5pct": 20.7,
+       "days_held": 18.4
+      }
+     }
+    },
+    "42 sessions, or a close 14% under": {
+     "picks": 6979,
+     "up_pct": 54.8,
+     "avg_pct": 3.38,
+     "median_pct": 1.52,
+     "after_costs_pct": 2.89,
+     "index_pct": 1.95,
+     "lead_pct": 1.42,
+     "lead_raw": 1.4159240800351396,
+     "worst_5pct": -16.9,
+     "best_5pct": 32.4,
+     "days_held": 37.1,
+     "lead_t": 2.52,
+     "days_with_a_pick_pct": 99.4,
+     "picks_a_day": 14.5,
+     "exits": {
+      "time": 5443,
+      "stop": 1536
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3446,
+       "up_pct": 56.2,
+       "avg_pct": 3.94,
+       "median_pct": 1.89,
+       "after_costs_pct": 3.45,
+       "index_pct": 2.66,
+       "lead_pct": 1.24,
+       "lead_raw": 1.2447695175391829,
+       "worst_5pct": -16.7,
+       "best_5pct": 31.7,
+       "days_held": 38.1
+      },
+      "2022-26": {
+       "picks": 3533,
+       "up_pct": 53.4,
+       "avg_pct": 2.83,
+       "median_pct": 1.28,
+       "after_costs_pct": 2.34,
+       "index_pct": 1.25,
+       "lead_pct": 1.59,
+       "lead_raw": 1.5892270261607528,
+       "worst_5pct": -17.0,
+       "best_5pct": 33.3,
+       "days_held": 36.2
+      }
+     }
+    }
+   }
+  }
+ },
+ "technical_choice": "scorecard",
+ "quick": {
+  "rsi2_under_10": {
+   "what": "In an uptrend, with the two-day RSI under 10: sold off hard for a day or two.",
+   "exits": {
+    "first close above the 5-day average, 7 sessions at most": {
+     "picks": 25559,
+     "up_pct": 63.3,
+     "avg_pct": 0.16,
+     "median_pct": 0.9,
+     "after_costs_pct": -0.33,
+     "index_pct": 0.07,
+     "lead_pct": 0.05,
+     "lead_raw": 0.050508242079422574,
+     "worst_5pct": -8.6,
+     "best_5pct": 6.2,
+     "days_held": 3.7,
+     "lead_t": 0.86,
+     "days_with_a_pick_pct": 97.1,
+     "picks_a_day": 10.9,
+     "exits": {
+      "bounced": 22464,
+      "time": 3095
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 11010,
+       "up_pct": 63.9,
+       "avg_pct": 0.18,
+       "median_pct": 0.9,
+       "after_costs_pct": -0.31,
+       "index_pct": 0.06,
+       "lead_pct": 0.04,
+       "lead_raw": 0.038849948337078465,
+       "worst_5pct": -8.4,
+       "best_5pct": 6.0,
+       "days_held": 3.6
+      },
+      "2022-26": {
+       "picks": 14549,
+       "up_pct": 62.8,
+       "avg_pct": 0.16,
+       "median_pct": 0.91,
+       "after_costs_pct": -0.33,
+       "index_pct": 0.08,
+       "lead_pct": 0.06,
+       "lead_raw": 0.06218643052098573,
+       "worst_5pct": -8.8,
+       "best_5pct": 6.4,
+       "days_held": 3.7
+      }
+     }
+    },
+    "the same, or a close 7% under": {
+     "picks": 25559,
+     "up_pct": 62.9,
+     "avg_pct": 0.11,
+     "median_pct": 0.89,
+     "after_costs_pct": -0.38,
+     "index_pct": 0.07,
+     "lead_pct": 0.02,
+     "lead_raw": 0.01785327986039583,
+     "worst_5pct": -8.7,
+     "best_5pct": 6.2,
+     "days_held": 3.4,
+     "lead_t": 0.33,
+     "days_with_a_pick_pct": 97.1,
+     "picks_a_day": 10.9,
+     "exits": {
+      "bounced": 20953,
+      "stop": 3113,
+      "time": 1493
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 11010,
+       "up_pct": 63.5,
+       "avg_pct": 0.12,
+       "median_pct": 0.88,
+       "after_costs_pct": -0.37,
+       "index_pct": 0.08,
+       "lead_pct": 0.0,
+       "lead_raw": 0.0013303354028943678,
+       "worst_5pct": -8.7,
+       "best_5pct": 6.0,
+       "days_held": 3.3
+      },
+      "2022-26": {
+       "picks": 14549,
+       "up_pct": 62.4,
+       "avg_pct": 0.1,
+       "median_pct": 0.9,
+       "after_costs_pct": -0.39,
+       "index_pct": 0.06,
+       "lead_pct": 0.03,
+       "lead_raw": 0.034404420468848645,
+       "worst_5pct": -8.7,
+       "best_5pct": 6.4,
+       "days_held": 3.4
+      }
+     }
+    },
+    "5 sessions": {
+     "picks": 25563,
+     "up_pct": 50.4,
+     "avg_pct": 0.17,
+     "median_pct": 0.04,
+     "after_costs_pct": -0.32,
+     "index_pct": 0.17,
+     "lead_pct": 0.02,
+     "lead_raw": 0.01848703309466103,
+     "worst_5pct": -8.5,
+     "best_5pct": 9.2,
+     "days_held": 5.0,
+     "lead_t": 0.25,
+     "days_with_a_pick_pct": 97.1,
+     "picks_a_day": 10.9,
+     "exits": {
+      "time": 25563
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 11010,
+       "up_pct": 50.8,
+       "avg_pct": 0.15,
+       "median_pct": 0.09,
+       "after_costs_pct": -0.34,
+       "index_pct": 0.18,
+       "lead_pct": 0.01,
+       "lead_raw": 0.0141579341728496,
+       "worst_5pct": -8.4,
+       "best_5pct": 8.8,
+       "days_held": 5.0
+      },
+      "2022-26": {
+       "picks": 14553,
+       "up_pct": 50.0,
+       "avg_pct": 0.19,
+       "median_pct": 0.0,
+       "after_costs_pct": -0.3,
+       "index_pct": 0.15,
+       "lead_pct": 0.02,
+       "lead_raw": 0.02282351955729464,
+       "worst_5pct": -8.6,
+       "best_5pct": 9.6,
+       "days_held": 5.0
+      }
+     }
+    },
+    "a 3% gain, 5 sessions at most, or a close 5% under": {
+     "picks": 25563,
+     "up_pct": 60.8,
+     "avg_pct": 0.12,
+     "median_pct": 3.0,
+     "after_costs_pct": -0.37,
+     "index_pct": 0.1,
+     "lead_pct": 0.01,
+     "lead_raw": 0.010101529284855484,
+     "worst_5pct": -6.9,
+     "best_5pct": 3.0,
+     "days_held": 3.2,
+     "lead_t": 0.24,
+     "days_with_a_pick_pct": 97.1,
+     "picks_a_day": 10.9,
+     "exits": {
+      "target": 13368,
+      "time": 8036,
+      "stop": 4159
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 11010,
+       "up_pct": 61.3,
+       "avg_pct": 0.19,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.3,
+       "index_pct": 0.14,
+       "lead_pct": 0.03,
+       "lead_raw": 0.026193913909005186,
+       "worst_5pct": -6.9,
+       "best_5pct": 3.0,
+       "days_held": 3.3
+      },
+      "2022-26": {
+       "picks": 14553,
+       "up_pct": 60.4,
+       "avg_pct": 0.07,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.42,
+       "index_pct": 0.06,
+       "lead_pct": -0.01,
+       "lead_raw": -0.006018316746502654,
+       "worst_5pct": -7.0,
+       "best_5pct": 3.0,
+       "days_held": 3.2
+      }
+     }
+    }
+   }
+  },
+  "rsi2_under_10_leader": {
+   "what": "The same, only in market leaders (top 30%).",
+   "exits": {
+    "first close above the 5-day average, 7 sessions at most": {
+     "picks": 16664,
+     "up_pct": 65.1,
+     "avg_pct": 0.37,
+     "median_pct": 1.07,
+     "after_costs_pct": -0.12,
+     "index_pct": 0.05,
+     "lead_pct": 0.22,
+     "lead_raw": 0.220560735420927,
+     "worst_5pct": -8.6,
+     "best_5pct": 6.6,
+     "days_held": 3.6,
+     "lead_t": 3.1,
+     "days_with_a_pick_pct": 92.2,
+     "picks_a_day": 7.5,
+     "exits": {
+      "bounced": 14807,
+      "time": 1857
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 6378,
+       "up_pct": 66.6,
+       "avg_pct": 0.48,
+       "median_pct": 1.08,
+       "after_costs_pct": -0.01,
+       "index_pct": 0.02,
+       "lead_pct": 0.23,
+       "lead_raw": 0.2346327968889396,
+       "worst_5pct": -7.9,
+       "best_5pct": 6.6,
+       "days_held": 3.5
+      },
+      "2022-26": {
+       "picks": 10286,
+       "up_pct": 64.2,
+       "avg_pct": 0.3,
+       "median_pct": 1.06,
+       "after_costs_pct": -0.19,
+       "index_pct": 0.06,
+       "lead_pct": 0.21,
+       "lead_raw": 0.2072390198878347,
+       "worst_5pct": -8.9,
+       "best_5pct": 6.6,
+       "days_held": 3.7
+      }
+     }
+    },
+    "the same, or a close 7% under": {
+     "picks": 16664,
+     "up_pct": 64.6,
+     "avg_pct": 0.3,
+     "median_pct": 1.05,
+     "after_costs_pct": -0.19,
+     "index_pct": 0.05,
+     "lead_pct": 0.16,
+     "lead_raw": 0.1634119177458562,
+     "worst_5pct": -8.8,
+     "best_5pct": 6.6,
+     "days_held": 3.3,
+     "lead_t": 2.45,
+     "days_with_a_pick_pct": 92.2,
+     "picks_a_day": 7.5,
+     "exits": {
+      "bounced": 13741,
+      "stop": 2091,
+      "time": 832
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 6378,
+       "up_pct": 66.1,
+       "avg_pct": 0.45,
+       "median_pct": 1.06,
+       "after_costs_pct": -0.04,
+       "index_pct": 0.07,
+       "lead_pct": 0.18,
+       "lead_raw": 0.17661656901855619,
+       "worst_5pct": -8.7,
+       "best_5pct": 6.6,
+       "days_held": 3.2
+      },
+      "2022-26": {
+       "picks": 10286,
+       "up_pct": 63.8,
+       "avg_pct": 0.21,
+       "median_pct": 1.04,
+       "after_costs_pct": -0.28,
+       "index_pct": 0.03,
+       "lead_pct": 0.15,
+       "lead_raw": 0.15091136064066904,
+       "worst_5pct": -8.9,
+       "best_5pct": 6.6,
+       "days_held": 3.3
+      }
+     }
+    },
+    "5 sessions": {
+     "picks": 16664,
+     "up_pct": 52.4,
+     "avg_pct": 0.39,
+     "median_pct": 0.25,
+     "after_costs_pct": -0.1,
+     "index_pct": 0.14,
+     "lead_pct": 0.23,
+     "lead_raw": 0.23316298587398687,
+     "worst_5pct": -8.8,
+     "best_5pct": 10.0,
+     "days_held": 5.0,
+     "lead_t": 2.56,
+     "days_with_a_pick_pct": 92.2,
+     "picks_a_day": 7.5,
+     "exits": {
+      "time": 16664
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 6378,
+       "up_pct": 54.0,
+       "avg_pct": 0.55,
+       "median_pct": 0.42,
+       "after_costs_pct": 0.06,
+       "index_pct": 0.16,
+       "lead_pct": 0.3,
+       "lead_raw": 0.29514009170034927,
+       "worst_5pct": -8.5,
+       "best_5pct": 9.8,
+       "days_held": 5.0
+      },
+      "2022-26": {
+       "picks": 10286,
+       "up_pct": 51.4,
+       "avg_pct": 0.29,
+       "median_pct": 0.14,
+       "after_costs_pct": -0.2,
+       "index_pct": 0.12,
+       "lead_pct": 0.17,
+       "lead_raw": 0.1744906033478064,
+       "worst_5pct": -9.1,
+       "best_5pct": 10.1,
+       "days_held": 5.0
+      }
+     }
+    },
+    "a 3% gain, 5 sessions at most, or a close 5% under": {
+     "picks": 16664,
+     "up_pct": 63.9,
+     "avg_pct": 0.28,
+     "median_pct": 3.0,
+     "after_costs_pct": -0.21,
+     "index_pct": 0.09,
+     "lead_pct": 0.15,
+     "lead_raw": 0.14640358605335604,
+     "worst_5pct": -7.1,
+     "best_5pct": 3.0,
+     "days_held": 3.1,
+     "lead_t": 2.79,
+     "days_with_a_pick_pct": 92.2,
+     "picks_a_day": 7.5,
+     "exits": {
+      "target": 9316,
+      "time": 4701,
+      "stop": 2647
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 6378,
+       "up_pct": 64.5,
+       "avg_pct": 0.38,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.11,
+       "index_pct": 0.17,
+       "lead_pct": 0.12,
+       "lead_raw": 0.12268403452310188,
+       "worst_5pct": -6.9,
+       "best_5pct": 3.0,
+       "days_held": 3.1
+      },
+      "2022-26": {
+       "picks": 10286,
+       "up_pct": 63.6,
+       "avg_pct": 0.22,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.27,
+       "index_pct": 0.03,
+       "lead_pct": 0.17,
+       "lead_raw": 0.16885837128697959,
+       "worst_5pct": -7.2,
+       "best_5pct": 3.0,
+       "days_held": 3.0
+      }
+     }
+    }
+   }
+  },
+  "rsi2_under_5": {
+   "what": "In an uptrend, with the two-day RSI under 5.",
+   "exits": {
+    "first close above the 5-day average, 7 sessions at most": {
+     "picks": 18210,
+     "up_pct": 63.9,
+     "avg_pct": 0.25,
+     "median_pct": 0.97,
+     "after_costs_pct": -0.24,
+     "index_pct": 0.06,
+     "lead_pct": 0.07,
+     "lead_raw": 0.06967908044314078,
+     "worst_5pct": -8.7,
+     "best_5pct": 6.4,
+     "days_held": 3.7,
+     "lead_t": 0.95,
+     "days_with_a_pick_pct": 91.0,
+     "picks_a_day": 8.3,
+     "exits": {
+      "bounced": 16054,
+      "time": 2156
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 7148,
+       "up_pct": 64.8,
+       "avg_pct": 0.29,
+       "median_pct": 0.97,
+       "after_costs_pct": -0.2,
+       "index_pct": 0.05,
+       "lead_pct": 0.04,
+       "lead_raw": 0.044786425972306226,
+       "worst_5pct": -8.5,
+       "best_5pct": 6.4,
+       "days_held": 3.6
+      },
+      "2022-26": {
+       "picks": 11062,
+       "up_pct": 63.3,
+       "avg_pct": 0.23,
+       "median_pct": 0.97,
+       "after_costs_pct": -0.26,
+       "index_pct": 0.07,
+       "lead_pct": 0.09,
+       "lead_raw": 0.09322797215050548,
+       "worst_5pct": -8.8,
+       "best_5pct": 6.5,
+       "days_held": 3.7
+      }
+     }
+    },
+    "the same, or a close 7% under": {
+     "picks": 18210,
+     "up_pct": 63.4,
+     "avg_pct": 0.18,
+     "median_pct": 0.95,
+     "after_costs_pct": -0.31,
+     "index_pct": 0.06,
+     "lead_pct": 0.04,
+     "lead_raw": 0.043816305405441555,
+     "worst_5pct": -8.7,
+     "best_5pct": 6.4,
+     "days_held": 3.4,
+     "lead_t": 0.66,
+     "days_with_a_pick_pct": 91.0,
+     "picks_a_day": 8.3,
+     "exits": {
+      "bounced": 14933,
+      "stop": 2258,
+      "time": 1019
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 7148,
+       "up_pct": 64.3,
+       "avg_pct": 0.22,
+       "median_pct": 0.95,
+       "after_costs_pct": -0.27,
+       "index_pct": 0.08,
+       "lead_pct": 0.01,
+       "lead_raw": 0.005272841502852513,
+       "worst_5pct": -8.8,
+       "best_5pct": 6.4,
+       "days_held": 3.3
+      },
+      "2022-26": {
+       "picks": 11062,
+       "up_pct": 62.9,
+       "avg_pct": 0.16,
+       "median_pct": 0.95,
+       "after_costs_pct": -0.33,
+       "index_pct": 0.04,
+       "lead_pct": 0.08,
+       "lead_raw": 0.08027910444249255,
+       "worst_5pct": -8.7,
+       "best_5pct": 6.5,
+       "days_held": 3.4
+      }
+     }
+    },
+    "5 sessions": {
+     "picks": 18214,
+     "up_pct": 50.9,
+     "avg_pct": 0.22,
+     "median_pct": 0.1,
+     "after_costs_pct": -0.27,
+     "index_pct": 0.16,
+     "lead_pct": -0.03,
+     "lead_raw": -0.030728895863873514,
+     "worst_5pct": -8.4,
+     "best_5pct": 9.4,
+     "days_held": 5.0,
+     "lead_t": -0.35,
+     "days_with_a_pick_pct": 91.0,
+     "picks_a_day": 8.3,
+     "exits": {
+      "time": 18214
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 7148,
+       "up_pct": 52.0,
+       "avg_pct": 0.26,
+       "median_pct": 0.2,
+       "after_costs_pct": -0.23,
+       "index_pct": 0.21,
+       "lead_pct": -0.06,
+       "lead_raw": -0.058224367854964494,
+       "worst_5pct": -8.2,
+       "best_5pct": 9.0,
+       "days_held": 5.0
+      },
+      "2022-26": {
+       "picks": 11066,
+       "up_pct": 50.2,
+       "avg_pct": 0.2,
+       "median_pct": 0.02,
+       "after_costs_pct": -0.29,
+       "index_pct": 0.13,
+       "lead_pct": -0.0,
+       "lead_raw": -0.004717692714779502,
+       "worst_5pct": -8.5,
+       "best_5pct": 9.6,
+       "days_held": 5.0
+      }
+     }
+    },
+    "a 3% gain, 5 sessions at most, or a close 5% under": {
+     "picks": 18214,
+     "up_pct": 61.6,
+     "avg_pct": 0.16,
+     "median_pct": 3.0,
+     "after_costs_pct": -0.33,
+     "index_pct": 0.09,
+     "lead_pct": -0.01,
+     "lead_raw": -0.012202702788668201,
+     "worst_5pct": -7.0,
+     "best_5pct": 3.0,
+     "days_held": 3.2,
+     "lead_t": -0.23,
+     "days_with_a_pick_pct": 91.0,
+     "picks_a_day": 8.3,
+     "exits": {
+      "target": 9726,
+      "time": 5487,
+      "stop": 3001
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 7148,
+       "up_pct": 62.8,
+       "avg_pct": 0.24,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.25,
+       "index_pct": 0.16,
+       "lead_pct": -0.03,
+       "lead_raw": -0.025935864427213108,
+       "worst_5pct": -6.9,
+       "best_5pct": 3.0,
+       "days_held": 3.2
+      },
+      "2022-26": {
+       "picks": 11066,
+       "up_pct": 60.8,
+       "avg_pct": 0.1,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.39,
+       "index_pct": 0.05,
+       "lead_pct": 0.0,
+       "lead_raw": 0.0007891111862030467,
+       "worst_5pct": -7.0,
+       "best_5pct": 3.0,
+       "days_held": 3.2
+      }
+     }
+    }
+   }
+  },
+  "three_down_days": {
+   "what": "In an uptrend, three lower closes in a row.",
+   "exits": {
+    "first close above the 5-day average, 7 sessions at most": {
+     "picks": 27204,
+     "up_pct": 63.3,
+     "avg_pct": 0.21,
+     "median_pct": 0.9,
+     "after_costs_pct": -0.28,
+     "index_pct": 0.09,
+     "lead_pct": 0.09,
+     "lead_raw": 0.09475960198946017,
+     "worst_5pct": -8.7,
+     "best_5pct": 6.5,
+     "days_held": 3.6,
+     "lead_t": 1.61,
+     "days_with_a_pick_pct": 98.3,
+     "picks_a_day": 11.4,
+     "exits": {
+      "bounced": 23964,
+      "time": 3240
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 12067,
+       "up_pct": 64.2,
+       "avg_pct": 0.24,
+       "median_pct": 0.88,
+       "after_costs_pct": -0.25,
+       "index_pct": 0.13,
+       "lead_pct": 0.09,
+       "lead_raw": 0.08827309290632397,
+       "worst_5pct": -8.4,
+       "best_5pct": 6.3,
+       "days_held": 3.5
+      },
+      "2022-26": {
+       "picks": 15137,
+       "up_pct": 62.6,
+       "avg_pct": 0.18,
+       "median_pct": 0.92,
+       "after_costs_pct": -0.31,
+       "index_pct": 0.07,
+       "lead_pct": 0.1,
+       "lead_raw": 0.10131196395668916,
+       "worst_5pct": -9.0,
+       "best_5pct": 6.7,
+       "days_held": 3.7
+      }
+     }
+    },
+    "the same, or a close 7% under": {
+     "picks": 27204,
+     "up_pct": 62.9,
+     "avg_pct": 0.14,
+     "median_pct": 0.88,
+     "after_costs_pct": -0.35,
+     "index_pct": 0.08,
+     "lead_pct": 0.05,
+     "lead_raw": 0.050056345977350855,
+     "worst_5pct": -8.7,
+     "best_5pct": 6.5,
+     "days_held": 3.3,
+     "lead_t": 0.92,
+     "days_with_a_pick_pct": 98.3,
+     "picks_a_day": 11.4,
+     "exits": {
+      "bounced": 22278,
+      "stop": 3477,
+      "time": 1449
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 12067,
+       "up_pct": 63.7,
+       "avg_pct": 0.19,
+       "median_pct": 0.87,
+       "after_costs_pct": -0.3,
+       "index_pct": 0.13,
+       "lead_pct": 0.05,
+       "lead_raw": 0.04691945000464051,
+       "worst_5pct": -8.6,
+       "best_5pct": 6.3,
+       "days_held": 3.2
+      },
+      "2022-26": {
+       "picks": 15137,
+       "up_pct": 62.2,
+       "avg_pct": 0.09,
+       "median_pct": 0.89,
+       "after_costs_pct": -0.4,
+       "index_pct": 0.04,
+       "lead_pct": 0.05,
+       "lead_raw": 0.05322508860968261,
+       "worst_5pct": -8.9,
+       "best_5pct": 6.7,
+       "days_held": 3.4
+      }
+     }
+    },
+    "5 sessions": {
+     "picks": 27204,
+     "up_pct": 50.4,
+     "avg_pct": 0.27,
+     "median_pct": 0.04,
+     "after_costs_pct": -0.22,
+     "index_pct": 0.2,
+     "lead_pct": 0.09,
+     "lead_raw": 0.09068099080692504,
+     "worst_5pct": -8.6,
+     "best_5pct": 10.0,
+     "days_held": 5.0,
+     "lead_t": 1.06,
+     "days_with_a_pick_pct": 98.3,
+     "picks_a_day": 11.4,
+     "exits": {
+      "time": 27204
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 12067,
+       "up_pct": 50.8,
+       "avg_pct": 0.31,
+       "median_pct": 0.08,
+       "after_costs_pct": -0.18,
+       "index_pct": 0.27,
+       "lead_pct": 0.1,
+       "lead_raw": 0.10033563329887071,
+       "worst_5pct": -8.4,
+       "best_5pct": 9.5,
+       "days_held": 5.0
+      },
+      "2022-26": {
+       "picks": 15137,
+       "up_pct": 50.0,
+       "avg_pct": 0.23,
+       "median_pct": 0.01,
+       "after_costs_pct": -0.26,
+       "index_pct": 0.14,
+       "lead_pct": 0.08,
+       "lead_raw": 0.08092833163993421,
+       "worst_5pct": -8.8,
+       "best_5pct": 10.3,
+       "days_held": 5.0
+      }
+     }
+    },
+    "a 3% gain, 5 sessions at most, or a close 5% under": {
+     "picks": 27204,
+     "up_pct": 61.7,
+     "avg_pct": 0.14,
+     "median_pct": 3.0,
+     "after_costs_pct": -0.35,
+     "index_pct": 0.11,
+     "lead_pct": 0.04,
+     "lead_raw": 0.03702810372990783,
+     "worst_5pct": -7.1,
+     "best_5pct": 3.0,
+     "days_held": 3.1,
+     "lead_t": 0.86,
+     "days_with_a_pick_pct": 98.3,
+     "picks_a_day": 11.4,
+     "exits": {
+      "target": 14738,
+      "time": 7848,
+      "stop": 4618
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 12067,
+       "up_pct": 61.4,
+       "avg_pct": 0.19,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.3,
+       "index_pct": 0.17,
+       "lead_pct": 0.03,
+       "lead_raw": 0.030690684598493768,
+       "worst_5pct": -6.9,
+       "best_5pct": 3.0,
+       "days_held": 3.2
+      },
+      "2022-26": {
+       "picks": 15137,
+       "up_pct": 61.9,
+       "avg_pct": 0.1,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.39,
+       "index_pct": 0.05,
+       "lead_pct": 0.04,
+       "lead_raw": 0.04342986214184384,
+       "worst_5pct": -7.2,
+       "best_5pct": 3.0,
+       "days_held": 3.1
+      }
+     }
+    }
+   }
+  },
+  "below_lower_band": {
+   "what": "In an uptrend, a close under the lower Bollinger band (20 days, 2 deviations).",
+   "exits": {
+    "first close above the 5-day average, 7 sessions at most": {
+     "picks": 11736,
+     "up_pct": 62.9,
+     "avg_pct": 0.29,
+     "median_pct": 1.04,
+     "after_costs_pct": -0.2,
+     "index_pct": 0.04,
+     "lead_pct": -0.05,
+     "lead_raw": -0.05379161611452169,
+     "worst_5pct": -9.5,
+     "best_5pct": 7.3,
+     "days_held": 3.8,
+     "lead_t": -0.56,
+     "days_with_a_pick_pct": 77.6,
+     "picks_a_day": 6.3,
+     "exits": {
+      "bounced": 10313,
+      "time": 1423
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 4464,
+       "up_pct": 64.3,
+       "avg_pct": 0.26,
+       "median_pct": 1.08,
+       "after_costs_pct": -0.23,
+       "index_pct": -0.13,
+       "lead_pct": 0.04,
+       "lead_raw": 0.04006633664628252,
+       "worst_5pct": -10.4,
+       "best_5pct": 7.5,
+       "days_held": 3.8
+      },
+      "2022-26": {
+       "picks": 7272,
+       "up_pct": 62.1,
+       "avg_pct": 0.31,
+       "median_pct": 1.01,
+       "after_costs_pct": -0.18,
+       "index_pct": 0.15,
+       "lead_pct": -0.13,
+       "lead_raw": -0.1346940024068535,
+       "worst_5pct": -9.1,
+       "best_5pct": 7.2,
+       "days_held": 3.9
+      }
+     }
+    },
+    "the same, or a close 7% under": {
+     "picks": 11736,
+     "up_pct": 62.1,
+     "avg_pct": 0.2,
+     "median_pct": 1.0,
+     "after_costs_pct": -0.29,
+     "index_pct": 0.05,
+     "lead_pct": -0.07,
+     "lead_raw": -0.06885979215804969,
+     "worst_5pct": -9.1,
+     "best_5pct": 7.3,
+     "days_held": 3.5,
+     "lead_t": -0.82,
+     "days_with_a_pick_pct": 77.6,
+     "picks_a_day": 6.3,
+     "exits": {
+      "bounced": 9400,
+      "stop": 1699,
+      "time": 637
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 4464,
+       "up_pct": 63.2,
+       "avg_pct": 0.26,
+       "median_pct": 1.02,
+       "after_costs_pct": -0.23,
+       "index_pct": -0.01,
+       "lead_pct": -0.02,
+       "lead_raw": -0.020843658269640113,
+       "worst_5pct": -9.3,
+       "best_5pct": 7.5,
+       "days_held": 3.4
+      },
+      "2022-26": {
+       "picks": 7272,
+       "up_pct": 61.4,
+       "avg_pct": 0.17,
+       "median_pct": 0.99,
+       "after_costs_pct": -0.32,
+       "index_pct": 0.09,
+       "lead_pct": -0.11,
+       "lead_raw": -0.11024807836970757,
+       "worst_5pct": -9.0,
+       "best_5pct": 7.2,
+       "days_held": 3.5
+      }
+     }
+    },
+    "5 sessions": {
+     "picks": 11736,
+     "up_pct": 51.5,
+     "avg_pct": 0.25,
+     "median_pct": 0.17,
+     "after_costs_pct": -0.24,
+     "index_pct": 0.14,
+     "lead_pct": -0.16,
+     "lead_raw": -0.16128920944809766,
+     "worst_5pct": -9.4,
+     "best_5pct": 10.2,
+     "days_held": 5.0,
+     "lead_t": -1.48,
+     "days_with_a_pick_pct": 77.6,
+     "picks_a_day": 6.3,
+     "exits": {
+      "time": 11736
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 4464,
+       "up_pct": 52.0,
+       "avg_pct": 0.21,
+       "median_pct": 0.26,
+       "after_costs_pct": -0.28,
+       "index_pct": 0.0,
+       "lead_pct": -0.13,
+       "lead_raw": -0.13119855378396006,
+       "worst_5pct": -9.9,
+       "best_5pct": 10.3,
+       "days_held": 5.0
+      },
+      "2022-26": {
+       "picks": 7272,
+       "up_pct": 51.2,
+       "avg_pct": 0.28,
+       "median_pct": 0.13,
+       "after_costs_pct": -0.21,
+       "index_pct": 0.22,
+       "lead_pct": -0.19,
+       "lead_raw": -0.1872263386600852,
+       "worst_5pct": -9.0,
+       "best_5pct": 10.0,
+       "days_held": 5.0
+      }
+     }
+    },
+    "a 3% gain, 5 sessions at most, or a close 5% under": {
+     "picks": 11736,
+     "up_pct": 61.9,
+     "avg_pct": 0.06,
+     "median_pct": 3.0,
+     "after_costs_pct": -0.43,
+     "index_pct": 0.05,
+     "lead_pct": -0.17,
+     "lead_raw": -0.16583694973936286,
+     "worst_5pct": -7.5,
+     "best_5pct": 3.0,
+     "days_held": 3.0,
+     "lead_t": -2.55,
+     "days_with_a_pick_pct": 77.6,
+     "picks_a_day": 6.3,
+     "exits": {
+      "target": 6343,
+      "time": 3236,
+      "stop": 2157
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 4464,
+       "up_pct": 62.3,
+       "avg_pct": 0.08,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.41,
+       "index_pct": 0.04,
+       "lead_pct": -0.19,
+       "lead_raw": -0.1941946728083068,
+       "worst_5pct": -7.6,
+       "best_5pct": 3.0,
+       "days_held": 3.0
+      },
+      "2022-26": {
+       "picks": 7272,
+       "up_pct": 61.7,
+       "avg_pct": 0.04,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.45,
+       "index_pct": 0.05,
+       "lead_pct": -0.14,
+       "lead_raw": -0.14139354991429498,
+       "worst_5pct": -7.4,
+       "best_5pct": 3.0,
+       "days_held": 3.0
+      }
+     }
+    }
+   }
+  },
+  "gap_down_recovered": {
+   "what": "Above its 200-day average, opened 2% or more under the previous close and closed above its open.",
+   "exits": {
+    "first close above the 5-day average, 7 sessions at most": {
+     "picks": 4156,
+     "up_pct": 57.7,
+     "avg_pct": -0.17,
+     "median_pct": 0.56,
+     "after_costs_pct": -0.66,
+     "index_pct": 0.1,
+     "lead_pct": -0.48,
+     "lead_raw": -0.479100073800908,
+     "worst_5pct": -10.3,
+     "best_5pct": 6.6,
+     "days_held": 3.0,
+     "lead_t": -4.07,
+     "days_with_a_pick_pct": 53.3,
+     "picks_a_day": 3.2,
+     "exits": {
+      "bounced": 3753,
+      "time": 403
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1505,
+       "up_pct": 57.7,
+       "avg_pct": -0.3,
+       "median_pct": 0.6,
+       "after_costs_pct": -0.79,
+       "index_pct": -0.12,
+       "lead_pct": -0.6,
+       "lead_raw": -0.6017294064839065,
+       "worst_5pct": -11.3,
+       "best_5pct": 6.9,
+       "days_held": 2.9
+      },
+      "2022-26": {
+       "picks": 2651,
+       "up_pct": 57.8,
+       "avg_pct": -0.1,
+       "median_pct": 0.52,
+       "after_costs_pct": -0.59,
+       "index_pct": 0.22,
+       "lead_pct": -0.39,
+       "lead_raw": -0.3936311449612426,
+       "worst_5pct": -9.6,
+       "best_5pct": 6.4,
+       "days_held": 3.0
+      }
+     }
+    },
+    "the same, or a close 7% under": {
+     "picks": 4156,
+     "up_pct": 57.0,
+     "avg_pct": -0.15,
+     "median_pct": 0.51,
+     "after_costs_pct": -0.64,
+     "index_pct": 0.13,
+     "lead_pct": -0.45,
+     "lead_raw": -0.4463700596300396,
+     "worst_5pct": -9.3,
+     "best_5pct": 6.6,
+     "days_held": 2.6,
+     "lead_t": -4.34,
+     "days_with_a_pick_pct": 53.3,
+     "picks_a_day": 3.2,
+     "exits": {
+      "bounced": 3441,
+      "stop": 591,
+      "time": 124
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1505,
+       "up_pct": 56.9,
+       "avg_pct": -0.14,
+       "median_pct": 0.58,
+       "after_costs_pct": -0.63,
+       "index_pct": 0.04,
+       "lead_pct": -0.6,
+       "lead_raw": -0.6045353615383278,
+       "worst_5pct": -9.4,
+       "best_5pct": 6.9,
+       "days_held": 2.5
+      },
+      "2022-26": {
+       "picks": 2651,
+       "up_pct": 57.1,
+       "avg_pct": -0.16,
+       "median_pct": 0.47,
+       "after_costs_pct": -0.65,
+       "index_pct": 0.19,
+       "lead_pct": -0.34,
+       "lead_raw": -0.3361336370878995,
+       "worst_5pct": -9.3,
+       "best_5pct": 6.4,
+       "days_held": 2.7
+      }
+     }
+    },
+    "5 sessions": {
+     "picks": 4156,
+     "up_pct": 49.4,
+     "avg_pct": 0.28,
+     "median_pct": -0.07,
+     "after_costs_pct": -0.21,
+     "index_pct": 0.38,
+     "lead_pct": -0.39,
+     "lead_raw": -0.3900833220810244,
+     "worst_5pct": -11.0,
+     "best_5pct": 13.0,
+     "days_held": 5.0,
+     "lead_t": -2.27,
+     "days_with_a_pick_pct": 53.3,
+     "picks_a_day": 3.2,
+     "exits": {
+      "time": 4156
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1505,
+       "up_pct": 51.2,
+       "avg_pct": 0.4,
+       "median_pct": 0.12,
+       "after_costs_pct": -0.09,
+       "index_pct": 0.35,
+       "lead_pct": -0.53,
+       "lead_raw": -0.528350513851083,
+       "worst_5pct": -11.1,
+       "best_5pct": 13.8,
+       "days_held": 5.0
+      },
+      "2022-26": {
+       "picks": 2651,
+       "up_pct": 48.4,
+       "avg_pct": 0.21,
+       "median_pct": -0.22,
+       "after_costs_pct": -0.28,
+       "index_pct": 0.39,
+       "lead_pct": -0.29,
+       "lead_raw": -0.2937152793321957,
+       "worst_5pct": -10.9,
+       "best_5pct": 12.6,
+       "days_held": 5.0
+      }
+     }
+    },
+    "a 3% gain, 5 sessions at most, or a close 5% under": {
+     "picks": 4156,
+     "up_pct": 64.0,
+     "avg_pct": 0.15,
+     "median_pct": 3.0,
+     "after_costs_pct": -0.34,
+     "index_pct": 0.24,
+     "lead_pct": -0.19,
+     "lead_raw": -0.18921259079616468,
+     "worst_5pct": -7.6,
+     "best_5pct": 3.0,
+     "days_held": 2.7,
+     "lead_t": -2.03,
+     "days_with_a_pick_pct": 53.3,
+     "picks_a_day": 3.2,
+     "exits": {
+      "target": 2485,
+      "stop": 886,
+      "time": 785
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 1505,
+       "up_pct": 65.8,
+       "avg_pct": 0.22,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.27,
+       "index_pct": 0.27,
+       "lead_pct": -0.4,
+       "lead_raw": -0.4020645602765074,
+       "worst_5pct": -7.9,
+       "best_5pct": 3.0,
+       "days_held": 2.6
+      },
+      "2022-26": {
+       "picks": 2651,
+       "up_pct": 63.0,
+       "avg_pct": 0.11,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.38,
+       "index_pct": 0.22,
+       "lead_pct": -0.04,
+       "lead_raw": -0.04086121812804701,
+       "worst_5pct": -7.5,
+       "best_5pct": 3.0,
+       "days_held": 2.7
+      }
+     }
+    }
+   }
+  },
+  "the_week_list": {
+   "what": "The existing week list (a leader that fell this week), for comparison.",
+   "exits": {
+    "first close above the 5-day average, 7 sessions at most": {
+     "picks": 7242,
+     "up_pct": 63.0,
+     "avg_pct": 0.29,
+     "median_pct": 0.68,
+     "after_costs_pct": -0.2,
+     "index_pct": 0.17,
+     "lead_pct": 0.12,
+     "lead_raw": 0.11733095377881343,
+     "worst_5pct": -7.0,
+     "best_5pct": 5.5,
+     "days_held": 3.1,
+     "lead_t": 1.77,
+     "days_with_a_pick_pct": 99.8,
+     "picks_a_day": 15.0,
+     "exits": {
+      "bounced": 6609,
+      "time": 633
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3657,
+       "up_pct": 64.3,
+       "avg_pct": 0.38,
+       "median_pct": 0.68,
+       "after_costs_pct": -0.11,
+       "index_pct": 0.26,
+       "lead_pct": 0.12,
+       "lead_raw": 0.11530024620954359,
+       "worst_5pct": -6.3,
+       "best_5pct": 5.3,
+       "days_held": 2.9
+      },
+      "2022-26": {
+       "picks": 3585,
+       "up_pct": 61.8,
+       "avg_pct": 0.19,
+       "median_pct": 0.68,
+       "after_costs_pct": -0.3,
+       "index_pct": 0.07,
+       "lead_pct": 0.12,
+       "lead_raw": 0.11940414477003451,
+       "worst_5pct": -7.7,
+       "best_5pct": 5.7,
+       "days_held": 3.2
+      }
+     }
+    },
+    "the same, or a close 7% under": {
+     "picks": 7242,
+     "up_pct": 62.7,
+     "avg_pct": 0.2,
+     "median_pct": 0.67,
+     "after_costs_pct": -0.29,
+     "index_pct": 0.16,
+     "lead_pct": 0.04,
+     "lead_raw": 0.04105988800306456,
+     "worst_5pct": -8.1,
+     "best_5pct": 5.5,
+     "days_held": 2.8,
+     "lead_t": 0.61,
+     "days_with_a_pick_pct": 99.8,
+     "picks_a_day": 15.0,
+     "exits": {
+      "bounced": 6265,
+      "stop": 659,
+      "time": 318
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3657,
+       "up_pct": 64.0,
+       "avg_pct": 0.33,
+       "median_pct": 0.66,
+       "after_costs_pct": -0.16,
+       "index_pct": 0.27,
+       "lead_pct": 0.06,
+       "lead_raw": 0.05761421770641928,
+       "worst_5pct": -7.7,
+       "best_5pct": 5.3,
+       "days_held": 2.8
+      },
+      "2022-26": {
+       "picks": 3585,
+       "up_pct": 61.4,
+       "avg_pct": 0.07,
+       "median_pct": 0.67,
+       "after_costs_pct": -0.42,
+       "index_pct": 0.05,
+       "lead_pct": 0.02,
+       "lead_raw": 0.0241592334105183,
+       "worst_5pct": -8.5,
+       "best_5pct": 5.7,
+       "days_held": 2.9
+      }
+     }
+    },
+    "5 sessions": {
+     "picks": 7243,
+     "up_pct": 52.7,
+     "avg_pct": 0.48,
+     "median_pct": 0.28,
+     "after_costs_pct": -0.01,
+     "index_pct": 0.27,
+     "lead_pct": 0.21,
+     "lead_raw": 0.21270216627199737,
+     "worst_5pct": -7.8,
+     "best_5pct": 9.1,
+     "days_held": 5.0,
+     "lead_t": 2.43,
+     "days_with_a_pick_pct": 99.8,
+     "picks_a_day": 15.0,
+     "exits": {
+      "time": 7243
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3658,
+       "up_pct": 53.7,
+       "avg_pct": 0.55,
+       "median_pct": 0.39,
+       "after_costs_pct": 0.06,
+       "index_pct": 0.33,
+       "lead_pct": 0.22,
+       "lead_raw": 0.2159940534244011,
+       "worst_5pct": -7.2,
+       "best_5pct": 8.7,
+       "days_held": 5.0
+      },
+      "2022-26": {
+       "picks": 3585,
+       "up_pct": 51.6,
+       "avg_pct": 0.41,
+       "median_pct": 0.14,
+       "after_costs_pct": -0.08,
+       "index_pct": 0.2,
+       "lead_pct": 0.21,
+       "lead_raw": 0.20934141118753488,
+       "worst_5pct": -8.2,
+       "best_5pct": 9.5,
+       "days_held": 5.0
+      }
+     }
+    },
+    "a 3% gain, 5 sessions at most, or a close 5% under": {
+     "picks": 7243,
+     "up_pct": 62.6,
+     "avg_pct": 0.26,
+     "median_pct": 3.0,
+     "after_costs_pct": -0.23,
+     "index_pct": 0.19,
+     "lead_pct": 0.07,
+     "lead_raw": 0.072413480856603,
+     "worst_5pct": -6.8,
+     "best_5pct": 3.0,
+     "days_held": 3.3,
+     "lead_t": 1.16,
+     "days_with_a_pick_pct": 99.8,
+     "picks_a_day": 15.0,
+     "exits": {
+      "target": 3850,
+      "time": 2340,
+      "stop": 1053
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3658,
+       "up_pct": 62.9,
+       "avg_pct": 0.39,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.1,
+       "index_pct": 0.3,
+       "lead_pct": 0.08,
+       "lead_raw": 0.08117343114987043,
+       "worst_5pct": -6.5,
+       "best_5pct": 3.0,
+       "days_held": 3.4
+      },
+      "2022-26": {
+       "picks": 3585,
+       "up_pct": 62.3,
+       "avg_pct": 0.14,
+       "median_pct": 3.0,
+       "after_costs_pct": -0.35,
+       "index_pct": 0.08,
+       "lead_pct": 0.06,
+       "lead_raw": 0.06347026800489897,
+       "worst_5pct": -7.2,
+       "best_5pct": 3.0,
+       "days_held": 3.2
+      }
+     }
+    }
+   }
+  }
+ },
+ "quick_choice": "rsi2_under_10_leader | 5 sessions",
+ "flow": {
+  "money_flow": {
+   "what": "The four sectors where money is moving in (share of market turnover this week against its own sixty-session share, share of members above their 50-day average, and the month's median move), and the four strongest leaders in each.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 6828,
+     "up_pct": 52.4,
+     "avg_pct": 1.37,
+     "median_pct": 0.51,
+     "after_costs_pct": 0.88,
+     "index_pct": 0.84,
+     "lead_pct": 0.44,
+     "lead_raw": 0.4410274513536273,
+     "worst_5pct": -12.4,
+     "best_5pct": 19.8,
+     "days_held": 19.0,
+     "lead_t": 1.59,
+     "days_with_a_pick_pct": 98.6,
+     "picks_a_day": 14.3,
+     "exits": {
+      "time": 5466,
+      "stop": 1362
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3336,
+       "up_pct": 56.3,
+       "avg_pct": 2.02,
+       "median_pct": 1.46,
+       "after_costs_pct": 1.53,
+       "index_pct": 1.25,
+       "lead_pct": 0.68,
+       "lead_raw": 0.6825367147027487,
+       "worst_5pct": -11.9,
+       "best_5pct": 19.8,
+       "days_held": 19.4
+      },
+      "2022-26": {
+       "picks": 3492,
+       "up_pct": 48.6,
+       "avg_pct": 0.75,
+       "median_pct": -0.34,
+       "after_costs_pct": 0.26,
+       "index_pct": 0.44,
+       "lead_pct": 0.2,
+       "lead_raw": 0.20052868701433504,
+       "worst_5pct": -12.7,
+       "best_5pct": 19.7,
+       "days_held": 18.6
+      }
+     }
+    },
+    "63 sessions, or a close 15% under": {
+     "picks": 6828,
+     "up_pct": 53.9,
+     "avg_pct": 4.94,
+     "median_pct": 1.9,
+     "after_costs_pct": 4.45,
+     "index_pct": 2.58,
+     "lead_pct": 2.15,
+     "lead_raw": 2.1454381251922885,
+     "worst_5pct": -17.6,
+     "best_5pct": 42.1,
+     "days_held": 54.5,
+     "lead_t": 2.3,
+     "days_with_a_pick_pct": 98.6,
+     "picks_a_day": 14.3,
+     "exits": {
+      "time": 5130,
+      "stop": 1698
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3336,
+       "up_pct": 57.2,
+       "avg_pct": 6.26,
+       "median_pct": 3.84,
+       "after_costs_pct": 5.77,
+       "index_pct": 3.31,
+       "lead_pct": 2.47,
+       "lead_raw": 2.470935303336519,
+       "worst_5pct": -17.5,
+       "best_5pct": 42.3,
+       "days_held": 56.2
+      },
+      "2022-26": {
+       "picks": 3492,
+       "up_pct": 50.7,
+       "avg_pct": 3.69,
+       "median_pct": 0.34,
+       "after_costs_pct": 3.2,
+       "index_pct": 1.88,
+       "lead_pct": 1.82,
+       "lead_raw": 1.8213028599273224,
+       "worst_5pct": -17.9,
+       "best_5pct": 42.1,
+       "days_held": 52.9
+      }
+     }
+    }
+   }
+  },
+  "turnover_share_only": {
+   "what": "The four sectors whose share of market turnover rose most this week, and the four strongest leaders in each.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 6496,
+     "up_pct": 52.2,
+     "avg_pct": 1.24,
+     "median_pct": 0.54,
+     "after_costs_pct": 0.75,
+     "index_pct": 0.9,
+     "lead_pct": 0.32,
+     "lead_raw": 0.32391208673646144,
+     "worst_5pct": -12.3,
+     "best_5pct": 19.1,
+     "days_held": 19.0,
+     "lead_t": 1.59,
+     "days_with_a_pick_pct": 98.6,
+     "picks_a_day": 13.6,
+     "exits": {
+      "time": 5233,
+      "stop": 1263
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3156,
+       "up_pct": 54.8,
+       "avg_pct": 1.66,
+       "median_pct": 1.05,
+       "after_costs_pct": 1.17,
+       "index_pct": 1.25,
+       "lead_pct": 0.42,
+       "lead_raw": 0.41536739966116876,
+       "worst_5pct": -12.0,
+       "best_5pct": 19.1,
+       "days_held": 19.4
+      },
+      "2022-26": {
+       "picks": 3340,
+       "up_pct": 49.9,
+       "avg_pct": 0.85,
+       "median_pct": -0.03,
+       "after_costs_pct": 0.36,
+       "index_pct": 0.56,
+       "lead_pct": 0.23,
+       "lead_raw": 0.23283943202482815,
+       "worst_5pct": -12.6,
+       "best_5pct": 19.1,
+       "days_held": 18.7
+      }
+     }
+    },
+    "63 sessions, or a close 15% under": {
+     "picks": 6496,
+     "up_pct": 54.0,
+     "avg_pct": 4.77,
+     "median_pct": 1.87,
+     "after_costs_pct": 4.28,
+     "index_pct": 2.59,
+     "lead_pct": 2.12,
+     "lead_raw": 2.1235756475172773,
+     "worst_5pct": -17.6,
+     "best_5pct": 42.0,
+     "days_held": 54.7,
+     "lead_t": 2.98,
+     "days_with_a_pick_pct": 98.6,
+     "picks_a_day": 13.6,
+     "exits": {
+      "time": 4910,
+      "stop": 1586
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3156,
+       "up_pct": 56.0,
+       "avg_pct": 5.48,
+       "median_pct": 2.8,
+       "after_costs_pct": 4.99,
+       "index_pct": 3.26,
+       "lead_pct": 2.1,
+       "lead_raw": 2.098078470673561,
+       "worst_5pct": -17.7,
+       "best_5pct": 40.6,
+       "days_held": 55.8
+      },
+      "2022-26": {
+       "picks": 3340,
+       "up_pct": 52.2,
+       "avg_pct": 4.1,
+       "median_pct": 1.15,
+       "after_costs_pct": 3.61,
+       "index_pct": 1.95,
+       "lead_pct": 2.15,
+       "lead_raw": 2.1489661416126937,
+       "worst_5pct": -17.6,
+       "best_5pct": 42.2,
+       "days_held": 53.6
+      }
+     }
+    }
+   }
+  },
+  "sector_momentum": {
+   "what": "The four sectors with the best median three-month move, and the four strongest leaders in each.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 7210,
+     "up_pct": 52.5,
+     "avg_pct": 1.57,
+     "median_pct": 0.62,
+     "after_costs_pct": 1.08,
+     "index_pct": 0.92,
+     "lead_pct": 0.55,
+     "lead_raw": 0.55318988557978,
+     "worst_5pct": -12.4,
+     "best_5pct": 21.0,
+     "days_held": 19.0,
+     "lead_t": 1.64,
+     "days_with_a_pick_pct": 99.8,
+     "picks_a_day": 14.9,
+     "exits": {
+      "time": 5784,
+      "stop": 1426
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3601,
+       "up_pct": 55.2,
+       "avg_pct": 1.99,
+       "median_pct": 1.25,
+       "after_costs_pct": 1.5,
+       "index_pct": 1.33,
+       "lead_pct": 0.57,
+       "lead_raw": 0.5665700228761138,
+       "worst_5pct": -12.0,
+       "best_5pct": 19.7,
+       "days_held": 19.5
+      },
+      "2022-26": {
+       "picks": 3609,
+       "up_pct": 49.8,
+       "avg_pct": 1.14,
+       "median_pct": -0.05,
+       "after_costs_pct": 0.65,
+       "index_pct": 0.51,
+       "lead_pct": 0.54,
+       "lead_raw": 0.5395298290931462,
+       "worst_5pct": -12.7,
+       "best_5pct": 21.8,
+       "days_held": 18.6
+      }
+     }
+    },
+    "63 sessions, or a close 15% under": {
+     "picks": 7210,
+     "up_pct": 54.4,
+     "avg_pct": 5.07,
+     "median_pct": 2.13,
+     "after_costs_pct": 4.58,
+     "index_pct": 2.77,
+     "lead_pct": 2.17,
+     "lead_raw": 2.1722906921497462,
+     "worst_5pct": -17.7,
+     "best_5pct": 42.2,
+     "days_held": 54.7,
+     "lead_t": 2.18,
+     "days_with_a_pick_pct": 99.8,
+     "picks_a_day": 14.9,
+     "exits": {
+      "time": 5466,
+      "stop": 1744
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 3601,
+       "up_pct": 58.4,
+       "avg_pct": 6.3,
+       "median_pct": 4.12,
+       "after_costs_pct": 5.81,
+       "index_pct": 3.67,
+       "lead_pct": 2.46,
+       "lead_raw": 2.462296852169786,
+       "worst_5pct": -17.4,
+       "best_5pct": 42.1,
+       "days_held": 56.7
+      },
+      "2022-26": {
+       "picks": 3609,
+       "up_pct": 50.3,
+       "avg_pct": 3.85,
+       "median_pct": 0.24,
+       "after_costs_pct": 3.36,
+       "index_pct": 1.87,
+       "lead_pct": 1.88,
+       "lead_raw": 1.8762174576522996,
+       "worst_5pct": -18.0,
+       "best_5pct": 42.4,
+       "days_held": 52.6
+      }
+     }
+    }
+   }
+  },
+  "emerging_leaders": {
+   "what": "Leader score under the 45th percentile a month ago and over the 60th now. Ranked on how far it rose.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 942,
+     "up_pct": 50.2,
+     "avg_pct": 0.58,
+     "median_pct": 0.09,
+     "after_costs_pct": 0.09,
+     "index_pct": 0.95,
+     "lead_pct": -0.61,
+     "lead_raw": -0.6086173454633476,
+     "worst_5pct": -12.1,
+     "best_5pct": 17.6,
+     "days_held": 19.0,
+     "lead_t": -1.3,
+     "days_with_a_pick_pct": 68.2,
+     "picks_a_day": 2.9,
+     "exits": {
+      "time": 746,
+      "stop": 196
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 330,
+       "up_pct": 50.0,
+       "avg_pct": 0.26,
+       "median_pct": 0.03,
+       "after_costs_pct": -0.23,
+       "index_pct": 1.52,
+       "lead_pct": -1.63,
+       "lead_raw": -1.628525482867688,
+       "worst_5pct": -11.9,
+       "best_5pct": 17.3,
+       "days_held": 18.9
+      },
+      "2022-26": {
+       "picks": 612,
+       "up_pct": 50.3,
+       "avg_pct": 0.75,
+       "median_pct": 0.1,
+       "after_costs_pct": 0.26,
+       "index_pct": 0.65,
+       "lead_pct": 0.2,
+       "lead_raw": 0.20065758965096608,
+       "worst_5pct": -12.2,
+       "best_5pct": 18.2,
+       "days_held": 19.0
+      }
+     }
+    },
+    "63 sessions, or a close 15% under": {
+     "picks": 942,
+     "up_pct": 46.4,
+     "avg_pct": 1.8,
+     "median_pct": -1.36,
+     "after_costs_pct": 1.31,
+     "index_pct": 2.07,
+     "lead_pct": -0.7,
+     "lead_raw": -0.6976121415038526,
+     "worst_5pct": -17.6,
+     "best_5pct": 35.7,
+     "days_held": 53.6,
+     "lead_t": -0.71,
+     "days_with_a_pick_pct": 68.2,
+     "picks_a_day": 2.9,
+     "exits": {
+      "time": 679,
+      "stop": 263
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 330,
+       "up_pct": 47.6,
+       "avg_pct": 1.57,
+       "median_pct": -0.65,
+       "after_costs_pct": 1.08,
+       "index_pct": 3.42,
+       "lead_pct": -2.41,
+       "lead_raw": -2.412320294134476,
+       "worst_5pct": -18.0,
+       "best_5pct": 30.7,
+       "days_held": 53.8
+      },
+      "2022-26": {
+       "picks": 612,
+       "up_pct": 45.8,
+       "avg_pct": 1.93,
+       "median_pct": -1.55,
+       "after_costs_pct": 1.44,
+       "index_pct": 1.34,
+       "lead_pct": 0.66,
+       "lead_raw": 0.6629715013443599,
+       "worst_5pct": -17.4,
+       "best_5pct": 37.4,
+       "days_held": 53.5
+      }
+     }
+    }
+   }
+  },
+  "stock_turnover_surge": {
+   "what": "Turnover this week at twice its sixty-session usual or more, the week up, in an uptrend. Ranked on the surge.",
+   "exits": {
+    "21 sessions, or a close 10% under": {
+     "picks": 5825,
+     "up_pct": 49.3,
+     "avg_pct": 0.94,
+     "median_pct": -0.19,
+     "after_costs_pct": 0.45,
+     "index_pct": 0.83,
+     "lead_pct": -0.02,
+     "lead_raw": -0.01734915876068247,
+     "worst_5pct": -12.8,
+     "best_5pct": 20.2,
+     "days_held": 18.4,
+     "lead_t": -0.06,
+     "days_with_a_pick_pct": 98.8,
+     "picks_a_day": 12.2,
+     "exits": {
+      "time": 4361,
+      "stop": 1464
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2530,
+       "up_pct": 50.9,
+       "avg_pct": 1.12,
+       "median_pct": 0.22,
+       "after_costs_pct": 0.63,
+       "index_pct": 1.38,
+       "lead_pct": -0.37,
+       "lead_raw": -0.37087120012967384,
+       "worst_5pct": -12.4,
+       "best_5pct": 19.4,
+       "days_held": 18.8
+      },
+      "2022-26": {
+       "picks": 3295,
+       "up_pct": 48.0,
+       "avg_pct": 0.79,
+       "median_pct": -0.54,
+       "after_costs_pct": 0.3,
+       "index_pct": 0.4,
+       "lead_pct": 0.34,
+       "lead_raw": 0.3391436560651912,
+       "worst_5pct": -13.0,
+       "best_5pct": 20.8,
+       "days_held": 18.1
+      }
+     }
+    },
+    "63 sessions, or a close 15% under": {
+     "picks": 5817,
+     "up_pct": 50.8,
+     "avg_pct": 4.28,
+     "median_pct": 0.35,
+     "after_costs_pct": 3.79,
+     "index_pct": 2.59,
+     "lead_pct": 1.65,
+     "lead_raw": 1.654291682898353,
+     "worst_5pct": -17.9,
+     "best_5pct": 42.6,
+     "days_held": 52.2,
+     "lead_t": 1.8,
+     "days_with_a_pick_pct": 98.8,
+     "picks_a_day": 12.2,
+     "exits": {
+      "time": 4047,
+      "stop": 1770
+     },
+     "by_half": {
+      "2017-21": {
+       "picks": 2524,
+       "up_pct": 53.6,
+       "avg_pct": 5.48,
+       "median_pct": 2.07,
+       "after_costs_pct": 4.99,
+       "index_pct": 3.8,
+       "lead_pct": 1.6,
+       "lead_raw": 1.5977570001419819,
+       "worst_5pct": -18.0,
+       "best_5pct": 42.2,
+       "days_held": 53.9
+      },
+      "2022-26": {
+       "picks": 3293,
+       "up_pct": 48.6,
+       "avg_pct": 3.36,
+       "median_pct": -0.62,
+       "after_costs_pct": 2.87,
+       "index_pct": 1.66,
+       "lead_pct": 1.71,
+       "lead_raw": 1.7113014470224248,
+       "worst_5pct": -17.8,
+       "best_5pct": 43.3,
+       "days_held": 51.0
+      }
+     }
+    }
+   }
+  }
+ },
+ "sectors": {
+  "source": "NSE, Nifty Total Market list",
+  "industries": 22,
+  "companies": 749
+ },
+ "flow_choice": "money_flow",
+ "taken": {
+  "breakout": {
+   "version": "box_40_leader",
+   "exit": "21 sessions, or a close 8% under the entry",
+   "note": "The version was chosen as the rule says, on leaving at a close back under the base. Both exits were measured for every version. Leaving at the base cut the average and left three picks in ten ahead; a line 8% under the entry left five in ten ahead with a higher average. The site uses the second. That choice between the two exits was made after seeing both."
+  },
+  "technical": {
+   "version": "scorecard",
+   "exit": "21 sessions, or a close 10% under"
+  },
+  "quick": {
+   "version": "rsi2_under_10_leader",
+   "exit": "the same, or a close 7% under",
+   "note": "The rule chose among versions still profitable after costs on 2017-2021, and only a plain five-session hold was (52 picks in 100 rose). The reader asked for the highest share of picks rising, so the site runs the exit with the highest: sold on the first close above the 5-day average. Its average pick does NOT cover a 0.49% round trip, and the page says so beside it."
+  },
+  "flow": {
+   "version": "money_flow",
+   "exit": "21 sessions, or a close 10% under"
+  }
+ }
+}

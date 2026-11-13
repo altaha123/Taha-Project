@@ -112,6 +112,19 @@ rank, beside the result it was last priced on and any order it disclosed. All
 of it is in [`research/signals_lab.py`](research/signals_lab.py) and the
 study's "What a reader asked for, tested".
 
+- **Five setup lists sit under the five horizon lists:** Breakouts (a close
+  above a tight 40-session base on twice the usual volume, with the unbroken
+  bases shown as *Setting up*), Technicals (seven of nine chart conditions),
+  Quick trades (an oversold leader, sold on the first close above its 5-day
+  average), Money flow (every NSE sector ranked on turnover share, breadth
+  and its month; the strongest stocks in the top four) and Emerging
+  (companies listed six to twelve months). Each prints its own replayed
+  record; none is a strong edge and the quick trade does not cover its
+  costs, and the page says so.
+- **A daily brief** (`brief.html`, `backend/policy_brief.py`,
+  `GET /brief`) reads every new DGFT, RBI, SEBI and PIB circular for the
+  sectors and stocks it touches: by Claude when `ANTHROPIC_API_KEY` is set,
+  by a keyword table otherwise. It has no tested record and moves no rank.
 - **The page prints only the study's numbers.** `research/ideas_study.py`
   writes them; `leaders.py` reads them; a test fails if the hold or exit line
   in the code differs from the one tested, and the study refuses to write

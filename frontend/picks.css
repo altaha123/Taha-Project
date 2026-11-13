@@ -127,3 +127,26 @@ html[data-theme="dark"] .pk-all { background: var(--gold-lt); color: #16130E; }
   .pk-all { flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .pk-tab, .pk-name { transition: none; } }
+
+/* The setup lists: a second row of tabs, the sector table, the watch list. */
+.pk-tabs.setups { margin-top: 6px; }
+.pk-tabs.setups .pk-tab { font-size: 13px; }
+#view-ideas .pk-tabs.page.setups { margin: 6px 0 4px; }
+.pk-cost { margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid var(--gold); background: var(--paper-2); font-size: 13px; line-height: 1.45; color: var(--ink); }
+.pk-sectors { margin: 12px 0 0; border: 1px solid var(--rule-2); border-radius: 10px; padding: 8px 12px; font-size: 13px; }
+.pk-sectors summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.pk-sectors-scroll { overflow-x: auto; margin-top: 8px; }
+.pk-sectors table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.pk-sectors th { text-align: right; font-weight: 500; color: var(--ink-2); font-size: 12px; padding: 4px 6px; white-space: nowrap; }
+.pk-sectors th:first-child, .pk-sectors td:first-child { text-align: left; }
+.pk-sectors td { text-align: right; padding: 5px 6px; border-top: 1px solid var(--rule-2); white-space: nowrap; }
+.pk-sectors td:first-child { white-space: normal; }
+.pk-sectors td small { color: var(--ink-2); }
+.pk-sectors td b { display: inline-block; min-width: 1.4em; color: var(--ink-2); font-weight: 600; }
+.pk-sectors tr.on td { background: var(--paper-2); color: var(--ink); font-weight: 600; }
+.pk-sectors p { margin: 8px 0 2px; color: var(--ink-2); line-height: 1.45; }
+@media (max-width: 520px) {
+  .pk-tabs.setups .pk-tab { font-size: 12px; }
+}
+.pk-brief { margin: 2px 0 14px; font-size: 13.5px; color: var(--ink-2); }
+.pk-brief a { color: var(--ink); font-weight: 600; }

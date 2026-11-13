@@ -482,7 +482,7 @@ def test_the_scan_gives_the_top_of_every_list_a_place_in_phase_two():
     cohort, n_ranked, n_control = scan.pick_phase2_cohort(cands, 40, control_pct=0.25)
     chosen = {c["symbol"]: label for c, label in cohort}
     assert len(chosen) == 40 and n_ranked == 30
-    assert sum(1 for v in chosen.values() if v == "leader") == 18, "leaders take at most three-fifths"
+    assert sum(1 for v in chosen.values() if v == "leader") == 20, "leaders take at most two-thirds"
     for key in PRICE_LISTS:
         best = min(blocks, key=lambda s: blocks[s]["lists"][key]["rank"] or 999)
         assert chosen.get(best) == "leader", f"the top {key} pick was not analysed"
@@ -907,3 +907,127 @@ def test_the_study_measured_the_young_picks_before_they_were_admitted():
         assert all(h["excess_pct"] > 0 for h in halves.values()), f"young picks trailed on {key}"
     for key in set(leaders.LISTS) - set(leaders.YOUNG_LISTS):
         assert "young" not in study["lists"][key]
+
+
+# --- the setup lists: breakouts, technicals, quick trades, money flow, emerging ---
+
+def _frame(closes, volumes=None):
+    import pandas as pd
+    c = np.asarray(closes, dtype=float)
+    v = np.full(len(c), 1e6) if volumes is None else np.asarray(volumes, dtype=float)
+    idx = pd.bdate_range("2024-01-01", periods=len(c))
+    return pd.DataFrame({"High": c * 1.005, "Low": c * 0.995, "Close": c, "Volume": v}, index=idx)
+
+
+def _base_then_break(broke=True):
+    """260 sessions of climb, 40 flat inside a 4% range, then one session."""
+    rng = np.random.default_rng(3)
+    climb = np.linspace(60, 100, 259)
+    flat = 100 + rng.uniform(-1.5, 1.5, 40)
+    last = 106.0 if broke else 100.5
+    vol = np.full(300, 1e6)
+    vol[-1] = 3.5e6 if broke else 1e6
+    return _frame(np.concatenate([climb, flat, [last]]), vol)
+
+
+def test_a_close_above_a_tight_base_on_heavy_volume_is_a_breakout():
+    t = leaders.technicals(_base_then_break(True))
+    assert t["box"] and t["box"]["sessions_ago"] == 0 and t["box"]["holding"]
+    assert t["box"]["width"] <= leaders.BOX_MAX_WIDTH and t["box"]["rel_volume"] >= leaders.BOX_MIN_VOLUME
+
+
+def test_a_stock_still_inside_its_base_is_watched_not_picked():
+    t = leaders.technicals(_base_then_break(False))
+    assert not t["box"]
+    assert t["base"] and t["base"]["width"] <= leaders.BOX_MAX_WIDTH and 0 <= t["base"]["to_top"] <= 0.04
+
+
+def test_the_scorecard_counts_the_nine_conditions_it_names():
+    t = leaders.technicals(_base_then_break(True))
+    assert 0 <= t["scorecard"] <= 9 and len(t["scorecard_met"]) == t["scorecard"]
+    assert set(t["scorecard_met"]) <= set(leaders.SCORECARD_LABELS) and len(leaders.SCORECARD_LABELS) == 9
+
+
+def _ranked_with_sectors():
+    cands = universe(80)
+    names = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
+    sectors = {c["symbol"]: names[i % 5] for i, c in enumerate(cands)}
+    return cands, sectors, leaders.rank(cands, sectors=sectors)
+
+
+def test_every_block_carries_every_setup_list():
+    _c, _s, blocks = _ranked_with_sectors()
+    for b in blocks.values():
+        assert set(leaders.ALL) <= set(b["lists"])
+        for key in leaders.SETUPS:
+            e = b["lists"][key]
+            assert e["eligible"] or e["why_not"], key
+            assert (e["rank"] is None) or e["eligible"]
+
+
+def test_money_flow_picks_only_from_the_top_sectors():
+    _c, sectors, blocks = _ranked_with_sectors()
+    table = {b["sector_flow"]["sector"]: b["sector_flow"] for b in blocks.values() if b.get("sector_flow")}
+    assert len(table) == 5 and sorted(r["rank"] for r in table.values()) == [1, 2, 3, 4, 5]
+    top = {s for s, r in table.items() if r["rank"] <= leaders.FLOW_SECTORS}
+    picked = [s for s, b in blocks.items() if b["lists"]["flow"]["rank"]]
+    assert picked, "no money-flow pick from a ranked universe"
+    assert all(sectors[s] in top for s in picked)
+    per = {}
+    for s in picked:
+        per[sectors[s]] = per.get(sectors[s], 0) + 1
+    assert max(per.values()) <= leaders.FLOW_PER_SECTOR
+
+
+def test_money_flow_is_empty_without_a_sector_list_and_says_why():
+    blocks = leaders.rank(universe(60))
+    assert not any(b["lists"]["flow"]["rank"] for b in blocks.values())
+    assert all("sector" in b["lists"]["flow"]["why_not"].lower() for b in blocks.values())
+
+
+def test_quick_trades_need_an_oversold_leader_in_an_uptrend():
+    _c, _s, blocks = _ranked_with_sectors()
+    for b in blocks.values():
+        if b["lists"]["quick"]["rank"]:
+            assert b["uptrend"] and b["technicals"]["rsi2"] < leaders.QUICK_RSI2
+            assert b["parts"]["leader"] >= leaders.QUICK_LEADER_FLOOR * 100 - 1
+
+
+def test_emerging_is_for_companies_listed_under_a_year():
+    _c, _s, blocks = _ranked_with_sectors()
+    for b in blocks.values():
+        e = b["lists"]["emerging"]
+        if not b["young"]:
+            assert not e["eligible"] and "more than a year" in e["why_not"]
+
+
+def test_the_quick_trade_plan_says_when_to_sell():
+    p = leaders.plan("quick", 200.0, dt.date(2026, 11, 9))
+    assert p["sell_rule"] == "sma5" and "5-day average" in p["note"] and p["stop"] == 186.0
+    assert leaders.plan("breakout", 100.0)["stop"] == 92.0
+
+
+def test_each_setup_list_has_a_replayed_record_and_the_page_can_say_what_it_cost():
+    with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
+        study = json.load(f)
+    for key in leaders.SETUPS:
+        rec = study["lists"][key]
+        assert rec["kind"] == "setup" and rec["picks"] > 1000 and rec["what"]
+        assert rec["by_half"]["2017-21"] and rec["by_half"]["2022-26"]
+        assert rec["avg_after_costs_pct"] == round(rec["avg_pct"] - study["round_trip_cost_pct"], 2)
+    # The quick trade's gain did not cover its costs in the test; the record must show that.
+    assert study["lists"]["quick"]["avg_after_costs_pct"] < 0
+    assert study["lists"]["quick"]["avg_sessions_held"] < leaders.LISTS["quick"]["hold_sessions"]
+
+
+def test_the_breakout_watch_lists_only_unbroken_tight_bases():
+    blocks = {"AAA": {"young": False, "score": 80.0, "sector": "Alpha", "facts": {"turnover_cr": 50},
+                      "technicals": {"box": None, "above_200d": True, "rel_volume_5": 1.1,
+                                     "base": {"top": 100, "low": 92, "width_pct": 8.7, "to_top_pct": 1.2}}},
+              "BBB": {"young": False, "score": 80.0, "facts": {},
+                      "technicals": {"box": None, "above_200d": True,
+                                     "base": {"top": 100, "low": 70, "width_pct": 42.0, "to_top_pct": 1.0}}},
+              "CCC": {"young": False, "score": 30.0, "facts": {},
+                      "technicals": {"box": None, "above_200d": True,
+                                     "base": {"top": 100, "low": 95, "width_pct": 5.0, "to_top_pct": 1.0}}}}
+    assert [r["symbol"] for r in leaders.breakout_watch(blocks)] == ["AAA"]

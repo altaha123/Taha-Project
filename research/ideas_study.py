@@ -5,6 +5,7 @@ The Ideas study: what picked well on NSE from 2017 to 2026, and what did not.
     python research/ideas_study.py --build      # adjusted price panel
     python research/ideas_study.py --baseline   # replay the OLD ranking (slow: ~30 min on 4 cores)
     python research/ideas_study.py --study      # every table, and research/ideas-study.json
+    python research/ideas_study.py --setups     # the setup lists alone, into the same file
 
 Everything the Ideas page prints about its own record comes out of --study.
 backend/leaders.py reads the JSON; it holds no number of its own.
@@ -818,6 +819,172 @@ def parity(P, U, scores, R=None, results=None, W=None, Y=None):
     return same, total
 
 
+# ---- the setup lists: breakouts, technicals, quick trades, money flow, emerging ----
+# These are ranked on what one stock's own chart says, so there is no second
+# implementation to check against: the record is the engine's, replayed.
+# backend/leaders.rank is run on every fifth session from frames cut at that
+# session, its top fifteen of each list bought at the next open, and left on
+# that list's own rule.
+SECTORS_CSV = os.environ.get("IDEAS_SECTORS_CSV", "").strip() or os.path.join(DATA, "nse_industries.csv")
+_REPLAY = {}
+
+
+def load_sectors():
+    """{symbol: industry} from NSE's Nifty Total Market list, or {}."""
+    if not os.path.exists(SECTORS_CSV):
+        return {}
+    df = pd.read_csv(SECTORS_CSV)
+    df.columns = [c.strip() for c in df.columns]
+    return dict(zip(df["Symbol"].astype(str).str.strip(), df["Industry"].astype(str).str.strip()))
+
+
+def _replay_date(i):
+    import leaders
+    P, Y, sectors = _REPLAY["P"], _REPLAY["Y"], _REPLAY["sectors"]
+    blocks = leaders.rank(_engine_candidates(P, i, Y), sectors=sectors)
+    out = {}
+    for key in leaders.SETUPS:
+        top = sorted((b["lists"][key]["rank"], s) for s, b in blocks.items()
+                     if (b["lists"][key]["rank"] or 99) <= 15)
+        out[key] = [s for _r, s in top]
+    return i, out
+
+
+def setup_picks(P, Y, sectors, procs=4):
+    """{list: [(date, [names])]} from the engine itself, cached on the
+    engine's source so a changed rule is never read from an old replay."""
+    import hashlib
+    import multiprocessing as mp
+    import pickle
+    import leaders
+    with open(leaders.__file__, "rb") as f:
+        stamp = hashlib.sha1(f.read() + str(len(P.C)).encode() + str(len(sectors)).encode()).hexdigest()[:16]
+    cache = os.path.join(DATA, "setup_picks.pkl")
+    if os.path.exists(cache):
+        with open(cache, "rb") as f:
+            got = pickle.load(f)
+        if got.get("stamp") == stamp:
+            return got["picks"]
+    _REPLAY.update(P=P, Y=Y, sectors=sectors)
+    days = list(range(262, len(P.C) - 2, 5))
+    with mp.get_context("fork").Pool(procs) as pool:
+        rows = pool.map(_replay_date, days, chunksize=4)
+    picks = {k: [(P.C.index[i], out[k]) for i, out in rows if out[k]] for k in rows[0][1]}
+    with open(cache, "wb") as f:
+        pickle.dump({"stamp": stamp, "picks": picks}, f)
+    return picks
+
+
+def run_setup(P, picks, hold, exit_pct, above_sma5=False):
+    """run_list, with the quick trade's sell rule: out at the first close
+    above the 5-day average. The index is measured over the sessions each
+    pick was actually held."""
+    if not above_sma5:
+        return run_list(P, picks, hold, exit_pct)
+    Cn, On, N5 = P.C.values, P.O.values, P.N500.values
+    S5 = P.C.rolling(5).mean().values
+    col = {n: i for i, n in enumerate(P.C.columns)}
+    row = {d: i for i, d in enumerate(P.C.index)}
+    recs = []
+    for d, names in picks:
+        i = row[d]
+        last = i + hold
+        if last >= len(Cn):
+            continue
+        for n in names:
+            j = col[n]
+            e = On[i + 1, j]
+            if not np.isfinite(e) or e <= 0:
+                continue
+            ret, out, stopped = None, last, False
+            for k in range(i + 1, last + 1):
+                c = Cn[k, j]
+                if not np.isfinite(c):
+                    continue
+                if c <= e * (1 - exit_pct / 100.0):
+                    ret, out, stopped = c / e - 1, k, True
+                    break
+                if c > S5[k, j]:
+                    ret, out = c / e - 1, k
+                    break
+            if ret is None:
+                c = Cn[last, j]
+                if not np.isfinite(c):
+                    continue
+                ret = c / e - 1
+            recs.append((d, n, ret, N5[out] / N5[i] - 1, stopped, out - i))
+    return pd.DataFrame(recs, columns=["date", "name", "ret", "bench", "exited", "held"])
+
+
+SETUP_NOTES = {
+    "breakout": "Forty sessions inside an 18% range, then a close above its top on twice the usual "
+                "volume within the last five sessions; above the 200-day average; leader score in the top half.",
+    "technical": "Seven or more of nine chart conditions met: price above the 20-day average, the 20 "
+                 "above the 50, the 50 above the 200, RSI over 55, MACD above its signal, ADX 25 or more "
+                 "with buyers ahead, more volume on up days, this week's volume above usual, and within "
+                 "5% of the 52-week high.",
+    "quick": "In an uptrend, leader score in the top 30%, two-day RSI under 10. Sold at the first close "
+             "above the 5-day average, after seven sessions, or on a close 7% under the entry.",
+    "flow": "The four sectors ranked highest on turnover share against their own sixty sessions, the "
+            "share of their stocks above the 50-day average, and their median month; the four strongest "
+            "stocks in each.",
+    "emerging": "Companies listed six to twelve months, above their own 50-day average, whose leader "
+                "score stands in the top half of the established universe; strongest first.",
+}
+
+
+def setup_records(P, U, Y):
+    """The record of each setup list, keyed as result['lists'] is."""
+    import leaders
+    sectors = load_sectors()
+    picks = setup_picks(P, Y, sectors)
+    out, exits = {}, {}
+    for key in leaders.SETUPS:
+        spec = leaders.LISTS[key]
+        hold, exit_pct = spec["hold_sessions"], spec["exit_pct"]
+        sma5 = spec.get("sell_rule") == "sma5"
+        ran = run_setup(P, picks.get(key) or [], hold, exit_pct, above_sma5=sma5)
+        rec = with_breakdowns(ran)
+        if rec is None:
+            continue
+        held = hold if not sma5 else max(1, int(round(float(ran["held"].mean()))))
+        rec.update(hold_sessions=hold, exit_pct=exit_pct,
+                   avg_after_costs_pct=round(rec["avg_pct"] - ROUND_TRIP_COST_PCT, 2),
+                   vs_average_stock=vs_average_stock(P, U, ran, held),
+                   market=by_market(P, ran),
+                   dates_tried=int(len(range(262, len(P.C) - 2, 5))),
+                   picks_per_list=round(len(ran) / max(1, ran["date"].nunique()), 1),
+                   kind="setup", what=SETUP_NOTES[key],
+                   replay="The site's own engine run on every fifth session; its top fifteen bought at "
+                          "the next open.")
+        if sma5:
+            rec["avg_sessions_held"] = round(float(ran["held"].mean()), 1)
+        if key == "flow":
+            rec["bias"] = ("Sectors are NSE's list as it stands today, so a company since delisted has "
+                           "no sector here and could not be picked.")
+        out[key] = rec
+        exits[key] = {"no exit line": describe(run_list(P, picks.get(key) or [], hold)),
+                      f"close {exit_pct:g}% under": describe(run_list(P, picks.get(key) or [], hold, exit_pct))}
+        print(f"\n{key}: hold {hold}, exit {exit_pct}%")
+        print(json.dumps({k: v for k, v in rec.items() if k not in ("by_year",)}, indent=1))
+    return out, exits
+
+
+def setups_only():
+    """Replay the setup lists and write them into the study file as it stands."""
+    P = Panel()
+    U = P.universe(10)
+    Y, _m = young_universe(P, U)
+    with open(OUT, encoding="utf-8") as f:
+        result = json.load(f)
+    recs, exits = setup_records(P, U, Y)
+    result["lists"].update(recs)
+    result["exits"].update(exits)
+    for path in (OUT, os.path.join(HERE, "..", "backend", "ideas_study.json")):
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=1)
+
+
 def study():
     P = Panel()
     U = P.universe(10)
@@ -939,6 +1106,11 @@ def study():
             result["exits"][r_key] = previous["exits"][r_key]
         print(f"\n{r_key}: no results table at {RESULTS_CSV}; the last record is kept.")
 
+    # The setup lists, replayed through the engine itself.
+    s_recs, s_exits = setup_records(P, U, Y)
+    result["lists"].update(s_recs)
+    result["exits"].update(s_exits)
+
     # Momentum held six months instead of three: the same picks, a wider line.
     dates = P.C.index[262:-(126 + 1):5]
     result["momentum_six_months"] = {
@@ -1013,7 +1185,7 @@ def study():
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    for flag in ("fetch", "build", "baseline", "study"):
+    for flag in ("fetch", "build", "baseline", "study", "setups"):
         ap.add_argument("--" + flag, action="store_true")
     a = ap.parse_args()
     if a.fetch:
@@ -1024,5 +1196,7 @@ if __name__ == "__main__":
         baseline()
     if a.study:
         study()
-    if not (a.fetch or a.build or a.baseline or a.study):
+    if a.setups and not a.study:
+        setups_only()
+    if not (a.fetch or a.build or a.baseline or a.study or a.setups):
         ap.print_help()

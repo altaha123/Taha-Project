@@ -42,7 +42,13 @@
     { key: 'month',    label: 'This month',    lead: 'This ',  short: 'month',   hold: 'about a month' },
     { key: 'results',  label: 'After results', lead: 'After ', short: 'results', hold: 'about a month' },
     { key: 'momentum', label: 'Momentum',      hold: 'about 3 months' },
-    { key: 'long',     label: 'Long term',     hold: 'about a year' }
+    { key: 'long',     label: 'Long term',     hold: 'about a year' },
+    /* The setup lists: picked on what the chart or the tape is doing now. */
+    { key: 'breakout',  label: 'Breakouts',    group: 'setup', hold: 'about a month' },
+    { key: 'technical', label: 'Technicals',   group: 'setup', hold: 'about a month' },
+    { key: 'quick',     label: 'Quick trades', lead: 'Quick ', short: 'trades', group: 'setup', hold: 'a few days' },
+    { key: 'flow',      label: 'Money flow',   lead: 'Money ', short: 'flow', group: 'setup', hold: 'about a month' },
+    { key: 'emerging',  label: 'Emerging',     group: 'setup', hold: 'about a month' }
   ];
   var KEYS = LISTS.map(function (l) { return l.key; });
   var STORE = 'altaha-pick-list';
@@ -89,7 +95,9 @@
   function planHTML(p) {
     if (!p || p.style !== 'hold' || !finite(p.stop)) return '';
     return '<div class="pk-plan">' +
-      '<span><b>Hold</b> ' + esc(p.hold_text || '') + '</span>' +
+      (p.sell_rule === 'sma5'
+        ? '<span><b>Sell</b> first close above its 5-day average</span>'
+        : '<span><b>Hold</b> ' + esc(p.hold_text || '') + '</span>') +
       '<span><b>Exit below</b> ' + inr(p.stop) +
         (finite(p.risk_pct) ? ' <small>−' + Number(p.risk_pct).toFixed(0) + '%</small>' : '') + '</span>' +
     '</div>';
@@ -172,9 +180,58 @@
           halves +
           '<li>Half the picks made less than ' + signed(t.median_pct) + '. One in twenty lost more than ' +
             Math.abs(Number(t.worst_5pct)).toFixed(0) + '%.</li>' +
+          (finite(t.avg_sessions_held) ? '<li>The average pick was held ' + Number(t.avg_sessions_held).toFixed(1) + ' sessions.</li>' : '') +
+          (t.vs_average_stock && finite(t.vs_average_stock.excess_pct)
+            ? '<li>Against the average liquid stock on the same days: ' + signed(t.vs_average_stock.excess_pct, 2) + ' a pick.</li>' : '') +
+          (finite(t.avg_after_costs_pct) ? '<li>After about 0.5% for buying and selling, the average pick made ' +
+            signed(t.avg_after_costs_pct, 2) + '.</li>' : '') +
+          (t.what ? '<li>' + esc(t.what) + '</li>' : '') +
+          (t.bias ? '<li>' + esc(t.bias) + '</li>' : '') +
           '<li>Before costs and tax. The past does not promise the future.</li>' +
         '</ul></details>' +
+      costHTML(t) +
     '</div>';
+  }
+
+  /* A list whose average gain did not cover the cost of trading it says so
+     in the open, not inside a fold. */
+  function costHTML(t) {
+    if (!t || !finite(t.avg_after_costs_pct) || t.avg_after_costs_pct >= 0) return '';
+    return '<p class="pk-cost">After about 0.5% for buying and selling, the average pick in the test lost ' +
+      Math.abs(Number(t.avg_after_costs_pct)).toFixed(2) + '%. More picks rose than fell, but the gains were small.</p>';
+  }
+
+  /* Money flow: every sector, ranked. The top ones are where the list picks. */
+  function sectorsHTML(d) {
+    var rows = (d && d.sector_flow) || [];
+    if (!rows.length) return '';
+    var top = d.flow_sectors || 4;
+    return '<details class="pk-sectors" open><summary>Where money is moving: ' + rows.length + ' sectors ranked</summary>' +
+      '<div class="pk-sectors-scroll"><table><thead><tr><th>Sector</th><th title="Share of market turnover this week against its share over sixty sessions">Turnover</th>' +
+      '<th title="Stocks above their 50-day average">Above 50-day</th><th title="Median stock, last 21 sessions">Month</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        return '<tr' + (r.rank <= top ? ' class="on"' : '') + '><td><b>' + r.rank + '</b> ' + esc(r.sector) +
+          ' <small>' + r.stocks + '</small></td><td>' + (finite(r.shift) ? Number(r.shift).toFixed(2) + '×' : '—') +
+          '</td><td>' + (finite(r.breadth_pct) ? Math.round(r.breadth_pct) + '%' : '—') + '</td><td>' + signed(r.month_pct) + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<p>Turnover is the sector\u2019s share of all trading this week against its usual share: above 1× means money is moving in. ' +
+      'The list takes the strongest stocks from the top ' + top + '.</p></details>';
+  }
+
+  /* Breakouts: tight bases that have not broken yet. Watched, not picked. */
+  function watchHTML(d) {
+    var rows = (d && d.watch) || [];
+    if (!rows.length) return '';
+    return '<details class="pk-sectors pk-watch"><summary>Setting up: ' + rows.length + ' tight bases not yet broken</summary>' +
+      '<div class="pk-sectors-scroll"><table><thead><tr><th>Stock</th><th>Top of base</th><th>Away</th><th>Range</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        return '<tr><td><a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '">' + esc(r.symbol) + '</a>' +
+          (r.sector ? ' <small>' + esc(r.sector) + '</small>' : '') + '</td><td>' + inr(r.top) + '</td><td>' +
+          (finite(r.to_top_pct) ? Number(r.to_top_pct).toFixed(1) + '%' : '—') + '</td><td>' +
+          (finite(r.width_pct) ? Number(r.width_pct).toFixed(0) + '%' : '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<p>Forty sessions inside a range 18% wide or tighter, within 4% of its top. None has broken out: ' +
+      'a stock joins the list above only after it closes over the top on twice its usual volume.</p></details>';
   }
 
   /* A scan ranked before the recipes last changed. Its record would be another
@@ -196,8 +253,11 @@
   }
 
   function tabsHTML(active, cls) {
-    return '<div class="pk-tabs ' + (cls || '') + '" role="tablist" aria-label="Holding period">' +
-      LISTS.map(function (l) {
+    return tabRow(active, cls, false, 'Holding period') + tabRow(active, (cls || '') + ' setups', true, 'Setup');
+  }
+  function tabRow(active, cls, setups, label) {
+    return '<div class="pk-tabs ' + (cls || '') + '" role="tablist" aria-label="' + label + '">' +
+      LISTS.filter(function (l) { return (l.group === 'setup') === setups; }).map(function (l) {
         var on = l.key === active;
         /* The first word drops out on a phone, where five full labels do not fit. */
         var text = l.short ? '<i>' + esc(l.lead) + '</i>' + esc(l.short) : esc(l.label);
@@ -313,7 +373,8 @@
     LISTS: LISTS, valid: valid, chosen: chosen, remember: remember,
     isTested: isTested, whyHTML: whyHTML, planHTML: planHTML, recordHTML: recordHTML,
     recipeHTML: recipeHTML, liveHTML: liveHTML, updatedText: updatedText, mount: mount, signed: signed, inr: inr,
-    resultsHTML: resultsHTML, orderHTML: orderHTML, chartHTML: chartHTML, marketHTML: marketHTML
+    resultsHTML: resultsHTML, orderHTML: orderHTML, chartHTML: chartHTML, marketHTML: marketHTML,
+    sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.AltahaPicks = api;
