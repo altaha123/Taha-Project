@@ -694,3 +694,41 @@ html[data-motion="off"] .sh-memenu.open, html[data-motion="off"] .sh-livetag .sh
 .sh-doorbar{ position:relative; z-index:1 }
 .sh-memenu .sh-right .sh-pro{ text-transform:none !important; letter-spacing:normal !important }
 .sh-memenu .sh-right .sh-pro small{ text-transform:none; letter-spacing:normal; color:var(--mute); font-weight:400 }
+
+/* ── The footer ─────────────────────────────────────────────────────────────
+   Brand and a way to write in on the left; every tool, by door, on the
+   right. Quiet on purpose: it is a map, read once, not a second header. */
+.sh-footer{
+  margin-top:72px; border-top:1px solid var(--rule-2); background:var(--paper-2);
+  color:var(--ink-2); font-size:14.5px; line-height:1.5;
+}
+.sh-fin{
+  max-width:1240px; margin:0 auto; padding:48px 24px 28px;
+  display:grid; grid-template-columns:minmax(220px,1.1fr) 3fr; gap:48px;
+}
+.sh-fbrand p{ margin:14px 0 16px; max-width:34ch }
+.sh-fbrand .sh-brand .mk{ height:30px }
+.sh-fbrand .sh-brand .nm{ font-size:18px }
+.sh-fmail{ display:inline-flex; align-items:center; gap:9px; color:var(--ink); text-decoration:none; font-weight:500 }
+.sh-fmail svg{ width:18px; height:18px; flex:0 0 auto }
+.sh-fmail:hover span{ text-decoration:underline }
+.sh-fcols{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:28px }
+.sh-fcol h4{
+  margin:0 0 14px; font-size:12px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--ink);
+}
+.sh-fcol ul{ list-style:none; margin:0; padding:0; display:grid; gap:10px }
+.sh-fcol a{ color:var(--ink-2); text-decoration:none }
+.sh-fcol a:hover{ color:var(--ink); text-decoration:underline }
+.sh-fcol a:focus-visible, .sh-fmail:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:3px }
+.sh-fbase{
+  max-width:1240px; margin:0 auto; padding:18px 24px 26px; border-top:1px solid var(--rule-2);
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:13px;
+}
+@media (max-width:900px){
+  .sh-fin{ grid-template-columns:1fr; gap:32px; padding:36px 20px 22px }
+  .sh-fcols{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:28px 20px }
+  .sh-fbase{ padding:16px 20px 22px }
+  .sh-fcol ul{ gap:12px }
+}
+@media print{ .sh-footer{ display:none } }
