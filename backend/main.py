@@ -843,7 +843,8 @@ def _rss_mb():
 # Headroom is the honest question — "is there room for a scan", not "is the
 # process small". SCAN_RSS_CEILING_MB is still read so an existing Render
 # setting keeps working; it is converted to the equivalent headroom.
-MEM_LIMIT_MB = int(os.environ.get("MEM_LIMIT_MB", "512") or 512)
+import memlimit
+MEM_LIMIT_MB = memlimit.LIMIT_MB          # the container's own limit, not a remembered plan
 _legacy_ceiling = os.environ.get("SCAN_RSS_CEILING_MB", "").strip()
 SCAN_HEADROOM_MB = int(os.environ.get("SCAN_HEADROOM_MB", "0") or 0) or (
     max(MEM_LIMIT_MB - int(_legacy_ceiling), 60) if _legacy_ceiling.isdigit() else 90)
@@ -898,7 +899,7 @@ def health_memory(detail: int = 0):
     (numpy, pandas, yfinance) before a line of app code runs. Reading it from
     /proc keeps this dependency-free — psutil is not worth 8 MB here.
     """
-    out = {"limit_mb": 512, "note": "Render Starter is 512 MB."}
+    out = {"limit_mb": MEM_LIMIT_MB, "limit_source": memlimit.SOURCE}
     try:
         with open("/proc/self/status") as fh:
             for line in fh:

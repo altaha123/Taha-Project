@@ -266,7 +266,8 @@ STORE_TOP = 60             # ranked rows kept in the output file
 # Two settings, both overridable on Render:
 #   MEM_LIMIT_MB             what the instance is allowed to hold (Render plan)
 #   SCAN_ABORT_HEADROOM_MB   stop when less than this much is left
-MEM_LIMIT_MB = int(os.environ.get("MEM_LIMIT_MB", "512") or 512)
+import memlimit
+MEM_LIMIT_MB = memlimit.LIMIT_MB
 SCAN_ABORT_HEADROOM_MB = int(os.environ.get("SCAN_ABORT_HEADROOM_MB", "45") or 45)
 
 
