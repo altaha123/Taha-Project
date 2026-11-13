@@ -236,6 +236,69 @@
     return phone ? 'Search a stock or tool' : 'Search stocks, tools, or what you want to do';
   }
 
+  /* ── The footer ──────────────────────────────────────────────────────────
+     Every tool on the site, by door, at the bottom of every page: the place
+     a reader looks when the top of the page did not have what they wanted.
+     It is built from DOORS, so a tool added to a door appears here without
+     anyone remembering to add it twice. The two full-screen desks (wealth,
+     advisers) lay out their own viewport and carry no footer. */
+  var FOOT_EMAIL = 'hello@altahascreener.in';
+  var FOOT_COMPANY = [
+    { section: 'me', tab: 'score', label: 'How the score works' },
+    { section: 'me', tab: 'vocab', label: 'Glossary' },
+    { href: 'brief.html', label: 'Daily policy brief' },
+    { href: 'pro.html?from=footer', label: 'Altaha Pro' },
+    { href: 'signin.html', label: 'Sign in' }
+  ];
+
+  function footLink(sectionId, it) {
+    if (it.href) return '<li><a href="' + esc(it.href) + '">' + esc(it.label) + '</a></li>';
+    var hash = sectionId + (it.tab && it.tab !== sectionId ? '/' + it.tab : '');
+    return '<li><a href="index.html#' + esc(hash) + '" data-foot-section="' + esc(sectionId) +
+      '" data-foot-tab="' + esc(it.tab) + '">' + esc(it.label) + '</a></li>';
+  }
+
+  function buildFooter() {
+    if (document.querySelector('.sh-footer')) return;
+    if (/\/(wealth|advisors)\.html$/.test(location.pathname)) return;
+    var foot = el('footer', 'sh-footer');
+    foot.setAttribute('aria-label', 'Site');
+    var cols = DOORS.map(function (d) {
+      var items = d.items.filter(function (it) { return !it.quiet && it.label !== 'Overview'; });
+      return '<nav class="sh-fcol" aria-label="' + esc(d.label) + '"><h4>' + esc(d.label) + '</h4><ul>' +
+        '<li><a href="index.html#' + esc(d.id) + '" data-foot-section="' + esc(d.id) + '" data-foot-tab="">Overview</a></li>' +
+        items.map(function (it) { return footLink(d.id, it); }).join('') + '</ul></nav>';
+    }).join('') +
+      '<nav class="sh-fcol" aria-label="Altaha"><h4>Altaha</h4><ul>' +
+      FOOT_COMPANY.map(function (it) { return footLink(it.section, it); }).join('') + '</ul></nav>';
+    foot.innerHTML =
+      '<div class="sh-fin">' +
+        '<div class="sh-fbrand">' +
+          '<a class="sh-brand" href="index.html" aria-label="Altaha Screener home">' +
+            '<span class="mk" aria-hidden="true"></span><span class="nm">Altaha <i>Screener</i></span></a>' +
+          '<p>Stock picks, a screener and a portfolio review for Indian markets, with the working shown.</p>' +
+          '<a class="sh-fmail" href="mailto:' + FOOT_EMAIL + '">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>' + '<span>' + FOOT_EMAIL + '</span></a>' +
+        '</div>' +
+        '<div class="sh-fcols">' + cols + '</div>' +
+      '</div>' +
+      '<div class="sh-fbase"><span>\u00a9 ' + new Date().getFullYear() + ' Altaha Screener</span>' +
+        '<span>Prices and filings from NSE and BSE. For information only, not investment advice.</span></div>';
+    foot.addEventListener('click', function (e) {
+      var a = e.target.closest('a[data-foot-section]');
+      if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+      // On the homepage the tab is opened in place; anywhere else the link
+      // is an ordinary one to index.html and the hash restores it there.
+      if (!window.AltahaNav || typeof window.AltahaNav.go !== 'function') return;
+      e.preventDefault();
+      navigate(a.getAttribute('data-foot-section'), a.getAttribute('data-foot-tab') || null);
+      // After the view has swapped: the new page starts at its top, not at
+      // the footer the reader happened to click from.
+      var top = function () { window.scrollTo(0, 0); };
+      top(); setTimeout(top, 0); setTimeout(top, 120);
+    });
+    document.body.appendChild(foot);
+  }
+
   function build() {
     if (document.querySelector('.sh-chrome')) return;
 
@@ -361,6 +424,8 @@
     drawer.setAttribute('aria-label', 'Me and every tool');
     drawer.id = 'sh-drawer';
     document.body.appendChild(drawer);
+
+    buildFooter();
 
     document.body.classList.add('sh-on');
     CHROME = chrome;

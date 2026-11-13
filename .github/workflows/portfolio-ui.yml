@@ -98,6 +98,12 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/nav-products-browser.cjs
+      - name: The site footer
+        # Every tool by door at the bottom of the public pages; links open in place.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/footer-browser.cjs
       - name: Verify the stock picks lead Ideas, keep their exit line and fit a phone
         if: always()
         # Ideas answered "what should I look at?" with a picture of a planet.
