@@ -2161,8 +2161,9 @@
   function pullIfStale() {
     if (document.visibilityState === 'visible' && Date.now() - lastPull > 20000) serverLoad();
   }
-  document.addEventListener('visibilitychange', pullIfStale);
-  window.addEventListener('focus', pullIfStale);
+  // Guarded: the import tests load this file against a bare document.
+  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', pullIfStale);
+  if (typeof window.addEventListener === 'function') window.addEventListener('focus', pullIfStale);
 
   /* The last thing this panel said, kept outside the markup it is rendered
      into. serverSave() repaints the panel on success, which threw away the

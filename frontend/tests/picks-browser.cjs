@@ -141,7 +141,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   await r0.locator('.evbtn').click();
   const ledger = await r0.locator('.evwrap').innerText();
   for (const word of ['Consolidation', 'Breakout', 'Technicals', 'Industry', 'Fundamentals']) {
-    assert.match(ledger, new RegExp(word), `the ledger does not show ${word}`);
+    assert.match(ledger, new RegExp(word, 'i'), `the ledger does not show ${word}`);
   }
   assert.doesNotMatch(ledger, /null|undefined|NaN/, 'the ledger printed a hole');
   await page.screenshot({ path: path.join(output, 'list-desktop.png'), fullPage: false });

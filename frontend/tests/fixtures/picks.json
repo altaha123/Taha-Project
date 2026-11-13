@@ -3877,11 +3877,101 @@
 "lists_ahead_of_index_pct":58.7
 }
 },
+"by_year":{
+"2017":{
+"avg_pct":3.92,
+"index_avg_pct":9.52,
+"up_pct":51.3,
+"picks":694
+},
+"2018":{
+"avg_pct":-2.29,
+"index_avg_pct":1.67,
+"up_pct":48.3,
+"picks":731
+},
+"2019":{
+"avg_pct":0.15,
+"index_avg_pct":-1.72,
+"up_pct":45.6,
+"picks":733
+},
+"2020":{
+"avg_pct":86.64,
+"index_avg_pct":51.36,
+"up_pct":79.6,
+"picks":740
+},
+"2021":{
+"avg_pct":21.5,
+"index_avg_pct":9.16,
+"up_pct":58.3,
+"picks":731
+},
+"2022":{
+"avg_pct":16.37,
+"index_avg_pct":10.92,
+"up_pct":59.4,
+"picks":744
+},
+"2023":{
+"avg_pct":68.24,
+"index_avg_pct":34.84,
+"up_pct":90.7,
+"picks":724
+},
+"2024":{
+"avg_pct":0.57,
+"index_avg_pct":3.56,
+"up_pct":42.0,
+"picks":735
+},
+"2025":{
+"avg_pct":16.05,
+"index_avg_pct":2.04,
+"up_pct":45.8,
+"picks":602
+}
+},
 "hold_sessions":252,
-"exit_pct":30.0
+"exit_pct":30.0,
+"avg_after_costs_pct":23.24,
+"vs_average_stock":{
+"excess_pct":7.6,
+"t":2.16,
+"lists_ahead_pct":65.1,
+"by_half":{
+"2017-21":{
+"excess_pct":9.75,
+"t":1.73,
+"lists_ahead_pct":71.3
+},
+"2022-26":{
+"excess_pct":4.83,
+"t":2.01,
+"lists_ahead_pct":57.1
+}
+}
+},
+"market":{
+"above_200d":{
+"list_dates":338,
+"picks":5021,
+"up_pct":55.4,
+"avg_pct":22.32,
+"index_avg_pct":11.44
+},
+"below_200d":{
+"list_dates":95,
+"picks":1413,
+"up_pct":67.8,
+"avg_pct":28.71,
+"index_avg_pct":22.16
+}
+}
 },
 "study":{
-"generated":"2026-11-11",
+"generated":"2026-11-13",
 "source":"NSE daily bhavcopy, every session, delisted companies included",
 "from":"2017-01-24",
 "to":"2026-11-09",
@@ -3891,25 +3981,31 @@
 "universe_median":386,
 "rules":"Bought at the next session's open, held for the period, left on a close under the exit line. Price returns before costs and tax. Index: Nifty 500."
 },
-"scanned_at":"09 Nov 2026, 11:30",
+"scanned_at":"09 Nov 2026, 18:10",
 "partial":false,
-"scored":200,
-"universe_source":"NSE official list (2393 EQ-series symbols)",
+"scored":120,
+"universe_source":"NSE equity list",
 "universe":721,
 "regime":{
 "ok":true,
-"stance":"Tailwind",
-"pct_vs_50dma":3.1,
-"pct_vs_200dma":4.5,
-"change_5d_pct":1.2,
-"label":"Index above its 50-day average.",
-"benchmark":"NIFTYBEES",
-"source":"test"
+"stance":"Mixed",
+"pct_vs_50dma":4.75,
+"pct_vs_200dma":3.53,
+"label":"",
+"benchmark":"NIFTY 500"
 },
+"market_test":{
+"state":"above_200d",
+"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +22.3% (55 in 100 rose), against +28.7% on the other days. The list is not held back in either.",
+"lists":338
+},
+"chart_note":"Facts about the chart, not reasons for the pick. Tested over ten years, none of these improved a list, so none of them changes a rank.",
+"empty_text":null,
+"event":null,
 "sector_mix":[
 [
 "Unknown",
-7
+4
 ],
 [
 "Healthcare",
@@ -3920,7 +4016,19 @@
 3
 ],
 [
+"Services",
+1
+],
+[
 "Financial Services",
+1
+],
+[
+"Chemicals",
+1
+],
+[
+"Metals & Mining",
 1
 ]
 ],
@@ -3928,29 +4036,104 @@
 "selection_notes":[],
 "excluded_adverse":[],
 "count":15,
-"considered":46,
+"considered":94,
 "method":"Every liquid NSE stock is ranked on the measurements in the ledger. The list is the top of that ranking after the uptrend and volatility gates. Tested on NSE prices from 2017 to 2026.",
-"live":null,
-"disclaimer":"Educational analysis. Not investment advice.",
-"staleness":{
-"days":1,
-"hours":30.0,
-"warn":false,
-"text":"Scanned 1 day ago."
+"recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
 },
-"market_context":null,
+{
+"key":"long",
+"label":"Long term"
+}
+],
+"kind":"horizon",
+"sell_rule":null,
+"sector_flow":null,
+"flow_sectors":null,
+"watch":null,
+"lists":[
+{
+"key":"week",
+"label":"This week",
+"hold_text":"about a week",
+"group":"horizon"
+},
+{
+"key":"month",
+"label":"This month",
+"hold_text":"about a month",
+"group":"horizon"
+},
+{
+"key":"results",
+"label":"After results",
+"hold_text":"about a month",
+"group":"horizon"
+},
+{
+"key":"momentum",
+"label":"Momentum",
+"hold_text":"about 3 months",
+"group":"horizon"
+},
+{
+"key":"long",
+"label":"Long term",
+"hold_text":"about a year",
+"group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"breakout",
+"label":"Breakouts",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"technical",
+"label":"Technicals",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"quick",
+"label":"Quick trades",
+"hold_text":"a few days",
+"group":"setup"
+},
+{
+"key":"flow",
+"label":"Money flow",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"emerging",
+"label":"Emerging",
+"hold_text":"about a month",
+"group":"setup"
+}
+],
 "rows":[
 {
 "symbol":"GCSL",
 "name":"Gretex Corporate Services Limited",
-"sector":null,
 "price":784.6,
-"avg_turnover_cr":27.2,
+"sector":null,
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":1,
+"young":false,
 "conviction":98.3,
 "conviction_band":"High",
 "why":[
@@ -3992,30 +4175,104 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹549.22, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹549.22, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":{
+"filed_at":"2026-11-05 19:11:49",
+"session":"2026-11-06",
+"sessions_ago":1,
+"quarter":"Q2 FY27",
+"move_pct":0.4,
+"market_move_pct":-0.9,
+"reaction_pct":1.3,
+"pat_yoy_pct":-44.66,
+"revenue_yoy_pct":-4.98,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.6,
+"below_6m_high_pct":0.2,
+"breakout":null,
+"squeeze":0.36,
+"range_15_60":0.32,
+"dry_up":0.57,
+"up_down_volume":3.35,
+"rel_volume":0.5,
+"rsi":79.0,
+"macd_hist_pct":-0.07,
+"macd_rising":false,
+"above_20d_pct":5.0,
+"adx":37.0,
+"atr_pct":2.3,
+"rsi2":65.0,
+"sma5":782.25,
+"rel_volume_5":0.6,
+"above_50d":true,
+"above_200d":true,
+"scorecard":7,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Within 5% of its 52-week high"
+],
+"box":null,
+"base":{
+"top":797.3,
+"low":560.0,
+"width_pct":42.4,
+"to_top_pct":1.6
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 79 · MACD below its signal line · ADX 37."
+},
+{
+"k":"Volume",
+"v":"0.5 times its usual volume in the last session; 3.4 times as much volume on rising days as on falling days over 50 sessions."
+},
+{
+"k":"Range",
+"v":"Tightening: the last ten sessions moved 36% as much as the last sixty."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":60.0,
-"technical":82,
-"fundamental":78,
-"f_score":8,
-"setup_fit":83,
-"call":null,
-"news":[]
+"avg_turnover_cr":27.2,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"SHREEJISPG",
 "name":"Shreeji Shipping Global Limited",
-"sector":null,
 "price":881.3,
-"avg_turnover_cr":76.9,
+"sector":"Services",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":2,
+"young":false,
 "conviction":98.1,
 "conviction_band":"High",
 "why":[
@@ -4057,30 +4314,98 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹616.91, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹616.91, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":2.0,
+"below_6m_high_pct":0.4,
+"breakout":null,
+"squeeze":0.9,
+"range_15_60":0.53,
+"dry_up":0.92,
+"up_down_volume":2.34,
+"rel_volume":0.3,
+"rsi":67.0,
+"macd_hist_pct":0.19,
+"macd_rising":false,
+"above_20d_pct":5.6,
+"adx":29.0,
+"atr_pct":3.0,
+"rsi2":68.0,
+"sma5":870.37,
+"rel_volume_5":1.0,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":1,
+"top":883.5,
+"low":655.75,
+"width_pct":34.7,
+"rel_volume":0.6,
+"close":884.55,
+"holding":false
+},
+"base":{
+"top":888.0,
+"low":655.75,
+"width_pct":35.4,
+"to_top_pct":0.8
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 67 · MACD above its signal line · ADX 29."
+},
+{
+"k":"Volume",
+"v":"0.3 times its usual volume in the last session; 2.3 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":64.0,
-"technical":75,
-"fundamental":58,
-"f_score":7,
-"setup_fit":71,
-"call":null,
-"news":[]
+"avg_turnover_cr":76.9,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"LAURUSLABS",
 "name":"Laurus Labs Limited",
-"sector":"Healthcare",
 "price":2454.0,
-"avg_turnover_cr":313.8,
+"sector":"Healthcare",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":3,
+"young":false,
 "conviction":98.1,
 "conviction_band":"High",
 "why":[
@@ -4123,30 +4448,104 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹1,717.80, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹1,717.80, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":{
+"filed_at":"2026-10-29 21:59:08",
+"session":"2026-10-30",
+"sessions_ago":6,
+"quarter":"Q2 FY27",
+"move_pct":7.2,
+"market_move_pct":-2.1,
+"reaction_pct":9.3,
+"pat_yoy_pct":124.27,
+"revenue_yoy_pct":33.44,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.0,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":1.39,
+"range_15_60":0.77,
+"dry_up":1.25,
+"up_down_volume":0.94,
+"rel_volume":2.5,
+"rsi":75.0,
+"macd_hist_pct":0.96,
+"macd_rising":true,
+"above_20d_pct":10.8,
+"adx":28.0,
+"atr_pct":3.1,
+"rsi2":95.0,
+"sma5":2357.36,
+"rel_volume_5":1.8,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":0,
+"top":2441.9,
+"low":1863.5,
+"width_pct":31.0,
+"rel_volume":2.5,
+"close":2454.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"1% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 75 · MACD above its signal line and rising · ADX 28."
+},
+{
+"k":"Volume",
+"v":"2.5 times its usual volume in the last session; more volume on falling days than rising days over 50 sessions (0.9 to 1)."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":64.0,
-"technical":77,
-"fundamental":69,
-"f_score":8,
-"setup_fit":77,
-"call":null,
-"news":[]
+"avg_turnover_cr":313.8,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"SBC",
 "name":"SBC Exports Limited",
-"sector":null,
 "price":68.73,
-"avg_turnover_cr":69.3,
+"sector":null,
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":4,
+"young":false,
 "conviction":97.2,
 "conviction_band":"High",
 "why":[
@@ -4189,30 +4588,101 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹48.11, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹48.11, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.9,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":0.74,
+"range_15_60":0.27,
+"dry_up":0.93,
+"up_down_volume":1.74,
+"rel_volume":1.1,
+"rsi":73.0,
+"macd_hist_pct":-0.26,
+"macd_rising":true,
+"above_20d_pct":6.5,
+"adx":52.0,
+"atr_pct":3.2,
+"rsi2":90.0,
+"sma5":67.62,
+"rel_volume_5":1.1,
+"above_50d":true,
+"above_200d":true,
+"scorecard":7,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":1,
+"top":68.34,
+"low":45.75,
+"width_pct":49.4,
+"rel_volume":1.0,
+"close":68.7,
+"holding":true
+},
+"base":{
+"top":69.37,
+"low":45.75,
+"width_pct":51.6,
+"to_top_pct":0.9
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 73 · MACD below its signal line and rising · ADX 52."
+},
+{
+"k":"Volume",
+"v":"1.1 times its usual volume in the last session; 1.7 times as much volume on rising days as on falling days over 50 sessions."
+},
+{
+"k":"Range",
+"v":"Tightening: the last ten sessions moved 74% as much as the last sixty."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":74.0,
-"technical":84,
-"fundamental":60,
-"f_score":7,
-"setup_fit":84,
-"call":null,
-"news":[]
+"avg_turnover_cr":69.3,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"SANSERA",
 "name":"Sansera Engineering Limited",
-"sector":"Automobile and Auto Components",
 "price":4653.4,
-"avg_turnover_cr":83.7,
+"sector":"Automobile and Auto Components",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":5,
+"young":false,
 "conviction":96.7,
 "conviction_band":"High",
 "why":[
@@ -4254,30 +4724,101 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹3,257.38, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹3,257.38, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":{
+"filed_at":"2026-11-05 19:08:26",
+"session":"2026-11-06",
+"sessions_ago":1,
+"quarter":"Q2 FY27",
+"move_pct":-2.5,
+"market_move_pct":-0.9,
+"reaction_pct":-1.6,
+"pat_yoy_pct":52.19,
+"revenue_yoy_pct":32.26,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.9,
+"below_6m_high_pct":0.2,
+"breakout":null,
+"squeeze":1.16,
+"range_15_60":0.74,
+"dry_up":0.93,
+"up_down_volume":1.49,
+"rel_volume":2.7,
+"rsi":65.0,
+"macd_hist_pct":0.87,
+"macd_rising":true,
+"above_20d_pct":8.9,
+"adx":15.0,
+"atr_pct":4.3,
+"rsi2":86.0,
+"sma5":4412.78,
+"rel_volume_5":1.7,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":null,
+"base":{
+"top":4743.5,
+"low":3800.0,
+"width_pct":24.8,
+"to_top_pct":1.9
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 65 · MACD above its signal line and rising · ADX 15."
+},
+{
+"k":"Volume",
+"v":"2.7 times its usual volume in the last session; 1.5 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":58.0,
-"technical":93,
-"fundamental":64,
-"f_score":8,
-"setup_fit":82,
-"call":null,
-"news":[]
+"avg_turnover_cr":83.7,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"SSWL",
 "name":"Steel Strips Wheels Limited",
-"sector":null,
 "price":548.95,
-"avg_turnover_cr":35.9,
+"sector":null,
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":6,
+"young":false,
 "conviction":94.9,
 "conviction_band":"High",
 "why":[
@@ -4319,30 +4860,94 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹384.26, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹384.26, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.7,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":0.74,
+"range_15_60":0.67,
+"dry_up":0.57,
+"up_down_volume":3.41,
+"rel_volume":0.3,
+"rsi":71.0,
+"macd_hist_pct":0.75,
+"macd_rising":false,
+"above_20d_pct":13.1,
+"adx":32.0,
+"atr_pct":5.4,
+"rsi2":89.0,
+"sma5":534.0,
+"rel_volume_5":0.6,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Within 5% of its 52-week high"
+],
+"box":null,
+"base":{
+"top":558.7,
+"low":326.0,
+"width_pct":71.4,
+"to_top_pct":1.8
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 71 · MACD above its signal line · ADX 32."
+},
+{
+"k":"Volume",
+"v":"0.3 times its usual volume in the last session; 3.4 times as much volume on rising days as on falling days over 50 sessions."
+},
+{
+"k":"Range",
+"v":"Tightening: the last ten sessions moved 74% as much as the last sixty."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":78.0,
-"technical":92,
-"fundamental":67,
-"f_score":7,
-"setup_fit":71,
-"call":null,
-"news":[]
+"avg_turnover_cr":35.9,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"SONACOMS",
-"name":"Sona BLW Precision Forgings Limited",
-"sector":"Automobile and Auto Components",
+"name":"Sona Blw Precision Forgings Limited",
 "price":924.0,
-"avg_turnover_cr":159.7,
+"sector":"Automobile and Auto Components",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":7,
+"young":false,
 "conviction":94.2,
 "conviction_band":"High",
 "why":[
@@ -4385,30 +4990,105 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹646.80, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹646.80, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":{
+"filed_at":"2026-10-26 18:35:18",
+"session":"2026-10-27",
+"sessions_ago":9,
+"quarter":"Q2 FY27",
+"move_pct":8.9,
+"market_move_pct":1.6,
+"reaction_pct":7.3,
+"pat_yoy_pct":30.81,
+"revenue_yoy_pct":35.23,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.0,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":1.4,
+"range_15_60":1.0,
+"dry_up":1.77,
+"up_down_volume":1.53,
+"rel_volume":0.7,
+"rsi":68.0,
+"macd_hist_pct":1.03,
+"macd_rising":false,
+"above_20d_pct":7.6,
+"adx":28.0,
+"atr_pct":3.1,
+"rsi2":77.0,
+"sma5":906.59,
+"rel_volume_5":1.3,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":2,
+"top":912.6,
+"low":741.3,
+"width_pct":23.1,
+"rel_volume":2.8,
+"close":915.25,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"At its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 68 · MACD above its signal line · ADX 28."
+},
+{
+"k":"Volume",
+"v":"0.7 times its usual volume in the last session; 1.5 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":67.0,
-"technical":76,
-"fundamental":48,
-"f_score":6,
-"setup_fit":79,
-"call":null,
-"news":[]
+"avg_turnover_cr":159.7,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"GLAND",
 "name":"Gland Pharma Limited",
-"sector":"Healthcare",
 "price":3302.4,
-"avg_turnover_cr":110.5,
+"sector":"Healthcare",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":8,
+"young":false,
 "conviction":93.7,
 "conviction_band":"High",
 "why":[
@@ -4451,30 +5131,94 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹2,311.68, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹2,311.68, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":2.1,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":1.02,
+"range_15_60":1.0,
+"dry_up":1.12,
+"up_down_volume":1.64,
+"rel_volume":6.7,
+"rsi":70.0,
+"macd_hist_pct":0.74,
+"macd_rising":true,
+"above_20d_pct":7.5,
+"adx":27.0,
+"atr_pct":3.2,
+"rsi2":97.0,
+"sma5":3186.96,
+"rel_volume_5":2.4,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":0,
+"top":3208.6,
+"low":2769.8,
+"width_pct":15.8,
+"rel_volume":6.7,
+"close":3302.4,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 70 · MACD above its signal line and rising · ADX 27."
+},
+{
+"k":"Volume",
+"v":"6.7 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":72.0,
-"technical":79,
-"fundamental":77,
-"f_score":8,
-"setup_fit":70,
-"call":null,
-"news":[]
+"avg_turnover_cr":110.5,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"ATHERENERG",
 "name":"Ather Energy Limited",
-"sector":"Automobile and Auto Components",
 "price":1859.8,
-"avg_turnover_cr":458.8,
+"sector":"Automobile and Auto Components",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":9,
+"young":false,
 "conviction":93.5,
 "conviction_band":"High",
 "why":[
@@ -4515,30 +5259,93 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹1,301.86, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹1,301.86, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.6,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":0.86,
+"range_15_60":1.0,
+"dry_up":0.97,
+"up_down_volume":1.46,
+"rel_volume":0.5,
+"rsi":71.0,
+"macd_hist_pct":1.6,
+"macd_rising":false,
+"above_20d_pct":11.6,
+"adx":32.0,
+"atr_pct":4.1,
+"rsi2":82.0,
+"sma5":1819.02,
+"rel_volume_5":0.9,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":4,
+"top":1790.0,
+"low":1345.7,
+"width_pct":33.0,
+"rel_volume":0.7,
+"close":1795.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"1% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 71 · MACD above its signal line · ADX 32."
+},
+{
+"k":"Volume",
+"v":"0.5 times its usual volume in the last session; 1.5 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":57.0,
-"technical":84,
-"fundamental":60,
-"f_score":8,
-"setup_fit":70,
-"call":null,
-"news":[]
+"avg_turnover_cr":458.8,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"MCX",
-"name":"Multi Commodity Exchange of India Limited",
-"sector":"Financial Services",
+"name":"MCX",
 "price":3545.0,
-"avg_turnover_cr":625.1,
+"sector":"Financial Services",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":10,
+"young":false,
 "conviction":93.4,
 "conviction_band":"High",
 "why":[
@@ -4580,30 +5387,101 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹2,481.50, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹2,481.50, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.0,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":4,
+"rel_volume":2.7,
+"level":3441.7
+},
+"squeeze":1.34,
+"range_15_60":0.87,
+"dry_up":1.41,
+"up_down_volume":1.19,
+"rel_volume":1.3,
+"rsi":63.0,
+"macd_hist_pct":1.12,
+"macd_rising":true,
+"above_20d_pct":7.3,
+"adx":23.0,
+"atr_pct":3.7,
+"rsi2":85.0,
+"sma5":3448.82,
+"rel_volume_5":2.5,
+"above_50d":true,
+"above_200d":true,
+"scorecard":7,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":4,
+"top":3481.4,
+"low":2985.0,
+"width_pct":16.6,
+"rel_volume":2.7,
+"close":3490.1,
+"holding":true
+},
+"base":{
+"top":3550.0,
+"low":2985.0,
+"width_pct":18.9,
+"to_top_pct":0.1
+}
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 4 sessions ago, on 2.7 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 63 · MACD above its signal line and rising · ADX 23."
+},
+{
+"k":"Volume",
+"v":"1.3 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":70.0,
-"technical":94,
-"fundamental":69,
-"f_score":7,
-"setup_fit":89,
-"call":null,
-"news":[]
+"avg_turnover_cr":625.1,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"KRISHANA",
 "name":"Krishana Phoschem Limited",
-"sector":null,
 "price":245.21,
-"avg_turnover_cr":15.4,
+"sector":null,
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":11,
+"young":false,
 "conviction":93.3,
 "conviction_band":"High",
 "why":[
@@ -4645,30 +5523,99 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹171.65, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹171.65, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":3.5,
+"below_6m_high_pct":0.1,
+"breakout":null,
+"squeeze":0.77,
+"range_15_60":0.76,
+"dry_up":1.29,
+"up_down_volume":1.66,
+"rel_volume":1.1,
+"rsi":75.0,
+"macd_hist_pct":1.14,
+"macd_rising":false,
+"above_20d_pct":10.6,
+"adx":35.0,
+"atr_pct":3.8,
+"rsi2":80.0,
+"sma5":241.33,
+"rel_volume_5":1.9,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":3,
+"top":240.24,
+"low":171.21,
+"width_pct":40.3,
+"rel_volume":2.9,
+"close":240.29,
+"holding":true
+},
+"base":{
+"top":251.84,
+"low":171.21,
+"width_pct":47.1,
+"to_top_pct":2.7
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"4% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 75 · MACD above its signal line · ADX 35."
+},
+{
+"k":"Volume",
+"v":"1.1 times its usual volume in the last session; 1.7 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":58.0,
-"technical":79,
-"fundamental":72,
-"f_score":8,
-"setup_fit":77,
-"call":null,
-"news":[]
+"avg_turnover_cr":15.4,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"MBAPL",
 "name":"Madhya Bharat Agro Products Limited",
-"sector":null,
 "price":197.69,
-"avg_turnover_cr":13.4,
+"sector":"Chemicals",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":12,
+"young":false,
 "conviction":93.3,
 "conviction_band":"High",
 "why":[
@@ -4710,30 +5657,98 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹138.38, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹138.38, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":2.4,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":0.94,
+"range_15_60":0.93,
+"dry_up":1.35,
+"up_down_volume":1.61,
+"rel_volume":1.2,
+"rsi":77.0,
+"macd_hist_pct":1.57,
+"macd_rising":true,
+"above_20d_pct":11.1,
+"adx":25.0,
+"atr_pct":3.5,
+"rsi2":98.0,
+"sma5":191.51,
+"rel_volume_5":1.5,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":2,
+"top":189.77,
+"low":152.16,
+"width_pct":24.7,
+"rel_volume":2.8,
+"close":194.24,
+"holding":true
+},
+"base":{
+"top":198.79,
+"low":152.16,
+"width_pct":30.6,
+"to_top_pct":0.6
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 77 · MACD above its signal line and rising · ADX 25."
+},
+{
+"k":"Volume",
+"v":"1.2 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":76.0,
-"technical":86,
-"fundamental":51,
-"f_score":8,
-"setup_fit":75,
-"call":null,
-"news":[]
+"avg_turnover_cr":13.4,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"SGMART",
 "name":"SG Mart Limited",
-"sector":null,
 "price":902.45,
-"avg_turnover_cr":23.4,
+"sector":"Metals & Mining",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":13,
+"young":false,
 "conviction":92.9,
 "conviction_band":"High",
 "why":[
@@ -4774,30 +5789,102 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹631.72, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹631.72, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":{
+"filed_at":"2026-10-27 20:07:14",
+"session":"2026-10-28",
+"sessions_ago":8,
+"quarter":"Q2 FY27",
+"move_pct":0.4,
+"market_move_pct":0.1,
+"reaction_pct":0.3,
+"pat_yoy_pct":103.54,
+"revenue_yoy_pct":-8.36,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":2.8,
+"below_6m_high_pct":0.1,
+"breakout":null,
+"squeeze":1.2,
+"range_15_60":0.77,
+"dry_up":2.42,
+"up_down_volume":1.96,
+"rel_volume":1.3,
+"rsi":66.0,
+"macd_hist_pct":0.9,
+"macd_rising":false,
+"above_20d_pct":8.3,
+"adx":45.0,
+"atr_pct":4.6,
+"rsi2":69.0,
+"sma5":889.92,
+"rel_volume_5":1.5,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":null,
+"base":{
+"top":928.45,
+"low":678.1,
+"width_pct":36.9,
+"to_top_pct":2.9
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"3% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 66 · MACD above its signal line · ADX 45."
+},
+{
+"k":"Volume",
+"v":"1.3 times its usual volume in the last session; 2.0 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":68.0,
-"technical":77,
-"fundamental":53,
-"f_score":5,
-"setup_fit":82,
-"call":null,
-"news":[]
+"avg_turnover_cr":23.4,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"DIVISLAB",
 "name":"Divi's Laboratories Limited",
-"sector":"Healthcare",
 "price":11565.5,
-"avg_turnover_cr":465.1,
+"sector":"Healthcare",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":14,
+"young":false,
 "conviction":92.6,
 "conviction_band":"High",
 "why":[
@@ -4840,30 +5927,94 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹8,095.85, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹8,095.85, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":2.2,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":1.59,
+"range_15_60":0.89,
+"dry_up":1.5,
+"up_down_volume":1.65,
+"rel_volume":4.9,
+"rsi":85.0,
+"macd_hist_pct":1.53,
+"macd_rising":true,
+"above_20d_pct":17.6,
+"adx":31.0,
+"atr_pct":2.8,
+"rsi2":100.0,
+"sma5":10425.6,
+"rel_volume_5":2.2,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":4,
+"top":9990.0,
+"low":8797.0,
+"width_pct":13.6,
+"rel_volume":1.2,
+"close":10064.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 85 · MACD above its signal line and rising · ADX 31."
+},
+{
+"k":"Volume",
+"v":"4.9 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
 "adverse_filing":false,
-"composite":78.0,
-"technical":93,
-"fundamental":53,
-"f_score":7,
-"setup_fit":80,
-"call":null,
-"news":[]
+"avg_turnover_cr":465.1,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
 },
 {
 "symbol":"AUROPHARMA",
 "name":"Aurobindo Pharma Limited",
-"sector":"Healthcare",
 "price":1855.3,
-"avg_turnover_cr":134.1,
+"sector":"Healthcare",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":15,
+"young":false,
 "conviction":92.0,
 "conviction_band":"High",
 "why":[
@@ -4905,20 +6056,117 @@
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-09",
-"note":"Hold about a year. Leave if it closes below ₹1,298.71, 30% under the call price."
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹1,298.71, 30% under this price."
 },
-"tracked":false,
-"liquidity_tier":"liquid",
-"adverse_filing":false,
-"composite":65.0,
-"technical":88,
-"fundamental":68,
-"f_score":5,
-"setup_fit":78,
-"call":null,
-"news":[]
+"results":{
+"filed_at":"2026-11-04 22:45:15",
+"session":"2026-11-05",
+"sessions_ago":2,
+"quarter":"Q2 FY27",
+"move_pct":4.7,
+"market_move_pct":1.2,
+"reaction_pct":3.5,
+"pat_yoy_pct":32.51,
+"revenue_yoy_pct":23.87,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.0,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":2,
+"rel_volume":3.8,
+"level":1734.0
+},
+"squeeze":0.84,
+"range_15_60":1.0,
+"dry_up":1.47,
+"up_down_volume":1.91,
+"rel_volume":3.0,
+"rsi":74.0,
+"macd_hist_pct":1.26,
+"macd_rising":true,
+"above_20d_pct":9.1,
+"adx":24.0,
+"atr_pct":2.4,
+"rsi2":100.0,
+"sma5":1767.96,
+"rel_volume_5":2.6,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":2,
+"top":1740.0,
+"low":1547.7,
+"width_pct":12.4,
+"rel_volume":3.8,
+"close":1785.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 2 sessions ago, on 3.8 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 74 · MACD above its signal line and rising · ADX 24."
+},
+{
+"k":"Volume",
+"v":"3.0 times its usual volume in the last session; 1.9 times as much volume on rising days as on falling days over 50 sessions."
 }
-]
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":134.1,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+}
+],
+"staleness":{
+"days":0,
+"hours":2.0,
+"warn":false,
+"text":"Scanned today."
+},
+"market_context":{
+"regime":{
+"ok":true,
+"stance":"Mixed",
+"pct_vs_50dma":4.75,
+"pct_vs_200dma":3.53,
+"label":"",
+"benchmark":"NIFTY 500"
+},
+"leaders":[],
+"laggards":[],
+"headlines":[]
+}
 },
 "legacy":{
 "available":true,
@@ -5421,7 +6669,7 @@
 "bias":"The results table holds companies listed today. vs_reporters compares the list with every company it was chosen from, which shares that bias."
 },
 "study":{
-"generated":"2026-11-12",
+"generated":"2026-11-13",
 "source":"NSE daily bhavcopy, every session, delisted companies included",
 "from":"2017-01-24",
 "to":"2026-11-09",
@@ -5503,6 +6751,16 @@
 "considered":72,
 "method":"Every liquid NSE company whose quarterly results reached the exchange in the last ten sessions is ranked on how its stock moved, against the average stock, on the first session that could price them. Tested on NSE prices and filings from 2018 to 2026.",
 "recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
 "kind":"horizon",
 "sell_rule":null,
 "sector_flow":null,
@@ -5538,6 +6796,12 @@
 "label":"Long term",
 "hold_text":"about a year",
 "group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
 },
 {
 "key":"breakout",
@@ -7632,7 +8896,7 @@
 "bias":"The results table holds companies listed today. vs_reporters compares the list with every company it was chosen from, which shares that bias."
 },
 "study":{
-"generated":"2026-11-12",
+"generated":"2026-11-13",
 "source":"NSE daily bhavcopy, every session, delisted companies included",
 "from":"2017-01-24",
 "to":"2026-11-09",
@@ -7673,6 +8937,16 @@
 "considered":0,
 "method":"Every liquid NSE company whose quarterly results reached the exchange in the last ten sessions is ranked on how its stock moved, against the average stock, on the first session that could price them. Tested on NSE prices and filings from 2018 to 2026.",
 "recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
 "kind":"horizon",
 "sell_rule":null,
 "sector_flow":null,
@@ -7708,6 +8982,12 @@
 "label":"Long term",
 "hold_text":"about a year",
 "group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
 },
 {
 "key":"breakout",
@@ -7916,7 +9196,7 @@
 "replay":"The site's own engine run on every fifth session; its top fifteen bought at the next open."
 },
 "study":{
-"generated":"2026-11-12",
+"generated":"2026-11-13",
 "source":"NSE daily bhavcopy, every session, delisted companies included",
 "from":"2017-01-24",
 "to":"2026-11-09",
@@ -7994,33 +9274,21 @@
 "considered":21,
 "method":"A stock is here when it spent 40 sessions inside a range 18% wide or tighter, then closed above the top of that range on at least twice its usual volume in the last five sessions. It must be above its 200-day average and in the stronger half of liquid stocks. Stocks still holding above the base come first, the newest breakout before older ones. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
 "recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
 "kind":"setup",
 "sell_rule":null,
 "sector_flow":null,
 "flow_sectors":null,
 "watch":[
-{
-"symbol":"NYKAA",
-"sector":"Consumer Services",
-"top":363.4,
-"low":311.4,
-"width_pct":16.7,
-"to_top_pct":1.0,
-"rel_volume_5":2.4,
-"leader":85.6,
-"turnover_cr":136.4
-},
-{
-"symbol":"RADICO",
-"sector":"Fast Moving Consumer Goods",
-"top":4614.1,
-"low":4025.0,
-"width_pct":14.6,
-"to_top_pct":1.2,
-"rel_volume_5":2.0,
-"leader":81.4,
-"turnover_cr":111.7
-},
 {
 "symbol":"IIFLCAPS",
 "sector":"Financial Services",
@@ -8075,50 +9343,6 @@
 "rel_volume_5":2.6,
 "leader":79.2,
 "turnover_cr":73.9
-},
-{
-"symbol":"HAL",
-"sector":"Capital Goods",
-"top":5119.0,
-"low":4549.3,
-"width_pct":12.5,
-"to_top_pct":2.4,
-"rel_volume_5":1.6,
-"leader":67.8,
-"turnover_cr":340.2
-},
-{
-"symbol":"FEDERALBNK",
-"sector":"Financial Services",
-"top":355.5,
-"low":313.75,
-"width_pct":13.3,
-"to_top_pct":3.3,
-"rel_volume_5":1.1,
-"leader":72.4,
-"turnover_cr":175.8
-},
-{
-"symbol":"INDGN",
-"sector":"Healthcare",
-"top":638.0,
-"low":559.0,
-"width_pct":14.1,
-"to_top_pct":3.8,
-"rel_volume_5":1.4,
-"leader":79.4,
-"turnover_cr":21.0
-},
-{
-"symbol":"IPCALAB",
-"sector":"Healthcare",
-"top":2038.0,
-"low":1797.0,
-"width_pct":13.4,
-"to_top_pct":4.0,
-"rel_volume_5":1.8,
-"leader":87.4,
-"turnover_cr":50.5
 }
 ],
 "lists":[
@@ -8151,6 +9375,12 @@
 "label":"Long term",
 "hold_text":"about a year",
 "group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
 },
 {
 "key":"breakout",
@@ -10756,7 +11986,7 @@
 "replay":"The site's own engine run on every fifth session; its top fifteen bought at the next open."
 },
 "study":{
-"generated":"2026-11-12",
+"generated":"2026-11-13",
 "source":"NSE daily bhavcopy, every session, delisted companies included",
 "from":"2017-01-24",
 "to":"2026-11-09",
@@ -10830,6 +12060,16 @@
 "considered":61,
 "method":"Nine chart conditions are checked on every liquid stock: price above its 20-day average, the 20-day above the 50-day, the 50-day above the 200-day, RSI over 55, MACD above its signal line, ADX at 25 or more with buyers ahead, more volume on up days than down days, this week's volume above usual, and price within 5% of its 52-week high. A stock is here when it meets seven or more; the most conditions come first, then the closest to its high. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
 "recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
 "kind":"setup",
 "sell_rule":null,
 "sector_flow":null,
@@ -10865,6 +12105,12 @@
 "label":"Long term",
 "hold_text":"about a year",
 "group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
 },
 {
 "key":"breakout",
@@ -13795,7 +15041,7 @@
 "avg_sessions_held":3.3
 },
 "study":{
-"generated":"2026-11-12",
+"generated":"2026-11-13",
 "source":"NSE daily bhavcopy, every session, delisted companies included",
 "from":"2017-01-24",
 "to":"2026-11-09",
@@ -13853,6 +15099,16 @@
 "considered":6,
 "method":"A stock is here when it is in an uptrend, in the top 30% of liquid stocks on the leader score, and its two-day RSI is under 10: a strong stock sold hard for a day or two. The most oversold come first. The trade ends at the first close above the 5-day average. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
 "recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
 "kind":"setup",
 "sell_rule":"sma5",
 "sector_flow":null,
@@ -13888,6 +15144,12 @@
 "label":"Long term",
 "hold_text":"about a year",
 "group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
 },
 {
 "key":"breakout",
@@ -14899,7 +16161,7 @@
 "bias":"Sectors are NSE's list as it stands today, so a company since delisted has no sector here and could not be picked."
 },
 "study":{
-"generated":"2026-11-12",
+"generated":"2026-11-13",
 "source":"NSE daily bhavcopy, every session, delisted companies included",
 "from":"2017-01-24",
 "to":"2026-11-09",
@@ -14955,6 +16217,16 @@
 "considered":13,
 "method":"Every NSE sector with eight or more liquid stocks is ranked on three things: its share of market turnover this week against its share over sixty sessions, how many of its stocks are above their 50-day average, and its median stock's month. The list is the four strongest stocks in each of the top four sectors. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
 "recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
 "kind":"setup",
 "sell_rule":null,
 "sector_flow":[
@@ -15171,6 +16443,12 @@
 "label":"Long term",
 "hold_text":"about a year",
 "group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
 },
 {
 "key":"breakout",
@@ -17310,7 +18588,7 @@
 "replay":"The site's own engine run on every fifth session; its top fifteen bought at the next open."
 },
 "study":{
-"generated":"2026-11-12",
+"generated":"2026-11-13",
 "source":"NSE daily bhavcopy, every session, delisted companies included",
 "from":"2017-01-24",
 "to":"2026-11-09",
@@ -17380,6 +18658,16 @@
 "considered":9,
 "method":"Companies listed six to twelve months, trading ₹10 crore a day or more, above their own 50-day average, whose leader score stands in the top half of the established market. Their 6-month return stands in for the 12-month one. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
 "recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
 "kind":"setup",
 "sell_rule":null,
 "sector_flow":null,
@@ -17415,6 +18703,12 @@
 "label":"Long term",
 "hold_text":"about a year",
 "group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
 },
 {
 "key":"breakout",
@@ -18646,6 +19940,2731 @@
 "setup_fit":null
 }
 ],
+"staleness":{
+"days":0,
+"hours":2.0,
+"warn":false,
+"text":"Scanned today."
+},
+"market_context":{
+"regime":{
+"ok":true,
+"stance":"Mixed",
+"pct_vs_50dma":4.75,
+"pct_vs_200dma":3.53,
+"label":"",
+"benchmark":"NIFTY 500"
+},
+"leaders":[],
+"laggards":[],
+"headlines":[]
+}
+},
+"short":{
+"available":true,
+"degraded":[],
+"method_key":"tested_lists",
+"list":"short",
+"horizon":"short",
+"label":"Short term",
+"idea":"Stocks breaking out of a consolidation, in industries money is moving into.",
+"hold_text":"about a month",
+"exit_pct":8.0,
+"tested":{
+"list_dates":342,
+"picks":1009,
+"up_pct":53.8,
+"beat_index_pct":49.7,
+"avg_pct":1.38,
+"median_pct":0.81,
+"index_avg_pct":0.8,
+"worst_5pct":-10.1,
+"best_5pct":16.9,
+"exit_hit_pct":21.7,
+"lists_ahead_of_index_pct":49.7,
+"by_half":{
+"2017-21":{
+"list_dates":160,
+"picks":393,
+"up_pct":56.7,
+"beat_index_pct":49.4,
+"avg_pct":1.62,
+"median_pct":1.17,
+"index_avg_pct":1.11,
+"worst_5pct":-9.8,
+"best_5pct":15.8,
+"exit_hit_pct":19.8,
+"lists_ahead_of_index_pct":48.1
+},
+"2022-26":{
+"list_dates":182,
+"picks":616,
+"up_pct":51.9,
+"beat_index_pct":49.8,
+"avg_pct":1.23,
+"median_pct":0.53,
+"index_avg_pct":0.52,
+"worst_5pct":-10.3,
+"best_5pct":17.3,
+"exit_hit_pct":22.9,
+"lists_ahead_of_index_pct":51.1
+}
+},
+"by_year":{
+"2017":{
+"avg_pct":1.6,
+"index_avg_pct":1.96,
+"up_pct":58.0,
+"picks":100
+},
+"2018":{
+"avg_pct":0.8,
+"index_avg_pct":-0.09,
+"up_pct":51.4,
+"picks":74
+},
+"2019":{
+"avg_pct":0.5,
+"index_avg_pct":1.11,
+"up_pct":58.5,
+"picks":65
+},
+"2020":{
+"avg_pct":0.83,
+"index_avg_pct":-0.53,
+"up_pct":47.3,
+"picks":55
+},
+"2021":{
+"avg_pct":3.44,
+"index_avg_pct":2.39,
+"up_pct":63.6,
+"picks":99
+},
+"2022":{
+"avg_pct":-1.83,
+"index_avg_pct":0.2,
+"up_pct":34.3,
+"picks":70
+},
+"2023":{
+"avg_pct":3.93,
+"index_avg_pct":2.19,
+"up_pct":67.1,
+"picks":170
+},
+"2024":{
+"avg_pct":1.9,
+"index_avg_pct":0.6,
+"up_pct":52.2,
+"picks":90
+},
+"2025":{
+"avg_pct":0.42,
+"index_avg_pct":0.1,
+"up_pct":47.6,
+"picks":145
+},
+"2026":{
+"avg_pct":-0.12,
+"index_avg_pct":-0.98,
+"up_pct":46.8,
+"picks":141
+}
+},
+"hold_sessions":21,
+"exit_pct":8.0,
+"avg_after_costs_pct":0.89,
+"vs_average_stock":{
+"excess_pct":0.97,
+"t":2.49,
+"lists_ahead_pct":54.7,
+"by_half":{
+"2017-21":{
+"excess_pct":1.13,
+"t":1.8,
+"lists_ahead_pct":53.8
+},
+"2022-26":{
+"excess_pct":0.84,
+"t":1.75,
+"lists_ahead_pct":55.5
+}
+}
+},
+"market":{
+"above_200d":{
+"list_dates":284,
+"picks":877,
+"up_pct":52.7,
+"avg_pct":1.3,
+"index_avg_pct":0.53
+},
+"below_200d":{
+"list_dates":58,
+"picks":132,
+"up_pct":61.4,
+"avg_pct":1.92,
+"index_avg_pct":2.11
+}
+},
+"dates_tried":483,
+"picks_per_list":3.0,
+"kind":"setup",
+"what":"A close above a 40-session range 18% wide or tighter on twice the usual volume in the last five sessions, still above it; above the 200-day average; leader score in the top half; six or more of nine chart conditions; its industry in the top half on money flow; no fall in profit last quarter; results, if just out, not sold by the market.",
+"replay":"The site's own engine run on every fifth session; its top fifteen bought at the next open.",
+"bias":"Industries are NSE's list as it stands today, and quarterly results start in 2018 and cover companies listed today. Before 2018 the profit screen passes everyone."
+},
+"study":{
+"generated":"2026-11-13",
+"source":"NSE daily bhavcopy, every session, delisted companies included",
+"from":"2017-01-24",
+"to":"2026-11-09",
+"sessions":2679,
+"companies":3276,
+"universe":"NSE stocks trading Rs 10 crore a day or more, priced Rs 20 or more",
+"universe_median":386,
+"rules":"Bought at the next session's open, held for the period, left on a close under the exit line. Price returns before costs and tax. Index: Nifty 500."
+},
+"scanned_at":"09 Nov 2026, 18:10",
+"partial":false,
+"scored":120,
+"universe_source":"NSE equity list",
+"universe":721,
+"regime":{
+"ok":true,
+"stance":"Mixed",
+"pct_vs_50dma":4.75,
+"pct_vs_200dma":3.53,
+"label":"",
+"benchmark":"NIFTY 500"
+},
+"market_test":{
+"state":"above_200d",
+"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +1.3% (53 in 100 rose), against +1.9% on the other days. The list is not held back in either.",
+"lists":284
+},
+"chart_note":null,
+"empty_text":null,
+"event":null,
+"sector_mix":[
+[
+"Financial Services",
+4
+],
+[
+"Healthcare",
+3
+],
+[
+"Oil Gas & Consumable Fuels",
+2
+],
+[
+"Automobile and Auto Components",
+1
+],
+[
+"Services",
+1
+],
+[
+"Construction",
+1
+]
+],
+"sector_cap":4,
+"selection_notes":[
+"1 more qualified but would have put more than 4 names in one sector.",
+"Stocks on the verge of a breakout are shown under the list, to watch. In the test, buying before the breakout did no better than chance, so the list waits for it."
+],
+"excluded_adverse":[],
+"count":12,
+"considered":13,
+"method":"A stock is here when it spent 40 sessions inside a range 18% wide or tighter and then closed above it on at least twice its usual volume in the last five sessions, and is still above it. It must also pass five screens: above its 200-day average and in the stronger half of liquid stocks; six or more of nine chart conditions; its industry in the top half on money flow; no fall in profit last quarter; and results, if just out, not sold by the market. A serious adverse filing removes it. Picks are ordered on strength, chart, industry and profit growth together. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
+"recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
+"kind":"setup",
+"sell_rule":null,
+"sector_flow":null,
+"flow_sectors":null,
+"watch":[
+{
+"symbol":"IIFLCAPS",
+"sector":"Financial Services",
+"top":356.4,
+"low":333.15,
+"width_pct":7.0,
+"to_top_pct":1.7,
+"rel_volume_5":3.3,
+"leader":63.8,
+"turnover_cr":14.2
+},
+{
+"symbol":"EICHERMOT",
+"sector":"Automobile and Auto Components",
+"top":7784.5,
+"low":6767.5,
+"width_pct":15.0,
+"to_top_pct":2.0,
+"rel_volume_5":1.5,
+"leader":53.8,
+"turnover_cr":270.0
+},
+{
+"symbol":"MUFIN",
+"sector":null,
+"top":145.0,
+"low":125.02,
+"width_pct":16.0,
+"to_top_pct":2.2,
+"rel_volume_5":2.3,
+"leader":78.8,
+"turnover_cr":11.4
+},
+{
+"symbol":"LALPATHLAB",
+"sector":"Healthcare",
+"top":2061.9,
+"low":1797.8,
+"width_pct":14.7,
+"to_top_pct":2.3,
+"rel_volume_5":2.2,
+"leader":82.3,
+"turnover_cr":42.9
+},
+{
+"symbol":"LGEINDIA",
+"sector":"Consumer Durables",
+"top":1836.0,
+"low":1588.0,
+"width_pct":15.6,
+"to_top_pct":2.4,
+"rel_volume_5":2.6,
+"leader":79.2,
+"turnover_cr":73.9
+}
+],
+"lists":[
+{
+"key":"week",
+"label":"This week",
+"hold_text":"about a week",
+"group":"horizon"
+},
+{
+"key":"month",
+"label":"This month",
+"hold_text":"about a month",
+"group":"horizon"
+},
+{
+"key":"results",
+"label":"After results",
+"hold_text":"about a month",
+"group":"horizon"
+},
+{
+"key":"momentum",
+"label":"Momentum",
+"hold_text":"about 3 months",
+"group":"horizon"
+},
+{
+"key":"long",
+"label":"Long term",
+"hold_text":"about a year",
+"group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"breakout",
+"label":"Breakouts",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"technical",
+"label":"Technicals",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"quick",
+"label":"Quick trades",
+"hold_text":"a few days",
+"group":"setup"
+},
+{
+"key":"flow",
+"label":"Money flow",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"emerging",
+"label":"Emerging",
+"hold_text":"about a month",
+"group":"setup"
+}
+],
+"rows":[
+{
+"symbol":"GLAND",
+"name":"Gland Pharma Limited",
+"price":3302.4,
+"sector":"Healthcare",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":1,
+"young":false,
+"conviction":84.0,
+"conviction_band":"Moderate",
+"why":[
+"Broke out today",
+"6.7× usual volume",
+"Healthcare: ranked 3 of 18 on money flow",
+"Profit up 47% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹2769.8 and ₹3208.6: a 15.8% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"Closed at ₹3302.4, above the range, on 6.7 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"9 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; ADX at 25 or more, buyers ahead; More volume on up days; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹2317.42). Leader score ahead of 94% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Healthcare ranks 3 of 18 on money flow: 55.7% of its stocks are above their 50-day average and its median stock moved 4.8% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 47% on a year ago, sales rose 20%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":3302.4,
+"stop":3038.21,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹3,038.21, 8% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":2.1,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":1.02,
+"range_15_60":1.0,
+"dry_up":1.12,
+"up_down_volume":1.64,
+"rel_volume":6.7,
+"rsi":70.0,
+"macd_hist_pct":0.74,
+"macd_rising":true,
+"above_20d_pct":7.5,
+"adx":27.0,
+"atr_pct":3.2,
+"rsi2":97.0,
+"sma5":3186.96,
+"rel_volume_5":2.4,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":0,
+"top":3208.6,
+"low":2769.8,
+"width_pct":15.8,
+"rel_volume":6.7,
+"close":3302.4,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 70 · MACD above its signal line and rising · ADX 27."
+},
+{
+"k":"Volume",
+"v":"6.7 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":110.5,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"GAIL",
+"name":"GAIL (India) Limited",
+"price":188.0,
+"sector":"Oil Gas & Consumable Fuels",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":2,
+"young":false,
+"conviction":77.0,
+"conviction_band":"Moderate",
+"why":[
+"Broke out 4 sessions ago",
+"2.4× usual volume",
+"Oil Gas & Consumable Fuels: ranked 7 of 18 on money flow",
+"Profit up 138% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹160.7 and ₹177.4: a 10.4% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"4 sessions ago it closed at ₹181.75, above the range, on 2.4 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"8 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; ADX at 25 or more, buyers ahead; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹166.52). Leader score ahead of 61% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Oil Gas & Consumable Fuels ranks 7 of 18 on money flow: 58.8% of its stocks are above their 50-day average and its median stock moved 2.3% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 138% on a year ago, sales rose 33%.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Results",
+"detail":"Priced on 2 Nov: +5.4% that day, the average stock +1.6%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":188.0,
+"stop":172.96,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹172.96, 8% under this price."
+},
+"results":{
+"filed_at":"2026-10-30 16:02:06",
+"session":"2026-11-02",
+"sessions_ago":5,
+"quarter":"Q2 FY27",
+"move_pct":5.4,
+"market_move_pct":1.6,
+"reaction_pct":3.8,
+"pat_yoy_pct":137.53,
+"revenue_yoy_pct":32.65,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.5,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":4,
+"rel_volume":2.4,
+"level":181.44
+},
+"squeeze":1.36,
+"range_15_60":1.0,
+"dry_up":1.45,
+"up_down_volume":0.97,
+"rel_volume":1.7,
+"rsi":73.0,
+"macd_hist_pct":1.34,
+"macd_rising":true,
+"above_20d_pct":7.2,
+"adx":31.0,
+"atr_pct":2.3,
+"rsi2":95.0,
+"sma5":185.55,
+"rel_volume_5":2.0,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":4,
+"top":177.4,
+"low":160.7,
+"width_pct":10.4,
+"rel_volume":2.4,
+"close":181.75,
+"holding":true
+},
+"base":{
+"top":188.9,
+"low":160.7,
+"width_pct":17.5,
+"to_top_pct":0.5
+}
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 4 sessions ago, on 2.4 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 73 · MACD above its signal line and rising · ADX 31."
+},
+{
+"k":"Volume",
+"v":"1.7 times its usual volume in the last session; more volume on falling days than rising days over 50 sessions (1.0 to 1)."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":117.6,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"AUROPHARMA",
+"name":"Aurobindo Pharma Limited",
+"price":1855.3,
+"sector":"Healthcare",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":3,
+"young":false,
+"conviction":76.7,
+"conviction_band":"Moderate",
+"why":[
+"Broke out 2 sessions ago",
+"3.8× usual volume",
+"Healthcare: ranked 3 of 18 on money flow",
+"Profit up 33% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹1547.7 and ₹1740.0: a 12.4% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"2 sessions ago it closed at ₹1785.0, above the range, on 3.8 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"8 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; More volume on up days; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹1474.46). Leader score ahead of 87% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Healthcare ranks 3 of 18 on money flow: 55.7% of its stocks are above their 50-day average and its median stock moved 4.8% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 33% on a year ago, sales rose 24%.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Results",
+"detail":"Priced on 5 Nov: +4.7% that day, the average stock +1.2%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1855.3,
+"stop":1706.88,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹1,706.88, 8% under this price."
+},
+"results":{
+"filed_at":"2026-11-04 22:45:15",
+"session":"2026-11-05",
+"sessions_ago":2,
+"quarter":"Q2 FY27",
+"move_pct":4.7,
+"market_move_pct":1.2,
+"reaction_pct":3.5,
+"pat_yoy_pct":32.51,
+"revenue_yoy_pct":23.87,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.0,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":2,
+"rel_volume":3.8,
+"level":1734.0
+},
+"squeeze":0.84,
+"range_15_60":1.0,
+"dry_up":1.47,
+"up_down_volume":1.91,
+"rel_volume":3.0,
+"rsi":74.0,
+"macd_hist_pct":1.26,
+"macd_rising":true,
+"above_20d_pct":9.1,
+"adx":24.0,
+"atr_pct":2.4,
+"rsi2":100.0,
+"sma5":1767.96,
+"rel_volume_5":2.6,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":2,
+"top":1740.0,
+"low":1547.7,
+"width_pct":12.4,
+"rel_volume":3.8,
+"close":1785.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 2 sessions ago, on 3.8 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 74 · MACD above its signal line and rising · ADX 24."
+},
+{
+"k":"Volume",
+"v":"3.0 times its usual volume in the last session; 1.9 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":134.1,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"PETRONET",
+"name":"Petronet LNG Limited",
+"price":320.45,
+"sector":"Oil Gas & Consumable Fuels",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":4,
+"young":false,
+"conviction":74.9,
+"conviction_band":"Moderate",
+"why":[
+"Broke out 4 sessions ago",
+"3.4× usual volume",
+"Oil Gas & Consumable Fuels: ranked 7 of 18 on money flow",
+"Profit up 51% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹278.25 and ₹301.4: a 8.3% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"4 sessions ago it closed at ₹303.0, above the range, on 3.4 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"8 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; More volume on up days; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹283.24). Leader score ahead of 74% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Oil Gas & Consumable Fuels ranks 7 of 18 on money flow: 58.8% of its stocks are above their 50-day average and its median stock moved 2.3% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 51% on a year ago, sales fell 35%.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Results",
+"detail":"Priced on 3 Nov: +0.7% that day, the average stock +0.5%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":320.45,
+"stop":294.81,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹294.81, 8% under this price."
+},
+"results":{
+"filed_at":"2026-11-02 18:29:18",
+"session":"2026-11-03",
+"sessions_ago":4,
+"quarter":"Q2 FY27",
+"move_pct":0.7,
+"market_move_pct":0.5,
+"reaction_pct":0.1,
+"pat_yoy_pct":51.32,
+"revenue_yoy_pct":-34.58,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.2,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":1.35,
+"range_15_60":0.87,
+"dry_up":1.45,
+"up_down_volume":2.38,
+"rel_volume":1.3,
+"rsi":71.0,
+"macd_hist_pct":0.95,
+"macd_rising":true,
+"above_20d_pct":6.7,
+"adx":23.0,
+"atr_pct":2.4,
+"rsi2":99.0,
+"sma5":313.69,
+"rel_volume_5":2.2,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":4,
+"top":301.4,
+"low":278.25,
+"width_pct":8.3,
+"rel_volume":3.4,
+"close":303.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"At its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 71 · MACD above its signal line and rising · ADX 23."
+},
+{
+"k":"Volume",
+"v":"1.3 times its usual volume in the last session; 2.4 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":55.8,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"BOSCHLTD",
+"name":"Bosch Limited",
+"price":49550.0,
+"sector":"Automobile and Auto Components",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":5,
+"young":false,
+"conviction":73.1,
+"conviction_band":"Moderate",
+"why":[
+"Broke out 4 sessions ago",
+"2.9× usual volume",
+"Automobile and Auto Components: ranked 2 of 18 on money flow"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹42675.0 and ₹49100.0: a 15.1% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"4 sessions ago it closed at ₹49645.0, above the range, on 2.9 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"7 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; ADX at 25 or more, buyers ahead; Volume above its usual this week.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹40193.38). Leader score ahead of 78% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Automobile and Auto Components ranks 2 of 18 on money flow: 67.4% of its stocks are above their 50-day average and its median stock moved 8.1% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"No quarterly result on file in the last five months, so this screen passed it unread.",
+"share_pct":null,
+"points":null,
+"of":null
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":49550.0,
+"stop":45586.0,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹45,586.00, 8% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":5.6,
+"below_6m_high_pct":5.6,
+"breakout":{
+"sessions_ago":3,
+"rel_volume":1.8,
+"level":50000.0
+},
+"squeeze":1.38,
+"range_15_60":0.9,
+"dry_up":1.47,
+"up_down_volume":1.01,
+"rel_volume":2.0,
+"rsi":59.0,
+"macd_hist_pct":1.18,
+"macd_rising":false,
+"above_20d_pct":3.6,
+"adx":31.0,
+"atr_pct":2.8,
+"rsi2":25.0,
+"sma5":50659.0,
+"rel_volume_5":2.3,
+"above_50d":true,
+"above_200d":true,
+"scorecard":7,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"Volume above its usual this week"
+],
+"box":{
+"sessions_ago":4,
+"top":49100.0,
+"low":42675.0,
+"width_pct":15.1,
+"rel_volume":2.9,
+"close":49645.0,
+"holding":true
+},
+"base":{
+"top":52475.0,
+"low":42675.0,
+"width_pct":23.0,
+"to_top_pct":5.9
+}
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 3 sessions ago, on 1.8 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 59 · MACD above its signal line · ADX 31."
+},
+{
+"k":"Volume",
+"v":"2.0 times its usual volume in the last session; 1.0 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":132.2,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"UNIONBANK",
+"name":"Union Bank of India",
+"price":197.0,
+"sector":"Financial Services",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":6,
+"young":false,
+"conviction":71.6,
+"conviction_band":"Moderate",
+"why":[
+"Broke out today",
+"2.2× usual volume",
+"Financial Services: ranked 4 of 18 on money flow",
+"Profit up 30% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹164.81 and ₹188.9: a 14.6% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"Closed at ₹197.0, above the range, on 2.2 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"8 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; More volume on up days; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹176.86). Leader score ahead of 73% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Financial Services ranks 4 of 18 on money flow: 57.3% of its stocks are above their 50-day average and its median stock moved 5.1% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 30% on a year ago, sales rose 6%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":197.0,
+"stop":181.24,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹181.24, 8% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.0,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":0,
+"rel_volume":2.2,
+"level":189.0
+},
+"squeeze":1.15,
+"range_15_60":0.76,
+"dry_up":1.25,
+"up_down_volume":1.55,
+"rel_volume":2.2,
+"rsi":71.0,
+"macd_hist_pct":0.65,
+"macd_rising":true,
+"above_20d_pct":7.4,
+"adx":23.0,
+"atr_pct":2.6,
+"rsi2":94.0,
+"sma5":187.82,
+"rel_volume_5":1.5,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":0,
+"top":188.9,
+"low":164.81,
+"width_pct":14.6,
+"rel_volume":2.2,
+"close":197.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high today, on 2.2 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 71 · MACD above its signal line and rising · ADX 23."
+},
+{
+"k":"Volume",
+"v":"2.2 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":174.3,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"ICICIBANK",
+"name":"ICICI Bank Limited",
+"price":1589.0,
+"sector":"Financial Services",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":7,
+"young":false,
+"conviction":71.2,
+"conviction_band":"Moderate",
+"why":[
+"Broke out 2 sessions ago",
+"3.6× usual volume",
+"Financial Services: ranked 4 of 18 on money flow",
+"Profit up 21% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹1291.0 and ₹1438.2: a 11.4% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"2 sessions ago it closed at ₹1500.0, above the range, on 3.6 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"9 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; ADX at 25 or more, buyers ahead; More volume on up days; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹1356.73). Leader score ahead of 68% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Financial Services ranks 4 of 18 on money flow: 57.3% of its stocks are above their 50-day average and its median stock moved 5.1% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 21% on a year ago, sales rose 16%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1589.0,
+"stop":1461.88,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹1,461.88, 8% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.2,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":2,
+"rel_volume":3.6,
+"level":1463.1
+},
+"squeeze":1.54,
+"range_15_60":0.77,
+"dry_up":1.52,
+"up_down_volume":1.27,
+"rel_volume":2.6,
+"rsi":81.0,
+"macd_hist_pct":1.35,
+"macd_rising":true,
+"above_20d_pct":11.1,
+"adx":34.0,
+"atr_pct":2.0,
+"rsi2":99.0,
+"sma5":1501.76,
+"rel_volume_5":2.7,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":2,
+"top":1438.2,
+"low":1291.0,
+"width_pct":11.4,
+"rel_volume":3.6,
+"close":1500.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 2 sessions ago, on 3.6 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 81 · MACD above its signal line and rising · ADX 34."
+},
+{
+"k":"Volume",
+"v":"2.6 times its usual volume in the last session; 1.3 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":1439.7,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"MANKIND",
+"name":"Mankind Pharma Limited",
+"price":2668.3,
+"sector":"Healthcare",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":8,
+"young":false,
+"conviction":71.2,
+"conviction_band":"Moderate",
+"why":[
+"Broke out today",
+"3.4× usual volume",
+"Healthcare: ranked 3 of 18 on money flow",
+"Profit up 38% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹2196.1 and ₹2561.2: a 16.6% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"Closed at ₹2668.3, above the range, on 3.4 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"8 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; ADX at 25 or more, buyers ahead; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹2322.76). Leader score ahead of 61% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Healthcare ranks 3 of 18 on money flow: 55.7% of its stocks are above their 50-day average and its median stock moved 4.8% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 38% on a year ago, sales rose 17%.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Results",
+"detail":"Priced on 27 Oct: +8.2% that day, the average stock +1.6%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2668.3,
+"stop":2454.84,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹2,454.84, 8% under this price."
+},
+"results":{
+"filed_at":"2026-10-26 21:18:11",
+"session":"2026-10-27",
+"sessions_ago":9,
+"quarter":"Q2 FY27",
+"move_pct":8.2,
+"market_move_pct":1.6,
+"reaction_pct":6.6,
+"pat_yoy_pct":37.67,
+"revenue_yoy_pct":17.33,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.4,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":0,
+"rel_volume":3.4,
+"level":2617.9
+},
+"squeeze":1.34,
+"range_15_60":1.0,
+"dry_up":1.57,
+"up_down_volume":1.18,
+"rel_volume":3.4,
+"rsi":69.0,
+"macd_hist_pct":1.01,
+"macd_rising":true,
+"above_20d_pct":8.4,
+"adx":27.0,
+"atr_pct":2.9,
+"rsi2":96.0,
+"sma5":2547.84,
+"rel_volume_5":1.7,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":0,
+"top":2561.2,
+"low":2196.1,
+"width_pct":16.6,
+"rel_volume":3.4,
+"close":2668.3,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high today, on 3.4 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 69 · MACD above its signal line and rising · ADX 27."
+},
+{
+"k":"Volume",
+"v":"3.4 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":104.5,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"PNB",
+"name":"Punjab National Bank",
+"price":132.17,
+"sector":"Financial Services",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":9,
+"young":false,
+"conviction":71.1,
+"conviction_band":"Moderate",
+"why":[
+"Broke out 2 sessions ago",
+"2.4× usual volume",
+"Financial Services: ranked 4 of 18 on money flow",
+"Profit up 15% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹109.37 and ₹125.22: a 14.5% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"2 sessions ago it closed at ₹126.1, above the range, on 2.4 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"9 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; ADX at 25 or more, buyers ahead; More volume on up days; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹114.15). Leader score ahead of 74% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Financial Services ranks 4 of 18 on money flow: 57.3% of its stocks are above their 50-day average and its median stock moved 5.1% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 15% on a year ago, sales rose 8%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":132.17,
+"stop":121.6,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹121.60, 8% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.2,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":1.25,
+"range_15_60":0.62,
+"dry_up":1.31,
+"up_down_volume":1.95,
+"rel_volume":3.4,
+"rsi":73.0,
+"macd_hist_pct":0.63,
+"macd_rising":true,
+"above_20d_pct":8.2,
+"adx":28.0,
+"atr_pct":2.5,
+"rsi2":98.0,
+"sma5":125.64,
+"rel_volume_5":2.2,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":2,
+"top":125.22,
+"low":109.37,
+"width_pct":14.5,
+"rel_volume":2.4,
+"close":126.1,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"At its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 73 · MACD above its signal line and rising · ADX 28."
+},
+{
+"k":"Volume",
+"v":"3.4 times its usual volume in the last session; 1.9 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":151.6,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"MCX",
+"name":"MCX",
+"price":3545.0,
+"sector":"Financial Services",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":10,
+"young":false,
+"conviction":70.8,
+"conviction_band":"Moderate",
+"why":[
+"Broke out 4 sessions ago",
+"2.7× usual volume",
+"Financial Services: ranked 4 of 18 on money flow"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹2985.0 and ₹3481.4: a 16.6% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"4 sessions ago it closed at ₹3490.1, above the range, on 2.7 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"7 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹2879.23). Leader score ahead of 85% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Financial Services ranks 4 of 18 on money flow: 57.3% of its stocks are above their 50-day average and its median stock moved 5.1% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"No quarterly result on file in the last five months, so this screen passed it unread.",
+"share_pct":null,
+"points":null,
+"of":null
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":3545.0,
+"stop":3261.4,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹3,261.40, 8% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.0,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":4,
+"rel_volume":2.7,
+"level":3441.7
+},
+"squeeze":1.34,
+"range_15_60":0.87,
+"dry_up":1.41,
+"up_down_volume":1.19,
+"rel_volume":1.3,
+"rsi":63.0,
+"macd_hist_pct":1.12,
+"macd_rising":true,
+"above_20d_pct":7.3,
+"adx":23.0,
+"atr_pct":3.7,
+"rsi2":85.0,
+"sma5":3448.82,
+"rel_volume_5":2.5,
+"above_50d":true,
+"above_200d":true,
+"scorecard":7,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":4,
+"top":3481.4,
+"low":2985.0,
+"width_pct":16.6,
+"rel_volume":2.7,
+"close":3490.1,
+"holding":true
+},
+"base":{
+"top":3550.0,
+"low":2985.0,
+"width_pct":18.9,
+"to_top_pct":0.1
+}
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 4 sessions ago, on 2.7 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 63 · MACD above its signal line and rising · ADX 23."
+},
+{
+"k":"Volume",
+"v":"1.3 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":625.1,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"ADANIPORTS",
+"name":"Adani Ports and Special Economic Zone Limited",
+"price":1942.7,
+"sector":"Services",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":11,
+"young":false,
+"conviction":67.7,
+"conviction_band":"Speculative",
+"why":[
+"Broke out 3 sessions ago",
+"2.2× usual volume",
+"Services: ranked 9 of 18 on money flow",
+"Profit up 18% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹1674.2 and ₹1875.2: a 12.0% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"3 sessions ago it closed at ₹1910.0, above the range, on 2.2 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"9 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; 50-day average above the 200-day; RSI over 55; MACD above its signal line; ADX at 25 or more, buyers ahead; More volume on up days; Volume above its usual this week; Within 5% of its 52-week high.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹1667.77). Leader score ahead of 69% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Services ranks 9 of 18 on money flow: 57.9% of its stocks are above their 50-day average and its median stock moved 2.4% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 18% on a year ago, sales rose 24%.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Results",
+"detail":"Priced on 29 Oct: +6.3% that day, the average stock +0.9%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1942.7,
+"stop":1787.28,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹1,787.28, 8% under this price."
+},
+"results":{
+"filed_at":"2026-10-28 15:53:28",
+"session":"2026-10-29",
+"sessions_ago":7,
+"quarter":"Q2 FY27",
+"move_pct":6.3,
+"market_move_pct":0.9,
+"reaction_pct":5.4,
+"pat_yoy_pct":18.02,
+"revenue_yoy_pct":23.7,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.8,
+"below_6m_high_pct":0.0,
+"breakout":{
+"sessions_ago":3,
+"rel_volume":2.2,
+"level":1883.2
+},
+"squeeze":1.03,
+"range_15_60":0.74,
+"dry_up":1.23,
+"up_down_volume":1.35,
+"rel_volume":1.2,
+"rsi":68.0,
+"macd_hist_pct":0.88,
+"macd_rising":true,
+"above_20d_pct":6.1,
+"adx":26.0,
+"atr_pct":2.6,
+"rsi2":85.0,
+"sma5":1908.16,
+"rel_volume_5":1.8,
+"above_50d":true,
+"above_200d":true,
+"scorecard":9,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":3,
+"top":1875.2,
+"low":1674.2,
+"width_pct":12.0,
+"rel_volume":2.2,
+"close":1910.0,
+"holding":true
+},
+"base":{
+"top":1948.9,
+"low":1674.2,
+"width_pct":16.4,
+"to_top_pct":0.3
+}
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 3 sessions ago, on 2.2 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 68 · MACD above its signal line and rising · ADX 26."
+},
+{
+"k":"Volume",
+"v":"1.2 times its usual volume in the last session; 1.4 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":331.4,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+},
+{
+"symbol":"LT",
+"name":"Larsen & Toubro Limited",
+"price":4185.0,
+"sector":"Construction",
+"list":"short",
+"setup":"Short-term pick",
+"setup_key":"pick_short",
+"horizon":"about a month",
+"pick_rank":13,
+"young":false,
+"conviction":58.0,
+"conviction_band":"Speculative",
+"why":[
+"Broke out 2 sessions ago",
+"2.4× usual volume",
+"Construction: ranked 10 of 18 on money flow",
+"Profit up 27% on a year ago"
+],
+"evidence":[
+{
+"factor":"Consolidation",
+"detail":"40 sessions between ₹3592.9 and ₹4020.2: a 11.9% range.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Breakout",
+"detail":"2 sessions ago it closed at ₹4050.0, above the range, on 2.4 times its usual volume. Still above it.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Technicals",
+"detail":"7 of 9 chart conditions: Above its 20-day average; 20-day average above the 50-day; RSI over 55; MACD above its signal line; ADX at 25 or more, buyers ahead; More volume on up days; Volume above its usual this week.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Trend",
+"detail":"Above its 200-day average (₹3934.29). Leader score ahead of 51% of 721 liquid stocks.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Industry",
+"detail":"Construction ranks 10 of 18 on money flow: 43.8% of its stocks are above their 50-day average and its median stock moved 2.0% this month.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Fundamentals",
+"detail":"Last quarter's profit rose 27% on a year ago, sales rose 16%.",
+"share_pct":null,
+"points":1,
+"of":1
+},
+{
+"factor":"Results",
+"detail":"Priced on 28 Oct: +3.7% that day, the average stock +0.1%.",
+"share_pct":null,
+"points":1,
+"of":1
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":4185.0,
+"stop":3850.2,
+"risk_pct":8.0,
+"rr":null,
+"t1":null,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-09",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹3,850.20, 8% under this price."
+},
+"results":{
+"filed_at":"2026-10-27 20:13:19",
+"session":"2026-10-28",
+"sessions_ago":8,
+"quarter":"Q2 FY27",
+"move_pct":3.7,
+"market_move_pct":0.1,
+"reaction_pct":3.6,
+"pat_yoy_pct":27.17,
+"revenue_yoy_pct":15.84,
+"reported":373
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":0.2,
+"below_6m_high_pct":0.7,
+"breakout":null,
+"squeeze":0.98,
+"range_15_60":1.0,
+"dry_up":1.5,
+"up_down_volume":1.31,
+"rel_volume":1.9,
+"rsi":78.0,
+"macd_hist_pct":1.36,
+"macd_rising":true,
+"above_20d_pct":8.0,
+"adx":40.0,
+"atr_pct":2.1,
+"rsi2":100.0,
+"sma5":4049.06,
+"rel_volume_5":2.0,
+"above_50d":true,
+"above_200d":true,
+"scorecard":7,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week"
+],
+"box":{
+"sessions_ago":2,
+"top":4020.2,
+"low":3592.9,
+"width_pct":11.9,
+"rel_volume":2.4,
+"close":4050.0,
+"holding":true
+},
+"base":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"At its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 78 · MACD above its signal line and rising · ADX 40."
+},
+{
+"k":"Volume",
+"v":"1.9 times its usual volume in the last session; 1.3 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":599.0,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null
+}
+],
+"staleness":{
+"days":0,
+"hours":2.0,
+"warn":false,
+"text":"Scanned today."
+},
+"market_context":{
+"regime":{
+"ok":true,
+"stance":"Mixed",
+"pct_vs_50dma":4.75,
+"pct_vs_200dma":3.53,
+"label":"",
+"benchmark":"NIFTY 500"
+},
+"leaders":[],
+"laggards":[],
+"headlines":[]
+}
+},
+"short_empty":{
+"available":true,
+"degraded":[],
+"method_key":"tested_lists",
+"list":"short",
+"horizon":"short",
+"label":"Short term",
+"idea":"Stocks breaking out of a consolidation, in industries money is moving into.",
+"hold_text":"about a month",
+"exit_pct":8.0,
+"tested":{
+"list_dates":342,
+"picks":1009,
+"up_pct":53.8,
+"beat_index_pct":49.7,
+"avg_pct":1.38,
+"median_pct":0.81,
+"index_avg_pct":0.8,
+"worst_5pct":-10.1,
+"best_5pct":16.9,
+"exit_hit_pct":21.7,
+"lists_ahead_of_index_pct":49.7,
+"by_half":{
+"2017-21":{
+"list_dates":160,
+"picks":393,
+"up_pct":56.7,
+"beat_index_pct":49.4,
+"avg_pct":1.62,
+"median_pct":1.17,
+"index_avg_pct":1.11,
+"worst_5pct":-9.8,
+"best_5pct":15.8,
+"exit_hit_pct":19.8,
+"lists_ahead_of_index_pct":48.1
+},
+"2022-26":{
+"list_dates":182,
+"picks":616,
+"up_pct":51.9,
+"beat_index_pct":49.8,
+"avg_pct":1.23,
+"median_pct":0.53,
+"index_avg_pct":0.52,
+"worst_5pct":-10.3,
+"best_5pct":17.3,
+"exit_hit_pct":22.9,
+"lists_ahead_of_index_pct":51.1
+}
+},
+"by_year":{
+"2017":{
+"avg_pct":1.6,
+"index_avg_pct":1.96,
+"up_pct":58.0,
+"picks":100
+},
+"2018":{
+"avg_pct":0.8,
+"index_avg_pct":-0.09,
+"up_pct":51.4,
+"picks":74
+},
+"2019":{
+"avg_pct":0.5,
+"index_avg_pct":1.11,
+"up_pct":58.5,
+"picks":65
+},
+"2020":{
+"avg_pct":0.83,
+"index_avg_pct":-0.53,
+"up_pct":47.3,
+"picks":55
+},
+"2021":{
+"avg_pct":3.44,
+"index_avg_pct":2.39,
+"up_pct":63.6,
+"picks":99
+},
+"2022":{
+"avg_pct":-1.83,
+"index_avg_pct":0.2,
+"up_pct":34.3,
+"picks":70
+},
+"2023":{
+"avg_pct":3.93,
+"index_avg_pct":2.19,
+"up_pct":67.1,
+"picks":170
+},
+"2024":{
+"avg_pct":1.9,
+"index_avg_pct":0.6,
+"up_pct":52.2,
+"picks":90
+},
+"2025":{
+"avg_pct":0.42,
+"index_avg_pct":0.1,
+"up_pct":47.6,
+"picks":145
+},
+"2026":{
+"avg_pct":-0.12,
+"index_avg_pct":-0.98,
+"up_pct":46.8,
+"picks":141
+}
+},
+"hold_sessions":21,
+"exit_pct":8.0,
+"avg_after_costs_pct":0.89,
+"vs_average_stock":{
+"excess_pct":0.97,
+"t":2.49,
+"lists_ahead_pct":54.7,
+"by_half":{
+"2017-21":{
+"excess_pct":1.13,
+"t":1.8,
+"lists_ahead_pct":53.8
+},
+"2022-26":{
+"excess_pct":0.84,
+"t":1.75,
+"lists_ahead_pct":55.5
+}
+}
+},
+"market":{
+"above_200d":{
+"list_dates":284,
+"picks":877,
+"up_pct":52.7,
+"avg_pct":1.3,
+"index_avg_pct":0.53
+},
+"below_200d":{
+"list_dates":58,
+"picks":132,
+"up_pct":61.4,
+"avg_pct":1.92,
+"index_avg_pct":2.11
+}
+},
+"dates_tried":483,
+"picks_per_list":3.0,
+"kind":"setup",
+"what":"A close above a 40-session range 18% wide or tighter on twice the usual volume in the last five sessions, still above it; above the 200-day average; leader score in the top half; six or more of nine chart conditions; its industry in the top half on money flow; no fall in profit last quarter; results, if just out, not sold by the market.",
+"replay":"The site's own engine run on every fifth session; its top fifteen bought at the next open.",
+"bias":"Industries are NSE's list as it stands today, and quarterly results start in 2018 and cover companies listed today. Before 2018 the profit screen passes everyone."
+},
+"study":{
+"generated":"2026-11-13",
+"source":"NSE daily bhavcopy, every session, delisted companies included",
+"from":"2017-01-24",
+"to":"2026-11-09",
+"sessions":2679,
+"companies":3276,
+"universe":"NSE stocks trading Rs 10 crore a day or more, priced Rs 20 or more",
+"universe_median":386,
+"rules":"Bought at the next session's open, held for the period, left on a close under the exit line. Price returns before costs and tax. Index: Nifty 500."
+},
+"scanned_at":"09 Nov 2026, 18:10",
+"partial":false,
+"scored":120,
+"universe_source":"NSE equity list",
+"universe":721,
+"regime":{
+"ok":true,
+"stance":"Mixed",
+"pct_vs_50dma":4.75,
+"pct_vs_200dma":3.53,
+"label":"",
+"benchmark":"NIFTY 500"
+},
+"market_test":{
+"state":"above_200d",
+"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +1.3% (53 in 100 rose), against +1.9% on the other days. The list is not held back in either.",
+"lists":284
+},
+"chart_note":null,
+"empty_text":"No stock passes every screen today. A breakout from a tight base, in a strong industry, with profit not falling, is uncommon: in the test about one list in four was empty. An empty list is the answer, not a fault.",
+"event":null,
+"sector_mix":[
+[
+"Financial Services",
+4
+],
+[
+"Healthcare",
+3
+],
+[
+"Oil Gas & Consumable Fuels",
+2
+],
+[
+"Automobile and Auto Components",
+1
+],
+[
+"Services",
+1
+],
+[
+"Construction",
+1
+]
+],
+"sector_cap":4,
+"selection_notes":[
+"No stock passes every screen today. A breakout from a tight base, in a strong industry, with profit not falling, is uncommon: in the test about one list in four was empty. An empty list is the answer, not a fault."
+],
+"excluded_adverse":[],
+"count":0,
+"considered":13,
+"method":"A stock is here when it spent 40 sessions inside a range 18% wide or tighter and then closed above it on at least twice its usual volume in the last five sessions, and is still above it. It must also pass five screens: above its 200-day average and in the stronger half of liquid stocks; six or more of nine chart conditions; its industry in the top half on money flow; no fall in profit last quarter; and results, if just out, not sold by the market. A serious adverse filing removes it. Picks are ordered on strength, chart, industry and profit growth together. The record beside the list is this rule replayed on NSE prices from 2017 to 2026: the list as it stood every fifth session, bought at the next open.",
+"recipe_current":true,
+"primary":[
+{
+"key":"short",
+"label":"Short term"
+},
+{
+"key":"long",
+"label":"Long term"
+}
+],
+"kind":"setup",
+"sell_rule":null,
+"sector_flow":null,
+"flow_sectors":null,
+"watch":[
+{
+"symbol":"IIFLCAPS",
+"sector":"Financial Services",
+"top":356.4,
+"low":333.15,
+"width_pct":7.0,
+"to_top_pct":1.7,
+"rel_volume_5":3.3,
+"leader":63.8,
+"turnover_cr":14.2
+},
+{
+"symbol":"EICHERMOT",
+"sector":"Automobile and Auto Components",
+"top":7784.5,
+"low":6767.5,
+"width_pct":15.0,
+"to_top_pct":2.0,
+"rel_volume_5":1.5,
+"leader":53.8,
+"turnover_cr":270.0
+},
+{
+"symbol":"MUFIN",
+"sector":null,
+"top":145.0,
+"low":125.02,
+"width_pct":16.0,
+"to_top_pct":2.2,
+"rel_volume_5":2.3,
+"leader":78.8,
+"turnover_cr":11.4
+},
+{
+"symbol":"LALPATHLAB",
+"sector":"Healthcare",
+"top":2061.9,
+"low":1797.8,
+"width_pct":14.7,
+"to_top_pct":2.3,
+"rel_volume_5":2.2,
+"leader":82.3,
+"turnover_cr":42.9
+},
+{
+"symbol":"LGEINDIA",
+"sector":"Consumer Durables",
+"top":1836.0,
+"low":1588.0,
+"width_pct":15.6,
+"to_top_pct":2.4,
+"rel_volume_5":2.6,
+"leader":79.2,
+"turnover_cr":73.9
+}
+],
+"lists":[
+{
+"key":"week",
+"label":"This week",
+"hold_text":"about a week",
+"group":"horizon"
+},
+{
+"key":"month",
+"label":"This month",
+"hold_text":"about a month",
+"group":"horizon"
+},
+{
+"key":"results",
+"label":"After results",
+"hold_text":"about a month",
+"group":"horizon"
+},
+{
+"key":"momentum",
+"label":"Momentum",
+"hold_text":"about 3 months",
+"group":"horizon"
+},
+{
+"key":"long",
+"label":"Long term",
+"hold_text":"about a year",
+"group":"horizon"
+},
+{
+"key":"short",
+"label":"Short term",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"breakout",
+"label":"Breakouts",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"technical",
+"label":"Technicals",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"quick",
+"label":"Quick trades",
+"hold_text":"a few days",
+"group":"setup"
+},
+{
+"key":"flow",
+"label":"Money flow",
+"hold_text":"about a month",
+"group":"setup"
+},
+{
+"key":"emerging",
+"label":"Emerging",
+"hold_text":"about a month",
+"group":"setup"
+}
+],
+"rows":[],
 "staleness":{
 "days":0,
 "hours":2.0,

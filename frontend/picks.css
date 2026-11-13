@@ -154,3 +154,4 @@ html[data-theme="dark"] .pk-all { background: var(--gold-lt); color: #16130E; }
 .pk-tabs.two { max-width: 340px; }
 .pk-tabs.two .pk-tab { flex: 1 1 0; font-size: 14px; }
 #view-ideas .pk-tabs.two.page { max-width: 340px; }
+.pk-tabs.two .pk-tab { text-align: center; justify-content: center; }

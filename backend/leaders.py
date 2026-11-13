@@ -162,7 +162,7 @@ DAYS_KEPT = 12                     # recent daily moves each stock carries for t
 # Stamped on every block rank() writes. A scan made under an earlier recipe
 # still serves its lists after a deploy, but the page must not print this
 # recipe's tested record beside them. Change it whenever LISTS changes.
-RECIPE = "2026-11 setup lists"
+RECIPE = "2026-11 short-term list"
 
 # The four lists. `mix` is the weight on each percentile; `calm_gate` says
 # whether the most volatile fifth is removed (True) or merely ranked lower.

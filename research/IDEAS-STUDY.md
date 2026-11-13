@@ -455,6 +455,82 @@ Each scan banks the same measurements for every stock it analyses (the
 indicators, the breakout flag and its volume, the result-day move), with what
 the stock then did. That is how the live record gets to overrule this test.
 
+## Two tabs: short term and long term
+
+The page had grown to ten tabs. A reader asked for two, and for the
+short-term one to be a single list: stocks that have consolidated and are
+breaking out or about to, picked on fundamentals, technicals, the industry
+and the news together, with the highest hit rate that can honestly be had.
+
+### What was tried
+
+`research/short_term_lab.py` declared sixty versions before running any:
+two pools (a breakout from a tight 40-session base that is still holding;
+a stock still inside such a base within 3% of its top), five screens added
+one at a time and together, and two exits. Picks are the top twelve a list
+date. Figures are a month's hold with a close 8% under as the exit,
+against the Nifty 500 over the same sessions.
+
+| Version | Picks | Rose | Average | Lead (t) | 2017–21 rose / lead | 2022–26 rose / lead |
+|---|---|---|---|---|---|---|
+| Breakout, trend and strength only | 1,938 | 52.5% | +1.22% | +0.42 (1.4) | 53.8% / +0.17 | 51.6% / +0.63 |
+| + industry in the top half on money flow | 1,318 | 54.6% | +1.57% | +0.87 (2.6) | 58.8% / +0.64 | 52.3% / +1.06 |
+| + chart, industry, no fall in profit, results not sold | 1,067 | 54.5% | +1.46% | +0.94 (3.4) | 58.4% / +0.95 | 52.0% / +0.92 |
+| + profit AND sales both up (strict) | 667 | 55.2% | +1.88% | +1.18 (3.3) | 63.1% / +1.37 | 53.4% / +1.12 |
+| On the verge, trend and strength only | 3,674 | 50.7% | +0.89% | −0.06 (−0.2) | 53.2% / +0.40 | 48.7% / −0.50 |
+| On the verge, every screen | 1,913 | 49.4% | +0.61% | −0.15 (−0.5) | 53.6% / +0.50 | 46.8% / −0.71 |
+| Both pools, every screen | 2,674 | 51.1% | +0.89% | +0.09 (0.4) | 54.8% / +0.62 | 48.5% / −0.37 |
+
+What this says:
+
+- **The industry is the screen that matters.** A breakout in an industry
+  money is moving into did better than a breakout anywhere, in both halves.
+  The chart conditions, the profit screen and the results screen added
+  little on top; none of them hurt.
+- **"On the verge" did not work.** Bought before the breakout, such stocks
+  rose as often as a coin lands heads and trailed the index in 2022–26,
+  with every screen applied or none. So the list waits for the breakout,
+  and stocks on the verge are shown under it to watch, said plainly not to
+  be picks.
+- **A ten-session hold was worse than a month** for every version.
+
+The rule declared beforehand (most picks rising in 2017–21, among versions
+with 400 picks there and a positive lead) chose "breakout + industry"
+(58.8%). The list that was built is the third row: the full combination
+that was asked for. It scored 58.4% on the same rule, a difference of two
+picks in five hundred, and was the steadiest across the two halves. The
+strict-fundamentals row has the best figures and too few picks to trust
+(122 in 2017–21, because quarterly filings start in 2018), and would leave
+the list empty on half of all days.
+
+### What the page prints
+
+The engine itself replayed (`ideas_study.py --setups`), every fifth session
+from 2017 to 2026, its top fifteen bought at the next open:
+
+| | Picks | Rose | Average | Median | Nifty 500 | After costs | Against the average stock (t) | 2017–21 / 2022–26 |
+|---|---|---|---|---|---|---|---|---|
+| **Short term** | 1,009 | 53.8% | +1.38% | +0.81% | +0.80% | +0.89% | +0.97% (2.5) | +1.13 / +0.84 |
+
+Read plainly: **54 picks in 100 rose over a month. That is the highest hit
+rate any tested version of this idea reached on a usable number of picks,
+and it is not high.** The edge is in the average (about one percentage
+point a month over the average stock, in both halves), not in being right
+most of the time. One pick in five hit its exit line. Years differ widely:
+67 in 100 rose in 2023, 34 in 100 in 2022, and 47 in 100 so far in 2026.
+The list is short, about three names when there is one, and on roughly
+three list dates in ten there is none.
+
+Two things flatter the record. Industries are NSE's list as it stands
+today, and quarterly results cover companies listed today and start in
+2018, so before then the profit screen passes everyone.
+
+**Long term** is the list it was: steady year-long climbers near their
+highs, held about a year with a close 30% under as the exit (58 in 100
+rose, +23.7% against +13.8% for the index). The other eight lists are
+still ranked and still answer by name on the API; the page no longer asks
+a reader to choose between them.
+
 ## The setup lists
 
 Five more lists were asked for by name: stocks breaking out of a
@@ -603,6 +679,7 @@ python research/ideas_study.py --baseline   # replay the old ranking (about 30 m
 python research/ideas_study.py --study      # tables and research/ideas-study.json
 python research/separation_lab.py           # every trial behind "One stock, one list"
 python research/signals_lab.py              # every trial behind "What a reader asked for"
+python research/short_term_lab.py           # every trial behind "Two tabs"
 python research/setups_lab.py               # every trial behind "The setup lists"
 python research/ideas_study.py --setups     # the setup lists' records alone, into the same file
 ```
