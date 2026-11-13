@@ -455,6 +455,90 @@ Each scan banks the same measurements for every stock it analyses (the
 indicators, the breakout flag and its volume, the result-day move), with what
 the stock then did. That is how the live record gets to overrule this test.
 
+## The setup lists
+
+Five more lists were asked for by name: stocks breaking out of a
+consolidation on volume, stocks picked on technicals, quick trades, stocks
+where money is flowing, and emerging companies. An earlier round of this
+study tested ideas like these as *improvements to the horizon lists*, found
+none improved them, and left them off the page. That answered a question
+nobody had asked. They are built now as lists of their own, each with the
+record it earned printed beside it, whatever that record is.
+
+`research/setups_lab.py` declared several versions of each before running
+any, chose on 2017–21 and read 2022–26. The chosen version went into
+`backend/leaders.py`. The record on the page is not the lab's: it is the
+engine itself replayed (`ideas_study.py --setups`), run on every fifth
+session from frames cut at that session, its top fifteen bought at the next
+open.
+
+| List | The rule | Hold, exit |
+|---|---|---|
+| **Breakouts** | 40 sessions inside a range 18% wide or tighter, then a close above its top on 2× usual volume in the last five sessions; above the 200-day average; leader score in the top half | 21 sessions, close 8% under |
+| **Technicals** | 7 or more of 9 conditions: above the 20-day average, 20 above 50, 50 above 200, RSI over 55, MACD above signal, ADX ≥ 25 with buyers ahead, more volume on up days, this week's volume above usual, within 5% of the 52-week high | 21 sessions, close 10% under |
+| **Quick trades** | In an uptrend, leader score in the top 30%, two-day RSI under 10 | Sold at the first close above the 5-day average, at most 7 sessions, close 7% under |
+| **Money flow** | Sectors ranked on turnover share (this week against sixty sessions), share of stocks above the 50-day average, and median month; the four strongest stocks in each of the top four | 21 sessions, close 10% under |
+| **Emerging** | Listed six to twelve months, above its own 50-day average, leader score in the top half of the established market | 21 sessions, close 10% under |
+
+### How they tested
+
+Engine replay, 2017–2026, 483 list dates tried, before costs:
+
+| List | Picks | Rose | Average | Median | Nifty 500 | After 0.49% costs | Against the average stock (t) | 2017–21 / 2022–26 |
+|---|---|---|---|---|---|---|---|---|
+| Breakouts | 2,308 | 51.4% | +1.05% | +0.38% | +0.91% | +0.56% | +0.49% (1.3) | +0.75 / +0.25 |
+| Technicals | 6,936 | 51.7% | +1.29% | +0.46% | +1.05% | +0.80% | +0.36% (1.3) | +0.49 / +0.22 |
+| Quick trades | 3,403 | 65.1% | +0.35% | +1.07% | +0.06% | **−0.14%** | +0.27% (2.5) | +0.41 / +0.14 |
+| Money flow | 6,581 | 52.4% | +1.39% | +0.53% | +1.10% | +0.90% | +0.40% (1.3) | +0.87 / **−0.07** |
+| Emerging | 1,403 | 48.8% | +1.51% | −0.43% | +0.75% | +1.02% | +0.40% (0.5) | +1.12 / **−0.14** |
+
+Read plainly:
+
+- **None of these is a strong edge.** Four of the five led the average liquid
+  stock by under half a percent a pick with a t-statistic near 1.3, which is
+  not distinguishable from luck. The horizon lists above did better on the
+  same test.
+- **Quick trades have the highest hit rate and lose money after costs.**
+  Two picks in three rose, over about three sessions, and the average gain
+  (+0.35%) is smaller than the cost of a round trip (0.49%). In 2022–26 the
+  average pick was flat before costs. The page says this above the list, not
+  inside a fold.
+- **Money flow and Emerging trailed the average stock in 2022–26.** Both led
+  in 2017–21 and gave it back. Emerging's median pick lost money: a few large
+  winners carry its average.
+- **Breakouts** kept a small lead in both halves. About one list date in
+  eight had no breakout to show; the list is then empty and says why.
+
+The exit used for Breakouts (21 sessions or a close 8% under) was chosen
+after seeing that the textbook exit, "sell on a close back inside the base",
+left 31% of picks up and a lead of +0.27%. That choice was made on the whole
+period, so its record flatters it a little. The sector map is NSE's list as
+it stands today: a company since delisted has no sector and could not be a
+money-flow pick, which flatters that list too.
+
+Under the breakout list the page also shows **Setting up**: tight bases not
+yet broken, nearest their top first. Those are watched, not picked, and have
+no record.
+
+## The daily brief
+
+`backend/policy_brief.py` reads every new DGFT notification, public notice,
+circular and trade notice, RBI press release and notification, SEBI circular
+and English PIB release three times each weekday
+(`.github/workflows/policy-brief.yml`). Each is read once. With
+`ANTHROPIC_API_KEY` set, Claude reads it (the PDF itself for DGFT) and
+returns a summary, the direction, the sectors and the stocks with a reason;
+symbols NSE does not list are dropped. Without a key a keyword table names
+sectors and a direction and no stocks, and the brief says which did the
+reading. `brief.html` shows it; the evening run emails it to digest
+subscribers on days something matters.
+
+**It has no tested record and cannot have one yet.** There is no archive of
+past circulars with timestamps to replay against prices, so how well a read
+predicts a move is unknown. It changes no rank on any list. As the brief
+accumulates, each read can be scored against what the named stocks did next;
+that study is the next thing to build here.
+
 ## The score
 
 The three price pillars of the Altaha Score were re-weighted from the same
@@ -519,6 +603,8 @@ python research/ideas_study.py --baseline   # replay the old ranking (about 30 m
 python research/ideas_study.py --study      # tables and research/ideas-study.json
 python research/separation_lab.py           # every trial behind "One stock, one list"
 python research/signals_lab.py              # every trial behind "What a reader asked for"
+python research/setups_lab.py               # every trial behind "The setup lists"
+python research/ideas_study.py --setups     # the setup lists' records alone, into the same file
 ```
 
 `--study` first checks that `backend/leaders.py` picks the same stocks the

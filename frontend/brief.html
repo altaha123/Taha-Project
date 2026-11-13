@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Daily brief — Altaha Screener</title>
+<meta name="description" content="Every new DGFT, RBI, SEBI and government circular, with what it changes and which Indian sectors and stocks it touches." />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="type.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("altaha-theme");
+      if (!t && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
+      if (t) document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+<style>
+  body { margin: 0; background: var(--paper, #faf8f3); color: var(--ink, #1a1a1a); font-family: Inter, system-ui, sans-serif; }
+  .bf { max-width: 780px; margin: 0 auto; padding: 20px 16px 60px; }
+  .bf a { color: inherit; }
+  .bf-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .bf h1 { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 34px; margin: 8px 0 2px; }
+  .bf-sub { color: var(--ink-2, #6b665c); font-size: 14px; margin: 0 0 14px; line-height: 1.5; }
+  .bf-days { display: flex; gap: 6px; margin: 0 0 14px; }
+  .bf-days button { border: 1px solid var(--rule-2, #ddd8cc); background: none; color: inherit; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; cursor: pointer; min-height: 36px; }
+  .bf-days button.on { background: var(--ink, #1a1a1a); color: var(--paper, #faf8f3); border-color: var(--ink, #1a1a1a); }
+  .bf-note { border-left: 3px solid var(--gold, #b8963e); background: var(--paper-2, #f2eee4); padding: 9px 12px; font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
+  .bf-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
+  .bf-chip { border: 1px solid var(--rule-2, #ddd8cc); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; }
+  .bf-chip.positive, .bf-imp.positive, .bf-st.helped { color: #1a7f4b; }
+  .bf-chip.negative, .bf-imp.negative, .bf-st.hurt { color: #b3261e; }
+  .bf-imp.mixed { color: #8a6d1a; }
+  html[data-theme="dark"] .bf-chip.positive, html[data-theme="dark"] .bf-imp.positive, html[data-theme="dark"] .bf-st.helped { color: #6fcf97; }
+  html[data-theme="dark"] .bf-chip.negative, html[data-theme="dark"] .bf-imp.negative, html[data-theme="dark"] .bf-st.hurt { color: #ff8a80; }
+  html[data-theme="dark"] .bf-imp.mixed { color: #e2c36b; }
+  .bf h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2, #6b665c); margin: 22px 0 4px; font-weight: 600; }
+  .bf-item { border-top: 1px solid var(--rule-2, #ddd8cc); padding: 13px 0; }
+  .bf-meta { font-size: 12px; color: var(--ink-2, #6b665c); display: flex; gap: 8px; flex-wrap: wrap; }
+  .bf-imp { font-weight: 700; text-transform: capitalize; }
+  .bf-title { font-weight: 600; margin: 4px 0; line-height: 1.35; overflow-wrap: anywhere; }
+  .bf-text { font-size: 14.5px; line-height: 1.5; margin: 4px 0; }
+  .bf-why { font-size: 13.5px; line-height: 1.5; color: var(--ink-2, #6b665c); margin: 4px 0; }
+  .bf-stocks { list-style: none; padding: 0; margin: 6px 0 0; font-size: 13.5px; line-height: 1.5; }
+  .bf-st { font-weight: 700; }
+  .bf-quiet { color: var(--ink-2, #6b665c); font-size: 14px; padding: 16px 0; }
+  details.bf-rest summary { cursor: pointer; font-size: 14px; padding: 10px 0; color: var(--ink-2, #6b665c); }
+</style>
+</head>
+<body>
+<main class="bf">
+  <div class="bf-top"><a href="index.html">&larr; Altaha Screener</a><span class="bf-sub" id="bf-when"></span></div>
+  <h1>Daily brief</h1>
+  <p class="bf-sub">Every new circular from DGFT, RBI, SEBI and the government press office, read for what it does to listed companies.</p>
+  <div class="bf-days" role="tablist" aria-label="Period">
+    <button type="button" data-days="1" class="on">Today</button>
+    <button type="button" data-days="3">3 days</button>
+    <button type="button" data-days="7">7 days</button>
+  </div>
+  <div id="bf-body" aria-live="polite"><p class="bf-quiet">Loading the brief. If the site has been idle this takes about thirty seconds.</p></div>
+</main>
+<script>
+var API_BASE = "https://taha-project.onrender.com";
+(function () {
+  "use strict";
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function day(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? Number(m[3]) + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][Number(m[2]) - 1] : ""; }
+  function item(r) {
+    var stocks = (r.stocks || []).map(function (s) {
+      return "<li><a href=\"stock.html?ticker=" + encodeURIComponent(s.symbol) + "\"><b>" + esc(s.symbol) + "</b></a> <span class=\"bf-st " + esc(s.direction) + "\">" + esc(s.direction) + "</span>: " + esc(s.reason) + "</li>";
+    }).join("");
+    var title = r.link ? "<a href=\"" + esc(r.link) + "\" target=\"_blank\" rel=\"noopener\">" + esc(r.title) + "</a>" : esc(r.title);
+    return "<div class=\"bf-item\"><div class=\"bf-meta\"><span>" + esc(r.source) + (r.number ? " " + esc(r.number) : "") + "</span><span>" + esc(day(r.date)) + "</span>" +
+      "<span class=\"bf-imp " + esc(r.impact) + "\">" + esc(r.impact === "none" ? "no market effect" : r.impact) + "</span>" +
+      "<span>" + (r.read_by === "claude" ? "read by Claude from " + esc(r.read_from || "the title") : "read by keywords") + "</span></div>" +
+      "<div class=\"bf-title\">" + title + "</div>" +
+      (r.summary && r.summary !== r.title ? "<p class=\"bf-text\">" + esc(r.summary) + "</p>" : "") +
+      (r.sectors && r.sectors.length ? "<p class=\"bf-why\"><b>Sectors:</b> " + esc(r.sectors.join(", ")) + "</p>" : "") +
+      (r.why ? "<p class=\"bf-why\">" + esc(r.why) + "</p>" : "") +
+      (stocks ? "<ul class=\"bf-stocks\">" + stocks + "</ul>" : "") +
+      (r.watch ? "<p class=\"bf-why\"><b>Watch:</b> " + esc(r.watch) + "</p>" : "") + "</div>";
+  }
+  function render(d) {
+    var body = document.getElementById("bf-body");
+    if (!d) { body.innerHTML = "<p class=\"bf-quiet\">The brief could not be loaded. Try again in a moment.</p>"; return; }
+    document.getElementById("bf-when").textContent = d.last_run ? "Last read " + d.last_run.at + " IST" : "Not read yet";
+    var matter = (d.items || []).filter(function (r) { return ["positive", "negative", "mixed"].indexOf(r.impact) !== -1; });
+    var rest = (d.items || []).filter(function (r) { return matter.indexOf(r) === -1; });
+    var out = "<p class=\"bf-note\">" + esc(d.note) + (d.reader === "keywords" ? " Today\u2019s circulars were read by a keyword table, which names sectors but no stocks." : "") + "</p>";
+    if (!d.count) {
+      out += "<p class=\"bf-quiet\">" + (d.last_run ? "No new circular in this period." : "The brief has not run yet. It reads the sources three times each weekday.") + "</p>";
+      body.innerHTML = out; return;
+    }
+    var chips = (d.sectors || []).map(function (s) {
+      var tone = s.positive && !s.negative ? "positive" : s.negative && !s.positive ? "negative" : "";
+      return "<span class=\"bf-chip " + tone + "\">" + esc(s.sector) + "</span>";
+    }).concat((d.stocks || []).map(function (s) {
+      var dir = s.mentions[0].direction;
+      return "<span class=\"bf-chip " + (dir === "helped" ? "positive" : "negative") + "\"><b>" + esc(s.symbol) + "</b> " + esc(dir) + "</span>";
+    })).join("");
+    if (chips) out += "<div class=\"bf-sum\">" + chips + "</div>";
+    out += "<h2>" + matter.length + " that matter" + (matter.length === 1 ? "s" : "") + "</h2>" +
+      (matter.length ? matter.map(item).join("") : "<p class=\"bf-quiet\">None of the " + d.count + " circulars read in this period changes anything for a listed company.</p>");
+    if (rest.length) out += "<details class=\"bf-rest\"><summary>" + rest.length + " more read, with no clear market effect</summary>" + rest.map(item).join("") + "</details>";
+    body.innerHTML = out;
+  }
+  function load(days) {
+    fetch(API_BASE + "/brief?days=" + days).then(function (r) { return r.ok ? r.json() : null; }).then(render).catch(function () { render(null); });
+  }
+  document.querySelectorAll(".bf-days button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".bf-days button").forEach(function (x) { x.classList.toggle("on", x === b); });
+      load(b.dataset.days);
+    });
+  });
+  window.AltahaBrief = { render: render };
+  load(1);
+})();
+</script>
+</body>
+</html>

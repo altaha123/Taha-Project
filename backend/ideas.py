@@ -722,7 +722,8 @@ def market_context(horizon: str = "short"):
 # ---------------------------------------------------------------------------
 
 PICK_SECTOR_CAP = int(os.environ.get("IDEAS_PICK_SECTOR_CAP", "4") or 4)
-PICK_STALE_DAYS = {"week": 2, "month": 5, "results": 3, "momentum": 7, "long": 14}
+PICK_STALE_DAYS = {"week": 2, "month": 5, "results": 3, "momentum": 7, "long": 14,
+                   "breakout": 2, "technical": 3, "quick": 1, "flow": 5, "emerging": 5}
 # A long-term pick with these on its record is left out. Not measured by the
 # price study (no ten-year fundamentals history exists to test it on); kept as
 # a plain safety screen and reported in the notes whenever it removes a name.
@@ -880,9 +881,63 @@ def has_picks(payload):
     return any((r.get("leader") or {}).get("lists") for r in rows)
 
 
+def _setup_evidence(key, block):
+    """The ledger for a setup list: what the setup measured, line by line.
+    A line that is a pass or a fail carries points 1 of 1; a plain
+    measurement carries none."""
+    t, facts, parts = block.get("technicals") or {}, block.get("facts") or {}, block.get("parts") or {}
+    n = block.get("universe")
+    out = []
+
+    def line(factor, detail, met=None):
+        out.append({"factor": factor, "detail": detail, "share_pct": None,
+                    "points": None if met is None else (1 if met else 0),
+                    "of": None if met is None else 1})
+    lead = f"Leader score ahead of {parts.get('leader')}% of {n} liquid stocks."
+    if key == "breakout":
+        b = t.get("box") or {}
+        line("The base", f"{leaders.BOX_SESSIONS} sessions between \u20b9{b.get('low')} and \u20b9{b.get('top')}: "
+                         f"a {b.get('width_pct')}% range. The list needs {leaders.BOX_MAX_WIDTH * 100:.0f}% or tighter.", True)
+        ago = b.get("sessions_ago")
+        line("The breakout", ("Closed" if not ago else f"{ago} session{'s' if ago != 1 else ''} ago it closed")
+             + f" at \u20b9{b.get('close')}, above the top of the base.", True)
+        line("Volume", f"{b.get('rel_volume')} times its usual volume that day. The list needs "
+                       f"{leaders.BOX_MIN_VOLUME:.0f} times.", True)
+        line("Still above the base", "Yes." if b.get("holding") else
+             "No: it has closed back under the top of the base since.", bool(b.get("holding")))
+        line("Long-term trend", f"Above its 200-day average (\u20b9{facts.get('sma200')}).", True)
+        line("Strength", lead, True)
+    elif key == "technical":
+        met = set(t.get("scorecard_met") or [])
+        for label in leaders.SCORECARD_LABELS:
+            line(label, "Met." if label in met else "Not met.", label in met)
+    elif key == "quick":
+        line("Two-day RSI", f"{t.get('rsi2')}: sold hard over the last two sessions. The setup is under "
+                            f"{leaders.QUICK_RSI2:.0f}.", True)
+        line("Uptrend", "Price and its 50-day average are above the 200-day average.", True)
+        line("Strength", lead + " The list needs the top 30%.", True)
+        line("Sell at", f"The first close above its 5-day average (\u20b9{t.get('sma5')} today; it moves each day).")
+    elif key == "flow":
+        f = block.get("sector_flow") or {}
+        line("Sector", f"{f.get('sector')}: ranked {f.get('rank')} of {f.get('of')} sectors on money flow.", True)
+        line("Turnover share", f"{f.get('shift')} times its sixty-session share of market turnover this week.")
+        line("Breadth", f"{f.get('breadth_pct')}% of its {f.get('stocks')} liquid stocks are above their 50-day average.")
+        line("Sector's month", f"Its median stock moved {f.get('month_pct')}% over the last 21 sessions.")
+        line("Strength", lead + " Among the four strongest in its sector.", True)
+    elif key == "emerging":
+        line("Listed", f"{block.get('listed_sessions')} sessions ago: six to twelve months.", True)
+        line("Above its 50-day average", "Yes.", True)
+        line("Strength", lead + " Its 6-month return stands in for the 12-month one.", True)
+        line("Six months", f"{facts.get('return_6m_pct')}% over six months, {facts.get('below_high_pct')}% "
+                           "below its high.")
+    return out
+
+
 def _pick_evidence(key, block):
     """The ledger: each measurement's percentile and its share of the score."""
     spec = leaders.LISTS[key]
+    if spec.get("kind") == "setup":
+        return _setup_evidence(key, block)
     mix = dict(spec["mix"])
     if "leader" in mix:                       # the leader score is four parts
         w = mix.pop("leader")
@@ -981,12 +1036,55 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
         if len(chosen) >= limit:
             break
         sec = item[0].get("sector") or "Unknown"
-        if sec != "Unknown" and per_sector.get(sec, 0) >= PICK_SECTOR_CAP:
+        # The money-flow list is four stocks from each of four sectors by
+        # construction; a sector cap of its own would only cut that short.
+        if key != "flow" and sec != "Unknown" and per_sector.get(sec, 0) >= PICK_SECTOR_CAP:
             capped += 1
             continue
         per_sector[sec] = per_sector.get(sec, 0) + 1
         chosen.append(item)
     return chosen, excluded_adverse, weak, capped, gave_way, per_sector, universe, len(pool)
+
+
+_REPLAYED = (" The record beside the list is this rule replayed on NSE prices from 2017 to 2026: "
+             "the list as it stood every fifth session, bought at the next open.")
+SETUP_METHOD = {
+    "breakout": ("A stock is here when it spent 40 sessions inside a range 18% wide or tighter, then "
+                 "closed above the top of that range on at least twice its usual volume in the last five "
+                 "sessions. It must be above its 200-day average and in the stronger half of liquid stocks. "
+                 "Stocks still holding above the base come first, the newest breakout before older ones."
+                 + _REPLAYED),
+    "technical": ("Nine chart conditions are checked on every liquid stock: price above its 20-day "
+                  "average, the 20-day above the 50-day, the 50-day above the 200-day, RSI over 55, MACD "
+                  "above its signal line, ADX at 25 or more with buyers ahead, more volume on up days than "
+                  "down days, this week's volume above usual, and price within 5% of its 52-week high. A "
+                  "stock is here when it meets seven or more; the most conditions come first, then the "
+                  "closest to its high." + _REPLAYED),
+    "quick": ("A stock is here when it is in an uptrend, in the top 30% of liquid stocks on the leader "
+              "score, and its two-day RSI is under 10: a strong stock sold hard for a day or two. The most "
+              "oversold come first. The trade ends at the first close above the 5-day average." + _REPLAYED),
+    "flow": ("Every NSE sector with eight or more liquid stocks is ranked on three things: its share of "
+             "market turnover this week against its share over sixty sessions, how many of its stocks are "
+             "above their 50-day average, and its median stock's month. The list is the four strongest "
+             "stocks in each of the top four sectors." + _REPLAYED),
+    "emerging": ("Companies listed six to twelve months, trading \u20b910 crore a day or more, above their own "
+                 "50-day average, whose leader score stands in the top half of the established market. "
+                 "Their 6-month return stands in for the 12-month one." + _REPLAYED),
+}
+SETUP_EMPTY = {
+    "breakout": "No stock has broken out of a tight 40-session base on heavy volume in the last five sessions.",
+    "technical": "No liquid stock meets seven of the nine chart conditions in this scan.",
+    "quick": ("No market leader is this oversold today. The setup needs a two-day RSI under 10 in a "
+              "stock that is in an uptrend; most days have a few, some have none."),
+    "flow": "No sector could be ranked on money flow in this scan.",
+    "emerging": "No company listed six to twelve months passes the tests in this scan.",
+}
+SETUP_NOTE = {
+    "quick": ("A quick trade lasts about three sessions. In the test two in three rose, but the average gain "
+              "was smaller than the cost of buying and selling: see the record before trading it."),
+    "emerging": ("Listed under a year, so each has six to twelve months of prices. Less history means "
+                 "less to judge by."),
+}
 
 
 def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
@@ -1096,8 +1194,13 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
             if reported else
             f"No liquid company's results were priced in the last {leaders.RESULTS_WINDOW} sessions. "
             "The list fills in the weeks companies report.")
+    setup = spec.get("kind") == "setup"
+    if setup and not chosen:
+        empty_text = SETUP_EMPTY.get(key, empty_text)
+    if setup and chosen and SETUP_NOTE.get(key):
+        notes.append(SETUP_NOTE[key])
     young_shown = [r.get("symbol") for r in chosen if (r.get("leader") or {}).get("young")]
-    if young_shown:
+    if young_shown and not setup:
         notes.append("Listed under a year, ranked on six months of prices in place of twelve: "
                      + ", ".join(young_shown[:6]) + ". In the test such companies led the average "
                      "stock on this list in both halves.")
@@ -1119,8 +1222,11 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "hold_text": spec["hold_text"],
         "exit_pct": spec["exit_pct"],
         "note": spec["idea"],
-        "horizon_note": (f"{spec['idea']} Hold {spec['hold_text']}; leave on a close "
-                         f"{spec['exit_pct']:.0f}% under the call price."),
+        "horizon_note": ((f"{spec['idea']} Sell at the first close above the 5-day average or after "
+                          f"{spec['hold_sessions']} sessions; leave on a close {spec['exit_pct']:.0f}% under the call price.")
+                         if spec.get("sell_rule") == "sma5" else
+                         (f"{spec['idea']} Hold {spec['hold_text']}; leave on a close "
+                          f"{spec['exit_pct']:.0f}% under the call price.")),
         "tested": tested_record(key) if recipe_current else None,
         "recipe_current": recipe_current,
         # The study's header only. Its tables are in research/ideas-study.json;
@@ -1129,7 +1235,16 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
                   ("generated", "source", "from", "to", "sessions", "companies",
                    "universe", "universe_median", "rules")},
         "lists": [{"key": k, "label": leaders.LISTS[k]["label"],
-                   "hold_text": leaders.LISTS[k]["hold_text"]} for k in leaders.ORDER],
+                   "hold_text": leaders.LISTS[k]["hold_text"],
+                   "group": "setup" if k in leaders.SETUPS else "horizon"} for k in leaders.ALL],
+        "kind": spec.get("kind") or "horizon",
+        "sell_rule": spec.get("sell_rule"),
+        # Every sector ranked on money flow, for the money-flow list's table.
+        "sector_flow": (payload.get("sector_flow") or []) if key == "flow" else None,
+        "flow_sectors": leaders.FLOW_SECTORS if key == "flow" else None,
+        # Tight bases not yet broken, nearest their top first: the breakout
+        # list's waiting room. Watched, not picked.
+        "watch": (payload.get("breakout_watch") or []) if key == "breakout" else None,
         "scanned_at": payload.get("scanned_at"),
         "staleness": stale,
         "partial": bool(payload.get("partial")),
@@ -1140,7 +1255,8 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         # What the test found for this list in a market like today's. The page
         # shows this where it used to show a warning the test did not bear out.
         "market_test": market_test(key, regime) if recipe_current else None,
-        "chart_note": CHART_NOTE,
+        # On a setup list the chart IS the reason, so the disclaimer is dropped.
+        "chart_note": None if spec.get("kind") == "setup" else CHART_NOTE,
         "empty_text": None if chosen else empty_text,
         "event": spec.get("event"),
         "market_context": {"regime": regime, "leaders": _leaders[0], "laggards": _leaders[1],
@@ -1160,13 +1276,14 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "considered": considered,
         "gives_way_to": other if other in leaders.LISTS else None,
         "gave_way": gave_way,
-        "method": (("Every liquid NSE company whose quarterly results reached the exchange in the "
+        "method": (SETUP_METHOD[key] if key in SETUP_METHOD else
+                   ("Every liquid NSE company whose quarterly results reached the exchange in the "
                     "last ten sessions is ranked on how its stock moved, against the average stock, "
                     "on the first session that could price them. Tested on NSE prices and filings "
                     "from 2018 to 2026.") if event else
-                   ("Every liquid NSE stock is ranked on the measurements in the ledger. "
+                   "Every liquid NSE stock is ranked on the measurements in the ledger. "
                     "The list is the top of that ranking after the uptrend and volatility "
-                    "gates. Tested on NSE prices from 2017 to 2026.")),
+                    "gates. Tested on NSE prices from 2017 to 2026."),
     }
 
 

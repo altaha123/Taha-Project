@@ -1,5 +1,5 @@
 """
-Add the results list to frontend/tests/fixtures/picks.json.
+Add the results list and the five setup lists to frontend/tests/fixtures/picks.json.
 
 The four price lists in that file are the live endpoint's answer for 9 Nov
 2026, trimmed to what the page reads. The results list did not exist then, so
@@ -35,7 +35,7 @@ TOP_KEYS = ("available", "degraded", "method_key", "list", "horizon", "label", "
             "exit_pct", "tested", "study", "scanned_at", "partial", "scored", "universe_source",
             "universe", "regime", "market_test", "chart_note", "empty_text", "event", "sector_mix",
             "sector_cap", "selection_notes", "excluded_adverse", "count", "considered", "method",
-            "recipe_current")
+            "recipe_current", "kind", "sell_rule", "sector_flow", "flow_sectors", "watch", "lists")
 
 
 def main():
@@ -76,20 +76,28 @@ def main():
     ideas._order_for = lambda sym: None
     ideas.tracker = None
 
+    sectors = S.load_sectors()
+
     def payload(results):
-        blocks = leaders.rank(cands, results=results)
+        blocks = leaders.rank(cands, results=results, sectors=sectors)
+        flow = {}
+        for b in blocks.values():
+            if b.get("sector_flow"):
+                flow[b["sector_flow"]["sector"]] = b["sector_flow"]
         rows = []
         for sym, b in blocks.items():
             if not leaders.best_rank(b) or leaders.best_rank(b) > 22:
                 continue
             j = P.C.columns.get_loc(sym)
-            rows.append({"symbol": sym, "name": names.get(sym, sym), "sector": None,
+            rows.append({"symbol": sym, "name": names.get(sym, sym), "sector": b.get("sector"),
                          "price": round(float(P.RAW.iat[i, j]), 2), "composite": None,
                          "technical": None, "fundamental": None, "f_score": None, "trailing_eps": None,
                          "setup": None, "setup_key": None, "setup_fit": None,
                          "avg_turnover_cr": b["facts"]["turnover_cr"], "leader": b})
         return {"scanned_at": day.strftime("%d %b %Y") + ", 18:10", "universe_source": "NSE equity list",
-                "scored": len(rows), "factor_universe": rows, "rankings": rows}
+                "scored": len(rows), "factor_universe": rows, "rankings": rows,
+                "sector_flow": sorted(flow.values(), key=lambda r: r["rank"]),
+                "breakout_watch": leaders.breakout_watch(blocks)}
 
     def trimmed(sel):
         out = {k: sel.get(k) for k in TOP_KEYS}
@@ -107,6 +115,14 @@ def main():
     empty = ideas.select(payload({}), horizon="results", limit=15)
     assert empty["count"] == 0 and empty["empty_text"]
     fix["results_empty"] = trimmed(empty)
+    # The setup lists, as they stood the same day.
+    made = []
+    for key in leaders.SETUPS:
+        sel = ideas.select(payload(filed), horizon=key, limit=15)
+        assert sel["tested"] and sel["kind"] == "setup", key
+        fix[key] = trimmed(sel)
+        made.append("%s %d" % (key, sel["count"]))
+    print("setup lists: " + ", ".join(made))
     # The file's own layout (one value a line, no padding), so a regenerated
     # fixture differs from the last one only where the lists do.
     OUT.write_text(json.dumps(fix, indent=0, separators=(",", ":"), ensure_ascii=False) + "\n",

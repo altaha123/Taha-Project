@@ -4878,6 +4878,52 @@ def run_daily_digest(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Ke
             "dry_run": dry_run, "provider": mailer.provider()}
 
 
+@app.get("/brief")
+def policy_brief_today(days: int = 1):
+    """The daily brief: each new DGFT, RBI, SEBI and PIB circular, with what
+    it changes and which sectors and stocks it touches. days=1 is today's;
+    up to 30 are kept."""
+    import policy_brief
+    return policy_brief.brief(days=max(1, min(int(days), policy_brief.KEEP_DAYS)))
+
+
+@app.post("/jobs/policy-brief")
+def run_policy_brief(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+                     key: str = "", send: bool = False, dry_run: bool = False):
+    """Read what is new from every source, once. With send=true, also mail
+    the brief to everyone who takes the daily digest, on days when at least
+    one circular matters. Guarded by ADMIN_KEY; a second run on the same day
+    reads only what appeared since and mails nobody twice."""
+    import policy_brief
+
+    expected = ADMIN_KEY
+    if expected and (x_admin_key or key) != expected:
+        raise HTTPException(403, "Set X-Admin-Key.")
+    run = policy_brief.refresh()
+    b = policy_brief.brief(days=1)
+    out = {"run": run, "date": b["date"], "read": b["count"], "matter": b["matter"],
+           "sent": 0, "skipped": 0, "failed": 0}
+    if not send or not b["matter"]:
+        return out
+    import accounts
+    import mailer
+    for person in accounts.digest_recipients():
+        if accounts.already_sent(person["id"], "brief", b["date"]):
+            out["skipped"] += 1
+            continue
+        if dry_run:
+            out["sent"] += 1
+            continue
+        unsub = f"{_site()}/unsubscribe?token={person['unsub_token']}"
+        ok, detail = mailer.send(person["email"], policy_brief.email_subject(b),
+                                 policy_brief.email_html(b, site=_site(), unsubscribe_url=unsub),
+                                 policy_brief.email_text(b, site=_site(), unsubscribe_url=unsub),
+                                 unsubscribe_url=unsub)
+        accounts.record_send(person["id"], "brief", b["date"], ok, detail)
+        out["sent" if ok else "failed"] += 1
+    return out
+
+
 @app.get("/digest/preview")
 def digest_preview(holdings: str = "", format: str = "html", name: str = ""):
     """The daily portfolio email, rendered. format=html | text | json."""
