@@ -294,7 +294,7 @@ def test_a_shared_portfolio_is_seen_by_the_adviser_until_it_is_withdrawn():
     chat = A.start_chat(reader, mine["slug"], "portfolio", "Please look at my book.",
                         share_portfolio=True)["chat_id"]
     shared = A.chat_view(adviser, chat)["shared"]
-    assert shared["holdings"] == [{"symbol": "TCS", "qty": 10.0, "avg_price": 3500.0}]
+    assert shared["holdings"] == [{"symbol": "TCS", "qty": 10.0, "avg_price": 3500.0, "buy_date": None}]
     assert "shared" not in A.chat_view(reader, chat), "the reader's own view does not echo it"
     A.set_share(reader, chat, False)
     assert "shared" not in A.chat_view(adviser, chat)

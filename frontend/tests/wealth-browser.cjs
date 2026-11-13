@@ -540,8 +540,25 @@ async function clean(page, label) {
       await ctx.close();
     }
 
+    // ── A desk left open catches up with another computer ──────────────
+    {
+      const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+      const state = fresh({ user: { email: 'nadia@example.com', wealth_desk: true }, desk: true });
+      await wire(ctx, state);
+      const page = await ctx.newPage();
+      watch(page, 'second computer');
+      await page.goto(`${base}/wealth.html#clients`);
+      await page.waitForFunction(n => document.body.innerText.includes(n), state.book.clients[0].name);
+      // Another computer renames a client on the same account.
+      state.book.clients[0].name = 'Renamed Elsewhere';
+      await page.evaluate(() => { const now = Date.now; Date.now = () => now() + 60000; window.dispatchEvent(new Event('focus')); });
+      await page.waitForFunction(() => document.body.innerText.includes('Renamed Elsewhere'), null, { timeout: 8000 })
+        .catch(() => assert.fail('an open desk did not pick up a change made on another computer'));
+      await ctx.close();
+    }
+
     assert.deepEqual(errors, [], errors.join('\n'));
-    console.log('wealth desk: landing, sample, setup, writes, client view, phone and motion-off all pass');
+    console.log('wealth desk: two computers, landing, sample, setup, writes, client view, phone and motion-off all pass');
   } finally {
     await browser.close();
     server.close();

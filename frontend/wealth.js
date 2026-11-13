@@ -320,6 +320,25 @@
     }).catch(function (e) { if (!quiet) failView(e.message); });
   }
 
+  /* One desk, several computers. Everything here is stored on the account,
+     but a desk left open on one computer went on showing the book as it was
+     when the page loaded: a client added or a trade entered on another
+     computer did not appear until somebody thought to reload. The book is
+     now fetched again whenever the tab is looked at, unless a form is open
+     or a field is being typed in, where a repaint would take the work away. */
+  var lastSeen = Date.now();
+  function refreshIfStale() {
+    if (document.visibilityState !== 'visible' || Date.now() - lastSeen < 20000) return;
+    if (S.mode !== 'desk' && S.mode !== 'portal') return;
+    var m = $('wd-modal'), el = document.activeElement;
+    if ((m && m.open) || (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+    lastSeen = Date.now();
+    if (S.mode === 'desk') loadBook(true).catch(function () {});
+    if (S.mode === 'portal' || (S.info && S.info.shared)) loadShared(true);
+  }
+  document.addEventListener('visibilitychange', refreshIfStale);
+  window.addEventListener('focus', refreshIfStale);
+
   /* Names still coming are fetched in chunks; ask again, a few times. */
   function schedulePoll() {
     clearTimeout(S.timer);

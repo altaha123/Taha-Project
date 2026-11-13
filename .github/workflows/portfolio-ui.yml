@@ -342,6 +342,13 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/portfolio-persist-browser.cjs
+      - name: One account, two computers
+        # A second computer must show the account's portfolio, and an edit
+        # must reach the account without Save being pressed.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/portfolio-sync-browser.cjs
       - name: Verify the holdings ledger is compact, adds up and works on a phone
         # One line per holding, under one header; a board whose totals come
         # only from the quotes given; sorting that the draft keeps; no price

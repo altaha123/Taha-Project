@@ -422,6 +422,7 @@
       if (rows.length) localStorage.setItem(DRAFT_KEY, JSON.stringify({ rows: rows }));
       else localStorage.removeItem(DRAFT_KEY);
     } catch (e) { /* a full or blocked store is not worth an error here */ }
+    queueAccountSave();
   }
 
   function readDraft() {
@@ -2054,8 +2055,9 @@
   function serverSave(silent) {
     if (!window.AltahaAuth || !window.AltahaAuth.authed()) return Promise.resolve(false);
     var holdings = collect().map(function (h) {
-      return { symbol: h.symbol, qty: h.qty, avg_price: h.buy_price };
+      return { symbol: h.symbol, qty: h.qty, avg_price: h.buy_price, buy_date: h.buy_date };
     });
+    var sent = signature(collect());
     return window.AltahaAuth.fetch('/me/portfolio', {
       method: 'PUT', body: JSON.stringify({ holdings: holdings })
     }).then(function (r) { return r.ok ? r.json() : null; })
@@ -2068,6 +2070,7 @@
           window.AltahaTrack('portfolio_saved',
             { holdings: d.saved, destination: 'account' });
         }
+        markSynced(sent);
         if (!silent) {
           say(d.saved + ' holding' + (d.saved === 1 ? '' : 's') +
               ' saved to your account. The daily email uses this list.', 'good');
@@ -2080,27 +2083,86 @@
       });
   }
 
-  /* Pulled once on load, and only into an EMPTY table. Somebody who arrives
-     with rows already typed must not have them replaced by an older saved
-     list — losing work is worse than not syncing. */
+  /* ── One portfolio on every computer ─────────────────────────────────────
+     Signed in, the ACCOUNT's copy is the portfolio. It used to be pulled only
+     into an empty table and pushed only when Save was pressed, so a second
+     computer that already held an older list kept showing it for ever, and
+     an edit made without pressing Save never left the machine it was typed
+     on. Now:
+       · every change is sent to the account a moment after it is made
+       · on load, on sign-in and whenever the tab is looked at again, the
+         account's copy replaces this browser's, UNLESS this browser has a
+         change it has not yet managed to send, which is newer and is sent
+     What this browser last agreed with the account on is remembered, which
+     is how "an unsent change" is told from "an old copy". */
+  var SYNC_KEY = 'altaha-portfolio-synced';
+  var saveTimer = null, lastPull = 0;
+
+  function signature(list) {
+    return JSON.stringify((list || []).map(function (h) {
+      return [String(h.symbol).toUpperCase(), Number(h.qty),
+              h.buy_price == null ? null : Number(h.buy_price), h.buy_date || null];
+    }).sort(function (x, y) { return x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0; }));
+  }
+  function me() {
+    var u = window.AltahaAuth && window.AltahaAuth.user && window.AltahaAuth.user();
+    return (u && u.email) || '';
+  }
+  function readSynced() {
+    try { return JSON.parse(localStorage.getItem(SYNC_KEY) || 'null') || {}; } catch (e) { return {}; }
+  }
+  function markSynced(sig) {
+    try { localStorage.setItem(SYNC_KEY, JSON.stringify({ who: me(), sig: sig })); } catch (e) {}
+  }
+  /* A row with a symbol and no quantity yet is somebody mid-sentence. */
+  function midEdit() {
+    return state.rows.some(function (r) { return r.symbol && !(Number(r.qty) > 0); });
+  }
+  function queueAccountSave() {
+    if (!window.AltahaAuth || !window.AltahaAuth.authed() || !me()) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      var synced = readSynced();
+      if (midEdit() || synced.who !== me()) return;        // first agree with the account, then follow it
+      if (signature(collect()) !== synced.sig) serverSave(true);
+    }, 1500);
+  }
+
   function serverLoad() {
     if (!window.AltahaAuth || !window.AltahaAuth.authed()) return;
+    lastPull = Date.now();
     window.AltahaAuth.fetch('/me/portfolio')
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (!d || !d.holdings || !d.holdings.length) return;
-        var typed = state.rows.filter(function (r) { return r.symbol; });
-        if (typed.length) { paintAccount(); return; }
+        if (!d || !Array.isArray(d.holdings) || !me()) return;
+        var server = d.holdings.map(function (h) {
+          return { symbol: h.symbol, qty: h.qty, buy_price: h.avg_price, buy_date: h.buy_date || null };
+        });
+        var theirs = signature(server), mine = signature(collect()), synced = readSynced();
+        if (theirs === mine) { markSynced(theirs); paintAccount(); return; }
+        if (midEdit()) return;
+        // A change made here that the account has not had yet is the newer one.
+        if (synced.who === me() && synced.sig !== mine) { serverSave(true); return; }
+        // An account with nothing saved takes what this browser holds.
+        if (!server.length) { if (collect().length) serverSave(true); return; }
         state.rows = d.holdings.slice(0, MAX_ROWS).map(function (h) {
           return { symbol: h.symbol, qty: String(h.qty),
-                   buy: h.avg_price == null ? '' : String(h.avg_price), date: '' };
+                   buy: h.avg_price == null ? '' : String(h.avg_price), date: h.buy_date || '' };
         });
+        markSynced(theirs);
         renderRows();
+        saveDraft();
         note('Loaded ' + d.holdings.length + ' holding' +
              (d.holdings.length === 1 ? '' : 's') + ' from your account.', 'good');
         paintAccount();
       }).catch(function () {});
   }
+  /* Another computer may have changed the list while this tab sat open. */
+  function pullIfStale() {
+    if (document.visibilityState === 'visible' && Date.now() - lastPull > 20000) serverLoad();
+  }
+  document.addEventListener('visibilitychange', pullIfStale);
+  window.addEventListener('focus', pullIfStale);
 
   /* The last thing this panel said, kept outside the markup it is rendered
      into. serverSave() repaints the panel on success, which threw away the

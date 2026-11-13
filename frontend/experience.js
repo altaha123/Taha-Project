@@ -202,6 +202,13 @@
 
   window.addEventListener('altaha-auth', pull);
   pull();
+  // Another computer may have changed the list while this tab sat open.
+  let lastPull = Date.now();
+  const pullIfStale = () => {
+    if (document.visibilityState === 'visible' && Date.now() - lastPull > 20000) { lastPull = Date.now(); pull(); }
+  };
+  document.addEventListener('visibilitychange', pullIfStale);
+  window.addEventListener('focus', pullIfStale);
 
   window.addEventListener('storage', e => { if (e.key === KEY || e.key === null) { saved = read(); sync(); } });
   function go(section) {
