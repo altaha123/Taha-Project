@@ -243,6 +243,9 @@ def _open(path):
     with conn:
         _ensure_column(conn, "login_tokens", "code_hash", "TEXT")
         _ensure_column(conn, "login_tokens", "attempts", "INTEGER NOT NULL DEFAULT 0")
+        # The day a holding was bought: typed on one computer, it has to be
+        # there on the next one.
+        _ensure_column(conn, "holdings", "buy_date", "TEXT")
     return conn
 
 
@@ -531,7 +534,10 @@ def save_holdings(user_id: int, rows: list) -> dict:
             avg = None
         # Later rows win, so pasting a CSV with the same scrip twice keeps one
         # line rather than failing the whole import.
-        good[sym] = (qty, avg)
+        day = str(r.get("buy_date") or "")[:10]
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+            day = None
+        good[sym] = (qty, avg, day)
         if len(good) > MAX_HOLDINGS:
             rejected.append({"symbol": sym, "why": f"over the {MAX_HOLDINGS}-holding limit"})
             good.pop(sym)
@@ -542,18 +548,18 @@ def save_holdings(user_id: int, rows: list) -> dict:
     with conn:
         conn.execute("DELETE FROM holdings WHERE user_id=?", (user_id,))
         conn.executemany(
-            "INSERT INTO holdings(user_id,symbol,qty,avg_price,updated_at) VALUES(?,?,?,?,?)",
-            [(user_id, s, q, a, now) for s, (q, a) in good.items()])
+            "INSERT INTO holdings(user_id,symbol,qty,avg_price,buy_date,updated_at) VALUES(?,?,?,?,?,?)",
+            [(user_id, s, q, a, d, now) for s, (q, a, d) in good.items()])
     return {"saved": len(good), "rejected": rejected}
 
 
 def get_holdings(user_id: int) -> list:
     conn = _connect()
     rows = conn.execute(
-        "SELECT symbol,qty,avg_price FROM holdings WHERE user_id=? ORDER BY symbol",
+        "SELECT symbol,qty,avg_price,buy_date FROM holdings WHERE user_id=? ORDER BY symbol",
         (user_id,)).fetchall()
-    return [{"symbol": r["symbol"], "qty": r["qty"], "avg_price": r["avg_price"]}
-            for r in rows]
+    return [{"symbol": r["symbol"], "qty": r["qty"], "avg_price": r["avg_price"],
+             "buy_date": r["buy_date"]} for r in rows]
 
 
 # ---------------------------------------------------------------------------
