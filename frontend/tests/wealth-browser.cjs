@@ -181,17 +181,22 @@ async function clean(page, label) {
       await clean(page, 'overview');
       await page.screenshot({ path: `${output}/overview.png`, fullPage: true });
 
-      // A client: recommended beside bought-at, in every row.
+      // A client: one price a holding was bought at, and a logo beside each name.
       const ayesha = BOOK.clients[0];
       await page.click(`.wd-card[data-go="client/${ayesha.id}"]`);
       await page.waitForSelector('.wd-table');
       const head = await page.locator('.wd-table thead').innerText();
-      assert.match(head, /RECOMMENDED/i);
-      assert.match(head, /BOUGHT AT/i);
+      assert.match(head, /AVG COST/i);
+      assert.doesNotMatch(head, /RECOMMENDED|BOUGHT AT|STOP/i, 'the second price is back in the table');
+      assert.equal(await page.locator('.wd-table thead th').count(), 8, 'the holdings table grew past eight columns');
       const first = ayesha.holdings[0];
       const row = await page.locator('.wd-table tbody tr').first().innerText();
       assert.ok(row.includes(first.symbol), row);
-      assert.ok(row.replace(/[^\d]/g, '').includes(String(Math.round(first.rec_price))), `recommended price in "${row}"`);
+      assert.ok(row.replace(/[^\d]/g, '').includes(String(Math.round(first.avg))), `average cost in "${row}"`);
+      assert.equal(await page.locator('.wd-table tbody tr .wd-logo').count(), ayesha.holdings.length + (ayesha.cash > 0.5 ? 1 : 0), 'a holding has no logo');
+      assert.equal(await page.locator('.wd-table tbody tr').first().locator('.wd-logo i').innerText(), first.symbol.replace(/[^A-Z0-9]/g, '').slice(0, 2),
+        'the initials under a logo are not the stock’s');
+      assert.deepEqual(await page.locator('.wd-acts .wd-act').allInnerTexts().then(a => a.map(x => x.trim())), ['Add stocks', 'Sell', 'Money in / out', 'More']);
       await clean(page, 'client');
       await page.screenshot({ path: `${output}/client.png`, fullPage: true });
 
@@ -230,8 +235,9 @@ async function clean(page, label) {
 
       // The statement prints the client.
       await page.goto(`${base}/wealth.html?demo=1#client/${ayesha.id}`);
-      await page.waitForSelector('.wd-acts [data-act="statement"]');
-      await page.click('.wd-acts [data-act="statement"]');
+      await page.waitForSelector('.wd-acts [data-act="client-more"]');
+      await page.click('.wd-acts [data-act="client-more"]');
+      await page.click('#wd-modal [data-act="m-statement"]');
       await page.waitForFunction(() => window.__printed > 0);
       const printed = await page.textContent('#wd-print');
       assert.ok(printed.includes(ayesha.name) && printed.includes(first.symbol), 'the statement carries the client and holdings');
@@ -293,7 +299,7 @@ async function clean(page, label) {
       assert.ok((await page.textContent('.wd-cid h2')).includes('<img'), 'the markup is shown as characters');
       assert.equal(await page.evaluate(() => window.__pwned), undefined, 'markup in a client name ran');
 
-      // A buy, linked to an open call, carries the recommended price.
+      // A single buy, from the More menu, linked to an open call.
       const c1 = state.book.clients[0];
       const rec = state.book.recs.find(r => r.status === 'open' && r.action === 'buy');
       await page.goto(`${base}/wealth.html#client/${c1.id}`);
@@ -312,8 +318,11 @@ async function clean(page, label) {
         qty: document.querySelector('#wd-modal [name=qty]').value })), { symbol: '', qty: '10' }, 'typing went to another field');
       await page.click('#wd-modal [data-close]');
       await page.waitForFunction(() => !document.getElementById('wd-modal').open);
-      await page.click('.wd-acts [data-act="add-event"]');
+      await page.click('.wd-acts [data-act="client-more"]');
+      await page.click('#wd-modal [data-act="m-event"][data-kind="buy"]');
       await page.waitForSelector('#wd-modal [name=symbol]');
+      assert.equal(await page.locator('#wd-modal [name=rec_price]').count(), 0, 'the trade form asks for a second price');
+      assert.equal(await page.locator('#wd-modal .ev-rec').isVisible(), false, 'the call field shows before there is a call to link');
       await page.fill('#wd-modal [name=symbol]', rec.symbol);
       await page.dispatchEvent('#wd-modal [name=symbol]', 'input');
       await page.fill('#wd-modal [name=qty]', '10');
@@ -325,7 +334,53 @@ async function clean(page, label) {
       assert.equal(ev.symbol, rec.symbol);
       assert.equal(ev.price, '1234.50', 'commas are stripped before sending');
       assert.equal(String(ev.rec_id), String(rec.id), 'the open call is linked');
-      assert.equal(Number(ev.rec_price), rec.price);
+      assert.ok(!('rec_price' in ev), 'a second price was sent with the trade');
+
+      // Many stocks in one go: typed, pasted from a spreadsheet, sent together.
+      await page.goto(`${base}/wealth.html#client/${c1.id}`);
+      await page.waitForSelector('.wd-acts [data-act="add-stocks"]');
+      await page.click('.wd-acts [data-act="add-stocks"]');
+      await page.waitForSelector('#wd-modal .wd-addrows');
+      assert.equal(await page.locator('#wd-modal tr[data-row]').count(), 4, 'the form does not open with room for several stocks');
+      assert.match(await page.locator('#wd-modal .wd-addrows thead').innerText(), /AVG COST/i);
+      assert.doesNotMatch(await page.locator('#wd-modal').innerText(), /recommended/i);
+      // An empty form says so, and sends nothing.
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForFunction(() => /at least one stock/.test(document.querySelector('#wd-modal .wd-err').textContent));
+      const row = n => page.locator('#wd-modal tr[data-row]').nth(n);
+      await row(0).locator('[data-f="symbol"]').fill('infy');
+      await row(0).locator('[data-f="qty"]').fill('25');
+      await row(0).locator('[data-f="avg"]').fill('1,540.50');
+      // A row begun and not finished is named, not dropped.
+      await row(1).locator('[data-f="symbol"]').fill('TCS');
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForFunction(() => /Row 2 \(TCS\) needs a quantity/.test(document.querySelector('#wd-modal .wd-err').textContent));
+      // Three rows copied from Excel, pasted into the second row, header and all.
+      await row(1).locator('[data-f="symbol"]').focus();
+      await page.evaluate(() => {
+        const dt = new DataTransfer();
+        dt.setData('text', 'Symbol\tQty\tAvg\nTCS\t12\t3305\nHDFCBANK\t40\t812.3\nITC\t100\t284\nSBIN\t30\t1086.5\n');
+        document.activeElement.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+      });
+      assert.equal(await page.locator('#wd-modal tr[data-row]').count(), 5, 'pasted rows did not make room for themselves');
+      assert.equal(await row(4).locator('[data-f="symbol"]').inputValue(), 'SBIN');
+      assert.match(await page.locator('#wd-modal [data-total]').innerText(), /5 stocks ready to add/);
+      await page.click('#wd-modal [data-more]');
+      assert.equal(await page.locator('#wd-modal tr[data-row]').count(), 6);
+      await row(5).locator('[data-del]').click();
+      assert.equal(await page.locator('#wd-modal tr[data-row]').count(), 5);
+      state.writes.length = 0;
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForFunction(() => !document.getElementById('wd-modal').open);
+      const many = state.writes.find(w => /\/statement\/apply$/.test(w.p));
+      assert.ok(many, 'the stocks were not sent');
+      assert.equal(state.writes.length, 1, 'adding five stocks took more than one request');
+      assert.equal(many.body.mode, 'add');
+      assert.deepEqual(many.body.rows, [
+        { symbol: 'INFY', qty: '25', avg: '1540.50' }, { symbol: 'TCS', qty: '12', avg: '3305' },
+        { symbol: 'HDFCBANK', qty: '40', avg: '812.3' }, { symbol: 'ITC', qty: '100', avg: '284' }, { symbol: 'SBIN', qty: '30', avg: '1086.5' }]);
+      assert.equal(many.body.buy_date, many.body.as_of);
+      state.writes.length = 0;
 
       // One call, two clients.
       await page.goto(`${base}/wealth.html#calls`);
@@ -381,8 +436,9 @@ async function clean(page, label) {
 
       // Upload: read in the page, matched, reviewed, applied.
       await page.goto(`${base}/wealth.html#client/${c1.id}`);
-      await page.waitForSelector('.wd-acts [data-act="upload"]');
-      await page.click('.wd-acts [data-act="upload"]');
+      await page.waitForSelector('.wd-acts [data-act="add-stocks"]');
+      await page.click('.wd-acts [data-act="add-stocks"]');
+      await page.click('#wd-modal [data-act="upload"]');
       await page.setInputFiles('#wd-modal input[name=file]', STMT);
       await page.waitForSelector('#wd-modal .wd-plan tbody tr');
       assert.match(await page.textContent('#wd-modal .wd-warn'), /Priya Raman/, 'a statement for somebody else says so');
@@ -401,20 +457,20 @@ async function clean(page, label) {
       const sent = JSON.stringify(state.writes);
       assert.ok(!/Priya|1234567890/.test(sent), 'the client’s name or code from the statement was sent');
 
-      // A holding's average and recommended price.
+      // A holding's average cost.
       const h = c1.holdings[0];
       await page.waitForSelector(`.wd-table [data-act="edit-hold"][data-sym="${h.symbol}"]`);
       await page.click(`.wd-table [data-act="edit-hold"][data-sym="${h.symbol}"]`);
       await page.waitForSelector('#wd-modal [name=avg]');
       assert.equal(Number(await page.inputValue('#wd-modal [name=avg]')), h.avg);
       await page.fill('#wd-modal [name=avg]', '1,111.50');
-      await page.fill('#wd-modal [name=rec]', '1100');
+      assert.equal(await page.locator('#wd-modal [name=rec]').count(), 0);
       assert.match(await page.textContent('#wd-modal [data-prev]'), /invested/);
       await page.click('#wd-modal [type=submit]');
       await page.waitForFunction(() => !document.getElementById('wd-modal').open);
       const hold = state.writes.find(w => /\/holdings\//.test(w.p));
       assert.equal(hold.p, `/wealth/clients/${c1.id}/holdings/${h.symbol}`);
-      assert.deepEqual(hold.body, { avg: '1111.50', rec_price: '1100' });
+      assert.deepEqual(hold.body, { avg: '1111.50' });
 
       // One purchase on its own.
       await page.click(`.wd-table [data-act="edit-hold"][data-sym="${h.symbol}"]`);
@@ -443,7 +499,7 @@ async function clean(page, label) {
       assert.equal(one.m, 'PUT');
       assert.equal(one.body.price, '999');
       assert.equal(one.body.symbol, buy.symbol);
-      assert.equal(Number(one.body.rec_price), buy.rec_price, 'the recommended price is kept, not replaced by the call’s');
+      assert.ok(!('rec_price' in one.body), 'an edit sent a second price; what is stored must be left alone');
 
       // A new client, started from their statement.
       state.writes.length = 0;
@@ -472,7 +528,7 @@ async function clean(page, label) {
       await page.waitForSelector('.wd-cid h2');
       assert.ok((await page.textContent('.wd-cid h2')).includes(view.name));
       assert.match(await page.textContent('#wd-view'), /read-only/);
-      for (const a of ['add-event', 'settle', 'import', 'del-event', 'hold']) {
+      for (const a of ['add-event', 'add-stocks', 'client-more', 'settle', 'import', 'del-event', 'hold']) {
         assert.equal(await page.locator(`#wd-view [data-act="${a}"]`).count(), 0, `a client can ${a}`);
       }
       assert.equal(await page.locator('[data-ctab="profile"]').count(), 0);
