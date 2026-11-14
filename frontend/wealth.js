@@ -119,6 +119,16 @@
     if (!w.length) return '?';
     return (w[0][0] + (w.length > 1 ? w[w.length - 1][0] : (w[0][1] || ''))).toUpperCase();
   }
+  /* A company's logo beside its name. The pictures come from the broker
+     feed's image host, keyed by NSE symbol; where it has none (it answers
+     403) the image removes itself and the two initials under it show. */
+  var LOGO_HOST = 'https://images.dhan.co/symbol/';
+  function logo(sym, cls) {
+    var s = String(sym || '').toUpperCase();
+    return '<span class="wd-logo' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><i>' + esc(s.replace(/[^A-Z0-9]/g, '').slice(0, 2)) + '</i>' +
+      '<img loading="lazy" decoding="async" alt="" src="' + LOGO_HOST + encodeURIComponent(s) + '.png" onerror="this.remove()"></span>';
+  }
+
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
   function still() {
     try {
@@ -720,7 +730,7 @@
     var max = Math.max.apply(null, rows.map(function (r) { return num(r.value); })) || 1;
     return '<div class="wd-bars">' + rows.map(function (r, i) {
       var who = r.clients.slice(0, 4).map(function (c) { return '<span class="wd-av sm c-' + esc(c.color) + '" title="' + esc(c.name) + '">' + esc(initials(c.name)) + '</span>'; }).join('');
-      return '<div class="wd-barrow"><div class="nm"><b><a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '">' + esc(r.symbol) + '</a></b>' +
+      return '<div class="wd-barrow"><div class="nm">' + logo(r.symbol, 'sm') + '<b><a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '">' + esc(r.symbol) + '</a></b>' +
         '<small><span class="wd-stack">' + who + '</span> ' + plural(r.clients.length, 'client') + '</small></div>' +
         '<div class="wd-track"><i style="width:' + (100 * num(r.value) / max).toFixed(1) + '%;--i:' + i + '"></i></div>' +
         '<div class="v pv">' + esc(short(r.value)) + '<small class="' + tone(r.pnl_pct) + '">' + esc(pct(r.pnl_pct, 1)) + '</small></div></div>';
@@ -797,12 +807,12 @@
     var t = c.terms || {}, f = c.fee || {};
     var contact = [c.email, c.phone].filter(Boolean).map(esc).join(' · ');
     var acts = ro ? '<button type="button" class="wd-act primary" data-act="statement" data-id="' + c.id + '">' + ic('print') + 'Statement</button>' :
-      '<button type="button" class="wd-act primary" data-act="add-event" data-id="' + c.id + '" data-kind="buy">' + ic('trade') + 'Trade</button>' +
+      /* Four buttons where there were six: the two things done every week
+         (add, sell), money, and everything else behind More. */
+      '<button type="button" class="wd-act primary" data-act="add-stocks" data-id="' + c.id + '">' + ic('plus') + 'Add stocks</button>' +
+      '<button type="button" class="wd-act" data-act="add-event" data-id="' + c.id + '" data-kind="sell">' + ic('down') + 'Sell</button>' +
       '<button type="button" class="wd-act" data-act="add-event" data-id="' + c.id + '" data-kind="deposit">' + ic('rupee') + 'Money in / out</button>' +
-      '<button type="button" class="wd-act" data-act="upload" data-id="' + c.id + '">' + ic('in') + 'Upload statement</button>' +
-      '<button type="button" class="wd-act" data-act="settle" data-id="' + c.id + '">' + ic('bill') + 'Settle fee</button>' +
-      '<button type="button" class="wd-act" data-act="statement" data-id="' + c.id + '">' + ic('print') + 'Statement</button>' +
-      '<button type="button" class="wd-act" data-go="client/' + c.id + '/profile">' + ic('edit') + 'Edit</button>';
+      '<button type="button" class="wd-act" data-act="client-more" data-id="' + c.id + '">' + ic('dots') + 'More</button>';
     var html = (ro ? '' : '<button type="button" class="wd-back" data-go="clients">' + ic('back') + 'All clients</button>') +
       '<div class="wd-hero wd-chero c-' + esc(c.color) + ' wd-rise"><span class="wd-glow" aria-hidden="true"></span>' +
       '<div style="min-width:0"><div class="wd-cid"><span class="wd-av lg">' + esc(initials(c.name)) + '</span><div style="min-width:0">' +
@@ -846,71 +856,58 @@
     return '<span class="wd-score ' + (s >= 65 ? 'hi' : s < 40 ? 'lo' : '') + '" title="Altaha Score">' + Math.round(s) + '</span>';
   }
 
-  function ttTrack(h) {
-    if (!finite(h.target) || !finite(h.stop) || !finite(h.ltp) || h.target <= h.stop) return '<span class="wd-muted">—</span>';
-    var span = h.target - h.stop;
-    var at = Math.max(0, Math.min(1, (h.ltp - h.stop) / span)), rec = finite(h.rec_price) ? Math.max(0, Math.min(1, (h.rec_price - h.stop) / span)) : null;
-    return '<span class="wd-tt" title="Stop ' + esc(px(h.stop)) + ' · target ' + esc(px(h.target)) + '"><span class="bar"></span>' +
-      (rec !== null ? '<span class="rec" style="left:' + (100 * rec).toFixed(1) + '%"></span>' : '') +
-      '<span class="at" style="left:' + (100 * at).toFixed(1) + '%"></span></span>';
-  }
-
   /* A price in the holdings table is a button that opens the holding's
      editor, except on a client's own read-only view. */
   function editCell(c, h, html, ro, what) {
     if (ro) return html;
     return '<button type="button" class="wd-cellbtn" data-act="edit-hold" data-id="' + c.id + '" data-sym="' + esc(h.symbol) + '" ' +
-      'title="Edit the ' + what + ' price" aria-label="Edit ' + esc(h.symbol) + '’s ' + what + ' price">' + html + ic('edit') + '</button>';
+      'title="Edit the ' + what + '" aria-label="Edit ' + esc(h.symbol) + '’s ' + what + '">' + html + ic('edit') + '</button>';
   }
 
-  function edge(h) {
-    if (!finite(h.edge_pct)) return '';
-    var good = h.edge_pct >= 0;
-    return '<span class="wd-edge ' + (good ? 'good' : 'bad') + '" title="' + (good ? 'Bought below' : 'Bought above') + ' the recommended price">' +
-      (good ? '▼ ' : '▲ ') + Math.abs(h.edge_pct).toFixed(1) + '%</span>';
+  function symCell(h, sub) {
+    return '<div class="wd-symrow">' + logo(h.symbol) + '<div style="min-width:0"><a href="stock.html?ticker=' + encodeURIComponent(h.symbol) + '"><b>' + esc(h.symbol) + '</b></a>' +
+      scoreChip(h.score) + '<small>' + sub + '</small></div></div>';
   }
 
+  /* One price a holding was bought at: the average cost, as a broker shows
+     it. The desk used to carry a second, "recommended", price beside it; two
+     prices in every row was one more than anybody could read at a glance. */
   function holdingsTab(c, ro) {
     if (!c.holdings.length) {
       return '<div class="wd-empty"><div class="wd-art">📈</div><h3>Nothing held yet</h3><p>' + (ro ? 'Your manager has not recorded any holdings yet.' :
-        'Upload their holdings statement from the broker (.xlsx or CSV), record a buy, or book a recommendation for them.') + '</p>' +
-        (ro ? '' : '<button type="button" class="wd-btn primary" data-act="add-event" data-id="' + c.id + '" data-kind="buy">' + ic('trade') + 'Record a buy</button> ' +
+        'Add everything they hold in one go: type or paste the stocks, or upload the holdings statement from their broker.') + '</p>' +
+        (ro ? '' : '<button type="button" class="wd-btn primary" data-act="add-stocks" data-id="' + c.id + '">' + ic('plus') + 'Add stocks</button> ' +
         '<button type="button" class="wd-btn" data-act="upload" data-id="' + c.id + '">' + ic('in') + 'Upload a holdings statement</button>') + '</div>';
     }
     var rows = c.holdings.map(function (h) {
-      return '<tr><td class="wd-sym"><a href="stock.html?ticker=' + encodeURIComponent(h.symbol) + '"><b>' + esc(h.symbol) + '</b></a>' + scoreChip(h.score) +
-          '<small>' + esc(h.name || h.sector || '') + (h.price_source === 'manual' ? ' · hand-priced' : '') + '</small></td>' +
+      return '<tr><td class="wd-sym">' + symCell(h, esc(h.name || h.sector || '') + (h.price_source === 'manual' ? ' · hand-priced' : '')) + '</td>' +
         '<td>' + esc(qty(h.qty)) + '</td>' +
-        '<td>' + editCell(c, h, finite(h.rec_price) ? esc(px(h.rec_price)) : '<span class="wd-muted">Add</span>', ro, 'recommended') + '</td>' +
-        '<td>' + editCell(c, h, esc(px(h.avg)), ro, 'buying') + ' ' + edge(h) + '</td>' +
+        '<td>' + editCell(c, h, esc(px(h.avg)), ro, 'average cost') + '</td>' +
         '<td>' + (h.priced ? esc(px(h.ltp)) + '<small class="' + tone(h.change_pct) + '">' + esc(pct(h.change_pct)) + '</small>' : '<span class="wd-muted">no price</span>') + '</td>' +
-        '<td>' + mini(h.spark) + '</td>' +
         '<td class="pv">' + esc(inr(h.value, 0)) + '</td>' +
         '<td class="' + tone(h.pnl) + '"><span class="pv">' + esc(signed(h.pnl, 0)) + '</span><small class="' + tone(h.pnl) + '">' + esc(pct(h.pnl_pct, 1)) + '</small></td>' +
         '<td><span class="wd-w" style="--w:' + Math.min(100, num(h.weight)).toFixed(1) + '%"><i></i>' + esc(finite(h.weight) ? h.weight.toFixed(1) + '%' : '—') + '</span></td>' +
-        '<td>' + ttTrack(h) + '</td>' +
         (ro ? '' : '<td><button type="button" class="wd-rowbtn" data-act="hold" data-id="' + c.id + '" data-sym="' + esc(h.symbol) + '" aria-label="Actions for ' + esc(h.symbol) + '">' + ic('dots') + '</button></td>') +
         '</tr>';
     }).join('');
     var cost = c.holdings.reduce(function (s, h) { return s + num(h.cost); }, 0);
     var unpnl = c.holdings.reduce(function (s, h) { return s + num(h.pnl); }, 0);
     if (num(c.cash) > 0.5) {
-      rows += '<tr><td class="wd-sym"><b>Cash</b><small>' + (c.mode === 'holdings' ? 'From sales, not yet reinvested' : 'Not yet invested') + '</small></td><td></td><td></td><td></td><td></td><td></td>' +
+      rows += '<tr><td class="wd-sym"><div class="wd-symrow"><span class="wd-logo cash" aria-hidden="true"><i>₹</i></span><div><b>Cash</b><small>' +
+        (c.mode === 'holdings' ? 'From sales, not yet reinvested' : 'Not yet invested') + '</small></div></div></td><td></td><td></td><td></td>' +
         '<td class="pv">' + esc(inr(c.cash, 0)) + '</td><td></td><td><span class="wd-w" style="--w:' + (100 * num(c.cash) / Math.max(1, num(c.value))).toFixed(1) + '%"><i></i>' +
-        (100 * num(c.cash) / Math.max(1, num(c.value))).toFixed(1) + '%</span></td><td></td>' + (ro ? '' : '<td></td>') + '</tr>';
+        (100 * num(c.cash) / Math.max(1, num(c.value))).toFixed(1) + '%</span></td>' + (ro ? '' : '<td></td>') + '</tr>';
     }
-    var table = '<div class="wd-table-wrap cards"><table class="wd-table"><thead><tr><th scope="col">Stock</th><th scope="col">Qty</th><th scope="col">Recommended</th>' +
-      '<th scope="col">Bought at</th><th scope="col">Price</th><th scope="col"><span class="wd-sr">Trend</span>30 days</th><th scope="col">Value</th><th scope="col">P&amp;L</th>' +
-      '<th scope="col">Weight</th><th scope="col">Stop → target</th>' + (ro ? '' : '<th scope="col"><span class="wd-sr">Actions</span></th>') + '</tr></thead><tbody>' + rows + '</tbody>' +
-      '<tfoot><tr class="wd-foot"><td>Total</td><td></td><td></td><td class="pv">' + esc(inr(cost, 0)) + '</td><td></td><td></td><td class="pv">' + esc(inr(c.value, 0)) + '</td>' +
-      '<td class="' + tone(unpnl) + ' pv">' + esc(signed(unpnl, 0)) + '</td><td></td><td></td>' + (ro ? '' : '<td></td>') + '</tr></tfoot></table></div>';
+    var table = '<div class="wd-table-wrap cards"><table class="wd-table"><thead><tr><th scope="col">Stock</th><th scope="col">Qty</th>' +
+      '<th scope="col">Avg cost</th><th scope="col">Price</th><th scope="col">Value</th><th scope="col">P&amp;L</th>' +
+      '<th scope="col">Weight</th>' + (ro ? '' : '<th scope="col"><span class="wd-sr">Actions</span></th>') + '</tr></thead><tbody>' + rows + '</tbody>' +
+      '<tfoot><tr class="wd-foot"><td>Total</td><td></td><td class="pv">' + esc(inr(cost, 0)) + '<small>invested</small></td><td></td><td class="pv">' + esc(inr(c.value, 0)) + '</td>' +
+      '<td class="' + tone(unpnl) + ' pv">' + esc(signed(unpnl, 0)) + '</td><td></td>' + (ro ? '' : '<td></td>') + '</tr></tfoot></table></div>';
     var cardsHtml = '<div class="wd-hlist">' + c.holdings.map(function (h) {
-      return '<div class="wd-hcard"><div class="wd-hcard-t"><div class="wd-sym"><a href="stock.html?ticker=' + encodeURIComponent(h.symbol) + '"><b>' + esc(h.symbol) + '</b></a>' + scoreChip(h.score) +
-        '<small>' + esc(qty(h.qty)) + ' shares · ' + esc(finite(h.weight) ? h.weight.toFixed(1) + '%' : '') + '</small></div>' +
+      return '<div class="wd-hcard"><div class="wd-hcard-t"><div class="wd-sym">' + symCell(h, esc(qty(h.qty)) + ' shares · ' + esc(finite(h.weight) ? h.weight.toFixed(1) + '%' : '')) + '</div>' +
         '<div style="text-align:right"><b class="pv">' + esc(inr(h.value, 0)) + '</b><small class="' + tone(h.pnl) + '" style="display:block"><span class="pv">' + esc(signed(h.pnl, 0)) + '</span> · ' + esc(pct(h.pnl_pct, 1)) + '</small></div>' +
         (ro ? '' : '<button type="button" class="wd-rowbtn" data-act="hold" data-id="' + c.id + '" data-sym="' + esc(h.symbol) + '" aria-label="Actions for ' + esc(h.symbol) + '">' + ic('dots') + '</button>') + '</div>' +
-        '<div class="wd-hcard-g"><div><small>Recommended</small><b>' + editCell(c, h, finite(h.rec_price) ? esc(px(h.rec_price)) : '—', ro, 'recommended') + '</b></div>' +
-        '<div><small>Bought at</small><b>' + editCell(c, h, esc(px(h.avg)), ro, 'buying') + '</b> ' + edge(h) + '</div>' +
+        '<div class="wd-hcard-g two"><div><small>Avg cost</small><b>' + editCell(c, h, esc(px(h.avg)), ro, 'average cost') + '</b></div>' +
         '<div><small>Price</small><b>' + (h.priced ? esc(px(h.ltp)) : '—') + '</b> <span class="' + tone(h.change_pct) + '">' + esc(pct(h.change_pct, 1)) + '</span></div></div></div>';
     }).join('') + '</div>';
     var closed = (c.closed || []).filter(function (x) { return Math.abs(num(x.pnl)) > 0.005; });
@@ -952,7 +949,6 @@
       if (e.kind === 'buy' || e.kind === 'sell') {
         title = k[0] + ' ' + qty(e.qty) + ' ' + esc(e.symbol);
         sub.push('at ' + px(e.price));
-        if (finite(e.rec_price)) sub.push('recommended ' + px(e.rec_price) + ' (' + pct(100 * (e.price / e.rec_price - 1), 1) + ')');
         if (num(e.charges)) sub.push('charges ' + inr(e.charges));
         amt = (e.kind === 'buy' ? '−' : '+') + inr(e.qty * e.price, 0).replace('−', '');
       } else if (e.kind === 'split') {
@@ -1054,7 +1050,7 @@
       return true;
     });
     var segs = [['open', 'Open'], ['hits', 'At target or stop'], ['closed', 'Closed'], ['all', 'All']];
-    return '<div class="wd-sec" style="margin-top:4px"><div><h2>Recommendations</h2><p>Make a call once, book it for as many clients as acted on it — each keeps the price you recommended beside the price they got.</p></div>' +
+    return '<div class="wd-sec" style="margin-top:4px"><div><h2>Recommendations</h2><p>Make a call once, then book it for every client who acted on it.</p></div>' +
       '<button type="button" class="wd-btn primary" data-act="new-rec">' + ic('plus') + 'New call</button></div>' +
       '<div class="wd-kpis">' + kpi('Open', rs.open || 0, (rs.closed || 0) + ' closed', 'target', 'c-violet', 0) +
         kpi('Working', (rs.working || 0) + '<small style="font-size:.5em" class="wd-muted"> of ' + (rs.judged || 0) + '</small>', 'above the price you called', 'up', 'c-green', 1) +
@@ -1226,7 +1222,7 @@
     root.innerHTML = '<section class="wd-land">' +
       '<div><p class="wd-kick">Altaha Wealth desk · for portfolio managers</p>' +
         '<h1>Every client. Every holding. <em>Your commission,</em> to the rupee.</h1>' +
-        '<p class="lede">Keep each client’s portfolio live, with the price you recommended beside the price they bought at. ' +
+        '<p class="lede">Keep each client’s portfolio live, priced at today’s market, with what they paid and what it is worth now. ' +
         'Book one call for many clients at once. Profit-share fees are worked out for you — high-water mark, hurdle, fixed fee and GST — with every step shown, ready to settle and mark paid.</p>' +
         '<div class="wd-land-cta"><a class="wd-btn primary" href="signin.html?next=wealth.html">' + ic('lock') + 'Sign in to open your desk</a>' +
         '<a class="wd-btn" href="wealth.html?demo=1">' + ic('spark') + 'Explore a sample desk</a></div>' +
@@ -1243,7 +1239,7 @@
       '</div></section>' +
       '<div class="wd-feats">' +
         feat('users', 'Client by client', 'Holdings, cash, profit, XIRR and a thirty-session chart for each client — and the whole book at a glance.') +
-        feat('target', 'Recommended vs bought', 'Every holding shows the price you called and the price the client got, and how each call has done since.') +
+        feat('target', 'Every holding, live', 'Add all of a client’s stocks in one go or upload the broker’s statement. Each shows its average cost, today’s price and the profit.') +
         feat('coins', 'Profit share, worked out', 'High-water mark, hard or soft hurdle, fixed fee, GST, booked or on-paper — with the working shown, settled and tracked to paid.') +
       '</div>';
   }
@@ -1550,8 +1546,7 @@
       field('Stock', '<input name="symbol" list="wd-syms" autocapitalize="characters" spellcheck="false" maxlength="20" value="' + esc(sym || '') + '" placeholder="e.g. TCS">', '', 'ev-sym') +
       field('Quantity', '<input name="qty" inputmode="decimal" placeholder="Shares">', '', 'ev-trade') +
       field('Price per share', '<input name="price" inputmode="decimal" placeholder="₹">', '', 'ev-trade') +
-      field('Recommendation <em>optional</em>', '<select name="rec_id"><option value="">None</option></select>', 'Links the trade to your call.', 'ev-trade') +
-      field('Recommended price <em>optional</em>', '<input name="rec_price" inputmode="decimal" placeholder="₹ — what you told them to pay">', '', 'ev-trade') +
+      field('Your call <em>optional</em>', '<select name="rec_id"><option value="">None</option></select>', 'Links this trade to a call you made on the stock.', 'ev-rec') +
       field('Charges <em>optional</em>', '<input name="charges" inputmode="decimal" placeholder="Brokerage, STT…">', '', 'ev-trade') +
       field('Amount', '<input name="amount" inputmode="decimal" placeholder="₹">', '', 'ev-money') +
       field('Every old share became', '<select name="factor">' + opt('2', '2 — a 1:1 bonus, or a 2-for-1 split', '2') + opt('1.5', '1.5 — a 1:2 bonus', '2') + opt('3', '3 — a 2:1 bonus', '2') +
@@ -1567,7 +1562,7 @@
         if (ev) {
           var set = function (n, v) { if (form[n] && v !== null && v !== undefined) form[n].value = v; };
           set('symbol', ev.symbol); set('qty', ev.kind === 'split' ? '' : ev.qty); set('price', ev.price);
-          set('rec_price', ev.rec_price); set('charges', ev.charges || ''); set('amount', ev.amount);
+          set('charges', ev.charges || ''); set('amount', ev.amount);
           set('on_date', ev.on_date); set('note', ev.note);
           if (ev.kind === 'split' && form.factor) {
             if (!form.factor.querySelector('option[value="' + ev.qty + '"]')) form.factor.insertAdjacentHTML('beforeend', opt(String(ev.qty), String(ev.qty), ''));
@@ -1582,6 +1577,7 @@
           form.querySelectorAll('.ev-trade').forEach(function (x) { x.hidden = !trade; });
           form.querySelectorAll('.ev-money').forEach(function (x) { x.hidden = trade || k === 'split'; });
           form.querySelectorAll('.ev-split').forEach(function (x) { x.hidden = k !== 'split'; });
+          form.querySelectorAll('.ev-rec').forEach(function (x) { x.hidden = true; });
           recs();
         }
         function recs() {
@@ -1604,6 +1600,8 @@
           var keep = was && mine.some(function (r) { return String(r.id) === was; });
           if (keep) sel.value = was;
           else if (mine.length && autoPick) { sel.value = String(mine[0].id); sel.dispatchEvent(new Event('change')); }
+          // The field is there only when there is a call it could link to.
+          form.querySelectorAll('.ev-rec').forEach(function (x) { x.hidden = !((k === 'buy' || k === 'sell') && mine.length); });
           var hint = form.querySelector('[data-hint]');
           hint.innerHTML = held[s] && (k === 'sell' || k === 'split') ? esc(c.name) + ' holds <b>' + esc(qty(held[s])) + '</b> ' + esc(s) +
             (k === 'sell' ? ' · <button type="button" class="wd-link" data-all>Sell all</button>' : '') : '';
@@ -1614,7 +1612,7 @@
         form.symbol.addEventListener('input', recs);
         form.rec_id.addEventListener('change', function () {
           var r = recById(+form.rec_id.value);
-          if (r) { form.rec_price.value = r.price; if (!form.price.value) form.price.value = r.price; }
+          if (r && !form.price.value) form.price.value = r.price;
         });
         show();
       },
@@ -1622,7 +1620,7 @@
         var k = fd.get('kind'), out = { kind: k, on_date: fd.get('on_date'), note: fd.get('note') };
         if (k === 'buy' || k === 'sell') {
           Object.assign(out, { symbol: fd.get('symbol'), qty: numv(fd.get('qty')), price: numv(fd.get('price')), charges: numv(fd.get('charges')),
-                               rec_price: numv(fd.get('rec_price')) || null, rec_id: fd.get('rec_id') || null });
+                               rec_id: fd.get('rec_id') || null });
         } else if (k === 'split') {
           Object.assign(out, { symbol: fd.get('symbol'), qty: fd.get('factor') });
         } else out.amount = numv(fd.get('amount'));
@@ -1640,6 +1638,120 @@
     });
   }
 
+  /* ── Adding stocks, as many as there are ─────────────────────────────────
+     A client arrives holding fifteen stocks, not one. The only way in used
+     to be a form that took a single trade and closed, fifteen times over, or
+     a statement upload for the manager who had the file. This takes a whole
+     list: a row for each stock, more rows as they are needed, and a paste
+     from a spreadsheet fills as many rows as were copied. */
+
+  function addStocksModal(c) {
+    fillSymbols();
+    var R = window.AltahaStatement;
+    function rowHTML() {
+      return '<tr data-row><td><input data-f="symbol" list="wd-syms" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="e.g. TCS" aria-label="Stock"></td>' +
+        '<td><input data-f="qty" inputmode="decimal" placeholder="Shares" aria-label="Quantity"></td>' +
+        '<td><input data-f="avg" inputmode="decimal" placeholder="₹ per share" aria-label="Average cost"></td>' +
+        '<td><button type="button" class="wd-rowbtn" data-del aria-label="Remove this row">✕</button></td></tr>';
+    }
+    modal({
+      title: 'Add stocks to ' + esc(c.name) + '’s portfolio', color: c.color, wide: true, submit: ic('check') + 'Add stocks',
+      sub: 'One row for each stock. Copy rows from Excel and paste them here to fill many at once.',
+      body: '<div class="wd-table-wrap wd-addwrap"><table class="wd-table wd-addrows"><thead><tr><th scope="col">Stock</th><th scope="col">Quantity</th>' +
+          '<th scope="col">Avg cost</th><th scope="col"><span class="wd-sr">Remove</span></th></tr></thead><tbody data-rows>' +
+          rowHTML() + rowHTML() + rowHTML() + rowHTML() + '</tbody></table></div>' +
+        '<div class="wd-addbar"><button type="button" class="wd-btn sm" data-more>' + ic('plus') + 'Add another row</button>' +
+          '<button type="button" class="wd-btn sm ghost" data-act="upload" data-id="' + c.id + '">' + ic('in') + 'Upload a file instead</button></div>' +
+        '<div class="wd-form">' + field('Bought on', '<input name="on_date" type="date" max="' + today() + '" value="' + today() + '">',
+          'One date for all of them. You can correct any single purchase later.') + '</div>' +
+        '<div class="wd-sum" data-total><span>Nothing entered yet</span><b></b></div>',
+      wire: function (form) {
+        var tb = form.querySelector('[data-rows]');
+        function read() {
+          return [].map.call(tb.querySelectorAll('tr[data-row]'), function (tr) {
+            var g = function (f) { return String(tr.querySelector('[data-f="' + f + '"]').value || '').trim(); };
+            return { tr: tr, symbol: R ? R.cleanSymbol(g('symbol')) : g('symbol').toUpperCase(), qty: numv(g('qty')), avg: numv(g('avg')),
+                     any: !!(g('symbol') || g('qty') || g('avg')) };
+          });
+        }
+        function total() {
+          var ok = read().filter(function (r) { return r.symbol && +r.qty > 0 && +r.avg > 0; });
+          var sum = ok.reduce(function (n, r) { return n + r.qty * r.avg; }, 0);
+          form.querySelector('[data-total]').innerHTML = ok.length
+            ? '<span>' + plural(ok.length, 'stock') + ' ready to add</span><b class="pv">' + esc(inr(sum, 0)) + ' invested</b>'
+            : '<span>Nothing entered yet</span><b></b>';
+        }
+        form._rows = read;
+        tb.addEventListener('input', total);
+        form.querySelector('[data-more]').addEventListener('click', function () {
+          tb.insertAdjacentHTML('beforeend', rowHTML());
+          tb.lastElementChild.querySelector('input').focus();
+        });
+        tb.addEventListener('click', function (e) {
+          var b = e.target.closest && e.target.closest('[data-del]');
+          if (!b) return;
+          if (tb.querySelectorAll('tr[data-row]').length > 1) b.closest('tr').remove();
+          else b.closest('tr').querySelectorAll('input').forEach(function (i) { i.value = ''; });
+          total();
+        });
+        // Rows copied from a spreadsheet: tabs between cells, a line for each stock.
+        tb.addEventListener('paste', function (e) {
+          var text = (e.clipboardData || window.clipboardData).getData('text');
+          if (!text || !/[\t\n,]/.test(text.trim())) return;
+          var lines = text.split(/\r?\n/).map(function (l) { return l.split(/\t|,|;|\s{2,}/).map(function (x) { return x.trim(); }); })
+            .filter(function (cells) { return cells[0] && cells.length >= 2 && String(numv(cells[1])) !== '' && +numv(cells[1]) > 0; });
+          if (!lines.length) return;
+          e.preventDefault();
+          var all = [].slice.call(tb.querySelectorAll('tr[data-row]'));
+          var at = Math.max(0, all.indexOf(e.target.closest('tr')));
+          lines.forEach(function (cells, i) {
+            var tr = all[at + i];
+            if (!tr) { tb.insertAdjacentHTML('beforeend', rowHTML()); tr = tb.lastElementChild; }
+            tr.querySelector('[data-f="symbol"]').value = cells[0];
+            tr.querySelector('[data-f="qty"]').value = cells[1];
+            tr.querySelector('[data-f="avg"]').value = cells[2] || '';
+          });
+          total();
+        });
+      },
+      onSubmit: function (fd, form) {
+        var rows = form._rows().filter(function (r) { return r.any; });
+        if (!rows.length) return Promise.reject(new Error('Enter at least one stock.'));
+        for (var i = 0; i < rows.length; i++) {
+          var r = rows[i], n = 'Row ' + (i + 1) + (r.symbol ? ' (' + r.symbol + ')' : '');
+          if (!r.symbol) return Promise.reject(new Error(n + ' needs a stock.'));
+          if (!(+r.qty > 0)) return Promise.reject(new Error(n + ' needs a quantity.'));
+          if (!(+r.avg > 0)) return Promise.reject(new Error(n + ' needs an average cost.'));
+        }
+        if (S.mode === 'demo') return Promise.reject(Object.assign(new Error('This is the sample desk — nothing is saved. Sign in and set up your own desk to add stocks.'), { demo: true }));
+        var on = fd.get('on_date') || today();
+        return api('/wealth/clients/' + c.id + '/statement/apply', { method: 'POST',
+          body: { rows: rows.map(function (r) { return { symbol: r.symbol, qty: r.qty, avg: r.avg }; }), mode: 'add', as_of: on, buy_date: on } })
+          .then(function (d) {
+            if (window.AltahaTrack) window.AltahaTrack('wealth_stocks_added', { holdings: d.holdings });
+            if (d.warning) toast(d.warning);
+            return plural(d.holdings, 'stock') + ' added to ' + c.name + '’s portfolio.';
+          });
+      }
+    });
+  }
+
+  /* Everything a client page can do that is not done every week. */
+  function clientMenu(c) {
+    var b = function (attrs, icon, label) { return '<button type="button" class="wd-btn" style="justify-content:flex-start" ' + attrs + '>' + ic(icon) + label + '</button>'; };
+    modal({
+      title: esc(c.name), color: c.color,
+      body: '<div style="display:grid;gap:8px">' +
+        b('data-act="upload" data-id="' + c.id + '"', 'in', 'Upload a holdings statement') +
+        b('data-act="m-event" data-id="' + c.id + '" data-kind="buy"', 'up', 'Record a single buy') +
+        b('data-act="m-event" data-id="' + c.id + '" data-kind="dividend"', 'coins', 'Record a dividend') +
+        b('data-act="m-event" data-id="' + c.id + '" data-kind="split"', 'split', 'Record a bonus or split') +
+        b('data-act="m-settle" data-id="' + c.id + '"', 'bill', 'Settle the fee') +
+        b('data-act="m-statement" data-id="' + c.id + '"', 'print', 'Print a statement') +
+        b('data-go="client/' + c.id + '/profile" data-close', 'edit', 'Edit client details') + '</div>'
+    });
+  }
+
   /* ── Correcting a holding ───────────────────────────────────────────── */
 
   function holdingEditModal(c, sym) {
@@ -1654,8 +1766,7 @@
       var tag = held > 0.0001 ? (Math.abs(held - e.qty) < 0.0001 || split ? 'Held' : 'Held ' + qty(held) + ' of ' + qty(e.qty)) : 'Sold';
       return '<tr data-eid="' + e.id + '"><td><input type="date" max="' + today() + '" data-f="on_date" value="' + esc(e.on_date) + '" aria-label="Date"></td>' +
         '<td><input inputmode="decimal" data-f="qty" value="' + esc(e.qty) + '" aria-label="Quantity"></td>' +
-        '<td><input inputmode="decimal" data-f="price" value="' + esc(e.price) + '" aria-label="Buying price"></td>' +
-        '<td><input inputmode="decimal" data-f="rec_price" value="' + esc(e.rec_price == null ? '' : e.rec_price) + '" placeholder="—" aria-label="Recommended price"></td>' +
+        '<td><input inputmode="decimal" data-f="price" value="' + esc(e.price) + '" aria-label="Price paid"></td>' +
         '<td><span class="wd-pst ' + (tag === 'Sold' ? 'nil' : 'paid') + '">' + esc(tag) + '</span></td></tr>';
     }).join('');
     modal({
@@ -1665,13 +1776,12 @@
         '<div class="wd-seg" role="tablist" aria-label="How to edit"><button type="button" class="on" data-pane="avg" aria-selected="true">Set the average</button>' +
           '<button type="button" data-pane="each" aria-selected="false">Each purchase (' + buys.length + ')</button></div>' +
         '<div data-panel="avg"><div class="wd-form">' +
-          field('Average buying price', '<input name="avg" inputmode="decimal" value="' + esc(h.avg) + '">', 'What the client paid per share, on average — the broker’s “avg. price”.') +
-          field('Recommended price', '<input name="rec" inputmode="decimal" value="' + esc(h.rec_price == null ? '' : h.rec_price) + '" placeholder="—">', 'The price you told them to buy at. Leave empty to remove it.') +
+          field('Average cost', '<input name="avg" inputmode="decimal" value="' + esc(h.avg) + '">', 'What the client paid per share, on average — the broker’s “avg. price”.', 'full') +
         '</div><div class="wd-sum" data-prev></div>' +
         (buys.length > 1 ? '<p class="wd-note">The ' + buys.length + ' purchases this holding is made of are all corrected by the same factor, so their proportions stay as recorded. Use “Each purchase” to change one on its own.</p>' : '') +
         '</div>' +
         '<div data-panel="each" hidden><div class="wd-table-wrap"><table class="wd-table wd-lots"><thead><tr><th scope="col">Date</th><th scope="col">Qty</th>' +
-          '<th scope="col">Bought at</th><th scope="col">Recommended</th><th scope="col"><span class="wd-sr">Still held</span></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+          '<th scope="col">Price paid</th><th scope="col"><span class="wd-sr">Still held</span></th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
           (split ? '<p class="wd-note">Quantities and prices as recorded on the day of each purchase, before the bonus or split since.</p>' : '') + '</div>',
       wire: function (form) {
         function prev() {
@@ -1700,7 +1810,7 @@
             tr.querySelectorAll('[data-f]').forEach(function (inp) {
               var f = inp.dataset.f, v = f === 'on_date' ? inp.value : numv(inp.value);
               var was = e[f] == null ? '' : String(e[f]);
-              if (String(v) !== was && !(f !== 'on_date' && v !== '' && +v === +was)) { ch[f] = f === 'rec_price' && v === '' ? null : v; any = true; }
+              if (String(v) !== was && !(f !== 'on_date' && v !== '' && +v === +was)) { ch[f] = v; any = true; }
             });
             if (any) edits.push(ch);
           });
@@ -1710,10 +1820,8 @@
             return d.warning ? '' : sym + ' corrected.';
           });
         }
-        var body = {}, a = numv(fd.get('avg')), r = numv(fd.get('rec'));
+        var body = {}, a = numv(fd.get('avg'));
         if (a !== '' && Math.abs(+a - h.avg) > 0.004) body.avg = a;
-        if (r === '' && finite(h.rec_price)) body.rec_price = '';
-        else if (r !== '' && !(finite(h.rec_price) && Math.abs(+r - h.rec_price) < 0.004)) body.rec_price = r;
         if (!Object.keys(body).length) return Promise.reject(new Error('Nothing was changed.'));
         return api('/wealth/clients/' + c.id + '/holdings/' + encodeURIComponent(sym), { method: 'PUT', body: body }).then(function (d) {
           if (d.warning) toast(d.warning);
@@ -1766,8 +1874,8 @@
           '<small>.xlsx or .csv · read on this device</small></label>' +
         '<p class="wd-err" data-status role="status"></p>' +
         '<details' + (opts.paste ? ' open' : '') + '><summary class="wd-link" style="display:inline-block;margin-bottom:8px">Or paste rows from a spreadsheet</summary>' +
-          field('Rows', '<textarea name="text" rows="7" style="font-family:\'IBM Plex Mono\',monospace;font-size:13px" placeholder="Symbol, Qty, Avg price, Date, Reco price\nRELIANCE, 50, 1250.50, 03/01/2025, 1240\nTCS, 12, 3305"></textarea>',
-            'A header row is recognised by its words; without one the columns are symbol, quantity, buying price, date, recommended price.', 'full') +
+          field('Rows', '<textarea name="text" rows="7" style="font-family:\'IBM Plex Mono\',monospace;font-size:13px" placeholder="Symbol, Qty, Avg cost, Date\nRELIANCE, 50, 1250.50, 03/01/2025\nTCS, 12, 3305"></textarea>',
+            'A header row is recognised by its words; without one the columns are symbol, quantity, average cost, date.', 'full') +
           '<button type="button" class="wd-btn sm" data-read>Read these rows</button></details>' +
         '<p class="wd-note">' + ic('lock') + ' The file is opened in this browser. Only each holding’s stock, quantity and prices are sent — not the name, client code or anything else in the statement.</p>',
       wire: function (form) {
@@ -1809,7 +1917,7 @@
       if (o.kind === 'buy') return 'Buy ' + qty(o.qty) + ' at ' + px(o.price);
       return 'Sell ' + qty(o.qty) + ' at ' + px(o.price) + (item.sell_price_from ? ' (' + item.sell_price_from + ')' : '');
     });
-    if (item.fix_avg) parts.push('correct the buying price to ' + px(item.fix_avg));
+    if (item.fix_avg) parts.push('correct the average cost to ' + px(item.fix_avg));
     if (item.status === 'same') parts.push('Already matches');
     var t = parts.join(', then ');
     return t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
@@ -1836,7 +1944,7 @@
     // What is sent: each matched holding's stock, quantity and prices.
     function payloadRows() {
       return rows.filter(function (r) { return r.symbol; }).map(function (r) {
-        return { symbol: r.symbol, qty: r.qty, avg: r.avg, close: r.close, rec_price: r.rec };
+        return { symbol: r.symbol, qty: r.qty, avg: r.avg, close: r.close };
       });
     }
     fillSymbols();
@@ -1959,7 +2067,7 @@
           return '<label><input type="radio" name="action" value="' + k[0] + '"' + (((r && r.action) || 'buy') === k[0] ? ' checked' : '') + '><span>' + k[1] + '</span></label>';
         }).join('') + '</div><div class="wd-form">' +
         field('Stock', '<input name="symbol" list="wd-syms" required autocapitalize="characters" spellcheck="false" maxlength="20" value="' + esc(r ? r.symbol : '') + '" placeholder="e.g. HAL">') +
-        field('Recommended price', '<input name="price" inputmode="decimal" required value="' + esc(r ? r.price : '') + '" placeholder="₹">') +
+        field('Call price', '<input name="price" inputmode="decimal" required value="' + esc(r ? r.price : '') + '" placeholder="₹">') +
         field('Target <em>optional</em>', '<input name="target" inputmode="decimal" value="' + esc(r && r.target || '') + '" placeholder="₹">') +
         field('Stop <em>optional</em>', '<input name="stop" inputmode="decimal" value="' + esc(r && r.stop || '') + '" placeholder="₹">') +
         field('Date', '<input name="on_date" type="date" max="' + today() + '" value="' + esc(r ? r.on_date : today()) + '">') +
@@ -2138,7 +2246,7 @@
     var b = function (act, icon, label) { return '<button type="button" class="wd-btn" style="justify-content:flex-start" data-act="' + act + '" data-id="' + c.id + '" data-sym="' + esc(sym) + '">' + ic(icon) + label + '</button>'; };
     modal({
       title: esc(sym), color: c.color, sub: esc((h.name || '') + ' · ' + qty(h.qty) + ' shares · ' + inr(h.value, 0)),
-      body: '<div style="display:grid;gap:8px">' + b('edit-hold', 'edit', 'Edit buying or recommended price') +
+      body: '<div style="display:grid;gap:8px">' + b('edit-hold', 'edit', 'Edit average cost') +
         b('h-buy', 'up', 'Buy more') + b('h-sell', 'down', 'Sell') + b('h-split', 'split', 'Bonus or split') +
         b('price', 'rupee', h.price_source === 'manual' ? 'Change the hand-set price' : 'Set a price by hand') +
         '<a class="wd-btn" style="justify-content:flex-start" href="stock.html?ticker=' + encodeURIComponent(sym) + '">' + ic('call') + 'Open the stock page</a></div>'
@@ -2158,11 +2266,11 @@
       '<div style="text-align:right"><b>Portfolio statement</b><br><small>As of ' + esc(day(S.book ? S.book.as_of : today())) + '<br>Prepared by ' + esc(desk.display_name || '') + '</small></div></div>' +
       '<div class="sum"><div><small>Value</small><b>' + esc(inr(c.value, 0)) + '</b></div><div><small>Capital in</small><b>' + esc(inr(c.capital, 0)) + '</b></div>' +
       '<div><small>Profit</small><b>' + esc(signed(c.profit, 0)) + '</b></div><div><small>Return · XIRR</small><b>' + esc(pct(c.profit_pct, 1)) + ' · ' + (c.xirr == null ? '—' : esc(pct(c.xirr, 1))) + '</b></div></div>' +
-      '<h2>Holdings</h2><table><thead><tr><th>Stock</th><th>Qty</th><th>Recommended</th><th>Bought at</th><th>Price</th><th>Value</th><th>P&amp;L</th><th>Weight</th></tr></thead><tbody>' +
+      '<h2>Holdings</h2><table><thead><tr><th>Stock</th><th>Qty</th><th>Avg cost</th><th>Price</th><th>Value</th><th>P&amp;L</th><th>Weight</th></tr></thead><tbody>' +
       c.holdings.map(function (h) {
-        return '<tr><td>' + esc(h.symbol) + '</td><td>' + esc(qty(h.qty)) + '</td><td>' + (finite(h.rec_price) ? esc(px(h.rec_price)) : '—') + '</td><td>' + esc(px(h.avg)) + '</td>' +
+        return '<tr><td>' + esc(h.symbol) + '</td><td>' + esc(qty(h.qty)) + '</td><td>' + esc(px(h.avg)) + '</td>' +
           '<td>' + (h.priced ? esc(px(h.ltp)) : 'at cost') + '</td><td>' + esc(inr(h.value, 0)) + '</td><td>' + esc(signed(h.pnl, 0)) + ' (' + esc(pct(h.pnl_pct, 1)) + ')</td><td>' + (finite(h.weight) ? h.weight.toFixed(1) + '%' : '') + '</td></tr>';
-      }).join('') + (num(c.cash) > 0.5 ? '<tr><td>Cash</td><td></td><td></td><td></td><td></td><td>' + esc(inr(c.cash, 0)) + '</td><td></td><td></td></tr>' : '') + '</tbody></table>' +
+      }).join('') + (num(c.cash) > 0.5 ? '<tr><td>Cash</td><td></td><td></td><td></td><td>' + esc(inr(c.cash, 0)) + '</td><td></td><td></td></tr>' : '') + '</tbody></table>' +
       '<h2>Fee for the current period</h2><p>' + esc(t ? c.terms_label : '') + '</p><table><tbody>' + (f.steps || []).map(function (s) {
         return '<tr><td>' + esc(s.label) + '<br><small style="color:#777">' + esc(s.formula) + '</small></td><td>' + (s.unit === 'days' ? esc(plural(s.value, 'day')) : esc(inr(s.value))) + '</td></tr>';
       }).join('') + '</tbody></table>';
@@ -2227,6 +2335,11 @@
       case 'add-client': clientModal(null); return;
       case 'new-rec': recModal(null); return;
       case 'add-event': if (c) eventModal(c, el.dataset.kind || 'buy'); return;
+      case 'add-stocks': if (c) addStocksModal(c); return;
+      case 'client-more': if (c) clientMenu(c); return;
+      case 'm-event': closeModal(); if (c) eventModal(c, el.dataset.kind || 'buy'); return;
+      case 'm-settle': closeModal(); if (c) settleModal(c); return;
+      case 'm-statement': closeModal(); if (c) printStatement(c, S.book.desk); return;
       case 'import': if (c) uploadModal(c, { paste: true }); return;
       case 'upload': if (c) uploadModal(c); return;
       case 'edit-hold': closeModal(); if (c) holdingEditModal(c, el.dataset.sym); return;
@@ -2285,7 +2398,7 @@
       case 'close-rec': { var r3 = recById(+el.dataset.rid); if (r3) recModal(r3, true); return; }
       case 'del-rec':
         closeModal();
-        confirmModal('Delete this call?', 'The clients’ trades stay — they happened — and keep the price you recommended. Only the call goes.', 'Delete call', function () {
+        confirmModal('Delete this call?', 'The clients’ trades stay, because they happened. Only the call goes.', 'Delete call', function () {
           return api('/wealth/recs/' + el.dataset.rid, { method: 'DELETE' }).then(function () { return 'Call deleted.'; });
         });
         return;
