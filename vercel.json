@@ -1,15 +1,45 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/share", "destination": "https://taha-project.onrender.com/share/record" },
-    { "source": "/share/:path*", "destination": "https://taha-project.onrender.com/share/:path*" },
-    { "source": "/og/:path*", "destination": "https://taha-project.onrender.com/og/:path*" }
+    {
+      "source": "/share",
+      "destination": "https://taha-project.onrender.com/share/record"
+    },
+    {
+      "source": "/share/:path*",
+      "destination": "https://taha-project.onrender.com/share/:path*"
+    },
+    {
+      "source": "/og/:path*",
+      "destination": "https://taha-project.onrender.com/og/:path*"
+    }
   ],
   "headers": [
     {
       "source": "/og/:path*",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, s-maxage=86400"
+        }
+      ]
+    },
+    {
+      "source": "/vendor/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(png|webp|ico|jpg|svg|woff2)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
       ]
     }
   ]

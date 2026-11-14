@@ -194,6 +194,11 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/home-browser.cjs
+      - name: Verify the home page's one early data request
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/boot-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

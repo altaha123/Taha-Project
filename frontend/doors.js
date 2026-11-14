@@ -231,8 +231,9 @@
         '<div class="dr-sticks"><span>9:15</span><span>12:00</span><span>15:30</span></div>' +
       '</div>';
     return '<div class="dr dr-today">' +
-      head('Today', 'What is the market doing?', session) +
       startHTML() +
+      head('Today', 'What is the market doing?', session) +
+      dailyHTML() +
       '<div class="dr-grid">' +
         '<div class="dr-main">' +
           '<section class="dr-hero dr-rise" style="--i:1" aria-label="The market now">' +
@@ -283,45 +284,43 @@
   }
 
   /* ── Start here ───────────────────────────────────────────────────────
-     People who were sent a link to this site said it was too complex to
-     find their way around. The first screen was a market dashboard — index
-     levels, FII/DII flows, eight tool cards — with nothing saying what the
-     site does or where to begin. This strip says it in one sentence and
-     offers the three things people actually come to do, each one tap away.
-     It stays until the reader hides it, and stays hidden after that. */
+     People who were sent a link to this site said it was too complicated to
+     use. The first screen was a market dashboard with nothing saying what
+     the site does or where to begin.
 
-  var START_KEY = 'altaha-start-hidden-v1';
-  var START_TRY = [['RELIANCE', 'Reliance'], ['TCS', 'TCS'], ['HDFCBANK', 'HDFC Bank'], ['INFY', 'Infosys']];
+     So the page now opens on the one thing nearly everybody came to do:
+     look up a stock. One sentence saying what they will get, one large box
+     to type in, six familiar names to tap if they would rather not type,
+     and the three other things the site is for, each one tap away. It is
+     always there. It used to be a strip a reader could hide, which meant
+     the people who most needed it were one stray tap from losing it. */
 
-  function startHidden() {
-    try { return localStorage.getItem(START_KEY) === '1'; } catch (e) { return false; }
-  }
+  var START_TRY = [['RELIANCE', 'Reliance'], ['TCS', 'TCS'], ['HDFCBANK', 'HDFC Bank'],
+                   ['INFY', 'Infosys'], ['SBIN', 'SBI'], ['ITC', 'ITC']];
 
   function startHTML() {
-    if (startHidden()) return '';
-    var task = function (attrs, icon, title, line) {
-      return '<button type="button" class="dr-task" ' + attrs + '>' +
+    var task = function (attrs, icon, title, line, tag) {
+      tag = tag || 'button type="button"';
+      return '<' + tag + ' class="dr-task" ' + attrs + '>' +
         '<span class="dr-task-ic">' + svg(icon, 22) + '</span>' +
         '<span class="dr-task-t"><b>' + esc(title) + '</b><small>' + esc(line) + '</small></span>' +
-        '<span class="dr-task-go" aria-hidden="true">' + svg('arrow', 16) + '</span></button>';
+        '<span class="dr-task-go" aria-hidden="true">' + svg('arrow', 16) + '</span></' + tag.split(' ')[0] + '>';
     };
     return '<section class="dr-start dr-rise" style="--i:1" id="dr-start" aria-labelledby="dr-start-h">' +
-      '<div class="dr-start-top">' +
-        '<div><h2 id="dr-start-h">New here? Start with one of these.</h2>' +
-        '<p>Altaha scores any stock from 0 to 100, and picks stocks to hold for a week, a month or longer.</p></div>' +
-        '<button type="button" class="dr-start-x" id="dr-start-x">Hide this</button>' +
-      '</div>' +
-      '<div class="dr-tasks">' +
-        task('data-start="search"', 'search', 'Check a stock', 'Its score, and why.') +
-        task('data-goto="research/ideas"', 'converge', 'Get stock picks', 'For a week, a month or longer.') +
-        task('data-goto="portfolio/portfolio"', 'review', 'Check my portfolio', 'A clear call on each holding.') +
-      '</div>' +
-      '<p class="dr-start-try"><span>Try one:</span>' +
+      '<h2 id="dr-start-h">Check any stock in seconds.</h2>' +
+      '<p class="dr-start-p">Type a company name. Get its score from 0 to 100 and the reasons behind it, in plain words. Free, no sign-up.</p>' +
+      '<button type="button" class="dr-find" data-start="search" aria-label="Search for a stock">' +
+        svg('search', 22) + '<span>Search any stock, for example Reliance</span><kbd aria-hidden="true">Search</kbd></button>' +
+      '<p class="dr-start-try"><span>Popular:</span>' +
         START_TRY.map(function (t) {
           return '<a href="stock.html?ticker=' + encodeURIComponent(t[0]) + '">' + esc(t[1]) + '</a>';
         }).join('') +
-        '<button type="button" class="dr-link" data-goto="me/score">How the score works ›</button>' +
       '</p>' +
+      '<div class="dr-tasks">' +
+        task('data-goto="research/ideas"', 'converge', 'Stock ideas', 'Ten ready-made lists, each with its record.') +
+        task('data-goto="portfolio/portfolio"', 'review', 'Check my portfolio', 'A clear view of each holding.') +
+        task('href="brief.html"', 'filings', 'Morning brief', 'New rules that move stocks, every day.', 'a') +
+      '</div>' +
     '</section>';
   }
 
@@ -330,18 +329,86 @@
     if (!box || box._wired) return;
     box._wired = true;
     box.addEventListener('click', function (e) {
-      if (e.target.closest('#dr-start-x')) {
-        try { localStorage.setItem(START_KEY, '1'); } catch (err) {}
-        if (box.parentNode) box.parentNode.removeChild(box);
-        var q = document.getElementById('sh-q');
-        if (q) q.focus();
-        return;
-      }
       if (e.target.closest('[data-start="search"]')) {
         if (window.AltahaShell && window.AltahaShell.focusSearch) window.AltahaShell.focusSearch();
         else { var i = document.getElementById('sh-q'); if (i) i.focus(); }
       }
     });
+  }
+
+  /* ── Today in a minute ────────────────────────────────────────────────
+     What the market did, in sentences (GET /daily, written by
+     backend/daily.py from the same figures the tiles below show). A reader
+     who never scrolls further has still been told the day. Each sentence
+     opens the part of the site it came from, and the whole thing can be
+     sent to a friend in one tap, which is how most people in India pass a
+     market note along. */
+
+  var DAILY_ANCHOR = { market: 'drt-level', sectors: 'drt-heat', movers: 'drt-movers' };
+
+  function dailyHTML() {
+    return '<section class="dr-daily dr-rise" style="--i:2" id="dr-daily" aria-labelledby="dr-daily-h">' +
+      '<div class="dr-daily-top"><span class="dr-daily-k" id="dr-daily-k">Today in a minute</span>' +
+      '<h2 id="dr-daily-h">Reading today’s market…</h2></div>' +
+      '<ul class="dr-daily-list" id="dr-daily-list"></ul>' +
+      '<div class="dr-daily-foot" id="dr-daily-foot" hidden>' +
+        '<a class="dr-daily-wa" id="dr-daily-wa" target="_blank" rel="noopener">' + WA_ICON + 'Share on WhatsApp</a>' +
+        '<button type="button" class="dr-daily-copy" id="dr-daily-copy">Copy</button>' +
+        '<span class="dr-daily-note">What the market did, from the exchange’s figures. Not advice.</span>' +
+      '</div>' +
+    '</section>';
+  }
+
+  var WA_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.7 7.4L3 21l2.1-5.3A8.5 8.5 0 1 1 21 11.5z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5"/></svg>';
+
+  function paintDaily(d) {
+    var box = $('dr-daily'), list = $('dr-daily-list'), h = $('dr-daily-h');
+    if (!box || !list || !h) return;
+    var lines = (d && d.lines) || [];
+    if (!lines.length) {
+      // Nothing to say is not worth a box. The tiles below still fill in.
+      if (!list.firstChild) box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    h.textContent = d.headline || 'Today in the market';
+    var k = $('dr-daily-k');
+    if (k) k.textContent = 'Today in a minute · ' + [d.weekday, d.day].filter(Boolean).join(', ');
+    list.innerHTML = lines.map(function (l) {
+      var attrs = l.href ? 'href="' + esc(l.href) + '"'
+        : l.goto ? 'href="#" data-goto="' + esc(l.goto) + '"'
+        : DAILY_ANCHOR[l.anchor] ? 'href="#' + DAILY_ANCHOR[l.anchor] + '" data-daily-anchor="' + DAILY_ANCHOR[l.anchor] + '"' : '';
+      var inner = '<b class="dr-daily-l t-' + esc(l.tone || 'flat') + '">' + esc(l.label || '') + '</b><span>' + esc(l.text) + '</span>';
+      return '<li>' + (attrs ? '<a ' + attrs + '>' + inner + '</a>' : '<div>' + inner + '</div>') + '</li>';
+    }).join('');
+    var foot = $('dr-daily-foot'), wa = $('dr-daily-wa');
+    if (foot && wa && d.share_text) {
+      wa.href = 'https://wa.me/?text=' + encodeURIComponent(d.share_text);
+      foot.hidden = false;
+      box._share = d.share_text;
+    }
+    if (box._wired) return;
+    box._wired = true;
+    box.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-daily-anchor]');
+      if (a) {
+        e.preventDefault();
+        var to = $(a.getAttribute('data-daily-anchor'));
+        if (to && to.scrollIntoView) to.scrollIntoView({ behavior: still() ? 'auto' : 'smooth', block: 'center' });
+        return;
+      }
+      if (e.target.closest('#dr-daily-wa')) { say('daily_share', { via: 'whatsapp' }); return; }
+      var c = e.target.closest('#dr-daily-copy');
+      if (c && box._share) {
+        var done = function () { c.textContent = 'Copied'; setTimeout(function () { c.textContent = 'Copy'; }, 1800); };
+        try { navigator.clipboard.writeText(box._share).then(done, function () {}); } catch (err) {}
+        say('daily_share', { via: 'copy' });
+      }
+    });
+  }
+
+  function say(name, props) {
+    try { if (window.AltahaTrack) window.AltahaTrack(name, props || {}); } catch (e) {}
   }
 
   function deskHTML() {
@@ -662,6 +729,7 @@
     }
     get('/market', 9000).then(function (d) { if (d) { T.market = d; paintIndices(d); } });
     get('/market/week', 15000).then(function (d) { T.week = d; paintFlows(); if (T.market) paintIndices(T.market); });
+    get('/daily', 12000).then(paintDaily);
     get('/chart?ticker=%5ENSEI&range=3M', 20000).then(paintChart);
     get('/social/news/feed?limit=8&sort=latest', 11000).then(paintHeads);
     todayCounts();

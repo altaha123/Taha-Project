@@ -71,6 +71,18 @@ const DOORS = ['Today', 'Ideas', 'My money'];
     if (u.pathname === '/planner/questions') {
       return route.fulfill({ json: { questions: [], bands: [] } });
     }
+    // Today in a minute: the shape is backend/daily.py's story().
+    if (u.pathname === '/daily') {
+      return route.fulfill({ json: { date: '2026-09-23', day: '23 Sep 2026', weekday: 'Wednesday', status: 'closed',
+        headline: 'Markets rose',
+        lines: [
+          { key: 'market', label: 'Market', tone: 'up', anchor: 'market', text: 'Nifty 50 closed at 25,150, up 0.84%.' },
+          { key: 'sectors', label: 'Sectors', tone: 'up', anchor: 'sectors', text: 'Energy led, up 1.20%. Technology was weakest, down 0.40%.' },
+          { key: 'results', label: 'Results', tone: 'flat', goto: 'discover/results', text: '12 companies report results today.' },
+          { key: 'brief', label: 'Policy', tone: 'flat', href: 'brief.html', text: '1 new government or regulator circular matters for listed companies today.' }],
+        share_text: 'Indian market today, 23 Sep 2026\n\n• Nifty 50 closed at 25,150, up 0.84%.\n\nMore at https://altahascreener.in/today',
+        url: 'https://altahascreener.in/today' } });
+    }
     // The weekday planets (#134) read the last five sessions from here; the
     // shape is market_week.build_week's.
     if (u.pathname === '/market/week') {
@@ -132,16 +144,45 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.equal((await page.locator('#sh-doorbar .sh-pill.on').innerText()).trim(), 'Overview');
 
   /* ── 1b · Built for the first visit ──────────────────────────────────────
-     People who were sent the site found it too complex to navigate. Today
-     now says what the site does and offers three tasks; the door bar shows
-     a short row with the rest under More. */
+     People who were sent the site found it too complicated to use. Today now
+     opens on the one thing nearly everybody came to do, look up a stock, and
+     then says what the market did in sentences. The door bar shows a short
+     row with the rest under More. */
 
   const start = page.locator('#view-today #dr-start');
   await start.waitFor({ state: 'visible' });
-  assert.match(await start.innerText(), /0 to 100/, 'Start here does not say what the site does');
+  assert.match(await start.innerText(), /0 to 100/, 'the first screen does not say what the site does');
+  assert.equal((await start.locator('h2').innerText()).trim(), 'Check any stock in seconds.');
   assert.deepEqual((await start.locator('.dr-task b').allInnerTexts()).map(t => t.trim()),
-                   ['Check a stock', 'Get stock picks', 'Check my portfolio']);
+                   ['Stock ideas', 'Check my portfolio', 'Morning brief']);
+  assert.equal(await start.locator('a.dr-task').getAttribute('href'), 'brief.html');
+  assert.equal(await start.locator('.dr-start-try a').count(), 6, 'six familiar names to tap');
   assert.ok(await start.locator('a[href="stock.html?ticker=RELIANCE"]').count(), 'no example stock to try');
+  // It is the first thing on the page, above the heading and the market.
+  assert.ok(await page.evaluate(() => {
+    const a = document.getElementById('dr-start'), b = document.querySelector('#view-today .dr-title');
+    return a.getBoundingClientRect().top < b.getBoundingClientRect().top;
+  }), 'the search box is not first');
+  // And it cannot be lost: there is nothing to hide it with.
+  assert.equal(await page.locator('#dr-start-x').count(), 0);
+
+  // Today in a minute: the day in sentences, each opening where it came from.
+  const daily = page.locator('#view-today #dr-daily');
+  await daily.locator('.dr-daily-list li').first().waitFor();
+  assert.equal((await daily.locator('h2').innerText()).trim(), 'Markets rose');
+  assert.match(await daily.locator('#dr-daily-k').innerText(), /Wednesday, 23 Sep 2026/i);
+  assert.equal(await daily.locator('.dr-daily-list li').count(), 4);
+  assert.match(await daily.locator('.dr-daily-list li').first().innerText(), /Nifty 50 closed at 25,150, up 0\.84%\./);
+  assert.equal(await daily.locator('.dr-daily-list a[data-goto="discover/results"]').count(), 1);
+  assert.equal(await daily.locator('.dr-daily-list a[href="brief.html"]').count(), 1);
+  const wa = await daily.locator('#dr-daily-wa').getAttribute('href');
+  assert.ok(wa.startsWith('https://wa.me/?text='), 'no WhatsApp link');
+  assert.match(decodeURIComponent(wa), /Indian market today, 23 Sep 2026[\s\S]*altahascreener\.in\/today/);
+  assert.equal(await daily.locator('#dr-daily-foot').isVisible(), true);
+  // A sentence about the market takes the reader to the market, on this page.
+  await daily.locator('.dr-daily-list a[data-daily-anchor="drt-heat"]').click();
+  assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Today', 'a market sentence left the page');
+  await page.evaluate(() => window.scrollTo(0, 0));
 
   // A short row, and the rest one tap away under More, each with its hint.
   assert.deepEqual(await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill').evaluateAll(ns => ns.map(n => n.dataset.tab)),
@@ -168,21 +209,20 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.equal(await page.locator('#sh-morepanel .sh-moreitem[data-tab="concalls"]').count(), 0,
                'the open tool is listed twice');
 
-  // "Check a stock" puts the cursor in the search box; "Hide this" sticks.
+  // The big box puts the cursor in the search box, and it is still there on a
+  // second visit: it used to be a strip a reader could hide for good.
   await page.locator('.sh-door[data-sec="discover"]').click();
   await start.waitFor({ state: 'visible' });
-  await start.locator('.dr-task[data-start="search"]').click();
+  await start.locator('.dr-find[data-start="search"]').click();
   assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), 'sh-q',
-               'Check a stock does not put the cursor in the search box');
+               'the big search box does not put the cursor in the search box');
   await page.keyboard.press('Escape');
   await page.evaluate(() => document.activeElement && document.activeElement.blur());
-  await start.locator('#dr-start-x').click();
-  assert.equal(await page.locator('#dr-start').count(), 0, 'Hide this did not hide Start here');
-  assert.equal(await page.evaluate(() => localStorage.getItem('altaha-start-hidden-v1')), '1');
+  await page.evaluate(() => localStorage.setItem('altaha-start-hidden-v1', '1'));
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!window.AltahaNav);
   await page.locator('#view-today .dr-title').waitFor();
-  assert.equal(await page.locator('#dr-start').count(), 0, 'Start here came back after it was hidden');
+  assert.equal(await page.locator('#dr-start').count(), 1, 'the search box is missing for someone who hid the old strip');
 
   /* ── 2 · One owner per destination, and no orphans ───────────────────── */
 

@@ -489,6 +489,31 @@ def disclaimer() -> str:
 # so an offset is the whole story and no tz database is needed for it.
 IST = _dt_mod.timezone(_dt_mod.timedelta(hours=5, minutes=30))
 
+
+# ---------------------------------------------------------------------------
+# Answer now, refresh behind (swr.py)
+#
+# How long an answer is good for depends on whether the market is trading. A
+# sector move that is a minute old is fine at 11 am and so is one that is
+# fifteen minutes old on a Sunday; the reverse is not true. `_life` returns the
+# two numbers swr wants: how long an answer is fresh, and how long it may still
+# be shown while a new one is made.
+# ---------------------------------------------------------------------------
+import swr
+
+
+def _session_live(now=None):
+    """Weekday, 09:00 to 15:45 IST: the session plus the minutes around it."""
+    now = now or _dt_mod.datetime.now(IST)
+    mins = now.hour * 60 + now.minute
+    return now.weekday() < 5 and 540 <= mins <= 945
+
+
+def _life(live_ttl, quiet_ttl, live_keep=None, quiet_keep=None):
+    if _session_live():
+        return live_ttl, (live_keep if live_keep is not None else live_ttl * 10)
+    return quiet_ttl, (quiet_keep if quiet_keep is not None else quiet_ttl * 40)
+
 LEADERBOARD_FILE = scanner.OUT_FILE
 RESULT_TTL = 12 * 3600          # a ranking older than this is stale
 
@@ -711,7 +736,13 @@ INDICES = [("^NSEI", "NIFTY 50"), ("^BSESN", "SENSEX"),
 
 @app.get("/market")
 def market():
-    """Index levels for the ticker strip. Cached by the data layer."""
+    """Index levels for the ticker strip, kept for a few seconds so a page
+    full of visitors is one read of the feed rather than one each."""
+    ttl, keep = _life(20, 300, live_keep=300, quiet_keep=12 * 3600)
+    return swr.get("/market", _market_now, ttl, keep)
+
+
+def _market_now():
     import datetime as _dt
     out = []
     for sym, label in INDICES:
@@ -4119,10 +4150,25 @@ def sector_overview(window: str = "1D", stocks: bool = False):
     and it is always the next thing a reader wants: not "materials is up 1.4%"
     but "which names in materials are doing that".
     """
+    win = window if window in SS.WINDOWS else "1D"
+    if win == "1D":
+        ttl, keep = _life(60, 900, live_keep=600, quiet_keep=18 * 3600)
+    else:
+        ttl, keep = 900, 6 * 3600          # a week or a month moves slowly
     try:
-        return SS.overview(window, with_stocks=bool(stocks))
+        return swr.get(f"/sector/overview:{win}:{int(bool(stocks))}",
+                       lambda: _sector_overview_now(win, bool(stocks)), ttl, keep)
     except Exception as e:
         raise HTTPException(503, f"Sector data unavailable: {str(e)[:120]}")
+
+
+def _sector_overview_now(window, stocks):
+    """One market-wide read. An answer with no sectors in it is a failed read,
+    not a quiet market, and is not kept: the next request tries again."""
+    out = SS.overview(window, with_stocks=stocks)
+    if not (out or {}).get("rows"):
+        raise RuntimeError("no sector returned a figure")
+    return to_native(out)
 
 
 @app.get("/sector/story")
@@ -4991,7 +5037,8 @@ def results_calendar_view():
     if results_calendar is None:
         return {"available": False, "message": "The results calendar is not available."}
     try:
-        return to_native(results_calendar.calendar())
+        return swr.get("/results/calendar",
+                       lambda: to_native(results_calendar.calendar()), 180, 3600)
     except Exception as e:
         raise HTTPException(503, f"Could not read the results calendar: {str(e)[:100]}")
 
@@ -5971,3 +6018,138 @@ def stream_status():
     if livefeed is None:
         return {"mode": "unavailable", "detail": "livefeed module not loaded"}
     return livefeed.FEED.status()
+
+
+# ---------------------------------------------------------------------------
+# One request for the home page
+#
+# The home page asked this server fifteen separate questions, and it could not
+# ask the first of them until seventy-odd script files had arrived. /boot is
+# all of those answers in one reply. The page asks for it from the first line
+# of its <head>, before a single script has loaded, and hands each answer to
+# the code that would otherwise have gone to the network for it
+# (frontend/boot.js).
+#
+# Two rules keep it honest:
+#
+#   It is never slower than its fastest part. Every part is read with
+#   swr.peek, which does not wait. A part that is not ready is left out and
+#   the page asks for that one the ordinary way.
+#
+#   A part is exactly what its own route returns. Each entry below calls the
+#   route's own function, and test_boot.py compares the two, so the home page
+#   cannot show one thing from /boot and another from the route.
+#
+# The keys are the path and query exactly as the page requests them.
+# ---------------------------------------------------------------------------
+from fastapi.encoders import jsonable_encoder as _encode
+
+
+def _boot_parts():
+    return {
+        "/market": (market, 20, 300),
+        "/sector/overview?window=1D&stocks=1":
+            (lambda: sector_overview("1D", True), 30, 600),
+        "/sector/benchmarks?window=1D": (lambda: sector_benchmarks("1D"), 60, 900),
+        "/market/week": (market_week_route, 300, 1800),
+        "/results/calendar": (results_calendar_view, 120, 600),
+        "/ideas?horizon=short&limit=6":
+            (lambda: ideas("short", 6, "moderate", False, None), 120, 900),
+        "/special?limit=6": (lambda: altaha_special(6), 120, 900),
+        "/deals?limit=6": (lambda: deals_board(1.0, 6), 120, 900),
+        "/announcements?limit=60&min_importance=medium":
+            (lambda: announcements_feed(60, "medium", "", ""), 45, 300),
+        "/chart?ticker=%5ENSEI&range=3M": (lambda: chart("^NSEI", "3M"), 60, 900),
+        "/social/news/feed?limit=8&sort=latest":
+            (lambda: news_routes.news_feed_route(8, None, None, 1, "latest"), 120, 600),
+        "/planner/questions": (planner_questions, 3600, 3600),
+        "/daily": (daily_route, 30, 300),
+    }
+
+
+def _boot_fn(fn):
+    def run():
+        out = fn()
+        if isinstance(out, Response):          # a file or a stream, not data
+            raise TypeError("not a JSON answer")
+        return _encode(out)
+    return run
+
+
+@app.get("/boot")
+def boot():
+    """Everything the home page opens with, in one reply. See above."""
+    data, age = {}, {}
+    for key, (fn, live_ttl, quiet_ttl) in _boot_parts().items():
+        ttl, keep = _life(live_ttl, quiet_ttl)
+        try:
+            value, old = swr.peek("boot:" + key, _boot_fn(fn), ttl, keep)
+        except Exception:
+            value, old = None, None
+        if value is not None:
+            data[key] = value
+            age[key] = round(old, 1)
+    return JSONResponse({"at": _dt_mod.datetime.now(IST).isoformat(timespec="seconds"),
+                         "data": data, "age": age},
+                        headers={"Cache-Control": "no-store"})
+
+
+@app.get("/health/cache")
+def health_cache():
+    """What is kept, how old each answer is, and what is being refreshed."""
+    return swr.stats()
+
+
+def _warm_boot():
+    """Fill /boot once after a start, so the first visitor after a deploy gets
+    the fast page too. Waits for the heavier start-up work to settle first."""
+    time.sleep(float(os.environ.get("BOOT_WARM_DELAY", "25") or 25))
+    try:
+        boot()
+    except Exception:
+        pass
+
+
+@app.on_event("startup")
+async def _start_boot_warm():
+    # On the server's start only. Importing this file (a test, a script) warms
+    # nothing.
+    if os.environ.get("BOOT_WARM", "1") != "0":
+        threading.Thread(target=_warm_boot, daemon=True, name="boot-warm").start()
+
+
+# ---------------------------------------------------------------------------
+# Today in a minute (daily.py)
+#
+# The first thing on the home page: what the market did, in sentences. Built
+# only from answers that are already kept above, so it costs nothing new, and
+# a part that cannot be read leaves its sentence out.
+# ---------------------------------------------------------------------------
+import daily as daily_story
+
+
+def _daily_now():
+    def part(fn):
+        try:
+            return fn()
+        except Exception:
+            return None
+    out = daily_story.story(
+        market=part(market),
+        sectors=part(lambda: sector_overview("1D", True)),
+        week=part(market_week_route),
+        calendar=part(results_calendar_view),
+        brief=part(lambda: policy_brief_today(1)))
+    if not out["lines"]:
+        raise RuntimeError("nothing to say yet")      # not kept; tried again
+    return to_native(out)
+
+
+@app.get("/daily")
+def daily_route():
+    """What the market did today, in five or six plain sentences."""
+    ttl, keep = _life(60, 600, live_keep=900, quiet_keep=18 * 3600)
+    try:
+        return swr.get("/daily", _daily_now, ttl, keep)
+    except Exception:
+        raise HTTPException(503, "Today's summary is not ready yet.")
