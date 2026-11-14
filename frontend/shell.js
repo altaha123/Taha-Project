@@ -137,7 +137,7 @@
       id: 'research', label: 'Ideas', question: 'What should I look at?',
       items: [
         { tab: 'ideahub', label: 'Overview', icon: 'bulb', hint: 'Every way to find a stock, in one place', kw: 'ideas find discover' },
-        { tab: 'ideas', label: 'Stock picks', icon: 'bulb', hint: 'Short-term breakouts and long-term picks', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
+        { tab: 'ideas', label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
         { tab: 'calls', more: true, label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
         { tab: 'query', label: 'Screener', icon: 'lens', hint: 'Filter every company by your own rules', kw: 'query filter screen roe roce pe debt pledge promoter' },
         { tab: 'lenses', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them', kw: 'lenses philosophy coffee can moat qglp' },

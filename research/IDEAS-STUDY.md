@@ -457,6 +457,10 @@ the stock then did. That is how the live record gets to overrule this test.
 
 ## Two tabs: short term and long term
 
+*The page showed these two tabs for one day and then went back to ten at the
+owner's request. The short-term list below is still ranked by the engine and
+answers on the API; it has no tab. Its trials and record stand as written.*
+
 The page had grown to ten tabs. A reader asked for two, and for the
 short-term one to be a single list: stocks that have consolidated and are
 breaking out or about to, picked on fundamentals, technicals, the industry
