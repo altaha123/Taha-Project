@@ -75,6 +75,9 @@ async function open(browser, size, file) {
     await page.locator('footer.sh-footer').waitFor();
     assert.equal(await page.locator('footer.sh-footer a', { hasText: 'Stock picks' }).getAttribute('href'), 'index.html#research/ideas');
     assert.equal(await page.locator('footer.sh-footer a', { hasText: 'Daily policy brief' }).getAttribute('href'), 'brief.html');
+    // The pages a search engine reads are linked from every page, so a crawler finds them.
+    assert.equal(await page.locator('footer.sh-footer a', { hasText: 'All stocks' }).getAttribute('href'), '/stocks');
+    assert.equal(await page.locator('footer.sh-footer a', { hasText: 'in a minute' }).getAttribute('href'), '/today');
     assert.deepEqual(errors, [], errors.join('\n'));
     await context.close();
 

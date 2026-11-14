@@ -108,3 +108,12 @@ def test_no_sentence_gives_advice():
     text = " ".join(l["text"] for l in out["lines"]).lower()
     for word in ("buy ", "sell ", "target", "should", "recommend", "stop loss"):
         assert word not in text
+
+
+def test_company_names_replace_symbols_where_known():
+    names = {"PHOENIXLTD": "The Phoenix Mills Ltd.", "ADANIPOWER": "Adani Power Limited"}
+    t = _by_key(daily.story(None, SECTORS, None, None, None, now=NOW, names=names))
+    assert t["movers"] == ("The Phoenix Mills gained most among large companies, up 5.57%. "
+                           "Adani Power fell most, down 3.10%.")
+    assert daily.short_name("Tata Consultancy Services Ltd") == "Tata Consultancy Services"
+    assert daily.short_name(None) == ""

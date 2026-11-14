@@ -246,6 +246,8 @@
   var FOOT_COMPANY = [
     { section: 'me', tab: 'score', label: 'How the score works' },
     { section: 'me', tab: 'vocab', label: 'Glossary' },
+    { href: '/today', label: 'Today\u2019s market, in a minute' },
+    { href: '/stocks', label: 'All stocks' },
     { href: 'brief.html', label: 'Daily policy brief' },
     { href: 'pro.html?from=footer', label: 'Altaha Pro' },
     { href: 'signin.html', label: 'Sign in' }

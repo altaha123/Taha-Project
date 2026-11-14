@@ -101,7 +101,16 @@ def _market_line(market):
             "tone": "up" if (ch or 0) > 0 else "down" if (ch or 0) < 0 else "flat"}
 
 
-def _sector_lines(sectors):
+def short_name(name):
+    """'Phoenix Mills Ltd.' -> 'Phoenix Mills': how a person would say it."""
+    out = (name or "").strip()
+    for tail in (" Limited", " Ltd.", " Ltd"):
+        if out.endswith(tail):
+            out = out[: -len(tail)].rstrip(" ,")
+    return out
+
+
+def _sector_lines(sectors, names=None):
     rows = [r for r in (sectors or {}).get("rows") or [] if _num(r.get("change_pct")) is not None]
     if len(rows) < 3:
         return []
@@ -131,11 +140,12 @@ def _sector_lines(sectors):
     if len(stocks) >= 10:
         ranked = sorted(stocks.items(), key=lambda kv: -kv[1])
         (gs, gv), (ls, lv) = ranked[0], ranked[-1]
+        say = lambda sym: short_name((names or {}).get(sym)) or sym
         bits = []
         if gv > 0:
-            bits.append(f"{gs} gained most among large companies, up {pct(gv)}.")
+            bits.append(f"{say(gs)} gained most among large companies, up {pct(gv)}.")
         if lv < 0:
-            bits.append(f"{ls} fell most, down {pct(lv)}.")
+            bits.append(f"{say(ls)} fell most, down {pct(lv)}.")
         if bits:
             out.append({"key": "movers", "label": "Movers", "text": " ".join(bits),
                         "anchor": "movers", "tone": "flat",
@@ -210,12 +220,15 @@ def _headline(lines):
     return mood
 
 
-def story(market=None, sectors=None, week=None, calendar=None, brief=None, now=None):
-    """Today's market in a few sentences. Any argument may be None."""
+def story(market=None, sectors=None, week=None, calendar=None, brief=None, now=None,
+          names=None):
+    """Today's market in a few sentences. Any argument may be None. `names`
+    maps a symbol to its company name, so a sentence can say Phoenix Mills
+    where the feed says PHOENIXLTD."""
     now = now or dt.datetime.now(IST)
     today = now.strftime("%Y-%m-%d")
     lines = []
-    for line in ([_market_line(market)] + _sector_lines(sectors)
+    for line in ([_market_line(market)] + _sector_lines(sectors, names)
                  + [_flow_line(week, today), _results_line(calendar, today), _brief_line(brief)]):
         if line:
             lines.append(line)

@@ -12,6 +12,22 @@
     {
       "source": "/og/:path*",
       "destination": "https://taha-project.onrender.com/og/:path*"
+    },
+    {
+      "source": "/stock/:symbol",
+      "destination": "https://taha-project.onrender.com/p/stock/:symbol"
+    },
+    {
+      "source": "/stocks",
+      "destination": "https://taha-project.onrender.com/p/stocks"
+    },
+    {
+      "source": "/today",
+      "destination": "https://taha-project.onrender.com/p/today"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "https://taha-project.onrender.com/p/sitemap.xml"
     }
   ],
   "headers": [

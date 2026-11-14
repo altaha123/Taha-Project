@@ -6139,7 +6139,8 @@ def _daily_now():
         sectors=part(lambda: sector_overview("1D", True)),
         week=part(market_week_route),
         calendar=part(results_calendar_view),
-        brief=part(lambda: policy_brief_today(1)))
+        brief=part(lambda: policy_brief_today(1)),
+        names={s: v["name"] for s, v in public_pages.industries().items()})
     if not out["lines"]:
         raise RuntimeError("nothing to say yet")      # not kept; tried again
     return to_native(out)
@@ -6153,3 +6154,184 @@ def daily_route():
         return swr.get("/daily", _daily_now, ttl, keep)
     except Exception:
         raise HTTPException(503, "Today's summary is not ready yet.")
+
+
+# ---------------------------------------------------------------------------
+# Pages a search engine can read (pages.py)
+#
+# Plain HTML, written here from what is already stored on this server's disk.
+# vercel.json serves them from the site's own domain:
+#
+#     altahascreener.in/stock/RELIANCE  ->  /p/stock/RELIANCE
+#     altahascreener.in/stocks          ->  /p/stocks
+#     altahascreener.in/today           ->  /p/today
+#     altahascreener.in/sitemap.xml     ->  /p/sitemap.xml
+#
+# A rendered page is kept (swr) and marked cacheable, so a crawler walking
+# two thousand of them is mostly answered by the CDN and, behind it, by
+# memory. No page causes a call to the exchange.
+# ---------------------------------------------------------------------------
+import pages as public_pages
+
+
+def _html(body, status=200, headers=None):
+    return Response(content=body, status_code=status, media_type="text/html; charset=utf-8",
+                    headers=headers if headers is not None else public_pages.CACHE_HEADERS)
+
+
+@app.get("/p/stock/{symbol}")
+def page_stock(symbol: str):
+    sym = public_pages.clean_symbol(symbol)
+    if not sym:
+        return _html(public_pages.not_found("That company"), 404, {"Cache-Control": "no-store"})
+
+    def build():
+        doc = public_pages.stock_page(sym)
+        if doc is None:
+            raise LookupError(sym)                    # not kept
+        return doc
+    try:
+        return _html(swr.get("page:stock:" + sym, build, 1800, 24 * 3600))
+    except LookupError:
+        return _html(public_pages.not_found("That company"), 404, {"Cache-Control": "no-store"})
+    except Exception:
+        raise HTTPException(503, "This page is not available right now.")
+
+
+@app.get("/p/stocks")
+def page_stocks():
+    try:
+        return _html(swr.get("page:stocks", public_pages.stocks_page, 3600, 24 * 3600))
+    except Exception:
+        raise HTTPException(503, "This page is not available right now.")
+
+
+@app.get("/p/today")
+def page_today():
+    """Today in a minute, as a page. Never waits for the market feeds: it is
+    written from the summary the home page already keeps."""
+    def build():
+        try:
+            story = daily_route()
+        except HTTPException:
+            story = daily_story.story()               # the frame, without lines
+        try:
+            sectors = sector_overview("1D", True)
+        except HTTPException:
+            sectors = None
+        return public_pages.today_page(story, sectors)
+    ttl, keep = _life(120, 900, live_keep=1800, quiet_keep=18 * 3600)
+    try:
+        return _html(swr.get("page:today", build, ttl, keep),
+                     headers={"Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"})
+    except Exception:
+        raise HTTPException(503, "This page is not available right now.")
+
+
+@app.get("/p/sitemap.xml")
+def page_sitemap():
+    try:
+        body = swr.get("page:sitemap", public_pages.sitemap, 6 * 3600, 48 * 3600)
+    except Exception:
+        raise HTTPException(503, "The sitemap is not available right now.")
+    return Response(content=body, media_type="application/xml; charset=utf-8",
+                    headers={"Cache-Control": "public, max-age=3600, s-maxage=21600"})
+
+
+# ---------------------------------------------------------------------------
+# The day's summary, posted to the public Telegram channel
+#
+# The same sentences as the home page and /today, once a day after the close,
+# to the channel named by TELEGRAM_PUBLIC_CHAT_ID. Until that is set this does
+# nothing at all.
+#
+# It runs from inside the server, on a clock of its own, because the scheduled
+# jobs on GitHub have been arriving hours late and a closing note at midnight
+# is worse than none.
+#
+# It posts only what is true today: the market must be shut, and the newest
+# session in the week's record must carry today's date. On an exchange
+# holiday that record still ends yesterday, so nothing is posted, rather than
+# yesterday's close under today's date.
+# ---------------------------------------------------------------------------
+_DAILY_POST_FILE = os.path.join(os.environ.get("DATA_DIR", "").strip()
+                                or os.path.dirname(os.path.abspath(__file__)), "daily_post.json")
+_daily_post_lock = threading.Lock()
+
+
+def _daily_posted_on():
+    try:
+        with open(_DAILY_POST_FILE, encoding="utf-8") as f:
+            return (json.load(f) or {}).get("date")
+    except (OSError, ValueError):
+        return None
+
+
+def _post_daily(dry_run=False, force=False, now=None):
+    """Post today's summary once. Returns what happened, and why."""
+    now = now or _dt_mod.datetime.now(IST)
+    today = now.strftime("%Y-%m-%d")
+    channel = getattr(notify, "TG_PUBLIC", "")
+    if not channel:
+        return {"sent": False, "why": "TELEGRAM_PUBLIC_CHAT_ID is not set on the server"}
+    with _daily_post_lock:
+        if not force and _daily_posted_on() == today:
+            return {"sent": False, "why": "already posted today"}
+        try:
+            sessions = (market_week_route() or {}).get("sessions") or []
+        except Exception:
+            sessions = []
+        if not sessions or sessions[-1].get("date") != today:
+            return {"sent": False, "why": "no session recorded for today (a holiday, or the close is not in yet)"}
+        swr.forget("/daily")                           # the close, not a kept mid-session read
+        try:
+            story = daily_route()
+        except HTTPException:
+            return {"sent": False, "why": "today's summary is not ready"}
+        if story.get("status") == "open":
+            return {"sent": False, "why": "the market is still open"}
+        if story.get("date") != today or not story.get("lines"):
+            return {"sent": False, "why": "today's summary is not ready"}
+        import html as _html_mod
+        text = (f"<b>{_html_mod.escape(story['headline'])}</b> · {_html_mod.escape(story['day'])}\n\n"
+                + "\n".join("• " + _html_mod.escape(l["text"]) for l in story["lines"])
+                + f"\n\n{_html_mod.escape(story['url'])}")
+        if dry_run:
+            return {"sent": False, "why": "dry run", "text": text}
+        ok, detail = notify._post(channel, text)
+        if ok:
+            try:
+                with open(_DAILY_POST_FILE, "w", encoding="utf-8") as f:
+                    json.dump({"date": today, "at": now.isoformat(timespec="seconds")}, f)
+            except OSError:
+                pass
+        return {"sent": bool(ok), "why": detail}
+
+
+@app.post("/jobs/daily-post")
+def run_daily_post(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+                   key: str = "", dry_run: bool = False, force: bool = False):
+    """Post today's summary to the public channel now. Guarded by ADMIN_KEY."""
+    if ADMIN_KEY and (x_admin_key or key) != ADMIN_KEY:
+        raise HTTPException(403, "Set X-Admin-Key.")
+    return _post_daily(dry_run=dry_run, force=force)
+
+
+def _daily_post_clock():
+    """Every five minutes on a weekday between 15:50 and 20:00 IST, try once.
+    `_post_daily` refuses everything that should not be posted, so trying is safe."""
+    while True:
+        time.sleep(300)
+        try:
+            now = _dt_mod.datetime.now(IST)
+            mins = now.hour * 60 + now.minute
+            if now.weekday() < 5 and 950 <= mins <= 1200 and getattr(notify, "TG_PUBLIC", ""):
+                _post_daily(now=now)
+        except Exception:
+            pass
+
+
+@app.on_event("startup")
+async def _start_daily_post_clock():
+    if os.environ.get("DAILY_POST", "1") != "0":
+        threading.Thread(target=_daily_post_clock, daemon=True, name="daily-post").start()

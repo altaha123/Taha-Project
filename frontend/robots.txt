@@ -1,0 +1,10 @@
+# Altaha Screener
+User-agent: *
+Allow: /
+# Signed-in desks and one-off links: nothing here for a search engine.
+Disallow: /wealth.html
+Disallow: /advisors.html
+Disallow: /signin.html
+Disallow: /share/
+
+Sitemap: https://altahascreener.in/sitemap.xml
