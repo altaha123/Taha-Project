@@ -69,7 +69,7 @@
       icon: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
       tabs: [
         { id: 'ideahub',     label: 'Overview',        hint: 'Every way to find a stock, in one place' },
-        { id: 'ideas',       label: 'Stock picks',     hint: 'Short-term breakouts and long-term picks' },
+        { id: 'ideas',       label: 'Stock picks',     hint: 'Picks by holding period and by setup: breakouts, technicals, money flow' },
         { id: 'calls',       label: 'Call log',        hint: 'Every call, the day it was made, and what happened next' },
         { id: 'query',       label: 'Screener',        hint: 'Filter every company by your own rules' },
         { id: 'lenses',      label: 'Investor styles', hint: 'Stocks picked the way great investors pick them' },
