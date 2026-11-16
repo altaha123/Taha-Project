@@ -1,0 +1,114 @@
+name: Keep five years of NSE bhavcopy
+
+# Every NSE daily bhavcopy for five years, and each new one, kept in the private
+# R2 bucket beside the backups under bhavcopy/ (backend/bhav_archive.py). The
+# fetching is done ON THE API, which already holds the R2 keys and already
+# reads NSE's archive every day; this job asks for one slice at a time until
+# nothing is left, then says what the archive holds.
+#
+# The first run backfills five years: about 1,240 sessions, two files each.
+# Expect most of an hour; if NSE starts refusing, the run stops politely and
+# the next evening carries on from where it got to. After that, each run adds
+# the day.
+#
+# 14:40 UTC is 20:10 IST, after both of the day's files are normally out.
+#
+# Needs ALTAHA_ADMIN_KEY here, and the R2_* variables on Render (the same four
+# the backup uses).
+
+on:
+  schedule:
+    - cron: "40 14 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      recheck:
+        description: "Ask again for days earlier written off as having no file"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bhavcopy
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      API: https://taha-project.onrender.com
+      ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+      RECHECK: ${{ inputs.recheck || false }}
+    steps:
+      - name: Fetch what is missing, a slice at a time
+        run: |
+          set -u
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render."
+            exit 1
+          fi
+          cat > slice.py <<'PY'
+          import json, sys
+          d = json.load(open(sys.argv[1]))
+          s, a = d.get("stored") or {}, d.get("absent_found") or {}
+          print("slice %s: stored %s bhavcopy + %s delivery (%.1f MB), %s days with no file, "
+                "%s refused, %s remaining, %s waiting for NSE, stopped on %s, %ss"
+                % (sys.argv[2], s.get("cm", 0), s.get("full", 0), (d.get("stored_bytes") or 0) / 1e6,
+                   a.get("cm", 0), d.get("blocked", 0), d.get("remaining"), d.get("waiting_for_nse"),
+                   d.get("stopped"), d.get("seconds")))
+          for e in d.get("errors") or []:
+              print("::error::%s %s: %s" % (e.get("day"), e.get("kind"), e.get("error")))
+          progress = s.get("cm", 0) + s.get("full", 0) + a.get("cm", 0) + a.get("full", 0)
+          with open("progress", "w") as fh:
+              fh.write("%d %d\n" % (progress, d.get("remaining") or 0))
+          PY
+          curl -sS --max-time 120 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+          recheck="${RECHECK}"
+          for i in $(seq 1 80); do
+            code=$(curl -sS --max-time 600 -o slice.json -w "%{http_code}" \
+                   -X POST "${API}/admin/bhavcopy/archive?limit=40&recheck=${recheck}" \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+            recheck=false
+            if [ "${code}" != "200" ]; then
+              head -c 400 slice.json; echo
+              echo "::error::The archive slice did not run (HTTP ${code}). If it says R2 variables are missing, set them on Render → Environment."
+              exit 1
+            fi
+            python3 slice.py slice.json "${i}" || { head -c 400 slice.json; echo; exit 1; }
+            read -r progress remaining < progress
+            [ "${remaining}" = "0" ] && break
+            # A slice that stored nothing and wrote nothing off was refused
+            # throughout. Stop; tomorrow's run starts where this one ended.
+            [ "${progress}" = "0" ] && break
+          done
+
+      - name: What the archive holds
+        if: always()
+        run: |
+          set -u
+          code=$(curl -sS --max-time 120 -o status.json -w "%{http_code}" \
+                 "${API}/admin/bhavcopy" -H "X-Admin-Key: ${ADMIN_KEY}" || echo "000")
+          if [ "${code}" != "200" ]; then
+            head -c 400 status.json; echo
+            echo "::warning::Could not read the archive's status (HTTP ${code})."
+            exit 0
+          fi
+          python3 - <<'PY'
+          import json
+          d = json.load(open("status.json"))
+          w = d.get("window") or ["?", "?"]
+          print("window: %s to %s" % (w[0], w[1]))
+          for kind, label in (("cm", "bhavcopy"), ("full", "delivery")):
+              k = d.get(kind) or {}
+              print("%-9s %5s sessions, %s to %s, %.1f MB"
+                    % (label, k.get("days"), k.get("first"), k.get("last"), (k.get("bytes") or 0) / 1e6))
+          print("days with no file (weekends, holidays): %s" % (d.get("absent") or {}).get("cm"))
+          left = d.get("remaining") or 0
+          if left:
+              print("::warning::%s days are still to fetch. The next run carries on." % left)
+          else:
+              print("complete: every day in the window is held or known to have no file")
+          PY

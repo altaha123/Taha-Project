@@ -27,6 +27,20 @@ S3-compatible PUT signed here with AWS Signature V4 (which is what R2 speaks),
 using `requests` — boto3 would add tens of megabytes of resident memory to do
 the same four calls.
 
+WHERE THE TEMPORARY COPIES GO
+Not on the data disk if anywhere else has room. They used to, and from 8 to 13
+November 2026 every night failed with "database or disk is full": the 1 GB
+disk held 692 MB of data, and the snapshot of the largest database (the
+point-in-time store, 307 MB) needs that much free again beside it. The two
+largest databases were the two left out, every night, for a week. The
+instance's own scratch space (the system temp folder, then the code folder) is
+tried first; the data disk is the last resort, as before. A folder that lives
+in memory (tmpfs) is never used: a 307 MB copy there is 307 MB of a 512 MB
+instance, and the out-of-memory kill takes the site down with the backup.
+Each manifest records where each copy was made and how full the data disk is,
+so the next disk running out is a warning in the job's log before it is a
+failed night.
+
 WHERE
   s3://$R2_BUCKET/daily/YYYY-MM-DD/<file>.gz
   s3://$R2_BUCKET/daily/YYYY-MM-DD/manifest.json   what was copied, sizes, sha256
@@ -48,6 +62,7 @@ import os
 import re
 import shutil
 import sqlite3
+import tempfile
 import threading
 import time
 from urllib.parse import quote
@@ -60,6 +75,15 @@ PREFIX = "daily/"
 _SCRATCH = ".backup-tmp"
 _SKIP_SUFFIXES = ("-wal", "-shm", "-journal", ".tmp", ".partial")
 _CHUNK = 1024 * 1024
+_MB = 1024 * 1024
+# Filesystems that are memory, not disk. Never a place for a scratch copy.
+_RAM_FS = {"tmpfs", "ramfs"}
+_MOUNTS = "/proc/mounts"
+# Room a file's copy needs: the snapshot itself, its gzip beside it while it is
+# written (at worst about half the size, for the pickle; the databases shrink
+# six to eight times), and a margin so the copy never fills a disk to the byte.
+_NEED_FACTOR = 1.5
+_NEED_MARGIN = 16 * _MB
 
 _lock = threading.Lock()
 _last = {"result": None}
@@ -144,7 +168,8 @@ class R2:
         self.bucket = cfg["R2_BUCKET"]
         self.ak, self.sk = cfg["R2_ACCESS_KEY_ID"], cfg["R2_SECRET_ACCESS_KEY"]
 
-    def _call(self, method, key="", query=None, headers=None, data=None, timeout=120):
+    def _call(self, method, key="", query=None, headers=None, data=None, timeout=120,
+              missing_ok=False):
         path = "/%s/%s" % (self.bucket, key) if key else "/%s" % self.bucket
         h = sign(method, path, query, headers, self.ak, self.sk, self.host)
         # The query string is built here, not by requests, so that what is
@@ -152,6 +177,8 @@ class R2:
         qs = _canonical_query(query)
         url = self.endpoint + quote(path, safe="/-_.~") + ("?" + qs if qs else "")
         r = self.http.request(method, url, headers=h, data=data, timeout=timeout)
+        if missing_ok and r.status_code == 404:
+            return None
         if r.status_code >= 300:
             raise RuntimeError("R2 %s %s: HTTP %s %s" % (method, key or "(bucket)",
                                                          r.status_code, r.text[:200]))
@@ -168,19 +195,42 @@ class R2:
         self._call("PUT", key, headers={"content-type": content_type,
                                         "content-length": str(len(body))}, data=body)
 
-    def list(self, prefix):
-        """Every key under prefix, following continuation tokens."""
-        keys, token = [], None
+    def get(self, key):
+        """The object's bytes, or None when there is no such key."""
+        r = self._call("GET", key, missing_ok=True)
+        return None if r is None else r.content
+
+    def _pages(self, prefix):
+        """The text of each page of a listing, following continuation tokens."""
+        token = None
         while True:
             q = {"list-type": "2", "prefix": prefix}
             if token:
                 q["continuation-token"] = token
             text = self._call("GET", query=q).text
-            keys += re.findall(r"<Key>([^<]+)</Key>", text)
+            yield text
             m = re.search(r"<NextContinuationToken>([^<]+)</NextContinuationToken>", text)
             if not m or "<IsTruncated>true</IsTruncated>" not in text:
-                return keys
+                return
             token = m.group(1)
+
+    def list(self, prefix):
+        """Every key under prefix, following continuation tokens."""
+        keys = []
+        for text in self._pages(prefix):
+            keys += re.findall(r"<Key>([^<]+)</Key>", text)
+        return keys
+
+    def list_objects(self, prefix):
+        """Every (key, size in bytes) under prefix."""
+        out = []
+        for text in self._pages(prefix):
+            for block in re.findall(r"<Contents>(.*?)</Contents>", text, re.S):
+                k = re.search(r"<Key>([^<]+)</Key>", block)
+                n = re.search(r"<Size>(\d+)</Size>", block)
+                if k:
+                    out.append((k.group(1), int(n.group(1)) if n else 0))
+        return out
 
     def delete(self, key):
         self._call("DELETE", key)
@@ -222,6 +272,87 @@ def _snapshot(src, dst):
         s.close()
 
 
+def _fs_type(path):
+    """The type of the filesystem holding path, from /proc/mounts; None when
+    that cannot be read (not Linux), which counts as disk."""
+    try:
+        path = os.path.realpath(path)
+        best, kind = "", None
+        with open(_MOUNTS, encoding="utf-8") as fh:
+            for line in fh:
+                parts = line.split()
+                if len(parts) < 3:
+                    continue
+                mnt = parts[1].replace("\\040", " ")
+                inside = path == mnt or path.startswith(mnt.rstrip("/") + "/")
+                if inside and len(mnt) >= len(best):
+                    best, kind = mnt, parts[2]
+        return kind
+    except OSError:
+        return None
+
+
+def scratch_bases(data_dir=None):
+    """
+    Where a temporary copy may be made, in order of preference: BACKUP_SCRATCH
+    if set, the system temp folder, the code folder, and the data disk last.
+    """
+    d = data_dir or DATA_DIR
+    env = os.environ.get("BACKUP_SCRATCH", "").strip()
+    out, seen = [], set()
+    for b in ([env] if env else []) + [tempfile.gettempdir(), _HERE, d]:
+        real = os.path.realpath(b)
+        if real not in seen:
+            seen.add(real)
+            out.append(b)
+    return out
+
+
+def _need(path):
+    """Bytes of free space a copy of path needs. The -wal file counts: the
+    snapshot carries the pages still waiting in it."""
+    raw = os.path.getsize(path)
+    try:
+        raw += os.path.getsize(path + "-wal")
+    except OSError:
+        pass
+    return int(raw * _NEED_FACTOR) + _NEED_MARGIN
+
+
+def _pick_scratch(need, bases):
+    """
+    The first base that is disk, not memory, and has room for a copy; with
+    why each one before it was passed over. None when none has room.
+    """
+    passed = []
+    for b in bases:
+        if not os.path.isdir(b):
+            passed.append("%s missing" % b)
+            continue
+        if _fs_type(b) in _RAM_FS:
+            passed.append("%s is memory" % b)
+            continue
+        try:
+            free = shutil.disk_usage(b).free
+        except OSError as e:
+            passed.append("%s unreadable (%s)" % (b, e))
+            continue
+        if free >= need:
+            return b, passed
+        passed.append("%s has %d MB free" % (b, free // _MB))
+    return None, passed
+
+
+def disk(data_dir=None):
+    """How full the data disk is, in bytes and as a share."""
+    try:
+        u = shutil.disk_usage(data_dir or DATA_DIR)
+    except OSError:
+        return None
+    return {"total": u.total, "used": u.used, "free": u.free,
+            "used_pct": round(100.0 * u.used / u.total, 1) if u.total else None}
+
+
 def _gzip(src, dst):
     sha = hashlib.sha256()
     with open(src, "rb") as fi, gzip.open(dst, "wb", compresslevel=6) as fo:
@@ -234,12 +365,17 @@ def _gzip(src, dst):
     return sha.hexdigest()
 
 
-def run(client=None, data_dir=None, today=None, keep_days=KEEP_DAYS):
+def run(client=None, data_dir=None, today=None, keep_days=KEEP_DAYS,
+        scratch=None):
     """
     One backup: every candidate file to daily/<today>/, a manifest, then the
     days older than keep_days removed. A file that fails is reported and the
     rest still go; old days are pruned only when every file of today's copy
     landed, so a broken night never deletes the last good one.
+
+    scratch is the list of places a temporary copy may be made, in order
+    (scratch_bases() when not given). Each file's copy goes to the first with
+    room for it.
     """
     if not _lock.acquire(blocking=False):
         return {"ok": False, "error": "a backup is already running"}
@@ -247,15 +383,24 @@ def run(client=None, data_dir=None, today=None, keep_days=KEEP_DAYS):
         d = data_dir or DATA_DIR
         client = client or R2()
         day = (today or dt.datetime.now(dt.timezone.utc).date()).isoformat()
-        scratch = os.path.join(d, _SCRATCH)
-        os.makedirs(scratch, exist_ok=True)
+        bases = scratch or scratch_bases(d)
+        made = set()
         started = time.time()
         files, errors = [], []
         for path in candidates(d):
             name = os.path.basename(path)
-            snap = os.path.join(scratch, name)
-            gz = snap + ".gz"
+            snap = gz = None
             try:
+                need = _need(path)
+                base, passed = _pick_scratch(need, bases)
+                if base is None:
+                    raise OSError("no room for a %d MB copy: %s"
+                                  % (need // _MB, "; ".join(passed)))
+                where = os.path.join(base, _SCRATCH)
+                os.makedirs(where, exist_ok=True)
+                made.add(where)
+                snap = os.path.join(where, name)
+                gz = snap + ".gz"
                 kind = "sqlite" if _is_sqlite(path) else "file"
                 if kind == "sqlite":
                     _snapshot(path, snap)
@@ -267,16 +412,25 @@ def run(client=None, data_dir=None, today=None, keep_days=KEEP_DAYS):
                 client.put_file("%s%s/%s.gz" % (PREFIX, day, name), gz,
                                 content_type="application/gzip")
                 files.append({"name": name, "kind": kind, "bytes": raw,
-                              "gzip_bytes": os.path.getsize(gz), "sha256": digest})
+                              "gzip_bytes": os.path.getsize(gz), "sha256": digest,
+                              "scratch": base})
             except Exception as e:
-                errors.append({"name": name, "error": ("%s: %s" % (type(e).__name__, e))[:200]})
+                errors.append({"name": name, "error": ("%s: %s" % (type(e).__name__, e))[:300]})
             finally:
                 for p in (snap, gz):
+                    if not p:
+                        continue
                     try:
                         os.remove(p)
                     except OSError:
                         pass
+        for where in made:
+            try:
+                os.rmdir(where)                 # only if empty; never a tree
+            except OSError:
+                pass
         manifest = {"day": day, "data_dir": d, "files": files, "errors": errors,
+                    "disk": disk(d),
                     "seconds": round(time.time() - started, 1),
                     "written_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")}
         client.put_bytes("%s%s/manifest.json" % (PREFIX, day),

@@ -392,6 +392,39 @@ and the page says so.
 
 ---
 
+### Backups, and five years of NSE bhavcopy
+
+Both live in one private Cloudflare R2 bucket, configured by the four `R2_*`
+variables on Render. Both are run by the API (which holds the keys) and asked
+for by a GitHub workflow (which needs only `ALTAHA_ADMIN_KEY`).
+
+**The data disk, daily** (`backend/backup.py`, `.github/workflows/backup.yml`).
+Every database and data file on the disk goes to `daily/YYYY-MM-DD/`, and 30 days
+are kept. Each database is snapshotted with SQLite's backup API, so a copy taken
+while something is writing still opens. The temporary copies are made **off the
+data disk** whenever the instance has room elsewhere, and never in a folder held
+in memory. From 8 to 13 November 2026 they were made on the 1 GB disk itself, and
+every night the two largest databases failed with "disk is full". The job's log
+now shows where each copy was made and how full the disk is. It warns at 85%.
+
+**Every daily bhavcopy, five years back** (`backend/bhav_archive.py`,
+`.github/workflows/bhavcopy.yml`). For each session the archive keeps NSE's
+bhavcopy exactly as published (`bhavcopy/cm/YYYY/YYYYMMDD.csv.zip`), which has
+ISIN, OHLC, previous close, volume and value for every security. It also keeps
+`sec_bhavdata_full` (`bhavcopy/full/…csv.gz`), which adds delivery. The
+workflow runs on weekday evenings after the close and fetches in slices until
+nothing is missing. The first run backfills five years, and each run after
+that adds the day. Days with no file (weekends, holidays) are recorded in
+`bhavcopy/absent.json` and asked for only once. A refusal or timeout is never
+recorded as a holiday. `bhav_archive.read(day)` returns any stored session as
+one table, whichever of NSE's two formats it came in. The format changed on
+8 July 2024. Prices are unadjusted for splits and bonuses, as NSE publishes
+them. `GET /admin/bhavcopy` reports how many sessions the archive holds, their
+span, their size and what is left to fetch. Nothing is written to the data
+disk.
+
+---
+
 ### "Explain this score" — plain English, free (optional)
 
 Every scored stock page (`stock.html`) has a floating **Smart AI** button,
