@@ -260,9 +260,10 @@ def _refresh_worker():
         _cache["refreshing"] = False
 
 
-def poll_if_stale(background: bool = True):
-    """Refresh at most once per TTL. Non-blocking by default."""
-    if time.time() - _cache["at"] < TTL:
+def poll_if_stale(background: bool = True, ttl: int = None):
+    """Refresh at most once per TTL. Non-blocking by default. A page that is
+    watched live (the Wealth desk's news) asks with a shorter ttl."""
+    if time.time() - _cache["at"] < (ttl or TTL):
         return
     if _cache["refreshing"]:
         return

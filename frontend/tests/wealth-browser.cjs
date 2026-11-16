@@ -30,6 +30,8 @@
      · NEWS IS ABOUT THE BOOK: the overview briefs the week's filings on the
        stocks held, the News tab lists them by stock, a client's page shows
        only their stocks, and a headline carrying markup is shown as text.
+     · NEWS IS LIVE: a filing that lands while the page is open appears
+       without a reload, marked New, and is announced.
      · A CALL GOES OUT ON WHATSAPP: making a call opens the message to send —
        the price, target and stop from the call, the why only when ticked —
        with WhatsApp links for everyone and for a client by phone, a copy that
@@ -66,7 +68,7 @@ function own(book) {
 }
 
 function fresh(opts) {
-  return Object.assign({ user: null, desk: false, shared: [], writes: [], book: own(BOOK) }, opts || {});
+  return Object.assign({ user: null, desk: false, shared: [], writes: [], book: own(BOOK), news: null }, opts || {});
 }
 
 async function wire(context, state) {
@@ -102,7 +104,7 @@ async function wire(context, state) {
     if (p === '/wealth/desk' && m === 'PUT') { state.desk = true; return route.fulfill({ json: { desk: state.book.desk } }); }
     if (p === '/wealth/book') return state.desk ? route.fulfill({ json: state.book }) : route.fulfill({ status: 403, json: { detail: 'Set up your wealth desk first.' } });
     if (p === '/wealth/shared') return route.fulfill({ json: { portfolios: state.shared } });
-    if (p === '/wealth/news') return route.fulfill({ json: NEWS });
+    if (p === '/wealth/news') return route.fulfill({ json: state.news || NEWS });
     if (p === '/wealth/clients' && m === 'POST') {
       const c = JSON.parse(JSON.stringify(state.book.clients[0]));
       Object.assign(c, { id: 99, name: body().name, code: 'C-099' });
@@ -588,7 +590,9 @@ async function clean(page, label) {
       await page.waitForSelector('[data-news="brief"] .wd-nrow');
       const brief = await page.locator('[data-news="brief"]').innerText();
       assert.match(brief, new RegExp(`${NEWS.stocks.length} of your ${NEWS.counts.held} stocks`));
-      assert.match(brief, /Q2 revenue Rs 7,150 crore/, 'the brief of the results filing is not on the overview');
+      assert.match(brief, /Profit up 12% this quarter/, 'the title of the results filing is not on the overview');
+      assert.doesNotMatch(brief, /Unaudited financial results/, 'the exchange wording crowds the overview');
+      await page.waitForSelector('.wd-news-panel [data-news-live]:not([hidden])');
       assert.equal(await page.locator('#wd img[src="x"]').count(), 0, 'a headline ran as markup');
       await page.click('.wd-tab[data-go="news"]');
       await page.waitForSelector('[data-news="full"] .wd-nws');
@@ -600,7 +604,12 @@ async function clean(page, label) {
       const full = await page.locator('[data-news="full"]').innerText();
       assert.ok(full.includes('<img src=x onerror=alert(1)> Credit rating reaffirmed'), 'a headline with markup is not shown as characters');
       assert.ok(!full.includes('Closure of trading window'), 'a trading-window notice is listed');
-      assert.match(full, /Writing a brief from the filing/, 'a brief still being written is not said to be');
+      assert.match(full, /Writing a short brief/, 'a brief still being written is not said to be');
+      // The exchange's own wording is folded away under the plain one.
+      const hal = page.locator('[data-news="full"] .wd-nws').filter({ hasText: 'HAL' });
+      assert.ok(!(await hal.locator('.wd-nsrcs p').first().isVisible()), 'the exchange wording is open by default');
+      await hal.locator('.wd-nsrcs summary').first().click();
+      assert.match(await hal.locator('.wd-nsrcs p').first().innerText(), /Unaudited financial results/);
       const pdf = page.locator('[data-news="full"] a.wd-nsrc[href$="fixture-hal-results.pdf"]');
       assert.equal(await pdf.getAttribute('target'), '_blank');
       assert.match(await pdf.getAttribute('rel'), /noopener/);
@@ -617,6 +626,25 @@ async function clean(page, label) {
       const theirs = NEWS.stocks.filter(s => s.clients.some(c => c.id === ayesha.id)).map(s => s.symbol);
       assert.ok(theirs.length, 'the fixture has nothing for this client');
       assert.deepEqual(await page.locator('[data-news="client"] .wd-nws .nm b').allInnerTexts(), theirs);
+
+      // Live: a filing lands while the page is open.
+      await page.goto(`${base}/wealth.html#news`);
+      await page.waitForSelector('[data-news="full"] .wd-nws');
+      assert.equal(await page.locator('[data-news="full"] .wd-nnew').count(), 0, 'news already on the page is marked new');
+      const next = JSON.parse(JSON.stringify(NEWS));
+      next.stocks[0].items.unshift({ id: 'fresh-order-1', kind: 'filing', category: 'Order win', importance: 'critical',
+        headline: 'Receipt of an order', source: 'NSE filing', url: 'https://nsearchives.nseindia.com/fresh.pdf',
+        at: new Date().toISOString(), age_hours: 0, title: 'Won a Rs 900 crore order', brief: 'From the Indian Army, for radar systems.',
+        brief_status: 'ready', also: [] });
+      state.news = next;
+      await page.evaluate(() => { const now = Date.now; Date.now = () => now() + 61000; window.dispatchEvent(new Event('focus')); });
+      await page.waitForFunction(() => document.body.innerText.includes('Won a Rs 900 crore order'), null, { timeout: 8000 })
+        .catch(() => assert.fail('a filing that landed while the page was open did not appear'));
+      const arrived = page.locator('[data-news="full"] .wd-ni.new');
+      assert.equal(await arrived.count(), 1, 'the new filing is not marked new, or old ones are');
+      assert.match(await arrived.innerText(), /NEW/i);
+      assert.match(await page.textContent('#wd-toast'), new RegExp(`New filing · ${next.stocks[0].symbol}: Won a Rs 900 crore order`));
+      await page.screenshot({ path: `${output}/news-live.png`, fullPage: true });
       await ctx.close();
     }
 

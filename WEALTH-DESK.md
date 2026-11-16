@@ -69,8 +69,13 @@ account.
 this week*: how many of the book's stocks were in the news, and the top four
 with the latest filing or story on each. The **News** tab has all of them,
 one card per stock: the clients who hold it, how much of the book is in it,
-today's move, then each filing (its category, when, a link to the PDF) and
-each press story (its publication, a link). A client's Holdings tab has the
+today's move, then each filing as a bold title and one plain line (its
+category, when, a link to the PDF) and each press story (its publication, a
+link). Three show per stock; the rest are behind "more". The exchange's own
+wording is folded under *What the exchange says*. Two filings about one
+event (the order letter, then the press release about the same order) are
+listed once, with the second under the first: same category within three
+days, and the same title or a large figure in common (years do not count). A client's Holdings tab has the
 same for their stocks only. Stocks with a results, order, deal or regulatory
 filing come first, then by how recent the news is and how much of the book is
 in the stock. The tab's badge counts those.
@@ -87,10 +92,24 @@ categories are keyword rules on the exchange's headline and the page says
 they can be wrong. A colour says what kind of event a filing is, never which
 way it cuts.
 
+*Live.* While a news box is on screen and the browser tab is being looked
+at, the page asks again every minute, and straight away on coming back to
+the tab. Asking keeps the filing feed at most 90 seconds old and the press
+at most three minutes (`WEALTH_NEWS_POLL_SECONDS`,
+`WEALTH_NEWS_PRESS_SECONDS`), refreshed behind the answer. Anything that was
+not there when this browser last looked is marked **New** (the ids seen are
+kept in the browser), and a filing that lands while the page is open is
+announced. A "Live · updated just now" mark says when it last asked.
+
 *The brief.* With `ANTHROPIC_API_KEY` set, Claude reads each filing shown
 (the text `filings_text.py` extracts from its PDF; the first 24,000
-characters of a long one) and writes one or two sentences on what it
-discloses, with the figures as filed. The filing reaches the model as data
+characters of a long one) and writes a title of at most seven words ("Won a
+Rs 2,691 crore order") and one sentence of at most twenty, in everyday words
+for somebody who does not follow markets: money in rupees and crore, rounded,
+at most two numbers, and no procedure (auditors' reviews, regulation
+numbers, standalone or consolidated). `BRIEF_STYLE` versions that
+instruction; a brief written to an older one stays on show until it has been
+written again. The filing reaches the model as data
 inside `<filing>` tags, and the brief is told to give no view on the share.
 Each filing is read once and its brief kept on disk
 (`wealth_news_briefs.json`), since a filed document never changes. Reading
