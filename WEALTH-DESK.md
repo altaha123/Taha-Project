@@ -12,10 +12,12 @@ for the recommended price, another for the buying price, and a formula for the
 fee that is never quite right after a bad quarter.
 
 Code: `backend/wealth.py` (every rule, all the arithmetic, every statement),
-`backend/wealth_routes.py` (HTTP only), `frontend/wealth.html`,
+`backend/wealth_news.py` (news and filings on the stocks held, and their
+briefs), `backend/wealth_routes.py` (HTTP only), `frontend/wealth.html`,
 `frontend/wealth.js`, `frontend/wealth.css`. Tests:
-`backend/tests/test_wealth.py`, `frontend/tests/wealth-browser.cjs`, fixture
-from `backend/tests/make_wealth_fixture.py`.
+`backend/tests/test_wealth.py`, `backend/tests/test_wealth_news.py`,
+`frontend/tests/wealth-browser.cjs`, fixtures from
+`backend/tests/make_wealth_fixture.py`.
 
 ## What it looks like from outside
 
@@ -29,7 +31,7 @@ registration (PMS `INP…`, RIA `INA…`, RA `INH…`, AMFI `ARN-…`, or none).
 *How you charge* sets the default terms, with a live line: "on a client's
 ₹10,00,000 that makes 15% in a year, you earn ₹X". Then the first client.
 
-**The desk**, five tabs:
+**The desk**, six tabs:
 
 | Tab | What it answers |
 |---|---|
@@ -37,6 +39,7 @@ registration (PMS `INP…`, RIA `INA…`, RA `INH…`, AMFI `ARN-…`, or none).
 | **Clients** | Every client as a card: value, return, today, a sparkline, commission accrued or the gap to the high-water mark. Search, filter by status, sort |
 | **A client** | Value, profit, return, XIRR, today; holdings with **recommended / bought at / edge / price / P&L / weight / stop→target**; the ledger; the fee with its working and a what-if; their profile and terms; a printable statement |
 | **Recommendations** | Each call: stock, price, target, stop, horizon, why; where the price sits between stop and target; which clients were booked on it, their average fill against the call; a scorecard |
+| **News** | The week's exchange filings and press on every stock the book holds, grouped by stock, with the clients who hold it and how much is in it; a short brief of each filing; filter by filings or press, or by client |
 | **Commission** | Accrued now, billed and awaiting payment, collected this year; twelve months billed vs received; what the book would accrue if every price moved ±5–20%; each client's current period; every invoice, marked paid in one click |
 | **Desk** | Profile and default terms, privacy, hand-set prices, CSV exports (holdings, ledger, fees), and closing the desk |
 
@@ -46,6 +49,66 @@ out) or a quantity, and change the fill price per client if theirs differed.
 Every fill is checked before any is written, so a call is booked for all of
 them or for none. Each trade keeps the recommended price beside the fill.
 Typing a stock into the trade form picks up the open call on it by itself.
+
+**Send a call to clients on WhatsApp.** Making a call opens the message to
+send, composed from the call: buy or sell, the stock, the price, the target
+and stop with how far each is from the price, the horizon, the manager's name
+and firm, the registration number, and the standard market-risk line. The
+*why* stays out unless it is ticked in, because the call form says a client
+sees the price and not the reason. The message can be edited before it goes.
+*Copy message* copies what is in the box; *Open WhatsApp* hands it to
+WhatsApp to pick contacts, a group or a broadcast list; and every client
+with a phone number gets their own *Send*, which opens their chat with "Hi
+Ayesha," at the top (a ten-digit number is taken as an Indian mobile). A
+sell, or a closed call, lists the clients who hold the stock first. *Next:
+book for clients* goes on to booking. Any call can be sent again from its
+card. Nothing is sent by this site: WhatsApp sends it, from the manager's own
+account.
+
+**News and filings on the stocks held.** The overview has *On your stocks
+this week*: how many of the book's stocks were in the news, and the top four
+with the latest filing or story on each. The **News** tab has all of them,
+one card per stock: the clients who hold it, how much of the book is in it,
+today's move, then each filing (its category, when, a link to the PDF) and
+each press story (its publication, a link). A client's Holdings tab has the
+same for their stocks only. Stocks with a results, order, deal or regulatory
+filing come first, then by how recent the news is and how much of the book is
+in the stock. The tab's badge counts those.
+
+*What is shown.* Filings come from the exchange feed `announcements.py`
+already keeps (BSE, NSE as the fallback) and press from the RSS cache
+`news_feed.py` keeps: the same two the Portfolio page joins, read from
+memory, so the page costs no fetch. Shown: results, orders, M&A, buybacks,
+fundraises, ratings, management changes, pledges, dividends, capex, bonuses,
+regulatory action, and board-meeting notices (that is how a results date is
+announced). Not shown: trading-window closures, compliance certificates,
+anything the rules cannot place, and anything older than seven days. The
+categories are keyword rules on the exchange's headline and the page says
+they can be wrong. A colour says what kind of event a filing is, never which
+way it cuts.
+
+*The brief.* With `ANTHROPIC_API_KEY` set, Claude reads each filing shown
+(the text `filings_text.py` extracts from its PDF; the first 24,000
+characters of a long one) and writes one or two sentences on what it
+discloses, with the figures as filed. The filing reaches the model as data
+inside `<filing>` tags, and the brief is told to give no view on the share.
+Each filing is read once and its brief kept on disk
+(`wealth_news_briefs.json`), since a filed document never changes. Reading
+happens on a background thread: twelve filings a pass and sixty an hour at
+most (`WEALTH_NEWS_MAX_PER_RUN`, `WEALTH_NEWS_HOURLY`), so a page load never
+waits on a model and a large book cannot run up a bill. The page asks again
+while briefs are being written. A scanned filing with no text, a refusal, or
+no key leaves the exchange's own headline, and the page says which it is
+showing. Press headlines are never rewritten. `WEALTH_NEWS_MODEL` (default
+`claude-opus-5-5`, with the server-side refusal fallback) and
+`WEALTH_NEWS_EFFORT` (default `low`) can be changed.
+
+*Coverage.* The filing feed reads the last three days on each poll and keeps
+what it has read in memory, up to 1,200 filings across every company. So
+seven days is the most this shows, and after a restart it starts again from
+three. A quiet small company may have nothing in it. Press matching covers the companies in `news_feed.py`'s alias table, the
+larger ones. An empty week says it is empty, and says so differently while
+the feed is still loading after the server wakes.
 
 **Upload a holdings statement.** *Upload statement* on a client takes the
 file their broker gives (Groww, Zerodha, Upstox, Angel One, Dhan, ICICI
@@ -258,6 +321,8 @@ shows a 50% loss.
 | `POST /wealth/recs/{id}/apply` `{fills: [...]}` | book a call for many clients |
 | `PUT /wealth/prices` `{symbol, price}` | set or clear a hand price |
 | `POST /wealth/corporate-action` `{symbol, factor, on_date}` | a bonus or split for every holder |
+| `GET /wealth/news` | the week's filings and press on the stocks the book holds, with briefs; the briefs still to be written are queued |
+| `GET /wealth/demo/news` | the same, for the sample desk (public) |
 | `GET /wealth/shared` | the portfolios managers show me, read-only |
 | `GET /wealth/export.csv?what=holdings\|ledger\|fees` | spreadsheets |
 

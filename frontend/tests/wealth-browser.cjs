@@ -26,7 +26,14 @@
        stocks, quantities and prices — never the client's name or code from
        the file. A statement for somebody else says so before anything is saved.
      · EVERY PRICE CAN BE CORRECTED: a holding's average or recommended price,
-       one purchase on its own, any ledger entry — each sends what was changed. */
+       one purchase on its own, any ledger entry — each sends what was changed.
+     · NEWS IS ABOUT THE BOOK: the overview briefs the week's filings on the
+       stocks held, the News tab lists them by stock, a client's page shows
+       only their stocks, and a headline carrying markup is shown as text.
+     · A CALL GOES OUT ON WHATSAPP: making a call opens the message to send —
+       the price, target and stop from the call, the why only when ticked —
+       with WhatsApp links for everyone and for a client by phone, a copy that
+       copies what was edited, and nothing sent by this site. */
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
 const { chromium } = require('playwright');
@@ -34,6 +41,7 @@ const { chromium } = require('playwright');
 const root = path.resolve('frontend'), output = path.resolve('test-results/wealth');
 fs.mkdirSync(output, { recursive: true });
 const BOOK = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/wealth-demo.json'), 'utf8'));
+const NEWS = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/wealth-news.json'), 'utf8'));
 
 const server = http.createServer((req, res) => {
   const p = decodeURIComponent(req.url.split('?')[0]);
@@ -81,6 +89,7 @@ async function wire(context, state) {
     const authed = !!state.user && /Bearer tok-test/.test(req.headers()['authorization'] || '');
     if (p === '/auth/me') return authed ? route.fulfill({ json: state.user }) : route.fulfill({ status: 401, json: { detail: 'Sign in.' } });
     if (p === '/wealth/demo') return route.fulfill({ json: BOOK });
+    if (p === '/wealth/demo/news') return route.fulfill({ json: NEWS });
     if (p === '/universe') return route.fulfill({ json: { rows: [{ s: 'TCS', n: 'Tata Consultancy Services Limited' }, { s: 'HAL', n: 'Hindustan Aeronautics' }] } });
     if (!p.startsWith('/wealth/')) return route.fulfill({ status: 404, json: { detail: 'not here' } });
     if (!authed) return route.fulfill({ status: 401, json: { detail: 'Sign in to use your wealth desk.' } });
@@ -93,6 +102,7 @@ async function wire(context, state) {
     if (p === '/wealth/desk' && m === 'PUT') { state.desk = true; return route.fulfill({ json: { desk: state.book.desk } }); }
     if (p === '/wealth/book') return state.desk ? route.fulfill({ json: state.book }) : route.fulfill({ status: 403, json: { detail: 'Set up your wealth desk first.' } });
     if (p === '/wealth/shared') return route.fulfill({ json: { portfolios: state.shared } });
+    if (p === '/wealth/news') return route.fulfill({ json: NEWS });
     if (p === '/wealth/clients' && m === 'POST') {
       const c = JSON.parse(JSON.stringify(state.book.clients[0]));
       Object.assign(c, { id: 99, name: body().name, code: 'C-099' });
@@ -122,7 +132,14 @@ async function wire(context, state) {
     if (/\/settle$/.test(p)) return route.fulfill({ json: { settlement: { id: 77, amount: 11502.39, status: 'due' } } });
     if (/\/apply$/.test(p)) return route.fulfill({ json: { booked: body().fills.map((f, i) => ({ client_id: f.client_id, id: 600 + i })) } });
     if (/\/wealth\/settlements\/\d+$/.test(p)) return route.fulfill({ json: { settlement: { id: 1, status: body().status } } });
-    if (p === '/wealth/recs' && m === 'POST') return route.fulfill({ json: { rec: Object.assign({}, state.book.recs[0], { id: 1 }) } });
+    if (p === '/wealth/recs' && m === 'POST') {
+      // The new call joins the book, as the server's would, so what opens
+      // after it is about this call and not another.
+      const rec = Object.assign(JSON.parse(JSON.stringify(state.book.recs[0])), body(),
+        { id: 901, status: 'open', state: 'open', fills: [], track: null, since_pct: 0, name: 'Hindustan Aeronautics' });
+      state.book.recs.unshift(rec);
+      return route.fulfill({ json: { rec } });
+    }
     return route.fulfill({ json: { ok: true } });
   });
 }
@@ -560,6 +577,113 @@ async function clean(page, label) {
       await ctx.close();
     }
 
+    // ── News and filings on the stocks held ────────────────────────────
+    {
+      const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+      const state = fresh({ user: { email: 'nadia@example.com', wealth_desk: true }, desk: true });
+      await wire(ctx, state);
+      const page = await ctx.newPage();
+      watch(page, 'news');
+      await page.goto(`${base}/wealth.html`);
+      await page.waitForSelector('[data-news="brief"] .wd-nrow');
+      const brief = await page.locator('[data-news="brief"]').innerText();
+      assert.match(brief, new RegExp(`${NEWS.stocks.length} of your ${NEWS.counts.held} stocks`));
+      assert.match(brief, /Q2 revenue Rs 7,150 crore/, 'the brief of the results filing is not on the overview');
+      assert.equal(await page.locator('#wd img[src="x"]').count(), 0, 'a headline ran as markup');
+      await page.click('.wd-tab[data-go="news"]');
+      await page.waitForSelector('[data-news="full"] .wd-nws');
+      const cards = page.locator('[data-news="full"] .wd-nws');
+      assert.equal(await cards.count(), NEWS.stocks.length);
+      assert.deepEqual(await page.locator('[data-news="full"] .wd-nws .nm b').allInnerTexts(), NEWS.stocks.map(s => s.symbol),
+        'the stocks are not in the order the server ranked them');
+      assert.ok(await cards.first().evaluate(n => n.classList.contains('hot')), 'a results or order filing is not marked');
+      const full = await page.locator('[data-news="full"]').innerText();
+      assert.ok(full.includes('<img src=x onerror=alert(1)> Credit rating reaffirmed'), 'a headline with markup is not shown as characters');
+      assert.ok(!full.includes('Closure of trading window'), 'a trading-window notice is listed');
+      assert.match(full, /Writing a brief from the filing/, 'a brief still being written is not said to be');
+      const pdf = page.locator('[data-news="full"] a.wd-nsrc[href$="fixture-hal-results.pdf"]');
+      assert.equal(await pdf.getAttribute('target'), '_blank');
+      assert.match(await pdf.getAttribute('rel'), /noopener/);
+      await page.click('[data-act="newskind"][data-v="press"]');
+      assert.deepEqual(await page.locator('[data-news="full"] .wd-nws .nm b').allInnerTexts(), ['HDFCBANK']);
+      await page.click('[data-act="newskind"][data-v="all"]');
+      await clean(page, 'news');
+      await page.screenshot({ path: `${output}/news.png`, fullPage: true });
+
+      // A client's page: their stocks only.
+      const ayesha = state.book.clients[0];
+      await page.goto(`${base}/wealth.html#client/${ayesha.id}`);
+      await page.waitForSelector('[data-news="client"] .wd-nws');
+      const theirs = NEWS.stocks.filter(s => s.clients.some(c => c.id === ayesha.id)).map(s => s.symbol);
+      assert.ok(theirs.length, 'the fixture has nothing for this client');
+      assert.deepEqual(await page.locator('[data-news="client"] .wd-nws .nm b').allInnerTexts(), theirs);
+      await ctx.close();
+    }
+
+    // ── A call sent to clients on WhatsApp ─────────────────────────────
+    {
+      const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+      const state = fresh({ user: { email: 'nadia@example.com', wealth_desk: true }, desk: true });
+      const ayesha = state.book.clients[0];
+      ayesha.phone = '98200 12345';
+      await wire(ctx, state);
+      await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
+      const page = await ctx.newPage();
+      watch(page, 'whatsapp');
+      await page.goto(`${base}/wealth.html#calls`);
+      await page.waitForSelector('.wd-sec [data-act="new-rec"]');
+      await page.click('.wd-sec [data-act="new-rec"]');
+      await page.fill('#wd-modal [name=symbol]', 'HAL');
+      await page.fill('#wd-modal [name=price]', '4600');
+      await page.fill('#wd-modal [name=target]', '5400');
+      await page.fill('#wd-modal [name=stop]', '4250');
+      await page.fill('#wd-modal [name=horizon]', '12–18 months');
+      await page.fill('#wd-modal [name=thesis]', 'Order book cover of four years');
+      state.writes.length = 0;
+      await page.click('#wd-modal [type=submit]');
+      await page.waitForSelector('#wd-modal [data-wa-text]');
+      assert.match(await page.locator('#wd-modal .wd-wa-ok').innerText(), /HAL call is saved/);
+      const msg = await page.inputValue('#wd-modal [data-wa-text]');
+      assert.match(msg, /^🟢 \*BUY: HAL\*\nHindustan Aeronautics\n\nBuy around ₹4,600\n/);
+      assert.match(msg, /Target: ₹5,400 \(\+17\.4%\)/);
+      assert.match(msg, /Stop loss: ₹4,250 \(−7\.6%\)/);
+      assert.match(msg, /Horizon: 12–18 months/);
+      assert.match(msg, /— Nadia Rahman, Rahman Wealth/);
+      assert.match(msg, /subject to market risks/);
+      assert.ok(!msg.includes('Order book cover'), 'the why went into the message without being ticked');
+      const any = await page.getAttribute('#wd-modal a[data-wa="any"]', 'href');
+      assert.ok(any.startsWith('https://wa.me/?text='), any);
+      assert.equal(decodeURIComponent(any.split('?text=')[1]), msg);
+      assert.equal(await page.locator('#wd-modal a[data-wa="client"]').count(), 1, 'only a client with a phone gets a WhatsApp link');
+      const one = await page.getAttribute('#wd-modal a[data-wa="client"]', 'href');
+      assert.ok(one.startsWith('https://wa.me/919820012345?text='), one);
+      assert.equal(decodeURIComponent(one.split('?text=')[1]), `Hi ${ayesha.name.split(' ')[0]},\n\n` + msg);
+
+      await page.check('#wd-modal [data-wa-opt="why"]');
+      assert.match(await page.inputValue('#wd-modal [data-wa-text]'), /Why: Order book cover of four years/);
+      await page.uncheck('#wd-modal [data-wa-opt="risk"]');
+      assert.doesNotMatch(await page.inputValue('#wd-modal [data-wa-text]'), /market risks/);
+      await page.fill('#wd-modal [data-wa-text]', 'Edited by hand');
+      assert.equal(decodeURIComponent((await page.getAttribute('#wd-modal a[data-wa="any"]', 'href')).split('?text=')[1]), 'Edited by hand');
+      await page.click('#wd-modal [data-act="wa-copy"]');
+      await page.waitForFunction(() => /Copied/.test(document.querySelector('#wd-modal [data-act="wa-copy"]').textContent));
+      assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'Edited by hand');
+      assert.deepEqual(state.writes.map(w => w.p), ['/wealth/recs'], 'something besides the call was sent');
+      await page.screenshot({ path: `${output}/whatsapp.png` });
+
+      await page.click('#wd-modal [data-act="share-book"]');
+      await page.waitForSelector('#wd-modal .wd-pick');
+
+      // An existing call can be sent again from its card.
+      await page.click('#wd-modal [data-close]');
+      await page.waitForSelector(`.wd-rec [data-act="share-rec"][data-rid="901"]`);
+      await page.click(`.wd-rec [data-act="share-rec"][data-rid="901"]`);
+      await page.waitForSelector('#wd-modal [data-wa-text]');
+      assert.equal(await page.locator('#wd-modal .wd-wa-ok').count(), 0);
+      assert.match(await page.inputValue('#wd-modal [data-wa-text]'), /\*BUY: HAL\*/);
+      await ctx.close();
+    }
+
     // ── A phone ────────────────────────────────────────────────────────
     {
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
@@ -568,7 +692,7 @@ async function clean(page, label) {
       const page = await ctx.newPage();
       watch(page, 'phone');
       const c = BOOK.clients[0];
-      for (const h of ['overview', 'clients', `client/${c.id}`, `client/${c.id}/ledger`, `client/${c.id}/fees`, 'calls', 'fees', 'settings']) {
+      for (const h of ['overview', 'clients', `client/${c.id}`, `client/${c.id}/ledger`, `client/${c.id}/fees`, 'calls', 'news', 'fees', 'settings']) {
         await page.goto(`${base}/wealth.html?demo=1#${h}`);
         await page.waitForSelector('#wd-view');
         await page.waitForTimeout(400);
