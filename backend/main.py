@@ -121,6 +121,12 @@ try:
 except Exception:
     backup_job = None
 try:
+    # Five years of NSE's daily bhavcopy files, kept in the same R2 bucket.
+    # Inert until the R2_* variables are set, like the backup.
+    import bhav_archive
+except Exception:
+    bhav_archive = None
+try:
     # Lenses: named investing philosophies applied as rules to the
     # fundamentals tables. The engine and store are stdlib-only; the crawl
     # that fills industry and ownership needs NSE, like the others.
@@ -2827,6 +2833,47 @@ def admin_backup_status(key: str = "",
         except Exception as e:
             out["error"] = str(e)[:200]
     return to_native(out)
+
+
+@app.post("/admin/bhavcopy/archive")
+def admin_bhavcopy_archive(key: str = "", limit: int = 40, recheck: bool = False,
+                           x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    Fetch the next missing NSE bhavcopy days (newest first, up to `limit`) and
+    keep them in R2 under bhavcopy/. Driven by the bhavcopy workflow, which
+    calls this until `remaining` is 0. `recheck` asks again for days earlier
+    written off as having no file.
+    """
+    _require_admin(x_admin_key or key)
+    if bhav_archive is None or backup_job is None:
+        raise HTTPException(503, "The bhavcopy archive module is not available.")
+    cfg = backup_job.config()
+    if cfg["missing"]:
+        raise HTTPException(503, "The archive is off: set %s on Render."
+                            % ", ".join(cfg["missing"]))
+    try:
+        return to_native(bhav_archive.run(limit=max(1, min(int(limit), 200)),
+                                          recheck=bool(recheck)))
+    except Exception as e:
+        raise HTTPException(503, f"The archive run failed: {str(e)[:200]}")
+
+
+@app.get("/admin/bhavcopy")
+def admin_bhavcopy_status(key: str = "",
+                          x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """How many sessions the archive holds, from when to when, its size, and
+    how many days are still to fetch."""
+    _require_admin(x_admin_key or key)
+    if bhav_archive is None or backup_job is None:
+        raise HTTPException(503, "The bhavcopy archive module is not available.")
+    cfg = backup_job.config()
+    if cfg["missing"]:
+        raise HTTPException(503, "The archive is off: set %s on Render."
+                            % ", ".join(cfg["missing"]))
+    try:
+        return to_native(bhav_archive.status())
+    except Exception as e:
+        raise HTTPException(503, f"The archive could not be read: {str(e)[:200]}")
 
 
 @app.post("/admin/fundamentals/crawl")
