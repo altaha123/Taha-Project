@@ -108,9 +108,8 @@ def news(book=None):
     ]
     press = [{"headline": "HDFC Bank shares rise after a loan growth update", "source": "Mint",
               "url": "https://news.example.com/hdfc-bank-loan-growth", "when_iso": at(8), "symbols": ["HDFCBANK"]}]
-    briefs = {N.key_for(HAL_PDF): {"status": "ready", "text": (
-        "Q2 revenue Rs 7,150 crore, up 14% from a year earlier; net profit Rs 1,690 crore against "
-        "Rs 1,510 crore. No dividend was declared.")}}
+    briefs = {N.key_for(HAL_PDF): {"status": "ready", "style": N.BRIEF_STYLE, "title": "Profit up 12% this quarter",
+                                   "text": "Sales rose 14% to Rs 7,150 crore; no dividend this time."}}
     return N.build(N.holdings_from_book(book), filings, press, briefs=briefs, now=NEWS_NOW, configured=True,
                    status={"filings": {"first_load": False}})
 

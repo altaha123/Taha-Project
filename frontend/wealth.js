@@ -53,7 +53,7 @@
     mode: 'boot', book: null, info: null, shared: null, view: 'overview', cid: null, ctab: 'holdings',
     q: '', status: 'live', sort: 'value', recFilter: 'open', stlFilter: 'all', ledFilter: 'all',
     priv: false, polls: 0, timer: null, uni: null, step: 1, setup: {}, mine: 0, whatif: {},
-    news: null, newsAt: 0, newsBusy: false, newsErr: '', newsPolls: 0, newsTimer: null, newsKind: 'all', newsClient: 0
+    news: null, newsAt: 0, newsBusy: false, newsErr: '', newsPolls: 0, newsTimer: null, newsKind: 'all', newsClient: 0, newsBase: undefined
   };
 
   /* ── Small helpers ───────────────────────────────────────────────────── */
@@ -700,7 +700,7 @@
         '<div class="wd-key"><span><i style="background:color-mix(in srgb,var(--gold) 40%,var(--rule))"></i>Billed</span><span><i style="background:var(--gold)"></i>Received</span></div></div>' +
       '</div>';
 
-    html += '<div class="wd-panel wd-news-panel wd-rise" style="--i:3;margin-top:16px"><h3><span>' + ic('news') + 'On your stocks this week <small>filings and press</small></span>' +
+    html += '<div class="wd-panel wd-news-panel wd-rise" style="--i:3;margin-top:16px"><h3><span>' + ic('news') + 'On your stocks this week ' + liveTag() + '</span>' +
       '<button type="button" class="wd-link" data-go="news">All news ›</button></h3><div data-news="brief"></div></div>';
 
     var top = b.clients.filter(function (c) { return c.status !== 'closed'; }).sort(function (x, y) { return num(y.value) - num(x.value); }).slice(0, 6);
@@ -770,14 +770,58 @@
   /* The week's filings and press on the stocks the book holds. Loaded after
      the book, on its own request, into every [data-news] box on the screen:
      "brief" on the overview, "full" on the News tab, "client" on a client's
-     holdings. Briefs still being written are asked for again a few times. */
+     holdings.
 
-  var NEWS_TTL = 5 * 60000;
+     LIVE. While a box is on screen and the tab is looked at, it is asked for
+     again every minute (sooner while briefs are being written), and on coming
+     back to the tab. Anything that was not there when this browser last
+     looked is marked New, and a filing that lands while the page is open
+     says so. Each item is a title and one plain line; the exchange's own
+     wording, and any second filing about the same event, are one tap away. */
+
+  var NEWS_LIVE = 60000, SEEN_KEY = 'altaha-wealth-news-seen-v1';
 
   function ensureNews() {
     if (!document.querySelector('[data-news]')) return;
     paintNews();
-    if (!S.news || Date.now() - S.newsAt > NEWS_TTL) loadNews();
+    if (!S.news || Date.now() - S.newsAt > NEWS_LIVE) loadNews();
+  }
+
+  function newsIds(n) {
+    var ids = [];
+    ((n && n.stocks) || []).forEach(function (s) { s.items.forEach(function (i) { ids.push(i.id); }); });
+    return ids;
+  }
+
+  /* What this browser had already seen is read once, when the page opens,
+     so an item stays New for the whole visit rather than for one repaint. */
+  function noteSeen(n) {
+    var stored = readJSON(SEEN_KEY), ids = newsIds(n);
+    if (S.newsBase === undefined) {
+      // A first visit has nothing to compare with: what is there now is the
+      // starting point, and only what arrives after it is New.
+      S.newsBase = {};
+      (Array.isArray(stored) ? stored : ids).forEach(function (id) { S.newsBase[id] = 1; });
+    }
+    var seen = {}, all = [];
+    ids.concat(Array.isArray(stored) ? stored : []).forEach(function (id) { if (!seen[id]) { seen[id] = 1; all.push(id); } });
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify(all.slice(0, 800))); } catch (e) {}
+  }
+
+  function isNew(i) { return !!(S.newsBase && !S.newsBase[i.id]); }
+
+  /* A filing that arrives while the page is open is announced once. */
+  function announceArrivals(prev, n) {
+    if (!prev) return;
+    var had = {};
+    newsIds(prev).forEach(function (id) { had[id] = 1; });
+    var fresh = [];
+    (n.stocks || []).forEach(function (s) {
+      s.items.forEach(function (i) { if (!had[i.id] && i.kind === 'filing') fresh.push([s, i]); });
+    });
+    if (!fresh.length) return;
+    var f = fresh[0];
+    toast('New filing · ' + f[0].symbol + ': ' + (f[1].title || f[1].headline).slice(0, 90) + (fresh.length > 1 ? ' (+' + (fresh.length - 1) + ' more)' : ''));
   }
 
   function loadNews() {
@@ -790,37 +834,59 @@
       return r.json();
     }) : api('/wealth/news');
     job.then(function (d) {
+      var prev = S.news;
       S.news = d; S.newsAt = Date.now(); S.newsErr = '';
       S.newsBusy = false;
+      noteSeen(d);
+      announceArrivals(prev, d);
       paintNews();
       paintTabs();
       scheduleNews();
     }, function (e) {
       S.newsBusy = false;
       S.newsErr = (e && e.message) || 'The news could not be loaded.';
-      paintNews();
+      if (!S.news) paintNews();
+      scheduleNews();
     });
   }
 
   function scheduleNews() {
+    clearTimeout(S.newsTimer);
     var n = S.news;
-    if (!n || !(n.loading || (n.briefs && n.briefs.pending > 0))) { S.newsPolls = 0; return; }
-    if (S.newsPolls >= 10) return;
-    S.newsPolls++;
+    var quick = n && (n.loading || (n.briefs && n.briefs.pending > 0)) && S.newsPolls < 10;
+    S.newsPolls = quick ? S.newsPolls + 1 : 0;
+    var every = quick ? (n.loading ? 5000 : 8000) : (((n && n.live && n.live.every_seconds) || 60) * 1000);
     S.newsTimer = setTimeout(function () {
-      if (document.querySelector('[data-news]')) loadNews();
+      // Only while somebody is looking: a hidden tab asks again when it is shown.
+      if (document.querySelector('[data-news]') && document.visibilityState === 'visible') loadNews();
       else S.newsAt = 0;
-    }, n.loading ? 5000 : 8000);
+    }, every);
   }
 
-  /* Painted again on every poll while briefs are being written, so a box is
-     only rewritten when what it shows has changed: a rewrite would scroll a
-     long list under the reader's finger. */
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && document.querySelector('[data-news]') && Date.now() - S.newsAt > NEWS_LIVE) loadNews();
+  });
+  window.addEventListener('focus', function () {
+    if (document.querySelector('[data-news]') && Date.now() - S.newsAt > NEWS_LIVE) loadNews();
+  });
+
+  /* Painted again on every refresh, so a box is only rewritten when what it
+     shows has changed: a rewrite would scroll a long list under the reader's
+     finger and close anything they had opened. */
   function paintNews() {
     document.querySelectorAll('[data-news]').forEach(function (el) {
       var html = newsBody(el.dataset.news, +el.dataset.cid || 0);
       if (el.__news !== html) { el.__news = html; el.innerHTML = html; }
     });
+    document.querySelectorAll('[data-news-live]').forEach(function (el) {
+      el.hidden = !S.news;
+      var t = el.querySelector('span');
+      if (t) t.textContent = S.newsAt ? 'Live · ' + agoText(new Date(S.newsAt).toISOString()).replace('just now', 'updated just now') : 'Live';
+    });
+  }
+
+  function liveTag() {
+    return '<span class="wd-nlive" data-news-live hidden title="Checked every minute while this page is open"><i></i><span>Live</span></span>';
   }
 
   function agoText(iso) {
@@ -841,18 +907,36 @@
                     'Fundraise': 'violet', 'Bonus / Split': 'violet', 'Credit rating': 'violet', 'Pledge': 'violet',
                     'Management change': 'blue', 'Board meeting': 'blue', 'Dividend': 'green', 'Capacity / capex': 'green' };
 
-  function newsItemHTML(i, compact) {
+  function newsChip(i) {
     var press = i.kind === 'press';
-    var chip = '<span class="wd-ncat ' + (press ? 'press' : 't-' + (NEWS_TONE[i.category] || 'slate')) + '">' + esc(press ? i.source : i.category) + '</span>';
-    var by = i.brief ? '<span class="wd-nby" title="Written by Claude from the filing’s own text">' + ic('spark') + 'Brief</span>' : '';
-    var src = i.url ? '<a class="wd-nsrc" href="' + esc(i.url) + '" target="_blank" rel="noopener noreferrer">' + (press ? 'Read' : esc(i.source)) + ' ↗</a>' : '';
-    var text = i.brief
-      ? '<p class="wd-nbrief">' + esc(i.brief) + '</p>' + (compact ? '' : '<p class="wd-nhead">Exchange headline: ' + esc(i.headline) + '</p>')
-      : '<p class="wd-nbrief' + (press ? ' press' : '') + '">' + esc(i.headline) + '</p>' +
-        (!compact && i.brief_status === 'pending' ? '<p class="wd-nhead wd-nwait">Writing a brief from the filing…</p>' : '');
-    return '<li class="wd-ni' + (press ? ' press' : '') + '"><div class="wd-nmeta">' + chip + by +
-      '<time datetime="' + esc(i.at) + '">' + esc(agoText(i.at)) + '</time>' + src + '</div>' + text + '</li>';
+    return '<span class="wd-ncat ' + (press ? 'press' : 't-' + (NEWS_TONE[i.category] || 'slate')) + '">' + esc(press ? i.source : i.category) + '</span>';
   }
+
+  function newsItemHTML(i) {
+    var press = i.kind === 'press', also = i.also || [];
+    var by = i.brief ? '<span class="wd-nby" title="Written by Claude from the filing’s own text">' + ic('spark') + '<span class="wd-sr">Written by Claude</span></span>' : '';
+    var src = i.url ? '<a class="wd-nsrc" href="' + esc(i.url) + '" target="_blank" rel="noopener noreferrer">' + (press ? 'Read' : esc(i.source)) + ' ↗</a>' : '';
+    var text;
+    if (i.title) text = '<p class="wd-ntitle">' + esc(i.title) + '</p>' + (i.brief ? '<p class="wd-nbrief">' + esc(i.brief) + '</p>' : '');
+    else if (i.brief) text = '<p class="wd-nbrief">' + esc(i.brief) + '</p>';
+    else text = '<p class="wd-nbrief' + (press ? ' press' : ' plain') + '">' + esc(i.headline) + '</p>' +
+      (i.brief_status === 'pending' ? '<p class="wd-nwait">Writing a short brief…</p>' : '');
+    // The exchange's own words, and a second filing about the same event, are
+    // kept for whoever wants to check them, folded away from whoever does not.
+    var more = '';
+    if (!press && (i.brief || also.length)) {
+      more = '<details class="wd-nsrcs"><summary>' + (also.length ? plural(also.length + 1, 'filing') + ' on this' : 'What the exchange says') + '</summary>' +
+        '<p>' + esc(i.headline) + '</p>' + also.map(function (a) {
+          return '<p>' + esc(a.headline) + (a.url ? ' <a href="' + esc(a.url) + '" target="_blank" rel="noopener noreferrer">' + esc(a.source) + ' ↗</a>' : '') +
+            ' · ' + esc(agoText(a.at)) + '</p>';
+        }).join('') + '</details>';
+    }
+    return '<li class="wd-ni' + (press ? ' press' : '') + (isNew(i) ? ' new' : '') + '"><div class="wd-nmeta">' + newsChip(i) +
+      (isNew(i) ? '<span class="wd-nnew">New</span>' : '') + by +
+      '<time datetime="' + esc(i.at) + '">' + esc(agoText(i.at)) + '</time>' + src + '</div>' + text + more + '</li>';
+  }
+
+  var NEWS_SHOWN = 3;
 
   function newsCardHTML(s, cid) {
     var mine = cid ? s.clients.filter(function (c) { return c.id === cid; })[0] : null;
@@ -860,12 +944,15 @@
       return '<span class="wd-av sm c-' + esc(c.color) + '" title="' + esc(c.name) + '">' + esc(initials(c.name)) + '</span>';
     }).join('') + '</span>' + plural(s.clients.length, 'client') + '</span>';
     var at = mine ? 'in this portfolio' : finite(s.weight) ? s.weight.toFixed(1) + '% of the book' : '';
+    var first = s.items.slice(0, NEWS_SHOWN), rest = s.items.slice(NEWS_SHOWN);
     return '<article class="wd-nws' + (s.material ? ' hot' : '') + '">' +
       '<header>' + logo(s.symbol) + '<div class="nm"><b><a href="stock.html?ticker=' + encodeURIComponent(s.symbol) + '">' + esc(s.symbol) + '</a></b>' +
         '<small>' + esc(s.name || '') + '</small></div>' +
         '<div class="at"><b class="pv">' + esc(short(mine ? mine.value : s.value)) + '</b><small>' + esc(at) +
           (finite(s.change_pct) ? ' · <span class="' + tone(s.change_pct) + '">' + esc(pct(s.change_pct, 1)) + ' today</span>' : '') + '</small>' + who + '</div></header>' +
-      '<ul class="wd-nlist">' + s.items.map(function (i) { return newsItemHTML(i, false); }).join('') + '</ul></article>';
+      '<ul class="wd-nlist">' + first.map(newsItemHTML).join('') + '</ul>' +
+      (rest.length ? '<details class="wd-nmore"><summary>' + rest.length + ' more on ' + esc(s.symbol) + '</summary><ul class="wd-nlist">' +
+        rest.map(newsItemHTML).join('') + '</ul></details>' : '') + '</article>';
   }
 
   function newsBody(mode, cid) {
@@ -898,20 +985,18 @@
     }
 
     if (mode === 'brief') {
-      var filings = 0, press = 0;
-      stocks.forEach(function (s) { filings += s.filings; press += s.press; });
+      var fresh = 0;
+      stocks.forEach(function (s) { s.items.forEach(function (i) { if (isNew(i)) fresh++; }); });
       var top = stocks.slice(0, 4);
-      return '<p class="wd-nsum"><b>' + stocks.length + ' of your ' + plural(c.held, 'stock') + '</b> in the news this week · ' +
-          plural(filings, 'filing') + ' · ' + plural(press, 'press story', 'press stories') +
-          (c.material ? ' <span class="wd-chip gold">' + c.material + ' with results, orders, deals or regulatory filings</span>' : '') + '</p>' +
+      return '<p class="wd-nsum"><b>' + stocks.length + ' of your ' + plural(c.held, 'stock') + '</b> had news this week' +
+          (fresh ? ' <span class="wd-nnew">' + fresh + ' new</span>' : '') + '</p>' +
         '<ul class="wd-nmini">' + top.map(function (s) {
           var i = s.items[0], more = s.items.length - 1;
-          return '<li><button type="button" class="wd-nrow" data-go="news">' + logo(s.symbol, 'sm') +
-            '<span class="tx"><span class="hd"><b>' + esc(s.symbol) + '</b>' +
-              '<span class="wd-ncat ' + (i.kind === 'press' ? 'press' : 't-' + (NEWS_TONE[i.category] || 'slate')) + '">' + esc(i.kind === 'press' ? i.source : i.category) + '</span>' +
-              '<time datetime="' + esc(i.at) + '">' + esc(agoText(i.at)) + '</time></span>' +
-              '<span class="bd">' + esc(i.brief || i.headline) + '</span>' +
-              (more > 0 ? '<small>+' + more + ' more · ' + plural(s.clients.length, 'client') + '</small>' : '<small>' + plural(s.clients.length, 'client') + '</small>') +
+          return '<li><button type="button" class="wd-nrow' + (isNew(i) ? ' new' : '') + '" data-go="news">' + logo(s.symbol, 'sm') +
+            '<span class="tx"><span class="hd"><b>' + esc(s.symbol) + '</b>' + newsChip(i) +
+              (isNew(i) ? '<span class="wd-nnew">New</span>' : '') + '<time datetime="' + esc(i.at) + '">' + esc(agoText(i.at)) + '</time></span>' +
+              '<span class="bd">' + (i.title ? '<b>' + esc(i.title) + '</b>' + (i.brief ? ' ' + esc(i.brief) : '') : esc(i.brief || i.headline)) + '</span>' +
+              (more > 0 ? '<small>+' + more + ' more</small>' : '') +
             '</span><em aria-hidden="true">›</em></button></li>';
         }).join('') + '</ul>' +
         (n.briefs && !n.briefs.on ? '<p class="wd-note">Showing the exchange’s own headlines; written briefs are off on this server.</p>' : '');
@@ -928,8 +1013,8 @@
     var segs = [['all', 'Everything'], ['filings', 'Filings'], ['press', 'Press']];
     var held = clients().filter(function (c) { return c.status !== 'closed' && c.holdings.length; });
     if (S.newsClient && !held.some(function (c) { return c.id === S.newsClient; })) S.newsClient = 0;
-    return '<div class="wd-sec" style="margin-top:4px"><div><h2>News and filings</h2><p>What the companies your clients hold filed with the exchange this week, ' +
-      'and what the press wrote about them. Each filing comes with a short brief of what it says.</p></div>' +
+    return '<div class="wd-sec" style="margin-top:4px"><div><h2>News and filings ' + liveTag() + '</h2><p>What the companies your clients hold told the exchange this week, ' +
+      'and what the papers wrote, in a line each.</p></div>' +
       '<button type="button" class="wd-btn" data-act="news-refresh">' + ic('news') + 'Refresh</button></div>' +
       '<div class="wd-tools"><div class="wd-seg" role="group" aria-label="Show">' + segs.map(function (s) {
         return '<button type="button" data-act="newskind" data-v="' + s[0] + '" class="' + (S.newsKind === s[0] ? 'on' : '') + '" aria-pressed="' + (S.newsKind === s[0]) + '">' + s[1] + '</button>';
