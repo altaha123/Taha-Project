@@ -752,3 +752,92 @@
   .wd-addrows input { padding: 8px 10px; font-size: 16px; }
   .wd-logo { width: 30px; height: 30px; }
 }
+
+/* ── News and filings ──────────────────────────────────────────────────
+   A filing's colour says what kind of event it is, never which way it cuts:
+   the feed's categories record what happened, not whether it was good. */
+.wd-news-panel > h3 > span { display: inline-flex; align-items: center; gap: 9px; min-width: 0; }
+.wd-news-panel > h3 > span svg { width: 18px; height: 18px; color: var(--gold); flex: none; }
+.wd-nsum { margin: 0 0 10px; color: var(--ink-2); font-size: 13.5px; line-height: 1.6; }
+.wd-nsum b { color: var(--ink); }
+.wd-nsum .wd-chip { margin-left: 4px; vertical-align: 1px; }
+.wd-nmini { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.wd-nrow { width: 100%; display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 11px 12px; border-radius: 16px; cursor: pointer;
+  background: var(--paper-2); border: 1px solid transparent; transition: border-color .15s, background .15s; }
+.wd-nrow:hover { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 5%, var(--paper-2)); }
+.wd-nrow:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.wd-nrow .wd-logo.sm { margin: 1px 0 0; }
+.wd-nrow .tx { display: grid; gap: 3px; min-width: 0; flex: 1; }
+.wd-nrow .hd { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 13px; }
+.wd-nrow .hd time { color: var(--mute); font-size: 11.5px; }
+.wd-nrow .bd { font-size: 13px; line-height: 1.45; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  overflow-wrap: anywhere; }
+.wd-nrow small { color: var(--mute); font-size: 11.5px; }
+.wd-nrow em { font-style: normal; color: var(--mute); align-self: center; }
+.wd-ncat { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 99px; font: 600 11px/1.5 Inter, sans-serif; white-space: nowrap;
+  background: color-mix(in srgb, var(--t, #66758A) 13%, transparent); color: color-mix(in srgb, var(--t, #66758A) 82%, var(--ink)); }
+.wd-ncat.t-gold { --t: #C9A63E; } .wd-ncat.t-rose { --t: #C8566B; } .wd-ncat.t-violet { --t: #8B6BC4; }
+.wd-ncat.t-blue { --t: #3D7FB8; } .wd-ncat.t-green { --t: #2F9E6E; } .wd-ncat.t-slate { --t: #66758A; }
+.wd-ncat.press { --t: #66758A; background: transparent; border: 1px solid var(--rule); color: var(--ink-2); }
+.wd-nwrap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.wd-news-panel .wd-nwrap { gap: 12px; }
+.wd-nws { background: var(--wd-card); border: 1px solid var(--rule); border-radius: var(--wd-r); padding: 14px 16px; box-shadow: var(--skin-shadow); min-width: 0; }
+.wd-news-panel .wd-nws { box-shadow: none; background: var(--paper-2); border-color: transparent; }
+.wd-nws.hot { border-color: color-mix(in srgb, var(--gold) 45%, var(--rule)); }
+.wd-nws header { display: flex; gap: 11px; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+.wd-nws .nm { min-width: 0; flex: 1; }
+.wd-nws .nm b { font-size: 15px; }
+.wd-nws .nm a { text-decoration: none; }
+.wd-nws .nm a:hover { text-decoration: underline; }
+.wd-nws .nm small { display: block; color: var(--mute); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wd-nws .at { text-align: right; flex: none; display: grid; justify-items: end; gap: 2px; }
+.wd-nws .at b { font-size: 14px; }
+.wd-nws .at small { color: var(--mute); font-size: 11.5px; }
+.wd-nwho { display: inline-flex; align-items: center; gap: 6px; color: var(--mute); font-size: 11.5px; }
+.wd-nlist { list-style: none; margin: 0; padding: 0; }
+.wd-ni { padding: 10px 0; border-bottom: 1px dashed var(--rule); }
+.wd-ni:last-child { border-bottom: 0; padding-bottom: 0; }
+.wd-nmeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 11.5px; color: var(--mute); }
+.wd-nsrc { margin-left: auto; color: var(--gold-dp); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.wd-nsrc:hover { text-decoration: underline; }
+.wd-nby { display: inline-flex; align-items: center; gap: 3px; color: var(--gold-dp); font-weight: 600; }
+.wd-nby svg { width: 12px; height: 12px; }
+.wd-nbrief { margin: 6px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
+.wd-nbrief.press { color: var(--ink-2); }
+.wd-nhead { margin: 4px 0 0; font-size: 12px; line-height: 1.45; color: var(--mute); overflow-wrap: anywhere; }
+.wd-nwait { animation: wd-npulse 1.6s ease-in-out infinite; }
+@keyframes wd-npulse { 50% { opacity: .45; } }
+.wd-nempty { padding: 18px; border-radius: 16px; background: var(--paper-2); color: var(--ink-2); font-size: 14px; }
+.wd-nempty p { margin: 0 0 6px; } .wd-nempty p:last-child { margin-bottom: 0; }
+.wd-nempty .wd-btn { margin-top: 6px; }
+.wd-nsel select { min-height: 40px; padding: 8px 34px 8px 14px; border-radius: 999px; border: 1px solid var(--rule); background: var(--wd-card); color: var(--ink);
+  font: 600 13px Inter, sans-serif; max-width: 100%; }
+.wd-nhow { margin-top: 8px; }
+.wd-nhow summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; font-weight: 600; }
+
+/* ── Sending a call on WhatsApp ──────────────────────────────────────── */
+.wd-btn.wa { background: #25D366; border-color: #25D366; color: #0B2A17; }
+.wd-btn.wa:hover { background: #1FBE5B; border-color: #1FBE5B; }
+.wd-rec-a .wd-btn.wa { background: color-mix(in srgb, #25D366 14%, var(--wd-card)); border-color: color-mix(in srgb, #25D366 45%, var(--rule)); color: var(--ink); }
+.wd-wa-ok { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: 14px; margin-bottom: 12px; font-size: 13.5px;
+  background: color-mix(in srgb, var(--pass) 10%, transparent); color: var(--ink); }
+.wd-wa-ok svg { width: 18px; height: 18px; color: var(--pass); flex: none; margin-top: 1px; }
+.wd-wa-opts { display: flex; gap: 16px; flex-wrap: wrap; margin: 0 0 10px; font-size: 13px; color: var(--ink-2); }
+.wd-wa-opts label { display: inline-flex; gap: 7px; align-items: center; cursor: pointer; }
+.wd-wa-opts input { width: 16px; height: 16px; accent-color: var(--gold); }
+.wd-modal textarea[data-wa-text] { min-height: 230px; font: 400 14px/1.55 Inter, system-ui, sans-serif; }
+.wd-wa-go { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.wd-wa-h { margin: 18px 0 8px; font: 600 14px Inter, sans-serif; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.wd-wa-h small { color: var(--mute); font-weight: 400; font-size: 12px; }
+.wd-wa-list { display: grid; gap: 6px; max-height: 260px; overflow-y: auto; }
+.wd-wa-row { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--rule); background: var(--wd-card); }
+.wd-wa-row .wd-av { background: var(--a, var(--gold)); color: #fff; }
+.wd-wa-row .who { min-width: 0; flex: 1; }
+.wd-wa-row .who b { display: block; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wd-wa-row .who small { display: block; color: var(--mute); font-size: 11.5px; }
+
+@media (max-width: 760px) {
+  .wd-nwrap, .wd-nmini { grid-template-columns: minmax(0, 1fr); }
+  .wd-nws .at small { display: none; }
+  .wd-wa-go .wd-btn { flex: 1 1 auto; }
+}

@@ -38,6 +38,8 @@ Routes
   POST   /wealth/recs/{id}/apply               book it for many clients at once
   PUT    /wealth/prices                        set (or clear) a hand price
   POST   /wealth/corporate-action              a bonus or split, for every client holding it
+  GET    /wealth/news                          the week's filings and press on the stocks the book holds
+  GET    /wealth/demo/news                     the same, for the sample desk
   GET    /wealth/shared                        portfolios a manager shows me, read-only
   GET    /wealth/export.csv?what=              holdings | ledger | fees
 """
@@ -53,6 +55,7 @@ from fastapi.responses import Response
 
 import accounts
 import wealth as W
+import wealth_news as WN
 
 router = APIRouter(tags=["wealth"])
 
@@ -61,6 +64,9 @@ router = APIRouter(tags=["wealth"])
 SCAN_ROWS = lambda: []                                        # noqa: E731
 # Tests replace this with a dict of rows; production asks watchlist_quotes.
 QUOTES = None
+# Tests replace this with (filings, press, status); production reads the
+# filing and press caches already in memory (wealth_news.gather).
+NEWS = None
 
 
 def _bearer(authorization: Optional[str]) -> str:
@@ -177,6 +183,37 @@ def wealth_demo():
     quotes, pending, mo = _quotes(W.sample_symbols())
     data = W.sample_data(quotes)
     return W.compute_book(data, quotes, pending=pending, market_open=mo, demo=True)
+
+
+# ── News and filings ────────────────────────────────────────────────────────
+
+def _news(book: dict) -> dict:
+    """The week's filings and press on every stock the book holds. Read from
+    memory; the briefs still to be written are queued behind the answer."""
+    holdings = WN.holdings_from_book(book)
+    if NEWS is not None:
+        filings, press, status = NEWS() if callable(NEWS) else NEWS
+    else:
+        filings, press, status = WN.gather([h["symbol"] for h in holdings])
+    payload = WN.build(holdings, filings, press, WN.briefs(), configured=WN.configured(), status=status)
+    payload["briefs"]["pending"] = WN.queue(payload)
+    payload["demo"] = bool(book.get("demo"))
+    return payload
+
+
+@router.get("/wealth/news")
+def wealth_news(authorization: Optional[str] = Header(None)):
+    user = _manager(authorization)
+    return _news(_book(user["id"]))
+
+
+@router.get("/wealth/demo/news")
+def wealth_demo_news():
+    """The sample desk's stocks. Public, like the sample desk itself: the
+    stocks are a fixed list of fifteen, so the briefs it can ask for are
+    bounded, and each is written once for everybody."""
+    quotes, pending, mo = _quotes(W.sample_symbols())
+    return _news(W.compute_book(W.sample_data(quotes), quotes, pending=pending, market_open=mo, demo=True))
 
 
 # ── Clients ─────────────────────────────────────────────────────────────────

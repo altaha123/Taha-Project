@@ -69,10 +69,12 @@ services:
         sync: false                # (score_explain.py). Free Groq account;
                                    # unset = the section says it is off.
       - key: ANTHROPIC_API_KEY     # Ask AI on the query screener
-        sync: false                # (query_assistant.py) and the earnings-call
-                                   # summary (concalls.py). Billed per question;
-                                   # unset = both say they are off. Ask AI also
-                                   # needs ADMIN_KEY: it is closed without one.
+        sync: false                # (query_assistant.py), the earnings-call
+                                   # summary (concalls.py) and the filing briefs
+                                   # on the Wealth desk (wealth_news.py, at most
+                                   # WEALTH_NEWS_HOURLY reads an hour). Billed
+                                   # per use; unset = each says it is off. Ask AI
+                                   # also needs ADMIN_KEY: it is closed without one.
       - key: QUERY_AI_HOURLY       # ceiling on Ask AI questions per hour, so a
         value: "60"                # leaked admin key has a bounded bill.
 

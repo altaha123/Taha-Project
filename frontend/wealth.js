@@ -24,7 +24,17 @@
 
    VIEWS (the hash)
    #overview  #clients  #client/ID[/holdings|ledger|fees|profile]
-   #calls  #fees  #settings  #mine
+   #calls  #news  #fees  #settings  #mine
+
+   NEWS AND FILINGS (#news, a panel on the overview, one on each client)
+   The week's exchange filings and press on the stocks the book holds, from
+   /wealth/news. Fetched on its own, after the book, so the desk never waits
+   for it; asked again while briefs are still being written.
+
+   SENDING A CALL
+   A call can be sent to clients on WhatsApp: the message is composed from
+   the call, edited on the page, copied, or opened in WhatsApp, for everyone
+   or one client at a time. Nothing is sent by this site.
 */
 
 (function () {
@@ -42,7 +52,8 @@
   var S = {
     mode: 'boot', book: null, info: null, shared: null, view: 'overview', cid: null, ctab: 'holdings',
     q: '', status: 'live', sort: 'value', recFilter: 'open', stlFilter: 'all', ledFilter: 'all',
-    priv: false, polls: 0, timer: null, uni: null, step: 1, setup: {}, mine: 0, whatif: {}
+    priv: false, polls: 0, timer: null, uni: null, step: 1, setup: {}, mine: 0, whatif: {},
+    news: null, newsAt: 0, newsBusy: false, newsErr: '', newsPolls: 0, newsTimer: null, newsKind: 'all', newsClient: 0
   };
 
   /* ── Small helpers ───────────────────────────────────────────────────── */
@@ -185,7 +196,10 @@
     paste: '<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/>',
     lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>',
-    shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/>'
+    shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/>',
+    news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2Z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M7.5 9h6M7.5 12h6M7.5 15h3.5"/>',
+    wa: '<path d="M20.5 11.6a8.4 8.4 0 0 1-12.4 7.4L3.5 20.5 5 16.1a8.4 8.4 0 1 1 15.5-4.5Z"/><path d="M9.2 8.6c-.4 2.8 2.6 5.9 5.6 5.7l.9-1.4-1.8-1-.8.7a3.4 3.4 0 0 1-2.1-2.1l.7-.8-1-1.8Z"/>',
+    copy: '<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.2"/><path d="M15.5 8.5V5.5a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 5.5V14a1.5 1.5 0 0 0 1.5 1.5h3"/>'
   };
   function ic(k) {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (IC[k] || '') + '</svg>';
@@ -243,7 +257,7 @@
       S.view = 'client';
       S.cid = parseInt(h[1], 10);
       S.ctab = CTABS.some(function (t) { return t[0] === h[2]; }) ? h[2] : 'holdings';
-    } else if (['overview', 'clients', 'calls', 'fees', 'settings', 'mine'].indexOf(v) >= 0) {
+    } else if (['overview', 'clients', 'calls', 'news', 'fees', 'settings', 'mine'].indexOf(v) >= 0) {
       S.view = v;
     } else {
       S.view = 'overview';
@@ -363,6 +377,7 @@
   function reload(msg) {
     var y = window.scrollY, next = S.after, then = S.then;
     S.after = null; S.then = null;
+    S.newsAt = 0;
     return loadBook(true).then(function () {
       if (msg) toast(msg);
       if (next) go(next); else window.scrollTo(0, y);
@@ -578,6 +593,7 @@
     wireWhatIf();
     wireTerms(root);
     measureChrome();
+    ensureNews();
   }
 
   function paintTabs() {
@@ -613,8 +629,9 @@
   function tabsHTML() {
     var b = S.book, alerts = (b && b.alerts || []).filter(function (a) { return ['overdue', 'unpaid', 'stop'].indexOf(a.kind) >= 0; }).length;
     var due = (b && b.clients || []).filter(function (c) { return c.status !== 'closed' && c.fee && c.fee.overdue && c.fee.total > 0.5; }).length;
+    var hot = S.news && S.news.counts ? S.news.counts.material : 0;
     var tabs = [['overview', 'Overview', 'home', alerts], ['clients', 'Clients', 'users', 0], ['calls', 'Recommendations', 'target', 0],
-                ['fees', 'Commission', 'coins', due], ['settings', 'Desk', 'gear', 0]];
+                ['news', 'News', 'news', hot], ['fees', 'Commission', 'coins', due], ['settings', 'Desk', 'gear', 0]];
     if (S.shared && S.shared.length) tabs.push(['mine', 'Shared with me', 'share', 0]);
     var cur = S.view === 'client' ? 'clients' : S.view;
     return tabs.map(function (t) {
@@ -628,6 +645,7 @@
       case 'clients': return clientsView();
       case 'client': return clientView(clientById(S.cid));
       case 'calls': return callsView();
+      case 'news': return newsView();
       case 'fees': return feesView();
       case 'settings': return settingsView();
       case 'mine': return mineView();
@@ -681,6 +699,9 @@
       '<div class="wd-panel wd-rise" style="--i:3"><h3>Commission <button type="button" class="wd-link" data-go="fees">Open ›</button></h3>' + monthsHTML(b.commission.months) +
         '<div class="wd-key"><span><i style="background:color-mix(in srgb,var(--gold) 40%,var(--rule))"></i>Billed</span><span><i style="background:var(--gold)"></i>Received</span></div></div>' +
       '</div>';
+
+    html += '<div class="wd-panel wd-news-panel wd-rise" style="--i:3;margin-top:16px"><h3><span>' + ic('news') + 'On your stocks this week <small>filings and press</small></span>' +
+      '<button type="button" class="wd-link" data-go="news">All news ›</button></h3><div data-news="brief"></div></div>';
 
     var top = b.clients.filter(function (c) { return c.status !== 'closed'; }).sort(function (x, y) { return num(y.value) - num(x.value); }).slice(0, 6);
     html += '<div class="wd-sec"><div><h2>Your clients</h2><p>Largest first. Tap a client for their holdings, ledger and fees.</p></div>' +
@@ -742,6 +763,181 @@
       '<p>Add your first client — a name is enough to start. Then record what they hold, or paste their holdings from a spreadsheet.</p>' +
       '<button type="button" class="wd-btn primary" data-act="add-client">' + ic('plus') + 'Add your first client</button> ' +
       '<a class="wd-btn ghost" href="wealth.html?demo=1">See a sample desk</a></div>';
+  }
+
+  /* ── News and filings ────────────────────────────────────────────────── */
+
+  /* The week's filings and press on the stocks the book holds. Loaded after
+     the book, on its own request, into every [data-news] box on the screen:
+     "brief" on the overview, "full" on the News tab, "client" on a client's
+     holdings. Briefs still being written are asked for again a few times. */
+
+  var NEWS_TTL = 5 * 60000;
+
+  function ensureNews() {
+    if (!document.querySelector('[data-news]')) return;
+    paintNews();
+    if (!S.news || Date.now() - S.newsAt > NEWS_TTL) loadNews();
+  }
+
+  function loadNews() {
+    if (S.newsBusy || (S.mode !== 'desk' && S.mode !== 'demo')) return;
+    S.newsBusy = true;
+    clearTimeout(S.newsTimer);
+    var demo = S.mode === 'demo';
+    var job = demo ? fetch(API + '/wealth/demo/news').then(function (r) {
+      if (!r.ok) throw new Error('The news could not be loaded (' + r.status + ').');
+      return r.json();
+    }) : api('/wealth/news');
+    job.then(function (d) {
+      S.news = d; S.newsAt = Date.now(); S.newsErr = '';
+      S.newsBusy = false;
+      paintNews();
+      paintTabs();
+      scheduleNews();
+    }, function (e) {
+      S.newsBusy = false;
+      S.newsErr = (e && e.message) || 'The news could not be loaded.';
+      paintNews();
+    });
+  }
+
+  function scheduleNews() {
+    var n = S.news;
+    if (!n || !(n.loading || (n.briefs && n.briefs.pending > 0))) { S.newsPolls = 0; return; }
+    if (S.newsPolls >= 10) return;
+    S.newsPolls++;
+    S.newsTimer = setTimeout(function () {
+      if (document.querySelector('[data-news]')) loadNews();
+      else S.newsAt = 0;
+    }, n.loading ? 5000 : 8000);
+  }
+
+  /* Painted again on every poll while briefs are being written, so a box is
+     only rewritten when what it shows has changed: a rewrite would scroll a
+     long list under the reader's finger. */
+  function paintNews() {
+    document.querySelectorAll('[data-news]').forEach(function (el) {
+      var html = newsBody(el.dataset.news, +el.dataset.cid || 0);
+      if (el.__news !== html) { el.__news = html; el.innerHTML = html; }
+    });
+  }
+
+  function agoText(iso) {
+    var t = Date.parse(iso);
+    if (!isFinite(t)) return '';
+    var m = Math.max(0, (Date.now() - t) / 60000);
+    if (m < 2) return 'just now';
+    if (m < 60) return Math.round(m) + ' min ago';
+    var h = m / 60;
+    if (h < 24) return Math.round(h) + ' h ago';
+    var d = Math.round(h / 24);
+    return d <= 1 ? 'yesterday' : d + ' days ago';
+  }
+
+  /* A colour for what kind of filing it is, not for which way it cuts: the
+     feed's categories say what happened, never whether it was good. */
+  var NEWS_TONE = { 'Regulatory action': 'rose', 'Results': 'gold', 'M&A': 'gold', 'Order win': 'gold', 'Buyback': 'gold',
+                    'Fundraise': 'violet', 'Bonus / Split': 'violet', 'Credit rating': 'violet', 'Pledge': 'violet',
+                    'Management change': 'blue', 'Board meeting': 'blue', 'Dividend': 'green', 'Capacity / capex': 'green' };
+
+  function newsItemHTML(i, compact) {
+    var press = i.kind === 'press';
+    var chip = '<span class="wd-ncat ' + (press ? 'press' : 't-' + (NEWS_TONE[i.category] || 'slate')) + '">' + esc(press ? i.source : i.category) + '</span>';
+    var by = i.brief ? '<span class="wd-nby" title="Written by Claude from the filing’s own text">' + ic('spark') + 'Brief</span>' : '';
+    var src = i.url ? '<a class="wd-nsrc" href="' + esc(i.url) + '" target="_blank" rel="noopener noreferrer">' + (press ? 'Read' : esc(i.source)) + ' ↗</a>' : '';
+    var text = i.brief
+      ? '<p class="wd-nbrief">' + esc(i.brief) + '</p>' + (compact ? '' : '<p class="wd-nhead">Exchange headline: ' + esc(i.headline) + '</p>')
+      : '<p class="wd-nbrief' + (press ? ' press' : '') + '">' + esc(i.headline) + '</p>' +
+        (!compact && i.brief_status === 'pending' ? '<p class="wd-nhead wd-nwait">Writing a brief from the filing…</p>' : '');
+    return '<li class="wd-ni' + (press ? ' press' : '') + '"><div class="wd-nmeta">' + chip + by +
+      '<time datetime="' + esc(i.at) + '">' + esc(agoText(i.at)) + '</time>' + src + '</div>' + text + '</li>';
+  }
+
+  function newsCardHTML(s, cid) {
+    var mine = cid ? s.clients.filter(function (c) { return c.id === cid; })[0] : null;
+    var who = cid ? '' : '<span class="wd-nwho"><span class="wd-stack">' + s.clients.slice(0, 4).map(function (c) {
+      return '<span class="wd-av sm c-' + esc(c.color) + '" title="' + esc(c.name) + '">' + esc(initials(c.name)) + '</span>';
+    }).join('') + '</span>' + plural(s.clients.length, 'client') + '</span>';
+    var at = mine ? 'in this portfolio' : finite(s.weight) ? s.weight.toFixed(1) + '% of the book' : '';
+    return '<article class="wd-nws' + (s.material ? ' hot' : '') + '">' +
+      '<header>' + logo(s.symbol) + '<div class="nm"><b><a href="stock.html?ticker=' + encodeURIComponent(s.symbol) + '">' + esc(s.symbol) + '</a></b>' +
+        '<small>' + esc(s.name || '') + '</small></div>' +
+        '<div class="at"><b class="pv">' + esc(short(mine ? mine.value : s.value)) + '</b><small>' + esc(at) +
+          (finite(s.change_pct) ? ' · <span class="' + tone(s.change_pct) + '">' + esc(pct(s.change_pct, 1)) + ' today</span>' : '') + '</small>' + who + '</div></header>' +
+      '<ul class="wd-nlist">' + s.items.map(function (i) { return newsItemHTML(i, false); }).join('') + '</ul></article>';
+  }
+
+  function newsBody(mode, cid) {
+    var n = S.news;
+    if (!n) {
+      if (S.newsErr) {
+        return '<div class="wd-nempty"><p>' + esc(S.newsErr) + '</p><button type="button" class="wd-btn sm" data-act="news-refresh">Try again</button></div>';
+      }
+      return '<div class="wd-skel" aria-label="Loading news"><i style="height:64px"></i><i style="height:64px"></i></div>';
+    }
+    if (mode === 'full') cid = S.newsClient;
+    var kind = mode === 'full' ? S.newsKind : 'all';
+    var stocks = (n.stocks || []).filter(function (s) {
+      return !cid || s.clients.some(function (c) { return c.id === cid; });
+    }).map(function (s) {
+      if (kind === 'all') return s;
+      var items = s.items.filter(function (i) { return kind === 'press' ? i.kind === 'press' : i.kind === 'filing'; });
+      return items.length ? Object.assign({}, s, { items: items }) : null;
+    }).filter(Boolean);
+
+    var c = n.counts || {};
+    if (!c.held) return '<div class="wd-nempty"><p>News appears here for the stocks your clients hold. Nothing is held yet.</p></div>';
+    if (!stocks.length) {
+      var why = n.loading ? 'Reading the exchange feed. The first read after the server wakes up takes about half a minute.'
+        : (cid ? 'Nothing filed or in the press on their stocks in the last seven days.'
+               : 'No important filings or press on your ' + plural(c.held, 'stock') + ' in the last seven days.') +
+          (kind !== 'all' ? ' Try “Everything”.' : ' A quiet week is normal.');
+      var err = n.sources && n.sources.filings && n.sources.filings.error;
+      return '<div class="wd-nempty"><p>' + esc(why) + '</p>' + (err ? '<p class="wd-note">The filing feed reported: ' + esc(String(err).slice(0, 160)) + '</p>' : '') + '</div>';
+    }
+
+    if (mode === 'brief') {
+      var filings = 0, press = 0;
+      stocks.forEach(function (s) { filings += s.filings; press += s.press; });
+      var top = stocks.slice(0, 4);
+      return '<p class="wd-nsum"><b>' + stocks.length + ' of your ' + plural(c.held, 'stock') + '</b> in the news this week · ' +
+          plural(filings, 'filing') + ' · ' + plural(press, 'press story', 'press stories') +
+          (c.material ? ' <span class="wd-chip gold">' + c.material + ' with results, orders, deals or regulatory filings</span>' : '') + '</p>' +
+        '<ul class="wd-nmini">' + top.map(function (s) {
+          var i = s.items[0], more = s.items.length - 1;
+          return '<li><button type="button" class="wd-nrow" data-go="news">' + logo(s.symbol, 'sm') +
+            '<span class="tx"><span class="hd"><b>' + esc(s.symbol) + '</b>' +
+              '<span class="wd-ncat ' + (i.kind === 'press' ? 'press' : 't-' + (NEWS_TONE[i.category] || 'slate')) + '">' + esc(i.kind === 'press' ? i.source : i.category) + '</span>' +
+              '<time datetime="' + esc(i.at) + '">' + esc(agoText(i.at)) + '</time></span>' +
+              '<span class="bd">' + esc(i.brief || i.headline) + '</span>' +
+              (more > 0 ? '<small>+' + more + ' more · ' + plural(s.clients.length, 'client') + '</small>' : '<small>' + plural(s.clients.length, 'client') + '</small>') +
+            '</span><em aria-hidden="true">›</em></button></li>';
+        }).join('') + '</ul>' +
+        (n.briefs && !n.briefs.on ? '<p class="wd-note">Showing the exchange’s own headlines; written briefs are off on this server.</p>' : '');
+    }
+
+    var cards = stocks.map(function (s) { return newsCardHTML(s, mode === 'client' ? cid : 0); }).join('');
+    if (mode === 'client') return '<div class="wd-nwrap">' + cards + '</div>';
+    return '<div class="wd-nwrap">' + cards + '</div>' +
+      '<p class="wd-note">' + esc((n.briefs && n.briefs.note) || '') + ' ' + esc(n.note || '') + '</p>' +
+      '<details class="wd-nhow"><summary>How these are chosen</summary><p class="wd-note">' + esc(n.method || '') + '</p></details>';
+  }
+
+  function newsView() {
+    var segs = [['all', 'Everything'], ['filings', 'Filings'], ['press', 'Press']];
+    var held = clients().filter(function (c) { return c.status !== 'closed' && c.holdings.length; });
+    if (S.newsClient && !held.some(function (c) { return c.id === S.newsClient; })) S.newsClient = 0;
+    return '<div class="wd-sec" style="margin-top:4px"><div><h2>News and filings</h2><p>What the companies your clients hold filed with the exchange this week, ' +
+      'and what the press wrote about them. Each filing comes with a short brief of what it says.</p></div>' +
+      '<button type="button" class="wd-btn" data-act="news-refresh">' + ic('news') + 'Refresh</button></div>' +
+      '<div class="wd-tools"><div class="wd-seg" role="group" aria-label="Show">' + segs.map(function (s) {
+        return '<button type="button" data-act="newskind" data-v="' + s[0] + '" class="' + (S.newsKind === s[0] ? 'on' : '') + '" aria-pressed="' + (S.newsKind === s[0]) + '">' + s[1] + '</button>';
+      }).join('') + '</div>' +
+      (held.length > 1 ? '<label class="wd-nsel"><span class="wd-sr">Client</span><select id="wd-news-client"><option value="0">Every client</option>' +
+        held.map(function (c) { return '<option value="' + c.id + '"' + (S.newsClient === c.id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') +
+        '</select></label>' : '') + '</div>' +
+      '<div data-news="full"></div>';
   }
 
   /* ── Clients ─────────────────────────────────────────────────────────── */
@@ -918,7 +1114,9 @@
       }).join('') + '</div>' : '<p class="wd-muted" style="margin:0">Nothing sold yet.</p>') +
       '<p class="wd-note">Dividends ' + pv(esc(inr(c.dividends, 0))) + ' · charges ' + pv(esc(inr(c.charges, 0))) + ' · on paper ' + pv(esc(signed(c.unrealised, 0))) + '</p></div>';
     return table + cardsHtml + '<div class="wd-grid2" style="margin-top:16px"><div class="wd-panel"><h3>Allocation <small>by sector</small></h3>' +
-      donut(c.sectors.map(function (s) { return { label: s.sector, value: s.value, color: s.sector === 'Cash' ? '#9CC6EC' : null }; }), short(c.value), 'value') + '</div>' + side + '</div>';
+      donut(c.sectors.map(function (s) { return { label: s.sector, value: s.value, color: s.sector === 'Cash' ? '#9CC6EC' : null }; }), short(c.value), 'value') + '</div>' + side + '</div>' +
+      (ro ? '' : '<div class="wd-panel wd-news-panel" style="margin-top:16px"><h3><span>' + ic('news') + 'News on their stocks <small>this week</small></span>' +
+        '<button type="button" class="wd-link" data-go="news">All news ›</button></h3><div data-news="client" data-cid="' + c.id + '"></div></div>');
   }
 
   var KIND = {
@@ -1093,6 +1291,7 @@
         (slip !== null ? ' · avg fill ' + esc(pct(slip, 2)) + ' vs call' : '') + '</span>' : '<span class="wd-muted">No client booked yet.</span>') + '</div>' +
       '<div class="wd-rec-a">' + (r.status === 'open' ? '<button type="button" class="wd-btn sm primary" data-act="book-rec" data-rid="' + r.id + '">' + ic('users') + 'Book for clients</button>' +
         '<button type="button" class="wd-btn sm" data-act="close-rec" data-rid="' + r.id + '">Close call</button>' : '') +
+        '<button type="button" class="wd-btn sm wa" data-act="share-rec" data-rid="' + r.id + '">' + ic('wa') + 'Send to clients</button>' +
         '<button type="button" class="wd-btn sm ghost" data-act="edit-rec" data-rid="' + r.id + '">' + ic('edit') + 'Edit</button></div></article>';
   }
 
@@ -1371,7 +1570,7 @@
         '<button type="button" class="wd-ic" data-close aria-label="Close">✕</button></div>' +
       '<div class="wd-mb">' + o.body + '</div>' +
       '<div class="wd-mf"><span class="wd-err" role="alert"></span>' + (o.extra || '') +
-        '<button type="button" class="wd-btn ghost" data-close>Cancel</button>' +
+        '<button type="button" class="wd-btn ghost" data-close>' + (o.cancel || 'Cancel') + '</button>' +
         (o.submit ? '<button type="submit" class="wd-btn ' + (o.danger ? 'danger armed' : 'primary') + '">' + o.submit + '</button>' : '') + '</div></form>';
     m.classList.toggle('c-' + (o.color || 'gold'), true);
     try { m.showModal(); } catch (e) { m.setAttribute('open', ''); }
@@ -2087,11 +2286,147 @@
         if (r) return api('/wealth/recs/' + r.id, { method: 'PUT', body: body2 }).then(function () { return 'Saved.'; });
         return api('/wealth/recs', { method: 'POST', body: body2 }).then(function (d) {
           S.after = 'calls';
-          S.then = function () { var x = recById(d.rec.id); if (x && clients().length) bookModal(x); };
-          return 'Call made. Book it for the clients who acted on it.';
+          S.then = function () { var x = recById(d.rec.id); if (x) shareModal(x, true); };
+          return 'Call made.';
         });
       }
     });
+  }
+
+  /* ── Sending a call on WhatsApp ──────────────────────────────────────── */
+
+  /* The message is composed from the call and can be edited before it goes.
+     "Open WhatsApp" hands it to WhatsApp to choose contacts, a group or a
+     broadcast list; a client with a phone number gets their own chat with
+     their name at the top. Nothing is sent from this site, and the reason for
+     the call stays out unless the manager ticks it in: the call form says a
+     client sees the price, not the why. */
+
+  var RISK_LINE = 'Investments in the securities market are subject to market risks. Read all the related documents carefully before investing.';
+
+  function waMessage(r, o) {
+    var d = (S.book && S.book.desk) || {}, buy = r.action === 'buy', L = [];
+    function move(x) { return finite(x) && finite(r.price) && Number(r.price) > 0 ? ' (' + pct(100 * (x / r.price - 1), 1) + ')' : ''; }
+    if (r.status === 'closed') {
+      L.push('*Closing my ' + (buy ? 'buy' : 'sell') + ' call: ' + r.symbol + '*');
+      if (r.name) L.push(r.name);
+      L.push('');
+      L.push('Called at ' + px(r.price) + ' on ' + day(r.on_date));
+      if (finite(r.close_price)) L.push('Closed at ' + px(r.close_price) + move(r.close_price) + (r.closed_on ? ' on ' + day(r.closed_on) : ''));
+    } else {
+      L.push((buy ? '🟢' : '🔴') + ' *' + (buy ? 'BUY' : 'SELL') + ': ' + r.symbol + '*');
+      if (r.name) L.push(r.name);
+      L.push('');
+      L.push((buy ? 'Buy' : 'Sell') + ' around ' + px(r.price));
+      if (finite(r.target)) L.push('Target: ' + px(r.target) + move(r.target));
+      if (finite(r.stop)) L.push('Stop loss: ' + px(r.stop) + move(r.stop));
+      if (r.horizon) L.push('Horizon: ' + r.horizon);
+    }
+    if (o.why && r.thesis) L.push('', 'Why: ' + r.thesis);
+    var sign = [d.display_name, d.firm].filter(Boolean).join(', ');
+    if (sign) L.push('', '— ' + sign);
+    if (d.reg_short && d.registration) L.push(d.reg_short + ' · ' + d.registration);
+    if (o.risk) L.push('', RISK_LINE);
+    return L.join('\n');
+  }
+
+  /* wa.me wants the full international number, digits only. A ten-digit
+     number is an Indian mobile; a leading 0 is the trunk prefix. */
+  function waNumber(p) {
+    var s = String(p || '').trim();
+    if (!s) return '';
+    var d = s.replace(/\D/g, '');
+    if (s.charAt(0) === '+') return d.length >= 8 ? d : '';
+    if (d.length === 10) return '91' + d;
+    if (d.length === 11 && d.charAt(0) === '0') return '91' + d.slice(1);
+    return d.length >= 11 ? d : '';
+  }
+
+  function waLink(num, text) { return 'https://wa.me/' + (num || '') + '?text=' + encodeURIComponent(text); }
+
+  function firstName(name) {
+    var w = String(name || '').trim().split(/\s+/).filter(function (x) { return !/^(dr|mr|mrs|ms|shri|smt)\.?$/i.test(x); });
+    if (!w.length) return '';
+    return w[1] === '&' && w[2] ? w[0] + ' & ' + w[2] : w[0];
+  }
+
+  function track(name, props) { try { if (window.AltahaTrack) window.AltahaTrack(name, props || {}); } catch (e) {} }
+
+  function shareModal(r, fresh) {
+    var buy = r.action === 'buy', open = r.status === 'open';
+    var opts = { risk: true, why: false };
+    var msg = waMessage(r, opts);
+    var live = clients().filter(function (c) { return c.status !== 'closed'; });
+    function held(c) { return c.holdings.filter(function (h) { return h.symbol === r.symbol; })[0]; }
+    // A sell or an exit goes first to the clients who hold the stock.
+    var list = live.slice().sort(function (a, b) {
+      var ha = held(a) ? 0 : 1, hb = held(b) ? 0 : 1;
+      if (!buy || !open) { if (ha !== hb) return ha - hb; }
+      var pa = waNumber(a.phone) ? 0 : 1, pb = waNumber(b.phone) ? 0 : 1;
+      return pa - pb || a.name.localeCompare(b.name);
+    });
+    var people = list.map(function (c) {
+      var num = waNumber(c.phone), h = held(c);
+      return '<div class="wd-wa-row c-' + esc(c.color) + '"><span class="wd-av sm">' + esc(initials(c.name)) + '</span>' +
+        '<span class="who"><b class="pv">' + esc(c.name) + '</b><small>' + (num ? '<span class="pv">' + esc(c.phone) + '</span>' : 'No phone on file') +
+          (h ? ' · holds ' + esc(qty(h.qty)) + ' shares' : '') + '</small></span>' +
+        (num ? '<a class="wd-btn sm wa" data-wa="client" data-num="' + esc(num) + '" data-first="' + esc(firstName(c.name)) + '" href="' + esc(waLink(num, msg)) +
+                 '" target="_blank" rel="noopener noreferrer" aria-label="Send to ' + esc(c.name) + ' on WhatsApp">' + ic('wa') + 'Send</a>'
+             : (S.mode === 'demo' ? '' : '<button type="button" class="wd-btn sm ghost" data-go="client/' + c.id + '/profile">Add phone</button>')) + '</div>';
+    }).join('');
+    var body = (fresh ? '<div class="wd-wa-ok">' + ic('check') + '<span>Your <b>' + esc(r.symbol) + '</b> call is saved. Send it to your clients, then book it for those who act on it.</span></div>' : '') +
+      '<div class="wd-wa-opts"><label><input type="checkbox" data-wa-opt="risk" checked> Market-risk line</label>' +
+        (r.thesis ? '<label><input type="checkbox" data-wa-opt="why"> Include why</label>' : '') + '</div>' +
+      '<label class="wd-f"><span>Message <em>edit anything before you send it</em></span><textarea name="msg" rows="11" spellcheck="true" data-wa-text>' + esc(msg) + '</textarea></label>' +
+      '<div class="wd-wa-go"><button type="button" class="wd-btn primary" data-act="wa-copy">' + ic('copy') + '<span>Copy message</span></button>' +
+        '<a class="wd-btn wa" data-wa="any" href="' + esc(waLink('', msg)) + '" target="_blank" rel="noopener noreferrer">' + ic('wa') + 'Open WhatsApp</a></div>' +
+      '<p class="wd-note">Open WhatsApp to pick contacts, a group or a broadcast list. Words between *stars* show in bold there.</p>' +
+      (people ? '<h4 class="wd-wa-h">Or send to one client <small>their chat opens with “Hi name,” at the top</small></h4><div class="wd-wa-list">' + people + '</div>' : '');
+    modal({
+      title: (r.status === 'closed' ? 'Tell your clients the ' : 'Send the ') + esc(r.symbol) + ' call' + (r.status === 'closed' ? ' is closed' : ' to your clients'),
+      body: body, cancel: 'Done', noFocus: true,
+      extra: open ? '<button type="button" class="wd-btn' + (fresh ? ' primary' : '') + '" data-act="share-book" data-rid="' + r.id + '">' + ic('users') +
+        (fresh ? 'Next: book for clients' : 'Book for clients') + '</button>' : '',
+      wire: function (form) {
+        var ta = form.querySelector('[data-wa-text]');
+        function links() {
+          var t = ta.value;
+          form.querySelector('[data-wa=any]').href = waLink('', t);
+          form.querySelectorAll('[data-wa=client]').forEach(function (a) {
+            a.href = waLink(a.dataset.num, (a.dataset.first ? 'Hi ' + a.dataset.first + ',\n\n' : '') + t);
+          });
+        }
+        form.querySelectorAll('[data-wa-opt]').forEach(function (cb) {
+          cb.addEventListener('change', function () { opts[cb.dataset.waOpt] = cb.checked; ta.value = waMessage(r, opts); links(); });
+        });
+        ta.addEventListener('input', links);
+        form.addEventListener('click', function (e) {
+          var a = e.target.closest && e.target.closest('a[data-wa]');
+          if (a) track('wealth_call_shared', { via: a.dataset.wa === 'client' ? 'whatsapp_client' : 'whatsapp' });
+        });
+        links();
+      }
+    });
+  }
+
+  /* The dialog sits above the page's toast, so a copy says so on its own
+     button. The clipboard API needs a secure page; the old way is the
+     fallback. */
+  function copyMessage(btn) {
+    var ta = document.querySelector('#wd-modal [data-wa-text]');
+    if (!ta) return;
+    var label = btn.querySelector('span');
+    function done(ok) {
+      if (label) label.textContent = ok ? 'Copied ✓' : 'Select and copy';
+      if (!ok) { ta.focus(); ta.select(); }
+      setTimeout(function () { if (label) label.textContent = 'Copy message'; }, 2200);
+      if (ok) track('wealth_call_shared', { via: 'copy' });
+    }
+    function legacy() {
+      try { ta.focus(); ta.select(); done(document.execCommand('copy')); } catch (e) { done(false); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(function () { done(true); }, legacy);
+    else legacy();
   }
 
   function bookModal(r) {
@@ -2394,6 +2729,11 @@
         });
         return;
       case 'book-rec': { var r = recById(+el.dataset.rid); if (r) bookModal(r); return; }
+      case 'share-rec': { var rs = recById(+el.dataset.rid); if (rs) shareModal(rs); return; }
+      case 'share-book': { var rb = recById(+el.dataset.rid); closeModal(); if (rb) bookModal(rb); return; }
+      case 'wa-copy': copyMessage(el); return;
+      case 'newskind': S.newsKind = el.dataset.v; segOn(el); paintNews(); return;
+      case 'news-refresh': S.newsAt = 0; S.newsErr = ''; S.newsPolls = 0; loadNews(); paintNews(); return;
       case 'edit-rec': { var r2 = recById(+el.dataset.rid); if (r2) recModal(r2); return; }
       case 'close-rec': { var r3 = recById(+el.dataset.rid); if (r3) recModal(r3, true); return; }
       case 'del-rec':
@@ -2458,6 +2798,7 @@
   });
   document.addEventListener('change', function (e) {
     if (e.target && e.target.id === 'wd-sort') { S.sort = e.target.value; repaintCards(); }
+    if (e.target && e.target.id === 'wd-news-client') { S.newsClient = +e.target.value || 0; paintNews(); }
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === '/' && S.view === 'clients' && document.activeElement === document.body) {
