@@ -53,11 +53,21 @@ jobs:
           import json, sys
           d = json.load(open("backup.json"))
           for f in d.get("files", []):
-              print("%-32s %10.1f MB -> %8.1f MB gz" % (f["name"], f["bytes"] / 1e6, f["gzip_bytes"] / 1e6))
+              print("%-32s %10.1f MB -> %8.1f MB gz   copied in %s"
+                    % (f["name"], f["bytes"] / 1e6, f["gzip_bytes"] / 1e6, f.get("scratch", "?")))
           for e in d.get("errors", []):
               print("::error::%s: %s" % (e["name"], e["error"]))
           print("total %.1f MB, uploaded %.1f MB in %ss; %s old objects pruned"
                 % (d.get("total_bytes", 0) / 1e6, d.get("total_gzip_bytes", 0) / 1e6,
                    d.get("seconds"), d.get("pruned")))
+          # The data disk filling up is what broke every night from 8 to 13
+          # November. Say so while there is still time to grow it.
+          disk = d.get("disk") or {}
+          if disk.get("total"):
+              print("data disk: %.0f MB used of %.0f MB (%s%%), %.0f MB free"
+                    % (disk["used"] / 1e6, disk["total"] / 1e6, disk["used_pct"], disk["free"] / 1e6))
+              if disk["used_pct"] >= 85:
+                  print("::warning::The data disk is %s%% full. Grow it on Render "
+                        "(the service's Disks page) before it fills." % disk["used_pct"])
           sys.exit(0 if d.get("ok") else 1)
           PY
