@@ -222,20 +222,25 @@ def format_public(a):
     return "\n".join(lines)
 
 
-def format_day_open(watch, profiles, index_pct, thresholds):
+def format_day_open(watch, profiles, index_pct, thresholds, breakout_watch=None):
     """Sent once, before the alert window opens. Its only job is to make a
     dead scanner distinguishable from a quiet market — the two looked
     identical all day in v23."""
     reg = f"{index_pct:+.2f}%" if index_pct is not None else "n/a"
-    return "\n".join([
+    lines = [
         "<b>ALTAHA · scanner live</b>",
         f"<code>{_e(f'Watchlist  {watch}')}</code>",
         f"<code>{_e(f'Profiles   {profiles}')}</code>",
+    ]
+    if breakout_watch is not None:
+        lines.append(f"<code>{_e(f'Breakouts  {breakout_watch} near a level')}</code>")
+    lines += [
         f"<code>{_e(f'Index      {reg}')}</code>",
         "<i>" + _e(f"Firing above {thresholds.get('RVOL_MIN')}× rolling volume, "
                    f"max risk {thresholds.get('MAX_RISK_PCT')}%, "
                    f"window {thresholds.get('ALERT_START')}–{thresholds.get('ALERT_END')}.") + "</i>",
-    ])
+    ]
+    return "\n".join(lines)
 
 
 def format_day_close(alerts, near):
@@ -254,6 +259,173 @@ def format_day_close(alerts, near):
     if near:
         lines += ["", "<i>" + _e("Closest non-firing: " + ", ".join(
             f"{r['symbol']} {r['rvol']}×" for r in near[:3])) + "</i>"]
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Breakout alerts (breakouts.py)
+#
+# The same four zones as the volume alerts, in the same order, so the two
+# kinds read alike on a phone:
+#   1  identity     ▲, symbol, which kind of breakout
+#   2  event        what it cleared, how long it had been held under it
+#   3  numbers      the level, the price, the base, the exit line
+#   4  context      overhead resistance, sector, and that this is live
+# ---------------------------------------------------------------------------
+
+BREAKOUT_LABEL = {"BASE": "base breakout", "HIGH52": "52-week high"}
+
+
+def _base_words(sessions):
+    """64 -> '64-session (3-month)'. The months are what a reader pictures."""
+    if not sessions:
+        return "multi-week"
+    months = sessions / 21.0
+    if months >= 1.5:
+        return f"{sessions}-session ({months:.0f}-month)"
+    return f"{sessions}-session"
+
+
+def _breakout_event(a):
+    """Zone 2. One line: what was cleared, on what volume."""
+    pace = a.get("pace")
+    vol = f" on {pace}× normal volume" if pace else ""
+    if a.get("kind") == "BASE":
+        width = f", {a['width_pct']:.0f}% wide" if a.get("width_pct") is not None else ""
+        if width and vol:
+            width += ","
+        return f"Cleared the top of a {_base_words(a.get('sessions'))} range{width}{vol}"
+    age = a.get("high_age")
+    since = f", first time in {age} sessions" if age else ""
+    if since and vol:
+        since += ","
+    return f"Cleared its 52-week high{since}{vol}"
+
+
+def _breakout_numbers(a):
+    """Zone 3. Monospaced, labels padded, so the decimals line up."""
+    rows = [("Now", a.get("price"),
+             f"{a['move_pct']:+.1f}% today" if a.get("move_pct") is not None else ""),
+            ("Level", a.get("level"),
+             f"+{a['above_pct']:.1f}% above" if a.get("above_pct") is not None else "")]
+    if a.get("base_low"):
+        rows.append(("Base low", a["base_low"], ""))
+    if a.get("measured_move"):
+        rows.append(("Measured", a["measured_move"], "textbook move"))
+    if a.get("exit"):
+        rows.append(("Exit", a["exit"], "close under, -8%"))
+    width = max(len(_money(v)) for _l, v, _t in rows)
+    out = []
+    for label, value, tail in rows:
+        line = f"{label:<9}{_money(value):>{width}}"
+        if tail:
+            line += f"  {tail}"
+        out.append(line)
+    return "<code>" + _e("\n".join(out)) + "</code>"
+
+
+def _breakout_context(a):
+    """Zone 4. Only what exists."""
+    out = []
+    lvl, hi = a.get("level"), a.get("high52")
+    try:
+        if hi and lvl and float(hi) > float(lvl) * 1.001:
+            gap = (float(hi) / float(a.get("price") or lvl) - 1) * 100
+            out.append(_e(f"52-week high {_money(hi)} is {gap:.1f}% overhead."))
+        elif hi and a.get("kind") == "BASE":
+            out.append(_e("Also a new 52-week high: no one above is sitting on a loss."))
+    except (TypeError, ValueError):
+        pass
+    bits = []
+    if a.get("sector"):
+        bits.append(str(a["sector"]))
+    if a.get("leader") is not None:
+        bits.append(f"leader score {float(a['leader']):.0f}")
+    if bits:
+        out.append(_e(" · ".join(bits)))
+    return out
+
+
+def format_breakout(a, seq=None):
+    head = "▲ "
+    if seq:
+        head += f"{seq} · "
+    head += f"<b>{_e(a['symbol'])}</b> · {_e(BREAKOUT_LABEL.get(a.get('kind'), 'breakout'))}"
+    parts = [head, _e(_breakout_event(a)), _breakout_numbers(a)]
+    parts += _breakout_context(a)
+    return "\n".join(parts)
+
+
+def format_breakouts(rows, clock=None, index_pct=None, total_today=None):
+    """One message per pass, like the volume digest."""
+    if not rows:
+        return ""
+    n = len(rows)
+    header = "<b>ALTAHA · breakout</b>" + ("s" if n != 1 else "")
+    if clock:
+        header += f" · {_e(clock)}"
+    sub = []
+    if index_pct is not None:
+        sub.append(f"index {index_pct:+.2f}%")
+    if total_today is not None:
+        sub.append(f"{total_today} today")
+    block = [header]
+    if sub:
+        block.append("<i>" + _e(" · ".join(sub)) + "</i>")
+    for i, a in enumerate(rows, 1):
+        block.append("")
+        block.append(format_breakout(a, seq=i if n > 1 else None))
+    lvl = rows[0].get("level") if n == 1 else None
+    tail = (f"Live, not a close. A close back under {_money(lvl)} means it failed."
+            if lvl else "Live, not a close. A close back under the level means it failed.")
+    block += ["", "<i>" + _e(tail) + " Observation, not advice.</i>"]
+    return "\n".join(block)
+
+
+def format_breakout_public(a):
+    """Facts only — no exit, no measured move. See format_public."""
+    lines = [f"▲ <b>{_e(a['symbol'])}</b>", _e(_breakout_event(a)),
+             f"<code>{_e('Now    ' + _money(a.get('price')))}</code>",
+             "", "<i>Altaha Screener · observation of a price level being crossed. "
+                 "Not a recommendation.</i>"]
+    return "\n".join(lines)
+
+
+def format_breakout_close(asof, fresh, light, held, faded, watch, vol_eod=2.0, near_pct=5.0):
+    """
+    The after-close summary. Sent every trading day the scan runs, whether or
+    not anything broke out — a quiet day confirmed is information.
+    """
+    lines = [f"<b>ALTAHA · breakouts at the close</b> · {_e(asof)}"]
+    if fresh:
+        lines += ["", _e(f"Closed above the level on {vol_eod:g}× volume or more:")]
+        rows = []
+        for r in fresh[:15]:
+            what = (f"{r.get('sessions', '')}d base" if r.get("kind") == "BASE" else "52w high")
+            rv = r.get("rel_volume")
+            rows.append(f"{r['symbol'][:11]:<11} {what:>9} {(f'{rv:.1f}x' if rv else '-'):>5}")
+        lines.append("<code>" + _e("\n".join(rows)) + "</code>")
+        if len(fresh) > 15:
+            lines.append(_e(f"and {len(fresh) - 15} more on the Alerts page."))
+    else:
+        lines += ["", _e(f"No stock closed above a base or a 52-week high on {vol_eod:g}× volume today.")]
+    if light:
+        lines.append("<i>" + _e("On light volume, less reliable: " +
+                                ", ".join(r["symbol"] for r in light[:6])) + "</i>")
+    if held or faded:
+        lines.append("")
+        if held:
+            lines.append(_e("Held from today's live alerts: " + ", ".join(a["symbol"] for a in held)))
+        if faded:
+            lines.append(_e("Faded back under the level: " + ", ".join(a["symbol"] for a in faded)))
+    if watch:
+        lines += ["", _e(f"Watching {len(watch)} for tomorrow, within {near_pct:g}% of the level. Nearest:")]
+        rows = []
+        for w in watch[:8]:
+            what = (f"{w.get('sessions', '')}d" if w.get("kind") == "BASE" else "52w")
+            rows.append(f"{w['symbol'][:11]:<11} {w['to_top_pct']:>4.1f}% {_money(w['level']):>10} {what:>4}")
+        lines.append("<code>" + _e("\n".join(rows)) + "</code>")
+    lines += ["", "<i>Observation, not advice.</i>"]
     return "\n".join(lines)
 
 
@@ -370,6 +542,20 @@ def send_batch(rows: list, index_pct=None, total_today=None, clock=None) -> bool
     return ok
 
 
+def send_breakouts(rows: list, clock=None, index_pct=None, total_today=None) -> bool:
+    """Live breakout alerts: one message to the private feed, facts-only
+    lines to the public channel."""
+    if not rows:
+        return False
+    ok, detail = _post(TG_CHAT, format_breakouts(rows, clock=clock, index_pct=index_pct,
+                                                 total_today=total_today))
+    _mark(ok, detail)
+    if TG_PUBLIC:
+        for a in rows[:5]:
+            _post(TG_PUBLIC, format_breakout_public(a))
+    return ok
+
+
 def send_alert(a: dict) -> bool:
     """Kept for compatibility with anything still calling the single-alert path."""
     return send_batch([a])
@@ -418,19 +604,28 @@ def send_whatsapp(a: dict) -> bool:
         return False
 
 
-def test() -> dict:
-    """Fire a test so setup can be verified without waiting for a signal."""
-    sample = {"symbol": "TESTMSG", "kind": "RVOL", "direction": "UP",
-              "headline": "alert delivery test",
-              "why": "This is a test alert from Altaha Screener.",
-              "price": 1042.30, "entry": 1044.0, "stop": 1028.0, "target": 1076.0,
-              "rr": 2.0, "risk_pct": 1.5, "rvol": 3.2, "day_rvol": 1.8,
-              "range_pos": 0.88, "vwap": 1036.4, "regime": 0.42, "score": 74}
-    ok, detail = send_telegram(format_digest([sample], index_pct=0.42,
-                                             total_today=1, clock="09:28"))
+def test(kind: str = "volume", breakout_sample: dict = None) -> dict:
+    """Fire a test so setup can be verified without waiting for a signal.
+    kind="breakout" sends a made-up breakout card instead of a volume one."""
+    if kind == "breakout" and breakout_sample:
+        ok, detail = send_telegram("<i>Test message.</i>\n\n" +
+                                   format_breakouts([breakout_sample], clock=breakout_sample.get("time"),
+                                                    index_pct=breakout_sample.get("index_pct"),
+                                                    total_today=1))
+        public = format_breakout_public(breakout_sample)
+    else:
+        sample = {"symbol": "TESTMSG", "kind": "RVOL", "direction": "UP",
+                  "headline": "alert delivery test",
+                  "why": "This is a test alert from Altaha Screener.",
+                  "price": 1042.30, "entry": 1044.0, "stop": 1028.0, "target": 1076.0,
+                  "rr": 2.0, "risk_pct": 1.5, "rvol": 3.2, "day_rvol": 1.8,
+                  "range_pos": 0.88, "vwap": 1036.4, "regime": 0.42, "score": 74}
+        ok, detail = send_telegram(format_digest([sample], index_pct=0.42,
+                                                 total_today=1, clock="09:28"))
+        public = format_public(sample)
     pub_ok, pub_detail = (None, "not configured")
     if TG_PUBLIC:
-        pub_ok, pub_detail = _post(TG_PUBLIC, format_public(sample))
+        pub_ok, pub_detail = _post(TG_PUBLIC, public)
     return {"telegram_configured": bool(TG_TOKEN and TG_CHAT),
             "public_channel_configured": bool(TG_PUBLIC),
             "whatsapp_configured": bool(WA_TOKEN and WA_PHONE_ID and WA_TO),

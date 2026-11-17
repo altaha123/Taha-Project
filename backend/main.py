@@ -223,6 +223,7 @@ import sector_story as SS
 import news_feed as press
 import intraday
 import alerts as notify
+import breakouts
 from plain import highlights, plain_verdict
 
 # MEMORY, PART ONE: THREADS.
@@ -5919,9 +5920,23 @@ def intraday_mark(key: str = ""):
 
 
 @app.get("/alerts/test")
-def alerts_test(key: str = ""):
+def alerts_test(key: str = "", kind: str = "volume"):
+    """Send a made-up alert to Telegram. kind=breakout sends a breakout card."""
     _require_admin(key)
+    if kind == "breakout":
+        return notify.test("breakout", breakouts.sample())
     return notify.test()
+
+
+@app.get("/breakouts/status")
+def breakouts_status():
+    """
+    The breakout alerts as the Alerts page shows them: today's live alerts,
+    the last close's confirmed breakouts, the stocks nearest their level, the
+    rules, and whether Telegram is reachable. Public: it holds nothing the
+    pick lists do not already show.
+    """
+    return to_native(breakouts.status())
 
 
 _track_day = {"on": None}

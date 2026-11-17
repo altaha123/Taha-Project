@@ -122,7 +122,7 @@
       id: 'discover', label: 'Today', question: 'What is the market doing?',
       items: [
         { tab: 'today', label: 'Overview', icon: 'pulse', hint: 'The market at a glance, live', kw: 'home market nifty sensex index sectors heatmap fii dii' },
-        { tab: 'live', label: 'Alerts', icon: 'bell', hint: 'Intraday signals as they fire', kw: 'live scanner intraday volume breakout' },
+        { tab: 'live', label: 'Alerts', icon: 'bell', hint: 'Breakouts and volume spikes, sent to Telegram', kw: 'live scanner intraday volume breakout consolidation 52 week high telegram alert' },
         { tab: 'deals', label: 'Big trades', icon: 'exchange', hint: 'Bulk and block deals, and who made them', kw: 'bulk block deals' },
         { tab: 'wow', more: true, label: 'Order wins', icon: 'target', hint: 'New orders measured against company size', kw: 'wow orders contract' },
         { tab: 'special', more: true, label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },

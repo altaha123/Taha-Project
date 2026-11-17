@@ -457,6 +457,44 @@ stop-loss or recommendation is withheld, not shown with a warning.
 `backend/tests/test_score_explain.py` and
 `frontend/tests/stock-explain-browser.cjs` pin all of the above.
 
+### Alerts on Telegram — breakouts and volume spikes
+
+The **Alerts** page (Today → Alerts) and your Telegram receive two kinds of alert.
+
+**Breakouts** (`backend/breakouts.py`) — a stock that spent weeks or months
+moving sideways and then clears the top of that range, or clears a 52-week
+high it set at least 20 sessions earlier.
+
+- *A base* is the longest stretch of 40 to 250 sessions whose range fits in
+  18% (under 120 sessions, the Breakouts list's rule) or 25% (120 sessions or
+  more), and whose older half already reached near the top — a slow uptrend
+  that happens to fit in a box is not a base.
+- *After the close*, the 16:50 IST scan reads every liquid stock's daily bars
+  (no extra data calls), lists the stocks that **closed** above their level on
+  2× their usual volume, marks the day's live alerts as held or faded, builds
+  the next day's watch list (stocks within 5% of their level), and sends one
+  summary to Telegram.
+- *During the session* the watch list rides on the live scanner's one-a-minute
+  quote request. A stock alerts once a day, 09:25–15:25, when it trades 0.2%
+  over its level with the day's volume running at 1.5× a normal day's pace.
+
+**Volume spikes** (`backend/intraday.py`) — the day-trading signal: 60 liquid
+stocks checked every minute for volume three times their usual rate for that
+time of day, with an entry, stop and target.
+
+**To switch Telegram on:** message @BotFather on Telegram, send `/newbot`, and
+copy the token it gives you. Send your new bot any message, then open
+`https://api.telegram.org/bot<TOKEN>/getUpdates` and copy `chat.id`. In the
+Render dashboard → Environment, add `TELEGRAM_BOT_TOKEN` and
+`TELEGRAM_CHAT_ID`, then press **Test alert** on the Alerts page. The page says
+plainly when Telegram is not set up. Live alerts also need Dhan (the quotes).
+
+**Tuning, without a redeploy** (Render → Environment): `BO_VOL_PACE` (live
+volume pace, default 1.5), `BO_VOL_EOD` (close volume, 2.0), `BO_NEAR_PCT`
+(watch distance, 5), `BO_MAX_WIDTH` / `BO_LONG_MAX_WIDTH` (base width, 0.18 /
+0.25), `BO_MIN_SESSIONS` (40), `BO_MAX_ALERTS_DAY` (20). `BREAKOUT_ALERTS=0`
+turns breakout alerts off. `GET /breakouts/status` shows what the page shows.
+
 ## Where the accuracy lives (read before you market it)
 
 - "Accuracy" here means: textbook-correct indicator formulas (validated against

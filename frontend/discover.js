@@ -183,30 +183,38 @@
         '<div id="dsc-wow"></div>' +
       '</div>';
 
-    slot('dsc-live', 'Live scanner', loading('the intraday scanner'));
+    slot('dsc-live', 'Alerts', loading('the alerts'));
     slot('dsc-deals', 'Bulk & block deals', loading('today’s disclosures'));
     slot('dsc-deliv', 'Delivery trends', loading('the delivery record'));
     slot('dsc-wow', 'Order wins', loading('the filings'));
 
-    get('/intraday/status', 9000).then(function (d) {
-      var body;
-      if (!d) {
+    Promise.all([get('/intraday/status', 9000), get('/breakouts/status', 9000)]).then(function (res) {
+      var d = res[0], b = res[1], body;
+      if (!d && !b) {
         body = quiet('The scanner could not be reached.');
       } else {
-        var fired = (d.alerts_today || []).length;
+        var bo = b ? (b.today || []) : [];
+        var fired = (d ? (d.alerts_today || []).length : 0) + bo.length;
+        var near = b && b.watch_usable ? (b.watch_count || 0) : 0;
         body = '<p class="dsc-big"><b class="tnum">' + fired + '</b> ' +
           (fired === 1 ? 'alert' : 'alerts') + ' today</p>' +
-          quiet(d.market_open
-            ? 'Watching ' + (d.watchlist_size || 0) + ' names for volume spikes, opening-range breaks and level breaks.'
-            : 'The market is closed, so nothing new will fire until it opens. Today’s alerts stay on the scanner.');
-        if ((d.top_rvol_now || []).length) {
-          body += '<p class="dsc-chips">' + d.top_rvol_now.slice(0, 5).map(function (x) {
-            var sym = x && (x.symbol || x[0]);
+          quiet((d && d.market_open)
+            ? 'Watching ' + near + ' stocks near a breakout level, and ' + ((d && d.watchlist_size) || 0) +
+              ' for sudden volume.'
+            : 'The market is closed. ' + (near ? near + ' stocks are within reach of a breakout level for the next session.'
+                                               : 'Today’s alerts stay on the Alerts page.'));
+        var chips = bo.length ? bo.map(function (a) { return a.symbol; })
+          : (b && b.near || []).map(function (w) { return w.symbol; });
+        if (!chips.length && d && (d.top_rvol_now || []).length) {
+          chips = d.top_rvol_now.map(function (x) { return x && (x.symbol || x[0]); });
+        }
+        if (chips.length) {
+          body += '<p class="dsc-chips">' + chips.slice(0, 5).map(function (sym) {
             return sym ? '<span class="dsc-chip">' + esc(sym) + '</span>' : '';
           }).join('') + '</p>';
         }
       }
-      slot('dsc-live', 'Live scanner', body, 'discover/live', 'Open the scanner');
+      slot('dsc-live', 'Alerts', body, 'discover/live', 'Open alerts');
     });
 
     get('/deals?limit=6', 15000).then(function (d) {

@@ -65,6 +65,13 @@ try:
 except Exception:
     ann = None
 
+# Breakout alerts ride on this loop's quote request: the watch list built after
+# the close is added to the same bulk call, so they cost no extra request.
+try:
+    import breakouts
+except Exception:
+    breakouts = None
+
 
 # ---------------------------------------------------------------------------
 # Configuration — every number is env-overridable, so thresholds can be tuned
@@ -553,17 +560,24 @@ def scan_once():
         _state["error"] = "Dhan not configured"
         return []
     syms = _state["watch"]
-    if not syms:
+    bo_syms = []
+    if breakouts is not None:
+        try:
+            bo_syms = breakouts.watch_symbols()
+        except Exception:
+            bo_syms = []
+    if not syms and not bo_syms:
         _state["error"] = "watchlist empty"
         return []
 
-    warm_step(syms)
+    if syms:
+        warm_step(syms)
 
     try:
         # mode="quote" — NOT "ohlc". /marketfeed/ohlc carries no volume field,
         # and every signal here is volume-gated. This one word is the whole
         # difference between a scanner and a silent scanner.
-        req = syms if INDEX_PROXY in syms else syms + [INDEX_PROXY]
+        req = list(dict.fromkeys(list(syms) + bo_syms + [INDEX_PROXY]))
         snap = dhan.bulk_quotes(req, mode="quote")
     except Exception as e:
         _state["error"] = str(e)[:160]
@@ -653,6 +667,14 @@ def scan_once():
             except Exception:
                 pass
 
+    # Breakouts from a base or a 52-week high, against the levels the last
+    # close left. Its own log, its own once-a-day rule, its own message.
+    if breakouts is not None:
+        try:
+            _state["breakouts_fired"] = len(breakouts.check_live(snap, index_pct=regime_pct))
+        except Exception as e:
+            _state["error"] = "breakouts: " + str(e)[:140]
+
     _state["scanned"] = len(snap)
     _state["last_run"] = now_ist().isoformat()
     _heartbeat()
@@ -677,6 +699,8 @@ def _heartbeat():
                 index_pct=_state["regime"],
                 thresholds={"RVOL_MIN": RVOL_MIN, "MAX_RISK_PCT": MAX_RISK_PCT,
                             "ALERT_START": "09:27", "ALERT_END": "14:45"},
+                breakout_watch=(len(breakouts.watch_symbols())
+                                if breakouts is not None else None),
             ))
         except Exception:
             pass
@@ -864,6 +888,7 @@ def diagnose():
                        "ALERT_START_MIN": ALERT_START_MIN,
                        "ALERT_END_MIN": ALERT_END_MIN},
         "alerts_configured": bool(notify and notify.configured()),
+        "breakout_watch": (len(breakouts.watch_symbols()) if breakouts is not None else None),
         "error": _state["error"],
         "log_path": LOG_FILE,
         "log_is_ephemeral": DATA_DIR == HERE,
@@ -925,5 +950,9 @@ def status():
         "index_change_pct": _state["regime"],
         "alerts_today": _alerts_today()[::-1],
         "top_rvol_now": _state["top_rvol"][:8],
+        "profiles_given_up": sum(1 for n in _state["warm_fail"].values() if n >= 2),
+        "in_alert_window": (market_open()
+                            and ALERT_START_MIN <= minutes_since_open() <= ALERT_END_MIN),
+        "alerts_configured": bool(notify and notify.configured()),
         "error": _state["error"],
     }

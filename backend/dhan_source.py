@@ -305,7 +305,14 @@ def daily_ohlcv(symbol: str, days: int = 400):
 
     try:
         ts = d.get("timestamp") or d.get("start_Time") or []
-        idx = (pd.to_datetime(pd.Series(ts, dtype="int64"), unit="s")
+        # Read in IST, then keep the date. Dhan stamps a daily candle at
+        # midnight IST, which is 18:30 UTC the day BEFORE: read as UTC, every
+        # bar was dated a day early, so _append_today never saw today's candle
+        # as today's and added a second one beside it. Converting is right
+        # whichever midnight Dhan uses — UTC midnight is 05:30 IST, same date.
+        idx = (pd.DatetimeIndex(pd.to_datetime(pd.Series(ts, dtype="int64"), unit="s")
+                                .dt.tz_localize("UTC").dt.tz_convert("Asia/Kolkata")
+                                .dt.tz_localize(None).dt.normalize())
                if len(ts) == len(d["close"]) else
                pd.RangeIndex(len(d["close"])))
         df = pd.DataFrame({
@@ -350,7 +357,10 @@ def _append_today(symbol, df):
         if last_date >= now.date():
             return df
 
-        q = bulk_quotes([symbol], mode="ohlc").get(symbol.upper())
+        # mode="quote", not "ohlc": the ohlc feed carries no volume, so the
+        # bar built here had a volume of 0 and every after-close measure of
+        # the day's volume — a breakout's above all — read as nothing traded.
+        q = bulk_quotes([symbol], mode="quote").get(symbol.upper())
         if not q:
             return df
         close = q.get("ltp") or q.get("close")

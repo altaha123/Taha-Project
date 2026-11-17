@@ -518,6 +518,24 @@
   .alertcard .awhy{margin-top:10px;font-size:14px;line-height:1.5;opacity:.85}
   .alertcard .aout{margin-top:8px;font-family:var(--mono);font-size:12px;letter-spacing:.08em}
   .aout.TARGET{color:var(--pass)} .aout.STOP{color:var(--fail)}
+  .aout.held{color:var(--pass)} .aout.faded{color:var(--fail)}
+  .alertcard.bo{border-left-color:var(--pass)}
+  .alertcard .asym a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+  .ltg{font-size:14px;line-height:1.6;margin:-4px 0 6px;color:var(--ink-2)}
+  .ltg.off{border:1px dashed var(--fail);padding:10px 14px;color:inherit}
+  .ltg code{font-family:var(--mono);font-size:12px}
+  .boh{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+       color:var(--mute);margin:26px 0 8px}
+  .botwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .botable{width:100%;border-collapse:collapse;font-size:14px}
+  .botable th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+              font-weight:400;color:var(--mute);text-align:right;padding:6px 8px;border-bottom:1px solid var(--rule)}
+  .botable td{padding:9px 8px;border-bottom:1px solid var(--rule-2);text-align:right;
+              font-family:var(--mono);font-size:13px;white-space:nowrap}
+  .botable th:first-child,.botable td:first-child{text-align:left;padding-left:0}
+  .botable td:first-child a{font-family:var(--sans);font-weight:600;font-size:14px;color:inherit;text-decoration:none}
+  .botable td.k{font-family:inherit;font-size:12px;color:var(--ink-2)}
+  @media(max-width:560px){.botable .opt{display:none}}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
   .statbox{border:1px solid var(--rule);padding:12px 14px}
   .statbox .sk2{font-size:11px;letter-spacing:.13em;text-transform:uppercase;opacity:.6;display:block}
@@ -1593,8 +1611,8 @@
 
   <div id="view-live" style="display:none">
     <header class="tabhead">
-      <h2>Live scanner</h2>
-      <p>Intraday alerts on unusual volume. Each is logged, so its hit rate can be measured.</p>
+      <h2>Alerts</h2>
+      <p>Two kinds, both sent to Telegram: a stock breaking out of a long sideways range or past its 52-week high, and a sudden burst of trading volume. Each is logged, so its hit rate can be measured.</p>
     </header>
 
     <div class="livehead">
@@ -1603,10 +1621,18 @@
       <button class="livebtn" id="livetest">Test alert</button>
       <span class="livestat"><span class="livedot" id="ldot"></span><span id="lstat">not running</span></span>
     </div>
+    <div id="ltg" class="ltg"></div>
 
     <div id="lstats"></div>
 
-    <div class="lh" style="margin-top:34px"><h3>Today's alerts</h3><span id="lcount"></span></div>
+    <div class="lh" style="margin-top:34px"><h3>Breakouts</h3><span id="bocount"></span></div>
+    <p class="lsub" id="borules">A stock that spent months moving sideways, then clears the top of that range on heavy volume.</p>
+    <div id="bolive"></div>
+    <div id="bofresh"></div>
+    <div id="bowatch"></div>
+
+    <div class="lh" style="margin-top:44px"><h3>Volume alerts today</h3><span id="lcount"></span></div>
+    <p class="lsub">A day-trading signal: 60 liquid stocks checked every minute from 9:27 to 2:45 for volume running three times its usual rate for that time of day, with the price confirming. Each comes with an entry, a stop and a target.</p>
     <div id="lalerts"><div class="ideas-note" style="padding:14px 0">Nothing yet. Start the scanner during market hours (9:15–3:30 IST).</div></div>
 
     <div class="lh" style="margin-top:44px"><h3>Measured hit rate</h3><span>your own signals</span></div>
@@ -2474,26 +2500,128 @@ function alertCard(a){
   </div>`;
 }
 
+/* Breakout alerts (backend/breakouts.py) */
+const BO_KIND = {BASE:"BASE BREAKOUT", HIGH52:"52-WEEK HIGH"};
+const boMoney = n => (n === null || n === undefined || n === "") ? "\u2014"
+  : "\u20B9" + Number(n).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2});
+const boLink = s => `<a href="stock.html?ticker=${encodeURIComponent(s)}">${esc(s)}</a>`;
+function boBase(r){
+  if(r.kind !== "BASE") return r.high_age ? `52w high, ${r.high_age} sessions old` : "52w high";
+  const m = r.sessions >= 32 ? ` (${Math.round(r.sessions / 21)} mo)` : "";
+  return `${r.sessions} sessions${m}, ${r.width_pct}% wide`;
+}
+
+function breakoutCard(a){
+  const what = a.kind === "BASE"
+    ? `Cleared the top of a ${a.sessions}-session range, ${a.width_pct}% wide,`
+    : "Cleared its 52-week high" + (a.high_age ? `, first time in ${a.high_age} sessions,` : "");
+  const over = a.high52 && a.level && a.high52 > a.level * 1.001
+    ? `<div class="awhy">52-week high ${boMoney(a.high52)} is ${((a.high52 / a.price - 1) * 100).toFixed(1)}% overhead.</div>` : "";
+  const out = a.eod ? `<div class="aout ${esc(a.eod)}">${a.eod === "held" ? "Held" : "Faded back under the level"} at the close \u00b7 ${boMoney(a.eod_close)}</div>` : "";
+  return `<div class="alertcard bo">
+    <div class="ah">
+      <span class="asym">${boLink(a.symbol)}</span>
+      <span class="akind">${esc(BO_KIND[a.kind] || a.kind)}</span>
+      <span class="atime">${esc(a.time || "")}</span>
+    </div>
+    <div class="ahl">${esc(what)} on ${a.pace}\u00d7 normal volume</div>
+    <div class="anums">
+      <span>Now <b>${boMoney(a.price)}</b></span>
+      <span>Level <b>${boMoney(a.level)}</b></span>
+      ${a.base_low ? `<span>Base low <b>${boMoney(a.base_low)}</b></span>` : ""}
+      <span>Exit <b>${boMoney(a.exit)}</b> (\u22128%)</span>
+    </div>${over}${out}
+  </div>`;
+}
+
+function renderBreakouts(b){
+  if(!b){
+    $("bolive").innerHTML = `<div class="ideas-note" style="padding:14px 0">Breakout alerts could not be reached.</div>`;
+    $("bofresh").innerHTML = $("bowatch").innerHTML = "";
+    return;
+  }
+  const r = b.rules || {};
+  $("borules").textContent = `A base is ${r.base || "a long sideways range"}. Alerted live when ${r.live || "it clears the level on volume"}; confirmed after the close by ${r.close || "a close over the level"}.`;
+  const today = b.today || [];
+  $("bocount").textContent = today.length ? `${today.length} today` : (b.asof ? `levels from ${b.asof}` : "");
+
+  let live = today.map(breakoutCard).join("");
+  const pend = b.pending || [];
+  if(pend.length) live += `<p class="lsub">Over the level now but volume not there yet: ${pend.map(p =>
+    `${esc(p.symbol)} (${p.pace === null ? "no volume" : p.pace + "\u00d7"})`).join(", ")}. They alert if volume catches up.</p>`;
+  if(!live){
+    live = `<div class="ideas-note" style="padding:14px 0">${
+      !b.watch_count ? "No watch list yet. It is built by the scan after each close (about 5 pm), from every liquid stock on the exchange."
+      : b.watch_usable && b.session_live ? `Watching ${b.watch_count} stocks near a level. None has cleared it on volume yet.`
+      : b.watch_usable ? `${b.watch_count} stocks are within reach of a level. They are checked every minute from 9:25 to 3:25.`
+      : `The watch list is from ${esc(b.asof || "?")} and too old to use. It rebuilds after the next close.`}</div>`;
+  }
+  $("bolive").innerHTML = live;
+
+  const fresh = b.fresh || [];
+  $("bofresh").innerHTML = !b.asof ? "" : `<div class="boh">Confirmed at the close \u00b7 ${esc(b.asof)}</div>` + (fresh.length
+    ? `<div class="botwrap"><table class="botable"><thead><tr><th>Stock</th><th>Close</th><th>Level</th><th class="opt">What it broke</th><th>Volume</th></tr></thead><tbody>${
+        fresh.map(f => `<tr><td>${boLink(f.symbol)}</td><td>${boMoney(f.close)}</td><td>${boMoney(f.level)}</td><td class="k opt">${esc(boBase(f))}</td><td>${f.rel_volume ? f.rel_volume.toFixed(1) + "\u00d7" : "\u2014"}</td></tr>`).join("")
+      }</tbody></table></div>`
+    : `<div class="ideas-note" style="padding:6px 0">No stock closed above a base or a 52-week high on heavy volume.${(b.light||[]).length ? " On light volume: " + b.light.map(x => esc(x.symbol)).join(", ") + "." : ""}</div>`);
+
+  const near = b.near || [];
+  $("bowatch").innerHTML = !near.length ? "" : `<div class="boh">Closest to a breakout \u00b7 ${b.watch_count} on watch</div>
+    <div class="botwrap"><table class="botable"><thead><tr><th>Stock</th><th>Level</th><th>Away</th><th class="opt">Base</th></tr></thead><tbody>${
+      near.map(w => `<tr><td>${boLink(w.symbol)}</td><td>${boMoney(w.level)}</td><td>${w.to_top_pct.toFixed(1)}%</td><td class="k opt">${esc(boBase(w))}</td></tr>`).join("")
+    }</tbody></table></div>`;
+}
+
+function renderTelegram(b, d){
+  const tg = (b && b.telegram) || {};
+  if(!b && !d){ $("ltg").innerHTML = ""; return; }
+  const on = tg.configured || (d && d.alerts_configured);
+  if(!on){
+    $("ltg").className = "ltg off";
+    $("ltg").innerHTML = `<b>Telegram is not set up, so nothing reaches your phone.</b> Add <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code> to the API's environment on Render, then press Test alert.`;
+    return;
+  }
+  $("ltg").className = "ltg";
+  const last = tg.last_at ? ` \u00b7 last send ${esc(tg.last_at)}${tg.last_ok === false ? " failed: " + esc(tg.last_detail || "") : ""}` : "";
+  $("ltg").innerHTML = `Telegram connected${last}${tg.sent_today ? ` \u00b7 ${tg.sent_today} sent today` : ""}`;
+}
+
+async function getJSON(path){
+  try{ const r = await fetch(`${API_BASE}${path}`); return r.ok ? await r.json() : null; }
+  catch(e){ return null; }
+}
+
 async function loadLive(){
-  try{
-    const res = await fetch(`${API_BASE}/intraday/status`);
-    const d = await res.json();
+  const [d, b] = await Promise.all([getJSON("/intraday/status"), getJSON("/breakouts/status")]);
+  renderTelegram(b, d);
+  renderBreakouts(b);
+  if(!d){
+    $("lstat").textContent = "engine unreachable";
+  }else{
     $("ldot").className = "livedot" + (d.running && d.market_open ? " on" : "");
     $("lstat").textContent = !d.running ? "not running"
-      : (d.market_open ? `live \u00b7 ${d.watchlist_size} stocks \u00b7 ${d.quotes_last_pass} quotes last pass`
-                       : "running \u00b7 market closed, will resume at 9:15");
-    $("lstats").innerHTML = d.running ? `<div class="statgrid">
-      <div class="statbox"><span class="sk2">Watchlist</span><span class="sv">${d.watchlist_size}</span></div>
-      <div class="statbox"><span class="sk2">Volume profiles</span><span class="sv">${d.profiles_built}</span></div>
-      <div class="statbox"><span class="sk2">Alerts today</span><span class="sv">${(d.alerts_today||[]).length}</span></div>
-    </div>` : "";
+      : (d.market_open ? `live \u00b7 ${d.quotes_last_pass} quotes last pass`
+                       : "running \u00b7 market closed, resumes at 9:15");
+    const vol = (d.alerts_today||[]).length, bo = b ? (b.today||[]).length : 0;
+    $("lstats").innerHTML = `<div class="statgrid">
+      <div class="statbox"><span class="sk2">Breakouts today</span><span class="sv">${bo}</span></div>
+      <div class="statbox"><span class="sk2">Near a breakout</span><span class="sv">${b && b.watch_usable ? b.watch_count : 0}</span></div>
+      <div class="statbox"><span class="sk2">Volume alerts today</span><span class="sv">${vol}</span></div>
+    </div>`;
     const rows = d.alerts_today || [];
     $("lcount").textContent = rows.length ? `${rows.length} fired` : "";
+    // Volume alerts need each stock's usual volume minute by minute, built in
+    // the first minutes after the open. Zero after hours is normal; zero at
+    // 10 am means they cannot fire.
+    const ready = d.market_open
+      ? (d.profiles_built < d.watchlist_size
+          ? ` Volume baselines ready for ${d.profiles_built} of ${d.watchlist_size}${d.profiles_given_up ? `, ${d.profiles_given_up} could not be built` : ""}.` : "")
+      : "";
     $("lalerts").innerHTML = rows.length ? rows.map(alertCard).join("")
-      : `<div class="ideas-note" style="padding:14px 0">${d.running ? "Scanner is live \u2014 nothing has met the volume threshold yet. Quiet is normal; three signals firing 5\u201310 times a day is the design." : "Nothing yet. Start the scanner during market hours (9:15\u20133:30 IST)."}</div>`;
+      : `<div class="ideas-note" style="padding:14px 0">${!d.running ? "Not running. Start the scanner during market hours (9:15\u20133:30 IST)."
+          : !d.market_open ? "The market is closed. Volume alerts fire only during the session."
+          : "Nothing has met the volume threshold yet. Quiet is normal; a few a day is the design."}${ready}</div>`;
     if(d.error) $("lalerts").innerHTML += `<div class="ideas-note" style="padding:8px 0;opacity:.7">Last error: ${esc(d.error)}</div>`;
-  }catch(e){
-    $("lstat").textContent = "engine unreachable";
   }
   loadHitRate();
 }
@@ -2543,7 +2671,7 @@ $("livescan").addEventListener("click", async ()=>{
 $("livetest").addEventListener("click", async ()=>{
   $("livetest").textContent = "Sending\u2026";
   try{
-    const d = await (await fetch(withKey(`${API_BASE}/alerts/test`))).json();
+    const d = await (await fetch(withKey(`${API_BASE}/alerts/test?kind=breakout`))).json();
     $("livetest").textContent = d.sent ? "Sent \u2014 check Telegram" : "Send failed";
     if(!d.sent){
       $("lalerts").innerHTML = `<div class="ideas-note" style="padding:14px 0">
