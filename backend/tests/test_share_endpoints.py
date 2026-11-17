@@ -189,4 +189,12 @@ def test_vercel_rewrites_cover_every_public_path():
     assert any(s.startswith("/share/") for s in sources), "no /share rewrite"
     assert any(s.startswith("/og/") for s in sources), "no /og rewrite"
     for r in cfg.get("rewrites", []):
-        assert r["destination"].startswith("https://"), r
+        if r["source"] == "/share" or r["source"].startswith(("/share/", "/og/")):
+            # Proxied to the API: must leave the static host.
+            assert r["destination"].startswith("https://"), r
+        else:
+            # A clean page address (/stock -> /stock.html, see DEPLOY-SHARE.md):
+            # must name a page that is actually in frontend/, or it is a 404.
+            dest = r["destination"]
+            assert dest.startswith("/") and dest.endswith(".html"), r
+            assert os.path.exists(os.path.join(REPO, "frontend", dest.lstrip("/"))), r
