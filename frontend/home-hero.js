@@ -15,10 +15,10 @@
       '<p class="hh-label"><span aria-hidden="true"></span>Your investment research workspace</p>'+
       '<h1 id="hh-title" class="hh-head">Better research.<br><em>Clearer decisions.</em></h1>'+
       '<p class="hh-sub">Understand a company. See how your portfolio fits together. Give every investment a reason.</p>'+
-      '<div class="hh-cta"><a class="hh-btn hh-btn-gold" href="index.html?go=research" data-hh-go="search">Research a stock <span aria-hidden="true">↗</span></a>'+
-      '<a class="hh-btn" href="index.html?go=allocate" data-hh-go="allocate">Plan allocation <span aria-hidden="true">→</span></a></div>'+
+      '<div class="hh-cta"><a class="hh-btn hh-btn-gold" href="./?go=research" data-hh-go="search">Research a stock <span aria-hidden="true">↗</span></a>'+
+      '<a class="hh-btn" href="./?go=allocate" data-hh-go="allocate">Plan allocation <span aria-hidden="true">→</span></a></div>'+
       '<p class="hh-note">Stocks, portfolios and allocation. One connected view.</p>'+
-      '<div class="hh-explore"><span>Start exploring</span><a href="index.html?go=ideas" data-hh-go="ideas">Find stock ideas ↗</a><a href="index.html?go=portfolio" data-hh-go="portfolio">Review my portfolio ↗</a></div></section>'+
+      '<div class="hh-explore"><span>Start exploring</span><a href="./?go=ideas" data-hh-go="ideas">Find stock ideas ↗</a><a href="./?go=portfolio" data-hh-go="portfolio">Review my portfolio ↗</a></div></section>'+
       '<div class="hh-visual"><svg aria-hidden="true" class="hh-connections" viewBox="0 0 520 440" focusable="false">'+
       '<defs><linearGradient id="hh-line"><stop stop-color="#b69239" stop-opacity=".08"/><stop offset=".5" stop-color="#bd963c"/><stop offset="1" stop-color="#b69239" stop-opacity=".08"/></linearGradient></defs>'+
       '<ellipse class="hh-orbit-line" cx="260" cy="218" rx="196" ry="158"/><ellipse class="hh-orbit-line" cx="260" cy="218" rx="134" ry="106"/>'+
@@ -51,7 +51,7 @@
       // live in a hidden tab; focusing it without activating that tab does nothing.
       var candidates=[document.getElementById('sh-q'),document.getElementById('tk')];
       var input=candidates.find(function(el){return el&&!el.disabled&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden';});
-      if(!input){window.location.href='index.html?go=research';return;}
+      if(!input){window.location.href='./?go=research';return;}
       input.scrollIntoView({behavior:'auto',block:'center'});input.focus({preventScroll:true});
       var search=input.closest('.sh-search,.searchrow');
       if(search){search.classList.remove('hh-search-target');void search.offsetWidth;search.classList.add('hh-search-target');}

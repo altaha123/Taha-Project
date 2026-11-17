@@ -180,13 +180,29 @@ def test_vercel_rewrites_cover_every_public_path():
     https://SITE/og/... — which are 404s on the static host unless the rewrite
     exists. Both halves would be individually correct and every shared link
     would be dead, which is this project's recurring failure exactly.
+
+    Which is what happened: the file sat at the repo root for two months while
+    the Vercel project's Root Directory is `frontend`, so Vercel never read it
+    and /share/RELIANCE was Vercel's own 404 on the live site. It has to live
+    in frontend/, and one at the root is a decoy that looks like it works.
     """
     import json
-    path = os.path.join(REPO, "vercel.json")
-    assert os.path.exists(path), "vercel.json is gone — every shared link is now a 404"
+    assert not os.path.exists(os.path.join(REPO, "vercel.json")), (
+        "vercel.json at the repo root is ignored: the Vercel project's Root "
+        "Directory is frontend. Put it in frontend/vercel.json")
+    path = os.path.join(REPO, "frontend", "vercel.json")
+    assert os.path.exists(path), "frontend/vercel.json is gone — every shared link is now a 404"
     cfg = json.load(open(path, encoding="utf-8"))
     sources = [r["source"] for r in cfg.get("rewrites", [])]
     assert any(s.startswith("/share/") for s in sources), "no /share rewrite"
     assert any(s.startswith("/og/") for s in sources), "no /og rewrite"
     for r in cfg.get("rewrites", []):
-        assert r["destination"].startswith("https://"), r
+        if r["source"] == "/share" or r["source"].startswith(("/share/", "/og/")):
+            # Proxied to the API: must leave the static host.
+            assert r["destination"].startswith("https://"), r
+        else:
+            # A clean page address (/stock -> /stock.html, see DEPLOY-SHARE.md):
+            # must name a page that is actually in frontend/, or it is a 404.
+            dest = r["destination"]
+            assert dest.startswith("/") and dest.endswith(".html"), r
+            assert os.path.exists(os.path.join(REPO, "frontend", dest.lstrip("/"))), r

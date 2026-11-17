@@ -393,7 +393,7 @@
 
   function shareUrl(l) {
     var payload = b64url(JSON.stringify({ n: l.name, e: l.emoji, c: l.color, s: l.symbols.slice(0, MAX_SYMBOLS) }));
-    var base = location.origin && location.origin !== 'null' ? location.origin + location.pathname : 'https://altahascreener.in/index.html';
+    var base = location.origin && location.origin !== 'null' ? location.origin + location.pathname : 'https://altahascreener.in/';
     return base + '?go=watchlists&wl=' + payload;
   }
 
@@ -1061,7 +1061,7 @@
 
   function show() {
     if (window.AltahaNav) window.AltahaNav.go('portfolio', 'watchlists', true);
-    else location.href = 'index.html?go=watchlists';
+    else location.href = './?go=watchlists';
   }
 
   /* ── Boot ────────────────────────────────────────────────────────────── */

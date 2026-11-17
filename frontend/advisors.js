@@ -366,7 +366,7 @@
           ? 'the ' + n + ' holding' + (n === 1 ? '' : 's') + ' saved to your account' +
             (risk ? ' and your risk profile (' + esc(risk.band) + ')' : '') +
             '. You can stop sharing at any time.'
-          : 'you have no portfolio saved to your account yet. <a href="index.html#portfolio">Add one</a>.') +
+          : 'you have no portfolio saved to your account yet. <a href="./#portfolio">Add one</a>.') +
         '</span></label>';
     }
     return '<h2>Ask ' + esc(first) + '</h2>' +

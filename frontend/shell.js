@@ -199,7 +199,7 @@
     // On the stock page there is no AltahaNav and no tab machinery — the
     // section lives on the homepage, so go there and let the hash restore it.
     if (!document.getElementById('tab-screener')) {
-      location.href = 'index.html#' + sectionId + (tabId && tabId !== sectionId ? '/' + tabId : '');
+      location.href = './#' + sectionId + (tabId && tabId !== sectionId ? '/' + tabId : '');
       return;
     }
     if ((tries || 0) > 25) return;
@@ -254,19 +254,19 @@
   function footLink(sectionId, it) {
     if (it.href) return '<li><a href="' + esc(it.href) + '">' + esc(it.label) + '</a></li>';
     var hash = sectionId + (it.tab && it.tab !== sectionId ? '/' + it.tab : '');
-    return '<li><a href="index.html#' + esc(hash) + '" data-foot-section="' + esc(sectionId) +
+    return '<li><a href="./#' + esc(hash) + '" data-foot-section="' + esc(sectionId) +
       '" data-foot-tab="' + esc(it.tab) + '">' + esc(it.label) + '</a></li>';
   }
 
   function buildFooter() {
     if (document.querySelector('.sh-footer')) return;
-    if (/\/(wealth|advisors)\.html$/.test(location.pathname)) return;
+    if (/\/(wealth|advisors)(\.html)?$/.test(location.pathname)) return;
     var foot = el('footer', 'sh-footer');
     foot.setAttribute('aria-label', 'Site');
     var cols = DOORS.map(function (d) {
       var items = d.items.filter(function (it) { return !it.quiet && it.label !== 'Overview'; });
       return '<nav class="sh-fcol" aria-label="' + esc(d.label) + '"><h4>' + esc(d.label) + '</h4><ul>' +
-        '<li><a href="index.html#' + esc(d.id) + '" data-foot-section="' + esc(d.id) + '" data-foot-tab="">Overview</a></li>' +
+        '<li><a href="./#' + esc(d.id) + '" data-foot-section="' + esc(d.id) + '" data-foot-tab="">Overview</a></li>' +
         items.map(function (it) { return footLink(d.id, it); }).join('') + '</ul></nav>';
     }).join('') +
       '<nav class="sh-fcol" aria-label="Altaha"><h4>Altaha</h4><ul>' +
@@ -274,7 +274,7 @@
     foot.innerHTML =
       '<div class="sh-fin">' +
         '<div class="sh-fbrand">' +
-          '<a class="sh-brand" href="index.html" aria-label="Altaha Screener home">' +
+          '<a class="sh-brand" href="./" aria-label="Altaha Screener home">' +
             '<span class="mk" aria-hidden="true"></span><span class="nm">Altaha <i>Screener</i></span></a>' +
           '<p>Stock picks, a screener and a portfolio review for Indian markets, with the working shown.</p>' +
           '<a class="sh-fmail" href="mailto:' + FOOT_EMAIL + '">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>' + '<span>' + FOOT_EMAIL + '</span></a>' +
@@ -314,7 +314,7 @@
     var bar = el('div', 'sh-bar');
 
     var brand = el('a', 'sh-brand');
-    brand.href = 'index.html';
+    brand.href = './';
     brand.setAttribute('aria-label', 'Altaha Screener home');
     brand.innerHTML =
       '<span class="mk" aria-hidden="true"></span>' +

@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8" />
+<meta charset="utf-8" /><script src="clean-url.js"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Sign in — Altaha Screener</title>
 <meta name="description" content="Sign in to save your portfolio and get one email after the close: what your holdings did, and what was filed on them." />
@@ -110,8 +111,8 @@
 
 <body class="si-page">
 <header class="si-header">
-  <a class="si-brand" href="index.html" aria-label="Altaha Screener home"><span class="si-monogram" aria-hidden="true">A</span><span class="si-brand-name">Altaha<small>Screener</small></span></a>
-  <a class="si-home" href="index.html">Explore screener ↗</a>
+  <a class="si-brand" href="./" aria-label="Altaha Screener home"><span class="si-monogram" aria-hidden="true">A</span><span class="si-brand-name">Altaha<small>Screener</small></span></a>
+  <a class="si-home" href="./">Explore screener ↗</a>
 </header>
 <main class="si-wrap">
   <section class="si-story" aria-label="Your investing workspace">
@@ -173,7 +174,7 @@
       <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg><span><b>The market closes. You stay informed.</b>One email with your holdings’ moves and filings. Unsubscribe anytime.</span></li>
     </ul>
 
-    <a class="si-back" href="index.html">← Back to the screener</a>
+    <a class="si-back" href="./">← Back to the screener</a>
   </div>
   </section>
 </main>
@@ -208,7 +209,7 @@
      an open redirect on a sign-in page is a phishing kit's favourite tool.
      Kept in sessionStorage too, because the emailed link reopens this page
      without the parameter. */
-  var HOME = 'index.html#portfolio', NEXT_KEY = 'altaha-signin-next';
+  var HOME = './#portfolio', NEXT_KEY = 'altaha-signin-next';
   function safeNext(v) {
     return /^[a-z][a-z0-9-]*\.html(#[A-Za-z0-9\/_-]*)?$/.test(v || '') ? v : '';
   }
@@ -230,7 +231,7 @@
      once: the account is the same account whichever door was used. */
   function signedIn(user, method) {
     track('signed_in', { method: method });
-    try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
+    try { history.replaceState({}, '', location.pathname); } catch (e) {}
     try { sessionStorage.removeItem(NEXT_KEY); } catch (e) {}
     panel('<h1>You are signed in</h1>' +
           '<p class="si-lede">Signed in as <b>' + escapeHTML(user && user.email) +
@@ -392,7 +393,7 @@
     var token = param('token');
     if (token) {
       // Keep the token out of history and subsequent requests immediately.
-      try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
+      try { history.replaceState({}, '', location.pathname); } catch (e) {}
       panel('<h1>Finish signing in</h1><p class="si-lede">Continue to securely open your account in this browser.</p>' +
             '<button class="si-btn" id="si-confirm">Continue to sign in</button>');
       $('si-confirm').addEventListener('click', function () { completeFromLink(token); });

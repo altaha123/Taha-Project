@@ -3,7 +3,7 @@
  *   · it is on the homepage, the stock page and the Pro page, and not on the
  *     two full-screen desks
  *   · a link opens its tool in place on the homepage, and is an ordinary
- *     link to index.html#door/tool anywhere else
+ *     link to ./#door/tool (the homepage) anywhere else
  *   · the address to write to is a mailto
  *   · on a 390px phone it stacks, nothing scrolls sideways, and the last line
  *     clears the bottom bar
@@ -73,7 +73,7 @@ async function open(browser, size, file) {
     // Off the homepage a link is an ordinary link back to it.
     ({ context, page, errors } = await open(browser, { width: 1366, height: 900 }, 'pro.html'));
     await page.locator('footer.sh-footer').waitFor();
-    assert.equal(await page.locator('footer.sh-footer a', { hasText: 'Stock picks' }).getAttribute('href'), 'index.html#research/ideas');
+    assert.equal(await page.locator('footer.sh-footer a', { hasText: 'Stock picks' }).getAttribute('href'), './#research/ideas');
     assert.equal(await page.locator('footer.sh-footer a', { hasText: 'Daily policy brief' }).getAttribute('href'), 'brief.html');
     assert.deepEqual(errors, [], errors.join('\n'));
     await context.close();

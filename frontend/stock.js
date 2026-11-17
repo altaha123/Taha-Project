@@ -68,7 +68,7 @@
   function failed(msg) {
     $('state').innerHTML =
       '<div class="stk-state"><div class="big">' + esc(msg) + '</div>' +
-      '<div><a href="index.html" style="color:var(--gold)">Back to the screener</a></div></div>';
+      '<div><a href="./" style="color:var(--gold)">Back to the screener</a></div></div>';
   }
 
   /* ── Identity ────────────────────────────────────────────────────────────── */

@@ -233,7 +233,7 @@ async function viewText(page, id) {
   assert.equal(await sp.locator('#stk-lenses .ln-badge').count(), 10);
   assert.equal(await sp.locator('#stk-lenses .ln-badge.is-pass').count(), fx.stock.GROW.meets);
   assert.match(await sp.locator('#stk-lenses .ln-badge.is-pass').first().getAttribute('href'),
-    /index\.html#research\/lenses\/[a-z]+$/);
+    /^\.\/#research\/lenses\/[a-z]+$/);
   assert.match(strip, NOTICE);
   assert.doesNotMatch(strip, BANNED);
   await sp.screenshot({ path: path.join(output, 'stock-strip.png') });

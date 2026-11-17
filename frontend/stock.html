@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8" />
+<meta charset="utf-8" /><script src="clean-url.js"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Stock — Altaha Screener</title>
 <meta name="description" content="A 0–100 score for any Indian or US stock, with every calculation that produced it shown line by line." />
@@ -47,7 +48,7 @@
   <!-- Identity. Filled by stock.js; skeletons until then, because a blank
        area and a broken area look identical while you are waiting. -->
   <div class="stk-head">
-    <div class="stk-crumb"><a href="index.html"><span class="brandmark" aria-hidden="true"></span><span>Altaha Screener</span></a> · <span id="crumb">Loading</span></div>
+    <div class="stk-crumb"><a href="./"><span class="brandmark" aria-hidden="true"></span><span>Altaha Screener</span></a> · <span id="crumb">Loading</span></div>
     <div class="stk-id">
       <div style="min-width:0">
         <h1 class="stk-name" id="nm"><span class="skel skel-row" style="display:block;width:280px;height:34px"></span></h1>
@@ -137,7 +138,7 @@
         <div class="ranges" id="ranges"></div>
         <div class="d3-card chartbox" id="chartbox"></div>
         <!-- Into the Strategy lab with this stock filled in (strategy-lab.js). -->
-        <a class="stk-lab-link" id="stk-lab-link" href="index.html?go=strategies">
+        <a class="stk-lab-link" id="stk-lab-link" href="./?go=strategies">
           <b>Would a trading rule have beaten holding it?</b>
           <span>Eleven textbook rules on this stock’s own history, with costs and tax, in the Strategy lab ›</span>
         </a>
@@ -146,7 +147,7 @@
             try {
               var t = (new URLSearchParams(location.search).get('ticker') || '').trim();
               if (t) document.getElementById('stk-lab-link').href =
-                'index.html?go=strategies&lab=' + encodeURIComponent(t);
+                './?go=strategies&lab=' + encodeURIComponent(t);
             } catch (e) {}
           })();
         </script>
