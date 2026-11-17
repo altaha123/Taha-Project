@@ -14,6 +14,15 @@ problems, one cosmetic and one not:
 * Every link ever posted breaks the day the API moves. Links are permanent in
   a way infrastructure is not.
 
+## Where the file lives: `frontend/vercel.json`
+
+The Vercel project's **Root Directory is `frontend`**, and Vercel reads
+`vercel.json` from the Root Directory only. Until November 2026 the file sat at
+the repo root, where Vercel never saw it. `/share/RELIANCE` on the live site
+was Vercel's own 404, and the frontend's fallback to the API host (below) hid
+it. `backend/tests/test_share_endpoints.py` now fails if a `vercel.json`
+reappears at the root.
+
 ## What the file does
 
 Vercel serves the site. Three rewrites proxy the two crawler-facing paths
@@ -70,7 +79,7 @@ that.
 The address bar reads `/stock?ticker=TCS`, `/signin`, `/wealth` rather than
 `stock.html?ticker=TCS`. Two pieces do it, and neither is a redirect:
 
-* **vercel.json rewrites** `/stock`, `/signin`, `/wealth`, `/advisors`,
+* **`frontend/vercel.json` rewrites** `/stock`, `/signin`, `/wealth`, `/advisors`,
   `/brief`, `/pro` and `/ownership-share` to their `.html` files, so a clean
   address works when it is reloaded, bookmarked or shared. Rewrites carry the
   query string, the same as the `/share` ones above.
@@ -92,7 +101,7 @@ redirect. Under it, `/stock.html?ticker=TCS` landed on an empty `/stock` and a
 sign-in link lost its `?token=`. Production may behave differently, but sign-in
 should not depend on it.
 
-**Adding a page:** add its rewrite to `vercel.json` and load `clean-url.js` first in its
+**Adding a page:** add its rewrite to `frontend/vercel.json` and load `clean-url.js` first in its
 `<head>`. Code that reads its own address must accept both forms, `/stock` and
 `/stock.html`. So far that is the stock-page check in `experience.js`, the
 "no footer on the desks" check in `shell.js`, and `signin.html`, which uses
