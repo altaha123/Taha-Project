@@ -50,6 +50,13 @@ import multifactor
 import xbrl
 import leaders
 
+# Breakout alerts read each stock's daily bars while phase 1 holds them.
+# Optional, like the ledger below: without it the scan runs as before.
+try:
+    import breakouts
+except Exception:
+    breakouts = None
+
 # The point-in-time ledger. Optional import: if pit_store.py isn't present
 # the scan still runs exactly as before, it just records nothing.
 try:
@@ -513,6 +520,9 @@ def phase1(symbols, progress, state, chunk_size=None):
     candidates, skipped_illiquid, skipped_nodata = [], 0, 0
     stopped = None
     size = int(chunk_size or CHUNK)
+    # A scan run during the session must not read today's forming candle as
+    # a close. Decided once, so every stock in the pass is read the same way.
+    bo_partial = breakouts.session_live() if breakouts is not None else False
     chunks = [symbols[i:i + size] for i in range(0, len(symbols), size)]
 
     for ci, chunk in enumerate(chunks):
@@ -584,8 +594,13 @@ def phase1(symbols, progress, state, chunk_size=None):
                     sig = leaders.signals(df)
                 except Exception:
                     sig = None
+                # A dozen numbers per stock; the frame itself is dropped below.
+                try:
+                    bo = breakouts.read_daily(df, drop_partial=bo_partial) if breakouts else None
+                except Exception:
+                    bo = None
                 candidates.append({"symbol": s, "score": tech["score"], "turnover": turnover,
-                                   "leader_sig": sig})
+                                   "leader_sig": sig, "bo": bo})
                 del tech
             except Exception:
                 skipped_nodata += 1
@@ -1240,9 +1255,20 @@ def run_scan(progress=None, names=None, checkpoint=None):
         _WATCH[:] = leaders.breakout_watch(blocks)
     except Exception:
         _WATCH[:] = []
+    # Breakout alerts: the close's confirmed breakouts, tomorrow's watch list,
+    # and the Telegram summary. Only a scan of the whole market may replace
+    # the watch list — a list of names given by hand is somebody's shortlist.
+    if breakouts is not None and names is None:
+        try:
+            meta = {sym: {"sector": b.get("sector"), "leader": b.get("score")}
+                    for sym, b in blocks.items()}
+            breakouts.ingest({str(c["symbol"]).upper(): c.get("bo") for c in cands}, meta=meta)
+        except Exception:
+            pass
     for c in cands:
         c["leader"] = blocks.get(str(c["symbol"]).upper())
         c.pop("leader_sig", None)
+        c.pop("bo", None)
     del blocks
     _note_attempt(phase="phase 2 — fundamentals and archetypes",
                   candidates=len(cands))

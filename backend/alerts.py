@@ -68,6 +68,13 @@ KIND_LABEL = {
     "ORB": "Opening range break",
     "ORB_DOWN": "Opening range breakdown",
     "LEVEL": "Level break",
+    # Intraday breakouts (breakouts.py), up and down.
+    "BO_BASE": "Base breakout", "BO_HIGH52": "52-week high breakout",
+    "BO_HIGH20": "20-day high breakout", "BO_PDH": "Yesterday's high broken",
+    "BO_ORB": "Opening range breakout", "BO_RANGE": "Intraday range breakout",
+    "BO_BASE_DN": "Base breakdown", "BO_LOW52": "52-week low breakdown",
+    "BO_LOW20": "20-day low breakdown", "BO_PDL": "Yesterday's low broken",
+    "BO_ORB_DN": "Opening range breakdown", "BO_RANGE_DN": "Intraday range breakdown",
 }
 
 # Delivery memory, read by health() and by the Live view.
@@ -120,14 +127,28 @@ def _headline_line(a):
 def _numbers_block(a):
     """Zone 3. Monospaced so the decimals line up. Telegram renders <code>
     in its mono face on every client, which <b> and plain text do not."""
-    rows = [
-        ("Now", _money(a.get("price")), ""),
-        ("Entry", _money(a.get("entry")), ""),
-        ("Stop", _money(a.get("stop")),
-         f"-{a['risk_pct']}%" if a.get("risk_pct") is not None else ""),
-        ("Target", _money(a.get("target")),
-         f"1:{a['rr']}" if a.get("rr") is not None else ""),
-    ]
+    if a.get("level") is not None:
+        # A breakout: the level it broke, then the trade. "Half" is one risk
+        # from the entry — where to book half and move the stop to cost.
+        rows = [
+            ("Level", _money(a.get("level")), ""),
+            ("Entry", _money(a.get("entry")), ""),
+            ("Stop", _money(a.get("stop")),
+             f"-{a['risk_pct']}%" if a.get("risk_pct") is not None else ""),
+        ]
+        if a.get("t1") is not None:
+            rows.append(("Half", _money(a["t1"]), "1:1"))
+        rows.append(("Target", _money(a.get("target")),
+                     f"1:{a['rr']}" if a.get("rr") is not None else ""))
+    else:
+        rows = [
+            ("Now", _money(a.get("price")), ""),
+            ("Entry", _money(a.get("entry")), ""),
+            ("Stop", _money(a.get("stop")),
+             f"-{a['risk_pct']}%" if a.get("risk_pct") is not None else ""),
+            ("Target", _money(a.get("target")),
+             f"1:{a['rr']}" if a.get("rr") is not None else ""),
+        ]
     width = max(len(_money(r[1])) for r in rows)
     out = []
     for label, value, tail in rows:
@@ -164,6 +185,8 @@ def format_alert(a, seq=None, repeat=False):
     if seq:
         head += f"{seq} · "
     head += f"<b>{_e(a['symbol'])}</b>"
+    if a.get("level") is not None:
+        head += " · " + ("BUY" if a.get("direction", "UP") == "UP" else "SELL")
     if a.get("score") is not None:
         head += f" · score {a['score']}"
     if repeat:
@@ -172,7 +195,7 @@ def format_alert(a, seq=None, repeat=False):
     parts = [head, _e(_headline_line(a)), _numbers_block(a)]
     parts += _context_lines(a)
     if a.get("why"):
-        parts.append("<i>" + _e(str(a["why"])[:180]) + "</i>")
+        parts.append("<i>" + _e(str(a["why"])[:260]) + "</i>")
     return "\n".join(parts)
 
 
@@ -222,20 +245,21 @@ def format_public(a):
     return "\n".join(lines)
 
 
-def format_day_open(watch, profiles, index_pct, thresholds):
+def format_day_open(stocks, levels_asof, index_pct, poll_seconds=20):
     """Sent once, before the alert window opens. Its only job is to make a
-    dead scanner distinguishable from a quiet market — the two looked
-    identical all day in v23."""
+    dead scanner distinguishable from a quiet market."""
     reg = f"{index_pct:+.2f}%" if index_pct is not None else "n/a"
-    return "\n".join([
-        "<b>ALTAHA · scanner live</b>",
-        f"<code>{_e(f'Watchlist  {watch}')}</code>",
-        f"<code>{_e(f'Profiles   {profiles}')}</code>",
-        f"<code>{_e(f'Index      {reg}')}</code>",
-        "<i>" + _e(f"Firing above {thresholds.get('RVOL_MIN')}× rolling volume, "
-                   f"max risk {thresholds.get('MAX_RISK_PCT')}%, "
-                   f"window {thresholds.get('ALERT_START')}–{thresholds.get('ALERT_END')}.") + "</i>",
-    ])
+    lines = ["<b>ALTAHA · scanner live</b>"]
+    if stocks:
+        lines += [f"<code>{_e(f'Stocks   {stocks}')}</code>",
+                  f"<code>{_e(f'Levels   {levels_asof}')}</code>",
+                  f"<code>{_e(f'Index    {reg}')}</code>",
+                  "<i>" + _e(f"Breakouts up and down, checked every {poll_seconds} seconds, "
+                             "alerts 09:20 to 14:30.") + "</i>"]
+    else:
+        lines.append(_e("No breakout levels yet. They are being built from daily bars now; "
+                        "alerts start as soon as they are ready."))
+    return "\n".join(lines)
 
 
 def format_day_close(alerts, near):
@@ -254,6 +278,58 @@ def format_day_close(alerts, near):
     if near:
         lines += ["", "<i>" + _e("Closest non-firing: " + ", ".join(
             f"{r['symbol']} {r['rvol']}×" for r in near[:3])) + "</i>"]
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Breakout alerts (breakouts.py): the two messages around the live cards
+# ---------------------------------------------------------------------------
+
+_KIND_SHORT = {"BASE": "base top", "BASE_DN": "base low", "HIGH52": "52w high", "LOW52": "52w low"}
+
+
+def format_levels_ready(asof, stocks, near):
+    """Sent once after the close, when tomorrow's levels are built."""
+    lines = [f"<b>ALTAHA · levels ready</b> · {_e(asof)}",
+             _e(f"{stocks} stocks watched tomorrow, up and down.")]
+    if near:
+        lines += ["", "Closest to a big level at the close:"]
+        rows = []
+        for w in near[:8]:
+            arrow = "▲" if w.get("dir") == "UP" else "▼"
+            rows.append(f"{arrow} {w['symbol'][:11]:<11} {w['away_pct']:>4.1f}%  "
+                        f"{_KIND_SHORT.get(w.get('kind'), '')}")
+        lines.append("<code>" + _e("\n".join(rows)) + "</code>")
+    return "\n".join(lines)
+
+
+def format_day_result(day, alerts):
+    """
+    Sent once after the close, when every alert has been marked. In R: one R
+    is the distance from entry to stop, so +2.0R is a target and -1.0R a stop.
+    """
+    n = len(alerts)
+    lines = [f"<b>ALTAHA · today's result</b> · {_e(day)}"]
+    if not n:
+        lines.append("No alert today. Nothing cleared a level on enough volume.")
+        return "\n".join(lines)
+    marked = [a for a in alerts if a.get("r") is not None]
+    tg = sum(1 for a in alerts if a.get("outcome") == "TARGET")
+    st = sum(1 for a in alerts if a.get("outcome") == "STOP")
+    flat = sum(1 for a in alerts if a.get("outcome") == "OPEN_AT_CLOSE")
+    lines.append(_e(f"{n} alert" + ("s" if n != 1 else "") +
+                    f" · {tg} target · {st} stopped · {flat} flat at 15:15"))
+    if marked:
+        total = sum(a["r"] for a in marked)
+        lines.append(f"<b>Net {total:+.1f}R</b>")
+    rows = []
+    for a in alerts[:15]:
+        arrow = "▲" if a.get("direction", "UP") == "UP" else "▼"
+        r = f"{a['r']:+.1f}R" if a.get("r") is not None else "  n/a"
+        rows.append(f"{a.get('time', '--:--')} {arrow} {a['symbol'][:11]:<11} {r:>6}")
+    lines.append("<code>" + _e("\n".join(rows)) + "</code>")
+    lines.append("<i>" + _e("Judged on 5-minute bars after each alert; when a bar touches both "
+                            "stop and target, the stop is assumed.") + "</i>")
     return "\n".join(lines)
 
 
@@ -418,19 +494,23 @@ def send_whatsapp(a: dict) -> bool:
         return False
 
 
-def test() -> dict:
-    """Fire a test so setup can be verified without waiting for a signal."""
-    sample = {"symbol": "TESTMSG", "kind": "RVOL", "direction": "UP",
-              "headline": "alert delivery test",
-              "why": "This is a test alert from Altaha Screener.",
-              "price": 1042.30, "entry": 1044.0, "stop": 1028.0, "target": 1076.0,
-              "rr": 2.0, "risk_pct": 1.5, "rvol": 3.2, "day_rvol": 1.8,
-              "range_pos": 0.88, "vwap": 1036.4, "regime": 0.42, "score": 74}
-    ok, detail = send_telegram(format_digest([sample], index_pct=0.42,
+def test(sample: dict = None) -> dict:
+    """Fire a test so setup can be verified without waiting for a signal.
+    Pass a sample alert to send that; without one the old volume card goes."""
+    if sample is None:
+        sample = {"symbol": "TESTMSG", "kind": "RVOL", "direction": "UP",
+                  "headline": "alert delivery test",
+                  "why": "This is a test alert from Altaha Screener.",
+                  "price": 1042.30, "entry": 1044.0, "stop": 1028.0, "target": 1076.0,
+                  "rr": 2.0, "risk_pct": 1.5, "rvol": 3.2, "day_rvol": 1.8,
+                  "range_pos": 0.88, "vwap": 1036.4, "regime": 0.42, "score": 74}
+    ok, detail = send_telegram("<i>Test message, not a real alert.</i>\n\n" +
+                               format_digest([sample], index_pct=0.42,
                                              total_today=1, clock="09:28"))
+    public = format_public(sample)
     pub_ok, pub_detail = (None, "not configured")
     if TG_PUBLIC:
-        pub_ok, pub_detail = _post(TG_PUBLIC, format_public(sample))
+        pub_ok, pub_detail = _post(TG_PUBLIC, public)
     return {"telegram_configured": bool(TG_TOKEN and TG_CHAT),
             "public_channel_configured": bool(TG_PUBLIC),
             "whatsapp_configured": bool(WA_TOKEN and WA_PHONE_ID and WA_TO),

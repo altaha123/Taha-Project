@@ -80,6 +80,14 @@ services:
       - key: QUERY_AI_HOURLY       # ceiling on Ask AI questions per hour, so a
         value: "60"                # leaked admin key has a bounded bill.
 
+      # Telegram: the intraday breakout alerts (breakouts.py, intraday.py).
+      # Both unset = alerts are logged on the Alerts page and sent nowhere,
+      # and the page says so. README: "Alerts on Telegram".
+      - key: TELEGRAM_BOT_TOKEN    # from @BotFather
+        sync: false
+      - key: TELEGRAM_CHAT_ID      # your own chat with the bot
+        sync: false
+
       # Email. Unset means EMAIL_PROVIDER=console: sign-in links and digests
       # are printed to the log and delivered nowhere, which is a working
       # deploy for everything except actually reaching a person.

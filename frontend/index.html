@@ -518,6 +518,25 @@
   .alertcard .awhy{margin-top:10px;font-size:14px;line-height:1.5;opacity:.85}
   .alertcard .aout{margin-top:8px;font-family:var(--mono);font-size:12px;letter-spacing:.08em}
   .aout.TARGET{color:var(--pass)} .aout.STOP{color:var(--fail)}
+  .aout.OPEN_AT_CLOSE{opacity:.75}
+  .alertcard.up{border-left-color:var(--pass)} .alertcard.dn{border-left-color:var(--fail)}
+  .alertcard .ascore{font-family:var(--mono);font-size:11px;letter-spacing:.08em;opacity:.65}
+  .alertcard .asym a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+  .ltg{font-size:14px;line-height:1.6;margin:-4px 0 6px;color:var(--ink-2)}
+  .ltg.off{border:1px dashed var(--fail);padding:10px 14px;color:inherit}
+  .ltg code{font-family:var(--mono);font-size:12px}
+  .boh{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+       color:var(--mute);margin:26px 0 8px}
+  .botwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .botable{width:100%;border-collapse:collapse;font-size:14px}
+  .botable th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+              font-weight:400;color:var(--mute);text-align:right;padding:6px 8px;border-bottom:1px solid var(--rule)}
+  .botable td{padding:9px 8px;border-bottom:1px solid var(--rule-2);text-align:right;
+              font-family:var(--mono);font-size:13px;white-space:nowrap}
+  .botable th:first-child,.botable td:first-child{text-align:left;padding-left:0}
+  .botable td:first-child a{font-family:var(--sans);font-weight:600;font-size:14px;color:inherit;text-decoration:none}
+  .botable td.k{font-family:inherit;font-size:12px;color:var(--ink-2)}
+  .botable .wide{white-space:normal;min-width:150px}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
   .statbox{border:1px solid var(--rule);padding:12px 14px}
   .statbox .sk2{font-size:11px;letter-spacing:.13em;text-transform:uppercase;opacity:.6;display:block}
@@ -1593,8 +1612,8 @@
 
   <div id="view-live" style="display:none">
     <header class="tabhead">
-      <h2>Live scanner</h2>
-      <p>Intraday alerts on unusual volume. Each is logged, so its hit rate can be measured.</p>
+      <h2>Alerts</h2>
+      <p>Intraday breakouts, up and down, sent to Telegram the moment they happen. Each comes with an entry, a stop and a target, and is marked after the close so its record can be measured.</p>
     </header>
 
     <div class="livehead">
@@ -1603,14 +1622,19 @@
       <button class="livebtn" id="livetest">Test alert</button>
       <span class="livestat"><span class="livedot" id="ldot"></span><span id="lstat">not running</span></span>
     </div>
+    <div id="ltg" class="ltg"></div>
 
     <div id="lstats"></div>
 
     <div class="lh" style="margin-top:34px"><h3>Today's alerts</h3><span id="lcount"></span></div>
-    <div id="lalerts"><div class="ideas-note" style="padding:14px 0">Nothing yet. Start the scanner during market hours (9:15–3:30 IST).</div></div>
+    <p class="lsub" id="borules">A liquid stock clearing a level on a burst of volume, with a stop close by and room to run.</p>
+    <div id="lalerts"><div class="ideas-note" style="padding:14px 0">Nothing yet.</div></div>
+    <div id="bowait"></div>
 
-    <div class="lh" style="margin-top:44px"><h3>Measured hit rate</h3><span>your own signals</span></div>
-    <p class="lsub">Each alert is marked target-hit, stop-hit or still open at the close. It takes about 30 closed trades per signal before this means anything.</p>
+    <div id="bowatch"></div>
+
+    <div class="lh" style="margin-top:44px"><h3>Measured record</h3><span>every alert, marked</span></div>
+    <p class="lsub">Each alert is judged on 5-minute bars after it fired: target, stop, or wherever it stood at the 3:15 square-off. Results are in R, where 1R is the distance from entry to stop.</p>
     <div id="lhit"></div>
 
     <p class="disc">Alerts are measurements, not recommendations. No signal predicts price.</p>
@@ -2450,73 +2474,135 @@ function withKey(url){
 
 /* \u2500\u2500 Live intraday scanner \u2500\u2500 */
 let liveTimer = null;
-const KIND_LABEL = {RVOL:"VOLUME SPIKE", ORB:"OPENING RANGE", LEVEL:"LEVEL BREAK"};
+const KIND_LABEL = {
+  BO_BASE:"BASE BREAKOUT", BO_HIGH52:"52-WEEK HIGH", BO_HIGH20:"20-DAY HIGH", BO_PDH:"YESTERDAY'S HIGH",
+  BO_ORB:"OPENING RANGE", BO_RANGE:"INTRADAY RANGE",
+  BO_BASE_DN:"BASE BREAKDOWN", BO_LOW52:"52-WEEK LOW", BO_LOW20:"20-DAY LOW", BO_PDL:"YESTERDAY'S LOW",
+  BO_ORB_DN:"OPENING RANGE", BO_RANGE_DN:"INTRADAY RANGE",
+  RVOL:"VOLUME SPIKE", RVOL_DOWN:"HEAVY SELLING", ORB:"OPENING RANGE", ORB_DOWN:"OPENING RANGE", LEVEL:"LEVEL BREAK"};
+const NEAR_KIND = {BASE:"top of its base", BASE_DN:"bottom of its base", HIGH52:"52-week high", LOW52:"52-week low"};
+const boMoney = n => (n === null || n === undefined || n === "") ? "—"
+  : "₹" + Number(n).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2});
+const boLink = s => `<a href="stock.html?ticker=${encodeURIComponent(s)}">${esc(s)}</a>`;
+const boR = r => (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(1) + "R";
 
 function alertCard(a){
-  const money = n => "\u20B9" + Number(n).toLocaleString("en-IN");
-  const out = a.outcome && a.outcome !== "OPEN_AT_CLOSE"
-    ? `<div class="aout ${esc(a.outcome)}">Outcome: ${a.outcome === "TARGET" ? "target hit" : "stopped out"} \u00b7 closed ${money(a.closed_at ?? 0)}</div>` : "";
-  return `<div class="alertcard">
+  const down = a.direction === "DOWN";
+  const res = {TARGET:"Target hit", STOP:"Stopped out", OPEN_AT_CLOSE:"Flat at the square-off"}[a.outcome];
+  const out = res ? `<div class="aout ${esc(a.outcome)}">${res}${a.r !== undefined && a.r !== null ? " · " + boR(a.r) : ""} · closed ${boMoney(a.closed_at)}</div>` : "";
+  return `<div class="alertcard ${down ? "dn" : "up"}">
     <div class="ah">
-      <span class="asym">${esc(a.symbol)}</span>
+      <span class="asym">${down ? "▼" : "▲"} ${boLink(a.symbol)}</span>
       <span class="akind">${esc(KIND_LABEL[a.kind] || a.kind)}</span>
+      ${a.score !== undefined && a.score !== null ? `<span class="ascore">score ${a.score}</span>` : ""}
       <span class="atime">${esc(a.time || "")}</span>
     </div>
-    <div class="ahl">${esc(a.headline || "")}</div>
+    <div class="ahl">${down ? "Sell" : "Buy"}: ${esc(a.headline || "")}</div>
     <div class="anums">
-      <span>Entry <b>${money(a.entry)}</b></span>
-      <span>Stop <b>${money(a.stop)}</b> (\u2212${a.risk_pct}%)</span>
-      <span>Target <b>${money(a.target)}</b></span>
-      ${a.rr ? `<span>R:R <b>1:${a.rr}</b></span>` : ""}
-      <span>RVOL <b>${a.rvol}\u00d7</b></span>
+      <span>Entry <b>${boMoney(a.entry)}</b></span>
+      <span>Stop <b>${boMoney(a.stop)}</b> (${a.risk_pct}%)</span>
+      ${a.t1 ? `<span>Half at <b>${boMoney(a.t1)}</b></span>` : ""}
+      <span>Target <b>${boMoney(a.target)}</b></span>
+      <span>Volume <b>${a.rvol}×</b></span>
     </div>
     <div class="awhy">${esc(a.why || "")}</div>${out}
   </div>`;
 }
 
+function renderBreakoutLevels(b){
+  if(!b){ $("bowait").innerHTML = $("bowatch").innerHTML = ""; return; }
+  const r = b.rules || {};
+  if(r.fires) $("borules").textContent = `An alert fires when ${r.fires}. Levels: ${r.levels}. ${r.risk ? r.risk.charAt(0).toUpperCase() + r.risk.slice(1) + "." : ""}`;
+  const w = b.waiting || [];
+  $("bowait").innerHTML = !w.length ? "" : `<div class="boh">Through a level, not confirmed</div>
+    <div class="botwrap"><table class="botable"><thead><tr><th>Stock</th><th>Level</th><th>Now</th><th class="wide">Why it has not alerted</th></tr></thead><tbody>${
+      w.map(x => `<tr><td>${x.dir === "DOWN" ? "▼" : "▲"} ${boLink(x.symbol)}</td><td>${boMoney(x.level)}</td><td>${boMoney(x.price)}</td><td class="k wide">${esc(x.why || "")}</td></tr>`).join("")
+    }</tbody></table></div>`;
+  const near = b.near || [];
+  $("bowatch").innerHTML = !near.length ? "" : `<div class="lh" style="margin-top:44px"><h3>Closest to a big level</h3><span>at the close of ${esc(b.asof || "")}</span></div>
+    <p class="lsub">Where the larger breaks are most likely to come from next. Yesterday's high and low are watched for every stock and are not listed.</p>
+    <div class="botwrap"><table class="botable"><thead><tr><th>Stock</th><th>Level</th><th>Away</th><th class="wide">What it is</th></tr></thead><tbody>${
+      near.map(x => `<tr><td>${x.dir === "DOWN" ? "▼" : "▲"} ${boLink(x.symbol)}</td><td>${boMoney(x.level)}</td><td>${x.away_pct.toFixed(1)}%</td><td class="k wide">${esc(NEAR_KIND[x.kind] || x.kind)}${x.sessions ? `, ${x.sessions} sessions, ${x.width_pct}% wide` : ""}</td></tr>`).join("")
+    }</tbody></table></div>`;
+}
+
+function renderTelegram(b, d){
+  const tg = (b && b.telegram) || {};
+  if(!b && !d){ $("ltg").innerHTML = ""; return; }
+  const on = tg.configured || (d && d.alerts_configured);
+  if(!on){
+    $("ltg").className = "ltg off";
+    $("ltg").innerHTML = `<b>Telegram is not set up, so nothing reaches your phone.</b> Add <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code> to the API's environment on Render, then press Test alert.`;
+    return;
+  }
+  $("ltg").className = "ltg";
+  const last = tg.last_at ? ` · last send ${esc(tg.last_at)}${tg.last_ok === false ? " failed: " + esc(tg.last_detail || "") : ""}` : "";
+  $("ltg").innerHTML = `Telegram connected${last}${tg.sent_today ? ` · ${tg.sent_today} sent today` : ""}`;
+}
+
+async function getJSON(path){
+  try{ const r = await fetch(`${API_BASE}${path}`); return r.ok ? await r.json() : null; }
+  catch(e){ return null; }
+}
+
 async function loadLive(){
-  try{
-    const res = await fetch(`${API_BASE}/intraday/status`);
-    const d = await res.json();
-    $("ldot").className = "livedot" + (d.running && d.market_open ? " on" : "");
-    $("lstat").textContent = !d.running ? "not running"
-      : (d.market_open ? `live \u00b7 ${d.watchlist_size} stocks \u00b7 ${d.quotes_last_pass} quotes last pass`
-                       : "running \u00b7 market closed, will resume at 9:15");
-    $("lstats").innerHTML = d.running ? `<div class="statgrid">
-      <div class="statbox"><span class="sk2">Watchlist</span><span class="sv">${d.watchlist_size}</span></div>
-      <div class="statbox"><span class="sk2">Volume profiles</span><span class="sv">${d.profiles_built}</span></div>
-      <div class="statbox"><span class="sk2">Alerts today</span><span class="sv">${(d.alerts_today||[]).length}</span></div>
-    </div>` : "";
-    const rows = d.alerts_today || [];
-    $("lcount").textContent = rows.length ? `${rows.length} fired` : "";
-    $("lalerts").innerHTML = rows.length ? rows.map(alertCard).join("")
-      : `<div class="ideas-note" style="padding:14px 0">${d.running ? "Scanner is live \u2014 nothing has met the volume threshold yet. Quiet is normal; three signals firing 5\u201310 times a day is the design." : "Nothing yet. Start the scanner during market hours (9:15\u20133:30 IST)."}</div>`;
-    if(d.error) $("lalerts").innerHTML += `<div class="ideas-note" style="padding:8px 0;opacity:.7">Last error: ${esc(d.error)}</div>`;
-  }catch(e){
+  const [d, b] = await Promise.all([getJSON("/intraday/status"), getJSON("/breakouts/status")]);
+  renderTelegram(b, d);
+  renderBreakoutLevels(b);
+  if(!d){
     $("lstat").textContent = "engine unreachable";
+  }else{
+    const live = d.running && d.market_open && !d.error && b && b.usable;
+    $("ldot").className = "livedot" + (live ? " on" : "");
+    $("lstat").textContent = !d.running ? "not running"
+      : !d.market_open ? "running · market closed, resumes at 9:15"
+      : d.error ? "running, but not reading the market"
+      : `live · ${d.quotes_last_pass} quotes every ${d.poll_seconds || 20}s`;
+    const rows = d.alerts_today || [];
+    const marked = rows.filter(a => a.r !== undefined && a.r !== null);
+    const net = marked.reduce((t, a) => t + a.r, 0);
+    $("lstats").innerHTML = `<div class="statgrid">
+      <div class="statbox"><span class="sk2">Alerts today</span><span class="sv">${rows.length}</span></div>
+      <div class="statbox"><span class="sk2">Stocks watched</span><span class="sv">${b && b.usable ? b.stocks : 0}</span></div>
+      <div class="statbox"><span class="sk2">${marked.length ? "Today's result" : "Levels from"}</span><span class="sv">${marked.length ? boR(net) : esc((b && b.asof) || "—")}</span></div>
+    </div>`;
+    $("lcount").textContent = rows.length ? `${rows.length} fired` : "";
+    // Say which of the reasons for silence applies, in the order they bite.
+    const quiet = !d.running ? "The scanner is not running. Press Start live scanner."
+      : d.error ? `The scanner is running but cannot read the market: ${d.error}.`
+      : !b || !b.stocks ? "No breakout levels yet. They are built after each close, or within a few minutes of the scanner's first morning."
+      : !b.usable ? `The levels are from ${b.asof} and too old to trade against. They rebuild on the next trading morning.`
+      : !d.market_open ? `The market is closed. ${b.stocks} stocks are loaded for the next session.`
+      : `Watching ${b.stocks} stocks. Nothing has cleared a level on enough volume yet.`;
+    $("lalerts").innerHTML = rows.length ? rows.map(alertCard).join("")
+      : `<div class="ideas-note" style="padding:14px 0">${esc(quiet)}</div>`;
+    if(rows.length && d.error) $("lalerts").innerHTML += `<div class="ideas-note" style="padding:8px 0;opacity:.7">Last error: ${esc(d.error)}</div>`;
   }
   loadHitRate();
 }
 
 async function loadHitRate(){
-  try{
-    const d = await (await fetch(`${API_BASE}/intraday/stats`)).json();
-    const by = d.by_signal || {};
-    const keys = Object.keys(by);
-    if(!keys.length){
-      $("lhit").innerHTML = `<div class="ideas-note" style="padding:14px 0">No closed trades logged yet. Numbers appear here after alerts have been marked at the close.</div>`;
-      return;
-    }
-    $("lhit").innerHTML = `<div class="statgrid">` + keys.map(k=>{
-      const b = by[k];
-      const col = b.expectancy_R > 0 ? "var(--pass)" : "var(--fail)";
-      return `<div class="statbox">
-        <span class="sk2">${esc(KIND_LABEL[k]||k)}</span>
-        <span class="sv">${b.win_rate}% <small style="font-size:.6em;opacity:.6">win</small></span>
-        <span class="sk2" style="margin-top:6px">Expectancy <b style="color:${col}">${b.expectancy_R > 0 ? "+" : ""}${b.expectancy_R}R</b> \u00b7 ${b.trades} trades</span>
-      </div>`;
-    }).join("") + `</div><p class="vnote">${esc(d.note||"")}</p>`;
-  }catch(e){}
+  const d = await getJSON("/intraday/stats");
+  if(!d) return;
+  const by = d.by_signal || {};
+  const keys = Object.keys(by).filter(k => by[k]);
+  if(!keys.length){
+    $("lhit").innerHTML = `<div class="ideas-note" style="padding:14px 0">No marked trades yet. The record starts after the first alerts have been through a close.</div>`;
+    return;
+  }
+  const box = (label, b) => {
+    const col = b.expectancy_R > 0 ? "var(--pass)" : "var(--fail)";
+    return `<div class="statbox">
+      <span class="sk2">${esc(label)}</span>
+      <span class="sv" style="color:${col}">${boR(b.expectancy_R)} <small style="font-size:.6em;opacity:.6;color:var(--ink)">a trade</small></span>
+      <span class="sk2" style="margin-top:6px">${b.trades} trades · ${b.win_rate}% won · ${boR(b.total_R)} in all</span>
+    </div>`;
+  };
+  const dir = d.by_direction || {};
+  $("lhit").innerHTML = `<div class="statgrid">` + (d.overall ? box("All alerts", d.overall) : "")
+    + (dir.UP ? box("Longs", dir.UP) : "") + (dir.DOWN ? box("Shorts", dir.DOWN) : "")
+    + keys.sort((x, y) => by[y].trades - by[x].trades).map(k => box(KIND_LABEL[k] || k, by[k])).join("")
+    + `</div><p class="vnote">${esc(d.note||"")}</p>`;
 }
 
 $("livestart").addEventListener("click", async ()=>{
@@ -2543,7 +2629,7 @@ $("livescan").addEventListener("click", async ()=>{
 $("livetest").addEventListener("click", async ()=>{
   $("livetest").textContent = "Sending\u2026";
   try{
-    const d = await (await fetch(withKey(`${API_BASE}/alerts/test`))).json();
+    const d = await (await fetch(withKey(`${API_BASE}/alerts/test?kind=breakout`))).json();
     $("livetest").textContent = d.sent ? "Sent \u2014 check Telegram" : "Send failed";
     if(!d.sent){
       $("lalerts").innerHTML = `<div class="ideas-note" style="padding:14px 0">

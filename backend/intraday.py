@@ -65,6 +65,13 @@ try:
 except Exception:
     ann = None
 
+# Breakout alerts ride on this loop's quote request: the watch list built after
+# the close is added to the same bulk call, so they cost no extra request.
+try:
+    import breakouts
+except Exception:
+    breakouts = None
+
 
 # ---------------------------------------------------------------------------
 # Configuration — every number is env-overridable, so thresholds can be tuned
@@ -105,7 +112,9 @@ PROFILE_FILE = os.path.join(DATA_DIR, "vol_profiles.json")
 RVOL_MIN = _f("RVOL_MIN", 3.0)             # rolling-window spike threshold
 RVOL_CONFIRM = _f("RVOL_CONFIRM", 1.8)     # confirmation floor for breaks
 LEVEL_MIN_STRENGTH = _i("LEVEL_MIN_STRENGTH", 70)
-POLL_SECONDS = _i("POLL_SECONDS", 60)
+# 20 seconds, not 60: a breakout alert that arrives a minute late is an entry
+# a minute worse. One bulk quote per pass is far inside Dhan's 1 request/second.
+POLL_SECONDS = _i("POLL_SECONDS", 20)
 MIN_PRICE = _f("MIN_PRICE", 30.0)
 MAX_RISK_PCT = _f("MAX_RISK_PCT", 2.5)     # skip setups whose stop is far away
 MIN_RR = _f("MIN_RR", 1.5)
@@ -113,7 +122,12 @@ MIN_RANGE_POS = _f("MIN_RANGE_POS", 0.60)  # longs must sit high in day's range
 WINDOW_MIN = _i("RVOL_WINDOW_MIN", 5)      # rolling volume window, minutes
 ALERT_START_MIN = _i("ALERT_START_MIN", 12)   # skip the opening-noise window
 ALERT_END_MIN = _i("ALERT_END_MIN", 330)      # 14:45 — later has no room to work
-MAX_ALERTS_DAY = _i("MAX_ALERTS_DAY", 12)
+MAX_ALERTS_DAY = _i("MAX_ALERTS_DAY", 15)
+# The older volume-spike, opening-range and level signals on the 60-name
+# watchlist. Off by default: breakouts.py is the alert now, and two engines
+# sending to one chat teaches you to ignore both. VOLUME_ALERTS=1 brings
+# them back alongside.
+VOLUME_ALERTS = _b("VOLUME_ALERTS", False)
 COOLDOWN_MIN = _i("COOLDOWN_MIN", 90)
 PROFILE_BATCH = _i("PROFILE_BATCH", 20)    # symbols warmed per pass
 REGIME_GUARD = _f("REGIME_GUARD", -0.80)   # suppress longs below this index %
@@ -547,29 +561,52 @@ def _regime(snap):
     return None
 
 
+_pass_lock = threading.Lock()
+
+
 def scan_once():
-    """One pass over the watchlist. Returns newly fired alerts."""
+    """One pass. Returns newly fired alerts. The scanner loop and the cron
+    tick both call this; when they collide the second one stands down, so a
+    breakout is never detected — and sent — twice."""
+    if not _pass_lock.acquire(blocking=False):
+        return []
+    try:
+        return _scan_pass()
+    finally:
+        _pass_lock.release()
+
+
+def _scan_pass():
     if dhan is None or not dhan.configured():
         _state["error"] = "Dhan not configured"
         return []
-    syms = _state["watch"]
-    if not syms:
-        _state["error"] = "watchlist empty"
+    syms = _state["watch"] if VOLUME_ALERTS else []
+    bo_syms = []
+    if breakouts is not None:
+        try:
+            bo_syms = breakouts.watch_symbols()
+        except Exception:
+            bo_syms = []
+    if not syms and not bo_syms:
+        _state["error"] = ("no breakout levels yet — they are built after each close, "
+                           "or within minutes of the first start")
         return []
 
-    warm_step(syms)
+    if syms:
+        warm_step(syms)
 
     try:
         # mode="quote" — NOT "ohlc". /marketfeed/ohlc carries no volume field,
         # and every signal here is volume-gated. This one word is the whole
         # difference between a scanner and a silent scanner.
-        req = syms if INDEX_PROXY in syms else syms + [INDEX_PROXY]
+        req = list(dict.fromkeys(list(syms) + bo_syms + [INDEX_PROXY]))
         snap = dhan.bulk_quotes(req, mode="quote")
     except Exception as e:
         _state["error"] = str(e)[:160]
         return []
     if not snap:
-        _state["error"] = "empty quote response"
+        _state["error"] = ("Dhan returned no quotes — the Data API subscription or the "
+                           "access token is the usual cause")
         return []
     _state["error"] = None
 
@@ -579,7 +616,7 @@ def scan_once():
     # Opening range: capture live between 09:30-09:40, else backfill once.
     mso = minutes_since_open()
     today_str = _today()
-    if mso >= 15 and _state.get("opening_day") != today_str:
+    if syms and mso >= 15 and _state.get("opening_day") != today_str:
         if mso <= 25:
             _state["opening"] = {s: {"high": float(q.get("high") or 0),
                                      "low": float(q.get("low") or 0)}
@@ -614,7 +651,17 @@ def scan_once():
     except Exception:
         pass
 
-    # Daily cap, best first. Better to miss the 13th idea than to train
+    # Breakouts, up and down (breakouts.py). They join the same list, so they
+    # share the day's cap, the filing join, the log and the outcome marking.
+    if breakouts is not None:
+        try:
+            done = {(a["symbol"], a.get("direction", "UP")) for a in _alerts_today()
+                    if str(a.get("kind", "")).startswith("BO_")}
+            fired.extend(breakouts.check_live(snap, index_pct=regime_pct, fired=done))
+        except Exception as e:
+            _state["error"] = "breakouts: " + str(e)[:140]
+
+    # Daily cap, best first. Better to miss the 16th idea than to train
     # yourself to ignore the notification.
     room = MAX_ALERTS_DAY - len(_alerts_today())
     if room <= 0:
@@ -660,33 +707,87 @@ def scan_once():
 
 
 def _heartbeat():
-    """One 'I am alive' message a day and one end-of-day summary. Without
-    these, a broken scanner and a quiet market look identical."""
+    """One 'I am alive' message a day. Without it, a broken scanner and a
+    quiet market look identical. The day's result is sent by day_result()."""
     if not (HEARTBEAT and notify):
         return
-    t = now_ist()
     day = _today()
-    # Sent BEFORE the alert window opens (09:18), not after it. At >= 15 the
-    # "I am alive" message could arrive later than the first alert.
+    # Sent BEFORE the alert window opens (09:18), not after it.
     if _state["heartbeat_day"] != day and market_open() and minutes_since_open() >= 3:
         _state["heartbeat_day"] = day
         try:
+            st = breakouts.status() if breakouts is not None else {}
             notify.send_plain(notify.format_day_open(
-                watch=len(_state["watch"]),
-                profiles=len(_state["profiles"]),
+                stocks=st.get("stocks", 0) if st.get("usable") else 0,
+                levels_asof=st.get("asof"),
                 index_pct=_state["regime"],
-                thresholds={"RVOL_MIN": RVOL_MIN, "MAX_RISK_PCT": MAX_RISK_PCT,
-                            "ALERT_START": "09:27", "ALERT_END": "14:45"},
+                poll_seconds=POLL_SECONDS,
             ))
         except Exception:
             pass
-    if _state["eod_day"] != day and t.hour == 15 and t.minute >= 35:
-        _state["eod_day"] = day
-        a = _alerts_today()
+
+
+MARKS_FILE = os.path.join(DATA_DIR, "intraday_marks.json")
+
+
+def _marks():
+    try:
+        with open(MARKS_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def day_result():
+    """
+    After the close: mark every open alert target / stop / flat, then send
+    the day's result to Telegram once. Sent on a day with no alerts too —
+    silence that is confirmed is information — but not on a day the scanner
+    never ran (a holiday). Returns how many alerts were marked.
+    """
+    t = now_ist()
+    if t.weekday() >= 5 or t.hour < 16:
+        return 0
+    marked = mark_outcomes()
+    day = _today()
+    rows = _alerts_today()
+    ran_today = str(_state.get("last_run") or "")[:10] == day
+    if notify and HEARTBEAT and (rows or ran_today) and _marks().get("result_day") != day:
         try:
-            notify.send_plain(notify.format_day_close(a, _state["top_rvol"]))
+            with open(MARKS_FILE, "w") as f:
+                json.dump({"result_day": day}, f)
         except Exception:
             pass
+        try:
+            notify.send_plain(notify.format_day_result(day, rows))
+        except Exception:
+            pass
+    return marked
+
+
+def _ensure_levels():
+    """
+    The breakout levels normally come from the after-close scan. If they are
+    missing or stale on a trading morning — first day after a deploy, a scan
+    that failed — build them straight from Dhan's daily bars, once, in the
+    background. About two minutes for 400 stocks at Dhan's 5 requests/second.
+    """
+    if breakouts is None or dhan is None or not dhan.configured():
+        return
+    t = now_ist()
+    mins = t.hour * 60 + t.minute
+    if t.weekday() >= 5 or not (510 <= mins <= 900):       # 08:30 to 15:00
+        return
+    day = _today()
+    if _state.get("levels_day") == day or breakouts.usable():
+        return
+    _state["levels_day"] = day
+    syms = breakouts.universe() or list(_state["watch"])
+    if not syms:
+        return
+    threading.Thread(target=breakouts.rebuild,
+                     args=(syms, lambda s: dhan.daily_ohlcv(s, with_today=False)),
+                     daemon=True, name="altaha-levels").start()
 
 
 def _backfill_opening(symbols, today_str):
@@ -712,6 +813,29 @@ def _backfill_opening(symbols, today_str):
         with _lock:
             _state["opening"] = out
             _state["opening_day"] = today_str
+
+
+SQUARE_OFF = dt.time(15, 15)
+
+
+def _r_multiple(a, last=None):
+    """The trade's result in risks: +rr at the target, -1 at the stop, and
+    for one still open at the square-off, wherever it stood. Counting only
+    targets and stops would leave out every trade that drifted — which is
+    most of the losing days of a breakout system."""
+    try:
+        risk = abs(float(a["entry"]) - float(a["stop"]))
+        if risk <= 0:
+            return None
+        if a["outcome"] == "TARGET":
+            return round(abs(float(a["target"]) - float(a["entry"])) / risk, 2)
+        if a["outcome"] == "STOP":
+            return -1.0
+        last = a.get("closed_at") if last is None else last
+        sign = 1 if a.get("direction", "UP") == "UP" else -1
+        return round(sign * (float(last) - float(a["entry"])) / risk, 2)
+    except (TypeError, ValueError, KeyError):
+        return None
 
 
 def mark_outcomes():
@@ -753,10 +877,13 @@ def mark_outcomes():
                             idx = (intra.index.tz_convert(IST)
                                    if intra.index.tz is not None else intra.index)
                             fired = dt.datetime.strptime(a["time"], "%H:%M").time()
+                            # A day trade is flat by 15:15: bars after that
+                            # are not part of it.
                             after = [i for i, ts in enumerate(idx)
-                                     if ts.date().isoformat() == day and ts.time() >= fired]
+                                     if ts.date().isoformat() == day
+                                     and fired <= ts.time() < SQUARE_OFF]
                             if after:
-                                sub = intra.iloc[after[0]:]
+                                sub = intra.iloc[after[0]:after[-1] + 1]
                                 hi = float(sub["High"].max())
                                 lo = float(sub["Low"].min())
                                 last = float(sub["Close"].iloc[-1])
@@ -784,6 +911,7 @@ def mark_outcomes():
                                         else "OPEN_AT_CLOSE")
                     a["closed_at"] = round(last, 2)
                     a["approx"] = approx
+                    a["r"] = _r_multiple(a, last)
                     done += 1
             except Exception:
                 continue
@@ -792,44 +920,56 @@ def mark_outcomes():
 
 
 def stats():
-    """Honest expectancy over logged alerts — the whole point of the log."""
-    done = [a for a in _state["alerts"] if a["outcome"] in ("STOP", "TARGET")]
+    """Honest expectancy over logged alerts — the whole point of the log.
+    Every marked trade counts, including the ones flat at the square-off."""
+    done = []
+    for a in _state["alerts"]:
+        if a.get("outcome") not in ("STOP", "TARGET", "OPEN_AT_CLOSE"):
+            continue
+        r = a.get("r")
+        if r is None:
+            r = _r_multiple(a)
+        if r is not None:
+            done.append((a, r))
 
     def bucket(rows):
         n = len(rows)
         if not n:
             return None
-        win = sum(1 for a in rows if a["outcome"] == "TARGET")
-        r = sum((a.get("rr") or 0) if a["outcome"] == "TARGET" else -1 for a in rows)
-        return {"trades": n, "win_rate": round(win / n * 100),
-                "expectancy_R": round(r / n, 2)}
+        return {"trades": n,
+                "win_rate": round(sum(1 for _a, r in rows if r > 0) / n * 100),
+                "targets": sum(1 for a, _r in rows if a["outcome"] == "TARGET"),
+                "stops": sum(1 for a, _r in rows if a["outcome"] == "STOP"),
+                "expectancy_R": round(sum(r for _a, r in rows) / n, 2),
+                "total_R": round(sum(r for _a, r in rows), 1)}
 
-    by_signal, by_hour, by_rvol, by_score = {}, {}, {}, {}
-    for a in done:
-        by_signal.setdefault(a["kind"], []).append(a)
+    by_signal, by_hour, by_rvol, by_score, by_dir = {}, {}, {}, {}, {}
+    for a, r in done:
+        by_signal.setdefault(a["kind"], []).append((a, r))
+        by_dir.setdefault(a.get("direction", "UP"), []).append((a, r))
         try:
-            by_hour.setdefault(a["time"][:2] + ":00", []).append(a)
+            by_hour.setdefault(a["time"][:2] + ":00", []).append((a, r))
         except Exception:
             pass
         rv = a.get("rvol") or 0
         key = "<3x" if rv < 3 else "3-5x" if rv < 5 else "5-8x" if rv < 8 else "8x+"
-        by_rvol.setdefault(key, []).append(a)
+        by_rvol.setdefault(key, []).append((a, r))
         sc = a.get("score") or 0
         skey = "<50" if sc < 50 else "50-64" if sc < 65 else "65-79" if sc < 80 else "80+"
-        by_score.setdefault(skey, []).append(a)
+        by_score.setdefault(skey, []).append((a, r))
 
     return {
         "by_signal": {k: bucket(v) for k, v in by_signal.items()},
+        "by_direction": {k: bucket(v) for k, v in by_dir.items()},
         "by_hour": {k: bucket(v) for k, v in sorted(by_hour.items())},
         "by_rvol_bucket": {k: bucket(v) for k, v in by_rvol.items()},
         "by_score_bucket": {k: bucket(v) for k, v in by_score.items()},
         "overall": bucket(done),
         "total_closed": len(done),
-        "note": ("Expectancy is in R — average return per unit risked. Positive R makes "
-                 "money even below a 50% win rate; that is the number that matters, not "
-                 "accuracy. Under roughly 30 closed trades a bucket is noise. The rvol and "
-                 "score buckets exist so thresholds get set by this table rather than by "
-                 "taste."),
+        "note": ("Results are in R: one R is the distance from entry to stop. A target is +2R, "
+                 "a stop is -1R, and a trade still open at 15:15 counts for wherever it stood. "
+                 "Positive expectancy makes money even under a 50% win rate. Under about 30 "
+                 "trades a row is noise; after that, switch off the kinds that lose."),
     }
 
 
@@ -864,6 +1004,9 @@ def diagnose():
                        "ALERT_START_MIN": ALERT_START_MIN,
                        "ALERT_END_MIN": ALERT_END_MIN},
         "alerts_configured": bool(notify and notify.configured()),
+        "breakouts": breakouts.status() if breakouts is not None else None,
+        "volume_alerts_on": VOLUME_ALERTS,
+        "poll_seconds": POLL_SECONDS,
         "error": _state["error"],
         "log_path": LOG_FILE,
         "log_is_ephemeral": DATA_DIR == HERE,
@@ -874,12 +1017,13 @@ def _loop():
     marked_day = None
     while _state["running"]:
         try:
+            _ensure_levels()
             if market_open():
                 scan_once()
             else:
                 today = _today()
                 if marked_day != today and now_ist().hour >= 16:
-                    mark_outcomes()
+                    day_result()
                     marked_day = today
         except Exception as e:
             _state["error"] = str(e)[:160]
@@ -925,5 +1069,12 @@ def status():
         "index_change_pct": _state["regime"],
         "alerts_today": _alerts_today()[::-1],
         "top_rvol_now": _state["top_rvol"][:8],
+        "profiles_given_up": sum(1 for n in _state["warm_fail"].values() if n >= 2),
+        "in_alert_window": (market_open()
+                            and ALERT_START_MIN <= minutes_since_open() <= ALERT_END_MIN),
+        "alerts_configured": bool(notify and notify.configured()),
+        "volume_alerts_on": VOLUME_ALERTS,
+        "poll_seconds": POLL_SECONDS,
+        "daily_cap": MAX_ALERTS_DAY,
         "error": _state["error"],
     }

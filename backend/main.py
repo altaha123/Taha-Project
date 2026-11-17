@@ -223,6 +223,7 @@ import sector_story as SS
 import news_feed as press
 import intraday
 import alerts as notify
+import breakouts
 from plain import highlights, plain_verdict
 
 # MEMORY, PART ONE: THREADS.
@@ -5868,7 +5869,7 @@ def intraday_start(limit: int = 200, key: str = ""):
     intraday.start(wl)
     return {"started": True, "watchlist_size": len(wl),
             "alerts_configured": notify.configured(),
-            "note": ("Scans every 60s while the market is open. Alerts go to Telegram when "
+            "note": ("Scans every few seconds while the market is open. Alerts go to Telegram when "
                      "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set.")}
 
 
@@ -5919,9 +5920,23 @@ def intraday_mark(key: str = ""):
 
 
 @app.get("/alerts/test")
-def alerts_test(key: str = ""):
+def alerts_test(key: str = "", kind: str = "volume"):
+    """Send a made-up alert to Telegram. kind=breakout sends a breakout card."""
     _require_admin(key)
+    if kind == "breakout":
+        return notify.test(breakouts.sample())
     return notify.test()
+
+
+@app.get("/breakouts/status")
+def breakouts_status():
+    """
+    The breakout alerts as the Alerts page shows them: today's live alerts,
+    the last close's confirmed breakouts, the stocks nearest their level, the
+    rules, and whether Telegram is reachable. Public: it holds nothing the
+    pick lists do not already show.
+    """
+    return to_native(breakouts.status())
 
 
 _track_day = {"on": None}
@@ -5967,7 +5982,7 @@ def cron_tick():
         # rate. The cron tick now closes that gap; mark_outcomes is idempotent.
         try:
             if intraday.now_ist().hour >= 16:
-                marked = intraday.mark_outcomes()
+                marked = intraday.day_result()
         except Exception:
             pass
         # Mark tracked ideas once after the close. Capped per tick so a single
