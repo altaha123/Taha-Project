@@ -213,7 +213,7 @@
   window.addEventListener('storage', e => { if (e.key === KEY || e.key === null) { saved = read(); sync(); } });
   function go(section) {
     if (window.AltahaNav) window.AltahaNav.go(section, null, true);
-    else location.href = 'index.html#' + section;
+    else location.href = './#' + section;
   }
   /* The phone bar: the three doors, search in the middle where a thumb
      rests, and Me. It names exactly what the desktop header names, so a
@@ -254,7 +254,7 @@
   };
   if (!document.getElementById('view-watchlists')) {
     const all = node('a', 'ux-note', 'Open all your watchlists ›');
-    all.href = 'index.html?go=watchlists';
+    all.href = './?go=watchlists';
     watch.append(all);
   }
   const SLOT = { discover: 0, research: 1, portfolio: 3, me: 4 };

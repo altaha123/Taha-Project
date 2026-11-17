@@ -47,7 +47,7 @@
     });
   }
   function stockHref(sym) { return 'stock.html?ticker=' + encodeURIComponent(sym); }
-  function lensHref(id) { return 'index.html#research/lenses/' + encodeURIComponent(id); }
+  function lensHref(id) { return './#research/lenses/' + encodeURIComponent(id); }
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
   function when(run) {

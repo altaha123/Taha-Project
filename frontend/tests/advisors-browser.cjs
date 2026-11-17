@@ -350,7 +350,7 @@ async function noSideways(page, label) {
 
   // ── Signing in comes back here, and never to another site ──────────────
   for (const [next, lands] of [['advisors.html#a/asha-rao', /\/advisors\.html#a\/asha-rao$/],
-                               ['https://evil.example/', /\/index\.html#portfolio$/]]) {
+                               ['https://evil.example/', /^http:\/\/127\.0\.0\.1:\d+\/#portfolio$/]]) {
     const state = fresh();
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     await wire(context, state);
