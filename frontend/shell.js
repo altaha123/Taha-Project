@@ -260,7 +260,7 @@
 
   function buildFooter() {
     if (document.querySelector('.sh-footer')) return;
-    if (/\/(wealth|advisors)\.html$/.test(location.pathname)) return;
+    if (/\/(wealth|advisors)(\.html)?$/.test(location.pathname)) return;
     var foot = el('footer', 'sh-footer');
     foot.setAttribute('aria-label', 'Site');
     var cols = DOORS.map(function (d) {

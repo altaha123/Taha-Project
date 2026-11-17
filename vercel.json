@@ -3,7 +3,14 @@
   "rewrites": [
     { "source": "/share", "destination": "https://taha-project.onrender.com/share/record" },
     { "source": "/share/:path*", "destination": "https://taha-project.onrender.com/share/:path*" },
-    { "source": "/og/:path*", "destination": "https://taha-project.onrender.com/og/:path*" }
+    { "source": "/og/:path*", "destination": "https://taha-project.onrender.com/og/:path*" },
+    { "source": "/stock", "destination": "/stock.html" },
+    { "source": "/signin", "destination": "/signin.html" },
+    { "source": "/wealth", "destination": "/wealth.html" },
+    { "source": "/advisors", "destination": "/advisors.html" },
+    { "source": "/brief", "destination": "/brief.html" },
+    { "source": "/pro", "destination": "/pro.html" },
+    { "source": "/ownership-share", "destination": "/ownership-share.html" }
   ],
   "headers": [
     {

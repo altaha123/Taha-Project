@@ -64,3 +64,36 @@ per day on the API side, so the first fetch of the day for a symbol is the slow
 one — open the share sheet once before posting and the crawler gets a warm
 cache. The site is on the paid Render tier, so there is no cold start on top of
 that.
+
+## Addresses without `.html`
+
+The address bar reads `/stock?ticker=TCS`, `/signin`, `/wealth` rather than
+`stock.html?ticker=TCS`. Two pieces do it, and neither is a redirect:
+
+* **vercel.json rewrites** `/stock`, `/signin`, `/wealth`, `/advisors`,
+  `/brief`, `/pro` and `/ownership-share` to their `.html` files, so a clean
+  address works when it is reloaded, bookmarked or shared. Rewrites carry the
+  query string, the same as the `/share` ones above.
+* **`frontend/clean-url.js`**, the first script on every page, swaps the
+  address shown with `history.replaceState` before anything paints. It keeps
+  the query string and the `#hash`. `/index.html` becomes `/` on any server.
+  The other pages are tidied only on `altahascreener.in` and `*.vercel.app`,
+  the hosts that have these rewrites. Anywhere else (a local copy, the
+  browser tests' static servers) a reload of `/stock` would 404.
+
+The pages still link to each other as `stock.html`, `signin.html` and so on,
+on purpose. That file loads directly, with no extra hop, and the address is
+then tidied. Emailed and WhatsApp links the backend sends (`signin.html?token=`,
+`advisors.html#chat/...`, `brief.html`) work the same way.
+
+**Why not `"cleanUrls": true`:** it answers `/stock.html` with a 308 to `/stock`.
+Vercel's own static server, `serve-handler`, drops the query string on that
+redirect. Under it, `/stock.html?ticker=TCS` landed on an empty `/stock` and a
+sign-in link lost its `?token=`. Production may behave differently, but sign-in
+should not depend on it.
+
+**Adding a page:** add its rewrite to `vercel.json` and load `clean-url.js` first in its
+`<head>`. Code that reads its own address must accept both forms, `/stock` and
+`/stock.html`. So far that is the stock-page check in `experience.js`, the
+"no footer on the desks" check in `shell.js`, and `signin.html`, which uses
+`location.pathname` when it clears the token from the address.

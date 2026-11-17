@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8" />
+<meta charset="utf-8" /><script src="clean-url.js"></script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Sign in — Altaha Screener</title>
 <meta name="description" content="Sign in to save your portfolio and get one email after the close: what your holdings did, and what was filed on them." />
@@ -230,7 +231,7 @@
      once: the account is the same account whichever door was used. */
   function signedIn(user, method) {
     track('signed_in', { method: method });
-    try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
+    try { history.replaceState({}, '', location.pathname); } catch (e) {}
     try { sessionStorage.removeItem(NEXT_KEY); } catch (e) {}
     panel('<h1>You are signed in</h1>' +
           '<p class="si-lede">Signed in as <b>' + escapeHTML(user && user.email) +
@@ -392,7 +393,7 @@
     var token = param('token');
     if (token) {
       // Keep the token out of history and subsequent requests immediately.
-      try { history.replaceState({}, '', 'signin.html'); } catch (e) {}
+      try { history.replaceState({}, '', location.pathname); } catch (e) {}
       panel('<h1>Finish signing in</h1><p class="si-lede">Continue to securely open your account in this browser.</p>' +
             '<button class="si-btn" id="si-confirm">Continue to sign in</button>');
       $('si-confirm').addEventListener('click', function () { completeFromLink(token); });

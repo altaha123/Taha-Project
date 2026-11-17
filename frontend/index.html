@@ -3,17 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<script>
-/* Keep "index.html" out of the address bar. Old bookmarks and links already
-   shared still say /index.html#research/ideahub; this shows them as
-   /#research/ideahub before anything paints. replaceState does not reload
-   and does not fire hashchange, so the tab the hash names still opens. Only
-   on a real site: on file:// the bare folder is a directory listing. */
-(function (l) {
-  if (!/^https?:$/.test(l.protocol) || !/\/index\.html$/.test(l.pathname)) return;
-  try { history.replaceState(history.state, '', l.pathname.replace(/index\.html$/, '') + l.search + l.hash); } catch (e) {}
-})(location);
-</script>
+<script src="clean-url.js"></script>
 <title>Free NSE Stock Screener &amp; Analysis Tool — Altaha</title>
 <meta name="description" content="Free stock screener for NSE and US markets. Type any stock for a 0-100 technical and fundamental score with every calculation shown. Built by a Chartered Accountant. No signup." />
 <meta name="keywords" content="stock screener India, NSE stock analysis, free stock screener, Piotroski score India, fundamental analysis tool, technical analysis NSE" />

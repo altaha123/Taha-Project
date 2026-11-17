@@ -277,7 +277,7 @@
     const owner = window.AltahaNav && window.AltahaNav.ownerOf ? window.AltahaNav.ownerOf(raw) : null;
     return aliases[raw] || owner || raw;
   }
-  active(location.pathname.endsWith('stock.html') ? '' : product(location.hash.slice(1).split('/')[0]));
+  active(/\/stock(\.html)?$/.test(location.pathname) ? '' : product(location.hash.slice(1).split('/')[0]));
   window.addEventListener('altaha:navigate', e => active(e.detail.section));
 
   const ticker = new URLSearchParams(location.search).get('ticker');
