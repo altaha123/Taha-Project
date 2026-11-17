@@ -5869,7 +5869,7 @@ def intraday_start(limit: int = 200, key: str = ""):
     intraday.start(wl)
     return {"started": True, "watchlist_size": len(wl),
             "alerts_configured": notify.configured(),
-            "note": ("Scans every 60s while the market is open. Alerts go to Telegram when "
+            "note": ("Scans every few seconds while the market is open. Alerts go to Telegram when "
                      "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set.")}
 
 
@@ -5924,7 +5924,7 @@ def alerts_test(key: str = "", kind: str = "volume"):
     """Send a made-up alert to Telegram. kind=breakout sends a breakout card."""
     _require_admin(key)
     if kind == "breakout":
-        return notify.test("breakout", breakouts.sample())
+        return notify.test(breakouts.sample())
     return notify.test()
 
 
@@ -5982,7 +5982,7 @@ def cron_tick():
         # rate. The cron tick now closes that gap; mark_outcomes is idempotent.
         try:
             if intraday.now_ist().hour >= 16:
-                marked = intraday.mark_outcomes()
+                marked = intraday.day_result()
         except Exception:
             pass
         # Mark tracked ideas once after the close. Capped per tick so a single

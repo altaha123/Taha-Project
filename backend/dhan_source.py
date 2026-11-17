@@ -263,8 +263,10 @@ def token_info() -> dict:
 # Historical candles
 # ---------------------------------------------------------------------------
 
-def daily_ohlcv(symbol: str, days: int = 400):
-    """Return a DataFrame of daily OHLCV, or None if Dhan can't serve it."""
+def daily_ohlcv(symbol: str, days: int = 400, with_today: bool = True):
+    """Return a DataFrame of daily OHLCV, or None if Dhan can't serve it.
+    with_today=False skips building today's bar from a live quote — one quote call
+    saved per symbol, for callers that only want completed sessions."""
     if not configured():
         return None
     sid = security_id(symbol)
@@ -322,7 +324,8 @@ def daily_ohlcv(symbol: str, days: int = 400):
         df = df.dropna(subset=["Close"])
         if len(df) < 60:
             return None
-        df = _append_today(symbol, df)
+        if with_today:
+            df = _append_today(symbol, df)
         return df
     except Exception:
         return None

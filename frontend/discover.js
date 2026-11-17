@@ -193,21 +193,16 @@
       if (!d && !b) {
         body = quiet('The scanner could not be reached.');
       } else {
-        var bo = b ? (b.today || []) : [];
-        var fired = (d ? (d.alerts_today || []).length : 0) + bo.length;
-        var near = b && b.watch_usable ? (b.watch_count || 0) : 0;
-        body = '<p class="dsc-big"><b class="tnum">' + fired + '</b> ' +
-          (fired === 1 ? 'alert' : 'alerts') + ' today</p>' +
+        var rows = d ? (d.alerts_today || []) : [];
+        var stocks = b && b.usable ? (b.stocks || 0) : 0;
+        body = '<p class="dsc-big"><b class="tnum">' + rows.length + '</b> ' +
+          (rows.length === 1 ? 'breakout alert' : 'breakout alerts') + ' today</p>' +
           quiet((d && d.market_open)
-            ? 'Watching ' + near + ' stocks near a breakout level, and ' + ((d && d.watchlist_size) || 0) +
-              ' for sudden volume.'
-            : 'The market is closed. ' + (near ? near + ' stocks are within reach of a breakout level for the next session.'
-                                               : 'Today’s alerts stay on the Alerts page.'));
-        var chips = bo.length ? bo.map(function (a) { return a.symbol; })
-          : (b && b.near || []).map(function (w) { return w.symbol; });
-        if (!chips.length && d && (d.top_rvol_now || []).length) {
-          chips = d.top_rvol_now.map(function (x) { return x && (x.symbol || x[0]); });
-        }
+            ? 'Watching ' + stocks + ' stocks for a break of a level, up or down, on a burst of volume.'
+            : 'The market is closed. ' + (stocks ? stocks + ' stocks are loaded for the next session.'
+                                                 : 'Today’s alerts stay on the Alerts page.'));
+        var chips = rows.length ? rows.map(function (a) { return a.symbol; })
+          : ((b && b.near) || []).map(function (w) { return w.symbol; });
         if (chips.length) {
           body += '<p class="dsc-chips">' + chips.slice(0, 5).map(function (sym) {
             return sym ? '<span class="dsc-chip">' + esc(sym) + '</span>' : '';

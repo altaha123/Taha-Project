@@ -1,10 +1,12 @@
 """
-Breakout alerts (breakouts.py) and the Telegram messages they send.
+Intraday breakout alerts (breakouts.py), the loop that carries them
+(intraday.py) and the Telegram messages they send (alerts.py).
 
-What matters here is the definition holding: a sideways range broken on
-volume fires, a slow uptrend that merely fits inside a box does not, a
-stock already above its level before the open does not, and nothing fires
-twice in a day.
+What matters is the definition holding: a level crossed minutes ago on a
+burst of volume fires once, with a stop and a target; a stock that gapped
+through, crossed on thin volume, or ran too far without its volume does
+not; and the day's record counts every trade, not only the ones that
+reached a stop or a target.
 """
 import datetime as dt
 import importlib.util
@@ -17,16 +19,22 @@ import pytest
 
 import alerts
 import breakouts as bo
+import intraday
 
 IST = bo.IST
 BACKEND = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DAY = dt.date(2026, 11, 17)          # a Tuesday
 
 
-def frame(closes, volume=None, end="2026-11-17", spread=0.01):
+def at(h, m, s=0):
+    return dt.datetime(DAY.year, DAY.month, DAY.day, h, m, s, tzinfo=IST)
+
+
+def frame(closes, volume=None, end="2026-11-16", spread=0.01):
     closes = np.asarray(closes, dtype=float)
     idx = pd.date_range(end=pd.Timestamp(end), periods=len(closes), freq="B")
     c = pd.Series(closes, index=idx)
-    v = np.full(len(closes), 1_000_000.0) if volume is None else np.asarray(volume, dtype=float)
+    v = np.full(len(closes), 3_000_000.0) if volume is None else np.asarray(volume, dtype=float)
     return pd.DataFrame({"Open": c, "High": c * (1 + spread), "Low": c * (1 - spread),
                          "Close": c, "Volume": v}, index=idx)
 
@@ -40,240 +48,382 @@ def sideways(n=80, lo=100.0, hi=110.0, period=20):
 @pytest.fixture(autouse=True)
 def fresh_state(monkeypatch, tmp_path):
     monkeypatch.setattr(bo, "FEED_FILE", str(tmp_path / "feed.json"))
-    monkeypatch.setattr(bo, "LOG_FILE", str(tmp_path / "log.json"))
-    monkeypatch.setattr(bo, "_mem", {"feed": None, "log": None, "pending": {}})
+    monkeypatch.setattr(bo, "_mem", {"feed": None, "day": None})
     sent = []
     fake = types.SimpleNamespace(
-        send_breakouts=lambda rows, **k: sent.append(("live", rows, k)),
-        send_plain=lambda text: sent.append(("plain", text, {})),
-        format_breakout_close=alerts.format_breakout_close,
+        send_plain=lambda text: sent.append(text),
+        format_levels_ready=alerts.format_levels_ready,
         health=lambda: {"configured": True})
     monkeypatch.setattr(bo, "notify", fake)
     return sent
 
 
 # ---------------------------------------------------------------------------
-# The definition
+# Daily bars -> levels
 # ---------------------------------------------------------------------------
 
-def test_a_range_broken_on_volume_is_a_fresh_base_breakout():
-    closes = sideways(80) + [114.0]
-    vol = [1_000_000.0] * 80 + [3_000_000.0]
-    r = bo.read_daily(frame(closes, vol), drop_partial=False)
-    assert r["fresh"]["kind"] == "BASE"
-    assert r["fresh"]["sessions"] >= 40
-    assert r["fresh"]["level"] == pytest.approx(110 * 1.01, rel=1e-3)
-    assert r["rel_volume"] == pytest.approx(3.0)
-    assert r["watch"] is None          # broke out today: not a setup for tomorrow
+def test_read_daily_takes_the_levels_a_day_trade_needs():
+    r = bo.read_daily(frame(sideways(80) + [108.0]), drop_partial=False)
+    assert r["asof"] == "2026-11-16"
+    assert r["pdh"] == pytest.approx(108 * 1.01) and r["pdl"] == pytest.approx(108 * 0.99)
+    assert r["hi20"] == pytest.approx(110 * 1.01, rel=1e-3)
+    assert r["base"]["sessions"] >= 40 and r["base"]["top"] == pytest.approx(111.1, rel=1e-3)
+    assert r["atr_pct"] > 0 and r["turnover_cr"] > 15
 
 
 def test_a_slow_uptrend_that_fits_the_box_is_not_a_base():
     # Up 15% in a straight line over 60 sessions: inside an 18% box, but the
     # older half never came near the top, so it is a trend, not a range.
-    closes = list(np.linspace(80, 100, 200)) + list(np.linspace(100, 115, 60)) + [116.0]
-    r = bo.read_daily(frame(closes), drop_partial=False)
-    assert r["fresh"] is None or r["fresh"]["kind"] != "BASE"
+    closes = list(np.linspace(80, 100, 200)) + list(np.linspace(100, 115, 60))
+    assert bo.read_daily(frame(closes), drop_partial=False)["base"] is None
 
 
 def test_a_long_wide_consolidation_counts_from_120_sessions():
-    # About 23% wide: too loose for a short base, fine for a long one.
-    closes = sideways(150, 100, 121, period=30)
+    closes = sideways(150, 100, 121, period=30)          # about 23% wide
     h, low, _c, _v = bo._arrays(frame(closes))
     base = bo.find_base(h, low, end=len(closes))
-    assert base is not None and base["sessions"] >= bo.LONG_SESSIONS
+    assert base["sessions"] >= bo.LONG_SESSIONS
     assert bo.MAX_WIDTH < base["width"] <= bo.LONG_MAX_WIDTH
     short = closes[-90:]
     h, low, _c, _v = bo._arrays(frame(short))
     assert bo.find_base(h, low, end=len(short)) is None
 
 
-def test_a_stock_near_the_top_of_its_base_is_on_watch():
-    closes = sideways(80) + [108.0]
-    r = bo.read_daily(frame(closes), drop_partial=False)
-    w = r["watch"]
-    assert w and w["kind"] == "BASE"
-    assert 0 < w["to_top_pct"] <= bo.NEAR_PCT
-    # Eighty sessions is too little history for a 52-week high.
-    assert "high52" not in w
-    longer = bo.read_daily(frame([95.0] * 120 + sideways(80) + [108.0]), drop_partial=False)
-    assert longer["watch"]["high52"] >= longer["watch"]["level"]
-
-
-def test_a_stock_far_below_its_top_is_not_watched():
-    closes = sideways(80) + [100.5]
-    r = bo.read_daily(frame(closes, spread=0.0), drop_partial=False)
-    assert r["watch"] is None
-
-
-def test_a_fresh_52_week_high_after_a_quiet_spell():
-    # A year of drifting under 130, then a close over it. Too wide for a base.
-    closes = list(np.linspace(90, 130, 120)) + sideways(140, 95, 125, period=35) + [133.0]
-    vol = [1e6] * 260 + [2.5e6]
-    r = bo.read_daily(frame(closes, vol), drop_partial=False)
-    assert r["fresh"] is not None
-    assert r["fresh"]["level"] == pytest.approx(130 * 1.01, rel=1e-3)
-
-
 def test_todays_forming_candle_is_dropped_during_the_session():
-    closes = sideways(80) + [114.0]
-    df = frame(closes, end="2026-11-17")
+    df = frame(sideways(80) + [114.0], end="2026-11-17")
     r = bo.read_daily(df, drop_partial=True, today="2026-11-17")
     assert r["asof"] == "2026-11-16"
-    assert r["fresh"] is None
+
+
+def test_levels_at_one_price_are_one_level_named_for_the_biggest():
+    # The last bar made the high of the whole base: yesterday's high, the
+    # 20-day high and the base top are one price, and the alert says so once.
+    r = bo.read_daily(frame(sideways(80) + [110.5]), drop_partial=False)
+    up = bo._ladder(r, True)
+    assert len(up) == 1 and up[0]["k"] == "BASE"
+    assert set(up[0]["also"]) == {"PDH", "HIGH20"}
+    assert [x["l"] for x in up] == sorted(x["l"] for x in up)
+    dn = bo._ladder(r, False)
+    assert [x["l"] for x in dn] == sorted((x["l"] for x in dn), reverse=True)
 
 
 def test_day_fraction_is_u_shaped_not_a_straight_line():
     assert bo.day_fraction(15) == pytest.approx(0.10)
     assert bo.day_fraction(375) == pytest.approx(1.0)
-    assert bo.day_fraction(60) > 60 / 375          # the morning is heavier than average
+    assert bo.day_fraction(60) > 60 / 375
 
 
 # ---------------------------------------------------------------------------
 # After the close
 # ---------------------------------------------------------------------------
 
-def _reads(monkeypatch, n_quiet=5):
-    monkeypatch.setattr(bo, "MIN_SCAN", 3)
-    up = bo.read_daily(frame(sideways(80) + [114.0], [1e6] * 80 + [3e6]), drop_partial=False)
-    light = bo.read_daily(frame(sideways(80) + [114.0], [1e6] * 80 + [1.2e6]), drop_partial=False)
-    near = bo.read_daily(frame(sideways(80) + [108.0]), drop_partial=False)
-    reads = {"BRK": up, "LITE": light, "NEAR": near}
-    for i in range(n_quiet):
-        reads[f"Q{i}"] = bo.read_daily(frame(sideways(80) + [100.5], spread=0.0), drop_partial=False)
+def _reads():
+    reads = {"NEAR": bo.read_daily(frame(sideways(80) + [109.5]), drop_partial=False),
+             "THIN": bo.read_daily(frame(sideways(80) + [108.0], [50_000.0] * 81), drop_partial=False),
+             "PENNY": bo.read_daily(frame([x / 10 for x in sideways(80)] + [10.8]), drop_partial=False)}
+    for i in range(4):
+        reads[f"Q{i}"] = bo.read_daily(frame(sideways(80) + [104.0]), drop_partial=False)
     return reads
 
 
-def test_ingest_splits_confirmed_from_light_and_builds_the_watch(monkeypatch, fresh_state):
-    after_close = dt.datetime(2026, 11, 17, 17, 5, tzinfo=IST)
-    feed = bo.ingest(_reads(monkeypatch), meta={"BRK": {"sector": "Power", "leader": 71}},
-                     now=after_close)
-    assert [r["symbol"] for r in feed["fresh"]] == ["BRK"]
-    assert feed["fresh"][0]["sector"] == "Power"
-    assert [r["symbol"] for r in feed["light"]] == ["LITE"]
-    assert [w["symbol"] for w in feed["watch"]] == ["NEAR"]
-    # One summary, sent once, however many times the scan is re-run.
-    assert [k for k, *_ in fresh_state] == ["plain"]
-    bo.ingest(_reads(monkeypatch), now=after_close)
-    assert [k for k, *_ in fresh_state] == ["plain"]
+def test_ingest_keeps_only_stocks_a_day_trader_can_get_out_of(monkeypatch, fresh_state):
+    monkeypatch.setattr(bo, "MIN_SCAN", 3)
+    feed = bo.ingest(_reads(), meta={"NEAR": {"sector": "Power"}}, now=at(17, 5))
+    assert "THIN" not in feed["levels"] and "PENNY" not in feed["levels"]
+    lv = feed["levels"]["NEAR"]
+    assert lv["sector"] == "Power" and lv["up"] and lv["dn"] and lv["base"]["n"] >= 40
+    assert feed["near"][0]["symbol"] == "NEAR" and feed["near"][0]["dir"] == "UP"
 
 
-def test_a_mid_session_scan_sends_no_summary(monkeypatch, fresh_state):
-    bo.ingest(_reads(monkeypatch), now=dt.datetime(2026, 11, 17, 11, 0, tzinfo=IST))
-    assert fresh_state == []
+def test_levels_ready_is_sent_once_and_only_after_a_close(monkeypatch, fresh_state):
+    monkeypatch.setattr(bo, "MIN_SCAN", 3)
+    reads = _reads()
+    for r in reads.values():
+        r["asof"] = "2026-11-17"
+    bo.ingest(reads, now=at(11, 0))
+    assert fresh_state == []                      # mid-session: nothing closed yet
+    bo.ingest(reads, now=at(17, 5))
+    bo.ingest(reads, now=at(17, 40))
+    assert len(fresh_state) == 1 and "levels ready" in fresh_state[0]
 
 
-def test_a_small_scan_does_not_replace_the_watch_list(monkeypatch):
-    reads = _reads(monkeypatch)
+def test_a_small_scan_does_not_replace_the_levels_but_a_rebuild_may(monkeypatch):
     monkeypatch.setattr(bo, "MIN_SCAN", 50)
-    assert bo.ingest(reads) is None
+    assert bo.ingest(_reads()) is None
+    frames = {"NEAR": frame(sideways(80) + [109.5])}
+    feed = bo.rebuild(["NEAR", "GONE"], lambda s: frames.get(s), now=at(8, 45))
+    assert list(feed["levels"]) == ["NEAR"]
+    assert bo.usable(now=at(9, 0)) and bo.watch_symbols(now=at(9, 0)) == ["NEAR"]
 
 
 # ---------------------------------------------------------------------------
 # During the session
 # ---------------------------------------------------------------------------
 
-def _armed(monkeypatch):
-    """A watch list built after Monday's close, read on Tuesday."""
-    feed = {"asof": "2026-11-16", "watch": [
-        {"symbol": "NEAR", "kind": "BASE", "level": 111.0, "base_low": 99.0, "sessions": 80,
-         "width_pct": 12.1, "to_top_pct": 2.7, "vol_med50": 1_000_000, "high52": 111.0},
-        {"symbol": "OLD", "kind": "BASE", "level": 50.0, "base_low": 45.0, "sessions": 60,
-         "width_pct": 11.0, "to_top_pct": 1.0, "vol_med50": 1_000_000}]}
-    bo._mem["feed"] = feed
-    return feed
+def _arm(asof="2026-11-16"):
+    """Levels left by Monday's close, traded on Tuesday. ATR 2%, a million
+    shares a day."""
+    bo._mem["feed"] = {"asof": asof, "levels": {"NEAR": {
+        "c": 108.0, "atr": 2.0, "v": 1_000_000, "sector": "Power", "base": {"n": 80, "w": 12.1},
+        "up": [{"l": 110.0, "k": "PDH", "s": 2, "also": []},
+               {"l": 111.0, "k": "BASE", "s": 4, "also": ["HIGH20"]}],
+        "dn": [{"l": 105.0, "k": "PDL", "s": 2, "also": []},
+               {"l": 99.0, "k": "BASE_DN", "s": 4, "also": []}]}}}
+    bo._mem["day"] = None
 
 
-def test_a_live_cross_on_volume_fires_once(monkeypatch, fresh_state):
-    _armed(monkeypatch)
-    at = dt.datetime(2026, 11, 17, 11, 15, tzinfo=IST)          # 120 minutes in: 42% of a day
-    snap = {"NEAR": {"ltp": 112.0, "volume": 900_000, "prev_close": 108.0}}
-    fired = bo.check_live(snap, now=at)
+def q(px, vol, pc=108.0, opn=108.0, vwap=None, hi=None, lo=None):
+    return {"NEAR": {"ltp": px, "volume": vol, "prev_close": pc, "open": opn,
+                     "vwap": vwap, "high": hi or px, "low": lo or px}}
+
+
+def quiet_tape(start, minutes, px=108.5, vol0=150_000, per_pass=1_000, step=20, **kw):
+    """Passes every `step` seconds at an ordinary volume. Returns (time, volume)."""
+    bo.check_live(q(108.0, 5_000, **kw), now=at(9, 16))          # seen before the window opens
+    t, vol = start, vol0
+    for _ in range(int(minutes * 60 / step)):
+        assert bo.check_live(q(px, vol, **kw), now=t) == []
+        t += dt.timedelta(seconds=step)
+        vol += per_pass
+    return t, vol
+
+
+def test_a_fresh_cross_on_a_volume_burst_is_a_trade():
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    fired = bo.check_live(q(111.3, vol + 60_000, vwap=109.0), now=t)
+    assert len(fired) == 1
+    a = fired[0]
+    assert (a["symbol"], a["kind"], a["direction"]) == ("NEAR", "BO_BASE", "UP")
+    assert a["level"] == 111.0 and a["entry"] == 111.3
+    # The stop sits just back inside the level; the target is two risks away.
+    assert 110.5 < a["stop"] < 111.0
+    risk = a["entry"] - a["stop"]
+    assert a["t1"] == pytest.approx(a["entry"] + risk, abs=0.02)
+    assert a["target"] == pytest.approx(a["entry"] + 2 * risk, abs=0.02)
+    assert bo.MIN_RISK <= a["risk_pct"] <= bo.MAX_RISK
+    assert a["rvol"] >= bo.SURGE and a["score"] >= bo.MIN_SCORE
+    assert "80-session base" in a["why"] and "20-day high" in a["why"]
+    # Once the caller has logged it, the same stock does not fire again.
+    assert bo.check_live(q(111.5, vol + 90_000, vwap=109.0),
+                         now=t + dt.timedelta(seconds=20), fired={("NEAR", "UP")}) == []
+
+
+def test_a_cross_on_thin_volume_waits_and_says_why():
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    assert bo.check_live(q(111.3, vol + 1_000, vwap=109.0), now=t) == []
+    w = bo.status(now=t)["waiting"]
+    assert w and w[0]["symbol"] == "NEAR" and "volume" in w[0]["why"]
+
+
+def test_volume_that_arrives_too_late_is_not_chased():
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    for _ in range(40):                                   # 13 minutes over the level, no volume
+        assert bo.check_live(q(111.3, vol, vwap=109.0), now=t) == []
+        t += dt.timedelta(seconds=20)
+        vol += 1_000
+    assert bo.check_live(q(111.4, vol + 80_000, vwap=109.0), now=t) == []
+
+
+def test_a_second_attempt_after_falling_back_is_a_fresh_break():
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    for px in (111.3, 111.3, 109.0, 109.0):               # poke, then back inside
+        assert bo.check_live(q(px, vol, vwap=109.0), now=t) == []
+        t += dt.timedelta(minutes=8)
+        vol += 20_000
+    for _ in range(4):                                    # a few ordinary minutes back inside
+        assert bo.check_live(q(109.0, vol, vwap=109.0), now=t) == []
+        t += dt.timedelta(minutes=1)
+        vol += 2_000
+    fired = bo.check_live(q(111.3, vol + 80_000, vwap=109.0), now=t)
+    assert [a["kind"] for a in fired] == ["BO_BASE"]
+
+
+def test_a_gap_through_the_level_is_not_a_breakout():
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5, px=112.0, opn=112.0)
+    assert bo.check_live(q(112.4, vol + 80_000, opn=112.0, vwap=111.0), now=t) == []
+
+
+def test_a_level_cleared_before_today_is_not_a_breakout():
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5, px=111.5, pc=111.6)
+    assert bo.check_live(q(111.9, vol + 80_000, pc=111.6, vwap=111.0), now=t) == []
+
+
+def test_a_break_seen_only_after_a_restart_is_not_fresh():
+    _arm()
+    t = at(11, 0)                                         # first quote of the day, already through
+    assert bo.check_live(q(111.3, 400_000, vwap=109.0), now=t) == []
+    assert bo.check_live(q(111.4, 500_000, vwap=109.0), now=t + dt.timedelta(seconds=20)) == []
+
+
+def test_a_breakdown_is_a_short():
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    fired = bo.check_live(q(104.8, vol + 60_000, vwap=106.5), now=t)
+    assert len(fired) == 1
+    a = fired[0]
+    assert (a["kind"], a["direction"], a["level"]) == ("BO_PDL", "DOWN", 105.0)
+    assert a["stop"] > a["entry"] > a["t1"] > a["target"]
+    assert "Broke below" in a["why"]
+
+
+def test_shorts_can_be_switched_off(monkeypatch):
+    monkeypatch.setattr(bo, "SHORTS", False)
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    assert bo.check_live(q(104.8, vol + 60_000, vwap=106.5), now=t) == []
+
+
+def test_the_index_and_vwap_can_veto():
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    assert bo.check_live(q(111.3, vol + 60_000, vwap=109.0), now=t, index_pct=-1.2) == []
+    assert "index" in bo.status(now=t)["waiting"][0]["why"]
+    _arm()
+    t, vol = quiet_tape(at(9, 55), 5)
+    assert bo.check_live(q(111.3, vol + 60_000, vwap=112.0), now=t) == []
+
+
+def test_a_level_too_close_overhead_leaves_no_room():
+    _arm()
+    bo._mem["feed"]["levels"]["NEAR"]["up"].append({"l": 111.6, "k": "HIGH52", "s": 4, "also": []})
+    t, vol = quiet_tape(at(9, 55), 5)
+    assert bo.check_live(q(111.3, vol + 60_000, vwap=109.0), now=t) == []
+    assert "too close" in bo.status(now=t)["waiting"][0]["why"]
+
+
+def test_a_tight_intraday_range_broken_on_volume_is_a_trade():
+    _arm()
+    bo.check_live(q(108.0, 5_000, pc=107.0), now=at(9, 16))
+    t, vol = at(11, 0), 400_000
+    for k in range(35):                                   # 35 minutes inside 0.3%
+        px = 108.0 + 0.3 * (k % 2)
+        assert bo.check_live(q(px, vol, pc=107.0, vwap=107.8), now=t) == []
+        t += dt.timedelta(minutes=1)
+        vol += 2_000
+    fired = bo.check_live(q(108.5, vol + 40_000, pc=107.0, vwap=107.8), now=t)
+    assert [a["kind"] for a in fired] == ["BO_RANGE"]
+    a = fired[0]
+    assert a["level"] == pytest.approx(108.3, abs=0.01)
+    assert a["stop"] < 108.0                              # the far side of the range
+    assert a["risk_pct"] < 0.8
+
+
+def test_nothing_fires_outside_the_window_or_from_stale_levels():
+    _arm()
+    t, vol = quiet_tape(at(14, 31), 5)                    # after 14:30
+    assert bo.check_live(q(111.3, vol + 60_000, vwap=109.0), now=t) == []
+    _arm(asof="2026-11-01")
+    assert bo.watch_symbols(now=at(10, 0)) == []
+    assert bo.check_live(q(111.3, 900_000), now=at(10, 0)) == []
+
+
+# ---------------------------------------------------------------------------
+# The loop that carries them (intraday.py)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def loop(monkeypatch, tmp_path):
+    sent = []
+    alert = dict(bo.sample(), symbol="NEAR", date=intraday._today())
+    calls = {"n": 0}
+
+    def check_live(snap, index_pct=None, fired=None):
+        calls["n"] += 1
+        calls["fired"] = fired
+        return [] if ("NEAR", "UP") in (fired or set()) else [dict(alert)]
+
+    monkeypatch.setattr(intraday, "dhan", types.SimpleNamespace(
+        configured=lambda: True,
+        bulk_quotes=lambda syms, mode="ohlc": {s: {"ltp": 100.0, "volume": 1, "prev_close": 99.0}
+                                               for s in syms}))
+    monkeypatch.setattr(intraday, "breakouts", types.SimpleNamespace(
+        watch_symbols=lambda: ["NEAR"], check_live=check_live,
+        status=lambda: {"stocks": 1, "usable": True, "asof": "2026-11-16"}))
+    monkeypatch.setattr(intraday, "notify", types.SimpleNamespace(
+        send_batch=lambda rows, **k: sent.append(rows), send_plain=lambda t: None,
+        format_day_open=lambda **k: "", configured=lambda: True))
+    monkeypatch.setattr(intraday, "ann", None)
+    monkeypatch.setattr(intraday, "LOG_FILE", str(tmp_path / "log.json"))
+    monkeypatch.setitem(intraday._state, "alerts", [])
+    monkeypatch.setitem(intraday._state, "watch", [])
+    return sent, calls
+
+
+def test_the_loop_logs_and_sends_a_breakout_once(loop):
+    sent, calls = loop
+    fired = intraday.scan_once()
     assert [a["symbol"] for a in fired] == ["NEAR"]
-    assert fired[0]["pace"] == pytest.approx(900_000 / (1_000_000 * 0.42), abs=0.06)
-    assert fired[0]["exit"] == pytest.approx(112.0 * 0.92)
-    assert len([k for k, *_ in fresh_state if k == "live"]) == 1
-    # The next pass, and the cron tick's pass, see it already fired.
-    assert bo.check_live(snap, now=at + dt.timedelta(minutes=1)) == []
-    assert bo.status(now=at)["today"][0]["symbol"] == "NEAR"
+    assert len(sent) == 1 and sent[0][0]["kind"] == "BO_BASE"
+    assert intraday.scan_once() == []                     # the engine is told it already fired
+    assert calls["fired"] == {("NEAR", "UP")} and len(sent) == 1
+    assert intraday.status()["alerts_today"][0]["symbol"] == "NEAR"
 
 
-def test_a_cross_on_thin_volume_waits(monkeypatch, fresh_state):
-    _armed(monkeypatch)
-    at = dt.datetime(2026, 11, 17, 11, 15, tzinfo=IST)
-    snap = {"NEAR": {"ltp": 112.0, "volume": 200_000, "prev_close": 108.0}}
-    assert bo.check_live(snap, now=at) == []
-    assert bo.status(now=at)["pending"][0]["symbol"] == "NEAR"
-    assert fresh_state == []
+def test_two_passes_at_once_do_not_both_run(loop):
+    _sent, calls = loop
+    assert intraday._pass_lock.acquire(blocking=False)
+    try:
+        assert intraday.scan_once() == []
+    finally:
+        intraday._pass_lock.release()
+    assert calls["n"] == 0
 
 
-def test_already_above_before_the_open_is_not_a_breakout(monkeypatch):
-    _armed(monkeypatch)
-    at = dt.datetime(2026, 11, 17, 11, 15, tzinfo=IST)
-    snap = {"OLD": {"ltp": 53.0, "volume": 5_000_000, "prev_close": 52.0}}
-    assert bo.check_live(snap, now=at) == []
-
-
-def test_nothing_fires_in_the_opening_minutes_or_from_a_stale_list(monkeypatch):
-    feed = _armed(monkeypatch)
-    snap = {"NEAR": {"ltp": 112.0, "volume": 5_000_000, "prev_close": 108.0}}
-    assert bo.check_live(snap, now=dt.datetime(2026, 11, 17, 9, 18, tzinfo=IST)) == []
-    feed["asof"] = "2026-11-01"
-    assert bo.watch_symbols(now=dt.datetime(2026, 11, 17, 10, 0, tzinfo=IST)) == []
-    assert bo.check_live(snap, now=dt.datetime(2026, 11, 17, 11, 0, tzinfo=IST)) == []
-
-
-def test_watch_symbols_from_a_fresh_list(monkeypatch):
-    _armed(monkeypatch)
-    assert bo.watch_symbols(now=dt.datetime(2026, 11, 17, 9, 0, tzinfo=IST)) == ["NEAR", "OLD"]
-
-
-def test_the_close_marks_live_alerts_held_or_faded(monkeypatch):
-    _armed(monkeypatch)
-    at = dt.datetime(2026, 11, 17, 11, 15, tzinfo=IST)
-    bo.check_live({"NEAR": {"ltp": 112.0, "volume": 900_000, "prev_close": 108.0}}, now=at)
-    reads = _reads(monkeypatch)
-    reads["NEAR"] = dict(reads["NEAR"], asof="2026-11-17", close=109.5)
-    for r in reads.values():
-        r["asof"] = "2026-11-17"
-    bo.ingest(reads, now=dt.datetime(2026, 11, 17, 17, 0, tzinfo=IST), send=False)
-    row = bo.status(now=at)["today"][0]
-    assert row["eod"] == "faded" and row["eod_close"] == 109.5
+def test_the_record_counts_every_trade_in_risks(monkeypatch):
+    base = {"date": "2026-11-17", "time": "10:42", "symbol": "X", "kind": "BO_BASE",
+            "entry": 100.0, "stop": 99.0, "target": 102.0, "rr": 2.0, "score": 70, "rvol": 2.5}
+    rows = [dict(base, direction="UP", outcome="TARGET", closed_at=102.0),
+            dict(base, direction="UP", outcome="STOP", closed_at=99.0),
+            dict(base, direction="UP", outcome="OPEN_AT_CLOSE", closed_at=100.5),
+            dict(base, direction="DOWN", kind="BO_PDL", stop=101.0, target=98.0,
+                 outcome="OPEN_AT_CLOSE", closed_at=99.5)]
+    assert [intraday._r_multiple(a) for a in rows] == [2.0, -1.0, 0.5, 0.5]
+    monkeypatch.setitem(intraday._state, "alerts", rows)
+    s = intraday.stats()
+    assert s["overall"] == {"trades": 4, "win_rate": 75, "targets": 1, "stops": 1,
+                            "expectancy_R": 0.5, "total_R": 2.0}
+    assert s["by_signal"]["BO_BASE"]["trades"] == 3 and s["by_direction"]["DOWN"]["trades"] == 1
 
 
 # ---------------------------------------------------------------------------
 # The Telegram messages
 # ---------------------------------------------------------------------------
 
-def test_the_live_message_reads_on_a_phone():
-    text = alerts.format_breakouts([bo.sample()], clock="10:42", index_pct=0.35, total_today=1)
-    assert "TESTMSG" in text and "base breakout" in text
-    assert "64-session (3-month) range" in text
-    assert "<code>" in text and "412.50" in text and "384.74" in text
-    assert "430.00 is 2.8% overhead" in text        # the 52-week high above the base
-    assert "Live, not a close" in text
+def test_the_alert_reads_as_a_trade_on_a_phone():
+    text = alerts.format_digest([bo.sample()], index_pct=0.35, total_today=1, clock="10:42")
+    assert "<b>TESTMSG</b> · BUY" in text and "Base breakout" in text
+    for label, value in (("Level", "412.50"), ("Entry", "414.10"), ("Stop", "411.25"),
+                         ("Half", "416.95"), ("Target", "419.80")):
+        assert label in text and value in text
+    assert "square off by 15:15" in text
+    short = alerts.format_digest([dict(bo.sample(), direction="DOWN", kind="BO_PDL")])
+    assert "▼" in short and "· SELL" in short and "Yesterday's low broken" in short
 
 
-def test_the_public_message_carries_no_exit_or_target():
-    text = alerts.format_breakout_public(bo.sample())
-    assert "384.74" not in text and "463.00" not in text
+def test_the_public_message_carries_no_entry_stop_or_target():
+    text = alerts.format_public(bo.sample())
+    assert "411.25" not in text and "419.80" not in text and "BUY" not in text
     assert "Not a recommendation" in text
 
 
-def test_the_close_summary_says_so_when_nothing_broke_out():
-    text = alerts.format_breakout_close("2026-11-17", [], [], [], [], [])
-    assert "No stock closed above" in text
-
-
-def test_the_close_summary_lists_breakouts_and_the_watch():
-    fresh = [{"symbol": "BRK", "kind": "BASE", "sessions": 80, "rel_volume": 3.0}]
-    watch = [{"symbol": "NEAR", "kind": "BASE", "sessions": 80, "to_top_pct": 2.7, "level": 111.0}]
-    text = alerts.format_breakout_close("2026-11-17", fresh, [], [], [], watch)
-    assert "BRK" in text and "80d base" in text and "3.0x" in text
-    assert "Watching 1 for tomorrow" in text and "NEAR" in text
+def test_the_days_result_adds_up():
+    rows = [dict(bo.sample(), symbol="A", outcome="TARGET", r=2.0),
+            dict(bo.sample(), symbol="B", direction="DOWN", outcome="STOP", r=-1.0),
+            dict(bo.sample(), symbol="C", outcome="OPEN_AT_CLOSE", r=0.4)]
+    text = alerts.format_day_result("2026-11-17", rows)
+    assert "3 alerts · 1 target · 1 stopped · 1 flat at 15:15" in text
+    assert "Net +1.4R" in text and "▼ B" in text
+    assert "No alert today" in alerts.format_day_result("2026-11-17", [])
 
 
 # ---------------------------------------------------------------------------
-# The daily bars the after-close pass reads (dhan_source.py)
+# The daily bars the levels are read from (dhan_source.py)
 # ---------------------------------------------------------------------------
 
 def _real_dhan():
@@ -296,10 +446,14 @@ def test_dhan_daily_bars_are_dated_by_the_indian_session(monkeypatch):
     monkeypatch.setattr(d, "configured", lambda: True)
     monkeypatch.setattr(d, "security_id", lambda s: "1")
     monkeypatch.setattr(d, "_throttle_hist", lambda: None)
-    monkeypatch.setattr(d, "_append_today", lambda s, df: df)
-    df = d.daily_ohlcv("ANY")
+    called = []
+    monkeypatch.setattr(d, "_append_today", lambda s, df: called.append(s) or df)
+    df = d.daily_ohlcv("ANY", with_today=False)
     assert df.index[-1] == pd.Timestamp("2026-11-17")
     assert df.index[0] == pd.Timestamp(days[0])
+    assert called == []                                   # with_today=False spends no quote call
+    d.daily_ohlcv("ANY")
+    assert called == ["ANY"]
 
 
 def test_dhan_todays_bar_carries_the_days_volume(monkeypatch):

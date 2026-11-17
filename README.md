@@ -457,43 +457,47 @@ stop-loss or recommendation is withheld, not shown with a warning.
 `backend/tests/test_score_explain.py` and
 `frontend/tests/stock-explain-browser.cjs` pin all of the above.
 
-### Alerts on Telegram — breakouts and volume spikes
+### Alerts on Telegram — intraday breakouts, up and down
 
-The **Alerts** page (Today → Alerts) and your Telegram receive two kinds of alert.
+The **Alerts** page (Today → Alerts) and your Telegram get one kind of alert: a
+liquid stock breaking a level *now*, as a day trade — entry, stop, half-off
+point and target. Code: `backend/breakouts.py` (the rules) and
+`backend/intraday.py` (the loop, the log and the record).
 
-**Breakouts** (`backend/breakouts.py`) — a stock that spent weeks or months
-moving sideways and then clears the top of that range, or clears a 52-week
-high it set at least 20 sessions earlier.
+- **Levels.** After each close the universe scan reads every liquid stock's
+  daily bars (no extra data calls) and keeps, for the 400 most-traded:
+  yesterday's high and low, the 20-day and 52-week extremes, and the top and
+  bottom of a base (40+ sessions inside 18%, or 120+ inside 25%). The session
+  adds two of its own: the opening range (first 15 minutes) and a tight
+  intraday range (40 minutes inside a third of the daily ATR).
+- **Live.** One Dhan bulk quote every 20 seconds covers all 400. An alert
+  fires only when the cross is fresh (the price was on the other side minutes
+  ago — not a gap, not yesterday's break), the last five minutes traded 2× the
+  stock's usual volume for that time of day, the price is on the right side of
+  VWAP, the stop is 0.4–1.5% away, the next level is at least one risk away,
+  and the index is not running hard the other way. One alert per stock per
+  direction per day, 09:20–14:30, at most 15 a day, best score first.
+- **The trade.** Stop just back inside the level (or the far side of the
+  tight range); target two risks away; book half at one risk; flat by 15:15.
+- **The record.** After the close every alert is marked on 5-minute bars —
+  target, stop, or wherever it stood at 15:15 — and Telegram gets the day's
+  result in R (1R = entry to stop). The Alerts page shows expectancy per kind
+  of breakout and per direction. **This is the part that decides whether it
+  makes money:** nothing here was backtested on intraday history, so run it
+  small for a few weeks and switch off what loses.
 
-- *A base* is the longest stretch of 40 to 250 sessions whose range fits in
-  18% (under 120 sessions, the Breakouts list's rule) or 25% (120 sessions or
-  more), and whose older half already reached near the top — a slow uptrend
-  that happens to fit in a box is not a base.
-- *After the close*, the 16:50 IST scan reads every liquid stock's daily bars
-  (no extra data calls), lists the stocks that **closed** above their level on
-  2× their usual volume, marks the day's live alerts as held or faded, builds
-  the next day's watch list (stocks within 5% of their level), and sends one
-  summary to Telegram.
-- *During the session* the watch list rides on the live scanner's one-a-minute
-  quote request. A stock alerts once a day, 09:25–15:25, when it trades 0.2%
-  over its level with the day's volume running at 1.5× a normal day's pace.
+**Needs:** Dhan's Data API subscription (live quotes and daily bars) and
+`TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` on Render. **Test alert** on the page
+sends a sample card. If the levels are missing on a trading morning (first day
+after a deploy, a scan that failed) they are rebuilt from Dhan automatically.
 
-**Volume spikes** (`backend/intraday.py`) — the day-trading signal: 60 liquid
-stocks checked every minute for volume three times their usual rate for that
-time of day, with an entry, stop and target.
-
-**To switch Telegram on:** message @BotFather on Telegram, send `/newbot`, and
-copy the token it gives you. Send your new bot any message, then open
-`https://api.telegram.org/bot<TOKEN>/getUpdates` and copy `chat.id`. In the
-Render dashboard → Environment, add `TELEGRAM_BOT_TOKEN` and
-`TELEGRAM_CHAT_ID`, then press **Test alert** on the Alerts page. The page says
-plainly when Telegram is not set up. Live alerts also need Dhan (the quotes).
-
-**Tuning, without a redeploy** (Render → Environment): `BO_VOL_PACE` (live
-volume pace, default 1.5), `BO_VOL_EOD` (close volume, 2.0), `BO_NEAR_PCT`
-(watch distance, 5), `BO_MAX_WIDTH` / `BO_LONG_MAX_WIDTH` (base width, 0.18 /
-0.25), `BO_MIN_SESSIONS` (40), `BO_MAX_ALERTS_DAY` (20). `BREAKOUT_ALERTS=0`
-turns breakout alerts off. `GET /breakouts/status` shows what the page shows.
+**Tuning, without a redeploy** (Render → Environment): `BO_SURGE` (volume
+burst, default 2.0), `BO_MIN_SCORE` (50), `BO_MAX_RISK` / `BO_MIN_RISK` (1.5 /
+0.4 %), `BO_RR` (target in risks, 2), `BO_SHORTS=0` (longs only),
+`BO_UNIVERSE` (400), `BO_MIN_TURNOVER_CR` (15), `MAX_ALERTS_DAY` (15),
+`POLL_SECONDS` (20), `BO_END_MIN` (315 = 14:30). `BREAKOUT_ALERTS=0` turns it
+off. The older volume-spike signals are off; `VOLUME_ALERTS=1` brings them
+back. `GET /breakouts/status` and `GET /intraday/diag` say why it is quiet.
 
 ## Where the accuracy lives (read before you market it)
 
