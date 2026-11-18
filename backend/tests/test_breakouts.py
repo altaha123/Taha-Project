@@ -450,8 +450,25 @@ def test_a_call_reads_as_a_call():
 
 def test_the_public_message_carries_no_entry_stop_or_target():
     text = alerts.format_public(bo.sample())
-    assert "411.25" not in text and "419.80" not in text and "BUY" not in text
+    assert "TESTMSG" in text and "Consolidation breakout" in text
+    assert "Crossed above 412.50, the top of a 64-day consolidation, on 2.6 times" in text
+    for trade in ("411.25", "419.80", "BUY", "SELL", "Exit", "Stop", "Target"):
+        assert trade not in text
     assert "Not a recommendation" in text
+
+
+@pytest.mark.parametrize("url, chat, expect", [
+    ("", "@altaha_alerts", "https://t.me/altaha_alerts"),           # built from the channel name
+    ("https://t.me/+AbCdEf12345", "-1001234", "https://t.me/+AbCdEf12345"),   # a private invite link
+    ("@altaha_alerts", "", "https://t.me/altaha_alerts"),
+    ("", "-1001234567", None),                                      # a numeric id has no public link
+    ("https://evil.example/t.me/x", "", None),                      # only t.me links are ever shown
+    ("javascript:alert(1)", "@x", None),                            # and no too-short names either
+])
+def test_the_join_button_only_ever_links_to_telegram(monkeypatch, url, chat, expect):
+    monkeypatch.setattr(alerts, "TG_JOIN", url)
+    monkeypatch.setattr(alerts, "TG_PUBLIC", chat)
+    assert alerts.join_url() == expect
 
 
 def test_the_days_result_is_in_plain_words():

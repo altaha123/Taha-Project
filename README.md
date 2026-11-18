@@ -495,6 +495,16 @@ point and target. Code: `backend/breakouts.py` (the rules) and
 sends a sample card. If the levels are missing on a trading morning (first day
 after a deploy, a scan that failed) they are rebuilt from Dhan automatically.
 
+**The join button.** The Alerts page shows visitors a "Get alerts on
+Telegram" button once the public channel is set: create a public channel in
+Telegram, add your bot as an administrator, and set
+`TELEGRAM_PUBLIC_CHAT_ID=@yourchannel` on Render (or `TELEGRAM_CHANNEL_URL`
+for a private channel's invite link). The channel receives each call
+facts-only — the stock, what it crossed, on what volume — without buy/sell,
+stop loss or target; the full call goes to `TELEGRAM_CHAT_ID` only. The
+owner's controls on the page appear after pressing "Owner" at the foot of the
+page and entering the admin key.
+
 **Tuning, without a redeploy** (Render → Environment): `BO_SURGE` (volume
 burst, default 2.0), `BO_MIN_SCORE` (50), `BO_MAX_RISK` / `BO_MIN_RISK` (1.5 /
 0.4 %), `BO_RR` (target in risks, 2), `BO_SHORTS=0` (longs only),

@@ -524,6 +524,16 @@
   .alertcard .aside.buy{background:var(--pass)} .alertcard .aside.sell{background:var(--fail)}
   .alertcard .anums{margin-top:10px}
   .statbox .recline{display:block;font-size:14px;line-height:1.7}
+  .tgbtn{display:inline-flex;align-items:center;gap:12px;margin:18px 0 6px;padding:14px 26px;border-radius:999px;
+         background:#229ED9;color:#fff;font-size:16px;font-weight:600;text-decoration:none;letter-spacing:.01em;
+         box-shadow:0 2px 10px rgba(34,158,217,.25)}
+  .tgbtn:hover{background:#1c8cc2}
+  .tgbtn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+  .tgbtn svg{width:22px;height:22px;flex-shrink:0}
+  .tgsub{font-size:13px;color:var(--mute);margin:2px 0 0 4px}
+  .lsrow{display:flex;align-items:center;margin:14px 0 4px}
+  .ownerlink{font:inherit;font-size:12px;background:none;border:0;color:var(--mute);cursor:pointer;
+             text-decoration:underline;margin-left:8px;padding:0}
   .alertcard .asym a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
   .ltg{font-size:14px;line-height:1.6;margin:-4px 0 6px;color:var(--ink-2)}
   .ltg.off{border:1px dashed var(--fail);padding:10px 14px;color:inherit}
@@ -1615,35 +1625,39 @@
 
   <div id="view-live" style="display:none">
     <header class="tabhead">
-      <h2>Alerts</h2>
-      <p>Live buy and sell calls for intraday, sent to your Telegram the moment a stock breaks out. Every call has a price to enter, a stop loss and a target.</p>
+      <h2>Live alerts</h2>
+      <p>Intraday calls and consolidation breakouts, the moment they happen.</p>
     </header>
 
-    <div class="livehead">
-      <button class="livebtn" id="livestart">Start live scanner</button>
-      <button class="livebtn" id="livescan">Scan once now</button>
-      <button class="livebtn" id="livetest">Test alert</button>
-      <span class="livestat"><span class="livedot" id="ldot"></span><span id="lstat">not running</span></span>
+    <div id="tgjoin"></div>
+    <div class="livestat lsrow"><span class="livedot" id="ldot"></span><span id="lstat"></span></div>
+
+    <!-- The owner's controls. Hidden from visitors; shown once the admin key
+         has been entered on this browser (the Owner link at the bottom). -->
+    <div id="lowner" hidden>
+      <div class="livehead">
+        <button class="livebtn" id="livestart">Start live scanner</button>
+        <button class="livebtn" id="livescan">Scan once now</button>
+        <button class="livebtn" id="livetest">Test alert</button>
+      </div>
+      <div id="ltg" class="ltg"></div>
+      <div id="lquiet"></div>
     </div>
-    <div id="ltg" class="ltg"></div>
 
     <div id="lstats"></div>
-    <div id="lquiet"></div>
 
     <div class="lh" style="margin-top:34px"><h3>Intraday calls</h3><span id="lcount"></span></div>
-    <p class="lsub">A stock crossing yesterday's high or low, its 20-day or 52-week high or low, or the first 15 minutes' range, on heavy volume.</p>
     <div id="lalerts"></div>
 
     <div class="lh" style="margin-top:44px"><h3>Consolidation breakouts</h3><span id="ccount"></span></div>
-    <p class="lsub">A stock that moved sideways in a narrow range, for weeks or for the last 40 minutes, and has just broken out of it on heavy volume.</p>
     <div id="calerts"></div>
     <div id="bowatch"></div>
 
     <div class="lh" style="margin-top:44px"><h3>How the calls have done</h3><span>checked after every close</span></div>
-    <p class="lsub">After the market closes, each call is checked against what the price did next: it hit the target, hit the stop loss, or was closed at 3:15 pm.</p>
     <div id="lhit"></div>
 
-    <p class="disc">Alerts are measurements, not recommendations. No signal predicts price.</p>
+    <p class="disc">Alerts are measurements, not recommendations. No signal predicts price.
+      <button type="button" class="ownerlink" id="lownerbtn">Owner</button></p>
   </div>
 
   <div id="view-ideas" style="display:none">
@@ -2465,10 +2479,14 @@ function switchTab(which){
 /* Admin key for control endpoints. Kept in memory for the session only \u2014
    never hardcoded, because this file is public. Set ADMIN_KEY on Render and
    enter it once when prompted. */
-let ADMIN_KEY = "";
+// Remembered on this browser under the same name the social desk uses, so the
+// owner enters it once and the Alerts page can show the owner's controls.
+const ADMIN_STORE = "altaha-admin-key";
+let ADMIN_KEY = (function(){ try{ return localStorage.getItem(ADMIN_STORE) || ""; }catch(e){ return ""; } })();
 function adminKey(){
   if(!ADMIN_KEY){
     ADMIN_KEY = window.prompt("Admin key (set as ADMIN_KEY on Render). Leave blank if you haven't set one.") || "";
+    try{ if(ADMIN_KEY) localStorage.setItem(ADMIN_STORE, ADMIN_KEY); }catch(e){}
   }
   return ADMIN_KEY;
 }
@@ -2514,17 +2532,25 @@ function renderWatch(b){
     }</tbody></table></div>`;
 }
 
+const TG_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.2 1.1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9-8.2c.4-.4-.1-.6-.6-.2L6.3 13 1.5 11.5c-1-.3-1.1-1 .2-1.5l18.8-7.2c.9-.3 1.6.2 1.4 1.5Z"/></svg>';
+const isOwner = () => !!ADMIN_KEY;
+
+/* The join button. The link comes from the server and is only ever a t.me
+   address: anything else is not shown, whatever the server says. */
 function renderTelegram(b, d){
   const tg = (b && b.telegram) || {};
-  if(!b && !d){ $("ltg").innerHTML = ""; return; }
+  const url = /^https:\/\/(t|telegram)\.me\/[A-Za-z0-9_+\-]{5,64}$/.test(tg.join_url || "") ? tg.join_url : "";
+  $("tgjoin").innerHTML = url
+    ? `<a class="tgbtn" href="${esc(url)}" target="_blank" rel="noopener">${TG_ICON}Get alerts on Telegram</a>
+       <p class="tgsub">Free. Opens Telegram, then tap Join.</p>`
+    : (isOwner() ? `<div class="ltg off">No join button yet: set <code>TELEGRAM_PUBLIC_CHAT_ID</code> to your channel's <code>@name</code> on Render.</div>` : "");
+  $("lowner").hidden = !isOwner();
+  if(!isOwner()) return;
   const on = tg.configured || (d && d.alerts_configured);
-  if(!on){
-    $("ltg").className = "ltg off";
-    $("ltg").innerHTML = `<b>Telegram is not set up, so nothing reaches your phone.</b> Add <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code> to the API's environment on Render, then press Test alert.`;
-    return;
-  }
-  $("ltg").className = "ltg";
-  $("ltg").innerHTML = "Telegram connected" + (tg.last_ok === false ? ", but the last message failed: " + esc(tg.last_detail || "") : "");
+  $("ltg").className = on ? "ltg" : "ltg off";
+  $("ltg").innerHTML = !on ? `<b>Telegram is not set up.</b> Add <code>TELEGRAM_BOT_TOKEN</code> and <code>TELEGRAM_CHAT_ID</code> on Render.`
+    : "Telegram connected" + (tg.last_ok === false ? ", but the last message failed: " + esc(tg.last_detail || "") : "")
+      + (tg.public_channel ? " · channel connected" : " · no public channel yet");
 }
 
 async function getJSON(path){
@@ -2541,17 +2567,15 @@ async function loadLive(){
   }else{
     const live = d.running && d.market_open && !d.error && b && b.usable;
     $("ldot").className = "livedot" + (live ? " on" : "");
-    $("lstat").textContent = !d.running ? "not running"
-      : !d.market_open ? "market closed, starts again at 9:15 am"
-      : d.error ? "running, but not reading the market"
-      : `live · checking ${d.quotes_last_pass} stocks every ${d.poll_seconds || 20} seconds`;
+    $("lstat").textContent = !d.market_open ? "Market closed. Calls resume at 9:20 am."
+      : live ? `Live: watching ${b.stocks} stocks`
+      : "Paused";
     const rows = d.alerts_today || [];
     const cons = rows.filter(a => a.call === "CONSOLIDATION");
     const intra = rows.filter(a => a.call !== "CONSOLIDATION");
     $("lstats").innerHTML = `<div class="statgrid">
       <div class="statbox"><span class="sk2">Calls today</span><span class="sv">${rows.length}</span></div>
       <div class="statbox"><span class="sk2">Hit target today</span><span class="sv">${rows.filter(a => a.outcome === "TARGET").length}</span></div>
-      <div class="statbox"><span class="sk2">Stocks watched live</span><span class="sv">${b && b.usable ? b.stocks : 0}</span></div>
     </div>`;
     // If something is stopping calls, say which thing, once, at the top.
     const problem = !d.running ? "The scanner is not running. Press Start live scanner."
@@ -2560,9 +2584,7 @@ async function loadLive(){
       : !b.usable ? "The watch list is out of date. It is rebuilt automatically on the next trading morning."
       : "";
     $("lquiet").innerHTML = problem ? `<div class="ltg off">${esc(problem)}</div>` : "";
-    const none = what => `<div class="ideas-note" style="padding:14px 0">${
-      d.market_open ? `No ${what} yet today. You get a Telegram message the moment there is one.`
-                    : `No ${what} today. Calls come between 9:20 am and 3:00 pm on trading days.`}</div>`;
+    const none = what => `<div class="ideas-note" style="padding:14px 0">No ${what}${d.market_open ? " yet" : ""} today.</div>`;
     $("lcount").textContent = intra.length ? `${intra.length} today` : "";
     $("ccount").textContent = cons.length ? `${cons.length} today` : "";
     $("lalerts").innerHTML = intra.length ? intra.map(alertCard).join("") : none("intraday call");
@@ -2588,10 +2610,19 @@ async function loadHitRate(){
       <span class="recline">Average result: <b style="color:${col}">${boPct(r.avg_pct)}</b> a call</span>
     </div>`;
   };
-  $("lhit").innerHTML = `<div class="statgrid">${box("Intraday calls", c.intraday)}${box("Consolidation breakouts", c.consolidation)}</div>`
-    + ((c.intraday && c.intraday.calls) || (c.consolidation && c.consolidation.calls) ? ""
-       : `<p class="lsub">The record starts after the first calls have been through a market close.</p>`);
+  $("lhit").innerHTML = `<div class="statgrid">${box("Intraday calls", c.intraday)}${box("Consolidation breakouts", c.consolidation)}</div>`;
 }
+
+$("lownerbtn").addEventListener("click", ()=>{
+  if(isOwner()){
+    if(window.confirm("Sign out of owner mode on this browser?")){
+      ADMIN_KEY = ""; try{ localStorage.removeItem(ADMIN_STORE); }catch(e){}
+    }
+  }else{
+    adminKey();
+  }
+  loadLive();
+});
 
 $("livestart").addEventListener("click", async ()=>{
   $("livestart").textContent = "Starting\u2026";
