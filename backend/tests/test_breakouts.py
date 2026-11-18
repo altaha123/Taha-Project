@@ -144,7 +144,27 @@ def test_levels_ready_is_sent_once_and_only_after_a_close(monkeypatch, fresh_sta
     assert fresh_state == []                      # mid-session: nothing closed yet
     bo.ingest(reads, now=at(17, 5))
     bo.ingest(reads, now=at(17, 40))
-    assert len(fresh_state) == 1 and "levels ready" in fresh_state[0]
+    assert len(fresh_state) == 1 and "ready for tomorrow" in fresh_state[0]
+
+
+def test_an_overnight_scan_still_says_the_levels_are_ready(monkeypatch, fresh_state):
+    # GitHub's 16:50 schedule has been starting the scan around 01:30 IST.
+    monkeypatch.setattr(bo, "MIN_SCAN", 3)
+    reads = _reads()
+    for r in reads.values():
+        r["asof"] = "2026-11-17"
+    overnight = dt.datetime(2026, 11, 18, 1, 24, tzinfo=IST)
+    bo.ingest(reads, now=overnight)
+    assert len(fresh_state) == 1 and "ready for tomorrow" in fresh_state[0]
+    assert not bo.behind(now=dt.datetime(2026, 11, 18, 8, 45, tzinfo=IST))
+    assert bo.behind(now=dt.datetime(2026, 11, 19, 8, 45, tzinfo=IST))
+
+
+def test_last_close_skips_the_weekend():
+    assert bo.last_close(at(16, 0)) == DAY                                   # Tuesday after the close
+    assert bo.last_close(at(10, 0)) == dt.date(2026, 11, 16)                 # Tuesday morning: Monday
+    monday = dt.datetime(2026, 11, 23, 9, 0, tzinfo=IST)
+    assert bo.last_close(monday) == dt.date(2026, 11, 20)                    # Monday morning: Friday
 
 
 def test_a_small_scan_does_not_replace_the_levels_but_a_rebuild_may(monkeypatch):
@@ -203,7 +223,8 @@ def test_a_fresh_cross_on_a_volume_burst_is_a_trade():
     assert a["target"] == pytest.approx(a["entry"] + 2 * risk, abs=0.02)
     assert bo.MIN_RISK <= a["risk_pct"] <= bo.MAX_RISK
     assert a["rvol"] >= bo.SURGE and a["score"] >= bo.MIN_SCORE
-    assert "80-session base" in a["why"] and "20-day high" in a["why"]
+    assert a["call"] == "CONSOLIDATION"
+    assert "80-day consolidation" in a["why"] and "Exit by 3:15 pm" in a["why"]
     # Once the caller has logged it, the same stock does not fire again.
     assert bo.check_live(q(111.5, vol + 90_000, vwap=109.0),
                          now=t + dt.timedelta(seconds=20), fired={("NEAR", "UP")}) == []
@@ -269,7 +290,7 @@ def test_a_breakdown_is_a_short():
     a = fired[0]
     assert (a["kind"], a["direction"], a["level"]) == ("BO_PDL", "DOWN", 105.0)
     assert a["stop"] > a["entry"] > a["t1"] > a["target"]
-    assert "Broke below" in a["why"]
+    assert a["call"] == "INTRADAY" and "Fell below 105.00, yesterday's low" in a["why"]
 
 
 def test_shorts_can_be_switched_off(monkeypatch):
@@ -309,6 +330,7 @@ def test_a_tight_intraday_range_broken_on_volume_is_a_trade():
     fired = bo.check_live(q(108.5, vol + 40_000, pc=107.0, vwap=107.8), now=t)
     assert [a["kind"] for a in fired] == ["BO_RANGE"]
     a = fired[0]
+    assert a["call"] == "CONSOLIDATION" and "tight 40-minute range" in a["why"]
     assert a["level"] == pytest.approx(108.3, abs=0.01)
     assert a["stop"] < 108.0                              # the far side of the range
     assert a["risk_pct"] < 0.8
@@ -316,7 +338,7 @@ def test_a_tight_intraday_range_broken_on_volume_is_a_trade():
 
 def test_nothing_fires_outside_the_window_or_from_stale_levels():
     _arm()
-    t, vol = quiet_tape(at(14, 31), 5)                    # after 14:30
+    t, vol = quiet_tape(at(15, 1), 5)                     # after 15:00
     assert bo.check_live(q(111.3, vol + 60_000, vwap=109.0), now=t) == []
     _arm(asof="2026-11-01")
     assert bo.watch_symbols(now=at(10, 0)) == []
@@ -391,19 +413,39 @@ def test_the_record_counts_every_trade_in_risks(monkeypatch):
     assert s["by_signal"]["BO_BASE"]["trades"] == 3 and s["by_direction"]["DOWN"]["trades"] == 1
 
 
+def test_the_page_record_is_in_plain_counts_and_percent(monkeypatch):
+    base = {"date": "2026-11-17", "time": "10:42", "symbol": "X", "kind": "BO_BASE",
+            "call": "CONSOLIDATION", "direction": "UP", "entry": 100.0, "stop": 99.0, "target": 102.0}
+    rows = [dict(base, outcome="TARGET", closed_at=102.0),                    # +2.0%
+            dict(base, outcome="STOP", closed_at=99.0),                       # -1.0%
+            dict(base, kind="BO_PDL", call="INTRADAY", direction="DOWN", stop=101.0, target=98.0,
+                 outcome="OPEN_AT_CLOSE", closed_at=99.5),                    # +0.5% on a short
+            # The old volume scanner's history is a different system: not counted.
+            dict(base, kind="RVOL", call=None, outcome="STOP", closed_at=99.0)]
+    assert [intraday._pnl_pct(a) for a in rows[:3]] == [2.0, -1.0, 0.5]
+    monkeypatch.setitem(intraday._state, "alerts", rows)
+    rec = intraday.stats()["calls"]
+    assert rec["consolidation"] == {"calls": 2, "target": 1, "stop": 1, "closed": 0,
+                                    "profitable": 1, "avg_pct": 0.5}
+    assert rec["intraday"] == {"calls": 1, "target": 0, "stop": 0, "closed": 1,
+                               "profitable": 1, "avg_pct": 0.5}
+
+
 # ---------------------------------------------------------------------------
 # The Telegram messages
 # ---------------------------------------------------------------------------
 
-def test_the_alert_reads_as_a_trade_on_a_phone():
+def test_a_call_reads_as_a_call():
     text = alerts.format_digest([bo.sample()], index_pct=0.35, total_today=1, clock="10:42")
-    assert "<b>TESTMSG</b> · BUY" in text and "Base breakout" in text
-    for label, value in (("Level", "412.50"), ("Entry", "414.10"), ("Stop", "411.25"),
-                         ("Half", "416.95"), ("Target", "419.80")):
+    assert "<b>BUY TESTMSG</b>" in text and "Consolidation breakout" in text
+    for label, value in (("Buy at", "414.10"), ("Stop loss", "411.25"), ("Target", "419.80")):
         assert label in text and value in text
-    assert "square off by 15:15" in text
-    short = alerts.format_digest([dict(bo.sample(), direction="DOWN", kind="BO_PDL")])
-    assert "▼" in short and "· SELL" in short and "Yesterday's low broken" in short
+    assert "Exit by 3:15 pm" in text
+    # Nothing a reader has to decode.
+    for jargon in ("score", "VWAP", "1:2", "index", "R "):
+        assert jargon not in text
+    sell = alerts.format_digest([dict(bo.sample(), direction="DOWN", call="INTRADAY")])
+    assert "<b>SELL TESTMSG</b>" in sell and "Intraday call" in sell and "Sell at" in sell
 
 
 def test_the_public_message_carries_no_entry_stop_or_target():
@@ -412,14 +454,14 @@ def test_the_public_message_carries_no_entry_stop_or_target():
     assert "Not a recommendation" in text
 
 
-def test_the_days_result_adds_up():
-    rows = [dict(bo.sample(), symbol="A", outcome="TARGET", r=2.0),
-            dict(bo.sample(), symbol="B", direction="DOWN", outcome="STOP", r=-1.0),
-            dict(bo.sample(), symbol="C", outcome="OPEN_AT_CLOSE", r=0.4)]
-    text = alerts.format_day_result("2026-11-17", rows)
-    assert "3 alerts · 1 target · 1 stopped · 1 flat at 15:15" in text
-    assert "Net +1.4R" in text and "▼ B" in text
-    assert "No alert today" in alerts.format_day_result("2026-11-17", [])
+def test_the_days_result_is_in_plain_words():
+    rows = [dict(bo.sample(), symbol="A", outcome="TARGET", pnl_pct=1.38),
+            dict(bo.sample(), symbol="B", direction="DOWN", outcome="STOP", pnl_pct=-0.44),
+            dict(bo.sample(), symbol="C", outcome="OPEN_AT_CLOSE", pnl_pct=0.3)]
+    text = alerts.format_day_result("18 Nov", rows)
+    assert "3 calls: 1 hit target, 1 hit stop loss, 1 closed at 3:15 pm" in text
+    assert "SELL B" in text and "-0.4%" in text and "+1.4%" in text
+    assert "No call today" in alerts.format_day_result("18 Nov", [])
 
 
 # ---------------------------------------------------------------------------
@@ -434,24 +476,44 @@ def _real_dhan():
     return mod
 
 
-def test_dhan_daily_bars_are_dated_by_the_indian_session(monkeypatch):
+def _dhan_with(monkeypatch, stamps):
     d = _real_dhan()
-    # Dhan stamps a daily candle at midnight IST: 18:30 UTC the day before.
-    days = pd.bdate_range(end="2026-11-17", periods=70)
-    stamps = [int((pd.Timestamp(x) - pd.Timedelta(hours=5, minutes=30)).timestamp()) for x in days]
-    body = {"open": [1.0] * 70, "high": [1.0] * 70, "low": [1.0] * 70, "close": [1.0] * 70,
-            "volume": [5] * 70, "timestamp": stamps}
+    n = len(stamps)
+    body = {"open": [1.0] * n, "high": [1.0] * n, "low": [1.0] * n, "close": [1.0] * n,
+            "volume": [5] * n, "timestamp": stamps}
     resp = types.SimpleNamespace(status_code=200, json=lambda: body, text="")
     monkeypatch.setattr(d, "requests", types.SimpleNamespace(post=lambda *a, **k: resp))
     monkeypatch.setattr(d, "configured", lambda: True)
     monkeypatch.setattr(d, "security_id", lambda s: "1")
     monkeypatch.setattr(d, "_throttle_hist", lambda: None)
+    return d
+
+
+@pytest.mark.parametrize("offset", [
+    pd.Timedelta(hours=18, minutes=30),       # 18:30 UTC on the trading day (midnight after it, IST)
+    -pd.Timedelta(hours=5, minutes=30),       # 18:30 UTC the day before (midnight starting it, IST)
+    pd.Timedelta(0),                          # UTC midnight
+])
+def test_dhan_daily_bars_land_on_their_trading_day_whichever_midnight(monkeypatch, offset):
+    # A year of weekdays. Read the wrong way, the stamps of one convention
+    # put every Friday on a Saturday — which is how the live levels on
+    # 18 Nov 2026 lost Tuesday's candle.
+    days = pd.bdate_range(end="2026-11-17", periods=260)
+    stamps = [int((pd.Timestamp(x) + offset).timestamp()) for x in days]
+    d = _dhan_with(monkeypatch, stamps)
+    monkeypatch.setattr(d, "_append_today", lambda s, df: df)
+    df = d.daily_ohlcv("ANY")
+    assert list(df.index) == list(days)
+    assert (df.index.dayofweek < 5).all()
+
+
+def test_dhan_with_today_false_spends_no_quote_call(monkeypatch):
+    days = pd.bdate_range(end="2026-11-17", periods=70)
+    d = _dhan_with(monkeypatch, [int(pd.Timestamp(x).timestamp()) for x in days])
     called = []
     monkeypatch.setattr(d, "_append_today", lambda s, df: called.append(s) or df)
-    df = d.daily_ohlcv("ANY", with_today=False)
-    assert df.index[-1] == pd.Timestamp("2026-11-17")
-    assert df.index[0] == pd.Timestamp(days[0])
-    assert called == []                                   # with_today=False spends no quote call
+    d.daily_ohlcv("ANY", with_today=False)
+    assert called == []
     d.daily_ohlcv("ANY")
     assert called == ["ANY"]
 
@@ -478,3 +540,39 @@ def test_dhan_todays_bar_carries_the_days_volume(monkeypatch):
     assert seen["mode"] == "quote"
     assert out.index[-1] == pd.Timestamp("2026-11-17")
     assert out["Volume"].iloc[-1] == 4_200_000
+
+
+def test_the_morning_rebuilds_levels_that_are_a_session_behind(monkeypatch):
+    started = []
+
+    class Thread:
+        def __init__(self, target=None, args=(), **k):
+            self.args = args
+
+        def start(self):
+            started.append(self.args[0])
+
+    monkeypatch.setattr(intraday, "threading", types.SimpleNamespace(Thread=Thread))
+    monkeypatch.setattr(intraday, "dhan", types.SimpleNamespace(configured=lambda: True))
+    monkeypatch.setattr(intraday, "now_ist", lambda: dt.datetime(2026, 11, 19, 8, 45, tzinfo=IST))
+    monkeypatch.setitem(intraday._state, "levels_day", None)
+    monkeypatch.setattr(intraday, "breakouts", types.SimpleNamespace(
+        usable=lambda: True, behind=lambda: True, universe=lambda: ["A", "B"], rebuild=None))
+    intraday._ensure_levels()
+    assert started == [["A", "B"]]
+    intraday._ensure_levels()                     # once a day, not every pass
+    assert len(started) == 1
+
+    started.clear()
+    monkeypatch.setitem(intraday._state, "levels_day", None)
+    monkeypatch.setattr(intraday, "breakouts", types.SimpleNamespace(
+        usable=lambda: True, behind=lambda: False, universe=lambda: ["A"], rebuild=None))
+    intraday._ensure_levels()
+    assert started == []                          # up to date: nothing to do
+
+
+def test_calls_run_until_three_pm():
+    _arm()
+    t, vol = quiet_tape(at(14, 50), 5, vol0=820_000)      # a break at 2:55 pm still calls
+    fired = bo.check_live(q(111.3, vol + 60_000, vwap=109.0), now=t)
+    assert [a["kind"] for a in fired] == ["BO_BASE"] and fired[0]["time"] == "14:55"

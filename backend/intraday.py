@@ -779,7 +779,9 @@ def _ensure_levels():
     if t.weekday() >= 5 or not (510 <= mins <= 900):       # 08:30 to 15:00
         return
     day = _today()
-    if _state.get("levels_day") == day or breakouts.usable():
+    # Rebuild when there are no usable levels, or when they are a session
+    # behind (the after-close scan did not run, or ran short).
+    if _state.get("levels_day") == day or (breakouts.usable() and not breakouts.behind()):
         return
     _state["levels_day"] = day
     syms = breakouts.universe() or list(_state["watch"])
@@ -836,6 +838,57 @@ def _r_multiple(a, last=None):
         return round(sign * (float(last) - float(a["entry"])) / risk, 2)
     except (TypeError, ValueError, KeyError):
         return None
+
+
+def _pnl_pct(a, last=None):
+    """The call's profit or loss as a percent of the entry price: out at the
+    target, out at the stop loss, or out at the 3:15 pm price."""
+    try:
+        entry = float(a["entry"])
+        if a["outcome"] == "TARGET":
+            out = float(a["target"])
+        elif a["outcome"] == "STOP":
+            out = float(a["stop"])
+        else:
+            out = float(a.get("closed_at") if last is None else last)
+        sign = 1 if a.get("direction", "UP") == "UP" else -1
+        return round(sign * (out - entry) / entry * 100, 2)
+    except (TypeError, ValueError, KeyError, ZeroDivisionError):
+        return None
+
+
+def call_record():
+    """
+    The breakout calls' record in plain terms, for the Alerts page: for each
+    of the two kinds of call, how many were made, how many hit the target,
+    how many hit the stop loss, and the average profit or loss per call in
+    percent. Alerts from the older volume scanner are not counted — they
+    were a different system.
+    """
+    groups = {"INTRADAY": [], "CONSOLIDATION": []}
+    for a in _state["alerts"]:
+        if not str(a.get("kind", "")).startswith("BO_"):
+            continue
+        if a.get("outcome") not in ("STOP", "TARGET", "OPEN_AT_CLOSE"):
+            continue
+        pct = a.get("pnl_pct")
+        if pct is None:
+            pct = _pnl_pct(a)
+        if pct is not None:
+            groups.setdefault(a.get("call") or "INTRADAY", []).append((a, pct))
+
+    def summary(rows):
+        n = len(rows)
+        if not n:
+            return {"calls": 0}
+        return {"calls": n,
+                "target": sum(1 for a, _p in rows if a["outcome"] == "TARGET"),
+                "stop": sum(1 for a, _p in rows if a["outcome"] == "STOP"),
+                "closed": sum(1 for a, _p in rows if a["outcome"] == "OPEN_AT_CLOSE"),
+                "profitable": sum(1 for _a, p in rows if p > 0),
+                "avg_pct": round(sum(p for _a, p in rows) / n, 2)}
+    return {"intraday": summary(groups["INTRADAY"]),
+            "consolidation": summary(groups["CONSOLIDATION"])}
 
 
 def mark_outcomes():
@@ -912,6 +965,7 @@ def mark_outcomes():
                     a["closed_at"] = round(last, 2)
                     a["approx"] = approx
                     a["r"] = _r_multiple(a, last)
+                    a["pnl_pct"] = _pnl_pct(a, last)
                     done += 1
             except Exception:
                 continue
@@ -965,6 +1019,7 @@ def stats():
         "by_rvol_bucket": {k: bucket(v) for k, v in by_rvol.items()},
         "by_score_bucket": {k: bucket(v) for k, v in by_score.items()},
         "overall": bucket(done),
+        "calls": call_record(),
         "total_closed": len(done),
         "note": ("Results are in R: one R is the distance from entry to stop. A target is +2R, "
                  "a stop is -1R, and a trade still open at 15:15 counts for wherever it stood. "

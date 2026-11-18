@@ -196,9 +196,9 @@
         var rows = d ? (d.alerts_today || []) : [];
         var stocks = b && b.usable ? (b.stocks || 0) : 0;
         body = '<p class="dsc-big"><b class="tnum">' + rows.length + '</b> ' +
-          (rows.length === 1 ? 'breakout alert' : 'breakout alerts') + ' today</p>' +
+          (rows.length === 1 ? 'call' : 'calls') + ' today</p>' +
           quiet((d && d.market_open)
-            ? 'Watching ' + stocks + ' stocks for a break of a level, up or down, on a burst of volume.'
+            ? 'Watching ' + stocks + ' stocks live for intraday calls and consolidation breakouts.'
             : 'The market is closed. ' + (stocks ? stocks + ' stocks are loaded for the next session.'
                                                  : 'Today’s alerts stay on the Alerts page.'));
         var chips = rows.length ? rows.map(function (a) { return a.symbol; })

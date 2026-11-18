@@ -122,7 +122,8 @@ REGIME = _f("BO_REGIME", 0.8)                     # index move, percent, that bl
 MIN_SCORE = _i("BO_MIN_SCORE", 50)
 SHORTS = _b("BO_SHORTS", True)
 START_MIN = _i("BO_START_MIN", 5)                 # 09:20
-END_MIN = _i("BO_END_MIN", 315)                   # 14:30 — later has no room to work
+END_MIN = _i("BO_END_MIN", 345)                   # 15:00 — the last call still has 15 minutes
+                                                  # before the 15:15 exit; asked for by the owner
 ORB_MIN = 15                                      # the opening range is the first 15 minutes
 ORB_END = _i("BO_ORB_END", 165)                   # and is traded until 12:00
 RANGE_MIN = _i("BO_RANGE_MIN", 40)                # the intraday consolidation, minutes
@@ -145,11 +146,12 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 # How much a level matters, and what it is called in a sentence.
 SIG = {"BASE_LONG": 5, "BASE": 4, "HIGH52": 4, "LOW52": 4, "HIGH20": 3, "LOW20": 3,
        "RANGE": 3, "ORB": 2, "PDH": 2, "PDL": 2}
-WORDS = {"BASE": "the top of its base", "HIGH52": "its 52-week high", "HIGH20": "its 20-day high",
-         "PDH": "yesterday's high", "ORB": "the opening-range high", "RANGE": "a tight intraday range",
-         "BASE_DN": "the bottom of its base", "LOW52": "its 52-week low", "LOW20": "its 20-day low",
-         "PDL": "yesterday's low", "ORB_DN": "the opening-range low",
-         "RANGE_DN": "a tight intraday range"}
+WORDS = {"BASE": "the top of its consolidation", "HIGH52": "its 52-week high",
+         "HIGH20": "its 20-day high", "PDH": "yesterday's high",
+         "ORB": "the high of the first 15 minutes", "RANGE": "a tight intraday range",
+         "BASE_DN": "the bottom of its consolidation", "LOW52": "its 52-week low",
+         "LOW20": "its 20-day low", "PDL": "yesterday's low",
+         "ORB_DN": "the low of the first 15 minutes", "RANGE_DN": "a tight intraday range"}
 
 # A normal NSE session's cumulative share of the day's volume by minutes after
 # 09:15. Volume is U-shaped — heavy at the open and into the close — so a
@@ -393,6 +395,36 @@ def _usable(feed, today):
     return 0 < age <= STALE_DAYS
 
 
+def _weekday_before(day):
+    day -= dt.timedelta(days=1)
+    while day.weekday() >= 5:
+        day -= dt.timedelta(days=1)
+    return day
+
+
+def last_close(now=None):
+    """The last session that has closed: today after 15:30 on a weekday,
+    otherwise the weekday before. Holidays are not known here, so on the day
+    after one this names the holiday; callers only ever use it to ask
+    "could the levels be newer?", where one wasted check is harmless."""
+    now = now or now_ist()
+    if now.weekday() < 5 and _mso(now) >= 375:
+        return now.date()
+    return _weekday_before(now.date())
+
+
+def behind(now=None):
+    """True when the stored levels are older than the last close, so the
+    session about to trade would use a stale yesterday's high and low."""
+    asof = _feed().get("asof")
+    if not asof:
+        return True
+    try:
+        return dt.date.fromisoformat(asof) < last_close(now)
+    except ValueError:
+        return True
+
+
 def usable(now=None):
     now = now or now_ist()
     return _usable(_feed(), now.date().isoformat())
@@ -475,7 +507,10 @@ def ingest(reads, meta=None, now=None, send=True, force=False):
         feed = {"asof": asof, "built_at": now.isoformat(timespec="minutes"),
                 "scanned": len(reads), "levels": levels, "near": near[:60],
                 "sent": old.get("sent") if old.get("asof") == asof else None}
-        complete = asof == now.date().isoformat() and now.weekday() < 5 and _mso(now) >= 375
+        # The levels are complete once they describe the last close — after
+        # 15:30 the same day, or overnight: GitHub's scheduled scan has been
+        # starting hours late, around 01:30 IST.
+        complete = not session_live(now) and asof == last_close(now).isoformat()
         due = bool(send and complete and levels and feed["sent"] != asof)
         if due:
             feed["sent"] = asof
@@ -768,23 +803,26 @@ def check_live(snap, now=None, index_pct=None, fired=None):
 
                 kind = trig["k"]
                 base = lv.get("base")
+                # The two things a reader asked for, by name. A break that
+                # ends a consolidation — weeks inside a base, or 40 tight
+                # minutes today — is a CONSOLIDATION breakout; every other
+                # break of a level is an INTRADAY call.
+                consolidation = ranged or kind in ("BASE", "BASE_DN", "RANGE", "RANGE_DN")
                 what = WORDS[kind]
                 if kind in ("BASE", "BASE_DN") and base:
-                    what = (f"the {'top' if sign > 0 else 'bottom'} of a {base['n']}-session base "
-                            f"({base['w']:.0f}% wide)")
+                    what = f"the {'top' if sign > 0 else 'bottom'} of a {base['n']}-day consolidation"
                 elif kind in ("RANGE", "RANGE_DN"):
-                    what = f"a {RANGE_MIN}-minute range {((rh - rl) / px * 100):.1f}% wide"
-                also = [WORDS[k] for k in trig["also"] if k in WORDS]
-                why = (f"{'Cleared' if sign > 0 else 'Broke below'} {level:,.2f}, {what}"
-                       + (f"; also {' and '.join(also)}" if also else "") + ". "
-                       + (f"It held a {((rh - rl) / px * 100):.1f}% range for {RANGE_MIN} minutes first. "
-                          if ranged and kind not in ("RANGE", "RANGE_DN") else "")
-                       + (f"Next level {nxt:,.2f}. " if nxt is not None else "")
-                       + "Out if it trades back through the stop; square off by 15:15.")
+                    what = f"a tight {RANGE_MIN}-minute range"
+                elif ranged:
+                    what += f", after {RANGE_MIN} minutes in a tight range"
+                verb = "Crossed above" if sign > 0 else "Fell below"
+                why = (f"{verb} {level:,.2f}, {what}, on {vol_x:.1f} times its normal volume. "
+                       "Exit by 3:15 pm.")
                 out.append({
                     "date": today, "time": now.strftime("%H:%M"), "symbol": sym,
                     "kind": "BO_" + kind, "direction": side,
-                    "headline": f"{'cleared' if sign > 0 else 'broke below'} {level:,.2f}, {what}",
+                    "call": "CONSOLIDATION" if consolidation else "INTRADAY",
+                    "headline": f"{verb.lower()} {level:,.2f}, {what}",
                     "level": round(level, 2), "price": round(px, 2),
                     "rvol": round(vol_x, 1), "day_rvol": round(pace, 1),
                     "range_pos": None, "vwap": round(vwap, 2) if vwap else None,
@@ -812,7 +850,7 @@ def rules():
                   f"{SURGE:g}x their usual volume, and it is on the right side of VWAP"),
         "risk": (f"stop {MIN_RISK:g}% to {MAX_RISK:g}% away, target {RR:g} times the risk, "
                  "next level at least one risk away"),
-        "window": "09:20 to 14:30, one alert per stock per direction a day",
+        "window": "09:20 to 15:00, one alert per stock per direction a day",
         "universe": f"the {UNIVERSE} most-traded stocks, at least Rs {MIN_TURNOVER_CR:g} crore a day",
     }
 
@@ -844,11 +882,12 @@ def status(now=None):
 def sample():
     """A made-up alert in the live shape, for the Telegram test."""
     return {"date": "", "time": "10:42", "symbol": "TESTMSG", "kind": "BO_BASE", "direction": "UP",
-            "headline": "cleared 412.50, the top of a 64-session base (14% wide)",
+            "call": "CONSOLIDATION",
+            "headline": "crossed above 412.50, the top of a 64-day consolidation",
             "level": 412.50, "price": 414.10, "rvol": 2.6, "day_rvol": 1.4, "range_pos": None,
             "vwap": 410.85, "entry": 414.10, "stop": 411.25, "t1": 416.95, "target": 419.80,
             "rr": 2.0, "risk_pct": 0.69, "move_pct": 1.8, "score": 74, "regime": 0.35,
             "sector": "Power",
-            "why": ("Cleared 412.50, the top of a 64-session base (14% wide); also its 20-day high. "
-                    "Next level 430.00. Out if it trades back through the stop; square off by 15:15."),
+            "why": ("Crossed above 412.50, the top of a 64-day consolidation, on 2.6 times its "
+                    "normal volume. Exit by 3:15 pm."),
             "outcome": None, "closed_at": None}
