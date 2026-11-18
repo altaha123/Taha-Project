@@ -217,28 +217,94 @@ def format_alert(a, seq=None, repeat=False):
 
 
 CALL_LABEL = {"INTRADAY": "Intraday call", "CONSOLIDATION": "Consolidation breakout"}
+# The badge each kind of call wears, up and down.
+CALL_ICON = {("CONSOLIDATION", True): "🚀", ("CONSOLIDATION", False): "💥",
+             ("INTRADAY", True): "⚡", ("INTRADAY", False): "⚡"}
+RULE = "━━━━━━━━━━━━━━━"
+
+
+def _rupee(v):
+    m = _money(v)
+    return "₹" + m if m and m[0].isdigit() else m
+
+
+def _clock(hhmm):
+    """'10:42' -> '10:42 am', '14:05' -> '2:05 pm'."""
+    try:
+        h, m = (int(x) for x in str(hhmm).split(":")[:2])
+        return f"{(h - 1) % 12 + 1}:{m:02d} {'am' if h < 12 else 'pm'}"
+    except (ValueError, TypeError):
+        return ""
+
+
+def _hashtag(sym):
+    """Telegram hashtags stop at the first character that is not a letter,
+    digit or underscore: M&M would tag as #M. Those characters are dropped."""
+    import re as _re
+    tag = _re.sub(r"[^A-Za-z0-9_]", "", str(sym))
+    return "#" + tag if tag else ""
+
+
+def _level_name(a):
+    """What the level is, e.g. 'The top of a 64-day consolidation'. Older
+    logged calls carry it only inside the headline, after the price."""
+    name = a.get("level_name")
+    if not name:
+        head = str(a.get("headline") or "")
+        name = head.split(", ", 1)[1] if ", " in head else ""
+    return name[:1].upper() + name[1:]
+
+
+def _event_lines(a):
+    """The lines both cards share: what was crossed, what it is, on what
+    volume, and how the stock stands on the day."""
+    up = a.get("direction", "UP") == "UP"
+    lines = [("📈 Crossed above " if up else "📉 Fell below ") + f"<b>{_e(_rupee(a.get('level')))}</b>"]
+    name = _level_name(a)
+    if name:
+        lines.append(("🧱 " if a.get("call") == "CONSOLIDATION" else "📍 ") + _e(name))
+    if a.get("rvol"):
+        lines.append(f"🔊 Volume <b>{a['rvol']}×</b> normal")
+    return lines
+
+
+def _head(a, label_side):
+    up = a.get("direction", "UP") == "UP"
+    call = a.get("call") or "INTRADAY"
+    icon = CALL_ICON.get((call, up), "⚡")
+    side = ("🟢 BUY " if up else "🔴 SELL ") if label_side else ""
+    mv = a.get("move_pct")
+    move = ""
+    if not label_side:
+        move = "  🟢 ▲" if up else "  🔴 ▼"
+        if mv is not None:
+            move += f" {'+' if mv >= 0 else '−'}{abs(mv):.1f}%"
+    return (f"{side}<b>{_e(a['symbol'])}</b>" + move,
+            f"{icon} <b>{_e(CALL_LABEL.get(call, 'Intraday call'))}</b>"
+            + (f"  ·  {_e(_clock(a.get('time')))}" if _clock(a.get("time")) else ""))
 
 
 def format_call(a):
     """
-    A breakout call as a person reads it on a phone: what to do, in which
-    stock, at what price, where to get out, and one sentence of why. No
-    scores, ratios or jargon — the reader asked for a call, not a report.
+    The full call, for the owner's private chat: what to do, in which stock,
+    at what price, where to get out, and why — laid out to be read in one
+    glance on a phone lock screen.
     """
-    buy = a.get("direction", "UP") == "UP"
-    rows = [("Buy at" if buy else "Sell at", _money(a.get("entry"))),
-            ("Stop loss", _money(a.get("stop"))),
-            ("Target", _money(a.get("target")))]
-    width = max(len(v) for _l, v in rows)
-    block = "\n".join(f"{label:<10}{value:>{width}}" for label, value in rows)
-    parts = [("🟢 " if buy else "🔴 ") + f"<b>{'BUY' if buy else 'SELL'} {_e(a['symbol'])}</b>",
-             _e(CALL_LABEL.get(a.get("call"), "Intraday call")),
-             "<code>" + _e(block) + "</code>"]
-    if a.get("why"):
-        parts.append("<i>" + _e(str(a["why"])[:240]) + "</i>")
+    up = a.get("direction", "UP") == "UP"
+    title, kind = _head(a, label_side=True)
+    parts = [title, kind, RULE,
+             f"{'💰 Buy at' if up else '💰 Sell at'}  <b>{_e(_rupee(a.get('entry')))}</b>",
+             f"🛑 Stop loss  <b>{_e(_rupee(a.get('stop')))}</b>",
+             f"🎯 Target  <b>{_e(_rupee(a.get('target')))}</b>",
+             RULE]
+    parts += _event_lines(a)
+    parts.append("⏰ Exit by 3:15 pm")
     f = a.get("filing")
     if f:
-        parts.append("\U0001F4CE " + _e(f"{f.get('line', '')}"))
+        parts.append("📎 " + _e(f"{f.get('line', '')}"))
+    tag = _hashtag(a["symbol"])
+    if tag:
+        parts += ["", _e(tag)]
     return "\n".join(parts)
 
 
@@ -283,12 +349,20 @@ def format_public(a):
     observations, and the SEBI RA regulations care about the difference."""
     arrow = "▲" if a.get("direction", "UP") == "UP" else "▼"
     if a.get("level") is not None:
-        # A breakout call: what crossed what, on what volume. No buy or
-        # sell, no levels to trade, no exit time.
-        what = str(a.get("headline") or "")
-        lines = [f"{arrow} <b>{_e(a['symbol'])}</b> · " + _e(CALL_LABEL.get(a.get("call"), "Intraday call")),
-                 _e(what[:1].upper() + what[1:]
-                    + (f", on {a['rvol']} times its normal volume." if a.get("rvol") else "."))]
+        # A breakout call: what crossed what, on what volume, and the price.
+        # No buy or sell, no levels to trade, no exit time.
+        title, kind = _head(a, label_side=False)
+        lines = [title, kind, RULE] + _event_lines(a)
+        lines.append(f"💹 Now <b>{_e(_rupee(a.get('price')))}</b>")
+        f = a.get("filing")
+        if f:
+            lines.append("📎 " + _e(f.get("line", "")))
+        lines.append(RULE)
+        tags = " ".join(t for t in (_hashtag(a["symbol"]),
+                                    "#Breakout" if a.get("call") == "CONSOLIDATION" else "#Intraday",
+                                    "#NSE") if t)
+        lines += [_e(tags), "<i>Altaha Screener · a market observation, not a recommendation.</i>"]
+        return "\n".join(lines)
     else:
         lines = [f"{arrow} <b>{_e(a['symbol'])}</b>", _e(_headline_line(a))]
     lines.append(f"<code>{_e('Now    ' + _money(a.get('price')))}</code>")

@@ -822,6 +822,8 @@ def check_live(snap, now=None, index_pct=None, fired=None):
                     "date": today, "time": now.strftime("%H:%M"), "symbol": sym,
                     "kind": "BO_" + kind, "direction": side,
                     "call": "CONSOLIDATION" if consolidation else "INTRADAY",
+                    # What the level is, on its own, for the card's second line.
+                    "level_name": what[:1].upper() + what[1:],
                     "headline": f"{verb.lower()} {level:,.2f}, {what}",
                     "level": round(level, 2), "price": round(px, 2),
                     "rvol": round(vol_x, 1), "day_rvol": round(pace, 1),
@@ -882,7 +884,7 @@ def status(now=None):
 def sample():
     """A made-up alert in the live shape, for the Telegram test."""
     return {"date": "", "time": "10:42", "symbol": "TESTMSG", "kind": "BO_BASE", "direction": "UP",
-            "call": "CONSOLIDATION",
+            "call": "CONSOLIDATION", "level_name": "The top of a 64-day consolidation",
             "headline": "crossed above 412.50, the top of a 64-day consolidation",
             "level": 412.50, "price": 414.10, "rvol": 2.6, "day_rvol": 1.4, "range_pos": None,
             "vwap": 410.85, "entry": 414.10, "stop": 411.25, "t1": 416.95, "target": 419.80,
