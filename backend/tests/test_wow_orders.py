@@ -296,4 +296,198 @@ def test_the_payload_counts_disclosure_separately_from_size():
         {"value_cr": 900.0, "wow": True},
     ]
     c = W._payload(rows, "")["counts"]
-    assert c == {"orders": 3, "with_value": 2, "value_not_disclosed": 1, "wow": 1}
+    assert c == {"orders": 3, "with_value": 2, "value_not_disclosed": 1,
+                 "unreadable": 0, "not_read": 0, "wow": 1}
+
+
+# ---------------------------------------------------------------------------
+# Answering at once
+#
+# The page used to sit on "Reading the filings…" for minutes, because the
+# request itself polled the exchange and downloaded up to forty PDFs one
+# after another. The request now answers from what is held and the reading
+# happens on a thread.
+# ---------------------------------------------------------------------------
+
+import threading
+import time as _time
+
+
+@pytest.fixture
+def fresh(ledger, monkeypatch):
+    monkeypatch.setattr(W, "_cache", {})
+    monkeypatch.setattr(W, "_run", {"running": False, "started": None,
+                                    "finished": None, "error": "",
+                                    "wide_poll": {}})
+    return W
+
+
+def _wait_idle(W, seconds=5.0):
+    stop = _time.time() + seconds
+    while W._run["running"] and _time.time() < stop:
+        _time.sleep(0.01)
+    assert not W._run["running"], "the refresh thread did not finish"
+
+
+def _live_row(symbol="LIVECO", value=None, state="read", day=None):
+    day = day or dt.date.today().isoformat()
+    return {"symbol": symbol, "company": symbol.title(), "headline": "order",
+            "at": day + "T10:00:00+05:30", "date": day, "quarter": "Q3 FY27",
+            "pdf": "https://x/%s.pdf" % symbol, "read_state": state,
+            "value_cr": value, "value_basis": "stated" if value else None,
+            "value_confident": bool(value), "currency_converted": False,
+            "excerpt": "order of Rs %s crore" % value if value else None,
+            "market_cap_cr": 1000.0 if value else None,
+            "pct_of_market_cap": round(100 * value / 1000.0, 2) if value else None,
+            "wow": bool(value) and 100 * value / 1000.0 >= W.WOW_MIN_PCT}
+
+
+def test_a_cold_page_is_answered_before_any_filing_is_read(fresh, monkeypatch):
+    gate = threading.Event()
+
+    def slow(days):
+        gate.wait(5)                      # the forty PDFs
+        return [_live_row(value=300.0)], "", True
+    monkeypatch.setattr(W, "_build_rows", slow)
+
+    t0 = _time.time()
+    out = W.scan(days=7)
+    assert _time.time() - t0 < 1.0, "the request waited for the filings"
+    assert out["refreshing"] is True and out["from_ledger"] is True
+    assert out["as_of"] is None
+
+    gate.set()
+    _wait_idle(W)
+    done = W.scan(days=7)
+    assert done["refreshing"] is False
+    assert [r["symbol"] for r in done["rows"]] == ["LIVECO"]
+    assert done["as_of"]
+
+
+def test_a_cold_start_shows_what_the_ledger_already_holds(fresh, monkeypatch):
+    today = dt.date.today().isoformat()
+    fresh.record([_live_row("OLDCO", value=250.0, day=today)])
+    monkeypatch.setattr(W, "_build_rows", lambda days: ([], "", True))
+    out = W.scan(days=7)
+    row = out["rows"][0]
+    assert row["symbol"] == "OLDCO" and row["value_cr"] == 250.0
+    # The evidence survives the restart, not just the number.
+    assert row["excerpt"] == "order of Rs 250.0 crore"
+    assert row["wow"] is True and row["read_state"] == "read"
+    _wait_idle(W)
+
+
+def test_pages_opened_during_a_refresh_share_it(fresh, monkeypatch):
+    gate, calls = threading.Event(), []
+
+    def slow(days):
+        calls.append(days)
+        gate.wait(5)
+        return [], "", True
+    monkeypatch.setattr(W, "_build_rows", slow)
+    for _ in range(5):
+        assert W.scan(days=7)["refreshing"] is True
+    gate.set()
+    _wait_idle(W)
+    assert calls == [7], "five open pages started %d refreshes" % len(calls)
+
+
+def test_a_failed_refresh_is_not_retried_in_a_loop(fresh, monkeypatch):
+    calls = []
+
+    def broken(days):
+        calls.append(days)
+        raise RuntimeError("exchange said no")
+    monkeypatch.setattr(W, "_build_rows", broken)
+    W.scan(days=7)
+    _wait_idle(W)
+    out = W.scan(days=7)               # the page asking again
+    assert calls == [7]
+    assert out["refreshing"] is False
+    assert "exchange said no" in out["refresh_error"]
+
+
+def test_the_cron_tick_leaves_a_fresh_answer_alone(fresh, monkeypatch):
+    calls = []
+    monkeypatch.setattr(W, "_build_rows",
+                        lambda days: calls.append(days) or ([], "", True))
+    assert W.refresh_if_stale(7) is True
+    _wait_idle(W)
+    assert W.refresh_if_stale(7) is False
+    assert calls == [7]
+
+
+# ---------------------------------------------------------------------------
+# "Not read yet" is not "not disclosed"
+# ---------------------------------------------------------------------------
+
+class _Filings:
+    """filings_text, with a cache and documents under test control."""
+    def __init__(self, docs, cache=None):
+        self.docs, self.store, self.downloads = docs, dict(cache or {}), 0
+
+    def available(self):
+        return True
+
+    def cached(self, url):
+        return self.store.get(url)
+
+    def extract(self, url):
+        self.downloads += 1
+        text = self.docs.get(url)
+        if text is None:
+            return None                   # download failed; nothing cached
+        self.store[url] = text
+        return text or None
+
+
+def test_reading_states(fresh):
+    f = _Filings({"https://x/a": "order value Rs 50 crore",
+                  "https://x/scan": "", "https://x/down": None},
+                 cache={"https://x/held": "held text"})
+    budget = {"left": 10, "until": _time.time() + 60}
+    assert W._read_filing(f, "https://x/a", budget) == ("read", "order value Rs 50 crore")
+    assert W._read_filing(f, "https://x/scan", budget) == ("unreadable", None)
+    assert W._read_filing(f, "https://x/down", budget) == ("unread", None)
+    # A cached document costs nothing; an uncached one past the budget waits.
+    assert W._read_filing(f, "https://x/held", {"left": 0, "until": 0}) == ("read", "held text")
+    assert W._read_filing(f, "https://x/a2", {"left": 0, "until": _time.time() + 60}) == ("unread", None)
+    assert W._read_filing(f, "https://x/a2", {"left": 5, "until": _time.time() - 1}) == ("unread", None)
+
+
+def test_a_filing_out_of_budget_is_not_read_yet_and_not_recorded(fresh, monkeypatch):
+    import sys, types
+    items = [{"symbol": "S%d" % i, "company": "Co %d" % i, "headline": "order",
+              "at": dt.date.today().isoformat() + "T10:00:00+05:30",
+              "pdf": "https://x/%d" % i} for i in range(3)]
+    f = _Filings({it["pdf"]: "Order value Rs %d crore." % (10 + i)
+                  for i, it in enumerate(items)})
+    monkeypatch.setitem(sys.modules, "filings_text", f)
+    monkeypatch.setattr(W, "_order_items", lambda days: (items, "", True))
+    monkeypatch.setattr(W, "market_cap_cr", lambda s: 1000.0)
+    monkeypatch.setattr(W, "MAX_PDFS", 2)
+
+    out = W.scan(days=7, wait=True)
+    c = out["counts"]
+    assert c["with_value"] == 2 and c["not_read"] == 1
+    assert c["value_not_disclosed"] == 0, "an unread filing was called undisclosed"
+    unread = [r for r in out["rows"] if r["read_state"] == "unread"]
+    assert len(unread) == 1 and unread[0]["value_cr"] is None
+    held = {r["symbol"] for r in W.recent(7)}
+    assert unread[0]["symbol"] not in held and len(held) == 2
+
+
+def test_a_value_fills_a_blank_but_never_restates_a_number(fresh):
+    blank = _live_row("FILLCO", value=None)
+    fresh.record([blank])
+    fresh.record([dict(_live_row("FILLCO", value=120.0), pdf=blank["pdf"])])
+    assert fresh.recent(7)[0]["value_cr"] == 120.0
+    fresh.record([dict(_live_row("FILLCO", value=999.0), pdf=blank["pdf"])])
+    assert fresh.recent(7)[0]["value_cr"] == 120.0
+
+
+def test_a_day_is_not_marked_watched_when_the_feed_was_not_reached(fresh, monkeypatch):
+    monkeypatch.setattr(W, "_build_rows", lambda days: ([], "feed down", False))
+    W.scan(days=7, wait=True)
+    today = dt.date.today()
+    assert W.covered_days(today - dt.timedelta(days=7), today) == set()

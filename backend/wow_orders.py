@@ -56,8 +56,24 @@ NEAR = int(os.environ.get("WOW_NEAR_CHARS", "260") or 260)
 MAX_PDFS = int(os.environ.get("WOW_MAX_PDFS", "40") or 40)
 CACHE_TTL = int(os.environ.get("WOW_CACHE_TTL", "600") or 600)
 
+# Seconds one refresh may spend downloading filings it has not read before.
+# A filing that does not fit is left for the next refresh and says "not read
+# yet"; it is never reported as "value not disclosed", which it may not be.
+SCAN_BUDGET = int(os.environ.get("WOW_SCAN_BUDGET", "180") or 180)
+
+# The announcements poller keeps three days. The orders window is seven, so
+# the wide walk runs on the first refresh and then every few hours; between
+# those the three-day poll keeps the newest days current. Orders the feed has
+# seen stay in its memory, so nothing older is lost by not re-walking it.
+WIDE_POLL_EVERY = int(os.environ.get("WOW_WIDE_POLL_EVERY", str(3 * 3600)) or 3 * 3600)
+
 _lock = threading.Lock()
-_cache = {"at": 0.0, "rows": [], "note": ""}
+# One entry per window: {days: {"at": epoch, "rows": [...], "note": str}}.
+_cache = {}
+# The refresh itself. It runs on a thread, one at a time: a page that opened
+# while it was running gets the last answer at once, not a second scan.
+_run = {"running": False, "started": None, "finished": None, "error": "",
+        "wide_poll": {}}
 _mcap_cache = {}
 
 
@@ -249,16 +265,29 @@ def previous_quarter(day: dt.date):
 # ---------------------------------------------------------------------------
 
 def _order_items(days: int):
-    """Order announcements from the feed the app already polls."""
+    """
+    Order announcements from the feed the app already polls.
+
+    Returns (items, note, polled_ok). The wide walk over every day of the
+    window runs on the first refresh and then every WIDE_POLL_EVERY seconds;
+    in between, the feed's own three-day poll is enough, because the orders
+    it has seen stay in its memory.
+    """
     try:
         import announcements
     except Exception:
-        return [], "The announcements feed is not available."
+        return [], "The announcements feed is not available.", False
     try:
-        announcements.poll(days=days)
+        wide = _run.get("wide_poll") or {}
+        if (time.time() - wide.get("at", 0.0) > WIDE_POLL_EVERY
+                or wide.get("days", 0) < days):
+            announcements.poll(days=days)
+            _run["wide_poll"] = {"at": time.time(), "days": days}
+        else:
+            announcements.poll_if_stale(background=False)
     except Exception as e:
-        return [], "Could not refresh announcements: %s" % str(e)[:90]
-    return list(announcements.orders(days)), ""
+        return [], "Could not refresh announcements: %s" % str(e)[:90], False
+    return list(announcements.orders(days)), "", True
 
 
 def _as_date(iso):
@@ -268,25 +297,49 @@ def _as_date(iso):
         return None
 
 
-def scan(days: int = 7, force: bool = False) -> dict:
+def _read_filing(filings_text, url, budget):
     """
-    Recent order wins, sized against the company that won them.
+    The filing's text, and what became of the attempt to read it.
 
-    Every row carries the filing it was read from, the excerpt the value came
-    out of, and whether the filing labelled that figure as the order's value.
+    ("read", text)        the text layer was read
+    ("unreadable", None)  the PDF has no text layer (a scan): any value it
+                          states is in the picture, so this is NOT "no value"
+    ("unread", None)      not downloaded this time: out of budget, or the
+                          download failed. The next refresh tries again.
+
+    `budget` is a dict {"left": n, "until": epoch}, spent only on documents
+    that are not already cached.
     """
-    now = time.time()
-    if not force and _cache["rows"] and now - _cache["at"] < CACHE_TTL:
-        return _payload(_cache["rows"], _cache["note"])
+    hit = filings_text.cached(url)
+    if hit is not None:
+        return ("read", hit) if hit else ("unreadable", None)
+    if budget["left"] <= 0 or time.time() >= budget["until"]:
+        return ("unread", None)
+    budget["left"] -= 1
+    text = filings_text.extract(url)
+    if text:
+        return ("read", text)
+    # extract() caches an empty string for a document with no text layer,
+    # and nothing for a download or parse failure. The cache says which.
+    return ("unreadable", None) if filings_text.cached(url) == "" else ("unread", None)
 
-    orders, note = _order_items(days)
-    rows, read = [], 0
+
+def _build_rows(days: int):
+    """
+    Read the window's order filings. Slow — it downloads PDFs — so it runs
+    on the refresh thread, never inside a page request.
+
+    Returns (rows, note, polled_ok).
+    """
+    orders, note, polled = _order_items(days)
+    rows = []
 
     try:
         import filings_text
         can_read = filings_text.available()
     except Exception:
         filings_text, can_read = None, False
+    budget = {"left": MAX_PDFS, "until": time.time() + SCAN_BUDGET}
 
     for item in orders:
         day = _as_date(item.get("at"))
@@ -299,6 +352,8 @@ def scan(days: int = 7, force: bool = False) -> dict:
             "date": day.isoformat() if day else None,
             "quarter": fiscal_quarter(day)[0] if day else None,
             "pdf": item.get("pdf"),
+            # "read" when there is no document: the headline is all there is.
+            "read_state": "read" if not item.get("pdf") else "unread",
             "value_cr": None,
             "value_basis": None,
             "value_confident": False,
@@ -309,11 +364,9 @@ def scan(days: int = 7, force: bool = False) -> dict:
             "wow": False,
         }
 
-        if can_read and item.get("pdf") and read < MAX_PDFS:
-            cached_text = filings_text.cached(item["pdf"])
-            if cached_text is None:
-                read += 1
-            text = filings_text.extract(item["pdf"])
+        if can_read and item.get("pdf"):
+            state, text = _read_filing(filings_text, item["pdf"], budget)
+            row["read_state"] = state
             found = order_value_cr(text) if text else None
             if found:
                 row.update({
@@ -332,30 +385,121 @@ def scan(days: int = 7, force: bool = False) -> dict:
                 row["wow"] = row["pct_of_market_cap"] >= WOW_MIN_PCT
         rows.append(row)
 
+    _sort(rows)
+    if not can_read:
+        note = ("The PDF reader is not installed on this instance, so order "
+                "values could not be read from the filings.")
+    return rows, note, polled
+
+
+def _sort(rows):
     rows.sort(key=lambda r: (r["pct_of_market_cap"] is None,
                              -(r["pct_of_market_cap"] or 0),
                              -(r["value_cr"] or 0),
                              r["at"] or ""))
-    if not can_read:
-        note = ("The PDF reader is not installed on this instance, so order "
-                "values could not be read from the filings.")
-    # Every live scan also writes down what it saw. This is how the ledger
-    # fills up in normal operation — the quarter comparison reads from there,
-    # not from a feed that only remembers three days.
+    return rows
+
+
+def _refresh(days: int):
+    """One full refresh, synchronously. Records what it read and caches it."""
+    rows, note, polled = _build_rows(days)
+    # Every refresh writes down what it saw. This is how the ledger fills up
+    # in normal operation — the quarter comparison reads from there, not from
+    # a feed that only remembers three days. A filing not read yet is left
+    # out: recording it as "no value" would be a permanent wrong answer.
     try:
-        record(rows)
-        today = dt.datetime.now(IST).date()
-        mark_covered([today - dt.timedelta(days=b) for b in range(days)])
+        record([r for r in rows if r.get("read_state") != "unread"])
+        # A day counts as watched only if the feed was actually reached.
+        if polled:
+            today = dt.datetime.now(IST).date()
+            mark_covered([today - dt.timedelta(days=b) for b in range(days)])
     except Exception:
         pass
     with _lock:
-        _cache.update({"at": now, "rows": rows, "note": note})
-    return _payload(rows, note)
+        _cache[days] = {"at": time.time(), "rows": rows, "note": note}
+    return rows, note
 
 
-def _payload(rows, note):
+def refresh(days: int = 7) -> bool:
+    """
+    Start a refresh on a thread. One at a time; a refresh that failed is not
+    retried for a minute, so an open page polling for news cannot turn one
+    broken exchange call into a retry loop. Returns whether one was started.
+    """
+    with _lock:
+        if _run["running"]:
+            return False
+        if _run["error"] and time.time() - (_run["finished"] or 0) < 60:
+            return False
+        _run.update({"running": True, "started": time.time(), "error": ""})
+
+    def work():
+        try:
+            _refresh(days)
+        except Exception as e:
+            _run["error"] = str(e)[:140] or e.__class__.__name__
+        finally:
+            with _lock:
+                _run["running"] = False
+                _run["finished"] = time.time()
+
+    threading.Thread(target=work, daemon=True, name="altaha-wow").start()
+    return True
+
+
+def refresh_if_stale(days: int = 7) -> bool:
+    """For the cron tick: keep the answer warm so a page never waits."""
+    with _lock:
+        hit = _cache.get(days)
+    if hit and time.time() - hit["at"] < CACHE_TTL:
+        return False
+    return refresh(days)
+
+
+def scan(days: int = 7, force: bool = False, wait: bool = False) -> dict:
+    """
+    Recent order wins, sized against the company that won them.
+
+    Answers at once. A fresh answer is returned as it is. A stale or missing
+    one starts a refresh on a thread and returns the last answer meanwhile —
+    on a cold start, the orders the ledger already holds for the window — with
+    `refreshing` set, so the page can say it is checking for new filings and
+    ask again. Reading filings inside the request is what left the page on
+    "Reading the filings…" for minutes: forty PDF downloads, one after another.
+
+    `wait=True` runs the refresh in the caller and returns its result, for
+    tests and admin calls. Every row carries the filing it was read from, the
+    excerpt the value came out of, and whether the filing labelled that
+    figure as the order's value.
+    """
+    days = int(days)
+    if wait:
+        rows, note = _refresh(days)
+        return _payload(rows, note, as_of=time.time())
+
+    with _lock:
+        hit = _cache.get(days)
+    if hit and not force and time.time() - hit["at"] < CACHE_TTL:
+        return _payload(hit["rows"], hit["note"], as_of=hit["at"],
+                        refreshing=_run["running"])
+
+    refresh(days)
+    if hit:
+        rows, note, as_of = hit["rows"], hit["note"], hit["at"]
+    else:
+        rows, note, as_of = recent(days), "", None
+    return _payload(rows, note, as_of=as_of, refreshing=_run["running"],
+                    from_ledger=not hit)
+
+
+def _payload(rows, note, as_of=None, refreshing=False, from_ledger=False):
     priced = [r for r in rows if r["value_cr"] is not None]
     wow = [r for r in rows if r["wow"]]
+    # A row from before read_state existed was read: unread rows were never
+    # recorded, and the live scan always sets it.
+    state = [r.get("read_state", "read") for r in rows]
+    not_read = state.count("unread")
+    unreadable = state.count("unreadable")
     return {
         "available": True,
         "threshold_pct": WOW_MIN_PCT,
@@ -363,9 +507,18 @@ def _payload(rows, note):
         "counts": {
             "orders": len(rows),
             "with_value": len(priced),
-            "value_not_disclosed": len(rows) - len(priced),
+            "value_not_disclosed": len(rows) - len(priced) - not_read - unreadable,
+            "unreadable": unreadable,
+            "not_read": not_read,
             "wow": len(wow),
         },
+        # When this answer was read from the filings, and whether a newer one
+        # is being read now. A page that is told `refreshing` asks again.
+        "as_of": (dt.datetime.fromtimestamp(as_of, IST).isoformat(timespec="seconds")
+                  if as_of else None),
+        "refreshing": bool(refreshing),
+        "from_ledger": bool(from_ledger),
+        "refresh_error": _run.get("error") or "",
         "note": note or "",
         "source": ("Exchange corporate announcements (BSE, or NSE when BSE is "
                    "unreachable), Regulation 30. Order values "
@@ -503,6 +656,13 @@ def _db():
                         market_cap_cr  REAL,
                         pct_of_market_cap REAL
                     )""")
+                # The sentence the value came out of, and why it was chosen,
+                # so an answer served from the ledger on a cold start still
+                # shows its evidence. Added after the table first shipped.
+                have = {r[1] for r in conn.execute("PRAGMA table_info(orders)")}
+                for col in ("excerpt", "value_basis"):
+                    if col not in have:
+                        conn.execute("ALTER TABLE orders ADD COLUMN %s TEXT" % col)
                 conn.execute("CREATE INDEX IF NOT EXISTS orders_date ON orders(date)")
                 # Which days this service has actually looked at.
                 #
@@ -534,6 +694,12 @@ def record(rows) -> int:
     """
     Write down what was seen. INSERT OR IGNORE, so the first record of an
     event wins and a later re-scan can never restate it.
+
+    One exception, and only in one direction: an event first recorded with
+    no value gets the value when a later read finds one. Until refreshes had
+    a reading budget, filings past the fortieth were recorded unread, as if
+    they stated no value. Filling in a blank is not restating a number. A
+    value once recorded is never changed.
     """
     if not rows:
         return 0
@@ -544,21 +710,62 @@ def record(rows) -> int:
             for r in rows:
                 if not r.get("date"):
                     continue
+                vals = (r.get("value_cr"), 1 if r.get("value_confident") else 0,
+                        1 if r.get("currency_converted") else 0,
+                        r.get("market_cap_cr"), r.get("pct_of_market_cap"),
+                        r.get("excerpt"), r.get("value_basis"))
                 cur = conn.execute(
                     "INSERT OR IGNORE INTO orders (key, seen_at, date, at, symbol,"
                     " company, headline, pdf, value_cr, value_confident,"
-                    " currency_converted, market_cap_cr, pct_of_market_cap)"
-                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    " currency_converted, market_cap_cr, pct_of_market_cap,"
+                    " excerpt, value_basis)"
+                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (_key(r), now, r.get("date"), r.get("at"), r.get("symbol"),
-                     r.get("company"), r.get("headline"), r.get("pdf"),
-                     r.get("value_cr"), 1 if r.get("value_confident") else 0,
-                     1 if r.get("currency_converted") else 0,
-                     r.get("market_cap_cr"), r.get("pct_of_market_cap")))
-                written += cur.rowcount or 0
+                     r.get("company"), r.get("headline"), r.get("pdf")) + vals)
+                if cur.rowcount:
+                    written += cur.rowcount
+                elif r.get("value_cr") is not None:
+                    cur = conn.execute(
+                        "UPDATE orders SET value_cr=?, value_confident=?,"
+                        " currency_converted=?, market_cap_cr=?,"
+                        " pct_of_market_cap=?, excerpt=?, value_basis=?"
+                        " WHERE key=? AND value_cr IS NULL", vals + (_key(r),))
+                    written += cur.rowcount or 0
             conn.commit()
     except Exception:
         return 0
     return written
+
+
+def recent(days: int = 7):
+    """
+    The window's orders as the ledger holds them, shaped like live rows.
+
+    What a cold start shows while the first refresh reads the filings: the
+    instance restarted, its memory is empty, but the disk remembers.
+    """
+    since = (dt.datetime.now(IST).date() - dt.timedelta(days=max(1, days) - 1))
+    out = []
+    for r in history(since, dt.date(9999, 12, 31)):
+        day = _as_date(r.get("at")) or (
+            dt.date.fromisoformat(r["date"]) if r.get("date") else None)
+        pct = r.get("pct_of_market_cap")
+        out.append({
+            "symbol": r.get("symbol"), "company": r.get("company") or "",
+            "headline": r.get("headline") or "", "at": r.get("at"),
+            "date": r.get("date"),
+            "quarter": fiscal_quarter(day)[0] if day else None,
+            "pdf": r.get("pdf"), "read_state": "read",
+            "value_cr": r.get("value_cr"),
+            "value_basis": r.get("value_basis"),
+            "value_confident": bool(r.get("value_confident")),
+            "currency_converted": bool(r.get("currency_converted")),
+            "excerpt": r.get("excerpt"),
+            "market_cap_cr": r.get("market_cap_cr"),
+            "pct_of_market_cap": pct,
+            "wow": pct is not None and pct >= WOW_MIN_PCT,
+        })
+    return _sort(out)
 
 
 def history(start: dt.date, end: dt.date):
@@ -640,7 +847,11 @@ def backfill(days: int = 45, max_days: int = 120) -> dict:
     days = max(1, min(int(days or 45), max_days))
     announcements._build_maps()
     today = dt.datetime.now(IST).date()
-    seen, recorded, pdfs = 0, 0, 0
+    seen, recorded, unread = 0, 0, 0
+    # A backfill is an admin call, not a page: it gets the PDF cap but no
+    # clock. Filings past the cap are left unrecorded rather than recorded
+    # as stating no value; the next backfill or live refresh reads them.
+    budget = {"left": MAX_PDFS, "until": float("inf")}
 
     for back in range(days):
         day = today - dt.timedelta(days=back)
@@ -669,15 +880,19 @@ def backfill(days: int = 45, max_days: int = 120) -> dict:
                     "currency_converted": False,
                     "market_cap_cr": None, "pct_of_market_cap": None,
                 }
-                if can_read and row["pdf"] and pdfs < MAX_PDFS:
-                    if filings_text.cached(row["pdf"]) is None:
-                        pdfs += 1
-                    text = filings_text.extract(row["pdf"])
+                if row["pdf"]:
+                    state, text = (_read_filing(filings_text, row["pdf"], budget)
+                                   if can_read else ("unread", None))
+                    if state == "unread":
+                        unread += 1
+                        continue
                     found = order_value_cr(text) if text else None
                     if found:
                         row.update({"value_cr": found["value_cr"],
                                     "value_confident": found["confident"],
-                                    "currency_converted": found["currency_converted"]})
+                                    "currency_converted": found["currency_converted"],
+                                    "excerpt": found["excerpt"],
+                                    "value_basis": found["basis"]})
                 if row["value_cr"] and row["symbol"]:
                     cap = market_cap_cr(row["symbol"])
                     if cap and cap > 0:
@@ -689,4 +904,6 @@ def backfill(days: int = 45, max_days: int = 120) -> dict:
         if seen_day:
             mark_covered([day])
     return {"ok": True, "days": days, "orders_seen": seen,
-            "newly_recorded": recorded, "pdfs_read": pdfs}
+            "newly_recorded": recorded,
+            "pdfs_read": MAX_PDFS - budget["left"],
+            "left_unread": unread}

@@ -245,6 +245,9 @@
       var body;
       if (!d || d.available === false) {
         body = quiet((d && d.message) || 'The orders reader is unavailable.');
+      } else if (d.refreshing && !((d.counts || {}).orders)) {
+        // A first read of the week: "0 orders worth noticing" would be a claim.
+        body = quiet('Reading this week’s order filings. Open the page to watch it fill in.');
       } else {
         var c = d.counts || {};
         body = '<p class="dsc-big"><b class="tnum">' + (c.wow || 0) + '</b> ' +

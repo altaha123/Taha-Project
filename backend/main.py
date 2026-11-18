@@ -3559,6 +3559,11 @@ def wow_orders_feed(days: int = 7, refresh: bool = False):
     marked, never ranked, and never given an assumed number. The quarter block
     compares disclosed order inflow this fiscal quarter with the previous one,
     and says so when one of the two started before this service was recording.
+
+    Answers at once: the filings are read on a background refresh (kept warm
+    by /cron/tick), and a stale answer comes back with `refreshing: true` so
+    the page can ask again. `refresh=true` starts a refresh now; it does not
+    make this request wait for one.
     """
     if wow_orders is None:
         return {"available": False, "message": "The orders reader is not available."}
@@ -5953,6 +5958,14 @@ def cron_tick():
         ann.poll_if_stale()
     except Exception:
         pass
+
+    # Order wins: read the week's filings on a thread so the page answers
+    # from a warm cache instead of downloading PDFs while a reader waits.
+    if wow_orders is not None:
+        try:
+            wow_orders.refresh_if_stale(days=7)
+        except Exception:
+            pass
 
     # Attach forward returns to anything whose horizon has now elapsed. This
     # has to be unattended: a label can only be written days or months after

@@ -31,6 +31,29 @@
   letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
 }
 
+/* How current the list is. A quiet line when it is fresh, a moving dot while
+   newer filings are being read, a button when the exchange could not be
+   reached. Never a spinner standing in for the whole page. */
+.wo-status{
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px;
+  margin:4px 0 0; font-size:12.5px; line-height:1.5; color:var(--mute);
+}
+.wo-status i{
+  flex:none; width:8px; height:8px; border-radius:50%; background:var(--gold);
+  animation:woPulse 1.4s ease-in-out infinite;
+}
+.wo-status.is-warn{ color:var(--sh-dn) }
+@keyframes woPulse{ 0%,100%{ opacity:.25 } 50%{ opacity:1 } }
+@media (prefers-reduced-motion:reduce){ .wo-status i{ animation:none; opacity:.7 } }
+.wo-retry{
+  font-family:inherit; font-weight:600; font-size:12px; line-height:1;
+  padding:8px 13px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--rule); background:var(--skin-card); color:var(--ink);
+}
+.wo-retry:hover{ border-color:var(--gold); color:var(--gold) }
+.wo-empty .wo-retry{ margin-top:10px }
+.wo-empty p{ margin:0 }
+
 /* Quarter on quarter */
 .wq{ margin:0 0 26px; padding:18px; background:var(--paper-2); border-radius:14px }
 .wq h3{

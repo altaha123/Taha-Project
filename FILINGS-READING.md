@@ -86,6 +86,29 @@ Two details that took a debugging pass each, both worth keeping:
 `WOW_MIN_PCT` (default 10) is the threshold, printed on the page — a rule the
 reader cannot see is a rule they cannot argue with.
 
+### Answering at once
+
+The first version read the filings inside the page's request: a seven-day
+walk of the exchange feed, then up to forty PDFs downloaded one after another,
+each allowed a minute. With a ten-minute cache, a visitor every so often sat on
+"Reading the filings…" for minutes. With no time limit on the page, some sat
+there for good.
+
+* `/wow-orders` now answers from what is held. A stale answer is returned as it
+  is, with `refreshing: true`, while one background refresh reads the new
+  filings. On a cold start, what is held is the ledger, which keeps each value's
+  excerpt so the evidence survives a restart. The page shows a status line and
+  asks again every eight seconds until the refresh is done.
+* `/cron/tick` keeps it warm, so in normal running nobody waits at all.
+* A refresh may spend `WOW_SCAN_BUDGET` seconds (default 180) on filings it
+  has not read before. A filing that does not fit is **not read yet**, which is
+  a third state, distinct from *value not disclosed*. A PDF with no text layer
+  (a scan) is **could not be read**. Neither is ever counted as undisclosed, and
+  a filing not read yet is not written to the ledger, where it would stand for
+  ever as "no value".
+* A refresh that fails is not retried for a minute, so an open page cannot turn
+  one broken exchange call into a loop.
+
 ### Quarter on quarter, and the coverage table
 
 The announcements feed keeps three days. A quarter compared out of that would
