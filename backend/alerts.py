@@ -53,6 +53,10 @@ import requests
 TG_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 TG_CHAT = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 TG_PUBLIC = os.environ.get("TELEGRAM_PUBLIC_CHAT_ID", "").strip()
+# The link visitors press to join the public channel. Optional: when the
+# public chat id is a channel username (@name) the link is built from it.
+# Set this for a private channel's invite link (https://t.me/+...).
+TG_JOIN = os.environ.get("TELEGRAM_CHANNEL_URL", "").strip()
 
 WA_TOKEN = os.environ.get("WHATSAPP_TOKEN", "").strip()
 WA_PHONE_ID = os.environ.get("WHATSAPP_PHONE_ID", "").strip()
@@ -80,6 +84,19 @@ KIND_LABEL = {
 # Delivery memory, read by health() and by the Live view.
 _LAST = {"ok": None, "at": None, "detail": "no send attempted yet",
          "sent_today": 0, "failed_today": 0, "day": None, "last_hash": None}
+
+
+def join_url():
+    """The public channel's t.me link, or None. Only t.me links are ever
+    returned: whatever is in the environment ends up behind a button on
+    the public site."""
+    import re as _re
+    if _re.fullmatch(r"https://(t|telegram)\.me/[A-Za-z0-9_+\-]{5,64}", TG_JOIN):
+        return TG_JOIN
+    for v in (TG_JOIN, TG_PUBLIC):
+        if v.startswith("@") and _re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{4,31}", v[1:]):
+            return "https://t.me/" + v[1:]
+    return None
 
 
 def configured() -> bool:
@@ -265,8 +282,16 @@ def format_public(a):
     levels to the public is a materially different activity from publishing
     observations, and the SEBI RA regulations care about the difference."""
     arrow = "▲" if a.get("direction", "UP") == "UP" else "▼"
-    lines = [f"{arrow} <b>{_e(a['symbol'])}</b>", _e(_headline_line(a)),
-             f"<code>{_e('Now    ' + _money(a.get('price')))}</code>"]
+    if a.get("level") is not None:
+        # A breakout call: what crossed what, on what volume. No buy or
+        # sell, no levels to trade, no exit time.
+        what = str(a.get("headline") or "")
+        lines = [f"{arrow} <b>{_e(a['symbol'])}</b> · " + _e(CALL_LABEL.get(a.get("call"), "Intraday call")),
+                 _e(what[:1].upper() + what[1:]
+                    + (f", on {a['rvol']} times its normal volume." if a.get("rvol") else "."))]
+    else:
+        lines = [f"{arrow} <b>{_e(a['symbol'])}</b>", _e(_headline_line(a))]
+    lines.append(f"<code>{_e('Now    ' + _money(a.get('price')))}</code>")
     f = a.get("filing")
     if f:
         lines.append("\U0001F4CE " + _e(f.get("line", "")))
@@ -474,6 +499,7 @@ def health() -> dict:
         "channel": "telegram" if (TG_TOKEN and TG_CHAT) else
                    ("whatsapp" if WA_TOKEN else "none"),
         "public_channel": bool(TG_PUBLIC),
+        "join_url": join_url(),
         "last_ok": _LAST["ok"],
         "last_at": _LAST["at"],
         "last_detail": _LAST["detail"],

@@ -87,6 +87,8 @@ services:
         sync: false
       - key: TELEGRAM_CHAT_ID      # your own chat with the bot
         sync: false
+      - key: TELEGRAM_PUBLIC_CHAT_ID   # @yourchannel: facts-only posts, and
+        sync: false                    # the Alerts page's join button
 
       # Email. Unset means EMAIL_PROVIDER=console: sign-in links and digests
       # are printed to the log and delivered nowhere, which is a working
