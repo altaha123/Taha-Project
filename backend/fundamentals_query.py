@@ -462,11 +462,33 @@ def company_row(c, ctx, today=None):
 
 
 def _profiles():
+    """
+    Company profiles and shareholding for every row.
+
+    The profiles are the merged ones the lenses use (industry.lens_profiles):
+    NSE's row where it was read, with Yahoo's share count and price filling
+    what NSE left empty. NSE's quote API refuses the server's datacenter
+    address, so NSE's rows alone carry no share count — and market cap, which
+    is price times shares, printed as a dash for every company, along with
+    everything worked out from it (P/B, EV, dividend yield).
+    """
     try:
         import lens_store
-        return lens_store.companies(), lens_store.shareholding()
     except Exception:
         return {}, {}
+    try:
+        import industry
+        profiles = industry.lens_profiles()
+    except Exception:
+        try:
+            profiles = lens_store.companies()
+        except Exception:
+            profiles = {}
+    try:
+        holdings = lens_store.shareholding()
+    except Exception:
+        holdings = {}
+    return profiles, holdings
 
 
 def build(conn, today=None, prices=None, profiles=None, holdings=None):

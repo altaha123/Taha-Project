@@ -251,3 +251,28 @@ def test_the_endpoint_reports_a_bad_query_as_400(monkeypatch):
     assert r.status_code == 200 and _syms(r.json()) == ["AAA"]
     r = c.get("/fundamentals/query/fields")
     assert any(f["id"] == "roce" for f in r.json()["fields"])
+
+
+def test_market_cap_uses_the_share_count_yahoo_filled_in(store, monkeypatch):
+    """NSE's quote API refuses the server, so NSE's profile rows carry no
+    share count. The screener read only those rows, and market cap printed as
+    a dash for every company while the lenses, on the merged profiles, had it."""
+    import industry
+    import lens_store
+    _fill(store)
+    monkeypatch.setattr(Q, "store", store)
+    monkeypatch.setattr(Q.LM, "latest_prices", lambda: {"ACME": 320.0})
+    monkeypatch.setattr(industry, "_nse_profiles",
+                        lambda: {"ACME": {"symbol": "ACME", "company": "Acme Ltd",
+                                          "industry": None, "issued_shares": None}})
+    monkeypatch.setattr(industry, "_yahoo_profiles",
+                        lambda: {"ACME": {"symbol": "ACME", "industry": "Chemicals",
+                                          "sector": "Basic Materials", "shares": 1e8, "price": 318.0}})
+    monkeypatch.setattr(lens_store, "shareholding", lambda: {})
+    profiles, _holdings = Q._profiles()
+    assert profiles["ACME"]["issued_shares"] == 1e8
+    Q._cache.update(rows=None, key=None)
+    out = Q.run("Market cap > 1000")
+    assert _syms(out) == ["ACME"]
+    row = next(r for r in out["results"] if r["symbol"] == "ACME")
+    assert row["market_cap"] == pytest.approx(3200.0)            # 320 x 10 crore shares

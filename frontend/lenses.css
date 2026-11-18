@@ -170,6 +170,17 @@
   position:sticky; left:0; z-index:1; text-align:left; font-weight:400; padding:11px 14px;
   background:var(--skin-card, #FFFDF8); min-width:180px;
 }
+/* The company column stays put while the figures scroll under it, so it has
+   to be opaque in every state. The row's hover tint is see-through; on this
+   cell it is mixed with the card colour instead, or the numbers scrolled
+   underneath show through the company's name. Its heading sticks with it, so
+   the column under "Company" is always the company. */
+.ln-table tbody tr:hover > th[scope="row"]{
+  background:color-mix(in srgb,var(--gold) 5%,var(--skin-card, #FFFDF8)) }
+.ln-table th[scope="row"]{ box-shadow:1px 0 0 var(--rule-2) }
+.ln-table thead th:first-child:not(.qs-n), .ln-table thead th.qs-co{
+  position:sticky; left:0; z-index:2; text-align:left; background:var(--skin-card, #FFFDF8);
+  box-shadow:1px 0 0 var(--rule-2) }
 .ln-table th[scope="row"] a{ text-decoration:none; color:var(--ink); display:block }
 .ln-table th[scope="row"] b{ display:block; font:600 13px/1.2 'IBM Plex Mono',monospace }
 .ln-table th[scope="row"] span{ display:block; font-size:12.5px; color:var(--ink-2); line-height:1.3 }
