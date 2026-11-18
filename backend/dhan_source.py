@@ -263,6 +263,24 @@ def token_info() -> dict:
 # Historical candles
 # ---------------------------------------------------------------------------
 
+def _session_dates(ts):
+    """
+    The trading date of each daily candle, from Dhan's epoch stamps.
+
+    Dhan's stamps sit at 18:30 UTC, which is midnight IST, and read as the
+    wrong midnight they move every bar a day. Rather than assume which
+    midnight it is, both readings are taken and the one that puts candles on
+    trading days wins: NSE does not trade on Saturday or Sunday, so the wrong
+    reading shows up as a year of weekend candles. A tie (too few bars to
+    tell) keeps the UTC reading, which is how this was read before.
+    """
+    utc = pd.to_datetime(pd.Series(ts, dtype="int64"), unit="s")
+    ist = utc.dt.tz_localize("UTC").dt.tz_convert("Asia/Kolkata").dt.tz_localize(None)
+    a, b = pd.DatetimeIndex(utc.dt.normalize()), pd.DatetimeIndex(ist.dt.normalize())
+    weekend = lambda ix: int((ix.dayofweek >= 5).sum())
+    return b if weekend(b) < weekend(a) else a
+
+
 def daily_ohlcv(symbol: str, days: int = 400, with_today: bool = True):
     """Return a DataFrame of daily OHLCV, or None if Dhan can't serve it.
     with_today=False skips building today's bar from a live quote — one quote call
@@ -307,15 +325,7 @@ def daily_ohlcv(symbol: str, days: int = 400, with_today: bool = True):
 
     try:
         ts = d.get("timestamp") or d.get("start_Time") or []
-        # Read in IST, then keep the date. Dhan stamps a daily candle at
-        # midnight IST, which is 18:30 UTC the day BEFORE: read as UTC, every
-        # bar was dated a day early, so _append_today never saw today's candle
-        # as today's and added a second one beside it. Converting is right
-        # whichever midnight Dhan uses — UTC midnight is 05:30 IST, same date.
-        idx = (pd.DatetimeIndex(pd.to_datetime(pd.Series(ts, dtype="int64"), unit="s")
-                                .dt.tz_localize("UTC").dt.tz_convert("Asia/Kolkata")
-                                .dt.tz_localize(None).dt.normalize())
-               if len(ts) == len(d["close"]) else
+        idx = (_session_dates(ts) if len(ts) == len(d["close"]) else
                pd.RangeIndex(len(d["close"])))
         df = pd.DataFrame({
             "Open": d["open"], "High": d["high"], "Low": d["low"], "Close": d["close"],

@@ -393,6 +393,36 @@ def _usable(feed, today):
     return 0 < age <= STALE_DAYS
 
 
+def _weekday_before(day):
+    day -= dt.timedelta(days=1)
+    while day.weekday() >= 5:
+        day -= dt.timedelta(days=1)
+    return day
+
+
+def last_close(now=None):
+    """The last session that has closed: today after 15:30 on a weekday,
+    otherwise the weekday before. Holidays are not known here, so on the day
+    after one this names the holiday; callers only ever use it to ask
+    "could the levels be newer?", where one wasted check is harmless."""
+    now = now or now_ist()
+    if now.weekday() < 5 and _mso(now) >= 375:
+        return now.date()
+    return _weekday_before(now.date())
+
+
+def behind(now=None):
+    """True when the stored levels are older than the last close, so the
+    session about to trade would use a stale yesterday's high and low."""
+    asof = _feed().get("asof")
+    if not asof:
+        return True
+    try:
+        return dt.date.fromisoformat(asof) < last_close(now)
+    except ValueError:
+        return True
+
+
 def usable(now=None):
     now = now or now_ist()
     return _usable(_feed(), now.date().isoformat())
@@ -475,7 +505,10 @@ def ingest(reads, meta=None, now=None, send=True, force=False):
         feed = {"asof": asof, "built_at": now.isoformat(timespec="minutes"),
                 "scanned": len(reads), "levels": levels, "near": near[:60],
                 "sent": old.get("sent") if old.get("asof") == asof else None}
-        complete = asof == now.date().isoformat() and now.weekday() < 5 and _mso(now) >= 375
+        # The levels are complete once they describe the last close — after
+        # 15:30 the same day, or overnight: GitHub's scheduled scan has been
+        # starting hours late, around 01:30 IST.
+        complete = not session_live(now) and asof == last_close(now).isoformat()
         due = bool(send and complete and levels and feed["sent"] != asof)
         if due:
             feed["sent"] = asof

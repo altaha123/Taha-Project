@@ -147,6 +147,26 @@ def test_levels_ready_is_sent_once_and_only_after_a_close(monkeypatch, fresh_sta
     assert len(fresh_state) == 1 and "levels ready" in fresh_state[0]
 
 
+def test_an_overnight_scan_still_says_the_levels_are_ready(monkeypatch, fresh_state):
+    # GitHub's 16:50 schedule has been starting the scan around 01:30 IST.
+    monkeypatch.setattr(bo, "MIN_SCAN", 3)
+    reads = _reads()
+    for r in reads.values():
+        r["asof"] = "2026-11-17"
+    overnight = dt.datetime(2026, 11, 18, 1, 24, tzinfo=IST)
+    bo.ingest(reads, now=overnight)
+    assert len(fresh_state) == 1 and "2026-11-17" in fresh_state[0]
+    assert not bo.behind(now=dt.datetime(2026, 11, 18, 8, 45, tzinfo=IST))
+    assert bo.behind(now=dt.datetime(2026, 11, 19, 8, 45, tzinfo=IST))
+
+
+def test_last_close_skips_the_weekend():
+    assert bo.last_close(at(16, 0)) == DAY                                   # Tuesday after the close
+    assert bo.last_close(at(10, 0)) == dt.date(2026, 11, 16)                 # Tuesday morning: Monday
+    monday = dt.datetime(2026, 11, 23, 9, 0, tzinfo=IST)
+    assert bo.last_close(monday) == dt.date(2026, 11, 20)                    # Monday morning: Friday
+
+
 def test_a_small_scan_does_not_replace_the_levels_but_a_rebuild_may(monkeypatch):
     monkeypatch.setattr(bo, "MIN_SCAN", 50)
     assert bo.ingest(_reads()) is None
@@ -434,24 +454,44 @@ def _real_dhan():
     return mod
 
 
-def test_dhan_daily_bars_are_dated_by_the_indian_session(monkeypatch):
+def _dhan_with(monkeypatch, stamps):
     d = _real_dhan()
-    # Dhan stamps a daily candle at midnight IST: 18:30 UTC the day before.
-    days = pd.bdate_range(end="2026-11-17", periods=70)
-    stamps = [int((pd.Timestamp(x) - pd.Timedelta(hours=5, minutes=30)).timestamp()) for x in days]
-    body = {"open": [1.0] * 70, "high": [1.0] * 70, "low": [1.0] * 70, "close": [1.0] * 70,
-            "volume": [5] * 70, "timestamp": stamps}
+    n = len(stamps)
+    body = {"open": [1.0] * n, "high": [1.0] * n, "low": [1.0] * n, "close": [1.0] * n,
+            "volume": [5] * n, "timestamp": stamps}
     resp = types.SimpleNamespace(status_code=200, json=lambda: body, text="")
     monkeypatch.setattr(d, "requests", types.SimpleNamespace(post=lambda *a, **k: resp))
     monkeypatch.setattr(d, "configured", lambda: True)
     monkeypatch.setattr(d, "security_id", lambda s: "1")
     monkeypatch.setattr(d, "_throttle_hist", lambda: None)
+    return d
+
+
+@pytest.mark.parametrize("offset", [
+    pd.Timedelta(hours=18, minutes=30),       # 18:30 UTC on the trading day (midnight after it, IST)
+    -pd.Timedelta(hours=5, minutes=30),       # 18:30 UTC the day before (midnight starting it, IST)
+    pd.Timedelta(0),                          # UTC midnight
+])
+def test_dhan_daily_bars_land_on_their_trading_day_whichever_midnight(monkeypatch, offset):
+    # A year of weekdays. Read the wrong way, the stamps of one convention
+    # put every Friday on a Saturday — which is how the live levels on
+    # 18 Nov 2026 lost Tuesday's candle.
+    days = pd.bdate_range(end="2026-11-17", periods=260)
+    stamps = [int((pd.Timestamp(x) + offset).timestamp()) for x in days]
+    d = _dhan_with(monkeypatch, stamps)
+    monkeypatch.setattr(d, "_append_today", lambda s, df: df)
+    df = d.daily_ohlcv("ANY")
+    assert list(df.index) == list(days)
+    assert (df.index.dayofweek < 5).all()
+
+
+def test_dhan_with_today_false_spends_no_quote_call(monkeypatch):
+    days = pd.bdate_range(end="2026-11-17", periods=70)
+    d = _dhan_with(monkeypatch, [int(pd.Timestamp(x).timestamp()) for x in days])
     called = []
     monkeypatch.setattr(d, "_append_today", lambda s, df: called.append(s) or df)
-    df = d.daily_ohlcv("ANY", with_today=False)
-    assert df.index[-1] == pd.Timestamp("2026-11-17")
-    assert df.index[0] == pd.Timestamp(days[0])
-    assert called == []                                   # with_today=False spends no quote call
+    d.daily_ohlcv("ANY", with_today=False)
+    assert called == []
     d.daily_ohlcv("ANY")
     assert called == ["ANY"]
 
@@ -478,3 +518,32 @@ def test_dhan_todays_bar_carries_the_days_volume(monkeypatch):
     assert seen["mode"] == "quote"
     assert out.index[-1] == pd.Timestamp("2026-11-17")
     assert out["Volume"].iloc[-1] == 4_200_000
+
+
+def test_the_morning_rebuilds_levels_that_are_a_session_behind(monkeypatch):
+    started = []
+
+    class Thread:
+        def __init__(self, target=None, args=(), **k):
+            self.args = args
+
+        def start(self):
+            started.append(self.args[0])
+
+    monkeypatch.setattr(intraday, "threading", types.SimpleNamespace(Thread=Thread))
+    monkeypatch.setattr(intraday, "dhan", types.SimpleNamespace(configured=lambda: True))
+    monkeypatch.setattr(intraday, "now_ist", lambda: dt.datetime(2026, 11, 19, 8, 45, tzinfo=IST))
+    monkeypatch.setitem(intraday._state, "levels_day", None)
+    monkeypatch.setattr(intraday, "breakouts", types.SimpleNamespace(
+        usable=lambda: True, behind=lambda: True, universe=lambda: ["A", "B"], rebuild=None))
+    intraday._ensure_levels()
+    assert started == [["A", "B"]]
+    intraday._ensure_levels()                     # once a day, not every pass
+    assert len(started) == 1
+
+    started.clear()
+    monkeypatch.setitem(intraday._state, "levels_day", None)
+    monkeypatch.setattr(intraday, "breakouts", types.SimpleNamespace(
+        usable=lambda: True, behind=lambda: False, universe=lambda: ["A"], rebuild=None))
+    intraday._ensure_levels()
+    assert started == []                          # up to date: nothing to do

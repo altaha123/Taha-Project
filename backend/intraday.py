@@ -779,7 +779,9 @@ def _ensure_levels():
     if t.weekday() >= 5 or not (510 <= mins <= 900):       # 08:30 to 15:00
         return
     day = _today()
-    if _state.get("levels_day") == day or breakouts.usable():
+    # Rebuild when there are no usable levels, or when they are a session
+    # behind (the after-close scan did not run, or ran short).
+    if _state.get("levels_day") == day or (breakouts.usable() and not breakouts.behind()):
         return
     _state["levels_day"] = day
     syms = breakouts.universe() or list(_state["watch"])
