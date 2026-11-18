@@ -7,6 +7,7 @@
 <title>Stock — Altaha Screener</title>
 <meta name="description" content="A 0–100 score for any Indian or US stock, with every calculation that produced it shown line by line." />
 <meta name="robots" content="index,follow" />
+<!-- ssr:head -->
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -18,7 +19,7 @@
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20261113-foot">
-<link rel="stylesheet" href="stock.css?v=20261106-easy">
+<link rel="stylesheet" href="stock.css?v=20261118-pages">
 <link rel="stylesheet" href="lenses.css?v=20260925-screens">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
@@ -145,7 +146,8 @@
         <script>
           (function () {
             try {
-              var t = (new URLSearchParams(location.search).get('ticker') || '').trim();
+              var t = window.AltahaPageTicker ? window.AltahaPageTicker()
+                : (new URLSearchParams(location.search).get('ticker') || '').trim();
               if (t) document.getElementById('stk-lab-link').href =
                 './?go=strategies&lab=' + encodeURIComponent(t);
             } catch (e) {}
@@ -235,9 +237,17 @@
       </section>
     </div>
 
-    <div class="stk-disc" id="disc"></div>
-
   </div>
+
+  <!-- The company's filed figures, its last quarters and its neighbours, as
+       plain HTML. Empty here; on /stock-SYMBOL the API fills it in before the
+       page is sent (backend/company_pages.py), so a search engine reads a
+       company and not an empty shell. The two "ssr:" comments in this file
+       are where it writes: do not remove them. -->
+  <!-- ssr:glance -->
+
+  <div class="stk-disc" id="disc"></div>
+
 </main>
 
 <!-- Smart AI. A floating button, bottom right, that opens a small panel
@@ -266,8 +276,8 @@
 <script src="ownership-snapshot.js" defer></script>
 <script src="ownership.js" defer></script>
 <script src="delivery-ui.js?v=20260923" defer></script>
-<script src="stock.js?v=20261106-easy" defer></script>
-<script src="lenses.js?v=20260924-run" defer></script>
-<script src="experience.js?v=20261113-sync" defer></script>
+<script src="stock.js?v=20261118-pages" defer></script>
+<script src="lenses.js?v=20261118-pages" defer></script>
+<script src="experience.js?v=20261118-pages" defer></script>
 </body>
 </html>

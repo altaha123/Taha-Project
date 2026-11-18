@@ -115,6 +115,12 @@ try:
 except Exception:
     fundamentals_query = None
 try:
+    # One address per company, with its figures in the HTML: what a search
+    # engine reads. Stdlib only; the routes are near the share pages.
+    import company_pages
+except Exception:
+    company_pages = None
+try:
     # A daily copy of the data disk in Cloudflare R2. Stdlib plus requests;
     # inert until the R2_* variables are set.
     import backup as backup_job
@@ -2128,6 +2134,119 @@ def share_stock(ticker: str):
         f"{name} ({sym}) — Altaha Screener", desc,
         f"{SHARE_ORIGIN}/og/stock.png?ticker={sym}", f"{SITE_URL}/?q={sym}"),
         media_type="text/html")
+
+
+# ---------------------------------------------------------------------------
+# Company pages: one address per company, for someone arriving from a search
+#
+# /stock-RELIANCE, /stocks and /sitemap.xml on the site's own domain are
+# proxied here by frontend/vercel.json. company_pages.py has the whole
+# argument; three things matter at this end.
+#
+# Nothing below leaves the machine for data. The rows are the query
+# screener's snapshot and the stored quarterly results, so a crawler asking
+# for every company costs lookups, not trips to an exchange.
+#
+# An empty snapshot is a 503, never a 404. "We have no such company" and "the
+# tables are not loaded yet" look the same from here, and telling a search
+# engine the first when the second is true removes every page it had indexed.
+#
+# The page without its template is sent no-store. It is a stopgap for the
+# minute stock.html cannot be read, and a cached stopgap outlives the minute.
+# ---------------------------------------------------------------------------
+
+_PAGE_HEADERS = {"Cache-Control": "public, max-age=300, s-maxage=3600, "
+                                  "stale-while-revalidate=86400"}
+_PAGE_MISS_HEADERS = {"Cache-Control": "public, max-age=60, s-maxage=300",
+                      "X-Robots-Tag": "noindex"}
+_PAGE_WAIT_HEADERS = {"Cache-Control": "no-store", "Retry-After": "300"}
+# HEAD as well as GET. FastAPI's @app.get answers HEAD with 405, and for a
+# public page that is what link checkers and some crawlers ask first.
+_PAGE_METHODS = ["GET", "HEAD"]
+
+
+def _company_rows():
+    """The screener's snapshot rows, or [] when they cannot be read."""
+    if fundamentals_query is None:
+        return []
+    try:
+        rows, _built = fundamentals_query.snapshot()
+        return rows or []
+    except Exception:
+        return []
+
+
+def _company_quarters(sym):
+    if fundamentals_store is None:
+        return []
+    try:
+        return fundamentals_store.rows("income", symbol=sym, freq="quarterly", limit=48)
+    except Exception:
+        return []
+
+
+def _company_score(sym):
+    """The scan's own score for a company in its cohort; None for the rest.
+    Never scored on request here: a crawler must not start two thousand."""
+    try:
+        s = ((_cached_v4(sym) or {}).get("position") or {}).get("final_score")
+        return float(s) if s is not None else None
+    except Exception:
+        return None
+
+
+def _pages_off():
+    return Response(content="Company pages are unavailable.", status_code=503,
+                    media_type="text/plain", headers=_PAGE_WAIT_HEADERS)
+
+
+@app.api_route("/pages/company/{symbol}", methods=_PAGE_METHODS)
+def company_page(symbol: str):
+    """One company, as a page a search engine can read. See company_pages.py."""
+    if company_pages is None:
+        return _pages_off()
+    rows = _company_rows()
+    if not rows:
+        return _pages_off()
+    sym = company_pages.clean_symbol(symbol)
+    row = company_pages.index(rows).get(sym) if sym else None
+    if not row:
+        return Response(content=company_pages.render_missing(symbol, SITE_URL, API_URL),
+                        status_code=404, media_type="text/html", headers=_PAGE_MISS_HEADERS)
+    quarters, score = _company_quarters(sym), _company_score(sym)
+    template = company_pages.template(SITE_URL)
+    if not template:
+        return Response(content=company_pages.render_plain(row, rows, SITE_URL, API_URL,
+                                                           quarters, score),
+                        media_type="text/html", headers={"Cache-Control": "no-store"})
+    return Response(content=company_pages.render_company(template, row, rows, SITE_URL,
+                                                         quarters, score),
+                    media_type="text/html", headers=_PAGE_HEADERS)
+
+
+@app.api_route("/pages/stocks", methods=_PAGE_METHODS)
+def company_directory():
+    """Every company, A to Z, each linked to its page."""
+    if company_pages is None:
+        return _pages_off()
+    rows = _company_rows()
+    return Response(content=company_pages.render_directory(rows, SITE_URL, API_URL),
+                    media_type="text/html",
+                    headers=_PAGE_HEADERS if rows else {"Cache-Control": "no-store"})
+
+
+@app.api_route("/sitemap.xml", methods=_PAGE_METHODS)
+def sitemap_xml():
+    """The site's pages and one line per company. An empty snapshot is a 503:
+    a sitemap that suddenly lists four addresses reads as two thousand pages
+    having been taken down."""
+    if company_pages is None:
+        return _pages_off()
+    rows = _company_rows()
+    if not rows:
+        return _pages_off()
+    return Response(content=company_pages.sitemap(rows, SITE_URL), media_type="application/xml",
+                    headers={"Cache-Control": "public, max-age=3600, s-maxage=21600"})
 
 
 @app.get("/score-history")

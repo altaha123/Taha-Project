@@ -247,6 +247,7 @@
     { section: 'me', tab: 'score', label: 'How the score works' },
     { section: 'me', tab: 'vocab', label: 'Glossary' },
     { href: 'brief.html', label: 'Daily policy brief' },
+    { href: '/stocks', label: 'All companies' },
     { href: 'pro.html?from=footer', label: 'Altaha Pro' },
     { href: 'signin.html', label: 'Sign in' }
   ];

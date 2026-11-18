@@ -275,6 +275,64 @@ decisions paid chats would need — is in [`ADVISORS.md`](ADVISORS.md).
 
 ---
 
+## Company pages — one address per company, for search
+
+`/stock-RELIANCE`, `/stocks` and `/sitemap.xml` (`backend/company_pages.py`,
+the three routes after the share pages in `main.py`, `frontend/vercel.json`).
+
+Every company used to be the same page: `stock.html` with the symbol in the
+query string, an empty heading and a script that fetched the rest. A search
+engine that asked for it was sent a title of "Stock — Altaha Screener" and no
+words, so nobody could arrive by searching for a company.
+
+- **`/stock-SYMBOL` is the stock page with the company already in it.** The
+  API takes the deployed `stock.html` and writes in the title, the
+  description, the canonical address, the heading, the last close, and one
+  section at the foot: a paragraph, the filed figures, the last eight
+  quarters and links to the twelve companies nearest it in size in its
+  industry. The page's own scripts then draw the chart, the score and the
+  panes as before. Two comments in `stock.html` (`ssr:head`, `ssr:glance`)
+  mark where it writes; do not remove them.
+- **`/stocks`** lists every company, A to Z, each linked to its page. The
+  footer of every page links to it.
+- **`/sitemap.xml`** lists the site's pages and one line per company.
+  `robots.txt` names it.
+- **Nothing leaves the machine for a page.** The figures are the query
+  screener's snapshot row and the stored quarterly results. A crawler asking
+  for every company costs lookups, not trips to NSE.
+- **Why `/stock-SYMBOL` and not `/stock/SYMBOL`.** Every link and asset on the
+  site is relative. One level down each is a 404, and the usual fix (a
+  `<base>` tag) breaks `#` links and, in some browsers, the chart's gradient
+  fills.
+- **An empty snapshot is a 503, never a 404.** After a deploy the tables can
+  be unread for a minute. "No such company" would tell a search engine that
+  every page it had indexed was gone.
+- **Quarters are on one accounting basis,** the one the snapshot row uses.
+  No percentage is printed across a loss.
+- **Figures, not advice.** The section states what the company filed and what
+  the market paid. A test fails on any word that reads as an instruction.
+- `/stock?ticker=SYMBOL` still works and is what the site's own links open.
+  On the live site it names `/stock-SYMBOL` as its canonical address.
+
+**Once, by hand, after this is live:** open
+[Google Search Console](https://search.google.com/search-console), add
+`altahascreener.in` as a property, verify it (a DNS record at the domain
+registrar), then Sitemaps → enter `sitemap.xml` → Submit. Do the same in
+[Bing Webmaster Tools](https://www.bing.com/webmasters). Search engines find
+the pages without this, but slowly, and Search Console is the only place that
+says which pages were indexed and which searches showed them.
+
+**Check it is live:** `https://altahascreener.in/stock-RELIANCE` → View Source
+(not Inspect) should show the company's name in `<title>` and `<h1>`.
+`/sitemap.xml` should list one address per company. If `/stock-RELIANCE`
+shows the figures with an "Open the chart…" link and no chart, the API could
+not read `stock.html` from the site; it retries each minute.
+
+`backend/tests/test_company_pages.py` and
+`frontend/tests/company-page-browser.cjs` pin all of the above.
+
+---
+
 ## Folder map
 
 ```

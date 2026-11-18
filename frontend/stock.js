@@ -55,7 +55,14 @@
     try { return new URLSearchParams(location.search).get(k); } catch (e) { return null; }
   }
 
-  var TICKER = (param('ticker') || '').trim().toUpperCase();
+  /* ?ticker=TCS on the static page, /stock-TCS on the one the API sends
+     (clean-url.js reads both). The fallback is for a page that loads this
+     file without that one. */
+  var TICKER = (window.AltahaPageTicker ? window.AltahaPageTicker() : (param('ticker') || ''))
+    .trim().toUpperCase();
+  /* Set by the API on /stock-TCS, where the title, the description and the
+     canonical address are already in the HTML and are the ones to keep. */
+  var SSR = window.ALTAHA_SSR || null;
 
   /* ── States ──────────────────────────────────────────────────────────────── */
 
@@ -75,7 +82,10 @@
 
   function paintHead(d) {
     var base = String(d.ticker || TICKER).replace(/\.(NS|BO)$/, '');
-    document.title = base + ' — ' + (d.name || 'Stock') + ' | Altaha Screener';
+    if (!SSR) {
+      document.title = base + ' — ' + (d.name || 'Stock') + ' | Altaha Screener';
+      canonical(d, base);
+    }
     $('crumb').textContent = base;
     $('nm').textContent = d.name || base;
 
@@ -93,6 +103,19 @@
     // The daily change is not in /analyze, so it is filled by the chart call
     // rather than invented here. An empty field beats a wrong one.
     $('chg').textContent = '';
+  }
+
+  /* This address and /stock-TCS show the same company. A search engine that
+     finds both is told which one to keep: the one with the figures in its
+     HTML. Only for an NSE listing, the only kind that has such a page, and
+     only on the live site, the only place that address exists. */
+  function canonical(d, base) {
+    if (d.exchange !== 'NSE' || document.querySelector('link[rel="canonical"]')) return;
+    if (!/(^|\.)altahascreener\.in$/.test(location.hostname)) return;
+    var link = document.createElement('link');
+    link.rel = 'canonical';
+    link.href = location.origin + '/stock-' + encodeURIComponent(base);
+    document.head.appendChild(link);
   }
 
   /* ── Score ───────────────────────────────────────────────────────────────── */
