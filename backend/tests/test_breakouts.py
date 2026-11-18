@@ -338,7 +338,7 @@ def test_a_tight_intraday_range_broken_on_volume_is_a_trade():
 
 def test_nothing_fires_outside_the_window_or_from_stale_levels():
     _arm()
-    t, vol = quiet_tape(at(14, 31), 5)                    # after 14:30
+    t, vol = quiet_tape(at(15, 1), 5)                     # after 15:00
     assert bo.check_live(q(111.3, vol + 60_000, vwap=109.0), now=t) == []
     _arm(asof="2026-11-01")
     assert bo.watch_symbols(now=at(10, 0)) == []
@@ -569,3 +569,10 @@ def test_the_morning_rebuilds_levels_that_are_a_session_behind(monkeypatch):
         usable=lambda: True, behind=lambda: False, universe=lambda: ["A"], rebuild=None))
     intraday._ensure_levels()
     assert started == []                          # up to date: nothing to do
+
+
+def test_calls_run_until_three_pm():
+    _arm()
+    t, vol = quiet_tape(at(14, 50), 5, vol0=820_000)      # a break at 2:55 pm still calls
+    fired = bo.check_live(q(111.3, vol + 60_000, vwap=109.0), now=t)
+    assert [a["kind"] for a in fired] == ["BO_BASE"] and fired[0]["time"] == "14:55"

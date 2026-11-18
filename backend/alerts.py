@@ -281,7 +281,7 @@ def format_day_open(stocks, levels_asof, index_pct, poll_seconds=20):
     if stocks:
         return ("<b>ALTAHA · live</b>\n" +
                 _e(f"Watching {stocks} stocks, checked every {poll_seconds} seconds. "
-                   "Calls come from 9:20 am to 2:30 pm."))
+                   "Calls come from 9:20 am to 3:00 pm."))
     return ("<b>ALTAHA · live</b>\n" +
             _e("Getting the watch list ready. Calls start in a few minutes."))
 

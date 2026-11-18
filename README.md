@@ -476,7 +476,7 @@ point and target. Code: `backend/breakouts.py` (the rules) and
   stock's usual volume for that time of day, the price is on the right side of
   VWAP, the stop is 0.4–1.5% away, the next level is at least one risk away,
   and the index is not running hard the other way. One alert per stock per
-  direction per day, 09:20–14:30, at most 15 a day, best score first.
+  direction per day, 09:20–15:00, at most 15 a day, best score first.
 - **The trade.** Stop just back inside the level (or the far side of the
   tight range); target two risks away; book half at one risk; flat by 15:15.
 - **Two kinds of call.** Each alert is tagged `CONSOLIDATION` (it broke out of
@@ -499,7 +499,7 @@ after a deploy, a scan that failed) they are rebuilt from Dhan automatically.
 burst, default 2.0), `BO_MIN_SCORE` (50), `BO_MAX_RISK` / `BO_MIN_RISK` (1.5 /
 0.4 %), `BO_RR` (target in risks, 2), `BO_SHORTS=0` (longs only),
 `BO_UNIVERSE` (400), `BO_MIN_TURNOVER_CR` (15), `MAX_ALERTS_DAY` (15),
-`POLL_SECONDS` (20), `BO_END_MIN` (315 = 14:30). `BREAKOUT_ALERTS=0` turns it
+`POLL_SECONDS` (20), `BO_END_MIN` (345 = 15:00). `BREAKOUT_ALERTS=0` turns it
 off. The older volume-spike signals are off; `VOLUME_ALERTS=1` brings them
 back. `GET /breakouts/status` and `GET /intraday/diag` say why it is quiet.
 

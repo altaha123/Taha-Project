@@ -2562,7 +2562,7 @@ async function loadLive(){
     $("lquiet").innerHTML = problem ? `<div class="ltg off">${esc(problem)}</div>` : "";
     const none = what => `<div class="ideas-note" style="padding:14px 0">${
       d.market_open ? `No ${what} yet today. You get a Telegram message the moment there is one.`
-                    : `No ${what} today. Calls come between 9:20 am and 2:30 pm on trading days.`}</div>`;
+                    : `No ${what} today. Calls come between 9:20 am and 3:00 pm on trading days.`}</div>`;
     $("lcount").textContent = intra.length ? `${intra.length} today` : "";
     $("ccount").textContent = cons.length ? `${cons.length} today` : "";
     $("lalerts").innerHTML = intra.length ? intra.map(alertCard).join("") : none("intraday call");

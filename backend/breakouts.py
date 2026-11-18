@@ -122,7 +122,8 @@ REGIME = _f("BO_REGIME", 0.8)                     # index move, percent, that bl
 MIN_SCORE = _i("BO_MIN_SCORE", 50)
 SHORTS = _b("BO_SHORTS", True)
 START_MIN = _i("BO_START_MIN", 5)                 # 09:20
-END_MIN = _i("BO_END_MIN", 315)                   # 14:30 — later has no room to work
+END_MIN = _i("BO_END_MIN", 345)                   # 15:00 — the last call still has 15 minutes
+                                                  # before the 15:15 exit; asked for by the owner
 ORB_MIN = 15                                      # the opening range is the first 15 minutes
 ORB_END = _i("BO_ORB_END", 165)                   # and is traded until 12:00
 RANGE_MIN = _i("BO_RANGE_MIN", 40)                # the intraday consolidation, minutes
@@ -849,7 +850,7 @@ def rules():
                   f"{SURGE:g}x their usual volume, and it is on the right side of VWAP"),
         "risk": (f"stop {MIN_RISK:g}% to {MAX_RISK:g}% away, target {RR:g} times the risk, "
                  "next level at least one risk away"),
-        "window": "09:20 to 14:30, one alert per stock per direction a day",
+        "window": "09:20 to 15:00, one alert per stock per direction a day",
         "universe": f"the {UNIVERSE} most-traded stocks, at least Rs {MIN_TURNOVER_CR:g} crore a day",
     }
 
