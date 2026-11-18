@@ -4,6 +4,9 @@
     { "source": "/share", "destination": "https://taha-project.onrender.com/share/record" },
     { "source": "/share/:path*", "destination": "https://taha-project.onrender.com/share/:path*" },
     { "source": "/og/:path*", "destination": "https://taha-project.onrender.com/og/:path*" },
+    { "source": "/stock-:symbol", "destination": "https://taha-project.onrender.com/pages/company/:symbol" },
+    { "source": "/stocks", "destination": "https://taha-project.onrender.com/pages/stocks" },
+    { "source": "/sitemap.xml", "destination": "https://taha-project.onrender.com/sitemap.xml" },
     { "source": "/stock", "destination": "/stock.html" },
     { "source": "/signin", "destination": "/signin.html" },
     { "source": "/wealth", "destination": "/wealth.html" },
@@ -18,6 +21,9 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }
       ]
-    }
+    },
+    { "source": "/stock-:symbol", "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }] },
+    { "source": "/stocks", "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }] },
+    { "source": "/sitemap.xml", "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }] }
   ]
 }

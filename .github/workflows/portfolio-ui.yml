@@ -12,6 +12,8 @@ on:
       - 'backend/filings_text.py'
       - 'backend/strategy_lab.py'
       - 'backend/wealth*.py'
+      - 'backend/company_pages.py'
+      - 'backend/tests/company_pages*'
       - 'backend/tests/*wealth*'
       - 'backend/tests/*portfolio*'
       - 'backend/tests/*shareholding*'
@@ -410,3 +412,20 @@ jobs:
         with:
           name: query-browser-verification
           path: test-results/query
+      - name: Verify a company page reads as a company with scripts off, and still works with them on
+        if: always()
+        # /stock-SYMBOL is what a search engine is sent. With scripts off it
+        # must show the name, the price, the filed figures and links to the
+        # company's neighbours. With scripts on, the same address must be the
+        # working stock page: four scripts read the company from the address,
+        # and the title and canonical the server sent must be the ones that
+        # stay. The pages are printed by the real renderer against the real
+        # stock.html, so an edit to either that breaks the other fails here.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/company-page-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: company-pages-browser-verification
+          path: test-results/company-pages

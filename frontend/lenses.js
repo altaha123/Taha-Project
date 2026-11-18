@@ -556,7 +556,10 @@
     var strip = $('stk-lenses');
     if (strip) {
       var sym = '';
-      try { sym = new URLSearchParams(location.search).get('ticker') || ''; } catch (e) {}
+      try {
+        sym = window.AltahaPageTicker ? window.AltahaPageTicker()
+          : (new URLSearchParams(location.search).get('ticker') || '');
+      } catch (e) {}
       mountStrip(strip, sym.trim().toUpperCase().replace(/\.(NS|BO)$/, ''));
     }
   }

@@ -1,0 +1,6 @@
+# Everything on the site may be read. The sitemap lists every company page
+# (backend/company_pages.py builds it; vercel.json proxies it from the API).
+User-agent: *
+Allow: /
+
+Sitemap: https://altahascreener.in/sitemap.xml
