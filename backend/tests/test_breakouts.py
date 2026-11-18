@@ -437,24 +437,40 @@ def test_the_page_record_is_in_plain_counts_and_percent(monkeypatch):
 
 def test_a_call_reads_as_a_call():
     text = alerts.format_digest([bo.sample()], index_pct=0.35, total_today=1, clock="10:42")
-    assert "<b>BUY TESTMSG</b>" in text and "Consolidation breakout" in text
-    for label, value in (("Buy at", "414.10"), ("Stop loss", "411.25"), ("Target", "419.80")):
+    assert "🟢 BUY <b>TESTMSG</b>" in text and "🚀 <b>Consolidation breakout</b>  ·  10:42 am" in text
+    for label, value in (("Buy at", "₹414.10"), ("Stop loss", "₹411.25"), ("Target", "₹419.80"),
+                         ("Crossed above", "₹412.50")):
         assert label in text and value in text
-    assert "Exit by 3:15 pm" in text
+    assert "The top of a 64-day consolidation" in text and "Volume <b>2.6×</b> normal" in text
+    assert "⏰ Exit by 3:15 pm" in text and "#TESTMSG" in text
     # Nothing a reader has to decode.
     for jargon in ("score", "VWAP", "1:2", "index", "R "):
         assert jargon not in text
     sell = alerts.format_digest([dict(bo.sample(), direction="DOWN", call="INTRADAY")])
-    assert "<b>SELL TESTMSG</b>" in sell and "Intraday call" in sell and "Sell at" in sell
+    assert "🔴 SELL <b>TESTMSG</b>" in sell and "⚡ <b>Intraday call</b>" in sell
+    assert "Sell at" in sell and "📉 Fell below" in sell
 
 
 def test_the_public_message_carries_no_entry_stop_or_target():
     text = alerts.format_public(bo.sample())
-    assert "TESTMSG" in text and "Consolidation breakout" in text
-    assert "Crossed above 412.50, the top of a 64-day consolidation, on 2.6 times" in text
+    assert "<b>TESTMSG</b>  🟢 ▲ +1.8%" in text and "🚀 <b>Consolidation breakout</b>" in text
+    assert "📈 Crossed above <b>₹412.50</b>" in text and "The top of a 64-day consolidation" in text
+    assert "Now <b>₹414.10</b>" in text and "#TESTMSG #Breakout #NSE" in text
     for trade in ("411.25", "419.80", "BUY", "SELL", "Exit", "Stop", "Target"):
         assert trade not in text
-    assert "Not a recommendation" in text
+    assert "not a recommendation" in text
+
+
+def test_a_hashtag_survives_a_symbol_telegram_cannot_tag():
+    text = alerts.format_public(dict(bo.sample(), symbol="M&M", direction="DOWN", call="INTRADAY",
+                                     level_name="Yesterday's low", move_pct=-1.2))
+    assert "<b>M&amp;M</b>  🔴 ▼ −1.2%" in text and "#MM #Intraday #NSE" in text
+    assert "📍 Yesterday's low" in text
+
+
+def test_an_older_logged_call_still_names_its_level():
+    old = {k: v for k, v in bo.sample().items() if k != "level_name"}
+    assert "🧱 The top of a 64-day consolidation" in alerts.format_public(old)
 
 
 @pytest.mark.parametrize("url, chat, expect", [
