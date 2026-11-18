@@ -145,11 +145,12 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 # How much a level matters, and what it is called in a sentence.
 SIG = {"BASE_LONG": 5, "BASE": 4, "HIGH52": 4, "LOW52": 4, "HIGH20": 3, "LOW20": 3,
        "RANGE": 3, "ORB": 2, "PDH": 2, "PDL": 2}
-WORDS = {"BASE": "the top of its base", "HIGH52": "its 52-week high", "HIGH20": "its 20-day high",
-         "PDH": "yesterday's high", "ORB": "the opening-range high", "RANGE": "a tight intraday range",
-         "BASE_DN": "the bottom of its base", "LOW52": "its 52-week low", "LOW20": "its 20-day low",
-         "PDL": "yesterday's low", "ORB_DN": "the opening-range low",
-         "RANGE_DN": "a tight intraday range"}
+WORDS = {"BASE": "the top of its consolidation", "HIGH52": "its 52-week high",
+         "HIGH20": "its 20-day high", "PDH": "yesterday's high",
+         "ORB": "the high of the first 15 minutes", "RANGE": "a tight intraday range",
+         "BASE_DN": "the bottom of its consolidation", "LOW52": "its 52-week low",
+         "LOW20": "its 20-day low", "PDL": "yesterday's low",
+         "ORB_DN": "the low of the first 15 minutes", "RANGE_DN": "a tight intraday range"}
 
 # A normal NSE session's cumulative share of the day's volume by minutes after
 # 09:15. Volume is U-shaped — heavy at the open and into the close — so a
@@ -801,23 +802,26 @@ def check_live(snap, now=None, index_pct=None, fired=None):
 
                 kind = trig["k"]
                 base = lv.get("base")
+                # The two things a reader asked for, by name. A break that
+                # ends a consolidation — weeks inside a base, or 40 tight
+                # minutes today — is a CONSOLIDATION breakout; every other
+                # break of a level is an INTRADAY call.
+                consolidation = ranged or kind in ("BASE", "BASE_DN", "RANGE", "RANGE_DN")
                 what = WORDS[kind]
                 if kind in ("BASE", "BASE_DN") and base:
-                    what = (f"the {'top' if sign > 0 else 'bottom'} of a {base['n']}-session base "
-                            f"({base['w']:.0f}% wide)")
+                    what = f"the {'top' if sign > 0 else 'bottom'} of a {base['n']}-day consolidation"
                 elif kind in ("RANGE", "RANGE_DN"):
-                    what = f"a {RANGE_MIN}-minute range {((rh - rl) / px * 100):.1f}% wide"
-                also = [WORDS[k] for k in trig["also"] if k in WORDS]
-                why = (f"{'Cleared' if sign > 0 else 'Broke below'} {level:,.2f}, {what}"
-                       + (f"; also {' and '.join(also)}" if also else "") + ". "
-                       + (f"It held a {((rh - rl) / px * 100):.1f}% range for {RANGE_MIN} minutes first. "
-                          if ranged and kind not in ("RANGE", "RANGE_DN") else "")
-                       + (f"Next level {nxt:,.2f}. " if nxt is not None else "")
-                       + "Out if it trades back through the stop; square off by 15:15.")
+                    what = f"a tight {RANGE_MIN}-minute range"
+                elif ranged:
+                    what += f", after {RANGE_MIN} minutes in a tight range"
+                verb = "Crossed above" if sign > 0 else "Fell below"
+                why = (f"{verb} {level:,.2f}, {what}, on {vol_x:.1f} times its normal volume. "
+                       "Exit by 3:15 pm.")
                 out.append({
                     "date": today, "time": now.strftime("%H:%M"), "symbol": sym,
                     "kind": "BO_" + kind, "direction": side,
-                    "headline": f"{'cleared' if sign > 0 else 'broke below'} {level:,.2f}, {what}",
+                    "call": "CONSOLIDATION" if consolidation else "INTRADAY",
+                    "headline": f"{verb.lower()} {level:,.2f}, {what}",
                     "level": round(level, 2), "price": round(px, 2),
                     "rvol": round(vol_x, 1), "day_rvol": round(pace, 1),
                     "range_pos": None, "vwap": round(vwap, 2) if vwap else None,
@@ -877,11 +881,12 @@ def status(now=None):
 def sample():
     """A made-up alert in the live shape, for the Telegram test."""
     return {"date": "", "time": "10:42", "symbol": "TESTMSG", "kind": "BO_BASE", "direction": "UP",
-            "headline": "cleared 412.50, the top of a 64-session base (14% wide)",
+            "call": "CONSOLIDATION",
+            "headline": "crossed above 412.50, the top of a 64-day consolidation",
             "level": 412.50, "price": 414.10, "rvol": 2.6, "day_rvol": 1.4, "range_pos": None,
             "vwap": 410.85, "entry": 414.10, "stop": 411.25, "t1": 416.95, "target": 419.80,
             "rr": 2.0, "risk_pct": 0.69, "move_pct": 1.8, "score": 74, "regime": 0.35,
             "sector": "Power",
-            "why": ("Cleared 412.50, the top of a 64-session base (14% wide); also its 20-day high. "
-                    "Next level 430.00. Out if it trades back through the stop; square off by 15:15."),
+            "why": ("Crossed above 412.50, the top of a 64-day consolidation, on 2.6 times its "
+                    "normal volume. Exit by 3:15 pm."),
             "outcome": None, "closed_at": None}

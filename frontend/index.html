@@ -520,7 +520,10 @@
   .aout.TARGET{color:var(--pass)} .aout.STOP{color:var(--fail)}
   .aout.OPEN_AT_CLOSE{opacity:.75}
   .alertcard.up{border-left-color:var(--pass)} .alertcard.dn{border-left-color:var(--fail)}
-  .alertcard .ascore{font-family:var(--mono);font-size:11px;letter-spacing:.08em;opacity:.65}
+  .alertcard .aside{font-family:var(--mono);font-size:12px;letter-spacing:.1em;padding:2px 8px;margin-right:6px;color:#fff}
+  .alertcard .aside.buy{background:var(--pass)} .alertcard .aside.sell{background:var(--fail)}
+  .alertcard .anums{margin-top:10px}
+  .statbox .recline{display:block;font-size:14px;line-height:1.7}
   .alertcard .asym a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
   .ltg{font-size:14px;line-height:1.6;margin:-4px 0 6px;color:var(--ink-2)}
   .ltg.off{border:1px dashed var(--fail);padding:10px 14px;color:inherit}
@@ -1613,7 +1616,7 @@
   <div id="view-live" style="display:none">
     <header class="tabhead">
       <h2>Alerts</h2>
-      <p>Intraday breakouts, up and down, sent to Telegram the moment they happen. Each comes with an entry, a stop and a target, and is marked after the close so its record can be measured.</p>
+      <p>Live buy and sell calls for intraday, sent to your Telegram the moment a stock breaks out. Every call has a price to enter, a stop loss and a target.</p>
     </header>
 
     <div class="livehead">
@@ -1625,16 +1628,19 @@
     <div id="ltg" class="ltg"></div>
 
     <div id="lstats"></div>
+    <div id="lquiet"></div>
 
-    <div class="lh" style="margin-top:34px"><h3>Today's alerts</h3><span id="lcount"></span></div>
-    <p class="lsub" id="borules">A liquid stock clearing a level on a burst of volume, with a stop close by and room to run.</p>
-    <div id="lalerts"><div class="ideas-note" style="padding:14px 0">Nothing yet.</div></div>
-    <div id="bowait"></div>
+    <div class="lh" style="margin-top:34px"><h3>Intraday calls</h3><span id="lcount"></span></div>
+    <p class="lsub">A stock crossing yesterday's high or low, its 20-day or 52-week high or low, or the first 15 minutes' range, on heavy volume.</p>
+    <div id="lalerts"></div>
 
+    <div class="lh" style="margin-top:44px"><h3>Consolidation breakouts</h3><span id="ccount"></span></div>
+    <p class="lsub">A stock that moved sideways in a narrow range, for weeks or for the last 40 minutes, and has just broken out of it on heavy volume.</p>
+    <div id="calerts"></div>
     <div id="bowatch"></div>
 
-    <div class="lh" style="margin-top:44px"><h3>Measured record</h3><span>every alert, marked</span></div>
-    <p class="lsub">Each alert is judged on 5-minute bars after it fired: target, stop, or wherever it stood at the 3:15 square-off. Results are in R, where 1R is the distance from entry to stop.</p>
+    <div class="lh" style="margin-top:44px"><h3>How the calls have done</h3><span>checked after every close</span></div>
+    <p class="lsub">After the market closes, each call is checked against what the price did next: it hit the target, hit the stop loss, or was closed at 3:15 pm.</p>
     <div id="lhit"></div>
 
     <p class="disc">Alerts are measurements, not recommendations. No signal predicts price.</p>
@@ -2474,55 +2480,37 @@ function withKey(url){
 
 /* \u2500\u2500 Live intraday scanner \u2500\u2500 */
 let liveTimer = null;
-const KIND_LABEL = {
-  BO_BASE:"BASE BREAKOUT", BO_HIGH52:"52-WEEK HIGH", BO_HIGH20:"20-DAY HIGH", BO_PDH:"YESTERDAY'S HIGH",
-  BO_ORB:"OPENING RANGE", BO_RANGE:"INTRADAY RANGE",
-  BO_BASE_DN:"BASE BREAKDOWN", BO_LOW52:"52-WEEK LOW", BO_LOW20:"20-DAY LOW", BO_PDL:"YESTERDAY'S LOW",
-  BO_ORB_DN:"OPENING RANGE", BO_RANGE_DN:"INTRADAY RANGE",
-  RVOL:"VOLUME SPIKE", RVOL_DOWN:"HEAVY SELLING", ORB:"OPENING RANGE", ORB_DOWN:"OPENING RANGE", LEVEL:"LEVEL BREAK"};
-const NEAR_KIND = {BASE:"top of its base", BASE_DN:"bottom of its base", HIGH52:"52-week high", LOW52:"52-week low"};
+const KIND_LABEL = {RVOL:"VOLUME SPIKE", RVOL_DOWN:"HEAVY SELLING", ORB:"OPENING RANGE", ORB_DOWN:"OPENING RANGE", LEVEL:"LEVEL BREAK"};
 const boMoney = n => (n === null || n === undefined || n === "") ? "—"
   : "₹" + Number(n).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2});
 const boLink = s => `<a href="stock.html?ticker=${encodeURIComponent(s)}">${esc(s)}</a>`;
-const boR = r => (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(1) + "R";
+const boPct = p => (p > 0 ? "+" : p < 0 ? "−" : "") + Math.abs(p).toFixed(1) + "%";
 
+/* One call: what to do, at what price, where to get out, and how it ended. */
 function alertCard(a){
-  const down = a.direction === "DOWN";
-  const res = {TARGET:"Target hit", STOP:"Stopped out", OPEN_AT_CLOSE:"Flat at the square-off"}[a.outcome];
-  const out = res ? `<div class="aout ${esc(a.outcome)}">${res}${a.r !== undefined && a.r !== null ? " · " + boR(a.r) : ""} · closed ${boMoney(a.closed_at)}</div>` : "";
-  return `<div class="alertcard ${down ? "dn" : "up"}">
+  const sell = a.direction === "DOWN";
+  const res = {TARGET:"Hit the target", STOP:"Hit the stop loss", OPEN_AT_CLOSE:"Closed at 3:15 pm"}[a.outcome];
+  const won = a.pnl_pct > 0;
+  const out = res ? `<div class="aout ${won ? "TARGET" : "STOP"}">${res}${a.pnl_pct !== undefined && a.pnl_pct !== null ? ": " + boPct(a.pnl_pct) : ""}</div>` : "";
+  return `<div class="alertcard ${sell ? "dn" : "up"}">
     <div class="ah">
-      <span class="asym">${down ? "▼" : "▲"} ${boLink(a.symbol)}</span>
-      <span class="akind">${esc(KIND_LABEL[a.kind] || a.kind)}</span>
-      ${a.score !== undefined && a.score !== null ? `<span class="ascore">score ${a.score}</span>` : ""}
+      <span class="asym"><b class="aside ${sell ? "sell" : "buy"}">${sell ? "SELL" : "BUY"}</b> ${boLink(a.symbol)}</span>
       <span class="atime">${esc(a.time || "")}</span>
     </div>
-    <div class="ahl">${down ? "Sell" : "Buy"}: ${esc(a.headline || "")}</div>
     <div class="anums">
-      <span>Entry <b>${boMoney(a.entry)}</b></span>
-      <span>Stop <b>${boMoney(a.stop)}</b> (${a.risk_pct}%)</span>
-      ${a.t1 ? `<span>Half at <b>${boMoney(a.t1)}</b></span>` : ""}
+      <span>${sell ? "Sell at" : "Buy at"} <b>${boMoney(a.entry)}</b></span>
+      <span>Stop loss <b>${boMoney(a.stop)}</b></span>
       <span>Target <b>${boMoney(a.target)}</b></span>
-      <span>Volume <b>${a.rvol}×</b></span>
     </div>
-    <div class="awhy">${esc(a.why || "")}</div>${out}
+    <div class="awhy">${esc(a.why || a.headline || "")}</div>${out}
   </div>`;
 }
 
-function renderBreakoutLevels(b){
-  if(!b){ $("bowait").innerHTML = $("bowatch").innerHTML = ""; return; }
-  const r = b.rules || {};
-  if(r.fires) $("borules").textContent = `An alert fires when ${r.fires}. Levels: ${r.levels}. ${r.risk ? r.risk.charAt(0).toUpperCase() + r.risk.slice(1) + "." : ""}`;
-  const w = b.waiting || [];
-  $("bowait").innerHTML = !w.length ? "" : `<div class="boh">Through a level, not confirmed</div>
-    <div class="botwrap"><table class="botable"><thead><tr><th>Stock</th><th>Level</th><th>Now</th><th class="wide">Why it has not alerted</th></tr></thead><tbody>${
-      w.map(x => `<tr><td>${x.dir === "DOWN" ? "▼" : "▲"} ${boLink(x.symbol)}</td><td>${boMoney(x.level)}</td><td>${boMoney(x.price)}</td><td class="k wide">${esc(x.why || "")}</td></tr>`).join("")
-    }</tbody></table></div>`;
-  const near = b.near || [];
-  $("bowatch").innerHTML = !near.length ? "" : `<div class="lh" style="margin-top:44px"><h3>Closest to a big level</h3><span>at the close of ${esc(b.asof || "")}</span></div>
-    <p class="lsub">Where the larger breaks are most likely to come from next. Yesterday's high and low are watched for every stock and are not listed.</p>
-    <div class="botwrap"><table class="botable"><thead><tr><th>Stock</th><th>Level</th><th>Away</th><th class="wide">What it is</th></tr></thead><tbody>${
-      near.map(x => `<tr><td>${x.dir === "DOWN" ? "▼" : "▲"} ${boLink(x.symbol)}</td><td>${boMoney(x.level)}</td><td>${x.away_pct.toFixed(1)}%</td><td class="k wide">${esc(NEAR_KIND[x.kind] || x.kind)}${x.sessions ? `, ${x.sessions} sessions, ${x.width_pct}% wide` : ""}</td></tr>`).join("")
+function renderWatch(b){
+  const near = ((b && b.near) || []).filter(x => x.kind === "BASE" || x.kind === "BASE_DN").slice(0, 10);
+  $("bowatch").innerHTML = !near.length ? "" : `<div class="boh">Closest to breaking out</div>
+    <div class="botwrap"><table class="botable"><thead><tr><th>Stock</th><th>Breaks out at</th><th>Away</th><th class="wide">Sideways for</th></tr></thead><tbody>${
+      near.map(x => `<tr><td>${x.dir === "DOWN" ? "▼" : "▲"} ${boLink(x.symbol)}</td><td>${boMoney(x.level)}</td><td>${x.away_pct.toFixed(1)}%</td><td class="k wide">${x.sessions ? x.sessions + " days" : ""}</td></tr>`).join("")
     }</tbody></table></div>`;
 }
 
@@ -2536,8 +2524,7 @@ function renderTelegram(b, d){
     return;
   }
   $("ltg").className = "ltg";
-  const last = tg.last_at ? ` · last send ${esc(tg.last_at)}${tg.last_ok === false ? " failed: " + esc(tg.last_detail || "") : ""}` : "";
-  $("ltg").innerHTML = `Telegram connected${last}${tg.sent_today ? ` · ${tg.sent_today} sent today` : ""}`;
+  $("ltg").innerHTML = "Telegram connected" + (tg.last_ok === false ? ", but the last message failed: " + esc(tg.last_detail || "") : "");
 }
 
 async function getJSON(path){
@@ -2548,35 +2535,38 @@ async function getJSON(path){
 async function loadLive(){
   const [d, b] = await Promise.all([getJSON("/intraday/status"), getJSON("/breakouts/status")]);
   renderTelegram(b, d);
-  renderBreakoutLevels(b);
+  renderWatch(b);
   if(!d){
     $("lstat").textContent = "engine unreachable";
   }else{
     const live = d.running && d.market_open && !d.error && b && b.usable;
     $("ldot").className = "livedot" + (live ? " on" : "");
     $("lstat").textContent = !d.running ? "not running"
-      : !d.market_open ? "running · market closed, resumes at 9:15"
+      : !d.market_open ? "market closed, starts again at 9:15 am"
       : d.error ? "running, but not reading the market"
-      : `live · ${d.quotes_last_pass} quotes every ${d.poll_seconds || 20}s`;
+      : `live · checking ${d.quotes_last_pass} stocks every ${d.poll_seconds || 20} seconds`;
     const rows = d.alerts_today || [];
-    const marked = rows.filter(a => a.r !== undefined && a.r !== null);
-    const net = marked.reduce((t, a) => t + a.r, 0);
+    const cons = rows.filter(a => a.call === "CONSOLIDATION");
+    const intra = rows.filter(a => a.call !== "CONSOLIDATION");
     $("lstats").innerHTML = `<div class="statgrid">
-      <div class="statbox"><span class="sk2">Alerts today</span><span class="sv">${rows.length}</span></div>
-      <div class="statbox"><span class="sk2">Stocks watched</span><span class="sv">${b && b.usable ? b.stocks : 0}</span></div>
-      <div class="statbox"><span class="sk2">${marked.length ? "Today's result" : "Levels from"}</span><span class="sv">${marked.length ? boR(net) : esc((b && b.asof) || "—")}</span></div>
+      <div class="statbox"><span class="sk2">Calls today</span><span class="sv">${rows.length}</span></div>
+      <div class="statbox"><span class="sk2">Hit target today</span><span class="sv">${rows.filter(a => a.outcome === "TARGET").length}</span></div>
+      <div class="statbox"><span class="sk2">Stocks watched live</span><span class="sv">${b && b.usable ? b.stocks : 0}</span></div>
     </div>`;
-    $("lcount").textContent = rows.length ? `${rows.length} fired` : "";
-    // Say which of the reasons for silence applies, in the order they bite.
-    const quiet = !d.running ? "The scanner is not running. Press Start live scanner."
-      : d.error ? `The scanner is running but cannot read the market: ${d.error}.`
-      : !b || !b.stocks ? "No breakout levels yet. They are built after each close, or within a few minutes of the scanner's first morning."
-      : !b.usable ? `The levels are from ${b.asof} and too old to trade against. They rebuild on the next trading morning.`
-      : !d.market_open ? `The market is closed. ${b.stocks} stocks are loaded for the next session.`
-      : `Watching ${b.stocks} stocks. Nothing has cleared a level on enough volume yet.`;
-    $("lalerts").innerHTML = rows.length ? rows.map(alertCard).join("")
-      : `<div class="ideas-note" style="padding:14px 0">${esc(quiet)}</div>`;
-    if(rows.length && d.error) $("lalerts").innerHTML += `<div class="ideas-note" style="padding:8px 0;opacity:.7">Last error: ${esc(d.error)}</div>`;
+    // If something is stopping calls, say which thing, once, at the top.
+    const problem = !d.running ? "The scanner is not running. Press Start live scanner."
+      : d.error && d.market_open ? `The scanner cannot read the market right now: ${d.error}.`
+      : !b || !b.stocks ? "The watch list is not ready yet. It is built automatically, within a few minutes on a trading morning."
+      : !b.usable ? "The watch list is out of date. It is rebuilt automatically on the next trading morning."
+      : "";
+    $("lquiet").innerHTML = problem ? `<div class="ltg off">${esc(problem)}</div>` : "";
+    const none = what => `<div class="ideas-note" style="padding:14px 0">${
+      d.market_open ? `No ${what} yet today. You get a Telegram message the moment there is one.`
+                    : `No ${what} today. Calls come between 9:20 am and 2:30 pm on trading days.`}</div>`;
+    $("lcount").textContent = intra.length ? `${intra.length} today` : "";
+    $("ccount").textContent = cons.length ? `${cons.length} today` : "";
+    $("lalerts").innerHTML = intra.length ? intra.map(alertCard).join("") : none("intraday call");
+    $("calerts").innerHTML = cons.length ? cons.map(alertCard).join("") : none("consolidation breakout");
   }
   loadHitRate();
 }
@@ -2584,25 +2574,23 @@ async function loadLive(){
 async function loadHitRate(){
   const d = await getJSON("/intraday/stats");
   if(!d) return;
-  const by = d.by_signal || {};
-  const keys = Object.keys(by).filter(k => by[k]);
-  if(!keys.length){
-    $("lhit").innerHTML = `<div class="ideas-note" style="padding:14px 0">No marked trades yet. The record starts after the first alerts have been through a close.</div>`;
-    return;
-  }
-  const box = (label, b) => {
-    const col = b.expectancy_R > 0 ? "var(--pass)" : "var(--fail)";
+  const c = d.calls || {};
+  const box = (label, r) => {
+    if(!r || !r.calls) return `<div class="statbox"><span class="sk2">${label}</span>
+      <span class="sk2" style="margin-top:8px;text-transform:none;letter-spacing:0;font-size:14px">No calls checked yet.</span></div>`;
+    const col = r.avg_pct > 0 ? "var(--pass)" : "var(--fail)";
     return `<div class="statbox">
-      <span class="sk2">${esc(label)}</span>
-      <span class="sv" style="color:${col}">${boR(b.expectancy_R)} <small style="font-size:.6em;opacity:.6;color:var(--ink)">a trade</small></span>
-      <span class="sk2" style="margin-top:6px">${b.trades} trades · ${b.win_rate}% won · ${boR(b.total_R)} in all</span>
+      <span class="sk2">${label}</span>
+      <span class="sv">${r.calls} calls</span>
+      <span class="recline">${r.target} hit the target</span>
+      <span class="recline">${r.stop} hit the stop loss</span>
+      <span class="recline">${r.closed} closed at 3:15 pm</span>
+      <span class="recline">Average result: <b style="color:${col}">${boPct(r.avg_pct)}</b> a call</span>
     </div>`;
   };
-  const dir = d.by_direction || {};
-  $("lhit").innerHTML = `<div class="statgrid">` + (d.overall ? box("All alerts", d.overall) : "")
-    + (dir.UP ? box("Longs", dir.UP) : "") + (dir.DOWN ? box("Shorts", dir.DOWN) : "")
-    + keys.sort((x, y) => by[y].trades - by[x].trades).map(k => box(KIND_LABEL[k] || k, by[k])).join("")
-    + `</div><p class="vnote">${esc(d.note||"")}</p>`;
+  $("lhit").innerHTML = `<div class="statgrid">${box("Intraday calls", c.intraday)}${box("Consolidation breakouts", c.consolidation)}</div>`
+    + ((c.intraday && c.intraday.calls) || (c.consolidation && c.consolidation.calls) ? ""
+       : `<p class="lsub">The record starts after the first calls have been through a market close.</p>`);
 }
 
 $("livestart").addEventListener("click", async ()=>{

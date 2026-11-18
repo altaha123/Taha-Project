@@ -144,7 +144,7 @@ def test_levels_ready_is_sent_once_and_only_after_a_close(monkeypatch, fresh_sta
     assert fresh_state == []                      # mid-session: nothing closed yet
     bo.ingest(reads, now=at(17, 5))
     bo.ingest(reads, now=at(17, 40))
-    assert len(fresh_state) == 1 and "levels ready" in fresh_state[0]
+    assert len(fresh_state) == 1 and "ready for tomorrow" in fresh_state[0]
 
 
 def test_an_overnight_scan_still_says_the_levels_are_ready(monkeypatch, fresh_state):
@@ -155,7 +155,7 @@ def test_an_overnight_scan_still_says_the_levels_are_ready(monkeypatch, fresh_st
         r["asof"] = "2026-11-17"
     overnight = dt.datetime(2026, 11, 18, 1, 24, tzinfo=IST)
     bo.ingest(reads, now=overnight)
-    assert len(fresh_state) == 1 and "2026-11-17" in fresh_state[0]
+    assert len(fresh_state) == 1 and "ready for tomorrow" in fresh_state[0]
     assert not bo.behind(now=dt.datetime(2026, 11, 18, 8, 45, tzinfo=IST))
     assert bo.behind(now=dt.datetime(2026, 11, 19, 8, 45, tzinfo=IST))
 
@@ -223,7 +223,8 @@ def test_a_fresh_cross_on_a_volume_burst_is_a_trade():
     assert a["target"] == pytest.approx(a["entry"] + 2 * risk, abs=0.02)
     assert bo.MIN_RISK <= a["risk_pct"] <= bo.MAX_RISK
     assert a["rvol"] >= bo.SURGE and a["score"] >= bo.MIN_SCORE
-    assert "80-session base" in a["why"] and "20-day high" in a["why"]
+    assert a["call"] == "CONSOLIDATION"
+    assert "80-day consolidation" in a["why"] and "Exit by 3:15 pm" in a["why"]
     # Once the caller has logged it, the same stock does not fire again.
     assert bo.check_live(q(111.5, vol + 90_000, vwap=109.0),
                          now=t + dt.timedelta(seconds=20), fired={("NEAR", "UP")}) == []
@@ -289,7 +290,7 @@ def test_a_breakdown_is_a_short():
     a = fired[0]
     assert (a["kind"], a["direction"], a["level"]) == ("BO_PDL", "DOWN", 105.0)
     assert a["stop"] > a["entry"] > a["t1"] > a["target"]
-    assert "Broke below" in a["why"]
+    assert a["call"] == "INTRADAY" and "Fell below 105.00, yesterday's low" in a["why"]
 
 
 def test_shorts_can_be_switched_off(monkeypatch):
@@ -329,6 +330,7 @@ def test_a_tight_intraday_range_broken_on_volume_is_a_trade():
     fired = bo.check_live(q(108.5, vol + 40_000, pc=107.0, vwap=107.8), now=t)
     assert [a["kind"] for a in fired] == ["BO_RANGE"]
     a = fired[0]
+    assert a["call"] == "CONSOLIDATION" and "tight 40-minute range" in a["why"]
     assert a["level"] == pytest.approx(108.3, abs=0.01)
     assert a["stop"] < 108.0                              # the far side of the range
     assert a["risk_pct"] < 0.8
@@ -411,19 +413,39 @@ def test_the_record_counts_every_trade_in_risks(monkeypatch):
     assert s["by_signal"]["BO_BASE"]["trades"] == 3 and s["by_direction"]["DOWN"]["trades"] == 1
 
 
+def test_the_page_record_is_in_plain_counts_and_percent(monkeypatch):
+    base = {"date": "2026-11-17", "time": "10:42", "symbol": "X", "kind": "BO_BASE",
+            "call": "CONSOLIDATION", "direction": "UP", "entry": 100.0, "stop": 99.0, "target": 102.0}
+    rows = [dict(base, outcome="TARGET", closed_at=102.0),                    # +2.0%
+            dict(base, outcome="STOP", closed_at=99.0),                       # -1.0%
+            dict(base, kind="BO_PDL", call="INTRADAY", direction="DOWN", stop=101.0, target=98.0,
+                 outcome="OPEN_AT_CLOSE", closed_at=99.5),                    # +0.5% on a short
+            # The old volume scanner's history is a different system: not counted.
+            dict(base, kind="RVOL", call=None, outcome="STOP", closed_at=99.0)]
+    assert [intraday._pnl_pct(a) for a in rows[:3]] == [2.0, -1.0, 0.5]
+    monkeypatch.setitem(intraday._state, "alerts", rows)
+    rec = intraday.stats()["calls"]
+    assert rec["consolidation"] == {"calls": 2, "target": 1, "stop": 1, "closed": 0,
+                                    "profitable": 1, "avg_pct": 0.5}
+    assert rec["intraday"] == {"calls": 1, "target": 0, "stop": 0, "closed": 1,
+                               "profitable": 1, "avg_pct": 0.5}
+
+
 # ---------------------------------------------------------------------------
 # The Telegram messages
 # ---------------------------------------------------------------------------
 
-def test_the_alert_reads_as_a_trade_on_a_phone():
+def test_a_call_reads_as_a_call():
     text = alerts.format_digest([bo.sample()], index_pct=0.35, total_today=1, clock="10:42")
-    assert "<b>TESTMSG</b> · BUY" in text and "Base breakout" in text
-    for label, value in (("Level", "412.50"), ("Entry", "414.10"), ("Stop", "411.25"),
-                         ("Half", "416.95"), ("Target", "419.80")):
+    assert "<b>BUY TESTMSG</b>" in text and "Consolidation breakout" in text
+    for label, value in (("Buy at", "414.10"), ("Stop loss", "411.25"), ("Target", "419.80")):
         assert label in text and value in text
-    assert "square off by 15:15" in text
-    short = alerts.format_digest([dict(bo.sample(), direction="DOWN", kind="BO_PDL")])
-    assert "▼" in short and "· SELL" in short and "Yesterday's low broken" in short
+    assert "Exit by 3:15 pm" in text
+    # Nothing a reader has to decode.
+    for jargon in ("score", "VWAP", "1:2", "index", "R "):
+        assert jargon not in text
+    sell = alerts.format_digest([dict(bo.sample(), direction="DOWN", call="INTRADAY")])
+    assert "<b>SELL TESTMSG</b>" in sell and "Intraday call" in sell and "Sell at" in sell
 
 
 def test_the_public_message_carries_no_entry_stop_or_target():
@@ -432,14 +454,14 @@ def test_the_public_message_carries_no_entry_stop_or_target():
     assert "Not a recommendation" in text
 
 
-def test_the_days_result_adds_up():
-    rows = [dict(bo.sample(), symbol="A", outcome="TARGET", r=2.0),
-            dict(bo.sample(), symbol="B", direction="DOWN", outcome="STOP", r=-1.0),
-            dict(bo.sample(), symbol="C", outcome="OPEN_AT_CLOSE", r=0.4)]
-    text = alerts.format_day_result("2026-11-17", rows)
-    assert "3 alerts · 1 target · 1 stopped · 1 flat at 15:15" in text
-    assert "Net +1.4R" in text and "▼ B" in text
-    assert "No alert today" in alerts.format_day_result("2026-11-17", [])
+def test_the_days_result_is_in_plain_words():
+    rows = [dict(bo.sample(), symbol="A", outcome="TARGET", pnl_pct=1.38),
+            dict(bo.sample(), symbol="B", direction="DOWN", outcome="STOP", pnl_pct=-0.44),
+            dict(bo.sample(), symbol="C", outcome="OPEN_AT_CLOSE", pnl_pct=0.3)]
+    text = alerts.format_day_result("18 Nov", rows)
+    assert "3 calls: 1 hit target, 1 hit stop loss, 1 closed at 3:15 pm" in text
+    assert "SELL B" in text and "-0.4%" in text and "+1.4%" in text
+    assert "No call today" in alerts.format_day_result("18 Nov", [])
 
 
 # ---------------------------------------------------------------------------

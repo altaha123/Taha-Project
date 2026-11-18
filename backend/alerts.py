@@ -199,13 +199,42 @@ def format_alert(a, seq=None, repeat=False):
     return "\n".join(parts)
 
 
+CALL_LABEL = {"INTRADAY": "Intraday call", "CONSOLIDATION": "Consolidation breakout"}
+
+
+def format_call(a):
+    """
+    A breakout call as a person reads it on a phone: what to do, in which
+    stock, at what price, where to get out, and one sentence of why. No
+    scores, ratios or jargon — the reader asked for a call, not a report.
+    """
+    buy = a.get("direction", "UP") == "UP"
+    rows = [("Buy at" if buy else "Sell at", _money(a.get("entry"))),
+            ("Stop loss", _money(a.get("stop"))),
+            ("Target", _money(a.get("target")))]
+    width = max(len(v) for _l, v in rows)
+    block = "\n".join(f"{label:<10}{value:>{width}}" for label, value in rows)
+    parts = [("🟢 " if buy else "🔴 ") + f"<b>{'BUY' if buy else 'SELL'} {_e(a['symbol'])}</b>",
+             _e(CALL_LABEL.get(a.get("call"), "Intraday call")),
+             "<code>" + _e(block) + "</code>"]
+    if a.get("why"):
+        parts.append("<i>" + _e(str(a["why"])[:240]) + "</i>")
+    f = a.get("filing")
+    if f:
+        parts.append("\U0001F4CE " + _e(f"{f.get('line', '')}"))
+    return "\n".join(parts)
+
+
 def format_digest(rows, index_pct=None, total_today=None, clock=None):
     """
-    One message per pass. Header answers 'is this worth opening' before you
-    open it: how many, at what time, in what market.
+    One message per pass. Breakout calls (anything carrying a `level`) go
+    out as plain call cards; the older volume alerts keep their own card.
     """
     if not rows:
         return ""
+    if all(a.get("level") is not None for a in rows):
+        block = [format_call(a) for a in rows]
+        return "\n\n".join(block) + "\n\n<i>Not investment advice.</i>"
     n = len(rows)
     header = f"<b>ALTAHA</b> · {n} setup" + ("s" if n != 1 else "")
     if clock:
@@ -224,7 +253,8 @@ def format_digest(rows, index_pct=None, total_today=None, clock=None):
         repeat = a["symbol"] in seen
         seen.add(a["symbol"])
         block.append("")
-        block.append(format_alert(a, seq=i if n > 1 else None, repeat=repeat))
+        block.append(format_call(a) if a.get("level") is not None
+                     else format_alert(a, seq=i if n > 1 else None, repeat=repeat))
 
     block += ["", "<i>Observation, not advice. Size the position before you act.</i>"]
     return "\n".join(block)
@@ -246,20 +276,14 @@ def format_public(a):
 
 
 def format_day_open(stocks, levels_asof, index_pct, poll_seconds=20):
-    """Sent once, before the alert window opens. Its only job is to make a
-    dead scanner distinguishable from a quiet market."""
-    reg = f"{index_pct:+.2f}%" if index_pct is not None else "n/a"
-    lines = ["<b>ALTAHA · scanner live</b>"]
+    """Sent once, just after the open. Its only job is to make a dead scanner
+    distinguishable from a quiet market."""
     if stocks:
-        lines += [f"<code>{_e(f'Stocks   {stocks}')}</code>",
-                  f"<code>{_e(f'Levels   {levels_asof}')}</code>",
-                  f"<code>{_e(f'Index    {reg}')}</code>",
-                  "<i>" + _e(f"Breakouts up and down, checked every {poll_seconds} seconds, "
-                             "alerts 09:20 to 14:30.") + "</i>"]
-    else:
-        lines.append(_e("No breakout levels yet. They are being built from daily bars now; "
-                        "alerts start as soon as they are ready."))
-    return "\n".join(lines)
+        return ("<b>ALTAHA · live</b>\n" +
+                _e(f"Watching {stocks} stocks, checked every {poll_seconds} seconds. "
+                   "Calls come from 9:20 am to 2:30 pm."))
+    return ("<b>ALTAHA · live</b>\n" +
+            _e("Getting the watch list ready. Calls start in a few minutes."))
 
 
 def format_day_close(alerts, near):
@@ -285,51 +309,43 @@ def format_day_close(alerts, near):
 # Breakout alerts (breakouts.py): the two messages around the live cards
 # ---------------------------------------------------------------------------
 
-_KIND_SHORT = {"BASE": "base top", "BASE_DN": "base low", "HIGH52": "52w high", "LOW52": "52w low"}
-
-
 def format_levels_ready(asof, stocks, near):
-    """Sent once after the close, when tomorrow's levels are built."""
-    lines = [f"<b>ALTAHA · levels ready</b> · {_e(asof)}",
-             _e(f"{stocks} stocks watched tomorrow, up and down.")]
-    if near:
-        lines += ["", "Closest to a big level at the close:"]
+    """Sent once after the close, when tomorrow's watch list is built."""
+    lines = [f"<b>ALTAHA · ready for tomorrow</b>",
+             _e(f"{stocks} stocks will be watched live.")]
+    bases = [w for w in (near or []) if w.get("kind") in ("BASE", "BASE_DN")][:8]
+    if bases:
+        lines += ["", "Closest to a consolidation breakout:"]
         rows = []
-        for w in near[:8]:
+        for w in bases:
             arrow = "▲" if w.get("dir") == "UP" else "▼"
-            rows.append(f"{arrow} {w['symbol'][:11]:<11} {w['away_pct']:>4.1f}%  "
-                        f"{_KIND_SHORT.get(w.get('kind'), '')}")
+            rows.append(f"{arrow} {w['symbol'][:11]:<11} {_money(w['level']):>10}  {w['away_pct']:.1f}% away")
         lines.append("<code>" + _e("\n".join(rows)) + "</code>")
     return "\n".join(lines)
 
 
 def format_day_result(day, alerts):
     """
-    Sent once after the close, when every alert has been marked. In R: one R
-    is the distance from entry to stop, so +2.0R is a target and -1.0R a stop.
+    Sent once after the close, when every call has been checked against what
+    the price did next. In plain terms: how many hit the target, how many hit
+    the stop loss, and each call's profit or loss in percent.
     """
     n = len(alerts)
-    lines = [f"<b>ALTAHA · today's result</b> · {_e(day)}"]
+    lines = [f"<b>ALTAHA · today's calls</b> · {_e(day)}"]
     if not n:
-        lines.append("No alert today. Nothing cleared a level on enough volume.")
+        lines.append("No call today. No stock broke out strongly enough.")
         return "\n".join(lines)
-    marked = [a for a in alerts if a.get("r") is not None]
     tg = sum(1 for a in alerts if a.get("outcome") == "TARGET")
     st = sum(1 for a in alerts if a.get("outcome") == "STOP")
     flat = sum(1 for a in alerts if a.get("outcome") == "OPEN_AT_CLOSE")
-    lines.append(_e(f"{n} alert" + ("s" if n != 1 else "") +
-                    f" · {tg} target · {st} stopped · {flat} flat at 15:15"))
-    if marked:
-        total = sum(a["r"] for a in marked)
-        lines.append(f"<b>Net {total:+.1f}R</b>")
+    lines.append(_e(f"{n} call" + ("s" if n != 1 else "") + f": {tg} hit target, "
+                    f"{st} hit stop loss, {flat} closed at 3:15 pm"))
     rows = []
     for a in alerts[:15]:
-        arrow = "▲" if a.get("direction", "UP") == "UP" else "▼"
-        r = f"{a['r']:+.1f}R" if a.get("r") is not None else "  n/a"
-        rows.append(f"{a.get('time', '--:--')} {arrow} {a['symbol'][:11]:<11} {r:>6}")
+        side = "BUY " if a.get("direction", "UP") == "UP" else "SELL"
+        pct = f"{a['pnl_pct']:+.1f}%" if a.get("pnl_pct") is not None else "  n/a"
+        rows.append(f"{side} {a['symbol'][:11]:<11} {pct:>6}")
     lines.append("<code>" + _e("\n".join(rows)) + "</code>")
-    lines.append("<i>" + _e("Judged on 5-minute bars after each alert; when a bar touches both "
-                            "stop and target, the stop is assumed.") + "</i>")
     return "\n".join(lines)
 
 
