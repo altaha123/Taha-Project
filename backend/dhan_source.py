@@ -532,7 +532,112 @@ def bulk_quotes(symbols: list, mode: str = "ohlc") -> dict:
                 "sell_qty": row.get("sell_quantity"),
                 "oi": row.get("oi"),
                 "prev_close": ohlc.get("close"),
+                "net_change": row.get("net_change"),
             }
+    _settle_prev_close(out)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# The previous close, after the close
+#
+# During a session, the quote's ohlc.close is the PREVIOUS session's close,
+# and (ltp - close) is the day's move. Some time after 15:30 the feed rolls:
+# close becomes TODAY's close, equal to ltp, and every stock on the site read
+# "0.00%" all evening — while the indices, which come from elsewhere, showed
+# the day's real move beside them.
+#
+# A market where nine stocks in ten are exactly unchanged does not exist, so
+# that is how the roll is recognised — no clock, no assumption about when the
+# exchange finishes its processing. Once recognised, each row gets the
+# previous close this process remembered during the session; failing that,
+# ltp minus the feed's own net_change; failing that, None — and a caller
+# given None falls back to its daily history instead of printing a zero.
+# ---------------------------------------------------------------------------
+
+_PREV_FILE = os.path.join(os.environ.get("DATA_DIR", "").strip()
+                          or os.path.dirname(os.path.abspath(__file__)), "prev_close.json")
+_prev = {"day": None, "map": {}, "saved": 0.0, "loaded": False}
+ROLL_MIN_ROWS = 8          # too few rows cannot tell a roll from a quiet stock
+ROLL_SHARE = 0.9
+
+
+def _session_day(now):
+    """The session a quote taken at `now` belongs to: today from 09:15 on a
+    weekday, otherwise the weekday before."""
+    day = now.date()
+    if now.weekday() >= 5 or (now.hour * 60 + now.minute) < 555:
+        day -= dt.timedelta(days=1)
+        while day.weekday() >= 5:
+            day -= dt.timedelta(days=1)
+    return day.isoformat()
+
+
+def _prev_memory(day):
+    """{SYMBOL: previous close} remembered for session `day`."""
+    if not _prev["loaded"]:
+        _prev["loaded"] = True
+        try:
+            import json
+            with open(_PREV_FILE) as fh:
+                blob = json.load(fh)
+            _prev.update({"day": blob.get("day"), "map": blob.get("map") or {}})
+        except Exception:
+            pass
+    if _prev["day"] != day:
+        _prev.update({"day": day, "map": {}})
+    return _prev["map"]
+
+
+def _settle_prev_close(out, now=None):
+    now = now or dt.datetime.now(IST_TZ)
+    rows = []
+    for sym, r in out.items():
+        try:
+            ltp, prev = float(r.get("ltp") or 0), float(r.get("prev_close") or 0)
+        except (TypeError, ValueError):
+            continue
+        if ltp > 0 and prev > 0:
+            rows.append((sym, r, ltp, prev))
+    if not rows:
+        return out
+    mins = now.hour * 60 + now.minute
+    live = now.weekday() < 5 and 555 <= mins < 930
+    memory = _prev_memory(_session_day(now))
+    flat = [abs(ltp - prev) < 1e-9 for _s, _r, ltp, prev in rows]
+    rolled = len(rows) >= ROLL_MIN_ROWS and sum(flat) / len(rows) >= ROLL_SHARE
+
+    if live and not rolled:
+        # The close in hand is the previous close. Remember it for tonight.
+        for sym, _r, _ltp, prev in rows:
+            memory[sym] = prev
+        if time.time() - _prev["saved"] > 300:
+            _prev["saved"] = time.time()
+            try:
+                import json
+                tmp = _PREV_FILE + ".tmp"
+                with open(tmp, "w") as fh:
+                    json.dump({"day": _prev["day"], "map": memory}, fh)
+                os.replace(tmp, _PREV_FILE)
+            except Exception:
+                pass
+        return out
+
+    for (sym, r, ltp, _prev_now), is_flat in zip(rows, flat):
+        if not is_flat:
+            continue
+        # A small batch cannot show a roll by itself, but outside the session
+        # a flat row with a remembered close is the same thing, one stock wide.
+        if not rolled and (live or sym not in memory):
+            continue
+        if sym in memory:
+            r["prev_close"] = memory[sym]
+            continue
+        try:
+            change = float(r.get("net_change") or 0)
+        except (TypeError, ValueError):
+            change = 0.0
+        r["prev_close"] = round(ltp - change, 2) if abs(change) > 1e-9 else None
     return out
 
 
