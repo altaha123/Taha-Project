@@ -14,7 +14,11 @@ permissions:
   contents: read
 jobs:
   scan-experience:
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: the day that label moved to Ubuntu 26.04,
+    # Playwright 1.58.2 refused to install Chromium there and this job
+    # failed before running a single test. Move this and the Playwright
+    # version together.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
