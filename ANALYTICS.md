@@ -23,7 +23,7 @@ here first, and `frontend/analytics.test.js` fails CI if the two drift.
 | `stock_opened` | ticker, from | Which companies people come here for, and by what route |
 | `stock_viewed` | ticker, sector, score | Which analyses actually render, and at what score |
 | `stock_view_failed` | ticker, reason | How often a reader gets nothing — asleep engine vs. no such name |
-| `stock_section_clicked` | section | Does anyone read past the score into the ledger and the levels |
+| `stock_section_clicked` | section | Which sections of a company's page get opened (`chart`, `scores`, `peers`, `news`…), from where (`score_chip`, `overview_news`), and whether the holding period and the peer sort are used |
 | `chart_range_changed` | range | Which windows matter |
 | `chart_failed` | range, status | A chart that refuses to draw — the 6M bug, caught next time |
 | `search_no_match` | query | Names people search for that the universe does not carry |

@@ -280,6 +280,29 @@ def test_analyze_names_why_a_us_listing_has_no_score(main_mod):
     assert d["scoring"]["score"] is None
     assert d["scoring"]["label"] == "NOT RANKED"
     assert "NSE peers" in d["scoring"]["summary"]
+    assert d["percentiles"] == {} and d["cohort_size"] is None
+
+
+def test_analyze_carries_what_the_stock_page_reads(main_mod):
+    """The page switches horizon without asking again, so the rank has to be
+    there for each one; and the word beside the score is the site's one scale,
+    not a second set of cuts."""
+    import score_bands
+    d = main_mod.analyze("NEWCO")
+    assert set(d["percentiles"]) == set(main_mod.PR.HORIZONS)
+    assert d["percentile"] == d["percentiles"]["position"]
+    assert d["cohort_size"] == len(main_mod._state["payload"]["factor_universe"])
+    assert d["scoring"]["band"] == score_bands.band(d["scoring"]["score"])
+    for h, shown in d["horizons"].items():
+        assert shown["band"] == score_bands.band(shown["score"]), h
+    assert d["score_bands"] == score_bands.as_payload()
+    assert d["business_model"]["key"] and d["business_model"]["name"]
+    assert d["logo"] == {"domain": None}
+    # A published website becomes the logo's domain and nothing more.
+    main_mod.fundamentals = lambda sym, t: (None, None, None, {
+        "sector": "Technology", "industry": "Software services", "marketCap": 5e10,
+        "currency": "INR", "website": "https://www.newco.example/investors"})
+    assert main_mod.analyze("NEWCO")["logo"] == {"domain": "newco.example"}
 
 
 # ── Dividend yield ─────────────────────────────────────────────────────────

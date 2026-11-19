@@ -82,7 +82,8 @@
     stock_view_failed:     ['ticker', 'reason'],
 
     // Does anyone read past the score? This is the whole paywall question:
-    // the ledger and the levels are the work; the score is the headline.
+    // the score's arithmetic, the peers and the filings are the work; the
+    // score is the headline. One event for every section of a company's page.
     stock_section_clicked: ['section'],
 
     // Which windows matter, now that they all work.

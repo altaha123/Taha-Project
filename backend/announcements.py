@@ -517,36 +517,167 @@ def _nse_rows(days: int = None):
         rows = data if isinstance(data, list) else _rows_from(data)
         if not rows:
             return [], "NSE: 200 but no rows"
-        out = []
-        for row in rows:
-            subject = re.sub(r"\s+", " ", (row.get("desc") or "")).strip()
-            text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ",
-                                              row.get("attchmntText") or "")).strip()
-            sym = (row.get("symbol") or "").strip().upper()
-            # The subject is a category ("General Updates"); the text is what
-            # the company actually said. Show the text when there is one.
-            head = text or subject
-            if not head or not sym:
-                continue
-            when = (_parse_dt(row.get("an_dt")) or _parse_dt(row.get("sort_date"))
-                    or _parse_dt(row.get("exchdisstime")))
-            if NSE_ORDER_SUBJECTS.match(subject):
-                cat, imp, weight = "Order win", IMPORTANCE[5], 5
-            else:
-                cat, imp, weight = classify(subject + " " + text)
-            out.append({
-                "symbol": sym, "scrip_code": "",
-                "company": (row.get("sm_name") or sym).strip(),
-                "headline": head[:400],
-                "exchange_category": subject[:80],
-                "category": cat, "importance": imp, "weight": weight,
-                "at": when.isoformat() if when else None,
-                "epoch": when.timestamp() if when else 0,
-                "pdf": row.get("attchmntFile") or None,
-            })
+        out = [i for i in (_nse_item(row) for row in rows) if i]
         return out, f"NSE: {len(out)} rows"
     except Exception as e:
         return [], f"NSE: {type(e).__name__} {str(e)[:80]}"
+
+
+def _nse_item(row):
+    """One NSE announcement row -> our shape, or None when it says nothing."""
+    if not isinstance(row, dict):
+        return None
+    subject = re.sub(r"\s+", " ", (row.get("desc") or "")).strip()
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ",
+                                      row.get("attchmntText") or "")).strip()
+    sym = (row.get("symbol") or "").strip().upper()
+    # The subject is a category ("General Updates"); the text is what
+    # the company actually said. Show the text when there is one.
+    head = text or subject
+    if not head or not sym:
+        return None
+    when = (_parse_dt(row.get("an_dt")) or _parse_dt(row.get("sort_date"))
+            or _parse_dt(row.get("exchdisstime")))
+    if NSE_ORDER_SUBJECTS.match(subject):
+        cat, imp, weight = "Order win", IMPORTANCE[5], 5
+    else:
+        cat, imp, weight = classify(subject + " " + text)
+    return {
+        "symbol": sym, "scrip_code": "",
+        "company": (row.get("sm_name") or sym).strip(),
+        "headline": head[:400],
+        "exchange_category": subject[:80],
+        "category": cat, "importance": imp, "weight": weight,
+        "at": when.isoformat() if when else None,
+        "epoch": when.timestamp() if when else 0,
+        "pdf": row.get("attchmntFile") or None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# One company's filings
+#
+# The feed above is the whole market for the last few days, which is what a
+# filings tab wants and not what a company's own page wants: most companies
+# file nothing in any given week, so their page showed an empty list while the
+# exchange held a year of their disclosures. NSE answers for one symbol over a
+# date range in a single call, so the stock page asks for exactly that.
+# ---------------------------------------------------------------------------
+
+NSE_ANN_PAGE = "https://www.nseindia.com/companies-listing/corporate-filings-announcements"
+COMPANY_DAYS = int(os.environ.get("ANN_COMPANY_DAYS", "365") or 365)
+COMPANY_TTL = int(os.environ.get("ANN_COMPANY_TTL", "900") or 900)
+COMPANY_MEMO_MAX = 200
+COMPANY_TIMEOUT = int(os.environ.get("ANN_COMPANY_TIMEOUT", "12") or 12)
+# After NSE refuses one company's read, nobody's is attempted for this long.
+# Each refusal costs a request thread a retry cycle, the instance has eight of
+# them, and when the exchange is refusing it refuses every symbol alike.
+COMPANY_PAUSE = int(os.environ.get("ANN_COMPANY_PAUSE", "120") or 120)
+_company_memo = {}                 # SYMBOL -> (fetched_at, rows or None)
+_company_lock = threading.Lock()
+_company_trip = {"until": 0.0}
+
+
+def _nse_company_rows(symbol, days):
+    """NSE's announcements for one symbol, or None when it would not answer."""
+    try:
+        import nse_http
+    except Exception:
+        return None
+    today = dt.datetime.now(IST).date()
+    start = today - dt.timedelta(days=max(1, days))
+    asks = [{"index": "equities", "symbol": symbol,
+             "from_date": start.strftime("%d-%m-%Y"), "to_date": today.strftime("%d-%m-%Y")},
+            # Asked again without the dates only when the first answer is
+            # empty: NSE has dropped the range on this endpoint before, and a
+            # company with a year of filings does not have none.
+            {"index": "equities", "symbol": symbol}]
+    if time.time() < _company_trip["until"]:
+        return None
+    for params in asks:
+        try:
+            r = nse_http.get("https://www.nseindia.com/api/corporate-announcements",
+                             params=params, referer=NSE_ANN_PAGE, timeout=COMPANY_TIMEOUT)
+            data = r.json() if r is not None else None
+        except Exception:
+            data = None
+        if data is None:
+            # Refused, not empty: do not ask a second way, and give the
+            # exchange a rest before anybody asks again.
+            _company_trip["until"] = time.time() + COMPANY_PAUSE
+            return None
+        rows = data if isinstance(data, list) else _rows_from(data)
+        out = [i for i in (_nse_item(row) for row in rows or []) if i and i["symbol"] == symbol]
+        if out:
+            return out
+    return []
+
+
+def for_company(symbol: str, days: int = None, limit: int = 60, fetch=None,
+                ask: bool = True) -> dict:
+    """
+    One company's filings over the last year, newest first, with a count per
+    category so the page can offer them as filters.
+
+    Read from NSE for that symbol and joined with whatever the market feed
+    already holds for it, so a filing made ten minutes ago is here even while
+    the per-company read is still inside its quarter-hour memo. `available`
+    is False only when neither source had anything to say; a company that
+    filed nothing reads as an empty list, which is a different fact.
+
+    `ask=False` reads only what is already held. The caller passes it for a
+    symbol it does not recognise: the address bar can name any string, and
+    the exchange is not asked about one the server has never heard of.
+    """
+    sym = re.sub(r"\.(NS|BO)$", "", (symbol or "").strip().upper())
+    days = days or COMPANY_DAYS
+    now = time.time()
+    with _company_lock:
+        hit = _company_memo.get(sym)
+    if not ask:
+        read = hit[1] if hit else None
+    elif hit and now - hit[0] < COMPANY_TTL:
+        read = hit[1]
+    else:
+        read = (fetch or _nse_company_rows)(sym, days)
+        # A refusal is remembered for a minute, not a quarter of an hour.
+        stamp = now if read is not None else now - COMPANY_TTL + 60
+        with _company_lock:
+            _company_memo[sym] = (stamp, read)
+            if len(_company_memo) > COMPANY_MEMO_MAX:
+                for k in sorted(_company_memo, key=lambda k: _company_memo[k][0])[:20]:
+                    _company_memo.pop(k, None)
+
+    held = list(_state["by_symbol"].get(sym, []))
+    seen, rows = set(), []
+    for i in sorted((read or []) + held, key=lambda i: i.get("epoch") or 0, reverse=True):
+        key = ((i.get("at") or "")[:16], re.sub(r"[^a-z0-9]+", "", (i.get("headline") or "").lower())[:60])
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append(i)
+    cutoff = now - days * 86400
+    rows = [i for i in rows if not i.get("epoch") or i["epoch"] >= cutoff]
+
+    counts = {}
+    for i in rows:
+        counts[i["category"]] = counts.get(i["category"], 0) + 1
+    out = {
+        "symbol": sym,
+        "available": read is not None or bool(held),
+        "rows": rows[:max(1, min(limit, 200))],
+        "count": len(rows),
+        "days": days,
+        "categories": [{"name": k, "count": v}
+                       for k, v in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))],
+        "source": "NSE corporate announcements" if read is not None
+                  else "BSE corporate announcements (recent days only)",
+        "note": ("Categories are keyword rules applied to the exchange's own "
+                 "headline. Open the document for what the company said."),
+    }
+    if not out["available"]:
+        out["message"] = "The exchange could not be read just now."
+    return out
 
 
 _polling = {"on": False}

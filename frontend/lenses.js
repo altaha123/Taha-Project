@@ -10,7 +10,7 @@
      #research/lenses/<id>     one lens: the idea, its rules, the companies
                                that meet every judged rule, and the near misses
      #research/convergence     companies that meet several lenses at once
-     stock.html                "Meets 3 of 10 lenses", with a badge per lens
+     stock.html                "Meets 3 of 10 lenses", in a card on the Overview
 
    WHAT THE PAGE SAYS, AND WHAT IT NEVER SAYS
    The wording is factual and nothing else: a company "meets Gorilla criteria"
@@ -497,23 +497,33 @@
     }).catch(function () { failed(host, showConvergence); });
   }
 
-  /* ── 4 · The strip on the stock page ──────────────────────────────────── */
+  /* ── 4 · The card on the stock page ───────────────────────────────────── */
+
+  /* "Meets 3 of 10 lenses", the lenses it meets named, the rest one tap away.
+
+     This used to be a full-width strip of ten grey badges directly under the
+     company's name, with the notice set in a paragraph beneath them: the
+     first thing on the page, and for most companies a row of things the
+     company does not meet. It is a card in the Overview's side column now.
+     The lenses a company meets or narrowly misses are the finding, so those
+     are what is shown; the others are still all there, folded. The notice
+     stays, in the card, because it is what stops a met lens being read as a
+     recommendation. */
+  var ORDER = { pass: 0, near_miss: 1, fail: 2, none: 2, insufficient: 3, soon: 4 };
 
   function mountStrip(host, symbol) {
     if (!host || !symbol) return;
     getJSON('/api/lenses/stock/' + encodeURIComponent(symbol)).then(function (d) {
       if (!d || !d.lenses) return;
       var total = d.lenses.length;
-      // A company the lenses have not reached shows nothing. The notice that
-      // used to stand here ("Not yet computed ...") was the first block under
-      // the price on Reliance's page: a statement about our pipeline, placed
-      // above everything a reader came for.
+      // A company the lenses have not reached shows nothing: a statement
+      // about our pipeline is not something a reader came for.
       if (!d.covered) {
         host.innerHTML = '';
         host.hidden = true;
         return;
       }
-      var badges = d.lenses.map(function (l) {
+      var rows = d.lenses.map(function (l, i) {
         var st = l.status !== 'live' ? 'soon' : ((l.result && l.result.status) || 'none');
         var tip = l.status !== 'live' ? l.name + ': coming soon'
           : !l.result ? l.name + ': not computed'
@@ -521,13 +531,28 @@
           : st === 'near_miss' ? l.name + ': passes ' + l.result.passed + ' of ' + l.result.total + ' rules (near miss)'
           : st === 'insufficient' ? l.name + ': too little data to judge'
           : l.name + ': passes ' + l.result.passed + ' of ' + l.result.total + ' rules';
-        return '<a class="ln-badge is-' + st.replace('_', '-') + '" href="' + lensHref(l.id) +
-          '" title="' + esc(tip) + '">' + esc(l.name) + '</a>';
-      }).join('');
-      host.innerHTML = '<div class="ln-strip"><span class="ln-strip-k">Lenses</span>' +
-        '<span class="ln-strip-n">Meets <b>' + d.meets + '</b> of ' + total + ' lenses</span>' +
-        '<span class="ln-badges">' + badges + '</span>' +
-        '<p class="ln-strip-note">' + esc(NOTICE) + '</p></div>';
+        var count = (l.result && l.result.total && st !== 'insufficient')
+          ? '<i>' + l.result.passed + '/' + l.result.total + '</i>' : '';
+        return { st: st, i: i, html: '<a class="ln-badge is-' + st.replace('_', '-') + '" href="' +
+          lensHref(l.id) + '" title="' + esc(tip) + '">' + esc(l.name) + count + '</a>' };
+      }).sort(function (a, b) { return (ORDER[a.st] - ORDER[b.st]) || (a.i - b.i); });
+      var top = rows.filter(function (r) { return r.st === 'pass' || r.st === 'near_miss'; });
+      var rest = rows.filter(function (r) { return r.st !== 'pass' && r.st !== 'near_miss'; });
+      var segs = '';
+      for (var k = 0; k < total; k++) segs += '<i' + (k < d.meets ? ' class="on"' : '') + '></i>';
+
+      host.innerHTML = '<section class="card ln-strip" aria-labelledby="ln-strip-h">' +
+        '<header class="card-h"><h2 id="ln-strip-h">Investor lenses</h2>' +
+          '<a class="card-go" href="./#research/lenses">All lenses ›</a></header>' +
+        '<p class="ln-strip-n">Meets <b>' + d.meets + '</b> of ' + total + ' lenses</p>' +
+        '<div class="ln-meter" aria-hidden="true">' + segs + '</div>' +
+        (top.length ? '<div class="ln-badges">' +
+          top.map(function (r) { return r.html; }).join('') + '</div>' : '') +
+        (rest.length ? '<details class="ln-rest"' + (top.length ? '' : '') + '><summary>' +
+          (top.length ? 'The other ' + rest.length : 'See all ' + rest.length) + '</summary>' +
+          '<div class="ln-badges">' + rest.map(function (r) { return r.html; }).join('') +
+          '</div></details>' : '') +
+        '<p class="ln-strip-note">' + esc(NOTICE) + '</p></section>';
       host.hidden = false;
     }).catch(function () { host.hidden = true; });
   }
