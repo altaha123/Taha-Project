@@ -445,6 +445,10 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       assert.match(await t.page.locator('.op.s-fii').innerText(), /9\.87[\s\S]*0\.61/);
       assert.equal(await t.page.locator('#own-intelligence, .own-names, .op-holders').count(), 0,
         'a stored copy has no names and no holder counts to show');
+      // The "derived" tag is a tag: it once took the Score section's grid rule
+      // by sharing a class name, and stretched across its card.
+      const tag = await t.page.locator('.op.s-public_non_institutional .drv').boundingBox();
+      assert.ok(tag && tag.width < 90, 'the derived tag is ' + (tag && tag.width) + 'px wide');
       assert.ok(!/undefined|NaN|null/.test(await t.page.locator('#pane-owners').innerText()));
       assert.deepEqual(t.errors, []);
       await t.context.close();

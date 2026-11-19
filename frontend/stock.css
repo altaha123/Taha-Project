@@ -555,7 +555,9 @@ html[data-theme="dark"] .hz button.on{ color:#17140E }
 }
 
 /* What helped, what hurt. */
-.drv{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px }
+/* By id: .drv is also the small "derived" tag on an ownership card, and a
+   class rule here turned that tag into a two-column grid as wide as its card. */
+#drivers{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px }
 .drv-col{ padding:16px 18px; border:1px solid var(--rule); border-radius:16px; background:var(--skin-card); min-width:0 }
 .drv-col h3{ margin:0 0 12px; display:flex; align-items:center; gap:8px;
   font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2) }
@@ -568,7 +570,7 @@ html[data-theme="dark"] .hz button.on{ color:#17140E }
 .drv-col.up .dv-b .fill{ background:var(--sh-up) } .drv-col.dn .dv-b .fill{ background:var(--sh-dn) }
 .dv-p{ grid-column:1 / -1; margin-top:-2px; font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute) }
 .drv-none{ margin:0; font-size:13px; color:var(--mute) }
-@media (max-width:640px){ .drv{ grid-template-columns:1fr } }
+@media (max-width:640px){ #drivers{ grid-template-columns:1fr } }
 
 /* Every factor. */
 .fl{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start }
