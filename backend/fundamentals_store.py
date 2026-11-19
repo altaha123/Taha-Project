@@ -242,7 +242,8 @@ CREATE TABLE IF NOT EXISTS yf_profile (
   price         REAL,
   market_cap    REAL,
   currency      TEXT,
-  updated_utc   TEXT NOT NULL
+  updated_utc   TEXT NOT NULL,
+  website       TEXT
 );
 
 -- Every profile attempt, including the ones Yahoo answered with nothing.
@@ -299,6 +300,11 @@ def _ensure(conn):
         if _ready["done"]:
             return
         conn.executescript(SCHEMA)
+        # A store made before the stock page showed logos has no website
+        # column, and CREATE TABLE IF NOT EXISTS does not add one.
+        held = {r[1] for r in conn.execute("PRAGMA table_info(yf_profile)")}
+        if "website" not in held:
+            conn.execute("ALTER TABLE yf_profile ADD COLUMN website TEXT")
         conn.commit()
         _ready["done"] = True
 
@@ -612,15 +618,17 @@ def record_yf_profile(symbol, info):
         "price": _num(info.get("currentPrice") or info.get("regularMarketPrice")),
         "market_cap": _num(info.get("marketCap")),
         "currency": info.get("currency"),
+        "website": (str(info.get("website") or "").strip()[:200] or None),
     }
     if not sym or not (row["industry"] or row["shares"]):
         return False
     with _tx() as conn:
         conn.execute(
             "INSERT OR REPLACE INTO yf_profile (symbol, company, sector, industry,"
-            " shares, price, market_cap, currency, updated_utc) VALUES (?,?,?,?,?,?,?,?,?)",
+            " shares, price, market_cap, currency, updated_utc, website)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?)",
             (sym, row["company"], row["sector"], row["industry"], row["shares"],
-             row["price"], row["market_cap"], row["currency"], _utcnow()))
+             row["price"], row["market_cap"], row["currency"], _utcnow(), row["website"]))
     return True
 
 
@@ -868,4 +876,66 @@ def latest_for(symbols, fresh_after=None):
             o = out.get(r["symbol"])
             if o is not None and "annual" not in o and r["basis"] == o["basis"]:
                 o["annual"] = dict(r)
+    return out
+
+
+def profiles_for(symbols):
+    """{symbol: stored Yahoo profile} for the companies asked for, and only
+    those: a peer table wants a dozen names, not the whole market's."""
+    syms = sorted({(s or "").strip().upper() for s in symbols or [] if s})
+    conn, out = _connect(), {}
+    for i in range(0, len(syms), 500):
+        part = syms[i:i + 500]
+        for r in conn.execute("SELECT * FROM yf_profile WHERE symbol IN (%s)"
+                              % ",".join("?" * len(part)), part):
+            out[r["symbol"]] = dict(r)
+    return out
+
+
+# Four quarter-ends in a row are nine months apart, give or take the length
+# of the months between them.
+_YEAR_SPAN_DAYS = (265, 285)
+
+
+def trailing_year(symbols):
+    """
+    Each company's last four quarters added up, on its own basis:
+    {symbol: {"revenue_cr", "pat_cr", "through", "basis"}}.
+
+    Only where four quarters in a row are held. Three quarters called a year
+    understates every figure by a quarter, and a P/E worked out on it would
+    read a third too dear with nothing on the page to say why. A line that is
+    missing from any of the four is left out for that company, not counted
+    as nil.
+    """
+    syms = sorted({(s or "").strip().upper() for s in symbols or [] if s})
+    conn, out = _connect(), {}
+    for i in range(0, len(syms), 500):
+        part = syms[i:i + 500]
+        rows = conn.execute(
+            "SELECT symbol, basis, period_end, revenue_cr, pat_cr FROM income_statement"
+            " WHERE freq='quarterly' AND symbol IN (%s) ORDER BY symbol, period_end DESC"
+            % ",".join("?" * len(part)), part).fetchall()
+        by = {}
+        for r in rows:
+            by.setdefault(r["symbol"], []).append(dict(r))
+        for sym, recs in by.items():
+            basis = _latest_basis(recs)
+            four = [r for r in recs if r["basis"] == basis][:4]
+            if len(four) < 4:
+                continue
+            try:
+                span = (datetime.fromisoformat(str(four[0]["period_end"])[:10])
+                        - datetime.fromisoformat(str(four[3]["period_end"])[:10])).days
+            except (TypeError, ValueError):
+                continue
+            if not _YEAR_SPAN_DAYS[0] <= span <= _YEAR_SPAN_DAYS[1]:
+                continue
+
+            def total(key):
+                vals = [r.get(key) for r in four]
+                return None if any(v is None for v in vals) else round(sum(vals), 2)
+
+            out[sym] = {"basis": basis, "through": four[0]["period_end"],
+                        "revenue_cr": total("revenue_cr"), "pat_cr": total("pat_cr")}
     return out

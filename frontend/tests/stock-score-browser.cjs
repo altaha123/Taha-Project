@@ -15,7 +15,11 @@
      · IT STOPS ASKING. A score that never arrives leaves the honest message
        on screen after three tries; it does not poll forever.
      · A US LISTING SAYS WHY IT HAS NO SCORE ("NOT RANKED"), rather than the
-       old blanket "NOT SCORED" that read as a fault. */
+       old blanket "NOT SCORED" that read as a fault.
+     · THE WORD BESIDE THE SCORE IS THE SITE'S ONE SCALE. These scores bunch
+       around 50, and the page used to cut them at 72/55/40, which read
+       "MIXED" for most of the market. It prints the API's `band` now, and
+       works one out from the same cuts for an API that does not send it. */
 
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
@@ -50,7 +54,7 @@ const note = "Not in the scan's analysed cohort, so ranked on request against it
              'using prices and filings as of 2026-09-29 — the same date its peers were measured on.';
 const scored = base({
   percentile: 44,
-  scoring: { score: 47.3, label: 'MIXED', tone: 'mixed', confidence: 71.5, horizon: 'position',
+  scoring: { score: 47.3, label: 'MIXED', band: 'Average', tone: 'mixed', confidence: 71.5, horizon: 'position',
              horizon_label: 'Weeks to months', model: { name: 'Cyclical' },
              basis: 'Altaha Score v4 · peer-relative · as of 2026-09-29 · ranked on request against the scan cohort',
              summary: 'Strongest on business quality (68/100); weakest on price trend (12/100).',
@@ -125,18 +129,24 @@ async function open(browser, port, ticker, answers) {
 
     // A scored-on-request company shows its number and where its peers came from.
     await page.clock.runFor(1500);
-    assert.equal(await page.locator('#scorelb').innerText(), 'MIXED');
-    const basis = await page.locator('#basis').innerText();
-    assert.match(basis, /ranked on request/i);
-    assert.match(basis, /against its 200 companies/);
-    // The score is under the name, not two clicks away, and opens its pane.
+    // The score is under the name, not two clicks away, says where it ranks,
+    // and opens its section.
     const chip = page.locator('#stk-scorechip');
     assert.ok(await chip.isVisible(), 'the score is not shown at the top of the page');
     assert.equal(await page.locator('#stk-scorechip-n').innerText(), '47');
-    assert.match(await chip.innerText(), /Altaha Score · Mixed/);
+    assert.match(await chip.innerText(), /Altaha Score · Average/);
+    assert.match(await chip.innerText(), /Ranks above 44% of companies scanned/);
     assert.equal(await page.locator('#pane-scores').isVisible(), false);
     await chip.click();
     assert.ok(await page.locator('#pane-scores').isVisible(), 'the score chip does not open the Scores pane');
+    await page.clock.runFor(1500);
+    assert.equal(await page.locator('#scoren').innerText(), '47');
+    assert.equal(await page.locator('#scorelb').innerText(), 'AVERAGE');
+    const basis = await page.locator('#basis').innerText();
+    assert.match(basis, /ranked on request/i);
+    assert.match(basis, /against its 200 companies/);
+    assert.match(await page.locator('#score-line').innerText(),
+      /Strongest on business quality, weakest on price trend/);
     assert.deepEqual(errors, []);
     await page.screenshot({ path: path.join(output, 'scored-on-request.png'), fullPage: false });
     await context.close();
@@ -151,7 +161,7 @@ async function open(browser, port, ticker, answers) {
     assert.match(await page.locator('#basis').innerText(), /takes a few seconds the first time/);
     assert.equal(seen.analyze, 1);
     await page.clock.runFor(6500);
-    await page.waitForFunction(() => document.getElementById('scorelb').textContent === 'MIXED');
+    await page.waitForFunction(() => document.getElementById('scorelb').textContent === 'AVERAGE');
     await page.clock.runFor(1500);
     assert.equal(seen.analyze, 2, 'one retry once the first answer said the score was pending');
     assert.ok(await page.locator('#stk-scorechip').isVisible(), 'the chip did not appear once the score arrived');

@@ -8,6 +8,7 @@ import math
 import numpy as np
 import factors as F
 import profiles as P
+import score_bands
 
 NEUTRAL = 50.0
 MIN_PEERS = 10
@@ -230,7 +231,12 @@ def presentation(v4, horizon="position"):
     value = s["final_score"]
     label, tone = ("STRONG", "strong") if value >= 72 else ("CONSTRUCTIVE", "constructive") if value >=55 else ("MIXED", "mixed") if value >=40 else ("WEAK", "weak")
     missing = v4["data_quality"]["missing_factors"]
-    return {"score": value, "label": label, "tone": tone, "methodology_version": "v4",
+    # `label` is the older four-word scale, kept for the screens that read it.
+    # `band` is the site's one scale (score_bands.py): v4 scores are shrunk
+    # toward 50, so a scale that waits for 72 to say "strong" almost never
+    # says it, and the stock page reads this word instead.
+    return {"score": value, "label": label, "tone": tone, "band": score_bands.band(value),
+            "methodology_version": "v4",
             "confidence": round(100*s["confidence"],1), "model": v4["model"], "horizon": h,
             "horizon_label": P.HORIZONS[h]["label"], "horizon_note": P.HORIZONS[h]["note"],
             "basis": "Altaha Score v4 · peer-relative · as of " + str(v4.get("as_of") or "scan date"),

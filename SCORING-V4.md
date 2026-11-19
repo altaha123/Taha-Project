@@ -37,6 +37,14 @@ scan's 120-session history floor applies. Indian listings only: the cohort is
 NSE companies, and a US listing reads NOT RANKED rather than being given a
 score with no peer group behind it.
 
+The word beside a score is `scoring.band`, from `score_bands.py`, the one
+scale every screen reads (Strong 60+, Good 55, Average 40, Weak 33, Poor).
+`scoring.label` is the older four-word scale cut at 72/55/40 and is kept only
+for screens that still read it; because confidence shrinks every score toward
+50 it called most of the market "MIXED". `/analyze` also sends `percentiles`
+(the rank at each horizon) and `cohort_size`, and the stock page prints the
+`contribution` rows, `raw_score` and `confidence` as the arithmetic they are.
+
 `composite` on v4 scan rows aliases the position score; `factor_score` aliases
 the requested horizon. `legacy_composite`, technical/fundamental scores,
 Piotroski, adapted G-Score, and setup fit remain diagnostic. `scoring` and

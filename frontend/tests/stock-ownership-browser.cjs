@@ -135,8 +135,10 @@ const server = http.createServer((req, res) => {
   const segSum = await page.locator('.own-bar').evaluate(bar =>
     [...bar.querySelectorAll('.seg')].reduce((a, s) => a + parseFloat(s.style.flex), 0));
   assert.ok(Math.abs(segSum - 100) < 0.2, `bar segments sum to ${segSum}, not 100`);
-  // The overlap is explained in prose exactly once.
-  assert.match(await page.locator('.own-notes').innerText(), /do not overlap and sum to 100/);
+  // The overlap is explained in prose exactly once: a method note, folded
+  // under the figures, so it is read from the document and not the screen.
+  assert.equal(await page.locator('.own-notes').count(), 1);
+  assert.match(await page.locator('.own-notes').textContent(), /do not overlap and sum to 100/);
 
   // A derived figure stays visibly derived, and carries its own numbers.
   const diiPanel = page.locator('.op', { hasText: 'Domestic institutions' });
@@ -276,14 +278,14 @@ const server = http.createServer((req, res) => {
   // While it is fetching the pane says so, and that placeholder is NOT the
   // empty state. Conflating them is what made this test read "Reading the
   // filings…" and assert against it.
-  const loading = page2.locator('.own-empty.is-loading');
+  const loading = page2.locator('#own-body .own-empty.is-loading');
   await loading.waitFor();
   assert.match(await loading.innerText(), /Reading the filings/);
 
   // :not(.is-loading), because the loading placeholder and the empty state
   // shared a class — so waitFor resolved on "Reading the filings…" and the
   // assertion read that instead. Passed locally on a fast fetch, failed in CI.
-  const settled = page2.locator('.own-empty:not(.is-loading)');
+  const settled = page2.locator('#own-body .own-empty:not(.is-loading)');
   await settled.waitFor();
   assert.match(await settled.innerText(), /No shareholding filing/);
   assert.equal(await page2.locator('.own-bar').count(), 0);

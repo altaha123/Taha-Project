@@ -202,26 +202,21 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   // Provenance: the filing it came from is one click away.
   assert.ok(await page.locator('#pane-funda .own-asof a[href*="nseindia"]').count() >= 1);
 
-  // ── Against its industry ────────────────────────────────────────────────
-  // The industry is named, the median printed beside the company's own
-  // figure, and the rank is "N of M" peers — never a verdict.
-  await page.locator('#funda-peers .fu-peers').waitFor();
-  assert.match(await page.locator('#funda-peers .fu-cap').innerText(), /Refineries & Marketing/);
-  const opmRow = page.locator('#funda-peers tbody tr', { hasText: 'Operating margin' });
-  const opmCells = await opmRow.locator('td').allInnerTexts();
-  assert.equal(opmCells[0], '17.1%');
-  assert.equal(opmCells[1], '11.3%', 'the median of six peers at 7.5 to 15% is 11.25');
-  assert.equal(opmCells[2], '6 of 6');
-  assert.match(await page.locator('#funda-peers').innerText(), /6 of the 6 other companies/);
-  assert.match(await page.locator('#funda-peers tbody tr', { hasText: 'Debt to equity' })
-    .locator('th').innerText(), /lower is better/i);
+  // The quarters are drawn as bars above the table, from the same rows: one
+  // bar a quarter, and the quarter that lost money hangs below the line.
+  assert.equal(await page.locator('#funda-trend .ft').count(), 2);
+  assert.equal(await page.locator('#funda-trend .ft').first().locator('.ft-c i').count(), 6);
+  assert.equal(await page.locator('#funda-trend .ft').nth(1).locator('.ft-c i.neg').count(), 1,
+    'the loss-making quarter is not drawn as a loss');
 
   // ── Balance sheet and cash flow ─────────────────────────────────────────
   // Crore values printed as crore (not divided again), full years only in the
   // cash flow — a half-year beside a year would read as a collapse — and a
   // line the company never filed is not drawn as a row of dashes.
   await page.locator('#funda-position .fu-stmt').first().waitFor();
-  assert.equal(extras, 2);
+  // The industry comparison sits with the named peers now, so opening the
+  // financials reads the balance sheet and cash flow and nothing else.
+  assert.equal(extras, 1);
   const tables = page.locator('#funda-position .fu-stmt');
   assert.equal(await tables.count(), 2);
   const bsHead = await tables.nth(0).locator('thead th').allInnerTexts();
@@ -240,6 +235,29 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   const conv = await tables.nth(1).locator('tbody tr', { hasText: 'Cash conversion' })
     .locator('td').allInnerTexts();
   assert.equal(num(conv[0]), 209.42);
+
+  // ── Against the industry median ─────────────────────────────────────────
+  // In the Peers section, under the named table, and read only when that
+  // section is opened. The industry is named, the median printed beside the
+  // company's own figure, and the rank is "N of M" peers — never a verdict.
+  assert.equal(await page.locator('#funda-peers .fu-peers').count(), 0,
+    'the industry comparison loaded before its section was opened');
+  await page.locator('#pane-btn-peers').click();
+  await page.locator('#funda-peers .fu-peers').waitFor();
+  assert.equal(extras, 2);
+  assert.match(await page.locator('#funda-peers .fu-cap').innerText(), /Refineries & Marketing/);
+  const opmRow = page.locator('#funda-peers tbody tr', { hasText: 'Operating margin' });
+  const opmCells = await opmRow.locator('td').allInnerTexts();
+  assert.equal(opmCells[0], '17.1%');
+  assert.equal(opmCells[1], '11.3%', 'the median of six peers at 7.5 to 15% is 11.25');
+  assert.equal(opmCells[2], '6 of 6');
+  // How much of the industry was read is a method note: folded, and there.
+  assert.match(await page.locator('#funda-peers details.own-notes').textContent(),
+    /6 of the 6 other companies/);
+  assert.match(await page.locator('#funda-peers tbody tr', { hasText: 'Debt to equity' })
+    .locator('th').innerText(), /lower is better/i);
+  await page.locator('#pane-btn-funda').click();
+  assert.equal(calls, 1, 'returning to the financials must not refetch');
 
   // ── Phone through desktop, both themes ───────────────────────────────────
   for (const width of [320, 390, 768, 1280]) {

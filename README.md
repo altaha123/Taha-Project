@@ -50,7 +50,7 @@ complex to find their way around, so three things changed (Nov 2026):
 - Less writing. Sixteen tool intros went from 452 words to 177.
 - The door bars went from 9 and 13 pills to 5 and 6, plus More.
 - A stock page shows its Altaha Score under the name; it used to be behind
-  the Scores tab. The chip opens that tab. One search box finds companies, tools and actions alike — "bulk"
+  the Scores tab. The chip opens that section. One search box finds companies, tools and actions alike — "bulk"
 finds Big trades, "pledge" finds the Screener — and opens with Ctrl+K or `/`.
 On a phone the bottom bar is Today · Ideas · Search · My money · Me.
 
@@ -317,6 +317,66 @@ salary-day figures add up to the rupee, a budget nobody itemised is not handed
 a grade, and no typed figure appears in any request.
 
 ---
+
+## The stock page — one company, eight sections
+
+`frontend/stock.html`, `stock.js`, `stock.css`; `backend/stock_page.py`,
+`backend/stock_news.py`, `announcements.for_company`.
+
+The page had grown by addition: a name, a score chip, a strip of ten lens
+badges, nine figures, a paragraph, and only then its own menu, whose first
+section carried on down the same column. It showed three scores that did not
+add up to each other, and a paragraph of method under most headings.
+
+- **One bar, directly under the name:** Overview · Chart · Score · Ownership ·
+  Financials · Peers · Delivery · News & filings. Scrolled past the name, the
+  bar carries the company's logo, symbol and price. A section is part of the
+  address (`#peers`, or the older `?pane=owners`).
+- **The Overview is cards**, each opening the section behind it: key figures
+  with where each sits among peers, the year's price, the score's pillars, the
+  lenses the company meets, and the newest filings and headlines.
+- **One score, and its arithmetic.** The Score section prints what the engine
+  did, from the payload it came from: each pillar's rank among peers, its
+  weight, the points that makes, their sum, and the pull toward 50 for what
+  could not be measured (`50 + (sum − 50) × confidence`). The three holding
+  periods switch without a request. The older technical and fundamental checks
+  are folded under "Other checks — not part of the score".
+- **The word beside the score is the site's one scale** (`score_bands.py`,
+  sent as `scoring.band`). The page used to cut at 72/55/40, which read
+  "MIXED" for most of the market, because v4 scores bunch around 50.
+- **A bank is not shown a debt-to-equity** or a ROCE, in its figures or among
+  its peers. `/analyze` sends `business_model`.
+- **Peers are named** (`GET /stock/peers`): the dozen companies nearest in
+  market value in the same industry, every figure worked out one way from the
+  stored filings and prices, sortable, with the peers' median. The medians
+  table (`/fundamentals/peers`) sits under it.
+- **News is two lists, filings a third, never merged** (`GET /stock/news`,
+  `GET /stock/filings`). Company news is a news search by name, kept only
+  where the headline names the company. Industry news is a search in the
+  industry's own vocabulary, each headline tagged with the driver it mentions
+  (a rate decision for a bank, crude for a refiner): keyword rules, printed in
+  `stock_news.GROUPS`. Filings are the company's own, a year of them, from NSE.
+  Press never reaches a score. Both endpoints go out only for a company the
+  server already knows (the scan, the stored profile, NSE's equity list), and
+  the name searched is the server's own, never a request's. Searches are held
+  for twenty minutes and filings for fifteen; three unanswered searches rest
+  the search for five minutes and a refused exchange read rests it for two.
+  The API must be able to reach `news.google.com`; when it cannot the page
+  says the search was not answered, which is not the same as no news. The
+  same section lists the company's bulk and block deals (`/deals/{ticker}`).
+- **Logos** are the company's initials on a tinted tile, with its own mark over
+  them when its website is known (the stored profile, else
+  `stock_page.KNOWN_DOMAINS`) and the image loads at a usable size. The browser
+  asks a favicon service with `no-referrer`; the API fetches no images.
+- **Motion** is the tab marker sliding, a section rising in, bars growing to
+  their value and the dial sweeping once. None of it runs under
+  `prefers-reduced-motion`.
+
+`backend/tests/make_stock_page_fixture.py` writes
+`frontend/tests/fixtures/stock-page.json` from the real modules, and
+`frontend/tests/stock-page-browser.cjs` reads it: the order of the page, the
+points summing to the number on the dial, lazy loading, the bank's figures,
+peer sorting, logo fallback, link safety and a phone at every section.
 
 ## Company pages — one address per company, for search
 

@@ -13,7 +13,11 @@ on:
       - 'backend/strategy_lab.py'
       - 'backend/wealth*.py'
       - 'backend/company_pages.py'
+      - 'backend/stock_page.py'
+      - 'backend/stock_news.py'
+      - 'backend/announcements.py'
       - 'backend/tests/company_pages*'
+      - 'backend/tests/make_stock_page_fixture.py'
       - 'backend/tests/*wealth*'
       - 'backend/tests/*portfolio*'
       - 'backend/tests/*shareholding*'
@@ -345,6 +349,24 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/stock-score-browser.cjs
+      - name: Verify the stock page reads as one page and its score adds up on screen
+        if: always()
+        # The section bar sits under the name, not under a strip of badges and
+        # nine figures. The points printed against each pillar sum to the
+        # weighted sum under them, and that sum pulled toward 50 by the printed
+        # confidence is the number on the dial. A holding period changes the
+        # arithmetic without asking the API. A bank is shown no debt-to-equity.
+        # Peers are named and sort; a logo is initials until a real mark loads;
+        # a feed's javascript: address never becomes a link; an unanswered
+        # press search is not "no news"; every section fits a phone.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/stock-page-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stock-page-browser-verification
+          path: test-results/stock-page
       - uses: actions/upload-artifact@v4
         if: always()
         with:

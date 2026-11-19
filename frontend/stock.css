@@ -8,27 +8,46 @@
    it, or press Back to leave it. A stock is the atomic object of this product
    and it now has a URL of its own.
 
-   ONE COLUMN, NOT FIVE TABS
-   The same company's score, chart, results, filings and deals used to live in
-   five separate tabs. Reading it meant five clicks and remembering what was
-   in the other four. It is now one scrolling page with a sticky rail, which
-   is the layout every dense financial product converges on for the same
-   reason: comparison beats navigation.
+   THE ORDER OF THE PAGE
+   A name, a price and a score; then one bar of eight sections directly under
+   them. The first section is an overview built of cards, each of which opens
+   the section behind it. Before this the page ran name, score, a strip of ten
+   lens badges, nine figures and a paragraph before it reached its own menu,
+   and the menu's first section carried on down the same column, so the page
+   read as one long list with a control somewhere in the middle of it.
+
+   ONE CARD, ONE HEADING STYLE, ONE CAPTION STYLE
+   Every block on the page is a .card or a .stk-sec with a .sec-h, and the
+   small print beside a heading is always .card-x or .sec-x. Sections that
+   were written at different times now look like parts of one page because
+   they are set with the same four rules.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* The three faces, as variables. The homepage defines these in its own
+   stylesheet and this page never did, so every rule here written as
+   `font:600 10px/1.6 var(--mono)` was an invalid declaration and was thrown
+   away whole: size, weight and face. The Delivery section is set almost
+   entirely that way, and rendered as unstyled 16px text. */
+:root{
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+}
 
 body{
   margin:0; background:var(--paper); color:var(--ink);
   font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   -webkit-font-smoothing:antialiased;
 }
-.stk-wrap{ max-width:1120px; margin:0 auto; padding:0 20px 90px }
+.stk-wrap{ max-width:1180px; margin:0 auto; padding:0 20px 90px }
+.up{ color:var(--sh-up) } .dn{ color:var(--sh-dn) }
 
 /* ── Identity ────────────────────────────────────────────────────────────── */
 
-.stk-head{ padding:34px 0 24px; border-bottom:1px solid var(--rule) }
+.stk-head{ padding:28px 0 20px }
 .stk-crumb{
   font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--mute); margin-bottom:14px;
+  text-transform:uppercase; color:var(--mute); margin-bottom:16px;
   display:flex; align-items:center; gap:7px;
 }
 .stk-crumb a{ color:var(--mute); text-decoration:none;
@@ -42,134 +61,311 @@ body{
 }
 html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-dark.png) }
 
-.stk-id{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 26px }
+.stk-id{ display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px }
+.stk-idt{ min-width:0; flex:1 1 260px }
 .stk-name{
   margin:0; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
-  font-size:clamp(28px,4.4vw,42px); line-height:1.06; letter-spacing:-.015em;
+  font-size:clamp(28px,4.2vw,42px); line-height:1.06; letter-spacing:-.015em;
 }
-.stk-tags{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px }
+.stk-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px }
 .stk-tag{
   font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.05em;
   padding:5px 9px; border:1px solid var(--rule); border-radius:99px; color:var(--ink-2);
 }
 .stk-px{ margin-left:auto; text-align:right }
-.stk-px .now{ font:600 28px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em }
-.stk-px .chg{ font:600 14px/1 'IBM Plex Mono',monospace; margin-top:7px }
-.up{ color:var(--sh-up) } .dn{ color:var(--sh-dn) }
+.stk-px .now{ font:600 30px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em }
+.stk-px .chg{ font:600 14px/1 'IBM Plex Mono',monospace; margin-top:8px; min-height:14px }
 
-/* The score under the name, opening the Scores pane (stock.js). */
+/* ── Logos ───────────────────────────────────────────────────────────────
+   The company's initials on a tile tinted from its symbol, and its own mark
+   over them when one loads (stock.js, paintLogo). The mark sits on white
+   whatever the theme: a logo is drawn for a white page, and on a dark tile
+   half of them disappear. */
+
+.lg{
+  --lg-s:40px; --lg-h:38;
+  position:relative; display:inline-grid; place-items:center; flex:0 0 auto;
+  width:var(--lg-s); height:var(--lg-s); border-radius:calc(var(--lg-s) * .28);
+  background:hsl(var(--lg-h) 46% 92%); color:hsl(var(--lg-h) 48% 30%);
+  border:1px solid hsl(var(--lg-h) 40% 84%); overflow:hidden;
+  font:600 calc(var(--lg-s) * .36)/1 'IBM Plex Mono',monospace; letter-spacing:-.02em;
+}
+html[data-theme="dark"] .lg{
+  background:hsl(var(--lg-h) 30% 17%); color:hsl(var(--lg-h) 62% 78%);
+  border-color:hsl(var(--lg-h) 28% 26%);
+}
+.lg-sm{ --lg-s:30px } .lg-xl{ --lg-s:58px }
+/* Nothing until the script has drawn the initials: with scripts off, which is
+   how a search engine reads /stock-SYMBOL, an empty tile is an empty box. */
+.lg:empty{ display:none }
+.lg img{
+  position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box;
+  object-fit:contain; padding:14%; background:#fff; border-radius:inherit;
+  animation:lgIn 320ms var(--ease-out) both;
+}
+.lg.has-img{ border-color:var(--rule) }
+.lg-med{ background:var(--paper-2); color:var(--mute); border-color:var(--rule) }
+html[data-theme="dark"] .lg-med{ background:var(--paper-2); color:var(--mute); border-color:var(--rule) }
+@keyframes lgIn{ from{ opacity:0; transform:scale(.86) } to{ opacity:1; transform:none } }
+
+/* ── The score, under the name ───────────────────────────────────────────── */
+
 .stk-scorechip{
-  display:inline-flex; align-items:center; gap:14px; margin-top:18px;
-  padding:10px 18px 10px 10px; min-height:44px; cursor:pointer;
-  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,var(--paper));
+  display:inline-flex; align-items:center; gap:13px; margin-top:18px;
+  padding:9px 16px 9px 10px; min-height:44px; cursor:pointer;
+  border:1px solid var(--rule); border-radius:999px; background:var(--skin-card,var(--paper));
   color:var(--ink); font:inherit; text-align:left;
-  transition:border-color .2s, box-shadow .2s, transform .2s;
+  transition:border-color .2s, box-shadow .25s, transform .2s var(--ease-out);
+  animation:rise 520ms var(--ease-out) both;
 }
 .stk-scorechip[hidden]{ display:none }
-.stk-scorechip:hover{ border-color:var(--gold); box-shadow:0 8px 22px #6b542b14 }
+.stk-scorechip:hover{ border-color:var(--gold); box-shadow:var(--skin-shadow); transform:translateY(-1px) }
 .stk-scorechip:focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
-.stk-scorechip-n{
-  display:grid; place-items:center; width:52px; height:52px; border-radius:14px;
-  font:600 22px/1 'IBM Plex Mono',monospace; color:#fff;
-  background:linear-gradient(135deg,var(--gold-dp),var(--gold));
+.stk-scorechip-ring{ position:relative; width:46px; height:46px; flex:0 0 auto; display:grid; place-items:center }
+.stk-scorechip-ring svg{ position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg) }
+.stk-scorechip-ring circle{ fill:none; stroke-width:4 }
+.stk-scorechip-ring .t{ stroke:var(--rule) }
+.stk-scorechip-ring .a{ stroke:var(--gold); stroke-linecap:round; transition:stroke-dashoffset 1200ms var(--ease-out) }
+.stk-scorechip-n{ position:relative; font:600 16px/1 'IBM Plex Mono',monospace; letter-spacing:-.03em }
+.stk-scorechip-t b{ display:block; font:600 14.5px/1.3 Inter,system-ui,sans-serif }
+.stk-scorechip-t small{ display:block; margin-top:2px; font:400 12.5px/1.4 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.stk-scorechip-go{ font-size:20px; line-height:1; color:var(--gold); margin-left:2px; transition:transform .2s var(--ease-out) }
+.stk-scorechip:hover .stk-scorechip-go{ transform:translateX(3px) }
+
+/* ── The section bar ─────────────────────────────────────────────────────
+   Full-bleed and opaque behind the pill, so the cards underneath never show
+   through the gap beside it. Scrolled past the name it also carries the
+   company and its price (.stk-mini, switched on by stock.js). */
+
+.stk-panebar{
+  position:sticky; top:var(--sh-chrome-h); z-index:60;
+  margin:0 -20px; padding:10px 20px;
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px;
+  background:var(--sh-glass); backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  transition:box-shadow 260ms var(--ease);
 }
-.stk-scorechip-t b{ display:block; font:600 15px/1.3 Inter,system-ui,sans-serif }
-.stk-scorechip-t small{ display:block; margin-top:3px; font:400 13px/1.4 Inter,system-ui,sans-serif; color:var(--ink-2) }
-@media (prefers-reduced-motion: reduce){ .stk-scorechip{ transition:none } }
+.stk-panebar.is-stuck{ box-shadow:0 10px 24px -18px rgba(23,20,14,.45) }
+.stk-mini{
+  display:none; align-items:center; gap:9px; min-width:0;
+  font:600 13px/1 'IBM Plex Mono',monospace;
+}
+.stk-panebar.is-stuck .stk-mini{ display:flex; animation:miniIn 280ms var(--ease-out) both }
+.stk-mini b{ font-weight:600; letter-spacing:.02em }
+.stk-mini span.tnum{ color:var(--ink-2) }
+.stk-mini span.up{ color:var(--sh-up) } .stk-mini span.dn{ color:var(--sh-dn) }
+@keyframes miniIn{ from{ opacity:0; transform:translateX(-8px) } to{ opacity:1; transform:none } }
 
-/* ── Key figures, above the fold ─────────────────────────────────────────
-   Nine stat tiles, not a ratio table.
+.stk-panes{
+  position:relative; display:flex; gap:2px; padding:4px;
+  background:var(--paper-2); border:1px solid var(--rule-2);
+  border-radius:999px; max-width:100%;
+  overflow-x:auto; scrollbar-width:none;
+}
+.stk-panes::-webkit-scrollbar{ display:none }
+/* The marker slides between tabs. Until the script has placed it the active
+   tab carries its own background, so the bar is never without a selection. */
+.stk-panes-ind{
+  position:absolute; left:0; top:4px; bottom:4px; width:0; border-radius:999px;
+  background:var(--ink); opacity:0; pointer-events:none;
+  transition:transform 420ms var(--ease-out), width 420ms var(--ease-out), opacity 200ms;
+}
+.stk-panes-ind.on{ opacity:1 }
+.stk-pane-btn{
+  position:relative; z-index:1; flex:0 0 auto; border:0; background:none; cursor:pointer;
+  padding:9px 18px; border-radius:999px; white-space:nowrap;
+  font-family:inherit; font-size:14px; font-weight:500; color:var(--ink-2);
+  transition:color 240ms var(--ease);
+}
+.stk-pane-btn:hover:not(.active){ color:var(--ink) }
+.stk-pane-btn.active{ color:var(--paper) }
+.stk-panes-ind:not(.on) ~ .stk-pane-btn.active{ background:var(--ink) }
+.stk-pane-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.stk-pane-n{
+  display:inline-grid; place-items:center; min-width:17px; height:17px; margin-left:7px;
+  padding:0 4px; border-radius:99px; background:var(--gold); color:#fff;
+  font:600 10px/1 'IBM Plex Mono',monospace; vertical-align:1px;
+}
+.stk-pane-n[hidden]{ display:none }
+html[data-theme="dark"] .stk-pane-n{ color:#17140E }
 
-   The table this replaced was a three-column grid with alternating row tints —
-   which is one particular competitor's layout signature, and printing the same
-   nine public numbers in the same arrangement under our own logo read as a
-   copy of their page rather than as ours. The numbers are not the problem;
-   every screener shows them and must. The arrangement was.
+.stk-pane[hidden]{ display:none }
+.stk-pane.enter{ animation:paneIn 420ms var(--ease-out) both }
+.stk-pane.enter > .stk-sec, .stk-pane.enter .card, .stk-pane.enter .nw-col{
+  animation:rise 520ms var(--ease-out) both;
+}
+.stk-pane.enter > .stk-sec:nth-child(2), .stk-pane.enter .ov-main > .card:nth-child(2),
+.stk-pane.enter .ov-rail > :nth-child(1){ animation-delay:70ms }
+.stk-pane.enter > .stk-sec:nth-child(3), .stk-pane.enter .ov-main > .card:nth-child(3),
+.stk-pane.enter .ov-rail > :nth-child(2){ animation-delay:140ms }
+.stk-pane.enter > .stk-sec:nth-child(n+4), .stk-pane.enter .ov-rail > :nth-child(3){ animation-delay:210ms }
+@keyframes paneIn{ from{ opacity:0 } to{ opacity:1 } }
+@keyframes rise{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
 
-   What is ours is the meter under each figure. Nothing in a vendor's summary
-   block can say where a number sits among its sector, because that needs a
-   scored universe rather than one company — and it is the thing a reader
-   actually wants, since 11.3% ROCE is strong for a utility and weak for
-   software. The figure alone never answers the question it is read to answer.
+/* ── Cards and sections ──────────────────────────────────────────────────── */
 
-   One hue, no red/green. Whether a high P/E is bad is a judgement and this
-   page reports arithmetic; the tick at the 50th shows the peer median and
-   leaves the reading to the reader. */
+.card{
+  min-width:0; background:var(--skin-card); border:1px solid var(--rule); border-radius:18px;
+  padding:18px 20px 20px; box-shadow:var(--e1);
+  transition:box-shadow 320ms var(--ease), border-color 240ms var(--ease);
+}
+.card:hover{ box-shadow:var(--skin-shadow); border-color:color-mix(in srgb,var(--gold) 28%,var(--rule)) }
+.card[hidden]{ display:none }
+.card-h, .sec-h{
+  display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between;
+  gap:6px 16px; margin:0 0 14px;
+}
+.card-h h2, .sec-h h2{
+  margin:0; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
+  letter-spacing:-.01em; color:var(--ink);
+}
+.card-h h2{ font-size:21px; line-height:1.15 }
+.sec-h h2{ font-size:26px; line-height:1.12 }
+.card-x, .sec-x{
+  font:500 10.5px/1.4 'IBM Plex Mono',monospace; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--mute);
+}
+.card-go{
+  border:0; background:none; padding:4px 0; cursor:pointer; font:500 13px/1.3 Inter,system-ui,sans-serif;
+  color:var(--gold-dp); text-decoration:none; white-space:nowrap;
+  background-image:linear-gradient(currentColor,currentColor); background-repeat:no-repeat;
+  background-size:0 1px; background-position:0 100%; transition:background-size 260ms var(--ease-out);
+}
+.card-go:hover, .card-go:focus-visible{ background-size:100% 1px }
+.card-go:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:4px }
 
-.stk-key{ margin:26px 0 0 }
+.stk-sec{ padding:30px 0 4px; scroll-margin-top:calc(var(--sh-chrome-h) + 70px) }
+.stk-sec[hidden]{ display:none }
+.stk-sec > .sub{ margin:-6px 0 18px; color:var(--mute); font-size:13.5px; max-width:66ch }
+/* A section whose heading is its own first child: the at-a-glance block the
+   API writes into /stock-SYMBOL (backend/company_pages.py). */
+.stk-sec > h2{
+  margin:0 0 4px; font-family:'Instrument Serif',Georgia,serif;
+  font-weight:400; font-size:26px; letter-spacing:-.01em;
+}
+
+/* ── Overview ────────────────────────────────────────────────────────────
+   Two columns of cards on a wide screen. On a narrow one the columns
+   dissolve and the cards take an order of their own: figures, score, price,
+   news, lenses, and the description last, because it is the one thing on the
+   page that does not change from one visit to the next. */
+
+.ov{
+  display:grid; grid-template-columns:minmax(0,1.62fr) minmax(0,1fr);
+  gap:18px; padding-top:22px; align-items:start;
+}
+.ov-main, .ov-rail{ display:grid; gap:18px; min-width:0 }
+.ov .card{ animation:rise 560ms var(--ease-out) both }
+.ov-main > .card:nth-child(2){ animation-delay:80ms }
+.ov-main > .card:nth-child(3){ animation-delay:160ms }
+.ov-rail > :nth-child(1){ animation-delay:120ms }
+.ov-rail > :nth-child(2) .card, .ov-rail > :nth-child(2).card{ animation-delay:200ms }
+.ov-rail > :nth-child(3){ animation-delay:280ms }
+@media (max-width:980px){
+  .ov{ grid-template-columns:minmax(0,1fr) }
+  .ov-main, .ov-rail{ display:contents }
+  .stk-key{ order:1 } #ov-score{ order:2 } .ov-price{ order:3 }
+  #ov-latest{ order:4 } #stk-lenses{ order:5 } .stk-brief{ order:6 }
+}
+
+/* ── Key figures ─────────────────────────────────────────────────────────
+   Tiles divided by hairlines, each with a meter showing where the figure
+   sits among the company's peers. One hue and no red or green: whether a
+   high P/E is bad is a judgement, and this page reports arithmetic. The tick
+   at the 50th is the peer median. */
+
 .kgrid{
-  display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
   gap:1px; background:var(--rule-2);
   border:1px solid var(--rule-2); border-radius:14px; overflow:hidden;
 }
-.ktile{ background:var(--skin-card); padding:17px 18px 15px; min-width:0 }
-.ktile .k{
+.kgrid[data-n="6"], .kgrid[data-n="5"], .kgrid[data-n="3"]{ grid-template-columns:repeat(3,minmax(0,1fr)) }
+.ktile{ background:var(--skin-card); padding:15px 16px 14px; min-width:0;
+  transition:background 240ms var(--ease) }
+.ktile:hover{ background:color-mix(in srgb,var(--gold) 5%,var(--skin-card)) }
+.ktile .k, .krange .k{
   font-family:var(--mono,'IBM Plex Mono',monospace); font-size:10px;
   letter-spacing:.14em; text-transform:uppercase; color:var(--mute);
 }
-/* The house display face, as every other figure on this site is set — the
-   tracker cells, the sector board, the portfolio dial. Proportional figures,
-   not tabular: these are standalone values, and `tabular-nums` gives every
-   digit the width of a zero, which reads loose at this size. */
+/* The house display face. Proportional figures, not tabular: these are
+   standalone values, and `tabular-nums` gives every digit the width of a
+   zero, which reads loose at this size. */
 .ktile .v{
-  margin-top:9px; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
-  font-size:28px; line-height:1.05; letter-spacing:-.01em; color:var(--ink);
+  margin-top:8px; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
+  font-size:27px; line-height:1.05; letter-spacing:-.01em; color:var(--ink);
   overflow-wrap:anywhere;
 }
-
-.ktile .v.range{ font-size:20px }
-
-.kmeter{ margin-top:11px }
-/* Grid items in a row already stretch to the tallest of them, so a tile with
-   no peer data needs no spacer — reserving height here left the whole first
-   row (market cap, price, the 52-week band, none of which have a meaningful
-   peer percentile) carrying 25px of dead space. */
+.kmeter{ margin-top:10px }
 .kmeter.empty{ display:none }
 .kmeter .track{
   position:relative; height:4px; border-radius:99px;
   background:var(--rule-2); overflow:hidden;
 }
 .kmeter .fill{
-  display:block; height:100%; border-radius:99px;
+  display:block; height:100%; width:0; border-radius:99px;
   background:linear-gradient(90deg,var(--gold-dp),var(--gold));
+  transition:width 900ms var(--ease-out);
 }
 .kmeter .mid{
   position:absolute; left:50%; top:-2px; bottom:-2px; width:1px;
   background:var(--ink); opacity:.22;
 }
-.kmeter .cap{
-  margin-top:6px; font-size:11px; line-height:1.4; color:var(--mute);
+.kmeter .cap{ margin-top:6px; font-size:11px; line-height:1.4; color:var(--mute) }
+
+/* The 52-week range: a line the price sits on. */
+.krange{ margin-top:16px }
+.krange[hidden]{ display:none }
+.kr-h{ display:flex; justify-content:space-between; align-items:baseline; gap:10px }
+.kr-x{ font-size:12px; color:var(--ink-2) }
+.kr-bar{
+  position:relative; height:6px; margin:12px 7px 8px; border-radius:99px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--gold) 16%,var(--rule-2)),var(--gold));
 }
+.kr-bar i{
+  position:absolute; left:var(--at); top:50%; width:14px; height:14px; border-radius:50%;
+  background:var(--ink); border:3px solid var(--skin-card); box-shadow:0 0 0 1px var(--ink);
+  transform:translate(-50%,-50%); animation:slideAt 1100ms var(--ease-out) both;
+}
+.kr-ends{ display:flex; justify-content:space-between; font:500 12px/1 'IBM Plex Mono',monospace; color:var(--ink-2) }
+@keyframes slideAt{ from{ left:0 } }
 
 @media (max-width:760px){
-  .kgrid{ grid-template-columns:repeat(2,minmax(0,1fr)) }
-  .ktile{ padding:14px 14px 12px }
-  .ktile .v{ font-size:24px }
-  .ktile .v.range{ font-size:18px }
+  .kgrid, .kgrid[data-n]{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .ktile{ padding:13px 13px 12px }
+  .ktile .v{ font-size:23px }
 }
-/* Two columns for as long as the widest value still fits on one line. At one
-   column these nine tiles are most of a phone screen before the reader reaches
-   anything else; the single column is the last resort, not the phone layout. */
-@media (max-width:430px){
-  .ktile{ padding:12px 12px 11px }
-  .ktile .v{ font-size:20px }
-  .ktile .v.range{ font-size:14px }
-  .kmeter .cap{ font-size:10px }
+@media (max-width:340px){ .kgrid, .kgrid[data-n]{ grid-template-columns:1fr } }
+
+/* ── Overview: the year's price ──────────────────────────────────────────── */
+
+.ov-price[hidden]{ display:none }
+.ov-spark{ position:relative; height:150px }
+.ov-spark svg{ display:block; width:100%; height:100%; overflow:visible }
+.ov-line{ fill:none; stroke-width:2.2; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke }
+.ov-line.draw{ stroke-dasharray:var(--len,3000); stroke-dashoffset:var(--len,3000);
+  animation:sparkIn 1600ms var(--ease-out) forwards }
+.ov-area{ animation:scAreaIn 1500ms ease both }
+.ov-dot{
+  position:absolute; right:0; width:9px; height:9px; border-radius:50%; background:currentColor;
+  transform:translate(50%,-50%); animation:scAreaIn 1700ms ease both;
 }
-@media (max-width:340px){
-  .kgrid{ grid-template-columns:1fr }
-}
+.ov-dot::after{ content:''; position:absolute; inset:-6px; border:1px solid currentColor;
+  border-radius:50%; animation:scBeacon 3s ease-out infinite }
+.ov-rets{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:16px }
+.ov-rets:empty{ display:none }
+.ov-ret{ padding:10px 12px; border-radius:11px; background:var(--paper-2) }
+.ov-ret span{ display:block; font:500 10px/1.3 'IBM Plex Mono',monospace; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--mute) }
+.ov-ret b{ display:block; margin-top:6px; font:600 15px/1 'IBM Plex Mono',monospace }
+@media (max-width:480px){ .ov-rets{ grid-template-columns:repeat(2,minmax(0,1fr)) } .ov-spark{ height:120px } }
 
 /* ── What the company does ──────────────────────────────────────────────── */
 
-.stk-brief{ margin:24px 0 0 }
-.stk-brief > h2{
-  margin:0 0 8px; font-family:'Instrument Serif',Georgia,serif;
-  font-weight:400; font-size:20px; letter-spacing:-.01em;
-}
+.stk-brief[hidden]{ display:none }
 .brief-body{
   font-size:14px; line-height:1.7; color:var(--ink-2); max-width:78ch;
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4;
   overflow:hidden;
 }
 .brief-body.open{ -webkit-line-clamp:unset; overflow:visible }
@@ -182,56 +378,81 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
   margin-top:12px; font-family:var(--mono,'IBM Plex Mono',monospace);
   font-size:11px; letter-spacing:.06em; color:var(--mute);
 }
+.brief-meta:empty{ display:none }
 .brief-meta a{ color:var(--gold-dp) }
 
-/* ── The three panes ─────────────────────────────────────────────────────
-   Was a sticky rail of six anchor links over six stacked sections. The rail
-   scrolled the page; this switches it. Same idiom as the segmented controls
-   on the homepage, restated here because those live in index.html's own
-   stylesheet and this page does not load it. */
+/* ── Overview: the score at a glance ─────────────────────────────────────── */
 
-/* The pill itself is opaque but the strip it sits in was not, so the cards
-   underneath scrolled through the gap beside it. The sticky element is the
-   full-bleed bar; the pill is just its content. */
-.stk-panebar{
-  position:sticky; top:var(--sh-chrome-h); z-index:60;
-  margin:34px -20px 0; padding:10px 20px;
-  background:var(--sh-glass); backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--rule);
+.ovs-p{ display:grid; gap:10px }
+.ovs-r{ display:grid; grid-template-columns:minmax(0,118px) minmax(0,1fr) 28px; gap:10px;
+  align-items:center; font-size:13px; color:var(--ink-2) }
+.ovs-r b{ font:600 13px/1 'IBM Plex Mono',monospace; text-align:right; color:var(--ink) }
+.ovs-b, .pl-bar, .fl-b, .dv-b{
+  position:relative; display:block; height:7px; border-radius:99px;
+  background:var(--rule-2); overflow:hidden;
 }
-.stk-panes{
-  display:flex; gap:2px; padding:4px;
-  background:var(--paper-2); border:1px solid var(--rule-2);
-  border-radius:999px; width:max-content; max-width:100%;
-  overflow-x:auto; scrollbar-width:none;
+.ovs-b .fill, .pl-bar .fill, .fl-b .fill, .dv-b .fill{
+  display:block; height:100%; width:0; border-radius:99px;
+  background:linear-gradient(90deg,var(--gold-dp),var(--gold-lt));
+  transition:width 900ms var(--ease-out);
 }
-.stk-panes::-webkit-scrollbar{ display:none }
-.stk-pane-btn{
-  flex:0 0 auto; border:0; background:none; cursor:pointer;
-  padding:9px 22px; border-radius:999px; white-space:nowrap;
-  font-family:inherit; font-size:14px; font-weight:500; color:var(--ink-2);
-  transition:color 200ms var(--ease), background 200ms var(--ease);
+.ovs-b .mid, .pl-bar .mid, .fl-b .mid{
+  position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--ink); opacity:.25;
 }
-.stk-pane-btn:hover:not(.active){ color:var(--ink) }
-.stk-pane-btn.active{ background:var(--ink); color:var(--paper) }
-.stk-pane-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
-.stk-pane[hidden]{ display:none }
-.stk-pane > .stk-sec:first-child{ padding-top:34px }
+.ovs-d{ list-style:none; margin:16px 0 0; padding:12px 0 0; border-top:1px solid var(--rule-2);
+  display:grid; gap:8px }
+.ovs-d li{ display:grid; grid-template-columns:14px minmax(0,1fr) auto; gap:8px; align-items:baseline;
+  font-size:13px; color:var(--ink-2) }
+.ovs-d i{ font-style:normal; font-size:10px }
+.ovs-d .up i{ color:var(--sh-up) } .ovs-d .dn i{ color:var(--sh-dn) }
+.ovs-d b{ font:500 11.5px/1 'IBM Plex Mono',monospace; color:var(--mute); white-space:nowrap }
+.ovs-f{ margin:14px 0 0; font-size:11.5px; line-height:1.5; color:var(--mute) }
+.ov-wait{ margin:0; font-size:13.5px; color:var(--mute) }
 
-/* ── Sections ────────────────────────────────────────────────────────────── */
+/* ── Overview: latest ────────────────────────────────────────────────────── */
 
-.stk-sec{ padding:44px 0 8px; scroll-margin-top:calc(var(--sh-chrome-h) + 54px) }
-.stk-sec > h2{
-  margin:0 0 4px; font-family:'Instrument Serif',Georgia,serif;
-  font-weight:400; font-size:24px; letter-spacing:-.01em;
+.lt-l{ list-style:none; margin:0; padding:0 }
+.lt-l li{ padding:11px 0; border-top:1px solid var(--rule-2);
+  animation:rise 460ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 55ms) }
+.lt-l li:first-child{ border-top:0; padding-top:0 }
+.lt-l li:last-child{ padding-bottom:0 }
+.lt-l a{ color:inherit; text-decoration:none }
+.lt-l a:hover .lt-h{ color:var(--gold-dp) }
+.lt-h{
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+  font-size:13.5px; line-height:1.45; font-weight:500; color:var(--ink);
+  transition:color 180ms var(--ease);
 }
-.stk-sec > .sub{ margin:0 0 22px; color:var(--mute); font-size:14px; max-width:66ch }
+.lt-m{ display:block; margin-top:5px; font-size:11.5px; color:var(--mute) }
+.lt-k{
+  display:inline-block; margin-right:7px; padding:2px 6px; border-radius:5px; font-style:normal;
+  font:500 9.5px/1.3 'IBM Plex Mono',monospace; letter-spacing:.08em; text-transform:uppercase;
+  background:var(--paper-2); color:var(--ink-2);
+}
+.lt-k.k-filing{ background:color-mix(in srgb,var(--gold) 14%,transparent); color:var(--gold-dp) }
 
 /* ── Score ───────────────────────────────────────────────────────────────── */
 
-.stk-scorewrap{ display:grid; grid-template-columns:230px 1fr; gap:30px; align-items:center }
-@media (max-width:760px){ .stk-scorewrap{ grid-template-columns:1fr } }
+.hz{ display:inline-flex; gap:2px; padding:3px; border:1px solid var(--rule); border-radius:12px;
+  background:var(--skin-card) }
+.hz:empty{ display:none }
+.hz button{
+  border:0; background:none; cursor:pointer; padding:8px 12px; border-radius:9px; min-height:36px;
+  font:500 12.5px/1 Inter,system-ui,sans-serif; color:var(--ink-2); white-space:nowrap;
+  transition:background 200ms var(--ease), color 200ms var(--ease);
+}
+.hz button:hover:not(.on){ background:var(--paper-2); color:var(--ink) }
+.hz button.on{ background:var(--gold); color:#fff }
+html[data-theme="dark"] .hz button.on{ color:#17140E }
+@media (max-width:560px){
+  .hz{ display:flex; width:100% }
+  .hz button{ flex:1 1 0; padding:8px 4px; white-space:normal; line-height:1.2 }
+}
+.hz button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+
+.sc-hero{ display:grid; grid-template-columns:220px minmax(0,1fr); gap:30px; align-items:center;
+  padding:26px 28px }
+@media (max-width:720px){ .sc-hero{ grid-template-columns:1fr; gap:18px; padding:22px 18px } }
 
 .dial{ position:relative; width:210px; height:210px; margin:0 auto }
 .dial svg{ width:100%; height:100%; transform:rotate(-90deg) }
@@ -250,25 +471,145 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
   letter-spacing:.12em; text-transform:uppercase; color:var(--gold);
 }
 
-.pillars{ display:grid; gap:13px }
-.pill{ display:grid; grid-template-columns:130px 1fr 58px; gap:12px; align-items:center; font-size:13px }
-.pill .nm{ color:var(--ink-2); text-transform:capitalize }
-/* display:block is load-bearing, not tidiness. Both of these are <span>, and
-   an inline box ignores width and height outright — the fill rendered at zero
-   size and every pillar bar read as empty. */
-.pill .bar{ display:block; height:7px; background:var(--rule-2); border-radius:99px; overflow:hidden }
-.pill .fill{
-  display:block; height:100%; border-radius:99px;
-  background:linear-gradient(90deg,var(--gold-dp),var(--gold-lt));
-  width:0; transition:width 1100ms var(--ease-out);
+.sc-line{ margin:0 0 14px; font-family:'Instrument Serif',Georgia,serif; font-size:25px;
+  line-height:1.28; letter-spacing:-.01em; color:var(--ink) }
+.sc-line:empty{ display:none }
+.rk-t{ font-size:14px; line-height:1.5; color:var(--ink-2) }
+.rk-t b{ color:var(--ink) }
+.rk-bar{
+  position:relative; height:8px; margin:12px 8px 0; border-radius:99px;
+  background:linear-gradient(90deg,var(--rule-2),color-mix(in srgb,var(--gold) 55%,var(--rule-2)));
 }
-.pill .vv{ font:600 13px/1 'IBM Plex Mono',monospace; text-align:right }
-
+.rk-bar i{
+  position:absolute; left:var(--p); top:50%; width:16px; height:16px; border-radius:50%;
+  background:var(--gold); border:3px solid var(--skin-card); box-shadow:0 0 0 1px var(--gold);
+  transform:translate(-50%,-50%); animation:slideP 1200ms var(--ease-out) both;
+}
+@keyframes slideP{ from{ left:0 } }
+.sc-sub{ margin:16px 0 0; font:500 11px/1.5 'IBM Plex Mono',monospace; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--mute) }
+.sc-sub:empty{ display:none }
 .stk-basis{
-  margin-top:22px; padding:15px 17px; border-left:2px solid var(--gold);
+  margin:14px 0 0; padding:12px 15px; border-left:2px solid var(--gold);
   background:var(--paper-2); border-radius:0 10px 10px 0;
-  font-size:14px; line-height:1.6; color:var(--ink-2);
+  font-size:13px; line-height:1.6; color:var(--ink-2);
 }
+.stk-basis[hidden]{ display:none }
+
+/* How it adds up. One row a pillar: its rank among peers as a bar and a
+   number, the weight it carries, the points that makes. */
+.pillars{ border:1px solid var(--rule); border-radius:16px; background:var(--skin-card); overflow:hidden }
+.pillars:empty{ display:none }
+.pl{
+  display:grid; grid-template-columns:minmax(150px,1.35fr) minmax(110px,2fr) 40px 62px 54px;
+  gap:14px; align-items:center; padding:13px 18px; border-top:1px solid var(--rule-2);
+}
+.pl:first-child{ border-top:0 }
+.pl-head{
+  padding:10px 18px; background:var(--paper-2);
+  font:500 10px/1.3 'IBM Plex Mono',monospace; letter-spacing:.1em; text-transform:uppercase; color:var(--mute);
+}
+.pl-head span:nth-child(n+3){ text-align:right }
+.pl-n b{ display:block; font-size:14px; font-weight:600; color:var(--ink) }
+.pl-n small{ display:block; margin-top:2px; font-size:12px; line-height:1.4; color:var(--mute) }
+.pl-bar{ height:8px }
+.pl-s, .pl-w, .pl-p{ text-align:right; font:500 13px/1 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.pl-s{ color:var(--ink); font-weight:600 }
+.pl-p{ color:var(--ink); font-weight:600 }
+.pl-miss{ padding:12px 18px; border-top:1px dashed var(--rule); font-size:12.5px; line-height:1.55; color:var(--mute) }
+.pl-miss b{ font-weight:600; color:var(--ink-2) }
+.pl-sum{ display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+  padding:13px 18px; border-top:1px solid var(--rule); font-size:14px; font-weight:500 }
+.pl-sum b{ font:600 15px/1 'IBM Plex Mono',monospace }
+.pl-conf{ padding:16px 18px 18px; border-top:1px solid var(--rule); background:var(--paper-2) }
+.pl-conf-t{ font-size:13px; line-height:1.6; color:var(--ink-2); max-width:78ch }
+.pl-conf-t b{ color:var(--ink) }
+/* The confidence step, drawn: the weighted sum, the score, and the stretch
+   between them that was given up toward 50. */
+.cf{ position:relative; height:8px; margin:38px 10px 30px; border-radius:99px; background:var(--rule) }
+.cf-50{ position:absolute; top:-5px; bottom:-5px; width:1px; background:var(--ink); opacity:.35 }
+.cf em{ position:absolute; left:50%; transform:translateX(-50%); font-style:normal; white-space:nowrap;
+  font:500 10.5px/1 'IBM Plex Mono',monospace; color:var(--mute) }
+.cf-50 em{ display:none }
+.cf.far .cf-50 em{ display:block; top:calc(100% + 5px) }
+.cf-pull{ position:absolute; top:0; bottom:0; border-radius:99px; opacity:.75;
+  background:repeating-linear-gradient(90deg,var(--gold) 0 4px,transparent 4px 8px) }
+.cf-raw{ position:absolute; top:50%; width:12px; height:12px; border-radius:50%;
+  border:2px solid var(--mute); background:var(--paper-2); transform:translate(-50%,-50%) }
+.cf-raw em{ top:calc(100% + 7px) }
+.cf-fin{ position:absolute; top:50%; width:16px; height:16px; border-radius:50%; background:var(--gold);
+  border:3px solid var(--paper-2); box-shadow:0 0 0 1px var(--gold); transform:translate(-50%,-50%);
+  animation:slideFin 1100ms var(--ease-out) both }
+.cf-fin em{ bottom:calc(100% + 8px); font-weight:600; font-size:12px; color:var(--ink) }
+@keyframes slideFin{ from{ opacity:0; transform:translate(-50%,-50%) scale(.4) } }
+.pl-eq{ text-align:right; font:500 12.5px/1.4 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.pl-eq b{ font-size:15px; color:var(--ink) }
+@media (max-width:680px){
+  .pl{ grid-template-columns:minmax(0,1fr) 34px 52px 44px; gap:8px 10px; padding:12px 14px }
+  .pl-n{ grid-column:1 / -1 }
+  .pl-head{ display:none }
+  .pl-miss, .pl-sum, .pl-conf{ padding-left:14px; padding-right:14px }
+}
+
+/* What helped, what hurt. */
+.drv{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px }
+.drv-col{ padding:16px 18px; border:1px solid var(--rule); border-radius:16px; background:var(--skin-card); min-width:0 }
+.drv-col h3{ margin:0 0 12px; display:flex; align-items:center; gap:8px;
+  font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2) }
+.drv-col h3::before{ content:''; width:8px; height:8px; border-radius:50% }
+.drv-col.up h3::before{ background:var(--sh-up) } .drv-col.dn h3::before{ background:var(--sh-dn) }
+.drv-col ul{ list-style:none; margin:0; padding:0; display:grid; gap:11px }
+.drv-col li{ display:grid; grid-template-columns:minmax(0,1fr) 84px; gap:5px 12px; align-items:center; font-size:13.5px }
+.dv-l{ color:var(--ink) }
+.dv-b{ height:6px }
+.drv-col.up .dv-b .fill{ background:var(--sh-up) } .drv-col.dn .dv-b .fill{ background:var(--sh-dn) }
+.dv-p{ grid-column:1 / -1; margin-top:-2px; font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute) }
+.drv-none{ margin:0; font-size:13px; color:var(--mute) }
+@media (max-width:640px){ .drv{ grid-template-columns:1fr } }
+
+/* Every factor. */
+.fl{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start }
+.fl-g{ padding:14px 16px 8px; border:1px solid var(--rule); border-radius:16px; background:var(--skin-card); min-width:0 }
+.fl-g h3{ margin:0 0 6px; display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  font:600 11px/1.3 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2) }
+.fl-g h3 b{ font-size:13px; letter-spacing:0; color:var(--gold-dp) }
+.fl-g h3 em{ display:block; margin-top:4px; font:400 11px/1.3 Inter,system-ui,sans-serif;
+  letter-spacing:0; text-transform:none; color:var(--mute) }
+.fl-g.off .fill{ background:var(--mute); opacity:.55 }
+.fl-g.off h3 b{ color:var(--mute) }
+.fl-r{ display:grid; grid-template-columns:minmax(0,1.6fr) 58px minmax(54px,1fr) 26px; gap:10px;
+  align-items:center; padding:9px 0; border-top:1px solid var(--rule-2); font-size:13px }
+.fl-l{ color:var(--ink); line-height:1.35 }
+.fl-l small{ display:block; margin-top:2px; font-size:11px; color:var(--mute) }
+.fl-v, .fl-p{ text-align:right; font:500 12px/1 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.fl-p{ font-weight:600; color:var(--ink) }
+.fl-b{ height:6px }
+.fl-r.none .fl-l{ color:var(--ink-2) }
+.fl-why{ grid-column:3 / -1; font-size:11.5px; line-height:1.4; color:var(--mute) }
+.fl-skip{ grid-column:1 / -1; font-size:13px; color:var(--mute) }
+.fl-skip summary{ cursor:pointer; padding:6px 0 }
+.fl-skip summary:hover{ color:var(--gold-dp) }
+.fl-skip p{ margin:6px 0 0; line-height:1.7 }
+@media (max-width:820px){ .fl{ grid-template-columns:1fr } }
+
+/* The older checks, folded. */
+.diag{ border:1px solid var(--rule); border-radius:16px; background:var(--skin-card); overflow:hidden }
+.diag > summary{
+  list-style:none; cursor:pointer; padding:16px 18px;
+  display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:6px 14px;
+}
+.diag > summary::-webkit-details-marker{ display:none }
+.diag > summary span{ font-family:'Instrument Serif',Georgia,serif; font-size:21px }
+.diag > summary span::after{ content:' +'; color:var(--gold) }
+.diag[open] > summary span::after{ content:' −' }
+.diag > summary small{ font:500 10.5px/1.4 'IBM Plex Mono',monospace; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--mute) }
+.diag > summary:focus-visible{ outline:2px solid var(--gold); outline-offset:-2px; border-radius:16px }
+.diag .ledger{ padding:0 18px 18px }
+.chk-h{ margin:18px 0 10px; display:flex; justify-content:space-between; align-items:baseline;
+  font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.14em; text-transform:uppercase; color:var(--mute) }
+.chk-h:first-child{ margin-top:4px }
+.chk-h b{ letter-spacing:0; color:var(--ink-2) }
 
 /* ── Smart AI: floating button and panel ─────────────────────────────────── */
 
@@ -369,15 +710,19 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
   .sai.open .sai-fab .sai-lbl{ position:static; width:auto; height:auto; clip:auto }
 }
 
-/* ── Numbers grid ────────────────────────────────────────────────────────── */
+/* ── Technical snapshot ──────────────────────────────────────────────────── */
 
-.nums{ display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:13px }
-.num{ padding:16px 17px }
+.nums{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px }
+@media (max-width:720px){ .nums{ grid-template-columns:repeat(2,minmax(0,1fr)) } }
+.num{ padding:14px 16px; border:1px solid var(--rule); border-radius:13px; background:var(--skin-card);
+  animation:rise 460ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 35ms);
+  transition:border-color 200ms var(--ease), box-shadow 260ms var(--ease) }
+.num:hover{ border-color:var(--gold-lt); box-shadow:var(--e2) }
 .num .k{
   font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
   text-transform:uppercase; color:var(--mute);
 }
-.num .v{ font:600 20px/1 'IBM Plex Mono',monospace; margin-top:11px; letter-spacing:-.02em }
+.num .v{ font:600 20px/1 'IBM Plex Mono',monospace; margin-top:10px; letter-spacing:-.02em }
 .num .h{ font-size:12px; color:var(--mute); margin-top:7px; line-height:1.45 }
 
 /* ── Chart ───────────────────────────────────────────────────────────────── */
@@ -498,19 +843,19 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
 .chk .row .v.mono{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink) }
 .chk[open]{ border-color:var(--gold-lt) }
 
-/* ── Prose blocks ────────────────────────────────────────────────────────── */
+/* ── Support and resistance ──────────────────────────────────────────────── */
 
-.prose{ padding:20px 22px; font-size:14px; line-height:1.72; color:var(--ink-2) }
-.prose .src{
-  margin-top:14px; font:500 11px/1.5 'IBM Plex Mono',monospace;
-  letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
-}
-
-.lvls{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:11px }
-.lvl{ padding:14px 16px; border-radius:11px; border:1px solid var(--rule); background:var(--skin-card) }
+.lvls{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px }
+.lvl{ padding:14px 16px; border-radius:13px; border:1px solid var(--rule); background:var(--skin-card);
+  border-left:3px solid var(--rule);
+  animation:rise 460ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 35ms) }
+.lvl.res{ border-left-color:color-mix(in srgb,var(--sh-dn) 70%,var(--rule)) }
+.lvl.sup{ border-left-color:color-mix(in srgb,var(--sh-up) 70%,var(--rule)) }
 .lvl .k{ font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
   text-transform:uppercase; color:var(--mute) }
 .lvl .v{ font:600 18px/1 'IBM Plex Mono',monospace; margin-top:9px }
+.lvl .h{ font-size:12px; color:var(--mute); margin-top:7px }
+.sec-h .ranges{ margin:0 }
 
 /* ── States ──────────────────────────────────────────────────────────────── */
 
@@ -636,7 +981,7 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
 .dir-none{ padding:24px 0; color:var(--mute) }
 
 @media (prefers-reduced-motion: reduce){
-  .dial .arc, .pill .fill{ transition:none }
+  .dial .arc{ transition:none }
   .spark-draw{ animation:none; stroke-dashoffset:0 }
   .sc-plot *, .sc-plot{ transition:none !important; animation:none !important }
   .skel{ animation:none }
@@ -943,10 +1288,13 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
   text-transform:uppercase; cursor:help;
 }
 
+/* A table's own heading: the same face as the section's, a size down, so a
+   pane of four tables reads as four parts of it. */
 .fu-h3{
-  margin:0 0 8px; font:500 11px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
+  margin:30px 0 6px; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
+  font-size:21px; line-height:1.15; letter-spacing:-.01em; color:var(--ink);
 }
+#funda-peers > .fu-h3:first-child{ margin-top:0 }
 
 /* Ratios. The formula is printed under its name rather than hidden in a
    tooltip: "OPM" means nothing until you know it is EBITDA over revenue, and
@@ -1206,3 +1554,225 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
 .stk-lab-link span{ color:var(--mute); font-size:13.5px }
 .stk-lab-link:hover{ border-color:var(--gold) }
 .stk-lab-link:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+
+/* ── Notes ───────────────────────────────────────────────────────────────
+   The method notes under a section, folded. They used to stand open at the
+   foot of every pane, three paragraphs at a time; true, and nobody's first
+   reason for being there. */
+details.own-notes{ margin-top:20px; padding:0; border-left:0 }
+details.own-notes > summary{
+  cursor:pointer; padding:8px 0; font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--mute);
+}
+details.own-notes > summary:hover{ color:var(--gold-dp) }
+details.own-notes[open] > summary{ margin-bottom:8px }
+details.own-notes p{ padding-left:14px; border-left:2px solid var(--rule) }
+
+/* ── Financials: the quarters as bars ────────────────────────────────────
+   Above the table that holds them to the rupee. A loss hangs below the line. */
+.ft-row{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-bottom:24px }
+.ft{ margin:0; padding:15px 17px 12px; border:1px solid var(--rule); border-radius:16px;
+  background:var(--skin-card); min-width:0 }
+.ft figcaption{ display:flex; justify-content:space-between; align-items:baseline; gap:10px }
+.ft figcaption span{ font:600 10.5px/1.3 'IBM Plex Mono',monospace; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--mute) }
+.ft figcaption b{ font:600 15px/1 'IBM Plex Mono',monospace; color:var(--ink) }
+.ft-plot{ position:relative; display:flex; gap:8px; height:104px; margin:16px 0 24px }
+.ft-plot::after{ content:''; position:absolute; left:0; right:0; top:var(--zero); border-top:1px solid var(--rule) }
+.ft-c{ position:relative; flex:1 1 0; min-width:0 }
+.ft-c i{
+  position:absolute; left:16%; right:16%; top:calc(var(--zero) - var(--h)); height:var(--h);
+  min-height:2px; border-radius:5px 5px 2px 2px;
+  background:color-mix(in srgb,var(--gold) 42%,var(--rule));
+  transform-origin:50% 100%; animation:barUp 720ms var(--ease-out) both;
+  animation-delay:calc(var(--i,0) * 60ms);
+}
+.ft-c i.now{ background:var(--gold) }
+.ft-c i.neg{ top:var(--zero); border-radius:2px 2px 5px 5px; transform-origin:50% 0;
+  background:color-mix(in srgb,var(--sh-dn) 70%,var(--rule)) }
+.ft-x{ position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:7px;
+  font:500 9.5px/1 'IBM Plex Mono',monospace; color:var(--mute); white-space:nowrap }
+@keyframes barUp{ from{ transform:scaleY(0) } to{ transform:scaleY(1) } }
+@media (max-width:640px){ .ft-row{ grid-template-columns:1fr } }
+
+/* ── Peers ───────────────────────────────────────────────────────────────
+   A wide table, so it borrows the financials table's scroller and its faded
+   right edge. The company column stays put while the figures scroll under
+   it, and this company's own row is the one with the gold edge. */
+
+.pr-table{ width:100%; min-width:780px; border-collapse:separate; border-spacing:0; font-size:13px }
+.pr-table th, .pr-table td{
+  padding:11px 12px; text-align:right; white-space:nowrap;
+  border-bottom:1px solid var(--rule-2); background:var(--paper);
+}
+.pr-table thead th{
+  position:sticky; top:0; z-index:2; padding-top:9px; padding-bottom:9px;
+  font:500 10px/1.3 'IBM Plex Mono',monospace; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--mute); border-bottom:1px solid var(--rule);
+}
+.pr-table thead button{
+  all:unset; cursor:pointer; display:inline-flex; align-items:baseline; gap:5px;
+  font:inherit; letter-spacing:inherit; text-transform:inherit; color:inherit;
+  transition:color 160ms var(--ease);
+}
+.pr-table thead button:hover, .pr-table thead button.on{ color:var(--ink) }
+.pr-table thead button:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:4px }
+.pr-table thead button em{ font-style:normal; opacity:.7 }
+.pr-table thead button i{ font-style:normal; width:8px; color:var(--gold) }
+.pr-table .pr-co{
+  position:sticky; left:0; z-index:1; text-align:left; min-width:218px; max-width:260px;
+  box-shadow:inset -1px 0 0 var(--rule-2);
+}
+.pr-table thead .pr-co{ z-index:3 }
+.pr-a{ display:flex; align-items:center; gap:10px; min-width:0; color:inherit; text-decoration:none }
+.pr-n{ min-width:0 }
+.pr-n b{ display:block; font-weight:600; font-size:13.5px; color:var(--ink);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:color 160ms var(--ease) }
+.pr-n small{ display:block; margin-top:2px; font:500 10.5px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.04em; color:var(--mute) }
+a.pr-a:hover .pr-n b{ color:var(--gold-dp) }
+a.pr-a:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:8px }
+.pr-table td{ font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink-2) }
+.pr-table td.none{ color:color-mix(in srgb,var(--mute) 55%,transparent) }
+.pr-table td.up{ color:var(--sh-up) } .pr-table td.dn{ color:var(--sh-dn) }
+.pr-table tbody tr{ animation:rowIn 420ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 26ms) }
+.pr-table tbody tr:hover th, .pr-table tbody tr:hover td{ background:var(--paper-2) }
+.pr-table tbody tr.self th, .pr-table tbody tr.self td{
+  background:color-mix(in srgb,var(--gold) 9%,var(--paper)); color:var(--ink); font-weight:600;
+}
+.pr-table tbody tr.self .pr-co{ box-shadow:inset 3px 0 0 var(--gold), inset -1px 0 0 var(--rule-2) }
+.pr-table tbody tr.self .pr-n small{ color:var(--gold-dp) }
+.pr-table tfoot th, .pr-table tfoot td{
+  border-top:1px solid var(--rule); border-bottom:0; background:var(--paper-2); color:var(--ink);
+}
+.pr-score{
+  display:inline-grid; place-items:center; min-width:34px; padding:5px 7px; border-radius:8px;
+  font:600 12px/1 'IBM Plex Mono',monospace; background:var(--paper-2); color:var(--ink-2);
+}
+.pr-score.b-strong{ background:var(--sh-up); color:#fff }
+.pr-score.b-good{ background:color-mix(in srgb,var(--sh-up) 20%,var(--skin-card)); color:var(--sh-up) }
+.pr-score.b-weak{ background:color-mix(in srgb,var(--sh-dn) 16%,var(--skin-card)); color:var(--sh-dn) }
+.pr-score.b-poor{ background:var(--sh-dn); color:#fff }
+html[data-theme="dark"] .pr-score.b-strong, html[data-theme="dark"] .pr-score.b-poor{ color:#0C0B08 }
+@keyframes rowIn{ from{ opacity:0; transform:translateY(6px) } to{ opacity:1; transform:none } }
+@media (max-width:560px){
+  .pr-table .pr-co{ min-width:150px; max-width:170px }
+  .pr-table th, .pr-table td{ padding:10px 9px }
+  .pr-n b{ font-size:12.5px }
+}
+#s-medians{ padding-top:14px }
+#s-medians:has(#funda-peers:empty){ display:none }
+
+/* ── News and filings ────────────────────────────────────────────────────
+   Two press lists side by side and the company's own filings beneath them.
+   Kept apart on the page because they are different kinds of fact. */
+
+.nw{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 26px }
+@media (max-width:860px){ .nw{ grid-template-columns:1fr } }
+.nw-l, .fil-l{
+  list-style:none; margin:0; padding:0; border:1px solid var(--rule); border-radius:16px;
+  background:var(--skin-card); overflow:hidden;
+}
+.nw-i{ padding:13px 16px; border-top:1px solid var(--rule-2);
+  animation:rise 440ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 40ms);
+  transition:background 180ms var(--ease) }
+.nw-i:first-child{ border-top:0 }
+.nw-i:hover{ background:color-mix(in srgb,var(--gold) 4%,var(--skin-card)) }
+.nw-i a{ color:inherit; text-decoration:none }
+.nw-h{ display:block; font-size:14px; line-height:1.45; font-weight:500; color:var(--ink);
+  transition:color 160ms var(--ease) }
+.nw-i a:hover .nw-h{ color:var(--gold-dp) }
+.nw-i a:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:6px }
+.nw-m{ display:flex; flex-wrap:wrap; align-items:center; gap:5px 10px; margin-top:7px;
+  font-size:11.5px; color:var(--mute) }
+.nw-m b{ font-weight:600; color:var(--ink-2) }
+.nw-d{
+  font-style:normal; padding:3px 8px; border-radius:99px;
+  font:500 10px/1.3 'IBM Plex Mono',monospace; letter-spacing:.04em;
+  background:color-mix(in srgb,var(--gold) 12%,transparent); color:var(--gold-dp);
+  border:1px solid color-mix(in srgb,var(--gold) 30%,transparent);
+}
+
+.fil-cats{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px }
+.fil-cats:empty{ display:none }
+.fil-cats button{
+  border:1px solid var(--rule); background:var(--skin-card); border-radius:99px; cursor:pointer;
+  padding:7px 12px; min-height:34px; font:500 12px/1 Inter,system-ui,sans-serif; color:var(--ink-2);
+  transition:background 180ms var(--ease), color 180ms var(--ease), border-color 180ms var(--ease);
+}
+.fil-cats button:hover:not(.on){ border-color:var(--gold); color:var(--ink) }
+.fil-cats button.on{ background:var(--ink); border-color:var(--ink); color:var(--paper) }
+.fil-cats button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.fil-cats button b{ margin-left:6px; font:500 10px/1 'IBM Plex Mono',monospace; opacity:.65 }
+
+.fil-i{
+  display:grid; grid-template-columns:58px 132px minmax(0,1fr) auto; gap:6px 14px; align-items:baseline;
+  padding:12px 16px; border-top:1px solid var(--rule-2);
+  animation:rise 440ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 36ms);
+}
+.fil-i:first-child{ border-top:0 }
+.fil-t{ font:500 11.5px/1.4 'IBM Plex Mono',monospace; color:var(--mute); white-space:nowrap }
+.fil-c{
+  justify-self:start; padding:4px 8px; border-radius:6px; white-space:nowrap;
+  font:500 10px/1.2 'IBM Plex Mono',monospace; letter-spacing:.06em; text-transform:uppercase;
+  background:var(--paper-2); color:var(--ink-2);
+}
+.fil-i.imp-critical .fil-c{ background:color-mix(in srgb,var(--gold) 20%,var(--skin-card)); color:var(--gold-dp) }
+.fil-i.imp-high .fil-c{ background:color-mix(in srgb,var(--gold) 10%,var(--skin-card)); color:var(--gold-dp) }
+.fil-i.imp-routine{ color:var(--mute) }
+.fil-i.imp-routine .fil-h{ color:var(--mute) }
+.fil-h{ font-size:13.5px; line-height:1.5; color:var(--ink); overflow-wrap:anywhere }
+.fil-a{ font-size:12.5px; font-weight:500; color:var(--gold-dp); text-decoration:none; white-space:nowrap }
+.fil-a:hover{ text-decoration:underline }
+.fil-a:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:4px }
+@media (max-width:680px){
+  .fil-i{ grid-template-columns:auto minmax(0,1fr) auto; padding:12px 14px }
+  .fil-h{ grid-column:1 / -1; grid-row:2 }
+  .fil-a{ grid-row:1; grid-column:3 }
+}
+
+/* Big trades: the same list furniture as the filings, with a side and a size. */
+.dl-i{
+  display:grid; grid-template-columns:86px 62px minmax(0,1.6fr) minmax(0,1.2fr) auto; gap:6px 14px;
+  align-items:baseline; padding:12px 16px; border-top:1px solid var(--rule-2);
+  animation:rise 440ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 36ms);
+}
+.dl-i:first-child{ border-top:0 }
+.dl-s{ font:600 10.5px/1.2 'IBM Plex Mono',monospace; letter-spacing:.06em; text-transform:uppercase }
+.dl-c{ font-size:13.5px; line-height:1.45; color:var(--ink); overflow-wrap:anywhere }
+.dl-c em, .dl-v em{ display:block; margin-top:2px; font-style:normal;
+  font:500 10px/1.3 'IBM Plex Mono',monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--mute) }
+.dl-q{ font:500 12px/1.45 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.dl-v{ text-align:right; font:600 13px/1.3 'IBM Plex Mono',monospace; color:var(--ink); white-space:nowrap }
+@media (max-width:680px){
+  .dl-i{ grid-template-columns:auto auto minmax(0,1fr); padding:12px 14px }
+  .dl-c{ grid-column:1 / -1 }
+  .dl-q{ grid-column:1 / 3 }
+  .dl-v{ grid-column:3; grid-row:1 }
+}
+
+/* ── While it loads ──────────────────────────────────────────────────────
+   The shape of the page, not a paragraph about the server. */
+.stk-loading{ padding:6px 0 30px }
+.sk-bar{ height:48px; border-radius:999px; max-width:760px }
+.sk-grid{ display:grid; grid-template-columns:minmax(0,1.62fr) minmax(0,1fr); gap:18px; margin-top:24px }
+.sk-card{ height:150px; border-radius:18px }
+.sk-card.tall{ height:236px }
+.sk-note{ margin:22px 0 0; text-align:center; font-size:13px; color:var(--mute);
+  animation:paneIn 400ms var(--ease-out) both }
+.sk-note[hidden]{ display:none }
+@media (max-width:980px){ .sk-grid{ grid-template-columns:1fr } }
+
+/* ── Stillness ───────────────────────────────────────────────────────────
+   Everything the redesign animates, switched off for a reader who has asked
+   for less motion. The values are all in place without it: every bar is set
+   to its width directly and every marker to its position. */
+@media (prefers-reduced-motion: reduce){
+  .stk-pane.enter, .stk-pane.enter > .stk-sec, .stk-pane.enter .card, .stk-pane.enter .nw-col,
+  .ov .card, .stk-scorechip, .lt-l li, .nw-i, .fil-i, .dl-i, .num, .lvl, .pr-table tbody tr, .ft-c i, .lg img,
+  .kr-bar i, .rk-bar i, .cf-fin, .ov-area, .ov-dot, .ov-dot::after, .sk-note,
+  .stk-panebar.is-stuck .stk-mini{ animation:none !important }
+  .ov-line.draw{ animation:none; stroke-dashoffset:0 }
+  .stk-panes-ind, .kmeter .fill, .ovs-b .fill, .pl-bar .fill, .fl-b .fill, .dv-b .fill,
+  .stk-scorechip, .stk-scorechip-go, .stk-scorechip-ring .a, .card, .card-go{ transition:none !important }
+}

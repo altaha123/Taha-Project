@@ -5,7 +5,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Stock — Altaha Screener</title>
-<meta name="description" content="A 0–100 score for any Indian or US stock, with every calculation that produced it shown line by line." />
+<meta name="description" content="Price, key figures, score, financials, peers, ownership, delivery, news and filings for any Indian stock, on one page." />
 <meta name="robots" content="index,follow" />
 <!-- ssr:head -->
 <link rel="icon" href="favicon.ico" sizes="any" />
@@ -19,8 +19,8 @@
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20261113-foot">
-<link rel="stylesheet" href="stock.css?v=20261118-pages">
-<link rel="stylesheet" href="lenses.css?v=20260925-screens">
+<link rel="stylesheet" href="stock.css?v=20261119-systematic">
+<link rel="stylesheet" href="lenses.css?v=20261119-systematic">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="type.css">
@@ -47,11 +47,14 @@
 <main class="stk-wrap">
 
   <!-- Identity. Filled by stock.js; skeletons until then, because a blank
-       area and a broken area look identical while you are waiting. -->
-  <div class="stk-head">
+       area and a broken area look identical while you are waiting. The name,
+       the tags, the price and the breadcrumb are also written by the API on
+       /stock-SYMBOL (backend/company_pages.py): keep their ids as they are. -->
+  <header class="stk-head" id="stk-head">
     <div class="stk-crumb"><a href="./"><span class="brandmark" aria-hidden="true"></span><span>Altaha Screener</span></a> · <span id="crumb">Loading</span></div>
     <div class="stk-id">
-      <div style="min-width:0">
+      <span class="lg lg-xl" id="logo" aria-hidden="true"></span>
+      <div class="stk-idt">
         <h1 class="stk-name" id="nm"><span class="skel skel-row" style="display:block;width:280px;height:34px"></span></h1>
         <div class="stk-tags" id="tags"></div>
       </div>
@@ -60,107 +63,148 @@
         <div class="chg tnum" id="chg"></div>
       </div>
     </div>
-    <!-- The answer people came for, at the top. The full score, its pillars
-         and the ledger stay in the Scores pane; this opens it. Filled by
-         stock.js (paintScoreChip) and hidden until there is a score. -->
+    <!-- The answer people came for, at the top: the score, its word and where
+         it ranks. Opens the Score section. Filled by stock.js and hidden
+         until there is a score. -->
     <button type="button" class="stk-scorechip" id="stk-scorechip" hidden>
-      <span class="stk-scorechip-n tnum" id="stk-scorechip-n">—</span>
+      <span class="stk-scorechip-ring" aria-hidden="true">
+        <svg viewBox="0 0 44 44"><circle class="t" cx="22" cy="22" r="19"/><circle class="a" id="stk-scorechip-arc" cx="22" cy="22" r="19"/></svg>
+        <span class="stk-scorechip-n tnum" id="stk-scorechip-n">—</span>
+      </span>
       <span class="stk-scorechip-t">
         <b>Altaha Score <span id="stk-scorechip-lb"></span></b>
-        <small>out of 100 · see what helped and what hurt ›</small>
+        <small id="stk-scorechip-sub">out of 100</small>
       </span>
+      <span class="stk-scorechip-go" aria-hidden="true">›</span>
     </button>
-  </div>
-
-  <!-- Lenses: "Meets 3 of 10 lenses", a badge per lens. Filled by lenses.js;
-       stays hidden if the lens results cannot be read. -->
-  <div id="stk-lenses" hidden></div>
+  </header>
 
   <div id="state"></div>
 
   <div id="body" hidden>
 
-    <!-- ══ Above the fold ══════════════════════════════════════════════════
-         The nine figures a reader checks before they read anything else, and
-         one paragraph on what the company actually does. Both are answers to
-         "what am I looking at", which has to come before "is it any good" —
-         the score means nothing to someone who cannot answer the first. -->
-    <section class="stk-key" aria-label="Key figures">
-      <div class="kgrid" id="kgrid"></div>
-    </section>
-
-    <section class="stk-brief" id="brief">
-      <h2>About</h2>
-      <div class="brief-body" id="brief-body"></div>
-      <button type="button" class="brief-more" id="brief-more" hidden>Read more</button>
-      <div class="brief-meta" id="brief-meta"></div>
-    </section>
-
-    <!-- ══ Everything else, one pane at a time ═════════════════════════════
-         This page used to be six sections stacked end to end and a rail of
-         anchor links to scroll between them, which on a phone is a very long
-         page with a menu that scrolls it. Three panes: what was measured,
-         what the price did, and what the engine made of it. -->
-    <div class="stk-panebar">
-    <nav class="stk-panes" id="panes" role="tablist" aria-label="Sections">
-      <button type="button" class="stk-pane-btn active" role="tab" data-p="info"
-              id="pane-btn-info" aria-selected="true" aria-controls="pane-info">Info</button>
-      <button type="button" class="stk-pane-btn" role="tab" data-p="chart"
-              id="pane-btn-chart" aria-selected="false" aria-controls="pane-chart">Chart</button>
-      <button type="button" class="stk-pane-btn" role="tab" data-p="scores"
-              id="pane-btn-scores" aria-selected="false" aria-controls="pane-scores">Scores</button>
-      <button type="button" class="stk-pane-btn" role="tab" data-p="owners"
-              id="pane-btn-owners" aria-selected="false" aria-controls="pane-owners">Ownership</button>
-      <button type="button" class="stk-pane-btn" role="tab" data-p="funda"
-              id="pane-btn-funda" aria-selected="false" aria-controls="pane-funda">Fundamentals</button>
-      <button type="button" class="stk-pane-btn" role="tab" data-p="deliv"
-              id="pane-btn-deliv" aria-selected="false" aria-controls="pane-deliv">Delivery</button>
-    </nav>
+    <!-- ══ One bar, eight sections ═════════════════════════════════════════
+         Directly under the name, so the page reads as a set of sections from
+         its first screen and not as a long column with a menu halfway down.
+         Scrolled past the name, the bar carries the company and its price. -->
+    <div class="stk-panebar" id="stk-panebar">
+      <div class="stk-mini" id="stk-mini" aria-hidden="true">
+        <span class="lg lg-sm" id="mini-logo"></span>
+        <b id="mini-sym"></b><span class="tnum" id="mini-px"></span><span class="tnum" id="mini-chg"></span>
+      </div>
+      <nav class="stk-panes" id="panes" role="tablist" aria-label="Sections">
+        <span class="stk-panes-ind" id="panes-ind" aria-hidden="true"></span>
+        <button type="button" class="stk-pane-btn active" role="tab" data-p="info"
+                id="pane-btn-info" aria-selected="true" aria-controls="pane-info">Overview</button>
+        <button type="button" class="stk-pane-btn" role="tab" data-p="chart"
+                id="pane-btn-chart" aria-selected="false" aria-controls="pane-chart">Chart</button>
+        <button type="button" class="stk-pane-btn" role="tab" data-p="scores"
+                id="pane-btn-scores" aria-selected="false" aria-controls="pane-scores">Score</button>
+        <button type="button" class="stk-pane-btn" role="tab" data-p="owners"
+                id="pane-btn-owners" aria-selected="false" aria-controls="pane-owners">Ownership</button>
+        <button type="button" class="stk-pane-btn" role="tab" data-p="funda"
+                id="pane-btn-funda" aria-selected="false" aria-controls="pane-funda">Financials</button>
+        <button type="button" class="stk-pane-btn" role="tab" data-p="peers"
+                id="pane-btn-peers" aria-selected="false" aria-controls="pane-peers">Peers</button>
+        <button type="button" class="stk-pane-btn" role="tab" data-p="deliv"
+                id="pane-btn-deliv" aria-selected="false" aria-controls="pane-deliv">Delivery</button>
+        <button type="button" class="stk-pane-btn" role="tab" data-p="news"
+                id="pane-btn-news" aria-selected="false" aria-controls="pane-news">News &amp; filings<span class="stk-pane-n" id="news-count" hidden></span></button>
+      </nav>
     </div>
 
+    <!-- ══ Overview ════════════════════════════════════════════════════════
+         What it is worth, how it has moved, how it scores and what is being
+         said about it, on one screen. Every card opens the section behind it. -->
     <div class="stk-pane" id="pane-info" role="tabpanel" aria-labelledby="pane-btn-info">
+      <div class="ov">
+        <div class="ov-main">
+          <section class="card stk-key" aria-labelledby="key-h">
+            <header class="card-h"><h2 id="key-h">Key figures</h2><span class="card-x" id="key-vs"></span></header>
+            <div class="kgrid" id="kgrid"></div>
+            <div class="krange" id="krange"></div>
+          </section>
+
+          <section class="card ov-price" id="ov-price" aria-labelledby="ovp-h">
+            <header class="card-h"><h2 id="ovp-h">Price, one year</h2>
+              <button type="button" class="card-go" data-go="chart">Full chart ›</button></header>
+            <div class="ov-spark" id="ov-spark"><div class="skel" style="height:120px"></div></div>
+            <div class="ov-rets" id="ov-rets"></div>
+          </section>
+
+          <section class="card stk-brief" id="brief" aria-labelledby="brief-h">
+            <header class="card-h"><h2 id="brief-h">About</h2></header>
+            <div class="brief-body" id="brief-body"></div>
+            <button type="button" class="brief-more" id="brief-more" hidden>Read more</button>
+            <div class="brief-meta" id="brief-meta"></div>
+          </section>
+        </div>
+
+        <aside class="ov-rail">
+          <section class="card ov-score" id="ov-score" aria-labelledby="ovs-h" hidden>
+            <header class="card-h"><h2 id="ovs-h">Altaha Score</h2>
+              <button type="button" class="card-go" data-go="scores">How it adds up ›</button></header>
+            <div id="ov-score-body"></div>
+          </section>
+
+          <!-- Lenses: "Meets 3 of 10", the ones it meets named, the rest one
+               tap away. Filled by lenses.js; hidden if the lens results cannot
+               be read or have not reached this company. -->
+          <div id="stk-lenses" hidden></div>
+
+          <section class="card ov-latest" id="ov-latest" aria-labelledby="ovl-h" hidden>
+            <header class="card-h"><h2 id="ovl-h">Latest</h2>
+              <button type="button" class="card-go" data-go="news">All news &amp; filings ›</button></header>
+            <div id="ov-latest-body"></div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ══ Chart ═══════════════════════════════════════════════════════════ -->
+    <div class="stk-pane" id="pane-chart" role="tabpanel" aria-labelledby="pane-btn-chart" hidden>
       <section class="stk-sec">
-        <h2>The numbers</h2>
-        <p class="sub">What the engine measured.</p>
-        <div class="nums d3-stage" id="nums"></div>
+        <header class="sec-h"><h2>Price</h2><div class="ranges" id="ranges"></div></header>
+        <div class="d3-card chartbox" id="chartbox"></div>
+      </section>
+
+      <section class="stk-sec">
+        <header class="sec-h"><h2>Technical snapshot</h2></header>
+        <div class="nums" id="nums"></div>
       </section>
 
       <section class="stk-sec" id="s-levels">
-        <h2>Levels</h2>
-        <p class="sub">Support and resistance from the price history. Observations, not instructions.</p>
+        <header class="sec-h"><h2>Support and resistance</h2><span class="sec-x">From the last year of prices</span></header>
         <div class="lvls" id="levels"></div>
       </section>
+
+      <!-- Into the Strategy lab with this stock filled in (strategy-lab.js). -->
+      <a class="stk-lab-link" id="stk-lab-link" href="./?go=strategies">
+        <b>Would a trading rule have beaten holding it?</b>
+        <span>Eleven rules on this stock’s own history, with costs and tax ›</span>
+      </a>
+      <script>
+        (function () {
+          try {
+            var t = window.AltahaPageTicker ? window.AltahaPageTicker()
+              : (new URLSearchParams(location.search).get('ticker') || '').trim();
+            if (t) document.getElementById('stk-lab-link').href =
+              './?go=strategies&lab=' + encodeURIComponent(t);
+          } catch (e) {}
+        })();
+      </script>
     </div>
 
-    <div class="stk-pane" id="pane-chart" role="tabpanel" aria-labelledby="pane-btn-chart" hidden>
-      <section class="stk-sec">
-        <h2>The price journey</h2>
-        <p class="sub">Touch a point for its price. Drag to compare two.</p>
-        <div class="ranges" id="ranges"></div>
-        <div class="d3-card chartbox" id="chartbox"></div>
-        <!-- Into the Strategy lab with this stock filled in (strategy-lab.js). -->
-        <a class="stk-lab-link" id="stk-lab-link" href="./?go=strategies">
-          <b>Would a trading rule have beaten holding it?</b>
-          <span>Eleven textbook rules on this stock’s own history, with costs and tax, in the Strategy lab ›</span>
-        </a>
-        <script>
-          (function () {
-            try {
-              var t = window.AltahaPageTicker ? window.AltahaPageTicker()
-                : (new URLSearchParams(location.search).get('ticker') || '').trim();
-              if (t) document.getElementById('stk-lab-link').href =
-                './?go=strategies&lab=' + encodeURIComponent(t);
-            } catch (e) {}
-          })();
-        </script>
-      </section>
-    </div>
-
+    <!-- ══ Score ═══════════════════════════════════════════════════════════
+         One number, and the arithmetic that made it: each pillar's rank among
+         peers, its weight, the points it added, and how much the total was
+         pulled toward 50 for what could not be measured. The older technical
+         and fundamental checks sit at the bottom, named as what they are. -->
     <div class="stk-pane" id="pane-scores" role="tabpanel" aria-labelledby="pane-btn-scores" hidden>
       <section class="stk-sec">
-        <h2>The score</h2>
-        <p class="sub" id="score-sub">Weighted for the business and the holding period.</p>
-        <div class="stk-scorewrap">
+        <header class="sec-h"><h2>Altaha Score</h2>
+          <div class="hz" id="hz" role="group" aria-label="Holding period"></div></header>
+        <div class="sc-hero card">
           <div class="dial" id="dial">
             <svg viewBox="0 0 200 200" aria-hidden="true">
               <defs>
@@ -178,62 +222,115 @@
               <div class="lb" id="scorelb"></div>
             </div>
           </div>
-          <div>
-            <div class="pillars" id="pillars"></div>
-            <div class="stk-basis" id="basis"></div>
+          <div class="sc-say">
+            <p class="sc-line" id="score-line"></p>
+            <div class="sc-rank" id="score-rank"></div>
+            <p class="sc-sub" id="score-sub"></p>
+            <p class="stk-basis" id="basis" hidden></p>
           </div>
         </div>
       </section>
 
+      <section class="stk-sec" id="s-adds">
+        <header class="sec-h"><h2>How it adds up</h2><span class="sec-x" id="adds-x"></span></header>
+        <div class="pillars" id="pillars"></div>
+      </section>
+
+      <section class="stk-sec" id="s-drivers" hidden>
+        <header class="sec-h"><h2>What helped, what hurt</h2></header>
+        <div class="drv" id="drivers"></div>
+      </section>
+
+      <section class="stk-sec" id="s-factors" hidden>
+        <header class="sec-h"><h2>Every factor</h2><span class="sec-x" id="factors-x"></span></header>
+        <div class="fl" id="factors"></div>
+      </section>
+
       <section class="stk-sec">
-        <h2>The ledger</h2>
-        <p class="sub">Every check and its formula. Open any row.</p>
-        <div class="ledger" id="ledger"></div>
+        <details class="diag" id="diag">
+          <summary><span>Other checks</span><small id="diag-x">Not part of the score</small></summary>
+          <div class="ledger" id="ledger"></div>
+        </details>
       </section>
     </div>
 
-    <!-- Ownership. Read from the company's own Reg 31 filing rather than a
-         provider's summary, which is why every figure here can name the
-         document it came from. Loaded when the pane is first opened: it is
-         several filings' worth of fetching and nobody who came for the chart
-         should pay for it. -->
+    <!-- ══ Ownership ═══════════════════════════════════════════════════════
+         Read from the company's own Reg 31 filing rather than a provider's
+         summary, which is why every figure here can name the document it came
+         from. Loaded when the pane is first opened. -->
     <div class="stk-pane" id="pane-owners" role="tabpanel" aria-labelledby="pane-btn-owners" hidden>
       <section class="stk-sec">
-        <h2>Who owns this company</h2>
-        <p class="sub">From the company's own quarterly filing. Every figure links to it.</p>
+        <header class="sec-h"><h2>Ownership</h2><span class="sec-x">From the company’s quarterly filings</span></header>
         <div id="own-body"></div>
       </section>
     </div>
 
-    <!-- Fundamentals. The quarterly P&L as filed, on ONE accounting basis —
-         standalone and consolidated differ by more than a factor of two for a
-         group, and alternating between them would report that difference as
-         growth. -->
+    <!-- ══ Financials ══════════════════════════════════════════════════════
+         The quarterly P&L as filed, on ONE accounting basis — standalone and
+         consolidated differ by more than a factor of two for a group, and
+         alternating between them would report that difference as growth. -->
     <div class="stk-pane" id="pane-funda" role="tabpanel" aria-labelledby="pane-btn-funda" hidden>
       <section class="stk-sec">
-        <h2>Fundamentals</h2>
-        <p class="sub">Quarterly results as filed, with the change from a year earlier.</p>
+        <header class="sec-h"><h2>Financials</h2><span class="sec-x">Quarterly results as filed</span></header>
+        <div id="funda-trend"></div>
         <div id="funda-body"></div>
-        <!-- Against its NSE industry, then the balance sheet and cash flow.
-             Both are read from the stored filings, so opening the pane costs
-             no extra trip to the exchange. -->
-        <div id="funda-peers"></div>
+        <!-- The balance sheet and cash flow, read from the stored filings. -->
         <div id="funda-position"></div>
       </section>
     </div>
 
-    <!-- Delivery. NSE publishes, per stock per session, what share of the
-         traded volume was actually settled into somebody's demat account
-         rather than bought and sold again before the close. No OHLCV feed
-         carries it. Read from the same panel the Altaha Special book is
-         ranked on, so the two can never quote different figures for the same
-         day. Loaded when the pane is first opened. -->
+    <!-- ══ Peers ═══════════════════════════════════════════════════════════
+         The company beside the named companies of its industry, then beside
+         the industry's medians. Loaded when the pane is first opened. -->
+    <div class="stk-pane" id="pane-peers" role="tabpanel" aria-labelledby="pane-btn-peers" hidden>
+      <section class="stk-sec">
+        <header class="sec-h"><h2>Peers</h2><span class="sec-x" id="peers-x"></span></header>
+        <div id="peers-body"></div>
+      </section>
+      <section class="stk-sec" id="s-medians">
+        <div id="funda-peers"></div>
+      </section>
+    </div>
+
+    <!-- ══ Delivery ════════════════════════════════════════════════════════
+         NSE publishes, per stock per session, what share of the traded volume
+         was settled into somebody's demat account rather than bought and sold
+         again before the close. Read from the same panel the Altaha Special
+         book is ranked on. Loaded when the pane is first opened. -->
     <div class="stk-pane" id="pane-deliv" role="tabpanel" aria-labelledby="pane-btn-deliv" hidden>
       <section class="stk-sec">
-        <h2>Delivery</h2>
-        <p class="sub">The share of each day's volume that was bought to keep, not traded out the same day. High means real buying.</p>
-        <div class="ranges dv-ranges" id="dv-ranges"></div>
+        <header class="sec-h"><h2>Delivery</h2>
+          <div class="ranges dv-ranges" id="dv-ranges"></div></header>
+        <p class="sub">The share of each day’s volume bought to keep, not traded out the same day.</p>
         <div id="dv-body"></div>
+      </section>
+    </div>
+
+    <!-- ══ News and filings ════════════════════════════════════════════════
+         Three lists that are never merged: what the press has reported about
+         the company, what it has reported about the things that move the
+         company's industry, and what the company itself has filed. -->
+    <div class="stk-pane" id="pane-news" role="tabpanel" aria-labelledby="pane-btn-news" hidden>
+      <div class="nw">
+        <section class="stk-sec nw-col">
+          <header class="sec-h"><h2>Company news</h2><span class="sec-x">Press</span></header>
+          <div id="news-company"></div>
+        </section>
+        <section class="stk-sec nw-col">
+          <header class="sec-h"><h2 id="news-ind-h">Industry news</h2><span class="sec-x">Press</span></header>
+          <div id="news-industry"></div>
+        </section>
+      </div>
+      <section class="stk-sec">
+        <header class="sec-h"><h2>Filings</h2><span class="sec-x" id="filings-x">Exchange</span></header>
+        <div class="fil-cats" id="filings-cats" role="group" aria-label="Filter filings"></div>
+        <div id="filings-body"></div>
+      </section>
+      <!-- Bulk and block deals the exchange has disclosed for this company.
+           Read when this section is first opened. -->
+      <section class="stk-sec" id="s-deals">
+        <header class="sec-h"><h2>Big trades</h2><span class="sec-x">Bulk and block deals, 90 days</span></header>
+        <div id="deals-body"></div>
       </section>
     </div>
 
@@ -276,8 +373,8 @@
 <script src="ownership-snapshot.js" defer></script>
 <script src="ownership.js" defer></script>
 <script src="delivery-ui.js?v=20260923" defer></script>
-<script src="stock.js?v=20261118-pages" defer></script>
-<script src="lenses.js?v=20261118-pages" defer></script>
+<script src="stock.js?v=20261119-systematic" defer></script>
+<script src="lenses.js?v=20261119-systematic" defer></script>
 <script src="experience.js?v=20261118-pages" defer></script>
 </body>
 </html>
