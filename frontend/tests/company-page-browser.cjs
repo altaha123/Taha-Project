@@ -10,8 +10,8 @@
        first reads it. The name, the price, the filed figures and the links to
        its neighbours must all be showing, and nothing may be a skeleton.
      · THE SAME PAGE STILL WORKS WITH SCRIPTS ON. /stock-ACME has no ?ticker=,
-       and four scripts used to read the company from there. Each must find it
-       in the address, or the page is a shell around a loading message.
+       and the page's scripts used to read the company from there. Each must
+       find it in the address, or the page is a shell around a loading message.
      · THE TITLE AND CANONICAL THE SERVER SENT ARE THE ONES THAT STAY.
        stock.js used to write its own title once the data arrived.
      · THE STATIC PAGE IS UNCHANGED. stock.html?ticker=ACME must work exactly
@@ -122,7 +122,6 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       await t.page.locator('#kgrid .ktile').first().waitFor();
       assert.ok(t.asked.some(u => u === '/analyze?ticker=ACME'),
                 'stock.js did not find the company in the address: ' + t.asked.join(' '));
-      assert.ok(t.asked.some(u => /^\/api\/lenses\/stock\/ACME/.test(u)), 'lenses.js did not find the company');
       assert.equal(await t.page.title(),
         'Acme Chemicals Ltd (ACME) share price, score and fundamentals | Altaha Screener',
         'stock.js replaced the title the server sent');

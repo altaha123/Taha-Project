@@ -80,6 +80,8 @@ NSE_HOME = "https://www.nseindia.com/"
 
 TIMEOUT = 30
 INDEX_TTL = 6 * 3600          # filings land quarterly; six hours is generous.
+STALE_RETRY = 5 * 60          # a refused list is asked for again after this.
+EMPTY_RETRY = 60              # and an empty one after this.
 MAX_PARSE = 12                # quarters parsed for one page. Three years.
 MAX_INDEXED = 400             # symbols held in the in-process index cache
 
@@ -137,22 +139,40 @@ def _warm_session(force=False):
     _sess["warm"] = time.time()
 
 
+# NSE throttles bursts: a call can be refused and the identical call a few
+# seconds later answered in full. This reader used to re-warm its cookies and
+# try once more straight away, with no pause, so a refusal that would have
+# cleared in two seconds became "no shareholding filing could be read" and an
+# empty Ownership section. The stock page reads filings, results and ownership
+# for one company within the same minute, which is exactly a burst. Bounded,
+# as nse_http is: a retry loop against a rate limiter earns a longer ban.
+RETRIES = int(os.environ.get("NSE_RETRIES", "2") or 2)
+BACKOFF = float(os.environ.get("NSE_BACKOFF", "1.5") or 1.5)
+
+
 def _get(url, params=None, referer=NSE_REFERER):
-    """One authenticated NSE call, with the cookie re-warm it periodically needs."""
+    """One authenticated NSE call, with the cookie re-warm it periodically
+    needs and a short wait before each retry. The response, or None."""
     s = session()
     if s is None:
         return None
     _warm_session()
-    try:
-        r = s.get(url, timeout=TIMEOUT, params=params, headers={"Referer": referer})
-        if r.status_code in (401, 403):
-            _warm_session(force=True)
+    for attempt in range(RETRIES + 1):
+        try:
             r = s.get(url, timeout=TIMEOUT, params=params, headers={"Referer": referer})
-        if r.status_code != 200:
+            if r.status_code == 200:
+                return r
+            if r.status_code in (401, 403, 429) and attempt < RETRIES:
+                time.sleep(BACKOFF * (attempt + 1))
+                _warm_session(force=True)
+                continue
             return None
-        return r
-    except Exception:
-        return None
+        except Exception:
+            if attempt < RETRIES:
+                time.sleep(BACKOFF * (attempt + 1))
+                continue
+            return None
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -196,6 +216,48 @@ def _cache_write(url: str, payload: dict):
 
 def _clean_symbol(symbol: str) -> str:
     return (symbol or "").strip().upper().replace(".NS", "").replace(".BO", "")
+
+
+# The list of a company's filings, kept on disk beside the parsed filings.
+#
+# Each parsed filing has always been cached to disk, but the list that says
+# which filings exist lived only in memory. So after a restart, or for any
+# company whose list had aged out, one refused call to the exchange emptied
+# the whole Ownership section while a year of that company's parsed filings
+# sat on the disk unread. With the list kept too, a company that has been read
+# once is never blank again: a refusal serves the last list, and the parsed
+# filings behind it need no network at all.
+def _index_path(sym: str):
+    if not CACHE_DIR or not re.fullmatch(r"[A-Z0-9&_.\-]{1,20}", sym or ""):
+        return None
+    return os.path.join(CACHE_DIR, "index-" + hashlib.sha1(sym.encode("utf-8")).hexdigest()[:16] + ".json")
+
+
+def _index_read(sym: str):
+    p = _index_path(sym)
+    if not p or not os.path.exists(p):
+        return None
+    try:
+        with open(p, "r", encoding="utf-8") as fh:
+            body = json.load(fh)
+        rows = body.get("rows") if isinstance(body, dict) else None
+        return rows if isinstance(rows, list) and rows else None
+    except Exception:
+        return None
+
+
+def _index_write(sym: str, rows):
+    p = _index_path(sym)
+    if not p or not rows:
+        return
+    try:
+        tmp = p + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump({"symbol": sym, "saved": dt.datetime.now(dt.timezone.utc).isoformat(),
+                       "rows": rows}, fh, separators=(",", ":"))
+        os.replace(tmp, p)
+    except Exception:
+        pass
 
 
 def _safe_doc_url(value):
@@ -265,15 +327,24 @@ def index(symbol: str, force=False):
     if hit and not force and time.time() - hit[0] < INDEX_TTL:
         return hit[1]
 
+    def last_known():
+        # What was read before, from memory and then from disk. Remembered
+        # for a few minutes so a refusing exchange is not asked on every view.
+        rows = (hit[1] if hit else None) or _index_read(sym) or []
+        if rows:
+            with _lock:
+                _index_cache[sym] = (time.time() - INDEX_TTL + STALE_RETRY, rows)
+        return rows
+
     r = _get(NSE_MASTER, params={"index": "equities", "symbol": sym})
     if r is None:
-        return hit[1] if hit else []
+        return last_known()
     try:
         body = r.json()
     except Exception:
-        return hit[1] if hit else []
+        return last_known()
     if not isinstance(body, list):
-        return hit[1] if hit else []
+        return last_known()
 
     rows = []
     for raw in body:
@@ -309,6 +380,18 @@ def index(symbol: str, force=False):
             continue
         seen.add(row["period"])
         uniq.append(row)
+    if not uniq:
+        # An empty list is what the exchange sends for a symbol it does not
+        # know, and also what it sometimes sends in place of a refusal. It
+        # used to be remembered like any other answer, so one bad reply left a
+        # company's Ownership section empty for six hours, through every
+        # reload. Now it never replaces a list that was read before, and when
+        # there is none it is believed for a minute, not for six hours.
+        known = last_known()
+        if not known:
+            with _lock:
+                _index_cache[sym] = (time.time() - INDEX_TTL + EMPTY_RETRY, [])
+        return known
     with _lock:
         # Bounded, because this process has 512MB and the universe has a few
         # thousand symbols in it. Oldest entry out; the disk cache underneath
@@ -317,6 +400,7 @@ def index(symbol: str, force=False):
             oldest = min(_index_cache, key=lambda k: _index_cache[k][0])
             _index_cache.pop(oldest, None)
         _index_cache[sym] = (time.time(), uniq)
+    _index_write(sym, uniq)
     return uniq
 
 
@@ -616,7 +700,7 @@ def _pledge(by_member, by_ctx, cats):
 # ---------------------------------------------------------------------------
 
 def filing(url: str, period: str = "", filed: str = "", revised: bool = False,
-           need=()):
+           need=(), offline: bool = False):
     """
     The parsed content of one filing.
 
@@ -631,6 +715,9 @@ def filing(url: str, period: str = "", filed: str = "", revised: bool = False,
     """
     hit = _cache_read(url)
     if hit is not None and all(k in hit for k in need or ()):
+        return hit
+    if offline:
+        # The caller has just been refused; what is on disk is all it wants.
         return hit
     r = _get(url, referer=NSE_HOME)
     if r is None:
@@ -674,6 +761,79 @@ def _delta(now, then):
     return round(now - then, 4)
 
 
+def from_store(symbol: str):
+    """
+    The ownership split from the quarters the lens crawl has stored, in the
+    shape summary() returns, or None when it holds none for this company.
+
+    Read from the same Reg 31 filings on an earlier day. It has the four
+    lines and their history and nothing else: no holder counts, no named
+    holders. `reduced` says so, and the page draws what is there.
+    """
+    sym = _clean_symbol(symbol)
+    try:
+        import lens_store
+        rows = lens_store.shareholding_of(sym)
+    except Exception:
+        rows = []
+    rows = [r for r in rows or [] if r.get("promoter_pct") is not None
+            and is_quarter_end(str(r.get("period_end") or ""))]
+    if not rows:
+        return None
+
+    def lines(r):
+        promoter, fii, dii = r.get("promoter_pct"), r.get("fii_pct"), r.get("dii_pct")
+        out = {"promoter": promoter, "fii": fii, "dii": dii}
+        # What is left of 100 once the three named lines are taken out. Only
+        # where all three were filed; a guess at a fourth line is not a figure.
+        if None not in (promoter, fii, dii):
+            rest = round(100 - promoter - fii - dii, 2)
+            if rest >= -0.15:
+                out["public_non_institutional"] = max(0.0, rest)
+        return out
+
+    def at(gap_lo, gap_hi):
+        try:
+            d0 = dt.date.fromisoformat(rows[0]["period_end"])
+        except Exception:
+            return None
+        for r in rows[1:]:
+            try:
+                gap = (d0 - dt.date.fromisoformat(r["period_end"])).days
+            except Exception:
+                continue
+            if gap_lo <= gap <= gap_hi:
+                return lines(r)
+        return None
+
+    now, prev, year = lines(rows[0]), at(60, 135) or {}, at(300, 430) or {}
+    split = [{"key": k, "label": LABELS[k], "pct": now[k], "holders": None, "shares": None,
+              "derived": k == "public_non_institutional" or (k == "dii" and bool(rows[0].get("dii_derived"))),
+              "reported_absent": False,
+              "change_qoq": _delta(now.get(k), prev.get(k)),
+              "change_yoy": _delta(now.get(k), year.get(k)),
+              "holders_change_qoq": None}
+             for k in ("promoter", "fii", "dii", "public_non_institutional") if now.get(k) is not None]
+    history = []
+    for r in reversed(rows[:MAX_PARSE]):
+        row = {"period": r["period_end"], "filed": None, "revised": False,
+               "source": _safe_doc_url(r.get("source_url") or ""), "quarter_end": True, "holders": None}
+        row.update({k: v for k, v in lines(r).items() if v is not None})
+        history.append(row)
+    return {
+        "symbol": sym, "available": True, "reduced": True,
+        "source": "NSE — shareholding pattern filed under LODR Regulation 31, as stored",
+        "period": rows[0]["period_end"], "filed": None,
+        "latest_source": _safe_doc_url(rows[0].get("source_url") or ""),
+        "quarters_read": len(history), "interim_filings": 0,
+        "split": split, "history": history,
+        "totals": {"holders": None, "public_total_pct": rows[0].get("public_pct"),
+                   "split_sums_to": round(sum(x["pct"] for x in split), 2)},
+        "names": {"promoters": [], "public": []},
+        "notes": [],
+    }
+
+
 def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
     """
     Who owns this company, how that changed, and where every figure came from.
@@ -702,20 +862,30 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
         return out
 
     rows = index(sym)
-    if not rows:
-        out["message"] = ("No shareholding filing could be read for " + sym +
-                          " right now.")
-        return out
-
     want = max(2, min(int(quarters or 8), MAX_PARSE))
-    parsed = []
+    parsed, refused = [], False
     for row in rows[:want]:
+        # Once the exchange has refused one document, the rest are read from
+        # the disk only. Asking for each in turn, with its retries, is most of
+        # a minute of one request thread for an answer already known.
         one = filing(row["xbrl"], period=row["period"], filed=row["filed"],
-                     revised=row["revised"])
+                     revised=row["revised"], **({"offline": True} if refused else {}))
         if one and one.get("categories"):
             parsed.append(one)
+        elif one is None:
+            refused = True
     if not parsed:
-        out["message"] = "The filings for " + sym + " could not be read."
+        # Nothing could be read from the exchange and nothing is cached. The
+        # lens crawl keeps each company's quarterly split from the same
+        # filings; that is less than this section usually shows, and a great
+        # deal more than an empty box.
+        held = from_store(sym)
+        if held is not None:
+            return held
+        out["message"] = ("No shareholding filing could be read for " + sym +
+                          " right now.") if not rows else \
+                         ("The filings for " + sym + " could not be read.")
+        out["retry"] = True
         return out
 
     latest = parsed[0]

@@ -1,17 +1,21 @@
-/* The Fundamentals pane in a real Chromium, against a fixture produced by the
+/* The Financials section in a real Chromium, against a fixture produced by the
    real backend module (see backend/tests/make_fundamentals_fixture.py). No
    live calls.
 
    What this is actually guarding:
+     · IT OPENS ON PICTURES, NOT PROSE. A row of figures, a chart, a split of
+       ₹100, and the statement behind a toggle. No sentence, no paragraph
+       about accounting bases, no caption over a table.
+     · A BAR STARTS AT ZERO, and a quarter that lost money hangs below the
+       line. A chart that cropped its axis would turn a 5% rise into a cliff.
      · ONE ACCOUNTING BASIS. Reliance files consolidated and standalone results
-       for the same quarter and they differ by more than a factor of two. A
-       page that mixes them shows that difference as growth, and looks entirely
-       normal while doing it. The basis must be named on screen and the numbers
-       must match it.
+       for the same quarter and they differ by more than a factor of two. The
+       basis is named on screen and the numbers match it.
      · NO PERCENTAGE ACROSS ZERO. A quarter that turned a loss into a profit
-       must read as words, never as a percentage — a percentage there reports a
-       recovery as a collapse.
-     · the table must stay readable on a phone: the line item and the change
+       reads as words, on the card and in the table, never as a percentage.
+     · THE COLOUR OF A CHANGE MEANS SOMETHING. Borrowings going up are not
+       green; a cost going up is not green either.
+     · the statement stays readable on a phone: the line item and the change
        must be reachable without losing the row.
      · phone through desktop, both themes, no horizontal page scroll. */
 const fs = require('node:fs'), path = require('node:path'),
@@ -92,52 +96,101 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   assert.equal(calls, 0, 'fundamentals must not load before its pane is opened');
   assert.equal(extras, 0, 'nor the balance sheet or the industry comparison');
 
+  let asked = '';
+  page.on('request', r => { if (new URL(r.url()).pathname === '/fundamentals') asked = r.url(); });
   await page.locator('#pane-btn-funda').click();
-  await page.locator('.fu-table').first().waitFor();
+  await page.locator('#funda-body .kp').first().waitFor();
   assert.equal(calls, 1);
+  // Two years, so four quarters can be set against the same quarter a year earlier.
+  assert.match(asked, /quarters=8/);
   await page.locator('#pane-btn-funda').click();
   assert.equal(calls, 1, 'reopening the pane must not refetch');
 
-  // ── THE BASIS GUARD ──────────────────────────────────────────────────────
-  // The basis is stated, the other one is acknowledged, and the figures on
-  // screen are the ones from that basis. The fixture's standalone revenue is
-  // 45% of consolidated, so a mixed series is arithmetically detectable here.
-  const asof = await page.locator('#pane-funda .own-asof').innerText();
-  assert.match(asof, /consolidated/i);
-  assert.match(asof, /also files standalone/i);
-  assert.match(asof, /6 quarters read/);
+  // ── PICTURES, NOT PROSE ──────────────────────────────────────────────────
+  assert.equal(await page.locator('#pane-funda .own-lead, #pane-funda .own-asof, #pane-funda .fu-cap').count(), 0,
+    'a sentence or a caption is back above the financials');
+  assert.equal(await page.locator('#pane-funda .own-notes').count(), 0, 'method notes are back under the financials');
+  // The basis, the unit and the filing are three chips.
+  const meta = await page.locator('#fn-meta').innerText();
+  assert.match(meta, /consolidated/i);
+  assert.match(meta, /₹ crore/i);
+  assert.match(await page.locator('#fn-meta a').getAttribute('href'), /nseindia/);
+  // The statement is there and folded.
+  assert.equal(await page.locator('#funda-body .fn-more').getAttribute('open'), null);
 
+  // The figures: each with its latest value and its change on the year.
+  const cards = page.locator('#funda-body .kp');
+  assert.deepEqual((await cards.locator('.kp-l').allInnerTexts()).map(t => t.toLowerCase()),
+    ['revenue', 'ebitda', 'net profit', 'eps', 'operating margin', 'net margin']);
+  const rev = cards.nth(0);
+  assert.match(await rev.locator('.kp-v').innerText(), /₹2\.69L cr/);
+  assert.match(await rev.locator('.kp-c').innerText(), /10\.5%\s*YoY/i);
+  assert.ok(await rev.locator('.mv').evaluate(el => el.classList.contains('up')));
+  assert.equal(await rev.getAttribute('aria-pressed'), 'true');
+  // The quarter that turned a loss into a profit says so in words.
+  const patChip = await cards.nth(2).locator('.kp-c').innerText();
+  assert.match(patChip, /to profit/i);
+  assert.ok(!/%/.test(patChip), 'a loss turning into a profit is not a percentage');
+
+  // The chart: one bar a quarter, every one standing on zero.
+  const chart = page.locator('#funda-body .fc');
+  assert.equal(await chart.locator('h3').innerText(), 'Revenue');
+  assert.equal(await chart.locator('.fc-c[data-i]').count(), 6);
+  const want = fundamentals.rows.slice().reverse().map(r => r.values.revenue);
+  const got = await chart.locator('.fc-c[data-i]').evaluateAll(cols =>
+    cols.map(c => parseFloat(c.style.getPropertyValue('--h'))));
+  got.forEach((h, i) => assert.ok(Math.abs(h / got[5] - want[i] / want[5]) < 0.01,
+    `bar ${i} is ${(h / got[5]).toFixed(3)} of the latest; its revenue is ${(want[i] / want[5]).toFixed(3)}`));
+  // The latest quarter is read out above it, and the one under the pointer replaces it.
+  assert.match(await chart.locator('.fc-read').innerText(), /Q1 FY27[\s\S]*2\.69L cr[\s\S]*10\.5%/);
+  await chart.locator('.fc-c[data-i="0"]').hover();
+  assert.match(await chart.locator('.fc-read').innerText(), /Q4 FY25/);
+  // A bar is a button: the keyboard reads a quarter out as well.
+  await chart.locator('.fc-c[data-i="3"]').focus();
+  assert.match(await chart.locator('.fc-read').innerText(), /Q3 FY26/);
+
+  // Another figure, and the chart is about that one. The loss hangs below the line.
+  await cards.nth(2).click();
+  assert.equal(await page.locator('#funda-body .fc h3').innerText(), 'Net profit');
+  assert.equal(await cards.nth(2).getAttribute('aria-pressed'), 'true');
+  assert.equal(await cards.nth(0).getAttribute('aria-pressed'), 'false');
+  assert.equal(await page.locator('#funda-body .fc .fc-c.neg').count(), 1,
+    'the loss-making quarter is not drawn as a loss');
+  assert.equal(calls, 1, 'choosing a figure asked the API again');
+
+  // Where each ₹100 went: the parts come back to the whole.
+  const parts = (await page.locator('#funda-body .sp .sp-k b').allInnerTexts()).map(num);
+  assert.ok(parts.length >= 4);
+  assert.ok(Math.abs(parts.reduce((x, y) => x + y, 0) - 100) < 0.6, `the parts of ₹100 come to ${parts}`);
+
+  // ── The statement, opened ────────────────────────────────────────────────
+  await page.locator('#funda-body .fn-more > summary').click();
+  await page.locator('#funda-body .fu-table').first().waitFor();
+
+  // THE BASIS GUARD. The fixture's standalone revenue is 45% of consolidated,
+  // so a mixed series is arithmetically detectable here.
   const revenueRow = page.locator('.fu-table tbody tr', { hasText: 'Revenue from operations' }).first();
   const revenueCells = (await revenueRow.locator('td.tnum:not(.fu-ch)').allInnerTexts()).map(num);
-  // Latest plus five older quarters, all within a plausible band of each
-  // other. A standalone row among them would sit at ~45% of its neighbours.
   assert.equal(revenueCells.length, 6, 'six quarters of revenue');
   const lo = Math.min(...revenueCells), hi = Math.max(...revenueCells);
   assert.ok(hi / lo < 1.6,
     `revenue spans ${lo}–${hi}: that is two accounting bases, not one company`);
   assert.ok(Math.abs(revenueCells[0] - 269496) < 2,
     `latest revenue reads ${revenueCells[0]}, expected the consolidated 2,69,496 crore`);
+  assert.match(await page.locator('.fu-table').first().locator('caption').textContent(), /consolidated/i);
 
-  // ── THE PERCENTAGE-ACROSS-ZERO GUARD ─────────────────────────────────────
-  // The fixture's June 2025 quarter is a loss, so profit after tax this
-  // quarter is a turnaround. It must read in words.
+  // THE PERCENTAGE-ACROSS-ZERO GUARD, in the table as on the card.
   const patRow = page.locator('.fu-table tbody tr', { hasText: 'Profit after tax' }).first();
   const yoyCell = patRow.locator('td.fu-ch').first();
   assert.match(await yoyCell.innerText(), /to profit/i);
   assert.ok(!/%/.test(await yoyCell.innerText()),
     'a loss turning into a profit is not a percentage');
   assert.ok(await yoyCell.evaluate(el => el.classList.contains('word')));
-  // And the lead sentence says the same thing, in prose, with no percentage.
-  const lead = await page.locator('#pane-funda .own-lead').innerText();
-  assert.match(lead, /profit after tax turned from a loss into a profit/i);
-  assert.match(lead, /Revenue grew 10\.5%/);
-  assert.match(lead, /against Q1 FY26/);
 
   // The tax line turned positive in the same quarter, and must NOT borrow the
   // profit vocabulary: a tax credit becoming a tax charge is not a company
-  // turning profitable.
-  // Matched on the row label exactly — "Tax" is a substring of "Profit before
-  // tax", and the loose match quietly tested the wrong row.
+  // turning profitable. Matched on the row label exactly — "Tax" is a
+  // substring of "Profit before tax".
   const taxYoy = await page.evaluate(() => {
     const row = [...document.querySelectorAll('.fu-table tbody tr')]
       .find(tr => tr.querySelector('th').firstChild.textContent.trim() === 'Tax');
@@ -150,9 +203,13 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   assert.match(await revYoy.innerText(), /^\+?\-?\d+\.\d%$/);
   assert.ok(await revYoy.evaluate(el =>
     el.classList.contains('up') || el.classList.contains('dn')));
+  // A cost that went up is not good news: its change carries no colour.
+  const costYoy = page.locator('.fu-table tbody tr', { hasText: 'Employee cost' }).first().locator('td.fu-ch').first();
+  assert.match(await costYoy.innerText(), /%$/);
+  assert.ok(await costYoy.evaluate(el => !el.classList.contains('up') && !el.classList.contains('dn')),
+    'a rise in a cost is coloured as though it were a rise in profit');
 
-  // Both change columns, and both say which period they compare against, so
-  // "+10.5%" is never a figure whose baseline the reader has to guess.
+  // Both change columns say which period they compare against.
   const changeHeads = await page.locator('.fu-table thead th.fu-chh').allInnerTexts();
   assert.equal(changeHeads.length, 2, 'year-on-year and sequential');
   assert.match(changeHeads[0], /Q1 FY26/);   // the same quarter a year back
@@ -161,15 +218,13 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   // Every P&L line the payload declares is drawn; a silently dropped row is a
   // blank the reader reads as a zero.
   const wantLines = fundamentals.lines.map(l => l.label);
-  // First text node only: a row label may carry a unit note under it.
   const gotLines = await page.evaluate(() =>
     [...document.querySelectorAll('.fu-table:not(.fu-ratios) tbody th[scope="row"]')]
       .map(th => th.firstChild.textContent.trim()));
   for (const l of wantLines)
     assert.ok(gotLines.includes(l), `missing P&L line ${l}`);
 
-  // Ratios: every one defined, each with its arithmetic written out. "OPM"
-  // means nothing to a reader who does not already know it.
+  // Ratios: every one defined, each with its arithmetic written out.
   const ratioRows = page.locator('.fu-ratios tbody tr');
   assert.equal(await ratioRows.count(), fundamentals.ratio_defs.length);
   const ratiosText = await page.locator('.fu-ratios').innerText();
@@ -177,64 +232,72 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
     assert.ok(ratiosText.includes(r.label), `missing ratio ${r.label}`);
     assert.ok(ratiosText.includes(r.formula), `ratio ${r.label} does not show its formula`);
   }
-  // The unit is on the row, so the five older quarters are not bare numbers of
-  // an unstated quantity.
   assert.match(await page.locator('.fu-ratios tbody tr', { hasText: 'Interest cover' })
     .first().locator('th').innerText(), /×/);
-  // Operating margin is EBITDA over revenue and the fixture is built at 17.08%.
   const opm = page.locator('.fu-ratios tbody tr', { hasText: 'Operating margin' }).first();
   assert.ok(Math.abs(num(await opm.locator('td.fu-now').innerText()) - 17.08) < 0.05);
-  // A trend is the question for a ratio, so it gets a mark as well as figures.
   assert.ok(await page.locator('.fu-spark').count() >= 4);
-
-  // The basis is not only asserted in the summary line — the note above the
-  // table repeats it, because the table is what gets screenshotted and shared.
-  assert.match(await page.locator('.fu-cap').first().innerText(), /consolidated/i);
-  // And the table carries an accessible name of its own.
-  assert.match(await page.locator('.fu-table').first().locator('caption').innerText(),
-    /consolidated/i);
-
-  // EPS is rupees per share while the column header says crore. The row says
-  // so on itself rather than leaving the reader to divide by a crore.
+  // EPS is rupees per share while the column header says crore.
   assert.match(await page.locator('.fu-table tbody tr', { hasText: 'EPS (basic)' })
     .first().locator('th').innerText(), /per share/i);
 
-  // Provenance: the filing it came from is one click away.
-  assert.ok(await page.locator('#pane-funda .own-asof a[href*="nseindia"]').count() >= 1);
-
-  // The quarters are drawn as bars above the table, from the same rows: one
-  // bar a quarter, and the quarter that lost money hangs below the line.
-  assert.equal(await page.locator('#funda-trend .ft').count(), 2);
-  assert.equal(await page.locator('#funda-trend .ft').first().locator('.ft-c i').count(), 6);
-  assert.equal(await page.locator('#funda-trend .ft').nth(1).locator('.ft-c i.neg').count(), 1,
-    'the loss-making quarter is not drawn as a loss');
-
-  // ── Balance sheet and cash flow ─────────────────────────────────────────
-  // Crore values printed as crore (not divided again), full years only in the
-  // cash flow — a half-year beside a year would read as a collapse — and a
-  // line the company never filed is not drawn as a row of dashes.
-  await page.locator('#funda-position .fu-stmt').first().waitFor();
-  // The industry comparison sits with the named peers now, so opening the
+  // ── Balance sheet ────────────────────────────────────────────────────────
+  // Crore values printed as crore (not divided again), and a line the company
+  // never filed is not drawn as a card or a row of dashes.
+  // The industry comparison sits with the named peers, so opening the
   // financials reads the balance sheet and cash flow and nothing else.
   assert.equal(extras, 1);
-  const tables = page.locator('#funda-position .fu-stmt');
-  assert.equal(await tables.count(), 2);
-  const bsHead = await tables.nth(0).locator('thead th').allInnerTexts();
+  await page.locator('#fn-views [data-fv="balance"]').click();
+  const bal = page.locator('#funda-position .fn-view[data-view="balance"]');
+  await bal.locator('.kp').first().waitFor();
+  assert.equal(await page.locator('#funda-body').isVisible(), false, 'two views are showing at once');
+  const balLabels = (await bal.locator('.kp-l').allInnerTexts()).map(t => t.toLowerCase());
+  assert.ok(balLabels.includes('total assets') && balLabels.includes('borrowings'), String(balLabels));
+  assert.ok(!balLabels.includes('deposits'), 'a line never filed got a card');
+  assert.match(await bal.locator('.kp').first().locator('.kp-v').innerText(), /₹19\.50L cr/);
+  // Borrowings rose. That is shown as a rise and not in the colour of good news.
+  const debt = bal.locator('.kp', { hasText: /borrowings/i }).locator('.mv');
+  assert.ok(await debt.evaluate(el => el.classList.contains('up') && el.classList.contains('inv')),
+    'a rise in borrowings is drawn as good news');
+  // Total assets have no good direction at all.
+  assert.ok(await bal.locator('.kp').first().locator('.mv').evaluate(el => el.classList.contains('plain')));
+  // What funds it: one bar a balance sheet.
+  assert.equal(await bal.locator('.sp .sp-r').count(), 4);
+  await bal.locator('.fn-more > summary').click();
+  const bsTable = bal.locator('.fu-stmt');
+  await bsTable.waitFor();
+  const bsHead = await bsTable.locator('thead th').allInnerTexts();
   // Headers are uppercased by CSS; compare the words.
   assert.deepEqual(bsHead.slice(1).map(t => t.toUpperCase()),
     ['MAR 2026', 'SEP 2025', 'MAR 2025', 'SEP 2024']);
-  const assets = await tables.nth(0).locator('tbody tr', { hasText: 'Total assets' })
+  const assets = await bsTable.locator('tbody tr', { hasText: 'Total assets' })
     .locator('td').allInnerTexts();
   assert.equal(num(assets[0]), 1950000, `total assets read ${assets[0]}`);
-  assert.equal(await tables.nth(0).locator('tbody tr', { hasText: 'Deposits' }).count(), 0);
-  const cfHead = await tables.nth(1).locator('thead th').allInnerTexts();
+  assert.equal(await bsTable.locator('tbody tr', { hasText: 'Deposits' }).count(), 0);
+
+  // ── Cash flow ────────────────────────────────────────────────────────────
+  // Full years only — a half-year beside a year would read as a collapse.
+  await page.locator('#fn-views [data-fv="cash"]').click();
+  const cash = page.locator('#funda-position .fn-view[data-view="cash"]');
+  await cash.locator('.kp').first().waitFor();
+  assert.equal(await bal.isVisible(), false);
+  assert.equal(await cash.locator('.fc .fc-c[data-i]').count(), 3);
+  assert.match(await cash.locator('.kp[data-metric="fcf"] .kp-v').innerText(), /₹47,000 cr/);
+  await cash.locator('.fn-more > summary').click();
+  const cfTable = cash.locator('.fu-stmt');
+  await cfTable.waitFor();
+  const cfHead = await cfTable.locator('thead th').allInnerTexts();
   assert.deepEqual(cfHead.slice(1).map(t => t.toUpperCase()), ['FY26', 'FY25', 'FY24']);
-  const fcf = await tables.nth(1).locator('tbody tr', { hasText: 'Free cash flow' }).first()
+  const fcf = await cfTable.locator('tbody tr', { hasText: 'Free cash flow' }).first()
     .locator('td').allInnerTexts();
   assert.equal(num(fcf[0]), 47000);
-  const conv = await tables.nth(1).locator('tbody tr', { hasText: 'Cash conversion' })
+  const conv = await cfTable.locator('tbody tr', { hasText: 'Cash conversion' })
     .locator('td').allInnerTexts();
   assert.equal(num(conv[0]), 209.42);
+  assert.equal(calls, 1);
+  assert.equal(extras, 1, 'switching between the three views asked the API again');
+  await page.locator('#fn-views [data-fv="income"]').click();
+  await page.locator('#funda-body .kp').first().waitFor();
 
   // ── Against the industry median ─────────────────────────────────────────
   // In the Peers section, under the named table, and read only when that

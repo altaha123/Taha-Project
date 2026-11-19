@@ -561,18 +561,16 @@
       if (missing.length) {
         html += '<div class="pl-miss">Not measured: ' + missing.map(function (k) {
           return '<b>' + esc(pillarName(k)) + '</b>';
-        }).join(', ') + '. Their weight is shared among the rest, and lowers confidence.</div>';
+        }).join(', ') + '</div>';
       }
 
       var raw = sc.raw_score, conf = sc.confidence;
       if (raw != null && conf != null) {
         html += '<div class="pl-sum"><span>Weighted sum</span><b class="tnum">' + raw.toFixed(1) + '</b></div>' +
           '<div class="pl-conf">' +
-            '<div class="pl-conf-t"><b>Confidence ' + conf.toFixed(1) + '%.</b> ' +
-              'The sum is pulled toward 50 by what could not be measured' +
-              (sc.confidence_notes ? ': ' + esc(String(sc.confidence_notes).split(/;\s*/)
-                .map(function (c) { return c.charAt(0).toLowerCase() + c.slice(1); }).join('; ')) : '') +
-              '.</div>' +
+            '<div class="pl-conf-t"' + (sc.confidence_notes ? ' title="' +
+              esc(String(sc.confidence_notes)) + '"' : '') + '><b>Confidence ' + conf.toFixed(1) +
+              '%</b> pulls the sum toward 50</div>' +
             '<div class="cf' + ((Math.abs(raw - 50) > 9 && Math.abs(score - 50) > 9) ? ' far' : '') +
               '" role="img" aria-label="' + raw.toFixed(1) + ' pulled toward 50 gives ' +
               score.toFixed(1) + '">' +
@@ -666,7 +664,7 @@
     $('factors').innerHTML = html;
     var cov = sc.coverage;
     $('factors-x').textContent = cov && cov.total
-      ? cov.present + ' of ' + cov.total + ' measured · rank is the percentile among peers' : '';
+      ? cov.present + ' of ' + cov.total + ' measured' : '';
   }
 
   /* The score, under the name. It is the one number this site exists to
@@ -741,8 +739,7 @@
           '</span><b class="tnum">beats ' + Math.round(up.percentile) + '%</b></li>' : '') +
         (dn ? '<li class="dn"><i aria-hidden="true">▼</i><span>' + esc(factorName(dn)) +
           '</span><b class="tnum">beats ' + Math.round(dn.percentile) + '%</b></li>' : '') +
-        '</ul>' : '') +
-      '<p class="ovs-f">Each bar is a rank among peers, from 0 to 100.</p>';
+        '</ul>' : '');
     card.hidden = false;
     growBars(body);
   }
@@ -1589,6 +1586,9 @@
     return n.toLocaleString('en-IN');
   }
   function holders(v) {
+    // Nothing filed is a dash. Number(null) is 0, and "0 shareholders" is a
+    // statement about a company, not about a missing figure.
+    if (v == null || v === '') return '—';
     var n = Number(v);
     if (!isFinite(n)) return '—';
     return Math.round(n).toLocaleString('en-IN');
@@ -1705,14 +1705,14 @@
         '<div class="op-val tnum">' + s.pct.toFixed(2) + '<span>%</span></div>' +
         '<div class="op-chips">' + chip(s.change_qoq, 'QoQ') + chip(s.change_yoy, 'YoY') + '</div>' +
         spark(pts, k) + range +
-        '<div class="op-holders">' +
-          (s.holders == null ? '—' : holders(s.holders)) +
-          '<b>' + (s.holders === 1 ? 'holder' : 'holders') + '</b>' +
-          (s.holders_change_qoq
-            ? '<em class="' + tone(s.holders_change_qoq) + '">' +
-              (s.holders_change_qoq > 0 ? '+' : '−') +
-              holders(Math.abs(s.holders_change_qoq)) + '</em>' : '') +
-        '</div>' +
+        (s.holders == null ? '' :
+          '<div class="op-holders">' + holders(s.holders) +
+            '<b>' + (s.holders === 1 ? 'holder' : 'holders') + '</b>' +
+            (s.holders_change_qoq
+              ? '<em class="' + tone(s.holders_change_qoq) + '">' +
+                (s.holders_change_qoq > 0 ? '+' : '−') +
+                holders(Math.abs(s.holders_change_qoq)) + '</em>' : '') +
+          '</div>') +
         '</article>';
     }).join('');
 
@@ -1784,121 +1784,119 @@
     });
   }
 
+  /* The few facts about the reading itself, as chips beside the heading:
+     which quarter, and the filing it came from. They used to be two
+     sentences above the chart. */
+  function ownMeta(d) {
+    var host = $('own-meta');
+    if (!host) return;
+    var bits = [];
+    if (d && d.available) {
+      var interim = d.basis_period && d.basis_period !== d.period;
+      if (d.period) bits.push('<span>' + (interim ? 'Interim filing ' : '') +
+        esc(niceDate(d.period) || d.period) + '</span>');
+      // An interim filing sets the levels; the changes still run between
+      // quarter-ends, and the reader has to be told which.
+      if (interim) bits.push('<span>Changes to ' + esc(niceDate(d.basis_period) || d.basis_period) + '</span>');
+      if (d.reduced) bits.push('<span>Stored copy</span>');
+      var src = safeUrl(d.latest_source);
+      if (src) bits.push('<a href="' + esc(src) + '" target="_blank" rel="noopener noreferrer">Filing ↗</a>');
+    }
+    host.innerHTML = bits.join('');
+  }
+
   function paintOwnership(d) {
     var box = $('own-body');
     if (!box) return;
+    ownMeta(d);
 
     if (!d || !d.available) {
-      box.innerHTML = '<div class="own-empty">' +
+      // Said plainly, with a way to ask again: the exchange refuses in
+      // bursts, and the same request a few seconds later is usually answered.
+      box.innerHTML = '<div class="own-empty"><span>' +
         esc((d && d.message) || 'No shareholding filing could be read for this company.') +
-        '</div>';
+        '</span><button type="button" class="own-retry" id="own-retry">Try again</button></div>';
+      $('own-retry').addEventListener('click', function () { loadOwnership(true); });
       return;
     }
 
     var split = (d.split || []).filter(function (s) { return s.pct != null; });
     var t = d.totals || {};
 
-    // Lead with the finding: the biggest mover this quarter, named in a
-    // sentence, before any chart.
-    var movers = split.filter(function (s) {
-      return s.change_qoq != null && Math.abs(s.change_qoq) >= 0.05;
-    }).sort(function (a, b) { return Math.abs(b.change_qoq) - Math.abs(a.change_qoq); });
-    var lead;
-    if (!movers.length) {
-      lead = split.some(function (s) { return s.change_qoq != null; })
-        ? 'No comparable category moved by more than a twentieth of a point over the quarter.'
-        : 'Quarter-on-quarter comparison is unavailable for the filings read.';
-    } else {
-      var m = movers[0];
-      lead = m.label + ' ' + (m.change_qoq > 0 ? 'rose' : 'fell') + ' ' +
-        Math.abs(m.change_qoq).toFixed(2) + ' percentage points over the quarter, to ' +
-        m.pct.toFixed(2) + '%.';
-      if (movers.length > 1) {
-        var n2 = movers[1];
-        lead += ' ' + n2.label + ' ' + (n2.change_qoq > 0 ? 'rose' : 'fell') + ' ' +
-          Math.abs(n2.change_qoq).toFixed(2) + '.';
-      }
-    }
-
-    if (d.basis_period && d.basis_period !== d.period) {
-      lead = 'Latest holdings are from the interim filing dated ' + d.period +
-        '. Quarterly changes compare quarter-ends through ' + d.basis_period + '; they do not describe changes since the interim filing.';
-    }
-
-    var read = (d.quarters_read || 0) + ' quarter-end' +
-      ((d.quarters_read === 1) ? '' : 's') +
-      (d.interim_filings ? ' and ' + d.interim_filings + ' interim filing' +
-        (d.interim_filings === 1 ? '' : 's') : '') + ' read';
-    var head = '<p class="own-lead">' + esc(lead) + '</p>' +
-      '<p class="own-asof">As filed for <b>' + esc(d.period || '—') + '</b>' +
-      (d.filed ? ', filed ' + esc(d.filed) : '') + '. ' + esc(read) + '.' +
-      (d.latest_source ? ' <a href="' + esc(d.latest_source) +
-        '" target="_blank" rel="noopener">Open the filing</a>.' : '') + '</p>';
-
     var count = '';
     if (t.holders != null) {
       count = '<div class="own-count">' +
         '<div class="big tnum">' + holders(t.holders) + '</div>' +
-        '<div class="lb">shareholders on the register</div>' +
+        '<div class="lb">shareholders</div>' +
         '<div class="ch">' +
           chip(t.holders_change_qoq, 'QoQ', holders) +
           chip(t.holders_change_yoy, 'YoY', holders) +
         '</div></div>';
     }
 
-    var notes = notesBlock(d.notes);
-
-    box.innerHTML = head + '<div id="own-intelligence"></div>' + ownBar(split) +
-      ownPanels(split, d.history) + count + ownTable(d.history) +
+    /* The split first, because it is the answer; then who the holders are;
+       then the table. A stored copy has the split and its history and no
+       names, so the name lists are left out for one, not printed as "no
+       promoter holding". */
+    var names = d.reduced ? '' :
+      '<div id="own-intelligence"></div>' +
       '<div class="own-namecols">' +
       '<div>' + ownNames(d.names && d.names.promoters, 'Promoter group',
         'This company reports no promoter holding.') + '</div>' +
       '<div>' + ownNames(d.names && d.names.public, 'Public holders above 1%',
         'No public holder crosses one per cent in this filing.') + '</div>' +
-      '</div>' + notes;
+      '</div>';
+
+    box.innerHTML = ownBar(split) + ownPanels(split, d.history) + count + names +
+      ownTable(d.history) + notesBlock(d.notes);
 
     wireOwnHover();
-    if (window.OwnershipInsights) window.OwnershipInsights.mount(d, {ticker:TICKER, api:API, name:$('nm').textContent});
+    growBars(box);
+    if (!d.reduced && window.OwnershipInsights) {
+      window.OwnershipInsights.mount(d, { ticker: TICKER, api: API, name: $('nm').textContent });
+    }
   }
 
-  function loadOwnership() {
+  /* One quiet second attempt before saying it failed. The API marks a
+     failure worth retrying; a company with no filings at all is not one. */
+  var ownTries = 0;
+  function loadOwnership(manual) {
     var box = $('own-body');
     if (box) {
       box.innerHTML = '<div class="own-empty is-loading" aria-busy="true">' +
         'Reading the filings…</div>';
     }
+    if (manual) ownTries = 0;
     fetch(API + '/shareholding?ticker=' + encodeURIComponent(TICKER) + '&quarters=8&names=40')
       .then(function (r) {
         if (!r.ok) throw new Error('down');
         return r.json();
       })
-      .then(paintOwnership)
-      .catch(function () {
-        if (box) {
-          box.innerHTML = '<div class="own-empty">The filings could not be read ' +
-            'just now. Try again in a moment.</div>';
+      .then(function (d) {
+        if (d && !d.available && d.retry && ownTries < 1) {
+          ownTries++;
+          setTimeout(function () { loadOwnership(false); }, 4000);
+          return;
         }
+        paintOwnership(d);
+      })
+      .catch(function () {
+        paintOwnership({ available: false,
+          message: 'The filings could not be read just now.' });
       });
   }
 
 
-  /* ── Fundamentals ─────────────────────────────────────────────────────────
-     The quarterly P&L as filed, the ratios that follow from it, and a change
-     column.
+  /* ── Financials: the statement tables ────────────────────────────────────
+     The quarterly P&L as filed, the ratios that follow from it, the balance
+     sheet and the cash flow, as tables. They sit behind "Full statement" in
+     each view; the charts above them are in the next block.
 
-     A TABLE, DELIBERATELY
-     Sixteen line items against six quarters with a change column is tabular
-     data, and a reader comparing two quarters of "other expenses" wants the
-     number, not a mark whose length they have to estimate. The sparklines in
-     the ratio block earn their place because a trend is the question there;
-     in the P&L the question is "what was it", and the answer is a figure.
-
-     THE TWO THINGS THIS MUST NOT DO
-     Mix accounting bases — the payload carries one basis and names it, and
-     the basis is printed at the top rather than assumed. And print a
-     percentage across zero: a company that lost money and then made money has
-     not grown by a percentage, so the payload sends a `kind` and this renders
-     the words instead of inventing a number. */
+     THE TWO THINGS A TABLE HERE MUST NOT DO
+     Mix accounting bases — the payload carries one basis and names it. And
+     print a percentage across zero: a company that lost money and then made
+     money has not grown by a percentage, so the payload sends a `kind` and
+     this renders the words instead of inventing a number. */
 
   var fundaLoaded = false;
 
@@ -1943,6 +1941,12 @@
   };
   function words(key) { return PROFIT_LINES[key] ? KIND_WORDS : SIGN_WORDS; }
 
+  /* A cost going up is not good news and a cost coming down is not bad, so
+     the change on a cost line is printed without the green and the red. The
+     page used to colour "employee cost +22%" the same green as revenue. */
+  var COST_LINES = { materials: 1, employee_cost: 1, finance_cost: 1, depreciation: 1,
+                     other_expenses: 1, total_expenses: 1, provisions: 1, tax: 1 };
+
   function changeCell(c, key) {
     if (!c || c.kind === 'unavailable') return '<td class="fu-ch none">—</td>';
     /* Nil in both quarters — exceptional items, usually. "Flat" is true but it
@@ -1951,12 +1955,13 @@
       return '<td class="fu-ch none">—</td>';
     if (c.pct == null) {
       var word = words(key)[c.kind] || 'changed';
-      var t = (c.kind === 'loss_to_profit' || c.kind === 'loss_narrowed') ? 'up'
+      var t = COST_LINES[key] ? ''
+            : (c.kind === 'loss_to_profit' || c.kind === 'loss_narrowed') ? 'up'
             : (c.kind === 'profit_to_loss' || c.kind === 'loss_widened') ? 'dn' : '';
       return '<td class="fu-ch word ' + t + '" title="A percentage change needs a ' +
         'positive base to mean anything">' + esc(word) + '</td>';
     }
-    var tone2 = c.pct > 0.005 ? 'up' : (c.pct < -0.005 ? 'dn' : '');
+    var tone2 = COST_LINES[key] ? '' : (c.pct > 0.005 ? 'up' : (c.pct < -0.005 ? 'dn' : ''));
     return '<td class="fu-ch ' + tone2 + ' tnum">' +
       (c.pct > 0 ? '+' : '') + c.pct.toFixed(1) + '%</td>';
   }
@@ -1999,10 +2004,8 @@
        table and gets clipped at the viewport edge on a phone — which is where
        it matters most, because that is where the basis is least visible. */
     return '<h3 class="fu-h3">Profit and loss</h3>' +
-      '<p class="fu-cap" id="fu-cap-pl">' + esc(d.basis.charAt(0).toUpperCase() + d.basis.slice(1)) +
-      ', ₹ crore. Change against the same quarter a year earlier, then against the quarter before.</p>' +
       '<div class="fu-block"><div class="fu-wrap">' +
-      '<table class="fu-table" aria-describedby="fu-cap-pl">' +
+      '<table class="fu-table">' +
       '<caption class="fu-vh">Quarterly profit and loss, ' + esc(d.basis) +
       ' basis, in rupees crore</caption>' +
       '<thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>';
@@ -2054,98 +2057,502 @@
       }).join('') + '</tr>';
 
     return '<h3 class="fu-h3">Ratios</h3>' +
-      '<p class="fu-cap" id="fu-cap-ratios">From the lines above. Blank where the ' +
-      'denominator is zero or negative.</p>' +
       '<div class="fu-block"><div class="fu-wrap">' +
-      '<table class="fu-table fu-ratios" aria-describedby="fu-cap-ratios">' +
+      '<table class="fu-table fu-ratios">' +
       '<caption class="fu-vh">Quarterly ratios</caption>' +
       '<thead>' + head + '</thead><tbody>' + body + '</tbody></table></div></div>';
   }
 
-  function paintFunda(d) {
-    var box = $('funda-body');
+  /* ── Financials, drawn ───────────────────────────────────────────────────
+     The section used to open on a sentence, a paragraph about accounting
+     bases and a sixteen-row table. All true, and a reader had to work to get
+     anything out of it. It opens on pictures now and says almost nothing:
+
+       · a row of figures, each with its change on the year and its own small
+         trend. Tapping one makes it the subject of the chart below;
+       · that chart: the quarters as bars, the growth under each, and the
+         quarter under the pointer read out above it;
+       · where each ₹100 of income went, this quarter beside the same quarter
+         a year ago, which is a margin story told without the word margin;
+       · the statement itself, every line of it, one tap away.
+
+     Income, balance sheet and cash flow are three views of the same four
+     parts, built by one set of functions from one shape of data, so they
+     cannot drift into three designs.
+
+     WHAT IS NEVER DRAWN
+     A bar that does not start at zero. A percentage change across zero or
+     against a loss: the API sends the kind of move instead ("to profit"),
+     and for the balance sheet and cash flow, where this file works the change
+     out, it is left blank unless both figures are positive. A split of ₹100
+     whose parts do not come back to the total within a rounding. */
+
+  var FN = { income: null, pos: null, view: 'income',
+             pick: { income: 'revenue', balance: 'total_assets', cash: 'cfo' } };
+  var FN_WORDS = { loss_to_profit: 'to profit', profit_to_loss: 'to loss',
+                   loss_widened: 'loss wider', loss_narrowed: 'loss narrower', flat: 'flat' };
+
+  function crShort(v) {
+    var a = Math.abs(v);
+    if (a >= 1e5) return (v / 1e5).toLocaleString('en-IN',
+      { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'L';
+    return v.toLocaleString('en-IN', { maximumFractionDigits: a >= 100 ? 0 : (a >= 10 ? 1 : 2) });
+  }
+  function fnText(v, kind, bare) {
+    if (v == null || isNaN(v)) return '—';
+    if (kind === 'cr') return bare ? crShort(v) : '₹' + crShort(v) + ' cr';
+    if (kind === 'rupees') return (bare ? '' : '₹') + Number(v).toLocaleString('en-IN',
+      { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (kind === 'pct') return Number(v).toFixed(1) + '%';
+    return Number(v).toFixed(2) + '×';
+  }
+  /* `sense` says which way is the good way for the figure: +1 when more is
+     better (profit), -1 when less is (borrowings), 0 when neither is (total
+     assets, capital expenditure). The arrow always shows the direction; the
+     green and the red are only used where a direction is good or bad, so
+     borrowings going up are never drawn in the colour of good news. */
+  function senseClass(sense) { return sense == null || sense > 0 ? '' : (sense < 0 ? ' inv' : ' plain'); }
+  function moveChip(c, suffix, sense) {
+    if (!c) return '';
+    return '<span class="mv ' + (c.tone || '') + senseClass(sense) + '">' +
+      (c.tone === 'up' ? '▲ ' : c.tone === 'dn' ? '▼ ' : '') + esc(c.text) +
+      (suffix ? '<small>' + suffix + '</small>' : '') + '</span>';
+  }
+  /* A change this file works out itself: a percentage only between two
+     positive figures, a difference for a ratio, otherwise nothing. */
+  function plainMove(now, then, kind) {
+    if (now == null || then == null) return null;
+    if (kind === 'pct' || kind === 'x') {
+      var d = now - then;
+      if (Math.abs(d) < (kind === 'x' ? 0.005 : 0.05)) return { text: 'flat', tone: '' };
+      return { text: Math.abs(d).toFixed(kind === 'x' ? 2 : 1) + (kind === 'x' ? '×' : ' pts'),
+               tone: d > 0 ? 'up' : 'dn' };
+    }
+    if (!(now > 0 && then > 0)) return null;
+    var p = 100 * (now - then) / then;
+    if (Math.abs(p) < 0.05) return { text: 'flat', tone: '' };
+    return { text: Math.abs(p).toFixed(1) + '%', tone: p > 0 ? 'up' : 'dn' };
+  }
+  /* A change the API worked out, which knows a turnaround from a percentage. */
+  function apiMove(c) {
+    if (!c || c.kind === 'unavailable') return null;
+    if (c.pct == null) {
+      if (c.kind === 'flat' && !c.abs) return null;
+      return { text: FN_WORDS[c.kind] || 'changed',
+               tone: (c.kind === 'loss_to_profit' || c.kind === 'loss_narrowed') ? 'up'
+                 : (c.kind === 'profit_to_loss' || c.kind === 'loss_widened') ? 'dn' : '' };
+    }
+    if (Math.abs(c.pct) < 0.05) return { text: 'flat', tone: '' };
+    return { text: Math.abs(c.pct).toFixed(1) + '%', tone: c.pct > 0 ? 'up' : 'dn' };
+  }
+  function daysApart(a, b) {
+    var x = Date.parse(a), y = Date.parse(b);
+    return (isNaN(x) || isNaN(y)) ? null : Math.round((x - y) / 86400000);
+  }
+
+  /* One shape for all three views: the periods, oldest first, and for each
+     figure its values, its change on the year and its change on the period
+     before, one per period. */
+  function incomeModel(d) {
+    var rows = (d.rows || []).slice().reverse();
+    var byLabel = {};
+    rows.forEach(function (r) { byLabel[r.label] = r; });
+    var defs = [
+      { key: 'revenue', label: 'Revenue', kind: 'cr', sense: 1 },
+      { key: 'ebitda', label: 'EBITDA', kind: 'cr', sense: 1 },
+      { key: 'pat', label: 'Net profit', kind: 'cr', sense: 1 },
+      { key: 'eps_basic', label: 'EPS', kind: 'rupees', sense: 1 },
+      { key: 'opm_pct', label: 'Operating margin', kind: 'pct', ratio: true, sense: 1 },
+      { key: 'net_margin_pct', label: 'Net margin', kind: 'pct', ratio: true, sense: 1 }
+    ];
+    function val(r, m) {
+      var v = m.ratio ? (r.ratios || {})[m.key] : (r.values || {})[m.key];
+      if (v == null || isNaN(Number(v))) return null;
+      return m.kind === 'cr' ? Number(v) / 1e7 : Number(v);
+    }
+    return {
+      id: 'income', periods: rows.map(function (r) { return r.label || ''; }),
+      metrics: defs.map(function (m) {
+        return {
+          key: m.key, label: m.label, kind: m.kind, sense: m.sense,
+          vals: rows.map(function (r) { return val(r, m); }),
+          yoy: rows.map(function (r) {
+            if (!m.ratio) return apiMove((r.yoy || {})[m.key]);
+            var then = byLabel[r.yoy_against];
+            return then ? plainMove(val(r, m), val(then, m), m.kind) : null;
+          }),
+          prev: rows.map(function (r, i) {
+            if (!m.ratio) return apiMove((r.qoq || {})[m.key]);
+            return i ? plainMove(val(r, m), val(rows[i - 1], m), m.kind) : null;
+          })
+        };
+      })
+    };
+  }
+
+  function sheetModel(part, id, defs, yearGap) {
+    var rows = ((part && part.rows) || []).slice().reverse();
+    function val(r, m) {
+      var v = m.ratio ? (r.ratios || {})[m.key] : (r.values || {})[m.key];
+      return (v == null || isNaN(Number(v))) ? null : Number(v);
+    }
+    function yearBefore(i) {
+      for (var j = i - 1; j >= 0; j--) {
+        var gap = daysApart(rows[i].period_end, rows[j].period_end);
+        if (gap != null && gap >= yearGap[0] && gap <= yearGap[1]) return rows[j];
+      }
+      return null;
+    }
+    return {
+      id: id, periods: rows.map(function (r) { return r.label || r.period_end || ''; }),
+      metrics: defs.map(function (m) {
+        return {
+          key: m.key, label: m.label, kind: m.kind, sense: m.sense,
+          vals: rows.map(function (r) { return val(r, m); }),
+          yoy: rows.map(function (r, i) {
+            var then = yearBefore(i);
+            return then ? plainMove(val(r, m), val(then, m), m.kind) : null;
+          }),
+          prev: rows.map(function () { return null; })
+        };
+      })
+    };
+  }
+  var BALANCE_DEFS = [
+    { key: 'total_assets', label: 'Total assets', kind: 'cr', sense: 0 },
+    { key: 'total_equity', label: 'Equity', kind: 'cr', sense: 1 },
+    { key: 'total_borrowings', label: 'Borrowings', kind: 'cr', sense: -1 },
+    { key: 'deposits', label: 'Deposits', kind: 'cr', sense: 0 },
+    { key: 'net_debt', label: 'Net debt', kind: 'cr', sense: -1 },
+    { key: 'cash_and_equivalents', label: 'Cash', kind: 'cr', sense: 0 },
+    { key: 'debt_equity_x', label: 'Debt / equity', kind: 'x', ratio: true, sense: -1 },
+    { key: 'current_ratio_x', label: 'Current ratio', kind: 'x', ratio: true, sense: 0 }
+  ];
+  var CASH_DEFS = [
+    { key: 'cfo', label: 'Cash from operations', kind: 'cr', sense: 1 },
+    { key: 'capex', label: 'Capital expenditure', kind: 'cr', sense: 0 },
+    { key: 'fcf', label: 'Free cash flow', kind: 'cr', sense: 1 },
+    { key: 'dividends_paid', label: 'Dividends paid', kind: 'cr', sense: 0 },
+    { key: 'cash_conversion_pct', label: 'Cash conversion', kind: 'pct', ratio: true, sense: 1 },
+    { key: 'fcf_margin_pct', label: 'Free cash flow margin', kind: 'pct', ratio: true, sense: 1 }
+  ];
+
+  /* Only the figures the company filed at least twice, and no more than six
+     of them: a seventh card is a second row on a laptop. */
+  function usable(model) {
+    model.metrics = model.metrics.filter(function (m) {
+      return m.vals.filter(function (v) { return v != null; }).length >= 2;
+    }).slice(0, 6);
+    return model.metrics.length ? model : null;
+  }
+  function lastWith(vals) {
+    for (var i = vals.length - 1; i >= 0; i--) if (vals[i] != null) return i;
+    return -1;
+  }
+
+  /* The small trend on a card: bars from zero, a loss below the line. */
+  function miniBars(vals) {
+    var have = vals.filter(function (v) { return v != null; });
+    var top = Math.max.apply(null, have.concat([0])), bot = Math.min.apply(null, have.concat([0]));
+    var span = (top - bot) || 1, zero = 100 * top / span, n = lastWith(vals);
+    return '<span class="kp-s" style="--zero:' + zero.toFixed(1) + '%" aria-hidden="true">' +
+      vals.map(function (v, i) {
+        if (v == null) return '<i class="gap"></i>';
+        return '<i class="' + (v < 0 ? 'neg' : '') + (i === n ? ' now' : '') + '" style="--h:' +
+          Math.max(3, 100 * Math.abs(v) / span).toFixed(1) + '%"></i>';
+      }).join('') + '</span>';
+  }
+
+  function fnCards(model) {
+    var pick = FN.pick[model.id];
+    return '<div class="kp-row" role="group" aria-label="Choose a figure to chart">' +
+      model.metrics.map(function (m, k) {
+        var i = lastWith(m.vals), on = m.key === pick;
+        return '<button type="button" class="kp' + (on ? ' on' : '') + '" data-metric="' + m.key +
+          '" aria-pressed="' + on + '" style="--i:' + k + '">' +
+          '<span class="kp-l">' + esc(m.label) + '</span>' +
+          '<span class="kp-v tnum">' + esc(fnText(m.vals[i], m.kind)) + '</span>' +
+          '<span class="kp-c">' + (moveChip(m.yoy[i], ' YoY', m.sense) || '<span class="mv none">&nbsp;</span>') + '</span>' +
+          miniBars(m.vals) + '</button>';
+      }).join('') + '</div>';
+  }
+
+  function fnReadout(model, m, i) {
+    return '<b>' + esc(model.periods[i] || '') + '</b>' +
+      '<span class="fc-v tnum">' + esc(fnText(m.vals[i], m.kind)) + '</span>' +
+      moveChip(m.yoy[i], ' YoY', m.sense) + moveChip(m.prev[i], ' QoQ', m.sense);
+  }
+
+  /* The chart: one bar a period, from zero, with its figure above it and its
+     growth on the year beneath. Each bar is a button, so the keyboard and a
+     finger can read a quarter out as well as a pointer can. */
+  function fnChart(model) {
+    var m = model.metrics.filter(function (x) { return x.key === FN.pick[model.id]; })[0] || model.metrics[0];
+    FN.pick[model.id] = m.key;
+    var have = m.vals.filter(function (v) { return v != null; });
+    var top = Math.max.apply(null, have.concat([0])), bot = Math.min.apply(null, have.concat([0]));
+    var span = (top - bot) || 1;
+    top += span * 0.2;
+    if (bot < 0) bot -= span * 0.2;
+    span = top - bot;
+    var zero = 100 * top / span, n = lastWith(m.vals);
+    return '<div class="card fc" data-view="' + model.id + '">' +
+      '<div class="fc-h"><h3>' + esc(m.label) + '</h3>' +
+        '<div class="fc-read" aria-live="polite">' + fnReadout(model, m, n) + '</div></div>' +
+      '<div class="fc-plot" style="--zero:' + zero.toFixed(2) + '%">' +
+      m.vals.map(function (v, i) {
+        if (v == null) {
+          return '<span class="fc-c none"><span class="fc-x">' + esc(model.periods[i]) + '</span></span>';
+        }
+        var h = 100 * Math.abs(v) / span, g = m.yoy[i];
+        return '<button type="button" class="fc-c' + (i === n ? ' now on' : '') + (v < 0 ? ' neg' : '') +
+          '" data-i="' + i + '" style="--h:' + h.toFixed(2) + '%;--i:' + i + '" aria-label="' +
+          esc(model.periods[i] + ': ' + fnText(v, m.kind)) + '">' +
+          '<span class="fc-n tnum">' + esc(fnText(v, m.kind, true)) + '</span><i></i>' +
+          '<span class="fc-x">' + esc(model.periods[i]) + '</span>' +
+          (g ? '<span class="fc-g ' + (g.tone || '') + senseClass(m.sense) + '">' +
+            (g.tone === 'up' ? '+' : g.tone === 'dn' ? '−' : '') + esc(g.text) + '</span>' : '') +
+          '</button>';
+      }).join('') + '</div></div>';
+  }
+
+  /* Where each ₹100 of income went. One bar a quarter, the parts in the same
+     order in each, so a part that grew is visibly wider in the newer bar. */
+  var SPLIT_PARTS = [
+    ['materials', 'Materials'], ['employee_cost', 'Employees'], ['other_expenses', 'Other costs'],
+    ['depreciation', 'Depreciation'], ['finance_cost', 'Interest'], ['tax', 'Tax'], ['pat', 'Profit']
+  ];
+  function splitOf(row) {
+    var v = (row && row.values) || {};
+    var total = Number(v.total_income != null ? v.total_income : v.revenue);
+    if (!(total > 0)) return null;
+    var parts = [], sum = 0;
+    for (var i = 0; i < SPLIT_PARTS.length; i++) {
+      var x = v[SPLIT_PARTS[i][0]];
+      if (x == null || isNaN(Number(x))) continue;
+      // A loss, a tax credit: the picture of ₹100 being shared out no longer
+      // holds, and a bar that pretended it did would be wrong.
+      if (Number(x) < 0) return null;
+      parts.push({ key: SPLIT_PARTS[i][0], label: SPLIT_PARTS[i][1], share: 100 * Number(x) / total });
+      sum += 100 * Number(x) / total;
+    }
+    if (parts.length < 3) return null;
+    var rest = 100 - sum;
+    if (rest < -1.5) return null;                 // the parts exceed the whole
+    if (rest > 0.75) parts.splice(parts.length - 1, 0, { key: 'rest', label: 'Other', share: rest });
+    return parts;
+  }
+  function fnSplit(d) {
+    var rows = d.rows || [], latest = rows[0];
+    if (!latest) return '';
+    var now = splitOf(latest);
+    if (!now) return '';
+    var then = null, thenRow = null;
+    rows.forEach(function (r) { if (r.label && r.label === latest.yoy_against) thenRow = r; });
+    if (thenRow) then = splitOf(thenRow);
+    function bar(label, parts) {
+      return '<div class="sp-r"><span class="sp-q">' + esc(label) + '</span><div class="sp-b">' +
+        parts.map(function (p, i) {
+          return '<i class="s-' + p.key + '" style="flex:' + p.share.toFixed(2) + ';--i:' + i + '" title="' +
+            esc(p.label + ' ₹' + p.share.toFixed(1)) + '">' +
+            (p.share >= 7 ? '<b class="tnum">' + Math.round(p.share) + '</b>' : '') + '</i>';
+        }).join('') + '</div></div>';
+    }
+    var before = {};
+    (then || []).forEach(function (p) { before[p.key] = p.share; });
+    return '<div class="card sp"><div class="fc-h"><h3>Where each ₹100 of income went</h3></div>' +
+      bar(latest.label, now) + (then ? bar(thenRow.label, then) : '') +
+      '<ul class="sp-k">' + now.map(function (p) {
+        var was = before[p.key], d = was == null ? null : p.share - was;
+        return '<li><i class="s-' + p.key + '"></i><span>' + esc(p.label) + '</span><b class="tnum">₹' +
+          p.share.toFixed(1) + '</b>' +
+          (d == null || Math.abs(d) < 0.05 ? '' : '<em class="' +
+            // More of each ₹100 kept as profit is the good direction; more of
+            // it spent on a cost is the other one.
+            ((p.key === 'pat') === (d > 0) ? 'up' : 'dn') + '">' + (d > 0 ? '+' : '−') +
+            Math.abs(d).toFixed(1) + '</em>') + '</li>';
+      }).join('') + '</ul></div>';
+  }
+
+  /* What funds the company: equity, borrowings and everything else it owes,
+     as shares of what it owns, one bar a balance sheet. */
+  function fnFunding(part) {
+    var rows = ((part && part.rows) || []).slice().reverse().filter(function (r) {
+      var v = r.values || {};
+      return v.total_assets > 0 && v.total_equity != null && v.total_equity >= 0 &&
+        v.total_equity <= v.total_assets;
+    });
+    if (rows.length < 2) return '';
+    return '<div class="card sp"><div class="fc-h"><h3>What funds it</h3></div>' +
+      rows.map(function (r) {
+        var v = r.values, eq = 100 * v.total_equity / v.total_assets;
+        var debt = v.total_borrowings > 0 ? Math.min(100 - eq, 100 * v.total_borrowings / v.total_assets) : 0;
+        var rest = Math.max(0, 100 - eq - debt);
+        function seg(cls, share, label) {
+          return share < 0.5 ? '' : '<i class="' + cls + '" style="flex:' + share.toFixed(2) + '" title="' +
+            esc(label + ' ' + share.toFixed(1) + '%') + '">' +
+            (share >= 8 ? '<b class="tnum">' + Math.round(share) + '%</b>' : '') + '</i>';
+        }
+        return '<div class="sp-r"><span class="sp-q">' + esc(r.label || r.period_end) + '</span><div class="sp-b">' +
+          seg('s-equity', eq, 'Equity') + seg('s-debt', debt, 'Borrowings') +
+          seg('s-rest', rest, 'Other liabilities') + '</div></div>';
+      }).join('') +
+      '<ul class="sp-k"><li><i class="s-equity"></i><span>Equity</span></li>' +
+      '<li><i class="s-debt"></i><span>Borrowings</span></li>' +
+      '<li><i class="s-rest"></i><span>Other liabilities</span></li></ul></div>';
+  }
+
+  function fnMore(html) {
+    return html ? '<details class="fn-more"><summary>Full statement</summary>' + html + '</details>' : '';
+  }
+
+  function fnMeta() {
+    var host = $('fn-meta');
+    if (!host) return;
+    var d = FN.income, bits = [];
+    var basis = (d && d.available && d.basis) || (FN.pos && FN.pos.basis) || '';
+    if (basis) bits.push('<span>' + esc(basis.charAt(0).toUpperCase() + basis.slice(1)) + '</span>');
+    if (basis) bits.push('<span>₹ crore</span>');
+    var src = d && d.available && d.rows && d.rows[0] && safeUrl(d.rows[0].source);
+    if (src) bits.push('<a href="' + esc(src) + '" target="_blank" rel="noopener noreferrer">Filing ↗</a>');
+    host.innerHTML = bits.join('');
+  }
+
+  function paintIncome() {
+    var box = $('funda-body'), d = FN.income;
     if (!box) return;
     if (!d || !d.available) {
       box.innerHTML = '<div class="own-empty">' +
         esc((d && d.message) || 'The filings could not be read.') + '</div>';
       return;
     }
-    var rows = d.rows || [];
-    var latest = rows[0] || {};
-    var rev = (latest.yoy || {}).revenue || {};
-    var pat = (latest.yoy || {}).pat || {};
-
-    var LEAD_WORDS = {
-      loss_to_profit: 'turned from a loss into a profit',
-      profit_to_loss: 'turned from a profit into a loss',
-      loss_widened: 'lost more',
-      loss_narrowed: 'lost less',
-      flat: 'was unchanged'
-    };
-    function phrase(c, what) {
-      if (!c || c.kind === 'unavailable') return '';
-      if (c.pct != null) {
-        if (Math.abs(c.pct) < 0.05) return what + ' was flat';
-        return what + ' ' + (c.pct > 0 ? 'grew' : 'fell') + ' ' +
-          Math.abs(c.pct).toFixed(1) + '%';
-      }
-      return what + ' ' + (LEAD_WORDS[c.kind] || 'changed');
-    }
-    var bits = [phrase(rev, 'Revenue'), phrase(pat, 'profit after tax')]
-      .filter(Boolean);
-    var lead = bits.length
-      ? bits.join(' and ') + ' against ' + (latest.yoy_against || 'a year earlier') + '.'
-      : 'Not enough history yet to compare this quarter with a year earlier.';
-
-    var alts = (d.basis_alternatives || []).filter(function (b) { return b !== d.basis; });
-    var head = '<p class="own-lead">' + esc(lead) + '</p>' +
-      '<p class="own-asof">' +
-        '<b>' + esc(d.basis) + '</b> results — ' + esc(d.basis_reason) + '. ' +
-        esc(String(d.count)) + ' quarter' + (d.count === 1 ? '' : 's') + ' read' +
-        (d.partial ? ' of ' + esc(String(d.requested)) + ' asked for' : '') + '.' +
-        (alts.length ? ' The company also files ' + esc(alts.join(' and ')) + '.' : '') +
-        (latest.source ? ' <a href="' + esc(latest.source) +
-          '" target="_blank" rel="noopener">Open the filing</a>.' : '') +
-      '</p>';
-
-    box.innerHTML = head + fundaTable(d) + fundaRatios(d) + notesBlock(d.notes);
-    paintTrend(d);
+    var model = usable(incomeModel(d));
+    box.innerHTML = (model ? fnCards(model) + fnChart(model) : '') + fnSplit(d) +
+      fnMore(fundaTable(d) + fundaRatios(d));
+    box._model = model;
+    growBars(box);
   }
 
-  /* The quarters as bars, above the table that holds them to the rupee. A
-     reader sees the direction here and reads the amount there; the bars are
-     drawn from the same rows, so they cannot show a different year. A loss
-     hangs below the line rather than standing on it. */
-  function paintTrend(d) {
-    var host = $('funda-trend');
-    if (!host) return;
-    var rows = (d.rows || []).slice().reverse();          // oldest first
-    function series(key) {
-      return rows.map(function (r) {
-        var v = (r.values || {})[key];
-        return { label: r.label || '', v: (v == null || isNaN(Number(v))) ? null : Number(v) / 1e7 };
-      });
-    }
-    function chart(title, key) {
-      var pts = series(key);
-      var vals = pts.filter(function (p) { return p.v != null; }).map(function (p) { return p.v; });
-      if (vals.length < 2) return '';
-      var top = Math.max.apply(null, vals.concat([0])), bot = Math.min.apply(null, vals.concat([0]));
-      var span = (top - bot) || 1, zero = 100 * top / span;
-      var last = pts[pts.length - 1];
-      return '<figure class="ft"><figcaption><span>' + esc(title) + '</span><b class="tnum">' +
-        (last.v == null ? '—' : '₹' + cr(last.v * 1e7) + ' cr') + '</b></figcaption>' +
-        '<div class="ft-plot" style="--zero:' + zero.toFixed(1) + '%">' + pts.map(function (p, i) {
-          if (p.v == null) return '<div class="ft-c"><span class="ft-x">' + esc(p.label) + '</span></div>';
-          var h = 100 * Math.abs(p.v) / span;
-          return '<div class="ft-c" title="' + esc(p.label + ': ₹' + cr(p.v * 1e7) + ' cr') + '">' +
-            '<i class="' + (p.v < 0 ? 'neg' : '') + (i === pts.length - 1 ? ' now' : '') +
-            '" style="--h:' + h.toFixed(1) + '%;--i:' + i + '"></i>' +
-            '<span class="ft-x">' + esc(p.label) + '</span></div>';
-        }).join('') + '</div></figure>';
-    }
-    var html = chart('Revenue', 'revenue') + chart('Profit after tax', 'pat');
-    host.innerHTML = html ? '<div class="ft-row">' + html + '</div>' : '';
+  function paintSheets() {
+    var box = $('funda-position'), p = FN.pos;
+    if (!box) return;
+    if (!p) { box.innerHTML = ''; return; }
+    var bal = usable(sheetModel(p.balance, 'balance', BALANCE_DEFS, [330, 400]));
+    var cash = usable(sheetModel(p.cashflow, 'cash', CASH_DEFS, [330, 400]));
+    box.innerHTML =
+      '<div class="fn-view" data-view="balance" hidden>' +
+        (bal ? fnCards(bal) + fnChart(bal) : '') + fnFunding(p.balance) +
+        fnMore(statementTable('Balance sheet', p.balance)) + '</div>' +
+      '<div class="fn-view" data-view="cash" hidden>' +
+        (cash ? fnCards(cash) + fnChart(cash) : '') +
+        fnMore(statementTable('Cash flow', p.cashflow)) + '</div>';
+    box._models = { balance: bal, cash: cash };
+  }
+
+  /* Which of the three is showing, and which of them there is anything for. */
+  function paintFnViews() {
+    paintSheets();
+    fnMeta();
+    var p = FN.pos, has = {
+      income: true,
+      balance: !!(p && p.balance && (p.balance.rows || []).length),
+      cash: !!(p && p.cashflow && (p.cashflow.rows || []).length)
+    };
+    if (!has[FN.view]) FN.view = 'income';
+    [].slice.call(document.querySelectorAll('#fn-views [data-fv]')).forEach(function (b) {
+      var on = b.dataset.fv === FN.view;
+      b.hidden = !has[b.dataset.fv];
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    var inc = $('funda-body');
+    if (inc) inc.hidden = FN.view !== 'income';
+    [].slice.call(document.querySelectorAll('#funda-position .fn-view')).forEach(function (v) {
+      v.hidden = v.dataset.view !== FN.view;
+    });
+  }
+
+  function paintFunda(d) {
+    FN.income = d;
+    paintIncome();
+    paintFnViews();
+  }
+
+  function fnModel(id) {
+    if (id === 'income') return ($('funda-body') || {})._model;
+    return (($('funda-position') || {})._models || {})[id];
+  }
+
+  var fnWired = false;
+  function wireFn() {
+    if (fnWired) return;
+    fnWired = true;
+    var pane = $('pane-funda');
+    if (!pane) return;
+
+    pane.addEventListener('click', function (e) {
+      var t = e.target.closest ? e.target : null;
+      if (!t) return;
+      var view = t.closest('[data-fv]');
+      if (view) {
+        if (view.dataset.fv === FN.view) return;
+        FN.view = view.dataset.fv;
+        track('stock_section_clicked', { section: 'financials_' + FN.view });
+        paintFnViews();
+        var shown = FN.view === 'income' ? $('funda-body')
+          : document.querySelector('#funda-position .fn-view[data-view="' + FN.view + '"]');
+        if (shown && !REDUCED) { shown.classList.remove('enter'); void shown.offsetWidth; shown.classList.add('enter'); }
+        view.focus();
+        return;
+      }
+      var card = t.closest('[data-metric]');
+      if (card) {
+        var id = FN.view;
+        if (FN.pick[id] === card.dataset.metric) return;
+        FN.pick[id] = card.dataset.metric;
+        track('stock_section_clicked', { section: 'financials_' + id + '_' + card.dataset.metric });
+        var model = fnModel(id), host = card.closest('.fn-view');
+        if (!model || !host) return;
+        // Only the cards' state and the chart change; the rest of the view,
+        // and the reader's place in it, stay as they are.
+        [].slice.call(host.querySelectorAll('[data-metric]')).forEach(function (b) {
+          var on = b.dataset.metric === FN.pick[id];
+          b.classList.toggle('on', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        var old = host.querySelector('.fc');
+        if (old) {
+          var div = document.createElement('div');
+          div.innerHTML = fnChart(model);
+          old.parentNode.replaceChild(div.firstChild, old);
+        }
+        return;
+      }
+      var col = t.closest('.fc-c[data-i]');
+      if (col) readColumn(col);
+    });
+
+    // A bar under the pointer, or reached with Tab, is read out above the chart.
+    pane.addEventListener('pointerover', function (e) {
+      var col = e.target.closest ? e.target.closest('.fc-c[data-i]') : null;
+      if (col) readColumn(col);
+    });
+    pane.addEventListener('focusin', function (e) {
+      var col = e.target.closest ? e.target.closest('.fc-c[data-i]') : null;
+      if (col) readColumn(col);
+    });
+  }
+
+  function readColumn(col) {
+    var chart = col.closest('.fc');
+    if (!chart) return;
+    var model = fnModel(chart.dataset.view);
+    if (!model) return;
+    var m = model.metrics.filter(function (x) { return x.key === FN.pick[model.id]; })[0];
+    if (!m) return;
+    [].slice.call(chart.querySelectorAll('.fc-c.on')).forEach(function (c) { c.classList.remove('on'); });
+    col.classList.add('on');
+    chart.querySelector('.fc-read').innerHTML = fnReadout(model, m, Number(col.dataset.i));
   }
 
   /* ── Against its industry ────────────────────────────────────────────────
@@ -2181,9 +2588,8 @@
         '<td class="tnum">' + esc(rank) + '</td></tr>';
     }).join('');
     box.innerHTML = '<h3 class="fu-h3">Against the industry median</h3>' +
-      '<p class="fu-cap" id="fu-cap-peers">' + esc(d.industry) + ', as ' +
-      esc(d.classifier || 'NSE') + ' classifies it. ' + esc(d.as_of || 'Latest') +
-      ' results against the median of its peers.</p>' +
+      '<p class="fu-cap" id="fu-cap-peers">' + esc(d.industry) +
+      (d.as_of ? ' · ' + esc(d.as_of) : '') + '</p>' +
       '<div class="fu-block"><div class="fu-wrap">' +
       '<table class="fu-table fu-peers" aria-describedby="fu-cap-peers">' +
       '<caption class="fu-vh">Against the industry median</caption>' +
@@ -2200,7 +2606,7 @@
      the company never filed is left out by the API, so a bank shows deposits
      and loans and a manufacturer inventories and receivables. */
 
-  function statementTable(id, title, cap, part) {
+  function statementTable(title, part) {
     var rows = part.rows || [];
     if (!rows.length) return '';
     var head = '<tr><th scope="col" class="fu-line">₹ crore</th>' +
@@ -2230,24 +2636,15 @@
             (v == null ? '—' : plain(v, 2)) + '</td>';
         }).join('') + '</tr>';
     }).join('');
-    return '<h3 class="fu-h3">' + esc(title) + '</h3>' +
-      '<p class="fu-cap" id="' + id + '">' + esc(cap) + '</p>' +
-      '<div class="fu-block"><div class="fu-wrap">' +
-      '<table class="fu-table fu-stmt" aria-describedby="' + id + '">' +
+    return '<div class="fu-block"><div class="fu-wrap">' +
+      '<table class="fu-table fu-stmt">' +
       '<caption class="fu-vh">' + esc(title) + ', in rupees crore</caption>' +
       '<thead>' + head + '</thead><tbody>' + lines + ratios + '</tbody></table></div></div>';
   }
 
   function paintPosition(d) {
-    var box = $('funda-position');
-    if (!box) return;
-    if (!d || !d.available) { box.innerHTML = ''; return; }
-    box.innerHTML =
-      statementTable('fu-cap-bs', 'Balance sheet',
-        'At each March and September, ' + d.basis + ', ₹ crore.', d.balance) +
-      statementTable('fu-cap-cf', 'Cash flow',
-        'Each full financial year, ' + d.basis + ', ₹ crore. Capital expenditure is shown positive.',
-        d.cashflow) + notesBlock(d.notes);
+    FN.pos = (d && d.available) ? d : null;
+    paintFnViews();
   }
 
   /* The medians belong beside the named peers, so they load with the Peers
@@ -2264,21 +2661,26 @@
       .catch(function () { paintPosition(null); });
   }
 
+  /* Eight quarters: two years, so four of them can be set against the same
+     quarter a year earlier. A crawled company is answered from the store. */
   function loadFunda() {
+    wireFn();
     loadPosition();
     var box = $('funda-body');
     if (box) {
       box.innerHTML = '<div class="own-empty is-loading" aria-busy="true">' +
         'Reading the results filings…</div>';
     }
-    fetch(API + '/fundamentals?ticker=' + encodeURIComponent(TICKER) + '&quarters=6')
+    fetch(API + '/fundamentals?ticker=' + encodeURIComponent(TICKER) + '&quarters=8')
       .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
       .then(paintFunda)
       .catch(function () {
+        FN.income = null;
         if (box) {
           box.innerHTML = '<div class="own-empty">The filings could not be read ' +
             'just now. Try again in a moment.</div>';
         }
+        paintFnViews();
       });
   }
 
@@ -2390,17 +2792,16 @@
       }).join('') + '</tr>';
 
     var dated = d.prices_as_of
-      ? ' Prices ' + ((d.prices_oldest && d.prices_oldest !== d.prices_as_of)
-          ? 'from ' + niceDate(d.prices_oldest) + ' to ' + niceDate(d.prices_as_of)
-          : 'as of ' + niceDate(d.prices_as_of)) + '.'
+      ? 'Prices ' + ((d.prices_oldest && d.prices_oldest !== d.prices_as_of)
+          ? niceDate(d.prices_oldest) + ' to ' + niceDate(d.prices_as_of)
+          : niceDate(d.prices_as_of))
       : '';
     box.innerHTML =
-      '<p class="fu-cap" id="pr-cap">' + esc(d.selection || '') + esc(dated) + '</p>' +
+      '<p class="fu-cap" id="pr-cap" title="' + esc(d.selection || '') + '">' + esc(dated) + '</p>' +
       '<div class="fu-block pr-block"><div class="fu-wrap">' +
       '<table class="pr-table" aria-describedby="pr-cap">' +
       '<caption class="fu-vh">' + esc(d.industry || 'Industry') + ' peers</caption>' +
-      '<thead>' + head + '</thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table></div></div>' +
-      notesBlock([d.note]);
+      '<thead>' + head + '</thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table></div></div>';
     hydrateLogos(box);
     $('peers-x').textContent = d.industry ? d.industry + ' · ' + (d.classifier || 'NSE') : '';
   }
@@ -2628,28 +3029,51 @@
 
   /* Asked for once the page is up, not with it. Neither list is needed to
      show a price or a score, and the press search is the slowest thing the
-     page does. The sector and industry are passed back for a company the API
-     holds no profile of; the name that is searched for is the API's own. */
-  var newsLoaded = false;
-  function loadNews() {
-    if (newsLoaded) return;
-    newsLoaded = true;
+     page does.
+
+     The filings are asked for twice, on purpose. At load the page asks only
+     for what the API already holds in memory (`held=1`): enough for the few
+     newest on the Overview, and no call to the exchange. The full year, which
+     is a call to NSE, is read when the News & filings section is opened. NSE
+     throttles bursts, and a page that spent a call on every visit left less
+     of its goodwill for the Ownership and Financials sections, which cannot
+     be drawn without one. */
+  var pressLoaded = false, filingsHeld = false, filingsFull = false;
+  function loadNews(full) {
     var d = DATA || {}, p = d.profile || {};
-    $('news-company').innerHTML = $('news-industry').innerHTML =
-      '<div class="own-empty is-loading" aria-busy="true">Searching the press…</div>';
-    $('filings-body').innerHTML =
-      '<div class="own-empty is-loading" aria-busy="true">Reading the exchange…</div>';
-    var q = '?ticker=' + encodeURIComponent(TICKER) +
-      '&sector=' + encodeURIComponent(p.sector || '') +
-      '&industry=' + encodeURIComponent(p.industry || '');
-    getJSON('/stock/news' + q)
-      .then(function (x) { NEWS = x; })
-      .catch(function () { NEWS = null; })
-      .then(function () { paintNews(); paintLatest(); });
-    getJSON('/stock/filings?ticker=' + encodeURIComponent(TICKER))
-      .then(function (x) { FILINGS = x; })
-      .catch(function () { FILINGS = null; })
-      .then(function () { paintFilings(); paintLatest(); });
+    if (!pressLoaded) {
+      pressLoaded = true;
+      $('news-company').innerHTML = $('news-industry').innerHTML =
+        '<div class="own-empty is-loading" aria-busy="true">Searching the press…</div>';
+      getJSON('/stock/news?ticker=' + encodeURIComponent(TICKER) +
+              '&sector=' + encodeURIComponent(p.sector || '') +
+              '&industry=' + encodeURIComponent(p.industry || ''))
+        .then(function (x) { NEWS = x; })
+        .catch(function () { NEWS = null; })
+        .then(function () { paintNews(); paintLatest(); });
+    }
+    if (full ? filingsFull : (filingsHeld || filingsFull)) return;
+    if (full) filingsFull = true; else filingsHeld = true;
+    var had = FILINGS && (FILINGS.rows || []).length;
+    if (!had) {
+      $('filings-body').innerHTML =
+        '<div class="own-empty is-loading" aria-busy="true">Reading the exchange…</div>';
+    }
+    getJSON('/stock/filings?ticker=' + encodeURIComponent(TICKER) + (full ? '' : '&held=1'))
+      .then(function (x) {
+        // A refused full read does not wipe the filings already on screen.
+        if (full && had && !(x && (x.rows || []).length)) return;
+        // And the first-screen read never replaces a full one that got in first.
+        if (!full && filingsFull && FILINGS) return;
+        FILINGS = x;
+      })
+      .catch(function () { if (!had) FILINGS = null; })
+      .then(function () {
+        // Until the section itself is opened, an empty first-screen read is
+        // not shown as "no filings": the year has not been asked for yet.
+        if (full || (FILINGS && (FILINGS.rows || []).length)) paintFilings();
+        paintLatest();
+      });
   }
 
   /* ── Delivery ─────────────────────────────────────────────────────────────
@@ -2735,12 +3159,26 @@
      measures zero; and the filings, the delivery record and the peer table
      are fetches nobody who came for the price should pay for.
 
-     MOTION
-     The marker under the active tab slides to it, the section that opens
-     rises into place, and its bars grow to their values. All three are
-     transform, opacity or width on small elements, none of them moves a
-     number that is being read, and none runs for a reader who has asked for
-     reduced motion. */
+     SWITCHING WITHOUT A JOLT
+     The first version swapped one section for the next and let the page sort
+     itself out. Going from a long section to a short one, the document got
+     shorter than the reader's scroll position, the browser clamped it, the
+     name scrolled half back into view under the header, the bar un-stuck and
+     its tabs slid sideways as the company's name left it. Four things moving
+     for one tap. Now:
+
+       · the sections sit in a stage that is never shorter than the screen,
+         so the page cannot collapse under the reader;
+       · a reader who has scrolled into a section is put at the top of the
+         next one in the same instant it appears, behind its own fade, so
+         nothing is seen to jump;
+       · the bar's tabs never move. The company's name and price ride at the
+         far end of the bar and only fade in and out.
+
+     The swap itself is immediate, with no timer between the tap and the
+     section: the incoming section fades and rises a few pixels, the marker
+     slides to its tab, and the section's bars grow to their values. None of
+     it runs for a reader who has asked for reduced motion. */
 
   var PANES = ['info', 'chart', 'scores', 'owners', 'funda', 'peers', 'deliv', 'news'];
   var chartDrawn = false;
@@ -2755,6 +3193,17 @@
     ind.classList.add('on');
   }
 
+  /* Where the page sits when the bar is exactly stuck under the header: the
+     top of any section. Null when it cannot be measured. */
+  function stageTop() {
+    var stage = $('stage'), bar = $('stk-panebar');
+    if (!stage || !bar) return null;
+    var chrome = document.querySelector('.sh-chrome');
+    var y = stage.getBoundingClientRect().top + window.scrollY -
+      ((chrome && chrome.offsetHeight) || 0) - bar.offsetHeight;
+    return Math.max(0, Math.round(y));
+  }
+
   function showPane(name, scroll) {
     if (PANES.indexOf(name) < 0) name = 'info';
     var changed = name !== current;
@@ -2764,12 +3213,23 @@
       if (!pane || !btn) return;
       var on = p === name;
       pane.hidden = !on;
-      pane.classList.toggle('enter', on && changed && !REDUCED);
+      pane.classList.remove('enter');
       btn.classList.toggle('active', on);
       btn.setAttribute('aria-selected', on ? 'true' : 'false');
       btn.tabIndex = on ? 0 : -1;
     });
     moveMarker();
+
+    // A reader partway down the last section starts the next one at its top.
+    // Set in the same tick the section appears, so the move is never seen.
+    var top = stageTop();
+    if (changed && top != null && window.scrollY > top) window.scrollTo(0, top);
+
+    var shown = $('pane-' + name);
+    if (shown && changed && !REDUCED) {
+      void shown.offsetWidth;                 // restart the animation on a repeat visit
+      shown.classList.add('enter');
+    }
 
     // The active tab stays in view on a phone, where the bar scrolls sideways.
     var btn = $('pane-btn-' + name), bar = $('panes');
@@ -2806,7 +3266,7 @@
       paintDvRanges();
       loadDelivery();
     }
-    if (name === 'news') { loadNews(); loadDeals(); }
+    if (name === 'news') { loadNews(true); loadDeals(); }
     if (changed) growBars($('pane-' + name));
 
     // The section is part of the address, so a link to a company's filings
@@ -2818,11 +3278,10 @@
       }
     } catch (e) {}
 
-    if (scroll) {
-      var top = $('stk-panebar');
-      if (top && top.scrollIntoView) {
-        top.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
-      }
+    if (scroll && top != null) {
+      // From a card on the Overview: bring the bar to the top of the screen.
+      try { window.scrollTo({ top: top, behavior: REDUCED ? 'auto' : 'smooth' }); }
+      catch (e) { window.scrollTo(0, top); }
     }
     // analytics.js keeps a closed list of events; this is the one that asks
     // which sections of a company's page get opened.
@@ -2864,16 +3323,13 @@
     moveMarker();
 
     /* Scrolled past the name, the bar carries the company and its price, so
-       a reader halfway down the financials still knows whose they are. */
+       a reader halfway down the financials still knows whose they are. It
+       fades in at the far end of the bar; the tabs do not move for it. */
     var head = $('stk-head'), panebar = $('stk-panebar');
     if (head && panebar && 'IntersectionObserver' in window) {
       var chrome = document.querySelector('.sh-chrome');
       new IntersectionObserver(function (entries) {
-        var past = !entries[0].isIntersecting;
-        panebar.classList.toggle('is-stuck', past);
-        // The marker's place depends on the bar's layout, which just changed.
-        setTimeout(moveMarker, 0);
-        setTimeout(moveMarker, 260);
+        panebar.classList.toggle('is-stuck', !entries[0].isIntersecting);
       }, { rootMargin: '-' + (((chrome && chrome.offsetHeight) || 96) + 4) + 'px 0px 0px 0px' }).observe(head);
     }
   }
@@ -2954,7 +3410,7 @@
         var want = (param('pane') || (location.hash || '').replace(/^#/, '')).toLowerCase();
         if (want && want !== 'info' && PANES.indexOf(want) >= 0) showPane(want);
         // The press and the filings, once the first screen is up.
-        setTimeout(loadNews, 350);
+        setTimeout(function () { loadNews(false); }, 350);
         if (window.AltahaShell) window.AltahaShell.reveal();
       })
       .catch(function (e) {

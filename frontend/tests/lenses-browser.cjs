@@ -9,7 +9,8 @@
      · a lens page lists its rules, marks each rule ✓ / ✗ / – with the figure
        behind it on hover, and keeps near misses in a collapsible section;
      · convergence ranks companies with a badge per lens met;
-     · the stock page says "Meets N of 10 lenses" with badges linking to each;
+     · the stock page carries no lenses: the card was taken off it, and the
+       page no longer loads this file or asks for a company's lens results;
      · every view carries the notice, and no view uses the words the site's
        SEBI position rules out. */
 const fs = require('node:fs'), path = require('node:path'),
@@ -223,28 +224,20 @@ async function viewText(page, id) {
   assert.notEqual(bg, 'rgb(255, 253, 248)', 'cards take the dark card colour');
   await page.screenshot({ path: path.join(output, 'index-dark.png'), fullPage: true });
 
-  // ── The stock page strip ───────────────────────────────────────────────
+  // ── The stock page carries no lenses ───────────────────────────────────
+  // The card was removed from the company page. Nothing of it is left to
+  // half-render, and the page does not spend a request on results it never
+  // shows.
   const sp = await desk.newPage();
   sp.on('pageerror', e => errors.push(String(e && (e.stack || e.message || e))));
+  const lensAsks = [];
+  sp.on('request', r => { if (r.url().includes('/api/lenses')) lensAsks.push(r.url()); });
   await sp.goto('http://127.0.0.1:8781/stock.html?ticker=GROW', { waitUntil: 'load' });
-  await sp.locator('#stk-lenses .ln-strip').waitFor({ state: 'visible' });
-  const strip = await sp.locator('#stk-lenses').innerText();
-  assert.match(strip, new RegExp('Meets ' + fx.stock.GROW.meets + ' of 10 lenses'));
-  assert.equal(await sp.locator('#stk-lenses .ln-badge').count(), 10);
-  assert.equal(await sp.locator('#stk-lenses .ln-badge.is-pass').count(), fx.stock.GROW.meets);
-  assert.match(await sp.locator('#stk-lenses .ln-badge.is-pass').first().getAttribute('href'),
-    /^\.\/#research\/lenses\/[a-z]+$/);
-  assert.match(strip, NOTICE);
-  assert.doesNotMatch(strip, BANNED);
-  await sp.screenshot({ path: path.join(output, 'stock-strip.png') });
-  // A company the lenses have not reached shows no strip at all, not a
-  // notice about the pipeline above everything the reader came for.
-  const answered = sp.waitForResponse(r => r.url().includes('/api/lenses/stock/NOPE'));
-  await sp.goto('http://127.0.0.1:8781/stock.html?ticker=NOPE', { waitUntil: 'load' });
-  await answered;
-  await sp.waitForTimeout(300);
-  assert.equal(await sp.locator('#stk-lenses .ln-strip').count(), 0, 'no empty lenses strip');
-  assert.equal(await sp.locator('#stk-lenses').isVisible(), false);
+  await sp.waitForTimeout(600);
+  assert.equal(await sp.locator('#stk-lenses, .ln-strip, .ln-badge').count(), 0,
+    'the lens card is still on the stock page');
+  assert.equal(await sp.locator('script[src*="lenses.js"], link[href*="lenses.css"]').count(), 0);
+  assert.deepEqual(lensAsks, [], 'the stock page still asks for lens results');
 
   // ── Mobile: the Me sheet carries every door, and the views fit ─────────
   const mob = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });

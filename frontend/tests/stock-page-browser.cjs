@@ -9,7 +9,15 @@
    What this is actually guarding:
      · THE PAGE HAS AN ORDER. Name, price and score, then the section bar
        directly under them, then cards. The bar used to sit under a strip of
-       lens badges, nine figures and a paragraph.
+       lens badges, nine figures and a paragraph. The lenses are off the page.
+     · SWITCHING SECTIONS MOVES NOTHING ELSE. From deep in a long section to a
+       short one, the reader lands at the top of the new section with the bar
+       still stuck: the page does not collapse under them, the name does not
+       slide half back into view, and the tabs do not shift sideways.
+     · OPENING A COMPANY IS NOT A CALL TO THE EXCHANGE. The first screen asks
+       only for filings already held; the full year is read with its section.
+     · OWNERSHIP ASKS AGAIN BEFORE IT GIVES UP, offers a way to ask once more,
+       and draws a stored copy when that is all there is.
      · THE SCORE ADDS UP ON SCREEN. The points printed against each pillar
        sum to the weighted sum printed under them, and that sum, pulled
        toward 50 by the confidence printed beside it, is the number on the
@@ -37,7 +45,6 @@ const { chromium } = require('playwright');
 const root = path.resolve('frontend'), output = path.resolve('test-results/stock-page');
 fs.mkdirSync(output, { recursive: true });
 const fx = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/stock-page.json'), 'utf8'));
-const lenses = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/lenses.json'), 'utf8'));
 
 const PNG64 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAUUlEQVR42u3PMQ0AMAgAMJgG1KEOqVPBQdI6aFZPXPbiOAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAYF9HyTJAY7THInWAAAAAElFTkSuQmCC', 'base64');
 const PNG16 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAGklEQVR42mMUiVrAQApgYiARjGoY1TB0NAAAbHUBLsKWU5AAAAAASUVORK5CYII=', 'base64');
@@ -72,6 +79,7 @@ async function open(browser, port, opts) {
   const context = await browser.newContext(Object.assign(
     { viewport: { width: 1280, height: 1000 } }, opts.context));
   const page = await context.newPage(), errors = [], asked = [];
+  let owned = 0;
   page.on('pageerror', e => errors.push(String(e.stack || e)));
   await context.route('**/*', route => {
     const u = new URL(route.request().url());
@@ -91,10 +99,21 @@ async function open(browser, port, opts) {
       case '/chart': return route.fulfill({ json: { currency: 'INR', day_change_pct: 0.84, candles: year } });
       case '/stock/peers': return route.fulfill({ json: fx.peers });
       case '/stock/news': return route.fulfill({ json: opts.news === undefined ? fx.news : opts.news });
-      case '/stock/filings': return route.fulfill({ json: opts.filings === undefined ? fx.filings : opts.filings });
+      case '/stock/filings': {
+        if (opts.filings !== undefined) return route.fulfill({ json: opts.filings });
+        // held=1 is what the API has in memory: the last few days of the feed.
+        const held = u.searchParams.get('held') === '1';
+        return route.fulfill({ json: held
+          ? Object.assign({}, fx.filings, { rows: fx.filings.rows.slice(0, 3), count: 3 }) : fx.filings });
+      }
+      case '/shareholding': {
+        const answers = opts.ownership || [];
+        const a = answers[Math.min(owned, answers.length - 1)];
+        owned++;
+        return route.fulfill({ json: a || { available: false, split: [], history: [] } });
+      }
     }
     if (u.pathname === '/deals/NORTHBANK') return route.fulfill({ json: deals });
-    if (u.pathname.startsWith('/api/lenses/stock/')) return route.fulfill({ json: lenses.stock.GROW });
     return route.fulfill({ json: { available: false, rows: [], items: [] } });
   });
   await page.goto(`http://127.0.0.1:${port}/stock.html?ticker=NORTHBANK${opts.hash || ''}`,
@@ -123,9 +142,8 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       const y = async sel => (await page.locator(sel).boundingBox()).y;
       assert.ok(await y('#nm') < await y('#panes'), 'the section bar is above the name');
       assert.ok(await y('#panes') < await y('#kgrid'), 'the figures are above the section bar');
-      await page.locator('#stk-lenses .ln-strip').waitFor();
-      assert.ok(await y('#panes') < await y('#stk-lenses'), 'the lenses are above the section bar again');
-      assert.equal(await page.locator('.ov-rail #stk-lenses').count(), 1, 'the lenses left the side column');
+      // The lenses were taken off the company page altogether.
+      assert.equal(await page.locator('#stk-lenses, .ln-strip, .ln-badge').count(), 0);
 
       // A bank: no ROCE, no debt to equity, and its price to book instead.
       const tiles = await page.evaluate(() => Object.fromEntries(
@@ -153,7 +171,7 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
 
       // Nothing slow was fetched to show this screen.
       assert.ok(!t.asked.some(u => u.startsWith('/stock/peers')), 'peers were fetched before their section');
-      assert.ok(!t.asked.some(u => /^\/(shareholding|fundamentals|delivery|deals)/.test(u)),
+      assert.ok(!t.asked.some(u => /^\/(shareholding|fundamentals|delivery|deals|api\/lenses)/.test(u)),
         'a section was fetched before it was opened: ' + t.asked.join(' '));
 
       // The press and the filings arrive once the page is up, and the newest
@@ -166,6 +184,12 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       const want = t.asked.find(u => u.startsWith('/stock/news'));
       assert.match(want, /industry=Banks%20-%20Regional/);
       assert.ok(!/[?&]name=/.test(want), 'the page sent the API a name to search for');
+      // The first screen's filings are the ones already held: no exchange call.
+      const filingAsks = () => t.asked.filter(u => u.startsWith('/stock/filings'));
+      assert.deepEqual(filingAsks().map(u => /held=1/.test(u)), [true],
+        'opening the page asked the exchange for filings: ' + filingAsks());
+      // No sentence under the score's bars.
+      assert.equal(await page.locator('#ov-score p').count(), 0);
 
       // The logo: initials first, then the company's own mark over them.
       await page.locator('#logo.has-img img').waitFor();
@@ -265,6 +289,10 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       /* ── 5. News and filings ───────────────────────────────────────────── */
       await page.locator('#pane-btn-news').click();
       await page.locator('#news-company .nw-i').first().waitFor();
+      await page.waitForFunction(n => document.querySelectorAll('#filings-body .fil-i').length === n,
+                                 fx.filings.rows.length);
+      assert.deepEqual(filingAsks().map(u => /held=1/.test(u)), [true, false],
+        'the year of filings is read once, with its section');
       assert.equal(await page.locator('#news-company .nw-i').count(), fx.news.company.rows.length);
       assert.equal(await page.locator('#news-ind-h').innerText(), 'Industry: Banks');
       const all = fx.news.industry.rows.length;
@@ -295,10 +323,47 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       assert.match(await page.locator('#deals-body .dl-i').nth(1).innerText(), /Sold[\s\S]*Proprietary desk/i);
       await page.screenshot({ path: path.join(output, 'news-1280.png'), fullPage: true });
 
-      // Scrolled past the name, the bar carries the company and its price.
-      await page.evaluate(() => scrollTo(0, 700));
-      await page.locator('#stk-panebar.is-stuck #stk-mini').waitFor();
+      /* ── 5b. Switching sections moves nothing else ─────────────────────── */
+      const tabX = () => page.locator('#pane-btn-info').evaluate(b => Math.round(b.getBoundingClientRect().left));
+      await page.evaluate(() => scrollTo(0, 0));
+      await page.waitForTimeout(450);
+      const restX = await tabX();
+      assert.equal(await page.locator('#stk-mini').evaluate(e => getComputedStyle(e).opacity), '0');
+
+      // Deep into a long section: the bar sticks and carries the company. The
+      // tabs are exactly where they were.
+      await page.locator('#pane-btn-scores').click();
+      await page.evaluate(() => scrollTo(0, 1100));
+      await page.locator('#stk-panebar.is-stuck').waitFor();
+      await page.waitForTimeout(450);
+      assert.equal(await page.locator('#stk-mini').evaluate(e => getComputedStyle(e).opacity), '1');
       assert.match(await page.locator('#stk-mini').innerText(), /NORTHBANK[\s\S]*1,156\.00[\s\S]*\+0\.84%/);
+      assert.equal(await tabX(), restX, 'the tabs slid sideways when the bar stuck');
+
+      // From there to a short section. The reader is at its top, the bar is
+      // still stuck under the header, and the name has not come back into view.
+      await page.locator('#pane-btn-owners').click();
+      const at = await page.evaluate(() => {
+        const chrome = document.querySelector('.sh-chrome').offsetHeight;
+        const bar = document.getElementById('stk-panebar').getBoundingClientRect();
+        const name = document.getElementById('nm').getBoundingClientRect();
+        const pane = document.getElementById('stage').getBoundingClientRect();
+        return { barTop: Math.round(bar.top - chrome), paneTop: Math.round(pane.top - bar.bottom),
+                 nameBottom: Math.round(name.bottom - chrome),
+                 slack: document.documentElement.scrollHeight - innerHeight - scrollY };
+      });
+      assert.ok(Math.abs(at.barTop) <= 1, `the bar is ${at.barTop}px off the header after switching`);
+      assert.ok(at.paneTop >= 0 && at.paneTop <= 2, `the new section starts ${at.paneTop}px from the bar`);
+      assert.ok(at.nameBottom <= 0, 'the company name slid back into view under the header');
+      assert.ok(at.slack >= 0, 'the page got shorter than the reader\'s scroll position');
+      assert.ok(await page.locator('#stk-panebar').evaluate(b => b.classList.contains('is-stuck')));
+      assert.equal(await tabX(), restX, 'the tabs slid sideways on switching sections');
+      // And back to a long one from the top of a short one: still no movement.
+      await page.locator('#pane-btn-news').click();
+      assert.equal(await tabX(), restX);
+      assert.ok(Math.abs(await page.evaluate(() =>
+        document.getElementById('stk-panebar').getBoundingClientRect().top -
+        document.querySelector('.sh-chrome').offsetHeight)) <= 1);
       assert.deepEqual(t.errors, [], t.errors.join('\n'));
       await t.context.close();
     }
@@ -347,6 +412,46 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       assert.equal(await quiet.page.locator('#ov-latest').isVisible(), false);
       assert.deepEqual(quiet.errors, []);
       await quiet.context.close();
+    }
+
+    /* ── 7b. Ownership asks again, then draws what it is given ───────────── */
+    {
+      const refused = { symbol: 'NORTHBANK', available: false, retry: true,
+        message: 'No shareholding filing could be read for NORTHBANK right now.' };
+      const row = (period, p, f, d, pub) => ({ period, quarter_end: true, promoter: p, fii: f, dii: d,
+        public_non_institutional: pub, holders: null, filed: null, source: null });
+      const stored = { symbol: 'NORTHBANK', available: true, reduced: true, period: '2026-09-30',
+        quarters_read: 3, latest_source: null,
+        split: [
+          { key: 'promoter', label: 'Promoters', pct: 55.5, change_qoq: 0, change_yoy: null, derived: false },
+          { key: 'fii', label: 'Foreign institutions (FII/FPI)', pct: 9.87, change_qoq: -0.61, change_yoy: null, derived: false },
+          { key: 'dii', label: 'Domestic institutions (DII)', pct: 27.42, change_qoq: 0.74, change_yoy: null, derived: false },
+          { key: 'public_non_institutional', label: 'Public — non-institutional', pct: 7.21, change_qoq: -0.13, change_yoy: null, derived: true }],
+        history: [row('2026-03-31', 55.5, 10.9, 26.1, 7.5), row('2026-06-30', 55.5, 10.48, 26.68, 7.34),
+                  row('2026-09-30', 55.5, 9.87, 27.42, 7.21)],
+        totals: { holders: null, split_sums_to: 100 }, names: { promoters: [], public: [] }, notes: [] };
+      const t = await open(browser, port, { hash: '#owners', ownership: [refused, refused, stored] });
+      const asks = () => t.asked.filter(u => u.startsWith('/shareholding')).length;
+      // A refusal is asked about once more, unprompted, before the page says so.
+      await t.page.locator('#own-retry').waitFor({ timeout: 12000 });
+      assert.equal(asks(), 2, 'a refused reading was not asked for again');
+      assert.match(await t.page.locator('#own-body').innerText(), /could be read[\s\S]*Try again/);
+      // Asking by hand reads it; a stored copy is drawn as far as it goes.
+      await t.page.locator('#own-retry').click();
+      await t.page.locator('#own-body .op').first().waitFor();
+      assert.equal(asks(), 3);
+      assert.equal(await t.page.locator('#own-body .op').count(), 4);
+      assert.match(await t.page.locator('#own-meta').innerText(), /30 Sep 2026[\s\S]*Stored copy/i);
+      assert.match(await t.page.locator('.op.s-fii').innerText(), /9\.87[\s\S]*0\.61/);
+      assert.equal(await t.page.locator('#own-intelligence, .own-names, .op-holders').count(), 0,
+        'a stored copy has no names and no holder counts to show');
+      // The "derived" tag is a tag: it once took the Score section's grid rule
+      // by sharing a class name, and stretched across its card.
+      const tag = await t.page.locator('.op.s-public_non_institutional .drv').boundingBox();
+      assert.ok(tag && tag.width < 90, 'the derived tag is ' + (tag && tag.width) + 'px wide');
+      assert.ok(!/undefined|NaN|null/.test(await t.page.locator('#pane-owners').innerText()));
+      assert.deepEqual(t.errors, []);
+      await t.context.close();
     }
 
     /* ── 8. A phone, every section, both themes ─────────────────────────── */

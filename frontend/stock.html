@@ -19,8 +19,7 @@
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20261113-foot">
-<link rel="stylesheet" href="stock.css?v=20261119-systematic">
-<link rel="stylesheet" href="lenses.css?v=20261119-systematic">
+<link rel="stylesheet" href="stock.css?v=20261119-charts">
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="type.css">
@@ -88,10 +87,6 @@
          its first screen and not as a long column with a menu halfway down.
          Scrolled past the name, the bar carries the company and its price. -->
     <div class="stk-panebar" id="stk-panebar">
-      <div class="stk-mini" id="stk-mini" aria-hidden="true">
-        <span class="lg lg-sm" id="mini-logo"></span>
-        <b id="mini-sym"></b><span class="tnum" id="mini-px"></span><span class="tnum" id="mini-chg"></span>
-      </div>
       <nav class="stk-panes" id="panes" role="tablist" aria-label="Sections">
         <span class="stk-panes-ind" id="panes-ind" aria-hidden="true"></span>
         <button type="button" class="stk-pane-btn active" role="tab" data-p="info"
@@ -111,7 +106,16 @@
         <button type="button" class="stk-pane-btn" role="tab" data-p="news"
                 id="pane-btn-news" aria-selected="false" aria-controls="pane-news">News &amp; filings<span class="stk-pane-n" id="news-count" hidden></span></button>
       </nav>
+      <div class="stk-mini" id="stk-mini" aria-hidden="true">
+        <span class="lg lg-sm" id="mini-logo"></span>
+        <b id="mini-sym"></b><span class="tnum" id="mini-px"></span><span class="tnum" id="mini-chg"></span>
+      </div>
     </div>
+
+    <!-- Every section sits in one stage that is never shorter than the
+         screen, so swapping a long section for a short one cannot pull the
+         page out from under the reader. -->
+    <div class="stk-stage" id="stage">
 
     <!-- ══ Overview ════════════════════════════════════════════════════════
          What it is worth, how it has moved, how it scores and what is being
@@ -147,11 +151,6 @@
             <div id="ov-score-body"></div>
           </section>
 
-          <!-- Lenses: "Meets 3 of 10", the ones it meets named, the rest one
-               tap away. Filled by lenses.js; hidden if the lens results cannot
-               be read or have not reached this company. -->
-          <div id="stk-lenses" hidden></div>
-
           <section class="card ov-latest" id="ov-latest" aria-labelledby="ovl-h" hidden>
             <header class="card-h"><h2 id="ovl-h">Latest</h2>
               <button type="button" class="card-go" data-go="news">All news &amp; filings ›</button></header>
@@ -174,14 +173,14 @@
       </section>
 
       <section class="stk-sec" id="s-levels">
-        <header class="sec-h"><h2>Support and resistance</h2><span class="sec-x">From the last year of prices</span></header>
+        <header class="sec-h"><h2>Support and resistance</h2></header>
         <div class="lvls" id="levels"></div>
       </section>
 
       <!-- Into the Strategy lab with this stock filled in (strategy-lab.js). -->
       <a class="stk-lab-link" id="stk-lab-link" href="./?go=strategies">
         <b>Would a trading rule have beaten holding it?</b>
-        <span>Eleven rules on this stock’s own history, with costs and tax ›</span>
+        <span>Test eleven rules on its own history ›</span>
       </a>
       <script>
         (function () {
@@ -260,7 +259,7 @@
          from. Loaded when the pane is first opened. -->
     <div class="stk-pane" id="pane-owners" role="tabpanel" aria-labelledby="pane-btn-owners" hidden>
       <section class="stk-sec">
-        <header class="sec-h"><h2>Ownership</h2><span class="sec-x">From the company’s quarterly filings</span></header>
+        <header class="sec-h"><h2>Ownership</h2><div class="fn-meta" id="own-meta"></div></header>
         <div id="own-body"></div>
       </section>
     </div>
@@ -271,10 +270,17 @@
          alternating between them would report that difference as growth. -->
     <div class="stk-pane" id="pane-funda" role="tabpanel" aria-labelledby="pane-btn-funda" hidden>
       <section class="stk-sec">
-        <header class="sec-h"><h2>Financials</h2><span class="sec-x">Quarterly results as filed</span></header>
-        <div id="funda-trend"></div>
-        <div id="funda-body"></div>
-        <!-- The balance sheet and cash flow, read from the stored filings. -->
+        <header class="sec-h"><h2>Financials</h2>
+          <div class="hz" id="fn-views" role="group" aria-label="Statement">
+            <button type="button" data-fv="income" class="on" aria-pressed="true">Income</button>
+            <button type="button" data-fv="balance" aria-pressed="false">Balance sheet</button>
+            <button type="button" data-fv="cash" aria-pressed="false">Cash flow</button>
+          </div>
+        </header>
+        <div class="fn-meta" id="fn-meta"></div>
+        <!-- Income: the quarters as charts, the statement itself one tap away. -->
+        <div class="fn-view" id="funda-body" data-view="income"></div>
+        <!-- Balance sheet and cash flow, read from the stored filings. -->
         <div id="funda-position"></div>
       </section>
     </div>
@@ -301,7 +307,6 @@
       <section class="stk-sec">
         <header class="sec-h"><h2>Delivery</h2>
           <div class="ranges dv-ranges" id="dv-ranges"></div></header>
-        <p class="sub">The share of each day’s volume bought to keep, not traded out the same day.</p>
         <div id="dv-body"></div>
       </section>
     </div>
@@ -333,6 +338,8 @@
         <div id="deals-body"></div>
       </section>
     </div>
+
+    </div><!-- /stage -->
 
   </div>
 
@@ -373,8 +380,7 @@
 <script src="ownership-snapshot.js" defer></script>
 <script src="ownership.js" defer></script>
 <script src="delivery-ui.js?v=20260923" defer></script>
-<script src="stock.js?v=20261119-systematic" defer></script>
-<script src="lenses.js?v=20261119-systematic" defer></script>
+<script src="stock.js?v=20261119-charts" defer></script>
 <script src="experience.js?v=20261118-pages" defer></script>
 </body>
 </html>
