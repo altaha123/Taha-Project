@@ -50,7 +50,7 @@ complex to find their way around, so three things changed (Nov 2026):
 - Less writing. Sixteen tool intros went from 452 words to 177.
 - The door bars went from 9 and 13 pills to 5 and 6, plus More.
 - A stock page shows its Altaha Score under the name; it used to be behind
-  the Scores tab. The chip opens that tab. One search box finds companies, tools and actions alike — "bulk"
+  the Scores tab. The chip opens that section. One search box finds companies, tools and actions alike — "bulk"
 finds Big trades, "pledge" finds the Screener — and opens with Ctrl+K or `/`.
 On a phone the bottom bar is Today · Ideas · Search · My money · Me.
 
@@ -317,6 +317,112 @@ salary-day figures add up to the rupee, a budget nobody itemised is not handed
 a grade, and no typed figure appears in any request.
 
 ---
+
+## The stock page — one company, eight sections
+
+`frontend/stock.html`, `stock.js`, `stock.css`; `backend/stock_page.py`,
+`backend/stock_news.py`, `announcements.for_company`.
+
+The page had grown by addition: a name, a score chip, a strip of ten lens
+badges, nine figures, a paragraph, and only then its own menu, whose first
+section carried on down the same column. It showed three scores that did not
+add up to each other, and a paragraph of method under most headings.
+
+- **One bar, directly under the name:** Overview · Chart · Score · Ownership ·
+  Financials · Peers · Delivery · News & filings. Scrolled past the name, the
+  bar carries the company's logo, symbol and price. A section is part of the
+  address (`#peers`, or the older `?pane=owners`).
+- **Switching sections moves nothing else.** The sections share a stage at
+  least a screen tall, so the page cannot collapse under a reader who was deep
+  in a long one; they land at the top of the new section with the bar still
+  stuck. The company's name in the bar fades in at the bar's far end, so the
+  tabs never shift, and a section arrives once, as a whole.
+- **The Overview is cards**, each opening the section behind it: key figures
+  with where each sits among peers, the year's price, the score's pillars, and
+  the newest filings and headlines. The lenses are not on this page; they stay
+  on the scanner.
+- **Labels, figures and directions; no paragraphs.** A method note is a
+  tooltip or it is gone.
+- **Financials are drawn** (`/fundamentals?quarters=8`,
+  `/fundamentals/position`). Three views: Income, Balance sheet, Cash flow.
+  Each opens on a row of figures that are also buttons, every one with its
+  change on the year and its own small trend line; the pressed one is charted
+  as slim bars from zero against a scale of round figures, the latest in full
+  colour, the period under the pointer read out above. Beside the chart is
+  the second question: the two margins as lines on one scale; what funds the
+  assets; how much operating cash was left after capital expenditure. Income
+  ends on **where the money went**: revenue on the left, costs and EBITDA in
+  the middle, every cost by name and the net profit on the right, the heights
+  being the amounts. It is drawn only for an ordinary quarter (a profit, no
+  negative cost, parts that come back to the whole); on a phone, and for any
+  other quarter the split allows, one bar of ₹100 says it instead. Every line
+  of the statement as filed is one tap away under "Full statement".
+- **Three colours, each meaning one thing.** Blue is the size of the business
+  (revenue, assets, operating cash), green is what is kept (profit, equity,
+  free cash), orange is what is owed or spent (borrowings, capital
+  expenditure); costs are grey. They are the first three steps of a palette
+  checked for colour-blind separation on both card colours. A rise in a cost
+  or in borrowings is marked as a rise, not as good news. Figures and card
+  titles are set in the interface sans; the display serif is kept for the
+  company's name and the section headings. The first version set numerals in
+  the serif over fat tan bars, and was approved in a test browser that had
+  web fonts blocked: previews now load the real fonts.
+- **Ownership asks more than once** (`shareholding_filings.py`). The exchange
+  refuses in bursts: a refused read is retried after a pause, the list of a
+  company's filings is kept on disk so a restart does not need the exchange to
+  answer first, an empty reply is believed for a minute (it used to be six
+  hours) and never replaces a list already read, and once one document is
+  refused the rest of that reading uses only what is already held. If nothing can be read, the quarters the scanner
+  already stores are shown instead, marked "Stored copy", without the named
+  holders; failing that the page asks once more itself and then offers "Try
+  again".
+- **One score, and its arithmetic.** The Score section prints what the engine
+  did, from the payload it came from: each pillar's rank among peers, its
+  weight, the points that makes, their sum, and the pull toward 50 for what
+  could not be measured (`50 + (sum − 50) × confidence`). The three holding
+  periods switch without a request. The older technical and fundamental checks
+  are folded under "Other checks — not part of the score".
+- **The word beside the score is the site's one scale** (`score_bands.py`,
+  sent as `scoring.band`). The page used to cut at 72/55/40, which read
+  "MIXED" for most of the market, because v4 scores bunch around 50.
+- **A bank is not shown a debt-to-equity** or a ROCE, in its figures or among
+  its peers. `/analyze` sends `business_model`.
+- **Peers are named** (`GET /stock/peers`): the dozen companies nearest in
+  market value in the same industry, every figure worked out one way from the
+  stored filings and prices, sortable, with the peers' median. The medians
+  table (`/fundamentals/peers`) sits under it.
+- **News is two lists, filings a third, never merged** (`GET /stock/news`,
+  `GET /stock/filings`). Company news is a news search by name, kept only
+  where the headline names the company. Industry news is a search in the
+  industry's own vocabulary, each headline tagged with the driver it mentions
+  (a rate decision for a bank, crude for a refiner): keyword rules, printed in
+  `stock_news.GROUPS`. Filings are the company's own, a year of them, from NSE;
+  the first screen asks only for the ones already held (`held=1`), so opening
+  a company is not a call to the exchange, and the year is read when the
+  section is opened.
+  Press never reaches a score. Both endpoints go out only for a company the
+  server already knows (the scan, the stored profile, NSE's equity list), and
+  the name searched is the server's own, never a request's. Searches are held
+  for twenty minutes and filings for fifteen; three unanswered searches rest
+  the search for five minutes and a refused exchange read rests it for two.
+  The API must be able to reach `news.google.com`; when it cannot the page
+  says the search was not answered, which is not the same as no news. The
+  same section lists the company's bulk and block deals (`/deals/{ticker}`).
+- **Logos** are the company's initials on a tinted tile, with its own mark over
+  them when its website is known (the stored profile, else
+  `stock_page.KNOWN_DOMAINS`) and the image loads at a usable size. The browser
+  asks a favicon service with `no-referrer`; the API fetches no images.
+- **Motion** is the tab marker sliding, a section fading in, bars growing to
+  their value and the dial sweeping once. None of it runs under
+  `prefers-reduced-motion`.
+
+`backend/tests/make_stock_page_fixture.py` writes
+`frontend/tests/fixtures/stock-page.json` from the real modules, and
+`frontend/tests/stock-page-browser.cjs` reads it: the order of the page, the
+points summing to the number on the dial, lazy loading, the bank's figures,
+peer sorting, logo fallback, link safety, a switch from deep in one section to
+the top of another, Ownership's second ask and stored copy, and a phone at
+every section. `stock-fundamentals-browser.cjs` covers the drawn Financials.
 
 ## Company pages — one address per company, for search
 

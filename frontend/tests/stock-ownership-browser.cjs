@@ -121,10 +121,14 @@ const server = http.createServer((req, res) => {
   await page.locator('.op').first().waitFor();
   assert.equal(shareholdingCalls, 1);
 
-  // Lead with the finding: the biggest mover, named, before any chart.
-  const lead = await page.locator('.own-lead').innerText();
-  assert.match(lead, /Foreign institutions/);
-  assert.match(lead, /fell 1\.47 percentage points/);
+  // No sentence above the chart: the quarter and its filing are chips beside
+  // the heading, and the move is on the panel of the category that moved.
+  assert.equal(await page.locator('#pane-owners .own-lead, #pane-owners .own-asof').count(), 0,
+    'the prose above the ownership chart is back');
+  const meta = page.locator('#own-meta');
+  assert.match(await meta.innerText(), /30 Jun 2026/i);
+  assert.match(await meta.locator('a').getAttribute('href'), /nseindia\.com/);
+  assert.match(await page.locator('.op.s-fii .op-chips').innerText(), /[−-]1\.47\s*QoQ/);
 
   // THE DOUBLE-COUNT GUARD. The reported public total (49.52) must never be a
   // panel or a bar segment beside the categories it contains.
@@ -135,8 +139,10 @@ const server = http.createServer((req, res) => {
   const segSum = await page.locator('.own-bar').evaluate(bar =>
     [...bar.querySelectorAll('.seg')].reduce((a, s) => a + parseFloat(s.style.flex), 0));
   assert.ok(Math.abs(segSum - 100) < 0.2, `bar segments sum to ${segSum}, not 100`);
-  // The overlap is explained in prose exactly once.
-  assert.match(await page.locator('.own-notes').innerText(), /do not overlap and sum to 100/);
+  // The overlap is explained in prose exactly once: a method note, folded
+  // under the figures, so it is read from the document and not the screen.
+  assert.equal(await page.locator('.own-notes').count(), 1);
+  assert.match(await page.locator('.own-notes').textContent(), /do not overlap and sum to 100/);
 
   // A derived figure stays visibly derived, and carries its own numbers.
   const diiPanel = page.locator('.op', { hasText: 'Domestic institutions' });
@@ -276,14 +282,14 @@ const server = http.createServer((req, res) => {
   // While it is fetching the pane says so, and that placeholder is NOT the
   // empty state. Conflating them is what made this test read "Reading the
   // filings…" and assert against it.
-  const loading = page2.locator('.own-empty.is-loading');
+  const loading = page2.locator('#own-body .own-empty.is-loading');
   await loading.waitFor();
   assert.match(await loading.innerText(), /Reading the filings/);
 
   // :not(.is-loading), because the loading placeholder and the empty state
   // shared a class — so waitFor resolved on "Reading the filings…" and the
   // assertion read that instead. Passed locally on a fast fetch, failed in CI.
-  const settled = page2.locator('.own-empty:not(.is-loading)');
+  const settled = page2.locator('#own-body .own-empty:not(.is-loading)');
   await settled.waitFor();
   assert.match(await settled.innerText(), /No shareholding filing/);
   assert.equal(await page2.locator('.own-bar').count(), 0);

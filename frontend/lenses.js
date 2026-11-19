@@ -3,14 +3,13 @@
 
    Lenses: named investing philosophies, each applied as a set of rules to
    every company whose statements the site has read. Three views on the
-   homepage and one strip on the stock page:
+   homepage:
 
      #research/lenses          every lens as a card, with how many companies
                                meet it
      #research/lenses/<id>     one lens: the idea, its rules, the companies
                                that meet every judged rule, and the near misses
      #research/convergence     companies that meet several lenses at once
-     stock.html                "Meets 3 of 10 lenses", with a badge per lens
 
    WHAT THE PAGE SAYS, AND WHAT IT NEVER SAYS
    The wording is factual and nothing else: a company "meets Gorilla criteria"
@@ -47,7 +46,6 @@
     });
   }
   function stockHref(sym) { return 'stock.html?ticker=' + encodeURIComponent(sym); }
-  function lensHref(id) { return './#research/lenses/' + encodeURIComponent(id); }
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 
   function when(run) {
@@ -497,41 +495,6 @@
     }).catch(function () { failed(host, showConvergence); });
   }
 
-  /* ── 4 · The strip on the stock page ──────────────────────────────────── */
-
-  function mountStrip(host, symbol) {
-    if (!host || !symbol) return;
-    getJSON('/api/lenses/stock/' + encodeURIComponent(symbol)).then(function (d) {
-      if (!d || !d.lenses) return;
-      var total = d.lenses.length;
-      // A company the lenses have not reached shows nothing. The notice that
-      // used to stand here ("Not yet computed ...") was the first block under
-      // the price on Reliance's page: a statement about our pipeline, placed
-      // above everything a reader came for.
-      if (!d.covered) {
-        host.innerHTML = '';
-        host.hidden = true;
-        return;
-      }
-      var badges = d.lenses.map(function (l) {
-        var st = l.status !== 'live' ? 'soon' : ((l.result && l.result.status) || 'none');
-        var tip = l.status !== 'live' ? l.name + ': coming soon'
-          : !l.result ? l.name + ': not computed'
-          : st === 'pass' ? 'Meets ' + l.name + ' criteria: passes ' + l.result.passed + ' of ' + l.result.total + ' rules'
-          : st === 'near_miss' ? l.name + ': passes ' + l.result.passed + ' of ' + l.result.total + ' rules (near miss)'
-          : st === 'insufficient' ? l.name + ': too little data to judge'
-          : l.name + ': passes ' + l.result.passed + ' of ' + l.result.total + ' rules';
-        return '<a class="ln-badge is-' + st.replace('_', '-') + '" href="' + lensHref(l.id) +
-          '" title="' + esc(tip) + '">' + esc(l.name) + '</a>';
-      }).join('');
-      host.innerHTML = '<div class="ln-strip"><span class="ln-strip-k">Lenses</span>' +
-        '<span class="ln-strip-n">Meets <b>' + d.meets + '</b> of ' + total + ' lenses</span>' +
-        '<span class="ln-badges">' + badges + '</span>' +
-        '<p class="ln-strip-note">' + esc(NOTICE) + '</p></div>';
-      host.hidden = false;
-    }).catch(function () { host.hidden = true; });
-  }
-
   /* ── Wiring ───────────────────────────────────────────────────────────── */
 
   function onNavigate(tab) {
@@ -553,20 +516,10 @@
     if (tc) tc.addEventListener('click', function () { setTimeout(showConvergence, 0); });
     var v = $('view-lenses');
     if (v && v.style.display !== 'none') routeLenses();
-    var strip = $('stk-lenses');
-    if (strip) {
-      var sym = '';
-      try {
-        sym = window.AltahaPageTicker ? window.AltahaPageTicker()
-          : (new URLSearchParams(location.search).get('ticker') || '');
-      } catch (e) {}
-      mountStrip(strip, sym.trim().toUpperCase().replace(/\.(NS|BO)$/, ''));
-    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  window.AltahaLenses = { open: openLens, index: showIndex, convergence: showConvergence,
-                          strip: mountStrip };
+  window.AltahaLenses = { open: openLens, index: showIndex, convergence: showConvergence };
 })();

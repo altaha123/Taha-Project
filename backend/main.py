@@ -193,6 +193,21 @@ try:
     import special as special_engine
 except Exception:
     special_engine = None
+# The stock page's own endpoints: named peers, and the press for one company.
+# Optional for the reason everything else here is: a page section that cannot
+# load must cost that section, never the page.
+try:
+    import stock_page
+except Exception:
+    stock_page = None
+try:
+    import stock_news
+except Exception:
+    stock_news = None
+try:
+    import score_bands
+except Exception:
+    score_bands = None
 import patterns as pattern_engine
 import forward as forward_engine
 import tracker
@@ -2775,6 +2790,127 @@ def fundamentals_peers(ticker: str):
     source, ind, members = _industry_members(sym)
     return to_native(fundamentals_source.peers_from_store(
         sym, ind, members, classifier=source or "NSE"))
+
+
+# ---------------------------------------------------------------------------
+# The stock page: named peers, the press, and the company's own filings
+# ---------------------------------------------------------------------------
+
+@app.get("/stock/peers")
+def stock_peers(ticker: str):
+    """
+    The company beside the named companies of its industry: market value,
+    P/E, P/B, return on equity, margin, growth, leverage and Altaha Score,
+    every figure worked out the same way for each row from the stored filings
+    and prices. /fundamentals/peers gives the medians; this gives the names.
+    """
+    if stock_page is None:
+        return {"available": False, "message": "The peer table is not available."}
+    sym = _fund_symbol(ticker)
+    source, ind, members = _industry_members(sym)
+    rows = (_state.get("payload") or {}).get("factor_universe") or []
+    scores = {r["symbol"]: r["position_score"] for r in rows
+              if r.get("symbol") and r.get("position_score") is not None}
+    panel = (special_engine._state.get("panel")
+             if special_engine is not None else None)
+    closes = stock_page.closes_from_panel(panel, set(members or []) | {sym})
+    return to_native(stock_page.peer_table(
+        sym, ind, members, classifier=source or "NSE", scores=scores, closes=closes))
+
+
+def _known_company(sym):
+    """
+    {"name", "sector", "industry"} from the server's own records for a
+    symbol: the last scan, the stored profile, the exchange's equity list.
+    None for a symbol none of them holds.
+
+    The stock page's press and filings endpoints go out to a search engine
+    and to the exchange, and the address bar can name any string. Neither is
+    asked about a company the server has never heard of, and the words that
+    become a search are these, never a request's.
+    """
+    out = {"name": None, "sector": None, "industry": None}
+    row = next((r for r in ((_state.get("payload") or {}).get("factor_universe") or [])
+                if r.get("symbol") == sym), None)
+    if row:
+        out.update(name=row.get("name"), sector=row.get("sector"), industry=row.get("industry"))
+    if fundamentals_store is not None and not (out["name"] and out["industry"]):
+        try:
+            p = fundamentals_store.yf_profile(sym) or {}
+        except Exception:
+            p = {}
+        out["name"] = out["name"] or p.get("company")
+        out["sector"] = out["sector"] or p.get("sector")
+        out["industry"] = out["industry"] or p.get("industry")
+    if not out["name"]:
+        try:
+            out["name"] = next((r["n"] for r in scanner.universe_with_names()
+                                if r.get("s") == sym), None)
+        except Exception:
+            pass
+    # A scan row for a company whose profile read was refused carries its
+    # ticker for a name; that is not a name to search the press for.
+    if out["name"] and out["name"].strip().upper() == sym:
+        out["name"] = None
+    return out if (out["name"] or row) else None
+
+
+@app.get("/stock/news")
+def stock_news_view(ticker: str, sector: str = "", industry: str = ""):
+    """
+    The press for one company's page, in two lists that are never merged:
+    headlines that name the company, and headlines about what moves its
+    industry, each tagged with the driver it mentions. Press, not filings;
+    nothing here reaches a score.
+
+    The company's name comes from the server's own records and from nowhere
+    else. `sector` and `industry` are the ones /analyze gave the page, used
+    only where the server holds none of its own, and only to choose among
+    the industry searches written in stock_news.py.
+    """
+    sym = _fund_symbol(ticker)
+    empty = {"symbol": sym, "kind": "press",
+             "company": {"rows": [], "searched": False},
+             "industry": {"label": None, "rows": [], "searched": False, "drivers": []}}
+    if stock_news is None:
+        return empty
+    known = _known_company(sym)
+    if known is None:
+        return empty
+    own = bool(known["sector"] or known["industry"])
+    try:
+        return to_native(stock_news.for_stock(
+            sym, name=known["name"],
+            sector=(known["sector"] if own else sector[:60]),
+            industry=(known["industry"] if own else industry[:80]),
+            free_industry=own))
+    except Exception as e:
+        raise HTTPException(503, f"Press search unavailable: {str(e)[:100]}")
+
+
+@app.get("/stock/filings")
+def stock_filings(ticker: str, limit: int = 60, held: bool = False):
+    """
+    One company's exchange filings over the last year, newest first, with a
+    count per category. The primary source; /stock/news is the press.
+
+    `held=1` answers from what is already in memory and asks the exchange
+    nothing. The stock page uses it for the few filings on its first screen:
+    opening a company's page must not be a call to NSE, both because nothing
+    slow belongs on that screen and because the exchange throttles bursts, and
+    the Ownership and Financials sections need its goodwill more.
+    """
+    sym = _fund_symbol(ticker)
+    try:
+        ann.poll_if_stale()
+    except Exception:
+        pass
+    try:
+        return to_native(ann.for_company(
+            sym, limit=max(1, min(limit, 200)),
+            ask=(not held) and _known_company(sym) is not None))
+    except Exception as e:
+        raise HTTPException(503, f"Filings unavailable: {str(e)[:100]}")
 
 
 @app.get("/fundamentals/screens")
@@ -5821,19 +5957,25 @@ def analyze(ticker: str, horizon: str = "position"):
     # Percentile vs the scanned universe — makes the score mean something. A
     # company ranked on request is placed in the same distribution its score
     # was measured against; it is not one of the names it is compared with.
-    pct = None
+    # Worked out for every horizon, because the page switches between them
+    # without asking again and a rank that stayed put while the score moved
+    # would be the rank of a different number.
+    pct, ranks, cohort_size = None, {}, None
     try:
         rows = (_state.get("payload") or {}).get("factor_universe") or []
         hz = horizon if horizon in PR.HORIZONS else "position"
-        field = hz + "_score"
-        mine = next((r.get(field) for r in rows if r.get("symbol") == base), None)
-        if mine is None and hz in v4:
-            mine = v4[hz]["final_score"]
-        if mine is not None and len(rows) >= multifactor.MIN_PEERS:
-            comps = [r[field] for r in rows if r.get(field) is not None]
-            pct = round(sum(1 for c in comps if c < mine) / len(comps) * 100)
+        for h in PR.HORIZONS:
+            field = h + "_score"
+            mine = next((r.get(field) for r in rows if r.get("symbol") == base), None)
+            if mine is None and h in v4:
+                mine = v4[h]["final_score"]
+            if mine is not None and len(rows) >= multifactor.MIN_PEERS:
+                comps = [r[field] for r in rows if r.get(field) is not None]
+                ranks[h] = round(sum(1 for c in comps if c < mine) / len(comps) * 100)
+                cohort_size = len(comps)
+        pct = ranks.get(hz)
     except Exception:
-        pct = None
+        pct, ranks, cohort_size = None, {}, None
 
     try:
         legacy_scoring = PR.score(tech, fund, info, fin, bs, cf, horizon=horizon)
@@ -5869,6 +6011,14 @@ def analyze(ticker: str, horizon: str = "position"):
         plain = None
     currency = info.get("currency") or ("INR" if sym.endswith((".NS", ".BO")) else "USD")
     header_ratios = _header_ratios(info, tech, fund)
+    # Which kind of business this is, stated once for the whole page: a bank
+    # has no meaningful ROCE or debt/equity, and the header should not print
+    # either beside a peer percentile as though it had.
+    try:
+        model = PR.classify(info)
+        business = {"key": model["key"], "name": model["name"]}
+    except Exception:
+        business = None
 
     return to_native({
         "ticker": sym,
@@ -5883,6 +6033,8 @@ def analyze(ticker: str, horizon: str = "position"):
         "levels": lv,
         "plan": plan,
         "percentile": pct,
+        "percentiles": ranks,
+        "cohort_size": cohort_size,
         "setup": setup,
         "plain": plain,
         "verdict": verdict,
@@ -5908,6 +6060,14 @@ def analyze(ticker: str, horizon: str = "position"):
             "market_cap": info.get("marketCap"),
             "source": "Business description as published by the data provider",
         },
+        "business_model": business,
+        # The domain the page asks for the company's mark. Its own website
+        # where the provider publishes one; nothing is fetched here.
+        "logo": {"domain": (stock_page.domain_for(sym, info.get("website"))
+                            if stock_page is not None else None)},
+        # The cuts that turn a score into a word, sent so the page never
+        # hard-codes its own (score_bands.py says why there is one scale).
+        "score_bands": score_bands.as_payload() if score_bands is not None else None,
         # `extras` is where the engine puts every measured number that is not
         # itself a scored check — RSI, ADX, the return series, the 52-week band,
         # ROCE, debt/equity, the earnings multiple. This endpoint used to drop

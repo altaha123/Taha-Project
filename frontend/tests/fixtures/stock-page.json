@@ -1,0 +1,3654 @@
+{
+ "analyze": {
+  "altaha_score_v4": {
+   "as_of": "2026-11-18",
+   "business_model": "lender",
+   "cohort": {
+    "as_of": "2026-11-18",
+    "basis": "on_request",
+    "note": "Not in the scan's analysed cohort, so ranked on request against its 64 companies, using prices and filings as of 2026-11-18 \u2014 the same date its peers were measured on (scan of 18 Nov 2026, 04:13).",
+    "peers": 64,
+    "scanned_at": "18 Nov 2026, 04:13"
+   },
+   "data_quality": {
+    "as_of": "2026-11-18",
+    "confidence_reasons": [
+     "Lender P/B, NPA, NIM and capital adequacy inputs are unavailable",
+     "Some peer groups have fewer than 30 observations"
+    ],
+    "consolidated": true,
+    "factor_coverage_pct": 100.0,
+    "history_quarters": 16,
+    "latest_filed_at": "07-Nov-2026 18:00:00",
+    "latest_period_end": "2026-09-30",
+    "missing_factors": [],
+    "period_age_days": 49,
+    "source_urls": [
+     "https://nsearchives.example/2026-09-30.xml",
+     "https://nsearchives.example/2026-06-30.xml",
+     "https://nsearchives.example/2026-03-31.xml",
+     "https://nsearchives.example/2025-12-31.xml",
+     "https://nsearchives.example/2025-09-30.xml",
+     "https://nsearchives.example/2025-06-30.xml",
+     "https://nsearchives.example/2025-03-31.xml",
+     "https://nsearchives.example/2024-12-31.xml",
+     "https://nsearchives.example/2024-09-30.xml",
+     "https://nsearchives.example/2024-06-30.xml",
+     "https://nsearchives.example/2024-03-31.xml",
+     "https://nsearchives.example/2023-12-31.xml",
+     "https://nsearchives.example/2023-09-30.xml",
+     "https://nsearchives.example/2023-06-30.xml",
+     "https://nsearchives.example/2023-03-31.xml",
+     "https://nsearchives.example/2022-12-31.xml"
+    ],
+    "source_valid": true,
+    "stale": false
+   },
+   "factor_ledger": [
+    {
+     "applicable": true,
+     "explanation": "12-month momentum, last month skipped: 26.45 \u2014 100.0 percentile among 17 model peers",
+     "factor": "momentum_12_1",
+     "family": "momentum",
+     "group": "trend",
+     "label": "12-month momentum, last month skipped",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 26.450061301873127
+    },
+    {
+     "applicable": true,
+     "explanation": "Signed straightness of the trend: 98.91 \u2014 100.0 percentile among 17 model peers",
+     "factor": "trend_quality",
+     "family": "momentum",
+     "group": "trend",
+     "label": "Signed straightness of the trend",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 98.91237730728142
+    },
+    {
+     "applicable": true,
+     "explanation": "Closeness to the 52-week high: 98.04 \u2014 100.0 percentile among 17 model peers",
+     "factor": "high_52w",
+     "family": "momentum",
+     "group": "high",
+     "label": "Closeness to the 52-week high",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 98.03921568627449
+    },
+    {
+     "applicable": true,
+     "explanation": "One-week reversal: -1.197 \u2014 43.8 percentile among 17 model peers",
+     "factor": "reversal_5d",
+     "family": "risk",
+     "group": "reversal",
+     "label": "One-week reversal",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 43.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -1.1967554629670696
+    },
+    {
+     "applicable": true,
+     "explanation": "Realised volatility (negated): -0.1789 \u2014 43.8 percentile among 17 model peers",
+     "factor": "low_volatility",
+     "family": "risk",
+     "group": "volatility",
+     "label": "Realised volatility (negated)",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 43.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -0.1789484190100862
+    },
+    {
+     "applicable": true,
+     "explanation": "Log turnover against its history: 8.038 \u2014 87.5 percentile among 17 model peers",
+     "factor": "volume_shock",
+     "family": "participation",
+     "group": "turnover",
+     "label": "Log turnover against its history",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 87.5,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 8.038016136855537
+    },
+    {
+     "applicable": false,
+     "explanation": "Positive trailing earnings yield: not applicable to business model",
+     "factor": "earnings_yield",
+     "family": "value",
+     "group": "valuation",
+     "label": "Positive trailing earnings yield",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": false,
+     "explanation": "Three-year median annual EPS yield: not applicable to business model",
+     "factor": "cycle_earnings_yield",
+     "family": "value",
+     "group": "valuation",
+     "label": "Three-year median annual EPS yield",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": true,
+     "explanation": "PAT growth year on year: 14.84 \u2014 87.5 percentile among 17 model peers",
+     "factor": "earnings_growth",
+     "family": "growth",
+     "group": "earnings",
+     "label": "PAT growth year on year",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 87.5,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 14.839553251874804
+    },
+    {
+     "applicable": true,
+     "explanation": "Revenue growth year on year: 12.03 \u2014 93.8 percentile among 17 model peers",
+     "factor": "revenue_growth",
+     "family": "growth",
+     "group": "revenue",
+     "label": "Revenue growth year on year",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 93.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 12.030155890329741
+    },
+    {
+     "applicable": false,
+     "explanation": "EBITDA margin change year on year: not applicable to business model",
+     "factor": "margin_trend",
+     "family": "growth",
+     "group": "margin",
+     "label": "EBITDA margin change year on year",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": false,
+     "explanation": "EBITDA margin level: not applicable to business model",
+     "factor": "margin_level",
+     "family": "quality",
+     "group": "profitability",
+     "label": "EBITDA margin level",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": true,
+     "explanation": "Annualised return on assets: 1.21 \u2014 68.8 percentile among 17 model peers",
+     "factor": "return_on_assets",
+     "family": "quality",
+     "group": "profitability",
+     "label": "Annualised return on assets",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 68.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 1.21
+    },
+    {
+     "applicable": true,
+     "explanation": "Negative dispersion of bounded PAT growth: -9.706e-15 \u2014 75.0 percentile among 17 model peers",
+     "factor": "earnings_consistency",
+     "family": "quality",
+     "group": "persistence",
+     "label": "Negative dispersion of bounded PAT growth",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 75.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -9.706313974233221e-15
+    },
+    {
+     "applicable": false,
+     "explanation": "Negative other income / PBT: not applicable to business model",
+     "factor": "other_income_quality",
+     "family": "quality",
+     "group": "earnings_quality",
+     "label": "Negative other income / PBT",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": true,
+     "explanation": "EPS YoY growth acceleration (pp): 0 \u2014 43.8 percentile among 17 model peers",
+     "factor": "eps_acceleration",
+     "family": "acceleration",
+     "group": "earnings",
+     "label": "EPS YoY growth acceleration (pp)",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 43.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 0.0
+    },
+    {
+     "applicable": true,
+     "explanation": "Revenue YoY growth acceleration (pp): -2.132e-14 \u2014 37.5 percentile among 17 model peers",
+     "factor": "revenue_acceleration",
+     "family": "acceleration",
+     "group": "revenue",
+     "label": "Revenue YoY growth acceleration (pp)",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 37.5,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -2.1316282072803006e-14
+    },
+    {
+     "applicable": false,
+     "explanation": "Acceleration of YoY EBITDA margin change (pp): not applicable to business model",
+     "factor": "margin_acceleration",
+     "family": "acceleration",
+     "group": "margin",
+     "label": "Acceleration of YoY EBITDA margin change (pp)",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": true,
+     "explanation": "Historical standardized EPS surprise: 1.668 \u2014 50.0 percentile among 17 model peers",
+     "factor": "earnings_surprise",
+     "family": "acceleration",
+     "group": "earnings",
+     "label": "Historical standardized EPS surprise",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 50.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 1.66792903443606
+    },
+    {
+     "applicable": false,
+     "explanation": "Negative reported debt/equity: not applicable to business model",
+     "factor": "low_leverage",
+     "family": "financial_strength",
+     "group": "leverage",
+     "label": "Negative reported debt/equity",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": false,
+     "explanation": "Operating interest coverage: not applicable to business model",
+     "factor": "interest_coverage",
+     "family": "financial_strength",
+     "group": "coverage",
+     "label": "Operating interest coverage",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": false,
+     "explanation": "YoY operating interest coverage change: not applicable to business model",
+     "factor": "interest_coverage_trend",
+     "family": "financial_strength",
+     "group": "coverage",
+     "label": "YoY operating interest coverage change",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    }
+   ],
+   "families": {
+    "acceleration": 42.1875,
+    "growth": 90.625,
+    "momentum": 100.0,
+    "participation": 87.5,
+    "quality": 71.875,
+    "risk": 43.75
+   },
+   "invest": {
+    "confidence": 0.36839199447895093,
+    "contribution": [
+     {
+      "pillar": "quality",
+      "pillar_score": 71.875,
+      "points": 30.90167197452229,
+      "weight": 0.42993630573248404
+     },
+     {
+      "pillar": "growth",
+      "pillar_score": 90.625,
+      "points": 21.646098726114648,
+      "weight": 0.23885350318471338
+     },
+     {
+      "pillar": "acceleration",
+      "pillar_score": 42.1875,
+      "points": 6.7177547770700645,
+      "weight": 0.15923566878980894
+     },
+     {
+      "pillar": "momentum",
+      "pillar_score": 100.0,
+      "points": 10.828025477707008,
+      "weight": 0.10828025477707007
+     },
+     {
+      "pillar": "risk",
+      "pillar_score": 43.75,
+      "points": 2.786624203821656,
+      "weight": 0.06369426751592357
+     }
+    ],
+    "family_coverage_pct": 62.5,
+    "final_score": 58.428873360938574,
+    "pillars": {
+     "acceleration": 42.1875,
+     "growth": 90.625,
+     "momentum": 100.0,
+     "participation": 87.5,
+     "quality": 71.875,
+     "risk": 43.75
+    },
+    "raw_score": 72.88017515923566,
+    "weights": {
+     "acceleration": 0.10351966873706005,
+     "financial_strength": 0.16770186335403728,
+     "growth": 0.15527950310559005,
+     "momentum": 0.07039337474120083,
+     "participation": 0.0,
+     "quality": 0.2795031055900621,
+     "risk": 0.041407867494824016,
+     "value": 0.18219461697722567
+    }
+   },
+   "market_cap_bucket": "large",
+   "methodology_version": "v4",
+   "model": {
+    "examples": "banks, NBFCs, housing finance, microfinance",
+    "key": "lender",
+    "matters": "For a lender the balance sheet is the product, not a means of funding one. What decides the outcome is the quality of the loan book, the margin between what it pays for deposits and earns on advances, and how much capital sits behind the risk. Growth without asset quality is how lenders fail.",
+    "missing": "This data source does not publish gross NPA, provision coverage, net interest margin, CASA ratio or capital adequacy. Those are the five numbers that matter most for a lender, so treat this score as a partial view and read the results filing itself.",
+    "name": "Lender",
+    "source": "industry \"Banks - Regional\""
+   },
+   "peer_group": "Financial Services",
+   "pillars": {
+    "acceleration": 42.1875,
+    "growth": 90.625,
+    "momentum": 100.0,
+    "participation": 87.5,
+    "quality": 71.875,
+    "risk": 43.75
+   },
+   "position": {
+    "confidence": 0.42074391988555077,
+    "contribution": [
+     {
+      "pillar": "quality",
+      "pillar_score": 71.875,
+      "points": 22.434971098265894,
+      "weight": 0.31213872832369943
+     },
+     {
+      "pillar": "growth",
+      "pillar_score": 90.625,
+      "points": 19.64414739884393,
+      "weight": 0.21676300578034682
+     },
+     {
+      "pillar": "acceleration",
+      "pillar_score": 42.1875,
+      "points": 9.144689306358382,
+      "weight": 0.21676300578034682
+     },
+     {
+      "pillar": "momentum",
+      "pillar_score": 100.0,
+      "points": 19.653179190751445,
+      "weight": 0.19653179190751446
+     },
+     {
+      "pillar": "risk",
+      "pillar_score": 43.75,
+      "points": 2.5289017341040463,
+      "weight": 0.057803468208092484
+     }
+    ],
+    "family_coverage_pct": 62.5,
+    "final_score": 59.84788537195994,
+    "pillars": {
+     "acceleration": 42.1875,
+     "growth": 90.625,
+     "momentum": 100.0,
+     "participation": 87.5,
+     "quality": 71.875,
+     "risk": 43.75
+    },
+    "raw_score": 73.40588872832369,
+    "weights": {
+     "acceleration": 0.1609442060085837,
+     "financial_strength": 0.11587982832618025,
+     "growth": 0.1609442060085837,
+     "momentum": 0.1459227467811159,
+     "participation": 0.0,
+     "quality": 0.2317596566523605,
+     "risk": 0.04291845493562232,
+     "value": 0.14163090128755365
+    }
+   },
+   "trade": {
+    "confidence": 0.49943502824858754,
+    "contribution": [
+     {
+      "pillar": "quality",
+      "pillar_score": 71.875,
+      "points": 10.662774725274726,
+      "weight": 0.14835164835164835
+     },
+     {
+      "pillar": "growth",
+      "pillar_score": 90.625,
+      "points": 6.224244505494506,
+      "weight": 0.06868131868131869
+     },
+     {
+      "pillar": "acceleration",
+      "pillar_score": 42.1875,
+      "points": 2.897493131868132,
+      "weight": 0.06868131868131869
+     },
+     {
+      "pillar": "momentum",
+      "pillar_score": 100.0,
+      "points": 28.021978021978022,
+      "weight": 0.2802197802197802
+     },
+     {
+      "pillar": "risk",
+      "pillar_score": 43.75,
+      "points": 16.826923076923077,
+      "weight": 0.3846153846153846
+     },
+     {
+      "pillar": "participation",
+      "pillar_score": 87.5,
+      "points": 4.326923076923077,
+      "weight": 0.04945054945054945
+     }
+    ],
+    "family_coverage_pct": 75.0,
+    "final_score": 59.46945621468926,
+    "pillars": {
+     "acceleration": 42.1875,
+     "growth": 90.625,
+     "momentum": 100.0,
+     "participation": 87.5,
+     "quality": 71.875,
+     "risk": 43.75
+    },
+    "raw_score": 68.96033653846153,
+    "weights": {
+     "acceleration": 0.06053268765133172,
+     "financial_strength": 0.06537530266343826,
+     "growth": 0.06053268765133172,
+     "momentum": 0.2469733656174334,
+     "participation": 0.043583535108958835,
+     "quality": 0.13075060532687652,
+     "risk": 0.3389830508474576,
+     "value": 0.053268765133171914
+    }
+   },
+   "what_helped": [
+    {
+     "applicable": true,
+     "explanation": "12-month momentum, last month skipped: 26.45 \u2014 100.0 percentile among 17 model peers",
+     "factor": "momentum_12_1",
+     "family": "momentum",
+     "group": "trend",
+     "label": "12-month momentum, last month skipped",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 26.450061301873127
+    },
+    {
+     "applicable": true,
+     "explanation": "Signed straightness of the trend: 98.91 \u2014 100.0 percentile among 17 model peers",
+     "factor": "trend_quality",
+     "family": "momentum",
+     "group": "trend",
+     "label": "Signed straightness of the trend",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 98.91237730728142
+    },
+    {
+     "applicable": true,
+     "explanation": "Closeness to the 52-week high: 98.04 \u2014 100.0 percentile among 17 model peers",
+     "factor": "high_52w",
+     "family": "momentum",
+     "group": "high",
+     "label": "Closeness to the 52-week high",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 98.03921568627449
+    }
+   ],
+   "what_hurt": [
+    {
+     "applicable": true,
+     "explanation": "Revenue YoY growth acceleration (pp): -2.132e-14 \u2014 37.5 percentile among 17 model peers",
+     "factor": "revenue_acceleration",
+     "family": "acceleration",
+     "group": "revenue",
+     "label": "Revenue YoY growth acceleration (pp)",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 37.5,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -2.1316282072803006e-14
+    },
+    {
+     "applicable": true,
+     "explanation": "One-week reversal: -1.197 \u2014 43.8 percentile among 17 model peers",
+     "factor": "reversal_5d",
+     "family": "risk",
+     "group": "reversal",
+     "label": "One-week reversal",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 43.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -1.1967554629670696
+    },
+    {
+     "applicable": true,
+     "explanation": "Realised volatility (negated): -0.1789 \u2014 43.8 percentile among 17 model peers",
+     "factor": "low_volatility",
+     "family": "risk",
+     "group": "volatility",
+     "label": "Realised volatility (negated)",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 43.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -0.1789484190100862
+    }
+   ]
+  },
+  "atr_pct": 3.9,
+  "business_model": {
+   "key": "lender",
+   "name": "Lender"
+  },
+  "cohort_size": 64,
+  "currency": "INR",
+  "disclaimer": "Altaha Screener is an educational analysis tool. Scores are objective computations from public data using disclosed formulas. Nothing here is investment advice or a recommendation to buy or sell any security. Rankings reflect scores on the stated date and change as prices and filings change. Markets carry risk of loss. Do your own research or consult a SEBI-registered adviser.",
+  "exchange": "NSE",
+  "fundamental": {
+   "checks": [],
+   "extras": {},
+   "f_score": null,
+   "g_score": null,
+   "score": null
+  },
+  "horizons": {
+   "invest": {
+    "band": "Good",
+    "basis": "Altaha Score v4 \u00b7 peer-relative \u00b7 as of 2026-11-18 \u00b7 ranked on request against the scan cohort",
+    "cohort_note": "Not in the scan's analysed cohort, so ranked on request against its 64 companies, using prices and filings as of 2026-11-18 \u2014 the same date its peers were measured on (scan of 18 Nov 2026, 04:13).",
+    "confidence": 36.8,
+    "confidence_notes": "Lender P/B, NPA, NIM and capital adequacy inputs are unavailable; Some peer groups have fewer than 30 observations",
+    "contribution": [
+     {
+      "pillar": "quality",
+      "pillar_score": 71.875,
+      "points": 30.90167197452229,
+      "weight": 0.42993630573248404
+     },
+     {
+      "pillar": "growth",
+      "pillar_score": 90.625,
+      "points": 21.646098726114648,
+      "weight": 0.23885350318471338
+     },
+     {
+      "pillar": "acceleration",
+      "pillar_score": 42.1875,
+      "points": 6.7177547770700645,
+      "weight": 0.15923566878980894
+     },
+     {
+      "pillar": "momentum",
+      "pillar_score": 100.0,
+      "points": 10.828025477707008,
+      "weight": 0.10828025477707007
+     },
+     {
+      "pillar": "risk",
+      "pillar_score": 43.75,
+      "points": 2.786624203821656,
+      "weight": 0.06369426751592357
+     }
+    ],
+    "coverage": {
+     "missing": [],
+     "present": 13,
+     "total": 13
+    },
+    "dropped": [
+     {
+      "check": "Positive trailing earnings yield",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Three-year median annual EPS yield",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "EBITDA margin change year on year",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "EBITDA margin level",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Negative other income / PBT",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Acceleration of YoY EBITDA margin change (pp)",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Negative reported debt/equity",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Operating interest coverage",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "YoY operating interest coverage change",
+      "reason": "not applicable to business model"
+     }
+    ],
+    "factor_ledger": [
+     {
+      "applicable": true,
+      "explanation": "12-month momentum, last month skipped: 26.45 \u2014 100.0 percentile among 17 model peers",
+      "factor": "momentum_12_1",
+      "family": "momentum",
+      "group": "trend",
+      "label": "12-month momentum, last month skipped",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 26.450061301873127
+     },
+     {
+      "applicable": true,
+      "explanation": "Signed straightness of the trend: 98.91 \u2014 100.0 percentile among 17 model peers",
+      "factor": "trend_quality",
+      "family": "momentum",
+      "group": "trend",
+      "label": "Signed straightness of the trend",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 98.91237730728142
+     },
+     {
+      "applicable": true,
+      "explanation": "Closeness to the 52-week high: 98.04 \u2014 100.0 percentile among 17 model peers",
+      "factor": "high_52w",
+      "family": "momentum",
+      "group": "high",
+      "label": "Closeness to the 52-week high",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 98.03921568627449
+     },
+     {
+      "applicable": true,
+      "explanation": "One-week reversal: -1.197 \u2014 43.8 percentile among 17 model peers",
+      "factor": "reversal_5d",
+      "family": "risk",
+      "group": "reversal",
+      "label": "One-week reversal",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -1.1967554629670696
+     },
+     {
+      "applicable": true,
+      "explanation": "Realised volatility (negated): -0.1789 \u2014 43.8 percentile among 17 model peers",
+      "factor": "low_volatility",
+      "family": "risk",
+      "group": "volatility",
+      "label": "Realised volatility (negated)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -0.1789484190100862
+     },
+     {
+      "applicable": true,
+      "explanation": "Log turnover against its history: 8.038 \u2014 87.5 percentile among 17 model peers",
+      "factor": "volume_shock",
+      "family": "participation",
+      "group": "turnover",
+      "label": "Log turnover against its history",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 87.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 8.038016136855537
+     },
+     {
+      "applicable": false,
+      "explanation": "Positive trailing earnings yield: not applicable to business model",
+      "factor": "earnings_yield",
+      "family": "value",
+      "group": "valuation",
+      "label": "Positive trailing earnings yield",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "Three-year median annual EPS yield: not applicable to business model",
+      "factor": "cycle_earnings_yield",
+      "family": "value",
+      "group": "valuation",
+      "label": "Three-year median annual EPS yield",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "PAT growth year on year: 14.84 \u2014 87.5 percentile among 17 model peers",
+      "factor": "earnings_growth",
+      "family": "growth",
+      "group": "earnings",
+      "label": "PAT growth year on year",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 87.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 14.839553251874804
+     },
+     {
+      "applicable": true,
+      "explanation": "Revenue growth year on year: 12.03 \u2014 93.8 percentile among 17 model peers",
+      "factor": "revenue_growth",
+      "family": "growth",
+      "group": "revenue",
+      "label": "Revenue growth year on year",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 93.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 12.030155890329741
+     },
+     {
+      "applicable": false,
+      "explanation": "EBITDA margin change year on year: not applicable to business model",
+      "factor": "margin_trend",
+      "family": "growth",
+      "group": "margin",
+      "label": "EBITDA margin change year on year",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "EBITDA margin level: not applicable to business model",
+      "factor": "margin_level",
+      "family": "quality",
+      "group": "profitability",
+      "label": "EBITDA margin level",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "Annualised return on assets: 1.21 \u2014 68.8 percentile among 17 model peers",
+      "factor": "return_on_assets",
+      "family": "quality",
+      "group": "profitability",
+      "label": "Annualised return on assets",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 68.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 1.21
+     },
+     {
+      "applicable": true,
+      "explanation": "Negative dispersion of bounded PAT growth: -9.706e-15 \u2014 75.0 percentile among 17 model peers",
+      "factor": "earnings_consistency",
+      "family": "quality",
+      "group": "persistence",
+      "label": "Negative dispersion of bounded PAT growth",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 75.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -9.706313974233221e-15
+     },
+     {
+      "applicable": false,
+      "explanation": "Negative other income / PBT: not applicable to business model",
+      "factor": "other_income_quality",
+      "family": "quality",
+      "group": "earnings_quality",
+      "label": "Negative other income / PBT",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "EPS YoY growth acceleration (pp): 0 \u2014 43.8 percentile among 17 model peers",
+      "factor": "eps_acceleration",
+      "family": "acceleration",
+      "group": "earnings",
+      "label": "EPS YoY growth acceleration (pp)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 0.0
+     },
+     {
+      "applicable": true,
+      "explanation": "Revenue YoY growth acceleration (pp): -2.132e-14 \u2014 37.5 percentile among 17 model peers",
+      "factor": "revenue_acceleration",
+      "family": "acceleration",
+      "group": "revenue",
+      "label": "Revenue YoY growth acceleration (pp)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 37.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -2.1316282072803006e-14
+     },
+     {
+      "applicable": false,
+      "explanation": "Acceleration of YoY EBITDA margin change (pp): not applicable to business model",
+      "factor": "margin_acceleration",
+      "family": "acceleration",
+      "group": "margin",
+      "label": "Acceleration of YoY EBITDA margin change (pp)",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "Historical standardized EPS surprise: 1.668 \u2014 50.0 percentile among 17 model peers",
+      "factor": "earnings_surprise",
+      "family": "acceleration",
+      "group": "earnings",
+      "label": "Historical standardized EPS surprise",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 50.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 1.66792903443606
+     },
+     {
+      "applicable": false,
+      "explanation": "Negative reported debt/equity: not applicable to business model",
+      "factor": "low_leverage",
+      "family": "financial_strength",
+      "group": "leverage",
+      "label": "Negative reported debt/equity",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "Operating interest coverage: not applicable to business model",
+      "factor": "interest_coverage",
+      "family": "financial_strength",
+      "group": "coverage",
+      "label": "Operating interest coverage",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "YoY operating interest coverage change: not applicable to business model",
+      "factor": "interest_coverage_trend",
+      "family": "financial_strength",
+      "group": "coverage",
+      "label": "YoY operating interest coverage change",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     }
+    ],
+    "horizon": "invest",
+    "horizon_label": "One year and beyond",
+    "horizon_note": "Over years, entry timing washes out and what remains is what the business earns on its capital and what you paid. Momentum is kept only to flag buying into a collapsing trend.",
+    "label": "CONSTRUCTIVE",
+    "methodology_version": "v4",
+    "model": {
+     "examples": "banks, NBFCs, housing finance, microfinance",
+     "key": "lender",
+     "matters": "For a lender the balance sheet is the product, not a means of funding one. What decides the outcome is the quality of the loan book, the margin between what it pays for deposits and earns on advances, and how much capital sits behind the risk. Growth without asset quality is how lenders fail.",
+     "missing": "This data source does not publish gross NPA, provision coverage, net interest margin, CASA ratio or capital adequacy. Those are the five numbers that matter most for a lender, so treat this score as a partial view and read the results filing itself.",
+     "name": "Lender",
+     "source": "industry \"Banks - Regional\""
+    },
+    "pillars": {
+     "acceleration": 42.1875,
+     "growth": 90.625,
+     "momentum": 100.0,
+     "participation": 87.5,
+     "quality": 71.875,
+     "risk": 43.75
+    },
+    "raw_score": 72.88017515923566,
+    "score": 58.428873360938574,
+    "summary": "Strongest on price trend (100/100); weakest on acceleration (42/100). 12-month momentum, last month skipped beats 100% of peers, while Revenue YoY growth acceleration (pp) beats only 38%.",
+    "tone": "constructive",
+    "weights": {
+     "acceleration": 0.10351966873706005,
+     "financial_strength": 0.16770186335403728,
+     "growth": 0.15527950310559005,
+     "momentum": 0.07039337474120083,
+     "participation": 0.0,
+     "quality": 0.2795031055900621,
+     "risk": 0.041407867494824016,
+     "value": 0.18219461697722567
+    }
+   },
+   "position": {
+    "band": "Good",
+    "basis": "Altaha Score v4 \u00b7 peer-relative \u00b7 as of 2026-11-18 \u00b7 ranked on request against the scan cohort",
+    "cohort_note": "Not in the scan's analysed cohort, so ranked on request against its 64 companies, using prices and filings as of 2026-11-18 \u2014 the same date its peers were measured on (scan of 18 Nov 2026, 04:13).",
+    "confidence": 42.1,
+    "confidence_notes": "Lender P/B, NPA, NIM and capital adequacy inputs are unavailable; Some peer groups have fewer than 30 observations",
+    "contribution": [
+     {
+      "pillar": "quality",
+      "pillar_score": 71.875,
+      "points": 22.434971098265894,
+      "weight": 0.31213872832369943
+     },
+     {
+      "pillar": "growth",
+      "pillar_score": 90.625,
+      "points": 19.64414739884393,
+      "weight": 0.21676300578034682
+     },
+     {
+      "pillar": "acceleration",
+      "pillar_score": 42.1875,
+      "points": 9.144689306358382,
+      "weight": 0.21676300578034682
+     },
+     {
+      "pillar": "momentum",
+      "pillar_score": 100.0,
+      "points": 19.653179190751445,
+      "weight": 0.19653179190751446
+     },
+     {
+      "pillar": "risk",
+      "pillar_score": 43.75,
+      "points": 2.5289017341040463,
+      "weight": 0.057803468208092484
+     }
+    ],
+    "coverage": {
+     "missing": [],
+     "present": 13,
+     "total": 13
+    },
+    "dropped": [
+     {
+      "check": "Positive trailing earnings yield",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Three-year median annual EPS yield",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "EBITDA margin change year on year",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "EBITDA margin level",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Negative other income / PBT",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Acceleration of YoY EBITDA margin change (pp)",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Negative reported debt/equity",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Operating interest coverage",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "YoY operating interest coverage change",
+      "reason": "not applicable to business model"
+     }
+    ],
+    "factor_ledger": [
+     {
+      "applicable": true,
+      "explanation": "12-month momentum, last month skipped: 26.45 \u2014 100.0 percentile among 17 model peers",
+      "factor": "momentum_12_1",
+      "family": "momentum",
+      "group": "trend",
+      "label": "12-month momentum, last month skipped",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 26.450061301873127
+     },
+     {
+      "applicable": true,
+      "explanation": "Signed straightness of the trend: 98.91 \u2014 100.0 percentile among 17 model peers",
+      "factor": "trend_quality",
+      "family": "momentum",
+      "group": "trend",
+      "label": "Signed straightness of the trend",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 98.91237730728142
+     },
+     {
+      "applicable": true,
+      "explanation": "Closeness to the 52-week high: 98.04 \u2014 100.0 percentile among 17 model peers",
+      "factor": "high_52w",
+      "family": "momentum",
+      "group": "high",
+      "label": "Closeness to the 52-week high",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 98.03921568627449
+     },
+     {
+      "applicable": true,
+      "explanation": "One-week reversal: -1.197 \u2014 43.8 percentile among 17 model peers",
+      "factor": "reversal_5d",
+      "family": "risk",
+      "group": "reversal",
+      "label": "One-week reversal",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -1.1967554629670696
+     },
+     {
+      "applicable": true,
+      "explanation": "Realised volatility (negated): -0.1789 \u2014 43.8 percentile among 17 model peers",
+      "factor": "low_volatility",
+      "family": "risk",
+      "group": "volatility",
+      "label": "Realised volatility (negated)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -0.1789484190100862
+     },
+     {
+      "applicable": true,
+      "explanation": "Log turnover against its history: 8.038 \u2014 87.5 percentile among 17 model peers",
+      "factor": "volume_shock",
+      "family": "participation",
+      "group": "turnover",
+      "label": "Log turnover against its history",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 87.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 8.038016136855537
+     },
+     {
+      "applicable": false,
+      "explanation": "Positive trailing earnings yield: not applicable to business model",
+      "factor": "earnings_yield",
+      "family": "value",
+      "group": "valuation",
+      "label": "Positive trailing earnings yield",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "Three-year median annual EPS yield: not applicable to business model",
+      "factor": "cycle_earnings_yield",
+      "family": "value",
+      "group": "valuation",
+      "label": "Three-year median annual EPS yield",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "PAT growth year on year: 14.84 \u2014 87.5 percentile among 17 model peers",
+      "factor": "earnings_growth",
+      "family": "growth",
+      "group": "earnings",
+      "label": "PAT growth year on year",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 87.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 14.839553251874804
+     },
+     {
+      "applicable": true,
+      "explanation": "Revenue growth year on year: 12.03 \u2014 93.8 percentile among 17 model peers",
+      "factor": "revenue_growth",
+      "family": "growth",
+      "group": "revenue",
+      "label": "Revenue growth year on year",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 93.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 12.030155890329741
+     },
+     {
+      "applicable": false,
+      "explanation": "EBITDA margin change year on year: not applicable to business model",
+      "factor": "margin_trend",
+      "family": "growth",
+      "group": "margin",
+      "label": "EBITDA margin change year on year",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "EBITDA margin level: not applicable to business model",
+      "factor": "margin_level",
+      "family": "quality",
+      "group": "profitability",
+      "label": "EBITDA margin level",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "Annualised return on assets: 1.21 \u2014 68.8 percentile among 17 model peers",
+      "factor": "return_on_assets",
+      "family": "quality",
+      "group": "profitability",
+      "label": "Annualised return on assets",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 68.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 1.21
+     },
+     {
+      "applicable": true,
+      "explanation": "Negative dispersion of bounded PAT growth: -9.706e-15 \u2014 75.0 percentile among 17 model peers",
+      "factor": "earnings_consistency",
+      "family": "quality",
+      "group": "persistence",
+      "label": "Negative dispersion of bounded PAT growth",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 75.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -9.706313974233221e-15
+     },
+     {
+      "applicable": false,
+      "explanation": "Negative other income / PBT: not applicable to business model",
+      "factor": "other_income_quality",
+      "family": "quality",
+      "group": "earnings_quality",
+      "label": "Negative other income / PBT",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "EPS YoY growth acceleration (pp): 0 \u2014 43.8 percentile among 17 model peers",
+      "factor": "eps_acceleration",
+      "family": "acceleration",
+      "group": "earnings",
+      "label": "EPS YoY growth acceleration (pp)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 0.0
+     },
+     {
+      "applicable": true,
+      "explanation": "Revenue YoY growth acceleration (pp): -2.132e-14 \u2014 37.5 percentile among 17 model peers",
+      "factor": "revenue_acceleration",
+      "family": "acceleration",
+      "group": "revenue",
+      "label": "Revenue YoY growth acceleration (pp)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 37.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -2.1316282072803006e-14
+     },
+     {
+      "applicable": false,
+      "explanation": "Acceleration of YoY EBITDA margin change (pp): not applicable to business model",
+      "factor": "margin_acceleration",
+      "family": "acceleration",
+      "group": "margin",
+      "label": "Acceleration of YoY EBITDA margin change (pp)",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "Historical standardized EPS surprise: 1.668 \u2014 50.0 percentile among 17 model peers",
+      "factor": "earnings_surprise",
+      "family": "acceleration",
+      "group": "earnings",
+      "label": "Historical standardized EPS surprise",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 50.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 1.66792903443606
+     },
+     {
+      "applicable": false,
+      "explanation": "Negative reported debt/equity: not applicable to business model",
+      "factor": "low_leverage",
+      "family": "financial_strength",
+      "group": "leverage",
+      "label": "Negative reported debt/equity",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "Operating interest coverage: not applicable to business model",
+      "factor": "interest_coverage",
+      "family": "financial_strength",
+      "group": "coverage",
+      "label": "Operating interest coverage",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "YoY operating interest coverage change: not applicable to business model",
+      "factor": "interest_coverage_trend",
+      "family": "financial_strength",
+      "group": "coverage",
+      "label": "YoY operating interest coverage change",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     }
+    ],
+    "horizon": "position",
+    "horizon_label": "Weeks to months",
+    "horizon_note": "The middle distance, where a business inflecting and a chart turning tend to happen together. This is the only horizon where all five pillars genuinely deserve a seat.",
+    "label": "CONSTRUCTIVE",
+    "methodology_version": "v4",
+    "model": {
+     "examples": "banks, NBFCs, housing finance, microfinance",
+     "key": "lender",
+     "matters": "For a lender the balance sheet is the product, not a means of funding one. What decides the outcome is the quality of the loan book, the margin between what it pays for deposits and earns on advances, and how much capital sits behind the risk. Growth without asset quality is how lenders fail.",
+     "missing": "This data source does not publish gross NPA, provision coverage, net interest margin, CASA ratio or capital adequacy. Those are the five numbers that matter most for a lender, so treat this score as a partial view and read the results filing itself.",
+     "name": "Lender",
+     "source": "industry \"Banks - Regional\""
+    },
+    "pillars": {
+     "acceleration": 42.1875,
+     "growth": 90.625,
+     "momentum": 100.0,
+     "participation": 87.5,
+     "quality": 71.875,
+     "risk": 43.75
+    },
+    "raw_score": 73.40588872832369,
+    "score": 59.84788537195994,
+    "summary": "Strongest on price trend (100/100); weakest on acceleration (42/100). 12-month momentum, last month skipped beats 100% of peers, while Revenue YoY growth acceleration (pp) beats only 38%.",
+    "tone": "constructive",
+    "weights": {
+     "acceleration": 0.1609442060085837,
+     "financial_strength": 0.11587982832618025,
+     "growth": 0.1609442060085837,
+     "momentum": 0.1459227467811159,
+     "participation": 0.0,
+     "quality": 0.2317596566523605,
+     "risk": 0.04291845493562232,
+     "value": 0.14163090128755365
+    }
+   },
+   "trade": {
+    "band": "Good",
+    "basis": "Altaha Score v4 \u00b7 peer-relative \u00b7 as of 2026-11-18 \u00b7 ranked on request against the scan cohort",
+    "cohort_note": "Not in the scan's analysed cohort, so ranked on request against its 64 companies, using prices and filings as of 2026-11-18 \u2014 the same date its peers were measured on (scan of 18 Nov 2026, 04:13).",
+    "confidence": 49.9,
+    "confidence_notes": "Lender P/B, NPA, NIM and capital adequacy inputs are unavailable; Some peer groups have fewer than 30 observations",
+    "contribution": [
+     {
+      "pillar": "quality",
+      "pillar_score": 71.875,
+      "points": 10.662774725274726,
+      "weight": 0.14835164835164835
+     },
+     {
+      "pillar": "growth",
+      "pillar_score": 90.625,
+      "points": 6.224244505494506,
+      "weight": 0.06868131868131869
+     },
+     {
+      "pillar": "acceleration",
+      "pillar_score": 42.1875,
+      "points": 2.897493131868132,
+      "weight": 0.06868131868131869
+     },
+     {
+      "pillar": "momentum",
+      "pillar_score": 100.0,
+      "points": 28.021978021978022,
+      "weight": 0.2802197802197802
+     },
+     {
+      "pillar": "risk",
+      "pillar_score": 43.75,
+      "points": 16.826923076923077,
+      "weight": 0.3846153846153846
+     },
+     {
+      "pillar": "participation",
+      "pillar_score": 87.5,
+      "points": 4.326923076923077,
+      "weight": 0.04945054945054945
+     }
+    ],
+    "coverage": {
+     "missing": [],
+     "present": 13,
+     "total": 13
+    },
+    "dropped": [
+     {
+      "check": "Positive trailing earnings yield",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Three-year median annual EPS yield",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "EBITDA margin change year on year",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "EBITDA margin level",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Negative other income / PBT",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Acceleration of YoY EBITDA margin change (pp)",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Negative reported debt/equity",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "Operating interest coverage",
+      "reason": "not applicable to business model"
+     },
+     {
+      "check": "YoY operating interest coverage change",
+      "reason": "not applicable to business model"
+     }
+    ],
+    "factor_ledger": [
+     {
+      "applicable": true,
+      "explanation": "12-month momentum, last month skipped: 26.45 \u2014 100.0 percentile among 17 model peers",
+      "factor": "momentum_12_1",
+      "family": "momentum",
+      "group": "trend",
+      "label": "12-month momentum, last month skipped",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 26.450061301873127
+     },
+     {
+      "applicable": true,
+      "explanation": "Signed straightness of the trend: 98.91 \u2014 100.0 percentile among 17 model peers",
+      "factor": "trend_quality",
+      "family": "momentum",
+      "group": "trend",
+      "label": "Signed straightness of the trend",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 98.91237730728142
+     },
+     {
+      "applicable": true,
+      "explanation": "Closeness to the 52-week high: 98.04 \u2014 100.0 percentile among 17 model peers",
+      "factor": "high_52w",
+      "family": "momentum",
+      "group": "high",
+      "label": "Closeness to the 52-week high",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 100.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 98.03921568627449
+     },
+     {
+      "applicable": true,
+      "explanation": "One-week reversal: -1.197 \u2014 43.8 percentile among 17 model peers",
+      "factor": "reversal_5d",
+      "family": "risk",
+      "group": "reversal",
+      "label": "One-week reversal",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -1.1967554629670696
+     },
+     {
+      "applicable": true,
+      "explanation": "Realised volatility (negated): -0.1789 \u2014 43.8 percentile among 17 model peers",
+      "factor": "low_volatility",
+      "family": "risk",
+      "group": "volatility",
+      "label": "Realised volatility (negated)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -0.1789484190100862
+     },
+     {
+      "applicable": true,
+      "explanation": "Log turnover against its history: 8.038 \u2014 87.5 percentile among 17 model peers",
+      "factor": "volume_shock",
+      "family": "participation",
+      "group": "turnover",
+      "label": "Log turnover against its history",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "market:model:lender",
+      "percentile": 87.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 8.038016136855537
+     },
+     {
+      "applicable": false,
+      "explanation": "Positive trailing earnings yield: not applicable to business model",
+      "factor": "earnings_yield",
+      "family": "value",
+      "group": "valuation",
+      "label": "Positive trailing earnings yield",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "Three-year median annual EPS yield: not applicable to business model",
+      "factor": "cycle_earnings_yield",
+      "family": "value",
+      "group": "valuation",
+      "label": "Three-year median annual EPS yield",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "PAT growth year on year: 14.84 \u2014 87.5 percentile among 17 model peers",
+      "factor": "earnings_growth",
+      "family": "growth",
+      "group": "earnings",
+      "label": "PAT growth year on year",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 87.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 14.839553251874804
+     },
+     {
+      "applicable": true,
+      "explanation": "Revenue growth year on year: 12.03 \u2014 93.8 percentile among 17 model peers",
+      "factor": "revenue_growth",
+      "family": "growth",
+      "group": "revenue",
+      "label": "Revenue growth year on year",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 93.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 12.030155890329741
+     },
+     {
+      "applicable": false,
+      "explanation": "EBITDA margin change year on year: not applicable to business model",
+      "factor": "margin_trend",
+      "family": "growth",
+      "group": "margin",
+      "label": "EBITDA margin change year on year",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "EBITDA margin level: not applicable to business model",
+      "factor": "margin_level",
+      "family": "quality",
+      "group": "profitability",
+      "label": "EBITDA margin level",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "Annualised return on assets: 1.21 \u2014 68.8 percentile among 17 model peers",
+      "factor": "return_on_assets",
+      "family": "quality",
+      "group": "profitability",
+      "label": "Annualised return on assets",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 68.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 1.21
+     },
+     {
+      "applicable": true,
+      "explanation": "Negative dispersion of bounded PAT growth: -9.706e-15 \u2014 75.0 percentile among 17 model peers",
+      "factor": "earnings_consistency",
+      "family": "quality",
+      "group": "persistence",
+      "label": "Negative dispersion of bounded PAT growth",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 75.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -9.706313974233221e-15
+     },
+     {
+      "applicable": false,
+      "explanation": "Negative other income / PBT: not applicable to business model",
+      "factor": "other_income_quality",
+      "family": "quality",
+      "group": "earnings_quality",
+      "label": "Negative other income / PBT",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "EPS YoY growth acceleration (pp): 0 \u2014 43.8 percentile among 17 model peers",
+      "factor": "eps_acceleration",
+      "family": "acceleration",
+      "group": "earnings",
+      "label": "EPS YoY growth acceleration (pp)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 43.75,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 0.0
+     },
+     {
+      "applicable": true,
+      "explanation": "Revenue YoY growth acceleration (pp): -2.132e-14 \u2014 37.5 percentile among 17 model peers",
+      "factor": "revenue_acceleration",
+      "family": "acceleration",
+      "group": "revenue",
+      "label": "Revenue YoY growth acceleration (pp)",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 37.5,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": -2.1316282072803006e-14
+     },
+     {
+      "applicable": false,
+      "explanation": "Acceleration of YoY EBITDA margin change (pp): not applicable to business model",
+      "factor": "margin_acceleration",
+      "family": "acceleration",
+      "group": "margin",
+      "label": "Acceleration of YoY EBITDA margin change (pp)",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": true,
+      "explanation": "Historical standardized EPS surprise: 1.668 \u2014 50.0 percentile among 17 model peers",
+      "factor": "earnings_surprise",
+      "family": "acceleration",
+      "group": "earnings",
+      "label": "Historical standardized EPS surprise",
+      "missing_reason": null,
+      "peer_count": 17,
+      "peer_group": "lender:model:lender",
+      "percentile": 50.0,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": 1.66792903443606
+     },
+     {
+      "applicable": false,
+      "explanation": "Negative reported debt/equity: not applicable to business model",
+      "factor": "low_leverage",
+      "family": "financial_strength",
+      "group": "leverage",
+      "label": "Negative reported debt/equity",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "Operating interest coverage: not applicable to business model",
+      "factor": "interest_coverage",
+      "family": "financial_strength",
+      "group": "coverage",
+      "label": "Operating interest coverage",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     },
+     {
+      "applicable": false,
+      "explanation": "YoY operating interest coverage change: not applicable to business model",
+      "factor": "interest_coverage_trend",
+      "family": "financial_strength",
+      "group": "coverage",
+      "label": "YoY operating interest coverage change",
+      "missing_reason": "not applicable to business model",
+      "peer_count": 0,
+      "peer_group": null,
+      "percentile": null,
+      "transformation": "peer 2nd/98th percentiles, linear interpolation",
+      "value": null
+     }
+    ],
+    "horizon": "trade",
+    "horizon_label": "Days to weeks",
+    "horizon_note": "Over days, the business barely changes \u2014 only the tape does. Quality is kept as a floor so the scanner does not surface junk that happens to be moving, but it cannot carry a score.",
+    "label": "CONSTRUCTIVE",
+    "methodology_version": "v4",
+    "model": {
+     "examples": "banks, NBFCs, housing finance, microfinance",
+     "key": "lender",
+     "matters": "For a lender the balance sheet is the product, not a means of funding one. What decides the outcome is the quality of the loan book, the margin between what it pays for deposits and earns on advances, and how much capital sits behind the risk. Growth without asset quality is how lenders fail.",
+     "missing": "This data source does not publish gross NPA, provision coverage, net interest margin, CASA ratio or capital adequacy. Those are the five numbers that matter most for a lender, so treat this score as a partial view and read the results filing itself.",
+     "name": "Lender",
+     "source": "industry \"Banks - Regional\""
+    },
+    "pillars": {
+     "acceleration": 42.1875,
+     "growth": 90.625,
+     "momentum": 100.0,
+     "participation": 87.5,
+     "quality": 71.875,
+     "risk": 43.75
+    },
+    "raw_score": 68.96033653846153,
+    "score": 59.46945621468926,
+    "summary": "Strongest on price trend (100/100); weakest on acceleration (42/100). 12-month momentum, last month skipped beats 100% of peers, while Revenue YoY growth acceleration (pp) beats only 38%.",
+    "tone": "constructive",
+    "weights": {
+     "acceleration": 0.06053268765133172,
+     "financial_strength": 0.06537530266343826,
+     "growth": 0.06053268765133172,
+     "momentum": 0.2469733656174334,
+     "participation": 0.043583535108958835,
+     "quality": 0.13075060532687652,
+     "risk": 0.3389830508474576,
+     "value": 0.053268765133171914
+    }
+   }
+  },
+  "legacy_scoring": {
+   "basis": "Weighted for a lender over weeks to months",
+   "confidence": 29,
+   "confidence_note": "Confidence measures how much of the intended evidence was actually available for this company \u2014 not how likely the score is to be right.",
+   "contribution": [
+    {
+     "pillar": "momentum",
+     "pillar_score": 79,
+     "points": 38.3,
+     "weight": 0.4847
+    },
+    {
+     "pillar": "participation",
+     "pillar_score": 70,
+     "points": 27.6,
+     "weight": 0.3947
+    },
+    {
+     "pillar": "valuation",
+     "pillar_score": 0,
+     "points": 0.0,
+     "weight": 0.1206
+    }
+   ],
+   "coverage": {
+    "missing": [
+     "Total Revenue (income statement)",
+     "Net Income (income statement)",
+     "EBIT (income statement)",
+     "Total Assets (balance sheet)",
+     "Stockholders Equity (balance sheet)",
+     "Current Assets (balance sheet)",
+     "Current Liabilities (balance sheet)",
+     "Long Term Debt (balance sheet)",
+     "Ordinary Shares Number (balance sheet)",
+     "Operating Cash Flow (cash flow)",
+     "institutional holding (market data)",
+     "promoter holding (market data)"
+    ],
+    "pct": 8,
+    "present": 1,
+    "total": 13
+   },
+   "cycle": null,
+   "cycle_note": null,
+   "dropped": [],
+   "horizon": "position",
+   "horizon_label": "Weeks to months",
+   "horizon_note": "The middle distance, where a business inflecting and a chart turning tend to happen together. This is the only horizon where all five pillars genuinely deserve a seat.",
+   "label": "CONSTRUCTIVE",
+   "model": {
+    "examples": "banks, NBFCs, housing finance, microfinance",
+    "key": "lender",
+    "matters": "For a lender the balance sheet is the product, not a means of funding one. What decides the outcome is the quality of the loan book, the margin between what it pays for deposits and earns on advances, and how much capital sits behind the risk. Growth without asset quality is how lenders fail.",
+    "missing": "This data source does not publish gross NPA, provision coverage, net interest margin, CASA ratio or capital adequacy. Those are the five numbers that matter most for a lender, so treat this score as a partial view and read the results filing itself.",
+    "name": "Lender",
+    "source": "industry \"Banks - Regional\""
+   },
+   "pillars": {
+    "improvement": null,
+    "momentum": 79,
+    "participation": 70,
+    "quality": null,
+    "valuation": 0
+   },
+   "score": 66,
+   "summary": "Price trend contributes most of this score (79/100 at 48% weight). what you pay is the weakest link at 0/100. confidence is only 29% because much of the statement data is missing.",
+   "tone": "constructive",
+   "valuation_basis": "drawdown_only",
+   "valuation_note": "No usable earnings multiple was published for this company, so the valuation reading is based only on how far price sits below its 52-week high \u2014 a position in a range, not a valuation. It has been given half its normal weight for that reason.",
+   "weights": {
+    "improvement": 0.2304,
+    "momentum": 0.2037,
+    "participation": 0.1659,
+    "quality": 0.2986,
+    "valuation": 0.0507
+   }
+  },
+  "levels": {
+   "current": 1156.0,
+   "method": "Swing highs and lows from the last year are clustered into zones (\u00b11.5%), then scored on touches, recency, volume at the reversal, and whether the zone flipped roles. Zones agreeing with the 50/200-DMA or 52-week extremes are flagged \u2014 independent methods pointing at one price is what makes a level trustworthy.",
+   "resistances": [
+    {
+     "distance_pct": 2.0,
+     "kind": "resistance",
+     "last_touch": "18 Nov 26",
+     "level": 1179.12,
+     "strength": 55,
+     "touches": 1,
+     "why": "52-week high \u2014 supply sits where the last rally topped out; breakouts above it often accelerate because nobody overhead is stuck at a loss.",
+     "zone": [
+      1179.12,
+      1179.12
+     ]
+    }
+   ],
+   "supports": [
+    {
+     "distance_pct": -10.9,
+     "kind": "support",
+     "last_touch": "04 Jun 26",
+     "level": 1030.2,
+     "pivots": 2,
+     "strength": 26,
+     "touches": 1,
+     "why": "Price reversed here 1\u00d7, last on 04 Jun 26",
+     "zone": [
+      1030.2,
+      1030.2
+     ],
+     "zone_width_pct": 0.0
+    },
+    {
+     "distance_pct": -20.3,
+     "kind": "support",
+     "last_touch": "30 Jul 26",
+     "level": 921.2,
+     "pivots": 2,
+     "strength": 30,
+     "touches": 1,
+     "why": "Price reversed here 1\u00d7, last on 30 Jul 26",
+     "zone": [
+      921.2,
+      921.2
+     ],
+     "zone_width_pct": 0.0
+    },
+    {
+     "distance_pct": -26.9,
+     "kind": "support",
+     "last_touch": "20 Nov 25",
+     "level": 845.21,
+     "strength": 55,
+     "touches": 1,
+     "why": "52-week low \u2014 the price the market refused to sell below all year.",
+     "zone": [
+      845.21,
+      845.21
+     ]
+    }
+   ]
+  },
+  "logo": {
+   "domain": "northernunion.example"
+  },
+  "name": "Northern Union Bank Limited",
+  "peers": {
+   "dividend_yield": {
+    "group": "Financial Services peers",
+    "peers": 16,
+    "percentile": 56,
+    "phrase": "higher than 56%"
+   },
+   "pe": {
+    "group": "Financial Services peers",
+    "peers": 16,
+    "percentile": 94,
+    "phrase": "cheaper than 94%"
+   },
+   "roe": {
+    "group": "Financial Services peers",
+    "peers": 16,
+    "percentile": 38,
+    "phrase": "lower than 62%"
+   }
+  },
+  "percentile": 97,
+  "percentiles": {
+   "invest": 92,
+   "position": 97,
+   "trade": 88
+  },
+  "plain": {
+   "bad": [
+    {
+     "name": "RSI(14) regime",
+     "text": "Momentum is either weak or the stock looks overheated"
+    },
+    {
+     "name": "Volume trend",
+     "text": "Trading interest is thinning out"
+    }
+   ],
+   "good": [
+    {
+     "name": "Trend structure",
+     "text": "The share price is in a clear uptrend"
+    },
+    {
+     "name": "Hull MA direction",
+     "text": "Short-term direction is upward"
+    },
+    {
+     "name": "ADX trend strength",
+     "text": "The trend has real force behind it"
+    }
+   ],
+   "verdict": "We could only check the price behaviour for this one \u2014 its financial statements aren't published by our data source. On price alone, it's behaving strongly."
+  },
+  "plan": {
+   "atr": 45.53,
+   "confidence": "HIGH",
+   "entry": 1181.48,
+   "entry_note": "wait for a close above 1,179 (strength 55/100) on above-average volume \u2014 do not front-run it",
+   "invalidation": "A daily CLOSE below 1,086.96 kills this plan \u2014 exit without negotiation. Douglas: the market doesn't know you're in a trade; the stop is the only opinion that matters.",
+   "principles": "Rules encoded from Weinstein (stage analysis), Minervini (trend template, 8% max risk), O'Neil (volume confirmation), Livermore (pivot entries), Elder (ATR stops), Tharp (expectancy & sizing), Douglas (pre-committed exits). No engine predicts price \u2014 the edge is taking only asymmetric bets and cutting the wrong ones fast.",
+   "risk_pct": 8.0,
+   "rr": 2.0,
+   "stance": "BREAKOUT WATCH",
+   "stop": 1086.96,
+   "targets": [
+    1370.51,
+    1465.03
+   ],
+   "warnings": [],
+   "why": [
+    "Stage 2 advance \u2014 price above a rising 200-DMA (Weinstein: the only stage worth buying)",
+    "Minervini trend template: price above the 50-DMA (\u22481,089) which is above the 200-DMA",
+    "Volume on up-days is 60000000.0\u00d7 volume on down-days over 60 sessions \u2014 accumulation footprint (O'Neil: institutions can't hide)",
+    "O'Neil: the breakout is only valid on volume \u2265 1.5\u00d7 average \u2014 a quiet breakout usually fails",
+    "No overhead resistance after the breakout \u2014 measured-move targets used (2R and 3R)"
+   ]
+  },
+  "price": 1156.0,
+  "price_series": null,
+  "profile": {
+   "description": "Northern Union Bank Limited provides banking products and services to individuals, commercial enterprises, corporates, public bodies and institutional customers in India and internationally. It operates through Treasury, Corporate and Wholesale Banking, Retail Banking, and Other Banking Business segments. The company accepts savings, current and term deposits and offers home, personal, auto, education and gold loans, along with loans against securities and property. It also provides working capital finance, project and structured finance, cash management, trade finance and supply chain finance, as well as life and general insurance, mutual funds, cards and merchant payment services through its subsidiaries. The bank serves its customers through a network of branches, ATMs and digital channels.",
+   "employees": 232296,
+   "industry": "Banks - Regional",
+   "market_cap": 10670590000000.0,
+   "sector": "Financial Services",
+   "source": "Business description as published by the data provider",
+   "website": "https://www.northernunion.example/"
+  },
+  "ratios": {
+   "book_value": 727.56,
+   "debt_to_equity": null,
+   "dividend_yield": 1.5,
+   "high_52w": 1156.0,
+   "low_52w": 870.95,
+   "market_cap": 10670590000000.0,
+   "pe": 11.8,
+   "price": 1156.0,
+   "price_to_book": 1.59,
+   "roce": null,
+   "roe": 14.0
+  },
+  "score_bands": {
+   "bands": [
+    {
+     "floor": 60.0,
+     "label": "Strong"
+    },
+    {
+     "floor": 55.0,
+     "label": "Good"
+    },
+    {
+     "floor": 40.0,
+     "label": "Average"
+    },
+    {
+     "floor": 33.0,
+     "label": "Weak"
+    },
+    {
+     "floor": 0.0,
+     "label": "Poor"
+    }
+   ],
+   "good": 55.0,
+   "poor": 33.0,
+   "strong": 60.0,
+   "weak": 40.0
+  },
+  "scoring": {
+   "band": "Good",
+   "basis": "Altaha Score v4 \u00b7 peer-relative \u00b7 as of 2026-11-18 \u00b7 ranked on request against the scan cohort",
+   "cohort_note": "Not in the scan's analysed cohort, so ranked on request against its 64 companies, using prices and filings as of 2026-11-18 \u2014 the same date its peers were measured on (scan of 18 Nov 2026, 04:13).",
+   "confidence": 42.1,
+   "confidence_notes": "Lender P/B, NPA, NIM and capital adequacy inputs are unavailable; Some peer groups have fewer than 30 observations",
+   "contribution": [
+    {
+     "pillar": "quality",
+     "pillar_score": 71.875,
+     "points": 22.434971098265894,
+     "weight": 0.31213872832369943
+    },
+    {
+     "pillar": "growth",
+     "pillar_score": 90.625,
+     "points": 19.64414739884393,
+     "weight": 0.21676300578034682
+    },
+    {
+     "pillar": "acceleration",
+     "pillar_score": 42.1875,
+     "points": 9.144689306358382,
+     "weight": 0.21676300578034682
+    },
+    {
+     "pillar": "momentum",
+     "pillar_score": 100.0,
+     "points": 19.653179190751445,
+     "weight": 0.19653179190751446
+    },
+    {
+     "pillar": "risk",
+     "pillar_score": 43.75,
+     "points": 2.5289017341040463,
+     "weight": 0.057803468208092484
+    }
+   ],
+   "coverage": {
+    "missing": [],
+    "present": 13,
+    "total": 13
+   },
+   "dropped": [
+    {
+     "check": "Positive trailing earnings yield",
+     "reason": "not applicable to business model"
+    },
+    {
+     "check": "Three-year median annual EPS yield",
+     "reason": "not applicable to business model"
+    },
+    {
+     "check": "EBITDA margin change year on year",
+     "reason": "not applicable to business model"
+    },
+    {
+     "check": "EBITDA margin level",
+     "reason": "not applicable to business model"
+    },
+    {
+     "check": "Negative other income / PBT",
+     "reason": "not applicable to business model"
+    },
+    {
+     "check": "Acceleration of YoY EBITDA margin change (pp)",
+     "reason": "not applicable to business model"
+    },
+    {
+     "check": "Negative reported debt/equity",
+     "reason": "not applicable to business model"
+    },
+    {
+     "check": "Operating interest coverage",
+     "reason": "not applicable to business model"
+    },
+    {
+     "check": "YoY operating interest coverage change",
+     "reason": "not applicable to business model"
+    }
+   ],
+   "factor_ledger": [
+    {
+     "applicable": true,
+     "explanation": "12-month momentum, last month skipped: 26.45 \u2014 100.0 percentile among 17 model peers",
+     "factor": "momentum_12_1",
+     "family": "momentum",
+     "group": "trend",
+     "label": "12-month momentum, last month skipped",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 26.450061301873127
+    },
+    {
+     "applicable": true,
+     "explanation": "Signed straightness of the trend: 98.91 \u2014 100.0 percentile among 17 model peers",
+     "factor": "trend_quality",
+     "family": "momentum",
+     "group": "trend",
+     "label": "Signed straightness of the trend",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 98.91237730728142
+    },
+    {
+     "applicable": true,
+     "explanation": "Closeness to the 52-week high: 98.04 \u2014 100.0 percentile among 17 model peers",
+     "factor": "high_52w",
+     "family": "momentum",
+     "group": "high",
+     "label": "Closeness to the 52-week high",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 100.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 98.03921568627449
+    },
+    {
+     "applicable": true,
+     "explanation": "One-week reversal: -1.197 \u2014 43.8 percentile among 17 model peers",
+     "factor": "reversal_5d",
+     "family": "risk",
+     "group": "reversal",
+     "label": "One-week reversal",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 43.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -1.1967554629670696
+    },
+    {
+     "applicable": true,
+     "explanation": "Realised volatility (negated): -0.1789 \u2014 43.8 percentile among 17 model peers",
+     "factor": "low_volatility",
+     "family": "risk",
+     "group": "volatility",
+     "label": "Realised volatility (negated)",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 43.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -0.1789484190100862
+    },
+    {
+     "applicable": true,
+     "explanation": "Log turnover against its history: 8.038 \u2014 87.5 percentile among 17 model peers",
+     "factor": "volume_shock",
+     "family": "participation",
+     "group": "turnover",
+     "label": "Log turnover against its history",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "market:model:lender",
+     "percentile": 87.5,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 8.038016136855537
+    },
+    {
+     "applicable": false,
+     "explanation": "Positive trailing earnings yield: not applicable to business model",
+     "factor": "earnings_yield",
+     "family": "value",
+     "group": "valuation",
+     "label": "Positive trailing earnings yield",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": false,
+     "explanation": "Three-year median annual EPS yield: not applicable to business model",
+     "factor": "cycle_earnings_yield",
+     "family": "value",
+     "group": "valuation",
+     "label": "Three-year median annual EPS yield",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": true,
+     "explanation": "PAT growth year on year: 14.84 \u2014 87.5 percentile among 17 model peers",
+     "factor": "earnings_growth",
+     "family": "growth",
+     "group": "earnings",
+     "label": "PAT growth year on year",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 87.5,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 14.839553251874804
+    },
+    {
+     "applicable": true,
+     "explanation": "Revenue growth year on year: 12.03 \u2014 93.8 percentile among 17 model peers",
+     "factor": "revenue_growth",
+     "family": "growth",
+     "group": "revenue",
+     "label": "Revenue growth year on year",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 93.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 12.030155890329741
+    },
+    {
+     "applicable": false,
+     "explanation": "EBITDA margin change year on year: not applicable to business model",
+     "factor": "margin_trend",
+     "family": "growth",
+     "group": "margin",
+     "label": "EBITDA margin change year on year",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": false,
+     "explanation": "EBITDA margin level: not applicable to business model",
+     "factor": "margin_level",
+     "family": "quality",
+     "group": "profitability",
+     "label": "EBITDA margin level",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": true,
+     "explanation": "Annualised return on assets: 1.21 \u2014 68.8 percentile among 17 model peers",
+     "factor": "return_on_assets",
+     "family": "quality",
+     "group": "profitability",
+     "label": "Annualised return on assets",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 68.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 1.21
+    },
+    {
+     "applicable": true,
+     "explanation": "Negative dispersion of bounded PAT growth: -9.706e-15 \u2014 75.0 percentile among 17 model peers",
+     "factor": "earnings_consistency",
+     "family": "quality",
+     "group": "persistence",
+     "label": "Negative dispersion of bounded PAT growth",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 75.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -9.706313974233221e-15
+    },
+    {
+     "applicable": false,
+     "explanation": "Negative other income / PBT: not applicable to business model",
+     "factor": "other_income_quality",
+     "family": "quality",
+     "group": "earnings_quality",
+     "label": "Negative other income / PBT",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": true,
+     "explanation": "EPS YoY growth acceleration (pp): 0 \u2014 43.8 percentile among 17 model peers",
+     "factor": "eps_acceleration",
+     "family": "acceleration",
+     "group": "earnings",
+     "label": "EPS YoY growth acceleration (pp)",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 43.75,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 0.0
+    },
+    {
+     "applicable": true,
+     "explanation": "Revenue YoY growth acceleration (pp): -2.132e-14 \u2014 37.5 percentile among 17 model peers",
+     "factor": "revenue_acceleration",
+     "family": "acceleration",
+     "group": "revenue",
+     "label": "Revenue YoY growth acceleration (pp)",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 37.5,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": -2.1316282072803006e-14
+    },
+    {
+     "applicable": false,
+     "explanation": "Acceleration of YoY EBITDA margin change (pp): not applicable to business model",
+     "factor": "margin_acceleration",
+     "family": "acceleration",
+     "group": "margin",
+     "label": "Acceleration of YoY EBITDA margin change (pp)",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": true,
+     "explanation": "Historical standardized EPS surprise: 1.668 \u2014 50.0 percentile among 17 model peers",
+     "factor": "earnings_surprise",
+     "family": "acceleration",
+     "group": "earnings",
+     "label": "Historical standardized EPS surprise",
+     "missing_reason": null,
+     "peer_count": 17,
+     "peer_group": "lender:model:lender",
+     "percentile": 50.0,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": 1.66792903443606
+    },
+    {
+     "applicable": false,
+     "explanation": "Negative reported debt/equity: not applicable to business model",
+     "factor": "low_leverage",
+     "family": "financial_strength",
+     "group": "leverage",
+     "label": "Negative reported debt/equity",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": false,
+     "explanation": "Operating interest coverage: not applicable to business model",
+     "factor": "interest_coverage",
+     "family": "financial_strength",
+     "group": "coverage",
+     "label": "Operating interest coverage",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    },
+    {
+     "applicable": false,
+     "explanation": "YoY operating interest coverage change: not applicable to business model",
+     "factor": "interest_coverage_trend",
+     "family": "financial_strength",
+     "group": "coverage",
+     "label": "YoY operating interest coverage change",
+     "missing_reason": "not applicable to business model",
+     "peer_count": 0,
+     "peer_group": null,
+     "percentile": null,
+     "transformation": "peer 2nd/98th percentiles, linear interpolation",
+     "value": null
+    }
+   ],
+   "horizon": "position",
+   "horizon_label": "Weeks to months",
+   "horizon_note": "The middle distance, where a business inflecting and a chart turning tend to happen together. This is the only horizon where all five pillars genuinely deserve a seat.",
+   "label": "CONSTRUCTIVE",
+   "methodology_version": "v4",
+   "model": {
+    "examples": "banks, NBFCs, housing finance, microfinance",
+    "key": "lender",
+    "matters": "For a lender the balance sheet is the product, not a means of funding one. What decides the outcome is the quality of the loan book, the margin between what it pays for deposits and earns on advances, and how much capital sits behind the risk. Growth without asset quality is how lenders fail.",
+    "missing": "This data source does not publish gross NPA, provision coverage, net interest margin, CASA ratio or capital adequacy. Those are the five numbers that matter most for a lender, so treat this score as a partial view and read the results filing itself.",
+    "name": "Lender",
+    "source": "industry \"Banks - Regional\""
+   },
+   "pillars": {
+    "acceleration": 42.1875,
+    "growth": 90.625,
+    "momentum": 100.0,
+    "participation": 87.5,
+    "quality": 71.875,
+    "risk": 43.75
+   },
+   "raw_score": 73.40588872832369,
+   "score": 59.84788537195994,
+   "summary": "Strongest on price trend (100/100); weakest on acceleration (42/100). 12-month momentum, last month skipped beats 100% of peers, while Revenue YoY growth acceleration (pp) beats only 38%.",
+   "tone": "constructive",
+   "weights": {
+    "acceleration": 0.1609442060085837,
+    "financial_strength": 0.11587982832618025,
+    "growth": 0.1609442060085837,
+    "momentum": 0.1459227467811159,
+    "participation": 0.0,
+    "quality": 0.2317596566523605,
+    "risk": 0.04291845493562232,
+    "value": 0.14163090128755365
+   }
+  },
+  "setup": {
+   "fit": 73,
+   "horizon": "3\u20138 weeks",
+   "invalidation": [
+    "Daily close back below the Supertrend band \u2014 the trend regime has flipped",
+    "ADX falling under 20, meaning the trend has lost force and price is going choppy",
+    "Price returning inside the Bollinger mid-band on rising volume \u2014 the breakout failed",
+    "Volume drying up while price holds \u2014 the move is running on fumes"
+   ],
+   "key": "momentum_breakout",
+   "name": "Momentum Breakout",
+   "pillars": [
+    {
+     "key": "momentum",
+     "label": "Momentum",
+     "value": 79,
+     "weight": 48
+    },
+    {
+     "key": "participation",
+     "label": "Participation",
+     "value": 70,
+     "weight": 27
+    },
+    {
+     "key": "quality",
+     "label": "Quality",
+     "value": null,
+     "weight": 15
+    },
+    {
+     "key": "improvement",
+     "label": "Improvement",
+     "value": null,
+     "weight": 7
+    },
+    {
+     "key": "valuation",
+     "label": "Valuation",
+     "value": 0,
+     "weight": 3
+    }
+   ],
+   "reads": [
+    "Bollinger %B",
+    "ADX",
+    "Supertrend",
+    "Hull MA slope",
+    "volume expansion"
+   ],
+   "risks": "Momentum setups fail fast and the failure is usually sharp. This archetype has the shortest useful life of the four \u2014 the evidence justifying it can be gone in a week.",
+   "strength": "Solid example, with the gaps noted below",
+   "thesis": "Price is trending with force and volume is confirming it. The premise is continuation: strong trends persist more often than they reverse, and the volume behind this one suggests real participation rather than a thin drift.",
+   "why": [
+    "Momentum pillar 79/100 with ADX at 98",
+    "Price trading above the Supertrend band",
+    "Participation pillar 70/100 confirming the move",
+    "Bollinger %B at 0.90 \u2014 riding the upper band"
+   ]
+  },
+  "shareholding": {
+   "published": false
+  },
+  "technical": {
+   "checks": [
+    {
+     "explain": "Moving averages smooth price into a trend line. Price above rising averages, with short averages above long ones, is the classic definition of an uptrend.",
+     "formula": "6 pts each: P>EMA20, P>EMA50, P>EMA200, EMA20>EMA50, EMA50>EMA200",
+     "max": 30,
+     "name": "Trend structure",
+     "points": 30,
+     "value": "Price 1156.0 | EMA20 1130.04 | EMA50 1093.06 | EMA200 1006.83"
+    },
+    {
+     "explain": "The Hull Moving Average reacts faster than a normal average with less lag. Its slope is a quick read on short-term direction.",
+     "formula": "10 pts if HMA(21) today > HMA(21) yesterday",
+     "max": 10,
+     "name": "Hull MA direction",
+     "points": 10,
+     "value": "HMA21 1152.35 \u2192 1155.09 (rising)"
+    },
+    {
+     "explain": "RSI measures the speed of recent gains vs losses on a 0\u2013100 scale. 50\u201370 is strength without overheating; above ~78 the move is often exhausted.",
+     "formula": "15 pts: 50\u201370 \u00b7 8 pts: 40\u201350 or 70\u201378 \u00b7 0 pts otherwise",
+     "max": 15,
+     "name": "RSI(14) regime",
+     "points": 0,
+     "value": "RSI = 99.8 (weak or overheated)"
+    },
+    {
+     "explain": "MACD compares a fast and slow average of price. Above its signal line with a growing gap means momentum is building, not fading.",
+     "formula": "7 pts: MACD above signal \u00b7 8 pts: histogram expanding",
+     "max": 15,
+     "name": "MACD momentum",
+     "points": 7,
+     "value": "MACD 19.02 vs signal 18.96; histogram 0.06 \u2192 0.06"
+    },
+    {
+     "explain": "ADX measures how strongly price is trending (in either direction). Below 20 means choppy, directionless trade \u2014 signals are less reliable there.",
+     "formula": "10 pts: ADX \u2265 25 \u00b7 5 pts: 20\u201325 \u00b7 0 pts: < 20",
+     "max": 10,
+     "name": "ADX trend strength",
+     "points": 10,
+     "value": "ADX(14) = 98.1"
+    },
+    {
+     "explain": "Supertrend draws a volatility-adjusted band under (or over) price. Which side price sits on is a simple trend-following regime filter.",
+     "formula": "10 pts if close is above the Supertrend(10, 3\u00d7ATR) band",
+     "max": 10,
+     "name": "Supertrend",
+     "points": 10,
+     "value": "Price above Supertrend(10,3) \u2014 bullish"
+    },
+    {
+     "explain": "Volume is how many shares changed hands. Rising average volume means more people are participating \u2014 a price move backed by growing volume is more convincing than one on thin trade.",
+     "formula": "8 pts: \u22651.25\u00d7 \u00b7 5: 1.05\u20131.25\u00d7 \u00b7 2: 0.90\u20131.05\u00d7 \u00b7 0: <0.90\u00d7",
+     "max": 8,
+     "name": "Volume trend",
+     "points": 2,
+     "value": "20-day avg 1,000,000 vs 50-day avg 1,000,000 = 1.0\u00d7 participation"
+    },
+    {
+     "explain": "If more shares trade on rising days than falling days, buyers are being more aggressive than sellers \u2014 that's accumulation. The reverse is distribution, where holders are quietly exiting.",
+     "formula": "7 pts: \u22651.5\u00d7 \u00b7 4: 1.0\u20131.5\u00d7 \u00b7 2: 0.7\u20131.0\u00d7 \u00b7 0: <0.7\u00d7",
+     "max": 7,
+     "name": "Accumulation vs distribution",
+     "points": 7,
+     "value": "Up-day volume 19,000,000 vs down-day volume 0 = 2.0\u00d7 (20 sessions)"
+    },
+    {
+     "explain": "On-Balance Volume adds volume on up days and subtracts it on down days, building a running total. When OBV rises alongside price, the trend has real buying behind it. When price rises but OBV doesn't, the move is hollow.",
+     "formula": "5 pts if OBV today is above OBV 30 sessions ago",
+     "max": 5,
+     "name": "On-Balance Volume",
+     "points": 5,
+     "value": "OBV 190,000,000 \u2192 219,000,000 (rising)"
+    },
+    {
+     "explain": "Bollinger Bands sit two standard deviations either side of a 20-day average. %B tells you where price sits inside that channel: above 0.5 is the strong half, above 1.0 means price has pushed outside the band, which is powerful but often short-lived.",
+     "formula": "7 pts: %B 0.55\u20131.00 \u00b7 4: 0.35\u20130.55 \u00b7 3: above 1.00 \u00b7 0: below 0.35",
+     "max": 7,
+     "name": "Bollinger position",
+     "points": 7,
+     "value": "%B = 0.9 (riding the upper half); band 1097.67 \u2013 1162.38"
+    },
+    {
+     "explain": "When Bollinger bands narrow, volatility has compressed and price is coiling \u2014 these periods often precede large directional moves. The squeeze doesn't tell you the direction, only that energy is building, which is exactly why it is shown here and left out of the score.",
+     "formula": "Not scored \u2014 a squeeze has no direction, so it earns no points either way",
+     "max": 0,
+     "name": "Volatility squeeze",
+     "points": 0,
+     "value": "Bandwidth at the 48.0th percentile of 6 months"
+    },
+    {
+     "explain": "Stocks near 52-week highs statistically continue outperforming (momentum effect); stocks in the bottom of their range are fighting overhead supply.",
+     "formula": "10 pts: top quartile \u00b7 6: upper half \u00b7 3: 30\u201350% \u00b7 0: bottom 30%",
+     "max": 10,
+     "name": "52-week range position",
+     "points": 10,
+     "value": "At 100.0% of 52w range (870.95 \u2013 1156.0)"
+    }
+   ],
+   "extras": {
+    "adx": 98.1,
+    "bandwidth_pctile": 48.0,
+    "drawdown_from_high": 0.0,
+    "high_52w": 1156.0,
+    "low_52w": 870.95,
+    "pct_b": 0.901,
+    "range_position": 100.0,
+    "ret_1m": 5.2,
+    "ret_3m": 17.5,
+    "ret_6m": 15.2,
+    "rsi": 99.8,
+    "squeeze": false,
+    "supertrend_bull": true
+   },
+   "score": 77
+  },
+  "ticker": "NORTHBANK.NS",
+  "verdict": {
+   "basis": "Technical only \u2014 fundamental statements unavailable for this ticker",
+   "label": "STRONG PROFILE",
+   "score": 77,
+   "summary": "Both the price action and the business quality clear high bars. Names like this belong on a serious watchlist \u2014 the remaining work is valuation comfort and position sizing.",
+   "tone": "strong"
+  },
+  "volume_series": [
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ],
+   [
+    1000000,
+    1
+   ]
+  ]
+ },
+ "filings": {
+  "available": true,
+  "categories": [
+   {
+    "count": 3,
+    "name": "Results"
+   },
+   {
+    "count": 1,
+    "name": "Credit rating"
+   },
+   {
+    "count": 1,
+    "name": "Dividend"
+   },
+   {
+    "count": 1,
+    "name": "Fundraise"
+   },
+   {
+    "count": 1,
+    "name": "Investor meet"
+   },
+   {
+    "count": 1,
+    "name": "Management change"
+   },
+   {
+    "count": 1,
+    "name": "Trading window"
+   }
+  ],
+  "count": 9,
+  "days": 365,
+  "note": "Categories are keyword rules applied to the exchange's own headline. Open the document for what the company said.",
+  "rows": [
+   {
+    "at": "2026-11-16T16:00:47+05:30",
+    "category": "Fundraise",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1794825047.0,
+    "exchange_category": "Updates",
+    "headline": "Northern Union Bank Limited has informed the Exchange about raising of funds through issue of Basel III compliant tier 2 debentures aggregating Rs 7,500 crore",
+    "importance": "high",
+    "pdf": "https://nsearchives.example/corporate/NORTHBANK_3.pdf",
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 4
+   },
+   {
+    "at": "2026-11-13T16:00:47+05:30",
+    "category": "Investor meet",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1794565847.0,
+    "exchange_category": "Analysts/Institutional Investor Meet/Con. Call Updates",
+    "headline": "Transcript of the earnings call for the quarter ended September 30, 2026",
+    "importance": "low",
+    "pdf": "https://nsearchives.example/corporate/NORTHBANK_6.pdf",
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 1
+   },
+   {
+    "at": "2026-11-12T16:00:47+05:30",
+    "category": "Results",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1794479447.0,
+    "exchange_category": "Copy of Newspaper Publication",
+    "headline": "Newspaper publication of financial results",
+    "importance": "critical",
+    "pdf": "https://nsearchives.example/corporate/NORTHBANK_7.pdf",
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 5
+   },
+   {
+    "at": "2026-11-11T16:00:47+05:30",
+    "category": "Results",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1794393047.0,
+    "exchange_category": "Financial Result Updates",
+    "headline": "Northern Union Bank Limited has submitted the unaudited financial results for the quarter and half year ended September 30, 2026",
+    "importance": "critical",
+    "pdf": "https://nsearchives.example/corporate/NORTHBANK_8.pdf",
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 5
+   },
+   {
+    "at": "2026-11-04T16:00:47+05:30",
+    "category": "Credit rating",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1793788247.0,
+    "exchange_category": "Credit Rating",
+    "headline": "Intimation of revision in credit rating by ICRA Limited",
+    "importance": "high",
+    "pdf": "https://nsearchives.example/corporate/NORTHBANK_15.pdf",
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 4
+   },
+   {
+    "at": "2026-10-28T16:00:47+05:30",
+    "category": "Results",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1793183447.0,
+    "exchange_category": "Board Meeting Intimation",
+    "headline": "Board meeting to consider and approve the financial results on November 8, 2026",
+    "importance": "critical",
+    "pdf": "https://nsearchives.example/corporate/NORTHBANK_22.pdf",
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 5
+   },
+   {
+    "at": "2026-10-01T16:00:47+05:30",
+    "category": "Trading window",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1790850647.0,
+    "exchange_category": "Trading Window",
+    "headline": "Closure of trading window",
+    "importance": "routine",
+    "pdf": null,
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 0
+   },
+   {
+    "at": "2026-09-28T16:00:47+05:30",
+    "category": "Management change",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1790591447.0,
+    "exchange_category": "Change in Directorate",
+    "headline": "Appointment of Managing Director with effect from October 1, 2026",
+    "importance": "high",
+    "pdf": "https://nsearchives.example/corporate/NORTHBANK_52.pdf",
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 4
+   },
+   {
+    "at": "2026-05-27T16:00:47+05:30",
+    "category": "Dividend",
+    "company": "Northern Union Bank Limited",
+    "epoch": 1779877847.0,
+    "exchange_category": "Dividend",
+    "headline": "Declaration of dividend of Rs 17.30 per equity share for FY 2025-26",
+    "importance": "medium",
+    "pdf": "https://nsearchives.example/corporate/NORTHBANK_176.pdf",
+    "scrip_code": "",
+    "symbol": "NORTHBANK",
+    "weight": 3
+   }
+  ],
+  "source": "NSE corporate announcements",
+  "symbol": "NORTHBANK"
+ },
+ "news": {
+  "company": {
+   "days": 21,
+   "rows": [
+    {
+     "age_minutes": 180,
+     "headline": "Northern Union Bank Q2 net profit rises 10% to \u20b922,600 crore; asset quality steady",
+     "kind": "press",
+     "source": "Mint",
+     "url": "https://news.example/0",
+     "when_iso": "2026-11-19T10:30:47+00:00"
+    },
+    {
+     "age_minutes": 1260,
+     "headline": "Northern Union Bank raises \u20b97,500 crore through tier-2 bonds at 7.02%",
+     "kind": "press",
+     "source": "Business Standard",
+     "url": "https://news.example/1",
+     "when_iso": "2026-11-18T16:30:47+00:00"
+    },
+    {
+     "age_minutes": 2760,
+     "headline": "Northern Union Bank to open 500 branches this financial year, says chairman",
+     "kind": "press",
+     "source": "Economic Times",
+     "url": "https://news.example/2",
+     "when_iso": "2026-11-17T15:30:47+00:00"
+    },
+    {
+     "age_minutes": 4200,
+     "headline": "Northern Union Bank cuts MCLR by 5 basis points across tenors",
+     "kind": "press",
+     "source": "Moneycontrol",
+     "url": "https://news.example/3",
+     "when_iso": "2026-11-16T15:30:47+00:00"
+    },
+    {
+     "age_minutes": 5760,
+     "headline": "Why brokerages stay divided on Northern Union Bank after its September quarter",
+     "kind": "press",
+     "source": "Financial Express",
+     "url": "https://news.example/4",
+     "when_iso": "2026-11-15T13:30:47+00:00"
+    }
+   ],
+   "searched": true
+  },
+  "industry": {
+   "days": 7,
+   "drivers": [
+    "Interest rates",
+    "Asset quality",
+    "Credit and deposits",
+    "Regulation"
+   ],
+   "label": "Banks",
+   "rows": [
+    {
+     "age_minutes": 360,
+     "driver": "Interest rates",
+     "headline": "RBI keeps repo rate unchanged at 5.25%, retains neutral stance",
+     "kind": "press",
+     "source": "Mint",
+     "url": "https://news.example/0",
+     "when_iso": "2026-11-19T07:30:47+00:00"
+    },
+    {
+     "age_minutes": 1080,
+     "driver": "Credit and deposits",
+     "headline": "Banks' credit growth slows to 11.2% as deposits keep pace: RBI data",
+     "kind": "press",
+     "source": "Business Standard",
+     "url": "https://news.example/1",
+     "when_iso": "2026-11-18T19:30:47+00:00"
+    },
+    {
+     "age_minutes": 1800,
+     "driver": "Asset quality",
+     "headline": "Gross NPAs of banks at a multi-decade low of 2.1%, says Financial Stability Report",
+     "kind": "press",
+     "source": "Economic Times",
+     "url": "https://news.example/2",
+     "when_iso": "2026-11-18T07:30:47+00:00"
+    },
+    {
+     "age_minutes": 2460,
+     "driver": "Regulation",
+     "headline": "RBI proposes easier norms for bank lending to NBFCs",
+     "kind": "press",
+     "source": "Moneycontrol",
+     "url": "https://news.example/3",
+     "when_iso": "2026-11-17T20:30:47+00:00"
+    },
+    {
+     "age_minutes": 3300,
+     "driver": "Credit and deposits",
+     "headline": "Deposit rates set to fall further as liquidity stays in surplus",
+     "kind": "press",
+     "source": "Hindu BusinessLine",
+     "url": "https://news.example/4",
+     "when_iso": "2026-11-17T06:30:47+00:00"
+    },
+    {
+     "age_minutes": 540,
+     "driver": null,
+     "headline": "Bank holidays in December: full list of days branches stay shut",
+     "kind": "press",
+     "source": "Times of India",
+     "url": "https://news.example/5",
+     "when_iso": "2026-11-19T04:30:47+00:00"
+    }
+   ],
+   "searched": true
+  },
+  "kind": "press",
+  "note": "Press coverage as published, with the publication named. Company filings are listed separately.",
+  "symbol": "NORTHBANK"
+ },
+ "peers": {
+  "available": true,
+  "classifier": "Yahoo Finance",
+  "industry": "Banks - Regional",
+  "industry_members": 10,
+  "measures": [
+   {
+    "higher_is_better": null,
+    "key": "market_cap_cr",
+    "label": "Market cap",
+    "unit": "cr"
+   },
+   {
+    "higher_is_better": false,
+    "key": "pe",
+    "label": "P/E",
+    "unit": "x"
+   },
+   {
+    "higher_is_better": false,
+    "key": "pb",
+    "label": "P/B",
+    "unit": "x"
+   },
+   {
+    "higher_is_better": true,
+    "key": "roe_pct",
+    "label": "ROE",
+    "unit": "%"
+   },
+   {
+    "higher_is_better": true,
+    "key": "opm_pct",
+    "label": "Operating margin",
+    "unit": "%"
+   },
+   {
+    "higher_is_better": true,
+    "key": "revenue_yoy_pct",
+    "label": "Sales growth",
+    "unit": "%"
+   },
+   {
+    "higher_is_better": true,
+    "key": "pat_yoy_pct",
+    "label": "Profit growth",
+    "unit": "%"
+   },
+   {
+    "higher_is_better": false,
+    "key": "debt_equity_x",
+    "label": "Debt / equity",
+    "unit": "x"
+   }
+  ],
+  "medians": {
+   "debt_equity_x": null,
+   "market_cap_cr": 141500.0,
+   "opm_pct": null,
+   "pat_yoy_pct": 7.5,
+   "pb": 1.81,
+   "pe": 16.65,
+   "revenue_yoy_pct": 10.5,
+   "roe_pct": 13.44
+  },
+  "note": "P/E is market value over the last four quarters' profit; P/B is market value over the latest balance sheet's equity. Each company is on the basis it files.",
+  "peers_shown": 10,
+  "prices_as_of": "2026-11-19",
+  "prices_oldest": "2026-11-19",
+  "rows": [
+   {
+    "band": "Strong",
+    "basis": "consolidated",
+    "company": "Harbour Bank Limited",
+    "debt_equity_x": null,
+    "domain": "harbourbk.example",
+    "is_self": false,
+    "market_cap_cr": 1480000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": 15.0,
+    "pb": 2.89,
+    "pe": 22.0,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 10.0,
+    "roe_pct": 13.41,
+    "score": 61.8,
+    "symbol": "HARBOURBK"
+   },
+   {
+    "band": null,
+    "basis": "consolidated",
+    "company": "Northern Union Bank Limited",
+    "debt_equity_x": null,
+    "domain": "northbank.example",
+    "is_self": true,
+    "market_cap_cr": 1067000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": 3.0,
+    "pb": 1.59,
+    "pe": 12.3,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 11.0,
+    "roe_pct": 13.14,
+    "score": null,
+    "symbol": "NORTHBANK"
+   },
+   {
+    "band": "Good",
+    "basis": "consolidated",
+    "company": "Crest Bank Limited",
+    "debt_equity_x": null,
+    "domain": "crestbank.example",
+    "is_self": false,
+    "market_cap_cr": 986000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": 9.0,
+    "pb": 3.28,
+    "pe": 21.7,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 11.0,
+    "roe_pct": 15.42,
+    "score": 57.2,
+    "symbol": "CRESTBANK"
+   },
+   {
+    "band": "Average",
+    "basis": "consolidated",
+    "company": "Meridian Bank Limited",
+    "debt_equity_x": null,
+    "domain": "meridianb.example",
+    "is_self": false,
+    "market_cap_cr": 412000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": -3.0,
+    "pb": 2.28,
+    "pe": 15.6,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 13.0,
+    "roe_pct": 14.87,
+    "score": 48.9,
+    "symbol": "MERIDIANB"
+   },
+   {
+    "band": null,
+    "basis": "consolidated",
+    "company": "Peninsula Bank Limited",
+    "debt_equity_x": null,
+    "domain": "peninsula.example",
+    "is_self": false,
+    "market_cap_cr": 338000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": 11.0,
+    "pb": 2.22,
+    "pe": 20.6,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 11.0,
+    "roe_pct": 11.03,
+    "score": null,
+    "symbol": "PENINSULA"
+   },
+   {
+    "band": "Average",
+    "basis": "consolidated",
+    "company": "Delta Bank of India Limited",
+    "debt_equity_x": null,
+    "domain": "deltabank.example",
+    "is_self": false,
+    "market_cap_cr": 151000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": 1.0,
+    "pb": 1.09,
+    "pe": 8.2,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 13.0,
+    "roe_pct": 13.47,
+    "score": 53.4,
+    "symbol": "DELTABANK"
+   },
+   {
+    "band": "Average",
+    "basis": "consolidated",
+    "company": "Union Cooperative Bank Limited",
+    "debt_equity_x": null,
+    "domain": "unioncoop.example",
+    "is_self": false,
+    "market_cap_cr": 132000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": -1.0,
+    "pb": 1.12,
+    "pe": 8.4,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 12.0,
+    "roe_pct": 13.55,
+    "score": 44.1,
+    "symbol": "UNIONCOOP"
+   },
+   {
+    "band": null,
+    "basis": "consolidated",
+    "company": "Canal Bank Limited",
+    "debt_equity_x": null,
+    "domain": "canalbank.example",
+    "is_self": false,
+    "market_cap_cr": 119000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": 17.0,
+    "pb": 1.14,
+    "pe": 7.1,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 8.0,
+    "roe_pct": 16.5,
+    "score": null,
+    "symbol": "CANALBANK"
+   },
+   {
+    "band": "Weak",
+    "basis": "consolidated",
+    "company": "Summit First Bank Limited",
+    "debt_equity_x": null,
+    "domain": "summitfin.example",
+    "is_self": false,
+    "market_cap_cr": 58000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": 13.0,
+    "pb": 1.49,
+    "pe": 31.6,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 10.0,
+    "roe_pct": 4.8,
+    "score": 36.7,
+    "symbol": "SUMMITFIN"
+   },
+   {
+    "band": "Average",
+    "basis": "consolidated",
+    "company": "Lakeshore Bank Limited",
+    "debt_equity_x": null,
+    "domain": "lakeshore.example",
+    "is_self": false,
+    "market_cap_cr": 49000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": 6.0,
+    "pb": 1.48,
+    "pe": 12.2,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 10.0,
+    "roe_pct": 12.41,
+    "score": 51.0,
+    "symbol": "LAKESHORE"
+   },
+   {
+    "band": null,
+    "basis": "consolidated",
+    "company": "Ridge Small Finance Bank Limited",
+    "debt_equity_x": null,
+    "domain": "ridgebank.example",
+    "is_self": false,
+    "market_cap_cr": 21000.0,
+    "opm_pct": null,
+    "pat_yoy_pct": -3.0,
+    "pb": 2.14,
+    "pe": 17.7,
+    "price": 1000.0,
+    "price_date": "2026-11-19",
+    "quarter": "Q2 FY27",
+    "revenue_yoy_pct": 9.0,
+    "roe_pct": 12.34,
+    "score": null,
+    "symbol": "RIDGEBANK"
+   }
+  ],
+  "selection": "Every company Yahoo Finance classes in Banks - Regional with figures held.",
+  "symbol": "NORTHBANK"
+ },
+ "symbol": "NORTHBANK"
+}
