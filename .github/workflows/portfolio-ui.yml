@@ -291,6 +291,21 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/motion-off-browser.cjs
+      - name: Verify a sector tile on Today opens its stocks in place
+        if: always()
+        # Tapping a sector used to leave Today for the market board and open
+        # nothing there: the board names tiles after NSE indices, Today after
+        # sectors, so the name never matched. This taps a tile at phone and
+        # desktop widths and asserts the reader stays on Today with the
+        # sector's stocks listed, each one a link to its page.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/today-sectors-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: today-sectors-browser-verification
+          path: test-results/today-sectors
       - name: Verify the delivery pane never invents a delivered figure
         if: always()
         # Two silent ones. A session the exchange published no quantity for
