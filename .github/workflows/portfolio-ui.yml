@@ -29,7 +29,10 @@ jobs:
     # failed before running a single test. Move this and the Playwright
     # version together.
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    # The tests take about seven minutes. Installing Chromium and its system
+    # packages usually takes one and has taken eleven and a half, and at
+    # fifteen that cancelled a run in which every test had passed.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

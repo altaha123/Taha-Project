@@ -82,6 +82,17 @@ const server = http.createServer((req, res) => {
     });
 
     await page.goto('http://127.0.0.1:8791/', { waitUntil: 'domcontentloaded' });
+    /* The page sets scroll-behavior: smooth, and the scroll Playwright makes
+       to put a tile under the finger obeys it. While the page is still
+       arriving Playwright retries that scroll with a different alignment, and
+       the retry was an animation: the tap landed at its first frame, the list
+       opened in view, and the rest of the animation then carried it off
+       screen. The "visible and tappable" check failed about one run in two —
+       on main as much as anywhere — for a reason no reader can produce: a
+       finger does not scroll the page before it taps. So the harness's own
+       scrolling is made instant. The scroll under test is untouched: doors.js
+       asks for behavior: 'smooth' by name, which this does not override. */
+    await page.addStyleTag({ content: 'html{scroll-behavior:auto !important}' });
     const tile = name => page.locator('#drt-heat .dr-tile[data-sector="' + name + '"]');
     const panel = page.locator('#drt-secpanel');
     await tile('Real Estate').waitFor();
