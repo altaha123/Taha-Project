@@ -128,7 +128,6 @@
         { tab: 'special', more: true, label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
         { tab: 'results', label: 'Results calendar', icon: 'document', hint: 'Who reports yesterday, today and this week', kw: 'results earnings quarterly calendar' },
         { tab: 'filings', label: 'Filings & news', icon: 'document', hint: 'Company announcements as they are filed', kw: 'news announcements filings exchange' },
-        { tab: 'discover', more: true, label: 'Setups', icon: 'target', hint: 'Today’s strongest setups and unusual activity', kw: 'opportunities setups ideas today' },
         { tab: 'options', more: true, label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
         { tab: 'screener', label: 'Market board', icon: 'bars', hint: 'The market board and a stock search box', kw: 'analysis board movers', quiet: true }
       ]
@@ -146,7 +145,6 @@
         { tab: 'funds', more: true, label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
         { tab: 'charts', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
         { tab: 'tracker', more: true, label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
-        { tab: 'factors', more: true, label: 'Factors', icon: 'plan', hint: 'What each factor has actually predicted', kw: 'factors ic accuracy' },
         { tab: 'strategies', more: true, label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
         { tab: 'concalls', more: true, label: 'Concalls', icon: 'chat', hint: 'Earnings call transcripts, digested', kw: 'concall earnings call transcript' }
       ]

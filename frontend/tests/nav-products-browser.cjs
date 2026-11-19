@@ -98,7 +98,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
      on Today instead (it failed CI that way, not locally). The router is
      slowed down here so it always comes second. */
   await page.route('**/nav.js*', async r => { await new Promise(res => setTimeout(res, 600)); await r.continue(); });
-  for (const [go, view] of [['portfolio', 'view-portfolio'], ['discover', 'view-discover'],
+  for (const [go, view] of [['portfolio', 'view-portfolio'], ['discover', 'view-today'],
                             ['allocate', 'view-allocate'], ['research', 'view-ideahub'], ['ideas', 'view-ideas']]) {
     await page.goto('http://127.0.0.1:8768/?go=' + go, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => !!window.AltahaNav);
@@ -150,7 +150,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   await page.locator('#sh-morebtn').click();
   await page.locator('#sh-morepanel').waitFor({ state: 'visible' });
   assert.deepEqual(await page.locator('#sh-morepanel .sh-moreitem').evaluateAll(ns => ns.map(n => n.dataset.tab)),
-                   ['wow', 'special', 'discover', 'options']);
+                   ['wow', 'special', 'options']);
   assert.match(await page.locator('#sh-morepanel .sh-moreitem[data-tab="options"]').innerText(), /open interest/i,
                'a tool under More lost its hint');
   await page.keyboard.press('Escape');
@@ -193,7 +193,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   }));
   ['ideas', 'screener', 'charts', 'results', 'investors', 'funds', 'filings', 'concalls',
    'social', 'vocab', 'tracker', 'portfolio', 'planner', 'live', 'deals', 'special',
-   'wow', 'options', 'discover', 'allocate', 'score', 'factors', 'query', 'lenses',
+   'wow', 'options', 'allocate', 'score', 'query', 'lenses',
    'convergence', 'today', 'ideahub', 'money', 'strategies'].forEach(t => {
     assert.ok(owners[t], `${t} lost its home in the restructure`);
   });
@@ -205,9 +205,14 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.equal(sections[2].tabs[0], 'money');
   ['live', 'deals', 'wow', 'special', 'results', 'filings', 'options', 'screener'].forEach(t =>
     assert.equal(owners[t], 'discover', `${t} belongs behind Today`));
-  ['ideas', 'query', 'lenses', 'convergence', 'investors', 'funds', 'charts', 'tracker', 'factors', 'strategies', 'concalls'].forEach(t =>
+  ['ideas', 'query', 'lenses', 'convergence', 'investors', 'funds', 'charts', 'tracker', 'strategies', 'concalls'].forEach(t =>
     assert.equal(owners[t], 'research', `${t} belongs behind Ideas`));
   ['portfolio', 'allocate', 'planner'].forEach(t => assert.equal(owners[t], 'portfolio', `${t} belongs behind My money`));
+  /* Setups ("Opportunities now") was removed as a tool: Today's own page
+     shows what it showed. It must be gone from the map, not merely hidden. */
+  assert.equal(owners.discover, undefined, 'the removed Setups tool is still on the map');
+  // Factors went the same way.
+  assert.equal(owners.factors, undefined, 'the removed Factors tool is still on the map');
   ['score', 'vocab', 'social'].forEach(t => assert.equal(owners[t], 'me', `${t} belongs in Me`));
 
   await page.evaluate(() => window.AltahaNav.go('research', 'ideas', true));
@@ -316,6 +321,13 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   await shows('#portfolio/money', 'view-money');
   await shows('#discover/today', 'view-today');
   await shows('#today', 'view-today');
+  // Addresses that used to open the removed Setups hub. A link somebody
+  // saved or shared has to land on Today, not on a blank page.
+  await shows('#discover', 'view-today');
+  await shows('#discover/discover', 'view-today');
+  // And the removed Factors page: its old addresses open Ideas.
+  await shows('#research/factors', 'view-ideahub');
+  await shows('#factors', 'view-ideahub');
   await shows('#research', 'view-ideahub');
   await shows('#discover/deals', 'view-deals');
   await shows('#research/query', 'view-query');
@@ -341,7 +353,9 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   await page.locator('#view-today .dr-hero').waitFor({ state: 'visible' });
   assert.match(await page.locator('#view-today .dr-hero').innerText(), /NIFTY 50/);
   assert.match(await page.locator('#drt-level').innerText(), /25,150\.75/);
-  assert.equal(await page.locator('#view-today .dr-tool').count(), 8, 'Today lost one of its tool cards');
+  assert.equal(await page.locator('#view-today .dr-tool').count(), 7, 'Today’s tool cards changed');
+  assert.equal(await page.locator('#view-today .dr-tool', { hasText: 'Setups' }).count(), 0,
+               'the removed Setups tool still has a card on Today');
   // A card is a door to its tool.
   await page.locator('#view-today .dr-tool[data-goto="discover/live"]').click();
   await page.locator('#view-live').waitFor({ state: 'visible' });
@@ -352,15 +366,45 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   await page.locator('#view-money .dr-pfhero').waitFor({ state: 'visible' });
   assert.match(page.url(), /#portfolio\/money$/);
 
+  /* The Setups hub is gone. Asking for it by its old name — a button somebody
+     still has, a pinned tool from before — opens Today and lights Today's own
+     pill, rather than opening nothing or throwing. */
+  await page.evaluate(() => localStorage.setItem('altaha-pins-v1', JSON.stringify(['discover', 'deals'])));
   await page.evaluate(() => window.AltahaNav.go('discover', 'discover', true));
-  await page.locator('#dsc-market .dsc-ix').first().waitFor();
-  assert.match(await page.locator('#dsc-market').innerText(), /NIFTY 50/);
-  await page.locator('#dsc-activity .dsc-card').first().waitFor();
-  assert.equal(await page.locator('#dsc-activity .dsc-card').count(), 4,
-               'Discover lost one of its activity cards');
-  /* A hub whose feeds are all empty must still say something rather than
-     present four blank boxes. */
-  assert.ok((await page.locator('#dsc-activity').innerText()).trim().length > 80);
+  await page.locator('#view-today .dr-hero').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#view-discover').count(), 0, 'the removed Setups page is still in the document');
+  assert.deepEqual(await page.locator('#sh-doorbar .sh-pill.on').evaluateAll(ns => ns.map(n => n.dataset.tab)), ['today']);
+  assert.match(page.url(), /#discover\/today$/);
+  assert.doesNotMatch(await page.locator('#view-today').innerText(), /\bSetups\b|Opportunities now/);
+  // A tool pinned before it was removed leaves no chip, and takes nothing else with it.
+  assert.deepEqual(await page.locator('#dr-desk-pins .dr-pinchip').allInnerTexts().then(t => t.map(x => x.trim())), ['Big trades']);
+  await page.evaluate(() => localStorage.removeItem('altaha-pins-v1'));
+
+  /* Factors was removed with it. Its old name opens Ideas; the Score page no
+     longer sends anybody there; and the panel that used to fill it does not
+     reappear at the foot of Track record, which is where its script fell back
+     to when it could not find a page of its own. */
+  await page.evaluate(() => window.AltahaNav.go('research', 'factors', true));
+  await page.locator('#view-ideahub .dr-universe').waitFor({ state: 'visible' });
+  assert.match(page.url(), /#research\/ideahub$/);
+  await page.evaluate(() => window.AltahaNav.go(null, 'tracker', true));
+  await page.locator('#view-tracker').waitFor({ state: 'visible' });
+  await page.waitForTimeout(1600);
+  assert.equal(await page.locator('#lab, #view-tracker .lab').count(), 0, 'the factor panel moved into Track record instead of going');
+  await page.evaluate(() => window.AltahaNav.go(null, 'score', true));
+  await page.locator('#view-score').waitFor({ state: 'visible' });
+  assert.doesNotMatch(await page.locator('#view-score').innerText(), /factor evidence|under Factors/i);
+  await page.locator('#view-score [data-goto="tracker"]').waitFor();
+
+  // Neither removed tool is offered anywhere: door bar, More, footer, hub cards, legacy tabs.
+  await page.evaluate(() => window.AltahaNav.go('research', null, true));
+  await page.locator('#view-ideahub .dr-universe').waitFor({ state: 'visible' });
+  for (const gone of ['discover', 'factors']) {
+    const left = await page.locator(`[data-tab="${gone}"], [data-foot-tab="${gone}"], [data-goto="${gone}"], [data-goto$="/${gone}"], #tab-${gone}, #view-${gone}`)
+      .evaluateAll(ns => ns.map(n => n.outerHTML.slice(0, 90)));
+    assert.deepEqual(left, [], `the removed "${gone}" tool is still offered`);
+  }
+  assert.equal(await page.locator('.sh-footer a', { hasText: /^(Setups|Factors)$/ }).count(), 0);
 
   await page.evaluate(() => window.AltahaNav.go('allocate', null, true));
   /* Allocate is the guided card and nothing else: the five-step sequence and
@@ -416,7 +460,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
 
   for (const width of [390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });
-    for (const view of ['today', 'ideahub', 'money', 'ideas', 'discover', 'allocate', 'score', 'factors']) {
+    for (const view of ['today', 'ideahub', 'money', 'ideas', 'allocate', 'score']) {
       await page.evaluate(v => window.AltahaNav.go(null, v, true), view);
       await page.waitForTimeout(350);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),

@@ -28,8 +28,8 @@ and its own address, in exactly one door.
 
 | Door | The question it answers | What lives behind it |
 |---|---|---|
-| **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Setups, Options and the Market board |
-| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
+| **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Options and the Market board |
+| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
 | **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner (the month work becomes optional, and what moves it — see below), Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
