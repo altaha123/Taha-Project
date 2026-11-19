@@ -2889,17 +2889,26 @@ def stock_news_view(ticker: str, sector: str = "", industry: str = ""):
 
 
 @app.get("/stock/filings")
-def stock_filings(ticker: str, limit: int = 60):
-    """One company's exchange filings over the last year, newest first, with
-    a count per category. The primary source; /stock/news is the press."""
+def stock_filings(ticker: str, limit: int = 60, held: bool = False):
+    """
+    One company's exchange filings over the last year, newest first, with a
+    count per category. The primary source; /stock/news is the press.
+
+    `held=1` answers from what is already in memory and asks the exchange
+    nothing. The stock page uses it for the few filings on its first screen:
+    opening a company's page must not be a call to NSE, both because nothing
+    slow belongs on that screen and because the exchange throttles bursts, and
+    the Ownership and Financials sections need its goodwill more.
+    """
     sym = _fund_symbol(ticker)
     try:
         ann.poll_if_stale()
     except Exception:
         pass
     try:
-        return to_native(ann.for_company(sym, limit=max(1, min(limit, 200)),
-                                         ask=_known_company(sym) is not None))
+        return to_native(ann.for_company(
+            sym, limit=max(1, min(limit, 200)),
+            ask=(not held) and _known_company(sym) is not None))
     except Exception as e:
         raise HTTPException(503, f"Filings unavailable: {str(e)[:100]}")
 

@@ -247,30 +247,6 @@
 .ln-badge.is-soon{ border-style:dashed; opacity:.7 }
 .ln-badge.is-insufficient, .ln-badge.is-none{ opacity:.65 }
 
-/* ── The card on the stock page ───────────────────────────────────────────
-   In the Overview's side column (stock.html). The lenses a company meets or
-   narrowly misses are named; the rest are folded under one line. `.card` and
-   `.card-h` are stock.css's own, so this sits in the column as one more card
-   of the same kind. */
-
-.ln-strip-n{ margin:0; font:400 24px/1.15 'Instrument Serif',Georgia,serif; color:var(--ink) }
-.ln-strip-n b{ font-weight:400; color:var(--gold) }
-.ln-meter{ display:flex; gap:4px; margin:12px 0 14px }
-.ln-meter i{ flex:1; height:6px; border-radius:99px; background:var(--rule-2) }
-.ln-meter i.on{ background:var(--gold); animation:lnSeg 520ms cubic-bezier(.16,1,.3,1) both }
-.ln-meter i.on:nth-child(2){ animation-delay:60ms } .ln-meter i.on:nth-child(3){ animation-delay:120ms }
-.ln-meter i.on:nth-child(4){ animation-delay:180ms } .ln-meter i.on:nth-child(n+5){ animation-delay:240ms }
-@keyframes lnSeg{ from{ transform:scaleX(0); transform-origin:0 50% } to{ transform:none; transform-origin:0 50% } }
-.ln-strip .ln-badge i{ font-style:normal; margin-left:6px; font:500 10px/1 'IBM Plex Mono',monospace; opacity:.75 }
-.ln-rest{ margin-top:12px }
-.ln-rest > summary{ cursor:pointer; padding:4px 0; font-size:12.5px; font-weight:500; color:var(--gold-dp) }
-.ln-rest > summary:hover{ text-decoration:underline }
-.ln-rest > summary:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:4px }
-.ln-rest .ln-badges{ margin-top:10px }
-.ln-strip-note{ margin:14px 0 0; padding-top:12px; border-top:1px solid var(--rule-2);
-  font-size:11px; color:var(--mute); line-height:1.5 }
-@media (prefers-reduced-motion: reduce){ .ln-meter i.on{ animation:none } }
-
 /* ── States and the notice ───────────────────────────────────────────────── */
 
 .ln-state{ padding:28px 18px; text-align:center; color:var(--mute); border:1px dashed var(--rule);

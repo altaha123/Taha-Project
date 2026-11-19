@@ -121,10 +121,14 @@ const server = http.createServer((req, res) => {
   await page.locator('.op').first().waitFor();
   assert.equal(shareholdingCalls, 1);
 
-  // Lead with the finding: the biggest mover, named, before any chart.
-  const lead = await page.locator('.own-lead').innerText();
-  assert.match(lead, /Foreign institutions/);
-  assert.match(lead, /fell 1\.47 percentage points/);
+  // No sentence above the chart: the quarter and its filing are chips beside
+  // the heading, and the move is on the panel of the category that moved.
+  assert.equal(await page.locator('#pane-owners .own-lead, #pane-owners .own-asof').count(), 0,
+    'the prose above the ownership chart is back');
+  const meta = page.locator('#own-meta');
+  assert.match(await meta.innerText(), /30 Jun 2026/i);
+  assert.match(await meta.locator('a').getAttribute('href'), /nseindia\.com/);
+  assert.match(await page.locator('.op.s-fii .op-chips').innerText(), /[−-]1\.47\s*QoQ/);
 
   // THE DOUBLE-COUNT GUARD. The reported public total (49.52) must never be a
   // panel or a bar segment beside the categories it contains.

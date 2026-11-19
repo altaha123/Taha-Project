@@ -629,3 +629,170 @@ def test_a_gap_in_the_quarter_series_yields_no_year_figure(monkeypatch):
     out = sf.summary("GAPPY", quarters=12)
     for row in out["split"]:
         assert row["change_yoy"] is None
+
+
+# ---------------------------------------------------------------------------
+# An exchange that refuses, and what the page still gets
+#
+# The Ownership section went empty whenever NSE refused one call: there was no
+# pause before the retry, the list of a company's filings was kept only in
+# memory, and nothing stood behind either. Each of those is pinned here.
+# ---------------------------------------------------------------------------
+
+class _Answer:
+    def __init__(self, status=200, body=None, text=""):
+        self.status_code, self._body, self.text = status, body, text
+
+    def json(self):
+        return self._body
+
+
+class _Session:
+    """Answers each call with the next status in `script`."""
+    def __init__(self, script):
+        self.script, self.calls = list(script), 0
+
+    def get(self, url, **kw):
+        self.calls += 1
+        item = self.script.pop(0) if self.script else _Answer(403)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+def _transport(monkeypatch, script):
+    s = _Session(script)
+    monkeypatch.setattr(sf, "session", lambda: s)
+    monkeypatch.setattr(sf, "_warm_session", lambda force=False: None)
+    monkeypatch.setattr(sf, "BACKOFF", 0)
+    return s
+
+
+def test_a_refused_call_is_tried_again_after_a_pause(monkeypatch):
+    s = _transport(monkeypatch, [_Answer(403), _Answer(429), _Answer(200, body=[])])
+    assert sf._get("https://www.nseindia.com/api/x").status_code == 200
+    assert s.calls == 3
+    # Bounded: a limiter that keeps refusing is not asked for ever.
+    s = _transport(monkeypatch, [_Answer(403)] * 10)
+    assert sf._get("https://www.nseindia.com/api/x") is None
+    assert s.calls == sf.RETRIES + 1
+    # A broken connection is retried too, and a plain 404 is not.
+    s = _transport(monkeypatch, [RuntimeError("reset"), _Answer(200, body=[])])
+    assert sf._get("https://www.nseindia.com/api/x").status_code == 200
+    s = _transport(monkeypatch, [_Answer(404), _Answer(200)])
+    assert sf._get("https://www.nseindia.com/api/x") is None and s.calls == 1
+
+
+MASTER = [{"date": "30-Sep-2026", "submissionDate": "18-Oct-2026",
+           "xbrl": "https://nsearchives.nseindia.com/corporate/xbrl/a.xml", "recordId": 1},
+          {"date": "30-Jun-2026", "submissionDate": "17-Jul-2026",
+           "xbrl": "https://nsearchives.nseindia.com/corporate/xbrl/b.xml", "recordId": 2}]
+
+
+def test_a_refused_list_serves_the_last_one_read_even_after_a_restart(monkeypatch, tmp_path):
+    monkeypatch.setattr(sf, "CACHE_DIR", str(tmp_path))
+    monkeypatch.setattr(sf, "_index_cache", {})
+    monkeypatch.setattr(sf, "_get", lambda *a, **k: _Answer(200, body=MASTER))
+    first = sf.index("ACME")
+    assert [r["period"] for r in first] == ["2026-09-30", "2026-06-30"]
+
+    # A restart: nothing in memory, and the exchange refusing.
+    monkeypatch.setattr(sf, "_index_cache", {})
+    asked = []
+    monkeypatch.setattr(sf, "_get", lambda *a, **k: asked.append(1) and None)
+    assert sf.index("ACME") == first, "a refusal emptied a company that had been read before"
+    # Remembered for a few minutes, so the refusing exchange is not asked per view.
+    sf.index("ACME")
+    assert len(asked) == 1
+    # A company never read has nothing to fall back on, and says so.
+    assert sf.index("NEVERREAD") == []
+    # Nothing but a plain symbol becomes a file name.
+    assert sf._index_path("../../etc/passwd") is None and sf._index_path("") is None
+
+
+def test_after_one_refused_document_the_rest_come_from_the_disk_only(monkeypatch):
+    rows = [{"period": p, "filed": p, "xbrl": "https://nsearchives.nseindia.com/x/%s" % p,
+             "record_id": p, "revised": False}
+            for p in ("2026-09-30", "2026-06-30", "2026-03-31", "2025-12-31")]
+    monkeypatch.setattr(sf, "available", lambda: True)
+    monkeypatch.setattr(sf, "index", lambda s, force=False: rows)
+    monkeypatch.setattr(sf, "from_store", lambda s: None)
+    seen = []
+
+    def filing(url, period="", filed="", revised=False, offline=False):
+        seen.append((period, offline))
+        return None
+
+    monkeypatch.setattr(sf, "filing", filing)
+    out = sf.summary("ACME")
+    assert not out["available"] and out["retry"] is True
+    assert seen[0] == ("2026-09-30", False)
+    assert all(off for _p, off in seen[1:]), "the exchange was asked again after refusing: %s" % seen
+
+
+def test_the_stored_quarters_stand_in_when_nothing_can_be_read(monkeypatch):
+    import sys, types
+    stored = [
+        {"symbol": "ACME", "period_end": "2026-09-30", "promoter_pct": 52.0, "fii_pct": 12.5,
+         "dii_pct": 9.5, "public_pct": 48.0, "dii_derived": 0,
+         "source_url": "https://nsearchives.nseindia.com/corporate/xbrl/a.xml"},
+        {"symbol": "ACME", "period_end": "2026-06-30", "promoter_pct": 53.0, "fii_pct": 11.0,
+         "dii_pct": 9.0, "public_pct": 47.0, "dii_derived": 0, "source_url": "javascript:alert(1)"},
+        {"symbol": "ACME", "period_end": "2026-07-14", "promoter_pct": 99.0, "fii_pct": 0.0,
+         "dii_pct": 0.0, "public_pct": 1.0, "dii_derived": 0, "source_url": None},   # interim
+        {"symbol": "ACME", "period_end": "2025-09-30", "promoter_pct": 55.0, "fii_pct": 10.0,
+         "dii_pct": None, "public_pct": 45.0, "dii_derived": 0, "source_url": None},
+    ]
+    monkeypatch.setitem(sys.modules, "lens_store",
+                        types.SimpleNamespace(shareholding_of=lambda s: stored if s == "ACME" else []))
+    monkeypatch.setattr(sf, "available", lambda: True)
+    monkeypatch.setattr(sf, "index", lambda s, force=False: [])
+
+    out = sf.summary("acme.ns")
+    assert out["available"] and out["reduced"] is True and out["period"] == "2026-09-30"
+    split = {s["key"]: s for s in out["split"]}
+    assert split["promoter"]["pct"] == 52.0 and split["public_non_institutional"]["pct"] == 26.0
+    assert out["totals"]["split_sums_to"] == 100.0
+    assert split["public_non_institutional"]["derived"] is True
+    assert split["promoter"]["change_qoq"] == pytest.approx(-1.0)
+    assert split["promoter"]["change_yoy"] == pytest.approx(-3.0)
+    assert split["dii"]["change_yoy"] is None, "a change was worked out against a line never filed"
+    # Quarter-ends only, oldest first, and no link the exchange did not issue.
+    assert [h["period"] for h in out["history"]] == ["2025-09-30", "2026-06-30", "2026-09-30"]
+    assert out["history"][1]["source"] is None
+    assert "public_non_institutional" not in out["history"][0]
+
+    none = sf.summary("NOBODY")
+    assert not none["available"] and none["retry"] is True and "NOBODY" in none["message"]
+
+
+def test_an_empty_answer_is_not_believed_for_six_hours(monkeypatch, tmp_path):
+    """The exchange sometimes answers a throttled call with an empty list. One
+    such reply used to blank a company's Ownership section until the cache
+    aged out, six hours later."""
+    monkeypatch.setattr(sf, "CACHE_DIR", str(tmp_path))
+    monkeypatch.setattr(sf, "_index_cache", {})
+    answers, asked = [[], MASTER], []
+
+    def get(*a, **k):
+        asked.append(1)
+        return _Answer(200, body=answers.pop(0) if answers else [])
+    monkeypatch.setattr(sf, "_get", get)
+
+    clock = [1_000_000.0]
+    monkeypatch.setattr(sf.time, "time", lambda: clock[0])
+    assert sf.index("ACME") == []
+    # Within the minute the exchange is left alone.
+    clock[0] += 5
+    assert sf.index("ACME") == [] and len(asked) == 1
+    # After it, the company is asked about again, and this time it answers.
+    clock[0] += sf.EMPTY_RETRY
+    assert [r["period"] for r in sf.index("ACME")] == ["2026-09-30", "2026-06-30"]
+    assert len(asked) == 2
+
+    # And an empty answer never replaces a list that was read before.
+    clock[0] += sf.INDEX_TTL + 1
+    assert [r["period"] for r in sf.index("ACME")] == ["2026-09-30", "2026-06-30"]
+    assert len(asked) == 3
+    monkeypatch.setattr(sf, "_index_cache", {})          # a restart
+    assert [r["period"] for r in sf.index("ACME")] == ["2026-09-30", "2026-06-30"]

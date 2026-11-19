@@ -332,9 +332,34 @@ add up to each other, and a paragraph of method under most headings.
   Financials · Peers · Delivery · News & filings. Scrolled past the name, the
   bar carries the company's logo, symbol and price. A section is part of the
   address (`#peers`, or the older `?pane=owners`).
+- **Switching sections moves nothing else.** The sections share a stage at
+  least a screen tall, so the page cannot collapse under a reader who was deep
+  in a long one; they land at the top of the new section with the bar still
+  stuck. The company's name in the bar fades in at the bar's far end, so the
+  tabs never shift, and a section arrives once, as a whole.
 - **The Overview is cards**, each opening the section behind it: key figures
-  with where each sits among peers, the year's price, the score's pillars, the
-  lenses the company meets, and the newest filings and headlines.
+  with where each sits among peers, the year's price, the score's pillars, and
+  the newest filings and headlines. The lenses are not on this page; they stay
+  on the scanner.
+- **Labels, figures and directions; no paragraphs.** A method note is a
+  tooltip or it is gone.
+- **Financials are drawn** (`/fundamentals?quarters=8`,
+  `/fundamentals/position`). Three views: Income, Balance sheet, Cash flow.
+  Each is a row of figures that are also buttons, the pressed one charted from
+  zero over eight quarters (or the years filed), with its change on the year
+  and on the quarter; then a split of 100, where each ₹100 of income went
+  beside the same quarter a year earlier, and what funds the assets. A rise in
+  a cost or in borrowings is marked as a rise, not as good news. Every line of
+  the statement as filed is one tap away under "Full statement".
+- **Ownership asks more than once** (`shareholding_filings.py`). The exchange
+  refuses in bursts: a refused read is retried after a pause, the list of a
+  company's filings is kept on disk so a restart does not need the exchange to
+  answer first, an empty reply is believed for a minute (it used to be six
+  hours) and never replaces a list already read, and once one document is
+  refused the rest of that reading uses only what is already held. If nothing can be read, the quarters the scanner
+  already stores are shown instead, marked "Stored copy", without the named
+  holders; failing that the page asks once more itself and then offers "Try
+  again".
 - **One score, and its arithmetic.** The Score section prints what the engine
   did, from the payload it came from: each pillar's rank among peers, its
   weight, the points that makes, their sum, and the pull toward 50 for what
@@ -355,7 +380,10 @@ add up to each other, and a paragraph of method under most headings.
   where the headline names the company. Industry news is a search in the
   industry's own vocabulary, each headline tagged with the driver it mentions
   (a rate decision for a bank, crude for a refiner): keyword rules, printed in
-  `stock_news.GROUPS`. Filings are the company's own, a year of them, from NSE.
+  `stock_news.GROUPS`. Filings are the company's own, a year of them, from NSE;
+  the first screen asks only for the ones already held (`held=1`), so opening
+  a company is not a call to the exchange, and the year is read when the
+  section is opened.
   Press never reaches a score. Both endpoints go out only for a company the
   server already knows (the scan, the stored profile, NSE's equity list), and
   the name searched is the server's own, never a request's. Searches are held
@@ -368,7 +396,7 @@ add up to each other, and a paragraph of method under most headings.
   them when its website is known (the stored profile, else
   `stock_page.KNOWN_DOMAINS`) and the image loads at a usable size. The browser
   asks a favicon service with `no-referrer`; the API fetches no images.
-- **Motion** is the tab marker sliding, a section rising in, bars growing to
+- **Motion** is the tab marker sliding, a section fading in, bars growing to
   their value and the dial sweeping once. None of it runs under
   `prefers-reduced-motion`.
 
@@ -376,7 +404,9 @@ add up to each other, and a paragraph of method under most headings.
 `frontend/tests/fixtures/stock-page.json` from the real modules, and
 `frontend/tests/stock-page-browser.cjs` reads it: the order of the page, the
 points summing to the number on the dial, lazy loading, the bank's figures,
-peer sorting, logo fallback, link safety and a phone at every section.
+peer sorting, logo fallback, link safety, a switch from deep in one section to
+the top of another, Ownership's second ask and stored copy, and a phone at
+every section. `stock-fundamentals-browser.cjs` covers the drawn Financials.
 
 ## Company pages — one address per company, for search
 

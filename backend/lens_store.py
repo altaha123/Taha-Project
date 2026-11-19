@@ -207,6 +207,14 @@ def companies():
     return {r["symbol"]: dict(r) for r in _connect().execute("SELECT * FROM lens_company")}
 
 
+def shareholding_of(symbol):
+    """One company's stored quarters, newest first. The stock page's ownership
+    section reads this when the exchange will not answer."""
+    return [dict(r) for r in _connect().execute(
+        "SELECT * FROM lens_shareholding WHERE symbol = ? ORDER BY period_end DESC",
+        ((symbol or "").strip().upper(),))]
+
+
 def shareholding():
     """{symbol: [quarter rows, newest first]}."""
     out = {}

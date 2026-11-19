@@ -570,6 +570,9 @@ def test_the_filings_route_reads_one_company_the_server_knows(api, monkeypatch):
     # A string the server has never heard of is not put to the exchange.
     api.stock_filings("ZZZZ9999")
     assert asked["ask"] is False
+    # Nor is anything, for the page's first screen: held=1 reads memory only.
+    api.stock_filings("ACME", held=True)
+    assert asked["sym"] == "ACME" and asked["ask"] is False
 
 
 def test_an_unknown_symbol_reads_only_what_is_held_and_a_refusal_rests_the_exchange(monkeypatch):
