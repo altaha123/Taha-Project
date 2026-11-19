@@ -749,13 +749,29 @@
     });
   }
 
+  /* Where a headline goes. The feed calls the story's address `link`. This
+     card read `url`, which the feed has never sent, so every headline was a
+     link to "#": it underlined on hover and went nowhere. `url` is still
+     accepted, in case a source ever arrives under that name.
+
+     Only an http(s) address becomes a link. The text is other people's RSS,
+     and escaping it does not stop a "javascript:" address from being one. */
+  function storyHref(l) {
+    var u = String((l && (l.link || l.url)) || '').trim();
+    return /^https?:\/\//i.test(u) ? u : '';
+  }
+
   function paintHeads(d) {
     var host = $('drt-heads');
     if (!host) return;
     var cs = ((d && d.clusters) || []).map(function (c) { return c.lead || {}; }).filter(function (l) { return l.title; });
     host.innerHTML = cs.length ? '<ul class="dr-hlist">' + cs.slice(0, 5).map(function (l, i) {
-      return '<li style="--i:' + i + '"><a href="' + esc(l.url || '#') + '" target="_blank" rel="noopener noreferrer">' +
-        esc(l.title) + '</a><small>' + esc(l.publication || '') + '</small></li>';
+      var href = storyHref(l);
+      // A headline with nowhere to go is text, not a link that does nothing.
+      return '<li style="--i:' + i + '">' + (href
+        ? '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(l.title) + '</a>'
+        : '<span>' + esc(l.title) + '</span>') +
+        '<small>' + esc(l.publication || '') + '</small></li>';
     }).join('') + '</ul>' : '<p class="dr-quiet">No headlines right now.</p>';
   }
 
