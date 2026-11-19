@@ -158,7 +158,7 @@
         { tab: 'portfolio', label: 'Portfolio review', icon: 'plan', hint: 'A clear call on every holding', kw: 'portfolio holdings review plan hold trim exit' },
         { tab: 'watchlists', label: 'Watchlists', icon: 'target', hint: 'Your lists, live — make, rename, share and play', kw: 'watchlist watch list star saved follow rename share game' },
         { tab: 'allocate', label: 'Allocation plan', icon: 'shield', hint: 'Where your next rupee should go', kw: 'allocate asset allocation invest' },
-        { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'Income, expenses, tax and your cushion', kw: 'planner budget tax emergency' },
+        { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'The month work becomes optional, and what moves it', kw: 'planner budget tax emergency retire retirement freedom fire goals goal sip check-in regime salary' },
         { href: 'advisors.html', label: 'Talk to an adviser', icon: 'chat', hint: 'Chat with SEBI-registered advisers', kw: 'advisor adviser sebi chat expert' },
         { href: 'wealth.html', label: 'Wealth desk', icon: 'shield', hint: 'For portfolio managers: clients, calls and commission',
           kw: 'wealth manager portfolio manager pms clients client book aum commission profit share sharing fee fees high water mark hurdle recommendation recommended price buying price statement' }

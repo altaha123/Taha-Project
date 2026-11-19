@@ -214,9 +214,10 @@ temperament. The order on the card:
 
 1. **What has a prior claim on the money.** Before a rupee is split, two
    things come off the top. A **cushion** of six months' expenses, sized in
-   rupees from the household numbers — the planner's if it has published
-   them this session, otherwise a monthly-expenses field on the card itself,
-   asked for rather than assumed. And **costly loans**: anything above about
+   rupees from the household numbers — the planner's if it has them (it
+   keeps them in this browser, so they are there on a later visit too),
+   otherwise a monthly-expenses field on the card itself, asked for rather
+   than assumed. And **costly loans**: anything above about
    10% a year (cards, personal loans; a home loan at 8–9% is not costly debt)
    is a certain return no sleeve can match, so what is outstanding on them is
    closed first. Both are capped at what is left, and what remains is printed

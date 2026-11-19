@@ -965,6 +965,33 @@
      MY MONEY
      ════════════════════════════════════════════════════════════════════════ */
 
+  /* The planner's card says what the planner says. Somebody with a date sees
+     it here, with how far along they are and whether this month's check-in is
+     still to do — which is the reason to open it. Everybody else sees what it
+     is for. The date is the planner's to work out; this only asks for it. */
+  function plannerCard() {
+    var p = null;
+    try { p = window.AltahaPlanner && window.AltahaPlanner.summary(); } catch (e) {}
+    var has = !!p && !p.example && (p.status === 'dated' || p.status === 'free');
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var when = has && p.when ? String(p.when).split('-') : null;
+    var line = !has ? 'Find the month work becomes optional, and what moves it.'
+      : (p.status === 'free' ? 'Work is already optional.'
+          : 'Work becomes optional in ' + MONTHS[Number(when[1]) - 1] + ' ' + when[0] + '.') +
+        (p.due ? ' This month\u2019s check-in is due.' : p.streak > 1 ? ' ' + p.streak + ' check-ins running.' : '');
+    // The arc is a half circle; draw as much of it as there is progress.
+    var f = has ? Math.max(0.04, Math.min(1, p.progress)) : 0.71;
+    var x = (100 - 84 * Math.cos(f * Math.PI)).toFixed(1), y = (96 - 84 * Math.sin(f * Math.PI)).toFixed(1);
+    return '<button type="button" class="dr-card dr-tool dr-rise" style="--i:4" data-goto="portfolio/planner" id="drm-planner" data-private>' +
+      '<span class="dr-sheen" aria-hidden="true"></span>' +
+      '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('planner') + '</span></span>' +
+      '<span class="dr-tool-name">Money planner</span>' +
+      '<span class="dr-tool-line">' + esc(line) + '</span>' +
+      '<svg class="dr-gauge" viewBox="0 0 200 104" aria-hidden="true"><path class="bg" d="M16 96 A84 84 0 0 1 184 96"/>' +
+        '<path class="fg dr-draw" pathLength="1" d="M16 96 A84 84 0 0 1 ' + x + ' ' + y + '"/></svg>' +
+    '</button>';
+  }
+
   function moneyShell() {
     var n = portfolioCount();
     var w = readJSON(WATCH_KEY, []);
@@ -1001,13 +1028,7 @@
           '<span class="dr-tool-line">How to split your money by risk.</span>' +
           '<span class="dr-stack" aria-hidden="true"><i style="--w:52%;--i:0"></i><i style="--w:26%;--i:1"></i><i style="--w:12%;--i:2"></i><i style="--w:10%;--i:3"></i></span>' +
         '</button>' +
-        '<button type="button" class="dr-card dr-tool dr-rise" style="--i:4" data-goto="portfolio/planner">' +
-          '<span class="dr-sheen" aria-hidden="true"></span>' +
-          '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('planner') + '</span></span>' +
-          '<span class="dr-tool-name">Money planner</span>' +
-          '<span class="dr-tool-line">Income, expenses, tax and your safety cushion.</span>' +
-          '<svg class="dr-gauge" viewBox="0 0 200 104" aria-hidden="true"><path class="bg" d="M16 96 A84 84 0 0 1 184 96"/><path class="fg dr-draw" pathLength="1" d="M16 96 A84 84 0 0 1 152 40"/></svg>' +
-        '</button>' +
+        plannerCard() +
         '<a class="dr-card dr-tool dr-rise" style="--i:5" href="advisors.html">' +
           '<span class="dr-sheen" aria-hidden="true"></span>' +
           '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('adviser') + '</span></span>' +

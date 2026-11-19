@@ -402,6 +402,23 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/planner-risk-browser.cjs
+      - name: Verify the money planner gives a date, keeps it, and sends nothing
+        # The planner answers with a month and a year, and almost everything
+        # that can go wrong with that is silent: a date that is not the one
+        # the arithmetic gives, numbers gone after a reload, a what-if that
+        # changes the saved plan, a purchase priced at "0 months", salary-day
+        # figures a rupee out, a grade for a budget nobody itemised, a streak
+        # broken by a month that is not over, an amount in the shared text or
+        # in a request. The clock is pinned to an IST day.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/planner-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: planner-verification
+          path: test-results/planner
       - name: Verify the Lenses views and the Research menu
         # The LENSES column must sit in the Research menu like its neighbours,
         # a blocked lens must say "Coming soon" and never show a count, a rule

@@ -699,9 +699,10 @@
     household: {}, years: null, monthly: false
   };
 
-  /* The planner publishes its household numbers in this browser session and
-     nowhere else. When it has, the cushion is sized from them without asking
-     twice; a figure typed on this card always wins over it. */
+  /* The planner publishes its household numbers in this browser and nowhere
+     else — and keeps them there, so they are published again on a later
+     visit. When it has, the cushion is sized from them without asking twice;
+     a figure typed on this card always wins over it. */
   function household() {
     var h = state.household || {};
     var p = root.AltahaPlannerState || {};
