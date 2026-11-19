@@ -2064,28 +2064,37 @@
   }
 
   /* ── Financials, drawn ───────────────────────────────────────────────────
-     The section used to open on a sentence, a paragraph about accounting
-     bases and a sixteen-row table. All true, and a reader had to work to get
-     anything out of it. It opens on pictures now and says almost nothing:
+     The section opens on pictures and says almost nothing:
 
        · a row of figures, each with its change on the year and its own small
          trend. Tapping one makes it the subject of the chart below;
-       · that chart: the quarters as bars, the growth under each, and the
-         quarter under the pointer read out above it;
-       · where each ₹100 of income went, this quarter beside the same quarter
-         a year ago, which is a margin story told without the word margin;
+       · that chart: slim bars from zero against a scale, the latest in full
+         colour, and the period under the pointer read out above it;
+       · beside it, the second thing a reader asks: for income, the two
+         margins as lines; for the balance sheet, what funds the assets; for
+         cash, how much of the operating cash was left after investing;
+       · for income, where the money went: revenue on the left, what was kept
+         on the right, every cost peeling away between them;
        · the statement itself, every line of it, one tap away.
 
-     Income, balance sheet and cash flow are three views of the same four
-     parts, built by one set of functions from one shape of data, so they
-     cannot drift into three designs.
+     COLOUR IS AN ENTITY, NOT A DECORATION. Blue is the size of the business
+     (revenue, assets, operating cash), green is what is kept (profit, equity,
+     free cash), orange is what is owed or spent (borrowings, capital
+     expenditure). Costs are grey. Three hues, checked for colour-blind
+     separation on both card colours; a rise or a fall wears the site's own
+     green and red and always carries an arrow.
+
+     The first version drew fat tan bars under numerals in the display serif.
+     It was checked in a browser that had the web fonts blocked, so nobody saw
+     what a reader would. Figures are set in the interface sans now, bars are
+     thin, and the previews load the real fonts.
 
      WHAT IS NEVER DRAWN
-     A bar that does not start at zero. A percentage change across zero or
-     against a loss: the API sends the kind of move instead ("to profit"),
-     and for the balance sheet and cash flow, where this file works the change
-     out, it is left blank unless both figures are positive. A split of ₹100
-     whose parts do not come back to the total within a rounding. */
+     A bar that does not start at zero. Two scales on one chart. A percentage
+     change across zero or against a loss: the API sends the kind of move
+     instead ("to profit"), and for the balance sheet and cash flow, where
+     this file works the change out, it is left blank unless both figures are
+     positive. A flow or a split whose parts do not come back to the whole. */
 
   var FN = { income: null, pos: null, view: 'income',
              pick: { income: 'revenue', balance: 'total_assets', cash: 'cfo' } };
@@ -2106,6 +2115,14 @@
     if (kind === 'pct') return Number(v).toFixed(1) + '%';
     return Number(v).toFixed(2) + '×';
   }
+  /* The same figure with its unit set smaller beside it. */
+  function fnFigure(v, kind) {
+    if (v == null || isNaN(v)) return '—';
+    if (kind === 'cr') return '₹' + esc(crShort(v)) + '<small> cr</small>';
+    if (kind === 'pct') return esc(Number(v).toFixed(1)) + '<small>%</small>';
+    if (kind === 'x') return esc(Number(v).toFixed(2)) + '<small>×</small>';
+    return esc(fnText(v, kind));
+  }
   /* `sense` says which way is the good way for the figure: +1 when more is
      better (profit), -1 when less is (borrowings), 0 when neither is (total
      assets, capital expenditure). The arrow always shows the direction; the
@@ -2114,8 +2131,8 @@
   function senseClass(sense) { return sense == null || sense > 0 ? '' : (sense < 0 ? ' inv' : ' plain'); }
   function moveChip(c, suffix, sense) {
     if (!c) return '';
-    return '<span class="mv ' + (c.tone || '') + senseClass(sense) + '">' +
-      (c.tone === 'up' ? '▲ ' : c.tone === 'dn' ? '▼ ' : '') + esc(c.text) +
+    return '<span class="mv ' + (c.tone || '') + senseClass(sense) + '"><b>' +
+      (c.tone === 'up' ? '▲ ' : c.tone === 'dn' ? '▼ ' : '') + esc(c.text) + '</b>' +
       (suffix ? '<small>' + suffix + '</small>' : '') + '</span>';
   }
   /* A change this file works out itself: a percentage only between two
@@ -2152,18 +2169,21 @@
 
   /* One shape for all three views: the periods, oldest first, and for each
      figure its values, its change on the year and its change on the period
-     before, one per period. */
+     before, one per period. `hue` is the entity's colour (a blue, b orange,
+     c green); `side` marks a figure drawn beside the chart, not as a card. */
   function incomeModel(d) {
     var rows = (d.rows || []).slice().reverse();
     var byLabel = {};
     rows.forEach(function (r) { byLabel[r.label] = r; });
     var defs = [
-      { key: 'revenue', label: 'Revenue', kind: 'cr', sense: 1 },
-      { key: 'ebitda', label: 'EBITDA', kind: 'cr', sense: 1 },
-      { key: 'pat', label: 'Net profit', kind: 'cr', sense: 1 },
-      { key: 'eps_basic', label: 'EPS', kind: 'rupees', sense: 1 },
-      { key: 'opm_pct', label: 'Operating margin', kind: 'pct', ratio: true, sense: 1 },
-      { key: 'net_margin_pct', label: 'Net margin', kind: 'pct', ratio: true, sense: 1 }
+      { key: 'revenue', label: 'Revenue', kind: 'cr', sense: 1, hue: 'a' },
+      { key: 'ebitda', label: 'EBITDA', kind: 'cr', sense: 1, hue: 'a' },
+      { key: 'pat', label: 'Net profit', kind: 'cr', sense: 1, hue: 'c' },
+      { key: 'eps_basic', label: 'EPS', kind: 'rupees', sense: 1, hue: 'c' },
+      { key: 'opm_pct', label: 'Operating margin', short: 'Operating', kind: 'pct', ratio: true,
+        sense: 1, hue: 'a', side: true },
+      { key: 'net_margin_pct', label: 'Net margin', short: 'Net', kind: 'pct', ratio: true,
+        sense: 1, hue: 'c', side: true }
     ];
     function val(r, m) {
       var v = m.ratio ? (r.ratios || {})[m.key] : (r.values || {})[m.key];
@@ -2174,7 +2194,7 @@
       id: 'income', periods: rows.map(function (r) { return r.label || ''; }),
       metrics: defs.map(function (m) {
         return {
-          key: m.key, label: m.label, kind: m.kind, sense: m.sense,
+          key: m.key, label: m.label, short: m.short, kind: m.kind, sense: m.sense, hue: m.hue, side: m.side,
           vals: rows.map(function (r) { return val(r, m); }),
           yoy: rows.map(function (r) {
             if (!m.ratio) return apiMove((r.yoy || {})[m.key]);
@@ -2207,7 +2227,7 @@
       id: id, periods: rows.map(function (r) { return r.label || r.period_end || ''; }),
       metrics: defs.map(function (m) {
         return {
-          key: m.key, label: m.label, kind: m.kind, sense: m.sense,
+          key: m.key, label: m.label, kind: m.kind, sense: m.sense, hue: m.hue,
           vals: rows.map(function (r) { return val(r, m); }),
           yoy: rows.map(function (r, i) {
             var then = yearBefore(i);
@@ -2219,105 +2239,359 @@
     };
   }
   var BALANCE_DEFS = [
-    { key: 'total_assets', label: 'Total assets', kind: 'cr', sense: 0 },
-    { key: 'total_equity', label: 'Equity', kind: 'cr', sense: 1 },
-    { key: 'total_borrowings', label: 'Borrowings', kind: 'cr', sense: -1 },
-    { key: 'deposits', label: 'Deposits', kind: 'cr', sense: 0 },
-    { key: 'net_debt', label: 'Net debt', kind: 'cr', sense: -1 },
-    { key: 'cash_and_equivalents', label: 'Cash', kind: 'cr', sense: 0 },
-    { key: 'debt_equity_x', label: 'Debt / equity', kind: 'x', ratio: true, sense: -1 },
-    { key: 'current_ratio_x', label: 'Current ratio', kind: 'x', ratio: true, sense: 0 }
+    { key: 'total_assets', label: 'Total assets', kind: 'cr', sense: 0, hue: 'a' },
+    { key: 'total_equity', label: 'Equity', kind: 'cr', sense: 1, hue: 'c' },
+    { key: 'total_borrowings', label: 'Borrowings', kind: 'cr', sense: -1, hue: 'b' },
+    { key: 'deposits', label: 'Deposits', kind: 'cr', sense: 0, hue: 'a' },
+    { key: 'net_debt', label: 'Net debt', kind: 'cr', sense: -1, hue: 'b' },
+    { key: 'cash_and_equivalents', label: 'Cash', kind: 'cr', sense: 0, hue: 'c' },
+    { key: 'debt_equity_x', label: 'Debt / equity', kind: 'x', ratio: true, sense: -1, hue: 'b' },
+    { key: 'current_ratio_x', label: 'Current ratio', kind: 'x', ratio: true, sense: 0, hue: 'a' }
   ];
   var CASH_DEFS = [
-    { key: 'cfo', label: 'Cash from operations', kind: 'cr', sense: 1 },
-    { key: 'capex', label: 'Capital expenditure', kind: 'cr', sense: 0 },
-    { key: 'fcf', label: 'Free cash flow', kind: 'cr', sense: 1 },
-    { key: 'dividends_paid', label: 'Dividends paid', kind: 'cr', sense: 0 },
-    { key: 'cash_conversion_pct', label: 'Cash conversion', kind: 'pct', ratio: true, sense: 1 },
-    { key: 'fcf_margin_pct', label: 'Free cash flow margin', kind: 'pct', ratio: true, sense: 1 }
+    { key: 'cfo', label: 'Cash from operations', kind: 'cr', sense: 1, hue: 'a' },
+    { key: 'capex', label: 'Capital expenditure', kind: 'cr', sense: 0, hue: 'b' },
+    { key: 'fcf', label: 'Free cash flow', kind: 'cr', sense: 1, hue: 'c' },
+    { key: 'dividends_paid', label: 'Dividends paid', kind: 'cr', sense: 0, hue: 'b' },
+    { key: 'cash_conversion_pct', label: 'Cash conversion', kind: 'pct', ratio: true, sense: 1, hue: 'a' },
+    { key: 'fcf_margin_pct', label: 'Free cash flow margin', kind: 'pct', ratio: true, sense: 1, hue: 'c' }
   ];
 
   /* Only the figures the company filed at least twice, and no more than six
-     of them: a seventh card is a second row on a laptop. */
+     cards of them: a seventh is a second row on a laptop. */
   function usable(model) {
+    var cards = 0;
     model.metrics = model.metrics.filter(function (m) {
-      return m.vals.filter(function (v) { return v != null; }).length >= 2;
-    }).slice(0, 6);
-    return model.metrics.length ? model : null;
+      if (m.vals.filter(function (v) { return v != null; }).length < 2) return false;
+      return m.side ? true : ++cards <= 6;
+    });
+    return cards ? model : null;
   }
   function lastWith(vals) {
     for (var i = vals.length - 1; i >= 0; i--) if (vals[i] != null) return i;
     return -1;
   }
+  function fnCardsOf(model) { return model.metrics.filter(function (m) { return !m.side; }); }
 
-  /* The small trend on a card: bars from zero, a loss below the line. */
-  function miniBars(vals) {
+  /* A smooth line through the points that never overshoots one: where the
+     data turns, the curve is flat. (Monotone cubic, Fritsch and Carlson.) */
+  function curve(pts) {
+    var n = pts.length, i;
+    function at(p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }
+    if (n < 2) return '';
+    if (n === 2) return 'M' + at(pts[0]) + 'L' + at(pts[1]);
+    var dx = [], m = [], t = [];
+    for (i = 0; i < n - 1; i++) {
+      dx[i] = pts[i + 1][0] - pts[i][0];
+      m[i] = (pts[i + 1][1] - pts[i][1]) / (dx[i] || 1);
+    }
+    t[0] = m[0]; t[n - 1] = m[n - 2];
+    for (i = 1; i < n - 1; i++) {
+      t[i] = m[i - 1] * m[i] <= 0 ? 0
+        : 3 * (dx[i - 1] + dx[i]) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]);
+    }
+    var d = 'M' + at(pts[0]);
+    for (i = 0; i < n - 1; i++) {
+      d += 'C' + at([pts[i][0] + dx[i] / 3, pts[i][1] + t[i] * dx[i] / 3]) + ' ' +
+        at([pts[i + 1][0] - dx[i] / 3, pts[i + 1][1] - t[i + 1] * dx[i] / 3]) + ' ' + at(pts[i + 1]);
+    }
+    return d;
+  }
+
+  /* Round steps for a scale: 1, 2, 2.5 or 5 times a power of ten. */
+  function niceStep(raw) {
+    if (!(raw > 0)) return 1;
+    var p = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10)), f = raw / p;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  }
+  /* A scale that holds every value, starts at zero and ends on a round figure. */
+  function scaleFor(vals) {
     var have = vals.filter(function (v) { return v != null; });
     var top = Math.max.apply(null, have.concat([0])), bot = Math.min.apply(null, have.concat([0]));
-    var span = (top - bot) || 1, zero = 100 * top / span, n = lastWith(vals);
-    return '<span class="kp-s" style="--zero:' + zero.toFixed(1) + '%" aria-hidden="true">' +
-      vals.map(function (v, i) {
-        if (v == null) return '<i class="gap"></i>';
-        return '<i class="' + (v < 0 ? 'neg' : '') + (i === n ? ' now' : '') + '" style="--h:' +
-          Math.max(3, 100 * Math.abs(v) / span).toFixed(1) + '%"></i>';
-      }).join('') + '</span>';
+    var step = niceStep(((top - bot) || 1) / 4);
+    var hi = Math.ceil(top / step - 1e-9) * step, lo = Math.floor(bot / step + 1e-9) * step;
+    if (hi === lo) hi = lo + step;
+    var ticks = [];
+    for (var v = lo; v <= hi + step / 1000; v += step) ticks.push(Math.abs(v) < step / 1000 ? 0 : v);
+    return { hi: hi, lo: lo, span: hi - lo, ticks: ticks, step: step,
+             y: function (x) { return 100 * (hi - x) / (hi - lo); } };
+  }
+  function tickText(v, kind, step, reach) {
+    if (kind === 'pct') return (step < 1 ? v.toFixed(1) : String(Math.round(v))) + '%';
+    if (kind === 'x') return v.toFixed(step < 0.1 ? 2 : 1) + '×';
+    // One style down an axis: once the scale reaches a lakh crore, every tick
+    // on it is in lakhs, zero excepted.
+    if (reach >= 1e5) return v === 0 ? '0' : (v / 1e5).toLocaleString('en-IN', { maximumFractionDigits: 2 }) + 'L';
+    return v.toLocaleString('en-IN', { maximumFractionDigits: step < 1 ? 2 : (step < 10 ? 1 : 0) });
+  }
+  function gridOf(sc, kind) {
+    return '<div class="fc-grid" aria-hidden="true">' + sc.ticks.map(function (t) {
+      return '<span class="' + (t === 0 ? 'zero' : '') + '" style="top:' + sc.y(t).toFixed(2) + '%"><b>' +
+        esc(tickText(t, kind, sc.step, Math.max(Math.abs(sc.hi), Math.abs(sc.lo)))) + '</b></span>';
+    }).join('') + '</div>';
+  }
+
+  /* The small trend on a card: a line across its own range, the latest
+     period marked. Where the figures cross zero, zero is drawn. */
+  function sparkOf(vals) {
+    var pts = [], n = vals.length;
+    vals.forEach(function (v, i) { if (v != null) pts.push([i, v]); });
+    if (pts.length < 2) return '<span class="kp-s" aria-hidden="true"></span>';
+    var ys = pts.map(function (p) { return p[1]; });
+    var top = Math.max.apply(null, ys), bot = Math.min.apply(null, ys), span = (top - bot) || Math.abs(top) || 1;
+    top += span * 0.14; bot -= span * 0.14; span = top - bot;
+    function Y(v) { return 100 * (top - v) / span; }
+    var line = pts.map(function (p) { return [n > 1 ? 100 * p[0] / (n - 1) : 50, Y(p[1])]; });
+    var d = curve(line), last = line[line.length - 1];
+    return '<span class="kp-s" aria-hidden="true">' +
+      '<svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">' +
+        '<path class="kp-a" d="' + d + 'L' + last[0].toFixed(2) + ',100L' + line[0][0].toFixed(2) + ',100Z"/>' +
+        (bot < 0 && top > 0 ? '<path class="kp-z" d="M0,' + Y(0).toFixed(2) + 'L100,' + Y(0).toFixed(2) + '"/>' : '') +
+        '<path class="kp-ln" d="' + d + '"/></svg>' +
+      '<i style="left:' + last[0].toFixed(2) + '%;top:' + last[1].toFixed(2) + '%"></i></span>';
   }
 
   function fnCards(model) {
-    var pick = FN.pick[model.id];
-    return '<div class="kp-row" role="group" aria-label="Choose a figure to chart">' +
-      model.metrics.map(function (m, k) {
+    var pick = FN.pick[model.id], cards = fnCardsOf(model);
+    return '<div class="kp-row n' + cards.length + '" role="group" aria-label="Choose a figure to chart">' +
+      cards.map(function (m, k) {
         var i = lastWith(m.vals), on = m.key === pick;
-        return '<button type="button" class="kp' + (on ? ' on' : '') + '" data-metric="' + m.key +
+        return '<button type="button" class="kp h-' + m.hue + (on ? ' on' : '') + '" data-metric="' + m.key +
           '" aria-pressed="' + on + '" style="--i:' + k + '">' +
-          '<span class="kp-l">' + esc(m.label) + '</span>' +
-          '<span class="kp-v tnum">' + esc(fnText(m.vals[i], m.kind)) + '</span>' +
-          '<span class="kp-c">' + (moveChip(m.yoy[i], ' YoY', m.sense) || '<span class="mv none">&nbsp;</span>') + '</span>' +
-          miniBars(m.vals) + '</button>';
+          '<span class="kp-l"><i></i>' + esc(m.label) + '</span>' +
+          '<span class="kp-v">' + fnFigure(m.vals[i], m.kind) + '</span>' +
+          '<span class="kp-c">' + (moveChip(m.yoy[i], 'YoY', m.sense) || '<span class="mv none">&nbsp;</span>') + '</span>' +
+          sparkOf(m.vals) + '</button>';
       }).join('') + '</div>';
   }
 
   function fnReadout(model, m, i) {
     return '<b>' + esc(model.periods[i] || '') + '</b>' +
-      '<span class="fc-v tnum">' + esc(fnText(m.vals[i], m.kind)) + '</span>' +
-      moveChip(m.yoy[i], ' YoY', m.sense) + moveChip(m.prev[i], ' QoQ', m.sense);
+      '<span class="fc-v">' + esc(fnText(m.vals[i], m.kind)) + '</span>' +
+      moveChip(m.yoy[i], 'YoY', m.sense) + moveChip(m.prev[i], 'QoQ', m.sense);
   }
 
-  /* The chart: one bar a period, from zero, with its figure above it and its
-     growth on the year beneath. Each bar is a button, so the keyboard and a
-     finger can read a quarter out as well as a pointer can. */
+  /* The chart: one slim bar a period, from zero, against a scale of round
+     figures. The latest is in full colour and labelled; any other is read
+     out above the chart when it is pointed at, tapped or tabbed to. */
   function fnChart(model) {
-    var m = model.metrics.filter(function (x) { return x.key === FN.pick[model.id]; })[0] || model.metrics[0];
+    var cards = fnCardsOf(model);
+    var m = cards.filter(function (x) { return x.key === FN.pick[model.id]; })[0] || cards[0];
     FN.pick[model.id] = m.key;
-    var have = m.vals.filter(function (v) { return v != null; });
-    var top = Math.max.apply(null, have.concat([0])), bot = Math.min.apply(null, have.concat([0]));
-    var span = (top - bot) || 1;
-    top += span * 0.2;
-    if (bot < 0) bot -= span * 0.2;
-    span = top - bot;
-    var zero = 100 * top / span, n = lastWith(m.vals);
-    return '<div class="card fc" data-view="' + model.id + '">' +
+    var sc = scaleFor(m.vals), n = lastWith(m.vals), zero = sc.y(0);
+    return '<div class="card fc h-' + m.hue + '" data-view="' + model.id + '">' +
       '<div class="fc-h"><h3>' + esc(m.label) + '</h3>' +
         '<div class="fc-read" aria-live="polite">' + fnReadout(model, m, n) + '</div></div>' +
-      '<div class="fc-plot" style="--zero:' + zero.toFixed(2) + '%">' +
+      '<div class="fc-plot" style="--zero:' + zero.toFixed(2) + '%">' + gridOf(sc, m.kind === 'rupees' ? 'cr' : m.kind) +
+      '<div class="fc-cols">' +
       m.vals.map(function (v, i) {
         if (v == null) {
           return '<span class="fc-c none"><span class="fc-x">' + esc(model.periods[i]) + '</span></span>';
         }
-        var h = 100 * Math.abs(v) / span, g = m.yoy[i];
+        var h = 100 * Math.abs(v) / sc.span;
         return '<button type="button" class="fc-c' + (i === n ? ' now on' : '') + (v < 0 ? ' neg' : '') +
           '" data-i="' + i + '" style="--h:' + h.toFixed(2) + '%;--i:' + i + '" aria-label="' +
           esc(model.periods[i] + ': ' + fnText(v, m.kind)) + '">' +
-          '<span class="fc-n tnum">' + esc(fnText(v, m.kind, true)) + '</span><i></i>' +
-          '<span class="fc-x">' + esc(model.periods[i]) + '</span>' +
-          (g ? '<span class="fc-g ' + (g.tone || '') + senseClass(m.sense) + '">' +
-            (g.tone === 'up' ? '+' : g.tone === 'dn' ? '−' : '') + esc(g.text) + '</span>' : '') +
-          '</button>';
-      }).join('') + '</div></div>';
+          '<span class="fc-n">' + esc(fnText(v, m.kind, true)) + '</span><i></i>' +
+          // On a phone eight labels do not fit side by side: every other one
+          // is dropped there, counted back from the latest.
+          '<span class="fc-x' + (m.vals.length > 6 && (m.vals.length - 1 - i) % 2 ? ' alt' : '') + '">' +
+          esc(model.periods[i]) + '</span></button>';
+      }).join('') + '</div></div></div>';
   }
 
-  /* Where each ₹100 of income went. One bar a quarter, the parts in the same
-     order in each, so a part that grew is visibly wider in the newer bar. */
+  /* The two margins, as lines on one scale. The header names them and gives
+     the figures for the period under the pointer, the latest by default. */
+  function fnMarginsKey(model, ms, i) {
+    return '<b>' + esc(model.periods[i] || '') + '</b>' + ms.map(function (m) {
+      return '<span class="lc-k h-' + m.hue + '"><i></i>' + esc(m.short || m.label) +
+        '<strong>' + esc(fnText(m.vals[i], m.kind)) + '</strong></span>';
+    }).join('');
+  }
+  function fnMargins(model) {
+    var ms = model.metrics.filter(function (m) { return m.side; });
+    if (!ms.length) return '';
+    var n = model.periods.length, all = [];
+    ms.forEach(function (m) { all = all.concat(m.vals); });
+    var sc = scaleFor(all), last = 0;
+    ms.forEach(function (m) { last = Math.max(last, lastWith(m.vals)); });
+    function X(i) { return 100 * (i + 0.5) / n; }
+    var paths = ms.map(function (m) {
+      var pts = [];
+      m.vals.forEach(function (v, i) { if (v != null) pts.push([X(i), sc.y(v)]); });
+      if (pts.length < 2) return '';
+      var d = curve(pts);
+      return '<path class="lc-a h-' + m.hue + '" d="' + d + 'L' + pts[pts.length - 1][0].toFixed(2) + ',' +
+        sc.y(0).toFixed(2) + 'L' + pts[0][0].toFixed(2) + ',' + sc.y(0).toFixed(2) + 'Z"/>' +
+        '<path class="lc-l h-' + m.hue + '" d="' + d + '"/>';
+    }).join('');
+    return '<div class="card lc" data-view="' + model.id + '">' +
+      '<div class="fc-h"><h3>Margins</h3>' +
+        '<div class="fc-read lc-read" aria-live="polite">' + fnMarginsKey(model, ms, last) + '</div></div>' +
+      '<div class="fc-plot lc-plot">' + gridOf(sc, 'pct') +
+        '<svg class="lc-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">' +
+          paths + '</svg>' +
+        '<div class="fc-cols">' + model.periods.map(function (p, i) {
+          var said = ms.map(function (m) {
+            return m.vals[i] == null ? '' : (m.label + ' ' + fnText(m.vals[i], m.kind));
+          }).filter(Boolean).join(', ');
+          return '<button type="button" class="lc-c' + (i === last ? ' on' : '') + '" data-i="' + i +
+            '" aria-label="' + esc(p + ': ' + said) + '">' +
+            ms.map(function (m) {
+              return m.vals[i] == null ? '' : '<i class="h-' + m.hue + '" style="top:' + sc.y(m.vals[i]).toFixed(2) + '%"></i>';
+            }).join('') +
+            // Every other label once there are more than six, counted back
+            // from the latest so that one is always named.
+            ((n <= 6 || (n - 1 - i) % 2 === 0) ? '<span class="fc-x">' + esc(p) + '</span>' : '') + '</button>';
+        }).join('') + '</div></div></div>';
+  }
+
+  /* Where the money went. Revenue on the left; in the middle what it cost to
+     run the business and what that left; on the right every cost by name and
+     the profit that remained. The heights are the amounts.
+
+     Drawn only when the quarter is an ordinary one: revenue, an operating
+     profit and a net profit, no cost below zero, and parts that come back to
+     the whole within a rounding. A loss or a tax credit is not money going
+     somewhere, and a picture that pretended it was would be wrong. */
+  function flowOf(row) {
+    var v = (row && row.values) || {};
+    function n(k) { var x = v[k]; return (x == null || isNaN(Number(x))) ? null : Number(x) / 1e7; }
+    var rev = n('revenue'), ebitda = n('ebitda'), pat = n('pat');
+    if (!(rev > 0) || !(ebitda > 0) || !(pat > 0) || ebitda >= rev) return null;
+    var tol = rev * 0.0075, opex = rev - ebitda, bad = false;
+
+    var costs = [];
+    [['materials', 'Materials'], ['employee_cost', 'Employees']].forEach(function (k) {
+      var x = n(k[0]);
+      if (x == null) return;
+      if (x < 0) { bad = true; return; }
+      if (x > tol) costs.push({ key: k[0], label: k[1], v: x });
+    });
+    var named = costs.reduce(function (s, c) { return s + c.v; }, 0);
+    if (bad || named > opex + tol) return null;
+    if (opex - named > tol) costs.push({ key: 'other_expenses', label: 'Other costs', v: opex - named });
+
+    var oi = n('other_income');
+    if (oi == null || oi < tol) oi = 0;
+    var sinks = [];
+    [['depreciation', 'Depreciation'], ['finance_cost', 'Interest'], ['tax', 'Tax']].forEach(function (k) {
+      var x = n(k[0]);
+      if (x == null) return;
+      if (x < -tol) { bad = true; return; }
+      if (x > tol) sinks.push({ key: k[0], label: k[1], v: x });
+    });
+    if (bad) return null;
+    var out = sinks.reduce(function (s, c) { return s + c.v; }, 0) + pat;
+    var gap = ebitda + oi - out;
+    // Exceptional items, a share of an associate's result, a minority's share:
+    // small ones are shown as what they are, an unnamed remainder; large ones
+    // mean this is not an ordinary quarter.
+    if (Math.abs(gap) > rev * 0.12) return null;
+    if (gap > tol) sinks.push({ key: 'rest', label: 'Other', v: gap });
+    else if (gap < -tol) oi += -gap;
+    sinks.push({ key: 'pat', label: 'Net profit', v: pat });
+    return { rev: rev, opex: opex, ebitda: ebitda, oi: oi, costs: costs, sinks: sinks };
+  }
+
+  function fnFlow(d) {
+    var latest = (d.rows || [])[0], f = flowOf(latest);
+    if (!f) return '';
+    var H = 340, GAP = 15, GROUP = 14, MIN = 3, leaves = f.costs.concat(f.sinks);
+    var total = f.rev + f.oi;
+    // Pixels per crore: the right-hand column is the crowded one, so it sets it.
+    var s = (H - GAP * (leaves.length - 1) - GROUP) / total;
+    function h(x) { return Math.max(MIN, x * s); }
+
+    var y = 0;
+    f.costs.forEach(function (c) { c.y = y; c.h = h(c.v); y += c.h + GAP; });
+    var costsEnd = y - GAP;
+    y += GROUP;
+    var sinksStart = y;
+    f.sinks.forEach(function (c) { c.y = y; c.h = h(c.v); y += c.h + GAP; });
+    var height = y - GAP;
+
+    var cost = { y: 0 + (costsEnd - f.opex * s) / 2, h: f.opex * s };
+    var inflow = (f.ebitda + f.oi) * s;
+    var keptTop = sinksStart + (height - sinksStart - inflow) / 2;
+    var op = { y: keptTop, h: f.ebitda * s };
+    var other = f.oi ? { y: keptTop + op.h, h: f.oi * s } : null;
+    var revH = f.rev * s;
+    var rv = { y: Math.max(0, Math.min(height - revH, (cost.y + op.y + op.h) / 2 - revH / 2)), h: revH };
+
+    // Columns, in the plot's own units: the plot is stretched to the width.
+    var W = 1000, NW = 12, xa = 0, xb = (W - NW) / 2, xc = W - NW;
+    function ribbon(x1, a1, a2, x2, b1, b2, cls, title) {
+      var mx = (x1 + x2) / 2;
+      return '<path class="mf-r ' + cls + '" d="M' + x1 + ',' + a1.toFixed(1) +
+        'C' + mx + ',' + a1.toFixed(1) + ' ' + mx + ',' + b1.toFixed(1) + ' ' + x2 + ',' + b1.toFixed(1) +
+        'L' + x2 + ',' + b2.toFixed(1) +
+        'C' + mx + ',' + b2.toFixed(1) + ' ' + mx + ',' + a2.toFixed(1) + ' ' + x1 + ',' + a2.toFixed(1) + 'Z">' +
+        '<title>' + esc(title) + '</title></path>';
+    }
+    function node(x, n, cls) {
+      return '<rect class="mf-n ' + cls + '" x="' + x + '" y="' + n.y.toFixed(1) + '" width="' + NW +
+        '" height="' + n.h.toFixed(1) + '" rx="2"/>';
+    }
+    function amount(x) { return fnText(x, 'cr'); }
+    function share(x) { return (100 * x / f.rev).toFixed(1) + '%'; }
+
+    // The colour goes out of the money as it is spent: a ribbon that leaves
+    // revenue for a cost starts in revenue's blue and ends in the costs' grey,
+    // and the one that is kept ends in green.
+    function fade(id, a, b) {
+      return '<linearGradient id="' + id + '" x1="0" x2="1" y1="0" y2="0">' +
+        '<stop offset="0" class="' + a + '"/><stop offset="1" class="' + b + '"/></linearGradient>';
+    }
+    var svg = '<defs>' + fade('mf-spent', 'g-a', 'g-n') + fade('mf-kept', 'g-a', 'g-a2') +
+      fade('mf-net', 'g-a2', 'g-c') + fade('mf-left', 'g-a2', 'g-n') + '</defs>';
+    // Revenue into what it cost and what it left.
+    svg += ribbon(xa + NW, rv.y, rv.y + cost.h, xb, cost.y, cost.y + cost.h, 'f-spent',
+      'Costs ' + amount(f.opex) + ' · ' + share(f.opex) + ' of revenue');
+    svg += ribbon(xa + NW, rv.y + cost.h, rv.y + rv.h, xb, op.y, op.y + op.h, 'f-keep',
+      'EBITDA ' + amount(f.ebitda) + ' · ' + share(f.ebitda) + ' of revenue');
+    // Costs into each cost.
+    var from = cost.y;
+    f.costs.forEach(function (c) {
+      svg += ribbon(xb + NW, from, from + c.v * s, xc, c.y, c.y + c.h, 'f-cost',
+        c.label + ' ' + amount(c.v) + ' · ' + share(c.v) + ' of revenue');
+      from += c.v * s;
+    });
+    // What was left, and any other income under it, into where it went.
+    from = op.y;
+    f.sinks.forEach(function (c) {
+      svg += ribbon(xb + NW, from, from + c.v * s, xc, c.y, c.y + c.h, c.key === 'pat' ? 'f-net' : 'f-left',
+        c.label + ' ' + amount(c.v) + ' · ' + share(c.v) + ' of revenue');
+      from += c.v * s;
+    });
+    svg += node(xa, rv, 'n-rev') + node(xb, cost, 'n-cost') + node(xb, op, 'n-op') +
+      (other ? node(xb, other, 'n-oi') : '') +
+      f.costs.map(function (c) { return node(xc, c, 'n-cost'); }).join('') +
+      f.sinks.map(function (c) { return node(xc, c, c.key === 'pat' ? 'n-net' : 'n-cost'); }).join('');
+
+    function mid(n) { return (n.y + n.h / 2).toFixed(1); }
+    function leaf(c) {
+      return '<li class="' + (c.key === 'pat' ? 'net' : '') + '" style="top:' + mid(c) + 'px">' +
+        '<span>' + esc(c.label) + '</span><b>' + esc(amount(c.v)) + '</b><em>' + esc(share(c.v)) + '</em></li>';
+    }
+    var said = 'Of ' + amount(f.rev) + ' revenue in ' + (latest.label || 'the quarter') + ': ' +
+      leaves.map(function (c) { return c.label + ' ' + amount(c.v); }).join(', ') + '.';
+    return '<div class="card mf">' +
+      '<div class="fc-h"><h3>Where the money went</h3><div class="fc-read"><b>' + esc(latest.label || '') + '</b></div></div>' +
+      '<div class="mf-plot" style="height:' + Math.ceil(height) + 'px" role="img" aria-label="' + esc(said) + '">' +
+        '<svg viewBox="0 0 ' + W + ' ' + Math.ceil(height) + '" preserveAspectRatio="none" aria-hidden="true" focusable="false">' +
+          svg + '</svg>' +
+        '<div class="mf-a" style="top:' + mid(rv) + 'px"><span>Revenue</span><b>' + esc(amount(f.rev)) + '</b></div>' +
+        '<div class="mf-b" style="top:' + cost.y.toFixed(1) + 'px"><span>Costs</span><b>' + esc(amount(f.opex)) + '</b></div>' +
+        '<div class="mf-b keep" style="top:' + op.y.toFixed(1) + 'px"><span>EBITDA</span><b>' + esc(amount(f.ebitda)) + '</b></div>' +
+        (other ? '<div class="mf-b under" style="top:' + (other.y + other.h).toFixed(1) + 'px"><span>Other income</span><b>' +
+          esc(amount(f.oi)) + '</b></div>' : '') +
+        '<ul class="mf-c">' + leaves.map(leaf).join('') + '</ul>' +
+      '</div></div>';
+  }
+
+  /* Where each ₹100 of income went, as one bar: the phone's version of the
+     flow above, and the only one for a quarter the flow cannot be drawn for. */
   var SPLIT_PARTS = [
     ['materials', 'Materials'], ['employee_cost', 'Employees'], ['other_expenses', 'Other costs'],
     ['depreciation', 'Depreciation'], ['finance_cost', 'Interest'], ['tax', 'Tax'], ['pat', 'Profit']
@@ -2342,7 +2616,7 @@
     if (rest > 0.75) parts.splice(parts.length - 1, 0, { key: 'rest', label: 'Other', share: rest });
     return parts;
   }
-  function fnSplit(d) {
+  function fnSplit(d, withFlow) {
     var rows = d.rows || [], latest = rows[0];
     if (!latest) return '';
     var now = splitOf(latest);
@@ -2355,21 +2629,21 @@
         parts.map(function (p, i) {
           return '<i class="s-' + p.key + '" style="flex:' + p.share.toFixed(2) + ';--i:' + i + '" title="' +
             esc(p.label + ' ₹' + p.share.toFixed(1)) + '">' +
-            (p.share >= 7 ? '<b class="tnum">' + Math.round(p.share) + '</b>' : '') + '</i>';
+            (p.share >= 7 ? '<b>' + Math.round(p.share) + '</b>' : '') + '</i>';
         }).join('') + '</div></div>';
     }
     var before = {};
     (then || []).forEach(function (p) { before[p.key] = p.share; });
-    return '<div class="card sp"><div class="fc-h"><h3>Where each ₹100 of income went</h3></div>' +
+    return '<div class="card sp' + (withFlow ? ' sp-narrow' : '') + '"><div class="fc-h"><h3>Where each ₹100 of income went</h3></div>' +
       bar(latest.label, now) + (then ? bar(thenRow.label, then) : '') +
       '<ul class="sp-k">' + now.map(function (p) {
         var was = before[p.key], d = was == null ? null : p.share - was;
-        return '<li><i class="s-' + p.key + '"></i><span>' + esc(p.label) + '</span><b class="tnum">₹' +
+        return '<li><i class="s-' + p.key + '"></i><span>' + esc(p.label) + '</span><b>₹' +
           p.share.toFixed(1) + '</b>' +
           (d == null || Math.abs(d) < 0.05 ? '' : '<em class="' +
             // More of each ₹100 kept as profit is the good direction; more of
             // it spent on a cost is the other one.
-            ((p.key === 'pat') === (d > 0) ? 'up' : 'dn') + '">' + (d > 0 ? '+' : '−') +
+            ((p.key === 'pat') === (d > 0) ? 'up' : 'dn') + '">' + (d > 0 ? '▲' : '▼') +
             Math.abs(d).toFixed(1) + '</em>') + '</li>';
       }).join('') + '</ul></div>';
   }
@@ -2381,9 +2655,9 @@
       var v = r.values || {};
       return v.total_assets > 0 && v.total_equity != null && v.total_equity >= 0 &&
         v.total_equity <= v.total_assets;
-    });
+    }).slice(-4);
     if (rows.length < 2) return '';
-    return '<div class="card sp"><div class="fc-h"><h3>What funds it</h3></div>' +
+    return '<div class="card sp"><div class="fc-h"><h3>What funds it</h3></div><div class="sp-rows">' +
       rows.map(function (r) {
         var v = r.values, eq = 100 * v.total_equity / v.total_assets;
         var debt = v.total_borrowings > 0 ? Math.min(100 - eq, 100 * v.total_borrowings / v.total_assets) : 0;
@@ -2391,19 +2665,47 @@
         function seg(cls, share, label) {
           return share < 0.5 ? '' : '<i class="' + cls + '" style="flex:' + share.toFixed(2) + '" title="' +
             esc(label + ' ' + share.toFixed(1) + '%') + '">' +
-            (share >= 8 ? '<b class="tnum">' + Math.round(share) + '%</b>' : '') + '</i>';
+            (share >= 8 ? '<b>' + Math.round(share) + '%</b>' : '') + '</i>';
         }
         return '<div class="sp-r"><span class="sp-q">' + esc(r.label || r.period_end) + '</span><div class="sp-b">' +
           seg('s-equity', eq, 'Equity') + seg('s-debt', debt, 'Borrowings') +
           seg('s-rest', rest, 'Other liabilities') + '</div></div>';
-      }).join('') +
+      }).join('') + '</div>' +
       '<ul class="sp-k"><li><i class="s-equity"></i><span>Equity</span></li>' +
       '<li><i class="s-debt"></i><span>Borrowings</span></li>' +
       '<li><i class="s-rest"></i><span>Other liabilities</span></li></ul></div>';
   }
 
+  /* How much of the cash the business produced was left after it had paid
+     for its plant: three bars on one scale, the second starting where the
+     third ends. Only for a year in which there was cash left. */
+  function fnBridge(part) {
+    var rows = ((part && part.rows) || []).filter(function (r) {
+      var v = r.values || {};
+      return v.cfo > 0 && v.capex >= 0 && v.fcf != null && v.fcf >= 0 &&
+        Math.abs(v.cfo - v.capex - v.fcf) <= Math.abs(v.cfo) * 0.02;
+    });
+    var r = rows[0];
+    if (!r) return '';
+    var v = r.values, kept = 100 * v.fcf / v.cfo;
+    function row(cls, label, value, from, width) {
+      return '<div class="br-r"><span class="br-l">' + esc(label) + '</span>' +
+        '<div class="br-t"><i class="' + cls + '" style="left:' + from.toFixed(2) + '%;width:' +
+        Math.max(0.6, width).toFixed(2) + '%"></i></div><b>' + esc(fnText(value, 'cr')) + '</b></div>';
+    }
+    return '<div class="card br"><div class="fc-h"><h3>Cash left after investing</h3>' +
+      '<div class="fc-read"><b>' + esc(r.label || '') + '</b></div></div><div class="sp-rows">' +
+      row('s-a', 'From operations', v.cfo, 0, 100) +
+      row('s-b', 'Capital expenditure', v.capex, kept, 100 - kept) +
+      row('s-c', 'Free cash flow', v.fcf, 0, kept) + '</div></div>';
+  }
+
   function fnMore(html) {
     return html ? '<details class="fn-more"><summary>Full statement</summary>' + html + '</details>' : '';
+  }
+  function fnPair(a, b) {
+    if (!a || !b) return (a || '') + (b || '');
+    return '<div class="fn-two">' + a + b + '</div>';
   }
 
   function fnMeta() {
@@ -2426,9 +2728,9 @@
         esc((d && d.message) || 'The filings could not be read.') + '</div>';
       return;
     }
-    var model = usable(incomeModel(d));
-    box.innerHTML = (model ? fnCards(model) + fnChart(model) : '') + fnSplit(d) +
-      fnMore(fundaTable(d) + fundaRatios(d));
+    var model = usable(incomeModel(d)), flow = fnFlow(d);
+    box.innerHTML = (model ? fnCards(model) + fnPair(fnChart(model), fnMargins(model)) : '') +
+      flow + fnSplit(d, !!flow) + fnMore(fundaTable(d) + fundaRatios(d));
     box._model = model;
     growBars(box);
   }
@@ -2441,10 +2743,10 @@
     var cash = usable(sheetModel(p.cashflow, 'cash', CASH_DEFS, [330, 400]));
     box.innerHTML =
       '<div class="fn-view" data-view="balance" hidden>' +
-        (bal ? fnCards(bal) + fnChart(bal) : '') + fnFunding(p.balance) +
+        (bal ? fnCards(bal) + fnPair(fnChart(bal), fnFunding(p.balance)) : fnFunding(p.balance)) +
         fnMore(statementTable('Balance sheet', p.balance)) + '</div>' +
       '<div class="fn-view" data-view="cash" hidden>' +
-        (cash ? fnCards(cash) + fnChart(cash) : '') +
+        (cash ? fnCards(cash) + fnPair(fnChart(cash), fnBridge(p.cashflow)) : '') +
         fnMore(statementTable('Cash flow', p.cashflow)) + '</div>';
     box._models = { balance: bal, cash: cash };
   }
@@ -2528,31 +2830,47 @@
         }
         return;
       }
-      var col = t.closest('.fc-c[data-i]');
+      var col = t.closest('.fc-c[data-i], .lc-c[data-i]');
       if (col) readColumn(col);
     });
 
-    // A bar under the pointer, or reached with Tab, is read out above the chart.
+    // A period under the pointer, or reached with Tab, is read out above its chart.
     pane.addEventListener('pointerover', function (e) {
-      var col = e.target.closest ? e.target.closest('.fc-c[data-i]') : null;
+      var col = e.target.closest ? e.target.closest('.fc-c[data-i], .lc-c[data-i]') : null;
       if (col) readColumn(col);
     });
     pane.addEventListener('focusin', function (e) {
-      var col = e.target.closest ? e.target.closest('.fc-c[data-i]') : null;
+      var col = e.target.closest ? e.target.closest('.fc-c[data-i], .lc-c[data-i]') : null;
       if (col) readColumn(col);
+    });
+    // And when the pointer leaves the chart, the latest period is back.
+    pane.addEventListener('pointerout', function (e) {
+      // A mouse only: a finger lifting is also a pointer leaving, and the bar
+      // it tapped should stay read out.
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      var plot = e.target.closest ? e.target.closest('.fc-plot') : null;
+      if (!plot || (e.relatedTarget && plot.contains(e.relatedTarget))) return;
+      var cols = plot.querySelectorAll('.fc-c[data-i], .lc-c[data-i]');
+      var latest = plot.querySelector('.fc-c.now') || cols[cols.length - 1];
+      if (latest && !plot.contains(document.activeElement)) readColumn(latest);
     });
   }
 
   function readColumn(col) {
-    var chart = col.closest('.fc');
+    var chart = col.closest('.fc, .lc');
     if (!chart) return;
     var model = fnModel(chart.dataset.view);
     if (!model) return;
-    var m = model.metrics.filter(function (x) { return x.key === FN.pick[model.id]; })[0];
-    if (!m) return;
-    [].slice.call(chart.querySelectorAll('.fc-c.on')).forEach(function (c) { c.classList.remove('on'); });
+    var i = Number(col.dataset.i), on = chart.querySelectorAll('.fc-c.on, .lc-c.on');
+    [].slice.call(on).forEach(function (c) { c.classList.remove('on'); });
     col.classList.add('on');
-    chart.querySelector('.fc-read').innerHTML = fnReadout(model, m, Number(col.dataset.i));
+    if (chart.classList.contains('lc')) {
+      chart.querySelector('.fc-read').innerHTML = fnMarginsKey(model,
+        model.metrics.filter(function (m) { return m.side; }), i);
+      return;
+    }
+    var m = model.metrics.filter(function (x) { return x.key === FN.pick[model.id]; })[0];
+    if (m) chart.querySelector('.fc-read').innerHTML = fnReadout(model, m, i);
   }
 
   /* ── Against its industry ────────────────────────────────────────────────
