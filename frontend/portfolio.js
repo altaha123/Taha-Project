@@ -2054,7 +2054,9 @@
         location.hash = '#planner';
       }
       // After the tab has swapped, put them at the questions rather than at
-      // the top of a page they then have to search.
+      // the top of a page they then have to search. The questions are the
+      // planner's last tab now, so that tab is opened before it is scrolled to.
+      if (window.AltahaPlanner) window.AltahaPlanner.open('risk');
       setTimeout(function () {
         var target = $('riskprofile');
         if (target) target.scrollIntoView({ block: 'start', behavior: 'smooth' });

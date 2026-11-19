@@ -38,6 +38,12 @@ here first, and `frontend/analytics.test.js` fails CI if the two drift.
 | `portfolio_full_report_opened` | from | Whether anyone still wants the full report after the story, and from where |
 | `portfolio_plan_viewed` | moves, holdings | Whether the action plan is seen, and how many of its calls ask for a move — counts only |
 | `portfolio_story_opened` | from | Whether anyone opens the story once it is optional |
+| `planner_dated` | — | How many people who open the planner get as far as a date |
+| `planner_tab_opened` | tab | Which of the planner's tools are used, and which are furniture |
+| `planner_example` | — | Whether the example is what gets people to type their own numbers |
+| `planner_goal_added` | kind | Which preset a goal started from — never its name, cost or date |
+| `planner_price_kept` | monthly | Whether the price tag is used for purchases or for habits |
+| `planner_checkin` | streak | Whether anyone comes back: the streak is the planner's retention number |
 | `pro_cta_clicked` | from | Who looks at the Pro price, and from which page |
 | `pro_waitlist_joined` | from, signed_in | Who would pay: the one number the Pro waitlist exists to measure |
 | `api_error` | endpoint, status | The API's real error rate, seen from the browser |
@@ -50,7 +56,10 @@ the first thing to switch off if the free quota ever tightens.
 
 - No names, emails, phone numbers or any other identifier a person types.
 - No portfolio holdings, quantities or values. No planner inputs — savings,
-  income, goals. The portfolio story reports which chapter was read, never
+  income, goals — and nothing worked out from them: not the date, not an
+  age, not a goal's name. The planner keeps its numbers in the browser's own
+  storage and makes no request with them; `frontend/tests/planner-browser.cjs`
+  fails if a typed figure appears in any request. The portfolio story reports which chapter was read, never
   a figure from it.
 - The Pro waitlist address goes to our own API (`POST /pro/waitlist`), never
   to PostHog; `pro_waitlist_joined` carries only where it came from.

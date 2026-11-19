@@ -30,7 +30,7 @@ and its own address, in exactly one door.
 |---|---|---|
 | **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Setups, Options and the Market board |
 | **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, Factors, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
-| **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner, Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
+| **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner (the month work becomes optional, and what moves it — see below), Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
 Each door opens on a page of its own (`frontend/doors.js`) that previews every
@@ -272,6 +272,49 @@ registered investment adviser and take it back at any time.
 Everything — the three kinds and what each may do, what may be said, why it
 polls instead of holding sockets, why there are no star ratings, and the
 decisions paid chats would need — is in [`ADVISORS.md`](ADVISORS.md).
+
+---
+
+## Money planner — a date, not a form
+
+The planner (`#portfolio/planner`) used to be fifteen empty boxes and a letter
+grade that appeared once most of them were filled. It remembered nothing, so
+nobody who finished it had a reason to come back.
+
+It now opens with one answer: **the month your investments could pay your
+bills**, after which working is a choice. Age, take-home, spending and what is
+invested produce it. Everything else on the screen is a tool that moves that
+date, and each is a reason to return:
+
+| Tab | What it answers |
+|---|---|
+| **Your date** | The path year by year against the line it has to reach, and the moves that bring the date closer — tick any to see the date they would give together |
+| **Price tag** | What a purchase or a monthly habit costs in working days and in days of freedom |
+| **Goals** | Dated goals, paid from the same monthly saving: what each costs by then, what to set aside, and what it does to the date |
+| **Check-in** | One figure a month: a streak, and whether you are ahead of your own plan or behind it |
+| **Budget** | The itemised ledger, four health checks with their working, and the salary-day split — cushion, goals, the long run |
+| **Tax** | Old regime against new |
+| **Risk profile** | The questionnaire the Allocation plan also reads |
+
+The model is compound interest in **today's rupees**, month by month: what is
+invested grows at the assumed return less inflation, what is put away steps up
+once a year, and the date is the first month the total reaches a multiple of a
+year's spending. The defaults — 10% return, 6% inflation, 30× spending, saving
+raised 5% a year — are dials on the page, labelled as assumptions rather than
+forecasts. It recommends no product; it is arithmetic with the working shown.
+
+**Nothing leaves the browser.** The numbers are kept in `localStorage` so the
+page can greet somebody with their own date, and "Clear my numbers" removes
+them. There is no request in `frontend/planner.js`, analytics carries which
+tab was opened and never an amount, and the WhatsApp share text has the date
+and two percentages in it and nothing else.
+
+`frontend/planner-math.js` is the arithmetic and `frontend/planner-math.test.js`
+pins it without a browser; `frontend/planner.js` is the screen and
+`frontend/tests/planner-browser.cjs` drives it — the date on screen is the date
+the arithmetic gives, a what-if never changes the saved plan, the three
+salary-day figures add up to the rupee, a budget nobody itemised is not handed
+a grade, and no typed figure appears in any request.
 
 ---
 

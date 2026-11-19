@@ -94,7 +94,7 @@
         { id: 'portfolio', label: 'Portfolio review',  hint: 'A clear call on every holding' },
         { id: 'watchlists', label: 'Watchlists',       hint: 'Your lists, live — make, rename, share and play' },
         { id: 'allocate',  label: 'Allocation plan',   hint: 'Where your next rupee should go' },
-        { id: 'planner',   label: 'Money planner',     hint: 'Income, expenses, tax and your cushion', brand: 'planner' }
+        { id: 'planner',   label: 'Money planner',     hint: 'The month work becomes optional, and what moves it', brand: 'planner' }
       ],
       extras: []
     },
@@ -514,6 +514,14 @@
         allTabs(s).forEach(function (t) { WATCH.push(t.id); });
       });
       new MutationObserver(function () {
+        /* The planner is shown by the brand switch, which lives inside this
+           same strip and never clears the tab that was lit before it. So the
+           moment the planner opens, this observer fires, finds that stale
+           tab still marked active, and repaints the bar to it: the planner
+           on screen with "Overview" lit above it. While the planner is the
+           open view, the strip's tabs say nothing about where the reader is. */
+        var pb = $id('bsw-planner');
+        if (pb && pb.classList.contains('active')) return;
         var active = null;
         WATCH.forEach(function (t) {
           var b = $id('tab-' + t);

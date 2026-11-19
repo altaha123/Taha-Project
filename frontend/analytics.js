@@ -118,6 +118,16 @@
     portfolio_plan_viewed:        ['moves', 'holdings'],
     portfolio_story_opened:       ['from'],
 
+    // Does the planner give anybody a date, which of its tools get used, and
+    // — the one that matters — does anyone come back to check in. Which tab,
+    // which preset, how long a streak. Never an amount, an age or a date.
+    planner_dated:         [],
+    planner_tab_opened:    ['tab'],
+    planner_example:       [],
+    planner_goal_added:    ['kind'],
+    planner_price_kept:    ['monthly'],
+    planner_checkin:       ['streak'],
+
     // Would anyone pay? Who looks at the price, and who leaves an address.
     pro_cta_clicked:       ['from'],
     pro_waitlist_joined:   ['from', 'signed_in'],
