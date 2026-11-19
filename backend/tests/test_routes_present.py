@@ -227,6 +227,9 @@ GET     /social/status
 GET     /special
 POST    /special/refresh
 GET     /special/status
+GET     /stock/filings
+GET     /stock/news
+GET     /stock/peers
 GET     /strategies
 GET     /stream/quotes
 GET     /stream/status
