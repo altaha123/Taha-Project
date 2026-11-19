@@ -201,7 +201,8 @@
      TODAY
      ════════════════════════════════════════════════════════════════════════ */
 
-  var T = { last: 0, market: null, week: null, sectors: null, chart: null, movers: 'up', clock: null, prevNifty: null };
+  var T = { last: 0, market: null, week: null, sectors: null, chart: null, movers: 'up', clock: null, prevNifty: null,
+            sector: null, sectorRows: [], nse: {} };
 
   var TODAY_TOOLS = [
     { id: 'drt-live', goto: 'discover/live', icon: 'alerts', name: 'Alerts', unit: 'fired today', live: true,
@@ -252,8 +253,9 @@
             '</div>' +
           '</section>' +
           '<section class="dr-sec dr-rise" style="--i:2">' +
-            '<div class="dr-sec-h"><h2>Sectors right now</h2><span>Colour is today’s move · tap one to see why</span></div>' +
+            '<div class="dr-sec-h"><h2>Sectors right now</h2><span>Colour is today’s move · tap one to see its stocks</span></div>' +
             '<div class="dr-heat" id="drt-heat"><p class="dr-quiet">Reading the sectors…</p></div>' +
+            '<div class="dr-secpanel" id="drt-secpanel" role="region" tabindex="-1" hidden></div>' +
           '</section>' +
           '<section class="dr-sec">' +
             '<div class="dr-sec-h dr-rise" style="--i:3"><h2>More tools for today’s market</h2><span>Tap a card to open the tool</span></div>' +
@@ -532,13 +534,18 @@
           var c = Number(r.change_pct) || 0, a = Math.min(1, Math.abs(c) / 2.4);
           var L = Math.round(92 - a * 56);
           var bg = c >= 0 ? 'hsl(146,40%,' + L + '%)' : 'hsl(9,60%,' + L + '%)';
-          return '<button type="button" class="dr-tile" data-sector="' + esc(r.sector) + '" style="--i:' + i +
+          return '<button type="button" class="dr-tile" data-sector="' + esc(r.sector) +
+            '" aria-expanded="false" aria-controls="drt-secpanel" style="--i:' + i +
             ';background-color:' + bg + ';color:' + (L < 60 ? '#FBF8F1' : '#17140E') + '">' +
             '<span>' + esc(r.sector) + '</span><b>' + pct(r.change_pct) + '</b>' +
             (finite(r.up) && finite(r.total) ? '<small>' + r.up + ' of ' + r.total + ' up</small>' : '') + '</button>';
         }).join('');
       }
     }
+    // The open sector's stocks follow the same read the tiles were drawn from.
+    T.sectorRows = rows;
+    paintSectorPanel();
+    if (T.sector) loadSectorIndex(T.sector);
     var up = 0, dn = 0;
     rows.forEach(function (r) { up += Number(r.up) || 0; dn += Number(r.down) || 0; });
     var b = $('drt-breadth');
@@ -561,6 +568,166 @@
     T.stocks = stocks;
     paintMovers();
     paintDesk(T.quotes);
+  }
+
+  /* ── A sector's stocks, opened where the tile is ──────────────────────
+     Tapping a sector used to leave Today for the market board and ask it to
+     open the sector there. The board names its tiles after NSE indices
+     ("Nifty Realty"), not sectors ("Real Estate"), so nothing opened: the
+     reader was moved to another page and shown no stocks.
+
+     The stocks open under the tiles instead, and the reader stays on Today.
+     The first list is the one the tile's own number is the average of; it
+     arrived with the tiles, so it is on screen at once. Where NSE publishes
+     an index for the sector, the rest of that index's members are read from
+     the exchange (/index/performance) and added below it. They are added
+     below, never merged in, so a row the reader is about to tap does not
+     move when the second read lands. */
+
+  var SECTOR_NSE = {
+    'Technology':             { id: 'NIFTY IT', name: 'Nifty IT' },
+    'Financial Services':     { id: 'NIFTY FINANCIAL SERVICES', name: 'Nifty Financial Services' },
+    'Healthcare':             { id: 'NIFTY HEALTHCARE INDEX', name: 'Nifty Healthcare' },
+    'Consumer Defensive':     { id: 'NIFTY FMCG', name: 'Nifty FMCG' },
+    'Consumer Cyclical':      { id: 'NIFTY AUTO', name: 'Nifty Auto' },
+    'Basic Materials':        { id: 'NIFTY METAL', name: 'Nifty Metal' },
+    'Energy':                 { id: 'NIFTY ENERGY', name: 'Nifty Energy' },
+    'Real Estate':            { id: 'NIFTY REALTY', name: 'Nifty Realty' },
+    'Communication Services': { id: 'NIFTY MEDIA', name: 'Nifty Media' }
+  };
+  var NSE_FRESH_MS = 55000;
+
+  function sectorRow(name) {
+    var rows = T.sectorRows || [];
+    for (var i = 0; i < rows.length; i++) if (rows[i].sector === name) return rows[i];
+    return null;
+  }
+
+  function sectorTile(name) {
+    var tiles = document.querySelectorAll('#drt-heat .dr-tile');
+    for (var i = 0; i < tiles.length; i++) if (tiles[i].dataset.sector === name) return tiles[i];
+    return null;
+  }
+
+  /* Best first; a stock with no change to show goes last, not to the middle. */
+  function byChange(a, b) {
+    var x = finite(a.change_pct) ? Number(a.change_pct) : -Infinity;
+    var y = finite(b.change_pct) ? Number(b.change_pct) : -Infinity;
+    return y === x ? String(a.symbol).localeCompare(String(b.symbol)) : y - x;
+  }
+
+  function stockList(list) {
+    return '<ul class="dr-slist">' + list.map(function (s) {
+      return '<li><a href="stock.html?ticker=' + encodeURIComponent(s.symbol) + '">' +
+        '<span class="dr-msym">' + esc(s.symbol) + '</span>' +
+        '<span class="dr-mpx">' + (finite(s.ltp) ? inr(s.ltp, 2) : '') + '</span>' +
+        '<span class="dr-mchg ' + tone(s.change_pct) + '">' + pct(s.change_pct) + '</span></a></li>';
+    }).join('') + '</ul>';
+  }
+
+  function paintSectorPanel() {
+    var host = $('drt-secpanel');
+    if (!host) return;
+    var name = T.sector, r = name ? sectorRow(name) : null;
+    var tiles = document.querySelectorAll('#drt-heat .dr-tile');
+    for (var i = 0; i < tiles.length; i++) {
+      var on = !!r && tiles[i].dataset.sector === name;
+      tiles[i].classList.toggle('is-open', on);
+      tiles[i].setAttribute('aria-expanded', on ? 'true' : 'false');
+    }
+    if (!r) {
+      T.sector = null;
+      host.hidden = true;
+      host.innerHTML = '';
+      return;
+    }
+
+    var seen = {};
+    var own = (r.stocks || []).filter(function (s) {
+      if (!s || !s.symbol || seen[s.symbol]) return false;
+      seen[s.symbol] = 1;
+      return true;
+    }).sort(byChange);
+    var ix = SECTOR_NSE[name], hit = ix ? T.nse[ix.id] : null, more = [];
+    if (hit && hit.stocks) {
+      Object.keys(hit.stocks).forEach(function (sym) {
+        if (seen[sym]) return;
+        var q = hit.stocks[sym] || {};
+        more.push({ symbol: sym, ltp: q.price, change_pct: q.change_pct });
+      });
+      more.sort(byChange);
+    }
+
+    var facts = [];
+    if (finite(r.change_pct)) facts.push('<b class="' + tone(r.change_pct) + '">' + pct(r.change_pct) + '</b> today');
+    if (finite(r.up) && finite(r.total)) facts.push(r.up + ' of ' + r.total + ' up');
+    var html = '<div class="dr-secpanel-h"><div><h3>' + esc(name) + ' stocks</h3>' +
+      (facts.length ? '<p>' + facts.join(' · ') + '</p>' : '') + '</div>' +
+      '<button type="button" class="dr-secpanel-x" id="drt-secpanel-x" aria-label="Close ' + esc(name) + ' stocks">Close</button></div>';
+    if (own.length) {
+      html += '<p class="dr-secpanel-cap">The sector’s move today is the average of ' +
+        (own.length === 1 ? 'this stock' : 'these ' + own.length + ' stocks') + '.</p>' + stockList(own);
+    }
+    if (more.length) {
+      html += '<p class="dr-secpanel-cap">' + (own.length ? 'More in' : 'In') + ' NSE’s ' + esc(ix.name) + ' index</p>' + stockList(more);
+    } else if (hit && hit.loading) {
+      html += '<p class="dr-quiet dr-secpanel-note">Reading ' + (own.length ? 'the rest of ' : '') + esc(ix.name) + ' from NSE…</p>';
+    } else if (!own.length) {
+      html += '<p class="dr-quiet dr-secpanel-note">Stock quotes for this sector are not available right now.</p>';
+    }
+
+    // A refresh redraws the list; whoever was on a row stays on that row.
+    var active = host.contains(document.activeElement) ? document.activeElement : null;
+    var href = active && active.getAttribute('href'), onClose = !!active && active.id === 'drt-secpanel-x';
+    host.setAttribute('aria-label', name + ' stocks');
+    host.innerHTML = html;
+    host.hidden = false;
+    if (onClose) {
+      $('drt-secpanel-x').focus({ preventScroll: true });
+    } else if (href) {
+      var links = host.querySelectorAll('a');
+      for (var k = 0; k < links.length; k++) {
+        if (links[k].getAttribute('href') === href) { links[k].focus({ preventScroll: true }); break; }
+      }
+    }
+  }
+
+  /* The rest of the sector's NSE index. A failure leaves the first list
+     standing and is tried again on the next refresh, not in a loop. */
+  function loadSectorIndex(name) {
+    var ix = SECTOR_NSE[name];
+    if (!ix) return;
+    var hit = T.nse[ix.id];
+    if (hit && (hit.loading || Date.now() - hit.at < NSE_FRESH_MS)) return;
+    T.nse[ix.id] = { at: hit ? hit.at : 0, stocks: hit ? hit.stocks : null, loading: true };
+    get('/index/performance?index=' + encodeURIComponent(ix.id) + '&window=1D', 20000).then(function (d) {
+      var stocks = d && d.stocks && Object.keys(d.stocks).length ? d.stocks : null;
+      var was = T.nse[ix.id] || {};
+      T.nse[ix.id] = { at: Date.now(), stocks: stocks || was.stocks || null, loading: false };
+      if (T.sector === name) paintSectorPanel();
+    });
+  }
+
+  function closeSector() {
+    var name = T.sector;
+    if (!name) return;
+    T.sector = null;
+    paintSectorPanel();
+    var tile = sectorTile(name);
+    if (tile) tile.focus({ preventScroll: true });
+  }
+
+  function toggleSector(name) {
+    if (T.sector === name) { closeSector(); return; }
+    T.sector = name;
+    loadSectorIndex(name);
+    paintSectorPanel();
+    var host = $('drt-secpanel');
+    if (!host || host.hidden) return;
+    // Focus goes to the list so a keyboard or screen reader lands on the
+    // stocks, not on the ten tiles between the one pressed and the list.
+    host.focus({ preventScroll: true });
+    host.scrollIntoView({ block: 'nearest', behavior: still() ? 'auto' : 'smooth' });
   }
 
   function paintMovers() {
@@ -910,14 +1077,15 @@
     var mv = t.closest('[data-movers]');
     if (mv) { T.movers = mv.dataset.movers; paintMovers(); return; }
     var tile = t.closest('.dr-tile[data-sector]');
-    if (tile) {
-      // The sector's story lives on the market board, with its constituents.
-      var name = tile.dataset.sector;
-      if (window.AltahaNav) window.AltahaNav.go('discover', 'screener', true);
-      setTimeout(function () { if (window.AltahaSectors) window.AltahaSectors.open(name); }, 350);
-      return;
-    }
+    if (tile) { toggleSector(tile.dataset.sector); return; }
+    if (t.closest('#drt-secpanel-x')) { closeSector(); return; }
     if (t.closest('#dr-desk-watchopen')) { openWatchlist(); }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || !T.sector) return;
+    var host = $('drt-secpanel');
+    if (host && host.contains(e.target)) { e.preventDefault(); closeSector(); }
   });
 
   // The header reads /market and /sector/overview every minute for its
