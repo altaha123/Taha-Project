@@ -216,7 +216,7 @@
 .dr-mchg.up { background: rgba(47,125,79,.12); } .dr-mchg.dn { background: rgba(180,68,47,.12); }
 .dr-hlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .dr-hlist li { display: flex; flex-direction: column; gap: 3px; animation: dr-rise .4s var(--dr-ease) backwards; animation-delay: calc(var(--i, 0) * 60ms); }
-.dr-hlist a { color: inherit; font-size: 14px; line-height: 1.4; text-decoration: none; }
+.dr-hlist a, .dr-hlist li > span { color: inherit; font-size: 14px; line-height: 1.4; text-decoration: none; }
 .dr-hlist a:hover { text-decoration: underline; }
 .dr-hlist small { font-size: 11px; color: var(--dr-mute); }
 

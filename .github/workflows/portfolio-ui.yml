@@ -313,6 +313,21 @@ jobs:
         with:
           name: today-sectors-browser-verification
           path: test-results/today-sectors
+      - name: Verify a headline on Today opens its story
+        if: always()
+        # The feed calls a story's address `link` and the Headlines card read
+        # `url`, so every headline was a link to "#": it underlined and went
+        # nowhere, and nothing threw. This feeds the card the server's real
+        # shape and taps a headline: the story opens in a new tab, no headline
+        # links to "#", and one with no web address is text rather than a link.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/today-headlines-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: today-headlines-browser-verification
+          path: test-results/today-headlines
       - name: Verify the delivery pane never invents a delivered figure
         if: always()
         # Two silent ones. A session the exchange published no quantity for
