@@ -121,7 +121,14 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   // The figures: each with its latest value and its change on the year.
   const cards = page.locator('#funda-body .kp');
   assert.deepEqual((await cards.locator('.kp-l').allInnerTexts()).map(t => t.toLowerCase()),
-    ['revenue', 'ebitda', 'net profit', 'eps', 'operating margin', 'net margin']);
+    ['revenue', 'ebitda', 'net profit', 'eps']);
+  // FIGURES ARE IN THE INTERFACE SANS. They were once in the display serif,
+  // which is narrow, and nobody saw it: the test browser had web fonts blocked.
+  assert.match(await cards.nth(0).locator('.kp-v').evaluate(el => getComputedStyle(el).fontFamily), /^"?Inter/);
+  assert.ok(!/Instrument Serif/.test(await page.locator('#funda-body .fc h3').evaluate(
+    el => getComputedStyle(el).fontFamily)), 'a chart title is in the display serif');
+  // Each card carries its own small trend, drawn as a line.
+  assert.equal(await cards.locator('.kp-s svg path.kp-ln').count(), 4);
   const rev = cards.nth(0);
   assert.match(await rev.locator('.kp-v').innerText(), /₹2\.69L cr/);
   assert.match(await rev.locator('.kp-c').innerText(), /10\.5%\s*YoY/i);
@@ -141,6 +148,12 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
     cols.map(c => parseFloat(c.style.getPropertyValue('--h'))));
   got.forEach((h, i) => assert.ok(Math.abs(h / got[5] - want[i] / want[5]) < 0.01,
     `bar ${i} is ${(h / got[5]).toFixed(3)} of the latest; its revenue is ${(want[i] / want[5]).toFixed(3)}`));
+  // Slim bars against a scale that starts at zero: never the fat blocks.
+  const barWidths = await chart.locator('.fc-c[data-i] > i').evaluateAll(b => b.map(x => x.getBoundingClientRect().width));
+  assert.ok(Math.max(...barWidths) <= 28, 'a bar is ' + Math.max(...barWidths) + 'px wide');
+  const ticks = await chart.locator('.fc-grid b').allInnerTexts();
+  assert.ok(ticks.includes('0') && ticks.length >= 3, 'the scale reads ' + ticks);
+  assert.ok(ticks.filter(t => t !== '0').every(t => /L$/.test(t)), 'one axis, two styles of figure: ' + ticks);
   // The latest quarter is read out above it, and the one under the pointer replaces it.
   assert.match(await chart.locator('.fc-read').innerText(), /Q1 FY27[\s\S]*2\.69L cr[\s\S]*10\.5%/);
   await chart.locator('.fc-c[data-i="0"]').hover();
@@ -148,6 +161,36 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   // A bar is a button: the keyboard reads a quarter out as well.
   await chart.locator('.fc-c[data-i="3"]').focus();
   assert.match(await chart.locator('.fc-read').innerText(), /Q3 FY26/);
+
+  // The pointer gone, the latest quarter is back.
+  await page.mouse.move(5, 5);
+  await page.locator('#funda-body .fc h3').focus().catch(() => {});
+  await page.evaluate(() => document.activeElement && document.activeElement.blur());
+  await chart.locator('.fc-c[data-i="1"]').hover();
+  await page.mouse.move(5, 5);
+  assert.match(await chart.locator('.fc-read').innerText(), /Q1 FY27/);
+
+  // The margins: two lines on one scale, named, the pointed-at quarter read out.
+  const margins = page.locator('#funda-body .lc');
+  assert.equal(await margins.locator('path.lc-l').count(), 2);
+  assert.match(await margins.locator('.fc-read').innerText(), /Q1 FY27[\s\S]*Operating\s*17\.1%[\s\S]*Net\s*8\.3%/);
+  await margins.locator('.lc-c[data-i="3"]').hover();
+  assert.match(await margins.locator('.fc-read').innerText(), /Q3 FY26/);
+
+  // Where the money went: every amount on the right comes back to revenue and
+  // other income, and what was kept is named.
+  const flow = page.locator('#funda-body .mf');
+  await flow.locator('svg path.mf-r').first().waitFor();
+  const latest = fundamentals.rows[0].values;
+  const leaves = (await flow.locator('.mf-c li b').allInnerTexts()).map(t => /L/.test(t) ? num(t) * 1e5 : num(t));
+  const whole = (latest.revenue + latest.other_income) / 1e7;
+  assert.ok(Math.abs(leaves.reduce((x, y) => x + y, 0) / whole - 1) < 0.01,
+    `the flow's parts come to ${leaves.reduce((x, y) => x + y, 0)} of ${whole}`);
+  assert.match(await flow.locator('.mf-c li.net').innerText(), /Net profit[\s\S]*22,290 cr/);
+  assert.match(await flow.locator('.mf-a').innerText(), /Revenue[\s\S]*2\.69L cr/);
+  assert.match(await flow.locator('.mf-plot').getAttribute('aria-label'), /Net profit ₹22,290 cr/);
+  // On a wide screen the flow stands in for the single bar; neither is lost.
+  assert.equal(await page.locator('#funda-body .sp').isVisible(), false);
 
   // Another figure, and the chart is about that one. The loss hangs below the line.
   await cards.nth(2).click();
@@ -159,7 +202,7 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   assert.equal(calls, 1, 'choosing a figure asked the API again');
 
   // Where each ₹100 went: the parts come back to the whole.
-  const parts = (await page.locator('#funda-body .sp .sp-k b').allInnerTexts()).map(num);
+  const parts = (await page.locator('#funda-body .sp .sp-k b').allTextContents()).map(num);
   assert.ok(parts.length >= 4);
   assert.ok(Math.abs(parts.reduce((x, y) => x + y, 0) - 100) < 0.6, `the parts of ₹100 come to ${parts}`);
 
@@ -263,6 +306,7 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   assert.ok(await bal.locator('.kp').first().locator('.mv').evaluate(el => el.classList.contains('plain')));
   // What funds it: one bar a balance sheet.
   assert.equal(await bal.locator('.sp .sp-r').count(), 4);
+  assert.equal(await bal.locator('.mf').count(), 0);
   await bal.locator('.fn-more > summary').click();
   const bsTable = bal.locator('.fu-stmt');
   await bsTable.waitFor();
@@ -283,6 +327,11 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   assert.equal(await bal.isVisible(), false);
   assert.equal(await cash.locator('.fc .fc-c[data-i]').count(), 3);
   assert.match(await cash.locator('.kp[data-metric="fcf"] .kp-v').innerText(), /₹47,000 cr/);
+  // Cash left after investing: the second bar starts where the third ends.
+  const bridge = await cash.locator('.br .br-t i').evaluateAll(b => b.map(x => [parseFloat(x.style.left), parseFloat(x.style.width)]));
+  assert.equal(bridge.length, 3);
+  assert.ok(Math.abs(bridge[1][0] - bridge[2][1]) < 0.01 && Math.abs(bridge[1][0] + bridge[1][1] - 100) < 0.01, String(bridge));
+  assert.ok(Math.abs(bridge[2][1] - 100 * 47000 / 178000) < 0.05);
   await cash.locator('.fn-more > summary').click();
   const cfTable = cash.locator('.fu-stmt');
   await cfTable.waitFor();
@@ -333,6 +382,25 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
       const over = await page.evaluate(() =>
         document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert.ok(over <= 1, `horizontal page overflow ${over}px at ${width}`);
+      // The flow needs three columns and two gutters; where there is no room
+      // the single bar says the same thing. Exactly one of them, never neither.
+      const pictures = [await page.locator('#funda-body .mf').isVisible(), await page.locator('#funda-body .sp').isVisible()];
+      assert.deepEqual(pictures, width > 900 ? [true, false] : [false, true], `at ${width}: ${pictures}`);
+      // No label runs outside its card.
+      const spill = await page.evaluate(() => {
+        const out = [];
+        document.querySelectorAll('#funda-body .card').forEach(card => {
+          if (!card.offsetParent) return;
+          const c = card.getBoundingClientRect();
+          card.querySelectorAll('.fc-x, .fc-n, .mf-c li, .mf-a, .mf-b, .fc-grid b, .lc-k').forEach(el => {
+            const r = el.getBoundingClientRect();
+            if (!r.width || getComputedStyle(el).opacity === '0') return;
+            if (r.left < c.left - 1 || r.right > c.right + 1) out.push(el.className + ' ' + el.textContent.trim());
+          });
+        });
+        return out;
+      });
+      assert.deepEqual(spill, [], `at ${width} a label runs outside its card`);
 
       const shot = await page.locator('#funda-body').boundingBox();
       await page.screenshot({
