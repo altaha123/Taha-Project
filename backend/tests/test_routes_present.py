@@ -177,6 +177,7 @@ GET     /og/stock.png
 GET     /options/chain
 GET     /options/expiries
 GET     /pages/company/{symbol}
+GET     /pages/sector/{slug}
 GET     /pages/stocks
 GET     /patterns
 GET     /pit/correlations

@@ -18,7 +18,12 @@
        as it did, with no empty at-a-glance section and no dashed empty box
        where the disclaimer now sits outside the hidden body.
      · THE DIRECTORY IS A PAGE OF THE SITE: header, footer, every company a
-       link, a filter that only hides. */
+       link, a filter that only hides.
+     · WITH THE API ASLEEP THE COMPANY IS STILL THE PAGE. A search engine runs
+       the script too. It used to be shown "The engine could not be reached"
+       and filed that as what the page says about the company.
+     · A SECTOR AND THE THREE READING PAGES ARE PAGES OF THE SITE, and say
+       what they say with scripts off. */
 
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
@@ -56,6 +61,7 @@ const server = http.createServer((req, res) => {
   if (p === '/stock-PLAIN') return html(pages.plain);
   if (p === '/stock-NOSUCH') return html(pages.missing, 404);
   if (p === '/stocks') return html(pages.directory);
+  if (p === '/sector-chemicals') return html(pages.sector);
   const file = path.join(root, p === '/' ? '/index.html' : p);
   if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
   try {
@@ -64,7 +70,10 @@ const server = http.createServer((req, res) => {
   } catch (_) { res.writeHead(404).end(); }
 });
 
-async function open(browser, port, url, opts) {
+/* extra.analyze answers /analyze in place of the canned company; extra.clock
+   puts the page's timers under the test's control before anything loads. */
+async function open(browser, port, url, opts, extra) {
+  extra = extra || {};
   const context = await browser.newContext(Object.assign({ viewport: { width: 1280, height: 1000 } }, opts));
   const page = await context.newPage(), errors = [], asked = [];
   page.on('pageerror', e => errors.push(String(e.stack || e)));
@@ -73,15 +82,21 @@ async function open(browser, port, url, opts) {
     if (u.hostname === '127.0.0.1') return route.continue();
     if (/fonts\.(googleapis|gstatic)\.com$/.test(u.hostname)) return route.abort();
     asked.push(u.pathname + u.search);
-    if (u.pathname === '/analyze') return route.fulfill({ json: analyze });
+    if (u.pathname === '/analyze') return extra.analyze ? extra.analyze(route) : route.fulfill({ json: analyze });
     if (u.pathname === '/chart') {
       return route.fulfill({ json: { currency: 'INR', day_change_pct: 0.31,
         candles: [790, 801, 797, 812, 815].map((v, i) => ['2026-09-1' + i, v, v, v, v, 1000]) } });
     }
     return route.fulfill({ json: { available: false, rows: [], items: [], results: [] } });
   });
+  if (extra.clock) await page.clock.install();
   const resp = await page.goto(`http://127.0.0.1:${port}${url}`, { waitUntil: 'domcontentloaded' });
   return { context, page, errors, asked, resp };
+}
+
+async function until(test, what) {
+  for (let i = 0; i < 200; i++) { if (test()) return; await new Promise(r => setTimeout(r, 50)); }
+  throw new Error('timed out waiting for ' + what);
 }
 
 const fits = page => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
@@ -101,7 +116,8 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       assert.equal(await t.page.locator('h1#nm .skel').count(), 0, 'the name is still a skeleton');
       assert.match(await t.page.locator('#px').innerText(), /₹812\.50/);
       assert.deepEqual(await t.page.locator('#tags .stk-tag').allInnerTexts(),
-                       ['NSE', 'ACME', 'Chemicals', 'Specialty Chemicals']);
+                       ['NSE: ACME', 'Chemicals', 'Specialty Chemicals']);
+      assert.equal(await t.page.locator('#tags a.stk-tag').getAttribute('href'), '/sector-chemicals');
       const glance = t.page.locator('#glance');
       assert.ok(await glance.isVisible(), 'the figures are not showing with scripts off');
       assert.match(await glance.innerText(), /is listed on the National Stock Exchange of India/);
@@ -109,6 +125,12 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       assert.equal(await glance.locator('.gl-peers a').count(), 12);
       assert.equal(await glance.locator('.gl-peers a').first().getAttribute('href'), '/stock-CHEM14');
       assert.ok(await glance.locator('.gl-facts > div').count() >= 12);
+      // The questions people search with, answered in the page itself.
+      assert.equal(await glance.locator('.gl-qa').count(), 6);
+      assert.ok(await glance.locator('.gl-qa h4', { hasText: 'ROE and ROCE' }).isVisible());
+      assert.match(await glance.locator('.gl-qa', { hasText: 'sector peers' }).innerText(),
+                   /nearest peers there by market value are Chem 14 Ltd, Chem 13 Ltd/);
+      assert.equal(await glance.locator('.gl-all a').first().getAttribute('href'), '/sector-chemicals');
       assert.ok(!(await t.page.locator('#body').isVisible()), 'the empty panes are showing');
       assert.ok(!(await t.page.locator('#disc').isVisible()), 'an empty disclaimer box is showing');
       assert.ok(await fits(t.page), 'the page scrolls sideways at ' + width);
@@ -129,6 +151,11 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       assert.deepEqual(canon, ['https://altahascreener.in/stock-ACME']);
       assert.match(await t.page.locator('#px').innerText(), /₹815\.00/, 'the live price did not replace the last close');
       assert.equal((await t.page.locator('h1#nm').innerText()).trim(), 'Acme Chemicals Ltd');
+      // The row the server wrote is kept: the ticker as one tag, the sector still a link.
+      assert.deepEqual(await t.page.locator('#tags .stk-tag').allInnerTexts(),
+                       ['NSE: ACME', 'Chemicals', 'Specialty Chemicals']);
+      assert.equal(await t.page.locator('#tags a.stk-tag').getAttribute('href'), '/sector-chemicals');
+      assert.equal(await t.page.locator('.stk-live-off').count(), 0);
       assert.match(await t.page.locator('#stk-lab-link').getAttribute('href'), /lab=ACME/);
       assert.equal(await t.page.locator('.stk-id .ux-save, .stk-id button').count() >= 1, true,
                    'experience.js did not add the Save button');
@@ -157,10 +184,76 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       await t.context.close();
     }
 
+    /* ── 2b. The API is asleep: the company is still the page ─────────────
+       Three calls fail (the first, and the two quiet retries at 6 and 18
+       seconds), and at no point does the page say a word about the server.
+       Then the API wakes and Retry draws the live page. */
+    {
+      let calls = 0, awake = false;
+      const t = await open(browser, port, '/stock-ACME', null, { clock: true, analyze: route => {
+        calls++;
+        return awake ? route.fulfill({ json: analyze }) : route.fulfill({ status: 503, body: 'asleep' });
+      } });
+      const quiet = async when => {
+        const said = await t.page.locator('main').innerText();
+        assert.doesNotMatch(said, /engine|waking|wake|thirty seconds|unreachable|could not be reached/i,
+                            'the page talks about the server ' + when);
+        assert.equal((await t.page.locator('h1#nm').innerText()).trim(), 'Acme Chemicals Ltd');
+        assert.match(await t.page.locator('#px').innerText(), /₹812\.50/);
+        assert.ok(await t.page.locator('#glance').isVisible(), 'the figures went away ' + when);
+        assert.equal(await t.page.locator('#glance .gl-table tbody tr').count(), 4);
+        assert.equal(await t.page.title(),
+          'Acme Chemicals Ltd (ACME) share price, score and fundamentals | Altaha Screener');
+      };
+      await until(() => calls >= 1, 'the first call');
+      await t.page.waitForTimeout(150);
+      await quiet('while it waits');
+      assert.equal((await t.page.locator('#state').innerText()).trim(), '', 'the wait has words in it');
+      assert.equal(await t.page.locator('#state .stk-loading').getAttribute('data-nosnippet'), '');
+      await t.page.clock.fastForward(6200);
+      await until(() => calls >= 2, 'the first retry');
+      await t.page.waitForTimeout(150);
+      await quiet('between retries');
+      assert.equal(await t.page.locator('.stk-live-off').count(), 0, 'it gave up before trying again');
+      await t.page.clock.fastForward(18200);
+      await until(() => calls >= 3, 'the second retry');
+      const off = t.page.locator('.stk-live-off');
+      await off.waitFor();
+      await quiet('after it gave up');
+      assert.equal(await off.getAttribute('data-nosnippet'), '', 'the notice may be quoted by a search engine');
+      assert.equal(await t.page.locator('.stk-state').count(), 0, 'the full-page error banner is back');
+      assert.ok(!(await t.page.locator('#body').isVisible()), 'the empty panes are showing');
+      assert.ok(await fits(t.page));
+      await t.page.screenshot({ path: path.join(output, 'api-asleep-1280.png'), fullPage: true });
+      await t.page.clock.fastForward(120000);
+      await t.page.waitForTimeout(150);
+      assert.equal(calls, 3, 'it went on asking after the page said it had stopped');
+
+      awake = true;
+      await t.page.locator('#live-retry').click();
+      await t.page.locator('#kgrid .ktile').first().waitFor();
+      assert.equal(await t.page.locator('.stk-live-off').count(), 0);
+      assert.match(await t.page.locator('#px').innerText(), /₹815\.00/);
+      assert.deepEqual(t.errors, [], t.errors.join('\n'));
+      await t.context.close();
+    }
+
+    /* ── 2c. A company the live engine does not know is not an error page ─ */
+    {
+      const t = await open(browser, port, '/stock-ACME', null,
+                           { analyze: route => route.fulfill({ status: 404, json: { detail: 'no' } }) });
+      await t.page.locator('.stk-live-off').waitFor();
+      assert.doesNotMatch(await t.page.locator('main').innerText(), /Couldn't find|Check the spelling/);
+      assert.ok(await t.page.locator('#glance').isVisible());
+      await t.context.close();
+    }
+
     /* ── 3. The static page is as it was ────────────────────────────────── */
     {
       const t = await open(browser, port, '/stock.html?ticker=ACME');
       await t.page.locator('#kgrid .ktile').first().waitFor();
+      assert.deepEqual(await t.page.locator('#tags .stk-tag').allInnerTexts(),
+                       ['NSE: ACME', 'Chemicals', 'Specialty Chemicals']);
       assert.equal(await t.page.title(), 'ACME — Acme Chemicals Ltd | Altaha Screener');
       assert.equal(await t.page.locator('#glance').count(), 0, 'an empty section was left in the static page');
       assert.equal(await t.page.locator('link[rel="canonical"]').count(), 0,
@@ -168,6 +261,14 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       assert.match(await t.page.locator('#disc').innerText(), /Educational tool/);
       assert.deepEqual(t.errors, [], t.errors.join('\n'));
       await t.context.close();
+
+      // With no figures behind it, the static page still says what went wrong.
+      const down = await open(browser, port, '/stock.html?ticker=ACME', null,
+                              { analyze: route => route.fulfill({ status: 503, body: 'asleep' }) });
+      await down.page.locator('.stk-state').waitFor();
+      assert.match(await down.page.locator('.stk-state').innerText(), /could not be reached/);
+      assert.equal(await down.page.locator('.stk-state').getAttribute('data-nosnippet'), '');
+      await down.context.close();
 
       // Before the data arrives the disclaimer has no words, and must take no room.
       const slow = await browser.newContext({ javaScriptEnabled: false });
@@ -245,6 +346,70 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
 
       const off = await open(browser, port, '/stocks', { javaScriptEnabled: false });
       assert.equal(await off.page.locator('.dir-list a:visible').count(), 18, 'the list needs scripts to show');
+      assert.equal(await off.page.locator('#dir-sectors a').getAttribute('href'), '/sector-chemicals');
+      await off.context.close();
+    }
+
+    /* ── 5b. One sector ─────────────────────────────────────────────────── */
+    {
+      const off = await open(browser, port, '/sector-chemicals', { javaScriptEnabled: false });
+      assert.equal(await off.page.title(),
+        'Chemicals stocks in India: NSE companies by market cap, P/E, ROE | Altaha Screener');
+      assert.equal((await off.page.locator('h1').innerText()).trim(), 'Chemicals stocks on NSE');
+      assert.equal(await off.page.locator('.sec-table tbody tr:visible').count(), 15);
+      assert.deepEqual(await off.page.locator('.sec-table tbody th a').evaluateAll(a => a.slice(0, 3).map(x => x.getAttribute('href'))),
+                       ['/stock-CHEM14', '/stock-CHEM13', '/stock-ACME']);
+      await off.context.close();
+
+      const t = await open(browser, port, '/sector-chemicals');
+      await t.page.locator('footer.sh-footer').waitFor();
+      assert.equal(await t.page.locator('#sh-q').count(), 1, 'the site header did not mount');
+      // The footer's own links must lead somewhere from this address.
+      assert.equal(await t.page.locator('footer.sh-footer a', { hasText: 'All companies' }).evaluate(a => a.pathname), '/stocks');
+      assert.equal(await t.page.locator('footer.sh-footer a', { hasText: 'Daily policy brief' }).evaluate(a => a.pathname), '/brief.html');
+      assert.ok(await fits(t.page));
+      await t.page.screenshot({ path: path.join(output, 'sector-1280.png'), fullPage: true });
+      await t.page.setViewportSize({ width: 390, height: 844 });
+      await t.page.waitForTimeout(150);
+      assert.ok(await fits(t.page), 'the sector page scrolls sideways on a phone');
+      await t.page.screenshot({ path: path.join(output, 'sector-390.png') });
+      assert.deepEqual(t.errors, [], t.errors.join('\n'));
+      await t.context.close();
+    }
+
+    /* ── 5c. The glossary, the method and the planner, each at an address ─ */
+    for (const [file, h1, more] of [
+      ['glossary.html', /Stock market glossary/, async p => assert.equal(await p.locator('.doc-term').count(), 24)],
+      ['methodology.html', /How the Altaha Score works/, async p => assert.equal(await p.locator('#weights tbody tr').count(), 8)],
+      ['planner.html', /Money planner/, async p => assert.match(await p.locator('a.doc-btn').getAttribute('href'), /#portfolio\/planner$/)],
+    ]) {
+      const off = await open(browser, port, '/' + file, { javaScriptEnabled: false });
+      assert.match(await off.page.locator('h1').innerText(), h1);
+      assert.ok((await off.page.locator('main').innerText()).length > 1500, file + ' says little with scripts off');
+      await more(off.page);
+      await off.context.close();
+
+      const t = await open(browser, port, '/' + file);
+      await t.page.locator('footer.sh-footer').waitFor();
+      assert.equal(await t.page.locator('#sh-q').count(), 1, 'the site header did not mount on ' + file);
+      assert.ok(await fits(t.page), file + ' scrolls sideways');
+      await t.page.screenshot({ path: path.join(output, file.replace('.html', '') + '-1280.png'), fullPage: true });
+      await t.page.setViewportSize({ width: 390, height: 844 });
+      await t.page.waitForTimeout(150);
+      assert.ok(await fits(t.page), file + ' scrolls sideways on a phone');
+      await t.page.screenshot({ path: path.join(output, file.replace('.html', '') + '-390.png') });
+      assert.deepEqual(t.errors, [], t.errors.join('\n'));
+      await t.context.close();
+    }
+
+    /* ── 5d. The homepage's plain links, with scripts off ───────────────── */
+    {
+      const off = await open(browser, port, '/', { javaScriptEnabled: false });
+      const links = off.page.locator('#site-links a:visible');
+      const hrefs = await links.evaluateAll(a => a.map(x => x.getAttribute('href')));
+      for (const must of ['/stocks', '/stock-RELIANCE', '/stock-TCS', '/stock-HDFCBANK', '/glossary', '/methodology', '/planner']) {
+        assert.ok(hrefs.includes(must), must + ' is not a visible link on the homepage with scripts off');
+      }
       await off.context.close();
     }
 

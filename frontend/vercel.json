@@ -5,6 +5,7 @@
     { "source": "/share/:path*", "destination": "https://taha-project.onrender.com/share/:path*" },
     { "source": "/og/:path*", "destination": "https://taha-project.onrender.com/og/:path*" },
     { "source": "/stock-:symbol", "destination": "https://taha-project.onrender.com/pages/company/:symbol" },
+    { "source": "/sector-:slug", "destination": "https://taha-project.onrender.com/pages/sector/:slug" },
     { "source": "/stocks", "destination": "https://taha-project.onrender.com/pages/stocks" },
     { "source": "/sitemap.xml", "destination": "https://taha-project.onrender.com/sitemap.xml" },
     { "source": "/stock", "destination": "/stock.html" },
@@ -13,6 +14,9 @@
     { "source": "/advisors", "destination": "/advisors.html" },
     { "source": "/brief", "destination": "/brief.html" },
     { "source": "/pro", "destination": "/pro.html" },
+    { "source": "/glossary", "destination": "/glossary.html" },
+    { "source": "/methodology", "destination": "/methodology.html" },
+    { "source": "/planner", "destination": "/planner.html" },
     { "source": "/ownership-share", "destination": "/ownership-share.html" }
   ],
   "headers": [
@@ -23,6 +27,7 @@
       ]
     },
     { "source": "/stock-:symbol", "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }] },
+    { "source": "/sector-:slug", "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }] },
     { "source": "/stocks", "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }] },
     { "source": "/sitemap.xml", "headers": [{ "key": "x-vercel-enable-rewrite-caching", "value": "1" }] }
   ]

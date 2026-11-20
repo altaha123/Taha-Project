@@ -359,7 +359,8 @@
   function fail() {
     var box = $('investors-body');
     if (box) {
-      box.innerHTML = '<div class="iv-empty">The engine is unreachable. ' +
+      // data-nosnippet: not to be quoted by a search engine as the page.
+      box.innerHTML = '<div class="iv-empty" data-nosnippet>The engine is unreachable. ' +
         'If it has been idle it takes about thirty seconds to wake — try again.</div>';
     }
   }

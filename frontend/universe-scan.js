@@ -39,9 +39,15 @@
     hud.appendChild(node('strong','su-voyage-place','Quality & profitability'));
     hud.appendChild(node('span','su-voyage-note','The picks above are made from this scan'));
     scene.appendChild(hud);
-    var credit=node('a','su-texture-credit','Planet maps: Solar System Scope · CC BY 4.0');
-    credit.href='https://www.solarsystemscope.com/textures/';credit.target='_blank';credit.rel='noopener noreferrer';
-    host.appendChild(credit);
+    // The credit for the planet maps. It is shown only while those maps are
+    // on screen (universe-voyage.js marks the host su-textured when its
+    // renderer exists); without them there is nothing to credit. A div,
+    // because data-nosnippet is honoured on div, span and section only, and
+    // this line is not what the page is about.
+    var credit=node('div','su-texture-credit');credit.setAttribute('data-nosnippet','');
+    var creditLink=node('a','','Planet maps: Solar System Scope · CC BY 4.0');
+    creditLink.href='https://www.solarsystemscope.com/textures/';creditLink.target='_blank';creditLink.rel='noopener noreferrer';
+    credit.appendChild(creditLink);host.appendChild(credit);
     var checkpoints=node('div','su-checkpoints');
     checkpoints.setAttribute('aria-label','This week, Monday to Friday');
     scene.querySelectorAll('.su-planet').forEach(function(el){checkpoints.appendChild(el);}); scene.appendChild(checkpoints);

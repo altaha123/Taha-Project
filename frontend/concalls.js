@@ -380,7 +380,8 @@
         // A background refresh that fails leaves what is on screen alone.
         if (quiet) { again(20); return; }
         if (box) {
-          box.innerHTML = '<div class="cc-empty">The engine is unreachable. ' +
+          // data-nosnippet: not to be quoted by a search engine as the page.
+          box.innerHTML = '<div class="cc-empty" data-nosnippet>The engine is unreachable. ' +
             'If it has been idle it takes about thirty seconds to wake. ' +
             '<button type="button" class="cc-retry">Try again</button></div>';
           var b = box.querySelector('.cc-retry');

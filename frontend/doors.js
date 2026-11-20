@@ -940,7 +940,8 @@
           (universe ? '<span class="dr-universe-n"><b class="dr-n" data-count-to="' + universe + '">' + inr(universe, 0) + '</b> companies on NSE today</span>' : '') +
           '<span class="dr-cta">Open the scan ' + svg('arrow', 16) + '</span>' +
         '</span>' +
-        '<span class="dr-credit">Planet textures: Solar System Scope, CC BY 4.0</span>' +
+        // data-nosnippet: a credit, not what the page is about.
+        '<span class="dr-credit" data-nosnippet>Planet textures: Solar System Scope, CC BY 4.0</span>' +
       '</button>' +
       '<div class="dr-cards wide">' + cards + '</div>' +
       '<div class="dr-rows">' + more + '</div>' +
