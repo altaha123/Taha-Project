@@ -18,21 +18,213 @@
   margin:14px 0 0; font-size:12px; line-height:1.6; color:var(--mute); max-width:78ch;
 }
 
-/* ── WOW orders ──────────────────────────────────────────────────────────── */
+/* ── WOW orders ──────────────────────────────────────────────────────────────
+   The WOW orders are the page: a card each, with the size against the company
+   as a number and a bar. Everything else is a row in a list, and opens. */
+
+/* The top of the page: what happened this week, in a sentence and three
+   figures, and the one rule the page judges by. */
+.wo-lead{
+  padding:20px 20px 18px; border:1px solid var(--rule); border-radius:16px;
+  background:var(--skin-card);
+}
+.wo-say{
+  margin:0 0 9px; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
+  font-size:27px; line-height:1.18; letter-spacing:-.01em; color:var(--ink);
+}
+.wo-say b{ font-weight:400; color:var(--gold) }
+.wo-rule{ margin:0 0 17px; font-size:13.5px; line-height:1.62; color:var(--ink-2); max-width:76ch }
+.wo-rule b{ color:var(--ink) }
+.wo-tiles{ display:grid; grid-template-columns:1fr; gap:10px }
+@media (min-width:720px){ .wo-tiles{ grid-template-columns:repeat(3,minmax(0,1fr)) } }
+.wo-tile{ display:grid; gap:8px; align-content:start; padding:13px 15px; background:var(--paper-2); border-radius:12px }
+.wo-tile .lb{
+  font:500 10px/1.2 'IBM Plex Mono',monospace; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--mute);
+}
+.wo-tile .vv{ font:600 25px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em; color:var(--ink) }
+.wo-tile:first-child .vv{ color:var(--gold) }
+.wo-tile .sub{ font-size:12.5px; line-height:1.45; color:var(--ink-2); overflow-wrap:anywhere }
 
 .wo-counts{
   display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline;
-  padding:14px 0 18px; border-bottom:1px solid var(--rule); margin-bottom:20px;
-  font-size:13px; color:var(--ink-2);
+  padding:16px 2px 0; font-size:13px; color:var(--ink-2);
 }
-.wo-counts b{ font:600 18px/1 'IBM Plex Mono',monospace; margin-right:6px; color:var(--ink) }
+.wo-counts b{ font:600 16px/1 'IBM Plex Mono',monospace; margin-right:6px; color:var(--ink) }
+.wo-counts .st{ font:500 11px/1.4 'IBM Plex Mono',monospace; color:var(--gold) }
 .wo-counts .thr{
   margin-left:auto; font:500 11px/1 'IBM Plex Mono',monospace;
   letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
 }
+@media (max-width:560px){ .wo-counts .thr{ margin-left:0; flex-basis:100% } }
 
-/* Quarter on quarter */
-.wq{ margin:0 0 26px; padding:18px; background:var(--paper-2); border-radius:14px }
+.wo-group{ margin-top:28px }
+.wo-gh{
+  display:flex; gap:9px; align-items:baseline; margin:0;
+  font:600 12px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink);
+}
+.wo-gh span{ color:var(--gold) }
+.wo-gn{ margin:7px 0 13px; font-size:12.5px; line-height:1.6; color:var(--mute); max-width:76ch }
+
+.wo-list{ display:grid; gap:12px }
+.wo{
+  background:var(--skin-card); border:1px solid var(--rule);
+  border-radius:14px; overflow:hidden;
+}
+
+/* A WOW order. The size sits in its own panel so a reader running down the
+   page reads the percentages as a column. */
+.wo.is-card{ display:grid; grid-template-columns:1fr }
+@media (min-width:720px){ .wo.is-card{ grid-template-columns:208px minmax(0,1fr) } }
+.wo.is-wow{ border-color:var(--gold) }
+.wo-meter{
+  position:relative; display:grid; align-content:start; gap:7px;
+  padding:17px 18px 18px; background:var(--paper-2);
+}
+.wo-rank{
+  position:absolute; top:14px; right:15px;
+  font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute);
+}
+.wo-rank::before{ content:"#" }
+.wo-pct{ font:600 17px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em; color:var(--ink) }
+.wo-meter .wo-pct{ font-size:40px }
+.wo-pct.wow{ color:var(--gold) }
+.wo-pct.none{ color:var(--mute) }
+.wo-of{
+  font:500 10px/1.2 'IBM Plex Mono',monospace; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--mute);
+}
+/* The order against the company. Full at half the company's value; the tick
+   is where WOW begins. */
+.wo-bar{
+  position:relative; display:block; height:8px; margin-top:7px;
+  border-radius:99px; background:var(--rule);
+}
+.wo-bar i{
+  position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:var(--gold);
+}
+.wo-bar u{
+  position:absolute; top:-3px; bottom:-3px; width:2px; margin-left:-1px;
+  background:var(--ink); opacity:.5; text-decoration:none;
+}
+.wo-bar.over i{ border-radius:99px 3px 3px 99px }
+.wo-bar.over::after{
+  content:"›"; position:absolute; right:-9px; top:50%; transform:translateY(-54%);
+  font:600 13px/1 'IBM Plex Mono',monospace; color:var(--gold);
+}
+
+.wo .fl{
+  font:600 9px/1 'IBM Plex Mono',monospace; letter-spacing:.1em; font-style:normal;
+  text-transform:uppercase; padding:4px 7px; border-radius:5px; white-space:nowrap;
+}
+.wo .fl.wow{ background:var(--gold); color:var(--paper) }
+.wo .fl.soft{ border:1px solid var(--rule); color:var(--mute) }
+.wo-body{ padding:16px 18px 17px; min-width:0 }
+.wo-co{ display:flex; flex-wrap:wrap; gap:6px 9px; align-items:center; font-weight:600; font-size:15.5px }
+.wo-co a{ color:var(--ink); text-decoration:none }
+.wo-co a:hover{ color:var(--gold); text-decoration:underline }
+.wo-hl{ margin:9px 0 0; font-size:15px; line-height:1.5; color:var(--ink-2); overflow-wrap:anywhere }
+.wo-hl b{ color:var(--ink); font-weight:600 }
+.wo-hl .wo-val{ font-family:'IBM Plex Mono',monospace; letter-spacing:-.01em }
+.wo-for{ margin:7px 0 0; font-size:13.5px; line-height:1.58; color:var(--ink-2); max-width:78ch; overflow-wrap:anywhere }
+.wo-for.none{ color:var(--mute) }
+.wo-facts{ display:flex; flex-wrap:wrap; gap:11px 28px; margin:15px 0 0 }
+.wo-facts div{ min-width:0; max-width:38ch }
+.wo-facts dt{
+  font:500 9px/1 'IBM Plex Mono',monospace; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--mute);
+}
+.wo-facts dd{ margin:6px 0 0; font-size:13px; line-height:1.45; color:var(--ink-2); overflow-wrap:anywhere }
+.wo-warn{
+  margin:14px 0 0; padding:10px 13px; border-left:2px solid var(--sh-dn);
+  background:var(--paper-2); border-radius:0 8px 8px 0;
+  font-size:12.5px; line-height:1.58; color:var(--ink-2); max-width:78ch;
+}
+.wo-warn.soft{ border-left-color:var(--mute) }
+.wo.is-card .wo-warn{ background:transparent; border:1px solid var(--rule); border-left:2px solid var(--sh-dn); }
+/* The evidence and the filing share a line; opened, the evidence takes the
+   line to itself and the link drops under it. */
+.wo-foot{ display:flex; flex-wrap:wrap; gap:6px 22px; align-items:center; margin-top:14px }
+.wo-foot:empty{ display:none }
+.wo-ev[open]{ flex:1 1 100% }
+/* Share sits at the end of that line. With a mouse it is the size of the
+   links beside it; on a touch screen it keeps the 44px every button has. */
+.wo-foot .wo-share{ margin-left:auto; flex:0 0 auto }
+@media (hover:hover) and (pointer:fine){ .wo-foot .wo-share{ min-height:30px } }
+/* The order a shared card linked to: clear of the sticky header when it is
+   scrolled to, and ringed so it can be told from its neighbours. */
+.wo{ scroll-margin-top:150px }
+.wo.is-arrived{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(176,141,46,.2) }
+.wo-row.is-arrived{ box-shadow:inset 3px 0 0 var(--gold) }
+.wo-ev > summary{
+  cursor:pointer; font:500 11px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--mute); padding:5px 0;
+}
+.wo-ev > summary:hover{ color:var(--gold) }
+.wo-ev blockquote{
+  margin:9px 0 0; padding:11px 14px; background:var(--paper-2);
+  border-left:2px solid var(--rule); border-radius:0 8px 8px 0;
+  font-size:12.5px; line-height:1.6; color:var(--ink-2); overflow-wrap:anywhere;
+}
+.wo-ev .basis{ margin:8px 0 0; font-size:11.5px; color:var(--mute); line-height:1.5 }
+.wo-pdf{
+  display:inline-block; padding:5px 0; font:500 12px/1 'IBM Plex Mono',monospace;
+  color:var(--gold); text-decoration:none;
+}
+.wo-pdf:hover{ text-decoration:underline }
+
+/* Every other order: a row in one list, which opens to the same detail. */
+.wo-list.rows{
+  gap:0; border:1px solid var(--rule); border-radius:14px; overflow:hidden;
+  background:var(--skin-card);
+}
+.wo-row{ border:0; border-radius:0; border-bottom:1px solid var(--rule); background:transparent }
+.wo-row:last-child{ border-bottom:0 }
+.wo-row > summary{
+  position:relative; list-style:none; cursor:pointer;
+  display:grid; grid-template-columns:minmax(0,1fr); gap:6px 20px; align-items:center;
+  padding:13px 40px 13px 17px;
+}
+.wo-row > summary::-webkit-details-marker{ display:none }
+.wo-row > summary::after{
+  content:"+"; position:absolute; right:16px; top:50%; transform:translateY(-50%);
+  font:500 16px/1 'IBM Plex Mono',monospace; color:var(--mute);
+}
+.wo-row[open] > summary::after{ content:"–" }
+.wo-row > summary:hover, .wo-row[open] > summary{ background:var(--paper-2) }
+.wo-row > summary:focus-visible, .wo-ev > summary:focus-visible, .wo-retry:focus-visible{
+  outline:2px solid var(--gold); outline-offset:-2px;
+}
+.wo-row .wo-co{ font-size:14px }
+.wo-row .wo-hl{ margin:0; font-size:13.5px; line-height:1.45 }
+.wo-size{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 8px; align-items:baseline }
+.wo-size .wo-bar{ grid-column:1 / -1; height:5px; margin-top:1px }
+.wo-row .wo-bar i{ background:var(--ink-2); opacity:.55 }
+.wo-row .wo-body{ padding:2px 17px 17px }
+@media (min-width:860px){
+  .wo-row > summary{ grid-template-columns:minmax(0,1.05fr) minmax(0,1.7fr) 168px }
+  .wo-row .wo-hl{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .wo-row[open] .wo-hl{ white-space:normal }
+}
+
+/* Waiting for the first read. */
+.wo-empty b{ color:var(--ink); font-weight:600 }
+.wo-skel{
+  display:block; height:52px; margin-top:12px; border-radius:11px; opacity:.6;
+  background:linear-gradient(90deg,var(--rule) 25%,var(--skin-card) 37%,var(--rule) 63%);
+  background-size:400% 100%; animation:wo-skel 1.5s ease infinite;
+}
+@keyframes wo-skel{ 0%{ background-position:100% 50% } 100%{ background-position:0 50% } }
+@media (prefers-reduced-motion: reduce){ .wo-skel{ animation:none } }
+.wo-retry{
+  margin-left:8px; padding:6px 12px; border:1px solid var(--rule); border-radius:8px;
+  background:var(--skin-card); color:var(--ink); font:500 12px/1 'IBM Plex Mono',monospace; cursor:pointer;
+}
+.wo-retry:hover{ border-color:var(--gold); color:var(--gold) }
+
+/* Quarter on quarter: the whole market's disclosed orders, under the week. */
+.wq{ margin:30px 0 0; padding:18px; background:var(--paper-2); border-radius:14px }
 .wq h3{
   margin:0 0 15px; font:500 11px/1 'IBM Plex Mono',monospace;
   letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
@@ -54,58 +246,6 @@
 .wq-delta.up{ color:var(--sh-up) } .wq-delta.dn{ color:var(--sh-dn) }
 .wq-delta.flat{ font-size:11px; color:var(--mute); letter-spacing:.04em }
 .wq-note{ margin:14px 0 0; font-size:12px; color:var(--mute); line-height:1.6 }
-
-.wo-list{ display:grid; gap:12px }
-.wo{
-  background:var(--skin-card); border:1px solid var(--rule);
-  border-radius:14px; overflow:hidden;
-}
-.wo.is-wow{ border-color:var(--gold) }
-.wo-head{
-  display:flex; flex-wrap:wrap; align-items:baseline; gap:9px;
-  padding:14px 17px 0;
-}
-.wo-pct{ font:600 27px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em }
-.wo-pct.wow{ color:var(--gold) }
-.wo-pct.none{ font-size:17px; color:var(--mute) }
-.wo-of{
-  font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--mute);
-}
-.wo .fl{
-  font:600 9px/1 'IBM Plex Mono',monospace; letter-spacing:.1em; font-style:normal;
-  text-transform:uppercase; padding:4px 7px; border-radius:5px;
-}
-.wo .fl.wow{ background:var(--gold); color:var(--paper) }
-.wo .fl.soft{ border:1px solid var(--rule); color:var(--mute) }
-.wo-body{ padding:11px 17px 16px }
-.wo-co{ display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline; font-weight:600 }
-.wo-co a{ color:var(--ink); text-decoration:none }
-.wo-co a:hover{ color:var(--gold); text-decoration:underline }
-.wo-when{ font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute); font-weight:400 }
-.wo-hl{ margin:8px 0 12px; font-size:13.5px; line-height:1.55; color:var(--ink-2) }
-.wo-nums{ display:flex; flex-wrap:wrap; gap:7px 22px; font-size:13px; color:var(--ink-2) }
-.wo-nums b{
-  display:block; font:500 9px/1 'IBM Plex Mono',monospace; letter-spacing:.11em;
-  text-transform:uppercase; color:var(--mute); margin-bottom:5px;
-}
-.wo-ev{ margin-top:13px }
-.wo-ev > summary{
-  cursor:pointer; font:500 11px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.06em; text-transform:uppercase; color:var(--mute); padding:5px 0;
-}
-.wo-ev > summary:hover{ color:var(--gold) }
-.wo-ev blockquote{
-  margin:9px 0 0; padding:11px 14px; background:var(--paper-2);
-  border-left:2px solid var(--rule); border-radius:0 8px 8px 0;
-  font-size:12.5px; line-height:1.6; color:var(--ink-2);
-}
-.wo-ev .basis{ margin:8px 0 0; font-size:11.5px; color:var(--mute); line-height:1.5 }
-.wo-pdf{
-  display:inline-block; margin-top:13px; font:500 12px/1 'IBM Plex Mono',monospace;
-  color:var(--gold); text-decoration:none;
-}
-.wo-pdf:hover{ text-decoration:underline }
 
 /* ── Concall summaries ───────────────────────────────────────────────────── */
 

@@ -373,8 +373,62 @@
         if (out.length + 2 + tail.length <= LIMIT) out += "\n\n" + tail;
         return out;
       }
+    },
+
+    /* One order win, sized against the company that won it. Arithmetic on
+       two published numbers, so like a results card it states facts: the
+       order as filed, and its share of market cap. `id` names the order,
+       because a company can win two in a week. */
+    wow: {
+      png: function (d) {
+        return "/og/wow.png" + qs({ ticker: clean(d.ticker || d.symbol), id: orderId(d) });
+      },
+      page: function (d) {
+        return "/share/wow/" + encodeURIComponent(clean(d.ticker || d.symbol)) + qs({ id: orderId(d) });
+      },
+      file: function (d) {
+        return "altaha-" + clean(d.ticker || d.symbol).toLowerCase() + "-order.png";
+      },
+      title: function (d) { return clean(d.ticker || d.symbol) + " — order win"; },
+      text: function (d) {
+        var LIMIT = 240;
+        var who = cut(String(d.company || clean(d.ticker || d.symbol) || "").trim(), 70);
+        // `kind` is which card this is; what sort of order it is travels beside it.
+        var what = String(d.order_kind || "order").toLowerCase();
+        var first = who + (crore(d.value_cr) ? " — " + crore(d.value_cr) + " " + what : " — " + what);
+        var size = share(d.pct_of_market_cap)
+          ? "That is " + share(d.pct_of_market_cap) + " of the company\u2019s market cap"
+            + (crore(d.market_cap_cr) ? " (" + crore(d.market_cap_cr) + ")" : "") + "."
+          : "";
+        var tail = "From the company\u2019s filing with the exchange.";
+        var from = d.customer ? " from " + String(d.customer).replace(/\s+/g, " ").trim() : "";
+        // The customer's name is what gives: some are a sentence long.
+        var room = LIMIT - first.length - (size ? size.length + 1 : 0);
+        if (from && from.length > room) from = room > 12 ? cut(from, room) : "";
+        var out = first + from + (size ? "\n" + size : "");
+        if (out.length + 2 + tail.length <= LIMIT) out += "\n\n" + tail;
+        return out;
+      }
     }
   };
+
+  function orderId(d) {
+    return String((d && (d.id || d.key)) || "").toLowerCase().replace(/[^0-9a-f]/g, "").slice(0, 24);
+  }
+
+  /* Rupees crore and a share of market cap, the way the WOW page writes them. */
+  function crore(v) {
+    var n = Number(v);
+    if (v == null || !isFinite(n)) return "";
+    if (n >= 100000) return "\u20B9" + (n / 100000).toFixed(2) + " lakh cr";
+    if (n >= 1) return "\u20B9" + n.toLocaleString("en-IN", { maximumFractionDigits: n >= 100 ? 0 : 2 }) + " cr";
+    return "\u20B9" + (n * 100).toFixed(2) + " lakh";
+  }
+  function share(p) {
+    var n = Number(p);
+    if (p == null || !isFinite(n)) return "";
+    return n >= 10 ? Math.round(n) + "%" : (n >= 0.1 ? n.toFixed(1) + "%" : "under 0.1%");
+  }
 
   /* A string no longer than n, cut at a word and marked as cut. */
   function cut(s, n) {
@@ -713,7 +767,9 @@
     results: "The quarter as the company filed it — profit, revenue, margin and the " +
              "same quarter a year earlier. Every figure on it is the company's own.",
     concall: "The call as its brief tells it: the headline and the summary, written " +
-             "by a model from the transcript the company filed, and marked as such."
+             "by a model from the transcript the company filed, and marked as such.",
+    wow: "The order as the company filed it, and its size against the company\u2019s " +
+         "market cap. Two published numbers and the division between them."
   };
 
   function open(d) {

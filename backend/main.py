@@ -2244,6 +2244,83 @@ def share_concall(ticker: str, period: str = ""):
         media_type="text/html")
 
 
+def _order_for_card(ticker, id=""):
+    """The order a WOW card draws, or a 404 when there is none it may draw."""
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    row = None
+    if wow_orders is not None:
+        try:
+            row = wow_orders.for_card(sym, (id or "")[:24])
+        except Exception:
+            row = None
+    if not row:
+        raise HTTPException(404, f"No order with a disclosed value is on file for {sym}.")
+    return row
+
+
+@app.get("/og/wow.png")
+def og_wow(ticker: str, id: str = ""):
+    """
+    One order win as a picture: its size against the company's market cap,
+    the order as a sentence from the filing, and the figures behind the
+    percentage.
+
+    Drawn from the list in memory and the ledger only, so a crawler never
+    sends this service to the exchange. Only a firm order with a value the
+    filing labels as the order's is drawn: a lowest bid, a memorandum and an
+    unlabelled figure are a 404, and the page offers no share button for them.
+    `id` names the order, so two orders of one company are two addresses.
+    """
+    row = _order_for_card(ticker, id)
+    key = "wow:%s:%s:%s:%s" % (row.get("key"), row.get("value_cr"),
+                               row.get("pct_of_market_cap"), row.get("customer"))
+    try:
+        png = og_cards.cached(key, lambda: og_cards.wow_card(
+            row, wow_orders.WOW_MIN_PCT))
+    except Exception as e:
+        raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
+    return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
+
+
+@app.get("/share/wow/{ticker}")
+def share_wow(ticker: str, id: str = ""):
+    from urllib.parse import quote as _q
+    row = _order_for_card(ticker, id)
+    sym, name = row["symbol"], row.get("company") or row["symbol"]
+    pct = og_cards._pct_of(row["pct_of_market_cap"])
+    title = f"{name} — {og_cards.order_sentence(row)}"
+    desc = (f"That is {pct} of the company's market cap of "
+            f"{og_cards._rupee_cr(row.get('market_cap_cr'))}")
+    if row.get("months_of_sales") is not None:
+        desc += (f", and {og_cards._sales_span(row['months_of_sales'])} of "
+                 f"{(str(row.get('sales_year')) + ' ') if row.get('sales_year') else 'a year of '}sales")
+    desc += ". Read from the filing the company made with the exchange."
+    key = row.get("key") or ""
+    tail = f"&id={key}" if key else ""
+    return Response(content=og_cards.share_page(
+        title, desc,
+        f"{SHARE_ORIGIN}/og/wow.png?ticker={_q(sym, safe='')}{tail}",
+        f"{SITE_URL}/?go=wow&q={_q(sym, safe='')}{tail}"),
+        media_type="text/html")
+
+
+@app.get("/wow-order")
+def wow_order_one(ticker: str, id: str = ""):
+    """
+    One order by name, for a shared link that is older than the week the page
+    lists. The same row /wow-orders gives, from the ledger; nothing is fetched.
+    """
+    try:
+        return to_native({"available": True, "row": _order_for_card(ticker, id),
+                          "threshold_pct": wow_orders.WOW_MIN_PCT})
+    except HTTPException as e:
+        if e.status_code == 404:
+            return {"available": False, "message": e.detail}
+        raise
+
+
 @app.get("/share/{ticker}")
 def share_stock(ticker: str):
     if not ticker or len(ticker) > 20:
@@ -3961,11 +4038,15 @@ def wow_orders_feed(days: int = 7, refresh: bool = False):
     marked, never ranked, and never given an assumed number. The quarter block
     compares disclosed order inflow this fiscal quarter with the previous one,
     and says so when one of the two started before this service was recording.
+
+    Answers at once with what has been read. Fetching and reading the filings
+    happens on a thread started beside the answer; `reading` says it is
+    working and `poll_seconds` tells an open page when to ask again.
     """
     if wow_orders is None:
         return {"available": False, "message": "The orders reader is not available."}
     try:
-        payload = wow_orders.scan(days=max(1, min(days, 30)), force=bool(refresh))
+        payload = wow_orders.feed(days=max(1, min(days, 30)), refresh=bool(refresh))
         payload["quarter"] = wow_orders.quarter_comparison()
         return to_native(payload)
     except Exception as e:

@@ -82,6 +82,12 @@ const CONCALL = {
   quarter: "Q2 FY27", headline: "Order book at \u20B95,472 crore; FY27 revenue guidance held",
 };
 
+const ORDER = {
+  kind: "wow", ticker: "PACEDIGITK", id: "6eed6d67e567", company: "Pace Digitek Limited",
+  value_cr: 2691.3, pct_of_market_cap: 75.4, market_cap_cr: 3569.3,
+  customer: "NTPC Green Energy Limited", order_kind: "Letter of award",
+};
+
 const cases = [
   { d: { kind: "stock", ticker: "TCS" },
     link: "https://site.example/share/TCS",
@@ -108,6 +114,9 @@ const cases = [
   { d: CONCALL,
     link: "https://site.example/share/concall/TARIL?period=Q2-FY27",
     card: "https://site.example/og/concall.png?ticker=TARIL&period=Q2-FY27" },
+  { d: ORDER,
+    link: "https://site.example/share/wow/PACEDIGITK?id=6eed6d67e567",
+    card: "https://site.example/og/wow.png?ticker=PACEDIGITK&id=6eed6d67e567" },
 ];
 
 for (const c of cases) {
@@ -167,6 +176,32 @@ for (const d of [{ kind: "concall", ticker: "X" },
 assert.strictEqual(S.link({ kind: "concall", ticker: "M&M", quarter: "Q1 FY27" }),
   "https://site.example/share/concall/M%26M?period=Q1-FY27");
 assert.strictEqual(S.link({ kind: "concall", ticker: "X" }), "https://site.example/share/concall/X");
+
+/* ── an order post is who won what from whom, and how big it is ────────── */
+
+assert.strictEqual(S.compose(ORDER),
+  "Pace Digitek Limited \u2014 \u20B92,691 cr letter of award from NTPC Green Energy Limited\n" +
+  "That is 75% of the company\u2019s market cap (\u20B93,569 cr).\n\n" +
+  "From the company\u2019s filing with the exchange.");
+/* A customer's name can be a sentence. It is what gives; the size never does. */
+const longOrder = S.compose(Object.assign({}, ORDER, {
+  customer: "Overseas entity situated in Ghana (the Customer\u2019s name is withheld due to " +
+            "confidentiality obligations under the agreement between the parties and will be " +
+            "disclosed in due course as and when permitted)",
+}));
+assert.ok(longOrder.length <= 240, `a long order post is ${longOrder.length} chars`);
+assert.ok(longOrder.includes("That is 75% of the company\u2019s market cap"), longOrder);
+assert.ok(longOrder.includes("\u2026"), `a cut name must say so:\n${longOrder}`);
+for (const d of [{ kind: "wow", ticker: "X" },
+                 { kind: "wow", ticker: "X", value_cr: 0.4, pct_of_market_cap: 0.02 },
+                 { kind: "wow", ticker: "X", company: "W".repeat(300), customer: "C ".repeat(300),
+                   value_cr: 5, pct_of_market_cap: 12, market_cap_cr: 41 }]) {
+  const t = S.compose(d);
+  assert.ok(t.length <= 240 && !/undefined|NaN|null/.test(t), `sparse order post:\n${t}`);
+}
+assert.strictEqual(S.link({ kind: "wow", ticker: "M&M", id: "AB12-zz" }),
+  "https://site.example/share/wow/M%26M?id=ab12");
+assert.strictEqual(S.link({ kind: "wow", ticker: "X" }), "https://site.example/share/wow/X");
 
 /* ── every network gets the link, and the card travels with it ─────────── */
 

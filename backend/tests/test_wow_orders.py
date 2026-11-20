@@ -296,4 +296,9 @@ def test_the_payload_counts_disclosure_separately_from_size():
         {"value_cr": 900.0, "wow": True},
     ]
     c = W._payload(rows, "")["counts"]
-    assert c == {"orders": 3, "with_value": 2, "value_not_disclosed": 1, "wow": 1}
+    assert (c["orders"], c["with_value"], c["value_not_disclosed"], c["wow"]) == (3, 2, 1, 1)
+    # A row with no value that was never read is counted as that, not as a
+    # company that declined to state one.
+    rows.append({"value_cr": None, "wow": False, "value_state": "unread"})
+    c = W._payload(rows, "")["counts"]
+    assert (c["value_not_disclosed"], c["unread"]) == (1, 1)

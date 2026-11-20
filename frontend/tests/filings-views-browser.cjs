@@ -2,8 +2,18 @@
    exactly like the API payloads. No live calls.
 
    What this guards:
+     · the WOW orders lead the page, each saying who won what from whom and how
+       large it is against the company, with the smaller orders one line each
+     · a lowest bid or a memorandum of understanding is never shown as WOW,
+       however large, and says why
      · an order whose value the company did not disclose must render as "value
-       not disclosed" — never as zero, never ranked above a disclosed one
+       not disclosed" — never as zero, never ranked above a disclosed one; one
+       the company calls confidential, and one not read yet, say that instead
+     · the page is answered before the filings are read, fills in by itself,
+       and keeps open what the reader opened
+     · an order can be shared only when it is a firm order with a labelled
+       value sized against the company; the card and link are that order's,
+       and a shared link opens onto it, even one older than the week listed
      · the WOW threshold must be visible on the page, because a rule nobody can
        read is a rule nobody can argue with
      · a quarter the service did not watch must not be presented as a fall in
@@ -27,13 +37,18 @@ fs.mkdirSync(output, { recursive: true });
 
 const wow = {
   available: true, threshold_pct: 10,
-  counts: { orders: 3, with_value: 2, value_not_disclosed: 1, wow: 1 },
+  counts: { orders: 7, firm: 6, with_value: 4, sized: 4, value_not_disclosed: 2, unread: 1, not_firm: 1, wow: 2 },
+  reading: false, poll_seconds: null, read_at: '2026-09-12T17:00:00+05:30',
   note: '', source: 'BSE corporate announcements, Regulation 30. Order values are read from the filed document, not the headline.',
   explain: 'An order is called WOW when its disclosed value is at least 10% of the company’s market capitalisation. Orders whose value the company did not disclose are listed but never ranked, and never given an assumed figure.',
   rows: [
-    { symbol: 'SMALLCO', company: 'Small Engineering Ltd', headline: 'Receipt of work order from NHAI for a highway package', at: '2026-09-12T11:02:00+05:30', date: '2026-09-12', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/1.pdf', value_cr: 450.75, value_basis: 'stated next to an order-value phrase in the filing', value_confident: true, currency_converted: false, excerpt: 'The Company has received a work order. The order value is Rs. 450.75 crore, to be executed over 24 months.', market_cap_cr: 1050, pct_of_market_cap: 42.93, wow: true },
-    { symbol: 'BIGCO', company: 'Big Infra Ltd', headline: 'Order win intimation under Regulation 30', at: '2026-09-11T15:40:00+05:30', date: '2026-09-11', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/2.pdf', value_cr: 320, value_basis: 'largest rupee figure in the filing; the filing does not label it as the order value', value_confident: false, currency_converted: true, excerpt: 'The company informed that USD 38 million was involved in the transaction.', market_cap_cr: 42000, pct_of_market_cap: 0.76, wow: false },
-    { symbol: 'ACCURACY', company: 'Accuracy Shipping Ltd', headline: 'Receipt Of Letter Of Intent For Setting Up Of Container Freight Station At Kandla', at: '2026-09-10T09:15:00+05:30', date: '2026-09-10', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/3.pdf', value_cr: null, value_basis: null, value_confident: false, currency_converted: false, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, wow: false }
+    { symbol: 'TINYCO', key: 'ca4913d33ad7', company: 'Tiny Infra Projects Ltd', headline: 'Bagging/Receiving of orders/contracts', at: '2026-09-12T16:20:00+05:30', date: '2026-09-12', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/7.pdf', read: true, stage: 'order', kind: 'Work order', customer: 'Hindalco Industries Limited', nature: null, period: null, size_text: null, value_cr: 136.29, value_state: 'stated', value_basis: 'stated next to an order-value phrase in the filing', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'Intimation of workorder from M/S Hindalco Industries Limited worth Rs.136.29 crores', market_cap_cr: 106.7, pct_of_market_cap: 127.73, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: true, outsized: true, filings: 1 },
+    { symbol: 'SMALLCO', key: '1a2b3c4d5e6f', company: 'Small Engineering Ltd', headline: 'Receipt of work order from NHAI for a highway package', at: '2026-09-12T11:02:00+05:30', date: '2026-09-12', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/1.pdf', read: true, stage: 'order', kind: 'Work order', customer: 'National Highways Authority of India <script>window.__wowxss=1</script>', nature: 'Four-laning of a 42 km highway package on EPC mode', period: '24 months', size_text: null, value_cr: 450.75, value_state: 'stated', value_basis: 'stated as the size of the order in the filing’s disclosure table', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'The Company has received a work order. The order value is Rs. 450.75 crore, to be executed over 24 months.', market_cap_cr: 1050, pct_of_market_cap: 42.93, sales_cr: 901.5, sales_year: 'FY26', pct_of_sales: 50, months_of_sales: 6, wow: true, outsized: false, filings: 2 },
+    { symbol: 'BIGCO', key: 'b16c0b16c0b1', company: 'Big Infra Ltd', headline: 'Order win intimation under Regulation 30', at: '2026-09-11T15:40:00+05:30', date: '2026-09-11', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/2.pdf', read: true, stage: 'order', kind: 'Letter of award', customer: 'Posh Offshore Private Limited', nature: 'Subsea inspection work', period: 'By May 2027', size_text: null, value_cr: 320, value_state: 'stated', value_basis: 'largest rupee figure in the filing; the filing does not label it as the order value', value_confident: false, currency_converted: true, fx_rate: 93.5, excerpt: 'The company informed that USD 38 million was involved in the transaction.', market_cap_cr: 42000, pct_of_market_cap: 0.76, sales_cr: 16000, sales_year: 'FY26', pct_of_sales: 2, months_of_sales: 0.2, wow: false, outsized: false, filings: 1 },
+    { symbol: 'ROADCO', key: '70ad70ad70ad', company: 'Road Builders Ltd', headline: 'Road Builders Ltd has informed the Exchange about L1 for NHAI Project', at: '2026-09-11T18:05:00+05:30', date: '2026-09-11', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/4.pdf', read: true, stage: 'l1', kind: 'Lowest bidder (L1)', customer: 'National Highways Authority of India (NHAI)', nature: 'Construction of an 8-lane expressway package', period: '18 months', size_text: null, value_cr: 1465, value_state: 'stated', value_basis: 'stated as the size of the order in the filing’s disclosure table', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'Quoted EPC Price for the Project Rs.1,465.00 Crore excluding GST', market_cap_cr: 3114.3, pct_of_market_cap: 47.04, sales_cr: 7519.88, sales_year: 'FY26', pct_of_sales: 19.5, months_of_sales: 2.3, wow: false, outsized: false, filings: 1 },
+    { symbol: 'ACCURACY', key: 'acc0acc0acc0', company: 'Accuracy Shipping Ltd', headline: 'Receipt Of Letter Of Intent For Setting Up Of Container Freight Station At Kandla', at: '2026-09-10T09:15:00+05:30', date: '2026-09-10', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/3.pdf', read: true, stage: 'order', kind: 'Letter of intent', customer: 'Deendayal Port Authority', nature: 'Container freight station at Kandla', period: null, size_text: '40,000 containers a year', value_cr: null, value_state: 'not_stated', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 },
+    { symbol: 'SECRETCO', key: '5ec5ec5ec5ec', company: 'Secret Systems Ltd', headline: 'Receiving of order', at: '2026-09-10T08:15:00+05:30', date: '2026-09-10', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/5.pdf', read: true, stage: 'order', kind: 'Purchase order', customer: 'Overseas customer in a space sector', nature: 'Manufacturing electrical wire harness', period: '4-6 months', size_text: 'This cannot be disclosed being confidential in nature', value_cr: null, value_state: 'confidential', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 },
+    { symbol: 'LATECO', key: '1a7e1a7e1a7e', company: 'Late Filer Ltd', headline: 'Bagging/Receiving of orders/contracts', at: '2026-09-09T19:15:00+05:30', date: '2026-09-09', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/6.pdf', read: false, stage: 'order', kind: null, customer: null, nature: null, period: null, size_text: null, value_cr: null, value_state: 'unread', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 }
   ],
   quarter: {
     this_quarter: { label: 'Q2 FY27', start: '2026-07-01', end: '2026-09-30', orders: 3, with_value: 2, value_not_disclosed: 1, total_cr: 770.75, companies: 3, biggest: { symbol: 'SMALLCO', company: 'Small Engineering Ltd', value_cr: 450.75, pct_of_market_cap: 42.93 }, partial: false, trading_days: 55, days_not_recorded: 0 },
@@ -187,18 +202,27 @@ const server = http.createServer((req, res) => {
     viewport: { width: 1280, height: 1000 }, reducedMotion: 'reduce' });
   await context.addInitScript(() => { try { localStorage.setItem('altaha-guide-dismissed', '1'); } catch (e) {} });
   const page = await context.newPage(), errors = [];
-  let wowCalls = 0, ccCalls = 0, wowPayload = wow, ccQueue = null, oneCall = null;
+  let wowCalls = 0, ccCalls = 0, wowPayload = wow, wowQueue = null, ccQueue = null, oneCall = null, oneOrder = null;
   page.on('pageerror', e => errors.push(String(e.stack)));
 
   await context.route('**/*', route => {
     const u = new URL(route.request().url());
     if (u.hostname === '127.0.0.1') return route.continue();
     if (['font', 'stylesheet', 'image'].includes(route.request().resourceType())) return route.abort();
-    if (u.pathname === '/wow-orders') { wowCalls++; return route.fulfill({ json: wowPayload }); }
+    if (u.pathname === '/wow-orders') {
+      wowCalls++;
+      const next = wowQueue ? (wowQueue.length > 1 ? wowQueue.shift() : wowQueue[0]) : wowPayload;
+      return route.fulfill({ json: next });
+    }
     if (u.pathname === '/concalls') {
       ccCalls++;
       const next = ccQueue ? (ccQueue.length > 1 ? ccQueue.shift() : ccQueue[0]) : concalls;
       return route.fulfill({ json: next });
+    }
+    if (u.pathname === '/wow-order') {
+      const hit = oneOrder && u.searchParams.get('ticker') === oneOrder.symbol;
+      return route.fulfill({ json: hit ? { available: true, row: oneOrder, threshold_pct: 10 }
+                                       : { available: false, message: 'No order on file.' } });
     }
     if (u.pathname === '/concall' && oneCall && u.searchParams.get('ticker') === oneCall.symbol) {
       return route.fulfill({ json: oneCall });
@@ -220,26 +244,96 @@ const server = http.createServer((req, res) => {
   assert.equal(wowCalls, 1);
   assert.ok(await page.locator('#view-wow').isVisible(), 'WOW view must be on screen');
 
-  assert.equal(await page.locator('#view-wow .wo').count(), 3);
+  const wv = page.locator('#view-wow');
+  assert.equal(await wv.locator('.wo').count(), 7);
+  // The top of the page says what happened this week and what WOW means.
+  assert.match(await wv.locator('.wo-say').innerText(), /2 orders this week are big enough to matter/i);
+  assert.match(await wv.locator('.wo-rule').innerText(), /at least 10% of the company.s market cap/i);
+  const tiles = wv.locator('.wo-tile');
+  assert.match(await tiles.nth(0).innerText(), /128%[\s\S]*Tiny Infra Projects Ltd/);
+  assert.match(await tiles.nth(1).innerText(), /₹451 cr[\s\S]*Small Engineering Ltd/);
+  assert.match(await tiles.nth(2).innerText(), /7[\s\S]*order filings · 4 state a rupee value/);
   // The threshold is on the page.
-  assert.match(await page.locator('.wo-counts').innerText(), /threshold 10% of market cap/i);
+  assert.match(await wv.locator('.wo-counts').innerText(), /threshold 10% of market cap/i);
+  assert.match(await wv.locator('.wo-counts').innerText(), /1\s*not read yet/i);
 
-  // A disclosed order leads with its share of the company, not the rupee figure.
-  const first = page.locator('#view-wow .wo').first();
-  assert.match(await first.innerText(), /42\.9%/);
-  assert.match(await first.innerText(), /of market cap/i);
-  assert.match(await first.innerText(), /WOW/);
+  // The groups, in order, each with its count.
+  assert.deepEqual((await wv.locator('.wo-gh').allInnerTexts()).map(t => t.replace(/\s+/g, ' ').trim().toUpperCase()),
+    ['WOW ORDERS 2', 'OTHER ORDERS WITH A VALUE 1', 'NOT FIRM ORDERS 1', 'NO RUPEE VALUE 3']);
 
-  // An undisclosed value says so, is last, and shows no number.
-  const last = page.locator('#view-wow .wo').last();
-  assert.match(await last.innerText(), /value not disclosed/i);
-  assert.doesNotMatch(await last.innerText(), /₹0|0\.0%/);
-  assert.equal(await last.locator('.wo-pct.none').count(), 1);
+  // A WOW order is a card that says who won what from whom, and how big it
+  // is against the company. The fixture is ordered by the server; the page
+  // keeps that order.
+  const cards = wv.locator('.wo.is-wow');
+  assert.equal(await cards.count(), 2);
+  const first = cards.nth(1);
+  assert.match(await first.locator('.wo-pct').innerText(), /43%/);
+  assert.match(await first.locator('.wo-of').innerText(), /of market cap/i);
+  assert.match(await first.locator('.wo-co').innerText(), /Small Engineering Ltd[\s\S]*WOW[\s\S]*Work order/i);
+  assert.match(await first.locator('.wo-hl').innerText(),
+    /₹451 cr work order from National Highways Authority of India/);
+  assert.match(await first.locator('.wo-for').innerText(), /Four-laning of a 42 km highway/);
+  const facts1 = await first.locator('.wo-facts').innerText();
+  assert.match(facts1, /₹1,050 cr/);
+  assert.match(facts1, /6 months of FY26 sales/);
+  assert.match(facts1, /24 months/);
+  assert.match(facts1, /2 filings/);
+  // The bar is the order against the company, with the WOW line marked on it.
+  const fill = await first.locator('.wo-bar i').evaluate(el => parseFloat(el.style.width));
+  const tick = await first.locator('.wo-bar u').evaluate(el => parseFloat(el.style.left));
+  assert.ok(Math.abs(fill - 85.9) < 0.2 && tick === 20, `bar ${fill} / tick ${tick}`);
+  // Text from a filing is text. A tag in a customer's name is printed, not run.
+  assert.match(await first.locator('.wo-hl').innerText(), /<script>/);
+  assert.equal(await page.evaluate(() => window.__wowxss), undefined);
 
+  // An order larger than the company says to open the filing.
+  const huge = cards.nth(0);
+  assert.match(await huge.locator('.wo-rank').evaluate(el => el.textContent), /^1$/);
+  assert.match(await huge.locator('.wo-pct').innerText(), /128%/);
+  assert.match(await huge.locator('.wo-warn').innerText(), /larger than the whole company.s market cap/i);
+  assert.equal(await first.locator('.wo-warn').count(), 0);
+  assert.doesNotMatch(await huge.locator('.wo-facts').innerText(), /sales/i,
+    'no sales on file means no sales comparison, not a made-up one');
+
+  // Every other order is one line, and opens to the same detail.
+  const rows = wv.locator('.wo-row');
+  assert.equal(await rows.count(), 5);
+  const mid = rows.nth(0);
+  assert.equal(await mid.evaluate(el => el.open), false);
+  assert.match(await mid.locator(':scope > summary').innerText(), /Big Infra Ltd/);
+  assert.match(await mid.locator(':scope > summary').innerText(), /0\.8%/);
   // An unlabelled or converted figure is flagged rather than presented flat.
-  const mid = page.locator('#view-wow .wo').nth(1);
-  assert.match(await mid.innerText(), /unlabelled figure/i);
-  assert.match(await mid.innerText(), /converted/i);
+  assert.match(await mid.locator(':scope > summary').innerText(), /unlabelled figure/i);
+  assert.match(await mid.locator(':scope > summary').innerText(), /converted/i);
+  await mid.evaluate(el => { el.open = true; });
+  assert.match(await mid.locator('.wo-facts').innerText(), /under a week of FY26 sales/);
+  assert.match(await mid.locator('.wo-ev .basis').evaluate(el => el.textContent),
+    /converted at ₹93\.5, an assumed rate/);
+
+  // A lowest bid is not an order: never WOW, whatever its size, and it says so.
+  const bid = rows.nth(1);
+  assert.match(await bid.locator(':scope > summary').innerText(), /Road Builders Ltd[\s\S]*Lowest bidder/i);
+  assert.match(await bid.locator(':scope > summary').innerText(), /₹1,465 cr lowest bid from National Highways/);
+  assert.match(await bid.locator(':scope > summary').innerText(), /47%/);
+  assert.equal(await bid.evaluate(el => el.classList.contains('is-wow')), false);
+  assert.equal(await bid.locator('.fl.wow').count(), 0);
+  await bid.evaluate(el => { el.open = true; });
+  assert.match(await bid.locator('.wo-warn').innerText(), /not been awarded yet, so it is not counted as WOW/i);
+
+  // An undisclosed value says so, and shows no number.
+  const none = rows.nth(2);
+  assert.match(await none.locator(':scope > summary').innerText(), /Accuracy Shipping Ltd/);
+  assert.match(await none.locator(':scope > summary').innerText(), /value not disclosed/i);
+  assert.doesNotMatch(await none.innerText(), /₹0|0\.0%/);
+  assert.equal(await none.locator('.wo-pct.none').count(), 1);
+  await none.evaluate(el => { el.open = true; });
+  assert.match(await none.locator('.wo-for.none').innerText(), /Size as filed: 40,000 containers a year/);
+  // Confidential and unread are different facts from undisclosed.
+  assert.match(await rows.nth(3).locator(':scope > summary').innerText(), /Secret Systems Ltd[\s\S]*value confidential/i);
+  assert.match(await rows.nth(4).locator(':scope > summary').innerText(), /Late Filer Ltd[\s\S]*not read yet/i);
+  await rows.nth(4).evaluate(el => { el.open = true; });
+  assert.match(await rows.nth(4).locator('.wo-for.none').innerText(), /has not been read yet/i);
+  const last = rows.nth(4);
 
   // The evidence for a figure is one disclosure away, and the figure never
   // appears without it. Opened through the element's own `open` property
@@ -249,11 +343,49 @@ const server = http.createServer((req, res) => {
   await page.evaluate(() => {
     document.querySelectorAll('#view-wow .wo-ev').forEach(d => { d.open = true; });
   });
-  const evidence = page.locator('#view-wow .wo-ev').first();
+  const evidence = first.locator('.wo-ev');
   assert.match(await evidence.locator('blockquote').innerText(), /450\.75 crore/);
-  assert.match(await evidence.locator('.basis').innerText(), /order-value phrase/);
+  assert.match(await evidence.locator('.basis').innerText(), /disclosure table/);
   // A row with no disclosed value has nothing to disclose and shows no panel.
   assert.equal(await last.locator('.wo-ev').count(), 0);
+  assert.equal(await none.locator('.wo-ev').count(), 0);
+  // Every filing is one tap away.
+  assert.equal(await wv.locator('.wo-pdf').count(), 7);
+
+  // ── Sharing an order ─────────────────────────────────────────────────────
+  // Only what a card may be drawn for can be shared: a firm order with a
+  // labelled value, sized against the company. Not the unlabelled figure,
+  // not the lowest bid, not an order with no value.
+  assert.equal(await wv.locator('.wo-share').count(), 2);
+  assert.equal(await mid.locator('.wo-share').count(), 0, 'an unlabelled figure is not put on a card');
+  assert.equal(await bid.locator('.wo-share').count(), 0, 'a bid is not an order');
+  assert.equal(await none.locator('.wo-share').count(), 0);
+  const order = JSON.parse(await first.locator('.wo-share').getAttribute('data-share'));
+  assert.deepEqual([order.kind, order.ticker, order.id, order.company, order.value_cr,
+                    order.pct_of_market_cap, order.market_cap_cr, order.order_kind],
+    ['wow', 'SMALLCO', '1a2b3c4d5e6f', 'Small Engineering Ltd', 450.75, 42.93, 1050, 'Work order']);
+  assert.match(order.customer, /<script>/, 'a tag in a name survives the attribute as text');
+
+  // Pressing it opens the sheet on that order's card, with X and WhatsApp.
+  await first.locator('.wo-share').evaluate(el => el.click());
+  const osheet = page.locator('#shsheet');
+  await osheet.waitFor({ state: 'visible' });
+  assert.match(await osheet.locator('#shttl').innerText(), /SMALLCO — order win/);
+  assert.match(await osheet.locator('#shsub').innerText(), /Two published numbers/i);
+  assert.match(await osheet.locator('#shcardimg').getAttribute('src'),
+    /\/og\/wow\.png\?ticker=SMALLCO&id=1a2b3c4d5e6f$/);
+  for (const net of ['x', 'wa']) {
+    assert.equal(await osheet.locator(`[data-do="${net}"]`).count(), 1);
+    const to = decodeURIComponent(await page.evaluate(
+      ([n, d]) => window.AltahaShare.shareUrl(n, d), [net, order]));
+    assert.match(to, /\/share\/wow\/SMALLCO\?id=1a2b3c4d5e6f/, `${net} must carry the order's link`);
+    assert.match(to, /Small Engineering Ltd — ₹451 cr work order from National Highways/);
+    assert.match(to, /That is 43% of the company.s market cap \(₹1,050 cr\)/);
+    assert.doesNotMatch(to, /onrender\.com/, 'a post must not name the API host');
+  }
+  await osheet.locator('.shx').evaluate(el => el.click());
+  await osheet.waitFor({ state: 'hidden' });
+  assert.equal(await page.evaluate(() => window.__wowxss), undefined);
 
   // Quarter on quarter, both sides labelled.
   const wq = page.locator('.wq');
@@ -303,6 +435,87 @@ const server = http.createServer((req, res) => {
   assert.match(await page2.locator('.wq-delta').innerText(), /not comparable yet/i);
   assert.match(await page2.locator('.wq-side.partial').innerText(), /Recording started part-way/i);
   await page2.close();
+
+  // ── Answered before the filings are read ─────────────────────────────────
+  // The server says it is still reading. The page says so, asks again by
+  // itself, fills in, keeps what the reader opened, and stops asking.
+  const wowEmpty = Object.assign({}, wow, { rows: [], reading: true, poll_seconds: 3,
+    counts: { orders: 0, firm: 0, with_value: 0, sized: 0, value_not_disclosed: 0, unread: 0, not_firm: 0, wow: 0 } });
+  const wowPart = Object.assign({}, wow, { rows: wow.rows.slice(0, 3), reading: true, poll_seconds: 3,
+    counts: { orders: 3, firm: 3, with_value: 3, sized: 3, value_not_disclosed: 0, unread: 0, not_firm: 0, wow: 2 } });
+  wowQueue = [wowEmpty, wowPart, wow];
+  wowCalls = 0;
+  const pageR = await context.newPage();
+  pageR.on('pageerror', e => errors.push(String(e.stack)));
+  await pageR.goto('http://127.0.0.1:8773/', { waitUntil: 'domcontentloaded' });
+  await pageR.waitForFunction(() => !!window.AltahaNav);
+  await openTab(pageR, 'wow');
+  const wr = pageR.locator('#view-wow');
+  await wr.locator('.wo-empty.is-loading').waitFor({ state: 'visible' });
+  assert.match(await wr.locator('.wo-empty').innerText(), /first read takes a minute or two/i);
+  await wr.locator('.wo').first().waitFor({ state: 'visible', timeout: 8000 });
+  assert.equal(wowCalls, 2, 'the page should have asked again by itself, once');
+  assert.equal(await wr.locator('.wo').count(), 3);
+  assert.match(await wr.locator('.wo-counts .st').innerText(), /Checking for new filings/i);
+  await wr.locator('.wo-row').first().evaluate(el => { el.open = true; });
+  await wr.locator('.wo').nth(6).waitFor({ state: 'attached', timeout: 8000 });
+  assert.equal(wowCalls, 3);
+  assert.equal(await wr.locator('.wo-row').first().evaluate(el => el.open), true,
+    'a row the reader opened must survive the list refreshing');
+  assert.equal(await wr.locator('.wo-counts .st').count(), 0, 'nothing is in progress, so nothing says so');
+  await pageR.waitForTimeout(4200);
+  assert.equal(wowCalls, 3, 'the page must stop asking once the server says it has finished');
+  await pageR.close();
+  wowQueue = null;
+
+  // ── Arriving from a shared link ──────────────────────────────────────────
+  // The link names an order. It is brought into view and marked, and the
+  // stock is not analysed instead: the reader was sent an order.
+  const pageS = await context.newPage();
+  pageS.on('pageerror', e => errors.push(String(e.stack)));
+  let analysedW = 0;
+  pageS.on('request', r => { if (new URL(r.url()).pathname === '/analyze') analysedW++; });
+  await pageS.goto('http://127.0.0.1:8773/?go=wow&q=SMALLCO&id=1a2b3c4d5e6f', { waitUntil: 'domcontentloaded' });
+  const sentO = pageS.locator('#view-wow .wo.is-arrived');
+  await sentO.waitFor({ state: 'visible', timeout: 8000 });
+  assert.equal(await sentO.count(), 1);
+  assert.match(await sentO.locator('.wo-co').innerText(), /Small Engineering Ltd/);
+  assert.equal(await pageS.locator('#view-wow .wo-gh', { hasText: /you were sent/i }).count(), 0,
+    'an order already in the list is not listed twice');
+  await pageS.waitForTimeout(600);
+  assert.equal(analysedW, 0, 'a shared order must not run the stock analysis');
+  await pageS.close();
+
+  // A link to an order in the one-line list opens that line.
+  const pageT = await context.newPage();
+  pageT.on('pageerror', e => errors.push(String(e.stack)));
+  await pageT.goto('http://127.0.0.1:8773/?go=wow&q=BIGCO', { waitUntil: 'domcontentloaded' });
+  const sentRow = pageT.locator('#view-wow .wo-row.is-arrived');
+  await sentRow.waitFor({ state: 'visible', timeout: 8000 });
+  assert.match(await sentRow.locator(':scope > summary').innerText(), /Big Infra Ltd/);
+  assert.equal(await sentRow.evaluate(el => el.open), true);
+  await pageT.close();
+
+  // A link older than the week. The order is asked for by name and shown
+  // above the list, as a card, rather than the reader landing on a page that
+  // does not have it.
+  oneOrder = Object.assign({}, wow.rows[1], {
+    symbol: 'OLDCO', key: '01d01d01d01d', company: 'Old Order Ltd', at: '2026-08-03T11:00:00+05:30',
+    customer: 'Northern Railway', pct_of_market_cap: 6.4, wow: false, filings: 1 });
+  const pageU = await context.newPage();
+  pageU.on('pageerror', e => errors.push(String(e.stack)));
+  await pageU.goto('http://127.0.0.1:8773/?go=wow&q=OLDCO&id=01d01d01d01d', { waitUntil: 'domcontentloaded' });
+  const old = pageU.locator('#view-wow .wo.is-arrived');
+  await old.waitFor({ state: 'visible', timeout: 8000 });
+  assert.match(await pageU.locator('#view-wow .wo-gh', { hasText: /you were sent/i }).innerText(), /you were sent/i);
+  assert.match(await old.locator('.wo-hl').innerText(), /₹451 cr work order from Northern Railway/);
+  assert.match(await old.locator('.wo-pct').innerText(), /6\.4%/);
+  assert.equal(await old.locator('.fl.wow').count(), 0, 'an order under the line is not called WOW because it was shared');
+  assert.equal(await old.evaluate(el => el.classList.contains('is-wow')), false);
+  assert.equal(await old.locator('.wo-share').count(), 1);
+  assert.equal(await pageU.locator('#view-wow .wo').count(), 8, 'the week is still there under it');
+  await pageU.close();
+  oneOrder = null;
 
   // ── Phone through desktop, both themes ───────────────────────────────────
   for (const [tab, name] of [['wow', 'wow'], ['concalls', 'concalls']]) {
@@ -508,6 +721,8 @@ const server = http.createServer((req, res) => {
   fs.writeFileSync(path.join(output, 'verification.json'), JSON.stringify({
     viewports: [320, 390, 768, 1280], themes: ['light', 'dark'],
     lazyLoaded: true, undisclosedNeverZero: true, thresholdVisible: true,
+    wowOrdersLead: true, bidNeverWow: true, answeredBeforeReading: true,
+    sharesOnlyFirmSizedOrders: true, sharedOrderLinkOpensItsOrder: true,
     quarterComparison: true, unwatchedQuarterNotCompared: true,
     everyQuoteAttributed: true, noSummaryStatedPlainly: true,
     fillsInWhileReading: true, keyCallsFirst: true, modelNamedOnEachSummary: true,
