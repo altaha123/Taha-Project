@@ -30,16 +30,33 @@ and its own address, in exactly one door.
 |---|---|---|
 | **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Options and the Market board |
 | **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
-| **My money** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner (the month work becomes optional, and what moves it — see below), Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
+| **Portfolio** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner (the month work becomes optional, and what moves it — see below), Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
 Each door opens on a page of its own (`frontend/doors.js`) that previews every
 tool behind it with one live number or one line, and opens the tool on a tap.
-Inside a tool, the door bar under the header lists the tools a newcomer needs
-first; the rest sit under **More**, each with its one-line hint, and a tool
-under More is shown in the bar while it is open. Which tools go under More is
-the `more: true` flag on the door map in `frontend/shell.js`. Any tool can be
-pinned to the desk on Today.
+
+**Each door has a menu.** On a screen wide enough to show the doors (above
+1040px), resting the mouse on Today, Ideas or Portfolio opens one panel with
+every tool behind that door: the door's question and a way to its own page on
+the left (Today's also shows the indices as they stand), and the tools on the
+right in named groups — *Live market*, *Money flow* and *Company news* behind
+Today, for instance — each with an icon and its one-line hint. The tool that
+is open is marked. The arrow beside each door opens the same menu for a
+keyboard, a screen reader or a touch screen; the door's name still opens the
+door's page. The groups are the `groups` list and each item's `g` on the door
+map in `frontend/shell.js`.
+
+Under the header, inside a tool, one line says where you are (*Today › Big
+trades*, and what the tool is for) and carries the pin that puts the tool on
+the desk on Today. On a door's own page that line is not shown. It replaced a
+row of pills with the rest of the tools under **More**, which readers found
+confusing. Below 1040px there are no doors in the header to hang a menu
+from, so the row of pills is still there: the tools a newcomer needs first,
+the rest under More (the `more: true` flag on the same door map).
+
+The third door was called *My money* until Nov 2026. Its id was always
+`portfolio`, so no address changed.
 
 **Built for the first visit.** People who were sent the site found it too
 complex to find their way around, so three things changed (Nov 2026):
@@ -48,14 +65,15 @@ complex to find their way around, so three things changed (Nov 2026):
   picks, check my portfolio. It stays hidden once the reader hides it.
 - Ideas opens on the picks. It used to open on a picture of a planet.
 - Less writing. Sixteen tool intros went from 452 words to 177.
-- The door bars went from 9 and 13 pills to 5 and 6, plus More.
+- The door bars went from 9 and 13 pills to 5 and 6, plus More. On a wide
+  screen they have since become the door menus above.
 - A stock page shows its Altaha Score under the name; it used to be behind
   the Scores tab. The chip opens that section. One search box finds companies, tools and actions alike — "bulk"
 finds Big trades, "pledge" finds the Screener — and opens with Ctrl+K or `/`.
-On a phone the bottom bar is Today · Ideas · Search · My money · Me.
+On a phone the bottom bar is Today · Ideas · Search · Portfolio · Me.
 
 `frontend/nav.js` holds the map and owns routing; `frontend/shell.js` renders
-the header, the door bar, search and Me from the same map. The section ids did
+the header, the door menus, the door bar, search and Me from the same map. The section ids did
 not change, and every address the site has ever published still resolves —
 `#screener`, `#ideas`, `#planner`, `#portfolio`, `#social` and the
 `#section/tab` pairs all land on the tool that now owns them.

@@ -8,13 +8,16 @@
 
    What this asserts:
      · the site opens on Today, and the doors are exactly Today, Ideas and
-       My money, with Me beside them; header and phone bar agree
+       Portfolio, with Me beside them; header and phone bar agree
+     · each door's menu opens on a hover, on its arrow and from the keyboard,
+       lists every tool behind the door in its groups, and gets out of the way
      · every destination has exactly one owner, and every one is reachable
      · every address the site has ever published still resolves to a visible
        view — #screener, #ideas, #planner, #portfolio, #funds, #screener/funds
      · the door pages and the older hubs render rather than sitting empty
-     · the door bar switches tools and pins them; search finds a tool by the
-       word people use for it
+     · the line under the header says where the reader is and pins the tool;
+       below 1040px the row of pills is still there; search finds a tool by
+       the word people use for it
      · nothing overflows a 390px screen
 
    Provider calls are fulfilled from fixtures; nothing here touches a network. */
@@ -46,7 +49,7 @@ const server = http.createServer((req, res) => {
   } catch (_) { res.writeHead(404).end(); }
 });
 
-const DOORS = ['Today', 'Ideas', 'My money'];
+const DOORS = ['Today', 'Ideas', 'Portfolio'];
 
 (async () => {
   await new Promise(resolve => server.listen(8768, '127.0.0.1', resolve));
@@ -87,6 +90,20 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   await page.goto('http://127.0.0.1:8768/', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!window.AltahaNav);
 
+  /* A door's menu, opened the way a mouse opens it: come to rest on the door.
+     The pointer is taken off the header first, so that it arrives rather than
+     happening to be there already. */
+  async function openMenu(sec) {
+    await page.mouse.move(640, 760);
+    await page.locator(`.sh-doorwrap[data-sec="${sec}"]`).hover();
+    await page.locator(`#sh-megawrap.open #sh-mega-${sec}`).waitFor({ state: 'visible' });
+  }
+  async function viaMenu(sec, tab) {
+    await openMenu(sec);
+    await page.locator(`#sh-mega-${sec} .sh-item[data-tab="${tab}"]`).click();
+  }
+  const menuTabs = sec => page.locator(`#sh-mega-${sec} .sh-item`).evaluateAll(ns => ns.map(n => n.dataset.tab || n.getAttribute('href')));
+
   /* ── 0 · The site opens on Today, not on a banner ──────────────────────── */
 
   await page.locator('#view-today .dr-title').waitFor();
@@ -116,7 +133,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
     id: s.id, label: s.label, question: s.question,
     tabs: s.tabs.map(t => t.id), extras: (s.extras || []).map(t => t.id)
   })));
-  assert.deepEqual(sections.map(s => s.label), DOORS.concat(['Me']), 'the doors are not Today, Ideas, My money and Me');
+  assert.deepEqual(sections.map(s => s.label), DOORS.concat(['Me']), 'the doors are not Today, Ideas, Portfolio and Me');
   assert.deepEqual(await page.evaluate(() => window.AltahaNav.doors), ['discover', 'research', 'portfolio']);
   sections.slice(0, 3).forEach(s => assert.ok(s.question && s.question.endsWith('?'),
     `${s.label} does not state the question it answers`));
@@ -125,11 +142,12 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.deepEqual(await page.locator('.sh-door').allInnerTexts().then(x => x.map(t => t.trim())),
                    DOORS, 'the header does not show the three doors');
   assert.deepEqual(await page.locator('.ux-bottom button').evaluateAll(ns => ns.map(n => n.getAttribute('aria-label'))),
-                   ['Today', 'Ideas', 'Search', 'My money', 'Me'], 'the phone bar does not match the doors');
-  // Today is lit, in the header and in the door bar.
+                   ['Today', 'Ideas', 'Search', 'Portfolio', 'Me'], 'the phone bar does not match the doors');
+  // Today is lit in the header. On a door's own page there is no bar under
+  // the header: it would only repeat the page's heading.
   await page.waitForFunction(() => document.querySelector('.sh-door.on'));
   assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Today');
-  assert.equal((await page.locator('#sh-doorbar .sh-pill.on').innerText()).trim(), 'Overview');
+  assert.equal(await page.locator('#sh-doorbar').isVisible(), false, 'the bar under the header is shown on a door’s own page');
 
   /* ── 1b · Built for the first visit ──────────────────────────────────────
      People who were sent the site found it too complex to navigate. Today
@@ -143,7 +161,103 @@ const DOORS = ['Today', 'Ideas', 'My money'];
                    ['Check a stock', 'Get stock picks', 'Check my portfolio']);
   assert.ok(await start.locator('a[href="stock.html?ticker=RELIANCE"]').count(), 'no example stock to try');
 
-  // A short row, and the rest one tap away under More, each with its hint.
+  /* ── 1c · The door menus ──────────────────────────────────────────────────
+     Resting on a door opens one panel with every tool behind it, in named
+     groups, each with its hint. It replaced a row of pills with the rest
+     under "More", which readers found confusing. */
+
+  assert.equal(await page.locator('#sh-megawrap.open').count(), 0, 'a menu opened by itself');
+  assert.equal(await page.locator('#sh-mega-discover').isVisible(), false);
+  await openMenu('discover');
+  assert.deepEqual(await page.locator('#sh-mega-discover .sh-mega-col h4').allInnerTexts().then(t => t.map(x => x.trim().toLowerCase())),
+                   ['live market', 'money flow', 'company news'], 'Today’s menu groups changed');
+  assert.deepEqual(await menuTabs('discover'), ['live', 'options', 'deals', 'special', 'wow', 'results', 'filings'],
+                   'Today’s menu does not list every tool behind the door');
+  assert.match(await page.locator('#sh-mega-discover .sh-item[data-tab="options"]').innerText(), /open interest/i,
+               'a tool in the menu lost its hint');
+  // The card on the left: the door's question, the market as it stands, and
+  // nothing to open, because this is already the door's page.
+  const lead = page.locator('#sh-mega-discover .sh-mega-lead');
+  assert.match(await lead.innerText(), /What is the market doing\?/);
+  await page.locator('#sh-mega-live .sh-mega-ix').first().waitFor({ state: 'visible' });
+  assert.match(await page.locator('#sh-mega-live').innerText(), /NIFTY 50\s+25,150\.75\s+\+1\.25%/);
+  assert.equal(await lead.getAttribute('aria-current'), 'page');
+  assert.match(await lead.innerText(), /You are here/);
+  assert.equal(await page.locator('.sh-doorcv[data-sec="discover"]').getAttribute('aria-expanded'), 'true');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, 'the menu overflows the page');
+  await page.screenshot({ path: path.join(output, '1280-menu-today.png') });
+
+  // Along the doors the same panel shows the next door's tools; one at a time.
+  await page.locator('.sh-doorwrap[data-sec="research"]').hover();
+  await page.locator('#sh-mega-research').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#sh-mega-discover').isVisible(), false, 'two menus are open at once');
+  assert.deepEqual(await menuTabs('research'),
+                   ['ideas', 'query', 'lenses', 'convergence', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls', 'tracker']);
+  assert.match(await page.locator('#sh-mega-research .sh-mega-lead').innerText(), /Open Ideas/);
+  await page.screenshot({ path: path.join(output, '1280-menu-ideas.png') });
+  await page.locator('.sh-doorwrap[data-sec="portfolio"]').hover();
+  await page.locator('#sh-mega-portfolio').waitFor({ state: 'visible' });
+  assert.deepEqual(await menuTabs('portfolio'), ['portfolio', 'watchlists', 'allocate', 'planner', 'advisors.html', 'wealth.html']);
+  // From the door down into its panel is a diagonal; the menu waits for it.
+  await page.locator('#sh-mega-portfolio .sh-item[data-tab="planner"]').hover();
+  await page.waitForTimeout(500);
+  assert.ok(await page.locator('#sh-mega-portfolio').isVisible(), 'the menu closed on the way from the door to a tool');
+  // Leaving both closes it, after a moment rather than at once.
+  await page.mouse.move(640, 760);
+  await page.locator('#sh-megawrap.open').waitFor({ state: 'detached' });
+  assert.equal(await page.locator('#sh-mega-portfolio').isVisible(), false);
+  // Escape closes it too.
+  await openMenu('discover');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#sh-megawrap.open').count(), 0, 'Escape did not close the menu');
+
+  // Without a mouse: the arrow beside the door opens the menu and puts the
+  // cursor in it, the arrow keys walk it, Escape hands the cursor back.
+  await page.mouse.move(640, 760);
+  await page.locator('.sh-doorcv[data-sec="research"]').focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#sh-mega-research').waitFor({ state: 'visible' });
+  assert.ok(await page.evaluate(() => document.activeElement.classList.contains('sh-mega-lead')), 'the keyboard did not land in the menu');
+  await page.keyboard.press('ArrowDown');
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.tab), 'ideas');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#sh-megawrap.open').count(), 0);
+  assert.ok(await page.evaluate(() => document.activeElement.matches('.sh-doorcv[data-sec="research"]')),
+            'Escape did not hand the cursor back to the door');
+  // A finger has no hover: a tap on the arrow opens the menu, another closes it.
+  await page.locator('.sh-doorcv[data-sec="portfolio"]').tap();
+  await page.locator('#sh-mega-portfolio').waitFor({ state: 'visible' });
+  await page.locator('.sh-doorcv[data-sec="portfolio"]').tap();
+  assert.equal(await page.locator('#sh-megawrap.open').count(), 0, 'a second tap did not close the menu');
+
+  // A tool opened from the menu: the menu goes, the line under the header
+  // says where the reader is, and the menu marks the tool as the one open.
+  await viaMenu('research', 'concalls');
+  await page.locator('#view-concalls').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#sh-megawrap.open').count(), 0, 'the menu stayed open over the tool it opened');
+  assert.equal((await page.locator('#sh-doorbar .sh-crumb-door').innerText()).trim(), 'Ideas');
+  assert.equal((await page.locator('#sh-doorbar .sh-crumb-here').innerText()).trim(), 'Concalls');
+  assert.match(await page.locator('#sh-doorbar .sh-crumb-hint').innerText(), /Earnings calls/);
+  assert.equal(await page.locator('#sh-doorbar .sh-pill').count(), 0, 'the row of pills is back on a wide screen');
+  assert.deepEqual(await page.locator('#sh-mega [aria-current="page"]').evaluateAll(ns => ns.map(n => n.dataset.tab)), ['concalls']);
+  // The door in that line, and the door's name in the header, both open the door's page.
+  await page.locator('#sh-doorbar .sh-crumb-door').click();
+  await page.locator('#view-ideahub').waitFor({ state: 'visible' });
+  await viaMenu('discover', 'deals');
+  await page.locator('#view-deals').waitFor({ state: 'visible' });
+  await page.locator('.sh-door[data-sec="research"]').click();
+  await page.locator('#view-ideahub').waitFor({ state: 'visible' });
+  await page.waitForTimeout(500);
+  assert.equal(await page.locator('#sh-megawrap.open').count(), 0, 'a click on a door’s name left its menu over the page');
+
+  /* Below 1040px the header has no doors to hang a menu from, so the row of
+     tools under it is still how a reader moves inside a door: a short row,
+     and the rest one tap away under More, each with its hint. */
+  await page.setViewportSize({ width: 900, height: 900 });
+  await page.evaluate(() => window.AltahaNav.go('discover', 'today', true));
+  await page.locator('#sh-doorbar .sh-pill.on').waitFor({ state: 'visible' });
+  assert.equal((await page.locator('#sh-doorbar .sh-pill.on').innerText()).trim(), 'Overview');
+  assert.equal(await page.locator('.sh-doorwrap').first().isVisible(), false);
   assert.deepEqual(await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill').evaluateAll(ns => ns.map(n => n.dataset.tab)),
                    ['today', 'live', 'deals', 'results', 'filings'], 'Today’s door bar row changed');
   assert.equal(await page.locator('#sh-morepanel').isVisible(), false, 'More opened by itself');
@@ -157,7 +271,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.equal(await page.locator('#sh-morepanel').isVisible(), false, 'Escape did not close More');
   assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), 'sh-morebtn');
   // Ideas: thirteen pills became six; a tool opened from More is lit in the row.
-  await page.locator('.sh-door[data-sec="research"]').click();
+  await page.evaluate(() => window.AltahaNav.go('research', null, true));
   await page.locator('#sh-morebtn').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill').count(), 6);
   await page.locator('#sh-morebtn').click();
@@ -167,6 +281,10 @@ const DOORS = ['Today', 'Ideas', 'My money'];
                'a tool opened from More is not shown as the one open');
   assert.equal(await page.locator('#sh-morepanel .sh-moreitem[data-tab="concalls"]').count(), 0,
                'the open tool is listed twice');
+  // Back on a wide screen the pills give way to the line again.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.locator('#sh-doorbar .sh-crumb-here').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#sh-doorbar .sh-pill').count(), 0);
 
   // "Check a stock" puts the cursor in the search box; "Hide this" sticks.
   await page.locator('.sh-door[data-sec="discover"]').click();
@@ -207,7 +325,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
     assert.equal(owners[t], 'discover', `${t} belongs behind Today`));
   ['ideas', 'query', 'lenses', 'convergence', 'investors', 'funds', 'charts', 'tracker', 'strategies', 'concalls'].forEach(t =>
     assert.equal(owners[t], 'research', `${t} belongs behind Ideas`));
-  ['portfolio', 'allocate', 'planner'].forEach(t => assert.equal(owners[t], 'portfolio', `${t} belongs behind My money`));
+  ['portfolio', 'allocate', 'planner'].forEach(t => assert.equal(owners[t], 'portfolio', `${t} belongs behind Portfolio`));
   /* Setups ("Opportunities now") was removed as a tool: Today's own page
      shows what it showed. It must be gone from the map, not merely hidden. */
   assert.equal(owners.discover, undefined, 'the removed Setups tool is still on the map');
@@ -373,7 +491,9 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   await page.evaluate(() => window.AltahaNav.go('discover', 'discover', true));
   await page.locator('#view-today .dr-hero').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#view-discover').count(), 0, 'the removed Setups page is still in the document');
-  assert.deepEqual(await page.locator('#sh-doorbar .sh-pill.on').evaluateAll(ns => ns.map(n => n.dataset.tab)), ['today']);
+  assert.deepEqual(await page.locator('#sh-mega [aria-current="page"]').evaluateAll(ns => ns.map(n => n.dataset.sec + '/' + (n.dataset.tab || ''))),
+                   ['discover/'], 'Today’s own page is not the one marked open');
+  assert.equal(await page.locator('#sh-doorbar').isVisible(), false);
   assert.match(page.url(), /#discover\/today$/);
   assert.doesNotMatch(await page.locator('#view-today').innerText(), /\bSetups\b|Opportunities now/);
   // A tool pinned before it was removed leaves no chip, and takes nothing else with it.
@@ -396,7 +516,7 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.doesNotMatch(await page.locator('#view-score').innerText(), /factor evidence|under Factors/i);
   await page.locator('#view-score [data-goto="tracker"]').waitFor();
 
-  // Neither removed tool is offered anywhere: door bar, More, footer, hub cards, legacy tabs.
+  // Neither removed tool is offered anywhere: door menus, door bar, footer, hub cards, legacy tabs.
   await page.evaluate(() => window.AltahaNav.go('research', null, true));
   await page.locator('#view-ideahub .dr-universe').waitFor({ state: 'visible' });
   for (const gone of ['discover', 'factors']) {
@@ -421,12 +541,12 @@ const DOORS = ['Today', 'Ideas', 'My money'];
   assert.match(await page.locator('#acf_exact').innerText(), /₹/,
                'Allocate rendered without an amount');
 
-  /* ── 5 · The door bar, pins, and search ──────────────────────────────── */
+  /* ── 5 · The door menu, pins, and search ─────────────────────────────── */
 
   await page.locator('.sh-door', { hasText: /^Ideas$/ }).click();
-  await page.locator('#sh-doorbar .sh-pill[data-tab="query"]').click();
+  await viaMenu('research', 'query');
   await page.locator('#view-query').waitFor({ state: 'visible' });
-  assert.equal((await page.locator('#sh-doorbar .sh-pill.on').innerText()).trim(), 'Screener');
+  assert.equal((await page.locator('#sh-doorbar .sh-crumb-here').innerText()).trim(), 'Screener');
   assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Ideas');
   // Pin it, and it waits on Today's desk.
   await page.locator('#sh-pin').click();
