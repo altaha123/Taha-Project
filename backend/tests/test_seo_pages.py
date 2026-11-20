@@ -266,18 +266,13 @@ def test_nosnippet_is_only_put_where_it_works():
     assert seen >= 12
 
 
-@pytest.mark.parametrize("name", ["wow.js", "special.js", "investors.js", "funds.js",
-                                  "concalls.js", "discover.js"])
+@pytest.mark.parametrize("name", ["wow.js", "special.js", "investors.js", "funds.js", "concalls.js"])
 def test_an_unreachable_engine_is_not_quoted_as_the_page(name):
     src = _read(name)
     lines = [l for l in src.splitlines() if "engine is unreachable" in l and "//" not in l.split("'")[0]]
     assert lines, name + " no longer has the message this test is about"
     for line in lines:
-        if "asleep(" in line:
-            assert re.search(r"function asleep\(msg\) \{\s*return '<p class=\"dsc-quiet\">"
-                             r"<span data-nosnippet>", src)
-        else:
-            assert "data-nosnippet" in line, name + ": " + line.strip()
+        assert "data-nosnippet" in line, name + ": " + line.strip()
 
 
 def test_the_menus_are_not_quoted_as_the_page():

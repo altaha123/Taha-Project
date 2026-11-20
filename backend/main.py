@@ -3869,24 +3869,45 @@ def wow_backfill(days: int = 45, key: str = ""):
 
 
 @app.get("/concalls")
-def concalls_recent(days: int = 7, limit: int = 25):
+def concalls_recent(days: int = 14, limit: int = 40):
     """
-    Earnings call transcripts filed recently, digested.
+    Earnings call transcripts filed recently: a written brief of each, the key
+    calls first, and the counts taken from the transcript itself.
 
-    The digest is EXTRACTED, never paraphrased: who was on the call, the
-    company's own forward-looking sentences quoted verbatim and attributed to
-    the person who said them, and what the call spent its time on. A written
-    summary requires a language model and appears only when one is configured;
-    when it is not, the response says so rather than passing the extraction off
-    as a summary.
+    Answers from the ledger at once. Finding transcripts, reading their PDFs
+    and writing briefs all happen on a background thread started beside this
+    answer, never inside it; `status.reading` says that thread is working and
+    `poll_seconds` tells an open page when to ask again.
+
+    A brief is written by a model and appears only when one is configured;
+    when it is not, the response says so rather than passing the extraction
+    off as a summary. Quotes in a brief are checked against the transcript.
     """
     if concall_source is None:
         return {"available": False, "message": "The transcript reader is not available."}
     try:
-        return to_native(concall_source.recent(days=max(1, min(days, 30)),
-                                               limit=max(1, min(limit, 50))))
+        concall_source.refresh_if_stale()
+    except Exception:
+        pass
+    try:
+        return to_native(concall_source.recent(days=max(1, min(days, 45)),
+                                               limit=max(1, min(limit, 80))))
     except Exception as e:
         raise HTTPException(503, f"Could not read the transcripts: {str(e)[:110]}")
+
+
+@app.post("/jobs/concalls")
+def concalls_job(key: str = ""):
+    """
+    Start a pass of the transcript reader now, whatever its age. Admin-gated,
+    for a schedule: without it a pass starts only when somebody opens the
+    page. Returns at once; the pass runs behind it within the usual caps.
+    """
+    _require_admin(key)
+    if concall_source is None:
+        raise HTTPException(503, "The transcript reader is not available.")
+    running = concall_source.refresh_if_stale(force=True)
+    return to_native({"started": running, "status": concall_source.status()})
 
 
 @app.get("/concall")
@@ -3894,9 +3915,10 @@ def concall_for_company(ticker: str, summary: bool = False):
     """
     One company's latest earnings call, and how it differed from the last one.
 
-    `summary=true` asks for a written summary. It is produced only when a model
-    is configured on this instance; otherwise the response explains that none
-    is, and the extracted digest stands on its own.
+    `brief` carries the written brief when one is on file. `summary=true` asks
+    for one to be written now if it is not: it is produced only when a model is
+    configured and the hourly and daily limits allow, and it is kept, so asking
+    again does not write it again.
     """
     if concall_source is None:
         return {"available": False, "message": "The transcript reader is not available."}
@@ -3904,6 +3926,10 @@ def concall_for_company(ticker: str, summary: bool = False):
         raise HTTPException(400, "Provide a valid ticker symbol.")
     sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
     try:
+        try:
+            concall_source.refresh_if_stale()
+        except Exception:
+            pass
         payload = concall_source.for_symbol(sym)
         if summary and payload.get("available"):
             text = None
@@ -3915,7 +3941,9 @@ def concall_for_company(ticker: str, summary: bool = False):
                     text = None
             payload["summary"] = concall_source.summarise(
                 text or "", company=payload.get("company") or sym,
-                quarter=payload.get("quarter") or "")
+                quarter=payload.get("quarter") or "", pdf=payload.get("pdf") or "")
+            if payload["summary"].get("available"):
+                payload["brief"] = payload["summary"]["brief"]
         return to_native(payload)
     except Exception as e:
         raise HTTPException(503, f"Could not read the transcript: {str(e)[:110]}")

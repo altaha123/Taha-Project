@@ -79,6 +79,15 @@ services:
                                    # also needs ADMIN_KEY: it is closed without one.
       - key: QUERY_AI_HOURLY       # ceiling on Ask AI questions per hour, so a
         value: "60"                # leaked admin key has a bounded bill.
+      # Concall summaries (concalls.py). Claude Sonnet writes one brief per
+      # filed transcript, once, on a background thread. These two are the
+      # ceiling on that bill; a brief is roughly 15,000 tokens in and 1,500 out.
+      - key: CONCALL_MODEL
+        value: claude-sonnet-5-5
+      - key: CONCALL_HOURLY
+        value: "20"
+      - key: CONCALL_DAILY
+        value: "80"
 
       # Telegram: the intraday breakout alerts (breakouts.py, intraday.py).
       # Both unset = alerts are logged on the Alerts page and sent nowhere,

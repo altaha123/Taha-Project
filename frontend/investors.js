@@ -63,6 +63,53 @@
     'new': 'new this quarter', unknown: ''
   };
 
+  /* ── The picture beside a name ─────────────────────────────────────────────
+     Two initials, with a picture laid over them where investor-pictures.js
+     holds one. A picture that does not load removes itself and the initials
+     are what is left, so no card ever shows a broken image. What may be a
+     picture, and why most names have none, is in that file. */
+
+  function picture(id) {
+    var all = window.AltahaInvestorPictures || {};
+    return Object.prototype.hasOwnProperty.call(all, id) ? all[id] : null;
+  }
+
+  function initials(name) {
+    var w = String(name || '').replace(/[^A-Za-zÀ-ɏ ]/g, ' ').trim()
+      .split(/\s+/).filter(Boolean);
+    if (!w.length) return '?';
+    return (w[0][0] + (w.length > 1 ? w[w.length - 1][0] : (w[0][1] || ''))).toUpperCase();
+  }
+
+  /* `i` is anything with an id, a name and a kind: a directory row or a
+     portfolio. A company is a rounded square and a person a circle, picture
+     or not, so the two read differently before a single one has a picture. */
+  function avatar(i, cls) {
+    var pic = picture(i.id);
+    return '<span class="iv-av' + (i.kind === 'fund' ? ' is-org' : '') +
+      (pic && pic.kind === 'logo' ? ' is-logo' : '') + (cls ? ' ' + cls : '') +
+      '" aria-hidden="true"><i>' + esc(initials(i.name)) + '</i>' +
+      (pic && pic.src
+        ? '<img loading="lazy" decoding="async" alt="" src="' + esc(pic.src) +
+          '" onerror="this.remove()">'
+        : '') +
+      '</span>';
+  }
+
+  /* A free licence asks for the author, the licence and what was changed to
+     be named where the picture is shown. This is that, not a courtesy. */
+  function linked(text, href) {
+    return href
+      ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + esc(text) + '</a>'
+      : esc(text);
+  }
+  function credit(pic) {
+    if (!pic || pic.kind !== 'photo' || !pic.credit) return '';
+    return linked(pic.credit, pic.source) +
+      (pic.license ? ', ' + linked(pic.license, pic.license_url) : '') +
+      (pic.changes ? ', ' + esc(pic.changes) : '');
+  }
+
   /* ── The directory ─────────────────────────────────────────────────────── */
 
   function paintDirectory(d) {
@@ -82,13 +129,21 @@
       var tag = n == null
         ? (i.kind === 'fund' ? 'fund' : 'individual')
         : (n > 0 ? n + ' holding' + (n === 1 ? '' : 's') : 'none found yet');
-      return '<button type="button" class="iv-card' +
+      return '<button type="button" class="iv-card has-av' +
         (n === 0 ? ' is-empty' : '') + '" data-id="' + esc(i.id) + '">' +
+        avatar(i) +
+        '<span class="iv-card-t">' +
         '<b>' + esc(i.name) + '</b>' +
         '<span class="iv-kind">' + esc(tag) + '</span>' +
         '<span class="iv-about">' + esc(i.about || '') + '</span>' +
+        '</span>' +
         '</button>';
     }).join('');
+
+    var credits = d.investors.map(function (i) {
+      var c = credit(picture(i.id));
+      return c ? esc(i.name) + ' by ' + c : '';
+    }).filter(Boolean);
 
     /* The coverage line is not decoration. A portfolio assembled from 300
        companies out of 2,000 is a sample, and saying which is the difference
@@ -124,7 +179,10 @@
       '&mdash; so every portfolio here is the disclosed floor of what someone ' +
       'holds, as at a quarter end, not a live position.</p>' +
       cover +
-      '<div class="iv-grid">' + cards + '</div>';
+      '<div class="iv-grid">' + cards + '</div>' +
+      (credits.length
+        ? '<p class="iv-credit">Photographs: ' + credits.join('; ') + '.</p>'
+        : '');
 
     box.querySelectorAll('.iv-card').forEach(function (b) {
       b.addEventListener('click', function () { open(b.getAttribute('data-id')); });
@@ -175,6 +233,20 @@
       '</li>';
   }
 
+  /* Who this page is about: the picture, the name, the line about them, and
+     whose photograph it is. The same on a full portfolio and an empty one. */
+  function whoHead(d) {
+    var named = d && d.name;
+    var by = named ? credit(picture(d.id)) : '';
+    return '<div class="iv-who-head">' +
+      (named ? avatar(d, 'lg') : '') +
+      '<div>' +
+        '<h3 class="iv-name">' + esc(named || 'Not found') + '</h3>' +
+        ((d && d.about) ? '<p class="iv-about">' + esc(d.about) + '</p>' : '') +
+      '</div></div>' +
+      (by ? '<p class="iv-credit">Photograph by ' + by + '.</p>' : '');
+  }
+
   function paintPortfolio(d) {
     var box = $('investors-body');
     if (!box) return;
@@ -188,8 +260,7 @@
          reader concludes the person holds nothing. */
       var cov = d && d.coverage;
       box.innerHTML = back +
-        '<h3 class="iv-name">' + esc((d && d.name) || 'Not found') + '</h3>' +
-        ((d && d.about) ? '<p class="iv-about">' + esc(d.about) + '</p>' : '') +
+        whoHead(d) +
         '<div class="iv-empty">' + esc((d && d.message) ||
           'Nothing could be read for this investor.') + '</div>' +
         (cov && cov.companies_read != null
@@ -216,8 +287,7 @@
 
     var counted = d.positions.length;
     var head =
-      '<h3 class="iv-name">' + esc(d.name) + '</h3>' +
-      '<p class="iv-about">' + esc(d.about || '') + '</p>' +
+      whoHead(d) +
       redirect +
       '<p class="iv-asof"><b>' + esc(d.period || '') + '</b> filings &mdash; ' +
         esc(String(counted)) + ' disclosed holding' + (counted === 1 ? '' : 's') +

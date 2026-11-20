@@ -57,7 +57,6 @@
     delivery: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     results:  '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     filings:  '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 14h5M9 17h3"/>',
-    setups:   '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
     options:  '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
     query:    '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
     lenses:   '<circle cx="7" cy="14" r="4"/><circle cx="17" cy="14" r="4"/><path d="M11 14h2M3 14l2-7M21 14l-2-7"/>',
@@ -66,7 +65,6 @@
     funds:    '<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>',
     record:   '<path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/>',
     charts:   '<path d="M7 4v3M7 17v3M17 4v3M17 17v3"/><rect x="4.5" y="7" width="5" height="10" rx="1"/><rect x="14.5" y="7" width="5" height="10" rx="1"/>',
-    factors:  '<path d="M4 6h16M4 12h10M4 18h6"/>',
     flask:    '<path d="M9 3h6M10 3v6.5L4.6 18.4A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.4-2.6L14 9.5V3"/><path d="M7.5 15h9"/>',
     concalls: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12z"/><path d="M8.5 11h7M8.5 14h4"/>',
     review:   '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 11l2 2 4-4M9 17h6"/>',
@@ -217,8 +215,6 @@
       line: 'Who reports this week.' },
     { id: 'drt-filings', goto: 'discover/filings', icon: 'filings', name: 'Filings & news', unit: 'filings in the feed', live: true,
       line: 'Company announcements, live.' },
-    { id: 'drt-setups', goto: 'discover/discover', icon: 'setups', name: 'Setups', unit: 'top picks',
-      line: 'The momentum list, top of the ranking.' },
     { id: 'drt-options', goto: 'discover/options', icon: 'options', name: 'Options', unit: '',
       line: 'Option chains and open interest.' }
   ];
@@ -815,10 +811,6 @@
       fillTool('drt-filings', d.count != null ? d.count : rows.length, null,
         rows.slice(0, 4).map(function (r) { return { text: r.symbol }; }).filter(function (c) { return c.text; }));
     });
-    get('/ideas?horizon=short&limit=6', 45000).then(function (d) {
-      if (!d || !d.available) return fillTool('drt-setups', null, (d && d.message) || 'No ranking yet — the scan builds one from the universe.');
-      fillTool('drt-setups', (d.rows || []).length, null, (d.rows || []).slice(0, 4).map(function (r) { return { text: r.symbol }; }));
-    });
     fillTool('drt-options', null);
   }
 
@@ -919,7 +911,6 @@
       ['research/funds', 'funds', 'Fund houses', 'What mutual funds hold'],
       ['research/charts', 'charts', 'Charts', 'Chart any stock'],
       ['research/strategies', 'flask', 'Strategy lab', 'Trading rules, tested on any stock'],
-      ['research/factors', 'factors', 'Factors', 'Which signals have worked'],
       ['research/concalls', 'concalls', 'Concalls', 'Earnings calls, summarised']
     ].map(function (m, k) {
       return '<button type="button" class="dr-card dr-row dr-rise" style="--i:' + (6 + k) + '" data-goto="' + m[0] + '">' +

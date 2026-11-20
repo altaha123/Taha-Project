@@ -44,7 +44,6 @@
 <link rel="stylesheet" href="portfolio-plan.css">
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="share.css">
-<link rel="stylesheet" href="lab.css">
 <link rel="stylesheet" href="products.css">
 <link rel="stylesheet" href="planner.css?v=20261119">
 <link rel="stylesheet" href="sectors-live.css">
@@ -1151,7 +1150,7 @@
                    text-transform:uppercase;color:var(--tk-quiet);text-align:right;margin-top:2px}
   /* These were literal ink. In the dark theme #a11 sits at about 2:1 against
      the page, so a loss read as a smudge rather than a number. Both tokens
-     carry a light and a dark value — the pattern lab.css already uses. */
+     carry a light and a dark value. */
   .pos{color:var(--pass)}.neg{color:var(--fail)}
   #tkrows .tk .tkln{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
             font-size:11px;letter-spacing:.06em;color:var(--mute)}
@@ -1226,7 +1225,7 @@
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="home-motion.css">
 <link rel="stylesheet" href="home-hero.css?v=20260922-explore">
-<link rel="stylesheet" href="filings-views.css">
+<link rel="stylesheet" href="filings-views.css?v=20261119-pictures">
 <link rel="stylesheet" href="type.css">
 <link rel="stylesheet" href="alerts.css?v=20261118">
 <script>
@@ -1320,10 +1319,8 @@
         <button id="tab-today" role="menuitem">Today</button>
         <button id="tab-ideahub" role="menuitem">Ideas</button>
         <button id="tab-money" role="menuitem">My money</button>
-        <button id="tab-discover" role="menuitem">Opportunities now</button>
         <button id="tab-allocate" role="menuitem">Allocation plan</button>
         <button id="tab-score" role="menuitem">Altaha Score</button>
-        <button id="tab-factors" role="menuitem">Factors</button>
         <button id="tab-deals" role="menuitem">Deals</button>
         <button id="tab-special" role="menuitem">Altaha Special</button>
         <button id="tab-tracker" role="menuitem">Tracker</button>
@@ -1553,27 +1550,6 @@
   </section>
   </div><!-- /view-screener -->
 
-
-  <!-- ══ DISCOVER ══════════════════════════════════════════════════════════
-       Where are opportunities now?
-
-       This is the product's front door for the question "show me something".
-       It does not own a feed of its own: every block here is a window onto a
-       tab that already exists, cut to the six rows worth looking at, with the
-       door to the full view underneath it. That is deliberate — a hub that
-       re-implements its children drifts out of step with them within a month.
-       Every block fails soft and independently: one dead feed removes one
-       card, never the page.                                                -->
-  <div id="view-discover" style="display:none">
-    <header class="tabhead">
-      <h2>Opportunities now</h2>
-      <p>What the market is doing today, and where something unusual is happening.</p>
-    </header>
-    <div id="dsc-market"></div>
-    <div id="dsc-setups"></div>
-    <div id="dsc-activity"></div>
-    <p class="disc" id="dsc-disc"></p>
-  </div><!-- /view-discover -->
 
   <!-- ══ ALLOCATE ══════════════════════════════════════════════════════════
        What should I do with my money?
@@ -1937,15 +1913,18 @@
     <div id="wow-body"></div>
   </div><!-- /view-wow -->
 
-  <!-- Concall digests. Extracted from the transcript, never paraphrased. -->
+  <!-- Concalls. A written brief of each call, key calls first; under it the
+       digest extracted from the transcript, which involves no model. -->
   <div id="view-concalls" style="display:none">
     <header class="tabhead">
       <h2>Concall summaries</h2>
-      <p>Earnings calls, summarised: who spoke, what was promised, what changed.</p>
+      <p>Earnings calls, read for you: what management said, what they committed to, what analysts pressed on. The key calls come first.</p>
     </header>
     <details class="tabnote">
-      <summary>What is extracted, and what is not</summary>
-      <p>Everything on this page is taken from the transcript itself. Forward-looking lines are quoted <b>verbatim and attributed to the person who said them</b> — a commitment put in management's mouth that they did not make would be the worst thing this page could print, so an analyst's question or the moderator's script is never quoted as guidance. Topic emphasis counts how often a subject came up per thousand words: it shows what the call was spent on, which is not the same as what was said about it. A written summary needs a language model; when none is configured the page says so instead of presenting the extraction as one.</p>
+      <summary>What is written, what is counted, and what makes a call key</summary>
+      <p>Each summary is <b>written by a language model</b> (Claude) from the transcript the company filed, and says so on the card. Two things in it are not left to the model. A commitment is always a quote, and every quote is <b>checked word for word against the transcript</b>: one that does not appear there is dropped rather than printed. The name under a quote is the speaker label the transcript itself puts on that passage, so an analyst's question or the moderator's script is never shown as the company's guidance. Figures elsewhere in a summary are not checked in that way — the transcript is one tap away for anything you mean to rely on.</p>
+      <p>A <b>key call</b> is one the model graded as adding the most to what the results filing already said: new or changed guidance, something announced, or a problem disclosed. It is a grade of the information in the call, not of the company or its share, and nothing here is a recommendation.</p>
+      <p>Under each summary, <b>Counted from the transcript</b> involves no model: who was on the call, how often each subject came up per thousand words, and how that moved since the company's last call. Emphasis shows what a call was spent on, which is not the same as what was said about it. When no model is configured the page says so and shows this extraction on its own, instead of presenting it as a summary.</p>
     </details>
     <div id="concalls-body"></div>
   </div><!-- /view-concalls -->
@@ -2117,31 +2096,15 @@
         <li><b>Not comparable across versions.</b> An old composite and a v4 score are different measurements and must never be pooled as one record.</li>
       </ul>
       <p class="lsub">What the score <i>has</i> been worth is a measurement, not a
-         claim, and it is kept where it can be audited: the per-factor evidence
-         sits under <b>Factors</b>, and the outcome of every idea added from it
-         sits under <b>Portfolio → Idea record</b>.</p>
+         claim, and it is kept where it can be audited: the outcome of every
+         idea added from it sits under <b>Portfolio → Idea record</b>.</p>
       <div class="toolbar">
-        <button class="act" type="button" data-goto="factors">Open the factor evidence</button>
         <button class="act" type="button" data-goto="tracker">Open the idea record</button>
         <button class="act" type="button" data-goto="vocab">Glossary of every term</button>
       </div>
       <p class="lsub">The same explanation as a page of its own, to link to or print: <a href="/methodology">How the Altaha Score works</a>.</p>
     </div>
   </div><!-- /view-score -->
-
-  <!-- ══ FACTORS ═══════════════════════════════════════════════════════════
-       The engine lab used to live at the bottom of the tracker, where it was
-       one scroll past a table about something else. Under Research it is a
-       destination of its own, because "does this factor carry signal" is a
-       different question from "did my ideas work". lab.js mounts into the
-       container below.                                                      -->
-  <div id="view-factors" style="display:none">
-    <header class="tabhead">
-      <h2>Factors</h2>
-      <p>How well each signal has predicted returns, measured on a point-in-time record.</p>
-    </header>
-    <div id="fct-host"></div>
-  </div><!-- /view-factors -->
 
   <div id="view-vocab" style="display:none">
     <header class="tabhead">
@@ -2294,11 +2257,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["today","ideahub","money","screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query","calls","watchlists","strategies"];
+const TABS = ["today","ideahub","money","screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","allocate","score","lenses","convergence","query","calls","watchlists","strategies"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["today","ideahub","money","deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","discover","allocate","score","factors","lenses","convergence","query","calls","watchlists","strategies"];
+const OVERFLOW_TABS = ["today","ideahub","money","deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","allocate","score","lenses","convergence","query","calls","watchlists","strategies"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -2438,9 +2401,8 @@ function switchTab(which){
   if(which==="tracker") loadTracker();
   if(which==="filings") loadFilings();
   if(which==="results") loadResultsCalendar();
-  /* The two product hubs build themselves on first sight rather than on page
-     load: neither is the landing view, and both fan out to several feeds. */
-  if(which==="discover" && window.AltahaDiscover) window.AltahaDiscover.open();
+  /* The door pages build themselves on first sight rather than on page load:
+     each fans out to several feeds. */
   if((which==="today"||which==="ideahub"||which==="money") && window.AltahaDoors) window.AltahaDoors.open(which);
   if(which==="calls" && window.AltahaCalls) window.AltahaCalls.open();
   if(which==="watchlists" && window.AltahaWatchlists) window.AltahaWatchlists.open();
@@ -4839,13 +4801,12 @@ if(fcSymParam){
 <script src="portfolio-story.js" defer></script>
 <script src="portfolio-plan.js" defer></script>
 <script src="portfolio.js?v=20261119-planner" defer></script>
-<script src="nav.js?v=20261119-planner" defer></script>
+<script src="nav.js?v=20261119-setups" defer></script>
 <script src="scoring.js" defer></script>
 <script src="social.js" defer></script>
 <script src="motion.js" defer></script>
 <script src="patterns.js" defer></script>
 <script src="share.js" defer></script>
-<script src="lab.js" defer></script>
 <link rel="stylesheet" href="index-explorer.css?v=20260924-atlas">
 <script src="index-explorer.js?v=20260924-atlas" defer></script>
 <script src="sectors-live.js?v=20260927-dialog" defer></script>
@@ -4855,7 +4816,8 @@ if(fcSymParam){
 <script src="special.js" defer></script>
 <script src="wow.js" defer></script>
 <script src="concalls.js" defer></script>
-<script src="investors.js" defer></script>
+<script src="investor-pictures.js?v=20261119" defer></script>
+<script src="investors.js?v=20261119-pictures" defer></script>
 <script src="funds.js" defer></script>
 <script src="lenses.js?v=20261119-nostrip" defer></script>
 <script src="screens.js?v=20260925" defer></script>
@@ -4864,7 +4826,6 @@ if(fcSymParam){
 <script src="planner-risk.js" defer></script>
 <script src="planner-math.js?v=20261119" defer></script>
 <script src="planner.js?v=20261119" defer></script>
-<script src="discover.js?v=20261120-seo" defer></script>
 <script src="doors.js?v=20261120-seo" defer></script>
 <script src="adviser.js" defer></script>
 <script src="question-art.js" defer></script>

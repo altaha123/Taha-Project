@@ -55,7 +55,6 @@
         { id: 'special',  label: 'Delivery trends',   hint: 'Price moves backed by delivered volume' },
         { id: 'results',  label: 'Results calendar',  hint: 'Who reports yesterday, today and this week' },
         { id: 'filings',  label: 'Filings & news',    hint: 'Company announcements as they are filed' },
-        { id: 'discover', label: 'Setups',            hint: 'Today’s strongest setups and unusual activity' },
         { id: 'options',  label: 'Options',           hint: 'Option prices and open interest' }
       ],
       extras: [
@@ -78,9 +77,8 @@
         { id: 'funds',       label: 'Fund houses',     hint: 'What the mutual funds disclosed holding' },
         { id: 'charts',      label: 'Charts',          hint: 'Price charts, drawings, levels and indicators' },
         { id: 'tracker',     label: 'Track record',    hint: 'How past ideas have done since they were found' },
-        { id: 'factors',     label: 'Factors',         hint: 'What each factor has actually predicted' },
         { id: 'strategies',  label: 'Strategy lab',    hint: 'Would a trading rule have beaten holding this stock?' },
-        { id: 'concalls',    label: 'Concalls',        hint: 'Earnings call transcripts, digested' }
+        { id: 'concalls',    label: 'Concalls',        hint: 'Earnings calls summarised, key calls first' }
       ],
       extras: []
     },
@@ -129,7 +127,11 @@
     planner:  'portfolio',
     allocate: 'portfolio',
     money:    'portfolio',
-    learn:    'me'
+    learn:    'me',
+    /* Factors was a tool behind Ideas and was removed. #factors and
+       ?go=factors open Ideas rather than nothing; #research/factors already
+       does, because an unknown tool falls back to its door's first page. */
+    factors:  'research'
   };
 
   var reduced = false;
@@ -431,9 +433,14 @@
 
     /* A bare door id that is also one of its own tools is that tool, which is
        what it meant before the doors had pages of their own: #portfolio has
-       always been the holdings review (sign-in, Pro and Advisors link it),
-       and #discover the Opportunities hub. A door's own page is
-       #portfolio/money, #discover/today, #research/ideahub. */
+       always been the holdings review (sign-in, Pro and Advisors link it).
+       A door's own page is #portfolio/money, #discover/today,
+       #research/ideahub.
+
+       #discover used to be such a tool too: the Setups hub, "Opportunities
+       now". That page was removed — Today's own overview shows everything it
+       did — so #discover, #discover/discover and ?go=discover all fall
+       through to Today's first page rather than to nothing. */
     var self = rawSection(sectionId);
     if (self && tabById(self, sectionId)) return { section: self.id, tab: sectionId };
 

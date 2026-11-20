@@ -97,6 +97,16 @@ async function openTab(page, id) {
   assert.ok(await page.locator('#view-funds').isVisible());
   assert.equal(directoryCalls, 1);
 
+  // A fund house card is the investor card with no picture on it. Its lines
+  // sit one under another from the same left edge; a picture column given to
+  // the shared card, not only to the cards that have a picture, scatters them
+  // across two columns. That was written once and caught before it shipped.
+  const fundCard = page.locator('#funds-body .iv-card').first();
+  const [fundName, fundTag] = [await fundCard.locator('b').boundingBox(),
+                               await fundCard.locator('.iv-kind').boundingBox()];
+  assert.ok(Math.abs(fundName.x - fundTag.x) < 1 && fundTag.y >= fundName.y + fundName.height - 1,
+    'the lines of a fund house card must be stacked from one left edge');
+
   // ── COVERAGE IS PART OF THE ANSWER ───────────────────────────────────────
   const cover = await page.locator('.iv-cover').first().innerText();
   assert.match(cover, new RegExp(String(directory.read) + '\\b'));
