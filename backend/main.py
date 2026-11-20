@@ -3906,11 +3906,15 @@ def wow_orders_feed(days: int = 7, refresh: bool = False):
     marked, never ranked, and never given an assumed number. The quarter block
     compares disclosed order inflow this fiscal quarter with the previous one,
     and says so when one of the two started before this service was recording.
+
+    Answers at once with what has been read. Fetching and reading the filings
+    happens on a thread started beside the answer; `reading` says it is
+    working and `poll_seconds` tells an open page when to ask again.
     """
     if wow_orders is None:
         return {"available": False, "message": "The orders reader is not available."}
     try:
-        payload = wow_orders.scan(days=max(1, min(days, 30)), force=bool(refresh))
+        payload = wow_orders.feed(days=max(1, min(days, 30)), refresh=bool(refresh))
         payload["quarter"] = wow_orders.quarter_comparison()
         return to_native(payload)
     except Exception as e:
