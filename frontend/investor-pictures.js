@@ -28,7 +28,10 @@
 
    TO ADD ONE
    Save the picture square, about 256 px, in assets/investors/<id>.jpg, and add
-   a line below. investor-pictures.test.js fails on an id the backend does not
+   a line below with its credit (the author), source (the page it came from)
+   and license. license_url links the licence where it has a page, and changes
+   says what was done to the picture, which a Creative Commons licence asks to
+   be told. investor-pictures.test.js fails on an id the backend does not
    have, a file that is missing or left over, a photograph with no credit, and
    a picture linked from a host that is not the logo host.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -38,7 +41,37 @@
 
   var PICTURES = {
     /* Authum is listed on NSE as AIIL. */
-    'authum': { kind: 'logo', src: 'https://images.dhan.co/symbol/AIIL.png' }
+    'authum': { kind: 'logo', src: 'https://images.dhan.co/symbol/AIIL.png' },
+
+    /* Wikimedia Commons, where the file's own page says who it is of. The
+       960 px rendering, cropped to the head and shoulders. */
+    'porinju-veliyath': {
+      kind: 'photo', src: 'assets/investors/porinju-veliyath.jpg',
+      credit: 'Viveq78', source: 'https://commons.wikimedia.org/wiki/File:Porinju_Veliyath.jpg',
+      license: 'CC BY-SA 4.0', license_url: 'https://creativecommons.org/licenses/by-sa/4.0/',
+      changes: 'cropped'
+    },
+
+    /* Also Commons: a still from The Nudge Institute's own recording of its
+       Charcha 2020 closing session, which it published under CC BY. It is a
+       video call, so it is soft; it is here because its licence can be
+       followed back to the people who made it. */
+    'ashish-dhawan': {
+      kind: 'photo', src: 'assets/investors/ashish-dhawan.jpg',
+      credit: 'The Nudge Institute', source: 'https://commons.wikimedia.org/wiki/File:AshishDhawan.png',
+      license: 'CC BY 4.0', license_url: 'https://creativecommons.org/licenses/by/4.0/',
+      changes: 'cropped'
+    }
+
+    /* NOT HERE, AND WHY
+       Vijay Kedia has a file on Commons (File:VijayKedia.jpg, CC BY-SA 3.0,
+       uploaded as the uploader's own work), and the photograph's embedded
+       copyright line names a photography studio instead. Two different
+       owners for one picture is a licence nobody can rely on, so it is left
+       out until one of them says so.
+
+       Commons was searched by name for everybody else in the table on
+       20 November 2026 and holds no photograph of them. */
   };
 
   root.AltahaInvestorPictures = PICTURES;

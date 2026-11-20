@@ -193,7 +193,27 @@ async function onTab(page, id) {
   // for the author and the licence by name.
   const credits = page.locator('.iv-grid + .iv-credit');
   assert.match(await credits.innerText(), /Vijay Kedia by A\. Photographer, CC BY-SA 4\.0/);
-  assert.equal(await credits.locator('a').getAttribute('href'), PHOTO_SOURCE);
+  assert.equal(await credits.locator('a', { hasText: 'A. Photographer' }).getAttribute('href'),
+    PHOTO_SOURCE);
+
+  // Every photograph kept in the repository is found where its entry says it
+  // is, by a browser, and is credited beneath the cards with its licence.
+  const kept = await page.evaluate(() => Object.entries(window.AltahaInvestorPictures)
+    .filter(([, p]) => p.kind === 'photo' && p.src.startsWith('assets/investors/') &&
+                       !p.src.includes('a-test-portrait'))
+    .map(([id, p]) => ({ id, credit: p.credit, license: p.license })));
+  for (const k of kept) {
+    const img = page.locator(`.iv-card[data-id="${k.id}"] .iv-av img`);
+    assert.equal(await img.count(), 1, `${k.id} has a photograph on file and no picture on its card`);
+    await img.scrollIntoViewIfNeeded();
+    await page.waitForFunction(id => {
+      const i = document.querySelector(`.iv-card[data-id="${id}"] .iv-av img`);
+      return i && i.complete && i.naturalWidth > 0;
+    }, k.id);
+    const text = await credits.innerText();
+    assert.ok(text.includes(k.credit) && text.includes(k.license),
+      `${k.id}: the credit "${k.credit}, ${k.license}" is not under the cards`);
+  }
 
   // A picture that will not load takes itself away and leaves the initials.
   // Authum's logo sits on another host, which this test refuses like every

@@ -63,6 +63,8 @@ for (const [id, pic] of Object.entries(PICTURES)) {
     }
     assert.ok(/^https:\/\//.test(pic.source),
       `${id}: source is the page the photograph was taken from, as an https link`);
+    assert.ok(pic.license_url === undefined || /^https:\/\//.test(pic.license_url),
+      `${id}: license_url, where there is one, is an https link to the licence`);
   }
 }
 

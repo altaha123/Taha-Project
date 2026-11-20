@@ -96,15 +96,18 @@
       '</span>';
   }
 
-  /* A free licence asks for the author and the licence to be named where the
-     picture is shown. This is that, not a courtesy. */
+  /* A free licence asks for the author, the licence and what was changed to
+     be named where the picture is shown. This is that, not a courtesy. */
+  function linked(text, href) {
+    return href
+      ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + esc(text) + '</a>'
+      : esc(text);
+  }
   function credit(pic) {
     if (!pic || pic.kind !== 'photo' || !pic.credit) return '';
-    return (pic.source
-        ? '<a href="' + esc(pic.source) + '" target="_blank" rel="noopener">' +
-          esc(pic.credit) + '</a>'
-        : esc(pic.credit)) +
-      (pic.license ? ', ' + esc(pic.license) : '');
+    return linked(pic.credit, pic.source) +
+      (pic.license ? ', ' + linked(pic.license, pic.license_url) : '') +
+      (pic.changes ? ', ' + esc(pic.changes) : '');
   }
 
   /* ── The directory ─────────────────────────────────────────────────────── */
