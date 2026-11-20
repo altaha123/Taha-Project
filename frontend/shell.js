@@ -129,14 +129,15 @@
      menu where the full one would run to three lines. `lead` is the line
      under the question.
 
-     ON A NARROW ONE, THE DOOR BAR
-     Below 1040px there are no doors in the header and nothing to hover, so
-     the row of pills under the header is still how a reader moves between
-     the tools of one door. `more: true` puts a tool under that row's "More"
-     button instead of in the row itself: Ideas alone showed thirteen pills.
-     A tool under More is shown in the row while it is the one open. Nothing
-     is removed: the door page, the search box and the phone sheet still
-     list every tool. */
+     ON A NARROW ONE, THE SAME MENU AS A SHEET
+     Below 1040px there are no doors in the header and nothing to hover. The
+     bar under the header is one button that says where the reader is
+     ("Today › Big trades") and opens a sheet from the bottom of the screen
+     with the same groups, icons and hints, and the three doors across its
+     top so any tool is two taps from anywhere. It replaced a row of pills
+     that scrolled sideways and kept the rest under "More", which is what
+     readers found confusing. Nothing is removed: the door page, the search
+     box and the Me sheet still list every tool. */
 
   var DOORS = [
     {
@@ -152,11 +153,11 @@
         { tab: 'today', label: 'Overview', icon: 'pulse', hint: 'The market at a glance, live', kw: 'home market nifty sensex index sectors heatmap fii dii' },
         { tab: 'live', g: 'live', label: 'Alerts', icon: 'bell', hint: 'Live intraday calls and consolidation breakouts', kw: 'live scanner intraday volume breakout consolidation 52 week high telegram alert' },
         { tab: 'deals', g: 'flow', label: 'Big trades', icon: 'exchange', hint: 'Bulk and block deals, and who made them', kw: 'bulk block deals' },
-        { tab: 'wow', g: 'news', more: true, label: 'Order wins', icon: 'flag', hint: 'New orders measured against company size', kw: 'wow orders contract' },
-        { tab: 'special', g: 'flow', more: true, label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
+        { tab: 'wow', g: 'news', label: 'Order wins', icon: 'flag', hint: 'New orders measured against company size', kw: 'wow orders contract' },
+        { tab: 'special', g: 'flow', label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
         { tab: 'results', g: 'news', label: 'Results calendar', icon: 'calendar', hint: 'Who reports yesterday, today and this week', kw: 'results earnings quarterly calendar' },
         { tab: 'filings', g: 'news', label: 'Filings & news', icon: 'document', hint: 'Company announcements as they are filed', kw: 'news announcements filings exchange' },
-        { tab: 'options', g: 'live', more: true, label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
+        { tab: 'options', g: 'live', label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
         { tab: 'screener', label: 'Market board', icon: 'bars', hint: 'The market board and a stock search box', kw: 'analysis board movers', quiet: true }
       ]
     },
@@ -174,16 +175,16 @@
         { tab: 'ideahub', label: 'Overview', icon: 'bulb', hint: 'Every way to find a stock, in one place', kw: 'ideas find discover' },
         { tab: 'ideas', g: 'find', label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow',
           tip: 'Ranked picks, by holding period and by setup', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
-        { tab: 'calls', g: 'proof', more: true, label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
+        { tab: 'calls', g: 'proof', label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
         { tab: 'query', g: 'find', label: 'Screener', icon: 'funnel', hint: 'Filter every company by your own rules', kw: 'query filter screen roe roce pe debt pledge promoter' },
         { tab: 'lenses', g: 'find', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them', kw: 'lenses philosophy coffee can moat qglp' },
-        { tab: 'convergence', g: 'find', more: true, label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
+        { tab: 'convergence', g: 'find', label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
         { tab: 'investors', g: 'own', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
-        { tab: 'funds', g: 'own', more: true, label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
+        { tab: 'funds', g: 'own', label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
         { tab: 'charts', g: 'dig', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
-        { tab: 'tracker', g: 'proof', more: true, label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
-        { tab: 'strategies', g: 'dig', more: true, label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
-        { tab: 'concalls', g: 'dig', more: true, label: 'Concalls', icon: 'chat', hint: 'Earnings calls summarised, key calls first', kw: 'concall earnings call transcript' }
+        { tab: 'tracker', g: 'proof', label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
+        { tab: 'strategies', g: 'dig', label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
+        { tab: 'concalls', g: 'dig', label: 'Concalls', icon: 'chat', hint: 'Earnings calls summarised, key calls first', kw: 'concall earnings call transcript' }
       ]
     },
     {
@@ -480,11 +481,23 @@
     drawer.id = 'sh-drawer';
     document.body.appendChild(drawer);
 
+    /* The tools sheet is opened from the door bar, so it is only built where
+       there is one. The other pages keep the phone bar and the Me sheet. */
+    var sheet = null;
+    if (onIndex()) {
+      sheet = el('dialog', 'sh-sheet');
+      sheet.id = 'sh-sheet';
+      sheet.setAttribute('aria-label', 'Every tool, by section');
+      sheet.innerHTML = sheetHTML();
+      document.body.appendChild(sheet);
+    }
+
     buildFooter();
 
     document.body.classList.add('sh-on');
     CHROME = chrome;
 
+    if (sheet) wireSheet(sheet);
     wireDoors();
     wireMega();
     wireMe(drawer);
@@ -655,19 +668,19 @@
   /* Which tool is open, lit in its menu, and the door's own page lit on the
      card that leads to it. */
   function paintMegaCurrent() {
-    var mega = document.getElementById('sh-mega');
-    if (!mega) return;
-    mega.querySelectorAll('.sh-item[data-tab]').forEach(function (b) {
+    var home = /^(today|ideahub|money)$/.test(activeTab || '');
+    document.querySelectorAll('#sh-mega .sh-item[data-tab], #sh-sheet .sh-item[data-tab]').forEach(function (b) {
       if (b.dataset.sec === activeDoor && b.dataset.tab === activeTab) b.setAttribute('aria-current', 'page');
       else b.removeAttribute('aria-current');
     });
-    var home = /^(today|ideahub|money)$/.test(activeTab || '');
-    mega.querySelectorAll('.sh-mega-lead').forEach(function (b) {
+    document.querySelectorAll('.sh-mega-lead, .sh-sheet-lead').forEach(function (b) {
       var here = home && b.dataset.sec === activeDoor;
       if (here) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
       // On the door's own page the card says so rather than offering it again.
       var t = b.querySelector('.sh-mega-go-t');
       if (t) t.textContent = here ? 'You are here' : t.getAttribute('data-open');
+      var k = b.querySelector('.sh-mega-kick[data-open]');
+      if (k) k.textContent = k.getAttribute('data-open') + (here ? ' \u00b7 you are here' : '');
     });
   }
 
@@ -694,6 +707,165 @@
         '<span class="tnum ' + (has && pct > 0 ? 'up' : has && pct < 0 ? 'dn' : '') + '">' +
         (has ? (pct > 0 ? '+' : '') + pct.toFixed(2) + '%' : '—') + '</span></span>';
     }).join('');
+  }
+
+  /* ── The tools sheet ───────────────────────────────────────────────────────
+     The door menus, for a screen with no room for doors and a finger instead
+     of a mouse. It rises from the bottom, where a thumb already is, and
+     holds what the menus hold: the three doors across the top, and under
+     the one chosen its own page first, then its tools in the same groups
+     with the same icons and hints.
+
+     It is a <dialog> opened with showModal(), which is what gives it a
+     focus trap, Escape and, on Android, the Back button as a way out. It
+     can also be closed by its cross, by its handle (a tap, or a pull
+     downwards), by a tap on the page behind it, and by choosing something.
+     It is one sheet: nothing in it opens another on top. */
+
+  function sheetHTML() {
+    var arrow = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    return '<div class="sh-sheet-grab" aria-hidden="true"><i></i></div>' +
+      '<div class="sh-sheet-head">' +
+        '<div class="sh-sheet-tabs" role="tablist" aria-label="Sections">' +
+          '<span class="sh-sheet-ind" aria-hidden="true"></span>' +
+          DOORS.map(function (d) {
+            return '<button type="button" role="tab" class="sh-sheet-tab" id="sh-sheet-tab-' + esc(d.id) + '" data-sec="' + esc(d.id) +
+              '" aria-selected="false" aria-controls="sh-sheet-' + esc(d.id) + '" tabindex="-1">' + esc(d.label) + '</button>';
+          }).join('') +
+        '</div>' +
+        '<button type="button" class="sh-sheet-x" aria-label="Close">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+          'stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
+      '</div>' +
+      '<div class="sh-sheet-body">' + DOORS.map(function (d) {
+        var groups = (d.groups || []).map(function (g, gi) {
+          var rows = d.items.filter(function (it) { return it.g === g.id; });
+          return rows.length ? '<div class="sh-sheet-group" style="--i:' + gi + '"><h4>' + esc(g.title) + '</h4>' +
+            rows.map(function (it) { return itemHTML(d.id, it, true); }).join('') + '</div>' : '';
+        }).join('');
+        return '<section class="sh-sheet-pane sh-col" role="tabpanel" id="sh-sheet-' + esc(d.id) + '" data-sec="' + esc(d.id) +
+          '" aria-labelledby="sh-sheet-tab-' + esc(d.id) + '" hidden>' +
+          '<button type="button" class="sh-sheet-lead" data-sec="' + esc(d.id) + '">' +
+            '<span class="sh-sheet-lead-t"><span class="sh-mega-kick" data-open="' + esc(d.label) + ' overview">' +
+              esc(d.label) + ' overview</span>' +
+            '<span class="sh-mega-q">' + esc(d.question) + '</span></span>' +
+            '<span class="sh-sheet-lead-go" aria-hidden="true">' + arrow + '</span>' +
+          '</button>' + groups + '</section>';
+      }).join('') + '</div>';
+  }
+
+  function showSheetPane(id, focusTab) {
+    var sheet = document.getElementById('sh-sheet');
+    if (!sheet) return;
+    var n = 0;
+    sheet.querySelectorAll('.sh-sheet-tab').forEach(function (t, i) {
+      var on = t.dataset.sec === id;
+      if (on) n = i;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      if (on && focusTab) t.focus();
+    });
+    sheet.querySelector('.sh-sheet-tabs').style.setProperty('--n', n);
+    sheet.querySelectorAll('.sh-sheet-pane').forEach(function (p) { p.hidden = p.dataset.sec !== id; });
+    sheet.querySelector('.sh-sheet-body').scrollTop = 0;
+  }
+
+  function openSheet(id) {
+    var sheet = document.getElementById('sh-sheet');
+    if (!sheet || sheet.open) return;
+    showSheetPane(DOORS.some(function (d) { return d.id === id; }) ? id : DOORS[0].id);
+    clearTimeout(sheet._t);
+    sheet.classList.remove('closing');
+    sheet.style.transform = '';
+    try { sheet.showModal(); } catch (e) { sheet.setAttribute('open', ''); }
+    document.body.style.overflow = 'hidden';
+    var where = document.getElementById('sh-where');
+    if (where) where.setAttribute('aria-expanded', 'true');
+  }
+
+  /* It slides away rather than vanishing, unless motion is off or the screen
+     has just grown past the width it exists for. */
+  function closeSheet(instant) {
+    var sheet = document.getElementById('sh-sheet');
+    if (!sheet || !sheet.open) return;
+    function done() {
+      clearTimeout(sheet._t);
+      sheet.classList.remove('closing');
+      sheet.style.transform = '';
+      try { sheet.close(); } catch (e) { sheet.removeAttribute('open'); }
+    }
+    if (instant || motionOff()) { done(); return; }
+    if (sheet.classList.contains('closing')) return;
+    sheet.classList.add('closing');
+    sheet._t = setTimeout(done, 240);
+  }
+
+  function wireSheet(sheet) {
+    var pulled = false;       // the handle was just dragged, so the click that follows is not a tap
+    sheet.addEventListener('close', function () {
+      document.body.style.overflow = '';
+      var where = document.getElementById('sh-where');
+      if (where) where.setAttribute('aria-expanded', 'false');
+    });
+    // Escape, and the Back button where the browser offers it to a dialog.
+    sheet.addEventListener('cancel', function (e) { e.preventDefault(); closeSheet(); });
+    sheet.addEventListener('click', function (e) {
+      if (e.target === sheet) { closeSheet(); return; }           // the page behind it
+      if (e.target.closest('.sh-sheet-grab')) {
+        // A tap on the handle closes; letting go after a short pull does not.
+        if (pulled) pulled = false; else closeSheet();
+        return;
+      }
+      if (e.target.closest('.sh-sheet-x')) { closeSheet(); return; }
+      var tab = e.target.closest('.sh-sheet-tab');
+      if (tab) { showSheetPane(tab.dataset.sec); return; }
+      var it = e.target.closest('.sh-item, .sh-sheet-lead');
+      if (!it) return;
+      closeSheet();
+      if (it.tagName === 'A') return;             // the adviser page, the wealth desk: ordinary links
+      navigate(it.dataset.sec, it.dataset.tab || null);
+    });
+    // Left and right walk the doors, as tabs do.
+    sheet.addEventListener('keydown', function (e) {
+      var tab = e.target.closest && e.target.closest('.sh-sheet-tab');
+      if (!tab || !/^(ArrowLeft|ArrowRight|Home|End)$/.test(e.key)) return;
+      e.preventDefault();
+      var i = DOORS.map(function (d) { return d.id; }).indexOf(tab.dataset.sec);
+      var next = e.key === 'Home' ? 0 : e.key === 'End' ? DOORS.length - 1
+        : (i + (e.key === 'ArrowRight' ? 1 : DOORS.length - 1)) % DOORS.length;
+      showSheetPane(DOORS[next].id, true);
+    });
+
+    /* Pulling the handle down takes the sheet with it; let go past a third
+       of the way, or with a flick, and it closes. Anything less and it
+       settles back. Only the handle drags, so the list below still scrolls. */
+    var grab = sheet.querySelector('.sh-sheet-grab'), drag = null;
+    grab.addEventListener('pointerdown', function (e) {
+      pulled = false;
+      drag = { y: e.clientY, at: Date.now(), dy: 0 };
+      try { grab.setPointerCapture(e.pointerId); } catch (err) {}
+      sheet.classList.add('dragging');
+    });
+    grab.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      drag.dy = Math.max(0, e.clientY - drag.y);
+      sheet.style.transform = 'translateY(' + drag.dy + 'px)';
+    });
+    function drop() {
+      if (!drag) return;
+      var d = drag;
+      drag = null;
+      sheet.classList.remove('dragging');
+      pulled = d.dy > 6;
+      var flick = d.dy > 24 && d.dy / Math.max(1, Date.now() - d.at) > 0.5;
+      if (d.dy > Math.min(140, sheet.offsetHeight / 3) || flick) closeSheet();
+      else sheet.style.transform = '';
+    }
+    grab.addEventListener('pointerup', drop);
+    grab.addEventListener('pointercancel', drop);
+
+    window.addEventListener('altaha:navigate', function () { closeSheet(); });
   }
 
   function wireMega() {
@@ -874,8 +1046,9 @@
      confusing. On a door's own page the line would only repeat the page's
      heading, so the bar is not there at all and the page starts higher.
 
-     ON A NARROW ONE it is still the row of tools, the open one lit, the rest
-     under More: there are no doors in the header to hang a menu from. */
+     ON A NARROW ONE it is a single button with the same two names on it,
+     and it opens the sheet of tools (below): there are no doors in the
+     header to hang a menu from. */
   function paintDoorbar() {
     var bar = document.getElementById('sh-doorbar');
     if (!bar) return;
@@ -912,76 +1085,33 @@
       bar.classList.add('on');
       return;
     }
-    var row = items.filter(function (it) { return !it.more || isOpen(it); });
-    var extra = items.filter(function (it) { return it.more && !isOpen(it); });
-    var moreHTML = extra.length
-      ? '<div class="sh-more">' +
-          '<button type="button" class="sh-morebtn" id="sh-morebtn" aria-haspopup="true" aria-expanded="false" ' +
-          'aria-controls="sh-morepanel">More<span class="sh-more-n">' + extra.length + '</span>' +
-          '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
-          'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' +
-          '<div class="sh-morepanel" id="sh-morepanel" role="menu" aria-label="More tools" hidden>' +
-          extra.map(function (it) {
-            var inner = '<b>' + esc(it.label) + '</b><small>' + esc(it.hint || '') + '</small>';
-            return it.href
-              ? '<a class="sh-pill sh-moreitem" role="menuitem" href="' + esc(it.href) + '">' + inner + '</a>'
-              : '<button type="button" class="sh-pill sh-moreitem" role="menuitem" data-sec="' + sec +
-                '" data-tab="' + esc(it.tab) + '">' + inner + '</button>';
-          }).join('') +
-          '</div></div>'
-      : '';
-    bar.innerHTML = '<div class="sh-doorbar-in">' + row.map(function (it, i) {
-      var on = isOpen(it);
-      if (it.href) {
-        return '<a class="sh-pill" style="--i:' + i + '" href="' + esc(it.href) + '">' + esc(it.label) + '</a>';
-      }
-      return '<button type="button" class="sh-pill' + (on ? ' on' : '') + '" style="--i:' + i + '" data-sec="' +
-        sec + '" data-tab="' + esc(it.tab) + '"' + (on ? ' aria-current="page"' : '') + '>' +
-        esc(it.label) + '</button>';
-    }).join('') + '</div>' + moreHTML + pinHTML;
+    // Narrow: the bar is the way into the sheet. Me has no sheet of its own
+    // (its three pages are in the Me menu), so there the button opens that.
+    var name = door ? door.label : 'Me';
+    bar.innerHTML = '<button type="button" class="sh-where" id="sh-where" data-sec="' + sec + '" aria-haspopup="dialog" ' +
+      'aria-expanded="false"' + (door ? ' aria-controls="sh-sheet"' : '') + ' aria-label="' +
+      esc(name + (here ? ', ' + here.label : '') + (door ? ': show every tool' : ': open the Me menu')) + '">' +
+      '<svg class="sh-where-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/>' +
+      '<rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/>' +
+      '<rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg>' +
+      '<span class="sh-where-door">' + esc(name) + '</span>' +
+      (here ? '<svg class="sh-where-sep" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+              'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>' +
+              '<b class="sh-where-here">' + esc(here.label) + '</b>' : '') +
+      '<svg class="cv" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>' + pinHTML;
     bar.classList.add('on');
-    // Same backstop as the doors: the pills rise in from opacity 0, so once
-    // they have had time to, the entrance is switched off.
-    bar.classList.remove('sh-played');
-    clearTimeout(bar._played);
-    bar._played = setTimeout(function () { bar.classList.add('sh-played'); }, 1500);
-    var cur = bar.querySelector('.sh-pill.on');
-    if (cur && cur.scrollIntoView) {
-      var box = bar.querySelector('.sh-doorbar-in');
-      if (box && box.scrollWidth > box.clientWidth) box.scrollLeft = cur.offsetLeft - 40;
-    }
-  }
-
-  function setMore(open, refocus) {
-    var btn = document.getElementById('sh-morebtn');
-    var panel = document.getElementById('sh-morepanel');
-    if (!btn || !panel) return;
-    panel.hidden = !open;
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) {
-      var first = panel.querySelector('.sh-moreitem');
-      if (first) first.focus();
-    } else if (refocus) {
-      btn.focus();
-    }
   }
 
   function wireDoorbar() {
     var bar = document.getElementById('sh-doorbar');
     if (!bar) return;
-    // The More menu closes on a tap anywhere else, and on Escape with focus
-    // returned to its button. It is rebuilt closed on every door bar paint.
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest || !e.target.closest('.sh-more')) setMore(false);
-    });
-    document.addEventListener('keydown', function (e) {
-      var panel = document.getElementById('sh-morepanel');
-      if (e.key === 'Escape' && panel && !panel.hidden) setMore(false, true);
-    });
     bar.addEventListener('click', function (e) {
-      var mb = e.target.closest('#sh-morebtn');
-      if (mb) {
-        setMore(mb.getAttribute('aria-expanded') !== 'true');
+      var where = e.target.closest('#sh-where');
+      if (where) {
+        if (where.dataset.sec === 'me') { if (window.AltahaShell && window.AltahaShell.openMe) window.AltahaShell.openMe(); }
+        else openSheet(where.dataset.sec);
         return;
       }
       var pin = e.target.closest('#sh-pin');
@@ -994,13 +1124,13 @@
         return;
       }
       var crumb = e.target.closest('button.sh-crumb-door');
-      if (crumb) { navigate(crumb.dataset.sec, null); return; }
-      var b = e.target.closest('.sh-pill[data-tab]');
-      if (b) navigate(b.dataset.sec, b.dataset.tab);
+      if (crumb) navigate(crumb.dataset.sec, null);
     });
     // The bar is a different thing either side of 1040px, so crossing it repaints.
     try {
-      window.matchMedia('(max-width:1040px)').addEventListener('change', function () { closeMega(); paintDoorbar(); });
+      window.matchMedia('(max-width:1040px)').addEventListener('change', function () {
+        closeMega(); closeSheet(true); paintDoorbar();
+      });
     } catch (err) {}
   }
 
