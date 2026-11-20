@@ -224,6 +224,15 @@ async function main() {
   });
   check('and nothing is reported as failed', !/\bon\b/.test(toast), toast);
 
+  await forget();
+  await tap('data:text/calendar;charset=utf-8,BEGIN%3AVCALENDAR', { download: 'money-check-in.ics' });
+  await page.waitForFunction(() => window.__native.made('Share', 'share').length === 1);
+  const ics = await made('Filesystem', 'writeFile');
+  check('a download link that is tapped, not clicked by a script, is saved the same way',
+    ics.length === 1 && ics[0].options.path === 'downloads/money-check-in.ics' &&
+    Buffer.from(ics[0].options.data, 'base64').toString() === 'BEGIN:VCALENDAR' &&
+    new URL(page.url()).pathname === '/', ics);
+
   /* ── print ────────────────────────────────────────────────────────────── */
   console.log('\nPrint opens the phone\'s print dialog');
   await forget();

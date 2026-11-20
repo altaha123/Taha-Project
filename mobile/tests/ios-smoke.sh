@@ -39,7 +39,11 @@ xcrun simctl bootstatus "$DEVICE" -b > /dev/null
 
 xcrun simctl install "$DEVICE" "$APP"
 : > "$LOG"
-xcrun simctl launch --stdout="$PWD/$LOG" --stderr="$PWD/$LOG" "$DEVICE" "$BUNDLE" > /dev/null
+# With a terminal attached, not a file: an app writing to a file saves its
+# output up and writes it in blocks, so the line this waits for would sit
+# unwritten until the app quit. The first run of this script failed that way
+# with the app open and working on the screen.
+xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE" > "$LOG" 2>&1 &
 
 wait_for "\[altaha\] bridge ready: ios [0-9.]+ /(index\.html)?( |$)" 120 \
   || fail "the home page never reported in"
@@ -59,3 +63,4 @@ if grep -qE "AltahaShell.*not implemented" "$LOG"; then
   fail "the app's own plugin did not register"
 fi
 echo "ok    still running, the app's own plugin answered"
+xcrun simctl terminate "$DEVICE" "$BUNDLE" > /dev/null 2>&1 || true

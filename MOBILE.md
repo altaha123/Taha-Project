@@ -84,7 +84,7 @@ Two things are deliberately different from the website:
 
 ## Running it on your own machine
 
-You need Node 22. For Android, Android Studio. For iOS, a Mac with Xcode 26.
+You need Node 22. For Android, Android Studio. For iOS, a Mac with a current Xcode.
 
 ```bash
 cd mobile
@@ -112,7 +112,7 @@ and `assets/icon-foreground.png` before the first store upload.
 |---|---|---|
 | `tests/bundle.test.mjs` | `ci.yml`, every pull request | Every link written in `frontend/` has somewhere to go inside the app. Nothing loads from a CDN. Every page of the site is in the bundle |
 | `tests/app-browser.cjs` | `ci.yml`, every pull request | The real bundle in a real browser, on a phone-sized screen with a notch. Share, a CSV export, print, Back, dark appearance, an outside link, a link opened from outside the app: each is done, and the call that reaches the phone is checked |
-| `tests/android-smoke.sh` | `mobile-apps.yml`, on an Android 15 emulator | The APK installs, starts, loads the home page, and opens the stock page from `altaha://stock?ticker=TCS` |
+| `tests/android-smoke.sh` | `mobile-apps.yml`, on an Android 14 emulator | The APK installs, starts, loads the home page, and opens the stock page from `altaha://stock?ticker=TCS` |
 | `tests/ios-smoke.sh` | `mobile-apps.yml`, on an iPhone simulator | The same, for the iOS app |
 
 The first two fake the phone one layer down (`tests/harness.cjs`) and need no

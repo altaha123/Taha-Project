@@ -115,7 +115,7 @@ window.addEventListener('click', (e) => {
   if (!a) return;
   const raw = a.getAttribute('href') || '';
   if (!raw || raw.charAt(0) === '#' || /^javascript:/i.test(raw)) return;
-  if (isDownload(a)) { e.preventDefault(); saveAnchor(a); return; }
+  if (native && isDownload(a)) { e.preventDefault(); saveAnchor(a); return; }
   const r = route(a.href);
   if (r) { e.preventDefault(); go(r); return; }
   // A page of the app's own, asked for in a new tab. There are no tabs.
