@@ -77,6 +77,9 @@ timeout 20 adb logcat -d > "$LOG" 2>/dev/null || true
 if grep -A3 "FATAL EXCEPTION" "$LOG" | grep -q "$PKG"; then
   fail "the app crashed"
 fi
+# The page asks the app's own plugin for the colour behind it on every load.
+# The call has to be in the log, and nothing may have said it is missing.
+grep -q "pluginId: AltahaShell, methodName: setBackground" "$LOG" || fail "the page never reached the app's own plugin"
 if grep -qE "AltahaShell.*not implemented" "$LOG"; then
   fail "the app's own plugin did not register"
 fi
