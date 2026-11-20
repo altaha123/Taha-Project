@@ -17,6 +17,12 @@ and that this project is not registered under either. The page says so in plain 
 (`action_plan.DISCLAIMER`); keep that sentence true, and take legal advice before
 charging for the calls.
 
+**On a phone.** The same site is an Android app and an iOS app, in `mobile/`:
+the pages in `frontend/`, unchanged, inside a native shell that gives them the
+share sheet, saved files, printing and the Back button. See
+[`MOBILE.md`](MOBILE.md) for how they are built, tested and released, and for
+what the stores will ask for first.
+
 ---
 
 ## Three doors

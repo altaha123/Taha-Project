@@ -9,6 +9,7 @@
     "android": "npm run sync && cap open android",
     "ios": "npm run sync && cap open ios",
     "icons": "capacitor-assets generate --iconBackgroundColor '#FBFAF7' --iconBackgroundColorDark '#FBFAF7' --splashBackgroundColor '#FBFAF7' --splashBackgroundColorDark '#0C0B08' --android --ios",
+    "set-version": "node scripts/set-version.mjs",
     "test": "npm run build && node tests/bundle.test.mjs && node tests/app-browser.cjs"
   },
   "dependencies": {

@@ -2,8 +2,8 @@ apply plugin: 'com.android.application'
 
 // One version for both apps: "version" in mobile/package.json. The Play
 // Store wants a whole number that only ever goes up as well, and that is
-// worked out from the same line: 1.4.2 is 10402. To ship a new build, raise
-// the version there; nothing here needs to change.
+// worked out from the same line: 1.4.2 is 10402. To ship a new build, run
+// `npm run set-version -- 1.4.3` in mobile/, which sets it for the iPhone app too.
 def appVersion = new groovy.json.JsonSlurper().parse(file('../../package.json')).version
 def appVersionCode = {
     def p = appVersion.tokenize('.-')
