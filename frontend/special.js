@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Altaha Special — renders the delivery-weighted momentum book.
 
-   Loads on demand, not at boot: it walks a few hundred NSE bhavcopies on the
-   server the first time and a visitor who never opens this tab should never
-   pay for that.
+   Loads on demand, not at boot, and not when its tab is shown either: the
+   tab opens on the delivery lists (delivery-trends.js) and this book is
+   folded away beneath them, read only when somebody opens it.
    ═══════════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -85,10 +85,16 @@
       '<span class="sp-progn mono">' + have + ' / ' + need + ' sessions</span></div>';
   }
 
-  // Only keep polling while the tab is actually on screen.
+  // The book sits in a closed <details> under the delivery lists, so "on
+  // screen" means the tab is showing AND the reader has opened it.
+  function open() {
+    var view = $('view-special'), book = $('spbook');
+    return !!view && view.style.display !== 'none' && (!book || book.open);
+  }
+
+  // Only keep polling while the book is actually on screen.
   function again() {
-    var view = $('view-special');
-    if (view && view.style.display === 'none') { poll = setTimeout(again, 20000); return; }
+    if (!open()) { poll = setTimeout(again, 20000); return; }
     load(true);
   }
 
@@ -131,7 +137,15 @@
   function wire() {
     var btn = $('spload');
     if (btn) btn.addEventListener('click', function () { load(true); });
-    // Load the first time the tab is actually shown.
+    // Load the first time the book is opened, not when the tab is shown: the
+    // tab now opens on the delivery lists, and a reader who came for those
+    // should not pay for a year-long ranking they never look at.
+    var book = $('spbook');
+    if (book) {
+      book.addEventListener('toggle', function () { if (book.open) load(false); });
+      if (book.open) load(false);
+      return;
+    }
     var view = $('view-special');
     if (!view || !('MutationObserver' in window)) return;
     new MutationObserver(function () {

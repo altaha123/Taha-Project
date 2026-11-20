@@ -209,8 +209,8 @@
       line: 'Bulk and block deals.' },
     { id: 'drt-wow', goto: 'discover/wow', icon: 'wow', name: 'Order wins', unit: '',
       line: 'New orders, sized against the company.' },
-    { id: 'drt-special', goto: 'discover/special', icon: 'delivery', name: 'Delivery trends', unit: 'in the book',
-      line: 'Stocks rising on real buying.' },
+    { id: 'drt-special', goto: 'discover/special', icon: 'delivery', name: 'Delivery trends', unit: 'delivery spikes',
+      line: 'Where delivery ran above normal.' },
     { id: 'drt-results', goto: 'discover/results', icon: 'results', name: 'Results calendar', unit: 'today',
       line: 'Who reports this week.' },
     { id: 'drt-filings', goto: 'discover/filings', icon: 'filings', name: 'Filings & news', unit: 'filings in the feed', live: true,
@@ -790,12 +790,15 @@
     // asks for them until their own tab is opened (filings-views-browser
     // pins this). The card says what the tool does instead of a count.
     fillTool('drt-wow', null);
-    get('/special?limit=6', 20000).then(function (d) {
-      var rows = (d && d.book) || [];
-      if (!d || d.available === false || !rows.length) {
-        return fillTool('drt-special', null, (d && (d.message || d.detail)) || 'The delivery record is not deep enough to rank yet.');
+    // The count is the latest session's spikes, not the size of the one-year
+    // book: that was always 6 here, because 6 is what this asked for.
+    get('/delivery/trends?limit=6', 20000).then(function (d) {
+      var t = d && d.views && d.views.today;
+      if (!d || d.available === false || !t) {
+        return fillTool('drt-special', null, (d && (d.message || d.detail)) || 'The delivery record is not deep enough to read yet.');
       }
-      fillTool('drt-special', rows.length, null, rows.slice(0, 4).map(function (r) { return { text: r.symbol }; }));
+      fillTool('drt-special', t.total, t.total ? t.up + ' on a rise, ' + t.down + ' on a fall.' : 'Nothing unusual in the latest session.',
+        (t.rows || []).slice(0, 4).map(function (r) { return { text: r.symbol, tone: tone(r.chg_pct) }; }));
     });
     get('/results/calendar', 15000).then(function (d) {
       if (!d || !d.available) return fillTool('drt-results', null, (d && d.message) || 'NSE’s calendar could not be read just now.');

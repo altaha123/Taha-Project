@@ -153,7 +153,7 @@
         { tab: 'live', g: 'live', label: 'Alerts', icon: 'bell', hint: 'Live intraday calls and consolidation breakouts', kw: 'live scanner intraday volume breakout consolidation 52 week high telegram alert' },
         { tab: 'deals', g: 'flow', label: 'Big trades', icon: 'exchange', hint: 'Bulk and block deals, and who made them', kw: 'bulk block deals' },
         { tab: 'wow', g: 'news', more: true, label: 'Order wins', icon: 'flag', hint: 'New orders measured against company size', kw: 'wow orders contract' },
-        { tab: 'special', g: 'flow', more: true, label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
+        { tab: 'special', g: 'flow', more: true, label: 'Delivery trends', icon: 'bars', hint: 'Where delivery is running above normal', kw: 'delivery special accumulation spike demat bhavcopy' },
         { tab: 'results', g: 'news', label: 'Results calendar', icon: 'calendar', hint: 'Who reports yesterday, today and this week', kw: 'results earnings quarterly calendar' },
         { tab: 'filings', g: 'news', label: 'Filings & news', icon: 'document', hint: 'Company announcements as they are filed', kw: 'news announcements filings exchange' },
         { tab: 'options', g: 'live', more: true, label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
