@@ -170,6 +170,7 @@ PUT     /me/watchlists
 GET     /news/press
 GET     /news/status
 GET     /og/chart.png
+GET     /og/concall.png
 GET     /og/holding.png
 GET     /og/idea.png
 GET     /og/record.png
@@ -205,6 +206,7 @@ GET     /sector/overview
 GET     /sector/story
 GET     /sectors
 GET     /share/chart/{ticker}
+GET     /share/concall/{ticker}
 GET     /share/holding/{ticker}
 GET     /share/idea/{ticker}
 GET     /share/record

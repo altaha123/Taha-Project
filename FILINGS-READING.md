@@ -163,6 +163,27 @@ must not be wrong are checked in code rather than trusted to any model:
   and where the document lists its management only they can be quoted — the
   digest's rule, applied to the model.
 
+### Sharing a call
+
+A call that has a written brief carries a **Share** button, which opens the
+site's share sheet (X, WhatsApp, Telegram, LinkedIn, Facebook, copy or download
+the image) on a card of that call: the company, the quarter, the brief's
+headline, and as much of its summary as fits in whole sentences.
+
+* `/og/concall.png?ticker=SYMBOL&period=Q2-FY27` is the picture and
+  `/share/concall/SYMBOL?period=Q2-FY27` the link that unfurls into it. Both
+  read the ledger and nothing else, so a crawler can never start a transcript
+  read or a model call. A call with no brief is a 404, and has no button.
+* The card says **AI-written from the transcript filed with BSE**, beside the
+  line every card carries that it is not investment advice. The page says a
+  model wrote each brief; a picture that travels without the page has to say
+  it too.
+* What it shows is what management told the call, with their figures. Revenue
+  or margin guidance is a fact about the call, not a level on the share.
+* The link opens `?go=concalls&q=SYMBOL`: the Concalls tab, with that call
+  brought into view and its brief open. A call too old to be in the list is
+  fetched by name and shown above it.
+
 Figures in the rest of a brief are not checked that way, and the page says so.
 
 ### The bill is bounded

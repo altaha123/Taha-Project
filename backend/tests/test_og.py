@@ -380,6 +380,188 @@ def test_a_sparse_results_payload_still_renders():
     assert _png_size(og.results_card({"symbol": "X"})) == (1200, 630)
 
 
+# ---------------------------------------------------------------------------
+# The concall card: the only one that is mostly prose
+# ---------------------------------------------------------------------------
+
+CONCALL = {
+    "symbol": "SOLARWORLD", "company": "Solarworld Energy Solutions Limited",
+    "quarter": "Q2 FY27", "call_date": "2026-11-14",
+    "filed_at": "2026-11-20T16:10:00+05:30", "key": True,
+    "brief": {
+        "status": "ready",
+        "headline": ("Management cut FY27 guidance to ₹1,600–1,700 crore revenue "
+                     "and 5–6% profit margin"),
+        "summary": ("Q2 revenue rose about 77% to ₹244 crore, but profit fell to "
+                    "₹4.2 crore from ₹9.3 crore as metal costs squeezed margins. "
+                    "Management guided FY27 revenue of ₹1,600–1,700 crore. "
+                    "The order book stands at ₹2,900 crore. "
+                    "A fourth sentence that there is no room for on any card."),
+    },
+}
+
+
+def _lines(build):
+    """What a prose card drew, a line at a time: [(y, size, text)]."""
+    from PIL import ImageDraw
+    rows = {}
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        if k.get("anchor") == "ls":
+            rows.setdefault(round(xy[1]), []).append(str(text))
+        return original(self, xy, text, *a, **k)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        build()
+    finally:
+        ImageDraw.ImageDraw.text = original
+    return ["".join(parts) for _y, parts in sorted(rows.items())]
+
+
+def test_concall_card_says_whose_call_it_is_and_what_was_said():
+    png, text = _drawn(lambda: og.concall_card(CONCALL))
+    assert _png_size(png) == (1200, 630)
+    flat = text.replace(" ", "")
+    for want in ("Q2 FY27 EARNINGS CALL", "CALL HELD 14 NOV 2026", "KEY CALL",
+                 "SOLARWORLD ENERGY SOLUTIONS LIMITED",
+                 "Management cut FY27 guidance to ₹1,600–1,700 crore",
+                 "Q2 revenue rose about 77% to ₹244 crore"):
+        assert want.replace(" ", "") in flat, want
+
+
+def test_concall_card_says_a_model_wrote_it():
+    """The page says so on every brief. A picture that travels without the
+    page has to carry that with it, beside the line that it is not advice."""
+    _png, text = _drawn(lambda: og.concall_card(CONCALL))
+    flat = text.replace(" ", "")
+    assert "AI-WRITTENFROMTHETRANSCRIPTFILEDWITHBSE" in flat
+    assert "NOTINVESTMENTADVICE" in flat
+
+
+def test_a_call_that_is_not_key_is_not_flagged_as_one():
+    _png, text = _drawn(lambda: og.concall_card(dict(CONCALL, key=False)))
+    assert "KEYCALL" not in text.replace(" ", "")
+
+
+def test_a_call_with_no_date_read_from_it_says_when_it_was_filed():
+    _png, text = _drawn(lambda: og.concall_card(dict(CONCALL, call_date=None)))
+    assert "TRANSCRIPT FILED 20 NOV 2026".replace(" ", "") in text.replace(" ", "")
+    assert "CALLHELD" not in text.replace(" ", "")
+
+
+def test_the_rupee_sign_is_drawn_by_a_face_that_has_one():
+    """Instrument Serif has no ₹. Asking it for one draws a hollow box, and a
+    brief has a rupee figure in nearly every sentence."""
+    assert og._covers("A") and og._covers("7") and og._covers("–")
+    assert not og._covers("₹")
+    from PIL import ImageDraw
+    faces = []
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        if "₹" in str(text):
+            faces.append((str(text), k.get("font").path))
+        return original(self, xy, text, *a, **k)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        og.concall_card(CONCALL)
+    finally:
+        ImageDraw.ImageDraw.text = original
+    assert faces, "the card drew no rupee sign at all"
+    for text, path in faces:
+        assert text == "₹", "the sign must be a run of its own: %r" % text
+        assert "IBMPlexMono" in path, path
+
+
+def test_the_summary_stops_at_the_end_of_a_sentence():
+    """A summary cut mid-sentence reads as a mistake. What fits is whole
+    sentences; the rest is on the site."""
+    brief = dict(CONCALL["brief"], summary=CONCALL["brief"]["summary"] + " "
+                 + "Another sentence about demand in the second half of the year. " * 8
+                 + "The last sentence, which no card has room for.")
+    lines = _lines(lambda: og.concall_card(dict(CONCALL, brief=brief)))
+    drawn = " ".join(lines)
+    assert drawn.rstrip().endswith("."), drawn
+    assert "…" not in drawn
+    assert "The last sentence" not in drawn
+    # What is there is the start of the summary, in order, and it fills the
+    # room it has rather than stopping after one sentence.
+    assert "squeezed margins. Management guided" in drawn
+    assert "The order book stands at ₹2,900 crore." in drawn
+
+
+def test_a_decimal_point_does_not_end_a_sentence():
+    parts = og._sentences("Profit fell to ₹4.2 crore from ₹9.3 crore. Margin was 5.5%. "
+                          "₹3,000 crore is the FY28 aim.")
+    assert parts == ["Profit fell to ₹4.2 crore from ₹9.3 crore.", "Margin was 5.5%.",
+                     "₹3,000 crore is the FY28 aim."]
+
+
+def test_a_long_headline_steps_down_before_it_is_cut():
+    from PIL import Image, ImageDraw
+    d = ImageDraw.Draw(Image.new("RGB", (og.W, og.H)))
+    long = ("Management said that the company will be raising ₹2,500 crore through a "
+            "qualified institutional placement to fund three new plants in Gujarat, "
+            "Odisha and Tamil Nadu over two years")
+    sizes = []
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        if k.get("anchor") == "ls" and k.get("fill") == og.INK:
+            sizes.append((round(xy[1]), k["font"].size))
+        return original(self, xy, text, *a, **k)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        og.concall_card(dict(CONCALL, brief=dict(CONCALL["brief"], headline=long)))
+    finally:
+        ImageDraw.ImageDraw.text = original
+    baselines = sorted({y for y, _s in sizes})
+    assert len(baselines) <= og.HEADLINE_LINES
+    size = max(s for _y, s in sizes)
+    assert size < og.HEADLINE_SIZES[0], "a long headline should be set smaller"
+    # Smaller, and whole: nothing was cut to make it fit.
+    assert len(og._wrap(d, long, size, og.W - 128)) <= og.HEADLINE_LINES
+
+
+def test_nothing_on_a_concall_card_runs_off_the_card():
+    """Every line of prose ends inside the right-hand margin, whatever the
+    brief says: a long name, a long headline, a summary of one long sentence."""
+    from PIL import Image, ImageDraw
+    d = ImageDraw.Draw(Image.new("RGB", (og.W, og.H)))
+    worst = dict(CONCALL, company="The Extraordinarily Long Named Infrastructure "
+                 "Development And Finance Corporation Of India Limited", quarter="",
+                 brief={"headline": "Word " * 60, "summary": "clause after clause " * 60})
+    seen = []
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        seen.append((xy[0] + d.textlength(str(text), font=k.get("font")), xy[1]))
+        return original(self, xy, text, *a, **k)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        png = og.concall_card(worst)
+    finally:
+        ImageDraw.ImageDraw.text = original
+    assert _png_size(png) == (1200, 630)
+    assert max(x for x, _y in seen) <= og.W - 60
+    # Prose stays above the footer rule.
+    assert all(y < og.H - 92 or y >= og.H - 72 for _x, y in seen)
+
+
+@pytest.mark.parametrize("call", [
+    {}, {"symbol": "X"}, {"symbol": "X", "brief": {}},
+    {"symbol": "X", "company": "X Ltd", "brief": {"headline": "", "summary": "One. Two."}},
+    {"symbol": "X", "brief": {"headline": None, "summary": None}, "call_date": "not a date"},
+])
+def test_a_sparse_concall_still_renders(call):
+    assert _png_size(og.concall_card(call)) == (1200, 630)
+
+
 def test_every_card_carries_the_mark():
     """The gold arrow only exists in the logo, so its pixels prove it landed."""
     from PIL import Image
@@ -392,6 +574,7 @@ def test_every_card_carries_the_mark():
         "holding": og.holding_card(HOLDING),
         "chart": og.chart_card(CHART),
         "results": og.results_card(RESULTS),
+        "concall": og.concall_card(CONCALL),
     }
     for name, png in cards.items():
         im = Image.open(_io.BytesIO(png)).convert("RGB")

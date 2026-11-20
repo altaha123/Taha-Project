@@ -14,7 +14,10 @@
      · with a model configured, the page must fill in while the server is
        still reading rather than wait for it, list the key calls first, name
        the model that wrote each summary, and stop asking once the server
-       says it has finished */
+       says it has finished
+     · a call can be shared only once it has a written summary, the card and
+       the link it shares are that call's, and a shared link opens onto that
+       call — including one too old to be in the list any more */
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
 const { chromium } = require('playwright');
@@ -184,7 +187,7 @@ const server = http.createServer((req, res) => {
     viewport: { width: 1280, height: 1000 }, reducedMotion: 'reduce' });
   await context.addInitScript(() => { try { localStorage.setItem('altaha-guide-dismissed', '1'); } catch (e) {} });
   const page = await context.newPage(), errors = [];
-  let wowCalls = 0, ccCalls = 0, wowPayload = wow, ccQueue = null;
+  let wowCalls = 0, ccCalls = 0, wowPayload = wow, ccQueue = null, oneCall = null;
   page.on('pageerror', e => errors.push(String(e.stack)));
 
   await context.route('**/*', route => {
@@ -196,6 +199,9 @@ const server = http.createServer((req, res) => {
       ccCalls++;
       const next = ccQueue ? (ccQueue.length > 1 ? ccQueue.shift() : ccQueue[0]) : concalls;
       return route.fulfill({ json: next });
+    }
+    if (u.pathname === '/concall' && oneCall && u.searchParams.get('ticker') === oneCall.symbol) {
+      return route.fulfill({ json: oneCall });
     }
     if (u.pathname === '/market') return route.fulfill({ json: { indices: [], status: 'closed' } });
     return route.fulfill({ json: { available: false, rows: [], items: [], sectors: [] } });
@@ -383,6 +389,12 @@ const server = http.createServer((req, res) => {
     assert.notEqual(cite.toLowerCase(), 'moderator');
   }
 
+  // Only a call with a written summary can be shared: the card is drawn from
+  // the summary, and there is not one yet for the second call.
+  assert.equal(await lead.locator('.cc-share').count(), 1);
+  assert.equal(await second.locator('.cc-share').count(), 0,
+    'a call still waiting for its summary must not offer a card of it');
+
   // The reader finishes. The second brief arrives without a reload, what the
   // person had opened stays open, and the page stops asking.
   await second.locator('.cc-hl').waitFor({ state: 'visible', timeout: 8000 });
@@ -400,6 +412,36 @@ const server = http.createServer((req, res) => {
   await page3.waitForTimeout(4200);
   assert.equal(ccCalls, 3, 'the page must stop asking once the server says it has finished');
 
+  // ── Sharing a call ───────────────────────────────────────────────────────
+  // The button carries the call it sits on. The headline here has a tag in
+  // it, which must survive the attribute as text and nothing else.
+  assert.equal(await second.locator('.cc-share').count(), 1, 'a summarised call can be shared');
+  const shared = JSON.parse(await lead.locator('.cc-share').getAttribute('data-share'));
+  assert.deepEqual([shared.kind, shared.ticker, shared.company, shared.quarter],
+    ['concall', 'SHIPROCKET', 'Shiprocket Ltd', 'Q1 FY27']);
+  assert.match(shared.headline, /^Revenue grew 34%.*<script>/);
+
+  // Pressing it opens the sheet on that call's card, with X and WhatsApp.
+  await lead.locator('.cc-share').evaluate(el => el.click());
+  const sheet = page3.locator('#shsheet');
+  await sheet.waitFor({ state: 'visible' });
+  assert.match(await sheet.locator('#shttl').innerText(), /SHIPROCKET — Q1 FY27 earnings call/);
+  assert.match(await sheet.locator('#shsub').innerText(), /written by a model/i);
+  assert.match(await sheet.locator('#shcardimg').getAttribute('src'),
+    /\/og\/concall\.png\?ticker=SHIPROCKET&period=Q1-FY27$/);
+  for (const net of ['x', 'wa']) {
+    assert.equal(await sheet.locator(`[data-do="${net}"]`).count(), 1);
+    const to = decodeURIComponent(await page3.evaluate(
+      ([n, d]) => window.AltahaShare.shareUrl(n, d), [net, shared]));
+    assert.match(to, /\/share\/concall\/SHIPROCKET\?period=Q1-FY27/, `${net} must carry the call's link`);
+    assert.match(to, /Shiprocket Ltd — Q1 FY27 earnings call/);
+    assert.match(to, /Revenue grew 34%/);
+    assert.doesNotMatch(to, /onrender\.com/, 'a post must not name the API host');
+  }
+  await sheet.locator('.shx').evaluate(el => el.click());
+  await sheet.waitFor({ state: 'hidden' });
+  assert.equal(await page3.evaluate(() => window.__xss), undefined);
+
   await page3.screenshot({ path: path.join(output, 'concalls-brief-1280-light.png'), fullPage: true });
   for (const width of [320, 390, 768, 1280]) {
     await page3.setViewportSize({ width, height: 1000 });
@@ -415,9 +457,52 @@ const server = http.createServer((req, res) => {
     }
   }
   await page3.close();
+
+  // ── Arriving from a shared link ──────────────────────────────────────────
+  // The link names a company. Its call is brought into view with its brief
+  // open, and the stock is not analysed instead: the reader was sent a call.
+  ccQueue = [ccDone];
+  const page4 = await context.newPage();
+  page4.on('pageerror', e => errors.push(String(e.stack)));
+  let analysed = 0;
+  page4.on('request', r => { if (new URL(r.url()).pathname === '/analyze') analysed++; });
+  await page4.goto('http://127.0.0.1:8773/?go=concalls&q=QUIETCO', { waitUntil: 'domcontentloaded' });
+  const sent = page4.locator('#view-concalls .cc.is-arrived');
+  await sent.waitFor({ state: 'visible', timeout: 8000 });
+  assert.equal(await sent.count(), 1);
+  assert.match(await sent.locator('.cc-co').innerText(), /Quiet Industries Ltd/);
+  assert.equal(await sent.locator('.cc-full').evaluate(el => el.open), true,
+    'the call a link was sent for opens with its brief showing');
+  assert.equal(await page4.locator('#view-concalls .cc-group', { hasText: /you were sent/i }).count(), 0,
+    'a call already in the list is not listed twice');
+  await page4.waitForTimeout(600);
+  assert.equal(analysed, 0, 'a shared call must not run the stock analysis');
+  await page4.close();
+
+  // A link older than the list. The call is asked for by name and shown above
+  // the list, rather than the reader landing on a page that does not have it.
+  oneCall = {
+    available: true, symbol: 'FARCO', company: 'Far Away Ltd', quarter: 'Q4 FY26',
+    filed_at: '2026-05-20T18:00:00+05:30', pdf: 'https://www.bseindia.com/x/far.pdf',
+    digest: Object.assign({}, ccShiprocket.digest, { quarter: 'Q4 FY26', call_date: '2026-05-18' }),
+    versus_previous: { available: false, reason: 'No earlier transcript has been read for this company yet.' },
+    brief: Object.assign({}, ccBrief, { headline: 'Capacity doubles at the Hosur plant by March' }),
+    summary_configured: true, summary: null
+  };
+  const page5 = await context.newPage();
+  page5.on('pageerror', e => errors.push(String(e.stack)));
+  await page5.goto('http://127.0.0.1:8773/?go=concalls&q=FARCO', { waitUntil: 'domcontentloaded' });
+  const far = page5.locator('#view-concalls .cc.is-arrived');
+  await far.waitFor({ state: 'visible', timeout: 8000 });
+  assert.match(await far.locator('.cc-hl').innerText(), /Capacity doubles at the Hosur plant/);
+  assert.match(await page5.locator('#view-concalls .cc-group').first().innerText(), /you were sent/i);
+  assert.equal(await page5.locator('#view-concalls .cc').count(), 3, 'the list is still there under it');
+  assert.equal(await far.locator('.cc-share').count(), 1);
+  await page5.close();
+  oneCall = null;
   ccQueue = null;
 
-  const relevant = errors.filter(e => /wow\.js|concalls\.js/.test(e));
+  const relevant = errors.filter(e => /wow\.js|concalls\.js|share\.js/.test(e));
   assert.deepEqual(relevant, []);
 
   fs.writeFileSync(path.join(output, 'verification.json'), JSON.stringify({
@@ -426,7 +511,8 @@ const server = http.createServer((req, res) => {
     quarterComparison: true, unwatchedQuarterNotCompared: true,
     everyQuoteAttributed: true, noSummaryStatedPlainly: true,
     fillsInWhileReading: true, keyCallsFirst: true, modelNamedOnEachSummary: true,
-    stopsPollingWhenDone: true, errors
+    stopsPollingWhenDone: true, sharesOnlySummarisedCalls: true,
+    sharedLinkOpensItsCall: true, errors
   }, null, 2));
 
   await browser.close(); server.close();

@@ -2126,6 +2126,69 @@ def share_results(ticker: str, period: str = ""):
         media_type="text/html")
 
 
+def _concall_for_card(ticker, period=""):
+    """The call a concall card draws, or a 404 when no brief has been written."""
+    if not ticker or len(ticker) > 20:
+        raise HTTPException(400, "Provide a valid ticker symbol.")
+    sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
+    call = None
+    if concall_source is not None:
+        try:
+            call = concall_source.for_card(sym, (period or "")[:12])
+        except Exception:
+            call = None
+    if not call:
+        raise HTTPException(404, f"No written summary of an earnings call is on file for {sym}.")
+    return call
+
+
+@app.get("/og/concall.png")
+def og_concall(ticker: str, period: str = ""):
+    """
+    One earnings call as a picture: the company, the quarter, the brief's
+    headline and as much of its summary as fits.
+
+    Drawn from the ledger only. A card is fetched by crawlers, and a crawler
+    never starts a transcript read or a model call: a call with no brief on
+    file is a 404, and the page offers no share button for one.
+
+    `period` picks the quarter, and is in the address for the reason it is on
+    a results card: a new quarter's call is a new URL, so the picture X and
+    the CDN cached for the last one is never shown for this one.
+    """
+    call = _concall_for_card(ticker, period)
+    brief = call.get("brief") or {}
+    key = "concall:%s:%s" % (call.get("pdf"), brief.get("written_at"))
+    try:
+        png = og_cards.cached(key, lambda: og_cards.concall_card(call))
+    except Exception as e:
+        raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
+    return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
+
+
+@app.get("/share/concall/{ticker}")
+def share_concall(ticker: str, period: str = ""):
+    call = _concall_for_card(ticker, period)
+    sym, brief = call["symbol"], call.get("brief") or {}
+    name = call.get("company") or sym
+    quarter = call.get("quarter") or ""
+    title = f"{name} — {quarter + ' ' if quarter else ''}earnings call"
+    if brief.get("headline"):
+        title += f": {brief['headline']}"
+    desc = (brief.get("summary") or "").strip()
+    if len(desc) > 300:
+        desc = desc[:297].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
+    # A symbol can carry an ampersand (M&M), which would end the parameter.
+    from urllib.parse import quote as _q
+    tag = concall_source.quarter_slug(quarter)
+    return Response(content=og_cards.share_page(
+        title, desc,
+        f"{SHARE_ORIGIN}/og/concall.png?ticker={_q(sym, safe='')}"
+        + (f"&period={tag}" if tag else ""),
+        f"{SITE_URL}/?go=concalls&q={_q(sym, safe='')}"),
+        media_type="text/html")
+
+
 @app.get("/share/{ticker}")
 def share_stock(ticker: str):
     if not ticker or len(ticker) > 20:

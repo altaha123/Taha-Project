@@ -36,6 +36,19 @@
 
   var loadedAt = 0, timer = null, polls = 0, lastPaint = '', busy = false;
 
+  /* A shared card links to ?go=concalls&q=SYMBOL. `want` is that symbol,
+     `pinned` its call when the list on the page does not already hold it, and
+     `last` the list as it was last answered, so the page can be drawn again
+     once the pinned call arrives. */
+  var want = (function () {
+    try {
+      var P = new URLSearchParams(location.search);
+      if ((P.get('go') || '').trim().toLowerCase() !== 'concalls') return '';
+      return (P.get('q') || '').trim().toUpperCase().replace(/[^A-Z0-9&.\-]/g, '').slice(0, 20);
+    } catch (e) { return ''; }
+  })();
+  var pinned = null, last = null, arrived = false;
+
   function $(id) { return document.getElementById(id); }
   function esc(s) {
     return String(s == null ? '' : s)
@@ -224,6 +237,23 @@
       esc(text) + '</p>' : '';
   }
 
+  /* The Share button, on a call that has a written brief and a symbol to
+     address it by. share.js opens its sheet for anything carrying data-share;
+     the server draws the card from the same brief this page is showing. */
+  var SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>' +
+    '<path d="M12 3v13"/><path d="M8 7l4-4 4 4"/></svg>';
+
+  function shareButton(r) {
+    var b = r.brief || {}, dg = r.digest || {};
+    if (!r.symbol || b.status !== 'ready') return '';
+    var payload = { kind: 'concall', ticker: r.symbol, company: r.company || r.symbol,
+                    quarter: dg.quarter || '', headline: b.headline || '' };
+    return '<button class="shbtn cc-share" type="button" data-share="' +
+      esc(JSON.stringify(payload)) + '" aria-label="Share the summary of ' +
+      esc(r.company || r.symbol) + '’s call">' + SHARE_ICON + 'Share</button>';
+  }
+
   function card(r, reading) {
     var dg = r.digest || {}, b = r.brief || {}, pdf = link(r.pdf);
     var body;
@@ -237,7 +267,8 @@
     } else {
       body = waitLine(b.status, reading) + digestBlock(dg) + shiftBlock(r.versus_previous);
     }
-    return '<article class="cc' + (r.key ? ' is-key' : '') + '">' +
+    return '<article class="cc' + (r.key ? ' is-key' : '') + '"' +
+      (r.symbol ? ' data-sym="' + esc(String(r.symbol).toUpperCase()) + '"' : '') + '>' +
       '<header class="cc-head">' +
         '<div class="cc-co">' +
           (r.symbol
@@ -247,6 +278,7 @@
           (r.key ? '<em class="key">Key call</em>' : '') +
         '</div>' +
         '<span class="cc-when">' + esc(dg.call_date ? when(dg.call_date) : when(r.at)) + '</span>' +
+        shareButton(r) +
       '</header>' + body +
       (r.readable && pdf
         ? '<a class="cc-pdf" href="' + pdf + '" target="_blank" rel="noopener">Read the full transcript →</a>' : '') +
@@ -316,12 +348,12 @@
     }
     // An unchanged answer is not repainted: a reader half-way down a brief
     // should not have the page rebuilt under them every few seconds.
-    var sig = JSON.stringify([d.rows, d.counts, d.status, d.summary_configured]);
+    var sig = JSON.stringify([d.rows, d.counts, d.status, d.summary_configured, pinned]);
     if (sig === lastPaint) return;
     lastPaint = sig;
 
     var rows = d.rows || [], s = d.status || {}, open = keepOpen(box), html;
-    if (!rows.length) {
+    if (!rows.length && !pinned) {
       html = summaryBlock(d.summary_configured) + (s.reading
         ? '<div class="cc-empty is-loading" aria-busy="true">Reading the transcripts filed in ' +
           'the last few days. The first pass takes a few minutes, and each call appears here ' +
@@ -334,6 +366,9 @@
       var rest = rows.filter(function (r) { return !r.key; });
       var one = function (r) { return card(r, !!s.reading); };
       html = summaryBlock(d.summary_configured) + countsBar(d) +
+        (pinned
+          ? '<h3 class="cc-group">The call you were sent</h3>' + card(pinned, false)
+          : '') +
         (key.length
           ? '<h3 class="cc-group">Key calls</h3>' +
             '<p class="cc-groupnote">The calls that added the most to what the results filing ' +
@@ -341,13 +376,56 @@
             'This grades the information in the call, not the company or its share.</p>' +
             key.map(one).join('') +
             (rest.length ? '<h3 class="cc-group">Other calls</h3>' : '')
-          : '') +
+          : (pinned && rest.length ? '<h3 class="cc-group">Other calls</h3>' : '')) +
         rest.map(one).join('') +
         (d.disclaimer ? '<p class="cc-src">' + esc(d.disclaimer) + '</p>' : '') +
         '<p class="cc-src">' + esc(d.source) + '</p>';
     }
     box.innerHTML = html;
     restoreOpen(box, open);
+  }
+
+  /* ── Arriving from a shared card ──────────────────────────────────────── */
+
+  function reveal() {
+    var box = $('concalls-body');
+    if (!box || !want || !visible()) return;
+    var el = null;
+    box.querySelectorAll('article.cc[data-sym]').forEach(function (a) {
+      if (!el && a.getAttribute('data-sym') === want) el = a;
+    });
+    if (!el) return;
+    var full = el.querySelector('details.cc-full');
+    if (full) full.open = true;
+    el.classList.add('is-arrived');
+    var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try { el.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' }); }
+    catch (e) { el.scrollIntoView(); }
+  }
+
+  /* Once, after the first list lands. The list holds forty calls and a link
+     can be older than all of them, so a call that is not in it is asked for
+     by name and shown above the list rather than quietly not being there. */
+  function arrive(d) {
+    if (!want || arrived || !d || !d.available) return;
+    arrived = true;
+    var here = (d.rows || []).some(function (r) {
+      return String(r.symbol || '').toUpperCase() === want;
+    });
+    if (here) { setTimeout(reveal, 80); return; }
+    fetch(API + '/concall?ticker=' + encodeURIComponent(want))
+      .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
+      .then(function (c) {
+        if (!c || !c.available) return;
+        var b = c.brief || {};
+        pinned = { symbol: c.symbol, company: c.company, at: c.filed_at, pdf: c.pdf,
+                   readable: true, digest: c.digest || {}, brief: b,
+                   versus_previous: c.versus_previous,
+                   key: b.status === 'ready' && b.weight === 'high' };
+        if (last) paint(last);
+        setTimeout(reveal, 80);
+      })
+      .catch(function () { /* the list is still the page */ });
   }
 
   function again(seconds) {
@@ -373,7 +451,9 @@
       .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
       .then(function (d) {
         loadedAt = Date.now();
+        last = d;
         paint(d);
+        arrive(d);
         again(d && d.poll_seconds);
       })
       .catch(function () {
