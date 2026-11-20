@@ -88,11 +88,17 @@ async function fresh(browser, viewport, when) {
 const open = (page) => page.goto(BASE + '/#portfolio/planner', { waitUntil: 'domcontentloaded' })
   .then(() => page.locator('#mp-hero').waitFor({ state: 'visible' }));
 /* Somebody who has been here before: their numbers are in the browser when
-   the page loads. Set, then loaded — a change of #hash alone loads nothing. */
+   the page loads. They are written on a bare page of the same site, and the
+   planner is then opened — not opened, written to and reloaded. A reload
+   puts the page back where it was scrolled before (here, the top) at the
+   moment it finishes loading, over anything scrolled since. The steps below
+   run inside that moment on a slow machine, and the phone check then found a
+   tool it had just opened back under the fold. That is the browser keeping a
+   reader's place across a reload, not the planner. */
 const returning = async (page, state) => {
-  await page.goto(BASE + '/#portfolio/planner', { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/planner.css', { waitUntil: 'domcontentloaded' });
   await page.evaluate(([k, v]) => localStorage.setItem(k, v), [KEY, JSON.stringify(state)]);
-  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.goto(BASE + '/#portfolio/planner', { waitUntil: 'domcontentloaded' });
   await page.locator('#mp-hero').waitFor({ state: 'visible' });
 };
 const stored = (page) => page.evaluate(k => JSON.parse(localStorage.getItem(k) || 'null'), KEY);
