@@ -1244,8 +1244,8 @@
 <link rel="stylesheet" href="calls.css?v=20261029">
 <link rel="stylesheet" href="watchlists.css?v=20261029">
 <link rel="stylesheet" href="strategy-lab.css?v=20261031">
-<link rel="stylesheet" href="picks.css?v=20261114">
-<script src="picks.js?v=20261114"></script>
+<link rel="stylesheet" href="picks.css?v=20261120-picks">
+<script src="picks.js?v=20261120-picks"></script>
 <script src="planet-renderer.js?v=20260921-3d"></script>
 <script src="universe-voyage.js?v=20261120-seo"></script>
 <script src="universe-scan.js?v=20261120-seo"></script>
@@ -1647,21 +1647,25 @@
     <!-- The pick lists (picks.js). The list comes first and the scan that
          makes it comes after: a reader came for stocks, and used to scroll
          past a full screen of planets to reach one. -->
-    <div class="hzrow" style="flex-direction:column;align-items:flex-start;gap:0">
+    <!-- The same chooser as the Ideas page (picks.js, tabsHTML): two labelled
+         rows, each chip saying how long the list is held. -->
+    <div class="pk-chooser page">
+      <div class="pk-group"><span class="pk-group-h" aria-hidden="true">By holding time</span>
       <div class="pk-tabs page" id="hzseg" role="tablist" aria-label="Holding period">
-        <button type="button" role="tab" class="pk-tab hz" data-h="week"><i>This </i>week</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="month"><i>This </i>month</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="results"><i>After </i>results</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="momentum">Momentum</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="long">Long term</button>
-      </div>
+        <button type="button" role="tab" class="pk-tab hz" data-h="week"><span><i>This </i>week</span><small>~ a week</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="month"><span><i>This </i>month</span><small>~ a month</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="results"><span><i>After </i>results</span><small>~ a month</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="momentum"><span>Momentum</span><small>~ 3 months</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="long"><span>Long term</span><small>~ a year</small></button>
+      </div></div>
+      <div class="pk-group"><span class="pk-group-h" aria-hidden="true">By chart setup</span>
       <div class="pk-tabs page setups" id="hzseg2" role="tablist" aria-label="Setup">
-        <button type="button" role="tab" class="pk-tab hz" data-h="breakout">Breakouts</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="technical">Technicals</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="quick"><i>Quick </i>trades</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="flow"><i>Money </i>flow</button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="emerging">Emerging</button>
-      </div>
+        <button type="button" role="tab" class="pk-tab hz" data-h="breakout"><span>Breakouts</span><small>~ a month</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="technical"><span>Technicals</span><small>~ a month</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="quick"><span><i>Quick </i>trades</span><small>a few days</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="flow"><span><i>Money </i>flow</span><small>~ a month</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="emerging"><span>Emerging</span><small>~ a month</small></button>
+      </div></div>
     </div>
     <p class="pk-brief"><a href="brief.html">Today&rsquo;s policy brief</a>: every new DGFT, RBI, SEBI and government circular, and the stocks it touches.</p>
     <div id="scan-results">
@@ -1673,6 +1677,9 @@
     <div class="secmix" id="secmix"></div>
     <div class="selnotes" id="selnotes"></div>
     <div id="idearows"></div>
+    <!-- What the target on each pick is, said once, under the list: above it,
+         it pushed the first stock off a phone's first screen. -->
+    <div id="pickaim"></div>
     <div class="toolbar" id="ideatools" style="display:none">
       <button class="act" id="thintoggle">Include thin stocks</button>
       <a class="act" id="ideacsv" href="#" download>Download CSV</a>
@@ -3110,6 +3117,7 @@ async function loadIdeas(){
   if(window.AltahaPicks){ horizon = window.AltahaPicks.chosen(); markHorizon(); }
   const req = ++ideasReq;
   $("idearows").innerHTML = SKEL(4);
+  if($("pickaim")) $("pickaim").innerHTML = "";
   $("hznote").textContent = "";
   ["pickhead","stalebox","regimebox","secmix","selnotes"].forEach(id=>$(id).innerHTML="");
   $("ideatools").style.display="none";
@@ -3164,6 +3172,7 @@ async function loadIdeas(){
        one more. A scan from before the lists keeps the old header. */
     const PK = window.AltahaPicks, picks = !!(PK && PK.isTested(d));
     $("view-ideas").classList.toggle("is-picks", picks);
+    if($("pickaim")) $("pickaim").innerHTML = picks && PK.aimHTML ? PK.aimHTML(d) : "";
     if(picks){
       /* The reasons a name was left out are worth having and not worth
          reading before the list, so they are folded. */

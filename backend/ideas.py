@@ -1266,6 +1266,9 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
                          (f"{spec['idea']} Hold {spec['hold_text']}; leave on a close "
                           f"{spec['exit_pct']:.0f}% under the call price.")),
         "tested": tested_record(key) if recipe_current else None,
+        # Each pick carries a mark above its price (plan.aim). This is what the
+        # study found on selling there, for the lists it tested that way.
+        "target_test": leaders.target_tested(key) if recipe_current else None,
         "recipe_current": recipe_current,
         # The study's header only. Its tables are in research/ideas-study.json;
         # sending them with every list would triple the response for nobody.
