@@ -15,7 +15,9 @@
      · a company dropping off must never be called a sale.
      · the 1% floor and the quarterly lag must be on the page, in the header of
        every portfolio, not folded into a footnote.
-     · a dead investor must redirect and say so. */
+     · a dead investor must redirect and say so.
+     · a picture goes only on the name investor-pictures.js gives it to, says
+       whose photograph it is, and leaves the initials behind if it fails. */
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
 const { chromium } = require('playwright');
@@ -49,6 +51,14 @@ const server = http.createServer((req, res) => {
 });
 
 const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
+
+/* One photograph, served here and given to one investor below, so the test
+   does not depend on which real pictures are on file. A single grey pixel. */
+const PORTRAIT_PATH = '/assets/investors/a-test-portrait.png';
+const PORTRAIT = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  'base64');
+const PHOTO_SOURCE = 'https://commons.wikimedia.org/wiki/File:Example.jpg';
 
 /* The shell nav replaces the legacy tab strip and hides it, so the old buttons
    are present but invisible; and `innerText` on a display:none element falls
@@ -95,6 +105,7 @@ async function onTab(page, id) {
 
   await context.route('**/*', route => {
     const u = new URL(route.request().url());
+    if (u.pathname === PORTRAIT_PATH) return route.fulfill({ body: PORTRAIT, contentType: 'image/png' });
     if (u.hostname === '127.0.0.1') return route.continue();
     if (['font', 'stylesheet', 'image'].includes(route.request().resourceType())) return route.abort();
     // An external <script src> answered with JSON is parsed as JavaScript and
@@ -118,6 +129,11 @@ async function onTab(page, id) {
 
   // Nothing is fetched until the tab is opened.
   assert.equal(directoryCalls, 0, 'the investor list must not load before its tab is opened');
+
+  await page.evaluate(([src, source]) => {
+    window.AltahaInvestorPictures['vijay-kedia'] = {
+      kind: 'photo', src, credit: 'A. Photographer', license: 'CC BY-SA 4.0', source };
+  }, [PORTRAIT_PATH.slice(1), PHOTO_SOURCE]);
 
   await openTab(page, 'investors');
   await page.locator('.iv-card').first().waitFor({ state: 'visible' });
@@ -152,6 +168,68 @@ async function onTab(page, id) {
   assert.match(lead, /above 1%/);
   assert.match(lead, /quarter/i);
 
+  // ── The picture beside each name ─────────────────────────────────────────
+  // Every card carries its initials, picture or not: they are what shows when
+  // there is no picture and what is left when one will not load.
+  const cardCount = await page.locator('.iv-card').count();
+  assert.equal(await page.locator('.iv-card .iv-av').count(), cardCount,
+    'every card has the place a picture goes');
+  const marks = await page.locator('.iv-card .iv-av i').allInnerTexts();
+  assert.ok(marks.every(m => /^[A-Z]{2}$/.test(m)), 'two initials on every card: ' + marks);
+  const kediaAv = page.locator('.iv-card[data-id="vijay-kedia"] .iv-av');
+  assert.equal(await kediaAv.locator('i').innerText(), 'VK');
+
+  // A photograph that loads is drawn over them, round, and not squashed.
+  await page.waitForFunction(() => {
+    const i = document.querySelector('.iv-card[data-id="vijay-kedia"] .iv-av img');
+    return i && i.complete && i.naturalWidth > 0;
+  });
+  const avBox = await kediaAv.boundingBox();
+  assert.ok(avBox.width >= 40 && Math.abs(avBox.width - avBox.height) < 0.5,
+    `the picture is a ${avBox.width} by ${avBox.height} box, not a square`);
+  assert.equal(await kediaAv.evaluate(el => getComputedStyle(el).borderRadius), '50%');
+
+  // And says whose photograph it is, where it is shown. A free licence asks
+  // for the author and the licence by name.
+  const credits = page.locator('.iv-grid + .iv-credit');
+  assert.match(await credits.innerText(), /Vijay Kedia by A\. Photographer, CC BY-SA 4\.0/);
+  assert.equal(await credits.locator('a').getAttribute('href'), PHOTO_SOURCE);
+
+  // A picture that will not load takes itself away and leaves the initials.
+  // Authum's logo sits on another host, which this test refuses like every
+  // other outside image, so its card is that failure.
+  const authumAv = page.locator('.iv-card[data-id="authum"] .iv-av');
+  await authumAv.scrollIntoViewIfNeeded();
+  assert.ok(await authumAv.evaluate(el => el.classList.contains('is-org')),
+    'a company is drawn as a company, not as a person');
+  await page.waitForFunction(() =>
+    !document.querySelector('.iv-card[data-id="authum"] .iv-av img'));
+  assert.equal(await authumAv.locator('i').innerText(), 'AI');
+  assert.ok(await authumAv.locator('i').isVisible());
+
+  // Nobody is given a picture that investor-pictures.js does not hold for
+  // them. A face on the wrong name is the error this page cannot afford.
+  const stray = await page.evaluate(() =>
+    [...document.querySelectorAll('.iv-card')]
+      .filter(c => c.querySelector('.iv-av img') &&
+                   !Object.prototype.hasOwnProperty.call(window.AltahaInvestorPictures, c.dataset.id))
+      .map(c => c.dataset.id));
+  assert.deepEqual(stray, []);
+
+  // On a phone the picture sits beside the text and nothing runs off the side.
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForTimeout(80);
+    const over = await page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    assert.ok(over <= 1, `the directory overflows by ${over}px at ${width}`);
+    const card = page.locator('.iv-card[data-id="vijay-kedia"]');
+    const [a, t] = [await card.locator('.iv-av').boundingBox(), await card.locator('b').boundingBox()];
+    assert.ok(a.x + a.width <= t.x, `at ${width} the picture overlaps the name`);
+    await card.screenshot({ path: path.join(output, `investors-card-${width}.png`) });
+  }
+  await page.setViewportSize({ width: 1280, height: 1000 });
+
   // ── A rolled-up total ────────────────────────────────────────────────────
   await onTab(page, 'investors');
   await page.locator('.iv-card', { hasText: 'Vijay Kedia' }).first().click();
@@ -180,6 +258,11 @@ async function onTab(page, id) {
   // Movement is named and signed.
   assert.match(await atul.locator('.mv').innerText(), /added \+0\.60 pp/);
 
+  // The same photograph heads his portfolio, with its credit beneath.
+  assert.equal(await page.locator('.iv-who-head .iv-av.lg img').count(), 1);
+  assert.match(await page.locator('.iv-who-head + .iv-credit').innerText(),
+    /Photograph by A\. Photographer, CC BY-SA 4\.0/);
+
   // ── Two folios of one name ───────────────────────────────────────────────
   await onTab(page, 'investors');
   await page.locator('#iv-back').click();
@@ -190,6 +273,11 @@ async function onTab(page, id) {
   assert.ok(Math.abs(num(await titan.locator('.iv-pos-head .vv').innerText()) - 5.31) < 0.01,
     'Titan names her twice, 4.24 and 1.07 — the position is 5.31, not 1.07');
   assert.equal(await titan.locator('.iv-parts li').count(), 2);
+
+  // No photograph is on file for her: initials, and no credit for nothing.
+  assert.equal(await page.locator('.iv-who-head .iv-av.lg i').innerText(), 'RJ');
+  assert.equal(await page.locator('.iv-who-head .iv-av img').count(), 0);
+  assert.equal(await page.locator('.iv-who-head + .iv-credit').count(), 0);
 
   // ── A family trust is counted AND labelled ───────────────────────────────
   const metro = page.locator('.iv-pos', { hasText: 'METROBRAND' }).first();
@@ -258,6 +346,7 @@ async function onTab(page, id) {
   assert.match(await page.locator('#investors-body .iv-cover').innerText(),
     /companies read so far/i);
   assert.match(await page.locator('.iv-looking').innerText(), /Dolly Khanna/);
+  assert.equal(await page.locator('.iv-who-head .iv-av i').innerText(), 'DK');
   assert.equal(await page.locator('.iv-pos').count(), 0,
     'no positions at all rather than an empty-looking list');
 
