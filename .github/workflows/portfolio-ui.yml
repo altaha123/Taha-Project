@@ -24,6 +24,7 @@ on:
       - 'backend/tests/*wow*'
       - 'backend/tests/*concall*'
       - '.github/workflows/portfolio-ui.yml'
+      - '.github/scripts/install-chromium.sh'
 permissions:
   contents: read
 jobs:
@@ -34,8 +35,9 @@ jobs:
     # version together.
     runs-on: ubuntu-24.04
     # The tests take about seven minutes. Installing Chromium and its system
-    # packages usually takes one and has taken eleven and a half, and at
-    # fifteen that cancelled a run in which every test had passed.
+    # packages usually takes one; install-chromium.sh stops an install the
+    # package mirror is trickling out and tries again, eleven minutes at the
+    # very worst. The limit covers both.
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +51,7 @@ jobs:
         run: |
           pip install numpy pandas
           npm install --prefix /tmp/portfolio-browser playwright@1.58.2
-          /tmp/portfolio-browser/node_modules/.bin/playwright install --with-deps chromium
+          bash .github/scripts/install-chromium.sh /tmp/portfolio-browser/node_modules/.bin/playwright
       - name: Build synthetic portfolio fixtures
         run: python backend/tests/portfolio_fixture.py /tmp/portfolio-fixtures
       - name: Verify phone, tablet, desktop and chart failures
