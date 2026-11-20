@@ -1299,6 +1299,33 @@ def breakout_watch(blocks, limit=20):
     return out[:limit]
 
 
+def target_tested(key):
+    """
+    What the study measured when a pick was SOLD at the mark plan() puts on it.
+
+    The study ran each of the four price lists twice more: held to the end
+    with its exit line, and sold at the first high as far above the entry as
+    that line is below it. Both records are in the file's `exits` table, and
+    this returns the two side by side, so the page can say what selling at
+    the mark did in the study's own numbers and in no others. None for a
+    list the study did not run that way (the results list and the setups),
+    and the page then says only what the mark is.
+    """
+    spec = LISTS.get(key)
+    if spec is None or spec.get("sell_rule"):
+        return None
+    pct = spec["exit_pct"]
+    runs = (TESTED.get("exits") or {}).get(key) or {}
+    held = runs.get(f"close {pct:g}% under")
+    sold = runs.get(f"close {pct:g}% under, target {pct:g}% over")
+    if not held or not sold:
+        return None
+    keep = ("up_pct", "avg_pct", "median_pct", "picks")
+    return {"target_pct": pct,
+            "sold": {k: sold.get(k) for k in keep},
+            "held": {k: held.get(k) for k in keep}}
+
+
 def best_rank(block):
     """The best standing a stock has on any list, or None if it is on none."""
     ranks = [v.get("rank") for v in ((block or {}).get("lists") or {}).values() if v.get("rank")]
@@ -1311,7 +1338,16 @@ def plan(key, price, called_on=None):
 
     `stop` is kept under that name because the tracker and the call log judge
     an idea against `plan.stop`; here it is the exit line, a set distance
-    under the call price, read on a close. There is deliberately no target.
+    under the call price, read on a close.
+
+    There is deliberately no target to SELL at: `t1` and `rr` stay None, so
+    the tracker and the call log close a call exactly as they did. `aim` is
+    something else, for the page only: a mark as far above the call price as
+    the exit line is below it, which is the nearer of the two targets the
+    study tested (research/ideas_study.py, "target X% over"). A reader asked
+    where a good result would be; this is where, and target_tested() below is
+    what the study found on selling there. A list with a sell rule of its own
+    (quick trades leave on the 5-day average) carries no mark.
     """
     spec = LISTS.get(key)
     p = _finite(price)
@@ -1327,6 +1363,7 @@ def plan(key, price, called_on=None):
         note = (f"Sell at the first close above its 5-day average, or after {spec['hold_sessions']} "
                 f"sessions. Leave if it closes below \u20b9{line:,.2f}, "
                 f"{spec['exit_pct']:.0f}% under this price.")
+    marked = not spec.get("sell_rule")
     return {
         "style": "hold",
         "stance": "HOLD",
@@ -1335,6 +1372,8 @@ def plan(key, price, called_on=None):
         "risk_pct": spec["exit_pct"],
         "rr": None,
         "t1": None,
+        "aim": round(p * (1 + spec["exit_pct"] / 100.0), 2) if marked else None,
+        "aim_pct": spec["exit_pct"] if marked else None,
         "hold_sessions": spec["hold_sessions"],
         "hold_text": spec["hold_text"],
         "review_on": (day + dt.timedelta(days=spec["hold_days"])).isoformat(),

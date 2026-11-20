@@ -124,7 +124,24 @@ is ever left invisible.
 The Ideas door opens on five tabs, with five setup tabs under them (see below): **This week**, **This month**, **After
 results**, **Momentum** and **Long term**. Each shows what the list is in one
 line, how it tested in three numbers, and the picks, each with up to four
-reasons, a holding period and one exit price.
+reasons, a holding period and three prices: where it is, a target, and the
+one price to leave at.
+
+**How the panel reads.** The ten lists are two labelled rows of chips (*By
+holding time*, *By chart setup*), each chip saying how long the list is held.
+The three tested figures each carry a whole phrase ("of every 100 picks went
+up", "average gain per pick, held about a month", "the market over the same
+time"), and the first is also drawn as a bar. It replaced two unlabelled bars
+of five tabs and a box of three numbers captioned in two words each.
+
+**The target is a mark, not a rule.** A pick's target (`plan.aim` from
+`leaders.plan`) is as far above the price as the exit line is below it. That
+is the nearer of the two targets the study tested, and where it was tested
+the page prints what selling there did, beside the picks: on the long-term
+list, 64.9 of 100 picks ended up against 58.2, and the average fell from
++23.7% to +8.8%. The plan is still "hold, and leave below the exit line":
+`plan.t1` stays empty, so the tracker and the call log close a call exactly
+as before. Quick trades, which already say when to sell, carry no target.
 
 | List | Hold | Exit line | Rose | Average | Nifty 500 | After costs |
 |---|---|---|---|---|---|---|

@@ -161,6 +161,13 @@ long-term list a +30% target raised it from 58% to 65% and cut the average from
 +23.7% to +8.8%. A few large winners carry each list, and a target sells
 exactly those. A higher hit rate is not a better list.
 
+*Added 20 November 2026.* The page now shows a target on each pick, because a
+reader asked where a good result would be. It is the nearer of the two tested
+above, as far over the price as the exit line is under it, and it is a mark
+and not a rule: the plan still says hold, nothing is sold at it, and the page
+prints the two rows of this comparison beside it (`leaders.target_tested`).
+The finding above stands.
+
 Momentum held six months instead of three, on a line 20% under: 57% rose,
 +9.9% a pick against +6.4% for the index.
 
