@@ -145,6 +145,7 @@ POST    /intraday/stop
 GET     /investor
 GET     /investors
 GET     /investors/coverage
+POST    /jobs/concalls
 POST    /jobs/daily-digest
 POST    /jobs/policy-brief
 POST    /jobs/wow-backfill
