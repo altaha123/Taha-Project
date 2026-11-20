@@ -579,6 +579,33 @@ async function clean(page, label) {
       await ctx.close();
     }
 
+    // ── The session answers before the header is built ─────────────────
+    // The header used to paint the account while it was still off the page,
+    // which painted nothing, and then waited for the next change of account.
+    // A session that had already answered never changed again, so the reader
+    // stayed "Sign in" beside a wealth desk that was theirs. Which of the two
+    // came first was a race, so here the header is held back until the
+    // session has answered.
+    {
+      const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
+      const state = fresh({ user: { email: 'nadia@example.com', wealth_desk: true }, desk: true });
+      await wire(ctx, state);
+      const page = await ctx.newPage();
+      watch(page, 'session first');
+      await ctx.route('**/shell.js*', async route => {
+        await page.waitForFunction(() => !!(window.AltahaAuth && window.AltahaAuth.user()));
+        return route.continue();
+      });
+      await page.goto(`${base}/wealth.html`);
+      await page.waitForFunction(() => document.body.classList.contains('sh-on'));
+      assert.match(await page.textContent('#sh-wd'), /Your wealth desk/, 'the header does not know a session that answered before it was built');
+      assert.equal(await page.getAttribute('#sh-wd', 'href'), 'wealth.html');
+      assert.equal(await page.textContent('#sh-account'), 'nadia');
+      assert.equal(await page.textContent('#sh-drawer .sh-dacc-name'), 'nadia@example.com');
+      assert.equal(await page.textContent('#sh-drawer .sh-dwd b'), 'Your wealth desk');
+      await ctx.close();
+    }
+
     // ── News and filings on the stocks held ────────────────────────────
     {
       const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });

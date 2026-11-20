@@ -395,9 +395,6 @@
     meWrap.appendChild(me);
     meWrap.appendChild(menu);
 
-    paintAccount();
-    window.addEventListener('altaha-auth', paintAccount);
-
     bar.appendChild(brand);
     bar.appendChild(nav);
     bar.appendChild(search);
@@ -434,6 +431,13 @@
     wireSearch();
     wireTheme();
     wireScroll();
+
+    /* Only now, with the header and the sheet both on the page: paintAccount
+       finds what it paints by id, so called any earlier it finds nothing and
+       paints nothing. That left a reader whose session had already answered
+       reading "Sign in" until their account next changed. */
+    paintAccount();
+    window.addEventListener('altaha-auth', paintAccount);
   }
 
   // One builder for the Me menu, the phone sheet and the door bar, so an item
