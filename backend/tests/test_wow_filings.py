@@ -587,6 +587,112 @@ def test_rereading_takes_a_tax_order_out_of_the_ledgers_count(ledger, monkeypatc
 
 
 # ---------------------------------------------------------------------------
+# What a share card reads
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def shelf(ledger, monkeypatch):
+    """A ledger and an empty list in memory, with nothing behind them: the
+    exchange and the filing reader both fail the test if a card asks."""
+    monkeypatch.setattr(W, "_cache", {"at": 0.0, "rows": [], "note": ""})
+    monkeypatch.setattr(W, "company_facts", lambda s: {"market_cap_cr": 100.0, "sales_cr": 240.0,
+                                                       "sales_year": "FY26"})
+    monkeypatch.setattr(W, "market_cap_cr", lambda s: 100.0)
+    monkeypatch.setattr(W, "_order_items", lambda days: pytest.fail("a card walked the feed"))
+    monkeypatch.setattr(W, "scan", lambda *a, **k: pytest.fail("a card started a scan"))
+    return W
+
+
+def _won(n=1, day=20, text="We have received an order worth Rs. 60 crore.", **item):
+    row = W.size_up(W.read_filing(_item(n=n, day=day, **item), text))
+    return row
+
+
+def test_every_row_carries_the_handle_a_link_names_it_by():
+    a, b = _won(n=1), _won(n=2)
+    assert len(a["key"]) == W.KEY_LEN and a["key"] != b["key"]
+    assert all(c in "0123456789abcdef" for c in a["key"])
+    # The same filing is the same order, whenever it is read.
+    assert _won(n=1)["key"] == a["key"]
+
+
+def test_a_card_is_drawn_from_the_list_on_the_page(shelf):
+    a, b = _won(n=1), _won(n=2, text="Order worth Rs. 25 crore from ABC Limited.")
+    shelf._cache["rows"] = [a, b]
+    got = shelf.for_card("smallco", b["key"])
+    assert got["value_cr"] == 25.0 and got["customer"] == "ABC Limited"
+    # However the handle is spelled, and with only its start.
+    assert shelf.for_card("SMALLCO", b["key"][:8].upper())["key"] == b["key"]
+
+
+def test_a_card_outlives_the_week_it_was_shared_in(shelf):
+    """The list keeps a week. The ledger keeps the row as the page showed it,
+    so the card drawn next month is the card that was shared."""
+    text = ("Name of the entity awarding the order(s)/contract(s); NTPC Green Energy Limited\n"
+            "Nature of order(s) / contract(s); BESS system supply\n"
+            "Time period by which the order(s)/contract(s) is to be executed; By September 2027\n"
+            "Broad consideration or size of the order(s)/contract(s); Rs. 60 crore\n"
+            "Whether the promoter group have any interest; No\n")
+    row = _won(n=7, day=3, text=text)
+    assert shelf.record([row]) == 1
+    got = shelf.for_card("SMALLCO", row["key"])
+    for k in ("value_cr", "pct_of_market_cap", "market_cap_cr", "customer", "nature", "period",
+              "months_of_sales", "sales_year", "wow", "key", "at"):
+        assert got[k] == row[k], k
+    assert got["kind"] == row["kind"] and got["stage"] == "order"
+
+
+def test_a_link_with_no_handle_or_a_stale_one_is_the_newest_order(shelf):
+    old = _won(n=1, day=3, text="Order worth Rs. 20 crore.")
+    new = _won(n=2, day=18, text="Order worth Rs. 45 crore.")
+    shelf.record([old, new])
+    assert shelf.for_card("SMALLCO")["value_cr"] == 45.0
+    assert shelf.for_card("SMALLCO", "ffffffffffff")["value_cr"] == 45.0
+    assert shelf.for_card("SMALLCO", old["key"])["value_cr"] == 20.0
+
+
+def test_there_is_no_card_for_what_the_page_would_not_stand_behind(shelf, monkeypatch):
+    bid = _won(n=1, headline="has informed the Exchange about L1 for NHAI Project",
+               text="declared as the Lowest Bidder (L-1). The quoted EPC Price is Rs. 90 Crore.")
+    mou = _won(n=2, text="Sub: Signing of Memorandum of Understanding (MoU). Aggregate order "
+                         "value of Rs.16,29,03,15,000.00/-")
+    loose = _won(n=3, text="Reference 2026. The figure Rs. 75 crore appears here.")
+    blank = W.size_up(W.read_filing(_item(n=4), "We have received an order."))
+    assert (bid["stage"], mou["stage"], loose["value_confident"], blank["value_cr"]) == \
+        ("l1", "mou", False, None)
+    shelf._cache["rows"] = [bid, mou, loose, blank]
+    shelf.record([bid, mou, loose, blank])
+    assert shelf.for_card("SMALLCO") is None
+    for row in (bid, mou, loose, blank):
+        assert shelf.for_card("SMALLCO", row["key"]) is None
+    # No market cap, no card: the percentage is the card.
+    monkeypatch.setattr(W, "company_facts", lambda s: {})
+    monkeypatch.setattr(W, "market_cap_cr", lambda s: None)
+    unsized = W.size_up(W.read_filing(_item("NOCAP"), "Order worth Rs. 60 crore."))
+    shelf.record([unsized])
+    assert shelf.for_card("NOCAP") is None
+    assert shelf.for_card("") is None and shelf.for_card("NEVERFILED") is None
+
+
+def test_a_value_the_old_reader_wrote_down_is_never_put_on_a_card(shelf):
+    day = dt.date(2026, 10, 5)
+    row = dict(_seen(day, 278400.0, reader=1, symbol="LT"), market_cap_cr=500000.0,
+               pct_of_market_cap=55.7)
+    shelf.record([row])
+    assert shelf.for_card("LT") is None
+
+
+def test_a_row_written_before_details_were_kept_gets_them_on_the_next_read(shelf):
+    row = _won(n=9, text="Order worth Rs. 25 crore from ABC Limited.")
+    bare = {k: v for k, v in row.items() if k not in W._DETAIL}
+    assert shelf.record([bare]) == 1
+    assert shelf.for_card("SMALLCO", row["key"])["customer"] is None
+    assert shelf.record([row]) == 0, "the same reader does not restate a row"
+    got = shelf.for_card("SMALLCO", row["key"])
+    assert got["customer"] == "ABC Limited" and got["value_cr"] == 25.0
+
+
+# ---------------------------------------------------------------------------
 # A page is answered at once
 # ---------------------------------------------------------------------------
 

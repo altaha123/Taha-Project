@@ -51,6 +51,12 @@ class Client:
                 return self.main.og_stock(**q)
             if path == "/og/record.png":
                 return self.main.og_record()
+            if path == "/og/wow.png":
+                return self.main.og_wow(**q)
+            if path.startswith("/share/wow/"):
+                return self.main.share_wow(path.rsplit("/", 1)[1], **q)
+            if path == "/wow-order":
+                return self.main.wow_order_one(**q)
             if path == "/og/concall.png":
                 return self.main.og_concall(**q)
             if path.startswith("/share/concall/"):
@@ -240,6 +246,79 @@ def test_a_call_with_no_brief_has_no_card_and_no_share_page(client, call_on_file
     assert _status(client.get("/og/concall.png?ticker=NOBRIEF")) == 404
     assert _status(client.get("/share/concall/NOBRIEF")) == 404
     assert _status(client.get("/og/concall.png?ticker=")) in (400, 422)
+
+
+# ---------------------------------------------------------------------------
+# An order win, shared
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def order_on_file(client, tmp_path, monkeypatch):
+    """One order in the ledger and none in memory, with nothing behind it:
+    the exchange fails the test if a card or a share page asks."""
+    W = client.main.wow_orders
+    monkeypatch.setattr(W, "DB_PATH", str(tmp_path / "wow.db"))
+    monkeypatch.setitem(W._db_ready, "done", False)
+    monkeypatch.setattr(W, "_cache", {"at": 0.0, "rows": [], "note": ""})
+    monkeypatch.setattr(W, "_order_items", lambda days: pytest.fail("a card walked the feed"))
+    monkeypatch.setattr(W, "feed", lambda *a, **k: pytest.fail("a card started the reader"))
+    monkeypatch.setattr(W, "company_facts", lambda s: {
+        "market_cap_cr": 3569.3, "sales_cr": 2641.27, "sales_year": "FY26"})
+    monkeypatch.setattr(W, "market_cap_cr", lambda s: 3569.3)
+    text = ("Name of the entity awarding the order(s)/contract(s); NTPC Green <b>Energy</b> Limited\n"
+            "Nature of order(s) / contract(s); BESS system supply and integration\n"
+            "Time period by which the order(s)/contract(s) is to be executed; By September 2027\n"
+            "Broad consideration or size of the order(s)/contract(s); Rs. 26,913 Million\n"
+            "Whether the promoter group have any interest; No\n")
+    row = W.size_up(W.read_filing(
+        {"symbol": "M&M", "company": "Mahindra & Mahindra Ltd",
+         "headline": "has received a Letter of Award (LOA)",
+         "at": "2026-11-16T14:55:00+05:30", "pdf": "https://x/loa.pdf"}, text))
+    assert W.record([row]) == 1
+    return row
+
+
+def test_a_wow_card_renders_from_the_ledger_alone(client, order_on_file):
+    key = order_on_file["key"]
+    assert _png(client.get("/og/wow.png?ticker=M%26M&id=" + key)) == (1200, 630)
+    # A link with no handle, or one that names nothing, still has a card.
+    assert _png(client.get("/og/wow.png?ticker=M%26M")) == (1200, 630)
+    assert _png(client.get("/og/wow.png?ticker=M%26M&id=zzzz")) == (1200, 630)
+
+
+def test_a_wow_share_page_is_that_order(client, order_on_file):
+    key = order_on_file["key"]
+    r = client.get("/share/wow/M&M?id=" + key)
+    assert _status(r) == 200, _text(r)[:300]
+    html = _text(r)
+    for tag in ('property="og:image"', 'name="twitter:card" content="summary_large_image"',
+                'rel="canonical"'):
+        assert tag in html
+    assert ("Mahindra &amp; Mahindra Ltd — ₹2,691 cr letter of award from "
+            "NTPC Green &lt;b&gt;Energy&lt;/b&gt; Limited") in html
+    assert "<b>" not in html, "a tag in a customer's name reached the page as markup"
+    assert "That is 75% of the company's market cap of ₹3,569 cr" in html.replace("&#x27;", "'")
+    assert "12.2 months of FY26 sales" in html
+    # The symbol's ampersand must not end the parameter it is in.
+    assert "/og/wow.png?ticker=M%26M&amp;id=" + key in html
+    assert "go=wow&amp;q=M%26M&amp;id=" + key in html, "a shared order must open the order"
+    assert "onrender.com" not in html
+
+
+def test_one_order_can_be_asked_for_by_name(client, order_on_file):
+    """What the page asks for when a link is older than the week it lists."""
+    out = client.get("/wow-order?ticker=M%26M&id=" + order_on_file["key"])
+    assert out["available"] is True and out["threshold_pct"] == 10.0
+    assert out["row"]["value_cr"] == 2691.3 and out["row"]["wow"] is True
+    assert out["row"]["nature"] == "BESS system supply and integration"
+    assert client.get("/wow-order?ticker=NOORDER")["available"] is False
+
+
+def test_an_order_with_no_card_has_no_share_page(client, order_on_file):
+    """Better a 404 than a card for a bid, a memorandum or nothing at all."""
+    assert _status(client.get("/og/wow.png?ticker=NOORDER")) == 404
+    assert _status(client.get("/share/wow/NOORDER")) == 404
+    assert _status(client.get("/og/wow.png?ticker=")) in (400, 422)
 
 
 def test_vercel_rewrites_cover_every_public_path():

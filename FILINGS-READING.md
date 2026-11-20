@@ -181,6 +181,32 @@ sales. Everything else — smaller orders, bids and memoranda, orders with no
 rupee value — is one line each and opens to the same detail. The quarter
 comparison sits under the week.
 
+### Sharing an order
+
+An order carries a **Share** button when it is a firm order, with a value the
+filing itself labels as the order's, sized against the company. It opens the
+site's share sheet (X, WhatsApp, Telegram, LinkedIn, Facebook, copy or
+download the image) on a card of that order: the percentage of market cap, the
+order as a sentence from the filing, what it is for, and the order, the market
+cap and the months of sales the percentage is made of.
+
+* `/og/wow.png?ticker=SYMBOL&id=KEY` is the picture and
+  `/share/wow/SYMBOL?id=KEY` the link that unfurls into it. `KEY` is the start
+  of the order's ledger key, so two orders of one company are two addresses.
+* Both read the list in memory and the ledger, never the exchange. The ledger
+  keeps each row as the page showed it (`detail`), so a card shared today is
+  the card drawn next month.
+* **No card for what the page would not stand behind in public**: a lowest
+  bid, a memorandum, an unlabelled figure, an order with no market cap to set
+  it against, and any value the first reader wrote down are a 404, and have
+  no button.
+* The card takes no view. An order larger than the whole company says so and
+  says to open the filing; an order stated in dollars says what rate was
+  assumed.
+* The link opens `?go=wow&q=SYMBOL&id=KEY`: the Order wins tab with that order
+  brought into view. One older than the week listed is fetched by name
+  (`/wow-order`) and shown above the list.
+
 ---
 
 ## Concall summaries — `concalls.py`

@@ -176,6 +176,7 @@ GET     /og/idea.png
 GET     /og/record.png
 GET     /og/results.png
 GET     /og/stock.png
+GET     /og/wow.png
 GET     /options/chain
 GET     /options/expiries
 GET     /pages/company/{symbol}
@@ -211,6 +212,7 @@ GET     /share/holding/{ticker}
 GET     /share/idea/{ticker}
 GET     /share/record
 GET     /share/results/{ticker}
+GET     /share/wow/{ticker}
 GET     /share/{ticker}
 GET     /shareholding
 GET     /shareholding/compare
@@ -282,6 +284,7 @@ POST    /wealth/recs/{rec_id}/apply
 DELETE  /wealth/settlements/{settlement_id}
 POST    /wealth/settlements/{settlement_id}
 GET     /wealth/shared
+GET     /wow-order
 GET     /wow-orders
 """
 
