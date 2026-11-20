@@ -336,6 +336,41 @@ def test_the_plan_has_an_exit_line_a_review_date_and_no_target():
     assert leaders.plan("nonsense", 100.0) is None
 
 
+def test_the_mark_above_the_price_is_for_the_page_and_closes_nothing():
+    """
+    A reader asked where a good result would be. The plan marks it as far
+    above the call price as the exit line is below it, and still carries no
+    target to sell at: the call log closes a call on `t1`, and that stays
+    None, so a pick is judged exactly as it was before the mark existed.
+    """
+    p = leaders.plan("momentum", 200.0, dt.date(2026, 11, 10))
+    assert p["aim"] == 230.0 and p["aim_pct"] == 15.0
+    assert p["aim"] - p["entry"] == p["entry"] - p["stop"]
+    assert p["t1"] is None and p["rr"] is None and "targets" not in p
+    import call_log
+    assert call_log._levels({"plan": p})["target"] is None, "the mark would close a logged call"
+    # A list that already says when to sell carries no mark.
+    q = leaders.plan("quick", 100.0)
+    assert q["sell_rule"] == "sma5" and q["aim"] is None and q["aim_pct"] is None
+
+
+def test_what_selling_at_the_mark_did_is_the_studys_own_figures():
+    exits = leaders.TESTED["exits"]
+    for key in ("week", "month", "momentum", "long"):
+        t = leaders.target_tested(key)
+        pct = leaders.LISTS[key]["exit_pct"]
+        assert t["target_pct"] == pct
+        sold = exits[key][f"close {pct:g}% under, target {pct:g}% over"]
+        held = exits[key][f"close {pct:g}% under"]
+        assert t["sold"]["up_pct"] == sold["up_pct"] and t["sold"]["avg_pct"] == sold["avg_pct"]
+        assert t["held"]["up_pct"] == held["up_pct"] and t["held"]["avg_pct"] == held["avg_pct"]
+        # Held to the end is the list's own record, the one the page already prints.
+        assert t["held"]["avg_pct"] == leaders.TESTED["lists"][key]["avg_pct"]
+    # Not tested that way: nothing is said, and nothing is made up.
+    for key in ("results", "technical", "breakout", "quick", "nonsense"):
+        assert leaders.target_tested(key) is None
+
+
 # --- the Ideas layer ----------------------------------------------------------
 
 @pytest.fixture

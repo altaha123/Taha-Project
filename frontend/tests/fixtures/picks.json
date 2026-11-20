@@ -179,7 +179,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹208.45, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹208.45, 7% under the call price.",
+"aim":239.83,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -259,7 +261,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹2,047.95, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹2,047.95, 7% under the call price.",
+"aim":2356.25,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -339,7 +343,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹614.03, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹614.03, 7% under the call price.",
+"aim":706.47,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -418,7 +424,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹819.61, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹819.61, 7% under the call price.",
+"aim":942.99,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -497,7 +505,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹403.20, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹403.20, 7% under the call price.",
+"aim":463.9,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -576,7 +586,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹71.55, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹71.55, 7% under the call price.",
+"aim":82.33,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -656,7 +668,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹655.00, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹655.00, 7% under the call price.",
+"aim":753.6,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -735,7 +749,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹1,359.66, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹1,359.66, 7% under the call price.",
+"aim":1564.34,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -814,7 +830,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹378.74, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹378.74, 7% under the call price.",
+"aim":435.76,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -893,7 +911,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹604.50, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹604.50, 7% under the call price.",
+"aim":695.5,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -972,7 +992,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹625.47, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹625.47, 7% under the call price.",
+"aim":719.63,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1051,7 +1073,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹287.14, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹287.14, 7% under the call price.",
+"aim":330.36,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1131,7 +1155,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹1,903.71, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹1,903.71, 7% under the call price.",
+"aim":2190.29,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1210,7 +1236,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹13,210.65, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹13,210.65, 7% under the call price.",
+"aim":15199.35,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1289,7 +1317,9 @@
 "hold_sessions":5,
 "hold_text":"about a week",
 "review_on":"2026-11-16",
-"note":"Hold about a week. Leave if it closes below ₹729.68, 7% under the call price."
+"note":"Hold about a week. Leave if it closes below ₹729.68, 7% under the call price.",
+"aim":839.52,
+"aim_pct":7.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1302,7 +1332,22 @@
 "call":null,
 "news":[]
 }
-]
+],
+"target_test":{
+"target_pct":7.0,
+"sold":{
+"up_pct":53.5,
+"avg_pct":0.42,
+"median_pct":0.39,
+"picks":7243
+},
+"held":{
+"up_pct":52.3,
+"avg_pct":0.43,
+"median_pct":0.26,
+"picks":7243
+}
+}
 },
 "month":{
 "available":true,
@@ -1495,7 +1540,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹775.54, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹775.54, 12% under the call price.",
+"aim":987.06,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1574,7 +1621,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹690.45, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹690.45, 12% under the call price.",
+"aim":878.75,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1654,7 +1703,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹581.02, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹581.02, 12% under the call price.",
+"aim":739.48,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1734,7 +1785,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹197.24, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹197.24, 12% under the call price.",
+"aim":251.04,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1814,7 +1867,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹813.12, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹813.12, 12% under the call price.",
+"aim":1034.88,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1893,7 +1948,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹821.79, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹821.79, 12% under the call price.",
+"aim":1045.91,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -1973,7 +2030,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹21,775.60, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹21,775.60, 12% under the call price.",
+"aim":27714.4,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2053,7 +2112,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹2,159.52, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹2,159.52, 12% under the call price.",
+"aim":2748.48,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2133,7 +2194,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹1,937.85, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹1,937.85, 12% under the call price.",
+"aim":2466.35,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2212,7 +2275,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹1,724.54, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹1,724.54, 12% under the call price.",
+"aim":2194.86,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2291,7 +2356,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹358.95, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹358.95, 12% under the call price.",
+"aim":456.85,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2370,7 +2437,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹271.70, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹271.70, 12% under the call price.",
+"aim":345.8,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2450,7 +2519,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹60.48, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹60.48, 12% under the call price.",
+"aim":76.98,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2529,7 +2600,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹67.71, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹67.71, 12% under the call price.",
+"aim":86.17,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2608,7 +2681,9 @@
 "hold_sessions":21,
 "hold_text":"about a month",
 "review_on":"2026-12-09",
-"note":"Hold about a month. Leave if it closes below ₹358.38, 12% under the call price."
+"note":"Hold about a month. Leave if it closes below ₹358.38, 12% under the call price.",
+"aim":456.12,
+"aim_pct":12.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2621,7 +2696,22 @@
 "call":null,
 "news":[]
 }
-]
+],
+"target_test":{
+"target_pct":12.0,
+"sold":{
+"up_pct":55.5,
+"avg_pct":1.41,
+"median_pct":1.32,
+"picks":7179
+},
+"held":{
+"up_pct":54.1,
+"avg_pct":1.74,
+"median_pct":0.91,
+"picks":7177
+}
+}
 },
 "momentum":{
 "available":true,
@@ -2801,7 +2891,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹749.10, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹749.10, 15% under the call price.",
+"aim":1013.49,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2873,7 +2965,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹666.91, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹666.91, 15% under the call price.",
+"aim":902.29,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -2946,7 +3040,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹2,085.90, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹2,085.90, 15% under the call price.",
+"aim":2822.1,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3019,7 +3115,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹58.42, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹58.42, 15% under the call price.",
+"aim":79.04,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3091,7 +3189,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹3,955.39, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹3,955.39, 15% under the call price.",
+"aim":5351.41,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3163,7 +3263,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹466.61, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹466.61, 15% under the call price.",
+"aim":631.29,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3236,7 +3338,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹2,807.04, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹2,807.04, 15% under the call price.",
+"aim":3797.76,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3309,7 +3413,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹785.40, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹785.40, 15% under the call price.",
+"aim":1062.6,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3382,7 +3488,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹9,830.67, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹9,830.67, 15% under the call price.",
+"aim":13300.32,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3453,7 +3561,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹1,580.83, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹1,580.83, 15% under the call price.",
+"aim":2138.77,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3525,7 +3635,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹168.04, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹168.04, 15% under the call price.",
+"aim":227.34,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3597,7 +3709,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹214.38, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹214.38, 15% under the call price.",
+"aim":290.04,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3669,7 +3783,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹208.43, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹208.43, 15% under the call price.",
+"aim":281.99,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3740,7 +3856,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹315.90, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹315.90, 15% under the call price.",
+"aim":427.4,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3812,7 +3930,9 @@
 "hold_sessions":63,
 "hold_text":"about 3 months",
 "review_on":"2027-02-08",
-"note":"Hold about 3 months. Leave if it closes below ₹2,014.50, 15% under the call price."
+"note":"Hold about 3 months. Leave if it closes below ₹2,014.50, 15% under the call price.",
+"aim":2725.5,
+"aim_pct":15.0
 },
 "tracked":false,
 "liquidity_tier":"liquid",
@@ -3825,7 +3945,22 @@
 "call":null,
 "news":[]
 }
-]
+],
+"target_test":{
+"target_pct":15.0,
+"sold":{
+"up_pct":61.7,
+"avg_pct":3.47,
+"median_pct":10.35,
+"picks":7013
+},
+"held":{
+"up_pct":55.5,
+"avg_pct":5.61,
+"median_pct":2.7,
+"picks":7011
+}
+}
 },
 "long":{
 "available":true,
@@ -4176,7 +4311,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹549.22, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹549.22, 30% under this price.",
+"aim":1019.98,
+"aim_pct":30.0
 },
 "results":{
 "filed_at":"2026-11-05 19:11:49",
@@ -4315,7 +4452,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹616.91, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹616.91, 30% under this price.",
+"aim":1145.69,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -4449,7 +4588,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹1,717.80, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹1,717.80, 30% under this price.",
+"aim":3190.2,
+"aim_pct":30.0
 },
 "results":{
 "filed_at":"2026-10-29 21:59:08",
@@ -4589,7 +4730,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹48.11, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹48.11, 30% under this price.",
+"aim":89.35,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -4725,7 +4868,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹3,257.38, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹3,257.38, 30% under this price.",
+"aim":6049.42,
+"aim_pct":30.0
 },
 "results":{
 "filed_at":"2026-11-05 19:08:26",
@@ -4861,7 +5006,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹384.26, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹384.26, 30% under this price.",
+"aim":713.64,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -4991,7 +5138,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹646.80, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹646.80, 30% under this price.",
+"aim":1201.2,
+"aim_pct":30.0
 },
 "results":{
 "filed_at":"2026-10-26 18:35:18",
@@ -5132,7 +5281,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹2,311.68, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹2,311.68, 30% under this price.",
+"aim":4293.12,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -5260,7 +5411,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹1,301.86, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹1,301.86, 30% under this price.",
+"aim":2417.74,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -5388,7 +5541,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹2,481.50, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹2,481.50, 30% under this price.",
+"aim":4608.5,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -5524,7 +5679,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹171.65, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹171.65, 30% under this price.",
+"aim":318.77,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -5658,7 +5815,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹138.38, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹138.38, 30% under this price.",
+"aim":257.0,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -5790,7 +5949,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹631.72, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹631.72, 30% under this price.",
+"aim":1173.19,
+"aim_pct":30.0
 },
 "results":{
 "filed_at":"2026-10-27 20:07:14",
@@ -5928,7 +6089,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹8,095.85, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹8,095.85, 30% under this price.",
+"aim":15035.15,
+"aim_pct":30.0
 },
 "results":null,
 "order":null,
@@ -6057,7 +6220,9 @@
 "hold_text":"about a year",
 "review_on":"2027-11-09",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹1,298.71, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹1,298.71, 30% under this price.",
+"aim":2411.89,
+"aim_pct":30.0
 },
 "results":{
 "filed_at":"2026-11-04 22:45:15",
@@ -6166,6 +6331,21 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
+},
+"target_test":{
+"target_pct":30.0,
+"sold":{
+"up_pct":64.9,
+"avg_pct":8.81,
+"median_pct":30.0,
+"picks":6449
+},
+"held":{
+"up_pct":58.2,
+"avg_pct":23.73,
+"median_pct":8.1,
+"picks":6434
+}
 }
 },
 "legacy":{
@@ -6875,7 +7055,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹216.81, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹216.81, 12% under this price.",
+"aim":275.93,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-27 21:15:31",
@@ -7002,7 +7184,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹285.68, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹285.68, 12% under this price.",
+"aim":363.6,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-11-04 00:03:45",
@@ -7133,7 +7317,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹406.12, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹406.12, 12% under this price.",
+"aim":516.88,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-11-03 20:55:41",
@@ -7255,7 +7441,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹263.43, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹263.43, 12% under this price.",
+"aim":335.27,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-30 17:27:16",
@@ -7377,7 +7565,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,616.38, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,616.38, 12% under this price.",
+"aim":2057.22,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-11-05 23:22:13",
@@ -7508,7 +7698,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹384.47, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹384.47, 12% under this price.",
+"aim":489.33,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-27 21:21:11",
@@ -7633,7 +7825,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹292.42, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹292.42, 12% under this price.",
+"aim":372.18,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-28 19:51:31",
@@ -7755,7 +7949,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,430.97, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,430.97, 12% under this price.",
+"aim":1821.23,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-30 18:42:13",
@@ -7877,7 +8073,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹11,090.64, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹11,090.64, 12% under this price.",
+"aim":14115.36,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-30 20:22:02",
@@ -7996,7 +8194,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,165.47, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,165.47, 12% under this price.",
+"aim":1483.33,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-30 21:32:55",
@@ -8118,7 +8318,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹793.76, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹793.76, 12% under this price.",
+"aim":1010.24,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-11-02 21:03:19",
@@ -8248,7 +8450,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,159.52, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,159.52, 12% under this price.",
+"aim":2748.48,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-29 21:59:08",
@@ -8374,7 +8578,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹221.94, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹221.94, 12% under this price.",
+"aim":282.48,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-30 19:22:31",
@@ -8505,7 +8711,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹179.49, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹179.49, 12% under this price.",
+"aim":228.45,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-29 19:47:21",
@@ -8624,7 +8832,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹34.28, 12% under this price."
+"note":"Hold about a month. Leave if it closes below ₹34.28, 12% under this price.",
+"aim":43.64,
+"aim_pct":12.0
 },
 "results":{
 "filed_at":"2026-10-30 17:06:17",
@@ -8725,7 +8935,8 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 },
 "results_empty":{
 "available":true,
@@ -9039,7 +9250,8 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 },
 "breakout":{
 "available":true,
@@ -9489,7 +9701,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹3,038.21, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹3,038.21, 8% under this price.",
+"aim":3566.59,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -9640,7 +9854,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,454.84, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,454.84, 8% under this price.",
+"aim":2881.76,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-10-26 21:18:11",
@@ -9805,7 +10021,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹181.24, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹181.24, 8% under this price.",
+"aim":212.76,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -9959,7 +10177,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,752.14, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,752.14, 8% under this price.",
+"aim":2056.86,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-10-30 19:34:09",
@@ -10118,7 +10338,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹859.00, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹859.00, 8% under this price.",
+"aim":1008.4,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -10270,7 +10492,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,706.88, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,706.88, 8% under this price.",
+"aim":2003.72,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-11-04 22:45:15",
@@ -10435,7 +10659,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,461.88, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,461.88, 8% under this price.",
+"aim":1716.12,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -10590,7 +10816,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,180.40, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,180.40, 8% under this price.",
+"aim":2559.6,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -10745,7 +10973,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹3,850.20, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹3,850.20, 8% under this price.",
+"aim":4519.8,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-10-27 20:13:19",
@@ -10905,7 +11135,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹935.92, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹935.92, 8% under this price.",
+"aim":1098.68,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-11-04 22:30:14",
@@ -11071,7 +11303,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,787.28, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,787.28, 8% under this price.",
+"aim":2098.12,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-10-28 15:53:28",
@@ -11242,7 +11476,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹829.84, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹829.84, 8% under this price.",
+"aim":974.16,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-11-02 21:03:19",
@@ -11407,7 +11643,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹294.81, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹294.81, 8% under this price.",
+"aim":346.09,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-11-02 18:29:18",
@@ -11568,7 +11806,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,906.33, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,906.33, 8% under this price.",
+"aim":2237.87,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -11727,7 +11967,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹45,586.00, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹45,586.00, 8% under this price.",
+"aim":53514.0,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -11829,7 +12071,8 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 },
 "technical":{
 "available":true,
@@ -12240,7 +12483,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹831.60, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹831.60, 10% under this price.",
+"aim":1016.4,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-26 18:35:18",
@@ -12423,7 +12668,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,430.10, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,430.10, 10% under this price.",
+"aim":1747.9,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -12599,7 +12846,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹431.55, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹431.55, 10% under this price.",
+"aim":527.45,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -12776,7 +13025,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹802.49, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹802.49, 10% under this price.",
+"aim":980.82,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -12957,7 +13208,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,748.43, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,748.43, 10% under this price.",
+"aim":2136.97,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-28 15:53:28",
@@ -13149,7 +13402,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,188.45, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,188.45, 10% under this price.",
+"aim":1452.55,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-31 17:18:26",
@@ -13336,7 +13591,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,403.99, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,403.99, 10% under this price.",
+"aim":2938.21,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-11-05 19:34:45",
@@ -13528,7 +13785,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹221.73, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹221.73, 10% under this price.",
+"aim":271.01,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-27 21:15:31",
@@ -13711,7 +13970,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,972.16, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,972.16, 10% under this price.",
+"aim":3632.64,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -13883,7 +14144,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹10,408.95, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹10,408.95, 10% under this price.",
+"aim":12722.05,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -14055,7 +14318,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹118.95, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹118.95, 10% under this price.",
+"aim":145.39,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -14227,7 +14492,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹710.37, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹710.37, 10% under this price.",
+"aim":868.23,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -14396,7 +14663,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹812.21, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹812.21, 10% under this price.",
+"aim":992.7,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-27 20:07:14",
@@ -14576,7 +14845,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,430.82, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,430.82, 10% under this price.",
+"aim":1748.78,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-28 19:50:44",
@@ -14768,7 +15039,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹583.02, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹583.02, 10% under this price.",
+"aim":712.58,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-11-04 18:10:48",
@@ -14883,7 +15156,8 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 },
 "quick":{
 "available":true,
@@ -15244,7 +15518,9 @@
 "hold_text":"a few days",
 "review_on":"2026-11-19",
 "sell_rule":"sma5",
-"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹320.43, 7% under this price."
+"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹320.43, 7% under this price.",
+"aim":null,
+"aim_pct":null
 },
 "results":{
 "filed_at":"2026-11-05 18:52:34",
@@ -15382,7 +15658,9 @@
 "hold_text":"a few days",
 "review_on":"2026-11-19",
 "sell_rule":"sma5",
-"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹655.00, 7% under this price."
+"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹655.00, 7% under this price.",
+"aim":null,
+"aim_pct":null
 },
 "results":null,
 "order":null,
@@ -15511,7 +15789,9 @@
 "hold_text":"a few days",
 "review_on":"2026-11-19",
 "sell_rule":"sma5",
-"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹623.98, 7% under this price."
+"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹623.98, 7% under this price.",
+"aim":null,
+"aim_pct":null
 },
 "results":null,
 "order":null,
@@ -15639,7 +15919,9 @@
 "hold_text":"a few days",
 "review_on":"2026-11-19",
 "sell_rule":"sma5",
-"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹512.62, 7% under this price."
+"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹512.62, 7% under this price.",
+"aim":null,
+"aim_pct":null
 },
 "results":{
 "filed_at":"2026-11-03 16:32:20",
@@ -15778,7 +16060,9 @@
 "hold_text":"a few days",
 "review_on":"2026-11-19",
 "sell_rule":"sma5",
-"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹208.45, 7% under this price."
+"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹208.45, 7% under this price.",
+"aim":null,
+"aim_pct":null
 },
 "results":null,
 "order":null,
@@ -15907,7 +16191,9 @@
 "hold_text":"a few days",
 "review_on":"2026-11-19",
 "sell_rule":"sma5",
-"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹625.47, 7% under this price."
+"note":"Sell at the first close above its 5-day average, or after 7 sessions. Leave if it closes below ₹625.47, 7% under this price.",
+"aim":null,
+"aim_pct":null
 },
 "results":{
 "filed_at":"2026-11-05 21:47:08",
@@ -16003,7 +16289,8 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 },
 "flow":{
 "available":true,
@@ -16550,7 +16837,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,852.73, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,852.73, 10% under this price.",
+"aim":3486.67,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -16688,7 +16977,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹4,188.06, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹4,188.06, 10% under this price.",
+"aim":5118.74,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-11-05 19:08:26",
@@ -16839,7 +17130,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹831.60, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹831.60, 10% under this price.",
+"aim":1016.4,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-26 18:35:18",
@@ -16994,7 +17287,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,673.82, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,673.82, 10% under this price.",
+"aim":2045.78,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -17137,7 +17432,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹145.72, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹145.72, 10% under this price.",
+"aim":178.1,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-11-05 20:35:45",
@@ -17292,7 +17589,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,208.60, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,208.60, 10% under this price.",
+"aim":2699.4,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-29 21:59:08",
@@ -17446,7 +17745,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,972.16, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,972.16, 10% under this price.",
+"aim":3632.64,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -17590,7 +17891,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹10,408.95, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹10,408.95, 10% under this price.",
+"aim":12722.05,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -17734,7 +18037,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹840.47, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹840.47, 10% under this price.",
+"aim":1027.24,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-11-05 14:28:20",
@@ -17884,7 +18189,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,133.00, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,133.00, 10% under this price.",
+"aim":2607.0,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -18032,7 +18339,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹298.71, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹298.71, 10% under this price.",
+"aim":365.09,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-28 16:56:19",
@@ -18180,7 +18489,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,609.20, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,609.20, 10% under this price.",
+"aim":1966.8,
+"aim_pct":10.0
 },
 "results":{
 "filed_at":"2026-10-26 22:53:06",
@@ -18329,7 +18640,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹3,190.50, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹3,190.50, 10% under this price.",
+"aim":3899.5,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -18431,7 +18744,8 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 },
 "emerging":{
 "available":true,
@@ -18803,7 +19117,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹256.45, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹256.45, 10% under this price.",
+"aim":313.44,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -18932,7 +19248,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹646.92, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹646.92, 10% under this price.",
+"aim":790.68,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -19069,7 +19387,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,089.27, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,089.27, 10% under this price.",
+"aim":1331.33,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -19200,7 +19520,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹556.65, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹556.65, 10% under this price.",
+"aim":680.35,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -19329,7 +19651,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹214.63, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹214.63, 10% under this price.",
+"aim":262.33,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -19463,7 +19787,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹199.82, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹199.82, 10% under this price.",
+"aim":244.22,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -19608,7 +19934,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹138.64, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹138.64, 10% under this price.",
+"aim":169.44,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -19740,7 +20068,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹237.65, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹237.65, 10% under this price.",
+"aim":290.47,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -19870,7 +20200,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹392.99, 10% under this price."
+"note":"Hold about a month. Leave if it closes below ₹392.99, 10% under this price.",
+"aim":480.31,
+"aim_pct":10.0
 },
 "results":null,
 "order":null,
@@ -19958,7 +20290,8 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 },
 "short":{
 "available":true,
@@ -20398,7 +20731,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹3,038.21, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹3,038.21, 8% under this price.",
+"aim":3566.59,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -20556,7 +20891,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹172.96, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹172.96, 8% under this price.",
+"aim":203.04,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-10-30 16:02:06",
@@ -20733,7 +21070,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,706.88, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,706.88, 8% under this price.",
+"aim":2003.72,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-11-04 22:45:15",
@@ -20905,7 +21244,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹294.81, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹294.81, 8% under this price.",
+"aim":346.09,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-11-02 18:29:18",
@@ -21065,7 +21406,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹45,586.00, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹45,586.00, 8% under this price.",
+"aim":53514.0,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -21223,7 +21566,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹181.24, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹181.24, 8% under this price.",
+"aim":212.76,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -21377,7 +21722,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,461.88, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,461.88, 8% under this price.",
+"aim":1716.12,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -21539,7 +21886,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹2,454.84, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹2,454.84, 8% under this price.",
+"aim":2881.76,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-10-26 21:18:11",
@@ -21704,7 +22053,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹121.60, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹121.60, 8% under this price.",
+"aim":142.74,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -21854,7 +22205,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹3,261.40, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹3,261.40, 8% under this price.",
+"aim":3828.6,
+"aim_pct":8.0
 },
 "results":null,
 "order":null,
@@ -22019,7 +22372,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,787.28, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹1,787.28, 8% under this price.",
+"aim":2098.12,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-10-28 15:53:28",
@@ -22197,7 +22552,9 @@
 "hold_text":"about a month",
 "review_on":"2026-12-09",
 "sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹3,850.20, 8% under this price."
+"note":"Hold about a month. Leave if it closes below ₹3,850.20, 8% under this price.",
+"aim":4519.8,
+"aim_pct":8.0
 },
 "results":{
 "filed_at":"2026-10-27 20:13:19",
@@ -22301,7 +22658,8 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 },
 "short_empty":{
 "available":true,
@@ -22683,6 +23041,7 @@
 "leaders":[],
 "laggards":[],
 "headlines":[]
-}
+},
+"target_test":null
 }
 }

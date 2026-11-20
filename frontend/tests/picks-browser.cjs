@@ -139,16 +139,41 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   // Live calls are shown once five have closed; this list has eight.
   assert.match(await panel.locator('.pk-live').innerText(), /5 of 8 closed calls rose/);
 
-  // A pick: name, reasons, and the one price that ends it.
+  // A pick: name, reasons, and three prices in a row: where it is, where a
+  // good result would be, and the one price that ends it. All three are the
+  // server's; the page works none of them out.
+  const shown = v => (Math.round(v * 100) / 100 >= 1000 ? Math.round(v) : v);
   for (let i = 0; i < 5; i++) {
     const card = panel.locator('.pk-card').nth(i), row = month.rows[i];
     assert.match(await card.innerText(), new RegExp(row.symbol));
     assert.ok(await card.locator('.pk-why span').count() >= 1, `${row.symbol} gives no reason`);
-    assert.equal(rupees(await card.locator('.pk-exit b').innerText()), Math.round(row.plan.stop * 100) / 100 >= 1000
-      ? Math.round(row.plan.stop) : row.plan.stop, `${row.symbol} shows the wrong exit price`);
+    assert.deepEqual(await card.locator('.pk-lv small').allInnerTexts(), ['Price', 'Target', 'Exit below']);
+    assert.equal(rupees(await card.locator('.pk-lv b').first().innerText()), shown(row.price), `${row.symbol} shows the wrong price`);
+    assert.equal(rupees(await card.locator('.pk-aim b').innerText()), shown(row.plan.aim), `${row.symbol} shows the wrong target`);
+    assert.equal((await card.locator('.pk-aim i').innerText()).trim(), '+12%');
+    assert.equal(rupees(await card.locator('.pk-exit b').innerText()), shown(row.plan.stop), `${row.symbol} shows the wrong exit price`);
+    assert.equal((await card.locator('.pk-exit i').innerText()).trim(), '−12%');
+    assert.ok(row.plan.aim > row.price && row.price > row.plan.stop);
   }
+  // The target is a mark and says so, with what selling at it did in the
+  // study's own figures. It is not the old trade plan come back.
+  const aim = await panel.locator('.pk-aimnote').innerText();
+  const tt = month.target_test;
+  assert.match(aim, /12% above the price/);
+  assert.match(aim, /not an order to sell/);
+  assert.ok(aim.includes(`${tt.sold.up_pct} of 100`) && aim.includes(`+${tt.sold.avg_pct.toFixed(2)}%`), 'the target note does not give the study’s figures for selling there');
+  assert.ok(aim.includes(`${tt.held.up_pct} of 100`) && aim.includes(`+${tt.held.avg_pct.toFixed(2)}%`), 'the target note does not give the study’s figures for holding on');
+  // The record's three figures each carry a label that is a whole phrase.
+  assert.deepEqual((await panel.locator('.pk-record-n small').allInnerTexts()).map(t => t.trim()),
+                   ['of every 100 picks went up', 'average gain per pick, held about a month', 'the market over the same time']);
+  // The ten lists are two labelled rows, and each chip says how long it is held.
+  assert.deepEqual((await panel.locator('.pk-group-h').allInnerTexts()).map(t => t.trim().toLowerCase()), ['by holding time', 'by chart setup']);
+  assert.equal((await panel.locator('.pk-tab[data-pick="momentum"] small').innerText()).trim(), '~ 3 months');
+  // "See all" can be read: it was ink on ink, a black pill with nothing on it.
+  const seeAll = await panel.locator('.pk-all').evaluate(n => { const c = getComputedStyle(n); return [c.color, c.backgroundColor]; });
+  assert.notEqual(seeAll[0], seeAll[1], 'the "See all" button is the same colour as its own text');
   const doorText = await panel.innerText();
-  assert.doesNotMatch(doorText, /\bWAIT\b|Target|R:R|Stop loss/i, 'the old trade plan is back on the door');
+  assert.doesNotMatch(doorText, /\bWAIT\b|R:R|Stop loss|BUY RANGE/i, 'the old trade plan is back on the door');
   await page.screenshot({ path: path.join(output, 'door-desktop.png') });
 
   /* ── 2 · Tabs switch the list, and the choice is remembered ───────────── */
@@ -186,9 +211,12 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
     assert.ok(await r.locator('.pk-why span').count() >= 1, `row ${i + 1} gives no reason`);
     const plan = await r.locator('.pk-plan').innerText();
     assert.match(plan, /Hold\s+about 3 months/); assert.match(plan, /Exit below\s+₹/); assert.match(plan, /−15%/);
+    assert.match(plan, /Target\s+₹[\d,.]+\s*\+15%/, `row ${i + 1} gives no target`);
     assert.equal(await r.locator('.ideaplan2').count(), 0, 'a tested pick is showing the old plan grid');
   }
-  assert.doesNotMatch(await page.locator('#idearows').innerText(), /\bWAIT\b|BUY RANGE|TARGET|R:R/i);
+  assert.doesNotMatch(await page.locator('#idearows').innerText(), /\bWAIT\b|BUY RANGE|R:R/i);
+  // What the target is, and what selling at it did, is said once under the list.
+  assert.match(await page.locator('#pickaim .pk-aimnote').innerText(), /15% above the price[\s\S]*not an order to sell[\s\S]*Holding to the end/);
   assert.match(await page.locator('#pickhead').innerText(), /stocks compared/);
   // The reasons a name was left out are kept, folded.
   assert.match(await page.locator('#pickhead .pk-notes summary').innerText(), /1 note on this list/);
@@ -257,6 +285,9 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   await page.locator('#hzseg2 .hz[data-h="quick"]').click();
   await page.locator(`#idearows .idea[data-t="${FIX.quick.rows[0].symbol}"]`).waitFor();
   assert.ok(/5-day average/.test(await page.locator('#idearows .idea .pk-plan').first().innerText()), 'quick: the plan names the sell rule');
+  // A list with a sell rule of its own carries no target: it already says when to sell.
+  assert.doesNotMatch(await page.locator('#idearows').innerText(), /Target/, 'quick: a target is shown beside a sell rule');
+  assert.equal(await page.locator('#pickaim .pk-aimnote').count(), 0);
   assert.ok(/lost/.test(await page.locator('#pickhead .pk-cost').innerText()), 'quick: says the average pick did not cover costs');
   /* Money flow: the sector table, top sectors marked. */
   await page.locator('#hzseg2 .hz[data-h="flow"]').click();

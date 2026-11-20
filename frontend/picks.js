@@ -31,6 +31,23 @@
    WORDS
    A reader told us the site had too much writing. Each pick gets at most
    four facts of four words. Everything longer is behind "Details".
+
+   HOW THE PANEL READS
+   Top to bottom it is three questions, in the order a newcomer asks them.
+   Which list? Ten of them, in two labelled rows (by holding time, by chart
+   setup), each chip saying how long it is held. Is it any good? Three
+   figures from the test, each with a label that is a whole phrase. Which
+   stocks? Five, each with its price, a target and the price to leave at.
+   It replaced two unlabelled bars of five tabs and a box of three numbers
+   captioned in two words each, which a reader found confusing.
+
+   THE TARGET
+   A pick shows a target because a reader asked where a good result would
+   be. It is the server's `plan.aim`: as far above the price as the exit
+   line is below it, the nearer of the two targets the study tested. It is
+   a mark, not a rule: the plan is still "hold, and leave below the exit",
+   and where the study tested selling at it (`target_test`) the panel prints
+   what that did, in the study's figures, next to the cards.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -66,6 +83,14 @@
     var n = Number(v);
     return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: n >= 1000 ? 0 : 2 });
   }
+  /* A price in a column of prices: two decimals under ₹1,000 and none above,
+     so the three levels on a card line up and none looks more exact than
+     its neighbour (881.3 beside 987.06 did). */
+  function px(v) {
+    if (!finite(v)) return '—';
+    var n = Number(v), dp = n >= 1000 ? 0 : 2;
+    return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  }
   function signed(v, dp) {
     if (!finite(v)) return '—';
     var n = Number(v);
@@ -90,17 +115,37 @@
     }).join('') + '</div>';
   }
 
-  /* Hold, and the one price that ends it. No target: the test found a target
-     was the most expensive rule a plan could carry. */
+  /* Hold, the mark of a good result, and the one price that ends it. The
+     target is a mark and not a rule (the test found selling at a target was
+     the most expensive rule a plan could carry), so "Hold" still leads. */
   function planHTML(p) {
     if (!p || p.style !== 'hold' || !finite(p.stop)) return '';
     return '<div class="pk-plan">' +
       (p.sell_rule === 'sma5'
         ? '<span><b>Sell</b> first close above its 5-day average</span>'
         : '<span><b>Hold</b> ' + esc(p.hold_text || '') + '</span>') +
+      (finite(p.aim) ? '<span><b>Target</b> ' + inr(p.aim) +
+        (finite(p.aim_pct) ? ' <small class="up">+' + Number(p.aim_pct).toFixed(0) + '%</small>' : '') + '</span>' : '') +
       '<span><b>Exit below</b> ' + inr(p.stop) +
         (finite(p.risk_pct) ? ' <small>−' + Number(p.risk_pct).toFixed(0) + '%</small>' : '') + '</span>' +
     '</div>';
+  }
+
+  /* What the target is, said once under the picks, and what selling at it
+     did in the test where the study ran that. Every figure is the study's. */
+  function aimHTML(d) {
+    if (!d || !isTested(d) || d.sell_rule || !finite(d.exit_pct)) return '';
+    if (!(d.rows || []).some(function (r) { return r.plan && finite(r.plan.aim); })) return '';
+    var pct = Number(d.exit_pct).toFixed(0), t = d.target_test;
+    var one = function (v) { return Number(v).toFixed(1).replace(/\.0$/, ''); };
+    var tested = t && t.sold && t.held && finite(t.sold.up_pct) && finite(t.held.up_pct) &&
+                 finite(t.sold.avg_pct) && finite(t.held.avg_pct)
+      ? 'In the test, selling at the target: <b>' + one(t.sold.up_pct) + '</b> of 100 picks ended up, average <b>' +
+        signed(t.sold.avg_pct, 2) + '</b> a pick. Holding to the end: <b>' + one(t.held.up_pct) + '</b> of 100, average <b>' +
+        signed(t.held.avg_pct, 2) + '</b>.'
+      : 'This list was tested held to the end. Selling at a target was not tested for it.';
+    return '<p class="pk-aimnote"><b>Target</b> is ' + pct + '% above the price, as far as the exit line is below it. ' +
+      'It marks a good result; it is not an order to sell. ' + tested + '</p>';
   }
 
   /* ── Facts beside a pick: its results, an order, the chart ────────────── */
@@ -167,11 +212,16 @@
       return '<li><b>' + esc(k.replace('-', '–')) + '</b> ' + Math.round(x.up_pct) + ' in 100 rose · ' +
         signed(x.avg_pct) + ' · market ' + signed(x.index_avg_pct) + '</li>';
     }).join('');
+    var up = Math.max(0, Math.min(100, Math.round(t.up_pct)));
     return '<div class="pk-record">' +
+      '<p class="pk-record-h">How this list did when tested</p>' +
       '<div class="pk-record-n">' +
-        '<span><b>' + Math.round(t.up_pct) + '</b><small>in 100 picks rose</small></span>' +
-        '<span><b class="' + (t.avg_pct >= 0 ? 'up' : 'dn') + '">' + signed(t.avg_pct) + '</b><small>average pick</small></span>' +
-        '<span><b>' + signed(t.index_avg_pct) + '</b><small>the market</small></span>' +
+        '<span><b>' + Math.round(t.up_pct) + '</b><small>of every 100 picks went up</small>' +
+          /* The same figure as a bar: the part that went up, and the rest. */
+          '<i class="pk-meter" aria-hidden="true"><i style="width:' + up + '%"></i></i></span>' +
+        '<span><b class="' + (t.avg_pct >= 0 ? 'up' : 'dn') + '">' + signed(t.avg_pct) + '</b><small>average ' +
+          (t.avg_pct >= 0 ? 'gain' : 'loss') + ' per pick' + (d.hold_text ? ', held ' + esc(d.hold_text) : '') + '</small></span>' +
+        '<span><b>' + signed(t.index_avg_pct) + '</b><small>the market over the same time</small></span>' +
       '</div>' +
       '<details class="pk-how"><summary>Tested on NSE prices' + (years ? ', ' + esc(years) : '') + '</summary>' +
         '<ul>' +
@@ -253,17 +303,23 @@
   }
 
   function tabsHTML(active, cls) {
-    return tabRow(active, cls, false, 'Holding period') + tabRow(active, (cls || '') + ' setups', true, 'Setup');
+    return '<div class="pk-chooser">' +
+      tabRow(active, cls, false, 'Holding period', 'By holding time') +
+      tabRow(active, (cls || '') + ' setups', true, 'Setup', 'By chart setup') + '</div>';
   }
-  function tabRow(active, cls, setups, label) {
-    return '<div class="pk-tabs ' + (cls || '') + '" role="tablist" aria-label="' + label + '">' +
+  /* "about a week" as the chip says it: "~ a week". */
+  function holdShort(l) { return String(l.hold || '').replace(/^about /, '~ '); }
+  function tabRow(active, cls, setups, label, heading) {
+    return '<div class="pk-group"><span class="pk-group-h" aria-hidden="true">' + heading + '</span>' +
+      '<div class="pk-tabs ' + (cls || '') + '" role="tablist" aria-label="' + label + '">' +
       LISTS.filter(function (l) { return (l.group === 'setup') === setups; }).map(function (l) {
         var on = l.key === active;
         /* The first word drops out on a phone, where five full labels do not fit. */
         var text = l.short ? '<i>' + esc(l.lead) + '</i>' + esc(l.short) : esc(l.label);
         return '<button type="button" role="tab" class="pk-tab' + (on ? ' on' : '') + '" data-pick="' + l.key +
-          '" aria-selected="' + on + '" aria-label="' + esc(l.label) + '">' + text + '</button>';
-      }).join('') + '</div>';
+          '" aria-selected="' + on + '" aria-label="' + esc(l.label) + '"><span>' + text + '</span>' +
+          '<small>' + esc(holdShort(l)) + '</small></button>';
+      }).join('') + '</div></div>';
   }
 
   function updatedText(d) {
@@ -298,11 +354,21 @@
       '<span class="pk-rank">' + (i + 1) + '</span>' +
       '<span class="pk-main">' +
         '<span class="pk-name">' + esc(s.name || s.symbol) + '</span>' +
-        '<span class="pk-sym">' + esc(s.symbol) + ' · ' + inr(s.price) + '</span>' +
+        '<span class="pk-sym">' + esc(s.symbol) + '</span>' +
         whyHTML(s) +
       '</span>' +
-      (p.style === 'hold' && finite(p.stop)
-        ? '<span class="pk-exit"><small>Exit below</small><b>' + inr(p.stop) + '</b></span>' : '') +
+      /* Three prices in a row, read left to right: where it is, where a good
+         result would be, and where to leave. The last two only on a list
+         that is held (a legacy scan has no plan to show). */
+      '<span class="pk-levels">' +
+        '<span class="pk-lv"><small>Price</small><b>' + px(s.price) + '</b></span>' +
+        (p.style === 'hold' && finite(p.aim)
+          ? '<span class="pk-lv pk-aim"><small>Target</small><b>' + px(p.aim) + '</b>' +
+            (finite(p.aim_pct) ? '<i>+' + Number(p.aim_pct).toFixed(0) + '%</i>' : '') + '</span>' : '') +
+        (p.style === 'hold' && finite(p.stop)
+          ? '<span class="pk-lv pk-exit"><small>Exit below</small><b>' + px(p.stop) + '</b>' +
+            (finite(p.risk_pct) ? '<i>−' + Number(p.risk_pct).toFixed(0) + '%</i>' : '') + '</span>' : '') +
+      '</span>' +
     '</a>';
   }
 
@@ -325,7 +391,8 @@
       out += '<p class="pk-stale">' + esc(d.staleness.text || 'This list is old.') + '</p>';
     }
     out += rows.length
-      ? '<div class="pk-cards">' + rows.slice(0, 5).map(cardHTML).join('') + '</div>'
+      ? '<h3 class="pk-cards-h">Top ' + Math.min(5, rows.length) + ' today</h3>' +
+        '<div class="pk-cards">' + rows.slice(0, 5).map(cardHTML).join('') + '</div>' + aimHTML(d)
       : '<p class="pk-quiet">' + esc(d.empty_text || 'Nothing passed every test in this scan.') + '</p>';
     out += '<div class="pk-foot">' +
       (rows.length ? '<button type="button" class="pk-all" data-goto="research/ideas">See all ' + rows.length + ' picks</button>' : '') +
@@ -337,7 +404,8 @@
     if (!host || host.dataset.pkBuilt) return;
     host.dataset.pkBuilt = '1';
     var key = chosen();
-    host.innerHTML = '<div class="pk-head"><span class="pk-label">Stock picks</span></div>' +
+    host.innerHTML = '<div class="pk-head"><h2 class="pk-title">Stock picks</h2>' +
+      '<p class="pk-sub">Choose a list, see how it did when tested, then open a stock.</p></div>' +
       tabsHTML(key) + '<div class="pk-body" aria-live="polite"></div>';
     var body = host.querySelector('.pk-body');
 
@@ -374,7 +442,7 @@
     isTested: isTested, whyHTML: whyHTML, planHTML: planHTML, recordHTML: recordHTML,
     recipeHTML: recipeHTML, liveHTML: liveHTML, updatedText: updatedText, mount: mount, signed: signed, inr: inr,
     resultsHTML: resultsHTML, orderHTML: orderHTML, chartHTML: chartHTML, marketHTML: marketHTML,
-    sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML
+    sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML, aimHTML: aimHTML
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.AltahaPicks = api;

@@ -15,6 +15,13 @@ for the same day. Two entries are written:
 
 It needs the data research/ideas_study.py --fetch and --build leave behind,
 and says so and stops when that is not there.
+
+    python backend/tests/make_picks_fixture.py --marks
+
+needs none of it. It refreshes the two things the page shows that come from
+leaders.py and the study file alone: the mark above each pick's price
+(plan.aim) and what the study found on selling there (target_test). Both are
+written by the real functions, onto the lists as the file already has them.
 """
 
 import json
@@ -32,13 +39,48 @@ ROW_KEYS = ("symbol", "name", "price", "sector", "list", "setup", "setup_key", "
             "technicals", "chart", "news", "adverse_filing", "avg_turnover_cr", "liquidity_tier",
             "tracked", "composite", "technical", "fundamental", "f_score", "setup_fit", "call")
 TOP_KEYS = ("available", "degraded", "method_key", "list", "horizon", "label", "idea", "hold_text",
-            "exit_pct", "tested", "study", "scanned_at", "partial", "scored", "universe_source",
+            "exit_pct", "tested", "target_test", "study", "scanned_at", "partial", "scored", "universe_source",
             "universe", "regime", "market_test", "chart_note", "empty_text", "event", "sector_mix",
             "sector_cap", "selection_notes", "excluded_adverse", "count", "considered", "method",
             "recipe_current", "primary", "kind", "sell_rule", "sector_flow", "flow_sectors", "watch", "lists")
 
 
+def marks(fix):
+    """
+    plan.aim on every pick and target_test on every list, from the functions
+    the endpoint uses. A list ranked with an older recipe (`recipe_current`
+    false) is sent no tested record, so it is sent no target test either.
+    """
+    import leaders
+    n = 0
+    for name, entry in fix.items():
+        if not isinstance(entry, dict) or entry.get("method_key") != "tested_lists":
+            continue
+        key = entry.get("list") or entry.get("horizon")
+        entry["target_test"] = (leaders.target_tested(key)
+                                if entry.get("tested") and entry.get("recipe_current") is not False else None)
+        for r in entry.get("rows") or []:
+            old = r.get("plan") or {}
+            new = leaders.plan(key, old.get("entry") if old.get("entry") is not None else r.get("price"))
+            if old.get("style") == "hold" and new:
+                old["aim"], old["aim_pct"] = new["aim"], new["aim_pct"]
+                n += 1
+    return n
+
+
+def write(fix):
+    # The file's own layout (one value a line, no padding), so a regenerated
+    # fixture differs from the last one only where the lists do.
+    OUT.write_text(json.dumps(fix, indent=0, separators=(",", ":"), ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+
+
 def main():
+    if "--marks" in sys.argv:
+        fix = json.loads(OUT.read_text(encoding="utf-8"))
+        print("marked %d picks" % marks(fix))
+        write(fix)
+        return 0
     import ideas_study as S
     if not os.path.exists(os.path.join(S.DATA, "panel.pkl")) or not os.path.exists(S.RESULTS_CSV):
         print("No study data at %s. Run research/ideas_study.py --fetch --build first." % S.DATA)
@@ -135,10 +177,8 @@ def main():
     none = dict(fix["short"], rows=[], count=0, watch=fix["short"].get("watch"),
                 empty_text=ideas.SETUP_EMPTY["short"], selection_notes=[ideas.SETUP_EMPTY["short"]])
     fix["short_empty"] = none
-    # The file's own layout (one value a line, no padding), so a regenerated
-    # fixture differs from the last one only where the lists do.
-    OUT.write_text(json.dumps(fix, indent=0, separators=(",", ":"), ensure_ascii=False) + "\n",
-                   encoding="utf-8")
+    marks(fix)
+    write(fix)
     print("wrote the results list for %s to %s: %s ... (%d reported)"
           % (day.date(), OUT.relative_to(ROOT), ", ".join(r["symbol"] for r in full["rows"][:5]),
              full["rows"][0]["results"]["reported"]))
