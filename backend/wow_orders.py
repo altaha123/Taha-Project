@@ -50,6 +50,7 @@ size is the whole of what this claims.
 """
 
 import datetime as dt
+import json
 import os
 import re
 import threading
@@ -83,6 +84,7 @@ _mcap_cache = {}
 # first reader could not read an amount written out in rupees, and took an
 # order book for an order.
 READER = 2
+KEY_LEN = 12
 
 # Rupees to the US dollar for an order stated only in dollars. Assumed, said
 # so on the row, and a rupee figure in the same sentence is always preferred.
@@ -738,6 +740,8 @@ def read_filing(item: dict, text: str) -> dict:
         "months_of_sales": None,
         "wow": False, "outsized": False, "filings": 1, "reader": READER,
     }
+    # The handle a shared link names this order by: the start of its ledger key.
+    row["key"] = _key(row)[:KEY_LEN]
     # The headline is read as well as the document: a small company often
     # puts the amount in the subject line and attaches a scan.
     found = order_value_cr(text, company) if text else None
@@ -931,6 +935,88 @@ def feed(days: int = 7, refresh: bool = False) -> dict:
     return out
 
 
+def _shareable(row) -> bool:
+    """
+    A card is drawn only for what the page would stand behind in public: a
+    firm order, with a value the filing itself labels as the order's, sized
+    against the company. Not a bid, not a memorandum, not an unlabelled
+    figure, and not a value an older reader wrote down.
+    """
+    return bool(row and row.get("symbol") and row.get("value_cr")
+                and row.get("value_confident")
+                and (row.get("stage") or "order") == "order"
+                and row.get("pct_of_market_cap") is not None
+                and int(row.get("reader") or 1) >= READER)
+
+
+def _from_ledger(rec: dict) -> dict:
+    """A ledger row as the page's row: its columns, and the detail kept beside them."""
+    try:
+        more = json.loads(rec.get("detail") or "{}")
+    except Exception:
+        more = {}
+    row = {
+        "symbol": rec.get("symbol"), "company": rec.get("company") or "",
+        "headline": rec.get("headline") or "", "at": rec.get("at"),
+        "date": rec.get("date"), "pdf": rec.get("pdf"), "read": True,
+        "stage": rec.get("stage") or "order",
+        "value_cr": rec.get("value_cr"),
+        "value_confident": bool(rec.get("value_confident")),
+        "currency_converted": bool(rec.get("currency_converted")),
+        "market_cap_cr": rec.get("market_cap_cr"),
+        "pct_of_market_cap": rec.get("pct_of_market_cap"),
+        "reader": rec.get("reader") or 1,
+        "key": (rec.get("key") or "")[:KEY_LEN],
+    }
+    for k in _DETAIL:
+        row[k] = more.get(k)
+    row["value_state"] = row["value_state"] or ("stated" if row["value_cr"] else "not_stated")
+    row["filings"] = row["filings"] or 1
+    pct = row["pct_of_market_cap"]
+    row["wow"] = bool(pct is not None and pct >= WOW_MIN_PCT and row["stage"] == "order")
+    row["outsized"] = bool(pct is not None and pct >= 100)
+    return row
+
+
+def for_card(symbol: str, key: str = ""):
+    """
+    One order as a share card and its link need it, or None when there is no
+    order of that company a card may be drawn for.
+
+    Reads the list already in memory and the ledger, and nothing else: a card
+    is fetched by a crawler, and a crawler must never be what sends this
+    service to the exchange. `key` names the order; without one, or when it
+    names nothing, the company's most recent shareable order is the answer, so
+    a link posted last month still opens onto something true.
+    """
+    sym = (symbol or "").strip().upper()
+    key = re.sub(r"[^0-9a-f]", "", (key or "").lower())[:24]
+    if not sym:
+        return None
+    with _lock:
+        live = [r for r in _cache["rows"] if r.get("symbol") == sym and _shareable(r)]
+    if key:
+        hit = next((r for r in live if (r.get("key") or "").startswith(key)), None)
+        if hit:
+            return dict(hit)
+    held = []
+    try:
+        with _db() as conn:
+            held = [dict(r) for r in conn.execute(
+                "SELECT * FROM orders WHERE symbol = ? AND value_cr IS NOT NULL"
+                " ORDER BY date DESC, at DESC LIMIT 60", (sym,)).fetchall()]
+    except Exception:
+        held = []
+    rows = [r for r in (_from_ledger(h) for h in held) if _shareable(r)]
+    if key:
+        hit = next((r for r in rows if r["key"].startswith(key)), None)
+        if hit:
+            return hit
+    if live:
+        return dict(max(live, key=lambda r: r.get("at") or ""))
+    return rows[0] if rows else None
+
+
 def _payload(rows, note):
     firm = [r for r in rows if r.get("stage", "order") == "order"]
     priced = [r for r in rows if r["value_cr"] is not None]
@@ -1108,6 +1194,10 @@ def _db():
                     conn.execute("ALTER TABLE orders ADD COLUMN reader INTEGER DEFAULT 1")
                 if "stage" not in have:
                     conn.execute("ALTER TABLE orders ADD COLUMN stage TEXT")
+                # The row as the page showed it, so a card shared today can be
+                # drawn next month from what was read today.
+                if "detail" not in have:
+                    conn.execute("ALTER TABLE orders ADD COLUMN detail TEXT")
                 # Which days this service has actually looked at.
                 #
                 # Without this, "the earliest order we hold" has to stand in
@@ -1156,27 +1246,49 @@ def record(rows) -> int:
                     "INSERT INTO orders (key, seen_at, date, at, symbol,"
                     " company, headline, pdf, value_cr, value_confident,"
                     " currency_converted, market_cap_cr, pct_of_market_cap,"
-                    " reader, stage)"
-                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                    " reader, stage, detail)"
+                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
                     " ON CONFLICT(key) DO UPDATE SET"
                     " value_cr = excluded.value_cr,"
                     " value_confident = excluded.value_confident,"
                     " currency_converted = excluded.currency_converted,"
                     " market_cap_cr = excluded.market_cap_cr,"
                     " pct_of_market_cap = excluded.pct_of_market_cap,"
-                    " reader = excluded.reader, stage = excluded.stage"
+                    " reader = excluded.reader, stage = excluded.stage,"
+                    " detail = excluded.detail"
                     " WHERE excluded.reader > COALESCE(orders.reader, 1)",
                     (_key(r), now, r.get("date"), r.get("at"), r.get("symbol"),
                      r.get("company"), r.get("headline"), r.get("pdf"),
                      r.get("value_cr"), 1 if r.get("value_confident") else 0,
                      1 if r.get("currency_converted") else 0,
                      r.get("market_cap_cr"), r.get("pct_of_market_cap"),
-                     int(r.get("reader") or READER), r.get("stage") or "order"))
+                     int(r.get("reader") or READER), r.get("stage") or "order",
+                     _detail(r)))
                 written += cur.rowcount or 0
+                # A row this reader wrote before the detail was kept gets it
+                # now. That adds to the reading; it does not change it.
+                if not cur.rowcount and _detail(r):
+                    conn.execute(
+                        "UPDATE orders SET detail = ? WHERE key = ? AND detail IS NULL"
+                        " AND COALESCE(reader, 1) = ?",
+                        (_detail(r), _key(r), int(r.get("reader") or READER)))
             conn.commit()
     except Exception:
         return 0
     return written
+
+
+_DETAIL = ("kind", "customer", "nature", "period", "size_text", "value_state",
+           "value_basis", "fx_rate", "excerpt", "sales_cr", "sales_year",
+           "pct_of_sales", "months_of_sales", "wow", "outsized", "filings", "quarter")
+
+
+def _detail(row) -> str:
+    """What a row says beyond the ledger's own columns, as JSON, or None."""
+    kept = {k: row[k] for k in _DETAIL if row.get(k) not in (None, "", False)}
+    if not kept:
+        return None
+    return json.dumps(kept, ensure_ascii=False, separators=(",", ":"))
 
 
 def reread(limit: int = 400) -> int:

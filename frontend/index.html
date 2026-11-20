@@ -1226,7 +1226,7 @@
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="home-motion.css">
 <link rel="stylesheet" href="home-hero.css?v=20260922-explore">
-<link rel="stylesheet" href="filings-views.css?v=20261120-wow">
+<link rel="stylesheet" href="filings-views.css?v=20261120-wowshare">
 <link rel="stylesheet" href="type.css">
 <link rel="stylesheet" href="alerts.css?v=20261118">
 <script>
@@ -4868,6 +4868,7 @@ if(fcSymParam){
      ?go=filings      open a specific tab on arrival
      ?go=results&q=TARIL   open that stock's latest results (a shared card)
      ?go=concalls&q=TARIL  open that company's earnings call (a shared card)
+     ?go=wow&q=TARIL&id=…  open that company's order win (a shared card)
    Both are sanitised, and neither runs unless present, so an ordinary
    visit to the site behaves exactly as it did before.               */
 (function(){
@@ -4909,10 +4910,10 @@ if(fcSymParam){
       setTimeout(function(){
         if (typeof getResults === "function") getResults(q);
       }, 220);
-    } else if (q && go === "concalls") {
-      /* A shared concall card links here. concalls.js reads the symbol and
-         brings that call into view; analysing the stock instead would carry
-         the reader off the summary they were sent. */
+    } else if (q && (go === "concalls" || go === "wow")) {
+      /* A shared concall or order card links here. concalls.js and wow.js
+         read the symbol and bring that call or order into view; analysing the
+         stock instead would carry the reader off what they were sent. */
     } else if (q) {
       var tk = document.getElementById("tk"), btn = document.getElementById("go");
       if (tk && btn) {

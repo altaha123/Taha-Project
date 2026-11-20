@@ -562,6 +562,123 @@ def test_a_sparse_concall_still_renders(call):
     assert _png_size(og.concall_card(call)) == (1200, 630)
 
 
+# ---------------------------------------------------------------------------
+# The WOW order card: an order against its company
+# ---------------------------------------------------------------------------
+
+ORDER = {
+    "symbol": "PACEDIGITK", "company": "Pace Digitek Limited", "key": "6eed6d67e567",
+    "at": "2026-11-16T14:55:00+05:30", "stage": "order", "kind": "Letter of award",
+    "customer": "NTPC Green Energy Limited",
+    "nature": ("BESS system supply, system integration, installation, testing, commissioning, "
+               "civil works and 15-year operations & maintenance for Block-01 and Block-02 "
+               "under Cluster-01 of the flagship 3300 MWh BESS Project"),
+    "value_cr": 2691.3, "value_confident": True, "currency_converted": False,
+    "market_cap_cr": 3569.3, "pct_of_market_cap": 75.4,
+    "sales_year": "FY26", "months_of_sales": 12.2, "wow": True, "outsized": False,
+}
+
+
+def test_wow_card_says_who_won_what_and_how_big_it_is():
+    png, text = _drawn(lambda: og.wow_card(ORDER))
+    assert _png_size(png) == (1200, 630)
+    flat = text.replace(" ", "")
+    for want in ("WOW ORDER", "FILED 16 NOV 2026", "PACE DIGITEK LIMITED", "75%",
+                 "OF MARKET CAP", "₹2,691 cr letter of award from NTPC Green Energy Limited",
+                 "BESS system supply", "ORDER", "MARKET CAP", "₹3,569 cr",
+                 "AGAINST FY26 SALES", "12.2 months", "AS THE COMPANY FILED IT",
+                 "NOT INVESTMENT ADVICE"):
+        assert want.replace(" ", "") in flat, want
+
+
+def test_an_order_under_the_line_is_not_called_wow_on_its_card():
+    small = dict(ORDER, pct_of_market_cap=3.3, wow=False)
+    _png, text = _drawn(lambda: og.wow_card(small))
+    flat = text.replace(" ", "")
+    assert "ORDERWIN" in flat and "WOWORDER" not in flat and "3.3%" in flat
+
+
+def test_an_order_larger_than_the_company_says_to_open_the_filing():
+    """The page says so beside the row. A picture travels without the page."""
+    huge = dict(ORDER, pct_of_market_cap=127.7, outsized=True, months_of_sales=None,
+                sales_year=None)
+    _png, text = _drawn(lambda: og.wow_card(huge))
+    flat = text.replace(" ", "")
+    assert "128%" in flat and "LARGERTHANTHECOMPANY:OPENTHEFILING" in flat
+    assert "SALES" not in flat, "no sales on file means no sales comparison"
+
+
+def test_a_converted_order_says_what_rate_was_assumed():
+    conv = dict(ORDER, currency_converted=True, fx_rate=93.5)
+    _png, text = _drawn(lambda: og.wow_card(conv))
+    assert "USDOLLARSAT₹93.5,ANASSUMEDRATE" in text.replace(" ", "")
+
+
+def test_the_wow_card_never_carries_a_level_or_a_directive():
+    """An order is an event with a size. Nothing on its card is about the share."""
+    _png, text = _drawn(lambda: og.wow_card(dict(ORDER, price=1234.5, target=1500, stop=1100,
+                                               entry=1200)))
+    for bad in ("1234", "1500", "1100", "1200"):
+        assert bad not in text.replace(",", "")
+    for word in ("BUY", "SELL", "TARGET", "STOP", "ENTRY"):
+        assert word not in text.upper()
+
+
+def test_nothing_on_a_wow_card_runs_off_the_card():
+    from PIL import Image, ImageDraw
+    d = ImageDraw.Draw(Image.new("RGB", (og.W, og.H)))
+    worst = dict(ORDER, company="The Extraordinarily Long Named Infrastructure Development And "
+                 "Finance Corporation Of India Limited", customer="Customer " * 30,
+                 nature="scope " * 80, value_cr=278400.0, market_cap_cr=1234567.0,
+                 pct_of_market_cap=1234.5, months_of_sales=480)
+    seen = []
+    original = ImageDraw.ImageDraw.text
+
+    def spy(self, xy, text, *a, **k):
+        seen.append((xy[0] + d.textlength(str(text), font=k.get("font")), xy[1]))
+        return original(self, xy, text, *a, **k)
+
+    ImageDraw.ImageDraw.text = spy
+    try:
+        png = og.wow_card(worst)
+    finally:
+        ImageDraw.ImageDraw.text = original
+    assert _png_size(png) == (1200, 630)
+    assert max(x for x, _y in seen) <= og.W - 60
+    assert all(y < og.H - 92 or y >= og.H - 72 for _x, y in seen)
+
+
+@pytest.mark.parametrize("row", [
+    {}, {"symbol": "X"}, {"symbol": "X", "value_cr": 5},
+    {"symbol": "X", "value_cr": 5, "pct_of_market_cap": 0.01, "at": "not a date"},
+    {"symbol": "X", "company": "X Ltd", "value_cr": None, "pct_of_market_cap": None},
+])
+def test_a_sparse_order_still_renders(row):
+    assert _png_size(og.wow_card(row)) == (1200, 630)
+
+
+@pytest.mark.parametrize("v,want", [
+    (278400, "₹2.78 lakh cr"), (2691.3, "₹2,691 cr"), (136.29, "₹136 cr"),
+    (18.51, "₹18.51 cr"), (6.0, "₹6 cr"), (0.45, "₹45 lakh"), (None, "—"), ("x", "—"),
+])
+def test_rupees_read_the_way_the_page_writes_them(v, want):
+    assert og._rupee_cr(v) == want
+
+
+@pytest.mark.parametrize("m,want", [
+    (0.1, "under a week"), (0.6, "about 3 weeks"), (1.0, "1 month"), (6.7, "6.7 months"),
+    (12.2, "12.2 months"), (30, "2.5 years"),
+])
+def test_sales_are_a_length_a_reader_can_picture(m, want):
+    assert og._sales_span(m) == want
+
+
+def test_the_order_sentence_is_built_only_from_what_the_filing_states():
+    assert og.order_sentence(ORDER) == ("₹2,691 cr letter of award from "
+                                        "NTPC Green Energy Limited")
+    assert og.order_sentence({"value_cr": 136.29}) == "₹136 cr order"
+
+
 def test_every_card_carries_the_mark():
     """The gold arrow only exists in the logo, so its pixels prove it landed."""
     from PIL import Image
@@ -575,6 +692,7 @@ def test_every_card_carries_the_mark():
         "chart": og.chart_card(CHART),
         "results": og.results_card(RESULTS),
         "concall": og.concall_card(CONCALL),
+        "wow": og.wow_card(ORDER),
     }
     for name, png in cards.items():
         im = Image.open(_io.BytesIO(png)).convert("RGB")

@@ -75,8 +75,9 @@
 
 /* A WOW order. The size sits in its own panel so a reader running down the
    page reads the percentages as a column. */
-.wo.is-wow{ border-color:var(--gold); display:grid; grid-template-columns:1fr }
-@media (min-width:720px){ .wo.is-wow{ grid-template-columns:208px minmax(0,1fr) } }
+.wo.is-card{ display:grid; grid-template-columns:1fr }
+@media (min-width:720px){ .wo.is-card{ grid-template-columns:208px minmax(0,1fr) } }
+.wo.is-wow{ border-color:var(--gold) }
 .wo-meter{
   position:relative; display:grid; align-content:start; gap:7px;
   padding:17px 18px 18px; background:var(--paper-2);
@@ -141,12 +142,21 @@
   font-size:12.5px; line-height:1.58; color:var(--ink-2); max-width:78ch;
 }
 .wo-warn.soft{ border-left-color:var(--mute) }
-.wo.is-wow .wo-warn{ background:transparent; border:1px solid var(--rule); border-left:2px solid var(--sh-dn); }
+.wo.is-card .wo-warn{ background:transparent; border:1px solid var(--rule); border-left:2px solid var(--sh-dn); }
 /* The evidence and the filing share a line; opened, the evidence takes the
    line to itself and the link drops under it. */
 .wo-foot{ display:flex; flex-wrap:wrap; gap:6px 22px; align-items:center; margin-top:14px }
 .wo-foot:empty{ display:none }
 .wo-ev[open]{ flex:1 1 100% }
+/* Share sits at the end of that line. With a mouse it is the size of the
+   links beside it; on a touch screen it keeps the 44px every button has. */
+.wo-foot .wo-share{ margin-left:auto; flex:0 0 auto }
+@media (hover:hover) and (pointer:fine){ .wo-foot .wo-share{ min-height:30px } }
+/* The order a shared card linked to: clear of the sticky header when it is
+   scrolled to, and ringed so it can be told from its neighbours. */
+.wo{ scroll-margin-top:150px }
+.wo.is-arrived{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(176,141,46,.2) }
+.wo-row.is-arrived{ box-shadow:inset 3px 0 0 var(--gold) }
 .wo-ev > summary{
   cursor:pointer; font:500 11px/1 'IBM Plex Mono',monospace;
   letter-spacing:.06em; text-transform:uppercase; color:var(--mute); padding:5px 0;

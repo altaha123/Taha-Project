@@ -11,6 +11,9 @@
        the company calls confidential, and one not read yet, say that instead
      · the page is answered before the filings are read, fills in by itself,
        and keeps open what the reader opened
+     · an order can be shared only when it is a firm order with a labelled
+       value sized against the company; the card and link are that order's,
+       and a shared link opens onto it, even one older than the week listed
      · the WOW threshold must be visible on the page, because a rule nobody can
        read is a rule nobody can argue with
      · a quarter the service did not watch must not be presented as a fall in
@@ -39,13 +42,13 @@ const wow = {
   note: '', source: 'BSE corporate announcements, Regulation 30. Order values are read from the filed document, not the headline.',
   explain: 'An order is called WOW when its disclosed value is at least 10% of the company’s market capitalisation. Orders whose value the company did not disclose are listed but never ranked, and never given an assumed figure.',
   rows: [
-    { symbol: 'TINYCO', company: 'Tiny Infra Projects Ltd', headline: 'Bagging/Receiving of orders/contracts', at: '2026-09-12T16:20:00+05:30', date: '2026-09-12', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/7.pdf', read: true, stage: 'order', kind: 'Work order', customer: 'Hindalco Industries Limited', nature: null, period: null, size_text: null, value_cr: 136.29, value_state: 'stated', value_basis: 'stated next to an order-value phrase in the filing', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'Intimation of workorder from M/S Hindalco Industries Limited worth Rs.136.29 crores', market_cap_cr: 106.7, pct_of_market_cap: 127.73, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: true, outsized: true, filings: 1 },
-    { symbol: 'SMALLCO', company: 'Small Engineering Ltd', headline: 'Receipt of work order from NHAI for a highway package', at: '2026-09-12T11:02:00+05:30', date: '2026-09-12', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/1.pdf', read: true, stage: 'order', kind: 'Work order', customer: 'National Highways Authority of India <script>window.__wowxss=1</script>', nature: 'Four-laning of a 42 km highway package on EPC mode', period: '24 months', size_text: null, value_cr: 450.75, value_state: 'stated', value_basis: 'stated as the size of the order in the filing’s disclosure table', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'The Company has received a work order. The order value is Rs. 450.75 crore, to be executed over 24 months.', market_cap_cr: 1050, pct_of_market_cap: 42.93, sales_cr: 901.5, sales_year: 'FY26', pct_of_sales: 50, months_of_sales: 6, wow: true, outsized: false, filings: 2 },
-    { symbol: 'BIGCO', company: 'Big Infra Ltd', headline: 'Order win intimation under Regulation 30', at: '2026-09-11T15:40:00+05:30', date: '2026-09-11', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/2.pdf', read: true, stage: 'order', kind: 'Letter of award', customer: 'Posh Offshore Private Limited', nature: 'Subsea inspection work', period: 'By May 2027', size_text: null, value_cr: 320, value_state: 'stated', value_basis: 'largest rupee figure in the filing; the filing does not label it as the order value', value_confident: false, currency_converted: true, fx_rate: 93.5, excerpt: 'The company informed that USD 38 million was involved in the transaction.', market_cap_cr: 42000, pct_of_market_cap: 0.76, sales_cr: 16000, sales_year: 'FY26', pct_of_sales: 2, months_of_sales: 0.2, wow: false, outsized: false, filings: 1 },
-    { symbol: 'ROADCO', company: 'Road Builders Ltd', headline: 'Road Builders Ltd has informed the Exchange about L1 for NHAI Project', at: '2026-09-11T18:05:00+05:30', date: '2026-09-11', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/4.pdf', read: true, stage: 'l1', kind: 'Lowest bidder (L1)', customer: 'National Highways Authority of India (NHAI)', nature: 'Construction of an 8-lane expressway package', period: '18 months', size_text: null, value_cr: 1465, value_state: 'stated', value_basis: 'stated as the size of the order in the filing’s disclosure table', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'Quoted EPC Price for the Project Rs.1,465.00 Crore excluding GST', market_cap_cr: 3114.3, pct_of_market_cap: 47.04, sales_cr: 7519.88, sales_year: 'FY26', pct_of_sales: 19.5, months_of_sales: 2.3, wow: false, outsized: false, filings: 1 },
-    { symbol: 'ACCURACY', company: 'Accuracy Shipping Ltd', headline: 'Receipt Of Letter Of Intent For Setting Up Of Container Freight Station At Kandla', at: '2026-09-10T09:15:00+05:30', date: '2026-09-10', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/3.pdf', read: true, stage: 'order', kind: 'Letter of intent', customer: 'Deendayal Port Authority', nature: 'Container freight station at Kandla', period: null, size_text: '40,000 containers a year', value_cr: null, value_state: 'not_stated', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 },
-    { symbol: 'SECRETCO', company: 'Secret Systems Ltd', headline: 'Receiving of order', at: '2026-09-10T08:15:00+05:30', date: '2026-09-10', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/5.pdf', read: true, stage: 'order', kind: 'Purchase order', customer: 'Overseas customer in a space sector', nature: 'Manufacturing electrical wire harness', period: '4-6 months', size_text: 'This cannot be disclosed being confidential in nature', value_cr: null, value_state: 'confidential', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 },
-    { symbol: 'LATECO', company: 'Late Filer Ltd', headline: 'Bagging/Receiving of orders/contracts', at: '2026-09-09T19:15:00+05:30', date: '2026-09-09', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/6.pdf', read: false, stage: 'order', kind: null, customer: null, nature: null, period: null, size_text: null, value_cr: null, value_state: 'unread', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 }
+    { symbol: 'TINYCO', key: 'ca4913d33ad7', company: 'Tiny Infra Projects Ltd', headline: 'Bagging/Receiving of orders/contracts', at: '2026-09-12T16:20:00+05:30', date: '2026-09-12', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/7.pdf', read: true, stage: 'order', kind: 'Work order', customer: 'Hindalco Industries Limited', nature: null, period: null, size_text: null, value_cr: 136.29, value_state: 'stated', value_basis: 'stated next to an order-value phrase in the filing', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'Intimation of workorder from M/S Hindalco Industries Limited worth Rs.136.29 crores', market_cap_cr: 106.7, pct_of_market_cap: 127.73, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: true, outsized: true, filings: 1 },
+    { symbol: 'SMALLCO', key: '1a2b3c4d5e6f', company: 'Small Engineering Ltd', headline: 'Receipt of work order from NHAI for a highway package', at: '2026-09-12T11:02:00+05:30', date: '2026-09-12', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/1.pdf', read: true, stage: 'order', kind: 'Work order', customer: 'National Highways Authority of India <script>window.__wowxss=1</script>', nature: 'Four-laning of a 42 km highway package on EPC mode', period: '24 months', size_text: null, value_cr: 450.75, value_state: 'stated', value_basis: 'stated as the size of the order in the filing’s disclosure table', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'The Company has received a work order. The order value is Rs. 450.75 crore, to be executed over 24 months.', market_cap_cr: 1050, pct_of_market_cap: 42.93, sales_cr: 901.5, sales_year: 'FY26', pct_of_sales: 50, months_of_sales: 6, wow: true, outsized: false, filings: 2 },
+    { symbol: 'BIGCO', key: 'b16c0b16c0b1', company: 'Big Infra Ltd', headline: 'Order win intimation under Regulation 30', at: '2026-09-11T15:40:00+05:30', date: '2026-09-11', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/2.pdf', read: true, stage: 'order', kind: 'Letter of award', customer: 'Posh Offshore Private Limited', nature: 'Subsea inspection work', period: 'By May 2027', size_text: null, value_cr: 320, value_state: 'stated', value_basis: 'largest rupee figure in the filing; the filing does not label it as the order value', value_confident: false, currency_converted: true, fx_rate: 93.5, excerpt: 'The company informed that USD 38 million was involved in the transaction.', market_cap_cr: 42000, pct_of_market_cap: 0.76, sales_cr: 16000, sales_year: 'FY26', pct_of_sales: 2, months_of_sales: 0.2, wow: false, outsized: false, filings: 1 },
+    { symbol: 'ROADCO', key: '70ad70ad70ad', company: 'Road Builders Ltd', headline: 'Road Builders Ltd has informed the Exchange about L1 for NHAI Project', at: '2026-09-11T18:05:00+05:30', date: '2026-09-11', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/4.pdf', read: true, stage: 'l1', kind: 'Lowest bidder (L1)', customer: 'National Highways Authority of India (NHAI)', nature: 'Construction of an 8-lane expressway package', period: '18 months', size_text: null, value_cr: 1465, value_state: 'stated', value_basis: 'stated as the size of the order in the filing’s disclosure table', value_confident: true, currency_converted: false, fx_rate: null, excerpt: 'Quoted EPC Price for the Project Rs.1,465.00 Crore excluding GST', market_cap_cr: 3114.3, pct_of_market_cap: 47.04, sales_cr: 7519.88, sales_year: 'FY26', pct_of_sales: 19.5, months_of_sales: 2.3, wow: false, outsized: false, filings: 1 },
+    { symbol: 'ACCURACY', key: 'acc0acc0acc0', company: 'Accuracy Shipping Ltd', headline: 'Receipt Of Letter Of Intent For Setting Up Of Container Freight Station At Kandla', at: '2026-09-10T09:15:00+05:30', date: '2026-09-10', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/3.pdf', read: true, stage: 'order', kind: 'Letter of intent', customer: 'Deendayal Port Authority', nature: 'Container freight station at Kandla', period: null, size_text: '40,000 containers a year', value_cr: null, value_state: 'not_stated', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 },
+    { symbol: 'SECRETCO', key: '5ec5ec5ec5ec', company: 'Secret Systems Ltd', headline: 'Receiving of order', at: '2026-09-10T08:15:00+05:30', date: '2026-09-10', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/5.pdf', read: true, stage: 'order', kind: 'Purchase order', customer: 'Overseas customer in a space sector', nature: 'Manufacturing electrical wire harness', period: '4-6 months', size_text: 'This cannot be disclosed being confidential in nature', value_cr: null, value_state: 'confidential', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 },
+    { symbol: 'LATECO', key: '1a7e1a7e1a7e', company: 'Late Filer Ltd', headline: 'Bagging/Receiving of orders/contracts', at: '2026-09-09T19:15:00+05:30', date: '2026-09-09', quarter: 'Q2 FY27', pdf: 'https://www.bseindia.com/x/6.pdf', read: false, stage: 'order', kind: null, customer: null, nature: null, period: null, size_text: null, value_cr: null, value_state: 'unread', value_basis: null, value_confident: false, currency_converted: false, fx_rate: null, excerpt: null, market_cap_cr: null, pct_of_market_cap: null, sales_cr: null, sales_year: null, pct_of_sales: null, months_of_sales: null, wow: false, outsized: false, filings: 1 }
   ],
   quarter: {
     this_quarter: { label: 'Q2 FY27', start: '2026-07-01', end: '2026-09-30', orders: 3, with_value: 2, value_not_disclosed: 1, total_cr: 770.75, companies: 3, biggest: { symbol: 'SMALLCO', company: 'Small Engineering Ltd', value_cr: 450.75, pct_of_market_cap: 42.93 }, partial: false, trading_days: 55, days_not_recorded: 0 },
@@ -199,7 +202,7 @@ const server = http.createServer((req, res) => {
     viewport: { width: 1280, height: 1000 }, reducedMotion: 'reduce' });
   await context.addInitScript(() => { try { localStorage.setItem('altaha-guide-dismissed', '1'); } catch (e) {} });
   const page = await context.newPage(), errors = [];
-  let wowCalls = 0, ccCalls = 0, wowPayload = wow, wowQueue = null, ccQueue = null, oneCall = null;
+  let wowCalls = 0, ccCalls = 0, wowPayload = wow, wowQueue = null, ccQueue = null, oneCall = null, oneOrder = null;
   page.on('pageerror', e => errors.push(String(e.stack)));
 
   await context.route('**/*', route => {
@@ -215,6 +218,11 @@ const server = http.createServer((req, res) => {
       ccCalls++;
       const next = ccQueue ? (ccQueue.length > 1 ? ccQueue.shift() : ccQueue[0]) : concalls;
       return route.fulfill({ json: next });
+    }
+    if (u.pathname === '/wow-order') {
+      const hit = oneOrder && u.searchParams.get('ticker') === oneOrder.symbol;
+      return route.fulfill({ json: hit ? { available: true, row: oneOrder, threshold_pct: 10 }
+                                       : { available: false, message: 'No order on file.' } });
     }
     if (u.pathname === '/concall' && oneCall && u.searchParams.get('ticker') === oneCall.symbol) {
       return route.fulfill({ json: oneCall });
@@ -344,6 +352,41 @@ const server = http.createServer((req, res) => {
   // Every filing is one tap away.
   assert.equal(await wv.locator('.wo-pdf').count(), 7);
 
+  // ── Sharing an order ─────────────────────────────────────────────────────
+  // Only what a card may be drawn for can be shared: a firm order with a
+  // labelled value, sized against the company. Not the unlabelled figure,
+  // not the lowest bid, not an order with no value.
+  assert.equal(await wv.locator('.wo-share').count(), 2);
+  assert.equal(await mid.locator('.wo-share').count(), 0, 'an unlabelled figure is not put on a card');
+  assert.equal(await bid.locator('.wo-share').count(), 0, 'a bid is not an order');
+  assert.equal(await none.locator('.wo-share').count(), 0);
+  const order = JSON.parse(await first.locator('.wo-share').getAttribute('data-share'));
+  assert.deepEqual([order.kind, order.ticker, order.id, order.company, order.value_cr,
+                    order.pct_of_market_cap, order.market_cap_cr, order.order_kind],
+    ['wow', 'SMALLCO', '1a2b3c4d5e6f', 'Small Engineering Ltd', 450.75, 42.93, 1050, 'Work order']);
+  assert.match(order.customer, /<script>/, 'a tag in a name survives the attribute as text');
+
+  // Pressing it opens the sheet on that order's card, with X and WhatsApp.
+  await first.locator('.wo-share').evaluate(el => el.click());
+  const osheet = page.locator('#shsheet');
+  await osheet.waitFor({ state: 'visible' });
+  assert.match(await osheet.locator('#shttl').innerText(), /SMALLCO — order win/);
+  assert.match(await osheet.locator('#shsub').innerText(), /Two published numbers/i);
+  assert.match(await osheet.locator('#shcardimg').getAttribute('src'),
+    /\/og\/wow\.png\?ticker=SMALLCO&id=1a2b3c4d5e6f$/);
+  for (const net of ['x', 'wa']) {
+    assert.equal(await osheet.locator(`[data-do="${net}"]`).count(), 1);
+    const to = decodeURIComponent(await page.evaluate(
+      ([n, d]) => window.AltahaShare.shareUrl(n, d), [net, order]));
+    assert.match(to, /\/share\/wow\/SMALLCO\?id=1a2b3c4d5e6f/, `${net} must carry the order's link`);
+    assert.match(to, /Small Engineering Ltd — ₹451 cr work order from National Highways/);
+    assert.match(to, /That is 43% of the company.s market cap \(₹1,050 cr\)/);
+    assert.doesNotMatch(to, /onrender\.com/, 'a post must not name the API host');
+  }
+  await osheet.locator('.shx').evaluate(el => el.click());
+  await osheet.waitFor({ state: 'hidden' });
+  assert.equal(await page.evaluate(() => window.__wowxss), undefined);
+
   // Quarter on quarter, both sides labelled.
   const wq = page.locator('.wq');
   assert.match(await wq.innerText(), /Q1 FY27/);
@@ -424,6 +467,55 @@ const server = http.createServer((req, res) => {
   assert.equal(wowCalls, 3, 'the page must stop asking once the server says it has finished');
   await pageR.close();
   wowQueue = null;
+
+  // ── Arriving from a shared link ──────────────────────────────────────────
+  // The link names an order. It is brought into view and marked, and the
+  // stock is not analysed instead: the reader was sent an order.
+  const pageS = await context.newPage();
+  pageS.on('pageerror', e => errors.push(String(e.stack)));
+  let analysedW = 0;
+  pageS.on('request', r => { if (new URL(r.url()).pathname === '/analyze') analysedW++; });
+  await pageS.goto('http://127.0.0.1:8773/?go=wow&q=SMALLCO&id=1a2b3c4d5e6f', { waitUntil: 'domcontentloaded' });
+  const sentO = pageS.locator('#view-wow .wo.is-arrived');
+  await sentO.waitFor({ state: 'visible', timeout: 8000 });
+  assert.equal(await sentO.count(), 1);
+  assert.match(await sentO.locator('.wo-co').innerText(), /Small Engineering Ltd/);
+  assert.equal(await pageS.locator('#view-wow .wo-gh', { hasText: /you were sent/i }).count(), 0,
+    'an order already in the list is not listed twice');
+  await pageS.waitForTimeout(600);
+  assert.equal(analysedW, 0, 'a shared order must not run the stock analysis');
+  await pageS.close();
+
+  // A link to an order in the one-line list opens that line.
+  const pageT = await context.newPage();
+  pageT.on('pageerror', e => errors.push(String(e.stack)));
+  await pageT.goto('http://127.0.0.1:8773/?go=wow&q=BIGCO', { waitUntil: 'domcontentloaded' });
+  const sentRow = pageT.locator('#view-wow .wo-row.is-arrived');
+  await sentRow.waitFor({ state: 'visible', timeout: 8000 });
+  assert.match(await sentRow.locator(':scope > summary').innerText(), /Big Infra Ltd/);
+  assert.equal(await sentRow.evaluate(el => el.open), true);
+  await pageT.close();
+
+  // A link older than the week. The order is asked for by name and shown
+  // above the list, as a card, rather than the reader landing on a page that
+  // does not have it.
+  oneOrder = Object.assign({}, wow.rows[1], {
+    symbol: 'OLDCO', key: '01d01d01d01d', company: 'Old Order Ltd', at: '2026-08-03T11:00:00+05:30',
+    customer: 'Northern Railway', pct_of_market_cap: 6.4, wow: false, filings: 1 });
+  const pageU = await context.newPage();
+  pageU.on('pageerror', e => errors.push(String(e.stack)));
+  await pageU.goto('http://127.0.0.1:8773/?go=wow&q=OLDCO&id=01d01d01d01d', { waitUntil: 'domcontentloaded' });
+  const old = pageU.locator('#view-wow .wo.is-arrived');
+  await old.waitFor({ state: 'visible', timeout: 8000 });
+  assert.match(await pageU.locator('#view-wow .wo-gh', { hasText: /you were sent/i }).innerText(), /you were sent/i);
+  assert.match(await old.locator('.wo-hl').innerText(), /₹451 cr work order from Northern Railway/);
+  assert.match(await old.locator('.wo-pct').innerText(), /6\.4%/);
+  assert.equal(await old.locator('.fl.wow').count(), 0, 'an order under the line is not called WOW because it was shared');
+  assert.equal(await old.evaluate(el => el.classList.contains('is-wow')), false);
+  assert.equal(await old.locator('.wo-share').count(), 1);
+  assert.equal(await pageU.locator('#view-wow .wo').count(), 8, 'the week is still there under it');
+  await pageU.close();
+  oneOrder = null;
 
   // ── Phone through desktop, both themes ───────────────────────────────────
   for (const [tab, name] of [['wow', 'wow'], ['concalls', 'concalls']]) {
@@ -630,6 +722,7 @@ const server = http.createServer((req, res) => {
     viewports: [320, 390, 768, 1280], themes: ['light', 'dark'],
     lazyLoaded: true, undisclosedNeverZero: true, thresholdVisible: true,
     wowOrdersLead: true, bidNeverWow: true, answeredBeforeReading: true,
+    sharesOnlyFirmSizedOrders: true, sharedOrderLinkOpensItsOrder: true,
     quarterComparison: true, unwatchedQuarterNotCompared: true,
     everyQuoteAttributed: true, noSummaryStatedPlainly: true,
     fillsInWhileReading: true, keyCallsFirst: true, modelNamedOnEachSummary: true,

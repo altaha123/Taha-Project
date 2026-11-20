@@ -1255,3 +1255,178 @@ def concall_card(c: dict) -> bytes:
     buf = io.BytesIO()
     img.save(buf, "PNG", optimize=True)
     return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# WOW order cards
+#
+# One order, sized against the company that won it: the percentage of market
+# cap as the figure, the order as a sentence built from the filing, and the
+# three numbers the percentage is made of. It is arithmetic on published
+# figures, so like the results card it states facts and takes no view.
+#
+# What it never carries is what the page never carries: no target, no level,
+# no word on the share. An order larger than the whole company says so and
+# says to open the filing, because that is also what a misread figure looks
+# like and a picture travels without the page's caution beside it.
+# ---------------------------------------------------------------------------
+
+def _rupee_cr(v):
+    """₹ crore the way the page writes it: '₹2,691 cr', '₹18.51 cr', '₹45 lakh'."""
+    try:
+        n = float(v)
+    except (TypeError, ValueError):
+        return "—"
+    if n != n:
+        return "—"
+    if n >= 100000:
+        return f"₹{n / 100000:.2f} lakh cr"
+    if n >= 100:
+        return f"₹{n:,.0f} cr"
+    if n >= 1:
+        return f"₹{n:,.2f}".rstrip("0").rstrip(".") + " cr"
+    return f"₹{n * 100:.2f}".rstrip("0").rstrip(".") + " lakh"
+
+
+def _pct_of(v):
+    n = float(v)
+    if n >= 10:
+        return f"{n:.0f}%"
+    if n >= 0.1:
+        return f"{n:.1f}%"
+    return "<0.1%"
+
+
+def _sales_span(months):
+    """A length of sales a reader can picture: weeks, then months, then years."""
+    m = float(months)
+    if m < 0.25:
+        return "under a week"
+    if m < 1:
+        w = max(1, round(m * 4.35))
+        return f"about {w} week" + ("" if w == 1 else "s")
+    if m < 18:
+        r = round(m, 1)
+        txt = f"{r:.1f}".rstrip("0").rstrip(".")
+        return f"{txt} month" + ("" if r == 1 else "s")
+    return f"{m / 12:.1f} years"
+
+
+def order_sentence(r: dict) -> str:
+    """'₹2,691 cr letter of award from NTPC Green Energy Limited', from the filing."""
+    what = (r.get("kind") or "order").lower()
+    line = f"{_rupee_cr(r.get('value_cr'))} {what}"
+    if r.get("customer"):
+        line += f" from {r['customer']}"
+    return " ".join(line.split())
+
+
+WOW_BAR_FULL = 50.0            # the bar is full at half the company's value
+
+
+def wow_card(r: dict, threshold: float = 10.0) -> bytes:
+    """
+    One order against its company. `r` is a row of /wow-orders.
+    """
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGB", (W, H), PAPER)
+    d = ImageDraw.Draw(img)
+    _shell(d, img)
+
+    sym = str(r.get("symbol") or "").upper().replace(".NS", "").replace(".BO", "")
+    company = " ".join(str(r.get("company") or sym or "").split())
+    pct = r.get("pct_of_market_cap")
+    is_wow = bool(r.get("wow"))
+
+    # What this is, top right.
+    tag = "WOW ORDER" if is_wow else "ORDER WIN"
+    tw = _tracked_width(d, tag, mono(20, True), 3)
+    _tracking(d, (W - 64 - tw, 60), tag, mono(20, True), GOLD, 3)
+    filed = _call_day(r.get("at") or r.get("date"))
+    if filed:
+        sub = f"FILED {filed}"
+        sw = _tracked_width(d, sub, mono(14), 2.2)
+        _tracking(d, (W - 64 - sw, 96), sub, mono(14), MUTE, 2.2)
+
+    # The company.
+    kf = mono(17, True)
+    name = company.upper()
+    tail = f" · {sym}" if sym and sym != name else ""
+    room = W - 128
+    if _tracked_width(d, name + tail, kf, 2.4) > room:
+        tail = ""
+    if _tracked_width(d, name, kf, 2.4) > room:
+        while name and _tracked_width(d, name + "…", kf, 2.4) > room:
+            name = name[:-1]
+        name = name.rstrip() + "…"
+    end = _tracking(d, (64, 164), name, kf, INK, 2.4)
+    if tail:
+        _tracking(d, (end, 164), tail, kf, MUTE, 2.4)
+
+    # Left: the size against the company, as a figure and a bar.
+    col = 300
+    if pct is not None:
+        txt = _pct_of(pct)
+        size = 150
+        for size in (150, 132, 116, 100, 84):
+            if d.textlength(txt, font=serif(size)) <= col:
+                break
+        d.text((60, 196 + (150 - size) // 2), txt, font=serif(size),
+               fill=GOLD if is_wow else INK)
+        _tracking(d, (66, 372), "OF MARKET CAP", mono(15), MUTE, 2.6)
+        y0, y1 = 404, 414
+        d.rounded_rectangle([64, y0, 64 + col, y1], radius=5, fill=RULE)
+        fill = max(6, col * min(1.0, float(pct) / WOW_BAR_FULL))
+        d.rounded_rectangle([64, y0, 64 + fill, y1], radius=5, fill=GOLD if is_wow else INK_2)
+        tick = 64 + col * min(1.0, float(threshold) / WOW_BAR_FULL)
+        d.rectangle([tick - 1, y0 - 4, tick + 1, y1 + 4], fill=INK)
+
+    # Right: the order as a sentence, then what it is for.
+    x, width = 412, W - 64 - 412
+    sentence = order_sentence(r)
+    size, lines = 34, []
+    for size in (48, 44, 40, 36, 32):
+        lines = _wrap(d, sentence, size, width)
+        if len(lines) <= 3:
+            break
+    lines = _clip(d, lines, 3, size, width)
+    lead = round(size * 1.12)
+    baseline = 200 + round(size * 0.82)
+    for line in lines:
+        _prose(d, x, baseline, line, size, INK)
+        baseline += lead
+    top = baseline - lead + round(size * 0.24) + 16
+    nature = " ".join(str(r.get("nature") or "").split())
+    room = min(2, int((428 - top) // 34))
+    if nature and room >= 1:
+        base = top + 21
+        for line in _clip(d, _wrap(d, nature, 25, width), room, 25, width):
+            _prose(d, x, base, line, 25, INK_2)
+            base += 34
+
+    # Under both: the numbers the percentage is made of.
+    d.line([(64, 440), (W - 64, 440)], fill=RULE, width=1)
+    cells = [("ORDER", _rupee_cr(r.get("value_cr")))]
+    if r.get("market_cap_cr") is not None:
+        cells.append(("MARKET CAP", _rupee_cr(r.get("market_cap_cr"))))
+    if r.get("months_of_sales") is not None:
+        year = str(r.get("sales_year") or "").upper()
+        cells.append((f"AGAINST {year} SALES" if year else "AGAINST A YEAR'S SALES",
+                      _sales_span(r["months_of_sales"])))
+    for i, (label, value) in enumerate(cells[:3]):
+        cx = 64 + i * 358
+        _tracking(d, (cx + 2, 458), label, mono(14), MUTE, 2.4)
+        _prose(d, cx, 512, value, 36, INK)
+
+    note = "AS THE COMPANY FILED IT · REG 30"
+    if r.get("outsized"):
+        note = "LARGER THAN THE COMPANY: OPEN THE FILING"
+    elif r.get("currency_converted"):
+        rate = r.get("fx_rate")
+        note = (f"US DOLLARS AT ₹{rate:g}, AN ASSUMED RATE" if rate
+                else "CONVERTED AT AN ASSUMED RATE")
+    _footer(d, note)
+    buf = io.BytesIO()
+    img.save(buf, "PNG", optimize=True)
+    return buf.getvalue()

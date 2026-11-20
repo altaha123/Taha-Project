@@ -40,6 +40,21 @@
 
   var loaded = false, timer = null, polls = 0, lastPaint = '';
 
+  /* A shared card links to ?go=wow&q=SYMBOL&id=KEY. `want` is that order,
+     `pinned` its row when the week on the page does not hold it, and `last`
+     the list as last answered, so the page can be drawn again once the
+     pinned order arrives. */
+  var want = (function () {
+    try {
+      var P = new URLSearchParams(location.search);
+      if ((P.get('go') || '').trim().toLowerCase() !== 'wow') return null;
+      var sym = (P.get('q') || '').trim().toUpperCase().replace(/[^A-Z0-9&.\-]/g, '').slice(0, 20);
+      var id = (P.get('id') || '').toLowerCase().replace(/[^0-9a-f]/g, '').slice(0, 24);
+      return sym ? { sym: sym, id: id } : null;
+    } catch (e) { return null; }
+  })();
+  var pinned = null, last = null, arrived = false;
+
   function $(id) { return document.getElementById(id); }
   function esc(s) {
     return String(s == null ? '' : s)
@@ -184,6 +199,36 @@
       : esc(r.company || 'Unnamed company');
   }
 
+  /* The Share button. Only on what the server will draw a card for: a firm
+     order, with a value the filing labels as the order's, sized against the
+     company. A bid, a memorandum and an unlabelled figure have none.
+     share.js opens its sheet for anything carrying data-share. */
+  var SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>' +
+    '<path d="M12 3v13"/><path d="M8 7l4-4 4 4"/></svg>';
+
+  function shareable(r) {
+    return !!(r.symbol && r.key && r.value_cr != null && r.value_confident &&
+      (r.stage || 'order') === 'order' && r.pct_of_market_cap != null);
+  }
+
+  function shareButton(r) {
+    if (!shareable(r)) return '';
+    var payload = { kind: 'wow', ticker: r.symbol, id: r.key, company: r.company || r.symbol,
+                    value_cr: r.value_cr, pct_of_market_cap: r.pct_of_market_cap,
+                    market_cap_cr: r.market_cap_cr, customer: r.customer || '',
+                    order_kind: r.kind || '' };
+    return '<button class="shbtn wo-share" type="button" data-share="' +
+      esc(JSON.stringify(payload)) + '" aria-label="Share ' + esc(r.company || r.symbol) +
+      '’s order">' + SHARE_ICON + 'Share</button>';
+  }
+
+  /* How a row is found again: by a shared link, and by the page itself. */
+  function ident(r) {
+    return (r.symbol ? ' data-sym="' + esc(String(r.symbol).toUpperCase()) + '"' : '') +
+      (r.key ? ' data-key="' + esc(r.key) + '"' : '');
+  }
+
   /* Everything under the top line. Shared by a WOW card and an opened row. */
   function detail(r) {
     var pdf = link(r.pdf);
@@ -192,21 +237,23 @@
       chips(r) + cautions(r) +
       '<div class="wo-foot">' + evidence(r) +
         (pdf ? '<a class="wo-pdf" href="' + pdf + '" target="_blank" rel="noopener">Open the filing →</a>' : '') +
+        shareButton(r) +
       '</div>';
   }
 
-  /* A WOW order: the full card. */
+  /* A WOW order: the full card. Also how an order a link was sent for is
+     shown above the list, WOW or not. */
   function card(r, threshold, rank) {
-    return '<article class="wo is-wow">' +
+    return '<article class="wo is-card' + (r.wow ? ' is-wow' : '') + '"' + ident(r) + '>' +
       '<div class="wo-meter">' +
-        '<span class="wo-rank tnum">' + rank + '</span>' +
-        '<span class="wo-pct wow tnum">' + esc(pctText(r.pct_of_market_cap)) + '</span>' +
+        (rank ? '<span class="wo-rank tnum">' + rank + '</span>' : '') +
+        '<span class="wo-pct tnum' + (r.wow ? ' wow' : '') + '">' + esc(pctText(r.pct_of_market_cap)) + '</span>' +
         '<span class="wo-of">of market cap</span>' +
         bar(r, threshold) +
       '</div>' +
       '<div class="wo-body">' +
         '<div class="wo-co">' + coName(r) +
-          '<em class="fl wow">WOW</em>' +
+          (r.wow ? '<em class="fl wow">WOW</em>' : '') +
           (r.kind ? '<em class="fl soft">' + esc(r.kind) + '</em>' : '') + flags(r) +
         '</div>' +
         '<p class="wo-hl">' + sentence(r) + '</p>' +
@@ -229,7 +276,7 @@
         (r.value_state === 'confidential' ? 'value confidential'
           : (r.value_state === 'unread' ? 'not read yet' : 'value not disclosed')) + '</span>';
     }
-    return '<details class="wo wo-row" data-k="row:' + esc(r.pdf || (r.symbol + r.at)) + '">' +
+    return '<details class="wo wo-row"' + ident(r) + ' data-k="row:' + esc(r.pdf || (r.symbol + r.at)) + '">' +
       '<summary>' +
         '<span class="wo-co">' + coName(r) +
           (st ? '<em class="fl soft">' + esc(st.tag) + '</em>' : '') + flags(r) + '</span>' +
@@ -358,12 +405,12 @@
     }
     // An unchanged answer is not repainted: a reader who has opened a row
     // should not have the list rebuilt under them every few seconds.
-    var sig = JSON.stringify([d.rows, d.counts, d.reading, d.note, d.quarter]);
+    var sig = JSON.stringify([d.rows, d.counts, d.reading, d.note, d.quarter, pinned]);
     if (sig === lastPaint) return;
     lastPaint = sig;
 
     var rows = d.rows || [], t = d.threshold_pct, open = keepOpen(box);
-    if (!rows.length) {
+    if (!rows.length && !pinned) {
       box.innerHTML = d.reading ? waiting()
         : '<div class="wo-empty">No order announcements in this window. ' +
           'Order flow is lumpy — a quiet week is normal, not a fault.</div>' +
@@ -379,7 +426,10 @@
     };
     var one = function (r) { return line(r, t); };
 
-    box.innerHTML = lead(d, g) + counts(d) +
+    box.innerHTML = (rows.length ? lead(d, g) + counts(d) : '') +
+      (pinned ? group('The order you were sent', 1,
+        'Filed ' + esc(day(pinned.at)) + ', before the week listed below.',
+        card(pinned, t, 0), true) : '') +
       group('WOW orders', g.wow.length,
         'Worth ' + esc(String(t)) + '% or more of the company’s market cap. The largest against its company comes first.',
         g.wow.map(function (r, i) { return card(r, t, i + 1); }).join(''), true) +
@@ -401,6 +451,56 @@
     restoreOpen(box, open);
   }
 
+  /* ── Arriving from a shared card ──────────────────────────────────────── */
+
+  function find(box) {
+    var hit = null, bySym = null;
+    box.querySelectorAll('.wo[data-sym]').forEach(function (el) {
+      if (el.getAttribute('data-sym') !== want.sym) return;
+      if (!bySym) bySym = el;
+      if (!hit && want.id && (el.getAttribute('data-key') || '').indexOf(want.id) === 0) hit = el;
+    });
+    return hit || bySym;
+  }
+
+  function reveal() {
+    var box = $('wow-body');
+    if (!box || !want || !visible()) return;
+    var el = find(box);
+    if (!el) return;
+    if (el.tagName === 'DETAILS') el.open = true;
+    el.classList.add('is-arrived');
+    var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try { el.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' }); }
+    catch (e) { el.scrollIntoView(); }
+  }
+
+  /* Once, when the list has been read. The page lists a week and a link can
+     be older than that, so an order that is not in it is asked for by name
+     and shown above the list rather than quietly not being there. */
+  function arrive(d) {
+    if (!want || arrived || !d || !d.available) return;
+    var rows = d.rows || [];
+    var here = rows.some(function (r) {
+      return String(r.symbol || '').toUpperCase() === want.sym &&
+        (!want.id || String(r.key || '').indexOf(want.id) === 0);
+    });
+    // While the server is still reading, the order may yet turn up in the list.
+    if (!here && d.reading) return;
+    arrived = true;
+    if (here) { setTimeout(reveal, 80); return; }
+    fetch(API + '/wow-order?ticker=' + encodeURIComponent(want.sym) +
+          (want.id ? '&id=' + encodeURIComponent(want.id) : ''))
+      .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
+      .then(function (one) {
+        if (!one || !one.available || !one.row) { setTimeout(reveal, 80); return; }
+        pinned = one.row;
+        if (last) paint(last);
+        setTimeout(reveal, 80);
+      })
+      .catch(function () { setTimeout(reveal, 80); });
+  }
+
   function again(seconds) {
     clearTimeout(timer);
     if (!seconds || polls >= MAX_POLLS) return;
@@ -418,7 +518,9 @@
     fetch(API + '/wow-orders?days=7')
       .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
       .then(function (d) {
+        last = d;
         paint(d);
+        arrive(d);
         again(d && d.reading ? (d.poll_seconds || 4) : 0);
       })
       .catch(function () {
