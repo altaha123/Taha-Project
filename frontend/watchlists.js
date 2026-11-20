@@ -393,7 +393,10 @@
 
   function shareUrl(l) {
     var payload = b64url(JSON.stringify({ n: l.name, e: l.emoji, c: l.color, s: l.symbols.slice(0, MAX_SYMBOLS) }));
-    var base = location.origin && location.origin !== 'null' ? location.origin + location.pathname : 'https://altahascreener.in/';
+    // Inside the Android and iOS apps the page's own address is the phone's,
+    // so the app names the site (SITE_URL, set by mobile/src/bridge.js).
+    var base = window.SITE_URL ? String(window.SITE_URL).replace(/\/+$/, '') + '/'
+      : location.origin && location.origin !== 'null' ? location.origin + location.pathname : 'https://altahascreener.in/';
     return base + '?go=watchlists&wl=' + payload;
   }
 

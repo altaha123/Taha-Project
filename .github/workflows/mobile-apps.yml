@@ -1,0 +1,134 @@
+name: Mobile apps
+
+# The Android and iOS apps (MOBILE.md). Each is built from scratch and then
+# started, on an Android emulator and on an iPhone simulator, because the two
+# ways an app breaks are a build that fails and an app that dies on launch,
+# and neither shows up anywhere else. The APK, the bundle for the Play Store
+# and a screenshot of each app are kept with the run.
+#
+# Runs when the apps themselves change, or by hand (Actions > Mobile apps >
+# Run workflow), which is how a new build is made after the website changes.
+# The website's pages are checked against the apps on every pull request by
+# the "mobile bundle" job in ci.yml, which needs no emulator.
+on:
+  push:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-apps.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-apps-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      # The upload key, base64 of the .jks file. Unset = the debug APK is
+      # still built and tested, and the release step is skipped.
+      KEYSTORE_BASE64: ${{ secrets.ALTAHA_KEYSTORE_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Build the web bundle and copy it into the app
+        working-directory: mobile
+        run: |
+          npm ci
+          npm run build
+          node tests/bundle.test.mjs
+          npx cap sync android
+      - name: Build the debug APK
+        working-directory: mobile/android
+        run: ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: altaha-android-debug-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Let the emulator use the machine's virtualisation
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Start the app on Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash mobile/tests/android-smoke.sh mobile/android/app/build/outputs/apk/debug/app-debug.apk mobile-smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: altaha-android-screenshots
+          path: mobile-smoke
+      - name: Build the signed bundle for the Play Store
+        if: env.KEYSTORE_BASE64 != ''
+        working-directory: mobile/android
+        env:
+          ALTAHA_KEYSTORE_FILE: upload-keystore.jks
+          ALTAHA_KEYSTORE_PASSWORD: ${{ secrets.ALTAHA_KEYSTORE_PASSWORD }}
+          ALTAHA_KEY_ALIAS: ${{ secrets.ALTAHA_KEY_ALIAS }}
+          ALTAHA_KEY_PASSWORD: ${{ secrets.ALTAHA_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > upload-keystore.jks
+          ./gradlew --no-daemon bundleRelease
+          rm -f upload-keystore.jks
+      - uses: actions/upload-artifact@v4
+        if: env.KEYSTORE_BASE64 != ''
+        with:
+          name: altaha-android-release-aab
+          path: mobile/android/app/build/outputs/bundle/release/app-release.aab
+
+  ios:
+    name: iOS
+    # Capacitor 8 needs Xcode 26, which is what this image carries.
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Build the web bundle and copy it into the app
+        working-directory: mobile
+        run: |
+          npm ci
+          npm run build
+          npx cap sync ios
+      - name: Build for the simulator
+        working-directory: mobile/ios/App
+        # Unsigned: this proves the project compiles and gives the next step
+        # something to start. The build that goes to the App Store is made in
+        # Xcode with the owner's Apple account (MOBILE.md).
+        run: |
+          xcodebuild -version
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -40
+      - name: Start the app on an iPhone simulator
+        run: bash mobile/tests/ios-smoke.sh mobile/ios/App/build/Build/Products/Debug-iphonesimulator/App.app mobile-smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: altaha-ios-screenshots
+          path: mobile-smoke

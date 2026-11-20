@@ -1,0 +1,58 @@
+/* Altaha Screener — what changes when the site is inside the app.
+   Loaded last on every page (scripts/build-web.mjs), and every rule hangs off
+   html.native-app, which only src/bridge.js sets.
+
+   The app draws edge to edge: the page is under the status bar at the top and
+   under the gesture bar at the bottom. The site already keeps its bottom bar
+   clear with env(safe-area-inset-bottom). The top is done here. */
+
+html.native-app{
+  --native-top: env(safe-area-inset-top, 0px);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* The fixed header grows by the height of the status bar, and everything that
+   measures itself from the header (sticky tabs, scroll margins, the drawer)
+   reads --sh-chrome-h, so it follows without being told. */
+html.native-app{
+  --sh-chrome-h: calc(var(--sh-ticker-h) + var(--sh-bar-h) + var(--sh-doorbar-h) + var(--native-top));
+  --sh-h: calc(64px + var(--native-top));
+}
+/* The strip behind the status bar is the page's own colour, because the
+   status bar's icons are set dark on a light page and light on a dark one
+   (paintTheme in src/bridge.js). A dark strip would hide them. */
+html.native-app .sh-chrome{
+  padding-top: var(--native-top);
+  background: var(--paper, #FBFAF7);
+}
+
+/* Pages with no fixed header: sign-in, the brief, a shared ownership card. */
+html.native-app[data-native-plain] body{
+  border-top: var(--native-top) solid transparent;
+}
+
+/* Google's button opens a pop-up, and Google refuses to sign anyone in from
+   inside an app's web view. The six-digit code works everywhere. */
+html.native-app #si-google,
+html.native-app #si-or{ display:none !important; }
+
+/* ── the bridge's own two elements ─────────────────────────────────────── */
+
+#native-offline, #native-toast{
+  position:fixed; left:12px; right:12px; z-index:2147483000;
+  margin:0 auto; max-width:520px; padding:11px 14px; border-radius:12px;
+  font:500 13px/1.4 Inter, system-ui, sans-serif; text-align:center;
+  background:#17140E; color:#FBF8F1; box-shadow:0 8px 24px rgba(0,0,0,.28);
+  opacity:0; pointer-events:none; transform:translateY(8px);
+  transition:opacity .2s ease, transform .2s ease;
+}
+#native-offline.on, #native-toast.on{ opacity:1; transform:none; }
+#native-offline{ top:calc(var(--native-top, 0px) + 10px); }
+#native-toast{ bottom:calc(96px + env(safe-area-inset-bottom, 0px)); }
+html[data-theme="dark"] #native-offline,
+html[data-theme="dark"] #native-toast{ background:#F2EEE4; color:#16130E; }
+
+@media (prefers-reduced-motion: reduce){
+  #native-offline, #native-toast{ transition:none; }
+}

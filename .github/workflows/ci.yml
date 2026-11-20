@@ -37,6 +37,39 @@ jobs:
       - name: Tests
         run: python -m pytest backend/tests -q
 
+  mobile:
+    name: mobile bundle
+    # The Android and iOS apps carry the pages in frontend/ (MOBILE.md). A
+    # change to the site can break them without breaking the site: a link the
+    # app cannot follow shows the home page instead, and a script added from
+    # a CDN is a page that hangs with no signal. Neither throws anywhere.
+    # This builds the bundle the apps ship and uses it the way a phone would.
+    # Pinned for the same reason as portfolio-ui.yml: move the image and the
+    # Playwright version together.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Build the bundle
+        working-directory: mobile
+        run: |
+          npm ci
+          npm run build
+      - name: Links and contents
+        working-directory: mobile
+        run: node tests/bundle.test.mjs
+      - name: Share, downloads, print, Back and the notch, in a browser
+        working-directory: mobile
+        run: |
+          npm install --prefix /tmp/mobile-browser playwright@1.58.2
+          /tmp/mobile-browser/node_modules/.bin/playwright install --with-deps chromium
+          NODE_PATH=/tmp/mobile-browser/node_modules node tests/app-browser.cjs
+
   frontend:
     name: frontend syntax
     runs-on: ubuntu-latest

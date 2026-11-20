@@ -1363,10 +1363,18 @@
         (d.income > 0 && d.put > 0 ? ' · putting away ' + Math.round(100 * d.put / d.income) + '% of take-home' : ''),
       s.count > 1 ? s.count + ' monthly check-ins in a row' : null,
       '',
-      'Find your date: ' + location.origin + '/#portfolio/planner'
+      'Find your date: ' + siteOrigin() + '/#portfolio/planner'
     ].filter(function (x) { return x !== null; });
     track('share_clicked', { kind: 'planner', action: 'whatsapp' });
     window.open('https://wa.me/?text=' + encodeURIComponent(lines.join('\n')), '_blank', 'noopener');
+  }
+
+  /* The address that goes into a message or a calendar entry. The page's own,
+     except inside the Android and iOS apps, where the page is served from the
+     phone and its own address means nothing to whoever receives the link;
+     there the app sets SITE_URL (mobile/src/bridge.js). */
+  function siteOrigin() {
+    return String(window.SITE_URL || location.origin).replace(/\/+$/, '');
   }
 
   /* A calendar entry, because the planner has no way to tap anybody on the
@@ -1374,7 +1382,7 @@
   function reminder() {
     var n = today(), first = new Date(n.getFullYear(), n.getMonth() + 1, 1);
     function ymd(dt) { return isoDay(dt).replace(/-/g, ''); }
-    var url = location.origin + '/#portfolio/planner';
+    var url = siteOrigin() + '/#portfolio/planner';
     var ics = [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Altaha Screener//Money planner//EN', 'BEGIN:VEVENT',
       'UID:money-check-in@altahascreener.in',
