@@ -118,9 +118,11 @@ GET /factors/rank?horizon=short   the universe ranked against itself
 GET /attention?ticker=RELIANCE    unusual-attention risk flag
 ```
 
-The **Engine Lab** panel at the bottom of the Tracker tab surfaces all of it,
-including the wait: with fewer than eight measured dates it explains why no
-average is shown instead of drawing an empty chart.
+The site no longer has a page for this. The **Factors** tab (the Engine Lab
+panel) that drew these figures was removed from the navigation; the endpoints
+above still answer, so the measurements can be read directly. Note the wait:
+with fewer than eight measured dates `/pit/ic` withholds an average rather
+than reporting one.
 
 ## The honest status
 

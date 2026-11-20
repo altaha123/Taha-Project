@@ -205,6 +205,85 @@
 }
 .cc-pdf:hover{ text-decoration:underline }
 
+/* The written brief. The headline and two sentences are the card; everything
+   else folds away, so a phone shows a list of calls rather than one long one.
+   A key call is marked the way a WOW order is: a gold edge and a flag. */
+
+.cc-counts{
+  display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline;
+  padding:14px 0 18px; border-bottom:1px solid var(--rule); margin-bottom:20px;
+  font-size:13px; color:var(--ink-2);
+}
+.cc-counts b{ font:600 18px/1 'IBM Plex Mono',monospace; margin-right:6px; color:var(--ink) }
+.cc-counts .st{
+  flex:1 1 220px; text-align:right; font-size:12px; line-height:1.5; color:var(--mute);
+}
+.cc-counts .st.is-on{ color:var(--gold) }
+.cc-counts .st.is-bad{ color:var(--sh-dn) }
+@media (max-width:560px){ .cc-counts .st{ flex-basis:100%; text-align:left } }
+
+.cc-group{
+  margin:26px 0 8px; font:500 11px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
+}
+.cc-counts + .cc-group{ margin-top:4px }
+.cc-groupnote{ margin:0 0 14px; font-size:12.5px; line-height:1.6; color:var(--mute); max-width:74ch }
+.cc-group + .cc{ margin-top:12px }
+
+.cc.is-key{ border-color:var(--gold) }
+.cc-co em.key{ background:var(--gold); border-color:var(--gold); color:var(--paper) }
+
+.cc-hl{
+  margin:0 0 9px; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
+  font-size:21px; line-height:1.3; letter-spacing:-.01em; color:var(--ink);
+  overflow-wrap:anywhere;
+}
+.cc-sum{ margin:0 0 13px; font-size:14px; line-height:1.65; color:var(--ink-2); max-width:72ch }
+.cc-why{
+  margin:0 0 4px; padding:10px 13px; background:var(--paper-2); border-radius:9px;
+  font-size:12.5px; line-height:1.55; color:var(--ink-2); max-width:72ch;
+}
+.cc-why b{
+  display:block; margin-bottom:5px; font:500 10px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--mute);
+}
+.cc-why.key b{ color:var(--gold) }
+
+.cc-full, .cc-more{ margin-top:12px }
+.cc-full > summary, .cc-more > summary{
+  cursor:pointer; padding:7px 0; font:500 11px/1.3 'IBM Plex Mono',monospace;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
+}
+.cc-full > summary{ color:var(--gold) }
+.cc-full > summary:hover, .cc-more > summary:hover{ color:var(--gold); text-decoration:underline }
+.cc-full > summary:focus-visible, .cc-more > summary:focus-visible, .cc-retry:focus-visible{
+  outline:2px solid var(--gold); outline-offset:2px;
+}
+.cc-full[open] > summary, .cc-more[open] > summary{ margin-bottom:2px }
+.cc-full > .cc-h4:first-of-type{ margin-top:10px }
+.cc-more .cc-facts{ margin-top:12px }
+.cc-note.first{ margin-top:4px }
+
+.cc-pts{ margin:0; padding:0 0 0 18px; display:grid; gap:7px; max-width:74ch }
+.cc-pts li{ font-size:13.5px; line-height:1.55; color:var(--ink-2); overflow-wrap:anywhere }
+.cc-pts li::marker{ color:var(--gold) }
+.cc-about{
+  display:block; margin-bottom:7px; font:500 10px/1 'IBM Plex Mono',monospace;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--mute);
+}
+.cc-by{ margin:15px 0 0; font-size:11.5px; line-height:1.6; color:var(--mute); max-width:76ch; overflow-wrap:anywhere }
+.cc-wait{
+  margin:0 0 15px; padding:10px 13px; border-left:2px solid var(--rule);
+  background:var(--paper-2); border-radius:0 9px 9px 0;
+  font-size:12.5px; line-height:1.55; color:var(--mute);
+}
+.cc-wait.is-on{ border-left-color:var(--gold); color:var(--ink-2) }
+.cc-retry{
+  margin-left:6px; padding:7px 13px; cursor:pointer; font-family:inherit; font-size:12.5px;
+  border:1px solid var(--rule); border-radius:99px; background:none; color:var(--ink-2);
+}
+.cc-retry:hover{ border-color:var(--gold); color:var(--gold) }
+
 /* ── Investor portfolios ──────────────────────────────────────────────────
    The design problem here is not density, it is credibility. Every number on
    this page is an attributed claim about what a named private individual owns,
