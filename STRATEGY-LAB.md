@@ -146,10 +146,10 @@ ride shallower, not richer. The page says so whenever the numbers show it:
 
 In order of value for this project:
 
-1. **The six numbers on Altaha's own record.** The Call log has dated calls
-   with stops and targets, which is exactly what win rate and profit factor
-   need. Add them, with the same thin-sample flag and luck framing, to the
-   Call log and Track record.
+1. **The six numbers on Altaha's own record.** The Track record has dated
+   calls with stops and targets, which is exactly what win rate and profit
+   factor need. Add them there, with the same thin-sample flag and luck
+   framing.
 2. **Rotation across NSE sector indices.** O17 Monthly Rotation and W04 Dual
    Momentum are the library's best long-only rules and need a basket, not one
    stock. `^CNXIT`, `^NSEBANK`, `^CNXPHARMA` and the other sector indices are

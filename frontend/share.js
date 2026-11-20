@@ -273,16 +273,17 @@
       page: function () { return "/share/record"; },
       file: function () { return "altaha-track-record.png"; },
       title: function () { return "Altaha — track record"; },
+      /* The summary of the track record, as /calls serves it and the page
+         shows it: returns run from the day of each idea to the latest scan. */
       text: function (d) {
-        var o = d.overall || d || {};
+        d = d || {};
+        var signed = function (v) { return (v > 0 ? "+" : "") + Number(v).toFixed(2) + "%"; };
         var lines = ["Does the Altaha engine work? Here is the ledger."];
         var bits = [];
-        if (d.total_tracked != null) bits.push(d.total_tracked + " ideas recorded");
-        if (o.beat_index_pct != null) bits.push(o.beat_index_pct + "% beat the index");
-        if (o.avg_alpha_pct != null) {
-          bits.push("avg alpha " + (o.avg_alpha_pct > 0 ? "+" : "")
-                    + Number(o.avg_alpha_pct).toFixed(2) + "%");
-        }
+        if (d.calls != null) bits.push(d.calls + " ideas recorded");
+        if (d.up_since_pct != null) bits.push(d.up_since_pct + "% up since the idea");
+        if (d.avg_since_pct != null) bits.push("avg return " + signed(d.avg_since_pct));
+        if (d.avg_vs_index_pct != null) bits.push(signed(d.avg_vs_index_pct) + " against the index");
         if (bits.length) lines.push(bits.join(" · "));
         lines.push("");
         lines.push("Every idea is logged the day it is generated. Winners and losers.");
@@ -762,7 +763,7 @@
            "measured move stay on the site, beside the base rate that qualifies them.",
     idea: "The conviction number and the seven weighted inputs that add up to it.",
     holding: "Marked to market against the index over the identical window.",
-    record: "The whole ledger — every idea logged the day it was generated.",
+    record: "The whole ledger — every idea logged the day it was generated, and its return since.",
     results: "The quarter as the company filed it — profit, revenue, margin and the " +
              "same quarter a year earlier. Every figure on it is the company's own.",
     concall: "The call as its brief tells it: the headline and the summary, written " +
@@ -862,7 +863,7 @@
 
   /* ---- the button that appears on every card ----------------------------
      One delegated listener rather than a listener per row: the ideas list and
-     the tracker redraw themselves wholesale on every refresh, and per-row
+     the track record redraw themselves wholesale on every refresh, and per-row
      wiring is exactly the kind of thing that survives the first render and
      quietly stops working after the second. */
 

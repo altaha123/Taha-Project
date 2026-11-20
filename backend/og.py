@@ -312,6 +312,9 @@ def record_card(stats: dict) -> bytes:
     The track record. This is the card worth sharing weekly — it is the one
     claim in this product that nobody else in the market makes, and it is a
     statement of fact about a measured ledger rather than a prediction.
+
+    `stats` is the summary of call_log.listing(): every idea, recorded the day
+    it was generated, with its return from that day to the latest scan.
     """
     from PIL import Image, ImageDraw
 
@@ -319,29 +322,35 @@ def record_card(stats: dict) -> bytes:
     d = ImageDraw.Draw(img)
     _shell(d, img)
 
-    o = stats.get("overall") or {}
+    stats = stats or {}
     d.text((64, 178), "Does it work?", font=serif(66), fill=INK)
     _tracking(d, (66, 258),
-              "EVERY IDEA RECORDED AUTOMATICALLY — WINNERS AND LOSERS",
+              "EVERY IDEA RECORDED THE DAY IT WAS GENERATED — WINNERS AND LOSERS",
               mono(16), MUTE, 2.6)
 
     def pct(v):
         return "—" if v is None else f"{v:+.2f}%".replace("+-", "-")
 
-    alpha = o.get("avg_alpha_pct")
-    beat = o.get("beat_index_pct")
-    y = 348
-    _metric(d, 64, y, "Ideas tracked", str(stats.get("total_tracked") or 0), INK)
-    _metric(d, 340, y, "Beat the index",
-            "—" if beat is None else f"{beat}%", PASS if (beat or 0) >= 50 else FAIL)
-    _metric(d, 640, y, "Avg alpha vs index", pct(alpha),
-            PASS if (alpha or 0) > 0 else FAIL)
-    _metric(d, 960, y, "Median hold",
-            f"{o.get('median_days_held') or 0}d", INK_2)
+    def share(v):
+        return "—" if v is None else f"{v:g}%"
 
-    _tracking(d, (66, 500),
-              "ALPHA IS RETURN MINUS THE INDEX OVER THE IDENTICAL WINDOW",
-              mono(15), MUTE, 2.4)
+    up = stats.get("up_since_pct")
+    avg = stats.get("avg_since_pct")
+    y = 348
+    _metric(d, 64, y, "Ideas recorded", str(stats.get("calls") or 0), INK)
+    _metric(d, 340, y, "Up since the idea", share(up), PASS if (up or 0) >= 50 else FAIL)
+    _metric(d, 640, y, "Average return", pct(avg), PASS if (avg or 0) > 0 else FAIL)
+    if stats.get("index_priced"):
+        vs = stats.get("avg_vs_index_pct")
+        _metric(d, 960, y, "Against the index", pct(vs), PASS if (vs or 0) > 0 else FAIL)
+        foot = "RETURN FROM THE DAY OF THE IDEA, NOTHING DONE AFTER · INDEX OVER THE SAME DAYS"
+    else:
+        days = stats.get("median_days")
+        _metric(d, 960, y, "Median days",
+                "—" if days is None else f"{days:g}d", INK_2)
+        foot = "RETURN FROM THE DAY OF THE IDEA TO THE LATEST SCAN, NOTHING DONE AFTER"
+
+    _tracking(d, (66, 500), foot, mono(15), MUTE, 2.4)
 
     _footer(d, dt.date.today().strftime("%d %b %Y"))
     buf = io.BytesIO()

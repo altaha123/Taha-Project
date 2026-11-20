@@ -1,4 +1,4 @@
-/* Altaha — Call log (calls.js). Site tokens only, so both themes follow. */
+/* Altaha — Track record (calls.js). Site tokens only, so both themes follow. */
 
 .cl { --cl-up: var(--pass); --cl-dn: var(--fail); max-width: 1080px; margin: 0 auto; padding: 8px 0 48px; color: var(--ink); }
 .cl * { box-sizing: border-box; }
@@ -9,7 +9,7 @@
 .cl-head h2 { font: 400 clamp(34px, 4.4vw, 52px)/1.05 'Instrument Serif', Georgia, serif; letter-spacing: -.02em; margin: 0; }
 .cl-lede { color: var(--ink-2); font-size: 15.5px; line-height: 1.6; max-width: 640px; margin: 10px 0 0; }
 
-.cl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; margin: 0 0 18px; }
+.cl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; margin: 0 0 18px; }
 .cl-stat { background: var(--skin-card); border: 1px solid var(--rule); border-radius: 16px; padding: 14px 16px; box-shadow: var(--skin-shadow); }
 .cl-stat span { display: block; font: 500 10.5px/1.4 'IBM Plex Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
 .cl-stat b { display: block; font: 400 30px/1.15 'Instrument Serif', Georgia, serif; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
@@ -41,6 +41,10 @@
 .cl-csv { font: 600 13px Inter, system-ui, sans-serif; color: var(--ink-2); text-decoration: none; padding: 9px 14px;
   border: 1px solid var(--rule); border-radius: 999px; min-height: 40px; display: inline-flex; align-items: center; }
 .cl-csv:hover { border-color: var(--gold); color: var(--ink); }
+.cl-share { background: none; cursor: pointer; gap: 7px; }
+.cl-share svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.cl-share:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.cl-tools .seg[hidden] { display: none; }
 .cl-filter { font-size: 13.5px; color: var(--ink-2); margin: 0 0 12px; }
 .cl-filter button { margin-left: 8px; border: 0; background: none; color: var(--gold-dp); font: 600 13.5px Inter, sans-serif; cursor: pointer; text-decoration: underline; }
 
@@ -90,6 +94,13 @@
 .cl-move.up { color: var(--cl-up); background: color-mix(in srgb, var(--cl-up) 12%, transparent); }
 .cl-move.dn { color: var(--cl-dn); background: color-mix(in srgb, var(--cl-dn) 11%, transparent); }
 .cl-span { color: var(--mute); font-size: 12.5px; padding-bottom: 3px; margin-left: auto; }
+/* The index over the same days, and where the list itself left the call. */
+.cl-vs { display: block; color: var(--ink-2); font-size: 13px; margin: 8px 0 0; font-variant-numeric: tabular-nums; }
+.cl-vs b { font-weight: 600; } .cl-vs b.up, .cl-left .up { color: var(--cl-up); } .cl-vs b.dn, .cl-left .dn { color: var(--cl-dn); }
+.cl-left { margin: 8px 0 0; padding: 7px 11px; border-radius: 10px; background: var(--paper-2); border-left: 3px solid var(--mute);
+  color: var(--ink-2); font-size: 13px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.cl-left b { color: var(--ink); font-weight: 600; }
+.cl-left.win { border-left-color: var(--cl-up); } .cl-left.loss { border-left-color: var(--cl-dn); }
 
 .cl-levels { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
 .cl-levels span { font: 600 12.5px Inter, sans-serif; background: var(--paper-2); border-radius: 9px; padding: 6px 9px; font-variant-numeric: tabular-nums; }

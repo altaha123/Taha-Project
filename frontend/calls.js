@@ -1,21 +1,27 @@
-/* Altaha — Call log
+/* Altaha — Track record
 
    WHAT THIS TAB IS FOR
    The Ideas list is rebuilt from the latest scan every time it loads, so it
    has no memory. A name that has sat on it since Monday looks the same as one
    that arrived this morning, and a call that was dropped simply vanishes. This
-   tab is the memory: every call the list has made, grouped by the day it was
-   made, with the time, the price, the plan it carried and everything that
-   happened to it after — stance changes, redrawn levels, a stop or a target,
-   or the day it left the list.
+   tab is the memory: every idea the list has generated, grouped by the day it
+   was generated, with the time, the price, and what it has returned from that
+   day to the latest scan as if nothing was done after. Where the list itself
+   later closed the call — a stop, a target, or the day it left the list —
+   that is shown beside it, with everything else that happened on the way.
+
+   It used to be two tabs. "Call log" dated the calls and "Track record"
+   scored a second, hand-added list of them; they were one question — what
+   did the ideas do — answered from two ledgers. This is the one page, and
+   #research/tracker opens it.
 
    The record itself lives on the server (backend/call_log.py) and is written
    once per scan, so every reader sees the same history and none of it depends
    on this browser.
 
    It also gives every row on the Universe scan list a stamp — "Called Mon
-   26 Oct at ₹101 · +4.9% since" — through AltahaCalls.stamp(), so the date a
-   call was made is visible where the call is, not only here.
+   26 Oct at ₹101 · +4.9% since" — through AltahaCalls.stamp(), so the date an
+   idea was generated is visible where the idea is, not only here.
 */
 
 (function () {
@@ -94,7 +100,7 @@
     if (!call || !call.called) return '';
     var c = call.called, fresh = c.date === istToday();
     return '<button type="button" class="cl-stamp' + (fresh ? ' fresh' : '') + '" data-calls-sym="' + esc(symbol || '') + '" ' +
-      'title="Open this call in the Call log">' +
+      'title="Open this idea in the Track record">' +
       '<span class="cl-stamp-dot" aria-hidden="true"></span>' +
       (fresh ? '<b>New today</b> · ' + esc(c.time) : 'Called <b>' + esc(dayWord(c)) + '</b> · ' + esc(c.time)) +
       (finite(call.called_price) ? ' at ' + inr(call.called_price) : '') +
@@ -114,20 +120,23 @@
 
   /* ── The tab ─────────────────────────────────────────────────────────── */
 
+  var SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/>' +
+    '<path d="M12 3v13"/><path d="M8 7l4-4 4 4"/></svg>';
+
   function shell() {
     return '<div class="cl">' +
       '<header class="cl-head">' +
-        '<p class="cl-kick">Ideas · the record</p>' +
-        '<h2>Call log</h2>' +
-        '<p class="cl-lede">Every call the Ideas list has made — the day, the date, the time and the price — and what happened to it after.</p>' +
+        '<p class="cl-kick">Ideas · our record</p>' +
+        '<h2>Track record</h2>' +
+        '<p class="cl-lede">Every idea, recorded the day it was generated — the date, the time and the price — ' +
+          'and what it has returned since, with nothing done after.</p>' +
       '</header>' +
       '<div class="cl-stats" id="cl-stats" aria-live="polite"></div>' +
-      '<div class="cl-strip" id="cl-strip" role="group" aria-label="Calls per day, last two weeks"></div>' +
+      '<div class="cl-strip" id="cl-strip" role="group" aria-label="Ideas per day, last two weeks"></div>' +
       '<div class="cl-tools">' +
-        '<div class="seg mono" id="cl-hz" role="group" aria-label="Horizon">' +
+        '<div class="seg mono" id="cl-hz" role="group" aria-label="List">' +
           '<button type="button" data-v="all" class="active" aria-pressed="true">All</button>' +
-          '<button type="button" data-v="short" aria-pressed="false">Short term</button>' +
-          '<button type="button" data-v="medium" aria-pressed="false">Medium term</button>' +
         '</div>' +
         '<div class="seg mono" id="cl-st" role="group" aria-label="Status">' +
           '<button type="button" data-v="all" class="active" aria-pressed="true">All</button>' +
@@ -137,11 +146,32 @@
         '<label class="cl-search"><span class="cl-sr">Find a stock</span>' +
           '<input id="cl-q" type="search" placeholder="Find a stock" autocomplete="off" spellcheck="false"></label>' +
         '<a class="cl-csv" id="cl-csv" href="' + esc(API + '/calls/export.csv') + '" download>Download CSV</a>' +
+        '<button type="button" class="cl-csv cl-share" id="cl-share" data-share="{&quot;kind&quot;:&quot;record&quot;}">' +
+          SHARE_ICON + 'Share the record</button>' +
       '</div>' +
       '<div class="cl-filter" id="cl-filter" hidden></div>' +
       '<div class="cl-feed" id="cl-feed"><div class="cl-skel"></div><div class="cl-skel"></div><div class="cl-skel"></div></div>' +
       '<p class="cl-method" id="cl-method"></p>' +
     '</div>';
+  }
+
+  /* The lists the record actually holds, in the order the server names them.
+     The buttons used to be fixed at "Short term" and "Medium term", two lists
+     that were retired — so on a record made of the four lists that replaced
+     them, both filters emptied the page. */
+  function horizonButtons(d) {
+    var hs = (d && d.horizons) || [];
+    if (S.horizon !== 'all' && !hs.some(function (h) { return h.key === S.horizon; })) S.horizon = 'all';
+    var key = JSON.stringify(hs);
+    if (S.hzKey === key) return;
+    S.hzKey = key;
+    var host = $('cl-hz');
+    host.hidden = hs.length < 2;
+    host.innerHTML = [{ key: 'all', label: 'All' }].concat(hs).map(function (h) {
+      var on = S.horizon === h.key;
+      return '<button type="button" data-v="' + esc(h.key) + '"' + (on ? ' class="active"' : '') +
+        ' aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(h.label) + '</button>';
+    }).join('');
   }
 
   function build() {
@@ -205,18 +235,31 @@
     });
   }
 
+  function count(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+  /* What the ideas returned comes first, then what the market did over the
+     same days, then what the list itself did with them. */
   function stats(d) {
-    var s = d.summary || {};
+    var s = d.summary || {}, o = s.outcomes || {};
     function tile(label, value, note, cls) {
       return '<div class="cl-stat"><span>' + label + '</span><b class="' + (cls || '') + '">' + value + '</b><small>' + note + '</small></div>';
     }
-    return tile('Calls logged', esc(s.calls || 0), s.first_logged ? 'since ' + esc(s.first_logged) : 'from the next scan') +
-      tile('Open now', esc(s.open || 0), 'still on the list') +
-      tile('Above the call price', s.priced ? esc(s.in_profit) + ' of ' + esc(s.priced) : '—',
-           s.in_profit_pct != null ? esc(s.in_profit_pct) + '% of priced calls' : 'no prices yet') +
-      tile('Median move', pct(s.median_move_pct), 'call price to latest scan', tone(s.median_move_pct)) +
-      tile('Targets · stops', esc((s.outcomes || {}).target || 0) + ' · ' + esc((s.outcomes || {}).stop || 0),
-           esc((s.outcomes || {}).dropped || 0) + ' dropped from the list');
+    var tiles = [
+      tile('Ideas recorded', esc(s.calls || 0), s.first_logged ? 'since ' + esc(s.first_logged) : 'from the next scan'),
+      tile('Average return', pct(s.avg_since_pct),
+           s.since_priced ? 'since each idea, nothing done after' : 'no prices yet', tone(s.avg_since_pct)),
+      tile('Up since the idea', s.since_priced ? esc(s.up_since) + ' of ' + esc(s.since_priced) : '—',
+           s.up_since_pct != null ? esc(s.up_since_pct) + '% · median ' + pct(s.median_since_pct) : 'no prices yet')
+    ];
+    if (s.index_priced) {
+      tiles.push(tile('Against the index', pct(s.avg_vs_index_pct),
+        esc(s.beat_index) + ' of ' + esc(s.index_priced) + ' beat ' + esc(d.index_name || 'the index') +
+        ' (' + pct(s.avg_index_pct) + ') over the same days', tone(s.avg_vs_index_pct)));
+    }
+    tiles.push(tile('Open now', esc(s.open || 0), 'still on the list'));
+    tiles.push(tile('Targets · stops', esc(o.target || 0) + ' · ' + esc(o.stop || 0),
+      esc(o.dropped || 0) + ' dropped from the list'));
+    return tiles.join('');
   }
 
   function strip(days) {
@@ -226,7 +269,7 @@
       var on = S.day === x.date;
       return '<button type="button" class="cl-bar' + (on ? ' on' : '') + (x.calls ? '' : ' none') + '" data-day="' + esc(x.date) + '"' +
         ' aria-pressed="' + (on ? 'true' : 'false') + '" style="--h:' + h + 'px;--i:' + i + '"' +
-        ' aria-label="' + esc(x.weekday + ' ' + x.label + ': ' + x.calls + (x.calls === 1 ? ' call' : ' calls')) + '">' +
+        ' aria-label="' + esc(x.weekday + ' ' + x.label + ': ' + count(x.calls, 'idea', 'ideas')) + '">' +
         '<span class="cl-bar-n">' + (x.calls || '') + '</span><i aria-hidden="true"></i>' +
         '<span class="cl-bar-d">' + esc(x.weekday.charAt(0)) + '<small>' + esc(x.label.split(' ')[0]) + '</small></span></button>';
     }).join('');
@@ -251,11 +294,33 @@
     }).join('') + '</ol>';
   }
 
+  function days(n) { return n == null ? '' : n === 0 ? 'the same day' : count(n, 'day', 'days'); }
+  function shortDay(w) { return w && w.day ? w.day.replace(/ \d{4}$/, '') : ''; }
+
+  /* One idea. The line of prices is always the same sentence: the price on
+     the day of the idea, the price now, and the return between them with
+     nothing done after. A call the list has closed gets a second line saying
+     where the list left it, which is a different number once the stock has
+     kept moving. */
   function card(r, i) {
     var o = OUTCOME[r.status === 'open' ? 'live' : (r.outcome || 'dropped')] || OUTCOME.dropped;
     var closed = r.status !== 'open';
-    var span = r.days == null ? '' : r.days === 0 ? 'same day' : r.days + (r.days === 1 ? ' day' : ' days');
+    var atClose = r.since_basis === 'close';
     var openNow = !!S.open[r.id];
+    var note = atClose
+      ? 'to its closing price · no longer in the scan'
+      : (r.since_days === 0 ? 'since the idea, today' : 'in ' + days(r.since_days) + ', nothing done after') +
+        (closed ? '' : ' · ' + count(r.scans_seen, 'scan', 'scans'));
+    var vs = finite(r.index_pct)
+      ? '<span class="cl-vs">Index ' + pct(r.index_pct) + ' over the same days · <b class="' + tone(r.vs_index_pct) + '">' +
+        pct(r.vs_index_pct) + '</b> against it</span>'
+      : '';
+    var left = closed && !atClose
+      ? '<p class="cl-left ' + o[1] + '"><b>' + esc(o[0]) + '</b> ' + esc(shortDay(r.closed)) +
+        (finite(r.price_now) ? ' at ' + inr(r.price_now) : '') +
+        (finite(r.move_pct) ? ' · <span class="' + tone(r.move_pct) + '">' + pct(r.move_pct) + '</span> from the idea' : '') +
+        (r.days != null ? ' · after ' + esc(days(r.days)) : '') + '</p>'
+      : '';
     return '<article class="cl-call ' + o[1] + (openNow ? ' open' : '') + '" style="--i:' + Math.min(i, 12) + '">' +
       '<div class="cl-time"><b>' + esc((r.called || {}).time || '') + '</b><i aria-hidden="true"></i></div>' +
       '<div class="cl-body">' +
@@ -268,14 +333,13 @@
         '<div class="cl-row2">' + esc(r.setup || 'Idea') + ' · ' + esc(r.horizon_label || '') +
           (r.hold ? ' · typical hold ' + esc(r.hold) : '') + (r.sector ? ' · ' + esc(r.sector) : '') + '</div>' +
         '<div class="cl-prices">' +
-          '<span class="cl-px"><small>Called at</small><b>' + inr(r.called_price) + '</b></span>' +
+          '<span class="cl-px"><small>Price at the idea</small><b>' + inr(r.called_price) + '</b></span>' +
           '<span class="cl-arrow" aria-hidden="true">→</span>' +
-          '<span class="cl-px"><small>' + (closed ? 'Closed at' : 'Latest scan') + '</small><b>' + inr(r.price_now) + '</b></span>' +
-          '<span class="cl-move ' + tone(r.move_pct) + '">' + pct(r.move_pct) + '</span>' +
-          '<span class="cl-span">' + (closed
-            ? esc(o[0]) + ' ' + esc(r.closed ? r.closed.day.replace(/ \d{4}$/, '') : '') + (span ? ' · after ' + esc(span) : '')
-            : 'open ' + esc(span) + ' · ' + esc(r.scans_seen) + (r.scans_seen === 1 ? ' scan' : ' scans')) + '</span>' +
+          '<span class="cl-px"><small>' + (atClose ? 'Closed at' : 'Latest scan') + '</small><b>' + inr(r.since_price) + '</b></span>' +
+          '<span class="cl-move ' + tone(r.since_pct) + '">' + pct(r.since_pct) + '</span>' +
+          '<span class="cl-span">' + esc(note) + '</span>' +
         '</div>' +
+        vs + left +
         levels(r) +
         '<button type="button" class="cl-more" data-open="' + esc(r.id) + '" aria-expanded="' + (openNow ? 'true' : 'false') + '">' +
           'Timeline <span>' + esc((r.events || []).length) + '</span></button>' +
@@ -289,7 +353,7 @@
     var word = date === istToday() ? 'Today' : date === istYesterday() ? 'Yesterday' : (c.weekday || '');
     return '<div class="cl-day"><h3>' + esc(word) + '</h3><span>' +
       esc(word === c.weekday ? (c.day || '').replace(/^\w+ /, '') : (c.weekday || '') + ' ' + (c.day || '').replace(/^\w+ /, '')) +
-      '</span><b>' + n + (n === 1 ? ' call' : ' calls') + '</b></div>';
+      '</span><b>' + count(n, 'idea', 'ideas') + '</b></div>';
   }
 
   function filtered(rows) {
@@ -306,12 +370,17 @@
     if (!S.built) return;
     var feed = $('cl-feed');
     if (S.error && !S.data) {
-      feed.innerHTML = '<p class="cl-empty">The call log could not be read just now (' + esc(S.error) + '). It will load when the engine answers.</p>';
+      feed.innerHTML = '<p class="cl-empty">The track record could not be read just now (' + esc(S.error) + '). It will load when the engine answers.</p>';
       return;
     }
     var d = S.data;
     if (!d) return;
     $('cl-stats').innerHTML = stats(d);
+    horizonButtons(d);
+    /* The share card posts these same figures, so its text is filled from
+       this response. setAttribute takes a string, not markup. */
+    $('cl-share').setAttribute('data-share', JSON.stringify(
+      Object.assign({ kind: 'record', index_name: d.index_name || null }, d.summary || {})));
     // Rebuilt only when the days change, so the bars grow in once rather
     // than replaying on every filter tap; the pressed day is a class flip.
     var key = JSON.stringify(d.by_day || []);
@@ -327,15 +396,15 @@
     if (S.day) bits.push('on ' + S.day);
     if (S.q) bits.push('matching “' + S.q + '”');
     f.hidden = !bits.length;
-    f.innerHTML = bits.length ? 'Showing calls ' + esc(bits.join(' ')) + ' <button type="button">Show all</button>' : '';
+    f.innerHTML = bits.length ? 'Showing ideas ' + esc(bits.join(' ')) + ' <button type="button">Show all</button>' : '';
 
     var rows = filtered(d.rows || []);
     if (!rows.length) {
       feed.innerHTML = '<p class="cl-empty">' + (d.total
-        ? 'No call matches these filters.'
+        ? 'No idea matches these filters.'
         : d.recording
-          ? 'Writing the latest scan into the log now — this takes a few seconds.'
-          : 'No calls logged yet. The log starts with the next universe scan: every call from then on is dated here, with its price and what happens to it.') + '</p>';
+          ? 'Writing the latest scan into the record now — this takes a few seconds.'
+          : 'No ideas recorded yet. The record starts with the next universe scan: every idea from then on is dated here, with its price and what it returns.') + '</p>';
     } else {
       var html = [], lastDay = null, group = [];
       var flush = function () {

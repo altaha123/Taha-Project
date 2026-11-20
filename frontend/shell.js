@@ -177,8 +177,10 @@
            its "See all" opens, so listing them beside it in the menu was the
            same thing twice. Search still finds them by name. */
         { tab: 'ideas', quiet: true, label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
-        { tab: 'calls', g: 'proof', label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
-        { tab: 'query', g: 'find', label: 'Screener', icon: 'funnel', hint: 'Tap what you want in a company and see who fits', kw: 'query filter screen screener finder roe roce pe debt pledge promoter dividend growth cheap' },
+        /* One entry. "Call log" and "Track record" sat here as two, and were
+           one thing: every idea, dated, and what it has returned since. */
+        { tab: 'calls', g: 'proof', label: 'Track record', icon: 'target', hint: 'Every idea, the day it was made, and its return since', kw: 'track record tracker performance returns calls call log history dated when called buy zone stop target' },
+        { tab: 'query', g: 'find', label: 'Screener', icon: 'funnel', hint: 'Pick what you want in a company, or write your own query', kw: 'query filter screen screener finder roe roce pe debt pledge promoter dividend growth cheap' },
         /* One entry for the styles and for the stocks several of them agree
            on: "Convergence" was a second door into the same idea, and is a
            section of this page now (lenses.js). */
@@ -187,7 +189,6 @@
         { tab: 'investors', g: 'own', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
         { tab: 'funds', g: 'own', label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
         { tab: 'charts', g: 'dig', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
-        { tab: 'tracker', g: 'proof', label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
         { tab: 'strategies', g: 'dig', label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
         { tab: 'concalls', g: 'dig', label: 'Concalls', icon: 'chat', hint: 'Earnings calls summarised, key calls first', kw: 'concall earnings call transcript' }
       ]

@@ -1116,88 +1116,14 @@
   @media(max-width:560px){.evrow{grid-template-columns:1fr;gap:2px}}
 
   .idearow-actions{display:flex;gap:8px;margin-top:11px}
-  .trackbtn{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-            border:1px solid var(--rule);background:#fff;color:var(--ink-2);padding:7px 15px;
-            border-radius:var(--r-pill);cursor:pointer;
-            transition:border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease),
-                       color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease)}
-  .trackbtn:hover{background:var(--ink);border-color:var(--ink);color:#fff;transform:translateY(-1px)}
-  .trackbtn:focus-visible{outline:none;box-shadow:var(--ring)}
-  .trackbtn.done{border-color:#1f6f43;color:#1f6f43;background:rgba(31,111,67,.06);cursor:default}
-  .trackbtn.done:hover{background:rgba(31,111,67,.06);color:#1f6f43;transform:none}
   .toolbar{display:flex;gap:9px;justify-content:flex-start;flex-wrap:wrap;align-items:center;
            margin:0 auto 18px}
   /* display and white-space are declared explicitly, not left to whatever
      an earlier rule happened to set — see the note on .tickers .tk above. */
-  /* Scoped to #tkrows. Scoping only the ticker half of this collision left it
-     running the other way: the card's padding, radius and display:flex landed
-     on every item in the market ticker strip, which is where the pale rounded
-     box behind "Indices resume at 09:15 IST" came from. Both sides are now
-     addressed by their own container and cannot reach each other. */
-  #tkrows .tk{display:block;white-space:normal;border:1px solid var(--rule-2);
-      border-radius:var(--r-card);margin-bottom:10px;
-      padding:16px 19px;background:var(--skin-card,#fff);box-shadow:var(--sh-1);
-      transition:box-shadow var(--t) var(--ease), transform var(--t) var(--ease)}
-  #tkrows .tk:hover{box-shadow:var(--sh-2);transform:translateY(-1px)}
-  #tkrows .tk .tkt{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
-  #tkrows .tk .tknm{font-family:var(--serif);font-size:20px;line-height:1.2;min-width:0;
-            overflow-wrap:anywhere}
-  #tkrows .tk .tknm small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.13em;
-                  text-transform:uppercase;color:var(--tk-quiet);margin-top:3px;
-                  overflow-wrap:anywhere}
-  #tkrows .tk .tkret{font-family:var(--serif);font-size:24px;flex-shrink:0}
-  #tkrows .tk .tkret small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.13em;
-                   text-transform:uppercase;color:var(--tk-quiet);text-align:right;margin-top:2px}
   /* These were literal ink. In the dark theme #a11 sits at about 2:1 against
      the page, so a loss read as a smudge rather than a number. Both tokens
      carry a light and a dark value. */
   .pos{color:var(--pass)}.neg{color:var(--fail)}
-  #tkrows .tk .tkln{display:flex;gap:16px;flex-wrap:wrap;margin-top:9px;font-family:var(--mono);
-            font-size:11px;letter-spacing:.06em;color:var(--mute)}
-
-  /* ── Tracker rows v25: the numbers, labelled ────────────────────────
-     The old row printed "Now ₹— Return — Index —" as a run-on line of
-     unlabelled values. These are the four-across cells that say what each
-     number is, plus the plan strip that answers whether the target was
-     actually reached. */
-  .tkgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:13px;
-          background:var(--tk-gap);border:1px solid var(--tk-gap);border-radius:7px;
-          overflow:hidden}
-  /* The cell was painted with a literal #fff and its value with var(--ink).
-     Those two invert in opposite directions: in the dark theme --ink is
-     near-white, so every figure in the grid — the prices, the return, the
-     distance to target — was white on a white tile and effectively gone.
-     Surface, label and value are one token set now, so they move together. */
-  .tkcell{background:var(--tk-cell);padding:9px 11px;min-width:0}
-  .tkcell b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
-            text-transform:uppercase;color:var(--tk-label);font-weight:400;margin-bottom:3px}
-  .tkcell span{display:block;font-family:var(--serif);font-size:18px;line-height:1.2;
-               color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-  .tkcell span.sm{font-size:13px;font-family:var(--mono);letter-spacing:.02em}
-  .tkcell span.dim{color:var(--mute)}
-  /* .tkcell span is (0,1,1) and .neg is (0,1,0), so the plain colour won and
-     Return printed in body ink while the same number printed red in the
-     header. Matched here at (0,2,1) so the sign actually shows. */
-  .tkcell span.pos{color:var(--pass)}
-  .tkcell span.neg{color:var(--fail)}
-  /* The plan strip carries the target and the stop — real numbers, not
-     decoration — so it sits a step above the muted metadata tone. */
-  .tkplan{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:11px;
-          font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--tk-quiet)}
-  .tkout{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-         border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 10px}
-  .tkout.TARGET{border-color:var(--pass);color:var(--pass);
-                background:color-mix(in srgb,var(--pass) 10%,transparent)}
-  .tkout.STOP{border-color:var(--fail);color:var(--fail);
-              background:color-mix(in srgb,var(--fail) 10%,transparent)}
-  .tkout.OPEN{border-color:var(--gold-dp);color:var(--gold-dp)}
-  .tkout.NO_PLAN{border-color:var(--rule);color:var(--mute)}
-  @media(max-width:620px){.tkgrid{grid-template-columns:repeat(2,1fr)}}
-  .tkstat{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-          padding:2px 7px;border:1px solid var(--rule);margin-left:8px}
-  .tkstat.LIVE{border-color:var(--pass);color:var(--pass)}
-  .tkstat.INVALIDATED{border-color:var(--fail);color:var(--fail)}
-  .tkstat.EXPIRED{border-color:var(--mute);color:var(--mute)}
   .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;
             margin:0 auto 22px;max-width:760px}
   .statcell{border:1px solid var(--rule-2);border-radius:var(--r-card);padding:15px;
@@ -1208,9 +1134,6 @@
   .statcell b{display:block;font-family:var(--serif);font-size:28px;font-weight:400;margin-bottom:3px}
   .statcell span{font-family:var(--mono);font-size:10px;letter-spacing:.13em;
                  text-transform:uppercase;color:var(--mute)}
-  /* Scoped to the tracker's own summary strip, which sits directly above the
-     rows: same label tone as the cells below it, in both themes. */
-  #tkstats .statcell span{color:var(--tk-label)}
   .fbtag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--mute);border:1px solid var(--rule);padding:2px 7px;margin-left:8px;
     vertical-align:2px;white-space:nowrap}
@@ -1238,10 +1161,10 @@
 </script>
 <link rel="stylesheet" href="universe-scan.css?v=20261120-seo">
 <link rel="stylesheet" href="lenses.css?v=20261120-market">
-<link rel="stylesheet" href="query.css?v=20261120-market">
+<link rel="stylesheet" href="query.css?v=20261120-two">
 <link rel="stylesheet" href="idea-card.css?v=20260927b">
 <link rel="stylesheet" href="doors.css?v=20261120-market">
-<link rel="stylesheet" href="calls.css?v=20261029">
+<link rel="stylesheet" href="calls.css?v=20261120">
 <link rel="stylesheet" href="watchlists.css?v=20261029">
 <link rel="stylesheet" href="strategy-lab.css?v=20261031">
 <link rel="stylesheet" href="picks.css?v=20261120-picks">
@@ -1324,8 +1247,7 @@
         <button id="tab-score" role="menuitem">Altaha Score</button>
         <button id="tab-deals" role="menuitem">Deals</button>
         <button id="tab-special" role="menuitem">Delivery trends</button>
-        <button id="tab-tracker" role="menuitem">Tracker</button>
-        <button id="tab-calls" role="menuitem">Call log</button>
+        <button id="tab-calls" role="menuitem">Track record</button>
         <button id="tab-watchlists" role="menuitem">Watchlists</button>
         <button id="tab-strategies" role="menuitem">Strategy lab</button>
         <button id="tab-results" role="menuitem">Results</button>
@@ -1347,8 +1269,10 @@
   <div id="view-today" class="dr-view" aria-label="Market"></div>
   <div id="view-ideahub" class="dr-view" style="display:none" aria-label="Ideas"></div>
   <div id="view-money" class="dr-view" style="display:none" aria-label="Portfolio"></div>
-  <!-- Every Ideas call, dated (calls.js), and the watchlists (watchlists.js). -->
-  <div id="view-calls" style="display:none" aria-label="Call log"></div>
+  <!-- The track record: every idea, dated, and its return since (calls.js).
+       It was two pages, Call log and Tracker; the Tracker's own view is gone
+       and its addresses open this one. Then the watchlists (watchlists.js). -->
+  <div id="view-calls" style="display:none" aria-label="Track record"></div>
   <div id="view-watchlists" style="display:none" aria-label="Watchlists"></div>
   <!-- Textbook trading rules tested on one stock, beside holding it (strategy-lab.js). -->
   <div id="view-strategies" style="display:none" aria-label="Strategy lab"></div>
@@ -2025,29 +1949,6 @@
     </details>
   </div><!-- /view-special -->
 
-  <div id="view-tracker" style="display:none">
-    <header class="tabhead">
-      <h2>Score history</h2>
-      <p>The ideas you track, and how each did against the index.</p>
-    </header>
-    <div class="toolbar">
-      <div class="seg mono" id="tkfilter">
-        <button id="tkall" class="active">All</button>
-        <button id="tklive">Live</button>
-        <button id="tkinv">Invalidated</button>
-        <button id="tkexp">Expired</button>
-      </div>
-    </div>
-    <div class="toolbar">
-      <button class="act" id="tkbackfill">Record current ideas</button>
-      <a class="act" id="tkcsv" href="#" download>Download CSV</a>
-      <button class="shbtn" type="button" id="tkshare" data-share="{&quot;kind&quot;:&quot;record&quot;}">Share the record</button>
-    </div>
-    <div class="statgrid" id="tkstats"></div>
-    <div class="ideas-note" id="tknote"></div>
-    <div id="tkrows"></div>
-    <p class="disc" id="tkdisc"></p>
-  </div><!-- /view-tracker -->
 
   <!-- ══ THE ALTAHA SCORE ══════════════════════════════════════════════════
        The number appears on every row on this site, so it gets a page that
@@ -2115,9 +2016,9 @@
       </ul>
       <p class="lsub">What the score <i>has</i> been worth is a measurement, not a
          claim, and it is kept where it can be audited: the outcome of every
-         idea added from it sits under <b>Portfolio → Idea record</b>.</p>
+         idea it produced sits under <b>Ideas → Track record</b>.</p>
       <div class="toolbar">
-        <button class="act" type="button" data-goto="tracker">Open the idea record</button>
+        <button class="act" type="button" data-goto="calls">Open the track record</button>
         <button class="act" type="button" data-goto="vocab">Glossary of every term</button>
       </div>
       <p class="lsub">The same explanation as a page of its own, to link to or print: <a href="/methodology">How the Altaha Score works</a>.</p>
@@ -2275,11 +2176,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["today","ideahub","money","screener","ideas","filings","deals","special","live","portfolio","results","options","tracker","vocab","wow","concalls","investors","funds","allocate","score","lenses","query","calls","watchlists","strategies"];
+const TABS = ["today","ideahub","money","screener","ideas","filings","deals","special","live","portfolio","results","options","vocab","wow","concalls","investors","funds","allocate","score","lenses","query","calls","watchlists","strategies"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["today","ideahub","money","deals","special","results","options","tracker","vocab","wow","concalls","investors","funds","allocate","score","lenses","query","calls","watchlists","strategies"];
+const OVERFLOW_TABS = ["today","ideahub","money","deals","special","results","options","vocab","wow","concalls","investors","funds","allocate","score","lenses","query","calls","watchlists","strategies"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -2416,7 +2317,6 @@ function switchTab(which){
   closeMore();
   moveTabInk(OVERFLOW_TABS.includes(which) ? "more" : which);
   if(which==="ideas") loadIdeas();
-  if(which==="tracker") loadTracker();
   if(which==="filings") loadFilings();
   if(which==="results") loadResultsCalendar();
   /* The door pages build themselves on first sight rather than on page load:
@@ -2995,7 +2895,6 @@ const SKEL = n => Array.from({length:n}, () =>
   `<div class="skel"><i class="w40"></i><i class="w70"></i><i class="w55"></i><i class="w25"></i></div>`).join("");
 
 let includeThin = false;
-const trackedNow = new Set();
 
 function tierChip(t){
   if(!t) return "";
@@ -3257,7 +3156,6 @@ async function loadIdeas(){
           ${picks ? PK.planHTML(s.plan) : planGrid(s.plan)}
           ${s.adverse_filing ? `<div class="badbox"><b>Adverse filing.</b> ${esc((s.catalyst&&s.catalyst.headline)||(s.catalyst&&s.catalyst.line)||"")} — scored against this idea, not for it.</div>` : ""}
           <div class="idearow-actions">
-            <button class="trackbtn${s.tracked?" done":""}" type="button" data-track="${esc(s.symbol)}">${trackInner(s.tracked?"Tracking":"Track")}</button>
             <button class="morebtn" type="button" aria-expanded="false">Details<i aria-hidden="true"></i></button>
           </div>
           <div class="ideamore"><div class="ideamore-in">
@@ -3289,7 +3187,7 @@ async function loadIdeas(){
         const go=()=>{ window.AltahaOpenStock ? window.AltahaOpenStock(el.dataset.t, "ideas")
                                               : location.href = "stock.html?ticker=" + encodeURIComponent(el.dataset.t); };
         el.addEventListener("click",ev=>{
-          if(ev.target.closest("button") || ev.target.closest(".trackbtn") || ev.target.closest(".evbtn") ||
+          if(ev.target.closest("button") || ev.target.closest(".evbtn") ||
              ev.target.closest(".shbtn") || ev.target.closest("[data-share]") ||
              ev.target.closest("a")) return;
           go();
@@ -3318,35 +3216,6 @@ async function loadIdeas(){
         });
       });
 
-      document.querySelectorAll("#idearows .trackbtn").forEach(btn=>{
-        const sym = btn.dataset.track;
-        const set = (label, cls) => {
-          btn.innerHTML = trackInner(label);
-          btn.classList.remove("busy");
-          if(cls) btn.classList.add(cls);
-        };
-        if(trackedNow.has(sym)){ set("Tracking", "done"); }
-        btn.addEventListener("click", async ev=>{
-          ev.stopPropagation();
-          if(btn.classList.contains("done") || btn.classList.contains("busy")) return;
-          const row = d.rows.find(r=>r.symbol===sym);
-          btn.classList.add("busy");
-          btn.querySelector(".tb-lbl").textContent = "Adding";
-          try{
-            const r = await fetch(`${API_BASE}/tracker/add`,{
-              method:"POST", headers:{"Content-Type":"application/json"},
-              body: JSON.stringify(row)});
-            const j = await r.json();
-            set(j.added ? "Tracking" : (j.reason || "Tracking"), "done");
-            /* Restart the landing animation on the element that just changed. */
-            btn.classList.remove("landed"); void btn.offsetWidth; btn.classList.add("landed");
-            trackedNow.add(sym);
-          }catch(e){
-            set("Retry", "fail");
-            setTimeout(()=>{ btn.classList.remove("fail"); btn.innerHTML = trackInner("Track"); }, 1600);
-          }
-        });
-      });
     }
     $("ideadisc").textContent = d.disclaimer || "";
   }catch(e){
@@ -3457,87 +3326,6 @@ async function loadFilings(retry){
                                           : location.href = "stock.html?ticker=" + encodeURIComponent(el.dataset.open); }));
   }catch(e){
     $("frows").innerHTML = `<div class="ideas-note" data-nosnippet style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
-  }
-}
-
-/* ── Tracker ────────────────────────────────────────────────────────── */
-let tkFilter = "";
-
-function pct(v){
-  if(v==null) return "\u2014";
-  return `${v>0?"+":""}${v}%`;
-}
-function signCls(v){ return v==null ? "" : (v>0 ? "pos" : (v<0 ? "neg" : "")); }
-
-async function loadTracker(){
-  $("tkrows").innerHTML = SKEL(3);
-  $("tkcsv").href = `${API_BASE}/tracker/export.csv`;
-  try{
-    const [lr, sr] = await Promise.all([
-      fetch(`${API_BASE}/tracker/list?status=${tkFilter}&limit=400`),
-      fetch(`${API_BASE}/tracker/stats`)
-    ]);
-    const d = await lr.json();
-    const st = await sr.json();
-
-    const o = st.overall;
-    $("tkstats").innerHTML = o ? `
-      <div class="statcell rise" style="--i:0"><b>${st.total_tracked}</b><span>ideas recorded</span></div>
-      <div class="statcell rise" style="--i:1"><b class="${signCls(o.avg_alpha_pct)}">${pct(o.avg_alpha_pct)}</b><span>avg alpha vs index</span></div>
-      <div class="statcell rise" style="--i:2"><b>${o.beat_index_pct!=null?o.beat_index_pct+"%":"\u2014"}</b><span>beat the index</span></div>
-      <div class="statcell rise" style="--i:3"><b class="${signCls(o.avg_return_pct)}">${pct(o.avg_return_pct)}</b><span>avg return</span></div>
-      <div class="statcell rise" style="--i:4"><b class="neg">${pct(o.avg_max_drawdown_pct)}</b><span>avg worst dip</span></div>
-      <div class="statcell rise" style="--i:5"><b>${o.median_days_held}</b><span>median days held</span></div>`
-      : `<div class="statcell" style="grid-column:1/-1"><b>0</b><span>ideas recorded yet \u2014 run a universe scan and they start collecting automatically</span></div>`;
-
-    /* The record card's post text carries the same numbers as the grid above
-       it, so it is filled from the same response rather than re-fetched. */
-    const shb = $("tkshare");
-    /* setAttribute takes a string, not markup — no HTML escaping here, and
-       adding some would put &quot; inside the JSON and break the parse. */
-    if(shb) shb.setAttribute("data-share", JSON.stringify({
-      kind:"record", total_tracked: st.total_tracked, overall: o || {}
-    }));
-
-    let note = st.note || "";
-    if(st.storage_is_ephemeral){
-      note = "WARNING: DATA_DIR is not set to a Render disk, so this record is wiped on every deploy. Add a disk at /data and set DATA_DIR=/data. \u2014 " + note;
-    }
-    if(st.marked === 0 && st.total_tracked > 0){
-      note = "Ideas are recorded but not yet marked. Marking runs after the close via /cron/tick. \u2014 " + note;
-    }
-    $("tknote").textContent = note;
-
-    if(!d.rows || !d.rows.length){
-      $("tkrows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Nothing recorded yet. Ideas are added automatically whenever a universe scan completes \u2014 but if your current results came from cache, press <b>Record current ideas</b> above to log them now without waiting for a fresh scan.</div>`;
-      return;
-    }
-    $("tkrows").innerHTML = d.rows.map((r,i)=>`
-      <div class="tk rise" style="--i:${Math.min(i,10)}">
-        <div class="tkt">
-          <span class="tknm">${esc(r.name || r.symbol)}<span class="tkstat ${esc(r.status)}">${esc(r.status)}</span>
-            <small>${esc(r.symbol)} \u00B7 ${esc(r.setup || "\u2014")} \u00B7 added ${esc(r.added_on)} at \u20B9${r.added_price}</small></span>
-          <span class="tkret ${signCls(r.alpha_pct)}">${pct(r.alpha_pct)}<small>alpha</small></span>
-        </div>
-        <div class="tkln">
-          <span>Now \u20B9${r.last_price ?? "\u2014"}</span>
-          <span class="${signCls(r.return_pct)}">Return ${pct(r.return_pct)}</span>
-          <span>Index ${pct(r.bench_return_pct)}</span>
-          <span>Best ${pct(r.max_gain_pct)}</span>
-          <span>Worst ${pct(r.max_drawdown_pct)}</span>
-          <span>${r.days_held} days</span>
-          ${r.sector?`<span>${esc(r.sector)}</span>`:""}
-        </div>
-        ${r.invalidated_by?`<div class="warnbox">${esc(r.invalidated_by)}</div>`:""}
-        <div class="idearow-actions">
-          <button class="shbtn" type="button" ${shareAttr({kind:"holding", ticker:r.symbol,
-            return_pct:r.return_pct, alpha_pct:r.alpha_pct, bench_return_pct:r.bench_return_pct,
-            added_on:r.added_on, days_held:r.days_held})}>${SHARE_ICON}Share this position</button>
-          <button class="shbtn" type="button" ${shareAttr({kind:"chart", ticker:r.symbol, range:"1D"})}>${SHARE_ICON}Chart</button>
-        </div>
-      </div>`).join("");
-  }catch(e){
-    $("tkrows").innerHTML = `<div class="ideas-note" data-nosnippet style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
   }
 }
 
@@ -4332,9 +4120,6 @@ function planGrid(p){
     <div class="pc rr"><b>R:R</b><span>${p.rr!=null?`1:${p.rr}`:"—"}</span></div>
   </div>`;
 }
-function trackInner(label){
-  return `<span class="tb-ic" aria-hidden="true"><svg viewBox="0 0 16 16"><path class="tb-plus" d="M8 3v10M3 8h10"/><path class="tb-check" d="M3.5 8.5l3 3 6-7"/></svg></span><span class="tb-lbl">${esc(label)}</span>`;
-}
 function stanceCls(s){ return s==="BUY ZONE"?"buy":(s==="BREAKOUT WATCH"?"watch":(s==="AVOID"?"avoid":"wait")); }
 let _plan = null;
 function sizePosition(){
@@ -4495,38 +4280,6 @@ document.addEventListener("keydown", ev=>{ if(ev.key==="Escape") closeMore(); })
 
 /* Ideas toolbar */
 $("thintoggle").addEventListener("click", ()=>{ includeThin = !includeThin; loadIdeas(); });
-
-/* Tracker filters */
-const bf = $("tkbackfill");
-if(bf) bf.addEventListener("click", async ()=>{
-  bf.textContent = "Recording\u2026";
-  try{
-    /* Recorded rows land under source="auto" — the statistical record, not
-       your picks — so the tab must switch to showing everything or the button
-       looks like it did nothing. It previously also went through the AUTOTRACK
-       gate, which is off by default, so it genuinely did nothing. */
-    const r = await fetch(`${API_BASE}/tracker/backfill`, {method:"POST"});
-    const j = await r.json();
-    bf.textContent = r.ok
-      ? `Recorded ${j.added ?? 0}${j.skipped ? ` (${j.skipped} already tracked)` : ""}`
-      : (j.detail || "Nothing to record");
-    const mine = $("tkmine");
-    if(r.ok && (j.added ?? 0) > 0 && mine && mine.textContent === "Showing my picks") mine.click();
-    else loadTracker();
-  }catch(e){ bf.textContent = "Couldn\u2019t record"; }
-  setTimeout(()=>{ bf.textContent = "Record current ideas"; }, 4000);
-});
-
-[["tkall",""],["tklive","LIVE"],["tkinv","INVALIDATED"],["tkexp","EXPIRED"]]
-  .forEach(([id,val])=>{
-    const el = $(id);
-    if(el) el.addEventListener("click", ()=>{
-      tkFilter = val;
-      document.querySelectorAll("#tkfilter button")
-        .forEach(x => x.classList.toggle("active", x === el));
-      loadTracker();
-    });
-  });
 
 
 /* The planner itself is planner.js and planner-math.js. What stays here is
@@ -4816,7 +4569,6 @@ if(fcSymParam){
 <script src="premium.js" defer></script>
 <script src="premium-plus.js" defer></script>
 <script src="charts.js" defer></script>
-<script src="tracker-fix.js" defer></script>
 <script src="portfolio-intelligence.js" defer></script>
 <script src="portfolio-story.js" defer></script>
 <script src="portfolio-plan.js" defer></script>
@@ -4842,7 +4594,7 @@ if(fcSymParam){
 <script src="funds.js" defer></script>
 <script src="lenses.js?v=20261120-market" defer></script>
 <script src="screens.js?v=20260925" defer></script>
-<script src="query.js?v=20261120-market" defer></script>
+<script src="query.js?v=20261120-two" defer></script>
 <script src="ledger-admin.js" defer></script>
 <script src="planner-risk.js" defer></script>
 <script src="planner-math.js?v=20261119" defer></script>
@@ -4854,7 +4606,7 @@ if(fcSymParam){
 <script src="risk-math.js" defer></script>
 <script src="allocate-flow.js" defer></script>
 <script src="experience.js?v=20261120-market" defer></script>
-<script src="calls.js?v=20261029" defer></script>
+<script src="calls.js?v=20261120" defer></script>
 <script src="watchlists.js?v=20261120-menus" defer></script>
 <script src="strategy-lab.js?v=20261031" defer></script>
 <script src="home-motion.js?v=20260923-always-on" defer></script>

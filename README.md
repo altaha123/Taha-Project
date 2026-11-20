@@ -29,7 +29,7 @@ and its own address, in exactly one door.
 | Door | The question it answers | What lives behind it |
 |---|---|---|
 | **Market** (`#discover`) | *What is happening today?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Options and the Market board |
-| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Call log, the Screener, Investor styles (with the companies several styles agree on), Who owns what and Fund houses, Charts, Track record, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
+| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Track record, the Screener, Investor styles (with the companies several styles agree on), Who owns what and Fund houses, Charts, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
 | **Portfolio** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner (the month work becomes optional, and what moves it — see below), Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
@@ -76,18 +76,23 @@ listed twice, and each is one entry now:
   cards, at `#research/lenses/convergence`. The old `#research/convergence`
   addresses open the page at that section (`MOVED` in `frontend/nav.js`).
 
-**The screener asks for no typing.** It opens on ten cards for things a
-person might want from a company — *Makes good money*, *Owes little*, *Not
-too pricey* — and six ready-made ideas that switch a few of them on. Tapping
-a card runs it: the count, a bar for each choice showing how it narrowed the
-list, and the table, with no button to press. Each card has up to three
-settings, explained in rupees on a hundred. The editor it used to open on
-(field, comparison, value and a text box) is folded underneath as *Write
-your own rules*, and the two are one query: a choice writes its lines into
-the editor, and a query typed or opened from a link lights the cards it is
-made of. The cards are `WISHES` in `frontend/query.js`, and
-`backend/tests/test_query_wishes.py` puts every line they can write through
-the server's parser.
+**The screener is two sections.** Two tabs sit under its title. *Pick what
+you want* asks for no typing: ten cards for things a person might want from a
+company — *Makes good money*, *Owes little*, *Not too pricey* — and six
+ready-made ideas that switch a few of them on. Tapping a card runs it: the
+count, a bar for each choice showing how it narrowed the list, and the table,
+with no button to press. Each card has up to three settings, explained in
+rupees on a hundred. *Make your own query* is the editor (examples, then
+field, comparison, value and a text box); it was folded at the foot of the
+cards as *Write your own rules* and is a section of its own now. The two are
+one query: a choice writes its lines into the editor, a query typed or opened
+from a link lights the cards it is made of, and one results table sits under
+both. A query from a link, a saved screen or the last visit opens the editor
+if any line is not a card's and the cards otherwise; nothing moves the reader
+between sections while they work in one. The cards are `WISHES` in
+`frontend/query.js`, and `backend/tests/test_query_wishes.py` puts every line
+they can write through the server's parser. Every font size on the page is a
+rung of the ladder in `frontend/type.css`.
 
 **Built for the first visit.** People who were sent the site found it too
 complex to find their way around, so three things changed (Nov 2026):
@@ -211,17 +216,35 @@ The Altaha Score's three price pillars were re-weighted from the same data
 
 ---
 
-## The call log, the watchlists and the portfolio pulse
+## The track record, the watchlists and the portfolio pulse
 
-**Call log** (`#research/calls`, `backend/call_log.py`). The Ideas list is
-rebuilt from the latest scan on every load, so on its own it cannot say when a
-call was made. The log records each scan's list once per horizon and keeps
-every call with the day, date, time (IST) and price it was made at, the stance
-and levels it carried, every change after (stance, redrawn levels) and how it
-ended — stop, target, or dropped from the list. Stops and targets are judged
-against the levels a call carried *before* a new scan redrew them, so a
+**Track record** (`#research/calls`, `backend/call_log.py`). The Ideas list is
+rebuilt from the latest scan on every load, so on its own it cannot say when
+an idea was generated. The record takes each scan's list once per horizon and
+keeps every idea with the day, date, time (IST) and price it was generated at,
+the stance and levels it carried, every change after (stance, redrawn levels)
+and how the list closed it — stop, target, or dropped. Stops and targets are
+judged against the levels a call carried *before* a new scan redrew them, so a
 breached stop cannot be quietly moved. Each Universe scan row also carries a
 stamp: "Called Mon 26 Oct · 10:40 IST at ₹101 · +4.9% since".
+
+Every idea carries two returns. *Since the idea* runs from the price on the
+day it was generated to the latest scan, as if it was bought that day and
+nothing was done after; it is the figure the page leads with and averages, and
+a closed call keeps one for as long as its stock is still scanned. Where the
+list closed the call, the return at that close is shown beside it. With the
+index's daily closes (the tracker's benchmark, read once a day off the request
+thread) each idea also shows the index over the same days and the difference.
+
+This is one page that used to be two. "Call log" dated the calls and "Track
+record" (the Tracker tab) scored a separate ledger of ideas added by hand with
+a Track button; both answered "what did the ideas do". The Tracker tab, its
+script and the Track button are gone, `#research/tracker`, `#portfolio/tracker`
+and `?go=tracker` open this page, and the share card (`/og/record.png`) and
+the CSV (`/calls/export.csv`) are drawn from this record. `backend/tracker.py`
+and its `/tracker/*` routes remain for the ledger already on disk
+(`/tracker/export.csv`) and for the old lists' archetype record in
+`ideas.py`; nothing in the interface adds to it any more.
 
 **Watchlists** (`#portfolio/watchlists`, `frontend/watchlists.js`). Any number
 of named lists with an emoji and a colour, renamed in place; live quotes for

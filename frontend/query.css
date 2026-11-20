@@ -4,16 +4,45 @@
    The query screener (#research/query). Colours are the tokens from
    altaha-skin.css, so the dark theme needs nothing of its own; the results
    table reuses .ln-table from lenses.css.
+
+   TYPE. Every size here is a rung of the ladder in type.css: 11 caption,
+   12 small, 13 compact, 14 body, 16 lead, 20 h3, 24 h2, 28 figure, and the
+   page title. The sheet had grown twenty-two sizes, half of them between
+   rungs (12.5, 13.5, 14.5, 15, 17, 21, 22, 23, 26), and a title set in the
+   body face above headings set in the serif, so nothing on the page looked
+   like the same size as anything else. Headings are the serif, everything
+   read as text is Inter, and figures and field names are the mono.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.qs-head h2{ font-size:clamp(28px,4vw,44px); line-height:1.08; margin:0 0 10px }
-.qs-head p{ max-width:68ch; line-height:1.65; color:var(--ink-2) }
+.qs-head{ margin:0 0 22px; padding-top:18px }
+.qs-head h2{ font:400 clamp(34px,4.4vw,52px)/1.05 'Instrument Serif',Georgia,serif;
+  letter-spacing:-.02em; margin:0 0 12px }
+.qs-head p{ max-width:62ch; margin:0; font-size:16px; line-height:1.6; color:var(--ink-2) }
 
-.qs-examples{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:18px 0 14px }
+/* ── The two sections ──────────────────────────────────────────────────────
+   Pick what you want, or make your own query: two tabs the width of the page,
+   so the second way in is as plain as the first. */
+.qs-modes{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:0 0 6px }
+.qs-mode{ display:flex; align-items:center; gap:14px; min-height:76px; padding:12px 18px 12px 12px; text-align:left;
+  cursor:pointer; border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFDF8);
+  color:var(--ink); font:inherit; -webkit-tap-highlight-color:transparent;
+  transition:border-color .2s ease, background-color .2s ease, box-shadow .25s ease }
+.qs-mode:hover{ border-color:var(--gold) }
+.qs-mode.on{ border-color:var(--ink); background:var(--ink); color:var(--paper); box-shadow:0 10px 26px rgba(23,20,14,.16) }
+.qs-mode-ic{ flex:none; display:grid; place-items:center; width:48px; height:48px; border-radius:14px;
+  background:color-mix(in srgb, var(--gold) 14%, transparent); font-size:24px; line-height:1 }
+.qs-mode.on .qs-mode-ic{ background:color-mix(in srgb, var(--paper) 14%, transparent) }
+.qs-mode-t{ display:block; min-width:0 }
+.qs-mode-t b{ display:block; font:600 16px/1.25 Inter,system-ui,sans-serif }
+.qs-mode-t span{ display:block; margin-top:3px; font:400 13px/1.35 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qs-mode.on .qs-mode-t span{ color:color-mix(in srgb, var(--paper) 72%, transparent) }
+.qs-mode:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+
+.qs-examples{ display:flex; flex-wrap:wrap; align-items:center; gap:8px }
 .qs-exlab{ font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
   text-transform:uppercase; color:var(--mute); margin-right:2px }
 .qs-chip{
-  min-height:34px; padding:0 14px; border-radius:999px; cursor:pointer;
+  min-height:38px; padding:0 15px; border-radius:999px; cursor:pointer;
   border:1px solid var(--rule); background:var(--skin-card,#FFFDF8); color:var(--ink);
   font:500 13px/1 Inter,system-ui,sans-serif; transition:border-color .15s ease, background .15s ease;
 }
@@ -48,12 +77,12 @@
 
 .qs-editor{ padding:14px 16px 16px }
 .qs-edlab{ display:block; margin-bottom:8px; font-weight:600; font-size:14px; color:var(--ink) }
-.qs-edlab span{ font-weight:400; font-size:12.5px; color:var(--mute); margin-left:6px }
+.qs-edlab span{ font-weight:400; font-size:13px; color:var(--mute); margin-left:6px }
 .qs-edwrap{ position:relative }
 .qs-editor textarea{
   width:100%; box-sizing:border-box; min-height:128px; resize:vertical; padding:12px 14px;
   border-radius:12px; border:1px solid var(--rule); background:var(--paper); color:var(--ink);
-  font:500 15px/1.65 'IBM Plex Mono',ui-monospace,monospace;
+  font:500 14px/1.7 'IBM Plex Mono',ui-monospace,monospace;
 }
 .qs-ac{
   position:absolute; left:0; right:0; top:100%; z-index:20; margin:4px 0 0; padding:4px;
@@ -61,11 +90,11 @@
   box-shadow:var(--skin-lift); max-height:300px; overflow:auto;
 }
 .qs-ac li{ padding:8px 10px; border-radius:8px; cursor:pointer; display:flex; gap:10px; align-items:baseline }
-.qs-ac li b{ font:600 13.5px/1.3 'IBM Plex Mono',monospace; white-space:nowrap }
-.qs-ac li span{ font-size:12.5px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.qs-ac li b{ font:600 13px/1.3 'IBM Plex Mono',monospace; white-space:nowrap }
+.qs-ac li span{ font-size:13px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .qs-ac li.on, .qs-ac li:hover{ background:color-mix(in srgb,var(--gold) 12%,transparent) }
 
-.qs-hint{ margin:8px 0 0; font-size:12.5px; line-height:1.6; color:var(--mute) }
+.qs-hint{ margin:10px 0 0; font-size:13px; line-height:1.7; color:var(--mute) }
 .qs-hint code, .qs-hint kbd{
   font:500 12px/1 'IBM Plex Mono',monospace; padding:2px 5px; border-radius:5px;
   background:var(--paper-2); color:var(--ink-2);
@@ -103,7 +132,7 @@
 .qs-out.is-stale{ opacity:.5 }
 .qs-sum{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; margin-bottom:4px }
 .qs-sum p{ margin:0 }
-.qs-sum p:first-child{ font:400 26px/1.2 'Instrument Serif',Georgia,serif }
+.qs-sum p:first-child{ font:400 28px/1.2 'Instrument Serif',Georgia,serif }
 .qs-sum p:first-child span{ font:400 14px/1 Inter,system-ui,sans-serif; color:var(--mute) }
 .qs-unk{ font-size:13px; color:var(--mute); flex:1 1 260px }
 .qs-csv{ margin-left:auto; min-height:34px; font-size:13px }
@@ -116,7 +145,7 @@
   color:var(--mute); text-align:right; white-space:nowrap;
 }
 .qs-sort:hover, th[aria-sort] .qs-sort{ color:var(--gold) }
-.qs-num{ text-align:right; padding:9px 12px; font:500 13.5px/1.2 'IBM Plex Mono',monospace;
+.qs-num{ text-align:right; padding:9px 12px; font:500 13px/1.2 'IBM Plex Mono',monospace;
   white-space:nowrap; font-variant-numeric:tabular-nums }
 .qs-num.qs-txt{ text-align:left; font-family:Inter,system-ui,sans-serif; white-space:normal; min-width:140px }
 .qs-na{ color:var(--mute) }
@@ -126,8 +155,8 @@
 
 /* ── Field reference ───────────────────────────────────────────────────── */
 
-.qs-ref{ margin:26px 0 0; border:1px solid var(--rule); border-radius:14px; padding:4px 16px 14px }
-.qs-ref summary{ cursor:pointer; padding:12px 0; font:400 22px/1.2 'Instrument Serif',Georgia,serif }
+.qs-ref{ margin:14px 0 0; border:1px solid var(--rule); border-radius:14px; padding:4px 16px 14px }
+.qs-ref summary{ cursor:pointer; padding:12px 0; font:400 20px/1.2 'Instrument Serif',Georgia,serif }
 .qs-ref summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--mute); margin-left:6px }
 .qs-find{ margin:4px 0 14px; max-width:420px }
 #qs-fields{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:6px 24px }
@@ -135,11 +164,11 @@
   text-transform:uppercase; color:var(--gold) }
 .qs-fgroup ul{ list-style:none; margin:0; padding:0 }
 .qs-fgroup li{ padding:7px 0; border-top:1px solid var(--rule-2) }
-.qs-fgroup li p{ margin:3px 0 0; font-size:12.5px; line-height:1.5; color:var(--ink-2) }
+.qs-fgroup li p{ margin:3px 0 0; font-size:13px; line-height:1.5; color:var(--ink-2) }
 .qs-fgroup li em{ font-style:normal; color:var(--mute) }
 .qs-fgroup li small{ font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute) }
 .qs-fbtn{
-  all:unset; cursor:pointer; font:600 13.5px/1.3 'IBM Plex Mono',monospace; color:var(--ink);
+  all:unset; cursor:pointer; font:600 13px/1.3 'IBM Plex Mono',monospace; color:var(--ink);
   border-bottom:1px dashed var(--gold);
 }
 .qs-fbtn:hover{ color:var(--gold) }
@@ -156,21 +185,21 @@
 
 /* Saved screens: the reader's own chips above the examples, and the small
    inline form that names one. */
-.qs-saved{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:18px 0 0 }
+.qs-saved{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:14px 0 0 }
 .qs-saved[hidden]{ display:none }
 .qs-schip{ display:inline-flex; align-items:stretch }
 .qs-schip .qs-chip{ border-top-right-radius:0; border-bottom-right-radius:0; border-color:var(--gold) }
 .qs-sdel{ border:1px solid var(--gold); border-left:0; background:var(--paper-2); color:var(--mute);
-  border-radius:0 999px 999px 0; padding:0 10px; cursor:pointer; font-size:15px; line-height:1; min-width:32px }
+  border-radius:0 999px 999px 0; padding:0 10px; cursor:pointer; font-size:16px; line-height:1; min-width:32px }
 .qs-sdel:hover{ color:var(--fail) }
 .qs-sdel:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
-.qs-ssign{ font-size:12.5px; color:var(--mute); margin-left:4px }
+.qs-ssign{ font-size:13px; color:var(--mute); margin-left:4px }
 .qs-saveform{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px;
   padding:12px; border:1px dashed var(--rule); border-radius:12px }
 .qs-saveform[hidden]{ display:none }
 .qs-saveform label{ font-size:13px; font-weight:600; width:100% }
 .qs-saveform input{ flex:1 1 220px; min-height:42px; padding:9px 12px; border-radius:10px;
-  border:1px solid var(--rule); background:var(--paper); color:var(--ink); font:400 15px Inter,system-ui,sans-serif }
+  border:1px solid var(--rule); background:var(--paper); color:var(--ink); font:400 16px Inter,system-ui,sans-serif }
 .qs-saveform input:focus{ outline:2px solid var(--gold); outline-offset:1px }
 .qs-savemsg{ width:100%; margin:0; font-size:13px; color:var(--mute) }
 .qs-savemsg:empty{ display:none }
@@ -202,10 +231,10 @@
 .qs-ai-head{ display:flex; gap:12px; align-items:flex-start; justify-content:space-between }
 .qs-ai-title{ margin:0; font:400 24px/1.15 'Instrument Serif',Georgia,serif }
 .qs-ai-title span{ color:var(--gold) }
-.qs-ai-sub{ margin:4px 0 0; font-size:13.5px; line-height:1.55; color:var(--ink-2); max-width:66ch }
+.qs-ai-sub{ margin:4px 0 0; font-size:14px; line-height:1.55; color:var(--ink-2); max-width:66ch }
 .qs-ai-tools{ display:flex; gap:6px; align-items:center; flex:none }
 .qs-ai-mini{ min-height:32px; padding:0 12px; font-size:13px }
-.qs-ai-x{ border:0; background:none; color:var(--mute); font-size:22px; line-height:1; width:34px;
+.qs-ai-x{ border:0; background:none; color:var(--mute); font-size:24px; line-height:1; width:34px;
   height:34px; border-radius:8px; cursor:pointer }
 .qs-ai-x:hover{ color:var(--ink); background:var(--paper-2) }
 .qs-ai-x:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
@@ -214,15 +243,15 @@
 .qs-ai-key label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px }
 .qs-ai-keyrow{ display:flex; gap:8px }
 .qs-ai-keyrow input{ flex:1 1 auto; min-width:0; min-height:42px; padding:0 12px; border-radius:10px;
-  border:1px solid var(--rule); background:var(--paper); color:var(--ink); font:400 15px Inter,system-ui,sans-serif }
-.qs-ai-fine{ margin:8px 0 0; font-size:12.5px; line-height:1.5; color:var(--mute) }
+  border:1px solid var(--rule); background:var(--paper); color:var(--ink); font:400 16px Inter,system-ui,sans-serif }
+.qs-ai-fine{ margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--mute) }
 .qs-ai-fine:empty{ display:none }
 .qs-ai-fine.is-err{ color:var(--fail) }
 
 .qs-ai-chat{ margin-top:14px }
 .qs-ai-log{ position:relative; display:flex; flex-direction:column; gap:12px; margin-bottom:12px;
   max-height:min(64vh,680px); overflow:auto; overscroll-behavior:contain; padding:2px }
-.qs-ai-msg{ font-size:14.5px; line-height:1.6; min-width:0 }
+.qs-ai-msg{ font-size:14px; line-height:1.6; min-width:0 }
 .qs-ai-msg p{ margin:0 0 8px }
 .qs-ai-msg p:last-child{ margin-bottom:0 }
 .qs-ai-msg.is-user{ align-self:flex-end; max-width:min(82%,560px); padding:10px 14px;
@@ -230,12 +259,12 @@
   overflow-wrap:anywhere }
 .qs-ai-msg.is-ai{ padding:12px 14px; border-radius:14px; border:1px solid var(--rule); background:var(--paper) }
 .qs-ai-msg.is-note{ padding:10px 14px; border-radius:12px; border:1px dashed var(--rule);
-  color:var(--ink-2); font-size:13.5px }
-.qs-ai-msg.is-busy{ color:var(--ink-2); font-size:13.5px }
-.qs-ai-who{ display:block; margin-bottom:6px; font:600 10.5px/1 'IBM Plex Mono',monospace;
+  color:var(--ink-2); font-size:13px }
+.qs-ai-msg.is-busy{ color:var(--ink-2); font-size:13px }
+.qs-ai-who{ display:block; margin-bottom:6px; font:600 11px/1 'IBM Plex Mono',monospace;
   letter-spacing:.12em; text-transform:uppercase; color:var(--gold) }
 .qs-ai-text{ overflow-wrap:anywhere }
-.qs-ai-text code{ font:500 12.5px/1 'IBM Plex Mono',monospace; padding:2px 5px; border-radius:5px;
+.qs-ai-text code{ font:500 13px/1 'IBM Plex Mono',monospace; padding:2px 5px; border-radius:5px;
   background:var(--paper-2); color:var(--ink) }
 .qs-ai-text ul{ margin:0 0 8px; padding-left:20px }
 .qs-ai-text li{ margin:2px 0 }
@@ -260,7 +289,7 @@
 .qs-ai-ask{ display:flex; gap:8px; align-items:flex-end }
 .qs-ai-ask textarea{ flex:1 1 auto; min-width:0; min-height:46px; max-height:180px; resize:vertical;
   padding:11px 12px; border-radius:12px; border:1px solid var(--rule); background:var(--paper);
-  color:var(--ink); font:400 15px/1.45 Inter,system-ui,sans-serif; box-sizing:border-box }
+  color:var(--ink); font:400 16px/1.45 Inter,system-ui,sans-serif; box-sizing:border-box }
 .qs-ai-ask textarea:disabled{ opacity:.6 }
 .qs-ai-ask textarea:focus, .qs-ai-keyrow input:focus{ outline:none; border-color:var(--gold);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 18%,transparent) }
@@ -293,21 +322,24 @@
    into its bar in step 3.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.qz{ position:relative; margin:22px 0 0 }
-.qz-step{ margin:0 0 30px }
-.qz-h{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin:0 0 14px;
-  font:400 24px/1.2 'Instrument Serif',Georgia,serif; letter-spacing:-.005em; color:var(--ink) }
-.qz-h small{ font:400 13.5px/1.3 Inter,system-ui,sans-serif; letter-spacing:0; color:var(--mute) }
-.qz-num{ flex:none; display:grid; place-items:center; width:30px; height:30px; border-radius:50%;
+.qz, .qs-adv{ position:relative; margin:26px 0 0 }
+.qz[hidden], .qs-adv[hidden]{ display:none }
+.qz-step{ margin:0 0 34px }
+.qz-h{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin:0 0 16px;
+  font:400 28px/1.15 'Instrument Serif',Georgia,serif; letter-spacing:-.01em; color:var(--ink) }
+.qz-h small{ font:400 14px/1.3 Inter,system-ui,sans-serif; letter-spacing:0; color:var(--mute) }
+.qz-num{ flex:none; display:grid; place-items:center; width:32px; height:32px; border-radius:50%;
   background:var(--ink); color:var(--paper); font:600 14px/1 Inter,system-ui,sans-serif }
 
 .qz-emoji{ flex:none; display:grid; place-items:center; width:46px; height:46px; border-radius:14px;
-  background:rgba(var(--tint, 176,141,46), .14); font-size:23px; line-height:1;
+  background:rgba(var(--tint, 176,141,46), .14); font-size:24px; line-height:1;
   transition:transform .3s cubic-bezier(.2,.8,.2,1), background-color .2s ease }
 
-/* Step 1 · ready-made ideas: one row that scrolls on a phone. */
-.qz-recipes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(232px, 1fr)); gap:10px }
-.qz-recipe{ display:flex; align-items:center; gap:12px; min-height:68px; padding:10px 14px 10px 10px; text-align:left; cursor:pointer;
+/* Step 1 · ready-made ideas: three across, one row that scrolls on a phone.
+   Three and not four: at four the titles broke over two lines in some cards
+   and not others, and a row of cards came out at three different heights. */
+.qz-recipes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:10px }
+.qz-recipe{ display:flex; align-items:center; gap:14px; min-height:84px; padding:12px 16px 12px 12px; text-align:left; cursor:pointer;
   border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFDF8); color:var(--ink);
   font:inherit; -webkit-tap-highlight-color:transparent;
   transition:border-color .2s ease, transform .2s ease, box-shadow .25s ease, background-color .2s ease }
@@ -317,17 +349,18 @@
 .qz-recipe.on{ border-color:var(--gold); background:color-mix(in srgb, var(--gold) 11%, var(--skin-card,#FFFDF8));
   box-shadow:inset 0 0 0 1px var(--gold) }
 .qz-recipe-t, .qz-wish-t{ display:block; min-width:0 }
-.qz-recipe-t b, .qz-wish-t b{ display:block; font:600 15px/1.25 Inter,system-ui,sans-serif; color:var(--ink) }
-.qz-recipe-t span, .qz-wish-t span{ display:block; margin-top:3px; font:400 13px/1.35 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qz-recipe-t b, .qz-wish-t b{ display:block; font:600 16px/1.25 Inter,system-ui,sans-serif; color:var(--ink) }
+.qz-recipe-t span, .qz-wish-t span{ display:block; margin-top:3px; font:400 13px/1.4 Inter,system-ui,sans-serif; color:var(--ink-2) }
 
-/* Step 2 · the things to ask for. */
-.qz-wishes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:10px; align-items:start }
+/* Step 2 · the things to ask for. A closed card is as tall as two lines of
+   its description need, so a row is one height whether a line wraps or not. */
+.qz-wishes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:10px; align-items:start }
 .qz-wish{ border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFDF8);
   transition:border-color .2s ease, box-shadow .25s ease, background-color .25s ease }
 .qz-wish:hover{ border-color:rgba(var(--tint), .7); box-shadow:0 10px 24px rgba(23,20,14,.08) }
 .qz-wish.on{ border-color:rgb(var(--tint)); background:color-mix(in srgb, rgb(var(--tint)) 7%, var(--skin-card,#FFFDF8));
   box-shadow:inset 0 0 0 1px rgb(var(--tint)) }
-.qz-wish-main{ display:flex; align-items:center; gap:12px; width:100%; min-height:68px; padding:10px 12px 10px 10px; text-align:left;
+.qz-wish-main{ display:flex; align-items:center; gap:14px; width:100%; min-height:84px; padding:12px 14px 12px 12px; text-align:left;
   border:0; border-radius:18px; background:none; color:var(--ink); font:inherit; cursor:pointer;
   -webkit-tap-highlight-color:transparent; transition:transform .15s ease }
 .qz-wish-t{ flex:1 1 auto }
@@ -336,18 +369,18 @@
   border:2px solid var(--rule); color:transparent; transition:background-color .2s ease, border-color .2s ease, transform .3s cubic-bezier(.2,1.4,.4,1) }
 .qz-wish.on .qz-tick{ border-color:rgb(var(--tint)); background:rgb(var(--tint)); color:#fff; transform:scale(1.08) }
 .qz-wish.on .qz-emoji{ background:rgba(var(--tint), .22) }
-.qz-more{ padding:0 12px 12px; animation:qzOpen .28s cubic-bezier(.2,.8,.2,1) }
+.qz-more{ padding:0 14px 14px; animation:qzOpen .28s cubic-bezier(.2,.8,.2,1) }
 @keyframes qzOpen{ from{ opacity:0; transform:translateY(-6px) } to{ opacity:1; transform:none } }
 .qz-levels{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:4px; padding:4px; border-radius:13px;
   background:color-mix(in srgb, rgb(var(--tint)) 10%, var(--paper-2)) }
-.qz-level{ min-height:36px; padding:0 6px; border:0; border-radius:10px; background:none; color:var(--ink-2); cursor:pointer;
-  font:500 13.5px/1.1 Inter,system-ui,sans-serif; -webkit-tap-highlight-color:transparent;
+.qz-level{ min-height:38px; padding:0 6px; border:0; border-radius:10px; background:none; color:var(--ink-2); cursor:pointer;
+  font:500 14px/1.1 Inter,system-ui,sans-serif; -webkit-tap-highlight-color:transparent;
   transition:background-color .2s ease, color .2s ease }
 .qz-level:hover{ color:var(--ink) }
 .qz-level.on{ background:rgb(var(--tint)); color:#fff; font-weight:600; box-shadow:0 2px 8px rgba(var(--tint), .35) }
 .qz-note{ margin:10px 2px 0; font:400 13px/1.5 Inter,system-ui,sans-serif; color:var(--ink-2) }
 .qz-numtag{ display:table; margin-top:8px; padding:3px 8px; border-radius:7px; background:var(--paper-2);
-  font:500 11.5px/1.3 'IBM Plex Mono',ui-monospace,monospace; color:var(--mute); white-space:nowrap }
+  font:500 12px/1.3 'IBM Plex Mono',ui-monospace,monospace; color:var(--mute); white-space:nowrap }
 .qz-recipe:focus-visible, .qz-wish-main:focus-visible, .qz-level:focus-visible, .qz-bar-x:focus-visible, .qz-float:focus-visible{
   outline:2px solid var(--gold); outline-offset:2px; box-shadow:none }
 .qz-wish-main:focus-visible{ border-radius:18px }
@@ -356,14 +389,14 @@
 .qz-board{ border:1px solid var(--rule); border-radius:20px; background:var(--skin-card,#FFFDF8); padding:20px 22px; transition:opacity .2s ease }
 .qz-board.is-counting{ opacity:.55 }
 .qz-board.is-empty, .qz-board.is-down{ border-style:dashed; background:none }
-.qz-wait{ margin:6px 0; font:400 15px/1.55 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qz-wait{ margin:6px 0; font:400 16px/1.55 Inter,system-ui,sans-serif; color:var(--ink-2) }
 .qz-wait .qs-btn{ margin-left:8px; min-height:34px }
 .qz-count{ display:flex; align-items:center; gap:16px; margin:0 0 16px }
-.qz-count b{ font:400 clamp(46px, 7vw, 68px)/1 'Instrument Serif',Georgia,serif; letter-spacing:-.01em; color:var(--ink);
+.qz-count b{ font:400 clamp(52px, 7vw, 64px)/1 'Instrument Serif',Georgia,serif; letter-spacing:-.01em; color:var(--ink);
   font-variant-numeric:tabular-nums }
 .qz-board.is-none .qz-count b{ color:var(--mute) }
-.qz-count span{ font:600 17px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
-.qz-count small{ display:block; margin-top:3px; font:400 13.5px/1.4 Inter,system-ui,sans-serif; color:var(--mute) }
+.qz-count span{ font:600 16px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
+.qz-count small{ display:block; margin-top:3px; font:400 14px/1.4 Inter,system-ui,sans-serif; color:var(--mute) }
 .qz-funnel{ list-style:none; margin:0; padding:0; display:grid; gap:8px }
 .qz-bar{ display:grid; grid-template-columns:minmax(120px, 250px) minmax(40px, 1fr) minmax(46px, auto) 26px; align-items:center; gap:12px }
 .qz-bar-l{ display:flex; align-items:center; gap:8px; min-width:0; font:400 14px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
@@ -375,10 +408,10 @@
   transition:width .6s cubic-bezier(.2,.8,.2,1) }
 .qz-bar.is-all .qz-bar-fill{ background:var(--rule) }
 .qz-bar.is-last .qz-bar-fill{ background:linear-gradient(90deg, var(--gold-dp), var(--gold-lt)) }
-.qz-bar-n{ text-align:right; font:500 13.5px/1 'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--ink-2) }
+.qz-bar-n{ text-align:right; font:500 13px/1 'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--ink-2) }
 .qz-bar.is-last .qz-bar-n{ color:var(--ink); font-weight:600 }
 .qz-bar-x{ display:grid; place-items:center; width:26px; height:26px; padding:0; border:0; border-radius:50%; background:none;
-  color:var(--mute); font:400 18px/1 Inter,system-ui,sans-serif }
+  color:var(--mute); font:400 20px/1 Inter,system-ui,sans-serif }
 button.qz-bar-x{ cursor:pointer }
 button.qz-bar-x:hover{ background:var(--paper-2); color:var(--ink) }
 .qz-unk{ margin:14px 0 0; font:400 13px/1.5 Inter,system-ui,sans-serif; color:var(--mute) }
@@ -389,33 +422,34 @@ button.qz-bar-x:hover{ background:var(--paper-2); color:var(--ink) }
 /* The count that follows the reader down the page while they choose. */
 .qz-float{ position:sticky; bottom:18px; z-index:30; display:flex; align-items:center; gap:10px; margin:0 auto; padding:0 18px 0 20px;
   min-height:48px; border:0; border-radius:24px; background:var(--ink); color:var(--paper); cursor:pointer;
-  font:400 14.5px/1 Inter,system-ui,sans-serif; box-shadow:0 12px 30px rgba(23,20,14,.28); animation:qzFloat .3s cubic-bezier(.2,.8,.2,1) }
+  font:400 14px/1 Inter,system-ui,sans-serif; box-shadow:0 12px 30px rgba(23,20,14,.28); animation:qzFloat .3s cubic-bezier(.2,.8,.2,1) }
 .qz-float[hidden]{ display:none }
 .qz-float b{ font:600 16px/1 Inter,system-ui,sans-serif }
 .qz-float span{ margin-left:6px; padding-left:12px; border-left:1px solid color-mix(in srgb, var(--paper) 30%, transparent); color:var(--gold-lt); font-weight:600 }
 @keyframes qzFloat{ from{ opacity:0; transform:translateY(12px) } to{ opacity:1; transform:none } }
 
 /* Results: a line of help above the table, the columns explained under it. */
-.qs-tip{ margin:2px 0 10px; font:400 13.5px/1.5 Inter,system-ui,sans-serif; color:var(--mute) }
+.qs-tip{ margin:2px 0 10px; font:400 14px/1.5 Inter,system-ui,sans-serif; color:var(--mute) }
 .qs-legend{ margin:12px 0 4px; border:1px solid var(--rule-2); border-radius:14px; padding:0 14px; background:var(--skin-card,#FFFDF8) }
 .qs-legend summary{ padding:12px 0; cursor:pointer; font:500 14px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
 .qs-legend dl{ display:grid; grid-template-columns:minmax(110px, max-content) 1fr; gap:8px 16px; margin:0 0 14px }
-.qs-legend dt{ font:600 12.5px/1.5 'IBM Plex Mono',ui-monospace,monospace; color:var(--ink) }
-.qs-legend dd{ margin:0; font:400 13.5px/1.5 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qs-legend dt{ font:600 13px/1.5 'IBM Plex Mono',ui-monospace,monospace; color:var(--ink) }
+.qs-legend dd{ margin:0; font:400 14px/1.5 Inter,system-ui,sans-serif; color:var(--ink-2) }
 
-/* The editor, folded under the finder for a reader who knows the number they want. */
-.qs-adv{ margin:34px 0 0; border-top:1px solid var(--rule) }
-.qs-adv > summary{ display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:18px 0 16px; cursor:pointer; list-style:none }
-.qs-adv > summary::-webkit-details-marker{ display:none }
-.qs-adv > summary::before{ content:'+'; flex:none; display:inline-grid; place-items:center; width:26px; height:26px; border-radius:50%;
-  border:1px solid var(--rule); font:400 17px/1 Inter,system-ui,sans-serif; color:var(--ink-2); align-self:center }
-.qs-adv[open] > summary::before{ content:'\2212' }
-.qs-adv-t{ font:400 22px/1.2 'Instrument Serif',Georgia,serif; color:var(--ink) }
-.qs-adv-s{ font:400 13.5px/1.3 Inter,system-ui,sans-serif; color:var(--mute) }
-.qs-adv > summary:focus-visible{ outline:2px solid var(--gold); outline-offset:4px; border-radius:8px }
+/* Make your own query: the editor, as a section of its own. Its steps are
+   numbered like the cards' so the two sections read as the same kind of page. */
+.qs-adv .qs-card{ margin:0 }
 
 @media (max-width:720px){
-  .qz-h{ font-size:21px }
+  .qs-head p{ font-size:14px }
+  .qs-modes{ gap:8px }
+  .qs-mode{ flex-direction:column; align-items:flex-start; gap:10px; min-height:0; padding:12px }
+  .qs-mode-ic{ width:40px; height:40px; border-radius:12px; font-size:20px }
+  .qs-mode-t b{ font-size:14px }
+  .qs-mode-t span{ font-size:12px }
+  .qz-h{ font-size:24px }
+  /* 16px in a field stops iOS zooming the page when it is tapped. */
+  .qs-lab select, .qs-lab input, .qs-find, .qs-editor textarea{ font-size:16px }
   .qz-recipes{ grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(220px, 72%); overflow-x:auto;
     margin:0 -16px; padding:2px 16px 8px; scroll-snap-type:x proximity; scrollbar-width:none }
   .qz-recipes::-webkit-scrollbar{ display:none }

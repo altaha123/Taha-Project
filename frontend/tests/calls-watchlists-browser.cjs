@@ -1,4 +1,4 @@
-/* The Call log, the Watchlists page and the portfolio pulse, in a real browser.
+/* The Track record, the Watchlists page and the portfolio pulse, in a real browser.
 
    Each of these fails silently when it breaks — a timeline that renders no
    dates, a rename that does not stick, a share link that opens an empty list,
@@ -36,10 +36,16 @@ const when = (iso, weekday, day, time) => ({ iso, date: iso.slice(0, 10), weekda
 const MON = when('2026-10-26T05:10:00+00:00', 'Monday', 'Mon 26 Oct 2026', '10:40 IST');
 const TUE = when('2026-10-27T05:10:00+00:00', 'Tuesday', 'Tue 27 Oct 2026', '10:40 IST');
 const CALLS = {
-  total: 3, method: 'Each call is dated by the scan that first listed it.', latest_scan: '28 Oct 2026, 05:10',
-  disclaimer: 'Research, not advice.', recording: false,
+  total: 3, method: 'Each idea is dated by the scan that first listed it.', latest_scan: '28 Oct 2026, 05:10',
+  disclaimer: 'Research, not advice.', recording: false, index_name: 'NIFTYBEES',
+  horizons: [{ key: 'short', label: 'Short term' }, { key: 'medium', label: 'Medium term' }],
+  /* since_* is the return from the day of the idea to the latest scan with
+     nothing done after; move_pct is where the list itself left the call. */
   summary: { calls: 3, open: 1, closed: 2, outcomes: { stop: 0, target: 1, dropped: 1 }, this_week: 3,
-             priced: 3, in_profit: 2, in_profit_pct: 66.7, median_move_pct: 4.95, first_logged: '2026-10-26' },
+             priced: 3, in_profit: 2, in_profit_pct: 66.7, median_move_pct: 4.95, first_logged: '2026-10-26',
+             since_priced: 3, up_since: 2, up_since_pct: 66.7, avg_since_pct: 4.76, median_since_pct: 4.95,
+             median_days: 3, index_priced: 3, beat_index: 2, beat_index_pct: 66.7, avg_index_pct: 1.2,
+             avg_vs_index_pct: 3.56 },
   by_day: Array.from({ length: 14 }, (_, i) => {
     const d = new Date(Date.UTC(2026, 9, 16 + i));
     const iso = d.toISOString().slice(0, 10);
@@ -52,6 +58,7 @@ const CALLS = {
       stance: 'BUY ZONE', entry: 1500, stop: 1440, target: 1620, rr: 2, status: 'closed', outcome: 'target',
       closed: when('2026-10-28T05:10:00+00:00', 'Wednesday', 'Wed 28 Oct 2026', '10:40 IST'),
       price_now: 1625, move_pct: 8.33, days: 1, scans_seen: 2,
+      since_price: 1680, since_pct: 12, since_basis: 'latest', since_days: 2, index_pct: 1.1, vs_index_pct: 10.9,
       events: [{ at: TUE, kind: 'called', stance: 'BREAKOUT WATCH', price: 1500, note: 'BREAKOUT WATCH' },
                { at: TUE, kind: 'stance', stance: 'BUY ZONE', price: 1510, note: 'BREAKOUT WATCH → BUY ZONE' },
                { at: TUE, kind: 'target', stance: 'BUY ZONE', price: 1625, note: 'Scan price at or above the target.' }] },
@@ -59,10 +66,12 @@ const CALLS = {
       setup: 'Momentum breakout', hold: '2–6 weeks', called: MON, called_price: 101, called_stance: 'BUY ZONE',
       stance: 'BUY ZONE', entry: 100, stop: 92, target: 118, rr: 2.1, status: 'open', outcome: null, closed: null,
       price_now: 106, move_pct: 4.95, days: 3, scans_seen: 3,
+      since_price: 106, since_pct: 4.95, since_basis: 'latest', since_days: 3, index_pct: 1.4, vs_index_pct: 3.55,
       events: [{ at: MON, kind: 'called', stance: 'BUY ZONE', price: 101, note: 'BUY ZONE · buy near ₹100.00 · stop ₹92.00 · target ₹118.00' }] },
     { id: 2, symbol: 'TCS', name: 'Tata Consultancy', sector: 'IT', horizon: 'medium', horizon_label: 'Medium term',
       setup: 'Quality compounder', hold: '3–9 months', called: MON, called_price: 3200, called_stance: 'WAIT',
       stance: 'WAIT', status: 'closed', outcome: 'dropped', closed: TUE, price_now: 3150, move_pct: -1.56, days: 1, scans_seen: 1,
+      since_price: 3115, since_pct: -2.66, since_basis: 'latest', since_days: 3, index_pct: 1.1, vs_index_pct: -3.76,
       events: [{ at: MON, kind: 'called', stance: 'WAIT', price: 3200, note: 'WAIT' },
                { at: TUE, kind: 'dropped', stance: 'WAIT', price: 3150, note: 'No longer on the list in this scan.' }] }
   ]
@@ -180,15 +189,47 @@ const PULSE_REPORT = {
   // Thursday 29 Oct 2026, 10:30 IST — the market is open and picks are allowed.
   await page.clock.setFixedTime(new Date('2026-10-29T05:00:00Z'));
 
-  /* ── 1 · The call log ─────────────────────────────────────────────── */
+  /* ── 1 · The track record ─────────────────────────────────────────── */
 
   await page.goto(base + '#research/calls', { waitUntil: 'domcontentloaded' });
   await page.locator('#view-calls .cl-call').first().waitFor();
+  assert.equal((await page.locator('#view-calls h2').innerText()).trim(), 'Track record');
   assert.equal(await page.locator('#view-calls .cl-call').count(), 3);
   const days = await page.locator('.cl-day h3').allInnerTexts();
-  assert.deepEqual(days, ['Tuesday', 'Monday'], 'calls are grouped under the day they were made');
+  assert.deepEqual(days, ['Tuesday', 'Monday'], 'ideas are grouped under the day they were generated');
   assert.ok((await page.locator('.cl-call').first().innerText()).includes('10:40 IST'));
-  assert.ok((await page.locator('.cl-stats').innerText()).includes('66.7% of priced calls'));
+
+  // The figures lead with the return since each idea, then the index.
+  const stats = await page.locator('.cl-stats').innerText();
+  assert.match(stats, /IDEAS RECORDED\s+3/i);
+  assert.match(stats, /AVERAGE RETURN\s+\+4\.76%/i);
+  assert.ok(stats.includes('2 of 3') && stats.includes('66.7%'));
+  assert.match(stats, /AGAINST THE INDEX\s+\+3\.56%/i);
+  assert.ok(stats.includes('2 of 3 beat NIFTYBEES'));
+
+  // An open idea: one return, from its day to the latest scan.
+  const abb = await page.locator('.cl-call:has-text("ABB")').innerText();
+  assert.match(abb, /PRICE AT THE IDEA\s+₹101\.00/i);
+  assert.ok(abb.includes('+4.95%') && abb.includes('in 3 days, nothing done after'));
+  assert.ok(abb.includes('Index +1.40% over the same days'));
+  assert.equal(await page.locator('.cl-call:has-text("ABB") .cl-left').count(), 0, 'an open idea has no closing line');
+
+  // A closed one keeps running: the headline is to today, and where the list
+  // left it is a second, different number.
+  const infy = page.locator('.cl-call:has-text("INFY")');
+  assert.equal((await infy.locator('.cl-move').innerText()).trim(), '+12.00%');
+  assert.match(await infy.locator('.cl-prices').innerText(), /LATEST SCAN\s+₹1,680\.00/i);
+  const left = await infy.locator('.cl-left').innerText();
+  assert.ok(left.includes('Target reached') && left.includes('₹1,625.00') && left.includes('+8.33%'), left);
+
+  // The lists offered are the ones the record holds.
+  assert.deepEqual(await page.locator('#cl-hz button').allInnerTexts().then(t => t.map(x => x.trim().toUpperCase())),
+                   ['ALL', 'SHORT TERM', 'MEDIUM TERM']);
+  await page.locator('#cl-hz button[data-v="medium"]').click();
+  assert.equal(await page.locator('.cl-call').count(), 1);
+  assert.ok((await page.locator('.cl-call').innerText()).includes('TCS'));
+  await page.locator('#cl-hz button[data-v="all"]').click();
+
   await page.locator('#cl-st button[data-v="open"]').click();
   assert.equal(await page.locator('.cl-call').count(), 1);
   assert.ok((await page.locator('.cl-call').innerText()).includes('ABB'));
@@ -204,8 +245,31 @@ const PULSE_REPORT = {
   assert.equal(await page.locator('.cl-call').count(), 1);
   await page.locator('#cl-q').fill('');
   await page.waitForTimeout(250);
+
+  // Share the record carries the figures the page shows.
+  const shared = JSON.parse(await page.locator('#cl-share').getAttribute('data-share'));
+  assert.equal(shared.kind, 'record');
+  assert.equal(shared.calls, 3);
+  assert.equal(shared.avg_since_pct, 4.76);
+  assert.ok((await page.locator('#cl-csv').getAttribute('href')).endsWith('/calls/export.csv'));
+
   await page.waitForTimeout(1200);           // let the rise-in animations settle
-  await page.screenshot({ path: path.join(output, 'call-log-desktop.png'), fullPage: true });
+  await page.screenshot({ path: path.join(output, 'track-record-desktop.png'), fullPage: true });
+
+  /* The Tracker was the other half of this page. Every address it ever had
+     opens the one record, and nothing of the old tab is left on the page. */
+  for (const old of ['#research/tracker', '#portfolio/tracker', '#tracker']) {
+    await page.goto(base + old, { waitUntil: 'domcontentloaded' });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('#view-calls .cl-call').first().waitFor();
+    assert.ok(await page.locator('#view-calls').isVisible(), old + ' no longer opens the track record');
+  }
+  await page.goto(base + '?go=tracker', { waitUntil: 'domcontentloaded' });
+  await page.locator('#view-calls .cl-call').first().waitFor();
+  assert.equal(await page.locator('#view-tracker, #tab-tracker, #tkrows, .trackbtn').count(), 0,
+               'part of the old Tracker tab is still on the page');
+  await page.goto(base + '#research/calls', { waitUntil: 'domcontentloaded' });
+  await page.locator('#view-calls .cl-call').first().waitFor();
 
   // The stamp on an Ideas row opens that stock's calls.
   const stampHtml = await page.evaluate(() => window.AltahaCalls.stamp(
@@ -359,13 +423,13 @@ const PULSE_REPORT = {
   await page.goto(base + '#research/calls', { waitUntil: 'domcontentloaded' });
   await page.locator('.cl-call').first().waitFor();
   const overflowC = await page.evaluate(() => document.documentElement.scrollWidth);
-  assert.ok(overflowC <= 391, 'call log overflows a 390px screen: ' + overflowC);
-  await page.screenshot({ path: path.join(output, 'call-log-phone.png'), fullPage: true });
+  assert.ok(overflowC <= 391, 'the track record overflows a 390px screen: ' + overflowC);
+  await page.screenshot({ path: path.join(output, 'track-record-phone.png'), fullPage: true });
 
   assert.deepEqual(ours(), [], 'errors thrown by the new pages:\n' + ours().join('\n'));
   await browser.close();
   server.close();
-  console.log('call log, watchlists, game and portfolio pulse ok — screenshots in test-results/calls-watchlists');
+  console.log('track record, watchlists, game and portfolio pulse ok — screenshots in test-results/calls-watchlists');
 })().catch(async e => {
   console.error(e);
   server.close();

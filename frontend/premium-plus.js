@@ -735,7 +735,7 @@
 
     var VIEWS = { 'tab-screener': 'view-screener', 'tab-ideas': 'view-ideas',
                   'tab-filings': 'view-filings', 'tab-live': 'view-live',
-                  'tab-portfolio': 'view-portfolio', 'tab-tracker': 'view-tracker',
+                  'tab-portfolio': 'view-portfolio', 'tab-calls': 'view-calls',
                   'tab-results': 'view-results', 'tab-options': 'view-options',
                   'tab-vocab': 'view-vocab' };
 

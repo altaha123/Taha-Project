@@ -282,7 +282,9 @@ def test_the_menus_are_not_quoted_as_the_page():
     home = _read("index.html")
     assert '<div class="tabnav" data-nosnippet>' in home
     assert re.search(r'<section class="site-links"[^>]*data-nosnippet', home)
-    assert home.count('class="ideas-note" data-nosnippet') == 2
+    # The filings list's "engine unreachable" note. There were two: the
+    # other belonged to the Tracker tab, which merged into the Track record.
+    assert home.count('class="ideas-note" data-nosnippet') == 1
 
 
 def test_a_company_s_own_page_never_talks_about_the_server():
