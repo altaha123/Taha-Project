@@ -2154,8 +2154,8 @@ def share_stock(ticker: str):
 # ---------------------------------------------------------------------------
 # Company pages: one address per company, for someone arriving from a search
 #
-# /stock-RELIANCE, /stocks and /sitemap.xml on the site's own domain are
-# proxied here by frontend/vercel.json. company_pages.py has the whole
+# /stock-RELIANCE, /sector-technology, /stocks and /sitemap.xml on the site's
+# own domain are proxied here by frontend/vercel.json. company_pages.py has the whole
 # argument; three things matter at this end.
 #
 # Nothing below leaves the machine for data. The rows are the query
@@ -2210,6 +2210,17 @@ def _company_score(sym):
         return None
 
 
+def _company_filed():
+    """{symbol: the day its newest results were filed}, for the sitemap's
+    <lastmod>. Empty when the store cannot be read: no date, never a made-up one."""
+    if fundamentals_store is None:
+        return {}
+    try:
+        return fundamentals_store.latest_filed()
+    except Exception:
+        return {}
+
+
 def _pages_off():
     return Response(content="Company pages are unavailable.", status_code=503,
                     media_type="text/plain", headers=_PAGE_WAIT_HEADERS)
@@ -2250,17 +2261,35 @@ def company_directory():
                     headers=_PAGE_HEADERS if rows else {"Cache-Control": "no-store"})
 
 
-@app.api_route("/sitemap.xml", methods=_PAGE_METHODS)
-def sitemap_xml():
-    """The site's pages and one line per company. An empty snapshot is a 503:
-    a sitemap that suddenly lists four addresses reads as two thousand pages
-    having been taken down."""
+@app.api_route("/pages/sector/{slug}", methods=_PAGE_METHODS)
+def sector_page(slug: str):
+    """One sector's companies, largest first, each linked to its page. The
+    same rule as a company: no rows is a 503, and only a sector that is not
+    one is a 404."""
     if company_pages is None:
         return _pages_off()
     rows = _company_rows()
     if not rows:
         return _pages_off()
-    return Response(content=company_pages.sitemap(rows, SITE_URL), media_type="application/xml",
+    page = company_pages.render_sector(rows, slug, SITE_URL, API_URL)
+    if page is None:
+        return Response(content=company_pages.render_no_sector(SITE_URL, API_URL),
+                        status_code=404, media_type="text/html", headers=_PAGE_MISS_HEADERS)
+    return Response(content=page, media_type="text/html", headers=_PAGE_HEADERS)
+
+
+@app.api_route("/sitemap.xml", methods=_PAGE_METHODS)
+def sitemap_xml():
+    """The site's pages, the sectors and one line per company. An empty
+    snapshot is a 503: a sitemap that suddenly lists seven addresses reads as
+    two thousand pages having been taken down."""
+    if company_pages is None:
+        return _pages_off()
+    rows = _company_rows()
+    if not rows:
+        return _pages_off()
+    return Response(content=company_pages.sitemap(rows, SITE_URL, _company_filed()),
+                    media_type="application/xml",
                     headers={"Cache-Control": "public, max-age=3600, s-maxage=21600"})
 
 
@@ -3961,6 +3990,27 @@ def delivery_daily(ticker: str, days: int = 60):
     sym = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
     try:
         return to_native(special_engine.daily_delivery(sym, days=days))
+    except Exception as e:
+        raise HTTPException(503, f"Delivery data unavailable: {type(e).__name__}")
+
+
+@app.get("/delivery/trends")
+def delivery_trends(min_turnover_cr: float = 10.0, limit: int = 40):
+    """
+    Where delivery is running above a stock's own normal — in the latest
+    session, across the week, and quietly over a month — with the market's own
+    delivered share and the industries the rupees are going to.
+
+    The reading /special cannot give: that book looks back a year and skips
+    the most recent month on purpose, so nothing that happened this week can
+    appear in it. This compares each stock only with itself, on the same panel
+    /delivery and /special read, so the three never disagree about a session.
+    """
+    if special_engine is None:
+        raise HTTPException(503, "The delivery engine is not loaded on this instance.")
+    try:
+        return to_native(special_engine.delivery_trends(
+            min_turnover_cr=min_turnover_cr, limit=limit))
     except Exception as e:
         raise HTTPException(503, f"Delivery data unavailable: {type(e).__name__}")
 

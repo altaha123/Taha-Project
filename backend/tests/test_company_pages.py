@@ -1,5 +1,5 @@
 """
-Company pages: /stock-SYMBOL, /stocks and /sitemap.xml.
+Company pages: /stock-SYMBOL, /sector-NAME, /stocks and /sitemap.xml.
 
 What a search engine is sent is the one part of this site nobody looks at. A
 page with an empty <h1>, a second <title>, a canonical pointing at the wrong
@@ -16,6 +16,8 @@ The failures being guarded, most expensive first:
   · a rewrite in vercel.json for a route the API does not have.
 """
 
+import datetime
+import html
 import json
 import os
 import re
@@ -24,7 +26,7 @@ import xml.etree.ElementTree as ET
 import pytest
 
 import company_pages as CP
-from company_pages_fixture import (ACME, ACME_QUARTERS, API, CHEMS, DELTA, GAMMA, GIANT,
+from company_pages_fixture import (ACME, ACME_QUARTERS, API, CHEMS, DELTA, FILED, GAMMA, GIANT,
                                    REPO, ROWS, SITE, pages)
 
 
@@ -105,6 +107,96 @@ def test_the_head_carries_what_a_crawler_reads(built):
     assert ld["@graph"][1]["about"]["tickerSymbol"] == "NSE ACME"
     # What stock.js reads to know it must keep this title and this canonical.
     assert 'window.ALTAHA_SSR={"ticker":"ACME"};' in page
+
+
+def _ld(html_text):
+    return json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>',
+                                html_text, re.S).group(1))
+
+
+def _plain(fragment):
+    """A fragment as a reader sees it: the tags gone, nothing put in their place."""
+    return html.unescape(re.sub(r"<[^>]+>", "", fragment)).strip()
+
+
+def test_the_ticker_sits_under_the_name_as_it_is_searched_for(built):
+    """
+    "NSE: ACME" in the row under the <h1>, in the HTML the server sends. The
+    <h1> stays the bare name: stock.js rewrites it from live data, and a name
+    that changed between the two would be a title a search engine rewrites.
+    """
+    for page in (built["company"], built["plain"]):
+        assert ('<span class="stk-tag">NSE: ACME</span>'
+                '<a class="stk-tag" href="/sector-chemicals">Chemicals</a>'
+                '<span class="stk-tag">Specialty Chemicals</span>') in page
+    # A sector too small for a page of its own is a word, not a dead link.
+    assert '<span class="stk-tag">Textiles</span>' in CP.tags_html(GAMMA, ROWS)
+    assert "<a " not in CP.tags_html(GAMMA, ROWS)
+    assert CP.tags_html(dict(DELTA, sector=None, industry=None), ROWS) == \
+        '<span class="stk-tag">NSE: DELTA</span>'
+
+
+def test_the_structured_data_names_the_company(built):
+    """
+    The page and the company it is about, as schema.org writes them. There is
+    no `exchange` property there: the exchange goes in front of the ticker.
+    """
+    graph = _ld(built["company"])["@graph"]
+    assert [n["@type"] for n in graph] == ["BreadcrumbList", "WebPage", "Corporation", "FAQPage"]
+    corp = graph[2]
+    assert corp["name"] == "Acme Chemicals Ltd" and corp["tickerSymbol"] == "NSE ACME"
+    assert corp["@id"] == SITE + "/stock-ACME#company" == graph[1]["about"]["@id"]
+    assert corp["mainEntityOfPage"] == {"@id": SITE + "/stock-ACME"}
+    assert "exchange" not in corp
+    # With no questions to ask there is no FAQPage, never an empty one.
+    assert [n["@type"] for n in _ld(CP.head_tags(ACME, SITE))["@graph"]] == \
+        ["BreadcrumbList", "WebPage", "Corporation"]
+
+
+def test_the_questions_on_the_page_are_the_ones_in_the_structured_data(built):
+    """
+    A search engine is told the page answers these questions; the page must
+    be seen to answer them, in the same words. Both come from faq(), and this
+    is where an edit to one side only would fail.
+    """
+    for page in (built["company"], built["plain"]):
+        shown = [(_plain(q), _plain(a))
+                 for q, a in re.findall(r'<div class="gl-qa"><h4>(.*?)</h4><p>(.*?)</p></div>',
+                                        _glance(page), re.S)]
+        told = [(q["name"], q["acceptedAnswer"]["text"]) for q in _ld(page)["@graph"][3]["mainEntity"]]
+        assert shown == told and len(told) == 6
+    q = dict(told)
+    assert "last closed at ₹812.50 a share, which values the company at ₹12,500 crore" in \
+        q["What is Acme Chemicals Ltd’s share price and market cap?"]
+    pat = q["What is Acme Chemicals Ltd’s latest revenue and profit after tax (PAT)?"]
+    assert "quarter ended 30 June 2026" in pat and "Over FY26, revenue was ₹4,200 crore" in pat
+    assert "return on equity (ROE) was 21.2%" in q["What is Acme Chemicals Ltd’s ROE and ROCE?"]
+    assert "return on capital employed (ROCE) was 28.4%" in q["What is Acme Chemicals Ltd’s ROE and ROCE?"]
+    assert "Promoters hold 61.42%" in q["What is Acme Chemicals Ltd’s shareholding pattern?"]
+    assert "61 out of 100" in q["What is Acme Chemicals Ltd’s Altaha Score?"]
+    peers = q["Who are Acme Chemicals Ltd’s sector peers?"]
+    assert "Chem 13 Ltd" in peers and "lists all 15 companies in the sector" in peers
+    # On the page the peers and the sector are links; in the data they are words.
+    g = _glance(built["company"])
+    assert '<a href="/stock-CHEM13">Chem 13 Ltd</a>' in g.split('class="gl-faq"')[1]
+    assert '<a href="/sector-chemicals">Chemicals sector page</a>' in g
+
+
+def test_a_question_is_not_asked_without_its_figures():
+    asked = lambda row, score=None: [q for q, _a, _h in CP.faq(row, ROWS, score)]
+    assert asked(DELTA) == ["What is Delta Infra Ltd’s ROCE?"]
+    assert not any("peers" in q for q in asked(GIANT)), "a company alone in its industry has none"
+    assert not any("Altaha Score" in q for q in asked(ACME)), "no score, no question about it"
+    assert any("Altaha Score" in q for q in asked(ACME, 61.4))
+    gamma = dict((q, a) for q, a, _h in CP.faq(GAMMA, ROWS))
+    assert "a loss of ₹24.0 crore" in gamma["What is Gamma & Sons Ltd’s latest revenue and profit after tax (PAT)?"]
+    assert "12.50% of all shares are pledged" in gamma["What is Gamma & Sons Ltd’s shareholding pattern?"]
+    assert "P/E" not in gamma["What is Gamma & Sons Ltd’s share price and market cap?"]
+    for row in (ACME, GAMMA, DELTA, GIANT):
+        for _q, a, h in CP.faq(row, ROWS, 50):
+            assert _plain(h) == a, "the page and the data say different things"
+            for junk in ("None", "nan", "₹—"):
+                assert junk not in a
 
 
 def test_the_section_states_the_filed_figures(built):
@@ -253,15 +345,122 @@ def test_an_empty_directory_says_so(built):
     assert "being read" in _text(page) and not re.search(r"<li\b", page)
 
 
+NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+
+
 def test_the_sitemap_is_valid_and_complete(built):
     root = ET.fromstring(built["sitemap"])
-    locs = [e.text for e in root.iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+    locs = [e.text for e in root.iter(NS + "loc")]
+    n = len(CP.SITE_PAGES)
+    assert locs[:n] == [SITE + p for p in CP.SITE_PAGES]
     assert locs[:4] == [SITE + "/", SITE + "/stocks", SITE + "/brief", SITE + "/advisors"]
-    assert set(locs[4:]) == {SITE + CP.path_for(s) for s in CP.index(ROWS)}
-    assert len(locs) == len(set(locs)) == 22
+    assert set(locs[4:n]) == {SITE + "/glossary", SITE + "/methodology", SITE + "/planner"}
+    assert locs[n] == SITE + "/sector-chemicals", "the sector pages come before the companies"
+    assert set(locs[n + 1:]) == {SITE + CP.path_for(s) for s in CP.index(ROWS)}
+    assert len(locs) == len(set(locs)) == n + 1 + 18
     assert SITE + "/stock-G%26S" in locs
     assert "NONAME" not in built["sitemap"]
     assert all(u.startswith(SITE + "/") for u in locs), "the sitemap names another host"
+
+
+def test_lastmod_is_the_day_a_company_filed_or_it_is_absent(built):
+    """
+    A date on every line that is always today is one a search engine learns
+    to ignore, and then the one real date is ignored with it. So: the day the
+    company's results reached the exchange, and nothing where that is not
+    known. Never today's date, never a date that has not happened.
+    """
+    root = ET.fromstring(built["sitemap"])
+    dated = {u.find(NS + "loc").text: u.find(NS + "lastmod").text
+             for u in root.iter(NS + "url") if u.find(NS + "lastmod") is not None}
+    assert dated == {SITE + "/stock-ACME": "2026-08-12"}, dated
+    assert FILED["G&S"] > "2100" and FILED["DELTA"] == "not a date", "the fixture changed"
+    assert "<lastmod>" not in CP.sitemap(ROWS, SITE), "no dates were given and one was printed"
+
+    today = datetime.date(2026, 11, 20)
+    assert CP._lastmod("2026-08-12 18:04:11", today) == "2026-08-12"
+    assert CP._lastmod("2026-11-20", today) == "2026-11-20"
+    for bad in ("2026-11-21", "2026-02-30", "1999-12-31", "12-Aug-2026", "", None, 20260812):
+        assert CP._lastmod(bad, today) is None, bad
+    one = CP.sitemap(ROWS, SITE, {"ACME": today.isoformat()}, today=today - datetime.timedelta(days=1))
+    assert "<lastmod>" not in one, "a filing dated tomorrow was printed"
+
+
+# ── Sectors ─────────────────────────────────────────────────────────────────
+
+def test_a_sector_page_links_every_company_in_it_largest_first(built):
+    page = built["sector"]
+    assert "<title>Chemicals stocks in India: NSE companies by market cap, P/E, ROE | Altaha Screener</title>" in page
+    assert '<link rel="canonical" href="https://altahascreener.in/sector-chemicals" />' in page
+    assert '<meta name="robots" content="index,follow" />' in page
+    assert '<h1 class="stk-name">Chemicals stocks on NSE</h1>' in page
+    rows = re.findall(r'<tr><th scope="row"><a href="([^"]+)">([^<]+)</a><span>([^<]+)</span></th>', page)
+    chem = sorted((r for r in ROWS if r.get("sector") == "Chemicals"),
+                  key=lambda r: -r["market_cap"])
+    assert [h for h, _n, _s in rows] == [CP.path_for(r["symbol"]) for r in chem]
+    assert len(rows) == 15 and rows[0][2] == "CHEM14" and rows[2][1] == "Acme Chemicals Ltd"
+    acme = re.search(r'<tr><th scope="row"><a href="/stock-ACME">.*?</tr>', page, re.S).group(0)
+    assert re.findall(r"<td>(.*?)</td>", acme) == \
+        ["Specialty Chemicals", "₹812.50", "12,500", "24.1", "21.2%", "28.4%"]
+    words = _text(page)
+    assert "15 NSE-listed companies are classified under Chemicals" in words
+    assert "Together they were valued at ₹1.18 lakh crore at their last close" in words
+    assert "The median P/E is 18.0 and the median return on equity is 12.0%" in words
+    for junk in ("None", "nan", "₹—"):
+        assert junk not in words
+    graph = _ld(page)["@graph"]
+    assert [c["item"] for c in graph[0]["itemListElement"]] == \
+        [SITE + "/", SITE + "/stocks", SITE + "/sector-chemicals"]
+    assert graph[1]["@type"] == "CollectionPage" and graph[1]["mainEntity"]["numberOfItems"] == 15
+    assert graph[1]["mainEntity"]["itemListElement"][0]["url"] == SITE + "/stock-CHEM14"
+
+
+def test_a_sector_page_is_a_list_or_it_does_not_exist():
+    """One company in Energy is not a list of Energy companies."""
+    assert list(CP.sectors(ROWS)) == ["chemicals"]
+    for slug in ("energy", "textiles", "nosuch", "", "Chemicals", "../x"):
+        assert CP.render_sector(ROWS, slug, SITE, API) is None, slug
+    assert CP.sector_of(GIANT, ROWS) is None and CP.sector_of(ACME, ROWS) == ("Chemicals", "/sector-chemicals", 15)
+    few = [dict(r, sector="Energy") for r in CHEMS[:CP.SECTOR_MIN - 1]]
+    assert CP.sectors(few) == {}
+    assert list(CP.sectors(few + [dict(GIANT)])) == ["energy"]
+    assert CP.sectors([]) == {} and CP.sectors(None) == {}
+
+
+@pytest.mark.parametrize("name, want", [
+    ("Financial Services", "financial-services"), ("Technology", "technology"),
+    ("  Oil, Gas & Consumable Fuels ", "oil-gas-consumable-fuels"), ("FMCG", "fmcg"),
+    ("", None), (None, None), ("&&&", None), ("../etc", "etc"),
+])
+def test_a_sector_name_becomes_an_address(name, want):
+    assert CP.slug_for(name) == want
+
+
+def test_two_spellings_of_a_sector_are_one_page():
+    rows = [dict(r, sector="Chemicals" if i % 2 else "chemicals ") for i, r in enumerate(CHEMS)]
+    found = CP.sectors(rows)
+    assert list(found) == ["chemicals"] and len(found["chemicals"][1]) == len(CHEMS)
+
+
+def test_a_hostile_sector_name_cannot_leave_its_element():
+    rows = [dict(r, sector='Chem<script>alert(1)</script> & "Co"', industry="A<b>B") for r in CHEMS]
+    slug = list(CP.sectors(rows))[0]
+    assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", slug)
+    page = CP.render_sector(rows, slug, SITE, API)
+    assert "<script>alert(1)" not in page and "A<b>B" not in page
+    assert "Chem&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Co&quot; stocks on NSE" in page
+    block = re.search(r'<script type="application/ld\+json">(.*?)</script>', page, re.S).group(1)
+    assert "<" not in block and json.loads(block)
+
+
+def test_the_sector_is_reached_from_the_list_and_from_each_company(built):
+    assert '<a href="/sector-chemicals">Chemicals</a><span>15</span>' in built["directory"]
+    assert 'id="dir-sectors"' not in CP.render_directory([], SITE, API)
+    g = _glance(built["company"])
+    assert '<a href="/sector-chemicals">All Chemicals companies</a>' in g and 'href="/stocks"' in g
+    assert "/sector-" not in CP.glance_html(GIANT, ROWS), "a link to a sector page that does not exist"
+    # And back: the sector page links the full list, and no sector but its own.
+    assert '<a href="/stocks">All companies, A to Z</a>' in built["sector"]
 
 
 def test_the_missing_page_is_not_for_indexing(built):
@@ -328,10 +527,28 @@ def test_without_the_template_the_figures_are_still_served_and_not_cached(main, 
     assert 'href="/stock?ticker=ACME"' in page, "no way through to the full page"
 
 
-def test_the_sitemap_route(main):
+def test_the_sitemap_route(main, monkeypatch):
     r = main.sitemap_xml()
     assert r.status_code == 200 and r.media_type == "application/xml"
     assert ET.fromstring(_body(r)).tag.endswith("urlset")
+    # The filing dates are read from the store by the route, not by the renderer.
+    monkeypatch.setattr(main, "_company_filed", lambda: {"ACME": "2026-08-12"})
+    assert "/stock-ACME</loc><lastmod>2026-08-12</lastmod>" in _body(main.sitemap_xml())
+
+
+def test_a_sector_is_served_and_an_unknown_one_is_a_404(main, monkeypatch):
+    r = main.sector_page("chemicals")
+    assert r.status_code == 200 and r.media_type == "text/html"
+    assert "s-maxage=3600" in r.headers["cache-control"]
+    assert '<link rel="canonical" href="https://altahascreener.in/sector-chemicals" />' in _body(r)
+    for raw in ("energy", "nosuch", "CHEMICALS", "../x"):
+        miss = main.sector_page(raw)
+        assert miss.status_code == 404 and miss.headers["x-robots-tag"] == "noindex", raw
+        assert "noindex" in _body(miss) and 'rel="canonical"' not in _body(miss)
+    # The same rule as a company: no rows is "come back", never "gone".
+    monkeypatch.setattr(main, "_company_rows", lambda: [])
+    off = main.sector_page("chemicals")
+    assert off.status_code == 503 and off.headers["retry-after"] == "300"
 
 
 def test_an_escaped_ampersand_reaches_the_route_as_a_symbol(main):
@@ -352,6 +569,9 @@ def test_an_escaped_ampersand_reaches_the_route_as_a_symbol(main):
     assert c.head("/pages/company/ACME").status_code == 200
     assert c.get("/pages/stocks").status_code == 200
     assert c.get("/sitemap.xml").headers["content-type"].startswith("application/xml")
+    assert c.get("/pages/sector/chemicals").status_code == 200
+    assert c.head("/pages/sector/chemicals").status_code == 200
+    assert c.get("/pages/sector/nosuch").status_code == 404
 
 
 def test_the_real_helpers_never_raise_without_data():
@@ -361,6 +581,7 @@ def test_the_real_helpers_never_raise_without_data():
     assert M._company_score("ACME") is None
     assert isinstance(M._company_quarters("ACME"), list)
     assert isinstance(M._company_rows(), list)
+    assert isinstance(M._company_filed(), dict)
 
 
 def test_the_real_tables_make_a_page(monkeypatch, tmp_path, stock_html):
@@ -408,6 +629,14 @@ def test_the_real_tables_make_a_page(monkeypatch, tmp_path, stock_html):
     assert M.company_page("LOSS").status_code == 200
     locs = _body(M.sitemap_xml())
     assert "/stock-ACME</loc>" in locs and "/stock-LOSS</loc>" in locs
+    # The day the newest results were filed, from the store's own column.
+    assert store.latest_filed()["ACME"] == "2026-08-01"
+    assert "/stock-ACME</loc><lastmod>2026-08-01</lastmod>" in locs
+    # A filing whose date cannot be read gives the company no date at all.
+    undated = _quarter(store, "NODATE", "2026-06-30", 10, 1, 0.1)
+    undated["filed_at"] = None
+    store.upsert("income", [undated])
+    assert "NODATE" not in store.latest_filed()
 
 
 # ── The template ────────────────────────────────────────────────────────────
@@ -468,6 +697,7 @@ def test_every_proxied_page_has_a_route_behind_it():
     by_source = {r["source"]: r["destination"] for r in cfg["rewrites"]}
     routes = {getattr(r, "path", None) for r in M.app.routes}
     for source, api_path in [("/stock-:symbol", "/pages/company/:symbol"),
+                             ("/sector-:slug", "/pages/sector/:slug"),
                              ("/stocks", "/pages/stocks"),
                              ("/sitemap.xml", "/sitemap.xml")]:
         assert source in by_source, "vercel.json no longer proxies " + source
@@ -476,6 +706,11 @@ def test_every_proxied_page_has_a_route_behind_it():
         assert re.sub(r":(\w+)", r"{\1}", api_path) in routes, "the API has no route for " + api_path
     # /stock (the static page) and /stock-ACME (this one) must not shadow each other.
     assert by_source["/stock"] == "/stock.html"
+    # A page the API writes is kept at the edge, so a crawler asking for two
+    # thousand of them is answered there and the one worker is left alone.
+    cached = {h["source"] for h in cfg["headers"]
+              if {"key": "x-vercel-enable-rewrite-caching", "value": "1"} in h["headers"]}
+    assert {"/stock-:symbol", "/sector-:slug", "/stocks", "/sitemap.xml"} <= cached
 
 
 def test_robots_txt_names_the_sitemap():

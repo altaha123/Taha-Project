@@ -12,10 +12,11 @@ This gives every company its own address, and puts the name, the price, the
 figures it has filed and links to its peers in the HTML the server sends:
 
     /stock-RELIANCE     one company (render_company)
+    /sector-technology  one sector, its companies largest first (render_sector)
     /stocks             every company, A to Z (render_directory)
     /sitemap.xml        the list a search engine is handed (sitemap)
 
-The site's own domain serves all three; frontend/vercel.json proxies them to
+The site's own domain serves all four; frontend/vercel.json proxies them to
 the routes in main.py, as it does /share and /og.
 
 IT IS THE STOCK PAGE, NOT A COPY OF IT
@@ -32,7 +33,14 @@ Every asset and every link on the site is relative ("stock.css", "./",
 "stock.html?ticker="). One level down, each of them resolves under /stock/
 and is a 404. A <base> tag fixes that and breaks "#" links and, in some
 browsers, the chart's url(#gradient) fills. A single path segment needs
-neither.
+neither. A sector is /sector-NAME for the same reason.
+
+WHAT THE PAGE ANSWERS
+People search for a company with a question: its revenue and profit, its ROE
+and ROCE, who owns it, who its peers are. faq() answers those in sentences,
+from the same row as everything else, and each answer is left out whole when
+its figures are missing. The questions are printed on the page and repeated
+as FAQPage structured data from the one list, so the two cannot disagree.
 
 NOTHING HERE GOES OVER THE NETWORK FOR A PAGE
 Every figure comes from fundamentals_query's snapshot row (the same row the
@@ -50,6 +58,7 @@ NO EXTERNAL DEPENDENCIES beyond `requests` for the template, imported only
 when it is needed.
 """
 
+import datetime
 import html
 import json
 import os
@@ -63,8 +72,13 @@ SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9&.\-]{0,19}$")
 HEAD_MARK = "<!-- ssr:head -->"
 GLANCE_MARK = "<!-- ssr:glance -->"
 
-# Static pages worth handing to a search engine beside the companies.
-SITE_PAGES = ("/", "/stocks", "/brief", "/advisors")
+# Static pages worth handing to a search engine beside the companies. Each is
+# a file or a rewrite on the site (test_company_pages.py checks every one).
+SITE_PAGES = ("/", "/stocks", "/brief", "/advisors", "/glossary", "/methodology", "/planner")
+
+# A sector gets a page of its own once it has this many companies. Fewer is
+# not a list, and a page of two links is one a search engine is right to skip.
+SECTOR_MIN = 5
 
 MONTHS = ("January", "February", "March", "April", "May", "June", "July",
           "August", "September", "October", "November", "December")
@@ -93,6 +107,49 @@ def eligible(row):
 def index(rows):
     """{symbol: row} for every company that gets a page."""
     return {r["symbol"]: r for r in (rows or []) if eligible(r)}
+
+
+def slug_for(name):
+    """'Financial Services' -> 'financial-services'; None for nothing usable."""
+    s = re.sub(r"[^a-z0-9]+", "-", str(name or "").lower()).strip("-")[:60].strip("-")
+    return s or None
+
+
+def sector_path(slug):
+    return "/sector-" + slug
+
+
+def _by_size(r):
+    """Largest first; a company with no market value goes last, by symbol."""
+    return (-(_num(r.get("market_cap")) or 0.0), r["symbol"])
+
+
+def sectors(rows):
+    """
+    {slug: (name, [row, ...])} for every sector with a page, its companies
+    largest first. Two spellings that make the same slug are one sector, under
+    the first name seen.
+    """
+    found = {}
+    for r in rows or []:
+        s = slug_for(r.get("sector")) if eligible(r) else None
+        if s:
+            found.setdefault(s, (r["sector"], []))[1].append(r)
+    out = {}
+    for s, (name, members) in found.items():
+        if len(members) >= SECTOR_MIN:
+            out[s] = (name, sorted(members, key=_by_size))
+    return out
+
+
+def sector_of(row, rows):
+    """(name, path, companies) for the row's sector page; None when it has none.
+    A count, not a sort: this runs for every company page."""
+    s = slug_for(row.get("sector"))
+    if not s:
+        return None
+    n = sum(1 for r in rows or [] if eligible(r) and slug_for(r.get("sector")) == s)
+    return (row["sector"], sector_path(s), n) if n >= SECTOR_MIN else None
 
 
 # ---------------------------------------------------------------------------
@@ -311,11 +368,110 @@ def peers(row, rows, n=12):
     if not key:
         return []
     pool = [r for r in rows if eligible(r) and r.get(key) == row[key]]
-    pool.sort(key=lambda r: (-(_num(r.get("market_cap")) or 0.0), r["symbol"]))
+    pool.sort(key=_by_size)
     at = next((i for i, r in enumerate(pool) if r["symbol"] == row["symbol"]), 0)
     others = [r for r in pool if r["symbol"] != row["symbol"]]
     start = max(0, min(at - n // 2, len(others) - n))
     return others[start:start + n]
+
+
+def _and(items):
+    """['A', 'B', 'C'] -> 'A, B and C'."""
+    items = list(items)
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def faq(row, rows, score=None):
+    """
+    [(question, answer, answer_html)]: what people ask a search engine about a
+    company, answered from its row. The answer is plain text, for the
+    structured data; the HTML is the same words with the companies linked.
+
+    The rule is lede()'s: a question whose figures are missing is not asked.
+    Nothing here is a view on the share, only what was filed and what was paid.
+    """
+    sym, name = row["symbol"], row["name"]
+    whose = name + "’s"
+    out = []
+
+    def add(question, answer, answer_html=None):
+        out.append((question, answer, esc(answer) if answer_html is None else answer_html))
+
+    price, mcap, pe = rupees(row.get("price")), crore_words(row.get("market_cap")), times(row.get("pe"))
+    if price:
+        a = "%s (NSE: %s) last closed at %s a share" % (name, sym, price)
+        if mcap:
+            a += ", which values the company at %s" % mcap
+        a += "."
+        if pe:
+            a += " Its P/E on the earnings of the last four quarters is %s." % pe
+        add("What is %s share price%s?" % (whose, " and market cap" if mcap else ""), a)
+
+    said = []
+    q_end = long_date(row.get("quarter"))
+    q_sales, q_profit = crore_words(row.get("sales_qtr")), _profit(row.get("net_profit_qtr"))
+    if q_end and (q_sales or q_profit):
+        bits = []
+        if q_sales:
+            bits.append("revenue of %s%s" % (q_sales, _moved(row.get("sales_growth_qtr"))))
+        if q_profit:
+            bits.append(q_profit)
+        said.append("For the quarter ended %s, %s reported %s." % (q_end, name, " and ".join(bits)))
+    fy, sales, profit = row.get("fy"), crore_words(row.get("sales")), _profit(row.get("net_profit"))
+    if fy and sales and profit:
+        said.append("Over %s, revenue was %s with %s." % (fy, sales, profit))
+    if said:
+        add("What is %s latest revenue and profit after tax (PAT)?" % whose, " ".join(said))
+
+    roe, roce = pct(row.get("roe")), pct(row.get("roce"))
+    when = "Over %s, " % fy if fy else ""
+    if roe and roce:
+        add("What is %s ROE and ROCE?" % whose,
+            "%s%s return on equity (ROE) was %s and its return on capital employed (ROCE) was %s."
+            % (when, whose, roe, roce))
+    elif roe:
+        add("What is %s ROE?" % whose, "%s%s return on equity (ROE) was %s." % (when, whose, roe))
+    elif roce:
+        add("What is %s ROCE?" % whose,
+            "%s%s return on capital employed (ROCE) was %s." % (when, whose, roce))
+
+    prom = pct(row.get("promoter_holding"), 2)
+    if prom:
+        a = "Promoters hold %s of %s" % (prom, name)
+        others = ["%s hold %s" % (who, v) for who, v in (
+            ("foreign institutional investors (FIIs)", pct(row.get("fii_holding"), 2)),
+            ("domestic institutional investors (DIIs)", pct(row.get("dii_holding"), 2))) if v]
+        if others:
+            a += "; " + " and ".join(others)
+        a += "."
+        pledged = _num(row.get("pledged"))
+        if pledged is not None:
+            a += (" No part of the promoter holding is pledged." if pledged <= 0
+                  else " %s of all shares are pledged." % pct(pledged, 2))
+        add("What is %s shareholding pattern?" % whose, a)
+
+    near = peers(row, rows, n=5)
+    if near:
+        group = row.get("industry") or row.get("sector")
+        one = len(near) == 1
+        lead = "%s is classified under %s. Its nearest %s there by market value %s " % (
+            name, group, "peer" if one else "peers", "is" if one else "are")
+        a = lead + _and(p["name"] for p in near) + "."
+        h = esc(lead) + _and('<a href="%s">%s</a>' % (esc(path_for(p["symbol"])), esc(p["name"]))
+                             for p in near) + "."
+        hub = sector_of(row, rows)
+        if hub:
+            link = "%s sector page" % hub[0]
+            rest = " lists all %s companies in the sector." % group_in(hub[2])
+            a += " The " + link + rest
+            h += ' The <a href="%s">%s</a>%s' % (esc(hub[1]), esc(link), esc(rest))
+        add("Who are %s sector peers?" % whose, a, h)
+
+    if score is not None:
+        add("What is %s Altaha Score?" % whose,
+            "%s Altaha Score was %d out of 100 at the last scan. It is a rank against peers on "
+            "disclosed weights, not a forecast." % (whose, round(score)))
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -352,21 +508,38 @@ def description_for(row):
             "0–100 Altaha Score with every calculation shown.")
 
 
-def head_tags(row, site, score=None):
-    """Canonical, the share card, structured data and the flag stock.js reads."""
+def head_tags(row, site, score=None, qa=None):
+    """
+    Canonical, the share card, structured data and the flag stock.js reads.
+
+    The structured data names the company as well as the page. schema.org
+    writes a ticker with its exchange in front ("NSE ACME") and has no
+    separate property for the exchange. The company's `url` would be its own
+    website, which the row does not carry, so the node points back at this
+    page instead. `qa` is faq()'s list: the questions printed on the page.
+    """
     sym, name = row["symbol"], row["name"]
     url = site + path_for(sym)
     title, desc = title_for(row), description_for(row)
     image = "%s/og/stock.png?ticker=%s" % (site, quote(sym, safe=""))
-    ld = {"@context": "https://schema.org", "@graph": [
+    company = {"@type": "Corporation", "@id": url + "#company", "name": name,
+               "tickerSymbol": "NSE " + sym}
+    graph = [
         {"@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "Altaha Screener", "item": site + "/"},
             {"@type": "ListItem", "position": 2, "name": "All companies", "item": site + "/stocks"},
             {"@type": "ListItem", "position": 3, "name": name, "item": url}]},
         {"@type": "WebPage", "@id": url, "url": url, "name": title, "description": desc,
          "isPartOf": {"@type": "WebSite", "name": "Altaha Screener", "url": site + "/"},
-         "about": {"@type": "Corporation", "name": name, "tickerSymbol": "NSE " + sym}},
-    ]}
+         "about": company},
+        dict(company, mainEntityOfPage={"@id": url}),
+    ]
+    if qa:
+        graph.append({"@type": "FAQPage", "@id": url + "#faq", "isPartOf": {"@id": url},
+                      "mainEntity": [{"@type": "Question", "name": q,
+                                      "acceptedAnswer": {"@type": "Answer", "text": a}}
+                                     for q, a, _h in qa]})
+    ld = {"@context": "https://schema.org", "@graph": graph}
     return "\n".join([
         '<link rel="canonical" href="%s" />' % esc(url),
         '<meta property="og:type" content="website" />',
@@ -381,11 +554,11 @@ def head_tags(row, site, score=None):
     ])
 
 
-def glance_html(row, rows, quarters=None, score=None):
+def glance_html(row, rows, quarters=None, score=None, qa=None):
     """
     The section at the foot of the page: the paragraph, the figures, the last
-    quarters and the neighbours. It is ordinary page content. A reader sees it
-    under the panes; a crawler reads it as the page.
+    quarters, the questions and the neighbours. It is ordinary page content.
+    A reader sees it under the panes; a crawler reads it as the page.
     """
     name = row["name"]
     out = ['<section class="stk-sec stk-glance" id="glance" aria-labelledby="glance-h">',
@@ -427,6 +600,12 @@ def glance_html(row, rows, quarters=None, score=None):
             '<th scope="col">Revenue vs a year earlier</th></tr></thead>'
             '<tbody>%s</tbody></table></div>' % (esc(name), "".join(body)))
 
+    qa = faq(row, rows, score) if qa is None else qa
+    if qa:
+        out.append('<h3>Questions about %s</h3><div class="gl-faq">%s</div>' % (
+            esc(name), "".join('<div class="gl-qa"><h4>%s</h4><p>%s</p></div>' % (esc(q), h)
+                               for q, _a, h in qa)))
+
     near = peers(row, rows)
     if near:
         group = row.get("industry") or row.get("sector")
@@ -435,9 +614,27 @@ def glance_html(row, rows, quarters=None, score=None):
                 '<li><a href="%s">%s</a></li>' % (esc(path_for(p["symbol"])), esc(p["name"]))
                 for p in near)))
 
-    out.append('<p class="gl-all"><a href="/stocks">All companies, A to Z</a></p>')
+    hub = sector_of(row, rows)
+    out.append('<p class="gl-all">%s<a href="/stocks">All companies, A to Z</a></p>' % (
+        '<a href="%s">All %s companies</a> · ' % (esc(hub[1]), esc(hub[0])) if hub else ""))
     out.append("</section>")
     return "\n".join(out)
+
+
+def tags_html(row, rows):
+    """
+    The row under the name: the ticker as a search engine and a reader both
+    write it ("NSE: ACME"), then the sector and the industry. The sector is a
+    link when it has a page.
+    """
+    hub = sector_of(row, rows)
+    out = ['<span class="stk-tag">NSE: %s</span>' % esc(row["symbol"])]
+    if row.get("sector"):
+        out.append('<a class="stk-tag" href="%s">%s</a>' % (esc(hub[1]), esc(row["sector"])) if hub
+                   else '<span class="stk-tag">%s</span>' % esc(row["sector"]))
+    if row.get("industry"):
+        out.append('<span class="stk-tag">%s</span>' % esc(row["industry"]))
+    return "".join(out)
 
 
 def _sub(pattern, repl, text):
@@ -452,19 +649,19 @@ def render_company(template, row, rows, site, quarters=None, score=None):
     page = _sub(r"(<title>).*?(</title>)", esc(title_for(row)), page)
     page = _sub(r'(<meta name="description" content=")[^"]*(")', esc(description_for(row)), page)
 
-    page = page.replace(HEAD_MARK, head_tags(row, site, score), 1)
+    qa = faq(row, rows, score)
+    page = page.replace(HEAD_MARK, head_tags(row, site, score, qa), 1)
 
-    # What stock.js paints a moment later, already there: the name, the tags
-    # and the last close. Same markup as paintHead writes, so nothing jumps.
-    tags = "".join('<span class="stk-tag">%s</span>' % esc(t)
-                   for t in ("NSE", sym, row.get("sector"), row.get("industry")) if t)
+    # What stock.js paints a moment later, already there: the name and the
+    # last close. The tags are these ones for good: stock.js leaves the row
+    # alone on this page, so the link to the sector stays a link.
     page = _sub(r'(<h1[^>]*\bid="nm"[^>]*>).*?(</h1>)', esc(name), page)
     page = _sub(r'(<span id="crumb">).*?(</span>)', esc(sym), page)
-    page = _sub(r'(<div[^>]*\bid="tags"[^>]*>).*?(</div>)', tags, page)
+    page = _sub(r'(<div[^>]*\bid="tags"[^>]*>).*?(</div>)', tags_html(row, rows), page)
     if rupees(row.get("price")):
         page = _sub(r'(<div[^>]*\bid="px"[^>]*>).*?(</div>)', esc(rupees(row.get("price"))), page)
 
-    return page.replace(GLANCE_MARK, glance_html(row, rows, quarters, score), 1)
+    return page.replace(GLANCE_MARK, glance_html(row, rows, quarters, score, qa), 1)
 
 
 def _doc(site, api, title, description, body, path=None, robots="index,follow", head=""):
@@ -527,8 +724,8 @@ def render_plain(row, rows, site, api, quarters=None, score=None):
     returns as soon as the template does.
     """
     sym, name = row["symbol"], row["name"]
-    tags = "".join('<span class="stk-tag">%s</span>' % esc(t)
-                   for t in ("NSE", sym, row.get("sector"), row.get("industry")) if t)
+    qa = faq(row, rows, score)
+    tags = tags_html(row, rows)
     body = (
         '<div class="stk-head">'
         '<div class="stk-crumb"><a href="/">Altaha Screener</a> · <a href="/stocks">All companies</a></div>'
@@ -537,10 +734,10 @@ def render_plain(row, rows, site, api, quarters=None, score=None):
         '<div class="stk-px"><div class="now tnum">%s</div></div></div>'
         '<p class="gl-open"><a href="/stock?ticker=%s">Open the chart, the score and the full analysis</a></p>'
         '</div>%s' % (esc(name), tags, esc(rupees(row.get("price")) or "—"),
-                      esc(quote(sym, safe="")), glance_html(row, rows, quarters, score)))
+                      esc(quote(sym, safe="")), glance_html(row, rows, quarters, score, qa)))
     # The canonical is already in head_tags; _doc is given no path of its own.
     return _doc(site, api, title_for(row), description_for(row), body,
-                head=head_tags(row, site, score) + "\n")
+                head=head_tags(row, site, score, qa) + "\n")
 
 
 def render_missing(raw, site, api):
@@ -559,6 +756,120 @@ def render_missing(raw, site, api):
     return _doc(site, api, "No company page | Altaha Screener",
                 "This address has no company page on Altaha Screener.",
                 "\n".join(body), robots="noindex,follow")
+
+
+def _median(values):
+    v = sorted(values)
+    if not v:
+        return None
+    mid = len(v) // 2
+    return v[mid] if len(v) % 2 else (v[mid - 1] + v[mid]) / 2.0
+
+
+def sector_title(name):
+    return "%s stocks in India: NSE companies by market cap, P/E, ROE | Altaha Screener" % name
+
+
+def render_sector(rows, slug, site, api):
+    """
+    One sector: every company in it, largest first, with the five figures a
+    reader compares companies on, each linked to its page. None when there is
+    no such sector, which main.py sends as a 404.
+
+    It is the page for somebody who searched for a kind of company and not for
+    one ("IT stocks in India"), and the shortest path from the front of the
+    site to a small company's page: home, the list, its sector, the company.
+    """
+    found = sectors(rows)
+    if slug not in found:
+        return None
+    name, members = found[slug]
+    url, n = site + sector_path(slug), len(members)
+
+    caps = [c for c in (_num(r.get("market_cap")) for r in members) if c and c > 0]
+    pes = [p for p in (_num(r.get("pe")) for r in members) if p and p > 0]
+    roes = [x for x in (_num(r.get("roe")) for r in members) if x is not None]
+    said = ["%s NSE-listed companies are classified under %s." % (group_in(n), name)]
+    if caps:
+        said.append("Together they were valued at %s at their last close." % crore_words(sum(caps)))
+    mid = []
+    if len(pes) >= SECTOR_MIN:
+        mid.append("P/E is %s" % times(_median(pes)))
+    if len(roes) >= SECTOR_MIN:
+        mid.append("return on equity is %s" % pct(_median(roes)))
+    if mid:
+        said.append("The median %s." % " and the median ".join(mid))
+    said.append("They are listed largest first by market value, with figures from each "
+                "company’s own filings.")
+
+    by_industry = {}
+    for r in members:
+        if r.get("industry"):
+            by_industry[r["industry"]] = by_industry.get(r["industry"], 0) + 1
+    industries = sorted(by_industry.items(), key=lambda kv: (-kv[1], kv[0]))
+
+    def cell(v):
+        return esc(v or "—")
+
+    body = ['<div class="stk-head"><div class="stk-crumb"><a href="/">Altaha Screener</a> · '
+            '<a href="/stocks">All companies</a> · <span>%s</span></div>' % esc(name),
+            '<h1 class="stk-name">%s stocks on NSE</h1>' % esc(name),
+            '<p class="dir-sub">%s Figures, not advice.</p></div>' % esc(" ".join(said))]
+    if len(industries) > 1:
+        body.append('<p class="sec-inds"><b>Industries in this sector:</b> %s.</p>' % esc(
+            ", ".join("%s (%s)" % (k, group_in(v)) for k, v in industries)))
+    body.append(
+        '<section class="sec-list" aria-label="%s companies"><div class="gl-scroll">'
+        '<table class="gl-table sec-table"><caption>%s companies on NSE, largest first by '
+        'market value. Price in ₹, market cap in ₹ crore.</caption>'
+        '<thead><tr><th scope="col">Company</th><th scope="col">Industry</th>'
+        '<th scope="col">Price</th><th scope="col">Market cap</th><th scope="col">P/E</th>'
+        '<th scope="col">ROE</th><th scope="col">ROCE</th></tr></thead><tbody>%s</tbody></table>'
+        '</div></section>' % (esc(name), esc(name), "".join(
+            '<tr><th scope="row"><a href="%s">%s</a><span>%s</span></th><td>%s</td><td>%s</td>'
+            '<td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % (
+                esc(path_for(r["symbol"])), esc(r["name"]), esc(r["symbol"]),
+                cell(r.get("industry")), cell(rupees(r.get("price"))), cell(crore(r.get("market_cap"))),
+                cell(times(r.get("pe"))), cell(pct(r.get("roe"))), cell(pct(r.get("roce"))))
+            for r in members)))
+    others = [(s, v) for s, v in sorted(found.items(), key=lambda kv: kv[1][0]) if s != slug]
+    more = "Other sectors" if others else "More companies"
+    body.append('<nav class="dir-sectors" aria-label="%s"><h2>%s</h2><ul>%s'
+                '<li><a href="/stocks">All companies, A to Z</a></li></ul></nav>' % (more, more, "".join(
+                    '<li><a href="%s">%s</a><span>%s</span></li>' % (
+                        esc(sector_path(s)), esc(v[0]), group_in(len(v[1]))) for s, v in others)))
+
+    desc = ("%s NSE-listed %s companies ranked by market cap, with share price, P/E, ROE and "
+            "ROCE from their filings. Open any company for quarterly results, shareholding and "
+            "its Altaha Score." % (group_in(n), name))
+    ld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Altaha Screener", "item": site + "/"},
+            {"@type": "ListItem", "position": 2, "name": "All companies", "item": site + "/stocks"},
+            {"@type": "ListItem", "position": 3, "name": name, "item": url}]},
+        {"@type": "CollectionPage", "@id": url, "url": url, "name": sector_title(name),
+         "description": desc,
+         "isPartOf": {"@type": "WebSite", "name": "Altaha Screener", "url": site + "/"},
+         # The largest thirty; the page itself links every one.
+         "mainEntity": {"@type": "ItemList", "numberOfItems": n, "itemListElement": [
+             {"@type": "ListItem", "position": i + 1, "name": r["name"],
+              "url": site + path_for(r["symbol"])} for i, r in enumerate(members[:30])]}},
+    ]}
+    return _doc(site, api, sector_title(name), desc, "\n".join(body), path=sector_path(slug),
+                head='<script type="application/ld+json">%s</script>\n' % _json_script(ld))
+
+
+def render_no_sector(site, api):
+    """A 404 for a sector that is not one. main.py sends it noindex."""
+    body = ('<div class="stk-head"><div class="stk-crumb"><a href="/">Altaha Screener</a> · '
+            '<a href="/stocks">All companies</a></div>'
+            '<h1 class="stk-name">No sector page at that address</h1></div>'
+            '<section class="stk-sec"><p class="gl-lede">Sector pages list NSE-listed companies '
+            'by the sector they are classified under. This address is not one of them.</p>'
+            '<p class="gl-all"><a href="/stocks">Find a company or a sector</a></p></section>')
+    return _doc(site, api, "No sector page | Altaha Screener",
+                "This address has no sector page on Altaha Screener.", body,
+                robots="noindex,follow")
 
 
 def render_directory(rows, site, api):
@@ -588,6 +899,12 @@ def render_directory(rows, site, api):
                     'placeholder="Name or symbol" /></label>'
                     '<nav class="dir-az" aria-label="Jump to a letter">%s</nav></div>'
                     % "".join('<a href="#%s">%s</a>' % (anchor(l), esc(l)) for l in letters))
+        hubs = sorted(sectors(rows).items(), key=lambda kv: kv[1][0])
+        if hubs:
+            body.append('<nav class="dir-sectors" id="dir-sectors" aria-label="Browse by sector">'
+                        '<h2>Browse by sector</h2><ul>%s</ul></nav>' % "".join(
+                            '<li><a href="%s">%s</a><span>%s</span></li>' % (
+                                esc(sector_path(s)), esc(v[0]), group_in(len(v[1]))) for s, v in hubs))
         body.append('<p class="dir-none" id="dir-none" hidden>No company matches that.</p>')
         for l in letters:
             items = "".join(
@@ -627,20 +944,40 @@ def render_directory(rows, site, api):
                 head='<script type="application/ld+json">%s</script>\n' % _json_script(ld))
 
 
-def sitemap(rows, site):
-    """
-    sitemap.xml: the site's own pages, then one line per company.
+def _lastmod(raw, today=None):
+    """'2026-08-12 18:04:11' -> '2026-08-12'; None unless it is a real day that
+    has happened. A date in the future is a typing error at the exchange, and
+    is worth less to a search engine than no date."""
+    m = re.match(r"^(\d{4}-\d{2}-\d{2})", str(raw or ""))
+    if not m:
+        return None
+    try:
+        day = datetime.date.fromisoformat(m.group(1))
+    except ValueError:
+        return None
+    today = today or datetime.date.today()
+    return day.isoformat() if datetime.date(2000, 1, 1) <= day <= today else None
 
-    No <lastmod>. The only honest date would be the day a company's page last
-    changed in substance, which is the day it last filed, and the snapshot row
-    does not carry it. A date that is always today is one search engines learn
-    to ignore; none is better.
+
+def sitemap(rows, site, filed=None, today=None):
     """
-    urls = [site + p for p in SITE_PAGES]
-    urls += [site + path_for(s) for s in sorted(index(rows))]
+    sitemap.xml: the site's own pages, the sectors, then one line per company.
+
+    <lastmod> ONLY WHERE THERE IS A REAL DATE. A company's page changes in
+    substance on the day it files results, and `filed` is {symbol: that day},
+    read from the store (fundamentals_store.latest_filed). A company with no
+    filing date on record gets no <lastmod>, and neither do the site's own
+    pages or the sectors. A date that is always today is one search engines
+    learn to ignore; none is better.
+    """
+    filed = filed or {}
+    lines = [(site + p, None) for p in SITE_PAGES]
+    lines += [(site + sector_path(s), None) for s in sorted(sectors(rows))]
+    lines += [(site + path_for(s), _lastmod(filed.get(s), today)) for s in sorted(index(rows))]
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n%s</urlset>\n'
-            % "".join("<url><loc>%s</loc></url>\n" % esc(u) for u in urls))
+            % "".join("<url><loc>%s</loc>%s</url>\n" % (
+                esc(u), "<lastmod>%s</lastmod>" % day if day else "") for u, day in lines))
 
 
 # ---------------------------------------------------------------------------

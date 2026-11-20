@@ -154,7 +154,7 @@
         { tab: 'live', g: 'live', label: 'Alerts', icon: 'bell', hint: 'Live intraday calls and consolidation breakouts', kw: 'live scanner intraday volume breakout consolidation 52 week high telegram alert' },
         { tab: 'deals', g: 'flow', label: 'Big trades', icon: 'exchange', hint: 'Bulk and block deals, and who made them', kw: 'bulk block deals' },
         { tab: 'wow', g: 'news', label: 'Order wins', icon: 'flag', hint: 'New orders measured against company size', kw: 'wow orders contract' },
-        { tab: 'special', g: 'flow', label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
+        { tab: 'special', g: 'flow', label: 'Delivery trends', icon: 'bars', hint: 'Where delivery is running above normal', kw: 'delivery special accumulation spike demat bhavcopy' },
         { tab: 'results', g: 'news', label: 'Results calendar', icon: 'calendar', hint: 'Who reports yesterday, today and this week', kw: 'results earnings quarterly calendar' },
         { tab: 'filings', g: 'news', label: 'Filings & news', icon: 'document', hint: 'Company announcements as they are filed', kw: 'news announcements filings exchange' },
         { tab: 'options', g: 'live', label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
@@ -315,8 +315,12 @@
     }).join('') +
       '<nav class="sh-fcol" aria-label="Altaha"><h4>Altaha</h4><ul>' +
       FOOT_COMPANY.map(function (it) { return footLink(it.section, it); }).join('') + '</ul></nav>';
+    /* data-nosnippet: the same list of tools is at the foot of every page,
+       and a search engine was quoting it as the page's description. It is
+       honoured on div, span and section, hence the two inner wrappers and
+       not the <footer>. The links are still followed. */
     foot.innerHTML =
-      '<div class="sh-fin">' +
+      '<div class="sh-fin" data-nosnippet>' +
         '<div class="sh-fbrand">' +
           '<a class="sh-brand" href="./" aria-label="Altaha Screener home">' +
             '<span class="mk" aria-hidden="true"></span><span class="nm">Altaha <i>Screener</i></span></a>' +
@@ -325,7 +329,7 @@
         '</div>' +
         '<div class="sh-fcols">' + cols + '</div>' +
       '</div>' +
-      '<div class="sh-fbase"><span>\u00a9 ' + new Date().getFullYear() + ' Altaha Screener</span>' +
+      '<div class="sh-fbase" data-nosnippet><span>\u00a9 ' + new Date().getFullYear() + ' Altaha Screener</span>' +
         '<span>Prices and filings from NSE and BSE. For information only, not investment advice.</span></div>';
     foot.addEventListener('click', function (e) {
       var a = e.target.closest('a[data-foot-section]');
@@ -347,6 +351,8 @@
     if (document.querySelector('.sh-chrome')) return;
 
     var chrome = el('div', 'sh-chrome');
+    // The menus are on every page: not for a search engine to quote (see the footer).
+    chrome.setAttribute('data-nosnippet', '');
 
     var ticker = el('div', 'sh-ticker');
     ticker.setAttribute('aria-label', 'Live market prices');
@@ -738,7 +744,8 @@
           '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
           'stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
       '</div>' +
-      '<div class="sh-sheet-body">' + DOORS.map(function (d) {
+      // data-nosnippet, as on the header and the footer: a list of tools is not a description of the page.
+      '<div class="sh-sheet-body" data-nosnippet>' + DOORS.map(function (d) {
         var groups = (d.groups || []).map(function (g, gi) {
           var rows = d.items.filter(function (it) { return it.g === g.id; });
           return rows.length ? '<div class="sh-sheet-group" style="--i:' + gi + '"><h4>' + esc(g.title) + '</h4>' +

@@ -239,6 +239,20 @@ jobs:
         with:
           name: filings-views-verification
           path: test-results/filings-views
+      - name: Verify Delivery trends opens on this week and reads the book only when asked
+        if: always()
+        # The tab carried this name for a long time while opening on a
+        # one-year ranking. What a browser is for here: the lists come first,
+        # a row carries its arithmetic, and the book is not fetched until
+        # somebody opens it.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/delivery-trends-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: delivery-trends-verification
+          path: test-results/delivery-trends
       - name: Verify the fundamentals pane never mixes accounting bases
         if: always()
         # The failure mode worth a browser for: a company files its results

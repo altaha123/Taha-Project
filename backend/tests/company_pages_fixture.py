@@ -97,6 +97,12 @@ ACME_QUARTERS = [
 ]
 
 
+# When each company's newest results reached the exchange, as
+# fundamentals_store.latest_filed() returns it. One real day, one in the
+# future and one that is not a date: only the first may reach the sitemap.
+FILED = {"ACME": "2026-08-12", "G&S": "2999-01-01", "DELTA": "not a date"}
+
+
 def pages():
     import company_pages as CP
     with open(os.path.join(REPO, "frontend", "stock.html"), encoding="utf-8") as fh:
@@ -105,8 +111,9 @@ def pages():
         "company": CP.render_company(template, ACME, ROWS, SITE, ACME_QUARTERS, 61.4),
         "plain": CP.render_plain(ACME, ROWS, SITE, API, ACME_QUARTERS, 61.4),
         "directory": CP.render_directory(ROWS, SITE, API),
+        "sector": CP.render_sector(ROWS, "chemicals", SITE, API),
         "missing": CP.render_missing("NOSUCH", SITE, API),
-        "sitemap": CP.sitemap(ROWS, SITE),
+        "sitemap": CP.sitemap(ROWS, SITE, FILED),
     }
 
 

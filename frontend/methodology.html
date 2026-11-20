@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" /><script src="clean-url.js"></script>
+<!-- How the Altaha Score works, as a page of its own.
+
+     The same explanation is a tab inside index.html (#view-score), where a
+     search engine cannot find it and nobody can link to it. This is that
+     text at an address. The weights table must say what the tab says:
+     backend/tests/test_seo_pages.py compares the two row by row, and the
+     tab in turn states profiles.V4_WEIGHTS. Change a weight in all three.
+
+     The bands are score_bands.py's; the scope is SCORING-V4.md's. -->
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How the Altaha Score works: a 0–100 stock score with its weights shown | Altaha Screener</title>
+<meta name="description" content="How the Altaha Score is built: each factor ranked against business-model peers, eight pillars, disclosed weights for three holding periods, and what the number is not. No forecast and no fitted weights." />
+<meta name="robots" content="index,follow" />
+<link rel="canonical" href="https://altahascreener.in/methodology" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Altaha Screener" />
+<meta property="og:title" content="How the Altaha Score works" />
+<meta property="og:description" content="A 0–100 research ranking with its arithmetic left open: peer percentiles, eight pillars, disclosed weights, and what the number is not." />
+<meta property="og:url" content="https://altahascreener.in/methodology" />
+<meta property="og:image" content="https://altahascreener.in/icon-512.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Altaha Screener","item":"https://altahascreener.in/"},{"@type":"ListItem","position":2,"name":"How the Altaha Score works","item":"https://altahascreener.in/methodology"}]},{"@type":"Article","@id":"https://altahascreener.in/methodology","mainEntityOfPage":"https://altahascreener.in/methodology","headline":"How the Altaha Score works","description":"How the Altaha Score is built: each factor ranked against business-model peers, eight pillars, disclosed weights for three holding periods, and what the number is not.","inLanguage":"en-IN","datePublished":"2026-11-20","dateModified":"2026-11-20","author":{"@type":"Organization","name":"Altaha Screener","url":"https://altahascreener.in/"},"publisher":{"@type":"Organization","name":"Altaha Screener","url":"https://altahascreener.in/","logo":{"@type":"ImageObject","url":"https://altahascreener.in/icon-512.png"}}}]}</script>
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css?v=20261120-sheet">
+<link rel="stylesheet" href="stock.css?v=20261120-seo">
+<link rel="stylesheet" href="experience.css?v=20261015-doors">
+<link rel="stylesheet" href="type.css">
+<script>
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+</head>
+<body>
+<main class="stk-wrap doc">
+  <div class="stk-head">
+    <div class="stk-crumb"><a href="./"><span class="brandmark" aria-hidden="true"></span><span>Altaha Screener</span></a> · <span>Methodology</span></div>
+    <h1 class="stk-name">How the Altaha Score works</h1>
+    <p class="dir-sub">The Altaha Score is a 0&ndash;100 research ranking of an NSE-listed company, with its arithmetic left open. It is not a forecast, and it is not a probability of profit. This page says how the number is put together, what the weights are, and what it cannot tell you.</p>
+  </div>
+
+  <section class="doc-sec" id="assembled">
+    <h2>How the number is assembled</h2>
+    <p>Raw observations are ranked against business-model peers, averaged within a signal group, then within a pillar, then weighted for the holding period you asked about and shrunk towards the middle where the evidence is thin. A missing input is never counted as a zero: it is withheld, and the confidence falls instead.</p>
+    <ol class="doc-steps">
+      <li><b>Observe.</b> Each factor is measured from reported numbers and prices, oriented so higher is better.</li>
+      <li><b>Rank.</b> Every factor becomes a percentile against companies with the same business model, never against the whole market.</li>
+      <li><b>Group.</b> Related signals average together first, so adding a second trend metric does not quietly double the weight of trend.</li>
+      <li><b>Weight.</b> The eight pillars are combined using the holding period&rsquo;s weights, below.</li>
+      <li><b>Shrink.</b> A score built from fewer inputs is pulled towards the middle, because a confident number from thin evidence is the expensive kind of wrong.</li>
+    </ol>
+  </section>
+
+  <section class="doc-sec" id="pillars">
+    <h2>The eight pillars and their weights</h2>
+    <p>These are disclosed priors, not estimated truths. No weight search was run to produce them. A day trader and a ten-year holder are asking different questions of the same company, which is why one set of weights could not serve both. Each column adds to 100.</p>
+    <div class="gl-scroll">
+      <table class="gl-table doc-table" id="weights">
+        <caption>Altaha Score pillar weights by holding period, in percent</caption>
+        <thead>
+          <tr><th scope="col">Pillar</th><th scope="col">What it asks</th>
+              <th scope="col">Days</th><th scope="col">Months</th><th scope="col">Years</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Quality</th><td>Does the business earn well, repeatably, without flattering itself?</td><td>10</td><td>20</td><td>25</td></tr>
+          <tr><th scope="row">Growth</th><td>Are earnings, revenue and margin bigger than a year ago?</td><td>5</td><td>15</td><td>15</td></tr>
+          <tr><th scope="row">Acceleration</th><td>Is the rate of improvement itself improving?</td><td>5</td><td>15</td><td>10</td></tr>
+          <tr><th scope="row">Value</th><td>What are you paying for those earnings?</td><td>5</td><td>15</td><td>20</td></tr>
+          <tr><th scope="row">Financial strength</th><td>Can it service what it owes?</td><td>5</td><td>10</td><td>15</td></tr>
+          <tr><th scope="row">Momentum</th><td>Has the price been going up, in a straight line, and is it near its high?</td><td>30</td><td>20</td><td>10</td></tr>
+          <tr><th scope="row">Risk</th><td>How violently does it move, and has it just spiked?</td><td>35</td><td>5</td><td>5</td></tr>
+          <tr><th scope="row">Participation</th><td>Is turnover unusual against its own history?</td><td>5</td><td>0</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The three price pillars were re-weighted in November 2026 after a test on NSE prices from 2017 to 2026. Unusual turnover predicted little, so Participation lost most of its weight.</p>
+  </section>
+
+  <section class="doc-sec" id="reading">
+    <h2>Reading the number</h2>
+    <p>Because every score is a peer percentile pulled towards 50 where the evidence is thin, scores do not spread evenly from 0 to 100. Most companies sit between 40 and 55. The word beside a score follows where scores actually fall:</p>
+    <dl class="gl-facts doc-bands">
+      <div><dt>Strong</dt><dd>60 and above</dd></div>
+      <div><dt>Good</dt><dd>55 to 60</dd></div>
+      <div><dt>Average</dt><dd>40 to 55</dd></div>
+      <div><dt>Weak</dt><dd>33 to 40</dd></div>
+      <div><dt>Poor</dt><dd>under 33</dd></div>
+    </dl>
+    <p>A company with little data lands in the Average band on purpose. That is the score saying it does not know, which is different from saying the company is ordinary.</p>
+  </section>
+
+  <section class="doc-sec" id="not">
+    <h2>What it is not</h2>
+    <ul class="doc-list">
+      <li><b>Not a forecast.</b> A high score describes the evidence available today. It says nothing about what the price will do.</li>
+      <li><b>Not a probability.</b> 82 is not an 82% chance of anything. It is a rank against peers, on disclosed weights.</li>
+      <li><b>Only partly measured.</b> The three price pillars were tested on ten years of NSE prices. The five business pillars have no such history to test against, and remain judgement.</li>
+      <li><b>Not comparable across versions.</b> An old composite and a v4 score are different measurements and must never be pooled as one record.</li>
+    </ul>
+  </section>
+
+  <section class="doc-sec" id="scope">
+    <h2>Which companies get a score</h2>
+    <p>The score ranks NSE-listed companies. Each universe scan ranks a cohort of companies together, on one date. A company outside that cohort is scored when its page is opened, against the same cohort and as of the same date, so it gets the score it would have had inside the scan. A US listing is shown as not ranked, because there is no peer group behind it to rank against.</p>
+    <p>Every figure the score reads comes from the company&rsquo;s own filings with the exchange and from traded prices. Where a filing is missing, the factor is left out and the confidence printed beside the score falls.</p>
+  </section>
+
+  <section class="doc-more">
+    <h2>See it on a company</h2>
+    <p>Every company page prints its score with the contribution of each pillar: start from <a href="/stocks">all NSE companies, A to Z</a>. The terms used here are defined in the <a href="/glossary">glossary</a>. The same explanation is inside the screener: <a href="./#me/score">open it there</a>.</p>
+    <p class="doc-fine">Altaha Screener is an educational tool. Scores and evidence only, never an instruction to trade.</p>
+  </section>
+</main>
+<script src="shell.js?v=20261120-sheet" defer></script>
+<script src="experience.js?v=20261120-menus" defer></script>
+</body>
+</html>

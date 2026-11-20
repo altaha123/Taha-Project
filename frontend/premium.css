@@ -436,12 +436,12 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
 }
 @media (max-width: 700px) { .kbdhint { display: none; } }
 
-.hint b {
+.hint b, .hint a {
   cursor: pointer; color: var(--ink-2); font-weight: 500;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule); text-decoration: none;
   transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
-.hint b:hover { color: var(--gold-dp); border-color: var(--gold-lt); }
+.hint b:hover, .hint a:hover { color: var(--gold-dp); border-color: var(--gold-lt); }
 
 /* ── 9. PANELS ─────────────────────────────────────────────────────────── */
 
