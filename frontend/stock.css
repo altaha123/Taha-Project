@@ -222,12 +222,13 @@ html[data-theme="dark"] .stk-pane-n{ color:#17140E }
   display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between;
   gap:6px 16px; margin:0 0 14px;
 }
-.card-h h2, .sec-h h2{
-  margin:0; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
-  letter-spacing:-.01em; color:var(--ink);
-}
-.card-h h2{ font-size:21px; line-height:1.15 }
-.sec-h h2{ font-size:26px; line-height:1.12 }
+/* A section's name is in the display serif, at a size it reads at. A card's
+   title and every figure are in the interface sans: the serif is narrow, and
+   at a card title's size or in a row of numerals it reads cramped. */
+.card-h h2, .sec-h h2{ margin:0; color:var(--ink) }
+.card-h h2{ font:600 16px/1.25 Inter,system-ui,-apple-system,'Segoe UI',sans-serif; letter-spacing:-.01em }
+.sec-h h2{ font-family:'Instrument Serif',Georgia,serif; font-weight:400; font-size:28px; line-height:1.12;
+  letter-spacing:-.005em }
 .card-x, .sec-x{
   font:500 10.5px/1.4 'IBM Plex Mono',monospace; letter-spacing:.08em;
   text-transform:uppercase; color:var(--mute);
@@ -297,8 +298,8 @@ html[data-theme="dark"] .stk-pane-n{ color:#17140E }
    standalone values, and `tabular-nums` gives every digit the width of a
    zero, which reads loose at this size. */
 .ktile .v{
-  margin-top:8px; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
-  font-size:27px; line-height:1.05; letter-spacing:-.01em; color:var(--ink);
+  margin-top:9px; font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif; font-weight:600;
+  font-size:24px; line-height:1.1; letter-spacing:-.028em; color:var(--ink);
   overflow-wrap:anywhere;
 }
 .kmeter{ margin-top:10px }
@@ -1296,8 +1297,8 @@ html[data-theme="dark"] .own-retry:hover{ color:#17140E }
 /* A table's own heading: the same face as the section's, a size down, so a
    pane of four tables reads as four parts of it. */
 .fu-h3{
-  margin:30px 0 6px; font-family:'Instrument Serif',Georgia,serif; font-weight:400;
-  font-size:21px; line-height:1.15; letter-spacing:-.01em; color:var(--ink);
+  margin:30px 0 6px; font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif; font-weight:600;
+  font-size:15px; line-height:1.25; letter-spacing:-.005em; color:var(--ink);
 }
 #funda-peers > .fu-h3:first-child{ margin-top:0 }
 
@@ -1432,12 +1433,12 @@ html[data-theme="dark"] .own-retry:hover{ color:#17140E }
 .dv-ring-track { stroke:var(--rule); }
 .dv-ring-fill { stroke:var(--dv-accent); stroke-linecap:butt; animation:dv-ring-in 1.25s cubic-bezier(.16,1,.3,1) both; }
 .dv-ring > div { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:7px; }
-.dv-ring strong { font:500 30px/1 var(--serif); font-variant-numeric:tabular-nums; color:var(--ink); }
+.dv-ring strong { font:600 28px/1 Inter,system-ui,sans-serif; letter-spacing:-.025em; font-variant-numeric:tabular-nums; color:var(--ink); }
 .dv-ring span { font:9px var(--mono); color:var(--mute); text-transform:uppercase; letter-spacing:.06em; }
 @keyframes dv-ring-in { from { stroke-dasharray:0 100; opacity:.3; } to { opacity:1; } }
 .dv-experience .dv-tiles { grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:0; }
 .dv-experience .dv-tile { background:var(--skin-card,var(--paper)); border-radius:16px; min-width:0; }
-.dv-experience .dv-tile .v { font-family:var(--serif); font-size:27px; font-weight:500; }
+.dv-experience .dv-tile .v { font-family:Inter,system-ui,sans-serif; font-size:24px; font-weight:600; letter-spacing:-.028em; }
 .dv-trend { min-width:0; border:1px solid var(--rule); padding:24px; border-radius:20px; background:var(--skin-card,var(--paper)); }
 .dv-section-head { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
 .dv-section-head h3 { font:500 23px/1.3 var(--serif); margin:5px 0 0; color:var(--ink); }
@@ -1464,7 +1465,7 @@ html[data-theme="dark"] .own-retry:hover{ color:#17140E }
 @keyframes dv-arrive { from { opacity:.4; transform:translateY(8px); } to { opacity:1; transform:none; } }
 .dv-session-head { display:flex; align-items:center; justify-content:space-between; gap:12px; color:var(--ink); }
 .dv-session-head time { font-size:12px; }
-.dv-session-head strong { font:500 24px var(--serif); font-variant-numeric:tabular-nums; }
+.dv-session-head strong { font:600 21px Inter,system-ui,sans-serif; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
 .dv-meter { margin-top:12px; height:5px; border-radius:5px; background:var(--rule); overflow:hidden; }
 .dv-meter i { display:block; height:100%; background:var(--dv-accent); border-radius:5px; transform-origin:left; animation:dv-grow .8s cubic-bezier(.16,1,.3,1) both; }
 @keyframes dv-grow { from { transform:scaleX(0); } to { transform:scaleX(1); } }
@@ -1574,9 +1575,36 @@ details.own-notes[open] > summary{ margin-bottom:8px }
 details.own-notes p{ padding-left:14px; border-left:2px solid var(--rule) }
 
 /* ── Financials, drawn ───────────────────────────────────────────────────
-   Three views of four parts: a row of figures that are also the chart's
-   controls, the chart, a split of ₹100, and the statement behind a toggle.
-   Almost no words: a label, a figure, a direction. */
+   Three views built from the same parts: a row of figures that are also the
+   chart's controls, the chart beside a second picture, and the statement
+   behind a toggle. Almost no words: a label, a figure, a direction.
+
+   THE COLOURS ARE THREE, AND EACH MEANS ONE THING. Blue is the size of the
+   business, green is what is kept, orange is what is owed or spent; costs are
+   a grey ramp. They are the first three steps of a palette checked for
+   colour-blind separation on both card colours (ΔE 9.2 light, 9.4 dark).
+   A rise or a fall is the site's green or red on a wash, with an arrow.
+
+   FIGURES ARE IN THE INTERFACE SANS. The first version set them in the
+   display serif, which is narrow, and drew them over fat tan bars. */
+#pane-funda{
+  --fz-a:#2a78d6; --fz-b:#eb6834; --fz-c:#1baf7a;
+  --fz-n1:#6f6859; --fz-n2:#8a8373; --fz-n3:#a39c8d; --fz-n4:#bbb5a7; --fz-n5:#d0cabd; --fz-n6:#e6e1d6;
+  --fz-ribbon:#e9e3d6; --fz-grid:var(--rule-2); --fz-axis:var(--rule);
+  --fz-good:#0b6b44; --fz-good-bg:rgba(31,122,85,.12);
+  --fz-bad:#a5301f; --fz-bad-bg:rgba(176,58,43,.11); --fz-bad-solid:#c8492f;
+  --fz-sans:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+html[data-theme="dark"] #pane-funda{
+  --fz-a:#3987e5; --fz-b:#d95926; --fz-c:#199e70;
+  --fz-n1:#b9b2a2; --fz-n2:#9a9383; --fz-n3:#7d7667; --fz-n4:#625c4f; --fz-n5:#4a453a; --fz-n6:#37332a;
+  --fz-ribbon:#29251d;
+  --fz-good:#55d39c; --fz-good-bg:rgba(63,191,135,.15);
+  --fz-bad:#f08573; --fz-bad-bg:rgba(224,97,79,.16); --fz-bad-solid:#e0614f;
+}
+.h-a, .s-a{ --c:var(--fz-a) } .h-b, .s-b{ --c:var(--fz-b) } .h-c, .s-c{ --c:var(--fz-c) }
+/* An earlier period: the same hue, stepped toward the card. */
+.h-a, .h-b, .h-c{ --c-soft:color-mix(in srgb,var(--c) 46%,var(--skin-card)) }
 
 /* The few facts about a reading, as chips: the basis, the unit, the filing. */
 .fn-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:-6px 0 16px }
@@ -1594,132 +1622,212 @@ html[data-theme="dark"] .fn-meta a:hover{ color:#17140E }
 .fn-meta a:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
 .fn-view[hidden]{ display:none }
 
-/* A change, with its direction. Shared by the cards and the readout. */
-.mv{ display:inline-flex; align-items:baseline; gap:3px; white-space:nowrap;
-  font:600 12px/1 'IBM Plex Mono',monospace; color:var(--ink-2) }
-.mv.up{ color:var(--sh-up) } .mv.dn{ color:var(--sh-dn) } .mv.none{ visibility:hidden }
-/* Where less is the good direction the colours swap; where neither is, none. */
-.mv.inv.up, .fc-g.inv.up{ color:var(--sh-dn) } .mv.inv.dn, .fc-g.inv.dn{ color:var(--sh-up) }
-.mv.plain, .fc-g.plain{ color:var(--ink-2) }
-.mv small{ font:500 9.5px/1 'IBM Plex Mono',monospace; letter-spacing:.08em; color:var(--mute);
-  text-transform:uppercase; margin-left:2px }
+/* A change, with its direction: an arrow and a figure on a wash, and what it
+   is measured against beside it. */
+.mv{ display:inline-flex; align-items:center; gap:6px; white-space:nowrap }
+.mv b{ padding:4px 8px; border-radius:99px; font:600 11.5px/1 var(--fz-sans,Inter,sans-serif);
+  color:var(--ink-2); background:var(--paper-2) }
+.mv small{ font:500 11px/1 var(--fz-sans,Inter,sans-serif); color:var(--mute) }
+.mv.up b{ color:var(--fz-good,var(--sh-up)); background:var(--fz-good-bg,transparent) }
+.mv.dn b{ color:var(--fz-bad,var(--sh-dn)); background:var(--fz-bad-bg,transparent) }
+/* Less is better: a rise is the bad colour and a fall the good one. */
+.mv.up.inv b{ color:var(--fz-bad,var(--sh-dn)); background:var(--fz-bad-bg,transparent) }
+.mv.dn.inv b{ color:var(--fz-good,var(--sh-up)); background:var(--fz-good-bg,transparent) }
+/* Neither way is better: the direction, in no colour. */
+.mv.plain b{ color:var(--ink-2); background:var(--paper-2) }
+.mv.none{ visibility:hidden }
 
 /* The figures. Each is a button: the one pressed is the one charted. */
-.kp-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px }
+/* A whole number of rows at every width: four across or two by two, six
+   across or three by two, never three and an orphan. */
+.kp-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(176px,1fr)); gap:12px; margin-bottom:14px }
+@media (max-width:1240px){ .kp-row.n5, .kp-row.n6{ grid-template-columns:repeat(3,minmax(0,1fr)) } }
+@media (max-width:900px){ .kp-row.n4{ grid-template-columns:repeat(2,minmax(0,1fr)) } }
 .kp{
-  display:grid; gap:7px; align-content:start; text-align:left; min-width:0; cursor:pointer;
-  padding:14px 15px 12px; border:1px solid var(--rule); border-radius:16px;
+  display:block; text-align:left; min-width:0; cursor:pointer;
+  padding:16px 16px 12px; border:1px solid var(--rule); border-radius:16px;
   background:var(--skin-card); color:var(--ink); font:inherit;
-  transition:border-color 200ms var(--ease), box-shadow 260ms var(--ease), transform 200ms var(--ease-out),
-    background 200ms var(--ease);
+  transition:border-color 200ms var(--ease), box-shadow 260ms var(--ease), transform 200ms var(--ease-out);
 }
-.kp:hover{ border-color:var(--gold-lt); box-shadow:var(--e2); transform:translateY(-2px) }
-.kp:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
-.kp.on{ border-color:var(--gold); background:color-mix(in srgb,var(--gold) 7%,var(--skin-card));
-  box-shadow:0 0 0 1px var(--gold) }
-.kp-l{ font:500 10px/1.3 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--mute) }
-.kp-v{ font-family:'Instrument Serif',Georgia,serif; font-size:25px; line-height:1.05; letter-spacing:-.01em;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-.kp-c{ min-height:13px }
-.kp-s{ position:relative; display:flex; align-items:stretch; gap:3px; height:30px; margin-top:3px }
-.kp-s i{ position:relative; flex:1 1 0 }
-.kp-s i::after{
-  content:''; position:absolute; left:0; right:0; top:calc(var(--zero) - var(--h)); height:var(--h);
-  border-radius:2px; background:color-mix(in srgb,var(--gold) 38%,var(--rule));
-}
-.kp-s i.now::after{ background:var(--gold) }
-.kp-s i.neg::after{ top:var(--zero); background:color-mix(in srgb,var(--sh-dn) 65%,var(--rule)) }
-.kp-s i.gap::after{ display:none }
+.kp:hover{ border-color:color-mix(in srgb,var(--c) 50%,var(--rule)); box-shadow:var(--e2); transform:translateY(-2px) }
+.kp:focus-visible{ outline:2px solid var(--c); outline-offset:2px }
+.kp.on{ border-color:var(--c);
+  box-shadow:0 0 0 1px var(--c), 0 10px 26px color-mix(in srgb,var(--c) 16%,transparent) }
+.kp-l{ display:flex; align-items:center; gap:7px; font:500 12.5px/1.2 var(--fz-sans); color:var(--ink-2) }
+.kp-l i{ flex:0 0 auto; width:8px; height:8px; border-radius:50%; background:var(--c) }
+.kp-v{ display:block; margin-top:10px; font:600 27px/1.1 var(--fz-sans); letter-spacing:-.028em;
+  color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.kp-v small{ font:500 14px/1 var(--fz-sans); letter-spacing:0; color:var(--mute) }
+.kp-c{ display:block; margin-top:9px; min-height:20px }
+.kp-s{ position:relative; display:block; height:40px; margin:10px 6px 0 0 }
+.kp-s svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible }
+.kp-ln{ fill:none; stroke:var(--c); stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+  vector-effect:non-scaling-stroke }
+.kp-a{ fill:var(--c); opacity:.1 }
+.kp-z{ fill:none; stroke:var(--fz-axis); stroke-width:1; vector-effect:non-scaling-stroke }
+.kp-s i{ position:absolute; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%;
+  background:var(--c); box-shadow:0 0 0 2px var(--skin-card) }
 @media (max-width:560px){
   .kp-row{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px }
-  .kp{ padding:12px 12px 10px }
-  .kp-v{ font-size:21px }
+  .kp{ padding:13px 12px 10px }
+  .kp-v{ font-size:22px }
+  .kp-s{ height:32px }
 }
 
-/* The chart. */
-.fc{ padding:18px 20px 16px; margin-bottom:14px }
-.fc-h{ display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 16px; margin-bottom:6px }
-.fc-h h3{ margin:0; font-family:'Instrument Serif',Georgia,serif; font-weight:400; font-size:21px;
-  letter-spacing:-.01em; color:var(--ink) }
-.fc-read{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px; min-height:20px }
-.fc-read b{ font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--mute) }
-.fc-v{ font:600 15px/1 'IBM Plex Mono',monospace; color:var(--ink) }
-.fc-plot{ position:relative; display:flex; justify-content:space-evenly; gap:10px; height:230px; margin:10px 0 46px }
-.fc-plot::after{ content:''; position:absolute; left:0; right:0; top:var(--zero); border-top:1px solid var(--rule) }
-.fc-c{
-  position:relative; flex:1 1 0; min-width:0; max-width:132px; padding:0; border:0; background:none;
-  cursor:pointer; font:inherit; color:inherit; border-radius:8px;
+/* Two pictures side by side: the chart, and the second question. */
+.fn-two{ display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:14px; margin-bottom:14px }
+.fn-two > .card{ margin-bottom:0 }
+@media (max-width:980px){ .fn-two{ grid-template-columns:minmax(0,1fr) } }
+/* Beside a taller chart, the second card spreads its rows down its height. */
+.fn-two > .sp, .fn-two > .br{ display:flex; flex-direction:column }
+.fn-two .sp-rows{ flex:1 1 auto; display:flex; flex-direction:column; justify-content:space-evenly; padding:6px 0 }
+.fn-two .sp-rows > *{ margin-top:0 }
+
+.fc, .lc, .mf, .sp, .br{ padding:18px 20px 16px; margin-bottom:14px }
+.fc-h{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; min-height:28px }
+.fc-h h3{ margin:0; font:600 15px/1.25 var(--fz-sans); letter-spacing:-.005em; color:var(--ink) }
+.fc-read{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; min-height:22px }
+.fc-read > b{ font:500 11.5px/1 var(--fz-sans); color:var(--mute); white-space:nowrap }
+.fc-v{ font:600 14px/1 var(--fz-sans); color:var(--ink); white-space:nowrap }
+
+/* The chart: a scale of round figures, hairlines, slim bars from zero. */
+.fc-plot{ position:relative; height:232px; margin:30px 4px 30px 46px }
+.fc-grid{ position:absolute; inset:0; pointer-events:none }
+.fc-grid span{ position:absolute; left:0; right:0; border-top:1px solid var(--fz-grid) }
+.fc-grid span.zero{ border-top-color:var(--fz-axis) }
+.fc-grid b{ position:absolute; right:100%; top:-6px; margin-right:10px;
+  font:400 10.5px/12px 'IBM Plex Mono',monospace; color:var(--mute); white-space:nowrap }
+.fc-cols{ position:absolute; inset:0; display:flex }
+.fc-c, .lc-c{
+  position:relative; flex:1 1 0; min-width:0; height:100%; padding:0; border:0; background:none;
+  font:inherit; color:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent;
 }
 span.fc-c{ cursor:default }
+/* The period under the pointer: a wash behind its column. */
+.fc-c::before{ content:''; position:absolute; inset:-8px 3px -26px; border-radius:9px;
+  background:var(--ink); opacity:0; transition:opacity 140ms var(--ease) }
+button.fc-c:hover::before, .fc-c.on:not(.now)::before{ opacity:.05 }
+.fc-c:focus-visible, .lc-c:focus-visible{ outline:2px solid var(--c,var(--gold)); outline-offset:3px; border-radius:6px }
 .fc-c i{
-  position:absolute; left:14%; right:14%; top:calc(var(--zero) - var(--h)); height:var(--h); min-height:2px;
-  border-radius:6px 6px 2px 2px; background:color-mix(in srgb,var(--gold) 40%,var(--rule));
+  position:absolute; left:0; right:0; margin:0 auto; width:min(26px,48%);
+  top:calc(var(--zero) - var(--h)); height:var(--h); min-height:2px;
+  border-radius:5px 5px 0 0; background:var(--c-soft);
   transform-origin:50% 100%; animation:barUp 620ms var(--ease-out) both;
-  animation-delay:calc(var(--i,0) * 45ms);
-  transition:background 180ms var(--ease), filter 180ms var(--ease);
+  animation-delay:calc(var(--i,0) * 40ms); transition:background 160ms var(--ease);
 }
-.fc-c.neg i{ top:var(--zero); border-radius:2px 2px 6px 6px; transform-origin:50% 0;
-  background:color-mix(in srgb,var(--sh-dn) 62%,var(--rule)) }
-.fc-c.now i{ background:var(--gold) }
-.fc-c.now.neg i{ background:var(--sh-dn) }
-.fc-c:hover i, .fc-c.on i{ filter:brightness(.9) saturate(1.25) }
-.fc-c.on i{ box-shadow:0 0 0 2px var(--skin-card), 0 0 0 3px var(--gold) }
-.fc-c:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
-.fc-n{ position:absolute; left:-6px; right:-6px; top:calc(var(--zero) - var(--h) - 19px); text-align:center;
-  font:600 11.5px/1 'IBM Plex Mono',monospace; color:var(--ink-2); white-space:nowrap; pointer-events:none }
-.fc-c.neg .fc-n{ top:calc(var(--zero) + var(--h) + 6px) }
-.fc-c.on .fc-n{ color:var(--ink) }
-.fc-x{ position:absolute; left:-8px; right:-8px; top:calc(100% + 8px); text-align:center;
-  font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.04em; color:var(--mute); white-space:nowrap }
-.fc-g{ position:absolute; left:-8px; right:-8px; top:calc(100% + 24px); text-align:center;
-  font:600 10.5px/1 'IBM Plex Mono',monospace; color:var(--ink-2); white-space:nowrap }
-.fc-g.up{ color:var(--sh-up) } .fc-g.dn{ color:var(--sh-dn) }
+.fc-c.neg i{ top:var(--zero); border-radius:0 0 5px 5px; transform-origin:50% 0;
+  background:color-mix(in srgb,var(--fz-bad-solid) 46%,var(--skin-card)) }
+.fc-c.now i, button.fc-c:hover i, .fc-c.on i{ background:var(--c) }
+.fc-c.now.neg i, button.fc-c.neg:hover i, .fc-c.neg.on i{ background:var(--fz-bad-solid) }
+.fc-n{ position:absolute; left:-14px; right:-14px; top:calc(var(--zero) - var(--h) - 20px); text-align:center;
+  font:600 12px/1 var(--fz-sans); color:var(--ink); white-space:nowrap; pointer-events:none;
+  opacity:0; transition:opacity 140ms var(--ease) }
+.fc-c.neg .fc-n{ top:calc(var(--zero) + var(--h) + 8px) }
+.fc-c.now .fc-n, .fc-c.on .fc-n, button.fc-c:hover .fc-n{ opacity:1 }
+.fc-x{ position:absolute; left:-14px; right:-14px; top:calc(100% + 10px); text-align:center;
+  font:400 10.5px/1 'IBM Plex Mono',monospace; color:var(--mute); white-space:nowrap; pointer-events:none }
+.fc-c.now .fc-x, .fc-c.on .fc-x, .lc-c.on .fc-x{ color:var(--ink) }
 @keyframes barUp{ from{ transform:scaleY(0) } to{ transform:scaleY(1) } }
 @media (max-width:640px){
-  .fc{ padding:16px 14px 14px }
-  .fc-plot{ gap:5px; height:190px }
-  .fc-n{ font-size:9.5px; left:-10px; right:-10px }
-  .fc-x{ font-size:8.5px; letter-spacing:0 }
-  .fc-g{ font-size:9px }
+  .fc, .lc, .mf, .sp, .br{ padding:16px 14px 14px }
+  .fc-plot{ height:196px; margin-left:40px }
+  .fc-c i{ width:min(18px,52%) }
+  .fc-n{ font-size:11px }
+  .fc-x{ font-size:9.5px }
+  .fc-x.alt{ display:none }
+  .fc-c.on .fc-x.alt{ display:block }
 }
 
-/* A split of 100: income by where it went, assets by what funds them. One
-   colour a part, the same in every bar, named once underneath. */
-.sp{ padding:18px 20px 16px; margin-bottom:14px }
-.sp-r{ display:grid; grid-template-columns:70px minmax(0,1fr); align-items:center; gap:12px; margin-top:12px }
-.sp-q{ font:500 10.5px/1.2 'IBM Plex Mono',monospace; letter-spacing:.05em; color:var(--mute); white-space:nowrap }
-.sp-b{ display:flex; gap:2px; height:34px; border-radius:9px; overflow:hidden }
-.sp-b i{ display:grid; place-items:center; min-width:3px; background:var(--sp-c,var(--rule));
-  transform-origin:0 50%; animation:spIn 700ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 50ms);
-  transition:filter 160ms var(--ease) }
-.sp-b i:hover{ filter:brightness(1.12) }
-.sp-b b{ font:600 11px/1 'IBM Plex Mono',monospace; color:var(--sp-t,#fff) }
+/* The margins: two lines on one scale, named in the header. */
+.lc-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible;
+  animation:drawIn 900ms var(--ease-out) both }
+.lc-l{ fill:none; stroke:var(--c); stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+  vector-effect:non-scaling-stroke }
+.lc-a{ fill:var(--c); opacity:.07 }
+.lc-c::before{ content:''; position:absolute; left:50%; top:0; bottom:0; border-left:1px solid var(--fz-axis);
+  opacity:0; transition:opacity 120ms var(--ease) }
+.lc-c:hover::before, .lc-c:focus-visible::before{ opacity:1 }
+.lc-c i{ position:absolute; left:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%;
+  background:var(--c); box-shadow:0 0 0 2px var(--skin-card);
+  opacity:0; transform:scale(.5); transition:opacity 140ms var(--ease), transform 180ms var(--ease-out) }
+.lc-c.on i, .lc-c:hover i{ opacity:1; transform:none }
+.lc-k{ display:inline-flex; align-items:center; gap:6px; font:500 12px/1 var(--fz-sans); color:var(--ink-2); white-space:nowrap }
+.lc-k i{ width:14px; height:3px; border-radius:2px; background:var(--c) }
+.lc-k strong{ font:600 13px/1 var(--fz-sans); color:var(--ink) }
+@keyframes drawIn{ from{ clip-path:inset(-10% 100% -10% 0) } to{ clip-path:inset(-10% 0 -10% 0) } }
+
+/* Where the money went. The plot is stretched to the width between two
+   gutters; the names and amounts sit in the gutters as text, so they stay the
+   size they were written at. */
+.mf-plot{ position:relative; margin:40px 232px 10px 124px }
+.mf-plot svg{ display:block; width:100%; height:100%; overflow:visible; animation:drawIn 1000ms var(--ease-out) both }
+.mf-r{ transition:opacity 160ms var(--ease) }
+.f-cost{ fill:var(--fz-ribbon) }
+.f-spent{ fill:url(#mf-spent) } .f-keep{ fill:url(#mf-kept) } .f-net{ fill:url(#mf-net) } .f-left{ fill:url(#mf-left) }
+.g-a{ stop-color:color-mix(in srgb,var(--fz-a) 30%,var(--skin-card)) }
+.g-a2{ stop-color:color-mix(in srgb,var(--fz-a) 22%,var(--skin-card)) }
+.g-c{ stop-color:color-mix(in srgb,var(--fz-c) 40%,var(--skin-card)) }
+.g-n{ stop-color:var(--fz-ribbon) }
+.mf-plot:hover .mf-r{ opacity:.5 }
+.mf-plot .mf-r:hover{ opacity:1 }
+.n-rev, .n-op{ fill:var(--fz-a) } .n-oi{ fill:color-mix(in srgb,var(--fz-a) 46%,var(--skin-card)) }
+.n-net{ fill:var(--fz-c) } .n-cost{ fill:var(--fz-n3) }
+.mf-a, .mf-b, .mf-c li{ position:absolute; white-space:nowrap; pointer-events:none }
+.mf-a span, .mf-b span, .mf-c span{ font:500 12.5px/1.2 var(--fz-sans); color:var(--ink-2) }
+.mf-a{ right:100%; margin-right:14px; transform:translateY(-50%); text-align:right }
+.mf-a b{ display:block; margin-top:4px; font:600 18px/1.1 var(--fz-sans); letter-spacing:-.02em; color:var(--ink) }
+.mf-b{ left:50%; transform:translate(-50%,calc(-100% - 6px)); display:flex; align-items:baseline; gap:7px;
+  padding:3px 9px; border-radius:99px; background:var(--skin-card) }
+.mf-b.under{ transform:translate(-50%,6px) }
+.mf-b b, .mf-c b{ font:600 13px/1 var(--fz-sans); color:var(--ink) }
+.mf-c{ list-style:none; margin:0; padding:0 }
+.mf-c li{ left:100%; margin-left:12px; transform:translateY(-50%); display:flex; align-items:baseline; gap:8px }
+.mf-c em{ font:400 10.5px/1 'IBM Plex Mono',monospace; font-style:normal; color:var(--mute) }
+.mf-c li.net span{ color:var(--ink); font-weight:600 }
+/* Too narrow for three columns and two gutters: the single bar below says it. */
+@media (max-width:900px){ .mf{ display:none } }
+@media (min-width:901px){ .sp-narrow{ display:none } }
+
+/* A split of 100, as one bar a period: income by where it went, assets by
+   what funds them. Each part its own block; the names once, underneath. */
+.sp-r{ display:grid; grid-template-columns:64px minmax(0,1fr); align-items:center; gap:12px; margin-top:14px }
+.sp-q{ font:400 10.5px/1.2 'IBM Plex Mono',monospace; color:var(--mute); white-space:nowrap }
+.sp-b{ display:flex; gap:2px; height:28px }
+.sp-b i{ display:grid; place-items:center; min-width:3px; border-radius:4px; background:var(--sp-c,var(--fz-n5));
+  transform-origin:0 50%; animation:spIn 700ms var(--ease-out) both; animation-delay:calc(var(--i,0) * 45ms) }
+.sp-b b{ font:600 11px/1 var(--fz-sans); color:var(--sp-t,#fff) }
 @keyframes spIn{ from{ transform:scaleX(0); opacity:0 } to{ transform:none; opacity:1 } }
-.sp-k{ list-style:none; margin:16px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:8px 20px }
-.sp-k li{ display:inline-flex; align-items:baseline; gap:7px; font-size:12.5px; color:var(--ink-2) }
-.sp-k i{ width:10px; height:10px; border-radius:3px; background:var(--sp-c,var(--rule)); align-self:center }
-.sp-k b{ font:600 12px/1 'IBM Plex Mono',monospace; color:var(--ink) }
-.sp-k em{ font:600 10.5px/1 'IBM Plex Mono',monospace; font-style:normal }
-.sp-k em.up{ color:var(--sh-up) } .sp-k em.dn{ color:var(--sh-dn) }
-/* Seven parts, told apart by lightness as well as hue, so they still read as
-   seven in greyscale; profit is the one green. */
-.s-materials{ --sp-c:#7A5F17 } .s-employee_cost{ --sp-c:#B08A2A } .s-other_expenses{ --sp-c:#D8BE74; --sp-t:#3A2E0C }
-.s-depreciation{ --sp-c:#5E6B78 } .s-finance_cost{ --sp-c:#8D99A6 } .s-tax{ --sp-c:#C3BDB0; --sp-t:#2E2A22 }
-.s-rest{ --sp-c:#DDD6C6; --sp-t:#2E2A22 } .s-pat{ --sp-c:var(--sh-up) }
-.s-equity{ --sp-c:var(--gold) } .s-debt{ --sp-c:#5E6B78 }
-html[data-theme="dark"] .s-rest{ --sp-c:#4A4436; --sp-t:#F2EEE4 }
-html[data-theme="dark"] .s-pat, html[data-theme="dark"] .s-equity{ --sp-t:#0C0B08 }
-@media (max-width:560px){
-  .sp{ padding:16px 14px 14px }
-  .sp-r{ grid-template-columns:58px minmax(0,1fr); gap:8px }
-  .sp-b{ height:30px }
-}
+.sp-k{ list-style:none; margin:16px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:8px 18px }
+.sp-k li{ display:inline-flex; align-items:baseline; gap:7px; font:500 12.5px/1.2 var(--fz-sans); color:var(--ink-2) }
+.sp-k i{ width:10px; height:10px; border-radius:3px; background:var(--sp-c,var(--fz-n5)); align-self:center }
+.sp-k b{ font:600 12.5px/1 var(--fz-sans); color:var(--ink) }
+.sp-k em{ font:600 10.5px/1 var(--fz-sans); font-style:normal; color:var(--ink-2) }
+.sp-k em.up{ color:var(--fz-good) } .sp-k em.dn{ color:var(--fz-bad) }
+/* Costs are one grey, stepped lighter in the order they are listed; what is
+   kept is the green. In the dark the ramp runs the other way. */
+.s-materials{ --sp-c:var(--fz-n1) } .s-employee_cost{ --sp-c:var(--fz-n2) } .s-other_expenses{ --sp-c:var(--fz-n3) }
+.s-depreciation{ --sp-c:var(--fz-n4); --sp-t:#17140E } .s-finance_cost{ --sp-c:var(--fz-n5); --sp-t:#17140E }
+.s-tax{ --sp-c:var(--fz-n6); --sp-t:#17140E } .s-rest{ --sp-c:var(--fz-n6); --sp-t:#17140E }
+.s-pat{ --sp-c:var(--fz-c) } .s-equity{ --sp-c:var(--fz-c) } .s-debt{ --sp-c:var(--fz-b) }
+html[data-theme="dark"] .s-materials, html[data-theme="dark"] .s-employee_cost{ --sp-t:#17140E }
+html[data-theme="dark"] .s-depreciation, html[data-theme="dark"] .s-finance_cost,
+html[data-theme="dark"] .s-tax, html[data-theme="dark"] .s-rest{ --sp-t:#F7F4EC }
+@media (max-width:560px){ .sp-r{ grid-template-columns:54px minmax(0,1fr); gap:8px } }
+
+/* Cash left after investing: three thin bars on one scale. */
+.br-r{ display:grid; grid-template-columns:132px minmax(0,1fr) 92px; align-items:center; gap:12px; margin-top:20px }
+.br-l{ font:500 12.5px/1.2 var(--fz-sans); color:var(--ink-2) }
+.br-t{ position:relative; height:20px; border-radius:5px; background:var(--paper-2) }
+.br-t i{ position:absolute; top:0; bottom:0; border-radius:5px; background:var(--c);
+  transform-origin:0 50%; animation:spIn 700ms var(--ease-out) both }
+.br-r b{ font:600 13px/1 var(--fz-sans); color:var(--ink); text-align:right; white-space:nowrap }
+@media (max-width:560px){ .br-r{ grid-template-columns:108px minmax(0,1fr) 78px; gap:8px } }
 
 /* The statement itself, every line of it, one tap away. */
 .fn-more{ border:1px solid var(--rule); border-radius:16px; background:var(--skin-card); overflow:hidden }
 .fn-more > summary{
-  list-style:none; cursor:pointer; padding:15px 18px; display:flex; align-items:center;
-  justify-content:space-between; font-family:'Instrument Serif',Georgia,serif; font-size:20px; color:var(--ink);
+  list-style:none; cursor:pointer; padding:15px 20px; display:flex; align-items:center;
+  justify-content:space-between; font:600 15px/1.25 var(--fz-sans); color:var(--ink);
 }
 .fn-more > summary::-webkit-details-marker{ display:none }
 .fn-more > summary::after{ content:'+'; color:var(--gold); font:400 22px/1 Inter,system-ui,sans-serif }
@@ -1902,9 +2010,9 @@ html[data-theme="dark"] .pr-score.b-strong, html[data-theme="dark"] .pr-score.b-
    to its width directly and every marker to its position. */
 @media (prefers-reduced-motion: reduce){
   .stk-pane.enter, .fn-view.enter, .ov .card, .stk-scorechip, .lg img, .kr-bar i, .rk-bar i, .cf-fin,
-  .ov-area, .ov-dot, .ov-dot::after, .sk-note, .fc-c i, .sp-b i{ animation:none !important }
+  .ov-area, .ov-dot, .ov-dot::after, .sk-note, .fc-c i, .sp-b i, .br-t i, .lc-svg, .mf-plot svg{ animation:none !important }
   .ov-line.draw{ animation:none; stroke-dashoffset:0 }
   .stk-panes-ind, .stk-mini, .kmeter .fill, .ovs-b .fill, .pl-bar .fill, .fl-b .fill, .dv-b .fill,
-  .stk-scorechip, .stk-scorechip-go, .stk-scorechip-ring .a, .card, .card-go, .kp, .fc-c i{ transition:none !important }
+  .stk-scorechip, .stk-scorechip-go, .stk-scorechip-ring .a, .card, .card-go, .kp, .fc-c i, .fc-c::before, .fc-n, .lc-c i, .mf-r{ transition:none !important }
 }
 }

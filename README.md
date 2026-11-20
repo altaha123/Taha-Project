@@ -345,12 +345,28 @@ add up to each other, and a paragraph of method under most headings.
   tooltip or it is gone.
 - **Financials are drawn** (`/fundamentals?quarters=8`,
   `/fundamentals/position`). Three views: Income, Balance sheet, Cash flow.
-  Each is a row of figures that are also buttons, the pressed one charted from
-  zero over eight quarters (or the years filed), with its change on the year
-  and on the quarter; then a split of 100, where each ₹100 of income went
-  beside the same quarter a year earlier, and what funds the assets. A rise in
-  a cost or in borrowings is marked as a rise, not as good news. Every line of
-  the statement as filed is one tap away under "Full statement".
+  Each opens on a row of figures that are also buttons, every one with its
+  change on the year and its own small trend line; the pressed one is charted
+  as slim bars from zero against a scale of round figures, the latest in full
+  colour, the period under the pointer read out above. Beside the chart is
+  the second question: the two margins as lines on one scale; what funds the
+  assets; how much operating cash was left after capital expenditure. Income
+  ends on **where the money went**: revenue on the left, costs and EBITDA in
+  the middle, every cost by name and the net profit on the right, the heights
+  being the amounts. It is drawn only for an ordinary quarter (a profit, no
+  negative cost, parts that come back to the whole); on a phone, and for any
+  other quarter the split allows, one bar of ₹100 says it instead. Every line
+  of the statement as filed is one tap away under "Full statement".
+- **Three colours, each meaning one thing.** Blue is the size of the business
+  (revenue, assets, operating cash), green is what is kept (profit, equity,
+  free cash), orange is what is owed or spent (borrowings, capital
+  expenditure); costs are grey. They are the first three steps of a palette
+  checked for colour-blind separation on both card colours. A rise in a cost
+  or in borrowings is marked as a rise, not as good news. Figures and card
+  titles are set in the interface sans; the display serif is kept for the
+  company's name and the section headings. The first version set numerals in
+  the serif over fat tan bars, and was approved in a test browser that had
+  web fonts blocked: previews now load the real fonts.
 - **Ownership asks more than once** (`shareholding_filings.py`). The exchange
   refuses in bursts: a refused read is retried after a pause, the list of a
   company's filings is kept on disk so a restart does not need the exchange to
