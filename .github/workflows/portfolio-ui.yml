@@ -131,7 +131,7 @@ jobs:
         with:
           name: nav-products-verification
           path: test-results/nav-products
-      - name: Verify the call log dates every call, the watchlists save, share and score, and the pulse renders
+      - name: Verify the track record dates every idea and its return, the watchlists save, share and score, and the pulse renders
         if: always()
         # A timeline with no days on it, a rename that does not stick, a
         # shared link that opens empty, a game that never scores after the

@@ -29,9 +29,11 @@ ANALYZE = {
 FLAT = {"symbol": "ACME", "name": "Acme Ltd", "composite": 74, "technical": 81,
         "fundamental": 66, "f_score": 7, "setup": "Momentum Breakout"}
 
-STATS = {"total_tracked": 96,
-         "overall": {"avg_alpha_pct": 1.15, "beat_index_pct": 56,
-                     "median_days_held": 2}}
+# The summary of the track record (call_log.listing), which is what the card
+# is drawn from.
+STATS = {"calls": 96, "since_priced": 94, "up_since": 55, "up_since_pct": 58.5,
+         "avg_since_pct": 2.31, "median_since_pct": 1.4, "median_days": 6,
+         "index_priced": 80, "beat_index_pct": 56.3, "avg_vs_index_pct": 1.15}
 
 
 def _png_size(data):
@@ -64,6 +66,9 @@ def test_a_missing_score_renders_a_dash_not_a_crash():
 def test_record_card_renders():
     assert _png_size(og.record_card(STATS)) == (1200, 630)
     assert _png_size(og.record_card({})) == (1200, 630)
+    # Before the index's closes have loaded the card has no index figure to
+    # print, and says how long the ideas have run in its place.
+    assert _png_size(og.record_card(dict(STATS, index_priced=0, avg_vs_index_pct=None))) == (1200, 630)
 
 
 def test_the_card_never_carries_a_price_level():

@@ -1251,16 +1251,65 @@ def ideas(horizon: str = "short", limit: int = 15,
 
 
 # ---------------------------------------------------------------------------
-# The call log — when each Ideas call was made, and what happened next
+# The track record — when each idea was generated, and what it has returned
 #
 # The Ideas list is recomputed from the current scan on every load, so it has
 # no memory: it cannot say a name has been there since Monday, or that a call
 # was dropped. call_log.py is that memory. It records once per scan per
 # horizon — on the first /ideas read of a new scan, or in the background when
-# the scan finishes or the Call log tab is opened, whichever comes first.
+# the scan finishes or the Track record tab is opened, whichever comes first.
+#
+# It is the one record. The page called Track record used to read a second
+# ledger, tracker.py, which held only the ideas somebody pressed Track on; the
+# two answered the same question, and the page, its share card and its CSV
+# now all read this one.
 # ---------------------------------------------------------------------------
 
 _call_log_busy = threading.Lock()
+
+# The index's daily closes, for "the index over the same days". One feed read
+# a day, off the request thread: the record must open at once whether or not
+# the feed answers, and without the closes it simply shows no index figures.
+_index_cache = {"day": None, "closes": None, "retry_at": 0.0}
+_index_busy = threading.Lock()
+
+
+def _index_closes():
+    today = _dt_mod.date.today()
+    if _index_cache["day"] == today or time.time() < _index_cache["retry_at"]:
+        return _index_cache["closes"]
+    if not _index_busy.acquire(blocking=False):
+        return _index_cache["closes"]
+
+    def run():
+        try:
+            frame = tracker._benchmark_frame()
+            days = tracker._dated_index(frame)
+            closes = []
+            if days is not None:
+                for day, close in zip(days, frame["Close"]):
+                    if close == close and close:
+                        closes.append((day.date().isoformat(), float(close)))
+            if closes:
+                _index_cache["closes"], _index_cache["day"] = closes, today
+            else:
+                _index_cache["retry_at"] = time.time() + 1800
+        except Exception:
+            _index_cache["retry_at"] = time.time() + 1800
+        finally:
+            _index_busy.release()
+
+    threading.Thread(target=run, daemon=True, name="record-index").start()
+    return _index_cache["closes"]
+
+
+def _record_summary():
+    """The headline figures of the track record, for its share card."""
+    if call_log is None:
+        return {}
+    out = call_log.listing(limit=1, prices=_scan_prices(_state["payload"]),
+                           index=_index_closes(), index_name=tracker.BENCHMARK)
+    return dict(out.get("summary") or {}, index_name=out.get("index_name"))
 
 
 def _scan_prices(p):
@@ -1375,17 +1424,19 @@ def _log_scan_calls(p):
 
 @app.get("/calls")
 def calls(horizon: str = "", status: str = "", symbol: str = "", limit: int = 300):
-    """Every Ideas call, newest first: the day, date and time it was made, the
-    price and plan it carried, every change since, and how it ended."""
+    """The track record. Every idea, newest first: the day, date and time it
+    was generated, the price and plan it carried, its return since, every
+    change in between, and how the list closed it."""
     if call_log is None:
-        raise HTTPException(503, "The call log is unavailable on this server.")
+        raise HTTPException(503, "The track record is unavailable on this server.")
     p = _state["payload"]
     recording = _log_scan_calls(p)
     try:
         out = call_log.listing(horizon=horizon, status=status, symbol=symbol,
-                               limit=limit, prices=_scan_prices(p))
+                               limit=limit, prices=_scan_prices(p),
+                               index=_index_closes(), index_name=tracker.BENCHMARK)
     except Exception as e:
-        raise HTTPException(503, f"The call log could not be read: {str(e)[:120]}")
+        raise HTTPException(503, f"The track record could not be read: {str(e)[:120]}")
     out["latest_scan"] = (p or {}).get("scanned_at")
     out["recording"] = bool(recording)
     out["disclaimer"] = DISCLAIMER
@@ -1395,9 +1446,11 @@ def calls(horizon: str = "", status: str = "", symbol: str = "", limit: int = 30
 @app.get("/calls/export.csv")
 def calls_export():
     if call_log is None:
-        raise HTTPException(503, "The call log is unavailable on this server.")
-    return Response(content=call_log.export_csv(), media_type="text/csv",
-                    headers={"Content-Disposition": "attachment; filename=altaha-call-log.csv"})
+        raise HTTPException(503, "The track record is unavailable on this server.")
+    return Response(content=call_log.export_csv(prices=_scan_prices(_state["payload"]),
+                                                index=_index_closes()),
+                    media_type="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=altaha-track-record.csv"})
 
 
 def _safe_context(horizon: str):
@@ -1769,7 +1822,7 @@ def og_stock(ticker: str):
 def og_record():
     """The track-record card — the one claim here nobody else publishes."""
     try:
-        png = og_cards.cached("record", lambda: og_cards.record_card(tracker.stats()))
+        png = og_cards.cached("record", lambda: og_cards.record_card(_record_summary()))
     except Exception as e:
         raise HTTPException(500, f"Could not render the card: {str(e)[:100]}")
     return Response(content=png, media_type="image/png", headers=_PNG_HEADERS)
@@ -1777,18 +1830,20 @@ def og_record():
 
 @app.get("/share/record")
 def share_record():
-    st = tracker.stats()
-    o = st.get("overall") or {}
-    alpha = o.get("avg_alpha_pct")
-    beat = o.get("beat_index_pct")
-    desc = (f"{st.get('total_tracked', 0)} ideas recorded automatically — winners and "
-            f"losers. {beat}% beat the index" if beat is not None else
-            f"{st.get('total_tracked', 0)} ideas recorded automatically.")
-    if alpha is not None:
-        desc += f", average alpha {alpha:+.2f}% over the index across the identical window."
+    try:
+        st = _record_summary()
+    except Exception:
+        st = {}
+    desc = (f"{st.get('calls') or 0} ideas, each recorded the day it was generated — "
+            "winners and losers.")
+    if st.get("up_since_pct") is not None:
+        desc += (f" {st['up_since_pct']:g}% are above the price they were called at, "
+                 f"average return {st['avg_since_pct']:+.2f}% with nothing done after.")
+    if st.get("avg_vs_index_pct") is not None:
+        desc += f" That is {st['avg_vs_index_pct']:+.2f}% against the index over the same days."
     return Response(content=og_cards.share_page(
         "Does the Altaha engine work?", desc,
-        f"{SHARE_ORIGIN}/og/record.png", f"{SITE_URL}/?go=tracker"),
+        f"{SHARE_ORIGIN}/og/record.png", f"{SITE_URL}/?go=calls"),
         media_type="text/html")
 
 
@@ -2064,7 +2119,7 @@ def share_holding(ticker: str):
         f"{name} ({sym}) — {pct(row.get('return_pct'))} since the idea was recorded",
         desc,
         f"{SHARE_ORIGIN}/og/holding.png?ticker={sym}",
-        f"{SITE_URL}/?go=tracker"),
+        f"{SITE_URL}/?go=calls"),
         media_type="text/html")
 
 

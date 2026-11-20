@@ -1,12 +1,17 @@
 """
-Altaha Screener — Call Log
+Altaha Screener — the Track record (the call log)
 
 WHAT THIS ANSWERS
 "When did Altaha first put this on the list, what exactly did it say, and what
-has happened since?" The Ideas tab is rebuilt from the latest scan every time
-it loads, so until this file a call had no date. A stock that had sat on the
-list for two weeks looked identical to one that arrived this morning, and a
-call that was dropped simply vanished — along with any way to check it.
+has it returned since?" The Ideas tab is rebuilt from the latest scan every
+time it loads, so until this file a call had no date. A stock that had sat on
+the list for two weeks looked identical to one that arrived this morning, and
+a call that was dropped simply vanished — along with any way to check it.
+
+This is the one record of the site's ideas. There used to be two — this log,
+and a Tracker of ideas added by hand — which answered the same question from
+two ledgers. The page called Track record now reads this file alone: every
+idea, recorded by the scan that generated it, with its return from that day.
 
 WHAT A CALL IS
 One (symbol, horizon, setup) on the Ideas list, with the stance and levels it
@@ -34,9 +39,27 @@ would turn that wobble into calls opened and closed within the hour. Recording
 keys on the scan's own timestamp, so the second and the hundredth view of the
 same scan change nothing.
 
+TWO RETURNS, AND WHICH ONE LEADS
+  · since     from the price on the day of the idea to the latest scan price,
+              as if it was bought that day and nothing was done after. Every
+              idea has one, open or closed, and it is the figure the record
+              leads with and averages.
+  · move      from the same price to where the call closed (stop, target or
+              dropped), or to the latest scan while it is still open. For an
+              open call the two are the same number.
+A call whose stock is no longer in the scan has no latest price; its "since"
+is then its closing move, and the row says the price is the closing one.
+
+AGAINST THE INDEX
+Return alone mostly measures the market. Given the index's daily closes, each
+idea also carries the index's move over the same days and the difference. The
+window runs from the first index close on or after the idea's day to the last
+one on or before the day its "since" price was read. An idea made today has
+no such window yet and carries no index figure.
+
 PRICES
 Every price here is a scan price — what the universe scan read for the stock —
-so "since the call" means "from the scan that made the call to the latest
+so "since the idea" means "from the scan that made the call to the latest
 scan", and the page names that scan. A stop that was touched and recovered
 between two scans is not seen. The page says so rather than implying an
 intraday check that does not happen.
@@ -46,6 +69,7 @@ DATA_DIR/call_log.db, SQLite in WAL mode, standard library only. A call's
 opening date and price are written once and never updated.
 """
 
+import bisect
 import csv
 import datetime as dt
 import io
@@ -83,11 +107,16 @@ def _anchored(setup_key):
 # logging it would bury the events that matter.
 LEVEL_CHANGE_PCT = 0.5
 
-METHOD = ("Each call is dated by the scan that first listed it. Prices are scan prices: "
-          "\"now\" is the latest scan, and stop and target are checked against each new "
-          "scan's price using the levels the call carried before that scan. A level touched "
-          "and recovered between two scans is not seen. A stock that returns after a call "
-          "closes opens a new call with its own date.")
+METHOD = ("Each idea is dated by the scan that first listed it, and recorded then, whether "
+          "or not it goes on to work. Its return is measured from that scan's price to the "
+          "latest scan's price, as if it was bought that day and nothing was done after; "
+          "where the list later closed the call, at a stop, a target or by dropping it, "
+          "that is shown beside it. Prices are scan prices: stop and target are checked "
+          "against each new scan's price using the levels the call carried before that scan, "
+          "and a level touched and recovered between two scans is not seen. A stock that "
+          "returns after a call closes is a new idea with its own date.")
+INDEX_METHOD = ("The index figure is {name} over the same days, from its close on the day "
+                "of the idea to its latest close.")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS calls (
@@ -391,25 +420,76 @@ def _pct(now, then):
     return round(100 * (now / then - 1), 2)
 
 
-def _shape(c, prices, events, now):
+def _index_series(index):
+    """[(date, close)] oldest first, from pairs or a {date: close} mapping."""
+    if not index:
+        return []
+    items = index.items() if isinstance(index, dict) else index
+    out = []
+    for day, close in items:
+        close = _num(close)
+        if day and close:
+            out.append((str(day)[:10], close))
+    out.sort()
+    return out
+
+
+def _index_move(series, start, end):
+    """
+    The index's move, in percent, from its first close on or after `start` to
+    its last close on or before `end` (both ISO dates). None until those are
+    two different closes: an idea made today has no index window yet, and
+    printing 0.00% for it would read as "the market did nothing".
+    """
+    if not series or not start or not end:
+        return None
+    dates = [d for d, _ in series]
+    i = bisect.bisect_left(dates, start)
+    j = bisect.bisect_right(dates, end) - 1
+    if i >= len(dates) or j <= i:
+        return None
+    return _pct(series[j][1], series[i][1])
+
+
+def _shape(c, prices, events, now, series=()):
     open_ = c["status"] == "open"
-    price_now = prices.get(c["symbol"]) if open_ else c["closed_price"]
+    latest = prices.get(c["symbol"])
+    price_now = latest if open_ else c["closed_price"]
     if open_ and price_now is None:
         price_now = c["last_price"]
     end = _parse(c["closed_at"]) if not open_ else now
     start = _parse(c["called_at"])
     days = max(0, (end - start).days) if end and start else None
+    called = when(c["called_at"])
+
+    # Since the idea, nothing done after. An open call is priced at the latest
+    # scan already; a closed one is priced there too while its stock is still
+    # in the scan, and at its closing price once it is not.
+    if open_ or latest is not None:
+        since_price, since_basis, since_end = (price_now if open_ else latest), "latest", now
+    else:
+        since_price, since_basis, since_end = c["closed_price"], "close", end
+    since_pct = _pct(since_price, c["called_price"])
+    since_days = max(0, (since_end - start).days) if since_end and start else None
+    index_pct = None
+    if series and called and since_end:
+        index_pct = _index_move(series, called["date"],
+                                since_end.astimezone(IST).date().isoformat())
+    vs_index = (round(since_pct - index_pct, 2)
+                if since_pct is not None and index_pct is not None else None)
     return {
         "id": c["id"], "symbol": c["symbol"], "name": c["name"], "sector": c["sector"],
         "horizon": c["horizon"], "horizon_label": HORIZON_LABEL.get(c["horizon"], c["horizon"]),
         "setup_key": c["setup_key"], "setup": c["setup"], "hold": c["hold"],
-        "called": when(c["called_at"]), "called_scan": c["called_scan"],
+        "called": called, "called_scan": c["called_scan"],
         "called_price": c["called_price"], "called_stance": c["called_stance"],
         "stance": c["stance"], "entry": c["entry"], "stop": c["stop"], "target": c["target"],
         "rr": c["rr"], "conviction": c["conviction"], "band": c["band"],
         "status": c["status"], "outcome": c["outcome"], "closed": when(c["closed_at"]),
         "price_now": price_now, "move_pct": _pct(price_now, c["called_price"]),
         "days": days, "scans_seen": c["scans_seen"],
+        "since_price": since_price, "since_pct": since_pct, "since_basis": since_basis,
+        "since_days": since_days, "index_pct": index_pct, "vs_index_pct": vs_index,
         "events": [{"at": when(e["at"]), "kind": e["kind"], "stance": e["stance"],
                     "price": e["price"], "note": e["note"]} for e in events],
     }
@@ -433,7 +513,27 @@ def _summary(rows, now):
             outcomes[r["outcome"]] += 1
     week_start = (now.astimezone(IST).date() - dt.timedelta(days=now.astimezone(IST).weekday()))
     first = min((r["called"]["date"] for r in rows if r["called"]), default=None)
+    since = [r["since_pct"] for r in rows if r["since_pct"] is not None]
+    held = [r["since_days"] for r in rows if r["since_pct"] is not None and r["since_days"] is not None]
+    # Only the ideas the index could be measured against, on both sides of the
+    # comparison: averaging every idea's return against some ideas' index
+    # would compare two different sets.
+    both = [r for r in rows if r["vs_index_pct"] is not None]
     return {
+        # Since the idea, nothing done after — what the record leads with.
+        "since_priced": len(since),
+        "up_since": sum(1 for m in since if m > 0),
+        "up_since_pct": round(100 * sum(1 for m in since if m > 0) / len(since), 1) if since else None,
+        "avg_since_pct": round(statistics.fmean(since), 2) if since else None,
+        "median_since_pct": round(statistics.median(since), 2) if since else None,
+        "median_days": statistics.median(held) if held else None,
+        "index_priced": len(both),
+        "beat_index": sum(1 for r in both if r["vs_index_pct"] > 0),
+        "beat_index_pct": (round(100 * sum(1 for r in both if r["vs_index_pct"] > 0) / len(both), 1)
+                           if both else None),
+        "avg_index_pct": round(statistics.fmean(r["index_pct"] for r in both), 2) if both else None,
+        "avg_vs_index_pct": (round(statistics.fmean(r["vs_index_pct"] for r in both), 2)
+                             if both else None),
         "calls": len(rows),
         "open": sum(1 for r in rows if r["status"] == "open"),
         "closed": sum(1 for r in rows if r["status"] == "closed"),
@@ -462,10 +562,19 @@ def _by_day(rows, now, days=14):
 
 
 def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 300,
-            prices: dict | None = None, now: dt.datetime | None = None) -> dict:
-    """Calls newest first, each with its timeline, plus a summary of all of them."""
+            prices: dict | None = None, now: dt.datetime | None = None,
+            index=None, index_name: str = "") -> dict:
+    """
+    Ideas newest first, each with its timeline, plus a summary of all of them.
+
+    prices  {SYMBOL: price} from the latest scan — what "since the idea" is
+            measured to
+    index   the index's daily closes, as [(date, close)] or {date: close}, for
+            the same-days comparison; without it the index fields are None
+    """
     now = now or dt.datetime.now(dt.timezone.utc)
     prices = {str(k).upper(): _num(v) for k, v in (prices or {}).items()}
+    series = _index_series(index)
     where, args = [], []
     if horizon in HORIZONS:
         where.append("horizon=?"); args.append(horizon)
@@ -477,7 +586,7 @@ def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 
     conn = _connect()
     calls = conn.execute(sql + " ORDER BY called_at DESC, id DESC", args).fetchall()
     events = _events_for(conn, [c["id"] for c in calls])
-    rows = [_shape(c, prices, events.get(c["id"], []), now) for c in calls]
+    rows = [_shape(c, prices, events.get(c["id"], []), now, series) for c in calls]
     last = conn.execute("SELECT scan, at FROM recorded_scans ORDER BY at DESC LIMIT 1").fetchone()
     return {
         "rows": rows[:max(1, min(int(limit or 300), 1000))],
@@ -485,7 +594,11 @@ def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 
         "summary": _summary(rows, now),
         "by_day": _by_day(rows, now),
         "last_scan": last["scan"] if last else None,
-        "method": METHOD,
+        "horizons": [{"key": h, "label": HORIZON_LABEL[h]} for h in HORIZONS
+                     if any(r["horizon"] == h for r in rows)],
+        "index_name": (index_name or "the index") if series else None,
+        "method": METHOD + (" " + INDEX_METHOD.format(name=index_name or "the index")
+                            if series else ""),
     }
 
 
@@ -525,10 +638,12 @@ def retire(horizons, scanned_at: str, prices: dict | None = None, note: str = ""
     return n
 
 
-def export_csv() -> str:
-    data = listing(limit=1000)["rows"]
+def export_csv(prices: dict | None = None, index=None) -> str:
+    data = listing(limit=1000, prices=prices, index=index)["rows"]
     cols = ["called_date", "called_weekday", "called_time", "symbol", "name", "horizon",
-            "setup", "called_stance", "called_price", "stance", "entry", "stop", "target",
+            "setup", "called_stance", "called_price", "since_price", "since_pct",
+            "since_basis", "since_days", "index_pct", "vs_index_pct",
+            "stance", "entry", "stop", "target",
             "status", "outcome", "closed_date", "price_now", "move_pct", "days", "scans_seen"]
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=cols, extrasaction="ignore")

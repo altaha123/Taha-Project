@@ -192,7 +192,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   await page.locator('#sh-mega-research').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#sh-mega-discover').isVisible(), false, 'two menus are open at once');
   assert.deepEqual(await menuTabs('research'),
-                   ['query', 'lenses', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls', 'tracker']);
+                   ['query', 'lenses', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls']);
   assert.match(await page.locator('#sh-mega-research .sh-mega-lead').innerText(), /Open Ideas/);
   await page.screenshot({ path: path.join(output, '1280-menu-ideas.png') });
   await page.locator('.sh-doorwrap[data-sec="portfolio"]').hover();
@@ -292,7 +292,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   await page.locator('#sh-sheet-research').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#sh-sheet-discover').isVisible(), false, 'two doors are showing at once');
   assert.deepEqual(await sheetTabs('research'),
-                   ['query', 'lenses', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls', 'tracker']);
+                   ['query', 'lenses', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls']);
   await sheet.locator('.sh-sheet-tab[data-sec="research"]').press('ArrowRight');
   await page.locator('#sh-sheet-portfolio').waitFor({ state: 'visible' });
   assert.deepEqual(await sheetTabs('portfolio'), ['portfolio', 'watchlists', 'allocate', 'planner', 'advisors.html', 'wealth.html']);
@@ -386,7 +386,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
     owners[t] = s.id;
   }));
   ['ideas', 'screener', 'charts', 'results', 'investors', 'funds', 'filings', 'concalls',
-   'social', 'vocab', 'tracker', 'portfolio', 'planner', 'live', 'deals', 'special',
+   'social', 'vocab', 'calls', 'portfolio', 'planner', 'live', 'deals', 'special',
    'wow', 'options', 'allocate', 'score', 'query', 'lenses',
    'today', 'ideahub', 'money', 'strategies'].forEach(t => {
     assert.ok(owners[t], `${t} lost its home in the restructure`);
@@ -399,7 +399,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   assert.equal(sections[2].tabs[0], 'money');
   ['live', 'deals', 'wow', 'special', 'results', 'filings', 'options', 'screener'].forEach(t =>
     assert.equal(owners[t], 'discover', `${t} belongs behind Market`));
-  ['ideas', 'query', 'lenses', 'investors', 'funds', 'charts', 'tracker', 'strategies', 'concalls'].forEach(t =>
+  ['ideas', 'query', 'lenses', 'investors', 'funds', 'charts', 'calls', 'strategies', 'concalls'].forEach(t =>
     assert.equal(owners[t], 'research', `${t} belongs behind Ideas`));
   ['portfolio', 'allocate', 'planner'].forEach(t => assert.equal(owners[t], 'portfolio', `${t} belongs behind Portfolio`));
   /* Setups ("Opportunities now") was removed as a tool: Market's own page
@@ -504,7 +504,9 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   await shows('#screener', 'view-screener');
   await shows('#ideas', 'view-ideas');
   await shows('#research/ideas', 'view-ideas');
-  await shows('#portfolio/tracker', 'view-tracker');
+  // The Tracker became the Track record, one page with the dated calls.
+  await shows('#portfolio/tracker', 'view-calls');
+  await shows('#research/tracker', 'view-calls');
   await shows('#funds', 'view-funds');
   await shows('#screener/funds', 'view-funds');
   await shows('#screener/filings', 'view-filings');
@@ -579,18 +581,19 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   /* Factors was removed with it. Its old name opens Ideas; the Score page no
      longer sends anybody there; and the panel that used to fill it does not
      reappear at the foot of Track record, which is where its script fell back
-     to when it could not find a page of its own. */
+     to when it could not find a page of its own. (The Tracker's own view has
+     since merged into the dated record; its id opens that page.) */
   await page.evaluate(() => window.AltahaNav.go('research', 'factors', true));
   await page.locator('#view-ideahub .dr-universe').waitFor({ state: 'visible' });
   assert.match(page.url(), /#research\/ideahub$/);
   await page.evaluate(() => window.AltahaNav.go(null, 'tracker', true));
-  await page.locator('#view-tracker').waitFor({ state: 'visible' });
+  await page.locator('#view-calls').waitFor({ state: 'visible' });
   await page.waitForTimeout(1600);
-  assert.equal(await page.locator('#lab, #view-tracker .lab').count(), 0, 'the factor panel moved into Track record instead of going');
+  assert.equal(await page.locator('#lab, #view-calls .lab, #view-tracker').count(), 0, 'the factor panel moved into Track record instead of going');
   await page.evaluate(() => window.AltahaNav.go(null, 'score', true));
   await page.locator('#view-score').waitFor({ state: 'visible' });
   assert.doesNotMatch(await page.locator('#view-score').innerText(), /factor evidence|under Factors/i);
-  await page.locator('#view-score [data-goto="tracker"]').waitFor();
+  await page.locator('#view-score [data-goto="calls"]').waitFor();
 
   // Neither removed tool is offered anywhere: door menus, door bar, footer, hub cards, legacy tabs.
   await page.evaluate(() => window.AltahaNav.go('research', null, true));

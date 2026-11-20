@@ -1,5 +1,6 @@
 """
-The call log: every Ideas call dated once, judged once, never rewritten.
+The track record: every idea dated once, judged once, never rewritten, and
+measured from the day it was generated.
 
 The failures these pin are the ones that would make the log flatter itself or
 lie about time — a breached stop quietly redrawn below the price, a call that
@@ -162,6 +163,117 @@ def test_export_has_the_day_and_time_columns(log):
     assert first.startswith("2026-10-26,Monday,10:40 IST,ABB")
 
 
+# --- since the idea: the return the record leads with ------------------------
+
+NOW = dt.datetime(2026, 10, 29, 6, 0, tzinfo=dt.timezone.utc)      # Thursday
+INDEX = [("2026-10-23", 250.0), ("2026-10-26", 250.0), ("2026-10-27", 252.5),
+         ("2026-10-28", 255.0), ("2026-10-29", 257.5)]
+
+
+def test_an_open_idea_is_measured_from_its_day_to_the_latest_scan(log):
+    log.record("short", [idea("ABB", price=100.0)], SCAN1, {})
+    r = log.listing(prices={"ABB": 112.0}, now=NOW)["rows"][0]
+    assert r["since_pct"] == 12.0 and r["since_price"] == 112.0
+    assert r["since_basis"] == "latest" and r["since_days"] == 3
+    # Nothing has been done to it, so the two returns are one number.
+    assert r["move_pct"] == r["since_pct"]
+
+
+def test_a_closed_idea_keeps_running_as_if_nothing_was_done(log):
+    """The list dropped it at 99. Whoever bought it on the day of the idea and
+    did nothing holds it at today's price, and that is the return to show."""
+    log.record("short", [idea("ABB", price=100.0)], SCAN1, {})
+    log.record("short", [], SCAN2, {"ABB": 99.0})
+    r = log.listing(prices={"ABB": 120.0}, now=NOW)["rows"][0]
+    assert r["status"] == "closed" and r["outcome"] == "dropped"
+    assert r["move_pct"] == -1.0 and r["price_now"] == 99.0      # where the list left it
+    assert r["since_pct"] == 20.0 and r["since_price"] == 120.0   # where it is now
+    assert r["since_basis"] == "latest"
+    assert r["days"] == 1 and r["since_days"] == 3
+
+
+def test_a_stock_that_left_the_scan_is_measured_to_its_close(log):
+    """No latest price exists for it. It stays in the average at the price it
+    closed at; leaving it out would drop exactly the ideas that went wrong."""
+    log.record("short", [idea("ABB", price=100.0, stop=92.0)], SCAN1, {})
+    log.record("short", [], SCAN2, {"ABB": 90.0})
+    out = log.listing(prices={}, now=NOW)
+    r = out["rows"][0]
+    assert r["outcome"] == "stop"
+    assert r["since_pct"] == -10.0 and r["since_basis"] == "close"
+    assert r["since_days"] == 1
+    assert out["summary"]["since_priced"] == 1 and out["summary"]["avg_since_pct"] == -10.0
+
+
+def test_the_index_is_measured_over_the_same_days(log):
+    log.record("short", [idea("ABB", price=100.0)], SCAN1, {})
+    out = log.listing(prices={"ABB": 112.0}, now=NOW, index=INDEX, index_name="NIFTYBEES")
+    r = out["rows"][0]
+    assert r["index_pct"] == 3.0                  # 250 on the 26th to 257.5 on the 29th
+    assert r["vs_index_pct"] == 9.0
+    assert out["index_name"] == "NIFTYBEES"
+    assert "NIFTYBEES over the same days" in out["method"]
+    # A {date: close} mapping reads the same as the pairs.
+    assert log.listing(prices={"ABB": 112.0}, now=NOW,
+                       index=dict(INDEX))["rows"][0]["index_pct"] == 3.0
+
+
+def test_an_idea_made_today_has_no_index_figure_yet(log):
+    """One close is not a window. 0.00% there would say the market did
+    nothing, when the truth is that nothing has been measured."""
+    log.record("short", [idea("ABB", price=100.0)], "29 Oct 2026, 05:10", {})
+    r = log.listing(prices={"ABB": 101.0}, now=NOW, index=INDEX)["rows"][0]
+    assert r["since_pct"] == 1.0
+    assert r["index_pct"] is None and r["vs_index_pct"] is None
+
+
+def test_without_index_closes_the_record_still_reads(log):
+    log.record("short", [idea("ABB", price=100.0)], SCAN1, {})
+    out = log.listing(prices={"ABB": 112.0}, now=NOW)
+    assert out["index_name"] is None
+    assert out["rows"][0]["index_pct"] is None
+    assert out["summary"]["index_priced"] == 0 and out["summary"]["avg_vs_index_pct"] is None
+    assert "over the same days" not in out["method"]
+
+
+def test_the_summary_leads_with_the_return_since_the_idea(log):
+    log.record("short", [idea("ABB", price=100.0), idea("TCS", price=100.0),
+                         idea("INFY", price=100.0)], SCAN1, {})
+    log.record("short", [idea("TCS", price=104.0)], SCAN2, {"ABB": 99.0, "INFY": 98.0})
+    out = log.listing(prices={"ABB": 120.0, "TCS": 106.0, "INFY": 91.0}, now=NOW, index=INDEX)
+    s = out["summary"]
+    assert s["calls"] == 3 and s["since_priced"] == 3
+    assert s["up_since"] == 2 and s["up_since_pct"] == 66.7
+    assert s["avg_since_pct"] == pytest.approx((20 + 6 - 9) / 3, abs=0.01)
+    assert s["median_since_pct"] == 6.0
+    assert s["median_days"] == 3
+    # The index rose 3% over the same three days, so two of the three beat it.
+    assert s["index_priced"] == 3 and s["beat_index"] == 2 and s["beat_index_pct"] == 66.7
+    assert s["avg_index_pct"] == 3.0
+    assert s["avg_vs_index_pct"] == pytest.approx((17 + 3 - 12) / 3, abs=0.01)
+    # What the list itself did with them is still counted, separately.
+    assert s["outcomes"]["dropped"] == 2 and s["open"] == 1
+
+
+def test_the_listing_names_the_lists_it_holds(log):
+    log.record("week", [idea("ABB", setup_key="pick_week")], SCAN1, {})
+    log.record("short", [idea("TCS")], SCAN1, {})
+    out = log.listing(now=NOW)
+    assert [h["key"] for h in out["horizons"]] == ["week", "short"]
+    assert out["horizons"][0]["label"] == "This week"
+
+
+def test_the_export_carries_the_return_since_the_idea(log):
+    log.record("short", [idea("ABB", price=100.0)], SCAN1, {})
+    text = log.export_csv(prices={"ABB": 112.0}, index=INDEX)
+    head, first = text.splitlines()[:2]
+    cols = head.split(",")
+    row = dict(zip(cols, first.split(",")))
+    assert row["called_price"] == "100.0" and row["since_price"] == "112.0"
+    assert row["since_pct"] == "12.0" and row["since_basis"] == "latest"
+    assert "index_pct" in cols and "vs_index_pct" in cols
+
+
 # --- the endpoints -----------------------------------------------------------
 
 @pytest.fixture
@@ -201,3 +313,66 @@ def test_calls_endpoint_answers_while_recording(app_with_scan, monkeypatch):
     assert out["latest_scan"] == SCAN1
     assert out["total"] >= 1
     assert "disclaimer" in out and "method" in out
+
+
+def test_the_endpoint_measures_to_the_latest_scan_and_against_the_index(app_with_scan, monkeypatch):
+    main = app_with_scan
+    monkeypatch.setattr(main.ideas_engine, "select",
+                        lambda p, **k: {"rows": [idea("ABB")], "available": True})
+    monkeypatch.setattr(main, "_index_closes", lambda: INDEX)
+    main.call_log.record("short", [idea("ABB", price=101.0)], SCAN1, {})
+    monkeypatch.setitem(main._state["payload"], "factor_universe",
+                        [{"symbol": "ABB", "price": 111.1}])
+    out = main.calls()
+    assert out["rows"][0]["since_pct"] == 10.0
+    assert out["index_name"] == main.tracker.BENCHMARK
+    assert "since_priced" in out["summary"]
+    # The share card is drawn from the same summary the page shows.
+    card = main._record_summary()
+    assert card["calls"] == out["summary"]["calls"]
+    assert card["avg_since_pct"] == out["summary"]["avg_since_pct"]
+
+
+def test_the_index_closes_never_hold_up_the_record(app_with_scan, monkeypatch):
+    """The feed read happens on its own thread. The first request gets no
+    index figures, not a wait; a feed that fails is left alone for a while."""
+    import threading
+    main = app_with_scan
+    monkeypatch.setattr(main, "_index_cache", {"day": None, "closes": None, "retry_at": 0.0})
+    gate, done = threading.Event(), threading.Event()
+
+    def slow():
+        gate.wait(5)
+        done.set()
+        raise RuntimeError("feed down")
+
+    monkeypatch.setattr(main.tracker, "_benchmark_frame", slow)
+    assert main._index_closes() is None          # answered before the feed did
+    gate.set()
+    assert done.wait(5)
+    for _ in range(200):
+        if main._index_cache["retry_at"]:
+            break
+        time.sleep(0.01)
+    assert main._index_cache["retry_at"] > time.time()
+    monkeypatch.setattr(main.tracker, "_benchmark_frame",
+                        lambda: pytest.fail("the feed was asked again inside the back-off"))
+    assert main._index_closes() is None
+
+
+def test_index_closes_are_read_once_a_day(app_with_scan, monkeypatch):
+    import pandas as pd
+    main = app_with_scan
+    monkeypatch.setattr(main, "_index_cache", {"day": None, "closes": None, "retry_at": 0.0})
+    frame = pd.DataFrame({"Close": [250.0, float("nan"), 255.0]},
+                         index=pd.to_datetime(["2026-10-26", "2026-10-27", "2026-10-28"]).tz_localize("Asia/Kolkata"))
+    monkeypatch.setattr(main.tracker, "_benchmark_frame", lambda: frame)
+    main._index_closes()
+    for _ in range(200):
+        if main._index_cache["closes"]:
+            break
+        time.sleep(0.01)
+    assert main._index_closes() == [("2026-10-26", 250.0), ("2026-10-28", 255.0)]
+    monkeypatch.setattr(main.tracker, "_benchmark_frame",
+                        lambda: pytest.fail("the feed was read twice in one day"))
+    assert main._index_closes() == [("2026-10-26", 250.0), ("2026-10-28", 255.0)]

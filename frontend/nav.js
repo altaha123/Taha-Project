@@ -78,13 +78,12 @@
       icon: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
       tabs: [
         { id: 'ideahub',     label: 'Overview',        hint: 'Our stock picks, and every other way to find a stock' },
-        { id: 'calls',       label: 'Call log',        hint: 'Every call, the day it was made, and what happened next' },
+        { id: 'calls',       label: 'Track record',    hint: 'Every idea, the day it was made, and its return since' },
         { id: 'query',       label: 'Screener',        hint: 'Tap what you want in a company and see who fits' },
         { id: 'lenses',      label: 'Investor styles', hint: 'Stocks picked the way great investors pick them, and the ones several styles agree on' },
         { id: 'investors',   label: 'Who owns what',   hint: 'What well-known investors disclosed holding' },
         { id: 'funds',       label: 'Fund houses',     hint: 'What the mutual funds disclosed holding' },
         { id: 'charts',      label: 'Charts',          hint: 'Price charts, drawings, levels and indicators' },
-        { id: 'tracker',     label: 'Track record',    hint: 'How past ideas have done since they were found' },
         { id: 'strategies',  label: 'Strategy lab',    hint: 'Would a trading rule have beaten holding this stock?' },
         { id: 'concalls',    label: 'Concalls',        hint: 'Earnings calls summarised, key calls first' }
       ],
@@ -131,8 +130,13 @@
      several investor styles agree on) is a section of the Investor styles
      page now: they were two entries for one idea. Its old addresses,
      #research/convergence and go('research', 'convergence'), open that page
-     at that section; `sub` in the navigate event says which. */
-  var MOVED = { convergence: 'lenses' };
+     at that section; `sub` in the navigate event says which.
+
+     The Tracker went the same way. "Call log" and "Track record" were two
+     entries for one question — what did the ideas do — and are one page now,
+     under the id the dated record always had. #research/tracker,
+     #portfolio/tracker, ?go=tracker and go(null, 'tracker') all open it. */
+  var MOVED = { convergence: 'lenses', tracker: 'calls' };
 
   /* Every section id this site has ever put in a URL, pointed at the door
      that now owns it. A hash is a promise; breaking one silently is how a
@@ -533,6 +537,7 @@
     if (qCharts != null) go('research', 'charts', false);
     else if (hasHash && r) go(r.section, r.tab, false);
     else if (qGo && ownerOf(qGo)) go(ownerOf(qGo).id, qGo, false);
+    else if (qGo && MOVED[qGo]) go(null, qGo, false);
     else if (qGo && (rawSection(qGo) || ALIASES[qGo])) go(qGo, null, false);
     else if (r) go(r.section, r.tab, false);
     else go(HOME.section, HOME.tab, false);

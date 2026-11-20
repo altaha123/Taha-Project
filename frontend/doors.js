@@ -902,16 +902,15 @@
         '<span class="dr-tool-count"><b class="dr-n" data-count>—</b><small>well-known investors tracked</small></span>' +
         '<span class="dr-tool-line" data-line>What well-known investors hold.</span>' +
         '<span class="dr-tool-chips" data-chips></span></button>',
-      '<button type="button" class="dr-card dr-tool dr-rise dr-record" style="--i:5" data-goto="research/tracker">' +
+      '<button type="button" class="dr-card dr-tool dr-rise dr-record" style="--i:5" data-goto="research/calls">' +
         '<span class="dr-sheen" aria-hidden="true"></span>' +
         '<span class="dr-record-row"><span>' +
           '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('record') + '</span></span>' +
           '<span class="dr-tool-name">Track record</span>' +
-          '<span class="dr-tool-line">How every pick has done since.</span></span>' +
+          '<span class="dr-tool-line">Every pick, dated, and its return since.</span></span>' +
           '<img src="research-illustration.webp" alt="" width="132" height="88" loading="lazy"></span></button>'
     ].join('');
     var more = [
-      ['research/calls', 'record', 'Call log', 'Every pick, dated, and what happened next'],
       ['research/funds', 'funds', 'Fund houses', 'What mutual funds hold'],
       ['research/charts', 'charts', 'Charts', 'Chart any stock'],
       ['research/strategies', 'flask', 'Strategy lab', 'Trading rules, tested on any stock'],
