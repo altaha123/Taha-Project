@@ -51,7 +51,7 @@ async function open(browser, size, file) {
     const foot = page.locator('footer.sh-footer');
     await foot.waitFor();
     assert.deepEqual(await foot.locator('.sh-fcol h4').allInnerTexts().then(a => a.map(s => s.toLowerCase())),
-                     ['today', 'ideas', 'my money', 'altaha']);
+                     ['today', 'ideas', 'portfolio', 'altaha']);
     assert.ok(await foot.locator('.sh-fcol a').count() >= 25, 'the footer does not list the tools');
     assert.equal(await foot.locator('.sh-fmail').getAttribute('href'), 'mailto:hello@altahascreener.in');
     assert.match(await foot.locator('.sh-fbase').innerText(), /not investment advice/);

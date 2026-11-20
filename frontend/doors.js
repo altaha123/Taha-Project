@@ -2,7 +2,7 @@
    Altaha — the three doors
 
    WHAT THIS IS
-   The page each door opens on. Today, Ideas and My money each preview every
+   The page each door opens on. Today, Ideas and Portfolio each preview every
    tool behind them — one live number or one line per tool — and open the
    tool on a tap. The tools themselves are the views that already exist and
    are not touched here; this file only decides how you arrive at them.
@@ -11,7 +11,7 @@
                                three-month chart, FII/DII flows, every sector,
                                the movers, and a card per Today tool
      Ideas     #view-ideahub   the ranked universe and every way to find a stock
-     My money  #view-money     your saved portfolio, watchlist and plans
+     Portfolio #view-money     your saved portfolio, watchlist and plans
 
    IT OWNS NO DATA, AND INVENTS NONE
    Every figure is read from an endpoint another view already uses. A feed
@@ -1005,7 +1005,7 @@
     w = Array.isArray(w) ? w : [];
     var ring = Math.min(100, n * 10);
     return '<div class="dr dr-money">' +
-      head('My money', 'How am I doing, and what next?') +
+      head('Portfolio', 'How am I doing, and what next?') +
       '<button type="button" class="dr-hero dr-pfhero dr-rise" style="--i:1" data-goto="portfolio/portfolio">' +
         '<span class="dr-blob dr-b1" aria-hidden="true"></span><span class="dr-blob dr-b3" aria-hidden="true"></span>' +
         '<span class="dr-gridbg" aria-hidden="true"></span>' +

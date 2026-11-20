@@ -1678,7 +1678,7 @@
 
   window.AltahaPlanner = {
     open: function (id) { open(id, true); },
-    /* For the My money overview card: the date, and whether a check-in is due,
+    /* For the Portfolio overview card: the date, and whether a check-in is due,
        without that file knowing how either is worked out. */
     summary: function () {
       if (!M) return null;

@@ -99,19 +99,21 @@ async function viewText(page, id) {
   await page.goto('http://127.0.0.1:8781/', { waitUntil: 'load' });
   await page.waitForTimeout(1200);
 
-  // The Ideas door: its page has a card for the styles, and its door bar
-  // carries both tools, each with its own pill.
+  // The Ideas door: its page has a card for the styles, and its menu
+  // carries both tools, each with its own row.
   await page.locator('.sh-door[data-sec="research"]').click();
   await page.locator('#view-ideahub .dr-tool[data-goto="research/lenses"]').waitFor({ state: 'visible' });
   assert.match(await page.locator('#view-ideahub .dr-tool[data-goto="research/lenses"]').innerText(), /Investor styles/);
-  const bar = page.locator('#sh-doorbar');
-  await bar.locator('.sh-pill[data-tab="lenses"]').waitFor({ state: 'visible' });
-  assert.match(await bar.locator('.sh-pill[data-tab="lenses"]').innerText(), /Investor styles/);
-  assert.match(await bar.locator('.sh-pill[data-tab="convergence"]').innerText(), /Convergence/);
+  await page.mouse.move(720, 860);
+  await page.locator('.sh-doorwrap[data-sec="research"]').hover();
+  const bar = page.locator('#sh-mega-research');
+  await bar.locator('.sh-item[data-tab="lenses"]').waitFor({ state: 'visible' });
+  assert.match(await bar.locator('.sh-item[data-tab="lenses"]').innerText(), /Investor styles/);
+  assert.match(await bar.locator('.sh-item[data-tab="convergence"]').innerText(), /Convergence/);
   await page.screenshot({ path: path.join(output, 'menu-desktop.png') });
 
   // ── The index ──────────────────────────────────────────────────────────
-  await bar.locator('.sh-pill[data-tab="lenses"]').click();
+  await bar.locator('.sh-item[data-tab="lenses"]').click();
   await page.locator('#view-lenses .ln-card').first().waitFor({ state: 'visible' });
   assert.ok(await page.locator('#view-lenses').isVisible());
   assert.match(page.url(), /#research\/lenses$/);

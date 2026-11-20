@@ -218,12 +218,12 @@
   /* The phone bar: the three doors, search in the middle where a thumb
      rests, and Me. It names exactly what the desktop header names, so a
      reader who learns one has learned the other. The watchlist lives in Me
-     and on My money; the Watchlist button below stays in the Me menu on a
+     and behind Portfolio; the Watchlist button below stays in the Me menu on a
      desktop, where it always was. */
   const DOORS = [
     ['discover',  'Today',    '<path d="M3 12h4l3-8 4 16 3-8h4"/>'],
     ['research',  'Ideas',    '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>'],
-    ['portfolio', 'My money', '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>']
+    ['portfolio', 'Portfolio', '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>']
   ];
   const icon = d => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
@@ -242,7 +242,7 @@
   bar.append(ind, doorButtons[0], doorButtons[1], searchButton, doorButtons[2], meButton); document.body.append(bar);
   const desktopSave = button('Watchlist', () => open(watch), 'ux-button ux-desktop-save');
   document.querySelector('.sh-right')?.prepend(desktopSave);
-  // One way in for the Me menu, the phone sheet and the My money door. On the
+  // One way in for the Me menu, the phone sheet and the Portfolio door. On the
   // main page the Watchlists tab (watchlists.js) is the destination; this
   // dialog is what pages without that tab still open.
   window.AltahaWatchlist = {
