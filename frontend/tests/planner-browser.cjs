@@ -507,6 +507,15 @@ const plan = (state, at) => M.derive(state, at || NOW);
       assert.deepEqual(wide.over, [], `${id}: something runs off the side of a phone`);
       // A tapped tool is on the screen: under the hero it used to open below
       // the fold, with nothing visibly changing.
+      // The page scrolls the tool into place; where it ends up is what is
+      // measured. Reading 120ms after the tap raced that scroll on a slow
+      // runner and reported the tool part-way there ("opened at 728px").
+      await page.waitForFunction(i => {
+        const t = Math.round(document.getElementById('mp-panel-' + i).getBoundingClientRect().top);
+        const w = window;
+        if (w.__mpTop === t) w.__mpStill = (w.__mpStill || 0) + 1; else { w.__mpTop = t; w.__mpStill = 0; }
+        return w.__mpStill >= 3;
+      }, id, { polling: 100, timeout: 5000 }).catch(() => {});
       const top = await page.evaluate(i => document.getElementById('mp-panel-' + i).getBoundingClientRect().top, id);
       assert.ok(top > 100 && top < 844 * 0.5, `${id}: opened at ${Math.round(top)}px, off the top or below the fold`);
       await page.screenshot({ path: path.join(output, `390-${id}.png`) });
