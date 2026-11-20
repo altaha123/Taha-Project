@@ -25,8 +25,8 @@ Pillow>=10.0
 # break a deploy on a free instance for want of a compiler.
 pypdf>=4.0
 
-# The optional written summary of an earnings call, and Ask AI on the query
-# screener. Dormant: concalls.py and query_assistant.py import it lazily and
+# The written brief of an earnings call, and Ask AI on the query
+# screener. Dormant without a key: concalls.py and query_assistant.py import it lazily and
 # only when ANTHROPIC_API_KEY is set, so until a key is present this costs disk
 # on the image and nothing at runtime. It is pinned here rather than left out so
 # that switching the features on is one environment variable, not a deploy.

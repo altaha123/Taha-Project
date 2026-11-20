@@ -10,7 +10,11 @@
        order inflow
      · every quoted concall line must carry the name of who said it
      · with no model configured, the page must say so rather than presenting
-       the extraction as a written summary */
+       the extraction as a written summary
+     · with a model configured, the page must fill in while the server is
+       still reading rather than wait for it, list the key calls first, name
+       the model that wrote each summary, and stop asking once the server
+       says it has finished */
 const fs = require('node:fs'), path = require('node:path'),
       http = require('node:http'), assert = require('node:assert/strict');
 const { chromium } = require('playwright');
@@ -44,12 +48,16 @@ wowPartial.quarter.comparable = false;
 wowPartial.quarter.caveat += ' One of these quarters began before this service started recording, so the two are not yet comparable and no percentage change is shown.';
 
 const concalls = {
-  available: true, count: 1, summary_configured: false,
+  available: true, count: 1, summary_configured: false, model: null, days: 21,
+  counts: { calls: 1, key: 0, summarised: 0, waiting: 0 },
+  status: { reading: false, phase: null, last_pass: '2026-09-12T10:00:00+05:30', error: null, capped: null, feed: [] },
+  poll_seconds: null, disclaimer: null,
   source: 'Earnings call transcripts filed with BSE under Regulation 30. The digest is extracted from the document itself; nothing in it is paraphrased.',
   rows: [{
     symbol: 'SHIPROCKET', company: 'Shiprocket Ltd',
     headline: 'Announcement under Regulation 30 (LODR)-Earnings Call Transcript',
     at: '2026-09-11T19:24:00+05:30', pdf: 'https://www.bseindia.com/x/t.pdf', readable: true,
+    brief: { status: 'off' }, key: false,
     digest: {
       quarter: 'Q1 FY27', call_date: '2026-09-08', words: 8978,
       management: [
@@ -81,6 +89,53 @@ const concalls = {
     }
   }]
 };
+
+
+/* The same page with a model configured, as three answers in a row: the
+   server still reading and nothing in the ledger yet; two calls read, one
+   briefed and one waiting; then finished. */
+const ccStatus = (reading, phase) => ({ reading, phase, last_pass: null, error: null, capped: null, feed: [] });
+const ccBase = {
+  available: true, summary_configured: true, model: 'claude-sonnet-5-5', days: 21,
+  disclaimer: 'Written by Claude from the filed transcript. Quotes are checked word for word against it; figures in the rest are not, so check one against the transcript before you rely on it.',
+  source: 'Earnings call transcripts filed with BSE under Regulation 30. The summary is written by a model from the transcript; the quotes in it are checked against the document, and the counts under each call involve no model at all.'
+};
+const ccShiprocket = concalls.rows[0];
+const ccBrief = {
+  status: 'ready', style: 1, model: 'claude-sonnet-5-5', written_at: '2026-09-12T10:04:00+05:30',
+  headline: 'Revenue grew 34% and contribution margin is expected to hold <script>window.__xss=1</script>',
+  summary: 'Management said transactions grew 36% and revenue nearly 34% in the quarter, ahead of last year’s 24%. They expect contribution margin to stay around its current range.',
+  quarter: ['Transactions grew 36% and GMV 31%.', 'Revenue grew nearly 34%, against 24% for FY26.'],
+  commitments: [{ topic: 'Contribution margin', said: 'The CM has improved a little bit, right, over this revenue growth and we expect it to maintain around that range as it has in the last trajectory.', by: 'Saahil Goel' }],
+  quotes_dropped: 1,
+  pressed_on: ['Whether margin growing faster than revenue would continue; management expects the range to hold.'],
+  not_answered: ['How many power merchants use Martech: no number was given.'],
+  weight: 'high', weight_reason: 'Management guided on contribution margin and gave growth figures by segment.', partial: false
+};
+const ccOther = {
+  symbol: 'QUIETCO', company: 'Quiet Industries Ltd',
+  headline: 'Transcript Of Q1 FY27 Earnings Conference Call',
+  at: '2026-09-12T12:10:00+05:30', pdf: 'https://www.bseindia.com/x/q.pdf', readable: true, key: false,
+  digest: Object.assign({}, ccShiprocket.digest, { management: [], analysts: [], analyst_count: 0 }),
+  versus_previous: { available: false, reason: 'No earlier transcript has been read for this company yet.' }
+};
+const ccReading = Object.assign({}, ccBase, {
+  count: 0, rows: [], counts: { calls: 0, key: 0, summarised: 0, waiting: 0 },
+  status: ccStatus(true, 'reading'), poll_seconds: 3 });
+const ccFilling = Object.assign({}, ccBase, {
+  count: 2, counts: { calls: 2, key: 1, summarised: 1, waiting: 1 },
+  status: ccStatus(true, 'summarising'), poll_seconds: 3,
+  rows: [Object.assign({}, ccShiprocket, { key: true, brief: ccBrief }),
+         Object.assign({}, ccOther, { brief: { status: 'pending' } })] });
+const ccDone = Object.assign({}, ccBase, {
+  count: 2, counts: { calls: 2, key: 1, summarised: 2, waiting: 0 },
+  status: ccStatus(false, null), poll_seconds: null,
+  rows: [Object.assign({}, ccShiprocket, { key: true, brief: ccBrief }),
+         Object.assign({}, ccOther, { brief: Object.assign({}, ccBrief, {
+           headline: 'Management repeated the reported numbers and gave no guidance',
+           summary: 'The call restated the quarter’s results. Answers to questions on demand and margins stayed general.',
+           commitments: [], quotes_dropped: 0, not_answered: [], weight: 'low',
+           weight_reason: 'Nothing was said beyond what the results filing already contained.' }) })] });
 
 
 /* Open a tab and prove it is actually on screen.
@@ -129,7 +184,7 @@ const server = http.createServer((req, res) => {
     viewport: { width: 1280, height: 1000 }, reducedMotion: 'reduce' });
   await context.addInitScript(() => { try { localStorage.setItem('altaha-guide-dismissed', '1'); } catch (e) {} });
   const page = await context.newPage(), errors = [];
-  let wowCalls = 0, ccCalls = 0, wowPayload = wow;
+  let wowCalls = 0, ccCalls = 0, wowPayload = wow, ccQueue = null;
   page.on('pageerror', e => errors.push(String(e.stack)));
 
   await context.route('**/*', route => {
@@ -137,7 +192,11 @@ const server = http.createServer((req, res) => {
     if (u.hostname === '127.0.0.1') return route.continue();
     if (['font', 'stylesheet', 'image'].includes(route.request().resourceType())) return route.abort();
     if (u.pathname === '/wow-orders') { wowCalls++; return route.fulfill({ json: wowPayload }); }
-    if (u.pathname === '/concalls') { ccCalls++; return route.fulfill({ json: concalls }); }
+    if (u.pathname === '/concalls') {
+      ccCalls++;
+      const next = ccQueue ? (ccQueue.length > 1 ? ccQueue.shift() : ccQueue[0]) : concalls;
+      return route.fulfill({ json: next });
+    }
     if (u.pathname === '/market') return route.fulfill({ json: { indices: [], status: 'closed' } });
     return route.fulfill({ json: { available: false, rows: [], items: [], sectors: [] } });
   });
@@ -257,6 +316,107 @@ const server = http.createServer((req, res) => {
     }
   }
 
+
+  // ── With a model: fills in while the server reads, key calls first ───────
+  ccQueue = [ccReading, ccFilling, ccDone];
+  ccCalls = 0;
+  const page3 = await context.newPage();
+  page3.on('pageerror', e => errors.push(String(e.stack)));
+  await page3.setViewportSize({ width: 1280, height: 1000 });
+  await page3.goto('http://127.0.0.1:8773/', { waitUntil: 'domcontentloaded' });
+  await page3.waitForFunction(() => !!window.AltahaNav);
+  await openTab(page3, 'concalls');
+  const cc3 = page3.locator('#view-concalls');
+
+  // The server is still reading. The page says so and comes back by itself:
+  // this is the state the old page sat in until the request died.
+  await cc3.locator('.cc-empty.is-loading').waitFor({ state: 'visible' });
+  assert.match(await cc3.locator('.cc-empty').innerText(), /first pass takes a few minutes/i);
+  assert.equal(await cc3.locator('.cc-nosum').count(), 0, 'a configured page must not say summaries are off');
+
+  await cc3.locator('.cc').first().waitFor({ state: 'visible', timeout: 8000 });
+  assert.equal(ccCalls, 2, 'the page should have asked again by itself, once');
+  assert.match(await cc3.locator('.cc-counts').innerText(), /2\s*calls in 21 days/i);
+  assert.match(await cc3.locator('.cc-counts .st').innerText(), /Writing summaries/i);
+
+  // The key call is first, flagged, and its brief is open.
+  const lead = cc3.locator('.cc').first();
+  assert.ok(await lead.evaluate(el => el.classList.contains('is-key')), 'the key call must be listed first');
+  assert.match(await lead.locator('.cc-co').innerText(), /Shiprocket Ltd/);
+  assert.match(await lead.locator('.cc-co em.key').innerText(), /key call/i);
+  assert.match(await cc3.locator('.cc-group').first().innerText(), /key calls/i);
+  assert.match(await cc3.locator('.cc-groupnote').innerText(), /not the company or its share/i);
+  assert.match(await lead.locator('.cc-hl').innerText(), /Revenue grew 34%/);
+  assert.match(await lead.locator('.cc-why').innerText(), /why it is a key call/i);
+  assert.equal(await lead.locator('.cc-full').evaluate(el => el.open), true);
+  assert.match(await lead.locator('.cc-full').innerText(), /Left unanswered/i);
+
+  // A summary says a model wrote it, names the model, and admits a dropped quote.
+  const by = await lead.locator('.cc-by').innerText();
+  assert.match(by, /Summary by claude-sonnet-5-5/);
+  assert.match(by, /quotes checked against it/i);
+  assert.match(by, /1 quote offered by the model did not match and was left out/i);
+
+  // Text from a model is text. A tag in a headline is printed, not run.
+  assert.match(await lead.locator('.cc-hl').innerText(), /<script>/);
+  assert.equal(await page3.evaluate(() => window.__xss), undefined);
+  assert.equal(await cc3.locator('.cc script').count(), 0);
+
+  // The counted layer is still there under the brief, folded, and says no
+  // model is involved in it.
+  assert.equal(await lead.locator('.cc-more').evaluate(el => el.open), false);
+  await lead.locator('.cc-more').evaluate(el => { el.open = true; });
+  assert.match(await lead.locator('.cc-more').innerText(), /No model is involved/i);
+  assert.match(await lead.locator('.cc-more .cc-shift').innerText(), /What changed since Q4 FY26/i);
+
+  // The call still waiting for its summary shows the extraction, as that.
+  const second = cc3.locator('.cc').nth(1);
+  assert.match(await second.locator('.cc-wait').innerText(), /summary of this call is being written/i);
+  assert.equal(await second.locator('.cc-hl').count(), 0);
+  assert.equal(await second.locator('.cc-quote').count(), 2);
+
+  // Every quote on the page, written layer or counted, carries a name.
+  const all3 = cc3.locator('.cc-quote');
+  for (let i = 0, n = await all3.count(); i < n; i++) {
+    const cite = (await all3.nth(i).locator('cite').innerText()).trim();
+    assert.ok(cite.length > 2, 'quote missing attribution');
+    assert.notEqual(cite.toLowerCase(), 'moderator');
+  }
+
+  // The reader finishes. The second brief arrives without a reload, what the
+  // person had opened stays open, and the page stops asking.
+  await second.locator('.cc-hl').waitFor({ state: 'visible', timeout: 8000 });
+  assert.equal(ccCalls, 3);
+  assert.equal(await lead.locator('.cc-more').evaluate(el => el.open), true,
+    'a section the reader opened must survive the list refreshing');
+  assert.equal(await second.locator('.cc-full').evaluate(el => el.open), false,
+    'a call that is not key stays folded to its headline and summary');
+  assert.match(await second.locator('.cc-why').innerText(), /How much the call added: low/i);
+  assert.match(await cc3.locator('.cc-group').nth(1).innerText(), /other calls/i);
+  assert.equal(await cc3.locator('.cc-counts .st').count(), 0, 'nothing is in progress, so nothing says so');
+  await second.locator('.cc-full').evaluate(el => { el.open = true; });
+  assert.match(await second.locator('.cc-full .cc-none').innerText(), /No commitment is quoted/i);
+  await second.locator('.cc-full').evaluate(el => { el.open = false; });
+  await page3.waitForTimeout(4200);
+  assert.equal(ccCalls, 3, 'the page must stop asking once the server says it has finished');
+
+  await page3.screenshot({ path: path.join(output, 'concalls-brief-1280-light.png'), fullPage: true });
+  for (const width of [320, 390, 768, 1280]) {
+    await page3.setViewportSize({ width, height: 1000 });
+    for (const theme of ['light', 'dark']) {
+      await page3.evaluate(t => document.documentElement.dataset.theme = t, theme);
+      await page3.waitForTimeout(60);
+      const over = await page3.evaluate(() =>
+        document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      assert.ok(over <= 1, `horizontal overflow ${over}px on the concall briefs at ${width}`);
+      if (width === 390) {
+        await page3.screenshot({ path: path.join(output, `concalls-brief-390-${theme}.png`), fullPage: true });
+      }
+    }
+  }
+  await page3.close();
+  ccQueue = null;
+
   const relevant = errors.filter(e => /wow\.js|concalls\.js/.test(e));
   assert.deepEqual(relevant, []);
 
@@ -264,7 +424,9 @@ const server = http.createServer((req, res) => {
     viewports: [320, 390, 768, 1280], themes: ['light', 'dark'],
     lazyLoaded: true, undisclosedNeverZero: true, thresholdVisible: true,
     quarterComparison: true, unwatchedQuarterNotCompared: true,
-    everyQuoteAttributed: true, noSummaryStatedPlainly: true, errors
+    everyQuoteAttributed: true, noSummaryStatedPlainly: true,
+    fillsInWhileReading: true, keyCallsFirst: true, modelNamedOnEachSummary: true,
+    stopsPollingWhenDone: true, errors
   }, null, 2));
 
   await browser.close(); server.close();

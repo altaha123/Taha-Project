@@ -1,17 +1,26 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Altaha Screener — concalls.js
 
-   Earnings call transcripts, digested.
+   Earnings calls: a written brief of each, the key calls first.
 
-   THE LINE THIS VIEW HOLDS
-   Everything rendered here is EXTRACTED from the transcript. Forward-looking
-   lines are quoted verbatim and carry the name of the person who said them,
-   because a commitment attributed to management that management did not make
-   is the worst thing this page could print — so the moderator's script and an
-   analyst's question are never shown as guidance.
+   TWO LAYERS, AND THE PAGE SAYS WHICH IS WHICH
+   The brief is written by a model from the filed transcript: what management
+   said about the quarter, what they committed to, what analysts pressed on,
+   what went unanswered. Each card says a model wrote it and names the model.
+   Under it, folded away, is the layer no model touches: participants, topic
+   counts, and the comparison with the company's previous call.
 
-   When no model is configured, the page says there is no written summary. It
-   does not relabel the extraction as one.
+   A commitment is always a quote with a name under it. The server checks each
+   quote against the transcript and takes the name from the transcript's own
+   speaker label, so this file only ever prints quotes that passed.
+
+   When no model is configured, the page says there is no written summary and
+   shows the extracted digest as what it is. It does not relabel it.
+
+   NOTHING HERE WAITS ON THE SERVER READING A PDF
+   /concalls answers from a ledger at once and says whether a background pass
+   is still reading. While it is, this asks again every few seconds and the
+   list fills in; it never sits on a spinner for the length of a download.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -20,13 +29,21 @@
   var API = (typeof API_BASE !== 'undefined' && API_BASE)
     ? API_BASE : 'https://taha-project.onrender.com';
 
-  var loaded = false;
+  var WINDOW_DAYS = 21;
+  var MAX_POLLS = 75;            // ten minutes of asking again, then stop
+  var STALE_MS = 60 * 1000;      // re-opening the tab after this asks afresh
+  var FETCH_MS = 25 * 1000;
+
+  var loadedAt = 0, timer = null, polls = 0, lastPaint = '', busy = false;
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+  function link(url) {
+    return /^https?:\/\//i.test(String(url || '')) ? esc(url) : '';
   }
   function when(iso) {
     if (!iso) return '';
@@ -35,6 +52,13 @@
         { day: 'numeric', month: 'short', year: 'numeric' });
     } catch (e) { return String(iso).slice(0, 10); }
   }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+  function visible() {
+    var view = $('view-concalls');
+    return !!view && view.style.display !== 'none';
+  }
+
+  /* ── The counted layer. No model is involved in anything below. ───────── */
 
   function topicBars(topics) {
     var keys = Object.keys(topics || {});
@@ -82,10 +106,17 @@
       '</div>';
   }
 
-  function digestBlock(d, pdf) {
-    if (!d || !d.quarter && !d.words) {
-      return '<div class="cc-empty">This transcript could not be read.</div>';
-    }
+  function facts(d) {
+    return '<div class="cc-facts">' +
+      '<span><b class="tnum">' + (d.words || 0).toLocaleString('en-IN') + '</b>words</span>' +
+      '<span><b class="tnum">' + (d.analyst_count || 0) + '</b>analysts</span>' +
+      '<span><b class="tnum">' + (d.guidance_count || 0) + '</b>forward-looking lines</span>' +
+      (d.prepared_remarks_share != null
+        ? '<span><b class="tnum">' + d.prepared_remarks_share + '%</b>prepared remarks</span>' : '') +
+      '</div>';
+  }
+
+  function people(d) {
     var mgmt = (d.management || []).map(function (m) {
       return '<li><b>' + esc(m.name) + '</b>' +
         (m.role ? '<span>' + esc(m.role) + '</span>' : '') + '</li>';
@@ -93,29 +124,133 @@
     var analysts = (d.analysts || []).map(function (a) {
       return '<li>' + esc(a.name) + (a.firm ? '<span>' + esc(a.firm) + '</span>' : '') + '</li>';
     }).join('');
-    var guidance = (d.guidance || []).map(function (g) {
-      return '<blockquote class="cc-quote">' + esc(g.said) +
-        (g.by ? '<cite>' + esc(g.by) + '</cite>' : '') + '</blockquote>';
-    }).join('');
+    if (!mgmt && !analysts) return '';
+    return '<div class="cc-people">' +
+      (mgmt ? '<div><h4 class="cc-h4">On the call</h4><ul class="cc-list">' + mgmt + '</ul></div>' : '') +
+      (analysts ? '<div><h4 class="cc-h4">Analysts who asked</h4><ul class="cc-list">' + analysts + '</ul></div>' : '') +
+      '</div>';
+  }
 
-    return '<div class="cc-facts">' +
-      '<span><b class="tnum">' + (d.words || 0).toLocaleString('en-IN') + '</b>words</span>' +
-      '<span><b class="tnum">' + (d.analyst_count || 0) + '</b>analysts</span>' +
-      '<span><b class="tnum">' + (d.guidance_count || 0) + '</b>forward-looking lines</span>' +
-      (d.prepared_remarks_share != null
-        ? '<span><b class="tnum">' + d.prepared_remarks_share + '%</b>prepared remarks</span>' : '') +
-      '</div>' +
+  function quote(said, by, topic) {
+    return '<blockquote class="cc-quote">' +
+      (topic ? '<span class="cc-about">' + esc(topic) + '</span>' : '') +
+      esc(said) + (by ? '<cite>' + esc(by) + '</cite>' : '') + '</blockquote>';
+  }
+
+  /* The digest as the whole card: what a call shows when it has no brief. */
+  function digestBlock(d) {
+    if (!d || !d.quarter && !d.words) {
+      return '<div class="cc-empty">This transcript could not be read.</div>';
+    }
+    var guidance = (d.guidance || []).map(function (g) {
+      return quote(g.said, g.by);
+    }).join('');
+    return facts(d) +
       (guidance
         ? '<h4 class="cc-h4">What management committed to, in their words</h4>' + guidance
         : '<p class="cc-none">No forward-looking statement was made in terms this reader recognises. ' +
           'That is a fact about the call, not a gap in the transcript.</p>') +
       (Object.keys(d.topics || {}).length
         ? '<h4 class="cc-h4">What the call was spent on</h4>' + topicBars(d.topics) : '') +
-      '<div class="cc-people">' +
-        (mgmt ? '<div><h4 class="cc-h4">On the call</h4><ul class="cc-list">' + mgmt + '</ul></div>' : '') +
-        (analysts ? '<div><h4 class="cc-h4">Analysts who asked</h4><ul class="cc-list">' + analysts + '</ul></div>' : '') +
-      '</div>' +
-      (pdf ? '<a class="cc-pdf" href="' + esc(pdf) + '" target="_blank" rel="noopener">Read the full transcript →</a>' : '');
+      people(d);
+  }
+
+  /* The digest folded under a brief: the counts, without repeating the quotes. */
+  function countedBlock(r) {
+    var d = r.digest || {};
+    if (!d.words) return '';
+    return '<details class="cc-more" data-k="more:' + esc(r.pdf) + '">' +
+      '<summary>Counted from the transcript</summary>' +
+      '<p class="cc-note first">No model is involved in anything in this section.</p>' +
+      facts(d) +
+      (Object.keys(d.topics || {}).length
+        ? '<h4 class="cc-h4">What the call was spent on</h4>' + topicBars(d.topics) : '') +
+      people(d) + shiftBlock(r.versus_previous) +
+      '</details>';
+  }
+
+  /* ── The written layer ─────────────────────────────────────────────────── */
+
+  function points(title, items) {
+    if (!items || !items.length) return '';
+    return '<h4 class="cc-h4">' + esc(title) + '</h4><ul class="cc-pts">' +
+      items.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
+  }
+
+  function briefBlock(r) {
+    var b = r.brief || {};
+    var said = (b.commitments || []).map(function (c) {
+      return quote(c.said, c.by, c.topic);
+    }).join('');
+    var grade = b.weight_reason
+      ? '<p class="cc-why' + (r.key ? ' key' : '') + '"><b>' +
+          (r.key ? 'Why it is a key call' : 'How much the call added: ' + esc(b.weight || 'medium')) +
+        '</b>' + esc(b.weight_reason) + '</p>'
+      : '';
+    var body = points('The quarter, as management told it', b.quarter) +
+      (said
+        ? '<h4 class="cc-h4">What management committed to, in their words</h4>' + said
+        : '<h4 class="cc-h4">What management committed to</h4>' +
+          '<p class="cc-none">No commitment is quoted for this call: none that the summary ' +
+          'offered could be matched word for word to something management said in the transcript.</p>') +
+      points('What analysts pressed on', b.pressed_on) +
+      points('Left unanswered', b.not_answered);
+    var fine = 'Summary by ' + esc(b.model || 'a language model') +
+      ' from the filed transcript · quotes checked against it' +
+      (b.quotes_dropped
+        ? ' · ' + plural(b.quotes_dropped, 'quote', 'quotes') +
+          ' offered by the model did not match and ' + (b.quotes_dropped === 1 ? 'was' : 'were') + ' left out'
+        : '') +
+      (b.partial ? ' · only the first part of a long transcript was read' : '');
+    return (b.headline ? '<h3 class="cc-hl">' + esc(b.headline) + '</h3>' : '') +
+      '<p class="cc-sum">' + esc(b.summary) + '</p>' + grade +
+      '<details class="cc-full" data-k="full:' + esc(r.pdf) + '"' + (r.key ? ' open' : '') + '>' +
+        '<summary>The full brief</summary>' + body +
+      '</details>' +
+      countedBlock(r) +
+      '<p class="cc-by">' + fine + '</p>';
+  }
+
+  /* Where a brief would be, when there is none, and why. */
+  function waitLine(status, reading) {
+    var text = {
+      pending: reading ? 'A summary of this call is being written.'
+        : 'A summary of this call is queued and will be written on the next pass.',
+      later: 'The summary could not be written just now. It is tried again within the hour.',
+      declined: 'The model declined to summarise this document, so the extracted digest is shown instead.',
+      unreadable: 'The model could not read this as an earnings call, so the extracted digest is shown instead.'
+    }[status];
+    return text ? '<p class="cc-wait' + (status === 'pending' && reading ? ' is-on' : '') + '">' +
+      esc(text) + '</p>' : '';
+  }
+
+  function card(r, reading) {
+    var dg = r.digest || {}, b = r.brief || {}, pdf = link(r.pdf);
+    var body;
+    if (!r.readable) {
+      body = '<div class="cc-empty">The filed PDF could not be read as text — ' +
+        'it is most likely a scan.' +
+        (pdf ? ' <a href="' + pdf + '" target="_blank" rel="noopener">Open it →</a>' : '') +
+        '</div>';
+    } else if (b.status === 'ready') {
+      body = briefBlock(r);
+    } else {
+      body = waitLine(b.status, reading) + digestBlock(dg) + shiftBlock(r.versus_previous);
+    }
+    return '<article class="cc' + (r.key ? ' is-key' : '') + '">' +
+      '<header class="cc-head">' +
+        '<div class="cc-co">' +
+          (r.symbol
+            ? '<a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '">' + esc(r.company || r.symbol) + '</a>'
+            : esc(r.company || 'Unnamed company')) +
+          (dg.quarter ? '<em>' + esc(dg.quarter) + '</em>' : '') +
+          (r.key ? '<em class="key">Key call</em>' : '') +
+        '</div>' +
+        '<span class="cc-when">' + esc(dg.call_date ? when(dg.call_date) : when(r.at)) + '</span>' +
+      '</header>' + body +
+      (r.readable && pdf
+        ? '<a class="cc-pdf" href="' + pdf + '" target="_blank" rel="noopener">Read the full transcript →</a>' : '') +
+      '</article>';
   }
 
   function summaryBlock(configured) {
@@ -128,6 +263,49 @@
       'and none is configured here.</div>';
   }
 
+  /* One line on what the reader behind the page is doing, or why it stopped. */
+  function statusLine(d) {
+    var s = d.status || {}, c = d.counts || {};
+    if (s.reading) {
+      return s.phase === 'summarising' ? 'Writing summaries…' : 'Reading newly filed transcripts…';
+    }
+    if (s.error) return s.error;
+    if (c.waiting && s.capped) {
+      return plural(c.waiting, 'summary', 'summaries') + ' queued: the ' + s.capped +
+        ' limit on summaries has been reached.';
+    }
+    if (c.waiting) return plural(c.waiting, 'summary', 'summaries') + ' queued for the next pass.';
+    return '';
+  }
+
+  function countsBar(d) {
+    var c = d.counts || {}, line = statusLine(d), s = d.status || {};
+    var parts = ['<span><b class="tnum">' + (c.calls || 0) + '</b>' +
+      (c.calls === 1 ? 'call' : 'calls') + ' in ' + (d.days || WINDOW_DAYS) + ' days</span>'];
+    if (d.summary_configured) {
+      parts.push('<span><b class="tnum">' + (c.key || 0) + '</b>key</span>');
+      parts.push('<span><b class="tnum">' + (c.summarised || 0) + '</b>summarised</span>');
+    }
+    return '<div class="cc-counts">' + parts.join('') +
+      (line ? '<span class="st' + (s.reading ? ' is-on' : (s.error ? ' is-bad' : '')) +
+        '" role="status">' + esc(line) + '</span>' : '') +
+      '</div>';
+  }
+
+  function keepOpen(box) {
+    var state = {};
+    box.querySelectorAll('details[data-k]').forEach(function (el) {
+      state[el.getAttribute('data-k')] = el.open;
+    });
+    return state;
+  }
+  function restoreOpen(box, state) {
+    box.querySelectorAll('details[data-k]').forEach(function (el) {
+      var k = el.getAttribute('data-k');
+      if (Object.prototype.hasOwnProperty.call(state, k)) el.open = state[k];
+    });
+  }
+
   function paint(d) {
     var box = $('concalls-body');
     if (!box) return;
@@ -136,68 +314,100 @@
         esc((d && d.message) || 'Transcripts could not be read.') + '</div>';
       return;
     }
-    var rows = d.rows || [];
+    // An unchanged answer is not repainted: a reader half-way down a brief
+    // should not have the page rebuilt under them every few seconds.
+    var sig = JSON.stringify([d.rows, d.counts, d.status, d.summary_configured]);
+    if (sig === lastPaint) return;
+    lastPaint = sig;
+
+    var rows = d.rows || [], s = d.status || {}, open = keepOpen(box), html;
     if (!rows.length) {
-      box.innerHTML = summaryBlock(d.summary_configured) +
-        '<div class="cc-empty">No transcript has been filed in this window. ' +
-        'Calls cluster in the weeks after results — this fills up in earnings season.</div>';
-      return;
+      html = summaryBlock(d.summary_configured) + (s.reading
+        ? '<div class="cc-empty is-loading" aria-busy="true">Reading the transcripts filed in ' +
+          'the last few days. The first pass takes a few minutes, and each call appears here ' +
+          'as it is read — there is no need to reload.</div>'
+        : '<div class="cc-empty">' + (s.error ? esc(s.error) + ' ' : '') +
+          'No transcript has been filed in this window. ' +
+          'Calls cluster in the weeks after results — this fills up in earnings season.</div>');
+    } else {
+      var key = rows.filter(function (r) { return r.key; });
+      var rest = rows.filter(function (r) { return !r.key; });
+      var one = function (r) { return card(r, !!s.reading); };
+      html = summaryBlock(d.summary_configured) + countsBar(d) +
+        (key.length
+          ? '<h3 class="cc-group">Key calls</h3>' +
+            '<p class="cc-groupnote">The calls that added the most to what the results filing ' +
+            'already said: new or changed guidance, something announced, or a problem disclosed. ' +
+            'This grades the information in the call, not the company or its share.</p>' +
+            key.map(one).join('') +
+            (rest.length ? '<h3 class="cc-group">Other calls</h3>' : '')
+          : '') +
+        rest.map(one).join('') +
+        (d.disclaimer ? '<p class="cc-src">' + esc(d.disclaimer) + '</p>' : '') +
+        '<p class="cc-src">' + esc(d.source) + '</p>';
     }
-    box.innerHTML = summaryBlock(d.summary_configured) +
-      rows.map(function (r) {
-        var dg = r.digest || {};
-        return '<article class="cc">' +
-          '<header class="cc-head">' +
-            '<div class="cc-co">' +
-              (r.symbol
-                ? '<a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '">' + esc(r.company || r.symbol) + '</a>'
-                : esc(r.company || 'Unnamed company')) +
-              (dg.quarter ? '<em>' + esc(dg.quarter) + '</em>' : '') +
-            '</div>' +
-            '<span class="cc-when">' + esc(dg.call_date ? when(dg.call_date) : when(r.at)) + '</span>' +
-          '</header>' +
-          (r.readable
-            ? digestBlock(dg, r.pdf) + shiftBlock(r.versus_previous)
-            : '<div class="cc-empty">The filed PDF could not be read as text — ' +
-              'it is most likely a scan.' +
-              (r.pdf ? ' <a href="' + esc(r.pdf) + '" target="_blank" rel="noopener">Open it →</a>' : '') +
-              '</div>') +
-          '</article>';
-      }).join('') +
-      '<p class="cc-src">' + esc(d.source) + '</p>';
+    box.innerHTML = html;
+    restoreOpen(box, open);
   }
 
-  function load() {
+  function again(seconds) {
+    clearTimeout(timer);
+    if (!seconds || polls >= MAX_POLLS) return;
+    timer = setTimeout(function () {
+      if (visible()) { polls++; load(true); }
+    }, Math.max(3, seconds) * 1000);
+  }
+
+  function load(quiet) {
     var box = $('concalls-body');
-    if (box) {
+    if (busy) return;
+    busy = true;
+    if (box && !quiet) {
+      lastPaint = '';
       box.innerHTML = '<div class="cc-empty is-loading" aria-busy="true">' +
-        'Reading the transcripts…</div>';
+        'Opening the call ledger…</div>';
     }
-    fetch(API + '/concalls?days=10')
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var stop = ctl ? setTimeout(function () { ctl.abort(); }, FETCH_MS) : null;
+    fetch(API + '/concalls?days=' + WINDOW_DAYS + '&limit=40', ctl ? { signal: ctl.signal } : undefined)
       .then(function (r) { if (!r.ok) throw new Error('down'); return r.json(); })
-      .then(paint)
+      .then(function (d) {
+        loadedAt = Date.now();
+        paint(d);
+        again(d && d.poll_seconds);
+      })
       .catch(function () {
+        // A background refresh that fails leaves what is on screen alone.
+        if (quiet) { again(20); return; }
         if (box) {
           box.innerHTML = '<div class="cc-empty">The engine is unreachable. ' +
-            'If it has been idle it takes about thirty seconds to wake — try again.</div>';
+            'If it has been idle it takes about thirty seconds to wake. ' +
+            '<button type="button" class="cc-retry">Try again</button></div>';
+          var b = box.querySelector('.cc-retry');
+          if (b) b.addEventListener('click', function () { load(false); });
         }
-      });
+      })
+      .then(function () { busy = false; if (stop) clearTimeout(stop); });
   }
 
-  /* Transcripts are twenty-page PDFs. Nothing is fetched until asked for. */
+  /* Nothing is fetched until the tab is opened, and coming back to it after a
+     while asks afresh rather than showing a list from an hour ago. */
+  function show() {
+    if (!visible()) { clearTimeout(timer); return; }
+    if (!loadedAt) { polls = 0; load(false); }
+    else if (Date.now() - loadedAt > STALE_MS) { polls = 0; load(true); }
+  }
+
   function watch() {
     var view = $('view-concalls');
     if (!view) return;
-    var obs = new MutationObserver(function () {
-      if (view.style.display !== 'none' && !loaded) { loaded = true; load(); }
-    });
-    obs.observe(view, { attributes: true, attributeFilter: ['style'] });
-    if (view.style.display !== 'none' && !loaded) { loaded = true; load(); }
+    new MutationObserver(show).observe(view, { attributes: true, attributeFilter: ['style'] });
+    show();
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', watch);
   } else { watch(); }
 
-  window.AltahaConcalls = { shiftBlock: shiftBlock };
+  window.AltahaConcalls = { shiftBlock: shiftBlock, paint: paint };
 })();
