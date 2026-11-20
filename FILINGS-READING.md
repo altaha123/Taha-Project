@@ -59,6 +59,61 @@ the existing order book. So:
 * the basis for the choice travels with the number, and the UI shows the
   sentence it was read from.
 
+Reader 2 (`READER`) added what a week of real filings showed the first one
+could not do. In that week it listed 58 order filings and called none WOW:
+
+* **An amount written out in rupees is read.** "Rs.1,24,00,00,000.00 (Rupees
+  One Hundred Twenty-Four Crore Only)" has no "crore" after the number, so the
+  first reader saw nothing and listed fifteen orders as *value not disclosed*.
+  That is how small companies write an amount, and they are where an order is
+  largest against the company.
+* **The company's talk about its orders in general is not the order.** "YTD
+  order inflows exceeding ₹26,000 crore" and "executable order book to
+  ₹13,427 crore" were the two largest "orders" of the week. Order inflow,
+  intake, backlog and pipeline are excluded, and the phrase is looked for with
+  line breaks flattened, because a PDF breaks the line between "order" and
+  "book".
+* **A size band is not a size.** "₹100 crore and above" in a table of bands is
+  declined.
+* **A rupee figure the company gives beats a converted one.** "USD 272 million
+  (INR 2,332 crore)" is ₹2,332 crore. Dollars alone are converted at
+  `WOW_USD_INR` (default 93.5), and the row says so.
+* **A filing for several orders is worth all of them**: one table per order is
+  summed, a table printed twice is not, and a breakdown inside one order is
+  not added to it.
+
+### What the order is
+
+The exchange headline is one sentence of boilerplate ("has informed the
+Exchange about Bagging/Receiving of orders/contracts"). Since 2023 the filing
+itself carries a table SEBI prescribes: who awarded the order, its nature, the
+period it is to be executed in, and its size. `disclosure()` reads those rows
+in the many wordings companies use, and the page builds its one line from
+them: *₹2,691 cr letter of award from NTPC Green Energy Limited*. Every word
+is the company's own or the row is left out. The size row, where it holds a
+figure, is the value.
+
+`describe()` also says what kind of filing it is:
+
+* a **lowest bid (L1)** and a **memorandum of understanding** are listed in
+  their own group and never called WOW, because neither is an order;
+* an **update** to an order filed earlier is listed there too;
+* a tax or court order ("Order-in-Appeal", "rectification order") is not an
+  order win and is not listed;
+* two filings of one order — the letter and the press release, the bid and
+  the award — are one row, which says how many filings it stands for.
+
+### The company it is measured against
+
+Market cap comes from the tables the query screener keeps (price times issued
+shares), then Dhan, then the price provider. The order was the other way
+round, and the price feeds are refused from the server's address, so every
+order was listed with no market cap and none could be WOW. The same tables
+give last full year's sales, and each order is also shown as so many months
+of them. An order of 100% of market cap or more is flagged to be checked
+against the filing: it happens to small companies, and it is also what a
+misread figure looks like.
+
 Two details that took a debugging pass each, both worth keeping:
 
 * **Sentence scoping, not character windows.** "The paid-up share capital is
@@ -90,8 +145,12 @@ reader cannot see is a rule they cannot argue with.
 
 The announcements feed keeps three days. A quarter compared out of that would
 be three days against nothing, so order events are written to an append-only
-SQLite ledger as they are seen (`INSERT OR IGNORE`; the first record of an
-event wins and a re-scan can never restate it).
+SQLite ledger as they are seen. The first record of an event wins and a
+re-scan by the same reader can never restate it. The one thing that replaces
+a row is a **newer reader**: that corrects how the filing was read, not what
+happened. A value read by an older reader is left out of a quarter's total
+until it has been read again (`awaiting_reread`), which `reread()` does after
+every scan from text already on disk, fetching nothing.
 
 A second table records **which days were actually fetched**. Without it, "the
 earliest order we hold" has to stand in for "when we started watching", and
@@ -103,6 +162,24 @@ it.
 
 `POST /jobs/wow-backfill?days=45` (admin-gated) walks the archive for events
 this instance never saw live. A few hundred requests — a job, never a page load.
+
+### Nothing waits on a PDF
+
+`/wow-orders` answers with whatever has been read. When that is stale or
+empty it starts the read on a background thread and says `reading: true` with
+`poll_seconds`; the page asks again until it is done, keeps open whatever the
+reader opened, and shows a failed read as a note rather than a blank page. A
+filing that has not been read yet is listed as *not read yet*, which is a
+different fact from *value not disclosed*.
+
+### The page
+
+The WOW orders lead, a card each: the percentage of market cap, a bar that is
+full at half the company's value with a tick where WOW begins, who won what
+from whom, what it is for, and the order against market cap and a year of
+sales. Everything else — smaller orders, bids and memoranda, orders with no
+rupee value — is one line each and opens to the same detail. The quarter
+comparison sits under the week.
 
 ---
 
