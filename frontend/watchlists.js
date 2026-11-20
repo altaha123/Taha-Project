@@ -875,7 +875,7 @@
   function shell() {
     return '<div class="wl">' +
       '<header class="wl-head">' +
-        '<p class="wl-kick">My money · watchlists</p>' +
+        '<p class="wl-kick">Portfolio · watchlists</p>' +
         '<h2>Watchlists</h2>' +
         '<p class="wl-lede">Every list you keep, live: today’s move, the week, the month, and how far each name has come since it went on the list. Race them, share them, and pick a winner.</p>' +
         '<p class="wl-sync" id="wl-sync"></p>' +

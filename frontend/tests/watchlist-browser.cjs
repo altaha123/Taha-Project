@@ -69,7 +69,7 @@ const HARNESS = `<!doctype html><meta charset="utf-8"><title>watchlist harness</
     };
     const signIn = () => page.evaluate(() => localStorage.setItem('altaha-session-v1', 'a-session'));
     // The list opens from Me (the phone sheet, the desktop menu) and from the
-    // My money door; all three call this. The harness has no header, so the
+    // Portfolio door; all three call this. The harness has no header, so the
     // test calls it directly.
     const openList = () => page.evaluate(() => window.AltahaWatchlist.open());
     const closeList = () => page.locator('.ux-dialog-head button').click();

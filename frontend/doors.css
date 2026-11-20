@@ -252,7 +252,7 @@
 .dr-universe:hover .dr-cta, .dr-pfhero:hover .dr-cta { transform: translateX(4px); box-shadow: 0 8px 22px rgba(168,128,28,.45); }
 .dr-credit { position: absolute; right: 16px; bottom: 10px; font-family: var(--mono); font-size: 9px; color: rgba(251,248,241,.45); }
 
-/* ── My money: the portfolio panel ────────────────────────────────────── */
+/* ── Portfolio: the portfolio panel ────────────────────────────────────── */
 .dr-pfhero { width: 100%; align-items: center; gap: 30px 44px; padding: 30px 36px; }
 .dr-ringwrap { position: relative; width: 180px; height: 180px; flex: none; }
 .dr-ringwrap svg { width: 180px; height: 180px; transform: rotate(-90deg); }
