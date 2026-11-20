@@ -1923,15 +1923,18 @@
     <div id="wow-body"></div>
   </div><!-- /view-wow -->
 
-  <!-- Concall digests. Extracted from the transcript, never paraphrased. -->
+  <!-- Concalls. A written brief of each call, key calls first; under it the
+       digest extracted from the transcript, which involves no model. -->
   <div id="view-concalls" style="display:none">
     <header class="tabhead">
       <h2>Concall summaries</h2>
-      <p>Earnings calls, summarised: who spoke, what was promised, what changed.</p>
+      <p>Earnings calls, read for you: what management said, what they committed to, what analysts pressed on. The key calls come first.</p>
     </header>
     <details class="tabnote">
-      <summary>What is extracted, and what is not</summary>
-      <p>Everything on this page is taken from the transcript itself. Forward-looking lines are quoted <b>verbatim and attributed to the person who said them</b> — a commitment put in management's mouth that they did not make would be the worst thing this page could print, so an analyst's question or the moderator's script is never quoted as guidance. Topic emphasis counts how often a subject came up per thousand words: it shows what the call was spent on, which is not the same as what was said about it. A written summary needs a language model; when none is configured the page says so instead of presenting the extraction as one.</p>
+      <summary>What is written, what is counted, and what makes a call key</summary>
+      <p>Each summary is <b>written by a language model</b> (Claude) from the transcript the company filed, and says so on the card. Two things in it are not left to the model. A commitment is always a quote, and every quote is <b>checked word for word against the transcript</b>: one that does not appear there is dropped rather than printed. The name under a quote is the speaker label the transcript itself puts on that passage, so an analyst's question or the moderator's script is never shown as the company's guidance. Figures elsewhere in a summary are not checked in that way — the transcript is one tap away for anything you mean to rely on.</p>
+      <p>A <b>key call</b> is one the model graded as adding the most to what the results filing already said: new or changed guidance, something announced, or a problem disclosed. It is a grade of the information in the call, not of the company or its share, and nothing here is a recommendation.</p>
+      <p>Under each summary, <b>Counted from the transcript</b> involves no model: who was on the call, how often each subject came up per thousand words, and how that moved since the company's last call. Emphasis shows what a call was spent on, which is not the same as what was said about it. When no model is configured the page says so and shows this extraction on its own, instead of presenting it as a summary.</p>
     </details>
     <div id="concalls-body"></div>
   </div><!-- /view-concalls -->

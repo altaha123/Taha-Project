@@ -148,7 +148,7 @@
         { tab: 'tracker', more: true, label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
         { tab: 'factors', more: true, label: 'Factors', icon: 'plan', hint: 'What each factor has actually predicted', kw: 'factors ic accuracy' },
         { tab: 'strategies', more: true, label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
-        { tab: 'concalls', more: true, label: 'Concalls', icon: 'chat', hint: 'Earnings call transcripts, digested', kw: 'concall earnings call transcript' }
+        { tab: 'concalls', more: true, label: 'Concalls', icon: 'chat', hint: 'Earnings calls summarised, key calls first', kw: 'concall earnings call transcript' }
       ]
     },
     {
