@@ -563,6 +563,40 @@ altaha/
 
 ---
 
+### Delivery trends
+
+`/delivery/trends` is what the **Delivery trends** tab opens on: where delivery
+is running above a stock's own normal. Three lists, each a stock compared only
+with itself, on the same panel as everything else in `backend/special.py`:
+
+| List | Rule |
+|---|---|
+| **Spikes today** | The latest session delivered at least 2x the rupees of its usual day (median of the 20 sessions before), with the delivered share of volume at or above its own average |
+| **Building all week** | The median day of the last 5 sessions delivered at least 1.5x the usual day of the 20 before them, so one loud session cannot qualify |
+| **Quiet build-up** | Delivered share at least 5 points higher over 20 sessions than over the 60 before, on more rupees, with the price within 6% of where it started |
+
+Above them, the market's own delivered share against its 20-session average;
+below, the same week-against-usual comparison by industry, for the companies in
+`nse_industries.csv`.
+
+The multiple is on delivered **rupees**, not shares, so a split or bonus does
+not read as a spike, and a name whose unadjusted price shows one inside the
+window is left out and counted. The liquidity floor (Rs 2, 10 or 50 crore a
+day) is measured on the sessions *before* the spike, so a spike cannot qualify
+itself.
+
+None of the thresholds was fitted to returns, and the tab does not claim an
+edge: the page carries the caveats that a delivered share has a seller as well
+as a buyer, that F&O expiry and block deals lift delivery for reasons that are
+no view on the company, and that this repo's own test found the delivery
+signal faded after 2023. It is a list of where to look.
+
+The one-year Altaha Special ranking (`/special`) used to be the whole tab. It
+skips the most recent month by design, so it could not show anything about
+this week; it is now folded away beneath the lists and fetched only when
+opened. `test_delivery_trends.py` pins the arithmetic,
+`frontend/tests/delivery-trends-browser.cjs` the page.
+
 ### Delivery, per company
 
 `/delivery?ticker=SYM` returns the delivered share of each session's volume for

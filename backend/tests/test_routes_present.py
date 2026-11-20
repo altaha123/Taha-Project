@@ -109,6 +109,7 @@ GET     /datasource
 GET     /deals
 GET     /deals/{ticker}
 GET     /delivery
+GET     /delivery/trends
 GET     /digest/preview
 GET     /explain
 GET     /factors

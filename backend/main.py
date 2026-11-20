@@ -3965,6 +3965,27 @@ def delivery_daily(ticker: str, days: int = 60):
         raise HTTPException(503, f"Delivery data unavailable: {type(e).__name__}")
 
 
+@app.get("/delivery/trends")
+def delivery_trends(min_turnover_cr: float = 10.0, limit: int = 40):
+    """
+    Where delivery is running above a stock's own normal — in the latest
+    session, across the week, and quietly over a month — with the market's own
+    delivered share and the industries the rupees are going to.
+
+    The reading /special cannot give: that book looks back a year and skips
+    the most recent month on purpose, so nothing that happened this week can
+    appear in it. This compares each stock only with itself, on the same panel
+    /delivery and /special read, so the three never disagree about a session.
+    """
+    if special_engine is None:
+        raise HTTPException(503, "The delivery engine is not loaded on this instance.")
+    try:
+        return to_native(special_engine.delivery_trends(
+            min_turnover_cr=min_turnover_cr, limit=limit))
+    except Exception as e:
+        raise HTTPException(503, f"Delivery data unavailable: {type(e).__name__}")
+
+
 @app.get("/special/status")
 def altaha_special_status():
     """Whether the delivery cache is deep enough to rank anything, and why not."""

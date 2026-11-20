@@ -52,7 +52,7 @@
         { id: 'live',     label: 'Alerts',            hint: 'Intraday signals as they fire' },
         { id: 'deals',    label: 'Big trades',        hint: 'Bulk and block deals, and who made them' },
         { id: 'wow',      label: 'Order wins',        hint: 'New orders measured against company size' },
-        { id: 'special',  label: 'Delivery trends',   hint: 'Price moves backed by delivered volume' },
+        { id: 'special',  label: 'Delivery trends',   hint: 'Where delivery is running above normal' },
         { id: 'results',  label: 'Results calendar',  hint: 'Who reports yesterday, today and this week' },
         { id: 'filings',  label: 'Filings & news',    hint: 'Company announcements as they are filed' },
         { id: 'options',  label: 'Options',           hint: 'Option prices and open interest' }

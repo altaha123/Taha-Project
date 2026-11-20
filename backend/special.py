@@ -954,3 +954,346 @@ def rank_universe(limit=BOOK):
             "arithmetic shown. Not a recommendation to buy or sell."),
         "status": status(),
     }
+
+
+# ---------------------------------------------------------------------------
+# What delivery is doing NOW
+# ---------------------------------------------------------------------------
+#
+# WHY THIS EXISTS BESIDE THE BOOK
+#
+# The tab is called "Delivery trends", and for a long time what it showed was
+# the book above: a year of history, the most recent month deliberately
+# skipped, five signals averaged into one percentile. That answers "which
+# stocks have been well owned for a year". It cannot answer the question the
+# name asks — where is delivery unusual this week — because the month in which
+# that would be visible is the month the signal throws away.
+#
+# So this is a different reading of the same panel, not another ranking model:
+#
+#   today   rupees delivered in the latest session against the stock's own
+#           usual day, for names where the delivered SHARE also held up
+#   week    the same, for a typical day of the last five sessions — a build
+#           that lasted, rather than one loud session
+#   quiet   delivered share higher for a month than in the three before it,
+#           while the price has barely moved
+#
+# Every figure is a comparison of a stock with ITSELF. There is no score, no
+# percentile and no cross-section, so a reader can check any row against the
+# exchange's own file.
+#
+# RUPEES, NOT SHARES. The multiple is on delivered VALUE (quantity x that
+# day's average price). A split or a bonus multiplies the share count and
+# divides the price, so delivered quantity jumps fivefold on the ex-date of a
+# 1:5 split with nothing whatever having happened. Value is unchanged by it.
+#
+# WHAT THIS IS NOT. A delivered share has a seller as well as a buyer, so
+# "heavy delivery" says ownership changed hands and stayed changed — not who
+# bought, and not that the price will follow. Stock futures and options settle
+# by physical delivery, so the monthly expiry lifts delivery in F&O names for
+# reasons that are no view on the company; so do block deals and index
+# rebalances. And the repo's own measurement above found the delivery signal's
+# information coefficient decayed to nothing after 2023. This is a list of
+# where to look, sorted by how unusual the day was. It is not a list of what
+# to buy, and none of the thresholds below has been fitted to returns.
+
+TRENDS_TAIL = 90                  # sessions read: 20 recent + 60 before + slack
+TRENDS_MIN_SESSIONS = 26          # a 20-session baseline, a week and one spare
+TRENDS_BASE = 20                  # sessions in "usual"
+TRENDS_BASE_MIN_OBS = 12          # readings a baseline needs to be called one
+TRENDS_SPIKE_MULT = 2.0           # today's delivered rupees vs a usual day
+TRENDS_WEEK = 5
+TRENDS_WEEK_MULT = 1.5            # a typical day this week vs a usual day
+TRENDS_QUIET_RECENT = 20
+TRENDS_QUIET_BASE = 60
+TRENDS_QUIET_BASE_MIN_OBS = 40
+TRENDS_QUIET_PP = 5.0             # points of delivered share gained
+TRENDS_QUIET_MULT = 1.25
+TRENDS_QUIET_BAND_PCT = 6.0       # "has not moved": within this over 20 sessions
+TRENDS_MIN_DELIVERED_CR = 1.0     # a day's delivery smaller than this is noise
+TRENDS_FLOORS_CR = (2.0, 10.0, 50.0)   # the liquidity choices the page offers
+TRENDS_DEFAULT_FLOOR_CR = 10.0
+TRENDS_LIMIT = 40
+TRENDS_SPARK = 20
+TRENDS_SECTOR_MIN_MEMBERS = 4
+# A one-session close-to-close move no banded stock can make. A 1:1 bonus or a
+# 1:2 split is -50%, a 1:2 bonus -33%; the widest price band is 20%. A name
+# that shows one inside the window has an unadjusted price series, so its
+# "price change" would be an artefact and it is left out and counted.
+TRENDS_CA_DROP = -0.30
+TRENDS_CA_JUMP = 0.45
+
+_names = {"loaded": False, "map": {}}
+
+
+def _company_names():
+    """symbol -> (company name, industry), from the Nifty Total Market list
+    kept beside this file. About 750 names: everything else is shown by its
+    symbol, which is the honest fallback — a guessed name is worse than none."""
+    if _names["loaded"]:
+        return _names["map"]
+    out = {}
+    try:
+        import csv
+        with open(os.path.join(HERE, "nse_industries.csv"), encoding="utf-8-sig") as fh:
+            for row in csv.DictReader(fh):
+                sym = (row.get("Symbol") or "").strip().upper()
+                if sym:
+                    out[sym] = ((row.get("Company Name") or "").strip(),
+                                (row.get("Industry") or "").strip())
+    except Exception:
+        out = {}
+    _names["map"], _names["loaded"] = out, True
+    return out
+
+
+def _num(v, nd=2):
+    """A plain float, or None. NaN and infinity are not readings."""
+    try:
+        f = float(v)
+    except Exception:
+        return None
+    return round(f, nd) if math.isfinite(f) else None
+
+
+def _trend_floor(v):
+    try:
+        f = float(v)
+    except Exception:
+        return TRENDS_DEFAULT_FLOOR_CR
+    if not math.isfinite(f):
+        return TRENDS_DEFAULT_FLOOR_CR
+    return max(TRENDS_FLOORS_CR[0], min(f, 500.0))
+
+
+@np.errstate(all="ignore")
+def delivery_trends(min_turnover_cr=TRENDS_DEFAULT_FLOOR_CR, limit=TRENDS_LIMIT):
+    """Where delivery is running above a stock's own normal: today, across the
+    week, and quietly over a month. See the note above for what it is not."""
+    floor = _trend_floor(min_turnover_cr)
+    try:
+        limit = max(5, min(int(limit), 100))
+    except Exception:
+        limit = TRENDS_LIMIT
+
+    ensure_building()
+    P = _load_cache()
+    dp_all = None if not P else P.get("deliv")
+    if dp_all is None or len(dp_all) < TRENDS_MIN_SESSIONS:
+        st = status()
+        have = int(st.get("cached_sessions", 0))
+        return {"available": False, "building": True, "sessions": have,
+                "needed": TRENDS_MIN_SESSIONS,
+                "message": (st.get("build", {}).get("error")
+                            or f"Reading the exchange delivery record — {have} "
+                               f"of {TRENDS_MIN_SESSIONS} sessions in. This "
+                               f"fills itself; nothing here needs a retry.")}
+
+    cols = [c for c in dp_all.columns if not _is_fund(c)]
+    tail = lambda k: P[k].tail(TRENDS_TAIL).reindex(columns=cols).astype("float64")
+    dp, qty, vwap, close, high, low = (tail(k) for k in
+                                       ("deliv", "qty", "vwap", "close", "high", "low"))
+    n = len(dp)
+    turn = qty * vwap / 1e7                 # traded value, Rs crore
+    val = turn * dp / 100.0                 # delivered value, Rs crore
+    px = close.ffill()
+    last, prev = px.iloc[-1], px.iloc[-2]
+
+    step = close.pct_change(fill_method=None)
+    corp = ((step <= TRENDS_CA_DROP) | (step >= TRENDS_CA_JUMP)).any()
+
+    spark_n = min(TRENDS_SPARK, n)
+    spark_val, spark_pct = val.tail(spark_n), dp.tail(spark_n)
+    names = _company_names()
+
+    def frame(recent, base, base_min_obs, agg):
+        """One stock-against-itself comparison: `recent` rows against `base`."""
+        f = pd.DataFrame({
+            "delivered_cr": agg(val.iloc[recent]),
+            "usual_cr": val.iloc[base].median(),
+            "deliv_pct": dp.iloc[recent].mean(),
+            "usual_pct": dp.iloc[base].mean(),
+            "turnover_cr": turn.iloc[base].median(),
+            "obs": val.iloc[recent].notna().sum(),
+            "base_obs": val.iloc[base].notna().sum(),
+            "price": last,
+        })
+        f["mult"] = f["delivered_cr"] / f["usual_cr"].where(f["usual_cr"] > 0)
+        f["pp"] = f["deliv_pct"] - f["usual_pct"]
+        f = f[~corp.reindex(f.index).fillna(False)]
+        return f[(f["base_obs"] >= base_min_obs) & (f["turnover_cr"] >= floor)
+                 & f["mult"].notna() & f["pp"].notna() & f["price"].notna()]
+
+    def rows_of(f, extra=None):
+        out = []
+        for sym, r in f.head(limit).iterrows():
+            nm = names.get(sym, ("", ""))
+            row = {
+                "symbol": sym, "name": nm[0] or None, "industry": nm[1] or None,
+                "price": _num(r["price"]), "chg_pct": _num(r["chg_pct"]),
+                "deliv_pct": _num(r["deliv_pct"]), "usual_pct": _num(r["usual_pct"]),
+                "pp": _num(r["pp"]),
+                "delivered_cr": _num(r["delivered_cr"]), "usual_cr": _num(r["usual_cr"]),
+                "mult": _num(r["mult"]), "turnover_cr": _num(r["turnover_cr"], 1),
+                "spark_cr": [_num(v) for v in spark_val[sym].tolist()],
+                "spark_pct": [_num(v, 1) for v in spark_pct[sym].tolist()],
+            }
+            if extra:
+                row.update(extra(sym, r))
+            out.append(row)
+        return out
+
+    def split(f):
+        return {"total": int(len(f)), "up": int((f["chg_pct"] > 0).sum()),
+                "down": int((f["chg_pct"] < 0).sum())}
+
+    # ── today ────────────────────────────────────────────────────────────
+    base_t = slice(-(TRENDS_BASE + 1), -1)
+    today = frame(slice(-1, None), base_t, TRENDS_BASE_MIN_OBS, lambda v: v.iloc[-1])
+    today["chg_pct"] = (last / prev - 1.0).reindex(today.index) * 100.0
+    rng = (high.iloc[-1] - low.iloc[-1])
+    today["close_loc"] = ((close.iloc[-1] - low.iloc[-1])
+                          / rng.where(rng > 0)).reindex(today.index)
+    today = today[(today["mult"] >= TRENDS_SPIKE_MULT) & (today["pp"] >= 0)
+                  & (today["delivered_cr"] >= TRENDS_MIN_DELIVERED_CR)
+                  & today["chg_pct"].notna()].sort_values("mult", ascending=False)
+
+    # ── the week ─────────────────────────────────────────────────────────
+    wk = slice(-TRENDS_WEEK, None)
+    base_w = slice(-(TRENDS_BASE + TRENDS_WEEK), -TRENDS_WEEK)
+    week = frame(wk, base_w, TRENDS_BASE_MIN_OBS, lambda v: v.median())
+    week["chg_pct"] = (last / px.iloc[-(TRENDS_WEEK + 1)] - 1.0).reindex(week.index) * 100.0
+    above = (val.iloc[wk] > val.iloc[base_w].median()).sum()
+    week["days_above"] = above.reindex(week.index)
+    week["week_cr"] = val.iloc[wk].sum().reindex(week.index)
+    week = week[(week["mult"] >= TRENDS_WEEK_MULT) & (week["pp"] >= 0)
+                & (week["obs"] >= TRENDS_WEEK - 1)
+                & (week["delivered_cr"] >= TRENDS_MIN_DELIVERED_CR)
+                & week["chg_pct"].notna()].sort_values("mult", ascending=False)
+
+    # ── a quiet month ────────────────────────────────────────────────────
+    quiet_ok = n >= TRENDS_QUIET_RECENT + TRENDS_QUIET_BASE_MIN_OBS
+    if quiet_ok:
+        qr = slice(-TRENDS_QUIET_RECENT, None)
+        qb = slice(-(TRENDS_QUIET_RECENT + TRENDS_QUIET_BASE), -TRENDS_QUIET_RECENT)
+        quiet = frame(qr, qb, TRENDS_QUIET_BASE_MIN_OBS, lambda v: v.median())
+        quiet["chg_pct"] = (last / px.iloc[-(TRENDS_QUIET_RECENT + 1)] - 1.0
+                            ).reindex(quiet.index) * 100.0
+        quiet = quiet[(quiet["pp"] >= TRENDS_QUIET_PP)
+                      & (quiet["mult"] >= TRENDS_QUIET_MULT)
+                      & (quiet["obs"] >= TRENDS_QUIET_RECENT - 5)
+                      & (quiet["chg_pct"].abs() <= TRENDS_QUIET_BAND_PCT)
+                      ].sort_values("pp", ascending=False)
+    else:
+        quiet = None
+
+    # ── the market, and where in it ──────────────────────────────────────
+    both = val.notna() & turn.notna()
+    day_val = val.where(both).sum(axis=1)
+    day_turn = turn.where(both).sum(axis=1)
+    day_share = (day_val / day_turn.where(day_turn > 0)) * 100.0
+    market = {
+        "delivered_cr": _num(day_val.iloc[-1], 0),
+        "usual_cr": _num(day_val.iloc[base_t].median(), 0),
+        "share_pct": _num(day_share.iloc[-1]),
+        "usual_share_pct": _num(day_share.iloc[base_t].mean()),
+        "stocks": int(both.iloc[-1].sum()),
+    }
+    if market["delivered_cr"] and market["usual_cr"]:
+        market["mult"] = _num(market["delivered_cr"] / market["usual_cr"])
+    if market["share_pct"] is not None and market["usual_share_pct"] is not None:
+        market["pp"] = _num(market["share_pct"] - market["usual_share_pct"])
+
+    sectors = []
+    ind = pd.Series({s: names[s][1] for s in cols if s in names and names[s][1]})
+    if len(ind):
+        clean = [s for s in ind.index if not bool(corp.get(s, False))]
+        ind = ind.reindex(clean)
+        sv, st_ = val[clean], turn[clean]
+        grp_val = sv.T.groupby(ind).sum(min_count=1).T
+        grp_turn = st_.T.groupby(ind).sum(min_count=1).T
+        members = ind.value_counts()
+        wk_chg = (last / px.iloc[-(TRENDS_WEEK + 1)] - 1.0).reindex(clean) * 100.0
+        med_chg = wk_chg.groupby(ind).median()
+        for name in grp_val.columns:
+            if int(members.get(name, 0)) < TRENDS_SECTOR_MIN_MEMBERS:
+                continue
+            usual = float(grp_val[name].iloc[base_w].median())
+            recent = float(grp_val[name].iloc[wk].median())
+            if not (usual > 0) or not math.isfinite(recent):
+                continue
+            share_now = (grp_val[name].iloc[wk].sum() / grp_turn[name].iloc[wk].sum()) * 100.0
+            share_was = (grp_val[name].iloc[base_w].sum() / grp_turn[name].iloc[base_w].sum()) * 100.0
+            sectors.append({
+                "industry": name, "members": int(members[name]),
+                "delivered_cr": _num(recent, 0), "usual_cr": _num(usual, 0),
+                "mult": _num(recent / usual),
+                "share_pct": _num(share_now, 1), "usual_share_pct": _num(share_was, 1),
+                "pp": _num(share_now - share_was, 1),
+                "chg_pct": _num(med_chg.get(name)),
+            })
+        sectors.sort(key=lambda s: -(s["mult"] or 0))
+
+    views = {
+        "today": {
+            "rows": rows_of(today, lambda s, r: {"close_loc": _num(r["close_loc"])}),
+            **split(today),
+            "rule": (f"Delivered at least {TRENDS_SPIKE_MULT:g} times the rupees "
+                     f"of its usual day (the median of the {TRENDS_BASE} sessions "
+                     f"before), with the delivered share of volume at or above "
+                     f"its own average."),
+        },
+        "week": {
+            "rows": rows_of(week, lambda s, r: {
+                "days_above": None if pd.isna(r["days_above"]) else int(r["days_above"]),
+                "week_cr": _num(r["week_cr"])}),
+            **split(week),
+            "rule": (f"A typical day of the last {TRENDS_WEEK} sessions delivered "
+                     f"at least {TRENDS_WEEK_MULT:g} times the usual day of the "
+                     f"{TRENDS_BASE} sessions before them, share of volume at or "
+                     f"above its average. One loud session cannot do this; three "
+                     f"of the five have to."),
+        },
+        "quiet": ({
+            "rows": rows_of(quiet), **split(quiet),
+            "rule": (f"Delivered share averaged at least {TRENDS_QUIET_PP:g} "
+                     f"points higher over the last {TRENDS_QUIET_RECENT} sessions "
+                     f"than over the {TRENDS_QUIET_BASE} before, on more rupees, "
+                     f"while the price ended within {TRENDS_QUIET_BAND_PCT:g}% "
+                     f"of where it started."),
+        } if quiet is not None else {
+            "rows": [], "total": 0, "up": 0, "down": 0, "unavailable": True,
+            "rule": (f"Needs {TRENDS_QUIET_RECENT + TRENDS_QUIET_BASE_MIN_OBS} "
+                     f"sessions of history; {n} are held so far."),
+        }),
+    }
+
+    return {
+        "available": True,
+        "as_of": str(dp.index[-1].date()),
+        "sessions_held": int(len(dp_all)),
+        "min_turnover_cr": floor,
+        "floors_cr": list(TRENDS_FLOORS_CR),
+        "limit": limit,
+        "universe": int(dp.iloc[-1].notna().sum()),
+        "excluded_corporate_action": int(corp.sum()),
+        "spark_dates": [str(d.date()) for d in spark_val.index],
+        "market": market,
+        "sectors": sectors,
+        "sector_coverage": int(len(ind)),
+        "views": views,
+        "delivered_value_derived": True,
+        "source": "NSE sec_bhavdata_full (EQ series)",
+        "caveats": [
+            "A delivered share has a seller as well as a buyer. Heavy delivery "
+            "says ownership changed hands and stayed changed, not who bought.",
+            "Stock futures and options settle by delivery, so the monthly "
+            "expiry lifts delivery in F&O names. Block deals and index "
+            "rebalances do the same.",
+            "None of these thresholds was fitted to returns, and this site's "
+            "own test found the delivery signal's edge faded after 2023. It "
+            "is a list of where to look, not of what to buy.",
+        ],
+        "disclaimer": ("Educational. Arithmetic on published exchange data. "
+                       "Not a recommendation to buy or sell."),
+    }
