@@ -364,7 +364,7 @@ async function noSideways(page, label) {
     await context.close();
   }
 
-  // ── The ways in: the Me menu, the My money door, the phone sheet ───────
+  // ── The ways in: the Me menu, the Portfolio door, the phone sheet ──────
   {
     const context = await browser.newContext({ viewport: { width: 1440, height: 800 } });
     await wire(context, fresh());
@@ -376,9 +376,13 @@ async function noSideways(page, label) {
     await noSideways(page, 'Me menu at 1440px');
     await page.locator('#sh-adv').click();
     await page.waitForURL(/\/advisors\.html$/);
-    // My money: the door bar and the door page both carry it.
+    // Portfolio: the door's menu and the door page both carry it.
     await page.goto(base + '/#portfolio/money', { waitUntil: 'load' });
-    await page.locator('#sh-doorbar a.sh-pill[href="advisors.html"]').waitFor();
+    await page.locator('.sh-doorwrap[data-sec="portfolio"]').hover();
+    await page.locator('#sh-mega-portfolio a.sh-item[href="advisors.html"]').waitFor();
+    await noSideways(page, 'Portfolio menu at 1440px');
+    await page.keyboard.press('Escape');
+    await page.locator('#sh-megawrap.open').waitFor({ state: 'detached' });
     await page.locator('#view-money a.dr-card[href="advisors.html"]').click();
     await page.waitForURL(/\/advisors\.html$/);
     await page.setViewportSize({ width: 1280, height: 800 });

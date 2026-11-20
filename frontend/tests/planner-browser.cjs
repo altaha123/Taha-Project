@@ -131,16 +131,19 @@ const plan = (state, at) => M.derive(state, at || NOW);
     await settle(page);
     assert.equal(await stored(page), null, 'a page load wrote a planner record nobody asked for');
 
-    // The door bar says where the reader is — arriving, and coming back.
-    const lit = () => page.locator('#sh-doorbar .sh-pill.on').allInnerTexts();
+    // The line under the header says where the reader is — arriving, and
+    // coming back from the door's own page by way of the door's menu.
+    const lit = () => page.locator('#sh-doorbar .sh-crumb-here').allInnerTexts();
     assert.deepEqual(await lit(), ['Money planner']);
-    await page.locator('#sh-doorbar .sh-pill[data-tab="money"]').click();
+    await page.locator('#sh-doorbar .sh-crumb-door').click();
     await page.locator('#view-money').waitFor({ state: 'visible' });
-    await page.locator('#sh-doorbar .sh-pill[data-tab="planner"]').click();
+    await page.mouse.move(640, 760);
+    await page.locator('.sh-doorwrap[data-sec="portfolio"]').hover();
+    await page.locator('#sh-mega-portfolio .sh-item[data-tab="planner"]').click();
     await page.locator('#mp-hero').waitFor({ state: 'visible' });
     await page.waitForTimeout(200);
     assert.deepEqual(await lit(), ['Money planner'],
-      'the planner was on screen with another tool lit in the door bar above it');
+      'the planner was on screen with another tool named in the line above it');
 
     /* ══ Four numbers, one date ═════════════════════════════════════════════ */
     await fill(page, '#mp-age', 30);
@@ -432,8 +435,8 @@ const plan = (state, at) => M.derive(state, at || NOW);
     assert.match(text, /3 monthly check-ins in a row/);
     assert.doesNotMatch(text, /₹|\d{1,2},\d{2},\d{3}|\d{5,}/, 'an amount went into the shared text');
 
-    // The My money overview says what the planner says.
-    await page.locator('#sh-doorbar .sh-pill[data-tab="money"]').click();
+    // The Portfolio overview says what the planner says.
+    await page.locator('#sh-doorbar .sh-crumb-door').click();
     await page.locator('#drm-planner').waitFor({ state: 'visible' });
     assert.ok((await page.locator('#drm-planner').innerText()).includes('Work becomes optional in ' + await page.evaluate(() => {
       const s = window.AltahaPlanner.summary(), p = s.when.split('-');

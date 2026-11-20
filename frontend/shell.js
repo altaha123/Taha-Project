@@ -90,7 +90,18 @@
     chat:     '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/>',
     lens:     '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>',
     converge: '<circle cx="8" cy="10" r="5"/><circle cx="16" cy="10" r="5"/><circle cx="12" cy="16" r="5"/>',
-    flask:    '<path d="M9 3h6M10 3v6.5L4.6 18.4A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.4-2.6L14 9.5V3"/><path d="M7.5 15h9"/>'
+    flask:    '<path d="M9 3h6M10 3v6.5L4.6 18.4A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.4-2.6L14 9.5V3"/><path d="M7.5 15h9"/>',
+    /* The door menus put a door's tools side by side, where two tools sharing
+       one drawing (the results calendar and the filings were both a page, the
+       screener and the investor styles both a lens) read as one tool listed
+       twice. These give each its own. */
+    calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    funnel:   '<path d="M3.5 5h17l-6.6 7.8V19l-3.8 1.6v-7.8z"/>',
+    flag:     '<path d="M5 21V4"/><path d="M5 4.5h11.5l-2 4 2 4H5"/>',
+    briefcase:'<rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M9 7.5V5.6A1.6 1.6 0 0 1 10.6 4h2.8A1.6 1.6 0 0 1 15 5.6v1.9M3 13h18"/>',
+    pie:      '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>',
+    star:     '<path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/>',
+    users:    '<circle cx="9" cy="8.5" r="3.2"/><path d="M3 20c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2"/><path d="M16 5.6a3.2 3.2 0 0 1 0 5.8M17.6 15.2c1.8.6 3 2.2 3.4 4.8"/>'
   };
 
   function svg(key) {
@@ -107,58 +118,91 @@
      the search box finds a tool by what people call it, not only by its
      label: "bulk" finds Big trades, "pledge" finds the Screener.
 
-     `more: true` puts a tool under the door bar's "More" button instead of in
-     the row itself. Visitors said the site was too complex to find their way
-     around: Ideas alone showed thirteen pills, and the row ran off the edge
-     of a laptop screen. The row now carries the few tools a newcomer needs;
-     the rest are one tap away under More, each with its one-line hint. A
-     tool under More is shown in the row while it is the one open, so the
-     reader always sees where they are. Nothing is removed: the door page,
-     the search box and the phone sheet still list every tool. To promote a
-     tool back into the row, delete its `more: true`. */
+     ON A WIDE SCREEN, EACH DOOR OPENS A MENU
+     Hovering a door (or pressing its arrow) opens one panel with every tool
+     behind it: the door's question and a way to its own page on the left,
+     the tools on the right in the groups below, each with its one-line
+     hint. `groups` names the columns in order and an item's `g` puts it in
+     one; `stack: true` sits a short group under the one before it rather
+     than in a column of its own. An item with no `g` (a door's Overview, a
+     `quiet` tool) is left out of the menu. `tip` is a shorter hint for the
+     menu where the full one would run to three lines. `lead` is the line
+     under the question.
+
+     ON A NARROW ONE, THE DOOR BAR
+     Below 1040px there are no doors in the header and nothing to hover, so
+     the row of pills under the header is still how a reader moves between
+     the tools of one door. `more: true` puts a tool under that row's "More"
+     button instead of in the row itself: Ideas alone showed thirteen pills.
+     A tool under More is shown in the row while it is the one open. Nothing
+     is removed: the door page, the search box and the phone sheet still
+     list every tool. */
 
   var DOORS = [
     {
       id: 'discover', label: 'Today', question: 'What is the market doing?',
+      lead: 'Prices, sectors, flows and everything that happened today.',
+      mark: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+      groups: [
+        { id: 'live', title: 'Live market' },
+        { id: 'flow', title: 'Money flow' },
+        { id: 'news', title: 'Company news' }
+      ],
       items: [
         { tab: 'today', label: 'Overview', icon: 'pulse', hint: 'The market at a glance, live', kw: 'home market nifty sensex index sectors heatmap fii dii' },
-        { tab: 'live', label: 'Alerts', icon: 'bell', hint: 'Live intraday calls and consolidation breakouts', kw: 'live scanner intraday volume breakout consolidation 52 week high telegram alert' },
-        { tab: 'deals', label: 'Big trades', icon: 'exchange', hint: 'Bulk and block deals, and who made them', kw: 'bulk block deals' },
-        { tab: 'wow', more: true, label: 'Order wins', icon: 'target', hint: 'New orders measured against company size', kw: 'wow orders contract' },
-        { tab: 'special', more: true, label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
-        { tab: 'results', label: 'Results calendar', icon: 'document', hint: 'Who reports yesterday, today and this week', kw: 'results earnings quarterly calendar' },
-        { tab: 'filings', label: 'Filings & news', icon: 'document', hint: 'Company announcements as they are filed', kw: 'news announcements filings exchange' },
-        { tab: 'options', more: true, label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
+        { tab: 'live', g: 'live', label: 'Alerts', icon: 'bell', hint: 'Live intraday calls and consolidation breakouts', kw: 'live scanner intraday volume breakout consolidation 52 week high telegram alert' },
+        { tab: 'deals', g: 'flow', label: 'Big trades', icon: 'exchange', hint: 'Bulk and block deals, and who made them', kw: 'bulk block deals' },
+        { tab: 'wow', g: 'news', more: true, label: 'Order wins', icon: 'flag', hint: 'New orders measured against company size', kw: 'wow orders contract' },
+        { tab: 'special', g: 'flow', more: true, label: 'Delivery trends', icon: 'bars', hint: 'Price moves backed by delivered volume', kw: 'delivery special accumulation' },
+        { tab: 'results', g: 'news', label: 'Results calendar', icon: 'calendar', hint: 'Who reports yesterday, today and this week', kw: 'results earnings quarterly calendar' },
+        { tab: 'filings', g: 'news', label: 'Filings & news', icon: 'document', hint: 'Company announcements as they are filed', kw: 'news announcements filings exchange' },
+        { tab: 'options', g: 'live', more: true, label: 'Options', icon: 'layers', hint: 'Option prices and open interest', kw: 'options open interest oi derivatives fno chain' },
         { tab: 'screener', label: 'Market board', icon: 'bars', hint: 'The market board and a stock search box', kw: 'analysis board movers', quiet: true }
       ]
     },
     {
       id: 'research', label: 'Ideas', question: 'What should I look at?',
+      lead: 'The ranked universe, your own screens, and what great investors hold.',
+      mark: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
+      groups: [
+        { id: 'find', title: 'Find stocks' },
+        { id: 'dig', title: 'Dig deeper' },
+        { id: 'own', title: 'Follow big investors' },
+        { id: 'proof', title: 'Our record', stack: true }
+      ],
       items: [
         { tab: 'ideahub', label: 'Overview', icon: 'bulb', hint: 'Every way to find a stock, in one place', kw: 'ideas find discover' },
-        { tab: 'ideas', label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
-        { tab: 'calls', more: true, label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
-        { tab: 'query', label: 'Screener', icon: 'lens', hint: 'Filter every company by your own rules', kw: 'query filter screen roe roce pe debt pledge promoter' },
-        { tab: 'lenses', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them', kw: 'lenses philosophy coffee can moat qglp' },
-        { tab: 'convergence', more: true, label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
-        { tab: 'investors', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
-        { tab: 'funds', more: true, label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
-        { tab: 'charts', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
-        { tab: 'tracker', more: true, label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
-        { tab: 'strategies', more: true, label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
-        { tab: 'concalls', more: true, label: 'Concalls', icon: 'chat', hint: 'Earnings calls summarised, key calls first', kw: 'concall earnings call transcript' }
+        { tab: 'ideas', g: 'find', label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow',
+          tip: 'Ranked picks, by holding period and by setup', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
+        { tab: 'calls', g: 'proof', more: true, label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
+        { tab: 'query', g: 'find', label: 'Screener', icon: 'funnel', hint: 'Filter every company by your own rules', kw: 'query filter screen roe roce pe debt pledge promoter' },
+        { tab: 'lenses', g: 'find', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them', kw: 'lenses philosophy coffee can moat qglp' },
+        { tab: 'convergence', g: 'find', more: true, label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
+        { tab: 'investors', g: 'own', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
+        { tab: 'funds', g: 'own', more: true, label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
+        { tab: 'charts', g: 'dig', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
+        { tab: 'tracker', g: 'proof', more: true, label: 'Track record', icon: 'target', hint: 'How past ideas have done since they were found', kw: 'tracker performance record' },
+        { tab: 'strategies', g: 'dig', more: true, label: 'Strategy lab', icon: 'flask', hint: 'Would a trading rule have beaten holding this stock?', kw: 'strategy strategies backtest back test rules trading system sharpe cagr drawdown golden cross rsi macd bollinger breakout kelly position sizing quants' },
+        { tab: 'concalls', g: 'dig', more: true, label: 'Concalls', icon: 'chat', hint: 'Earnings calls summarised, key calls first', kw: 'concall earnings call transcript' }
       ]
     },
     {
-      id: 'portfolio', label: 'My money', question: 'How am I doing, and what next?',
+      id: 'portfolio', label: 'Portfolio', question: 'How am I doing, and what next?',
+      lead: 'Your holdings, your watchlists, your plan and the next rupee.',
+      mark: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>',
+      groups: [
+        { id: 'mine', title: 'Your stocks' },
+        { id: 'plan', title: 'Your plan' },
+        { id: 'help', title: 'Get help' }
+      ],
       items: [
         { tab: 'money', label: 'Overview', icon: 'shield', hint: 'Your portfolio, watchlist and plans', kw: 'money mine' },
-        { tab: 'portfolio', label: 'Portfolio review', icon: 'plan', hint: 'A clear call on every holding', kw: 'portfolio holdings review plan hold trim exit' },
-        { tab: 'watchlists', label: 'Watchlists', icon: 'target', hint: 'Your lists, live — make, rename, share and play', kw: 'watchlist watch list star saved follow rename share game' },
-        { tab: 'allocate', label: 'Allocation plan', icon: 'shield', hint: 'Where your next rupee should go', kw: 'allocate asset allocation invest' },
-        { tab: 'planner', label: 'Money planner', icon: 'plan', hint: 'The month work becomes optional, and what moves it', kw: 'planner budget tax emergency retire retirement freedom fire goals goal sip check-in regime salary' },
-        { href: 'advisors.html', label: 'Talk to an adviser', icon: 'chat', hint: 'Chat with SEBI-registered advisers', kw: 'advisor adviser sebi chat expert' },
-        { href: 'wealth.html', label: 'Wealth desk', icon: 'shield', hint: 'For portfolio managers: clients, calls and commission',
+        { tab: 'portfolio', g: 'mine', label: 'Portfolio review', icon: 'briefcase', hint: 'A clear call on every holding', kw: 'portfolio holdings review plan hold trim exit' },
+        { tab: 'watchlists', g: 'mine', label: 'Watchlists', icon: 'star', hint: 'Your lists, live — make, rename, share and play', kw: 'watchlist watch list star saved follow rename share game' },
+        { tab: 'allocate', g: 'plan', label: 'Allocation plan', icon: 'pie', hint: 'Where your next rupee should go', kw: 'allocate asset allocation invest' },
+        { tab: 'planner', g: 'plan', label: 'Money planner', icon: 'plan', hint: 'The month work becomes optional, and what moves it', kw: 'planner budget tax emergency retire retirement freedom fire goals goal sip check-in regime salary' },
+        { href: 'advisors.html', g: 'help', label: 'Talk to an adviser', icon: 'chat', hint: 'Chat with SEBI-registered advisers', kw: 'advisor adviser sebi chat expert' },
+        { href: 'wealth.html', g: 'help', label: 'Wealth desk', icon: 'users', hint: 'For portfolio managers: clients, calls and commission',
           kw: 'wealth manager portfolio manager pms clients client book aum commission profit share sharing fee fees high water mark hurdle recommendation recommended price buying price statement' }
       ]
     }
@@ -215,8 +259,8 @@
   /* ── Build the chrome ──────────────────────────────────────────────────────
      Three rows, top to bottom:
        1  the live tape    prices moving now (startTicker)
-       2  the bar          brand · three doors · search · Me
-       3  the door bar     the tools behind the door you are in (index only)
+       2  the bar          brand · three doors, each with its menu · search · Me
+       3  the door bar     where you are (index only; the tools themselves on a phone)
      The headline ribbon that used to sit above the tape now lives on the
      Today page as its Headlines card, and the row of Watchlist, Advisors,
      Pro, Sign in and theme buttons is the Me menu. */
@@ -321,10 +365,24 @@
 
     var nav = el('nav', 'sh-nav sh-doors');
     nav.setAttribute('aria-label', 'Main');
+    /* Each door is two buttons side by side: its name, which opens the door's
+       own page as it always has, and an arrow, which opens its menu. Hovering
+       either opens the menu too, but the arrow is what a keyboard, a screen
+       reader and a touch screen have, so the menu never depends on a mouse.
+       No title on the name: its tooltip would sit on top of the menu, which
+       already prints the question. */
     nav.innerHTML = '<span class="sh-door-ind" aria-hidden="true"></span>' + DOORS.map(function (d) {
-      return '<button type="button" class="sh-top sh-door" data-sec="' + esc(d.id) + '" title="' + esc(d.question) + '">' +
-        esc(d.label) + '</button>';
+      return '<span class="sh-doorwrap" data-sec="' + esc(d.id) + '">' +
+        '<button type="button" class="sh-top sh-door" data-sec="' + esc(d.id) + '">' + esc(d.label) + '</button>' +
+        '<button type="button" class="sh-doorcv" data-sec="' + esc(d.id) + '" aria-expanded="false" ' +
+        'aria-controls="sh-mega-' + esc(d.id) + '" aria-label="' + esc(d.label) + ': show every tool">' +
+        '<svg class="cv" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></span>';
     }).join('');
+
+    var megawrap = el('div', 'sh-megawrap');
+    megawrap.id = 'sh-megawrap';
+    megawrap.innerHTML = megaHTML();
 
     var search = el('div', 'sh-search');
     search.innerHTML =
@@ -397,6 +455,7 @@
 
     bar.appendChild(brand);
     bar.appendChild(nav);
+    bar.appendChild(megawrap);       // straight after the doors, so Tab walks into an open menu
     bar.appendChild(search);
     bar.appendChild(meWrap);
 
@@ -427,6 +486,7 @@
     CHROME = chrome;
 
     wireDoors();
+    wireMega();
     wireMe(drawer);
     wireSearch();
     wireTheme();
@@ -442,16 +502,305 @@
 
   // One builder for the Me menu, the phone sheet and the door bar, so an item
   // can never appear in one and be missing from another.
-  function itemHTML(secId, it) {
+  function itemHTML(secId, it, inMenu) {
+    var hint = (inMenu && it.tip) || it.hint;
     if (it.href) {
       return '<a class="sh-item" href="' + esc(it.href) + '">' + svg(it.icon) +
         '<span class="sh-txt"><b>' + esc(it.label) + '</b>' +
-        '<span>' + esc(it.hint) + '</span></span></a>';
+        '<span>' + esc(hint) + '</span></span></a>';
     }
     return '<button class="sh-item" type="button" data-sec="' + esc(it.section || secId) +
       '" data-tab="' + esc(it.tab) + '">' + svg(it.icon) +
       '<span class="sh-txt"><b>' + esc(it.label) + '</b>' +
-      '<span>' + esc(it.hint) + '</span></span></button>';
+      '<span>' + esc(hint) + '</span></span></button>';
+  }
+
+  /* ── The door menus ────────────────────────────────────────────────────────
+     One panel under the bar, shared by the three doors: hovering a door shows
+     that door's pane in it, and moving along the doors swaps the pane rather
+     than closing one panel and opening another. Each pane is the door's
+     question and a way to its own page on the left, and its tools in named
+     columns on the right.
+
+     WHAT OPENS IT
+       · a mouse resting on a door for a moment (MEGA_IN). Not at once: a
+         pointer crossing the bar on its way to the search box should not
+         throw a panel in front of it.
+       · the arrow beside the door's name: a click, a tap, or Enter.
+       · the down arrow key on a door.
+     WHAT CLOSES IT
+       · the mouse leaving both the door and the panel for MEGA_OUT. Not at
+         once either: the way from "Portfolio" to the far column is a
+         diagonal, and a panel that vanishes halfway there is the thing
+         people dislike about hover menus.
+       · Escape, a press anywhere else, focus moving on, or opening a tool.
+     A door's name still opens the door's own page on a click, as it always
+     did, and that page shows every tool too, so nothing here is the only
+     way to anything. */
+
+  var MEGA_IN = 140, MEGA_SWAP = 110, MEGA_OUT = 320, MEGA_QUIET = 700;
+  var megaOpen = null, megaOpenT = null, megaCloseT = null;
+  var megaWant = null;      // the door a pending open is for
+  var megaQuiet = 0;        // a door's name was just clicked: until this time, moving on it opens nothing
+
+  function motionOff() {
+    return REDUCED || document.documentElement.getAttribute('data-motion') === 'off';
+  }
+
+  function megaHTML() {
+    var arrow = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    return '<div class="sh-mega" id="sh-mega"><div class="sh-mega-in">' + DOORS.map(function (d) {
+      var cols = [];
+      (d.groups || []).forEach(function (g) {
+        var rows = d.items.filter(function (it) { return it.g === g.id; });
+        if (!rows.length) return;
+        var html = '<h4>' + esc(g.title) + '</h4>' +
+          rows.map(function (it) { return itemHTML(d.id, it, true); }).join('');
+        if (g.stack && cols.length) cols[cols.length - 1] += html; else cols.push(html);
+      });
+      return '<section class="sh-mega-pane" id="sh-mega-' + esc(d.id) + '" data-sec="' + esc(d.id) +
+        '" aria-label="' + esc(d.label) + ': every tool" hidden>' +
+        '<button type="button" class="sh-mega-lead" data-sec="' + esc(d.id) + '">' +
+          '<svg class="sh-mega-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" ' +
+            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (d.mark || '') + '</svg>' +
+          '<span class="sh-mega-kick">' + esc(d.label) +
+            (d.id === 'discover' ? '<span class="sh-mega-status" id="sh-mega-status"></span>' : '') + '</span>' +
+          '<span class="sh-mega-q">' + esc(d.question) + '</span>' +
+          '<span class="sh-mega-p">' + esc(d.lead || '') + '</span>' +
+          (d.id === 'discover' ? '<span class="sh-mega-live" id="sh-mega-live" hidden></span>' : '') +
+          '<span class="sh-mega-go"><span class="sh-mega-go-t" data-open="Open ' + esc(d.label) + '">Open ' + esc(d.label) +
+            '</span>' + arrow + '</span>' +
+        '</button>' +
+        '<div class="sh-mega-cols">' + cols.map(function (c, i) {
+          return '<div class="sh-col sh-mega-col" style="--i:' + i + '">' + c + '</div>';
+        }).join('') + '</div>' +
+      '</section>';
+    }).join('') + '</div><span class="sh-mega-tip" aria-hidden="true"></span></div>';
+  }
+
+  /* Under the doors, but never off the right-hand edge: on a laptop the panel
+     is wider than the room to the right of "Today", so it slides left to fit
+     and the notch on its top edge is what still points at the door. */
+  function placeMega() {
+    var mega = document.getElementById('sh-mega');
+    var nav = document.querySelector('.sh-doors');
+    if (!mega || !nav) return;
+    var vw = document.documentElement.clientWidth;
+    var x = Math.max(12, Math.min(nav.offsetLeft - 14, vw - mega.offsetWidth - 12));
+    mega.style.left = x + 'px';
+    var wrap = megaOpen && nav.querySelector('.sh-doorwrap[data-sec="' + megaOpen + '"]');
+    if (!wrap) return;
+    var mid = nav.offsetLeft + wrap.offsetLeft + wrap.offsetWidth / 2 - x;
+    mega.style.setProperty('--tip', Math.round(mid) + 'px');
+  }
+
+  function paintMegaState() {
+    document.querySelectorAll('.sh-doorwrap').forEach(function (w) {
+      var on = w.dataset.sec === megaOpen;
+      w.classList.toggle('open', on);
+      var cv = w.querySelector('.sh-doorcv');
+      if (cv) cv.setAttribute('aria-expanded', on ? 'true' : 'false');
+    });
+  }
+
+  function openMega(id, focusFirst) {
+    var wrap = document.getElementById('sh-megawrap');
+    var box = wrap && wrap.querySelector('.sh-mega-in');
+    if (!box || narrow()) return;
+    clearTimeout(megaOpenT); clearTimeout(megaCloseT);
+    megaWant = null;
+    var pane = document.getElementById('sh-mega-' + id);
+    if (!pane) return;
+    if (megaOpen !== id) {
+      var was = megaOpen, h0 = was ? box.offsetHeight : 0;
+      megaOpen = id;
+      wrap.querySelectorAll('.sh-mega-pane').forEach(function (p) { p.hidden = p !== pane; });
+      box.scrollTop = 0;
+      paintMegaState();
+      paintMegaLive();
+      placeMega();
+      wrap.classList.add('open');
+      // Gliding from one door to the next: the panel keeps its place and
+      // grows or shrinks to the new pane instead of jumping to its height.
+      if (was && !motionOff() && box.animate) {
+        var h1 = box.offsetHeight;
+        if (h0 && h1 && h0 !== h1) {
+          box.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }],
+                      { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
+        }
+      }
+    }
+    if (focusFirst) {
+      var first = pane.querySelector('.sh-mega-lead');
+      if (first) first.focus();
+    }
+  }
+
+  function closeMega(refocus) {
+    clearTimeout(megaOpenT); clearTimeout(megaCloseT);
+    megaWant = null;
+    if (!megaOpen) return;
+    var was = megaOpen;
+    megaOpen = null;
+    var wrap = document.getElementById('sh-megawrap');
+    if (wrap) wrap.classList.remove('open');
+    paintMegaState();
+    if (refocus) {
+      var cv = document.querySelector('.sh-doorcv[data-sec="' + was + '"]');
+      if (cv) cv.focus();
+    }
+  }
+
+  /* Which tool is open, lit in its menu, and the door's own page lit on the
+     card that leads to it. */
+  function paintMegaCurrent() {
+    var mega = document.getElementById('sh-mega');
+    if (!mega) return;
+    mega.querySelectorAll('.sh-item[data-tab]').forEach(function (b) {
+      if (b.dataset.sec === activeDoor && b.dataset.tab === activeTab) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    });
+    var home = /^(today|ideahub|money)$/.test(activeTab || '');
+    mega.querySelectorAll('.sh-mega-lead').forEach(function (b) {
+      var here = home && b.dataset.sec === activeDoor;
+      if (here) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+      // On the door's own page the card says so rather than offering it again.
+      var t = b.querySelector('.sh-mega-go-t');
+      if (t) t.textContent = here ? 'You are here' : t.getAttribute('data-open');
+    });
+  }
+
+  /* Today's card carries the market as it stands. The tape above has already
+     fetched it (startTicker), so this reads that copy and asks for nothing. */
+  function paintMegaLive() {
+    var box = document.getElementById('sh-mega-live');
+    var st = document.getElementById('sh-mega-status');
+    if (!box) return;
+    var m = (window.AltahaShell && window.AltahaShell.market) || null;
+    var rows = ((m && m.indices) || []).filter(function (i) {
+      return i && i.label && i.level != null && !isNaN(Number(i.level));
+    }).slice(0, 3);
+    if (st) {
+      var open = !!m && m.status === 'open';
+      st.textContent = !m || !m.status ? '' : open ? 'Market open' : m.status === 'pre' ? 'Pre-open' : 'Market closed';
+      st.classList.toggle('live', open);
+    }
+    box.hidden = !rows.length;
+    box.innerHTML = rows.map(function (i) {
+      var pct = Number(i.change_pct), has = !isNaN(pct) && i.change_pct != null;
+      var level = Number(i.level).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return '<span class="sh-mega-ix"><span>' + esc(i.label) + '</span><span class="tnum">' + esc(level) + '</span>' +
+        '<span class="tnum ' + (has && pct > 0 ? 'up' : has && pct < 0 ? 'dn' : '') + '">' +
+        (has ? (pct > 0 ? '+' : '') + pct.toFixed(2) + '%' : '—') + '</span></span>';
+    }).join('');
+  }
+
+  function wireMega() {
+    var mega = document.getElementById('sh-mega');
+    if (!mega) return;
+    function hovering(e) { return e.pointerType !== 'touch'; }
+    function closeSoon() {
+      clearTimeout(megaCloseT);
+      megaCloseT = setTimeout(function () { closeMega(); }, MEGA_OUT);
+    }
+
+    // A shorter wait once a menu is showing, but still a wait: a pointer
+    // cutting across "Ideas" on its way down into Portfolio's panel has left
+    // again before this fires.
+    function arm(id) {
+      if (megaOpen === id || megaWant === id) return;
+      clearTimeout(megaOpenT);
+      megaWant = id;
+      megaOpenT = setTimeout(function () { openMega(id); }, megaOpen ? MEGA_SWAP : MEGA_IN);
+    }
+
+    document.querySelectorAll('.sh-doorwrap').forEach(function (w) {
+      var id = w.dataset.sec, cv = w.querySelector('.sh-doorcv'), pressed = '';
+      w.addEventListener('pointerenter', function (e) {
+        if (!hovering(e)) return;
+        clearTimeout(megaCloseT);
+        arm(id);
+      });
+      // Entering is not the only way to be on a door: after a click on its
+      // name the pointer is still there, and moving it again should bring
+      // the menu up without first leaving and coming back.
+      w.addEventListener('pointermove', function (e) { if (hovering(e) && Date.now() > megaQuiet) arm(id); });
+      w.addEventListener('pointerleave', function (e) {
+        if (!hovering(e)) return;
+        clearTimeout(megaOpenT);
+        megaWant = null;
+        if (megaOpen) closeSoon();
+      });
+      // The name opens the door's page (wireDoors); the menu gets out of the
+      // way, and stays out for a moment so the hand's next twitch on the
+      // door does not put it straight back over the page just asked for.
+      w.querySelector('.sh-door').addEventListener('click', function () {
+        megaQuiet = Date.now() + MEGA_QUIET;
+        closeMega();
+      });
+      w.querySelector('.sh-door').addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown') { e.preventDefault(); openMega(id, true); }
+      });
+      cv.addEventListener('pointerdown', function (e) { pressed = e.pointerType || 'mouse'; });
+      cv.addEventListener('click', function (e) {
+        var how = e.detail === 0 ? 'key' : (pressed || 'mouse');
+        pressed = '';
+        // A mouse is already hovering, so the menu may have opened a moment
+        // before the click landed; closing it again would look like a
+        // refusal. A key or a finger has no hover, so for them it toggles.
+        if (megaOpen === id && how !== 'mouse') { closeMega(how === 'key'); return; }
+        openMega(id, how === 'key');
+      });
+      cv.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown') { e.preventDefault(); openMega(id, true); }
+      });
+    });
+
+    mega.addEventListener('pointerenter', function (e) {
+      if (hovering(e)) { clearTimeout(megaCloseT); clearTimeout(megaOpenT); }
+    });
+    mega.addEventListener('pointerleave', function (e) { if (hovering(e) && megaOpen) closeSoon(); });
+
+    mega.addEventListener('click', function (e) {
+      var it = e.target.closest('.sh-item, .sh-mega-lead');
+      if (!it) return;
+      closeMega();
+      if (it.tagName === 'A') return;             // the adviser page, the wealth desk: ordinary links
+      navigate(it.dataset.sec, it.dataset.tab || null);
+    });
+    // Up and down walk the open pane; Tab still works and leaves at the end.
+    mega.addEventListener('keydown', function (e) {
+      if (!/^(ArrowDown|ArrowUp|Home|End)$/.test(e.key) || !megaOpen) return;
+      var pane = document.getElementById('sh-mega-' + megaOpen);
+      var all = pane ? Array.prototype.slice.call(pane.querySelectorAll('.sh-mega-lead, .sh-item')) : [];
+      if (!all.length) return;
+      e.preventDefault();
+      var i = all.indexOf(document.activeElement);
+      var next = e.key === 'Home' ? 0 : e.key === 'End' ? all.length - 1
+        : e.key === 'ArrowDown' ? (i + 1) % all.length : (i <= 0 ? all.length - 1 : i - 1);
+      all[next].focus();
+    });
+    mega.addEventListener('focusout', function (e) {
+      var to = e.relatedTarget;
+      if (to && to.closest && !to.closest('.sh-mega, .sh-doorwrap')) closeMega();
+    });
+
+    document.addEventListener('pointerdown', function (e) {
+      if (megaOpen && !(e.target.closest && e.target.closest('.sh-mega, .sh-doorwrap'))) closeMega();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || !megaOpen) return;
+      closeMega(!!(document.activeElement && document.activeElement.closest &&
+                   document.activeElement.closest('.sh-mega, .sh-doorwrap')));
+    });
+    window.addEventListener('altaha:navigate', function () { closeMega(); });
+    window.addEventListener('altaha:market', paintMegaLive);
+    window.addEventListener('resize', function () { if (narrow()) closeMega(); else if (megaOpen) placeMega(); });
+    var q = document.getElementById('sh-q');
+    if (q) q.addEventListener('focus', function () { closeMega(); });
+    paintMegaLive();
+    paintMegaCurrent();
   }
 
   /* ── The doors ───────────────────────────────────────────────────────────── */
@@ -499,12 +848,15 @@
       b.classList.toggle('on', is);
       if (is) { b.setAttribute('aria-current', 'page'); on = b; } else b.removeAttribute('aria-current');
     });
+    paintMegaCurrent();
     if (!ind) return;
     if (!on) { ind.style.opacity = '0'; return; }
+    // The line runs under the name and its arrow together: they are one door.
+    var box = on.closest('.sh-doorwrap') || on;
     if (instant) ind.style.transition = 'none';
     ind.style.opacity = '1';
-    ind.style.width = on.offsetWidth + 'px';
-    ind.style.transform = 'translateX(' + on.offsetLeft + 'px)';
+    ind.style.width = box.offsetWidth + 'px';
+    ind.style.transform = 'translateX(' + box.offsetLeft + 'px)';
     if (instant) { void ind.offsetWidth; ind.style.transition = ''; }
   }
 
@@ -513,20 +865,53 @@
     catch (e) { return []; }
   }
 
-  /* The door bar: the tools behind the door you are in, the one you are on
-     lit, and a pin for it. Switching between two tools in one door never
-     needs a menu. */
+  /* The door bar, under the header on the main page.
+
+     ON A WIDE SCREEN it is one quiet line: the door, the tool that is open,
+     what that tool is for, and a pin for it. The tools themselves are in the
+     door's menu now, so a row of them here would be the same list twice,
+     and that row (five pills and a "More 3") is what readers found
+     confusing. On a door's own page the line would only repeat the page's
+     heading, so the bar is not there at all and the page starts higher.
+
+     ON A NARROW ONE it is still the row of tools, the open one lit, the rest
+     under More: there are no doors in the header to hang a menu from. */
   function paintDoorbar() {
     var bar = document.getElementById('sh-doorbar');
     if (!bar) return;
     var door = DOORS.filter(function (d) { return d.id === activeDoor; })[0];
     var items = door ? door.items.filter(function (it) { return !it.quiet || it.tab === activeTab; })
                      : activeDoor === 'me' ? ME_ITEMS : [];
-    if (!items.length) { bar.innerHTML = ''; bar.classList.remove('on'); return; }
     var pinned = readPins();
-    var pinnable = activeTab && !/^(today|ideahub|money)$/.test(activeTab);
+    var home = /^(today|ideahub|money)$/.test(activeTab || '');
+    var pinnable = activeTab && !home;
     var sec = esc(door ? door.id : 'me');
     function isOpen(it) { return !!(it.tab && it.tab === activeTab); }
+    var pinHTML = pinnable ? '<button type="button" class="sh-pin' + (pinned.indexOf(activeTab) > -1 ? ' on' : '') + '" id="sh-pin" ' +
+        'aria-pressed="' + (pinned.indexOf(activeTab) > -1 ? 'true' : 'false') + '" title="Pin this tool to your desk on Today">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
+        'stroke-linejoin="round"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/></svg><span>' +
+        (pinned.indexOf(activeTab) > -1 ? 'Pinned' : 'Pin') + '</span></button>' : '';
+
+    var wide = !narrow();
+    var here = items.filter(isOpen)[0];
+    var none = wide && (home || !here);
+    document.documentElement.classList.toggle('sh-doorbar-none', none);
+    bar.classList.toggle('sh-crumbbar', wide && !none);
+    if (none || !items.length) { bar.innerHTML = ''; bar.classList.remove('on'); return; }
+    if (wide) {
+      bar.innerHTML = '<div class="sh-crumb">' +
+        (door ? '<button type="button" class="sh-crumb-door" data-sec="' + sec + '" title="' + esc(door.question) + '">' +
+                esc(door.label) + '</button>'
+              : '<span class="sh-crumb-door">Me</span>') +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>' +
+        '<b class="sh-crumb-here" aria-current="page">' + esc(here.label) + '</b>' +
+        (here.hint ? '<span class="sh-crumb-hint">' + esc(here.hint) + '</span>' : '') +
+        '</div>' + pinHTML;
+      bar.classList.add('on');
+      return;
+    }
     var row = items.filter(function (it) { return !it.more || isOpen(it); });
     var extra = items.filter(function (it) { return it.more && !isOpen(it); });
     var moreHTML = extra.length
@@ -553,12 +938,7 @@
       return '<button type="button" class="sh-pill' + (on ? ' on' : '') + '" style="--i:' + i + '" data-sec="' +
         sec + '" data-tab="' + esc(it.tab) + '"' + (on ? ' aria-current="page"' : '') + '>' +
         esc(it.label) + '</button>';
-    }).join('') + '</div>' + moreHTML +
-      (pinnable ? '<button type="button" class="sh-pin' + (pinned.indexOf(activeTab) > -1 ? ' on' : '') + '" id="sh-pin" ' +
-        'aria-pressed="' + (pinned.indexOf(activeTab) > -1 ? 'true' : 'false') + '" title="Pin this tool to your desk on Today">' +
-        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
-        'stroke-linejoin="round"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/></svg><span>' +
-        (pinned.indexOf(activeTab) > -1 ? 'Pinned' : 'Pin') + '</span></button>' : '');
+    }).join('') + '</div>' + moreHTML + pinHTML;
     bar.classList.add('on');
     // Same backstop as the doors: the pills rise in from opacity 0, so once
     // they have had time to, the entrance is switched off.
@@ -613,9 +993,15 @@
         paintDoorbar();
         return;
       }
+      var crumb = e.target.closest('button.sh-crumb-door');
+      if (crumb) { navigate(crumb.dataset.sec, null); return; }
       var b = e.target.closest('.sh-pill[data-tab]');
       if (b) navigate(b.dataset.sec, b.dataset.tab);
     });
+    // The bar is a different thing either side of 1040px, so crossing it repaints.
+    try {
+      window.matchMedia('(max-width:1040px)').addEventListener('change', function () { closeMega(); paintDoorbar(); });
+    } catch (err) {}
   }
 
   /* ── Me ──────────────────────────────────────────────────────────────────── */
@@ -868,7 +1254,7 @@
       matchTools(q).forEach(function (t) { var tr = toolRow(t); tr.head = 'Tools'; out.push(tr); });
       out.push({ kind: 'screen', id: 'screen', head: 'Do', q: q });
       if (/portf|holding|my stock/i.test(q)) out.push({ kind: 'tool', id: 'portfolio/portfolio', head: 'Do',
-        t: { section: 'portfolio', tab: 'portfolio', label: 'Review my portfolio', hint: 'A call on every holding', icon: 'plan', door: 'My money' } });
+        t: { section: 'portfolio', tab: 'portfolio', label: 'Review my portfolio', hint: 'A call on every holding', icon: 'plan', door: 'Portfolio' } });
       return out;
     }
 

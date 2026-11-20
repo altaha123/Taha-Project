@@ -8,7 +8,7 @@
 
      Today      What is the market doing?          (section id: discover)
      Ideas      What should I look at?             (section id: research)
-     My money   How am I doing, and what next?     (section id: portfolio)
+     Portfolio  How am I doing, and what next?     (section id: portfolio)
      Me         Account, settings and learning     (section id: me)
 
    Each door opens on a page of its own (today / ideahub / money, built by
@@ -17,14 +17,19 @@
    had a tab still has one, in exactly one door.
 
    THE SECTION IDS DID NOT CHANGE
-   Today is still `discover`, Ideas is still `research` and My money is still
+   Today is still `discover`, Ideas is still `research` and Portfolio is
    `portfolio`, so #discover/deals, #research/query and #portfolio keep
    working, and so does every caller of AltahaNav.go() in this codebase.
    Only the labels and the tabs inside them moved.
 
+   THE THIRD DOOR IS CALLED PORTFOLIO
+   It was "My money". Portfolio is the plainer and more familiar word for
+   the place your holdings live, so it is the one a reader looks for. Its id
+   was always `portfolio`, so no address changed.
+
    TABS ARE THE DOOR, EXTRAS ARE RARE
-   `tabs` are the tools shown in the door bar (shell.js) and on the door
-   page. `extras` are routable but deliberately quiet: the old Stock
+   `tabs` are the tools shown in the door's menu and its bar (shell.js) and
+   on the door page. `extras` are routable but deliberately quiet: the old Stock
    analysis view, whose search box and market board the header search and
    the Today page now cover.
 
@@ -83,7 +88,7 @@
       extras: []
     },
     {
-      id: 'portfolio', label: 'My money',
+      id: 'portfolio', label: 'Portfolio',
       question: 'How am I doing, and what next?',
       blurb: 'How am I doing, and what next? — your holdings, your plan and the next rupee',
       icon: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>',

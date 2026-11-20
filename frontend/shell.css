@@ -272,42 +272,9 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 }
 .sh-top.on::after{ transform:scaleX(1) }
 
-/* ── 3d · The mega panel ─────────────────────────────────────────────────── */
-
-.sh-megawrap{ position:absolute; left:0; right:0; top:100%; perspective:1400px;
-  pointer-events:none; padding:0 18px }
-.sh-mega{
-  /* Sized to its content and parked under the nav, not stretched across the
-     viewport. Held at 1180px full-width it left most of the panel empty,
-     which read as an unfinished layout rather than a restrained one. The
-     offset lines its left edge up with the first menu label. */
-  width:max-content; max-width:min(1100px, calc(100vw - 36px));
-  margin:6px 0 0 172px;
-  background:var(--skin-card); border:1px solid var(--rule);
-  border-radius:14px; box-shadow:var(--e3);
-  padding:22px 26px 24px;
-  /* Capped, and packed to the left. With 1fr columns a two-column section
-     stretched each one to ~560px and stranded its text at the far edge, which
-     is what made the panel read as mostly empty space. */
-  display:none; grid-template-columns:repeat(auto-fit,minmax(230px,290px));
-  justify-content:start; gap:22px 30px;
-  transform-origin:50% 0; transform:rotateX(-12deg) translateY(-10px); opacity:0;
-  transition:opacity var(--t-mid) var(--ease-out), transform var(--t-mid) var(--ease-out);
-}
-.sh-mega.open{ display:grid; opacity:1; transform:rotateX(0) translateY(0); pointer-events:auto }
-
-.sh-mega{ transform-origin:20% 0 }
-@media (max-width:1200px){ .sh-mega{ margin-left:0 } }
-/* Research carries five columns since Lenses joined it. Narrower columns and
-   a wider cap keep them on one row on a laptop screen instead of stranding the
-   fifth on a row of its own; below that width the grid wraps as before. */
-@media (min-width:1280px){
-  .sh-mega:has(> .sh-col:nth-of-type(5)){
-    grid-template-columns:repeat(5, minmax(0, 222px));
-    max-width:min(1270px, calc(100vw - 36px)); gap:22px 22px;
-  }
-}
-@media (max-width:1460px){ .sh-mega:has(> .sh-col:nth-of-type(5)){ margin-left:0 } }
+/* ── 3d · Menu rows ──────────────────────────────────────────────────────────
+   The icon-and-two-lines row shared by the door menus, the Me menu and the
+   phone sheet. The door menus themselves are styled with the doors, below. */
 
 .sh-col h4{
   margin:0 0 12px; font:600 11px/1 'IBM Plex Mono',monospace;
@@ -343,13 +310,6 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
   box-shadow:var(--e2);
 }
 
-/* Each column lifts in on its own beat — the panel reads as one object
-   assembling, which is what tells you it is a panel and not a page. */
-.sh-mega.open .sh-col{ animation: shColIn var(--t-mid) var(--ease-out) both }
-.sh-mega.open .sh-col:nth-child(2){ animation-delay:40ms }
-.sh-mega.open .sh-col:nth-child(3){ animation-delay:80ms }
-.sh-mega.open .sh-col:nth-child(4){ animation-delay:120ms }
-.sh-mega.open .sh-col:nth-child(5){ animation-delay:160ms }
 @keyframes shColIn{ from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:none } }
 
 /* ── 3e · Search in the bar ──────────────────────────────────────────────── */
@@ -521,8 +481,6 @@ a.sh-item{ text-decoration:none; color:inherit }
   .sh-rail{ animation:none !important; transform:none !important }
   .sh-ticker{ overflow-x:auto }
   .sh-head{ transition:none; transform:none !important }
-  .sh-mega{ transition:none; transform:none !important }
-  .sh-mega.open .sh-col{ animation:none }
   .sh-item:hover .sh-ico{ transform:none }
   .d3-card.tilt{ transform:none !important }
   .d3-card.tilt::after{ display:none }
@@ -551,7 +509,8 @@ a.sh-item{ text-decoration:none; color:inherit }
 
 /* ════════════════════════════════════════════════════════════════════════════
    THREE DOORS — the header since the navigation was rebuilt (shell.js)
-   tape · brand, Today / Ideas / My money, search, Me · the door bar
+   tape · brand, Today / Ideas / Portfolio each with its menu, search, Me ·
+   the door bar
    ════════════════════════════════════════════════════════════════════════════ */
 
 html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
@@ -571,12 +530,33 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 /* The bar: one row at every width. */
 .sh-bar{ gap:16px }
 .sh-doors{ position:relative; flex:0 0 auto; display:flex; height:100% }
-.sh-door{ position:relative; padding:0 16px; border:0; background:none; font:500 15px/1 var(--sans, Inter, system-ui, sans-serif);
+/* A door is its name and an arrow, side by side (shell.js). The name opens
+   the door's page; the arrow, or resting the mouse on either, opens its menu.
+   The soft tile behind them is what says the two are one thing to point at. */
+.sh-doorwrap{ position:relative; display:flex; align-items:stretch; height:100% }
+.sh-doorwrap::before{ content:''; position:absolute; inset:11px 3px; border-radius:11px; background:var(--paper-2);
+  opacity:0; transform:scale(.94); transition:opacity .2s var(--ease), transform .25s var(--ease-out); pointer-events:none }
+.sh-doorwrap:hover::before, .sh-doorwrap.open::before{ opacity:1; transform:none }
+.sh-door{ position:relative; padding:0 3px 0 15px; border:0; background:none; font:500 15px/1 var(--sans, Inter, system-ui, sans-serif);
   color:var(--ink-2); cursor:pointer; transition:color .25s }
 .sh-door::after{ display:none !important }
-.sh-door:hover, .sh-door.on{ color:var(--ink) }
+.sh-doorwrap:hover .sh-door, .sh-doorwrap.open .sh-door, .sh-door.on{ color:var(--ink) }
 .sh-door.on{ font-weight:600 }
-.sh-door:focus-visible{ outline:2px solid var(--gold); outline-offset:-6px; border-radius:10px }
+/* Keyboard focus. On the name, the ring goes round the whole door, name and
+   arrow, because that is what Enter opens; on the arrow, round the arrow. An
+   inset outline on the buttons themselves would cut through the text: the
+   two sit too close together for that. */
+.sh-door:focus-visible, .sh-doorcv:focus-visible{ outline:none; box-shadow:none }
+.sh-doorwrap:has(> .sh-door:focus-visible)::before{ opacity:1; transform:none; box-shadow:0 0 0 2px var(--gold) }
+.sh-doorcv:focus-visible .cv{ outline:2px solid var(--gold); outline-offset:5px; border-radius:7px }
+@supports not selector(:has(a)){
+  .sh-door:focus-visible{ outline:2px solid var(--gold); outline-offset:-9px; border-radius:12px }
+}
+.sh-doorcv{ position:relative; display:grid; place-items:center; width:27px; padding:0 9px 0 0; border:0; background:none;
+  color:var(--mute); cursor:pointer; transition:color .25s }
+.sh-doorcv .cv{ transition:transform .3s var(--ease-out) }
+.sh-doorwrap:hover .sh-doorcv, .sh-doorwrap.open .sh-doorcv, .sh-door.on + .sh-doorcv{ color:var(--ink) }
+.sh-doorwrap.open .sh-doorcv .cv{ transform:rotate(180deg) }
 .sh-door-ind{ position:absolute; left:0; bottom:0; height:3px; width:0; border-radius:3px 3px 0 0; background:var(--gold);
   opacity:0; transition:transform .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1), opacity .25s }
 .sh-search{ flex:1 1 380px; max-width:560px }
@@ -660,6 +640,122 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-morepanel .sh-pill.sh-moreitem:hover, .sh-morepanel .sh-pill.sh-moreitem:focus-visible{ background:var(--rule-2, rgba(0,0,0,.05)); outline:none }
 @media (prefers-reduced-motion: reduce){ .sh-morebtn svg{ transition:none } }
 
+/* ── The door menus ─────────────────────────────────────────────────────────
+   One panel under the bar for all three doors (shell.js). It holds its place
+   and its width as the pointer moves along the doors; only the pane inside
+   it changes, and the notch on its top edge slides to the door it belongs
+   to. Closed it is hidden rather than removed, so it can fade both ways. */
+.sh-megawrap{ position:absolute; left:0; right:0; top:100%; height:0; z-index:55; pointer-events:none }
+.sh-mega{ position:absolute; top:9px; left:18px; width:min(1010px, calc(100vw - 24px)); --tip:90px;
+  visibility:hidden; opacity:0; transform:translateY(-10px) scale(.985); transform-origin:var(--tip) 0;
+  transition:opacity .16s var(--ease), transform .2s var(--ease), visibility 0s linear .2s }
+.sh-megawrap.open .sh-mega{ visibility:visible; opacity:1; transform:none; pointer-events:auto;
+  transition:opacity .2s var(--ease-out), transform .34s var(--ease-out), visibility 0s }
+/* The strip between the bar and the panel belongs to the panel, so a pointer
+   coming down from a door never crosses a gap that would close the menu. */
+.sh-mega::before{ content:''; position:absolute; left:0; right:0; top:-11px; height:12px }
+.sh-mega-in{ position:relative; overflow:hidden auto; max-height:calc(100vh - var(--sh-chrome-h) - 26px);
+  background:var(--skin-card, var(--paper)); border:1px solid var(--rule); border-radius:22px; box-shadow:var(--e3) }
+.sh-mega-tip{ position:absolute; top:-6px; left:-7px; width:13px; height:13px; border:1px solid var(--rule); border-right:0; border-bottom:0;
+  border-radius:3px 0 0 0; background:var(--skin-card, var(--paper));
+  transform:translateX(var(--tip)) rotate(45deg); transition:transform .38s var(--ease-out) }
+
+.sh-mega-pane{ display:grid; grid-template-columns:minmax(0, 262px) minmax(0, 1fr); gap:4px; padding:10px }
+.sh-mega-pane[hidden]{ display:none }
+
+/* The card on the left: the door's question, and the way to its own page.
+   Dark in both themes, like the market panel on Today, so the panel has one
+   heavy thing in it and the eye knows where to start. */
+.sh-mega-lead{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; gap:9px;
+  min-height:214px; padding:20px 20px 18px; border:0; border-radius:14px; background:#15120C; color:#FBF8F1;
+  font:400 13px/1.45 var(--sans, Inter, system-ui, sans-serif); text-align:left; cursor:pointer;
+  transition:box-shadow .3s var(--ease) }
+.sh-mega-lead::before{ content:''; position:absolute; left:-90px; top:-160px; width:280px; height:280px; border-radius:50%;
+  background:rgba(168,128,28,.6); filter:blur(48px); pointer-events:none; transition:transform .7s var(--ease-out) }
+.sh-mega-lead::after{ content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:linear-gradient(rgba(251,248,241,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(251,248,241,.045) 1px, transparent 1px);
+  background-size:38px 38px }
+.sh-mega-lead:hover::before, .sh-mega-lead:focus-visible::before{ transform:translate(34px, 26px) scale(1.12) }
+.sh-mega-lead:hover{ box-shadow:0 10px 26px rgba(23,20,14,.28) }
+.sh-mega-lead:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; border-radius:14px; box-shadow:none }
+/* On the dark theme the panel is nearly the card's own colour; a hairline keeps its edge. */
+:root[data-theme="dark"] .sh-mega-lead{ box-shadow:inset 0 0 0 1px rgba(217,188,106,.2) }
+.sh-mega-lead > *{ position:relative; z-index:1 }
+.sh-mega-mark{ position:absolute !important; right:-26px; bottom:-30px; width:112px; height:112px; color:#FBF8F1; opacity:.09; z-index:0 !important;
+  transition:transform .7s var(--ease-out), opacity .4s var(--ease) }
+.sh-mega-lead:hover .sh-mega-mark{ transform:translate(-6px,-6px) rotate(-6deg); opacity:.15 }
+.sh-mega-kick{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font:600 10.5px/1 'IBM Plex Mono',monospace; letter-spacing:.14em;
+  text-transform:uppercase; color:#D9BC6A }
+.sh-mega-status{ display:inline-flex; align-items:center; gap:6px; color:#CFC8B6; font-weight:500; letter-spacing:.1em }
+.sh-mega-status:empty{ display:none }
+.sh-mega-status::before{ content:''; width:6px; height:6px; border-radius:50%; background:#8B8477 }
+.sh-mega-status.live{ color:#6FD39A }
+.sh-mega-status.live::before{ background:#6FD39A; box-shadow:0 0 0 3px rgba(111,211,154,.2) }
+.sh-mega-q{ font:400 27px/1.06 var(--serif, 'Instrument Serif', Georgia, serif); letter-spacing:-.005em; color:#FBF8F1 }
+.sh-mega-p{ max-width:26ch; font-size:12.5px; color:#CFC8B6 }
+.sh-mega-live{ display:grid; gap:7px; width:100%; margin-top:2px; padding-top:11px; border-top:1px solid rgba(251,248,241,.13) }
+.sh-mega-live[hidden]{ display:none }
+.sh-mega-ix{ display:grid; grid-template-columns:minmax(0,1fr) auto 58px; gap:10px; align-items:baseline;
+  font:500 11.5px/1.2 'IBM Plex Mono',monospace; color:#EFEADF }
+.sh-mega-ix > :first-child{ color:#CFC8B6; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.sh-mega-ix > :last-child{ text-align:right }
+.sh-mega-ix .up{ color:#6FD39A } .sh-mega-ix .dn{ color:#FF9B85 }
+.sh-mega-go{ display:inline-flex; align-items:center; gap:8px; height:34px; margin-top:auto; padding:0 15px; border-radius:17px;
+  background:#E9CF86; color:#17140E; font:600 13px/1 var(--sans, Inter, system-ui, sans-serif);
+  transition:gap .25s var(--ease-out), background-color .2s var(--ease) }
+.sh-mega-lead:hover .sh-mega-go, .sh-mega-lead:focus-visible .sh-mega-go{ gap:13px; background:#F3DC97 }
+/* You are on this door's own page: the card says so instead of offering it. */
+.sh-mega-lead[aria-current="page"] .sh-mega-go{ background:rgba(251,248,241,.12); color:#FBF8F1 }
+.sh-mega-lead[aria-current="page"] .sh-mega-go svg{ display:none }
+
+/* The tools: up to three columns, each under the name of what it is for. */
+.sh-mega-cols{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0 8px; padding:12px 6px 8px 14px; align-content:start }
+.sh-mega-col h4{ margin:0 0 5px; padding:0 10px; font:600 10.5px/1 'IBM Plex Mono',monospace; letter-spacing:.13em; color:var(--mute) }
+.sh-mega-col h4:not(:first-child){ margin-top:17px }
+.sh-mega .sh-item{ position:relative; grid-template-columns:36px 1fr; gap:12px; padding:8px 10px; border-radius:13px; font:inherit }
+.sh-mega .sh-item b{ font:600 14px/1.25 var(--sans, Inter, system-ui, sans-serif); color:var(--ink) }
+.sh-mega .sh-txt > span{ font:400 12.5px/1.4 var(--sans, Inter, system-ui, sans-serif); color:var(--ink-2) }
+.sh-mega .sh-ico{ width:36px; height:36px; border-radius:11px }
+.sh-mega .sh-item:hover, .sh-mega .sh-item:focus-visible{ background:var(--paper-2); transform:none; outline:none }
+.sh-mega .sh-item:focus-visible{ box-shadow:inset 0 0 0 2px var(--gold) }
+.sh-mega .sh-item:focus-visible .sh-ico{ background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt)); border-color:transparent; color:#fff }
+/* The tool that is open: its tile stays gold and a short rule marks the row. */
+.sh-mega .sh-item[aria-current="page"]{ background:var(--paper-2) }
+.sh-mega .sh-item[aria-current="page"] .sh-ico{ background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt)); border-color:transparent; color:#fff }
+.sh-mega .sh-item[aria-current="page"]::before{ content:''; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--gold) }
+
+/* Opening, the columns rise in one after another; swapping panes, the same. */
+.sh-megawrap.open .sh-mega-pane:not([hidden]) .sh-mega-col{ animation:shColIn .36s var(--ease-out) backwards; animation-delay:calc(var(--i, 0) * 45ms + 30ms) }
+.sh-megawrap.open .sh-mega-pane:not([hidden]) .sh-mega-lead{ animation:shLeadIn .4s var(--ease-out) backwards }
+@keyframes shLeadIn{ from{ opacity:0; transform:translateX(-10px) } to{ opacity:1; transform:none } }
+
+/* A finger needs more to aim at than a mouse does. */
+@media (pointer:coarse){ .sh-doorcv{ width:40px; padding-right:12px } }
+
+/* Narrower laptops: the hints wrap sooner, so the card gives up some room. */
+@media (max-width:1180px){
+  .sh-mega-pane{ grid-template-columns:minmax(0, 232px) minmax(0, 1fr) }
+  .sh-mega-q{ font-size:24px }
+  .sh-mega-cols{ padding-left:8px }
+}
+/* No doors in the header below this width, so no menus either. */
+@media (max-width:1040px){ .sh-megawrap{ display:none } }
+
+/* ── The door bar on a wide screen: where you are, in one line ───────────── */
+html.sh-has-doorbar.sh-doorbar-none{ --sh-doorbar-h:0px }
+html.sh-doorbar-none .sh-doorbar{ display:none }
+@media (min-width:1041px){ html.sh-has-doorbar:not(.sh-doorbar-none){ --sh-doorbar-h:42px } }
+.sh-crumbbar{ gap:14px }
+.sh-crumb{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:3px; font:500 13px/1 var(--sans, Inter, system-ui, sans-serif); color:var(--ink-2) }
+.sh-crumb > svg{ flex:none; color:var(--mute) }
+.sh-crumb-door{ flex:none; margin-left:-9px; padding:7px 9px; border:0; border-radius:9px; background:none; color:var(--ink-2); font:inherit }
+button.sh-crumb-door{ cursor:pointer; transition:background-color .2s var(--ease), color .2s var(--ease) }
+button.sh-crumb-door:hover{ background:var(--paper-2); color:var(--ink) }
+button.sh-crumb-door:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; border-radius:9px; box-shadow:none }
+.sh-crumb-here{ flex:none; margin-left:5px; font-weight:600; color:var(--ink); white-space:nowrap }
+.sh-crumb-hint{ min-width:0; margin-left:12px; padding-left:14px; border-left:1px solid var(--rule); color:var(--mute);
+  font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+
 /* The phone sheet: Me first, then every door. */
 .sh-dme .sh-dpro{ margin:6px 0 10px }
 .sh-drawer .sh-col h4{ font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--mute) }
@@ -682,9 +778,19 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 @media (prefers-reduced-motion: reduce){
   .sh-livetag .sh-dot::after{ animation:none }
   .sh-door-ind, .sh-pill, .sh-ac b.row, .sh-memenu.open{ transition:none; animation:none }
+  .sh-mega, .sh-megawrap.open .sh-mega{ transition:none; transform:none }
+  .sh-mega-tip, .sh-doorwrap::before, .sh-doorcv .cv, .sh-mega-lead::before, .sh-mega-mark, .sh-mega-go{ transition:none }
+  .sh-megawrap.open .sh-mega-pane:not([hidden]) .sh-mega-col, .sh-megawrap.open .sh-mega-pane:not([hidden]) .sh-mega-lead{ animation:none }
+  .sh-mega-lead:hover::before, .sh-mega-lead:hover .sh-mega-mark{ transform:none }
 }
 html[data-motion="off"] .sh-door-ind, html[data-motion="off"] .sh-pill, html[data-motion="off"] .sh-ac b.row,
 html[data-motion="off"] .sh-memenu.open, html[data-motion="off"] .sh-livetag .sh-dot::after{ transition:none; animation:none }
+html[data-motion="off"] .sh-mega, html[data-motion="off"] .sh-megawrap.open .sh-mega{ transition:none; transform:none }
+html[data-motion="off"] .sh-mega-tip, html[data-motion="off"] .sh-doorwrap::before, html[data-motion="off"] .sh-doorcv .cv,
+html[data-motion="off"] .sh-mega-lead::before, html[data-motion="off"] .sh-mega-mark, html[data-motion="off"] .sh-mega-go{ transition:none }
+html[data-motion="off"] .sh-megawrap.open .sh-mega-pane:not([hidden]) .sh-mega-col,
+html[data-motion="off"] .sh-megawrap.open .sh-mega-pane:not([hidden]) .sh-mega-lead{ animation:none }
+html[data-motion="off"] .sh-mega-lead:hover::before, html[data-motion="off"] .sh-mega-lead:hover .sh-mega-mark{ transform:none }
 .sh-bar .sh-door.on{ background:none }
 .sh-doorbar.sh-played .sh-pill{ animation:none }
 /* The bar's popups (search results, the Me menu) open over the door bar.
