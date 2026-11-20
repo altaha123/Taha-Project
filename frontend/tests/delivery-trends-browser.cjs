@@ -87,10 +87,10 @@ const server = http.createServer((req, res) => {
   await page.waitForLoadState('load');
   await page.waitForTimeout(600);
 
-  // ── Lazy. The Today page's own card asks for six rows; the tab asks for none
+  // ── Lazy. The Market page's own card asks for six rows; the tab asks for none
   const fromTab = () => asked.filter(q => /limit=60/.test(q));
   assert.equal(fromTab().length, 0, 'the lists must not load before the tab is shown');
-  assert.equal(bookCalls, 0, 'the Today page no longer reads the one-year book for a count');
+  assert.equal(bookCalls, 0, 'the Market page no longer reads the one-year book for a count');
 
   await openTab(page, 'special');
   await page.locator('#dt-root .dt-row').first().waitFor({ state: 'visible' });

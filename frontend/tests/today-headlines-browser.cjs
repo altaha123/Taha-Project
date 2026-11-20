@@ -1,4 +1,4 @@
-/* Today › Headlines: a headline opens its story.
+/* Market › Headlines: a headline opens its story.
  *
  * This exists because of a bug that shipped. The news feed calls a story's
  * address `link`; the Headlines card read `url`, which the feed has never
@@ -9,7 +9,7 @@
  * So this feeds it stories in the shape the server really sends
  * (backend/market_news.py) and asserts on what the reader gets:
  *   - a headline is a link to the story, and tapping it opens the story in a
- *     new tab while Today stays where it is
+ *     new tab while Market stays where it is
  *   - no headline is ever a link to "#"
  *   - a story with no address is text, not a link that does nothing
  *   - only an http(s) address becomes a link — the text is other people's RSS
@@ -86,11 +86,11 @@ const server = http.createServer((req, res) => {
     assert.match(await first.innerText(), /Dhan launches SIF investing/);
     assert.match(await list.locator('li').first().locator('small').innerText(), /Hindu BusinessLine/);
 
-    // The tap: the story opens, and Today has not gone anywhere.
+    // The tap: the story opens, and Market has not gone anywhere.
     const [story] = await Promise.all([context.waitForEvent('page'), first.click()]);
     await story.waitForLoadState('domcontentloaded');
     assert.equal(story.url(), STORY, `${width}: the headline opened something other than its story`);
-    assert.equal(page.url(), address, `${width}: opening a story moved Today`);
+    assert.equal(page.url(), address, `${width}: opening a story moved Market`);
     assert.ok(await page.locator('#view-today').isVisible());
     await story.close();
 
@@ -116,5 +116,5 @@ const server = http.createServer((req, res) => {
   await browser.close();
   server.close();
   assert.deepEqual(errors, []);
-  console.log('Today headlines open their stories');
+  console.log('Market headlines open their stories');
 })().catch(e => { console.error(e); process.exit(1); });

@@ -51,7 +51,7 @@ async function open(browser, size, file) {
     const foot = page.locator('footer.sh-footer');
     await foot.waitFor();
     assert.deepEqual(await foot.locator('.sh-fcol h4').allInnerTexts().then(a => a.map(s => s.toLowerCase())),
-                     ['today', 'ideas', 'portfolio', 'altaha']);
+                     ['market', 'ideas', 'portfolio', 'altaha']);
     assert.ok(await foot.locator('.sh-fcol a').count() >= 25, 'the footer does not list the tools');
     assert.equal(await foot.locator('.sh-fmail').getAttribute('href'), 'mailto:hello@altahascreener.in');
     assert.match(await foot.locator('.sh-fbase').innerText(), /not investment advice/);
@@ -59,9 +59,13 @@ async function open(browser, size, file) {
     await foot.scrollIntoViewIfNeeded();
     await page.screenshot({ path: path.join(out, 'desktop.png') });
     // A link opens its tool in place.
-    await foot.locator('a', { hasText: 'Stock picks' }).click();
-    await page.locator('#view-ideas').waitFor({ state: 'visible' });
-    assert.match(page.url(), /#research\/ideas/);
+    await foot.locator('a', { hasText: 'Investor styles' }).click();
+    await page.locator('#view-lenses').waitFor({ state: 'visible' });
+    assert.match(page.url(), /#research\/lenses/);
+    // One entry each: the picks are Ideas' own page, and the stocks several
+    // styles agree on are part of Investor styles.
+    assert.equal(await foot.locator('a', { hasText: /^(Stock picks|Convergence)$/ }).count(), 0,
+                 'the footer lists a tool that is part of another one');
     await page.waitForFunction(() => window.scrollY < 50, null, { timeout: 3000 })
       .catch(() => assert.fail('the reader was left at the bottom of the new page'));
     await foot.locator('a', { hasText: 'Watchlists' }).click();
@@ -73,7 +77,7 @@ async function open(browser, size, file) {
     // Off the homepage a link is an ordinary link back to it.
     ({ context, page, errors } = await open(browser, { width: 1366, height: 900 }, 'pro.html'));
     await page.locator('footer.sh-footer').waitFor();
-    assert.equal(await page.locator('footer.sh-footer a', { hasText: 'Stock picks' }).getAttribute('href'), './#research/ideas');
+    assert.equal(await page.locator('footer.sh-footer a', { hasText: 'Investor styles' }).getAttribute('href'), './#research/lenses');
     assert.equal(await page.locator('footer.sh-footer a', { hasText: 'Daily policy brief' }).getAttribute('href'), 'brief.html');
     assert.deepEqual(errors, [], errors.join('\n'));
     await context.close();

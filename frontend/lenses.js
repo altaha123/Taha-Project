@@ -2,14 +2,22 @@
    Altaha Screener — lenses.js
 
    Lenses: named investing philosophies, each applied as a set of rules to
-   every company whose statements the site has read. Three views on the
-   homepage:
+   every company whose statements the site has read. Two views on the
+   homepage, both behind Ideas › Investor styles:
 
      #research/lenses          every lens as a card, with how many companies
-                               meet it
+                               meet it, and under the cards the companies
+                               that meet several lenses at once
      #research/lenses/<id>     one lens: the idea, its rules, the companies
                                that meet every judged rule, and the near misses
-     #research/convergence     companies that meet several lenses at once
+
+   ONE PAGE, NOT TWO
+   "Companies that meet several lenses" used to be a tool of its own called
+   Convergence, listed beside this one in the menu. It is the same idea seen
+   from the other end (which stocks, rather than which style), so it is a
+   section of this page now. #research/lenses/convergence opens the page at
+   that section, and so do the old #research/convergence addresses, which
+   nav.js sends here.
 
    WHAT THE PAGE SAYS, AND WHAT IT NEVER SAYS
    The wording is factual and nothing else: a company "meets Gorilla criteria"
@@ -103,9 +111,15 @@
   function hashParts() {
     return (location.hash || '').replace(/^#/, '').split('/');
   }
+  var TOGETHER = 'convergence';       // the address of the section, not a lens
   function lensFromHash() {
     var p = hashParts();
-    return (p[1] === 'lenses' && p[2]) ? decodeURIComponent(p[2]) : null;
+    var id = (p[1] === 'lenses' && p[2]) ? decodeURIComponent(p[2]) : null;
+    return id === TOGETHER ? null : id;
+  }
+  function wantsTogether() {
+    var p = hashParts();
+    return p[1] === TOGETHER || p[0] === TOGETHER || (p[1] === 'lenses' && p[2] === TOGETHER);
   }
 
   /* ── 1 · The index ────────────────────────────────────────────────────── */
@@ -139,7 +153,10 @@
       '<p class="ln-meta">' + esc(plural(d.lenses.length, 'lens', 'lenses')) + ' · ' + live + ' live' +
       (d.run ? ' · computed ' + esc(when(d.run)) + ' over ' +
         esc((d.run.companies || 0).toLocaleString('en-IN')) + ' companies' : ' · not yet computed') +
-      '</p>' + runPanel() + '</header>';
+      '</p>' +
+      '<p class="ln-jump"><a href="#research/lenses/' + TOGETHER + '" id="ln-jump">' +
+        'Or see the companies that meet several lenses at once ↓</a></p>' +
+      runPanel() + '</header>';
 
     html += '<div class="ln-grid">';
     d.lenses.forEach(function (l, i) {
@@ -162,10 +179,23 @@
         '</a>';
     });
     html += '</div>';
-    html += '<p class="ln-conv-link"><a href="#research/convergence" data-goto="research/convergence">' +
-      'Companies that meet three or more lenses →</a></p>';
+    /* Where the lenses agree. Filled by showConvergence() once the cards are
+       on the page, so the cards never wait for it. */
+    html += '<section class="ln-together" id="ln-together" aria-labelledby="ln-together-h">' +
+      '<header class="ln-together-head"><p class="ln-kicker">Where the lenses agree</p>' +
+      '<h3 id="ln-together-h">Companies that meet several lenses at once</h3>' +
+      '<p>Each lens reads the same filings through a different philosophy, so a company that ' +
+      'clears several has passed several independent sets of rules.</p></header>' +
+      '<div id="convergence-body"></div></section>';
     html += footer();
     host.innerHTML = html;
+    showConvergence();
+    var jump = host.querySelector('#ln-jump');
+    if (jump) jump.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      try { history.replaceState(null, '', '#research/lenses/' + TOGETHER); } catch (e) {}
+      scrollToTogether();
+    });
 
     Array.prototype.forEach.call(host.querySelectorAll('.ln-count b'), countUp);
     wireRun(host);
@@ -177,15 +207,29 @@
     });
   }
 
-  function showIndex() {
+  /* `together`: open at the companies-that-meet-several section. */
+  function showIndex(together) {
     var host = $('lenses-body');
     if (!host) return;
-    if (cache.index) { renderIndex(host, cache.index); return; }
+    function done() { if (together) scrollToTogether(); }
+    if (cache.index) { renderIndex(host, cache.index); done(); return; }
     loading(host, 'lenses');
     getJSON('/api/lenses').then(function (d) {
       cache.index = d;
-      if (!lensFromHash()) renderIndex(host, d);
-    }).catch(function () { failed(host, showIndex); });
+      if (!lensFromHash()) { renderIndex(host, d); done(); }
+    }).catch(function () { failed(host, function () { showIndex(together); }); });
+  }
+
+  function scrollToTogether() {
+    var sec = $('ln-together');
+    if (!sec) return;
+    var chrome = document.querySelector('.sh-chrome');
+    function go() {
+      var y = sec.getBoundingClientRect().top + window.scrollY - ((chrome && chrome.offsetHeight) || 0) - 14;
+      window.scrollTo({ top: Math.max(0, y), behavior: REDUCED ? 'auto' : 'smooth' });
+    }
+    // Twice: the cards above settle their height a moment after they are drawn.
+    go(); setTimeout(go, 350);
   }
 
   /* ── The Run button ───────────────────────────────────────────────────────
@@ -422,9 +466,9 @@
     }).catch(function () { failed(host, function () { openLens(id, false); }); });
   }
 
-  function routeLenses() {
+  function routeLenses(together) {
     var id = lensFromHash();
-    if (id) openLens(id, false); else showIndex();
+    if (id) openLens(id, false); else showIndex(together || wantsTogether());
   }
 
   /* ── 3 · Convergence ──────────────────────────────────────────────────── */
@@ -433,13 +477,7 @@
 
   function renderConvergence(host, d) {
     var rows = d.stocks || [];
-    var html = '<header class="tabhead ln-head">' +
-      '<p class="ln-kicker">Research · Lenses</p>' +
-      '<h2>Convergence</h2>' +
-      '<p>Companies that meet several lenses at once. Each lens reads the same filings through a ' +
-      'different philosophy, so a company that clears several has passed several independent sets ' +
-      'of rules.</p></header>' +
-      '<div class="ln-convbar" role="group" aria-label="Minimum lenses met">' +
+    var html = '<div class="ln-convbar" role="group" aria-label="Minimum lenses met">' +
       '<span>Meets at least</span>';
     [2, 3, 4].forEach(function (n) {
       html += '<button type="button" class="ln-chip' + (n === convMin ? ' on' : '') +
@@ -463,7 +501,6 @@
       });
       html += '</ol>';
     }
-    html += footer();
     host.innerHTML = html;
 
     Array.prototype.forEach.call(host.querySelectorAll('.ln-chip'), function (b) {
@@ -475,10 +512,7 @@
     Array.prototype.forEach.call(host.querySelectorAll('[data-goto-lens]'), function (a) {
       a.addEventListener('click', function (ev) {
         ev.preventDefault();
-        var id = a.getAttribute('data-goto-lens');
-        if (window.AltahaNav) window.AltahaNav.go('research', 'lenses', true);
-        history.replaceState(null, '', '#research/lenses/' + encodeURIComponent(id));
-        openLens(id, false);
+        openLens(a.getAttribute('data-goto-lens'), true);
       });
     });
   }
@@ -488,22 +522,27 @@
     if (!host) return;
     var key = String(convMin);
     if (cache.convergence[key]) { renderConvergence(host, cache.convergence[key]); return; }
-    loading(host, 'convergence');
+    host.innerHTML = '<div class="ln-state"><span class="ln-spin" aria-hidden="true"></span>Loading the companies…</div>';
     getJSON('/api/lenses/convergence?min_lenses=' + convMin).then(function (d) {
       cache.convergence[key] = d;
-      renderConvergence(host, d);
-    }).catch(function () { failed(host, showConvergence); });
+      // The reader may have opened a lens while this was on its way.
+      var now = $('convergence-body');
+      if (now) renderConvergence(now, d);
+    }).catch(function () {
+      var now = $('convergence-body');
+      if (!now) return;
+      now.innerHTML = '<div class="ln-state">This list could not be loaded. ' +
+        '<button type="button" class="ln-btn">Try again</button></div>';
+      now.querySelector('.ln-btn').addEventListener('click', showConvergence);
+    });
   }
 
   /* ── Wiring ───────────────────────────────────────────────────────────── */
 
-  function onNavigate(tab) {
-    if (tab === 'lenses') routeLenses();
-    else if (tab === 'convergence') showConvergence();
-  }
-
   window.addEventListener('altaha:navigate', function (ev) {
-    onNavigate(ev && ev.detail && ev.detail.tab);
+    var d = (ev && ev.detail) || {};
+    // `sub` is how nav.js says an old Convergence address brought the reader here.
+    if (d.tab === 'lenses') routeLenses(d.sub === TOGETHER);
   });
   window.addEventListener('hashchange', function () {
     var p = hashParts();
@@ -511,9 +550,8 @@
   });
 
   function boot() {
-    var tl = $('tab-lenses'), tc = $('tab-convergence');
+    var tl = $('tab-lenses');
     if (tl) tl.addEventListener('click', function () { setTimeout(routeLenses, 0); });
-    if (tc) tc.addEventListener('click', function () { setTimeout(showConvergence, 0); });
     var v = $('view-lenses');
     if (v && v.style.display !== 'none') routeLenses();
   }
@@ -521,5 +559,6 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  window.AltahaLenses = { open: openLens, index: showIndex, convergence: showConvergence };
+  window.AltahaLenses = { open: openLens, index: showIndex,
+    convergence: function () { if (window.AltahaNav) window.AltahaNav.go('research', TOGETHER, true); } };
 })();

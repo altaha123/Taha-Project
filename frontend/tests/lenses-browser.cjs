@@ -8,7 +8,8 @@
        with its reason, never a count, for the blocked ones;
      · a lens page lists its rules, marks each rule ✓ / ✗ / – with the figure
        behind it on hover, and keeps near misses in a collapsible section;
-     · convergence ranks companies with a badge per lens met;
+     · the same page ranks the companies that meet several lenses, with a
+       badge per lens met, and the old Convergence addresses open it there;
      · the stock page carries no lenses: the card was taken off it, and the
        page no longer loads this file or asks for a company's lens results;
      · every view carries the notice, and no view uses the words the site's
@@ -100,7 +101,8 @@ async function viewText(page, id) {
   await page.waitForTimeout(1200);
 
   // The Ideas door: its page has a card for the styles, and its menu
-  // carries both tools, each with its own row.
+  // carries them as one tool. Convergence was a second entry for the same
+  // idea and is a section of the styles page now.
   await page.locator('.sh-door[data-sec="research"]').click();
   await page.locator('#view-ideahub .dr-tool[data-goto="research/lenses"]').waitFor({ state: 'visible' });
   assert.match(await page.locator('#view-ideahub .dr-tool[data-goto="research/lenses"]').innerText(), /Investor styles/);
@@ -109,7 +111,8 @@ async function viewText(page, id) {
   const bar = page.locator('#sh-mega-research');
   await bar.locator('.sh-item[data-tab="lenses"]').waitFor({ state: 'visible' });
   assert.match(await bar.locator('.sh-item[data-tab="lenses"]').innerText(), /Investor styles/);
-  assert.match(await bar.locator('.sh-item[data-tab="convergence"]').innerText(), /Convergence/);
+  assert.equal(await bar.locator('.sh-item[data-tab="convergence"]').count(), 0, 'Convergence is still a tool of its own in the menu');
+  assert.match(await bar.locator('.sh-item[data-tab="lenses"]').innerText(), /agree/);
   await page.screenshot({ path: path.join(output, 'menu-desktop.png') });
 
   // ── The index ──────────────────────────────────────────────────────────
@@ -203,19 +206,43 @@ async function viewText(page, id) {
   await page.locator('.ln-back a').click();
   await page.locator('.ln-card').first().waitFor({ state: 'visible' });
 
-  // ── Convergence ────────────────────────────────────────────────────────
-  await page.evaluate(() => window.AltahaNav.go('research', 'convergence', true));
-  await page.locator('#view-convergence .ln-convbar').waitFor({ state: 'visible' });
-  await page.locator('.ln-chip[data-min="2"]').click();
-  await page.locator('.ln-conv li').first().waitFor({ state: 'visible' });
-  const first = page.locator('.ln-conv li').first();
+  // ── Where the lenses agree: a section of the same page ─────────────────
+  // The cards and the companies that meet several of them are one page. The
+  // list is under the cards, and a line in the heading jumps to it.
+  const together = page.locator('#view-lenses #ln-together');
+  await together.locator('.ln-convbar').waitFor({ state: 'visible' });
+  assert.ok(await page.locator('#view-lenses .ln-card').first().isVisible(), 'the cards left the page the list is on');
+  assert.equal(await page.locator('#view-convergence, #tab-convergence').count(), 0, 'the old Convergence view is still in the document');
+  assert.match(await together.innerText(), /meet several lenses at once/i);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.locator('#ln-jump').click();
+  await page.waitForFunction(() => document.getElementById('ln-together').getBoundingClientRect().top < innerHeight * 0.6);
+  assert.match(page.url(), /#research\/lenses\/convergence$/);
+  await together.locator('.ln-chip[data-min="2"]').click();
+  await together.locator('.ln-conv li').first().waitFor({ state: 'visible' });
+  assert.equal(await together.locator('.ln-chip[data-min="2"]').getAttribute('aria-pressed'), 'true');
+  const first = together.locator('.ln-conv li').first();
   assert.match(await first.innerText(), /GROW/);
   const badges = first.locator('.ln-badge');
   assert.equal(await badges.count(), fx.convergence['2'].stocks[0].lenses.length);
-  assert.match(await viewText(page, 'view-convergence'), NOTICE);
-  assert.doesNotMatch(await viewText(page, 'view-convergence'), BANNED);
+  assert.match(await viewText(page, 'view-lenses'), NOTICE);
+  assert.doesNotMatch(await viewText(page, 'view-lenses'), BANNED);
   await page.screenshot({ path: path.join(output, 'convergence-desktop.png'), fullPage: true });
-  await badges.first().click();
+  // An address somebody saved while Convergence was a page of its own, and a
+  // button that still asks for it by that name, both open this page at the list.
+  for (const old of ['#research/convergence', '#convergence']) {
+    await page.goto('http://127.0.0.1:8781/' + old, { waitUntil: 'load' });
+    await page.locator('#view-lenses #ln-together .ln-convbar').waitFor({ state: 'visible' });
+    await page.waitForFunction(() => document.getElementById('ln-together').getBoundingClientRect().top < innerHeight * 0.6,
+                               null, { timeout: 6000 }).catch(() => assert.fail(old + ' did not open at the list'));
+    assert.ok(await page.locator('#view-lenses').isVisible(), old + ' no longer opens the styles page');
+  }
+  await page.evaluate(() => window.AltahaNav.go('research', 'ideahub', true));
+  await page.evaluate(() => window.AltahaNav.go('research', 'convergence', true));
+  await page.locator('#view-lenses #ln-together .ln-convbar').waitFor({ state: 'visible' });
+  assert.match(page.url(), /#research\/lenses\/convergence$/);
+  await page.locator('#ln-together .ln-chip[data-min="2"]').click();
+  await page.locator('#ln-together .ln-conv li .ln-badge').first().click();
   await page.locator('.ln-hero').waitFor({ state: 'visible' });
 
   // ── Dark theme: tokens, not a second stylesheet ────────────────────────
@@ -253,7 +280,7 @@ async function viewText(page, id) {
   await drawer.waitFor({ state: 'visible' });
   const dtext = await drawer.innerText();
   assert.match(dtext, /Investor styles/);
-  assert.match(dtext, /Convergence/);
+  assert.doesNotMatch(dtext, /Convergence/);
   await mp.screenshot({ path: path.join(output, 'menu-mobile.png') });
   await drawer.locator('.sh-item[data-tab="lenses"]').click();
   await mp.locator('#view-lenses .ln-card').first().waitFor({ state: 'visible' });

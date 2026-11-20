@@ -2,14 +2,14 @@
    Altaha — the three doors
 
    WHAT THIS IS
-   The page each door opens on. Today, Ideas and Portfolio each preview every
+   The page each door opens on. Market, Ideas and Portfolio each preview every
    tool behind them — one live number or one line per tool — and open the
    tool on a tap. The tools themselves are the views that already exist and
    are not touched here; this file only decides how you arrive at them.
 
-     Today     #view-today     the market, live: Nifty, the other indices, a
+     Market     #view-today     the market, live: Nifty, the other indices, a
                                three-month chart, FII/DII flows, every sector,
-                               the movers, and a card per Today tool
+                               the movers, and a card per Market tool
      Ideas     #view-ideahub   the ranked universe and every way to find a stock
      Portfolio #view-money     your saved portfolio, watchlist and plans
 
@@ -228,7 +228,7 @@
         '<div class="dr-sticks"><span>9:15</span><span>12:00</span><span>15:30</span></div>' +
       '</div>';
     return '<div class="dr dr-today">' +
-      head('Today', 'What is the market doing?', session) +
+      head('Market', 'What is happening today?', session) +
       startHTML() +
       '<div class="dr-grid">' +
         '<div class="dr-main">' +
@@ -567,12 +567,12 @@
   }
 
   /* ── A sector's stocks, opened where the tile is ──────────────────────
-     Tapping a sector used to leave Today for the market board and ask it to
+     Tapping a sector used to leave Market for the market board and ask it to
      open the sector there. The board names its tiles after NSE indices
      ("Nifty Realty"), not sectors ("Real Estate"), so nothing opened: the
      reader was moved to another page and shown no stocks.
 
-     The stocks open under the tiles instead, and the reader stays on Today.
+     The stocks open under the tiles instead, and the reader stays on Market.
      The first list is the one the tile's own number is the average of; it
      arrived with the tiles, so it is on screen at once. Where NSE publishes
      an index for the sector, the rest of that index's members are read from
@@ -845,7 +845,7 @@
     todayCounts();
   }
 
-  /* The trading-session clock, IST, once a second while Today is on screen. */
+  /* The trading-session clock, IST, once a second while Market is on screen. */
   function startClock() {
     if (T.clock) return;
     function tick() {
@@ -883,8 +883,10 @@
         '<span class="dr-sheen" aria-hidden="true"></span>' +
         '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('query') + '</span></span>' +
         '<span class="dr-tool-name">Screener</span>' +
-        '<span class="dr-tool-line">Filter every company by your own rules.</span>' +
-        '<span class="dr-term"><span class="dr-type">ROE &gt; 20 AND Debt to equity &lt; 0.5</span></span></button>',
+        '<span class="dr-tool-line">Tap what you want in a company and see who fits.</span>' +
+        '<span class="dr-tool-chips">' + ['Makes good money', 'Owes little', 'Not too pricey', 'Growing fast'].map(function (n, k) {
+          return '<span class="dr-chip dr-pop" style="--i:' + k + '">' + esc(n) + '</span>';
+        }).join('') + '</span></button>',
       '<button type="button" class="dr-card dr-tool dr-rise" style="--i:3" data-goto="research/lenses">' +
         '<span class="dr-sheen" aria-hidden="true"></span>' +
         '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('lenses') + '</span></span>' +
@@ -910,7 +912,6 @@
     ].join('');
     var more = [
       ['research/calls', 'record', 'Call log', 'Every pick, dated, and what happened next'],
-      ['research/convergence', 'converge', 'Convergence', 'Stocks several investor styles agree on'],
       ['research/funds', 'funds', 'Fund houses', 'What mutual funds hold'],
       ['research/charts', 'charts', 'Charts', 'Chart any stock'],
       ['research/strategies', 'flask', 'Strategy lab', 'Trading rules, tested on any stock'],
@@ -1121,7 +1122,7 @@
   });
 
   // The header reads /market and /sector/overview every minute for its
-  // ticker. Each read refreshes Today in place, with the level flashing.
+  // ticker. Each read refreshes Market in place, with the level flashing.
   window.addEventListener('altaha:market', function (e) {
     var d = e.detail || {};
     var v = $('view-today');
@@ -1136,7 +1137,7 @@
 
   window.AltahaDoors = { open: open, pins: pins, PIN_KEY: PIN_KEY };
 
-  /* The landing view is Today, so it may already be on screen before the
+  /* The landing view is Market, so it may already be on screen before the
      tab handler that calls open() exists. */
   function boot() {
     ['today', 'ideahub', 'money'].forEach(function (w) {

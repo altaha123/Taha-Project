@@ -1,19 +1,31 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Altaha Screener — query.js
 
-   The query screener: the reader types their own question of every stored
-   company — "ROE > 15 AND Debt to equity < 0.5" — and gets back the
-   companies whose filed figures meet it. Research → Query screener
-   (#research/query).
+   The screener: every stored company, narrowed to the ones that fit what
+   the reader asks for. Ideas → Screener (#research/query).
 
-   It is meant to be the friendly version of a screener's query box, so the
-   reader never has to know the syntax to use it:
+   TWO WAYS TO ASK, ONE QUESTION UNDERNEATH
+   The page a reader sees first asks nothing in numbers. It shows a handful
+   of things a person might want from a company ("Makes good money", "Owes
+   little", "Not too pricey"), each a card to tap, with three settings where
+   a setting makes sense. Tapping writes the rules, runs them and shows who
+   is left, and a strip of bars shows how each choice narrowed the list.
+   Nothing has to be typed, and there is no button to press to see a result.
+   It replaced a page that opened on a field picker and a text box, which a
+   newcomer read as a form to fill in before anything would happen.
 
-     · ready-made examples to start from, each just a query they can edit;
+   Under it, folded away, is the editor that page used to be, for a reader
+   who knows the number they want:
+
+     · the server's example queries, each just a query they can edit;
      · a three-box builder (field, comparison, value) that writes the line;
      · suggestions as they type, from every field name and alias;
      · every field listed with what it means, one click to insert;
      · an error that says what is wrong and offers the field they meant.
+
+   The two are one screen of the same query. A choice writes its lines into
+   the editor; a query typed or opened from a link is read back into the
+   choices it matches, and anything left over is carried as "your own rules".
 
    The parsing and the figures live in backend/fundamentals_query.py; this
    file never evaluates anything. The query is kept in the address
@@ -33,7 +45,10 @@
   var KEY = 'altaha.query.last';
 
   var meta = null, metaPending = null, built = false;
-  var state = { q: '', sort: '', order: 'desc', results: [], data: null, busy: false, err: '' };
+  var state = { q: '', sort: '', order: 'desc', results: [], data: null, busy: false, err: '', again: false };
+  var REDUCED = false;
+  try { REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  function still() { return REDUCED || document.documentElement.getAttribute('data-motion') === 'off'; }
   var ac = { items: [], active: 0, from: 0, to: 0, open: false };
 
   function $(id) { return document.getElementById(id); }
@@ -190,15 +205,39 @@
   function skeleton(host) {
     host.innerHTML =
       '<header class="qs-head">' +
-        '<p class="ln-kicker">Research · Query screener</p>' +
-        '<h2>Ask every company your own question</h2>' +
-        '<p>Write conditions on the figures each company has filed — returns, growth, ' +
-        'margins, debt, cash flow, valuation and ownership — and see every company that ' +
-        'meets them. Start from an example, build a line with the boxes, or just type.</p>' +
+        '<p class="ln-kicker">Ideas · Screener</p>' +
+        '<h2>Find stocks your way</h2>' +
+        '<p>Tap what you want in a company. The list updates as you choose. Nothing to type.</p>' +
       '</header>' +
       '<div class="qs-saved" id="qs-saved" aria-label="Your saved screens" hidden></div>' +
-      '<div class="qs-examples" id="qs-examples" aria-label="Example queries"></div>' +
-      '<div class="qs-card">' +
+      '<section class="qz" id="qz" aria-label="Find stocks by choosing what you want">' +
+        '<div class="qz-step">' +
+          '<h3 class="qz-h"><span class="qz-num" aria-hidden="true">1</span>Start with a ready-made idea' +
+            '<small>or skip straight to step 2</small></h3>' +
+          '<div class="qz-recipes" id="qz-recipes"></div>' +
+        '</div>' +
+        '<div class="qz-step">' +
+          '<h3 class="qz-h"><span class="qz-num" aria-hidden="true">2</span>Pick what matters to you' +
+            '<small>as many as you like</small></h3>' +
+          '<div class="qz-wishes" id="qz-wishes"></div>' +
+        '</div>' +
+        '<div class="qz-step qz-result" id="qz-result">' +
+          '<h3 class="qz-h"><span class="qz-num" aria-hidden="true">3</span>See who fits</h3>' +
+          '<div class="qz-board" id="qz-board" aria-live="polite"></div>' +
+          '<div class="qz-acts" id="qz-acts" hidden>' +
+            '<button type="button" class="qs-btn qs-btn-ghost" id="qz-reset">Start over</button>' +
+            '<button type="button" class="qs-btn qs-btn-ghost" id="qz-save">Save this list</button>' +
+            '<button type="button" class="qs-btn qs-btn-ghost" id="qs-copy" hidden>Copy link</button>' +
+          '</div>' +
+        '</div>' +
+        '<button type="button" class="qz-float" id="qz-float" hidden></button>' +
+      '</section>' +
+      '<div id="qs-out" class="qs-out"></div>' +
+      '<details class="qs-adv" id="qs-adv">' +
+        '<summary><span class="qs-adv-t">Write your own rules</span>' +
+          '<span class="qs-adv-s">for when you know the exact number you want</span></summary>' +
+        '<div class="qs-examples" id="qs-examples" aria-label="Example queries"></div>' +
+        '<div class="qs-card">' +
         '<div class="qs-builder" role="group" aria-label="Add a condition">' +
           '<label class="qs-lab"><span>Field</span><select id="qs-bfield"></select></label>' +
           '<label class="qs-lab qs-lab-op"><span>Is</span><select id="qs-bop">' +
@@ -226,15 +265,16 @@
           '<div class="qs-actions">' +
             '<button type="button" class="qs-btn qs-btn-go" id="qs-run">Run query</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-clear">Clear</button>' +
-            '<button type="button" class="qs-btn qs-btn-ghost" id="qs-copy" hidden>Copy link</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-save">Save screen</button>' +
             '<button type="button" class="qs-btn qs-aibtn" id="qs-aibtn" aria-expanded="false" ' +
               'aria-controls="qs-ai"><span class="qs-aispark" aria-hidden="true">✦</span>Ask AI' +
               '<span class="qs-aitag">Admin</span></button>' +
           '</div>' +
+          /* One form for both Save buttons. It sits here, and moves under
+             step 3 when "Save this list" up there is the one pressed. */
           '<form class="qs-saveform" id="qs-saveform" hidden>' +
-            '<label for="qs-savename">Name this screen</label>' +
-            '<input id="qs-savename" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Cheap compounders">' +
+            '<label for="qs-savename">Give this list a name</label>' +
+            '<input id="qs-savename" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Safe and growing">' +
             '<button type="submit" class="qs-btn qs-btn-go" id="qs-savego">Save</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-savecancel">Cancel</button>' +
             '<p class="qs-savemsg" id="qs-savemsg" role="status"></p>' +
@@ -271,13 +311,344 @@
             '<p class="qs-ai-fine" id="qs-ai-foot"></p>' +
           '</div>' +
         '</section>' +
-      '</div>' +
-      '<div id="qs-out" class="qs-out" aria-live="polite"></div>' +
-      '<details class="qs-ref" id="qs-ref"><summary>Every field you can use ' +
-        '<span id="qs-refn"></span></summary>' +
-        '<input id="qs-find" class="qs-find" type="search" placeholder="Find a field — e.g. debt, growth, promoter">' +
-        '<div id="qs-fields"></div></details>' +
+        '</div>' +
+        '<details class="qs-ref" id="qs-ref"><summary>Every field you can use ' +
+          '<span id="qs-refn"></span></summary>' +
+          '<input id="qs-find" class="qs-find" type="search" placeholder="Find a field — e.g. debt, growth, promoter">' +
+          '<div id="qs-fields"></div></details>' +
+      '</details>' +
       '<p class="ln-notice qs-notice" role="note" id="qs-notice"></p>';
+    paintFinder();
+    paintBoard();
+  }
+
+  /* ── The finder ─────────────────────────────────────────────────────────
+     WISHES are the things a reader can ask for. Each has up to three
+     settings, and each setting is nothing but lines of the query language
+     the editor below takes, so a choice here and a line typed there are the
+     same thing. `say` is the card's one line; `note` says what a setting
+     means in rupees on a hundred, which is how the figure would be explained
+     to somebody who has never met it; `num` is the same in the terms the
+     results table uses. Every line is checked against the server's parser
+     by backend/tests/test_query_wishes.py, so a renamed field fails a test
+     and not a reader.
+
+     RECIPES are starting points: a few wishes switched on together. They
+     are not a second kind of thing; after one is tapped the cards show
+     exactly what it chose, and each can be changed. */
+
+  var WISHES = [
+    { id: 'profit', icon: '💰', tint: '176,141,46', title: 'Makes good money', say: 'Earns well on what its owners put in', def: 0,
+      levels: [
+        { tag: 'Good',  q: ['ROE > 12'], num: 'ROE above 12%', note: 'Earns more than ₹12 a year on every ₹100 of its owners’ money.' },
+        { tag: 'Great', q: ['ROE > 18'], num: 'ROE above 18%', note: 'Earns more than ₹18 a year on every ₹100 of its owners’ money.' },
+        { tag: 'Top',   q: ['ROE > 25'], num: 'ROE above 25%', note: 'Earns more than ₹25 a year on every ₹100 of its owners’ money.' }] },
+    { id: 'growth', icon: '🌱', tint: '47,125,79', title: 'Growing fast', say: 'Sells more and earns more every year', def: 0,
+      levels: [
+        { tag: 'Steady', q: ['Sales growth 3Y > 10', 'Profit growth 3Y > 10'], num: 'Sales and profit up 10% a year, 3 years', note: 'Sales and profit both grew more than 10% a year over three years.' },
+        { tag: 'Fast',   q: ['Sales growth 3Y > 15', 'Profit growth 3Y > 15'], num: 'Sales and profit up 15% a year, 3 years', note: 'Sales and profit both grew more than 15% a year over three years.' },
+        { tag: 'Racing', q: ['Sales growth 3Y > 25', 'Profit growth 3Y > 25'], num: 'Sales and profit up 25% a year, 3 years', note: 'Sales and profit both grew more than 25% a year over three years.' }] },
+    { id: 'debt', icon: '🕊️', tint: '68,125,159', title: 'Owes little', say: 'Has not borrowed much', def: 1,
+      levels: [
+        { tag: 'Some',        q: ['Debt to equity < 1'],   num: 'Debt to equity under 1',   note: 'Has borrowed less than its own money: under ₹100 for every ₹100 it owns.' },
+        { tag: 'Little',      q: ['Debt to equity < 0.5'], num: 'Debt to equity under 0.5', note: 'Has borrowed less than ₹50 for every ₹100 of its own money.' },
+        { tag: 'Almost none', q: ['Debt to equity < 0.1'], num: 'Debt to equity under 0.1', note: 'Has borrowed less than ₹10 for every ₹100 of its own money.' }] },
+    { id: 'cheap', icon: '🏷️', tint: '176,58,43', title: 'Not too pricey', say: 'The share price is low for what it earns', def: 1,
+      levels: [
+        { tag: 'Fair',       q: ['PE > 0', 'PE < 30'], num: 'PE under 30', note: 'You pay less than ₹30 for every ₹1 it earns in a year. Loss-makers are left out.' },
+        { tag: 'Cheap',      q: ['PE > 0', 'PE < 20'], num: 'PE under 20', note: 'You pay less than ₹20 for every ₹1 it earns in a year. Loss-makers are left out.' },
+        { tag: 'Very cheap', q: ['PE > 0', 'PE < 12'], num: 'PE under 12', note: 'You pay less than ₹12 for every ₹1 it earns in a year. Loss-makers are left out.' }] },
+    { id: 'dividend', icon: '🎁', tint: '128,90,170', title: 'Pays you every year', say: 'Shares its profit as dividends', def: 0,
+      levels: [
+        { tag: 'A little', q: ['Dividend yield > 1'], num: 'Dividend yield above 1%', note: 'Pays more than ₹1 a year on every ₹100 of its shares.' },
+        { tag: 'Good',     q: ['Dividend yield > 2'], num: 'Dividend yield above 2%', note: 'Pays more than ₹2 a year on every ₹100 of its shares.' },
+        { tag: 'A lot',    q: ['Dividend yield > 4'], num: 'Dividend yield above 4%', note: 'Pays more than ₹4 a year on every ₹100 of its shares.' }] },
+    { id: 'size', icon: '🏢', tint: '90,100,120', title: 'How big?', say: 'Choose the size of company', def: 2, kind: 'choice',
+      levels: [
+        { tag: 'Small',  q: ['Market cap < 5000'], num: 'Market cap under ₹5,000 cr', note: 'All its shares together are worth less than ₹5,000 crore.' },
+        { tag: 'Medium', q: ['Market cap >= 5000', 'Market cap < 50000'], num: 'Market cap ₹5,000 to ₹50,000 cr', note: 'All its shares together are worth ₹5,000 to ₹50,000 crore.' },
+        { tag: 'Big',    q: ['Market cap >= 50000'], num: 'Market cap above ₹50,000 cr', note: 'All its shares together are worth more than ₹50,000 crore.' }] },
+    { id: 'owners', icon: '🔑', tint: '190,120,30', title: 'Founders still own a lot', say: 'The people who run it hold a big share', def: 1,
+      levels: [
+        { tag: 'A fair share', q: ['Promoter holding > 40'], num: 'Promoter holding above 40%', note: 'The founders and their family own more than 40 of every 100 shares.' },
+        { tag: 'Half',         q: ['Promoter holding > 50'], num: 'Promoter holding above 50%', note: 'The founders and their family own more than half the company.' },
+        { tag: 'Most of it',   q: ['Promoter holding > 65'], num: 'Promoter holding above 65%', note: 'The founders and their family own more than 65 of every 100 shares.' }] },
+    { id: 'clean', icon: '🔒', tint: '40,130,130', title: 'No shares pawned', say: 'The owners have not pledged shares for loans', def: 0,
+      levels: [
+        { tag: 'None', q: ['Pledged percentage = 0'], num: 'Pledged shares: 0%', note: 'The owners have not handed over any of their shares as security for a loan.' }] },
+    { id: 'cash', icon: '💵', tint: '31,122,85', title: 'Brings in real cash', say: 'Profit that turns up in the bank', def: 1,
+      levels: [
+        { tag: 'Some',   q: ['Operating cash flow > 0'], num: 'Operating cash flow positive', note: 'The business itself brought in cash last year.' },
+        { tag: 'Plenty', q: ['Operating cash flow > 0', 'Free cash flow 3Y > 0'], num: 'Free cash flow positive over 3 years', note: 'It brought in cash, and had some left after paying for its own growth, over three years.' },
+        { tag: 'All of it', q: ['Operating cash flow > 0', 'Free cash flow 3Y > 0', 'Cash conversion > 1'], num: 'Cash conversion above 1', note: 'It had cash left over, and every rupee of profit arrived as a rupee of cash or more.' }] },
+    { id: 'hot', icon: '🔥', tint: '214,110,40', title: 'Had a strong last quarter', say: 'The newest results were clearly better', def: 0,
+      levels: [
+        { tag: 'Better',      q: ['Sales growth YoY quarter > 10', 'Profit growth YoY quarter > 10'], num: 'Latest quarter up 10% on last year', note: 'Sales and profit were both more than 10% higher than in the same three months last year.' },
+        { tag: 'Much better', q: ['Sales growth YoY quarter > 20', 'Profit growth YoY quarter > 20'], num: 'Latest quarter up 20% on last year', note: 'Sales and profit were both more than 20% higher than in the same three months last year.' },
+        { tag: 'Booming',     q: ['Sales growth YoY quarter > 40', 'Profit growth YoY quarter > 40'], num: 'Latest quarter up 40% on last year', note: 'Sales and profit were both more than 40% higher than in the same three months last year.' }] }
+  ];
+
+  var RECIPES = [
+    { id: 'steady',  icon: '🛡️', name: 'Safe and steady',     say: 'Big, earns well, owes little',           set: [['size', 2], ['profit', 0], ['debt', 1]] },
+    { id: 'growers', icon: '🚀', name: 'Fast growers',        say: 'Sales and profit climbing quickly',      set: [['growth', 1], ['profit', 0]] },
+    { id: 'bargain', icon: '🛍️', name: 'Good and not pricey', say: 'Earns well, and the price is low',       set: [['cheap', 1], ['profit', 0], ['debt', 0]] },
+    { id: 'income',  icon: '🏦', name: 'Pays you to hold',    say: 'Dividends from a healthy business',      set: [['dividend', 1], ['profit', 0], ['debt', 1]] },
+    { id: 'nodebt',  icon: '🧘', name: 'Debt-free winners',   say: 'Owes almost nothing, earns a lot',       set: [['debt', 2], ['profit', 1]] },
+    { id: 'owner',   icon: '👑', name: 'Run by its owners',   say: 'Founders hold most of it, none pawned',  set: [['owners', 1], ['clean', 0], ['profit', 0]] }
+  ];
+
+  var pick = [];        // what the reader chose: [{ id, level }], in the order chosen
+  var custom = [];      // lines in the query that no choice explains ("your own rules")
+  var counts = {};      // query → { count, screened }, so a bar is asked for once
+  var runTimer = null, funnelGen = 0, shownCount = 0;
+
+  function wishById(id) {
+    for (var i = 0; i < WISHES.length; i++) if (WISHES[i].id === id) return WISHES[i];
+    return null;
+  }
+  function picked(id) {
+    for (var i = 0; i < pick.length; i++) if (pick[i].id === id) return pick[i];
+    return null;
+  }
+  function linesFor(p) { return wishById(p.id).levels[p.level].q; }
+  function tidy(line) { return String(line).replace(/\s+/g, ' ').trim(); }
+
+  /* The query the choices amount to: each choice's lines in the order it was
+     chosen, a line two choices share written once, then the reader's own. */
+  function buildQuery(upTo) {
+    var out = [], n = upTo == null ? pick.length : upTo;
+    pick.slice(0, n).forEach(function (p) {
+      linesFor(p).forEach(function (l) { if (out.indexOf(l) < 0) out.push(l); });
+    });
+    if (upTo == null) custom.forEach(function (l) { if (out.indexOf(l) < 0) out.push(l); });
+    return out.join('\n');
+  }
+
+  /* The other way: a query (typed, opened from a link, or a saved screen)
+     read back into the choices it is made of. The strictest setting that
+     fits is the one taken, so "Plenty of cash" is not read as "Some cash"
+     and a stray line. Whatever no choice accounts for is kept as it is. */
+  function readQuery(q) {
+    var lines = String(q || '').split('\n').map(tidy).filter(Boolean);
+    var left = lines.slice(), found = [];
+    WISHES.forEach(function (w) {
+      var order = w.levels.map(function (l, i) { return i; }).sort(function (a, b) {
+        return w.levels[b].q.length - w.levels[a].q.length || b - a;
+      });
+      for (var k = 0; k < order.length; k++) {
+        var L = w.levels[order[k]].q;
+        if (L.every(function (x) { return left.indexOf(x) > -1; })) {
+          found.push({ id: w.id, level: order[k], at: lines.indexOf(L[L.length - 1]) });
+          L.forEach(function (x) { left.splice(left.indexOf(x), 1); });
+          break;
+        }
+      }
+    });
+    found.sort(function (a, b) { return a.at - b.at; });
+    pick = found.map(function (f) { return { id: f.id, level: f.level }; });
+    custom = left;
+  }
+
+  function recipeOn(r) {
+    return !custom.length && r.set.length === pick.length && r.set.every(function (s) {
+      var p = picked(s[0]);
+      return p && p.level === s[1];
+    });
+  }
+
+  function paintFinder() {
+    var rec = $('qz-recipes'), box = $('qz-wishes');
+    if (!rec || !box) return;
+    rec.innerHTML = RECIPES.map(function (r) {
+      var on = recipeOn(r);
+      return '<button type="button" class="qz-recipe' + (on ? ' on' : '') + '" data-recipe="' + esc(r.id) +
+        '" aria-pressed="' + on + '"><span class="qz-emoji" aria-hidden="true">' + r.icon + '</span>' +
+        '<span class="qz-recipe-t"><b>' + esc(r.name) + '</b><span>' + esc(r.say) + '</span></span></button>';
+    }).join('');
+    box.innerHTML = WISHES.map(function (w) {
+      var p = picked(w.id), on = !!p, lv = on ? p.level : w.def, L = w.levels[lv];
+      return '<div class="qz-wish' + (on ? ' on' : '') + '" data-wishbox="' + esc(w.id) + '" style="--tint:' + w.tint + '">' +
+        '<button type="button" class="qz-wish-main" data-wish="' + esc(w.id) + '" aria-pressed="' + on + '">' +
+          '<span class="qz-emoji" aria-hidden="true">' + w.icon + '</span>' +
+          '<span class="qz-wish-t"><b>' + esc(w.title) + '</b><span>' + esc(w.say) + '</span></span>' +
+          '<span class="qz-tick" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" ' +
+            'stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>' +
+        '</button>' +
+        (on ? '<div class="qz-more">' +
+          (w.levels.length > 1 ? '<div class="qz-levels" role="group" aria-label="' + esc(w.title) + ': ' +
+              (w.kind === 'choice' ? 'which' : 'how much') + '">' +
+            w.levels.map(function (l, i) {
+              return '<button type="button" class="qz-level' + (i === lv ? ' on' : '') + '" data-wish="' + esc(w.id) +
+                '" data-level="' + i + '" aria-pressed="' + (i === lv) + '">' + esc(l.tag) + '</button>';
+            }).join('') + '</div>' : '') +
+          '<p class="qz-note">' + esc(L.note) + ' <span class="qz-numtag">' + esc(L.num) + '</span></p>' +
+        '</div>' : '') +
+      '</div>';
+    }).join('');
+  }
+
+  /* A choice changed: write the query it amounts to, show the cards as they
+     now stand at once, and run a moment later, so three quick taps are one
+     question to the server and not three. */
+  function chosen() {
+    var q = buildQuery();
+    if (ta()) ta().value = q;
+    paintFinder();
+    clearTimeout(runTimer);
+    if (!q) { clearAll(); return; }
+    paintBoard('counting');
+    runTimer = setTimeout(function () { state.sort = ''; run(false); }, 160);
+  }
+
+  function toggleWish(id) {
+    var i = pick.map(function (p) { return p.id; }).indexOf(id);
+    if (i > -1) pick.splice(i, 1);
+    else pick.push({ id: id, level: wishById(id).def });
+    chosen();
+  }
+  function setLevel(id, level) {
+    var p = picked(id);
+    if (!p || p.level === level) return;
+    p.level = level;
+    chosen();
+  }
+  function useRecipe(id) {
+    var r = RECIPES.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    if (recipeOn(r)) pick = [];                     // tapping the lit one again switches it off
+    else pick = r.set.map(function (s) { return { id: s[0], level: s[1] }; });
+    custom = [];
+    chosen();
+  }
+
+  function nf(x) { return Number(x || 0).toLocaleString('en-IN'); }
+
+  function countFor(q) {
+    if (counts[q]) return Promise.resolve(counts[q]);
+    return getJSON('/fundamentals/query?q=' + encodeURIComponent(q) + '&limit=1&offset=0').then(function (d) {
+      if (!d || d.available === false) throw new Error('unavailable');
+      counts[q] = { count: d.count, screened: d.screened };
+      return counts[q];
+    });
+  }
+
+  /* A number that climbs or falls to its new value, so a change of mind is
+     seen to change the answer. The true figure is written first and last. */
+  function tickTo(node, to) {
+    var from = shownCount;
+    shownCount = to;
+    node.textContent = nf(to);
+    if (still() || from === to || !window.requestAnimationFrame) return;
+    var t0 = null, dur = 520;
+    node.textContent = nf(from);
+    (function step(ts) {
+      if (t0 === null) t0 = ts;
+      var k = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      if (shownCount !== to) return;                // a newer answer has taken over
+      node.textContent = nf(Math.round(from + (to - from) * e));
+      if (k < 1) requestAnimationFrame(step);
+    })(performance.now());
+  }
+
+  /* Step 3. What it says depends on where the reader is:
+       nothing chosen     an invitation, and no number
+       'counting'         the bars as they stood, dimmed
+       'down'             the server did not answer, and a way to ask again
+       otherwise          the count, and a bar for each choice in turn. */
+  function paintBoard(mode) {
+    var board = $('qz-board'), acts = $('qz-acts');
+    if (!board) return;
+    var any = pick.length || custom.length;
+    acts.hidden = !any;
+    if (!any) {
+      shownCount = 0;
+      board.className = 'qz-board is-empty';
+      board.innerHTML = '<p class="qz-wait"><span aria-hidden="true">👆</span> Tap a card above and the companies that fit appear here.</p>';
+      paintFloat();
+      return;
+    }
+    if (mode === 'counting' && board.querySelector('.qz-count')) { board.classList.add('is-counting'); return; }
+    if (mode === 'down') {
+      board.className = 'qz-board is-down';
+      board.innerHTML = '<p class="qz-wait">The list could not be fetched just now. The server may be waking up, ' +
+        'which takes about half a minute. <button type="button" class="qs-btn qs-btn-ghost" id="qz-retry">Try again</button></p>';
+      paintFloat();
+      return;
+    }
+    var d = state.data;
+    if (!d || mode === 'counting') {
+      board.className = 'qz-board is-counting';
+      board.innerHTML = '<p class="qz-wait">Counting the companies that fit…</p>';
+      return;
+    }
+    var steps = [{ label: 'Every company we have figures for', icon: '', q: null, n: d.screened }];
+    pick.forEach(function (p, i) {
+      var w = wishById(p.id), L = w.levels[p.level];
+      steps.push({ label: w.title, tag: w.levels.length > 1 ? L.tag : '', icon: w.icon, tint: w.tint,
+                   q: buildQuery(i + 1), drop: p.id });
+    });
+    if (custom.length) steps.push({ label: 'Your own rules', tag: custom.length + (custom.length === 1 ? ' line' : ' lines'),
+                                    icon: '✍️', q: buildQuery(), drop: '*' });
+    steps[steps.length - 1].n = steps.length > 1 ? d.count : d.screened;
+    steps.forEach(function (st) { if (st.q && st.n == null && counts[st.q]) st.n = counts[st.q].count; });
+    var none = d.count === 0;
+    board.className = 'qz-board' + (none ? ' is-none' : '');
+    board.innerHTML =
+      '<div class="qz-count"><b id="qz-n">' + nf(d.count) + '</b><span>' +
+        (none ? 'No company fits all of that.' : (d.count === 1 ? 'company fits' : 'companies fit')) +
+        '<small>' + (none ? 'Turn one choice off, or ease one, and the list comes back.'
+                          : 'out of ' + nf(d.screened) + ' we have figures for') + '</small></span></div>' +
+      '<ol class="qz-funnel" aria-label="How each choice narrowed the list">' + steps.map(function (st, i) {
+        var known = st.n != null, pct = known && d.screened ? Math.max(st.n ? 1.5 : 0, 100 * st.n / d.screened) : 0;
+        return '<li class="qz-bar' + (i === steps.length - 1 && i > 0 ? ' is-last' : '') + (i === 0 ? ' is-all' : '') +
+          '"' + (st.tint ? ' style="--tint:' + st.tint + '"' : '') + '>' +
+          '<span class="qz-bar-l">' + (st.icon ? '<span aria-hidden="true">' + st.icon + '</span>' : '') +
+            '<b>' + esc(st.label) + '</b>' + (st.tag ? '<i>' + esc(st.tag) + '</i>' : '') + '</span>' +
+          '<span class="qz-bar-track"><span class="qz-bar-fill" style="width:' + pct.toFixed(2) + '%"></span></span>' +
+          '<span class="qz-bar-n">' + (known ? nf(st.n) : '…') + '</span>' +
+          (st.drop ? '<button type="button" class="qz-bar-x" data-drop="' + esc(st.drop) + '" aria-label="Remove: ' +
+            esc(st.label) + '">×</button>' : '<span class="qz-bar-x" aria-hidden="true"></span>') + '</li>';
+      }).join('') + '</ol>' +
+      (d.unknown ? '<p class="qz-unk">' + nf(d.unknown) + (d.unknown === 1 ? ' company is' : ' companies are') +
+        ' left out because a figure these choices need has not been filed for ' + (d.unknown === 1 ? 'it' : 'them') + '.</p>' : '');
+    tickTo($('qz-n'), d.count);
+    paintFloat();
+
+    // The bars in between are asked for one each, once, and drawn as they arrive.
+    var gen = ++funnelGen;
+    steps.forEach(function (st) {
+      if (!st.q || st.n != null) return;
+      countFor(st.q).then(function () { if (gen === funnelGen) paintBoard(); }).catch(function () {});
+    });
+  }
+
+  /* On a long page the answer is below the cards. A small bar at the foot of
+     the screen carries the count while the reader is still choosing, and
+     takes them to the list. It goes once the list itself is in sight. */
+  function paintFloat() {
+    var f = $('qz-float'), res = $('qz-result');
+    if (!f || !res) return;
+    var d = state.data, any = pick.length || custom.length;
+    var below = res.getBoundingClientRect().top > (window.innerHeight || 0) - 90;
+    var view = $('view-query');
+    var show = !!(any && d && below && view && view.style.display !== 'none');
+    f.hidden = !show;
+    if (show) f.innerHTML = '<b>' + nf(d.count) + '</b> ' + (d.count === 1 ? 'company fits' : 'companies fit') +
+      '<span aria-hidden="true">See the list ↓</span>';
+  }
+
+  function clearAll() {
+    clearTimeout(runTimer);
+    pick = []; custom = [];
+    var t = ta();
+    if (t) t.value = '';
+    state.q = ''; state.data = null; state.results = []; state.err = ''; state.sort = '';
+    $('qs-out').innerHTML = ''; $('qs-err').hidden = true; $('qs-copy').hidden = true;
+    $('qs-saveform').hidden = true;
+    writeHash('');
+    remember('');
+    paintFinder();
+    paintBoard();
   }
 
   function fillHelpers() {
@@ -493,7 +864,10 @@
   function run(append) {
     var q = ta().value.trim();
     if (!q) { ta().focus(); return; }
-    if (state.busy) return;
+    /* A choice made while an answer is on its way is not dropped: it runs as
+       soon as that answer is in. Without this, a quick second tap on a card
+       left the list showing the first tap's companies. */
+    if (state.busy) { if (!append) state.again = true; return; }
     closeAc();
     if (!append) { state.q = q; state.results = []; }
     state.busy = true;
@@ -519,34 +893,55 @@
       state.err = '';
       state.sort = d.sort; state.order = d.order;
       state.results = append ? state.results.concat(d.results) : d.results;
+      counts[state.q] = { count: d.count, screened: d.screened };
       writeHash(state.q);
       remember(state.q);
+      /* The cards follow the query that ran, whoever wrote it: a line typed
+         in the editor, a saved screen or a link lights the choices it is
+         made of. Not while a newer choice is waiting, which would undo it. */
+      if (!state.again && ta().value.trim() === state.q) {
+        readQuery(state.q);
+        paintFinder();
+        if (custom.length) $('qs-adv').open = true;
+      }
       paintResults();
+      paintBoard();
     }).catch(function (e) {
       if (!append) $('qs-out').innerHTML = '';
       showError(e, state.q);
+      state.data = null;
+      if (e && e.body && e.body.error) {
+        // A rule that cannot be read is the editor's to explain; it opens to show it.
+        readQuery(state.q); paintFinder();
+        $('qs-adv').open = true;
+        var board = $('qz-board');
+        board.className = 'qz-board is-down';
+        board.innerHTML = '<p class="qz-wait">One of the rules written below could not be read. It is marked there, with a fix.</p>';
+        $('qz-acts').hidden = false;
+      } else {
+        paintBoard('down');
+      }
     }).then(function () {
       state.busy = false;
       btn.disabled = false; btn.classList.remove('is-busy'); btn.textContent = 'Run query';
       $('qs-out').classList.remove('is-stale');
+      if (state.again) { state.again = false; run(false); }
     });
   }
 
   function paintResults() {
     var d = state.data, out = $('qs-out');
     var n = function (x) { return Number(x || 0).toLocaleString('en-IN'); };
+    /* How many of how many, and who was left out for want of a figure, is
+       said once, in step 3 above. This heading only names the table. */
     var head = '<div class="qs-sum"><p><b>' + n(d.count) + '</b> ' +
-      (d.count === 1 ? 'company matches' : 'companies match') +
-      ' <span>of ' + n(d.screened) + ' screened</span></p>' +
-      (d.unknown ? '<p class="qs-unk" title="A company whose figure is missing is left out rather ' +
-        'than counted as failing">' + n(d.unknown) + ' left out because a figure the query uses ' +
-        'is not available for them</p>' : '') +
+      (d.count === 1 ? 'company matches' : 'companies match') + '</p>' +
       (d.count ? '<button type="button" class="qs-btn qs-btn-ghost qs-csv" id="qs-csv">Download CSV</button>' : '') +
       '</div>';
     $('qs-copy').hidden = false;
     if (!d.count) {
-      out.innerHTML = head + '<p class="ln-small">No company meets every condition. ' +
-        'Try loosening a number, or join two lines with OR.</p>';
+      out.innerHTML = head + '<p class="ln-small">No company meets all of that. ' +
+        'Turn one choice off, or ease one, and the list comes back.</p>';
       return;
     }
     var cols = d.columns;
@@ -569,11 +964,18 @@
       ? '<button type="button" class="qs-btn qs-btn-ghost qs-more" id="qs-more">Show ' +
         Math.min(PAGE, d.count - state.results.length) + ' more (' + n(state.results.length) +
         ' of ' + n(d.count) + ' shown)</button>' : '';
-    out.innerHTML = head + '<div class="ln-tablewrap"><table class="ln-table qs-table">' +
+    /* The headings are the names the filings use (ROE, PE). What each one
+       means is one tap away, in the words the server keeps for it. */
+    var legend = '<details class="qs-legend"><summary>What do these columns mean?</summary><dl>' +
+      cols.map(function (c) {
+        return '<dt>' + esc(c.label) + '</dt><dd>' + esc(c.description || '') + '</dd>';
+      }).join('') + '</dl></details>';
+    out.innerHTML = head + '<p class="qs-tip">Tap a company to see everything about it. Tap a column to sort by it.</p>' +
+      '<div class="ln-tablewrap"><table class="ln-table qs-table">' +
       '<thead><tr><th scope="col" class="qs-n">#</th>' + th + '</tr></thead><tbody>' + rows +
-      '</tbody></table></div>' + more +
+      '</tbody></table></div>' + more + legend +
       '<p class="ln-small">Figures are the latest filed, in ₹ crore where money; — means not ' +
-      'available. Click a column to sort. ' + (d.computed_utc ? 'Computed ' +
+      'available. ' + (d.computed_utc ? 'Computed ' +
         esc(new Date(d.computed_utc).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })) + '.' : '') + '</p>';
   }
 
@@ -865,6 +1267,11 @@
 
   function wire(host) {
     var t = ta();
+    // The cards are redrawn on every choice; the one just pressed keeps the keyboard.
+    function refocus(sel) {
+      var n = host.querySelector(sel);
+      if (n) try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); }
+    }
     t.addEventListener('input', openAc);
     t.addEventListener('click', closeAc);
     t.addEventListener('blur', function () { setTimeout(closeAc, 150); });
@@ -885,11 +1292,20 @@
     $('qs-bval').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); builderAdd(); }
     });
-    $('qs-run').addEventListener('click', function () { state.sort = ''; run(false); });
-    $('qs-clear').addEventListener('click', function () {
-      t.value = ''; $('qs-out').innerHTML = ''; $('qs-err').hidden = true; state.err = '';
-      $('qs-copy').hidden = true; state.data = null; writeHash(''); t.focus();
+    $('qs-run').addEventListener('click', function () { clearTimeout(runTimer); state.sort = ''; run(false); });
+    $('qs-clear').addEventListener('click', function () { clearAll(); t.focus(); });
+    $('qz-reset').addEventListener('click', function () {
+      clearAll();
+      var first = host.querySelector('.qz-recipe');
+      if (first) first.focus();
     });
+    $('qz-float').addEventListener('click', function () {
+      var chrome = document.querySelector('.sh-chrome');
+      var y = $('qz-result').getBoundingClientRect().top + window.scrollY - ((chrome && chrome.offsetHeight) || 0) - 12;
+      window.scrollTo({ top: Math.max(0, y), behavior: still() ? 'auto' : 'smooth' });
+    });
+    window.addEventListener('scroll', paintFloat, { passive: true });
+    window.addEventListener('resize', paintFloat);
     $('qs-copy').addEventListener('click', function () {
       var b = $('qs-copy');
       var done = function () { b.textContent = 'Link copied'; setTimeout(function () { b.textContent = 'Copy link'; }, 1600); };
@@ -907,7 +1323,22 @@
     host.addEventListener('click', function (e) {
       var b = e.target.closest('button');
       if (!b) return;
-      if (b.hasAttribute('data-ex')) {
+      if (b.hasAttribute('data-level')) {
+        setLevel(b.getAttribute('data-wish'), +b.getAttribute('data-level'));
+        refocus('.qz-level[data-wish="' + b.getAttribute('data-wish') + '"][data-level="' + b.getAttribute('data-level') + '"]');
+      } else if (b.hasAttribute('data-wish')) {
+        toggleWish(b.getAttribute('data-wish'));
+        refocus('.qz-wish-main[data-wish="' + b.getAttribute('data-wish') + '"]');
+      } else if (b.hasAttribute('data-recipe')) {
+        useRecipe(b.getAttribute('data-recipe'));
+        refocus('.qz-recipe[data-recipe="' + b.getAttribute('data-recipe') + '"]');
+      } else if (b.hasAttribute('data-drop')) {
+        if (b.getAttribute('data-drop') === '*') custom = [];
+        else pick = pick.filter(function (p) { return p.id !== b.getAttribute('data-drop'); });
+        chosen();
+      } else if (b.id === 'qz-retry') {
+        state.sort = ''; run(false);
+      } else if (b.hasAttribute('data-ex')) {
         var ex = meta.examples[+b.getAttribute('data-ex')];
         t.value = ex.query; state.sort = ''; run(false);
       } else if (b.hasAttribute('data-insert')) {
@@ -956,17 +1387,19 @@
     $('qs-ai-in').addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); aiSend(this.value); }
     });
-    $('qs-save').addEventListener('click', function () {
+    function openSave(under) {
       var f = $('qs-saveform');
+      if (f.parentNode !== under) under.appendChild(f);
       $('qs-savemsg').textContent = '';
+      f.hidden = false;
       if (!t.value.trim()) {
-        f.hidden = false;
         $('qs-savemsg').textContent = 'Write or pick a query first, then save it.';
         return;
       }
-      f.hidden = false;
       $('qs-savename').focus();
-    });
+    }
+    $('qs-save').addEventListener('click', function () { openSave(host.querySelector('.qs-editor')); });
+    $('qz-save').addEventListener('click', function () { openSave($('qz-result')); });
     $('qs-savecancel').addEventListener('click', function () { $('qs-saveform').hidden = true; });
     $('qs-saveform').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -1010,7 +1443,13 @@
   function start(q) {
     var t = ta();
     if (q && q !== state.q) { t.value = q; state.sort = ''; run(false); return; }
-    if (!t.value && !state.q) t.value = recall();
+    /* Back again with nothing asked for in the address: the list the reader
+       last made is put back, cards and all, instead of an empty page. */
+    if (!t.value && !state.q) {
+      var last = recall();
+      if (last) { t.value = last; state.sort = ''; run(false); }
+    }
+    paintFloat();
   }
 
   window.addEventListener('altaha:navigate', function (ev) {

@@ -6,7 +6,7 @@
    offer at once, so nothing stood out. Now there are three doors, each the
    answer to a question somebody actually arrives with, plus a Me menu:
 
-     Today      What is the market doing?          (section id: discover)
+     Market     What is happening today?           (section id: discover)
      Ideas      What should I look at?             (section id: research)
      Portfolio  How am I doing, and what next?     (section id: portfolio)
      Me         Account, settings and learning     (section id: me)
@@ -17,10 +17,15 @@
    had a tab still has one, in exactly one door.
 
    THE SECTION IDS DID NOT CHANGE
-   Today is still `discover`, Ideas is still `research` and Portfolio is
+   Market is still `discover`, Ideas is still `research` and Portfolio is
    `portfolio`, so #discover/deals, #research/query and #portfolio keep
    working, and so does every caller of AltahaNav.go() in this codebase.
    Only the labels and the tabs inside them moved.
+
+   THE FIRST DOOR IS CALLED MARKET
+   It was "Today". Market says what is behind it; the day is in its question
+   ("What is happening today?"). Its id is still `discover` and its own
+   page is still `today`, so no address changed.
 
    THE THIRD DOOR IS CALLED PORTFOLIO
    It was "My money". Portfolio is the plainer and more familiar word for
@@ -31,12 +36,12 @@
    `tabs` are the tools shown in the door's menu and its bar (shell.js) and
    on the door page. `extras` are routable but deliberately quiet: the old Stock
    analysis view, whose search box and market board the header search and
-   the Today page now cover.
+   the Market page now cover.
 
    OLD ADDRESSES STILL RESOLVE
    ALIASES maps every section id this site has ever put in a URL onto the
    door that now owns it, and a tab id always wins over the section id it
-   arrived with, so AltahaNav.go('screener', 'filings') lands on Today ›
+   arrived with, so AltahaNav.go('screener', 'filings') lands on Market ›
    Filings & news whether or not the caller knows the doors exist.
 
    shell.js renders the visible header from this map; this module owns
@@ -48,9 +53,9 @@
 
   var SECTIONS = [
     {
-      id: 'discover', label: 'Today',
-      question: 'What is the market doing?',
-      blurb: 'What is the market doing? — prices, sectors, flows, and everything that happened today',
+      id: 'discover', label: 'Market',
+      question: 'What is happening today?',
+      blurb: 'What is happening today? — prices, sectors, flows, and everything that happened today',
       icon: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
       tabs: [
         { id: 'today',    label: 'Overview',          hint: 'The market at a glance, live' },
@@ -72,12 +77,10 @@
       blurb: 'What should I look at? — the ranked universe, your own screens, and what great investors hold',
       icon: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
       tabs: [
-        { id: 'ideahub',     label: 'Overview',        hint: 'Every way to find a stock, in one place' },
-        { id: 'ideas',       label: 'Stock picks',     hint: 'Picks by holding period and by setup: breakouts, technicals, money flow' },
+        { id: 'ideahub',     label: 'Overview',        hint: 'Our stock picks, and every other way to find a stock' },
         { id: 'calls',       label: 'Call log',        hint: 'Every call, the day it was made, and what happened next' },
-        { id: 'query',       label: 'Screener',        hint: 'Filter every company by your own rules' },
-        { id: 'lenses',      label: 'Investor styles', hint: 'Stocks picked the way great investors pick them' },
-        { id: 'convergence', label: 'Convergence',     hint: 'Stocks that pass three or more investor styles' },
+        { id: 'query',       label: 'Screener',        hint: 'Tap what you want in a company and see who fits' },
+        { id: 'lenses',      label: 'Investor styles', hint: 'Stocks picked the way great investors pick them, and the ones several styles agree on' },
         { id: 'investors',   label: 'Who owns what',   hint: 'What well-known investors disclosed holding' },
         { id: 'funds',       label: 'Fund houses',     hint: 'What the mutual funds disclosed holding' },
         { id: 'charts',      label: 'Charts',          hint: 'Price charts, drawings, levels and indicators' },
@@ -85,7 +88,12 @@
         { id: 'strategies',  label: 'Strategy lab',    hint: 'Would a trading rule have beaten holding this stock?' },
         { id: 'concalls',    label: 'Concalls',        hint: 'Earnings calls summarised, key calls first' }
       ],
-      extras: []
+      /* The full pick lists. Ideas' own page leads with the same picks (the
+         top five of each list) and its "See all" opens this, so a "Stock
+         picks" entry beside "Ideas" in the menu was the same thing twice. */
+      extras: [
+        { id: 'ideas',       label: 'Stock picks',     hint: 'Picks by holding period and by setup: breakouts, technicals, money flow' }
+      ]
     },
     {
       id: 'portfolio', label: 'Portfolio',
@@ -118,6 +126,13 @@
   /* The three doors the header and the phone bar show. Me is reached from
      its own button, not as a fourth door. */
   var DOORS = ['discover', 'research', 'portfolio'];
+
+  /* A tool that became part of another tool's page. Convergence (the stocks
+     several investor styles agree on) is a section of the Investor styles
+     page now: they were two entries for one idea. Its old addresses,
+     #research/convergence and go('research', 'convergence'), open that page
+     at that section; `sub` in the navigate event says which. */
+  var MOVED = { convergence: 'lenses' };
 
   /* Every section id this site has ever put in a URL, pointed at the door
      that now owns it. A hash is a promise; breaking one silently is how a
@@ -153,7 +168,7 @@
     return n;
   }
 
-  /* The first screen is Today: the market, live, with every tool behind the
+  /* The first screen is Market: the market, live, with every tool behind the
      door one tap away. Looking up one company is the header search, which is
      on every page, so it no longer needs the landing view to itself. */
   var HOME = { section: 'discover', tab: 'today' };
@@ -295,7 +310,9 @@
        And a lone id that names a tab rather than a product is that tab:
        go('planner') and go('ideas') both predate this structure and both have
        to keep landing where they always did. */
-    var s;
+    var s, sub = null;
+    if (!tabId && MOVED[sectionId]) tabId = sectionId;
+    if (tabId && MOVED[tabId]) { sub = tabId; tabId = MOVED[tabId]; }
     if (tabId) {
       s = ownerOf(tabId) || sectionById(sectionId);
     } else {
@@ -349,11 +366,11 @@
     if (target) clickLegacy(target, 0);
 
     current = { section: s.id, tab: target };
-    paint(s, target);
-    if (userInitiated) { setHash(s.id, target); scrollToContent(); }
+    paint(s, target, sub);
+    if (userInitiated) { setHash(s.id, sub ? target + '/' + sub : target); if (!sub) scrollToContent(); }
   }
 
-  function paint(section, tabId) {
+  function paint(section, tabId, sub) {
     document.body.dataset.tab = tabId || "";
     // The landing banner belongs to the landing page. Asked for a product —
     // by a link (?go=), an address (#portfolio) or a click — the reader gets
@@ -394,7 +411,7 @@
     if (blurb) blurb.textContent = section.blurb || '';
 
     syncMobile(section.id);
-    window.dispatchEvent(new CustomEvent('altaha:navigate', { detail: { section: section.id, tab: tabId } }));
+    window.dispatchEvent(new CustomEvent('altaha:navigate', { detail: { section: section.id, tab: tabId, sub: sub || null } }));
   }
 
   function scrollToContent() {
@@ -430,9 +447,10 @@
        — the section beside it may be a name this site stopped using. Failing
        that, a bare tab id sitting in the section slot resolves to its owner. */
     if (tabId) {
-      var tabOwner = ownerOf(tabId);
+      var tabOwner = ownerOf(tabId) || ownerOf(MOVED[tabId]);
       if (tabOwner) return { section: tabOwner.id, tab: tabId };
     }
+    if (MOVED[sectionId]) return { section: ownerOf(MOVED[sectionId]).id, tab: sectionId };
     var owner = ownerOf(sectionId);
     if (owner && !rawSection(sectionId)) return { section: owner.id, tab: sectionId };
 
@@ -507,7 +525,7 @@
     /* ?go=portfolio and friends. index.html also clicks the named tab, but
        on its own timer; now that the landing view is routed rather than
        merely painted, whichever ran second used to win, and a shared link
-       could open on Today instead of the tool it named. Honouring it here
+       could open on Market instead of the tool it named. Honouring it here
        makes the answer the same every time. A tab id wins, as everywhere,
        and an explicit #hash wins over both (readHash answers HOME when
        there is no hash at all, so it is asked only when there is one). */

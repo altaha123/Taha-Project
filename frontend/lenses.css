@@ -114,8 +114,16 @@
 .ln-card.is-soon::after{ background:var(--rule) }
 .ln-card.is-soon .ln-name{ color:var(--ink-2) }
 
-.ln-conv-link a{ color:var(--gold); font-weight:500; text-decoration:none }
-.ln-conv-link a:hover{ text-decoration:underline }
+.ln-jump{ margin:10px 0 0 }
+.ln-jump a{ color:var(--gold); font-weight:500; text-decoration:none }
+.ln-jump a:hover{ text-decoration:underline }
+/* Where the lenses agree: the companies that meet several, under the cards.
+   It was a page of its own (Convergence); the rule above it and the heading
+   are what say a second part of the same page has started. */
+.ln-together{ margin:44px 0 0; padding:30px 0 0; border-top:1px solid var(--rule); scroll-margin-top:calc(var(--sh-chrome-h, 96px) + 14px) }
+.ln-together-head{ margin:0 0 18px; max-width:70ch }
+.ln-together-head h3{ margin:6px 0 8px; font:400 30px/1.12 'Instrument Serif',Georgia,serif; letter-spacing:-.005em; color:var(--ink) }
+.ln-together-head p:last-child{ margin:0; font-size:15px; line-height:1.6; color:var(--ink-2) }
 
 @keyframes lnRise{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
 

@@ -51,6 +51,15 @@ def main():
         {"q": "ROCE > 20", "sort": "roe", "order": "asc"},
         {"q": "ROEE > 15"},
         {"q": "ROE > 100"},
+        # What the finder's cards write (frontend/query.js, WISHES), alone and
+        # together, and each step on the way, which the bars ask for.
+        {"q": "ROE > 12"},
+        {"q": "ROE > 18"},
+        {"q": "ROE > 18\nDebt to equity < 0.5"},
+        {"q": "ROE > 12\nDebt to equity < 0.5"},
+        {"q": "Debt to equity < 0.5"},
+        {"q": "Debt to equity < 0.1"},
+        {"q": "Debt to equity < 0.1\nROE > 18"},
     ]
     for a in asks:
         params = {"q": a["q"], "limit": "50", "offset": "0"}
