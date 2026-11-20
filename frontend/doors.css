@@ -331,7 +331,7 @@ html[data-motion="off"] .dr *, html[data-motion="off"] .dr *::before, html[data-
 html[data-motion="off"] .dr-type { width: 33ch; border-right: 0; }
 html[data-motion="off"] .dr-sheen { display: none; }
 
-/* The landing banner gave way to Today, which is the welcome now. */
+/* The landing banner gave way to Market, which is the welcome now. */
 html.doors-on body.sh-on header.wrap { display: none !important; }
 
 /* Site-wide skins colour every <b> with the page ink; inside the dark panels
@@ -345,7 +345,7 @@ html.doors-on body.sh-on header.wrap { display: none !important; }
 .dr-played .dr-mlist li, .dr-played .dr-hlist li, .dr-played .dr-area, .dr-played .dr-dot,
 .dr-played .dr-chat .me, .dr-played .dr-chat .them { animation: none !important; }
 
-/* ── Start here (Today, until the reader hides it) ────────────────────── */
+/* ── Start here (Market, until the reader hides it) ────────────────────── */
 .dr-start { margin: 0 0 24px; padding: 22px 24px 18px; border: 1px solid var(--dr-gold); border-radius: 22px;
             background: var(--dr-card); box-shadow: 0 10px 30px rgba(107, 84, 43, .08); }
 .dr-start-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }

@@ -10,9 +10,9 @@
  * `from` state, which is opacity:0 — so with motion off the entire hero
  * rendered as blank paper.
  *
- * The opening screen is the Today door now (doors.js), and every card on it
+ * The opening screen is the Market door now (doors.js), and every card on it
  * rises in from opacity 0, so the same trap is waiting. This walks the
- * header and the Today page, multiplies opacity down the tree the way the
+ * header and the Market page, multiplies opacity down the tree the way the
  * compositor does, and fails on any element that has text and cannot be
  * seen — with motion on, off, reduced, and with every animation on the page
  * paused by a stylesheet nobody here wrote.

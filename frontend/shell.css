@@ -35,7 +35,7 @@
 
 :root{
   --sh-bar-h: 58px;
-  --sh-ribbon-h: 0px;            /* the headline ribbon is the Today page's Headlines card now */
+  --sh-ribbon-h: 0px;            /* the headline ribbon is the Market page's Headlines card now */
   --sh-ticker-h: 38px;
   --sh-doorbar-h: 0px;           /* only pages with doors (index) get the door bar */
   --sh-chrome-h: calc(var(--sh-ticker-h) + var(--sh-bar-h) + var(--sh-doorbar-h));
@@ -509,7 +509,7 @@ a.sh-item{ text-decoration:none; color:inherit }
 
 /* ════════════════════════════════════════════════════════════════════════════
    THREE DOORS — the header since the navigation was rebuilt (shell.js)
-   tape · brand, Today / Ideas / Portfolio each with its menu, search, Me ·
+   tape · brand, Market / Ideas / Portfolio each with its menu, search, Me ·
    the door bar
    ════════════════════════════════════════════════════════════════════════════ */
 
@@ -631,7 +631,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-mega-pane[hidden]{ display:none }
 
 /* The card on the left: the door's question, and the way to its own page.
-   Dark in both themes, like the market panel on Today, so the panel has one
+   Dark in both themes, like the market panel on Market, so the panel has one
    heavy thing in it and the eye knows where to start. */
 .sh-mega-lead{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; gap:9px;
   min-height:214px; padding:20px 20px 18px; border:0; border-radius:14px; background:#15120C; color:#FBF8F1;

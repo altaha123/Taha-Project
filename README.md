@@ -28,8 +28,8 @@ and its own address, in exactly one door.
 
 | Door | The question it answers | What lives behind it |
 |---|---|---|
-| **Today** (`#discover`) | *What is the market doing?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Options and the Market board |
-| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Call log, the Screener, Investor styles and Convergence, Who owns what and Fund houses, Charts, Track record, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
+| **Market** (`#discover`) | *What is happening today?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Options and the Market board |
+| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Call log, the Screener, Investor styles (with the companies several styles agree on), Who owns what and Fund houses, Charts, Track record, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
 | **Portfolio** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner (the month work becomes optional, and what moves it — see below), Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
 | **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
@@ -37,19 +37,19 @@ Each door opens on a page of its own (`frontend/doors.js`) that previews every
 tool behind it with one live number or one line, and opens the tool on a tap.
 
 **Each door has a menu.** On a screen wide enough to show the doors (above
-1040px), resting the mouse on Today, Ideas or Portfolio opens one panel with
+1040px), resting the mouse on Market, Ideas or Portfolio opens one panel with
 every tool behind that door: the door's question and a way to its own page on
-the left (Today's also shows the indices as they stand), and the tools on the
+the left (Market's also shows the indices as they stand), and the tools on the
 right in named groups — *Live market*, *Money flow* and *Company news* behind
-Today, for instance — each with an icon and its one-line hint. The tool that
+Market, for instance — each with an icon and its one-line hint. The tool that
 is open is marked. The arrow beside each door opens the same menu for a
 keyboard, a screen reader or a touch screen; the door's name still opens the
 door's page. The groups are the `groups` list and each item's `g` on the door
 map in `frontend/shell.js`.
 
-Under the header, inside a tool, one line says where you are (*Today › Big
+Under the header, inside a tool, one line says where you are (*Market › Big
 trades*, and what the tool is for) and carries the pin that puts the tool on
-the desk on Today. On a door's own page that line is not shown. It replaced a
+the desk on Market. On a door's own page that line is not shown. It replaced a
 row of pills with the rest of the tools under **More**, which readers found
 confusing.
 
@@ -63,12 +63,35 @@ from anywhere. The sheet closes on its cross, a tap or a pull on its handle,
 a tap on the page behind it, Escape, or Android's Back button. It is built
 by `sheetHTML` in `frontend/shell.js` from the same door map as the menus.
 
-The third door was called *My money* until Nov 2026. Its id was always
-`portfolio`, so no address changed.
+The first door was called *Today* and the third *My money* until Nov 2026.
+Their ids were always `discover` and `portfolio`, so no address changed.
+
+**One entry for one idea.** Two pairs in the Ideas menu were the same thing
+listed twice, and each is one entry now:
+- *Stock picks* was listed beside *Ideas*, whose own page leads with those
+  picks. The full lists are still at `#research/ideas`, reached from the Ideas
+  page's "See all" and from search; they are no longer a menu entry.
+- *Convergence* (the companies several investor styles agree on) was listed
+  beside *Investor styles*. It is a section of that page now, under the
+  cards, at `#research/lenses/convergence`. The old `#research/convergence`
+  addresses open the page at that section (`MOVED` in `frontend/nav.js`).
+
+**The screener asks for no typing.** It opens on ten cards for things a
+person might want from a company — *Makes good money*, *Owes little*, *Not
+too pricey* — and six ready-made ideas that switch a few of them on. Tapping
+a card runs it: the count, a bar for each choice showing how it narrowed the
+list, and the table, with no button to press. Each card has up to three
+settings, explained in rupees on a hundred. The editor it used to open on
+(field, comparison, value and a text box) is folded underneath as *Write
+your own rules*, and the two are one query: a choice writes its lines into
+the editor, and a query typed or opened from a link lights the cards it is
+made of. The cards are `WISHES` in `frontend/query.js`, and
+`backend/tests/test_query_wishes.py` puts every line they can write through
+the server's parser.
 
 **Built for the first visit.** People who were sent the site found it too
 complex to find their way around, so three things changed (Nov 2026):
-- Today opens with a *Start here* strip (`startHTML` in `doors.js`): one
+- Market opens with a *Start here* strip (`startHTML` in `doors.js`): one
   sentence on what the site does and three tasks: check a stock, get stock
   picks, check my portfolio. It stays hidden once the reader hides it.
 - Ideas opens on the picks. It used to open on a picture of a planet.
@@ -78,7 +101,7 @@ complex to find their way around, so three things changed (Nov 2026):
 - A stock page shows its Altaha Score under the name; it used to be behind
   the Scores tab. The chip opens that section. One search box finds companies, tools and actions alike — "bulk"
 finds Big trades, "pledge" finds the Screener — and opens with Ctrl+K or `/`.
-On a phone the bottom bar is Today · Ideas · Search · Portfolio · Me.
+On a phone the bottom bar is Market · Ideas · Search · Portfolio · Me.
 
 `frontend/nav.js` holds the map and owns routing; `frontend/shell.js` renders
 the header, the door menus, the door bar, search and Me from the same map. The section ids did
@@ -726,7 +749,7 @@ stop-loss or recommendation is withheld, not shown with a warning.
 
 ### Alerts on Telegram — intraday breakouts, up and down
 
-The **Alerts** page (Today → Alerts) and your Telegram get one kind of alert: a
+The **Alerts** page (Market → Alerts) and your Telegram get one kind of alert: a
 liquid stock breaking a level *now*, as a day trade — entry, stop, half-off
 point and target. Code: `backend/breakouts.py` (the rules) and
 `backend/intraday.py` (the loop, the log and the record).

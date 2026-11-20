@@ -7,7 +7,7 @@
    shows up in a syntax check.
 
    What this asserts:
-     · the site opens on Today, and the doors are exactly Today, Ideas and
+     · the site opens on Market, and the doors are exactly Market, Ideas and
        Portfolio, with Me beside them; header and phone bar agree
      · each door's menu opens on a hover, on its arrow and from the keyboard,
        lists every tool behind the door in its groups, and gets out of the way
@@ -49,7 +49,7 @@ const server = http.createServer((req, res) => {
   } catch (_) { res.writeHead(404).end(); }
 });
 
-const DOORS = ['Today', 'Ideas', 'Portfolio'];
+const DOORS = ['Market', 'Ideas', 'Portfolio'];
 
 (async () => {
   await new Promise(resolve => server.listen(8768, '127.0.0.1', resolve));
@@ -104,15 +104,15 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   }
   const menuTabs = sec => page.locator(`#sh-mega-${sec} .sh-item`).evaluateAll(ns => ns.map(n => n.dataset.tab || n.getAttribute('href')));
 
-  /* ── 0 · The site opens on Today, not on a banner ──────────────────────── */
+  /* ── 0 · The site opens on Market, not on a banner ──────────────────────── */
 
   await page.locator('#view-today .dr-title').waitFor();
-  assert.equal((await page.locator('#view-today .dr-title').innerText()).trim(), 'Today');
+  assert.equal((await page.locator('#view-today .dr-title').innerText()).trim(), 'Market');
   assert.equal(await page.locator('header.wrap').isVisible(), false, 'the old landing banner is gone');
   /* ?go= opens the tool it names, every time. index.html clicks the named tab
      on a timer of its own and the router opens the landing view as it
      starts; when the router came second, a shared ?go=portfolio link opened
-     on Today instead (it failed CI that way, not locally). The router is
+     on Market instead (it failed CI that way, not locally). The router is
      slowed down here so it always comes second. */
   await page.route('**/nav.js*', async r => { await new Promise(res => setTimeout(res, 600)); await r.continue(); });
   for (const [go, view] of [['portfolio', 'view-portfolio'], ['discover', 'view-today'],
@@ -133,7 +133,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
     id: s.id, label: s.label, question: s.question,
     tabs: s.tabs.map(t => t.id), extras: (s.extras || []).map(t => t.id)
   })));
-  assert.deepEqual(sections.map(s => s.label), DOORS.concat(['Me']), 'the doors are not Today, Ideas, Portfolio and Me');
+  assert.deepEqual(sections.map(s => s.label), DOORS.concat(['Me']), 'the doors are not Market, Ideas, Portfolio and Me');
   assert.deepEqual(await page.evaluate(() => window.AltahaNav.doors), ['discover', 'research', 'portfolio']);
   sections.slice(0, 3).forEach(s => assert.ok(s.question && s.question.endsWith('?'),
     `${s.label} does not state the question it answers`));
@@ -142,15 +142,15 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   assert.deepEqual(await page.locator('.sh-door').allInnerTexts().then(x => x.map(t => t.trim())),
                    DOORS, 'the header does not show the three doors');
   assert.deepEqual(await page.locator('.ux-bottom button').evaluateAll(ns => ns.map(n => n.getAttribute('aria-label'))),
-                   ['Today', 'Ideas', 'Search', 'Portfolio', 'Me'], 'the phone bar does not match the doors');
-  // Today is lit in the header. On a door's own page there is no bar under
+                   ['Market', 'Ideas', 'Search', 'Portfolio', 'Me'], 'the phone bar does not match the doors');
+  // Market is lit in the header. On a door's own page there is no bar under
   // the header: it would only repeat the page's heading.
   await page.waitForFunction(() => document.querySelector('.sh-door.on'));
-  assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Today');
+  assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Market');
   assert.equal(await page.locator('#sh-doorbar').isVisible(), false, 'the bar under the header is shown on a door’s own page');
 
   /* ── 1b · Built for the first visit ──────────────────────────────────────
-     People who were sent the site found it too complex to navigate. Today
+     People who were sent the site found it too complex to navigate. Market
      now says what the site does and offers three tasks; the door bar shows
      a short row with the rest under More. */
 
@@ -170,15 +170,15 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   assert.equal(await page.locator('#sh-mega-discover').isVisible(), false);
   await openMenu('discover');
   assert.deepEqual(await page.locator('#sh-mega-discover .sh-mega-col h4').allInnerTexts().then(t => t.map(x => x.trim().toLowerCase())),
-                   ['live market', 'money flow', 'company news'], 'Today’s menu groups changed');
+                   ['live market', 'money flow', 'company news'], 'Market’s menu groups changed');
   assert.deepEqual(await menuTabs('discover'), ['live', 'options', 'deals', 'special', 'wow', 'results', 'filings'],
-                   'Today’s menu does not list every tool behind the door');
+                   'Market’s menu does not list every tool behind the door');
   assert.match(await page.locator('#sh-mega-discover .sh-item[data-tab="options"]').innerText(), /open interest/i,
                'a tool in the menu lost its hint');
   // The card on the left: the door's question, the market as it stands, and
   // nothing to open, because this is already the door's page.
   const lead = page.locator('#sh-mega-discover .sh-mega-lead');
-  assert.match(await lead.innerText(), /What is the market doing\?/);
+  assert.match(await lead.innerText(), /What is happening today\?/);
   await page.locator('#sh-mega-live .sh-mega-ix').first().waitFor({ state: 'visible' });
   assert.match(await page.locator('#sh-mega-live').innerText(), /NIFTY 50\s+25,150\.75\s+\+1\.25%/);
   assert.equal(await lead.getAttribute('aria-current'), 'page');
@@ -192,7 +192,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   await page.locator('#sh-mega-research').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#sh-mega-discover').isVisible(), false, 'two menus are open at once');
   assert.deepEqual(await menuTabs('research'),
-                   ['ideas', 'query', 'lenses', 'convergence', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls', 'tracker']);
+                   ['query', 'lenses', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls', 'tracker']);
   assert.match(await page.locator('#sh-mega-research .sh-mega-lead').innerText(), /Open Ideas/);
   await page.screenshot({ path: path.join(output, '1280-menu-ideas.png') });
   await page.locator('.sh-doorwrap[data-sec="portfolio"]').hover();
@@ -219,7 +219,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   await page.locator('#sh-mega-research').waitFor({ state: 'visible' });
   assert.ok(await page.evaluate(() => document.activeElement.classList.contains('sh-mega-lead')), 'the keyboard did not land in the menu');
   await page.keyboard.press('ArrowDown');
-  assert.equal(await page.evaluate(() => document.activeElement.dataset.tab), 'ideas');
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.tab), 'query');
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#sh-megawrap.open').count(), 0);
   assert.ok(await page.evaluate(() => document.activeElement.matches('.sh-doorcv[data-sec="research"]')),
@@ -260,7 +260,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   const where = page.locator('#sh-where');
   await where.waitFor({ state: 'visible' });
   assert.equal(await page.locator('.sh-doorwrap').first().isVisible(), false);
-  assert.equal((await where.locator('.sh-where-door').innerText()).trim(), 'Today');
+  assert.equal((await where.locator('.sh-where-door').innerText()).trim(), 'Market');
   assert.equal((await where.locator('.sh-where-here').innerText()).trim(), 'Overview');
   assert.equal(await page.locator('#sh-doorbar .sh-crumb').count(), 0, 'the wide screen’s line is on a narrow one');
   const sheet = page.locator('#sh-sheet');
@@ -271,7 +271,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   assert.equal(await where.getAttribute('aria-expanded'), 'true');
   assert.deepEqual(await sheet.locator('.sh-sheet-tab').allInnerTexts().then(t => t.map(x => x.trim())), DOORS,
                    'the sheet does not carry the three doors');
-  assert.deepEqual(await sheet.locator('.sh-sheet-tab[aria-selected="true"]').allInnerTexts().then(t => t.map(x => x.trim())), ['Today'],
+  assert.deepEqual(await sheet.locator('.sh-sheet-tab[aria-selected="true"]').allInnerTexts().then(t => t.map(x => x.trim())), ['Market'],
                    'the sheet did not open on the door the reader is in');
   // The same tools, in the same order and groups, as the menu on a wide screen.
   assert.deepEqual(await sheetTabs('discover'), ['live', 'options', 'deals', 'special', 'wow', 'results', 'filings']);
@@ -279,7 +279,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
                    ['live market', 'money flow', 'company news']);
   assert.match(await page.locator('#sh-sheet-discover .sh-item[data-tab="options"]').innerText(), /open interest/i,
                'a tool in the sheet lost its hint');
-  assert.match(await page.locator('#sh-sheet-discover .sh-sheet-lead').innerText(), /What is the market doing\?/);
+  assert.match(await page.locator('#sh-sheet-discover .sh-sheet-lead').innerText(), /What is happening today\?/);
   assert.equal(await page.locator('#sh-sheet-discover .sh-sheet-lead').getAttribute('aria-current'), 'page');
   // It fits the screen it is on, and leaves the top of the page showing behind it.
   await page.waitForFunction(() => Math.round(document.getElementById('sh-sheet').getBoundingClientRect().bottom) === innerHeight,
@@ -292,7 +292,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   await page.locator('#sh-sheet-research').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#sh-sheet-discover').isVisible(), false, 'two doors are showing at once');
   assert.deepEqual(await sheetTabs('research'),
-                   ['ideas', 'query', 'lenses', 'convergence', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls', 'tracker']);
+                   ['query', 'lenses', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls', 'tracker']);
   await sheet.locator('.sh-sheet-tab[data-sec="research"]').press('ArrowRight');
   await page.locator('#sh-sheet-portfolio').waitFor({ state: 'visible' });
   assert.deepEqual(await sheetTabs('portfolio'), ['portfolio', 'watchlists', 'allocate', 'planner', 'advisors.html', 'wealth.html']);
@@ -388,7 +388,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   ['ideas', 'screener', 'charts', 'results', 'investors', 'funds', 'filings', 'concalls',
    'social', 'vocab', 'tracker', 'portfolio', 'planner', 'live', 'deals', 'special',
    'wow', 'options', 'allocate', 'score', 'query', 'lenses',
-   'convergence', 'today', 'ideahub', 'money', 'strategies'].forEach(t => {
+   'today', 'ideahub', 'money', 'strategies'].forEach(t => {
     assert.ok(owners[t], `${t} lost its home in the restructure`);
   });
 
@@ -398,11 +398,11 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   assert.equal(sections[1].tabs[0], 'ideahub');
   assert.equal(sections[2].tabs[0], 'money');
   ['live', 'deals', 'wow', 'special', 'results', 'filings', 'options', 'screener'].forEach(t =>
-    assert.equal(owners[t], 'discover', `${t} belongs behind Today`));
-  ['ideas', 'query', 'lenses', 'convergence', 'investors', 'funds', 'charts', 'tracker', 'strategies', 'concalls'].forEach(t =>
+    assert.equal(owners[t], 'discover', `${t} belongs behind Market`));
+  ['ideas', 'query', 'lenses', 'investors', 'funds', 'charts', 'tracker', 'strategies', 'concalls'].forEach(t =>
     assert.equal(owners[t], 'research', `${t} belongs behind Ideas`));
   ['portfolio', 'allocate', 'planner'].forEach(t => assert.equal(owners[t], 'portfolio', `${t} belongs behind Portfolio`));
-  /* Setups ("Opportunities now") was removed as a tool: Today's own page
+  /* Setups ("Opportunities now") was removed as a tool: Market's own page
      shows what it showed. It must be gone from the map, not merely hidden. */
   assert.equal(owners.discover, undefined, 'the removed Setups tool is still on the map');
   // Factors went the same way.
@@ -516,7 +516,7 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   await shows('#discover/today', 'view-today');
   await shows('#today', 'view-today');
   // Addresses that used to open the removed Setups hub. A link somebody
-  // saved or shared has to land on Today, not on a blank page.
+  // saved or shared has to land on Market, not on a blank page.
   await shows('#discover', 'view-today');
   await shows('#discover/discover', 'view-today');
   // And the removed Factors page: its old addresses open Ideas.
@@ -547,9 +547,9 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   await page.locator('#view-today .dr-hero').waitFor({ state: 'visible' });
   assert.match(await page.locator('#view-today .dr-hero').innerText(), /NIFTY 50/);
   assert.match(await page.locator('#drt-level').innerText(), /25,150\.75/);
-  assert.equal(await page.locator('#view-today .dr-tool').count(), 7, 'Today’s tool cards changed');
+  assert.equal(await page.locator('#view-today .dr-tool').count(), 7, 'Market’s tool cards changed');
   assert.equal(await page.locator('#view-today .dr-tool', { hasText: 'Setups' }).count(), 0,
-               'the removed Setups tool still has a card on Today');
+               'the removed Setups tool still has a card on Market');
   // A card is a door to its tool.
   await page.locator('#view-today .dr-tool[data-goto="discover/live"]').click();
   await page.locator('#view-live').waitFor({ state: 'visible' });
@@ -561,14 +561,14 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   assert.match(page.url(), /#portfolio\/money$/);
 
   /* The Setups hub is gone. Asking for it by its old name — a button somebody
-     still has, a pinned tool from before — opens Today and lights Today's own
+     still has, a pinned tool from before — opens Market and lights Market's own
      pill, rather than opening nothing or throwing. */
   await page.evaluate(() => localStorage.setItem('altaha-pins-v1', JSON.stringify(['discover', 'deals'])));
   await page.evaluate(() => window.AltahaNav.go('discover', 'discover', true));
   await page.locator('#view-today .dr-hero').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#view-discover').count(), 0, 'the removed Setups page is still in the document');
   assert.deepEqual(await page.locator('#sh-mega [aria-current="page"]').evaluateAll(ns => ns.map(n => n.dataset.sec + '/' + (n.dataset.tab || ''))),
-                   ['discover/'], 'Today’s own page is not the one marked open');
+                   ['discover/'], 'Market’s own page is not the one marked open');
   assert.equal(await page.locator('#sh-doorbar').isVisible(), false);
   assert.match(page.url(), /#discover\/today$/);
   assert.doesNotMatch(await page.locator('#view-today').innerText(), /\bSetups\b|Opportunities now/);
@@ -624,11 +624,11 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   await page.locator('#view-query').waitFor({ state: 'visible' });
   assert.equal((await page.locator('#sh-doorbar .sh-crumb-here').innerText()).trim(), 'Screener');
   assert.equal((await page.locator('.sh-door.on').innerText()).trim(), 'Ideas');
-  // Pin it, and it waits on Today's desk.
+  // Pin it, and it waits on Market's desk.
   await page.locator('#sh-pin').click();
   assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('altaha-pins-v1'))), ['query']);
   assert.equal(await page.locator('#sh-pin').getAttribute('aria-pressed'), 'true');
-  await page.locator('.sh-door', { hasText: /^Today$/ }).click();
+  await page.locator('.sh-door', { hasText: /^Market$/ }).click();
   await page.locator('#dr-desk-pins .dr-pinchip[data-goto="research/query"]').waitFor({ state: 'visible' });
 
   // Search finds a tool by the word people use for it, and Enter opens it.

@@ -221,7 +221,7 @@
      and behind Portfolio; the Watchlist button below stays in the Me menu on a
      desktop, where it always was. */
   const DOORS = [
-    ['discover',  'Today',    '<path d="M3 12h4l3-8 4 16 3-8h4"/>'],
+    ['discover',  'Market',   '<path d="M3 12h4l3-8 4 16 3-8h4"/>'],
     ['research',  'Ideas',    '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>'],
     ['portfolio', 'Portfolio', '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>']
   ];

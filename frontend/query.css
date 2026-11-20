@@ -283,3 +283,157 @@
   .qs-ai-keyrow, .qs-ai-ask{ flex-wrap:wrap }
   .qs-ai-keyrow .qs-btn, .qs-ai-ask .qs-btn{ flex:1 1 100% }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE FINDER — the screener a reader sees first (query.js)
+   Three numbered steps down the page: a ready-made idea, the things you can
+   ask for, and who fits. Everything is a card to tap; nothing is a field to
+   fill in. Each card carries its own tint (--tint, an r,g,b triple) so the
+   ten of them are told apart at a glance, and the same tint follows a choice
+   into its bar in step 3.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.qz{ position:relative; margin:22px 0 0 }
+.qz-step{ margin:0 0 30px }
+.qz-h{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin:0 0 14px;
+  font:400 24px/1.2 'Instrument Serif',Georgia,serif; letter-spacing:-.005em; color:var(--ink) }
+.qz-h small{ font:400 13.5px/1.3 Inter,system-ui,sans-serif; letter-spacing:0; color:var(--mute) }
+.qz-num{ flex:none; display:grid; place-items:center; width:30px; height:30px; border-radius:50%;
+  background:var(--ink); color:var(--paper); font:600 14px/1 Inter,system-ui,sans-serif }
+
+.qz-emoji{ flex:none; display:grid; place-items:center; width:46px; height:46px; border-radius:14px;
+  background:rgba(var(--tint, 176,141,46), .14); font-size:23px; line-height:1;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1), background-color .2s ease }
+
+/* Step 1 · ready-made ideas: one row that scrolls on a phone. */
+.qz-recipes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(232px, 1fr)); gap:10px }
+.qz-recipe{ display:flex; align-items:center; gap:12px; min-height:68px; padding:10px 14px 10px 10px; text-align:left; cursor:pointer;
+  border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFDF8); color:var(--ink);
+  font:inherit; -webkit-tap-highlight-color:transparent;
+  transition:border-color .2s ease, transform .2s ease, box-shadow .25s ease, background-color .2s ease }
+.qz-recipe:hover{ border-color:var(--gold); transform:translateY(-2px); box-shadow:0 10px 24px rgba(23,20,14,.09) }
+.qz-recipe:hover .qz-emoji, .qz-wish-main:hover .qz-emoji{ transform:scale(1.1) rotate(-6deg) }
+.qz-recipe:active, .qz-wish-main:active{ transform:scale(.985) }
+.qz-recipe.on{ border-color:var(--gold); background:color-mix(in srgb, var(--gold) 11%, var(--skin-card,#FFFDF8));
+  box-shadow:inset 0 0 0 1px var(--gold) }
+.qz-recipe-t, .qz-wish-t{ display:block; min-width:0 }
+.qz-recipe-t b, .qz-wish-t b{ display:block; font:600 15px/1.25 Inter,system-ui,sans-serif; color:var(--ink) }
+.qz-recipe-t span, .qz-wish-t span{ display:block; margin-top:3px; font:400 13px/1.35 Inter,system-ui,sans-serif; color:var(--ink-2) }
+
+/* Step 2 · the things to ask for. */
+.qz-wishes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:10px; align-items:start }
+.qz-wish{ border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFDF8);
+  transition:border-color .2s ease, box-shadow .25s ease, background-color .25s ease }
+.qz-wish:hover{ border-color:rgba(var(--tint), .7); box-shadow:0 10px 24px rgba(23,20,14,.08) }
+.qz-wish.on{ border-color:rgb(var(--tint)); background:color-mix(in srgb, rgb(var(--tint)) 7%, var(--skin-card,#FFFDF8));
+  box-shadow:inset 0 0 0 1px rgb(var(--tint)) }
+.qz-wish-main{ display:flex; align-items:center; gap:12px; width:100%; min-height:68px; padding:10px 12px 10px 10px; text-align:left;
+  border:0; border-radius:18px; background:none; color:var(--ink); font:inherit; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; transition:transform .15s ease }
+.qz-wish-t{ flex:1 1 auto }
+/* The tick: an empty ring until the card is chosen, so "this can be switched on" is visible before it is. */
+.qz-tick{ flex:none; display:grid; place-items:center; width:26px; height:26px; border-radius:50%;
+  border:2px solid var(--rule); color:transparent; transition:background-color .2s ease, border-color .2s ease, transform .3s cubic-bezier(.2,1.4,.4,1) }
+.qz-wish.on .qz-tick{ border-color:rgb(var(--tint)); background:rgb(var(--tint)); color:#fff; transform:scale(1.08) }
+.qz-wish.on .qz-emoji{ background:rgba(var(--tint), .22) }
+.qz-more{ padding:0 12px 12px; animation:qzOpen .28s cubic-bezier(.2,.8,.2,1) }
+@keyframes qzOpen{ from{ opacity:0; transform:translateY(-6px) } to{ opacity:1; transform:none } }
+.qz-levels{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:4px; padding:4px; border-radius:13px;
+  background:color-mix(in srgb, rgb(var(--tint)) 10%, var(--paper-2)) }
+.qz-level{ min-height:36px; padding:0 6px; border:0; border-radius:10px; background:none; color:var(--ink-2); cursor:pointer;
+  font:500 13.5px/1.1 Inter,system-ui,sans-serif; -webkit-tap-highlight-color:transparent;
+  transition:background-color .2s ease, color .2s ease }
+.qz-level:hover{ color:var(--ink) }
+.qz-level.on{ background:rgb(var(--tint)); color:#fff; font-weight:600; box-shadow:0 2px 8px rgba(var(--tint), .35) }
+.qz-note{ margin:10px 2px 0; font:400 13px/1.5 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qz-numtag{ display:table; margin-top:8px; padding:3px 8px; border-radius:7px; background:var(--paper-2);
+  font:500 11.5px/1.3 'IBM Plex Mono',ui-monospace,monospace; color:var(--mute); white-space:nowrap }
+.qz-recipe:focus-visible, .qz-wish-main:focus-visible, .qz-level:focus-visible, .qz-bar-x:focus-visible, .qz-float:focus-visible{
+  outline:2px solid var(--gold); outline-offset:2px; box-shadow:none }
+.qz-wish-main:focus-visible{ border-radius:18px }
+
+/* Step 3 · who fits: the count, then a bar for each choice in turn. */
+.qz-board{ border:1px solid var(--rule); border-radius:20px; background:var(--skin-card,#FFFDF8); padding:20px 22px; transition:opacity .2s ease }
+.qz-board.is-counting{ opacity:.55 }
+.qz-board.is-empty, .qz-board.is-down{ border-style:dashed; background:none }
+.qz-wait{ margin:6px 0; font:400 15px/1.55 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qz-wait .qs-btn{ margin-left:8px; min-height:34px }
+.qz-count{ display:flex; align-items:center; gap:16px; margin:0 0 16px }
+.qz-count b{ font:400 clamp(46px, 7vw, 68px)/1 'Instrument Serif',Georgia,serif; letter-spacing:-.01em; color:var(--ink);
+  font-variant-numeric:tabular-nums }
+.qz-board.is-none .qz-count b{ color:var(--mute) }
+.qz-count span{ font:600 17px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
+.qz-count small{ display:block; margin-top:3px; font:400 13.5px/1.4 Inter,system-ui,sans-serif; color:var(--mute) }
+.qz-funnel{ list-style:none; margin:0; padding:0; display:grid; gap:8px }
+.qz-bar{ display:grid; grid-template-columns:minmax(120px, 250px) minmax(40px, 1fr) minmax(46px, auto) 26px; align-items:center; gap:12px }
+.qz-bar-l{ display:flex; align-items:center; gap:8px; min-width:0; font:400 14px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
+.qz-bar-l b{ font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.qz-bar-l i{ flex:none; font-style:normal; font-size:12px; color:var(--mute); white-space:nowrap }
+.qz-bar.is-all .qz-bar-l b{ color:var(--ink-2); font-weight:400 }
+.qz-bar-track{ height:14px; border-radius:7px; background:var(--paper-2); overflow:hidden }
+.qz-bar-fill{ display:block; height:100%; border-radius:7px; background:rgba(var(--tint, 139,132,119), .55);
+  transition:width .6s cubic-bezier(.2,.8,.2,1) }
+.qz-bar.is-all .qz-bar-fill{ background:var(--rule) }
+.qz-bar.is-last .qz-bar-fill{ background:linear-gradient(90deg, var(--gold-dp), var(--gold-lt)) }
+.qz-bar-n{ text-align:right; font:500 13.5px/1 'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--ink-2) }
+.qz-bar.is-last .qz-bar-n{ color:var(--ink); font-weight:600 }
+.qz-bar-x{ display:grid; place-items:center; width:26px; height:26px; padding:0; border:0; border-radius:50%; background:none;
+  color:var(--mute); font:400 18px/1 Inter,system-ui,sans-serif }
+button.qz-bar-x{ cursor:pointer }
+button.qz-bar-x:hover{ background:var(--paper-2); color:var(--ink) }
+.qz-unk{ margin:14px 0 0; font:400 13px/1.5 Inter,system-ui,sans-serif; color:var(--mute) }
+.qz-acts{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px }
+.qz-acts[hidden]{ display:none }
+.qz .qs-saveform{ margin-top:12px }
+
+/* The count that follows the reader down the page while they choose. */
+.qz-float{ position:sticky; bottom:18px; z-index:30; display:flex; align-items:center; gap:10px; margin:0 auto; padding:0 18px 0 20px;
+  min-height:48px; border:0; border-radius:24px; background:var(--ink); color:var(--paper); cursor:pointer;
+  font:400 14.5px/1 Inter,system-ui,sans-serif; box-shadow:0 12px 30px rgba(23,20,14,.28); animation:qzFloat .3s cubic-bezier(.2,.8,.2,1) }
+.qz-float[hidden]{ display:none }
+.qz-float b{ font:600 16px/1 Inter,system-ui,sans-serif }
+.qz-float span{ margin-left:6px; padding-left:12px; border-left:1px solid color-mix(in srgb, var(--paper) 30%, transparent); color:var(--gold-lt); font-weight:600 }
+@keyframes qzFloat{ from{ opacity:0; transform:translateY(12px) } to{ opacity:1; transform:none } }
+
+/* Results: a line of help above the table, the columns explained under it. */
+.qs-tip{ margin:2px 0 10px; font:400 13.5px/1.5 Inter,system-ui,sans-serif; color:var(--mute) }
+.qs-legend{ margin:12px 0 4px; border:1px solid var(--rule-2); border-radius:14px; padding:0 14px; background:var(--skin-card,#FFFDF8) }
+.qs-legend summary{ padding:12px 0; cursor:pointer; font:500 14px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
+.qs-legend dl{ display:grid; grid-template-columns:minmax(110px, max-content) 1fr; gap:8px 16px; margin:0 0 14px }
+.qs-legend dt{ font:600 12.5px/1.5 'IBM Plex Mono',ui-monospace,monospace; color:var(--ink) }
+.qs-legend dd{ margin:0; font:400 13.5px/1.5 Inter,system-ui,sans-serif; color:var(--ink-2) }
+
+/* The editor, folded under the finder for a reader who knows the number they want. */
+.qs-adv{ margin:34px 0 0; border-top:1px solid var(--rule) }
+.qs-adv > summary{ display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:18px 0 16px; cursor:pointer; list-style:none }
+.qs-adv > summary::-webkit-details-marker{ display:none }
+.qs-adv > summary::before{ content:'+'; flex:none; display:inline-grid; place-items:center; width:26px; height:26px; border-radius:50%;
+  border:1px solid var(--rule); font:400 17px/1 Inter,system-ui,sans-serif; color:var(--ink-2); align-self:center }
+.qs-adv[open] > summary::before{ content:'\2212' }
+.qs-adv-t{ font:400 22px/1.2 'Instrument Serif',Georgia,serif; color:var(--ink) }
+.qs-adv-s{ font:400 13.5px/1.3 Inter,system-ui,sans-serif; color:var(--mute) }
+.qs-adv > summary:focus-visible{ outline:2px solid var(--gold); outline-offset:4px; border-radius:8px }
+
+@media (max-width:720px){
+  .qz-h{ font-size:21px }
+  .qz-recipes{ grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(220px, 72%); overflow-x:auto;
+    margin:0 -16px; padding:2px 16px 8px; scroll-snap-type:x proximity; scrollbar-width:none }
+  .qz-recipes::-webkit-scrollbar{ display:none }
+  .qz-recipe{ scroll-snap-align:start }
+  .qz-wishes{ grid-template-columns:1fr }
+  .qz-board{ padding:16px 14px }
+  .qz-bar{ grid-template-columns:minmax(0, 1fr) minmax(46px, auto) 26px; gap:4px 8px }
+  .qz-bar-track{ grid-column:1 / -1; grid-row:2; height:10px }
+  .qz-float{ bottom:calc(88px + env(safe-area-inset-bottom)) }
+  .qs-legend dl{ grid-template-columns:1fr; gap:2px 0 }
+  .qs-legend dd{ margin-bottom:8px }
+}
+@media (prefers-reduced-motion: reduce){
+  .qz-emoji, .qz-recipe, .qz-wish, .qz-wish-main, .qz-tick, .qz-level, .qz-bar-fill, .qz-board{ transition:none }
+  .qz-more, .qz-float{ animation:none }
+  .qz-recipe:hover, .qz-recipe:hover .qz-emoji, .qz-wish-main:hover .qz-emoji{ transform:none }
+}
+html[data-motion="off"] .qz-emoji, html[data-motion="off"] .qz-recipe, html[data-motion="off"] .qz-wish, html[data-motion="off"] .qz-wish-main,
+html[data-motion="off"] .qz-tick, html[data-motion="off"] .qz-level, html[data-motion="off"] .qz-bar-fill, html[data-motion="off"] .qz-board{ transition:none }
+html[data-motion="off"] .qz-more, html[data-motion="off"] .qz-float{ animation:none }
+html[data-motion="off"] .qz-recipe:hover, html[data-motion="off"] .qz-recipe:hover .qz-emoji, html[data-motion="off"] .qz-wish-main:hover .qz-emoji{ transform:none }

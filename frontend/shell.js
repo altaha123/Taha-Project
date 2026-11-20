@@ -132,7 +132,7 @@
      ON A NARROW ONE, THE SAME MENU AS A SHEET
      Below 1040px there are no doors in the header and nothing to hover. The
      bar under the header is one button that says where the reader is
-     ("Today › Big trades") and opens a sheet from the bottom of the screen
+     ("Market › Big trades") and opens a sheet from the bottom of the screen
      with the same groups, icons and hints, and the three doors across its
      top so any tool is two taps from anywhere. It replaced a row of pills
      that scrolled sideways and kept the rest under "More", which is what
@@ -141,7 +141,7 @@
 
   var DOORS = [
     {
-      id: 'discover', label: 'Today', question: 'What is the market doing?',
+      id: 'discover', label: 'Market', question: 'What is happening today?',
       lead: 'Prices, sectors, flows and everything that happened today.',
       mark: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
       groups: [
@@ -163,7 +163,7 @@
     },
     {
       id: 'research', label: 'Ideas', question: 'What should I look at?',
-      lead: 'The ranked universe, your own screens, and what great investors hold.',
+      lead: 'Our stock picks first, then every other way to find a stock.',
       mark: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
       groups: [
         { id: 'find', title: 'Find stocks' },
@@ -172,13 +172,18 @@
         { id: 'proof', title: 'Our record', stack: true }
       ],
       items: [
-        { tab: 'ideahub', label: 'Overview', icon: 'bulb', hint: 'Every way to find a stock, in one place', kw: 'ideas find discover' },
-        { tab: 'ideas', g: 'find', label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow',
-          tip: 'Ranked picks, by holding period and by setup', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
+        { tab: 'ideahub', label: 'Overview', icon: 'bulb', hint: 'Our stock picks, and every other way to find a stock', kw: 'ideas find discover picks' },
+        /* quiet: the full pick lists are what Ideas' own page leads with and
+           its "See all" opens, so listing them beside it in the menu was the
+           same thing twice. Search still finds them by name. */
+        { tab: 'ideas', quiet: true, label: 'Stock picks', icon: 'bulb', hint: 'Picks by holding period and by setup: breakouts, technicals, money flow', kw: 'picks week month momentum long term buy best top universe scan ranked planets' },
         { tab: 'calls', g: 'proof', label: 'Call log', icon: 'ledger', hint: 'Every call, the day it was made, and what happened next', kw: 'calls log history dated when called buy zone stop target' },
-        { tab: 'query', g: 'find', label: 'Screener', icon: 'funnel', hint: 'Filter every company by your own rules', kw: 'query filter screen roe roce pe debt pledge promoter' },
-        { tab: 'lenses', g: 'find', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them', kw: 'lenses philosophy coffee can moat qglp' },
-        { tab: 'convergence', g: 'find', label: 'Convergence', icon: 'converge', hint: 'Stocks that pass three or more investor styles', kw: 'convergence lenses' },
+        { tab: 'query', g: 'find', label: 'Screener', icon: 'funnel', hint: 'Tap what you want in a company and see who fits', kw: 'query filter screen screener finder roe roce pe debt pledge promoter dividend growth cheap' },
+        /* One entry for the styles and for the stocks several of them agree
+           on: "Convergence" was a second door into the same idea, and is a
+           section of this page now (lenses.js). */
+        { tab: 'lenses', g: 'find', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them, and the ones several styles agree on',
+          tip: 'How great investors pick, and where they agree', kw: 'lenses philosophy coffee can moat qglp convergence agree several styles' },
         { tab: 'investors', g: 'own', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
         { tab: 'funds', g: 'own', label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
         { tab: 'charts', g: 'dig', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
@@ -263,7 +268,7 @@
        2  the bar          brand · three doors, each with its menu · search · Me
        3  the door bar     where you are (index only; the tools themselves on a phone)
      The headline ribbon that used to sit above the tape now lives on the
-     Today page as its Headlines card, and the row of Watchlist, Advisors,
+     Market page as its Headlines card, and the row of Watchlist, Advisors,
      Pro, Sign in and theme buttons is the Me menu. */
 
   var CHROME = null;
@@ -599,7 +604,7 @@
   }
 
   /* Under the doors, but never off the right-hand edge: on a laptop the panel
-     is wider than the room to the right of "Today", so it slides left to fit
+     is wider than the room to the right of "Market", so it slides left to fit
      and the notch on its top edge is what still points at the door. */
   function placeMega() {
     var mega = document.getElementById('sh-mega');
@@ -1068,7 +1073,7 @@
     var sec = esc(door ? door.id : 'me');
     function isOpen(it) { return !!(it.tab && it.tab === activeTab); }
     var pinHTML = pinnable ? '<button type="button" class="sh-pin' + (pinned.indexOf(activeTab) > -1 ? ' on' : '') + '" id="sh-pin" ' +
-        'aria-pressed="' + (pinned.indexOf(activeTab) > -1 ? 'true' : 'false') + '" title="Pin this tool to your desk on Today">' +
+        'aria-pressed="' + (pinned.indexOf(activeTab) > -1 ? 'true' : 'false') + '" title="Pin this tool to your desk on the Market page">' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
         'stroke-linejoin="round"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/></svg><span>' +
         (pinned.indexOf(activeTab) > -1 ? 'Pinned' : 'Pin') + '</span></button>' : '';
@@ -1599,7 +1604,7 @@
 
   /* ── The IST clock at the end of the tape ─────────────────────────────────
      The headline ribbon that used to own this clock is the Headlines card on
-     the Today page now. */
+     the Market page now. */
 
   function startClock() {
     var clock = document.getElementById('sh-clock');
@@ -1691,7 +1696,7 @@
         // One fetch, two consumers: the homepage board listens for this
         // instead of pulling /market and /sector/overview again on its own.
         // Kept on AltahaShell too, so a page that mounts after this read (the
-        // Today door) can use it instead of asking again.
+        // Market door) can use it instead of asking again.
         try {
           window.AltahaShell = window.AltahaShell || {};
           window.AltahaShell.market = { indices: idx, sectors: sec, status: status };

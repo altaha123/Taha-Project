@@ -1158,6 +1158,606 @@
     "computed_utc": "2026-09-27T06:00:00+00:00",
     "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
    }
+  },
+  "ROE > 12||": {
+   "status": 200,
+   "body": {
+    "query": "ROE > 12",
+    "fields_used": [
+     "roe"
+    ],
+    "columns": [
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roe",
+    "order": "desc",
+    "count": 2,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "roe": 21.2,
+      "price": 812.5,
+      "market_cap": 12500.0,
+      "pe": 24.1,
+      "roce": 28.4,
+      "sales_growth_3y": 18.5
+     },
+     {
+      "symbol": "BETA",
+      "name": "Beta Pharma Ltd",
+      "industry": "Pharmaceuticals",
+      "fy": "FY26",
+      "quarter": null,
+      "roe": 17.5,
+      "price": 1420.0,
+      "market_cap": 38000.0,
+      "pe": 31.0,
+      "roce": 22.0,
+      "sales_growth_3y": 12.2
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "ROE > 18||": {
+   "status": 200,
+   "body": {
+    "query": "ROE > 18",
+    "fields_used": [
+     "roe"
+    ],
+    "columns": [
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roe",
+    "order": "desc",
+    "count": 1,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "roe": 21.2,
+      "price": 812.5,
+      "market_cap": 12500.0,
+      "pe": 24.1,
+      "roce": 28.4,
+      "sales_growth_3y": 18.5
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "ROE > 18\nDebt to equity < 0.5||": {
+   "status": 200,
+   "body": {
+    "query": "ROE > 18\nDebt to equity < 0.5",
+    "fields_used": [
+     "roe",
+     "debt_to_equity"
+    ],
+    "columns": [
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "debt_to_equity",
+      "label": "Debt to equity",
+      "unit": "x",
+      "group": "Balance sheet",
+      "description": "Borrowings ÷ shareholders' equity, latest balance sheet."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roe",
+    "order": "desc",
+    "count": 1,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "roe": 21.2,
+      "debt_to_equity": 0.12,
+      "price": 812.5,
+      "market_cap": 12500.0,
+      "pe": 24.1,
+      "roce": 28.4,
+      "sales_growth_3y": 18.5
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "ROE > 12\nDebt to equity < 0.5||": {
+   "status": 200,
+   "body": {
+    "query": "ROE > 12\nDebt to equity < 0.5",
+    "fields_used": [
+     "roe",
+     "debt_to_equity"
+    ],
+    "columns": [
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "debt_to_equity",
+      "label": "Debt to equity",
+      "unit": "x",
+      "group": "Balance sheet",
+      "description": "Borrowings ÷ shareholders' equity, latest balance sheet."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "roe",
+    "order": "desc",
+    "count": 2,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "roe": 21.2,
+      "debt_to_equity": 0.12,
+      "price": 812.5,
+      "market_cap": 12500.0,
+      "pe": 24.1,
+      "roce": 28.4,
+      "sales_growth_3y": 18.5
+     },
+     {
+      "symbol": "BETA",
+      "name": "Beta Pharma Ltd",
+      "industry": "Pharmaceuticals",
+      "fy": "FY26",
+      "quarter": null,
+      "roe": 17.5,
+      "debt_to_equity": 0.3,
+      "price": 1420.0,
+      "market_cap": 38000.0,
+      "pe": 31.0,
+      "roce": 22.0,
+      "sales_growth_3y": 12.2
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "Debt to equity < 0.5||": {
+   "status": 200,
+   "body": {
+    "query": "Debt to equity < 0.5",
+    "fields_used": [
+     "debt_to_equity"
+    ],
+    "columns": [
+     {
+      "id": "debt_to_equity",
+      "label": "Debt to equity",
+      "unit": "x",
+      "group": "Balance sheet",
+      "description": "Borrowings ÷ shareholders' equity, latest balance sheet."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "debt_to_equity",
+    "order": "desc",
+    "count": 2,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [
+     {
+      "symbol": "BETA",
+      "name": "Beta Pharma Ltd",
+      "industry": "Pharmaceuticals",
+      "fy": "FY26",
+      "quarter": null,
+      "debt_to_equity": 0.3,
+      "price": 1420.0,
+      "market_cap": 38000.0,
+      "pe": 31.0,
+      "roce": 22.0,
+      "roe": 17.5,
+      "sales_growth_3y": 12.2
+     },
+     {
+      "symbol": "ACME",
+      "name": "Acme Chemicals Ltd",
+      "industry": "Chemicals",
+      "fy": "FY26",
+      "quarter": null,
+      "debt_to_equity": 0.12,
+      "price": 812.5,
+      "market_cap": 12500.0,
+      "pe": 24.1,
+      "roce": 28.4,
+      "roe": 21.2,
+      "sales_growth_3y": 18.5
+     }
+    ],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "Debt to equity < 0.1||": {
+   "status": 200,
+   "body": {
+    "query": "Debt to equity < 0.1",
+    "fields_used": [
+     "debt_to_equity"
+    ],
+    "columns": [
+     {
+      "id": "debt_to_equity",
+      "label": "Debt to equity",
+      "unit": "x",
+      "group": "Balance sheet",
+      "description": "Borrowings ÷ shareholders' equity, latest balance sheet."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "debt_to_equity",
+    "order": "desc",
+    "count": 0,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
+  },
+  "Debt to equity < 0.1\nROE > 18||": {
+   "status": 200,
+   "body": {
+    "query": "Debt to equity < 0.1\nROE > 18",
+    "fields_used": [
+     "debt_to_equity",
+     "roe"
+    ],
+    "columns": [
+     {
+      "id": "debt_to_equity",
+      "label": "Debt to equity",
+      "unit": "x",
+      "group": "Balance sheet",
+      "description": "Borrowings ÷ shareholders' equity, latest balance sheet."
+     },
+     {
+      "id": "roe",
+      "label": "ROE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on equity, latest full year: profit after tax ÷ shareholders' equity."
+     },
+     {
+      "id": "price",
+      "label": "Current price",
+      "unit": "inr",
+      "group": "Valuation",
+      "description": "Latest closing price."
+     },
+     {
+      "id": "market_cap",
+      "label": "Market cap",
+      "unit": "cr",
+      "group": "Valuation",
+      "description": "Price × issued shares, in ₹ crore."
+     },
+     {
+      "id": "pe",
+      "label": "PE",
+      "unit": "x",
+      "group": "Valuation",
+      "description": "Price ÷ earnings per share over the last four quarters. Unknown when earnings are not positive."
+     },
+     {
+      "id": "roce",
+      "label": "ROCE",
+      "unit": "pct",
+      "group": "Returns",
+      "description": "Return on capital employed, latest full year: EBIT ÷ (total assets − current liabilities)."
+     },
+     {
+      "id": "sales_growth_3y",
+      "label": "Sales growth 3Y",
+      "unit": "pct",
+      "group": "Growth",
+      "description": "Revenue CAGR over three full years."
+     }
+    ],
+    "sort": "debt_to_equity",
+    "order": "desc",
+    "count": 0,
+    "unknown": 1,
+    "screened": 4,
+    "offset": 0,
+    "limit": 50,
+    "results": [],
+    "available": true,
+    "computed_utc": "2026-09-27T06:00:00+00:00",
+    "notice": "Results are companies whose filed figures meet the condition you typed. They are filters, not recommendations."
+   }
   }
  },
  "ai": {

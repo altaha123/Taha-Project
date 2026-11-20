@@ -1,8 +1,21 @@
-/* The query screener (#research/query) in a real Chromium, against responses
+/* The screener (#research/query) in a real Chromium, against responses
    produced by the real endpoints (backend/tests/make_query_fixture.py).
 
-   What is guarded:
-     · the tab is reachable from Research and builds itself on first sight;
+   What is guarded, first, is the page a newcomer meets, which asks for no
+   typing at all:
+     · it opens on cards to tap, with no number, no table and the editor
+       folded away;
+     · tapping a card runs it: the count, a bar for each choice in turn, the
+       table, and the query in the address, with no button pressed;
+     · a card's setting tightens the list; the cross on a bar removes that
+       choice; Start over clears everything;
+     · a ready-made idea switches on the cards it is made of, and tapping it
+       again switches them off; a list nobody fits says so in words;
+     · the last list comes back, cards lit, on the next visit;
+     · a query typed, saved or opened from a link lights the cards it is made
+       of and carries the rest as "your own rules".
+
+   And then the editor underneath, as before:
      · an example chip fills the editor, runs, and shows the count and table;
      · the three-box builder writes a line in the syntax the backend reads;
      · typing a partial name offers the field, and Enter inserts it;
@@ -85,13 +98,110 @@ async function wire(context) {
       const page = await context.newPage();
       page.on('pageerror', e => errors.push(String(e)));
       await page.goto(base + '/index.html#research/query');
-      await page.waitForSelector('#qs-examples .qs-chip');
+      await page.waitForSelector('.qz-wish-main');
       assert.ok(await page.locator('#view-query').isVisible(), 'the query view is not shown');
+      const hash = () => page.evaluate(() => decodeURIComponent(location.hash));
+      const syms0 = () => page.locator('.qs-table tbody th[scope=row] b').allInnerTexts();
+      const bars = () => page.locator('.qz-bar').evaluateAll(ns => ns.map(n =>
+        n.querySelector('.qz-bar-l b').textContent + ' ' + n.querySelector('.qz-bar-n').textContent));
+      const lit = () => page.locator('.qz-wish.on').evaluateAll(ns => ns.map(n =>
+        n.dataset.wishbox + ':' + ((n.querySelector('.qz-level.on') || {}).textContent || '')));
+      const count = n => page.waitForFunction(k => (document.getElementById('qz-n') || {}).textContent === k, String(n));
 
-      // 1 · an example runs as it stands
+      // A · the page a newcomer meets: cards to tap, nothing to type
+      assert.equal(await page.locator('.qz-recipe').count(), 6);
+      assert.equal(await page.locator('.qz-wish').count(), 10);
+      assert.match(await page.locator('#qz-board').innerText(), /Tap a card above/);
+      assert.equal(await page.locator('.qs-table, #qz-n').count(), 0, 'a list is shown before anything is chosen');
+      assert.equal(await page.locator('#qs-q').isVisible(), false, 'the editor is open on a first visit');
+      assert.equal(await page.locator('#qz-acts').isVisible(), false);
+      assert.doesNotMatch(await page.locator('#qz').innerText(), /\bquery\b|\bfield\b|\bcondition\b/i,
+                          'the words of the editor are on the page a newcomer meets');
+
+      // B · one tap is a question asked: the count, the bars, the table, the address
+      await page.locator('.qz-wish-main[data-wish="profit"]').click();
+      await page.waitForSelector('.qs-table');
+      await count(2);
+      assert.match(await page.locator('.qz-count').innerText(), /2\s*companies fit\s*out of 4/);
+      assert.deepEqual(await bars(), ['Every company we have figures for 4', 'Makes good money 2']);
+      assert.deepEqual(await syms0(), ['ACME', 'BETA']);
+      assert.equal(await hash(), '#research/query/ROE > 12');
+      assert.equal(await page.inputValue('#qs-q'), 'ROE > 12', 'the choice was not written into the editor');
+      assert.deepEqual(await lit(), ['profit:Good']);
+      assert.equal(await page.locator('.qz-wish-main[data-wish="profit"]').getAttribute('aria-pressed'), 'true');
+      assert.match(await page.locator('.qz-wish.on .qz-note').innerText(), /₹12 a year on every ₹100[\s\S]*ROE above 12%/);
+      assert.match(await page.locator('#qz-board .qz-unk').innerText(), /1 company is left out/);
+
+      // C · a setting tightens it, a second card narrows it, and each has its bar
+      await page.locator('.qz-level[data-wish="profit"][data-level="1"]').click();
+      await count(1);
+      assert.equal(await hash(), '#research/query/ROE > 18');
+      assert.deepEqual(await syms0(), ['ACME']);
+      assert.match(await page.locator('.qz-count').innerText(), /1\s*company fits/);
+      await page.locator('.qz-wish-main[data-wish="debt"]').click();
+      await page.waitForFunction(() => document.querySelectorAll('.qz-bar').length === 3);
+      assert.equal(await hash(), '#research/query/ROE > 18\nDebt to equity < 0.5');
+      assert.deepEqual(await bars(), ['Every company we have figures for 4', 'Makes good money 1', 'Owes little 1']);
+      assert.deepEqual(await lit(), ['profit:Great', 'debt:Little']);
+
+      // D · the last list comes back on the next visit, cards and all
+      await page.goto(base + '/index.html');
+      await page.goto(base + '/index.html#research/query');
+      await page.waitForSelector('.qs-table');
+      assert.deepEqual(await lit(), ['profit:Great', 'debt:Little']);
+      assert.equal(await page.locator('#qs-q').isVisible(), false, 'a list made of cards opened the editor');
+
+      // E · the cross on a bar removes that choice; Start over removes them all
+      await page.locator('.qz-bar-x[data-drop="profit"]').click();
+      await count(2);
+      assert.equal(await hash(), '#research/query/Debt to equity < 0.5');
+      assert.deepEqual(await lit(), ['debt:Little']);
+      // A list can be kept by name from here, and comes back with a tap.
+      await page.locator('#qz-save').click();
+      await page.locator('#qz-result #qs-savename').fill('Little debt');
+      await page.locator('#qs-savego').click();
+      await page.locator('#qs-saved .qs-chip', { hasText: 'Little debt' }).waitFor();
+      await page.locator('#qz-reset').click();
+      assert.match(await page.locator('#qz-board').innerText(), /Tap a card above/);
+      assert.equal(await page.locator('.qs-table, .qz-wish.on').count(), 0, 'Start over left something behind');
+      assert.equal(await hash(), '#research/query');
+      assert.equal(await page.inputValue('#qs-q'), '');
+
+      await page.locator('#qs-saved .qs-chip', { hasText: 'Little debt' }).click();
+      await count(2);
+      assert.deepEqual(await lit(), ['debt:Little'], 'a saved list did not come back with its card lit');
+      await page.locator('#qs-saved .qs-sdel').click();
+      await page.waitForFunction(() => document.getElementById('qs-saved').hidden);
+      await page.locator('#qz-reset').click();
+
+      // F · a ready-made idea is cards switched on together; nobody fitting is said in words
+      await page.locator('.qz-recipe[data-recipe="nodebt"]').click();
+      await count(0);
+      assert.equal(await hash(), '#research/query/Debt to equity < 0.1\nROE > 18');
+      assert.deepEqual(await lit(), ['profit:Great', 'debt:Almost none']);
+      assert.equal(await page.locator('.qz-recipe[data-recipe="nodebt"]').getAttribute('aria-pressed'), 'true');
+      assert.match(await page.locator('#qz-board').innerText(), /No company fits all of that/);
+      assert.deepEqual(await bars(), ['Every company we have figures for 4', 'Owes little 0', 'Makes good money 0']);
+      await page.waitForFunction(() => /No company meets/.test(document.getElementById('qs-out').innerText));
+      await page.locator('.qz-recipe[data-recipe="nodebt"]').click();
+      assert.equal(await page.locator('.qz-wish.on').count(), 0, 'tapping a lit idea again did not switch it off');
+      const fits = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      assert.ok(fits <= 1, `the finder scrolls sideways by ${fits}px at ${width}px`);
+      await page.locator('.qz-recipe[data-recipe="nodebt"]').click();
+      await count(0);
+      await page.screenshot({ path: path.join(output, width + '-finder.png'), fullPage: true });
+      await page.locator('#qz-reset').click();
+
+      // 1 · the editor, for a reader who knows the number: an example runs as it stands
+      await page.locator('#qs-adv > summary').click();
+      await page.waitForSelector('#qs-examples .qs-chip');
       await page.locator('#qs-examples .qs-chip').first().click();
       await page.waitForSelector('.qs-table');
       assert.match(await page.locator('.qs-sum').innerText(), /2\s+companies match/);
+      // A query written in the editor lights the card it contains, and the rest are "your own rules".
+      await page.waitForFunction(() => document.querySelectorAll('.qz-bar').length === 3);
+      assert.deepEqual(await lit(), ['debt:Little']);
+      assert.deepEqual(await bars(), ['Every company we have figures for 4', 'Owes little 2', 'Your own rules 2']);
       assert.deepEqual(await page.locator('.qs-table tbody th[scope=row] b').allInnerTexts(),
                        ['ACME', 'BETA']);
       assert.match(decodeURIComponent(await page.evaluate(() => location.hash)),

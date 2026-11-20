@@ -1,13 +1,13 @@
-/* Today › Sectors right now: a sector tile opens that sector's stocks, in place.
+/* Market › Sectors right now: a sector tile opens that sector's stocks, in place.
  *
- * This exists because of a bug that shipped. Tapping a tile left Today for
+ * This exists because of a bug that shipped. Tapping a tile left Market for
  * the market board and asked the board to open the sector by name. The board
- * names its tiles after NSE indices ("Nifty Realty"), Today names them after
+ * names its tiles after NSE indices ("Nifty Realty"), Market names them after
  * sectors ("Real Estate"), so the name never matched: the reader was sent to
  * another page and shown no stocks at all.
  *
  * So this asserts on what the reader gets, at phone and desktop widths:
- *   - the tap stays on Today (same address, same view)
+ *   - the tap stays on Market (same address, same view)
  *   - the sector's own stocks are listed at once, each a link to its page
  *   - the rest of the sector's NSE index is added below them, not merged in
  *   - a sector NSE has no index for, and an NSE read that fails, still list
@@ -103,8 +103,8 @@ const server = http.createServer((req, res) => {
     // The tap: stocks, here, and nowhere else.
     await tile('Real Estate').tap();
     await panel.locator('.dr-slist a').first().waitFor();
-    assert.equal(page.url(), address, `${width}: a sector tap must not leave Today`);
-    assert.ok(await page.locator('#view-today').isVisible(), `${width}: Today is still the view on screen`);
+    assert.equal(page.url(), address, `${width}: a sector tap must not leave Market`);
+    assert.ok(await page.locator('#view-today').isVisible(), `${width}: Market is still the view on screen`);
     assert.equal(await page.locator('#view-screener').isVisible(), false, `${width}: the market board was opened instead`);
     assert.equal(await tile('Real Estate').getAttribute('aria-expanded'), 'true');
     assert.match(await panel.locator('h3').innerText(), /Real Estate stocks/);
@@ -204,5 +204,5 @@ const server = http.createServer((req, res) => {
   const relevant = errors.filter(e => /doors\.js|shell\.js|nav\.js/.test(e));
   assert.deepEqual(relevant, []);
   await browser.close(); server.close();
-  console.log('Today sector tiles open their stocks in place');
+  console.log('Market sector tiles open their stocks in place');
 })().catch(e => { console.error(e); server.close(); process.exit(1); });
