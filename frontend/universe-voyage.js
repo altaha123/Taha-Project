@@ -50,6 +50,8 @@
       p.restore();return tile;
     });
     var renderer=window.AltahaPlanets?window.AltahaPlanets.create(textureReady):null;
+    // The planet maps are being drawn: universe-scan.css shows their credit on this class.
+    if(renderer)host.classList.add('su-textured');
     function textureReady(restored){
       if(destroyed)return;
       if(restored){if(renderer)renderer.destroy();renderer=window.AltahaPlanets.create(textureReady);}
@@ -175,7 +177,7 @@
     var view=document.getElementById('view-ideas');if(view)tabObserver.observe(view,{attributes:true,attributeFilter:['style','class','hidden']});
     function preference(){draw();sync();}
     reduced.addEventListener('change',preference);document.addEventListener('visibilitychange',sync);
-    function destroy(){destroyed=true;if(renderer)renderer.destroy();cancelAnimationFrame(frame);if(resizeObserver)resizeObserver.disconnect();if(intersection)intersection.disconnect();tabObserver.disconnect();window.removeEventListener('resize',resize);reduced.removeEventListener('change',preference);document.removeEventListener('visibilitychange',sync);window.removeEventListener('pagehide',pagehide);}
+    function destroy(){destroyed=true;if(renderer)renderer.destroy();host.classList.remove('su-textured');cancelAnimationFrame(frame);if(resizeObserver)resizeObserver.disconnect();if(intersection)intersection.disconnect();tabObserver.disconnect();window.removeEventListener('resize',resize);reduced.removeEventListener('change',preference);document.removeEventListener('visibilitychange',sync);window.removeEventListener('pagehide',pagehide);}
     function pagehide(event){if(!event.persisted)destroy();}
     window.addEventListener('pagehide',pagehide);
     resize();return {sync:sync,destroy:destroy};

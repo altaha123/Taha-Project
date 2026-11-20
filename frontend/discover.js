@@ -90,6 +90,12 @@
   function quiet(msg) {
     return '<p class="dsc-quiet">' + esc(msg) + '</p>';
   }
+  /* The API did not answer. The span is there for data-nosnippet, which a
+     search engine honours on span, div and section and not on a paragraph:
+     this line must not be quoted as what the page says. */
+  function asleep(msg) {
+    return '<p class="dsc-quiet"><span data-nosnippet>' + esc(msg) + '</span></p>';
+  }
 
   function loading(what) {
     return '<p class="dsc-quiet is-loading" aria-busy="true">Reading ' + esc(what) + '…</p>';
@@ -140,7 +146,7 @@
     get('/ideas?horizon=short&limit=6', 45000).then(function (d) {
       var body, sub = '';
       if (!d) {
-        body = quiet('The ranking engine is unreachable. If it has been idle it takes about thirty seconds to wake.');
+        body = asleep('The ranking engine is unreachable. If it has been idle it takes about thirty seconds to wake.');
       } else if (!d.available) {
         body = quiet(d.message || 'No scan has been run yet, so there is no ranking to show. The screener builds one from the universe.');
       } else if (!(d.rows || []).length) {
@@ -191,7 +197,7 @@
     Promise.all([get('/intraday/status', 9000), get('/breakouts/status', 9000)]).then(function (res) {
       var d = res[0], b = res[1], body;
       if (!d && !b) {
-        body = quiet('The scanner could not be reached.');
+        body = asleep('The scanner could not be reached.');
       } else {
         var rows = d ? (d.alerts_today || []) : [];
         var stocks = b && b.usable ? (b.stocks || 0) : 0;

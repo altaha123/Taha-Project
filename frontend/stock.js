@@ -131,22 +131,41 @@
   /* The shape of the page while it loads, not a paragraph about the server.
      The one sentence appears only if the wait runs long, which is when a
      reader starts wondering whether anything is happening. */
+  /* ON A COMPANY'S OWN ADDRESS THE PAGE NEVER TALKS ABOUT THE SERVER.
+     /stock-TCS arrives with the company's figures already in it, and it is
+     the address a search engine reads. A search engine runs this script too,
+     and when the API was asleep it filed "The engine could not be reached"
+     as what the page says about the company. So there, the wait is a
+     skeleton with no sentence in it, and a failure is one quiet line with a
+     Retry beside it: the figures the server sent stay the page.
+
+     data-nosnippet asks a search engine not to quote a block. It is honoured
+     on div, span and section only, which is why it sits on these wrappers. */
   var slowTimer = null;
   function loading() {
+    clearTimeout(slowTimer);
     $('state').innerHTML =
-      '<div class="stk-loading" aria-busy="true" aria-label="Loading">' +
+      '<div class="stk-loading" aria-busy="true" aria-label="Loading" data-nosnippet>' +
         '<div class="skel sk-bar"></div>' +
         '<div class="sk-grid"><div class="skel sk-card tall"></div><div class="skel sk-card"></div>' +
         '<div class="skel sk-card"></div><div class="skel sk-card tall"></div></div>' +
-        '<p class="sk-note" id="sk-note" hidden>Waking the engine. This takes about thirty seconds after a quiet spell.</p>' +
+        (SSR ? '' : '<p class="sk-note" id="sk-note" hidden>Waking the engine. This takes about thirty seconds after a quiet spell.</p>') +
       '</div>';
-    slowTimer = setTimeout(function () { var n = $('sk-note'); if (n) n.hidden = false; }, 4500);
+    if (!SSR) slowTimer = setTimeout(function () { var n = $('sk-note'); if (n) n.hidden = false; }, 4500);
   }
   function failed(msg) {
     clearTimeout(slowTimer);
     $('state').innerHTML =
-      '<div class="stk-state"><div class="big">' + esc(msg) + '</div>' +
+      '<div class="stk-state" data-nosnippet><div class="big">' + esc(msg) + '</div>' +
       '<div><a href="./" style="color:var(--gold)">Back to the screener</a></div></div>';
+  }
+  function liveOff(retry) {
+    clearTimeout(slowTimer);
+    $('state').innerHTML =
+      '<div class="stk-live-off" data-nosnippet role="status">' +
+        '<span>The live chart and score did not load.</span>' +
+        '<button type="button" id="live-retry">Retry</button></div>';
+    $('live-retry').addEventListener('click', retry);
   }
 
   /* ── Logos ───────────────────────────────────────────────────────────────
@@ -221,14 +240,17 @@
     $('crumb').textContent = base;
     $('nm').textContent = d.name || base;
 
-    var tags = [];
-    if (d.exchange) tags.push(d.exchange);
-    tags.push(base);
-    if (d.profile && d.profile.sector) tags.push(d.profile.sector);
-    if (d.profile && d.profile.industry) tags.push(d.profile.industry);
-    $('tags').innerHTML = tags.map(function (t) {
-      return '<span class="stk-tag">' + esc(t) + '</span>';
-    }).join('');
+    /* The ticker as it is written everywhere else: "NSE: TCS". On the
+       company's own address the server has already written this row, with
+       the sector as a link to its page, and it is left as it is. */
+    if (!(SSR && $('tags').children.length)) {
+      var tags = [(d.exchange ? d.exchange + ': ' : '') + base];
+      if (d.profile && d.profile.sector) tags.push(d.profile.sector);
+      if (d.profile && d.profile.industry) tags.push(d.profile.industry);
+      $('tags').innerHTML = tags.map(function (t) {
+        return '<span class="stk-tag">' + esc(t) + '</span>';
+      }).join('');
+    }
 
     $('px').textContent = money(d.price, d.currency);
     // The daily change is not in /analyze, so it is filled by the chart call
@@ -3694,50 +3716,69 @@
       }, 6000);
     }
 
-    loading();
-    fetch(API + '/analyze?ticker=' + encodeURIComponent(TICKER))
-      .then(function (r) {
-        if (!r.ok) track('api_error', { endpoint: '/analyze', status: r.status });
-        if (r.status === 404) throw new Error('notfound');
-        if (!r.ok) throw new Error('down');
-        return r.json();
-      })
-      .then(function (d) {
-        clearTimeout(slowTimer);
-        $('state').innerHTML = '';
-        $('body').hidden = false;
-        var sc = (d.scoring && d.scoring.score != null) ? Math.round(d.scoring.score) : null;
-        track('stock_viewed', {
-          ticker: TICKER,
-          sector: (d.profile && d.profile.sector) || null,
-          score: sc
-        });
-        paintAll(d);
-        awaitScore(d, 0);
-        $('disc').textContent = d.disclaimer ||
-          'Educational tool. Scores and evidence only — never a recommendation to buy or sell.';
-        wirePanes();
-        wireScoreChip();
-        wirePeerSort();
-        wireNews();
-        // The day's move for the headline and the year for the Overview; the
-        // full chart draws itself when its section is first opened.
-        loadYear(d);
+    /* On a company's own address a failed call is tried twice more, quietly,
+       before anything is said: after a quiet spell the API takes about thirty
+       seconds to wake, and the page already shows the company meanwhile. */
+    var RETRY_AFTER = [6000, 18000];
+    load(0);
 
-        // A link can name the section to open: ?pane=owners, or #owners.
-        var want = (param('pane') || (location.hash || '').replace(/^#/, '')).toLowerCase();
-        if (want && want !== 'info' && PANES.indexOf(want) >= 0) showPane(want);
-        // The press and the filings, once the first screen is up.
-        setTimeout(function () { loadNews(false); }, 350);
-        if (window.AltahaShell) window.AltahaShell.reveal();
-      })
-      .catch(function (e) {
-        var reason = (e && e.message === 'notfound') ? 'not_found' : 'engine_unreachable';
-        track('stock_view_failed', { ticker: TICKER, reason: reason });
-        failed(reason === 'not_found'
-          ? "Couldn't find " + TICKER + '. Check the spelling.'
-          : 'The engine could not be reached. After a quiet spell it takes about thirty seconds to wake. Try again.');
-      });
+    function load(attempt) {
+      loading();
+      fetch(API + '/analyze?ticker=' + encodeURIComponent(TICKER))
+        .then(function (r) {
+          if (!r.ok) track('api_error', { endpoint: '/analyze', status: r.status });
+          if (r.status === 404) throw new Error('notfound');
+          if (!r.ok) throw new Error('down');
+          return r.json();
+        })
+        .then(function (d) {
+          clearTimeout(slowTimer);
+          $('state').innerHTML = '';
+          $('body').hidden = false;
+          var sc = (d.scoring && d.scoring.score != null) ? Math.round(d.scoring.score) : null;
+          track('stock_viewed', {
+            ticker: TICKER,
+            sector: (d.profile && d.profile.sector) || null,
+            score: sc
+          });
+          paintAll(d);
+          awaitScore(d, 0);
+          $('disc').textContent = d.disclaimer ||
+            'Educational tool. Scores and evidence only — never a recommendation to buy or sell.';
+          wirePanes();
+          wireScoreChip();
+          wirePeerSort();
+          wireNews();
+          // The day's move for the headline and the year for the Overview; the
+          // full chart draws itself when its section is first opened.
+          loadYear(d);
+
+          // A link can name the section to open: ?pane=owners, or #owners.
+          var want = (param('pane') || (location.hash || '').replace(/^#/, '')).toLowerCase();
+          if (want && want !== 'info' && PANES.indexOf(want) >= 0) showPane(want);
+          // The press and the filings, once the first screen is up.
+          setTimeout(function () { loadNews(false); }, 350);
+          if (window.AltahaShell) window.AltahaShell.reveal();
+        })
+        .catch(function (e) {
+          var reason = (e && e.message === 'notfound') ? 'not_found' : 'engine_unreachable';
+          // Only a call that never answered is asked again. Once the answer
+          // has been painted (DATA is set) the page is wired, and a second
+          // pass would wire it twice; that case reloads instead.
+          if (SSR && !DATA && reason !== 'not_found' && attempt < RETRY_AFTER.length) {
+            setTimeout(function () { load(attempt + 1); }, RETRY_AFTER[attempt]);
+            return;
+          }
+          track('stock_view_failed', { ticker: TICKER, reason: reason });
+          if (SSR) {
+            liveOff(function () { if (DATA) location.reload(); else load(0); });
+            return;
+          }
+          failed(reason === 'not_found'
+            ? "Couldn't find " + TICKER + '. Check the spelling.'
+            : 'The engine could not be reached. After a quiet spell it takes about thirty seconds to wake. Try again.');
+        });
+    }
   }
 
   if (document.readyState === 'loading') {

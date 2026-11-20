@@ -164,7 +164,9 @@
       .then(paint)
       .catch(function () {
         if (box) {
-          box.innerHTML = '<div class="wo-empty">The engine is unreachable. ' +
+          // data-nosnippet: a search engine that runs this page while the API
+          // is asleep must not quote this line as what the page says.
+          box.innerHTML = '<div class="wo-empty" data-nosnippet>The engine is unreachable. ' +
             'If it has been idle it takes about thirty seconds to wake — try again.</div>';
         }
       });

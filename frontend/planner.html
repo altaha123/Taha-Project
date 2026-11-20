@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" /><script src="clean-url.js"></script>
+<!-- The money planner, described at an address of its own.
+
+     The planner is a screen inside index.html (#view-planner, planner.js)
+     that keeps a household's numbers in that browser and nowhere else. It
+     cannot be a public page: there is nothing in it until someone types.
+     So this page is what a search engine and a first-time reader can be
+     given: what the planner answers, the arithmetic behind the answer, and
+     a link that opens it.
+
+     Every figure here is planner-math.js's: the defaults (DEFAULTS), the
+     model in its header, and the tabs planner.js lists. If one of those
+     changes, this page changes with it. -->
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Money planner: the month your investments could pay your bills | Altaha Screener</title>
+<meta name="description" content="A free money planner for Indian households. Four numbers give the month your investments could cover your spending; then see what a purchase, a goal or a raise does to that date. Your figures stay in your browser." />
+<meta name="robots" content="index,follow" />
+<link rel="canonical" href="https://altahascreener.in/planner" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Altaha Screener" />
+<meta property="og:title" content="Money planner: the month your investments could pay your bills" />
+<meta property="og:description" content="Four numbers give the date. Everything else shows what moves it. Free, and your figures never leave your browser." />
+<meta property="og:url" content="https://altahascreener.in/planner" />
+<meta property="og:image" content="https://altahascreener.in/icon-512.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Altaha Screener","item":"https://altahascreener.in/"},{"@type":"ListItem","position":2,"name":"Money planner","item":"https://altahascreener.in/planner"}]},{"@type":"WebApplication","@id":"https://altahascreener.in/planner","url":"https://altahascreener.in/planner","name":"Altaha money planner","description":"A money planner for Indian households that answers with a date: the month investments could cover spending, and what a purchase, a goal or a raise does to it.","applicationCategory":"FinanceApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","inLanguage":"en-IN","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"INR"},"provider":{"@type":"Organization","name":"Altaha Screener","url":"https://altahascreener.in/"}}]}</script>
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css?v=20261113-foot">
+<link rel="stylesheet" href="stock.css?v=20261120-seo">
+<link rel="stylesheet" href="experience.css?v=20261015-doors">
+<link rel="stylesheet" href="type.css">
+<script>
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+</head>
+<body>
+<main class="stk-wrap doc">
+  <div class="stk-head">
+    <div class="stk-crumb"><a href="./"><span class="brandmark" aria-hidden="true"></span><span>Altaha Screener</span></a> · <span>Money planner</span></div>
+    <h1 class="stk-name">Money planner</h1>
+    <p class="dir-sub">Most planners answer with a savings rate or a grade. This one answers with a date: the month your investments could pay your household&rsquo;s bills, after which working is a choice. Four numbers produce it, and everything else on the screen shows what moves it.</p>
+    <p class="doc-cta"><a class="doc-btn" href="./#portfolio/planner">Open the money planner</a><span>Free. No sign-up. Your household figures stay in this browser.</span></p>
+  </div>
+
+  <section class="doc-sec" id="arithmetic">
+    <h2>The arithmetic, in full</h2>
+    <p>The planner works month by month, in today&rsquo;s rupees, so nobody is shown a frightening figure forty years out and asked to guess what it buys.</p>
+    <ol class="doc-steps">
+      <li><b>Each month,</b> what you have invested grows by the return, is reduced by inflation, and has that month&rsquo;s saving added to it.</li>
+      <li><b>The date</b> is the first month that pot reaches a multiple of one year&rsquo;s spending.</li>
+      <li><b>What is saved</b> steps up once a year, and is smaller while an emergency cushion is being filled and while dated goals are being paid for. It is one pot of monthly saving, split three ways.</li>
+    </ol>
+    <p>It is compound interest and a subtraction, with the working shown on request.</p>
+  </section>
+
+  <section class="doc-sec" id="assumptions">
+    <h2>Every assumption is a dial</h2>
+    <p>These are the starting values. Each is on the screen beside the answer and can be changed. None of them predicts a market.</p>
+    <dl class="gl-facts doc-bands">
+      <div><dt>Return on investments</dt><dd>10% a year</dd></div>
+      <div><dt>Inflation</dt><dd>6% a year</dd></div>
+      <div><dt>The finish line</dt><dd>30 &times; a year&rsquo;s spending</dd></div>
+      <div><dt>Saving raised by</dt><dd>5% a year</dd></div>
+    </dl>
+  </section>
+
+  <section class="doc-sec" id="tools">
+    <h2>What is in it</h2>
+    <p>Seven tools, one per tab. Each one changes the date or explains it.</p>
+    <dl class="doc-defs">
+      <div><dt>Your date</dt><dd>The path to the month work becomes optional, and the moves that bring it closer.</dd></div>
+      <div><dt>Price tag</dt><dd>What a purchase or a habit costs, counted in days of freedom and not only in rupees.</dd></div>
+      <div><dt>Goals</dt><dd>Dated goals such as a home or a child&rsquo;s education, paid from the same pot, each with the delay it costs.</dd></div>
+      <div><dt>Check-in</dt><dd>One figure a month. It keeps a streak and says whether you are ahead of the plan or behind it.</dd></div>
+      <div><dt>Budget</dt><dd>The itemised household ledger, and how to split the money on salary day.</dd></div>
+      <div><dt>Tax</dt><dd>The old income-tax regime against the new one, on your own figures.</dd></div>
+      <div><dt>Risk</dt><dd>A questionnaire that describes your situation and temperament back to you, with the working shown. It recommends nothing.</dd></div>
+    </dl>
+  </section>
+
+  <section class="doc-sec" id="private">
+    <h2>Your numbers stay with you</h2>
+    <p>The household figures you type are kept in your own browser so the screen can greet you with your date and not an empty form. They are not sent to Altaha or to anyone else, and &ldquo;Clear my numbers&rdquo; removes them. The planner names no product and suggests none.</p>
+    <p>The risk questionnaire is the one part that talks to the server: your answers are sent there to work out the profile, and are saved to your account only if you are signed in.</p>
+  </section>
+
+  <section class="doc-more">
+    <h2>Next</h2>
+    <p><a href="./#portfolio/planner">Open the money planner</a>. If you already own shares, the terms on a company page are explained in the <a href="/glossary">glossary</a>, and the score beside each company in <a href="/methodology">how the Altaha Score works</a>.</p>
+    <p class="doc-fine">Altaha Screener is an educational tool. The planner is arithmetic on the numbers you give it, not financial advice.</p>
+  </section>
+</main>
+<script src="shell.js?v=20261120-seo" defer></script>
+<script src="experience.js?v=20261118-pages" defer></script>
+</body>
+</html>

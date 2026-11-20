@@ -198,7 +198,7 @@ def test_vercel_rewrites_cover_every_public_path():
     assert any(s.startswith("/og/") for s in sources), "no /og rewrite"
     # The pages the API writes for a search engine are proxied too
     # (company_pages.py; test_company_pages.py checks each has a route).
-    proxied = ("/share/", "/og/", "/stock-", "/stocks", "/sitemap.xml")
+    proxied = ("/share/", "/og/", "/stock-", "/sector-", "/stocks", "/sitemap.xml")
     for r in cfg.get("rewrites", []):
         if r["source"] == "/share" or r["source"].startswith(proxied):
             # Proxied to the API: must leave the static host.

@@ -272,8 +272,12 @@
     }).join('') +
       '<nav class="sh-fcol" aria-label="Altaha"><h4>Altaha</h4><ul>' +
       FOOT_COMPANY.map(function (it) { return footLink(it.section, it); }).join('') + '</ul></nav>';
+    /* data-nosnippet: the same list of tools is at the foot of every page,
+       and a search engine was quoting it as the page's description. It is
+       honoured on div, span and section, hence the two inner wrappers and
+       not the <footer>. The links are still followed. */
     foot.innerHTML =
-      '<div class="sh-fin">' +
+      '<div class="sh-fin" data-nosnippet>' +
         '<div class="sh-fbrand">' +
           '<a class="sh-brand" href="./" aria-label="Altaha Screener home">' +
             '<span class="mk" aria-hidden="true"></span><span class="nm">Altaha <i>Screener</i></span></a>' +
@@ -282,7 +286,7 @@
         '</div>' +
         '<div class="sh-fcols">' + cols + '</div>' +
       '</div>' +
-      '<div class="sh-fbase"><span>\u00a9 ' + new Date().getFullYear() + ' Altaha Screener</span>' +
+      '<div class="sh-fbase" data-nosnippet><span>\u00a9 ' + new Date().getFullYear() + ' Altaha Screener</span>' +
         '<span>Prices and filings from NSE and BSE. For information only, not investment advice.</span></div>';
     foot.addEventListener('click', function (e) {
       var a = e.target.closest('a[data-foot-section]');
@@ -304,6 +308,8 @@
     if (document.querySelector('.sh-chrome')) return;
 
     var chrome = el('div', 'sh-chrome');
+    // The menus are on every page: not for a search engine to quote (see the footer).
+    chrome.setAttribute('data-nosnippet', '');
 
     var ticker = el('div', 'sh-ticker');
     ticker.setAttribute('aria-label', 'Live market prices');

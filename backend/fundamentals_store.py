@@ -544,6 +544,23 @@ def recent_quarterly(since):
     return [dict(r) for r in _connect().execute(sql, (str(since),)).fetchall()]
 
 
+def latest_filed():
+    """
+    {symbol: 'YYYY-MM-DD'}: the day each company's newest results reached the
+    exchange. What the sitemap prints as a company page's <lastmod>. One query
+    for every company; a filing with no readable date is left out, so a
+    company with none on record is simply absent.
+    """
+    out = {}
+    for sym, at in _connect().execute(
+            "SELECT symbol, MAX(filed_at) FROM income_statement"
+            " WHERE filed_at IS NOT NULL GROUP BY symbol").fetchall():
+        day = _date(at)
+        if day:
+            out[sym] = day.isoformat()
+    return out
+
+
 def to_csv(table, records):
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=TABLES[table]["columns"], extrasaction="ignore")

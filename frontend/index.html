@@ -254,8 +254,16 @@
   button#go:hover{background:var(--gold-dp)}
   button#go:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .hint{font-family:var(--mono);font-size:12px;color:var(--mute);text-align:center;margin-bottom:40px;letter-spacing:.04em}
-  .hint b{color:var(--gold-dp);cursor:pointer;font-weight:500;border-bottom:1px solid var(--rule)}
-  .hint b:hover{border-color:var(--gold)}
+  .hint b,.hint a{color:var(--gold-dp);cursor:pointer;font-weight:500;border-bottom:1px solid var(--rule);text-decoration:none}
+  .hint b:hover,.hint a:hover{border-color:var(--gold)}
+  /* The plain links at the foot of the page (see the markup). */
+  .site-links{margin:64px 0 0;padding:26px 0 8px;border-top:1px solid var(--rule)}
+  .site-links h2{margin:0 0 14px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  .site-links ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+  .site-links li a{display:inline-block;padding:7px 12px;border:1px solid var(--rule);border-radius:99px;font-size:13px;color:var(--ink-2);text-decoration:none}
+  .site-links li a:hover,.site-links li a:focus-visible{border-color:var(--gold);color:var(--ink)}
+  .site-links p{margin:18px 0 0;font-size:13px;line-height:1.9;color:var(--mute)}
+  .site-links p a{color:var(--gold-dp);text-decoration:underline;text-underline-offset:3px}
 
   .state{max-width:540px;margin:0 auto 40px;text-align:center;font-size:14px;color:var(--ink-2);
     line-height:1.65;display:none;padding:20px;border:1px solid var(--rule);background:var(--paper-2)}
@@ -1228,7 +1236,7 @@
   document.documentElement.setAttribute('data-theme', s || (d?'dark':'light'));
 }catch(e){}})();
 </script>
-<link rel="stylesheet" href="universe-scan.css?v=20260927-week">
+<link rel="stylesheet" href="universe-scan.css?v=20261120-seo">
 <link rel="stylesheet" href="lenses.css?v=20261119-nostrip">
 <link rel="stylesheet" href="query.css?v=20261106">
 <link rel="stylesheet" href="idea-card.css?v=20260927b">
@@ -1239,8 +1247,8 @@
 <link rel="stylesheet" href="picks.css?v=20261114">
 <script src="picks.js?v=20261114"></script>
 <script src="planet-renderer.js?v=20260921-3d"></script>
-<script src="universe-voyage.js?v=20260922-stock-copy"></script>
-<script src="universe-scan.js?v=20261112"></script>
+<script src="universe-voyage.js?v=20261120-seo"></script>
+<script src="universe-scan.js?v=20261120-seo"></script>
 </head>
 <body>
 
@@ -1296,7 +1304,10 @@
 </header>
 
 <main class="wrap">
-  <div class="tabnav">
+  <!-- data-nosnippet: this menu is the same on every visit and is not what
+       the page is about. A search engine was quoting "Today / Ideas / My
+       money" as the site's description. -->
+  <div class="tabnav" data-nosnippet>
   <nav class="tabs tabs6 seg" role="tablist">
     <button class="tab active" id="tab-screener" role="tab" aria-selected="true">Screener</button>
     <button class="tab" id="tab-ideas" role="tab" aria-selected="false">Ideas</button>
@@ -1351,7 +1362,10 @@
            spellcheck="false" aria-label="Stock ticker symbol" />
     <button id="go">Analyse</button>
   </div>
-  <p class="hint">Try <b data-t="RELIANCE">RELIANCE</b> · <b data-t="HDFCBANK">HDFCBANK</b> · <b data-t="INFY">INFY</b> · <b data-t="NVDA">NVDA</b> · <b data-t="AAPL">AAPL</b></p>
+  <!-- The three NSE names are real links to the company's own page, so a
+       crawler reading this file can follow them. A click still runs the
+       analysis here. The two US names have no company page and stay as they were. -->
+  <p class="hint">Try <a href="/stock-RELIANCE" data-t="RELIANCE">RELIANCE</a> · <a href="/stock-HDFCBANK" data-t="HDFCBANK">HDFCBANK</a> · <a href="/stock-INFY" data-t="INFY">INFY</a> · <b data-t="NVDA">NVDA</b> · <b data-t="AAPL">AAPL</b></p>
 
   <div class="state" id="state"></div>
 
@@ -2111,6 +2125,7 @@
         <button class="act" type="button" data-goto="tracker">Open the idea record</button>
         <button class="act" type="button" data-goto="vocab">Glossary of every term</button>
       </div>
+      <p class="lsub">The same explanation as a page of its own, to link to or print: <a href="/methodology">How the Altaha Score works</a>.</p>
     </div>
   </div><!-- /view-score -->
 
@@ -2131,7 +2146,7 @@
   <div id="view-vocab" style="display:none">
     <header class="tabhead">
       <h2>Glossary</h2>
-      <p>Every term this site uses, in plain English with a worked example.</p>
+      <p>Every term this site uses, in plain English with a worked example. Also <a href="/glossary">as a page of its own</a>.</p>
     </header>
     <div class="searchrow" style="margin-top:0;max-width:440px">
       <input id="vsearch" placeholder="Search a term — ROCE, debt, volume…" autocomplete="off" aria-label="Search vocabulary">
@@ -2139,6 +2154,37 @@
     <div class="vgroups" id="vgroups"></div>
     <div id="vcards"></div>
   </div><!-- /view-vocab -->
+
+  <!-- ══ PLAIN LINKS ═══════════════════════════════════════════════════════
+       Everything else on this page that leads to a company is drawn by a
+       script, and the footer's link to the full list is too. A crawler
+       reading this file as text found no way off it. These are ordinary
+       links in the HTML: the largest NSE companies by name, the full list,
+       and the three pages that explain the site. The companies are the ones
+       large enough to be certain of a page; the rest are reached from
+       /stocks. data-nosnippet because a list of links is not a description. -->
+  <section class="site-links" id="site-links" aria-labelledby="site-links-h" data-nosnippet>
+    <h2 id="site-links-h">Popular companies</h2>
+    <ul>
+      <li><a href="/stock-RELIANCE">Reliance Industries</a></li>
+      <li><a href="/stock-TCS">TCS</a></li>
+      <li><a href="/stock-HDFCBANK">HDFC Bank</a></li>
+      <li><a href="/stock-ICICIBANK">ICICI Bank</a></li>
+      <li><a href="/stock-INFY">Infosys</a></li>
+      <li><a href="/stock-SBIN">State Bank of India</a></li>
+      <li><a href="/stock-BHARTIARTL">Bharti Airtel</a></li>
+      <li><a href="/stock-ITC">ITC</a></li>
+      <li><a href="/stock-LT">Larsen &amp; Toubro</a></li>
+      <li><a href="/stock-HINDUNILVR">Hindustan Unilever</a></li>
+      <li><a href="/stock-BAJFINANCE">Bajaj Finance</a></li>
+      <li><a href="/stock-KOTAKBANK">Kotak Mahindra Bank</a></li>
+      <li><a href="/stock-AXISBANK">Axis Bank</a></li>
+      <li><a href="/stock-MARUTI">Maruti Suzuki</a></li>
+      <li><a href="/stock-SUNPHARMA">Sun Pharma</a></li>
+      <li><a href="/stock-TITAN">Titan</a></li>
+    </ul>
+    <p><a href="/stocks">All NSE Companies (A&ndash;Z)</a> &middot; <a href="/glossary">Glossary</a> &middot; <a href="/methodology">How the Altaha Score works</a> &middot; <a href="/planner">Money planner</a></p>
+  </section>
 
 </main>
 
@@ -3428,7 +3474,7 @@ async function loadFilings(retry){
       el.addEventListener("click", ()=>{ window.AltahaOpenStock ? window.AltahaOpenStock(el.dataset.open, "filings")
                                           : location.href = "stock.html?ticker=" + encodeURIComponent(el.dataset.open); }));
   }catch(e){
-    $("frows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
+    $("frows").innerHTML = `<div class="ideas-note" data-nosnippet style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
   }
 }
 
@@ -3509,7 +3555,7 @@ async function loadTracker(){
         </div>
       </div>`).join("");
   }catch(e){
-    $("tkrows").innerHTML = `<div class="ideas-note" style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
+    $("tkrows").innerHTML = `<div class="ideas-note" data-nosnippet style="padding:14px 0">Engine unreachable \u2014 it may be waking from sleep. Try again in ~30 seconds.</div>`;
   }
 }
 
@@ -4432,7 +4478,11 @@ function render(d){
 
 $("go").addEventListener("click", ()=>analyse());
 $("tk").addEventListener("keydown", e=>{ if(e.key==="Enter") analyse(); });
-document.querySelectorAll(".hint b").forEach(b=>b.addEventListener("click",()=>analyse(b.dataset.t)));
+document.querySelectorAll(".hint [data-t]").forEach(b=>b.addEventListener("click",e=>{
+  // A plain click runs the analysis here; a modified one opens the company's page.
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.button) return;
+  e.preventDefault(); analyse(b.dataset.t);
+}));
 document.querySelectorAll("#hzseg .hz[data-h], #hzseg2 .hz[data-h]").forEach(b=>b.addEventListener("click",()=>{
   horizon = b.dataset.h;
   if(window.AltahaPicks) window.AltahaPicks.remember(horizon);
@@ -4800,7 +4850,7 @@ if(fcSymParam){
 <script src="index-explorer.js?v=20260924-atlas" defer></script>
 <script src="sectors-live.js?v=20260927-dialog" defer></script>
 <script src="deals.js" defer></script>
-<script src="shell.js?v=20261119-planner" defer></script>
+<script src="shell.js?v=20261120-seo" defer></script>
 <script src="home.js" defer></script>
 <script src="special.js" defer></script>
 <script src="wow.js" defer></script>
@@ -4814,8 +4864,8 @@ if(fcSymParam){
 <script src="planner-risk.js" defer></script>
 <script src="planner-math.js?v=20261119" defer></script>
 <script src="planner.js?v=20261119" defer></script>
-<script src="discover.js?v=20261111" defer></script>
-<script src="doors.js?v=20261119-heads" defer></script>
+<script src="discover.js?v=20261120-seo" defer></script>
+<script src="doors.js?v=20261120-seo" defer></script>
 <script src="adviser.js" defer></script>
 <script src="question-art.js" defer></script>
 <script src="money-fx.js" defer></script>
