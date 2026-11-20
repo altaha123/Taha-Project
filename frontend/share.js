@@ -334,8 +334,56 @@
         }
         return lines.join("\n");
       }
+    },
+
+    /* One earnings call, as its written brief tells it. The headline is what
+       management said on the call, with their figures: a revenue or margin
+       number they guided for is a fact about the call, not a level on the
+       share, and nothing here is a view on it. `period` is in the address for
+       the reason it is on a results card. */
+    concall: {
+      png: function (d) {
+        return "/og/concall.png" + qs({ ticker: clean(d.ticker || d.symbol), period: period(d) });
+      },
+      page: function (d) {
+        return "/share/concall/" + encodeURIComponent(clean(d.ticker || d.symbol))
+             + qs({ period: period(d) });
+      },
+      file: function (d) {
+        return "altaha-" + clean(d.ticker || d.symbol).toLowerCase()
+             + (period(d) ? "-" + period(d).toLowerCase() : "") + "-concall.png";
+      },
+      title: function (d) {
+        return clean(d.ticker || d.symbol) + " — " + (d.quarter ? d.quarter + " " : "")
+             + "earnings call";
+      },
+      text: function (d) {
+        /* The whole post has to leave room for the link on X, and a brief's
+           headline can run to 160 characters, so the headline is what gives:
+           it is cut at a word, and the closing line goes before it does. */
+        var LIMIT = 240;
+        var who = cut(String(d.company || clean(d.ticker || d.symbol) || "").trim(), 70);
+        var head = (who ? who + " — " : "") + (d.quarter ? d.quarter + " " : "")
+                 + "earnings call";
+        var said = cut(String(d.headline || "").replace(/\s+/g, " ").trim(),
+                       LIMIT - head.length - 1);
+        var out = said ? head + "\n" + said : head;
+        var tail = "AI summary of the transcript the company filed.";
+        if (out.length + 2 + tail.length <= LIMIT) out += "\n\n" + tail;
+        return out;
+      }
     }
   };
+
+  /* A string no longer than n, cut at a word and marked as cut. */
+  function cut(s, n) {
+    if (s.length <= n) return s;
+    if (n < 2) return "";
+    var t = s.slice(0, n - 1);
+    var sp = t.lastIndexOf(" ");
+    if (sp > n * 0.6) t = t.slice(0, sp);
+    return t.replace(/[\s,;:\u2013\u2014-]+$/, "") + "\u2026";
+  }
 
   function period(d) {
     return String((d && d.quarter) || "").trim().replace(/\s+/g, "-").replace(/[^A-Za-z0-9\-]/g, "");
@@ -662,7 +710,9 @@
     holding: "Marked to market against the index over the identical window.",
     record: "The whole ledger — every idea logged the day it was generated.",
     results: "The quarter as the company filed it — profit, revenue, margin and the " +
-             "same quarter a year earlier. Every figure on it is the company's own."
+             "same quarter a year earlier. Every figure on it is the company's own.",
+    concall: "The call as its brief tells it: the headline and the summary, written " +
+             "by a model from the transcript the company filed, and marked as such."
   };
 
   function open(d) {

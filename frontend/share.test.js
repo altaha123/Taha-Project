@@ -77,6 +77,11 @@ const RESULTS = {
   net_margin_pct: 11.0, net_margin_yoy_pct: 8.1,
 };
 
+const CONCALL = {
+  kind: "concall", ticker: "TARIL", company: "Transformers And Rectifiers (India) Ltd",
+  quarter: "Q2 FY27", headline: "Order book at \u20B95,472 crore; FY27 revenue guidance held",
+};
+
 const cases = [
   { d: { kind: "stock", ticker: "TCS" },
     link: "https://site.example/share/TCS",
@@ -100,6 +105,9 @@ const cases = [
   { d: RESULTS,
     link: "https://site.example/share/results/TARIL?period=Q2-FY27",
     card: "https://site.example/og/results.png?ticker=TARIL&period=Q2-FY27" },
+  { d: CONCALL,
+    link: "https://site.example/share/concall/TARIL?period=Q2-FY27",
+    card: "https://site.example/og/concall.png?ticker=TARIL&period=Q2-FY27" },
 ];
 
 for (const c of cases) {
@@ -130,6 +138,35 @@ const lossPost = S.compose(Object.assign({}, RESULTS, { pat_cr: -12.5, pat_yoy_p
 assert.ok(lossPost.includes("Net loss \u20B912.5 Cr"), `a loss must say so:\n${lossPost}`);
 assert.ok(!/undefined|NaN|null/.test(S.compose({ kind: "results", ticker: "X" })),
   "a sparse results payload leaked a raw value");
+
+/* ── a concall post is the company, the quarter and what was said ──────── */
+
+const cpost = S.compose(CONCALL);
+assert.strictEqual(cpost,
+  "Transformers And Rectifiers (India) Ltd \u2014 Q2 FY27 earnings call\n" +
+  "Order book at \u20B95,472 crore; FY27 revenue guidance held\n\n" +
+  "AI summary of the transcript the company filed.");
+/* A long headline is cut at a word and says it was cut; the closing line is
+   what goes first, and the whole post still leaves room for the link. */
+const longCall = S.compose(Object.assign({}, CONCALL, {
+  company: "Solarworld Energy Solutions Limited",
+  headline: "Management cut FY27 guidance to \u20B91,600\u20131,700 crore revenue and " +
+            "5\u20136% profit margin on fixed-price government contracts, and said the " +
+            "order book supports \u20B93,000 crore of revenue in FY28 and beyond that",
+}));
+assert.ok(longCall.length <= 240, `a long concall post is ${longCall.length} chars`);
+assert.ok(longCall.endsWith("\u2026"), `a cut headline must say so:\n${longCall}`);
+assert.ok(!/\s\u2026$/.test(longCall) && !longCall.includes("AI summary"), longCall);
+assert.ok(longCall.startsWith("Solarworld Energy Solutions Limited \u2014 Q2 FY27 earnings call\n" +
+  "Management cut FY27 guidance to \u20B91,600\u20131,700 crore"), longCall);
+for (const d of [{ kind: "concall", ticker: "X" },
+                 { kind: "concall", ticker: "X", company: "W".repeat(300), headline: "H ".repeat(300) }]) {
+  const t = S.compose(d);
+  assert.ok(t.length <= 240 && !/undefined|NaN|null/.test(t), `sparse concall post:\n${t}`);
+}
+assert.strictEqual(S.link({ kind: "concall", ticker: "M&M", quarter: "Q1 FY27" }),
+  "https://site.example/share/concall/M%26M?period=Q1-FY27");
+assert.strictEqual(S.link({ kind: "concall", ticker: "X" }), "https://site.example/share/concall/X");
 
 /* ── every network gets the link, and the card travels with it ─────────── */
 

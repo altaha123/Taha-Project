@@ -1012,3 +1012,246 @@ def results_card(r: dict) -> bytes:
     buf = io.BytesIO()
     img.save(buf, "PNG", optimize=True)
     return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Concall cards
+#
+# One earnings call: the company, the quarter, the brief's headline and as
+# much of its summary as fits in whole sentences. It is the only card here
+# that is mostly prose, so it is the only one that wraps text.
+#
+# What it may say is what the brief may say: what management told the call,
+# with their figures. A revenue or margin figure management guided for is a
+# fact about the call and is drawn; it is not a price level, and nothing on
+# the card is a view on the share. The card also says a model wrote it — the
+# page does, on every brief, and a picture that travels without the page has
+# to carry that with it.
+# ---------------------------------------------------------------------------
+
+_covers_cache = {}
+
+
+def _covers(ch):
+    """
+    Whether the serif can draw this character.
+
+    Instrument Serif has no ₹, and a brief is full of them. Pillow does not
+    expose a font's character map, so a missing glyph is recognised by what it
+    draws: the same .notdef box as a code point no font has.
+    """
+    if ch.isspace():
+        return True
+    hit = _covers_cache.get(ch)
+    if hit is None:
+        try:
+            f = serif(40)
+            hit = bytes(f.getmask(ch)) != bytes(f.getmask("\U0010fffd"))
+        except Exception:
+            hit = True
+        _covers_cache[ch] = hit
+    return hit
+
+
+def _runs(text):
+    """Split text into (serif can draw it, run) pieces, in order."""
+    out = []
+    for ch in text:
+        ok = _covers(ch)
+        if out and out[-1][0] == ok:
+            out[-1][1] += ch
+        else:
+            out.append([ok, ch])
+    return out
+
+
+def _prose_fonts(size):
+    # The mono is wider and taller for its size than the serif; at four fifths
+    # a rupee sign sits at the height of the figures beside it.
+    return serif(size), mono(max(8, round(size * 0.8)))
+
+
+def _prose_width(draw, text, size):
+    fs, fm = _prose_fonts(size)
+    return sum(draw.textlength(run, font=fs if ok else fm) for ok, run in _runs(text))
+
+
+def _prose(draw, x, baseline, text, size, fill):
+    """One line of serif text on a baseline, with the mono filling its gaps."""
+    fs, fm = _prose_fonts(size)
+    for ok, run in _runs(text):
+        f = fs if ok else fm
+        draw.text((x, baseline), run, font=f, fill=fill, anchor="ls")
+        x += draw.textlength(run, font=f)
+    return x
+
+
+def _wrap(draw, text, size, width):
+    """Greedy word wrap. A word wider than the line gets a line to itself."""
+    lines, line = [], ""
+    for word in str(text or "").split():
+        trial = (line + " " + word) if line else word
+        if line and _prose_width(draw, trial, size) > width:
+            lines.append(line)
+            line = word
+        else:
+            line = trial
+    if line:
+        lines.append(line)
+    return lines
+
+
+def _clip(draw, lines, n, size, width):
+    """The first n lines, the last ending in an ellipsis when some were cut."""
+    if len(lines) <= n:
+        return lines
+    kept = lines[:n]
+    last = kept[-1].rstrip(" ,;:—-")
+    while last and _prose_width(draw, last + "…", size) > width:
+        last = last.rsplit(" ", 1)[0] if " " in last else last[:-1]
+        last = last.rstrip(" ,;:—-")
+    kept[-1] = last + "…"
+    return kept
+
+
+def _sentences(text):
+    """
+    Sentences, split only where a full stop ends one.
+
+    A brief is written in rupees and percentages, so most of its full stops
+    are decimal points: "₹4.2 crore", "5.5%". A stop counts only when a space
+    and a capital, a digit or a rupee sign follow it.
+    """
+    import re
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9₹“\"'(])", str(text or "").strip())
+    return [p.strip() for p in parts if p.strip()]
+
+
+def _whole_sentences(draw, text, size, width, room):
+    """
+    As much of a paragraph as fits in `room` lines, ending on a sentence.
+
+    A summary cut mid-sentence reads as a mistake; one that stops a sentence
+    early reads as a summary. Only when even the first sentence is too long is
+    it cut, and then it says so with an ellipsis.
+    """
+    if room < 1:
+        return []
+    kept = []
+    for s in _sentences(text):
+        trial = _wrap(draw, " ".join(kept + [s]), size, width)
+        if len(trial) > room:
+            break
+        kept.append(s)
+    if kept:
+        return _wrap(draw, " ".join(kept), size, width)
+    return _clip(draw, _wrap(draw, text, size, width), room, size, width)
+
+
+def _call_day(value):
+    """'2026-11-20' or an ISO timestamp -> '20 NOV 2026'; '' when unreadable."""
+    s = str(value or "").strip()
+    if not s:
+        return ""
+    try:
+        return dt.datetime.fromisoformat(s.replace("Z", "+00:00")).strftime("%d %b %Y").upper()
+    except ValueError:
+        pass
+    try:
+        return dt.datetime.strptime(s[:10], "%Y-%m-%d").strftime("%d %b %Y").upper()
+    except ValueError:
+        return ""
+
+
+# The headline is the card. It is set as large as three lines allow, and a
+# long one steps down rather than being cut.
+HEADLINE_SIZES = (62, 56, 50, 45, 40)
+HEADLINE_LINES = 3
+SUMMARY_SIZE = 28
+SUMMARY_LEAD = 39
+
+
+def concall_card(c: dict) -> bytes:
+    """
+    One earnings call, as its brief tells it.
+
+    c: symbol, company, quarter, call_date, filed_at, key, and brief
+       {headline, summary}. The same fields /concalls gives the page.
+    """
+    from PIL import Image, ImageDraw
+
+    img = Image.new("RGB", (W, H), PAPER)
+    d = ImageDraw.Draw(img)
+    _shell(d, img)
+
+    brief = c.get("brief") or {}
+    sym = str(c.get("symbol") or "").upper().replace(".NS", "").replace(".BO", "")
+    company = " ".join(str(c.get("company") or sym or "").split())
+    quarter = str(c.get("quarter") or "").strip().upper()
+    headline = " ".join(str(brief.get("headline") or "").split())
+    summary = " ".join(str(brief.get("summary") or "").split())
+    if not headline:
+        # A brief always has a summary; a headline is the model's to leave out.
+        first = _sentences(summary)
+        headline, summary = (first[0], " ".join(first[1:])) if first else ("", "")
+
+    # What this is, top right, where the eye lands after the mark.
+    tag = f"{quarter} EARNINGS CALL" if quarter else "EARNINGS CALL"
+    tw = _tracked_width(d, tag, mono(20, True), 3)
+    _tracking(d, (W - 64 - tw, 60), tag, mono(20, True), GOLD, 3)
+    held, filed = _call_day(c.get("call_date")), _call_day(c.get("filed_at"))
+    sub = f"CALL HELD {held}" if held else (f"TRANSCRIPT FILED {filed}" if filed else "")
+    if sub:
+        sw = _tracked_width(d, sub, mono(14), 2.2)
+        _tracking(d, (W - 64 - sw, 96), sub, mono(14), MUTE, 2.2)
+
+    # The company, as the line above the headline. A key call is flagged the
+    # way the page flags it: a filled gold tag in front of the name.
+    x, y = 64, 164
+    kf = mono(17, True)
+    if c.get("key"):
+        flag = "KEY CALL"
+        fw = _tracked_width(d, flag, mono(14, True), 2.2)
+        d.rounded_rectangle([x, y - 5, x + fw + 24, y + 25], radius=5, fill=GOLD)
+        _tracking(d, (x + 12, y + 1), flag, mono(14, True), PAPER, 2.2)
+        x += fw + 24 + 16
+    name = company.upper()
+    tail = f" · {sym}" if sym and sym != name else ""
+    room = W - 64 - x
+    if _tracked_width(d, name + tail, kf, 2.4) > room:
+        tail = ""
+    if _tracked_width(d, name, kf, 2.4) > room:
+        while name and _tracked_width(d, name + "…", kf, 2.4) > room:
+            name = name[:-1]
+        name = name.rstrip() + "…"
+    end = _tracking(d, (x, y), name, kf, INK, 2.4)
+    if tail:
+        _tracking(d, (end, y), tail, kf, MUTE, 2.4)
+
+    # The headline.
+    width = W - 128
+    size, lines = HEADLINE_SIZES[-1], []
+    for size in HEADLINE_SIZES:
+        lines = _wrap(d, headline, size, width)
+        if len(lines) <= HEADLINE_LINES:
+            break
+    lines = _clip(d, lines, HEADLINE_LINES, size, width)
+    lead = round(size * 1.1)
+    baseline = 208 + round(size * 0.82)
+    for line in lines:
+        _prose(d, 62, baseline, line, size, INK)
+        baseline += lead
+    bottom = baseline - lead + round(size * 0.24)
+
+    # As much of the summary as fits above the footer, in whole sentences.
+    top = bottom + 22
+    room = int((H - 92 - 20 - top) // SUMMARY_LEAD)
+    baseline = top + round(SUMMARY_SIZE * 0.82)
+    for line in _whole_sentences(d, summary, SUMMARY_SIZE, width, room):
+        _prose(d, 64, baseline, line, SUMMARY_SIZE, INK_2)
+        baseline += SUMMARY_LEAD
+
+    _footer(d, "AI-WRITTEN FROM THE TRANSCRIPT FILED WITH BSE")
+    buf = io.BytesIO()
+    img.save(buf, "PNG", optimize=True)
+    return buf.getvalue()

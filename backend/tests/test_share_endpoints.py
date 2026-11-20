@@ -51,6 +51,10 @@ class Client:
                 return self.main.og_stock(**q)
             if path == "/og/record.png":
                 return self.main.og_record()
+            if path == "/og/concall.png":
+                return self.main.og_concall(**q)
+            if path.startswith("/share/concall/"):
+                return self.main.share_concall(path.rsplit("/", 1)[1], **q)
             if path == "/share/record":
                 return self.main.share_record()
             if path.startswith("/share/chart/"):
@@ -172,6 +176,70 @@ def test_the_chart_share_page_links_to_the_charts_tab(client):
 def test_holding_share_page_404s_for_an_untracked_symbol(client):
     """Better a 404 than a card describing a position that does not exist."""
     assert _status(client.get("/share/holding/NOTTRACKED")) == 404
+
+
+# ---------------------------------------------------------------------------
+# A concall, shared
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def call_on_file(client, tmp_path, monkeypatch):
+    """One call in the ledger with a written brief, and nothing behind it: the
+    feed and the model both fail the test if a card or a share page asks."""
+    import datetime as dt
+    C = client.main.concall_source
+    monkeypatch.setattr(C, "DB_PATH", str(tmp_path / "concalls.db"))
+    monkeypatch.setitem(C._db_ready, "done", False)
+    monkeypatch.setattr(C, "find", lambda *a, **k: pytest.fail("a card walked the feed"))
+    monkeypatch.setattr(C, "write_brief", lambda *a, **k: pytest.fail("a card called a model"))
+    monkeypatch.setattr(C, "refresh_if_stale", lambda *a, **k: pytest.fail(
+        "a card started the reader"))
+    at = dt.datetime.now(C.IST) - dt.timedelta(days=2)
+    pdf = "https://www.bseindia.com/x/m.pdf"
+    assert C.file_call({"symbol": "M&M", "company": "Mahindra & Mahindra Ltd",
+                        "headline": "Earnings Call Transcript", "at": at.isoformat(),
+                        "epoch": at.timestamp(), "pdf": pdf},
+                       True, {"quarter": "Q2 FY27", "call_date": "2026-11-14", "words": 9000})
+    assert C._put_brief(pdf, {
+        "status": "ready", "model": "claude-sonnet-5-5", "weight": "high",
+        "headline": "Tractor volumes guided to grow 12% in FY27 <b>",
+        "summary": ("Management raised its tractor volume guidance to 12% growth for "
+                    "FY27. " + "Rural demand was described as firm across regions. " * 12),
+    })
+    return C
+
+
+def test_a_concall_card_renders_from_the_ledger_alone(client, call_on_file):
+    assert _png(client.get("/og/concall.png?ticker=M%26M&period=Q2-FY27")) == (1200, 630)
+    # A link with no quarter, or last quarter's, still has a card.
+    assert _png(client.get("/og/concall.png?ticker=M%26M")) == (1200, 630)
+
+
+def test_a_concall_share_page_is_that_call(client, call_on_file):
+    r = client.get("/share/concall/M&M?period=Q2-FY27")
+    assert _status(r) == 200, _text(r)[:300]
+    html = _text(r)
+    for tag in ('property="og:image"', 'name="twitter:card" content="summary_large_image"',
+                'rel="canonical"'):
+        assert tag in html
+    assert "Mahindra &amp; Mahindra Ltd — Q2 FY27 earnings call" in html
+    assert "Tractor volumes guided to grow 12% in FY27 &lt;b&gt;" in html
+    assert "<b>" not in html, "a tag in a model's headline reached the page as markup"
+    # The symbol's ampersand must not end the parameter it is in.
+    assert "/og/concall.png?ticker=M%26M&amp;period=Q2-FY27" in html
+    assert "go=concalls&amp;q=M%26M" in html, "a shared call must open the call"
+    assert "onrender.com" not in html
+    # The description is the summary, cut to a length a preview will show.
+    desc = re.search(r'<meta name="description" content="([^"]*)"', html).group(1)
+    assert desc.startswith("Management raised its tractor volume guidance")
+    assert len(desc) <= 300 and desc.endswith("…")
+
+
+def test_a_call_with_no_brief_has_no_card_and_no_share_page(client, call_on_file):
+    """Better a 404 than a card for a summary that was never written."""
+    assert _status(client.get("/og/concall.png?ticker=NOBRIEF")) == 404
+    assert _status(client.get("/share/concall/NOBRIEF")) == 404
+    assert _status(client.get("/og/concall.png?ticker=")) in (400, 422)
 
 
 def test_vercel_rewrites_cover_every_public_path():

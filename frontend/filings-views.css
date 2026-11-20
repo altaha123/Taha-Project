@@ -133,6 +133,17 @@
   border-radius:5px; padding:4px 7px;
 }
 .cc-when{ margin-left:auto; font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute) }
+/* Share sits after the date, at the end of the header. On a phone the header
+   wraps and the pair moves to its own line, still at the right-hand edge. */
+.cc-head .cc-share{ align-self:center; flex:0 0 auto }
+.cc-head .cc-when{ align-self:center }
+/* With a mouse the button is the size of the tags beside it; on a touch
+   screen it keeps the 44px every other button on the site has. */
+@media (hover:hover) and (pointer:fine){ .cc-head .cc-share{ min-height:30px } }
+/* The call a shared card linked to: clear of the sticky header when it is
+   scrolled to, and ringed so it can be told from its neighbours. */
+.cc{ scroll-margin-top:150px }
+.cc.is-arrived{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(176,141,46,.2) }
 
 .cc-facts{ display:flex; flex-wrap:wrap; gap:9px 24px; margin-bottom:17px }
 .cc-facts span{

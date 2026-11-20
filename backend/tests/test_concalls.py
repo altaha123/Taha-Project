@@ -561,6 +561,68 @@ def test_a_brief_is_written_once_and_the_key_calls_come_first(reader, text):
     assert out["model"] == "claude-sonnet-5-5" and "Claude" in out["disclaimer"]
 
 
+# ---------------------------------------------------------------------------
+# What a share card reads
+# ---------------------------------------------------------------------------
+
+def _file_with_brief(text, pdf, quarter, days_ago, **over):
+    item = filing(1, "CARDCO", days_ago=days_ago, company="Card Company Ltd")
+    item["pdf"] = pdf
+    body = dict(C.digest(text), quarter=quarter)
+    assert C.file_call(item, True, body)
+    brief = C.shape_brief(answer(**over), text, model="claude-sonnet-5-5")
+    assert C._put_brief(pdf, brief)
+    return item
+
+
+def test_a_card_is_the_call_for_the_quarter_in_its_address(reader, text):
+    _file_with_brief(text, "https://x/old.pdf", "Q4 FY26", 100, headline="The older call")
+    _file_with_brief(text, "https://x/new.pdf", "Q1 FY27", 2, headline="The newer call",
+                     weight="low")
+    old = reader.for_card("cardco", "Q4-FY26")
+    assert old["brief"]["headline"] == "The older call" and old["quarter"] == "Q4 FY26"
+    assert old["key"] is True and old["company"] == "Card Company Ltd"
+    # However the quarter is spelled in the link, it is the same call.
+    assert reader.for_card("CARDCO", "q4 fy26")["pdf"] == "https://x/old.pdf"
+    new = reader.for_card("CARDCO", "Q1-FY27")
+    assert new["brief"]["headline"] == "The newer call" and new["key"] is False
+    assert new["call_date"] == C.digest(text)["call_date"]
+
+
+def test_a_card_with_no_quarter_or_an_unknown_one_is_the_newest_call(reader, text):
+    _file_with_brief(text, "https://x/old.pdf", "Q4 FY26", 100, headline="The older call")
+    _file_with_brief(text, "https://x/new.pdf", "Q1 FY27", 2, headline="The newer call")
+    assert reader.for_card("CARDCO")["brief"]["headline"] == "The newer call"
+    assert reader.for_card("CARDCO", "Q3-FY19")["brief"]["headline"] == "The newer call"
+
+
+def test_there_is_no_card_without_a_written_brief(reader, text):
+    """A card is the brief. A call that was read but not summarised, one whose
+    summary the model declined, a scan and an unknown company all have none —
+    and asking never walks the feed or calls a model to make one."""
+    item = filing(1, "NOBRIEF")
+    assert C.file_call(item, True, C.digest(text))
+    assert reader.for_card("NOBRIEF") is None
+
+    declined = filing(2, "DECLINED")
+    assert C.file_call(declined, True, C.digest(text))
+    assert C._put_brief(declined["pdf"], {"status": "declined", "model": "m"})
+    assert reader.for_card("DECLINED") is None
+
+    scan = filing(3, "SCANCO")
+    assert C.file_call(scan, False, {})
+    assert reader.for_card("SCANCO") is None
+
+    assert reader.for_card("NEVERFILED") is None
+    assert reader.for_card("") is None and reader.for_card(None) is None
+
+
+@pytest.mark.parametrize("quarter,slug", [("Q2 FY27", "Q2-FY27"), ("q2-fy27", "Q2-FY27"),
+                                          (" Q2  FY27 ", "Q2-FY27"), ("", ""), (None, "")])
+def test_a_quarter_has_one_spelling_in_an_address(quarter, slug):
+    assert C.quarter_slug(quarter) == slug
+
+
 def test_the_hourly_limit_stops_the_pass_and_the_page_is_told(reader, text, monkeypatch):
     monkeypatch.setattr(C, "HOURLY", 2)
     items = [filing(n, "S%d" % n, company="Co %d" % n) for n in range(1, 6)]

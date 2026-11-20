@@ -1341,6 +1341,47 @@ def for_symbol(symbol: str, days: int = 7) -> dict:
     }
 
 
+def quarter_slug(quarter: str) -> str:
+    """'Q2 FY27' -> 'Q2-FY27', the form a quarter takes in an address."""
+    return re.sub(r"[^A-Za-z0-9]+", "-", str(quarter or "")).strip("-").upper()
+
+
+def for_card(symbol: str, quarter: str = ""):
+    """
+    One company's call as a share card needs it, or None when there is no
+    written brief to put on one.
+
+    Reads the ledger and nothing else, like `recent`: a card is fetched by a
+    crawler, and a crawler must never be what starts a model call. `quarter`
+    is matched as it appears in an address, so 'Q2-FY27' and 'Q2 FY27' are the
+    same call; without one, or when that quarter has no brief, the newest
+    call that has a brief is the answer — a link posted last quarter still
+    opens onto something true.
+    """
+    sym = (symbol or "").strip().upper()
+    if not sym:
+        return None
+    filed = [r for r in filed_since(symbol=sym, limit=40) if r["readable"]]
+    if not filed:
+        return None
+    have = briefs_for([r["pdf"] for r in filed])
+    ready = [r for r in filed if (have.get(r["pdf"]) or {}).get("status") == "ready"]
+    if not ready:
+        return None
+    want = quarter_slug(quarter)
+    row = next((r for r in ready
+                if want and quarter_slug((r["digest"] or {}).get("quarter")) == want),
+               ready[0])
+    brief, body = have[row["pdf"]], row["digest"] or {}
+    return {
+        "symbol": sym, "company": row["company"] or sym,
+        "quarter": body.get("quarter") or "", "call_date": body.get("call_date"),
+        "filed_at": row["at"], "pdf": row["pdf"],
+        "key": brief.get("weight") == "high",
+        "brief": brief,
+    }
+
+
 def summarise(text: str, company: str = "", quarter: str = "", pdf: str = "",
               headline: str = "") -> dict:
     """
