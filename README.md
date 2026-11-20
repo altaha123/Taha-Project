@@ -51,9 +51,17 @@ Under the header, inside a tool, one line says where you are (*Today › Big
 trades*, and what the tool is for) and carries the pin that puts the tool on
 the desk on Today. On a door's own page that line is not shown. It replaced a
 row of pills with the rest of the tools under **More**, which readers found
-confusing. Below 1040px there are no doors in the header to hang a menu
-from, so the row of pills is still there: the tools a newcomer needs first,
-the rest under More (the `more: true` flag on the same door map).
+confusing.
+
+**On a phone or a narrow window** (below 1040px) there are no doors in the
+header to hang a menu from, so the same menu comes up as a sheet from the
+bottom of the screen. The bar under the header is one button that says where
+you are (*Portfolio › Watchlists*); it opens the sheet, which has the three
+doors across its top and, under the one chosen, the door's own page and its
+tools in the same groups with the same icons and hints. Any tool is two taps
+from anywhere. The sheet closes on its cross, a tap or a pull on its handle,
+a tap on the page behind it, Escape, or Android's Back button. It is built
+by `sheetHTML` in `frontend/shell.js` from the same door map as the menus.
 
 The third door was called *My money* until Nov 2026. Its id was always
 `portfolio`, so no address changed.
@@ -65,8 +73,8 @@ complex to find their way around, so three things changed (Nov 2026):
   picks, check my portfolio. It stays hidden once the reader hides it.
 - Ideas opens on the picks. It used to open on a picture of a planet.
 - Less writing. Sixteen tool intros went from 452 words to 177.
-- The door bars went from 9 and 13 pills to 5 and 6, plus More. On a wide
-  screen they have since become the door menus above.
+- The door bars went from 9 and 13 pills to 5 and 6, plus More. They have
+  since become the door menus above, and the sheet on a phone.
 - A stock page shows its Altaha Score under the name; it used to be behind
   the Scores tab. The chip opens that section. One search box finds companies, tools and actions alike — "bulk"
 finds Big trades, "pledge" finds the Screener — and opens with Ctrl+K or `/`.

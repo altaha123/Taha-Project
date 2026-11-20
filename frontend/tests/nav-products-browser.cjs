@@ -16,8 +16,8 @@
        view — #screener, #ideas, #planner, #portfolio, #funds, #screener/funds
      · the door pages and the older hubs render rather than sitting empty
      · the line under the header says where the reader is and pins the tool;
-       below 1040px the row of pills is still there; search finds a tool by
-       the word people use for it
+       below 1040px it is a button that opens the same menu as a sheet from
+       the bottom of the screen; search finds a tool by the word people use
      · nothing overflows a 390px screen
 
    Provider calls are fulfilled from fixtures; nothing here touches a network. */
@@ -238,7 +238,6 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   assert.equal((await page.locator('#sh-doorbar .sh-crumb-door').innerText()).trim(), 'Ideas');
   assert.equal((await page.locator('#sh-doorbar .sh-crumb-here').innerText()).trim(), 'Concalls');
   assert.match(await page.locator('#sh-doorbar .sh-crumb-hint').innerText(), /Earnings calls/);
-  assert.equal(await page.locator('#sh-doorbar .sh-pill').count(), 0, 'the row of pills is back on a wide screen');
   assert.deepEqual(await page.locator('#sh-mega [aria-current="page"]').evaluateAll(ns => ns.map(n => n.dataset.tab)), ['concalls']);
   // The door in that line, and the door's name in the header, both open the door's page.
   await page.locator('#sh-doorbar .sh-crumb-door').click();
@@ -250,41 +249,118 @@ const DOORS = ['Today', 'Ideas', 'Portfolio'];
   await page.waitForTimeout(500);
   assert.equal(await page.locator('#sh-megawrap.open').count(), 0, 'a click on a door’s name left its menu over the page');
 
-  /* Below 1040px the header has no doors to hang a menu from, so the row of
-     tools under it is still how a reader moves inside a door: a short row,
-     and the rest one tap away under More, each with its hint. */
+  /* ── 1d · The same menu on a narrow screen ────────────────────────────────
+     Below 1040px the header has no doors to hang a menu from. The bar under
+     it is one button that says where the reader is and opens a sheet from
+     the bottom of the screen: the three doors across the top, and under the
+     one chosen its own page and its tools, in the same groups. It replaced
+     a row of pills that scrolled sideways with the rest under "More". */
   await page.setViewportSize({ width: 900, height: 900 });
   await page.evaluate(() => window.AltahaNav.go('discover', 'today', true));
-  await page.locator('#sh-doorbar .sh-pill.on').waitFor({ state: 'visible' });
-  assert.equal((await page.locator('#sh-doorbar .sh-pill.on').innerText()).trim(), 'Overview');
+  const where = page.locator('#sh-where');
+  await where.waitFor({ state: 'visible' });
   assert.equal(await page.locator('.sh-doorwrap').first().isVisible(), false);
-  assert.deepEqual(await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill').evaluateAll(ns => ns.map(n => n.dataset.tab)),
-                   ['today', 'live', 'deals', 'results', 'filings'], 'Today’s door bar row changed');
-  assert.equal(await page.locator('#sh-morepanel').isVisible(), false, 'More opened by itself');
-  await page.locator('#sh-morebtn').click();
-  await page.locator('#sh-morepanel').waitFor({ state: 'visible' });
-  assert.deepEqual(await page.locator('#sh-morepanel .sh-moreitem').evaluateAll(ns => ns.map(n => n.dataset.tab)),
-                   ['wow', 'special', 'options']);
-  assert.match(await page.locator('#sh-morepanel .sh-moreitem[data-tab="options"]').innerText(), /open interest/i,
-               'a tool under More lost its hint');
+  assert.equal((await where.locator('.sh-where-door').innerText()).trim(), 'Today');
+  assert.equal((await where.locator('.sh-where-here').innerText()).trim(), 'Overview');
+  assert.equal(await page.locator('#sh-doorbar .sh-crumb').count(), 0, 'the wide screen’s line is on a narrow one');
+  const sheet = page.locator('#sh-sheet');
+  const sheetTabs = sec => page.locator(`#sh-sheet-${sec} .sh-item`).evaluateAll(ns => ns.map(n => n.dataset.tab || n.getAttribute('href')));
+  assert.equal(await sheet.isVisible(), false, 'the sheet opened by itself');
+  await where.click();
+  await sheet.waitFor({ state: 'visible' });
+  assert.equal(await where.getAttribute('aria-expanded'), 'true');
+  assert.deepEqual(await sheet.locator('.sh-sheet-tab').allInnerTexts().then(t => t.map(x => x.trim())), DOORS,
+                   'the sheet does not carry the three doors');
+  assert.deepEqual(await sheet.locator('.sh-sheet-tab[aria-selected="true"]').allInnerTexts().then(t => t.map(x => x.trim())), ['Today'],
+                   'the sheet did not open on the door the reader is in');
+  // The same tools, in the same order and groups, as the menu on a wide screen.
+  assert.deepEqual(await sheetTabs('discover'), ['live', 'options', 'deals', 'special', 'wow', 'results', 'filings']);
+  assert.deepEqual(await page.locator('#sh-sheet-discover h4').allInnerTexts().then(t => t.map(x => x.trim().toLowerCase())),
+                   ['live market', 'money flow', 'company news']);
+  assert.match(await page.locator('#sh-sheet-discover .sh-item[data-tab="options"]').innerText(), /open interest/i,
+               'a tool in the sheet lost its hint');
+  assert.match(await page.locator('#sh-sheet-discover .sh-sheet-lead').innerText(), /What is the market doing\?/);
+  assert.equal(await page.locator('#sh-sheet-discover .sh-sheet-lead').getAttribute('aria-current'), 'page');
+  // It fits the screen it is on, and leaves the top of the page showing behind it.
+  await page.waitForFunction(() => Math.round(document.getElementById('sh-sheet').getBoundingClientRect().bottom) === innerHeight,
+                             null, { timeout: 4000 }).catch(() => assert.fail('the sheet never came to rest on the bottom edge'));
+  const box = await sheet.boundingBox();
+  assert.ok(box.y > 60 && box.width <= 900, `the sheet covers the whole screen (${JSON.stringify(box)})`);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, 'the sheet overflows the page');
+  // Another door is one tap away, without leaving the sheet.
+  await sheet.locator('.sh-sheet-tab[data-sec="research"]').click();
+  await page.locator('#sh-sheet-research').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('#sh-sheet-discover').isVisible(), false, 'two doors are showing at once');
+  assert.deepEqual(await sheetTabs('research'),
+                   ['ideas', 'query', 'lenses', 'convergence', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls', 'tracker']);
+  await sheet.locator('.sh-sheet-tab[data-sec="research"]').press('ArrowRight');
+  await page.locator('#sh-sheet-portfolio').waitFor({ state: 'visible' });
+  assert.deepEqual(await sheetTabs('portfolio'), ['portfolio', 'watchlists', 'allocate', 'planner', 'advisors.html', 'wealth.html']);
+  await page.screenshot({ path: path.join(output, '900-sheet-portfolio.png') });
+  // Three ways out that are not choosing something: Escape, the cross, the page behind.
   await page.keyboard.press('Escape');
-  assert.equal(await page.locator('#sh-morepanel').isVisible(), false, 'Escape did not close More');
-  assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.id), 'sh-morebtn');
-  // Ideas: thirteen pills became six; a tool opened from More is lit in the row.
-  await page.evaluate(() => window.AltahaNav.go('research', null, true));
-  await page.locator('#sh-morebtn').waitFor({ state: 'visible' });
-  assert.equal(await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill').count(), 6);
-  await page.locator('#sh-morebtn').click();
-  await page.locator('#sh-morepanel .sh-moreitem[data-tab="concalls"]').click();
+  await sheet.waitFor({ state: 'hidden' });
+  assert.equal(await where.getAttribute('aria-expanded'), 'false');
+  await where.click();
+  await sheet.waitFor({ state: 'visible' });
+  await sheet.locator('.sh-sheet-x').click();
+  await sheet.waitFor({ state: 'hidden' });
+  await where.click();
+  await sheet.waitFor({ state: 'visible' });
+  await page.mouse.click(450, 30);
+  await sheet.waitFor({ state: 'hidden' });
+  assert.equal(await page.evaluate(() => document.body.style.overflow), '', 'the page behind stayed locked after the sheet closed');
+  // And a pull on the handle: a short one settles back, a long one closes.
+  await where.click();
+  await sheet.waitFor({ state: 'visible' });
+  await page.waitForTimeout(500);
+  const grab = await sheet.locator('.sh-sheet-grab').boundingBox();
+  const gx = grab.x + grab.width / 2, gy = grab.y + grab.height / 2;
+  await page.mouse.move(gx, gy); await page.mouse.down();
+  await page.mouse.move(gx, gy + 40, { steps: 8 }); await page.waitForTimeout(700); await page.mouse.up();
+  await page.waitForTimeout(450);
+  assert.ok(await sheet.isVisible(), 'a short pull on the handle closed the sheet');
+  await page.mouse.move(gx, gy); await page.mouse.down();
+  await page.mouse.move(gx, gy + 320, { steps: 12 }); await page.mouse.up();
+  await sheet.waitFor({ state: 'hidden' });
+
+  // A tool chosen in another door: the sheet goes, the button names the tool,
+  // and the sheet marks it as the one open the next time it comes up.
+  await where.click();
+  await sheet.locator('.sh-sheet-tab[data-sec="research"]').click();
+  await page.locator('#sh-sheet-research .sh-item[data-tab="concalls"]').click();
   await page.locator('#view-concalls').waitFor({ state: 'visible' });
-  assert.equal((await page.locator('#sh-doorbar .sh-doorbar-in .sh-pill.on').innerText()).trim(), 'Concalls',
-               'a tool opened from More is not shown as the one open');
-  assert.equal(await page.locator('#sh-morepanel .sh-moreitem[data-tab="concalls"]').count(), 0,
-               'the open tool is listed twice');
-  // Back on a wide screen the pills give way to the line again.
+  await sheet.waitFor({ state: 'hidden' });
+  assert.equal((await where.locator('.sh-where-door').innerText()).trim(), 'Ideas');
+  assert.equal((await where.locator('.sh-where-here').innerText()).trim(), 'Concalls');
+  assert.equal(await page.locator('#sh-pin').isVisible(), true, 'the pin left the bar on a narrow screen');
+  await where.click();
+  await sheet.waitFor({ state: 'visible' });
+  assert.deepEqual(await sheet.locator('.sh-sheet-tab[aria-selected="true"]').allInnerTexts().then(t => t.map(x => x.trim())), ['Ideas']);
+  assert.deepEqual(await sheet.locator('[aria-current="page"]').evaluateAll(ns => ns.map(n => n.dataset.tab)), ['concalls']);
+  // The card at the top of a door's list is the door's own page.
+  await page.locator('#sh-sheet-research .sh-sheet-lead').click();
+  await page.locator('#view-ideahub').waitFor({ state: 'visible' });
+  await sheet.waitFor({ state: 'hidden' });
+  assert.equal((await where.locator('.sh-where-here').innerText()).trim(), 'Overview');
+  // Me has no sheet of its own: its pages are in the Me menu, and the button opens that.
+  await page.evaluate(() => window.AltahaNav.go('me', 'vocab', true));
+  await page.locator('#view-vocab').waitFor({ state: 'visible' });
+  assert.equal((await where.locator('.sh-where-door').innerText()).trim(), 'Me');
+  assert.equal((await where.locator('.sh-where-here').innerText()).trim(), 'Glossary');
+  await where.click();
+  await page.locator('#sh-drawer.open').waitFor({ state: 'visible' });
+  assert.equal(await sheet.isVisible(), false);
+  await page.keyboard.press('Escape');
+  await page.locator('#sh-drawer.open').waitFor({ state: 'detached' });
+  // Back on a wide screen the button gives way to the line, and an open sheet does not follow.
+  await page.evaluate(() => window.AltahaNav.go('research', 'concalls', true));
+  await where.click();
+  await sheet.waitFor({ state: 'visible' });
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.locator('#sh-doorbar .sh-crumb-here').waitFor({ state: 'visible' });
-  assert.equal(await page.locator('#sh-doorbar .sh-pill').count(), 0);
+  assert.equal(await sheet.isVisible(), false, 'the sheet stayed open on a wide screen');
+  assert.equal(await page.locator('#sh-where').count(), 0);
 
   // "Check a stock" puts the cursor in the search box; "Hide this" sticks.
   await page.locator('.sh-door[data-sec="discover"]').click();
