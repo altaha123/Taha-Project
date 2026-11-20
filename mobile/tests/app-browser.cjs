@@ -89,6 +89,8 @@ async function main() {
     serif: document.fonts.check('16px "Instrument Serif"'),
     rupee: document.fonts.check('16px Inter', '₹'),
   }));
+  check('the splash screen is taken down as soon as the page is ready',
+    (await made('SplashScreen', 'hide')).length === 1);
   check('the page\'s own script ran (API_BASE did not collide)', home.script, home);
   check('no "already been declared" error', !errors.some((e) => /already been declared|redeclaration/i.test(e)), errors);
   check('the chart library came from the bundle', home.charts, home);

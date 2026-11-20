@@ -32,7 +32,7 @@ wait_for() {
 }
 
 # Any iPhone the machine has.
-DEVICE="$(xcrun simctl list devices available | grep -E "^[[:space:]]+iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")"
+DEVICE="$(xcrun simctl list devices available | awk '/^[[:space:]]+iPhone/ { if (match($0, /[0-9A-F]+-[0-9A-F]+-[0-9A-F]+-[0-9A-F]+-[0-9A-F]+/)) { print substr($0, RSTART, RLENGTH); exit } }')"
 [ -n "$DEVICE" ] || { echo "no iPhone simulator on this machine"; exit 1; }
 xcrun simctl boot "$DEVICE" 2>/dev/null || true
 xcrun simctl bootstatus "$DEVICE" -b > /dev/null
@@ -45,7 +45,9 @@ xcrun simctl install "$DEVICE" "$APP"
 # with the app open and working on the screen.
 xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE" > "$LOG" 2>&1 &
 
-wait_for "\[altaha\] bridge ready: ios [0-9.]+ /(index\.html)?( |$)" 120 \
+# The line ends with a carriage return here, because the app was given a
+# terminal. The second run of this script failed on exactly that.
+wait_for "\[altaha\] bridge ready: ios [0-9.]+ /(index\.html)?[[:space:]]*$" 120 \
   || fail "the home page never reported in"
 echo "ok    the app starts and the home page loads"
 sleep 8

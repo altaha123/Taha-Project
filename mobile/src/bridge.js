@@ -39,6 +39,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Network } from '@capacitor/network';
 import { Share } from '@capacitor/share';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { pageFor, routeFor } from './routes.mjs';
 
 /* Written in by scripts/build-web.mjs. */
@@ -328,6 +329,10 @@ function installPhone() {
 
   const ready = () => {
     paintTheme();
+    // The splash screen stays until there is a page to show, and not a
+    // moment longer. capacitor.config.json takes it down by itself after
+    // three seconds, in case this line is never reached.
+    SplashScreen.hide({ fadeOutDuration: 200 }).catch(quiet);
     Network.getStatus().then((s) => offline(!s.connected)).catch(quiet);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);

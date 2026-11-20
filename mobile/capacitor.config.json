@@ -11,7 +11,7 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 600,
+      "launchShowDuration": 3000,
       "launchAutoHide": true,
       "launchFadeOutDuration": 200,
       "showSpinner": false

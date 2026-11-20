@@ -66,6 +66,7 @@ function fakePhone() {
       { name: 'Haptics', methods: promise(['impact']) },
       { name: 'Network', methods: listen.concat(promise(['getStatus'])) },
       { name: 'Share', methods: promise(['share', 'canShare']) },
+      { name: 'SplashScreen', methods: promise(['hide', 'show']) },
       { name: 'SystemBars', methods: promise(['setStyle', 'show', 'hide']) },
       { name: 'AltahaShell', methods: promise(['print', 'setBackground']) },
     ],
