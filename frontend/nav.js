@@ -79,7 +79,7 @@
       tabs: [
         { id: 'ideahub',     label: 'Overview',        hint: 'Our stock picks, and every other way to find a stock' },
         { id: 'calls',       label: 'Track record',    hint: 'Every idea, the day it was made, and its return since' },
-        { id: 'query',       label: 'Screener',        hint: 'Tap what you want in a company and see who fits' },
+        { id: 'query',       label: 'Screener',        hint: 'Pick what you want in a company, or write your own query' },
         { id: 'lenses',      label: 'Investor styles', hint: 'Stocks picked the way great investors pick them, and the ones several styles agree on' },
         { id: 'investors',   label: 'Who owns what',   hint: 'What well-known investors disclosed holding' },
         { id: 'funds',       label: 'Fund houses',     hint: 'What the mutual funds disclosed holding' },

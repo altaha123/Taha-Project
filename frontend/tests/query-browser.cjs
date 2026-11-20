@@ -104,6 +104,14 @@ async function wire(context) {
       const syms0 = () => page.locator('.qs-table tbody th[scope=row] b').allInnerTexts();
       const bars = () => page.locator('.qz-bar').evaluateAll(ns => ns.map(n =>
         n.querySelector('.qz-bar-l b').textContent + ' ' + n.querySelector('.qz-bar-n').textContent));
+      /* The buttons under the board. On a phone the bar along the bottom covers
+         the last strip of the screen, and a button that scrolls to rest there is
+         under its search button: a person scrolls on, a click cannot. Each is
+         brought to the middle of the screen first. */
+      const act = async sel => {
+        await page.locator(sel).evaluate(n => n.scrollIntoView({ block: 'center' }));
+        await page.locator(sel).click();
+      };
       const lit = () => page.locator('.qz-wish.on').evaluateAll(ns => ns.map(n =>
         n.dataset.wishbox + ':' + ((n.querySelector('.qz-level.on') || {}).textContent || '')));
       const count = n => page.waitForFunction(k => (document.getElementById('qz-n') || {}).textContent === k, String(n));
@@ -157,11 +165,11 @@ async function wire(context) {
       assert.equal(await hash(), '#research/query/Debt to equity < 0.5');
       assert.deepEqual(await lit(), ['debt:Little']);
       // A list can be kept by name from here, and comes back with a tap.
-      await page.locator('#qz-save').click();
+      await act('#qz-save');
       await page.locator('#qz-result #qs-savename').fill('Little debt');
       await page.locator('#qs-savego').click();
       await page.locator('#qs-saved .qs-chip', { hasText: 'Little debt' }).waitFor();
-      await page.locator('#qz-reset').click();
+      await act('#qz-reset');
       assert.match(await page.locator('#qz-board').innerText(), /Tap a card above/);
       assert.equal(await page.locator('.qs-table, .qz-wish.on').count(), 0, 'Start over left something behind');
       assert.equal(await hash(), '#research/query');
@@ -172,7 +180,7 @@ async function wire(context) {
       assert.deepEqual(await lit(), ['debt:Little'], 'a saved list did not come back with its card lit');
       await page.locator('#qs-saved .qs-sdel').click();
       await page.waitForFunction(() => document.getElementById('qs-saved').hidden);
-      await page.locator('#qz-reset').click();
+      await act('#qz-reset');
 
       // F · a ready-made idea is cards switched on together; nobody fitting is said in words
       await page.locator('.qz-recipe[data-recipe="nodebt"]').click();
@@ -190,10 +198,26 @@ async function wire(context) {
       await page.locator('.qz-recipe[data-recipe="nodebt"]').click();
       await count(0);
       await page.screenshot({ path: path.join(output, width + '-finder.png'), fullPage: true });
-      await page.locator('#qz-reset').click();
+      await act('#qz-reset');
 
-      // 1 · the editor, for a reader who knows the number: an example runs as it stands
-      await page.locator('#qs-adv > summary').click();
+      // 1 · the second section, Make your own query, is a tab at the top and
+      //     not a fold at the foot. One section is on screen at a time.
+      assert.deepEqual(await page.locator('.qs-mode b').allInnerTexts(), ['Pick what you want', 'Make your own query']);
+      assert.equal(await page.locator('#qs-mode-pick').getAttribute('aria-selected'), 'true');
+      assert.ok(await page.locator('#qz').isVisible() && !(await page.locator('#qs-adv').isVisible()));
+      await page.locator('#qs-mode-write').click();
+      assert.equal(await page.locator('#qs-mode-write').getAttribute('aria-selected'), 'true');
+      assert.ok(await page.locator('#qs-adv').isVisible() && !(await page.locator('#qz').isVisible()),
+                'both sections are showing at once');
+      assert.ok(await page.locator('#qs-q').isVisible());
+      // The arrow keys move between the two, as on any tab list.
+      await page.locator('#qs-mode-write').press('ArrowLeft');
+      assert.ok(await page.locator('#qz').isVisible());
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'qs-mode-pick');
+      await page.locator('#qs-mode-pick').press('ArrowRight');
+      assert.ok(await page.locator('#qs-adv').isVisible());
+
+      // An example runs as it stands, and the reader stays in this section.
       await page.waitForSelector('#qs-examples .qs-chip');
       await page.locator('#qs-examples .qs-chip').first().click();
       await page.waitForSelector('.qs-table');
@@ -206,6 +230,14 @@ async function wire(context) {
                        ['ACME', 'BETA']);
       assert.match(decodeURIComponent(await page.evaluate(() => location.hash)),
                    /^#research\/query\/ROCE > 20\nDebt to equity/);
+      assert.ok(await page.locator('#qs-adv').isVisible(), 'running a query moved the reader out of the editor');
+      // The same query, seen from the cards: its card is lit and the rest is one bar.
+      await page.locator('#qs-mode-pick').click();
+      assert.ok(await page.locator('.qz-wish.on[data-wish="debt"], .qz-wish.on').first().isVisible());
+      // Edit as a query goes back to the editor with those lines in it.
+      await act('#qz-edit');
+      assert.ok(await page.locator('#qs-adv').isVisible());
+      assert.match(await page.inputValue('#qs-q'), /^ROCE > 20\nDebt to equity/);
 
       // 2 · the builder writes a line the backend reads
       await page.locator('#qs-clear').click();
@@ -255,6 +287,9 @@ async function wire(context) {
       // 7 · the address carries the query: a reload runs it again
       await page.goto(base + '/index.html#research/query/' + encodeURIComponent('ROCE > 20'));
       await page.waitForFunction(() => document.querySelectorAll('.qs-table tbody tr').length === 3);
+      // A rule no card explains opens the section that can show it.
+      assert.ok(await page.locator('#qs-adv').isVisible(), 'a typed query opened on the cards');
+      assert.equal(await page.inputValue('#qs-q'), 'ROCE > 20');
 
       const overflow = await page.evaluate(() =>
         document.documentElement.scrollWidth - document.documentElement.clientWidth);

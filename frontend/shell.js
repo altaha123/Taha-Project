@@ -180,7 +180,7 @@
         /* One entry. "Call log" and "Track record" sat here as two, and were
            one thing: every idea, dated, and what it has returned since. */
         { tab: 'calls', g: 'proof', label: 'Track record', icon: 'target', hint: 'Every idea, the day it was made, and its return since', kw: 'track record tracker performance returns calls call log history dated when called buy zone stop target' },
-        { tab: 'query', g: 'find', label: 'Screener', icon: 'funnel', hint: 'Tap what you want in a company and see who fits', kw: 'query filter screen screener finder roe roce pe debt pledge promoter dividend growth cheap' },
+        { tab: 'query', g: 'find', label: 'Screener', icon: 'funnel', hint: 'Pick what you want in a company, or write your own query', kw: 'query filter screen screener finder roe roce pe debt pledge promoter dividend growth cheap' },
         /* One entry for the styles and for the stocks several of them agree
            on: "Convergence" was a second door into the same idea, and is a
            section of this page now (lenses.js). */

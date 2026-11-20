@@ -76,18 +76,23 @@ listed twice, and each is one entry now:
   cards, at `#research/lenses/convergence`. The old `#research/convergence`
   addresses open the page at that section (`MOVED` in `frontend/nav.js`).
 
-**The screener asks for no typing.** It opens on ten cards for things a
-person might want from a company — *Makes good money*, *Owes little*, *Not
-too pricey* — and six ready-made ideas that switch a few of them on. Tapping
-a card runs it: the count, a bar for each choice showing how it narrowed the
-list, and the table, with no button to press. Each card has up to three
-settings, explained in rupees on a hundred. The editor it used to open on
-(field, comparison, value and a text box) is folded underneath as *Write
-your own rules*, and the two are one query: a choice writes its lines into
-the editor, and a query typed or opened from a link lights the cards it is
-made of. The cards are `WISHES` in `frontend/query.js`, and
-`backend/tests/test_query_wishes.py` puts every line they can write through
-the server's parser.
+**The screener is two sections.** Two tabs sit under its title. *Pick what
+you want* asks for no typing: ten cards for things a person might want from a
+company — *Makes good money*, *Owes little*, *Not too pricey* — and six
+ready-made ideas that switch a few of them on. Tapping a card runs it: the
+count, a bar for each choice showing how it narrowed the list, and the table,
+with no button to press. Each card has up to three settings, explained in
+rupees on a hundred. *Make your own query* is the editor (examples, then
+field, comparison, value and a text box); it was folded at the foot of the
+cards as *Write your own rules* and is a section of its own now. The two are
+one query: a choice writes its lines into the editor, a query typed or opened
+from a link lights the cards it is made of, and one results table sits under
+both. A query from a link, a saved screen or the last visit opens the editor
+if any line is not a card's and the cards otherwise; nothing moves the reader
+between sections while they work in one. The cards are `WISHES` in
+`frontend/query.js`, and `backend/tests/test_query_wishes.py` puts every line
+they can write through the server's parser. Every font size on the page is a
+rung of the ladder in `frontend/type.css`.
 
 **Built for the first visit.** People who were sent the site found it too
 complex to find their way around, so three things changed (Nov 2026):

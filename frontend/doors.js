@@ -883,7 +883,7 @@
         '<span class="dr-sheen" aria-hidden="true"></span>' +
         '<span class="dr-tool-top"><span class="dr-tool-ic">' + svg('query') + '</span></span>' +
         '<span class="dr-tool-name">Screener</span>' +
-        '<span class="dr-tool-line">Tap what you want in a company and see who fits.</span>' +
+        '<span class="dr-tool-line">Pick what you want in a company, or write your own query.</span>' +
         '<span class="dr-tool-chips">' + ['Makes good money', 'Owes little', 'Not too pricey', 'Growing fast'].map(function (n, k) {
           return '<span class="dr-chip dr-pop" style="--i:' + k + '">' + esc(n) + '</span>';
         }).join('') + '</span></button>',

@@ -163,9 +163,9 @@ function fresh() { return { user: null, joins: [], puts: [], deletes: [], screen
     page.on('pageerror', e => errors.push(String(e.stack || e)));
     await page.goto(base + '/#research/query', { waitUntil: 'load' });
     // The screener opens on its cards; the editor, which is where a query is
-    // typed and saved by name, is folded under them.
+    // typed and saved by name, is its second section.
     await page.locator('.qz-wish-main').first().waitFor();
-    await page.locator('#qs-adv > summary').click();
+    await page.locator('#qs-mode-write').click();
     await page.locator('#qs-q').waitFor();
     // Pro is in the Me menu on a desktop, one click from anywhere.
     await page.locator('#sh-me').click();

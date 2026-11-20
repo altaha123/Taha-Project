@@ -4,18 +4,20 @@
    The screener: every stored company, narrowed to the ones that fit what
    the reader asks for. Ideas → Screener (#research/query).
 
-   TWO WAYS TO ASK, ONE QUESTION UNDERNEATH
-   The page a reader sees first asks nothing in numbers. It shows a handful
-   of things a person might want from a company ("Makes good money", "Owes
-   little", "Not too pricey"), each a card to tap, with three settings where
-   a setting makes sense. Tapping writes the rules, runs them and shows who
-   is left, and a strip of bars shows how each choice narrowed the list.
-   Nothing has to be typed, and there is no button to press to see a result.
-   It replaced a page that opened on a field picker and a text box, which a
-   newcomer read as a form to fill in before anything would happen.
+   TWO SECTIONS, ONE QUESTION UNDERNEATH
+   Two tabs sit under the title, and each is a whole way of asking.
 
-   Under it, folded away, is the editor that page used to be, for a reader
-   who knows the number they want:
+   "Pick what you want" asks nothing in numbers. It shows a handful of things
+   a person might want from a company ("Makes good money", "Owes little",
+   "Not too pricey"), each a card to tap, with three settings where a setting
+   makes sense. Tapping writes the rules, runs them and shows who is left,
+   and a strip of bars shows how each choice narrowed the list. Nothing has
+   to be typed, and there is no button to press to see a result.
+
+   "Make your own query" is the editor, for a reader who knows the number
+   they want. It used to be folded away at the foot of the first section
+   behind a line of small type, where it read as a footnote and not as a
+   second way in; it is a section of its own now, one tap from the top:
 
      · the server's example queries, each just a query they can edit;
      · a three-box builder (field, comparison, value) that writes the line;
@@ -23,9 +25,13 @@
      · every field listed with what it means, one click to insert;
      · an error that says what is wrong and offers the field they meant.
 
-   The two are one screen of the same query. A choice writes its lines into
-   the editor; a query typed or opened from a link is read back into the
-   choices it matches, and anything left over is carried as "your own rules".
+   The two are one query. A choice writes its lines into the editor; a query
+   typed or opened from a link is read back into the choices it matches, and
+   anything left over is carried as "your own rules". The results table sits
+   under both. A query that arrives from outside (a link, a saved screen, the
+   last visit) opens the section that can show all of it: the editor if any
+   line is not a card's, the cards otherwise. Nothing moves the reader
+   between sections while they are working in one.
 
    The parsing and the figures live in backend/fundamentals_query.py; this
    file never evaluates anything. The query is kept in the address
@@ -207,10 +213,21 @@
       '<header class="qs-head">' +
         '<p class="ln-kicker">Ideas · Screener</p>' +
         '<h2>Find stocks your way</h2>' +
-        '<p>Tap what you want in a company. The list updates as you choose. Nothing to type.</p>' +
+        '<p>Two ways to do it. Pick what you want from ready-made choices, or write your own query. ' +
+          'Either way the list updates as you go.</p>' +
       '</header>' +
+      '<div class="qs-modes" id="qs-modes" role="tablist" aria-label="How to find stocks">' +
+        '<button type="button" class="qs-mode on" id="qs-mode-pick" role="tab" data-mode="pick" ' +
+          'aria-selected="true" aria-controls="qz">' +
+          '<span class="qs-mode-ic" aria-hidden="true">👆</span>' +
+          '<span class="qs-mode-t"><b>Pick what you want</b><span>Tap cards. Nothing to type.</span></span></button>' +
+        '<button type="button" class="qs-mode" id="qs-mode-write" role="tab" data-mode="write" ' +
+          'aria-selected="false" aria-controls="qs-adv" tabindex="-1">' +
+          '<span class="qs-mode-ic" aria-hidden="true">✍️</span>' +
+          '<span class="qs-mode-t"><b>Make your own query</b><span>Write the exact rules and numbers.</span></span></button>' +
+      '</div>' +
       '<div class="qs-saved" id="qs-saved" aria-label="Your saved screens" hidden></div>' +
-      '<section class="qz" id="qz" aria-label="Find stocks by choosing what you want">' +
+      '<section class="qz" id="qz" role="tabpanel" aria-labelledby="qs-mode-pick">' +
         '<div class="qz-step">' +
           '<h3 class="qz-h"><span class="qz-num" aria-hidden="true">1</span>Start with a ready-made idea' +
             '<small>or skip straight to step 2</small></h3>' +
@@ -228,15 +245,20 @@
             '<button type="button" class="qs-btn qs-btn-ghost" id="qz-reset">Start over</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qz-save">Save this list</button>' +
             '<button type="button" class="qs-btn qs-btn-ghost" id="qs-copy" hidden>Copy link</button>' +
+            '<button type="button" class="qs-btn qs-btn-ghost" id="qz-edit">Edit as a query</button>' +
           '</div>' +
         '</div>' +
         '<button type="button" class="qz-float" id="qz-float" hidden></button>' +
       '</section>' +
-      '<div id="qs-out" class="qs-out"></div>' +
-      '<details class="qs-adv" id="qs-adv">' +
-        '<summary><span class="qs-adv-t">Write your own rules</span>' +
-          '<span class="qs-adv-s">for when you know the exact number you want</span></summary>' +
-        '<div class="qs-examples" id="qs-examples" aria-label="Example queries"></div>' +
+      '<section class="qs-adv" id="qs-adv" role="tabpanel" aria-labelledby="qs-mode-write" hidden>' +
+        '<div class="qz-step">' +
+          '<h3 class="qz-h"><span class="qz-num" aria-hidden="true">1</span>Start from an example' +
+            '<small>or skip straight to step 2</small></h3>' +
+          '<div class="qs-examples" id="qs-examples" aria-label="Example queries"></div>' +
+        '</div>' +
+        '<div class="qz-step">' +
+        '<h3 class="qz-h"><span class="qz-num" aria-hidden="true">2</span>Write your rules' +
+          '<small>one per line</small></h3>' +
         '<div class="qs-card">' +
         '<div class="qs-builder" role="group" aria-label="Add a condition">' +
           '<label class="qs-lab"><span>Field</span><select id="qs-bfield"></select></label>' +
@@ -249,8 +271,8 @@
           '<button type="button" class="qs-btn qs-btn-ghost" id="qs-badd">+ Add condition</button>' +
         '</div>' +
         '<div class="qs-editor">' +
-          '<label for="qs-q" class="qs-edlab">Your query <span>one condition per line — ' +
-            'lines are joined with AND</span></label>' +
+          '<label for="qs-q" class="qs-edlab">Your query <span>one rule per line — ' +
+            'a company has to meet all of them</span></label>' +
           '<div class="qs-edwrap">' +
             '<textarea id="qs-q" rows="5" spellcheck="false" autocomplete="off" ' +
               'aria-autocomplete="list" aria-controls="qs-ac" ' +
@@ -316,10 +338,35 @@
           '<span id="qs-refn"></span></summary>' +
           '<input id="qs-find" class="qs-find" type="search" placeholder="Find a field — e.g. debt, growth, promoter">' +
           '<div id="qs-fields"></div></details>' +
-      '</details>' +
+        '</div>' +
+      '</section>' +
+      '<div id="qs-out" class="qs-out"></div>' +
       '<p class="ln-notice qs-notice" role="note" id="qs-notice"></p>';
     paintFinder();
     paintBoard();
+  }
+
+  /* ── The two sections ───────────────────────────────────────────────────
+     One is on screen at a time. `follow` is set when a query is about to run
+     that the reader did not make in the section they are looking at (it came
+     from the address, a saved screen or their last visit); when its answer
+     arrives the section that can show all of it opens. A tap on a card or a
+     press of Run query never sets it, so nobody is moved out of the section
+     they are working in. */
+
+  var mode = 'pick', follow = false;
+
+  function setMode(m, focus) {
+    mode = m === 'write' ? 'write' : 'pick';
+    [['pick', 'qz'], ['write', 'qs-adv']].forEach(function (pair) {
+      var on = pair[0] === mode, tab = $('qs-mode-' + pair[0]);
+      $(pair[1]).hidden = !on;
+      tab.classList.toggle('on', on);
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
+      if (on && focus) tab.focus();
+    });
+    paintFloat();
   }
 
   /* ── The finder ─────────────────────────────────────────────────────────
@@ -631,7 +678,7 @@
     var d = state.data, any = pick.length || custom.length;
     var below = res.getBoundingClientRect().top > (window.innerHeight || 0) - 90;
     var view = $('view-query');
-    var show = !!(any && d && below && view && view.style.display !== 'none');
+    var show = !!(mode === 'pick' && any && d && below && view && view.style.display !== 'none');
     f.hidden = !show;
     if (show) f.innerHTML = '<b>' + nf(d.count) + '</b> ' + (d.count === 1 ? 'company fits' : 'companies fit') +
       '<span aria-hidden="true">See the list ↓</span>';
@@ -656,8 +703,7 @@
     $('qs-refn').textContent = '(' + fields.length + ')';
     $('qs-notice').textContent = meta.notice || '';
 
-    $('qs-examples').innerHTML = '<span class="qs-exlab">Try</span>' +
-      (meta.examples || []).map(function (e, i) {
+    $('qs-examples').innerHTML = (meta.examples || []).map(function (e, i) {
         return '<button type="button" class="qs-chip" data-ex="' + i + '" title="' +
           esc(e.query.replace(/\n/g, ' AND ')) + '">' + esc(e.name) + '</button>';
       }).join('');
@@ -902,8 +948,9 @@
       if (!state.again && ta().value.trim() === state.q) {
         readQuery(state.q);
         paintFinder();
-        if (custom.length) $('qs-adv').open = true;
+        if (follow) setMode(custom.length ? 'write' : 'pick');
       }
+      follow = false;
       paintResults();
       paintBoard();
     }).catch(function (e) {
@@ -911,12 +958,13 @@
       showError(e, state.q);
       state.data = null;
       if (e && e.body && e.body.error) {
-        // A rule that cannot be read is the editor's to explain; it opens to show it.
+        // A rule that cannot be read is the editor's to explain; its section opens to show it.
         readQuery(state.q); paintFinder();
-        $('qs-adv').open = true;
+        follow = false;
+        setMode('write');
         var board = $('qz-board');
         board.className = 'qz-board is-down';
-        board.innerHTML = '<p class="qz-wait">One of the rules written below could not be read. It is marked there, with a fix.</p>';
+        board.innerHTML = '<p class="qz-wait">One of the rules in <b>Make your own query</b> could not be read. It is marked there, with a fix.</p>';
         $('qz-acts').hidden = false;
       } else {
         paintBoard('down');
@@ -1299,6 +1347,23 @@
       var first = host.querySelector('.qz-recipe');
       if (first) first.focus();
     });
+    $('qs-modes').addEventListener('click', function (e) {
+      var b = e.target.closest('.qs-mode');
+      if (b) setMode(b.getAttribute('data-mode'));
+    });
+    $('qs-modes').addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+      e.preventDefault();
+      setMode(e.key === 'Home' ? 'pick' : e.key === 'End' ? 'write' : mode === 'pick' ? 'write' : 'pick', true);
+    });
+    /* The cards have already written their lines into the editor, so this
+       only has to show it. */
+    $('qz-edit').addEventListener('click', function () {
+      setMode('write');
+      window.scrollTo({ top: Math.max(0, $('qs-modes').getBoundingClientRect().top + window.scrollY - 90),
+                        behavior: still() ? 'auto' : 'smooth' });
+      try { t.focus({ preventScroll: true }); } catch (err) { t.focus(); }
+    });
     $('qz-float').addEventListener('click', function () {
       var chrome = document.querySelector('.sh-chrome');
       var y = $('qz-result').getBoundingClientRect().top + window.scrollY - ((chrome && chrome.offsetHeight) || 0) - 12;
@@ -1353,7 +1418,7 @@
         downloadCsv();
       } else if (b.hasAttribute('data-saved')) {
         var sc = saved[+b.getAttribute('data-saved')];
-        if (sc) { t.value = sc.query; state.sort = ''; run(false); }
+        if (sc) { t.value = sc.query; state.sort = ''; follow = true; run(false); }
       } else if (b.hasAttribute('data-delsaved')) {
         deleteSaved(+b.getAttribute('data-delsaved'));
       } else if (b.hasAttribute('data-aiask')) {
@@ -1442,12 +1507,12 @@
 
   function start(q) {
     var t = ta();
-    if (q && q !== state.q) { t.value = q; state.sort = ''; run(false); return; }
+    if (q && q !== state.q) { t.value = q; state.sort = ''; follow = true; run(false); return; }
     /* Back again with nothing asked for in the address: the list the reader
        last made is put back, cards and all, instead of an empty page. */
     if (!t.value && !state.q) {
       var last = recall();
-      if (last) { t.value = last; state.sort = ''; run(false); }
+      if (last) { t.value = last; state.sort = ''; follow = true; run(false); }
     }
     paintFloat();
   }
@@ -1466,5 +1531,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  window.AltahaQuery = { show: show, run: function (q) { show(); ta().value = q; run(false); } };
+  window.AltahaQuery = { show: show, run: function (q) { show(); ta().value = q; follow = true; run(false); } };
 })();
