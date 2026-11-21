@@ -29,6 +29,7 @@ because it is the same file.
 | `android/` | The Android Studio project |
 | `ios/` | The Xcode project |
 | `assets/` | The icon and the splash screen, as the five pictures every size is cut from |
+| `store/` | The pictures a store listing needs, made by `npm run store` ([`PLAY-STORE.md`](PLAY-STORE.md)) |
 | `tests/` | See "How it is checked" |
 
 `www/` is built, never edited and never committed.
@@ -173,9 +174,8 @@ or let GitHub build it. Add four repository secrets and every run of
 | `ALTAHA_KEY_ALIAS` | `altaha` |
 | `ALTAHA_KEY_PASSWORD` | the key's password |
 
-Upload the `.aab` in the Play Console. A new personal developer account has
-to run a closed test with at least 12 testers for 14 days before Google
-allows a public release; an organisation account does not.
+Upload the `.aab` in the Play Console. [`PLAY-STORE.md`](PLAY-STORE.md) is the
+whole of that, form by form, with the listing's text and pictures.
 
 ### iOS
 

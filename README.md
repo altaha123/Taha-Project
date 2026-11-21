@@ -20,8 +20,8 @@ charging for the calls.
 **On a phone.** The same site is an Android app and an iOS app, in `mobile/`:
 the pages in `frontend/`, unchanged, inside a native shell that gives them the
 share sheet, saved files, printing and the Back button. See
-[`MOBILE.md`](MOBILE.md) for how they are built, tested and released, and for
-what the stores will ask for first.
+[`MOBILE.md`](MOBILE.md) for how they are built, tested and released, and
+[`PLAY-STORE.md`](PLAY-STORE.md) for publishing on Google Play, form by form.
 
 ---
 
