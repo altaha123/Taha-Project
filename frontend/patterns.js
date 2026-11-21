@@ -648,7 +648,10 @@
 
   function currentRange() {
     var on = document.querySelector("#cw-tfs button.on, #fctfbar .tf.active");
-    return (on && on.dataset && on.dataset.r) || "1D";
+    /* data-api is the candle size the backend knows; the workspace also has
+       sizes it builds itself (3m, 30m, 2H, 1M) that /chart/patterns would
+       refuse. */
+    return (on && on.dataset && (on.dataset.api || on.dataset.r)) || "1D";
   }
 
   /* Rather than guessing every control that might change the symbol, watch
