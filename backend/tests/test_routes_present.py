@@ -153,6 +153,7 @@ POST    /jobs/wow-backfill
 GET     /leaderboard
 GET     /market
 GET     /market/week
+POST    /me/delete
 POST    /me/digest/send-test
 POST    /me/digest/settings
 GET     /me/portfolio

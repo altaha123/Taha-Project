@@ -203,6 +203,40 @@ built to take the money. Nothing is charged, and the page says so.
 - `source` says where the reader came from: `header`, `menu`, `story`
   (the portfolio story's last chapter), `direct`.
 
+## Deleting an account
+
+Anybody with an account can delete it, themselves and at once, at
+`delete-account.html` (`/delete-account` on the site). It is linked from the
+foot of every page, from the sign-in page once signed in, and from the privacy
+policy (`privacy.html`). The Play Store and the App Store both require this of
+any app that lets people sign up, and both ask for the address.
+
+The page asks for the account's email address to be typed again, and the
+server checks it (`POST /me/delete`). A request with a valid session and no
+such line deletes nothing.
+
+**What goes is found, not listed.** `accounts.delete_account` deletes from
+every table in the database that has a `user_id` column, whichever module made
+it, in one transaction. A list of tables was the weak point: a table added
+later and left off it would survive a deletion that told the person everything
+was gone, and nothing would fail. `test_delete_account.py` works the same way,
+so a new per-user table is covered, and tested, the day it is added.
+
+Three things are not keyed on `user_id` and are handled by name: sign-in
+tokens and the Pro waitlist (keyed on the address), and conversations with
+advisers, which go whole, both sides, whichever side the person was on.
+
+**What stays.** A client record on somebody else's wealth desk: it is the desk
+owner's book. And the backups: thirty days of them are kept (`backup.py`), so
+a deleted account is in a backup for up to thirty days. Both are said on the
+page and in the privacy policy. If a backup is ever restored, anybody who
+deleted their account since it was taken comes back with it and has to be
+deleted again; there is no record of who they were, by design.
+
+The page also offers to clear what the browser itself holds. Left behind, the
+old watchlist would be merged into the next account to sign in on that device
+(see the next section).
+
 ## Design decisions worth knowing
 
 **Bearer tokens, not cookies.** The site and the API are on different origins.

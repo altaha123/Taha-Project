@@ -103,6 +103,9 @@
     signed_in:              ['method'],
     portfolio_saved:        ['holdings', 'destination'],
     digest_opt_in_changed:  ['opt_in'],
+    // How many people leave for good. Nothing about who: by the time this
+    // is sent there is nobody left to say it about.
+    account_deleted:        [],
 
     // Which of the forty-odd modules earn their keep — Deals, Social, Lab.
     view_opened:           ['section', 'tab'],

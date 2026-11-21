@@ -4965,6 +4965,31 @@ def auth_logout(authorization: Optional[str] = Header(None)):
     return {"ok": accounts.logout(_bearer(authorization))}
 
 
+@app.post("/me/delete")
+def delete_my_account(payload: dict = Body(...),
+                      authorization: Optional[str] = Header(None)):
+    """Delete the signed-in account and everything kept under it.
+
+    Both app stores require that anybody who can create an account can delete
+    it, from inside the app and from a web address; frontend/delete-account.html
+    is both. It cannot be undone, so the request has to carry the account's
+    own email address, typed again: a stray call with a valid session and no
+    such line deletes nothing.
+
+    What is removed, and the one thing that is not, is written down once, in
+    accounts.delete_account.
+    """
+    import accounts
+    user = _require_user(authorization)
+    typed = str((payload or {}).get("confirm") or "").strip().lower()
+    if typed != str(user["email"]).strip().lower():
+        raise HTTPException(400, "Type your email address exactly as it is shown to confirm.")
+    out = accounts.delete_account(user["id"])
+    if out.get("error"):
+        raise HTTPException(404, out["error"])
+    return {"ok": True, "deleted": True}
+
+
 # ---------------------------------------------------------------------------
 # The saved portfolio
 # ---------------------------------------------------------------------------

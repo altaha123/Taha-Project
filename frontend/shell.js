@@ -298,7 +298,9 @@
     { href: 'brief.html', label: 'Daily policy brief' },
     { href: '/stocks', label: 'All companies' },
     { href: 'pro.html?from=footer', label: 'Altaha Pro' },
-    { href: 'signin.html', label: 'Sign in' }
+    { href: 'signin.html', label: 'Sign in' },
+    { href: 'privacy.html', label: 'Privacy' },
+    { href: 'delete-account.html', label: 'Delete your account' }
   ];
 
   function footLink(sectionId, it) {

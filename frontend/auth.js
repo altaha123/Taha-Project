@@ -186,6 +186,30 @@
     return done;
   }
 
+  /* Delete the account and everything kept under it (backend
+     accounts.delete_account). The server wants the address typed again, so
+     that is what is sent; this function does not decide anything. Only when
+     the server says it is done is the session forgotten here. */
+  function deleteAccount(confirmEmail) {
+    return authFetch('/me/delete', {
+      method: 'POST',
+      body: JSON.stringify({ confirm: String(confirmEmail || '') })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) {
+          throw new Error(typeof d.detail === 'string' ? d.detail
+            : 'Your account could not be deleted just now. Nothing was removed. Please try again.');
+        }
+        writeToken('');
+        cached = null;
+        announce();
+        return d;
+      });
+    }, function () {
+      throw new Error('Could not connect. Nothing was removed. Check your connection and try again.');
+    });
+  }
+
   window.AltahaAuth = {
     api: API,
     token: readToken,
@@ -198,7 +222,8 @@
     verifyCode: verifyCode,
     google: google,
     config: config,
-    signOut: signOut
+    signOut: signOut,
+    deleteAccount: deleteAccount
   };
 
   window.addEventListener('storage', function (event) {

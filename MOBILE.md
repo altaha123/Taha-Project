@@ -201,18 +201,20 @@ needed. That workflow is not written yet.
 
 ## Before either store will accept it
 
-These are not code in `mobile/`. They are what the stores ask of the
-product, and the first two will stop a submission.
+These are what the stores ask of the product, not of the app's code. The
+first two would stop a submission and are built; the rest are the owner's.
 
 1. **Deleting an account.** Both stores require that anybody who can create
    an account can delete it from inside the app, and Google wants a web
-   address for it too. The site has no such thing today: there is no
-   `DELETE /me`. It has to remove the user, their sessions, holdings,
-   watchlists, saved screens, risk profile and whatever the wealth desk and
-   the advisors keep for them.
-2. **A privacy policy at a public address.** Both stores ask for the link,
-   and both ask what is collected: an email address, a portfolio, a
-   watchlist, and the daily email. The site has no such page.
+   address for it too. Built: `delete-account.html`, which is
+   `https://altahascreener.in/delete-account` once merged (ACCOUNTS.md,
+   "Deleting an account").
+2. **A privacy policy at a public address.** Both stores ask for the link.
+   Built: `privacy.html`, which is `https://altahascreener.in/privacy` once
+   merged. It was written from what the code does and every statement in it
+   has to stay true to the code; the owner should read it as their own
+   promise before publishing it. `PLAY-STORE.md` has the store forms' answers,
+   which have to agree with it.
 3. **Who submits it.** Apple's guideline 5.1.1(ix) asks that apps in
    regulated fields, financial services among them, come from a legal entity
    and not an individual's account. The portfolio review gives hold, trim and

@@ -406,6 +406,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/signin-browser.cjs
+      - name: Verify an account is deleted only when asked, and then completely
+        # The page both app stores send a reviewer to, and the one thing on
+        # the site that cannot be undone. It must do nothing on a half-typed
+        # address or a failed request, and on success must sign the browser
+        # out and clear the watchlist the next account would inherit.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/delete-account-browser.cjs
       - name: Verify the watchlist survives signing in
         # The three ways a synced list loses somebody's work are all silent:
         # signing in replaces the list they built with an empty account, a

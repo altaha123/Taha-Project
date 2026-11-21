@@ -533,6 +533,100 @@ def logout(token: str) -> bool:
     return cur.rowcount > 0
 
 
+# ---------------------------------------------------------------------------
+# Deleting an account
+# ---------------------------------------------------------------------------
+
+def _tables_with(conn, column: str) -> list:
+    """Every table that has this column, in the order they were created."""
+    out = []
+    for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table' "
+                            "AND name NOT LIKE 'sqlite_%' ORDER BY rowid").fetchall():
+        name = row["name"]
+        cols = [c["name"] for c in conn.execute(f'PRAGMA table_info("{name}")').fetchall()]
+        if column in cols:
+            out.append(name)
+    return out
+
+
+def delete_account(user_id: int) -> dict:
+    """Erase one person: the account and everything kept under it.
+
+    Returns {"ok": True, "email", "removed": {table: rows}} or {"error"}.
+
+    WHAT GOES
+    Every row, in every table of this database, that carries their user_id:
+    sessions, holdings, the watchlist and its named lists, saved screens,
+    risk profiles, the send log, and whatever the advisers' and the wealth
+    desk's tables hold for them. The tables are found by looking for the
+    column rather than from a list, because the list was the weak point: a
+    table added next year and left off it would quietly survive a deletion
+    that told the person everything was gone. test_delete_account.py puts a
+    row in every such table and fails if one is left.
+
+    Three things are not keyed on user_id and are named here:
+      - sign-in tokens and the Pro waitlist are keyed on the address;
+      - a conversation with an adviser goes whole, both sides of it, whether
+        this person was the one asking or the adviser answering. Half a
+        conversation is still the other half's words about them;
+      - an adviser's profile, and with it the conversations held with them.
+
+    WHAT STAYS
+    A client record on somebody else's wealth desk. That is the desk owner's
+    book, kept under the owner's user_id, and the address in it is something
+    they wrote down. It is theirs to delete.
+
+    One transaction: a deletion that stops halfway leaves an account that can
+    still sign in to an empty shell, or rows nobody can ever reach again.
+    """
+    conn = _connect()
+    try:
+        uid = int(user_id)
+    except (TypeError, ValueError):
+        return {"error": "No such account."}
+    row = conn.execute("SELECT email FROM users WHERE id=?", (uid,)).fetchone()
+    if not row:
+        return {"error": "No such account."}
+    email = row["email"]
+    removed = {}
+
+    def drop(table, where, params):
+        cur = conn.execute(f'DELETE FROM "{table}" WHERE {where}', params)
+        if cur.rowcount:
+            removed[table] = removed.get(table, 0) + cur.rowcount
+
+    with conn:
+        tables = set(r["name"] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'").fetchall())
+
+        # Conversations first, while the rows that say whose they are exist.
+        if "chats" in tables:
+            mine = "user_id=?"
+            params = [uid]
+            if "experts" in tables:
+                mine += " OR expert_id IN (SELECT id FROM experts WHERE user_id=?)"
+                params.append(uid)
+            chat_ids = [r["id"] for r in conn.execute(
+                f"SELECT id FROM chats WHERE {mine}", params).fetchall()]
+            for start in range(0, len(chat_ids), 500):
+                chunk = chat_ids[start:start + 500]
+                marks = ",".join("?" * len(chunk))
+                for child in ("chat_messages", "chat_reports"):
+                    if child in tables:
+                        drop(child, f"chat_id IN ({marks})", chunk)
+                drop("chats", f"id IN ({marks})", chunk)
+
+        for table in _tables_with(conn, "user_id"):
+            if table != "users":
+                drop(table, "user_id=?", (uid,))
+
+        drop("login_tokens", "email=?", (email,))
+        drop("pro_waitlist", "email=?", (email,))
+        drop("users", "id=?", (uid,))
+
+    return {"ok": True, "email": email, "removed": removed}
+
+
 def _user_dict(row) -> dict:
     return {"id": row["id"], "email": row["email"], "created_at": row["created_at"],
             "digest_opt_in": bool(row["digest_opt_in"]),

@@ -405,7 +405,8 @@
             '<a class="si-btn" style="display:block;text-align:center;text-decoration:none;' +
             'box-sizing:border-box" href="' + escapeHTML(DEST) + '">' +
             (DEST === HOME ? 'Open your portfolio' : 'Carry on') + '</a>' +
-            '<a class="si-back" href="#" id="si-out">Sign out</a>');
+            '<a class="si-back" href="#" id="si-out">Sign out</a>' +
+            '<a class="si-back" href="delete-account.html" id="si-delete">Delete your account</a>');
       var out = $('si-out');
       if (out) out.addEventListener('click', function (e) {
         e.preventDefault();

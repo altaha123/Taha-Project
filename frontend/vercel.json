@@ -17,7 +17,9 @@
     { "source": "/glossary", "destination": "/glossary.html" },
     { "source": "/methodology", "destination": "/methodology.html" },
     { "source": "/planner", "destination": "/planner.html" },
-    { "source": "/ownership-share", "destination": "/ownership-share.html" }
+    { "source": "/ownership-share", "destination": "/ownership-share.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/delete-account", "destination": "/delete-account.html" }
   ],
   "headers": [
     {

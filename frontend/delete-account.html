@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" /><script src="clean-url.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Delete your account — Altaha Screener</title>
+<meta name="description" content="Delete your Altaha Screener account and everything saved under it: your portfolio, watchlists, saved screens and the daily email." />
+<meta name="referrer" content="no-referrer" />
+<link rel="canonical" href="https://altahascreener.in/delete-account" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="type.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem("altaha-theme");
+      if (!t && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
+      if (t) document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+<style>
+  body { margin: 0; background: var(--paper, #faf8f3); color: var(--ink, #1a1a1a); font-family: Inter, system-ui, sans-serif; }
+  .pg { max-width: 720px; margin: 0 auto; padding: 20px 18px 72px; line-height: 1.6; font-size: 16px; }
+  .pg a { color: inherit; }
+  .pg-top { font-size: 14px; }
+  .pg h1 { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 38px; line-height: 1.1; margin: 18px 0 6px; }
+  .pg h2 { font-size: 18px; font-weight: 600; margin: 32px 0 6px; }
+  .pg p, .pg li { color: var(--ink-2, #4a443a); }
+  .pg ul { padding-left: 20px; margin: 8px 0; }
+  .pg li { margin: 5px 0; }
+  .pg strong { color: var(--ink, #1a1a1a); font-weight: 600; }
+  .pg-lede { font-size: 17px; }
+  .pg-when { font-size: 13px; color: var(--mute, #8b8477); font-family: "IBM Plex Mono", monospace; }
+  .pg-card { border: 1px solid var(--rule, #ddd6c9); border-radius: 16px; padding: 20px; margin: 22px 0; background: var(--paper-2, #f4f1eb); }
+  .pg-card h2 { margin-top: 0; }
+  .pg-field { display: block; margin: 14px 0 6px; font-size: 14px; font-weight: 500; color: var(--ink, #1a1a1a); }
+  .pg-input { box-sizing: border-box; width: 100%; min-height: 48px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--rule, #ddd6c9); background: var(--paper, #faf8f3); color: inherit; font: inherit; }
+  .pg-check { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0; font-size: 14.5px; }
+  .pg-check input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; }
+  .pg-btn { display: inline-block; box-sizing: border-box; min-height: 48px; padding: 12px 22px; border-radius: 12px; border: 1px solid var(--ink, #1a1a1a); background: var(--ink, #1a1a1a); color: var(--paper, #faf8f3); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; text-align: center; }
+  .pg-btn.danger { background: var(--fail, #8e2f2a); border-color: var(--fail, #8e2f2a); color: #fff; }
+  .pg-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .pg-note { min-height: 22px; margin: 12px 0 0; font-size: 14.5px; color: var(--fail, #8e2f2a); }
+  html[data-theme="dark"] .pg-note { color: #ff8a80; }
+  html[data-theme="dark"] .pg-btn.danger { background: #b3423a; border-color: #b3423a; }
+</style>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+</head>
+<body>
+<!-- The page both app stores ask for: somewhere a person can delete their
+     account, reachable from inside the app and from the web. It does the
+     deleting itself, for whoever is signed in; signed out, it says what to do.
+     What is removed is decided in one place, backend accounts.delete_account,
+     and the list below has to stay true to it. -->
+<main class="pg">
+  <div class="pg-top"><a href="./">&larr; Altaha Screener</a></div>
+  <h1>Delete your account</h1>
+  <p class="pg-lede">This removes your account and everything saved under it. It cannot be undone.</p>
+
+  <h2>What is deleted</h2>
+  <ul>
+    <li>Your <strong>email address</strong> and every sign-in on every device.</li>
+    <li>Your saved <strong>portfolio</strong>, your <strong>watchlists</strong> and your <strong>saved screens</strong>.</li>
+    <li>Your <strong>risk profile</strong> answers and your place on the Altaha Pro waitlist.</li>
+    <li>Your <strong>conversations with advisers</strong>, both sides of them. If you are an adviser, your profile and the conversations held with you.</li>
+    <li>Your <strong>wealth desk</strong>, if you keep one: its clients, trades and recommendations.</li>
+    <li>The <strong>daily email</strong> stops, because there is no longer an address to send it to.</li>
+  </ul>
+
+  <h2>What is not</h2>
+  <ul>
+    <li>If a portfolio manager keeps a record of you on their own wealth desk, that record is theirs. Ask them to remove it.</li>
+    <li>Backups of the database are kept for 30 days and then deleted. Your data is in them until then, and is not used for anything.</li>
+  </ul>
+
+  <div class="pg-card" id="da-panel" aria-live="polite">
+    <p id="da-loading">Checking whether you are signed in&hellip;</p>
+  </div>
+
+  <p>Something not working? Write to <a href="mailto:hello@altahascreener.in">hello@altahascreener.in</a> from the address on your account and it will be deleted by hand.
+     See also the <a href="privacy.html">privacy policy</a>.</p>
+</main>
+<script>
+(function () {
+  'use strict';
+  var panel = document.getElementById('da-panel');
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function signedOut() {
+    panel.innerHTML =
+      '<h2>Sign in first</h2>' +
+      '<p>Only you can delete your account, so the page has to know it is you. Sign in with the email ' +
+      'address on the account, and you will be brought back here.</p>' +
+      '<a class="pg-btn" id="da-signin" href="signin.html?next=delete-account.html">Sign in</a>';
+  }
+
+  /* What this device keeps for itself: a watchlist, a portfolio draft, the
+     planner's numbers. Left behind, the watchlist would be copied into the
+     next account that signs in here. Appearance is kept; it is not about them. */
+  function clearDevice() {
+    try {
+      var keep = { 'altaha-theme': 1 }, keys = [], i;
+      for (i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+      keys.forEach(function (k) { if (!keep[k]) localStorage.removeItem(k); });
+    } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
+  }
+
+  function gone(clearedDevice) {
+    panel.innerHTML =
+      '<h2 id="da-done">Your account has been deleted</h2>' +
+      '<p>Everything listed above is gone' + (clearedDevice ? ', and so is what this device had saved' : '') +
+      '. You are signed out everywhere.</p>' +
+      '<p>You can keep using Altaha Screener without an account.</p>' +
+      '<a class="pg-btn" href="./">Back to Altaha Screener</a>';
+  }
+
+  function signedIn(user) {
+    panel.innerHTML =
+      '<h2>Delete <span id="da-email">' + esc(user.email) + '</span></h2>' +
+      '<form id="da-form" novalidate>' +
+        '<label class="pg-field" for="da-confirm">Type your email address to confirm</label>' +
+        '<input class="pg-input" id="da-confirm" type="email" autocomplete="off" autocapitalize="none" ' +
+          'spellcheck="false" inputmode="email" placeholder="' + esc(user.email) + '" />' +
+        '<label class="pg-check"><input type="checkbox" id="da-device" checked />' +
+          '<span>Also clear what this device has saved: the watchlist, portfolio draft and planner kept in this browser.</span></label>' +
+        '<button class="pg-btn danger" type="submit" id="da-go" disabled>Delete my account for good</button>' +
+        '<p class="pg-note" id="da-note" role="alert"></p>' +
+      '</form>';
+    var form = document.getElementById('da-form'), input = document.getElementById('da-confirm'),
+        go = document.getElementById('da-go'), note = document.getElementById('da-note');
+    var want = String(user.email).trim().toLowerCase();
+    var matches = function () { return input.value.trim().toLowerCase() === want; };
+    input.addEventListener('input', function () { go.disabled = !matches(); note.textContent = ''; });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!matches() || go.disabled) return;
+      go.disabled = true;
+      go.textContent = 'Deleting…';
+      note.textContent = '';          // the last attempt's error is not this attempt's
+      var device = document.getElementById('da-device').checked;
+      window.AltahaAuth.deleteAccount(input.value).then(function () {
+        if (device) clearDevice();
+        if (window.AltahaTrack) window.AltahaTrack('account_deleted', {});
+        gone(device);
+      }, function (err) {
+        // A session that ended in the meantime: the server has said who this is not.
+        if (!window.AltahaAuth.authed()) { signedOut(); return; }
+        note.textContent = err && err.message ? err.message : 'Nothing was removed. Please try again.';
+        go.textContent = 'Delete my account for good';
+        go.disabled = !matches();
+      });
+    });
+  }
+
+  function start() {
+    if (!window.AltahaAuth) { signedOut(); return; }
+    window.AltahaAuth.refresh().then(function (user) {
+      if (user && user.email) signedIn(user); else signedOut();
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>
+</body>
+</html>
