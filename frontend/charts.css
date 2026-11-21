@@ -255,6 +255,10 @@ html.cw-max-on,html.cw-max-on body{overflow:hidden}
   background:var(--ink);color:var(--paper);font-size:13px;line-height:1.4;padding:8px 14px;border-radius:8px;box-shadow:var(--sh-2);
   opacity:0;pointer-events:none;transition:opacity 180ms var(--ease,ease),transform 180ms var(--ease,ease)}
 .cw-toast.on{opacity:1;transform:translate(-50%,0)}
+.cw-fault{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:31;display:none;align-items:center;gap:12px;
+  max-width:min(560px,92%);background:var(--surface,#fff);border:1px solid var(--fail);border-radius:10px;padding:12px 14px;
+  box-shadow:var(--sh-2);font-size:14px;color:var(--ink)}
+.cw-fault.on{display:flex}
 
 /* ── Selection toolbar ────────────────────────────────────────────────── */
 
