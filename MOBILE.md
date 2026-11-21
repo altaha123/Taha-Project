@@ -179,15 +179,25 @@ allows a public release; an organisation account does not.
 
 ### iOS
 
-There is no way round a Mac and an Apple Developer Program membership.
+There is no way round an Apple Developer Program membership: an iPhone only
+runs an app signed with an Apple account, and the stores only take one signed
+with a paid one. With the membership, the plain route is a Mac:
 
 1. `cd mobile && npm run ios`
 2. In Xcode: the App target › Signing & Capabilities › choose your Team.
 3. Product › Archive, then Distribute App › App Store Connect.
 4. TestFlight first, then submit for review.
 
-CI builds the iOS app unsigned for the simulator, which proves it compiles
-and starts. It cannot sign it: that takes your certificate.
+CI builds the iOS app twice, both times unsigned. The simulator build is the
+one it starts and tests. The second is the build for a real iPhone, kept with
+the run as `altaha-ios-unsigned-ipa`. That file is the app, but it cannot be
+installed by opening it. It is there to prove the phone build compiles, and
+for a signing tool to be given.
+
+CI cannot sign either one today: that takes your Apple account. Once there is
+a membership, GitHub can do the signing and the upload to TestFlight itself,
+from an App Store Connect API key kept as a repository secret, and no Mac is
+needed. That workflow is not written yet.
 
 ## Before either store will accept it
 

@@ -123,6 +123,7 @@ jobs:
         # something to start. The build that goes to the App Store is made in
         # Xcode with the owner's Apple account (MOBILE.md).
         run: |
+          set -o pipefail
           xcodebuild -version
           xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
@@ -134,3 +135,24 @@ jobs:
         with:
           name: altaha-ios-screenshots
           path: mobile-smoke
+      - name: Build the app for a real iPhone, unsigned
+        working-directory: mobile/ios/App
+        # The app itself, as the one file an iPhone app is: an .ipa. It is not
+        # signed, and an iPhone refuses anything unsigned, so it cannot be
+        # installed by opening it. It is what a signing tool is given, and it
+        # proves the build that goes to a phone compiles, not only the one for
+        # the simulator (MOBILE.md, "iOS").
+        run: |
+          set -o pipefail
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build-device \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build | tail -20
+          rm -rf Payload && mkdir Payload
+          cp -R build-device/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry altaha-screener-unsigned.ipa Payload
+          ls -la altaha-screener-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: altaha-ios-unsigned-ipa
+          path: mobile/ios/App/altaha-screener-unsigned.ipa
