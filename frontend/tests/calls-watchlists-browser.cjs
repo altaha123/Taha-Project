@@ -287,6 +287,26 @@ const PULSE_REPORT = {
   await page.waitForTimeout(1400);
   await page.screenshot({ path: path.join(output, 'watchlists-desktop.png'), fullPage: true });
 
+  /* The width is used: every list's summary beside the title, your lists and
+     the featured ones on one row, and the glance and the game beside the
+     cards rather than under them. */
+  const layout = await page.evaluate(() => {
+    const box = sel => { const n = document.querySelector(sel); return n && n.getBoundingClientRect(); };
+    const groups = [...document.querySelectorAll('#wl-shelf .wl-group')].map(g => g.getBoundingClientRect());
+    return { title: box('.wl-head-t'), sum: box('#wl-sum'), groups,
+             main: box('.wl-main'), side: box('.wl-side'),
+             glance: document.querySelector('.wl-side .wl-glance li b')?.textContent,
+             best: document.querySelector('#wl-sum a.wl-sum-c b')?.textContent,
+             game: !!document.querySelector('.wl-side .wl-game') };
+  });
+  assert.ok(layout.sum.left > layout.title.right - 1 && layout.sum.top < layout.title.bottom, 'the summary sits beside the title');
+  assert.equal(layout.best, 'TCS', 'the summary names the best mover today');
+  assert.equal(layout.groups.length, 2);
+  assert.ok(Math.abs(layout.groups[0].top - layout.groups[1].top) < 2, 'your lists and the featured ones share a row');
+  assert.ok(layout.side.left > layout.main.right - 1 && Math.abs(layout.side.top - layout.main.top) < 2, 'the side column sits beside the cards');
+  assert.equal(layout.glance, 'TCS', 'the glance leads with today’s leader');
+  assert.ok(layout.game, 'the game is in the side column');
+
   // Rename the main list.
   await page.locator('[data-act="rename"]').click();
   await page.locator('#wl-name-in').fill('Core holdings');

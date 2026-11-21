@@ -577,20 +577,63 @@
       bar + '</button>';
   }
 
+  /* The shelf is two groups, your lists and the featured ones. On a wide
+     screen they share one row, each as wide as the tiles it holds, so a
+     reader with two lists does not get two tiles and a row of nothing. With
+     more tiles than fit side by side, each group takes the full width. */
+  var SHELF_SPLIT = 6;
   function paintShelf() {
     var host = $('wl-shelf');
     if (!host) return;
     var mine = myLists(), k = 0;
-    var html = '<div class="wl-shelf-row" role="group" aria-label="Your lists">' +
+    var nMine = mine.length + (S.shared ? 1 : 0) + 1, nFeat = S.featured.length;
+    var split = nFeat > 0 && nMine + nFeat <= SHELF_SPLIT;
+    var html = '<section class="wl-group" style="--n:' + nMine + '"><p class="wl-shelf-h">Your lists</p>' +
+      '<div class="wl-shelf-row" role="group" aria-label="Your lists">' +
       (S.shared ? shelfCard(S.shared, k++) : '') +
       mine.map(function (l) { return shelfCard(l, k++); }).join('') +
       '<button type="button" class="wl-tile wl-new" id="wl-new" style="--i:' + (k++) + '"><span class="wl-tile-e" aria-hidden="true">＋</span>' +
-      '<span class="wl-tile-t"><b>New list</b><small>name it anything</small></span></button></div>';
-    if (S.featured.length) {
-      html += '<p class="wl-shelf-h">Featured lists: open one, race it, or keep a copy</p><div class="wl-shelf-row" role="group" aria-label="Featured lists">' +
-        S.featured.map(function (l) { return shelfCard(l, k++); }).join('') + '</div>';
+      '<span class="wl-tile-t"><b>New list</b><small>name it anything</small></span></button></div></section>';
+    if (nFeat) {
+      html += '<section class="wl-group" style="--n:' + nFeat + '"><p class="wl-shelf-h">Featured: open one, race it, or keep a copy</p>' +
+        '<div class="wl-shelf-row" role="group" aria-label="Featured lists">' +
+        S.featured.map(function (l) { return shelfCard(l, k++); }).join('') + '</div></section>';
     }
+    host.classList.toggle('split', split);
+    host.style.gridTemplateColumns = split ? nMine + 'fr ' + nFeat + 'fr' : '';
     host.innerHTML = html;
+    paintSummary();
+  }
+
+  /* Every list at once, beside the page title: how many names are tracked,
+     how many are up today, and the best and worst of them. */
+  function paintSummary() {
+    var host = $('wl-sum');
+    if (!host) return;
+    var lists = myLists(), seen = {}, syms = [];
+    lists.forEach(function (l) { l.symbols.forEach(function (s) { if (!seen[s]) { seen[s] = 1; syms.push(s); } }); });
+    var up = 0, dn = 0, flat = 0, best = null, worst = null;
+    syms.forEach(function (s) {
+      var q = S.q[s];
+      if (!q || !finite(q.change_pct)) return;
+      var c = Number(q.change_pct);
+      if (c > 0) up++; else if (c < 0) dn++; else flat++;
+      if (!best || c > best.c) best = { s: s, c: c };
+      if (!worst || c < worst.c) worst = { s: s, c: c };
+    });
+    var n = up + dn + flat;
+    function mover(label, m) {
+      return '<a class="wl-sum-c" href="' + (m ? 'stock.html?ticker=' + encodeURIComponent(m.s) : '#portfolio/watchlists') + '">' +
+        '<small>' + label + '</small>' +
+        (m ? '<b>' + esc(m.s) + '</b><span class="' + tone(m.c) + '">' + pct(m.c) + '</span>' : '<b>—</b><span>&nbsp;</span>') + '</a>';
+    }
+    host.innerHTML =
+      '<div class="wl-sum-c"><small>Your lists</small><b>' + lists.length + '</b><span>' + syms.length + (syms.length === 1 ? ' stock' : ' stocks') + ' tracked</span></div>' +
+      '<div class="wl-sum-c"><small>Today</small><b><span class="up">' + up + '</span> / <span class="dn">' + dn + '</span></b>' +
+        (n ? '<span class="wl-moodbar" aria-label="' + up + ' up, ' + dn + ' down"><i class="up" style="flex:' + up + '"></i><i class="flat" style="flex:' + flat + '"></i><i class="dn" style="flex:' + dn + '"></i></span>'
+           : '<span>up / down</span>') + '</div>' +
+      mover('Best today', best) +
+      mover('Worst today', n > 1 ? worst : null);
   }
 
   function hero(l) {
@@ -728,6 +771,38 @@
     }).join('') + '</div>';
   }
 
+  /* Beside the cards: the names worth knowing about on this list today,
+     each one a link. A list with one priced name has no laggard. */
+  function glance(l, rows) {
+    var priced = rows.filter(function (r) { return r.q && finite(r.q.change_pct); });
+    if (!priced.length) return '';
+    function top(get, low) {
+      var pick = null;
+      priced.forEach(function (r) {
+        var v = get(r);
+        if (!finite(v)) return;
+        if (!pick || (low ? v < pick.v : v > pick.v)) pick = { s: r.s, v: Number(v) };
+      });
+      return pick;
+    }
+    var items = [
+      ['Leading today', top(function (r) { return r.q.change_pct; })],
+      ['Lagging today', priced.length > 1 ? top(function (r) { return r.q.change_pct; }, true) : null],
+      ['Best this week', top(function (r) { return r.q.week_pct; })],
+      ['Best this month', top(function (r) { return r.q.month_pct; })],
+      ['Best since added', top(function (r) { return r.since ? r.since.pct : null; })],
+      ['Top Altaha Score', top(function (r) { return r.q.score; }), 'score']
+    ];
+    return '<section class="wl-glance" aria-labelledby="wl-glance-h">' +
+      '<h3 id="wl-glance-h">At a glance</h3>' +
+      '<p class="wl-glance-sub">' + priced.length + ' of ' + l.symbols.length + ' priced · ' + (S.marketOpen ? 'live' : 'last close') + '</p>' +
+      '<ul>' + items.filter(function (it) { return it[1]; }).map(function (it) {
+        var m = it[1], isScore = it[2] === 'score';
+        return '<li><a href="stock.html?ticker=' + encodeURIComponent(m.s) + '"><span>' + it[0] + '</span><b>' + esc(m.s) + '</b>' +
+          '<em class="' + (isScore ? '' : tone(m.v)) + '">' + (isScore ? Math.round(m.v) : pct(m.v)) + '</em></a></li>';
+      }).join('') + '</ul></section>';
+  }
+
   // The most recent scored pick, if it is recent enough to still be news.
   function latestResult(g) {
     var days = Object.keys(g.picks).filter(function (d) { return g.picks[d] && g.picks[d].result; }).sort();
@@ -815,7 +890,9 @@
       ? '<div class="wl-empty"><span class="wl-empty-e" aria-hidden="true">' + esc(l.emoji || '⭐') + '</span>' +
         '<b>' + esc(l.name) + ' is empty</b><p>Add a stock above, tap ☆ Save on any stock page, or copy names in from a featured list.</p></div>'
       : S.mode === 'race' ? race(l, rows) : S.mode === 'heat' ? heat(l, rows) : cards(l, rows, today);
-    host.innerHTML = hero(l) + toolbar(l) + body + gamePanel(l) +
+    host.innerHTML = hero(l) + toolbar(l) +
+      '<div class="wl-body"><div class="wl-main">' + body + '</div>' +
+        '<aside class="wl-side" aria-label="' + esc(l.name) + ' at a glance">' + glance(l, rows) + gamePanel(l) + '</aside></div>' +
       '<p class="wl-note">' + esc(S.note || 'Prices are delayed daily closes unless the live feed is connected.') + '</p>';
     if (kept) restoreUi(kept);
     if (S.renaming) {
@@ -875,10 +952,13 @@
   function shell() {
     return '<div class="wl">' +
       '<header class="wl-head">' +
-        '<p class="wl-kick">Portfolio · watchlists</p>' +
-        '<h2>Watchlists</h2>' +
-        '<p class="wl-lede">Every list you keep, live: today’s move, the week, the month, and how far each name has come since it went on the list. Race them, share them, and pick a winner.</p>' +
-        '<p class="wl-sync" id="wl-sync"></p>' +
+        '<div class="wl-head-t">' +
+          '<p class="wl-kick">Portfolio · watchlists</p>' +
+          '<h2>Watchlists</h2>' +
+          '<p class="wl-lede">Every list you keep, live: today’s move, the week, the month, and how far each name has come since it went on the list. Race them, share them, and pick a winner.</p>' +
+          '<p class="wl-sync" id="wl-sync"></p>' +
+        '</div>' +
+        '<div class="wl-sum" id="wl-sum" aria-label="All your lists today"></div>' +
       '</header>' +
       '<div class="wl-shelf" id="wl-shelf"></div>' +
       '<div class="wl-stage" id="wl-stage"></div>' +
