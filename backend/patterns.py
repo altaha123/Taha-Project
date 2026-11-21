@@ -200,7 +200,7 @@ def double_bottom(df, c, piv):
 
     checks = [
         _chk("Two lows at the same level", level,
-             f"₹{b1[1]:.2f} and ₹{b2[1]:.2f} — {abs(b1[1]-b2[1])/a:.1f} ATR apart"),
+             f"₹{b1[1]:.2f} and ₹{b2[1]:.2f}, {abs(b1[1]-b2[1])/a:.1f} ATR apart"),
         _chk("Meaningful separation between them", spaced,
              f"{b2[0]-b1[0]} sessions apart"),
         _chk("Recovery between the lows is real", deep,
@@ -245,7 +245,7 @@ def double_top(df, c, piv):
 
     checks = [
         _chk("Two highs at the same level", level,
-             f"₹{t1[1]:.2f} and ₹{t2[1]:.2f} — {abs(t1[1]-t2[1])/a:.1f} ATR apart"),
+             f"₹{t1[1]:.2f} and ₹{t2[1]:.2f}, {abs(t1[1]-t2[1])/a:.1f} ATR apart"),
         _chk("Meaningful separation between them", spaced, f"{t2[0]-t1[0]} sessions apart"),
         _chk("Pullback between the highs is real", deep,
              f"the middle low is {depth/a:.1f} ATR below the highs"),
@@ -720,7 +720,7 @@ def base_rate(df, detector, horizons=HORIZONS, step=3, min_sample=MIN_SAMPLE):
     if len(hits) < min_sample:
         return {"instances": len(hits), "reliable": False,
                 "note": (f"Only {len(hits)} prior instance"
-                         f"{'' if len(hits) == 1 else 's'} in this stock's history — "
+                         f"{'' if len(hits) == 1 else 's'} in this stock's history, "
                          "too few to quote a rate. Treat the pattern as a shape, not "
                          "as a statistic.")}
 
@@ -786,7 +786,7 @@ def _confluence(res, fwd):
     return {"agrees": agree, "argues": against,
             "verdict": ("The indicators line up with the shape." if agree and not against
                         else "The indicators argue with the shape." if against and not agree
-                        else "Mixed — the indicators are split on this one."
+                        else "Mixed: the indicators are split on this one."
                         if agree and against else "Nothing to add.")}
 
 

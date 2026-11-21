@@ -205,7 +205,7 @@
       items: [
         { tab: 'money', label: 'Overview', icon: 'shield', hint: 'Your portfolio, watchlist and plans', kw: 'money mine' },
         { tab: 'portfolio', g: 'mine', label: 'Portfolio review', icon: 'briefcase', hint: 'A clear call on every holding', kw: 'portfolio holdings review plan hold trim exit' },
-        { tab: 'watchlists', g: 'mine', label: 'Watchlists', icon: 'star', hint: 'Your lists, live — make, rename, share and play', kw: 'watchlist watch list star saved follow rename share game' },
+        { tab: 'watchlists', g: 'mine', label: 'Watchlists', icon: 'star', hint: 'Live lists you can make, rename, share and play', kw: 'watchlist watch list star saved follow rename share game' },
         { tab: 'allocate', g: 'plan', label: 'Allocation plan', icon: 'pie', hint: 'Where your next rupee should go', kw: 'allocate asset allocation invest' },
         { tab: 'planner', g: 'plan', label: 'Money planner', icon: 'plan', hint: 'The month work becomes optional, and what moves it', kw: 'planner budget tax emergency retire retirement freedom fire goals goal sip check-in regime salary' },
         { href: 'advisors.html', g: 'help', label: 'Talk to an adviser', icon: 'chat', hint: 'Chat with SEBI-registered advisers', kw: 'advisor adviser sebi chat expert' },
@@ -554,19 +554,38 @@
        · the arrow beside the door's name: a click, a tap, or Enter.
        · the down arrow key on a door.
      WHAT CLOSES IT
-       · the mouse leaving both the door and the panel for MEGA_OUT. Not at
-         once either: the way from "Portfolio" to the far column is a
-         diagonal, and a panel that vanishes halfway there is the thing
-         people dislike about hover menus.
+       · the mouse being off both the doors and the panel for MEGA_OUT.
        · Escape, a press anywhere else, focus moving on, or opening a tool.
      A door's name still opens the door's own page on a click, as it always
      did, and that page shows every tool too, so nothing here is the only
-     way to anything. */
+     way to anything.
 
-  var MEGA_IN = 140, MEGA_SWAP = 110, MEGA_OUT = 320, MEGA_QUIET = 700;
+     WHERE THE POINTER IS, AND WHERE IT IS GOING
+     Two things made this menu hard to use, and both are settled here.
+
+     It closed on readers who were inside it. Whether the pointer was "in"
+     the menu was read from enter and leave events on the panel, and a
+     browser can report a leave that is not one (Chrome did, as the pointer
+     came off the strip joining the bar to the panel). So those events are
+     not asked. Every pointer move says what it is over, and before the
+     menu closes the spot the pointer was last seen at is looked up again:
+     a menu with a pointer on it stays.
+
+     It changed under readers on their way to it. The panel is far wider
+     than the doors, so the straight line from "Market" to a tool in the
+     last column runs across "Ideas" and "Portfolio", and each of those
+     swapped the pane on the way. A pointer travelling towards the panel
+     (aiming, below) is on its way to what it can already see, so neither a
+     swap nor a close happens until it arrives or stops. */
+
+  var MEGA_IN = 120, MEGA_SWAP = 90, MEGA_OUT = 300, MEGA_QUIET = 700;
+  var MEGA_AIM = 80;        // while the pointer is travelling to the panel, look again this often
+  var MEGA_TRAIL = 140;     // how far back the pointer's path is remembered, in ms
   var megaOpen = null, megaOpenT = null, megaCloseT = null;
   var megaWant = null;      // the door a pending open is for
   var megaQuiet = 0;        // a door's name was just clicked: until this time, moving on it opens nothing
+  var megaTrail = [];       // the pointer's last few positions, oldest first
+  var megaHover = false;    // a mouse has been on the open menu, so a mouse leaving closes it
 
   function motionOff() {
     return REDUCED || document.documentElement.getAttribute('data-motion') === 'off';
@@ -634,11 +653,13 @@
     var box = wrap && wrap.querySelector('.sh-mega-in');
     if (!box || narrow()) return;
     clearTimeout(megaOpenT); clearTimeout(megaCloseT);
+    megaCloseT = null;
     megaWant = null;
     var pane = document.getElementById('sh-mega-' + id);
     if (!pane) return;
     if (megaOpen !== id) {
       var was = megaOpen, h0 = was ? box.offsetHeight : 0;
+      if (!was) megaHover = false;
       megaOpen = id;
       wrap.querySelectorAll('.sh-mega-pane').forEach(function (p) { p.hidden = p !== pane; });
       box.scrollTop = 0;
@@ -664,10 +685,12 @@
 
   function closeMega(refocus) {
     clearTimeout(megaOpenT); clearTimeout(megaCloseT);
+    megaCloseT = null;
     megaWant = null;
     if (!megaOpen) return;
     var was = megaOpen;
     megaOpen = null;
+    megaHover = false;
     var wrap = document.getElementById('sh-megawrap');
     if (wrap) wrap.classList.remove('open');
     paintMegaState();
@@ -884,27 +907,89 @@
   function wireMega() {
     var mega = document.getElementById('sh-mega');
     if (!mega) return;
+    var ZONE = '.sh-mega, .sh-doorwrap';
     function hovering(e) { return e.pointerType !== 'touch'; }
-    function closeSoon() {
-      clearTimeout(megaCloseT);
-      megaCloseT = setTimeout(function () { closeMega(); }, MEGA_OUT);
+    function inZone(node) { return !!(node && node.closest && node.closest(ZONE)); }
+
+    /* Is the pointer on a door or the panel right now? Asked of the page,
+       at the place the pointer was last seen, rather than remembered from
+       events. */
+    function pointerOnMenu() {
+      var p = megaTrail[megaTrail.length - 1];
+      return !!p && inZone(document.elementFromPoint(p.x, p.y));
     }
 
-    // A shorter wait once a menu is showing, but still a wait: a pointer
-    // cutting across "Ideas" on its way down into Portfolio's panel has left
-    // again before this fires.
+    /* Is the pointer on its way to the panel? True while it is above the
+       panel, still moving, and its path over the last moment points inside
+       the triangle from where it was to the panel's two top corners. A
+       pointer that has stopped is not on its way anywhere. */
+    function aiming() {
+      var n = megaTrail.length;
+      if (!megaOpen || n < 2) return false;
+      var cur = megaTrail[n - 1], old = megaTrail[0];
+      if (performance.now() - cur.t > MEGA_AIM) return false;
+      var vx = cur.x - old.x, vy = cur.y - old.y;
+      if (vy < 2) return false;
+      var box = mega.querySelector('.sh-mega-in');
+      var r = box && box.getBoundingClientRect();
+      if (!r || !r.width || cur.y >= r.top) return false;
+      var ax = r.left - 12 - old.x, bx = r.right + 12 - old.x, dy = r.top - old.y;
+      return ax * vy - dy * vx <= 0 && vx * dy - vy * bx <= 0;
+    }
+
+    function tryClose() {
+      megaCloseT = null;
+      if (!megaOpen || pointerOnMenu()) return;
+      if (aiming()) { megaCloseT = setTimeout(tryClose, MEGA_AIM); return; }
+      closeMega();
+    }
+    function closeSoon() {
+      if (megaCloseT) return;
+      megaCloseT = setTimeout(tryClose, MEGA_OUT);
+    }
+    function stay() { clearTimeout(megaCloseT); megaCloseT = null; }
+
+    function tryOpen() {
+      var id = megaWant;
+      if (!id) return;
+      // Crossing a door on the way down to the open panel is not asking for
+      // that door. Resting on it is, and so is sliding along the bar.
+      if (megaOpen && aiming()) { megaOpenT = setTimeout(tryOpen, MEGA_AIM); return; }
+      openMega(id);
+      megaHover = true;
+    }
     function arm(id) {
       if (megaOpen === id || megaWant === id) return;
       clearTimeout(megaOpenT);
       megaWant = id;
-      megaOpenT = setTimeout(function () { openMega(id); }, megaOpen ? MEGA_SWAP : MEGA_IN);
+      megaOpenT = setTimeout(tryOpen, megaOpen ? MEGA_SWAP : MEGA_IN);
     }
+
+    /* One listener says where the pointer is. On the menu, it stays. Off
+       it, it closes after a pause, but only a menu a mouse has been on:
+       one opened from the keyboard is not closed by a mouse that happens
+       to be moved somewhere else on the page. */
+    document.addEventListener('pointermove', function (e) {
+      if (!hovering(e)) return;
+      var now = performance.now();
+      megaTrail.push({ x: e.clientX, y: e.clientY, t: now });
+      while (megaTrail.length > 2 && now - megaTrail[1].t > MEGA_TRAIL) megaTrail.shift();
+      if (!megaOpen) return;
+      if (inZone(e.target)) { megaHover = true; stay(); }
+      else if (megaHover) closeSoon();
+    }, { passive: true });
+    // The pointer has left the window: it is on nothing.
+    document.documentElement.addEventListener('pointerleave', function (e) {
+      if (!hovering(e)) return;
+      megaTrail.length = 0;
+      if (megaOpen && megaHover) closeSoon();
+    });
 
     document.querySelectorAll('.sh-doorwrap').forEach(function (w) {
       var id = w.dataset.sec, cv = w.querySelector('.sh-doorcv'), pressed = '';
       w.addEventListener('pointerenter', function (e) {
         if (!hovering(e)) return;
-        clearTimeout(megaCloseT);
+        stay();
         arm(id);
       });
       // Entering is not the only way to be on a door: after a click on its
@@ -915,7 +1000,6 @@
         if (!hovering(e)) return;
         clearTimeout(megaOpenT);
         megaWant = null;
-        if (megaOpen) closeSoon();
       });
       // The name opens the door's page (wireDoors); the menu gets out of the
       // way, and stays out for a moment so the hand's next twitch on the
@@ -941,11 +1025,6 @@
         if (e.key === 'ArrowDown') { e.preventDefault(); openMega(id, true); }
       });
     });
-
-    mega.addEventListener('pointerenter', function (e) {
-      if (hovering(e)) { clearTimeout(megaCloseT); clearTimeout(megaOpenT); }
-    });
-    mega.addEventListener('pointerleave', function (e) { if (hovering(e) && megaOpen) closeSoon(); });
 
     mega.addEventListener('click', function (e) {
       var it = e.target.closest('.sh-item, .sh-mega-lead');
@@ -1164,7 +1243,7 @@
         '<div class="sh-dacct"><a class="sh-item sh-dacc" href="signin.html">' + svg('shield') +
           '<span class="sh-txt"><b class="sh-dacc-name">Sign in</b><span>Keep your portfolio and watchlist on your account</span></span></a></div>' +
         '<a class="sh-dpro" href="pro.html?from=menu"><b>Altaha Pro</b>' +
-          '<span>The portfolio story, watchlist alerts and saved screens — ₹1,999 a year</span></a>' +
+          '<span>The portfolio story, watchlist alerts and saved screens, ₹1,999 a year</span></a>' +
         '<a class="sh-item" href="advisors.html">' + svg('chat') +
           '<span class="sh-txt"><b>Talk to an adviser</b><span>SEBI-registered advisers, free to chat</span></span></a>' +
         '<a class="sh-item sh-dwd" href="wealth.html">' + svg('shield') +

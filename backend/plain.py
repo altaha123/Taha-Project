@@ -23,28 +23,28 @@ PHRASING = {
     "MACD momentum": ("Upward momentum is building, not fading",
                       "Momentum is fading"),
     "ADX trend strength": ("The trend has real force behind it",
-                           "There's no strong trend — price is choppy and directionless"),
+                           "There's no strong trend. Price is choppy and directionless"),
     "Supertrend": ("Price is on the bullish side of its trend band",
                    "Price is on the bearish side of its trend band"),
     "Bollinger position": ("Price is trading in the strong half of its range",
                            "Price is trading in the weak half of its range"),
-    "Volatility squeeze": ("Volatility has compressed — often a build-up before a big move",
+    "Volatility squeeze": ("Volatility has compressed, often a build-up before a big move",
                            "Volatility is unremarkable right now"),
     "52-week range position": ("Trading near its one-year high, which tends to continue",
                                "Trading near its one-year low, fighting overhead selling"),
-    "Volume trend": ("More people are trading it lately — interest is rising",
+    "Volume trend": ("More people are trading it lately. Interest is rising",
                      "Trading interest is thinning out"),
-    "Accumulation vs distribution": ("More shares change hands on up days than down days — buyers are in control",
-                                     "More shares change hands on down days — sellers are in control"),
+    "Accumulation vs distribution": ("More shares change hands on up days than down days, so buyers are in control",
+                                     "More shares change hands on down days, so sellers are in control"),
     "On-Balance Volume": ("Buying volume is genuinely supporting the price",
                           "Volume is not supporting the price move"),
     "Institutional holding (FII + DII)": ("Large professional investors hold a meaningful stake",
                                           "Professional investors hold very little of it"),
-    "Promoter holding": ("The founding family has a large stake — their money is on the line too",
+    "Promoter holding": ("The founding family has a large stake, so their money is on the line too",
                          "The founding family holds a small stake"),
     "ROCE": ("The business earns strong profits on the money invested in it",
              "The business earns poor profits on the money invested in it"),
-    "Debt / Equity": ("Very little debt — it can survive a bad year",
+    "Debt / Equity": ("Very little debt, so it can survive a bad year",
                       "Carries heavy debt, which is risky if business slows"),
     "Revenue growth (YoY)": ("Sales are growing well",
                              "Sales are flat or shrinking"),
@@ -60,7 +60,7 @@ PHRASING = {
     "F-Score · Leverage falling": ("Debt is coming down", "Debt is rising"),
     "F-Score · Liquidity improving": ("Better able to pay short-term bills than last year",
                                       "Less able to pay short-term bills than last year"),
-    "F-Score · No dilution": ("No new shares issued — your stake isn't being watered down",
+    "F-Score · No dilution": ("No new shares issued, so your stake isn't being watered down",
                               "New shares issued, diluting existing shareholders"),
     "F-Score · Gross margin expanding": ("Making more profit on each rupee of sales",
                                          "Making less profit on each rupee of sales"),
@@ -127,7 +127,7 @@ def plain_verdict(tech: dict, fund: dict, verdict: dict, setup: dict | None) -> 
     f = fund.get("score")
 
     if f is None:
-        base = ("We could only check the price behaviour for this one — its financial "
+        base = ("We could only check the price behaviour for this one, because its financial "
                 "statements aren't published by our data source.")
         if t >= 65:
             return base + " On price alone, it's behaving strongly."
@@ -141,8 +141,8 @@ def plain_verdict(tech: dict, fund: dict, verdict: dict, setup: dict | None) -> 
     weak_px = t < 45
 
     if strong_biz and strong_px:
-        core = ("This is a good business and the share price is behaving well too — "
-                "the two agree, which is the most comfortable situation to find.")
+        core = ("This is a good business and the share price is behaving well too. "
+                "The two agree, which is the most comfortable situation to find.")
     elif strong_biz and weak_px:
         core = ("The underlying business looks solid, but the share price is weak right now. "
                 "Either the market knows something the numbers don't yet show, or it's simply "
@@ -154,7 +154,7 @@ def plain_verdict(tech: dict, fund: dict, verdict: dict, setup: dict | None) -> 
         core = ("Both the business numbers and the share price are weak. There's little here "
                 "supporting a case at the moment.")
     else:
-        core = ("A mixed picture — parts of the business and the price action look fine, "
+        core = ("A mixed picture: parts of the business and the price action look fine, "
                 "parts don't, and nothing dominates strongly enough to be clear-cut.")
 
     if setup and setup.get("key") and setup["key"] != "no_clear_setup":

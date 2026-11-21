@@ -172,7 +172,7 @@
       png: function (d) { return "/og/stock.png" + qs({ ticker: clean(d.ticker || d.symbol) }); },
       page: function (d) { return "/share/" + encodeURIComponent(clean(d.ticker || d.symbol)); },
       file: function (d) { return "altaha-" + clean(d.ticker || d.symbol).toLowerCase() + "-scorecard.png"; },
-      title: function (d) { return clean(d.ticker || d.symbol) + " — scorecard"; },
+      title: function (d) { return clean(d.ticker || d.symbol) + ": scorecard"; },
       text: function (d) {
         var scoring = d.scoring || d.verdict || {};
         var comp = num(scoring.score !== undefined ? scoring.score : d.composite);
@@ -180,7 +180,7 @@
         var tech = num(d.technical), fund = num(d.fundamental);
         var fsc = (d.fundamental && d.fundamental.f_score != null) ? d.fundamental.f_score : null;
         var setup = d.setup && d.setup.name ? d.setup.name : d.setup;
-        var lines = [clean(d.ticker || d.symbol) + " — " + (comp == null ? "—" : comp) + "/100"
+        var lines = [clean(d.ticker || d.symbol) + " scores " + (comp == null ? "—" : comp) + "/100"
                      + (label ? " (" + label + ")" : "") + " on the Altaha Screener."];
         var bits = [];
         if (tech != null) bits.push("Technical " + tech);
@@ -206,18 +206,18 @@
         return "altaha-" + clean(d.ticker || d.symbol).toLowerCase() + "-"
              + String(d.range || "1D").toLowerCase() + "-chart.png";
       },
-      title: function (d) { return clean(d.ticker || d.symbol) + " — " + (d.range || "1D") + " chart"; },
+      title: function (d) { return clean(d.ticker || d.symbol) + " " + (d.range || "1D") + " chart"; },
       text: function (d) {
         var sym = clean(d.ticker || d.symbol);
         var p = d.pattern || null;
         var lines = [sym + " on the " + (d.range || "1D") + " chart."];
         if (p && p.name) {
-          lines.push(p.name + " — " + (p.status || "forming")
+          lines.push(p.name + ": " + (p.status || "forming")
                      + (p.confidence != null ? ", " + p.confidence + " shape match" : "") + ".");
           lines.push("The checks behind that reading, and how the same shape resolved "
                      + "here before, are published beside it.");
         } else {
-          lines.push("No textbook pattern right now — which is the usual answer, and a "
+          lines.push("No textbook pattern right now, which is the usual answer. A "
                      + "detector that always finds one has stopped detecting.");
         }
         return lines.join("\n");
@@ -233,10 +233,10 @@
              + qs({ horizon: d.horizon_key || "short" });
       },
       file: function (d) { return "altaha-" + clean(d.ticker || d.symbol).toLowerCase() + "-idea.png"; },
-      title: function (d) { return clean(d.ticker || d.symbol) + " — conviction"; },
+      title: function (d) { return clean(d.ticker || d.symbol) + ": conviction"; },
       text: function (d) {
         var conv = num(d.conviction);
-        var lines = [clean(d.ticker || d.symbol) + " — " + (conv == null ? "—" : conv)
+        var lines = [clean(d.ticker || d.symbol) + ": " + (conv == null ? "—" : conv)
                      + "/100 conviction"
                      + (d.conviction_band ? " (" + String(d.conviction_band).toLowerCase() + ")" : "")
                      + " on the Altaha Screener."];
@@ -252,18 +252,18 @@
       png: function (d) { return "/og/holding.png" + qs({ ticker: clean(d.ticker || d.symbol) }); },
       page: function (d) { return "/share/holding/" + encodeURIComponent(clean(d.ticker || d.symbol)); },
       file: function (d) { return "altaha-" + clean(d.ticker || d.symbol).toLowerCase() + "-tracked.png"; },
-      title: function (d) { return clean(d.ticker || d.symbol) + " — tracked"; },
+      title: function (d) { return clean(d.ticker || d.symbol) + ": tracked"; },
       text: function (d) {
         function p(v) {
           return v == null ? "—" : (Number(v) > 0 ? "+" : "") + Number(v).toFixed(2) + "%";
         }
-        var lines = [clean(d.ticker || d.symbol) + " — " + p(d.return_pct)
+        var lines = [clean(d.ticker || d.symbol) + ": " + p(d.return_pct)
                      + " since the idea was recorded"
                      + (d.added_on ? " on " + d.added_on : "") + "."];
         lines.push("Index did " + p(d.bench_return_pct) + " over the same window · alpha "
                    + p(d.alpha_pct));
         lines.push("");
-        lines.push("Logged in advance and marked automatically — losers included.");
+        lines.push("Logged in advance and marked automatically, losers included.");
         return lines.join("\n");
       }
     },
@@ -272,7 +272,7 @@
       png: function () { return "/og/record.png"; },
       page: function () { return "/share/record"; },
       file: function () { return "altaha-track-record.png"; },
-      title: function () { return "Altaha — track record"; },
+      title: function () { return "Altaha track record"; },
       /* The summary of the track record, as /calls serves it and the page
          shows it: returns run from the day of each idea to the latest scan. */
       text: function (d) {
@@ -308,7 +308,7 @@
              + (period(d) ? "-" + period(d).toLowerCase() : "") + "-results.png";
       },
       title: function (d) {
-        return clean(d.ticker || d.symbol) + " — " + (d.quarter || "latest") + " results";
+        return clean(d.ticker || d.symbol) + " " + (d.quarter || "latest") + " results";
       },
       text: function (d) {
         function cr(v) {
@@ -319,7 +319,7 @@
           return v == null ? "" : " (" + (Number(v) >= 0 ? "+" : "") + Number(v).toFixed(1) + "% YoY)";
         }
         var sym = clean(d.ticker || d.symbol);
-        var lines = [sym + " — " + (d.quarter || "latest") + " results"
+        var lines = [sym + " " + (d.quarter || "latest") + " results"
                      + (d.filed_at ? ", as filed with NSE." : ".")];
         var bits = [];
         if (d.pat_cr != null) {
@@ -355,7 +355,7 @@
              + (period(d) ? "-" + period(d).toLowerCase() : "") + "-concall.png";
       },
       title: function (d) {
-        return clean(d.ticker || d.symbol) + " — " + (d.quarter ? d.quarter + " " : "")
+        return clean(d.ticker || d.symbol) + " " + (d.quarter ? d.quarter + " " : "")
              + "earnings call";
       },
       text: function (d) {
@@ -364,7 +364,7 @@
            it is cut at a word, and the closing line goes before it does. */
         var LIMIT = 240;
         var who = cut(String(d.company || clean(d.ticker || d.symbol) || "").trim(), 70);
-        var head = (who ? who + " — " : "") + (d.quarter ? d.quarter + " " : "")
+        var head = (who ? who + ": " : "") + (d.quarter ? d.quarter + " " : "")
                  + "earnings call";
         var said = cut(String(d.headline || "").replace(/\s+/g, " ").trim(),
                        LIMIT - head.length - 1);
@@ -389,13 +389,13 @@
       file: function (d) {
         return "altaha-" + clean(d.ticker || d.symbol).toLowerCase() + "-order.png";
       },
-      title: function (d) { return clean(d.ticker || d.symbol) + " — order win"; },
+      title: function (d) { return clean(d.ticker || d.symbol) + " order win"; },
       text: function (d) {
         var LIMIT = 240;
         var who = cut(String(d.company || clean(d.ticker || d.symbol) || "").trim(), 70);
         // `kind` is which card this is; what sort of order it is travels beside it.
         var what = String(d.order_kind || "order").toLowerCase();
-        var first = who + (crore(d.value_cr) ? " — " + crore(d.value_cr) + " " + what : " — " + what);
+        var first = who + (crore(d.value_cr) ? ": " + crore(d.value_cr) + " " + what : ": " + what);
         var size = share(d.pct_of_market_cap)
           ? "That is " + share(d.pct_of_market_cap) + " of the company\u2019s market cap"
             + (crore(d.market_cap_cr) ? " (" + crore(d.market_cap_cr) + ")" : "") + "."
@@ -692,7 +692,7 @@
       flash(btn, "Copied");
       note("Paste it straight into a post on X, Telegram or WhatsApp Web.");
     }).catch(function () {
-      flash(btn, "Blocked — use Download");
+      flash(btn, "Blocked. Use Download");
     });
   }
 
@@ -722,7 +722,7 @@
       /* Some in-app browsers block both fetch and programmatic downloads.
          Opening the image directly still lets a long-press save it. */
       window.open(cardCandidates(d)[0], "_blank", "noopener");
-      flash(btn, "Opened — long-press to save");
+      flash(btn, "Opened. Long-press to save");
     });
   }
 
@@ -763,8 +763,8 @@
            "measured move stay on the site, beside the base rate that qualifies them.",
     idea: "The conviction number and the seven weighted inputs that add up to it.",
     holding: "Marked to market against the index over the identical window.",
-    record: "The whole ledger — every idea logged the day it was generated, and its return since.",
-    results: "The quarter as the company filed it — profit, revenue, margin and the " +
+    record: "The whole ledger: every idea logged the day it was generated, and its return since.",
+    results: "The quarter as the company filed it: profit, revenue, margin and the " +
              "same quarter a year earlier. Every figure on it is the company's own.",
     concall: "The call as its brief tells it: the headline and the summary, written " +
              "by a model from the transcript the company filed, and marked as such.",
@@ -795,8 +795,8 @@
       img.hidden = true;
       if (spin) {
         spin.hidden = false;
-        spin.textContent = "The card could not be rendered — the engine may be waking up. " +
-                           "The link still works.";
+        spin.textContent = "The card could not be rendered. The engine may be waking up, but " +
+                           "the link still works.";
       }
     };
     img.src = urls[0];

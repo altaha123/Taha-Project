@@ -157,7 +157,7 @@
       if (!led.companies_read && led.attempted === 0) {
         cover = '<p class="iv-cover"><b>The collector has not run yet.</b> ' +
           'These pages are assembled from a ledger built by reading company ' +
-          'filings one at a time, and nothing has been read into it so far &mdash; ' +
+          'filings one at a time, and nothing has been read into it so far, ' +
           'so every name below is empty for that reason, not because the ' +
           'investor holds nothing.</p>';
       } else {
@@ -175,8 +175,8 @@
 
     box.innerHTML =
       '<p class="iv-lead">Taken from each company&rsquo;s own shareholding filing. ' +
-      'Only stakes above 1% are named in those filings, and they are quarterly ' +
-      '&mdash; so every portfolio here is the disclosed floor of what someone ' +
+      'Only stakes above 1% are named in those filings, and they are quarterly. ' +
+      'So every portfolio here is the disclosed floor of what someone ' +
       'holds, as at a quarter end, not a live position.</p>' +
       cover +
       '<div class="iv-grid">' + cards + '</div>' +
@@ -289,7 +289,7 @@
     var head =
       whoHead(d) +
       redirect +
-      '<p class="iv-asof"><b>' + esc(d.period || '') + '</b> filings &mdash; ' +
+      '<p class="iv-asof"><b>' + esc(d.period || '') + '</b> filings: ' +
         esc(String(counted)) + ' disclosed holding' + (counted === 1 ? '' : 's') +
         (d.compared_with ? ', compared with ' + esc(d.compared_with) : '') +
         '. Stakes below 1% of a company are not named in its filing and do not ' +
@@ -303,7 +303,7 @@
       ? '<h4 class="iv-h4">No longer disclosed</h4>' +
         '<p class="iv-sub">Named in ' + esc(d.compared_with || 'the previous quarter') +
         ' and not in ' + esc(d.period) + '. The stake has fallen below the 1% ' +
-        'threshold or been sold &mdash; the filing does not say which.</p>' +
+        'threshold or been sold. The filing does not say which.</p>' +
         '<ul class="iv-list is-gone">' +
           d.no_longer_disclosed.map(function (x) {
             return '<li class="iv-pos"><div class="iv-pos-head">' +
@@ -317,7 +317,7 @@
     var who = (d.entities || []).length
       ? '<h4 class="iv-h4">Names counted as ' + esc(d.name) + '</h4>' +
         '<ul class="iv-who">' + d.entities.map(function (e) {
-          return '<li><b>' + esc(e.alias) + '</b> &mdash; ' +
+          return '<li><b>' + esc(e.alias) + '</b>, ' +
             esc(e.relation_word || e.relation) + '</li>';
         }).join('') + '</ul>'
       : '';
@@ -361,7 +361,7 @@
     if (box) {
       // data-nosnippet: not to be quoted by a search engine as the page.
       box.innerHTML = '<div class="iv-empty" data-nosnippet>The engine is unreachable. ' +
-        'If it has been idle it takes about thirty seconds to wake — try again.</div>';
+        'If it has been idle it takes about thirty seconds to wake. Try again.</div>';
     }
   }
 

@@ -258,8 +258,8 @@
     var dg = r.digest || {}, b = r.brief || {}, pdf = link(r.pdf);
     var body;
     if (!r.readable) {
-      body = '<div class="cc-empty">The filed PDF could not be read as text — ' +
-        'it is most likely a scan.' +
+      body = '<div class="cc-empty">The filed PDF could not be read as text. ' +
+        'It is most likely a scan.' +
         (pdf ? ' <a href="' + pdf + '" target="_blank" rel="noopener">Open it →</a>' : '') +
         '</div>';
     } else if (b.status === 'ready') {
@@ -289,7 +289,7 @@
     if (configured) return '';
     return '<div class="cc-nosum">' +
       '<b>No written summary on this instance.</b> Everything below is ' +
-      'extracted from the transcript itself — participants, management’s own ' +
+      'extracted from the transcript itself: participants, management’s own ' +
       'forward-looking sentences quoted verbatim, and what the call spent its ' +
       'time on against last quarter. A written summary needs a language model, ' +
       'and none is configured here.</div>';
@@ -357,10 +357,10 @@
       html = summaryBlock(d.summary_configured) + (s.reading
         ? '<div class="cc-empty is-loading" aria-busy="true">Reading the transcripts filed in ' +
           'the last few days. The first pass takes a few minutes, and each call appears here ' +
-          'as it is read — there is no need to reload.</div>'
+          'as it is read, so there is no need to reload.</div>'
         : '<div class="cc-empty">' + (s.error ? esc(s.error) + ' ' : '') +
           'No transcript has been filed in this window. ' +
-          'Calls cluster in the weeks after results — this fills up in earnings season.</div>');
+          'Calls cluster in the weeks after results, so this fills up in earnings season.</div>');
     } else {
       var key = rows.filter(function (r) { return r.key; });
       var rest = rows.filter(function (r) { return !r.key; });

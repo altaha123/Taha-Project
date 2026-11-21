@@ -152,7 +152,7 @@ assert.ok(!/undefined|NaN|null/.test(S.compose({ kind: "results", ticker: "X" })
 
 const cpost = S.compose(CONCALL);
 assert.strictEqual(cpost,
-  "Transformers And Rectifiers (India) Ltd \u2014 Q2 FY27 earnings call\n" +
+  "Transformers And Rectifiers (India) Ltd: Q2 FY27 earnings call\n" +
   "Order book at \u20B95,472 crore; FY27 revenue guidance held\n\n" +
   "AI summary of the transcript the company filed.");
 /* A long headline is cut at a word and says it was cut; the closing line is
@@ -166,7 +166,7 @@ const longCall = S.compose(Object.assign({}, CONCALL, {
 assert.ok(longCall.length <= 240, `a long concall post is ${longCall.length} chars`);
 assert.ok(longCall.endsWith("\u2026"), `a cut headline must say so:\n${longCall}`);
 assert.ok(!/\s\u2026$/.test(longCall) && !longCall.includes("AI summary"), longCall);
-assert.ok(longCall.startsWith("Solarworld Energy Solutions Limited \u2014 Q2 FY27 earnings call\n" +
+assert.ok(longCall.startsWith("Solarworld Energy Solutions Limited: Q2 FY27 earnings call\n" +
   "Management cut FY27 guidance to \u20B91,600\u20131,700 crore"), longCall);
 for (const d of [{ kind: "concall", ticker: "X" },
                  { kind: "concall", ticker: "X", company: "W".repeat(300), headline: "H ".repeat(300) }]) {
@@ -180,7 +180,7 @@ assert.strictEqual(S.link({ kind: "concall", ticker: "X" }), "https://site.examp
 /* ── an order post is who won what from whom, and how big it is ────────── */
 
 assert.strictEqual(S.compose(ORDER),
-  "Pace Digitek Limited \u2014 \u20B92,691 cr letter of award from NTPC Green Energy Limited\n" +
+  "Pace Digitek Limited: \u20B92,691 cr letter of award from NTPC Green Energy Limited\n" +
   "That is 75% of the company\u2019s market cap (\u20B93,569 cr).\n\n" +
   "From the company\u2019s filing with the exchange.");
 /* A customer's name can be a sentence. It is what gives; the size never does. */

@@ -67,7 +67,7 @@
   function paintNote() {
     note.textContent = auth()
       ? 'Saved to your account. It follows you to any device you sign in on.'
-      : 'Saved on this browser only. Sign in and it follows you everywhere \u2014 and survives a cleared browser.';
+      : 'Saved on this browser only. Sign in and it follows you everywhere and survives a cleared browser.';
   }
   paintNote();
   const list = node('div', 'ux-saved-list'); watch.append(list);

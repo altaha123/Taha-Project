@@ -746,7 +746,7 @@ def feed(limit: int = 60, min_importance: str = "low", symbol: str = "",
         "error": _state["error"],
         "source": "BSE corporate announcements (primary exchange filing feed)",
         "note": ("Categories and importance are keyword rules applied to the exchange's own "
-                 "headline — transparent, and wrong sometimes. Nothing here is a summary of "
+                 "headline. They are transparent, and wrong sometimes. Nothing here is a summary of "
                  "the filing; open the PDF for what the company actually said."),
     }
 

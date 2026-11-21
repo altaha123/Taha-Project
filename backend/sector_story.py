@@ -277,7 +277,7 @@ def _returns(symbols, sessions):
         return rows, bench, "dhan", None
     rows2, bench2, err2 = _returns_yahoo(symbols, sessions)
     if rows2:
-        note = f"Dhan unavailable ({err}) — figures from Yahoo Finance instead."
+        note = f"Dhan unavailable ({err}). Figures from Yahoo Finance instead."
         return rows2, bench2, "yahoo", note
     return {}, None, "none", f"No price source available. Dhan: {err}. Yahoo: {err2}."
 
@@ -365,7 +365,7 @@ def _narrate(sector, move, movers, breadth, news, window, vol_note=None):
         if breadth.get("top3_share") is not None and breadth["top3_share"] >= 60:
             names = ", ".join(m["symbol"] for m in movers[:3])
             bits[-1] += (f", but {breadth['top3_share']}% of the movement came from "
-                         f"just three names ({names}) — read this as a stock move "
+                         f"just three names ({names}), so read this as a stock move "
                          f"more than a sector move")
         elif breadth.get("up") and breadth["up"] >= 0.7 * breadth["total"]:
             bits[-1] += ", so the move is broad rather than carried by one or two names"
@@ -383,7 +383,7 @@ def _narrate(sector, move, movers, breadth, news, window, vol_note=None):
             bits.append(f"{len(news)} routine filings, none of them market-moving "
                         f"in category")
     else:
-        bits.append("no company filings inside the window explain it — a move with "
+        bits.append("no company filings inside the window explain it. A move with "
                     "no company-level cause usually came from outside the companies: "
                     "a commodity price, the currency, a policy signal or the global "
                     "session")
@@ -446,9 +446,9 @@ def story(sector: str, window: str = "1D") -> dict:
                 vol_note = (f"{share}% of the traded volume across these names was "
                             f"in the ones that rose")
                 if share >= 75:
-                    vol_note += " — the buying had size behind it"
+                    vol_note += ", so the buying had size behind it"
                 elif share <= 35:
-                    vol_note += " — the selling carried the volume"
+                    vol_note += ", so the selling carried the volume"
 
     filings, news_err = _news_for(names, WINDOWS[window]["news_hours"])
 
@@ -490,7 +490,7 @@ def story(sector: str, window: str = "1D") -> dict:
                 "relative_pp": (round(avg - bench_pct, 2)
                                 if bench_pct is not None else None),
                 "proxy_note": ("Equal-weight average of the carried heavyweights "
-                               "measured against NIFTYBEES in the same snapshot — "
+                               "measured against NIFTYBEES in the same snapshot, "
                                "not the published index level.")}
 
     return {

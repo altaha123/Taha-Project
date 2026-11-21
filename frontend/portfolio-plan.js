@@ -68,7 +68,7 @@
       '<div class="pp-herocopy"><span class="pp-eyebrow">Your action plan</span>' +
         '<h2>' + esc(plan.headline) + '</h2>' +
         (plan.money ? '<p class="pp-money">' + esc(plan.money) + '</p>' : '') +
-        '<div class="pp-tally" role="group" aria-label="Calls by kind — tap one to show only those">' + chips + '</div>' +
+        '<div class="pp-tally" role="group" aria-label="Calls by kind. Tap one to show only those">' + chips + '</div>' +
       '</div></div>';
   }
 
@@ -135,7 +135,7 @@
         'in proportion, or have no strongly scored stocks to suggest. Nothing to move for its own sake.</p>';
     }
     return '<section class="pp-where"><h3>Where the money could go</h3>' +
-      '<p class="pp-sub">Industries doing better than the market where you hold less than the market does — and the best-scoring stocks in each.</p>' +
+      '<p class="pp-sub">Industries doing better than the market where you hold less than the market does, and the best-scoring stocks in each.</p>' +
       body + '</section>';
   }
 
@@ -151,7 +151,7 @@
       '</div>' +
       '<div class="pp-cards">' + acts.map(card).join('') + '</div>' +
       rotation(plan) +
-      '<details class="pp-how"><summary>How these calls are made — and what they are not</summary>' +
+      '<details class="pp-how"><summary>How these calls are made, and what they are not</summary>' +
         '<p>' + esc(plan.method) + '</p><p class="pp-disc">' + esc(plan.disclaimer) + '</p></details>' +
       // The disclaimer says to consult a registered adviser; this is where one is.
       '<p class="pp-ask">Want a person to look at this? <a href="advisors.html?kind=ria&amp;topic=portfolio">' +

@@ -132,7 +132,7 @@
     el.innerHTML =
       '<div class="dl-hdr"><h3>Who traded size today</h3>' +
         "<span>Bulk and block deals disclosed to the exchange" +
-        (d.as_on ? " — " + esc(d.as_on) : "") + "</span></div>" +
+        (d.as_on ? ", " + esc(d.as_on) : "") + "</span></div>" +
       '<div class="dl-counts">' +
         '<span><b>' + (c.bulk || 0) + "</b>bulk</span>" +
         '<span><b>' + (c.block || 0) + "</b>block</span>" +
@@ -154,7 +154,7 @@
       var r = await fetch(API + "/deals?min_value_cr=1&limit=25");
       state.board = await r.json();
     } catch (e) {
-      state.board = { available: false, message: "Engine unreachable — it may be waking up." };
+      state.board = { available: false, message: "Engine unreachable. It may be waking up." };
     } finally {
       state.busy = false;
       renderBoard();

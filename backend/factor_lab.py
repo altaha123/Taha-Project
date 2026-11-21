@@ -128,7 +128,7 @@ def evaluate(factor, horizon_days=21, min_cross_section=MIN_CROSS_SECTION):
         out["reliable"] = False
         out["message"] = (
             f"Only {len(dates)} date{'s' if len(dates) != 1 else ''} measured. "
-            f"No average is reported below {MIN_DATES} — an information "
+            f"No average is reported below {MIN_DATES}, because an information "
             "coefficient from a handful of overlapping windows is noise with a "
             "decimal point, and it would be quoted as though it were not.")
         return out
@@ -150,7 +150,7 @@ def evaluate(factor, horizon_days=21, min_cross_section=MIN_CROSS_SECTION):
         "t_stat": round(mean / sd * math.sqrt(len(ics)), 2) if sd > 0 else None,
         "verdict": _verdict(mean, len(ics)),
         "caveat": (
-            "Windows overlap, so the t-statistic is optimistic — treat it as a "
+            "Windows overlap, so the t-statistic is optimistic. Treat it as a "
             "rough guide, never as a significance test. An IC is only worth "
             "acting on after it has survived a market regime it was not "
             "measured in."),

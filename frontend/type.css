@@ -29,8 +29,11 @@
      52  hero      the score, the brand on small screens
      64  brand     the wordmark
 
-   Anything responsive uses clamp() between two rungs — never a value between
-   them. Weight is 400, 500 or 600; all three families ship those and none of
+   Anything responsive uses clamp() between two rungs, never a value between
+   them. The ladder was declared here long before it was followed: some six
+   hundred declarations in the other stylesheets still sat between rungs
+   (10.5, 12.5, 13.5, 15, 22, 26 ...) and have since been moved onto it. A
+   new size goes on a rung or it does not go in. Weight is 400, 500 or 600; all three families ship those and none of
    them ships 700, so 700 was being synthesised and looked blotchy next to the
    real 600.
 
@@ -46,10 +49,9 @@
   --lh-tight:1.15;  --lh-snug:1.35;    --lh-body:1.6;     --lh-loose:1.7;
   --tr-label:.14em;                    /* one tracking for every mono label */
 
-  /* The family, radius and timing tokens live in premium.css, which only the
-     homepage loads — stock.html and signin.html share these stylesheets
-     without it. Aliasing them here with the same fallbacks keeps this file
-     correct on all three pages without redefining anybody's token. */
+  /* The three families are named once, in altaha-skin.css, which every page
+     loads. The radius and timing tokens live in premium.css, which only the
+     homepage loads, so they are aliased here with the same fallbacks. */
   --ty-serif: var(--serif, 'Instrument Serif', Georgia, serif);
   --ty-mono:  var(--mono, 'IBM Plex Mono', ui-monospace, monospace);
   --ty-sans:  var(--sans, 'Inter', system-ui, sans-serif);

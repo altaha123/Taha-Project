@@ -46,7 +46,7 @@
   function key(force) {
     if (!KEY || force) {
       KEY = window.prompt(
-        'Admin key — the value set as ADMIN_KEY on Render.\n\n' +
+        'Admin key: the value set as ADMIN_KEY on Render.\n\n' +
         'It is kept for this browser tab only and sent as a header, never ' +
         'stored and never put in a URL.') || '';
     }
@@ -85,7 +85,7 @@
     var running = s && s.alive;
     var status = '';
     if (running) {
-      status = '<p class="lg-status is-on">Running &mdash; ' +
+      status = '<p class="lg-status is-on">Running: ' +
         n(s.read) + ' companies this run, ' + n(s.rows) + ' holdings found' +
         (s.last_symbol ? ' &middot; at ' + esc(s.last_symbol) : '') +
         '. You can close this tab; it keeps going.</p>';
@@ -101,7 +101,7 @@
        running it. */
     var warn = (led.persistent === false)
       ? '<p class="lg-status is-bad">This instance is not storing the ledger ' +
-        'between restarts &mdash; check DATA_DIR on the server before running ' +
+        'between restarts. Check DATA_DIR on the server before running ' +
         'a full sweep.</p>'
       : '';
 

@@ -157,7 +157,7 @@ const server = http.createServer((req, res) => {
     document.querySelector('[aria-label="Share on Telegram"]').click();
     return window.__opened[0];
   })).split('&text=')[1]);
-  assert.match(tg, /TARIL — Q2 FY27 results, as filed with NSE\./);
+  assert.match(tg, /TARIL Q2 FY27 results, as filed with NSE\./);
   assert.match(tg, /Profit ₹81\.38 Cr \(\+117\.9% YoY\)/);
 
   /* ── 4 · The image opens in the sheet, with every way out ────────────── */
@@ -171,7 +171,7 @@ const server = http.createServer((req, res) => {
   }, null, { timeout: 10000 });
   assert.match(await page.locator('#shcardimg').getAttribute('src'),
     /\/og\/results\.png\?ticker=TARIL&period=Q2-FY27$/);
-  assert.equal(await page.locator('#shttl').innerText(), 'TARIL — Q2 FY27 results');
+  assert.equal(await page.locator('#shttl').innerText(), 'TARIL Q2 FY27 results');
   const sheetNets = await sheet.locator('.shnet').evaluateAll(els => els.map(b => ({
     text: b.textContent.trim(), svg: !!b.querySelector('svg path[d]') })));
   assert.deepEqual(sheetNets.map(n => n.text), ['X', 'WhatsApp', 'Telegram', 'LinkedIn', 'Facebook']);

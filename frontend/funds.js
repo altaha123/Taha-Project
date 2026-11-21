@@ -84,13 +84,13 @@
     box.innerHTML =
       '<p class="iv-lead">Every position each scheme held at the end of ' +
       esc(monthName(d.month)) + ', from the asset manager&rsquo;s own monthly ' +
-      'disclosure. No 1% floor &mdash; this is the whole book.</p>' +
+      'disclosure. No 1% floor: this is the whole book.</p>' +
       /* Coverage, stated plainly. This is the sentence that keeps the page
          from implying it covers the industry. */
       '<p class="iv-cover"><b>' + esc(String(d.read)) + '</b> of the ' +
       esc(String(d.listed_with_amfi)) + ' fund houses AMFI lists have been read ' +
       'for this month. ' + esc(d.note || '') + ' A fund house not shown here ' +
-      'has not been read &mdash; it does not mean it holds nothing.</p>' +
+      'has not been read. That does not mean it holds nothing.</p>' +
       '<div class="iv-grid">' + cards + '</div>' +
       (d.lag ? '<p class="iv-cover">' + esc(d.lag) + '</p>' : '');
 
@@ -149,7 +149,7 @@
     var head =
       '<h3 class="iv-name">' + esc(d.name || d.amc_id) + '</h3>' +
       '<p class="iv-asof">Portfolio as at <b>' + esc(monthName(d.month)) +
-        '</b> &mdash; ' + esc(String(d.count)) + ' listed compan' +
+        '</b>: ' + esc(String(d.count)) + ' listed compan' +
         (d.count === 1 ? 'y' : 'ies') + ' across ' +
         esc(String(d.schemes || 0)) + ' schemes. Disclosed monthly and due by ' +
         'the tenth of the following month, so this can be about six weeks old.' +
@@ -166,7 +166,7 @@
     var other = (d.not_on_nse || []).length
       ? '<h4 class="iv-h4">Not on NSE&rsquo;s equity list</h4>' +
         '<p class="iv-sub">Held, and carried in the pack, but not matched to a ' +
-        'listed NSE company &mdash; another fund&rsquo;s units, an unlisted ' +
+        'listed NSE company: another fund&rsquo;s units, an unlisted ' +
         'holding, or something quoted only on BSE. Listed here rather than ' +
         'dropped so the figures above can be reconciled against the ' +
         'fund&rsquo;s real portfolio.</p>' +
@@ -210,7 +210,7 @@
     if (box) {
       // data-nosnippet: not to be quoted by a search engine as the page.
       box.innerHTML = '<div class="iv-empty" data-nosnippet>The engine is unreachable. ' +
-        'If it has been idle it takes about thirty seconds to wake — try again.</div>';
+        'If it has been idle it takes about thirty seconds to wake. Try again.</div>';
     }
   }
 

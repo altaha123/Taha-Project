@@ -172,7 +172,7 @@ QUESTIONS = [
             {"value": "10", "label": "About 10%", "score": 25},
             {"value": "20", "label": "About 20%", "score": 55},
             {"value": "30", "label": "About 30%", "score": 82},
-            {"value": "40plus", "label": "40% or more — I have sat through it", "score": 100},
+            {"value": "40plus", "label": "40% or more, and I have sat through it", "score": 100},
         ],
     },
     {
@@ -352,13 +352,13 @@ def assess(answers: dict) -> dict:
         binding = ("tolerance",
                    "Your circumstances could carry more risk than you would be "
                    "comfortable holding. The comfort is the binding constraint, "
-                   "and it is the right one to respect — a plan abandoned "
+                   "and it is the right one to respect. A plan abandoned "
                    "halfway costs more than a cautious one kept.")
     elif tolerance > capacity:
         binding = ("capacity",
                    "You are willing to carry more risk than your circumstances "
                    "can absorb today. Horizon, surplus or the emergency fund is "
-                   "the limit, and each of those can be changed — which "
+                   "the limit, and each of those can be changed, which "
                    "makes this the more useful of the two gaps to have.")
     else:
         binding = ("both", "Circumstances and temperament agree.")

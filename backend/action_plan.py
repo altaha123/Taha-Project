@@ -77,7 +77,7 @@ ORDER = ["EXIT", "TRIM", "AVERAGE", "ADD", "HOLD"]
 
 DISCLAIMER = (
     "These calls come from fixed rules applied to each company's Altaha Score, its "
-    "industry's trend and the limits you set — the rules are written out on the page. "
+    "industry's trend and the limits you set. The rules are written out on the page. "
     "Altaha is not registered with SEBI as an investment adviser or research analyst, and "
     "the rules do not know your goals, tax position or other savings. Treat each call as a "
     "starting point, read its reasons, and decide for yourself. Markets carry risk of loss.")
@@ -231,9 +231,9 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
     reasons = []
     if s is not None:
         rank = ("" if pctile is None else
-                " — among the weakest of the companies we track" if pctile <= 2 else
-                " — among the strongest of the companies we track" if pctile >= 98 else
-                f" — stronger than {pctile}% of the companies we track")
+                ", among the weakest of the companies we track" if pctile <= 2 else
+                ", among the strongest of the companies we track" if pctile >= 98 else
+                f", stronger than {pctile}% of the companies we track")
         reasons.append(f"Altaha Score {s:.0f}/100{rank}.")
         pl = _pillar_line(row)
         if pl:
@@ -241,7 +241,7 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
     elif row.get("score_pending"):
         reasons.append("Its Altaha Score was still being worked out when this review finished.")
     else:
-        reasons.append("No Altaha Score yet — too little published data to rank it.")
+        reasons.append("No Altaha Score yet: too little published data to rank it.")
     reasons.append(f"{w:.1f}% of your money (your limit for one stock is {cap:.0f}%).")
     if p is not None:
         reasons.append(f"{'Up' if p >= 0 else 'Down'} {_pct(p)} from what you paid.")
@@ -263,9 +263,9 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
                        f"is no score to argue for keeping it that big.")
         if action == "HOLD":
             conviction = "low"
-            why = (("Its score was still being worked out when this review finished — run the "
+            why = (("Its score was still being worked out when this review finished, so run the "
                     "review again in a minute for a proper call.") if row.get("score_pending") else
-                   ("We could not score it yet, so there is no case either way — keep it within "
+                   ("We could not score it yet, so there is no case either way. Keep it within "
                     "your limits and check back after the next scan."))
     elif s < POOR:
         action, conviction = "EXIT", "high"
@@ -278,12 +278,12 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
         why = f"Weak evidence (score {s:.0f}) and its industry is trailing the market."
     elif s < weak_below and p is not None and p <= -review:
         action, conviction = "EXIT", "medium"
-        why = (f"Weak evidence (score {s:.0f}) and it is {_pct(p)} below what you paid — past the "
+        why = (f"Weak evidence (score {s:.0f}) and it is {_pct(p)} below what you paid, past the "
                f"{review:.0f}% mark you set for a rethink.")
     elif s < weak_below and w < SMALL_PCT:
         action, conviction = "EXIT", "medium"
         why = (f"Weak evidence (score {s:.0f}) in a position too small ({w:.1f}%) to be worth "
-               f"watching — tidying it up simplifies the portfolio.")
+               f"watching. Tidying it up simplifies the portfolio.")
     elif s < weak_below and qty < 2:
         # Half of one share is not a trade: the only move is the whole position.
         action, conviction = "EXIT", "medium"
@@ -299,7 +299,7 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
         action = "TRIM"
         conviction = "high" if s < GOOD else "medium"
         why = ((f"A good company, but at {w:.1f}% it is more than your {cap:.0f}% limit for one "
-                f"stock — one bad quarter would hit your whole portfolio.")
+                f"stock, so one bad quarter would hit your whole portfolio.")
                if s >= GOOD else
                (f"At {w:.1f}% it is over your {cap:.0f}% limit, and its evidence is only "
                 f"average (score {s:.0f})."))
@@ -310,7 +310,7 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
                 # One share is worth more than the excess: any sale overshoots.
                 action, conviction = "HOLD", "low"
                 why = (f"At {w:.1f}% it is over your {cap:.0f}% limit, but selling even one share "
-                       f"would take it well below — keep it, and do not add more.")
+                       f"would take it well below. Keep it, and do not add more.")
     elif s >= GOOD and p is not None and p <= -AVERAGE_BELOW_PCT and not trailing and w < cap and price_ok:
         n_cap = _buy_to_weight(qty, row["price"], row["value"], total, cap)
         n = int(min(qty, n_cap)) if n_cap else 0
@@ -319,7 +319,7 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
             conviction = "high" if s >= STRONG else "medium"
             move = _move("buy", n, row, total)
             why = (f"Strong evidence (score {s:.0f}) while the price is {_pct(p)} below what you "
-                   f"paid — buying more now lowers your average cost.")
+                   f"paid, so buying more now lowers your average cost.")
     if action == "HOLD" and s is not None and s >= STRONG and not trailing and w < add_target - 1 and price_ok:
         n = _buy_to_weight(qty, row["price"], row["value"], total, add_target)
         if n:
@@ -349,14 +349,14 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
     if move and move["side"] == "sell":
         todo = (f"Sell all {int(move['shares'])} shares · {_rupees(move['value'])}" if move["all"] else
                 f"Sell {int(move['shares'])} of {int(move['of_shares'])} shares · {_rupees(move['value'])}"
-                f" — leaves it at {move['after_weight_pct']:.1f}% of your money")
+                f", which leaves it at {move['after_weight_pct']:.1f}% of your money")
     elif move and move["side"] == "buy":
         todo = f"Buy {int(move['shares'])} more · {_rupees(move['value'])}"
         if action == "AVERAGE" and move.get("avg_cost_after"):
-            todo += (f" — your average cost falls from {_rupees(move['avg_cost_before'])} to "
+            todo += (f", so your average cost falls from {_rupees(move['avg_cost_before'])} to "
                      f"{_rupees(move['avg_cost_after'])}")
         else:
-            todo += f" — takes it to {move['after_weight_pct']:.1f}% of your money"
+            todo += f", which takes it to {move['after_weight_pct']:.1f}% of your money"
     else:
         todo = "No change needed" if action == "HOLD" else "Sell the whole position"
 
@@ -367,7 +367,7 @@ def call(row, total, policy, sector_state=None, sector_rel_3m=None,
     if alts:
         best = alts[0]
         vs = f"score {best['score']:.0f} vs {s:.0f} for {sym}" if s is not None else f"score {best['score']:.0f}"
-        switch = f"Consider switching to {best['symbol']} — same industry ({best['group']}), {vs}."
+        switch = f"Consider switching to {best['symbol']}: same industry ({best['group']}), {vs}."
 
     return {
         "symbol": sym, "name": row.get("name") or sym, "sector": row.get("sector"),
@@ -486,7 +486,7 @@ def plan(report, scan_payload=None, policy=None, industries=None) -> dict:
     for a in adds[MAX_ADDS:]:
         a.update(action="HOLD", verb="Hold", headline=f"Hold {a['symbol']}", conviction="high",
                  todo="No change needed", move=None,
-                 why=(f"Strong evidence (score {a['score']:.0f}) — a candidate to add to once the "
+                 why=(f"Strong evidence (score {a['score']:.0f}), a candidate to add to once the "
                       f"stronger picks above are done."))
     rank = {a: i for i, a in enumerate(ORDER)}
     conv = {"high": 0, "medium": 1, "low": 2}

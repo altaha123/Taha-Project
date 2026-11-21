@@ -152,7 +152,7 @@
         note('That profile could not be worked out here. Please refresh and try again.', 'warn');
         return;
       }
-      note('Sign in to keep this profile on your account — showing it here for now.', '');
+      note('Sign in to keep this profile on your account. Showing it here for now.', '');
       show(local);
       return;
     }

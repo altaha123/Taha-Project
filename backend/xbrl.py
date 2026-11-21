@@ -869,13 +869,13 @@ def freshness(rows, symbol=None, today=None):
         out["note"] = "No dated filing to measure."
         return out
     if not out["stale"]:
-        out["note"] = f"Newest filing covers a period ending {latest} — current."
+        out["note"] = f"Newest filing covers a period ending {latest}, which is current."
         return out
 
     out["note"] = (
         f"The newest XBRL filing available covers a period ending {latest}, "
-        f"{age} days ago. NSE's results index is not serving anything newer — "
-        "for any symbol, not just this one — so growth and margin figures "
+        f"{age} days ago. NSE's results index is not serving anything newer "
+        "(for any symbol, not just this one), so growth and margin figures "
         "derived from it describe a period that has since been superseded.")
     if symbol:
         # Guarded here as well as inside. The docstring promises this is a

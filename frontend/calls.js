@@ -129,7 +129,7 @@
       '<header class="cl-head">' +
         '<p class="cl-kick">Ideas · our record</p>' +
         '<h2>Track record</h2>' +
-        '<p class="cl-lede">Every idea, recorded the day it was generated — the date, the time and the price — ' +
+        '<p class="cl-lede">Every idea, recorded the day it was generated (the date, the time and the price), ' +
           'and what it has returned since, with nothing done after.</p>' +
       '</header>' +
       '<div class="cl-stats" id="cl-stats" aria-live="polite"></div>' +
@@ -290,7 +290,7 @@
       return '<li class="k-' + esc(e.kind) + '"><span class="cl-tl-when"><b>' + esc(at.weekday || '') + '</b> ' +
         esc((at.day || '').replace(/^\w+ /, '')) + ' · ' + esc(at.time || '') + '</span>' +
         '<span class="cl-tl-what"><b>' + esc(EVENT[e.kind] || e.kind) + '</b>' +
-        (finite(e.price) ? ' at ' + inr(e.price) : '') + (e.note ? ' — ' + esc(e.note) : '') + '</span></li>';
+        (finite(e.price) ? ' at ' + inr(e.price) : '') + (e.note ? ': ' + esc(e.note) : '') + '</span></li>';
     }).join('') + '</ol>';
   }
 
@@ -403,7 +403,7 @@
       feed.innerHTML = '<p class="cl-empty">' + (d.total
         ? 'No idea matches these filters.'
         : d.recording
-          ? 'Writing the latest scan into the record now — this takes a few seconds.'
+          ? 'Writing the latest scan into the record now. This takes a few seconds.'
           : 'No ideas recorded yet. The record starts with the next universe scan: every idea from then on is dated here, with its price and what it returns.') + '</p>';
     } else {
       var html = [], lastDay = null, group = [];

@@ -115,7 +115,7 @@ def test_cards_are_cached_per_day():
 
 
 def test_share_page_carries_the_tags_a_crawler_reads():
-    html = og.share_page("Acme (ACME) — Altaha", "Scores 74/100.",
+    html = og.share_page("Acme (ACME) | Altaha", "Scores 74/100.",
                          "https://api.example/og/stock.png?ticker=ACME",
                          "https://site.example/?ticker=ACME")
     for tag in ('property="og:image"', 'property="og:title"', 'property="og:description"',

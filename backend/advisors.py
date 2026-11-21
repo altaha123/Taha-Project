@@ -100,8 +100,8 @@ SEBI_REGISTER = {
 DISCLAIMER = (
     "Altaha lists these people and carries the conversation; it does not advise "
     "you and does not read your chats. A SEBI registration shown here was "
-    "checked against SEBI's public register before the profile was listed — "
-    "check it yourself on sebi.gov.in. Educators are not registered: they can "
+    "checked against SEBI's public register before the profile was listed. "
+    "Check it yourself on sebi.gov.in. Educators are not registered: they can "
     "teach and share how they think, not tell you what to buy or sell. Chats "
     "are free. Never pay anyone you meet here, never move the conversation to "
     "WhatsApp or Telegram, and never share an OTP, password or demat login."
@@ -324,7 +324,7 @@ def check_message(body: str, sender: str, kind: str) -> None:
     if what:
         raise MessageRefused(
             f"This message contains {what}, so it was not sent. Keep the "
-            "conversation on Altaha — moving it to a phone, a payment app or a "
+            "conversation on Altaha. Moving it to a phone, a payment app or a "
             "private group is how investment scams start.")
     if sender != "expert":
         return

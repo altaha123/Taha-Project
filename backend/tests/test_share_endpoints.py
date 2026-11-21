@@ -228,7 +228,7 @@ def test_a_concall_share_page_is_that_call(client, call_on_file):
     for tag in ('property="og:image"', 'name="twitter:card" content="summary_large_image"',
                 'rel="canonical"'):
         assert tag in html
-    assert "Mahindra &amp; Mahindra Ltd — Q2 FY27 earnings call" in html
+    assert "Mahindra &amp; Mahindra Ltd | Q2 FY27 earnings call" in html
     assert "Tractor volumes guided to grow 12% in FY27 &lt;b&gt;" in html
     assert "<b>" not in html, "a tag in a model's headline reached the page as markup"
     # The symbol's ampersand must not end the parameter it is in.
@@ -294,7 +294,7 @@ def test_a_wow_share_page_is_that_order(client, order_on_file):
     for tag in ('property="og:image"', 'name="twitter:card" content="summary_large_image"',
                 'rel="canonical"'):
         assert tag in html
-    assert ("Mahindra &amp; Mahindra Ltd — ₹2,691 cr letter of award from "
+    assert ("Mahindra &amp; Mahindra Ltd: ₹2,691 cr letter of award from "
             "NTPC Green &lt;b&gt;Energy&lt;/b&gt; Limited") in html
     assert "<b>" not in html, "a tag in a customer's name reached the page as markup"
     assert "That is 75% of the company's market cap of ₹3,569 cr" in html.replace("&#x27;", "'")

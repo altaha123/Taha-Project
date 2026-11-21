@@ -4,7 +4,7 @@
 <meta charset="utf-8" /><script src="clean-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sign in — Altaha Screener</title>
+<title>Sign in | Altaha Screener</title>
 <meta name="description" content="Sign in to save your portfolio and get one email after the close: what your holdings did, and what was filed on them." />
 <meta name="referrer" content="no-referrer" />
 <meta name="robots" content="noindex,follow" />
@@ -18,7 +18,7 @@
 
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
-<link rel="stylesheet" href="shell.css?v=20261120-market">
+<link rel="stylesheet" href="shell.css?v=20261121-type">
 <link rel="stylesheet" href="type.css">
 
 <script>
@@ -45,7 +45,7 @@
   .si-page *, .si-page *::before, .si-page *::after { box-sizing:border-box; }
   .si-header { max-width:1180px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
   .si-brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); }
-  .si-monogram { width:40px; height:40px; border-radius:12px; background:#183f35; color:#e2cf9e; display:grid; place-items:center; font:400 30px/1 Georgia,serif; }
+  .si-monogram { width:40px; height:40px; border-radius:12px; background:#183f35; color:#e2cf9e; display:grid; place-items:center; font:400 28px/1 var(--serif,'Instrument Serif',Georgia,serif); }
   .si-brand-name { font-size:18px; font-weight:600; letter-spacing:-.04em; }
   .si-brand-name small { display:block; font-size:10px; letter-spacing:.2em; text-transform:uppercase; margin-top:4px; color:var(--si-muted); }
   .si-home { color:var(--si-muted); font-size:13px; text-decoration:none; padding:12px 0; }
@@ -260,7 +260,7 @@
   function askForCode(email, d) {
     panel('<h1>Check your email</h1>' +
           '<p class="si-lede">If <b>' + escapeHTML(email) + '</b> can receive mail, a ' +
-          'six-digit code is on its way. Type it here \u2014 stay on this page.</p>' +
+          'six-digit code is on its way. Type it here and stay on this page.</p>' +
           '<form id="si-codeform" novalidate>' +
             '<label class="si-field" for="si-code"><span>Six-digit code</span>' +
               '<input class="si-input si-code" id="si-code" name="code" inputmode="numeric" ' +
@@ -273,7 +273,7 @@
           (d && d.debug_code
             ? '<p class="si-note">Delivery is not configured on this deploy. ' +
               'Your code is <b>' + escapeHTML(d.debug_code) + '</b>.</p>' : '') +
-          '<p class="si-note">Not there in a minute? Look in spam \u2014 and if it is there, ' +
+          '<p class="si-note">Not there in a minute? Look in spam, and if it is there, ' +
           'marking it "not spam" is what keeps the daily email out of that folder too. ' +
           'The email also has a link, if you would rather click one.</p>' +
           '<a class="si-back" href="signin.html">Use a different email</a>');

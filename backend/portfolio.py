@@ -271,8 +271,8 @@ def build_report(rows: list, scan_payload: dict | None,
             detail = ""
             if trim:
                 detail = (f" The gap to your ceiling is {trim['shares']} of "
-                          f"{int(trim['of_shares'])} shares — ₹{trim['value']:,.0f} at "
-                          f"today's ₹{trim['price']:,.2f}, which would leave the position "
+                          f"{int(trim['of_shares'])} shares (₹{trim['value']:,.0f} at "
+                          f"today's ₹{trim['price']:,.2f}), which would leave the position "
                           f"at {trim['resulting_weight_pct']:.1f}%.")
             breaches.append({
                 "rule": "max_stock_pct", "level": "breach", "symbol": r["symbol"],
@@ -297,7 +297,7 @@ def build_report(rows: list, scan_payload: dict | None,
             if s.get("state") and rel3 is not None:
                 direction = "ahead of" if rel3 >= 0 else "behind"
                 mom_txt = (f" {s['index_name']} is {abs(rel3):.1f}% {direction} the "
-                           f"Nifty 50 over three months — {s['state'].lower()}.")
+                           f"Nifty 50 over three months ({s['state'].lower()}).")
             breaches.append({
                 "rule": "max_sector_pct", "level": "breach", "sector": s["sector"],
                 "title": f"Sector cap · {s['sector']}",
@@ -342,7 +342,7 @@ def build_report(rows: list, scan_payload: dict | None,
             "limit": pol["min_holdings"], "arithmetic": None,
             "text": (f"{len(ok)} holding(s) against your floor of {int(pol['min_holdings'])}. "
                      f"At this count the largest position drives portfolio behaviour more than "
-                     f"the quality of any individual name — the effective count is "
+                     f"the quality of any individual name. The effective count is "
                      f"{conc['effective_n']}.")
         })
 
@@ -366,7 +366,7 @@ def build_report(rows: list, scan_payload: dict | None,
         names = ", ".join(f"{r['symbol']} ({r['composite']:.0f})" for r in strong[:5])
         observations.append({
             "level": "good", "title": "Strongest current evidence",
-            "text": (f"{names} — Altaha Score {STRONG_SCORE:.0f}+ on today's data, "
+            "text": (f"{names}: Altaha Score {STRONG_SCORE:.0f}+ on today's data, "
                      f"{sum(r['weight_pct'] for r in strong):.1f}% of the book combined.")
         })
 
@@ -419,8 +419,8 @@ def build_report(rows: list, scan_payload: dict | None,
         if sec:
             by_sec.setdefault(sec, []).append(sr)
     if not by_sec:
-        peers_note = ("Peer comparison needs a universe scan that includes sector data — "
-                      "run one from the Ideas tab and re-analyse.")
+        peers_note = ("Peer comparison needs a universe scan that includes sector data. "
+                      "Run one from the Ideas tab and re-analyse.")
     for r in ok:
         pool = [p for p in by_sec.get(r.get("sector") or "", [])
                 if p["symbol"] != r["symbol"]]

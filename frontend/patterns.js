@@ -75,7 +75,7 @@
     bar.hidden = false;
     if (!d.count) {
       bar.innerHTML = '<b>No textbook pattern</b><span>on the ' + esc(d.timeframe) +
-        " chart right now — read why below</span>";
+        " chart right now. Read why below</span>";
       bar.className = "patbar quiet";
       return;
     }
@@ -194,7 +194,7 @@
     if (f.expected_range && f.expected_range.bands) {
       var b = f.expected_range.bands["5"] || f.expected_range.bands[5];
       if (b) rows.push(["Typical 5-session range",
-                        rupee(b.low) + " – " + rupee(b.high) + " (±" + b.pct + "%)"]);
+                        rupee(b.low) + " to " + rupee(b.high) + " (±" + b.pct + "%)"]);
     }
     return '<div class="patfwd"><h4>What has to happen next</h4>' +
       '<p class="patnote">' + esc(f.method) + "</p>" +
@@ -612,12 +612,12 @@
         (d.count
           ? d.patterns.map(patternHTML).join("")
           : '<div class="patload">No textbook pattern on this timeframe right now. That is the ' +
-            "usual answer — most stocks, most days, are not in one, and a detector that " +
+            "usual answer: most stocks, most days, are not in one, and a detector that " +
             "always finds something has stopped detecting.</div>") +
         forwardHTML(d.forward) +
         '<p class="patdisc">' + esc(d.disclaimer) + "</p>";
     } catch (e) {
-      el.innerHTML = '<div class="patload">Engine unreachable — it may be waking up.</div>';
+      el.innerHTML = '<div class="patload">Engine unreachable. It may be waking up.</div>';
     } finally {
       state.busy = false;
     }

@@ -760,7 +760,7 @@ def peer_metrics(summaries, required, profiles, universe_size):
                 band = "large" if r <= LARGE_CAP_RANK else ("mid" if r <= MID_CAP_RANK else "small")
                 out[s["symbol"]][key] = m(band, "%s cap (#%d, %s)" % (band.capitalize(), r,
                                                                        cr(s["mcap_cr"])),
-                                          "Rank by market value: 1–100 large, 101–250 mid, 251+ small")
+                                          "Rank by market value: 1 to 100 large, 101 to 250 mid, 251+ small")
         elif field == "margin_stdev_pctile":
             vals = sorted((s["stdev"].get(lb), s["symbol"]) for s in summaries
                           if s["stdev"].get(lb) is not None)

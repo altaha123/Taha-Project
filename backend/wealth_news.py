@@ -494,6 +494,7 @@ SYSTEM = (
     "big contract, a battery project a battery project; write money in rupees and crore, rounded "
     "(Rs 26,913 million is Rs 2,691 crore). Give at most two numbers. Leave out procedure: auditors' "
     "reviews, regulation numbers, standalone versus consolidated, GST.\n"
+    "Never use em dashes or en dashes. "
     "Use only what the filing says. No opinion on the share, no forecast, no advice, no words like "
     "good, bad, strong or weak. If the filing is a routine notice, say what it is plainly. If the "
     "text is unreadable, empty, or about something other than the headline given, set readable to "

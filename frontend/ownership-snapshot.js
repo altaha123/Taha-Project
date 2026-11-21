@@ -83,7 +83,7 @@
         line(pct(m.pct)+(m.derived?'*':''),px,py+28,23,'#20271f',pw-14,1,'600 ');
         x.fillStyle='#e4e0d5'; x.fillRect(px,py+41,pw-20,5); x.fillStyle='#ae831f'; x.fillRect(px,py+41,(m.pct || 0)/100*(pw-20),5);
       });
-    } else line('Peer comparison not included — load peers before sharing.',54,peerY,19,'#565c54',950,2);
+    } else line('Peer comparison not included. Load peers before sharing.',54,peerY,19,'#565c54',950,2);
     if(d.peerFinding) line(d.peerFinding,54,H-185,16,'#565c54',965,2);
     rule(H-142);
     line('Source: NSE Reg 31 filing · * derived where marked · Changes in percentage points',54,H-112,16,'#565c54',965,1);

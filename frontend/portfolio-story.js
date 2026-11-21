@@ -130,7 +130,7 @@
       money.visual.pnl = d.total_pnl;
     } else {
       money.lede = n + ' companies make up your portfolio. Add the price you paid for each, and this chapter shows what you have gained or lost.';
-      money.why = 'Without a buy price there is no gain or loss to show — the value today is still exact.';
+      money.why = 'Without a buy price there is no gain or loss to show, but the value today is still exact.';
     }
     out.push(money);
 
@@ -153,7 +153,7 @@
       if (rest > 0.05) parts.push({ label: 'Everything else', w: rest });
       out.push({
         id: 'sectors', kicker: 'Where it lives', title: 'Where your money lives', lede: lede,
-        why: 'Companies in one industry tend to rise and fall together — on the same news, the same interest rates, the same government policy.',
+        why: 'Companies in one industry tend to rise and fall together on the same news, the same interest rates, the same government policy.',
         visual: { type: 'sectors', parts: parts }
       });
     }
@@ -162,7 +162,7 @@
     if (top && finite(top.weight_pct) && n > 1) {
       var w = top.weight_pct, hit = total * w / 100 * 0.10;
       var lede3 = '**₹' + per100(w) + ' of every ₹100** you have invested is in this one company. If it fell 10%, your whole portfolio would fall about **' +
-        pct(w / 10) + '** — roughly **' + words(hit) + '**.';
+        pct(w / 10) + '**, roughly **' + words(hit) + '**.';
       if (finite(policy.max_stock_pct) && w > policy.max_stock_pct) {
         lede3 += ' You set ' + pct(policy.max_stock_pct, 0) + ' as the most for any one stock; this is ' + pct(w) + '.';
       }
@@ -211,7 +211,7 @@
       var items = gains.slice(0, losses.length ? 3 : 5).concat(losses.slice(0, gains.length ? 3 : 5))
         .map(function (r) { return { symbol: r.symbol, pnl: r.pnl }; });
       out.push({
-        id: 'movers', kicker: 'Who moves your money', title: 'Who is making — and losing — you money', lede: lede5,
+        id: 'movers', kicker: 'Who moves your money', title: 'Who is making you money, and who is losing it', lede: lede5,
         why: 'Ranked in rupees, not percent: a small slip in a big holding can cost more than a big jump in a small one earns.',
         visual: { type: 'movers', items: items }
       });
@@ -238,7 +238,7 @@
       });
       out.push({
         id: 'score', kicker: 'The evidence', title: 'How strong is the evidence?', lede: lede6,
-        why: 'The Altaha Score reads each company’s quality, growth, value, price trend and risk from its own filings and prices. It measures evidence — not the chance of making a profit.',
+        why: 'The Altaha Score reads each company’s quality, growth, value, price trend and risk from its own filings and prices. It measures evidence, not the chance of making a profit.',
         visual: { type: 'gauge', score: d.weighted_score, bands: bands.filter(function (b) { return b.symbols.length; }) }
       });
     }
@@ -256,11 +256,11 @@
       var lede7 = finite(v95) && v95 > 0
         ? 'On about **1 day in 20**, your portfolio lost more than **' + words(total * v95 / 100) + '**. '
         : '';
-      lede7 += 'Its worst single day' + (since ? ' since ' + since : '') + ' was **' + pct(rb.worst_day_pct) + '** — about **' +
+      lede7 += 'Its worst single day' + (since ? ' since ' + since : '') + ' was **' + pct(rb.worst_day_pct) + '**, about **' +
         words(Math.abs(total * rb.worst_day_pct / 100)) + '** at today’s size.';
       out.push({
         id: 'rough', kicker: 'A rough patch', title: 'What a rough patch looks like', lede: lede7,
-        why: 'Worked out by replaying the stocks you hold today over past prices. It describes what already happened — it is not a forecast, and not the most you could lose.',
+        why: 'Worked out by replaying the stocks you hold today over past prices. It describes what already happened. It is not a forecast, and not the most you could lose.',
         visual: { type: 'dips', items: dips }
       });
     } else {
@@ -271,7 +271,7 @@
           id: 'rough', kicker: 'A rough patch', title: 'If the market has a bad week',
           lede: 'If ' + scenarioPhrase(a.name) + ', you would be down about **' + words(Math.abs(a.impact_inr)) + '**.' +
             (b2 ? ' If ' + scenarioPhrase(b2.name) + ', about **' + words(Math.abs(b2.impact_inr)) + '**.' : ''),
-          why: 'Simple arithmetic on what you hold today — not a prediction of what will happen.',
+          why: 'Simple arithmetic on what you hold today, not a prediction of what will happen.',
           visual: { type: 'dips', items: sc.slice(0, 3).map(function (s) { return { label: s.name, pct: s.impact_pct, inr: s.impact_inr }; }) }
         });
       }
@@ -286,7 +286,7 @@
         lede: ev.length
           ? (ev.length === 1 ? 'One filing or story' : ev.length + ' filings and stories') + ' touched your holdings recently.'
           : 'No filings or news turned up for your holdings in the last seven days.',
-        why: 'Headlines are shown as published. Whether one matters to you depends on the detail — open the source before reading anything into a headline.',
+        why: 'Headlines are shown as published. Whether one matters to you depends on the detail, so open the source before reading anything into a headline.',
         visual: {
           type: 'news', items: ev.map(function (e) {
             return { headline: e.headline, source: e.source || '', symbols: (e.symbols || []).slice(0, 3),
@@ -303,7 +303,7 @@
         id: 'questions', kicker: 'Worth asking',
         title: (qs.length === 1 ? 'One question' : ['', '', 'Two', 'Three'][qs.length] + ' questions') + ' worth asking yourself',
         lede: 'Not instructions. Each comes from a limit you set or a measurement in your report, and only you know the answer.',
-        why: 'Your portfolio policy — the limits these are measured against — can be changed under “Your portfolio policy” above.',
+        why: 'Your portfolio policy (the limits these are measured against) can be changed under “Your portfolio policy” above.',
         visual: { type: 'questions', items: qs }
       });
     }
@@ -317,7 +317,7 @@
     if (finite(d.weighted_score)) facts.push(['Evidence score', trimNum(d.weighted_score) + ' / 100']);
     out.push({
       id: 'recap', kicker: 'In one breath', title: 'Your portfolio, in one breath',
-      lede: 'That is the story. The full report has every number behind it — each holding, each measurement, and how it was worked out.',
+      lede: 'That is the story. The full report has every number behind it: each holding, each measurement, and how it was worked out.',
       why: 'This story describes what you hold. What to do with each stock is in your action plan, above.',
       visual: { type: 'recap', facts: facts }
     });
@@ -377,7 +377,7 @@
                    question: 'Is this much in one industry a choice you made?' });
       } else if (g.rule === 'min_composite' && first) {
         out.push({ head: many ? names(items, function (x) { return x.subject + ' (' + Math.round(x.measured) + ')'; }) + ' score below your floor of ' + Math.round(first.limit)
-                              : first.subject + ' scores ' + Math.round(first.measured) + ' — below your floor of ' + Math.round(first.limit),
+                              : first.subject + ' scores ' + Math.round(first.measured) + ', below your floor of ' + Math.round(first.limit),
                    fact: (many ? 'Their' : 'Its') + ' filings and price trend give weak evidence right now.',
                    question: 'What do you know about ' + (many ? 'these companies' : 'this company') + ' that the numbers do not show?' });
       } else if (g.rule === 'risk_share') {
@@ -390,7 +390,7 @@
                    question: 'Are you comfortable with this much of your ups and downs coming from so few places?' });
       } else {
         var a = g.items[0].a;
-        if (a.question) out.push({ head: String(a.title || '').replace('·', '—'), fact: a.arithmetic || '', question: a.question });
+        if (a.question) out.push({ head: String(a.title || '').replace(' ·', ':'), fact: a.arithmetic || '', question: a.question });
       }
     });
     return out;

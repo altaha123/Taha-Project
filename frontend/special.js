@@ -130,7 +130,7 @@
         loaded = false;
         // data-nosnippet: not to be quoted by a search engine as the page.
         host.innerHTML = '<div class="sp-state" data-nosnippet><b>The engine is unreachable</b>' +
-          'If it has been idle it takes about thirty seconds to wake — try again.</div>';
+          'If it has been idle it takes about thirty seconds to wake. Try again.</div>';
       });
   }
 

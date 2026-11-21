@@ -703,7 +703,7 @@ async function clean(page, label) {
       assert.match(msg, /Target: ₹5,400 \(\+17\.4%\)/);
       assert.match(msg, /Stop loss: ₹4,250 \(−7\.6%\)/);
       assert.match(msg, /Horizon: 12–18 months/);
-      assert.match(msg, /— Nadia Rahman, Rahman Wealth/);
+      assert.match(msg, /\n\nNadia Rahman, Rahman Wealth/);
       assert.match(msg, /subject to market risks/);
       assert.ok(!msg.includes('Order book cover'), 'the why went into the message without being ticked');
       const any = await page.getAttribute('#wd-modal a[data-wa="any"]', 'href');

@@ -134,7 +134,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   await panel.locator('.pk-how summary').click();
   const how = await panel.locator('.pk-how').innerText();
   assert.match(how, /Before costs and tax/, 'the record does not say it is before costs');
-  assert.match(how, /2017–21/); assert.match(how, /2022–26/);
+  assert.match(how, /2017-21/); assert.match(how, /2022-26/);
   assert.match(how, new RegExp(month.tested.picks.toLocaleString('en-IN')), 'the number of tested picks is missing');
   // Live calls are shown once five have closed; this list has eight.
   assert.match(await panel.locator('.pk-live').innerText(), /5 of 8 closed calls rose/);
@@ -244,10 +244,10 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.deepEqual(await page.locator('#idearows .idea').evaluateAll(ns => ns.map(n => n.dataset.t)),
                    res.rows.map(r => r.symbol), 'the page reordered the results list');
   assert.match(await page.locator('#pickhead').innerText(), /jumped on their quarterly results/);
-  assert.match(await page.locator('#pickhead .pk-how summary').innerText(), /2018–2026/,
+  assert.match(await page.locator('#pickhead .pk-how summary').innerText(), /2018-2026/,
                'the results record should say its test began in 2018');
   await page.locator('#pickhead .pk-how summary').click();
-  assert.match(await page.locator('#pickhead .pk-how').innerText(), /2018–21/);
+  assert.match(await page.locator('#pickhead .pk-how').innerText(), /2018-21/);
   assert.equal((await page.locator('#pickhead .pk-record-n b').first().innerText()).trim(),
                String(Math.round(res.tested.up_pct)));
   // Above its 200-day average: nothing to explain, so no market line.

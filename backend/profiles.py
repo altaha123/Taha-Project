@@ -72,7 +72,7 @@ PILLARS = ("momentum", "participation", "quality", "improvement", "valuation")
 HORIZONS = {
     "trade": {
         "label": "Days to weeks",
-        "note": ("Over days, the business barely changes — only the tape does. "
+        "note": ("Over days, the business barely changes. Only the tape does. "
                  "Quality is kept as a floor so the scanner does not surface junk "
                  "that happens to be moving, but it cannot carry a score."),
         "weights": {"momentum": .44, "participation": .28, "quality": .16,
@@ -137,7 +137,7 @@ BUSINESS_MODELS = {
                               "that is not lending."),
             _G + "Gross margin level": "Lenders do not report a gross margin.",
             _G + "Reinvestment intensity": ("Capex to revenue is meaningless for a "
-                                            "lender — its growth spending is capital, "
+                                            "lender, because its growth spending is capital, "
                                             "not plant."),
             _F + "Gross margin expanding": "No gross margin is reported.",
             _F + "Asset turnover rising": ("Revenue over assets for a lender is just "
@@ -150,7 +150,7 @@ BUSINESS_MODELS = {
                 "movements. A fast-growing, perfectly healthy lender routinely reports "
                 "negative CFO because it lent the money out."),
             _F + "CFO exceeds net income": (
-                "The same reason — the comparison is not meaningful when lending itself "
+                "The same reason: the comparison is not meaningful when lending itself "
                 "is the operating cash outflow."),
             _G + "Cash return on assets": (
                 "Cash flow over assets does not describe a lender's productivity; return "
@@ -174,7 +174,7 @@ BUSINESS_MODELS = {
         "matters": ("These businesses need very little capital to grow, so the test is "
                     "whether high returns on capital persist and whether reported profit "
                     "turns into cash. They rarely look cheap, and demanding a low "
-                    "multiple from one is how people miss the entire category — so "
+                    "multiple from one is how people miss the entire category, so "
                     "valuation is deliberately given less weight here than elsewhere."),
         "suppress": {
             _G + "Reinvestment intensity": ("Low capex is the point of an asset-light "
@@ -194,7 +194,7 @@ BUSINESS_MODELS = {
         "valuation": "cycle",
         "matters": ("Earnings here are a function of a commodity price the company does "
                     "not control. The single most useful question is not whether margins "
-                    "are high but where they sit inside their own history — because the "
+                    "are high but where they sit inside their own history, because the "
                     "cheapest-looking multiple in this category almost always appears at "
                     "the exact top of the cycle, and the most expensive at the bottom."),
         "suppress": {},
@@ -210,13 +210,13 @@ BUSINESS_MODELS = {
         "valuation": "pe",
         "matters": ("An order book is not revenue and revenue is not cash. These "
                     "businesses fail on the working capital cycle far more often than on "
-                    "demand — profit is booked on percentage completion while the money "
+                    "demand, because profit is booked on percentage completion while the money "
                     "sits in receivables. Cash conversion is weighted heavily here for "
                     "exactly that reason."),
         "suppress": {},
         "missing": ("Order book, order inflow and receivable days are the three numbers "
                     "that decide this category. None are published in a machine-readable "
-                    "form here — read the investor presentation."),
+                    "form here, so read the investor presentation."),
     },
 
     "utility": {
@@ -256,7 +256,7 @@ BUSINESS_MODELS = {
                                             "advertising, which are expensed, not "
                                             "through capex."),
         },
-        "missing": "Volume growth versus price-led growth — the distinction that matters most, and one the income statement hides.",
+        "missing": "Volume growth versus price-led growth. It is the distinction that matters most, and one the income statement hides.",
     },
 
     "realty": {
@@ -265,7 +265,7 @@ BUSINESS_MODELS = {
         "bias": {"quality": 1.05, "improvement": 1.25, "valuation": 1.10,
                  "momentum": 1.00, "participation": 1.05},
         "valuation": "pb",
-        "matters": ("Revenue recognition here is a timing choice, not an event — a "
+        "matters": ("Revenue recognition here is a timing choice, not an event. A "
                     "developer can report a weak year while selling more than ever, or a "
                     "strong year on projects sold three years ago. Pre-sales and "
                     "collections tell the truth; the profit and loss account lags them "
@@ -277,7 +277,7 @@ BUSINESS_MODELS = {
                                            "so turnover ratios do not describe "
                                            "efficiency."),
         },
-        "missing": "Pre-sales, collections, unsold inventory and land bank cost — the entire operating picture.",
+        "missing": "Pre-sales, collections, unsold inventory and land bank cost: the entire operating picture.",
     },
 
     "emerging": {
@@ -287,18 +287,18 @@ BUSINESS_MODELS = {
                  "momentum": 1.10, "participation": 1.20},
         "valuation": "none",
         "matters": ("With no profit there is no return on capital, no earnings multiple "
-                    "and no F-Score worth reading — most of the standard toolkit returns "
+                    "and no F-Score worth reading. Most of the standard toolkit returns "
                     "zero and a zero here means 'not applicable', not 'bad'. What can be "
                     "measured is the direction of travel: is the loss narrowing, is gross "
                     "margin improving, is cash being consumed more slowly."),
         "suppress": {
             "Valuation (P/E)": "No earnings, so no earnings multiple exists.",
             "ROCE": "Return on capital is undefined while the business loses money.",
-            _F + "Positive ROA": ("Loss-making by design at this stage — scoring it as a "
+            _F + "Positive ROA": ("Loss-making by design at this stage, so scoring it as a "
                                   "failure says nothing the reader does not know."),
             _F + "ROA improving": "Reported through the improvement pillar instead.",
         },
-        "missing": "Cash runway, unit economics and contribution margin — the only three things that matter here.",
+        "missing": "Cash runway, unit economics and contribution margin: the only three things that matter here.",
     },
 
     "general": {
@@ -387,7 +387,7 @@ def classify(info: dict, fund: dict = None) -> dict:
         key, source = _SECTOR_FALLBACK[sector], f'sector "{sector}"'
 
     if key is None:
-        key, source = "general", "no sector or industry published — general treatment applied"
+        key, source = "general", "no sector or industry published, general treatment applied"
 
     # A loss-making company is an emerging-growth object whatever its label,
     # because most of the profitability toolkit returns nothing for it. This
@@ -398,7 +398,7 @@ def classify(info: dict, fund: dict = None) -> dict:
         eps = (info or {}).get("trailingEps")
         loss = (margins is not None and margins < 0) or (eps is not None and eps < 0)
         if loss:
-            key, source = "emerging", f"{source}, overridden — the company is currently loss-making"
+            key, source = "emerging", f"{source}, overridden because the company is currently loss-making"
 
     model = BUSINESS_MODELS[key]
     return {"key": key, "name": model["name"], "examples": model["examples"],
@@ -445,7 +445,7 @@ def cycle_position(fin) -> dict:
 
         margins = [m for m in margins if abs(m) < 200]
         if len(margins) < 3:
-            out["note"] = f"Only {len(margins)} comparable years — too few to place the cycle."
+            out["note"] = f"Only {len(margins)} comparable years, too few to place the cycle."
             out["margins"] = margins
             out["years"] = len(margins)
             return out
@@ -629,11 +629,11 @@ def _apply_cycle(pillars: dict, model_key: str, cyc: dict) -> tuple:
                 notes.append(f"business quality is damped by {damp} points "
                              f"(from {qua} to {out['quality']})")
         note = (f"Operating margin sits at {pct}% of its own {cyc.get('years', '?')}-year "
-                f"range — near the top of the cycle. These are peak-cycle earnings, so "
+                f"range, near the top of the cycle. These are peak-cycle earnings, so "
                 + " and ".join(notes) + ". A low earnings multiple on peak earnings is "
                 "the market pricing in the fall, not a discount."
                 if notes else
-                f"Margins sit at {pct}% of their own range — near the cycle top.")
+                f"Margins sit at {pct}% of their own range, near the cycle top.")
         return out, note
 
     if pos <= 0.30:
@@ -651,11 +651,11 @@ def _apply_cycle(pillars: dict, model_key: str, cyc: dict) -> tuple:
                 notes.append(f"business quality is eased up by {lift} points "
                              f"(from {qua} to {out['quality']})")
         note = (f"Operating margin sits at {pct}% of its own {cyc.get('years', '?')}-year "
-                f"range — near the bottom of the cycle, where trailing multiples look "
+                f"range, near the bottom of the cycle, where trailing multiples look "
                 f"expensive and returns look poor precisely because earnings are "
                 f"depressed. To correct for that, " + " and ".join(notes) + "."
                 if notes else
-                f"Margins sit at {pct}% of their own range — near the cycle low.")
+                f"Margins sit at {pct}% of their own range, near the cycle low.")
         return out, note
 
     return pillars, (f"Operating margin sits mid-range at {pct}% of its own history. "
@@ -775,13 +775,13 @@ def score(tech: dict, fund: dict, info: dict, fin=None, bs=None, cf=None,
             None if priced else
             "No usable earnings multiple was published for this company, so the "
             "valuation reading is based only on how far price sits below its "
-            "52-week high — a position in a range, not a valuation. It has been "
+            "52-week high, which is a position in a range, not a valuation. It has been "
             "given half its normal weight for that reason."),
         "confidence": conf,
         "coverage": cov,
         "confidence_note": (
             "Confidence measures how much of the intended evidence was actually "
-            "available for this company — not how likely the score is to be right."),
+            "available for this company, not how likely the score is to be right."),
     }
 
 

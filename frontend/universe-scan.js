@@ -166,7 +166,7 @@
     var s = sessionFor(selected), mood = s ? s.mood : 'wait';
     var html = s ? dayBody(s) : '<span class="su-day-date">' + DAYS[selected] + '</span><p class="su-day-syn">' +
       (weekReq ? 'Checking the tape…' : weekFailed ? 'Couldn’t reach the market data just now. Tap the planet again to retry.' :
-       week ? 'No session on record for this day — likely a market holiday.' : 'Checking the tape…') + '</p>';
+       week ? 'No session on record for this day, likely a market holiday.' : 'Checking the tape…') + '</p>';
     if (!s && weekFailed && !weekReq) { weekFailed = false; loadWeek(host); }
     var key = selected + '|' + mood + '|' + html;
     if (box && box.dataset.key === key && !box.classList.contains('leaving')) return;
@@ -225,7 +225,7 @@
     if(state==='starting'||(running&&!total))progress.removeAttribute('value');else progress.value=pct;
     host.querySelector('.su-percent').textContent=(running&&total)||complete?pct+'%':'';
     var eta=running?estimateRemaining(samples,total):null;
-    host.querySelector('.su-timing').textContent=running?Math.floor(elapsed/60)+'m '+Math.floor(elapsed%60)+'s elapsed · '+(eta!==null?'roughly '+Math.max(1,Math.floor(eta/60))+'–'+Math.max(2,Math.ceil(eta/60)+1)+' min remaining; may change':'estimating remaining time…'):'';
+    host.querySelector('.su-timing').textContent=running?Math.floor(elapsed/60)+'m '+Math.floor(elapsed%60)+'s elapsed · '+(eta!==null?'roughly '+Math.max(1,Math.floor(eta/60))+' to '+Math.max(2,Math.ceil(eta/60)+1)+' min remaining; may change':'estimating remaining time…'):'';
     var mark=Math.min(3,Math.floor(pct/25));
     if(running && mark>milestone){milestone=mark;host.classList.remove('su-celebrate');void host.offsetWidth;host.classList.add('su-celebrate');}
     host.querySelector('.su-milestone').textContent=running&&milestone?['','A quarter explored. The search continues.','Halfway through the analysis checks.','Three quarters explored. Keep discovering.'][milestone]:'';

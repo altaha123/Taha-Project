@@ -636,7 +636,7 @@ def restate(rec: Dict[str, Any]) -> Dict[str, str]:
     else:
         body = clean_text(rec.get("headline", "")) or f"{company} has filed an announcement."
 
-    headline = f"{company} — {rec.get('category_label') or 'Filing'}"
+    headline = f"{company}: {rec.get('category_label') or 'Filing'}"
     return {"headline": headline, "body": body.strip(), "figures": " · ".join(figures)}
 
 # ============================================================================
@@ -892,7 +892,7 @@ def process(row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     else:
         # No invention. The exchange's own words, and a flag to go read the PDF.
         rec["restated"] = {
-            "headline": f"{_company_short(rec['company'])} — filing",
+            "headline": f"{_company_short(rec['company'])}: filing",
             "body": rec["headline"],
             "figures": "",
         }
@@ -1072,7 +1072,7 @@ IG_CATEGORY_TAGS = {
 }
 
 IG_DISCLAIMER = ("A plain-English restatement of the company's own filing. "
-                 "Descriptive only — not a recommendation, not advice.")
+                 "Descriptive only: not a recommendation, not advice.")
 
 
 def build_ig_caption(rec: Dict[str, Any]) -> str:

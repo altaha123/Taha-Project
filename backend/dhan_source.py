@@ -222,7 +222,7 @@ def is_live(force=False) -> dict:
     try:
         sid = security_id("RELIANCE")
         if not sid:
-            detail = ("instrument master unavailable — "
+            detail = ("instrument master unavailable: "
                       + (_scrip.get("error") or "download returned no usable rows"))
         else:
             today = dt.date.today()
@@ -237,7 +237,7 @@ def is_live(force=False) -> dict:
             if ok:
                 detail = "token valid"
             elif r.status_code in (401, 403):
-                detail = ("token expired or unauthorised — regenerate in the Dhan "
+                detail = ("token expired or unauthorised. Regenerate in the Dhan "
                           "portal, or check DHAN_PIN / DHAN_TOTP_SECRET. Dhan said "
                           f"HTTP {r.status_code}: {(r.text or '')[:160]}")
             else:
@@ -310,7 +310,7 @@ def daily_ohlcv(symbol: str, days: int = 400, with_today: bool = True):
                                   headers=_headers(), timeout=20)
             if r.status_code != 200:
                 _status.update({"ok": False, "checked": time.time(),
-                                "detail": f"token expired or unauthorised — Dhan said "
+                                "detail": f"token expired or unauthorised. Dhan said "
                                           f"HTTP {r.status_code}: {(r.text or '')[:160]}"})
                 return None
         elif r.status_code != 200:

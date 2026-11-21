@@ -205,11 +205,11 @@
     /* A list with its own start (the results list: filings begin in 2018)
        says that year, not the study's. */
     var from = t.from || st.from;
-    var years = (from && st.to) ? String(from).slice(0, 4) + '–' + String(st.to).slice(0, 4) : '';
+    var years = (from && st.to) ? String(from).slice(0, 4) + '-' + String(st.to).slice(0, 4) : '';
     var h = t.by_half || {};
     var halves = Object.keys(h).map(function (k) {
       var x = h[k] || {};
-      return '<li><b>' + esc(k.replace('-', '–')) + '</b> ' + Math.round(x.up_pct) + ' in 100 rose · ' +
+      return '<li><b>' + esc(k) + '</b> ' + Math.round(x.up_pct) + ' in 100 rose · ' +
         signed(x.avg_pct) + ' · market ' + signed(x.index_avg_pct) + '</li>';
     }).join('');
     var up = Math.max(0, Math.min(100, Math.round(t.up_pct)));

@@ -508,13 +508,13 @@ def _check_invalidation(key, df, entry=None):
             # invalidated on a regime flip at all. Compare the direction.
             st = val(supertrend(df))
             if st is not None and st < 0:
-                return "Supertrend flipped bearish — the trend regime has turned"
+                return "Supertrend flipped bearish: the trend regime has turned"
             a = val(adx(df))
             if a is not None and a < 20:
-                return f"ADX fell to {a:.0f} — trend lost force"
+                return f"ADX fell to {a:.0f}, trend lost force"
             mid = val(bollinger(close)[0])
             if mid is not None and last < mid and entry and last < float(entry):
-                return "Back inside the Bollinger mid-band and below the entry — the breakout failed"
+                return "Back inside the Bollinger mid-band and below the entry, so the breakout failed"
         elif key == "institutional_accumulation":
             # OBV rolling over while price holds: the classic divergence.
             sign = (close.diff() > 0).astype(int) * 2 - 1
@@ -523,12 +523,12 @@ def _check_invalidation(key, df, entry=None):
                 obv_down = float(obv.iloc[-1]) < float(obv.iloc[-21])
                 px_flat = float(close.iloc[-1]) >= float(close.iloc[-21]) * 0.97
                 if obv_down and px_flat:
-                    return "OBV rolling over while price holds — accumulation has stopped"
+                    return "OBV rolling over while price holds: accumulation has stopped"
         elif key in ("quality_at_discount", "turnaround"):
             if len(close) > 200:
                 ma200 = val(close.rolling(200).mean())
                 if ma200 is not None and last < ma200 * 0.90:
-                    return "Price 10% below its 200-day average — the decline has not stopped"
+                    return "Price 10% below its 200-day average, and the decline has not stopped"
     except Exception:
         return None
     return None
@@ -626,7 +626,7 @@ def update_one(rec):
         if _dated_index(df) is None:
             # No usable dates: the return above is still correct, the
             # path-dependent columns are not computable. Say so.
-            rec["mark_error"] = "feed returned undated bars — best/worst unavailable"
+            rec["mark_error"] = "feed returned undated bars, best/worst unavailable"
             rec["max_gain_pct"] = None
             rec["max_drawdown_pct"] = None
         else:
@@ -673,7 +673,7 @@ def update_one(rec):
             rec["status"] = "INVALIDATED"
             rec["invalidated_by"] = (
                 f"Closed under the \u20b9{hit_s['price']} exit line{on}" if pick else
-                f"Stop \u20b9{hit_s['price']} broke{on} — the plan's own "
+                f"Stop \u20b9{hit_s['price']} broke{on}, the plan's own "
                 "invalidation level, reached before the target")
 
     if rec.get("status") == "LIVE":
@@ -874,7 +874,7 @@ def stats(source: str = "") -> dict:
         "unmarked": sum(1 for r in rows if r.get("last_price") is None),
         "mark_errors": sum(1 for r in rows if r.get("mark_error")),
         "last_marked_at": max(stamps) if stamps else None,
-        "note": ("Alpha is return minus the index over the identical window — it is the only "
+        "note": ("Alpha is return minus the index over the identical window. It is the only "
                  "column that says anything about the engine. Return alone mostly measures the "
                  "market. Under about 30 marked ideas a bucket is noise, and archetypes with "
                  "long horizons will look empty for months before they mean anything."),

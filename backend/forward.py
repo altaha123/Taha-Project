@@ -163,7 +163,7 @@ def ma_cross_projection(close, fast=20, slow=50, max_sessions=60):
         "state": "fast above slow" if above else "fast below slow",
         "sessions_to_cross": None,
         "assumption": "price holds at today's close",
-        "note": (f"No cross within {max_sessions} sessions at today's price — the "
+        "note": (f"No cross within {max_sessions} sessions at today's price: the "
                  "averages are not converging on their own."),
     }
 
@@ -203,7 +203,7 @@ def bollinger_state(close, period=20, mult=2.0, lookback=250):
     if pct <= 15:
         state, note = "squeeze", ("Band width is in the tightest "
                                   f"{pct:.0f}% of the last {len(w)} sessions. Tight ranges "
-                                  "expand — this says nothing about which way.")
+                                  "expand, but this says nothing about which way.")
     elif pct >= 85:
         state, note = "expanded", (f"Band width is wider than {pct:.0f}% of the last "
                                    f"{len(w)} sessions. Moves this stretched tend to "
@@ -289,7 +289,7 @@ def build(df):
         "ema50_touch": price_for_ma_touch(close, 50),
         "expected_range": expected_range(df),
         "method": ("Each figure is solved from the indicator's own formula with history "
-                   "held fixed — the price at which something happens, or the number of "
+                   "held fixed: the price at which something happens, or the number of "
                    "sessions it takes at an unchanged price. Nothing here extrapolates "
                    "price, and nothing here is a forecast."),
     }

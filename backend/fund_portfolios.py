@@ -912,7 +912,7 @@ def _read_file(path, src):
         return _read_book(path, label=src.get("title") or _stem(_filename(src["url"])))
     if getattr(fund_workbook, "looks_like_xls", lambda b: False)(head):
         return _read_book(path, label=src.get("title") or _stem(_filename(src["url"])))
-    raise ValueError("not an xlsx workbook (nor the legacy .xls format) — "
+    raise ValueError("not an xlsx workbook (nor the legacy .xls format): "
                      "the link served something else")
 
 
@@ -1031,29 +1031,29 @@ def ingest_month(amc_id, amc_name, group, mapping=None, keep_debt=False,
                            "(first: %s)" % (len(sources), as_of, problems[0]))
         return out
     if not read and not_portfolio and not undated:
-        out["note"] = ("read %d file%s but none is a portfolio — no table with "
+        out["note"] = ("read %d file%s but none is a portfolio: no table with "
                        "an ISIN column (a scheme summary, a list, a factsheet)"
                        % (not_portfolio, "" if not_portfolio == 1 else "s"))
         return out
     if not read and future:
         out["note"] = ("refused: the pack reads as a month that has not "
-                       "ended — the date was taken from something that is not "
+                       "ended, so the date was taken from something that is not "
                        "the portfolio's")
         return out
     if not as_of or (undated and not shaped):
-        out["note"] = ("could not tell which month this pack describes — "
+        out["note"] = ("could not tell which month this pack describes: "
                        "neither the filename nor the sheets carry a date")
         return out
     if as_of > latest:
         out["note"] = ("refused: the pack reads as %s, a month that has not "
-                       "ended — the date was taken from something that is not "
+                       "ended, so the date was taken from something that is not "
                        "the portfolio's" % as_of)
         return out
     if oldest and as_of < oldest:
         # NJ's page lists packs back to 2021 among files with no date in the
         # name; the newest it could date was March 2024. Recorded, that would
         # sit in the ledger as this house's latest month.
-        out["note"] = ("the newest portfolio found is for %s — too old to be "
+        out["note"] = ("the newest portfolio found is for %s, too old to be "
                        "this house's current month; not recorded" % as_of)
         return out
     if not shaped:
@@ -1100,11 +1100,11 @@ def _page_note(page):
         return ("the disclosure page served a bot challenge instead of its "
                 "content, so its download list could not be read")
     if why and why.startswith("HTTP 403"):
-        return ("the site refused the request (HTTP 403) — its CDN blocks "
+        return ("the site refused the request (HTTP 403): its CDN blocks "
                 "this server's address, so the disclosure page could not be read")
     if why:
         return "the disclosure page could not be fetched (%s)" % why
-    return ("no workbook link in the page's HTML — this AMC most likely builds "
+    return ("no workbook link in the page's HTML: this AMC most likely builds "
             "its download list in JavaScript")
 
 
@@ -1141,7 +1141,7 @@ def ingest_amc(amc, mapping=None, today=None):
     oldest = oldest_current_month(today)
     dated = [g for g in groups if g.get("as_of") is None or g["as_of"] >= oldest]
     if not dated:
-        out["note"] = ("the newest monthly portfolio linked is for %s — too old "
+        out["note"] = ("the newest monthly portfolio linked is for %s, too old "
                        "to be this house's current month" % groups[0]["as_of"])
         return out
     # The three newest months, then the undated files if those all failed.
@@ -1230,7 +1230,7 @@ def run(limit=6, amcs=None, mapping=None, progress=None, due_only=True, today=No
     todo = due[: max(1, int(limit))]
     out["remaining"] = len(due) - len(todo)
     if not todo:
-        out["note"] = ("nothing due — every reachable fund house has been read "
+        out["note"] = ("nothing due: every reachable fund house has been read "
                        "for %s or was tried within the last day" % want)
         return out
     if mapping is None:

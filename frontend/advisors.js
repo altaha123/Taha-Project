@@ -67,7 +67,7 @@
         return d;
       });
     }, function () {
-      var e = new Error('Altaha could not be reached. If the site has been idle it may be waking up — try again in half a minute.');
+      var e = new Error('Altaha could not be reached. If the site has been idle it may be waking up. Try again in half a minute.');
       e.status = 0;
       throw e;
     });
@@ -192,7 +192,7 @@
     directory().then(function (d) {
       paint(
         '<section class="adv-hero">' +
-          '<h1>Talk to someone who <em>knows money</em> — and has been checked.</h1>' +
+          '<h1>Talk to someone who <em>knows money</em> and has been checked.</h1>' +
           '<p class="adv-lede">SEBI-registered investment advisers, research analysts and well-known market educators. ' +
           'Ask about your portfolio, a stock, a fund, your retirement or a career in finance. Chats are free.</p>' +
         '</section>' +
@@ -321,7 +321,7 @@
     }).catch(function (err) {
       if (err.status === 404) {
         paint('<a class="adv-back" href="#">← Everyone</a><div class="adv-empty"><p>' +
-          'This person is not listed — the link may be old, or the profile is being re-checked.</p></div>');
+          'This person is not listed. The link may be old, or the profile is being re-checked.</p></div>');
       } else failed(err, function () { renderProfile(slug); });
     });
   }
@@ -332,7 +332,7 @@
         '</b>. Altaha checked this number before listing; ' +
         '<a href="' + esc(e.register_url) + '" target="_blank" rel="noopener noreferrer">check it on SEBI’s register ↗</a></p>';
     }
-    return '<p class="adv-regnote">Educator — <b>not SEBI-registered</b>. Can teach and explain how they think; ' +
+    return '<p class="adv-regnote">Educator, <b>not SEBI-registered</b>. Can teach and explain how they think; ' +
       'cannot tell you what to buy or sell.</p>';
   }
 
@@ -362,7 +362,7 @@
       var n = mine ? mine.holdings : 0;
       var risk = mine && mine.risk_profile;
       share = '<label class="adv-check"><input type="checkbox" id="adv-share"' + (n ? '' : ' disabled') + '>' +
-        '<span><b>Share my portfolio</b> — ' + (n
+        '<span><b>Share my portfolio</b>: ' + (n
           ? 'the ' + n + ' holding' + (n === 1 ? '' : 's') + ' saved to your account' +
             (risk ? ' and your risk profile (' + esc(risk.band) + ')' : '') +
             '. You can stop sharing at any time.'
@@ -544,14 +544,14 @@
           ' apply in this chat, and it is kept as your record.';
     }
     if (e.kind === 'educator') {
-      return esc(e.display_name) + ' is an educator, not SEBI-registered — they can teach and explain, not tell you what to buy or sell.';
+      return esc(e.display_name) + ' is an educator, not SEBI-registered. They can teach and explain, not tell you what to buy or sell.';
     }
     if (e.kind === 'ra') {
       return esc(e.display_name) + ' is a SEBI-registered research analyst (' + esc(e.sebi_reg) +
         '). For advice on your whole portfolio, talk to a registered investment adviser.';
     }
     return esc(e.display_name) + ' is a SEBI-registered investment adviser (' + esc(e.sebi_reg) +
-      '). Advice here is theirs, under their registration — not Altaha’s.';
+      '). Advice here is theirs, under their registration, not Altaha’s.';
   }
 
   /* Everything a poll can change, applied in place: new messages, the other
@@ -769,7 +769,7 @@
             'Buy or sell calls, targets and stop-losses cannot be sent from an educator’s side.</p></div>' +
         '</div>' +
         '<p class="adv-note">For everyone: no promises of returns, no payments, no moving readers to WhatsApp, Telegram or a phone. ' +
-          'Messages that do are not sent. Chats are kept and cannot be deleted — a registered adviser needs that record, ' +
+          'Messages that do are not sent. Chats are kept and cannot be deleted, because a registered adviser needs that record, ' +
           'and so does anyone judging a report. No star ratings: SEBI’s advertising rules for advisers do not allow testimonials.</p>';
       if (authed() && !mine) {
         failed(new Error('Your profile could not be loaded just now.'), renderJoin);
@@ -833,7 +833,7 @@
         '<label class="adv-field">Years of experience<input id="adv-j-exp" type="number" min="0" max="60" inputmode="numeric" value="' +
           esc(x.experience_years == null ? '' : x.experience_years) + '"></label>' +
       '</div>' +
-      '<fieldset class="adv-linkset"><legend>Public links <span class="adv-muted">— optional: website, X, YouTube, LinkedIn</span></legend>' +
+      '<fieldset class="adv-linkset"><legend>Public links <span class="adv-muted">(optional: website, X, YouTube, LinkedIn)</span></legend>' +
         links.map(function (u, i) {
           return '<label class="adv-sr" for="adv-j-link' + i + '">Link ' + (i + 1) + '</label>' +
             '<input id="adv-j-link' + i + '" type="url" value="' + esc(u) + '" placeholder="https://">';
@@ -952,9 +952,9 @@
       '<header><b>' + esc(x.display_name) + '</b> <span class="adv-kind is-' + esc(x.kind) + '">' + esc(x.kind_short) + '</span> ' +
         '<span class="adv-pill">' + esc(x.status) + (x.featured ? ' · featured' : '') + '</span></header>' +
       '<p class="adv-muted">' + esc(x.email) + ' · applied ' + esc(day(x.created_at)) + '</p>' +
-      (x.sebi_reg ? '<p>Registration <b class="adv-reg">' + esc(x.sebi_reg) + '</b> — <a href="' + esc(x.register_url) +
+      (x.sebi_reg ? '<p>Registration <b class="adv-reg">' + esc(x.sebi_reg) + '</b>: <a href="' + esc(x.register_url) +
         '" target="_blank" rel="noopener noreferrer">open SEBI’s register ↗</a> and search for this number before approving.</p>'
-        : '<p>Educator — no registration to check. Make sure the profile does not claim one.</p>') +
+        : '<p>Educator: no registration to check. Make sure the profile does not claim one.</p>') +
       '<p><b>' + esc(x.headline) + '</b></p><div class="adv-bio">' + esc(x.bio) + '</div>' +
       '<p class="adv-muted">Topics: ' + esc(x.topics.map(function (t) { return t.label; }).join(', ')) +
         ' · Languages: ' + esc(x.languages.join(', ')) + (x.links.length ? ' · ' + esc(x.links.join(' ')) : '') + '</p>' +
@@ -968,7 +968,7 @@
   }
 
   function reportCard(r) {
-    return '<article class="adv-admincard"><header><b>Chat ' + r.chat_id + '</b> — reported by the ' +
+    return '<article class="adv-admincard"><header><b>Chat ' + r.chat_id + '</b>, reported by the ' +
       esc(r.reporter === 'seeker' ? 'reader (' + r.seeker_name + ')' : 'adviser') + ' about ' + esc(r.expert.display_name) +
       ' <span class="adv-pill">' + esc(r.expert.status) + '</span></header>' +
       '<p><b>Reason:</b> ' + esc(r.reason) + '</p>' +

@@ -36,10 +36,10 @@
                   background:linear-gradient(180deg,var(--gold-lt),var(--gold)) }
 .la-status{ display:inline-flex; align-items:center; gap:9px; padding:6px 13px 6px 11px; border-radius:999px;
             border:1px solid var(--la-line); background:var(--la-surface);
-            font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--ink-2) }
-.la-hero h2{ font-family:var(--serif); font-weight:400; font-size:clamp(32px,4.4vw,46px); line-height:1.05;
+            font-family:var(--mono); font-size:12px; letter-spacing:.04em; color:var(--ink-2) }
+.la-hero h2{ font-family:var(--serif); font-weight:400; font-size:clamp(34px,4.4vw,42px); line-height:1.05;
              letter-spacing:-.015em; margin:14px 0 8px; color:var(--ink) }
-.la-hero p.la-lede{ font-size:15.5px; line-height:1.55; color:var(--ink-2); margin:0 0 20px; max-width:44ch }
+.la-hero p.la-lede{ font-size:16px; line-height:1.55; color:var(--ink-2); margin:0 0 20px; max-width:44ch }
 
 /* the status dot: steady when closed, a ring going out while live */
 .la-dot{ position:relative; width:9px; height:9px; border-radius:50%; background:var(--mute); flex-shrink:0 }
@@ -70,9 +70,9 @@
            border:1px solid var(--la-line); background:var(--la-surface); overflow:hidden }
 .la-stat{ padding:18px 14px 16px; text-align:center; border-left:1px solid var(--la-line) }
 .la-stat:first-child{ border-left:0 }
-.la-stat b{ display:block; font-family:var(--mono); font-weight:600; font-size:clamp(26px,3.2vw,34px);
+.la-stat b{ display:block; font-family:var(--mono); font-weight:600; font-size:clamp(24px,3.2vw,34px);
             line-height:1.1; color:var(--ink); font-variant-numeric:tabular-nums }
-.la-stat span{ display:block; margin-top:6px; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+.la-stat span{ display:block; margin-top:6px; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
                color:var(--mute); font-family:var(--mono) }
 .la-stat.good b{ color:var(--pass) }
 
@@ -101,8 +101,8 @@
 .la-head{ display:flex; align-items:center; gap:12px; margin-bottom:14px }
 .la-ico{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:18px; flex-shrink:0;
          background:var(--paper-2); border:1px solid var(--la-line) }
-.la-head h3{ font-family:var(--sans); font-weight:600; font-size:17px; letter-spacing:-.01em; margin:0; color:var(--ink) }
-.la-head small{ display:block; font-size:12.5px; color:var(--mute); font-weight:400; margin-top:2px; letter-spacing:0 }
+.la-head h3{ font-family:var(--sans); font-weight:600; font-size:18px; letter-spacing:-.01em; margin:0; color:var(--ink) }
+.la-head small{ display:block; font-size:13px; color:var(--mute); font-weight:400; margin-top:2px; letter-spacing:0 }
 .la-badge{ margin-left:auto; min-width:28px; padding:4px 10px; border-radius:999px; text-align:center;
            font-family:var(--mono); font-size:12px; font-weight:600; background:var(--paper-2); color:var(--ink-2);
            border:1px solid var(--la-line) }
@@ -127,12 +127,12 @@
 .la-levels div{ padding:9px 10px 8px; border-radius:9px; background:var(--la-surface); border:1px solid var(--la-line); min-width:0 }
 .la-levels span{ display:block; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
                  font-family:var(--mono) }
-.la-levels b{ display:block; margin-top:3px; font-family:var(--mono); font-weight:600; font-size:14.5px; color:var(--ink);
+.la-levels b{ display:block; margin-top:3px; font-family:var(--mono); font-weight:600; font-size:14px; color:var(--ink);
               white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums }
 .la-levels .stop b{ color:var(--fail) } .la-levels .tgt b{ color:var(--pass) }
-.la-why{ font-size:13.5px; line-height:1.5; color:var(--ink-2); margin:0 }
+.la-why{ font-size:14px; line-height:1.5; color:var(--ink-2); margin:0 }
 .la-out{ display:inline-flex; align-items:center; gap:7px; margin-top:10px; padding:4px 11px; border-radius:999px;
-         font-size:12.5px; font-weight:600 }
+         font-size:13px; font-weight:600 }
 .la-out.won{ color:var(--pass); background:rgba(46,158,107,.12) }
 .la-out.lost{ color:var(--fail); background:rgba(190,60,50,.10) }
 .la-out.flat{ color:var(--ink-2); background:var(--paper-2) }
@@ -145,7 +145,7 @@
 /* nothing yet: a sweep while the scanner is checking, still when it is not */
 .la-empty{ display:flex; align-items:center; gap:14px; padding:18px 16px; border:1px dashed var(--rule);
            border-radius:var(--la-radius); color:var(--ink-2); font-size:14px; line-height:1.45 }
-.la-empty small{ display:block; color:var(--mute); font-size:12.5px; margin-top:2px }
+.la-empty small{ display:block; color:var(--mute); font-size:13px; margin-top:2px }
 .la-radar{ position:relative; width:38px; height:38px; border-radius:50%; flex-shrink:0;
            border:1px solid var(--rule); background:var(--paper-2); overflow:hidden }
 .la-radar::after{ content:""; position:absolute; inset:0; border-radius:50%; opacity:0;
@@ -163,7 +163,7 @@
        transition:transform var(--t,280ms) var(--ease-soft,ease-out), border-color var(--t,280ms) var(--ease-soft,ease-out) }
 .la-w:hover{ transform:translateY(-2px); border-color:var(--gold-lt) }
 .la-w .top{ display:flex; align-items:baseline; gap:8px }
-.la-w .top b{ font-weight:600; font-size:14.5px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.la-w .top b{ font-weight:600; font-size:14px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .la-w .top i{ font-style:normal; font-size:11px; color:var(--pass) } .la-w.dn .top i{ color:var(--fail) }
 .la-w .top span{ margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--ink-2); white-space:nowrap }
 .la-w .bar{ height:5px; border-radius:99px; background:var(--paper-2); margin:9px 0 7px; overflow:hidden }
@@ -176,21 +176,21 @@
 /* ── the record ──────────────────────────────────────────────────────────── */
 .la-rec{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px }
 .la-r{ padding:16px 18px 15px; border:1px solid var(--la-line); border-radius:var(--la-radius); background:var(--paper) }
-.la-r h4{ font-family:var(--mono); font-weight:400; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+.la-r h4{ font-family:var(--mono); font-weight:400; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
           color:var(--mute); margin:0 0 8px }
 .la-r .big{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap }
 .la-r .big b{ font-family:var(--mono); font-weight:600; font-size:28px; color:var(--ink); font-variant-numeric:tabular-nums }
 .la-r .big span{ font-size:13px; color:var(--mute) }
-.la-r .big em{ margin-left:auto; font-style:normal; font-family:var(--mono); font-weight:600; font-size:15px }
+.la-r .big em{ margin-left:auto; font-style:normal; font-family:var(--mono); font-weight:600; font-size:14px }
 .la-r .big em.up{ color:var(--pass) } .la-r .big em.down{ color:var(--fail) }
 .la-seg{ display:flex; height:9px; border-radius:99px; overflow:hidden; background:var(--paper-2); margin:13px 0 11px }
 .la-seg u{ display:block; width:0; transition:width 900ms var(--ease-soft,ease-out) }
 .la-seg u.t{ background:var(--pass) } .la-seg u.s{ background:var(--fail) } .la-seg u.c{ background:var(--mute); opacity:.55 }
-.la-leg{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:var(--ink-2) }
+.la-leg{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px; color:var(--ink-2) }
 .la-leg span::before{ content:""; display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px;
                       background:var(--pass) }
 .la-leg span.s::before{ background:var(--fail) } .la-leg span.c::before{ background:var(--mute); opacity:.55 }
-.la-r .none{ font-size:13.5px; color:var(--mute); margin:2px 0 0 }
+.la-r .none{ font-size:14px; color:var(--mute); margin:2px 0 0 }
 
 #view-live .disc{ margin-top:22px }
 #view-live .ownerlink{ font:inherit; font-size:12px; background:none; border:0; color:var(--mute); cursor:pointer;
@@ -205,7 +205,7 @@
   .la-hero{ padding:20px 16px 18px 20px; margin-top:4px }
   .la-tg{ width:100%; justify-content:center; padding:14px 18px }
   .la-stat{ padding:14px 6px 12px }
-  .la-stat span{ font-size:9.5px; letter-spacing:.1em }
+  .la-stat span{ font-size:10px; letter-spacing:.1em }
   .la-panel{ padding:16px 14px 14px }
   .la-levels{ gap:6px } .la-levels div{ padding:8px 7px 7px } .la-levels b{ font-size:13px }
   .la-rec{ grid-template-columns:1fr }

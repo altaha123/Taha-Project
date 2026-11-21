@@ -94,8 +94,8 @@
   /* ── What a row says ──────────────────────────────────────────────────── */
 
   var STAGE = {
-    l1: { tag: 'Lowest bidder', verb: 'lowest bid', why: 'Lowest bidder — the order has not been awarded yet' },
-    mou: { tag: 'MoU', verb: 'memorandum of understanding', why: 'A memorandum of understanding — not an order' },
+    l1: { tag: 'Lowest bidder', verb: 'lowest bid', why: 'Lowest bidder: the order has not been awarded yet' },
+    mou: { tag: 'MoU', verb: 'memorandum of understanding', why: 'A memorandum of understanding, not an order' },
     update: { tag: 'Update', verb: 'order', why: 'An update to an order filed earlier' }
   };
 
@@ -413,7 +413,7 @@
     if (!rows.length && !pinned) {
       box.innerHTML = d.reading ? waiting()
         : '<div class="wo-empty">No order announcements in this window. ' +
-          'Order flow is lumpy — a quiet week is normal, not a fault.</div>' +
+          'Order flow is lumpy. A quiet week is normal, not a fault.</div>' +
           (d.note ? '<p class="wo-note">' + esc(d.note) + '</p>' : '');
       return;
     }

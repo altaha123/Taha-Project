@@ -74,7 +74,7 @@ assert.deepEqual(chs.map(c => c.id),
 assert.equal(byId.money.title, 'Your portfolio is worth ₹25,00,000');
 assert.match(byId.money.lede, /On the 11 of your 12 holdings with a buy price/);
 assert.match(byId.biggest.lede, /₹24 of every ₹100/);
-assert.match(byId.biggest.lede, /about \*\*2\.4%\*\* — roughly \*\*₹60,000\*\*/);
+assert.match(byId.biggest.lede, /about \*\*2\.4%\*\*, roughly \*\*₹60,000\*\*/);
 assert.match(byId.biggest.lede, /You set 15% as the most for any one stock; this is 24%/);
 assert.match(byId.sectors.lede, /₹34 of every ₹100\*\* sits in Financial Services/);
 assert.match(byId.spread.lede, /about 8 equal-sized ones/);

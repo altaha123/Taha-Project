@@ -545,7 +545,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:#B5AD9C }
 #view-portfolio .pf-import-options summary, #view-portfolio .pf-manage summary{ cursor:pointer; min-height:44px; padding:10px 0; color:var(--ink-2) }
 #view-portfolio .pf-manage{ border-top:1px solid var(--rule); padding-top:10px }
 #view-portfolio .brun{ display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding-top:8px }
-#view-portfolio #pf_go{ min-height:50px; padding:14px 24px; border-radius:10px; font:600 15px/1.4 Inter,system-ui,sans-serif; letter-spacing:0; text-transform:none; box-shadow:none }
+#view-portfolio #pf_go{ min-height:50px; padding:14px 24px; border-radius:10px; font:600 16px/1.4 Inter,system-ui,sans-serif; letter-spacing:0; text-transform:none; box-shadow:none }
 #view-portfolio :where(button,a,summary,select,textarea):focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
 @media(max-width:780px){
   #view-portfolio > .psec{ padding:18px 14px }
@@ -585,9 +585,9 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pf-stats{ display:grid; grid-template-columns:1.4fr repeat(3,minmax(0,1fr)); gap:14px 22px }
 #view-portfolio .pf-stat{ min-width:0 }
 #view-portfolio .pf-stat > span{ display:block; font:500 11px/1.4 Inter,system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#D9BC6A }
-#view-portfolio .pf-stat b{ display:block; margin-top:4px; font:600 22px/1.15 'IBM Plex Mono',monospace; letter-spacing:-.02em; color:#FBF8F1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-#view-portfolio .pf-stat-main b{ font:400 40px/1 var(--serif,'Instrument Serif',Georgia,serif); letter-spacing:-.01em }
-#view-portfolio .pf-stat small{ display:block; margin-top:4px; font:400 12.5px/1.4 Inter,system-ui,sans-serif; color:#CFC6B2 }
+#view-portfolio .pf-stat b{ display:block; margin-top:4px; font:600 20px/1.15 'IBM Plex Mono',monospace; letter-spacing:-.02em; color:#FBF8F1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+#view-portfolio .pf-stat-main b{ font:400 42px/1 var(--serif,'Instrument Serif',Georgia,serif); letter-spacing:-.01em }
+#view-portfolio .pf-stat small{ display:block; margin-top:4px; font:400 13px/1.4 Inter,system-ui,sans-serif; color:#CFC6B2 }
 #view-portfolio .pf-stat em{ font-style:normal }
 #view-portfolio .pf-board .up{ color:#7BE0A6 } #view-portfolio .pf-board .dn{ color:#FF9F8A }
 #view-portfolio .pf-strip{ display:flex; height:12px; margin-top:16px; border-radius:6px; overflow:hidden; background:#ffffff14; gap:2px }
@@ -599,10 +599,10 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pf-legend .pf-more{ color:#B9AF98 }
 #view-portfolio .pf-boardfoot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid #ffffff1c }
 #view-portfolio .pf-sort{ display:inline-flex; flex-wrap:wrap; gap:4px; padding:3px; border-radius:12px; background:#ffffff12 }
-#view-portfolio .pf-sort button{ min-height:32px; padding:0 12px; border:0; border-radius:9px; background:transparent; color:#E8DFC9; font:500 12.5px/1 Inter,system-ui,sans-serif; cursor:pointer }
+#view-portfolio .pf-sort button{ min-height:32px; padding:0 12px; border:0; border-radius:9px; background:transparent; color:#E8DFC9; font:500 13px/1 Inter,system-ui,sans-serif; cursor:pointer }
 #view-portfolio .pf-sort button[aria-pressed="true"]{ background:#FBF8F1; color:#17140E; font-weight:600 }
 #view-portfolio .pf-sort button:focus-visible{ outline:2px solid #D9BC6A; outline-offset:1px }
-#view-portfolio .pf-src{ font:400 11.5px/1.4 Inter,system-ui,sans-serif; color:#B9AF98 }
+#view-portfolio .pf-src{ font:400 12px/1.4 Inter,system-ui,sans-serif; color:#B9AF98 }
 
 /* One header for every row. */
 #view-portfolio .pfhead,
@@ -621,7 +621,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
   transition:background-color .15s }
 #view-portfolio .pfrow:hover, #view-portfolio .pfrow:focus-within{ background:var(--paper-2) }
 #view-portfolio .pf-av{ grid-area:av; display:grid; place-items:center; width:38px; height:38px; border-radius:12px;
-  color:#fff; font:700 13px/1 Inter,system-ui,sans-serif; letter-spacing:.02em; background:#8a7f69; text-transform:uppercase }
+  color:#fff; font:600 13px/1 Inter,system-ui,sans-serif; letter-spacing:.02em; background:#8a7f69; text-transform:uppercase }
 #view-portfolio .pf-av.empty{ background:transparent; color:var(--gold-dp,#8A6D1E); border:1.5px dashed var(--gold,#A8801C); font-size:18px; font-weight:500 }
 #view-portfolio .pf-field{ display:block; min-width:0; margin:0 }
 #view-portfolio .pf-field-symbol{ grid-area:sym } #view-portfolio .pf-field-qty{ grid-area:qty }
@@ -634,7 +634,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pfrow input{
   display:block; box-sizing:border-box; width:100%; min-width:0; height:38px; margin:0;
   padding:7px 9px; border:1px solid transparent; border-radius:9px;
-  background:transparent; color:var(--ink); font:500 15px/1.3 Inter,system-ui,sans-serif; letter-spacing:0; text-transform:none;
+  background:transparent; color:var(--ink); font:500 16px/1.3 Inter,system-ui,sans-serif; letter-spacing:0; text-transform:none;
   font-variant-numeric:tabular-nums; transition:border-color .15s, background-color .15s;
 }
 #view-portfolio .pfrow:hover input, #view-portfolio .pfrow input:placeholder-shown{ border-color:var(--rule) }
@@ -644,20 +644,20 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pfrow input:focus{ outline:none; border-color:var(--gold); background:var(--paper); box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 22%,transparent) }
 #view-portfolio .pfrow input::placeholder{ color:var(--pf-editor-muted); opacity:.7; font-weight:400 }
 #view-portfolio .pfrow input.bad{ border-color:var(--fail); background:color-mix(in srgb,var(--fail) 7%,transparent) }
-#view-portfolio .pfrow .pf_sym{ height:30px; padding:4px 8px; font:700 15px/1.2 Inter,system-ui,sans-serif; letter-spacing:.01em; text-transform:uppercase }
+#view-portfolio .pfrow .pf_sym{ height:30px; padding:4px 8px; font:600 16px/1.2 Inter,system-ui,sans-serif; letter-spacing:.01em; text-transform:uppercase }
 #view-portfolio .pfrow .pf_date{ font-size:13px; color:var(--ink-2) }
 #view-portfolio .pfrow:not(.has-date):not(:hover):not(:focus-within) .pf_date{ color:transparent }
 #view-portfolio .pfrow:not(.has-date) .pf_date{ color:var(--pf-editor-muted) }
 #view-portfolio .pfrow:not(.has-date):not(:hover):not(:focus-within) .pf_date::-webkit-calendar-picker-indicator{ opacity:.35 }
 #view-portfolio .pf-name{ display:flex; align-items:center; gap:6px; min-width:0; padding:1px 9px 0; font:400 12px/1.35 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
 #view-portfolio .pf-name span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-#view-portfolio .pf-tag{ flex:none; padding:2px 7px; border-radius:99px; font:600 10.5px/1.3 Inter,system-ui,sans-serif; font-style:normal;
+#view-portfolio .pf-tag{ flex:none; padding:2px 7px; border-radius:99px; font:600 11px/1.3 Inter,system-ui,sans-serif; font-style:normal;
   background:var(--paper-2); border:1px solid var(--rule); color:var(--ink-2) }
 #view-portfolio .pf-tag.gold{ background:linear-gradient(135deg,#C9A63E,#A8801C); border-color:transparent; color:#17140E }
 
 /* Worked-out figures. */
 #view-portfolio .pf-live{ min-width:0; text-align:right; font-variant-numeric:tabular-nums }
-#view-portfolio .pf-live b{ display:block; font:600 14.5px/1.3 'IBM Plex Mono',monospace; letter-spacing:-.01em; color:var(--ink); white-space:nowrap }
+#view-portfolio .pf-live b{ display:block; font:600 14px/1.3 'IBM Plex Mono',monospace; letter-spacing:-.01em; color:var(--ink); white-space:nowrap }
 #view-portfolio .pf-live small{ display:block; margin-top:2px; font:500 12px/1.3 Inter,system-ui,sans-serif; color:var(--pf-editor-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 #view-portfolio .pf-live .pf-wait{ color:var(--pf-editor-muted); font-weight:400 }
 #view-portfolio .pf-pl{ display:inline-block !important; padding:1px 7px; border-radius:99px; font-weight:600 !important }
@@ -686,7 +686,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pfacct b{ font:600 14px/1.4 Inter,system-ui,sans-serif; color:var(--ink) }
 #view-portfolio .pfacct span{ font-size:13px; line-height:1.5; color:var(--pf-editor-muted) }
 #view-portfolio .pfacct-av{ display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:50%;
-  background:linear-gradient(135deg,#C9A63E,#97731D); color:#fff !important; font:700 15px/1 Inter,system-ui,sans-serif !important }
+  background:linear-gradient(135deg,#C9A63E,#97731D); color:#fff !important; font:600 16px/1 Inter,system-ui,sans-serif !important }
 #view-portfolio .pfacct-who{ display:flex; flex-direction:column; min-width:0; flex:1 1 260px }
 #view-portfolio .pfacct-opt{ display:inline-flex; align-items:center; gap:9px; min-height:40px; margin:0; font:500 13px/1.3 Inter,system-ui,sans-serif; color:var(--ink); cursor:pointer }
 #view-portfolio .pfacct-switch input{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none }
@@ -735,11 +735,11 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
   #view-portfolio .pf-trend{ display:none }
   #view-portfolio .pf-field-qty .pf-lbl, #view-portfolio .pf-field-buy .pf-lbl{ display:block; margin:0 0 3px 2px; font:500 11px/1.2 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
   #view-portfolio .pfrow input{ height:34px; padding:5px 8px; font-size:16px; border-color:var(--rule); background:var(--paper) }
-  #view-portfolio .pfrow .pf_sym{ height:28px; padding:2px 4px; font-size:14.5px; border-color:transparent; background:transparent }
+  #view-portfolio .pfrow .pf_sym{ height:28px; padding:2px 4px; font-size:14px; border-color:transparent; background:transparent }
   #view-portfolio .pfrow .pf_sym:focus{ border-color:var(--gold); background:var(--paper) }
-  #view-portfolio .pf-name{ padding-left:4px; font-size:11.5px }
+  #view-portfolio .pf-name{ padding-left:4px; font-size:12px }
   #view-portfolio .pf-live b{ font-size:14px }
-  #view-portfolio .pf-live small{ font-size:11.5px }
+  #view-portfolio .pf-live small{ font-size:12px }
   #view-portfolio .pf-pl{ padding:1px 6px; font-size:11px !important }
   #view-portfolio .pf-sep{ display:none }
   #view-portfolio .pfrow:focus-within .pf-field-date, #view-portfolio .pfrow.is-open .pf-field-date, #view-portfolio .pfrow.has-date .pf-field-date{ display:flex; align-items:center; gap:8px }
@@ -751,7 +751,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
   #view-portfolio .pf-board{ padding:16px 14px 12px; border-radius:16px }
   #view-portfolio .pf-stats{ grid-template-columns:1fr 1fr; gap:12px 14px }
   #view-portfolio .pf-stat-main{ grid-column:1/-1 }
-  #view-portfolio .pf-stat-main b{ font-size:36px }
+  #view-portfolio .pf-stat-main b{ font-size:34px }
   #view-portfolio .pf-stat b{ font-size:18px }
   #view-portfolio .pf-boardfoot{ flex-direction:column; align-items:stretch }
   #view-portfolio .pf-sort{ justify-content:space-between }

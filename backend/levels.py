@@ -149,17 +149,17 @@ def compute_levels(df, max_each=3):
 
         why = [f"price reversed here {touches}\u00d7, last on {_fmt_date(dates[last_i])}"]
         if zvol >= 1.3:
-            why.append(f"those reversals ran on {zvol:.1f}\u00d7 average volume \u2014 real money defended this zone")
+            why.append(f"those reversals ran on {zvol:.1f}\u00d7 average volume, so real money defended this zone")
         if flip:
-            why.append("has acted as BOTH support and resistance \u2014 flip zones are the most reliable levels in charting")
+            why.append("has acted as BOTH support and resistance, and flip zones are the most reliable levels in charting")
         if near(level, dma200):
-            why.append(f"sits on the 200-DMA (\u2248{dma200:,.0f}) \u2014 long-term trend line agrees")
+            why.append(f"sits on the 200-DMA (\u2248{dma200:,.0f}), so the long-term trend line agrees")
         elif near(level, dma50):
-            why.append(f"sits on the 50-DMA (\u2248{dma50:,.0f}) \u2014 medium-term trend line agrees")
+            why.append(f"sits on the 50-DMA (\u2248{dma50:,.0f}), so the medium-term trend line agrees")
         if near(level, hi52):
-            why.append("this is the 52-week high \u2014 the ceiling where the last big rally stalled")
+            why.append("this is the 52-week high, the ceiling where the last big rally stalled")
         if near(level, lo52):
-            why.append("this is the 52-week low \u2014 the floor of the entire year")
+            why.append("this is the 52-week low, the floor of the entire year")
 
         zones.append({
             "level": round(level, 2),
@@ -181,14 +181,14 @@ def compute_levels(df, max_each=3):
                       "kind": "resistance", "strength": 55, "touches": 1,
                       "last_touch": _fmt_date(dates[hi52_i]),
                       "distance_pct": round((hi52 - px) / px * 100, 1),
-                      "why": "52-week high \u2014 supply sits where the last rally topped out; "
+                      "why": "52-week high: supply sits where the last rally topped out; "
                              "breakouts above it often accelerate because nobody overhead is stuck at a loss."})
     if not any(near(z["level"], lo52) for z in zones) and (px - lo52) / px <= MAX_DIST and lo52 < px * 0.996:
         zones.append({"level": round(lo52, 2), "zone": [round(lo52, 2), round(lo52, 2)],
                       "kind": "support", "strength": 55, "touches": 1,
                       "last_touch": _fmt_date(dates[lo52_i]),
                       "distance_pct": round((lo52 - px) / px * 100, 1),
-                      "why": "52-week low \u2014 the price the market refused to sell below all year."})
+                      "why": "52-week low: the price the market refused to sell below all year."})
 
     supports = sorted([z for z in zones if z["kind"] == "support"],
                       key=lambda z: -z["strength"])[:max_each]
@@ -207,6 +207,6 @@ def compute_levels(df, max_each=3):
         "resistances": resist,
         "method": ("Swing highs and lows from the last year are clustered into zones (\u00b11.5%), "
                    "then scored on touches, recency, volume at the reversal, and whether the zone "
-                   "flipped roles. Zones agreeing with the 50/200-DMA or 52-week extremes are flagged \u2014 "
+                   "flipped roles. Zones agreeing with the 50/200-DMA or 52-week extremes are flagged, because "
                    "independent methods pointing at one price is what makes a level trustworthy."),
     }

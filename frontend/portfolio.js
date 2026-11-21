@@ -702,7 +702,7 @@
     var legend = segs.slice(0, 6).map(function (f) {
       return '<span><i style="background:' + tone(f.r.symbol) + '"></i>' + esc(f.r.symbol) + ' <b>' + f.weight.toFixed(1) + '%</b></span>';
     }).join('') + (segs.length > 6 ? '<span class="pf-more">+' + (segs.length - 6) + ' more</span>' : '');
-    var sorts = [['', 'As entered'], ['value', 'Biggest'], ['gain', 'Best return'], ['az', 'A–Z']];
+    var sorts = [['', 'As entered'], ['value', 'Biggest'], ['gain', 'Best return'], ['az', 'A-Z']];
 
     host.innerHTML =
       '<div class="pf-stats">' +
@@ -934,9 +934,10 @@
     var bits = ['Loaded ' + state.rows.length + ' holdings'];
     if (sourceLabel) bits.push('from ' + sourceLabel);
     if (over) bits.push('(first ' + MAX_ROWS + ' of ' + parsed.length + ')');
-    if (skipped) bits.push('\u2014 ' + skipped + ' row' + (skipped === 1 ? '' : 's') + ' skipped');
-    if (map && map.buy === undefined) bits.push('\u2014 no cost column found, so profit and loss is unavailable');
-    note(bits.join(' '), state.rows.length ? 'good' : 'warn');
+    var loaded = bits.join(' ');
+    if (skipped) loaded += ', ' + skipped + ' row' + (skipped === 1 ? '' : 's') + ' skipped';
+    if (map && map.buy === undefined) loaded += '. No cost column found, so profit and loss is unavailable';
+    note(loaded, state.rows.length ? 'good' : 'warn');
   }
 
   /* Column mapper — the fallback that makes any broker's file work. */
@@ -951,12 +952,12 @@
 
     panel.innerHTML =
       '<div class="pfmap-head">We could not recognise the columns in that file. ' +
-      'Tell us which is which \u2014 the first few rows are shown below.</div>' +
+      'Tell us which is which. The first few rows are shown below.</div>' +
       '<div class="pfmap-grid">' +
         '<label><span>Symbol</span><select id="map_symbol">' + options + '</select></label>' +
         '<label><span>Quantity</span><select id="map_qty">' + options + '</select></label>' +
         '<label><span>Buy price <i>optional</i></span><select id="map_buy">' +
-          '<option value="">\u2014 none \u2014</option>' + options + '</select></label>' +
+          '<option value="">None</option>' + options + '</select></label>' +
         '<label><span>Header row</span><select id="map_head">' +
           rows.slice(0, 10).map(function (r, i) {
             return '<option value="' + i + '">Row ' + (i + 1) + ': ' +
@@ -987,7 +988,7 @@
       var parsed = rowsFromMap(state.pendingCSV, head, map);
       if (!parsed.length) {
         panel.querySelector('.pfmap-head').textContent =
-          'No usable rows with that mapping \u2014 check the quantity column holds numbers.';
+          'No usable rows with that mapping. Check the quantity column holds numbers.';
         return;
       }
       closeMapper();
@@ -1014,15 +1015,15 @@
       '<div class="pfmap-head">' +
         esc(out.rows.length + ' holding' + (out.rows.length === 1 ? '' : 's') + ' matched. ') +
         esc(out.unresolved.length === 1
-            ? 'This one we could not place — pick the right stock, or leave it out.'
-            : 'These ' + out.unresolved.length + ' we could not place — pick the right stock, or leave them out.') +
+            ? 'This one we could not place. Pick the right stock, or leave it out.'
+            : 'These ' + out.unresolved.length + ' we could not place. Pick the right stock, or leave them out.') +
       '</div>' +
       '<div class="pfmap-grid">' +
         out.unresolved.map(function (u, i) {
           var label = u.row.raw || u.row.symbol;
           return '<label><span>' + esc(label) + '</span>' +
             '<select id="res_' + i + '">' +
-              '<option value="">— leave this one out —</option>' +
+              '<option value="">Leave this one out</option>' +
               u.candidates.map(function (sym) {
                 return '<option value="' + esc(sym) + '">' + esc(sym) + '</option>';
               }).join('') +
@@ -1089,7 +1090,7 @@
     var store = readStore();
     store[name] = { rows: state.rows, saved_at: new Date().toISOString() };
     if (!writeStore(store)) {
-      note('Could not save \u2014 browser storage is full or blocked.', 'warn');
+      note('Could not save: browser storage is full or blocked.', 'warn');
       return;
     }
     state.activeName = name;
@@ -1098,7 +1099,7 @@
       note('Saved as "' + name + '".', 'good');
       serverSave(false);
     } else {
-      note('Saved as "' + name + '". It stays in this browser only \u2014 ' +
+      note('Saved as "' + name + '". It stays in this browser only, so ' +
            'sign in to keep it on your account.', 'good');
       if (window.AltahaTrack) {
         window.AltahaTrack('portfolio_saved',
@@ -1213,7 +1214,7 @@
         if(state.pollErrors < 4 && err.status !== 404) {
           setBusy(true,'Connection interrupted. Retrying; available results remain visible.');
           state.pollTimer=setTimeout(function(){poll(request);},2000*state.pollErrors);
-        } else setBusy(false,esc(err.message)+' — run Analyse portfolio to retry.');
+        } else setBusy(false,esc(String(err.message).replace(/\.$/,''))+'. Run Analyse portfolio to retry.');
       });
   }
 
@@ -1246,7 +1247,7 @@
       out += '<path d="M ' + x1.toFixed(1) + ' ' + y1.toFixed(1) +
              ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2.toFixed(1) + ' ' + y2.toFixed(1) +
              '" fill="none" stroke="' + PALETTE[i % PALETTE.length] + '" ' +
-             'stroke-width="' + thick + '"><title>' + esc(s.sector) + ' \u2014 ' +
+             'stroke-width="' + thick + '"><title>' + esc(s.sector) + ': ' +
              pct(s.weight_pct) + '</title></path>';
       angle = end;
     });
@@ -1354,7 +1355,7 @@
       out += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) +
              '" fill="' + fill + '" fill-opacity="' + (held > 0 ? '.62' : '.28') +
              '" stroke="' + (held > 0 ? 'var(--pf-dot-held)' : 'var(--pf-dot-idle)') +
-             '" stroke-width="1.2"><title>' + esc(s.sector) + ' \u2014 ' + esc(s.state) +
+             '" stroke-width="1.2"><title>' + esc(s.sector) + ': ' + esc(s.state) +
              '. You hold ' + pct(held) + '</title></circle>' +
              '<text x="' + x.toFixed(1) + '" y="' + (y - r - 5).toFixed(1) +
              '" class="pfsvg-sm" text-anchor="middle">' + esc(shortSector(s.sector)) + '</text>';
@@ -1411,7 +1412,7 @@
       var breach = h.weight_pct > policy.max_stock_pct || h.composite < policy.min_composite;
       out += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="6" fill="' +
              (breach ? 'var(--pf-bad)' : 'var(--pf-good)') + '" fill-opacity=".75"><title>' +
-             esc(h.symbol) + ' \u2014 ' + pct(h.weight_pct) + ' of book, score ' +
+             esc(h.symbol) + ': ' + pct(h.weight_pct) + ' of book, score ' +
              h.composite + '</title></circle>' +
              '<text x="' + (x + 9).toFixed(1) + '" y="' + (y + 4).toFixed(1) +
              '" class="pfsvg-sm">' + esc(h.symbol) + '</text>';
@@ -1546,7 +1547,7 @@
 
     var pnlTxt, pnlCls = 'mute';
     if (d.total_pnl === null || d.total_pnl === undefined) {
-      pnlTxt = 'No buy prices entered \u2014 profit and loss unavailable';
+      pnlTxt = 'No buy prices entered. Profit and loss unavailable';
     } else {
       pnlTxt = (d.total_pnl >= 0 ? '+' : '\u2212') + inr(Math.abs(d.total_pnl)) +
                ' (' + (d.total_pnl_pct >= 0 ? '+' : '') + d.total_pnl_pct + '%) against cost ' +
@@ -1603,7 +1604,7 @@
       if (active) {
         html += '<section class="psec"><div class="lh"><h3>Against the index</h3>' +
           '<span>Nifty 500 weights, ' + esc(mom.benchmark_weights_asof || '') + '</span></div>' +
-          '<p class="pfnote">Holding 30% financials is not by itself a bet \u2014 the index ' +
+          '<p class="pfnote">Holding 30% financials is not by itself a bet, because the index ' +
           'already carries roughly that much. This is the difference.</p>' + active + '</section>';
       }
       var quad = chartQuadrant(mom.sectors || []);
@@ -1631,7 +1632,7 @@
     if (contrib) {
       html += '<section class="psec"><div class="lh"><h3>What moved the book</h3>' +
         '<span>Unrealised, in rupees</span></div>' +
-        '<p class="pfnote">In rupees rather than percentages \u2014 a 40% gain on a small ' +
+        '<p class="pfnote">In rupees rather than percentages: a 40% gain on a small ' +
         'position moves less money than a 9% gain on a large one.</p>' + contrib + '</section>';
     }
 
@@ -1768,7 +1769,7 @@
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
       '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-      '<title>Altaha Portfolio Review \u2014 ' + when + '</title>' +
+      '<title>Altaha Portfolio Review, ' + when + '</title>' +
       '<style>' + css + '</style></head><body><div class="wrap">' +
       '<header class="rpt-head">' +
         '<div class="rpt-brand"><img class="rpt-mark" src="' + MARK + '" alt="">' +
@@ -1827,7 +1828,7 @@
   function printReport() {
     if (!state.report) { note('Run an analysis first.', 'warn'); return; }
     var w = window.open('', '_blank');
-    if (!w) { note('Your browser blocked the popup \u2014 allow it and try again.', 'warn'); return; }
+    if (!w) { note('Your browser blocked the popup. Allow it and try again.', 'warn'); return; }
     w.document.write(reportDocument(state.report));
     w.document.close();
     // Let the SVG lay out before the print dialog measures the page.
@@ -1900,7 +1901,7 @@
           ' \u00B7 Technical ' + (r.technical === null ? '\u2014' : r.technical) +
           ' \u00B7 Fundamental ' + (r.fundamental === null ? '\u2014' : r.fundamental) +
           (r.horizon && r.horizon !== '\u2014' ? ' \u00B7 typical hold ' + esc(r.horizon) : '') +
-          ' \u2014 the full ledger is in the Screener</div>' +
+          '. The full ledger is in the Screener</div>' +
         '<div class="pfpeer">' + peers + '</div>' +
       '</div></details>';
   }
@@ -2215,7 +2216,7 @@
         ? 'Your holdings against their scores, sectors and exposures. ' +
           'Press <b>Save</b> to keep this list on your account.'
         : 'Your holdings against their scores, sectors and exposures. Saved in ' +
-          'this browser \u2014 <a href="signin.html">sign in</a> to keep them on your account.';
+          'this browser. <a href="signin.html">Sign in</a> to keep them on your account.';
     }
 
     if (!user) {
@@ -2263,7 +2264,7 @@
       // nothing, which is right and was invisible. Saying it here, before the
       // request, costs a round trip nobody needed.
       if (!collect().length) {
-        say('Add at least one holding first — the email reports on what you hold.', 'warn');
+        say('Add at least one holding first. The email reports on what you hold.', 'warn');
         return;
       }
       btn.disabled = true;
@@ -2278,7 +2279,7 @@
         .then(function (d) {
           if (!d) return;                 // serverSave has already said why
           btn.disabled = false;
-          if (d && d.sent) say('Sent to ' + user.email + ' — subject: "' + d.subject + '".', 'good');
+          if (d && d.sent) say('Sent to ' + user.email + ', subject: "' + d.subject + '".', 'good');
           else say((d && d.detail) || 'Could not send that right now.', 'warn');
         }).catch(function () {
           btn.disabled = false;

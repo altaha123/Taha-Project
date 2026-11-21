@@ -73,7 +73,7 @@ def status() -> dict:
     name, addr = sender()
     return {"provider": provider(), "configured": configured(),
             "from": formataddr((name, addr)),
-            "note": ("Nothing is being delivered — set EMAIL_PROVIDER and its key."
+            "note": ("Nothing is being delivered. Set EMAIL_PROVIDER and its key."
                      if provider() == "console" else
                      "Deliverability depends on SPF/DKIM/DMARC for the sending domain.")}
 
@@ -213,7 +213,7 @@ If the button does not work, paste this into your browser:<br>
 <span style="color:#1a1a1a;word-break:break-all">{link}</span></p>
 <p style="font:400 12px Arial,sans-serif;color:#6b6b6b;margin:22px 0 0;
 border-top:1px solid #e4e2dd;padding-top:16px;line-height:1.6">
-If you did not ask to sign in, you can ignore this email — nothing happens
+If you did not ask to sign in, you can ignore this email. Nothing happens
 until the link is opened, and it stops working shortly.</p>
 </td></tr></table></td></tr></table></body></html>"""
     text = ((f"Your Altaha Screener sign-in code\n\n    {code}\n\n"
@@ -223,6 +223,6 @@ until the link is opened, and it stops working shortly.</p>
              if code else
              f"Your Altaha Screener sign-in link\n\n{link}\n\n"
              f"It works once and expires in {minutes} minutes.\n\n") +
-            "If you did not ask to sign in, ignore this email — nothing "
+            "If you did not ask to sign in, ignore this email. Nothing "
             "happens until it is used.")
     return subject, html, text

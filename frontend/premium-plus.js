@@ -337,7 +337,7 @@
       var go = $('#rgo'); if (go) go.click();
     });
     var tk = $('#tk');
-    if (tk) tk.placeholder = 'Search a company or symbol \u2014 Reliance, HDFC Bank, NVDA\u2026';
+    if (tk) tk.placeholder = 'Search a company or symbol, e.g. Reliance, HDFC Bank, NVDA\u2026';
   }
 
   /* ── 4. RECENT STOCKS ─────────────────────────────────────────────────── */
@@ -443,20 +443,20 @@
      a field of dotted underlines. */
 
   var TERMS = {
-    'RSI': 'Relative Strength Index. Measures how hard price has risen versus fallen over 14 sessions, on a 0\u2013100 scale. Above 70 is often called overbought, below 30 oversold \u2014 but in a strong trend a stock can sit above 70 for months.',
+    'RSI': 'Relative Strength Index. Measures how hard price has risen versus fallen over 14 sessions, on a 0 to 100 scale. Above 70 is often called overbought, below 30 oversold, but in a strong trend a stock can sit above 70 for months.',
     'MACD': 'Moving Average Convergence Divergence. The gap between a fast and a slow average of price. When the gap is widening upward, momentum is building; when it narrows, momentum is fading.',
     'ADX': 'Average Directional Index. Measures how strong a trend is, not which way it points. Below 20 means price is choppy and directionless; above 25 means the trend has real force.',
     'ATR': 'Average True Range. The typical distance a stock travels in a day, in rupees. Used to place a stop beyond ordinary noise rather than at a round number.',
     'VWAP': 'Volume Weighted Average Price. The average price paid today, weighted by how much traded at each level. Institutions measure their fills against it.',
-    'RVOL': 'Relative Volume. Today\u2019s volume compared with what this stock normally trades by this time of day. 3\u00d7 means three times its usual activity \u2014 something is happening.',
+    'RVOL': 'Relative Volume. Today\u2019s volume compared with what this stock normally trades by this time of day. 3\u00d7 means three times its usual activity, so something is happening.',
     'OBV': 'On-Balance Volume. A running total that adds the day\u2019s volume on up days and subtracts it on down days. When it rises with price, buying is genuine; when it falls while price holds, it is not.',
-    'Bollinger': 'Bollinger Bands. A band drawn two standard deviations either side of a 20-day average. When the band narrows sharply, volatility has compressed \u2014 often before a large move.',
+    'Bollinger': 'Bollinger Bands. A band drawn two standard deviations either side of a 20-day average. When the band narrows sharply, volatility has compressed, often before a large move.',
     'Supertrend': 'A band placed a multiple of ATR away from price. Which side price sits on is a simple, mechanical read of trend regime.',
     'ROCE': 'Return on Capital Employed. Operating profit divided by the capital the business runs on. It answers: for every rupee tied up in this company, how much does it earn?',
-    'F-Score': 'Piotroski F-Score. Nine pass/fail accounting tests of profitability, leverage and efficiency, scored 0\u20139. Designed for manufacturers \u2014 several of its tests are meaningless for banks.',
+    'F-Score': 'Piotroski F-Score. Nine pass/fail accounting tests of profitability, leverage and efficiency, scored 0 to 9. Designed for manufacturers, and several of its tests are meaningless for banks.',
     'G-Score': 'Mohanram G-Score. Six tests of earnings quality and growth durability, aimed at separating real growth from growth bought with accounting.',
-    'DMA': 'Daily Moving Average. The average closing price over a number of sessions \u2014 50-DMA over fifty, 200-DMA over two hundred. Used to define trend.',
-    'alpha': 'Return beyond the index over the identical window. A 9% gain while the market did 11% is negative alpha \u2014 the position lost against the alternative of simply owning the index.',
+    'DMA': 'Daily Moving Average. The average closing price over a number of sessions: 50-DMA over fifty, 200-DMA over two hundred. Used to define trend.',
+    'alpha': 'Return beyond the index over the identical window. A 9% gain while the market did 11% is negative alpha. The position lost against the alternative of simply owning the index.',
     'drawdown': 'The worst fall from a peak before any recovery. It measures what you would have had to sit through, which is usually what decides whether a person actually held on.',
     'R:R': 'Risk to reward. The distance to the target divided by the distance to the stop. At 1:2, a strategy is profitable even winning only four times in ten.',
     'liquidity': 'How easily you can buy or sell without moving the price yourself. Thin stocks look tradeable on screen and are not.',
@@ -490,7 +490,7 @@
           var b = el('button', 'vterm', esc(m[1]));
           b.type = 'button';
           b.dataset.term = m[1];
-          b.setAttribute('aria-label', m[1] + ' \u2014 what this means');
+          b.setAttribute('aria-label', m[1] + ': what this means');
           frag.appendChild(b);
           last = m.index + m[1].length;
         }
@@ -558,7 +558,7 @@
         var k = ratio >= 0.99 ? 'h-pass' : ratio <= 0.001 ? 'h-fail' : 'h-part';
         if (k === 'h-pass') pass++; else if (k === 'h-fail') fail++; else part++;
         return '<button type="button" class="hseg ' + k + '" data-i="' + i + '" ' +
-               'title="' + esc(c.name + ' \u2014 ' + c.points + '/' + c.max) + '"></button>';
+               'title="' + esc(c.name + ': ' + c.points + '/' + c.max) + '"></button>';
       }).join('') +
       '<span class="heat-key"><i class="h-pass"></i>' + pass +
       ' <i class="h-part"></i>' + part + ' <i class="h-fail"></i>' + fail + '</span>';
@@ -780,7 +780,7 @@
       '<button type="button" class="act cmp-open">Compare with another stock</button>' +
       '<div class="cmp-panel" hidden>' +
       '  <div class="cmp-bar">' +
-      '    <input class="cmp-input" placeholder="Second stock \u2014 symbol or company" ' +
+      '    <input class="cmp-input" placeholder="Second stock: symbol or company" ' +
       '           autocomplete="off" spellcheck="false" aria-label="Second stock to compare">' +
       '    <button type="button" class="act solid cmp-go">Compare</button>' +
       '    <button type="button" class="act cmp-close">Close</button>' +
@@ -830,7 +830,7 @@
         draw(both[0], both[1]);
       }).catch(function (err) {
         out.innerHTML = '<p class="cmp-msg">Couldn\u2019t score \u201C' + esc(b) +
-          '\u201D \u2014 ' + esc(err.message || 'try again') +
+          '\u201D: ' + esc(err.message || 'try again') +
           '. Check the symbol, or pick one from the suggestions.</p>';
       });
     }
@@ -887,7 +887,7 @@
                 '<span class="cmp-b ' + (r.d < 0 ? 'win' : '') + '">' + r.b + '</span>' +
                 '</div>';
             }).join('') + '</div>'
-          : '<p class="cmp-msg">These two pass and fail the same checks \u2014 the totals differ only by degree.</p>') +
+          : '<p class="cmp-msg">These two pass and fail the same checks. The totals differ only by degree.</p>') +
         '<p class="cmp-note">Both scored at the same moment. A comparison is not a ranking: ' +
         'two businesses in different sectors are measured against thresholds that suit ' +
         'one better than the other.</p>';

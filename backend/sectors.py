@@ -53,7 +53,7 @@ SECTOR_INDEX = {
     "Technology":             {"sym": "^CNXIT",      "name": "Nifty IT"},
     "Financial Services":     {"sym": "^NSEBANK",    "name": "Nifty Bank",
                                "proxy_note": "Bank index used for the whole "
-                                             "financials sleeve — NBFCs and "
+                                             "financials sleeve. NBFCs and "
                                              "insurers move differently."},
     "Healthcare":             {"sym": "^CNXPHARMA",  "name": "Nifty Pharma"},
     "Consumer Defensive":     {"sym": "^CNXFMCG",    "name": "Nifty FMCG"},
@@ -67,7 +67,7 @@ SECTOR_INDEX = {
     "Energy":                 {"sym": "^CNXENERGY",  "name": "Nifty Energy"},
     "Utilities":              {"sym": "^CNXENERGY",  "name": "Nifty Energy",
                                "proxy_note": "No standalone NSE utilities index "
-                                             "on Yahoo — energy used as proxy."},
+                                             "on Yahoo, so energy is used as proxy."},
     "Industrials":            {"sym": "^CNXINFRA",   "name": "Nifty Infrastructure"},
     "Real Estate":            {"sym": "^CNXREALTY",  "name": "Nifty Realty"},
     "Communication Services": {"sym": "^CNXMEDIA",   "name": "Nifty Media",

@@ -357,7 +357,7 @@ def ensure_building(days_back=420):
         return
     rss = _rss_mb()
     if rss is not None and rss > BUILD_RSS_CEILING:
-        _build["error"] = (f"Holding {rss:.0f} MB of 512 — waiting for headroom "
+        _build["error"] = (f"Holding {rss:.0f} MB of 512, so waiting for headroom "
                            "before fetching more. The cache resumes on its own.")
         return
     P = _load_cache()
@@ -646,7 +646,7 @@ def daily_delivery(symbol, days=DAILY_DEFAULT):
         return {"available": False, "symbol": sym, "reason": "building",
                 "building": True, "sessions": have,
                 "message": (st.get("build", {}).get("error")
-                            or f"Reading the exchange delivery record — "
+                            or f"Reading the exchange delivery record: "
                                f"{have} sessions held so far. This fills "
                                f"itself; nothing here needs a retry."),
                 "status": {k: st.get(k) for k in
@@ -665,7 +665,7 @@ def daily_delivery(symbol, days=DAILY_DEFAULT):
                 "covered_symbols": int(dp.shape[1]),
                 "message": (f"No delivery record is held for {sym}. The "
                             f"exchange publishes this for NSE equity-series "
-                            f"stocks only — a US listing has no equivalent — "
+                            f"stocks only (a US listing has no equivalent), "
                             f"and the store carries the {int(dp.shape[1])} "
                             f"symbols that have traded in the sessions held.")}
 
@@ -846,7 +846,7 @@ def rank_universe(limit=BOOK):
         err = st.get("build", {}).get("error")
         return {"available": False, "building": True, "sessions": have,
                 "needed": MIN_SESSIONS,
-                "message": (err or (f"Reading the exchange delivery record — "
+                "message": (err or (f"Reading the exchange delivery record: "
                                     f"{have} of {MIN_SESSIONS} sessions in.")),
                 "status": st}
 
@@ -942,7 +942,7 @@ def rank_universe(limit=BOOK):
                 "persistence was +0.065 over 2015-2020 and -0.001 after. Only "
                 "residual momentum held its sign across both halves, and even "
                 "it is not individually significant. The blend decayed least, "
-                "which is the case for holding five rather than one — it is "
+                "which is the case for holding five rather than one. It is "
                 "not a claim that any of them still works."),
             "honest_note": (
                 "This is measured over one regime on a universe of survivors. "
@@ -1085,7 +1085,7 @@ def delivery_trends(min_turnover_cr=TRENDS_DEFAULT_FLOOR_CR, limit=TRENDS_LIMIT)
         return {"available": False, "building": True, "sessions": have,
                 "needed": TRENDS_MIN_SESSIONS,
                 "message": (st.get("build", {}).get("error")
-                            or f"Reading the exchange delivery record — {have} "
+                            or f"Reading the exchange delivery record: {have} "
                                f"of {TRENDS_MIN_SESSIONS} sessions in. This "
                                f"fills itself; nothing here needs a retry.")}
 
