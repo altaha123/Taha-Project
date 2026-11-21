@@ -145,39 +145,25 @@
       return c ? esc(i.name) + ' by ' + c : '';
     }).filter(Boolean);
 
-    /* The coverage line is not decoration. A portfolio assembled from 300
-       companies out of 2,000 is a sample, and saying which is the difference
-       between a floor and a claim. */
-    var cover = '';
+    /* One line: the 1% floor, the quarterly cadence, and how much of the
+       exchange the ledger has read. A portfolio built from 300 companies out
+       of 2,000 is a sample, and the count is what says so. Never started and
+       part-way through are not the same situation, so "0 read" is not shown
+       for a collector that has not run. */
+    var read = '';
     if (led.companies_read != null) {
-      var of = led.universe ? ' of ' + esc(String(led.universe)) : '';
-      /* Never started and part-way through look identical as a number, and
-         they are not the same situation: "0 of 2309 read so far" reads as
-         though waiting is the answer when in fact nothing has been run. */
-      if (!led.companies_read && led.attempted === 0) {
-        cover = '<p class="iv-cover"><b>The collector has not run yet.</b> ' +
-          'These pages are assembled from a ledger built by reading company ' +
-          'filings one at a time, and nothing has been read into it so far, ' +
-          'so every name below is empty for that reason, not because the ' +
-          'investor holds nothing.</p>';
-      } else {
-        cover = '<p class="iv-cover">Built from <b>' + esc(String(led.companies_read)) +
-          of + '</b> companies read so far' +
-          (led.latest_period ? ', to ' + esc(led.latest_period) : '') +
-          '. The ledger is filled one company at a time, so an investor may hold ' +
-          'something in a company that has not been read yet.' +
-          (led.persistent === false
-            ? ' <b>This instance is not storing the ledger between restarts.</b>'
-            : '') +
-          '</p>';
-      }
+      read = !led.companies_read && led.attempted === 0
+        ? ' · <b>nothing read yet</b>'
+        : ' · <b>' + esc(String(led.companies_read)) +
+          (led.universe ? ' of ' + esc(String(led.universe)) : '') +
+          '</b> companies read so far';
     }
+    var cover = '<p class="iv-cover">Stakes above 1%, from quarterly filings' +
+      (led.latest_period ? ', to ' + esc(led.latest_period) : '') + read +
+      (led.persistent === false ? ' · <b>not stored between restarts</b>' : '') +
+      '</p>';
 
     box.innerHTML =
-      '<p class="iv-lead">Taken from each company&rsquo;s own shareholding filing. ' +
-      'Only stakes above 1% are named in those filings, and they are quarterly. ' +
-      'So every portfolio here is the disclosed floor of what someone ' +
-      'holds, as at a quarter end, not a live position.</p>' +
       cover +
       '<div class="iv-grid">' + cards + '</div>' +
       (credits.length
@@ -267,8 +253,7 @@
           ? '<p class="iv-cover"><b>' + esc(String(cov.companies_read)) +
             '</b> companies read so far' +
             (cov.latest_period ? ', to ' + esc(cov.latest_period) : '') +
-            '. The sweep runs nightly and keeps going until it has read the ' +
-            'whole exchange, so this fills in rather than staying empty.</p>'
+            ' · fills in nightly</p>'
           : '') +
         (d && d.entities && d.entities.length
           ? '<p class="iv-looking">Names being looked for: ' +
@@ -289,11 +274,10 @@
     var head =
       whoHead(d) +
       redirect +
-      '<p class="iv-asof"><b>' + esc(d.period || '') + '</b> filings: ' +
+      '<p class="iv-asof"><b>' + esc(d.period || '') + '</b> · ' +
         esc(String(counted)) + ' disclosed holding' + (counted === 1 ? '' : 's') +
         (d.compared_with ? ', compared with ' + esc(d.compared_with) : '') +
-        '. Stakes below 1% of a company are not named in its filing and do not ' +
-        'appear here.</p>';
+        ' · stakes below 1% are not filed</p>';
 
     var list = d.positions.length
       ? '<ul class="iv-list">' + d.positions.map(positionRow).join('') + '</ul>'
@@ -301,9 +285,7 @@
 
     var gone = (d.no_longer_disclosed || []).length
       ? '<h4 class="iv-h4">No longer disclosed</h4>' +
-        '<p class="iv-sub">Named in ' + esc(d.compared_with || 'the previous quarter') +
-        ' and not in ' + esc(d.period) + '. The stake has fallen below the 1% ' +
-        'threshold or been sold. The filing does not say which.</p>' +
+        '<p class="iv-sub">Fell below 1% or was sold; the filing does not say which.</p>' +
         '<ul class="iv-list is-gone">' +
           d.no_longer_disclosed.map(function (x) {
             return '<li class="iv-pos"><div class="iv-pos-head">' +

@@ -452,7 +452,7 @@ const server = http.createServer((req, res) => {
   await openTab(pageR, 'wow');
   const wr = pageR.locator('#view-wow');
   await wr.locator('.wo-empty.is-loading').waitFor({ state: 'visible' });
-  assert.match(await wr.locator('.wo-empty').innerText(), /first read takes a minute or two/i);
+  assert.match(await wr.locator('.wo-empty').innerText(), /Reading this week.s order filings/i);
   await wr.locator('.wo').first().waitFor({ state: 'visible', timeout: 8000 });
   assert.equal(wowCalls, 2, 'the page should have asked again by itself, once');
   assert.equal(await wr.locator('.wo').count(), 3);
@@ -564,7 +564,7 @@ const server = http.createServer((req, res) => {
   assert.match(await lead.locator('.cc-co').innerText(), /Shiprocket Ltd/);
   assert.match(await lead.locator('.cc-co em.key').innerText(), /key call/i);
   assert.match(await cc3.locator('.cc-group').first().innerText(), /key calls/i);
-  assert.match(await cc3.locator('.cc-groupnote').innerText(), /not the company or its share/i);
+  assert.equal(await cc3.locator('.cc-groupnote').count(), 0, 'no explainer under the group heading');
   assert.match(await lead.locator('.cc-hl').innerText(), /Revenue grew 34%/);
   assert.match(await lead.locator('.cc-why').innerText(), /why it is a key call/i);
   assert.equal(await lead.locator('.cc-full').evaluate(el => el.open), true);

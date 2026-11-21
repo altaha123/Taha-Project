@@ -371,15 +371,11 @@
           : '') +
         (key.length
           ? '<h3 class="cc-group">Key calls</h3>' +
-            '<p class="cc-groupnote">The calls that added the most to what the results filing ' +
-            'already said: new or changed guidance, something announced, or a problem disclosed. ' +
-            'This grades the information in the call, not the company or its share.</p>' +
             key.map(one).join('') +
             (rest.length ? '<h3 class="cc-group">Other calls</h3>' : '')
           : (pinned && rest.length ? '<h3 class="cc-group">Other calls</h3>' : '')) +
         rest.map(one).join('') +
-        (d.disclaimer ? '<p class="cc-src">' + esc(d.disclaimer) + '</p>' : '') +
-        '<p class="cc-src">' + esc(d.source) + '</p>';
+        '<p class="cc-src">' + esc(d.disclaimer || d.source) + '</p>';
     }
     box.innerHTML = html;
     restoreOpen(box, open);

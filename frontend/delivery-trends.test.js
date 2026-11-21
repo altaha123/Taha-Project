@@ -67,8 +67,7 @@ assert.equal(ui.signed(0, 1, '%'), '0.0%'); assert.equal(ui.signed(-2.04, 1, ' p
 assert.match(html, /Where the rupees went this week/);
 assert.ok(html.includes(d.sectors[0].industry.replace(/&/g, '&amp;')));
 assert.match(html, new RegExp(d.market.share_pct.toFixed(1) + '%'));
-assert.match(html, /has a seller as well as a buyer/);
-assert.match(html, /left out because the price shows a split or bonus/);
+assert.match(html, /left out for a split or bonus/);
 assert.doesNotMatch(html, /NaN|undefined|null/);
 
 // ── States that are not a list ────────────────────────────────────────────
@@ -91,9 +90,8 @@ const evil = JSON.parse(JSON.stringify(d));
 evil.views.today.rows[0].symbol = '<img src=x onerror=1>';
 evil.views.today.rows[0].name = '<script>x</script>';
 evil.sectors[0].industry = '<b>Bad</b>';
-evil.caveats = ['<i>c</i>'];
 const safe = ui.render(evil, { view: 'today' });
-assert.doesNotMatch(safe, /<img|<script|<b>Bad|<i>c<\/i>/);
+assert.doesNotMatch(safe, /<img|<script|<b>Bad/);
 assert.match(safe, /&lt;img src=x onerror=1&gt;/);
 
 console.log('delivery-trends: rows carry their arithmetic, a fall reads as a fall, holes draw nothing');

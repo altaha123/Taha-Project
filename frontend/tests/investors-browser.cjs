@@ -166,7 +166,7 @@ async function onTab(page, id) {
   assert.match(await page.locator('.iv-cover').innerText(), /companies read so far/i);
 
   // The caveats are on the page before any portfolio is opened.
-  const lead = await page.locator('.iv-lead').innerText();
+  const lead = await page.locator('#investors-body .iv-cover').first().innerText();
   assert.match(lead, /above 1%/);
   assert.match(lead, /quarter/i);
 
@@ -319,7 +319,7 @@ async function onTab(page, id) {
 
   // ── A company dropping off is never called a sale ────────────────────────
   const gone = page.locator('.iv-list.is-gone');
-  assert.match(await page.locator('.iv-sub').innerText(), /fallen below the 1% threshold or been sold/i);
+  assert.match(await page.locator('.iv-sub').innerText(), /below 1% or was sold/i);
   assert.match(await page.locator('.iv-sub').innerText(), /does not say which/i);
   assert.ok(!/\bsold\b(?!\s*—|\s*&mdash)/i.test(await gone.innerText()),
     'the list itself must not assert a sale');

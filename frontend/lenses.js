@@ -34,8 +34,7 @@
 
   var API = (typeof API_BASE !== 'undefined' && API_BASE)
     ? API_BASE : 'https://taha-project.onrender.com';
-  var NOTICE = 'Lenses are rules-based filters applied to historical financial data. ' +
-               'They are not investment advice or recommendations.';
+  var NOTICE = 'Rules-based filters on past filings. Not investment advice.';
   var REDUCED = false;
   try { REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
 
@@ -145,17 +144,13 @@
   function renderIndex(host, d) {
     var live = d.lenses.filter(function (l) { return l.status === 'live'; }).length;
     var html = '<header class="tabhead ln-head">' +
-      '<p class="ln-kicker">Research · Lenses</p>' +
       '<h2>Stocks screened the way great investors think</h2>' +
-      '<p>Each lens turns a well-known investing philosophy into rules, and applies them to every ' +
-      'NSE company whose filed statements this site has read. A company meets a lens when it ' +
-      'passes every rule that could be judged from its filings.</p>' +
       '<p class="ln-meta">' + esc(plural(d.lenses.length, 'lens', 'lenses')) + ' · ' + live + ' live' +
       (d.run ? ' · computed ' + esc(when(d.run)) + ' over ' +
         esc((d.run.companies || 0).toLocaleString('en-IN')) + ' companies' : ' · not yet computed') +
       '</p>' +
       '<p class="ln-jump"><a href="#research/lenses/' + TOGETHER + '" id="ln-jump">' +
-        'Or see the companies that meet several lenses at once ↓</a></p>' +
+        'Companies that meet several lenses ↓</a></p>' +
       runPanel() + '</header>';
 
     html += '<div class="ln-grid">';
@@ -183,9 +178,7 @@
        on the page, so the cards never wait for it. */
     html += '<section class="ln-together" id="ln-together" aria-labelledby="ln-together-h">' +
       '<header class="ln-together-head"><p class="ln-kicker">Where the lenses agree</p>' +
-      '<h3 id="ln-together-h">Companies that meet several lenses at once</h3>' +
-      '<p>Each lens reads the same filings through a different philosophy, so a company that ' +
-      'clears several has passed several independent sets of rules.</p></header>' +
+      '<h3 id="ln-together-h">Companies that meet several lenses at once</h3></header>' +
       '<div id="convergence-body"></div></section>';
     html += footer();
     host.innerHTML = html;

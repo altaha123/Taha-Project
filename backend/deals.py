@@ -430,13 +430,6 @@ def board(min_value_cr=1.0, limit=40):
         "total_symbols": len(nets),
         "short_sold": sorted({r["symbol"] for r in shorts}),
         "min_value_cr": min_value_cr,
-        "timing": ("Block deals are published within minutes of their window "
-                   "(08:45 to 09:00 and 14:05 to 14:20). Bulk deals are reported by the "
-                   "broker through the day and are complete only after the close. "
-                   "This is a disclosure record, not a live trade feed. There is "
-                   "no such thing as a real-time bulk deal."),
-        "caveat": ("A bulk deal says who traded, not whether they were right. In "
-                   "small caps it is as often an operator distributing stock as an "
-                   "investor building a position, and the exchange record cannot "
-                   "tell you which. Nothing here scores a stock."),
+        "caveat": ("Disclosed after the trade, not live. Shows who traded, "
+                   "not whether they were right."),
     }

@@ -98,7 +98,6 @@
 .dt-more > summary{ cursor:pointer; padding:11px 2px; border-top:1px solid var(--rule-2); font-size:13px; color:var(--gold-dp) }
 .dt-secnote{ margin:12px 0 0; max-width:74ch; font-size:12px; line-height:1.55; color:var(--mute) }
 
-.dt-notes{ margin-top:34px }
 .dt-disc{ margin:18px 0 0; font-size:12px; line-height:1.6; color:var(--mute) }
 
 /* The one-year ranking, kept and folded away. */

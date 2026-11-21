@@ -378,7 +378,6 @@
   letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
 }
 .cc-counts + .cc-group{ margin-top:4px }
-.cc-groupnote{ margin:0 0 14px; font-size:13px; line-height:1.6; color:var(--mute); max-width:74ch }
 .cc-group + .cc{ margin-top:12px }
 
 .cc.is-key{ border-color:var(--gold) }
@@ -443,11 +442,6 @@
    the caveats sit in the header of the portfolio rather than in a footnote
    nobody reaches. */
 
-.iv-lead{
-  margin:0 0 10px; font-family:'Instrument Serif',Georgia,serif;
-  font-size:20px; line-height:1.5; letter-spacing:-.01em; max-width:64ch;
-  color:var(--ink);
-}
 .iv-cover{
   margin:0 0 20px; font-size:13px; line-height:1.6; color:var(--mute);
   max-width:74ch;

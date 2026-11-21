@@ -112,12 +112,11 @@ async function openTab(page, id) {
   // ── COVERAGE IS PART OF THE ANSWER ───────────────────────────────────────
   const cover = await page.locator('.iv-cover').first().innerText();
   assert.match(cover, new RegExp(String(directory.read) + '\\b'));
-  assert.match(cover, /53 fund houses AMFI lists/);
-  assert.match(cover, /has not been read/i,
-    'an absent fund house must be absent because it was not read, not because it holds nothing');
-  // The lag, before any portfolio is opened.
-  assert.match(await page.locator('#funds-body').innerText(), /six weeks/i);
-  assert.match(await page.locator('.iv-lead').innerText(), /No 1% floor/i);
+  assert.match(cover, /of 53 fund houses read so far/i,
+    'an absent fund house must read as not yet read, not as holding nothing');
+  // The lag, and that this is the whole book, before any portfolio is opened.
+  assert.match(cover, /six weeks/i);
+  assert.match(cover, /full holdings/i);
 
   // ── One fund house ───────────────────────────────────────────────────────
   await page.locator('.iv-card').first().click();
@@ -161,8 +160,7 @@ async function openTab(page, id) {
   const other = page.locator('.iv-list.is-gone');
   assert.equal(await other.locator('.iv-pos').count(), 1);
   assert.match(await other.innerText(), /Gold ETF/);
-  assert.match(await page.locator('.iv-sub').innerText(), /reconciled/i);
-  assert.match(await page.locator('.iv-sub').innerText(), /rather than dropped/i);
+  assert.match(await page.locator('.iv-sub').innerText(), /reconcile/i);
 
   // ── The pack it came from is one click away ──────────────────────────────
   assert.ok(await page.locator('.iv-asof a[href*="barodabnpparibasmf"]').count() >= 1);

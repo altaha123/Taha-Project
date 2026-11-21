@@ -131,15 +131,13 @@
     var rows = d.symbols || [];
     el.innerHTML =
       '<div class="dl-hdr"><h3>Who traded size today</h3>' +
-        "<span>Bulk and block deals disclosed to the exchange" +
-        (d.as_on ? ", " + esc(d.as_on) : "") + "</span></div>" +
+        (d.as_on ? "<span>" + esc(d.as_on) + "</span>" : "") + "</div>" +
       '<div class="dl-counts">' +
         '<span><b>' + (c.bulk || 0) + "</b>bulk</span>" +
         '<span><b>' + (c.block || 0) + "</b>block</span>" +
         '<span><b>' + (c.short || 0) + "</b>short-sell</span>" +
         '<span><b>' + (d.total_symbols || 0) + "</b>stocks</span>" +
       "</div>" +
-      '<p class="dl-timing">' + esc(d.timing || "") + "</p>" +
       (rows.length
         ? '<div class="dl-rows">' + rows.map(symbolRow).join("") + "</div>"
         : '<div class="dl-load">Nothing above the size filter today.</div>') +
