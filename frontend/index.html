@@ -1159,6 +1159,69 @@
   document.documentElement.setAttribute('data-theme', s || (d?'dark':'light'));
 }catch(e){}})();
 </script>
+<!-- BOOT COVER
+     This file's own markup is the first design of the site: a centred
+     masthead and a pill of tabs. The page a reader is meant to see is built
+     over it by some sixty deferred scripts, each of which runs the moment it
+     arrives - nav.js redraws the menu, shell.js adds the header, doors.js
+     swaps the banner for Market. On anything but a fast line those arrive
+     seconds apart, and every step in between was painted: three pages that
+     no longer exist, shown one after another before the real one.
+     So the half-built page stays under a cover until it is finished. The
+     class is set by script, so a reader without JavaScript - for whom the
+     markup below is the whole page - never gets a cover at all. -->
+<style>
+  #sh-bootcover{display:none}
+  html.sh-boot #sh-bootcover{display:flex;position:fixed;inset:0;z-index:2147483000;
+    flex-direction:column;align-items:center;justify-content:center;gap:22px;
+    background:var(--paper);color:var(--ink);
+    /* If the script below never runs to the end, the page still appears. */
+    animation:shBootGone 0s linear 20s forwards}
+  #sh-bootcover .brand{margin:0;font-size:clamp(30px,5vw,42px)}
+  #sh-bootcover .sh-bootline{width:132px;height:2px;border-radius:2px;overflow:hidden;background:var(--rule)}
+  #sh-bootcover .sh-bootline i{display:block;width:40%;height:100%;border-radius:2px;background:var(--gold);
+    animation:shBootRun 1.15s ease-in-out infinite alternate}
+  @keyframes shBootRun{from{transform:translateX(-20%)}to{transform:translateX(170%)}}
+  @keyframes shBootGone{to{visibility:hidden}}
+  @media (prefers-reduced-motion:reduce){#sh-bootcover .sh-bootline i{animation:none;width:100%;opacity:.55}}
+</style>
+<script>
+(function(){
+  var root=document.documentElement, done=false;
+  root.classList.add('sh-boot');
+  function reveal(){
+    if(done)return; done=true;
+    root.classList.remove('sh-boot');
+    var c=document.getElementById('sh-bootcover');
+    if(c&&c.parentNode)c.parentNode.removeChild(c);
+  }
+  /* A door view (Market, Ideas, Portfolio) is drawn by doors.js a moment
+     after the scripts have run, and until it is, the old banner is still
+     standing where Market will be. Wait for that last step, briefly. */
+  function pending(){
+    if(!document.body||!document.body.classList.contains('sh-on'))return true;
+    return ['today','ideahub','money'].some(function(w){
+      var v=document.getElementById('view-'+w);
+      return v&&v.style.display!=='none'&&!v.firstChild;
+    });
+  }
+  function settle(){
+    var until=Date.now()+1500;
+    (function wait(){
+      if(done)return;
+      if(pending()&&Date.now()<until){setTimeout(wait,40);return;}
+      (window.requestAnimationFrame||setTimeout)(reveal);
+      setTimeout(reveal,120);   // rAF does not fire in a background tab
+    })();
+  }
+  /* DOMContentLoaded comes after every deferred script has run. */
+  document.addEventListener('DOMContentLoaded',settle);
+  window.addEventListener('load',function(){setTimeout(reveal,300);});
+  window.addEventListener('pageshow',function(e){if(e.persisted)reveal();});
+  setTimeout(reveal,15000);
+  window.AltahaBoot={reveal:reveal};
+})();
+</script>
 <link rel="stylesheet" href="universe-scan.css?v=20261120-seo">
 <link rel="stylesheet" href="lenses.css?v=20261120-market">
 <link rel="stylesheet" href="query.css?v=20261120-two">
@@ -1174,6 +1237,10 @@
 <script src="universe-scan.js?v=20261120-seo"></script>
 </head>
 <body>
+<div id="sh-bootcover" aria-hidden="true">
+  <div class="brand"><span class="brandmark"></span><span>Altaha <i>Screener</i></span></div>
+  <div class="sh-bootline"><i></i></div>
+</div>
 
 <div class="tickerbar">
   <div class="tickerinner">

@@ -202,6 +202,11 @@ jobs:
         with:
           name: results-calendar-verification
           path: test-results/results-calendar
+      - name: Verify only the finished homepage is ever shown while it loads
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/boot-cover-browser.cjs
       - name: Verify homepage visuals, motion and accessibility
         if: always()
         env:
