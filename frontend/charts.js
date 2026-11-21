@@ -1,4 +1,4 @@
-/* Altaha Screener — full drawing chart plus the label/Tick fix. */
+/* Altaha Screener: loads the Charts workspace, and wraps the charting library. */
 (function () {
   "use strict";
 
@@ -86,6 +86,15 @@
 
   window.AltahaChartTap = {
     get: function () { return tap; },
+    /* The workspace hands over its chart itself, whatever the chart type: a
+       line or bar chart has no candlestick series for the wrap below to see. */
+    publish: function (chart, series, container, rows) {
+      tap.chart = chart; tap.series = series;
+      tap.container = (container && container.nodeType === 1) ? container : null;
+      tap.rows = Array.isArray(rows) ? rows : [];
+      tap.times = tap.rows.map(function (r) { return r && r.time; });
+      announce();
+    },
     ready: function () { return !!(tap.chart && tap.series && tap.times.length); },
     /* Called on every setData and on first attach. A subscriber that throws
        must not take the others down with it, hence the try above. */
@@ -289,16 +298,17 @@
     view.insertBefore(d, view.firstChild);
   }
 
-  var N = 15;
+  /* The workspace is two ordinary scripts: the arithmetic, then the
+     workspace that uses it. It used to be fifteen string fragments joined and
+     eval'd, which no stack trace, linter or reader could make sense of. */
+  var FILES = ["charts-math.js?v=20261121-tv", "charts-workspace.js?v=20261121-tv"];
   var i = 0;
   function next() {
-    if (i >= N) {
-      var src = (window.__ALTAHA_CHARTS_PARTS || []).join("");
-      window.__ALTAHA_CHARTS_PARTS = null;
-      try { (0, eval)(src); } catch (e) { console.error("Altaha chart failed to load", e); }
+    if (i >= FILES.length) {
       showChartsInMenu();
       setTimeout(showChartsInMenu, 400);
       setTimeout(showChartsInMenu, 1200);
+      try { seedFromQuery(); } catch (e) {}
       // The workspace is mounted either way; the library decides whether a
       // chart can be drawn inside it.
       ensureLibrary(function (ok) {
@@ -307,12 +317,11 @@
       });
       return;
     }
-    i += 1;
     var s = document.createElement("script");
-    var n = i < 10 ? "0" + i : String(i);
-    s.src = "charts.p" + n + ".js";
+    var name = FILES[i++];
+    s.src = name;
     s.onload = next;
-    s.onerror = function () { console.error("Missing chart piece " + n); next(); };
+    s.onerror = function () { console.error("[altaha-charts] missing " + name); next(); };
     document.head.appendChild(s);
   }
   next();

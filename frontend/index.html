@@ -4941,10 +4941,11 @@ if(fcSymParam){
       setTimeout(function(){
         if (typeof getResults === "function") getResults(q);
       }, 220);
-    } else if (q && (go === "concalls" || go === "wow")) {
-      /* A shared concall or order card links here. concalls.js and wow.js
-         read the symbol and bring that call or order into view; analysing the
-         stock instead would carry the reader off what they were sent. */
+    } else if (q && (go === "concalls" || go === "wow" || go === "charts")) {
+      /* A shared concall, order or chart card links here. concalls.js,
+         wow.js and charts.js read the symbol and bring that call, order or
+         chart into view; analysing the stock instead would carry the reader
+         off to the stock page, away from what they were sent. */
     } else if (q) {
       var tk = document.getElementById("tk"), btn = document.getElementById("go");
       if (tk && btn) {

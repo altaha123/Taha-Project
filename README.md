@@ -277,6 +277,43 @@ forecast, and the page says so.
 
 ---
 
+## Charts: a charting workspace
+
+`#research/charts` (also `/?charts=RELIANCE`, and the `/share/chart/SYM` links)
+is a full charting workspace on lightweight-charts 4.1.3. `frontend/charts.js`
+loads two files: `charts-math.js`, every indicator and candle transform with no
+DOM (tested by `charts-math.test.js` against pandas and `backend/engine.py`),
+and `charts-workspace.js`, which builds the tab. They replace fifteen string
+fragments that were joined and eval'd.
+
+- **Timeframes** 1m to 1M. 3m, 30m, 2H and 1M are folded in the browser from the
+  sizes `/chart` serves, never across a session close. Daily asks for `5Y`, so a
+  reader can scroll back through all the history there is.
+- **Chart types**: candles, hollow candles, Heikin Ashi, bars, line, step line,
+  area, baseline.
+- **Indicators**: forty-odd, any number of each, every input and colour
+  editable, oscillators each in a pane of their own that can be resized. The
+  catalogue is `INDICATORS` in `charts-math.js`: one entry says what an
+  indicator is called, what it is tuned by and how it is drawn.
+- **Drawing tools**: forty-four in seven flyouts on the rail (lines, channels
+  and pitchforks, Fibonacci and Gann, chart patterns, forecast and measure,
+  shapes, text and marks), with a weak or strong magnet, keep-drawing, lock
+  all and hide all. Any drawing can be moved, reshaped, recoloured, restyled,
+  extended, given text, locked, hidden, cloned, copied to another symbol, put
+  in front or behind, and undone or redone. Drawings are anchored to time and
+  price, so they hold across timeframes, and are kept per symbol in
+  `localStorage` (`altaha.charts.v1.SYMBOL`, the key the old workspace used).
+- **Also**: full screen (a fixed layer where the browser has no Fullscreen
+  API, as on an iPhone), an object tree and data window, compare up to four
+  symbols on a percent scale, log, percent and inverted scales, bar replay,
+  price alerts on any horizontal line (a toast, and a browser notification if
+  allowed), go to a date, range presets, a right-click menu, keyboard
+  shortcuts (`?` lists them), and an image to download or copy.
+
+`window.AltahaCharts.state()` reports what is on screen, for tests and for
+anyone driving the chart from code. `frontend/tests/charts-browser.cjs` places
+every tool and runs the rest on desktop and on a phone.
+
 ## Strategy lab — would a trading rule have beaten holding?
 
 `#research/strategies` (`backend/strategy_lab.py`, `/strategies`,

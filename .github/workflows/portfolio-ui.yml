@@ -48,7 +48,7 @@ jobs:
       - name: Install test dependencies
         run: |
           pip install numpy pandas
-          npm install --prefix /tmp/portfolio-browser playwright@1.58.2
+          npm install --prefix /tmp/portfolio-browser playwright@1.58.2 lightweight-charts@4.1.3
           /tmp/portfolio-browser/node_modules/.bin/playwright install --with-deps chromium
       - name: Build synthetic portfolio fixtures
         run: python backend/tests/portfolio_fixture.py /tmp/portfolio-fixtures
@@ -144,6 +144,21 @@ jobs:
         with:
           name: calls-watchlists-verification
           path: test-results/calls-watchlists
+      - name: Verify the Charts tab draws with every tool, keeps panes and drawings in step, and fits a phone
+        if: always()
+        # Forty-four drawing tools, forty-odd indicators, replay, full screen
+        # and a share link, on the real charting library (the version the page
+        # loads). A tool that never commits, a pane that hides the drawings
+        # above it, a text box that loses the first keys typed: none of them
+        # throws, so each is done here the way a reader does it.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/charts-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: charts-verification
+          path: test-results/charts
       - name: Verify the Strategy lab sorts, compares, sizes and fits a phone
         if: always()
         # A table sorted on the wrong column, a compare tick that draws no
