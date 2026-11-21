@@ -2157,11 +2157,14 @@
     if (!box.clientWidth || !box.clientHeight) return false;
     W.chart = LW.createChart(box, Object.assign({ width: box.clientWidth, height: box.clientHeight }, theme(false)));
     hookChart(W.chart, null);
+    if (W.watching) return true;
+    W.watching = true;
     new ResizeObserver(function () {
       if (!W.chart) return;
       W.chart.applyOptions({ width: box.clientWidth, height: box.clientHeight });
       render();
     }).observe(box);
+    setInterval(watchdog, 1500);
     /* A vertical drag on the price scale changes no logical range, so the
        drawings would lag the candles. A cheap signature check catches it
        without a permanent animation loop. */
@@ -2173,6 +2176,102 @@
     }, 120);
     return true;
   }
+
+  /* ── never a blank chart ────────────────────────────────────────────────
+     A chart with candles loaded must show them. Every second and a half the
+     workspace checks that it does: a visible range, a price scale that can
+     place the last close, the library's own element in place, and ink on
+     the plot. Two failed checks in a row and the chart is rebuilt from the
+     candles it already holds, drawings and indicators kept, and the failure
+     is reported so it can be found and fixed rather than lived with. */
+  /* Ink on the plot: pixels that differ from the background, over every
+     canvas the size of the plot (the library paints candles on one and the
+     crosshair on a transparent one above it). */
+  function plotInk() {
+    var list = [], area = 0;
+    box.querySelectorAll("canvas").forEach(function (c) {
+      if (c === cv || c.classList.contains("cw-patov") || !c.width || !c.height) return;
+      var a = c.width * c.height;
+      if (a > area * 1.01) { area = a; list = [c]; } else if (a >= area * 0.99) list.push(c);
+    });
+    if (!list.length) return 0;
+    var bg = tok("--surface", "#ffffff"), m = /^#?([0-9a-f]{6})$/i.exec(bg), n = 0;
+    var br = m ? parseInt(m[1], 16) >> 16 : 255, bgc = m ? (parseInt(m[1], 16) >> 8) & 255 : 255, bb = m ? parseInt(m[1], 16) & 255 : 255;
+    list.forEach(function (c) {
+      var x = c.getContext("2d"); if (!x) { n++; return; }
+      var d = x.getImageData(0, 0, c.width, c.height).data;
+      for (var i = 0; i < d.length; i += 4 * 37) {
+        if (d[i + 3] < 40) continue;
+        if (Math.abs(d[i] - br) + Math.abs(d[i + 1] - bgc) + Math.abs(d[i + 2] - bb) > 40) n++;
+      }
+    });
+    return n;
+  }
+  function blankReason() {
+    if (!W.chart || !W.main) return "no chart";
+    var n = W.disp.length, g = geo();
+    if (!g) return "no visible range";
+    if (g.to < 0 || g.from > n - 1) return "scrolled off the data";
+    if (W.main.priceToCoordinate(W.disp[n - 1].close) == null) return "price scale lost";
+    if (!box.querySelector("table")) return "chart element missing";
+    /* Only while the price scale fits itself: a reader who dragged the
+       scale until the candles left the screen did that on purpose. */
+    var auto = true;
+    try { auto = W.chart.priceScale("right").options().autoScale; } catch (e) {}
+    if (auto && plotInk() === 0) return "nothing painted";
+    return null;
+  }
+  function watchdog() {
+    if (!W.raw.length || !visible() || msgEl.classList.contains("on") || document.visibilityState !== "visible") { W.blank = 0; return; }
+    var why;
+    try { why = blankReason(); } catch (e) { why = "check failed: " + (e && e.message); }
+    W.blank = why ? (W.blank || 0) + 1 : 0;
+    if (W.blank < 2) return;
+    W.blank = 0;
+    if (why === "scrolled off the data") { resetView(); return; }
+    report(new Error("Chart went blank: " + why));
+    restoreChart();
+    toast("The chart had gone blank, so it was redrawn. Your drawings and indicators are kept.", 6000);
+  }
+  /* Rebuilt from scratch: new library charts, the same candles, layout and
+     drawings. */
+  function restoreChart() {
+    W.panes.forEach(function (p) { try { p.chart.remove(); } catch (e) {} try { p.el.remove(); } catch (e) {} });
+    W.panes = []; W.paneSig = "";
+    try { if (W.chart) W.chart.remove(); } catch (e) {}
+    W.chart = null; W.main = null; W.space = null; W.vol = null; W.all = []; W.levelLines = []; W.seriesSig = "";
+    Array.prototype.slice.call(box.children).forEach(function (el) {
+      if (el.tagName === "DIV" && el.querySelector && el.querySelector("table")) el.remove();
+    });
+    faultOff();
+    if (!ensure()) return;
+    rebuild(true);
+    resetView();
+  }
+  function report(err) {
+    var ctxt = { sym: W.sym, tf: L.tf, type: L.type, bars: W.disp.length, mode: W.mode, tool: W.tool,
+                 studies: L.studies.map(function (x) { return x.id; }).join(","), drawings: W.drawings.length, full: isFull() };
+    if (window.console) console.error("[altaha-charts]", err, ctxt);
+    try { if (window.Sentry && window.Sentry.captureException) window.Sentry.captureException(err, { tags: { area: "charts" }, extra: ctxt }); } catch (e) {}
+  }
+  /* An error the chart did not catch is shown on the chart, with a way back. */
+  function fault(err) {
+    var el = $("cw-fault");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "cw-fault"; el.className = "cw-fault"; el.setAttribute("role", "alert");
+      box.appendChild(el);
+      el.addEventListener("click", function (e) { if (e.target.closest("[data-restore]")) restoreChart(); });
+    }
+    el.innerHTML = "<span>The chart ran into an error: " + esc(String(err && err.message || err).slice(0, 160)) +
+      "</span><button type='button' class='cw-btn primary' data-restore='1'>Restore chart</button>";
+    el.classList.add("on");
+  }
+  function faultOff() { var el = $("cw-fault"); if (el) el.classList.remove("on"); }
+  window.addEventListener("error", function (ev) {
+    var where = String((ev && ev.filename) || "") + " " + String((ev && ev.error && ev.error.stack) || "");
+    if (/charts-workspace|charts-math|lightweight-charts/.test(where) && visible()) fault(ev.error || ev.message);
+  });
 
   function charts() { return [W.chart].concat(W.panes.map(function (p) { return p.chart; })).filter(Boolean); }
 
@@ -3378,7 +3477,7 @@
   function safe(fn) {
     return function (e) {
       try { fn(e); } catch (err) {
-        if (window.console) console.error("[altaha-charts]", err);
+        report(err);
         W.dragging = null;
         toast("Something went wrong while drawing (" + (err && err.message || err) + "). Press Esc and try again.", 9000);
       }
@@ -3470,6 +3569,9 @@
                mode: W.mode, tool: W.tool, full: isFull(), compares: W.cmp.map(function (c) { return c.sym; }) };
     },
     drawings: function () { return clone(W.drawings); },
+    /* For tests: what the watchdog would say now, and a forced rebuild. */
+    health: function () { try { return blankReason(); } catch (e) { return "check failed"; } },
+    restore: function () { restoreChart(); },
     tools: function () { return Object.keys(T); }
   };
   window.AltahaCharts = WS;

@@ -219,6 +219,26 @@ const POINTS = { trend: 2, ray: 2, xline: 2, infoline: 2, arrowline: 2, angle: 2
       await context.close();
     }
 
+    /* ── Never a blank chart: the watchdog stays quiet on a healthy chart,
+       and a chart whose library element is torn out is rebuilt, drawings
+       kept. ── */
+    {
+      const { context, page, errors } = await open(browser, base + '/#research/charts');
+      await ready(page);
+      await page.keyboard.press('Alt+KeyH');
+      const box = await page.locator('#cw-price').boundingBox();
+      await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.4);
+      await page.waitForTimeout(3600);
+      assert.equal(await page.evaluate(() => AltahaCharts.health()), null, 'a healthy chart reads healthy');
+      assert.equal(await page.isVisible('.cw-toast.on'), false, 'and nothing was redrawn behind the reader');
+      await page.evaluate(() => { const t = document.querySelector('#cw-price table'); t.closest('div').remove(); });
+      await page.waitForFunction(() => AltahaCharts.health() === null && document.querySelector('#cw-price table'), null, { timeout: 8000 });
+      assert.equal((await state(page)).drawings, 1, 'drawings survive the rebuild');
+      assert.match(await page.locator('.cw-toast').innerText(), /redrawn/);
+      assert.deepEqual(errors, [], 'watchdog: no page errors');
+      await context.close();
+    }
+
     /* ── A share link, old drawings, and editing ── */
     {
       const { context, page, errors } = await open(browser, base + '/?q=TCS&go=charts&range=1W', {});
