@@ -176,9 +176,10 @@ async function clean(page, label) {
       const page = await ctx.newPage();
       watch(page, 'landing');
       await page.goto(`${base}/wealth.html`);
-      await page.waitForSelector('.wd-land');
-      assert.equal(await page.getAttribute('.wd-land a[href^="signin.html"]', 'href'), 'signin.html?next=wealth.html');
-      assert.ok(await page.$('a[href="wealth.html?demo=1"]'), 'the sample desk is offered');
+      // Signed out, the desk is behind the sign-in card (gate.js).
+      await page.waitForSelector('#altaha-gate .ag-go');
+      assert.equal(await page.getAttribute('#ag-go', 'href'), 'signin.html?next=wealth.html');
+      assert.equal(await page.isVisible('#wd'), false, 'the desk is hidden signed out');
       await page.screenshot({ path: `${output}/landing.png` });
       await ctx.close();
     }
@@ -186,7 +187,7 @@ async function clean(page, label) {
     // ── The sample desk ────────────────────────────────────────────────
     {
       const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
-      const state = fresh();
+      const state = fresh({ user: { email: 'guest@example.com' } });
       await wire(ctx, state);
       const page = await ctx.newPage();
       watch(page, 'demo');
@@ -742,7 +743,7 @@ async function clean(page, label) {
     // ── A phone ────────────────────────────────────────────────────────
     {
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-      const state = fresh();
+      const state = fresh({ user: { email: 'guest@example.com' } });
       await wire(ctx, state);
       const page = await ctx.newPage();
       watch(page, 'phone');
@@ -765,7 +766,7 @@ async function clean(page, label) {
     // ── Motion off: nothing left invisible ─────────────────────────────
     {
       const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
-      const state = fresh();
+      const state = fresh({ user: { email: 'guest@example.com' } });
       await wire(ctx, state);
       const page = await ctx.newPage();
       await page.goto(`${base}/wealth.html?demo=1`);

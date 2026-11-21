@@ -87,6 +87,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/advisors-browser.cjs
+      - name: Verify the member tools ask for sign-in and open once signed in
+        if: always()
+        # Alerts, Big trades, Delivery trends, Investor styles, Who owns what,
+        # Fund houses, the Strategy lab, the adviser page and the wealth desk
+        # show a sign-in card signed out, come back to the same tool after
+        # sign-in, and stay open signed in. Ungated tools stay open.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/gate-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

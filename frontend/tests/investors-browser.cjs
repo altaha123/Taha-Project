@@ -99,6 +99,8 @@ async function onTab(page, id) {
     executablePath: process.env.CHROMIUM_PATH || undefined,
   });
   const context = await browser.newContext({ viewport: { width: 1280, height: 1000 } });
+  // Member tools (gate.js) open for a signed-in reader.
+  await context.addInitScript(() => localStorage.setItem('altaha-session-v1', 'tok-test'));
   const page = await context.newPage(), errors = [];
   let directoryCalls = 0;
   page.on('pageerror', e => errors.push(String(e && (e.stack || e.message || e))));

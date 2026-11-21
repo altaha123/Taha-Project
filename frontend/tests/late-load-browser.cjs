@@ -70,6 +70,8 @@ function picture(){
   const browser=await chromium.launch({headless:true,executablePath:process.env.ALTAHA_CHROMIUM||process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox','--disable-dev-shm-usage']});
   async function open(url,options,more){
     const context=await browser.newContext(Object.assign({viewport:{width:1280,height:800},reducedMotion:'reduce'},options||{}));
+    // Big trades and friends are member tools (gate.js); open them signed in.
+    await context.addInitScript(()=>localStorage.setItem('altaha-session-v1','tok-test'));
     const page=await context.newPage(), errors=[], asked=[];
     page.on('pageerror',e=>errors.push(e.message));
     page.on('request',r=>{const u=new URL(r.url());asked.push(u.origin===origin?u.pathname:u.href);});

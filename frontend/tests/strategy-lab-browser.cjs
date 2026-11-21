@@ -41,6 +41,8 @@ const server = http.createServer((req, res) => {
 
   async function context(width) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 }, hasTouch: width < 600 });
+    // Member tools (gate.js) open for a signed-in reader.
+    await ctx.addInitScript(() => localStorage.setItem('altaha-session-v1', 'tok-test'));
     await ctx.addInitScript(() => { localStorage.setItem('altaha-guide-dismissed', '1'); });
     await ctx.route('**/*', route => {
       const u = new URL(route.request().url());
