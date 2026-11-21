@@ -185,10 +185,24 @@ async function noSideways(page, label) {
   const errors = [];
   const watch = page => page.on('pageerror', e => errors.push(String(e.stack || e)));
 
-  // ── The directory, signed out ──────────────────────────────────────────
+  // ── Signed out, the page is a sign-in card (gate.js) that comes back here ─
   {
-    const state = fresh();
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await wire(context, fresh());
+    const page = await context.newPage(); watch(page);
+    await page.goto(base + '/advisors.html#a/asha-rao', { waitUntil: 'load' });
+    await page.locator('#altaha-gate .ag-go').waitFor();
+    assert.equal(await page.locator('#adv').isVisible(), false, 'the directory is for signed-in readers');
+    const href = await page.locator('#ag-go').getAttribute('href');
+    assert.equal(decodeURIComponent(href), 'signin.html?next=advisors.html#a/asha-rao');
+    await context.close();
+  }
+
+  // ── The directory, signed in ───────────────────────────────────────────
+  {
+    const state = fresh(); state.user = { id: 7, email: 'ravi@example.com' };
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await context.addInitScript(() => localStorage.setItem('altaha-session-v1', 'tok-123'));
     await wire(context, state);
     const page = await context.newPage(); watch(page);
     await page.goto(base + '/advisors.html?kind=ria&topic=portfolio', { waitUntil: 'load' });
@@ -206,12 +220,10 @@ async function noSideways(page, label) {
     assert.match(await page.locator('.adv-note').innerText(), /Never pay anyone/);
     await page.screenshot({ path: path.join(output, 'directory.png'), fullPage: true });
 
-    // A profile, signed out: the way in is sign-in, and it comes back here.
+    // A profile: its registration is shown beside the way to start a chat.
     await page.locator('.adv-card', { hasText: 'Asha Rao' }).click();
-    await page.locator('.adv-start .adv-btn').waitFor();
+    await page.locator('.adv-start .adv-btn').first().waitFor();
     assert.match(await page.locator('.adv-regnote').innerText(), /not|INA000012345/);
-    const href = await page.locator('.adv-start .adv-btn').getAttribute('href');
-    assert.equal(decodeURIComponent(href), 'signin.html?next=advisors.html#a/asha-rao');
     await context.close();
   }
 

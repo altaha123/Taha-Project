@@ -94,6 +94,8 @@ async function viewText(page, id) {
 
   // ── Desktop: the Research menu ─────────────────────────────────────────
   const desk = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  // Member tools (gate.js) open for a signed-in reader.
+  await desk.addInitScript(() => localStorage.setItem('altaha-session-v1', 'tok-test'));
   await wire(desk);
   const page = await desk.newPage();
   page.on('pageerror', e => errors.push(String(e && (e.stack || e.message || e))));
@@ -270,6 +272,8 @@ async function viewText(page, id) {
 
   // ── Mobile: the Me sheet carries every door, and the views fit ─────────
   const mob = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  // Member tools (gate.js) open for a signed-in reader.
+  await mob.addInitScript(() => localStorage.setItem('altaha-session-v1', 'tok-test'));
   await wire(mob);
   const mp = await mob.newPage();
   mp.on('pageerror', e => errors.push(String(e && (e.stack || e.message || e))));

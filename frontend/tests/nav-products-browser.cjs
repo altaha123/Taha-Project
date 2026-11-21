@@ -56,6 +56,8 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   const browser = await chromium.launch({
     headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, hasTouch: true });
+  // Member tools (gate.js) open for a signed-in reader.
+  await context.addInitScript(() => localStorage.setItem('altaha-session-v1', 'tok-test'));
   await context.addInitScript(() => localStorage.setItem('altaha-guide-dismissed', '1'));
   const page = await context.newPage(), errors = [];
   page.on('pageerror', e => errors.push(String(e.stack)));

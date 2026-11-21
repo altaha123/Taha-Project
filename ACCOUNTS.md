@@ -4,9 +4,25 @@ A reader signs in with their email, saves what they hold, and gets one message
 after the close: what their holdings did, what was filed on them, what is worth
 a look.
 
-Nothing here is a gate. Signed out, every tool works exactly as before —
-a screener that demands a login before it will do arithmetic is a screener
-people leave.
+Most of the site stays open signed out: the market overview, the screener,
+stock pages, charts, the portfolio tools. A set of **member tools** asks for
+sign-in first (`frontend/gate.js`):
+
+- Market › Alerts, Big trades, Delivery trends
+- Ideas › Investor styles, Who owns what, Fund houses, Strategy lab
+- Talk to an adviser (`advisors.html`) and the Wealth desk (`wealth.html`)
+
+Opened signed out — from the menu, a door card, the search palette or a
+shared `#hash` — each shows a sign-in card in its place. The card sends the
+reader to `signin.html?next=…`, and once signed in they land back on the same
+tool. The hiding is a stylesheet rule keyed on `html.gate-out`, set in the
+`<head>` before the page draws, so a gated tool never flashes up first. To
+gate or ungate a tool, edit `TOOLS` (tabs on the main page) or `PAGES` (pages
+of their own, which load `gate.js` with `data-page=`) in that file.
+
+This decides what the site shows, not what the API serves: the market data
+behind these tools is public, while an account's own data (chats, a desk's
+clients) is checked server-side by the session token, as before.
 
 ## What it looks like from outside
 

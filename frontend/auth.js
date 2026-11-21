@@ -20,7 +20,7 @@
    IT IS FINE TO BE SIGNED OUT
    Every helper works when nobody is signed in — user() returns null, authed()
    is false, and nothing throws. Signing in adds saving across devices and the
-   daily email; it is not a gate in front of the product.
+   daily email, and opens the member tools that gate.js keeps behind it.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {

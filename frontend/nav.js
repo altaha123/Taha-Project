@@ -430,8 +430,11 @@
 
   function scrollToContent() {
     if (booting) return;
+    // A tool behind the sign-in gate (gate.js) is hidden; its card stands in.
+    var view = $id('view-' + current.tab);
+    if (view && !view.getClientRects().length && $id('altaha-gate')) view = $id('altaha-gate');
     var anchor = document.body.classList.contains('sh-on')
-      ? ($id('view-' + current.tab) || $('main')) : $('.navwrap');
+      ? (view || $('main')) : $('.navwrap');
     if (!anchor) return;
     var top = anchor.getBoundingClientRect().top + window.scrollY - (document.querySelector('.sh-chrome')?.offsetHeight || 0) - 12;
     window.scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' });

@@ -62,6 +62,8 @@ const server = http.createServer((req, res) => {
   const context = await browser.newContext({
     viewport: { width: 1280, height: 1000 }, reducedMotion: 'reduce', deviceScaleFactor: SCALE });
   await context.addInitScript(() => { try { localStorage.setItem('altaha-guide-dismissed', '1'); } catch (e) {} });
+  // Delivery trends is a member tool (gate.js); open it as a signed-in reader.
+  await context.addInitScript(() => localStorage.setItem('altaha-session-v1', 'tok-test'));
   const page = await context.newPage(), errors = [];
   const asked = [];                       // every /delivery/trends query string
   let bookCalls = 0, payload = trends;
