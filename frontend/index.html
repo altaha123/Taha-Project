@@ -532,18 +532,6 @@
   /* The More trigger sits inside the bar but must not be swallowed by the
      puck's scroll math, so it keeps its own relative wrapper. */
   .moreWrap{flex:0 0 auto}
-  /* The explanation a tab used to open with, folded away. Tabs whose
-     background reading is genuinely worth keeping (what a block deal is, why
-     the Special book weights its signals equally) keep it here, one click
-     from the page and out of the way of the numbers. */
-  .tabnote{margin:0 0 24px;max-width:72ch;border-left:2px solid var(--rule);padding-left:16px}
-  .tabnote > summary{font-family:var(--sans);font-size:13px;color:var(--gold-dp);
-    cursor:pointer;list-style:none;padding:2px 0}
-  .tabnote > summary::-webkit-details-marker{display:none}
-  .tabnote > summary::before{content:"+ ";font-family:var(--mono)}
-  .tabnote[open] > summary::before{content:"\2212 "}
-  .tabnote > summary:hover{color:var(--gold)}
-  .tabnote p{font-size:13px;line-height:1.65;color:var(--ink-2);margin:10px 0 0;max-width:68ch}
   /* Horizons were two large bordered cards carrying sub-descriptions. The
      descriptions already repeat in the note below the selector, so the cards
      were saying it twice and taking a third of the screen to do it. */
@@ -2125,13 +2113,7 @@
   <div id="view-wow" style="display:none">
     <header class="tabhead">
       <h2>WOW orders</h2>
-      <p>New orders, measured against the size of the company that won them.</p>
     </header>
-    <details class="tabnote">
-      <summary>How an order gets called WOW, and what is left out</summary>
-      <p>An order is flagged <b>WOW</b> when the value the company disclosed is at least a set share of its market capitalisation (shown on the page, and configurable). The value, the customer and what the order is for are read from the document the company filed, in its own words, and the sentence each figure came from is one tap away. Each order is also set against a year of the company's sales, as filed.</p>
-      <p>A <b>lowest bid</b> that has not been awarded and a <b>memorandum of understanding</b> are listed but never called WOW: neither is an order. Plenty of disclosures quantify a contract in megawatts or containers and never state a rupee figure at all; those are listed as <b>value not disclosed</b>, and are never ranked or given an assumed number. Nothing here is a recommendation: an order is an event with a size, and the size is all this claims.</p>
-    </details>
     <div id="wow-body"></div>
   </div><!-- /view-wow -->
 
@@ -2187,7 +2169,6 @@
   <div id="view-special" style="display:none">
     <header class="tabhead">
       <h2>Delivery <i>trends</i></h2>
-      <p>Where shares are being bought to keep, not flipped by the close. Every stock is measured against <b>its own usual day</b>.</p>
     </header>
     <!-- Filled by delivery-trends.js from /delivery/trends the first time the
          tab is shown. -->
@@ -2197,15 +2178,9 @@
          and skips the latest month, so it says nothing about this week; it is
          kept for what it does say, and read only when somebody opens it. -->
     <details class="dt-book" id="spbook">
-      <summary><b>Altaha <i>Special</i></b><span>A slower reading: twenty names ranked on a year of delivery, drift and calm.</span></summary>
+      <summary><b>Altaha <i>Special</i></b><span>Twenty names ranked on a year of delivery.</span></summary>
       <div class="dt-book-body">
         <div class="sp-formula mono">score&nbsp;=&nbsp;mean&nbsp;of&nbsp;five&nbsp;percentile&nbsp;ranks&nbsp;&nbsp;&middot;&nbsp;&nbsp;liquid,&nbsp;above&nbsp;its&nbsp;200-day</div>
-        <details class="tabnote">
-          <summary>Why delivery percentage, and why equal weights</summary>
-          <p>NSE publishes, for every stock every day, what share of traded volume was <b>delivered</b> (settled into somebody’s demat account) rather than bought and sold again before the close. Two stocks both up 60% score identically on plain momentum: one rose on 70%-delivery days and was accumulated, the other on 20%-delivery days and was churned by traders flat by 3:30pm.</p>
-          <p>Delivery is one of five signals. Each becomes a percentile against every other name ranked today, and the five are averaged with equal weight. Equal weighting is a finding, not laziness: weighting by each signal’s measured information coefficient was tested and produced a worse book, because those weights chase whichever signal last worked.</p>
-          <p>The ranking reads a year and leaves out the most recent month, so a stock bought heavily this week will not appear here for weeks. The lists above are where to look for that.</p>
-        </details>
 
         <div class="sp-measured" id="spmeasured"></div>
         <div class="toolbar"><button class="act" id="spload">Load the book</button>

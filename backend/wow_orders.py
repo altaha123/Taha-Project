@@ -1037,9 +1037,8 @@ def _payload(rows, note):
             "wow": len(wow),
         },
         "note": note or "",
-        "source": ("Exchange corporate announcements (BSE, or NSE when BSE is "
-                   "unreachable), Regulation 30. Order values "
-                   "are read from the filed document, not the headline."),
+        "source": ("BSE/NSE corporate announcements. Values are read from the "
+                   "filed document."),
         "explain": (
             "An order is called WOW when its disclosed value is at least %g%% "
             "of the company's market capitalisation. Orders whose value the "
@@ -1125,15 +1124,11 @@ def quarter_comparison(today: dt.date = None) -> dict:
         "comparable": comparable,
         "recording_since": since,
         "caveat": (
-            "Counts only orders whose value the company disclosed, so every "
-            "total is a floor on order inflow rather than a complete order "
-            "book." + ("" if comparable else
-                       " One of these quarters began before this service "
-                       "started recording, so the two are not yet comparable "
-                       "and no percentage change is shown.")
+            "Disclosed values only, so totals are a floor."
+            + ("" if comparable else
+               " Recording began mid-quarter, so the two are not yet comparable.")
             + ("" if not (now_b["awaiting_reread"] or prev_b["awaiting_reread"]) else
-               " %d earlier filings are still to be read again by the current "
-               "reader and are not in these totals yet."
+               " %d earlier filings are still to be read again."
                % (now_b["awaiting_reread"] + prev_b["awaiting_reread"]))),
     }
 

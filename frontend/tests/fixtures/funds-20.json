@@ -130,8 +130,6 @@
  "schemes": 3,
  "unmapped": 1,
  "notes": [
-  "Listed-equity positions only. The pack also contains debt, government securities and trust units; those are read but are not shown here. 1 row in this pack had no match in NSE's equity list.",
-  "Disclosed monthly, due by the tenth of the following month, so these can be about six weeks old. Unlike the shareholding filings there is no 1% floor: a fund's whole book is published.",
-  "A company held by several schemes is shown once, with the schemes listed beneath it. The percentages are each scheme's weight in its own portfolio and are not added together."
+  "Listed equity only. Each percentage is that scheme's own weight; they are not added together."
  ]
 }

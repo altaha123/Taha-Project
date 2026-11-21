@@ -253,8 +253,7 @@
           ? '<p class="iv-cover"><b>' + esc(String(cov.companies_read)) +
             '</b> companies read so far' +
             (cov.latest_period ? ', to ' + esc(cov.latest_period) : '') +
-            '. The sweep runs nightly and keeps going until it has read the ' +
-            'whole exchange, so this fills in rather than staying empty.</p>'
+            ' · fills in nightly</p>'
           : '') +
         (d && d.entities && d.entities.length
           ? '<p class="iv-looking">Names being looked for: ' +
@@ -275,11 +274,10 @@
     var head =
       whoHead(d) +
       redirect +
-      '<p class="iv-asof"><b>' + esc(d.period || '') + '</b> filings: ' +
+      '<p class="iv-asof"><b>' + esc(d.period || '') + '</b> · ' +
         esc(String(counted)) + ' disclosed holding' + (counted === 1 ? '' : 's') +
         (d.compared_with ? ', compared with ' + esc(d.compared_with) : '') +
-        '. Stakes below 1% of a company are not named in its filing and do not ' +
-        'appear here.</p>';
+        ' · stakes below 1% are not filed</p>';
 
     var list = d.positions.length
       ? '<ul class="iv-list">' + d.positions.map(positionRow).join('') + '</ul>'
@@ -287,9 +285,7 @@
 
     var gone = (d.no_longer_disclosed || []).length
       ? '<h4 class="iv-h4">No longer disclosed</h4>' +
-        '<p class="iv-sub">Named in ' + esc(d.compared_with || 'the previous quarter') +
-        ' and not in ' + esc(d.period) + '. The stake has fallen below the 1% ' +
-        'threshold or been sold. The filing does not say which.</p>' +
+        '<p class="iv-sub">Fell below 1% or was sold; the filing does not say which.</p>' +
         '<ul class="iv-list is-gone">' +
           d.no_longer_disclosed.map(function (x) {
             return '<li class="iv-pos"><div class="iv-pos-head">' +

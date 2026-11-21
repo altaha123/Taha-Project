@@ -3854,15 +3854,6 @@ def funds_list(month: str = None):
         "funds": packs,
         "read": len(packs),
         "listed_with_amfi": listed,
-        "note": ("Read from each asset manager's own monthly portfolio "
-                 "disclosure. %d of the %d fund houses AMFI lists have been "
-                 "read for this month. AMFI publishes a directory, not a "
-                 "feed, and several AMCs build their download list in "
-                 "JavaScript rather than serving it as a link."
-                 % (len(packs), listed)),
-        "lag": ("Portfolios are disclosed monthly and are due by the tenth of "
-                "the following month, so a position here can be about six "
-                "weeks old."),
     })
 
 
@@ -3931,18 +3922,8 @@ def fund_portfolio(amc: str, month: str = None, min_pct: float = 0.0):
         "schemes": pack.get("schemes"),
         "unmapped": pack.get("unmapped"),
         "notes": [
-            "Listed-equity positions only. The pack also contains debt, "
-            "government securities and trust units; those are read but are "
-            "not shown here." +
-            (" %d row%s in this pack had no match in NSE's equity list."
-             % (pack["unmapped"], "" if pack["unmapped"] == 1 else "s")
-             if pack.get("unmapped") else ""),
-            "Disclosed monthly, due by the tenth of the following month, so "
-            "these can be about six weeks old. Unlike the shareholding "
-            "filings there is no 1% floor: a fund's whole book is published.",
-            "A company held by several schemes is shown once, with the "
-            "schemes listed beneath it. The percentages are each scheme's "
-            "weight in its own portfolio and are not added together.",
+            "Listed equity only. Each percentage is that scheme's own "
+            "weight; they are not added together.",
         ],
     })
 

@@ -1284,16 +1284,6 @@ def delivery_trends(min_turnover_cr=TRENDS_DEFAULT_FLOOR_CR, limit=TRENDS_LIMIT)
         "views": views,
         "delivered_value_derived": True,
         "source": "NSE sec_bhavdata_full (EQ series)",
-        "caveats": [
-            "A delivered share has a seller as well as a buyer. Heavy delivery "
-            "says ownership changed hands and stayed changed, not who bought.",
-            "Stock futures and options settle by delivery, so the monthly "
-            "expiry lifts delivery in F&O names. Block deals and index "
-            "rebalances do the same.",
-            "None of these thresholds was fitted to returns, and this site's "
-            "own test found the delivery signal's edge faded after 2023. It "
-            "is a list of where to look, not of what to buy.",
-        ],
         "disclaimer": ("Educational. Arithmetic on published exchange data. "
                        "Not a recommendation to buy or sell."),
     }

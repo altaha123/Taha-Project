@@ -452,7 +452,7 @@ const server = http.createServer((req, res) => {
   await openTab(pageR, 'wow');
   const wr = pageR.locator('#view-wow');
   await wr.locator('.wo-empty.is-loading').waitFor({ state: 'visible' });
-  assert.match(await wr.locator('.wo-empty').innerText(), /first read takes a minute or two/i);
+  assert.match(await wr.locator('.wo-empty').innerText(), /Reading this week.s order filings/i);
   await wr.locator('.wo').first().waitFor({ state: 'visible', timeout: 8000 });
   assert.equal(wowCalls, 2, 'the page should have asked again by itself, once');
   assert.equal(await wr.locator('.wo').count(), 3);

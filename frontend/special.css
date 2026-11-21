@@ -5,10 +5,8 @@
    arithmetic on every row like everywhere else in this product.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* The tab opens with the shared `.tabhead` (type.css) like every other tab;
-   the three paragraphs that used to sit under a bespoke gold-ruled title are
-   now behind the `.tabnote` disclosure below it. Only the formula chip, which
-   is the one line a returning reader actually re-reads, stayed on the page. */
+/* The tab opens with the shared `.tabhead` (type.css) like every other tab.
+   Only the formula chip, the one line a returning reader re-reads, stays. */
 .sp-formula{ display:inline-block; margin:0 0 22px; padding:11px 16px;
   border:1px solid var(--rule); border-radius:10px; background:var(--paper-2);
   font-size:14px; letter-spacing:.02em }

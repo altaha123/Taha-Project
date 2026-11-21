@@ -143,13 +143,11 @@
 
     var head =
       '<h3 class="iv-name">' + esc(d.name || d.amc_id) + '</h3>' +
-      '<p class="iv-asof">Portfolio as at <b>' + esc(monthName(d.month)) +
-        '</b>: ' + esc(String(d.count)) + ' listed compan' +
-        (d.count === 1 ? 'y' : 'ies') + ' across ' +
-        esc(String(d.schemes || 0)) + ' schemes. Disclosed monthly and due by ' +
-        'the tenth of the following month, so this can be about six weeks old.' +
-        (d.source ? ' <a href="' + esc(d.source) + '" target="_blank" ' +
-          'rel="noopener">The pack it came from</a>.' : '') +
+      '<p class="iv-asof"><b>' + esc(monthName(d.month)) + '</b> · ' +
+        esc(String(d.count)) + ' listed compan' + (d.count === 1 ? 'y' : 'ies') +
+        ' across ' + esc(String(d.schemes || 0)) + ' schemes · about six weeks old' +
+        (d.source ? ' · <a href="' + esc(d.source) + '" target="_blank" ' +
+          'rel="noopener">Source</a>' : '') +
       '</p>';
 
     var list = d.positions.length
@@ -160,11 +158,8 @@
        the fund's real book. */
     var other = (d.not_on_nse || []).length
       ? '<h4 class="iv-h4">Not on NSE&rsquo;s equity list</h4>' +
-        '<p class="iv-sub">Held, and carried in the pack, but not matched to a ' +
-        'listed NSE company: another fund&rsquo;s units, an unlisted ' +
-        'holding, or something quoted only on BSE. Listed here rather than ' +
-        'dropped so the figures above can be reconciled against the ' +
-        'fund&rsquo;s real portfolio.</p>' +
+        '<p class="iv-sub">Held but not a listed NSE company. Shown so the ' +
+        'totals reconcile.</p>' +
         '<ul class="iv-list is-gone">' +
           d.not_on_nse.map(function (p) {
             return '<li class="iv-pos"><div class="iv-pos-head">' +

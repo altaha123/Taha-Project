@@ -307,9 +307,8 @@
     }
     return '<section class="wo-lead">' +
       '<h3 class="wo-say">' + say + '</h3>' +
-      '<p class="wo-rule">An order is <b>WOW</b> when it is worth at least <b>' + esc(String(t)) +
-        '%</b> of the company’s market cap, which is what the whole company is valued at on the ' +
-        'stock market. A ₹100 crore order is routine for a giant and can be a year’s work for a small company.</p>' +
+      '<p class="wo-rule"><b>WOW</b> = an order worth at least <b>' + esc(String(t)) +
+        '%</b> of the company’s market cap.</p>' +
       '<div class="wo-tiles">' +
         tile('Biggest against its company', top,
           top ? esc(pctText(top.pct_of_market_cap)) : '', top ? cr(top.value_cr) + ' order' : '') +
@@ -390,8 +389,7 @@
 
   function waiting() {
     return '<div class="wo-empty is-loading" aria-busy="true">' +
-      '<b>Reading this week’s order filings…</b> The first read takes a minute or two, ' +
-      'and the orders appear here as they are read. There is no need to reload.' +
+      '<b>Reading this week’s order filings…</b>' +
       '<span class="wo-skel"></span><span class="wo-skel"></span><span class="wo-skel"></span></div>';
   }
 
@@ -412,8 +410,7 @@
     var rows = d.rows || [], t = d.threshold_pct, open = keepOpen(box);
     if (!rows.length && !pinned) {
       box.innerHTML = d.reading ? waiting()
-        : '<div class="wo-empty">No order announcements in this window. ' +
-          'Order flow is lumpy. A quiet week is normal, not a fault.</div>' +
+        : '<div class="wo-empty">No order announcements this week.</div>' +
           (d.note ? '<p class="wo-note">' + esc(d.note) + '</p>' : '');
       return;
     }
@@ -431,23 +428,20 @@
         'Filed ' + esc(day(pinned.at)) + ', before the week listed below.',
         card(pinned, t, 0), true) : '') +
       group('WOW orders', g.wow.length,
-        'Worth ' + esc(String(t)) + '% or more of the company’s market cap. The largest against its company comes first.',
+        'Largest against its company first.',
         g.wow.map(function (r, i) { return card(r, t, i + 1); }).join(''), true) +
       group('Other orders with a value', g.sized.length,
-        'Under ' + esc(String(t)) + '% of market cap. Tap one for what it is for and where the figure came from.',
+        'Under ' + esc(String(t)) + '% of market cap.',
         g.sized.map(one).join('')) +
       group('Not firm orders', g.soft.length,
-        'A lowest bid that has not been awarded, a memorandum of understanding, or an update to an order ' +
-        'filed earlier. Listed so the week is complete, and never counted as WOW.',
+        'Lowest bids, MoUs and updates. Never counted as WOW.',
         g.soft.map(one).join('')) +
       group('No rupee value', g.blank.length,
-        'The company gave no amount, sized the order in megawatts or tonnes, or said the value is confidential. ' +
-        'Never ranked, and never given an assumed figure.',
+        'No amount disclosed. Never ranked.',
         g.blank.map(one).join('')) +
       quarterBlock(d.quarter) +
       (d.note ? '<p class="wo-note">' + esc(d.note) + '</p>' : '') +
-      '<p class="wo-src">' + esc(d.source) + '</p>' +
-      '<p class="wo-src">' + esc(d.explain) + '</p>';
+      '<p class="wo-src">' + esc(d.source) + '</p>';
     restoreOpen(box, open);
   }
 

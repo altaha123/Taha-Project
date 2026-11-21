@@ -160,8 +160,7 @@ async function openTab(page, id) {
   const other = page.locator('.iv-list.is-gone');
   assert.equal(await other.locator('.iv-pos').count(), 1);
   assert.match(await other.innerText(), /Gold ETF/);
-  assert.match(await page.locator('.iv-sub').innerText(), /reconciled/i);
-  assert.match(await page.locator('.iv-sub').innerText(), /rather than dropped/i);
+  assert.match(await page.locator('.iv-sub').innerText(), /reconcile/i);
 
   // ── The pack it came from is one click away ──────────────────────────────
   assert.ok(await page.locator('.iv-asof a[href*="barodabnpparibasmf"]').count() >= 1);

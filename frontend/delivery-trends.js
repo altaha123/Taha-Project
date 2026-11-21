@@ -201,20 +201,11 @@
     }
     var top = all.slice(0, 8), rest = all.slice(8);
     return '<section class="dt-sectors"><div class="dt-sechead"><h3>Where the rupees went this week</h3>' +
-      '<p>A typical day of the last five sessions against a usual day of the twenty before, by industry. The tick marks a usual day.</p></div>' +
+      '<p>Last five sessions against a usual day. The tick marks usual.</p></div>' +
       '<div class="dt-sechdr" aria-hidden="true"><span>Industry</span><span></span><span>Against usual</span><span>Share delivered</span><span>5 sessions</span></div>' +
       top.map(one).join('') +
       (rest.length ? '<details class="dt-more"><summary>' + rest.length + ' more industries</summary>' + rest.map(one).join('') + '</details>' : '') +
-      '<p class="dt-secnote">Covers the ' + (d.sector_coverage || 0) + ' companies in NSE’s Nifty Total Market list, the only ones with a published industry. The lists above cover every stock.</p></section>';
-  }
-
-  function notes(d) {
-    return '<details class="tabnote dt-notes"><summary>What a delivery figure can and cannot tell you</summary>' +
-      '<p>NSE publishes, for every stock every day, how much of the traded volume was <b>delivered</b>: settled into somebody’s demat account, not bought and sold again before the close. Rupees delivered is that quantity at the day’s average price, worked out here from the exchange’s file.</p>' +
-      (d.caveats || []).map(function (c) { return '<p>' + esc(c) + '</p>'; }).join('') +
-      (d.excluded_corporate_action ? '<p>' + d.excluded_corporate_action + ' stock' + (d.excluded_corporate_action === 1 ? ' is' : 's are') +
-        ' left out because the price shows a split or bonus inside the window, which would make the price change meaningless.</p>' : '') +
-      '</details>';
+      '<p class="dt-secnote">' + (d.sector_coverage || 0) + ' Nifty Total Market companies.</p></section>';
   }
 
   function building(d) {
@@ -229,9 +220,11 @@
   function render(d, state) {
     var s = { view: (state && state.view) || 'today', dir: (state && state.dir) || 'all' };
     if (!d || d.available === false) return building(d);
+    var cut = d.excluded_corporate_action || 0;
     return '<p class="dt-asof mono">Session of ' + esc(day(d.as_of)) + ' · ' + Number(d.universe || 0).toLocaleString('en-IN') +
-      ' stocks read · published by NSE after the close</p>' +
-      tiles(d) + controls(d, s) + list(d, s) + sectors(d) + notes(d) +
+      ' stocks read' + (cut ? ' · ' + cut + ' left out for a split or bonus' : '') +
+      ' · published by NSE after the close</p>' +
+      tiles(d) + controls(d, s) + list(d, s) + sectors(d) +
       '<p class="dt-disc">' + esc(d.disclaimer || '') + ' Source: ' + esc(d.source || 'NSE full bhavcopy') + '.</p>';
   }
 
