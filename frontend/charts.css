@@ -37,7 +37,7 @@
 /* The toolbar answers to the workspace's own width, not the window's: the
    page caps its content width, so a wide window can still hold a narrow cw. */
 .cw{container-type:inline-size;container-name:cw}
-@container cw (max-width:1400px){
+@container cw (max-width:1560px){
   .cw-tb[data-a="cmp"] span,.cw-tb[data-a="replay"] span,.cw-tb[data-a="alert"] span{display:none}
 }
 /* Narrower: the timeframe row folds into its active button, which opens the

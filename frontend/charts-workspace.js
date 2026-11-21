@@ -3152,6 +3152,7 @@
     if (tape) tape.scrollLeft = 0;
     if (b) { b.innerHTML = svg(f ? "unfull" : "full"); b.classList.toggle("on", f); b.setAttribute("aria-label", f ? "Leave full screen" : "Full screen"); }
     setTimeout(function () {
+      if (tape) tape.scrollLeft = 0;
       charts().forEach(function (c) { try { c.applyOptions({}); } catch (e) {} });
       render();
     }, 60);
