@@ -200,7 +200,7 @@
      ════════════════════════════════════════════════════════════════════════ */
 
   var T = { last: 0, market: null, week: null, sectors: null, chart: null, movers: 'up', clock: null, prevNifty: null,
-            sector: null, sectorRows: [], nse: {} };
+            sector: null, sectorRows: [], nse: {}, wq: {}, wqAt: 0 };
 
   var TODAY_TOOLS = [
     { id: 'drt-live', goto: 'discover/live', icon: 'alerts', name: 'Alerts', unit: 'fired today', live: true,
@@ -370,13 +370,26 @@
       if (!rows.length) {
         w.innerHTML = '<p class="dr-quiet">Tap ☆ on a stock to follow it.</p>';
       } else {
-        w.innerHTML = rows.slice(0, 6).map(function (r) {
-          var sym = String(r.symbol || r).toUpperCase(), q = (quotes || {})[sym];
-          return '<a class="dr-wrow" href="stock.html?ticker=' + encodeURIComponent(sym) + '">' +
+        var missing = [];
+        w.innerHTML = deskSymbols(rows).map(function (sym) {
+          // The watchlist's own read first: the sector feed covers the large
+          // names only, so a small cap would otherwise show no price at all.
+          var q = T.wq[sym] || (quotes || {})[sym];
+          var has = q && finite(q.ltp);
+          if (!has) missing.push(sym);
+          var amt = q ? dayChange(q) : null;
+          var t = q ? tone(finite(q.change_pct) ? q.change_pct : amt) : '';
+          var label = esc(sym) + (has ? ', ' + inr(q.ltp, 2) + ' rupees' +
+            (finite(q.change_pct) ? ', ' + pct(q.change_pct) + ' today' : '') : '');
+          return '<a class="dr-wrow" href="stock.html?ticker=' + encodeURIComponent(sym) + '" aria-label="' + label + '">' +
             '<span class="dr-wsym">' + esc(sym) + '</span>' +
-            '<span class="dr-wpx">' + (q && finite(q.ltp) ? inr(q.ltp, 2) : '') + '</span>' +
-            '<span class="dr-wchg ' + (q ? tone(q.change_pct) : '') + '">' + (q ? pct(q.change_pct) : '') + '</span></a>';
+            '<span class="dr-wpx">' + (has ? '₹' + inr(q.ltp, 2) : (T.wqBusy ? '<i class="dr-wwait" aria-hidden="true"></i>' : '—')) + '</span>' +
+            '<span class="dr-wchg ' + t + '">' +
+              (has && finite(q.change_pct) ? '<b>' + pct(q.change_pct) + '</b>' : '') +
+              (has && finite(amt) ? '<small>' + (amt > 0 ? '+' : amt < 0 ? '−' : '') + '₹' + inr(Math.abs(amt), 2) + '</small>' : '') +
+            '</span></a>';
         }).join('');
+        if (missing.length && !T.wqBusy && Date.now() - T.wqAt > 30000) loadDeskQuotes(missing);
       }
     }
     var p = $('dr-desk-pins');
@@ -387,6 +400,43 @@
           svg('pin', 14) + esc(t.tab.label) + '</button>';
       }).join('') : '<p class="dr-quiet">Pin a tool to keep it here.</p>';
     }
+  }
+
+  function deskSymbols(rows) {
+    if (!rows) { rows = readJSON(WATCH_KEY, []); rows = Array.isArray(rows) ? rows : []; }
+    return rows.slice(0, 6).map(function (r) { return String((r && r.symbol) || r).toUpperCase(); })
+      .filter(function (s) { return /^[A-Z0-9][A-Z0-9.&^=_-]{0,29}$/.test(s); });
+  }
+
+  /* Today's move in rupees: the feed's own figure, else price less the
+     previous close. */
+  function dayChange(q) {
+    if (finite(q.change)) return Number(q.change);
+    if (finite(q.ltp) && finite(q.prev_close)) return Number(q.ltp) - Number(q.prev_close);
+    if (finite(q.ltp) && finite(q.change_pct) && Number(q.change_pct) !== -100) {
+      var p = Number(q.change_pct);
+      return Number(q.ltp) - Number(q.ltp) / (1 + p / 100);
+    }
+    return null;
+  }
+
+  /* Price and today's move for the desk's names, from the same read the
+     Watchlist page uses. Names the server has not fetched yet come back in
+     `pending`; they are asked for again a few times. */
+  function loadDeskQuotes(syms, tries) {
+    syms = syms || deskSymbols();
+    if (!syms.length || T.wqBusy) return;
+    T.wqBusy = true;
+    get('/watchlist/quotes?symbols=' + encodeURIComponent(syms.join(',')), 30000).then(function (d) {
+      T.wqBusy = false;
+      T.wqAt = Date.now();
+      ((d && d.rows) || []).forEach(function (r) { if (r && r.symbol) T.wq[String(r.symbol).toUpperCase()] = r; });
+      paintDesk(T.quotes);
+      var pend = (d && d.pending) || [];
+      if (pend.length && (tries || 0) < 4) {
+        setTimeout(function () { loadDeskQuotes(pend, (tries || 0) + 1); }, 2000);
+      }
+    });
   }
 
   function portfolioCount() {
@@ -827,6 +877,7 @@
     startClock();
     if (!force && T.last && now - T.last < FRESH_MS) return;
     T.last = now;
+    loadDeskQuotes();
     // The header already reads /market and /sector/overview for its ticker
     // and announces them; use that read when it is in, and fetch only if not.
     var shared = window.AltahaShell && window.AltahaShell.market;
@@ -1128,6 +1179,8 @@
     if (!v || !v.firstChild) return;
     if (d.indices && d.indices.length) { T.market = { indices: d.indices, status: (T.market || {}).status }; paintIndices(T.market); }
     if (d.sectors) paintSectors(d.sectors);
+    // The desk's names move with the market; the server answers from cache.
+    if (v.style.display !== 'none' && Date.now() - T.wqAt > 55000) loadDeskQuotes();
   });
   window.addEventListener('storage', function (e) {
     if (e.key === WATCH_KEY || e.key === PIN_KEY) paintDesk(T.quotes);

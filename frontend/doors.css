@@ -197,11 +197,18 @@
 .dr-deskpf-ic { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(217,188,106,.5); color: #F3DC97; flex: none; }
 .dr-deskpf b { display: block; font-size: 14px; color: #FBF8F1; } .dr-deskpf small { display: block; font-size: 12px; color: #D9BC6A; margin-top: 3px; }
 .dr-desk-h { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 4px; }
-.dr-wrow { display: grid; grid-template-columns: 1fr auto 70px; align-items: center; gap: 10px; min-height: 42px; padding: 0 6px; border-bottom: 1px solid var(--rule-2, #EFEADF); border-radius: 6px; color: inherit; text-decoration: none; transition: background-color .15s; }
+.dr-wrow { display: grid; grid-template-columns: minmax(0, 1fr) auto 78px; align-items: center; gap: 10px; min-height: 48px; padding: 0 6px; border-bottom: 1px solid var(--rule-2, #EFEADF); border-radius: 6px; color: inherit; text-decoration: none; transition: background-color .15s; }
 .dr-wrow:hover { background: var(--paper-2, #F3EFE4); }
 .dr-wsym, .dr-msym { font-family: var(--mono); font-size: 13px; font-weight: 500; }
 .dr-wpx, .dr-mpx { font-family: var(--mono); font-size: 12px; color: var(--dr-mute); font-variant-numeric: tabular-nums; }
-.dr-wchg { text-align: right; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.dr-wsym { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dr-wpx { color: var(--dr-ink); }
+.dr-wchg { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; text-align: right; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.dr-wchg b { font-weight: 600; }
+.dr-wchg small { font-size: 11px; opacity: .85; }
+.dr-wwait { display: inline-block; width: 46px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--paper-2, #F3EFE4), var(--rule-2, #EFEADF), var(--paper-2, #F3EFE4)); background-size: 200% 100%; animation: dr-wwait 1.2s linear infinite; }
+@keyframes dr-wwait { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .dr-wwait { animation: none; } }
 .dr-pins { display: flex; flex-wrap: wrap; gap: 6px; }
 .dr-pinchip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #D9BC6A; border-radius: 17px; background: rgba(217,188,106,.14); color: var(--gold-dp, #8A6D1E); font-size: 13px; animation: dr-pop .4s var(--dr-ease) backwards; }
 .dr-seg { position: relative; display: flex; padding: 3px; border-radius: 16px; background: var(--paper-2, #F3EFE4); }
