@@ -215,9 +215,14 @@ html.cw-max-on,html.cw-max-on body{overflow:hidden}
 .cw-lg-main{font-size:12px}
 .cw-lg-tag{background:var(--gold);color:#fff;border-radius:3px;padding:0 5px;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
 .cw-lg-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
-.cw-lg-b{display:inline-flex;gap:1px;pointer-events:auto;opacity:0;transition:opacity 120ms}
-.cw-lg-row:hover .cw-lg-b,.cw-lg-b:focus-within{opacity:1}
-@media (hover:none){.cw-lg-b{opacity:.85}}
+/* A legend line answers the pointer so its buttons can appear on hover; the
+   buttons are not there at all until then, so a drag that starts near the
+   legend never lands on "remove" unseen. */
+.cw-lg-row{pointer-events:auto}
+.cw-lg-b{display:inline-flex;gap:1px;pointer-events:auto;visibility:hidden;opacity:0;transition:opacity 120ms}
+.cw-lg-row:hover .cw-lg-b,.cw-lg-b:focus-within{visibility:visible;opacity:1}
+@media (hover:none){.cw-lg-b{visibility:visible;opacity:.85}}
+.cw.drawing .cw-lg-row{pointer-events:none}
 .cw-lg-b button{border:0;background:var(--surface,#fff);color:var(--ink-2);cursor:pointer;width:22px;height:20px;
   display:grid;place-items:center;border-radius:4px}
 .cw-lg-b button:hover{background:var(--rule-2);color:var(--ink)}
@@ -244,6 +249,7 @@ html.cw-max-on,html.cw-max-on body{overflow:hidden}
 .cw-nav svg,.cw-rt svg{width:15px;height:15px}
 .cw-rt{position:absolute;right:86px;bottom:34px;z-index:10;display:none}
 .cw-rt.on{display:grid}
+.cw.drawing .cw-lg-b,.cw.drawing .cw-nav,.cw.drawing .cw-rt{pointer-events:none !important;opacity:0 !important}
 
 .cw-toast{position:absolute;left:50%;top:12px;transform:translate(-50%,-8px);z-index:30;max-width:min(520px,90%);
   background:var(--ink);color:var(--paper);font-size:13px;line-height:1.4;padding:8px 14px;border-radius:8px;box-shadow:var(--sh-2);

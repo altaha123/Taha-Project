@@ -189,6 +189,36 @@ const POINTS = { trend: 2, ray: 2, xline: 2, infoline: 2, arrowline: 2, angle: 2
       await context.close();
     }
 
+    /* ── A trend line on a short monthly chart with a pane, the way it was
+       reported not to work: the first click lands on the legend, and the
+       clicks wobble as a touchpad's do. ── */
+    {
+      const { context, page, errors } = await open(browser, base + '/#research/charts');
+      await ready(page);
+      await pickTf(page, '1M');
+      await ready(page);
+      await page.keyboard.press('/');
+      await page.fill('.cw-ind-q', 'Chaikin money flow'); await page.keyboard.press('Enter');
+      await page.locator('.cw-modal .cw-x').click();
+      await page.click('#cw-rail .cw-grp[data-g="lines"] .cw-t');
+      const row = await page.locator('#cw-legend .cw-lg-row[data-u]').first().boundingBox();
+      const a = { x: row.x + row.width - 8, y: row.y + row.height / 2 };
+      await page.mouse.move(a.x, a.y); await page.mouse.down(); await page.mouse.move(a.x + 5, a.y + 4); await page.mouse.up();
+      const marked = await page.evaluate(() => {
+        const c = document.getElementById('cw-cv'), r = c.getBoundingClientRect();
+        return { n: AltahaCharts.state().drawings };
+      });
+      assert.equal(marked.n, 0, 'a wobbly first click does not end the line');
+      const box = await page.locator('#cw-price').boundingBox();
+      for (let i = 1; i <= 6; i++) await page.mouse.move(a.x + i * 40, a.y + i * 30);
+      await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.6); await page.mouse.down();
+      await page.mouse.move(box.x + box.width * 0.7 + 4, box.y + box.height * 0.6 - 3); await page.mouse.up();
+      assert.equal((await state(page)).drawings, 1, 'the line is drawn, starting on the legend');
+      assert.equal((await state(page)).studies.length, 3, 'no indicator was removed by a click meant for the chart');
+      assert.deepEqual(errors, [], 'short monthly chart: no page errors');
+      await context.close();
+    }
+
     /* ── A share link, old drawings, and editing ── */
     {
       const { context, page, errors } = await open(browser, base + '/?q=TCS&go=charts&range=1W', {});
