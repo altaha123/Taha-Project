@@ -32,22 +32,251 @@
 <meta name="twitter:description" content="A 0-100 score for any Indian or US stock, with every calculation shown. Built by a Chartered Accountant." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-<script>if(typeof LightweightCharts==="undefined")document.write('<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- WHAT LOADS FIRST, AND WHAT LOADS AFTER
+     This page is every tool on the site: some sixty scripts and forty
+     stylesheets, about two and a half megabytes before compression. A reader
+     who opens the homepage is shown Market, which a dozen of those scripts
+     and a third of those stylesheets draw. The rest used to stand between
+     them and the page anyway: on a slow line the first paint waited for
+     every stylesheet and the finished page for every script.
+
+     So the files Market does not use are not tags in the page. They are
+     listed once, just below, in numbered template elements (which a browser
+     parses and does not fetch), and each place one of those groups used to
+     stand now holds AltahaBoot.late(n).
+
+     - On the plain homepage address they wait. Market is drawn and shown,
+       and then they are loaded behind it, in the order of the page. A
+       reader who asks for another tool before they have arrived is taken
+       there the moment they have (nav.js asks AltahaBoot.then).
+     - On any other address (#portfolio, ?go=filings, ?q=TCS, a shared card)
+       each group is written back into the page where its number stands, so
+       it loads exactly as it did when it was ordinary tags, in the same
+       order. Their stylesheets are asked for at once (AltahaBoot.declared),
+       because a tag written by script is one the browser cannot see coming.
+
+     ADDING A FILE. A script or stylesheet for a tool behind a tab goes in
+     the group that stands where the file would have (search for late(n) to
+     see where that is). One that changes what Market or the header looks
+     like stays outside, as an ordinary tag; tests/late-load-browser.cjs
+     fails if the first screen changes when the later files land.
+
+     Without JavaScript none of the later files load. Their stylesheets style
+     tools that cannot be opened without it.
+
+     The charting library is fetched from a CDN by whichever chart first needs
+     it (AltahaBoot.chartLib), not ahead of every page that has no chart. -->
+<script>
+(function(){
+  var root=document.documentElement, queue=[], waiting=[], left=0, started=false, plain=false;
+  try{
+    /* A campaign tag is not a destination; anything else in the address is. */
+    plain=!location.hash.replace(/^#/,'')&&location.search.replace(/^\?/,'').split('&').every(function(part){
+      return !part||/^(utm_\w+|fbclid|gclid)=/.test(part);
+    });
+  }catch(e){}
+  var B=window.AltahaBoot={plain:plain,ready:!plain};
+
+  /* Called once, under the groups. On an address that names a tool, their
+     stylesheets (and the scripts that are not deferred) start coming now, all
+     at once, the way they did when the browser could read them as tags. */
+  B.declared=function(){
+    if(plain)return;
+    [].forEach.call(document.querySelectorAll('template[id^="later-"]'),function(t){
+      [].forEach.call(t.content.children,function(tag){
+        var href=tag.getAttribute('href'), url=href||(!tag.hasAttribute('defer')&&tag.getAttribute('src'));
+        if(!url)return;
+        var hint=document.createElement('link');
+        hint.rel='preload'; hint.as=href?'style':'script'; hint.href=url;
+        document.head.appendChild(hint);
+      });
+    });
+  };
+
+  /* Called where group n stands. */
+  B.late=function(n){
+    var t=document.getElementById('later-'+n), at=document.currentScript;
+    if(!t||!t.content||!at)return;
+    if(plain)queue.push([t,at]); else document.write(t.innerHTML);
+  };
+
+  function finish(){
+    if(--left>0)return;
+    B.ready=true;
+    root.classList.remove('sh-wait');
+    var run=waiting; waiting=[];
+    run.forEach(function(fn){try{fn();}catch(e){setTimeout(function(){throw e;});}});
+  }
+
+  /* Stylesheets go in where their group stands, so the cascade is the one
+     the page has always had. Scripts run in the order of the page. A file
+     that fails to arrive is not waited for. */
+  B.start=function(){
+    if(started||B.ready)return;
+    started=true; left=1;
+    queue.forEach(function(group){
+      var after=group[1];
+      [].forEach.call(group[0].content.children,function(tag){
+        var src=tag.getAttribute('src'), href=tag.getAttribute('href'), n;
+        if(src){n=document.createElement('script');n.async=false;n.src=src;}
+        else if(href){n=document.createElement('link');n.rel='stylesheet';n.href=href;}
+        else return;
+        left++; n.onload=n.onerror=finish;
+        if(src)document.body.appendChild(n);
+        else{after.parentNode.insertBefore(n,after.nextSibling);after=n;}
+      });
+    });
+    finish();
+  };
+
+  /* Run fn once every later file is in. At once, if they already are. It
+     does not start them: they follow the scripts Market needs, never
+     overtake them. A file that neither arrives nor fails is given the same
+     fifteen seconds the boot cover gives a script, and then fn runs with
+     whatever did arrive, as it would have on a page that loaded them all. */
+  B.then=function(fn){
+    if(B.ready){fn();return;}
+    waiting.push(fn);
+    root.classList.add('sh-wait');
+    if(waiting.length===1)setTimeout(function(){if(!B.ready){left=0;finish();}},15000);
+  };
+
+  /* After every script Market needs has run, and before the load event, so
+     "loaded" still means all of it. */
+  document.addEventListener('DOMContentLoaded',function(){B.start();});
+
+  var CDNS=["https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js",
+            "https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"];
+  var asking=false, askers=[];
+  function have(){var L=window.LightweightCharts;return !!(L&&typeof L.createChart==='function');}
+  /* fn(true) once the charting library is on the page, fn(false) if neither
+     CDN would send it. charts.js wraps the library on `altaha:chartlib`,
+     which fires before any caller is told. */
+  B.chartLib=function(fn){
+    if(have()){if(fn)fn(true);return;}
+    if(fn)askers.push(fn);
+    if(asking)return;
+    asking=true;
+    var k=0;
+    function settle(ok){
+      asking=false;
+      if(ok){try{window.dispatchEvent(new CustomEvent('altaha:chartlib'));}catch(e){}}
+      var run=askers; askers=[];
+      run.forEach(function(f){try{f(ok);}catch(e){}});
+    }
+    (function attempt(){
+      if(have()){settle(true);return;}
+      if(k>=CDNS.length){settle(false);return;}
+      var el=document.createElement('script');
+      el.src=CDNS[k++];
+      el.onload=function(){if(have())settle(true);else attempt();};
+      el.onerror=attempt;
+      document.head.appendChild(el);
+    })();
+  };
+  /* An address that opens on a chart will need it at once. */
+  if(/[?&]charts?=|[?&]go=charts|#.*\bcharts\b/.test(location.search+location.hash))B.chartLib();
+})();
+</script>
+<!-- WHAT LOADS LATER. Each group is put back where its number stands below,
+     by AltahaBoot.late(n): the order of the page is the order it always had. -->
+<template id="later-1">
 <link rel="stylesheet" href="charts.css">
-<link rel="stylesheet" href="motion.css">
+</template>
+<template id="later-2">
 <link rel="stylesheet" href="patterns.css">
 <link rel="stylesheet" href="portfolio.css?v=20261113-tap">
 <link rel="stylesheet" href="portfolio-intelligence.css">
 <link rel="stylesheet" href="portfolio-story.css">
 <link rel="stylesheet" href="portfolio-plan.css">
-<link rel="stylesheet" href="nav.css">
+</template>
+<template id="later-3">
 <link rel="stylesheet" href="share.css">
 <link rel="stylesheet" href="products.css">
 <link rel="stylesheet" href="planner.css?v=20261119">
 <link rel="stylesheet" href="sectors-live.css">
 <link rel="stylesheet" href="deals.css">
+</template>
+<template id="later-4">
+<link rel="stylesheet" href="special.css">
+<link rel="stylesheet" href="delivery-trends.css">
+</template>
+<template id="later-5">
+<link rel="stylesheet" href="filings-views.css?v=20261120-wowshare">
+</template>
+<template id="later-6">
+<link rel="stylesheet" href="alerts.css?v=20261118">
+</template>
+<template id="later-7">
+<link rel="stylesheet" href="universe-scan.css?v=20261120-seo">
+<link rel="stylesheet" href="lenses.css?v=20261120-market">
+<link rel="stylesheet" href="query.css?v=20261120-two">
+<link rel="stylesheet" href="idea-card.css?v=20260927b">
+</template>
+<template id="later-8">
+<link rel="stylesheet" href="calls.css?v=20261120">
+<link rel="stylesheet" href="watchlists.css?v=20261029">
+<link rel="stylesheet" href="strategy-lab.css?v=20261031">
+<link rel="stylesheet" href="picks.css?v=20261120-picks">
+<script src="picks.js?v=20261120-picks"></script>
+<script src="planet-renderer.js?v=20260921-3d"></script>
+<script src="universe-voyage.js?v=20261120-seo"></script>
+<script src="universe-scan.js?v=20261120-seo"></script>
+</template>
+<template id="later-9">
+<script src="charts.js" defer></script>
+<script src="portfolio-intelligence.js" defer></script>
+<script src="portfolio-story.js" defer></script>
+<script src="portfolio-plan.js" defer></script>
+<script src="portfolio.js?v=20261119-planner" defer></script>
+</template>
+<template id="later-10">
+<script src="scoring.js" defer></script>
+<script src="social.js" defer></script>
+</template>
+<template id="later-11">
+<script src="patterns.js" defer></script>
+<script src="share.js" defer></script>
+<link rel="stylesheet" href="index-explorer.css?v=20260924-atlas">
+<script src="index-explorer.js?v=20260924-atlas" defer></script>
+<script src="sectors-live.js?v=20260927-dialog" defer></script>
+<script src="deals.js" defer></script>
+</template>
+<template id="later-12">
+<script src="special.js" defer></script>
+<script src="delivery-trends.js" defer></script>
+<script src="wow.js" defer></script>
+<script src="concalls.js" defer></script>
+<script src="investor-pictures.js?v=20261119" defer></script>
+<script src="investors.js?v=20261119-pictures" defer></script>
+<script src="funds.js" defer></script>
+<script src="lenses.js?v=20261120-market" defer></script>
+<script src="screens.js?v=20260925" defer></script>
+<script src="query.js?v=20261120-two" defer></script>
+<script src="ledger-admin.js" defer></script>
+<script src="planner-risk.js" defer></script>
+<script src="planner-math.js?v=20261119" defer></script>
+<script src="planner.js?v=20261120-menus" defer></script>
+</template>
+<template id="later-13">
+<script src="adviser.js" defer></script>
+<script src="question-art.js" defer></script>
+<script src="money-fx.js" defer></script>
+<script src="risk-math.js" defer></script>
+<script src="allocate-flow.js" defer></script>
+</template>
+<template id="later-14">
+<script src="calls.js?v=20261120" defer></script>
+<script src="watchlists.js?v=20261120-menus" defer></script>
+<script src="strategy-lab.js?v=20261031" defer></script>
+</template>
+<script>AltahaBoot.declared()</script>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>AltahaBoot.late(1)</script>
+<link rel="stylesheet" href="motion.css">
+<script>AltahaBoot.late(2)</script>
+<link rel="stylesheet" href="nav.css">
+<script>AltahaBoot.late(3)</script>
 <style>
   :root{
     --paper:#FBFAF7; --paper-2:#F4F1EB; --ink:#16130E; --ink-2:#4A443A; --mute:#8B8477;
@@ -1144,14 +1373,13 @@
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20261120-market">
 <link rel="stylesheet" href="home.css">
-<link rel="stylesheet" href="special.css">
-<link rel="stylesheet" href="delivery-trends.css">
+<script>AltahaBoot.late(4)</script>
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="home-motion.css">
 <link rel="stylesheet" href="home-hero.css?v=20260922-explore">
-<link rel="stylesheet" href="filings-views.css?v=20261120-wowshare">
+<script>AltahaBoot.late(5)</script>
 <link rel="stylesheet" href="type.css">
-<link rel="stylesheet" href="alerts.css?v=20261118">
+<script>AltahaBoot.late(6)</script>
 <script>
 (function(){try{
   var s=localStorage.getItem('altaha-theme');
@@ -1184,6 +1412,13 @@
   @keyframes shBootRun{from{transform:translateX(-20%)}to{transform:translateX(170%)}}
   @keyframes shBootGone{to{visibility:hidden}}
   @media (prefers-reduced-motion:reduce){#sh-bootcover .sh-bootline i{animation:none;width:100%;opacity:.55}}
+  /* A tool was asked for before its files had arrived (AltahaBoot.then). */
+  html.sh-wait{cursor:progress}
+  html.sh-wait body::after{content:"";position:fixed;z-index:2147483000;left:0;top:0;width:100%;height:3px;pointer-events:none;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent) no-repeat;background-size:40% 100%;
+    animation:shWaitRun 1.1s ease-in-out infinite alternate}
+  @keyframes shWaitRun{from{background-position:-70% 0}to{background-position:170% 0}}
+  @media (prefers-reduced-motion:reduce){html.sh-wait body::after{animation:none;background:var(--gold);opacity:.55}}
 </style>
 <script>
 (function(){
@@ -1214,27 +1449,19 @@
       setTimeout(reveal,120);   // rAF does not fire in a background tab
     })();
   }
-  /* DOMContentLoaded comes after every deferred script has run. */
+  /* DOMContentLoaded comes after every deferred script has run: all of them
+     on an address that names a tool, the ones Market needs on the homepage
+     (see WHAT LOADS FIRST above). */
   document.addEventListener('DOMContentLoaded',settle);
   window.addEventListener('load',function(){setTimeout(reveal,300);});
   window.addEventListener('pageshow',function(e){if(e.persisted)reveal();});
   setTimeout(reveal,15000);
-  window.AltahaBoot={reveal:reveal};
+  window.AltahaBoot.reveal=reveal;
 })();
 </script>
-<link rel="stylesheet" href="universe-scan.css?v=20261120-seo">
-<link rel="stylesheet" href="lenses.css?v=20261120-market">
-<link rel="stylesheet" href="query.css?v=20261120-two">
-<link rel="stylesheet" href="idea-card.css?v=20260927b">
+<script>AltahaBoot.late(7)</script>
 <link rel="stylesheet" href="doors.css?v=20261120-market">
-<link rel="stylesheet" href="calls.css?v=20261120">
-<link rel="stylesheet" href="watchlists.css?v=20261029">
-<link rel="stylesheet" href="strategy-lab.css?v=20261031">
-<link rel="stylesheet" href="picks.css?v=20261120-picks">
-<script src="picks.js?v=20261120-picks"></script>
-<script src="planet-renderer.js?v=20260921-3d"></script>
-<script src="universe-voyage.js?v=20261120-seo"></script>
-<script src="universe-scan.js?v=20261120-seo"></script>
+<script>AltahaBoot.late(8)</script>
 </head>
 <body>
 <div id="sh-bootcover" aria-hidden="true">
@@ -2949,6 +3176,13 @@ $("rcallist").addEventListener("click", e => {
 /* ── Ideas view ─────────────────────────────────────────────────────── */
 /* One of week, month, momentum, long (picks.js). The server still answers
    to short and medium, which is what older links ask for. */
+/* universe-scan.js draws the scan's progress, and on the homepage it arrives
+   after this script has already asked the engine where the scan stands. What
+   it is told before then is kept, and it starts from that. */
+function universeUpdate(s){
+  if(window.AltahaUniverse) window.AltahaUniverse.update(s);
+  else window.AltahaUniversePending = s;
+}
 let horizon = (window.AltahaPicks ? window.AltahaPicks.chosen() : "month"), pollTimer = null, ideasReq = 0;
 function markHorizon(){
   document.querySelectorAll("#hzseg .hz[data-h], #hzseg2 .hz[data-h]").forEach(x=>{
@@ -3398,7 +3632,7 @@ async function loadFilings(retry){
 
 /* ── Scan controller ────────────────────────────────────────────────── */
 function setProgress(s){
-  window.AltahaUniverse.update(s);
+  universeUpdate(s);
   const wrap=$("progwrap2");
   if(s.status!=="running"){ wrap.style.display="none"; return; }
   wrap.style.display="block";
@@ -3420,12 +3654,12 @@ async function pollScan(){
     if(!s) throw new Error("no body");
     pollMisses = 0;
   }catch(e){
-    window.AltahaUniverse.update({status:"reconnecting"});
+    universeUpdate({status:"reconnecting"});
     if(++pollMisses < 6){
       $("gennote2").textContent = "Engine not answering \u2014 still polling";
       return;
     }
-    window.AltahaUniverse.update({status:"error"});
+    universeUpdate({status:"error"});
     clearInterval(pollTimer); pollTimer=null; pollMisses=0;
     $("genbtn2").disabled=false;
     $("genbtn2").textContent="Refresh universe scan";
@@ -3487,7 +3721,7 @@ async function pollScan(){
    Refresh now sends force alone. A refusal comes back in words, and the
    override is a second, explicit press of the button the refusal offers. */
 async function startScan(force, ignoreMemory){
-  window.AltahaUniverse.update({status:"starting"});
+  universeUpdate({status:"starting"});
   $("genbtn2").disabled=true; $("genbtn2").textContent="Scanning\u2026";
   $("gennote2").textContent="A few minutes \u2014 keep this tab open";
   try{
@@ -3497,7 +3731,7 @@ async function startScan(force, ignoreMemory){
                                    {tries: 3, timeoutMs: 30000});
     const r = body || {};
     if(!r.started && r.reason==="cached"){
-      window.AltahaUniverse.update({...r, status:"cached"});
+      universeUpdate({...r, status:"cached"});
       $("genbtn2").disabled=false; $("genbtn2").textContent="Refresh universe scan";
       $("gennote2").textContent=""; loadIdeas(); return;
     }
@@ -3508,7 +3742,7 @@ async function startScan(force, ignoreMemory){
        Pressing Generate did nothing and said nothing about why — for eight
        days, while the newest ideas on the page were from 31 August. */
     if((!res.ok || r.started === false) && r.reason !== "already_running"){
-      window.AltahaUniverse.update({status:"error"});
+      universeUpdate({status:"error"});
       $("genbtn2").disabled=false;
       $("genbtn2").textContent = "Refresh universe scan";
       $("gennote2").textContent =
@@ -3537,7 +3771,7 @@ async function startScan(force, ignoreMemory){
     if(!pollTimer) pollTimer=setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);
   }catch(e){
     $("genbtn2").disabled=false;
-    window.AltahaUniverse.update({status:"error"});
+    universeUpdate({status:"error"});
     /* Don't relabel to "Generate from universe" on a network failure: a cached
        scan may well still exist on the server, and relabelling made the next
        press send force=false, which then came back "cached" and looked like a
@@ -3767,6 +4001,13 @@ function makeChartPanel(cfg){
     if(cfg.canShow && !cfg.canShow()){ S.pendingLoad = true; return; }
     if(cfg.reveal) cfg.reveal();
 
+    if(typeof LightweightCharts === "undefined" && window.AltahaBoot && window.AltahaBoot.chartLib && !S.askedLib){
+      // The charting library is fetched when a chart first needs it. Ask
+      // once, and come back here when it is on the page (or is not coming).
+      S.askedLib = true;
+      window.AltahaBoot.chartLib(()=>load());
+      return;
+    }
     if(!ensureChart()){
       // Container not laid out yet (was hidden a frame ago) — retry a few frames
       S.initTries = (S.initTries || 0) + 1;
@@ -4626,7 +4867,7 @@ if(fcSymParam){
     $("genbtn2").disabled = true; $("genbtn2").textContent = "Scanning…";
     setProgress(s); pollTimer = setInterval(function(){ if(!document.hidden) pollScan(); }, 2500);
   } else if(s.scanned_at){
-    window.AltahaUniverse.update({...s, status:"cached"});
+    universeUpdate({...s, status:"cached"});
     $("genbtn2").textContent = "Refresh universe scan";
   }
 }catch(e){} })();
@@ -4635,47 +4876,18 @@ if(fcSymParam){
 <script src="auth.js" defer></script>
 <script src="premium.js" defer></script>
 <script src="premium-plus.js" defer></script>
-<script src="charts.js" defer></script>
-<script src="portfolio-intelligence.js" defer></script>
-<script src="portfolio-story.js" defer></script>
-<script src="portfolio-plan.js" defer></script>
-<script src="portfolio.js?v=20261119-planner" defer></script>
+<script>AltahaBoot.late(9)</script>
 <script src="nav.js?v=20261120-market" defer></script>
-<script src="scoring.js" defer></script>
-<script src="social.js" defer></script>
+<script>AltahaBoot.late(10)</script>
 <script src="motion.js" defer></script>
-<script src="patterns.js" defer></script>
-<script src="share.js" defer></script>
-<link rel="stylesheet" href="index-explorer.css?v=20260924-atlas">
-<script src="index-explorer.js?v=20260924-atlas" defer></script>
-<script src="sectors-live.js?v=20260927-dialog" defer></script>
-<script src="deals.js" defer></script>
+<script>AltahaBoot.late(11)</script>
 <script src="shell.js?v=20261120-market" defer></script>
 <script src="home.js" defer></script>
-<script src="special.js" defer></script>
-<script src="delivery-trends.js" defer></script>
-<script src="wow.js" defer></script>
-<script src="concalls.js" defer></script>
-<script src="investor-pictures.js?v=20261119" defer></script>
-<script src="investors.js?v=20261119-pictures" defer></script>
-<script src="funds.js" defer></script>
-<script src="lenses.js?v=20261120-market" defer></script>
-<script src="screens.js?v=20260925" defer></script>
-<script src="query.js?v=20261120-two" defer></script>
-<script src="ledger-admin.js" defer></script>
-<script src="planner-risk.js" defer></script>
-<script src="planner-math.js?v=20261119" defer></script>
-<script src="planner.js?v=20261120-menus" defer></script>
+<script>AltahaBoot.late(12)</script>
 <script src="doors.js?v=20261120-market" defer></script>
-<script src="adviser.js" defer></script>
-<script src="question-art.js" defer></script>
-<script src="money-fx.js" defer></script>
-<script src="risk-math.js" defer></script>
-<script src="allocate-flow.js" defer></script>
+<script>AltahaBoot.late(13)</script>
 <script src="experience.js?v=20261120-market" defer></script>
-<script src="calls.js?v=20261120" defer></script>
-<script src="watchlists.js?v=20261120-menus" defer></script>
-<script src="strategy-lab.js?v=20261031" defer></script>
+<script>AltahaBoot.late(14)</script>
 <script src="home-motion.js?v=20260923-always-on" defer></script>
 <script src="home-hero.js?v=20260922-explore" defer></script>
 <script>

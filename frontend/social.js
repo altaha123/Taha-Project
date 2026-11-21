@@ -1403,7 +1403,12 @@
 
   function boot() {
     injectCSS();
-    if (!addNavEntry()) addFallbackButton();
+    /* With the site's navigation on the page, the desk is Me > Post drafts,
+       which calls AltahaSocial.open(), and nav.js removed the button this
+       used to clone into its bar. That removal ran on a timer and relied on
+       this file running first; on the homepage it now arrives after the
+       header is built, and its button would land in the header and stay. */
+    if (!window.AltahaNav && !addNavEntry()) addFallbackButton();
     if (location.hash === '#social') open();
   }
 

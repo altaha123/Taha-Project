@@ -239,5 +239,8 @@
     syncDock();
   }
   window.AltahaUniverse={update:update};
-  document.addEventListener('DOMContentLoaded',function(){update(pending);});
+  /* On the homepage this file arrives after the page has asked the engine
+     where the scan stands (index.html keeps the answer until then). */
+  function first(){var early=window.AltahaUniversePending;window.AltahaUniversePending=null;update(early||pending);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',first);else first();
 })();

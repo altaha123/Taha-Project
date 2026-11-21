@@ -314,7 +314,7 @@
        And a lone id that names a tab rather than a product is that tab:
        go('planner') and go('ideas') both predate this structure and both have
        to keep landing where they always did. */
-    var s, sub = null;
+    var s, sub = null, askedSection = sectionId, askedTab = tabId;
     if (!tabId && MOVED[sectionId]) tabId = sectionId;
     if (tabId && MOVED[tabId]) { sub = tabId; tabId = MOVED[tabId]; }
     if (tabId) {
@@ -324,6 +324,22 @@
       if (asTab) { s = asTab; tabId = sectionId; }
       else s = sectionById(sectionId);
     }
+    var target = tabId;
+    if (!target || !tabById(s, target)) {
+      target = s.tabs.length ? s.tabs[0].id : null;
+    }
+    var def = target ? tabById(s, target) : null;
+
+    /* The homepage shows Market before the files for every other tool have
+       arrived (index.html, WHAT LOADS FIRST). Asked for one of those tools
+       in that interval, wait for its files and then go: a view opened ahead
+       of the script that fills it would stay empty. */
+    var boot = window.AltahaBoot;
+    if (boot && boot.ready === false && typeof boot.then === 'function' && target !== HOME.tab) {
+      boot.then(function () { go(askedSection, askedTab, userInitiated); });
+      return;
+    }
+
     markLearn(false);
 
     // Only deliberate navigation. Restoring a section from the hash on load
@@ -331,12 +347,6 @@
     if (userInitiated && window.AltahaTrack) {
       window.AltahaTrack('view_opened', { section: s && s.id, tab: tabId || null });
     }
-
-    var target = tabId;
-    if (!target || !tabById(s, target)) {
-      target = s.tabs.length ? s.tabs[0].id : null;
-    }
-    var def = target ? tabById(s, target) : null;
 
     /* News & post drafts is a panel over the page rather than a view, so it
        opens rather than switching a tab. */

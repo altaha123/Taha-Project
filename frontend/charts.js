@@ -223,6 +223,8 @@
   /* Guarded: nothing above this line may stop the piece loader below it
      from running. That was the whole failure. */
   try { wrapChart(); } catch (e) {}
+  /* The library can land at any time now; wrap it before anything draws. */
+  window.addEventListener("altaha:chartlib", function () { try { wrapChart(); } catch (e) {} });
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", bootPatch);
   } else {
@@ -232,14 +234,16 @@
   setTimeout(bootPatch, 1200);
 
   /* ---- the charting library ------------------------------------------
-     index.html loads it from unpkg, with a document.write fallback to
-     jsdelivr. Chrome's "parser-blocking cross-site script via document.write"
-     intervention can refuse that fallback outright on a slow connection —
-     which is exactly a phone on mobile data, and leaves the tab with a
-     toolbar and no chart and no explanation. This retry appends a normal
-     script element instead, which the intervention does not touch, and if
-     the library still never arrives it says so on the page rather than
-     leaving the reader to guess. */
+     index.html used to load it in the head, from unpkg, with a
+     document.write fallback to jsdelivr: 160 KB from another site that every
+     visit waited for before the first paint, chart or no chart, and a
+     fallback that Chrome refuses outright on a slow connection. It is now
+     fetched when a chart first needs it, by AltahaBoot.chartLib in
+     index.html, which appends an ordinary script element and tries the
+     second CDN if the first fails. This asks for it once the workspace is
+     mounted, and if the library never arrives it says so on the page rather
+     than leaving the reader to guess. Pages without that loader (and this
+     file's own older behaviour) use the list below. */
   var CDNS = [
     "https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js",
     "https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"
@@ -252,6 +256,12 @@
 
   function ensureLibrary(done) {
     if (haveLibrary()) { done(true); return; }
+    /* index.html has one loader for it, shared with the chart on the
+       analysis page, so the library is never fetched twice. */
+    if (window.AltahaBoot && typeof window.AltahaBoot.chartLib === "function") {
+      window.AltahaBoot.chartLib(done);
+      return;
+    }
     var k = 0;
     (function attempt() {
       if (haveLibrary()) { done(true); return; }
