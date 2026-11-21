@@ -38,17 +38,34 @@ xcrun simctl boot "$DEVICE" 2>/dev/null || true
 xcrun simctl bootstatus "$DEVICE" -b > /dev/null
 
 xcrun simctl install "$DEVICE" "$APP"
-: > "$LOG"
 # With a terminal attached, not a file: an app writing to a file saves its
 # output up and writes it in blocks, so the line this waits for would sit
 # unwritten until the app quit. The first run of this script failed that way
 # with the app open and working on the screen.
-xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE" > "$LOG" 2>&1 &
+launch() {
+  : > "$LOG"
+  xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE" > "$LOG" 2>&1 &
+  LAUNCH_PID=$!
+}
 
-# The line ends with a carriage return here, because the app was given a
-# terminal. The second run of this script failed on exactly that.
-wait_for "\[altaha\] bridge ready: ios [0-9.]+ /(index\.html)?[[:space:]]*$" 120 \
-  || fail "the home page never reported in"
+# A simulator fresh from its first boot sometimes takes a request to open an
+# app and then does nothing with it: one run ended with the app installed, on
+# the home screen, never opened, and nothing in the log at all. So the app is
+# asked again, up to three times. An app that cannot start fails all three.
+# The line ends with a carriage return, because the app was given a terminal.
+STARTED=""
+for attempt in 1 2 3; do
+  launch
+  if wait_for "\[altaha\] bridge ready: ios [0-9.]+ /(index\.html)?[[:space:]]*$" 90; then
+    STARTED=1
+    break
+  fi
+  echo "      (launch $attempt did not report in)"
+  kill "$LAUNCH_PID" 2>/dev/null || true
+  xcrun simctl terminate "$DEVICE" "$BUNDLE" > /dev/null 2>&1 || true
+  sleep 5
+done
+[ -n "$STARTED" ] || fail "the home page never reported in"
 echo "ok    the app starts and the home page loads"
 sleep 8
 xcrun simctl io "$DEVICE" screenshot "$OUT/ios-home.png" > /dev/null
