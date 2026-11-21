@@ -692,6 +692,12 @@
       ctx.globalAlpha = 1;
     }
     if (W.sel && !W.sel.hidden && !W.hideAll && HITS[W.sel.id]) handles(HITS[W.sel.id].h);
+    /* The points placed so far, marked the moment they are placed: a line
+       of no length yet is otherwise invisible, and a click that shows
+       nothing reads as a click that did nothing. */
+    if (W.mode === "draw" && W.pending.length) {
+      handles(W.pending.map(function (q) { return { x: X(g, q.t), y: Y(q.p) }; }));
+    }
     ctx.restore();
     axisTags(g);
     rtButton(g);
@@ -1413,6 +1419,9 @@
   function setMode(m, tool) {
     W.mode = m; W.tool = tool || null; W.pending = []; W.preview = null;
     cv.classList.toggle("live", m !== "pan");
+    /* While a tool is out, the legend's buttons and the zoom buttons that
+       appear on hover step aside: a click meant for the chart must reach it. */
+    root.classList.toggle("drawing", m !== "pan");
     cv.classList.toggle("erase", m === "erase");
     root.querySelectorAll("#cw-rail .cw-t[data-t]").forEach(function (b) {
       b.classList.toggle("on", m === "draw" ? b.dataset.t === tool : b.dataset.t === m);
@@ -1438,10 +1447,19 @@
       if (gEl) { gEl.dataset.t = t; gEl.dataset.tip = T[t].lab; gEl.setAttribute("aria-label", T[t].lab); gEl.innerHTML = svg(t); }
     }
     W.sel = null; inspector();
+    if (W.hideAll) { W.hideAll = false; railState(); toast("Drawings were hidden; they are shown again so you can see this one."); }
     setMode("draw", t);
   }
 
+  /* Moving the crosshair redraws the price chart and every pane, so it is
+     done once per frame however many pointer events arrive in it. */
+  var xhPt = null, xhRaf = null;
   function crosshairAt(pt) {
+    xhPt = pt;
+    if (xhRaf) return;
+    xhRaf = requestAnimationFrame(function () { xhRaf = null; if (xhPt) crosshairNow(xhPt); });
+  }
+  function crosshairNow(pt) {
     if (!W.chart || !W.main || typeof W.chart.setCrosshairPosition !== "function") return;
     var g = geo(); if (!g) return;
     var i = clamp(Math.round(g.l(pt.x)), 0, W.disp.length - 1), r = W.disp[i];
@@ -1633,7 +1651,9 @@
     }
     if (W.dragging && W.dragging.place) {
       var st = W.dragging.start; W.dragging = null;
-      if (Math.hypot(pt.x - st.x, pt.y - st.y) > 8) {
+      /* A press dragged out to a second point; a click that wobbled a few
+         pixels on a touchpad is still a click, so the bar is set high. */
+      if (Math.hypot(pt.x - st.x, pt.y - st.y) > 14) {
         var a = anchorAt(pt);
         if (a) { if (e.shiftKey && LINES[W.tool]) a.p = W.pending[0].p; W.pending.push(a); place(); }
       }
@@ -3299,10 +3319,10 @@
     });
 
     /* The chart. */
-    cv.addEventListener("pointerdown", onDown);
-    cv.addEventListener("pointermove", onMove);
-    cv.addEventListener("pointerup", onUp);
-    cv.addEventListener("pointercancel", onUp);
+    cv.addEventListener("pointerdown", safe(onDown));
+    cv.addEventListener("pointermove", safe(onMove));
+    cv.addEventListener("pointerup", safe(onUp));
+    cv.addEventListener("pointercancel", safe(onUp));
     cv.addEventListener("wheel", onWheel, { passive: false });
     cv.addEventListener("dblclick", function (e) {
       if (W.mode === "draw" && W.tool === "path") { finishPath(false); return; }
@@ -3351,6 +3371,18 @@
     root.querySelector('[data-a="side"]').classList.toggle("on", !!L.side);
     railState(); tfButtons(); footState();
     setMode("pan");
+  }
+
+  /* A drawing that fails must say so. Silently doing nothing is the one
+     failure a reader cannot report. */
+  function safe(fn) {
+    return function (e) {
+      try { fn(e); } catch (err) {
+        if (window.console) console.error("[altaha-charts]", err);
+        W.dragging = null;
+        toast("Something went wrong while drawing (" + (err && err.message || err) + "). Press Esc and try again.", 9000);
+      }
+    };
   }
 
   function railState() {
