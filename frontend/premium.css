@@ -52,8 +52,11 @@
   --up:   #0B7A55;
   --down: #C0392F;
 
-  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-          'Inter', 'Segoe UI', system-ui, sans-serif;
+  /* The same three families as every other page (altaha-skin.css). This
+     used to put the Apple system font ahead of Inter, so on a Mac or an
+     iPhone half the homepage was set in San Francisco and the other half,
+     wherever a rule named Inter itself, in Inter. */
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --serif: 'Instrument Serif', Georgia, serif;
 

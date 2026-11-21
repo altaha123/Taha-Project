@@ -9,6 +9,19 @@
    and motion — no layout surgery, so nothing in the app can break.
    ═══════════════════════════════════════════════════════════════════════ */
 
+/* ── 0 · THE THREE FAMILIES ───────────────────────────────────────────────
+   Inter for reading, IBM Plex Mono for figures and small labels, Instrument
+   Serif for headlines. Named here because this is the one stylesheet every
+   page loads. Pages that never defined these (Pro, sign-in, the planner,
+   advisers, the wealth desk) were falling through to whatever each rule
+   happened to name as its fallback, which on Windows meant Segoe UI in one
+   panel and Courier in the next. */
+:root{
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --serif:'Instrument Serif',Georgia,serif;
+}
+
 /* ── 1 · PALETTE ─────────────────────────────────────────────────────────
    Both themes defined against the tokens index.html already uses, so the
    existing theme button switches the entire application, not just a page. */

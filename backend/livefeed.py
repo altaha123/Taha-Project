@@ -195,7 +195,7 @@ class _Feed:
         try:
             import websockets
         except ImportError:
-            self.last_error = ("websockets package not installed — add "
+            self.last_error = ("websockets package not installed: add "
                                "'websockets' to requirements.txt for live "
                                "streaming; using REST fallback")
             return False

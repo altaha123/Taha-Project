@@ -191,7 +191,7 @@ def test_a_switch_is_only_ever_into_the_same_industry():
     alts = P.alternatives_for(r, P._universe({"factor_universe": STEEL}), held={"TATASTEEL"})
     assert [(a["symbol"], a["group"]) for a in alts] == [("JSWSTEEL", "Steel")]
     out = c(r, t, sector_state="Improving", sector_rel_3m=1.0, alternatives=alts)
-    assert out["switch"] == "Consider switching to JSWSTEEL — same industry (Steel), score 60 vs 32 for TATASTEEL."
+    assert out["switch"] == "Consider switching to JSWSTEEL: same industry (Steel), score 60 vs 32 for TATASTEEL."
 
     assert P.alternatives_for(r, P._universe({"factor_universe": STEEL[:1]}), held={"TATASTEEL"}) == []
     r.pop("industry")

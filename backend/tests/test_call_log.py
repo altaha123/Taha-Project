@@ -127,7 +127,7 @@ def test_horizons_are_separate_records(log):
 
 
 def test_a_partial_scan_is_never_recorded(log):
-    out = log.record("short", [idea("ABB")], SCAN1 + " (partial — scan in progress)", {})
+    out = log.record("short", [idea("ABB")], SCAN1 + " (partial, scan in progress)", {})
     assert out["recorded"] is False
     assert log.listing()["total"] == 0
 

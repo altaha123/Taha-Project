@@ -10,7 +10,7 @@ assert.match(html,/13\.20 L/);
 assert.match(html,/13,20,000 shares, derived/);
 assert.match(html,/delivered quantity|Delivered quantity/);
 assert.match(html,/stroke-dasharray="66 100"/);
-assert.match(html,/0–100% scale/);
+assert.match(html,/0 to 100% scale/);
 assert.match(html,/<details class="dv-data">/);
 assert(!html.includes('NaN'));
 for(const x of [null,undefined,'',NaN,Infinity,-1,101]) assert.equal(ui.percent(x),null);

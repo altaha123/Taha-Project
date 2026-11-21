@@ -72,7 +72,7 @@ DB_PATH = os.path.join(DATA_DIR, "explanations.db")
 
 DISCLAIMER = ("Written by an AI model (%s, via Groq) from the numbers on this "
               "page. It is an explanation of the score, not advice, and it can "
-              "be wrong — check anything that matters against the ledger below.")
+              "be wrong, so check anything that matters against the ledger below.")
 
 
 def configured() -> bool:
@@ -306,11 +306,12 @@ SYSTEM = (
     "- A percentile is a rank among peers: 80th percentile means better than "
     "80 of every 100 peers on that measure.\n"
     "- If data is missing or confidence is low, say so plainly.\n"
-    "Format: plain text, no markdown, no headings, no bullet points. Exactly "
+    "Format: plain text, no markdown, no headings, no bullet points, and no "
+    "em dashes or en dashes. Exactly "
     "three short paragraphs, under 180 words in total: (1) what the overall "
     "score and label mean for this company; (2) what is lifting the score and "
     "what is holding it back, with the specific numbers; (3) what the score "
-    "cannot see — missing data, confidence, and that it is not a "
+    "cannot see: missing data, confidence, and that it is not a "
     "recommendation."
 )
 

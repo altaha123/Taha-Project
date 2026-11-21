@@ -82,8 +82,8 @@ def state():
     # true rather than what was last written.
     if out["running"] and not running():
         out["running"] = False
-        out["note"] = out["note"] or ("the job stopped before finishing — most "
-                                      "likely the instance restarted. Start it "
+        out["note"] = out["note"] or ("the job stopped before finishing, most "
+                                      "likely because the instance restarted. Start it "
                                       "again and it will continue from where "
                                       "it reached.")
     out["alive"] = running()
@@ -119,7 +119,7 @@ def _sweep(quarters, max_slices):
             if results:
                 _job["last_symbol"] = results[-1].get("symbol")
             if r.get("attempted", 0) == 0:
-                _job["note"] = ("every company in the universe has been read — "
+                _job["note"] = ("every company in the universe has been read, so "
                                 "the ledger is current.")
                 break
             if r.get("stopped_early"):

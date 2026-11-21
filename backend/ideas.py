@@ -130,7 +130,7 @@ HORIZONS = {
         "label": "Short-term setups",
         "note": ("Setups whose premise plays out in weeks to a few months: strong trends with "
                  "volume behind them, and accumulation footprints that haven't fully moved yet. "
-                 "These decay fastest — re-scan often."),
+                 "These decay fastest, so re-scan often."),
         # Weights sum to 100. Regime and fresh catalysts matter most here.
         "weights": {"fit": 32, "composite": 10, "sector": 14, "regime": 12,
                     "catalyst": 17, "liquidity": 8, "record": 7},
@@ -257,13 +257,13 @@ def liquidity_tier(turnover_cr):
     surfacing them without a flag is how a credibility tool becomes a liability.
     """
     if turnover_cr is None:
-        return "unknown", "Turnover unknown — treat position size with caution."
+        return "unknown", "Turnover unknown. Treat position size with caution."
     try:
         t = float(turnover_cr)
     except (TypeError, ValueError):
-        return "unknown", "Turnover unknown — treat position size with caution."
+        return "unknown", "Turnover unknown. Treat position size with caution."
     if t >= 10:
-        return "liquid", "Trades freely — entry and exit costs are small."
+        return "liquid", "Trades freely, so entry and exit costs are small."
     if t >= 2:
         return "moderate", "Reasonable depth, but large orders will move the price."
     if t >= 0.5:
@@ -338,14 +338,14 @@ def market_regime():
 
                 if pct >= 2:
                     stance = "Tailwind"
-                    label = ("Index comfortably above its 50-day average — trend setups have "
+                    label = ("Index comfortably above its 50-day average: trend setups have "
                              "tailwind.")
                 elif pct >= 0:
                     stance = "Mixed"
-                    label = "Index just above its 50-day average — mixed, not yet hostile."
+                    label = "Index just above its 50-day average: mixed, not yet hostile."
                 elif pct >= -3:
                     stance = "Headwind"
-                    label = ("Index below its 50-day average — trend setups fail more often here, "
+                    label = ("Index below its 50-day average. Trend setups fail more often here, "
                              "so momentum ideas are shown with a warning.")
                 else:
                     stance = "Hostile"
@@ -371,7 +371,7 @@ def market_regime():
 def _regime_quality(regime, setup_key):
     """0..1 for the regime component, plus the sentence explaining it."""
     if not regime:
-        return 0.6, "Index trend unavailable — this factor scored neutral rather than assumed."
+        return 0.6, "Index trend unavailable, so this factor scored neutral rather than assumed."
     pct = regime.get("pct_vs_50dma")
     if setup_key not in TREND_DEPENDENT:
         # A quality business in a drawdown does not need the index's permission,
@@ -382,12 +382,12 @@ def _regime_quality(regime, setup_key):
     if pct is None:
         return 0.6, "Index trend unavailable."
     if pct >= 2:
-        return 1.0, f"Index {pct:+.1f}% above its 50-day average — trend continuation has tailwind."
+        return 1.0, f"Index {pct:+.1f}% above its 50-day average: trend continuation has tailwind."
     if pct >= 0:
-        return 0.78, f"Index {pct:+.1f}% above its 50-day average — workable, not strong."
+        return 0.78, f"Index {pct:+.1f}% above its 50-day average: workable, not strong."
     if pct >= -3:
-        return 0.42, f"Index {pct:+.1f}% below its 50-day average — breakouts fail more often here."
-    return 0.15, (f"Index {pct:+.1f}% below its 50-day average — the worst regime for this setup, "
+        return 0.42, f"Index {pct:+.1f}% below its 50-day average. Breakouts fail more often here."
+    return 0.15, (f"Index {pct:+.1f}% below its 50-day average, the worst regime for this setup, "
                   "and scored as such.")
 
 
@@ -445,7 +445,7 @@ def _sector_row(outlook, sector_name):
 
 def _sector_quality(row, horizon):
     if not row:
-        return 0.55, "No sector index maps to this name — scored neutral, not assumed."
+        return 0.55, "No sector index maps to this name. Scored neutral, not assumed."
     state = row.get("state") or "Unrated"
     q = SECTOR_QUALITY.get(horizon, SECTOR_QUALITY["short"]).get(state, 0.55)
     rel3 = (row.get("relative") or {}).get("3M")
@@ -548,18 +548,18 @@ def _catalyst_quality(filing, stories, hours):
 
     if filing and filing.get("direction") == "adverse":
         return (0.05,
-                f"Adverse filing: {filing.get('category')} — {filing.get('line')}. "
+                f"Adverse filing ({filing.get('category')}): {filing.get('line')}. "
                 "Scored against this idea, not for it.",
                 fresh, True)
 
     if filing and filing.get("direction") == "supportive":
         q = _FILING_SUPPORT.get(filing.get("importance"), 0.5)
-        return (q, f"{filing.get('category')} filed with the exchange — {filing.get('line')}.",
+        return (q, f"{filing.get('category')} filed with the exchange: {filing.get('line')}.",
                 fresh, False)
 
     if filing:      # an "event": real, dated, but direction unknown from the tag
         q = 0.5 * _FILING_SUPPORT.get(filing.get("importance"), 0.5) + 0.25
-        return (q, (f"{filing.get('category')} filed with the exchange — {filing.get('line')}. "
+        return (q, (f"{filing.get('category')} filed with the exchange: {filing.get('line')}. "
                     "A dated event inside the horizon; the direction is not readable from the "
                     "filing header, so it is scored as an event, not as support."),
                 fresh, False)
@@ -572,10 +572,10 @@ def _catalyst_quality(filing, stories, hours):
             q -= 0.15
         note = (f"{len(fresh)} press item{'s' if len(fresh) > 1 else ''} inside the window, "
                 f"carried by up to {outlets} outlet{'s' if outlets > 1 else ''}"
-                + (" — all of it speculative wording." if speculative else "."))
+                + (", all of it speculative wording." if speculative else "."))
         return max(0.0, min(q, 0.8)), note, fresh, False
 
-    return 0.35, "No filing or press inside the window — a quiet name, which is neutral.", [], False
+    return 0.35, "No filing or press inside the window: a quiet name, which is neutral.", [], False
 
 
 # ---------------------------------------------------------------------------
@@ -586,8 +586,8 @@ def _record_quality(detail, setup_key):
     d = (detail or {}).get(setup_key)
     if not d or not d.get("reliable"):
         n = (d or {}).get("ideas", 0)
-        return 0.5, (f"Only {n} closed idea{'s' if n != 1 else ''} for this archetype so far — "
-                     "not enough to say anything, so this factor scored neutral.")
+        return 0.5, (f"Only {n} closed idea{'s' if n != 1 else ''} for this archetype so far. "
+                     "That is not enough to say anything, so this factor scored neutral.")
     a = d["avg_alpha_pct"]
     q = max(0.0, min(1.0, (a + 5.0) / 10.0))
     return q, (f"This archetype has averaged {a:+.2f}% alpha over the index across "
@@ -625,7 +625,7 @@ def _staleness(scanned_at):
         return {"days": age, "hours": round(age_hours, 1), "warn": False,
                 "text": f"Scanned {age} day{'s' if age > 1 else ''} ago."}
     return {"days": age, "hours": round(age_hours, 1), "warn": True,
-            "text": (f"Scanned {age} days ago. Short-term setups decay in days — "
+            "text": (f"Scanned {age} days ago. Short-term setups decay in days, so "
                      "re-run the universe scan before acting on these.")}
 
 
@@ -1542,7 +1542,7 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
     if excluded_adverse:
         n = len(excluded_adverse)
         notes.append(f"{n} name{'s' if n > 1 else ''} matching the setup {'were' if n > 1 else 'was'} "
-                     "removed for a serious adverse filing in the window — "
+                     "removed for a serious adverse filing in the window: "
                      + ", ".join(f"{e['symbol']} ({e['category']})" for e in excluded_adverse[:4])
                      + ". These are listed under 'removed for filings' rather than shown with a "
                        "warning, because a live regulatory action is not a setup with a caveat.")
@@ -1555,7 +1555,7 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
                      f"held back by the {SECTOR_CAP}-per-sector cap.")
     if dropped_thin:
         notes.append(f"{dropped_thin} qualifying name{'s' if dropped_thin > 1 else ''} "
-                     "excluded for thin liquidity — switch on 'include thin' to see them.")
+                     "excluded for thin liquidity. Switch on 'include thin' to see them.")
     if dropped_unknown:
         notes.append(f"{dropped_unknown} name{'s' if dropped_unknown > 1 else ''} excluded because "
                      "turnover could not be measured at all.")
@@ -1573,12 +1573,12 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
     missing = [k.replace("_", " ") for k, v in layers.items() if not v]
     if missing:
         notes.append("Scored without " + ", ".join(missing) +
-                     " — that feed was unavailable, so those factors scored neutral rather "
+                     ". That feed was unavailable, so those factors scored neutral rather "
                      "than being guessed at.")
     if slow:
         notes.append("The " + ", ".join(slow) + " feed did not answer within "
                      f"{IDEAS_FEED_DEADLINE:.0f} seconds and is still loading. It is being "
-                     "fetched now — reload in a moment for the full picture rather than a "
+                     "fetched now, so reload in a moment for the full picture rather than a "
                      "list that was scored without it.")
 
     return {

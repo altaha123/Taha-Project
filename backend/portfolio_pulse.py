@@ -91,15 +91,15 @@ def lean_for(row, events, directions=None):
             if d == "supportive":
                 p = round(FILING_FOR * weight, 2)
                 reasons.append({**base, "sign": 1, "points": p, "kind": "filing",
-                                "why": f"{e.get('category')} filed — counts for the stock."})
+                                "why": f"{e.get('category')} filed, which counts for the stock."})
             elif d == "adverse":
                 p = round(FILING_AGAINST * weight, 2)
                 reasons.append({**base, "sign": -1, "points": p, "kind": "filing",
-                                "why": f"{e.get('category')} filed — counts against the stock."})
+                                "why": f"{e.get('category')} filed, which counts against the stock."})
             else:
                 p = 0.0
                 reasons.append({**base, "sign": 0, "points": 0.0, "kind": "filing",
-                                "why": f"{e.get('category') or 'Filing'} — a real event whose direction the "
+                                "why": f"{e.get('category') or 'Filing'}: a real event whose direction the "
                                        "exchange headline does not give. Open the filing."})
             points += p
         else:
@@ -112,7 +112,7 @@ def lean_for(row, events, directions=None):
                                 "why": "Press coverage with a verified direction."})
             else:
                 reasons.append({**base, "sign": 0, "points": 0.0, "kind": "press",
-                                "why": "In the news — direction not verified, so it is not scored."})
+                                "why": "In the news. Direction not verified, so it is not scored."})
 
     score = _num(row.get("composite"))
     if score is not None and score >= SCORE_STRONG:

@@ -181,7 +181,7 @@ def _context_lines(a):
     out = []
     f = a.get("filing")
     if f:
-        out.append("\U0001F4CE " + _e(f"{f.get('line', '')} — {f.get('category', '')}"))
+        out.append("\U0001F4CE " + _e(f"{f.get('line', '')} · {f.get('category', '')}"))
     # NOTE: index regime is deliberately not repeated per alert — the digest
     # header carries it once. Repeating it made every card look different
     # depending on which optional fields happened to be present.
@@ -545,7 +545,7 @@ def send_batch(rows: list, index_pct=None, total_today=None, clock=None) -> bool
     # A restart that re-detects the same setups must not buzz twice.
     h = hashlib.sha1(text.encode("utf-8")).hexdigest()
     if h == _LAST.get("last_hash"):
-        _mark(True, "suppressed — identical to the previous digest")
+        _mark(True, "suppressed: identical to the previous digest")
         return True
     _LAST["last_hash"] = h
 
@@ -631,7 +631,7 @@ def test(sample: dict = None) -> dict:
             "public_channel_configured": bool(TG_PUBLIC),
             "whatsapp_configured": bool(WA_TOKEN and WA_PHONE_ID and WA_TO),
             "token_shape": (f"{TG_TOKEN.split(':')[0]}:***" if ":" in TG_TOKEN
-                            else ("MALFORMED — no colon in token" if TG_TOKEN else "missing")),
+                            else ("MALFORMED: no colon in token" if TG_TOKEN else "missing")),
             "chat_id": TG_CHAT or "missing",
             "sent": ok, "detail": detail,
             "public_sent": pub_ok, "public_detail": pub_detail}

@@ -227,7 +227,7 @@ def test_the_homepage_links_to_companies_without_a_script():
     for must in ("/stocks", "/glossary", "/methodology", "/planner",
                  "/stock-RELIANCE", "/stock-TCS", "/stock-HDFCBANK", "/stock-INFY"):
         assert must in hrefs, must + " is not a plain link on the homepage"
-    assert '<a href="/stocks">All NSE Companies (A&ndash;Z)</a>' in static
+    assert '<a href="/stocks">All NSE Companies (A to Z)</a>' in static
     companies = [h for h in hrefs if h.startswith("/stock-")]
     assert len(set(companies)) >= 12
     for h in companies:

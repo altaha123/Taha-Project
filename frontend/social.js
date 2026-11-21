@@ -309,7 +309,7 @@
     y += attribGap;
     ctx.font = font(28, SANS, '400');
     ctx.fillStyle = P.mute;
-    ctx.fillText('\u2014 ' + (lead.publication || ''), pad, y);
+    ctx.fillText(lead.publication || '', pad, y);
 
     if (alsoBlock) {
       y += 16;
@@ -781,7 +781,7 @@
     panel = document.createElement('div');
     panel.id = 'altaha-social-panel';
     panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-label', 'Social — announcement feed');
+    panel.setAttribute('aria-label', 'Social: announcement feed');
     panel.innerHTML = ''
       + '<div class="as-wrap"><div class="as-pad">'
       + '  <div class="as-top">'
@@ -790,7 +790,7 @@
       + '    <button class="as-close" id="as-close" aria-label="Close Social">&times;</button>'
       + '  </div>'
       + '  <p class="as-note">Plain restatements of what companies filed with BSE and NSE today. '
-      + '  No view, no target, no recommendation — that stays out until the RA registration is in hand. '
+      + '  No view, no target, no recommendation. That stays out until the RA registration is in hand. '
       + '  Read the filing before you post anything.</p>'
       + '  <div class="as-tabs" role="tablist">'
       + '    <button class="as-tab" id="as-tab-filings" role="tab">Filings</button>'
@@ -912,7 +912,7 @@
       + '<span class="as-co">' + esc(item.company || '') + '</span></div>';
 
     var badge = held
-      ? '<div class="as-hold">Headline does not carry the facts \u2014 read the PDF before posting</div>'
+      ? '<div class="as-hold">Headline does not carry the facts. Read the PDF before posting</div>'
       : (r.figures ? '<div class="as-figs">' + esc(r.figures) + '</div>' : '');
 
     /* A held row used to offer only "Open filing" and "Dismiss" — a dead end.
@@ -936,7 +936,7 @@
     var edit = held
       ? '<div class="as-edit" hidden>'
         + '<label class="as-writelbl">Restate the filing in one sentence. '
-        + 'Facts only \u2014 what the company said, not what you think of it.</label>'
+        + 'Facts only: what the company said, not what you think of it.</label>'
         + '<textarea class="as-post" spellcheck="false" aria-label="Your restatement" '
         + 'placeholder="e.g. IDFC First Bank\u2019s long term rating was reaffirmed at CRISIL AA+/Stable."></textarea>'
         + '<div class="as-acts as-writeacts" hidden>'
@@ -973,7 +973,7 @@
                   + (item.time_ist ? ' on ' + item.time_ist : '')
                   + '. The full PDF is linked in our bio.\n\n'
                   + 'A plain-English restatement of the company\u2019s own filing. '
-                  + 'Descriptive only \u2014 not a recommendation, not advice.\n\n'
+                  + 'Descriptive only, not a recommendation and not advice.\n\n'
                   + '#' + (item.symbol || 'Markets') + ' #StockMarketIndia #NSE #BSE #CorporateFilings';
       return copy;
     }
@@ -1203,8 +1203,8 @@
         a.href = url; a.download = name;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 6000);
-        if (note) note.textContent = mp4 ? 'MP4 saved' : 'WebM — convert before uploading';
-        toast(mp4 ? 'Reel saved \u2014 ready for Instagram'
+        if (note) note.textContent = mp4 ? 'MP4 saved' : 'WebM: convert before uploading';
+        toast(mp4 ? 'Reel saved, ready for Instagram'
                   : 'Reel saved as WebM. Instagram needs MP4, so convert it first.');
       }).catch(function (err) {
         if (note) note.textContent = '';
@@ -1222,7 +1222,7 @@
       var name = 'altaha-' + (nameHint || 'card').toLowerCase().replace(/[^a-z0-9]+/g, '-')
         + '-' + state.format + '.png';
       window.AltahaCards.download(canvas, name).then(function () {
-        toast('Saved — post it from your phone');
+        toast('Saved. Post it from your phone');
       }, function () { toast('Download failed'); });
     });
 
@@ -1239,13 +1239,13 @@
       t.style.opacity = '0';
       document.body.appendChild(t);
       t.select();
-      try { document.execCommand('copy'); toast('Copied — paste into X'); }
+      try { document.execCommand('copy'); toast('Copied. Paste into X'); }
       catch (e) { toast('Select the text and copy manually'); }
       document.body.removeChild(t);
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () {
-        toast('Copied — paste into X');
+        toast('Copied. Paste into X');
       }, fallback);
     } else { fallback(); }
   }
@@ -1331,7 +1331,7 @@
 
   function offline() {
     listEl.innerHTML = '<div class="as-empty">Could not reach the service. '
-      + 'If the backend has been idle it may still be starting — give it about thirty seconds and try again.</div>';
+      + 'If the backend has been idle it may still be starting. Give it about thirty seconds and try again.</div>';
     statusEl.textContent = 'offline';
   }
 

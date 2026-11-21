@@ -325,7 +325,7 @@ def record_card(stats: dict) -> bytes:
     stats = stats or {}
     d.text((64, 178), "Does it work?", font=serif(66), fill=INK)
     _tracking(d, (66, 258),
-              "EVERY IDEA RECORDED THE DAY IT WAS GENERATED — WINNERS AND LOSERS",
+              "EVERY IDEA RECORDED THE DAY IT WAS GENERATED, WINNERS AND LOSERS",
               mono(16), MUTE, 2.6)
 
     def pct(v):
@@ -433,7 +433,7 @@ def share_page(title, description, image, target):
 <meta property="og:title" content="{t}">
 <meta property="og:description" content="{d}">
 <meta property="og:image" content="{i}">
-<meta property="og:image:alt" content="Altaha Screener card — {t}">
+<meta property="og:image:alt" content="Altaha Screener card: {t}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="{u}">
@@ -711,7 +711,7 @@ def chart_card(payload: dict) -> bytes:
 
     if not shape:
         _tracking(d, (66, 520),
-                  "WHICH IS THE USUAL ANSWER — A DETECTOR THAT ALWAYS FINDS ONE "
+                  "WHICH IS THE USUAL ANSWER. A DETECTOR THAT ALWAYS FINDS ONE "
                   "HAS STOPPED DETECTING", mono(13), MUTE, 2.2)
 
     _footer(d, dt.date.today().strftime("%d %b %Y"))
@@ -985,7 +985,7 @@ def results_card(r: dict) -> bytes:
     def bars(top, title, series, now):
         if not series:
             return top
-        _tracking(d, (700, top), f"{title} — ₹ CRORE", mono(14), MUTE, 2.4)
+        _tracking(d, (700, top), f"{title}, ₹ CRORE", mono(14), MUTE, 2.4)
         then = _year_ago(series or [])
         rows = [(then.get("period"), then.get("value_cr"), False)] if then else []
         if series:

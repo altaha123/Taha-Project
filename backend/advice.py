@@ -138,15 +138,15 @@ def evaluate(row: dict, total_value: float, sector_state: str | None,
     # ── Reasons, in the order a person would actually weigh them ──────────
     if score is not None:
         if strong:
-            reasons.append(f"Scores {score}/100 — the engine's checks are largely passing.")
+            reasons.append(f"Scores {score}/100: the engine's checks are largely passing.")
         elif weak:
             reasons.append(f"Scores {score}/100. Below 38 the technical and fundamental "
                            f"checks are failing together, not in isolation.")
         elif soft:
-            reasons.append(f"Scores {score}/100 — middling. Neither the trend nor the "
+            reasons.append(f"Scores {score}/100, which is middling. Neither the trend nor the "
                            f"accounts make a strong case.")
         else:
-            reasons.append(f"Scores {score}/100 — sound without being exceptional.")
+            reasons.append(f"Scores {score}/100: sound without being exceptional.")
 
     if oversize:
         reasons.append(f"At {weight:.1f}% it is the concentration risk in this book, "
@@ -158,17 +158,17 @@ def evaluate(row: dict, total_value: float, sector_state: str | None,
     if sector_state and sector_rel_3m is not None:
         side = "ahead of" if sector_rel_3m >= 0 else "behind"
         reasons.append(f"Its sector is {abs(sector_rel_3m):.1f}% {side} the Nifty 50 over "
-                       f"three months — {sector_state.lower()}.")
+                       f"three months ({sector_state.lower()}).")
 
     if deep_loss:
         reasons.append(f"Down {abs(pnl_pct):.1f}% from your cost. A position needs "
                        f"{100 * (abs(pnl_pct) / (100 - abs(pnl_pct))):.0f}% just to get back "
                        f"to level.")
     elif pnl_pct is not None and pnl_pct >= 40:
-        reasons.append(f"Up {pnl_pct:.1f}% from cost — the gain itself has grown the weight.")
+        reasons.append(f"Up {pnl_pct:.1f}% from cost, and the gain itself has grown the weight.")
 
     if news and news.get("importance") in ("high", "critical"):
-        reasons.append(f"Recent filing — {news.get('category')}: {news.get('headline')}")
+        reasons.append(f"Recent filing, {news.get('category')}: {news.get('headline')}")
 
     # ── The call ──────────────────────────────────────────────────────────
     if weak and (sector_bad or deep_loss):
@@ -205,7 +205,7 @@ def evaluate(row: dict, total_value: float, sector_state: str | None,
                           "price": round(row["price"], 2), "of_shares": row["qty"]}
     elif action == "REDUCE" and trim:
         headline = _verb(
-            f"Reduce {sym} to about {STOCK_TARGET:.0f}% — sell {trim['shares']} of "
+            f"Reduce {sym} to about {STOCK_TARGET:.0f}%: sell {trim['shares']} of "
             f"{int(trim['of_shares'])} shares, ₹{trim['value']:,.0f}.",
             f"{sym} sits at {weight:.1f}%. Returning to {STOCK_TARGET:.0f}% is "
             f"{trim['shares']} of {int(trim['of_shares'])} shares, ₹{trim['value']:,.0f}.")
@@ -214,7 +214,7 @@ def evaluate(row: dict, total_value: float, sector_state: str | None,
         headline = _verb(f"Reduce {sym}.", f"{sym} is above a reasonable single-name weight.")
     elif action == "ADD":
         headline = _verb(
-            f"Add to {sym} — quality is there and the position is small.",
+            f"Add to {sym}: quality is there and the position is small.",
             f"{sym} scores well at a weight small enough that it changes little.")
     elif action == "REVIEW":
         headline = _verb(

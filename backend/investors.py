@@ -559,7 +559,7 @@ def portfolio(investor_id, period_end=None):
         read = cov.get("companies_read") or 0
         out["message"] = (
             "No holding has been found for %s yet. The ledger is built by "
-            "reading company filings one at a time, and %s so far — so this "
+            "reading company filings one at a time, and %s so far, so this "
             "means the companies %s holds have not been reached, not that "
             "there are none."
             % (inv["name"],

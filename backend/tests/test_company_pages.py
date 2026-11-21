@@ -337,7 +337,7 @@ def test_the_directory_links_every_company_once(built):
     assert "18 NSE-listed companies" in _text(page)
     # A name that starts with a digit has somewhere to go, and it is first.
     assert page.index('id="l-0"') < page.index('id="l-A"')
-    assert '<a href="#l-0">0–9</a>' in page
+    assert '<a href="#l-0">0-9</a>' in page
 
 
 def test_an_empty_directory_says_so(built):

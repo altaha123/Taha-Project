@@ -289,7 +289,7 @@ def calendar(now=None, force=False):
         "days": build(meets, files, start, end, today),
         "checked_at": dt.datetime.now(IST).strftime("%Y-%m-%dT%H:%M:%S"),
         "source": ("NSE event calendar (board meetings to approve results) and NSE "
-                   "Integrated Filing — Financials (the results as filed)"),
+                   "Integrated Filing: Financials (the results as filed)"),
         "notes": notes,
     }
     if not notes:

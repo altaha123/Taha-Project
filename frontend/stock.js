@@ -234,7 +234,7 @@
   function paintHead(d) {
     var base = String(d.ticker || TICKER).replace(/\.(NS|BO)$/, '');
     if (!SSR) {
-      document.title = base + ' — ' + (d.name || 'Stock') + ' | Altaha Screener';
+      document.title = base + ': ' + (d.name || 'Stock') + ' | Altaha Screener';
       canonical(d, base);
     }
     $('crumb').textContent = base;
@@ -1717,7 +1717,7 @@
       var vals = pts.map(function (p) { return p.v; });
       var range = pts.length > 1
         ? '<div class="op-range"><span>' + pts.length + ' quarters</span>' +
-          '<span><b>range</b> ' + Math.min.apply(null, vals).toFixed(2) + '–' +
+          '<span><b>range</b> ' + Math.min.apply(null, vals).toFixed(2) + ' to ' +
           Math.max.apply(null, vals).toFixed(2) + '</span></div>'
         : '';
       return '<article class="op s-' + esc(k) + '">' +
@@ -3744,7 +3744,7 @@
           paintAll(d);
           awaitScore(d, 0);
           $('disc').textContent = d.disclaimer ||
-            'Educational tool. Scores and evidence only — never a recommendation to buy or sell.';
+            'Educational tool. Scores and evidence only, never a recommendation to buy or sell.';
           wirePanes();
           wireScoreChip();
           wirePeerSort();

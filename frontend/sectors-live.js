@@ -254,7 +254,7 @@
       }
       if (!state.data && requestedWindow === state.window) {
         var h = host();
-        if (h) h.innerHTML = '<div class="sb-load">Engine unreachable — it may be waking up.</div>';
+        if (h) h.innerHTML = '<div class="sb-load">Engine unreachable. It may be waking up.</div>';
       }
     } finally {
       state.busy = false;

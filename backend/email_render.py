@@ -98,7 +98,7 @@ def subject(digest: dict) -> str:
     move = t.get("day_change")
     p = t.get("day_change_pct")
     if move is None or p is None:
-        return f"Your portfolio — {digest.get('date', '')}"
+        return f"Your portfolio, {digest.get('date', '')}"
     word = "up" if move > 0 else ("down" if move < 0 else "flat")
     head = (f"Portfolio {word} {rupees(abs(move))} ({pct(abs(p), signed=False)})"
             if move else "Portfolio flat today")
@@ -219,7 +219,7 @@ def render_html(digest: dict, *, site: str = "https://altahascreener.in",
 <title>{_esc(subject(digest))}</title></head>
 <body style="margin:0;padding:0;background:{PAPER}">
 <span style="display:none;font-size:1px;color:{PAPER};max-height:0;overflow:hidden">
-{_esc(subject(digest))} — {len(digest.get('rows') or [])} holdings, priced at today's close.
+{_esc(subject(digest))}. {len(digest.get('rows') or [])} holdings, priced at today's close.
 </span>
 <table width="100%" cellpadding="0" cellspacing="0" style="background:{PAPER}">
 <tr><td align="center" style="padding:24px 12px">
@@ -248,7 +248,7 @@ padding:11px 18px;text-decoration:none;display:inline-block">Open the full repor
 
 <p style="font:400 11px Arial,sans-serif;color:{MUTE};line-height:1.6;margin:26px 0 0;
 border-top:1px solid {LINE};padding-top:16px">
-Educational analysis only — scores and evidence, never a recommendation to buy or sell.
+Educational analysis only: scores and evidence, never a recommendation to buy or sell.
 Prices are the exchange's closing prices for {_esc(digest.get("date", ""))} and can be revised.
 {'<br><a href="' + _esc(unsubscribe_url) + '" style="color:' + MUTE + '">Stop these emails</a>' if unsubscribe_url else ''}
 </p>
@@ -261,7 +261,7 @@ Prices are the exchange's closing prices for {_esc(digest.get("date", ""))} and 
 def render_text(digest: dict, *, site: str = "https://altahascreener.in",
                 unsubscribe_url: str = "") -> str:
     t = digest.get("totals") or {}
-    out = [f"ALTAHA SCREENER — {digest.get('date', '')}", ""]
+    out = [f"ALTAHA SCREENER · {digest.get('date', '')}", ""]
     out.append(f"Today: {rupees(t.get('day_change'), signed=True)} ({pct(t.get('day_change_pct'))})")
     out.append(f"Portfolio value: {rupees(t.get('value'))}")
     if t.get("pnl") is not None:
@@ -273,7 +273,7 @@ def render_text(digest: dict, *, site: str = "https://altahascreener.in",
     if digest.get("events"):
         out += ["", "WHAT WAS FILED"]
         for e in digest["events"][:5]:
-            out.append(f"  {e['symbol']} — {e.get('category') or 'filing'}: {e.get('headline')}")
+            out.append(f"  {e['symbol']}, {e.get('category') or 'filing'}: {e.get('headline')}")
             if e.get("pdf"):
                 out.append(f"    {e['pdf']}")
     if digest.get("observations"):
@@ -285,12 +285,12 @@ def render_text(digest: dict, *, site: str = "https://altahascreener.in",
         for w in digest["watchlist"]:
             line = f"  {w['symbol']} {pct(w.get('day_change_pct'))}"
             if w.get("filing"):
-                line += f" — {w['filing'].get('category') or 'filing'}: {w['filing'].get('headline')}"
+                line += f", {w['filing'].get('category') or 'filing'}: {w['filing'].get('headline')}"
             for o in w.get("observations") or []:
                 line += f" · {o}"
             out.append(line)
     out += ["", f"Full report: {site}", "",
-            "Educational analysis only — scores and evidence, never a "
+            "Educational analysis only: scores and evidence, never a "
             "recommendation to buy or sell."]
     if unsubscribe_url:
         out.append(f"Stop these emails: {unsubscribe_url}")

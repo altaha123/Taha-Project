@@ -89,31 +89,31 @@ ARCHETYPES = {
         "name": "Momentum Breakout",
         "weights": {"momentum": .48, "participation": .27, "quality": .15,
                     "improvement": .07, "valuation": .03},
-        "horizon": "3–8 weeks",
+        "horizon": "3 to 8 weeks",
         "thesis": ("Price is trending with force and volume is confirming it. The premise is "
                    "continuation: strong trends persist more often than they reverse, and the volume "
                    "behind this one suggests real participation rather than a thin drift."),
         "reads": ["Bollinger %B", "ADX", "Supertrend", "Hull MA slope", "volume expansion"],
         "invalidation": [
-            "Daily close back below the Supertrend band — the trend regime has flipped",
+            "Daily close back below the Supertrend band: the trend regime has flipped",
             "ADX falling under 20, meaning the trend has lost force and price is going choppy",
-            "Price returning inside the Bollinger mid-band on rising volume — the breakout failed",
-            "Volume drying up while price holds — the move is running on fumes",
+            "Price returning inside the Bollinger mid-band on rising volume, a sign the breakout failed",
+            "Volume drying up while price holds, which means the move is running on fumes",
         ],
         "risks": ("Momentum setups fail fast and the failure is usually sharp. This archetype has the "
-                  "shortest useful life of the four — the evidence justifying it can be gone in a week."),
+                  "shortest useful life of the four: the evidence justifying it can be gone in a week."),
     },
     "institutional_accumulation": {
         "name": "Institutional Accumulation",
         "weights": {"participation": .45, "momentum": .24, "quality": .21,
                     "improvement": .07, "valuation": .03},
-        "horizon": "2–6 months",
+        "horizon": "2 to 6 months",
         "thesis": ("Volume patterns and the shareholding register suggest larger holders are building "
                    "positions before price has fully moved. The premise is that institutional buying "
                    "leaves a footprint in volume before it shows up in headline returns."),
         "reads": ["accumulation vs distribution", "OBV", "volume trend", "FII/DII stake", "promoter stake"],
         "invalidation": [
-            "Accumulation ratio turning below 1.0 — more volume now trading on down days than up days",
+            "Accumulation ratio turning below 1.0, with more volume now trading on down days than up days",
             "OBV rolling over while price holds up, the classic divergence that precedes a fall",
             "Institutional stake falling in the next quarterly filing",
             "Promoter stake declining across two consecutive quarters",
@@ -125,13 +125,13 @@ ARCHETYPES = {
         "name": "Quality at Discount",
         "weights": {"quality": .42, "valuation": .28, "improvement": .12,
                     "momentum": .12, "participation": .06},
-        "horizon": "6–18 months",
-        "thesis": ("The business scores well on durable quality measures — returns on capital, cash "
-                   "conversion, balance sheet strength — while price sits meaningfully below its recent "
+        "horizon": "6 to 18 months",
+        "thesis": ("The business scores well on durable quality measures (returns on capital, cash "
+                   "conversion, balance sheet strength) while price sits meaningfully below its recent "
                    "high. The premise is that quality reasserts itself and the discount closes over time."),
         "reads": ["ROCE", "Piotroski F-Score", "G-Score", "debt/equity", "drawdown from 52-week high"],
         "invalidation": [
-            "ROCE or gross margin deteriorating in the next reported results — the quality premise itself breaks",
+            "ROCE or gross margin deteriorating in the next reported results, which breaks the quality premise itself",
             "Debt rising materially against assets, changing the risk profile",
             "Operating cash flow falling below net income, signalling earnings quality decay",
             "Drawdown deepening on accelerating volume, suggesting the market knows something the filings don't yet show",
@@ -143,13 +143,13 @@ ARCHETYPES = {
         "name": "Turnaround",
         "weights": {"improvement": .44, "quality": .20, "momentum": .18,
                     "participation": .12, "valuation": .06},
-        "horizon": "4–12 months",
-        "thesis": ("The absolute numbers aren't impressive yet, but the direction of travel is — margins "
+        "horizon": "4 to 12 months",
+        "thesis": ("The absolute numbers aren't impressive yet, but the direction of travel is: margins "
                    "expanding, leverage falling, returns improving off a low base. The premise is that "
                    "rate of change matters more than level when a business is inflecting."),
         "reads": ["ROA delta", "margin expansion", "debt reduction", "liquidity trend", "asset turnover"],
         "invalidation": [
-            "Any improving metric reversing for a single reported period — the inflection was noise",
+            "Any improving metric reversing for a single reported period, which would mean the inflection was noise",
             "Debt resuming its rise after the reduction that formed the thesis",
             "Revenue stalling while margins expand, which usually means cost-cutting rather than genuine recovery",
             "Equity dilution to fund the recovery, which transfers upside away from existing holders",
@@ -165,10 +165,10 @@ ARCHETYPES = {
         "horizon": "—",
         "thesis": ("No single factor dominates strongly enough to define a coherent setup. The evidence "
                    "is mixed or middling across the board. That is a legitimate finding, not a failure of "
-                   "the analysis — most stocks, most of the time, are not in a distinct setup."),
+                   "the analysis. Most stocks, most of the time, are not in a distinct setup."),
         "reads": ["all pillars, evenly weighted"],
         "invalidation": [
-            "Any pillar moving decisively — re-running after the next results or a volume expansion may classify it clearly",
+            "Any pillar moving decisively. Re-running after the next results or a volume expansion may classify it clearly",
         ],
         "risks": ("Forcing a thesis onto an unclear picture is how conviction gets manufactured. The "
                   "honest reading is that this name isn't presenting an edge right now."),
@@ -210,7 +210,7 @@ def classify(p: dict, tech_extras: dict) -> tuple:
     if par >= 66 and (par - mom) >= 12 and qua >= 45:
         return "institutional_accumulation", [
             f"Participation pillar {par}/100 leading momentum at {mom}/100",
-            "Volume footprint is running ahead of price — the accumulation signature",
+            "Volume footprint is running ahead of price, the accumulation signature",
             f"Quality pillar {qua}/100 supports the positioning being deliberate",
         ]
 
@@ -220,15 +220,15 @@ def classify(p: dict, tech_extras: dict) -> tuple:
                "Price trading above the Supertrend band",
                f"Participation pillar {par}/100 confirming the move"]
         if pct_b > 0.75:
-            why.append(f"Bollinger %B at {pct_b:.2f} — riding the upper band")
+            why.append(f"Bollinger %B at {pct_b:.2f}, riding the upper band")
         if squeeze:
-            why.append("Bandwidth still compressed — expansion may have room to run")
+            why.append("Bandwidth still compressed, so expansion may have room to run")
         return "momentum_breakout", why
 
     # 3. Accumulation, softer case — strong participation, momentum not yet extended
     if par >= 66 and 40 <= mom < 78 and qua >= 45:
         return "institutional_accumulation", [
-            f"Participation pillar {par}/100 — the strongest signal present",
+            f"Participation pillar {par}/100, the strongest signal present",
             f"Momentum still moderate at {mom}/100, so the move may be early",
             f"Quality pillar {qua}/100 supports the positioning being deliberate",
         ]
@@ -239,15 +239,15 @@ def classify(p: dict, tech_extras: dict) -> tuple:
                f"Trading {abs(dd):.0f}% below the 52-week high",
                f"Valuation pillar {val}/100 reflecting that discount"]
         if imp >= 55:
-            why.append(f"Fundamentals also improving ({imp}/100) — not merely cheap")
+            why.append(f"Fundamentals also improving ({imp}/100), not merely cheap")
         return "quality_at_discount", why
 
     # 5. Turnaround — direction of travel beats the level
     if imp >= 62 and qua < 68:
-        why = [f"Improvement pillar {imp}/100 — the deltas are the story",
+        why = [f"Improvement pillar {imp}/100: the deltas are the story",
                f"Quality still {qua}/100, so this is inflection rather than excellence"]
         if dd <= -15:
-            why.append(f"Still {abs(dd):.0f}% below the 52-week high — recovery not yet priced")
+            why.append(f"Still {abs(dd):.0f}% below the 52-week high, so recovery is not yet priced")
         return "turnaround", why
 
     # 6. Dominant-pillar fallback — if something is genuinely strong, classify
@@ -276,11 +276,11 @@ def classify(p: dict, tech_extras: dict) -> tuple:
         if pv >= 68 and preconditions[pk]():
             others = [v for k, v in ranked if k != pk]
             lead = "clearly leads" if (pv - max(others)) >= 10 else "narrowly leads"
-            note = ("Classified on the dominant factor — not every textbook condition "
+            note = ("Classified on the dominant factor. Not every textbook condition "
                     "for this setup is present")
             if i > 0:
                 note = ("Classified on the strongest factor whose defining condition is "
-                        "actually met — stronger pillars didn't qualify")
+                        "actually met. Stronger pillars didn't qualify")
             return mapping[pk], [
                 f"{PILLAR_LABEL[pk]} pillar at {pv}/100 {lead} the other factors",
                 note,
@@ -317,9 +317,9 @@ def evaluate(tech: dict, fund: dict) -> dict:
     elif fit >= 62:
         strength = "Solid example, with the gaps noted below"
     elif fit >= 48:
-        strength = "Partial fit — the shape is there but the evidence is thin"
+        strength = "Partial fit: the shape is there but the evidence is thin"
     else:
-        strength = "Weak fit — classified by elimination rather than conviction"
+        strength = "Weak fit, classified by elimination rather than conviction"
 
     return {
         "key": key,

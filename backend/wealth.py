@@ -1016,7 +1016,7 @@ def delete_event(user_id: int, client_id, event_id) -> dict:
     try:
         validate_ledger([e for e in have if e["id"] != eid])
     except ValueError as e:
-        raise ValueError(f"Removing it would break a later entry — {e}")
+        raise ValueError(f"Removing it would break a later entry: {e}")
     with conn:
         conn.execute("DELETE FROM wm_events WHERE id=? AND user_id=? AND client_id=?", (eid, user_id, row["id"]))
     return {"deleted": eid}
@@ -1119,7 +1119,7 @@ def update_events(user_id: int, client_id, edits: list) -> dict:
     try:
         validate_ledger(final)
     except ValueError as e:
-        raise ValueError(f"That change would break the ledger — {e}")
+        raise ValueError(f"That change would break the ledger: {e}")
     dates = [by_id[i]["on_date"] for i in repl] + [r["on_date"] for r in repl.values()]
     with conn:
         out = _write_events(conn, user_id, row["id"], final, have)
@@ -2184,14 +2184,14 @@ def compute_client(client: dict, events: list, settles: list, quotes: dict, manu
     if client["status"] != "closed":
         if fee["overdue"] and fee["total"] and fee["total"] > 0.5:
             alerts.append({"kind": "overdue", "tone": "gold", "client_id": client["id"], "rank": 1,
-                           "text": f"{nm}'s {client['terms']['period']} period ended {_nice(fee['next_due'])} — "
+                           "text": f"{nm}'s {client['terms']['period']} period ended {_nice(fee['next_due'])}. "
                                    f"{_inr(fee['total'])} to settle."})
         if (client["terms"]["share_pct"] and events and fee["to_hwm"]
                 and fee["to_hwm"] > max(500.0, 0.002 * max(st.capital, 0.0))):
             alerts.append({"kind": "below_hwm", "tone": "rose", "client_id": client["id"], "rank": 4,
                            "text": f"{nm} is {_inr(fee['to_hwm'])} below the "
-                                   f"{'high-water mark' if client['terms']['hwm'] else 'last settlement'} — "
-                                   "no profit share until it is made back."})
+                                   f"{'high-water mark' if client['terms']['hwm'] else 'last settlement'}, "
+                                   "so no profit share until it is made back."})
         for h in holdings:
             if h["weight"] and h["weight"] > 30 and len(holdings) > 1:
                 alerts.append({"kind": "concentration", "tone": "violet", "client_id": client["id"], "rank": 5,
@@ -2199,7 +2199,7 @@ def compute_client(client: dict, events: list, settles: list, quotes: dict, manu
         unp = [h["symbol"] for h in holdings if not h["priced"]]
         if unp:
             alerts.append({"kind": "unpriced", "tone": "slate", "client_id": client["id"], "rank": 6,
-                           "text": f"No price for {', '.join(unp[:3])} in {nm}'s book — valued at cost. "
+                           "text": f"No price for {', '.join(unp[:3])} in {nm}'s book, so valued at cost. "
                                    "Set a price if it is not listed."})
         if value > 0 and st.cash / value > 0.25 and st.cash > 10000:
             alerts.append({"kind": "cash", "tone": "blue", "client_id": client["id"], "rank": 7,
@@ -2391,7 +2391,7 @@ def compute_book(data: dict, quotes: dict, pending=None, on: str = None, market_
             alerts.append({"kind": word, "tone": "green" if word == "target" else "rose", "rec_id": r["id"],
                            "rank": 0 if word == "stop" else 3,
                            "text": f"{r['symbol']} {'reached your target' if word == 'target' else 'hit your stop'} "
-                                   f"of {_inr(lvl)}" + ((" — 1 client holds it." if n == 1 else f" — {n} clients hold it.")
+                                   f"of {_inr(lvl)}" + ((". 1 client holds it." if n == 1 else f". {n} clients hold it.")
                                                         if n else ".")})
     for c in clients:
         alerts.extend(c["alerts"])
@@ -2566,7 +2566,7 @@ def sample_data(quotes: dict, on: str = None) -> dict:
             rp = round(p * rec_x, 1)
             recs.append({"id": rid, "symbol": sym, "action": "buy", "price": rp,
                          "target": round(rp * 1.28, 1), "stop": round(rp * 0.88, 1), "on_date": on_d,
-                         "horizon": "12–18 months", "thesis": "Sample call.", "status": "open",
+                         "horizon": "12 to 18 months", "thesis": "Sample call.", "status": "open",
                          "closed_on": None, "close_price": None, "created_at": on_d})
             rec_for[sym] = recs[-1]
             rid += 1

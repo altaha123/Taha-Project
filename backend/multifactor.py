@@ -91,7 +91,7 @@ def rank(rows, horizon="short", weights=None):
                 "label": spec.label, "value": vals[i], "percentile": p, "applicable": applicable,
                 "peer_group": ":".join(key) if key else None, "peer_count": len(pools[key]) if key else 0,
                 "missing_reason": reason, "transformation": spec.winsorisation,
-                "explanation": (f"{spec.label}: {vals[i]:.4g} — {p:.1f} percentile among {len(pools[key])} {key[1]} peers"
+                "explanation": (f"{spec.label}: {vals[i]:.4g}, {p:.1f} percentile among {len(pools[key])} {key[1]} peers"
                                 if p is not None else f"{spec.label}: {reason}")})
     out = []
     for i, row in enumerate(rows):

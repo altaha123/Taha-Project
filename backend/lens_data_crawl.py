@@ -173,7 +173,7 @@ def run(limit=DEFAULT_LIMIT, symbols=None, pause=PAUSE):
             out["failed"] += 1
             misses += 1
         if misses >= GIVE_UP_AFTER:
-            out["stopped_early"] = ("%d companies in a row could not be read — stopping rather "
+            out["stopped_early"] = ("%d companies in a row could not be read, so stopping rather "
                                     "than continuing to hammer a rate limiter" % misses)
             break
         if pause:

@@ -858,7 +858,7 @@ def save_screen(user_id: int, name, query) -> dict:
         count = conn.execute("SELECT COUNT(*) AS n FROM saved_screens WHERE user_id=?",
                              (user_id,)).fetchone()["n"]
         if count >= MAX_SCREENS:
-            raise ValueError(f"You have {MAX_SCREENS} saved screens — delete one to save another.")
+            raise ValueError(f"You have {MAX_SCREENS} saved screens, so delete one to save another.")
     with conn:
         conn.execute(
             "INSERT INTO saved_screens(user_id,name,query,created_at,updated_at) VALUES(?,?,?,?,?) "

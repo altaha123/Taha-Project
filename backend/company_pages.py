@@ -505,7 +505,7 @@ def description_for(row):
             bits.append("%s %s" % (label, v))
     lead = "%s (NSE: %s)" % (name, sym) + (": " + ", ".join(bits) + ". " if bits else ". ")
     return (lead + "Quarterly results as filed, who owns it, delivery volumes and a "
-            "0–100 Altaha Score with every calculation shown.")
+            "0 to 100 Altaha Score with every calculation shown.")
 
 
 def head_tags(row, site, score=None, qa=None):
@@ -878,11 +878,11 @@ def render_directory(rows, site, api):
     groups = {}
     for r in companies:
         first = r["name"].strip()[:1].upper()
-        groups.setdefault(first if first.isalpha() else "0–9", []).append(r)
-    letters = sorted(groups, key=lambda k: (k != "0–9", k))
+        groups.setdefault(first if first.isalpha() else "0-9", []).append(r)
+    letters = sorted(groups, key=lambda k: (k != "0-9", k))
 
     def anchor(letter):
-        return "l-" + ("0" if letter == "0–9" else letter)
+        return "l-" + ("0" if letter == "0-9" else letter)
 
     body = ['<div class="stk-head"><div class="stk-crumb"><a href="/">Altaha Screener</a> · '
             '<span>All companies</span></div>',
@@ -939,7 +939,7 @@ def render_directory(rows, site, api):
         {"@type": "ListItem", "position": 2, "name": "All companies", "item": site + "/stocks"}]}
     return _doc(site, api, "All NSE companies, A to Z | Altaha Screener",
                 "Every NSE-listed company on Altaha Screener, A to Z: share price, quarterly "
-                "results as filed, shareholding and a 0–100 score with the working shown.",
+                "results as filed, shareholding and a 0 to 100 score with the working shown.",
                 "\n".join(body), path="/stocks",
                 head='<script type="application/ld+json">%s</script>\n' % _json_script(ld))
 

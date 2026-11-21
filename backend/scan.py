@@ -179,7 +179,7 @@ def persistence_health():
         if att.get("started_at") and not att.get("finished_at"):
             out["interrupted_scan"] = (
                 "A scan reached the '" + str(att.get("phase")) + "' phase at " +
-                str(att.get("started_at")) + " and never finished — the process "
+                str(att.get("started_at")) + " and never finished because the process "
                 "restarted while it was running. Nothing was written, so the "
                 "cached scan below is older than that attempt.")
     out["healthy"] = bool(out.get("dir_exists")) and _persist["consecutive_failures"] == 0
@@ -463,7 +463,7 @@ def fetch_nse_list():
         except Exception:
             pass
     fb = sorted({s for s in FALLBACK.split() if s})
-    return fb, f"Fallback curated list ({len(fb)} symbols) — NSE list unreachable from this server"
+    return fb, f"Fallback curated list ({len(fb)} symbols), NSE list unreachable from this server"
 
 
 def universe():
@@ -1091,7 +1091,7 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
     rows = sorted(scored, key=lambda r: (-r["position_score"], r["symbol"]))
     return {
         "scanned_at": dt.datetime.now().strftime("%d %b %Y, %H:%M")
-                      + (" (partial — scan in progress)" if partial else ""),
+                      + (" (partial, scan in progress)" if partial else ""),
         "partial": partial,
         "universe_source": source,
         "universe_size": universe_all,
@@ -1217,7 +1217,7 @@ def run_scan(progress=None, names=None, checkpoint=None):
         symbols, source = list(names), f"Provided list ({len(names)} symbols)"
     else:
         symbols, source = fetch_nse_list()
-    _note_attempt(phase="phase 1 — bulk prices and technical scores",
+    _note_attempt(phase="phase 1: bulk prices and technical scores",
                   universe=len(symbols))
 
     n2 = min(PHASE2_SIZE, len(symbols))
@@ -1270,7 +1270,7 @@ def run_scan(progress=None, names=None, checkpoint=None):
         c.pop("leader_sig", None)
         c.pop("bo", None)
     del blocks
-    _note_attempt(phase="phase 2 — fundamentals and archetypes",
+    _note_attempt(phase="phase 2: fundamentals and archetypes",
                   candidates=len(cands))
 
     # Was: deep = cands[:n2] — top N by technical score only.

@@ -370,7 +370,7 @@ const server = http.createServer((req, res) => {
   await first.locator('.wo-share').evaluate(el => el.click());
   const osheet = page.locator('#shsheet');
   await osheet.waitFor({ state: 'visible' });
-  assert.match(await osheet.locator('#shttl').innerText(), /SMALLCO — order win/);
+  assert.match(await osheet.locator('#shttl').innerText(), /SMALLCO order win/);
   assert.match(await osheet.locator('#shsub').innerText(), /Two published numbers/i);
   assert.match(await osheet.locator('#shcardimg').getAttribute('src'),
     /\/og\/wow\.png\?ticker=SMALLCO&id=1a2b3c4d5e6f$/);
@@ -379,7 +379,7 @@ const server = http.createServer((req, res) => {
     const to = decodeURIComponent(await page.evaluate(
       ([n, d]) => window.AltahaShare.shareUrl(n, d), [net, order]));
     assert.match(to, /\/share\/wow\/SMALLCO\?id=1a2b3c4d5e6f/, `${net} must carry the order's link`);
-    assert.match(to, /Small Engineering Ltd — ₹451 cr work order from National Highways/);
+    assert.match(to, /Small Engineering Ltd: ₹451 cr work order from National Highways/);
     assert.match(to, /That is 43% of the company.s market cap \(₹1,050 cr\)/);
     assert.doesNotMatch(to, /onrender\.com/, 'a post must not name the API host');
   }
@@ -638,7 +638,7 @@ const server = http.createServer((req, res) => {
   await lead.locator('.cc-share').evaluate(el => el.click());
   const sheet = page3.locator('#shsheet');
   await sheet.waitFor({ state: 'visible' });
-  assert.match(await sheet.locator('#shttl').innerText(), /SHIPROCKET — Q1 FY27 earnings call/);
+  assert.match(await sheet.locator('#shttl').innerText(), /SHIPROCKET Q1 FY27 earnings call/);
   assert.match(await sheet.locator('#shsub').innerText(), /written by a model/i);
   assert.match(await sheet.locator('#shcardimg').getAttribute('src'),
     /\/og\/concall\.png\?ticker=SHIPROCKET&period=Q1-FY27$/);
@@ -647,7 +647,7 @@ const server = http.createServer((req, res) => {
     const to = decodeURIComponent(await page3.evaluate(
       ([n, d]) => window.AltahaShare.shareUrl(n, d), [net, shared]));
     assert.match(to, /\/share\/concall\/SHIPROCKET\?period=Q1-FY27/, `${net} must carry the call's link`);
-    assert.match(to, /Shiprocket Ltd — Q1 FY27 earnings call/);
+    assert.match(to, /Shiprocket Ltd: Q1 FY27 earnings call/);
     assert.match(to, /Revenue grew 34%/);
     assert.doesNotMatch(to, /onrender\.com/, 'a post must not name the API host');
   }

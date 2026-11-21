@@ -46,12 +46,12 @@ def _stage(close, n):
     dma200_prev = np.mean(close[-220:-20])
     above, rising = close[-1] > dma200, dma200 > dma200_prev
     if above and rising:
-        return 2, "Stage 2 advance — price above a rising 200-DMA (Weinstein: the only stage worth buying)"
+        return 2, "Stage 2 advance: price above a rising 200-DMA (Weinstein: the only stage worth buying)"
     if not above and not rising:
-        return 4, "Stage 4 decline — price below a falling 200-DMA (Weinstein: never fight this stage)"
+        return 4, "Stage 4 decline: price below a falling 200-DMA (Weinstein: never fight this stage)"
     if above and not rising:
-        return 3, "Stage 3 top — above a flattening 200-DMA; distribution risk"
-    return 1, "Stage 1 base — below a flattening 200-DMA; early, unproven"
+        return 3, "Stage 3 top: above a flattening 200-DMA; distribution risk"
+    return 1, "Stage 1 base: below a flattening 200-DMA; early, unproven"
 
 
 def build_plan(df, levels, tech=None):
@@ -88,9 +88,9 @@ def build_plan(df, levels, tech=None):
     if trend_ok and dma50:
         why.append(f"Minervini trend template: price above the 50-DMA (\u2248{dma50:,.0f}) which is above the 200-DMA")
     if accum >= 1.2:
-        why.append(f"Volume on up-days is {accum:.1f}\u00d7 volume on down-days over 60 sessions — accumulation footprint (O'Neil: institutions can't hide)")
+        why.append(f"Volume on up-days is {accum:.1f}\u00d7 volume on down-days over 60 sessions, an accumulation footprint (O'Neil: institutions can't hide)")
     elif accum <= 0.8:
-        warn.append(f"Down-days carry {1/accum:.1f}\u00d7 the volume of up-days — distribution footprint (O'Neil)")
+        warn.append(f"Down-days carry {1/accum:.1f}\u00d7 the volume of up-days, a distribution footprint (O'Neil)")
 
     # ---- candidate entries -------------------------------------------
     plan = None
@@ -115,9 +115,9 @@ def build_plan(df, levels, tech=None):
             rr = (tgts[0] - entry) / (entry - stop) if entry > stop else 0
             if risk_pct <= MAX_RISK_PCT and rr >= MIN_RR:
                 plan = sized(entry, stop, tgts, "BUY ZONE",
-                             f"price is sitting on tested support at {sup['level']:,.0f} (strength {sup['strength']}/100) — enter here, not after it runs")
-                why.append(f"Entry at support caps the risk at {risk_pct:.1f}% — Livermore: buy at the pivot, never in the middle of the range")
-                why.append(f"Risk:reward 1:{rr:.1f} to the first resistance — profitable even at a 40% win rate (Tharp: expectancy beats accuracy)")
+                             f"price is sitting on tested support at {sup['level']:,.0f} (strength {sup['strength']}/100). Enter here, not after it runs")
+                why.append(f"Entry at support caps the risk at {risk_pct:.1f}%. Livermore: buy at the pivot, never in the middle of the range")
+                why.append(f"Risk:reward 1:{rr:.1f} to the first resistance, profitable even at a 40% win rate (Tharp: expectancy beats accuracy)")
 
     # B) Breakout watch (O'Neil pivot above resistance)
     if plan is None and res and trend_ok:
@@ -130,27 +130,27 @@ def build_plan(df, levels, tech=None):
             tgts = nxt or [entry + 2 * (entry - stop), entry + 3 * (entry - stop)]
             rr = (tgts[0] - entry) / (entry - stop) if entry > stop else 0
             plan = sized(entry, stop, tgts, "BREAKOUT WATCH",
-                         f"wait for a close above {res['level']:,.0f} (strength {res['strength']}/100) on above-average volume — do not front-run it")
-            why.append("O'Neil: the breakout is only valid on volume \u2265 1.5\u00d7 average — a quiet breakout usually fails")
+                         f"wait for a close above {res['level']:,.0f} (strength {res['strength']}/100) on above-average volume. Do not front-run it")
+            why.append("O'Neil: the breakout is only valid on volume \u2265 1.5\u00d7 average. A quiet breakout usually fails")
             if not nxt:
-                why.append("No overhead resistance after the breakout — measured-move targets used (2R and 3R)")
+                why.append("No overhead resistance after the breakout, so measured-move targets are used (2R and 3R)")
 
     # C) No trade
     if plan is None:
         if stage == 4:
-            stance, note = "AVOID", "Stage 4 downtrend — the canon is unanimous: don't buy falling stocks, no matter how cheap they look"
+            stance, note = "AVOID", "Stage 4 downtrend. The canon is unanimous: don't buy falling stocks, no matter how cheap they look"
         elif not trend_ok:
-            stance, note = "WAIT", "trend not established — no entry until price reclaims its key averages"
+            stance, note = "WAIT", "Trend not established. No entry until price reclaims its key averages"
         elif sup:
-            stance, note = "WAIT", f"price is mid-range, {abs((px - sup['level']) / px * 100):.1f}% above support — a better entry exists at {sup['level']:,.0f}; buying here widens the stop for no extra reward"
+            stance, note = "WAIT", f"Price is mid-range, {abs((px - sup['level']) / px * 100):.1f}% above support. A better entry exists at {sup['level']:,.0f}, and buying here widens the stop for no extra reward"
         else:
-            stance, note = "WAIT", "no tested level near price to anchor a stop — a plan without a stop isn't a plan"
+            stance, note = "WAIT", "No tested level near price to anchor a stop. A plan without a stop isn't a plan"
         plan = {"stance": stance, "entry": None, "entry_note": note, "stop": None,
                 "risk_pct": None, "targets": [], "rr": None, "atr": round(atr, 2)}
 
     # invalidation — Douglas: decided before entry, not negotiable
     if plan.get("stop"):
-        plan["invalidation"] = (f"A daily CLOSE below {plan['stop']:,.2f} kills this plan — exit without negotiation. "
+        plan["invalidation"] = (f"A daily CLOSE below {plan['stop']:,.2f} kills this plan. Exit without negotiation. "
                                 "Douglas: the market doesn't know you're in a trade; the stop is the only opinion that matters.")
 
     conf = len(why)
@@ -160,7 +160,7 @@ def build_plan(df, levels, tech=None):
     plan["principles"] = ("Rules encoded from Weinstein (stage analysis), Minervini (trend template, 8% max risk), "
                           "O'Neil (volume confirmation), Livermore (pivot entries), Elder (ATR stops), "
                           "Tharp (expectancy & sizing), Douglas (pre-committed exits). "
-                          "No engine predicts price — the edge is taking only asymmetric bets and cutting the wrong ones fast.")
+                          "No engine predicts price. The edge is taking only asymmetric bets and cutting the wrong ones fast.")
     return plan
 
 

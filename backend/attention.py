@@ -132,7 +132,7 @@ def assess(symbol, df=None, filings=None, stories=None, liquidity_tier=None,
         gross = deals.get("gross_cr")
         if deals.get("crossed") and (net is None or abs(net) < 0.5):
             deal_note = ("A bulk deal was disclosed, but the same counterparty is "
-                         "on both sides and ends flat — stock changed hands, "
+                         "on both sides and ends flat: stock changed hands, "
                          "nobody built a position.")
         elif net is not None and abs(net) >= 1:
             deal_note = (f"₹{abs(net):.1f}cr net {'bought' if net > 0 else 'sold'} "
@@ -168,7 +168,7 @@ def assess(symbol, df=None, filings=None, stories=None, liquidity_tier=None,
                 "ones providing the exit.")
     elif tier == "extreme":
         flag = ("Turnover is far above this stock's own normal. Something has "
-                "happened — find out what before reading the price move as a "
+                "happened. Find out what before reading the price move as a "
                 "verdict on it.")
     elif tier == "elevated" and thin:
         flag = ("Raised attention on a thinly traded stock. Position size is the "
@@ -191,7 +191,7 @@ def assess(symbol, df=None, filings=None, stories=None, liquidity_tier=None,
         "direction": "risk",
         "note": (
             "Attention is not a direction. A crowded stock is not a good one or a "
-            "bad one — it is a stock where the price is being set by people who "
+            "bad one. It is a stock where the price is being set by people who "
             "arrived recently. This never touches a score; it sits beside one."),
         "as_of": dt.date.today().isoformat(),
     }

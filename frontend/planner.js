@@ -1233,8 +1233,8 @@
       '<p class="ptaxverdict" id="mp-tax-verdict">' + (t.winner === 'either' ? 'Both regimes produce the same tax at these numbers.'
         : 'The ' + t.winner + ' regime saves you ' + M.inr(t.saving) + ' this year at these numbers.') + '</p>' +
       (t.winner === 'new' ? '<p class="ptaxlink">Rough flip point: if your total old-regime deductions crossed about ' + M.inr(t.flip) +
-          ', the old regime would start winning — exact point depends on which slab the extra deduction lands in.</p>'
-        : t.winner === 'old' ? '<p class="ptaxlink">Your ' + M.inr(t.deductions) + ' of deductions is what’s carrying the old regime here — if any of those lapse next year, re-run this.</p>'
+          ', the old regime would start winning. The exact point depends on which slab the extra deduction lands in.</p>'
+        : t.winner === 'old' ? '<p class="ptaxlink">Your ' + M.inr(t.deductions) + ' of deductions is what’s carrying the old regime here. If any of those lapse next year, re-run this.</p>'
         : '');
   }
 

@@ -283,7 +283,7 @@
     d.className = "warnbox";
     d.style.cssText = "margin:14px 0";
     d.innerHTML = "<b>The charting library did not load.</b> Drawings and indicators " +
-      "need it, so the chart is blank \u2014 this is a network problem, not a broken " +
+      "need it, so the chart is blank. This is a network problem, not a broken " +
       "symbol. It is fetched from a public CDN; reload once you have a steadier " +
       "connection.";
     view.insertBefore(d, view.firstChild);

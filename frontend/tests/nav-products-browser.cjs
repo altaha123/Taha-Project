@@ -205,7 +205,44 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   // Leaving both closes it, after a moment rather than at once.
   await page.mouse.move(640, 760);
   await page.locator('#sh-megawrap.open').waitFor({ state: 'detached' });
-  assert.equal(await page.locator('#sh-mega-portfolio').isVisible(), false);
+  await page.locator('#sh-mega-portfolio').waitFor({ state: 'hidden' });     // it fades out, so not at once
+
+  // The way a hand does it: a few pixels at a time, in a straight line from
+  // the door to a tool in the last column. hover() above jumps there, which
+  // is how two faults got past it. The menu used to shut once the pointer
+  // was on it, because Chrome reported a leave as it came off the strip
+  // under the bar. And the line from Market or Ideas to the last column
+  // crosses the doors beside it, each of which swapped the pane on the way.
+  const middle = async sel => { const b = await page.locator(sel).boundingBox(); return [b.x + b.width / 2, b.y + b.height / 2]; };
+  const glide = async (from, to, pxPerSec) => {
+    const steps = Math.max(2, Math.round(Math.hypot(to[0] - from[0], to[1] - from[1]) / pxPerSec * 1000 / 16));
+    for (let i = 1; i <= steps; i++) {
+      await page.mouse.move(from[0] + (to[0] - from[0]) * i / steps, from[1] + (to[1] - from[1]) * i / steps);
+      await page.waitForTimeout(16);
+    }
+  };
+  for (const sec of ['discover', 'research', 'portfolio']) {
+    for (const speed of [300, 900]) {
+      await page.mouse.move(640, 760);
+      await page.locator('#sh-megawrap.open').waitFor({ state: 'detached' });
+      const from = await middle(`.sh-doorwrap[data-sec="${sec}"] .sh-door`);
+      await page.mouse.move(from[0], from[1], { steps: 3 });
+      await page.locator(`#sh-mega-${sec}`).waitFor({ state: 'visible' });
+      const tool = `#sh-mega-${sec} .sh-mega-col:last-child .sh-item:last-child`;
+      await glide(from, await middle(tool), speed);
+      await page.waitForTimeout(600);       // longer than the menu waits before closing
+      assert.ok(await page.locator(`#sh-mega-${sec}`).isVisible(),
+                `${sec}: the menu closed or changed on the way to its last column at ${speed}px/s`);
+      assert.ok(await page.locator(tool).evaluate(n => n.matches(':hover')), `${sec}: the pointer is not on the tool it went to`);
+    }
+  }
+  // Sliding along the bar still moves from door to door, and resting on one opens it.
+  await glide(await middle('#sh-mega-portfolio .sh-mega-col:last-child .sh-item:last-child'),
+              await middle('.sh-doorwrap[data-sec="portfolio"] .sh-door'), 900);
+  await glide(await middle('.sh-doorwrap[data-sec="portfolio"] .sh-door'), await middle('.sh-doorwrap[data-sec="discover"] .sh-door'), 600);
+  await page.locator('#sh-mega-discover').waitFor({ state: 'visible' });
+  await page.mouse.move(640, 760);
+  await page.locator('#sh-megawrap.open').waitFor({ state: 'detached' });
   // Escape closes it too.
   await openMenu('discover');
   await page.keyboard.press('Escape');

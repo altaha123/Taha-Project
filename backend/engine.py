@@ -176,8 +176,8 @@ def technical_score(df: pd.DataFrame) -> dict:
     else:
         rsi_pts, tag = 0, "weak or overheated"
     add("RSI(14) regime", rsi_pts, 15, f"RSI = {fmt(r, 1)} ({tag})",
-        "15 pts: 50–70 · 8 pts: 40–50 or 70–78 · 0 pts otherwise",
-        "RSI measures the speed of recent gains vs losses on a 0–100 scale. 50–70 is strength without overheating; above ~78 the move is often exhausted.")
+        "15 pts: 50-70 · 8 pts: 40-50 or 70-78 · 0 pts otherwise",
+        "RSI measures the speed of recent gains vs losses on a 0 to 100 scale. 50 to 70 is strength without overheating; above ~78 the move is often exhausted.")
 
     # MACD (15 pts)
     line, sig, hist = macd(close)
@@ -191,13 +191,13 @@ def technical_score(df: pd.DataFrame) -> dict:
     a = adx(df).iloc[-1]
     adx_pts = 10 if a >= 25 else (5 if a >= 20 else 0)
     add("ADX trend strength", adx_pts, 10, f"ADX(14) = {fmt(a, 1)}",
-        "10 pts: ADX ≥ 25 · 5 pts: 20–25 · 0 pts: < 20",
-        "ADX measures how strongly price is trending (in either direction). Below 20 means choppy, directionless trade — signals are less reliable there.")
+        "10 pts: ADX ≥ 25 · 5 pts: 20-25 · 0 pts: < 20",
+        "ADX measures how strongly price is trending (in either direction). Below 20 means choppy, directionless trade, and signals are less reliable there.")
 
     # Supertrend (10 pts)
     st = supertrend(df).iloc[-1]
     add("Supertrend", 10 if st == 1 else 0, 10,
-        "Price above Supertrend(10,3) — bullish" if st == 1 else "Price below Supertrend(10,3) — bearish",
+        "Price above Supertrend(10,3): bullish" if st == 1 else "Price below Supertrend(10,3): bearish",
         "10 pts if close is above the Supertrend(10, 3×ATR) band",
         "Supertrend draws a volatility-adjusted band under (or over) price. Which side price sits on is a simple trend-following regime filter.")
 
@@ -213,8 +213,8 @@ def technical_score(df: pd.DataFrame) -> dict:
         vt_pts = 8 if ratio >= 1.25 else (5 if ratio >= 1.05 else (2 if ratio >= 0.9 else 0))
         add("Volume trend", vt_pts, 8,
             f"20-day avg {v20:,.0f} vs 50-day avg {v50:,.0f} = {fmt(ratio)}× participation",
-            "8 pts: ≥1.25× · 5: 1.05–1.25× · 2: 0.90–1.05× · 0: <0.90×",
-            "Volume is how many shares changed hands. Rising average volume means more people are participating — a price move backed by growing volume is more convincing than one on thin trade.")
+            "8 pts: ≥1.25× · 5: 1.05-1.25× · 2: 0.90-1.05× · 0: <0.90×",
+            "Volume is how many shares changed hands. Rising average volume means more people are participating, and a price move backed by growing volume is more convincing than one on thin trade.")
 
         # Accumulation: volume on up-days vs down-days over last 20 sessions
         recent = df.tail(20)
@@ -225,8 +225,8 @@ def technical_score(df: pd.DataFrame) -> dict:
         acc_pts = 7 if ud >= 1.5 else (4 if ud >= 1.0 else (2 if ud >= 0.7 else 0))
         add("Accumulation vs distribution", acc_pts, 7,
             f"Up-day volume {up_v:,.0f} vs down-day volume {dn_v:,.0f} = {fmt(ud)}× (20 sessions)",
-            "7 pts: ≥1.5× · 4: 1.0–1.5× · 2: 0.7–1.0× · 0: <0.7×",
-            "If more shares trade on rising days than falling days, buyers are being more aggressive than sellers — that's accumulation. The reverse is distribution, where holders are quietly exiting.")
+            "7 pts: ≥1.5× · 4: 1.0-1.5× · 2: 0.7-1.0× · 0: <0.7×",
+            "If more shares trade on rising days than falling days, buyers are being more aggressive than sellers. That's accumulation. The reverse is distribution, where holders are quietly exiting.")
 
         # On-Balance Volume direction over 30 sessions
         obv = (np.sign(close.diff().fillna(0)) * vol).fillna(0).cumsum()
@@ -256,8 +256,8 @@ def technical_score(df: pd.DataFrame) -> dict:
     else:
         bb_pts, bb_tag = 0, "not computable"
     add("Bollinger position", bb_pts, 7,
-        f"%B = {fmt(pb)} ({bb_tag}); band {fmt(blo.iloc[-1])} – {fmt(bup.iloc[-1])}",
-        "7 pts: %B 0.55–1.00 · 4: 0.35–0.55 · 3: above 1.00 · 0: below 0.35",
+        f"%B = {fmt(pb)} ({bb_tag}); band {fmt(blo.iloc[-1])} to {fmt(bup.iloc[-1])}",
+        "7 pts: %B 0.55-1.00 · 4: 0.35-0.55 · 3: above 1.00 · 0: below 0.35",
         "Bollinger Bands sit two standard deviations either side of a 20-day average. %B tells you where price sits inside that channel: above 0.5 is the strong half, above 1.0 means price has pushed outside the band, which is powerful but often short-lived.")
 
     # SCORED ZERO ON PURPOSE — the check stays, its points do not.
@@ -277,20 +277,20 @@ def technical_score(df: pd.DataFrame) -> dict:
     # it belongs in the ledger as context, not in the total as an opinion.
     sq_pts = 0
     sq_max = 0
-    sq_val = ("Bandwidth in the tightest quartile of 6 months — squeeze, direction unknown" if squeeze
+    sq_val = ("Bandwidth in the tightest quartile of 6 months: a squeeze, direction unknown" if squeeze
               else "Expanding from a squeeze with price at the upper band" if breakout
               else f"Bandwidth at the {fmt(w_rank * 100, 0)}th percentile of 6 months")
     add("Volatility squeeze", sq_pts, sq_max, sq_val,
-        "Not scored — a squeeze has no direction, so it earns no points either way",
-        "When Bollinger bands narrow, volatility has compressed and price is coiling — these periods often precede large directional moves. The squeeze doesn't tell you the direction, only that energy is building, which is exactly why it is shown here and left out of the score.")
+        "Not scored: a squeeze has no direction, so it earns no points either way",
+        "When Bollinger bands narrow, volatility has compressed and price is coiling. These periods often precede large directional moves. The squeeze doesn't tell you the direction, only that energy is building, which is exactly why it is shown here and left out of the score.")
 
     # 52-week position (10 pts)
     lo52, hi52 = close.tail(252).min(), close.tail(252).max()
     pos = (price - lo52) / (hi52 - lo52) if hi52 > lo52 else 0.5
     pos_pts = 10 if pos >= 0.75 else (6 if pos >= 0.5 else (3 if pos >= 0.3 else 0))
     add("52-week range position", pos_pts, 10,
-        f"At {fmt(pos * 100, 0)}% of 52w range ({fmt(lo52)} – {fmt(hi52)})",
-        "10 pts: top quartile · 6: upper half · 3: 30–50% · 0: bottom 30%",
+        f"At {fmt(pos * 100, 0)}% of 52w range ({fmt(lo52)} to {fmt(hi52)})",
+        "10 pts: top quartile · 6: upper half · 3: 30-50% · 0: bottom 30%",
         "Stocks near 52-week highs statistically continue outperforming (momentum effect); stocks in the bottom of their range are fighting overhead supply.")
 
     score = round(100 * earned / possible)
@@ -408,7 +408,7 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
          "Rising return on assets means the business is getting more productive, not just bigger.")
     fbit("CFO exceeds net income", bool(cfo is not None and ni_now is not None and cfo > ni_now),
          f"CFO {cr(cfo)} vs NI {cr(ni_now)}",
-         "When cash flow beats reported profit, earnings quality is high — profits are backed by cash, not accruals.")
+         "When cash flow beats reported profit, earnings quality is high: profits are backed by cash, not accruals.")
     fbit("Leverage falling", bool(ltd_now is not None and ltd_prev is not None and ta_now and ta_prev
                                   and (ltd_now / ta_now) <= (ltd_prev / ta_prev)),
          f"LTD/Assets {fmt((ltd_prev or 0) / ta_prev * 100, 1) if ta_prev else 'n/a'}% → {fmt((ltd_now or 0) / ta_now * 100, 1) if ta_now else 'n/a'}%",
@@ -417,7 +417,7 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
     cur_prev = (ca_prev / cl_prev) if ca_prev and cl_prev else None
     fbit("Liquidity improving", bool(cur_now and cur_prev and cur_now > cur_prev),
          f"Current ratio {fmt(cur_prev)} → {fmt(cur_now)}",
-         "A rising current ratio means more short-term assets per rupee of short-term liability — better ability to pay bills.")
+         "A rising current ratio means more short-term assets per rupee of short-term liability, which means a better ability to pay bills.")
     fbit("No dilution", bool(shares_now is not None and shares_prev is not None and shares_now <= shares_prev * 1.005),
          f"Shares {cr(shares_prev)} → {cr(shares_now)}",
          "If share count isn't rising, existing shareholders aren't being diluted to fund the business.")
@@ -425,7 +425,7 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
     gm_prev = (gp_prev / rev_prev) if gp_prev and rev_prev else None
     fbit("Gross margin expanding", bool(gm_now and gm_prev and gm_now > gm_prev),
          f"Gross margin {fmt((gm_prev or 0) * 100, 1)}% → {fmt((gm_now or 0) * 100, 1)}%",
-         "Expanding gross margin signals pricing power or falling input costs — both marks of a strengthening franchise.")
+         "Expanding gross margin signals pricing power or falling input costs, both marks of a strengthening franchise.")
     at_now = (rev_now / ta_now) if rev_now and ta_now else None
     at_prev = (rev_prev / ta_prev) if rev_prev and ta_prev else None
     fbit("Asset turnover rising", bool(at_now and at_prev and at_now > at_prev),
@@ -439,21 +439,21 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
     roce_pts = 0 if roce is None else (16 if roce >= 0.18 else (10 if roce >= 0.12 else (5 if roce >= 0.08 else 0)))
     add("ROCE", roce_pts, 16,
         f"EBIT {cr(ebit)} / Capital employed {cr((ta_now - (cl_now or 0)) if ta_now else None)} = {fmt((roce or 0) * 100, 1)}%",
-        "16 pts: ≥18% · 10: 12–18% · 5: 8–12% · 0: <8%",
+        "16 pts: ≥18% · 10: 12-18% · 5: 8-12% · 0: <8%",
         "Return on Capital Employed is the single best test of business quality: how much operating profit each rupee tied up in the business earns. Consistently high ROCE compounds wealth.")
 
     de = (ltd_now / te_now) if ltd_now is not None and te_now and te_now > 0 else (0.0 if te_now and te_now > 0 and not ltd_now else None)
     de_pts = 0 if de is None else (10 if de <= 0.3 else (6 if de <= 0.8 else (2 if de <= 1.5 else 0)))
     add("Debt / Equity", de_pts, 10,
         f"LTD {cr(ltd_now)} / Equity {cr(te_now)} = {fmt(de)}",
-        "10 pts: ≤0.3 · 6: 0.3–0.8 · 2: 0.8–1.5 · 0: >1.5",
+        "10 pts: ≤0.3 · 6: 0.3-0.8 · 2: 0.8-1.5 · 0: >1.5",
         "Low debt means the company survives bad years and doesn't hand its upside to lenders.")
 
     rev_g = ((rev_now / rev_prev) - 1) if rev_now and rev_prev else None
     g_pts = 0 if rev_g is None else (10 if rev_g >= 0.15 else (6 if rev_g >= 0.08 else (3 if rev_g > 0 else 0)))
     add("Revenue growth (YoY)", g_pts, 10,
         f"{cr(rev_prev)} → {cr(rev_now)} = {fmt((rev_g or 0) * 100, 1)}%",
-        "10 pts: ≥15% · 6: 8–15% · 3: 0–8% · 0: negative",
+        "10 pts: ≥15% · 6: 8-15% · 3: 0-8% · 0: negative",
         "Quality without growth stagnates. Double-digit revenue growth shows real demand for what the company sells.")
 
     pe = info.get("trailingPE")
@@ -463,7 +463,7 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
         pe_pts = 10 if pe <= 25 else (6 if pe <= 45 else (2 if pe <= 70 else 0))
         pe_detail = f"Trailing P/E = {fmt(pe, 1)}"
     add("Valuation (P/E)", pe_pts, 10, pe_detail,
-        "10 pts: ≤25 · 6: 25–45 · 2: 45–70 · 0: >70 or loss-making",
+        "10 pts: ≤25 · 6: 25-45 · 2: 45-70 · 0: >70 or loss-making",
         "Price matters. Even a great business bought at an extreme multiple can deliver poor returns for years. P/E is a rough but honest first check.")
 
     # --- G-Score (adapted Mohanram, 6 available checks) -------------------
@@ -493,14 +493,14 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
     gm_level = gm_now
     gbit("Gross margin level", bool(gm_level and gm_level >= 0.25),
          f"Gross margin = {fmt((gm_level or 0) * 100, 1)}% (threshold 25%)",
-         "A high gross margin usually means pricing power or a structural cost advantage — the raw material of a durable business.")
+         "A high gross margin usually means pricing power or a structural cost advantage, the raw material of a durable business.")
     roa_stable = bool(roa_now is not None and roa_prev is not None and roa_now > 0 and roa_prev > 0)
     gbit("Earnings consistency", roa_stable,
          f"ROA positive in both years: {fmt((roa_prev or 0) * 100, 1)}% → {fmt((roa_now or 0) * 100, 1)}%",
          "Consistently positive returns matter more than one spectacular year. Volatile earnings are priced lower and for good reason.")
     rev_g_pos = ((rev_now / rev_prev) - 1) if rev_now and rev_prev else None
     gbit("Sales growth quality", bool(rev_g_pos is not None and 0.05 <= rev_g_pos <= 0.60),
-         f"Revenue growth = {fmt((rev_g_pos or 0) * 100, 1)}% (band 5%–60%)",
+         f"Revenue growth = {fmt((rev_g_pos or 0) * 100, 1)}% (band 5% to 60%)",
          "Steady growth is more repeatable than explosive growth. Very high growth often reflects a one-off, an acquisition, or a low base, and rarely persists.")
 
     g_score = sum(1 for b in g_bits if b)
@@ -515,16 +515,16 @@ def fundamental_score(fin: pd.DataFrame, bs: pd.DataFrame, cf: pd.DataFrame, inf
         inst_pts = 8 if ip >= 30 else (6 if ip >= 18 else (3 if ip >= 8 else 0))
         add("Institutional holding (FII + DII)", inst_pts, 8,
             f"Institutions hold {fmt(ip, 1)}% of equity (last filed shareholding pattern)",
-            "8 pts: ≥30% · 6: 18–30% · 3: 8–18% · 0: <8%",
-            "This is the combined FII and DII stake from the company's quarterly shareholding filing. Professional investors run their own diligence before taking large positions, so a meaningful institutional stake means the business has passed outside scrutiny. It is a quality signal, not a guarantee — institutions are wrong regularly, and this figure is quarterly, so it lags the market.")
+            "8 pts: ≥30% · 6: 18-30% · 3: 8-18% · 0: <8%",
+            "This is the combined FII and DII stake from the company's quarterly shareholding filing. Professional investors run their own diligence before taking large positions, so a meaningful institutional stake means the business has passed outside scrutiny. It is a quality signal, not a guarantee: institutions are wrong regularly, and this figure is quarterly, so it lags the market.")
 
     if prom is not None:
         pp = prom * 100
         prom_pts = 8 if pp >= 50 else (6 if pp >= 35 else (3 if pp >= 20 else 0))
         add("Promoter holding", prom_pts, 8,
             f"Promoters / insiders hold {fmt(pp, 1)}% of equity (last filed shareholding pattern)",
-            "8 pts: ≥50% · 6: 35–50% · 3: 20–35% · 0: <20%",
-            "Promoter holding is the founding family's or parent group's own stake. High promoter holding means their wealth rises and falls with yours — skin in the game. Watch for falling promoter stake across quarters, which can signal the people who know the business best are stepping back.")
+            "8 pts: ≥50% · 6: 35-50% · 3: 20-35% · 0: <20%",
+            "Promoter holding is the founding family's or parent group's own stake. High promoter holding means their wealth rises and falls with yours (skin in the game). Watch for falling promoter stake across quarters, which can signal the people who know the business best are stepping back.")
 
     # If the core statement lines are all missing, data is unavailable —
     # report None rather than a misleading zero.
@@ -569,22 +569,22 @@ def composite(tech: dict, fund: dict) -> dict:
     t, f = tech["score"], fund.get("score")
     if f is None:
         overall = t
-        basis = "Technical only — fundamental statements unavailable for this ticker"
+        basis = "Technical only: fundamental statements unavailable for this ticker"
     else:
         overall = round(0.5 * t + 0.5 * f)
         basis = "50% technical · 50% fundamental"
 
     if overall >= 72:
         label, tone = "STRONG PROFILE", "strong"
-        summary = "Both the price action and the business quality clear high bars. Names like this belong on a serious watchlist — the remaining work is valuation comfort and position sizing."
+        summary = "Both the price action and the business quality clear high bars. Names like this belong on a serious watchlist. The remaining work is valuation comfort and position sizing."
     elif overall >= 55:
         label, tone = "CONSTRUCTIVE", "constructive"
-        summary = "More going right than wrong, with specific weak spots identified in the ledger below. Worth studying — read the failed checks first; they tell you exactly what to monitor."
+        summary = "More going right than wrong, with specific weak spots identified in the ledger below. Worth studying. Read the failed checks first; they tell you exactly what to monitor."
     elif overall >= 40:
         label, tone = "MIXED", "mixed"
-        summary = "The evidence genuinely conflicts. When technicals and fundamentals disagree this much, the honest answer is that conviction isn't available yet — wait for the picture to resolve."
+        summary = "The evidence genuinely conflicts. When technicals and fundamentals disagree this much, the honest answer is that conviction isn't available yet. Wait for the picture to resolve."
     else:
         label, tone = "WEAK PROFILE", "weak"
-        summary = "The majority of objective checks fail. This doesn't predict the future — but buying against this much evidence requires a specific thesis about what the numbers are missing."
+        summary = "The majority of objective checks fail. This doesn't predict the future, but buying against this much evidence requires a specific thesis about what the numbers are missing."
 
     return {"score": overall, "label": label, "tone": tone, "summary": summary, "basis": basis}

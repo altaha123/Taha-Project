@@ -147,7 +147,7 @@ def _cohort_note(key, n, on_request):
     scanned = key[0] or "the last scan"
     if on_request:
         return (f"Not in the scan's analysed cohort, so ranked on request against its {n} "
-                f"companies, using prices and filings as of {key[2]} — the same date its "
+                f"companies, using prices and filings as of {key[2]}, the same date its "
                 f"peers were measured on (scan of {scanned}).")
     return f"Analysed in the universe scan of {scanned}, ranked against its {n} companies."
 
@@ -267,7 +267,7 @@ class OnRequestScorer:
             v4 = fut.result(timeout=self.wait if wait is None else wait)
         except _FutureTimeout:
             return unavailable(
-                f"Scoring {base} against the scan's {len(rows)} companies — this "
+                f"Scoring {base} against the scan's {len(rows)} companies. This "
                 "takes a few seconds the first time. Refresh in a moment.",
                 reason="pending", pending=True)
         except Exception:

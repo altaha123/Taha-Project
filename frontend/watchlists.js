@@ -413,7 +413,7 @@
 
   function share(l) {
     var url = shareUrl(l);
-    var text = l.emoji + ' ' + l.name + ' — my watchlist on Altaha Screener';
+    var text = l.emoji + ' ' + l.name + ', my watchlist on Altaha Screener';
     if (navigator.share && window.matchMedia('(hover: none)').matches) {
       navigator.share({ title: l.name, text: text, url: url }).catch(function () {});
       return;
@@ -587,7 +587,7 @@
       '<button type="button" class="wl-tile wl-new" id="wl-new" style="--i:' + (k++) + '"><span class="wl-tile-e" aria-hidden="true">＋</span>' +
       '<span class="wl-tile-t"><b>New list</b><small>name it anything</small></span></button></div>';
     if (S.featured.length) {
-      html += '<p class="wl-shelf-h">Featured lists — open one, race it, or keep a copy</p><div class="wl-shelf-row" role="group" aria-label="Featured lists">' +
+      html += '<p class="wl-shelf-h">Featured lists: open one, race it, or keep a copy</p><div class="wl-shelf-row" role="group" aria-label="Featured lists">' +
         S.featured.map(function (l) { return shelfCard(l, k++); }).join('') + '</div>';
     }
     host.innerHTML = html;
@@ -645,12 +645,12 @@
     }
     return '<div class="wl-tools">' +
       (mine ? '<div class="wl-add"><label class="wl-sr" for="wl-add-in">Add a stock</label>' +
-        '<input id="wl-add-in" type="search" placeholder="Add a stock — name or symbol" autocomplete="off" spellcheck="false" ' +
+        '<input id="wl-add-in" type="search" placeholder="Add a stock by name or symbol" autocomplete="off" spellcheck="false" ' +
         'role="combobox" aria-expanded="false" aria-controls="wl-sugg" aria-autocomplete="list">' +
         '<ul class="wl-sugg" id="wl-sugg" role="listbox" hidden></ul></div>' : '') +
       seg('wl-mode', S.mode, [['cards', 'Cards'], ['race', 'Race'], ['heat', 'Heatmap']]) +
       '<label class="wl-sortl"><span>Sort</span><select id="wl-sort">' +
-        [['move', 'Today’s move'], ['since', 'Since added'], ['score', 'Altaha Score'], ['az', 'A–Z'], ['mine', 'List order']].map(function (o) {
+        [['move', 'Today’s move'], ['since', 'Since added'], ['score', 'Altaha Score'], ['az', 'A-Z'], ['mine', 'List order']].map(function (o) {
           return '<option value="' + o[0] + '"' + (o[0] === S.sort ? ' selected' : '') + '>' + o[1] + '</option>';
         }).join('') + '</select></label>' +
     '</div>';
@@ -742,7 +742,7 @@
     var hist = Object.keys(g.picks).sort().reverse().slice(0, 7).map(function (d) {
       var p = g.picks[d], r = p.result;
       var cls = !r ? 'wait' : r.kind;
-      var txt = !r ? 'waiting for the close' : r.kind === 'void' ? 'no session — not scored'
+      var txt = !r ? 'waiting for the close' : r.kind === 'void' ? 'no session, not scored'
         : (r.kind === 'win' ? '1st of ' + r.of + ' · +3' : r.rank + ' of ' + r.of + (r.points ? ' · +1' : ' · 0')) + ' · ' + pct(r.pct);
       return '<li class="' + cls + '"><span>' + esc(niceDate(d)) + '</span><b>' + esc(p.sym) + '</b><small>' + esc(txt) + '</small></li>';
     }).join('');
@@ -751,8 +751,8 @@
     if (fresh) {
       var r = fresh.result;
       banner = '<div class="wl-game-result ' + r.kind + '">' +
-        (r.kind === 'win' ? '🏆 <b>' + esc(fresh.sym) + ' won the day</b> — ' + pct(r.pct) + ', first of ' + r.of + '. Three points.'
-          : r.kind === 'beat' ? '👏 <b>' + esc(fresh.sym) + ' beat the list</b> — ' + pct(r.pct) + ', ' + r.rank + ' of ' + r.of + '. One point. ' + esc(r.top) + ' won with ' + pct(r.topPct) + '.'
+        (r.kind === 'win' ? '🏆 <b>' + esc(fresh.sym) + ' won the day</b> with ' + pct(r.pct) + ', first of ' + r.of + '. Three points.'
+          : r.kind === 'beat' ? '👏 <b>' + esc(fresh.sym) + ' beat the list</b> with ' + pct(r.pct) + ', ' + r.rank + ' of ' + r.of + '. One point. ' + esc(r.top) + ' won with ' + pct(r.topPct) + '.'
           : r.kind === 'void' ? 'No session on that day, so the pick was not scored.'
           : '😅 <b>' + esc(fresh.sym) + '</b> finished ' + r.rank + ' of ' + r.of + ' (' + pct(r.pct) + '). ' + esc(r.top) + ' won with ' + pct(r.topPct) + '.') +
         '</div>';
@@ -762,7 +762,7 @@
         (today.result ? 'Scored.' : 'Results after 3:30 pm IST.') + '</p>'
       : pickOpen()
         ? '<p class="wl-game-now">Tap <b>⚑ Pick</b> on the stock you think ends today highest on this list.</p>'
-        : '<p class="wl-game-now">Picks are closed — they open on weekdays until 3:30 pm IST.</p>';
+        : '<p class="wl-game-now">Picks are closed. They open on weekdays until 3:30 pm IST.</p>';
     return '<section class="wl-game" aria-labelledby="wl-game-h">' +
       '<div class="wl-game-head"><h3 id="wl-game-h">Pick today’s winner</h3>' +
         '<div class="wl-game-score"><span><b>' + g.points + '</b><small>points</small></span>' +
@@ -771,7 +771,7 @@
         '<span><b>' + g.wins + '/' + g.played + '</b><small>wins</small></span></div></div>' +
       banner + status +
       (hist ? '<ol class="wl-game-hist">' + hist + '</ol>' : '') +
-      '<p class="wl-game-fine">Three points if your pick tops the list, one if it beats the list’s average. A game for fun on this browser — no money, and not a view on what to buy.</p>' +
+      '<p class="wl-game-fine">Three points if your pick tops the list, one if it beats the list’s average. A game for fun on this browser. No money, and not a view on what to buy.</p>' +
     '</section>';
   }
 
@@ -836,7 +836,7 @@
     var note = $('wl-sync');
     if (note) {
       note.textContent = auth()
-        ? 'Saved to your account — every list follows you to any device you sign in on.'
+        ? 'Saved to your account. Every list follows you to any device you sign in on.'
         : 'Saved on this browser. Sign in and your lists follow you everywhere.';
     }
     paintShelf();

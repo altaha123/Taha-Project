@@ -19,14 +19,14 @@
    as its own words, and carries how long the list is held under its name. */
 .pk-chooser { display: grid; gap: 10px; }
 .pk-group { display: grid; grid-template-columns: 124px minmax(0, 1fr); align-items: center; gap: 12px; }
-.pk-group-h { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--tk-label, var(--mute)); }
+.pk-group-h { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--tk-label, var(--mute)); }
 .pk-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
 .pk-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; min-height: 48px;
   padding: 7px 16px; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper); color: var(--ink);
-  font: 500 14.5px/1 var(--sans); white-space: nowrap; cursor: pointer; text-align: left;
+  font: 500 14px/1 var(--sans); white-space: nowrap; cursor: pointer; text-align: left;
   transition: background var(--t-fast, 150ms), color var(--t-fast, 150ms), border-color var(--t-fast, 150ms), transform var(--t-fast, 150ms); }
 .pk-tab i { font-style: normal; }
-.pk-tab small { font: 400 11.5px/1 var(--sans); color: var(--tk-label, var(--mute)); }
+.pk-tab small { font: 400 12px/1 var(--sans); color: var(--tk-label, var(--mute)); }
 .pk-tab:hover { border-color: var(--gold); transform: translateY(-1px); }
 .pk-tab.on { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
 .pk-tab.on small { color: var(--gold-lt, #D9BC6A); }
@@ -36,14 +36,14 @@
 .pk-idea { margin: 16px 0 12px; font-size: 16px; line-height: 1.4; color: var(--ink); }
 .pk-idea span { color: var(--pk-mute, var(--mute)); }
 .pk-record { margin: 0 0 14px; border: 1px solid var(--rule-2); border-radius: 14px; background: var(--paper-2); }
-.pk-record-h { margin: 0; padding: 11px 14px 0; font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .1em;
+.pk-record-h { margin: 0; padding: 11px 14px 0; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em;
   text-transform: uppercase; color: var(--tk-label, var(--mute)); }
 .pk-record-n { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .pk-record-n > span { display: flex; flex-direction: column; gap: 4px; padding: 8px 14px 12px; min-width: 0; }
 .pk-record-n > span + span { border-left: 1px solid var(--rule-2); }
-.pk-record-n b { font-family: var(--serif); font-weight: 400; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.pk-record-n b { font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
 .pk-record-n b.up { color: var(--pass); } .pk-record-n b.dn { color: var(--fail); }
-.pk-record-n small { font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
+.pk-record-n small { font-size: 13px; line-height: 1.35; color: var(--ink-2); }
 /* "52 of every 100 went up" as a bar: the part that went up, and the rest. */
 .pk-meter { display: block; height: 6px; max-width: 220px; margin-top: 4px; border-radius: 3px; overflow: hidden;
   background: color-mix(in srgb, var(--fail) 38%, var(--paper-2)); }
@@ -62,7 +62,7 @@
 .pk-retry { border: 0; background: none; padding: 0; color: var(--gold-dp); font: inherit; text-decoration: underline; cursor: pointer; }
 
 /* ── The picks ────────────────────────────────────────────────────────── */
-.pk-cards-h { margin: 18px 0 2px; font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+.pk-cards-h { margin: 18px 0 2px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
   color: var(--tk-label, var(--mute)); }
 .pk-cards { display: flex; flex-direction: column; }
 .pk-card { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 13px 8px;
@@ -74,7 +74,7 @@
 .pk-rank { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--gold) 14%, transparent);
   font-family: var(--serif); font-size: 20px; line-height: 1; color: var(--gold-dp); font-variant-numeric: tabular-nums; }
 .pk-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.pk-name { font-family: var(--serif); font-size: 21px; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere; transition: color var(--t-fast, 150ms); }
+.pk-name { font-family: var(--serif); font-size: 20px; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere; transition: color var(--t-fast, 150ms); }
 .pk-sym { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--tk-label, var(--mute)); font-variant-numeric: tabular-nums; }
 /* Three prices, left to right: where it is, where a good result would be,
    where to leave. Green and red are on the percentages only; the prices
@@ -84,7 +84,7 @@
 .pk-lv { display: flex; flex-direction: column; gap: 3px; padding: 8px 14px; text-align: right; }
 .pk-lv + .pk-lv { border-left: 1px solid var(--rule-2); }
 .pk-lv small { font-size: 11px; color: var(--tk-label, var(--mute)); white-space: nowrap; }
-.pk-lv b { font-family: var(--mono); font-size: 14.5px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pk-lv b { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pk-lv i { font: 500 11px/1 var(--mono); font-style: normal; font-variant-numeric: tabular-nums; }
 .pk-aim i { color: var(--pass); } .pk-exit i { color: var(--fail); }
 .pk-aimnote { margin: 12px 0 0; padding: 10px 14px; border-radius: 12px; background: var(--paper-2); font-size: 13px; line-height: 1.55; color: var(--ink-2); }
@@ -107,7 +107,7 @@
    the chips and the retry link lost their own type. Said again here with the
    panel's name in front, which outranks it back. */
 .pk-panel .pk-all { color: var(--paper); font: 500 14px/1 var(--sans); text-align: center; }
-.pk-panel .pk-tab { color: var(--ink); font: 500 14.5px/1 var(--sans); }
+.pk-panel .pk-tab { color: var(--ink); font: 500 14px/1 var(--sans); }
 .pk-panel .pk-tab.on { color: var(--paper); font-weight: 600; }
 .pk-panel .pk-retry { color: var(--gold-dp); text-decoration: underline; }
 .pk-all:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -131,18 +131,18 @@
 .pk-notes summary { cursor: pointer; color: var(--tk-label, var(--mute)); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; }
 .pk-notes ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.5; }
 /* Facts beside a pick: the result it was priced on, an order, the chart. */
-.pk-fact { margin: 8px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
-.pk-fact b { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+.pk-fact { margin: 8px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.pk-fact b { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
   color: var(--tk-label, var(--mute)); margin-right: 6px; }
 .pk-chart { margin: 14px 0 6px; padding: 12px 14px; border: 1px solid var(--rule-2); border-radius: 12px; background: var(--paper-2); }
-.pk-chart h6 { margin: 0 0 8px; font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+.pk-chart h6 { margin: 0 0 8px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
   color: var(--tk-label, var(--mute)); }
-.pk-chart dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 14px; margin: 0; font-size: 13.5px; line-height: 1.45; }
+.pk-chart dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 14px; margin: 0; font-size: 14px; line-height: 1.45; }
 .pk-chart dt { color: var(--tk-label, var(--mute)); }
 .pk-chart dd { margin: 0; color: var(--ink); }
-.pk-chart p { margin: 10px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--tk-label, var(--mute)); }
-.pk-market { margin: 4px 0 14px; max-width: 560px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
-.pk-again { margin: 34px 0 10px; font-family: var(--serif); font-weight: 400; font-size: 26px; color: var(--ink); }
+.pk-chart p { margin: 10px 0 0; font-size: 13px; line-height: 1.45; color: var(--tk-label, var(--mute)); }
+.pk-market { margin: 4px 0 14px; max-width: 560px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.pk-again { margin: 34px 0 10px; font-family: var(--serif); font-weight: 400; font-size: 28px; color: var(--ink); }
 
 html[data-theme="dark"] .pk-panel { box-shadow: none; }
 html[data-theme="dark"] .pk-tab.on { background: var(--gold-lt); border-color: var(--gold-lt); color: #16130E; }
@@ -170,18 +170,18 @@ html[data-theme="dark"] .pk-panel .pk-tab.on { color: #16130E; }
   .pk-tab:hover { transform: none; }
   .pk-chart dl { grid-template-columns: minmax(0, 1fr); gap: 1px 0; }
   .pk-chart dd { margin-bottom: 7px; }
-  .pk-idea { margin: 12px 0 10px; font-size: 15px; }
+  .pk-idea { margin: 12px 0 10px; font-size: 16px; }
   .pk-record-n b { font-size: 24px; }
   .pk-record-n > span { padding: 6px 10px 10px; }
   .pk-record-n small { font-size: 11px; }
   .pk-record-h { padding: 9px 10px 0; }
-  .pk-name { font-size: 19px; }
+  .pk-name { font-size: 20px; }
   /* The three prices drop under the reasons, across the card's full width. */
   .pk-card { grid-template-columns: 30px minmax(0, 1fr); gap: 8px 10px; align-items: start; padding: 12px 2px; }
-  .pk-rank { width: 30px; height: 30px; font-size: 17px; }
+  .pk-rank { width: 30px; height: 30px; font-size: 18px; }
   .pk-levels { grid-column: 1 / -1; grid-auto-columns: minmax(0, 1fr); }
   .pk-lv { padding: 7px 10px; text-align: left; }
-  .pk-lv b { font-size: 13.5px; }
+  .pk-lv b { font-size: 14px; }
   .pk-cards-h { margin-top: 14px; }
   .pk-all { flex: 1; }
 }
@@ -201,5 +201,5 @@ html[data-theme="dark"] .pk-panel .pk-tab.on { color: #16130E; }
 .pk-sectors td b { display: inline-block; min-width: 1.4em; color: var(--ink-2); font-weight: 600; }
 .pk-sectors tr.on td { background: var(--paper-2); color: var(--ink); font-weight: 600; }
 .pk-sectors p { margin: 8px 0 2px; color: var(--ink-2); line-height: 1.45; }
-.pk-brief { margin: 2px 0 14px; font-size: 13.5px; color: var(--ink-2); }
+.pk-brief { margin: 2px 0 14px; font-size: 14px; color: var(--ink-2); }
 .pk-brief a { color: var(--ink); font-weight: 600; }

@@ -214,7 +214,7 @@
     'Conservative': 'The job of this money is to still be there. The growth sleeve stays small enough that a bad year is survivable without selling.',
     'Moderately conservative': 'Some growth, but not at the cost of a fall that would force a sale at the wrong moment.',
     'Balanced': 'Growth and protection weighed about equally. Swings are the price of the first, which only works if they were expected before they arrived.',
-    'Growth': 'A long horizon and the means to sit through a bad stretch. Drawdowns are expected rather than tolerated — the plan assumes them.',
+    'Growth': 'A long horizon and the means to sit through a bad stretch. Drawdowns are expected rather than tolerated. The plan assumes them.',
     'Aggressive': 'Both the circumstances and the temperament to hold through a deep fall. The limit is rarely arithmetic; it is whether the last bad year was actually sat through.'
   };
 
@@ -298,7 +298,7 @@
     },
     'International equity': {
       holds: 'An S&P 500 feeder fund.',
-      via: 'A fund that holds a US index fund of the 500 largest American companies. When that feeder is shut to new money, a world index fund — developed markets, not only the US — is the wider version of the same idea.',
+      via: 'A fund that holds a US index fund of the 500 largest American companies. When that feeder is shut to new money, a world index fund (developed markets, not only the US) is the wider version of the same idea.',
       route: 'The same mutual-fund apps. Overseas limits fill up; the fund has to be open.',
       look: 'The total cost, including the fund it holds underneath, and how the gains are taxed here.'
     },
@@ -306,7 +306,7 @@
       holds: 'Units of a listed REIT or InvIT.',
       via: 'Offices, malls, roads and power lines that pay out rent, in units that trade daily.',
       route: 'A demat account, from a few hundred rupees a unit. Traded on the NSE like a share.',
-      look: 'Occupancy above 85%, a distribution yield of 6–8%, and how much debt the trust carries.'
+      look: 'Occupancy above 85%, a distribution yield of 6 to 8%, and how much debt the trust carries.'
     },
     'Bank fixed deposits': {
       holds: 'A fixed deposit of one to three years, at a scheduled commercial bank.',
@@ -330,7 +330,7 @@
       holds: 'Sovereign Gold Bonds when a tranche is open; a gold ETF otherwise.',
       via: 'The bond tracks the gold price and pays 2.5% a year on top. The ETF tracks the gold price in a demat account. A gold fund is that ETF held through a mutual-fund app.',
       route: 'A bank or demat account for the bonds; a demat account or any mutual-fund app for the ETF.',
-      look: 'Bonds are tax-free at maturity if held to the end. Jewellery is not this line: 10–25% goes in making charges. Digital gold sits outside a regulated bond or fund and is not this line either.'
+      look: 'Bonds are tax-free at maturity if held to the end. Jewellery is not this line: 10 to 25% goes in making charges. Digital gold sits outside a regulated bond or fund and is not this line either.'
     },
     'Alternative investment funds (Category II & III)': {
       holds: 'One Category II or III alternative investment fund.',
@@ -357,7 +357,7 @@
     if (v <= DICGC) {
       return 'One scheduled commercial bank is enough: this line sits inside the ₹5 lakh DICGC cover.';
     }
-    return 'Spread across ' + n + ' scheduled commercial banks, so no one of them holds more than ₹5 lakh — the DICGC cover, interest included.';
+    return 'Spread across ' + n + ' scheduled commercial banks, so no one of them holds more than ₹5 lakh (the DICGC cover, interest included).';
   }
 
   function holding(label, rupees) {
@@ -451,17 +451,17 @@
       var repay = Math.min(left, debt);
       if (repay > 0) {
         calls.push({ key: 'debt', label: 'Costly loans next', rupees: repay,
-          text: 'Closing a loan at 12–18% is a certain 12–18% earned. Nothing in the sleeves is certain of anything. ' +
+          text: 'Closing a loan at 12 to 18% is a certain 12 to 18% earned. Nothing in the sleeves is certain of anything. ' +
                 (repay < debt ? inr(repay) + ' of the ' + inr(debt) + ' outstanding goes here.' :
                  'The whole ' + inr(debt) + ' can be closed from this sum.'),
-          via: 'The highest rate first: cards, then personal loans. A home loan at 8–9% is not costly debt and stays.' });
+          via: 'The highest rate first: cards, then personal loans. A home loan at 8 to 9% is not costly debt and stays.' });
         left -= repay;
       }
     } else if (heavy) {
       calls.push({ key: 'debt', label: 'Costly loans next', rupees: null, needs: 'debt',
-        text: 'You said loan repayments take over 40% of income. Any loan above about 10% — cards, ' +
-              'personal loans — outranks the sleeves. Enter what is outstanding on those.',
-        via: 'The highest rate first. A home loan at 8–9% is not costly debt and stays.' });
+        text: 'You said loan repayments take over 40% of income. Any loan above about 10% (cards, ' +
+              'personal loans) outranks the sleeves. Enter what is outstanding on those.',
+        via: 'The highest rate first. A home loan at 8 to 9% is not costly debt and stays.' });
     }
 
     return { calls: calls, free: Math.max(0, left) };
@@ -505,18 +505,18 @@
     var flat = 60 * 100000;           // a modest city flat, for scale
     out.push({ label: 'Direct property',
       text: free < flat
-        ? 'A flat in a city costs more than this whole sum. It is one thing in one place, costs 7–8% to ' +
-          'enter and leave, and rents at 2–3% a year. Listed REITs give the property exposure from a few ' +
+        ? 'A flat in a city costs more than this whole sum. It is one thing in one place, costs 7 to 8% to ' +
+          'enter and leave, and rents at 2 to 3% a year. Listed REITs give the property exposure from a few ' +
           'hundred rupees a unit and sit in the growth sleeve where the sum allows.'
         : 'One flat would take about ' + Math.round(flat / free * 100) + '% of this in a single thing that cannot be ' +
-          'sold in parts, costs 7–8% to enter and leave, and rents at 2–3%. A home is a decision about living, ' +
+          'sold in parts, costs 7 to 8% to enter and leave, and rents at 2 to 3%. A home is a decision about living, ' +
           'not a sleeve. A second property counts against the growth sleeve, not on top of it.' });
 
     if (!inAlt['Alternative investment funds (Category II & III)']) {
       out.push({ label: 'Alternative investment funds',
         text: 'SEBI sets the minimum at ₹1 crore per fund' +
           (free < AIF_MIN ? ', which is more than all of this money.' :
-           ', which is ' + Math.round(AIF_MIN / free * 100) + '% of what is free here — too much in one locked fund.') +
+           ', which is ' + Math.round(AIF_MIN / free * 100) + '% of what is free here, too much in one locked fund.') +
           ' Fees run near 2% a year plus a fifth of the gains, with a five-to-seven-year lock. They start to make sense ' +
           'past about ₹5 crore of investable money' +
           (band === 'Growth' || band === 'Aggressive' ? '' : ', and only for a growth-type profile') + '.' });
@@ -570,7 +570,7 @@
     if (free > 0 && dated) {
       // Money with a date inside three years gets no growth sleeve at all.
       var whole = slice(free, [100, 100], 1);
-      groups = [{ key: 'stable', label: 'Stays put', kind: 'Deposits and short-duration debt — this money has a date',
+      groups = [{ key: 'stable', label: 'Stays put', kind: 'Deposits and short-duration debt: this money has a date',
                   line: 'Needed within three years, so none of it is exposed to a fall it has no time to recover from.',
                   share: whole, sleeves: sleeves(free, whole, DATED_MIX) }];
     } else if (free > 0) {
@@ -607,7 +607,7 @@
           share: gold, sleeves: sleeves(free, gold, [['Gold', 100]]) }
       ];
       if (altShare) {
-        groups.push({ key: 'alt', label: 'Alternatives', kind: 'Private funds and early-stage — locked for years',
+        groups.push({ key: 'alt', label: 'Alternatives', kind: 'Private funds and early-stage, locked for years',
           line: 'Illiquid, expensive, and capped. It is here because the sum, the horizon and the years in the market all allow it.',
           share: altShare, sleeves: sleeves(free, altShare, alt.mix) });
       }
@@ -817,7 +817,7 @@
         '<div class="acf-head acf-bubble">' +
           '<span class="acf-step">Step 1 of 3</span>' +
           '<h3>How much are you putting to work?</h3>' +
-          '<p>Everything after this is a share of this number. It is the sum you are allocating — ' +
+          '<p>Everything after this is a share of this number. It is the sum you are allocating, ' +
           'not your net worth, and not money you have already committed elsewhere.</p>' +
         '</div>') +
       '<div class="acf-amount" data-stagger>' +
@@ -1078,7 +1078,7 @@
     var p = state.profile;
     if (!p || !p.band) {
       return '<div class="acf-head" data-stagger><h3>Not enough answers yet</h3>' +
-             '<p>' + esc(state.error || 'The profile needs both halves of the questionnaire — what your ' +
+             '<p>' + esc(state.error || 'The profile needs both halves of the questionnaire: what your ' +
              'circumstances can absorb and what your temperament can sit through.') + '</p></div>' +
              '<div class="acf-act" data-stagger><button type="button" class="acf-go" id="acf_again">Back to the questions</button></div>';
     }
@@ -1118,7 +1118,7 @@
       '<div class="acf-axes">' +
         axis('Capacity', p.capacity, 'What your circumstances can absorb') +
         axis('Temperament', p.tolerance, 'What you could sit through') +
-        axis('Profile', p.score, 'The lower of the two — always') +
+        axis('Profile', p.score, 'Always the lower of the two') +
       '</div>' +
       '<p class="acf-disc">The sleeve ranges are independent guardrails, so their midpoints do not add to ' +
       '100% on their own; the rupee figures are those midpoints scaled to what is free after the first ' +
@@ -1168,7 +1168,7 @@
   function groupsHTML(result) {
     if (!result.groups.length) {
       return '<div class="acf-flag is-note" data-stagger><b>Nothing left to split yet</b>' +
-        '<p>The first calls take all of this sum. That is the plan — the sleeves start with the next rupee.</p></div>';
+        '<p>The first calls take all of this sum. That is the plan: the sleeves start with the next rupee.</p></div>';
     }
     var toggle = '<div class="acf-view" data-stagger>' +
       '<button type="button" class="acf-pill' + (!state.monthly ? ' is-on' : '') + '" id="acf_lump" aria-pressed="' + !state.monthly + '">One sum</button>' +
@@ -1207,14 +1207,14 @@
   }
 
   function range(lo, hi) {
-    return words(lo) + ' – ' + words(hi).replace('₹', '');
+    return words(lo) + ' to ' + words(hi).replace('₹', '');
   }
 
   function outcomeRows(result) {
     var o = outcomes(result.groups, state.years);
     var rows = o.rows.map(function (r) {
       var note = r.low == null ? r.note
-        : r.rate[0] + '–' + r.rate[1] + '% a year, the long-run range for this sleeve.' +
+        : r.rate[0] + ' to ' + r.rate[1] + '% a year, the long-run range for this sleeve.' +
           (r.fall < r.rupees ? ' In a bad year it has fallen to about ' + words(r.fall) + ' before recovering.' : ' It does not fall.');
       return '<li class="is-' + r.key + '"><span><i class="acf-swatch is-' + r.key + '" aria-hidden="true"></i>' +
         esc(r.label) + ' <em>' + esc(inr(r.rupees)) + '</em></span>' +
@@ -1657,7 +1657,7 @@
       .catch(function () {
         state.error = 'The question list could not be loaded. It is served rather than held in ' +
           'this page so that an answer recorded today still resolves to the same question years ' +
-          'from now — which means this needs the network.';
+          'from now, which means this needs the network.';
         paint('next');
       });
   }

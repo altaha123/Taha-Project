@@ -88,7 +88,7 @@
     }, function (e) {
       if (timer) clearTimeout(timer);
       throw new Error(e && e.name === 'AbortError'
-        ? 'The server took too long. It may be waking up — try again in half a minute.'
+        ? 'The server took too long. It may be waking up, so try again in half a minute.'
         : 'Could not reach the server. Check the connection and try again.');
     });
   }
@@ -259,7 +259,7 @@
       out += '<p>The best, <b>' + esc(L.best_name) + '</b>, led holding’s Sharpe by ' + plain(L.best_sharpe_lead) +
         '. With about ' + L.effective_rules + ' genuinely different rules tried over ' + L.years +
         ' years, luck alone would hand the best of them a lead of about ' + plain(L.luck_bar_sharpe) +
-        ' — this one is inside that.</p>';
+        '. This one is inside that.</p>';
     } else if (L.verdict === 'clears_luck') {
       out += '<p>The best, <b>' + esc(L.best_name) + '</b>, led holding’s Sharpe by ' + plain(L.best_sharpe_lead) +
         ', more than the ' + plain(L.luck_bar_sharpe) + ' luck alone would hand the best of about ' +
@@ -415,7 +415,7 @@
     var m = r.metrics, h = S.data.hold, vs = r.vs_hold || {}, inr = S.data.currency === 'INR';
     var halves = (r.halves || []).map(function (x, i) {
       var hh = (h.halves || [])[i] || {};
-      return '<div class="sl-half"><span>' + (i ? 'Second half' : 'First half') + '<small>' + esc(day(x.from)) + ' – ' + esc(day(x.to)) + '</small></span>' +
+      return '<div class="sl-half"><span>' + (i ? 'Second half' : 'First half') + '<small>' + esc(day(x.from)) + ' to ' + esc(day(x.to)) + '</small></span>' +
         '<b class="' + tone(x.sharpe) + '">Sharpe ' + plain(x.sharpe) + '</b>' +
         '<small>' + pct(x.cagr_pct) + ' a year · holding ' + plain(hh.sharpe) + ' / ' + pct(hh.cagr_pct) + '</small></div>';
     }).join('');

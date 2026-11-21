@@ -481,7 +481,7 @@ def detect(sym, q, prof, lv, opening, regime_pct):
                    px, stop, px - 2 * (stop - px),
                    f"Heavy volume ({rvol:.1f}x normal for this window) with price in the bottom "
                    f"{int((1 - rpos) * 100)}% of the day's range and under VWAP. Flagged as "
-                   "distribution — relevant mainly if you already hold this.")
+                   "distribution, relevant mainly if you already hold this.")
             if a:
                 out.append(a)
 
@@ -588,7 +588,7 @@ def _scan_pass():
         except Exception:
             bo_syms = []
     if not syms and not bo_syms:
-        _state["error"] = ("no breakout levels yet — they are built after each close, "
+        _state["error"] = ("no breakout levels yet: they are built after each close, "
                            "or within minutes of the first start")
         return []
 
@@ -605,7 +605,7 @@ def _scan_pass():
         _state["error"] = str(e)[:160]
         return []
     if not snap:
-        _state["error"] = ("Dhan returned no quotes — the Data API subscription or the "
+        _state["error"] = ("Dhan returned no quotes: the Data API subscription or the "
                            "access token is the usual cause")
         return []
     _state["error"] = None

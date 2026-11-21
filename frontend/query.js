@@ -184,7 +184,7 @@
         .then(function (d) { saved = d.screens || []; paintSaved(); });
     }
     var list = localScreens().filter(function (sc) { return sc.name !== name; });
-    if (list.length >= 25) return Promise.reject(new Error('You have 25 saved screens — delete one to save another.'));
+    if (list.length >= 25) return Promise.reject(new Error('You have 25 saved screens. Delete one to save another.'));
     list.unshift({ name: name, query: query, updated_at: new Date().toISOString() });
     writeLocal(list);
     saved = list; paintSaved();
@@ -271,7 +271,7 @@
           '<button type="button" class="qs-btn qs-btn-ghost" id="qs-badd">+ Add condition</button>' +
         '</div>' +
         '<div class="qs-editor">' +
-          '<label for="qs-q" class="qs-edlab">Your query <span>one rule per line — ' +
+          '<label for="qs-q" class="qs-edlab">Your query <span>one rule per line, and ' +
             'a company has to meet all of them</span></label>' +
           '<div class="qs-edwrap">' +
             '<textarea id="qs-q" rows="5" spellcheck="false" autocomplete="off" ' +
@@ -336,7 +336,7 @@
         '</div>' +
         '<details class="qs-ref" id="qs-ref"><summary>Every field you can use ' +
           '<span id="qs-refn"></span></summary>' +
-          '<input id="qs-find" class="qs-find" type="search" placeholder="Find a field — e.g. debt, growth, promoter">' +
+          '<input id="qs-find" class="qs-find" type="search" placeholder="Find a field, e.g. debt, growth, promoter">' +
           '<div id="qs-fields"></div></details>' +
         '</div>' +
       '</section>' +
@@ -1221,7 +1221,7 @@
         setAiKey('');
         aiShowKey('That key was not accepted. It is the ADMIN_KEY set on the server.', true);
       } else {
-        aiShowKey('Could not reach the server — it may be waking up. Try again in a minute.', true);
+        aiShowKey('Could not reach the server. It may be waking up, so try again in a minute.', true);
       }
     }).then(function () { go.disabled = false; go.textContent = 'Unlock'; });
   }
@@ -1288,7 +1288,7 @@
         if (gen !== ai.gen) return;
         if (e.status === 401) { aiForget('The admin key is no longer accepted. Enter it again.'); return; }
         failed(e.status === 400 ? e.message
-          : 'Could not reach the server — it may be waking up. Try again in a minute.');
+          : 'Could not reach the server. It may be waking up, so try again in a minute.');
       })
       .then(function () {
         if (gen !== ai.gen) return;

@@ -357,13 +357,13 @@ def _reading(a, net, crossers, real):
     prop_cr = a["prop_value"] / 1e7
     if not real and prop_cr > 0:
         return ("Entirely proprietary desks. This is market making, not a view "
-                "on the company — there is no accumulation here to read.")
+                "on the company, so there is no accumulation here to read.")
     if crossers and abs(net_cr) < 0.5:
         return ("The same counterparty is on both sides and ends roughly flat. "
                 "Stock changed hands; nobody built a position.")
     if a["block"] and net_cr > 0:
         return (f"A negotiated block. Somebody bought ₹{abs(net_cr):.1f}cr net at "
-                "an agreed price — which says a buyer and a seller both wanted "
+                "an agreed price, which says a buyer and a seller both wanted "
                 "the trade, not that the price is right.")
     if net_cr > 0:
         return (f"₹{net_cr:.1f}cr net bought. Who they are matters more than the "
@@ -431,9 +431,9 @@ def board(min_value_cr=1.0, limit=40):
         "short_sold": sorted({r["symbol"] for r in shorts}),
         "min_value_cr": min_value_cr,
         "timing": ("Block deals are published within minutes of their window "
-                   "(08:45–09:00 and 14:05–14:20). Bulk deals are reported by the "
+                   "(08:45 to 09:00 and 14:05 to 14:20). Bulk deals are reported by the "
                    "broker through the day and are complete only after the close. "
-                   "This is a disclosure record, not a live trade feed — there is "
+                   "This is a disclosure record, not a live trade feed. There is "
                    "no such thing as a real-time bulk deal."),
         "caveat": ("A bulk deal says who traded, not whether they were right. In "
                    "small caps it is as often an operator distributing stock as an "

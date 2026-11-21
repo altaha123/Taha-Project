@@ -29,7 +29,7 @@
       path += (open ? ' L' : ' M') + x.toFixed(1) + ',' + y.toFixed(1); open = true;
     });
     return '<svg class="oi-spark" viewBox="0 0 240 52" role="img" aria-label="Holding history; gaps mean not disclosed. Range ' + pct(lo) + ' to ' + pct(hi) + '"><path d="' + path + '"/></svg>' +
-      '<div class="oi-meta">' + esc(history[0].period) + ' → ' + esc(history[history.length - 1].period) + ' · range ' + pct(lo) + '–' + pct(hi) + '</div>';
+      '<div class="oi-meta">' + esc(history[0].period) + ' → ' + esc(history[history.length - 1].period) + ' · range ' + pct(lo) + ' to ' + pct(hi) + '</div>';
   }
   function investor(n, filing) {
     var initials = n.name.split(/\s+/).slice(0, 2).map(function (x) { return x[0]; }).join('');
@@ -134,7 +134,7 @@
         drawPeers();
       }
       peerBusy = false; root.querySelector('#oi-add').disabled = false;
-      root.querySelector('#oi-peer-status').textContent = 'Up to five peers. Bars use the same 0–100% scale; changes are percentage points.';
+      root.querySelector('#oi-peer-status').textContent = 'Up to five peers. Bars use the same 0 to 100% scale; changes are percentage points.';
     }
     root.querySelector('#oi-add').addEventListener('click', function () {
       if (peerBusy) return;

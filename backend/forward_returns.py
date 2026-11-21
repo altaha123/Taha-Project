@@ -162,7 +162,7 @@ def run(horizons=HORIZONS, limit_symbols=None, today=None):
 
         bench = _history(BENCHMARK)
         if bench is None:
-            return {"ok": False, "error": f"benchmark {BENCHMARK} unavailable — "
+            return {"ok": False, "error": f"benchmark {BENCHMARK} unavailable, and "
                                           "labels without it would be returns, not alpha"}
 
         symbols = sorted(wanted)

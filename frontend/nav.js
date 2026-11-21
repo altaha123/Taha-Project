@@ -55,7 +55,7 @@
     {
       id: 'discover', label: 'Market',
       question: 'What is happening today?',
-      blurb: 'What is happening today? — prices, sectors, flows, and everything that happened today',
+      blurb: 'What is happening today? Prices, sectors, flows, and everything that happened today',
       icon: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
       tabs: [
         { id: 'today',    label: 'Overview',          hint: 'The market at a glance, live' },
@@ -74,7 +74,7 @@
     {
       id: 'research', label: 'Ideas',
       question: 'What should I look at?',
-      blurb: 'What should I look at? — the ranked universe, your own screens, and what great investors hold',
+      blurb: 'What should I look at? The ranked universe, your own screens, and what great investors hold',
       icon: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
       tabs: [
         { id: 'ideahub',     label: 'Overview',        hint: 'Our stock picks, and every other way to find a stock' },
@@ -97,12 +97,12 @@
     {
       id: 'portfolio', label: 'Portfolio',
       question: 'How am I doing, and what next?',
-      blurb: 'How am I doing, and what next? — your holdings, your plan and the next rupee',
+      blurb: 'How am I doing, and what next? Your holdings, your plan and the next rupee',
       icon: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/>',
       tabs: [
         { id: 'money',     label: 'Overview',          hint: 'Your portfolio, watchlist and plans' },
         { id: 'portfolio', label: 'Portfolio review',  hint: 'A clear call on every holding' },
-        { id: 'watchlists', label: 'Watchlists',       hint: 'Your lists, live — make, rename, share and play' },
+        { id: 'watchlists', label: 'Watchlists',       hint: 'Live lists you can make, rename, share and play' },
         { id: 'allocate',  label: 'Allocation plan',   hint: 'Where your next rupee should go' },
         { id: 'planner',   label: 'Money planner',     hint: 'The month work becomes optional, and what moves it', brand: 'planner' }
       ],

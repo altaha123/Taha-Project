@@ -748,7 +748,7 @@ LABELS = {
     "promoter": "Promoters",
     "fii": "Foreign institutions (FII/FPI)",
     "dii": "Domestic institutions (DII)",
-    "public_non_institutional": "Public — non-institutional",
+    "public_non_institutional": "Public (non-institutional)",
     "government": "Government",
     "custodian": "Custodian / depository receipts",
     "non_promoter_non_public": "Non-promoter, non-public",
@@ -822,7 +822,7 @@ def from_store(symbol: str):
         history.append(row)
     return {
         "symbol": sym, "available": True, "reduced": True,
-        "source": "NSE — shareholding pattern filed under LODR Regulation 31, as stored",
+        "source": "NSE shareholding pattern filed under LODR Regulation 31, as stored",
         "period": rows[0]["period_end"], "filed": None,
         "latest_source": _safe_doc_url(rows[0].get("source_url") or ""),
         "quarters_read": len(history), "interim_filings": 0,
@@ -847,7 +847,7 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
     out = {
         "symbol": sym,
         "available": False,
-        "source": "NSE — shareholding pattern filed under LODR Regulation 31",
+        "source": "NSE shareholding pattern filed under LODR Regulation 31",
         "split": [],
         "history": [],
         "names": {"promoters": [], "public": []},
@@ -988,7 +988,7 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
         out["notes"].append(
             "The categories read from this filing come to %.2f%%, not 100%%. "
             "Some of the holding sits in a category this reader does not yet "
-            "break out — treat the split as incomplete."
+            "break out, so treat the split as incomplete."
             % out["totals"]["split_sums_to"])
 
     for rec in parsed:
@@ -1026,7 +1026,7 @@ def summary(symbol: str, quarters: int = 8, names_limit: int = 12) -> dict:
     if interim:
         out["notes"].append(
             "%d of the %d filings read are interim disclosures rather than "
-            "quarter-ends — Regulation 31 requires one within ten days of a "
+            "quarter-ends, because Regulation 31 requires one within ten days of a "
             "capital change. They are shown, but the quarter-on-quarter and "
             "year-on-year figures compare quarter-ends only."
             % (len(interim), len(parsed)))

@@ -109,7 +109,7 @@ SOURCES: List[Dict[str, Any]] = [
      "url": "https://www.cnbc.com/id/100727362/device/rss/rss.html"},
     {"key": "ft_home", "name": "Financial Times", "region": "GLOBAL", "enabled": False,
      "url": "https://www.ft.com/rss/home",
-     "note": "headlines only, hard paywall — on for reading, poor for posting"},
+     "note": "headlines only, hard paywall. On for reading, poor for posting"},
     {"key": "ft_markets", "name": "Financial Times", "region": "GLOBAL", "enabled": False,
      "url": "https://www.ft.com/markets?format=rss",
      "note": "headlines only, hard paywall"},
@@ -436,7 +436,7 @@ def build_x_post(c: Dict[str, Any]) -> str:
 
     head = f"{tag} · {theme}"
     quote = f'"{lead["title"]}"'
-    attrib = f"— {lead['publication']}"
+    attrib = f"Source: {lead['publication']}"
     corro = ""
     if c["corroboration"] >= 3:
         corro = f"\n\nAlso running in {c['corroboration'] - 1} other outlets."
@@ -457,7 +457,7 @@ def build_x_post(c: Dict[str, Any]) -> str:
     trimmed = lead["title"]
     if len(trimmed) > 150:
         trimmed = trimmed[:147].rsplit(" ", 1)[0] + "…"
-    return f'{head}\n\n"{trimmed}"\n— {lead["publication"]}'
+    return f'{head}\n\n"{trimmed}"\nSource: {lead["publication"]}'
 
 
 # ============================================================================

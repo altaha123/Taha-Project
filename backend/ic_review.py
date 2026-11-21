@@ -421,9 +421,9 @@ def valuation_view(rows):
 
     band = 'unavailable'
     if pe is not None:
-        band = ('below the 15–28× reference band' if pe < NEUTRAL_PE[0] else
-                'above the 15–28× reference band' if pe > NEUTRAL_PE[1] else
-                'inside the 15–28× reference band')
+        band = ('below the 15 to 28× reference band' if pe < NEUTRAL_PE[0] else
+                'above the 15 to 28× reference band' if pe > NEUTRAL_PE[1] else
+                'inside the 15 to 28× reference band')
 
     return {
         'available': pe is not None or pb is not None,
@@ -440,9 +440,9 @@ def valuation_view(rows):
         'loss_making': negative,
         'loss_making_weight_pct': _round(sum(n['weight_pct'] or 0 for n in negative)),
         'unpriced_multiple_symbols': sorted(unavailable),
-        'method': ('Portfolio P/E is 1 ÷ Σ(weightᵢ × 1/PEᵢ) over positive-earnings holdings — the '
-                   'harmonic mean, which is what aggregating earnings gives. Trailing provider '
-                   'figures; no forward estimate is used. The 15–28× band is a conventional '
+        'method': ('Portfolio P/E is 1 ÷ Σ(weightᵢ × 1/PEᵢ) over positive-earnings holdings (the '
+                   'harmonic mean, which is what aggregating earnings gives). Trailing provider '
+                   'figures; no forward estimate is used. The 15 to 28× band is a conventional '
                    'reference for placing the number, not a fair-value judgement.'),
     }
 
@@ -680,8 +680,8 @@ def memo(report, risk, valuation, plan, card, now):
     construction = 'unavailable'
     if eff is not None and count:
         construction = (f"{eff:.1f} effective positions against {count} names"
-                        + (' — the weights, not the count, decide what this book does'
-                           if eff < count * 0.8 else ' — weights are close to even'))
+                        + (': the weights, not the count, decide what this book does'
+                           if eff < count * 0.8 else ': weights are close to even'))
     section('construction', 'How the book is built', construction,
             [f"Herfindahl concentration is {conc.get('hhi')}, which is the same concentration as "
              f"{_pct(100 / eff, 1) if eff else 'unavailable'} each in {eff:.1f} equally sized positions. "
@@ -712,7 +712,7 @@ def memo(report, risk, valuation, plan, card, now):
                 [f"On {risk.get('observations')} shared trading dates to {risk.get('to')}, covering "
                  f"{_pct(risk.get('coverage_pct'))} of priced capital, the current weights produce "
                  f"{_pct(risk.get('volatility_pct'))} annualised volatility against a weighted average "
-                 f"holding volatility of {_pct(risk.get('weighted_average_volatility_pct'))} — a "
+                 f"holding volatility of {_pct(risk.get('weighted_average_volatility_pct'))}. That is a "
                  f"diversification ratio of {risk.get('diversification_ratio')}, or "
                  f"{_pct(risk.get('diversification_benefit_pct'))} of volatility removed by the fact that "
                  f"the holdings do not move together.",
@@ -755,8 +755,8 @@ def memo(report, risk, valuation, plan, card, now):
                       if _num(r.get('composite')) is not None and r['composite'] < (pol.get('min_composite') or score_bands.DEFAULT_FLOOR))
     val_txt = 'Aggregate multiples are unavailable for this book.'
     if valuation.get('portfolio_pe'):
-        val_txt = (f"The book trades at {valuation['portfolio_pe']}× trailing earnings — "
-                   f"{valuation.get('band_position')} — on {_pct(valuation.get('portfolio_pe_coverage_pct'))} "
+        val_txt = (f"The book trades at {valuation['portfolio_pe']}× trailing earnings "
+                   f"({valuation.get('band_position')}) on {_pct(valuation.get('portfolio_pe_coverage_pct'))} "
                    f"of capital, an earnings yield of {_pct(valuation.get('earnings_yield_pct'))}. "
                    f"The median holding sits at {valuation.get('median_holding_pe')}×, so the aggregate is "
                    f"{'pulled up by the larger positions' if (valuation.get('median_holding_pe') or 0) < valuation['portfolio_pe'] else 'below the typical holding'}.")

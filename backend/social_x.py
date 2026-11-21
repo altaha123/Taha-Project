@@ -135,5 +135,5 @@ def health() -> Dict[str, Any]:
         "auto_post_enabled": auto_post_enabled(),
         "daily_cap": int(os.getenv("X_DAILY_CAP", "15")),
         "sent_today": daily_count(),
-        "mode": "live" if auto_post_enabled() else "draft — copy and paste from the Social panel",
+        "mode": "live" if auto_post_enabled() else "draft (copy and paste from the Social panel)",
     }

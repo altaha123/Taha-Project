@@ -254,7 +254,7 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       await t.page.locator('#kgrid .ktile').first().waitFor();
       assert.deepEqual(await t.page.locator('#tags .stk-tag').allInnerTexts(),
                        ['NSE: ACME', 'Chemicals', 'Specialty Chemicals']);
-      assert.equal(await t.page.title(), 'ACME — Acme Chemicals Ltd | Altaha Screener');
+      assert.equal(await t.page.title(), 'ACME: Acme Chemicals Ltd | Altaha Screener');
       assert.equal(await t.page.locator('#glance').count(), 0, 'an empty section was left in the static page');
       assert.equal(await t.page.locator('link[rel="canonical"]').count(), 0,
                    'a canonical was added off the live site, where /stock-ACME does not exist');

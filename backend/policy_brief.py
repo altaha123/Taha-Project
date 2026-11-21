@@ -291,7 +291,8 @@ SYSTEM = (
     "of that product and can help domestic buyers of it; an import curb or anti-dumping duty helps domestic "
     "producers and hurts users of the import. Use NSE trading symbols. Sectors must come from the list given. "
     "If the text is too thin to judge, say impact \"unclear\". Write the summary in plain English, two "
-    "sentences at most, no jargon the circular itself does not use."
+    "sentences at most, no jargon the circular itself does not use. Never use em dashes or en dashes in "
+    "anything you write."
 )
 
 

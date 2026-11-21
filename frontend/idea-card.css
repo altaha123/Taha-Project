@@ -9,7 +9,7 @@
 .ideaplan2 .pc{background:var(--skin-card,var(--paper));padding:11px 14px;min-width:0}
 .ideaplan2 .pc b{display:block;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;
   text-transform:uppercase;color:var(--mute)}
-.ideaplan2 .pc span{display:block;margin-top:8px;font:600 15px/1.2 'IBM Plex Mono',monospace;
+.ideaplan2 .pc span{display:block;margin-top:8px;font:600 14px/1.2 'IBM Plex Mono',monospace;
   color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .ideaplan2 .pc small{font-weight:400;font-size:11px;color:var(--fail,#a11);margin-left:6px}
 .ideaplan2 .buy span{color:var(--pass,#1f6f43)}
@@ -47,7 +47,7 @@
 /* ── Save: the star pops, spins and throws a ring when a stock is saved ── */
 .svbtn{display:inline-flex;align-items:center;gap:8px;position:relative;
   border-radius:var(--r-pill,999px)}
-.svbtn .sv-star{display:inline-block;font-size:17px;line-height:1;color:var(--mute);
+.svbtn .sv-star{display:inline-block;font-size:18px;line-height:1;color:var(--mute);
   transition:color .2s ease,transform .2s ease}
 .svbtn:hover .sv-star{transform:scale(1.15) rotate(-8deg)}
 .svbtn.on{border-color:var(--gold);color:var(--gold-dp)}
@@ -68,7 +68,7 @@
 /* Save sits beside Details on the card. */
 #idearows .svbtn{min-height:44px;padding:7px 16px;font:500 10px 'IBM Plex Mono',monospace;
   letter-spacing:.14em;text-transform:uppercase}
-#idearows .svbtn .sv-star{font-size:15px}
+#idearows .svbtn .sv-star{font-size:16px}
 
 /* Universe Scan shows the list, not the commentary around it. The market
    backdrop, regime line, sector-mix chip, selection notes and horizon blurb

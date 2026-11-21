@@ -670,13 +670,13 @@ def _worker():
     except MemoryError:
         _state["status"] = "done" if _state["payload"] else "error"
         _state["finished_at"] = time.time()
-        _state["error"] = "ran out of memory — partial results kept" \
+        _state["error"] = "ran out of memory, partial results kept" \
             if _state["payload"] else "out of memory before any results"
     except Exception as e:
         if _state["payload"]:
             _state["status"] = "done"
             _state["finished_at"] = time.time()
-            _state["error"] = "scan interrupted — partial results kept: " + str(e)[:120]
+            _state["error"] = "scan interrupted, partial results kept: " + str(e)[:120]
         else:
             _state["status"] = "error"
             _state["error"] = str(e)[:200]
@@ -940,7 +940,7 @@ def health_memory(detail: int = 0):
     except Exception:
         pass
     out["malloc_arena_max"] = os.environ.get("MALLOC_ARENA_MAX") or \
-        "UNSET — glibc may open up to 8 arenas per CPU for a threaded process"
+        "UNSET (glibc may open up to 8 arenas per CPU for a threaded process)"
     out["web_concurrency"] = os.environ.get("WEB_CONCURRENCY") or "unset (1)"
     out["data_dir_persistent"] = bool(os.environ.get("DATA_DIR", "").strip())
     # DATA_DIR being SET is not the same as the scan cache being written; the
@@ -1117,7 +1117,7 @@ def scan_start(force: bool = False, key: str = "",
                             f"{headroom:.0f} MB is free and a scan needs about "
                             f"{SCAN_HEADROOM_MB} MB. Starting one now would get the "
                             "instance killed part-way through, taking the whole "
-                            "site down with it for a minute or two — which is what "
+                            "site down with it for a minute or two. That is what "
                             "an unreachable engine right after pressing Generate "
                             "actually was. Restart the service to clear it, or pass "
                             "ignore_memory=true if you accept the risk.")}
@@ -1204,7 +1204,7 @@ def ideas(horizon: str = "short", limit: int = 15,
     p = _state["payload"]
     if not p:
         return to_native({"available": False, "status": _state["status"],
-                           "message": "No scan yet — generate the ranking first.",
+                           "message": "No scan yet. Generate the ranking first.",
                            "market_context": _safe_context(horizon)})
     try:
         # to_native, like every other endpoint that touches pandas. Without it
@@ -1244,7 +1244,7 @@ def ideas(horizon: str = "short", limit: int = 15,
                 "status": _state["status"],
                 "error": f"{type(e).__name__}: {str(e)[:300]}",
                 "message": ("The scan is on the server but the ideas engine failed while "
-                            "scoring it. The ranking is intact — this is a bug in the "
+                            "scoring it. The ranking is intact. This is a bug in the "
                             "scoring layer, not a lost scan."),
                 "scanned_at": p.get("scanned_at"),
                 "market_context": _safe_context(horizon)})
@@ -1613,7 +1613,7 @@ def tracker_update(key: str = "", limit: int = 25, force: bool = False):
       returned "updated: 0" and looked like a no-op.
     """
     if not _marking.acquire(blocking=False):
-        raise HTTPException(409, "A marking pass is already running — let it finish.")
+        raise HTTPException(409, "A marking pass is already running. Let it finish.")
     try:
         return tracker.update_all(limit=max(1, min(int(limit), 25)), force=bool(force))
     finally:
@@ -1834,7 +1834,7 @@ def share_record():
         st = _record_summary()
     except Exception:
         st = {}
-    desc = (f"{st.get('calls') or 0} ideas, each recorded the day it was generated — "
+    desc = (f"{st.get('calls') or 0} ideas, each recorded the day it was generated, "
             "winners and losers.")
     if st.get("up_since_pct") is not None:
         desc += (f" {st['up_since_pct']:g}% are above the price they were called at, "
@@ -2059,15 +2059,15 @@ def share_chart(ticker: str, range: str = "1D"):
     except Exception:
         pass
     if shape:
-        desc = (f"{name} on the {label} chart — {shape['name']}, {shape['status']}, "
+        desc = (f"{name} on the {label} chart: {shape['name']}, {shape['status']}, "
                 f"{shape['confidence']} shape match. Every check behind that reading, "
                 "and how the same shape resolved here before, opens on the site.")
     else:
-        desc = (f"{name} on the {label} chart. No textbook pattern right now — which is "
-                "the usual answer, and a detector that always finds one has stopped "
+        desc = (f"{name} on the {label} chart. No textbook pattern right now, which is "
+                "the usual answer. A detector that always finds one has stopped "
                 "detecting.")
     return Response(content=og_cards.share_page(
-        f"{name} ({sym}) — {label} chart", desc,
+        f"{name} ({sym}) | {label} chart", desc,
         f"{SHARE_ORIGIN}/og/chart.png?ticker={sym}&range={rng}",
         f"{SITE_URL}/?q={sym}&go=charts&range={rng}"),
         media_type="text/html")
@@ -2083,14 +2083,14 @@ def share_idea(ticker: str, horizon: str = "short"):
     if row:
         name = row.get("name") or sym
         desc = (f"{name} scores {row.get('conviction')}/100 conviction on the "
-                f"{h}-term list — {row.get('setup') or 'no archetype'}, typical hold "
+                f"{h}-term list: {row.get('setup') or 'no archetype'}, typical hold "
                 f"{row.get('horizon') or '—'}. The seven weighted inputs that add up "
                 "to that number are published beside it.")
     else:
         name, desc = sym, (f"{sym} is not on the current {h}-term list. The scorecard "
                            "and the arithmetic behind it are on the site.")
     return Response(content=og_cards.share_page(
-        f"{name} ({sym}) — conviction {row.get('conviction') if row else '—'}/100",
+        f"{name} ({sym}) | conviction {row.get('conviction') if row else '—'}/100",
         desc,
         f"{SHARE_ORIGIN}/og/idea.png?ticker={sym}&horizon={h}",
         f"{SITE_URL}/?q={sym}&go=ideas"),
@@ -2112,11 +2112,11 @@ def share_holding(ticker: str):
 
     desc = (f"{name}, recorded on {row.get('added_on')} and marked to market since: "
             f"{pct(row.get('return_pct'))} against {pct(row.get('bench_return_pct'))} "
-            f"for the index — {pct(row.get('alpha_pct'))} alpha over "
+            f"for the index, {pct(row.get('alpha_pct'))} alpha over "
             f"{row.get('days_held') or 0} days. Logged in advance, winners and losers "
             "alike.")
     return Response(content=og_cards.share_page(
-        f"{name} ({sym}) — {pct(row.get('return_pct'))} since the idea was recorded",
+        f"{name} ({sym}) | {pct(row.get('return_pct'))} since the idea was recorded",
         desc,
         f"{SHARE_ORIGIN}/og/holding.png?ticker={sym}",
         f"{SITE_URL}/?go=calls"),
@@ -2175,7 +2175,7 @@ def share_results(ticker: str, period: str = ""):
         desc += f" As filed with NSE on {str(r['filed_at'])[:11]}."
     tag = str(quarter).replace(" ", "-")
     return Response(content=og_cards.share_page(
-        f"{name} ({sym}) — {quarter} results", desc,
+        f"{name} ({sym}) | {quarter} results", desc,
         f"{SHARE_ORIGIN}/og/results.png?ticker={sym}&period={tag}",
         f"{SITE_URL}/?go=results&q={sym}"),
         media_type="text/html")
@@ -2227,7 +2227,7 @@ def share_concall(ticker: str, period: str = ""):
     sym, brief = call["symbol"], call.get("brief") or {}
     name = call.get("company") or sym
     quarter = call.get("quarter") or ""
-    title = f"{name} — {quarter + ' ' if quarter else ''}earnings call"
+    title = f"{name} | {quarter + ' ' if quarter else ''}earnings call"
     if brief.get("headline"):
         title += f": {brief['headline']}"
     desc = (brief.get("summary") or "").strip()
@@ -2290,7 +2290,7 @@ def share_wow(ticker: str, id: str = ""):
     row = _order_for_card(ticker, id)
     sym, name = row["symbol"], row.get("company") or row["symbol"]
     pct = og_cards._pct_of(row["pct_of_market_cap"])
-    title = f"{name} — {og_cards.order_sentence(row)}"
+    title = f"{name}: {og_cards.order_sentence(row)}"
     desc = (f"That is {pct} of the company's market cap of "
             f"{og_cards._rupee_cr(row.get('market_cap_cr'))}")
     if row.get("months_of_sales") is not None:
@@ -2341,7 +2341,7 @@ def share_stock(ticker: str):
             + (f" Setup: {setup}." if setup else "")
             + " Every number opens into the arithmetic behind it.")
     return Response(content=og_cards.share_page(
-        f"{name} ({sym}) — Altaha Screener", desc,
+        f"{name} ({sym}) | Altaha Screener", desc,
         f"{SHARE_ORIGIN}/og/stock.png?ticker={sym}", f"{SITE_URL}/?q={sym}"),
         media_type="text/html")
 
@@ -2517,7 +2517,7 @@ def score_history(ticker: str, limit: int = 400):
     if not rows:
         return {"available": False, "symbol": sym, "rows": [],
                 "message": ("No scan has recorded this symbol yet. The history builds "
-                            "one universe scan at a time — it cannot be backfilled, "
+                            "one universe scan at a time. It cannot be backfilled, "
                             "because a score computed today is not what the engine "
                             "believed in March.")}
     return {"available": True, "symbol": sym, **hist, "change": change,
@@ -2539,7 +2539,7 @@ def pit_coverage():
     """
     if pit_store is None:
         return {"available": False,
-                "reason": "pit_store failed to import — the store records nothing."}
+                "reason": "pit_store failed to import, so the store records nothing."}
     return {"available": True, **pit_store.coverage_report()}
 
 
@@ -2661,7 +2661,7 @@ def factors_for(ticker: str, horizon: str = "short"):
         "families": {n: {"family": factor_lib.REGISTRY[n][0],
                          "label": factor_lib.REGISTRY[n][1],
                          "value": values.get(n)} for n in factor_lib.REGISTRY},
-        "note": ("Higher is better for every factor — volatility and reversal are "
+        "note": ("Higher is better for every factor. Volatility and reversal are "
                  "negated at source, so nothing downstream has to remember which "
                  "way each one points."),
         "disclaimer": DISCLAIMER,
@@ -2686,7 +2686,7 @@ def factors_rank(horizon: str = "short", limit: int = 50):
     rows = (p or {}).get("rankings") or []
     if not rows:
         return {"available": False,
-                "message": "No scan yet — generate the ranking first."}
+                "message": "No scan yet. Generate the ranking first."}
     h = horizon if horizon in multifactor.WEIGHTS else "short"
     rows = (p or {}).get("factor_universe") or rows
     if rows and all(r.get("altaha_score_v4", {}).get("position") for r in rows):
@@ -3856,7 +3856,7 @@ def funds_list(month: str = None):
         "listed_with_amfi": listed,
         "note": ("Read from each asset manager's own monthly portfolio "
                  "disclosure. %d of the %d fund houses AMFI lists have been "
-                 "read for this month — AMFI publishes a directory, not a "
+                 "read for this month. AMFI publishes a directory, not a "
                  "feed, and several AMCs build their download list in "
                  "JavaScript rather than serving it as a link."
                  % (len(packs), listed)),
@@ -4278,7 +4278,7 @@ PF_MAX_JOBS = 20
 def _pf_inputs(payload, limit=MAX_HOLDINGS):
     holdings = payload.get("holdings")
     if not isinstance(holdings, list) or not holdings or len(holdings) > limit:
-        raise HTTPException(400, f"Provide 1–{limit} holdings.")
+        raise HTTPException(400, f"Provide 1 to {limit} holdings.")
     if payload.get("policy") is not None and not isinstance(payload["policy"], dict):
         raise HTTPException(400, "Policy must be an object.")
     # Coalesce tax lots for concentration, preserving partial cost coverage by
@@ -5923,11 +5923,11 @@ def options_expiries(ticker: str):
         if err:
             raise HTTPException(503, "The Dhan options feed is rejecting requests right "
                                      f"now ({err}). This is a data-feed problem, not "
-                                     f"the symbol — {ticker.upper()} will load once "
+                                     f"the symbol. {ticker.upper()} will load once "
                                      "the feed is back.")
         raise HTTPException(404, f"No option expiries found for {ticker.upper()}. "
                                  "Indices (NIFTY, BANKNIFTY, FINNIFTY, SENSEX) and "
-                                 "F&O-listed stocks are supported — non-F&O stocks "
+                                 "F&O-listed stocks are supported. Non-F&O stocks "
                                  "have no options to show.")
     return {"ticker": ticker.upper(), "expiries": ex[:12]}
 
@@ -5941,7 +5941,7 @@ def options_chain(ticker: str, expiry: str):
     oc = data.get("oc") or {}
     if not oc:
         raise HTTPException(404, "No option chain returned for that expiry. Dhan "
-                                 "allows one chain request every 3 seconds — wait a "
+                                 "allows one chain request every 3 seconds, so wait a "
                                  "moment and pick the expiry again.")
 
     spot = data.get("last_price")
@@ -6195,7 +6195,7 @@ def analyze(ticker: str, horizon: str = "position"):
     except NotFound:
         raise HTTPException(
             404,
-            f"Couldn't find '{ticker.upper()}'. Check the spelling — "
+            f"Couldn't find '{ticker.upper()}'. Check the spelling, or "
             "try RELIANCE, TCS, INFY, NVDA or AAPL.",
         )
     except Exception:
@@ -6420,7 +6420,7 @@ def _default_watchlist(limit=200):
 def intraday_start(limit: int = 200, key: str = ""):
     _require_admin(key)
     if dhan is None or not dhan.configured():
-        raise HTTPException(503, "Dhan is not configured — the live scanner needs it for quotes.")
+        raise HTTPException(503, "Dhan is not configured. The live scanner needs it for quotes.")
     wl = _default_watchlist(limit)
     intraday.start(wl)
     return {"started": True, "watchlist_size": len(wl),

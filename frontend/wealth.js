@@ -222,7 +222,7 @@
     opts = opts || {};
     var method = opts.method || 'GET';
     if (S.mode === 'demo' && method !== 'GET') {
-      var e = new Error('This is the sample desk — nothing is saved. Sign in and set up your own desk to keep clients.');
+      var e = new Error('This is the sample desk, so nothing is saved. Sign in and set up your own desk to keep clients.');
       e.demo = true;
       return Promise.reject(e);
     }
@@ -244,7 +244,7 @@
         return d;
       });
     }, function () {
-      throw new Error('Could not reach the server. On the free instance the first request after a quiet spell can take half a minute — try again.');
+      throw new Error('Could not reach the server. On the free instance the first request after a quiet spell can take half a minute. Try again.');
     });
   }
 
@@ -570,7 +570,7 @@
     root.innerHTML = deskBar() + demoBanner() + '<nav class="wd-tabs" id="wd-tabs" aria-label="Wealth desk">' + tabsHTML() + '</nav>' +
       '<section id="wd-view" aria-live="polite">' + viewHTML() + '</section>';
     after(root);
-    document.title = (S.view === 'client' && clientById(S.cid) ? clientById(S.cid).name + ' — ' : '') + 'Wealth desk — Altaha Screener';
+    document.title = (S.view === 'client' && clientById(S.cid) ? clientById(S.cid).name + ' | ' : '') + 'Wealth desk | Altaha Screener';
   }
 
   /* A quiet refresh (prices arriving) redraws the view, not the frame, so a
@@ -622,7 +622,7 @@
 
   function demoBanner() {
     if (!S.book.demo) return '';
-    return '<div class="wd-demo"><span>✨ <b>This is a sample desk</b> — five invented clients, priced at today’s market. Click anything; nothing is saved.</span>' +
+    return '<div class="wd-demo"><span>✨ <b>This is a sample desk</b> with five invented clients, priced at today’s market. Click anything; nothing is saved.</span>' +
       '<a class="wd-btn gold" href="' + (signedIn() ? 'wealth.html' : 'signin.html?next=wealth.html') + '">' + (signedIn() ? 'Set up my own desk' : 'Sign in to set up my desk') + '</a></div>';
   }
 
@@ -760,7 +760,7 @@
 
   function firstClientEmpty() {
     return '<div class="wd-empty wd-rise"><div class="wd-art">🗂️</div><h3>Your desk is ready</h3>' +
-      '<p>Add your first client — a name is enough to start. Then record what they hold, or paste their holdings from a spreadsheet.</p>' +
+      '<p>Add your first client. A name is enough to start. Then record what they hold, or paste their holdings from a spreadsheet.</p>' +
       '<button type="button" class="wd-btn primary" data-act="add-client">' + ic('plus') + 'Add your first client</button> ' +
       '<a class="wd-btn ghost" href="wealth.html?demo=1">See a sample desk</a></div>';
   }
@@ -1260,9 +1260,9 @@
     }).join('');
     var due = f.overdue ? '<span class="wd-chip warn">Period ended ' + esc(day(f.next_due)) + '</span>' : '<span class="wd-chip">Period ends ' + esc(day(f.next_due)) + '</span>';
     var hwm = num(f.to_hwm) > 0.5 && t.share_pct
-      ? '<p class="wd-note" style="color:var(--dn)">' + pv(esc(inr(f.to_hwm, 0))) + ' below the ' + (t.hwm ? 'high-water mark' : 'last settlement') + ' — no profit share is due until it is made back.</p>' : '';
+      ? '<p class="wd-note" style="color:var(--dn)">' + pv(esc(inr(f.to_hwm, 0))) + ' below the ' + (t.hwm ? 'high-water mark' : 'last settlement') + '. No profit share is due until it is made back.</p>' : '';
     var receipt = '<div class="wd-receipt"><div class="wd-due"><div><small>Accrued this period</small><b class="pv">' + esc(inr(f.total)) + '</b></div>' +
-      '<div style="text-align:right">' + due + '<div class="wd-muted" style="font-size:12.5px;margin-top:6px">' + esc(c.terms_label) + '</div></div></div>' +
+      '<div style="text-align:right">' + due + '<div class="wd-muted" style="font-size:13px;margin-top:6px">' + esc(c.terms_label) + '</div></div></div>' +
       '<ol class="wd-steps">' + steps + '</ol>' + hwm +
       (ro ? '' : '<div class="wd-acts" style="margin-top:14px"><button type="button" class="wd-btn primary" data-act="settle" data-id="' + c.id + '">' + ic('bill') + 'Settle this period</button>' +
         '<button type="button" class="wd-btn" data-act="past" data-id="' + c.id + '">Record an earlier settlement</button></div>') + '</div>';
@@ -1284,7 +1284,7 @@
         (s.paid_on ? ' · paid ' + esc(day(s.paid_on)) : '') + (s.note ? ' · ' + esc(s.note) : '') + '</small></span>' +
         '<span class="amt"><span class="pv">' + esc(inr(s.amount)) + '</span> <span class="wd-pst ' + esc(s.status) + '">' + esc(s.status === 'nil' ? 'nothing due' : s.status) + '</span></span>' +
         '<span class="acts" style="display:flex;gap:6px;justify-content:flex-end">' + acts + '</span></li>';
-    }).join('') + '</ul>' : '<p class="wd-muted" style="margin:0">No settlements yet. ' + (ro ? '' : 'When you bill this client, settle the period here — it becomes the high-water mark the next period is measured from.') + '</p>';
+    }).join('') + '</ul>' : '<p class="wd-muted" style="margin:0">No settlements yet. ' + (ro ? '' : 'When you bill this client, settle the period here. It becomes the high-water mark the next period is measured from.') + '</p>';
     return '<div class="wd-feegrid">' + receipt + wi + '</div>' +
       '<div class="wd-panel" style="margin-top:16px"><h3>Settlements <small>' + plural(hist.length, 'period') + '</small></h3>' + list + '</div>' +
       (ro ? '' : '<p class="wd-note">' + esc(S.book.fee_note) + '</p>');
@@ -1339,13 +1339,13 @@
         kpi('Working', (rs.working || 0) + '<small style="font-size:.5em" class="wd-muted"> of ' + (rs.judged || 0) + '</small>', 'above the price you called', 'up', 'c-green', 1) +
         kpi('Average since call', esc(pct(rs.avg_pct, 1)), rs.best ? 'best ' + esc(rs.best) + ' · worst ' + esc(rs.worst) : '—', 'call', 'c-gold', 2) +
         kpi('Targets reached', rs.targets || 0, 'still open', 'check', 'c-green', 3) +
-        kpi('Stops hit', rs.stops || 0, 'still open — review them', 'alert', 'c-rose', 4) + '</div>' +
+        kpi('Stops hit', rs.stops || 0, 'still open, review them', 'alert', 'c-rose', 4) + '</div>' +
       '<div class="wd-tools"><div class="wd-seg" role="group" aria-label="Show">' + segs.map(function (s) {
         return '<button type="button" data-act="recfilter" data-v="' + s[0] + '" class="' + (S.recFilter === s[0] ? 'on' : '') + '" aria-pressed="' + (S.recFilter === s[0]) + '">' + s[1] + '</button>';
       }).join('') + '</div></div>' +
       (list.length ? '<div class="wd-recs">' + list.map(recCard).join('') + '</div>' :
         '<div class="wd-empty"><div class="wd-art">🎯</div><h3>' + ((b.recs || []).length ? 'Nothing in this list' : 'No calls yet') + '</h3>' +
-        '<p>A call is a stock, a price, and — if you set them — a target and a stop. Book it for clients and every one of them is tracked against it.</p>' +
+        '<p>A call is a stock, a price and, if you set them, a target and a stop. Book it for clients and every one of them is tracked against it.</p>' +
         '<button type="button" class="wd-btn primary" data-act="new-rec">' + ic('plus') + 'Make a call</button></div>') +
       '<p class="wd-note">A target or stop counts as reached when a daily close since the call crossed it, as far back as the quotes go (about six weeks); older calls are judged on today’s price.</p>';
   }
@@ -1443,7 +1443,7 @@
       field('Your name', '<input name="display_name" required minlength="2" maxlength="60" value="' + esc(d.display_name || '') + '" autocomplete="name">') +
       field('Firm <em>optional</em>', '<input name="firm" maxlength="80" value="' + esc(d.firm || '') + '" autocomplete="organization">') +
       field('Registration', '<select name="reg_kind" data-reg>' + regOptions(d.reg_kind || 'none') + '</select>') +
-      field('Registration number', '<input name="registration" maxlength="20" value="' + esc(d.registration || '') + '" placeholder="INP000000000" autocapitalize="characters">', 'Checked for its shape — INP, INA or INH and nine digits, or ARN-.') +
+      field('Registration number', '<input name="registration" maxlength="20" value="' + esc(d.registration || '') + '" placeholder="INP000000000" autocapitalize="characters">', 'Checked for its shape: INP, INA or INH and nine digits, or ARN-.') +
       '</div>';
   }
 
@@ -1468,7 +1468,7 @@
         '<button type="button" class="wd-btn" data-act="export" data-what="fees">' + ic('download') + 'Fees</button></div></div></div>' +
       '<div class="wd-panel" style="margin-top:16px"><h3>Hand-set prices</h3>' + prices + '</div>' +
       '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Close this desk</h3><p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">' +
-        'Deletes the desk and everything on it — every client, trade, call and settlement. Export first if you want a copy. This cannot be undone.</p>' +
+        'Deletes the desk and everything on it: every client, trade, call and settlement. Export first if you want a copy. This cannot be undone.</p>' +
         '<button type="button" class="wd-btn danger" data-act="del-desk">' + ic('trash') + 'Delete the desk</button></div>' +
       '<p class="wd-note">' + esc(b.disclaimer) + '</p>';
   }
@@ -1493,7 +1493,7 @@
     return '<header class="wd-bar"><span class="wd-mono" aria-hidden="true">' + esc(String(me.email || 'Y').charAt(0).toUpperCase()) + '</span>' +
       '<div class="wd-who"><p class="wd-kick">Your portfolio</p><h1>Managed for you</h1><small>' + esc(me.email || '') + '</small></div>' +
       '<div class="wd-bar-r"><button type="button" class="wd-ic" data-act="privacy" aria-pressed="' + S.priv + '" aria-label="Hide or show amounts">' + ic(S.priv ? 'eyeoff' : 'eye') + '</button>' +
-      '<button type="button" class="wd-btn" data-act="start-setup">I manage money — set up a desk</button></div></header>' +
+      '<button type="button" class="wd-btn" data-act="start-setup">I manage money. Set up a desk</button></div></header>' +
       '<section id="wd-view">' + (S.shared ? mineView() : '<div class="wd-skel"><i style="height:300px"></i></div>') + '</section>';
   }
 
@@ -1507,12 +1507,12 @@
       '<div><p class="wd-kick">Altaha Wealth desk · for portfolio managers</p>' +
         '<h1>Every client. Every holding. <em>Your commission,</em> to the rupee.</h1>' +
         '<p class="lede">Keep each client’s portfolio live, priced at today’s market, with what they paid and what it is worth now. ' +
-        'Book one call for many clients at once. Profit-share fees are worked out for you — high-water mark, hurdle, fixed fee and GST — with every step shown, ready to settle and mark paid.</p>' +
+        'Book one call for many clients at once. Profit-share fees are worked out for you (high-water mark, hurdle, fixed fee and GST) with every step shown, ready to settle and mark paid.</p>' +
         '<div class="wd-land-cta"><a class="wd-btn primary" href="signin.html?next=wealth.html">' + ic('lock') + 'Sign in to open your desk</a>' +
         '<a class="wd-btn" href="wealth.html?demo=1">' + ic('spark') + 'Explore a sample desk</a></div>' +
-        '<p class="wd-note">Free. Your book is private to your account — a client sees their own portfolio only if you switch that on.</p></div>' +
+        '<p class="wd-note">Free. Your book is private to your account. A client sees their own portfolio only if you switch that on.</p></div>' +
       '<div class="wd-stage" aria-hidden="true">' +
-        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:#F2D58A">Book value</p><p class="wd-big" style="font-size:44px">₹7,62,56,240</p>' +
+        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:#F2D58A">Book value</p><p class="wd-big" style="font-size:42px">₹7,62,56,240</p>' +
           '<div class="wd-hero-sub"><span class="wd-pill up">▲ +₹1,24,800 today</span><span class="wd-pill">42 clients</span></div></div>' +
         '<div class="wd-float f2 c-rose"><div class="wd-card-top"><span class="wd-av">AK</span><span class="wd-card-n"><b>Ayesha Kapoor</b><small>AK-01 · Mumbai</small></span></div>' +
           '<div class="wd-card-v" style="margin-top:10px"><b>₹28.9 L</b><span class="ret up">+15.4%</span></div>' + spark([10, 12, 11, 14, 13, 16, 18, 17, 20, 22]) + '</div>' +
@@ -1522,9 +1522,9 @@
           '<li class="wd-step total"><span><b>20% share</b></span><span class="v">₹13,001</span></li></ol></div>' +
       '</div></section>' +
       '<div class="wd-feats">' +
-        feat('users', 'Client by client', 'Holdings, cash, profit, XIRR and a thirty-session chart for each client — and the whole book at a glance.') +
+        feat('users', 'Client by client', 'Holdings, cash, profit, XIRR and a thirty-session chart for each client, and the whole book at a glance.') +
         feat('target', 'Every holding, live', 'Add all of a client’s stocks in one go or upload the broker’s statement. Each shows its average cost, today’s price and the profit.') +
-        feat('coins', 'Profit share, worked out', 'High-water mark, hard or soft hurdle, fixed fee, GST, booked or on-paper — with the working shown, settled and tracked to paid.') +
+        feat('coins', 'Profit share, worked out', 'High-water mark, hard or soft hurdle, fixed fee, GST, booked or on-paper, all with the working shown, settled and tracked to paid.') +
       '</div>';
   }
 
@@ -1548,7 +1548,7 @@
       : '<h3>How you charge</h3><p class="wd-muted" style="margin:-6px 0 14px">The terms a new client starts on. You can change them for any client later.</p>' + termsFields(terms, 't_') +
         '<p class="wd-note">' + esc((S.info && S.info.fee_note) || '') + '</p>';
     root.innerHTML = '<div class="wd-setup wd-rise"><p class="wd-kick">Set up your wealth desk · step ' + step + ' of 2</p>' +
-      '<h1 style="font:400 clamp(36px,5vw,54px)/1.05 \'Instrument Serif\',Georgia,serif;margin:6px 0 10px">' + (step === 1 ? 'Your book, in one place.' : 'Your commission, worked out.') + '</h1>' +
+      '<h1 style="font:400 clamp(34px,5vw,52px)/1.05 \'Instrument Serif\',Georgia,serif;margin:6px 0 10px">' + (step === 1 ? 'Your book, in one place.' : 'Your commission, worked out.') + '</h1>' +
       '<p class="wd-muted" style="margin:0 0 16px">Signed in as ' + esc(me.email || '') + '. Only you will see your clients.</p>' +
       '<div class="wd-steps-top"><i class="on"></i><i class="' + (step === 2 ? 'on' : '') + '"></i></div>' +
       '<form class="wd-panel" data-form="setup">' + body +
@@ -1572,11 +1572,11 @@
       field('Profit share', '<input name="' + p + 'share_pct" inputmode="decimal" value="' + esc(t.share_pct != null ? t.share_pct : 20) + '">', '% of profit. 0 for none.') +
       field('Fixed fee', '<input name="' + p + 'fixed_pct" inputmode="decimal" value="' + esc(t.fixed_pct || 0) + '">', '% a year on capital, for the days it is invested.') +
       field('Hurdle', '<input name="' + p + 'hurdle_pct" inputmode="decimal" value="' + esc(t.hurdle_pct || 0) + '">', '% a year the client keeps before any share.') +
-      field('Hurdle type', '<select name="' + p + 'hurdle_type">' + opt('hard', 'Hard — share only above the hurdle', t.hurdle_type) + opt('soft', 'Soft — share on all of it once cleared', t.hurdle_type) + '</select>') +
-      field('Measured on', '<select name="' + p + 'basis">' + opt('total', 'All profit — booked and on paper', t.basis) + opt('realised', 'Booked profit only', t.basis) + '</select>') +
+      field('Hurdle type', '<select name="' + p + 'hurdle_type">' + opt('hard', 'Hard: share only above the hurdle', t.hurdle_type) + opt('soft', 'Soft: share on all of it once cleared', t.hurdle_type) + '</select>') +
+      field('Measured on', '<select name="' + p + 'basis">' + opt('total', 'All profit, booked and on paper', t.basis) + opt('realised', 'Booked profit only', t.basis) + '</select>') +
       field('Billing period', '<select name="' + p + 'period">' + ['monthly', 'quarterly', 'half-yearly', 'yearly'].map(function (x) { return opt(x, x.charAt(0).toUpperCase() + x.slice(1), t.period || 'quarterly'); }).join('') + '</select>',
         'Periods end with the financial year: 30 Jun, 30 Sep, 31 Dec, 31 Mar.') +
-      field('GST', '<select name="' + p + 'gst_pct">' + opt(0, 'No GST', t.gst_pct || 0) + opt(18, '18% — I am GST-registered', t.gst_pct || 0) + '</select>') +
+      field('GST', '<select name="' + p + 'gst_pct">' + opt(0, 'No GST', t.gst_pct || 0) + opt(18, '18% (I am GST-registered)', t.gst_pct || 0) + '</select>') +
       '<div class="wd-f"><span>High-water mark</span><label class="wd-toggle"><input type="checkbox" name="' + p + 'hwm"' + (t.hwm !== false ? ' checked' : '') + '> A loss must be made back before any share</label></div>' +
       '<div class="wd-ex full" data-example></div></div>';
   }
@@ -1622,15 +1622,15 @@
       field('City <em>optional</em>', '<input name="city" maxlength="40" value="' + esc(c.city || '') + '">') +
       field('Client since', '<input name="since" type="date" max="' + today() + '" value="' + esc(c.since || today()) + '">') +
       field('Risk profile', '<select name="risk">' + opt('conservative', 'Conservative', c.risk || 'moderate') + opt('moderate', 'Moderate', c.risk || 'moderate') + opt('aggressive', 'Aggressive', c.risk || 'moderate') + '</select>') +
-      field('Status', '<select name="status">' + opt('active', 'Active', c.status || 'active') + opt('paused', 'Paused', c.status || 'active') + opt('closed', 'Closed — kept for the record', c.status || 'active') + '</select>') +
+      field('Status', '<select name="status">' + opt('active', 'Active', c.status || 'active') + opt('paused', 'Paused', c.status || 'active') + opt('closed', 'Closed (kept for the record)', c.status || 'active') + '</select>') +
       '<div class="wd-f"><span>Colour</span><div class="wd-colors">' + COLORS.map(function (k) {
         return '<label class="c-' + k + '"><input type="radio" name="color" value="' + k + '"' + ((c.color || 'gold') === k ? ' checked' : '') + ' aria-label="' + k + '"><i></i></label>';
       }).join('') + '</div></div>' +
       field('Tags <em>optional</em>', '<input name="tags" maxlength="200" value="' + esc((c.tags || []).join(', ')) + '" placeholder="HNI, Family, Retirement">', 'Separated by commas.') +
-      field('Private notes <em>optional</em>', '<textarea name="notes" maxlength="2000">' + esc(c.notes || '') + '</textarea>', 'Only you see these — never the client.', 'full') +
+      field('Private notes <em>optional</em>', '<textarea name="notes" maxlength="2000">' + esc(c.notes || '') + '</textarea>', 'Only you see these, never the client.', 'full') +
       '<fieldset class="wd-fieldset full"><legend>Fee terms</legend>' + termsFields(t, 't_') + '</fieldset>' +
       '<fieldset class="wd-fieldset full"><legend>Show the client</legend><label class="wd-toggle"><input type="checkbox" name="portal"' + (c.portal ? ' checked' : '') +
-        '> Let this client see their own portfolio, read-only</label><p class="wd-note">They sign in on Altaha with the email above and see their holdings, ledger and fees — not your notes, and nobody else’s portfolio.</p></fieldset>' +
+        '> Let this client see their own portfolio, read-only</label><p class="wd-note">They sign in on Altaha with the email above and see their holdings, ledger and fees, but not your notes, and nobody else’s portfolio.</p></fieldset>' +
       '</div>';
   }
 
@@ -1764,7 +1764,7 @@
             stmt = st;
             if (st.meta.client && !String(form.name.value).trim()) form.name.value = titleCase(st.meta.client);
             if (st.meta.as_of && form.since && form.since.value === today()) form.since.value = st.meta.as_of;
-            label.textContent = plural(st.holdings.length, 'holding') + (st.meta.as_of ? ', as on ' + day(st.meta.as_of) : '') + ' — reviewed after the client is added.';
+            label.textContent = plural(st.holdings.length, 'holding') + (st.meta.as_of ? ', as on ' + day(st.meta.as_of) : '') + '. Reviewed after the client is added.';
           }).catch(function (e) { stmt = null; label.textContent = e.message; });
         });
       },
@@ -1833,8 +1833,8 @@
       field('Your call <em>optional</em>', '<select name="rec_id"><option value="">None</option></select>', 'Links this trade to a call you made on the stock.', 'ev-rec') +
       field('Charges <em>optional</em>', '<input name="charges" inputmode="decimal" placeholder="Brokerage, STT…">', '', 'ev-trade') +
       field('Amount', '<input name="amount" inputmode="decimal" placeholder="₹">', '', 'ev-money') +
-      field('Every old share became', '<select name="factor">' + opt('2', '2 — a 1:1 bonus, or a 2-for-1 split', '2') + opt('1.5', '1.5 — a 1:2 bonus', '2') + opt('3', '3 — a 2:1 bonus', '2') +
-        opt('5', '5 — a 5-for-1 split', '2') + opt('10', '10 — a 10-for-1 split', '2') + opt('0.2', '0.2 — a 1-for-5 consolidation', '2') + '</select>', 'Yahoo adjusts past prices for these, so record them or the holding will look like a loss.', 'ev-split') +
+      field('Every old share became', '<select name="factor">' + opt('2', '2 (a 1:1 bonus, or a 2-for-1 split)', '2') + opt('1.5', '1.5 (a 1:2 bonus)', '2') + opt('3', '3 (a 2:1 bonus)', '2') +
+        opt('5', '5 (a 5-for-1 split)', '2') + opt('10', '10 (a 10-for-1 split)', '2') + opt('0.2', '0.2 (a 1-for-5 consolidation)', '2') + '</select>', 'Yahoo adjusts past prices for these, so record them or the holding will look like a loss.', 'ev-split') +
       field('Date', '<input name="on_date" type="date" max="' + today() + '" value="' + today() + '">') +
       field('Note <em>optional</em>', '<input name="note" maxlength="200">') +
       '</div><p class="wd-note" data-hint></p>';
@@ -2007,7 +2007,7 @@
           if (!(+r.qty > 0)) return Promise.reject(new Error(n + ' needs a quantity.'));
           if (!(+r.avg > 0)) return Promise.reject(new Error(n + ' needs an average cost.'));
         }
-        if (S.mode === 'demo') return Promise.reject(Object.assign(new Error('This is the sample desk — nothing is saved. Sign in and set up your own desk to add stocks.'), { demo: true }));
+        if (S.mode === 'demo') return Promise.reject(Object.assign(new Error('This is the sample desk, so nothing is saved. Sign in and set up your own desk to add stocks.'), { demo: true }));
         var on = fd.get('on_date') || today();
         return api('/wealth/clients/' + c.id + '/statement/apply', { method: 'POST',
           body: { rows: rows.map(function (r) { return { symbol: r.symbol, qty: r.qty, avg: r.avg }; }), mode: 'add', as_of: on, buy_date: on } })
@@ -2060,7 +2060,7 @@
         '<div class="wd-seg" role="tablist" aria-label="How to edit"><button type="button" class="on" data-pane="avg" aria-selected="true">Set the average</button>' +
           '<button type="button" data-pane="each" aria-selected="false">Each purchase (' + buys.length + ')</button></div>' +
         '<div data-panel="avg"><div class="wd-form">' +
-          field('Average cost', '<input name="avg" inputmode="decimal" value="' + esc(h.avg) + '">', 'What the client paid per share, on average — the broker’s “avg. price”.', 'full') +
+          field('Average cost', '<input name="avg" inputmode="decimal" value="' + esc(h.avg) + '">', 'What the client paid per share, on average (the broker’s “avg. price”).', 'full') +
         '</div><div class="wd-sum" data-prev></div>' +
         (buys.length > 1 ? '<p class="wd-note">The ' + buys.length + ' purchases this holding is made of are all corrected by the same factor, so their proportions stay as recorded. Use “Each purchase” to change one on its own.</p>' : '') +
         '</div>' +
@@ -2152,7 +2152,7 @@
     var accept = '.xlsx,.csv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     modal({
       title: 'Update ' + esc(c.name) + '’s portfolio', color: c.color, wide: true, noFocus: true,
-      sub: 'From the holdings statement their broker gives — Groww, Zerodha, Upstox, Angel One, Dhan, ICICI Direct — or your own spreadsheet. You see every change before anything is saved.',
+      sub: 'From the holdings statement their broker gives (Groww, Zerodha, Upstox, Angel One, Dhan, ICICI Direct) or your own spreadsheet. You see every change before anything is saved.',
       body: '<label class="wd-drop" data-drop><input type="file" name="file" accept="' + accept + '" hidden>' +
           '<span class="wd-drop-ic">' + ic('in') + '</span><b>Drop the statement here, or choose a file</b>' +
           '<small>.xlsx or .csv · read on this device</small></label>' +
@@ -2161,7 +2161,7 @@
           field('Rows', '<textarea name="text" rows="7" style="font-family:\'IBM Plex Mono\',monospace;font-size:13px" placeholder="Symbol, Qty, Avg cost, Date\nRELIANCE, 50, 1250.50, 03/01/2025\nTCS, 12, 3305"></textarea>',
             'A header row is recognised by its words; without one the columns are symbol, quantity, average cost, date.', 'full') +
           '<button type="button" class="wd-btn sm" data-read>Read these rows</button></details>' +
-        '<p class="wd-note">' + ic('lock') + ' The file is opened in this browser. Only each holding’s stock, quantity and prices are sent — not the name, client code or anything else in the statement.</p>',
+        '<p class="wd-note">' + ic('lock') + ' The file is opened in this browser. Only each holding’s stock, quantity and prices are sent, not the name, client code or anything else in the statement.</p>',
       wire: function (form) {
         var status = form.querySelector('[data-status]'), drop = form.querySelector('[data-drop]');
         function go(p) {
@@ -2224,7 +2224,7 @@
         '<input data-sym="' + i + '" list="wd-syms" placeholder="NSE symbol" autocapitalize="characters" spellcheck="false" maxlength="20" aria-label="Symbol for ' + esc(r.label) + '">' +
         (r.candidates.length ? '<span class="wd-cands">' + r.candidates.slice(0, 4).map(function (s) { return '<button type="button" class="wd-chip" data-pick="' + i + '" data-v="' + esc(s) + '">' + esc(s) + '</button>'; }).join('') + '</span>' : '') +
         '</div>';
-    }).join('') + '<p class="wd-note">Not listed on the NSE? Type any short name for it — it is added and priced by hand at the statement’s closing price, which you can change later. Leave it empty to skip it.</p></div>' : '';
+    }).join('') + '<p class="wd-note">Not listed on the NSE? Type any short name for it. It is added and priced by hand at the statement’s closing price, which you can change later. Leave it empty to skip it.</p></div>' : '';
     // What is sent: each matched holding's stock, quantity and prices.
     function payloadRows() {
       return rows.filter(function (r) { return r.symbol; }).map(function (r) {
@@ -2243,7 +2243,7 @@
             'Matching buys what is new, sells what is gone, and corrects quantities and buying prices.') : '') +
           field('Statement date', '<input name="as_of" type="date" max="' + today() + '" value="' + esc(P.as_of) + '">', 'Sales are dated this day.') +
           field('New purchases dated', '<input name="buy_date" type="date" max="' + today() + '" value="' + esc(P.buy_date) + '">',
-            held ? 'Usually the statement date.' : 'For a first statement, when the client started — returns and fees count from here.') +
+            held ? 'Usually the statement date.' : 'For a first statement, when the client started. Returns and fees count from here.') +
         '</div>' +
         '<div class="wd-sum" data-summary><span>Working it out…</span><b></b></div>' +
         '<div class="wd-table-wrap"><table class="wd-table wd-plan"><thead><tr><th scope="col"><span class="wd-sr">Include</span></th><th scope="col">Stock</th>' +
@@ -2314,7 +2314,7 @@
         refresh();
       },
       onSubmit: function () {
-        if (S.mode === 'demo') return Promise.reject(Object.assign(new Error('This is the sample desk — nothing is saved. Sign in and set up your own desk to import statements.'), { demo: true }));
+        if (S.mode === 'demo') return Promise.reject(Object.assign(new Error('This is the sample desk, so nothing is saved. Sign in and set up your own desk to import statements.'), { demo: true }));
         if (!P.plan) return Promise.reject(new Error('The review is still being worked out.'));
         var body = payloadRows();
         // A symbol the NSE list does not know is priced by hand, at the
@@ -2355,7 +2355,7 @@
         field('Target <em>optional</em>', '<input name="target" inputmode="decimal" value="' + esc(r && r.target || '') + '" placeholder="₹">') +
         field('Stop <em>optional</em>', '<input name="stop" inputmode="decimal" value="' + esc(r && r.stop || '') + '" placeholder="₹">') +
         field('Date', '<input name="on_date" type="date" max="' + today() + '" value="' + esc(r ? r.on_date : today()) + '">') +
-        field('Horizon <em>optional</em>', '<input name="horizon" maxlength="40" value="' + esc(r && r.horizon || '') + '" placeholder="12–18 months">') +
+        field('Horizon <em>optional</em>', '<input name="horizon" maxlength="40" value="' + esc(r && r.horizon || '') + '" placeholder="12 to 18 months">') +
         field('Why <em>optional</em>', '<textarea name="thesis" maxlength="600">' + esc(r && r.thesis || '') + '</textarea>', 'For you; a client sees the price, not this.', 'full') + '</div>';
     modal({
       title: closing ? 'Close the ' + esc(r.symbol) + ' call' : r ? 'Edit the ' + esc(r.symbol) + ' call' : 'New call', body: body,
@@ -2409,7 +2409,7 @@
     }
     if (o.why && r.thesis) L.push('', 'Why: ' + r.thesis);
     var sign = [d.display_name, d.firm].filter(Boolean).join(', ');
-    if (sign) L.push('', '— ' + sign);
+    if (sign) L.push('', sign);
     if (d.reg_short && d.registration) L.push(d.reg_short + ' · ' + d.registration);
     if (o.risk) L.push('', RISK_LINE);
     return L.join('\n');
@@ -2587,13 +2587,13 @@
       sub: 'Crystallises the period: the profit level becomes the mark the next period is measured from.',
       body: '<div class="wd-sum"><span>Due by your terms, ' + esc(day(f.period_start)) + ' → today</span><b class="pv">' + esc(inr(f.total)) + '</b></div>' +
         '<div class="wd-form">' + field('Settle as of', '<input name="as_of" type="date" max="' + today() + '" min="' + esc(f.period_start || '') + '" value="' + today() + '">',
-          'A past date (a quarter end) is valued at that day’s closes — within about six weeks.') +
+          'A past date (a quarter end) is valued at that day’s closes, within about six weeks.') +
         field('Amount billed <em>optional</em>', '<input name="amount" inputmode="decimal" placeholder="' + esc(String(f.total)) + '">', 'Leave blank for what the terms say. Kept beside the computed figure.') +
         field('Note <em>optional</em>', '<input name="note" maxlength="200" placeholder="Invoice number, how it was paid…">', '', 'full') + '</div>',
       onSubmit: function (fd) {
         var as = fd.get('as_of');
         return api('/wealth/clients/' + c.id + '/settle', { method: 'POST', body: { as_of: as === today() ? null : as, amount: numv(fd.get('amount')) || null, note: fd.get('note') } })
-          .then(function (d) { return d.settlement.status === 'nil' ? 'Period settled — nothing was due.' : 'Billed ' + inr(d.settlement.amount) + '. Mark it paid when it arrives.'; });
+          .then(function (d) { return d.settlement.status === 'nil' ? 'Period settled. Nothing was due.' : 'Billed ' + inr(d.settlement.amount) + '. Mark it paid when it arrives.'; });
       }
     });
   }
@@ -2604,8 +2604,8 @@
       sub: 'For a client you billed before this desk existed, so those periods are not counted again.',
       body: '<div class="wd-form">' + field('Settled up to', '<input name="period_end" type="date" max="' + today() + '" required>') +
         field('Portfolio value that day', '<input name="value" inputmode="decimal" placeholder="₹ from the broker’s statement">', 'The profit level is this less the capital in by then.') +
-        field('Or the profit level itself <em>optional</em>', '<input name="level" inputmode="decimal" placeholder="₹ — your high-water mark">') +
-        field('Amount billed', '<input name="amount" inputmode="decimal" placeholder="₹ — 0 if nothing">') +
+        field('Or the profit level itself <em>optional</em>', '<input name="level" inputmode="decimal" placeholder="₹ (your high-water mark)">') +
+        field('Amount billed', '<input name="amount" inputmode="decimal" placeholder="₹ (0 if nothing)">') +
         field('Status', '<select name="status">' + opt('paid', 'Paid', 'paid') + opt('due', 'Not yet paid', 'paid') + '</select>') +
         field('Paid on <em>optional</em>', '<input name="paid_on" type="date" max="' + today() + '">') + '</div>',
       onSubmit: function (fd) {
@@ -2632,9 +2632,9 @@
     var cur = (S.book.prices || []).filter(function (p) { return p.symbol === sym; })[0];
     modal({
       title: 'Set a price for ' + esc(sym), submit: ic('check') + 'Save',
-      sub: 'For anything without a live quote — an unlisted share, a fund, a bond. A hand-set price replaces the live one everywhere on the desk until you clear it.',
+      sub: 'For anything without a live quote: an unlisted share, a fund, a bond. A hand-set price replaces the live one everywhere on the desk until you clear it.',
       body: '<div class="wd-form">' + field('Price per unit', '<input name="price" inputmode="decimal" value="' + esc(cur ? cur.price : '') + '" placeholder="₹">') + '</div>',
-      extra: cur ? '<button type="button" class="wd-btn ghost danger" data-act="clear-price" data-sym="' + esc(sym) + '">Clear — use live</button>' : '',
+      extra: cur ? '<button type="button" class="wd-btn ghost danger" data-act="clear-price" data-sym="' + esc(sym) + '">Clear and use live</button>' : '',
       onSubmit: function (fd) {
         return api('/wealth/prices', { method: 'PUT', body: { symbol: sym, price: numv(fd.get('price')) } }).then(function () { return sym + ' priced by hand.'; });
       }
@@ -2645,8 +2645,8 @@
     modal({
       title: 'Bonus or split in ' + esc(sym), submit: ic('check') + 'Apply',
       sub: 'Yahoo adjusts its past prices for these, so without one a holding bought before it looks like a loss.',
-      body: '<div class="wd-form">' + field('Every old share became', '<select name="factor">' + opt('2', '2 — a 1:1 bonus, or a 2-for-1 split', '2') + opt('1.5', '1.5 — a 1:2 bonus', '2') +
-          opt('3', '3 — a 2:1 bonus', '2') + opt('5', '5 — a 5-for-1 split', '2') + opt('10', '10 — a 10-for-1 split', '2') + opt('0.2', '0.2 — a 1-for-5 consolidation', '2') + '</select>') +
+      body: '<div class="wd-form">' + field('Every old share became', '<select name="factor">' + opt('2', '2 (a 1:1 bonus, or a 2-for-1 split)', '2') + opt('1.5', '1.5 (a 1:2 bonus)', '2') +
+          opt('3', '3 (a 2:1 bonus)', '2') + opt('5', '5 (a 5-for-1 split)', '2') + opt('10', '10 (a 10-for-1 split)', '2') + opt('0.2', '0.2 (a 1-for-5 consolidation)', '2') + '</select>') +
         field('Ex-date', '<input name="on_date" type="date" max="' + today() + '" value="' + today() + '">') + '</div>' +
         '<label class="wd-toggle"><input type="checkbox" name="all" checked> Apply to every client who held ' + esc(sym) + ' that day</label>',
       onSubmit: function (fd) {
