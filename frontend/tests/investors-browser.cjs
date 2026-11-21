@@ -166,7 +166,7 @@ async function onTab(page, id) {
   assert.match(await page.locator('.iv-cover').innerText(), /companies read so far/i);
 
   // The caveats are on the page before any portfolio is opened.
-  const lead = await page.locator('.iv-lead').innerText();
+  const lead = await page.locator('#investors-body .iv-cover').first().innerText();
   assert.match(lead, /above 1%/);
   assert.match(lead, /quarter/i);
 

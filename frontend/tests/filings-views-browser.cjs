@@ -564,7 +564,7 @@ const server = http.createServer((req, res) => {
   assert.match(await lead.locator('.cc-co').innerText(), /Shiprocket Ltd/);
   assert.match(await lead.locator('.cc-co em.key').innerText(), /key call/i);
   assert.match(await cc3.locator('.cc-group').first().innerText(), /key calls/i);
-  assert.match(await cc3.locator('.cc-groupnote').innerText(), /not the company or its share/i);
+  assert.equal(await cc3.locator('.cc-groupnote').count(), 0, 'no explainer under the group heading');
   assert.match(await lead.locator('.cc-hl').innerText(), /Revenue grew 34%/);
   assert.match(await lead.locator('.cc-why').innerText(), /why it is a key call/i);
   assert.equal(await lead.locator('.cc-full').evaluate(el => el.open), true);

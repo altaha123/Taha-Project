@@ -82,17 +82,12 @@
     }).join('');
 
     box.innerHTML =
-      '<p class="iv-lead">Every position each scheme held at the end of ' +
-      esc(monthName(d.month)) + ', from the asset manager&rsquo;s own monthly ' +
-      'disclosure. No 1% floor: this is the whole book.</p>' +
-      /* Coverage, stated plainly. This is the sentence that keeps the page
-         from implying it covers the industry. */
-      '<p class="iv-cover"><b>' + esc(String(d.read)) + '</b> of the ' +
-      esc(String(d.listed_with_amfi)) + ' fund houses AMFI lists have been read ' +
-      'for this month. ' + esc(d.note || '') + ' A fund house not shown here ' +
-      'has not been read. That does not mean it holds nothing.</p>' +
-      '<div class="iv-grid">' + cards + '</div>' +
-      (d.lag ? '<p class="iv-cover">' + esc(d.lag) + '</p>' : '');
+      /* One line: coverage, month, and that this is the whole book. A fund
+         house not listed has not been read, which "so far" says. */
+      '<p class="iv-cover"><b>' + esc(String(d.read)) + '</b> of ' +
+      esc(String(d.listed_with_amfi)) + ' fund houses read so far · ' +
+      esc(monthName(d.month)) + ' · full holdings, about six weeks old</p>' +
+      '<div class="iv-grid">' + cards + '</div>';
 
     box.querySelectorAll('.iv-card').forEach(function (b) {
       b.addEventListener('click', function () { open(b.getAttribute('data-id')); });

@@ -183,7 +183,7 @@ def test_the_board_always_carries_its_timing_and_its_caveat(monkeypatch):
     assert out["as_on"] == "01-Sep-2026"
     assert out["symbols"][0]["symbol"] == "ACME"
     # The honesty about what "live" means has to survive to the API.
-    assert "not a live trade feed" in out["timing"]
+    assert "not live" in out["caveat"]
     assert "who traded, not whether they were right" in out["caveat"]
     D._cache.clear()
 

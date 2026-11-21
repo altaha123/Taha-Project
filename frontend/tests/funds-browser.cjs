@@ -112,12 +112,11 @@ async function openTab(page, id) {
   // ── COVERAGE IS PART OF THE ANSWER ───────────────────────────────────────
   const cover = await page.locator('.iv-cover').first().innerText();
   assert.match(cover, new RegExp(String(directory.read) + '\\b'));
-  assert.match(cover, /53 fund houses AMFI lists/);
-  assert.match(cover, /has not been read/i,
-    'an absent fund house must be absent because it was not read, not because it holds nothing');
-  // The lag, before any portfolio is opened.
-  assert.match(await page.locator('#funds-body').innerText(), /six weeks/i);
-  assert.match(await page.locator('.iv-lead').innerText(), /No 1% floor/i);
+  assert.match(cover, /of 53 fund houses read so far/i,
+    'an absent fund house must read as not yet read, not as holding nothing');
+  // The lag, and that this is the whole book, before any portfolio is opened.
+  assert.match(cover, /six weeks/i);
+  assert.match(cover, /full holdings/i);
 
   // ── One fund house ───────────────────────────────────────────────────────
   await page.locator('.iv-card').first().click();

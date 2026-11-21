@@ -2116,12 +2116,7 @@
   <div id="view-deals" style="display:none">
     <header class="tabhead">
       <h2>Bulk &amp; block deals</h2>
-      <p>Large disclosed trades, netted by buyer and seller.</p>
     </header>
-    <details class="tabnote">
-      <summary>What counts as a bulk or block deal</summary>
-      <p>A <b>bulk deal</b> is one client trading more than 0.5% of a company’s shares in a day. A <b>block deal</b> is a negotiated trade of at least ₹10 crore inside one of two fixed windows. Both are disclosed after the trade, not live: block deals appear within minutes of their window, bulk deals arrive through the day and complete after the close.</p>
-    </details>
   </div><!-- /view-deals -->
 
   <!-- WOW orders. An order is only interesting relative to the company that
@@ -2145,14 +2140,7 @@
   <div id="view-concalls" style="display:none">
     <header class="tabhead">
       <h2>Concall summaries</h2>
-      <p>Earnings calls, read for you: what management said, what they committed to, what analysts pressed on. The key calls come first.</p>
     </header>
-    <details class="tabnote">
-      <summary>What is written, what is counted, and what makes a call key</summary>
-      <p>Each summary is <b>written by a language model</b> (Claude) from the transcript the company filed, and says so on the card. Two things in it are not left to the model. A commitment is always a quote, and every quote is <b>checked word for word against the transcript</b>: one that does not appear there is dropped rather than printed. The name under a quote is the speaker label the transcript itself puts on that passage, so an analyst's question or the moderator's script is never shown as the company's guidance. Figures elsewhere in a summary are not checked in that way. The transcript is one tap away for anything you mean to rely on.</p>
-      <p>A <b>key call</b> is one the model graded as adding the most to what the results filing already said: new or changed guidance, something announced, or a problem disclosed. It is a grade of the information in the call, not of the company or its share, and nothing here is a recommendation.</p>
-      <p>Under each summary, <b>Counted from the transcript</b> involves no model: who was on the call, how often each subject came up per thousand words, and how that moved since the company's last call. Emphasis shows what a call was spent on, which is not the same as what was said about it. When no model is configured the page says so and shows this extraction on its own, instead of presenting it as a summary.</p>
-    </details>
     <div id="concalls-body"></div>
   </div><!-- /view-concalls -->
 
@@ -2160,15 +2148,7 @@
   <div id="view-investors" style="display:none">
     <header class="tabhead">
       <h2>Investor portfolios</h2>
-      <p>What well-known investors hold, from company filings.</p>
     </header>
-    <details class="tabnote">
-      <summary>What this can and cannot show: read this first</summary>
-      <p><b>Only stakes above 1% appear.</b> A company names a public shareholder in its filing only once they cross 1% of its equity. A position below that can be several hundred crore in a large company and is completely invisible here. Every portfolio on this page is therefore a <i>floor</i> on what someone holds, never the whole of it.</p>
-      <p><b>It is quarterly, and it is late.</b> Shareholding patterns are filed once a quarter and land up to 21 days after the quarter ends, so a position shown here can be four months old. It is what was disclosed, not what is held today, and it is not a reason to buy anything.</p>
-      <p><b>Names are matched by hand, not by a similarity score.</b> Atul Auto&rsquo;s register names <i>VIJAY KEDIA</i> and <i>KEDIA SECURITIES PRIVATE LIMITED</i> separately; Elecon&rsquo;s writes <i>Vijay Kishanlal Kedia</i>. Getting that wrong would mean publishing a false statement about what a named person owns, so every association is curated, and every rolled-up total is shown broken into the entities that make it up. A holding in a <b>family trust</b> is counted but labelled as one, because a trust someone is trustee of is not the same as shares they own outright.</p>
-      <p><b>A company leaving the list is not necessarily a sale.</b> It has fallen below the 1% disclosure threshold or been sold, and the filing does not say which. This page does not guess.</p>
-    </details>
     <div id="investors-body"></div>
     <!-- Starts the sweep that fills the ledger these pages are built from.
          Visible to anyone and useless without the admin key the API checks. -->
@@ -2197,15 +2177,7 @@
   <div id="view-funds" style="display:none">
     <header class="tabhead">
       <h2>Fund house portfolios</h2>
-      <p>What each mutual fund holds, from its monthly disclosure.</p>
     </header>
-    <details class="tabnote">
-      <summary>Where this comes from, and how complete it is</summary>
-      <p><b>A different source from the investor portfolios, with different limits.</b> SEBI requires every asset manager to publish each scheme&rsquo;s full portfolio every month. There is <b>no 1% floor</b> here: a fund&rsquo;s entire book is disclosed, down to the smallest position. Every row carries an <b>ISIN</b>, so a holding is matched to a listed company by registered identifier rather than by name. Nothing on this page is guessed.</p>
-      <p><b>Monthly, and due by the tenth of the following month</b>, so a position here can be about six weeks old. Fresher than the quarterly shareholding filings, still not live.</p>
-      <p><b>Coverage is partial and is stated.</b> AMFI lists all 53 fund houses but publishes a <i>directory</i>, not a feed. Each pack has to be fetched from that AMC&rsquo;s own website, and a good many build their download list in JavaScript rather than serving a link. The number read is printed on the page. Fund houses not listed here have not been read; it does not mean they hold nothing.</p>
-      <p><b>Listed equity only.</b> A pack also contains debt, government securities and trust units. Those are read but not shown, and anything whose ISIN is not in NSE&rsquo;s equity list (another fund&rsquo;s units, an unlisted or BSE-only holding) is listed separately rather than dropped, so the weights reconcile.</p>
-    </details>
     <div id="funds-body"></div>
     <details class="lg-wrap"><summary>Fill the ledger (admin)</summary>
       <div id="ledger-admin-funds" class="lg-panel"></div>

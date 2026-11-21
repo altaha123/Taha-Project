@@ -26,7 +26,7 @@ const fx = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/lenses.jso
 const screensFx = JSON.parse(fs.readFileSync(
   path.join(root, 'tests/fixtures/fundamentals-screens.json'), 'utf8'));
 const screenCalls = [];
-const NOTICE = /rules-based filters applied to historical financial data\. They are not investment advice or recommendations\./;
+const NOTICE = /Rules-based filters on past filings\. Not investment advice\./;
 const BANNED = /\b(buy|sell|target|recommend|top picks|best stocks|should|opportunity)\b/i;
 
 const server = http.createServer((req, res) => {
