@@ -11,7 +11,7 @@
 
 .cl-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; margin: 0 0 18px; }
 .cl-stat { background: var(--skin-card); border: 1px solid var(--rule); border-radius: 16px; padding: 14px 16px; box-shadow: var(--skin-shadow); }
-.cl-stat span { display: block; font: 500 11px/1.4 'IBM Plex Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+.cl-stat span { display: block; font: 500 10px/1.4 'IBM Plex Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
 .cl-stat b { display: block; font: 400 28px/1.15 'Instrument Serif', Georgia, serif; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
 .cl-stat small { color: var(--mute); font-size: 12px; }
 .cl-stat b.up { color: var(--cl-up); } .cl-stat b.dn { color: var(--cl-dn); }
@@ -29,7 +29,7 @@
 .cl-bar:hover i { filter: brightness(1.08); }
 .cl-bar:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 8px; }
 .cl-bar-n { font: 600 11px/1 'IBM Plex Mono', monospace; color: var(--ink-2); min-height: 11px; }
-.cl-bar-d { font: 600 11px/1.1 'IBM Plex Mono', monospace; text-align: center; }
+.cl-bar-d { font: 600 10px/1.1 'IBM Plex Mono', monospace; text-align: center; }
 .cl-bar-d small { display: block; font-weight: 400; font-size: 10px; opacity: .8; }
 @keyframes cl-grow { from { transform: scaleY(0); } }
 

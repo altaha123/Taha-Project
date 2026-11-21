@@ -112,7 +112,7 @@
 @keyframes wd-blink { 50% { opacity: .3; } }
 .wd-trio { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
 .wd-trio > div { padding: 14px 16px; border-radius: 18px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); min-width: 0; }
-.wd-trio > div > small { display: block; font: 500 11px/1.4 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: rgba(251, 248, 241, .6); }
+.wd-trio > div > small { display: block; font: 500 10px/1.4 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: rgba(251, 248, 241, .6); }
 .wd-trio b { display: block; font: 400 clamp(20px, 2.6vw, 28px)/1.15 'Instrument Serif', Georgia, serif; margin-top: 4px; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis; }
 .wd-trio > div > span { font-size: 13px; color: rgba(251, 248, 241, .66); }
@@ -165,7 +165,7 @@
   box-shadow: var(--skin-shadow); min-width: 0; }
 .wd-kpi::before { content: ''; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, var(--a, var(--gold)) 14%, transparent), transparent 70%); }
-.wd-kpi > small { display: block; font: 500 11px/1.4 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
+.wd-kpi > small { display: block; font: 500 10px/1.4 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
 .wd-kpi b { display: block; font: 400 28px/1.15 'Instrument Serif', Georgia, serif; margin: 4px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wd-kpi > span { font-size: 13px; color: var(--ink-2); }
 .wd-kpi b small { font: 400 .5em/1 Inter, sans-serif; color: var(--mute); letter-spacing: 0; text-transform: none; }
@@ -294,7 +294,7 @@
 .wd-cid p { margin: 4px 0 0; color: rgba(251, 248, 241, .7); font-size: 14px; }
 .wd-cvals { display: flex; gap: 22px 30px; flex-wrap: wrap; margin: 18px 0 4px; align-items: flex-end; }
 .wd-cvals .wd-big { font-size: clamp(42px, 5vw, 64px); }
-.wd-cv small { display: block; font: 500 11px/1.4 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: rgba(251, 248, 241, .58); }
+.wd-cv small { display: block; font: 500 10px/1.4 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: rgba(251, 248, 241, .58); }
 .wd-cv b { font: 400 28px/1.2 'Instrument Serif', Georgia, serif; white-space: nowrap; }
 .wd-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .wd-act { display: inline-flex; align-items: center; gap: 7px; font: 600 13px Inter, sans-serif; color: #FBF8F1; background: rgba(255, 255, 255, .08);
@@ -313,7 +313,7 @@
 /* Holdings table */
 .wd-table-wrap { overflow-x: auto; border-radius: var(--wd-r); border: 1px solid var(--rule); background: var(--wd-card); box-shadow: var(--skin-shadow); }
 .wd-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.wd-table th { text-align: right; font: 500 11px/1.3 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--mute);
+.wd-table th { text-align: right; font: 500 10px/1.3 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--mute);
   padding: 12px 12px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; background: var(--paper-2); position: sticky; top: 0; }
 .wd-table th:first-child, .wd-table td:first-child { text-align: left; padding-left: 18px; }
 .wd-table td { text-align: right; padding: 11px 12px; border-bottom: 1px solid var(--rule-2); white-space: nowrap; vertical-align: middle; }
@@ -375,7 +375,7 @@
 .wd-ev .t small { display: block; color: var(--mute); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wd-ev .amt { text-align: right; font-weight: 600; font-size: 14px; white-space: nowrap; }
 .wd-ev .amt small { display: block; font-weight: 500; color: var(--mute); font-size: 12px; }
-.wd-day { font: 500 11px/1 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); padding: 14px 12px 6px; }
+.wd-day { font: 500 10px/1 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); padding: 14px 12px 6px; }
 
 /* Fee receipt */
 .wd-feegrid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; }
@@ -385,7 +385,7 @@
   background: linear-gradient(90deg, var(--a2, #F2D58A), var(--a, var(--gold))); }
 .wd-due { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1.5px dashed var(--rule); margin-bottom: 8px; }
 .wd-due b { font: 400 clamp(34px, 4.6vw, 52px)/1 'Instrument Serif', Georgia, serif; }
-.wd-due small { display: block; font: 500 11px/1.4 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); margin-bottom: 6px; }
+.wd-due small { display: block; font: 500 10px/1.4 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); margin-bottom: 6px; }
 .wd-steps { list-style: none; margin: 0; padding: 0; counter-reset: s; }
 .wd-step { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--rule-2);
   counter-increment: s; }
@@ -491,7 +491,7 @@
 .wd-ex { padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--gold) 10%, var(--paper-2)); font-size: 14px; line-height: 1.5; }
 .wd-ex b { color: var(--gold-dp); }
 .wd-fieldset { border: 1px solid var(--rule); border-radius: 18px; padding: 14px 16px 16px; margin: 0; }
-.wd-fieldset legend { font: 500 11px/1 'IBM Plex Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); padding: 0 6px; }
+.wd-fieldset legend { font: 500 10px/1 'IBM Plex Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); padding: 0 6px; }
 .wd-danger { border-color: color-mix(in srgb, var(--dn) 40%, var(--rule)); }
 
 /* ── Modal ─────────────────────────────────────────────────────────── */

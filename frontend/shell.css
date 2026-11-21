@@ -658,7 +658,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-mega-mark{ position:absolute !important; right:-26px; bottom:-30px; width:112px; height:112px; color:#FBF8F1; opacity:.09; z-index:0 !important;
   transition:transform .7s var(--ease-out), opacity .4s var(--ease) }
 .sh-mega-lead:hover .sh-mega-mark{ transform:translate(-6px,-6px) rotate(-6deg); opacity:.15 }
-.sh-mega-kick{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.14em;
+.sh-mega-kick{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.14em;
   text-transform:uppercase; color:#D9BC6A }
 .sh-mega-status{ display:inline-flex; align-items:center; gap:6px; color:#CFC8B6; font-weight:500; letter-spacing:.1em }
 .sh-mega-status:empty{ display:none }
@@ -684,7 +684,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 
 /* The tools: up to three columns, each under the name of what it is for. */
 .sh-mega-cols{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0 8px; padding:12px 6px 8px 14px; align-content:start }
-.sh-mega-col h4{ margin:0 0 5px; padding:0 10px; font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.13em; color:var(--mute) }
+.sh-mega-col h4{ margin:0 0 5px; padding:0 10px; font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em; color:var(--mute) }
 .sh-mega-col h4:not(:first-child){ margin-top:17px }
 .sh-mega .sh-item{ position:relative; grid-template-columns:36px 1fr; gap:12px; padding:8px 10px; border-radius:13px; font:inherit }
 .sh-mega .sh-item b{ font:600 14px/1.25 var(--sans, Inter, system-ui, sans-serif); color:var(--ink) }
@@ -804,7 +804,7 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--gold); outline-offse
   background:#E9CF86; color:#17140E }
 .sh-sheet-lead[aria-current="page"] .sh-sheet-lead-go{ display:none }
 
-.sh-sheet-group h4{ margin:18px 8px 5px; font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.13em; color:var(--mute) }
+.sh-sheet-group h4{ margin:18px 8px 5px; font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em; color:var(--mute) }
 .sh-sheet .sh-item{ position:relative; grid-template-columns:42px 1fr; gap:14px; align-items:center; min-height:60px; padding:8px;
   border-radius:14px; font:inherit; -webkit-tap-highlight-color:transparent }
 .sh-sheet .sh-ico{ width:42px; height:42px; border-radius:13px }
