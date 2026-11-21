@@ -202,6 +202,22 @@ jobs:
         with:
           name: results-calendar-verification
           path: test-results/results-calendar
+      - name: Verify only the finished homepage is ever shown while it loads
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/boot-cover-browser.cjs
+      - name: Verify the homepage shows Market first and loads every other tool behind it
+        if: always()
+        # Market is drawn by a dozen of the page's sixty scripts; the rest sit
+        # in <template>s and load after it is on show. Silent ones: a file
+        # Market needs is held back and the first screen changes when it
+        # lands, a tool opened before its script has arrived stays empty, the
+        # later scripts run out of order, or an address that names a tool
+        # (#portfolio, ?go=filings) stops loading the way it always has.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/late-load-browser.cjs
       - name: Verify homepage visuals, motion and accessibility
         if: always()
         env:
