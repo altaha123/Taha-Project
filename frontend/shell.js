@@ -167,6 +167,11 @@
       mark: '<circle cx="12" cy="12" r="9"/><path d="m15.6 8.4-2.3 5-5 2.2 2.3-5Z"/>',
       groups: [
         { id: 'find', title: 'Find stocks' },
+        /* The forum: what other investors are looking at, and why. Stacked
+           under Find stocks, which has two entries, so the three columns
+           stay three deep. It is a page of its own (forum.html), like the
+           adviser chats, because every discussion has its own address. */
+        { id: 'talk', title: 'Talk it over', stack: true },
         { id: 'dig', title: 'Dig deeper' },
         { id: 'own', title: 'Follow big investors' },
         { id: 'proof', title: 'Our record', stack: true }
@@ -186,6 +191,8 @@
            section of this page now (lenses.js). */
         { tab: 'lenses', g: 'find', label: 'Investor styles', icon: 'lens', hint: 'Stocks picked the way great investors pick them, and the ones several styles agree on',
           tip: 'How great investors pick, and where they agree', kw: 'lenses philosophy coffee can moat qglp convergence agree several styles' },
+        { href: 'forum.html', g: 'talk', label: 'Forum', icon: 'users', hint: 'Discuss stocks and the market with other investors',
+          tip: 'Discuss stocks with other investors', kw: 'forum discussion discuss community talk chat ask question questions members opinion thread threads stock discussion' },
         { tab: 'investors', g: 'own', label: 'Who owns what', icon: 'shield', hint: 'What well-known investors disclosed holding', kw: 'investors superstar ownership holdings' },
         { tab: 'funds', g: 'own', label: 'Fund houses', icon: 'layers', hint: 'What the mutual funds disclosed holding', kw: 'mutual fund amc portfolios' },
         { tab: 'charts', g: 'dig', label: 'Charts', icon: 'candles', hint: 'Price charts, drawings, levels and indicators', kw: 'chart technicals rsi macd fibonacci' },
@@ -233,7 +240,8 @@
     ME_ITEMS.forEach(function (it) {
       out.push({ section: 'me', door: 'Me', tab: it.tab, label: it.label, hint: it.hint, icon: it.icon, kw: it.kw || '' });
     });
-    out.push({ door: 'Me', href: 'pro.html?from=search', label: 'Altaha Pro', hint: 'Saved screens and the daily email', icon: 'bulb', kw: 'pro premium subscribe price' });
+    out.push({ door: 'Me', href: 'pro.html?from=search', label: 'Altaha Pro', hint: 'Plans and pricing: ₹5,000 a quarter or ₹15,000 a year', icon: 'bulb', kw: 'pro premium subscribe subscription price pricing plans plan quarterly yearly annual fees cost' });
+    out.push({ door: 'Me', href: 'weekly.html?from=search', label: 'Weekly brief', hint: 'The week’s market, flows, rules and forum, in one page', icon: 'document', kw: 'weekly brief week summary newsletter recap digest topics' });
     out.push({ door: 'Me', href: 'signin.html', label: 'Sign in', hint: 'Keep your portfolio and watchlist on your account', icon: 'shield', kw: 'login account sign' });
     return out;
   }
@@ -296,8 +304,9 @@
     { section: 'me', tab: 'score', label: 'How the score works' },
     { section: 'me', tab: 'vocab', label: 'Glossary' },
     { href: 'brief.html', label: 'Daily policy brief' },
+    { href: 'weekly.html?from=footer', label: 'Weekly brief' },
     { href: '/stocks', label: 'All companies' },
-    { href: 'pro.html?from=footer', label: 'Altaha Pro' },
+    { href: 'pro.html?from=footer', label: 'Pro plans & pricing' },
     { href: 'signin.html', label: 'Sign in' }
   ];
 
@@ -429,7 +438,7 @@
     var pro = el('a', 'sh-pro');
     pro.id = 'sh-pro';
     pro.href = 'pro.html?from=header';
-    pro.innerHTML = 'Altaha Pro<small>Saved screens and the daily email</small>';
+    pro.innerHTML = 'Altaha Pro<small>Plans from ₹1,250 a month</small>';
     pro.addEventListener('click', function () {
       if (window.AltahaTrack) window.AltahaTrack('pro_cta_clicked', { from: 'header' });
     });
@@ -1243,7 +1252,7 @@
         '<div class="sh-dacct"><a class="sh-item sh-dacc" href="signin.html">' + svg('shield') +
           '<span class="sh-txt"><b class="sh-dacc-name">Sign in</b><span>Keep your portfolio and watchlist on your account</span></span></a></div>' +
         '<a class="sh-dpro" href="pro.html?from=menu"><b>Altaha Pro</b>' +
-          '<span>The portfolio story, watchlist alerts and saved screens, ₹1,999 a year</span></a>' +
+          '<span>Plans from ₹1,250 a month: ₹5,000 a quarter or ₹15,000 a year</span></a>' +
         '<a class="sh-item" href="advisors.html">' + svg('chat') +
           '<span class="sh-txt"><b>Talk to an adviser</b><span>SEBI-registered advisers, free to chat</span></span></a>' +
         '<a class="sh-item sh-dwd" href="wealth.html">' + svg('shield') +

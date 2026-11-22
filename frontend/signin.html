@@ -205,13 +205,14 @@
 
   /* Where to go once signed in. A page that sent the reader here to sign in
      (an adviser they were about to message) passes ?next=, and they go back
-     to it rather than to the portfolio. Only a page on this site, by name —
+     to it rather than to the portfolio (or a forum discussion, #t/42, or a
+     company's, #new/stock/M%26M). Only a page on this site, by name —
      an open redirect on a sign-in page is a phishing kit's favourite tool.
      Kept in sessionStorage too, because the emailed link reopens this page
      without the parameter. */
   var HOME = './#portfolio', NEXT_KEY = 'altaha-signin-next';
   function safeNext(v) {
-    return /^[a-z][a-z0-9-]*\.html(#[A-Za-z0-9\/_-]*)?$/.test(v || '') ? v : '';
+    return /^[a-z][a-z0-9-]*\.html(#[A-Za-z0-9\/_%&.-]*)?$/.test(v || '') ? v : '';
   }
   var DEST = (function () {
     var n = safeNext(param('next'));

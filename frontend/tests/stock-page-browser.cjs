@@ -35,6 +35,7 @@
        http(s). A headline's `javascript:` address is printed as text.
      · AN UNANSWERED SEARCH IS NOT "NO NEWS".
      · NOTHING SLOW IS FETCHED TO SHOW A PRICE. Peers load with their section.
+     · THE FORUM IS ASKED WITH ITS SECTION, AND A MEMBER'S WORDS ARE TEXT.
      · EVERY SECTION FITS A PHONE, and nothing moves for a reader who asked
        for reduced motion. */
 
@@ -68,6 +69,17 @@ const deals = { available: true, symbol: 'NORTHBANK', days: 90, count: 2, rows: 
   { symbol: 'NORTHBANK', client: 'Tidewater Securities', side: 'SELL', qty: 4100000, price: 1139.0,
     value_cr: 466.99, date: '03-Nov-2026', kind: 'bulk', prop_desk: true, institutional: false },
 ] };
+
+// Shaped as backend/forum.py for_stock() returns it.
+const forum = { symbol: 'NORTHBANK', count: 2, posts_this_week: 5, has_more: false, threads: [
+  { id: 41, category: 'stocks', category_label: 'Stocks', symbol: 'NORTHBANK', company: 'Northern Union Bank',
+    title: 'Slippages in the SME book: how worried?', author: 'Patient Compounder', replies: 4, helpful: 2,
+    excerpt: 'Gross slippages rose for a second quarter.', created_at: '2026-11-20T09:00:00+00:00',
+    last_post_at: '2026-11-21T09:00:00+00:00', locked: false, pinned: false },
+  { id: 42, category: 'stocks', category_label: 'Stocks', symbol: 'NORTHBANK', company: 'Northern Union Bank',
+    title: '<img src=x onerror=alert(1)> deposit costs', author: '<b>Mallory</b>', replies: 1, helpful: 0,
+    excerpt: null, created_at: '2026-11-19T09:00:00+00:00', last_post_at: '2026-11-19T09:00:00+00:00',
+    locked: false, pinned: false }] };
 
 const year = Array.from({ length: 120 }, (_, i) => {
   const v = 880 + i * 2.3 + (i % 7) * 4;
@@ -114,6 +126,7 @@ async function open(browser, port, opts) {
       }
     }
     if (u.pathname === '/deals/NORTHBANK') return route.fulfill({ json: deals });
+    if (u.pathname === '/forum/stock/NORTHBANK') return route.fulfill({ json: opts.forum || forum });
     return route.fulfill({ json: { available: false, rows: [], items: [] } });
   });
   await page.goto(`http://127.0.0.1:${port}/stock.html?ticker=NORTHBANK${opts.hash || ''}`,
@@ -138,7 +151,7 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       const t = await open(browser, port);
       const { page } = t;
       assert.deepEqual(await page.locator('.stk-pane-btn').evaluateAll(a => a.map(b => b.dataset.p)),
-        ['info', 'chart', 'scores', 'owners', 'funda', 'peers', 'deliv', 'news']);
+        ['info', 'chart', 'scores', 'owners', 'funda', 'peers', 'deliv', 'news', 'talk']);
       const y = async sel => (await page.locator(sel).boundingBox()).y;
       assert.ok(await y('#nm') < await y('#panes'), 'the section bar is above the name');
       assert.ok(await y('#panes') < await y('#kgrid'), 'the figures are above the section bar');
@@ -414,6 +427,32 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       await quiet.context.close();
     }
 
+    /* ── 7a. The forum's threads, read with their section, printed as text ─ */
+    {
+      const t = await open(browser, port);
+      await t.page.waitForTimeout(400);
+      assert.equal(t.asked.filter(u => u.startsWith('/forum')).length, 0, 'the forum was asked before its section opened');
+      await t.page.locator('#pane-btn-talk').click();
+      await t.page.locator('#talk-body .talk-l li').first().waitFor();
+      assert.equal(await t.page.locator('#talk-body .talk-l li').count(), 2);
+      assert.equal(await t.page.locator('#talk-body a').first().getAttribute('href'), 'forum.html#t/41');
+      assert.equal(await t.page.locator('#talk-new').getAttribute('href'), 'forum.html#new/stock/NORTHBANK');
+      assert.equal(await t.page.locator('#talk-all').getAttribute('href'), 'forum.html#stock/NORTHBANK');
+      assert.match(await t.page.locator('#talk-x').innerText(), /2 discussions · 5 posts this week/i);
+      assert.equal(await t.page.locator('#pane-talk img, #pane-talk b b').count(), 0, 'a member\'s words were read as markup');
+      assert.match(await t.page.locator('#talk-body').innerText(), /<img src=x onerror=alert\(1\)> deposit costs/);
+      assert.match(await t.page.locator('#pane-talk').innerText(), /not advice/);
+      assert.deepEqual(t.errors, []);
+      await t.context.close();
+
+      const none = await open(browser, port, { hash: '#talk',
+        forum: { symbol: 'NORTHBANK', count: 0, posts_this_week: 0, threads: [], has_more: false } });
+      await none.page.locator('#talk-body .own-empty:not(.is-loading)').waitFor();
+      assert.match(await none.page.locator('#talk-body').innerText(), /Nobody has started a discussion about NORTHBANK/);
+      assert.equal(await none.page.locator('#talk-all').isVisible(), false, 'an empty forum offered "All discussions"');
+      await none.context.close();
+    }
+
     /* ── 7b. Ownership asks again, then draws what it is given ───────────── */
     {
       const refused = { symbol: 'NORTHBANK', available: false, retry: true,
@@ -459,7 +498,7 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       const t = await open(browser, port, { context: { viewport: { width: 390, height: 844 },
                                                        isMobile: true, hasTouch: true } });
       await t.page.locator('#ov-latest .lt-l li').first().waitFor();
-      for (const pane of ['info', 'chart', 'scores', 'owners', 'funda', 'peers', 'deliv', 'news']) {
+      for (const pane of ['info', 'chart', 'scores', 'owners', 'funda', 'peers', 'deliv', 'news', 'talk']) {
         await t.page.locator('#pane-btn-' + pane).click();
         await t.page.waitForTimeout(350);
         assert.ok(await fits(t.page), `the ${pane} section scrolls the page sideways on a phone`);

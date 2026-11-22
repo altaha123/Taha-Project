@@ -965,11 +965,16 @@
       ['research/funds', 'funds', 'Fund houses', 'What mutual funds hold'],
       ['research/charts', 'charts', 'Charts', 'Chart any stock'],
       ['research/strategies', 'flask', 'Strategy lab', 'Trading rules, tested on any stock'],
-      ['research/concalls', 'concalls', 'Concalls', 'Earnings calls, summarised']
+      ['research/concalls', 'concalls', 'Concalls', 'Earnings calls, summarised'],
+      // A page of its own, so a link rather than a tab.
+      ['forum.html', 'adviser', 'Forum', 'Discuss stocks with other investors']
     ].map(function (m, k) {
-      return '<button type="button" class="dr-card dr-row dr-rise" style="--i:' + (6 + k) + '" data-goto="' + m[0] + '">' +
-        '<span class="dr-tool-ic">' + svg(m[1]) + '</span><span><b>' + esc(m[2]) + '</b><small>' + esc(m[3]) + '</small></span>' +
-        '<span class="dr-row-go">' + svg('arrow', 16) + '</span></button>';
+      var inner = '<span class="dr-tool-ic">' + svg(m[1]) + '</span><span><b>' + esc(m[2]) + '</b><small>' + esc(m[3]) + '</small></span>' +
+        '<span class="dr-row-go">' + svg('arrow', 16) + '</span>';
+      if (/\.html$/.test(m[0])) {
+        return '<a class="dr-card dr-row dr-rise" style="--i:' + (6 + k) + '" href="' + m[0] + '">' + inner + '</a>';
+      }
+      return '<button type="button" class="dr-card dr-row dr-rise" style="--i:' + (6 + k) + '" data-goto="' + m[0] + '">' + inner + '</button>';
     }).join('');
 
     return '<div class="dr dr-ideas">' +

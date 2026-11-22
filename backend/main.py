@@ -412,6 +412,17 @@ try:
 except Exception as _e:                                      # pragma: no cover
     print(f"[wealth] not loaded: {type(_e).__name__}: {_e}", flush=True)
 
+# The forum: members discussing the market and one stock at a time. Same
+# database, same guard. A stock discussion can only be opened for a company
+# the server knows; the lambda reads _known_company when it is called, since
+# that is defined further down this file.
+try:
+    import forum_routes
+    forum_routes.KNOWN_COMPANY = lambda sym: _known_company(sym)
+    app.include_router(forum_routes.router)
+except Exception as _e:                                      # pragma: no cover
+    print(f"[forum] not loaded: {type(_e).__name__}: {_e}", flush=True)
+
 # Ask AI on the query screener: Claude writes and checks queries in the
 # screener's syntax. Admin key only, closed when ADMIN_KEY is unset, and off
 # until ANTHROPIC_API_KEY is set. Same guard as the two above.
@@ -5484,6 +5495,106 @@ def run_policy_brief(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Ke
         accounts.record_send(person["id"], "brief", b["date"], ok, detail)
         out["sent" if ok else "failed"] += 1
     return out
+
+
+# ---------------------------------------------------------------------------
+# The weekly brief (weekly_brief.py): the week's market, money flow, new
+# rules, forum and the owner's own topics, in one page and one Saturday
+# email. The scheduled job is .github/workflows/weekly-brief.yml.
+# ---------------------------------------------------------------------------
+
+@app.get("/weekly")
+def weekly_brief_issue(week: str = ""):
+    """One week's brief. No week: this week so far, as a draft."""
+    import weekly_brief
+    try:
+        return to_native(weekly_brief.issue(week.strip()))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except LookupError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.get("/weekly/issues")
+def weekly_brief_issues():
+    """Every published issue, newest first, and this week's id."""
+    import weekly_brief
+    return {"issues": weekly_brief.issues(),
+            "current": weekly_brief.week_id(weekly_brief.today_ist())}
+
+
+@app.post("/jobs/weekly-brief")
+def run_weekly_brief(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+                     key: str = "", week: str = "", send: bool = False, dry_run: bool = False):
+    """Build and keep a week's issue (by default the week that has just
+    traded) and, with send=true, mail it to everyone who takes the daily
+    digest. Guarded as the policy brief's job is; a second run the same week
+    rebuilds the issue and mails nobody twice."""
+    import weekly_brief
+
+    expected = ADMIN_KEY
+    if expected and (x_admin_key or key) != expected:
+        raise HTTPException(403, "Set X-Admin-Key.")
+    try:
+        import market_week
+        market_week.record_latest()          # Friday's flows, if nobody has asked since
+    except Exception:
+        pass
+    wk = week.strip() or weekly_brief.last_traded_week()
+    try:
+        iss = weekly_brief.publish(wk)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    out = {"week": wk, "label": iss["label"], "summary": iss["summary"], "missing": iss["missing"],
+           "topics": len(iss["topics"]), "sent": 0, "skipped": 0, "failed": 0}
+    if not send or not weekly_brief.has_content(iss):
+        return out
+    import accounts
+    import mailer
+    for person in accounts.digest_recipients():
+        if accounts.already_sent(person["id"], "weekly", wk):
+            out["skipped"] += 1
+            continue
+        if dry_run:
+            out["sent"] += 1
+            continue
+        unsub = f"{_site()}/unsubscribe?token={person['unsub_token']}"
+        ok, detail = mailer.send(person["email"], weekly_brief.email_subject(iss),
+                                 weekly_brief.email_html(iss, site=_site(), unsubscribe_url=unsub),
+                                 weekly_brief.email_text(iss, site=_site(), unsubscribe_url=unsub),
+                                 unsubscribe_url=unsub)
+        accounts.record_send(person["id"], "weekly", wk, ok, detail)
+        out["sent" if ok else "failed"] += 1
+    return out
+
+
+@app.post("/admin/weekly/topics")
+def admin_weekly_topics(payload: Optional[dict] = Body(None), key: str = "",
+                        x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """Add a topic to a week's brief, on any subject, or remove one.
+    {"action": "add", "week"?, "title", "body", "symbols"?} or
+    {"action": "delete", "week", "id"}. The week defaults to this one.
+    Closed when ADMIN_KEY is unset: this writes what every subscriber reads."""
+    import forum
+    import weekly_brief
+    if not ADMIN_KEY or (x_admin_key or key) != ADMIN_KEY:
+        raise HTTPException(401, "This needs the admin key (X-Admin-Key, or ?key=).")
+    p = payload or {}
+    wk = str(p.get("week") or "").strip() or weekly_brief.week_id(weekly_brief.today_ist())
+    try:
+        if p.get("action") == "delete":
+            weekly_brief.delete_topic(wk, str(p.get("id") or ""))
+        elif p.get("action") == "add":
+            weekly_brief.add_topic(wk, p.get("title"), p.get("body"), p.get("symbols"))
+        else:
+            raise ValueError("action is add or delete.")
+    except forum.PostRefused as e:
+        raise HTTPException(422, {"message": str(e), "sentence": e.sentence, "rule": e.rule})
+    except LookupError as e:
+        raise HTTPException(404, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"week": wk, "topics": weekly_brief.load()["topics"].get(wk, [])}
 
 
 @app.get("/digest/preview")

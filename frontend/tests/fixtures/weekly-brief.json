@@ -1,0 +1,294 @@
+{
+ "published": {
+  "week": "2026-W47",
+  "label": "16–22 Nov 2026",
+  "start": "2026-11-16",
+  "end": "2026-11-22",
+  "built_at": "2026-11-22 14:04",
+  "summary": [
+   "Nifty rose 1.00% over the week, to 25,250.",
+   "FIIs sold a net ₹2,201 crore in the cash market and DIIs bought ₹3,000 crore, across the 4 of 5 sessions on record.",
+   "2 new circulars mattered for listed companies, most of all for Banks.",
+   "On the forum, 12 posts from 5 members; the busiest discussion was “Bank NIMs <next> quarter”."
+  ],
+  "market": {
+   "indices": [
+    {
+     "index": "NIFTY 50",
+     "close": 25250.0,
+     "as_of": "2026-11-20",
+     "week_change_pct": 1.0
+    },
+    {
+     "index": "SENSEX",
+     "close": 81590.0,
+     "as_of": "2026-11-20",
+     "week_change_pct": -0.5
+    },
+    {
+     "index": "INDIA VIX",
+     "close": 13.1,
+     "as_of": "2026-11-20",
+     "week_change_pct": null
+    }
+   ],
+   "sessions": [
+    {
+     "date": "2026-11-16",
+     "weekday": "Mon",
+     "close": 25100.0,
+     "change_pct": 0.4
+    },
+    {
+     "date": "2026-11-17",
+     "weekday": "Tue",
+     "close": 24950.0,
+     "change_pct": -0.6
+    },
+    {
+     "date": "2026-11-18",
+     "weekday": "Wed",
+     "close": 25200.0,
+     "change_pct": 1.0
+    },
+    {
+     "date": "2026-11-19",
+     "weekday": "Thu",
+     "close": 25300.0,
+     "change_pct": 0.4
+    },
+    {
+     "date": "2026-11-20",
+     "weekday": "Fri",
+     "close": 25250.0,
+     "change_pct": -0.2
+    }
+   ]
+  },
+  "flows": {
+   "sessions": [
+    {
+     "date": "2026-11-16",
+     "weekday": "Mon",
+     "fii": -1200.5,
+     "dii": 1500.0,
+     "recorded": true
+    },
+    {
+     "date": "2026-11-17",
+     "weekday": "Tue",
+     "fii": -800.0,
+     "dii": 900.0,
+     "recorded": true
+    },
+    {
+     "date": "2026-11-18",
+     "weekday": "Wed",
+     "fii": 300.0,
+     "dii": -100.0,
+     "recorded": true
+    },
+    {
+     "date": "2026-11-19",
+     "weekday": "Thu",
+     "fii": null,
+     "dii": null,
+     "recorded": false
+    },
+    {
+     "date": "2026-11-20",
+     "weekday": "Fri",
+     "fii": -500.0,
+     "dii": 700.0,
+     "recorded": true
+    }
+   ],
+   "recorded": 4,
+   "of": 5,
+   "fii_total": -2200.5,
+   "dii_total": 3000.0,
+   "source": "NSE provisional cash-market figures, ₹ crore"
+  },
+  "policy": {
+   "read": 3,
+   "matter": 2,
+   "items": [
+    {
+     "source": "RBI press release",
+     "number": null,
+     "title": "Circular 2",
+     "date": "2026-11-18",
+     "impact": "negative",
+     "summary": "A rule.",
+     "sectors": [
+      "Banks",
+      "Financial Services"
+     ],
+     "link": "https://rbi.org.in/x",
+     "stocks": [
+      {
+       "symbol": "HDFCBANK",
+       "direction": "helped"
+      }
+     ]
+    },
+    {
+     "source": "RBI press release",
+     "number": null,
+     "title": "Circular 1",
+     "date": "2026-11-17",
+     "impact": "positive",
+     "summary": "A rule.",
+     "sectors": [
+      "Banks"
+     ],
+     "link": "https://rbi.org.in/x",
+     "stocks": [
+      {
+       "symbol": "HDFCBANK",
+       "direction": "helped"
+      }
+     ]
+    }
+   ],
+   "sectors": [
+    {
+     "sector": "Banks",
+     "positive": 1,
+     "negative": 1,
+     "mixed": 0
+    },
+    {
+     "sector": "Financial Services",
+     "positive": 0,
+     "negative": 1,
+     "mixed": 0
+    }
+   ]
+  },
+  "forum": {
+   "posts": 12,
+   "members": 5,
+   "new_threads": 3,
+   "threads": [
+    {
+     "id": 9,
+     "title": "Bank NIMs <next> quarter",
+     "category": "stocks",
+     "category_label": "Stocks",
+     "symbol": "HDFCBANK",
+     "posts": 7,
+     "replies": 6
+    }
+   ],
+   "stocks": [
+    {
+     "symbol": "HDFCBANK",
+     "company": "HDFC Bank",
+     "posts": 7,
+     "threads": 1
+    }
+   ]
+  },
+  "note": "Facts from the week's prices, the exchange's provisional flow figures, the regulators' circulars and the forum, and notes from Altaha. None of it is a recommendation to buy or sell, and none of it changes a rank on the Ideas lists.",
+  "published": true,
+  "missing": [],
+  "topics": [
+   {
+    "id": "5fa07db05d",
+    "title": "What the budget could change for banks",
+    "body": "Three things to read in the budget speech.\n\n- Credit guarantee schemes\n- Deposit tax rules\n- Recapitalisation\n\nMore at https://example.com/budget-notes.",
+    "symbols": [
+     "HDFCBANK",
+     "SBIN"
+    ],
+    "added_at": "2026-11-22 14:04"
+   }
+  ]
+ },
+ "draft": {
+  "week": "2026-W48",
+  "label": "23–29 Nov 2026",
+  "start": "2026-11-23",
+  "end": "2026-11-29",
+  "built_at": "2026-11-22 14:04",
+  "summary": [],
+  "market": {
+   "indices": [],
+   "sessions": []
+  },
+  "flows": {
+   "sessions": [
+    {
+     "date": "2026-11-23",
+     "weekday": "Mon",
+     "fii": null,
+     "dii": null,
+     "recorded": false
+    },
+    {
+     "date": "2026-11-24",
+     "weekday": "Tue",
+     "fii": null,
+     "dii": null,
+     "recorded": false
+    },
+    {
+     "date": "2026-11-25",
+     "weekday": "Wed",
+     "fii": null,
+     "dii": null,
+     "recorded": false
+    },
+    {
+     "date": "2026-11-26",
+     "weekday": "Thu",
+     "fii": null,
+     "dii": null,
+     "recorded": false
+    },
+    {
+     "date": "2026-11-27",
+     "weekday": "Fri",
+     "fii": null,
+     "dii": null,
+     "recorded": false
+    }
+   ],
+   "recorded": 0,
+   "of": 5,
+   "fii_total": null,
+   "dii_total": null,
+   "source": "NSE provisional cash-market figures, ₹ crore"
+  },
+  "policy": {
+   "read": 0,
+   "matter": 0,
+   "items": [],
+   "sectors": []
+  },
+  "forum": {
+   "posts": 0,
+   "members": 0,
+   "new_threads": 0,
+   "threads": [],
+   "stocks": []
+  },
+  "note": "Facts from the week's prices, the exchange's provisional flow figures, the regulators' circulars and the forum, and notes from Altaha. None of it is a recommendation to buy or sell, and none of it changes a rank on the Ideas lists.",
+  "published": false,
+  "draft": true,
+  "missing": [],
+  "topics": []
+ },
+ "issues": {
+  "issues": [
+   {
+    "week": "2026-W47",
+    "label": "16–22 Nov 2026",
+    "headline": "Nifty rose 1.00% over the week, to 25,250.",
+    "topics": 1
+   }
+  ],
+  "current": "2026-W48"
+ }
+}

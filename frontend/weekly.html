@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" /><script src="clean-url.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Weekly brief | Altaha Screener</title>
+<meta name="description" content="The week on Indian markets in one page: how the indices closed, what FIIs and DIIs did, the new rules that touch listed companies, the forum's busiest discussions, and this week's topics." />
+<meta name="referrer" content="no-referrer" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css?v=20261121-type">
+<link rel="stylesheet" href="type.css">
+<script>
+  /* Theme before first paint, as every page here does. */
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+<style>
+  body{margin:0;background:var(--paper);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .wk{--wk-card:var(--skin-card,#FFFDF8);max-width:860px;margin:0 auto;padding:32px clamp(16px,4vw,32px) 72px;box-sizing:border-box;color:var(--ink)}
+  .wk *{box-sizing:border-box}
+  .wk a{color:var(--gold)}
+  .wk [hidden]{display:none !important}
+  .wk-eyebrow{font:500 11px/1.5 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 10px}
+  .wk-top{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+  .wk h1{font:400 clamp(36px,5vw,56px)/1.05 'Instrument Serif',Georgia,serif;letter-spacing:-.025em;margin:0}
+  .wk-when{font-size:16px;color:var(--ink-2);margin:8px 0 0}
+  .wk-state{display:inline-block;font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;padding:4px 7px;border-radius:5px;border:1px solid currentColor;margin-left:8px;vertical-align:3px}
+  .wk-state.is-draft{color:var(--part)} .wk-state.is-final{color:var(--pass)}
+  .wk-pick select{font:500 15px Inter,sans-serif;padding:10px 12px;min-height:44px;border-radius:11px;border:1px solid var(--rule);background:var(--wk-card);color:var(--ink);max-width:100%}
+  .wk-lead{margin:26px 0 0;padding:20px 22px;border-radius:18px;background:var(--wk-card);border:1px solid var(--rule);box-shadow:var(--skin-shadow)}
+  .wk-lead h2{font:600 12px/1.3 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin:0 0 10px}
+  .wk-lead p{font:400 19px/1.55 'Instrument Serif',Georgia,serif;margin:0 0 8px}
+  .wk-lead p:last-child{margin:0}
+  .wk-sec{margin:34px 0 0}
+  .wk-sec > h2{font:400 clamp(26px,3.2vw,34px)/1.1 'Instrument Serif',Georgia,serif;letter-spacing:-.015em;margin:0 0 4px}
+  .wk-sub{font-size:13px;color:var(--mute);margin:0 0 14px}
+  .wk-card{background:var(--wk-card);border:1px solid var(--rule);border-radius:16px;padding:6px 16px}
+  .wk-t{width:100%;border-collapse:collapse;font-size:14px}
+  .wk-t th,.wk-t td{padding:10px 4px;border-bottom:1px solid var(--rule-2);text-align:right;font-variant-numeric:tabular-nums}
+  .wk-t th:first-child,.wk-t td:first-child{text-align:left}
+  .wk-t thead th{font:600 11px/1.2 Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+  .wk-t tbody tr:last-child td{border-bottom:0}
+  .wk-t tfoot td{font-weight:600;border-bottom:0;border-top:1px solid var(--rule)}
+  .up{color:var(--pass)} .dn{color:var(--fail)} .na{color:var(--mute)}
+  .wk-days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px 0 4px}
+  .wk-day{background:var(--paper-2);border-radius:12px;padding:10px;text-align:center;font-size:13px}
+  .wk-day b{display:block;font:600 11px/1 'IBM Plex Mono',monospace;color:var(--mute);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase}
+  .wk-day span{display:block;font-variant-numeric:tabular-nums}
+  .wk-list{list-style:none;margin:0;padding:0}
+  .wk-list li{padding:12px 0;border-bottom:1px solid var(--rule-2)}
+  .wk-list li:last-child{border-bottom:0}
+  .wk-meta{font-size:12px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 10px}
+  .wk-imp{font-weight:600;text-transform:capitalize}
+  .wk-imp.positive{color:var(--pass)} .wk-imp.negative{color:var(--fail)} .wk-imp.mixed{color:var(--part)}
+  .wk-title{font-weight:600;margin:4px 0 2px;line-height:1.4;overflow-wrap:anywhere}
+  .wk-title a{color:var(--ink)}
+  .wk-text{font-size:14px;line-height:1.55;color:var(--ink-2);margin:2px 0 0}
+  .wk-chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+  .wk-chip{font-size:12px;padding:4px 9px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2);text-decoration:none}
+  .wk-chip.is-stock{font-family:'IBM Plex Mono',monospace;color:var(--gold);border-color:var(--gold)}
+  .wk-topic{background:var(--wk-card);border:1px solid var(--rule);border-left:3px solid var(--gold);border-radius:0 16px 16px 0;padding:18px 20px;margin:0 0 12px}
+  .wk-topic h3{font:400 24px/1.2 'Instrument Serif',Georgia,serif;margin:0 0 10px;overflow-wrap:anywhere}
+  .wk-body{font-size:15px;line-height:1.7;overflow-wrap:anywhere}
+  .wk-body p{margin:0 0 10px} .wk-body ul{margin:0 0 10px;padding-left:20px}
+  .wk-empty{color:var(--mute);font-size:14px;padding:12px 0}
+  .wk-note{margin:36px 0 0;padding:12px 14px;border-left:3px solid var(--gold);background:var(--paper-2);border-radius:0 12px 12px 0;font-size:13px;line-height:1.6;color:var(--ink-2)}
+  .wk-ask{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:14px 0 0;padding:14px 16px;border:1px dashed var(--rule);border-radius:14px}
+  .wk-ask p{margin:0;font-size:14px;color:var(--ink-2)}
+  .wk-btn{display:inline-flex;align-items:center;justify-content:center;font:600 14px/1 Inter,sans-serif;padding:11px 15px;min-height:42px;border-radius:11px;border:1px solid var(--rule);background:var(--wk-card);color:var(--ink) !important;text-decoration:none;cursor:pointer}
+  .wk-btn.is-gold{background:var(--gold);border-color:var(--gold);color:#17140E !important}
+  .wk-btn.is-small{padding:7px 10px;min-height:32px;font-size:12px}
+  .wk-edit{margin:14px 0 0;display:grid;gap:10px;padding:16px;border:1px solid var(--gold);border-radius:16px;background:var(--wk-card)}
+  .wk-edit label{display:grid;gap:6px;font-size:13px;font-weight:600}
+  .wk-edit input,.wk-edit textarea{font:400 16px Inter,sans-serif;padding:10px 12px;border-radius:10px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);width:100%}
+  .wk-edit textarea{min-height:160px;line-height:1.55;resize:vertical}
+  .wk-msg{font-size:14px;margin:0}
+  .wk-msg.is-err{color:var(--fail)}
+  .wk-msg blockquote{margin:6px 0 0;padding:6px 10px;border-left:3px solid var(--fail);background:var(--paper-2)}
+  .wk-loading{color:var(--mute);padding:32px 0}
+  @media (max-width:560px){.wk-days{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.wk-day{padding:8px 2px;font-size:11px}.wk-t{font-size:13px}}
+</style>
+</head>
+<body>
+<main class="wk" id="wk">
+  <div class="wk-top">
+    <div>
+      <p class="wk-eyebrow">Altaha · weekly brief</p>
+      <h1>The week in brief</h1>
+      <p class="wk-when" id="wk-when"></p>
+    </div>
+    <label class="wk-pick"><span class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Choose a week</span>
+      <select id="wk-weeks" aria-label="Choose a week"><option value="">This week so far</option></select></label>
+  </div>
+  <div id="wk-body" aria-live="polite"><p class="wk-loading">Loading the brief. If the site has been idle this takes about thirty seconds.</p></div>
+</main>
+
+<script src="shell.js?v=20261121-type" defer></script>
+<script>
+(function () {
+  'use strict';
+  var API = (typeof API_BASE !== 'undefined' && API_BASE) ? API_BASE : 'https://taha-project.onrender.com';
+  var ADMIN_STORE = 'altaha-admin-key';
+  var body = document.getElementById('wk-body'), pick = document.getElementById('wk-weeks');
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function param(k) { try { return new URLSearchParams(location.search).get(k) || ''; } catch (e) { return ''; } }
+  function num(v, d) { return v == null ? '–' : Number(v).toLocaleString('en-IN', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); }
+  function pct(v) {
+    if (v == null) return '<span class="na">–</span>';
+    return '<span class="' + (v > 0 ? 'up' : v < 0 ? 'dn' : 'na') + '">' + (v > 0 ? '+' : '') + v.toFixed(2) + '%</span>';
+  }
+  function cr(v) {
+    if (v == null) return '<span class="na">not recorded</span>';
+    return '<span class="' + (v > 0 ? 'up' : v < 0 ? 'dn' : 'na') + '">' + (v > 0 ? '+' : '') + num(v) + '</span>';
+  }
+  function adminKey() { try { return localStorage.getItem(ADMIN_STORE) || ''; } catch (e) { return ''; } }
+  function editing() { return !!adminKey() || param('edit') === '1'; }
+
+  /* A topic is the owner's text: escaped, then paragraphs, "- " lines as a
+     list, and http(s) addresses as links. Never read as markup. */
+  function bodyHTML(text) {
+    function links(s) {
+      return s.replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/g, function (u) {
+        return '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>';
+      });
+    }
+    return String(text || '').split(/\n{2,}/).map(function (para) {
+      var lines = para.split('\n');
+      if (lines.every(function (l) { return /^\s*[-•]\s+/.test(l); })) {
+        return '<ul>' + lines.map(function (l) { return '<li>' + links(esc(l.replace(/^\s*[-•]\s+/, ''))) + '</li>'; }).join('') + '</ul>';
+      }
+      return '<p>' + links(esc(para)).replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+  }
+
+  function section(title, sub, inner) {
+    return '<section class="wk-sec"><h2>' + esc(title) + '</h2>' + (sub ? '<p class="wk-sub">' + esc(sub) + '</p>' : '') + inner + '</section>';
+  }
+
+  function marketHTML(m) {
+    if (!m || !m.indices || !m.indices.length) return '';
+    var rows = m.indices.map(function (r) {
+      return '<tr><td>' + esc(r.index) + '</td><td>' + num(r.close, 2) + '</td><td>' + pct(r.week_change_pct) + '</td></tr>';
+    }).join('');
+    var days = (m.sessions || []).length ? '<div class="wk-days" aria-label="Nifty, session by session">' + m.sessions.map(function (s) {
+      return '<div class="wk-day"><b>' + esc(s.weekday) + '</b><span>' + num(s.close) + '</span><span>' + pct(s.change_pct) + '</span></div>';
+    }).join('') + '</div>' : '';
+    return section('The market', 'Each index at the end of the week, against the end of the week before. Then Nifty, session by session.',
+      '<div class="wk-card"><table class="wk-t"><thead><tr><th>Index</th><th>Close</th><th>On the week</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + days);
+  }
+
+  function flowsHTML(f) {
+    if (!f || !f.recorded) return '';
+    var rows = f.sessions.map(function (s) {
+      return '<tr><td>' + esc(s.weekday) + '</td><td>' + cr(s.fii) + '</td><td>' + cr(s.dii) + '</td></tr>';
+    }).join('');
+    return section('Money flow', f.source + (f.recorded < f.of ? '. ' + f.recorded + ' of ' + f.of + ' sessions on record.' : '.'),
+      '<div class="wk-card"><table class="wk-t"><thead><tr><th>Session</th><th>FII net</th><th>DII net</th></tr></thead><tbody>' + rows +
+      '</tbody><tfoot><tr><td>The week</td><td>' + cr(f.fii_total) + '</td><td>' + cr(f.dii_total) + '</td></tr></tfoot></table></div>');
+  }
+
+  function policyHTML(p) {
+    if (!p || !p.items || !p.items.length) return '';
+    var items = p.items.map(function (r) {
+      var title = r.link && /^https?:\/\//.test(r.link) ? '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">' + esc(r.title) + '</a>' : esc(r.title);
+      var stocks = (r.stocks || []).map(function (s) {
+        return '<a class="wk-chip is-stock" href="stock.html?ticker=' + encodeURIComponent(s.symbol) + '">' + esc(s.symbol) + ' ' + esc(s.direction) + '</a>';
+      }).join('');
+      return '<li><div class="wk-meta"><span>' + esc(r.source) + (r.number ? ' ' + esc(r.number) : '') + '</span>' +
+        '<span class="wk-imp ' + esc(r.impact) + '">' + esc(r.impact) + '</span>' +
+        ((r.sectors || []).length ? '<span>' + esc(r.sectors.join(', ')) + '</span>' : '') + '</div>' +
+        '<div class="wk-title">' + title + '</div>' + (r.summary && r.summary !== r.title ? '<p class="wk-text">' + esc(r.summary) + '</p>' : '') +
+        (stocks ? '<div class="wk-chips">' + stocks + '</div>' : '') + '</li>';
+    }).join('');
+    return section('New rules that matter', p.matter + ' of ' + p.read + ' circulars read this week touch listed companies. A judgement, not a measurement.',
+      '<div class="wk-card"><ul class="wk-list">' + items + '</ul></div><p class="wk-sub" style="margin-top:8px"><a href="brief.html">Every circular, day by day ›</a></p>');
+  }
+
+  function forumHTML(f) {
+    if (!f || !f.threads || !f.threads.length) {
+      return section('On the forum', '', '<div class="wk-ask"><p>Nobody posted on the forum this week. Be the first.</p>' +
+        '<a class="wk-btn" href="forum.html">Open the forum</a></div>');
+    }
+    var threads = f.threads.map(function (t) {
+      return '<li><div class="wk-meta"><span>' + esc(t.category_label) + '</span>' + (t.symbol ? '<span>' + esc(t.symbol) + '</span>' : '') +
+        '<span>' + t.posts + ' posts this week</span></div><div class="wk-title"><a href="forum.html#t/' + encodeURIComponent(t.id) + '">' + esc(t.title) + '</a></div></li>';
+    }).join('');
+    var stocks = (f.stocks || []).map(function (s) {
+      return '<a class="wk-chip is-stock" href="forum.html#stock/' + encodeURIComponent(s.symbol) + '">' + esc(s.symbol) + ' · ' + s.posts + '</a>';
+    }).join('');
+    return section('On the forum', f.posts + ' posts from ' + f.members + ' members, ' + f.new_threads + ' new discussions. Members’ opinions, not advice.',
+      '<div class="wk-card"><ul class="wk-list">' + threads + '</ul></div>' +
+      (stocks ? '<p class="wk-sub" style="margin:12px 0 0">Most talked-about stocks</p><div class="wk-chips">' + stocks + '</div>' : ''));
+  }
+
+  function topicsHTML(d) {
+    var list = (d.topics || []).map(function (t) {
+      var syms = (t.symbols || []).map(function (s) {
+        return '<a class="wk-chip is-stock" href="stock.html?ticker=' + encodeURIComponent(s) + '">' + esc(s) + '</a>';
+      }).join('');
+      return '<article class="wk-topic" id="topic-' + esc(t.id) + '"><h3>' + esc(t.title) + '</h3><div class="wk-body">' + bodyHTML(t.body) + '</div>' +
+        (syms ? '<div class="wk-chips">' + syms + '</div>' : '') +
+        (editing() ? '<p style="margin:10px 0 0"><button type="button" class="wk-btn is-small" data-del="' + esc(t.id) + '">Remove this topic</button></p>' : '') +
+        '</article>';
+    }).join('');
+    var ask = '<div class="wk-ask"><p>A subject you would like the brief to cover?</p>' +
+      '<a class="wk-btn" href="forum.html#new/c/altaha">Suggest a topic</a></div>';
+    var editor = editing() ? '<form class="wk-edit" id="wk-edit" novalidate>' +
+      '<label>Topic title<input id="wk-e-title" maxlength="120" placeholder="e.g. What the budget could change for banks"></label>' +
+      '<label>What you want to say<textarea id="wk-e-body" maxlength="8000" placeholder="Plain text. A blank line starts a paragraph; lines starting with - become a list."></textarea></label>' +
+      '<label>Stocks it mentions (optional)<input id="wk-e-syms" placeholder="HDFCBANK, ICICIBANK"></label>' +
+      '<div><button class="wk-btn is-gold" type="submit">Add to ' + esc(d.label) + '</button></div>' +
+      '<p class="wk-msg" id="wk-e-msg" role="status"></p></form>' : '';
+    if (!list && !editing()) return section('This week’s topics', '', ask);
+    return section('This week’s topics', 'Notes from Altaha on whatever mattered this week.', list + editor + ask);
+  }
+
+  function render(d) {
+    var state = d.published ? '<span class="wk-state is-final">Published</span>' : d.draft ? '<span class="wk-state is-draft">So far</span>' : '';
+    document.getElementById('wk-when').innerHTML = esc(d.label) + state;
+    document.title = 'Weekly brief, ' + d.label + ' | Altaha Screener';
+    var lead = (d.summary || []).length
+      ? '<div class="wk-lead"><h2>In brief</h2>' + d.summary.map(function (s) { return '<p>' + esc(s) + '</p>'; }).join('') + '</div>'
+      : '<div class="wk-lead"><h2>In brief</h2><p>Nothing recorded for this week yet.</p></div>';
+    // Topics lead when there are any; with none, the invitation to suggest one waits at the end.
+    var topics = topicsHTML(d), first = (d.topics || []).length || editing();
+    body.innerHTML = lead + (first ? topics : '') + marketHTML(d.market) + flowsHTML(d.flows) + policyHTML(d.policy) + forumHTML(d.forum) +
+      (first ? '' : topics) +
+      '<p class="wk-note">' + esc(d.note) + (d.draft ? ' This week is still going: the figures fill in as the week trades, and the issue is fixed on Saturday morning.' : '') + '</p>';
+    wireEditor(d);
+  }
+
+  function wireEditor(d) {
+    var form = document.getElementById('wk-edit');
+    function key() {
+      var k = adminKey();
+      if (!k) {
+        k = window.prompt('Admin key (ADMIN_KEY on Render)') || '';
+        try { if (k) localStorage.setItem(ADMIN_STORE, k); } catch (e) {}
+      }
+      return k;
+    }
+    function send(payload) {
+      return fetch(API + '/admin/weekly/topics', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key() },
+        body: JSON.stringify(Object.assign({ week: d.week }, payload)) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) { var e = new Error((j.detail && j.detail.message) || j.detail || 'Not saved.'); e.sentence = j.detail && j.detail.sentence; throw e; }
+          return j;
+        }); });
+    }
+    if (form) form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('wk-e-msg');
+      msg.className = 'wk-msg'; msg.textContent = 'Saving…';
+      send({ action: 'add', title: document.getElementById('wk-e-title').value, body: document.getElementById('wk-e-body').value,
+             symbols: document.getElementById('wk-e-syms').value })
+        .then(function () { load(d.published || !d.draft ? d.week : ''); }, function (err) {
+          msg.className = 'wk-msg is-err';
+          msg.innerHTML = esc(err.message) + (err.sentence ? '<blockquote>' + esc(err.sentence) + '</blockquote>' : '');
+        });
+    });
+    body.querySelectorAll('[data-del]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!window.confirm('Remove this topic from the brief?')) return;
+        send({ action: 'delete', id: b.dataset.del }).then(function () { load(d.published || !d.draft ? d.week : ''); },
+          function (err) { alert(err.message); });
+      });
+    });
+  }
+
+  var opened = false;
+  function load(week) {
+    fetch(API + '/weekly' + (week ? '?week=' + encodeURIComponent(week) : ''))
+      .then(function (r) { return r.ok ? r.json() : r.json().then(function (j) { throw new Error(j.detail || 'down'); }, function () { throw new Error('down'); }); })
+      .then(function (d) {
+        render(d);
+        if (!opened && window.AltahaTrack) {
+          opened = true;
+          window.AltahaTrack('weekly_brief_opened', { week: d.week, from: (param('from') || 'direct').replace(/[^a-z]/g, '').slice(0, 20) });
+        }
+      }, function (err) {
+        body.innerHTML = '<p class="wk-empty">' + (err.message && err.message !== 'down' ? esc(err.message) : 'The brief could not be loaded. Try again in a moment.') + '</p>';
+      });
+  }
+
+  function start() {
+    var want = /^\d{4}-W\d{2}$/.test(param('w')) ? param('w') : '';
+    fetch(API + '/weekly/issues').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+      if (!d) return;
+      (d.issues || []).forEach(function (i) {
+        if (i.week === d.current) return;            // this week is the first option
+        var o = document.createElement('option');
+        o.value = i.week; o.textContent = i.label;
+        pick.appendChild(o);
+      });
+      if (want && want !== d.current) {
+        if (![].some.call(pick.options, function (o) { return o.value === want; })) {
+          var o = document.createElement('option'); o.value = want; o.textContent = want; pick.appendChild(o);
+        }
+        pick.value = want;
+      }
+    }).catch(function () {});
+    pick.addEventListener('change', function () {
+      try { history.replaceState(null, '', location.pathname + (pick.value ? '?w=' + pick.value : '')); } catch (e) {}
+      load(pick.value);
+    });
+    load(want);
+  }
+  window.AltahaWeekly = { bodyHTML: bodyHTML };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+</body>
+</html>

@@ -6,6 +6,10 @@ on:
       - 'backend/portfolio*.py'
       - 'backend/action_plan.py'
       - 'backend/advisor*.py'
+      - 'backend/forum*.py'
+      - 'backend/weekly_brief.py'
+      - 'backend/tests/make_weekly_fixture.py'
+      - 'backend/tests/test_weekly_brief.py'
       - 'backend/shareholding_filings.py'
       - 'backend/wow_orders.py'
       - 'backend/concalls.py'
@@ -559,3 +563,27 @@ jobs:
         with:
           name: company-pages-browser-verification
           path: test-results/company-pages
+      - name: Verify the forum reads signed out, asks for a name, shows a refused sentence and keeps members' words as text
+        if: always()
+        # Reading needs no account; writing needs a forum name and never shows
+        # the email. A post a house rule refuses comes back with the sentence
+        # that tripped it. A stock page's "Start a discussion" opens the
+        # composer on that company. Posts are text, links are nofollow ugc.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/forum-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forum-browser-verification
+          path: test-results/forum
+      - name: Verify the weekly brief draws every section, never counts an unrecorded session as zero, and keeps its editor to the owner
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/weekly-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weekly-brief-browser-verification
+          path: test-results/weekly

@@ -94,7 +94,14 @@ function fresh() { return { user: null, joins: [], puts: [], deletes: [], screen
     await page.goto(base + '/pro.html?from=header', { waitUntil: 'load' });
     await page.evaluate(() => { window.__t = []; window.AltahaTrack = (n, p) => window.__t.push([n, p]); });
     assert.match(await page.locator('#pro-card').innerText(), /Nothing is charged today/);
-    assert.match(await page.locator('#pro-card').innerText(), /₹1,999/);
+    // The two prices, and the yearly one chosen to start with.
+    assert.match(await page.locator('.pro-tiers').innerText(), /₹5,000[\s\S]*a quarter[\s\S]*₹15,000[\s\S]*a year/);
+    assert.equal(await page.locator('input[name="plan"]:checked').getAttribute('value'), 'yearly');
+    assert.match(await page.locator('#pro-chosen').innerText(), /Yearly, ₹15,000 a year/);
+    assert.match(await page.locator('.pro-badge').innerText(), /save ₹5,000/i);
+    // Free is on the page too, and says what it keeps.
+    assert.match(await page.locator('.pro-tier.is-free').innerText(), /₹0[\s\S]*forum/i);
+    assert.equal(await page.locator('.pro-table tbody tr:not(.is-group)').count(), 12);
 
     // A bad address is caught before anything is sent.
     await page.locator('#pro-email').fill('not-an-email');
@@ -103,13 +110,16 @@ function fresh() { return { user: null, joins: [], puts: [], deletes: [], screen
     assert.equal(state.joins.length, 0);
 
     // The plan picked and the page it came from are what is sent.
-    await page.locator('label.pro-plan', { hasText: '₹249' }).click();
+    await page.locator('label.pro-plan', { hasText: 'Pro · Quarterly' }).click();
+    assert.match(await page.locator('#pro-chosen').innerText(), /Quarterly, ₹5,000 a quarter/);
+    assert.deepEqual((await page.evaluate(() => window.__t)).filter(t => t[0] === 'pro_plan_selected'),
+      [['pro_plan_selected', { plan: 'quarterly' }]]);
     await page.locator('#pro-email').fill('reader@example.com');
     await page.locator('#pro-go').click();
     await page.locator('.pro-done').waitFor();
-    assert.deepEqual(state.joins[0].body, { email: 'reader@example.com', source: 'header', plan: 'monthly' });
+    assert.deepEqual(state.joins[0].body, { email: 'reader@example.com', source: 'header', plan: 'quarterly' });
     assert.match(await page.locator('.pro-done').innerText(), /reader@example\.com/);
-    assert.match(await page.locator('.pro-done').innerText(), /monthly/);
+    assert.match(await page.locator('.pro-done').innerText(), /quarterly founding price \(₹5,000 a quarter\)/);
     assert.deepEqual((await page.evaluate(() => window.__t)).filter(t => t[0] === 'pro_waitlist_joined'),
       [['pro_waitlist_joined', { from: 'header', signed_in: false }]]);
     await page.screenshot({ path: path.join(output, 'waitlist-joined.png') });

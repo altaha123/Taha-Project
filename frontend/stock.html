@@ -82,7 +82,7 @@
 
   <div id="body" hidden>
 
-    <!-- ══ One bar, eight sections ═════════════════════════════════════════
+    <!-- ══ One bar, nine sections ══════════════════════════════════════════
          Directly under the name, so the page reads as a set of sections from
          its first screen and not as a long column with a menu halfway down.
          Scrolled past the name, the bar carries the company and its price. -->
@@ -105,6 +105,8 @@
                 id="pane-btn-deliv" aria-selected="false" aria-controls="pane-deliv">Delivery</button>
         <button type="button" class="stk-pane-btn" role="tab" data-p="news"
                 id="pane-btn-news" aria-selected="false" aria-controls="pane-news">News &amp; filings<span class="stk-pane-n" id="news-count" hidden></span></button>
+        <button type="button" class="stk-pane-btn" role="tab" data-p="talk"
+                id="pane-btn-talk" aria-selected="false" aria-controls="pane-talk">Discussion</button>
       </nav>
       <div class="stk-mini" id="stk-mini" aria-hidden="true">
         <span class="lg lg-sm" id="mini-logo"></span>
@@ -336,6 +338,22 @@
       <section class="stk-sec" id="s-deals">
         <header class="sec-h"><h2>Big trades</h2><span class="sec-x">Bulk and block deals, 90 days</span></header>
         <div id="deals-body"></div>
+      </section>
+    </div>
+
+    <!-- ══ Discussion ══════════════════════════════════════════════════════
+         This company's threads on the forum (forum.html#stock/SYM), read
+         when the section is first opened. Starting one opens the forum's
+         composer with the company filled in. -->
+    <div class="stk-pane" id="pane-talk" role="tabpanel" aria-labelledby="pane-btn-talk" hidden>
+      <section class="stk-sec">
+        <header class="sec-h"><h2>Discussion</h2><span class="sec-x" id="talk-x">Forum</span></header>
+        <div id="talk-body"></div>
+        <div class="talk-acts">
+          <a class="talk-btn is-gold" id="talk-new" href="forum.html#new">Start a discussion</a>
+          <a class="talk-btn" id="talk-all" href="forum.html">All discussions ›</a>
+        </div>
+        <p class="talk-fine">Posts are members’ own opinions, not advice from Altaha. No tips, targets or stop-loss levels.</p>
       </section>
     </div>
 
