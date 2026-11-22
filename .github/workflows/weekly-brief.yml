@@ -1,0 +1,80 @@
+name: Weekly brief
+
+# Builds the week that has just traded (backend/weekly_brief.py) and mails it
+# to everyone who takes the daily digest. Saturday 03:40 UTC is 09:10 IST:
+# Friday's provisional flows and the evening's circulars are in by then, and
+# it lands with the weekend's first coffee. Needs the repository secret
+# ALTAHA_ADMIN_KEY (the same value as ADMIN_KEY on Render).
+#
+# A second run in the same week rebuilds the issue and mails nobody twice
+# (send_log, kind "weekly"). Topics the owner adds afterwards still reach the
+# page; only the email is fixed when it is sent, so add the week's topics
+# before Saturday morning, or run this by hand once they are in.
+
+on:
+  schedule:
+    - cron: "40 3 * * 6"
+  workflow_dispatch:
+    inputs:
+      week:
+        description: "ISO week to build, e.g. 2026-W47 (blank: the week that just traded)"
+        type: string
+        default: ""
+      send:
+        description: "Also email it"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Ask the API to build and send the week's brief
+        env:
+          ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+          API: https://taha-project.onrender.com
+          WEEK: ${{ inputs.week }}
+          MANUAL_SEND: ${{ inputs.send && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set, so nothing was built."
+            exit 1
+          fi
+          SEND="${MANUAL_SEND}"
+          # The scheduled Saturday run is the one that mails.
+          if [ "${{ github.event_name }}" = "schedule" ]; then SEND=true; fi
+
+          # The free instance sleeps; wake it before the real request.
+          curl -sS --max-time 90 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+
+          code=$(curl -sS --max-time 600 -o response.json -w "%{http_code}" \
+                 -X POST "${API}/jobs/weekly-brief?send=${SEND}&week=${WEEK}" \
+                 -H "X-Admin-Key: ${ADMIN_KEY}")
+          echo "HTTP ${code}"
+          cat response.json
+          echo
+          if [ "${code}" != "200" ]; then
+            echo "::error::The weekly brief job answered ${code}."
+            exit 1
+          fi
+          # A week with no prices at all is a broken reader, not a quiet week.
+          python3 - <<'EOF'
+          import json, sys
+          out = json.load(open("response.json"))
+          missing = out.get("missing") or []
+          print("week:", out.get("week"), "| sent:", out.get("sent"), "| skipped:", out.get("skipped"),
+                "| failed:", out.get("failed"))
+          for m in missing:
+              print(f"::warning::{m} could not be read for this issue.")
+          if "prices" in missing:
+              print("::error::No index prices could be read, so the issue has no market section.")
+              sys.exit(1)
+          if out.get("failed"):
+              print(f"::warning::{out['failed']} emails were not delivered.")
+          EOF

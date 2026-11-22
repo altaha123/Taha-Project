@@ -171,7 +171,8 @@ CREATE INDEX IF NOT EXISTS idx_risk_user ON risk_profiles(user_id, id);
 -- The Pro waitlist: who said they would pay, and from where. Keyed on the
 -- address so joining twice is one row, and so a person who joins signed out
 -- and later signs in is still one person. `plan` is the price they were shown
--- when they joined ("annual" / "monthly"), which is the whole experiment.
+-- when they joined ("yearly" ₹15,000 / "quarterly" ₹5,000; earlier
+-- "annual" ₹1,999 / "monthly" ₹249), which is the whole experiment.
 CREATE TABLE IF NOT EXISTS pro_waitlist (
   email      TEXT PRIMARY KEY,
   user_id    INTEGER,
@@ -881,7 +882,15 @@ def delete_screen(user_id: int, screen_id: int) -> bool:
 # The Pro waitlist
 # ---------------------------------------------------------------------------
 
-WAITLIST_PLANS = ("annual", "monthly")
+# The plan a person picked, by the price they were shown when they picked it.
+# Until Nov 2026 the page offered "annual" (₹1,999 a year) and "monthly"
+# (₹249 a month). It now offers "yearly" (₹15,000 a year) and "quarterly"
+# (₹5,000 a quarter). The new prices get new ids rather than reusing the old
+# ones, so the summary never adds a yes at ₹1,999 to a yes at ₹15,000: the
+# whole point of the list is to learn which price people say yes to. The old
+# ids are still accepted, for a page some browser has had open since.
+WAITLIST_PLANS = ("yearly", "quarterly", "annual", "monthly")
+PRO_PRICES = {"yearly": 15000, "quarterly": 5000, "annual": 1999, "monthly": 249}
 
 
 def join_waitlist(email, source: str = "", plan: str = "", user_id=None) -> dict:
@@ -921,7 +930,8 @@ def waitlist_summary() -> dict:
         r["source"] = r["source"] or "unknown"
         r["plan"] = r["plan"] or "unknown"
     by = lambda k: {v: sum(1 for r in rows if r[k] == v) for v in sorted({r[k] for r in rows})}
-    return {"count": len(rows), "by_source": by("source"), "by_plan": by("plan"), "people": rows}
+    return {"count": len(rows), "by_source": by("source"), "by_plan": by("plan"),
+            "prices": PRO_PRICES, "people": rows}
 
 
 # ---------------------------------------------------------------------------

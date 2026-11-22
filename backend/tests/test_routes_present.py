@@ -17,10 +17,10 @@ route that arrives fails until somebody adds its line on purpose.
 What is in the list, and what is not:
 
   * The routers main.py mounts inside try/except (advisor_routes,
-    wealth_routes, query_ai_routes) ARE in it. They are guarded so that a
-    feature which fails to import costs that feature and not the site, and
-    that guard is exactly what makes losing one silent: the app starts, prints
-    one line and answers 404. All three import in a test run with no keys set
+    wealth_routes, query_ai_routes, forum_routes) ARE in it. They are guarded
+    so that a feature which fails to import costs that feature and not the
+    site, and that guard is exactly what makes losing one silent: the app
+    starts, prints one line and answers 404. All four import in a test run with no keys set
     (test_cors.py already counts on the advisor and wealth ones), so here a
     router that did not mount is a failure, and the message says which one
     would not import and why.
@@ -48,6 +48,8 @@ GET     /admin/backup
 POST    /admin/backup
 GET     /admin/bhavcopy
 POST    /admin/bhavcopy/archive
+GET     /admin/forum
+POST    /admin/forum/moderate
 POST    /admin/fundamentals/crawl
 GET     /admin/funds/directory
 POST    /admin/funds/ingest
@@ -64,6 +66,7 @@ POST    /admin/lenses/run/stop
 GET     /admin/pro-waitlist
 GET     /admin/query/ai
 POST    /admin/query/ai
+POST    /admin/weekly/topics
 GET     /adviser
 GET     /advisors
 GET     /advisors/chats
@@ -114,6 +117,16 @@ GET     /digest/preview
 GET     /explain
 GET     /factors
 GET     /factors/rank
+GET     /forum
+GET     /forum/me
+POST    /forum/me/handle
+POST    /forum/posts/{post_id}/helpful
+POST    /forum/posts/{post_id}/remove
+POST    /forum/posts/{post_id}/report
+GET     /forum/stock/{symbol}
+POST    /forum/threads
+GET     /forum/threads/{thread_id}
+POST    /forum/threads/{thread_id}/posts
 GET     /fund
 GET     /fundamentals
 GET     /fundamentals/coverage
@@ -149,6 +162,7 @@ GET     /investors/coverage
 POST    /jobs/concalls
 POST    /jobs/daily-digest
 POST    /jobs/policy-brief
+POST    /jobs/weekly-brief
 POST    /jobs/wow-backfill
 GET     /leaderboard
 GET     /market
@@ -284,12 +298,14 @@ POST    /wealth/recs/{rec_id}/apply
 DELETE  /wealth/settlements/{settlement_id}
 POST    /wealth/settlements/{settlement_id}
 GET     /wealth/shared
+GET     /weekly
+GET     /weekly/issues
 GET     /wow-order
 GET     /wow-orders
 """
 
 # The routers main.py carries on without if they fail to import.
-GUARDED_ROUTERS = ("advisor_routes", "wealth_routes", "query_ai_routes")
+GUARDED_ROUTERS = ("advisor_routes", "wealth_routes", "query_ai_routes", "forum_routes")
 
 
 def served_routes(app) -> set:

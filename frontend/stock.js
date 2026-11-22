@@ -3347,6 +3347,46 @@
       .catch(function () { paintDeals(null); });
   }
 
+  /* ── Discussion ─────────────────────────────────────────────────────────
+     The forum's threads about this company (backend/forum.py), read when
+     the section is first opened. A thread opens on the forum; everything a
+     member wrote is printed as text. */
+  var talkLoaded = false;
+  function forumHref(hash) { return 'forum.html#' + hash; }
+  function paintTalk(d) {
+    var body = $('talk-body');
+    if (!body) return;
+    var sym = encodeURIComponent(BASE);
+    $('talk-new').href = forumHref('new/stock/' + sym);
+    $('talk-all').href = forumHref('stock/' + sym);
+    if (!d) {
+      body.innerHTML = '<div class="own-empty">The forum could not be reached just now.</div>';
+      return;
+    }
+    $('talk-x').textContent = d.count ? d.count + (d.count === 1 ? ' discussion' : ' discussions') +
+      (d.posts_this_week ? ' · ' + d.posts_this_week + ' posts this week' : '') : 'Forum';
+    $('talk-all').hidden = !d.count;
+    if (!d.threads || !d.threads.length) {
+      body.innerHTML = '<div class="own-empty">Nobody has started a discussion about ' + esc(BASE) +
+        ' yet. Ask what you want to know, or say what you see.</div>';
+      return;
+    }
+    body.innerHTML = '<ul class="talk-l">' + d.threads.map(function (t) {
+      return '<li><a href="' + forumHref('t/' + t.id) + '"><b>' + esc(t.title) + '</b>' +
+        (t.excerpt ? '<span class="talk-ex">' + esc(t.excerpt) + '</span>' : '') +
+        '<span class="talk-m">by ' + esc(t.author || 'member') + ' · ' + t.replies +
+        (t.replies === 1 ? ' reply' : ' replies') + '</span></a></li>';
+    }).join('') + '</ul>';
+  }
+  function loadTalk() {
+    if (talkLoaded) return;
+    talkLoaded = true;
+    $('talk-body').innerHTML = '<div class="own-empty is-loading" aria-busy="true">Reading the forum…</div>';
+    getJSON('/forum/stock/' + encodeURIComponent(BASE))
+      .then(paintTalk)
+      .catch(function () { talkLoaded = false; paintTalk(null); });
+  }
+
   function wireNews() {
     var ind = $('news-industry'), cats = $('filings-cats');
     if (ind) ind.addEventListener('click', function (e) {
@@ -3520,7 +3560,7 @@
      slides to its tab, and the section's bars grow to their values. None of
      it runs for a reader who has asked for reduced motion. */
 
-  var PANES = ['info', 'chart', 'scores', 'owners', 'funda', 'peers', 'deliv', 'news'];
+  var PANES = ['info', 'chart', 'scores', 'owners', 'funda', 'peers', 'deliv', 'news', 'talk'];
   var chartDrawn = false;
   var scoreShown = false;
   var current = 'info';
@@ -3607,6 +3647,7 @@
       loadDelivery();
     }
     if (name === 'news') { loadNews(true); loadDeals(); }
+    if (name === 'talk') loadTalk();
     if (changed) growBars($('pane-' + name));
 
     // The section is part of the address, so a link to a company's filings

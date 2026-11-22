@@ -181,7 +181,9 @@ html[data-theme="dark"] .lg-med{ background:var(--paper-2); color:var(--mute); b
 .stk-panes-ind.on{ opacity:1 }
 .stk-pane-btn{
   position:relative; z-index:1; flex:0 0 auto; border:0; background:none; cursor:pointer;
-  padding:9px 18px; border-radius:999px; white-space:nowrap;
+  /* 16px, not 18: nine tabs and the company's name in the stuck bar have to
+     share one row at 1280px without the tabs scrolling under the pointer. */
+  padding:9px 16px; border-radius:999px; white-space:nowrap;
   font-family:inherit; font-size:14px; font-weight:500; color:var(--ink-2);
   transition:color 240ms var(--ease);
 }
@@ -2142,3 +2144,19 @@ html[data-theme="dark"] .pr-score.b-strong, html[data-theme="dark"] .pr-score.b-
   .stk-scorechip, .stk-scorechip-go, .stk-scorechip-ring .a, .card, .card-go, .kp, .fc-c i, .fc-c::before, .fc-n, .lc-c i, .mf-r{ transition:none !important }
 }
 }
+
+/* ── Discussion ───────────────────────────────────────────────────────────
+   The forum's threads about this company (stock.js, loadTalk). */
+.talk-l{list-style:none;margin:0;padding:0}
+.talk-l li a{display:block;padding:12px 0;border-bottom:1px solid var(--rule-2);color:var(--ink);text-decoration:none}
+.talk-l li:last-child a{border-bottom:0}
+.talk-l li a:hover b{color:var(--gold)}
+.talk-l b{display:block;font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.talk-ex{display:block;font-size:14px;line-height:1.5;color:var(--ink-2);margin:4px 0 0;overflow-wrap:anywhere}
+.talk-m{display:block;font-size:12px;color:var(--mute);margin:5px 0 0}
+.talk-acts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+.talk-btn{display:inline-flex;align-items:center;font:600 14px/1 var(--sans,Inter,sans-serif);padding:11px 15px;min-height:42px;
+  border-radius:11px;border:1px solid var(--rule);color:var(--ink);text-decoration:none;background:none}
+.talk-btn.is-gold{background:var(--gold);border-color:var(--gold);color:#17140E}
+.talk-btn[hidden]{display:none}
+.talk-fine{font-size:12px;color:var(--mute);margin:10px 0 0;line-height:1.5}

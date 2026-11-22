@@ -118,6 +118,17 @@ def test_the_waitlist_refuses_a_bad_address_and_cleans_what_it_stores():
     assert row["source"] == "scriptalert1script" and row["plan"] == "unknown"
 
 
+def test_the_new_prices_are_counted_apart_from_the_old_ones():
+    """A yes at ₹15,000 a year is not the same answer as a yes at ₹1,999."""
+    A.join_waitlist("old@example.com", plan="annual")
+    A.join_waitlist("q@example.com", plan="quarterly")
+    A.join_waitlist("y1@example.com", plan="yearly")
+    A.join_waitlist("y2@example.com", plan="yearly")
+    s = A.waitlist_summary()
+    assert s["by_plan"] == {"annual": 1, "quarterly": 1, "yearly": 2}
+    assert s["prices"]["quarterly"] == 5000 and s["prices"]["yearly"] == 15000
+
+
 def test_signed_in_joins_use_the_account_address(main_mod):
     tok, u = login("member@example.com")
     out = main_mod.join_pro_waitlist(req(), {"source": "pricing"}, authorization="Bearer " + tok)

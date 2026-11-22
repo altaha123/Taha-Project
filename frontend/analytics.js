@@ -132,6 +132,18 @@
     // Would anyone pay? Who looks at the price, and who leaves an address.
     pro_cta_clicked:       ['from'],
     pro_waitlist_joined:   ['from', 'signed_in'],
+    // Which plan the price page sends people toward. The plan id only.
+    pro_plan_selected:     ['plan'],
+
+    // Does anybody talk? Threads started and replies, by where they began
+    // (the forum, a stock page) and which category. Never the words.
+    forum_thread_started:  ['category', 'from'],
+    forum_reply_posted:    ['category'],
+    // How often a house rule turns a post away, and which one.
+    forum_post_refused:    ['rule'],
+
+    // Is the weekly brief read, and which issue.
+    weekly_brief_opened:   ['week', 'from'],
 
     // Every non-200 the frontend sees, so the API's real error rate is known
     // from the browser's side and not only from the server's logs.

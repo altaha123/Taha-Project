@@ -206,10 +206,14 @@ did, which is exactly the failure that file exists to catch.
 
 ## The Pro waitlist
 
-`pro.html` shows the price and collects an address — a fake door, on purpose:
+`pro.html` shows the price (₹5,000 a quarter or ₹15,000 a year since Nov
+2026; see [`FORUM.md`](FORUM.md)) and collects an address — a fake door, on purpose:
 the cheapest honest measure of whether anybody would pay before anything is
 built to take the money. Nothing is charged, and the page says so.
 
+- `plan` is `quarterly` or `yearly`. The ids the page used before, `annual`
+  (₹1,999) and `monthly` (₹249), are still accepted and still counted apart,
+  so a yes at the old price is never read as a yes at the new one.
 - `POST /pro/waitlist` `{email, source, plan}`. Signed in, the account's
   address is used. Joining twice is one row; the first source and plan are
   kept. Five joins an hour per visitor.

@@ -194,7 +194,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   await page.locator('#sh-mega-research').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#sh-mega-discover').isVisible(), false, 'two menus are open at once');
   assert.deepEqual(await menuTabs('research'),
-                   ['query', 'lenses', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls']);
+                   ['query', 'lenses', 'forum.html', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls']);
   assert.match(await page.locator('#sh-mega-research .sh-mega-lead').innerText(), /Open Ideas/);
   await page.screenshot({ path: path.join(output, '1280-menu-ideas.png') });
   await page.locator('.sh-doorwrap[data-sec="portfolio"]').hover();
@@ -331,7 +331,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   await page.locator('#sh-sheet-research').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#sh-sheet-discover').isVisible(), false, 'two doors are showing at once');
   assert.deepEqual(await sheetTabs('research'),
-                   ['query', 'lenses', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls']);
+                   ['query', 'lenses', 'forum.html', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls']);
   await sheet.locator('.sh-sheet-tab[data-sec="research"]').press('ArrowRight');
   await page.locator('#sh-sheet-portfolio').waitFor({ state: 'visible' });
   assert.deepEqual(await sheetTabs('portfolio'), ['portfolio', 'watchlists', 'allocate', 'planner', 'advisors.html', 'wealth.html']);

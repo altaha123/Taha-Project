@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" /><script src="clean-url.js"></script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Forum | Altaha Screener</title>
+<meta name="description" content="Discuss Indian stocks, the market, mutual funds and tax with other investors. One discussion per company on every stock page. Free to read; sign in to post." />
+<meta name="referrer" content="no-referrer" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="altaha-polish.css">
+<link rel="stylesheet" href="altaha-skin.css">
+<link rel="stylesheet" href="shell.css?v=20261121-type">
+<link rel="stylesheet" href="type.css">
+<link rel="stylesheet" href="forum.css?v=20261122-forum">
+<script>
+  /* Theme before first paint, as every page here does. */
+  (function () {
+    try {
+      var s = localStorage.getItem('altaha-theme');
+      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
+    } catch (e) {}
+  })();
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
+<script src="analytics.js" defer></script>
+<script src="auth.js" defer></script>
+</head>
+<body>
+<main class="fm" id="fm">
+  <header class="fm-top">
+    <div>
+      <p class="fm-eyebrow">Altaha Forum</p>
+      <h1 class="fm-h1" id="fm-h1">Talk it over with <em>other investors</em></h1>
+      <p class="fm-lede" id="fm-lede">The market, mutual funds, tax, and one discussion per company. Free to read; sign in to post.</p>
+    </div>
+    <a class="fm-btn is-gold" id="fm-new" href="#new">Start a discussion</a>
+  </header>
+  <div class="fm-layout">
+    <div class="fm-main" id="fm-view" aria-live="polite"><p class="fm-loading">Loading the forum. If the site has been idle this takes about thirty seconds.</p></div>
+    <aside class="fm-side" id="fm-side" aria-label="About the forum"></aside>
+  </div>
+</main>
+
+<script src="shell.js?v=20261121-type" defer></script>
+<script src="forum.js?v=20261122-forum" defer></script>
+</body>
+</html>

@@ -46,6 +46,11 @@ here first, and `frontend/analytics.test.js` fails CI if the two drift.
 | `planner_checkin` | streak | Whether anyone comes back: the streak is the planner's retention number |
 | `pro_cta_clicked` | from | Who looks at the Pro price, and from which page |
 | `pro_waitlist_joined` | from, signed_in | Who would pay: the one number the Pro waitlist exists to measure |
+| `pro_plan_selected` | plan | Which plan the price page moves people toward: `quarterly` or `yearly` |
+| `forum_thread_started` | category, from | Does anybody start a discussion, in which category, and from the forum or a stock page |
+| `forum_reply_posted` | category | Does anybody answer |
+| `forum_post_refused` | rule | How often a house rule turns a post away (`tip`, `promise`, `contact`, `links`) — never the words |
+| `weekly_brief_opened` | week, from | Whether the weekly brief is read, which issue, and from the email or the site |
 | `api_error` | endpoint, status | The API's real error rate, seen from the browser |
 
 Automatic on top of that: page views, page leaves, and autocapture (clicks on

@@ -29,9 +29,9 @@ and its own address, in exactly one door.
 | Door | The question it answers | What lives behind it |
 |---|---|---|
 | **Market** (`#discover`) | *What is happening today?* | A live overview — Nifty and the other indices, a three-month chart, FII/DII flows, every sector, the movers, headlines — then Alerts, Big trades, Order wins, Delivery trends, Results calendar, Filings & news, Options and the Market board |
-| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Track record, the Screener, Investor styles (with the companies several styles agree on), Who owns what and Fund houses, Charts, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
+| **Ideas** (`#research`) | *What should I look at?* | Stock picks for a week, a month, momentum and the long term — see [`research/IDEAS-STUDY.md`](research/IDEAS-STUDY.md) — then the Track record, the Screener, Investor styles (with the companies several styles agree on), the Forum ([`FORUM.md`](FORUM.md)), Who owns what and Fund houses, Charts, the Strategy lab ([`STRATEGY-LAB.md`](STRATEGY-LAB.md)) and Concalls |
 | **Portfolio** (`#portfolio`) | *How am I doing, and what next?* | Your saved portfolio, the Watchlists, the Portfolio review — see [`IC-REVIEW.md`](IC-REVIEW.md) — the Allocation plan ([`ALLOCATE-FLOW.md`](ALLOCATE-FLOW.md)), the Money planner (the month work becomes optional, and what moves it — see below), Advisors, and the Wealth desk for portfolio managers ([`WEALTH-DESK.md`](WEALTH-DESK.md)) |
-| **Me** | Account, settings and learning | Sign in, Altaha Pro, appearance, the watchlist, How the score works, the Glossary, Post drafts |
+| **Me** | Account, settings and learning | Sign in, Altaha Pro (plans and pricing: ₹5,000 a quarter or ₹15,000 a year), appearance, the watchlist, How the score works, the Glossary, Post drafts |
 
 Each door opens on a page of its own (`frontend/doors.js`) that previews every
 tool behind it with one live number or one line, and opens the tool on a tap.
@@ -444,7 +444,27 @@ a grade, and no typed figure appears in any request.
 
 ---
 
-## The stock page — one company, eight sections
+## The forum, the weekly brief and Pro pricing
+
+- **The forum** (`forum.html`, under Ideas › *Talk it over*): discussions in
+  seven categories, one of them a company at a time. Every stock page has a
+  **Discussion** section listing that company's threads. Free to read; posting
+  needs an account and a forum name. Tips (a price to trade at, a target, a
+  stop-loss), promised returns and contact details are refused with the
+  sentence that tripped the rule; three reports hide a post until the owner
+  looks.
+- **The weekly brief** (`weekly.html`): the week's market, FII/DII flows, the
+  circulars that matter and the forum's busiest discussions, under the owner's
+  own topics on any subject. Built every Saturday at 09:10 IST and mailed to
+  daily-digest subscribers.
+- **Pro pricing** (`pro.html`, also `/pricing`): ₹5,000 a quarter or ₹15,000 a
+  year, still a founding list that charges nothing.
+
+All three, where each sits and why: [`FORUM.md`](FORUM.md).
+
+---
+
+## The stock page — one company, nine sections
 
 `frontend/stock.html`, `stock.js`, `stock.css`; `backend/stock_page.py`,
 `backend/stock_news.py`, `announcements.for_company`.
@@ -455,7 +475,8 @@ section carried on down the same column. It showed three scores that did not
 add up to each other, and a paragraph of method under most headings.
 
 - **One bar, directly under the name:** Overview · Chart · Score · Ownership ·
-  Financials · Peers · Delivery · News & filings. Scrolled past the name, the
+  Financials · Peers · Delivery · News & filings · Discussion (the forum's
+  threads about the company, read when the section is opened). Scrolled past the name, the
   bar carries the company's logo, symbol and price. A section is part of the
   address (`#peers`, or the older `?pane=owners`).
 - **Switching sections moves nothing else.** The sections share a stage at
