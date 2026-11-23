@@ -157,7 +157,16 @@ async function open(browser, state, hash, viewport) {
       await page.screenshot({ path: path.join(output, '1280-front.png'), fullPage: true });
 
       await page.locator('.fm-chip', { hasText: 'Market & economy' }).click();
-      await page.waitForFunction(() => location.hash === '#c/market');
+      // The address changes at once; the page redraws when the hashchange
+      // event reaches it, which a browser may hand over a frame later. This
+      // used to wait on the address and then on this discussion's title, and
+      // the title is on the front page too: both were true before the page
+      // had redrawn, so the count below read the front page's two rows (CI,
+      // every run from the day the forum landed). Wait for the redraw itself:
+      // the chip marked as the category on show, drawn in the same stroke
+      // that clears the old list.
+      await page.locator('.fm-chip[aria-current="page"]', { hasText: 'Market & economy' }).waitFor();
+      assert.equal(await page.evaluate(() => location.hash), '#c/market');
       await page.locator('.fm-row h3', { hasText: 'FIIs sold all week' }).waitFor();
       assert.equal(await page.locator('.fm-row').count(), 1);
       assert.equal(await page.locator('#fm-h1').isVisible(), false);

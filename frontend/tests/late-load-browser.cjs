@@ -48,11 +48,17 @@ const server=http.createServer((req,res)=>{
 });
 
 /* The page as a reader has it: every element that is on show, where it is
-   and how it is drawn. Compared before and after the later files land. */
+   and how it is drawn. Compared before and after the later files land.
+
+   Not the session clock or the bar under it. Both follow the wall clock
+   (doors.js, startClock), so while NSE is trading the bar grows a pixel about
+   once a minute, and a run that took its two pictures either side of that
+   pixel failed with nothing having moved (CI, 23 Nov 2026 at 12:53 IST: 212
+   px, then 213). The track the bar sits in is still in the picture. */
 function picture(){
   var out=[];
   document.querySelectorAll('body *').forEach(function(el){
-    if(/^(SCRIPT|TEMPLATE|LINK|STYLE)$/.test(el.tagName)||el.id==='drt-clock'||el.closest('svg')&&el.tagName!=='svg')return;
+    if(/^(SCRIPT|TEMPLATE|LINK|STYLE)$/.test(el.tagName)||el.id==='drt-clock'||el.id==='drt-sbar'||el.closest('svg')&&el.tagName!=='svg')return;
     var r=el.getBoundingClientRect();
     if(!el.getClientRects().length||r.bottom<0||r.top>innerHeight*3)return;
     var c=getComputedStyle(el);

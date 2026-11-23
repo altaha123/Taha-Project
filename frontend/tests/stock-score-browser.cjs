@@ -176,8 +176,23 @@ async function open(browser, port, ticker, answers) {
   // ── IT STOPS ASKING ──────────────────────────────────────────────────────
   {
     const { context, page, errors, seen } = await open(browser, port, 'RELIANCE', [pending]);
-    for (let i = 0; i < 6; i++) await page.clock.runFor(6500);
-    assert.equal(seen.analyze, 4, `first load plus three retries, then stop — saw ${seen.analyze}`);
+    /* The page's clock is a fake one, run forward from here, but each answer
+       travels in real time, and the page arms its next try only once it has
+       read the answer to the one before. Running the clock straight through
+       raced the two: on a slow runner an answer landed after the last of the
+       clock had been spent, its retry was never armed, and this counted three
+       requests where there are four (CI, 22 Nov 2026). So the clock goes a
+       second at a time, with a real pause for an answer in flight, until the
+       fourth request has been made. */
+    const pause = ms => new Promise(r => setTimeout(r, ms));
+    for (const until = Date.now() + 20000; seen.analyze < 4 && Date.now() < until;) {
+      await page.clock.runFor(1000);
+      await pause(10);
+    }
+    assert.equal(seen.analyze, 4, `first load plus three retries — saw ${seen.analyze}`);
+    // Then it stops: another minute, with the same chance to ask, asks nothing.
+    for (let i = 0; i < 20; i++) { await page.clock.runFor(3000); await pause(10); }
+    assert.equal(seen.analyze, 4, `three retries, then stop — saw ${seen.analyze}`);
     assert.equal(await page.locator('#scorelb').innerText(), 'SCORING');
     assert.deepEqual(errors, []);
     await context.close();
