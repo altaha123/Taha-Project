@@ -320,7 +320,12 @@ def test_the_endpoint_measures_to_the_latest_scan_and_against_the_index(app_with
     monkeypatch.setattr(main.ideas_engine, "select",
                         lambda p, **k: {"rows": [idea("ABB")], "available": True})
     monkeypatch.setattr(main, "_index_closes", lambda: INDEX)
-    main.call_log.record("short", [idea("ABB", price=101.0)], SCAN1, {})
+    # Every list of this scan is recorded up front. Otherwise calls() records
+    # the missing ones on a background thread, and whether that lands before
+    # or after _record_summary() below is a race: the card read 2 calls
+    # where the page had read 1, on one CI run in many.
+    for h in main._call_horizons(main._state["payload"]):
+        main.call_log.record(h, [idea("ABB", price=101.0)], SCAN1, {})
     monkeypatch.setitem(main._state["payload"], "factor_universe",
                         [{"symbol": "ABB", "price": 111.1}])
     out = main.calls()

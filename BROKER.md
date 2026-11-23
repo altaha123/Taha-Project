@@ -1,23 +1,24 @@
 # Connect your broker
 
-A member links their own Dhan account to Altaha. On **Your broker**
+A member links their own Dhan or Zerodha account to Altaha (one at a time). On **Your broker**
 (Portfolio › Your broker, `broker.html`) they see their funds, today's orders,
 positions and holdings, cancel an open order, and copy their real holdings
 into their Altaha portfolio in one tap. Once the owner switches orders on, a
 **Trade** button beside the price on every Indian stock page opens an order
-ticket. The order goes to Dhan and shows up in the member's Dhan app like any
-other order.
+ticket. The order goes to the member's broker and shows up in that broker's
+app like any other order.
 
-Altaha is not the broker. Dhan executes every order and holds every rupee.
+Altaha is not the broker. The broker executes every order and holds every rupee.
 
 | file | what it does |
 | --- | --- |
 | `backend/brokers.py` | The rules: connecting, the encrypted token, order checks, limits, the kill switch |
 | `backend/broker_dhan.py` | Dhan's API: login consent, orders, holdings, positions, funds |
+| `backend/broker_zerodha.py` | Zerodha's Kite Connect API: login, orders, holdings, positions, funds |
 | `backend/broker_routes.py` | The HTTP routes (`/broker/config`, `/me/broker/*`, `/admin/broker*`) |
 | `frontend/broker.js`, `broker.css` | The order ticket and the Trade button on the stock page |
 | `frontend/broker.html`, `broker-page.js` | Your broker: the connection, funds, orders, positions, holdings |
-| `backend/tests/test_brokers.py`, `test_broker_dhan.py` | The safety rules, and the exact requests sent to Dhan |
+| `backend/tests/test_brokers.py`, `test_broker_dhan.py`, `test_broker_zerodha.py` | The safety rules, and the exact requests sent to each broker |
 
 ---
 
@@ -46,13 +47,31 @@ Dhan account instead of partner keys:
 `BROKER_MEMBERS` also works with partner keys, as a comma-separated beta list.
 Leave it empty to open connections to every signed-in member.
 
+**Zerodha** works the same way through a Kite Connect app:
+
+| Where | Setting | Why |
+| --- | --- | --- |
+| developers.kite.trade | Create a Kite Connect app, redirect URL `https://altahascreener.in/broker` | Zerodha sends the member back here with a `request_token` |
+| Render → Environment | `KITE_API_KEY`, `KITE_API_SECRET` | The app's key and secret. The secret stays on the server; the login is finished with a SHA-256 checksum of it |
+| Render → Environment | `BROKER_MEMBERS` | Your Altaha email, while only you use the app |
+| Render → Environment | `KITE_ALL_MEMBERS=on` | Only once Zerodha confirms in writing that other Zerodha clients may log in to your app, and on what terms. Until then Zerodha is offered only to the people `BROKER_MEMBERS` names |
+
+A Kite session ends at 6 AM India time every day (Zerodha flushes them all);
+members log in again each morning. Kite Connect is a paid subscription on
+Zerodha's developer site; check the current price there.
+
+Who may connect is decided **per broker**: a Zerodha app still limited to its
+owner does not close a Dhan partner connection that is open to everyone, and
+the reverse.
+
 **Stage 2: place orders.** Two more things are needed:
 
 1. **Dhan must accept orders from the server's IP address.** Under SEBI's 2025
    rules, Dhan accepts placing, modifying and cancelling orders only from a
    whitelisted static IP. Reading funds, holdings and orders does not need
-   it. Render's outbound addresses are shared ranges, not one fixed address,
-   so **ask Dhan how this applies to a partner platform** and whether your
+   it. Zerodha has the same rule and takes the IP in the Kite Connect app's
+   settings. Render's outbound addresses are shared ranges, not one fixed address,
+   so **ask each broker how this applies to a platform** and whether your
    outbound IPs can be whitelisted, or whether a dedicated egress IP is
    needed. If this is wrong, orders come back rejected with Dhan's reason on
    the screen. Nothing else breaks.
@@ -130,9 +149,9 @@ changes.
 ## Not built yet
 
 - Other brokers. Each one is a module with the same functions as
-  `broker_dhan.py`, added to `brokers._adapters()`. Zerodha (Kite Connect),
-  Upstox and Angel One all have similar login and order APIs.
+  `broker_dhan.py`, added to `brokers._adapters()`. Upstox and Angel One have
+  similar login and order APIs.
 - Modifying an open order (cancel and place again for now), after-market
   orders, bracket and cover orders, F&O.
-- Dhan's postback (order updates pushed to us). The ticket polls for a minute
+- Order updates pushed by the broker (Dhan's postback, Kite's postback). The ticket polls for a minute
   instead, and Today's orders reads the order book.
