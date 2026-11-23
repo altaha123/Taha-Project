@@ -1,0 +1,142 @@
+/* Altaha — Connect your broker: the order ticket (broker.js) and the
+   member's own page (broker-page.js). The site's own tokens
+   (altaha-skin.css), so both follow light and dark. Buy is the site's pass
+   green and Sell its fail red, as gains and losses are everywhere else. */
+
+/* ── The Trade button on the stock page ──────────────────────────────── */
+.bk-trade{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;min-height:38px;padding:0 20px;
+  border-radius:999px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);
+  font:600 14px/1 Inter,system-ui,sans-serif;cursor:pointer}
+.bk-trade:hover{filter:brightness(1.15)}
+.bk-trade:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* ── Shared pieces ───────────────────────────────────────────────────── */
+.bk-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:600 14px/1 Inter,system-ui,sans-serif;
+  padding:12px 16px;min-height:44px;border-radius:11px;border:1px solid var(--rule);background:var(--skin-card,#FFFDF8);
+  color:var(--ink) !important;text-decoration:none;cursor:pointer;box-sizing:border-box}
+.bk-btn:hover{background:var(--paper-2)}
+.bk-btn:disabled{opacity:.6;cursor:default}
+.bk-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.bk-btn.is-gold{background:var(--gold);border-color:var(--gold);color:#17140E !important}
+.bk-btn.is-buy{background:var(--pass);border-color:var(--pass);color:#fff !important}
+.bk-btn.is-sell{background:var(--fail);border-color:var(--fail);color:#fff !important}
+.bk-btn.is-buy:hover,.bk-btn.is-sell:hover,.bk-btn.is-gold:hover{filter:brightness(1.07)}
+.bk-btn.is-small{padding:8px 11px;min-height:36px;font-size:13px}
+.bk-btn.is-wide{width:100%}
+.bk-eyebrow{font:500 11px/1.5 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 8px}
+.bk-p{font-size:15px;line-height:1.6;color:var(--ink-2);margin:0 0 16px}
+.bk-p a,.bk-note a,.bk-msg a{color:var(--gold)}
+.bk-fine{font-size:12.5px;line-height:1.55;color:var(--mute);margin:14px 0 0}
+.bk-wait{color:var(--mute);font-size:14px;margin:6px 0}
+.bk-wait.is-fail,.is-fail{color:var(--fail)}
+.bk-msg,.bk-err{font-size:14px;line-height:1.5;margin:10px 0 0;min-height:1px}
+.bk-err,.bk-msg.is-err{color:var(--fail)}
+.bk-msg.is-good{color:var(--pass)}
+.bk-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0 0}
+.bk-sum div{background:var(--paper-2);border-radius:10px;padding:10px 12px}
+.bk-sum dt{font-size:12px;color:var(--mute);margin:0 0 4px}
+.bk-sum dd{margin:0;font:600 16px/1.2 'IBM Plex Mono',monospace;color:var(--ink)}
+.bk-acts{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+.bk-acts .bk-btn{flex:1 1 auto}
+
+/* ── The ticket ──────────────────────────────────────────────────────── */
+html.bk-open{overflow:hidden}
+.bk-scrim{position:fixed;inset:0;z-index:1000;background:rgba(12,11,8,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.bk-scrim[hidden]{display:none}
+.bk-sheet{position:relative;width:100%;max-width:440px;max-height:calc(100vh - 32px);overflow:auto;box-sizing:border-box;
+  background:var(--skin-card,#FFFDF8);color:var(--ink);border:1px solid var(--rule);border-radius:20px;padding:22px 22px 20px;
+  box-shadow:0 24px 60px rgba(0,0,0,.25);font-family:Inter,system-ui,sans-serif}
+.bk-x{position:absolute;top:10px;right:10px;width:40px;height:40px;border:0;background:none;font-size:26px;line-height:1;color:var(--mute);cursor:pointer;border-radius:10px}
+.bk-x:hover{background:var(--paper-2);color:var(--ink)}
+.bk-h{font:400 32px/1.1 'Instrument Serif',Georgia,serif;margin:0;letter-spacing:-.01em}
+.bk-ltp{font:500 17px/1 'IBM Plex Mono',monospace;color:var(--ink-2);margin-left:6px}
+.bk-sub{font-size:13px;color:var(--mute);margin:4px 0 16px}
+.bk-seg{display:flex;gap:2px;background:var(--paper-2);border:1px solid var(--rule);border-radius:12px;padding:3px;margin:0 0 14px}
+.bk-seg-o{flex:1;position:relative;text-align:center;cursor:pointer}
+.bk-seg-o input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.bk-seg-o span{display:block;font:600 14px/1 Inter,sans-serif;padding:11px 6px;border-radius:9px;color:var(--ink-2)}
+.bk-seg-o.on span{background:var(--skin-card,#FFFDF8);color:var(--ink);box-shadow:var(--skin-shadow)}
+.bk-seg-o.is-buy.on span{background:var(--pass);color:#fff}
+.bk-seg-o.is-sell.on span{background:var(--fail);color:#fff}
+.bk-seg-o input:focus-visible+span{outline:2px solid var(--gold);outline-offset:1px}
+.bk-row{margin:0 0 4px}
+.bk-row .bk-seg{margin:6px 0 12px}
+.bk-lbl,.bk-f span{display:block;font-size:12px;font-weight:600;color:var(--ink-2)}
+.bk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:0 0 12px}
+.bk-f input{display:block;width:100%;box-sizing:border-box;margin-top:6px;font:500 17px 'IBM Plex Mono',monospace;padding:10px 12px;
+  min-height:46px;border-radius:10px;border:1px solid var(--rule);background:var(--paper);color:var(--ink)}
+.bk-f input:focus{outline:2px solid var(--gold);outline-offset:0;border-color:var(--gold)}
+.bk-sheet .bk-sum{margin:6px 0 4px}
+.bk-sheet > div > .bk-btn.is-wide{margin-top:12px}
+.bk-review,.bk-done{background:var(--paper-2);border-radius:14px;padding:14px}
+.bk-review .bk-sum div,.bk-done .bk-sum div{background:var(--skin-card,#FFFDF8)}
+.bk-words{font-size:17px;line-height:1.45;margin:0;color:var(--ink)}
+.bk-status{font-size:15px;margin:12px 0 0}
+.bk-status.is-pass{color:var(--pass)}
+.bk-status.is-fail{color:var(--fail)}
+.bk-status.is-part{color:var(--part)}
+.bk-done .bk-p{margin:8px 0 0;font-size:14px}
+
+/* ── The page ────────────────────────────────────────────────────────── */
+.bk-page{max-width:1080px;margin:0 auto;padding:28px clamp(16px,4vw,32px) 72px;box-sizing:border-box;color:var(--ink)}
+.bk-page *{box-sizing:border-box}
+.bk-page [hidden]{display:none !important}
+.bk-top{margin:0 0 22px}
+.bk-h1{font:400 clamp(32px,4.6vw,52px)/1.05 'Instrument Serif',Georgia,serif;letter-spacing:-.025em;margin:0}
+.bk-h1 em{color:var(--gold);font-style:italic}
+.bk-lede{font-size:16px;line-height:1.6;color:var(--ink-2);margin:12px 0 0;max-width:660px}
+.bk-card{background:var(--skin-card,#FFFDF8);border:1px solid var(--rule);border-radius:18px;padding:18px;box-shadow:var(--skin-shadow);min-width:0}
+.bk-card h2{font:400 28px/1.15 'Instrument Serif',Georgia,serif;margin:0 0 14px}
+.bk-card h3{font:600 13px/1.3 Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
+.bk-card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.bk-card-h h3{margin:0}
+.bk-hero{max-width:680px}
+.bk-why{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:10px}
+.bk-why li{font-size:15px;line-height:1.55;color:var(--ink-2);padding-left:22px;position:relative}
+.bk-why li:before{content:"";position:absolute;left:4px;top:.55em;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+.bk-why b{color:var(--ink)}
+.bk-acct{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+.bk-acct .bk-acts{margin:0}
+.bk-acct .bk-msg{flex-basis:100%;margin:0}
+.bk-acct-id{display:flex;align-items:center;gap:12px;min-width:0}
+.bk-acct-id b{display:block;font-size:16px}
+.bk-acct-id > div > span{display:block;font-size:13px;color:var(--mute);margin-top:2px}
+.bk-logo{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--ink);color:var(--paper);
+  font:400 24px/1 'Instrument Serif',Georgia,serif}
+.bk-note{margin:14px 0;padding:12px 14px;border-radius:12px;background:var(--paper-2);border:1px solid var(--rule-2,var(--rule));font-size:14px;line-height:1.5;color:var(--ink-2)}
+.bk-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.bk-tbl-wrap{overflow-x:auto;margin:0 -4px}
+.bk-tbl{width:100%;border-collapse:collapse;font-size:14px}
+.bk-tbl th{text-align:left;font-size:12px;font-weight:600;color:var(--mute);padding:6px 8px;border-bottom:1px solid var(--rule);white-space:nowrap}
+.bk-tbl td{padding:9px 8px;border-bottom:1px solid var(--rule-2,var(--rule));vertical-align:top}
+.bk-tbl td small{display:block;font-size:12px;color:var(--mute);margin-top:3px;max-width:260px}
+.bk-tbl .num{text-align:right;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.bk-tbl a{color:var(--ink);text-decoration:none}
+.bk-tbl a:hover{color:var(--gold)}
+.is-buy{color:var(--pass)}
+.is-sell{color:var(--fail)}
+.bk-tag{display:inline-block;font:600 10px/1 Inter,sans-serif;padding:3px 6px;border-radius:999px;border:1px solid var(--gold);color:var(--gold);vertical-align:2px}
+.bk-st{display:inline-block;font:600 12px/1 Inter,sans-serif;padding:5px 8px;border-radius:999px;background:var(--paper-2);color:var(--ink-2);white-space:nowrap}
+.bk-st.is-pass{color:var(--pass)}
+.bk-st.is-fail{color:var(--fail)}
+.bk-st.is-part{color:var(--part)}
+
+@media (max-width:560px){
+  /* Today's orders as cards: the status and the Cancel button are what a
+     member opens this for, and a sideways scroll hides both. */
+  .bk-tbl.is-orders thead{display:none}
+  .bk-tbl.is-orders tr{display:grid;grid-template-columns:44px 40px minmax(0,1fr);gap:4px 10px;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--rule-2,var(--rule))}
+  .bk-tbl.is-orders td{padding:0;border:0}
+  .bk-tbl.is-orders td:nth-child(1){grid-area:2/1;font-size:12px;color:var(--mute)}
+  .bk-tbl.is-orders td:nth-child(2){grid-area:1/1/2/3}
+  .bk-tbl.is-orders td:nth-child(3){grid-area:2/2}
+  .bk-tbl.is-orders td:nth-child(4){grid-area:2/3;text-align:left}
+  .bk-tbl.is-orders td:nth-child(5){grid-area:3/1/4/3;text-align:left}
+  .bk-tbl.is-orders td:nth-child(6){grid-area:1/3;justify-self:end;text-align:right}
+  .bk-tbl.is-orders td:nth-child(7){grid-area:3/3;justify-self:end}
+  .bk-tbl.is-orders td:nth-child(7):empty{display:none}
+  .bk-scrim{align-items:flex-end;padding:0}
+  .bk-sheet{max-width:none;border-radius:20px 20px 0 0;max-height:92vh;padding:20px 16px 24px}
+  .bk-acct .bk-acts{width:100%}
+}

@@ -63,3 +63,8 @@ xlrd>=2.0.1
 # diff would explain. Pinned for the same reason requests is, above.
 anyio>=4.0
 multitasking>=0.0.11
+
+# Connect your broker (brokers.py): a member's broker token is stored
+# encrypted with Fernet under BROKER_TOKEN_KEY, never in the clear. Ships
+# prebuilt wheels, so no compiler is needed on the instance.
+cryptography>=42
