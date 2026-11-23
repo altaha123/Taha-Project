@@ -1,4 +1,4 @@
-/* Market › Sectors right now: a sector tile opens that sector's stocks, in place.
+/* Market › Sector performance: a sector tile opens that sector's stocks, in place.
  *
  * This exists because of a bug that shipped. Tapping a tile left Market for
  * the market board and asked the board to open the sector by name. The board
