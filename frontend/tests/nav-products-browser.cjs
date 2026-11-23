@@ -199,7 +199,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   await page.screenshot({ path: path.join(output, '1280-menu-ideas.png') });
   await page.locator('.sh-doorwrap[data-sec="portfolio"]').hover();
   await page.locator('#sh-mega-portfolio').waitFor({ state: 'visible' });
-  assert.deepEqual(await menuTabs('portfolio'), ['portfolio', 'watchlists', 'allocate', 'planner', 'advisors.html', 'wealth.html']);
+  assert.deepEqual(await menuTabs('portfolio'), ['portfolio', 'watchlists', 'broker.html', 'allocate', 'planner', 'advisors.html', 'wealth.html']);
   // From the door down into its panel is a diagonal; the menu waits for it.
   await page.locator('#sh-mega-portfolio .sh-item[data-tab="planner"]').hover();
   await page.waitForTimeout(500);
@@ -334,7 +334,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
                    ['query', 'lenses', 'forum.html', 'charts', 'strategies', 'concalls', 'investors', 'funds', 'calls']);
   await sheet.locator('.sh-sheet-tab[data-sec="research"]').press('ArrowRight');
   await page.locator('#sh-sheet-portfolio').waitFor({ state: 'visible' });
-  assert.deepEqual(await sheetTabs('portfolio'), ['portfolio', 'watchlists', 'allocate', 'planner', 'advisors.html', 'wealth.html']);
+  assert.deepEqual(await sheetTabs('portfolio'), ['portfolio', 'watchlists', 'broker.html', 'allocate', 'planner', 'advisors.html', 'wealth.html']);
   await page.screenshot({ path: path.join(output, '900-sheet-portfolio.png') });
   // Three ways out that are not choosing something: Escape, the cross, the page behind.
   await page.keyboard.press('Escape');

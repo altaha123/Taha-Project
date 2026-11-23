@@ -432,6 +432,24 @@ try:
 except Exception as _e:                                      # pragma: no cover
     print(f"[query-ai] not loaded: {type(_e).__name__}: {_e}", flush=True)
 
+
+# Connect your broker: members link their own Dhan account and, once
+# BROKER_TRADING=on, place orders from the stock page (BROKER.md). A market
+# order's value is judged by the live price here, not the one the page sent.
+def _broker_price(sym):
+    if dhan is None or not dhan.configured():
+        return None
+    return (dhan.bulk_quotes([sym], mode="ltp").get(sym) or {}).get("ltp")
+
+
+try:
+    import brokers
+    import broker_routes
+    brokers.PRICE = _broker_price
+    app.include_router(broker_routes.router)
+except Exception as _e:                                      # pragma: no cover
+    print(f"[broker] not loaded: {type(_e).__name__}: {_e}", flush=True)
+
 # Every method this API actually serves.
 #
 # This read ["GET", "POST"] while /me/portfolio and /me/watchlist were PUT. An

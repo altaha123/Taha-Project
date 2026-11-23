@@ -262,6 +262,15 @@
     paintLogo($('mini-logo'), base, d.name, domain);
     $('mini-sym').textContent = base;
     $('mini-px').textContent = money(d.price, d.currency);
+
+    /* Which company this is, for scripts that add to the page (broker.js
+       puts its Trade button beside the price). The stock and its price,
+       nothing from the score. */
+    try {
+      window.dispatchEvent(new CustomEvent('altaha-stock', { detail: {
+        symbol: base, name: d.name || base, price: d.price,
+        currency: d.currency, exchange: d.exchange } }));
+    } catch (e) {}
   }
 
   /* This address and /stock-TCS show the same company. A search engine that

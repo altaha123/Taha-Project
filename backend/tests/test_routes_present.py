@@ -48,6 +48,8 @@ GET     /admin/backup
 POST    /admin/backup
 GET     /admin/bhavcopy
 POST    /admin/bhavcopy/archive
+GET     /admin/broker
+POST    /admin/broker/halt
 GET     /admin/forum
 POST    /admin/forum/moderate
 POST    /admin/fundamentals/crawl
@@ -102,6 +104,7 @@ POST    /auth/verify
 POST    /auth/verify-code
 GET     /breakouts/status
 GET     /brief
+GET     /broker/config
 GET     /calls
 GET     /calls/export.csv
 GET     /chart
@@ -167,6 +170,19 @@ POST    /jobs/wow-backfill
 GET     /leaderboard
 GET     /market
 GET     /market/week
+GET     /me/broker
+POST    /me/broker/complete
+POST    /me/broker/connect
+POST    /me/broker/disconnect
+GET     /me/broker/funds
+GET     /me/broker/holdings
+POST    /me/broker/holdings/copy
+GET     /me/broker/orders
+POST    /me/broker/orders
+POST    /me/broker/orders/cancel
+GET     /me/broker/orders/{order_id}
+POST    /me/broker/pause
+GET     /me/broker/positions
 POST    /me/digest/send-test
 POST    /me/digest/settings
 GET     /me/portfolio
