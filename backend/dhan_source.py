@@ -21,6 +21,7 @@ import csv
 import gc
 import io
 import os
+import threading
 import time
 import datetime as dt
 
@@ -354,6 +355,11 @@ def _append_today(symbol, df):
     session has already opened, we build today's bar from the live quote
     (open/high/low/LTP/volume) and append it. During market hours this bar
     is the forming candle; after 15:30 it is effectively the close.
+
+    When today's bar is owed and the quote does not arrive, the frame is
+    returned without it and marked `today_missing`, so the caller can keep it
+    for a minute rather than serve the last session as today's for half an
+    hour.
     """
     try:
         now = dt.datetime.now(IST_TZ)
@@ -373,6 +379,7 @@ def _append_today(symbol, df):
         # mode="quote", not "ohlc": the ohlc feed carries no volume, so the
         # bar built here had a volume of 0 and every after-close measure of
         # the day's volume — a breakout's above all — read as nothing traded.
+        df.attrs["today_missing"] = True
         q = bulk_quotes([symbol], mode="quote").get(symbol.upper())
         if not q:
             return df
@@ -386,6 +393,7 @@ def _append_today(symbol, df):
         stamp = pd.Timestamp(now.date())
         df.loc[stamp] = {"Open": float(o), "High": float(h), "Low": float(l),
                          "Close": float(close), "Volume": float(v)}
+        df.attrs.pop("today_missing", None)
         return df
     except Exception:
         return df
@@ -454,21 +462,33 @@ QUOTE_GAP = 1.15        # seconds between quote calls (limit is 1/sec)
 # almost every symbol, which looked exactly like "Dhan has no data".
 HIST_GAP = 0.25
 _last_hist = {"at": 0.0}
+_last_quote = {"at": 0.0}
+
+# The gaps only hold if callers take turns. The intraday scanner, the sector
+# board, watchlists and stock pages all quote from their own threads, and two
+# of them reading `at` in the same instant both saw a free slot and both fired,
+# inside Dhan's one-a-second limit. A refused quote comes back empty, and for a
+# stock page an empty quote is no bar for today: on 23 Nov 2026 WELSPUNLIV
+# read Friday's close, with Friday's +6.18% as "today", on Monday afternoon.
+# A lock makes each caller wait its turn.
+_hist_lock = threading.Lock()
+_quote_lock = threading.Lock()
 
 
 def _throttle_hist():
-    wait = HIST_GAP - (time.time() - _last_hist["at"])
-    if wait > 0:
-        time.sleep(wait)
-    _last_hist["at"] = time.time()
-_last_quote = {"at": 0.0}
+    with _hist_lock:
+        wait = HIST_GAP - (time.time() - _last_hist["at"])
+        if wait > 0:
+            time.sleep(wait)
+        _last_hist["at"] = time.time()
 
 
 def _throttle_quote():
-    wait = QUOTE_GAP - (time.time() - _last_quote["at"])
-    if wait > 0:
-        time.sleep(wait)
-    _last_quote["at"] = time.time()
+    with _quote_lock:
+        wait = QUOTE_GAP - (time.time() - _last_quote["at"])
+        if wait > 0:
+            time.sleep(wait)
+        _last_quote["at"] = time.time()
 
 
 def _quote_call(path: str, ids: list) -> dict:
