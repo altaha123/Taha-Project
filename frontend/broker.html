@@ -2,15 +2,16 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8" />
-<!-- Dhan sends members back to /broker/?tokenId=… (or /broker/<tokenId>),
-     where a relative address would resolve under /broker/. Every file this
+<!-- Brokers send members back to /broker/?tokenId=… (Dhan, or /broker/<tokenId>)
+     or /broker?request_token=… (Zerodha), and under /broker/ a relative
+     address would resolve inside that folder. Every file this
      page loads sits at the root. -->
 <base href="/">
 <script src="clean-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Your broker | Altaha Screener</title>
-<meta name="description" content="Connect your Dhan account to Altaha: see your funds, holdings and orders, and place orders from any stock page." />
+<meta name="description" content="Connect your Dhan or Zerodha account to Altaha: see your funds, holdings and orders, and place orders from any stock page." />
 <meta name="referrer" content="no-referrer" />
 <meta name="robots" content="noindex" />
 <link rel="icon" href="favicon.ico" sizes="any" />
@@ -45,7 +46,7 @@
   <header class="bk-top">
     <p class="bk-eyebrow">Your broker</p>
     <h1 class="bk-h1">Trade from Altaha, on <em>your own broker account</em></h1>
-    <p class="bk-lede">Connect Dhan once. See your funds, holdings and orders here, and place orders from any stock page. Your broker holds the money and executes every order.</p>
+    <p class="bk-lede">Connect Dhan or Zerodha once. See your funds, holdings and orders here, and place orders from any stock page. Your broker holds the money and executes every order.</p>
   </header>
   <div id="bk-page">
     <div id="bk-view" aria-live="polite"><p class="bk-wait">Loading your broker. If the site has been idle this takes about thirty seconds.</p></div>

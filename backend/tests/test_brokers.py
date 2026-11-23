@@ -399,3 +399,25 @@ def test_an_order_cut_off_mid_send_is_settled_not_left_sending(fake):
                      "WHERE id=?", (old, o["id"]))
     after = B.order(u["id"], o["id"])
     assert after["status"] == "rejected" and "no record" in after["message"]
+
+
+def test_one_brokers_test_key_does_not_close_another(fake, monkeypatch):
+    """Zerodha on its owner-only app must not lock members out of a Dhan
+    partner connection that is open to everyone."""
+    closed = FakeBroker()
+    closed.ID, closed.LABEL, closed.individual = "zerodha", "Zerodha", True
+    monkeypatch.setattr(B, "ADAPTERS", {"dhan": fake, "zerodha": closed})
+    u, _ = member()
+    cfg = {b["id"]: b["allowed"] for b in B.config(u)["brokers"]}
+    assert cfg == {"dhan": True, "zerodha": False}
+    assert B.start_connect(u, "dhan")["login_url"]
+    with pytest.raises(PermissionError):
+        B.start_connect(u, "zerodha")
+
+
+def test_the_correlation_id_is_letters_and_digits_under_twenty(fake):
+    import re
+    u, _ = connected()
+    B.place_order(u, ticket())
+    corr = fake.placed[0]["correlation_id"]
+    assert re.fullmatch(r"[A-Za-z0-9]{1,20}", corr)

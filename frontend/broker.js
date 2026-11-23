@@ -84,8 +84,8 @@
      page, which is where the broker sends the member afterwards. */
   function connect(broker, back) {
     try { sessionStorage.setItem(RETURN_KEY, back || location.href); } catch (e) {}
-    track('broker_connect_started', { broker: broker || 'dhan' });
-    return post('/me/broker/connect', { broker: broker || 'dhan' }).then(function (d) {
+    track('broker_connect_started', { broker: broker });
+    return post('/me/broker/connect', { broker: broker }).then(function (d) {
       location.href = d.login_url;
       return d;
     });
@@ -231,16 +231,24 @@
         h = head() + '<p class="bk-p">Sign in to Altaha, then connect your broker to place orders from this page.</p>' +
           '<a class="bk-btn is-gold" href="signin.html?next=broker.html">Sign in</a>';
         break;
-      case 'connect':
       case 'reconnect':
-        h = head() + '<p class="bk-p">' + (T.step === 'reconnect'
-            ? 'Your Dhan session has ended (Dhan ends it every day). Log in to Dhan again to place orders.'
-            : 'Connect your Dhan account to place orders from Altaha. You log in on Dhan\'s own page; Altaha never sees your password or PIN.') + '</p>' +
-          '<button type="button" class="bk-btn is-gold" data-bk="connect">' + (T.step === 'reconnect' ? 'Log in to Dhan' : 'Connect Dhan') + '</button>' +
+        h = head() + '<p class="bk-p">Your ' + esc(T.link.label) + ' session has ended (' + esc(T.link.label) +
+            ' ends it every day). Log in to ' + esc(T.link.label) + ' again to place orders.</p>' +
+          '<button type="button" class="bk-btn is-gold" data-bk="connect" data-broker="' + esc(T.link.broker) + '">Log in to ' + esc(T.link.label) + '</button>' +
+          '<p class="bk-err" id="bk-err">' + esc(T.err) + '</p>';
+        break;
+      case 'connect':
+        var open = ((cfg && cfg.brokers) || []).filter(function (b) { return b.available && b.allowed !== false; });
+        h = head() + '<p class="bk-p">' + (open.length
+            ? 'Connect your broker to place orders from Altaha. You log in on your broker\'s own page; Altaha never sees your password or PIN.'
+            : 'Broker connections are open to a few members while they are tested.') + '</p>' +
+          '<div class="bk-acts">' + open.map(function (b) {
+            return '<button type="button" class="bk-btn is-gold" data-bk="connect" data-broker="' + esc(b.id) + '">Connect ' + esc(b.label) + '</button>';
+          }).join('') + '</div>' +
           '<p class="bk-err" id="bk-err">' + esc(T.err) + '</p>';
         break;
       case 'off':
-        h = head() + '<p class="bk-p">Your Dhan account is connected. Placing orders from Altaha is not switched on yet; ' +
+        h = head() + '<p class="bk-p">Your ' + esc(T.link.label) + ' account is connected. Placing orders from Altaha is not switched on yet; ' +
           'you can see your funds, holdings and orders on <a href="' + brokerPage + '">Your broker</a>.</p>';
         break;
       case 'paused':
@@ -312,11 +320,11 @@
     return '';
   }
 
-  function act(what) {
+  function act(what, el) {
     if (!T) return;
     if (what === 'close') return close();
     if (what === 'connect') {
-      connect('dhan').catch(function (e) { T.err = e.message; paint(); });
+      connect(el && el.getAttribute('data-broker')).catch(function (e) { T.err = e.message; paint(); });
       return;
     }
     if (what === 'review') {

@@ -49,7 +49,8 @@ recommendation to trade, and that needs SEBI registration this project does
 not have.
 
 ONE BROKER PER MEMBER, ONE MODULE PER BROKER
-broker_dhan.py speaks Dhan. Another broker is another module with the same
+broker_dhan.py speaks Dhan and broker_zerodha.py speaks Zerodha (Kite
+Connect). A member links one at a time. Another broker is another module with the same
 functions (start_login, finish_login, place, cancel, order, order_by_ref,
 orders, holdings, positions, funds, instrument), added to _adapters().
 """
@@ -154,11 +155,12 @@ def _adapters() -> dict:
     exceptions, and a broker module that fails to import must cost that
     broker and nothing else."""
     out = {}
-    try:
-        import broker_dhan
-        out[broker_dhan.ID] = broker_dhan
-    except Exception as e:                                    # pragma: no cover
-        print(f"[brokers] dhan not loaded: {type(e).__name__}: {e}", flush=True)
+    for name in ("broker_dhan", "broker_zerodha"):
+        try:
+            mod = __import__(name)
+            out[mod.ID] = mod
+        except Exception as e:                                # pragma: no cover
+            print(f"[brokers] {name} not loaded: {type(e).__name__}: {e}", flush=True)
     return out
 
 
@@ -342,17 +344,23 @@ def trading_on() -> bool:
             and not halted())
 
 
-def allowed(user) -> bool:
-    """Who may connect. BROKER_MEMBERS, when set, is the list. A broker app
-    that can only ever log in one account (Dhan's individual API key, used
-    while a partner application is pending) is closed unless the list names
-    who it is for."""
-    if not user:
+def allowed_for(user, a) -> bool:
+    """Who may connect to one broker. BROKER_MEMBERS, when set, is the list
+    for every broker. A broker app that may only log in its owner's account
+    (Dhan's individual API key, a Kite Connect app not cleared for other
+    clients) is closed unless that list names who it is for. Decided per
+    broker, so a test key for one cannot close another that is open."""
+    if not user or a is None or not a.available():
         return False
     members = _members()
     if members:
         return user.get("email") in members
-    return not any(a.available() and a.needs_allowlist() for a in adapters().values())
+    return not a.needs_allowlist()
+
+
+def allowed(user) -> bool:
+    """May this member connect any broker at all."""
+    return any(allowed_for(user, a) for a in adapters().values())
 
 
 def config(user=None) -> dict:
@@ -361,7 +369,8 @@ def config(user=None) -> dict:
         "trading": trading_on(),
         "halted": halted(),
         "allowed": allowed(user) if user else None,
-        "brokers": [{"id": a.ID, "label": a.LABEL, "available": bool(a.available())}
+        "brokers": [{"id": a.ID, "label": a.LABEL, "available": bool(a.available()),
+                     "allowed": allowed_for(user, a) if user else None}
                     for a in adapters().values()],
         "limits": {"max_order_value": max_order_value(),
                    "max_orders_per_day": max_orders_per_day(),
@@ -374,20 +383,20 @@ def config(user=None) -> dict:
 # Connecting
 # ---------------------------------------------------------------------------
 
-def _require_connect(user):
+def _require_connect(user, a=None):
     if not connect_on():
         raise NotSwitchedOn("Broker connections are not switched on yet.")
-    if not allowed(user):
+    if a is not None and not a.available():
+        raise NotSwitchedOn(f"{a.LABEL} connections are not switched on yet.")
+    if not (allowed_for(user, a) if a is not None else allowed(user)):
         raise PermissionError("Broker connections are open to a few members while they are tested.")
 
 
 def start_connect(user: dict, broker_id: str) -> dict:
     """The broker's login page for this member. Records that this member
     started a login, which is what finish_connect checks for."""
-    _require_connect(user)
     a = _adapter(broker_id)
-    if not a.available():
-        raise NotSwitchedOn(f"{a.LABEL} connections are not switched on yet.")
+    _require_connect(user, a)
     conn = _conn()
     now = _now()
     hour_ago = _iso(now - dt.timedelta(hours=1))
@@ -409,8 +418,8 @@ def finish_connect(user: dict, broker_id: str, token_id: str) -> dict:
     login this member started here in the last fifteen minutes can finish,
     and the attempt is spent before the broker is asked, so a token id that
     reaches the server twice links once."""
-    _require_connect(user)
     a = _adapter(broker_id)
+    _require_connect(user, a)
     token_id = str(token_id or "").strip()
     if not token_id or len(token_id) > 2000:
         raise ValueError(f"{a.LABEL} did not send back a sign-in. Press Connect again.")
@@ -675,9 +684,9 @@ def place_order(user: dict, raw: dict) -> dict:
         if halted():
             raise NotSwitchedOn("Orders from Altaha are paused just now. Use your broker's app.")
         raise NotSwitchedOn("Placing orders from Altaha is not switched on yet.")
-    if not allowed(user):
-        raise PermissionError("Broker trading is open to a few members while it is tested.")
     a, sess, linkrow = _session(user["id"])
+    if not allowed_for(user, a):
+        raise PermissionError("Broker trading is open to a few members while it is tested.")
     if linkrow["paused"]:
         raise PermissionError("You paused trading on this account. Resume it on Your broker page.")
 
@@ -724,7 +733,9 @@ def place_order(user: dict, raw: dict) -> dict:
                  o["qty"], o["type"], o["product"], o["validity"], o["price"], o["trigger"],
                  o["value_est"], o["source"], stamp, stamp))
             oid = cur.lastrowid
-            corr = f"alt-{oid}-{secrets.token_hex(3)}"
+            # Letters and digits only, under 20: Kite's order tag allows
+            # nothing else, and Dhan's correlationId accepts it too.
+            corr = f"alt{oid}x{secrets.token_hex(3)}"
             conn.execute("UPDATE broker_orders SET correlation_id=? WHERE id=?", (corr, oid))
     except sqlite3.IntegrityError:
         # The same order, arriving twice at once: the first one is sending it.

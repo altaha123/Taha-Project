@@ -3,12 +3,14 @@
    the holdings into the Altaha portfolio, pause trading, disconnect.
 
    COMING BACK FROM THE BROKER
-   After the member logs in on Dhan's page, Dhan sends them here with a
-   one-time tokenId, in the query string (?tokenId=) or, as Dhan's docs also
-   allow, as the last part of the path (/broker/<tokenId>). It is handed to
-   the server once and taken out of the address bar straight away, so a
-   reload or a shared link never carries it. The server only accepts it for
-   a login this member started here in the last fifteen minutes. */
+   After the member logs in on the broker's page, the broker sends them here
+   with a one-time token: Dhan as ?tokenId= (or, as its docs also allow, the
+   last part of the path, /broker/<tokenId>), Zerodha as
+   ?request_token=…&status=success. Which parameter came back says which
+   broker it was. It is handed to the server once and taken out of the
+   address bar straight away, so a reload or a shared link never carries it.
+   The server only accepts it for a login this member started here in the
+   last fifteen minutes. */
 
 (function () {
   'use strict';
@@ -21,14 +23,19 @@
   function say(m, kind) { S.msg = m || ''; S.msgKind = kind || ''; var n = document.getElementById('bk-msg'); if (n) { n.textContent = S.msg; n.className = 'bk-msg' + (kind ? ' is-' + kind : ''); } }
   function track(name, props) { if (window.AltahaTrack) window.AltahaTrack(name, props || {}); }
 
-  function tokenFromAddress() {
-    var t = '';
-    try { t = new URLSearchParams(location.search).get('tokenId') || ''; } catch (e) {}
+  function returned() {
+    var q;
+    try { q = new URLSearchParams(location.search); } catch (e) { return null; }
+    if (q.get('request_token')) return { broker: 'zerodha', token: q.get('request_token') };
+    if (q.get('action') === 'login' && q.get('status') && q.get('status') !== 'success') {
+      return { broker: 'zerodha', failed: true };
+    }
+    var t = q.get('tokenId') || '';
     if (!t) {
       var m = /\/broker\/([A-Za-z0-9._~-]{8,})\/?$/.exec(location.pathname);
       if (m) t = m[1];
     }
-    return t;
+    return t ? { broker: 'dhan', token: t } : null;
   }
   function cleanAddress() {
     try {
@@ -48,28 +55,32 @@
 
   function paintIntro() {
     var c = S.cfg || {};
-    var dhan = (c.brokers || []).filter(function (b) { return b.id === 'dhan'; })[0];
-    var can = c.connect && dhan && dhan.available && c.allowed !== false;
+    var open = (c.brokers || []).filter(function (b) { return b.available && b.allowed !== false; });
     view.innerHTML =
       '<section class="bk-card bk-hero">' +
-        '<h2>Connect your Dhan account</h2>' +
+        '<h2>Connect your broker</h2>' +
         '<ul class="bk-why">' +
-          '<li><b>You log in on Dhan\'s own page.</b> Altaha never sees your password, PIN or OTP.</li>' +
-          '<li><b>Orders land in your Dhan account.</b> They show up in the Dhan app like any other order.</li>' +
+          '<li><b>You log in on your broker\'s own page.</b> Altaha never sees your password, PIN or OTP.</li>' +
+          '<li><b>Orders land in your own account.</b> They show up in your broker\'s app like any other order.</li>' +
           '<li><b>Your holdings, funds and orders, here.</b> Copy your real holdings into your Altaha portfolio in one tap.</li>' +
-          '<li><b>Disconnect any time.</b> Dhan also ends the session itself every day.</li>' +
+          '<li><b>Disconnect any time.</b> Your broker also ends the session itself every day.</li>' +
         '</ul>' +
-        (can ? '<button type="button" class="bk-btn is-gold" id="bk-connect">Connect Dhan</button>'
-             : '<p class="bk-p">' + (!c.connect ? 'Broker connections are coming soon.'
-                 : 'Broker connections are open to a few members while they are tested.') + '</p>') +
+        (c.connect && open.length
+          ? '<div class="bk-acts bk-pick">' + open.map(function (b) {
+              return '<button type="button" class="bk-btn is-gold" data-broker="' + esc(b.id) + '">Connect ' + esc(b.label) + '</button>';
+            }).join('') + '</div>'
+          : '<p class="bk-p">' + (!c.connect ? 'Broker connections are coming soon.'
+              : 'Broker connections are open to a few members while they are tested.') + '</p>') +
         '<p class="bk-msg" id="bk-msg" role="alert"></p>' +
-        '<p class="bk-fine">More brokers will follow. Dhan comes first because Altaha\'s market data already runs on it.</p>' +
+        '<p class="bk-fine">Dhan and Zerodha for now. More brokers will follow.</p>' +
       '</section>';
-    var b = document.getElementById('bk-connect');
-    if (b) b.addEventListener('click', function () {
-      b.disabled = true;
-      B.connect('dhan', document.referrer && /altahascreener|localhost|127\.0\.0\.1/.test(document.referrer) ? document.referrer : '')
-        .catch(function (e) { b.disabled = false; say(e.message, 'err'); });
+    var back = document.referrer && /altahascreener|localhost|127\.0\.0\.1/.test(document.referrer) ? document.referrer : '';
+    [].forEach.call(view.querySelectorAll('[data-broker]'), function (b) {
+      b.addEventListener('click', function () {
+        b.disabled = true;
+        B.connect(b.getAttribute('data-broker'), back)
+          .catch(function (e) { b.disabled = false; say(e.message, 'err'); });
+      });
     });
   }
 
@@ -85,17 +96,17 @@
         '<div class="bk-acct-id"><span class="bk-logo" aria-hidden="true">' + esc(L.label.charAt(0)) + '</span>' +
           '<div><b>' + esc(L.label) + (L.client_name ? ' · ' + esc(L.client_name) : '') + '</b>' +
           '<span>Client ' + esc(L.client_id) + ' · connected ' + esc(when(L.connected_at)) + '</span>' +
-          '<span class="' + (L.expired ? 'is-fail' : '') + '">' + (L.expired ? 'Session ended. Log in to Dhan again.'
-              : L.expires_at ? 'Dhan session ends ' + esc(when(L.expires_at)) : '') + '</span></div></div>' +
+          '<span class="' + (L.expired ? 'is-fail' : '') + '">' + (L.expired ? 'Session ended. Log in to ' + esc(L.label) + ' again.'
+              : L.expires_at ? esc(L.label) + ' session ends ' + esc(when(L.expires_at)) : '') + '</span></div></div>' +
         '<div class="bk-acts">' + backLink +
-          (L.expired ? '<button type="button" class="bk-btn is-gold is-small" data-a="reconnect">Log in to Dhan</button>' : '') +
+          (L.expired ? '<button type="button" class="bk-btn is-gold is-small" data-a="reconnect">Log in to ' + esc(L.label) + '</button>' : '') +
           '<button type="button" class="bk-btn is-small" data-a="pause">' + (L.paused ? 'Resume trading' : 'Pause trading') + '</button>' +
           '<button type="button" class="bk-btn is-small" data-a="disconnect">Disconnect</button>' +
         '</div>' +
         '<p class="bk-msg" id="bk-msg" role="alert"></p>' +
       '</section>' +
       (!c.trading ? '<p class="bk-note">' + (c.halted ? 'Orders from Altaha are paused just now.' :
-        'Placing orders from Altaha is not switched on yet.') + ' You can see your account here; place orders in the Dhan app.</p>'
+        'Placing orders from Altaha is not switched on yet.') + ' You can see your account here; place orders in the ' + esc(L.label) + ' app.</p>'
         : L.paused ? '<p class="bk-note">You paused trading from Altaha. Orders cannot be placed here until you resume.</p>'
         : '<p class="bk-note">To place an order, open any stock and press <b>Trade</b> beside its price.</p>') +
       '<div class="bk-cols">' +
@@ -108,7 +119,7 @@
     view.querySelector('.bk-acct').addEventListener('click', onAccount);
     if (L.expired) {
       ['bk-funds', 'bk-orders', 'bk-positions', 'bk-holdings'].forEach(function (id) {
-        document.getElementById(id).querySelector('.bk-wait').textContent = 'Log in to Dhan again to see this.';
+        document.getElementById(id).querySelector('.bk-wait').textContent = 'Log in to ' + L.label + ' again to see this.';
       });
       return;
     }
@@ -167,7 +178,7 @@
       box.onclick = function (e) {
         var b = e.target.closest('[data-cancel]');
         if (!b) return;
-        if (!confirm('Cancel this order in your Dhan account?')) return;
+        if (!confirm('Cancel this order in your ' + S.link.label + ' account?')) return;
         b.disabled = true;
         B.post('/me/broker/orders/cancel', { broker_order_id: b.getAttribute('data-cancel') })
           .then(function () { track('broker_order_cancelled'); loadOrders(); loadFunds(); })
@@ -206,7 +217,7 @@
         '<p class="bk-msg" id="bk-copy-msg" role="status"></p>';
       var c = document.getElementById('bk-copy');
       if (c) c.addEventListener('click', function () {
-        if (!confirm('Replace the portfolio saved on your Altaha account with these ' + hs.length + ' holdings from Dhan?')) return;
+        if (!confirm('Replace the portfolio saved on your Altaha account with these ' + hs.length + ' holdings from ' + S.link.label + '?')) return;
         c.disabled = true;
         B.post('/me/broker/holdings/copy').then(function (r) {
           track('broker_holdings_copied', { n: r.saved });
@@ -229,14 +240,14 @@
     var a = b.getAttribute('data-a');
     if (a === 'reconnect') {
       b.disabled = true;
-      B.connect('dhan', '').catch(function (err) { b.disabled = false; say(err.message, 'err'); });
+      B.connect(S.link.broker, '').catch(function (err) { b.disabled = false; say(err.message, 'err'); });
     } else if (a === 'pause') {
       b.disabled = true;
       B.post('/me/broker/pause', { paused: !S.link.paused }).then(function (d) {
         S.link = d.link; track('broker_paused', { paused: S.link.paused }); paintLinked();
       }).catch(function (err) { b.disabled = false; say(err.message, 'err'); });
     } else if (a === 'disconnect') {
-      if (!confirm('Disconnect Dhan from Altaha? Altaha forgets the session; nothing changes in your Dhan account.')) return;
+      if (!confirm('Disconnect ' + S.link.label + ' from Altaha? Altaha forgets the session; nothing changes in your ' + S.link.label + ' account.')) return;
       b.disabled = true;
       B.post('/me/broker/disconnect').then(function () {
         S.link = null; track('broker_disconnected'); paintIntro();
@@ -248,20 +259,21 @@
 
   function load() {
     if (!(window.AltahaAuth && window.AltahaAuth.authed())) return;   // gate.js shows the sign-in card
-    var token = tokenFromAddress();
-    if (token) cleanAddress();
-    var finish = token
-      ? B.post('/me/broker/complete', { broker: 'dhan', token_id: token }).then(function (d) {
-          track('broker_connected', { broker: 'dhan' });
+    var back = returned();
+    var name = back ? (back.broker === 'zerodha' ? 'Zerodha' : 'Dhan') : '';
+    if (back) cleanAddress();
+    var finish = back && back.token
+      ? B.post('/me/broker/complete', { broker: back.broker, token_id: back.token }).then(function (d) {
+          track('broker_connected', { broker: back.broker });
           return { link: d.link, done: true };
         }).catch(function (e) { return { err: e }; })
-      : Promise.resolve({});
-    view.innerHTML = '<p class="bk-wait">' + (token ? 'Finishing your Dhan login…' : 'Loading your broker…') + '</p>';
+      : Promise.resolve(back && back.failed ? { err: new Error(name + ' login did not finish. Press Connect to try again.') } : {});
+    view.innerHTML = '<p class="bk-wait">' + (back && back.token ? 'Finishing your ' + name + ' login…' : 'Loading your broker…') + '</p>';
     finish.then(function (f) {
       return B.api('/me/broker').then(function (d) {
         S.cfg = d.config; S.link = d.link;
         if (S.link) paintLinked(); else paintIntro();
-        if (f.done) say('Connected to Dhan.', 'good');
+        if (f.done && S.link) say('Connected to ' + S.link.label + '.', 'good');
         if (f.err) say(f.err.message, 'err');
       });
     }).catch(function (e) {

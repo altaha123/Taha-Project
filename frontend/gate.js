@@ -42,7 +42,7 @@
   var PAGES = {
     advisors: ['Talk to an adviser', 'Chat with SEBI-registered advisers, free.', 'adv'],
     wealth:   ['Wealth desk',        'For portfolio managers: clients, calls and commission.', 'wd'],
-    broker:   ['Your broker',        'Connect your Dhan account: see your funds, holdings and orders, and trade from any stock page.', 'bk-page']
+    broker:   ['Your broker',        'Connect Dhan or Zerodha: see your funds, holdings and orders, and trade from any stock page.', 'bk-page']
   };
 
   /* Which page this is: a page of its own names itself on the script tag. */
