@@ -570,8 +570,25 @@
       '" aria-hidden="true"><polyline points="' + pts + '"/></svg>';
   }
 
+  /* Today's date on the exchange's calendar, YYYY-MM-DD, whatever the
+     reader's own time zone. */
+  function istToday(now) {
+    var t = (now === undefined ? Date.now() : +now) + 330 * 60000;
+    return new Date(t).toISOString().slice(0, 10);
+  }
+
+  /* The price a holding's day is measured from. Normally yesterday's close.
+     A holding bought today never saw yesterday's close: the move from there
+     to the buy price happened before the reader owned it, so the day starts
+     at what they paid — as every broker counts it. */
+  function dayOpenPrice(prevClose, buy, date, today) {
+    if (date && buy !== null && buy > 0 && String(date).slice(0, 10) >= today) return buy;
+    return isFinite(prevClose) && prevClose > 0 ? prevClose : null;
+  }
+
   /* One pass over the model: every row's figures, and the totals. */
   function figures() {
+    var today = istToday();
     var out = { rows: [], value: 0, cost: 0, costed: 0, valuedCost: 0, day: 0, dayBase: 0,
                 priced: 0, named: 0, up: 0, dn: 0 };
     state.rows.forEach(function (r) {
@@ -585,10 +602,11 @@
           out.priced++;
           f.value = qty * q.ltp;
           out.value += f.value;
-          if (isFinite(q.prev_close) && q.prev_close > 0) {
-            f.day = qty * (q.ltp - q.prev_close);
+          var open = dayOpenPrice(q.prev_close, buy, r.date, today);
+          if (open !== null) {
+            f.day = qty * (q.ltp - open);
             out.day += f.day;
-            out.dayBase += qty * q.prev_close;
+            out.dayBase += qty * open;
           }
           if (f.cost !== null) {
             f.pl = f.value - f.cost;
@@ -2296,5 +2314,5 @@
 
   window.AltahaPortfolio = { parseCSV: parseCSV, findHeader: findHeader, init: init, collect: collect,
     rowsFromMap: rowsFromMap, normName: normName, indexUniverse: indexUniverse,
-    resolveOne: resolveOne, resolveRows: resolveRows };
+    resolveOne: resolveOne, resolveRows: resolveRows, istToday: istToday, dayOpenPrice: dayOpenPrice };
 })();
