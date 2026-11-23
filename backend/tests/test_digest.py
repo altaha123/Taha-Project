@@ -90,6 +90,25 @@ def test_a_holding_with_no_cost_basis_still_works(two_stocks):
     assert d["rows"][0]["day_change"] == 200.0
 
 
+def test_a_holding_bought_today_starts_its_day_at_the_buy_price(two_stocks):
+    # AAA closed at 200 yesterday and trades at 220 today. A reader who
+    # bought at 225 this session has lost ₹50, not gained ₹200.
+    session = str(frame([100.0] * 60 + [200.0, 220.0]).index[-1])[:10]
+    d = D.build_digest([{"symbol": "AAA", "qty": 10, "avg_price": 225.0,
+                         "buy_date": session}], resolve=two_stocks)
+    row = d["rows"][0]
+    assert row["day_change"] == -50.0            # 10 × (220 − 225)
+    assert row["prev_close"] == 200.0            # still the market's close
+    assert d["totals"]["day_change"] == row["pnl"] == -50.0
+    assert d["totals"]["day_change_pct"] == round(100 * -50 / 2250, 2)
+
+
+def test_a_holding_bought_earlier_keeps_yesterdays_close(two_stocks):
+    d = D.build_digest([{"symbol": "AAA", "qty": 10, "avg_price": 225.0,
+                         "buy_date": "2023-06-01"}], resolve=two_stocks)
+    assert d["rows"][0]["day_change"] == 200.0
+
+
 def test_cost_basis_produces_overall_pnl(two_stocks):
     d = D.build_digest([{"symbol": "AAA", "qty": 10, "avg_price": 100.0}],
                        resolve=two_stocks)

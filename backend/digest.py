@@ -253,8 +253,15 @@ def build_digest(holdings: list, *, resolve, filings_for=None, now=None,
 
         price, prev = f["price"], f["prev_close"]
         value = round(qty * price, 2)
-        day_change = round(qty * (price - prev), 2) if prev is not None else None
         avg = _num(h.get("avg_price"))
+        # Bought in the session being reported: the move from the previous
+        # close up to the buy price happened before this reader owned the
+        # stock, so their day starts at what they paid. Counting from the
+        # close would credit them with a gain they never had.
+        session = f.get("data_date") or now.astimezone(IST).date().isoformat()
+        bought = str(h.get("buy_date") or "")[:10]
+        day_from = avg if (bought and avg and bought >= session) else prev
+        day_change = round(qty * (price - day_from), 2) if day_from is not None else None
         cost = round(qty * avg, 2) if avg else None
 
         rows.append({
