@@ -1008,9 +1008,118 @@
           m.className = 'tnum ' + tone(d.day_change_pct);
           m.textContent = pct(d.day_change_pct);
         }
+        LIVE.ref = dayRef(d);
         drawYear(d, d0);
       })
-      .catch(function () { if (card) card.hidden = true; });
+      .catch(function () { if (card) card.hidden = true; })
+      .then(streamWatch);
+  }
+
+  /* ── Live price ──────────────────────────────────────────────────────────
+     While the market trades, the price at the top and the day's move under
+     it follow the tape. One Server-Sent Events stream from the API, which
+     holds the one Dhan WebSocket for every reader (backend/livefeed.py); the
+     browser never sees a Dhan token. The Trade button reads #px when it is
+     pressed, so the ticket opens at the price on screen.
+
+     The day's move is measured from the last session's close. /chart's daily
+     series ends today once today's bar is in it, and then that close is the
+     bar before; if it still ends on the last session, that session's close
+     is the one. Without either, the price ticks and the move is left as sent.
+
+     Open from 09:15 to 16:00 IST on a weekday: the closing price settles
+     after 15:30, and a page left open should end the day on it. Closed while
+     the tab is hidden and opened again when it is shown, so a tab in the
+     background holds no connection. */
+  var LIVE = { ref: null, es: null, last: null, retry: null, watching: false, flash: null };
+
+  function ist() {
+    var n = new Date(Date.now() + new Date().getTimezoneOffset() * 60000 + 19800000);
+    return {
+      day: n.getDay(), mins: n.getHours() * 60 + n.getMinutes(),
+      date: n.getFullYear() + '-' + ('0' + (n.getMonth() + 1)).slice(-2) + '-' + ('0' + n.getDate()).slice(-2)
+    };
+  }
+  function liveHours() {
+    var t = ist();
+    return t.day !== 0 && t.day !== 6 && t.mins >= 555 && t.mins < 960;
+  }
+  function dayRef(d) {
+    if (!d || d.last == null) return null;
+    var lastDay = String(d.as_of || '').slice(0, 10);
+    var ref = lastDay && lastDay === ist().date ? d.prev_close : d.last;
+    ref = Number(ref);
+    return ref > 0 && isFinite(ref) ? ref : null;
+  }
+
+  function paintPrice(px) {
+    var prev = LIVE.last, cur = (DATA && DATA.currency) || 'INR';
+    LIVE.last = px;
+    $('px').textContent = money(px, cur);
+    $('mini-px').textContent = money(px, cur);
+    if (LIVE.ref) {
+      var ch = 100 * (px - LIVE.ref) / LIVE.ref;
+      var c = $('chg');
+      c.className = 'chg tnum ' + tone(ch);
+      c.textContent = pct(ch) + ' today';
+      var m = $('mini-chg');
+      m.className = 'tnum ' + tone(ch);
+      m.textContent = pct(ch);
+    }
+    if (prev != null && prev !== px) {
+      var el = $('px');
+      el.classList.remove('tick-up', 'tick-dn');
+      el.classList.add(px > prev ? 'tick-up' : 'tick-dn');
+      clearTimeout(LIVE.flash);
+      LIVE.flash = setTimeout(function () { el.classList.remove('tick-up', 'tick-dn'); }, 700);
+    }
+  }
+
+  function liveBadge(on) {
+    var b = $('px-live');
+    if (b) b.hidden = !on;
+  }
+  function streamStop() {
+    if (LIVE.es) { try { LIVE.es.close(); } catch (e) {} LIVE.es = null; }
+    clearTimeout(LIVE.retry);
+    LIVE.retry = null;
+    liveBadge(false);
+  }
+  function streamStart() {
+    if (LIVE.es || LIVE.retry || !BASE || typeof EventSource === 'undefined') return;
+    if (!liveHours() || document.visibilityState === 'hidden') return;
+    // The feed is the NSE's. A US listing has no live price here.
+    if (DATA && DATA.exchange && DATA.exchange !== 'NSE') return;
+    var es;
+    try { es = new EventSource(API + '/stream/quotes?tickers=' + encodeURIComponent(BASE)); }
+    catch (e) { return; }
+    LIVE.es = es;
+    es.onopen = function () { liveBadge(true); };
+    es.onmessage = function (ev) {
+      var d;
+      try { d = JSON.parse(ev.data); } catch (e) { return; }
+      var px = Number(d && (d.ltp != null ? d.ltp : (d[BASE] && d[BASE].ltp)));
+      if (px > 0 && isFinite(px)) paintPrice(px);
+    };
+    es.onerror = function () {
+      liveBadge(false);
+      // CONNECTING means the browser is already trying again. CLOSED means it
+      // has given up (the API answered with something other than a stream),
+      // and the page asks again in half a minute rather than never.
+      if (es.readyState !== 2) return;
+      if (LIVE.es === es) LIVE.es = null;
+      LIVE.retry = setTimeout(function () { LIVE.retry = null; streamStart(); }, 30000);
+    };
+  }
+  function streamWatch() {
+    if (LIVE.watching) return;
+    LIVE.watching = true;
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') streamStop(); else streamStart();
+    });
+    // The session opening or closing while the page is open.
+    setInterval(function () { if (liveHours()) streamStart(); else streamStop(); }, 60000);
+    streamStart();
   }
 
   function drawYear(d, d0) {
