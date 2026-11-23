@@ -444,7 +444,13 @@
     var n = draft && Array.isArray(draft.rows) ? draft.rows.filter(function (r) { return r && r.symbol; }).length : 0;
     if (n) return n;
     var store = readJSON(STORE_KEY, {});
-    var names = store && typeof store === 'object' ? Object.keys(store) : [];
+    // A portfolio named while signed in is that account's (portfolio.js,
+    // offered): it is not counted for anybody else.
+    var user = window.AltahaAuth && window.AltahaAuth.user && window.AltahaAuth.user();
+    var who = (user && user.email) || '';
+    var names = store && typeof store === 'object' ? Object.keys(store).filter(function (n) {
+      return !(store[n] && store[n].owner) || store[n].owner === who;
+    }) : [];
     if (!names.length) return 0;
     var first = store[names[0]];
     var rows = (first && (first.rows || first.holdings)) || (Array.isArray(first) ? first : []);

@@ -146,6 +146,49 @@ never the one on the disk with real users in it. `_ensure_column` is what makes
 the deployed database get them too, and there is a test that opens a
 pre-codes database and signs in against it.
 
+## The portfolio stays with its account
+
+Signed in, the list on the Portfolio tab is a copy of the **account's**
+portfolio, kept in `localStorage` so it draws at once. The API has always kept
+accounts apart (`/me/portfolio` is read and written by the session's user id).
+The browser's copy did not: it outlived the session it came from.
+
+- Sign out, and the list stayed on the screen for whoever used the browser
+  next.
+- Sign in as somebody else with nothing saved, and the rule written for a list
+  typed signed out ("an empty account takes what this browser holds") saved
+  the first account's holdings into the second, where the daily email then
+  reported on them.
+
+So the copy now has an owner, the account it last agreed with
+(`altaha-portfolio-synced`: `who`, `sig`, `out`), and it leaves with that
+account (`portfolio.js`, *Whose list this is*):
+
+| What happened | The list in the browser |
+|---|---|
+| Somebody signed out here since it last synced (`AltahaAuth.signOutMark()` has changed) | Goes, before anything is drawn |
+| A different account is signed in | Goes, and is never sent |
+| The session lapsed (a 401) | Goes, unless it holds a change the account never received, which is kept for its owner to send |
+| It was typed signed out (no owner) | Kept, and saved to the first account that signs in with nothing saved, as before |
+
+Nothing is lost by any of the first three: the account has the list, and it is
+back on the next sign-in. A line under the table says why it went.
+
+Until `/auth/me` has said whose session this is, a list with an owner is not
+saved anywhere (`unconfirmed()`): the Save button and the email button say they
+are still checking.
+
+A portfolio saved **by name** is kept in the browser only. One saved while
+signed in now carries its account and is offered only to that account; one
+saved signed out, or before this change, has no owner and is offered to anybody
+on that browser.
+
+`frontend/tests/portfolio-accounts-browser.cjs` walks two accounts through one
+browser, a lapsed session and a second open tab.
+
+**Not covered:** the watchlists still merge whatever is in the browser into the
+first account that signs in, including a list another account left there.
+
 ## The watchlist, and why it merges exactly once
 
 The watchlist is the list most readers will ever build — following a stock

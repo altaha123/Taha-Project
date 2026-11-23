@@ -486,6 +486,15 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/portfolio-sync-browser.cjs
+      - name: One computer, more than one account
+        # A portfolio stays with its account: it is not shown to, or saved
+        # into, the next account to sign in on the same browser, it leaves the
+        # screen on sign-out (in every open tab), and a session that lapses
+        # does not cost a change the account never received.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/portfolio-accounts-browser.cjs
       - name: Verify the holdings ledger is compact, adds up and works on a phone
         # One line per holding, under one header; a board whose totals come
         # only from the quotes given; sorting that the draft keeps; no price

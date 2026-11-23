@@ -1107,11 +1107,22 @@
 
   /* ── 5. SAVED PORTFOLIOS ────────────────────────────────────────────────── */
 
+  /* A portfolio named and saved while signed in is that account's. It stays in
+     the browser it was saved in, but only its own account is offered it: the
+     picker used to hand it to anybody, signed in as somebody else or not at
+     all, and loading it there saved it into their account a moment later.
+     One saved signed out, or before saves carried an owner, has none and is
+     the browser's, as before. */
+  function offered(entry) {
+    return !!entry && (!entry.owner || entry.owner === me());
+  }
+
   function refreshSaved() {
     var sel = $('pf_saved');
     if (!sel) return;
     var store = readStore();
-    var names = Object.keys(store).sort();
+    var names = Object.keys(store).filter(function (n) { return offered(store[n]); }).sort();
+    if (names.indexOf(state.activeName) === -1) state.activeName = null;
     sel.innerHTML = '<option value="">Saved portfolios\u2026</option>' +
       names.map(function (n) {
         return '<option value="' + esc(n) + '"' +
@@ -1126,6 +1137,9 @@
   }
 
   function saveCurrent() {
+    // Not until it is known whose list this is: see "Whose list this is".
+    if (sweep()) return;
+    if (unconfirmed()) { note('Still checking who is signed in. Try again in a moment.', 'warn'); return; }
     var holdings = collect();
     if (!holdings.length) { note('Nothing to save yet.', 'warn'); return; }
     var name = prompt('Name this portfolio', state.activeName || 'My portfolio');
@@ -1134,7 +1148,7 @@
     if (!name) return;
 
     var store = readStore();
-    store[name] = { rows: state.rows, saved_at: new Date().toISOString() };
+    store[name] = { rows: state.rows, saved_at: new Date().toISOString(), owner: me() || undefined };
     if (!writeStore(store)) {
       note('Could not save: browser storage is full or blocked.', 'warn');
       return;
@@ -1157,7 +1171,7 @@
   function loadSaved(name) {
     if (!name) return;
     var entry = readStore()[name];
-    if (!entry) return;
+    if (!offered(entry)) return;
     state.rows = (entry.rows || []).slice(0, MAX_ROWS);
     state.activeName = name;
     renderRows();
@@ -1976,6 +1990,23 @@
 
   /* ── 10. INIT ───────────────────────────────────────────────────────────── */
 
+  /* One empty row, and nothing left on the page describing the list that
+     was there: not its report, its story or its plan. */
+  function emptyTable() {
+    state.rows = []; state.activeName = null;
+    // A review still running is of the list that has just gone: without this
+    // its report was drawn under an empty table a few seconds later.
+    state.request += 1;
+    clearTimeout(state.pollTimer);
+    setBusy(false, '');
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    addRow(); refreshSaved(); clearNote();
+    var rep = $('pf_report'); if (rep) rep.style.display = 'none';
+    if (window.PortfolioStory) window.PortfolioStory.destroy($('pf_story'));
+    if (window.PortfolioPlan) window.PortfolioPlan.destroy($('pf_plan'));
+    var fb = $('pf_fullbar'); if (fb) fb.hidden = true;
+  }
+
   function init() {
     if (!$('pf_rows')) return;
 
@@ -1986,6 +2017,10 @@
       var draft = readDraft();
       if (draft.length) state.rows = draft;
     }
+    // Unless it was an account's list and that account is not the one here:
+    // decided before anything is drawn, so it is never on the screen at all.
+    var gone = whyStale();
+    if (gone) forgetList();
     if (!state.rows.length) addRow();
 
     $('pf_addrow').addEventListener('click', function () {
@@ -2037,13 +2072,7 @@
     $('pf_saved').addEventListener('change', function () { loadSaved(this.value); });
     $('pf_clear').addEventListener('click', function () {
       if (!confirm('Clear all rows?')) return;
-      state.rows = []; state.activeName = null;
-      try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
-      addRow(); refreshSaved(); clearNote();
-      var rep = $('pf_report'); if (rep) rep.style.display = 'none';
-      if (window.PortfolioStory) window.PortfolioStory.destroy($('pf_story'));
-      if (window.PortfolioPlan) window.PortfolioPlan.destroy($('pf_plan'));
-      var fb = $('pf_fullbar'); if (fb) fb.hidden = true;
+      emptyTable();
     });
     var exp = $('pf_export');
     if (exp) exp.addEventListener('click', exportCSV);
@@ -2059,9 +2088,14 @@
     wireFork();
     refreshSaved();
     renderRows();
+    if (gone) sayWhyGone(gone);
     paintAccount();
     serverLoad();
-    window.addEventListener('altaha-auth', function () { paintAccount(); serverLoad(); });
+    // Who is signed in has changed, or has just become known: the list on the
+    // screen and the named ones offered are both decided by that.
+    window.addEventListener('altaha-auth', function () {
+      sweep(); refreshSaved(); paintAccount(); serverLoad();
+    });
   }
 
   /* ── 5a. THE FORK ─────────────────────────────────────────────────────────
@@ -2119,7 +2153,14 @@
      before it will do arithmetic is a screener people leave. */
 
   function serverSave(silent) {
-    if (!window.AltahaAuth || !window.AltahaAuth.authed()) return Promise.resolve(false);
+    if (!tokened()) return Promise.resolve(false);
+    // Every way of saving comes through here, so this is where a list another
+    // account left in this browser is stopped. See "Whose list this is".
+    if (sweep()) return Promise.resolve(false);
+    if (unconfirmed()) {
+      say('Still checking who is signed in. Try again in a moment.', 'warn');
+      return Promise.resolve(false);
+    }
     var holdings = collect().map(function (h) {
       return { symbol: h.symbol, qty: h.qty, avg_price: h.buy_price, buy_date: h.buy_date };
     });
@@ -2178,11 +2219,74 @@
     try { return JSON.parse(localStorage.getItem(SYNC_KEY) || 'null') || {}; } catch (e) { return {}; }
   }
   function markSynced(sig) {
-    try { localStorage.setItem(SYNC_KEY, JSON.stringify({ who: me(), sig: sig })); } catch (e) {}
+    try { localStorage.setItem(SYNC_KEY, JSON.stringify({ who: me(), sig: sig, out: outMark() })); } catch (e) {}
   }
   /* A row with a symbol and no quantity yet is somebody mid-sentence. */
   function midEdit() {
     return state.rows.some(function (r) { return r.symbol && !(Number(r.qty) > 0); });
+  }
+
+  /* ── Whose list this is ───────────────────────────────────────────────────
+     Once the list in this browser has agreed with an account it is that
+     ACCOUNT's copy, not the browser's, and markSynced() records whose. It
+     used to outlive the session it came from. Signing out left it on the
+     screen for whoever sat down next, and the next account to sign in with
+     nothing saved was handed it by the rule below written for a list typed
+     signed out ("an account with nothing saved takes what this browser
+     holds"). One reader's holdings ended up saved under another reader's
+     email, and in that reader's daily email. So the list leaves with its
+     account:
+       · its account signed out of this browser: it goes
+       · somebody else is signed in: it goes, and is never sent
+       · the session simply lapsed: it goes, unless it holds a change the
+         account never received, which is kept for its owner to send
+     A list typed signed out has no owner. It is whoever is sitting here's,
+     and still goes to the first account that signs in. */
+  function tokened() { return !!(window.AltahaAuth && window.AltahaAuth.authed()); }
+  /* Changes each time somebody signs out of this browser on purpose (auth.js).
+     Compared for a change, never as a time: a clock that is put back must not
+     make a reader's own list look older than their last sign-out. */
+  function outMark() {
+    return (window.AltahaAuth && window.AltahaAuth.signOutMark && window.AltahaAuth.signOutMark()) || '';
+  }
+
+  /* '' while the list is this reader's to see, otherwise why it is not. */
+  function whyStale() {
+    var synced = readSynced(), who = synced.who || '';
+    if (!who) return '';
+    if (tokened() && me() && me() !== who) return 'other';
+    if (outMark() !== (synced.out || '')) return 'out';
+    // Signed in as its own account, or not yet told as whom. Not known is
+    // asked again when /auth/me answers, and unconfirmed() keeps the list
+    // from being saved anywhere meanwhile.
+    if (tokened()) return '';
+    return signature(collect()) === synced.sig ? 'lapsed' : '';
+  }
+  function unconfirmed() {
+    var who = readSynced().who || '';
+    return !!who && tokened() && who !== me();
+  }
+  function forgetList() {
+    state.rows = []; state.activeName = null;
+    try { localStorage.removeItem(DRAFT_KEY); localStorage.removeItem(SYNC_KEY); } catch (e) {}
+  }
+  /* Said once, where the list was: a portfolio that vanishes without a word
+     reads as a portfolio that was lost. Nothing is said to somebody signing
+     straight back in, whose own list is already on its way from the account. */
+  function sayWhyGone(why) {
+    if (why === 'other') {
+      note('This browser was showing another account\'s portfolio, so it has been taken off the screen. Nothing was copied to this account.', '');
+    } else if (!tokened()) {
+      note('You are signed out, so your account\'s portfolio is no longer shown on this browser. Sign in to see it again.', '');
+    }
+  }
+  function sweep() {
+    var why = whyStale();
+    if (!why) return false;
+    forgetList();
+    emptyTable();
+    sayWhyGone(why);
+    return true;
   }
   function queueAccountSave() {
     if (!window.AltahaAuth || !window.AltahaAuth.authed() || !me()) return;
@@ -2201,6 +2305,7 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || !Array.isArray(d.holdings) || !me()) return;
+        sweep();      // before anything here is compared with, or sent to, this account
         var server = d.holdings.map(function (h) {
           return { symbol: h.symbol, qty: h.qty, buy_price: h.avg_price, buy_date: h.buy_date || null };
         });
@@ -2209,7 +2314,9 @@
         if (midEdit()) return;
         // A change made here that the account has not had yet is the newer one.
         if (synced.who === me() && synced.sig !== mine) { serverSave(true); return; }
-        // An account with nothing saved takes what this browser holds.
+        // An account with nothing saved takes what this browser holds. After
+        // the sweep above that is a list typed signed out or this account's
+        // own, never one another account left here.
         if (!server.length) { if (collect().length) serverSave(true); return; }
         state.rows = d.holdings.slice(0, MAX_ROWS).map(function (h) {
           return { symbol: h.symbol, qty: String(h.qty),
@@ -2218,6 +2325,9 @@
         markSynced(theirs);
         renderRows();
         saveDraft();
+        // "Do you already hold stocks?" was asked of an empty table. It is
+        // not a question to leave above the holdings that have just arrived.
+        var fork = $('pf_fork'); if (fork) fork.style.display = 'none';
         note('Loaded ' + d.holdings.length + ' holding' +
              (d.holdings.length === 1 ? '' : 's') + ' from your account.', 'good');
         paintAccount();
