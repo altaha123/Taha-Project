@@ -249,7 +249,7 @@
             '</div>' +
           '</section>' +
           '<section class="dr-sec dr-rise" style="--i:2">' +
-            '<div class="dr-sec-h"><h2>Sectors right now</h2><span>Colour is today’s move · tap one to see its stocks</span></div>' +
+            '<div class="dr-sec-h"><h2>Sector performance</h2><span>Colour is today’s move · tap one to see its stocks</span></div>' +
             '<div class="dr-heat" id="drt-heat"><p class="dr-quiet">Reading the sectors…</p></div>' +
             '<div class="dr-secpanel" id="drt-secpanel" role="region" tabindex="-1" hidden></div>' +
           '</section>' +
