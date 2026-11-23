@@ -372,9 +372,11 @@
     chrome.setAttribute('data-nosnippet', '');
 
     var ticker = el('div', 'sh-ticker');
-    ticker.setAttribute('aria-label', 'Live market prices');
+    ticker.id = 'sh-ticker';
+    // The tag and the label are painted by paintTape(): "Live" is a claim
+    // about the session, so it is not written here as a constant.
     ticker.innerHTML =
-      '<span class="sh-livetag"><i class="sh-dot"></i>Live</span>' +
+      '<span class="sh-livetag" id="sh-livetag"><i class="sh-dot"></i><span id="sh-livetag-t"></span></span>' +
       '<div class="sh-railbox"><div class="sh-rail" id="sh-rail"></div></div>' +
       '<span class="sh-ribbon-clock" id="sh-clock"></span>';
 
@@ -1699,16 +1701,63 @@
 
   function startClock() {
     var clock = document.getElementById('sh-clock');
-    if (!clock) return;
     function stamp() {
+      if (!clock) return;
       try {
         clock.textContent = new Date().toLocaleTimeString('en-IN', {
           hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata'
         }) + ' IST';
       } catch (e) {}
     }
-    stamp();
-    setInterval(stamp, 30000);
+    // The tag at the other end of the tape keeps the same time: it turns to
+    // Closed at 15:30 by this clock when /market has not been heard from.
+    function tick() { stamp(); paintTape(); }
+    tick();
+    setInterval(tick, 30000);
+  }
+
+  /* ── The tag at the head of the tape ──────────────────────────────────────
+     It says Live only while the market is trading. Outside the session the
+     prices on the tape are the last close, and the tag says so: Closed, or
+     Pre-open on a trading morning, the same three words the Market page and
+     the Market menu use.
+
+     /market is the authority, because it knows a holiday and a special
+     session and a clock does not. The clock answers only when /market has
+     not: before its first reply, when it fails, and when its last reply is
+     too old to stand for now (a tab left open across the close). */
+
+  var TAPE = { status: null, at: 0 };
+  var TAPE_FRESH_MS = 150000;      // two missed refreshes of the tape
+
+  /* The NSE equity session by the IST clock: 09:15 to 15:30, Monday to
+     Friday. The same window /market falls back on. */
+  function sessionByClock(now) {
+    var d = new Date((now || Date.now()) + 19800000);   // IST is UTC+5:30, no DST
+    var day = d.getUTCDay();
+    if (day === 0 || day === 6) return 'closed';
+    var mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+    return mins < 555 ? 'pre' : mins < 930 ? 'open' : 'closed';
+  }
+
+  function tapeStatus() {
+    var fresh = TAPE.status && Date.now() - TAPE.at < TAPE_FRESH_MS;
+    return fresh ? TAPE.status : sessionByClock();
+  }
+
+  function paintTape() {
+    var tag = document.getElementById('sh-livetag');
+    var text = document.getElementById('sh-livetag-t');
+    if (!tag || !text) return;
+    var s = tapeStatus(), open = s === 'open';
+    var label = open ? 'Live' : s === 'pre' ? 'Pre-open' : 'Closed';
+    if (text.textContent !== label) text.textContent = label;
+    tag.classList.toggle('is-off', !open);
+    tag.setAttribute('data-state', open ? 'open' : s === 'pre' ? 'pre' : 'closed');
+    var ticker = document.getElementById('sh-ticker');
+    if (ticker) ticker.setAttribute('aria-label', open ? 'Live market prices'
+      : s === 'pre' ? 'Market prices from the last close. The market has not opened yet'
+      : 'Market prices from the last close. The market is closed');
   }
 
   /* ── The live ticker ─────────────────────────────────────────────────────── */
@@ -1764,6 +1813,10 @@
                        pct: i.change_pct, link: false });
         });
       }).catch(function () {}).then(function () {
+        // A failed read leaves status null, and the tag goes by the clock.
+        TAPE.status = status === 'open' || status === 'pre' || status === 'closed' ? status : null;
+        TAPE.at = Date.now();
+        paintTape();
         return get('/sector/overview?window=1D&stocks=1', 12000).catch(function () { return null; });
       }).then(function (d) {
         sec = d;
@@ -1802,7 +1855,9 @@
     // Refresh on return, so coming back to the tab shows live prices rather
     // than whatever was on screen when you left.
     document.addEventListener('visibilitychange', function () {
-      if (!document.hidden) load();
+      // The tag first: a tab that was left on Live at three should not still
+      // say so at nine while /market is being asked again.
+      if (!document.hidden) { paintTape(); load(); }
     });
   }
 
