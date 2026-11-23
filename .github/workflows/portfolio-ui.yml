@@ -130,6 +130,13 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/footer-browser.cjs
+      - name: Verify the tape says Live only while the market trades
+        # The tag at the head of the tape was the constant "Live", on gold,
+        # at ten at night above a page that said the market was closed.
+        if: always()
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/tape-state-browser.cjs
       - name: Verify the stock picks lead Ideas, keep their exit line and fit a phone
         if: always()
         # Ideas answered "what should I look at?" with a picture of a planet.
