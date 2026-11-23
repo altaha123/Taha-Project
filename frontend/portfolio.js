@@ -465,6 +465,38 @@
     for (var i = 0; i < sym.length; i++) h = (h * 31 + sym.charCodeAt(i)) >>> 0;
     return TONES[h % TONES.length];
   }
+  /* The company's mark over its initials. The same image host the Wealth desk
+     uses (wealth.js), keyed by NSE symbol, so a small company with no website
+     on file still has one. Asked for once per symbol, and only for a symbol
+     that is real (it has a quote or is in the exchange's list), not for each
+     half-typed one. The initials stay underneath: they are what shows until
+     the mark has loaded, and for good if the host has none (it answers 403).
+     A board repaints on every tick, so a tile already showing this symbol's
+     mark is left alone. */
+  var LOGO_HOST = 'https://images.dhan.co/symbol/';
+  function paintAv(av, sym, known) {
+    sym = sym || '';
+    if (av.dataset.sym !== sym) {
+      av.dataset.sym = sym;
+      av.dataset.mark = '';
+      av.textContent = sym ? sym.replace(/[^A-Z0-9]/g, '').slice(0, 2) : '+';
+      av.style.background = sym ? tone(sym) : '';
+      av.classList.toggle('empty', !sym);
+      av.classList.remove('has-img');
+    }
+    if (!sym || !known || av.dataset.mark === sym) return;
+    av.dataset.mark = sym;
+    var img = new Image();
+    img.alt = '';
+    img.decoding = 'async';
+    img.referrerPolicy = 'no-referrer';
+    img.onload = function () {
+      if (img.naturalWidth < 24 || av.dataset.sym !== sym || !av.isConnected) return;
+      av.appendChild(img);
+      av.classList.add('has-img');
+    };
+    img.src = LOGO_HOST + encodeURIComponent(sym) + '.png';
+  }
   function num(v) { var n = Number(v); return v !== '' && v !== null && v !== undefined && isFinite(n) ? n : null; }
   function px(n) {
     if (n === null || !isFinite(n)) return '—';
@@ -647,11 +679,7 @@
       if (!row) return;
       var sym = f.r.symbol;
       var av = row.querySelector('.pf-av');
-      if (av) {
-        av.textContent = sym ? sym.replace(/[^A-Z0-9]/g, '').slice(0, 2) : '+';
-        av.style.background = sym ? tone(sym) : '';
-        av.classList.toggle('empty', !sym);
-      }
+      if (av) paintAv(av, sym, !!f.q || !!(sym && LIVE.names && Object.prototype.hasOwnProperty.call(LIVE.names, sym)));
       var name = row.querySelector('.pf-name');
       if (name) {
         var nm = sym && LIVE.names ? (LIVE.names[sym] || '') : '';

@@ -16,6 +16,8 @@
  *   5. The signed-in box is one slim strip, and its controls still work.
  *   6. A phone gets compact cards, no sideways scroll, and every input is
  *      still a real input.
+ *   7. The badge carries the company's mark over its initials, asked for once
+ *      per real symbol. Where the image host has none, the initials stay.
  */
 const fs = require('node:fs'), path = require('node:path'), http = require('node:http');
 const assert = require('node:assert/strict');
@@ -55,6 +57,10 @@ HOLD.forEach(([s, , buy]) => {
 });
 QUOTES.WIPRO = { symbol: 'WIPRO', ltp: 200, prev_close: 202, change_pct: -0.99, spark: [210, 205, 200], source: 'Test feed' };
 const NAMES = { HSCL: 'Himadri Speciality Chemical Limited', TCS: 'Tata Consultancy Services Limited', WIPRO: 'Wipro Limited' };
+// A 64-pixel mark, and the symbols the image host has none for (it answers 403).
+const MARK = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAUUlEQVR42u3PMQ0AMAgAMJgG1KEOqVPBQdI6aFZPXPbiOAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAYF9HyTJAY7THInWAAAAAElFTkSuQmCC', 'base64');
+const NO_MARK = new Set(['IRISDOREME']);
+const logoAsks = [];
 
 (async () => {
   await new Promise(r => server.listen(8785, '127.0.0.1', r));
@@ -69,6 +75,13 @@ const NAMES = { HSCL: 'Himadri Speciality Chemical Limited', TCS: 'Tata Consulta
       const url = new URL(route.request().url());
       const p = url.pathname;
       if (url.hostname === '127.0.0.1') return route.continue();
+      if (url.hostname === 'images.dhan.co') {
+        const sym = decodeURIComponent(p.replace(/^\/symbol\//, '').replace(/\.png$/, ''));
+        logoAsks.push(sym);
+        return NO_MARK.has(sym)
+          ? route.fulfill({ status: 403, contentType: 'application/xml', body: '<Error><Code>AccessDenied</Code></Error>' })
+          : route.fulfill({ contentType: 'image/png', body: MARK });
+      }
       const kind = route.request().resourceType();
       if (kind === 'script' || kind === 'font' || kind === 'stylesheet') return route.abort();
       if (p === '/auth/me') {
@@ -112,6 +125,20 @@ const NAMES = { HSCL: 'Himadri Speciality Chemical Limited', TCS: 'Tata Consulta
       assert.ok(await page.locator('.pfhead').isVisible(), 'the one header for every row is missing');
       const first = page.locator('#pf_rows .pfrow').first();
       assert.equal(await first.locator('.pf-av').innerText(), 'HS');
+
+      // 7 · The company's mark over its initials, which stay underneath.
+      await first.locator('.pf-av.has-img img').waitFor();
+      assert.match(await first.locator('.pf-av img').getAttribute('src'), /^https:\/\/images\.dhan\.co\/symbol\/HSCL\.png$/);
+      assert.equal(await first.locator('.pf-av').innerText(), 'HS', 'the initials were thrown away under the mark');
+      const iris = page.locator('#pf_rows .pfrow').nth(1);
+      await page.waitForFunction(() => document.querySelectorAll('#pf_rows .pf-av.has-img').length >= 19);
+      assert.equal(await iris.locator('.pf-av img').count(), 0, 'a 403 from the image host became a broken image');
+      assert.equal(await iris.locator('.pf-av').innerText(), 'IR');
+      // KAYNES has no price and is not in this test's list of NSE names: not a
+      // symbol anyone has confirmed, so nobody is asked for its mark.
+      assert.ok(!logoAsks.includes('KAYNES'), 'a mark was asked for a symbol nobody has confirmed');
+      const twice = logoAsks.filter((x, i) => logoAsks.indexOf(x) !== i);
+      assert.deepEqual(twice, [], 'a mark was asked for again on a repaint: ' + twice.join(', '));
       assert.match(await first.locator('.pf-name').innerText(), /Himadri Speciality Chemical/);
       // HSCL: 66 × 784.78 = 51,795; cost 47,087; profit 4,708 (10%).
       assert.match(await first.locator('.pf-price').innerText(), /₹784\.78/);
