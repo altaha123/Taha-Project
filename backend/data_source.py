@@ -17,22 +17,26 @@ except Exception:      # module optional
 
 _CACHE = {}
 _TTL = 1800  # 30 minutes
+# A Dhan history whose bar for today could not be built from the live quote.
+# Kept briefly, so a burst of requests does not refetch it, but not for the
+# half hour a complete one is: the last session's close is not today's price.
+MISSING_TODAY_TTL = 60
 MAX_CACHE = 120        # bounded for a 512 MB instance
 
 
 def _cget(k):
     hit = _CACHE.get(k)
-    if hit and (time.time() - hit[0]) < _TTL:
+    if hit and (time.time() - hit[0]) < hit[2]:
         return hit[1]
     return None
 
 
-def _cput(k, v):
+def _cput(k, v, ttl=_TTL):
     if len(_CACHE) >= MAX_CACHE:
         # drop the oldest third rather than growing without bound
         for old in sorted(_CACHE, key=lambda x: _CACHE[x][0])[: MAX_CACHE // 3]:
             _CACHE.pop(old, None)
-    _CACHE[k] = (time.time(), v)
+    _CACHE[k] = (time.time(), v, ttl)
 
 
 class NotFound(Exception):
@@ -83,7 +87,7 @@ def resolve(raw: str):
                 df = None
             if df is not None and len(df) >= 60:
                 df.attrs.update(price_source="Dhan", adjustment="unverified")
-                _cput(key, df)
+                _cput(key, df, MISSING_TODAY_TTL if df.attrs.get("today_missing") else _TTL)
                 return f"{base}.NS", yf.Ticker(f"{base}.NS"), df
 
     for sym in candidates:
