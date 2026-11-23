@@ -623,6 +623,16 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pf-av{ grid-area:av; display:grid; place-items:center; width:38px; height:38px; border-radius:12px;
   color:#fff; font:600 13px/1 Inter,system-ui,sans-serif; letter-spacing:.02em; background:#8a7f69; text-transform:uppercase }
 #view-portfolio .pf-av.empty{ background:transparent; color:var(--gold-dp,#8A6D1E); border:1.5px dashed var(--gold,#A8801C); font-size:18px; font-weight:500 }
+/* The company's mark, over its initials (portfolio.js, paintAv). On white
+   whatever the theme: a logo is drawn for a white page, and on a dark tile
+   half of them disappear. */
+#view-portfolio .pf-av{ position:relative; overflow:hidden }
+#view-portfolio .pf-av img{ position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box;
+  object-fit:contain; padding:8%; background:#fff; border:1px solid var(--rule,#E4DED1); border-radius:inherit;
+  animation:pfAvIn 240ms ease-out both }
+@keyframes pfAvIn{ from{ opacity:0 } to{ opacity:1 } }
+@media (prefers-reduced-motion: reduce){ #view-portfolio .pf-av img{ animation:none } }
+html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pf-field{ display:block; min-width:0; margin:0 }
 #view-portfolio .pf-field-symbol{ grid-area:sym } #view-portfolio .pf-field-qty{ grid-area:qty }
 #view-portfolio .pf-field-buy{ grid-area:buy } #view-portfolio .pf-price{ grid-area:price }
