@@ -31,6 +31,15 @@
     : (window.API_BASE || 'https://taha-project.onrender.com');
 
   var KEY = 'altaha-session-v1';
+  /* Changed every time somebody signs out of this browser on purpose. A copy
+     of an account's data that a page keeps here (the portfolio's working
+     list) remembers the mark it was made under; a different mark means its
+     session has ended and it is not the next reader's to see or to save. A
+     mark, not deleting those copies from here: sign-out happens on
+     signin.html, which loads none of the pages that own them, and a tab left
+     open elsewhere still has the list on its screen and must be able to tell
+     that it is stale. */
+  var OUT = KEY + '-out';
   var cached = null;              // the last /auth/me answer
 
   function readToken() {
@@ -180,6 +189,9 @@
 
   function signOut() {
     var done = authFetch('/auth/logout', { method: 'POST' }).catch(function () {});
+    try {
+      localStorage.setItem(OUT, Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+    } catch (e) {}
     writeToken('');
     cached = null;
     announce();
@@ -198,7 +210,10 @@
     verifyCode: verifyCode,
     google: google,
     config: config,
-    signOut: signOut
+    signOut: signOut,
+    signOutMark: function () {
+      try { return localStorage.getItem(OUT) || ''; } catch (e) { return ''; }
+    }
   };
 
   window.addEventListener('storage', function (event) {

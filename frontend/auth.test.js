@@ -37,6 +37,26 @@ test('successful verification persists session; logout clears it', async () => {
   assert.equal(auth.user(), null);
   assert.equal(auth.token(), '');
 });
+test('signing out on purpose changes the mark; a session that lapses does not', async () => {
+  // Pages that keep a copy of an account's data remember the mark it was made
+  // under, and a changed mark tells them its session has ended (portfolio.js).
+  let status = 401;
+  const { auth, data } = setup(async () => response(status, { token: 'session', user: { email: 'a@example.com' } }));
+  assert.equal(auth.signOutMark(), '');
+  data.set(key, 'old');
+  await auth.refresh();
+  assert.equal(auth.token(), '');
+  assert.equal(auth.signOutMark(), '');
+  status = 200;
+  await auth.verify('link');
+  await auth.signOut();
+  const first = auth.signOutMark();
+  assert.notEqual(first, '');
+  await auth.verify('link');
+  assert.equal(auth.signOutMark(), first);
+  await auth.signOut();
+  assert.notEqual(auth.signOutMark(), first);
+});
 test('expired session clears, temporary server failure preserves session', async () => {
   let status = 503;
   const { auth, data } = setup(async () => response(status, {}));
