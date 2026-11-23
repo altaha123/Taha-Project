@@ -26,6 +26,7 @@ import pytest
 BACKEND = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 MONDAY_AFTER_CLOSE = dt.datetime(2026, 11, 23, 15, 53, tzinfo=IST)
+MONDAY_MIDDAY = dt.datetime(2026, 11, 23, 11, 0, tzinfo=IST)
 SATURDAY = dt.datetime(2026, 11, 21, 12, 0, tzinfo=IST)
 
 
@@ -124,6 +125,7 @@ def test_a_complete_frame_is_still_kept_for_half_an_hour(ds, monkeypatch):
     data_source, clock = ds
     fake, calls = feed([through_friday()])
     monkeypatch.setattr(data_source, "dhan", fake)
+    monkeypatch.setattr(data_source, "_px_ttl", lambda now=None: data_source._TTL)  # an evening
     data_source.resolve("TCS")
     clock["t"] += data_source._TTL - 1
     data_source.resolve("TCS")
@@ -151,3 +153,18 @@ def test_concurrent_quote_callers_take_turns(d, monkeypatch):
     stamps.sort()
     gaps = [b - a for a, b in zip(stamps, stamps[1:])]
     assert min(gaps) >= 0.04, gaps
+
+
+def test_a_complete_frame_is_kept_for_five_minutes_while_the_market_trades(ds, monkeypatch):
+    data_source, clock = ds
+    fake, calls = feed([through_friday()])
+    monkeypatch.setattr(data_source, "dhan", fake)
+    real = data_source._px_ttl
+    monkeypatch.setattr(data_source, "_px_ttl", lambda now=None: real(MONDAY_MIDDAY))
+    data_source.resolve("TCS")
+    clock["t"] += data_source.SESSION_TTL - 1
+    data_source.resolve("TCS")
+    assert len(calls) == 1
+    clock["t"] += 2
+    data_source.resolve("TCS")
+    assert len(calls) == 2

@@ -75,6 +75,21 @@ html[data-theme="dark"] .stk-crumb .brandmark{ background-image:url(altaha-logo-
 .stk-px{ margin-left:auto; text-align:right }
 .stk-px .now{ font:600 28px/1 'IBM Plex Mono',monospace; letter-spacing:-.02em }
 .stk-px .chg{ font:600 14px/1 'IBM Plex Mono',monospace; margin-top:8px; min-height:14px }
+/* A tick: the price takes the colour of the move for a moment, then settles. */
+.stk-px .now{ transition:color 600ms var(--ease) }
+.stk-px .now.tick-up{ color:var(--sh-up); transition:none }
+.stk-px .now.tick-dn{ color:var(--sh-dn); transition:none }
+.px-live{
+  display:inline-flex; align-items:center; gap:6px; margin-top:8px;
+  font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
+}
+.px-live[hidden]{ display:none }
+.px-live i{ width:7px; height:7px; border-radius:50%; background:var(--sh-up); animation:pxLive 1.8s var(--ease) infinite }
+@keyframes pxLive{ 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
+@media (prefers-reduced-motion: reduce){
+  .stk-px .now{ transition:none }
+  .px-live i{ animation:none }
+}
 
 /* ── Logos ───────────────────────────────────────────────────────────────
    The company's initials on a tile tinted from its symbol, and its own mark

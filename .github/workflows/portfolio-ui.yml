@@ -435,11 +435,23 @@ jobs:
         env:
           NODE_PATH: /tmp/portfolio-browser/node_modules
         run: node frontend/tests/stock-page-browser.cjs
+      - name: Verify the stock page's price follows the tape while the market trades
+        if: always()
+        # Between 09:15 and 16:00 IST the header price, the stuck bar's price
+        # and the day's move follow each tick from /stream/quotes. The move is
+        # measured from the last session's close, whether or not today's bar is
+        # in the daily series yet. At the weekend no stream is opened, and an
+        # API with no stream leaves the page as it was.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/stock-live-price-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: stock-page-browser-verification
-          path: test-results/stock-page
+          path: |
+            test-results/stock-page
+            test-results/stock-live-price
       - uses: actions/upload-artifact@v4
         if: always()
         with:

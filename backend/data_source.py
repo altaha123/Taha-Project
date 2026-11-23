@@ -1,11 +1,12 @@
 """
 Altaha Screener — Data Layer
 
-Wraps yfinance with an in-memory cache (30 min) so repeated lookups and the
-leaderboard don't hammer the provider, plus ownership extraction from the
+Wraps yfinance with an in-memory cache (30 min; 5 min while the market
+trades) so repeated lookups and the leaderboard don't hammer the provider, plus ownership extraction from the
 quarterly shareholding data where published.
 """
 
+import datetime as dt
 import time
 import pandas as pd
 import yfinance as yf
@@ -21,7 +22,34 @@ _TTL = 1800  # 30 minutes
 # Kept briefly, so a burst of requests does not refetch it, but not for the
 # half hour a complete one is: the last session's close is not today's price.
 MISSING_TODAY_TTL = 60
+# While the market trades, the last bar is a price that moves. Half an hour
+# of it cached was a stock page opening up to thirty minutes behind the tape.
+# Five minutes, from the open until the closing price has settled. The page
+# itself ticks from the live feed on top of this; this is what it opens with,
+# and what the score and the levels are worked out from.
+SESSION_TTL = 300
+IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
+SESSION_OPEN_MIN = 9 * 60 + 15     # 09:15
+SESSION_SETTLED_MIN = 16 * 60      # 16:00: the closing price is in by then
 MAX_CACHE = 120        # bounded for a 512 MB instance
+
+
+def _px_ttl(now=None):
+    """How long a price history fetched `now` may be served from the cache.
+
+    Short while the session is on. Before the open on a weekday, never past
+    the open: a history cached at 09:10 would otherwise open the session with
+    yesterday's close for its price and yesterday's move for today's."""
+    n = (now or dt.datetime.now(IST)).astimezone(IST)
+    if n.weekday() >= 5:
+        return _TTL
+    mins = n.hour * 60 + n.minute
+    if SESSION_OPEN_MIN <= mins < SESSION_SETTLED_MIN:
+        return SESSION_TTL
+    if mins < SESSION_OPEN_MIN:
+        to_open = (SESSION_OPEN_MIN - mins) * 60 - n.second
+        return max(1, min(_TTL, to_open))
+    return _TTL
 
 
 def _cget(k):
@@ -87,7 +115,7 @@ def resolve(raw: str):
                 df = None
             if df is not None and len(df) >= 60:
                 df.attrs.update(price_source="Dhan", adjustment="unverified")
-                _cput(key, df, MISSING_TODAY_TTL if df.attrs.get("today_missing") else _TTL)
+                _cput(key, df, MISSING_TODAY_TTL if df.attrs.get("today_missing") else _px_ttl())
                 return f"{base}.NS", yf.Ticker(f"{base}.NS"), df
 
     for sym in candidates:
@@ -100,7 +128,7 @@ def resolve(raw: str):
             if h is not None and len(h) >= 60:
                 h = h.dropna(subset=["Close"])
                 h.attrs.update(price_source="Yahoo Finance", adjustment="adjusted")
-                _cput(f"px::{sym}", h)
+                _cput(f"px::{sym}", h, _px_ttl())
                 return sym, t, h
         except Exception:
             continue

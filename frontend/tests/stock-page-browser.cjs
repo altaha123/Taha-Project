@@ -339,7 +339,10 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       /* ── 5b. Switching sections moves nothing else ─────────────────────── */
       const tabX = () => page.locator('#pane-btn-info').evaluate(b => Math.round(b.getBoundingClientRect().left));
       await page.evaluate(() => scrollTo(0, 0));
-      await page.waitForTimeout(450);
+      // Waited for, not slept on: the observer that unsticks the bar can fire
+      // after a fixed 450 ms on a busy runner, and the fade then reads '1'.
+      await page.waitForFunction(() => getComputedStyle(document.getElementById('stk-mini')).opacity === '0',
+        null, { timeout: 3000 }).catch(() => {});
       const restX = await tabX();
       assert.equal(await page.locator('#stk-mini').evaluate(e => getComputedStyle(e).opacity), '0');
 
@@ -348,7 +351,8 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       await page.locator('#pane-btn-scores').click();
       await page.evaluate(() => scrollTo(0, 1100));
       await page.locator('#stk-panebar.is-stuck').waitFor();
-      await page.waitForTimeout(450);
+      await page.waitForFunction(() => getComputedStyle(document.getElementById('stk-mini')).opacity === '1',
+        null, { timeout: 3000 }).catch(() => {});
       assert.equal(await page.locator('#stk-mini').evaluate(e => getComputedStyle(e).opacity), '1');
       assert.match(await page.locator('#stk-mini').innerText(), /NORTHBANK[\s\S]*1,156\.00[\s\S]*\+0\.84%/);
       assert.equal(await tabX(), restX, 'the tabs slid sideways when the bar stuck');

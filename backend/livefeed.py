@@ -346,34 +346,28 @@ class _Feed:
             await asyncio.sleep(FALLBACK_POLL_SECONDS)
 
     def _rest_batch(self, syms):
-        """Best-effort batch quote via whatever dhan_source exposes."""
+        """Last prices for `syms` from one bulk REST quote.
+
+        This used to look for `quotes`, `quote_batch`, `ltp_batch` and `quote`
+        on dhan_source. None of them exists: the function is `bulk_quotes`.
+        So when the WebSocket could not connect, the fallback asked nobody,
+        and every live price on the site stopped where it was."""
+        fn = getattr(D, "bulk_quotes", None)
+        if not callable(fn):
+            return {}
+        try:
+            res = fn(list(syms), mode="ltp") or {}
+        except Exception:
+            return {}
         out = {}
-        for fn_name in ("quotes", "quote_batch", "ltp_batch"):
-            fn = getattr(D, fn_name, None)
-            if callable(fn):
-                try:
-                    res = fn(syms)
-                    if isinstance(res, dict):
-                        for k, v in res.items():
-                            sym = str(k).upper().replace(".NS", "")
-                            ltp = v.get("ltp") if isinstance(v, dict) else v
-                            if ltp:
-                                out[sym] = ltp
-                        if out:
-                            return out
-                except Exception:
-                    pass
-        # Single-symbol fallback
-        fn = getattr(D, "quote", None)
-        if callable(fn):
-            for s in syms[:20]:
-                try:
-                    q = fn(s)
-                    ltp = q.get("ltp") if isinstance(q, dict) else None
-                    if ltp:
-                        out[s] = ltp
-                except Exception:
-                    continue
+        for k, v in res.items():
+            ltp = v.get("ltp") if isinstance(v, dict) else v
+            try:
+                ltp = float(ltp)
+            except (TypeError, ValueError):
+                continue
+            if ltp > 0:
+                out[str(k).upper().replace(".NS", "")] = ltp
         return out
 
 
