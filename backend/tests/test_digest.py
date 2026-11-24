@@ -255,3 +255,56 @@ def test_the_digest_is_dated_by_the_market_not_the_clock(two_stocks):
     last_session = str(two_stocks("AAA")[2].index[-1])[:10]
     assert d["data_date"] == last_session
     assert d["date"] == last_session != "2026-09-10"
+
+
+# ── When a digest may go out ─────────────────────────────────────────────────
+#
+# 20 November 2026 was a Friday and a trading day. The scheduler ran that
+# day's 17:45 job at 01:34 on the Saturday; the feed's last session by then
+# was Thursday, and Thursday's digest is what was mailed.
+
+def at(text):
+    return dt.datetime.strptime(text, "%Y-%m-%d %H:%M").replace(tzinfo=D.IST)
+
+
+def test_the_days_digest_is_due_once_the_session_has_closed():
+    assert D.session_due(at("2026-11-20 17:45"), "2026-11-20") == ("2026-11-20", "ok")
+    # Whatever zone the caller's clock is in: 12:15 UTC is 17:45 in India.
+    utc = dt.datetime(2026, 11, 20, 12, 15, tzinfo=dt.timezone.utc)
+    assert D.session_due(utc, "2026-11-20")[0] == "2026-11-20"
+
+
+def test_a_run_after_midnight_sends_no_session_at_all():
+    # As it happened: the feed a session back, and the clock past midnight.
+    session, why = D.session_due(at("2026-11-21 01:34"), "2026-11-19")
+    assert session is None and "2026-11-19" in why
+    # And when the feed does still hold Friday, Friday is not today either.
+    assert D.session_due(at("2026-11-21 01:34"), "2026-11-20")[0] is None
+    # Late on the weekday itself is still that day's digest.
+    assert D.session_due(at("2026-11-20 23:50"), "2026-11-20")[0] == "2026-11-20"
+
+
+def test_a_run_before_the_close_has_settled_waits():
+    assert D.session_due(at("2026-11-20 13:45"), "2026-11-20")[0] is None
+    assert D.session_due(at("2026-11-20 15:59"), "2026-11-20")[0] is None
+    assert D.session_due(at("2026-11-20 16:00"), "2026-11-20")[0] == "2026-11-20"
+    # The send has an hour of its own, later than the close settling.
+    send_at = 17 * 60 + 45
+    session, why = D.session_due(at("2026-11-20 17:00"), "2026-11-20", send_at)
+    assert session is None and "17:45" in why
+    assert D.session_due(at("2026-11-20 17:45"), "2026-11-20", send_at)[0] == "2026-11-20"
+    # An hour set before the close is not honoured: 16:00 is the floor.
+    assert D.session_due(at("2026-11-20 15:00"), "2026-11-20", 14 * 60)[0] is None
+
+
+def test_a_holiday_and_a_weekend_have_no_session():
+    # Tuesday 24 November 2026: the feed still ends on Monday.
+    assert D.session_due(at("2026-11-24 17:45"), "2026-11-23")[0] is None
+    assert D.session_due(at("2026-11-22 17:45"), "2026-11-20")[0] is None
+
+
+def test_with_no_index_feed_the_calendar_decides():
+    session, why = D.session_due(at("2026-11-20 17:45"), None)
+    assert session == "2026-11-20" and "calendar" in why
+    assert D.session_due(at("2026-11-20 13:45"), None)[0] is None
+    assert D.session_due(at("2026-11-21 17:45"), None)[0] is None      # Saturday

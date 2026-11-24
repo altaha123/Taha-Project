@@ -173,17 +173,39 @@ def test_a_bad_unsubscribe_link_says_so_without_erroring(main_mod, fresh):
 
 # ── The daily job ────────────────────────────────────────────────────────────
 
+IST = __import__("datetime").timezone(__import__("datetime").timedelta(hours=5, minutes=30))
+
+
+def clock(main_mod, monkeypatch, text):
+    """Set the time the daily send reads: 'YYYY-MM-DD HH:MM', in India."""
+    import datetime as dt
+    when = dt.datetime.strptime(text, "%Y-%m-%d %H:%M").replace(tzinfo=IST)
+    monkeypatch.setattr(main_mod, "_digest_now", lambda: when)
+    return when
+
+
+def frame(closes, last_day):
+    """A daily history ending on `last_day`."""
+    import pandas as pd
+    return pd.DataFrame({"Open": closes, "High": closes, "Low": closes, "Close": closes,
+                         "Volume": [1000] * len(closes)},
+                        index=pd.bdate_range(end=last_day, periods=len(closes)))
+
+
+# Friday 20 November 2026, a trading day; the evening it should go out.
+SESSION = "2026-11-20"
+
+
 @pytest.fixture
 def one_subscriber(main_mod, fresh, monkeypatch):
-    import pandas as pd
     token = sign_in(main_mod, fresh, "holder@example.com")
     main_mod.save_my_portfolio({"holdings": [{"symbol": "AAA", "qty": 10}]},
                                authorization=auth(token))
-    closes = [100.0] * 60 + [100.0, 110.0]
-    df = pd.DataFrame({"Open": closes, "High": closes, "Low": closes, "Close": closes,
-                       "Volume": [1000] * len(closes)},
-                      index=pd.bdate_range("2025-01-01", periods=len(closes)))
+    df = frame([100.0] * 60 + [100.0, 110.0], SESSION)
     monkeypatch.setattr(main_mod, "resolve", lambda s: (s, None, df))
+    clock(main_mod, monkeypatch, SESSION + " 17:45")
+    main_mod._digest_clock.update(day=None, tries=0, next_try=None, done=False,
+                                  last_ask=None, last_due=None)
     fresh.clear()
     return token
 
@@ -192,6 +214,7 @@ def test_the_job_sends_one_email_per_subscriber(main_mod, fresh, one_subscriber,
     monkeypatch.setattr(main_mod, "ADMIN_KEY", "")
     out = main_mod.run_daily_digest()
     assert out["sent"] == 1 and out["failed"] == 0
+    assert out["session"] == SESSION and out["due"] is True
     assert fresh[0]["to"] == "holder@example.com"
     assert "Portfolio up" in fresh[0]["subject"]
     assert fresh[0]["unsub"], "every bulk email needs a working unsubscribe"
@@ -214,10 +237,194 @@ def test_a_holiday_run_does_not_repeat_the_last_session(main_mod, fresh,
     first = main_mod.run_daily_digest()
     assert first["sent"] == 1
 
-    holiday = main_mod.run_daily_digest()          # same data, next calendar day
-    assert holiday["session"] == first["session"]
-    assert holiday["sent"] == 0 and holiday["skipped"] == 1
+    clock(main_mod, monkeypatch, "2026-11-23 17:45")   # same data, the next weekday
+    holiday = main_mod.run_daily_digest()
+    assert holiday["session"] is None and SESSION in holiday["reason"]
+    assert holiday["sent"] == 0
     assert len(fresh) == 1
+
+
+def test_a_run_after_midnight_mails_nobody(main_mod, fresh, one_subscriber, monkeypatch):
+    """What went wrong every night of November 2026. The scheduler ran the
+    17:45 job at about half past one the next morning, and by then the feeds
+    ended on the session BEFORE the one that had closed. That older session
+    had not been mailed under its own date, so it was: Thursday's digest, on
+    Saturday morning. A late run now says why it is not sending, and stops."""
+    monkeypatch.setattr(main_mod, "ADMIN_KEY", "")
+    thursday = frame([100.0] * 60 + [100.0, 110.0], "2026-11-19")
+    monkeypatch.setattr(main_mod, "resolve", lambda s: (s, None, thursday))
+    clock(main_mod, monkeypatch, "2026-11-21 01:34")
+
+    out = main_mod.run_daily_digest()
+    assert out["session"] is None and out["due"] is False
+    assert out["feed_date"] == "2026-11-19" and "2026-11-19" in out["reason"]
+    assert out["sent"] == 0 and fresh == []
+
+    # The same hour with a feed that does still hold Friday: Friday is over.
+    friday = frame([100.0] * 60 + [100.0, 110.0], SESSION)
+    monkeypatch.setattr(main_mod, "resolve", lambda s: (s, None, friday))
+    assert main_mod.run_daily_digest()["sent"] == 0 and fresh == []
+
+
+def test_a_run_before_the_evening_mails_nobody(main_mod, fresh, one_subscriber, monkeypatch):
+    """A scheduler that fires early would otherwise mail a morning's prices
+    as the day's, and mark everybody as done for the evening."""
+    monkeypatch.setattr(main_mod, "ADMIN_KEY", "")
+    clock(main_mod, monkeypatch, SESSION + " 13:45")
+    assert main_mod.run_daily_digest()["sent"] == 0 and fresh == []
+    # Settled, but not yet the hour the email is promised for.
+    clock(main_mod, monkeypatch, SESSION + " 17:00")
+    early = main_mod.run_daily_digest()
+    assert early["sent"] == 0 and "17:45" in early["reason"] and fresh == []
+    clock(main_mod, monkeypatch, SESSION + " 17:45")
+    assert main_mod.run_daily_digest()["sent"] == 1
+
+
+def test_no_index_feed_does_not_cost_the_days_email(main_mod, fresh, one_subscriber, monkeypatch):
+    """The index is one refused call away from missing. The weekday evening
+    still goes out, without an index figure in it."""
+    monkeypatch.setattr(main_mod, "ADMIN_KEY", "")
+    df = frame([100.0] * 60 + [100.0, 110.0], SESSION)
+
+    def resolve(sym):
+        if sym.startswith("^"):
+            raise RuntimeError("index feed refused")
+        return sym, None, df
+    monkeypatch.setattr(main_mod, "resolve", resolve)
+
+    out = main_mod.run_daily_digest()
+    assert out["sent"] == 1 and out["session"] == SESSION and out["feed_date"] is None
+    assert "NIFTY" not in fresh[0]["html"]
+
+
+def test_the_index_is_printed_only_beside_the_same_days_prices(main_mod, fresh,
+                                                              one_subscriber, monkeypatch):
+    monkeypatch.setattr(main_mod, "ADMIN_KEY", "")
+    main_mod.run_daily_digest()
+    assert "NIFTY" in fresh[0]["html"], "same session: the comparison belongs in the email"
+
+    # A holding whose history stops a session short (its quote did not
+    # arrive): the index's Friday move beside Thursday's prices is no
+    # comparison, so the figure is left out.
+    A.reset_for_tests(A._state["path"] + ".second")
+    token = sign_in(main_mod, fresh, "other@example.com")
+    main_mod.save_my_portfolio({"holdings": [{"symbol": "AAA", "qty": 10}]},
+                               authorization=auth(token))
+    fresh.clear()
+    index = frame([100.0] * 60 + [100.0, 101.0], SESSION)
+    stale = frame([100.0] * 60 + [100.0, 110.0], "2026-11-19")
+    monkeypatch.setattr(main_mod, "resolve",
+                        lambda s: (s, None, index if s.startswith("^") else stale))
+    out = main_mod.run_daily_digest()
+    assert out["sent"] == 1
+    assert "NIFTY" not in fresh[0]["html"]
+
+
+def test_two_runs_at_once_send_once(main_mod, fresh, one_subscriber, monkeypatch):
+    """The server's clock and the scheduled fallback can arrive together."""
+    monkeypatch.setattr(main_mod, "ADMIN_KEY", "")
+    assert main_mod._digest_busy.acquire(blocking=False)
+    try:
+        out = main_mod.run_daily_digest()
+        assert out.get("busy") is True and out["sent"] == 0 and fresh == []
+    finally:
+        main_mod._digest_busy.release()
+    assert main_mod.run_daily_digest()["sent"] == 1
+
+
+# ── The server's own clock ───────────────────────────────────────────────────
+
+def test_the_clock_sends_at_the_hour_and_only_once(main_mod, fresh, one_subscriber, monkeypatch):
+    clock(main_mod, monkeypatch, SESSION + " 17:44")
+    assert main_mod._digest_clock_tick() is None and fresh == []
+
+    clock(main_mod, monkeypatch, SESSION + " 17:45")
+    out = main_mod._digest_clock_tick()
+    assert out["sent"] == 1 and out["by"] == "clock" and len(fresh) == 1
+
+    clock(main_mod, monkeypatch, SESSION + " 17:46")
+    assert main_mod._digest_clock_tick() is None and len(fresh) == 1
+    # /health can say so: the clock is done for today, and what the send was.
+    status = main_mod._digest_clock_status()
+    assert status["done_today"] is True and status["at_ist"] == "17:45"
+    assert status["last_due"]["sent"] == 1 and status["last_due"]["session"] == SESSION
+    # The scheduled fallback, hours later, finds nothing left to do.
+    monkeypatch.setattr(main_mod, "ADMIN_KEY", "")
+    clock(main_mod, monkeypatch, SESSION + " 20:10")
+    late = main_mod.run_daily_digest()
+    assert late["sent"] == 0 and late["skipped"] == 1 and len(fresh) == 1
+    # A call that is turned away does not write over the record of the send.
+    clock(main_mod, monkeypatch, "2026-11-21 01:34")
+    assert main_mod.run_daily_digest()["session"] is None
+    status = main_mod._digest_clock_status()
+    assert status["last_ask"]["due"] is False and status["last_due"]["session"] == SESSION
+
+
+def test_a_restart_after_the_hour_still_sends(main_mod, fresh, one_subscriber, monkeypatch):
+    """Every deploy restarts the process. One that comes up at 18:20 has
+    missed 17:45 and must not wait for tomorrow."""
+    clock(main_mod, monkeypatch, SESSION + " 18:20")
+    assert main_mod._digest_clock_tick()["sent"] == 1
+    # And a restart after the send (a fresh clock) mails nobody again.
+    main_mod._digest_clock.update(day=None, tries=0, next_try=None, done=False)
+    out = main_mod._digest_clock_tick()
+    assert out["sent"] == 0 and out["skipped"] == 1 and len(fresh) == 1
+
+
+def test_the_clock_gives_up_on_a_day_with_no_session(main_mod, fresh, one_subscriber, monkeypatch):
+    """A holiday: the feed still ends on Friday. Four looks, then quiet."""
+    runs = []
+    real = main_mod._send_daily_digests
+    monkeypatch.setattr(main_mod, "_send_daily_digests",
+                        lambda **k: (runs.append(k), real(**k))[1])
+    for hhmm in ("17:45", "17:50", "17:55", "18:10", "18:25", "19:00", "19:25",
+                 "20:30", "22:00", "23:59"):
+        clock(main_mod, monkeypatch, "2026-11-23 " + hhmm)
+        main_mod._digest_clock_tick()
+    assert len(runs) == 4, "17:45, then after 10, 30 and 60 minutes"
+    assert fresh == []
+    # A new day starts the count again.
+    df = frame([100.0] * 60 + [100.0, 110.0], "2026-11-24")
+    monkeypatch.setattr(main_mod, "resolve", lambda s: (s, None, df))
+    clock(main_mod, monkeypatch, "2026-11-24 17:45")
+    assert main_mod._digest_clock_tick()["sent"] == 1
+
+
+def test_a_failed_delivery_is_tried_again(main_mod, fresh, one_subscriber, monkeypatch):
+    import mailer
+    monkeypatch.setattr(mailer, "send", lambda *a, **k: (False, "provider said no"))
+    assert main_mod._digest_clock_tick()["failed"] == 1
+    assert main_mod._digest_clock["done"] is False
+
+    monkeypatch.setattr(mailer, "send",
+                        lambda to, subject, html, text="", unsubscribe_url="":
+                        (fresh.append({"to": to}), (True, "test"))[1])
+    clock(main_mod, monkeypatch, SESSION + " 17:50")
+    assert main_mod._digest_clock_tick() is None, "not before ten minutes have passed"
+    clock(main_mod, monkeypatch, SESSION + " 17:55")
+    assert main_mod._digest_clock_tick()["sent"] == 1
+    assert main_mod._digest_clock["done"] is True
+
+
+def test_the_clock_stays_off_without_an_email_provider(main_mod, monkeypatch):
+    """A laptop, a test run, a deploy with no provider: nothing may start
+    mailing by itself."""
+    import mailer
+    monkeypatch.setattr(mailer, "provider", lambda: "console")
+    assert main_mod._digest_clock_on() is False
+    assert main_mod._start_digest_clock() is False
+    monkeypatch.setattr(mailer, "provider", lambda: "resend")
+    assert main_mod._digest_clock_on() is True
+    monkeypatch.setenv("DIGEST_CLOCK", "off")
+    assert main_mod._digest_clock_on() is False
+
+
+def test_the_send_time_can_be_moved(main_mod, monkeypatch):
+    assert main_mod._digest_at_min() == 17 * 60 + 45
+    monkeypatch.setenv("DIGEST_AT_IST", "18:30")
+    assert main_mod._digest_at_min() == 18 * 60 + 30
+    monkeypatch.setenv("DIGEST_AT_IST", "teatime")
+    assert main_mod._digest_at_min() == 17 * 60 + 45
 
 
 def test_a_dry_run_sends_nothing(main_mod, fresh, one_subscriber, monkeypatch):

@@ -94,15 +94,52 @@ check of what a subscriber actually receives.
 
 ## The schedule
 
-`.github/workflows/daily-digest.yml` fires at 12:15 UTC (17:45 IST) on
-weekdays — after the close, late enough for the daily feed to settle. Render's
-own cron is a paid add-on and an in-process timer dies with the worker, which
-is how a job silently stops running one afternoon.
+**The API sends the digest itself, at 17:45 IST**, after the close and late
+enough for the daily feed to settle (`backend/main.py`, "The daily send, on
+time"). A thread looks at the clock every half minute and calls the same code
+`POST /jobs/daily-digest` does.
 
-The job is keyed on **the market's last session, not the calendar date**, so a
-run on an Indian market holiday finds everybody already marked for that
-session and mails nobody. Same mechanism makes a retry after a crash safe: it
-sends to whoever was missed and to nobody else.
+It used to be started only by `.github/workflows/daily-digest.yml`, once, at
+12:15 UTC. GitHub starts a scheduled run when it has room: across November
+2026 that run began between 19:30 and 22:00 UTC every night, which is 01:00
+to 03:30 in India. Two things followed. The email arrived in the small hours,
+and at that hour the index feed ended on the session *before* the one that had
+closed, so the job mailed that older session: Thursday's digest on Saturday
+morning.
+
+So there are now two rules.
+
+**The job sends only on the evening of a session.** It asks the index feed for
+its last session and sends when that is today and it is 17:45 IST or later
+(`digest.session_due`). Every other call answers `"session": null` with the
+reason and mails nobody: a holiday (the feed still ends on the last session,
+so nobody gets the same closes twice), a weekend, a run before the evening,
+and a run after midnight. When the index feed does not answer at all, a
+weekday evening still goes out, without an index figure in it.
+
+**The workflow is the fallback.** It runs three times a day and asks for the
+send each time; the API turns away the calls that are early or late, and
+whoever asks second finds everybody already mailed. If a workflow run is the
+one that sends, its log carries a warning, because that means the API's own
+clock did not. A retry after a crash is safe for the same reason: it sends to
+whoever was missed and to nobody else.
+
+The process restarts on every deploy. A start that comes up after 17:45 sends
+then, and a run that cannot send (the feed behind, a delivery that failed) is
+tried again after 10, 30 and 60 minutes, then left for the day.
+
+| Setting (Render → Environment) | Default | What it does |
+|---|---|---|
+| `DIGEST_AT_IST` | `17:45` | When the day's send is first tried. Never before 16:00, when the close settles |
+| `DIGEST_CLOCK` | on | `off` leaves the send to the workflow alone |
+
+`GET /health` reports it under `"digest"`: whether the clock is on and
+running, whether today's send is done, what the last call was told
+(`last_ask`) and what the last send did (`last_due`). With no email provider
+configured the clock does not start.
+
+The Nifty figure beside the day's move is printed only when the index and the
+holdings were priced on the same session.
 
 ## Three ways in, one account
 
@@ -306,6 +343,8 @@ registration this project does not have. A test reads the rendered email and
 fails the build on that vocabulary, because the risk is not somebody deciding
 to add advice; it is a helpful phrase creeping into a template one afternoon.
 
-**A backup of the accounts database.** The Render disk is the system of record
-and nothing copies it anywhere. Worth fixing before there are users whose data
-would be missed.
+**A second copy of the accounts database that is ready to serve.** The Render
+disk is the system of record. It is copied to Cloudflare R2 every night, with
+the rest of the data disk, and thirty days are kept (`backend/backup.py`, and
+"Backups" in the README), so a lost disk costs at most a day. Putting a copy
+back is done by hand.

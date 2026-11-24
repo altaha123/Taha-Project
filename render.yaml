@@ -108,6 +108,9 @@ services:
       # amount of code substitutes for them.
       - key: EMAIL_PROVIDER        # resend | brevo | smtp | console
         value: console
+      # The daily email goes out from here at 17:45 IST once a provider is set
+      # (ACCOUNTS.md, "The schedule"). DIGEST_AT_IST moves the time;
+      # DIGEST_CLOCK=off leaves the send to the GitHub workflow alone.
       - key: EMAIL_FROM
         value: Altaha Screener <no-reply@altahascreener.in>
       - key: RESEND_API_KEY
