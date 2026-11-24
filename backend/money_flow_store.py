@@ -11,8 +11,9 @@ WHAT IS A RECORD AND WHAT IS A CACHE
             figures and the deals cannot be fetched again by date, so they are
             the only copy and are never pruned.
   caches    sector_score_daily, stock_accumulation_daily and snapshots are
-            worked out from the records and can be rebuilt; snapshots older
-            than KEEP_SNAPSHOTS sessions are dropped.
+            worked out from the records and can be rebuilt. The page and the
+            accumulation rows are kept for KEEP_SNAPSHOTS sessions, the sector
+            scores for KEEP_SCORE_SESSIONS.
 
 EVERY WRITE IS IDEMPOTENT. Each table is keyed on what the row IS (a sector
 and a fortnight, an index and a session, a whole deal disclosure), so reading
@@ -45,6 +46,7 @@ DB_PATH = os.environ.get("ALTAHA_MONEYFLOW_DB", "").strip() or \
     os.path.join(_DATA_DIR, "altaha_money_flow.db")
 MIGRATIONS_DIR = os.path.join(_HERE, "migrations", "moneyflow")
 KEEP_SNAPSHOTS = 60
+KEEP_SCORE_SESSIONS = 750
 KEEP_JOB_RUNS = 400
 
 _local = threading.local()
@@ -370,6 +372,12 @@ def save_snapshot(date, payload, sectors, stocks):
         for d in old:
             conn.execute("DELETE FROM snapshots WHERE date=?", (d,))
             conn.execute("DELETE FROM stock_accumulation_daily WHERE date=?", (d,))
+        # Sector scores are kept much longer, as the history a card can draw,
+        # but not for ever: three years of sessions is about 30 MB.
+        cut = conn.execute("SELECT DISTINCT date FROM sector_score_daily ORDER BY date DESC"
+                           " LIMIT 1 OFFSET ?", (KEEP_SCORE_SESSIONS,)).fetchone()
+        if cut:
+            conn.execute("DELETE FROM sector_score_daily WHERE date <= ?", (cut[0],))
 
 
 def latest_snapshot():

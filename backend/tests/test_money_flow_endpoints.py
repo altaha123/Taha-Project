@@ -65,6 +65,18 @@ def test_the_page_is_one_payload(filled):
     assert len(out["mapping"]) == 24
 
 
+def test_the_market_pages_card_gets_a_few_figures_not_the_page(app):
+    assert app.moneyflow_brief()["available"] is False
+    F.seed(store)
+    M.recompute(today=F.TODAY, panel=F.panel())
+    out = app.moneyflow_brief()
+    assert out["available"] and out["inflow_sectors"] == 2 and out["outflow_sectors"] == 1
+    assert [t["short"] for t in out["top"]] == ["IT", "FMCG", "Metals"]
+    assert out["line"] == "Ranked first on money flow: IT, FMCG, Metals."
+    assert out["flipped_to_inflow"] == ["FMCG"]
+    assert "heatmap" not in out and "rrg" not in out
+
+
 def test_a_sector_opens_and_an_unknown_one_is_a_404(filled):
     out = filled.moneyflow_sector("information-technology")
     assert out["sector"] == F.IT and out["stocks"] and len(out["fortnights"]) == 6

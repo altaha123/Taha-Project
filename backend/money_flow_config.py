@@ -211,8 +211,8 @@ DETAIL_FORTNIGHTS = 24
 FLAT_CR = 1.0                   # a net flow smaller than this has no direction
 
 RS_1M, RS_3M = 21, 63           # sessions
-RRG_RATIO_WEEKS = 10            # RS-ratio: relative strength over its own 10-week mean
-RRG_MOMENTUM_WEEKS = 4          # RS-momentum: RS-ratio over its own 4-week mean
+RRG_FAST, RRG_SLOW = 10, 50     # RS-ratio: RS's 10-session average over its 50-session one
+RRG_MOMENTUM = 20               # RS-momentum: RS-ratio over its own 20-session average
 RRG_TRAIL_WEEKS = 8
 MIN_INDEX_SESSIONS = 130        # about six months; under it the basket is used
 BREADTH_DMA = 50

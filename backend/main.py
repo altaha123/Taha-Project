@@ -4246,6 +4246,17 @@ def moneyflow_overview():
         raise HTTPException(503, f"Money Flow unavailable: {type(e).__name__}")
 
 
+@app.get("/moneyflow/brief")
+def moneyflow_brief():
+    """Four figures for the Market page's card. The page itself is /moneyflow."""
+    if money_flow is None:
+        return {"available": False, "message": "Money Flow is not loaded on this instance."}
+    try:
+        return to_native(money_flow.brief())
+    except Exception as e:
+        raise HTTPException(503, f"Money Flow unavailable: {type(e).__name__}")
+
+
 @app.get("/moneyflow/status")
 def moneyflow_status():
     """What the store holds, the last runs of each job and what they said."""

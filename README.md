@@ -717,6 +717,33 @@ altaha/
 
 ---
 
+### Money flow
+
+**Market › Money flow** shows where institutional money is moving: NSDL's
+fortnightly FPI flow by sector as a heatmap, NSE's daily FII and DII figures,
+each sector's eight-week rotation against the Nifty 50 (which plays), and the
+sectors ranked on a **Sector Money Flow Score** out of 100 (FPI flow 40,
+rotation 35, breadth 25). A sector opens into the stocks being accumulated
+inside it: delivery against its own usual, volume, and bulk and block deals.
+
+It is a ranking of published data, not a forecast, and it changes no Altaha
+Score. A stock page and an Ideas pick print their sector's rank as context.
+
+The page is empty until two years of history are read once:
+
+```bash
+python backend/backfill_money_flow.py --api https://taha-project.onrender.com --key "$ADMIN_KEY"
+```
+
+After that `.github/workflows/money-flow.yml` reads each evening's files. It
+needs `ALTAHA_ADMIN_KEY`, like the other jobs. Optional settings on Render:
+`MONEYFLOW_WEIGHTS` (the three weights), `IDEAS_MONEYFLOW_CAPS=on` (let the
+score set how many names an Ideas list takes from one sector; off by default)
+and `MONEYFLOW_TELEGRAM=off` (silence the sector alert).
+
+[MONEY-FLOW.md](MONEY-FLOW.md) has the sources, the NSDL-to-NSE-index mapping
+with every judgement in it named, the arithmetic, and what is missing.
+
 ### Delivery trends
 
 `/delivery/trends` is what the **Delivery trends** tab opens on: where delivery

@@ -89,6 +89,18 @@ services:
       - key: CONCALL_DAILY
         value: "80"
 
+      # Money Flow (money_flow.py, MONEY-FLOW.md). Its database lives on the
+      # data disk beside the others. All three are optional.
+      - key: MONEYFLOW_WEIGHTS     # the Sector Money Flow Score's three parts.
+        value: "fpi=40,rs=35,breadth=25"   # A value that cannot be read is ignored whole.
+      - key: IDEAS_MONEYFLOW_CAPS  # "on": a sector in the top quarter on money
+        value: "off"               # flow may give 5 names to an Ideas list, the
+                                   # bottom quarter 2. Off: every sector gives 4,
+                                   # as before. No weight changes either way.
+      - key: MONEYFLOW_TELEGRAM    # "off" silences the message sent when a sector
+        value: "on"                # turns Improving or Leading on FPI buying.
+                                   # Needs the Telegram variables below.
+
       # Telegram: the intraday breakout alerts (breakouts.py, intraday.py).
       # Both unset = alerts are logged on the Alerts page and sent nowhere,
       # and the page says so. README: "Alerts on Telegram".

@@ -144,6 +144,22 @@ def test_the_schema_is_migrations_and_running_them_again_applies_none(db):
             "sector_score_daily", "stock_accumulation_daily", "snapshots", "job_runs"} <= tables
 
 
+def test_old_sessions_are_pruned_and_the_records_are_not(db, monkeypatch):
+    monkeypatch.setattr(db, "KEEP_SNAPSHOTS", 2)
+    monkeypatch.setattr(db, "KEEP_SCORE_SESSIONS", 3)
+    db.upsert_fpi(F.fpi_rows())
+    card = {"sector": IT, "score": 50.0, "rank": 1, "quadrant": "Leading"}
+    stock = {"sector": IT, "symbol": "IT1", "score": 80.0}
+    days = ["2026-11-1%d" % n for n in range(1, 7)]
+    for day in days:
+        db.save_snapshot(day, {"available": True}, [card], [stock])
+    conn = db._connect()
+    dates = lambda t: [r[0] for r in conn.execute("SELECT DISTINCT date FROM %s ORDER BY date" % t)]
+    assert dates("snapshots") == days[-2:] and dates("stock_accumulation_daily") == days[-2:]
+    assert dates("sector_score_daily") == days[-3:]
+    assert len(db.fpi_rows()) == 18               # what NSDL published is never pruned
+
+
 def test_an_alert_key_can_be_claimed_once(db):
     assert db.alert_claim("IT|2026-11-15", "x") is True
     assert db.alert_claim("IT|2026-11-15", "x") is False
@@ -251,8 +267,22 @@ def test_the_rotation_trail_is_weekly_and_at_most_eight_points():
     weeks = [dt.date.fromisoformat(p["week"]) for p in pts]
     assert all((b - a).days == 7 for a, b in zip(weeks, weeks[1:]))
     assert all(p["ratio"] > 100 for p in pts)
-    # 13 weeks are needed for one point (10 for the ratio, 4 more for momentum).
-    assert M.rrg_points(line("NIFTY IT")[-40:], line("NIFTY 50")[-40:]) == []
+    assert pts[-1]["date"] == F.TODAY.isoformat()
+    # 70 sessions are needed for one point: 50 for the slow average, 20 more
+    # for momentum's.
+    assert M.rrg_points(line("NIFTY IT")[-60:], line("NIFTY 50")[-60:]) == []
+    assert len(M.rrg_points(line("NIFTY IT")[-70:], line("NIFTY 50")[-70:])) == 1
+
+
+def test_an_unfinished_week_is_named_by_its_friday_and_dated_by_its_last_session():
+    """So a series that stops on Tuesday and one that stops on Monday are in
+    the same week on the chart."""
+    closes = F.index_closes()
+    line = lambda name, cut: [(d, v[name]) for d, v in sorted(closes.items())][:cut]
+    tue = M.rrg_points(line("NIFTY IT", -3), line("NIFTY 50", -3))[-1]       # stops Tue 17 Nov
+    mon = M.rrg_points(line("NIFTY IT", -4), line("NIFTY 50", -4))[-1]       # stops Mon 16 Nov
+    assert (tue["week"], tue["date"]) == ("2026-11-20", "2026-11-17")
+    assert (mon["week"], mon["date"]) == ("2026-11-20", "2026-11-16")
 
 
 def test_a_series_in_line_with_the_benchmark_sits_at_100():
@@ -448,6 +478,7 @@ def test_the_rotation_chart_has_a_trail_per_sector(market):
     assert set(series) == {IT, FMCG, METAL}
     assert all(len(s["points"]) == 8 and s["kind"] == "sector" for s in series.values())
     assert len(payload["rrg"]["weeks"]) == 8 and payload["rrg"]["benchmark"] == "Nifty 50"
+    assert payload["rrg"]["week_dates"][-1] == F.TODAY.isoformat()
 
 
 def test_accumulation_rows_are_ranked_inside_each_sector(market):

@@ -29,10 +29,11 @@ card says so: a missing input is not counted as a bad one.
 THE ROTATION CHART IS RRG-STYLE, NOT THE LICENSED FORMULA
 Relative Rotation Graphs are Julius de Kempenaer's, and the exact
 normalisation is proprietary. What is drawn here is the open reading of it, on
-weekly closes:  RS = sector / Nifty 50;  RS-ratio = RS over its own 10-week
-mean;  RS-momentum = RS-ratio over its own 4-week mean; both times 100, so 100
-is "in line". Leading is both above 100, Weakening is ratio above and momentum
-below, Lagging both below, Improving ratio below and momentum above.
+daily closes read once a week:  RS = sector / Nifty 50;  RS-ratio = RS's
+10-session average over its 50-session average;  RS-momentum = RS-ratio over
+its own 20-session average; both times 100, so 100 is "in line". Leading is
+both above 100, Weakening is ratio above and momentum below, Lagging both
+below, Improving ratio below and momentum above.
 
 WHAT IT IS NOT
 A forecast. FPI data arrives a fortnight at a time and about a week after the
@@ -325,8 +326,21 @@ def quadrant(ratio, momentum):
 def rrg_points(sector, bench, trail=None):
     """
     The rotation trail: one point per week, oldest first, at most `trail` of
-    them, each {"week" (the week's last session), "ratio", "momentum"}.
+    them, each {"week", "date" (the week's last session), "ratio", "momentum"}.
     [] when there is not yet enough history for a single point.
+
+    Worked out on daily closes and read once a week:
+
+      RS           sector / benchmark
+      RS-ratio     100 x RS's 10-session average over its 50-session average:
+                   the last fortnight of relative strength against the last
+                   ten weeks of it
+      RS-momentum  100 x RS-ratio over its own 20-session average
+
+    The averages are exponential. Without them the trail is noise: on real
+    data a sector's weekly RS against a plain ten-week mean moved four or five
+    points a week in both directions, and eight such points joined up are a
+    scribble, not a path. Averaged, a sector travels.
     """
     import pandas as pd
     trail = trail or C.RRG_TRAIL_WEEKS
@@ -334,17 +348,21 @@ def rrg_points(sector, bench, trail=None):
     if a is None or b is None:
         return []
     df = pd.concat([a, b], axis=1, join="inner").dropna()
-    if df.empty:
+    if len(df) < C.RRG_SLOW + C.RRG_MOMENTUM:
         return []
-    weekly = df.groupby(df.index.to_period("W-FRI")).tail(1)
-    rs = 100.0 * weekly.iloc[:, 0] / weekly.iloc[:, 1]
-    ratio = 100.0 * rs / rs.rolling(C.RRG_RATIO_WEEKS).mean()
-    mom = 100.0 * ratio / ratio.rolling(C.RRG_MOMENTUM_WEEKS).mean()
-    out = []
-    for ts in mom.dropna().index[-trail:]:
-        out.append({"week": ts.date().isoformat(), "ratio": round(float(ratio[ts]), 3),
-                    "momentum": round(float(mom[ts]), 3)})
-    return out
+    rs = df.iloc[:, 0] / df.iloc[:, 1]
+    ema = lambda x, n: x.ewm(span=n, adjust=False, min_periods=n).mean()
+    ratio = 100.0 * ema(rs, C.RRG_FAST) / ema(rs, C.RRG_SLOW)
+    mom = 100.0 * ratio / ema(ratio, C.RRG_MOMENTUM)
+    both = pd.concat([ratio, mom], axis=1).dropna()
+    if both.empty:
+        return []
+    weekly = both.groupby(both.index.to_period("W-FRI")).tail(1).tail(trail)
+    # `week` is the Friday the week ends on, so every series names a week the
+    # same way whichever session its own data stops at; `date` is that session.
+    return [{"week": ts.to_period("W-FRI").end_time.date().isoformat(), "date": ts.date().isoformat(),
+             "ratio": round(float(r), 3), "momentum": round(float(m), 3)}
+            for ts, (r, m) in zip(weekly.index, weekly.values)]
 
 
 # ---------------------------------------------------------------------------
@@ -476,7 +494,7 @@ def accumulation_score(row):
     if net is not None and abs(net) >= C.ACC_DEAL_MIN_CR:
         deal = C.ACC_DEAL_PTS if net > 0 else -C.ACC_DEAL_PTS
         who = (deals.get("top_buyers") if net > 0 else deals.get("top_sellers")) or []
-        reasons.append("Rs %.1f cr net %s in bulk and block deals over %d days%s."
+        reasons.append("\u20B9%.1f cr net %s in bulk and block deals over %d days%s."
                        % (abs(net), "bought" if net > 0 else "sold", C.ACC_DEAL_DAYS,
                           (" (" + who[0]["client"].title() + ")") if who else ""))
     return round(max(0.0, min(100.0, d + pv + deal)), 1), reasons
@@ -603,7 +621,7 @@ def market_flow(rows, sessions=None):
         "sessions_in_5d": min(5, n), "sessions_in_20d": min(20, n),
         "from": days[0]["date"], "to": days[-1]["date"],
         "provisional": True,
-        "note": ("Cash market, Rs crore, NSE's provisional figures." +
+        "note": ("Net of buying and selling, \u20B9 crore. NSE's provisional figures." +
                  ("" if n >= 20 else " %d session%s recorded so far: NSE publishes the latest "
                                      "session only, so this fills one evening at a time."
                                      % (n, "" if n == 1 else "s"))),
@@ -785,6 +803,7 @@ def build_snapshot(today=None, panel="load"):
                        "rs": relative_strength(s, bench), "points": pts})
     rrg_series += [dict(t, full=t["name"], score=None, source="index") for t in themes if t["points"]]
 
+    rrg_weeks = sorted({p["week"] for s in rrg_series for p in s["points"]})[-C.RRG_TRAIL_WEEKS:]
     index_last = bench.index[-1].date() if bench is not None else None
     as_of = max([d for d in (index_last, panel_last) if d] or [today])
     flows = market_flow(store.flows())
@@ -810,8 +829,13 @@ def build_snapshot(today=None, panel="load"):
         "sectors": scored,
         "unscored": unscored,
         "rrg": {"benchmark": C.BENCHMARK_LABEL, "series": rrg_series,
-                "weeks": sorted({p["week"] for s in rrg_series for p in s["points"]})[-C.RRG_TRAIL_WEEKS:],
-                "ratio_weeks": C.RRG_RATIO_WEEKS, "momentum_weeks": C.RRG_MOMENTUM_WEEKS},
+                "weeks": rrg_weeks,
+                # The last session each week actually reaches (the current
+                # week is unfinished, so its Friday has not happened).
+                "week_dates": [max(p["date"] for s in rrg_series for p in s["points"] if p["week"] == w)
+                               for w in rrg_weeks],
+                "fast_sessions": C.RRG_FAST, "slow_sessions": C.RRG_SLOW,
+                "momentum_sessions": C.RRG_MOMENTUM},
         "themes": themes,
         "weights": C.SCORE_WEIGHTS,
         "method": METHOD,
@@ -830,8 +854,9 @@ METHOD = {
             "the latest, and the change from the one before."),
     "rs": ("The sector index's return less the Nifty 50's over 21 and 63 sessions, and its "
            "quadrant on the rotation chart."),
-    "rrg": ("Weekly closes. RS-ratio is the sector over the Nifty 50, against its own 10-week "
-            "mean; RS-momentum is that ratio against its own 4-week mean. 100 is in line. An "
+    "rrg": ("Relative strength is the sector over the Nifty 50. RS-ratio is its 10-session "
+            "average over its 50-session average; RS-momentum is that ratio over its own "
+            "20-session average. Read at each week's last session; 100 is in line. An "
             "RRG-style chart, not the licensed formula."),
     "breadth": "The share of the sector's stocks above their own 50-day average.",
     "accumulation": ("Per stock: delivered share over 5 sessions against the 20 before (up to "
@@ -927,6 +952,26 @@ def overview():
     payload.setdefault("built_utc", snap["built_utc"])
     _cache.update(at=now, payload=payload)
     return payload
+
+
+def brief():
+    """A few figures for the Market page's card, so it does not fetch the
+    whole page to print one number."""
+    page = overview()
+    if not page.get("available"):
+        return {"available": False, "message": "Money Flow has not been filled yet."}
+    f, top = page.get("fpi") or {}, (page.get("sectors") or [])[:4]
+    lp = f.get("latest_period") or {}
+    return {
+        "available": True, "as_of": page.get("as_of"), "fortnight": lp,
+        "inflow_sectors": f.get("inflow_sectors"), "outflow_sectors": f.get("outflow_sectors"),
+        "flipped_to_inflow": f.get("flipped_to_inflow") or [], "total_cr": f.get("total_cr"),
+        "top": [{"short": c["short"], "slug": c["slug"], "score": c["score"],
+                 "quadrant": c.get("quadrant"), "direction": (c.get("fpi") or {}).get("direction")}
+                for c in top],
+        "line": ("Ranked first on money flow: %s." % ", ".join(c["short"] for c in top[:3])) if top else
+                "FPI flow by sector, fortnight by fortnight.",
+    }
 
 
 def sector_detail(slug_or_name):

@@ -199,6 +199,7 @@ POST    /me/watchlist/merge
 GET     /me/watchlists
 PUT     /me/watchlists
 GET     /moneyflow
+GET     /moneyflow/brief
 GET     /moneyflow/sector/{slug}
 GET     /moneyflow/status
 GET     /news/press

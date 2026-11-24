@@ -1,0 +1,6219 @@
+{
+ "as_of": "2026-11-20",
+ "available": true,
+ "built_utc": "2026-11-20T14:40:00+00:00",
+ "disclaimer": "Published data, arranged. FPI figures are NSDL's, fortnightly and about a week late; FII/DII figures are NSE's provisional numbers. A sector money moved into is not a sector that will rise. Not investment advice.",
+ "fpi": {
+  "flipped_to_inflow": [
+   "Cement",
+   "FMCG",
+   "Financials",
+   "Healthcare",
+   "Telecom"
+  ],
+  "fortnights_held": 14,
+  "inflow_sectors": 14,
+  "latest_period": {
+   "end": "2026-11-15",
+   "start": "2026-11-01"
+  },
+  "outflow_sectors": 8,
+  "source": "NSDL, fortnightly sector-wise FPI investment (equity)",
+  "total_cr": 8345.0
+ },
+ "gaps": [],
+ "heatmap": {
+  "periods": [
+   {
+    "end": "2026-05-31",
+    "start": "2026-05-16"
+   },
+   {
+    "end": "2026-06-15",
+    "start": "2026-06-01"
+   },
+   {
+    "end": "2026-06-30",
+    "start": "2026-06-16"
+   },
+   {
+    "end": "2026-07-15",
+    "start": "2026-07-01"
+   },
+   {
+    "end": "2026-07-31",
+    "start": "2026-07-16"
+   },
+   {
+    "end": "2026-08-15",
+    "start": "2026-08-01"
+   },
+   {
+    "end": "2026-08-31",
+    "start": "2026-08-16"
+   },
+   {
+    "end": "2026-09-15",
+    "start": "2026-09-01"
+   },
+   {
+    "end": "2026-09-30",
+    "start": "2026-09-16"
+   },
+   {
+    "end": "2026-10-15",
+    "start": "2026-10-01"
+   },
+   {
+    "end": "2026-10-31",
+    "start": "2026-10-16"
+   },
+   {
+    "end": "2026-11-15",
+    "start": "2026-11-01"
+   }
+  ],
+  "rows": [
+   {
+    "cells": [
+     {
+      "net_cr": 1251.0,
+      "pct": 0.312
+     },
+     {
+      "net_cr": 1819.0,
+      "pct": 0.452
+     },
+     {
+      "net_cr": 2431.0,
+      "pct": 0.602
+     },
+     {
+      "net_cr": 3081.0,
+      "pct": 0.758
+     },
+     {
+      "net_cr": 3765.0,
+      "pct": 0.919
+     },
+     {
+      "net_cr": 4479.0,
+      "pct": 1.083
+     },
+     {
+      "net_cr": 5220.0,
+      "pct": 1.249
+     },
+     {
+      "net_cr": 5986.0,
+      "pct": 1.415
+     },
+     {
+      "net_cr": 6775.0,
+      "pct": 1.579
+     },
+     {
+      "net_cr": 7587.0,
+      "pct": 1.741
+     },
+     {
+      "net_cr": 8419.0,
+      "pct": 1.899
+     },
+     {
+      "net_cr": 9270.0,
+      "pct": 2.052
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Information Technology",
+    "short": "IT",
+    "slug": "information-technology",
+    "sum3_cr": 25276.0,
+    "trend": "accelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -58.0,
+      "pct": -0.727
+     },
+     {
+      "net_cr": 0.0,
+      "pct": 0.0
+     },
+     {
+      "net_cr": -41.0,
+      "pct": -0.518
+     },
+     {
+      "net_cr": -66.0,
+      "pct": -0.838
+     },
+     {
+      "net_cr": -14.0,
+      "pct": -0.179
+     },
+     {
+      "net_cr": -86.0,
+      "pct": -1.103
+     },
+     {
+      "net_cr": -53.0,
+      "pct": -0.687
+     },
+     {
+      "net_cr": 16.0,
+      "pct": 0.209
+     },
+     {
+      "net_cr": 22.0,
+      "pct": 0.287
+     },
+     {
+      "net_cr": -7.0,
+      "pct": -0.091
+     },
+     {
+      "net_cr": 66.0,
+      "pct": 0.858
+     },
+     {
+      "net_cr": 2.0,
+      "pct": 0.026
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Capital Goods",
+    "short": "Capital Goods",
+    "slug": "capital-goods",
+    "sum3_cr": 61.0,
+    "trend": "decelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -2330.0,
+      "pct": -0.587
+     },
+     {
+      "net_cr": 303.0,
+      "pct": 0.077
+     },
+     {
+      "net_cr": 2860.0,
+      "pct": 0.724
+     },
+     {
+      "net_cr": -1680.0,
+      "pct": -0.423
+     },
+     {
+      "net_cr": 1973.0,
+      "pct": 0.498
+     },
+     {
+      "net_cr": -527.0,
+      "pct": -0.132
+     },
+     {
+      "net_cr": -196.0,
+      "pct": -0.049
+     },
+     {
+      "net_cr": 3214.0,
+      "pct": 0.809
+     },
+     {
+      "net_cr": 313.0,
+      "pct": 0.078
+     },
+     {
+      "net_cr": -2553.0,
+      "pct": -0.637
+     },
+     {
+      "net_cr": 1722.0,
+      "pct": 0.432
+     },
+     {
+      "net_cr": 3439.0,
+      "pct": 0.86
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Consumer Services",
+    "short": "Consumer Services",
+    "slug": "consumer-services",
+    "sum3_cr": 2608.0,
+    "trend": "accelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -280.0,
+      "pct": -0.187
+     },
+     {
+      "net_cr": -320.0,
+      "pct": -0.214
+     },
+     {
+      "net_cr": -360.0,
+      "pct": -0.242
+     },
+     {
+      "net_cr": -200.0,
+      "pct": -0.135
+     },
+     {
+      "net_cr": -240.0,
+      "pct": -0.162
+     },
+     {
+      "net_cr": -280.0,
+      "pct": -0.189
+     },
+     {
+      "net_cr": -320.0,
+      "pct": -0.216
+     },
+     {
+      "net_cr": -360.0,
+      "pct": -0.244
+     },
+     {
+      "net_cr": -200.0,
+      "pct": -0.136
+     },
+     {
+      "net_cr": -240.0,
+      "pct": -0.163
+     },
+     {
+      "net_cr": -280.0,
+      "pct": -0.191
+     },
+     {
+      "net_cr": 700.0,
+      "pct": 0.478
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "sector": "Fast Moving Consumer Goods",
+    "short": "FMCG",
+    "slug": "fast-moving-consumer-goods",
+    "sum3_cr": 180.0,
+    "trend": "reversing"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 170.0,
+      "pct": 0.858
+     },
+     {
+      "net_cr": 4.0,
+      "pct": 0.02
+     },
+     {
+      "net_cr": -110.0,
+      "pct": -0.55
+     },
+     {
+      "net_cr": -36.0,
+      "pct": -0.181
+     },
+     {
+      "net_cr": 111.0,
+      "pct": 0.559
+     },
+     {
+      "net_cr": 235.0,
+      "pct": 1.177
+     },
+     {
+      "net_cr": 212.0,
+      "pct": 1.05
+     },
+     {
+      "net_cr": 87.0,
+      "pct": 0.426
+     },
+     {
+      "net_cr": 117.0,
+      "pct": 0.571
+     },
+     {
+      "net_cr": 104.0,
+      "pct": 0.505
+     },
+     {
+      "net_cr": -228.0,
+      "pct": -1.101
+     },
+     {
+      "net_cr": 102.0,
+      "pct": 0.498
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "sector": "Telecommunication",
+    "short": "Telecom",
+    "slug": "telecommunication",
+    "sum3_cr": -22.0,
+    "trend": "reversing"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 19.0,
+      "pct": 0.239
+     },
+     {
+      "net_cr": -71.0,
+      "pct": -0.89
+     },
+     {
+      "net_cr": 17.0,
+      "pct": 0.215
+     },
+     {
+      "net_cr": 86.0,
+      "pct": 1.085
+     },
+     {
+      "net_cr": 65.0,
+      "pct": 0.811
+     },
+     {
+      "net_cr": 50.0,
+      "pct": 0.619
+     },
+     {
+      "net_cr": 19.0,
+      "pct": 0.234
+     },
+     {
+      "net_cr": 47.0,
+      "pct": 0.577
+     },
+     {
+      "net_cr": 43.0,
+      "pct": 0.525
+     },
+     {
+      "net_cr": -20.0,
+      "pct": -0.243
+     },
+     {
+      "net_cr": 92.0,
+      "pct": 1.12
+     },
+     {
+      "net_cr": 19.0,
+      "pct": 0.229
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Realty",
+    "short": "Realty",
+    "slug": "realty",
+    "sum3_cr": 91.0,
+    "trend": "decelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 32.0,
+      "pct": 0.394
+     },
+     {
+      "net_cr": -29.0,
+      "pct": -0.356
+     },
+     {
+      "net_cr": 3.0,
+      "pct": 0.037
+     },
+     {
+      "net_cr": 50.0,
+      "pct": 0.616
+     },
+     {
+      "net_cr": -91.0,
+      "pct": -1.114
+     },
+     {
+      "net_cr": 1.0,
+      "pct": 0.012
+     },
+     {
+      "net_cr": -40.0,
+      "pct": -0.495
+     },
+     {
+      "net_cr": 18.0,
+      "pct": 0.224
+     },
+     {
+      "net_cr": -102.0,
+      "pct": -1.266
+     },
+     {
+      "net_cr": -29.0,
+      "pct": -0.364
+     },
+     {
+      "net_cr": -113.0,
+      "pct": -1.425
+     },
+     {
+      "net_cr": 57.0,
+      "pct": 0.729
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "sector": "Construction Materials",
+    "short": "Cement",
+    "slug": "construction-materials",
+    "sum3_cr": -85.0,
+    "trend": "reversing"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 2691.0,
+      "pct": 0.667
+     },
+     {
+      "net_cr": 255.0,
+      "pct": 0.063
+     },
+     {
+      "net_cr": 1288.0,
+      "pct": 0.317
+     },
+     {
+      "net_cr": 2900.0,
+      "pct": 0.711
+     },
+     {
+      "net_cr": 1977.0,
+      "pct": 0.482
+     },
+     {
+      "net_cr": 1576.0,
+      "pct": 0.382
+     },
+     {
+      "net_cr": 713.0,
+      "pct": 0.172
+     },
+     {
+      "net_cr": -1005.0,
+      "pct": -0.242
+     },
+     {
+      "net_cr": 2831.0,
+      "pct": 0.684
+     },
+     {
+      "net_cr": 3054.0,
+      "pct": 0.733
+     },
+     {
+      "net_cr": 31.0,
+      "pct": 0.007
+     },
+     {
+      "net_cr": 3488.0,
+      "pct": 0.831
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Power",
+    "short": "Power",
+    "slug": "power",
+    "sum3_cr": 6573.0,
+    "trend": "accelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -1876.0,
+      "pct": -1.245
+     },
+     {
+      "net_cr": -800.0,
+      "pct": -0.538
+     },
+     {
+      "net_cr": -307.0,
+      "pct": -0.207
+     },
+     {
+      "net_cr": -680.0,
+      "pct": -0.461
+     },
+     {
+      "net_cr": 655.0,
+      "pct": 0.446
+     },
+     {
+      "net_cr": -507.0,
+      "pct": -0.343
+     },
+     {
+      "net_cr": -1135.0,
+      "pct": -0.771
+     },
+     {
+      "net_cr": -430.0,
+      "pct": -0.295
+     },
+     {
+      "net_cr": -58.0,
+      "pct": -0.04
+     },
+     {
+      "net_cr": -304.0,
+      "pct": -0.209
+     },
+     {
+      "net_cr": -792.0,
+      "pct": -0.545
+     },
+     {
+      "net_cr": 1151.0,
+      "pct": 0.797
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "sector": "Healthcare",
+    "short": "Healthcare",
+    "slug": "healthcare",
+    "sum3_cr": 55.0,
+    "trend": "reversing"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 161.0,
+      "pct": 0.161
+     },
+     {
+      "net_cr": -294.0,
+      "pct": -0.293
+     },
+     {
+      "net_cr": 233.0,
+      "pct": 0.233
+     },
+     {
+      "net_cr": 1071.0,
+      "pct": 1.067
+     },
+     {
+      "net_cr": -630.0,
+      "pct": -0.621
+     },
+     {
+      "net_cr": -309.0,
+      "pct": -0.307
+     },
+     {
+      "net_cr": -902.0,
+      "pct": -0.897
+     },
+     {
+      "net_cr": 121.0,
+      "pct": 0.121
+     },
+     {
+      "net_cr": -389.0,
+      "pct": -0.39
+     },
+     {
+      "net_cr": -521.0,
+      "pct": -0.524
+     },
+     {
+      "net_cr": -1307.0,
+      "pct": -1.323
+     },
+     {
+      "net_cr": 612.0,
+      "pct": 0.628
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "sector": "Financial Services",
+    "short": "Financials",
+    "slug": "financial-services",
+    "sum3_cr": -1216.0,
+    "trend": "reversing"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -123.0,
+      "pct": -0.082
+     },
+     {
+      "net_cr": -806.0,
+      "pct": -0.538
+     },
+     {
+      "net_cr": 936.0,
+      "pct": 0.628
+     },
+     {
+      "net_cr": -334.0,
+      "pct": -0.223
+     },
+     {
+      "net_cr": 595.0,
+      "pct": 0.397
+     },
+     {
+      "net_cr": -495.0,
+      "pct": -0.329
+     },
+     {
+      "net_cr": 780.0,
+      "pct": 0.521
+     },
+     {
+      "net_cr": -430.0,
+      "pct": -0.286
+     },
+     {
+      "net_cr": -476.0,
+      "pct": -0.317
+     },
+     {
+      "net_cr": 1140.0,
+      "pct": 0.762
+     },
+     {
+      "net_cr": -270.0,
+      "pct": -0.179
+     },
+     {
+      "net_cr": -11.0,
+      "pct": -0.007
+     }
+    ],
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "sector": "Automobile and Auto Components",
+    "short": "Auto",
+    "slug": "automobile-and-auto-components",
+    "sum3_cr": 859.0,
+    "trend": "decelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 151.0,
+      "pct": 0.745
+     },
+     {
+      "net_cr": 63.0,
+      "pct": 0.308
+     },
+     {
+      "net_cr": -11.0,
+      "pct": -0.054
+     },
+     {
+      "net_cr": -42.0,
+      "pct": -0.205
+     },
+     {
+      "net_cr": 119.0,
+      "pct": 0.582
+     },
+     {
+      "net_cr": -33.0,
+      "pct": -0.161
+     },
+     {
+      "net_cr": 11.0,
+      "pct": 0.054
+     },
+     {
+      "net_cr": 139.0,
+      "pct": 0.677
+     },
+     {
+      "net_cr": 153.0,
+      "pct": 0.74
+     },
+     {
+      "net_cr": 218.0,
+      "pct": 1.047
+     },
+     {
+      "net_cr": 253.0,
+      "pct": 1.202
+     },
+     {
+      "net_cr": 65.0,
+      "pct": 0.305
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Textiles",
+    "short": "Textiles",
+    "slug": "textiles",
+    "sum3_cr": 536.0,
+    "trend": "decelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -143.0,
+      "pct": -0.717
+     },
+     {
+      "net_cr": -173.0,
+      "pct": -0.874
+     },
+     {
+      "net_cr": -194.0,
+      "pct": -0.989
+     },
+     {
+      "net_cr": 72.0,
+      "pct": 0.371
+     },
+     {
+      "net_cr": 62.0,
+      "pct": 0.318
+     },
+     {
+      "net_cr": -150.0,
+      "pct": -0.767
+     },
+     {
+      "net_cr": -68.0,
+      "pct": -0.35
+     },
+     {
+      "net_cr": -40.0,
+      "pct": -0.207
+     },
+     {
+      "net_cr": 100.0,
+      "pct": 0.518
+     },
+     {
+      "net_cr": 41.0,
+      "pct": 0.211
+     },
+     {
+      "net_cr": 35.0,
+      "pct": 0.18
+     },
+     {
+      "net_cr": 113.0,
+      "pct": 0.58
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Services",
+    "short": "Services",
+    "slug": "services",
+    "sum3_cr": 189.0,
+    "trend": "accelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -1030.0,
+      "pct": -1.725
+     },
+     {
+      "net_cr": -316.0,
+      "pct": -0.539
+     },
+     {
+      "net_cr": -340.0,
+      "pct": -0.583
+     },
+     {
+      "net_cr": 197.0,
+      "pct": 0.34
+     },
+     {
+      "net_cr": -69.0,
+      "pct": -0.119
+     },
+     {
+      "net_cr": 230.0,
+      "pct": 0.396
+     },
+     {
+      "net_cr": 30.0,
+      "pct": 0.051
+     },
+     {
+      "net_cr": -746.0,
+      "pct": -1.277
+     },
+     {
+      "net_cr": 337.0,
+      "pct": 0.584
+     },
+     {
+      "net_cr": -477.0,
+      "pct": -0.822
+     },
+     {
+      "net_cr": -442.0,
+      "pct": -0.768
+     },
+     {
+      "net_cr": -65.0,
+      "pct": -0.114
+     }
+    ],
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "sector": "Consumer Durables",
+    "short": "Durables",
+    "slug": "consumer-durables",
+    "sum3_cr": -984.0,
+    "trend": "decelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -2374.0,
+      "pct": -0.599
+     },
+     {
+      "net_cr": 1029.0,
+      "pct": 0.261
+     },
+     {
+      "net_cr": -3247.0,
+      "pct": -0.822
+     },
+     {
+      "net_cr": 2218.0,
+      "pct": 0.566
+     },
+     {
+      "net_cr": -906.0,
+      "pct": -0.23
+     },
+     {
+      "net_cr": -3176.0,
+      "pct": -0.808
+     },
+     {
+      "net_cr": -4009.0,
+      "pct": -1.028
+     },
+     {
+      "net_cr": -921.0,
+      "pct": -0.239
+     },
+     {
+      "net_cr": 1822.0,
+      "pct": 0.473
+     },
+     {
+      "net_cr": 1317.0,
+      "pct": 0.34
+     },
+     {
+      "net_cr": -563.0,
+      "pct": -0.145
+     },
+     {
+      "net_cr": -1409.0,
+      "pct": -0.363
+     }
+    ],
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "sector": "Chemicals",
+    "short": "Chemicals",
+    "slug": "chemicals",
+    "sum3_cr": -655.0,
+    "trend": "accelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 496.0,
+      "pct": 0.829
+     },
+     {
+      "net_cr": 76.0,
+      "pct": 0.126
+     },
+     {
+      "net_cr": -121.0,
+      "pct": -0.2
+     },
+     {
+      "net_cr": 186.0,
+      "pct": 0.308
+     },
+     {
+      "net_cr": 415.0,
+      "pct": 0.686
+     },
+     {
+      "net_cr": 157.0,
+      "pct": 0.258
+     },
+     {
+      "net_cr": 7.0,
+      "pct": 0.011
+     },
+     {
+      "net_cr": -166.0,
+      "pct": -0.272
+     },
+     {
+      "net_cr": -148.0,
+      "pct": -0.243
+     },
+     {
+      "net_cr": 162.0,
+      "pct": 0.267
+     },
+     {
+      "net_cr": 401.0,
+      "pct": 0.658
+     },
+     {
+      "net_cr": -164.0,
+      "pct": -0.267
+     }
+    ],
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "sector": "Construction",
+    "short": "Construction",
+    "slug": "construction",
+    "sum3_cr": 399.0,
+    "trend": "reversing"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -129.0,
+      "pct": -1.611
+     },
+     {
+      "net_cr": 47.0,
+      "pct": 0.596
+     },
+     {
+      "net_cr": -36.0,
+      "pct": -0.454
+     },
+     {
+      "net_cr": 16.0,
+      "pct": 0.203
+     },
+     {
+      "net_cr": -89.0,
+      "pct": -1.126
+     },
+     {
+      "net_cr": -5.0,
+      "pct": -0.064
+     },
+     {
+      "net_cr": -48.0,
+      "pct": -0.614
+     },
+     {
+      "net_cr": 36.0,
+      "pct": 0.464
+     },
+     {
+      "net_cr": -27.0,
+      "pct": -0.346
+     },
+     {
+      "net_cr": -58.0,
+      "pct": -0.746
+     },
+     {
+      "net_cr": -57.0,
+      "pct": -0.739
+     },
+     {
+      "net_cr": -118.0,
+      "pct": -1.541
+     }
+    ],
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "sector": "Media Entertainment & Publication",
+    "short": "Media",
+    "slug": "media-entertainment-publication",
+    "sum3_cr": -233.0,
+    "trend": "accelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -416.0,
+      "pct": -0.28
+     },
+     {
+      "net_cr": 693.0,
+      "pct": 0.468
+     },
+     {
+      "net_cr": 125.0,
+      "pct": 0.084
+     },
+     {
+      "net_cr": -956.0,
+      "pct": -0.642
+     },
+     {
+      "net_cr": -627.0,
+      "pct": -0.424
+     },
+     {
+      "net_cr": 835.0,
+      "pct": 0.567
+     },
+     {
+      "net_cr": -1854.0,
+      "pct": -1.251
+     },
+     {
+      "net_cr": 2058.0,
+      "pct": 1.406
+     },
+     {
+      "net_cr": -1094.0,
+      "pct": -0.737
+     },
+     {
+      "net_cr": -1952.0,
+      "pct": -1.325
+     },
+     {
+      "net_cr": 138.0,
+      "pct": 0.095
+     },
+     {
+      "net_cr": -715.0,
+      "pct": -0.491
+     }
+    ],
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "sector": "Oil Gas & Consumable Fuels",
+    "short": "Oil & Gas",
+    "slug": "oil-gas-consumable-fuels",
+    "sum3_cr": -2529.0,
+    "trend": "reversing"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -1085.0,
+      "pct": -0.272
+     },
+     {
+      "net_cr": -1576.0,
+      "pct": -0.396
+     },
+     {
+      "net_cr": -2107.0,
+      "pct": -0.531
+     },
+     {
+      "net_cr": -2670.0,
+      "pct": -0.677
+     },
+     {
+      "net_cr": -3263.0,
+      "pct": -0.833
+     },
+     {
+      "net_cr": -3881.0,
+      "pct": -0.999
+     },
+     {
+      "net_cr": -4524.0,
+      "pct": -1.177
+     },
+     {
+      "net_cr": -5188.0,
+      "pct": -1.365
+     },
+     {
+      "net_cr": -5872.0,
+      "pct": -1.567
+     },
+     {
+      "net_cr": -6575.0,
+      "pct": -1.782
+     },
+     {
+      "net_cr": -7296.0,
+      "pct": -2.013
+     },
+     {
+      "net_cr": -8034.0,
+      "pct": -2.263
+     }
+    ],
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "sector": "Metals & Mining",
+    "short": "Metals",
+    "slug": "metals-mining",
+    "sum3_cr": -21905.0,
+    "trend": "accelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 13.0,
+      "pct": 0.162
+     },
+     {
+      "net_cr": 142.0,
+      "pct": 1.763
+     },
+     {
+      "net_cr": -37.0,
+      "pct": -0.451
+     },
+     {
+      "net_cr": 68.0,
+      "pct": 0.833
+     },
+     {
+      "net_cr": -2.0,
+      "pct": -0.024
+     },
+     {
+      "net_cr": 31.0,
+      "pct": 0.377
+     },
+     {
+      "net_cr": 46.0,
+      "pct": 0.557
+     },
+     {
+      "net_cr": -19.0,
+      "pct": -0.229
+     },
+     {
+      "net_cr": 13.0,
+      "pct": 0.157
+     },
+     {
+      "net_cr": 42.0,
+      "pct": 0.506
+     },
+     {
+      "net_cr": 32.0,
+      "pct": 0.384
+     },
+     {
+      "net_cr": -43.0,
+      "pct": -0.514
+     }
+    ],
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "sector": "Diversified",
+    "short": "Diversified",
+    "slug": "diversified",
+    "sum3_cr": 31.0,
+    "trend": "reversing"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": 128.0,
+      "pct": 1.598
+     },
+     {
+      "net_cr": 29.0,
+      "pct": 0.356
+     },
+     {
+      "net_cr": 58.0,
+      "pct": 0.71
+     },
+     {
+      "net_cr": 19.0,
+      "pct": 0.231
+     },
+     {
+      "net_cr": -50.0,
+      "pct": -0.607
+     },
+     {
+      "net_cr": -48.0,
+      "pct": -0.586
+     },
+     {
+      "net_cr": -69.0,
+      "pct": -0.847
+     },
+     {
+      "net_cr": 3.0,
+      "pct": 0.037
+     },
+     {
+      "net_cr": 29.0,
+      "pct": 0.359
+     },
+     {
+      "net_cr": -31.0,
+      "pct": -0.382
+     },
+     {
+      "net_cr": 51.0,
+      "pct": 0.631
+     },
+     {
+      "net_cr": 4.0,
+      "pct": 0.049
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Forest Materials",
+    "short": "Forest",
+    "slug": "forest-materials",
+    "sum3_cr": 24.0,
+    "trend": "decelerating"
+   },
+   {
+    "cells": [
+     {
+      "net_cr": -63.0,
+      "pct": -0.317
+     },
+     {
+      "net_cr": 32.0,
+      "pct": 0.162
+     },
+     {
+      "net_cr": -245.0,
+      "pct": -1.235
+     },
+     {
+      "net_cr": 86.0,
+      "pct": 0.439
+     },
+     {
+      "net_cr": -7.0,
+      "pct": -0.036
+     },
+     {
+      "net_cr": 50.0,
+      "pct": 0.254
+     },
+     {
+      "net_cr": -190.0,
+      "pct": -0.964
+     },
+     {
+      "net_cr": 56.0,
+      "pct": 0.287
+     },
+     {
+      "net_cr": 10.0,
+      "pct": 0.051
+     },
+     {
+      "net_cr": 46.0,
+      "pct": 0.235
+     },
+     {
+      "net_cr": 106.0,
+      "pct": 0.54
+     },
+     {
+      "net_cr": 124.0,
+      "pct": 0.628
+     }
+    ],
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "sector": "Utilities",
+    "short": "Utilities",
+    "slug": "utilities",
+    "sum3_cr": 276.0,
+    "trend": "accelerating"
+   }
+  ],
+  "totals": [
+   -4506.0,
+   -534.0,
+   931.0,
+   3885.0,
+   3897.0,
+   -2213.0,
+   -6180.0,
+   2869.0,
+   4303.0,
+   1760.0,
+   -412.0,
+   8345.0
+  ]
+ },
+ "mapping": [
+  {
+   "fit": "clean",
+   "note": null,
+   "nsdl_sector": "Automobile and Auto Components",
+   "nse_index": "NIFTY AUTO",
+   "short": "Auto"
+  },
+  {
+   "fit": "clean",
+   "note": "A new index: not in NSE's daily file in November 2024.",
+   "nsdl_sector": "Capital Goods",
+   "nse_index": "NIFTY CAPITAL GOODS",
+   "short": "Capital Goods"
+  },
+  {
+   "fit": "clean",
+   "note": "A new index: not in NSE's daily file in November 2024.",
+   "nsdl_sector": "Chemicals",
+   "nse_index": "NIFTY CHEMICALS",
+   "short": "Chemicals"
+  },
+  {
+   "fit": "ambiguous",
+   "note": "NSE has no construction index. Nifty Infrastructure is the nearest, but its largest weights are Reliance, Bharti Airtel, L&T and the power companies, so it is an infrastructure index and not a construction one. Nifty Realty and Nifty Housing were the alternatives and fit worse.",
+   "nsdl_sector": "Construction",
+   "nse_index": "NIFTY INFRASTRUCTURE",
+   "short": "Construction"
+  },
+  {
+   "fit": "broad",
+   "note": "Cement is nearly all of this sector by value, but not all of it. A new index: not in NSE's daily file in November 2024.",
+   "nsdl_sector": "Construction Materials",
+   "nse_index": "NIFTY CEMENT",
+   "short": "Cement"
+  },
+  {
+   "fit": "clean",
+   "note": null,
+   "nsdl_sector": "Consumer Durables",
+   "nse_index": "NIFTY CONSUMER DURABLES",
+   "short": "Durables"
+  },
+  {
+   "fit": "clean",
+   "note": "A new index: not in NSE's daily file in November 2024.",
+   "nsdl_sector": "Consumer Services",
+   "nse_index": "NIFTY CONSUMER SERVICES",
+   "short": "Consumer Services"
+  },
+  {
+   "fit": "none",
+   "note": "No index, and one company in our universe.",
+   "nsdl_sector": "Diversified",
+   "nse_index": null,
+   "short": "Diversified"
+  },
+  {
+   "fit": "clean",
+   "note": null,
+   "nsdl_sector": "Fast Moving Consumer Goods",
+   "nse_index": "NIFTY FMCG",
+   "short": "FMCG"
+  },
+  {
+   "fit": "clean",
+   "note": "NSDL reports banks, NBFCs, insurers and brokers as one sector, so FPI flow cannot be split between Nifty Bank, Private Bank and PSU Bank. Those are shown as themes, on price only.",
+   "nsdl_sector": "Financial Services",
+   "nse_index": "NIFTY FINANCIAL SERVICES",
+   "short": "Financials"
+  },
+  {
+   "fit": "none",
+   "note": "No index, and one company in our universe.",
+   "nsdl_sector": "Forest Materials",
+   "nse_index": null,
+   "short": "Forest"
+  },
+  {
+   "fit": "clean",
+   "note": "Healthcare is pharma plus hospitals and diagnostics. Nifty Pharma is a part of it and is shown as a theme.",
+   "nsdl_sector": "Healthcare",
+   "nse_index": "NIFTY HEALTHCARE INDEX",
+   "short": "Healthcare"
+  },
+  {
+   "fit": "clean",
+   "note": null,
+   "nsdl_sector": "Information Technology",
+   "nse_index": "NIFTY IT",
+   "short": "IT"
+  },
+  {
+   "fit": "clean",
+   "note": null,
+   "nsdl_sector": "Media Entertainment & Publication",
+   "nse_index": "NIFTY MEDIA",
+   "short": "Media"
+  },
+  {
+   "fit": "clean",
+   "note": null,
+   "nsdl_sector": "Metals & Mining",
+   "nse_index": "NIFTY METAL",
+   "short": "Metals"
+  },
+  {
+   "fit": "clean",
+   "note": "Nifty Energy was the other candidate; it also holds the power companies, which NSDL reports under Power.",
+   "nsdl_sector": "Oil Gas & Consumable Fuels",
+   "nse_index": "NIFTY OIL & GAS",
+   "short": "Oil & Gas"
+  },
+  {
+   "fit": "clean",
+   "note": "A new index: not in NSE's daily file in November 2024.",
+   "nsdl_sector": "Power",
+   "nse_index": "NIFTY POWER",
+   "short": "Power"
+  },
+  {
+   "fit": "clean",
+   "note": null,
+   "nsdl_sector": "Realty",
+   "nse_index": "NIFTY REALTY",
+   "short": "Realty"
+  },
+  {
+   "fit": "ambiguous",
+   "note": "The classification's Services sector is transport, logistics, ports and commercial services. Nifty Services Sector sounds right and is not: it is banks, IT and telecom. Nifty Transportation & Logistics is used, though it also holds the automobile makers.",
+   "nsdl_sector": "Services",
+   "nse_index": "NIFTY TRANSPORTATION & LOGISTICS",
+   "short": "Services"
+  },
+  {
+   "fit": "clean",
+   "note": "A new index: not in NSE's daily file in November 2024.",
+   "nsdl_sector": "Telecommunication",
+   "nse_index": "NIFTY TELECOMMUNICATIONS",
+   "short": "Telecom"
+  },
+  {
+   "fit": "none",
+   "note": "NSE publishes no textiles index.",
+   "nsdl_sector": "Textiles",
+   "nse_index": null,
+   "short": "Textiles"
+  },
+  {
+   "fit": "none",
+   "note": "No index, and four companies in our universe.",
+   "nsdl_sector": "Utilities",
+   "nse_index": null,
+   "short": "Utilities"
+  },
+  {
+   "fit": "excluded",
+   "note": "Not an equity sector.",
+   "nsdl_sector": "Sovereign",
+   "nse_index": null,
+   "short": "Sovereign"
+  },
+  {
+   "fit": "excluded",
+   "note": "Not an equity sector.",
+   "nsdl_sector": "Others",
+   "nse_index": null,
+   "short": "Others"
+  }
+ ],
+ "market": {
+  "available": true,
+  "days": [
+   {
+    "date": "2026-08-31",
+    "dii": 577.0,
+    "dii_cum": 577.0,
+    "fii": 3177.0,
+    "fii_cum": 3177.0
+   },
+   {
+    "date": "2026-09-01",
+    "dii": 630.0,
+    "dii_cum": 1207.0,
+    "fii": 1186.0,
+    "fii_cum": 4363.0
+   },
+   {
+    "date": "2026-09-02",
+    "dii": -157.0,
+    "dii_cum": 1050.0,
+    "fii": 4075.0,
+    "fii_cum": 8438.0
+   },
+   {
+    "date": "2026-09-03",
+    "dii": 1114.0,
+    "dii_cum": 2164.0,
+    "fii": -4807.0,
+    "fii_cum": 3631.0
+   },
+   {
+    "date": "2026-09-04",
+    "dii": 1842.0,
+    "dii_cum": 4006.0,
+    "fii": -2702.0,
+    "fii_cum": 929.0
+   },
+   {
+    "date": "2026-09-07",
+    "dii": -475.0,
+    "dii_cum": 3531.0,
+    "fii": -382.0,
+    "fii_cum": 547.0
+   },
+   {
+    "date": "2026-09-08",
+    "dii": 2928.0,
+    "dii_cum": 6459.0,
+    "fii": -5049.0,
+    "fii_cum": -4502.0
+   },
+   {
+    "date": "2026-09-09",
+    "dii": 3386.0,
+    "dii_cum": 9845.0,
+    "fii": -4021.0,
+    "fii_cum": -8523.0
+   },
+   {
+    "date": "2026-09-10",
+    "dii": -1762.0,
+    "dii_cum": 8083.0,
+    "fii": 578.0,
+    "fii_cum": -7945.0
+   },
+   {
+    "date": "2026-09-11",
+    "dii": -1558.0,
+    "dii_cum": 6525.0,
+    "fii": 2267.0,
+    "fii_cum": -5678.0
+   },
+   {
+    "date": "2026-09-14",
+    "dii": 1227.0,
+    "dii_cum": 7752.0,
+    "fii": -711.0,
+    "fii_cum": -6389.0
+   },
+   {
+    "date": "2026-09-15",
+    "dii": 2365.0,
+    "dii_cum": 10117.0,
+    "fii": -1019.0,
+    "fii_cum": -7408.0
+   },
+   {
+    "date": "2026-09-16",
+    "dii": -1397.0,
+    "dii_cum": 8720.0,
+    "fii": 4238.0,
+    "fii_cum": -3170.0
+   },
+   {
+    "date": "2026-09-17",
+    "dii": -2757.0,
+    "dii_cum": 5963.0,
+    "fii": 4187.0,
+    "fii_cum": 1017.0
+   },
+   {
+    "date": "2026-09-18",
+    "dii": -644.0,
+    "dii_cum": 5319.0,
+    "fii": 1565.0,
+    "fii_cum": 2582.0
+   },
+   {
+    "date": "2026-09-21",
+    "dii": -2260.0,
+    "dii_cum": 3059.0,
+    "fii": 2341.0,
+    "fii_cum": 4923.0
+   },
+   {
+    "date": "2026-09-22",
+    "dii": 658.0,
+    "dii_cum": 3717.0,
+    "fii": -1711.0,
+    "fii_cum": 3212.0
+   },
+   {
+    "date": "2026-09-23",
+    "dii": -1030.0,
+    "dii_cum": 2687.0,
+    "fii": 1938.0,
+    "fii_cum": 5150.0
+   },
+   {
+    "date": "2026-09-24",
+    "dii": 286.0,
+    "dii_cum": 2973.0,
+    "fii": -368.0,
+    "fii_cum": 4782.0
+   },
+   {
+    "date": "2026-09-25",
+    "dii": 1446.0,
+    "dii_cum": 4419.0,
+    "fii": -3093.0,
+    "fii_cum": 1689.0
+   },
+   {
+    "date": "2026-09-28",
+    "dii": 1064.0,
+    "dii_cum": 5483.0,
+    "fii": 779.0,
+    "fii_cum": 2468.0
+   },
+   {
+    "date": "2026-09-29",
+    "dii": -2780.0,
+    "dii_cum": 2703.0,
+    "fii": 3476.0,
+    "fii_cum": 5944.0
+   },
+   {
+    "date": "2026-09-30",
+    "dii": 1856.0,
+    "dii_cum": 4559.0,
+    "fii": -3019.0,
+    "fii_cum": 2925.0
+   },
+   {
+    "date": "2026-10-01",
+    "dii": 117.0,
+    "dii_cum": 4676.0,
+    "fii": -87.0,
+    "fii_cum": 2838.0
+   },
+   {
+    "date": "2026-10-02",
+    "dii": 485.0,
+    "dii_cum": 5161.0,
+    "fii": -416.0,
+    "fii_cum": 2422.0
+   },
+   {
+    "date": "2026-10-05",
+    "dii": -810.0,
+    "dii_cum": 4351.0,
+    "fii": 3032.0,
+    "fii_cum": 5454.0
+   },
+   {
+    "date": "2026-10-06",
+    "dii": 779.0,
+    "dii_cum": 5130.0,
+    "fii": -1407.0,
+    "fii_cum": 4047.0
+   },
+   {
+    "date": "2026-10-07",
+    "dii": 599.0,
+    "dii_cum": 5729.0,
+    "fii": -187.0,
+    "fii_cum": 3860.0
+   },
+   {
+    "date": "2026-10-08",
+    "dii": 392.0,
+    "dii_cum": 6121.0,
+    "fii": -1090.0,
+    "fii_cum": 2770.0
+   },
+   {
+    "date": "2026-10-09",
+    "dii": -1095.0,
+    "dii_cum": 5026.0,
+    "fii": 2327.0,
+    "fii_cum": 5097.0
+   },
+   {
+    "date": "2026-10-12",
+    "dii": -1758.0,
+    "dii_cum": 3268.0,
+    "fii": 4251.0,
+    "fii_cum": 9348.0
+   },
+   {
+    "date": "2026-10-13",
+    "dii": -2700.0,
+    "dii_cum": 568.0,
+    "fii": 5226.0,
+    "fii_cum": 14574.0
+   },
+   {
+    "date": "2026-10-14",
+    "dii": -136.0,
+    "dii_cum": 432.0,
+    "fii": 967.0,
+    "fii_cum": 15541.0
+   },
+   {
+    "date": "2026-10-15",
+    "dii": 1449.0,
+    "dii_cum": 1881.0,
+    "fii": -1022.0,
+    "fii_cum": 14519.0
+   },
+   {
+    "date": "2026-10-16",
+    "dii": 908.0,
+    "dii_cum": 2789.0,
+    "fii": -329.0,
+    "fii_cum": 14190.0
+   },
+   {
+    "date": "2026-10-19",
+    "dii": -1706.0,
+    "dii_cum": 1083.0,
+    "fii": 1726.0,
+    "fii_cum": 15916.0
+   },
+   {
+    "date": "2026-10-20",
+    "dii": 2101.0,
+    "dii_cum": 3184.0,
+    "fii": -2357.0,
+    "fii_cum": 13559.0
+   },
+   {
+    "date": "2026-10-21",
+    "dii": -2195.0,
+    "dii_cum": 989.0,
+    "fii": 3963.0,
+    "fii_cum": 17522.0
+   },
+   {
+    "date": "2026-10-22",
+    "dii": 64.0,
+    "dii_cum": 1053.0,
+    "fii": 2296.0,
+    "fii_cum": 19818.0
+   },
+   {
+    "date": "2026-10-23",
+    "dii": 162.0,
+    "dii_cum": 1215.0,
+    "fii": -799.0,
+    "fii_cum": 19019.0
+   },
+   {
+    "date": "2026-10-26",
+    "dii": -452.0,
+    "dii_cum": 763.0,
+    "fii": 1067.0,
+    "fii_cum": 20086.0
+   },
+   {
+    "date": "2026-10-27",
+    "dii": 2022.0,
+    "dii_cum": 2785.0,
+    "fii": -2039.0,
+    "fii_cum": 18047.0
+   },
+   {
+    "date": "2026-10-28",
+    "dii": 1366.0,
+    "dii_cum": 4151.0,
+    "fii": -839.0,
+    "fii_cum": 17208.0
+   },
+   {
+    "date": "2026-10-29",
+    "dii": -2206.0,
+    "dii_cum": 1945.0,
+    "fii": 7007.0,
+    "fii_cum": 24215.0
+   },
+   {
+    "date": "2026-10-30",
+    "dii": 273.0,
+    "dii_cum": 2218.0,
+    "fii": -339.0,
+    "fii_cum": 23876.0
+   },
+   {
+    "date": "2026-11-02",
+    "dii": 1161.0,
+    "dii_cum": 3379.0,
+    "fii": 2676.0,
+    "fii_cum": 26552.0
+   },
+   {
+    "date": "2026-11-03",
+    "dii": -900.0,
+    "dii_cum": 2479.0,
+    "fii": 5603.0,
+    "fii_cum": 32155.0
+   },
+   {
+    "date": "2026-11-04",
+    "dii": -2550.0,
+    "dii_cum": -71.0,
+    "fii": 3307.0,
+    "fii_cum": 35462.0
+   },
+   {
+    "date": "2026-11-05",
+    "dii": -1541.0,
+    "dii_cum": -1612.0,
+    "fii": 3418.0,
+    "fii_cum": 38880.0
+   },
+   {
+    "date": "2026-11-06",
+    "dii": -1795.0,
+    "dii_cum": -3407.0,
+    "fii": 3455.0,
+    "fii_cum": 42335.0
+   },
+   {
+    "date": "2026-11-09",
+    "dii": -1252.0,
+    "dii_cum": -4659.0,
+    "fii": 839.0,
+    "fii_cum": 43174.0
+   },
+   {
+    "date": "2026-11-10",
+    "dii": 1693.0,
+    "dii_cum": -2966.0,
+    "fii": -1822.0,
+    "fii_cum": 41352.0
+   },
+   {
+    "date": "2026-11-11",
+    "dii": -2478.0,
+    "dii_cum": -5444.0,
+    "fii": 3798.0,
+    "fii_cum": 45150.0
+   },
+   {
+    "date": "2026-11-12",
+    "dii": -2618.0,
+    "dii_cum": -8062.0,
+    "fii": 4874.0,
+    "fii_cum": 50024.0
+   },
+   {
+    "date": "2026-11-13",
+    "dii": 932.0,
+    "dii_cum": -7130.0,
+    "fii": -1027.0,
+    "fii_cum": 48997.0
+   },
+   {
+    "date": "2026-11-16",
+    "dii": -2662.0,
+    "dii_cum": -9792.0,
+    "fii": 4207.0,
+    "fii_cum": 53204.0
+   },
+   {
+    "date": "2026-11-17",
+    "dii": -1661.0,
+    "dii_cum": -11453.0,
+    "fii": 1176.0,
+    "fii_cum": 54380.0
+   },
+   {
+    "date": "2026-11-18",
+    "dii": -308.0,
+    "dii_cum": -11761.0,
+    "fii": 1848.0,
+    "fii_cum": 56228.0
+   },
+   {
+    "date": "2026-11-19",
+    "dii": -2535.0,
+    "dii_cum": -14296.0,
+    "fii": 4019.0,
+    "fii_cum": 60247.0
+   },
+   {
+    "date": "2026-11-20",
+    "dii": 1231.0,
+    "dii_cum": -13065.0,
+    "fii": -412.0,
+    "fii_cum": 59835.0
+   }
+  ],
+  "dii_20d": -14280.0,
+  "dii_5d": -5935.0,
+  "fii_20d": 40816.0,
+  "fii_5d": 10838.0,
+  "from": "2026-08-31",
+  "latest": {
+   "date": "2026-11-20",
+   "dii": 1231.0,
+   "dii_buy": 12231.0,
+   "dii_sell": 11000.0,
+   "fii": -412.0,
+   "fii_buy": 14000.0,
+   "fii_sell": 14412.0
+  },
+  "note": "Net of buying and selling, \u20b9 crore. NSE's provisional figures.",
+  "provisional": true,
+  "sessions": 60,
+  "sessions_in_20d": 20,
+  "sessions_in_5d": 5,
+  "to": "2026-11-20"
+ },
+ "method": {
+  "accumulation": "Per stock: delivered share over 5 sessions against the 20 before (up to 45), sessions closed up on above-usual volume (up to 40), and net buying in bulk and block deals over 30 days (plus or minus 15).",
+  "breadth": "The share of the sector's stocks above their own 50-day average.",
+  "fpi": "FPI equity net investment per fortnight, as a share of the sector's assets under custody. Ranked among the scored sectors on the last three fortnights together, the latest, and the change from the one before.",
+  "rrg": "Relative strength is the sector over the Nifty 50. RS-ratio is its 10-session average over its 50-session average; RS-momentum is that ratio over its own 20-session average. Read at each week's last session; 100 is in line. An RRG-style chart, not the licensed formula.",
+  "rs": "The sector index's return less the Nifty 50's over 21 and 63 sessions, and its quadrant on the rotation chart.",
+  "score": "Sector Money Flow Score, 0 to 100: FPI flow, rotation against the Nifty 50, and breadth. A part that cannot be measured is left out and the rest re-weighted."
+ },
+ "rrg": {
+  "benchmark": "Nifty 50",
+  "fast_sessions": 10,
+  "momentum_sessions": 20,
+  "series": [
+   {
+    "full": "Automobile and Auto Components",
+    "key": "automobile-and-auto-components",
+    "kind": "sector",
+    "name": "Auto",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.718,
+      "ratio": 100.692,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.652,
+      "ratio": 100.461,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.479,
+      "ratio": 100.083,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.861,
+      "ratio": 100.288,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.907,
+      "ratio": 100.313,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.086,
+      "ratio": 100.474,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.786,
+      "ratio": 100.176,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.524,
+      "ratio": 99.702,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "score": 49.5,
+    "source": "index"
+   },
+   {
+    "full": "Capital Goods",
+    "key": "capital-goods",
+    "kind": "sector",
+    "name": "Capital Goods",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.339,
+      "ratio": 101.521,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 100.357,
+      "ratio": 101.711,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.968,
+      "ratio": 101.396,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.542,
+      "ratio": 100.82,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.72,
+      "ratio": 100.784,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.289,
+      "ratio": 101.41,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.27,
+      "ratio": 101.574,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.047,
+      "ratio": 101.433,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Leading",
+    "score": 74.8,
+    "source": "index"
+   },
+   {
+    "full": "Chemicals",
+    "key": "chemicals",
+    "kind": "sector",
+    "name": "Chemicals",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.961,
+      "ratio": 97.207,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.913,
+      "ratio": 97.189,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.599,
+      "ratio": 96.727,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.864,
+      "ratio": 96.858,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 100.231,
+      "ratio": 97.255,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.866,
+      "ratio": 98.181,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.722,
+      "ratio": 98.476,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.15,
+      "ratio": 98.088,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Improving",
+    "score": 40.5,
+    "source": "index"
+   },
+   {
+    "full": "Construction",
+    "key": "construction",
+    "kind": "sector",
+    "name": "Construction",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.375,
+      "ratio": 99.155,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 100.491,
+      "ratio": 99.458,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 100.643,
+      "ratio": 99.948,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 100.136,
+      "ratio": 99.623,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.776,
+      "ratio": 99.219,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.628,
+      "ratio": 98.895,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.835,
+      "ratio": 98.991,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.541,
+      "ratio": 98.538,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "score": 40.0,
+    "source": "index"
+   },
+   {
+    "full": "Construction Materials",
+    "key": "construction-materials",
+    "kind": "sector",
+    "name": "Cement",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.734,
+      "ratio": 98.017,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.999,
+      "ratio": 98.28,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.88,
+      "ratio": 98.112,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.937,
+      "ratio": 98.128,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.826,
+      "ratio": 97.925,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.783,
+      "ratio": 97.77,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.25,
+      "ratio": 98.269,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.572,
+      "ratio": 98.822,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Improving",
+    "score": 54.2,
+    "source": "index"
+   },
+   {
+    "full": "Consumer Durables",
+    "key": "consumer-durables",
+    "kind": "sector",
+    "name": "Durables",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.182,
+      "ratio": 101.288,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 100.465,
+      "ratio": 101.763,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 100.787,
+      "ratio": 102.487,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 100.601,
+      "ratio": 102.693,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 100.275,
+      "ratio": 102.565,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.833,
+      "ratio": 102.118,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.854,
+      "ratio": 102.044,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.76,
+      "ratio": 101.833,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Weakening",
+    "score": 41.1,
+    "source": "index"
+   },
+   {
+    "full": "Consumer Services",
+    "key": "consumer-services",
+    "kind": "sector",
+    "name": "Consumer Services",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.211,
+      "ratio": 100.056,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.487,
+      "ratio": 100.008,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.499,
+      "ratio": 99.753,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.486,
+      "ratio": 99.429,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.782,
+      "ratio": 99.572,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.698,
+      "ratio": 99.348,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.119,
+      "ratio": 99.693,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.369,
+      "ratio": 100.111,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Leading",
+    "score": 72.8,
+    "source": "index"
+   },
+   {
+    "full": "Fast Moving Consumer Goods",
+    "key": "fast-moving-consumer-goods",
+    "kind": "sector",
+    "name": "FMCG",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.217,
+      "ratio": 102.127,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 100.345,
+      "ratio": 102.462,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 100.256,
+      "ratio": 102.549,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.874,
+      "ratio": 102.158,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.463,
+      "ratio": 101.514,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.746,
+      "ratio": 101.604,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.747,
+      "ratio": 101.481,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.595,
+      "ratio": 101.137,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Weakening",
+    "score": 60.6,
+    "source": "index"
+   },
+   {
+    "full": "Financial Services",
+    "key": "financial-services",
+    "kind": "sector",
+    "name": "Financials",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.466,
+      "ratio": 102.382,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.996,
+      "ratio": 102.002,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.618,
+      "ratio": 101.446,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.896,
+      "ratio": 101.618,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 100.079,
+      "ratio": 101.808,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.213,
+      "ratio": 102.028,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.754,
+      "ratio": 101.548,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.37,
+      "ratio": 100.89,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Weakening",
+    "score": 50.3,
+    "source": "index"
+   },
+   {
+    "full": "Healthcare",
+    "key": "healthcare",
+    "kind": "sector",
+    "name": "Healthcare",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.197,
+      "ratio": 99.982,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 100.295,
+      "ratio": 100.211,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 100.405,
+      "ratio": 100.521,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 100.516,
+      "ratio": 100.851,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.986,
+      "ratio": 100.487,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.455,
+      "ratio": 99.773,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.351,
+      "ratio": 99.3,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.892,
+      "ratio": 99.656,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "score": 51.9,
+    "source": "index"
+   },
+   {
+    "full": "Information Technology",
+    "key": "information-technology",
+    "kind": "sector",
+    "name": "IT",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.057,
+      "ratio": 104.168,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.932,
+      "ratio": 104.023,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 100.024,
+      "ratio": 104.102,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 100.115,
+      "ratio": 104.238,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 100.079,
+      "ratio": 104.261,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.012,
+      "ratio": 104.203,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.183,
+      "ratio": 104.438,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.097,
+      "ratio": 104.431,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Leading",
+    "score": 95.6,
+    "source": "index"
+   },
+   {
+    "full": "Media Entertainment & Publication",
+    "key": "media-entertainment-publication",
+    "kind": "sector",
+    "name": "Media",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.842,
+      "ratio": 102.307,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.87,
+      "ratio": 102.266,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.949,
+      "ratio": 102.305,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.733,
+      "ratio": 102.02,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.34,
+      "ratio": 101.367,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 98.85,
+      "ratio": 100.357,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 98.971,
+      "ratio": 99.875,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.297,
+      "ratio": 99.809,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "score": 21.1,
+    "source": "index"
+   },
+   {
+    "full": "Metals & Mining",
+    "key": "metals-mining",
+    "kind": "sector",
+    "name": "Metals",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.921,
+      "ratio": 95.993,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.865,
+      "ratio": 95.878,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.767,
+      "ratio": 95.683,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.807,
+      "ratio": 95.611,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.786,
+      "ratio": 95.495,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.79,
+      "ratio": 95.398,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.88,
+      "ratio": 95.397,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.887,
+      "ratio": 95.348,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "score": 4.1,
+    "source": "index"
+   },
+   {
+    "full": "Oil Gas & Consumable Fuels",
+    "key": "oil-gas-consumable-fuels",
+    "kind": "sector",
+    "name": "Oil & Gas",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.847,
+      "ratio": 100.141,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.59,
+      "ratio": 99.735,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.623,
+      "ratio": 99.55,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.555,
+      "ratio": 99.264,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.66,
+      "ratio": 99.162,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.763,
+      "ratio": 99.151,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.551,
+      "ratio": 98.726,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.27,
+      "ratio": 98.155,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "score": 18.1,
+    "source": "index"
+   },
+   {
+    "full": "Power",
+    "key": "power",
+    "kind": "sector",
+    "name": "Power",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.372,
+      "ratio": 99.303,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.968,
+      "ratio": 98.946,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.76,
+      "ratio": 98.638,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.768,
+      "ratio": 98.517,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.587,
+      "ratio": 98.196,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.469,
+      "ratio": 97.812,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.727,
+      "ratio": 97.9,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.373,
+      "ratio": 97.31,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "score": 54.2,
+    "source": "index"
+   },
+   {
+    "full": "Realty",
+    "key": "realty",
+    "kind": "sector",
+    "name": "Realty",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.13,
+      "ratio": 100.777,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.698,
+      "ratio": 100.258,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.818,
+      "ratio": 100.248,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.714,
+      "ratio": 100.021,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.598,
+      "ratio": 99.745,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.749,
+      "ratio": 99.685,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.028,
+      "ratio": 99.9,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.263,
+      "ratio": 100.228,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Leading",
+    "score": 55.5,
+    "source": "index"
+   },
+   {
+    "full": "Services",
+    "key": "services",
+    "kind": "sector",
+    "name": "Services",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.503,
+      "ratio": 96.732,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.531,
+      "ratio": 96.558,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.65,
+      "ratio": 96.437,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.952,
+      "ratio": 96.636,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.866,
+      "ratio": 96.509,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.062,
+      "ratio": 96.689,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.973,
+      "ratio": 96.595,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.092,
+      "ratio": 96.78,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Improving",
+    "score": 46.9,
+    "source": "index"
+   },
+   {
+    "full": "Telecommunication",
+    "key": "telecommunication",
+    "kind": "sector",
+    "name": "Telecom",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.255,
+      "ratio": 101.409,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 100.249,
+      "ratio": 101.574,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 100.14,
+      "ratio": 101.543,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 100.243,
+      "ratio": 101.725,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 100.312,
+      "ratio": 101.954,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.896,
+      "ratio": 101.56,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.139,
+      "ratio": 101.813,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.094,
+      "ratio": 101.867,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Leading",
+    "score": 59.8,
+    "source": "index"
+   },
+   {
+    "full": "Textiles",
+    "key": "textiles",
+    "kind": "sector",
+    "name": "Textiles",
+    "points": [
+     {
+      "date": "2026-10-09",
+      "momentum": 100.738,
+      "ratio": 100.511,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 101.267,
+      "ratio": 101.567,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 101.115,
+      "ratio": 102.142,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.883,
+      "ratio": 101.057,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.628,
+      "ratio": 100.614,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.093,
+      "ratio": 99.641,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 98.918,
+      "ratio": 98.897,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "score": 49.5,
+    "source": "basket"
+   },
+   {
+    "full": "Banks",
+    "index": "Nifty Bank",
+    "key": "theme-banks",
+    "kind": "theme",
+    "name": "Banks",
+    "part_of": "Financial Services",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.457,
+      "ratio": 102.049,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.652,
+      "ratio": 102.033,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.605,
+      "ratio": 101.777,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.775,
+      "ratio": 101.792,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.867,
+      "ratio": 101.81,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.988,
+      "ratio": 101.849,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.209,
+      "ratio": 102.138,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.366,
+      "ratio": 102.508,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Leading",
+    "rs": {
+     "as_of": "2026-11-20",
+     "bench_1m": 0.78,
+     "bench_3m": -1.22,
+     "momentum": 2.42,
+     "ret_1m": 4.0,
+     "ret_3m": 4.32,
+     "rs_1m": 3.23,
+     "rs_3m": 5.55,
+     "sessions": 287
+    },
+    "score": null,
+    "source": "index"
+   },
+   {
+    "full": "Private Banks",
+    "index": "Nifty Private Bank",
+    "key": "theme-private-banks",
+    "kind": "theme",
+    "name": "Private Banks",
+    "part_of": "Financial Services",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.1,
+      "ratio": 99.836,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.792,
+      "ratio": 99.495,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.516,
+      "ratio": 98.99,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.637,
+      "ratio": 98.89,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.873,
+      "ratio": 99.02,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.021,
+      "ratio": 99.12,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.155,
+      "ratio": 99.313,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.006,
+      "ratio": 99.239,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Improving",
+    "rs": {
+     "as_of": "2026-11-20",
+     "bench_1m": 0.78,
+     "bench_3m": -1.22,
+     "momentum": 2.18,
+     "ret_1m": -0.04,
+     "ret_3m": -2.86,
+     "rs_1m": -0.82,
+     "rs_3m": -1.64,
+     "sessions": 287
+    },
+    "score": null,
+    "source": "index"
+   },
+   {
+    "full": "PSU Banks",
+    "index": "Nifty PSU Bank",
+    "key": "theme-psu-banks",
+    "kind": "theme",
+    "name": "PSU Banks",
+    "part_of": "Financial Services",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.783,
+      "ratio": 97.63,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.752,
+      "ratio": 97.486,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.751,
+      "ratio": 97.342,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 99.88,
+      "ratio": 97.373,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.895,
+      "ratio": 97.351,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.237,
+      "ratio": 97.733,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.281,
+      "ratio": 97.947,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 100.207,
+      "ratio": 97.977,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Improving",
+    "rs": {
+     "as_of": "2026-11-20",
+     "bench_1m": 0.78,
+     "bench_3m": -1.22,
+     "momentum": 0.96,
+     "ret_1m": -0.8,
+     "ret_3m": -7.77,
+     "rs_1m": -1.57,
+     "rs_3m": -6.54,
+     "sessions": 287
+    },
+    "score": null,
+    "source": "index"
+   },
+   {
+    "full": "Pharma",
+    "index": "Nifty Pharma",
+    "key": "theme-pharma",
+    "kind": "theme",
+    "name": "Pharma",
+    "part_of": "Healthcare",
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.069,
+      "ratio": 98.714,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 98.848,
+      "ratio": 97.958,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 99.253,
+      "ratio": 97.838,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 100.24,
+      "ratio": 98.7,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 100.82,
+      "ratio": 99.6,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.676,
+      "ratio": 99.87,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 100.277,
+      "ratio": 99.708,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.855,
+      "ratio": 99.299,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "rs": {
+     "as_of": "2026-11-20",
+     "bench_1m": 0.78,
+     "bench_3m": -1.22,
+     "momentum": -0.31,
+     "ret_1m": -0.71,
+     "ret_3m": -5.62,
+     "rs_1m": -1.49,
+     "rs_3m": -4.39,
+     "sessions": 287
+    },
+    "score": null,
+    "source": "index"
+   },
+   {
+    "full": "PSE",
+    "index": "Nifty PSE",
+    "key": "theme-pse",
+    "kind": "theme",
+    "name": "PSE",
+    "part_of": null,
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 100.348,
+      "ratio": 99.146,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 100.666,
+      "ratio": 99.71,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 100.761,
+      "ratio": 100.23,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 100.128,
+      "ratio": 99.806,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 99.815,
+      "ratio": 99.431,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 99.62,
+      "ratio": 99.08,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.593,
+      "ratio": 98.847,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.754,
+      "ratio": 98.837,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "rs": {
+     "as_of": "2026-11-20",
+     "bench_1m": 0.78,
+     "bench_3m": -1.22,
+     "momentum": -1.84,
+     "ret_1m": -0.84,
+     "ret_3m": -3.82,
+     "rs_1m": -1.62,
+     "rs_3m": -2.59,
+     "sessions": 287
+    },
+    "score": null,
+    "source": "index"
+   },
+   {
+    "full": "Energy",
+    "index": "Nifty Energy",
+    "key": "theme-energy",
+    "kind": "theme",
+    "name": "Energy",
+    "part_of": null,
+    "points": [
+     {
+      "date": "2026-10-02",
+      "momentum": 99.867,
+      "ratio": 98.412,
+      "week": "2026-10-02"
+     },
+     {
+      "date": "2026-10-09",
+      "momentum": 99.872,
+      "ratio": 98.343,
+      "week": "2026-10-09"
+     },
+     {
+      "date": "2026-10-16",
+      "momentum": 100.029,
+      "ratio": 98.497,
+      "week": "2026-10-16"
+     },
+     {
+      "date": "2026-10-23",
+      "momentum": 100.477,
+      "ratio": 99.075,
+      "week": "2026-10-23"
+     },
+     {
+      "date": "2026-10-30",
+      "momentum": 100.381,
+      "ratio": 99.234,
+      "week": "2026-10-30"
+     },
+     {
+      "date": "2026-11-06",
+      "momentum": 100.414,
+      "ratio": 99.49,
+      "week": "2026-11-06"
+     },
+     {
+      "date": "2026-11-13",
+      "momentum": 99.991,
+      "ratio": 99.181,
+      "week": "2026-11-13"
+     },
+     {
+      "date": "2026-11-20",
+      "momentum": 99.637,
+      "ratio": 98.689,
+      "week": "2026-11-20"
+     }
+    ],
+    "quadrant": "Lagging",
+    "rs": {
+     "as_of": "2026-11-20",
+     "bench_1m": 0.78,
+     "bench_3m": -1.22,
+     "momentum": -2.79,
+     "ret_1m": -1.79,
+     "ret_3m": -5.9,
+     "rs_1m": -2.56,
+     "rs_3m": -4.68,
+     "sessions": 287
+    },
+    "score": null,
+    "source": "index"
+   }
+  ],
+  "slow_sessions": 50,
+  "week_dates": [
+   "2026-10-02",
+   "2026-10-09",
+   "2026-10-16",
+   "2026-10-23",
+   "2026-10-30",
+   "2026-11-06",
+   "2026-11-13",
+   "2026-11-20"
+  ],
+  "weeks": [
+   "2026-10-02",
+   "2026-10-09",
+   "2026-10-16",
+   "2026-10-23",
+   "2026-10-30",
+   "2026-11-06",
+   "2026-11-13",
+   "2026-11-20"
+  ]
+ },
+ "sectors": [
+  {
+   "accumulating": 1,
+   "breadth": {
+    "above": 8,
+    "of": 8,
+    "pct": 100.0
+   },
+   "components": {
+    "breadth": {
+     "points": 25.0,
+     "score": 100.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 35.6,
+     "score": 88.9,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 35.0,
+     "score": 100.0,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 461121.0,
+    "change_pct": 0.153,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 9270.0,
+    "latest_pct": 2.052,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 8419.0,
+    "prev_pct": 1.899,
+    "prev_sum3_cr": 22781.0,
+    "streak": 14,
+    "sum3_cr": 25276.0,
+    "sum3_pct": 5.691,
+    "trend": "accelerating"
+   },
+   "fpi_spark": [
+    1251.0,
+    1819.0,
+    2431.0,
+    3081.0,
+    3765.0,
+    4479.0,
+    5220.0,
+    5986.0,
+    6775.0,
+    7587.0,
+    8419.0,
+    9270.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty IT",
+    "name": "NIFTY IT",
+    "note": null,
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Leading",
+   "rank": 1,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 100.097,
+    "ratio": 104.431,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 0.3,
+    "ret_1m": 5.49,
+    "ret_3m": 13.61,
+    "rs_1m": 4.72,
+    "rs_3m": 14.84,
+    "sessions": 287
+   },
+   "score": 95.6,
+   "sector": "Information Technology",
+   "short": "IT",
+   "slug": "information-technology",
+   "top_stocks": [
+    {
+     "score": 100.0,
+     "symbol": "ITE1"
+    },
+    {
+     "score": 35.7,
+     "symbol": "ITE6"
+    },
+    {
+     "score": 29.9,
+     "symbol": "ITE4"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 7,
+    "of": 8,
+    "pct": 87.5
+   },
+   "components": {
+    "breadth": {
+     "points": 21.9,
+     "score": 87.5,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 20.4,
+     "score": 51.1,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 32.5,
+     "score": 92.8,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 7756.0,
+    "change_pct": -0.833,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 2.0,
+    "latest_pct": 0.026,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 66.0,
+    "prev_pct": 0.858,
+    "prev_sum3_cr": 81.0,
+    "streak": 2,
+    "sum3_cr": 61.0,
+    "sum3_pct": 0.793,
+    "trend": "decelerating"
+   },
+   "fpi_spark": [
+    -58.0,
+    0.0,
+    -41.0,
+    -66.0,
+    -14.0,
+    -86.0,
+    -53.0,
+    16.0,
+    22.0,
+    -7.0,
+    66.0,
+    2.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Capital Goods",
+    "name": "NIFTY CAPITAL GOODS",
+    "note": "A new index: not in NSE's daily file in November 2024.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Leading",
+   "rank": 2,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 100.047,
+    "ratio": 101.433,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 2.9,
+    "ret_1m": 3.28,
+    "ret_3m": 3.4,
+    "rs_1m": 2.5,
+    "rs_3m": 4.62,
+    "sessions": 287
+   },
+   "score": 74.8,
+   "sector": "Capital Goods",
+   "short": "Capital Goods",
+   "slug": "capital-goods",
+   "top_stocks": [
+    {
+     "score": 23.8,
+     "symbol": "CAP5"
+    },
+    {
+     "score": 16.9,
+     "symbol": "CAP6"
+    },
+    {
+     "score": 7.0,
+     "symbol": "CAP7"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 6,
+    "of": 8,
+    "pct": 75.0
+   },
+   "components": {
+    "breadth": {
+     "points": 18.8,
+     "score": 75.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 28.4,
+     "score": 71.1,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 25.6,
+     "score": 73.1,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 403332.0,
+    "change_pct": 0.428,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 3439.0,
+    "latest_pct": 0.86,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 1722.0,
+    "prev_pct": 0.432,
+    "prev_sum3_cr": -518.0,
+    "streak": 2,
+    "sum3_cr": 2608.0,
+    "sum3_pct": 0.655,
+    "trend": "accelerating"
+   },
+   "fpi_spark": [
+    -2330.0,
+    303.0,
+    2860.0,
+    -1680.0,
+    1973.0,
+    -527.0,
+    -196.0,
+    3214.0,
+    313.0,
+    -2553.0,
+    1722.0,
+    3439.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Consumer Services",
+    "name": "NIFTY CONSUMER SERVICES",
+    "note": "A new index: not in NSE's daily file in November 2024.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Leading",
+   "rank": 3,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 100.369,
+    "ratio": 100.111,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 2.27,
+    "ret_1m": 1.77,
+    "ret_3m": -3.12,
+    "rs_1m": 1.0,
+    "rs_3m": -1.9,
+    "sessions": 287
+   },
+   "score": 72.8,
+   "sector": "Consumer Services",
+   "short": "Consumer Services",
+   "slug": "consumer-services",
+   "top_stocks": [
+    {
+     "score": 34.7,
+     "symbol": "CSV7"
+    },
+    {
+     "score": 29.4,
+     "symbol": "CSV3"
+    },
+    {
+     "score": 25.4,
+     "symbol": "CSV4"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 5,
+    "of": 8,
+    "pct": 62.5
+   },
+   "components": {
+    "breadth": {
+     "points": 15.6,
+     "score": 62.5,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 22.4,
+     "score": 56.1,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 22.5,
+     "score": 64.3,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 147180.0,
+    "change_pct": 0.669,
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 700.0,
+    "latest_pct": 0.478,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -280.0,
+    "prev_pct": -0.191,
+    "prev_sum3_cr": -720.0,
+    "streak": 1,
+    "sum3_cr": 180.0,
+    "sum3_pct": 0.124,
+    "trend": "reversing"
+   },
+   "fpi_spark": [
+    -280.0,
+    -320.0,
+    -360.0,
+    -200.0,
+    -240.0,
+    -280.0,
+    -320.0,
+    -360.0,
+    -200.0,
+    -240.0,
+    -280.0,
+    700.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty FMCG",
+    "name": "NIFTY FMCG",
+    "note": null,
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Weakening",
+   "rank": 4,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.595,
+    "ratio": 101.137,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -1.1,
+    "ret_1m": 0.97,
+    "ret_3m": 5.23,
+    "rs_1m": 0.2,
+    "rs_3m": 6.45,
+    "sessions": 287
+   },
+   "score": 60.6,
+   "sector": "Fast Moving Consumer Goods",
+   "short": "FMCG",
+   "slug": "fast-moving-consumer-goods",
+   "top_stocks": [
+    {
+     "score": 48.3,
+     "symbol": "FMC7"
+    },
+    {
+     "score": 41.0,
+     "symbol": "FMC3"
+    },
+    {
+     "score": 25.7,
+     "symbol": "FMC8"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 2,
+    "of": 8,
+    "pct": 25.0
+   },
+   "components": {
+    "breadth": {
+     "points": 6.2,
+     "score": 25.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 22.2,
+     "score": 55.6,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 31.3,
+     "score": 89.4,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 20591.0,
+    "change_pct": 1.598,
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 102.0,
+    "latest_pct": 0.498,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -228.0,
+    "prev_pct": -1.101,
+    "prev_sum3_cr": -7.0,
+    "streak": 1,
+    "sum3_cr": -22.0,
+    "sum3_pct": -0.098,
+    "trend": "reversing"
+   },
+   "fpi_spark": [
+    170.0,
+    4.0,
+    -110.0,
+    -36.0,
+    111.0,
+    235.0,
+    212.0,
+    87.0,
+    117.0,
+    104.0,
+    -228.0,
+    102.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Telecommunications",
+    "name": "NIFTY TELECOMMUNICATIONS",
+    "note": "A new index: not in NSE's daily file in November 2024.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Leading",
+   "rank": 5,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 100.094,
+    "ratio": 101.867,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -1.68,
+    "ret_1m": 2.08,
+    "ret_3m": 3.31,
+    "rs_1m": 1.31,
+    "rs_3m": 4.53,
+    "sessions": 287
+   },
+   "score": 59.8,
+   "sector": "Telecommunication",
+   "short": "Telecom",
+   "slug": "telecommunication",
+   "top_stocks": [
+    {
+     "score": 36.4,
+     "symbol": "TEL6"
+    },
+    {
+     "score": 25.8,
+     "symbol": "TEL3"
+    },
+    {
+     "score": 18.4,
+     "symbol": "TEL8"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 1,
+    "of": 8,
+    "pct": 12.5
+   },
+   "components": {
+    "breadth": {
+     "points": 3.1,
+     "score": 12.5,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 22.9,
+     "score": 57.2,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 29.5,
+     "score": 84.2,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 8324.0,
+    "change_pct": -0.891,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 19.0,
+    "latest_pct": 0.229,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 92.0,
+    "prev_pct": 1.12,
+    "prev_sum3_cr": 115.0,
+    "streak": 2,
+    "sum3_cr": 91.0,
+    "sum3_pct": 1.106,
+    "trend": "decelerating"
+   },
+   "fpi_spark": [
+    19.0,
+    -71.0,
+    17.0,
+    86.0,
+    65.0,
+    50.0,
+    19.0,
+    47.0,
+    43.0,
+    -20.0,
+    92.0,
+    19.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Realty",
+    "name": "NIFTY REALTY",
+    "note": null,
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Leading",
+   "rank": 6,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 100.263,
+    "ratio": 100.228,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 2.78,
+    "ret_1m": 2.06,
+    "ret_3m": 0.88,
+    "rs_1m": 1.28,
+    "rs_3m": 2.11,
+    "sessions": 287
+   },
+   "score": 55.5,
+   "sector": "Realty",
+   "short": "Realty",
+   "slug": "realty",
+   "top_stocks": [
+    {
+     "score": 44.8,
+     "symbol": "REA5"
+    },
+    {
+     "score": 39.9,
+     "symbol": "REA4"
+    },
+    {
+     "score": 34.6,
+     "symbol": "REA7"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 4,
+    "of": 8,
+    "pct": 50.0
+   },
+   "components": {
+    "breadth": {
+     "points": 12.5,
+     "score": 50.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 22.9,
+     "score": 57.2,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 18.8,
+     "score": 53.6,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 7873.0,
+    "change_pct": 2.154,
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 57.0,
+    "latest_pct": 0.729,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -113.0,
+    "prev_pct": -1.425,
+    "prev_sum3_cr": -244.0,
+    "streak": 1,
+    "sum3_cr": -85.0,
+    "sum3_pct": -1.06,
+    "trend": "reversing"
+   },
+   "fpi_spark": [
+    32.0,
+    -29.0,
+    3.0,
+    50.0,
+    -91.0,
+    1.0,
+    -40.0,
+    18.0,
+    -102.0,
+    -29.0,
+    -113.0,
+    57.0
+   ],
+   "index": {
+    "fit": "broad",
+    "label": "Nifty Cement",
+    "name": "NIFTY CEMENT",
+    "note": "Cement is nearly all of this sector by value, but not all of it. A new index: not in NSE's daily file in November 2024.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Improving",
+   "rank": 7,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 100.572,
+    "ratio": 98.822,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 0.84,
+    "ret_1m": 0.47,
+    "ret_3m": -6.62,
+    "rs_1m": -0.31,
+    "rs_3m": -5.4,
+    "sessions": 287
+   },
+   "score": 54.2,
+   "sector": "Construction Materials",
+   "short": "Cement",
+   "slug": "construction-materials",
+   "top_stocks": [
+    {
+     "score": 31.2,
+     "symbol": "CEM3"
+    },
+    {
+     "score": 26.3,
+     "symbol": "CEM4"
+    },
+    {
+     "score": 22.8,
+     "symbol": "CEM1"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 5,
+    "of": 8,
+    "pct": 62.5
+   },
+   "components": {
+    "breadth": {
+     "points": 15.6,
+     "score": 62.5,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 34.7,
+     "score": 86.7,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 3.9,
+     "score": 11.2,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 423253.0,
+    "change_pct": 0.824,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 3488.0,
+    "latest_pct": 0.831,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 31.0,
+    "prev_pct": 0.007,
+    "prev_sum3_cr": 5916.0,
+    "streak": 4,
+    "sum3_cr": 6573.0,
+    "sum3_pct": 1.571,
+    "trend": "accelerating"
+   },
+   "fpi_spark": [
+    2691.0,
+    255.0,
+    1288.0,
+    2900.0,
+    1977.0,
+    1576.0,
+    713.0,
+    -1005.0,
+    2831.0,
+    3054.0,
+    31.0,
+    3488.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Power",
+    "name": "NIFTY POWER",
+    "note": "A new index: not in NSE's daily file in November 2024.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Lagging",
+   "rank": 8,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.373,
+    "ratio": 97.31,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -2.54,
+    "ret_1m": -4.08,
+    "ret_3m": -8.05,
+    "rs_1m": -4.85,
+    "rs_3m": -6.83,
+    "sessions": 287
+   },
+   "score": 54.2,
+   "sector": "Power",
+   "short": "Power",
+   "slug": "power",
+   "top_stocks": [
+    {
+     "score": 21.1,
+     "symbol": "POW8"
+    },
+    {
+     "score": 17.5,
+     "symbol": "POW1"
+    },
+    {
+     "score": 16.1,
+     "symbol": "POW4"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 5,
+    "of": 8,
+    "pct": 62.5
+   },
+   "components": {
+    "breadth": {
+     "points": 15.6,
+     "score": 62.5,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 25.6,
+     "score": 63.9,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 10.7,
+     "score": 30.7,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 145563.0,
+    "change_pct": 1.342,
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 1151.0,
+    "latest_pct": 0.797,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -792.0,
+    "prev_pct": -0.545,
+    "prev_sum3_cr": -1154.0,
+    "streak": 1,
+    "sum3_cr": 55.0,
+    "sum3_pct": 0.043,
+    "trend": "reversing"
+   },
+   "fpi_spark": [
+    -1876.0,
+    -800.0,
+    -307.0,
+    -680.0,
+    655.0,
+    -507.0,
+    -1135.0,
+    -430.0,
+    -58.0,
+    -304.0,
+    -792.0,
+    1151.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Healthcare Index",
+    "name": "NIFTY HEALTHCARE INDEX",
+    "note": "Healthcare is pharma plus hospitals and diagnostics. Nifty Pharma is a part of it and is shown as a theme.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Lagging",
+   "rank": 9,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.892,
+    "ratio": 99.656,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -2.37,
+    "ret_1m": -0.34,
+    "ret_3m": -1.62,
+    "rs_1m": -1.12,
+    "rs_3m": -0.39,
+    "sessions": 287
+   },
+   "score": 51.9,
+   "sector": "Healthcare",
+   "short": "Healthcare",
+   "slug": "healthcare",
+   "top_stocks": [
+    {
+     "score": 37.5,
+     "symbol": "HEA5"
+    },
+    {
+     "score": 28.3,
+     "symbol": "HEA7"
+    },
+    {
+     "score": 19.2,
+     "symbol": "HEA1"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 3,
+    "of": 8,
+    "pct": 37.5
+   },
+   "components": {
+    "breadth": {
+     "points": 9.4,
+     "score": 37.5,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 20.7,
+     "score": 51.7,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 20.3,
+     "score": 57.9,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 98117.0,
+    "change_pct": 1.95,
+    "direction": "inflow",
+    "flipped_to_inflow": true,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 612.0,
+    "latest_pct": 0.628,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -1307.0,
+    "prev_pct": -1.323,
+    "prev_sum3_cr": -2217.0,
+    "streak": 1,
+    "sum3_cr": -1216.0,
+    "sum3_pct": -1.22,
+    "trend": "reversing"
+   },
+   "fpi_spark": [
+    161.0,
+    -294.0,
+    233.0,
+    1071.0,
+    -630.0,
+    -309.0,
+    -902.0,
+    121.0,
+    -389.0,
+    -521.0,
+    -1307.0,
+    612.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Financial Services",
+    "name": "NIFTY FINANCIAL SERVICES",
+    "note": "NSDL reports banks, NBFCs, insurers and brokers as one sector, so FPI flow cannot be split between Nifty Bank, Private Bank and PSU Bank. Those are shown as themes, on price only.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Weakening",
+   "rank": 10,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.37,
+    "ratio": 100.89,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -0.18,
+    "ret_1m": 1.04,
+    "ret_3m": 2.78,
+    "rs_1m": 0.27,
+    "rs_3m": 4.0,
+    "sessions": 287
+   },
+   "score": 50.3,
+   "sector": "Financial Services",
+   "short": "Financials",
+   "slug": "financial-services",
+   "top_stocks": [
+    {
+     "score": 23.4,
+     "symbol": "FIN3"
+    },
+    {
+     "score": 17.2,
+     "symbol": "FIN4"
+    },
+    {
+     "score": 16.6,
+     "symbol": "FIN1"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 6,
+    "of": 8,
+    "pct": 75.0
+   },
+   "components": {
+    "breadth": {
+     "points": 18.8,
+     "score": 75.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 19.1,
+     "score": 47.8,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 11.6,
+     "score": 33.2,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 150556.0,
+    "change_pct": 0.172,
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": -11.0,
+    "latest_pct": -0.007,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -270.0,
+    "prev_pct": -0.179,
+    "prev_sum3_cr": 394.0,
+    "streak": 2,
+    "sum3_cr": 859.0,
+    "sum3_pct": 0.575,
+    "trend": "decelerating"
+   },
+   "fpi_spark": [
+    -123.0,
+    -806.0,
+    936.0,
+    -334.0,
+    595.0,
+    -495.0,
+    780.0,
+    -430.0,
+    -476.0,
+    1140.0,
+    -270.0,
+    -11.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Auto",
+    "name": "NIFTY AUTO",
+    "note": null,
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Lagging",
+   "rank": 11,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.524,
+    "ratio": 99.702,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -1.09,
+    "ret_1m": -0.44,
+    "ret_3m": -0.78,
+    "rs_1m": -1.22,
+    "rs_3m": 0.44,
+    "sessions": 287
+   },
+   "score": 49.5,
+   "sector": "Automobile and Auto Components",
+   "short": "Auto",
+   "slug": "automobile-and-auto-components",
+   "top_stocks": [
+    {
+     "score": 42.7,
+     "symbol": "AUT2"
+    },
+    {
+     "score": 26.9,
+     "symbol": "AUT8"
+    },
+    {
+     "score": 24.4,
+     "symbol": "AUT7"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 5,
+    "of": 8,
+    "pct": 62.5
+   },
+   "components": {
+    "breadth": {
+     "points": 15.6,
+     "score": 62.5,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 25.3,
+     "score": 63.3,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 8.5,
+     "score": 24.3,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 21360.0,
+    "change_pct": -0.897,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 65.0,
+    "latest_pct": 0.305,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 253.0,
+    "prev_pct": 1.202,
+    "prev_sum3_cr": 624.0,
+    "streak": 6,
+    "sum3_cr": 536.0,
+    "sum3_pct": 2.554,
+    "trend": "decelerating"
+   },
+   "fpi_spark": [
+    151.0,
+    63.0,
+    -11.0,
+    -42.0,
+    119.0,
+    -33.0,
+    11.0,
+    139.0,
+    153.0,
+    218.0,
+    253.0,
+    65.0
+   ],
+   "index": {
+    "fit": "none",
+    "label": "Basket of 8 Textiles stocks",
+    "name": null,
+    "note": "NSE publishes no textiles index.",
+    "source": "basket"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Lagging",
+   "rank": 12,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 98.918,
+    "ratio": 98.897,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -9.37,
+    "ret_1m": -3.43,
+    "ret_3m": -1.35,
+    "rs_1m": -4.21,
+    "rs_3m": -0.12,
+    "sessions": 99
+   },
+   "score": 49.5,
+   "sector": "Textiles",
+   "short": "Textiles",
+   "slug": "textiles",
+   "top_stocks": [
+    {
+     "score": 35.3,
+     "symbol": "TEX7"
+    },
+    {
+     "score": 22.1,
+     "symbol": "TEX5"
+    },
+    {
+     "score": 17.8,
+     "symbol": "TEX3"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 2,
+    "of": 8,
+    "pct": 25.0
+   },
+   "components": {
+    "breadth": {
+     "points": 6.2,
+     "score": 25.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 28.0,
+     "score": 70.0,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 12.6,
+     "score": 36.1,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 19589.0,
+    "change_pct": 0.4,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 113.0,
+    "latest_pct": 0.58,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 35.0,
+    "prev_pct": 0.18,
+    "prev_sum3_cr": 176.0,
+    "streak": 4,
+    "sum3_cr": 189.0,
+    "sum3_pct": 0.972,
+    "trend": "accelerating"
+   },
+   "fpi_spark": [
+    -143.0,
+    -173.0,
+    -194.0,
+    72.0,
+    62.0,
+    -150.0,
+    -68.0,
+    -40.0,
+    100.0,
+    41.0,
+    35.0,
+    113.0
+   ],
+   "index": {
+    "fit": "ambiguous",
+    "label": "Nifty Transportation & Logistics",
+    "name": "NIFTY TRANSPORTATION & LOGISTICS",
+    "note": "The classification's Services sector is transport, logistics, ports and commercial services. Nifty Services Sector sounds right and is not: it is banks, IT and telecom. Nifty Transportation & Logistics is used, though it also holds the automobile makers.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Improving",
+   "rank": 13,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 100.092,
+    "ratio": 96.78,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -0.91,
+    "ret_1m": -3.35,
+    "ret_3m": -12.13,
+    "rs_1m": -4.12,
+    "rs_3m": -10.91,
+    "sessions": 287
+   },
+   "score": 46.9,
+   "sector": "Services",
+   "short": "Services",
+   "slug": "services",
+   "top_stocks": [
+    {
+     "score": 24.2,
+     "symbol": "SER5"
+    },
+    {
+     "score": 22.2,
+     "symbol": "SER3"
+    },
+    {
+     "score": 17.7,
+     "symbol": "SER8"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 2,
+    "of": 8,
+    "pct": 25.0
+   },
+   "components": {
+    "breadth": {
+     "points": 6.2,
+     "score": 25.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 12.0,
+     "score": 30.0,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 22.8,
+     "score": 65.2,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 57012.0,
+    "change_pct": 0.655,
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": -65.0,
+    "latest_pct": -0.114,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -442.0,
+    "prev_pct": -0.768,
+    "prev_sum3_cr": -582.0,
+    "streak": 3,
+    "sum3_cr": -984.0,
+    "sum3_pct": -1.705,
+    "trend": "decelerating"
+   },
+   "fpi_spark": [
+    -1030.0,
+    -316.0,
+    -340.0,
+    197.0,
+    -69.0,
+    230.0,
+    30.0,
+    -746.0,
+    337.0,
+    -477.0,
+    -442.0,
+    -65.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Consumer Durables",
+    "name": "NIFTY CONSUMER DURABLES",
+    "note": null,
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Weakening",
+   "rank": 14,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.76,
+    "ratio": 101.833,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -4.05,
+    "ret_1m": 1.74,
+    "ret_3m": 4.41,
+    "rs_1m": 0.96,
+    "rs_3m": 5.63,
+    "sessions": 287
+   },
+   "score": 41.1,
+   "sector": "Consumer Durables",
+   "short": "Durables",
+   "slug": "consumer-durables",
+   "top_stocks": [
+    {
+     "score": 29.7,
+     "symbol": "DUR8"
+    },
+    {
+     "score": 23.8,
+     "symbol": "DUR7"
+    },
+    {
+     "score": 22.7,
+     "symbol": "DUR6"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 4,
+    "of": 8,
+    "pct": 50.0
+   },
+   "components": {
+    "breadth": {
+     "points": 12.5,
+     "score": 50.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 11.8,
+     "score": 29.4,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 16.2,
+     "score": 46.4,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 386236.0,
+    "change_pct": -0.218,
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": -1409.0,
+    "latest_pct": -0.363,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -563.0,
+    "prev_pct": -0.145,
+    "prev_sum3_cr": 2576.0,
+    "streak": 2,
+    "sum3_cr": -655.0,
+    "sum3_pct": -0.168,
+    "trend": "accelerating"
+   },
+   "fpi_spark": [
+    -2374.0,
+    1029.0,
+    -3247.0,
+    2218.0,
+    -906.0,
+    -3176.0,
+    -4009.0,
+    -921.0,
+    1822.0,
+    1317.0,
+    -563.0,
+    -1409.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Chemicals",
+    "name": "NIFTY CHEMICALS",
+    "note": "A new index: not in NSE's daily file in November 2024.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Improving",
+   "rank": 15,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 100.15,
+    "ratio": 98.088,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 2.89,
+    "ret_1m": 0.4,
+    "ret_3m": -8.65,
+    "rs_1m": -0.38,
+    "rs_3m": -7.43,
+    "sessions": 287
+   },
+   "score": 40.5,
+   "sector": "Chemicals",
+   "short": "Chemicals",
+   "slug": "chemicals",
+   "top_stocks": [
+    {
+     "score": 34.7,
+     "symbol": "CHE2"
+    },
+    {
+     "score": 17.2,
+     "symbol": "CHE1"
+    },
+    {
+     "score": 16.9,
+     "symbol": "CHE8"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 5,
+    "of": 8,
+    "pct": 62.5
+   },
+   "components": {
+    "breadth": {
+     "points": 15.6,
+     "score": 62.5,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 16.0,
+     "score": 40.0,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 8.4,
+     "score": 24.0,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 61156.0,
+    "change_pct": -0.926,
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": true,
+    "fortnights_in_sum": 3,
+    "latest_cr": -164.0,
+    "latest_pct": -0.267,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 401.0,
+    "prev_pct": 0.658,
+    "prev_sum3_cr": 415.0,
+    "streak": 1,
+    "sum3_cr": 399.0,
+    "sum3_pct": 0.657,
+    "trend": "reversing"
+   },
+   "fpi_spark": [
+    496.0,
+    76.0,
+    -121.0,
+    186.0,
+    415.0,
+    157.0,
+    7.0,
+    -166.0,
+    -148.0,
+    162.0,
+    401.0,
+    -164.0
+   ],
+   "index": {
+    "fit": "ambiguous",
+    "label": "Nifty Infrastructure",
+    "name": "NIFTY INFRASTRUCTURE",
+    "note": "NSE has no construction index. Nifty Infrastructure is the nearest, but its largest weights are Reliance, Bharti Airtel, L&T and the power companies, so it is an infrastructure index and not a construction one. Nifty Realty and Nifty Housing were the alternatives and fit worse.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Lagging",
+   "rank": 16,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.541,
+    "ratio": 98.538,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -2.31,
+    "ret_1m": -1.8,
+    "ret_3m": -3.38,
+    "rs_1m": -2.57,
+    "rs_3m": -2.16,
+    "sessions": 287
+   },
+   "score": 40.0,
+   "sector": "Construction",
+   "short": "Construction",
+   "slug": "construction",
+   "top_stocks": [
+    {
+     "score": 36.9,
+     "symbol": "CON4"
+    },
+    {
+     "score": 35.7,
+     "symbol": "CON1"
+    },
+    {
+     "score": 18.7,
+     "symbol": "CON7"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 2,
+    "of": 8,
+    "pct": 25.0
+   },
+   "components": {
+    "breadth": {
+     "points": 6.2,
+     "score": 25.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 3.6,
+     "score": 8.9,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 11.3,
+     "score": 32.3,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 7541.0,
+    "change_pct": -0.802,
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": -118.0,
+    "latest_pct": -1.541,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -57.0,
+    "prev_pct": -0.739,
+    "prev_sum3_cr": -142.0,
+    "streak": 4,
+    "sum3_cr": -233.0,
+    "sum3_pct": -3.026,
+    "trend": "accelerating"
+   },
+   "fpi_spark": [
+    -129.0,
+    47.0,
+    -36.0,
+    16.0,
+    -89.0,
+    -5.0,
+    -48.0,
+    36.0,
+    -27.0,
+    -58.0,
+    -57.0,
+    -118.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Media",
+    "name": "NIFTY MEDIA",
+    "note": null,
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Lagging",
+   "rank": 17,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.297,
+    "ratio": 99.809,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -4.96,
+    "ret_1m": -1.87,
+    "ret_3m": 0.67,
+    "rs_1m": -2.65,
+    "rs_3m": 1.9,
+    "sessions": 287
+   },
+   "score": 21.1,
+   "sector": "Media Entertainment & Publication",
+   "short": "Media",
+   "slug": "media-entertainment-publication",
+   "top_stocks": [
+    {
+     "score": 27.9,
+     "symbol": "MED3"
+    },
+    {
+     "score": 22.4,
+     "symbol": "MED6"
+    },
+    {
+     "score": 17.5,
+     "symbol": "MED1"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 2,
+    "of": 8,
+    "pct": 25.0
+   },
+   "components": {
+    "breadth": {
+     "points": 6.2,
+     "score": 25.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 5.8,
+     "score": 14.4,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 6.1,
+     "score": 17.3,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 144787.0,
+    "change_pct": -0.586,
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": true,
+    "fortnights_in_sum": 3,
+    "latest_cr": -715.0,
+    "latest_pct": -0.491,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 138.0,
+    "prev_pct": 0.095,
+    "prev_sum3_cr": -2908.0,
+    "streak": 1,
+    "sum3_cr": -2529.0,
+    "sum3_pct": -1.722,
+    "trend": "reversing"
+   },
+   "fpi_spark": [
+    -416.0,
+    693.0,
+    125.0,
+    -956.0,
+    -627.0,
+    835.0,
+    -1854.0,
+    2058.0,
+    -1094.0,
+    -1952.0,
+    138.0,
+    -715.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Oil & Gas",
+    "name": "NIFTY OIL & GAS",
+    "note": "Nifty Energy was the other candidate; it also holds the power companies, which NSDL reports under Power.",
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Lagging",
+   "rank": 18,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.27,
+    "ratio": 98.155,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -2.1,
+    "ret_1m": -2.8,
+    "ret_3m": -6.75,
+    "rs_1m": -3.58,
+    "rs_3m": -5.53,
+    "sessions": 287
+   },
+   "score": 18.1,
+   "sector": "Oil Gas & Consumable Fuels",
+   "short": "Oil & Gas",
+   "slug": "oil-gas-consumable-fuels",
+   "top_stocks": [
+    {
+     "score": 24.2,
+     "symbol": "OIL3"
+    },
+    {
+     "score": 20.2,
+     "symbol": "OIL6"
+    },
+    {
+     "score": 17.2,
+     "symbol": "OIL8"
+    }
+   ]
+  },
+  {
+   "accumulating": 0,
+   "breadth": {
+    "above": 0,
+    "of": 8,
+    "pct": 0.0
+   },
+   "components": {
+    "breadth": {
+     "points": 0.0,
+     "score": 0.0,
+     "weight": 25.0
+    },
+    "fpi": {
+     "points": 2.7,
+     "score": 6.7,
+     "weight": 40.0
+    },
+    "rs": {
+     "points": 1.4,
+     "score": 4.0,
+     "weight": 35.0
+    }
+   },
+   "fpi": {
+    "auc_cr": 347029.0,
+    "change_pct": -0.249,
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": -8034.0,
+    "latest_pct": -2.263,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": -7296.0,
+    "prev_pct": -2.013,
+    "prev_sum3_cr": -19743.0,
+    "streak": 14,
+    "sum3_cr": -21905.0,
+    "sum3_pct": -6.058,
+    "trend": "accelerating"
+   },
+   "fpi_spark": [
+    -1085.0,
+    -1576.0,
+    -2107.0,
+    -2670.0,
+    -3263.0,
+    -3881.0,
+    -4524.0,
+    -5188.0,
+    -5872.0,
+    -6575.0,
+    -7296.0,
+    -8034.0
+   ],
+   "index": {
+    "fit": "clean",
+    "label": "Nifty Metal",
+    "name": "NIFTY METAL",
+    "note": null,
+    "source": "index"
+   },
+   "members": 8,
+   "missing": [],
+   "of": 19,
+   "partial": false,
+   "quadrant": "Lagging",
+   "rank": 19,
+   "rrg": {
+    "date": "2026-11-20",
+    "momentum": 99.887,
+    "ratio": 95.348,
+    "week": "2026-11-20"
+   },
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -0.74,
+    "ret_1m": -4.39,
+    "ret_3m": -14.58,
+    "rs_1m": -5.16,
+    "rs_3m": -13.36,
+    "sessions": 287
+   },
+   "score": 4.1,
+   "sector": "Metals & Mining",
+   "short": "Metals",
+   "slug": "metals-mining",
+   "top_stocks": [
+    {
+     "score": 28.2,
+     "symbol": "MET8"
+    },
+    {
+     "score": 26.0,
+     "symbol": "MET1"
+    },
+    {
+     "score": 20.3,
+     "symbol": "MET7"
+    }
+   ]
+  }
+ ],
+ "themes": [
+  {
+   "index": "Nifty Bank",
+   "key": "theme-banks",
+   "kind": "theme",
+   "name": "Banks",
+   "part_of": "Financial Services",
+   "points": [
+    {
+     "date": "2026-10-02",
+     "momentum": 99.457,
+     "ratio": 102.049,
+     "week": "2026-10-02"
+    },
+    {
+     "date": "2026-10-09",
+     "momentum": 99.652,
+     "ratio": 102.033,
+     "week": "2026-10-09"
+    },
+    {
+     "date": "2026-10-16",
+     "momentum": 99.605,
+     "ratio": 101.777,
+     "week": "2026-10-16"
+    },
+    {
+     "date": "2026-10-23",
+     "momentum": 99.775,
+     "ratio": 101.792,
+     "week": "2026-10-23"
+    },
+    {
+     "date": "2026-10-30",
+     "momentum": 99.867,
+     "ratio": 101.81,
+     "week": "2026-10-30"
+    },
+    {
+     "date": "2026-11-06",
+     "momentum": 99.988,
+     "ratio": 101.849,
+     "week": "2026-11-06"
+    },
+    {
+     "date": "2026-11-13",
+     "momentum": 100.209,
+     "ratio": 102.138,
+     "week": "2026-11-13"
+    },
+    {
+     "date": "2026-11-20",
+     "momentum": 100.366,
+     "ratio": 102.508,
+     "week": "2026-11-20"
+    }
+   ],
+   "quadrant": "Leading",
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 2.42,
+    "ret_1m": 4.0,
+    "ret_3m": 4.32,
+    "rs_1m": 3.23,
+    "rs_3m": 5.55,
+    "sessions": 287
+   }
+  },
+  {
+   "index": "Nifty Private Bank",
+   "key": "theme-private-banks",
+   "kind": "theme",
+   "name": "Private Banks",
+   "part_of": "Financial Services",
+   "points": [
+    {
+     "date": "2026-10-02",
+     "momentum": 100.1,
+     "ratio": 99.836,
+     "week": "2026-10-02"
+    },
+    {
+     "date": "2026-10-09",
+     "momentum": 99.792,
+     "ratio": 99.495,
+     "week": "2026-10-09"
+    },
+    {
+     "date": "2026-10-16",
+     "momentum": 99.516,
+     "ratio": 98.99,
+     "week": "2026-10-16"
+    },
+    {
+     "date": "2026-10-23",
+     "momentum": 99.637,
+     "ratio": 98.89,
+     "week": "2026-10-23"
+    },
+    {
+     "date": "2026-10-30",
+     "momentum": 99.873,
+     "ratio": 99.02,
+     "week": "2026-10-30"
+    },
+    {
+     "date": "2026-11-06",
+     "momentum": 100.021,
+     "ratio": 99.12,
+     "week": "2026-11-06"
+    },
+    {
+     "date": "2026-11-13",
+     "momentum": 100.155,
+     "ratio": 99.313,
+     "week": "2026-11-13"
+    },
+    {
+     "date": "2026-11-20",
+     "momentum": 100.006,
+     "ratio": 99.239,
+     "week": "2026-11-20"
+    }
+   ],
+   "quadrant": "Improving",
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 2.18,
+    "ret_1m": -0.04,
+    "ret_3m": -2.86,
+    "rs_1m": -0.82,
+    "rs_3m": -1.64,
+    "sessions": 287
+   }
+  },
+  {
+   "index": "Nifty PSU Bank",
+   "key": "theme-psu-banks",
+   "kind": "theme",
+   "name": "PSU Banks",
+   "part_of": "Financial Services",
+   "points": [
+    {
+     "date": "2026-10-02",
+     "momentum": 99.783,
+     "ratio": 97.63,
+     "week": "2026-10-02"
+    },
+    {
+     "date": "2026-10-09",
+     "momentum": 99.752,
+     "ratio": 97.486,
+     "week": "2026-10-09"
+    },
+    {
+     "date": "2026-10-16",
+     "momentum": 99.751,
+     "ratio": 97.342,
+     "week": "2026-10-16"
+    },
+    {
+     "date": "2026-10-23",
+     "momentum": 99.88,
+     "ratio": 97.373,
+     "week": "2026-10-23"
+    },
+    {
+     "date": "2026-10-30",
+     "momentum": 99.895,
+     "ratio": 97.351,
+     "week": "2026-10-30"
+    },
+    {
+     "date": "2026-11-06",
+     "momentum": 100.237,
+     "ratio": 97.733,
+     "week": "2026-11-06"
+    },
+    {
+     "date": "2026-11-13",
+     "momentum": 100.281,
+     "ratio": 97.947,
+     "week": "2026-11-13"
+    },
+    {
+     "date": "2026-11-20",
+     "momentum": 100.207,
+     "ratio": 97.977,
+     "week": "2026-11-20"
+    }
+   ],
+   "quadrant": "Improving",
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": 0.96,
+    "ret_1m": -0.8,
+    "ret_3m": -7.77,
+    "rs_1m": -1.57,
+    "rs_3m": -6.54,
+    "sessions": 287
+   }
+  },
+  {
+   "index": "Nifty Pharma",
+   "key": "theme-pharma",
+   "kind": "theme",
+   "name": "Pharma",
+   "part_of": "Healthcare",
+   "points": [
+    {
+     "date": "2026-10-02",
+     "momentum": 99.069,
+     "ratio": 98.714,
+     "week": "2026-10-02"
+    },
+    {
+     "date": "2026-10-09",
+     "momentum": 98.848,
+     "ratio": 97.958,
+     "week": "2026-10-09"
+    },
+    {
+     "date": "2026-10-16",
+     "momentum": 99.253,
+     "ratio": 97.838,
+     "week": "2026-10-16"
+    },
+    {
+     "date": "2026-10-23",
+     "momentum": 100.24,
+     "ratio": 98.7,
+     "week": "2026-10-23"
+    },
+    {
+     "date": "2026-10-30",
+     "momentum": 100.82,
+     "ratio": 99.6,
+     "week": "2026-10-30"
+    },
+    {
+     "date": "2026-11-06",
+     "momentum": 100.676,
+     "ratio": 99.87,
+     "week": "2026-11-06"
+    },
+    {
+     "date": "2026-11-13",
+     "momentum": 100.277,
+     "ratio": 99.708,
+     "week": "2026-11-13"
+    },
+    {
+     "date": "2026-11-20",
+     "momentum": 99.855,
+     "ratio": 99.299,
+     "week": "2026-11-20"
+    }
+   ],
+   "quadrant": "Lagging",
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -0.31,
+    "ret_1m": -0.71,
+    "ret_3m": -5.62,
+    "rs_1m": -1.49,
+    "rs_3m": -4.39,
+    "sessions": 287
+   }
+  },
+  {
+   "index": "Nifty PSE",
+   "key": "theme-pse",
+   "kind": "theme",
+   "name": "PSE",
+   "part_of": null,
+   "points": [
+    {
+     "date": "2026-10-02",
+     "momentum": 100.348,
+     "ratio": 99.146,
+     "week": "2026-10-02"
+    },
+    {
+     "date": "2026-10-09",
+     "momentum": 100.666,
+     "ratio": 99.71,
+     "week": "2026-10-09"
+    },
+    {
+     "date": "2026-10-16",
+     "momentum": 100.761,
+     "ratio": 100.23,
+     "week": "2026-10-16"
+    },
+    {
+     "date": "2026-10-23",
+     "momentum": 100.128,
+     "ratio": 99.806,
+     "week": "2026-10-23"
+    },
+    {
+     "date": "2026-10-30",
+     "momentum": 99.815,
+     "ratio": 99.431,
+     "week": "2026-10-30"
+    },
+    {
+     "date": "2026-11-06",
+     "momentum": 99.62,
+     "ratio": 99.08,
+     "week": "2026-11-06"
+    },
+    {
+     "date": "2026-11-13",
+     "momentum": 99.593,
+     "ratio": 98.847,
+     "week": "2026-11-13"
+    },
+    {
+     "date": "2026-11-20",
+     "momentum": 99.754,
+     "ratio": 98.837,
+     "week": "2026-11-20"
+    }
+   ],
+   "quadrant": "Lagging",
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -1.84,
+    "ret_1m": -0.84,
+    "ret_3m": -3.82,
+    "rs_1m": -1.62,
+    "rs_3m": -2.59,
+    "sessions": 287
+   }
+  },
+  {
+   "index": "Nifty Energy",
+   "key": "theme-energy",
+   "kind": "theme",
+   "name": "Energy",
+   "part_of": null,
+   "points": [
+    {
+     "date": "2026-10-02",
+     "momentum": 99.867,
+     "ratio": 98.412,
+     "week": "2026-10-02"
+    },
+    {
+     "date": "2026-10-09",
+     "momentum": 99.872,
+     "ratio": 98.343,
+     "week": "2026-10-09"
+    },
+    {
+     "date": "2026-10-16",
+     "momentum": 100.029,
+     "ratio": 98.497,
+     "week": "2026-10-16"
+    },
+    {
+     "date": "2026-10-23",
+     "momentum": 100.477,
+     "ratio": 99.075,
+     "week": "2026-10-23"
+    },
+    {
+     "date": "2026-10-30",
+     "momentum": 100.381,
+     "ratio": 99.234,
+     "week": "2026-10-30"
+    },
+    {
+     "date": "2026-11-06",
+     "momentum": 100.414,
+     "ratio": 99.49,
+     "week": "2026-11-06"
+    },
+    {
+     "date": "2026-11-13",
+     "momentum": 99.991,
+     "ratio": 99.181,
+     "week": "2026-11-13"
+    },
+    {
+     "date": "2026-11-20",
+     "momentum": 99.637,
+     "ratio": 98.689,
+     "week": "2026-11-20"
+    }
+   ],
+   "quadrant": "Lagging",
+   "rs": {
+    "as_of": "2026-11-20",
+    "bench_1m": 0.78,
+    "bench_3m": -1.22,
+    "momentum": -2.79,
+    "ret_1m": -1.79,
+    "ret_3m": -5.9,
+    "rs_1m": -2.56,
+    "rs_3m": -4.68,
+    "sessions": 287
+   }
+  }
+ ],
+ "unscored": [
+  {
+   "accumulating": 0,
+   "breadth": null,
+   "components": null,
+   "fpi": {
+    "auc_cr": 8329.0,
+    "change_pct": -0.897,
+    "direction": "outflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": true,
+    "fortnights_in_sum": 3,
+    "latest_cr": -43.0,
+    "latest_pct": -0.514,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 32.0,
+    "prev_pct": 0.384,
+    "prev_sum3_cr": 87.0,
+    "streak": 1,
+    "sum3_cr": 31.0,
+    "sum3_pct": 0.376,
+    "trend": "reversing"
+   },
+   "fpi_spark": [
+    13.0,
+    142.0,
+    -37.0,
+    68.0,
+    -2.0,
+    31.0,
+    46.0,
+    -19.0,
+    13.0,
+    42.0,
+    32.0,
+    -43.0
+   ],
+   "index": {
+    "fit": "none",
+    "label": null,
+    "name": null,
+    "note": "No index, and one company in our universe.",
+    "source": null
+   },
+   "members": 1,
+   "of": null,
+   "quadrant": null,
+   "rank": null,
+   "rrg": null,
+   "rs": null,
+   "sector": "Diversified",
+   "short": "Diversified",
+   "slug": "diversified",
+   "top_stocks": [
+    {
+     "score": 2.4,
+     "symbol": "DIV1"
+    }
+   ],
+   "unscored_reason": "Fewer than 5 companies in our universe, so breadth and a basket cannot be measured."
+  },
+  {
+   "accumulating": 0,
+   "breadth": null,
+   "components": null,
+   "fpi": {
+    "auc_cr": 8134.0,
+    "change_pct": -0.582,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 4.0,
+    "latest_pct": 0.049,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 51.0,
+    "prev_pct": 0.631,
+    "prev_sum3_cr": 49.0,
+    "streak": 2,
+    "sum3_cr": 24.0,
+    "sum3_pct": 0.298,
+    "trend": "decelerating"
+   },
+   "fpi_spark": [
+    128.0,
+    29.0,
+    58.0,
+    19.0,
+    -50.0,
+    -48.0,
+    -69.0,
+    3.0,
+    29.0,
+    -31.0,
+    51.0,
+    4.0
+   ],
+   "index": {
+    "fit": "none",
+    "label": null,
+    "name": null,
+    "note": "No index, and one company in our universe.",
+    "source": null
+   },
+   "members": 1,
+   "of": null,
+   "quadrant": null,
+   "rank": null,
+   "rrg": null,
+   "rs": null,
+   "sector": "Forest Materials",
+   "short": "Forest",
+   "slug": "forest-materials",
+   "top_stocks": [
+    {
+     "score": 24.2,
+     "symbol": "FOR1"
+    }
+   ],
+   "unscored_reason": "Fewer than 5 companies in our universe, so breadth and a basket cannot be measured."
+  },
+  {
+   "accumulating": 0,
+   "breadth": null,
+   "components": null,
+   "fpi": {
+    "auc_cr": 19870.0,
+    "change_pct": 0.088,
+    "direction": "inflow",
+    "flipped_to_inflow": false,
+    "flipped_to_outflow": false,
+    "fortnights_in_sum": 3,
+    "latest_cr": 124.0,
+    "latest_pct": 0.628,
+    "period_end": "2026-11-15",
+    "period_start": "2026-11-01",
+    "prev_cr": 106.0,
+    "prev_pct": 0.54,
+    "prev_sum3_cr": 162.0,
+    "streak": 5,
+    "sum3_cr": 276.0,
+    "sum3_pct": 1.402,
+    "trend": "accelerating"
+   },
+   "fpi_spark": [
+    -63.0,
+    32.0,
+    -245.0,
+    86.0,
+    -7.0,
+    50.0,
+    -190.0,
+    56.0,
+    10.0,
+    46.0,
+    106.0,
+    124.0
+   ],
+   "index": {
+    "fit": "none",
+    "label": null,
+    "name": null,
+    "note": "No index, and four companies in our universe.",
+    "source": null
+   },
+   "members": 4,
+   "of": null,
+   "quadrant": null,
+   "rank": null,
+   "rrg": null,
+   "rs": null,
+   "sector": "Utilities",
+   "short": "Utilities",
+   "slug": "utilities",
+   "top_stocks": [
+    {
+     "score": 17.8,
+     "symbol": "UTI3"
+    },
+    {
+     "score": 15.3,
+     "symbol": "UTI1"
+    },
+    {
+     "score": 12.3,
+     "symbol": "UTI2"
+    }
+   ],
+   "unscored_reason": "Fewer than 5 companies in our universe, so breadth and a basket cannot be measured."
+  }
+ ],
+ "weights": {
+  "breadth": 25.0,
+  "fpi": 40.0,
+  "rs": 35.0
+ }
+}
