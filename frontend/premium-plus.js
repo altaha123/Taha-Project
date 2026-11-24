@@ -175,10 +175,18 @@
     'TORNTPHARM Torrent Pharmaceuticals|ALKEM Alkem Laboratories|ZYDUSLIFE Zydus Lifesciences|' +
     'ASTRAL Astral|POLYCAB Polycab India|KEI KEI Industries|SUPREMEIND Supreme Industries|' +
     'BALKRISIND Balkrishna Industries|MRF MRF|APOLLOTYRE Apollo Tyres|TVSMOTOR TVS Motor|' +
-    'ASHOKLEY Ashok Leyland|ESCORTS Escorts Kubota|BHARATFORG Bharat Forge|' +
-    'AAPL Apple|MSFT Microsoft|NVDA NVIDIA|GOOGL Alphabet|AMZN Amazon|META Meta Platforms|' +
+    'ASHOKLEY Ashok Leyland|ESCORTS Escorts Kubota|BHARATFORG Bharat Forge').split('|')
+    .map(seedRow);
+
+  /* Listed in New York. The logo host is keyed by Indian symbol, and META
+     there is a different company, so these rows are marked and keep their
+     initials (shell.js, Company marks). The exchange's own list, once it has
+     loaded, has no such rows. */
+  SEED = SEED.concat(('AAPL Apple|MSFT Microsoft|NVDA NVIDIA|GOOGL Alphabet|AMZN Amazon|META Meta Platforms|' +
     'TSLA Tesla|NFLX Netflix|AMD Advanced Micro Devices|INTC Intel').split('|')
-    .map(function (r) { var i = r.indexOf(' '); return { s: r.slice(0, i), n: r.slice(i + 1) }; });
+    .map(seedRow).map(function (r) { r.us = true; return r; }));
+
+  function seedRow(r) { var i = r.indexOf(' '); return { s: r.slice(0, i), n: r.slice(i + 1) }; }
 
   var UNIVERSE = SEED.slice();
   var CACHE_KEY = 'altaha-universe-v1';
@@ -266,12 +274,17 @@
       rows = search(q);
       if (!q) { close(); return; }
       input.removeAttribute('aria-activedescendant');
+      // The company's logo leads each row, drawn by the shell: shell.js loads
+      // after this file, so it is looked up when a list is drawn, not before.
+      var logos = window.AltahaLogo;
       list.innerHTML = rows.map(function (r, i) {
-        return '<div class="tah-item" role="option" aria-selected="false" id="' + list.id + '-' + i + '" data-i="' + i + '">' +
+        return '<div class="tah-item' + (logos ? ' has-lg' : '') + '" role="option" aria-selected="false" id="' + list.id + '-' + i + '" data-i="' + i + '">' +
+               (logos ? logos.tag(r.s, r.n, !r.us) : '') +
                '<span class="tah-sym">' + highlight(r.s, q) + '</span>' +
                '<span class="tah-name">' + highlight(r.n || '', q) + '</span></div>';
       }).join('');
       if (!rows.length) list.innerHTML = '<div class="tah-empty" role="status">No matching stocks. Try a company name or symbol.</div>';
+      else if (logos) logos.hydrate(list);
       list.hidden = false;
       wrap.classList.add('typeahead-open');
       cur = -1;

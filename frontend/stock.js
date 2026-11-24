@@ -170,18 +170,30 @@
 
   /* ── Logos ───────────────────────────────────────────────────────────────
      A company's initials on a tinted tile, always; and over it the company's
-     own mark, when its website is known and the image actually loads.
+     own mark, when one is found and the image actually loads.
 
      The initials are not a fallback bolted on afterwards. They are what is
      drawn first, so a logo that is slow, blocked or missing costs nothing:
-     the tile is already there and already identifies the company. The mark is
-     asked for from the company's own domain through a favicon service, and is
-     kept only if it comes back at a usable size. That service answers an
-     unknown domain with a 16-pixel placeholder rather than an error, and a
-     blurred globe beside a company's name is worse than its initials.
+     the tile is already there and already identifies the company.
 
-     no-referrer, so the service is told which domain's icon is wanted and not
+     The mark is asked for in two places, in order. First the image host the
+     portfolio and the search box use, keyed by the symbol a company trades
+     under in India. It has a mark for nearly every listed company, with or
+     without a website on file, which is what left a small cap's page on its
+     initials when the website was the only place asked. It knows nothing of
+     other markets (META there is an Indian company), so it is asked only for
+     an NSE or BSE listing. Then the company's own domain through a favicon
+     service: for the few the first has none of, and for anything listed
+     elsewhere.
+
+     Either is kept only if it comes back at a usable size. The favicon
+     service answers an unknown domain with a 16-pixel placeholder rather
+     than an error, and a blurred globe beside a company's name is worse than
+     its initials.
+
+     no-referrer, so each is told which company's mark is wanted and not
      which page wanted it. */
+  var LOGO_HOST = 'https://images.dhan.co/symbol/';
   var HUES = [38, 152, 205, 268, 330, 18, 95, 232, 178, 300];
   function hueOf(sym) {
     var h = 0, s = String(sym || '');
@@ -200,7 +212,20 @@
       '" data-name="' + esc(name || '') + '" data-domain="' + esc(domain || '') +
       '" aria-hidden="true"></span>';
   }
-  function paintLogo(node, sym, name, domain) {
+  /* Where to ask, in order. `indian` false is a listing outside India. */
+  function logoSources(sym, domain, indian) {
+    var out = [];
+    sym = String(sym || '').toUpperCase();
+    if (indian !== false && /^[A-Z0-9][A-Z0-9&_-]{0,23}$/.test(sym)) {
+      out.push(LOGO_HOST + encodeURIComponent(sym) + '.png');
+    }
+    domain = String(domain || '').toLowerCase();
+    if (/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)) {
+      out.push('https://www.google.com/s2/favicons?sz=128&domain=' + encodeURIComponent(domain));
+    }
+    return out;
+  }
+  function paintLogo(node, sym, name, domain, indian) {
     if (!node) return;
     node.textContent = '';
     node.classList.remove('has-img');
@@ -209,18 +234,25 @@
     m.className = 'lg-m';
     m.textContent = initials(name, sym);
     node.appendChild(m);
-    domain = String(domain || '').toLowerCase();
-    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(domain)) return;
-    var img = new Image();
-    img.alt = '';
-    img.decoding = 'async';
-    img.referrerPolicy = 'no-referrer';
-    img.onload = function () {
-      if (img.naturalWidth < 24 || !node.isConnected) return;
-      node.appendChild(img);
-      node.classList.add('has-img');
-    };
-    img.src = 'https://www.google.com/s2/favicons?sz=128&domain=' + encodeURIComponent(domain);
+    /* A tile painted again while a mark is on its way keeps only the mark
+       asked for last. */
+    var from = logoSources(sym, domain, indian), turn = node._lgTurn = (node._lgTurn || 0) + 1;
+    (function next() {
+      var src = from.shift();
+      if (!src || node._lgTurn !== turn) return;
+      var img = new Image();
+      img.alt = '';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.onerror = next;
+      img.onload = function () {
+        if (img.naturalWidth < 24) return next();
+        if (node._lgTurn !== turn || !node.isConnected) return;
+        node.appendChild(img);
+        node.classList.add('has-img');
+      };
+      img.src = src;
+    })();
   }
   function hydrateLogos(root) {
     [].slice.call((root || document).querySelectorAll('.lg[data-sym]')).forEach(function (n) {
@@ -258,8 +290,9 @@
     $('chg').textContent = '';
 
     var domain = (d.logo && d.logo.domain) || '';
-    paintLogo($('logo'), base, d.name, domain);
-    paintLogo($('mini-logo'), base, d.name, domain);
+    var indian = d.exchange === 'NSE' || d.exchange === 'BSE';
+    paintLogo($('logo'), base, d.name, domain, indian);
+    paintLogo($('mini-logo'), base, d.name, domain, indian);
     $('mini-sym').textContent = base;
     $('mini-px').textContent = money(d.price, d.currency);
 

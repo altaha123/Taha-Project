@@ -29,8 +29,14 @@
      · PEERS ARE NAMED, THE COMPANY'S OWN ROW IS MARKED, AND SORTING ONLY
        REORDERS. A company with no figure sorts last in both directions.
      · A LOGO IS THE COMPANY'S INITIALS UNTIL ITS MARK HAS LOADED AT A USABLE
-       SIZE. The favicon service answers an unknown domain with a 16-pixel
-       placeholder, which must never replace the initials.
+       SIZE. The mark is asked for by symbol first, which is what gives a
+       company with no website on file a logo at all; then from its website;
+       and a listing outside India is never asked for by symbol, because the
+       host's symbols are Indian ones. The favicon service answers an unknown
+       domain with a 16-pixel placeholder, which must never replace the
+       initials.
+     · SEARCH LISTS COMPANIES WITH THEIR MARKS, initials first, and asks for
+       each symbol once however many letters are typed.
      · PRESS AND FILINGS ARE THREE LISTS, AND A LINK FROM A FEED IS ONLY EVER
        http(s). A headline's `javascript:` address is printed as text.
      · AN UNANSWERED SEARCH IS NOT "NO NEWS".
@@ -86,21 +92,34 @@ const year = Array.from({ length: 120 }, (_, i) => {
   return [new Date(Date.UTC(2025, 10, 20) + i * 3 * 86400000).toISOString().slice(0, 10), v, v, v, v, 1000];
 });
 
+// The companies the logo host has a mark for. It is keyed by symbol and
+// answers 403 for one it does not know.
+const MARKS = ['NORTHBANK', 'HARBOURBK', 'CRESTBANK'];
+
 async function open(browser, port, opts) {
   opts = opts || {};
   const context = await browser.newContext(Object.assign(
     { viewport: { width: 1280, height: 1000 } }, opts.context));
-  const page = await context.newPage(), errors = [], asked = [];
+  const page = await context.newPage(), errors = [], asked = [], marks = [], icons = [];
   let owned = 0;
   page.on('pageerror', e => errors.push(String(e.stack || e)));
   await context.route('**/*', route => {
     const u = new URL(route.request().url());
     if (u.hostname === '127.0.0.1') return route.continue();
     if (/fonts\.(googleapis|gstatic)\.com$/.test(u.hostname)) return route.abort();
+    if (u.hostname === 'images.dhan.co') {
+      const sym = decodeURIComponent(u.pathname).replace(/^\/symbol\/|\.png$/g, '');
+      marks.push(sym);
+      assert.equal(route.request().headers().referer, undefined, 'the page told the logo host where it was');
+      return (opts.marks || MARKS).includes(sym)
+        ? route.fulfill({ contentType: 'image/png', body: PNG64 })
+        : route.fulfill({ status: 403, contentType: 'application/xml', body: '<Error><Code>AccessDenied</Code></Error>' });
+    }
     if (u.hostname === 'www.google.com' && u.pathname === '/s2/favicons') {
       // The company's own domain has a real mark; every other domain gets
       // what the service really sends for one it does not know.
       const real = u.searchParams.get('domain') === 'northernunion.example';
+      icons.push(u.searchParams.get('domain'));
       assert.equal(route.request().headers().referer, undefined, 'the page told the icon service where it was');
       return route.fulfill({ contentType: 'image/png', body: real ? PNG64 : PNG16 });
     }
@@ -108,6 +127,7 @@ async function open(browser, port, opts) {
     const analyze = opts.analyze ? opts.analyze(JSON.parse(JSON.stringify(fx.analyze))) : fx.analyze;
     switch (u.pathname) {
       case '/analyze': return route.fulfill({ json: analyze });
+      case '/universe': return route.fulfill({ json: { rows: opts.universe || [] } });
       case '/chart': return route.fulfill({ json: { currency: 'INR', day_change_pct: 0.84, candles: year } });
       case '/stock/peers': return route.fulfill({ json: fx.peers });
       case '/stock/news': return route.fulfill({ json: opts.news === undefined ? fx.news : opts.news });
@@ -133,7 +153,7 @@ async function open(browser, port, opts) {
                   { waitUntil: 'domcontentloaded' });
   // Attached, not visible: a link that names a section opens on that section.
   await page.locator('#kgrid .ktile').first().waitFor({ state: 'attached' });
-  return { context, page, errors, asked };
+  return { context, page, errors, asked, marks, icons };
 }
 
 const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
@@ -204,9 +224,14 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       // No sentence under the score's bars.
       assert.equal(await page.locator('#ov-score p').count(), 0);
 
-      // The logo: initials first, then the company's own mark over them.
+      // The logo: initials first, then the company's own mark over them,
+      // from the host that holds it by symbol. The website is not asked.
       await page.locator('#logo.has-img img').waitFor();
       assert.equal(await page.locator('#logo .lg-m').innerText(), 'NU');
+      assert.equal(await page.locator('#logo img').getAttribute('src'),
+        'https://images.dhan.co/symbol/NORTHBANK.png');
+      await page.locator('#mini-logo.has-img img').waitFor({ state: 'attached' });
+      assert.deepEqual(t.icons, [], 'the website was asked for a mark the symbol already gave');
       await page.screenshot({ path: path.join(output, 'overview-1280.png'), fullPage: true });
 
       /* ── 2. The score adds up ──────────────────────────────────────────── */
@@ -290,11 +315,20 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
       assert.equal(col[col.length - 1], '—');
       assert.equal(await page.locator('.pr-table thead th[aria-sort="ascending"]').count(), 1);
       assert.match(await page.locator('.pr-table tfoot').innerText(), /Peer median/);
-      // Every row has its initials; a 16-pixel placeholder never replaced them.
-      await page.waitForTimeout(400);
+      // Every row has its initials. The ones the logo host knows carry their
+      // mark over them. For the rest the website is asked, and the 16-pixel
+      // placeholder that comes back never replaces the initials.
+      const known = fx.peers.rows.map(r => r.symbol).filter(s => MARKS.includes(s)).sort();
+      assert.ok(known.length >= 2 && known.length < fx.peers.rows.length, 'the fixture no longer has both kinds of peer');
+      const unknown = fx.peers.rows.filter(r => !MARKS.includes(r.symbol)).map(r => r.domain).sort();
+      await page.waitForFunction(n => document.querySelectorAll('.pr-table tbody .lg.has-img').length === n, known.length);
+      for (let i = 0; i < 50 && new Set(t.icons).size < unknown.length; i++) await page.waitForTimeout(100);
+      await page.waitForTimeout(400);     // long enough for a placeholder to be laid on, were it going to be
       assert.equal(await page.locator('.pr-table tbody .lg .lg-m').count(), fx.peers.rows.length);
-      assert.equal(await page.locator('.pr-table tbody .lg.has-img').count(), 0,
-        'the icon service\'s placeholder was shown as a company\'s logo');
+      assert.deepEqual(await page.locator('.pr-table tbody .lg.has-img').evaluateAll(a => a.map(n => n.dataset.sym).sort()), known,
+        'a peer without a mark was given one, or the icon service\'s placeholder was shown as a logo');
+      assert.deepEqual(Array.from(new Set(t.icons)).sort(), unknown,
+        'the website is asked for exactly the peers the logo host has no mark for');
       assert.match(await page.locator('.pr-table tbody tr:not(.self) a.pr-a').first().getAttribute('href'),
         /^stock\.html\?ticker=[A-Z]+$/);
       await page.screenshot({ path: path.join(output, 'peers-1280.png'), fullPage: true });
@@ -531,6 +565,110 @@ const fits = page => page.evaluate(() => document.documentElement.scrollWidth <=
          Number(r.querySelector('.pl-s').textContent)]);
       assert.ok(Math.abs(first[0] - first[1]) <= 2, 'a bar waited for an animation that never ran');
       assert.equal(await t.page.locator('.rk-bar i').evaluate(e => getComputedStyle(e).animationName), 'none');
+      assert.deepEqual(t.errors, []);
+      await t.context.close();
+    }
+
+    /* ── 10. A mark by symbol, then from the website, then initials ─────── */
+    {
+      // The logo host has none for this company: its website's icon is used.
+      let t = await open(browser, port, { marks: [] });
+      await t.page.locator('#logo.has-img img').waitFor();
+      assert.match(await t.page.locator('#logo img').getAttribute('src'),
+        /^https:\/\/www\.google\.com\/s2\/favicons\?sz=128&domain=northernunion\.example$/);
+      assert.ok(t.marks.includes('NORTHBANK'), 'the website was asked before the symbol');
+      assert.deepEqual(t.errors, []);
+      await t.context.close();
+
+      // Neither has one, and no website is on file: the initials stay.
+      t = await open(browser, port, { marks: [], analyze: a => { a.logo = { domain: null }; return a; } });
+      for (let i = 0; i < 50 && !t.marks.includes('NORTHBANK'); i++) await t.page.waitForTimeout(100);
+      await t.page.waitForTimeout(400);
+      assert.equal(await t.page.locator('#logo .lg-m').innerText(), 'NU');
+      assert.equal(await t.page.locator('#logo.has-img, #logo img').count(), 0);
+      assert.deepEqual(t.icons, []);
+      assert.deepEqual(t.errors, []);
+      await t.context.close();
+
+      // No website on file, which is most small caps: the symbol is enough.
+      t = await open(browser, port, { analyze: a => { a.logo = { domain: null }; return a; } });
+      await t.page.locator('#logo.has-img img').waitFor();
+      assert.equal(await t.page.locator('#logo img').getAttribute('src'),
+        'https://images.dhan.co/symbol/NORTHBANK.png');
+      await t.context.close();
+
+      // Listed outside India. The host has a mark under these letters, and it
+      // is some other company's: it is never asked, and the website is.
+      t = await open(browser, port, { analyze: a => { a.ticker = 'NORTHBANK'; a.exchange = 'NASDAQ'; return a; } });
+      await t.page.locator('#logo.has-img img').waitFor();
+      assert.match(await t.page.locator('#logo img').getAttribute('src'), /^https:\/\/www\.google\.com\/s2\/favicons\?/);
+      assert.deepEqual(t.marks, [], 'a foreign listing was looked up by an Indian symbol');
+      assert.deepEqual(t.errors, []);
+      await t.context.close();
+    }
+
+    /* ── 11. Search lists companies with their marks ────────────────────── */
+    {
+      const universe = [
+        { s: 'HARBOURBK', n: 'Harbour Bank Limited', x: 'NSE' },
+        { s: 'HARVESTCO', n: 'Harvest Foods Limited', x: 'NSE' },
+        { s: 'M&M', n: 'Meadow & Mill Limited', x: 'NSE' }];
+      const t = await open(browser, port, { universe, marks: ['NORTHBANK', 'HARBOURBK', 'M&M'] });
+      const { page } = t;
+      const box = page.locator('#sh-q'), rows = page.locator('#sh-ac.open .row.stock');
+      const asks = sym => t.marks.filter(s => s === sym).length;
+
+      // Letter by letter, as it is typed. The initials are there with the row.
+      await box.click();
+      await box.pressSequentially('har', { delay: 30 });
+      await rows.first().waitFor();
+      assert.deepEqual(await rows.locator('.s').allInnerTexts(), ['HARBOURBK', 'HARVESTCO']);
+      assert.deepEqual(await rows.locator('.co-lg-m').allInnerTexts(), ['HB', 'HF']);
+      // The mark the host has is laid over them; the one it has not stays initials.
+      await rows.locator('.co-lg[data-sym="HARBOURBK"].has-img img').waitFor();
+      for (let i = 0; i < 50 && !asks('HARVESTCO'); i++) await page.waitForTimeout(100);
+      await page.waitForTimeout(300);
+      assert.equal(await rows.locator('.co-lg[data-sym="HARVESTCO"] img').count(), 0);
+      // The tile is the size of the tool icon it shares the list with.
+      const wide = sel => page.locator(sel).first().evaluate(n => n.getBoundingClientRect().width);
+      assert.equal(await wide('#sh-ac .row.stock .co-lg'), await wide('#sh-ac .row.tool .sh-ico'));
+
+      // A redraw, by arrow key and by typing on, has the mark on it at once
+      // and asks nobody: not for the one that loaded, not for the one refused.
+      await box.press('ArrowDown');
+      assert.equal(await page.evaluate(() => {
+        const i = document.querySelector('#sh-ac .co-lg[data-sym="HARBOURBK"] img');
+        return !!i && i.complete && i.naturalWidth > 0;
+      }), true, 'the logo blinked back to initials when the list was redrawn');
+      await box.press('Backspace');
+      await box.pressSequentially('rb', { delay: 30 });
+      await page.waitForTimeout(500);
+      assert.deepEqual(await rows.locator('.s').allInnerTexts(), ['HARBOURBK']);
+      assert.equal(await rows.locator('.co-lg.has-img img').count(), 1);
+      assert.deepEqual([asks('HARBOURBK'), asks('HARVESTCO')], [1, 1], 'a symbol was asked for again: ' + t.marks);
+
+      // A symbol with an ampersand in it is asked for by that symbol.
+      await box.fill('m&m');
+      await rows.locator('.co-lg[data-sym="M&M"].has-img img').waitFor();
+      assert.equal(asks('M&M'), 1);
+      await page.screenshot({ path: path.join(output, 'search-1280.png') });
+
+      // Empty, the box offers what was opened last, with its mark.
+      await page.evaluate(() => localStorage.setItem('altaha-recent-v1',
+        JSON.stringify([{ kind: 'stock', id: 'HARBOURBK', n: 'Harbour Bank Limited' }])));
+      await box.fill('');
+      await page.locator('#sh-ac.open .hd', { hasText: 'Recent' }).waitFor();
+      await rows.locator('.co-lg[data-sym="HARBOURBK"].has-img img').waitFor();
+
+      // A phone: the row still fits with a tile in front of it.
+      await page.setViewportSize({ width: 390, height: 844 });
+      await box.fill('har');
+      await rows.first().waitFor();
+      assert.ok(await fits(page), 'the search list overflows a phone');
+      assert.deepEqual(await rows.evaluateAll(a => a.map(r => {
+        const b = r.getBoundingClientRect(), l = r.querySelector('.co-lg').getBoundingClientRect();
+        return l.left >= b.left && l.right <= b.right && r.scrollWidth <= r.clientWidth + 1;
+      })), [true, true]);
       assert.deepEqual(t.errors, []);
       await t.context.close();
     }

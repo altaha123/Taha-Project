@@ -110,6 +110,97 @@
       (ICON[key] || '') + '</svg></span>';
   }
 
+  /* ── Company marks ─────────────────────────────────────────────────────────
+     A company's logo beside its name wherever a list of companies is offered:
+     the search box in this file, and the Market board's own (premium-plus.js)
+     through window.AltahaLogo.
+
+     The pictures come from the image host the portfolio and the wealth desk
+     already use, keyed by the symbol a company trades under in India. It has
+     a mark for nearly every listed company, small caps included. It knows
+     nothing of other markets: META there is an Indian company, so a caller
+     passes `listed` false for anything not on an Indian exchange and the
+     tile keeps its initials.
+
+     The initials are drawn first and stay underneath. A mark is laid over
+     them only once it has loaded at a usable size, so a slow, blocked or
+     missing picture costs nothing; where the host has none it answers 403
+     and the initials are what is left.
+
+     A list of suggestions is redrawn on every keystroke, so each symbol is
+     asked for once per page. One that has loaded is laid straight onto the
+     next redraw, and does not blink back to initials as the reader types;
+     one the host does not have is not asked for again. The asking waits for
+     a pause in the typing, because most of what is listed mid-word is gone
+     by the next letter. */
+
+  var LOGO_HOST = 'https://images.dhan.co/symbol/';
+  var LOGO_WAIT = 140;
+  var LOGO_SEEN = {};      // symbol → true: loaded · false: the host has none · 1: asked
+  var logoTimer = null;
+
+  function logoSym(sym) {
+    sym = String(sym || '').trim().toUpperCase().replace(/\.(NS|BO)$/, '');
+    return /^[A-Z0-9][A-Z0-9&_-]{0,23}$/.test(sym) ? sym : '';
+  }
+  function logoInitials(name, sym) {
+    var words = String(name || '').replace(/[^A-Za-z0-9& ]+/g, ' ').trim().split(/\s+/)
+      .filter(function (w) { return w && !/^(the|of|and|ltd|limited|india|&)$/i.test(w); });
+    var out = words.length >= 2 ? words[0].charAt(0) + words[1].charAt(0)
+      : (words[0] || String(sym || '')).slice(0, 2);
+    return out.toUpperCase() || '·';
+  }
+  /* The tile, as markup: initials, and the symbol to ask for when it is
+     listed in India. logoHydrate() lays the marks on. */
+  function logoTag(sym, name, listed) {
+    var s = listed === false ? '' : logoSym(sym);
+    return '<span class="co-lg"' + (s ? ' data-sym="' + esc(s) + '"' : '') + ' aria-hidden="true">' +
+      '<span class="co-lg-m">' + esc(logoInitials(name, sym)) + '</span></span>';
+  }
+  function logoLay(tile, sym, fresh) {
+    if (tile.querySelector('img')) return;
+    var img = new Image();
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    if (fresh) img.className = 'in';
+    img.onerror = function () { img.remove(); tile.classList.remove('has-img'); };
+    img.src = LOGO_HOST + encodeURIComponent(sym) + '.png';
+    tile.appendChild(img);
+    tile.classList.add('has-img');
+  }
+  function logoTiles(root) {
+    return [].slice.call((root || document).querySelectorAll('.co-lg[data-sym]'));
+  }
+  function logoAsk(sym) {
+    if (LOGO_SEEN[sym] !== undefined) return;
+    LOGO_SEEN[sym] = 1;
+    var probe = new Image();
+    probe.referrerPolicy = 'no-referrer';
+    probe.onerror = function () { LOGO_SEEN[sym] = false; };
+    probe.onload = function () {
+      LOGO_SEEN[sym] = probe.naturalWidth >= 24;
+      if (!LOGO_SEEN[sym]) return;
+      logoTiles().forEach(function (t) { if (t.dataset.sym === sym) logoLay(t, sym, true); });
+    };
+    probe.src = LOGO_HOST + encodeURIComponent(sym) + '.png';
+  }
+  /* Call after writing tiles into `root`. Marks already loaded go on at once;
+     the rest are asked for after the pause, and only if still on the page. */
+  function logoHydrate(root) {
+    var unseen = false;
+    logoTiles(root).forEach(function (t) {
+      var seen = LOGO_SEEN[t.dataset.sym];
+      if (seen === true) logoLay(t, t.dataset.sym, false);
+      else if (seen === undefined) unseen = true;
+    });
+    if (!unseen) return;
+    clearTimeout(logoTimer);
+    logoTimer = setTimeout(function () {
+      logoTiles().forEach(function (t) { logoAsk(t.dataset.sym); });
+    }, LOGO_WAIT);
+  }
+  window.AltahaLogo = { tag: logoTag, hydrate: logoHydrate };
+
   /* ── The door map ──────────────────────────────────────────────────────────
      Three doors, each the answer to one question, and a Me menu. Mirrors the
      sections in nav.js (same section and tab ids) because this file also runs
@@ -1496,7 +1587,11 @@
     function rowHTML(r, i) {
       var cls = 'row' + (i === sel ? ' sel' : '');
       if (r.kind === 'stock') {
-        return '<b class="' + cls + '" role="option" data-i="' + i + '"><span class="s">' + mark(r.s, q) + '</span>' +
+        // A row remembered from an earlier visit carries no exchange; it was
+        // picked from this same list, which is the NSE's.
+        return '<b class="' + cls + ' stock" role="option" data-i="' + i + '">' +
+          logoTag(r.s, r.n, !r.x || r.x === 'NSE' || r.x === 'BSE') +
+          '<span class="s">' + mark(r.s, q) + '</span>' +
           '<span class="n">' + mark(r.n || '', q) + '</span>' +
           '<span class="x">' + esc(r.x || 'NSE') + '</span></b>';
       }
@@ -1522,6 +1617,7 @@
         html += rowHTML(r, i);
       });
       ac.innerHTML = html;
+      logoHydrate(ac);
       ac.classList.toggle('open', !!html);
       input.setAttribute('aria-expanded', html ? 'true' : 'false');
     }
