@@ -308,9 +308,9 @@
   var EXTENDABLE = { trend: 1, ray: 1, xline: 1, infoline: 1, chan: 1, regchan: 1, fib: 1, fibext: 1 };
   var FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1, 1.272, 1.618, 2.618];
   var FIBEXT_LEVELS = [0, 0.382, 0.5, 0.618, 1, 1.272, 1.618, 2, 2.618];
-  var FIB_COLORS = ["#8B8477", "#8E2F2A", "#C0692B", "#1F5D45", "#1E7B85", "#2E5E8E", "#8B8477", "#2E5E8E", "#8E2F2A", "#6B4E9B", "#B0457A"];
+  var FIB_COLORS = ["#6E6E78", "#8E2F2A", "#C0692B", "#1F5D45", "#1E7B85", "#2E5E8E", "#6E6E78", "#2E5E8E", "#8E2F2A", "#6B4E9B", "#B0457A"];
 
-  var PALETTE = ["#B08D2E", "#8A6D1E", "#16130E", "#4A443A", "#8B8477", "#FFFFFF",
+  var PALETTE = ["#B08D2E", "#8A6D1E", "#0A0A0B", "#33333A", "#6E6E78", "#FFFFFF",
                  "#1F5D45", "#2E8B57", "#1E7B85", "#2E5E8E", "#4F7CC4", "#6B4E9B",
                  "#8E2F2A", "#D04A3C", "#C0692B", "#E0A526", "#B0457A", "#D9BC6A"];
   var CMP_COLORS = ["#2E5E8E", "#B0457A", "#1E7B85", "#C0692B"];
@@ -455,30 +455,30 @@
   function dnC() { return L.set.down || tok("--fail", "#8E2F2A"); }
 
   function theme(sub) {
-    var LW = window.LightweightCharts, grid = L.set.grid ? tok("--rule-2", "#EBE6DC") : "rgba(0,0,0,0)";
+    var LW = window.LightweightCharts, grid = L.set.grid ? tok("--rule-2", "#EEEEF1") : "rgba(0,0,0,0)";
     var tf = tfOf(L.tf);
     return {
       layout: {
         background: { type: "solid", color: tok("--surface", "#ffffff") },
-        textColor: tok("--ink-2", "#4A443A"),
+        textColor: tok("--ink-2", "#33333A"),
         fontFamily: "'IBM Plex Mono', monospace", fontSize: 11
       },
       grid: { vertLines: { color: grid }, horzLines: { color: grid } },
       /* minimumWidth pins the axis gutter. Without it a pane whose values are
          0 to 100 draws a narrower scale than the price pane, the panes end at
          different x, and every bar sits a few pixels off the one above it. */
-      rightPriceScale: { borderColor: tok("--rule", "#DDD6C9"), minimumWidth: 76,
+      rightPriceScale: { borderColor: tok("--rule", "#E4E4E8"), minimumWidth: 76,
                          scaleMargins: sub ? { top: 0.1, bottom: 0.08 } : { top: 0.08, bottom: 0.2 } },
-      timeScale: { borderColor: tok("--rule", "#DDD6C9"), timeVisible: !!tf.intra, secondsVisible: false,
+      timeScale: { borderColor: tok("--rule", "#E4E4E8"), timeVisible: !!tf.intra, secondsVisible: false,
                    rightOffset: 10, barSpacing: 7, minBarSpacing: 0.5 },
       crosshair: {
         mode: L.set.cross ? LW.CrosshairMode.Magnet : LW.CrosshairMode.Normal,
-        vertLine: { color: tok("--mute", "#8B8477"), width: 1, style: 2, labelBackgroundColor: tok("--ink", "#16130E") },
-        horzLine: { color: tok("--mute", "#8B8477"), width: 1, style: 2, labelBackgroundColor: tok("--ink", "#16130E") }
+        vertLine: { color: tok("--mute", "#6E6E78"), width: 1, style: 2, labelBackgroundColor: tok("--ink", "#0A0A0B") },
+        horzLine: { color: tok("--mute", "#6E6E78"), width: 1, style: 2, labelBackgroundColor: tok("--ink", "#0A0A0B") }
       },
       watermark: {
         visible: !sub && !!L.set.wm && !!W.sym, text: W.sym ? W.sym + " · " + L.tf : "",
-        color: "rgba(139,132,119,.10)", fontSize: 52, fontFamily: "'IBM Plex Mono', monospace",
+        color: "rgba(110,110,120,.10)", fontSize: 52, fontFamily: "'IBM Plex Mono', monospace",
         horzAlign: "center", vertAlign: "center"
       },
       handleScroll: true, handleScale: true
@@ -828,12 +828,12 @@
     var m = /^#?([0-9a-f]{6})$/i.exec(col || "");
     if (!m) return "#fff";
     var n = parseInt(m[1], 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
-    return (r * 0.299 + g * 0.587 + b * 0.114) > 170 ? "#16130E" : "#fff";
+    return (r * 0.299 + g * 0.587 + b * 0.114) > 170 ? "#0A0A0B" : "#fff";
   }
   function handles(list) {
     if (!list) return;
     ctx.fillStyle = tok("--surface", "#fff");
-    ctx.strokeStyle = tok("--gold", "#B08D2E");
+    ctx.strokeStyle = tok("--gold", "#666D79");
     ctx.lineWidth = 1.5; ctx.setLineDash([]);
     list.forEach(function (q) {
       if (q.x == null || q.y == null) return;
@@ -870,7 +870,7 @@
   }
   function ratioOn(a, b, r) {
     if (!a || !b || !ok(r)) return;
-    label(r.toFixed(3), (a.x + b.x) / 2, (a.y + b.y) / 2, tok("--surface", "#fff"), tok("--ink-2", "#4A443A"), 0.5);
+    label(r.toFixed(3), (a.x + b.x) / 2, (a.y + b.y) / 2, tok("--surface", "#fff"), tok("--ink-2", "#33333A"), 0.5);
   }
 
   function shape(d, g, ghost) {
@@ -909,7 +909,7 @@
             var dp = A[1].p - A[0].p, bars = Math.round(tToL(A[1].t) - tToL(A[0].t));
             txt = (dp >= 0 ? "+" : "") + fmt(dp) + " (" + pctS(A[0].p ? dp / A[0].p * 100 : 0) + ")\n" +
                   bars + " bars, " + span(A[1].t - A[0].t) + "\n" + deg.toFixed(1) + "°";
-            label(txt, b.x + 10, b.y + 26, tok("--ink", "#16130E"), tok("--paper", "#fff"), 0);
+            label(txt, b.x + 10, b.y + 26, tok("--ink", "#0A0A0B"), tok("--paper", "#fff"), 0);
           }
         }
         if (d.text) plainText(d.text, (a.x + b.x) / 2, (a.y + b.y) / 2 - 7, c, 0.5, "500 12px 'Inter', system-ui, sans-serif");
@@ -1128,7 +1128,7 @@
         var gp = tok("--pass", "#1F5D45"), bd = tok("--fail", "#8E2F2A");
         fillRect(xL, yE, xR - xL, yS - yE, bd, 0.16);
         fillRect(xL, yE, xR - xL, yT - yE, gp, 0.16);
-        stroke(tok("--ink-2", "#4A443A"), 1.2, "solid");
+        stroke(tok("--ink-2", "#33333A"), 1.2, "solid");
         seg({ x: xL, y: yE }, { x: xR, y: yE });
         var risk = Math.abs(entry - stop), rew = Math.abs(tgt - entry), longSide = tgt >= entry;
         var tl = "Target " + fmt(tgt) + "  " + pctS(entry ? (tgt - entry) / entry * 100 : 0) + "  " + (risk ? (rew / risk).toFixed(2) : "–") + "R";
@@ -1145,12 +1145,12 @@
           mid2 += "  Now " + (pnl >= 0 ? "+" : "") + (pnl / risk).toFixed(2) + "R";
           var yc = Y(cur);
           if (yc != null && Math.min(yS, yT) <= yc && yc <= Math.max(yS, yT)) {
-            stroke(tok("--ink-2", "#4A443A"), 1, "dot"); seg({ x: xL, y: yc }, { x: xR, y: yc });
+            stroke(tok("--ink-2", "#33333A"), 1, "dot"); seg({ x: xL, y: yc }, { x: xR, y: yc });
           }
         }
         label(tl, xL + 4, yT + (yT > yE ? 12 : -12), gp, "#fff", 0);
         label(sl, xL + 4, yS + (yS > yE ? 12 : -12), bd, "#fff", 0);
-        label(mid2, xL + 4, yE, tok("--ink", "#16130E"), tok("--paper", "#fff"), 0);
+        label(mid2, xL + 4, yE, tok("--ink", "#0A0A0B"), tok("--paper", "#fff"), 0);
         HC.h = [{ x: a.x, y: yE, i: 0 }, { x: b.x, y: yS, i: 1 }, { x: b.x, y: yT, i: 2 }];
         break;
       }
@@ -1205,7 +1205,7 @@
         if (!vp) { seg({ x: xa2, y: a.y }, { x: xb2, y: a.y }); HC.h = [a, b]; break; }
         var maxW = Math.max(40, (xb2 - xa2) * 0.6);
         var yt = Y(vp.hi), yb2 = Y(vp.lo);
-        stroke(tok("--rule", "#DDD6C9"), 1, "solid");
+        stroke(tok("--rule", "#E4E4E8"), 1, "solid");
         fillRect(xa2, yt, xb2 - xa2, yb2 - yt, c, 0.03);
         /* Value area: the 70% of volume around the busiest row. */
         var tot = vp.total, acc = vp.up[vp.poc] + vp.dn[vp.poc], lo2 = vp.poc, hi2 = vp.poc;
@@ -1334,7 +1334,7 @@
       var s = W.sel;
       if (s.type !== "brush" && s.type !== "hilite") {
         s.pts.forEach(function (q) {
-          if (s.type !== "vline") tags.push({ p: q.p, c: tok("--ink", "#16130E") });
+          if (s.type !== "vline") tags.push({ p: q.p, c: tok("--ink", "#0A0A0B") });
           if (s.type !== "hline") times.push(q.t);
         });
       }
@@ -1350,7 +1350,7 @@
     times.forEach(function (t) {
       var x = X(g, t); if (x < 0 || x > g.w) return;
       var s2 = fmtT(t, intra), tw = ctx.measureText(s2).width + 12;
-      ctx.fillStyle = tok("--ink", "#16130E"); ctx.fillRect(x - tw / 2, g.h - 18, tw, 18);
+      ctx.fillStyle = tok("--ink", "#0A0A0B"); ctx.fillRect(x - tw / 2, g.h - 18, tw, 18);
       ctx.fillStyle = tok("--paper", "#fff"); ctx.fillText(s2, x - tw / 2 + 6, g.h - 5);
     });
   }
@@ -1853,7 +1853,7 @@
     });
     var lab = document.createElement("label");
     lab.className = "cw-custom";
-    lab.innerHTML = '<input type="color" value="' + (/^#[0-9a-f]{6}$/i.test(cur) ? cur : "#b08d2e") + '"><span>Custom</span>';
+    lab.innerHTML = '<input type="color" value="' + (/^#[0-9a-f]{6}$/i.test(cur) ? cur : "#666d79") + '"><span>Custom</span>';
     lab.querySelector("input").addEventListener("change", function (e) { closePops(); fn(e.target.value); });
     wrap.appendChild(lab);
     return pop(anchor, wrap, "cw-pop-colors");
@@ -1896,7 +1896,7 @@
   function drawingSettings(d) {
     var before = JSON.stringify(W.drawings), c = d.color || W.color;
     var h = '<div class="cw-form">';
-    h += row("Colour", '<input type="color" data-k="color" value="' + (/^#[0-9a-f]{6}$/i.test(c) ? c : "#b08d2e") + '">');
+    h += row("Colour", '<input type="color" data-k="color" value="' + (/^#[0-9a-f]{6}$/i.test(c) ? c : "#666d79") + '">');
     h += row("Thickness", '<select data-k="width">' + [1, 2, 3, 4, 6, 8, 14].map(function (v) { return "<option" + ((d.width || 2) === v ? " selected" : "") + ">" + v + "</option>"; }).join("") + "</select>");
     h += row("Line", '<select data-k="style">' + [["solid", "Solid"], ["dash", "Dashed"], ["dot", "Dotted"]].map(function (v) { return '<option value="' + v[0] + '"' + ((d.style || "solid") === v[0] ? " selected" : "") + ">" + v[1] + "</option>"; }).join("") + "</select>");
     if (FILLED[d.type] || d.type === "path") h += row("Fill", '<input type="range" min="0" max="2" step="0.1" data-k="fill" value="' + (d.fill == null ? 1 : d.fill) + '">');
@@ -2124,7 +2124,7 @@
       else h += row(q.l, '<input type="number" data-p="' + q.k + '" min="' + q.min + '" max="' + q.max + '" step="' + (q.step || 1) + '" value="' + s.p[q.k] + '">');
     });
     def.out.forEach(function (o) {
-      h += row(o.l, '<input type="color" data-c="' + o.k + '" value="' + (/^#[0-9a-f]{6}$/i.test(colOf(s, o)) ? colOf(s, o) : "#b08d2e") + '">');
+      h += row(o.l, '<input type="color" data-c="' + o.k + '" value="' + (/^#[0-9a-f]{6}$/i.test(colOf(s, o)) ? colOf(s, o) : "#666d79") + '">');
     });
     if (def.note) h += "<p class='cw-p'>" + esc(def.note) + "</p>";
     h += "</div>";
@@ -2427,14 +2427,14 @@
   }
 
   function mainOpts() {
-    var up = upC(), dn = dnC(), ink = tok("--ink", "#16130E"), gold = tok("--gold", "#B08D2E");
+    var up = upC(), dn = dnC(), ink = tok("--ink", "#0A0A0B"), gold = tok("--gold", "#666D79");
     var base = { priceLineVisible: !!L.set.last, lastValueVisible: true, priceLineStyle: 2 };
     switch (L.type) {
       case "hollow": return ["Candlestick", Object.assign(base, { upColor: "rgba(0,0,0,0)", downColor: dn, borderUpColor: up, borderDownColor: dn, wickUpColor: up, wickDownColor: dn })];
       case "bars": return ["Bar", Object.assign(base, { upColor: up, downColor: dn, thinBars: false })];
       case "line": return ["Line", Object.assign(base, { color: ink, lineWidth: 2 })];
       case "step": return ["Line", Object.assign(base, { color: ink, lineWidth: 2, lineType: 1 })];
-      case "area": return ["Area", Object.assign(base, { lineColor: gold, topColor: hexA(gold.charAt(0) === "#" ? gold : "#B08D2E", 0.3), bottomColor: hexA(gold.charAt(0) === "#" ? gold : "#B08D2E", 0.02), lineWidth: 2 })];
+      case "area": return ["Area", Object.assign(base, { lineColor: gold, topColor: hexA(gold.charAt(0) === "#" ? gold : "#666D79", 0.3), bottomColor: hexA(gold.charAt(0) === "#" ? gold : "#666D79", 0.02), lineWidth: 2 })];
       case "baseline": {
         var bv = W.disp.length ? W.disp[Math.max(0, W.disp.length - 120)].close : 0;
         return ["Baseline", Object.assign(base, { baseValue: { type: "price", price: bv }, topLineColor: up, bottomLineColor: dn,
@@ -2533,7 +2533,7 @@
       });
       var first = s.ser[s.def.out[0].k][0];
       (s.def.levels || []).forEach(function (lv) {
-        try { first.createPriceLine({ price: lv, color: tok("--mute", "#8B8477"), lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: "" }); } catch (e) {}
+        try { first.createPriceLine({ price: lv, color: tok("--mute", "#6E6E78"), lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: "" }); } catch (e) {}
       });
       p.chart.applyOptions({ timeScale: { visible: k === W.panes.length - 1, timeVisible: !!tfOf(L.tf).intra } });
     });
@@ -3117,7 +3117,7 @@
     ovs.forEach(function (ov) { try { c.drawImage(ov, 0, 0, ov.width, ov.height, 0, head, base.width, base.height); } catch (e) {} });
     var y = head + base.height;
     shots.forEach(function (s) { c.drawImage(s, 0, y); y += s.height; });
-    c.fillStyle = tok("--ink", "#16130E");
+    c.fillStyle = tok("--ink", "#0A0A0B");
     c.font = "600 " + Math.round(13 * sc) + "px 'IBM Plex Mono', monospace";
     var last = W.disp[W.disp.length - 1];
     c.fillText(W.sym + "  " + L.tf + "  " + (last ? fmtT(last.time, !!tfOf(L.tf).intra) + "  C " + fmt(last.close) : ""), 10 * sc, 20 * sc);
@@ -3212,7 +3212,7 @@
     inp.addEventListener("keydown", function (e) { e.stopPropagation(); if (e.key === "Enter") go(); });
   }
   function flash(o) {
-    o.style = "dash"; o.width = 1; o.color = tok("--gold", "#B08D2E");
+    o.style = "dash"; o.width = 1; o.color = tok("--gold", "#666D79");
     W.drawings.push(o); render();
     setTimeout(function () { W.drawings = W.drawings.filter(function (x) { return x !== o; }); render(); }, 1600);
   }

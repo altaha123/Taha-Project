@@ -29,7 +29,7 @@
 .sl-seg button + button { border-left: 1px solid var(--rule); }
 .sl-seg button.on { background: var(--ink); color: var(--paper); }
 .sl-seg button:focus-visible, .sl-go:focus-visible, .sl-try button:focus-visible, .sl-chips button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.sl-go { border: 0; border-radius: 12px; background: linear-gradient(180deg, var(--gold-lt), var(--gold)); color: #17140E;
+.sl-go { border: 0; border-radius: 12px; background: var(--gold); color: var(--on-accent,#fff);
   font: 600 14px Inter, system-ui, sans-serif; padding: 0 20px; min-height: 42px; cursor: pointer; }
 .sl-go[disabled] { opacity: .7; cursor: progress; }
 .sl-try { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 10px 2px 18px; color: var(--mute); font-size: 13px; }

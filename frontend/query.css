@@ -24,11 +24,11 @@
    so the second way in is as plain as the first. */
 .qs-modes{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:0 0 6px }
 .qs-mode{ display:flex; align-items:center; gap:14px; min-height:76px; padding:12px 18px 12px 12px; text-align:left;
-  cursor:pointer; border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFDF8);
+  cursor:pointer; border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFFFF);
   color:var(--ink); font:inherit; -webkit-tap-highlight-color:transparent;
   transition:border-color .2s ease, background-color .2s ease, box-shadow .25s ease }
 .qs-mode:hover{ border-color:var(--gold) }
-.qs-mode.on{ border-color:var(--ink); background:var(--ink); color:var(--paper); box-shadow:0 10px 26px rgba(23,20,14,.16) }
+.qs-mode.on{ border-color:var(--ink); background:var(--ink); color:var(--paper); box-shadow:0 10px 26px rgba(10,10,11,.16) }
 .qs-mode-ic{ flex:none; display:grid; place-items:center; width:48px; height:48px; border-radius:14px;
   background:color-mix(in srgb, var(--gold) 14%, transparent); font-size:24px; line-height:1 }
 .qs-mode.on .qs-mode-ic{ background:color-mix(in srgb, var(--paper) 14%, transparent) }
@@ -43,7 +43,7 @@
   text-transform:uppercase; color:var(--mute); margin-right:2px }
 .qs-chip{
   min-height:38px; padding:0 15px; border-radius:999px; cursor:pointer;
-  border:1px solid var(--rule); background:var(--skin-card,#FFFDF8); color:var(--ink);
+  border:1px solid var(--rule); background:var(--skin-card,#FFFFFF); color:var(--ink);
   font:500 13px/1 Inter,system-ui,sans-serif; transition:border-color .15s ease, background .15s ease;
 }
 .qs-chip:hover{ border-color:var(--gold); background:color-mix(in srgb,var(--gold) 8%,transparent) }
@@ -51,7 +51,7 @@
   outline:2px solid var(--gold); outline-offset:2px }
 
 .qs-card{
-  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFDF8);
+  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFFFF);
   box-shadow:var(--skin-shadow); overflow:visible;
 }
 
@@ -86,7 +86,7 @@
 }
 .qs-ac{
   position:absolute; left:0; right:0; top:100%; z-index:20; margin:4px 0 0; padding:4px;
-  list-style:none; border-radius:12px; border:1px solid var(--rule); background:var(--skin-card,#FFFDF8);
+  list-style:none; border-radius:12px; border:1px solid var(--rule); background:var(--skin-card,#FFFFFF);
   box-shadow:var(--skin-lift); max-height:300px; overflow:auto;
 }
 .qs-ac li{ padding:8px 10px; border-radius:8px; cursor:pointer; display:flex; gap:10px; align-items:baseline }
@@ -116,11 +116,11 @@
   font:600 14px/1 Inter,system-ui,sans-serif;
 }
 .qs-btn-go{
-  border:0; color:#fff; background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt));
+  border:0; color:var(--on-accent,#fff); background:linear-gradient(135deg,var(--gold-dp),var(--gold));
   box-shadow:0 6px 16px color-mix(in srgb,var(--gold) 28%,transparent);
   transition:transform .15s ease, opacity .15s ease;
 }
-:root[data-theme="dark"] .qs-btn-go{ color:#17140E }
+:root[data-theme="dark"] .qs-btn-go{ color:#0A0A0B }
 .qs-btn-go:hover:not(:disabled){ transform:translateY(-1px) }
 .qs-btn-go:disabled{ cursor:progress; opacity:.8 }
 .qs-btn-ghost{ border:1px solid var(--rule); background:none; color:var(--ink-2); font-weight:500 }
@@ -271,7 +271,7 @@
 
 .qs-ai-qs{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; margin-top:12px }
 .qs-ai-q{ display:flex; flex-direction:column; gap:8px; min-width:0; padding:12px; border-radius:12px;
-  border:1px solid var(--rule); background:var(--skin-card,#FFFDF8) }
+  border:1px solid var(--rule); background:var(--skin-card,#FFFFFF) }
 .qs-ai-q header{ display:flex; flex-wrap:wrap; gap:4px 10px; align-items:baseline; justify-content:space-between }
 .qs-ai-q header b{ font-size:14px }
 .qs-ai-n{ font:500 12px/1.35 'IBM Plex Mono',monospace; color:var(--mute) }
@@ -340,13 +340,13 @@
    and not others, and a row of cards came out at three different heights. */
 .qz-recipes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:10px }
 .qz-recipe{ display:flex; align-items:center; gap:14px; min-height:84px; padding:12px 16px 12px 12px; text-align:left; cursor:pointer;
-  border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFDF8); color:var(--ink);
+  border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFFFF); color:var(--ink);
   font:inherit; -webkit-tap-highlight-color:transparent;
   transition:border-color .2s ease, transform .2s ease, box-shadow .25s ease, background-color .2s ease }
-.qz-recipe:hover{ border-color:var(--gold); transform:translateY(-2px); box-shadow:0 10px 24px rgba(23,20,14,.09) }
+.qz-recipe:hover{ border-color:var(--gold); transform:translateY(-2px); box-shadow:0 10px 24px rgba(10,10,11,.09) }
 .qz-recipe:hover .qz-emoji, .qz-wish-main:hover .qz-emoji{ transform:scale(1.1) rotate(-6deg) }
 .qz-recipe:active, .qz-wish-main:active{ transform:scale(.985) }
-.qz-recipe.on{ border-color:var(--gold); background:color-mix(in srgb, var(--gold) 11%, var(--skin-card,#FFFDF8));
+.qz-recipe.on{ border-color:var(--gold); background:color-mix(in srgb, var(--gold) 11%, var(--skin-card,#FFFFFF));
   box-shadow:inset 0 0 0 1px var(--gold) }
 .qz-recipe-t, .qz-wish-t{ display:block; min-width:0 }
 .qz-recipe-t b, .qz-wish-t b{ display:block; font:600 16px/1.25 Inter,system-ui,sans-serif; color:var(--ink) }
@@ -355,10 +355,10 @@
 /* Step 2 · the things to ask for. A closed card is as tall as two lines of
    its description need, so a row is one height whether a line wraps or not. */
 .qz-wishes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:10px; align-items:start }
-.qz-wish{ border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFDF8);
+.qz-wish{ border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFFFF);
   transition:border-color .2s ease, box-shadow .25s ease, background-color .25s ease }
-.qz-wish:hover{ border-color:rgba(var(--tint), .7); box-shadow:0 10px 24px rgba(23,20,14,.08) }
-.qz-wish.on{ border-color:rgb(var(--tint)); background:color-mix(in srgb, rgb(var(--tint)) 7%, var(--skin-card,#FFFDF8));
+.qz-wish:hover{ border-color:rgba(var(--tint), .7); box-shadow:0 10px 24px rgba(10,10,11,.08) }
+.qz-wish.on{ border-color:rgb(var(--tint)); background:color-mix(in srgb, rgb(var(--tint)) 7%, var(--skin-card,#FFFFFF));
   box-shadow:inset 0 0 0 1px rgb(var(--tint)) }
 .qz-wish-main{ display:flex; align-items:center; gap:14px; width:100%; min-height:84px; padding:12px 14px 12px 12px; text-align:left;
   border:0; border-radius:18px; background:none; color:var(--ink); font:inherit; cursor:pointer;
@@ -386,7 +386,7 @@
 .qz-wish-main:focus-visible{ border-radius:18px }
 
 /* Step 3 · who fits: the count, then a bar for each choice in turn. */
-.qz-board{ border:1px solid var(--rule); border-radius:20px; background:var(--skin-card,#FFFDF8); padding:20px 22px; transition:opacity .2s ease }
+.qz-board{ border:1px solid var(--rule); border-radius:20px; background:var(--skin-card,#FFFFFF); padding:20px 22px; transition:opacity .2s ease }
 .qz-board.is-counting{ opacity:.55 }
 .qz-board.is-empty, .qz-board.is-down{ border-style:dashed; background:none }
 .qz-wait{ margin:6px 0; font:400 16px/1.55 Inter,system-ui,sans-serif; color:var(--ink-2) }
@@ -422,7 +422,7 @@ button.qz-bar-x:hover{ background:var(--paper-2); color:var(--ink) }
 /* The count that follows the reader down the page while they choose. */
 .qz-float{ position:sticky; bottom:18px; z-index:30; display:flex; align-items:center; gap:10px; margin:0 auto; padding:0 18px 0 20px;
   min-height:48px; border:0; border-radius:24px; background:var(--ink); color:var(--paper); cursor:pointer;
-  font:400 14px/1 Inter,system-ui,sans-serif; box-shadow:0 12px 30px rgba(23,20,14,.28); animation:qzFloat .3s cubic-bezier(.2,.8,.2,1) }
+  font:400 14px/1 Inter,system-ui,sans-serif; box-shadow:0 12px 30px rgba(10,10,11,.28); animation:qzFloat .3s cubic-bezier(.2,.8,.2,1) }
 .qz-float[hidden]{ display:none }
 .qz-float b{ font:600 16px/1 Inter,system-ui,sans-serif }
 .qz-float span{ margin-left:6px; padding-left:12px; border-left:1px solid color-mix(in srgb, var(--paper) 30%, transparent); color:var(--gold-lt); font-weight:600 }
@@ -430,7 +430,7 @@ button.qz-bar-x:hover{ background:var(--paper-2); color:var(--ink) }
 
 /* Results: a line of help above the table, the columns explained under it. */
 .qs-tip{ margin:2px 0 10px; font:400 14px/1.5 Inter,system-ui,sans-serif; color:var(--mute) }
-.qs-legend{ margin:12px 0 4px; border:1px solid var(--rule-2); border-radius:14px; padding:0 14px; background:var(--skin-card,#FFFDF8) }
+.qs-legend{ margin:12px 0 4px; border:1px solid var(--rule-2); border-radius:14px; padding:0 14px; background:var(--skin-card,#FFFFFF) }
 .qs-legend summary{ padding:12px 0; cursor:pointer; font:500 14px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
 .qs-legend dl{ display:grid; grid-template-columns:minmax(110px, max-content) 1fr; gap:8px 16px; margin:0 0 14px }
 .qs-legend dt{ font:600 13px/1.5 'IBM Plex Mono',ui-monospace,monospace; color:var(--ink) }

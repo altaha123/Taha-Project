@@ -23,35 +23,35 @@
   })();
 </script>
 <style>
-  body { margin: 0; background: var(--paper, #faf8f3); color: var(--ink, #1a1a1a); font-family: Inter, system-ui, sans-serif; }
+  body { margin: 0; background: var(--paper, #ffffff); color: var(--ink, #1a1a1a); font-family: Inter, system-ui, sans-serif; }
   .bf { max-width: 780px; margin: 0 auto; padding: 20px 16px 60px; }
   .bf a { color: inherit; }
   .bf-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .bf h1 { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 34px; margin: 8px 0 2px; }
-  .bf-sub { color: var(--ink-2, #6b665c); font-size: 14px; margin: 0 0 14px; line-height: 1.5; }
+  .bf-sub { color: var(--ink-2, #666669); font-size: 14px; margin: 0 0 14px; line-height: 1.5; }
   .bf-days { display: flex; gap: 6px; margin: 0 0 14px; }
-  .bf-days button { border: 1px solid var(--rule-2, #ddd8cc); background: none; color: inherit; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; cursor: pointer; min-height: 36px; }
-  .bf-days button.on { background: var(--ink, #1a1a1a); color: var(--paper, #faf8f3); border-color: var(--ink, #1a1a1a); }
-  .bf-note { border-left: 3px solid var(--gold, #b8963e); background: var(--paper-2, #f2eee4); padding: 9px 12px; font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
+  .bf-days button { border: 1px solid var(--rule-2, #dddee1); background: none; color: inherit; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; cursor: pointer; min-height: 36px; }
+  .bf-days button.on { background: var(--ink, #1a1a1a); color: var(--paper, #ffffff); border-color: var(--ink, #1a1a1a); }
+  .bf-note { border-left: 3px solid var(--gold, #646a74); background: var(--paper-2, #f2f3f6); padding: 9px 12px; font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
   .bf-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
-  .bf-chip { border: 1px solid var(--rule-2, #ddd8cc); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+  .bf-chip { border: 1px solid var(--rule-2, #dddee1); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
   .bf-chip.positive, .bf-imp.positive, .bf-st.helped { color: #1a7f4b; }
   .bf-chip.negative, .bf-imp.negative, .bf-st.hurt { color: #b3261e; }
-  .bf-imp.mixed { color: #8a6d1a; }
+  .bf-imp.mixed { color: #30343b; }
   html[data-theme="dark"] .bf-chip.positive, html[data-theme="dark"] .bf-imp.positive, html[data-theme="dark"] .bf-st.helped { color: #6fcf97; }
   html[data-theme="dark"] .bf-chip.negative, html[data-theme="dark"] .bf-imp.negative, html[data-theme="dark"] .bf-st.hurt { color: #ff8a80; }
-  html[data-theme="dark"] .bf-imp.mixed { color: #e2c36b; }
-  .bf h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2, #6b665c); margin: 22px 0 4px; font-weight: 600; }
-  .bf-item { border-top: 1px solid var(--rule-2, #ddd8cc); padding: 13px 0; }
-  .bf-meta { font-size: 12px; color: var(--ink-2, #6b665c); display: flex; gap: 8px; flex-wrap: wrap; }
+  html[data-theme="dark"] .bf-imp.mixed { color: #d6d9de; }
+  .bf h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2, #666669); margin: 22px 0 4px; font-weight: 600; }
+  .bf-item { border-top: 1px solid var(--rule-2, #dddee1); padding: 13px 0; }
+  .bf-meta { font-size: 12px; color: var(--ink-2, #666669); display: flex; gap: 8px; flex-wrap: wrap; }
   .bf-imp { font-weight: 600; text-transform: capitalize; }
   .bf-title { font-weight: 600; margin: 4px 0; line-height: 1.35; overflow-wrap: anywhere; }
   .bf-text { font-size: 14px; line-height: 1.5; margin: 4px 0; }
-  .bf-why { font-size: 14px; line-height: 1.5; color: var(--ink-2, #6b665c); margin: 4px 0; }
+  .bf-why { font-size: 14px; line-height: 1.5; color: var(--ink-2, #666669); margin: 4px 0; }
   .bf-stocks { list-style: none; padding: 0; margin: 6px 0 0; font-size: 14px; line-height: 1.5; }
   .bf-st { font-weight: 600; }
-  .bf-quiet { color: var(--ink-2, #6b665c); font-size: 14px; padding: 16px 0; }
-  details.bf-rest summary { cursor: pointer; font-size: 14px; padding: 10px 0; color: var(--ink-2, #6b665c); }
+  .bf-quiet { color: var(--ink-2, #666669); font-size: 14px; padding: 16px 0; }
+  details.bf-rest summary { cursor: pointer; font-size: 14px; padding: 10px 0; color: var(--ink-2, #666669); }
 </style>
 </head>
 <body>

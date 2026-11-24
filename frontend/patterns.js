@@ -325,7 +325,7 @@
     function colourFor(direction) {
       if (direction === "bullish") return tok("--pass", "#1F5D45");
       if (direction === "bearish") return tok("--fail", "#8E2F2A");
-      return tok("--gold", "#B08D2E");
+      return tok("--gold", "#666D79");
     }
 
     function dash(c, a, b, colour, width) {
@@ -345,7 +345,7 @@
       c.font = "600 10px 'IBM Plex Mono', monospace";
       var w = c.measureText(text).width;
       if (right) x -= w;
-      c.fillStyle = tok("--paper", "#FBFAF7");
+      c.fillStyle = tok("--paper", "#FFFFFF");
       c.globalAlpha = 0.88;
       c.fillRect(x - 3, y - 11, w + 6, 14);
       c.globalAlpha = 1;
@@ -422,7 +422,7 @@
         pts.forEach(function (q) {
           ctx.beginPath();
           ctx.arc(q[0], q[1], 4.5, 0, Math.PI * 2);
-          ctx.fillStyle = tok("--paper", "#FBFAF7");
+          ctx.fillStyle = tok("--paper", "#FFFFFF");
           ctx.fill();
           ctx.lineWidth = 2.4;
           ctx.strokeStyle = colour;

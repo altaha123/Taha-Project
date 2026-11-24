@@ -90,7 +90,7 @@
   background:var(--rule-2); overflow:hidden }
 .sp-part .pb i{ display:block; height:100%; border-radius:99px; background:var(--gold) }
 .sp-part .pb i.hi{ background:linear-gradient(90deg,var(--gold-dp),var(--gold-lt)) }
-.sp-part .pb i.lo{ background:var(--fail,#B03A2B); opacity:.75 }
+.sp-part .pb i.lo{ background:var(--fail,#C62828); opacity:.75 }
 .sp-part .pb i.na{ background:var(--rule) }
 .sp-part .pv{ display:block; text-align:right; font:600 12px/1 'IBM Plex Mono',monospace;
   font-variant-numeric:tabular-nums }

@@ -74,21 +74,21 @@
   }
   rules +=
     '#altaha-gate{display:none;box-sizing:border-box;max-width:560px;margin:48px auto;padding:0 16px}' +
-    '#altaha-gate .ag-card{border:1px solid var(--rule,rgba(22,19,14,.14));border-radius:14px;' +
-      'background:var(--paper,#FBFAF7);color:var(--ink,#16130E);padding:32px 28px;text-align:center;' +
+    '#altaha-gate .ag-card{border:1px solid var(--rule,rgba(10,10,11,.14));border-radius:14px;' +
+      'background:var(--paper,#FFFFFF);color:var(--ink,#0A0A0B);padding:32px 28px;text-align:center;' +
       'box-shadow:0 1px 2px rgba(0,0,0,.04)}' +
     '#altaha-gate .ag-lock{width:44px;height:44px;margin:0 auto 14px;border-radius:50%;display:grid;' +
-      'place-items:center;background:var(--paper-2,#F4F1EB);color:var(--gold,#A8812F)}' +
+      'place-items:center;background:var(--paper-2,#F5F5F7);color:var(--gold,#4D535C)}' +
     '#altaha-gate .ag-kick{margin:0 0 6px;font:500 12px/1.4 "IBM Plex Mono",ui-monospace,monospace;' +
-      'letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#8B8477)}' +
+      'letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#5E5E69)}' +
     '#altaha-gate h2{margin:0 0 10px;font:400 30px/1.15 "Instrument Serif",Georgia,serif}' +
     '#altaha-gate p.ag-lede{margin:0 auto 22px;max-width:40ch;font:400 15px/1.55 Inter,system-ui,sans-serif;' +
-      'color:var(--ink-2,#4A443A)}' +
+      'color:var(--ink-2,#33333A)}' +
     '#altaha-gate .ag-go{display:inline-flex;align-items:center;justify-content:center;min-height:48px;' +
-      'padding:0 26px;border-radius:999px;background:var(--ink,#16130E);color:var(--paper,#FBFAF7);' +
+      'padding:0 26px;border-radius:999px;background:var(--ink,#0A0A0B);color:var(--paper,#FFFFFF);' +
       'font:600 15px/1 Inter,system-ui,sans-serif;text-decoration:none}' +
-    '#altaha-gate .ag-go:focus-visible{outline:2px solid var(--gold,#A8812F);outline-offset:3px}' +
-    '#altaha-gate .ag-note{margin:14px 0 0;font:400 13px/1.5 Inter,system-ui,sans-serif;color:var(--mute,#8B8477)}';
+    '#altaha-gate .ag-go:focus-visible{outline:2px solid var(--gold,#4D535C);outline-offset:3px}' +
+    '#altaha-gate .ag-note{margin:14px 0 0;font:400 13px/1.5 Inter,system-ui,sans-serif;color:var(--mute,#5E5E69)}';
 
   var style = document.createElement('style');
   style.id = 'altaha-gate-css';

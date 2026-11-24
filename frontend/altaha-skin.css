@@ -23,31 +23,93 @@
 }
 
 /* ── 1 · PALETTE ─────────────────────────────────────────────────────────
-   Both themes defined against the tokens index.html already uses, so the
-   existing theme button switches the entire application, not just a page. */
+   Platinum. White paper and black ink by day, true black and platinum white
+   by night, and brushed silver where the old site used gold. There is no
+   brand colour: black does the work on white and white does it on black, so
+   the only colour on a page is what the market is doing, green, red, amber.
+
+   This block is the palette. Every page loads this file, and it outranks
+   the copies in index.html and premium.css, which exist only so the first
+   paint is right before this arrives. Change a colour here, then there.
+
+   The accent is still reached as --gold, --gold-lt and --gold-dp: about a
+   thousand rules name those, and what changed was the colour, not the job.
+   New rules should say --accent.
+
+     --accent          what you press and what is selected: ink
+     --on-accent       the text on an accent fill: paper
+     --accent-soft     steel, for rules, rings and quiet marks. 4.5:1 on both
+                       white and black, so a label set in it still reads
+     --accent-em       the second voice in a headline, the italic word
+     --metal           brushed platinum, for the few things that should feel
+                       like an object: a mark, a monogram, a badge
+     --on-metal        the text on it, always ink
+
+   Measured on white: ink 19.8:1, secondary 12.7:1, hints 6.5:1. On black:
+   18.8:1, 13.6:1 and 7.6:1. Nothing that is read is under 4.5:1.          */
 
 :root, :root[data-theme="light"]{
-  --paper:#FBF8F1; --paper-2:#F3EFE4;
-  --ink:#17140E; --ink-2:#4B4438; --mute:#8A8171;
-  --rule:#E2DACA; --rule-2:#EFEADF;
-  --gold:#A8801C; --gold-lt:#C9A63E; --gold-dp:#8A6D1E;
-  --pass:#1F7A55; --part:#9A7B1F; --fail:#B03A2B;
-  --skin-card:#FFFDF8;
-  --skin-shadow:0 1px 2px rgba(23,20,14,.04),0 12px 34px rgba(23,20,14,.07);
-  --skin-lift:0 22px 50px rgba(23,20,14,.11);
-  --sky-1:#F6E7C4; --sky-2:#FBF8F1; --hill:#E8DCC0; --hill-2:#DCCFAE;
+  --paper:#FFFFFF; --paper-2:#F5F5F7;
+  --ink:#0A0A0B; --ink-2:#33333A; --mute:#5E5E69;
+  --rule:#E3E4E8; --rule-2:#EEEFF2;
+  --accent:#0A0A0B; --accent-soft:#6F7886; --accent-strong:#000000; --on-accent:#FFFFFF;
+  --accent-em:#5F6875; --accent-wash:rgba(10,10,11,.045);
+  --metal:linear-gradient(135deg,#FFFFFF 0%,#E9ECF0 26%,#B7BEC9 58%,#DDE1E7 82%,#F4F6F8 100%);
+  --metal-edge:#C2C8D1; --on-metal:#0A0A0B;
+  --metal-shadow:inset 0 0 0 1px var(--metal-edge),inset 0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(10,10,11,.12);
+  --amber:#A84D08;
+  --gold:var(--accent); --gold-lt:var(--accent-soft); --gold-dp:var(--accent-strong);
+  --gold-line:var(--accent-soft);
+  --pass:#0A7548; --part:var(--amber); --fail:#C62828;
+  --skin-card:#FFFFFF;
+  --skin-shadow:0 1px 2px rgba(10,10,11,.04),0 12px 34px rgba(10,10,11,.07);
+  --skin-lift:0 22px 50px rgba(10,10,11,.11);
+  --sky-1:#EEF0F3; --sky-2:#FFFFFF; --hill:#EDEDF0; --hill-2:#DFDFE4;
 }
 :root[data-theme="dark"]{
-  --paper:#0C0B08; --paper-2:#131109;
-  --ink:#F7F4EC; --ink-2:#CFC8B6; --mute:#8E877A;
-  --rule:#2C271C; --rule-2:#221E16;
-  --gold:#D9BC6A; --gold-lt:#C9A63E; --gold-dp:#D9BC6A;
-  --pass:#3FBF87; --part:#D9BC6A; --fail:#E0614F;
-  --skin-card:#17150F;
+  --paper:#000000; --paper-2:#0B0B0D;
+  --ink:#F5F5F7; --ink-2:#D2D2D8; --mute:#9C9CA6;
+  --rule:#2A2A2F; --rule-2:#1B1B1F;
+  --accent:#F2F3F5; --accent-soft:#AEB5C0; --accent-strong:#FFFFFF; --on-accent:#0A0A0B;
+  --accent-em:#B4BBC6; --accent-wash:rgba(255,255,255,.07);
+  --metal:linear-gradient(135deg,#FFFFFF 0%,#E3E6EB 24%,#A9B0BB 58%,#D5D9E0 82%,#F0F2F5 100%);
+  --metal-edge:#8A93A0; --on-metal:#0A0A0B;
+  --metal-shadow:inset 0 0 0 1px rgba(255,255,255,.38),inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(0,0,0,.5);
+  --amber:#F5B544;
+  --gold:var(--accent); --gold-lt:var(--accent-soft); --gold-dp:var(--accent-strong);
+  --gold-line:var(--accent-soft);
+  --pass:#2FD98B; --part:var(--amber); --fail:#FF5C4D;
+  --skin-card:#111114;
   --skin-shadow:0 1px 2px rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.45);
   --skin-lift:0 22px 56px rgba(0,0,0,.55);
-  --sky-1:#241E12; --sky-2:#0C0B08; --hill:#1D1810; --hill-2:#272013;
+  --sky-1:#17181B; --sky-2:#000000; --hill:#121214; --hill-2:#191920;
 }
+
+/* A card that is black in both themes carries the night palette with it.
+   On white the accent is ink, which on one of these would be black on black,
+   and --paper would put a white chip where the dark theme has a dark one. So
+   inside them every token has its night value whatever the theme, and the
+   card reads the same at noon as it does at midnight. The --gold names are
+   set again because a custom property inherits its value, not its formula.
+   A new always-black surface joins this list, or takes the class .on-dark. */
+.on-dark,
+.dr-hero, .dr-deskpf, .dr-universe, .dr-term,
+.mp-hero, .pp-hero, #view-portfolio .pf-board,
+.sh-mega-lead, .sh-sheet-lead,
+.scan-universe, .su-dock, .su-bubble, .ix-observatory,
+.wl-hero, .wd-hero, .wd-float.dark, .wd-toast{
+  --paper:#000000; --paper-2:#0B0B0D;
+  --ink:#F5F5F7; --ink-2:#D2D2D8; --mute:#9C9CA6;
+  --rule:#2A2A2F; --rule-2:#1B1B1F; --skin-card:#111114;
+  --accent:#F2F3F5; --accent-soft:#AEB5C0; --accent-strong:#FFFFFF; --on-accent:#0A0A0B;
+  --accent-em:#B4BBC6; --accent-wash:rgba(255,255,255,.07);
+  --metal:linear-gradient(135deg,#FFFFFF 0%,#E3E6EB 24%,#A9B0BB 58%,#D5D9E0 82%,#F0F2F5 100%);
+  --metal-shadow:inset 0 0 0 1px rgba(255,255,255,.38),inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(0,0,0,.5);
+  --gold:var(--accent); --gold-lt:var(--accent-soft); --gold-dp:var(--accent-strong);
+  --gold-line:var(--accent-soft);
+  --pass:#2FD98B; --amber:#F5B544; --part:var(--amber); --fail:#FF5C4D;
+}
+
 body{background:var(--paper);color:var(--ink);
   transition:background 300ms cubic-bezier(.22,.61,.36,1),color 300ms cubic-bezier(.22,.61,.36,1)}
 
@@ -83,11 +145,11 @@ header.wrap{position:relative;isolation:isolate}
   box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 15%,transparent) !important}
 #tk{font-family:var(--mono) !important;font-size:16px !important;letter-spacing:.05em;
   color:var(--ink) !important;background:none !important;border:0 !important}
-#go{background:var(--gold) !important;color:#fff !important;border:0 !important;
+#go{background:var(--gold) !important;color:var(--on-accent,#fff) !important;border:0 !important;
   border-radius:10px !important;font-family:var(--mono) !important;font-size:12px !important;
   letter-spacing:.09em;text-transform:uppercase;padding:0 26px !important;
   transition:transform 150ms ease,box-shadow 300ms ease}
-:root[data-theme="dark"] #go{color:#17140E !important}
+:root[data-theme="dark"] #go{color:#0A0A0B !important}
 #go:hover{transform:translateY(-1px);box-shadow:0 10px 24px color-mix(in srgb,var(--gold) 30%,transparent)}
 
 
@@ -192,19 +254,19 @@ header.wrap > *:not(#skin-art){position:relative;z-index:1}
 /* ── 10 · GOLD & CREAM REFINEMENTS ─────────────────────────────────────
    Restore the original palette, with clearer hierarchy and quieter surfaces.
    Market status colours and mobile account visibility are independent. */
-:root{ --ui-secondary:#686052; --ui-elevation:0 2px 4px #17140e04,0 8px 24px #17140e08 }
-:root[data-theme="dark"]{ --ui-secondary:#B5AD9C; --ui-elevation:0 2px 8px #0003,0 12px 28px #0003 }
+:root{ --ui-secondary:#4D4D56; --ui-elevation:0 2px 4px #0a0a0b04,0 8px 24px #0a0a0b08 }
+:root[data-theme="dark"]{ --ui-secondary:#B4B4BD; --ui-elevation:0 2px 8px #0003,0 12px 28px #0003 }
 
 /* Keep the primary search field and action aligned, including on phones. */
 body .searchrow{ box-shadow:var(--ui-elevation) !important }
 body .searchrow:focus-within{ transform:none }
 body #tk{ letter-spacing:0; min-height:48px }
 body #go{
-  min-height:48px; color:#17140E !important;
+  min-height:48px; color:var(--on-accent,#fff) !important;
   font-family:Inter,system-ui,sans-serif !important;
   font-weight:600; letter-spacing:.02em;
 }
-body #go:hover{ opacity:1; box-shadow:0 4px 12px #17140e18 }
+body #go:hover{ opacity:1; box-shadow:0 4px 12px #0a0a0b18 }
 body #go:disabled{ opacity:.55; cursor:wait; transform:none; box-shadow:none }
 
 /* Reading surfaces stay still; interactive destination cards get depth. */

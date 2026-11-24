@@ -48,7 +48,7 @@
 
 .acf-step{
   display:block; font-family:var(--mono,monospace); font-size:10px; letter-spacing:.11em;
-  text-transform:uppercase; color:var(--gold-dp,#8a6d2f); margin-bottom:9px;
+  text-transform:uppercase; color:var(--gold-dp,#31353b); margin-bottom:9px;
 }
 .acf-head h3{
   margin:0 0 7px; font-family:var(--serif,Georgia,serif); font-weight:400;
@@ -72,7 +72,7 @@
 }
 .acf-track > i{
   display:block; height:100%; border-radius:999px;
-  background:linear-gradient(90deg,var(--gold-lt,#d8bd7c),var(--gold,#a38338));
+  background:linear-gradient(90deg,var(--gold-lt,#caccd1),var(--gold,#4c515a));
   transition:width 140ms linear;
 }
 .acf-slider input[type=range]{
@@ -127,7 +127,7 @@
   transition:width 420ms cubic-bezier(.22,1,.36,1);
 }
 .acf-bar.wide{ height:8px; margin:12px 0 14px }
-.acf-bar.wide > i{ background:linear-gradient(90deg,var(--gold-lt,#d8bd7c),var(--gold,#a38338)) }
+.acf-bar.wide > i{ background:linear-gradient(90deg,var(--gold-lt,#caccd1),var(--gold,#4c515a)) }
 .acf-q h3{
   margin:0 0 6px; font-family:var(--serif,Georgia,serif); font-weight:400;
   font-size:clamp(18px,2.6vw,24px); line-height:1.3; color:var(--ink);
@@ -140,7 +140,7 @@
   transition:border-color 140ms ease, background 140ms ease, transform 140ms cubic-bezier(.22,1,.36,1);
 }
 .acf-opt:hover{ border-color:var(--gold); transform:translateX(3px) }
-.acf-opt.is-on{ border-color:var(--gold); background:var(--gold-lt,#f2e7cc); color:var(--ink) }
+.acf-opt.is-on{ border-color:var(--gold); background:var(--accent-wash,rgba(74,80,90,.07)); color:var(--ink) }
 .acf-opt:focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
 
 /* Stage 3 — the asset classes */
@@ -203,16 +203,16 @@
   background:var(--paper-2); padding:14px 16px 12px }
 .acf-first h4,.acf-out h4,.acf-how h4{
   margin:0 0 10px; font-family:var(--mono,monospace); font-size:11px; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--gold-dp,#8a6d2f); font-weight:500;
+  text-transform:uppercase; color:var(--gold-dp,#31353b); font-weight:500;
 }
 .acf-first ol{ list-style:none; margin:0; padding:0 }
 .acf-call{ display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-top:1px solid var(--rule) }
 .acf-call:first-child{ border-top:0; padding-top:2px }
 .acf-call-n{
   flex:0 0 24px; height:24px; border-radius:999px; display:grid; place-items:center;
-  font-family:var(--mono,monospace); font-size:12px; color:#fff; background:var(--ink-2,#4b4438);
+  font-family:var(--mono,monospace); font-size:12px; color:#fff; background:var(--ink-2,#33333a);
 }
-.acf-call.is-cushion .acf-call-n{ background:var(--part,#b58a2a) }
+.acf-call.is-cushion .acf-call-n{ background:var(--part,#585e69) }
 .acf-call.is-debt .acf-call-n{ background:var(--fail,#a13d2d) }
 .acf-call-body{ flex:1 1 auto; min-width:0 }
 .acf-call-body b{ display:block; font-size:14px; color:var(--ink) }
@@ -229,7 +229,7 @@
   background:var(--paper); color:var(--ink); font-family:var(--mono,monospace); font-size:13px;
 }
 .acf-free{ display:flex; justify-content:space-between; align-items:baseline; gap:12px;
-  margin:10px 0 0; padding-top:10px; border-top:2px solid var(--ink-2,#4b4438) }
+  margin:10px 0 0; padding-top:10px; border-top:2px solid var(--ink-2,#33333a) }
 .acf-free span{ font-size:13px; color:var(--ink) }
 .acf-free b{ font-family:var(--mono,monospace); font-size:20px; color:var(--ink); font-variant-numeric:tabular-nums }
 
@@ -238,7 +238,7 @@
   font-family:var(--mono,monospace); font-size:11px; padding:6px 12px; border-radius:999px;
   border:1px solid var(--rule); background:transparent; color:var(--ink-2); cursor:pointer; min-height:32px;
 }
-.acf-pill.is-on{ border-color:var(--gold); background:var(--gold-lt,#f2e7cc); color:var(--ink) }
+.acf-pill.is-on{ border-color:var(--gold); background:var(--accent-wash,rgba(74,80,90,.07)); color:var(--ink) }
 
 .acf-out{ margin:20px 0 0; border:1px solid var(--rule); border-radius:13px; background:var(--paper-2); padding:14px 16px }
 .acf-out-head{ display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap }
@@ -253,7 +253,7 @@
 .acf-out-rows li > span em{ font-style:normal; font-family:var(--mono,monospace); font-size:12px; color:var(--mute); margin-left:6px }
 .acf-out-rows li > b{ font-family:var(--mono,monospace); font-size:16px; color:var(--ink); white-space:nowrap; font-variant-numeric:tabular-nums }
 .acf-out-rows li > small{ grid-column:1 / -1; font-size:12px; line-height:1.6; color:var(--mute) }
-.acf-out-total{ border-top:2px solid var(--ink-2,#4b4438) !important }
+.acf-out-total{ border-top:2px solid var(--ink-2,#33333a) !important }
 .acf-out-total > b{ font-size:20px !important }
 
 .acf-how{ margin:20px 0 0 }
@@ -287,7 +287,7 @@
 .acf-act{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:22px 0 0 }
 .acf-go{
   padding:12px 22px; border-radius:999px; border:1px solid var(--gold);
-  background:var(--gold); color:#fff; font-size:14px; cursor:pointer; min-height:44px;
+  background:var(--gold); color:var(--on-accent,#fff); font-size:14px; cursor:pointer; min-height:44px;
   transition:transform 140ms cubic-bezier(.22,1,.36,1), filter 140ms ease;
 }
 .acf-go:hover{ transform:translateY(-1px); filter:brightness(1.06) }
@@ -331,8 +331,8 @@
 .mfx-coin{
   position:absolute; width:28px; height:28px; border-radius:50%;
   display:grid; place-items:center; will-change:transform,opacity;
-  font:600 14px/1 var(--mono,monospace); color:#54400d;
-  background:radial-gradient(circle at 34% 28%,#fbf0cf 0%,#e3c979 42%,#b8912c 78%,#8a6d1e 100%);
+  font:600 14px/1 var(--mono,monospace); color:#23262b;
+  background:radial-gradient(circle at 34% 28%,#ffffff 0%,#e3e6eb 42%,#a9b0bb 78%,#7a838f 100%);
   box-shadow:0 2px 5px rgba(0,0,0,.28), inset 0 -1px 2px rgba(0,0,0,.22),
              inset 0 1px 1px rgba(255,255,255,.55);
   text-shadow:0 1px 0 rgba(255,255,255,.35);
@@ -341,8 +341,8 @@
 /* The light that runs across a figure the moment it changes. */
 .mfx-sheen{
   background-image:linear-gradient(100deg,
-    transparent 30%, rgba(233,203,120,.85) 45%, rgba(255,255,255,.95) 50%,
-    rgba(233,203,120,.85) 55%, transparent 70%);
+    transparent 30%, rgba(197,202,211,.85) 45%, rgba(255,255,255,.95) 50%,
+    rgba(197,202,211,.85) 55%, transparent 70%);
   background-size:260% 100%; background-repeat:no-repeat;
   -webkit-background-clip:text; background-clip:text;
   animation:mfx-sweep 850ms cubic-bezier(.3,.1,.3,1);
@@ -350,7 +350,7 @@
 @keyframes mfx-sweep{ from{ background-position:180% 0 } to{ background-position:-80% 0 } }
 
 /* The rupee sign, which is the one glyph on the card that means money. */
-.acf-sym{ font-style:normal; color:var(--gold-dp,#8a6d1e); display:inline-block;
+.acf-sym{ font-style:normal; color:var(--gold-dp,#000000); display:inline-block;
   will-change:transform; margin-right:.06em }
 
 /* Stage 3 — the ring */
@@ -361,10 +361,10 @@
 .acf-ring svg{ width:100%; height:100%; transform:rotate(-90deg) }
 .acf-arc-bg{ fill:none; stroke:var(--rule); stroke-width:13 }
 .acf-arc{ fill:none; stroke-width:13; stroke-linecap:butt }
-.acf-arc.is-growth{ stroke:var(--gold,#a8801c) }
-.acf-arc.is-stable{ stroke:var(--ink-2,#4b4438) }
-.acf-arc.is-gold{ stroke:var(--gold-lt,#c9a63e) }
-.acf-arc.is-alt{ stroke:var(--mute,#8a8171) }
+.acf-arc.is-growth{ stroke:var(--gold,#0a0a0b) }
+.acf-arc.is-stable{ stroke:var(--ink-2,#33333a) }
+.acf-arc.is-gold{ stroke:var(--gold-lt,#7a838f) }
+.acf-arc.is-alt{ stroke:var(--mute,#5e5e69) }
 .acf-ring-mid{
   position:absolute; inset:0; display:grid; place-content:center; text-align:center;
   gap:1px; line-height:1.1;
@@ -382,10 +382,10 @@
   display:inline-block; width:9px; height:9px; border-radius:2.5px;
   margin-right:7px; vertical-align:baseline;
 }
-.acf-swatch.is-growth{ background:var(--gold,#a8801c) }
-.acf-swatch.is-stable{ background:var(--ink-2,#4b4438) }
-.acf-swatch.is-gold{ background:var(--gold-lt,#c9a63e) }
-.acf-swatch.is-alt{ background:var(--mute,#8a8171) }
+.acf-swatch.is-growth{ background:var(--gold,#0a0a0b) }
+.acf-swatch.is-stable{ background:var(--ink-2,#33333a) }
+.acf-swatch.is-gold{ background:var(--gold-lt,#7a838f) }
+.acf-swatch.is-alt{ background:var(--mute,#5e5e69) }
 
 @media (prefers-reduced-motion:reduce){
   .mfx-layer{ display:none }
@@ -412,32 +412,32 @@
 .acf-art .acf-adviser,.acf-art .qa-scene{ width:100% }
 .adv-svg{ display:block; width:100%; height:auto; overflow:visible }
 
-.adv-suit{ fill:var(--ink-2,#4b4438) }
-.adv-lapel{ fill:var(--ink,#17140e); opacity:.85 }
-.adv-shirt{ fill:var(--paper,#fffdf7) }
-.adv-collar{ fill:var(--paper,#fffdf7); stroke:var(--rule,#deded8); stroke-width:.8 }
-.adv-skin{ fill:var(--paper-2,#f7f3e8); stroke:var(--ink-2,#4b4438); stroke-width:1.5 }
-.adv-hair{ fill:var(--ink,#17140e); transition:fill 260ms ease }
-.adv-hair.is-dark{ fill:var(--ink,#17140e) }
-.adv-hair.is-salt{ fill:#7c766a }
-.adv-hair.is-grey{ fill:#a09a8e }
-.adv-hair.is-white{ fill:#cfc9bb }
-.adv-specs{ fill:none; stroke:var(--gold-dp,#8a6d1e); stroke-width:1.7;
+.adv-suit{ fill:var(--ink-2,#33333a) }
+.adv-lapel{ fill:var(--ink,#0a0a0b); opacity:.85 }
+.adv-shirt{ fill:var(--paper,#ffffff) }
+.adv-collar{ fill:var(--paper,#ffffff); stroke:var(--rule,#e4e5e8); stroke-width:.8 }
+.adv-skin{ fill:var(--paper-2,#f9fafb); stroke:var(--ink-2,#33333a); stroke-width:1.5 }
+.adv-hair{ fill:var(--ink,#0a0a0b); transition:fill 260ms ease }
+.adv-hair.is-dark{ fill:var(--ink,#0a0a0b) }
+.adv-hair.is-salt{ fill:#767779 }
+.adv-hair.is-grey{ fill:#9a9a9d }
+.adv-hair.is-white{ fill:#c8c9cc }
+.adv-specs{ fill:none; stroke:var(--gold-dp,#000000); stroke-width:1.7;
   stroke-linecap:round; stroke-linejoin:round }
-.adv-gold{ fill:var(--gold,#a8801c) }
-.adv-eye{ fill:var(--ink,#17140e) }
-.adv-line{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:1.7;
+.adv-gold{ fill:var(--gold,#0a0a0b) }
+.adv-eye{ fill:var(--ink,#0a0a0b) }
+.adv-line{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:1.7;
   stroke-linecap:round; stroke-linejoin:round }
 .adv-mouth{ stroke-width:1.5 }
-.adv-sleeve{ fill:var(--ink-2,#4b4438) }
+.adv-sleeve{ fill:var(--ink-2,#33333a) }
 .adv-palm{ stroke-width:1.4 }
 .adv-knuckle{ stroke-width:1.1; opacity:.55 }
-.adv-desk{ fill:var(--hill,#e8dcc0) }
-.adv-desk-edge{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:1.4; opacity:.5 }
-.adv-pad{ fill:var(--paper,#fffdf7); stroke:var(--ink-2,#4b4438); stroke-width:1.6 }
-.adv-pad-line{ fill:none; stroke:var(--rule,#deded8); stroke-width:1.6; stroke-linecap:round }
-.adv-pen-body{ fill:var(--gold,#a8801c) }
-.adv-pen-nib{ fill:var(--ink,#17140e) }
+.adv-desk{ fill:var(--hill,#e3e4e7) }
+.adv-desk-edge{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:1.4; opacity:.5 }
+.adv-pad{ fill:var(--paper,#ffffff); stroke:var(--ink-2,#33333a); stroke-width:1.6 }
+.adv-pad-line{ fill:none; stroke:var(--rule,#e4e5e8); stroke-width:1.6; stroke-linecap:round }
+.adv-pen-body{ fill:var(--gold,#0a0a0b) }
+.adv-pen-nib{ fill:var(--ink,#0a0a0b) }
 
 /* The question, in a bubble the figure is talking into. */
 .acf-bubble{
@@ -505,81 +505,81 @@
 
 .qa-ground{ fill:none; stroke:var(--rule); stroke-width:1.6 }
 .qa-axis{ fill:none; stroke:var(--rule); stroke-width:1.6 }
-.qa-line{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:1.9;
+.qa-line{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:1.9;
   stroke-linecap:round; stroke-linejoin:round }
-.qa-coin circle{ fill:var(--gold-lt,#c9a63e); stroke:var(--gold-dp,#8a6d1e); stroke-width:1.4 }
-.qa-coin text{ fill:var(--ink,#17140e); text-anchor:middle; font-family:var(--mono,monospace);
+.qa-coin circle{ fill:var(--gold-lt,#7a838f); stroke:var(--gold-dp,#000000); stroke-width:1.4 }
+.qa-coin text{ fill:var(--ink,#0a0a0b); text-anchor:middle; font-family:var(--mono,monospace);
   font-weight:600 }
-.qa-coin.qa-dim circle{ fill:var(--hill,#e8dcc0) }
+.qa-coin.qa-dim circle{ fill:var(--hill,#e3e4e7) }
 .qa-person{ transform-box:fill-box; transform-origin:50% 100% }
-.qa-person .qa-head,.qa-person .qa-body{ fill:var(--ink-2,#4b4438) }
+.qa-person .qa-head,.qa-person .qa-body{ fill:var(--ink-2,#33333a) }
 .qa-only{ stroke-dasharray:4 5; opacity:.6 }
-.qa-person.is-self .qa-head,.qa-person.is-self .qa-body{ fill:var(--gold,#a8801c) }
+.qa-person.is-self .qa-head,.qa-person.is-self .qa-body{ fill:var(--gold,#0a0a0b) }
 
 /* hourglass */
-.qa-glass{ fill:var(--paper,#fffdf7); stroke:var(--ink-2,#4b4438); stroke-width:2;
+.qa-glass{ fill:var(--paper,#ffffff); stroke:var(--ink-2,#33333a); stroke-width:2;
   stroke-linejoin:round }
-.qa-sand{ fill:var(--gold,#a8801c); transition:d 420ms ease }
+.qa-sand{ fill:var(--gold,#0a0a0b); transition:d 420ms ease }
 
 /* surplus */
-.qa-bar{ fill:var(--gold-lt,#c9a63e) }
-.qa-bar-spent{ fill:var(--hill-2,#dccfae) }
+.qa-bar{ fill:var(--gold-lt,#7a838f) }
+.qa-bar-spent{ fill:var(--hill-2,#cfd0d2) }
 .qa-arrow{ stroke-width:2 }
-.qa-nil{ fill:none; stroke:var(--fail,#b03a2b); stroke-width:2.4; stroke-linecap:round }
+.qa-nil{ fill:none; stroke:var(--fail,#c62828); stroke-width:2.4; stroke-linecap:round }
 
 /* umbrella */
-.qa-canopy{ fill:var(--gold,#a8801c) }
+.qa-canopy{ fill:var(--gold,#0a0a0b) }
 .qa-pip{ fill:var(--rule) }
-.qa-pip.is-on{ fill:var(--gold,#a8801c) }
-.qa-rain{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:2; stroke-linecap:round;
+.qa-pip.is-on{ fill:var(--gold,#0a0a0b) }
+.qa-rain{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:2; stroke-linecap:round;
   opacity:.45 }
 
 /* note and chain */
-.qa-note{ fill:var(--hill,#e8dcc0); stroke:var(--ink-2,#4b4438); stroke-width:1.6 }
-.qa-note-claim{ fill:var(--ink-2,#4b4438); opacity:.75 }
-.qa-chain circle{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:2.6 }
-.qa-tick{ fill:none; stroke:var(--pass,#1f7a55); stroke-width:2.6; stroke-linecap:round;
+.qa-note{ fill:var(--hill,#e3e4e7); stroke:var(--ink-2,#33333a); stroke-width:1.6 }
+.qa-note-claim{ fill:var(--ink-2,#33333a); opacity:.75 }
+.qa-chain circle{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:2.6 }
+.qa-tick{ fill:none; stroke:var(--pass,#0a7548); stroke-width:2.6; stroke-linecap:round;
   stroke-linejoin:round }
 
 /* the fall, and what the reader does next */
-.qa-fall{ fill:none; stroke:var(--fail,#b03a2b); stroke-width:2.4; stroke-linecap:round;
+.qa-fall{ fill:none; stroke:var(--fail,#c62828); stroke-width:2.4; stroke-linecap:round;
   stroke-linejoin:round }
-.qa-tail{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:2.4; stroke-linecap:round;
+.qa-tail{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:2.4; stroke-linecap:round;
   stroke-linejoin:round }
-.qa-tail.is-up{ stroke:var(--pass,#1f7a55) }
-.qa-tail.is-flat{ stroke:var(--mute,#8a8171); stroke-dasharray:4 4 }
+.qa-tail.is-up{ stroke:var(--pass,#0a7548) }
+.qa-tail.is-flat{ stroke:var(--mute,#5e5e69); stroke-dasharray:4 4 }
 
 /* depth gauge */
-.qa-tank{ fill:var(--paper,#fffdf7); stroke:var(--ink-2,#4b4438); stroke-width:1.8 }
-.qa-water{ fill:var(--gold-lt,#c9a63e); opacity:.8; transition:height 420ms cubic-bezier(.22,1,.36,1) }
-.qa-waterline{ fill:none; stroke:var(--gold-dp,#8a6d1e); stroke-width:2;
+.qa-tank{ fill:var(--paper,#ffffff); stroke:var(--ink-2,#33333a); stroke-width:1.8 }
+.qa-water{ fill:var(--gold-lt,#7a838f); opacity:.8; transition:height 420ms cubic-bezier(.22,1,.36,1) }
+.qa-waterline{ fill:none; stroke:var(--gold-dp,#000000); stroke-width:2;
   transition:transform 420ms cubic-bezier(.22,1,.36,1) }
-.qa-mark{ fill:none; stroke:var(--fail,#b03a2b); stroke-width:1.5; stroke-dasharray:3 3 }
+.qa-mark{ fill:none; stroke:var(--fail,#c62828); stroke-width:1.5; stroke-dasharray:3 3 }
 .qa-scale{ stroke-width:1.5 }
-.qa-down{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:2; stroke-linecap:round;
+.qa-down{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:2; stroke-linecap:round;
   stroke-linejoin:round }
 
 /* the beam */
-.qa-post{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:3; stroke-linecap:round }
+.qa-post{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:3; stroke-linecap:round }
 .qa-beam{ transform-box:view-box; transform-origin:65px 74px;
   transition:transform 460ms cubic-bezier(.34,1.3,.64,1) }
-.qa-shield{ fill:var(--ink-2,#4b4438) }
-.qa-sprout{ fill:none; stroke:var(--pass,#1f7a55); stroke-width:2.4; stroke-linecap:round }
-.qa-leaf{ fill:var(--pass,#1f7a55) }
+.qa-shield{ fill:var(--ink-2,#33333a) }
+.qa-sprout{ fill:none; stroke:var(--pass,#0a7548); stroke-width:2.4; stroke-linecap:round }
+.qa-leaf{ fill:var(--pass,#0a7548) }
 
 /* the market's own line */
 .qa-cycle-ghost{ fill:none; stroke:var(--rule); stroke-width:2.2 }
-.qa-cycle{ fill:none; stroke:var(--gold,#a8801c); stroke-width:2.6; stroke-linecap:round;
+.qa-cycle{ fill:none; stroke:var(--gold,#0a0a0b); stroke-width:2.6; stroke-linecap:round;
   transition:stroke-dasharray 520ms cubic-bezier(.22,1,.36,1) }
-.qa-now{ fill:var(--gold-dp,#8a6d1e) }
+.qa-now{ fill:var(--gold-dp,#000000) }
 
 /* what it is for */
-.qa-sun{ fill:var(--gold-lt,#c9a63e) }
-.qa-trunk{ fill:none; stroke:var(--ink-2,#4b4438); stroke-width:3; stroke-linecap:round }
-.qa-roof{ fill:var(--gold,#a8801c) }
-.qa-wall{ fill:var(--hill,#e8dcc0); stroke:var(--ink-2,#4b4438); stroke-width:1.6 }
-.qa-door{ fill:var(--ink-2,#4b4438) }
-.qa-knob{ fill:var(--gold,#a8801c) }
+.qa-sun{ fill:var(--gold-lt,#7a838f) }
+.qa-trunk{ fill:none; stroke:var(--ink-2,#33333a); stroke-width:3; stroke-linecap:round }
+.qa-roof{ fill:var(--gold,#0a0a0b) }
+.qa-wall{ fill:var(--hill,#e3e4e7); stroke:var(--ink-2,#33333a); stroke-width:1.6 }
+.qa-door{ fill:var(--ink-2,#33333a) }
+.qa-knob{ fill:var(--gold,#0a0a0b) }
 
 @media (prefers-reduced-motion:no-preference){
   .qa-scene{ animation:adv-arrive 560ms cubic-bezier(.22,1,.36,1) both }
@@ -646,9 +646,9 @@
 .acf-dot{ position:relative }
 .acf-dot:hover,.acf-dot:focus-visible{ transform:scale(1.5); border-color:var(--gold) }
 .acf-dot:focus-visible{ outline:2px solid var(--gold); outline-offset:4px }
-.acf-dot.is-done{ background:var(--gold,#a8801c); border-color:var(--gold,#a8801c) }
+.acf-dot.is-done{ background:var(--gold,#0a0a0b); border-color:var(--gold,#0a0a0b) }
 .acf-dot.is-now{
-  background:var(--paper); border-color:var(--gold-dp,#8a6d1e); border-width:3px;
+  background:var(--paper); border-color:var(--gold-dp,#000000); border-width:3px;
   transform:scale(1.35);
 }
 .acf-dot.is-now:hover{ transform:scale(1.6) }

@@ -2,7 +2,7 @@
    follows light and dark without a second palette. */
 
 body{margin:0;background:var(--paper);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-.adv{--adv-card:var(--skin-card,#FFFDF8);max-width:1080px;margin:0 auto;padding:28px clamp(16px,4vw,32px) 72px;
+.adv{--adv-card:var(--skin-card,#FFFFFF);max-width:1080px;margin:0 auto;padding:28px clamp(16px,4vw,32px) 72px;
   box-sizing:border-box;color:var(--ink)}
 .adv *{box-sizing:border-box}
 .adv a{color:var(--gold)}
@@ -19,14 +19,14 @@ body{margin:0;background:var(--paper);font-family:Inter,system-ui,sans-serif;-we
   border-radius:9px;white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;gap:6px}
 .adv-tabs a[aria-current="page"]{background:var(--adv-card);color:var(--ink);box-shadow:var(--skin-shadow)}
 .adv-badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;
-  background:var(--gold);color:#17140E;font:600 11px/1 Inter,sans-serif}
+  background:var(--gold);color:var(--on-accent,#fff);font:600 11px/1 Inter,sans-serif}
 
 /* ── Shared pieces ───────────────────────────────────────────────────── */
 .adv-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:600 14px/1 Inter,system-ui,sans-serif;
   padding:12px 16px;min-height:44px;border-radius:11px;border:1px solid var(--rule);background:var(--adv-card);
   color:var(--ink) !important;text-decoration:none;cursor:pointer}
 .adv-btn:hover{background:var(--paper-2)}
-.adv-btn.is-gold{background:var(--gold);border-color:var(--gold);color:#17140E !important}
+.adv-btn.is-gold{background:var(--gold);border-color:var(--gold);color:var(--on-accent,#fff) !important}
 .adv-btn.is-gold:hover{filter:brightness(1.07)}
 .adv-btn.is-wide{width:100%;min-height:50px;font-size:16px}
 .adv-btn:disabled{opacity:.6;cursor:default}
@@ -58,7 +58,7 @@ body{margin:0;background:var(--paper);font-family:Inter,system-ui,sans-serif;-we
 /* ── Directory ───────────────────────────────────────────────────────── */
 .adv-hero{margin:4px 0 26px;max-width:760px}
 .adv-hero h1{font:400 clamp(34px,5vw,64px)/1.05 'Instrument Serif',Georgia,serif;letter-spacing:-.025em;margin:0}
-.adv-hero h1 em{color:var(--gold);font-style:italic}
+.adv-hero h1 em{color:var(--accent-em,var(--gold));font-style:italic}
 .adv-lede{font-size:16px;line-height:1.65;color:var(--ink-2);margin:16px 0 0}
 .adv-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:0 0 18px}
 .adv-chips{display:flex;flex-wrap:wrap;gap:6px}

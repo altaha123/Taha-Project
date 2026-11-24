@@ -153,7 +153,7 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
 }
 .hzrow > .hz:hover{ border-color:var(--ink-2); color:var(--ink) }
 .hzrow > .hz.active{ background:var(--ink); border-color:var(--ink); color:var(--paper) }
-.hzrow > .hz.active small{ color:var(--gold-lt) }
+.hzrow > .hz.active small{ color:inherit; opacity:.74 }
 
 /* `#genbtn` and `#pf_go` were dressed by id; `#genbtn2` and the Planner's twin
    were not, and shipped as system buttons. */

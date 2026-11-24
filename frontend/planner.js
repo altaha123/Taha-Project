@@ -605,9 +605,9 @@
           '<button type="button" class="mp-chip" data-act="example">See an example first</button>' +
         '</div></div>' +
         '<svg class="mp-sketch" viewBox="0 0 190 120" aria-hidden="true">' +
-          '<path d="M6 38h178" stroke="rgba(251,248,241,.45)" stroke-width="1.5" stroke-dasharray="5 5"/>' +
-          '<path d="M6 110C70 106 120 84 150 38s24-30 34-34" stroke="#D9BC6A" stroke-width="2.5"/>' +
-          '<circle cx="150" cy="38" r="6" fill="#D9BC6A" stroke="#15120C" stroke-width="2"/></svg>';
+          '<path d="M6 38h178" stroke="rgba(255,255,255,.45)" stroke-width="1.5" stroke-dasharray="5 5"/>' +
+          '<path d="M6 110C70 106 120 84 150 38s24-30 34-34" stroke="#C5CAD3" stroke-width="2.5"/>' +
+          '<circle cx="150" cy="38" r="6" fill="#C5CAD3" stroke="#0A0A0B" stroke-width="2"/></svg>';
       $('mp-hero').innerHTML = html;
       return;
     }

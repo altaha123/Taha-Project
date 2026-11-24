@@ -6,7 +6,7 @@
 .wl-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .wl .up { color: var(--wl-up); } .wl .dn { color: var(--wl-dn); }
 
-.c-gold   { --wl-a: #C9A63E; --wl-a2: #F2D58A; }
+.c-gold   { --wl-a: #7A838F; --wl-a2: #EBEDEF; }
 .c-green  { --wl-a: #2F9E6E; --wl-a2: #8FD9B6; }
 .c-blue   { --wl-a: #3D7FB8; --wl-a2: #9CC6EC; }
 .c-rose   { --wl-a: #C8566B; --wl-a2: #F0A7B4; }
@@ -43,7 +43,7 @@ a.wl-sum-c:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; 
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wl-shelf-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); gap: 10px; padding: 4px 2px 10px; }
 .wl-shelf.split .wl-shelf-row { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
-.wl-tile { --wl-a: #C9A63E; position: relative; flex: 0 0 auto; min-width: 0; min-height: 92px; display: grid; grid-template-columns: auto 1fr;
+.wl-tile { --wl-a: #7A838F; position: relative; flex: 0 0 auto; min-width: 0; min-height: 92px; display: grid; grid-template-columns: auto 1fr;
   gap: 4px 10px; align-items: center; text-align: left; padding: 12px 14px 14px; border-radius: 18px; cursor: pointer; scroll-snap-align: start;
   background: var(--skin-card); border: 1.5px solid var(--rule); color: var(--ink); font: inherit; box-shadow: var(--skin-shadow);
   transition: transform .18s ease, border-color .18s, box-shadow .18s; animation: wl-up .4s ease-out backwards; animation-delay: calc(var(--i) * 40ms); }
@@ -68,9 +68,9 @@ a.wl-sum-c:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; 
 
 /* ── The hero of the open list ──────────────────────────────────────── */
 .wl-hero { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 18px; align-items: center;
-  padding: 22px 24px; border-radius: 26px; margin: 0 0 14px; color: #FBF8F1;
-  background: radial-gradient(130% 140% at 0% 0%, color-mix(in srgb, var(--wl-a) 70%, #17140E) 0%, #17140E 62%),
-              linear-gradient(135deg, #1D1912, #0E0C08); box-shadow: 0 24px 60px rgba(23, 20, 14, .22); }
+  padding: 22px 24px; border-radius: 26px; margin: 0 0 14px; color: #FFFFFF;
+  background: radial-gradient(130% 140% at 0% 0%, color-mix(in srgb, var(--wl-a) 70%, #0A0A0B) 0%, #0A0A0B 62%),
+              linear-gradient(135deg, #121315, #050506); box-shadow: 0 24px 60px rgba(10, 10, 11, .22); }
 .wl-hero-glow { position: absolute; width: 360px; height: 360px; right: -80px; top: -160px; border-radius: 50%; pointer-events: none;
   background: radial-gradient(circle, color-mix(in srgb, var(--wl-a2) 55%, transparent), transparent 70%); filter: blur(8px);
   animation: wl-drift 9s ease-in-out infinite alternate; }
@@ -81,16 +81,16 @@ a.wl-sum-c:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; 
 @keyframes wl-bob { 50% { transform: translateY(-4px) rotate(-3deg); } }
 .wl-hero-t { min-width: 0; }
 .wl-name { font: 400 clamp(28px, 3.6vw, 42px)/1.05 'Instrument Serif', Georgia, serif; margin: 2px 0 6px; overflow-wrap: anywhere; }
-.wl-name-in { font: 400 clamp(24px, 3.2vw, 42px)/1.1 'Instrument Serif', Georgia, serif; width: min(100%, 420px); color: #FBF8F1;
+.wl-name-in { font: 400 clamp(24px, 3.2vw, 42px)/1.1 'Instrument Serif', Georgia, serif; width: min(100%, 420px); color: #FFFFFF;
   background: rgba(255, 255, 255, .08); border: 1.5px solid var(--wl-a2); border-radius: 12px; padding: 4px 12px; margin: 0 0 6px; }
 .wl-name-in:focus { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--wl-a2) 40%, transparent); }
-.wl-hero-sub { color: rgba(251, 248, 241, .72); font-size: 14px; line-height: 1.5; margin: 0 0 12px; max-width: 520px; }
+.wl-hero-sub { color: rgba(255, 255, 255, .72); font-size: 14px; line-height: 1.5; margin: 0 0 12px; max-width: 520px; }
 .wl-acts { display: flex; flex-wrap: wrap; gap: 8px; }
-.wl-act { font: 600 13px Inter, system-ui, sans-serif; color: #FBF8F1; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16);
+.wl-act { font: 600 13px Inter, system-ui, sans-serif; color: #FFFFFF; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16);
   border-radius: 999px; padding: 8px 13px; cursor: pointer; min-height: 36px; transition: background .15s, transform .15s; }
 .wl-act:hover { background: rgba(255, 255, 255, .16); transform: translateY(-1px); }
 .wl-act:focus-visible { outline: 2px solid var(--wl-a2); outline-offset: 2px; }
-.wl-act.primary { background: var(--wl-a2); color: #17140E; border-color: transparent; }
+.wl-act.primary { background: var(--wl-a2); color: #0A0A0B; border-color: transparent; }
 .wl-act.danger { color: #F0A7B4; }
 .wl-act.danger.armed { background: #C8566B; color: #fff; border-color: transparent; animation: wl-shake .35s; }
 @keyframes wl-shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
@@ -100,11 +100,11 @@ a.wl-sum-c:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; 
 .wl-mood-face { font-size: 42px; line-height: 1; animation: wl-pulse 2.6s ease-in-out infinite; }
 @keyframes wl-pulse { 50% { transform: scale(1.08); } }
 .wl-mood b { font: 400 24px/1.1 'Instrument Serif', Georgia, serif; }
-.wl-mood small { color: rgba(251, 248, 241, .7); font-size: 12px; }
+.wl-mood small { color: rgba(255, 255, 255, .7); font-size: 12px; }
 .wl-mood .up { color: #7FE0B2; } .wl-mood .dn { color: #F59A8C; }
 .wl-gauge { position: relative; width: 100%; height: 8px; border-radius: 99px; margin: 4px 0;
-  background: linear-gradient(90deg, #E0614F, #D9BC6A 50%, #3FBF87); }
-.wl-gauge i { position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: #FBF8F1; border: 3px solid #17140E;
+  background: linear-gradient(90deg, #FF5C4D, #C5CAD3 50%, #2FD98B); }
+.wl-gauge i { position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: #FFFFFF; border: 3px solid #0A0A0B;
   transform: translate(-50%, -50%); transition: left .8s cubic-bezier(.2, .9, .3, 1.3); box-shadow: 0 2px 8px rgba(0, 0, 0, .4); }
 
 .wl-style { grid-column: 1 / -1; position: relative; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding-top: 4px; }
@@ -115,7 +115,7 @@ a.wl-sum-c:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; 
 .wl-emojis button:hover { transform: scale(1.12) rotate(-6deg); }
 .wl-emojis button.on { background: rgba(255, 255, 255, .2); border-color: var(--wl-a2); }
 .wl-colors button { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid rgba(255, 255, 255, .2); background: var(--wl-a); }
-.wl-colors button.on { border-color: #FBF8F1; box-shadow: 0 0 0 3px var(--wl-a); }
+.wl-colors button.on { border-color: #FFFFFF; box-shadow: 0 0 0 3px var(--wl-a); }
 
 /* ── Tools ──────────────────────────────────────────────────────────── */
 .wl-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 14px; }
@@ -196,7 +196,7 @@ a.wl-sum-c:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; 
 .wl-card-acts { display: flex; align-items: center; gap: 8px; margin-top: 10px; min-height: 32px; }
 .wl-pick { font: 600 12px Inter, sans-serif; color: var(--gold-dp); background: color-mix(in srgb, var(--gold) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); border-radius: 999px; padding: 6px 11px; cursor: pointer; min-height: 32px; }
-.wl-pick:hover { background: var(--gold); color: #17140E; }
+.wl-pick:hover { background: var(--gold); color: var(--on-accent,#fff); }
 .wl-picked { font: 600 12px Inter, sans-serif; color: var(--gold-dp); }
 .wl-copy select { font: 500 12px Inter, sans-serif; color: var(--ink-2); background: transparent; border: 1px solid var(--rule); border-radius: 999px;
   padding: 6px 8px; max-width: 120px; min-height: 32px; }

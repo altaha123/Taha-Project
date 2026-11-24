@@ -165,7 +165,7 @@ html[data-theme="dark"] .lg-med{ background:var(--paper-2); color:var(--mute); b
   border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
   transition:box-shadow 320ms var(--ease);
 }
-.stk-panebar.is-stuck{ box-shadow:0 10px 24px -18px rgba(23,20,14,.45) }
+.stk-panebar.is-stuck{ box-shadow:0 10px 24px -18px rgba(10,10,11,.45) }
 .stk-mini{
   display:flex; align-items:center; gap:9px; margin-left:auto; flex:0 0 auto; white-space:nowrap;
   font:600 13px/1 'IBM Plex Mono',monospace;
@@ -208,11 +208,11 @@ html[data-theme="dark"] .lg-med{ background:var(--paper-2); color:var(--mute); b
 .stk-pane-btn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
 .stk-pane-n{
   display:inline-grid; place-items:center; min-width:17px; height:17px; margin-left:7px;
-  padding:0 4px; border-radius:99px; background:var(--gold); color:#fff;
+  padding:0 4px; border-radius:99px; background:var(--gold); color:var(--on-accent,#fff);
   font:600 10px/1 'IBM Plex Mono',monospace; vertical-align:1px;
 }
 .stk-pane-n[hidden]{ display:none }
-html[data-theme="dark"] .stk-pane-n{ color:#17140E }
+html[data-theme="dark"] .stk-pane-n{ color:#0A0A0B }
 
 .stk-pane[hidden]{ display:none }
 /* The stage every section sits in. Never shorter than the screen below the
@@ -463,8 +463,8 @@ html[data-theme="dark"] .stk-pane-n{ color:#17140E }
   transition:background 200ms var(--ease), color 200ms var(--ease);
 }
 .hz button:hover:not(.on){ background:var(--paper-2); color:var(--ink) }
-.hz button.on{ background:var(--gold); color:#fff }
-html[data-theme="dark"] .hz button.on{ color:#17140E }
+.hz button.on{ background:var(--gold); color:var(--on-accent,#fff)}
+html[data-theme="dark"] .hz button.on{ color:#0A0A0B }
 @media (max-width:560px){
   .hz{ display:flex; width:100% }
   .hz button{ flex:1 1 0; padding:8px 4px; white-space:normal; line-height:1.2 }
@@ -646,7 +646,7 @@ html[data-theme="dark"] .hz button.on{ color:#17140E }
   display:inline-flex; align-items:center; gap:8px;
   padding:12px 18px 12px 14px; border:0; border-radius:99px; cursor:pointer;
   font-family:inherit; font-size:16px; font-weight:600; letter-spacing:.01em;
-  color:#fff; background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt));
+  color:var(--on-accent,#fff); background:linear-gradient(135deg,var(--gold-dp),var(--gold));
   box-shadow:var(--e2);
   transition:transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
 }
@@ -654,7 +654,7 @@ html[data-theme="dark"] .hz button.on{ color:#17140E }
 /* The dark theme's gold is light, so white text on it washes out; dark ink
    reads. Same for the question chip when it fills on hover. */
 html[data-theme="dark"] .sai-fab,
-html[data-theme="dark"] .sai-q:hover{ color:#17140E }
+html[data-theme="dark"] .sai-q:hover{ color:#0A0A0B }
 .sai-fab:focus-visible{ outline:2px solid var(--ink); outline-offset:3px }
 .sai.open .sai-fab{ transform:none }
 /* A slow shimmer on the icon, so the button reads as alive without moving. */
@@ -690,7 +690,7 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
   font-family:inherit; font-size:14px; font-weight:500; color:var(--gold-dp);
   transition:background 160ms var(--ease-out), color 160ms var(--ease-out);
 }
-.sai-q:hover{ background:var(--gold); color:#fff }
+.sai-q:hover{ background:var(--gold); color:var(--on-accent,#fff)}
 .sai-q:focus-visible{ outline:2px solid var(--gold-dp); outline-offset:2px }
 .sai-you{
   margin:0 0 12px auto; width:fit-content; max-width:88%; padding:9px 13px;
@@ -759,7 +759,7 @@ html[data-theme="dark"] .sai-q:hover{ color:#17140E }
   transition:all 160ms var(--ease);
 }
 .ranges button:hover{ background:var(--paper-2); color:var(--ink) }
-.ranges button.on{ background:var(--gold); border-color:var(--gold); color:#fff }
+.ranges button.on{ background:var(--gold); border-color:var(--gold); color:var(--on-accent,#fff)}
 .spark-line{ fill:none; stroke:var(--gold); stroke-width:2; stroke-linejoin:round; stroke-linecap:round }
 .spark-fill{ fill:url(#sparkG); opacity:.5 }
 .spark-draw{ stroke-dasharray:var(--len); stroke-dashoffset:var(--len);
@@ -1332,8 +1332,8 @@ a.stk-tag:hover,a.stk-tag:focus-visible{ border-color:var(--gold); color:var(--i
   padding:8px 14px; min-height:36px; border-radius:99px; font:500 13px/1 Inter,system-ui,sans-serif;
   transition:background 180ms var(--ease), color 180ms var(--ease);
 }
-.own-retry:hover{ background:var(--gold); color:#fff }
-html[data-theme="dark"] .own-retry:hover{ color:#17140E }
+.own-retry:hover{ background:var(--gold); color:var(--on-accent,#fff)}
+html[data-theme="dark"] .own-retry:hover{ color:#0A0A0B }
 .own-retry:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
 .own-notes{
   margin-top:26px; padding:15px 17px; border-left:2px solid var(--rule);
@@ -1563,7 +1563,7 @@ html[data-theme="dark"] .own-retry:hover{ color:#17140E }
 }
 
 /* Delivery pulse: data-led artwork, touch exploration and readable sessions. */
-.dv-experience { --dv-accent:var(--gold,#aa842a); display:grid; gap:24px; min-width:0; }
+.dv-experience { --dv-accent:var(--gold,#50565f); display:grid; gap:24px; min-width:0; }
 .dv-experience * { box-sizing:border-box; }
 .dv-hero { position:relative; display:grid; grid-template-columns:1fr 200px; gap:24px; align-items:center; overflow:hidden; padding:30px; border:1px solid var(--rule); border-radius:24px; background:radial-gradient(ellipse at 95% 20%,color-mix(in srgb,var(--dv-accent) 15%,transparent),transparent 65%),var(--skin-card,var(--paper)); }
 .dv-eyebrow { font:600 10px/1.6 var(--mono); letter-spacing:.13em; color:var(--mute); }
@@ -1732,18 +1732,18 @@ details.own-notes p{ padding-left:14px; border-left:2px solid var(--rule) }
    display serif, which is narrow, and drew them over fat tan bars. */
 #pane-funda{
   --fz-a:#2a78d6; --fz-b:#eb6834; --fz-c:#1baf7a;
-  --fz-n1:#6f6859; --fz-n2:#8a8373; --fz-n3:#a39c8d; --fz-n4:#bbb5a7; --fz-n5:#d0cabd; --fz-n6:#e6e1d6;
-  --fz-ribbon:#e9e3d6; --fz-grid:var(--rule-2); --fz-axis:var(--rule);
+  --fz-n1:#68696b; --fz-n2:#838386; --fz-n3:#9c9d9f; --fz-n4:#b4b5b8; --fz-n5:#c9cacd; --fz-n6:#e6e7ea;
+  --fz-ribbon:#e8e9ec; --fz-grid:var(--rule-2); --fz-axis:var(--rule);
   --fz-good:#0b6b44; --fz-good-bg:rgba(31,122,85,.12);
   --fz-bad:#a5301f; --fz-bad-bg:rgba(176,58,43,.11); --fz-bad-solid:#c8492f;
   --fz-sans:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
 }
 html[data-theme="dark"] #pane-funda{
   --fz-a:#3987e5; --fz-b:#d95926; --fz-c:#199e70;
-  --fz-n1:#b9b2a2; --fz-n2:#9a9383; --fz-n3:#7d7667; --fz-n4:#625c4f; --fz-n5:#4a453a; --fz-n6:#37332a;
-  --fz-ribbon:#29251d;
+  --fz-n1:#b1b2b5; --fz-n2:#929396; --fz-n3:#767779; --fz-n4:#5c5c5f; --fz-n5:#454548; --fz-n6:#323335;
+  --fz-ribbon:#222325;
   --fz-good:#55d39c; --fz-good-bg:rgba(63,191,135,.15);
-  --fz-bad:#f08573; --fz-bad-bg:rgba(224,97,79,.16); --fz-bad-solid:#e0614f;
+  --fz-bad:#f08573; --fz-bad-bg:rgba(224,97,79,.16); --fz-bad-solid:#ff5c4d;
 }
 .h-a, .s-a{ --c:var(--fz-a) } .h-b, .s-b{ --c:var(--fz-b) } .h-c, .s-c{ --c:var(--fz-c) }
 /* An earlier period: the same hue, stepped toward the card. */
@@ -1760,8 +1760,8 @@ html[data-theme="dark"] #pane-funda{
 }
 .fn-meta a{ color:var(--gold-dp); border-color:color-mix(in srgb,var(--gold) 40%,var(--rule));
   transition:background 180ms var(--ease), color 180ms var(--ease) }
-.fn-meta a:hover{ background:var(--gold); color:#fff }
-html[data-theme="dark"] .fn-meta a:hover{ color:#17140E }
+.fn-meta a:hover{ background:var(--gold); color:var(--on-accent,#fff)}
+html[data-theme="dark"] .fn-meta a:hover{ color:#0A0A0B }
 .fn-meta a:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
 .fn-view[hidden]{ display:none }
 
@@ -1949,12 +1949,12 @@ button.fc-c:hover::before, .fc-c.on:not(.now)::before{ opacity:.05 }
 /* Costs are one grey, stepped lighter in the order they are listed; what is
    kept is the green. In the dark the ramp runs the other way. */
 .s-materials{ --sp-c:var(--fz-n1) } .s-employee_cost{ --sp-c:var(--fz-n2) } .s-other_expenses{ --sp-c:var(--fz-n3) }
-.s-depreciation{ --sp-c:var(--fz-n4); --sp-t:#17140E } .s-finance_cost{ --sp-c:var(--fz-n5); --sp-t:#17140E }
-.s-tax{ --sp-c:var(--fz-n6); --sp-t:#17140E } .s-rest{ --sp-c:var(--fz-n6); --sp-t:#17140E }
+.s-depreciation{ --sp-c:var(--fz-n4); --sp-t:#0A0A0B } .s-finance_cost{ --sp-c:var(--fz-n5); --sp-t:#0A0A0B }
+.s-tax{ --sp-c:var(--fz-n6); --sp-t:#0A0A0B } .s-rest{ --sp-c:var(--fz-n6); --sp-t:#0A0A0B }
 .s-pat{ --sp-c:var(--fz-c) } .s-equity{ --sp-c:var(--fz-c) } .s-debt{ --sp-c:var(--fz-b) }
-html[data-theme="dark"] .s-materials, html[data-theme="dark"] .s-employee_cost{ --sp-t:#17140E }
+html[data-theme="dark"] .s-materials, html[data-theme="dark"] .s-employee_cost{ --sp-t:#0A0A0B }
 html[data-theme="dark"] .s-depreciation, html[data-theme="dark"] .s-finance_cost,
-html[data-theme="dark"] .s-tax, html[data-theme="dark"] .s-rest{ --sp-t:#F7F4EC }
+html[data-theme="dark"] .s-tax, html[data-theme="dark"] .s-rest{ --sp-t:#FAFAFA }
 @media (max-width:560px){ .sp-r{ grid-template-columns:54px minmax(0,1fr); gap:8px } }
 
 /* Cash left after investing: three thin bars on one scale. */
@@ -2041,7 +2041,7 @@ a.pr-a:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-
 .pr-score.b-good{ background:color-mix(in srgb,var(--sh-up) 20%,var(--skin-card)); color:var(--sh-up) }
 .pr-score.b-weak{ background:color-mix(in srgb,var(--sh-dn) 16%,var(--skin-card)); color:var(--sh-dn) }
 .pr-score.b-poor{ background:var(--sh-dn); color:#fff }
-html[data-theme="dark"] .pr-score.b-strong, html[data-theme="dark"] .pr-score.b-poor{ color:#0C0B08 }
+html[data-theme="dark"] .pr-score.b-strong, html[data-theme="dark"] .pr-score.b-poor{ color:#000000 }
 @media (max-width:560px){
   .pr-table .pr-co{ min-width:150px; max-width:170px }
   .pr-table th, .pr-table td{ padding:10px 9px }
@@ -2172,6 +2172,6 @@ html[data-theme="dark"] .pr-score.b-strong, html[data-theme="dark"] .pr-score.b-
 .talk-acts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
 .talk-btn{display:inline-flex;align-items:center;font:600 14px/1 var(--sans,Inter,sans-serif);padding:11px 15px;min-height:42px;
   border-radius:11px;border:1px solid var(--rule);color:var(--ink);text-decoration:none;background:none}
-.talk-btn.is-gold{background:var(--gold);border-color:var(--gold);color:#17140E}
+.talk-btn.is-gold{background:var(--gold);border-color:var(--gold);color:var(--on-accent,#fff)}
 .talk-btn[hidden]{display:none}
 .talk-fine{font-size:12px;color:var(--mute);margin:10px 0 0;line-height:1.5}

@@ -12,11 +12,11 @@
 .ideaplan2 .pc span{display:block;margin-top:8px;font:600 14px/1.2 'IBM Plex Mono',monospace;
   color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .ideaplan2 .pc small{font-weight:400;font-size:11px;color:var(--fail,#a11);margin-left:6px}
-.ideaplan2 .buy span{color:var(--pass,#1f6f43)}
+.ideaplan2 .buy span{color:var(--pass,#0a7548)}
 .ideaplan2 .sl span{color:var(--fail,#a11)}
 .ideaplan2 .rr span{color:var(--gold-dp)}
 .ideaplan2.wait{display:flex;gap:12px;align-items:baseline;padding:11px 14px;background:var(--paper-2)}
-.ideaplan2.wait span{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#8a7a4a}
+.ideaplan2.wait span{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#3e4147}
 .ideaplan2.wait em{font-style:normal;font-size:13px;color:var(--mute)}
 @media(max-width:620px){
   .ideaplan2{grid-template-columns:1fr 1fr}
@@ -40,7 +40,7 @@
 .ideamore .arch .ip{padding:2px 8px;border:1px solid;font-weight:600;letter-spacing:.08em;margin-right:6px}
 .ideamore .ip.buy{color:var(--pass);border-color:var(--pass)}
 .ideamore .ip.watch{color:var(--gold);border-color:var(--gold)}
-.ideamore .ip.wait{color:#8a7a4a;border-color:#8a7a4a}
+.ideamore .ip.wait{color:#3e4147;border-color:#3e4147}
 .ideamore .ip.avoid{color:var(--fail);border-color:var(--fail)}
 .ideamore .filingtag{margin-top:10px}
 

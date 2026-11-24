@@ -155,9 +155,9 @@ const server = http.createServer((req, res) => {
   // ── Dark theme, phone width, above the bottom product bar ────────────────
   ({ context, page } = await open({ width: 390, height: 844 }, 'dark'));
   await page.screenshot({ path: path.join(output, 'phone-dark-closed.png') });
-  // The dark theme's gold is light; the label on it must be dark ink.
+  // The dark theme's accent is platinum white; the label on it must be dark ink.
   const ink = await page.locator('#sai-fab').evaluate(n => getComputedStyle(n).color);
-  assert.equal(ink, 'rgb(23, 20, 14)', 'the dark-theme button needs dark text to be readable');
+  assert.equal(ink, 'rgb(10, 10, 11)', 'the dark-theme button needs dark text to be readable');
   const bar = await page.locator('.ux-bottom').boundingBox();
   const fabBox = await page.locator('#sai-fab').boundingBox();
   if (bar) assert.ok(fabBox.y + fabBox.height <= bar.y, 'the button must sit above the bottom bar');

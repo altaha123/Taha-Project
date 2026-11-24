@@ -28,12 +28,12 @@ body.sh-open{overflow:hidden}
 .shsheet{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;
   justify-content:center;padding:22px}
 .shsheet[hidden]{display:none}
-.shback{position:absolute;inset:0;background:rgba(12,10,7,.62);
+.shback{position:absolute;inset:0;background:rgba(0,0,0,.62);
   backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   animation:shfade .2s ease both}
 .shbox{position:relative;z-index:1;width:min(720px,100%);max-height:92vh;overflow:auto;
   background:var(--paper);border:1px solid var(--rule-2);border-radius:14px;
-  box-shadow:0 30px 80px rgba(12,10,7,.34);padding:26px 26px 22px;
+  box-shadow:0 30px 80px rgba(0,0,0,.34);padding:26px 26px 22px;
   animation:shrise .24s cubic-bezier(.2,.8,.25,1) both}
 @keyframes shfade{from{opacity:0}to{opacity:1}}
 @keyframes shrise{from{opacity:0;transform:translateY(14px) scale(.985)}

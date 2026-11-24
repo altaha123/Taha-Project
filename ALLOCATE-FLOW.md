@@ -30,7 +30,7 @@ Same person throughout — only the hands change.
 **Drawn, not photographed.** A stock photograph of a man in a tie would date
 the site, weigh several hundred kilobytes, need a licence, and pick a face for
 a reader who did not ask for one. `frontend/adviser.js` is about two kilobytes
-of inline SVG in the site's own tokens — ink line, paper fill, one gold accent
+of inline SVG in the site's own tokens — ink line, paper fill, one accent
 at the tie — so it draws in ink on cream and in cream on ink without a second
 asset, and stays sharp at any size.
 
