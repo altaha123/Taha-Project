@@ -41,6 +41,58 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 # seen yet, so the window is a day and a half rather than a calendar day.
 FILING_WINDOW_MINUTES = 36 * 60
 
+# The closing price is in by 16:00 IST (data_source.SESSION_SETTLED_MIN). A
+# digest built before then is a morning's prices under an evening's heading.
+SETTLED_MIN = 16 * 60
+
+
+def session_due(now, feed_date, not_before_min=SETTLED_MIN):
+    """The session whose digest may go out at `now`, and why: (session, why).
+
+    `feed_date` is the date of the index's last daily bar, or None when the
+    index feed did not answer. `not_before_min` is the minute of the day (IST)
+    the send opens at; never earlier than the close settling. The answer is a
+    session only when today traded and its evening has come. Every other
+    moment is (None, the reason), and the job sends nothing.
+
+    WHY TODAY ONLY
+    The job used to mail whatever session the feed ended on, whenever it was
+    called. Called on time, that is today's. But the scheduler ran it seven to
+    ten hours late every night of November 2026, after midnight in India, and
+    at that hour the index feed ended on the session BEFORE the one that had
+    closed: the job logged it four nights out of four. That older session had
+    not been mailed under its own date, so it was. At 01:34 on Saturday the
+    21st the feed's last session was Thursday the 19th, and Thursday's digest
+    is what went out, a day and a half after that close. A late run now sends
+    nothing and says so.
+
+    The same rule covers a holiday (the feed still ends on the last session,
+    so nobody is mailed the same closes twice), a weekend, and a run before
+    the evening.
+
+    With no index to ask, the calendar decides, as it always has: a weekday
+    evening goes out. That keeps one refused call to the index feed from
+    costing every subscriber the day's email.
+    """
+    now = now.astimezone(IST)
+    today = now.date().isoformat()
+    mins = now.hour * 60 + now.minute
+    opens = max(SETTLED_MIN, int(not_before_min))
+    early = "before %02d:%02d IST, when the day's digest goes out" % (opens // 60, opens % 60)
+    if not feed_date:
+        if now.weekday() >= 5:
+            return None, "weekend, and the index feed did not answer"
+        if mins < opens:
+            return None, early
+        return today, "by the calendar: the index feed did not answer"
+    if feed_date != today:
+        return None, ("the index feed ends on %s, not today: a holiday, a weekend, "
+                      "a run after midnight or before the open, or a feed that is behind"
+                      % feed_date)
+    if mins < opens:
+        return None, early
+    return today, "ok"
+
 
 def _num(v):
     try:

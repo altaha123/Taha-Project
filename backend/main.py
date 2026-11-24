@@ -1091,6 +1091,10 @@ def health():
         extras["accounts"] = accounts.stats()
     except Exception as e:
         extras["accounts"] = {"ok": False, "error": type(e).__name__}
+    try:
+        extras["digest"] = _digest_clock_status()
+    except Exception as e:
+        extras["digest"] = {"error": type(e).__name__}
 
     try:
         sym, t, h = resolve("AAPL")
@@ -5335,7 +5339,14 @@ def unsubscribe_post(token: str = ""):
 # The daily send
 # ---------------------------------------------------------------------------
 
-def _build_one_digest(holdings: list, index_pct=None, watchlist=None):
+def _build_one_digest(holdings: list, index_day=None, watchlist=None):
+    """One reader's digest. `index_day` is _index_day(): the index's last
+    session and its move on it.
+
+    The move is printed only beside holdings priced on that same session. An
+    index figure from one day next to a portfolio's move on another reads as
+    a comparison and is not one, so when the two dates differ the email
+    carries no index figure at all."""
     import digest as digest_mod
     ann_window = digest_mod.FILING_WINDOW_MINUTES
 
@@ -5345,37 +5356,44 @@ def _build_one_digest(holdings: list, index_pct=None, watchlist=None):
         except Exception:
             return []
 
-    return digest_mod.build_digest(holdings, resolve=resolve,
-                                   filings_for=_filings, index_pct=index_pct,
-                                   watchlist=watchlist)
+    index_date, index_pct = index_day if index_day else (None, None)
+    d = digest_mod.build_digest(holdings, resolve=resolve,
+                                filings_for=_filings, index_pct=index_pct,
+                                watchlist=watchlist)
+    if d.get("index_change_pct") is not None and d.get("data_date") != index_date:
+        d["index_change_pct"] = None
+    return d
 
 
-def _index_day_pct():
+def _index_day():
+    """The index's last session and its move on it: (YYYY-MM-DD, percent).
+    Either is None when the feed cannot say.
+
+    The date is what the daily send is keyed on rather than the calendar: on a
+    market holiday the feed still ends on the last session, so the job knows
+    there is nothing new to mail (digest.session_due). One read of the feed
+    answers both, so the date and the move are always from the same bar."""
     try:
         _s, _t, idx = resolve("^NSEI")
         closes = idx["Close"].dropna()
+        day = str(closes.index[-1])[:10]
+    except Exception:
+        return None, None
+    pct = None
+    try:
         if len(closes) >= 2:
             prev = float(closes.iloc[-2])
-            return round(100 * (float(closes.iloc[-1]) - prev) / prev, 2) if prev else None
+            pct = round(100 * (float(closes.iloc[-1]) - prev) / prev, 2) if prev else None
     except Exception:
-        pass
-    return None
+        pct = None
+    return day, pct
 
 
-def _market_data_date():
-    """The session the daily feed has actually settled, as YYYY-MM-DD.
-
-    This is what the digest is keyed on rather than the calendar date, and it
-    solves two problems with one lookup. On a market holiday the last session
-    is unchanged, so every subscriber is already marked sent and nobody is
-    mailed yesterday's closes a second time. And when the feed lags — it did
-    on 2026-09-10, still serving the 9th — the email is dated by the data
-    rather than by the clock."""
-    try:
-        _s, _t, idx = resolve("^NSEI")
-        return str(idx["Close"].dropna().index[-1])[:10]
-    except Exception:
-        return None
+def _digest_now():
+    """The clock the daily send reads, in IST. A function so a test can set
+    the time of day, which is most of what the send depends on."""
+    import digest as digest_mod
+    return _dt_mod.datetime.now(digest_mod.IST)
 
 
 @app.post("/me/digest/send-test")
@@ -5391,7 +5409,7 @@ def send_my_digest_now(authorization: Optional[str] = Header(None)):
     if not holdings:
         raise HTTPException(400, "Save a portfolio first.")
 
-    d = _build_one_digest(holdings, _index_day_pct(),
+    d = _build_one_digest(holdings, _index_day(),
                           watchlist=accounts.get_watchlist(user["id"]))
     unsub = f"{_site()}/unsubscribe?token={user['unsub_token']}"
     ok, detail = mailer.send(
@@ -5406,67 +5424,228 @@ def send_my_digest_now(authorization: Optional[str] = Header(None)):
 @app.post("/jobs/daily-digest")
 def run_daily_digest(x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
                      key: str = "", dry_run: bool = False, limit: int = 500):
-    """Send every subscriber their digest. Called by a scheduler, once, after
-    the close.
+    """Send every subscriber their digest, if today's is due.
 
-    Guarded by ADMIN_KEY, idempotent through accounts.send_log — a retry after
-    a crash re-sends to the people who were missed and to nobody else. The
-    market data is fetched ONCE for the union of everybody's symbols, which is
-    what keeps this affordable on a 512 MB instance.
+    Guarded by ADMIN_KEY. The server's own clock calls the same code at 17:45
+    IST (the daily send, on time, below); the scheduled workflow calls this as
+    the fallback. Whoever arrives second finds everybody already marked.
+    """
+    expected = ADMIN_KEY
+    if expected and (x_admin_key or key) != expected:
+        raise HTTPException(403, "Set X-Admin-Key.")
+    return _send_daily_digests(dry_run=dry_run, limit=limit, by="request")
+
+
+_digest_busy = threading.Lock()
+
+
+def _send_daily_digests(dry_run: bool = False, limit: int = 500, by: str = "request"):
+    """Today's digest to everybody who has not had it. Returns the counts.
+
+    Sends only for a session that traded today, from DIGEST_AT_IST on
+    (digest.session_due): any other moment answers with `session: None` and
+    the reason, and mails nobody. Idempotent through accounts.send_log, so a
+    retry after a crash re-sends to the people who were missed and to nobody
+    else. The market data is fetched ONCE for the union of everybody's
+    symbols, which is what keeps this affordable on a 512 MB instance.
+
+    A dry run builds every digest whatever the hour, and sends none.
     """
     import accounts
     import digest as digest_mod
     import email_render
     import mailer
 
-    expected = ADMIN_KEY
-    if expected and (x_admin_key or key) != expected:
-        raise HTTPException(403, "Set X-Admin-Key.")
+    now = _digest_now()
+    index_day = _index_day()
+    session, why = digest_mod.session_due(now, index_day[0], _digest_at_min())
+    out = {"date": session, "session": session, "due": session is not None,
+           "reason": why, "feed_date": index_day[0],
+           "recipients": 0, "sent": 0, "skipped": 0, "failed": 0,
+           "dry_run": dry_run, "provider": mailer.provider(),
+           "by": by, "at": now.isoformat(timespec="seconds")}
+    if session is None and not dry_run:
+        _digest_clock["last_ask"] = out
+        return out
+    # What each send is filed under. A dry run outside the hours is filed
+    # nowhere; it is dated by the feed so the answer says what it was built on.
+    today = session or index_day[0] or now.date().isoformat()
+    out["date"] = out["session"] = today
 
-    # Keyed on the market's last session, not on today's date — see
-    # _market_data_date(). A run on a holiday finds every subscriber already
-    # marked for that session and mails nobody.
-    today = _market_data_date() or _dt_mod.datetime.now(digest_mod.IST).date().isoformat()
-    people = accounts.digest_recipients()[:max(1, limit)]
-    index_pct = _index_day_pct()
+    # One run at a time: the clock and the workflow can arrive together, and
+    # both would find the same people unsent.
+    if not _digest_busy.acquire(blocking=False):
+        out.update(busy=True, reason="another run is sending now")
+        return out
+    try:
+        people = accounts.digest_recipients()[:max(1, limit)]
+        sent, skipped, failed = 0, 0, 0
+        for person in people:
+            if accounts.already_sent(person["id"], "daily", today):
+                skipped += 1
+                continue
+            holdings = accounts.get_holdings(person["id"])
+            if not holdings:
+                skipped += 1
+                continue
+            try:
+                d = _build_one_digest(holdings, index_day,
+                                      watchlist=accounts.get_watchlist(person["id"]))
+            except Exception as e:
+                failed += 1
+                accounts.record_send(person["id"], "daily", today, False,
+                                     f"build failed: {type(e).__name__}")
+                continue
+            if not digest_mod.is_worth_sending(d):
+                skipped += 1
+                continue
+            if dry_run:
+                sent += 1
+                continue
 
-    sent, skipped, failed = 0, 0, 0
-    for person in people:
-        if accounts.already_sent(person["id"], "daily", today):
-            skipped += 1
-            continue
-        holdings = accounts.get_holdings(person["id"])
-        if not holdings:
-            skipped += 1
-            continue
+            unsub = f"{_site()}/unsubscribe?token={person['unsub_token']}"
+            ok, detail = mailer.send(
+                person["email"], email_render.subject(d),
+                email_render.render_html(d, site=_site(), unsubscribe_url=unsub),
+                email_render.render_text(d, site=_site(), unsubscribe_url=unsub),
+                unsubscribe_url=unsub)
+            accounts.record_send(person["id"], "daily", today, ok, detail)
+            sent += 1 if ok else 0
+            failed += 0 if ok else 1
+        out.update(recipients=len(people), sent=sent, skipped=skipped, failed=failed)
+    finally:
+        _digest_busy.release()
+    if not dry_run:
+        _digest_clock["last_ask"] = _digest_clock["last_due"] = out
+    return out
+
+
+# ---------------------------------------------------------------------------
+# The daily send, on time
+#
+# The digest is an after-the-close email, and for its first two months the
+# only thing that started it was a scheduled GitHub workflow. GitHub runs a
+# schedule when it has room: across November 2026 the 17:45 IST run started
+# between 01:00 and 03:30 the next morning, every night. The email arrived in
+# the small hours, and at that hour the index feed ended on the session before
+# the one that had closed, so that older session is what it described.
+#
+# So the server keeps the time itself. Once a day, from DIGEST_AT_IST (17:45),
+# a thread calls the same code the endpoint does. It is safe to be wrong
+# about, in both directions:
+#
+#   - Restarts. The process restarts on every deploy and sometimes for no
+#     visible reason, which is why an in-process timer was first ruled out.
+#     This is not a timer that is lost with the process: every start looks at
+#     the clock, and one that comes up after 17:45 sends then. People already
+#     mailed are skipped, so a restart mid-send finishes the list.
+#   - Silence. The workflow still calls /jobs/daily-digest, as the fallback.
+#     If the clock here has died, the workflow's run is the one that sends,
+#     and its log says so in a warning, so a dead clock is a visible thing.
+#
+# A run that cannot send (a holiday, the feed behind, a failed delivery) is
+# tried again after 10, 30 and 60 minutes, then left for the day.
+#
+# Off with DIGEST_CLOCK=off, and off by itself when no email provider is
+# configured. GET /health reports it under "digest".
+# ---------------------------------------------------------------------------
+
+_DIGEST_RETRY_AFTER = (600, 1800, 3600)        # seconds; then no more that day
+# last_ask is the answer to the latest call, due or not; last_due the latest
+# one that was due, which is the one to read after a quiet evening.
+_digest_clock = {"thread": None, "day": None, "tries": 0, "next_try": None,
+                 "done": False, "last_ask": None, "last_due": None}
+_digest_clock_lock = threading.Lock()
+
+
+def _digest_at_min():
+    """Minutes after midnight IST at which the day's send is first tried."""
+    try:
+        h, m = os.environ.get("DIGEST_AT_IST", "17:45").strip().split(":")
+        v = int(h) * 60 + int(m)
+        if 0 <= v < 24 * 60:
+            return v
+    except Exception:
+        pass
+    return 17 * 60 + 45
+
+
+def _digest_clock_on():
+    if os.environ.get("DIGEST_CLOCK", "1").strip().lower() in ("0", "false", "no", "off"):
+        return False
+    try:
+        import mailer
+        return mailer.provider() != "console"
+    except Exception:
+        return False
+
+
+def _digest_clock_tick():
+    """One look at the clock. Sends when the day's digest is due and has not
+    gone; returns what the run answered, or None when there was nothing to do."""
+    now = _digest_now()
+    c = _digest_clock
+    day = now.date().isoformat()
+    if c["day"] != day:
+        c.update(day=day, tries=0, next_try=None, done=False)
+    if c["done"] or c["tries"] > len(_DIGEST_RETRY_AFTER):
+        return None
+    if now.hour * 60 + now.minute < _digest_at_min():
+        return None
+    if c["next_try"] is not None and now < c["next_try"]:
+        return None
+    out = _send_daily_digests(by="clock")
+    if out.get("busy"):
+        # Somebody else is sending. Look again in a minute; not a try of ours.
+        c["next_try"] = now + _dt_mod.timedelta(seconds=60)
+        return out
+    if out.get("session") == day and not out.get("failed"):
+        c["done"] = True
+        return out
+    if c["tries"] < len(_DIGEST_RETRY_AFTER):
+        c["next_try"] = now + _dt_mod.timedelta(seconds=_DIGEST_RETRY_AFTER[c["tries"]])
+    c["tries"] += 1
+    return out
+
+
+def _digest_clock_loop():
+    # Not in the first minute: the thread is started while the app is still
+    # being imported, and the port should be answering before this does work.
+    time.sleep(60)
+    while True:
         try:
-            d = _build_one_digest(holdings, index_pct,
-                                  watchlist=accounts.get_watchlist(person["id"]))
+            _digest_clock_tick()
         except Exception as e:
-            failed += 1
-            accounts.record_send(person["id"], "daily", today, False,
-                                 f"build failed: {type(e).__name__}")
-            continue
-        if not digest_mod.is_worth_sending(d):
-            skipped += 1
-            continue
-        if dry_run:
-            sent += 1
-            continue
+            print(f"[digest-clock] {type(e).__name__}: {e}", flush=True)
+        time.sleep(30)
 
-        unsub = f"{_site()}/unsubscribe?token={person['unsub_token']}"
-        ok, detail = mailer.send(
-            person["email"], email_render.subject(d),
-            email_render.render_html(d, site=_site(), unsubscribe_url=unsub),
-            email_render.render_text(d, site=_site(), unsubscribe_url=unsub),
-            unsubscribe_url=unsub)
-        accounts.record_send(person["id"], "daily", today, ok, detail)
-        sent += 1 if ok else 0
-        failed += 0 if ok else 1
 
-    return {"date": today, "session": today, "recipients": len(people),
-            "sent": sent, "skipped": skipped, "failed": failed,
-            "dry_run": dry_run, "provider": mailer.provider()}
+def _start_digest_clock():
+    """Start the clock unless it is running or switched off. Called on boot
+    and from /cron/tick, so a thread that died is put back."""
+    if not _digest_clock_on():
+        return False
+    with _digest_clock_lock:
+        t = _digest_clock["thread"]
+        if t is not None and t.is_alive():
+            return True
+        t = threading.Thread(target=_digest_clock_loop, daemon=True,
+                             name="altaha-digest-clock")
+        _digest_clock["thread"] = t
+        t.start()
+    return True
+
+
+def _digest_clock_status():
+    t = _digest_clock["thread"]
+    at = _digest_at_min()
+    return {"clock": "on" if _digest_clock_on() else "off",
+            "running": bool(t is not None and t.is_alive()),
+            "at_ist": "%02d:%02d" % (at // 60, at % 60),
+            "done_today": bool(_digest_clock["done"]),
+            "tries_today": _digest_clock["tries"],
+            "last_ask": _digest_clock["last_ask"],
+            "last_due": _digest_clock["last_due"]}
 
 
 @app.get("/brief")
@@ -6635,6 +6814,10 @@ def cron_tick():
     if not intraday._state["running"]:
         _autostart_intraday()
         revived = intraday._state["running"]
+    try:
+        _start_digest_clock()
+    except Exception:
+        pass
     fired, marked = [], 0
     if intraday.market_open() and intraday._state["running"]:
         try:
@@ -6666,6 +6849,13 @@ def cron_tick():
 
 
 _autostart_intraday()
+
+# The daily send keeps its own time (see "The daily send, on time"). A no-op
+# when no email provider is configured, so a test run or a laptop never mails.
+try:
+    _start_digest_clock()
+except Exception as _e:                                      # pragma: no cover
+    print(f"[digest-clock] not started: {type(_e).__name__}: {_e}", flush=True)
 
 
 # ---------------------------------------------------------------------------
