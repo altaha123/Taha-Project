@@ -75,6 +75,27 @@ os.environ.setdefault("DATA_DIR", tempfile.mkdtemp(prefix="altaha-tests-"))
 os.environ.setdefault("AUTOTRACK", "")
 
 
+@pytest.fixture(autouse=True)
+def _nothing_kept_between_tests():
+    """Every test starts with no settled sessions remembered and no holiday
+    list. data_source.resolve puts back a session a feed has dropped
+    (settled_bars.py), and that memory is one module and one file for the
+    whole run: without this, a bar one test fed in would be put back into
+    another test's frame, or not, depending on the date the suite ran on."""
+    import market_calendar
+    import settled_bars
+    try:
+        os.remove(settled_bars._PATH)
+    except OSError:
+        pass
+    settled_bars._mem["bars"] = None
+    # No list, and NSE never asked for one: a test that wants a holiday sets it.
+    held = dict(market_calendar._state)
+    market_calendar._state.update(days={}, at=0.0, loaded=True, retry_at=float("inf"))
+    yield
+    market_calendar._state.update(held)
+
+
 def ohlcv(closes, volume=None, tz=None, end=None):
     """
     A well-formed daily frame from a list of closes, ending TODAY by default.

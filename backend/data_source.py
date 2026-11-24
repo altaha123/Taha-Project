@@ -4,12 +4,20 @@ Altaha Screener — Data Layer
 Wraps yfinance with an in-memory cache (30 min; 5 min while the market
 trades) so repeated lookups and the leaderboard don't hammer the provider, plus ownership extraction from the
 quarterly shareholding data where published.
+
+A price history never goes back a session: the last settled sessions of every
+history fetched are remembered (settled_bars.py), and put back when a later
+fetch comes without them. After midnight in India the index feed does exactly
+that for some hours.
 """
 
 import datetime as dt
 import time
 import pandas as pd
 import yfinance as yf
+
+import market_calendar
+import settled_bars
 
 try:
     import dhan_source as dhan
@@ -37,11 +45,12 @@ MAX_CACHE = 120        # bounded for a 512 MB instance
 def _px_ttl(now=None):
     """How long a price history fetched `now` may be served from the cache.
 
-    Short while the session is on. Before the open on a weekday, never past
-    the open: a history cached at 09:10 would otherwise open the session with
-    yesterday's close for its price and yesterday's move for today's."""
+    Short while the session is on. Before the open on a trading day, never
+    past the open: a history cached at 09:10 would otherwise open the session
+    with yesterday's close for its price and yesterday's move for today's.
+    A weekend or a trading holiday has no session: the usual half hour."""
     n = (now or dt.datetime.now(IST)).astimezone(IST)
-    if n.weekday() >= 5:
+    if not market_calendar.trading_day(n.date()):
         return _TTL
     mins = n.hour * 60 + n.minute
     if SESSION_OPEN_MIN <= mins < SESSION_SETTLED_MIN:
@@ -115,6 +124,10 @@ def resolve(raw: str):
                 df = None
             if df is not None and len(df) >= 60:
                 df.attrs.update(price_source="Dhan", adjustment="unverified")
+                # A refetch can add a session or correct one. It can never
+                # take the newest one away: settled_bars.py has the night
+                # this was found on.
+                df = settled_bars.keep(f"{base}.NS", df)
                 _cput(key, df, MISSING_TODAY_TTL if df.attrs.get("today_missing") else _px_ttl())
                 return f"{base}.NS", yf.Ticker(f"{base}.NS"), df
 
@@ -128,6 +141,7 @@ def resolve(raw: str):
             if h is not None and len(h) >= 60:
                 h = h.dropna(subset=["Close"])
                 h.attrs.update(price_source="Yahoo Finance", adjustment="adjusted")
+                h = settled_bars.keep(sym, h)
                 _cput(f"px::{sym}", h, _px_ttl())
                 return sym, t, h
         except Exception:
