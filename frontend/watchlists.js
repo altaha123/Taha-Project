@@ -503,7 +503,7 @@
     var host = document.createElement('div');
     host.className = 'wl-confetti';
     host.setAttribute('aria-hidden', 'true');
-    var colors = ['#6382FF', '#2FD98B', '#5B9BD5', '#FF5C4D', '#9A7FD1', '#799CF5'];
+    var colors = ['#C5CAD3', '#2FD98B', '#5B9BD5', '#FF5C4D', '#9A7FD1', '#DBDFE4'];
     for (var i = 0; i < 70; i++) {
       var b = document.createElement('i');
       b.style.left = (Math.random() * 100) + '%';
@@ -673,7 +673,7 @@
           return '<button type="button" data-emoji="' + esc(e) + '"' + (e === l.emoji ? ' class="on"' : '') + '>' + e + '</button>';
         }).join('') + '</div>' +
         '<div class="wl-colors" role="group" aria-label="Colour">' + COLORS.map(function (c) {
-          return '<button type="button" class="c-' + c + (c === l.color ? ' on' : '') + '" data-color="' + c + '" aria-label="' + c + '"></button>';
+          return '<button type="button" class="c-' + c + (c === l.color ? ' on' : '') + '" data-color="' + c + '" aria-label="' + (c === 'gold' ? 'platinum' : c) + '"></button>';
         }).join('') + '</div>' +
       '</div>' +
     '</div>';

@@ -222,7 +222,7 @@ details.row.flash {
   animation: flashRow 1400ms var(--ease) both;
 }
 @keyframes flashRow {
-  0%, 70% { background: rgba(77,107,255,.14); }
+  0%, 70% { background: rgba(122,131,143,.14); }
   100%    { background: transparent; }
 }
 

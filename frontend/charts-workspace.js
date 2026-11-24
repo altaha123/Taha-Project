@@ -310,7 +310,7 @@
   var FIBEXT_LEVELS = [0, 0.382, 0.5, 0.618, 1, 1.272, 1.618, 2, 2.618];
   var FIB_COLORS = ["#6E6E78", "#8E2F2A", "#C0692B", "#1F5D45", "#1E7B85", "#2E5E8E", "#6E6E78", "#2E5E8E", "#8E2F2A", "#6B4E9B", "#B0457A"];
 
-  var PALETTE = ["#B08D2E", "#8A6D1E", "#0A0A0B", "#3C3C43", "#6E6E78", "#FFFFFF",
+  var PALETTE = ["#B08D2E", "#8A6D1E", "#0A0A0B", "#33333A", "#6E6E78", "#FFFFFF",
                  "#1F5D45", "#2E8B57", "#1E7B85", "#2E5E8E", "#4F7CC4", "#6B4E9B",
                  "#8E2F2A", "#D04A3C", "#C0692B", "#E0A526", "#B0457A", "#D9BC6A"];
   var CMP_COLORS = ["#2E5E8E", "#B0457A", "#1E7B85", "#C0692B"];
@@ -460,7 +460,7 @@
     return {
       layout: {
         background: { type: "solid", color: tok("--surface", "#ffffff") },
-        textColor: tok("--ink-2", "#3C3C43"),
+        textColor: tok("--ink-2", "#33333A"),
         fontFamily: "'IBM Plex Mono', monospace", fontSize: 11
       },
       grid: { vertLines: { color: grid }, horzLines: { color: grid } },
@@ -833,7 +833,7 @@
   function handles(list) {
     if (!list) return;
     ctx.fillStyle = tok("--surface", "#fff");
-    ctx.strokeStyle = tok("--gold", "#3D5AFF");
+    ctx.strokeStyle = tok("--gold", "#666D79");
     ctx.lineWidth = 1.5; ctx.setLineDash([]);
     list.forEach(function (q) {
       if (q.x == null || q.y == null) return;
@@ -870,7 +870,7 @@
   }
   function ratioOn(a, b, r) {
     if (!a || !b || !ok(r)) return;
-    label(r.toFixed(3), (a.x + b.x) / 2, (a.y + b.y) / 2, tok("--surface", "#fff"), tok("--ink-2", "#3C3C43"), 0.5);
+    label(r.toFixed(3), (a.x + b.x) / 2, (a.y + b.y) / 2, tok("--surface", "#fff"), tok("--ink-2", "#33333A"), 0.5);
   }
 
   function shape(d, g, ghost) {
@@ -1128,7 +1128,7 @@
         var gp = tok("--pass", "#1F5D45"), bd = tok("--fail", "#8E2F2A");
         fillRect(xL, yE, xR - xL, yS - yE, bd, 0.16);
         fillRect(xL, yE, xR - xL, yT - yE, gp, 0.16);
-        stroke(tok("--ink-2", "#3C3C43"), 1.2, "solid");
+        stroke(tok("--ink-2", "#33333A"), 1.2, "solid");
         seg({ x: xL, y: yE }, { x: xR, y: yE });
         var risk = Math.abs(entry - stop), rew = Math.abs(tgt - entry), longSide = tgt >= entry;
         var tl = "Target " + fmt(tgt) + "  " + pctS(entry ? (tgt - entry) / entry * 100 : 0) + "  " + (risk ? (rew / risk).toFixed(2) : "–") + "R";
@@ -1145,7 +1145,7 @@
           mid2 += "  Now " + (pnl >= 0 ? "+" : "") + (pnl / risk).toFixed(2) + "R";
           var yc = Y(cur);
           if (yc != null && Math.min(yS, yT) <= yc && yc <= Math.max(yS, yT)) {
-            stroke(tok("--ink-2", "#3C3C43"), 1, "dot"); seg({ x: xL, y: yc }, { x: xR, y: yc });
+            stroke(tok("--ink-2", "#33333A"), 1, "dot"); seg({ x: xL, y: yc }, { x: xR, y: yc });
           }
         }
         label(tl, xL + 4, yT + (yT > yE ? 12 : -12), gp, "#fff", 0);
@@ -1853,7 +1853,7 @@
     });
     var lab = document.createElement("label");
     lab.className = "cw-custom";
-    lab.innerHTML = '<input type="color" value="' + (/^#[0-9a-f]{6}$/i.test(cur) ? cur : "#3d5aff") + '"><span>Custom</span>';
+    lab.innerHTML = '<input type="color" value="' + (/^#[0-9a-f]{6}$/i.test(cur) ? cur : "#666d79") + '"><span>Custom</span>';
     lab.querySelector("input").addEventListener("change", function (e) { closePops(); fn(e.target.value); });
     wrap.appendChild(lab);
     return pop(anchor, wrap, "cw-pop-colors");
@@ -1896,7 +1896,7 @@
   function drawingSettings(d) {
     var before = JSON.stringify(W.drawings), c = d.color || W.color;
     var h = '<div class="cw-form">';
-    h += row("Colour", '<input type="color" data-k="color" value="' + (/^#[0-9a-f]{6}$/i.test(c) ? c : "#3d5aff") + '">');
+    h += row("Colour", '<input type="color" data-k="color" value="' + (/^#[0-9a-f]{6}$/i.test(c) ? c : "#666d79") + '">');
     h += row("Thickness", '<select data-k="width">' + [1, 2, 3, 4, 6, 8, 14].map(function (v) { return "<option" + ((d.width || 2) === v ? " selected" : "") + ">" + v + "</option>"; }).join("") + "</select>");
     h += row("Line", '<select data-k="style">' + [["solid", "Solid"], ["dash", "Dashed"], ["dot", "Dotted"]].map(function (v) { return '<option value="' + v[0] + '"' + ((d.style || "solid") === v[0] ? " selected" : "") + ">" + v[1] + "</option>"; }).join("") + "</select>");
     if (FILLED[d.type] || d.type === "path") h += row("Fill", '<input type="range" min="0" max="2" step="0.1" data-k="fill" value="' + (d.fill == null ? 1 : d.fill) + '">');
@@ -2124,7 +2124,7 @@
       else h += row(q.l, '<input type="number" data-p="' + q.k + '" min="' + q.min + '" max="' + q.max + '" step="' + (q.step || 1) + '" value="' + s.p[q.k] + '">');
     });
     def.out.forEach(function (o) {
-      h += row(o.l, '<input type="color" data-c="' + o.k + '" value="' + (/^#[0-9a-f]{6}$/i.test(colOf(s, o)) ? colOf(s, o) : "#3d5aff") + '">');
+      h += row(o.l, '<input type="color" data-c="' + o.k + '" value="' + (/^#[0-9a-f]{6}$/i.test(colOf(s, o)) ? colOf(s, o) : "#666d79") + '">');
     });
     if (def.note) h += "<p class='cw-p'>" + esc(def.note) + "</p>";
     h += "</div>";
@@ -2427,14 +2427,14 @@
   }
 
   function mainOpts() {
-    var up = upC(), dn = dnC(), ink = tok("--ink", "#0A0A0B"), gold = tok("--gold", "#3D5AFF");
+    var up = upC(), dn = dnC(), ink = tok("--ink", "#0A0A0B"), gold = tok("--gold", "#666D79");
     var base = { priceLineVisible: !!L.set.last, lastValueVisible: true, priceLineStyle: 2 };
     switch (L.type) {
       case "hollow": return ["Candlestick", Object.assign(base, { upColor: "rgba(0,0,0,0)", downColor: dn, borderUpColor: up, borderDownColor: dn, wickUpColor: up, wickDownColor: dn })];
       case "bars": return ["Bar", Object.assign(base, { upColor: up, downColor: dn, thinBars: false })];
       case "line": return ["Line", Object.assign(base, { color: ink, lineWidth: 2 })];
       case "step": return ["Line", Object.assign(base, { color: ink, lineWidth: 2, lineType: 1 })];
-      case "area": return ["Area", Object.assign(base, { lineColor: gold, topColor: hexA(gold.charAt(0) === "#" ? gold : "#3D5AFF", 0.3), bottomColor: hexA(gold.charAt(0) === "#" ? gold : "#3D5AFF", 0.02), lineWidth: 2 })];
+      case "area": return ["Area", Object.assign(base, { lineColor: gold, topColor: hexA(gold.charAt(0) === "#" ? gold : "#666D79", 0.3), bottomColor: hexA(gold.charAt(0) === "#" ? gold : "#666D79", 0.02), lineWidth: 2 })];
       case "baseline": {
         var bv = W.disp.length ? W.disp[Math.max(0, W.disp.length - 120)].close : 0;
         return ["Baseline", Object.assign(base, { baseValue: { type: "price", price: bv }, topLineColor: up, bottomLineColor: dn,
@@ -3212,7 +3212,7 @@
     inp.addEventListener("keydown", function (e) { e.stopPropagation(); if (e.key === "Enter") go(); });
   }
   function flash(o) {
-    o.style = "dash"; o.width = 1; o.color = tok("--gold", "#3D5AFF");
+    o.style = "dash"; o.width = 1; o.color = tok("--gold", "#666D79");
     W.drawings.push(o); render();
     setTimeout(function () { W.drawings = W.drawings.filter(function (x) { return x !== o; }); render(); }, 1600);
   }

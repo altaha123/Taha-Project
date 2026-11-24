@@ -83,7 +83,7 @@ html.bk-open{overflow:hidden}
 .bk-page [hidden]{display:none !important}
 .bk-top{margin:0 0 22px}
 .bk-h1{font:400 clamp(32px,4.6vw,52px)/1.05 'Instrument Serif',Georgia,serif;letter-spacing:-.025em;margin:0}
-.bk-h1 em{color:var(--gold);font-style:italic}
+.bk-h1 em{color:var(--accent-em,var(--gold));font-style:italic}
 .bk-lede{font-size:16px;line-height:1.6;color:var(--ink-2);margin:12px 0 0;max-width:660px}
 .bk-card{background:var(--skin-card,#FFFFFF);border:1px solid var(--rule);border-radius:18px;padding:18px;box-shadow:var(--skin-shadow);min-width:0}
 .bk-card h2{font:400 28px/1.15 'Instrument Serif',Georgia,serif;margin:0 0 14px}

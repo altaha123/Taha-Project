@@ -31,14 +31,14 @@
   --paper:   #FFFFFF;
   --paper-2: #F5F5F7;
   --ink:     #0A0A0B;
-  --ink-2:   #3C3C43;
-  --mute:    #6B6B76;
-  --rule:    #E4E4E8;
-  --rule-2:  #EEEEF1;
+  --ink-2:   #33333A;
+  --mute:    #5E5E69;
+  --rule:    #E3E4E8;
+  --rule-2:  #EEEFF2;
 
-  --gold:    #1F3DFF;
-  --gold-lt: #5C76FF;
-  --gold-dp: #1228C9;
+  --gold:    #0A0A0B;
+  --gold-lt: #6F7886;
+  --gold-dp: #000000;
 
   --pass: #0A7548;
   --part: #A84D08;
@@ -67,7 +67,7 @@
           0 12px 32px rgba(10,10,11,.05);
   --sh-3: 0 2px 4px rgba(10,10,11,.06), 0 12px 28px rgba(10,10,11,.10),
           0 32px 64px rgba(10,10,11,.10);
-  --ring: 0 0 0 3.5px rgba(77,107,255,.30);
+  --ring: 0 0 0 3.5px rgba(122,131,143,.30);
 
   --r-card:  14px;
   --r-panel: 20px;
@@ -86,15 +86,15 @@ html[data-theme="dark"] {
 
   --paper:   #000000;
   --paper-2: #0B0B0D;
-  --ink:     #FAFAFA;
-  --ink-2:   #C4C4CC;
-  --mute:    #8D8D97;
+  --ink:     #F5F5F7;
+  --ink-2:   #D2D2D8;
+  --mute:    #9C9CA6;
   --rule:    #2A2A2F;
   --rule-2:  #1B1B1F;
 
-  --gold:    #6382FF;
-  --gold-lt: #5C76FF;
-  --gold-dp: #7C96FF;
+  --gold:    #F2F3F5;
+  --gold-lt: #AEB5C0;
+  --gold-dp: #FFFFFF;
 
   --pass: #2FD98B;
   --part: #F5B544;
@@ -113,7 +113,7 @@ html[data-theme="dark"] {
   --sh-1: 0 .5px 1px rgba(0,0,0,.5);
   --sh-2: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.45);
   --sh-3: 0 2px 6px rgba(0,0,0,.5), 0 20px 48px rgba(0,0,0,.55);
-  --ring: 0 0 0 3.5px rgba(99,130,255,.32);
+  --ring: 0 0 0 3.5px rgba(197,202,211,.32);
 }
 
 /* Hardcoded #fff in the original sheet, rerouted. Explicit, not wildcard. */
@@ -194,7 +194,7 @@ body {
   font-feature-settings: 'tnum' 1, 'zero' 1;
 }
 
-::selection { background: rgba(77,107,255,.28); color: var(--ink); }
+::selection { background: rgba(122,131,143,.28); color: var(--ink); }
 :focus-visible { outline: none; box-shadow: var(--ring); border-radius: 8px; }
 
 /* ── 3. TICKER BAR ─────────────────────────────────────────────────────── */
@@ -241,7 +241,7 @@ header.wrap::after {
   content: "";
   position: absolute; inset: -10% -25% 30% -25%; z-index: -2;
   background: radial-gradient(52% 74% at 50% 30%,
-              rgba(77,107,255,.15) 0%, rgba(77,107,255,0) 72%);
+              rgba(122,131,143,.15) 0%, rgba(122,131,143,0) 72%);
   pointer-events: none;
 }
 
@@ -606,7 +606,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 .themeseg button svg { display: block; }
 .themeseg button:hover { color: rgba(255,255,255,.82); }
 .themeseg button.on { color: #0A0A0B; }
-.themeseg button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(99,130,255,.6); }
+.themeseg button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(197,202,211,.6); }
 
 /* One puck that slides, rather than two backgrounds that flick. */
 .themepuck {

@@ -325,7 +325,7 @@
     function colourFor(direction) {
       if (direction === "bullish") return tok("--pass", "#1F5D45");
       if (direction === "bearish") return tok("--fail", "#8E2F2A");
-      return tok("--gold", "#3D5AFF");
+      return tok("--gold", "#666D79");
     }
 
     function dash(c, a, b, colour, width) {

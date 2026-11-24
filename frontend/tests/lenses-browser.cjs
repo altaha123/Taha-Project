@@ -252,7 +252,7 @@ async function viewText(page, id) {
   await page.evaluate(() => window.AltahaNav.go('research', 'lenses', true));
   await page.waitForTimeout(400);
   const bg = await page.locator('.ln-card').first().evaluate(n => getComputedStyle(n).backgroundColor);
-  assert.notEqual(bg, 'rgb(255, 253, 248)', 'cards take the dark card colour');
+  assert.notEqual(bg, 'rgb(255, 255, 255)', 'cards take the dark card colour');
   await page.screenshot({ path: path.join(output, 'index-dark.png'), fullPage: true });
 
   // ── The stock page carries no lenses ───────────────────────────────────

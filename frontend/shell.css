@@ -157,11 +157,11 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 .sh-head .corr{
   flex:0 0 auto; font:600 10px/1 'IBM Plex Mono',monospace;
   padding:3px 6px; border-radius:99px;
-  border:1px solid rgba(99,130,255,.35); color:var(--gold-lt);
+  border:1px solid rgba(197,202,211,.35); color:var(--gold-lt);
 }
 .sh-ribbon-clock{
   flex:0 0 auto; font:500 11px/1 'IBM Plex Mono',monospace;
-  opacity:.66; white-space:nowrap;
+  white-space:nowrap;
 }
 @media (max-width:720px){ .sh-ribbon-clock{ display:none } }
 
@@ -248,7 +248,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
    logo — the arrow would point the other way — so it lifts instead. */
 .sh-brand:hover .mk{ transform:translateY(-1px) scale(1.06) }
 .sh-brand .nm{ font-size:16px }
-.sh-brand .nm i{ font-family:'Instrument Serif',Georgia,serif; font-style:italic; color:var(--gold) }
+.sh-brand .nm i{ font-family:'Instrument Serif',Georgia,serif; font-style:italic; color:var(--accent-em,var(--gold)) }
 @media (max-width:560px){ .sh-brand .nm{ display:none } }
 
 .sh-nav{ display:flex; align-items:stretch; gap:2px; height:100%; flex:1 1 auto; min-width:0 }
@@ -332,7 +332,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 }
 .sh-search input:focus{
   outline:none; border-color:var(--gold);
-  box-shadow:0 0 0 4px rgba(31,61,255,.14), var(--e2);
+  box-shadow:0 0 0 4px var(--accent-wash,rgba(10,10,11,.06)), var(--e2);
   background:var(--skin-card);
 }
 .sh-search input::placeholder{ color:var(--mute) }
@@ -396,11 +396,12 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-account:hover{ background:var(--paper-2); color:var(--ink) }
 .sh-pro{
   font:600 12px/1 Inter, system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--on-accent,#fff); background:var(--gold); text-decoration:none; padding:9px 12px;
-  border:1px solid var(--gold); border-radius:9px; white-space:nowrap;
+  color:var(--on-metal,#0A0A0B); background:var(--metal,#E9ECF0); text-decoration:none; padding:9px 12px;
+  border:1px solid var(--metal-edge,#C2C8D1); border-radius:9px; white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
   transition:filter var(--t-fast) var(--ease);
 }
-.sh-pro:hover{ filter:brightness(1.08) }
+.sh-pro:hover{ filter:brightness(1.04) }
 .sh-pro:focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
 .sh-adv{
   font:600 13px/1 Inter, system-ui, sans-serif; color:var(--ink-2); text-decoration:none;
@@ -460,7 +461,7 @@ a.sh-item{ text-decoration:none; color:inherit }
 .d3-card.tilt:hover::after{ opacity:1 }
 :root[data-theme="dark"] .d3-card.tilt::after{
   background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),
-             rgba(99,130,255,.10), transparent 45%);
+             rgba(197,202,211,.10), transparent 45%);
 }
 
 .d3-lift{ transition:transform var(--t-mid) var(--ease-out), box-shadow var(--t-mid) var(--ease) }
@@ -517,7 +518,7 @@ a.sh-item{ text-decoration:none; color:inherit }
 
 html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 
-/* The tape: a gold Live tag, the moving rail, the IST clock. */
+/* The tape: a Live tag in the accent, the moving rail, the IST clock. */
 .sh-ticker::before, .sh-ticker::after{ display:none }
 .sh-livetag{ flex:none; display:flex; align-items:center; gap:8px; align-self:stretch; padding:0 14px;
   background:var(--gold); color:var(--on-accent,#fff); font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em; text-transform:uppercase }
@@ -525,7 +526,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-livetag .sh-dot::after{ content:''; position:absolute; inset:0; border-radius:50%; background:inherit; animation:shPing 1.7s ease-out infinite }
 @keyframes shPing{ 0%{ transform:scale(1); opacity:.7 } 100%{ transform:scale(3.2); opacity:0 } }
 /* Outside the session (shell.js paintTape) the tag reads Closed or Pre-open,
-   and it stops looking live: no gold, and a dot that does not beat. */
+   and it stops looking live: no accent fill, and a dot that does not beat. */
 .sh-livetag.is-off{ background:var(--paper-2); color:var(--ink-2); box-shadow:inset -1px 0 0 var(--rule) }
 .sh-livetag.is-off .sh-dot{ background:var(--mute); animation:none; box-shadow:none }
 .sh-livetag.is-off .sh-dot::after{ display:none }
@@ -584,7 +585,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 /* Me: one button, one menu. */
 .sh-mewrap{ position:relative; flex:0 0 auto; margin-left:auto }
 .sh-me{ width:42px; height:42px; border-radius:50%; background:var(--paper-2); color:var(--gold-dp, var(--gold)) }
-.sh-me[aria-expanded="true"]{ box-shadow:0 0 0 3px rgba(31,61,255,.25) }
+.sh-me[aria-expanded="true"]{ box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 22%,transparent) }
 .sh-memenu{ position:absolute; top:calc(100% + 10px); right:0; z-index:60; width:310px; padding:8px;
   background:var(--skin-card, var(--paper)); border:1px solid var(--rule); border-radius:18px; box-shadow:var(--e3);
   display:none; transform-origin:100% 0 }
@@ -597,7 +598,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
   text-align:left; text-decoration:none; filter:none !important; max-width:none !important }
 .sh-memenu .sh-right > *:hover{ background:var(--paper-2) !important }
 .sh-memenu .sh-right small{ font-size:12px; font-weight:400; color:var(--mute) }
-.sh-memenu .sh-right .sh-pro{ color:var(--gold-dp, var(--gold)) !important; font-weight:600 !important }
+.sh-memenu .sh-right .sh-pro{ color:var(--gold-dp, var(--gold)) !important; font-weight:600 !important; box-shadow:none !important }
 .sh-memenu .sh-merow{ display:flex; align-items:center; justify-content:space-between; padding:6px 12px; margin:4px 0;
   border-top:1px solid var(--rule-2); border-bottom:1px solid var(--rule-2); font-size:14px }
 .sh-melearn h4{ margin:8px 12px 2px; font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--mute) }
@@ -610,7 +611,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-pin:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
 .sh-pin{ flex:none; display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border:1px dashed var(--gold);
   border-radius:16px; background:transparent; color:var(--gold-dp, var(--gold)); font:500 12px/1 var(--sans, Inter, sans-serif); cursor:pointer }
-.sh-pin.on{ border-style:solid; background:rgba(31,61,255,.14) }
+.sh-pin.on{ border-style:solid; background:var(--accent-wash,rgba(10,10,11,.06)) }
 
 .sh-doorbar .sh-pin{ margin-left:auto }
 
@@ -646,11 +647,11 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
    Dark in both themes, like the market panel on Market, so the panel has one
    heavy thing in it and the eye knows where to start. */
 .sh-mega-lead{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; gap:9px;
-  min-height:214px; padding:20px 20px 18px; border:0; border-radius:14px; background:#0A0A0B; color:#FFFFFF;
+  min-height:214px; padding:20px 20px 18px; border:0; border-radius:14px; background:linear-gradient(160deg,#1A1B1E 0%,#0A0A0B 46%,#050506 100%); color:#FFFFFF;
   font:400 13px/1.45 var(--sans, Inter, system-ui, sans-serif); text-align:left; cursor:pointer;
   transition:box-shadow .3s var(--ease) }
 .sh-mega-lead::before{ content:''; position:absolute; left:-90px; top:-160px; width:280px; height:280px; border-radius:50%;
-  background:rgba(31,61,255,.6); filter:blur(48px); pointer-events:none; transition:transform .7s var(--ease-out) }
+  background:rgba(206,212,221,.22); filter:blur(48px); pointer-events:none; transition:transform .7s var(--ease-out) }
 .sh-mega-lead::after{ content:''; position:absolute; inset:0; pointer-events:none;
   background-image:linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
   background-size:38px 38px }
@@ -658,31 +659,31 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-mega-lead:hover{ box-shadow:0 10px 26px rgba(10,10,11,.28) }
 .sh-mega-lead:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; border-radius:14px; box-shadow:none }
 /* On the dark theme the panel is nearly the card's own colour; a hairline keeps its edge. */
-:root[data-theme="dark"] .sh-mega-lead{ box-shadow:inset 0 0 0 1px rgba(99,130,255,.2) }
+:root[data-theme="dark"] .sh-mega-lead{ box-shadow:inset 0 0 0 1px rgba(197,202,211,.2) }
 .sh-mega-lead > *{ position:relative; z-index:1 }
 .sh-mega-mark{ position:absolute !important; right:-26px; bottom:-30px; width:112px; height:112px; color:#FFFFFF; opacity:.09; z-index:0 !important;
   transition:transform .7s var(--ease-out), opacity .4s var(--ease) }
 .sh-mega-lead:hover .sh-mega-mark{ transform:translate(-6px,-6px) rotate(-6deg); opacity:.15 }
 .sh-mega-kick{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.14em;
-  text-transform:uppercase; color:#9DB0FF }
-.sh-mega-status{ display:inline-flex; align-items:center; gap:6px; color:#C4C4CC; font-weight:500; letter-spacing:.1em }
+  text-transform:uppercase; color:#E8EBEF }
+.sh-mega-status{ display:inline-flex; align-items:center; gap:6px; color:#D2D2D8; font-weight:500; letter-spacing:.1em }
 .sh-mega-status:empty{ display:none }
-.sh-mega-status::before{ content:''; width:6px; height:6px; border-radius:50%; background:#6B6B76 }
+.sh-mega-status::before{ content:''; width:6px; height:6px; border-radius:50%; background:#5E5E69 }
 .sh-mega-status.live{ color:#6FD39A }
 .sh-mega-status.live::before{ background:#6FD39A; box-shadow:0 0 0 3px rgba(111,211,154,.2) }
 .sh-mega-q{ font:400 28px/1.06 var(--serif, 'Instrument Serif', Georgia, serif); letter-spacing:-.005em; color:#FFFFFF }
-.sh-mega-p{ max-width:26ch; font-size:13px; color:#C4C4CC }
+.sh-mega-p{ max-width:26ch; font-size:13px; color:#D2D2D8 }
 .sh-mega-live{ display:grid; gap:7px; width:100%; margin-top:2px; padding-top:11px; border-top:1px solid rgba(255,255,255,.13) }
 .sh-mega-live[hidden]{ display:none }
 .sh-mega-ix{ display:grid; grid-template-columns:minmax(0,1fr) auto 58px; gap:10px; align-items:baseline;
   font:500 12px/1.2 'IBM Plex Mono',monospace; color:#EEEEF1 }
-.sh-mega-ix > :first-child{ color:#C4C4CC; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.sh-mega-ix > :first-child{ color:#D2D2D8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .sh-mega-ix > :last-child{ text-align:right }
 .sh-mega-ix .up{ color:#6FD39A } .sh-mega-ix .dn{ color:#FF9B85 }
 .sh-mega-go{ display:inline-flex; align-items:center; gap:8px; height:34px; margin-top:auto; padding:0 15px; border-radius:17px;
-  background:#99AEDF; color:#0A0A0B; font:600 13px/1 var(--sans, Inter, system-ui, sans-serif);
+  background:#E5E7EA; color:#0A0A0B; font:600 13px/1 var(--sans, Inter, system-ui, sans-serif);
   transition:gap .25s var(--ease-out), background-color .2s var(--ease) }
-.sh-mega-lead:hover .sh-mega-go, .sh-mega-lead:focus-visible .sh-mega-go{ gap:13px; background:#B6C7EF }
+.sh-mega-lead:hover .sh-mega-go, .sh-mega-lead:focus-visible .sh-mega-go{ gap:13px; background:#EEF0F2 }
 /* You are on this door's own page: the card says so instead of offering it. */
 .sh-mega-lead[aria-current="page"] .sh-mega-go{ background:rgba(255,255,255,.12); color:#FFFFFF }
 .sh-mega-lead[aria-current="page"] .sh-mega-go svg{ display:none }
@@ -799,14 +800,14 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--gold); outline-offse
   padding:16px 14px 17px 18px; border:0; border-radius:18px; background:#0A0A0B; color:#FFFFFF; text-align:left; cursor:pointer;
   font:400 13px/1.4 var(--sans, Inter, system-ui, sans-serif); -webkit-tap-highlight-color:transparent }
 .sh-sheet-lead::before{ content:''; position:absolute; left:-80px; top:-150px; width:260px; height:260px; border-radius:50%;
-  background:rgba(31,61,255,.6); filter:blur(46px); pointer-events:none }
+  background:rgba(206,212,221,.22); filter:blur(46px); pointer-events:none }
 .sh-sheet-lead:active{ transform:scale(.99) }
 .sh-sheet-lead:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; border-radius:18px; box-shadow:none }
-:root[data-theme="dark"] .sh-sheet-lead{ box-shadow:inset 0 0 0 1px rgba(99,130,255,.2) }
+:root[data-theme="dark"] .sh-sheet-lead{ box-shadow:inset 0 0 0 1px rgba(197,202,211,.2) }
 .sh-sheet-lead-t{ position:relative; flex:1 1 auto; min-width:0; display:grid; gap:8px }
 .sh-sheet-lead .sh-mega-q{ font-size:24px }
 .sh-sheet-lead-go{ position:relative; flex:none; display:grid; place-items:center; width:40px; height:40px; border-radius:50%;
-  background:#99AEDF; color:#0A0A0B }
+  background:#E5E7EA; color:#0A0A0B }
 .sh-sheet-lead[aria-current="page"] .sh-sheet-lead-go{ display:none }
 
 .sh-sheet-group h4{ margin:18px 8px 5px; font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em; color:var(--mute) }

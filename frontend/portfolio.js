@@ -1858,10 +1858,10 @@
       'body{margin:0;padding:34px 20px;background:#fff;color:#131315;' +
         'font-family:Inter,-apple-system,Segoe UI,sans-serif;line-height:1.6}' +
       '.wrap{max-width:860px;margin:0 auto}' +
-      '.rpt-head{border-bottom:2px solid #4B73EB;padding-bottom:16px;margin-bottom:28px}' +
+      '.rpt-head{border-bottom:2px solid #7B828C;padding-bottom:16px;margin-bottom:28px}' +
       '.rpt-brand{font-family:Georgia,serif;font-size:28px;letter-spacing:-.01em;' +
         'display:flex;align-items:center;gap:11px}' +
-      '.rpt-brand i{color:#1D2EFE;font-style:italic}' +
+      '.rpt-brand i{color:#444A53;font-style:italic}' +
       '.rpt-mark{height:34px;width:auto;display:block}' +
       '.rpt-sub{font-size:11px;letter-spacing:.22em;text-transform:uppercase;' +
         'color:#6B6C6E;margin-top:6px}' +

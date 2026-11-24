@@ -692,8 +692,8 @@
     // Ground
     x.fillStyle = '#0A0B0E'; x.fillRect(0, 0, W, H);
     var glow = x.createRadialGradient(W / 2, 300, 40, W / 2, 300, 720);
-    glow.addColorStop(0, 'rgba(77,107,255,.16)');
-    glow.addColorStop(1, 'rgba(77,107,255,0)');
+    glow.addColorStop(0, 'rgba(122,131,143,.16)');
+    glow.addColorStop(1, 'rgba(122,131,143,0)');
     x.fillStyle = glow; x.fillRect(0, 0, W, H);
 
     // Chart paper
@@ -774,7 +774,7 @@
     x.fillText(when, cx, 1200);
     x.fillStyle = 'rgba(255,255,255,.34)'; x.font = '400 19px ' + M;
     x.fillText('Every calculation shown at the source', cx, 1240);
-    x.fillStyle = 'rgba(77,107,255,.72)'; x.font = '500 21px ' + M;
+    x.fillStyle = 'rgba(122,131,143,.72)'; x.font = '500 21px ' + M;
     x.fillText('altahascreener.in', cx, 1284);
 
     return { canvas: c, sym: sym || 'stock' };

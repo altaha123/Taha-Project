@@ -25,22 +25,22 @@
 /* ── 1 · READABLE ACCENT, READABLE GREY ───────────────────────────────────
    Body text needs 4.5:1. These are the same values altaha-skin.css sets, and
    that file is where the palette lives; they are repeated here only so a
-   page is right in the moment before the skin arrives. The accent measures
-   6.6:1 on white and 6.2:1 on black, the hint grey 5.3:1 and 6.4:1. Lines
-   and underlines use the softer accent, where the standard is 3:1.        */
+   page is right in the moment before the skin arrives. The accent is ink,
+   19.8:1 on white and 18.8:1 on black; the hint grey is 6.5:1 and 7.6:1.
+   Rules and underlines use the steel, which clears 4.5:1 on both.         */
 
 :root {
-  --gold:     #1F3DFF;
-  --gold-dp:  #1228C9;
-  --mute:     #6B6B76;
-  --gold-line: #5C76FF;
+  --gold:     #0A0A0B;
+  --gold-dp:  #000000;
+  --mute:     #5E5E69;
+  --gold-line: #6F7886;
 }
 
 html[data-theme="dark"] {
-  --gold:     #6382FF;
-  --gold-dp:  #7C96FF;
-  --mute:     #8D8D97;
-  --gold-line: #5C76FF;
+  --gold:     #F2F3F5;
+  --gold-dp:  #FFFFFF;
+  --mute:     #9C9CA6;
+  --gold-line: #AEB5C0;
 }
 
 /* The decorative divider under the wordmark keeps the brighter gold. */
@@ -226,7 +226,7 @@ button#go, button#rgo {
 }
 .navsub-btn small, .navsub-btn span { opacity: .82; }
 .navsub-btn.on, .navsub-btn[aria-selected="true"] {
-  border-bottom: 2px solid var(--gold-line, #3D5AFF) !important;
+  border-bottom: 2px solid var(--gold-line, #666D79) !important;
 }
 .navsub-inner { gap: 26px !important; }
 

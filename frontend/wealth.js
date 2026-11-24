@@ -46,7 +46,9 @@
   var PRIV_KEY = 'altaha-wealth-private-v1';
   var UNI_KEY = 'altaha-universe-v2';
   var COLORS = ['gold', 'green', 'blue', 'rose', 'violet', 'slate'];
-  var PALETTE = ['#4D6BFF', '#2F9E6E', '#3D7FB8', '#C8566B', '#8B6BC4', '#66758A', '#D9822B', '#4BA3A3', '#9C6B4E', '#A3A34B'];
+  /* The first slice is the accent itself (ink by day, platinum by night); a
+     fixed grey here sat too close to the slate further along. */
+  var PALETTE = ['var(--gold)', '#2F9E6E', '#3D7FB8', '#C8566B', '#8B6BC4', '#66758A', '#D9822B', '#4BA3A3', '#9C6B4E', '#A3A34B'];
   var CTABS = [['holdings', 'Holdings'], ['ledger', 'Ledger'], ['fees', 'Fees'], ['profile', 'Profile']];
 
   var S = {
@@ -460,7 +462,7 @@
     var line = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
     var fill = line + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + H + ' L' + pts[0][0].toFixed(1) + ' ' + H + ' Z';
     var gid = id + 'g';
-    var col = opts.light ? 'var(--a, var(--gold))' : 'var(--a2, #A5BBED)';
+    var col = opts.light ? 'var(--a, var(--gold))' : 'var(--a2, #EBEDEF)';
     CHARTS[id] = { pts: pts, dates: dates || [], W: W, H: H, fmt: opts.fmt || inr };
     var grid = [0.25, 0.5, 0.75].map(function (f) { return '<line class="gd" vector-effect="non-scaling-stroke" x1="0" x2="' + W + '" y1="' + (H * f) + '" y2="' + (H * f) + '"/>'; }).join('');
     return '<div class="wd-area' + (opts.light ? ' light' : '') + '" id="' + id + '" role="img" aria-label="' + esc(opts.label || 'Value over the last sessions') + '">' +
@@ -481,7 +483,7 @@
       var tip = el.querySelector('.wd-tip'), cx = el.querySelector('.cx');
       var dot = document.createElement('span');
       dot.style.cssText = 'position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);display:none;pointer-events:none;' +
-        'background:#FFFFFF;border:3px solid var(--a, #4D6BFF);box-shadow:0 2px 8px rgba(0,0,0,.3)';
+        'background:#FFFFFF;border:3px solid var(--a, #7A838F);box-shadow:0 2px 8px rgba(0,0,0,.3)';
       el.appendChild(dot);
       function at(clientX) {
         var r = el.getBoundingClientRect();
@@ -660,7 +662,7 @@
 
   function marketPill(b) {
     return b.market_open ? '<span class="wd-pill wd-live up"><i></i>Market open</span>'
-      : '<span class="wd-pill"><i style="color:#8D8D97"></i>Market closed · last close</span>';
+      : '<span class="wd-pill"><i style="color:#9C9CA6"></i>Market closed · last close</span>';
   }
 
   /* ── Overview ────────────────────────────────────────────────────────── */
@@ -1512,7 +1514,7 @@
         '<a class="wd-btn" href="wealth.html?demo=1">' + ic('spark') + 'Explore a sample desk</a></div>' +
         '<p class="wd-note">Free. Your book is private to your account. A client sees their own portfolio only if you switch that on.</p></div>' +
       '<div class="wd-stage" aria-hidden="true">' +
-        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:#A5BBED">Book value</p><p class="wd-big" style="font-size:42px">₹7,62,56,240</p>' +
+        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:#EBEDEF">Book value</p><p class="wd-big" style="font-size:42px">₹7,62,56,240</p>' +
           '<div class="wd-hero-sub"><span class="wd-pill up">▲ +₹1,24,800 today</span><span class="wd-pill">42 clients</span></div></div>' +
         '<div class="wd-float f2 c-rose"><div class="wd-card-top"><span class="wd-av">AK</span><span class="wd-card-n"><b>Ayesha Kapoor</b><small>AK-01 · Mumbai</small></span></div>' +
           '<div class="wd-card-v" style="margin-top:10px"><b>₹28.9 L</b><span class="ret up">+15.4%</span></div>' + spark([10, 12, 11, 14, 13, 16, 18, 17, 20, 22]) + '</div>' +

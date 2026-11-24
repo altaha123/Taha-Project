@@ -23,9 +23,10 @@
 }
 
 /* ── 1 · PALETTE ─────────────────────────────────────────────────────────
-   White paper, black ink, one ultramarine. Light is pure white and dark is
-   true black; the only colour that belongs to the brand is the accent, and
-   green, red and amber are kept for what the market is doing.
+   Platinum. White paper and black ink by day, true black and platinum white
+   by night, and brushed silver where the old site used gold. There is no
+   brand colour: black does the work on white and white does it on black, so
+   the only colour on a page is what the market is doing, green, red, amber.
 
    This block is the palette. Every page loads this file, and it outranks
    the copies in index.html and premium.css, which exist only so the first
@@ -35,17 +36,27 @@
    thousand rules name those, and what changed was the colour, not the job.
    New rules should say --accent.
 
-   Measured: ink 19.8:1 and mute 5.3:1 on white; accent 6.6:1 on white and
-   6.2:1 on black, so it is safe as text in both themes. On an accent fill
-   the text is --on-accent: white on the light theme's deep blue (6.6:1),
-   near-black on the dark theme's lighter one (6.0:1).                     */
+     --accent          what you press and what is selected: ink
+     --on-accent       the text on an accent fill: paper
+     --accent-soft     steel, for rules, rings and quiet marks. 4.5:1 on both
+                       white and black, so a label set in it still reads
+     --accent-em       the second voice in a headline, the italic word
+     --metal           brushed platinum, for the few things that should feel
+                       like an object: a mark, a monogram, a badge
+     --on-metal        the text on it, always ink
+
+   Measured on white: ink 19.8:1, secondary 12.7:1, hints 6.5:1. On black:
+   18.8:1, 13.6:1 and 7.6:1. Nothing that is read is under 4.5:1.          */
 
 :root, :root[data-theme="light"]{
   --paper:#FFFFFF; --paper-2:#F5F5F7;
-  --ink:#0A0A0B; --ink-2:#3C3C43; --mute:#6B6B76;
-  --rule:#E4E4E8; --rule-2:#EEEEF1;
-  --accent:#1F3DFF; --accent-soft:#5C76FF; --accent-strong:#1228C9; --on-accent:#FFFFFF;
-  --accent-wash:rgba(31,61,255,.07);
+  --ink:#0A0A0B; --ink-2:#33333A; --mute:#5E5E69;
+  --rule:#E3E4E8; --rule-2:#EEEFF2;
+  --accent:#0A0A0B; --accent-soft:#6F7886; --accent-strong:#000000; --on-accent:#FFFFFF;
+  --accent-em:#5F6875; --accent-wash:rgba(10,10,11,.045);
+  --metal:linear-gradient(135deg,#FFFFFF 0%,#E9ECF0 26%,#B7BEC9 58%,#DDE1E7 82%,#F4F6F8 100%);
+  --metal-edge:#C2C8D1; --on-metal:#0A0A0B;
+  --metal-shadow:inset 0 0 0 1px var(--metal-edge),inset 0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(10,10,11,.12);
   --amber:#A84D08;
   --gold:var(--accent); --gold-lt:var(--accent-soft); --gold-dp:var(--accent-strong);
   --gold-line:var(--accent-soft);
@@ -53,14 +64,17 @@
   --skin-card:#FFFFFF;
   --skin-shadow:0 1px 2px rgba(10,10,11,.04),0 12px 34px rgba(10,10,11,.07);
   --skin-lift:0 22px 50px rgba(10,10,11,.11);
-  --sky-1:#E3E8FF; --sky-2:#FFFFFF; --hill:#EDEDF0; --hill-2:#DFDFE4;
+  --sky-1:#EEF0F3; --sky-2:#FFFFFF; --hill:#EDEDF0; --hill-2:#DFDFE4;
 }
 :root[data-theme="dark"]{
   --paper:#000000; --paper-2:#0B0B0D;
-  --ink:#FAFAFA; --ink-2:#C4C4CC; --mute:#8D8D97;
+  --ink:#F5F5F7; --ink-2:#D2D2D8; --mute:#9C9CA6;
   --rule:#2A2A2F; --rule-2:#1B1B1F;
-  --accent:#6382FF; --accent-soft:#5C76FF; --accent-strong:#7C96FF; --on-accent:#050506;
-  --accent-wash:rgba(99,130,255,.12);
+  --accent:#F2F3F5; --accent-soft:#AEB5C0; --accent-strong:#FFFFFF; --on-accent:#0A0A0B;
+  --accent-em:#B4BBC6; --accent-wash:rgba(255,255,255,.07);
+  --metal:linear-gradient(135deg,#FFFFFF 0%,#E3E6EB 24%,#A9B0BB 58%,#D5D9E0 82%,#F0F2F5 100%);
+  --metal-edge:#8A93A0; --on-metal:#0A0A0B;
+  --metal-shadow:inset 0 0 0 1px rgba(255,255,255,.38),inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(0,0,0,.5);
   --amber:#F5B544;
   --gold:var(--accent); --gold-lt:var(--accent-soft); --gold-dp:var(--accent-strong);
   --gold-line:var(--accent-soft);
@@ -68,8 +82,34 @@
   --skin-card:#111114;
   --skin-shadow:0 1px 2px rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.45);
   --skin-lift:0 22px 56px rgba(0,0,0,.55);
-  --sky-1:#0C1230; --sky-2:#000000; --hill:#121214; --hill-2:#191920;
+  --sky-1:#17181B; --sky-2:#000000; --hill:#121214; --hill-2:#191920;
 }
+
+/* A card that is black in both themes carries the night palette with it.
+   On white the accent is ink, which on one of these would be black on black,
+   and --paper would put a white chip where the dark theme has a dark one. So
+   inside them every token has its night value whatever the theme, and the
+   card reads the same at noon as it does at midnight. The --gold names are
+   set again because a custom property inherits its value, not its formula.
+   A new always-black surface joins this list, or takes the class .on-dark. */
+.on-dark,
+.dr-hero, .dr-deskpf, .dr-universe, .dr-term,
+.mp-hero, .pp-hero, #view-portfolio .pf-board,
+.sh-mega-lead, .sh-sheet-lead,
+.scan-universe, .su-dock, .su-bubble, .ix-observatory,
+.wl-hero, .wd-hero, .wd-float.dark, .wd-toast{
+  --paper:#000000; --paper-2:#0B0B0D;
+  --ink:#F5F5F7; --ink-2:#D2D2D8; --mute:#9C9CA6;
+  --rule:#2A2A2F; --rule-2:#1B1B1F; --skin-card:#111114;
+  --accent:#F2F3F5; --accent-soft:#AEB5C0; --accent-strong:#FFFFFF; --on-accent:#0A0A0B;
+  --accent-em:#B4BBC6; --accent-wash:rgba(255,255,255,.07);
+  --metal:linear-gradient(135deg,#FFFFFF 0%,#E3E6EB 24%,#A9B0BB 58%,#D5D9E0 82%,#F0F2F5 100%);
+  --metal-shadow:inset 0 0 0 1px rgba(255,255,255,.38),inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(0,0,0,.5);
+  --gold:var(--accent); --gold-lt:var(--accent-soft); --gold-dp:var(--accent-strong);
+  --gold-line:var(--accent-soft);
+  --pass:#2FD98B; --amber:#F5B544; --part:var(--amber); --fail:#FF5C4D;
+}
+
 body{background:var(--paper);color:var(--ink);
   transition:background 300ms cubic-bezier(.22,.61,.36,1),color 300ms cubic-bezier(.22,.61,.36,1)}
 
@@ -214,8 +254,8 @@ header.wrap > *:not(#skin-art){position:relative;z-index:1}
 /* ── 10 · GOLD & CREAM REFINEMENTS ─────────────────────────────────────
    Restore the original palette, with clearer hierarchy and quieter surfaces.
    Market status colours and mobile account visibility are independent. */
-:root{ --ui-secondary:#55555E; --ui-elevation:0 2px 4px #0a0a0b04,0 8px 24px #0a0a0b08 }
-:root[data-theme="dark"]{ --ui-secondary:#A9A9B2; --ui-elevation:0 2px 8px #0003,0 12px 28px #0003 }
+:root{ --ui-secondary:#4D4D56; --ui-elevation:0 2px 4px #0a0a0b04,0 8px 24px #0a0a0b08 }
+:root[data-theme="dark"]{ --ui-secondary:#B4B4BD; --ui-elevation:0 2px 8px #0003,0 12px 28px #0003 }
 
 /* Keep the primary search field and action aligned, including on phones. */
 body .searchrow{ box-shadow:var(--ui-elevation) !important }

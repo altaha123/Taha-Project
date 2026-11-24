@@ -31,7 +31,7 @@
   function render(d, portrait) {
     var c = document.createElement('canvas'); c.width = 1080; c.height = portrait ? 1350 : 1080;
     var x = c.getContext('2d'), W = c.width, H = c.height;
-    x.fillStyle = '#fcfdfe'; x.fillRect(0,0,W,H); x.fillStyle = '#2444ff'; x.fillRect(0,0,W,10);
+    x.fillStyle = '#fcfdfe'; x.fillRect(0,0,W,H); x.fillStyle = '#505660'; x.fillRect(0,0,W,10);
     function line(s, px, py, size, color, maxWidth, lines, font) {
       x.fillStyle = color || '#20271f'; x.font = (font || '') + size + 'px Arial, sans-serif';
       var words = String(s).split(/\s+/), out = '', row = 0;
@@ -46,7 +46,7 @@
       x.fillText(out,px,py+row*size*1.3);
     }
     function rule(y) { x.fillStyle='#e2e3e6'; x.fillRect(54,y,972,1); }
-    line('ALTAHA SCREENER  /  OWNERSHIP SNAPSHOT',54,57,20,'#1730B3',960,1,'600 ');
+    line('ALTAHA SCREENER  /  OWNERSHIP SNAPSHOT',54,57,20,'#2C3035',960,1,'600 ');
     line(d.symbol,54,122,48,'#20271f',950,1,'600 ');
     line(d.company,54,159,24,'#565c54',950,1);
     line('Reporting period '+d.period+'  ·  NSE company disclosure',54,196,20,'#565c54',950,1);
@@ -60,7 +60,7 @@
     });
     rule(348);
     var extra=portrait?90:0;
-    line('DISCLOSED INSTITUTIONAL INVESTORS',54,389,19,'#1730B3',960,1,'600 ');
+    line('DISCLOSED INSTITUTIONAL INVESTORS',54,389,19,'#2C3035',960,1,'600 ');
     if (!d.names.length) line('Named institutional holders are unavailable in this snapshot.',54,440,23,'#565c54',950,2);
     d.names.forEach(function(n,i) {
       var y=431+i*(56+extra/3);
@@ -70,25 +70,25 @@
       line(n.new_in_table?'Newly disclosed':pp(n.change_qoq),738,y+23,15,'#565c54',288,1);
     });
     rule(603+extra);
-    line('WHAT STANDS OUT',54,638+extra,18,'#1730B3',960,1,'600 ');
+    line('WHAT STANDS OUT',54,638+extra,18,'#2C3035',960,1,'600 ');
     line(d.finding || 'Compare disclosed holdings with their source filings.',54,673+extra,23,'#20271f',965,3);
     var peerY=773+extra+(portrait?40:0);
     if (d.peers.length>1) {
-      line((d.peerMetric==='institutions'?'Institutional holding':LABELS[d.peerMetric])+(d.sector?' · '+d.sector:'')+' · '+d.peerPeriod,54,peerY,18,'#1730B3',950,1,'600 ');
+      line((d.peerMetric==='institutions'?'Institutional holding':LABELS[d.peerMetric])+(d.sector?' · '+d.sector:'')+' · '+d.peerPeriod,54,peerY,18,'#2C3035',950,1,'600 ');
       // Three per row in portrait; compact six across in square.
       d.peers.forEach(function(p,i) {
         var col=portrait?i%3:i, row=portrait?Math.floor(i/3):0, pw=portrait?324:162, px=54+col*pw, py=peerY+34+row*73;
         var m=p.metrics[d.peerMetric];
         line(p.symbol,px,py,16,'#565c54',pw-14,1);
         line(pct(m.pct)+(m.derived?'*':''),px,py+28,23,'#20271f',pw-14,1,'600 ');
-        x.fillStyle='#e6e7e9'; x.fillRect(px,py+41,pw-20,5); x.fillStyle='#2444ff'; x.fillRect(px,py+41,(m.pct || 0)/100*(pw-20),5);
+        x.fillStyle='#e6e7e9'; x.fillRect(px,py+41,pw-20,5); x.fillStyle='#505660'; x.fillRect(px,py+41,(m.pct || 0)/100*(pw-20),5);
       });
     } else line('Peer comparison not included. Load peers before sharing.',54,peerY,19,'#565c54',950,2);
     if(d.peerFinding) line(d.peerFinding,54,H-185,16,'#565c54',965,2);
     rule(H-142);
     line('Source: NSE Reg 31 filing · * derived where marked · Changes in percentage points',54,H-112,16,'#565c54',965,1);
     line('Disclosed holdings are not proof of trades. Newly disclosed does not mean newly invested.',54,H-86,16,'#565c54',965,1);
-    line('altahascreener.in  ·  '+d.symbol+'  ·  '+d.period,54,H-43,20,'#1730B3',965,1,'600 ');
+    line('altahascreener.in  ·  '+d.symbol+'  ·  '+d.period,54,H-43,20,'#2C3035',965,1,'600 ');
     return c;
   }
   function open(raw) {

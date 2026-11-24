@@ -11,31 +11,31 @@
 :root {
   --pf-good:        #0A7548;
   --pf-bad:         #C62828;
-  --pf-over:        #4B73EB;
+  --pf-over:        #7B828C;
   --pf-under:       #4C7A9E;
-  --pf-dot-held:    #4B73EB;
+  --pf-dot-held:    #7B828C;
   --pf-dot-idle:    #8A8B8D;
   --pf-q-lead:      rgba(46, 125, 91, .08);
   --pf-q-improve:   rgba(76, 122, 158, .08);
-  --pf-q-weaken:    rgba(75, 115, 235, .09);
+  --pf-q-weaken:    rgba(123, 130, 140, .09);
   --pf-q-lag:       rgba(181, 69, 60, .07);
   --pf-axis:        rgba(0, 0, 0, .22);
-  --pf-rule:        rgba(75, 115, 235, .55);
+  --pf-rule:        rgba(123, 130, 140, .55);
 }
 
 html[data-theme="dark"] {
   --pf-good:        #2FD98B;
   --pf-bad:         #FF5C4D;
-  --pf-over:        #6382FF;
+  --pf-over:        #C5CAD3;
   --pf-under:       #6FA8D4;
-  --pf-dot-held:    #6382FF;
+  --pf-dot-held:    #C5CAD3;
   --pf-dot-idle:    #79808E;
   --pf-q-lead:      rgba(52, 196, 141, .10);
   --pf-q-improve:   rgba(111, 168, 212, .10);
-  --pf-q-weaken:    rgba(99, 130, 255, .11);
+  --pf-q-weaken:    rgba(197, 202, 211, .11);
   --pf-q-lag:       rgba(240, 115, 106, .09);
   --pf-axis:        rgba(255, 255, 255, .26);
-  --pf-rule:        rgba(99, 130, 255, .5);
+  --pf-rule:        rgba(197, 202, 211, .5);
 }
 
 /* ── Input rows ─────────────────────────────────────────────────────────── */
@@ -413,8 +413,8 @@ html[data-theme="dark"] .pfact { background: var(--surface); }
   background: var(--rule); color: var(--ink);
 }
 .pfact.exit   .pfact-tag { background: var(--fail); color: #fff; }
-.pfact.reduce .pfact-tag { background: var(--part); color: #081334; }
-.pfact.review .pfact-tag { background: var(--gold-lt); color: #081334; }
+.pfact.reduce .pfact-tag { background: var(--part); color: #0B0C0D; }
+.pfact.review .pfact-tag { background: var(--gold-lt); color: #0B0C0D; }
 .pfact.add    .pfact-tag { background: var(--pass); color: #04231A; }
 .pfact-sym {
   font-family: var(--mono); font-size: 16px; color: var(--ink); letter-spacing: .02em;
@@ -512,10 +512,10 @@ html[data-theme="dark"] .pfnews { background: var(--surface-2); }
 
 /* Portfolio workspace: scoped above legacy global button/input rules. */
 #view-portfolio{
-  --pf-editor-muted:#55555E;
+  --pf-editor-muted:#4D4D56;
   scroll-margin-top:calc(var(--sh-chrome-h,132px) + 20px);
 }
-html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:#A9A9B2 }
+html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:#B4B4BD }
 #view-portfolio .tabhead{ margin-bottom:24px }
 #view-portfolio .tabhead h2{ font-size:clamp(28px,4vw,42px); margin-bottom:10px }
 #view-portfolio .tabhead p{ max-width:64ch; line-height:1.65 }
@@ -580,11 +580,11 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 
 /* The board. */
 #view-portfolio .pf-board{ margin:0 0 18px; padding:18px 20px 14px; border-radius:18px; color:#FFFFFF;
-  background:radial-gradient(120% 140% at 0% 0%,#1A2E6D 0%,#0B1329 46%,#07080A 100%); box-shadow:0 14px 34px #10204f24 }
+  background:radial-gradient(120% 140% at 0% 0%,#202224 0%,#0A0B0C 46%,#07080A 100%); box-shadow:0 14px 34px #15161824 }
 #view-portfolio .pf-board[hidden]{ display:none }
 #view-portfolio .pf-stats{ display:grid; grid-template-columns:1.4fr repeat(3,minmax(0,1fr)); gap:14px 22px }
 #view-portfolio .pf-stat{ min-width:0 }
-#view-portfolio .pf-stat > span{ display:block; font:500 11px/1.4 Inter,system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#9DB0FF }
+#view-portfolio .pf-stat > span{ display:block; font:500 11px/1.4 Inter,system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#E8EBEF }
 #view-portfolio .pf-stat b{ display:block; margin-top:4px; font:600 20px/1.15 'IBM Plex Mono',monospace; letter-spacing:-.02em; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 #view-portfolio .pf-stat-main b{ font:400 42px/1 var(--serif,'Instrument Serif',Georgia,serif); letter-spacing:-.01em }
 #view-portfolio .pf-stat small{ display:block; margin-top:4px; font:400 13px/1.4 Inter,system-ui,sans-serif; color:#C6C7C9 }
@@ -601,7 +601,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pf-sort{ display:inline-flex; flex-wrap:wrap; gap:4px; padding:3px; border-radius:12px; background:#ffffff12 }
 #view-portfolio .pf-sort button{ min-height:32px; padding:0 12px; border:0; border-radius:9px; background:transparent; color:#E5E6E9; font:500 13px/1 Inter,system-ui,sans-serif; cursor:pointer }
 #view-portfolio .pf-sort button[aria-pressed="true"]{ background:#FFFFFF; color:#0A0A0B; font-weight:600 }
-#view-portfolio .pf-sort button:focus-visible{ outline:2px solid #6382FF; outline-offset:1px }
+#view-portfolio .pf-sort button:focus-visible{ outline:2px solid #C5CAD3; outline-offset:1px }
 #view-portfolio .pf-src{ font:400 12px/1.4 Inter,system-ui,sans-serif; color:#AFB0B2 }
 
 /* One header for every row. */
@@ -622,7 +622,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pfrow:hover, #view-portfolio .pfrow:focus-within{ background:var(--paper-2) }
 #view-portfolio .pf-av{ grid-area:av; display:grid; place-items:center; width:38px; height:38px; border-radius:12px;
   color:#fff; font:600 13px/1 Inter,system-ui,sans-serif; letter-spacing:.02em; background:#7f8083; text-transform:uppercase }
-#view-portfolio .pf-av.empty{ background:transparent; color:var(--gold-dp,#1228C9); border:1.5px dashed var(--gold,#1F3DFF); font-size:18px; font-weight:500 }
+#view-portfolio .pf-av.empty{ background:transparent; color:var(--gold-dp,#000000); border:1.5px dashed var(--gold,#0A0A0B); font-size:18px; font-weight:500 }
 /* The company's mark, over its initials (portfolio.js, paintAv). On white
    whatever the theme: a logo is drawn for a white page, and on a dark tile
    half of them disappear. */
@@ -663,7 +663,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pf-name span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 #view-portfolio .pf-tag{ flex:none; padding:2px 7px; border-radius:99px; font:600 11px/1.3 Inter,system-ui,sans-serif; font-style:normal;
   background:var(--paper-2); border:1px solid var(--rule); color:var(--ink-2) }
-#view-portfolio .pf-tag.gold{ background:#1F3DFF; border-color:transparent; color:#FFFFFF }
+#view-portfolio .pf-tag.gold{ background:var(--gold,#0A0A0B); border-color:transparent; color:var(--on-accent,#FFFFFF) }
 
 /* Worked-out figures. */
 #view-portfolio .pf-live{ min-width:0; text-align:right; font-variant-numeric:tabular-nums }
@@ -696,13 +696,13 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pfacct b{ font:600 14px/1.4 Inter,system-ui,sans-serif; color:var(--ink) }
 #view-portfolio .pfacct span{ font-size:13px; line-height:1.5; color:var(--pf-editor-muted) }
 #view-portfolio .pfacct-av{ display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:50%;
-  background:linear-gradient(135deg,#3D5AFF,#1228C9); color:#fff !important; font:600 16px/1 Inter,system-ui,sans-serif !important }
+  background:var(--metal,#E9ECF0); box-shadow:var(--metal-shadow); color:var(--on-metal,#0A0A0B) !important; font:600 16px/1 Inter,system-ui,sans-serif !important }
 #view-portfolio .pfacct-who{ display:flex; flex-direction:column; min-width:0; flex:1 1 260px }
 #view-portfolio .pfacct-opt{ display:inline-flex; align-items:center; gap:9px; min-height:40px; margin:0; font:500 13px/1.3 Inter,system-ui,sans-serif; color:var(--ink); cursor:pointer }
 #view-portfolio .pfacct-switch input{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none }
 #view-portfolio .pfacct-switch i{ position:relative; flex:none; width:36px; height:20px; border-radius:10px; background:var(--rule); transition:background-color .2s }
 #view-portfolio .pfacct-switch i::after{ content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0003; transition:transform .2s }
-#view-portfolio .pfacct-switch input:checked + i{ background:var(--gold,#1F3DFF) }
+#view-portfolio .pfacct-switch input:checked + i{ background:var(--gold,#0A0A0B) }
 #view-portfolio .pfacct-switch input:checked + i::after{ transform:translateX(16px) }
 #view-portfolio .pfacct-switch input:focus-visible + i{ outline:2px solid var(--gold); outline-offset:2px }
 #view-portfolio .pfacct .pfbtn{ min-height:38px; padding:8px 14px; font-size:13px }
@@ -756,7 +756,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 12px/1 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
   #view-portfolio .pfrow .pf_date{ width:auto; flex:1 1 auto; height:34px; font-size:14px }
   #view-portfolio .pfdel{ grid-area:auto; position:absolute; top:-10px; right:-10px; width:24px; height:24px; border-radius:50%; opacity:1;
-    border:1px solid var(--rule); background:var(--skin-card,var(--paper)); box-shadow:0 2px 6px #0d18361a; z-index:1 }
+    border:1px solid var(--rule); background:var(--skin-card,var(--paper)); box-shadow:0 2px 6px #0e0f101a; z-index:1 }
   #view-portfolio .pf-wbar{ display:none }
   #view-portfolio .pf-board{ padding:16px 14px 12px; border-radius:16px }
   #view-portfolio .pf-stats{ grid-template-columns:1fr 1fr; gap:12px 14px }

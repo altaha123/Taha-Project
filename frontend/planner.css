@@ -15,14 +15,14 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .mp{
-  --mp-s1:#1F3DFF;            /* the long run: what compounds toward the date */
+  --mp-s1:#0A0A0B;            /* the long run: what compounds toward the date */
   --mp-s2:#2F73B8;            /* dated money: goals, wants, what-ifs */
   --mp-s3:#1B9A72;            /* safety: the cushion, needs */
   --mp-quiet:#848588;         /* context lines that are not the story */
-  --mp-label:var(--tk-label,#62626C);
+  --mp-label:var(--tk-label,#5A5A64);
 }
 html[data-theme="dark"] .mp{
-  --mp-s1:#2B51FB; --mp-s2:#3987E5; --mp-s3:#199E70; --mp-quiet:#8D8D97;
+  --mp-s1:#F2F3F5; --mp-s2:#3987E5; --mp-s3:#199E70; --mp-quiet:#9C9CA6;
 }
 .mp *, .mp *::before, .mp *::after{ box-sizing:border-box }
 .mp-sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
@@ -37,15 +37,15 @@ html[data-theme="dark"] .mp{
 .mp-hero::before{
   content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
   background-image:
-    radial-gradient(520px 320px at 8% -10%, rgba(31,61,255,.50), transparent 70%),
-    radial-gradient(420px 300px at 104% 118%, rgba(47,115,184,.30), transparent 70%),
+    radial-gradient(520px 320px at 8% -10%, rgba(206,212,221,.20), transparent 70%),
+    radial-gradient(420px 300px at 104% 118%, rgba(150,158,170,.16), transparent 70%),
     linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
   background-size:auto, auto, 44px 44px, 44px 44px;
 }
 .mp-eyebrow{
   display:block; font-family:var(--mono); font-size:10px; letter-spacing:.14em;
-  text-transform:uppercase; color:#9DB0FF;
+  text-transform:uppercase; color:#E8EBEF;
 }
 .mp-hero .mp-when{
   margin:8px 0 12px; font-family:var(--serif); font-weight:400; color:#FFFFFF;
@@ -64,11 +64,11 @@ html[data-theme="dark"] .mp{
   text-decoration:none;
 }
 button.mp-chip{ cursor:pointer; transition:border-color 140ms ease, background 140ms ease }
-button.mp-chip:hover{ border-color:#6382FF; background:rgba(99,130,255,.12) }
-.mp-chip.is-due{ border-color:#6382FF; background:#6382FF; color:#0A0A0B }
-button.mp-chip.is-due:hover{ background:#8FABED }
-.mp-chip.is-gold{ border-color:#6382FF; background:#6382FF; color:#0A0A0B }
-button.mp-chip.is-gold:hover{ background:#8FABED }
+button.mp-chip:hover{ border-color:#C5CAD3; background:rgba(197,202,211,.12) }
+.mp-chip.is-due{ border-color:#C5CAD3; background:#C5CAD3; color:#0A0A0B }
+button.mp-chip.is-due:hover{ background:#E3E6EA }
+.mp-chip.is-gold{ border-color:#C5CAD3; background:#C5CAD3; color:#0A0A0B }
+button.mp-chip.is-gold:hover{ background:#E3E6EA }
 .mp-chip svg{ width:14px; height:14px; flex:none }
 .mp-chip:focus-visible, .mp-tab:focus-visible, .mp-btn:focus-visible, .mp-x:focus-visible,
 .mp-seg button:focus-visible, .mp-pick:focus-visible, .mp-link:focus-visible{
@@ -77,27 +77,27 @@ button.mp-chip.is-gold:hover{ background:#8FABED }
 .mp-example{
   grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;
   margin:-8px 0 0; padding:9px 14px; border-radius:12px;
-  border:1px dashed rgba(99,130,255,.55); background:rgba(99,130,255,.10);
+  border:1px dashed rgba(197,202,211,.55); background:rgba(197,202,211,.10);
   font-size:13px; color:#FFFFFF;
 }
-.mp-example b{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#9DB0FF; font-weight:500 }
+.mp-example b{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#E8EBEF; font-weight:500 }
 .mp-example button{
-  margin-left:auto; border:0; background:none; color:#9DB0FF; font:inherit; font-weight:500;
+  margin-left:auto; border:0; background:none; color:#E8EBEF; font:inherit; font-weight:500;
   cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:6px 0;
 }
 
 /* How far along. A meter: the unfilled track is a lighter step of the fill. */
 .mp-ring{ position:relative; width:140px; height:140px; flex:none }
 .mp-ring svg{ display:block; width:100%; height:100%; transform:rotate(-90deg) }
-.mp-ring .track{ fill:none; stroke:rgba(99,130,255,.20); stroke-width:9 }
-.mp-ring .fill{ fill:none; stroke:#6382FF; stroke-width:9; stroke-linecap:round;
+.mp-ring .track{ fill:none; stroke:rgba(197,202,211,.20); stroke-width:9 }
+.mp-ring .fill{ fill:none; stroke:#C5CAD3; stroke-width:9; stroke-linecap:round;
   transition:stroke-dashoffset 600ms cubic-bezier(.22,1,.36,1) }
 .mp-ring-in{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px }
 .mp-ring-in b{ font-family:var(--serif); font-weight:400; font-size:34px; line-height:1; color:#FFFFFF }
 .mp-ring-in span{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.66) }
 .mp-bar{ display:none; align-items:center; gap:12px; margin:16px 0 0 }
-.mp-bar .mp-meter{ flex:1 1 auto; background:rgba(99,130,255,.20) }
-.mp-bar .mp-meter > i{ background:#6382FF }
+.mp-bar .mp-meter{ flex:1 1 auto; background:rgba(197,202,211,.20) }
+.mp-bar .mp-meter > i{ background:#C5CAD3 }
 .mp-bar span{ flex:none; font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:rgba(255,255,255,.80) }
 html[data-theme="dark"] .mp-hero{ box-shadow:0 0 0 1px var(--rule), 0 24px 60px rgba(0,0,0,.45) }
 .mp-sketch{ width:190px; height:120px; flex:none; opacity:.9 }
@@ -177,7 +177,7 @@ html[data-theme="dark"] .mp-hero{ box-shadow:0 0 0 1px var(--rule), 0 24px 60px 
 }
 .mp .mp-inr > .mp-in{ padding-left:30px }
 .mp .mp-in::placeholder{ color:var(--mute); opacity:.75 }
-.mp .mp-in:focus{ outline:none; border-color:var(--gold); box-shadow:var(--ring,0 0 0 3px rgba(61,90,255,.20)) }
+.mp .mp-in:focus{ outline:none; border-color:var(--gold); box-shadow:var(--ring,0 0 0 3px rgba(102,109,121,.20)) }
 .mp .mp-in[readonly]{ background:var(--paper-2); color:var(--ink-2) }
 .mp .mp-in.is-text{ font-family:var(--sans) }
 .mp-note{ font-size:12px; line-height:1.5; color:var(--mp-label); min-height:0 }
