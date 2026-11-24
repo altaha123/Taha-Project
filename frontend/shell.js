@@ -128,8 +128,9 @@
      and the initials are what is left.
 
      A list of suggestions is redrawn on every keystroke, so each symbol is
-     asked for once per page. One that has loaded is laid straight onto the
-     next redraw, and does not blink back to initials as the reader types;
+     asked for once per page. One that has loaded is kept and laid straight
+     onto the next redraw, and does not blink back to initials as the reader
+     types;
      one the host does not have is not asked for again. The asking waits for
      a pause in the typing, because most of what is listed mid-word is gone
      by the next letter. */
@@ -137,6 +138,7 @@
   var LOGO_HOST = 'https://images.dhan.co/symbol/';
   var LOGO_WAIT = 140;
   var LOGO_SEEN = {};      // symbol → true: loaded · false: the host has none · 1: asked
+  var LOGO_IMG = {};       // symbol → the <img> that loaded
   var logoTimer = null;
 
   function logoSym(sym) {
@@ -157,14 +159,16 @@
     return '<span class="co-lg"' + (s ? ' data-sym="' + esc(s) + '"' : '') + ' aria-hidden="true">' +
       '<span class="co-lg-m">' + esc(logoInitials(name, sym)) + '</span></span>';
   }
+  /* The picture that loaded is kept and moved onto each redrawn row. A new
+     <img> for the same address is not reliably served from memory: some
+     browsers ask the host again, and the tile shows initials meanwhile. Only
+     a second tile for the same company on the page at once gets a copy. */
   function logoLay(tile, sym, fresh) {
     if (tile.querySelector('img')) return;
-    var img = new Image();
-    img.alt = '';
-    img.referrerPolicy = 'no-referrer';
-    if (fresh) img.className = 'in';
-    img.onerror = function () { img.remove(); tile.classList.remove('has-img'); };
-    img.src = LOGO_HOST + encodeURIComponent(sym) + '.png';
+    var img = LOGO_IMG[sym];
+    if (!img) return;
+    if (img.isConnected) img = img.cloneNode(false);
+    img.className = fresh ? 'in' : '';
     tile.appendChild(img);
     tile.classList.add('has-img');
   }
@@ -175,11 +179,14 @@
     if (LOGO_SEEN[sym] !== undefined) return;
     LOGO_SEEN[sym] = 1;
     var probe = new Image();
+    probe.alt = '';
     probe.referrerPolicy = 'no-referrer';
     probe.onerror = function () { LOGO_SEEN[sym] = false; };
     probe.onload = function () {
+      if (LOGO_SEEN[sym] === true) return;          // a copy of it, loading
       LOGO_SEEN[sym] = probe.naturalWidth >= 24;
       if (!LOGO_SEEN[sym]) return;
+      LOGO_IMG[sym] = probe;
       logoTiles().forEach(function (t) { if (t.dataset.sym === sym) logoLay(t, sym, true); });
     };
     probe.src = LOGO_HOST + encodeURIComponent(sym) + '.png';
