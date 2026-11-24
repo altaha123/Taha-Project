@@ -26,6 +26,10 @@ ythreads.serial_downloads()
 
 from engine import technical_score, fundamental_score, composite
 from data_source import resolve, fundamentals, shareholding, NotFound, dividend_yield_pct
+import market_calendar
+# Start reading NSE's holiday list now, so the first reader after a deploy is
+# not answered by the clock alone. It is read on its own thread; nothing waits.
+market_calendar.holidays()
 try:
     import dhan_source as dhan
 except Exception:
@@ -769,7 +773,6 @@ INDICES = [("^NSEI", "NIFTY 50"), ("^BSESN", "SENSEX"),
 @app.get("/market")
 def market():
     """Index levels for the ticker strip. Cached by the data layer."""
-    import datetime as _dt
     out = []
     for sym, label in INDICES:
         try:
@@ -784,14 +787,6 @@ def market():
         except Exception:
             continue
 
-    # Market session status, IST
-    dhan_status = None
-    if dhan is not None and dhan.configured():
-        try:
-            dhan_status = dhan.market_status()
-        except Exception:
-            dhan_status = None
-
     # An IST-aware clock, not naive UTC plus five and a half hours.
     #
     # datetime.utcnow() is deprecated and scheduled for removal — it is already
@@ -802,27 +797,17 @@ def market():
     # The old line was also lying about what it held: a NAIVE datetime carrying
     # IST wall-clock numbers, which reads as UTC to anything that inspects it.
     # A real timezone makes .hour, .minute and .weekday() mean what the market
-    # session checks below already assume they mean.
-    now = _dt.datetime.now(IST)
-    mins = now.hour * 60 + now.minute
-    weekday = now.weekday() < 5
-    if not weekday:
-        status = "closed"
-    elif 555 <= mins < 930:          # 09:15 - 15:30 IST, the NSE equity session
-        status = "open"
-    elif mins < 555:
-        status = "pre"
-    else:
-        status = "closed"
-    if dhan_status:
-        if "open" in dhan_status:
-            status = "open"
-        elif "pre" in dhan_status:
-            status = "pre"
-        elif "close" in dhan_status:
-            status = "closed"
+    # session checks already assume they mean.
+    now = market_calendar.now()
 
-    return to_native({"indices": out, "status": status,
+    # The session by the clock AND the exchange's holiday list. The clock
+    # alone said "open" all through Tuesday 24 November 2026, a trading
+    # holiday. Dhan was asked for the market's status here and was to overrule
+    # the clock, but it has no such call (the address answered 404 every
+    # time), so nothing ever did. market_calendar.py has the list.
+    status, holiday = market_calendar.session(now)
+
+    return to_native({"indices": out, "status": status, "holiday": holiday,
                       "ist": now.strftime("%d %b %Y, %H:%M IST")})
 
 
@@ -836,17 +821,20 @@ def market_week_route():
 
 @app.get("/datasource")
 def datasource():
-    """Which price feed is live right now, and why."""
+    """Which price feed is live right now, and why. `calendar` is the
+    exchange's holiday list as held: how many days, and when it was read."""
+    calendar = market_calendar.status()
     if dhan is None or not dhan.configured():
         return {"price_source": "yahoo", "dhan_configured": False,
-                "detail": "Set DHAN_CLIENT_ID and DHAN_ACCESS_TOKEN in Render to enable Dhan."}
+                "detail": "Set DHAN_CLIENT_ID and DHAN_ACCESS_TOKEN in Render to enable Dhan.",
+                "calendar": calendar}
     st = dhan.is_live()
     scrip = dhan.load_scrip()
     return {"price_source": "dhan" if st["ok"] else "yahoo (dhan unavailable)",
             "dhan_configured": True, "dhan_ok": st["ok"], "detail": st["detail"],
             "instruments_mapped": len(scrip or {}),
             "scrip_error": getattr(dhan, "_scrip", {}).get("error"),
-            "token": dhan.token_info()}
+            "token": dhan.token_info(), "calendar": calendar}
 
 
 @app.get("/universe")
@@ -6061,7 +6049,7 @@ def chart(ticker: str, range: str = "1D"):
         raise HTTPException(400, f"range must be one of {', '.join(RANGES)}")
 
     base = ticker.strip().upper().replace(".NS", "").replace(".BO", "")
-    df, live = None, False
+    df, live, kept = None, False, []
 
     if cfg["mode"] == "intraday":
         if dhan is None or not dhan.configured():
@@ -6087,6 +6075,9 @@ def chart(ticker: str, range: str = "1D"):
             raise HTTPException(404, f"Couldn't find '{base}'.")
         except Exception:
             raise HTTPException(503, "The data provider is busy. Try again in a minute.")
+        # Sessions the feed came back without and that were put back from
+        # the last fetch that had them (settled_bars.py). Empty on most calls.
+        kept = list(hist.attrs.get("kept_sessions") or [])
         df = hist.tail(cfg["sessions"])
         if cfg.get("resample_w") and isinstance(df.index, pd.DatetimeIndex):
             df = _resample_weeks(df)
@@ -6162,6 +6153,7 @@ def chart(ticker: str, range: str = "1D"):
         "as_of": str(df.index[-1])[:19] if len(df) else None,
         "base_close": round(base_close, 2) if base_close else None,
         "levels": lv,
+        "kept_sessions": kept,
     })
 
 

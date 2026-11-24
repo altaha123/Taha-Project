@@ -811,6 +811,34 @@ them. `GET /admin/bhavcopy` reports how many sessions the archive holds, their
 span, their size and what is left to fetch. Nothing is written to the data
 disk.
 
+### The session that just closed, and trading holidays
+
+**A price history never goes back a session** (`backend/settled_bars.py`).
+After midnight in India the index feed's daily history ends on the session
+*before* the one that just closed, and has it back by late morning. On the
+night of 23 November 2026 `/market` read Friday's close and Friday's move from
+00:07 IST. The last three settled sessions of every history fetched are now
+kept, in memory and in `settled_bars.json` on the data disk, and put back when
+a later fetch comes without them. The feed's own bar wins as soon as it
+carries the session again, so a correction still lands. A kept bar is trusted
+for four days. `/chart` names any session it put back in `kept_sessions`;
+on most calls that is empty. What it cannot do: a symbol nobody asked for
+between 16:00 IST and the feed going back has nothing kept.
+
+Stocks had a second cause. Dhan's daily history was asked for up to the
+server's date, which in UTC is still yesterday until 05:30 IST, and Dhan's
+`toDate` is the first day not returned. It is asked by India's date now
+(`dhan_source._india_today`).
+
+**The site knows a trading holiday** (`backend/market_calendar.py`). The
+holiday list is NSE's own, read twice a day and kept in `nse_holidays.json` on
+the data disk. On a holiday `/market` answers `"status": "closed"` with the
+day's name in `holiday`, no bar is built for the day, and the watchlist does
+not call the market open. `/datasource` shows how many holidays are held and
+when the list was last read. A special session on a listed holiday (Muhurat
+trading) or on a weekend still reads as closed. The intraday scanner
+(`intraday.market_open`) still goes by the weekday clock alone.
+
 ---
 
 ### "Explain this score" — plain English, free (optional)

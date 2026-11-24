@@ -18,6 +18,11 @@ WHERE THE NUMBERS COME FROM
   3. The universe scan — the Altaha Score, its label, the name and the sector,
      read from the payload already in memory. No request at all.
 
+  A name's daily row never goes back a session. After midnight in India
+  Yahoo's daily history ends a session early for some hours (settled_bars.py),
+  and a refetch then would swap a row that ends on the session just closed
+  for one that ends on the session before it. The newer row is kept.
+
 WHAT IT REFUSES TO DO
   · More than CHUNK uncached names per request. The rest come back as
     `pending` and the page asks again; a 100-name list must not turn one
@@ -46,6 +51,13 @@ try:
     import dhan_source as dhan
 except Exception:                                   # pragma: no cover
     dhan = None
+
+import market_calendar
+
+try:
+    from settled_bars import TRUST_DAYS
+except Exception:                                   # pragma: no cover
+    TRUST_DAYS = 4
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 MAX_SYMBOLS = 100
@@ -77,9 +89,8 @@ def clean(symbols) -> list:
 
 
 def market_open(now=None) -> bool:
-    n = (now or dt.datetime.now(dt.timezone.utc)).astimezone(IST)
-    m = n.hour * 60 + n.minute
-    return n.weekday() < 5 and 555 <= m < 930
+    """09:15 to 15:30 IST on a trading day: not a weekend, not a holiday."""
+    return market_calendar.session(now or dt.datetime.now(dt.timezone.utc))[0] == "open"
 
 
 def _ttl(now=None):
@@ -124,6 +135,22 @@ def _row_from_closes(sym, closes):
         "spark_dates": dates,
         "last_date": last_date, "source": "Yahoo Finance (daily, delayed)",
     }
+
+
+def _never_backwards(sym, row, now):
+    """The row to hold for `sym`: the one just fetched, unless the one already
+    held ends on a later session and that session is recent enough to trust
+    (the same few days settled_bars trusts a kept bar for)."""
+    held = (_cache.get(sym) or (0, None))[1]
+    try:
+        was, new = held.get("last_date"), row.get("last_date")
+        if was and new and was > new:
+            age = now.astimezone(IST).date() - dt.date.fromisoformat(was)
+            if age.days <= TRUST_DAYS:
+                return held
+    except (AttributeError, TypeError, ValueError):
+        pass
+    return row
 
 
 def _yahoo(symbols) -> dict:
@@ -214,6 +241,7 @@ def quotes(symbols, scan_rows=None, now=None, fetch=None) -> dict:
             try:
                 got = (fetch or _yahoo)(batch)
                 for s, row in got.items():
+                    row = _never_backwards(s, row, now)
                     _cache[s] = (time.time(), row)
                     fresh[s] = row
                 _trim_cache()

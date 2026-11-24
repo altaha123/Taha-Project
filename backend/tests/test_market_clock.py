@@ -47,15 +47,11 @@ def test_it_agrees_with_the_arithmetic_it_replaces(main_mod):
 
 
 def _session(now):
-    """The classification /market performs, isolated from the price feeds."""
-    mins = now.hour * 60 + now.minute
-    if now.weekday() >= 5:
-        return "closed"
-    if 555 <= mins < 930:
-        return "open"
-    if mins < 555:
-        return "pre"
-    return "closed"
+    """The classification /market performs, isolated from the price feeds.
+    It is market_calendar.session, which also knows a trading holiday
+    (test_market_calendar.py); with no holiday list it is the clock alone."""
+    import market_calendar
+    return market_calendar.session(now)[0]
 
 
 @pytest.mark.parametrize("when,expected", [

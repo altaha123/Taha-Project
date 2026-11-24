@@ -28,7 +28,10 @@ import datetime as dt
 import pandas as pd
 import requests
 
+import market_calendar
+
 BASE = "https://api.dhan.co/v2"
+IST_TZ = dt.timezone(dt.timedelta(hours=5, minutes=30))
 SCRIP_URLS = [
     "https://images.dhan.co/api-data/api-scrip-master.csv",            # compact — try first
     "https://images.dhan.co/api-data/api-scrip-master-detailed.csv",   # huge — fallback
@@ -60,6 +63,18 @@ _scrip = {"map": None, "at": 0, "error": None}
 _status = {"ok": None, "checked": 0, "detail": "not checked"}
 SCRIP_TTL = 12 * 3600
 STATUS_TTL = 300
+
+
+def _india_today():
+    """Today's date in India, which is the exchange's date.
+
+    dt.date.today() is the server's date, and the server runs in UTC: from
+    midnight to 05:30 IST it is still yesterday there. Dhan's daily history
+    takes `toDate` as the first day NOT wanted, so a request dated by the
+    server at 00:30 IST asked for the sessions before the one that had just
+    closed, and nothing adds a bar before 09:15. On the night of 23 November
+    2026 RELIANCE read Friday's close from 00:07 IST."""
+    return dt.datetime.now(IST_TZ).date()
 
 
 def can_auto_refresh() -> bool:
@@ -226,7 +241,7 @@ def is_live(force=False) -> dict:
             detail = ("instrument master unavailable: "
                       + (_scrip.get("error") or "download returned no usable rows"))
         else:
-            today = dt.date.today()
+            today = _india_today()
             body = {"securityId": sid, "exchangeSegment": "NSE_EQ", "instrument": "EQUITY",
                     "fromDate": str(today - dt.timedelta(days=10)), "toDate": str(today)}
             r = requests.post(f"{BASE}/charts/historical", json=body,
@@ -292,7 +307,10 @@ def daily_ohlcv(symbol: str, days: int = 400, with_today: bool = True):
     if not sid:
         return None
 
-    today = dt.date.today()
+    # `toDate` is not inclusive (Dhan's own description of the field), so
+    # this asks for every session before today in India. Today's bar is built
+    # from the live quote, in _append_today.
+    today = _india_today()
     body = {
         "securityId": sid,
         "exchangeSegment": "NSE_EQ",
@@ -342,19 +360,20 @@ def daily_ohlcv(symbol: str, days: int = 400, with_today: bool = True):
         return None
 
 
-IST_TZ = dt.timezone(dt.timedelta(hours=5, minutes=30))
-
-
 def _append_today(symbol, df):
     """
-    Dhan's /charts/historical publishes the daily candle only after its
-    end-of-day processing, so on a trading day the last bar can still be
-    yesterday's even at 8 PM. That makes the screener look a day stale.
+    Dhan's /charts/historical is asked for every session before today (its
+    `toDate` is not inclusive), so on a trading day the last bar it returns
+    is yesterday's, at 8 PM as much as at noon. That makes the screener look
+    a day stale.
 
-    When the last bar predates today AND today is a weekday on which the
+    When the last bar predates today AND today is a trading day on which the
     session has already opened, we build today's bar from the live quote
     (open/high/low/LTP/volume) and append it. During market hours this bar
     is the forming candle; after 15:30 it is effectively the close.
+
+    A trading holiday owes no bar. The quote on one is the last session's,
+    and a bar built from it would be that session again under today's date.
 
     When today's bar is owed and the quote does not arrive, the frame is
     returned without it and marked `today_missing`, so the caller can keep it
@@ -363,7 +382,7 @@ def _append_today(symbol, df):
     """
     try:
         now = dt.datetime.now(IST_TZ)
-        if now.weekday() >= 5:
+        if not market_calendar.trading_day(now.date()):
             return df
         mins = now.hour * 60 + now.minute
         if mins < 555:                       # before 09:15 — nothing to add
@@ -411,7 +430,7 @@ def intraday_ohlcv(symbol: str, interval: str = "5", days: int = 5):
     if not sid:
         return None
 
-    today = dt.date.today()
+    today = _india_today()
     body = {
         "securityId": sid,
         "exchangeSegment": "NSE_EQ",
@@ -799,22 +818,3 @@ def option_chain(symbol: str, expiry: str) -> dict:
 # ---------------------------------------------------------------------------
 
 INDEX_IDS = {"NIFTY 50": "13", "BANK NIFTY": "25", "INDIA VIX": "21"}
-
-
-def market_status():
-    """Dhan's own market status, or None."""
-    if not configured():
-        return None
-    try:
-        r = requests.get(f"{BASE}/marketfeed/marketstatus", headers=_headers(), timeout=12)
-        if r.status_code != 200:
-            return None
-        d = r.json()
-        if isinstance(d, dict):
-            for k in ("marketStatus", "status", "NSE", "nse"):
-                v = d.get(k)
-                if isinstance(v, str):
-                    return v.lower()
-        return None
-    except Exception:
-        return None
