@@ -21,16 +21,16 @@
 .ln-run{
   display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; margin-top:16px;
   padding:12px 14px; border-radius:14px; border:1px solid var(--rule);
-  background:var(--skin-card, #FFFDF8); max-width:72ch;
+  background:var(--skin-card, #FFFFFF); max-width:72ch;
 }
 .ln-runbtn{
   display:inline-flex; align-items:center; gap:8px; min-height:40px; padding:0 18px;
   border:0; border-radius:999px; cursor:pointer; font:600 14px/1 Inter,system-ui,sans-serif;
-  color:#fff; background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt));
+  color:var(--on-accent,#fff); background:linear-gradient(135deg,var(--gold-dp),var(--gold));
   box-shadow:0 6px 16px color-mix(in srgb,var(--gold) 28%,transparent);
   transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
 }
-:root[data-theme="dark"] .ln-runbtn{ color:#17140E }
+:root[data-theme="dark"] .ln-runbtn{ color:#0A0A0B }
 .ln-runbtn svg{ width:14px; height:14px; fill:currentColor }
 .ln-runbtn:hover:not(:disabled){ transform:translateY(-1px) }
 .ln-runbtn:focus-visible, .ln-stopbtn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
@@ -54,7 +54,7 @@
   position:relative; overflow:hidden; isolation:isolate;
   display:flex; flex-direction:column; gap:8px; min-height:280px;
   padding:20px 20px 18px; border-radius:16px; text-decoration:none; color:var(--ink);
-  background:var(--skin-card, #FFFDF8); border:1px solid var(--rule);
+  background:var(--skin-card, #FFFFFF); border:1px solid var(--rule);
   box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent);
   transition:transform .32s cubic-bezier(.16,1,.3,1), box-shadow .32s ease, border-color .2s ease;
   animation:lnRise .6s cubic-bezier(.16,1,.3,1) both;
@@ -85,7 +85,7 @@
 }
 .ln-glyph svg{ width:20px; height:20px }
 .ln-card:hover .ln-glyph{
-  background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt)); color:#fff; border-color:transparent;
+  background:linear-gradient(135deg,var(--gold-dp),var(--gold)); color:var(--on-accent,#fff); border-color:transparent;
 }
 .ln-rules, .ln-soon{
   font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase;
@@ -110,7 +110,7 @@
 .ln-count span{ font-size:13px; color:var(--ink-2); line-height:1.3 }
 .ln-count i{ display:block; font-style:normal; font-size:12px; color:var(--mute) }
 
-.ln-card.is-soon{ background:color-mix(in srgb,var(--paper-2) 70%,var(--skin-card, #FFFDF8)); border-style:dashed }
+.ln-card.is-soon{ background:color-mix(in srgb,var(--paper-2) 70%,var(--skin-card, #FFFFFF)); border-style:dashed }
 .ln-card.is-soon::after{ background:var(--rule) }
 .ln-card.is-soon .ln-name{ color:var(--ink-2) }
 
@@ -135,7 +135,7 @@
   position:relative; margin:16px 0 22px; padding:28px 26px 26px; border-radius:18px;
   background:
     radial-gradient(120% 140% at 100% 0%, color-mix(in srgb,var(--gold) 16%,transparent) 0%, transparent 55%),
-    var(--skin-card, #FFFDF8);
+    var(--skin-card, #FFFFFF);
   border:1px solid var(--rule);
 }
 .ln-hero .ln-glyph{ width:48px; height:48px; margin-bottom:14px }
@@ -163,7 +163,7 @@
 
 .ln-tablewrap{
   overflow-x:auto; -webkit-overflow-scrolling:touch; margin:10px 0 6px;
-  border:1px solid var(--rule); border-radius:14px; background:var(--skin-card, #FFFDF8);
+  border:1px solid var(--rule); border-radius:14px; background:var(--skin-card, #FFFFFF);
 }
 .ln-table{ width:100%; border-collapse:collapse; font-size:14px }
 .ln-table thead th{
@@ -176,7 +176,7 @@
 .ln-table tbody tr:hover > *{ background:color-mix(in srgb,var(--gold) 5%,transparent) }
 .ln-table th[scope="row"]{
   position:sticky; left:0; z-index:1; text-align:left; font-weight:400; padding:11px 14px;
-  background:var(--skin-card, #FFFDF8); min-width:180px;
+  background:var(--skin-card, #FFFFFF); min-width:180px;
 }
 /* The company column stays put while the figures scroll under it, so it has
    to be opaque in every state. The row's hover tint is see-through; on this
@@ -184,10 +184,10 @@
    underneath show through the company's name. Its heading sticks with it, so
    the column under "Company" is always the company. */
 .ln-table tbody tr:hover > th[scope="row"]{
-  background:color-mix(in srgb,var(--gold) 5%,var(--skin-card, #FFFDF8)) }
+  background:color-mix(in srgb,var(--gold) 5%,var(--skin-card, #FFFFFF)) }
 .ln-table th[scope="row"]{ box-shadow:1px 0 0 var(--rule-2) }
 .ln-table thead th:first-child:not(.qs-n), .ln-table thead th.qs-co{
-  position:sticky; left:0; z-index:2; text-align:left; background:var(--skin-card, #FFFDF8);
+  position:sticky; left:0; z-index:2; text-align:left; background:var(--skin-card, #FFFFFF);
   box-shadow:1px 0 0 var(--rule-2) }
 .ln-table th[scope="row"] a{ text-decoration:none; color:var(--ink); display:block }
 .ln-table th[scope="row"] b{ display:block; font:600 13px/1.2 'IBM Plex Mono',monospace }
@@ -217,7 +217,7 @@
 .ln-convbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px;
   font-size:13px; color:var(--mute) }
 .ln-chip{
-  border:1px solid var(--rule); background:var(--skin-card, #FFFDF8); color:var(--ink-2);
+  border:1px solid var(--rule); background:var(--skin-card, #FFFFFF); color:var(--ink-2);
   border-radius:999px; padding:7px 13px; font:500 13px/1 Inter,system-ui,sans-serif; cursor:pointer;
   min-height:34px;
 }
@@ -226,7 +226,7 @@
 .ln-conv li{
   display:grid; grid-template-columns:44px minmax(180px,1.2fr) auto minmax(0,2fr); gap:14px;
   align-items:center; padding:14px 16px; border-radius:14px; border:1px solid var(--rule);
-  background:var(--skin-card, #FFFDF8);
+  background:var(--skin-card, #FFFFFF);
   animation:lnRise .5s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i,0) * 35ms);
 }
 .ln-rank{ font:400 28px/1 'Instrument Serif',Georgia,serif; color:var(--gold); text-align:center }
@@ -248,9 +248,9 @@
 }
 .ln-badge:hover{ transform:translateY(-1px); border-color:var(--gold) }
 .ln-badge.is-pass{
-  background:linear-gradient(135deg,var(--gold-dp),var(--gold-lt)); color:#fff; border-color:transparent;
+  background:linear-gradient(135deg,var(--gold-dp),var(--gold)); color:var(--on-accent,#fff); border-color:transparent;
 }
-:root[data-theme="dark"] .ln-badge.is-pass{ color:#17140E }
+:root[data-theme="dark"] .ln-badge.is-pass{ color:#0A0A0B }
 .ln-badge.is-near-miss{ border-color:var(--gold); color:var(--gold) }
 .ln-badge.is-soon{ border-style:dashed; opacity:.7 }
 .ln-badge.is-insufficient, .ln-badge.is-none{ opacity:.65 }

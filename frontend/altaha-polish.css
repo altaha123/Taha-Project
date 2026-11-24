@@ -13,7 +13,7 @@
    back, remove that one line.
 
    WHAT IT FIXES
-   1  The gold text was too pale to read (and failed accessibility rules).
+   1  The accent text was too pale to read (and failed accessibility rules).
    2  The candlestick drawing behind the hero cut across the paragraph.
    3  The "Analyse" button was cut off on phones.
    4  "Screener · Planner" appeared twice on the homepage.
@@ -22,26 +22,25 @@
    ═══════════════════════════════════════════════════════════════════════ */
 
 
-/* ── 1 · READABLE GOLD, READABLE GREY ─────────────────────────────────────
-   The old gold (#B08D2E) on the cream background measured 3.0:1. The
-   accessibility standard for body text is 4.5:1, so on a phone in daylight
-   it disappeared. The new value is the same colour, one shade deeper, and
-   measures 4.7:1. The grey used for hints moves from 3.6:1 to 5.1:1.
-   Decorative gold — rules, arcs, underlines — stays bright, because for
-   lines rather than letters the standard is 3:1 and the old value passes. */
+/* ── 1 · READABLE ACCENT, READABLE GREY ───────────────────────────────────
+   Body text needs 4.5:1. These are the same values altaha-skin.css sets, and
+   that file is where the palette lives; they are repeated here only so a
+   page is right in the moment before the skin arrives. The accent measures
+   6.6:1 on white and 6.2:1 on black, the hint grey 5.3:1 and 6.4:1. Lines
+   and underlines use the softer accent, where the standard is 3:1.        */
 
 :root {
-  --gold:     #8A6D1E;
-  --gold-dp:  #7F6419;
-  --mute:     #726B5D;
-  --gold-line: #B08D2E;
+  --gold:     #1F3DFF;
+  --gold-dp:  #1228C9;
+  --mute:     #6B6B76;
+  --gold-line: #5C76FF;
 }
 
 html[data-theme="dark"] {
-  --gold:     #D9BE7E;
-  --gold-dp:  #EBD6A2;
-  --mute:     #8A919F;
-  --gold-line: #C4A661;
+  --gold:     #6382FF;
+  --gold-dp:  #7C96FF;
+  --mute:     #8D8D97;
+  --gold-line: #5C76FF;
 }
 
 /* The decorative divider under the wordmark keeps the brighter gold. */
@@ -227,7 +226,7 @@ button#go, button#rgo {
 }
 .navsub-btn small, .navsub-btn span { opacity: .82; }
 .navsub-btn.on, .navsub-btn[aria-selected="true"] {
-  border-bottom: 2px solid var(--gold-line, #B08D2E) !important;
+  border-bottom: 2px solid var(--gold-line, #3D5AFF) !important;
 }
 .navsub-inner { gap: 26px !important; }
 

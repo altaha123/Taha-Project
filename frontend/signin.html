@@ -38,14 +38,25 @@
 
 <style>
   body { margin:0; font-family:Inter,system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
-  .si-page { --si-muted:#68685f; --si-card:#fffdf8; --si-accent:#183f35;
+  /* Black, white and the one ultramarine, like the rest of the site. The
+     picture is drawn from the --si-a-* values so it turns with the theme
+     instead of sitting on a dark page as a pale card. */
+  .si-page { --si-muted:var(--mute,#6b6b76); --si-card:var(--skin-card,#ffffff); --si-accent:var(--gold,#1f3dff);
+    --si-a-sky1:#f7f7f9; --si-a-sky2:#e6e6eb; --si-a-sun:#ffffff; --si-a-hill1:#dcdce2; --si-a-hill2:#cbcbd3;
+    --si-a-top:#5b5b66; --si-a-face1:#3c3c43; --si-a-face2:#0a0a0b; --si-a-side:#0a0a0b;
+    --si-a-btop:#9db0ff; --si-a-bface1:#5c76ff; --si-a-bface2:#1f3dff; --si-a-bside:#1228c9;
+    --si-a-line:#0a0a0b; --si-a-quiet:#6b6b76;
     min-height:100svh; padding:28px clamp(20px,5vw,80px); box-sizing:border-box;
-    background:radial-gradient(ellipse at 10% 80%,#e7eadf80,transparent 55%),var(--paper); }
-  [data-theme="dark"] .si-page { --si-muted:#b4b5a9; --si-card:#191d19; --si-accent:#b8dac8; }
+    background:var(--paper); }
+  [data-theme="dark"] .si-page {
+    --si-a-sky1:#151518; --si-a-sky2:#0b0b0d; --si-a-sun:#f5f5f7; --si-a-hill1:#1d1d21; --si-a-hill2:#28282d;
+    --si-a-top:#fafafa; --si-a-face1:#c4c4cc; --si-a-face2:#8d8d97; --si-a-side:#62626c;
+    --si-a-btop:#b4c2ff; --si-a-bface1:#7c96ff; --si-a-bface2:#3d5aff; --si-a-bside:#1f3dff;
+    --si-a-line:#fafafa; --si-a-quiet:#8d8d97; }
   .si-page *, .si-page *::before, .si-page *::after { box-sizing:border-box; }
   .si-header { max-width:1180px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
   .si-brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); }
-  .si-monogram { width:40px; height:40px; border-radius:12px; background:#183f35; color:#e2cf9e; display:grid; place-items:center; font:400 28px/1 var(--serif,'Instrument Serif',Georgia,serif); }
+  .si-monogram { width:40px; height:40px; border-radius:12px; background:var(--ink); color:var(--paper); display:grid; place-items:center; font:400 28px/1 var(--serif,'Instrument Serif',Georgia,serif); }
   .si-brand-name { font-size:18px; font-weight:600; letter-spacing:-.04em; }
   .si-brand-name small { display:block; font-size:10px; letter-spacing:.2em; text-transform:uppercase; margin-top:4px; color:var(--si-muted); }
   .si-home { color:var(--si-muted); font-size:13px; text-decoration:none; padding:12px 0; }
@@ -57,7 +68,7 @@
   .si-art { margin:28px 0 0; position:relative; }
   .si-art svg { display:block; width:100%; height:auto; border-radius:24px; }
   .si-art figcaption { color:var(--si-muted); font-size:11px; margin-top:10px; letter-spacing:.03em; }
-  .si-card { min-width:0; padding:38px; border:1px solid var(--rule); border-radius:24px; background:var(--si-card); box-shadow:0 16px 60px #183f350c,0 2px 6px #183f3505; animation:si-enter .5s ease-out both; }
+  .si-card { min-width:0; padding:38px; border:1px solid var(--rule); border-radius:24px; background:var(--si-card); box-shadow:0 16px 60px #0a0a0b0f,0 2px 6px #0a0a0b08; animation:si-enter .5s ease-out both; }
   .si-card h1 { font:400 42px/1.15 'Instrument Serif',Georgia,serif; letter-spacing:-.025em; margin:0 0 12px; color:var(--ink); }
   .si-lede { font-size:14px; line-height:1.7; color:var(--si-muted); margin:0 0 26px; overflow-wrap:anywhere; }
   .si-field { display:block; margin-bottom:16px; }
@@ -65,8 +76,8 @@
   .si-input { width:100%; min-height:52px; padding:14px 16px; font:400 16px/1.4 Inter,system-ui,sans-serif; color:var(--ink); background:var(--paper); border:1px solid var(--rule); border-radius:10px; }
   .si-input::placeholder { color:var(--si-muted); opacity:1; }
   .si-page :focus-visible { outline:3px solid var(--si-accent); outline-offset:4px; }
-  .si-btn { display:block; width:100%; min-height:52px; padding:15px 18px; font:600 14px/1.5 Inter,system-ui,sans-serif; color:#fffdf8; background:#183f35; border:1px solid transparent; border-radius:10px; cursor:pointer; transition:background .18s ease,box-shadow .18s ease; }
-  .si-btn:hover:not(:disabled) { background:#245848; box-shadow:0 4px 12px #183f3520; }
+  .si-btn { display:block; width:100%; min-height:52px; padding:15px 18px; font:600 14px/1.5 Inter,system-ui,sans-serif; color:var(--paper); background:var(--ink); border:1px solid transparent; border-radius:10px; cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
+  .si-btn:hover:not(:disabled) { background:var(--gold); color:var(--on-accent,#fff); box-shadow:0 4px 14px color-mix(in srgb,var(--gold) 28%,transparent); }
   .si-btn[disabled] { opacity:.55; cursor:wait; }
   .si-note { font-size:13px; line-height:1.65; margin:16px 0 0; color:var(--si-muted); overflow-wrap:anywhere; }
   .si-note:empty { display:none; }
@@ -121,27 +132,27 @@
     <p class="si-description">Keep your portfolio close. See what changed, and stay connected to the companies you own.</p>
     <figure class="si-art">
       <svg viewBox="0 0 500 280" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="si-art-title">
-        <title id="si-art-title">An abstract market landscape with sculptural green and gold columns</title>
+        <title id="si-art-title">An abstract market landscape with sculptural black and blue columns</title>
         <defs>
-          <linearGradient id="si-sky" x2="500" y2="280" gradientUnits="userSpaceOnUse"><stop stop-color="#eaece0"/><stop offset="1" stop-color="#d6dece"/></linearGradient>
-          <linearGradient id="si-green" x2="1" y2="1"><stop stop-color="#497663"/><stop offset="1" stop-color="#163d32"/></linearGradient>
-          <linearGradient id="si-gold" x2="1" y2="1"><stop stop-color="#e2c986"/><stop offset="1" stop-color="#a68848"/></linearGradient>
+          <linearGradient id="si-sky" x2="500" y2="280" gradientUnits="userSpaceOnUse"><stop style="stop-color:var(--si-a-sky1)"/><stop offset="1" style="stop-color:var(--si-a-sky2)"/></linearGradient>
+          <linearGradient id="si-ink" x2="1" y2="1"><stop style="stop-color:var(--si-a-face1)"/><stop offset="1" style="stop-color:var(--si-a-face2)"/></linearGradient>
+          <linearGradient id="si-blue" x2="1" y2="1"><stop style="stop-color:var(--si-a-bface1)"/><stop offset="1" style="stop-color:var(--si-a-bface2)"/></linearGradient>
         </defs>
         <rect width="500" height="280" rx="24" fill="url(#si-sky)"/>
-        <circle cx="380" cy="90" r="58" fill="#f8f4e7"/>
-        <circle cx="380" cy="90" r="74" stroke="#f8f4e7" stroke-opacity=".5"/>
-        <path d="M0 210Q150 160 290 210T500 205V280H0Z" fill="#bdcab8"/>
-        <path d="M0 247Q180 206 500 240V280H0Z" fill="#a3b7a0"/>
-        <ellipse cx="275" cy="244" rx="166" ry="16" fill="#264d36" opacity=".12"/>
-        <path d="M118 184l40-19 41 19-40 20z" fill="#719181"/>
-        <path d="M118 184l41 20v42l-41-20z" fill="url(#si-green)"/><path d="M159 204l40-20v42l-40 20z" fill="#173e32"/>
-        <path d="M203 143l40-19 41 19-40 20z" fill="#719181"/>
-        <path d="M203 143l41 20v83l-41-20z" fill="url(#si-green)"/><path d="M244 163l40-20v83l-40 20z" fill="#173e32"/>
-        <path d="M288 94l40-19 41 19-40 20z" fill="#e5d298"/>
-        <path d="M288 94l41 20v132l-41-20z" fill="url(#si-gold)"/><path d="M329 114l40-20v132l-40 20z" fill="#9e8246"/>
-        <path d="M77 164C147 115 174 148 225 91S316 62 344 38" stroke="#426c58" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>
-        <circle cx="77" cy="164" r="4" fill="#426c58"/><circle cx="344" cy="38" r="4" fill="#426c58"/>
-        <path d="M397 231v-39m-7 13h14v18h-14zM429 208v-51m-7 11h14v24h-14z" stroke="#526f59" stroke-width="2"/>
+        <circle cx="380" cy="90" r="58" style="fill:var(--si-a-sun)"/>
+        <circle cx="380" cy="90" r="74" style="stroke:var(--si-a-sun)" stroke-opacity=".35"/>
+        <path d="M0 210Q150 160 290 210T500 205V280H0Z" style="fill:var(--si-a-hill1)"/>
+        <path d="M0 247Q180 206 500 240V280H0Z" style="fill:var(--si-a-hill2)"/>
+        <ellipse cx="275" cy="244" rx="166" ry="16" fill="#000" opacity=".12"/>
+        <path d="M118 184l40-19 41 19-40 20z" style="fill:var(--si-a-top)"/>
+        <path d="M118 184l41 20v42l-41-20z" fill="url(#si-ink)"/><path d="M159 204l40-20v42l-40 20z" style="fill:var(--si-a-side)"/>
+        <path d="M203 143l40-19 41 19-40 20z" style="fill:var(--si-a-top)"/>
+        <path d="M203 143l41 20v83l-41-20z" fill="url(#si-ink)"/><path d="M244 163l40-20v83l-40 20z" style="fill:var(--si-a-side)"/>
+        <path d="M288 94l40-19 41 19-40 20z" style="fill:var(--si-a-btop)"/>
+        <path d="M288 94l41 20v132l-41-20z" fill="url(#si-blue)"/><path d="M329 114l40-20v132l-40 20z" style="fill:var(--si-a-bside)"/>
+        <path d="M77 164C147 115 174 148 225 91S316 62 344 38" style="stroke:var(--si-a-line)" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>
+        <circle cx="77" cy="164" r="4" style="fill:var(--si-a-line)"/><circle cx="344" cy="38" r="4" style="fill:var(--gold,#1f3dff)"/>
+        <path d="M397 231v-39m-7 13h14v18h-14zM429 208v-51m-7 11h14v24h-14z" style="stroke:var(--si-a-quiet)" stroke-width="2"/>
       </svg>
       <figcaption>A little perspective makes a difference.</figcaption>
     </figure>

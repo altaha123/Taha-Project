@@ -2,7 +2,7 @@
    so the page follows light and dark without a second palette. */
 
 body{margin:0;background:var(--paper);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-.fm{--fm-card:var(--skin-card,#FFFDF8);max-width:1120px;margin:0 auto;padding:28px clamp(16px,4vw,32px) 72px;
+.fm{--fm-card:var(--skin-card,#FFFFFF);max-width:1120px;margin:0 auto;padding:28px clamp(16px,4vw,32px) 72px;
   box-sizing:border-box;color:var(--ink)}
 .fm *{box-sizing:border-box}
 .fm a{color:var(--gold)}
@@ -21,7 +21,7 @@ body{margin:0;background:var(--paper);font-family:Inter,system-ui,sans-serif;-we
   padding:12px 16px;min-height:44px;border-radius:11px;border:1px solid var(--rule);background:var(--fm-card);
   color:var(--ink) !important;text-decoration:none;cursor:pointer}
 .fm-btn:hover{background:var(--paper-2)}
-.fm-btn.is-gold{background:var(--gold);border-color:var(--gold);color:#17140E !important}
+.fm-btn.is-gold{background:var(--gold);border-color:var(--gold);color:var(--on-accent,#fff) !important}
 .fm-btn.is-gold:hover{filter:brightness(1.07)}
 .fm-btn.is-small{padding:8px 11px;min-height:36px;font-size:13px}
 .fm-btn:disabled{opacity:.6;cursor:default}

@@ -26,31 +26,33 @@
 :root {
   color-scheme: light;
 
-  --paper:   #FCFCFD;
-  --paper-2: #F1F3F6;
-  --ink:     #0A0B0E;
-  --ink-2:   #3A404B;
-  --mute:    #6C7280;
-  --rule:    #E1E4E9;
-  --rule-2:  #ECEEF1;
+  /* The shared colours are altaha-skin.css's to decide; it loads after this
+     file and outranks it. These are the same values, for the first paint. */
+  --paper:   #FFFFFF;
+  --paper-2: #F5F5F7;
+  --ink:     #0A0A0B;
+  --ink-2:   #3C3C43;
+  --mute:    #6B6B76;
+  --rule:    #E4E4E8;
+  --rule-2:  #EEEEF1;
 
-  --gold:    #A8862F;
-  --gold-lt: #C4A661;
-  --gold-dp: #7E6220;
+  --gold:    #1F3DFF;
+  --gold-lt: #5C76FF;
+  --gold-dp: #1228C9;
 
-  --pass: #0B7A55;
-  --part: #A2751A;
-  --fail: #C0392F;
+  --pass: #0A7548;
+  --part: #A84D08;
+  --fail: #C62828;
 
   --surface:    #FFFFFF;
-  --surface-2:  #F7F8FA;
-  --glass:      rgba(252,252,253,.78);
-  --glass-line: rgba(10,11,14,.08);
-  --hairline:   rgba(10,11,14,.10);
-  --grid:       rgba(10,11,14,.045);
+  --surface-2:  #F7F7F9;
+  --glass:      rgba(255,255,255,.78);
+  --glass-line: rgba(10,10,11,.08);
+  --hairline:   rgba(10,10,11,.10);
+  --grid:       rgba(10,10,11,.045);
 
-  --up:   #0B7A55;
-  --down: #C0392F;
+  --up:   #0A7548;
+  --down: #C62828;
 
   /* The same three families as every other page (altaha-skin.css). This
      used to put the Apple system font ahead of Inter, so on a Mac or an
@@ -60,12 +62,12 @@
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --serif: 'Instrument Serif', Georgia, serif;
 
-  --sh-1: 0 .5px 1px rgba(10,11,14,.05), 0 1px 2px rgba(10,11,14,.04);
-  --sh-2: 0 1px 2px rgba(10,11,14,.05), 0 4px 12px rgba(10,11,14,.06),
-          0 12px 32px rgba(10,11,14,.05);
-  --sh-3: 0 2px 4px rgba(10,11,14,.06), 0 12px 28px rgba(10,11,14,.10),
-          0 32px 64px rgba(10,11,14,.10);
-  --ring: 0 0 0 3.5px rgba(196,166,97,.30);
+  --sh-1: 0 .5px 1px rgba(10,10,11,.05), 0 1px 2px rgba(10,10,11,.04);
+  --sh-2: 0 1px 2px rgba(10,10,11,.05), 0 4px 12px rgba(10,10,11,.06),
+          0 12px 32px rgba(10,10,11,.05);
+  --sh-3: 0 2px 4px rgba(10,10,11,.06), 0 12px 28px rgba(10,10,11,.10),
+          0 32px 64px rgba(10,10,11,.10);
+  --ring: 0 0 0 3.5px rgba(77,107,255,.30);
 
   --r-card:  14px;
   --r-panel: 20px;
@@ -82,36 +84,36 @@
 html[data-theme="dark"] {
   color-scheme: dark;
 
-  --paper:   #0A0B0E;
-  --paper-2: #15171C;
-  --ink:     #F3F4F7;
-  --ink-2:   #B4BAC4;
-  --mute:    #79808E;
-  --rule:    #23262E;
-  --rule-2:  #1B1E24;
+  --paper:   #000000;
+  --paper-2: #0B0B0D;
+  --ink:     #FAFAFA;
+  --ink-2:   #C4C4CC;
+  --mute:    #8D8D97;
+  --rule:    #2A2A2F;
+  --rule-2:  #1B1B1F;
 
-  --gold:    #D9BE7E;
-  --gold-lt: #C4A661;
-  --gold-dp: #EBD6A2;
+  --gold:    #6382FF;
+  --gold-lt: #5C76FF;
+  --gold-dp: #7C96FF;
 
-  --pass: #34C48D;
-  --part: #D8AE4B;
-  --fail: #F0736A;
+  --pass: #2FD98B;
+  --part: #F5B544;
+  --fail: #FF5C4D;
 
-  --surface:    #121419;
-  --surface-2:  #181B21;
-  --glass:      rgba(10,11,14,.76);
+  --surface:    #111114;
+  --surface-2:  #18181C;
+  --glass:      rgba(0,0,0,.76);
   --glass-line: rgba(255,255,255,.09);
   --hairline:   rgba(255,255,255,.10);
   --grid:       rgba(255,255,255,.05);
 
-  --up:   #34C48D;
-  --down: #F0736A;
+  --up:   #2FD98B;
+  --down: #FF5C4D;
 
   --sh-1: 0 .5px 1px rgba(0,0,0,.5);
   --sh-2: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.45);
   --sh-3: 0 2px 6px rgba(0,0,0,.5), 0 20px 48px rgba(0,0,0,.55);
-  --ring: 0 0 0 3.5px rgba(217,190,126,.32);
+  --ring: 0 0 0 3.5px rgba(99,130,255,.32);
 }
 
 /* Hardcoded #fff in the original sheet, rerouted. Explicit, not wildcard. */
@@ -192,7 +194,7 @@ body {
   font-feature-settings: 'tnum' 1, 'zero' 1;
 }
 
-::selection { background: rgba(196,166,97,.28); color: var(--ink); }
+::selection { background: rgba(77,107,255,.28); color: var(--ink); }
 :focus-visible { outline: none; box-shadow: var(--ring); border-radius: 8px; }
 
 /* ── 3. TICKER BAR ─────────────────────────────────────────────────────── */
@@ -204,8 +206,8 @@ body {
 .tickerbar .tk { background: transparent !important; border: 0; }
 .tickerbar .tk .n { color: rgba(255,255,255,.66); letter-spacing: .1em; }
 .tickerbar .tk .l { color: rgba(255,255,255,.94); font-weight: 500; }
-.tickerbar .tk .c.up { color: #34C48D; }
-.tickerbar .tk .c.dn { color: #F0736A; }
+.tickerbar .tk .c.up { color: #2FD98B; }
+.tickerbar .tk .c.dn { color: #FF5C4D; }
 .tickerbar .mktime, .tickerbar .mkstatus { color: rgba(255,255,255,.74); }
 .tickerbar .mkstatus i { box-shadow: 0 0 0 4px rgba(52,196,141,.16); }
 
@@ -239,7 +241,7 @@ header.wrap::after {
   content: "";
   position: absolute; inset: -10% -25% 30% -25%; z-index: -2;
   background: radial-gradient(52% 74% at 50% 30%,
-              rgba(196,166,97,.15) 0%, rgba(196,166,97,0) 72%);
+              rgba(77,107,255,.15) 0%, rgba(77,107,255,0) 72%);
   pointer-events: none;
 }
 
@@ -378,7 +380,7 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
   background: var(--paper-2);
   border: .5px solid var(--hairline);
   padding: 3px;
-  box-shadow: inset 0 1px 2px rgba(10,11,14,.03);
+  box-shadow: inset 0 1px 2px rgba(10,10,11,.03);
 }
 html[data-theme="dark"] .seg { box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
 
@@ -391,7 +393,7 @@ html[data-theme="dark"] .seg { box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
 .seg-puck {
   top: 3px; bottom: 3px;
   background: var(--surface);
-  box-shadow: 0 .5px 1px rgba(10,11,14,.07), 0 3px 8px rgba(10,11,14,.10);
+  box-shadow: 0 .5px 1px rgba(10,10,11,.07), 0 3px 8px rgba(10,10,11,.10);
   transition: transform 420ms var(--ease), width 420ms var(--ease),
               opacity var(--t-fast) linear;
 }
@@ -493,7 +495,7 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
 }
 html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
 
-.seal { filter: drop-shadow(0 8px 22px rgba(10,11,14,.07)); }
+.seal { filter: drop-shadow(0 8px 22px rgba(10,10,11,.07)); }
 .seal svg circle#arc {
   stroke-linecap: round;
   transition: stroke-dashoffset 1200ms var(--ease-soft) !important;
@@ -603,13 +605,13 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 }
 .themeseg button svg { display: block; }
 .themeseg button:hover { color: rgba(255,255,255,.82); }
-.themeseg button.on { color: #17140E; }
-.themeseg button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(217,188,106,.6); }
+.themeseg button.on { color: #0A0A0B; }
+.themeseg button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(99,130,255,.6); }
 
 /* One puck that slides, rather than two backgrounds that flick. */
 .themepuck {
   position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc(50% - 2px);
-  border-radius: 999px; background: #E8E2D4; z-index: 0;
+  border-radius: 999px; background: #E7E8EB; z-index: 0;
   transition: transform var(--t) var(--ease-soft);
 }
 .themeseg[data-t="dark"] .themepuck { transform: translateX(100%); }

@@ -213,7 +213,7 @@ html.cw-max-on,html.cw-max-on body{overflow:hidden}
 .cw-lg-row .nm{color:var(--ink-2)}
 .cw-lg-row.off{opacity:.45}
 .cw-lg-main{font-size:12px}
-.cw-lg-tag{background:var(--gold);color:#fff;border-radius:3px;padding:0 5px;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.cw-lg-tag{background:var(--gold);color:var(--on-accent,#fff);border-radius:3px;padding:0 5px;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
 .cw-lg-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
 /* A legend line answers the pointer so its buttons can appear on hover; the
    buttons are not there at all until then, so a drag that starts near the
@@ -367,7 +367,7 @@ html.cw-max-on,html.cw-max-on body{overflow:hidden}
 .cw-goto input{text-transform:none;margin:6px 0 8px}
 .cw-goto label{display:block;font-size:12px;color:var(--mute)}
 
-.cw-modal-back{position:absolute;inset:0;z-index:50;background:rgba(22,19,14,.28);display:grid;place-items:center;padding:16px}
+.cw-modal-back{position:absolute;inset:0;z-index:50;background:rgba(10,10,11,.28);display:grid;place-items:center;padding:16px}
 .cw-modal{background:var(--surface,#fff);border-radius:12px;box-shadow:var(--sh-2);width:min(440px,100%);max-height:calc(100% - 24px);
   display:flex;flex-direction:column;border:1px solid var(--rule)}
 .cw-modal-wide{width:min(620px,100%)}

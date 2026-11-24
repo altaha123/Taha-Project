@@ -701,8 +701,8 @@
        calc   (D, p) -> { key: array }. D carries o, h, l, c, v, t.
      ══════════════════════════════════════════════════════════════════════ */
 
-  var GOLD = "#B08D2E", GREEN = "#1F5D45", RED = "#8E2F2A", BLUE = "#2E5E8E", INK = "#4A443A",
-      PURPLE = "#6B4E9B", TEAL = "#1E7B85", ORANGE = "#C0692B", MUTE = "#8B8477", PINK = "#B0457A";
+  var GOLD = "#B08D2E", GREEN = "#1F5D45", RED = "#8E2F2A", BLUE = "#2E5E8E", INK = "#3C3C43",
+      PURPLE = "#6B4E9B", TEAL = "#1E7B85", ORANGE = "#C0692B", MUTE = "#6E6E78", PINK = "#B0457A";
 
   var LEN = function (v, l) { return { k: "len", l: l || "Length", v: v, min: 1, max: 500 }; };
   var SRC = { k: "src", l: "Source", v: "close", opts: ["close", "open", "high", "low", "hl2", "hlc3", "ohlc4"] };

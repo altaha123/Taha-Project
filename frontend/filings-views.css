@@ -155,7 +155,7 @@
 /* The order a shared card linked to: clear of the sticky header when it is
    scrolled to, and ringed so it can be told from its neighbours. */
 .wo{ scroll-margin-top:150px }
-.wo.is-arrived{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(176,141,46,.2) }
+.wo.is-arrived{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(61,90,255,.2) }
 .wo-row.is-arrived{ box-shadow:inset 3px 0 0 var(--gold) }
 .wo-ev > summary{
   cursor:pointer; font:500 11px/1 'IBM Plex Mono',monospace;
@@ -283,7 +283,7 @@
 /* The call a shared card linked to: clear of the sticky header when it is
    scrolled to, and ringed so it can be told from its neighbours. */
 .cc{ scroll-margin-top:150px }
-.cc.is-arrived{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(176,141,46,.2) }
+.cc.is-arrived{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(61,90,255,.2) }
 
 .cc-facts{ display:flex; flex-wrap:wrap; gap:9px 24px; margin-bottom:17px }
 .cc-facts span{
@@ -657,6 +657,6 @@
 }
 .lg-btn:hover{ border-color:var(--gold); color:var(--gold) }
 .lg-btn.is-go{ background:var(--ink); border-color:var(--ink); color:var(--paper) }
-.lg-btn.is-go:hover{ background:var(--gold); border-color:var(--gold); color:#fff }
+.lg-btn.is-go:hover{ background:var(--gold); border-color:var(--gold); color:var(--on-accent,#fff)}
 .lg-fine{ margin:0; font-size:12px; line-height:1.6; color:var(--mute) }
 @media (prefers-reduced-motion:reduce){ .lg-bar i{ transition:none } }

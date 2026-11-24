@@ -536,7 +536,7 @@
     host.innerHTML =
       '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
         '<defs><linearGradient id="drt-fill" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0" stop-color="#D9BC6A" stop-opacity=".42"/><stop offset="1" stop-color="#D9BC6A" stop-opacity="0"/>' +
+          '<stop offset="0" stop-color="#6382FF" stop-opacity=".42"/><stop offset="1" stop-color="#6382FF" stop-opacity="0"/>' +
         '</linearGradient></defs>' +
         '<line class="dr-prevline" x1="0" x2="' + W + '" y1="' + Y(prev).toFixed(1) + '" y2="' + Y(prev).toFixed(1) + '"/>' +
         '<path class="dr-area" d="' + line + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="url(#drt-fill)"/>' +
@@ -588,7 +588,7 @@
           var bg = c >= 0 ? 'hsl(146,40%,' + L + '%)' : 'hsl(9,60%,' + L + '%)';
           return '<button type="button" class="dr-tile" data-sector="' + esc(r.sector) +
             '" aria-expanded="false" aria-controls="drt-secpanel" style="--i:' + i +
-            ';background-color:' + bg + ';color:' + (L < 60 ? '#FBF8F1' : '#17140E') + '">' +
+            ';background-color:' + bg + ';color:' + (L < 60 ? '#FFFFFF' : '#0A0A0B') + '">' +
             '<span>' + esc(r.sector) + '</span><b>' + pct(r.change_pct) + '</b>' +
             (finite(r.up) && finite(r.total) ? '<small>' + r.up + ' of ' + r.total + ' up</small>' : '') + '</button>';
         }).join('');

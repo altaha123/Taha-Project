@@ -8,7 +8,7 @@
 
 .pk-panel { --pk-card: var(--dr-card, #fff); --pk-rule: var(--dr-rule, var(--rule-2)); --pk-mute: var(--dr-mute, var(--mute));
   margin: 0 0 22px; padding: 20px 22px 18px; border: 1px solid var(--pk-rule); border-radius: 22px; background: var(--pk-card);
-  box-shadow: 0 10px 34px rgba(23, 20, 14, .06); }
+  box-shadow: 0 10px 34px rgba(10, 10, 11, .06); }
 .pk-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 14px; }
 .pk-title { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1.1; letter-spacing: -.005em; color: var(--ink); }
 .pk-sub { margin: 0; font-size: 14px; color: var(--pk-mute, var(--mute)); }
@@ -29,7 +29,7 @@
 .pk-tab small { font: 400 12px/1 var(--sans); color: var(--tk-label, var(--mute)); }
 .pk-tab:hover { border-color: var(--gold); transform: translateY(-1px); }
 .pk-tab.on { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
-.pk-tab.on small { color: var(--gold-lt, #D9BC6A); }
+.pk-tab.on small { color: inherit; opacity: .72; }
 .pk-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 /* ── What the list is, and how it did ─────────────────────────────────── */
@@ -145,10 +145,6 @@
 .pk-again { margin: 34px 0 10px; font-family: var(--serif); font-weight: 400; font-size: 28px; color: var(--ink); }
 
 html[data-theme="dark"] .pk-panel { box-shadow: none; }
-html[data-theme="dark"] .pk-tab.on { background: var(--gold-lt); border-color: var(--gold-lt); color: #16130E; }
-html[data-theme="dark"] .pk-tab.on small { color: #4A3F1E; }
-html[data-theme="dark"] .pk-all, html[data-theme="dark"] .pk-panel .pk-all { background: var(--gold-lt); color: #16130E; }
-html[data-theme="dark"] .pk-panel .pk-tab.on { color: #16130E; }
 
 @media (max-width: 720px) {
   .pk-group { grid-template-columns: minmax(0, 1fr); gap: 5px; }

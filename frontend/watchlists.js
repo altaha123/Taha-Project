@@ -503,7 +503,7 @@
     var host = document.createElement('div');
     host.className = 'wl-confetti';
     host.setAttribute('aria-hidden', 'true');
-    var colors = ['#D9BC6A', '#3FBF87', '#5B9BD5', '#E0614F', '#9A7FD1', '#F2C14E'];
+    var colors = ['#6382FF', '#2FD98B', '#5B9BD5', '#FF5C4D', '#9A7FD1', '#799CF5'];
     for (var i = 0; i < 70; i++) {
       var b = document.createElement('i');
       b.style.left = (Math.random() * 100) + '%';
@@ -766,7 +766,7 @@
       var L = Math.round(90 - a * 52);
       var bg = c >= 0 ? 'hsl(150,42%,' + L + '%)' : 'hsl(8,62%,' + L + '%)';
       return '<a class="wl-hcell' + (big[r.s] ? ' big' : '') + '" href="stock.html?ticker=' + encodeURIComponent(r.s) + '" style="--i:' + Math.min(k, 20) +
-        ';background:' + bg + ';color:' + (L < 62 ? '#FBF8F1' : '#17140E') + '">' +
+        ';background:' + bg + ';color:' + (L < 62 ? '#FFFFFF' : '#0A0A0B') + '">' +
         '<b>' + esc(r.s) + '</b><span>' + pct(c) + '</span><small>' + inr(r.q.ltp, 0) + '</small></a>';
     }).join('') + '</div>';
   }

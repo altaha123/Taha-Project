@@ -280,10 +280,12 @@
 <script>AltahaBoot.late(3)</script>
 <style>
   :root{
-    --paper:#FBFAF7; --paper-2:#F4F1EB; --ink:#16130E; --ink-2:#4A443A; --mute:#8B8477;
-    --rule:#DDD6C9; --rule-2:#EBE6DC;
-    --gold:#B08D2E; --gold-lt:#D9BC6A; --gold-dp:#8A6D1E;
-    --pass:#1F5D45; --part:#9A7B1F; --fail:#8E2F2A;
+    /* First paint only. The palette lives in altaha-skin.css, which loads
+       later and outranks this; keep the two the same. */
+    --paper:#FFFFFF; --paper-2:#F5F5F7; --ink:#0A0A0B; --ink-2:#3C3C43; --mute:#6B6B76;
+    --rule:#E4E4E8; --rule-2:#EEEEF1;
+    --gold:#1F3DFF; --gold-lt:#5C76FF; --gold-dp:#1228C9;
+    --pass:#0A7548; --part:#A84D08; --fail:#C62828;
     --mono:'IBM Plex Mono',monospace; --serif:'Instrument Serif',Georgia,serif; --sans:'Inter',system-ui,sans-serif;
   }
 
@@ -302,17 +304,17 @@
     /* Not var(--mute): the light mute lands at 3.8:1, which fails AA for the
        8.5-10px mono this grid labels itself with. This is the value
        altaha-polish.css picked for exactly that reason. */
-    --tk-cell:#fff; --tk-label:#726B5D; --tk-quiet:#726B5D; --tk-gap:var(--rule-2);
+    --tk-cell:#fff; --tk-label:#62626C; --tk-quiet:#62626C; --tk-gap:var(--rule-2);
     --warn-bg:#fdf8f0; --warn-ink:#5c4520; --warn-edge:#b26a00;
     --stale-bg:#fdf3f3; --stale-ink:#7a2020;
   }
   html[data-theme="dark"]{
     /* A shade off the card rather than off the page, so the cells still read
        as tiles sitting on it rather than as holes cut out of it. */
-    --tk-cell:#221E15; --tk-label:#ADA593; --tk-quiet:#A9A190;
-    /* The separators invert too. On --rule-2 they were #221E16 between
-       #221E15 tiles, and the four cells merged into a single slab. */
-    --tk-gap:#0D0B07;
+    --tk-cell:#18181C; --tk-label:#A3A3AD; --tk-quiet:#A0A0AA;
+    /* The separators invert too. On --rule-2 they were #1B1B1F between
+       #18181C tiles, and the four cells merged into a single slab. */
+    --tk-gap:#000000;
     --warn-bg:#241C10; --warn-ink:#E4D5B4; --warn-edge:#C08A2A;
     --stale-bg:#261412; --stale-ink:#F0B5AC;
   }
@@ -326,9 +328,9 @@
     --ease-soft:cubic-bezier(.16,1,.3,1);
     --t-fast:150ms; --t:280ms; --t-slow:460ms;
     --r-pill:999px; --r-card:9px;
-    --sh-1:0 1px 2px rgba(22,19,14,.045), 0 2px 6px rgba(22,19,14,.028);
-    --sh-2:0 2px 5px rgba(22,19,14,.05), 0 14px 34px rgba(22,19,14,.075);
-    --ring:0 0 0 3px rgba(176,141,46,.20);
+    --sh-1:0 1px 2px rgba(10,10,11,.045), 0 2px 6px rgba(10,10,11,.028);
+    --sh-2:0 2px 5px rgba(10,10,11,.05), 0 14px 34px rgba(10,10,11,.075);
+    --ring:0 0 0 3px rgba(61,90,255,.20);
   }
 
   /* ══ Segmented bubble — the one selector idiom ═════════════════════════
@@ -346,14 +348,14 @@
        transition:transform var(--t) var(--ease), width var(--t) var(--ease),
                   opacity var(--t-fast) linear}
   .seg-puck::after{content:"";position:absolute;inset:0;border-radius:inherit;
-       border:1px solid rgba(217,188,106,.42)}
+       border:1px solid rgba(99,130,255,.42)}
   .seg > .moreWrap > button{position:relative;z-index:1;border:0;background:none;
        border-radius:var(--r-pill);padding:9px 17px;cursor:pointer;white-space:nowrap;
        font-family:var(--sans);font-weight:500;font-size:14px;color:var(--ink-2);
        transition:color var(--t) var(--ease)}
   .seg > .moreWrap > button:hover:not(.active){color:var(--ink)}
   .seg > .moreWrap > button.active{background:var(--ink);color:var(--paper);
-       box-shadow:var(--sh-1),inset 0 0 0 1px rgba(217,188,106,.42)}
+       box-shadow:var(--sh-1),inset 0 0 0 1px rgba(99,130,255,.42)}
   .seg.has-puck > .moreWrap > button.active{background:transparent;box-shadow:none}
   .seg > .moreWrap > button:focus-visible{outline:none;box-shadow:var(--ring)}
   /* Legacy control skins are neutralised inside a bubble bar. Without this the
@@ -366,7 +368,7 @@
        color:var(--ink-2);transition:color var(--t) var(--ease)}
   .seg > button:hover:not(.active){color:var(--ink)}
   .seg > button.active{background:var(--ink);color:var(--paper);
-       box-shadow:var(--sh-1),inset 0 0 0 1px rgba(217,188,106,.42)}
+       box-shadow:var(--sh-1),inset 0 0 0 1px rgba(99,130,255,.42)}
   /* Engine confirmed: hand the fill over to the sliding puck. */
   .seg.has-puck > button.active{background:transparent;box-shadow:none}
   .seg.has-puck > button{transition:color var(--t) var(--ease)}
@@ -391,7 +393,7 @@
   .act:active{transform:translateY(0)}
   .act:focus-visible{outline:none;box-shadow:var(--ring)}
   .act.solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-  .act.solid:hover{background:var(--gold-dp);border-color:var(--gold-dp);color:#fff}
+  .act.solid:hover{background:var(--gold-dp);border-color:var(--gold-dp);color:var(--on-accent,#fff)}
 
   /* ══ Staggered reveal ══════════════════════════════════════════════════
      Rows arrive in sequence rather than all at once. Capped at 10 steps so a
@@ -408,7 +410,7 @@
   .skel{border:1px solid var(--rule-2);border-radius:var(--r-card);background:#fff;
         padding:19px 22px;margin-bottom:12px;box-shadow:var(--sh-1)}
   .skel i{display:block;height:11px;border-radius:var(--r-pill);
-          background:linear-gradient(90deg,var(--paper-2) 8%,rgba(217,188,106,.22) 38%,var(--paper-2) 68%);
+          background:linear-gradient(90deg,var(--paper-2) 8%,rgba(99,130,255,.22) 38%,var(--paper-2) 68%);
           background-size:280% 100%;animation:shimmer 1.5s var(--ease) infinite}
   .skel i + i{margin-top:11px}
   .skel i.w40{width:40%}.skel i.w70{width:70%}.skel i.w55{width:55%}.skel i.w25{width:25%;height:9px}
@@ -506,7 +508,7 @@
   .lsub{font-size:14px;color:var(--mute);margin:12px 0 6px;line-height:1.6}
   .brow{display:grid;grid-template-columns:34px 1fr auto auto;gap:14px;align-items:center;
     padding:13px 12px;border-bottom:1px solid var(--rule-2);cursor:pointer;font-size:16px}
-  .brow:nth-child(even){background:rgba(244,241,235,.5)}
+  .brow:nth-child(even){background:rgba(245,245,247,.5)}
   .brow:hover{background:var(--paper-2)}
   .brow .rank{font-family:var(--serif);font-size:24px;color:var(--gold-dp);text-align:center;line-height:1}
   .brow .nm{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -666,8 +668,8 @@
   .sharebtn:hover{border-color:var(--ink);color:var(--ink)}
   .sharebtn:focus-visible{outline:none;box-shadow:var(--ring)}
   .sharebtn.x{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-  .sharebtn.x:hover{background:var(--gold-dp);border-color:var(--gold-dp);color:#fff}
-  .sharebtn.done{border-color:#1f6f43;color:#1f6f43}
+  .sharebtn.x:hover{background:var(--gold-dp);border-color:var(--gold-dp);color:var(--on-accent,#fff)}
+  .sharebtn.done{border-color:#0a7548;color:#0a7548}
   .sharecard{display:block;width:100%;height:auto;margin-top:14px;border-radius:7px;
              border:1px solid var(--rule-2)}
   .sharecard[hidden]{display:none}
@@ -687,10 +689,10 @@
   .badge:first-child{border-color:var(--gold);color:var(--gold-dp);background:var(--paper-2)}
   @media(max-width:520px){.badge{font-size:10px;letter-spacing:.1em;padding:6px 10px}}
   body{background-image:
-      linear-gradient(rgba(22,19,14,.038) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(22,19,14,.038) 1px, transparent 1px),
-      linear-gradient(rgba(22,19,14,.022) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(22,19,14,.022) 1px, transparent 1px);
+      linear-gradient(rgba(10,10,11,.038) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(10,10,11,.038) 1px, transparent 1px),
+      linear-gradient(rgba(10,10,11,.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(10,10,11,.022) 1px, transparent 1px);
     background-size:120px 120px,120px 120px,24px 24px,24px 24px;
     background-position:-1px -1px,-1px -1px,-1px -1px,-1px -1px}
   .tickerbar{background:var(--ink);color:var(--paper);overflow:hidden;
@@ -702,7 +704,7 @@
   .mkstatus i{width:7px;height:7px;border-radius:50%;background:var(--mute);display:block}
   .mkstatus.open i{background:#4CB08A;box-shadow:0 0 0 3px rgba(76,176,138,.25)}
   .mkstatus.pre i{background:var(--gold-lt)}
-  .mkstatus.closed i{background:#8B8477}
+  .mkstatus.closed i{background:#6B6B76}
   .tickers{display:flex;gap:26px;overflow-x:auto;flex:1;scrollbar-width:none}
   .tickers::-webkit-scrollbar{display:none}
   /* Scoped to the ticker strip. These rules were written as a bare `.tk`,
@@ -760,7 +762,7 @@
   .stance{font-family:var(--mono);font-weight:600;letter-spacing:.08em;font-size:16px;padding:6px 14px;border:2px solid}
   .stance.buy{color:var(--pass);border-color:var(--pass)}
   .stance.watch{color:var(--gold);border-color:var(--gold)}
-  .stance.wait{color:#8a7a4a;border-color:#8a7a4a}
+  .stance.wait{color:#2648c1;border-color:#2648c1}
   .stance.avoid{color:var(--fail);border-color:var(--fail)}
   .planconf{font-size:12px;letter-spacing:.14em;opacity:.7;font-family:var(--mono)}
   .plannote{padding:12px 20px;font-size:14px;line-height:1.55;border-bottom:1px solid var(--rule)}
@@ -790,7 +792,7 @@
   .ideaplan .ip{padding:2px 8px;border:1px solid;font-weight:600;font-size:12px;letter-spacing:.08em}
   .ideaplan .ip.buy{color:var(--pass);border-color:var(--pass)}
   .ideaplan .ip.watch{color:var(--gold);border-color:var(--gold)}
-  .ideaplan .ip.wait{color:#8a7a4a;border-color:#8a7a4a}
+  .ideaplan .ip.wait{color:#2648c1;border-color:#2648c1}
   .ideaplan .ip.avoid{color:var(--fail);border-color:var(--fail)}
   #pricewrap{padding:34px 0 30px;border-bottom:1px solid var(--rule);display:none}
   #lvlwrap{padding:34px 0 30px;border-bottom:1px solid var(--rule)}
@@ -834,8 +836,8 @@
     font-weight:400;padding:9px 8px;border-bottom:1px solid var(--ink);white-space:nowrap}
   .octable td{padding:8px;text-align:right;border-bottom:1px solid var(--rule-2);white-space:nowrap}
   .octable td.k{text-align:center;font-weight:600;background:var(--paper-2);font-family:var(--serif);font-size:16px}
-  .octable tr.atm td{background:rgba(176,141,46,.10)}
-  .octable tr.atm td.k{background:var(--gold);color:#fff}
+  .octable tr.atm td{background:rgba(61,90,255,.10)}
+  .octable tr.atm td.k{background:var(--gold);color:var(--on-accent,#fff)}
   .octable .ce{color:var(--pass)} .octable .pe{color:var(--fail)}
   .octable .hi{font-weight:600}
   .tfbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 14px}
@@ -988,7 +990,7 @@
     align-items:center;padding:13px 10px;cursor:pointer;list-style:none;font-size:14px}
   .pfh summary::-webkit-details-marker{display:none}
   .pfh{border-bottom:1px solid var(--rule-2)}
-  .pfh:nth-child(even){background:rgba(244,241,235,.5)}
+  .pfh:nth-child(even){background:rgba(245,245,247,.5)}
   .pfh .sym{font-weight:500}.pfh .sym small{display:block;font-family:var(--mono);font-size:10px;
     color:var(--mute);letter-spacing:.08em;margin-top:3px;text-transform:uppercase}
   .pfh .m{font-family:var(--mono);font-size:12px;color:var(--mute)}
@@ -1096,7 +1098,7 @@
   .shbar div{display:flex;align-items:center;justify-content:center;font-family:var(--mono);
     font-size:11px;letter-spacing:.1em;overflow:hidden;white-space:nowrap}
   .sh-prom{background:var(--ink);color:var(--paper)}
-  .sh-inst{background:var(--gold);color:#fff}
+  .sh-inst{background:var(--gold);color:var(--on-accent,#fff)}
   .sh-pub{background:var(--paper-2);color:var(--ink-2)}
   .shkeys{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
     border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
@@ -1113,12 +1115,12 @@
   .shtab th{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
     color:var(--mute);text-align:left;font-weight:400;padding:8px 10px;border-bottom:1px solid var(--ink)}
   .shtab td{padding:11px 10px;border-bottom:1px solid var(--rule-2)}
-  .shtab tr:nth-child(even) td{background:rgba(244,241,235,.5)}
+  .shtab tr:nth-child(even) td{background:rgba(245,245,247,.5)}
   .shtab td.n{font-family:var(--mono);text-align:right;white-space:nowrap}
   .shnone{font-size:14px;line-height:1.7;color:var(--ink-2);padding-left:15px;
     border-left:2px solid var(--gold-lt)}
   .row{border-bottom:1px solid var(--rule-2)}
-  .row:nth-child(even){background:rgba(244,241,235,.5)}
+  .row:nth-child(even){background:rgba(245,245,247,.5)}
   .row summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:14px 1fr auto;gap:14px;
     align-items:center;padding:14px 12px;font-size:16px;font-weight:400}
   .row summary::-webkit-details-marker{display:none}
@@ -1171,7 +1173,7 @@
     text-transform:uppercase;color:var(--mute);border-top:1px solid var(--rule-2)}
   .cxlegend{position:absolute;top:8px;left:8px;z-index:5;display:none;pointer-events:none;
     font-family:var(--mono);font-size:11px;color:var(--ink-2);
-    background:rgba(251,250,247,.93);border:1px solid var(--rule);padding:4px 9px}
+    background:rgba(255,255,255,.93);border:1px solid var(--rule);padding:4px 9px}
   /* ── Nav overflow menu ─────────────────────────────────────────────── */
   .moreWrap{position:relative;display:inline-block}
   /* position:fixed, not absolute.
@@ -1230,7 +1232,7 @@
   /* ── Ideas v23: liquidity tiers, warnings, tracker ─────────────────── */
   .tier{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
         padding:2px 7px;border:1px solid var(--rule);margin-left:8px;white-space:nowrap}
-  .tier.liquid{border-color:#1f6f43;color:#1f6f43}
+  .tier.liquid{border-color:#0a7548;color:#0a7548}
   .tier.moderate{border-color:var(--gold-dp);color:var(--gold-dp)}
   .tier.thin{border-color:#b26a00;color:#b26a00}
   .tier.untradeable{border-color:#a11;color:#a11}
@@ -1260,8 +1262,8 @@
                 text-transform:uppercase;color:var(--mute);font-weight:400}
   .rstance{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
            border:1px solid var(--rule);border-radius:var(--r-pill);padding:3px 10px;white-space:nowrap}
-  .rstance.Tailwind{border-color:#1f6f43;color:#1f6f43;background:rgba(31,111,67,.06)}
-  .rstance.Mixed{border-color:var(--gold-dp);color:var(--gold-dp);background:rgba(176,141,46,.07)}
+  .rstance.Tailwind{border-color:#0a7548;color:#0a7548;background:rgba(31,111,67,.06)}
+  .rstance.Mixed{border-color:var(--gold-dp);color:var(--gold-dp);background:rgba(61,90,255,.07)}
   .rstance.Headwind{border-color:#b26a00;color:#b26a00;background:#fdf8f0}
   .rstance.Hostile{border-color:#a11;color:#a11;background:#fdf3f3}
   .mktctx .mb{padding:14px 17px;font-size:13px;line-height:1.7;color:var(--ink-2)}
@@ -1276,7 +1278,7 @@
   .secline{display:flex;justify-content:space-between;gap:10px;font-size:12px;line-height:1.9;
            color:var(--ink-2)}
   .secline i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--mute)}
-  .secline i.pos{color:#1f6f43}
+  .secline i.pos{color:#0a7548}
   .secline i.neg{color:#a11}
   .mheads{border-top:1px solid var(--rule-2);padding:13px 17px}
   .mheads a{display:block;font-size:13px;line-height:1.55;color:var(--ink-2);
@@ -1293,13 +1295,13 @@
               color:var(--mute);text-transform:uppercase;margin-top:2px}
   .cband{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
          border:1px solid var(--rule);padding:2px 7px;margin-left:8px;white-space:nowrap}
-  .cband.High{border-color:#1f6f43;color:#1f6f43}
+  .cband.High{border-color:#0a7548;color:#0a7548}
   .cband.Moderate{border-color:var(--gold-dp);color:var(--gold-dp)}
   .cband.Speculative{border-color:#b26a00;color:#b26a00}
   .ctx{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
   .ctxchip{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
            border:1px solid var(--rule);padding:3px 9px;color:var(--mute);white-space:nowrap}
-  .ctxchip.good{border-color:#1f6f43;color:#1f6f43}
+  .ctxchip.good{border-color:#0a7548;color:#0a7548}
   .ctxchip.bad{border-color:#a11;color:#a11}
   .ctxchip.warn{border-color:#b26a00;color:#b26a00}
   .badbox{border-left:3px solid #a11;background:#fdf3f3;padding:9px 12px;margin-top:10px;
@@ -3762,14 +3764,14 @@ const RANGE_KEYS = ["tick","1m","5m","15m","1H","4H","1D","1W"];
 
 function chartTheme(){
   return {
-    layout: { background:{ type:'solid', color:'#ffffff' }, textColor:'#4A443A',
+    layout: { background:{ type:'solid', color:'#ffffff' }, textColor:'#3C3C43',
               fontFamily:"'IBM Plex Mono', monospace", fontSize: 10 },
-    grid: { vertLines:{ color:'#EBE6DC' }, horzLines:{ color:'#EBE6DC' } },
-    rightPriceScale: { borderColor:'#DDD6C9', scaleMargins:{ top:0.08, bottom:0.26 } },
-    timeScale: { borderColor:'#DDD6C9', timeVisible:true, secondsVisible:false, rightOffset:4 },
+    grid: { vertLines:{ color:'#EEEEF1' }, horzLines:{ color:'#EEEEF1' } },
+    rightPriceScale: { borderColor:'#E4E4E8', scaleMargins:{ top:0.08, bottom:0.26 } },
+    timeScale: { borderColor:'#E4E4E8', timeVisible:true, secondsVisible:false, rightOffset:4 },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal,
-                 vertLine:{ color:'#B08D2E', width:1, style:2, labelBackgroundColor:'#16130E' },
-                 horzLine:{ color:'#B08D2E', width:1, style:2, labelBackgroundColor:'#16130E' } },
+                 vertLine:{ color:'#3D5AFF', width:1, style:2, labelBackgroundColor:'#0A0A0B' },
+                 horzLine:{ color:'#3D5AFF', width:1, style:2, labelBackgroundColor:'#0A0A0B' } },
     handleScroll: true, handleScale: true,
   };
 }
@@ -3824,10 +3826,10 @@ function makeChartPanel(cfg){
       wickUpColor:'#1F5D45', wickDownColor:'#8E2F2A' });
     S.vs = S.chart.addHistogramSeries({ priceFormat:{ type:'volume' }, priceScaleId:'vol' });
     S.chart.priceScale('vol').applyOptions({ scaleMargins:{ top:0.80, bottom:0 } });
-    S.m20 = S.chart.addLineSeries({ color:'#B08D2E', lineWidth:2, priceLineVisible:false, lastValueVisible:false });
-    S.m50 = S.chart.addLineSeries({ color:'#4A443A', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
-    S.bu  = S.chart.addLineSeries({ color:'#DDD6C9', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
-    S.bl  = S.chart.addLineSeries({ color:'#DDD6C9', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+    S.m20 = S.chart.addLineSeries({ color:'#3D5AFF', lineWidth:2, priceLineVisible:false, lastValueVisible:false });
+    S.m50 = S.chart.addLineSeries({ color:'#3C3C43', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+    S.bu  = S.chart.addLineSeries({ color:'#E4E4E8', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
+    S.bl  = S.chart.addLineSeries({ color:'#E4E4E8', lineWidth:1, priceLineVisible:false, lastValueVisible:false });
 
     let raf = null;
     new ResizeObserver(()=>{
@@ -3874,7 +3876,7 @@ function makeChartPanel(cfg){
     if(price === null) return;
 
     if(S.tool === "hline"){
-      const line = S.cs.createPriceLine({ price: price, color:'#B08D2E', lineWidth:1,
+      const line = S.cs.createPriceLine({ price: price, color:'#3D5AFF', lineWidth:1,
                                           lineStyle:2, axisLabelVisible:true, title:'' });
       S.drawings.push({ kind:'hline', ref: line });
       setTool("none");
@@ -3889,7 +3891,7 @@ function makeChartPanel(cfg){
       const a = S.pendA, b = { time: param.time, value: price };
       S.pendA = null;
       const pts = [a, b].sort((x,y)=> (x.time > y.time ? 1 : -1));
-      const s = S.chart.addLineSeries({ color:'#8A6D1E', lineWidth:2, priceLineVisible:false,
+      const s = S.chart.addLineSeries({ color:'#1228C9', lineWidth:2, priceLineVisible:false,
                                         lastValueVisible:false, crosshairMarkerVisible:false });
       s.setData(pts);
       S.drawings.push({ kind:'trend', ref: s });

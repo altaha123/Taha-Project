@@ -20,7 +20,7 @@
       '<p class="hh-note">Stocks, portfolios and allocation. One connected view.</p>'+
       '<div class="hh-explore"><span>Start exploring</span><a href="./?go=ideas" data-hh-go="ideas">Find stock ideas ↗</a><a href="./?go=portfolio" data-hh-go="portfolio">Review my portfolio ↗</a></div></section>'+
       '<div class="hh-visual"><svg aria-hidden="true" class="hh-connections" viewBox="0 0 520 440" focusable="false">'+
-      '<defs><linearGradient id="hh-line"><stop stop-color="#b69239" stop-opacity=".08"/><stop offset=".5" stop-color="#bd963c"/><stop offset="1" stop-color="#b69239" stop-opacity=".08"/></linearGradient></defs>'+
+      '<defs><linearGradient id="hh-line"><stop stop-color="#345df0" stop-opacity=".08"/><stop offset=".5" stop-color="#3962ef"/><stop offset="1" stop-color="#345df0" stop-opacity=".08"/></linearGradient></defs>'+
       '<ellipse class="hh-orbit-line" cx="260" cy="218" rx="196" ry="158"/><ellipse class="hh-orbit-line" cx="260" cy="218" rx="134" ry="106"/>'+
       '<g class="hh-wires"><path d="M120 103C220 103 170 218 260 218S330 342 415 342"/><path d="M419 112C320 112 350 218 260 218S190 346 100 346"/></g>'+
       '<g class="hh-signals"><path pathLength="100" d="M120 103C220 103 170 218 260 218S330 342 415 342"/><path pathLength="100" d="M419 112C320 112 350 218 260 218S190 346 100 346"/></g></svg>'+

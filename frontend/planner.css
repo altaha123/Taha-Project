@@ -15,14 +15,14 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .mp{
-  --mp-s1:#A8801C;            /* the long run: what compounds toward the date */
+  --mp-s1:#1F3DFF;            /* the long run: what compounds toward the date */
   --mp-s2:#2F73B8;            /* dated money: goals, wants, what-ifs */
   --mp-s3:#1B9A72;            /* safety: the cushion, needs */
-  --mp-quiet:#8C8572;         /* context lines that are not the story */
-  --mp-label:var(--tk-label,#726B5D);
+  --mp-quiet:#848588;         /* context lines that are not the story */
+  --mp-label:var(--tk-label,#62626C);
 }
 html[data-theme="dark"] .mp{
-  --mp-s1:#B48C28; --mp-s2:#3987E5; --mp-s3:#199E70; --mp-quiet:#8E877A;
+  --mp-s1:#2B51FB; --mp-s2:#3987E5; --mp-s3:#199E70; --mp-quiet:#8D8D97;
 }
 .mp *, .mp *::before, .mp *::after{ box-sizing:border-box }
 .mp-sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
@@ -32,43 +32,43 @@ html[data-theme="dark"] .mp{
   position:relative; overflow:hidden; isolation:isolate;
   display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:22px 36px;
   padding:30px 32px 26px; border-radius:24px;
-  background:#15120C; color:#FBF8F1; box-shadow:0 24px 60px rgba(23,20,14,.22);
+  background:#0A0A0B; color:#FFFFFF; box-shadow:0 24px 60px rgba(10,10,11,.22);
 }
 .mp-hero::before{
   content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
   background-image:
-    radial-gradient(520px 320px at 8% -10%, rgba(168,128,28,.50), transparent 70%),
+    radial-gradient(520px 320px at 8% -10%, rgba(31,61,255,.50), transparent 70%),
     radial-gradient(420px 300px at 104% 118%, rgba(47,115,184,.30), transparent 70%),
-    linear-gradient(rgba(251,248,241,.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(251,248,241,.045) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
   background-size:auto, auto, 44px 44px, 44px 44px;
 }
 .mp-eyebrow{
   display:block; font-family:var(--mono); font-size:10px; letter-spacing:.14em;
-  text-transform:uppercase; color:#D9BC6A;
+  text-transform:uppercase; color:#9DB0FF;
 }
 .mp-hero .mp-when{
-  margin:8px 0 12px; font-family:var(--serif); font-weight:400; color:#FBF8F1;
+  margin:8px 0 12px; font-family:var(--serif); font-weight:400; color:#FFFFFF;
   font-size:clamp(42px,7vw,64px); line-height:1.04; letter-spacing:-.015em;
 }
 .mp-hero .mp-when.is-words{ font-size:clamp(34px,5vw,52px) }
-.mp-hero p{ margin:0; max-width:58ch; font-size:16px; line-height:1.55; color:rgba(251,248,241,.80) }
-.mp-hero p b{ color:#FBF8F1; font-weight:500 }
+.mp-hero p{ margin:0; max-width:58ch; font-size:16px; line-height:1.55; color:rgba(255,255,255,.80) }
+.mp-hero p b{ color:#FFFFFF; font-weight:500 }
 .mp-hero p + p{ margin-top:8px }
-.mp-hero .mp-since{ font-size:13px; color:rgba(251,248,241,.66) }
+.mp-hero .mp-since{ font-size:13px; color:rgba(255,255,255,.66) }
 .mp-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:20px }
 .mp-chip{
   display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:8px 14px;
-  border-radius:999px; border:1px solid rgba(251,248,241,.20); background:rgba(251,248,241,.06);
-  color:#FBF8F1; font-family:var(--sans); font-size:13px; font-weight:500; line-height:1.2;
+  border-radius:999px; border:1px solid rgba(255,255,255,.20); background:rgba(255,255,255,.06);
+  color:#FFFFFF; font-family:var(--sans); font-size:13px; font-weight:500; line-height:1.2;
   text-decoration:none;
 }
 button.mp-chip{ cursor:pointer; transition:border-color 140ms ease, background 140ms ease }
-button.mp-chip:hover{ border-color:#D9BC6A; background:rgba(217,188,106,.12) }
-.mp-chip.is-due{ border-color:#D9BC6A; background:#D9BC6A; color:#17140E }
-button.mp-chip.is-due:hover{ background:#E6CE8A }
-.mp-chip.is-gold{ border-color:#D9BC6A; background:#D9BC6A; color:#17140E }
-button.mp-chip.is-gold:hover{ background:#E6CE8A }
+button.mp-chip:hover{ border-color:#6382FF; background:rgba(99,130,255,.12) }
+.mp-chip.is-due{ border-color:#6382FF; background:#6382FF; color:#0A0A0B }
+button.mp-chip.is-due:hover{ background:#8FABED }
+.mp-chip.is-gold{ border-color:#6382FF; background:#6382FF; color:#0A0A0B }
+button.mp-chip.is-gold:hover{ background:#8FABED }
 .mp-chip svg{ width:14px; height:14px; flex:none }
 .mp-chip:focus-visible, .mp-tab:focus-visible, .mp-btn:focus-visible, .mp-x:focus-visible,
 .mp-seg button:focus-visible, .mp-pick:focus-visible, .mp-link:focus-visible{
@@ -77,28 +77,28 @@ button.mp-chip.is-gold:hover{ background:#E6CE8A }
 .mp-example{
   grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;
   margin:-8px 0 0; padding:9px 14px; border-radius:12px;
-  border:1px dashed rgba(217,188,106,.55); background:rgba(217,188,106,.10);
-  font-size:13px; color:#FBF8F1;
+  border:1px dashed rgba(99,130,255,.55); background:rgba(99,130,255,.10);
+  font-size:13px; color:#FFFFFF;
 }
-.mp-example b{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#D9BC6A; font-weight:500 }
+.mp-example b{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#9DB0FF; font-weight:500 }
 .mp-example button{
-  margin-left:auto; border:0; background:none; color:#D9BC6A; font:inherit; font-weight:500;
+  margin-left:auto; border:0; background:none; color:#9DB0FF; font:inherit; font-weight:500;
   cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:6px 0;
 }
 
 /* How far along. A meter: the unfilled track is a lighter step of the fill. */
 .mp-ring{ position:relative; width:140px; height:140px; flex:none }
 .mp-ring svg{ display:block; width:100%; height:100%; transform:rotate(-90deg) }
-.mp-ring .track{ fill:none; stroke:rgba(217,188,106,.20); stroke-width:9 }
-.mp-ring .fill{ fill:none; stroke:#D9BC6A; stroke-width:9; stroke-linecap:round;
+.mp-ring .track{ fill:none; stroke:rgba(99,130,255,.20); stroke-width:9 }
+.mp-ring .fill{ fill:none; stroke:#6382FF; stroke-width:9; stroke-linecap:round;
   transition:stroke-dashoffset 600ms cubic-bezier(.22,1,.36,1) }
 .mp-ring-in{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px }
-.mp-ring-in b{ font-family:var(--serif); font-weight:400; font-size:34px; line-height:1; color:#FBF8F1 }
-.mp-ring-in span{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:rgba(251,248,241,.66) }
+.mp-ring-in b{ font-family:var(--serif); font-weight:400; font-size:34px; line-height:1; color:#FFFFFF }
+.mp-ring-in span{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.66) }
 .mp-bar{ display:none; align-items:center; gap:12px; margin:16px 0 0 }
-.mp-bar .mp-meter{ flex:1 1 auto; background:rgba(217,188,106,.20) }
-.mp-bar .mp-meter > i{ background:#D9BC6A }
-.mp-bar span{ flex:none; font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:rgba(251,248,241,.80) }
+.mp-bar .mp-meter{ flex:1 1 auto; background:rgba(99,130,255,.20) }
+.mp-bar .mp-meter > i{ background:#6382FF }
+.mp-bar span{ flex:none; font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:rgba(255,255,255,.80) }
 html[data-theme="dark"] .mp-hero{ box-shadow:0 0 0 1px var(--rule), 0 24px 60px rgba(0,0,0,.45) }
 .mp-sketch{ width:190px; height:120px; flex:none; opacity:.9 }
 .mp-sketch path{ fill:none; stroke-linecap:round }
@@ -136,7 +136,7 @@ html[data-theme="dark"] .mp-hero{ box-shadow:0 0 0 1px var(--rule), 0 24px 60px 
 .mp-panel[hidden]{ display:none }
 
 .mp-card{
-  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFDF8);
+  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFFFF);
   box-shadow:var(--skin-shadow,0 1px 2px rgba(0,0,0,.04)); padding:24px 26px; margin:0 0 18px;
 }
 .mp-card-h{ display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:6px 14px; margin:0 0 14px }
@@ -177,7 +177,7 @@ html[data-theme="dark"] .mp-hero{ box-shadow:0 0 0 1px var(--rule), 0 24px 60px 
 }
 .mp .mp-inr > .mp-in{ padding-left:30px }
 .mp .mp-in::placeholder{ color:var(--mute); opacity:.75 }
-.mp .mp-in:focus{ outline:none; border-color:var(--gold); box-shadow:var(--ring,0 0 0 3px rgba(176,141,46,.20)) }
+.mp .mp-in:focus{ outline:none; border-color:var(--gold); box-shadow:var(--ring,0 0 0 3px rgba(61,90,255,.20)) }
 .mp .mp-in[readonly]{ background:var(--paper-2); color:var(--ink-2) }
 .mp .mp-in.is-text{ font-family:var(--sans) }
 .mp-note{ font-size:12px; line-height:1.5; color:var(--mp-label); min-height:0 }
@@ -215,11 +215,11 @@ html[data-theme="dark"] .mp-hero{ box-shadow:0 0 0 1px var(--rule), 0 24px 60px 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .mp-btn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px;
-  padding:11px 20px; border-radius:999px; border:1px solid var(--gold-dp); background:var(--gold-dp); color:#fff;
+  padding:11px 20px; border-radius:999px; border:1px solid var(--gold-dp); background:var(--gold-dp); color:var(--on-accent,#fff);
   font-family:var(--sans); font-size:14px; font-weight:500; cursor:pointer; text-decoration:none;
   transition:transform 140ms cubic-bezier(.22,1,.36,1), filter 140ms ease, border-color 140ms ease;
 }
-html[data-theme="dark"] .mp-btn{ color:#17140E }
+html[data-theme="dark"] .mp-btn{ color:#0A0A0B }
 .mp-btn:hover{ transform:translateY(-1px); filter:brightness(1.06) }
 .mp-btn:disabled{ opacity:.45; cursor:default; transform:none; filter:none }
 .mp-btn.is-ghost{ background:transparent; border-color:var(--rule); color:var(--ink-2) }
@@ -276,12 +276,12 @@ html[data-theme="dark"] .mp-btn.is-ghost{ color:var(--ink-2) }
 .mp-chart .wash{ fill:var(--mp-s1); opacity:.10; stroke:none }
 .mp-chart .goal{ stroke:var(--ink-2); stroke-width:1.5; stroke-dasharray:5 5; fill:none }
 .mp-chart .goal.s2{ stroke:var(--mp-s2) }
-.mp-chart .mp-pt{ stroke:var(--skin-card,#FFFDF8); stroke-width:2 }
+.mp-chart .mp-pt{ stroke:var(--skin-card,#FFFFFF); stroke-width:2 }
 .mp-chart .mp-pt.s1{ fill:var(--mp-s1) } .mp-chart .mp-pt.s2{ fill:var(--mp-s2) } .mp-chart .mp-pt.quiet{ fill:var(--mp-quiet) }
 .mp-chart .hair{ stroke:var(--ink-2); stroke-width:1 }
 .mp-tip{
   position:absolute; top:0; left:0; z-index:3; pointer-events:none; min-width:150px; max-width:240px;
-  padding:10px 12px; border-radius:10px; border:1px solid var(--rule); background:var(--skin-card,#FFFDF8);
+  padding:10px 12px; border-radius:10px; border:1px solid var(--rule); background:var(--skin-card,#FFFFFF);
   box-shadow:var(--skin-lift,0 12px 30px rgba(0,0,0,.14)); font-size:12px; line-height:1.4; color:var(--ink-2);
 }
 .mp-tip[hidden]{ display:none }
@@ -318,7 +318,7 @@ html[data-theme="dark"] .mp-btn.is-ghost{ color:var(--ink-2) }
 .mp-h4{ margin:22px 0 2px; font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:var(--mp-label) }
 .mp-combo{
   margin:16px 0 0; padding:16px 18px; border-radius:12px; border:1px solid var(--mp-s2);
-  background:color-mix(in srgb, var(--mp-s2) 7%, var(--skin-card,#FFFDF8));
+  background:color-mix(in srgb, var(--mp-s2) 7%, var(--skin-card,#FFFFFF));
   font-size:14px; line-height:1.6; color:var(--ink-2);
 }
 .mp-combo b{ font-family:var(--serif); font-weight:400; font-size:24px; line-height:1.2; color:var(--ink) }
@@ -365,7 +365,7 @@ html[data-theme="dark"] .mp-btn.is-ghost{ color:var(--ink-2) }
 
 /* ── Goals ───────────────────────────────────────────────────────────────── */
 .mp-goals{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:0 0 18px }
-.mp-goal{ display:flex; flex-direction:column; gap:10px; padding:20px 22px; border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFDF8); box-shadow:var(--skin-shadow,none); min-width:0 }
+.mp-goal{ display:flex; flex-direction:column; gap:10px; padding:20px 22px; border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFFFF); box-shadow:var(--skin-shadow,none); min-width:0 }
 .mp-goal-h{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px }
 .mp-goal-h h4{ margin:0; font-family:var(--serif); font-weight:400; font-size:20px; line-height:1.2; color:var(--ink); overflow-wrap:anywhere }
 .mp-goal-h span{ display:block; margin-top:3px; font-family:var(--mono); font-size:11px; color:var(--mp-label) }
@@ -403,7 +403,7 @@ html[data-theme="dark"] .mp-btn.is-ghost{ color:var(--ink-2) }
 .mp-next{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 18px }
 .mp-next a, .mp-next button{
   display:flex; flex-direction:column; gap:5px; min-height:44px; padding:16px 18px; text-align:left;
-  border:1px solid var(--rule); border-radius:14px; background:var(--skin-card,#FFFDF8); cursor:pointer;
+  border:1px solid var(--rule); border-radius:14px; background:var(--skin-card,#FFFFFF); cursor:pointer;
   color:var(--ink); text-decoration:none; font-family:var(--sans);
   transition:border-color 140ms ease, transform 140ms cubic-bezier(.22,1,.36,1);
 }
@@ -418,7 +418,7 @@ html[data-theme="dark"] .mp-btn.is-ghost{ color:var(--ink-2) }
 /* The risk questionnaire is the planner's last tab. It keeps its own markup
    and its own script; here it is only given the card the other tabs have. */
 #mp-panel-risk > #riskprofile{
-  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFDF8);
+  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFFFF);
   box-shadow:var(--skin-shadow,none); padding:24px 26px;
 }
 
