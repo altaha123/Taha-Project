@@ -47,18 +47,37 @@ const server=http.createServer((req,res)=>{
   },hold&&isLater.has(url)?HOLD:0);
 });
 
+/* Every page here is told it is eight in the evening in India, on a trading
+   day, and its clock runs on from there. Market goes by the wall clock, and
+   so did this test: while NSE is trading the session bar grows a pixel about
+   once a minute (doors.js, startClock), and a run that took its two pictures
+   either side of that pixel failed with nothing having moved (CI, 23 Nov 2026
+   at 12:53 IST: 212 px, then 213). Until /market answers, the tag at the head
+   of the tape goes by the clock as well (shell.js, paintTape): on a weekday
+   before 15:30 it says Live or Pre-open, then Closed when the answer served
+   here arrives, and the tape beside it moves over. At eight the bar is full
+   and the tag says Closed whoever is asked.
+
+   Only Date is replaced. Playwright's page.clock also takes over the timers
+   the page loads by, and gives it a `performance` whose getEntriesByType() is
+   always empty, so "no later file had arrived" would pass whatever had. */
+const EVENING=Date.parse('2026-11-23T20:00:00+05:30');
+function pinClock(at){
+  const Real=Date, began=Real.now(), now=()=>at+(Real.now()-began);
+  window.Date=class extends Real{
+    constructor(...args){super(...(args.length?args:[now()]));}
+    static now(){return now();}
+  };
+}
+
 /* The page as a reader has it: every element that is on show, where it is
    and how it is drawn. Compared before and after the later files land.
 
-   Not the session clock or the bar under it. Both follow the wall clock
-   (doors.js, startClock), so while NSE is trading the bar grows a pixel about
-   once a minute, and a run that took its two pictures either side of that
-   pixel failed with nothing having moved (CI, 23 Nov 2026 at 12:53 IST: 212
-   px, then 213). The track the bar sits in is still in the picture. */
+   Not the session clock: it counts the seconds, whatever the hour. */
 function picture(){
   var out=[];
   document.querySelectorAll('body *').forEach(function(el){
-    if(/^(SCRIPT|TEMPLATE|LINK|STYLE)$/.test(el.tagName)||el.id==='drt-clock'||el.id==='drt-sbar'||el.closest('svg')&&el.tagName!=='svg')return;
+    if(/^(SCRIPT|TEMPLATE|LINK|STYLE)$/.test(el.tagName)||el.id==='drt-clock'||el.closest('svg')&&el.tagName!=='svg')return;
     var r=el.getBoundingClientRect();
     if(!el.getClientRects().length||r.bottom<0||r.top>innerHeight*3)return;
     var c=getComputedStyle(el);
@@ -78,6 +97,7 @@ function picture(){
     const context=await browser.newContext(Object.assign({viewport:{width:1280,height:800},reducedMotion:'reduce'},options||{}));
     // Big trades and friends are member tools (gate.js); open them signed in.
     await context.addInitScript(()=>localStorage.setItem('altaha-session-v1','tok-test'));
+    await context.addInitScript(pinClock,EVENING);
     const page=await context.newPage(), errors=[], asked=[];
     page.on('pageerror',e=>errors.push(e.message));
     page.on('request',r=>{const u=new URL(r.url());asked.push(u.origin===origin?u.pathname:u.href);});
@@ -111,6 +131,7 @@ function picture(){
       /* The homepage: Market is shown before a single later file has arrived. */
       const {context,page,errors,asked}=await open(url,{viewport});
       assert.equal(await page.evaluate(()=>window.AltahaBoot.plain),true,url+' is the homepage');
+      assert(Math.abs(await page.evaluate(()=>Date.now())-EVENING)<60000,url+': the page has the clock it was given');
       await revealed(page);
       assert.equal(await page.evaluate(()=>window.AltahaBoot.ready),false,url+': Market is on show before the later files are in');
       assert.equal(await page.evaluate(()=>!!document.getElementById('view-today').firstChild&&document.body.classList.contains('sh-on')),true,url+': Market is drawn');
