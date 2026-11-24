@@ -65,6 +65,7 @@ POST    /admin/lenses/compute
 POST    /admin/lenses/crawl
 POST    /admin/lenses/run
 POST    /admin/lenses/run/stop
+POST    /admin/moneyflow/run
 GET     /admin/pro-waitlist
 GET     /admin/query/ai
 POST    /admin/query/ai
@@ -197,6 +198,9 @@ PUT     /me/watchlist
 POST    /me/watchlist/merge
 GET     /me/watchlists
 PUT     /me/watchlists
+GET     /moneyflow
+GET     /moneyflow/sector/{slug}
+GET     /moneyflow/status
 GET     /news/press
 GET     /news/status
 GET     /og/chart.png

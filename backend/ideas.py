@@ -108,6 +108,16 @@ try:
 except Exception:
     leaders = None
 
+# Money Flow (money_flow.py): each sector's FPI flow, rotation and breadth as
+# one score. Read here for two things and nothing else. It is printed beside a
+# pick as its sector's tailwind, and, only when IDEAS_MONEYFLOW_CAPS=on, it
+# decides how many names a list may take from one sector. It moves no rank and
+# no conviction: every weight in this file is what it was.
+try:
+    import money_flow
+except Exception:
+    money_flow = None
+
 BENCHMARK = os.environ.get("INDEX_PROXY", "NIFTYBEES").strip().upper()
 
 SECTOR_CAP = int(os.environ.get("IDEAS_SECTOR_CAP", "3") or 3)
@@ -401,6 +411,38 @@ SECTOR_QUALITY = {
     "short":  {"Leading": 1.0, "Weakening": 0.55, "Improving": 0.68, "Lagging": 0.25},
     "medium": {"Leading": 0.92, "Weakening": 0.5, "Improving": 0.85, "Lagging": 0.3},
 }
+
+
+def sector_tailwind(symbol):
+    """The stock's sector on Money Flow, or None. Never raises: a feed that
+    is missing is a row without the line, not a list that fails."""
+    if money_flow is None:
+        return None
+    try:
+        return money_flow.tailwind(symbol)
+    except Exception:
+        return None
+
+
+def sector_cap_for(symbol, default):
+    """How many names a list may take from this stock's sector: `default`,
+    unless the money-flow caps are switched on (money_flow.sector_cap)."""
+    if money_flow is None:
+        return default
+    try:
+        return int(money_flow.sector_cap(symbol, default))
+    except Exception:
+        return default
+
+
+def money_flow_caps():
+    """What the payload says about those caps, so the page can state them."""
+    if money_flow is None:
+        return {"on": False}
+    try:
+        return money_flow.caps_note()
+    except Exception:
+        return {"on": False}
 
 
 def sector_outlook():
@@ -1064,7 +1106,8 @@ def _choose_picks(rows_all, key, limit, hours, exclude=()):
         sec = item[0].get("sector") or "Unknown"
         # The money-flow list is four stocks from each of four sectors by
         # construction; a sector cap of its own would only cut that short.
-        if key != "flow" and sec != "Unknown" and per_sector.get(sec, 0) >= PICK_SECTOR_CAP:
+        if (key != "flow" and sec != "Unknown"
+                and per_sector.get(sec, 0) >= sector_cap_for(item[0].get("symbol"), PICK_SECTOR_CAP)):
             capped += 1
             continue
         per_sector[sec] = per_sector.get(sec, 0) + 1
@@ -1197,6 +1240,8 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
                                 "rel_1m": (srow.get("relative") or {}).get("1M"),
                                 "above_200dma_pct": srow.get("above_200dma_pct"),
                                 "why": srow.get("state_why")} if srow else None),
+            # Its sector on Money Flow. A fact beside the pick; not ranked.
+            "sector_tailwind": sector_tailwind(sym),
         })
         band = "High" if entry["score"] >= 85 else ("Moderate" if entry["score"] >= 70 else "Speculative")
         row["conviction_band"] = band
@@ -1211,9 +1256,14 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
     if weak:
         notes.append("Left out of the long-term list for weak fundamentals "
                      f"(Piotroski under {LONG_MIN_PIOTROSKI} or a loss): " + ", ".join(weak[:6]) + ".")
+    caps = money_flow_caps()
     if capped:
         notes.append(f"{capped} more qualified but would have put more than "
-                     f"{PICK_SECTOR_CAP} names in one sector.")
+                     f"{PICK_SECTOR_CAP} names in one sector."
+                     if not caps.get("on") else
+                     f"{capped} more qualified but would have put too many names in one sector "
+                     f"(the cap is {caps.get('top')} for a sector in the top quarter on money "
+                     f"flow, {caps.get('bottom')} for the bottom quarter, {PICK_SECTOR_CAP} otherwise).")
     if other in leaders.LISTS:
         notes.append(f"Stocks on the {leaders.LISTS[other]['label'].lower()} list are left off "
                      "this one, so the two lists show different stocks.")
@@ -1310,6 +1360,7 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
                    "track_record": False},
         "sector_mix": sorted(per_sector.items(), key=lambda kv: -kv[1]),
         "sector_cap": PICK_SECTOR_CAP,
+        "money_flow_caps": caps,
         "expectancy_applied": False,
         "selection_notes": notes,
         "excluded_adverse": excluded_adverse,
@@ -1523,10 +1574,11 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
         if len(chosen) >= limit:
             break
         sec = r.get("sector") or "Unknown"
-        if per_sector.get(sec, 0) >= SECTOR_CAP:
+        if per_sector.get(sec, 0) >= sector_cap_for(r.get("symbol"), SECTOR_CAP):
             capped += 1
             continue
         per_sector[sec] = per_sector.get(sec, 0) + 1
+        r["sector_tailwind"] = sector_tailwind(r.get("symbol"))
         chosen.append(r)
 
     # Regime warning on trend-dependent setups, applied per row so the reader
@@ -1609,6 +1661,7 @@ def select(payload: dict, horizon: str = "short", limit: int = 15,
         "layers": layers,
         "sector_mix": sorted(per_sector.items(), key=lambda kv: -kv[1]),
         "sector_cap": SECTOR_CAP,
+        "money_flow_caps": money_flow_caps(),
         "expectancy_applied": bool(record),
         "selection_notes": notes,
         "excluded_adverse": excluded_adverse,
