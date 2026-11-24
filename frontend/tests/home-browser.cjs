@@ -22,7 +22,9 @@ const server=http.createServer((req,res)=>{
  const browser=await chromium.launch({headless:true, executablePath: process.env.CHROMIUM_PATH || undefined});
  const context=await browser.newContext({viewport:{width:1280,height:900},hasTouch:true});
  await context.addInitScript(()=>localStorage.setItem('altaha-guide-dismissed','1'));
- const page=await context.newPage(), errors=[], sectorRequests=[], searchPicks=[];
+ const page=await context.newPage(), errors=[], sectorRequests=[], searchPicks=[], logoAsks=[];
+ // Big enough to be kept as a logo: the page drops anything under 24 pixels.
+ const PNG64=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAUUlEQVR42u3PMQ0AMAgAMJgG1KEOqVPBQdI6aFZPXPbiOAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAYF9HyTJAY7THInWAAAAAElFTkSuQmCC','base64');
  page.on('pageerror',e=>errors.push(String(e.stack)));
  await context.route('**/*',route=>{
    const u=new URL(route.request().url());
@@ -44,6 +46,14 @@ const server=http.createServer((req,res)=>{
      return route.continue();
    }
    if(['script','font','stylesheet'].includes(route.request().resourceType())) return route.abort();
+   // The logo host is keyed by Indian symbol. It has RELIANCE, and it has a
+   // META that is not the company in New York; anything else is a 403.
+   if(u.hostname==='images.dhan.co'){
+     const sym=decodeURIComponent(u.pathname).replace(/^\/symbol\/|\.png$/g,'');
+     logoAsks.push(sym);
+     return ['RELIANCE','META'].includes(sym)?route.fulfill({contentType:'image/png',body:PNG64})
+       :route.fulfill({status:403,contentType:'application/xml',body:'<Error/>'});
+   }
    if(u.pathname==='/market') return route.fulfill({json:{indices,status:'closed',ist:'10 Sep 2026, 15:45 IST'}});
    if(u.pathname==='/sector/benchmarks') return route.fulfill({json:{
      source:'NSE',available:true,as_of:'23-Sep-2026 15:30:00',window:u.searchParams.get('window')||'1D',
@@ -73,6 +83,16 @@ const server=http.createServer((req,res)=>{
    await input.fill('Reliance');
    const item = list.locator('.tah-item').first();
    await item.scrollIntoViewIfNeeded();
+   // Each suggestion leads with the company's initials, and its logo over
+   // them once the host has answered. On a phone the tile sits beside the
+   // symbol and the name, which stack; it does not push them down a line.
+   assert.equal(await item.locator('.co-lg .co-lg-m').innerText(), 'RI');
+   await item.locator('.co-lg[data-sym="RELIANCE"].has-img img').waitFor();
+   assert.equal(await item.evaluate(n => {
+     const l=n.querySelector('.co-lg').getBoundingClientRect(), s=n.querySelector('.tah-sym').getBoundingClientRect(),
+           m=n.querySelector('.tah-name').getBoundingClientRect();
+     return l.right<=s.left && l.right<=m.left && l.top<=s.top+1 && l.bottom>=s.bottom-1;
+   }), true, 'the logo is not beside its row');
    assert.equal(await item.evaluate(n => {
      const r=n.getBoundingClientRect();
      return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
@@ -84,6 +104,16 @@ const server=http.createServer((req,res)=>{
    await input.press('ArrowDown');
    await input.press('Enter');
    assert.equal(await input.inputValue(), 'HDFCBANK');
+   // A company listed in New York keeps its initials. The host has a logo
+   // under the same letters and it is another company's, so it is not asked.
+   await input.fill('meta');
+   const us = list.locator('.tah-item', { hasText: 'Meta Platforms' });
+   await us.waitFor();
+   assert.equal(await us.locator('.co-lg .co-lg-m').innerText(), 'MP');
+   assert.equal(await us.locator('.co-lg[data-sym]').count(), 0);
+   await page.waitForTimeout(400);
+   assert.equal(await us.locator('.co-lg img').count(), 0);
+   assert.ok(!logoAsks.includes('META'), 'a New York listing was looked up by an Indian symbol');
    await input.fill('zzzznomatch');
    await list.locator('.tah-empty').waitFor();
    await input.press('Escape');
@@ -91,6 +121,8 @@ const server=http.createServer((req,res)=>{
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
  }
  assert.deepEqual(searchPicks, ['RELIANCE','HDFCBANK','RELIANCE','HDFCBANK']);
+ // Asked once, though it was listed at two widths and after every letter.
+ assert.equal(logoAsks.filter(sym=>sym==='RELIANCE').length, 1, 'a logo was asked for again: '+logoAsks);
  await page.locator('#tk').fill('');
  await page.locator('.mb-card').first().waitFor();
  await page.locator('.sb-tile').first().waitFor();

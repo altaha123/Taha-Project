@@ -27,12 +27,15 @@ with a quarter missing. None of them is a number; each is None and the page
 prints a dash.
 
 LOGOS
-A company's mark is its own, and the only place this asks for it is the
-company's own website, through a favicon service the browser calls. The site
-comes from the stored profile; a short curated table covers the names people
-open most until the profile crawl has reached them. Nothing here fetches an
-image. With no domain the page draws the company's initials, which is also
-what it draws if the image does not load.
+A company's mark is its own. The page asks for it by symbol first, from the
+image host the portfolio uses, which has one for nearly every listed company.
+What this module adds is the second place to ask: the company's own website,
+through a favicon service the browser calls, for the few the first has none
+of and for a listing outside India. The site comes from the stored profile; a
+short curated table covers the names people open most until the profile crawl
+has reached them. Nothing here fetches an image. With no mark from either the
+page draws the company's initials, which is also what it draws while an image
+is on its way.
 """
 
 import datetime as dt
@@ -170,8 +173,9 @@ def domain_of(website):
 
 
 def domain_for(symbol, website=None):
-    """The domain to ask for a company's logo: its stored or published
-    website, else the curated table, else None."""
+    """The domain to ask for a company's logo when the symbol's own host has
+    none: its stored or published website, else the curated table, else
+    None."""
     return domain_of(website) or KNOWN_DOMAINS.get(_base(symbol))
 
 

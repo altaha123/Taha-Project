@@ -556,9 +556,16 @@ add up to each other, and a paragraph of method under most headings.
   says the search was not answered, which is not the same as no news. The
   same section lists the company's bulk and block deals (`/deals/{ticker}`).
 - **Logos** are the company's initials on a tinted tile, with its own mark over
-  them when its website is known (the stored profile, else
-  `stock_page.KNOWN_DOMAINS`) and the image loads at a usable size. The browser
-  asks a favicon service with `no-referrer`; the API fetches no images.
+  them when one loads at a usable size. For an NSE or BSE listing the browser
+  first asks the image host the portfolio uses, keyed by symbol
+  (`images.dhan.co/symbol/SYMBOL.png`), which has a mark for nearly every
+  listed company whether or not a website is on file. Where it has none, and
+  for a listing outside India (its symbols are Indian ones), the browser asks
+  a favicon service for the company's website (the stored profile, else
+  `stock_page.KNOWN_DOMAINS`). Both are asked with `no-referrer`; the API
+  fetches no images. The search box in the header and the Market board's own
+  list each company with the same mark, from the same host
+  (`window.AltahaLogo`, `shell.js`).
 - **Motion** is the tab marker sliding, a section fading in, bars growing to
   their value and the dial sweeping once. None of it runs under
   `prefers-reduced-motion`.
@@ -567,7 +574,7 @@ add up to each other, and a paragraph of method under most headings.
 `frontend/tests/fixtures/stock-page.json` from the real modules, and
 `frontend/tests/stock-page-browser.cjs` reads it: the order of the page, the
 points summing to the number on the dial, lazy loading, the bank's figures,
-peer sorting, logo fallback, link safety, a switch from deep in one section to
+peer sorting, logo fallback, the marks in the search list, link safety, a switch from deep in one section to
 the top of another, Ownership's second ask and stored copy, and a phone at
 every section. `stock-fundamentals-browser.cjs` covers the drawn Financials.
 

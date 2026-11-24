@@ -409,3 +409,12 @@ details.row.flash {
   .tah-item { align-items: flex-start; flex-direction: column; gap: 3px; }
   .tah-name { white-space: normal; overflow-wrap: anywhere; }
 }
+/* With the company's logo leading the row (shell.css, .co-lg). On a phone the
+   symbol and the name still stack, beside the logo and not under it. */
+.tah-item.has-lg { align-items: center; }
+.tah-item.has-lg .tah-sym { min-width: 80px; }
+@media (max-width: 560px) {
+  .tah-item.has-lg { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; row-gap: 3px; }
+  .tah-item.has-lg .co-lg { grid-row: 1 / span 2; }
+  .tah-item.has-lg .tah-sym, .tah-item.has-lg .tah-name { grid-column: 2; min-width: 0; }
+}

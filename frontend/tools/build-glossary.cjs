@@ -100,7 +100,7 @@ function page(list) {
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
-<link rel="stylesheet" href="shell.css?v=20261123-tape">
+<link rel="stylesheet" href="shell.css?v=20261124-logos">
 <link rel="stylesheet" href="stock.css?v=20261121-type">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="type.css">
@@ -138,7 +138,7 @@ ${body}
     <p>Every company page prints these figures from the company&rsquo;s own filings: see <a href="/stocks">all NSE companies, A to Z</a>. How they are combined into one number is on <a href="/methodology">how the Altaha Score works</a>. The same glossary, with a search box, is inside the screener: <a href="./#me/vocab">open it there</a>.</p>
   </section>
 </main>
-<script src="shell.js?v=20261123-tape" defer></script>
+<script src="shell.js?v=20261124-logos" defer></script>
 <script src="experience.js?v=20261121-type" defer></script>
 </body>
 </html>
