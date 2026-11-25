@@ -470,7 +470,9 @@ const invisible = page => page.evaluate(() => {
   {
     const s = await open(browser, { mode: 'empty' });
     await openTab(s.page, 'flows');
-    await s.page.locator('#mf-root .mf-state').waitFor({ state: 'visible' });
+    // The loading state is drawn in the same box first, so wait for the
+    // answer by its words, not for the box.
+    await s.page.locator('#mf-root .mf-state', { hasText: 'Nothing to show yet' }).waitFor({ state: 'visible' });
     assert.match(await s.page.locator('#mf-root .mf-state').innerText(), /Nothing to show yet\s+Money Flow has no data yet\. The evening job fills it/);
     assert.match(await s.page.locator('.mf-top h2').innerText(), /Money\s+flow/);
     assert.equal(await s.page.locator('.mf-sec').count(), 0);
@@ -488,7 +490,8 @@ const invisible = page => page.evaluate(() => {
     // A sector the server does not know says so and can be closed.
     await s.page.evaluate(() => { document.querySelector('.mf-card').dataset.sector = 'atlantis'; });
     await s.page.locator('.mf-card').first().click();
-    await s.page.locator('#mf-drawer .mf-state').waitFor({ state: 'visible' });
+    // "Reading the sector" is drawn in the same box until the server answers.
+    await s.page.locator('#mf-drawer .mf-state', { hasText: 'could not be read' }).waitFor({ state: 'visible' });
     assert.match(await s.page.locator('#mf-drawer .mf-state').innerText(), /That sector could not be read\s+No such sector\./);
     await s.page.locator('#mf-drawer .mf-btn[data-close]').click();
     await s.page.locator('#mf-drawer').waitFor({ state: 'hidden' });
