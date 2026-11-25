@@ -177,6 +177,14 @@
       (o.date ? ' · ' + esc(shortDay(o.date)) : '') + '</div>';
   }
 
+  /* The stock's sector on Money Flow (FPI flow, rotation, breadth). A fact
+     beside the pick: it moves no rank. The sentence is the server's. */
+  function flowHTML(s) {
+    var t = s && s.sector_tailwind;
+    if (!t || !t.line) return '';
+    return '<div class="pk-fact"><b>Sector money flow</b> ' + esc(t.line) + '</div>';
+  }
+
   /* The chart and the tape. Facts, with one line saying they rank nothing:
      each was tested as a rule and none improved a list. */
   function chartHTML(s, note) {
@@ -441,7 +449,7 @@
     LISTS: LISTS, valid: valid, chosen: chosen, remember: remember,
     isTested: isTested, whyHTML: whyHTML, planHTML: planHTML, recordHTML: recordHTML,
     recipeHTML: recipeHTML, liveHTML: liveHTML, updatedText: updatedText, mount: mount, signed: signed, inr: inr,
-    resultsHTML: resultsHTML, orderHTML: orderHTML, chartHTML: chartHTML, marketHTML: marketHTML,
+    resultsHTML: resultsHTML, orderHTML: orderHTML, flowHTML: flowHTML, chartHTML: chartHTML, marketHTML: marketHTML,
     sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML, aimHTML: aimHTML
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

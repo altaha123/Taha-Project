@@ -201,6 +201,7 @@
 <template id="later-4">
 <link rel="stylesheet" href="special.css">
 <link rel="stylesheet" href="delivery-trends.css">
+<link rel="stylesheet" href="money-flow.css">
 </template>
 <template id="later-5">
 <link rel="stylesheet" href="filings-views.css?v=20261121-type">
@@ -246,6 +247,7 @@
 <template id="later-12">
 <script src="special.js" defer></script>
 <script src="delivery-trends.js" defer></script>
+<script src="money-flow.js" defer></script>
 <script src="wow.js" defer></script>
 <script src="concalls.js" defer></script>
 <script src="investor-pictures.js?v=20261119" defer></script>
@@ -1531,6 +1533,7 @@
         <button id="tab-allocate" role="menuitem">Allocation plan</button>
         <button id="tab-score" role="menuitem">Altaha Score</button>
         <button id="tab-deals" role="menuitem">Deals</button>
+        <button id="tab-flows" role="menuitem">Money flow</button>
         <button id="tab-special" role="menuitem">Delivery trends</button>
         <button id="tab-calls" role="menuitem">Track record</button>
         <button id="tab-watchlists" role="menuitem">Watchlists</button>
@@ -2199,6 +2202,13 @@
        says what it is and — more importantly — what it is not. The weights
        below are the disclosed priors from profiles.V4_WEIGHTS; they are not
        fitted, and saying so here is the point of the page.                  -->
+  <div id="view-flows" style="display:none" aria-label="Money flow">
+    <!-- Filled by money-flow.js from /moneyflow the first time the tab is
+         shown: FII and DII, FPI flow by sector, sector rotation, and the
+         sectors ranked on their Money Flow Score. -->
+    <div id="mf-root"></div>
+  </div><!-- /view-flows -->
+
   <div id="view-score" style="display:none">
     <header class="tabhead">
       <h2>The Altaha Score</h2>
@@ -2420,11 +2430,11 @@ const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7
 
 
 /* ── Tabs ───────────────────────────────────────────────────────────── */
-const TABS = ["today","ideahub","money","screener","ideas","filings","deals","special","live","portfolio","results","options","vocab","wow","concalls","investors","funds","allocate","score","lenses","query","calls","watchlists","strategies"];
+const TABS = ["today","ideahub","money","screener","ideas","filings","deals","flows","special","live","portfolio","results","options","vocab","wow","concalls","investors","funds","allocate","score","lenses","query","calls","watchlists","strategies"];
 /* Tabs that live under the More menu rather than in the main bar. The bar was
    carrying nine items, which on a phone wrapped to two rows and made everything
    look equally important. Five primary, the rest one tap away. */
-const OVERFLOW_TABS = ["today","ideahub","money","deals","special","results","options","vocab","wow","concalls","investors","funds","allocate","score","lenses","query","calls","watchlists","strategies"];
+const OVERFLOW_TABS = ["today","ideahub","money","deals","flows","special","results","options","vocab","wow","concalls","investors","funds","allocate","score","lenses","query","calls","watchlists","strategies"];
 function closeMore(){
   const m = $("moreMenu"), b = $("tab-more");
   if(m) m.classList.remove("open");
@@ -3243,6 +3253,10 @@ function catalystChips(s){
     const cls = st==="Leading" ? "good" : (st==="Lagging" ? "bad" : (st==="Weakening" ? "warn" : ""));
     chips.push(`<span class="ctxchip ${cls}">Sector ${esc(st)}${s.sector_outlook.rel_3m!=null?" "+pctTxt(s.sector_outlook.rel_3m,0):""}</span>`);
   }
+  if(s.sector_tailwind && s.sector_tailwind.rank){
+    const t = s.sector_tailwind;
+    chips.push(`<span class="ctxchip ${t.tier==="top" ? "good" : (t.tier==="bottom" ? "bad" : "")}" title="${esc(t.line||"")}">Money flow ${esc(t.rank)} of ${esc(t.of)}</span>`);
+  }
   if(s.catalyst){
     const d = s.catalyst.direction;
     chips.push(`<span class="ctxchip ${d==="adverse"?"bad":(d==="supportive"?"good":"warn")}">${esc(s.catalyst.category||"Filing")}</span>`);
@@ -3413,7 +3427,7 @@ async function loadIdeas(){
             ${picks
               ? `<div class="arch">Ranked ${s.pick_rank} of the stocks that passed every test${s.sector?` · ${esc(s.sector)}`:""}${s.plan&&s.plan.review_on?` · review by ${esc(s.plan.review_on)}`:""}</div>`
               : `<div class="arch">${s.plan&&s.plan.stance?`<span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>`:""}${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${scoreTxt(s.setup_fit, 0)}/100${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}</div>`}
-            ${picks && PK.resultsHTML ? PK.resultsHTML(s) + PK.orderHTML(s) : ""}
+            ${picks && PK.resultsHTML ? PK.resultsHTML(s) + PK.orderHTML(s) + (PK.flowHTML ? PK.flowHTML(s) : "") : ""}
             ${s.filing?`<div class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</div>`:""}
             ${catalystChips(s)}
             <div class="ln"><span>Composite ${scoreTxt(s.composite)}</span><span>Technical ${scoreTxt(s.technical, 0)}</span>

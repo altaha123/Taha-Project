@@ -1,0 +1,150 @@
+name: Money Flow, read the day's flows
+
+# Money Flow (backend/money_flow.py) needs four things read after each close:
+# every NSE index's close, the provisional FII/DII figures, the day's bulk and
+# block deals, and NSDL's fortnightly FPI report whenever a new one is out.
+# Then it works out the sector scores. The reading is done ON THE API, which
+# has the disk the database lives on; this job only asks for it and says what
+# happened.
+#
+# WHY THERE IS NO SEPARATE FORTNIGHTLY JOB
+# NSDL publishes a fortnight about a week after it ends, on no fixed day. A
+# cron on the 7th and the 22nd would be early some fortnights and a week late
+# others. So every run reads NSDL's list of reports (one small page) and
+# fetches only a report it has not read. On most evenings that is nothing.
+#
+# WHY TWO TIMES
+# 15:10 UTC is 20:40 IST: the index file, the deals files and the FII/DII
+# figures are normally all out by then, and the bhavcopy job (20:10 IST) has
+# run. NSE publishes the latest FII/DII session ONLY, with no archive, so a
+# session missed is a session lost; 03:25 UTC (08:55 IST) the next morning,
+# before the open, asks again for anything that landed late. Every write is
+# keyed on what the row is, so the second run changes nothing the first got.
+#
+# The first run, or one started by hand with job=backfill, reads two years of
+# history in slices (about fifteen minutes). backend/backfill_money_flow.py
+# does the same from a laptop.
+#
+# A step that fails does not stop the others, and is printed as an error with
+# its reason: this job goes red, and GET /moneyflow/status keeps the record.
+#
+# Needs ALTAHA_ADMIN_KEY here, with the same value as ADMIN_KEY on Render.
+
+on:
+  schedule:
+    - cron: "10 15 * * 1-5"
+    - cron: "25 3 * * 2-6"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "daily: today's files. backfill: two years of history. recompute: the scores only."
+        type: choice
+        options: [daily, backfill, recompute]
+        default: daily
+      months:
+        description: "backfill only: how many months back"
+        type: string
+        default: "24"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: money-flow
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      API: https://taha-project.onrender.com
+      ADMIN_KEY: ${{ secrets.ALTAHA_ADMIN_KEY }}
+      JOB: ${{ inputs.job || 'daily' }}
+      MONTHS: ${{ inputs.months || '24' }}
+    steps:
+      - name: Ask the API to read the flows
+        run: |
+          set -u
+          if [ -z "${ADMIN_KEY}" ]; then
+            echo "::error::ALTAHA_ADMIN_KEY is not set. Add it under Settings → Secrets and variables → Actions, with the same value as ADMIN_KEY on Render."
+            exit 1
+          fi
+          case "${JOB}" in daily|backfill|recompute) ;; *) echo "::error::unknown job ${JOB}"; exit 1 ;; esac
+          case "${MONTHS}" in ''|*[!0-9]*) echo "::error::months must be a number"; exit 1 ;; esac
+
+          cat > slice.py <<'PY'
+          import json, sys
+          d = json.load(open(sys.argv[1]))
+          if d.get("busy"):
+              print("slice %s: a Money Flow job is already running" % sys.argv[2])
+              open("state", "w").write("busy 1\n")
+              sys.exit(0)
+          for name, s in (d.get("steps") or {}).items():
+              bits = ["%s=%s" % (k, v) for k, v in s.items()
+                      if k not in ("errors", "warnings", "notes", "alerts") and v not in (None, [], "")]
+              print("slice %s: %-14s %s" % (sys.argv[2], name, "  ".join(bits)))
+              for w in (s.get("warnings") or []) + (s.get("notes") or []):
+                  print("::warning::%s: %s" % (name, w))
+              if s.get("alerts"):
+                  print("slice %s: %-14s alerts %s" % (sys.argv[2], name, json.dumps(s["alerts"])))
+          for e in d.get("errors") or []:
+              print("::error::%s" % e)
+          open("state", "w").write("%s %d\n" % ("ok" if d.get("ok") else "failed", d.get("remaining") or 0))
+          PY
+
+          # Render's instance sleeps; the first request can spend a minute
+          # waking it. Warm it, and let curl retry the wake rather than the job.
+          curl -sS --max-time 120 --retry 3 --retry-delay 10 \
+               --retry-all-errors -o /dev/null "${API}/health" || true
+
+          slices=1
+          if [ "${JOB}" = "backfill" ]; then slices=40; fi
+          failed=0
+          last=""
+          stuck=0
+          for i in $(seq 1 "${slices}"); do
+            code=$(curl -sS --max-time 900 -o slice.json -w "%{http_code}" -X POST \
+                   -H "X-Admin-Key: ${ADMIN_KEY}" \
+                   "${API}/admin/moneyflow/run?job=${JOB}&months=${MONTHS}&limit=60" || echo "000")
+            if [ "${code}" != "200" ]; then
+              echo "::error::The API answered ${code}: $(head -c 300 slice.json 2>/dev/null || true)"
+              failed=1
+              break
+            fi
+            python3 slice.py slice.json "${i}"
+            read -r state remaining < state
+            if [ "${state}" = "busy" ]; then sleep 60; continue; fi
+            if [ "${state}" = "failed" ]; then failed=1; fi
+            if [ "${remaining}" = "0" ]; then break; fi
+            # The same amount left three slices running is a source refusing
+            # this address, not work in progress. Stop politely; the next run
+            # carries on from here.
+            if [ "${remaining}" = "${last}" ]; then stuck=$((stuck + 1)); else stuck=0; fi
+            last="${remaining}"
+            if [ "${stuck}" -ge 3 ]; then
+              echo "::warning::${remaining} still to read and no progress in three slices. Stopping; the next run carries on."
+              break
+            fi
+            sleep 2
+          done
+          exit "${failed}"
+
+      - name: What the store now holds
+        if: always()
+        run: |
+          code=$(curl -sS --max-time 120 -o status.json -w "%{http_code}" "${API}/moneyflow/status" || echo "000")
+          if [ "${code}" != "200" ]; then echo "status answered ${code}"; exit 0; fi
+          python3 - <<'PY'
+          import json
+          d = json.load(open("status.json"))
+          c = d.get("coverage") or {}
+          f, i, w, x = (c.get(k) or {} for k in ("fpi_fortnights", "index_sessions", "flow_sessions", "deals"))
+          print("NSDL fortnights  %s  (%s to %s, %s revised)" % (f.get("count"), f.get("from"), f.get("to"), f.get("revisions")))
+          print("index sessions   %s  (%s to %s)" % (i.get("count"), i.get("from"), i.get("to")))
+          print("FII/DII sessions %s  (%s to %s)" % (w.get("count"), w.get("from"), w.get("to")))
+          print("deals            %s rows over %s sessions (%s to %s)" % (x.get("rows"), x.get("sessions"), x.get("from"), x.get("to")))
+          print("latest scores    %s" % (c.get("snapshots") or {}).get("latest"))
+          if not c.get("persistent"):
+              print("::warning::DATA_DIR is not set on the API, so this database is lost on the next deploy.")
+          PY

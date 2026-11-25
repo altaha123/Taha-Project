@@ -173,7 +173,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   await openMenu('discover');
   assert.deepEqual(await page.locator('#sh-mega-discover .sh-mega-col h4').allInnerTexts().then(t => t.map(x => x.trim().toLowerCase())),
                    ['live market', 'money flow', 'company news'], 'Market’s menu groups changed');
-  assert.deepEqual(await menuTabs('discover'), ['live', 'options', 'deals', 'special', 'wow', 'results', 'filings'],
+  assert.deepEqual(await menuTabs('discover'), ['live', 'options', 'deals', 'flows', 'special', 'wow', 'results', 'filings'],
                    'Market’s menu does not list every tool behind the door');
   assert.match(await page.locator('#sh-mega-discover .sh-item[data-tab="options"]').innerText(), /open interest/i,
                'a tool in the menu lost its hint');
@@ -313,7 +313,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   assert.deepEqual(await sheet.locator('.sh-sheet-tab[aria-selected="true"]').allInnerTexts().then(t => t.map(x => x.trim())), ['Market'],
                    'the sheet did not open on the door the reader is in');
   // The same tools, in the same order and groups, as the menu on a wide screen.
-  assert.deepEqual(await sheetTabs('discover'), ['live', 'options', 'deals', 'special', 'wow', 'results', 'filings']);
+  assert.deepEqual(await sheetTabs('discover'), ['live', 'options', 'deals', 'flows', 'special', 'wow', 'results', 'filings']);
   assert.deepEqual(await page.locator('#sh-sheet-discover h4').allInnerTexts().then(t => t.map(x => x.trim().toLowerCase())),
                    ['live market', 'money flow', 'company news']);
   assert.match(await page.locator('#sh-sheet-discover .sh-item[data-tab="options"]').innerText(), /open interest/i,
@@ -425,7 +425,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
     owners[t] = s.id;
   }));
   ['ideas', 'screener', 'charts', 'results', 'investors', 'funds', 'filings', 'concalls',
-   'social', 'vocab', 'calls', 'portfolio', 'planner', 'live', 'deals', 'special',
+   'social', 'vocab', 'calls', 'portfolio', 'planner', 'live', 'deals', 'flows', 'special',
    'wow', 'options', 'allocate', 'score', 'query', 'lenses',
    'today', 'ideahub', 'money', 'strategies'].forEach(t => {
     assert.ok(owners[t], `${t} lost its home in the restructure`);
@@ -436,7 +436,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   assert.equal(sections[0].tabs[0], 'today');
   assert.equal(sections[1].tabs[0], 'ideahub');
   assert.equal(sections[2].tabs[0], 'money');
-  ['live', 'deals', 'wow', 'special', 'results', 'filings', 'options', 'screener'].forEach(t =>
+  ['live', 'deals', 'flows', 'wow', 'special', 'results', 'filings', 'options', 'screener'].forEach(t =>
     assert.equal(owners[t], 'discover', `${t} belongs behind Market`));
   ['ideas', 'query', 'lenses', 'investors', 'funds', 'charts', 'calls', 'strategies', 'concalls'].forEach(t =>
     assert.equal(owners[t], 'research', `${t} belongs behind Ideas`));
@@ -588,7 +588,7 @@ const DOORS = ['Market', 'Ideas', 'Portfolio'];
   await page.locator('#view-today .dr-hero').waitFor({ state: 'visible' });
   assert.match(await page.locator('#view-today .dr-hero').innerText(), /NIFTY 50/);
   assert.match(await page.locator('#drt-level').innerText(), /25,150\.75/);
-  assert.equal(await page.locator('#view-today .dr-tool').count(), 7, 'Market’s tool cards changed');
+  assert.equal(await page.locator('#view-today .dr-tool').count(), 8, 'Market’s tool cards changed');
   assert.equal(await page.locator('#view-today .dr-tool', { hasText: 'Setups' }).count(), 0,
                'the removed Setups tool still has a card on Market');
   // A card is a door to its tool.

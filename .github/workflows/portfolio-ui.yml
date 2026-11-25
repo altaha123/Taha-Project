@@ -15,6 +15,8 @@ on:
       - 'backend/concalls.py'
       - 'backend/filings_text.py'
       - 'backend/strategy_lab.py'
+      - 'backend/money_flow*.py'
+      - 'backend/tests/make_money_flow_fixture.py'
       - 'backend/wealth*.py'
       - 'backend/company_pages.py'
       - 'backend/stock_page.py'
@@ -304,6 +306,21 @@ jobs:
         with:
           name: delivery-trends-verification
           path: test-results/delivery-trends
+      - name: Verify Money flow loads once, plays its rotation chart, opens a sector and stays visible with motion off
+        if: always()
+        # What a browser is for here: the page is one request and a control
+        # never goes back to the server; the rotation chart travels and ends
+        # where the data ends; a sector opens as a dialog that holds focus;
+        # the stage is dark in both themes; and no reveal can be left
+        # invisible by motion being off or animations being paused.
+        env:
+          NODE_PATH: /tmp/portfolio-browser/node_modules
+        run: node frontend/tests/money-flow-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: money-flow-verification
+          path: test-results/money-flow
       - name: Verify the fundamentals pane never mixes accounting bases
         if: always()
         # The failure mode worth a browser for: a company files its results

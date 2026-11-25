@@ -81,7 +81,7 @@ def client(tmp_path_factory):
 
         for name in ("holdings_crawl", "holdings_job", "fund_portfolios",
                      "investors_source", "lens_data_crawl", "lens_job",
-                     "lens_runner", "bhav_archive"):
+                     "lens_runner", "bhav_archive", "money_flow"):
             if getattr(mod, name, None) is not None:
                 stubbed[name] = getattr(mod, name)
                 setattr(mod, name, Inert())

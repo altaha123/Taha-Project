@@ -61,3 +61,9 @@ backend/market_flows.json
 
 # The Ideas study downloads ~2,700 NSE daily files here (research/ideas_study.py).
 research/.ideas-data/
+
+# Money Flow: NSDL fortnights, index closes, FII/DII and deals, and the scores
+# worked out from them. Data, never source — it lives on the mounted disk in
+# production and is filled by backend/backfill_money_flow.py anywhere else.
+altaha_money_flow.db
+altaha_money_flow.db-*

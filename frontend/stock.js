@@ -935,6 +935,15 @@
       .filter(function (p) { return p && p.peers; })[0];
     $('key-vs').textContent = first ? 'Against ' + first.peers + ' ' + first.group : '';
 
+    // The company's sector on Money Flow: FPI flow, rotation and breadth as
+    // one rank. Shown beside the figures; it is not in the Altaha Score.
+    var tail = $('key-tail'), tw = d.sector_tailwind;
+    if (tail) {
+      tail.hidden = !(tw && tw.line);
+      tail.innerHTML = tw && tw.line
+        ? '<b>Sector money flow</b> ' + esc(tw.line) + ' <a href="index.html#discover/flows">See every sector</a>' : '';
+    }
+
     paintRange(r.low_52w != null ? r.low_52w : tx.low_52w,
                r.high_52w != null ? r.high_52w : tx.high_52w,
                r.price != null ? r.price : d.price, cur);
