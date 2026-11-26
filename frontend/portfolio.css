@@ -53,8 +53,8 @@ html[data-theme="dark"] {
   border: 1px solid var(--border);
   border-radius: 2px;
   padding: 9px 10px;
-  font-family: var(--mono);
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-small);
   color: var(--text-primary);
 }
 html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--text-primary); }
@@ -69,7 +69,7 @@ html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--
 }
 .pfdel {
   background: none; border: 1px solid var(--border); border-radius: 2px;
-  color: var(--text-muted); cursor: pointer; padding: 8px 0; font-size: 12px;
+  color: var(--text-muted); cursor: pointer; padding: 8px 0; font-size: var(--fs-small);
   transition: color .15s, border-color .15s;
 }
 .pfdel:hover { color: var(--loss); border-color: var(--loss); }
@@ -78,7 +78,7 @@ html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--
   display: grid;
   grid-template-columns: 1.3fr .6fr .8fr .9fr 36px;
   gap: 8px;
-  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
 }
 .pfhead i { font-style: normal; opacity: .6; text-transform: none; letter-spacing: 0; }
@@ -86,8 +86,8 @@ html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--
 .pfinrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
 .pfbtn {
   display: inline-block; background: #fff; border: 1px solid var(--border);
-  border-radius: 2px; padding: 8px 13px; font-family: var(--mono);
-  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  border-radius: 2px; padding: 8px 13px; font-family: var(--font-sans);
+  font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase;
   color: var(--text-primary); cursor: pointer; text-decoration: none;
   transition: border-color .15s, color .15s;
 }
@@ -97,15 +97,15 @@ html[data-theme="dark"] .pfbtn { background: var(--surface); color: var(--text-s
 .pfbtn:disabled { opacity: .4; cursor: not-allowed; }
 .pfsel {
   background: #fff; border: 1px solid var(--border); border-radius: 2px;
-  padding: 8px 10px; font-family: var(--mono); font-size: 10px;
-  text-transform: uppercase; letter-spacing: .08em; color: var(--text-primary);
+  padding: 8px 10px; font-family: var(--font-sans); font-size: var(--fs-label);
+  text-transform: uppercase; letter-spacing: var(--ls-label); color: var(--text-primary);
 }
 html[data-theme="dark"] .pfsel { background: var(--surface); color: var(--text-secondary); }
 
 .pfpaste {
   width: 100%; min-height: 42px; resize: vertical;
   background: #fff; border: 1px dashed var(--border); border-radius: 3px;
-  padding: 10px 12px; font-family: var(--mono); font-size: 12px;
+  padding: 10px 12px; font-family: var(--font-sans); font-size: var(--fs-small);
   color: var(--text-primary); margin-bottom: 12px;
 }
 html[data-theme="dark"] .pfpaste { background: var(--surface); color: var(--text-secondary); }
@@ -121,24 +121,24 @@ html[data-theme="dark"] .pfpaste { background: var(--surface); color: var(--text
   border: 1px solid var(--border-strong); border-radius: 3px;
   background: var(--surface-raised);
 }
-.pfmap-head { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.55; }
+.pfmap-head { font-size: var(--fs-small); color: var(--text-secondary); margin-bottom: 14px; line-height: var(--lh-body); }
 .pfmap-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 10px; margin-bottom: 14px;
 }
 .pfmap-grid label { display: flex; flex-direction: column; gap: 5px; }
 .pfmap-grid span {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .11em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 .pfmap-grid i { font-style: normal; opacity: .6; text-transform: none; }
 .pfmap-grid select {
   background: #fff; border: 1px solid var(--border); border-radius: 2px;
-  padding: 8px 9px; font-family: var(--mono); font-size: 12px; color: var(--text-primary);
+  padding: 8px 9px; font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary);
 }
 html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: var(--text-secondary); }
 .pfmap-preview {
-  font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+  font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted);
   border: 1px solid var(--border); border-radius: 2px; padding: 8px;
   margin-bottom: 14px; overflow-x: auto;
 }
@@ -157,7 +157,7 @@ html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: 
   transition: width .45s cubic-bezier(.4, 0, .2, 1);
 }
 .pfprogtx {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .09em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 
@@ -181,10 +181,10 @@ html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: 
 }
 html[data-theme="dark"] .pfstat { background: var(--surface); }
 .pfstat .k {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
-.pfstat .v { font-family: var(--mono); font-size: 18px; color: var(--text-primary); }
+.pfstat .v { font-family: var(--font-sans); font-size: var(--fs-body); color: var(--text-primary); }
 
 /* ── Rulebook ───────────────────────────────────────────────────────────── */
 
@@ -194,16 +194,16 @@ html[data-theme="dark"] .pfstat { background: var(--surface); }
 }
 .pfpolicy label { display: flex; flex-direction: column; gap: 5px; }
 .pfpolicy .k {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .11em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 .pfpolicy input {
   background: #fff; border: 1px solid var(--border); border-radius: 2px;
-  padding: 8px 10px; font-family: var(--mono); font-size: 13px; color: var(--text-primary);
+  padding: 8px 10px; font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary);
 }
 html[data-theme="dark"] .pfpolicy input { background: var(--surface); color: var(--text-primary); }
 .pfpolicy input:focus { outline: none; border-color: var(--focus-ring); }
-.pfpolicy .u { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+.pfpolicy .u { font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted); }
 
 .pfbreach {
   border: 1px solid var(--border); border-left: 3px solid var(--loss);
@@ -215,17 +215,17 @@ html[data-theme="dark"] .pfbreach { background: var(--surface); }
   gap: 12px; margin-bottom: 7px; flex-wrap: wrap;
 }
 .pfb-title {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .11em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-primary);
 }
 .pfb-meter {
-  font-family: var(--mono); font-size: 11px; color: var(--loss); white-space: nowrap;
+  font-family: var(--font-sans); font-size: var(--fs-label); color: var(--loss); white-space: nowrap;
 }
-.pfbreach p { margin: 0; font-size: 14px; line-height: 1.62; color: var(--text-secondary); }
+.pfbreach p { margin: 0; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); }
 
 .pff {
   border-left: 3px solid var(--border); padding: 12px 15px; margin-bottom: 8px;
-  font-size: 14px; line-height: 1.62; color: var(--text-secondary); background: var(--bg);
+  font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); background: var(--bg);
 }
 html[data-theme="dark"] .pff { background: var(--surface); }
 .pff.good { border-left-color: var(--gain); }
@@ -234,16 +234,16 @@ html[data-theme="dark"] .pff { background: var(--surface); }
 .pff b { color: var(--text-primary); font-weight: 600; }
 
 .pfnote {
-  font-size: 13px; line-height: 1.6; color: var(--text-muted);
+  font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-muted);
   margin: 0 0 16px; max-width: 62ch;
 }
 
 /* ── Charts ─────────────────────────────────────────────────────────────── */
 
 .pfsvg { width: 100%; height: auto; display: block; overflow: visible; }
-.pfsvg-sm  { font-family: var(--mono); font-size: 10px; fill: var(--text-muted); }
-.pfsvg-num { font-family: var(--mono); font-size: 11px; fill: var(--text-secondary); }
-.pfsvg-big { font-family: var(--mono); font-size: 28px; fill: var(--text-primary); }
+.pfsvg-sm  { font-family: var(--font-sans); font-size: var(--fs-label); fill: var(--text-muted); }
+.pfsvg-num { font-family: var(--font-sans); font-size: var(--fs-label); fill: var(--text-secondary); }
+.pfsvg-big { font-family: var(--font-display); font-size: var(--fs-h1); fill: var(--text-primary); font-weight:500; letter-spacing:var(--ls-heading); }
 .pfaxis { stroke: var(--pf-axis); stroke-width: 1; }
 .pfrule { stroke: var(--pf-rule); stroke-width: 1; stroke-dasharray: 4 3; }
 
@@ -253,17 +253,17 @@ html[data-theme="dark"] .pff { background: var(--surface); }
 .pflegend { display: flex; flex-direction: column; gap: 7px; }
 .pflg {
   display: grid; grid-template-columns: 11px 1fr auto; gap: 10px;
-  align-items: center; font-size: 13px; color: var(--text-secondary);
+  align-items: center; font-size: var(--fs-small); color: var(--text-secondary);
 }
 .pflg i { width: 11px; height: 11px; border-radius: 2px; display: block; }
-.pflg b { font-family: var(--mono); font-size: 12px; color: var(--text-primary); }
+.pflg b { font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary); }
 
 .pfmeth { margin-top: 14px; }
 .pfmeth summary {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .11em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); cursor: pointer;
 }
-.pfmeth p { font-size: 13px; line-height: 1.6; color: var(--text-muted); margin: 9px 0 0; }
+.pfmeth p { font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-muted); margin: 9px 0 0; }
 
 /* ── Sector table ───────────────────────────────────────────────────────── */
 
@@ -274,22 +274,22 @@ html[data-theme="dark"] .pff { background: var(--surface); }
   gap: 10px; padding: 11px 14px; align-items: center; min-width: 560px;
 }
 .pfst-head {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);
 }
-.pfst-row { border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 12px; }
+.pfst-row { border-bottom: 1px solid var(--border); font-family: var(--font-sans); font-size: var(--fs-small); }
 .pfst-row:last-child { border-bottom: 0; }
 .pfst-row .nm {
   display: flex; flex-direction: column; gap: 2px;
-  font-family: var(--sans); font-size: 14px; color: var(--text-primary);
+  font-family: var(--font-sans); font-size: var(--fs-body); color: var(--text-primary);
 }
-.pfst-row .nm small { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+.pfst-row .nm small { font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted); }
 .pfst-row .up   { color: var(--gain); }
 .pfst-row .down { color: var(--loss); }
 .pfst-row .mute { color: var(--text-muted); }
 
 .pfstate {
-  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase;
   padding: 3px 7px; border: 1px solid var(--border); border-radius: 2px;
   text-align: center; color: var(--text-muted);
 }
@@ -309,20 +309,20 @@ html[data-theme="dark"] .pff { background: var(--surface); }
 .pfh > summary::-webkit-details-marker { display: none; }
 .pfh .sym {
   display: flex; flex-direction: column; gap: 2px;
-  font-family: var(--mono); font-size: 13px; color: var(--text-primary);
+  font-family: var(--font-mono); font-size: var(--fs-small); color: var(--text-primary);
 }
-.pfh .sym small { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
-.pfh .m { font-family: var(--mono); font-size: 12px; color: var(--text-secondary); }
+.pfh .sym small { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--text-muted); }
+.pfh .m { font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-secondary); }
 .pfh .m .up { color: var(--gain); }
 .pfh .m .down { color: var(--loss); }
-.pfh .setup { font-size: 12px; color: var(--text-muted); }
+.pfh .setup { font-size: var(--fs-small); color: var(--text-muted); }
 .pfh .comp {
-  font-family: var(--mono); font-size: 16px; color: var(--text-primary); text-align: right;
+  font-family: var(--font-sans); font-size: var(--fs-body); color: var(--text-primary); text-align: right;
 }
 .pfh .comp.hi { color: var(--gain); }
 .pfh .comp.lo { color: var(--loss); }
 .pfh .body { padding: 4px 0 16px; }
-.pfpeer { font-size: 13px; line-height: 1.6; color: var(--text-muted); margin-bottom: 8px; }
+.pfpeer { font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-muted); margin-bottom: 8px; }
 .pfpeer b { color: var(--text-secondary); }
 
 /* ── Mobile ─────────────────────────────────────────────────────────────── */
@@ -352,23 +352,23 @@ html[data-theme="dark"] .pfhero { background: var(--surface); }
 }
 .pfhero-val { display: flex; flex-direction: column; gap: 6px; }
 .pfhero-val .k {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 .pfhero-val .v {
-  font-family: var(--mono); font-size: clamp(28px, 5vw, 42px);
-  color: var(--text-primary); letter-spacing: -.01em; line-height: 1;
+  font-family: var(--font-display); font-size: var(--fs-display);
+  color: var(--text-primary); letter-spacing: var(--ls-heading); line-height: var(--lh-none); font-weight:400;
 }
-.pfhero-val .s { font-size: 13px; }
+.pfhero-val .s { font-size: var(--fs-small); }
 .pfhero-val .s.up { color: var(--gain); }
 .pfhero-val .s.down { color: var(--loss); }
 .pfhero-val .s.mute { color: var(--text-muted); }
 .pfdial { width: 122px; height: 122px; }
-.pfdial-v { font-family: var(--mono); font-size: 28px; fill: var(--text-primary); }
-.pfdial-k { font-family: var(--mono); font-size: 11px; fill: var(--text-muted); }
+.pfdial-v { font-family: var(--font-display); font-size: var(--fs-h1); fill: var(--text-primary); font-weight:500; letter-spacing:var(--ls-heading); }
+.pfdial-k { font-family: var(--font-sans); font-size: var(--fs-label); fill: var(--text-muted); }
 
 .pfhero-say {
-  font-size: 16px; line-height: 1.68; color: var(--text-secondary);
+  font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary);
   margin: 20px 0 0; max-width: 68ch;
 }
 
@@ -381,9 +381,9 @@ html[data-theme="dark"] .pfhero { background: var(--surface); }
   display: flex; flex-direction: column; gap: 3px;
 }
 html[data-theme="dark"] .pfab { background: var(--surface); }
-.pfab b { font-family: var(--mono); font-size: 20px; color: var(--text-primary); }
+.pfab b { font-family: var(--font-display); font-size: var(--fs-h2); color: var(--text-primary); font-weight:500; letter-spacing:var(--ls-heading); }
 .pfab span {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 .pfab.zero b { color: var(--text-muted); opacity: .45; }
@@ -408,7 +408,7 @@ html[data-theme="dark"] .pfact { background: var(--surface); }
   display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap; margin-bottom: 11px;
 }
 .pfact-tag {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .15em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; padding: 4px 9px; border-radius: 2px;
   background: var(--border); color: var(--text-primary);
 }
@@ -417,34 +417,34 @@ html[data-theme="dark"] .pfact { background: var(--surface); }
 .pfact.review .pfact-tag { background: var(--border-strong); color: #0B0C0D; }
 .pfact.add    .pfact-tag { background: var(--gain); color: #04231A; }
 .pfact-sym {
-  font-family: var(--mono); font-size: 16px; color: var(--text-primary); letter-spacing: .02em;
+  font-family: var(--font-mono); font-size: var(--fs-body); color: var(--text-primary); letter-spacing: normal;
 }
-.pfact-meta { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+.pfact-meta { font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted); }
 .pfact-conv {
-  margin-left: auto; font-family: var(--mono); font-size: 10px;
-  letter-spacing: .13em; text-transform: uppercase; color: var(--text-muted);
+  margin-left: auto; font-family: var(--font-sans); font-size: var(--fs-label);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-muted);
   border: 1px solid var(--border); padding: 3px 7px; border-radius: 2px;
 }
 .pfact-conv.high { color: var(--text-secondary); border-color: var(--border-strong); }
 
 .pfact-say {
-  font-size: 16px; line-height: 1.58; color: var(--text-primary);
+  font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-primary);
   margin: 0 0 12px; font-weight: 500;
 }
 .pfact-why { margin: 0; padding-left: 17px; }
 .pfact-why li {
-  font-size: 14px; line-height: 1.62; color: var(--text-secondary); margin-bottom: 5px;
+  font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); margin-bottom: 5px;
 }
 
 .pfnews {
   margin-top: 13px; padding: 10px 13px; border-left: 2px solid var(--border-strong);
-  background: var(--surface-raised); font-size: 13px; line-height: 1.55; color: var(--text-secondary);
+  background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-secondary);
 }
 html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 .pfnews.critical, .pfnews.high { border-left-color: var(--loss); }
 .pfnews .k {
-  display: block; font-family: var(--mono); font-size: 10px;
-  letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;
+  display: block; font-family: var(--font-sans); font-size: var(--fs-label);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;
 }
 .pfnews a { color: var(--highlight-text); }
 
@@ -452,15 +452,15 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
   margin-top: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
 .pfalt .k {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); margin-right: 3px;
 }
 .pfaltpill {
-  font-family: var(--mono); font-size: 12px; color: var(--text-secondary);
+  font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-secondary);
   border: 1px solid var(--border); border-radius: 2px; padding: 5px 9px;
 }
 .pfaltpill b { color: var(--text-primary); }
-.pfaltpill i { font-style: normal; color: var(--gain); margin-left: 5px; font-size: 10px; }
+.pfaltpill i { font-style: normal; color: var(--gain); margin-left: 5px; font-size: var(--fs-label); }
 
 /* ── Ledger ─────────────────────────────────────────────────────────────── */
 
@@ -470,23 +470,23 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
   gap: 10px; padding: 11px 14px; align-items: center; min-width: 620px;
 }
 .pfl-head {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);
 }
 .pfl-row { border-bottom: 1px solid var(--border); }
 .pfl-row:last-child { border-bottom: 0; }
 .pfl-row .nm {
-  display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--text-primary);
+  display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-body); color: var(--text-primary);
 }
-.pfl-row .nm small { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
-.pfl-row .mono { font-family: var(--mono); font-size: 12px; color: var(--text-secondary); }
+.pfl-row .nm small { font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted); }
+.pfl-row .mono { font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-secondary); }
 .pfl-row .up { color: var(--gain); }
 .pfl-row .down { color: var(--loss); }
-.pfl-row .sc { font-size: 14px; color: var(--text-primary); }
+.pfl-row .sc { font-size: var(--fs-body); color: var(--text-primary); }
 .pfl-row .sc.hi { color: var(--gain); }
 .pfl-row .sc.lo { color: var(--loss); }
 .pftag {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; text-align: center; padding: 4px 6px;
   border: 1px solid var(--border); border-radius: 2px; color: var(--text-muted);
 }
@@ -517,16 +517,16 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 }
 html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:#B4B4BD }
 #view-portfolio .tabhead{ margin-bottom:24px }
-#view-portfolio .tabhead h2{ font-size:clamp(28px,4vw,42px); margin-bottom:10px }
-#view-portfolio .tabhead p{ max-width:64ch; line-height:1.65 }
+#view-portfolio .tabhead h2{ font-size:var(--fs-display); margin-bottom:10px ; font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading)}
+#view-portfolio .tabhead p{ max-width:64ch; line-height:var(--lh-body) }
 #view-portfolio > .psec{ padding:24px; border:1px solid var(--border); border-radius:18px; background:var(--surface) }
 #view-portfolio .lh{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:22px }
-#view-portfolio #pf_count{ color:var(--pf-editor-muted); font:400 12px/1.5 Inter,system-ui,sans-serif }
+#view-portfolio #pf_count{ color:var(--pf-editor-muted); font:400 var(--fs-small)/var(--lh-small) var(--font-sans) }
 #view-portfolio .pfbtn{
   display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
   min-height:44px; padding:11px 16px; border:1px solid var(--border); border-radius:9px;
   background:var(--surface-raised); color:var(--text-primary); box-shadow:none;
-  font:500 14px/1.4 Inter,system-ui,sans-serif; text-transform:none; letter-spacing:0;
+  font:500 var(--fs-body)/var(--lh-label) var(--font-sans); text-transform:none; letter-spacing:0;
 }
 #view-portfolio .pfbtn:hover:not(:disabled){ background:var(--bg); border-color:var(--highlight); transform:none; box-shadow:none }
 #view-portfolio #pf_addrow{ background:var(--accent); color:var(--on-accent); border-color:var(--border-strong) }
@@ -539,13 +539,13 @@ html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:#B4B4BD }
 #view-portfolio .pfsel, #view-portfolio .pfpaste{
   width:100%; min-width:0; box-sizing:border-box; min-height:46px; padding:12px;
   border:1px solid var(--border); border-radius:9px; background:var(--bg);
-  color:var(--text-primary); font:400 16px/1.4 Inter,system-ui,sans-serif; text-transform:none; letter-spacing:0;
+  color:var(--text-primary); font:400 var(--fs-body)/var(--lh-label) var(--font-sans); text-transform:none; letter-spacing:0;
 }
-#view-portfolio .pf-import-options, #view-portfolio .pf-manage{ margin-top:18px; color:var(--pf-editor-muted); font:400 13px/1.6 Inter,system-ui,sans-serif }
+#view-portfolio .pf-import-options, #view-portfolio .pf-manage{ margin-top:18px; color:var(--pf-editor-muted); font:400 var(--fs-small)/var(--lh-body) var(--font-sans) }
 #view-portfolio .pf-import-options summary, #view-portfolio .pf-manage summary{ cursor:pointer; min-height:44px; padding:10px 0; color:var(--text-secondary) }
 #view-portfolio .pf-manage{ border-top:1px solid var(--border); padding-top:10px }
 #view-portfolio .brun{ display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding-top:8px }
-#view-portfolio #pf_go{ min-height:50px; padding:14px 24px; border-radius:10px; font:600 16px/1.4 Inter,system-ui,sans-serif; letter-spacing:0; text-transform:none; box-shadow:none }
+#view-portfolio #pf_go{ min-height:50px; padding:14px 24px; border-radius:10px; font:600 var(--fs-h3)/var(--lh-label) var(--font-sans); letter-spacing:0; text-transform:none; box-shadow:none }
 #view-portfolio :where(button,a,summary,select,textarea):focus-visible{ outline:2px solid var(--focus-ring); outline-offset:3px }
 @media(max-width:780px){
   #view-portfolio > .psec{ padding:18px 14px }
@@ -572,7 +572,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 /* Toolbar: saved portfolios and Save on the left, Add and Import on the right. */
 #view-portfolio .pf-workspace{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 16px; margin-bottom:18px }
 #view-portfolio .pf-savebar{ display:flex; align-items:flex-end; gap:8px; flex:1 1 360px; min-width:0; flex-wrap:wrap }
-#view-portfolio .pf-savebar > label{ width:100%; font:600 12px/1.4 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
+#view-portfolio .pf-savebar > label{ width:100%; font:600 var(--fs-label)/var(--lh-label) var(--font-sans); color:var(--pf-editor-muted) }
 #view-portfolio .pf-savebar .pfsel{ flex:1 1 200px; width:auto }
 #view-portfolio .pf-entrybar{ display:flex; flex-wrap:wrap; gap:8px; margin:0 }
 #view-portfolio .pf-import-options{ flex:1 1 100%; margin-top:0 }
@@ -584,25 +584,25 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pf-board[hidden]{ display:none }
 #view-portfolio .pf-stats{ display:grid; grid-template-columns:1.4fr repeat(3,minmax(0,1fr)); gap:14px 22px }
 #view-portfolio .pf-stat{ min-width:0 }
-#view-portfolio .pf-stat > span{ display:block; font:500 11px/1.4 Inter,system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#E8EBEF }
-#view-portfolio .pf-stat b{ display:block; margin-top:4px; font:600 20px/1.15 'IBM Plex Mono',monospace; letter-spacing:-.02em; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-#view-portfolio .pf-stat-main b{ font:400 42px/1 var(--serif,'Instrument Serif',Georgia,serif); letter-spacing:-.01em }
-#view-portfolio .pf-stat small{ display:block; margin-top:4px; font:400 13px/1.4 Inter,system-ui,sans-serif; color:#C6C7C9 }
+#view-portfolio .pf-stat > span{ display:block; font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:#E8EBEF }
+#view-portfolio .pf-stat b{ display:block; margin-top:4px; font:500 var(--fs-h2)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+#view-portfolio .pf-stat-main b{ font:400 var(--fs-display)/var(--lh-none) var(--font-display); letter-spacing:var(--ls-heading) }
+#view-portfolio .pf-stat small{ display:block; margin-top:4px; font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:#C6C7C9 }
 #view-portfolio .pf-stat em{ font-style:normal }
 #view-portfolio .pf-board .up{ color:#7BE0A6 } #view-portfolio .pf-board .dn{ color:#FF9F8A }
 #view-portfolio .pf-strip{ display:flex; height:12px; margin-top:16px; border-radius:6px; overflow:hidden; background:#ffffff14; gap:2px }
 #view-portfolio .pf-strip i{ display:block; min-width:3px; height:100% }
-#view-portfolio .pf-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:9px; font:500 12px/1.4 Inter,system-ui,sans-serif; color:#E5E6E9 }
+#view-portfolio .pf-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:9px; font:500 var(--fs-small)/var(--lh-label) var(--font-sans); color:#E5E6E9 }
 #view-portfolio .pf-legend span{ display:inline-flex; align-items:center; gap:6px }
 #view-portfolio .pf-legend i{ width:9px; height:9px; border-radius:3px; flex:none }
 #view-portfolio .pf-legend b{ font-weight:600; color:#FFFFFF }
 #view-portfolio .pf-legend .pf-more{ color:#AFB0B2 }
 #view-portfolio .pf-boardfoot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid #ffffff1c }
 #view-portfolio .pf-sort{ display:inline-flex; flex-wrap:wrap; gap:4px; padding:3px; border-radius:12px; background:#ffffff12 }
-#view-portfolio .pf-sort button{ min-height:32px; padding:0 12px; border:0; border-radius:9px; background:transparent; color:#E5E6E9; font:500 13px/1 Inter,system-ui,sans-serif; cursor:pointer }
+#view-portfolio .pf-sort button{ min-height:32px; padding:0 12px; border:0; border-radius:9px; background:transparent; color:#E5E6E9; font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer }
 #view-portfolio .pf-sort button[aria-pressed="true"]{ background:#FFFFFF; color:#0A0A0B; font-weight:600 }
 #view-portfolio .pf-sort button:focus-visible{ outline:2px solid #C5CAD3; outline-offset:1px }
-#view-portfolio .pf-src{ font:400 12px/1.4 Inter,system-ui,sans-serif; color:#AFB0B2 }
+#view-portfolio .pf-src{ font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:#AFB0B2 }
 
 /* One header for every row. */
 #view-portfolio .pfhead,
@@ -612,7 +612,7 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
   grid-template-areas:"av sym qty buy price val trend date del";
 }
 #view-portfolio .pfhead{ padding:0 10px 8px; margin:0; border-bottom:1px solid var(--border);
-  font:600 11px/1.3 Inter,system-ui,sans-serif; letter-spacing:.05em; text-transform:uppercase; color:var(--pf-editor-muted) }
+  font:600 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--pf-editor-muted) }
 #view-portfolio .pfhead span:nth-child(2){ grid-column:2 }
 #view-portfolio .pfhead span:nth-child(5), #view-portfolio .pfhead span:nth-child(6){ text-align:right }
 
@@ -621,8 +621,8 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
   transition:background-color .15s }
 #view-portfolio .pfrow:hover, #view-portfolio .pfrow:focus-within{ background:var(--surface-raised) }
 #view-portfolio .pf-av{ grid-area:av; display:grid; place-items:center; width:38px; height:38px; border-radius:12px;
-  color:#fff; font:600 13px/1 Inter,system-ui,sans-serif; letter-spacing:.02em; background:#7f8083; text-transform:uppercase }
-#view-portfolio .pf-av.empty{ background:transparent; color:var(--text-primary); border:1.5px dashed var(--border-strong); font-size:18px; font-weight:500 }
+  color:#fff; font:600 var(--fs-small)/var(--lh-none) var(--font-sans); letter-spacing:normal; background:#7f8083; text-transform:uppercase }
+#view-portfolio .pf-av.empty{ background:transparent; color:var(--text-primary); border:1.5px dashed var(--border-strong); font-size:var(--fs-body); font-weight:500 }
 /* The company's mark, over its initials (portfolio.js, paintAv). On white
    whatever the theme: a logo is drawn for a white page, and on a dark tile
    half of them disappear. */
@@ -644,7 +644,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pfrow input{
   display:block; box-sizing:border-box; width:100%; min-width:0; height:38px; margin:0;
   padding:7px 9px; border:1px solid transparent; border-radius:9px;
-  background:transparent; color:var(--text-primary); font:500 16px/1.3 Inter,system-ui,sans-serif; letter-spacing:0; text-transform:none;
+  background:transparent; color:var(--text-primary); font:500 var(--fs-input)/var(--lh-h3) var(--font-sans); letter-spacing:0; text-transform:none;
   font-variant-numeric:tabular-nums; transition:border-color .15s, background-color .15s;
 }
 #view-portfolio .pfrow:hover input, #view-portfolio .pfrow input:placeholder-shown{ border-color:var(--border) }
@@ -654,21 +654,21 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pfrow input:focus{ outline:none; border-color:var(--focus-ring); background:var(--bg); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus-ring) 22%,transparent) }
 #view-portfolio .pfrow input::placeholder{ color:var(--pf-editor-muted); opacity:.7; font-weight:400 }
 #view-portfolio .pfrow input.bad{ border-color:var(--loss); background:color-mix(in srgb,var(--loss) 7%,transparent) }
-#view-portfolio .pfrow .pf_sym{ height:30px; padding:4px 8px; font:600 16px/1.2 Inter,system-ui,sans-serif; letter-spacing:.01em; text-transform:uppercase }
-#view-portfolio .pfrow .pf_date{ font-size:13px; color:var(--text-secondary) }
+#view-portfolio .pfrow .pf_sym{ height:30px; padding:4px 8px; font:600 var(--fs-h3)/var(--lh-h1) var(--font-sans); letter-spacing:normal; text-transform:uppercase }
+#view-portfolio .pfrow .pf_date{ font-size:var(--fs-small); color:var(--text-secondary) }
 #view-portfolio .pfrow:not(.has-date):not(:hover):not(:focus-within) .pf_date{ color:transparent }
 #view-portfolio .pfrow:not(.has-date) .pf_date{ color:var(--pf-editor-muted) }
 #view-portfolio .pfrow:not(.has-date):not(:hover):not(:focus-within) .pf_date::-webkit-calendar-picker-indicator{ opacity:.35 }
-#view-portfolio .pf-name{ display:flex; align-items:center; gap:6px; min-width:0; padding:1px 9px 0; font:400 12px/1.35 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
+#view-portfolio .pf-name{ display:flex; align-items:center; gap:6px; min-width:0; padding:1px 9px 0; font:400 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--pf-editor-muted) }
 #view-portfolio .pf-name span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-#view-portfolio .pf-tag{ flex:none; padding:2px 7px; border-radius:99px; font:600 11px/1.3 Inter,system-ui,sans-serif; font-style:normal;
+#view-portfolio .pf-tag{ flex:none; padding:2px 7px; border-radius:99px; font:600 var(--fs-label)/var(--lh-h3) var(--font-sans); font-style:normal;
   background:var(--surface-raised); border:1px solid var(--border); color:var(--text-secondary) }
 #view-portfolio .pf-tag.gold{ background:var(--accent); border-color:transparent; color:var(--on-accent,#FFFFFF) }
 
 /* Worked-out figures. */
 #view-portfolio .pf-live{ min-width:0; text-align:right; font-variant-numeric:tabular-nums }
-#view-portfolio .pf-live b{ display:block; font:600 14px/1.3 'IBM Plex Mono',monospace; letter-spacing:-.01em; color:var(--text-primary); white-space:nowrap }
-#view-portfolio .pf-live small{ display:block; margin-top:2px; font:500 12px/1.3 Inter,system-ui,sans-serif; color:var(--pf-editor-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+#view-portfolio .pf-live b{ display:block; font:600 var(--fs-body)/var(--lh-h3) var(--font-sans); letter-spacing:normal; color:var(--text-primary); white-space:nowrap }
+#view-portfolio .pf-live small{ display:block; margin-top:2px; font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--pf-editor-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 #view-portfolio .pf-live .pf-wait{ color:var(--pf-editor-muted); font-weight:400 }
 #view-portfolio .pf-pl{ display:inline-block !important; padding:1px 7px; border-radius:99px; font-weight:600 !important }
 #view-portfolio .pf-pl.up{ color:var(--pf-up); background:color-mix(in srgb,var(--pf-up) 12%,transparent) }
@@ -693,19 +693,19 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pfacct:not(.on){ border-left:3px solid var(--highlight) }
 #view-portfolio .pfacct.on{ border-left:1px solid var(--border) }
 #view-portfolio .pfacct span{ max-width:none }
-#view-portfolio .pfacct b{ font:600 14px/1.4 Inter,system-ui,sans-serif; color:var(--text-primary) }
-#view-portfolio .pfacct span{ font-size:13px; line-height:1.5; color:var(--pf-editor-muted) }
+#view-portfolio .pfacct b{ font:600 var(--fs-body)/var(--lh-label) var(--font-sans); color:var(--text-primary) }
+#view-portfolio .pfacct span{ font-size:var(--fs-small); line-height:var(--lh-small); color:var(--pf-editor-muted) }
 #view-portfolio .pfacct-av{ display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:50%;
-  background:var(--highlight-subtle); box-shadow:var(--metal-shadow); color:var(--highlight-text) !important; font:600 16px/1 Inter,system-ui,sans-serif !important }
+  background:var(--highlight-subtle); box-shadow:var(--metal-shadow); color:var(--highlight-text) !important; font:600 var(--fs-h3)/var(--lh-none) var(--font-sans) !important }
 #view-portfolio .pfacct-who{ display:flex; flex-direction:column; min-width:0; flex:1 1 260px }
-#view-portfolio .pfacct-opt{ display:inline-flex; align-items:center; gap:9px; min-height:40px; margin:0; font:500 13px/1.3 Inter,system-ui,sans-serif; color:var(--text-primary); cursor:pointer }
+#view-portfolio .pfacct-opt{ display:inline-flex; align-items:center; gap:9px; min-height:40px; margin:0; font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--text-primary); cursor:pointer }
 #view-portfolio .pfacct-switch input{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none }
 #view-portfolio .pfacct-switch i{ position:relative; flex:none; width:36px; height:20px; border-radius:10px; background:var(--border); transition:background-color .2s }
 #view-portfolio .pfacct-switch i::after{ content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0003; transition:transform .2s }
 #view-portfolio .pfacct-switch input:checked + i{ background:var(--accent) }
 #view-portfolio .pfacct-switch input:checked + i::after{ transform:translateX(16px) }
 #view-portfolio .pfacct-switch input:focus-visible + i{ outline:2px solid var(--focus-ring); outline-offset:2px }
-#view-portfolio .pfacct .pfbtn{ min-height:38px; padding:8px 14px; font-size:13px }
+#view-portfolio .pfacct .pfbtn{ min-height:38px; padding:8px 14px; font-size:var(--fs-small) }
 #view-portfolio .pfacct-note{ flex:1 1 100%; margin:0 }
 #view-portfolio .pfacct-note:empty{ display:none }
 
@@ -719,7 +719,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio .pf-field-date{ display:none }
   #view-portfolio .pfrow:focus-within, #view-portfolio .pfrow.is-open, #view-portfolio .pfrow.has-date{ grid-template-areas:"av sym qty buy price val del" ". date date date . . ."; row-gap:4px }
   #view-portfolio .pfrow:focus-within .pf-field-date, #view-portfolio .pfrow.is-open .pf-field-date, #view-portfolio .pfrow.has-date .pf-field-date{ display:flex; align-items:center; gap:8px }
-  #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 12px/1 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
+  #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); color:var(--pf-editor-muted) }
   #view-portfolio .pfrow .pf_date{ width:auto; height:32px }
 }
 
@@ -735,7 +735,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio .pfrow:hover{ background:var(--surface) }
   /* Line 1: badge, symbol and name, today's price. Line 2: quantity and
      average cost, then value and profit. */
-  #view-portfolio .pf-av{ grid-area:auto; grid-column:1/3; grid-row:1; width:36px; height:36px; border-radius:11px; font-size:12px }
+  #view-portfolio .pf-av{ grid-area:auto; grid-column:1/3; grid-row:1; width:36px; height:36px; border-radius:11px; font-size:var(--fs-small) }
   #view-portfolio .pf-field-symbol{ grid-area:auto; grid-column:3/9; grid-row:1 }
   #view-portfolio .pf-price{ grid-area:auto; grid-column:9/13; grid-row:1; text-align:right; align-self:center }
   #view-portfolio .pf-field-qty{ grid-area:auto; grid-column:1/5; grid-row:2 }
@@ -743,26 +743,26 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio .pf-val{ grid-area:auto; grid-column:9/13; grid-row:2; text-align:right; align-self:end }
   #view-portfolio .pf-field-date{ grid-area:auto; grid-column:1/13; grid-row:3; display:none }
   #view-portfolio .pf-trend{ display:none }
-  #view-portfolio .pf-field-qty .pf-lbl, #view-portfolio .pf-field-buy .pf-lbl{ display:block; margin:0 0 3px 2px; font:500 11px/1.2 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
-  #view-portfolio .pfrow input{ height:34px; padding:5px 8px; font-size:16px; border-color:var(--border); background:var(--bg) }
-  #view-portfolio .pfrow .pf_sym{ height:28px; padding:2px 4px; font-size:14px; border-color:transparent; background:transparent }
+  #view-portfolio .pf-field-qty .pf-lbl, #view-portfolio .pf-field-buy .pf-lbl{ display:block; margin:0 0 3px 2px; font:500 var(--fs-label)/var(--lh-h1) var(--font-sans); color:var(--pf-editor-muted) }
+  #view-portfolio .pfrow input{ height:34px; padding:5px 8px; font-size:var(--fs-input); border-color:var(--border); background:var(--bg) }
+  #view-portfolio .pfrow .pf_sym{ height:28px; padding:2px 4px; font-size:var(--fs-body); border-color:transparent; background:transparent }
   #view-portfolio .pfrow .pf_sym:focus{ border-color:var(--focus-ring); background:var(--bg) }
-  #view-portfolio .pf-name{ padding-left:4px; font-size:12px }
-  #view-portfolio .pf-live b{ font-size:14px }
-  #view-portfolio .pf-live small{ font-size:12px }
-  #view-portfolio .pf-pl{ padding:1px 6px; font-size:11px !important }
+  #view-portfolio .pf-name{ padding-left:4px; font-size:var(--fs-small) }
+  #view-portfolio .pf-live b{ font-size:var(--fs-body) }
+  #view-portfolio .pf-live small{ font-size:var(--fs-small) }
+  #view-portfolio .pf-pl{ padding:1px 6px; font-size:var(--fs-label) !important }
   #view-portfolio .pf-sep{ display:none }
   #view-portfolio .pfrow:focus-within .pf-field-date, #view-portfolio .pfrow.is-open .pf-field-date, #view-portfolio .pfrow.has-date .pf-field-date{ display:flex; align-items:center; gap:8px }
-  #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 12px/1 Inter,system-ui,sans-serif; color:var(--pf-editor-muted) }
-  #view-portfolio .pfrow .pf_date{ width:auto; flex:1 1 auto; height:34px; font-size:14px }
+  #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); color:var(--pf-editor-muted) }
+  #view-portfolio .pfrow .pf_date{ width:auto; flex:1 1 auto; height:34px; font-size:var(--fs-body) }
   #view-portfolio .pfdel{ grid-area:auto; position:absolute; top:-10px; right:-10px; width:24px; height:24px; border-radius:50%; opacity:1;
     border:1px solid var(--border); background:var(--surface); box-shadow:0 2px 6px #0e0f101a; z-index:1 }
   #view-portfolio .pf-wbar{ display:none }
   #view-portfolio .pf-board{ padding:16px 14px 12px; border-radius:16px }
   #view-portfolio .pf-stats{ grid-template-columns:1fr 1fr; gap:12px 14px }
   #view-portfolio .pf-stat-main{ grid-column:1/-1 }
-  #view-portfolio .pf-stat-main b{ font-size:34px }
-  #view-portfolio .pf-stat b{ font-size:18px }
+  #view-portfolio .pf-stat-main b{ font-size:var(--fs-h1) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
+  #view-portfolio .pf-stat b{ font-size:var(--fs-body) }
   #view-portfolio .pf-boardfoot{ flex-direction:column; align-items:stretch }
   #view-portfolio .pf-sort{ justify-content:space-between }
   #view-portfolio .pf-sort button{ flex:1 1 auto; padding:0 8px }
@@ -770,7 +770,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio .pf-workspace{ gap:10px }
   #view-portfolio .pf-savebar{ flex:1 1 100% }
   #view-portfolio .pf-entrybar{ width:100% }
-  #view-portfolio .pf-entrybar > .pfbtn, #view-portfolio .pf-savebar .pfbtn{ flex:1; min-height:42px; padding:8px 12px; font-size:14px }
+  #view-portfolio .pf-entrybar > .pfbtn, #view-portfolio .pf-savebar .pfbtn{ flex:1; min-height:42px; padding:8px 12px; font-size:var(--fs-body) }
 }
 
 @media (prefers-reduced-motion: reduce){ #view-portfolio .pfrow, #view-portfolio .pfrow input, #view-portfolio .pf-wbar, #view-portfolio .pfdel, #view-portfolio .pfacct-switch i, #view-portfolio .pfacct-switch i::after{ transition:none } }

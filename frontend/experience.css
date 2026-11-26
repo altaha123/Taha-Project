@@ -12,24 +12,24 @@
 .ux-dialog[open] { animation: ux-enter 200ms ease-out; }
 .ux-dialog::backdrop { background: rgb(0 0 0 / .48); }
 .ux-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.ux-dialog h2, .ux-guide h2 { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 28px; margin: 0; }
-.ux-dialog h3 { font-size: 18px; }
-.ux-note { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+.ux-dialog h2, .ux-guide h2 { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); margin: 0; letter-spacing:var(--ls-heading); }
+.ux-dialog h3 { font-size: var(--fs-h3); font-weight:600; }
+.ux-note { color: var(--text-muted); font-size: var(--fs-body); line-height: var(--lh-body); }
 .ux-dialog-foot { display: flex; justify-content: space-between; gap: 12px; position: sticky; bottom: -24px; padding: 16px 0; background: var(--bg); border-top: 1px solid var(--border); }
-.ux-field { display: grid; gap: 8px; margin: 24px 0; font-size: 14px; }
-.ux-field input, .ux-field select { box-sizing: border-box; width: 100%; padding: 12px; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); background: var(--surface-raised); font: inherit; font-size: 16px; }
+.ux-field { display: grid; gap: 8px; margin: 24px 0; font-size: var(--fs-body); }
+.ux-field input, .ux-field select { box-sizing: border-box; width: 100%; padding: 12px; min-height: 44px; border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); background: var(--surface-raised); font: inherit; font-size: var(--fs-input); }
 .ux-saved-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.ux-saved-row a { color: var(--text-primary); font: 500 14px 'IBM Plex Mono', monospace; padding: 12px 0; overflow-wrap: anywhere; }
+.ux-saved-row a { color: var(--text-primary); font: 500 var(--fs-body) var(--font-sans); padding: 12px 0; overflow-wrap: anywhere; }
 .ux-filterbar, .ux-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .ux-filterbar { margin: 20px 0; }
-.ux-chips button { font-size: 12px; }
+.ux-chips button { font-size: var(--fs-label); }
 .ux-empty { padding: 28px; border: 1px dashed var(--border); border-radius: 14px; text-align: center; }
 [hidden] { display: none !important; }
 .ux-art { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 14px; }
 .ux-saved-list > .ux-art { max-width: 240px; margin: 20px auto; }
 .ux-guide { display: grid; grid-template-columns: 160px 1fr; gap: 24px; align-items: center; max-width: 660px; margin: 20px auto 28px; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
-.ux-guide ol { padding-left: 20px; color: var(--text-muted); font-size: 14px; line-height: 1.7; }
-.ux-toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; padding: 12px 18px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--bg); color: var(--text-primary); box-shadow: var(--e2); width: max-content; max-width: calc(100vw - 40px); box-sizing: border-box; z-index: 1500; transition: opacity var(--ux-fast), transform var(--ux-fast); font-size: 14px; }
+.ux-guide ol { padding-left: 20px; color: var(--text-muted); font-size: var(--fs-body); line-height: var(--lh-body); }
+.ux-toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; padding: 12px 18px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--bg); color: var(--text-primary); box-shadow: var(--e2); width: max-content; max-width: calc(100vw - 40px); box-sizing: border-box; z-index: 1500; transition: opacity var(--ux-fast), transform var(--ux-fast); font-size: var(--fs-body); }
 .ux-toast.on { opacity: 1; transform: translate(-50%, 0); }
 .idea .nm > a { color: inherit; text-decoration: none; }
 .idea .nm > a:hover { text-decoration: underline; text-underline-offset: 4px; }
@@ -53,13 +53,13 @@
 @media (max-width: 1040px) {
   body.sh-on { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .ux-bottom { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; inset: auto 0 0; z-index: 950; gap: 4px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--border); box-shadow: var(--e2); }
-  .ux-bottom button { border-color: transparent; font-size: 12px; padding: 10px 4px; font-weight: 500; }
+  .ux-bottom button { border-color: transparent; font-size: var(--fs-small); padding: 10px 4px; font-weight: 500; }
   .ux-bottom button[aria-current], .ux-bottom button[aria-expanded="true"] { background: var(--surface-raised); border-color: var(--highlight); }
   .ux-desktop-save { display: none; }
   .ux-toast { bottom: calc(82px + env(safe-area-inset-bottom)); }
   .sh-drawer { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   .sh-icon { min-width: 44px; min-height: 44px; }
-  .sh-search input { font-size: 16px; height: 44px; }
+  .sh-search input { font-size: var(--fs-input); height: 44px; }
   .sh-bar { gap: 10px; padding-inline: 12px; }
   .sh-search .kbd { display: none; }
   .sh-search input { padding-right: 12px; }
@@ -72,12 +72,12 @@
   .ux-dialog-foot { bottom: -20px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
   .ux-guide { grid-template-columns: 1fr; gap: 14px; padding: 18px; }
   .ux-guide > .ux-art { width: 120px; }
-  .ux-guide h2 { font-size: 24px; }
+  .ux-guide h2 { font-size: var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
   .mb { padding: 6px 0 0; }
   .mb-idx { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .mb-card { padding: 14px 12px; }
-  .mb-card .v { font-size: clamp(16px, 4.4vw, 24px); }
-  .mb-card .k { font-size: 10px; letter-spacing: .06em; }
+  .mb-card .v { font-size: var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
+  .mb-card .k { font-size: var(--fs-label); letter-spacing: var(--ls-label); }
   .mb-movers { grid-template-columns: 1fr; }
   .stk-id { flex-wrap: wrap; gap: 16px; }
   .stk-rail a { display: inline-flex; align-items: center; }
@@ -93,7 +93,7 @@
 .sh-drawer { box-sizing: border-box; margin: 0; width: 100%; max-width: none; height: calc(100dvh - var(--sh-chrome-h)); max-height: none; color: var(--text-primary); border: 0; }
 .sh-drawer::backdrop { background: rgb(0 0 0 / .35); }
 .sh-drawer > .ux-button { margin-bottom: 24px; }
-.ux-chart-value { display: block; padding-top: 20px; color: var(--text-primary); font: 12px/1.6 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.ux-chart-value { display: block; padding-top: 20px; color: var(--text-primary); font: 400 var(--fs-small)/var(--lh-body) var(--font-sans); overflow-wrap: anywhere; }
 .chartbox input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--highlight); cursor: pointer; }
 
 /* The phone bar since the three doors: icon over label, search raised in the
@@ -101,7 +101,7 @@
 @media (max-width: 720px) {
   .ux-bottom { position: fixed; align-items: end; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); gap: 0; }
   .ux-bottom .ux-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px;
-    padding: 6px 2px 4px; border: 0 !important; background: transparent !important; color: var(--text-muted); font-size: 11px; transition: color .3s; }
+    padding: 6px 2px 4px; border: 0 !important; background: transparent !important; color: var(--text-muted); font-size: var(--fs-label); transition: color .3s; }
   .ux-bottom .ux-tab[aria-current] { color: var(--text-primary); font-weight: 600; }
   .ux-bottom .ux-fab { justify-self: center; width: 56px; height: 56px; min-height: 56px; margin-top: -18px; padding: 0; border-radius: 50% !important;
     background: var(--accent) !important; color: var(--on-accent, #FFFFFF); box-shadow: 0 8px 22px rgba(10,10,11,.28);

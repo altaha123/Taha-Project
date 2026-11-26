@@ -19,8 +19,8 @@
   display: flex; align-items: center; justify-content: center; gap: 9px;
   padding: 16px 10px 15px;
   background: none; border: 0; cursor: pointer;
-  font-family: var(--mono);
-  font-size: 12px; letter-spacing: .13em; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase;
   color: var(--text-muted);
   transition: color .18s var(--ease, ease), background .18s var(--ease, ease);
 }
@@ -57,12 +57,12 @@
   transition: border-color .18s ease, color .18s ease;
 }
 .navsub-lbl {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .11em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
   transition: color .18s ease;
 }
 .navsub-hint {
-  font-size: 11px; color: var(--text-muted); opacity: .62;
+  font-size: var(--fs-label); color: var(--text-muted); opacity: .62;
 }
 .navsub-btn:hover .navsub-lbl { color: var(--text-secondary); }
 .navsub-btn.on { border-bottom-color: var(--border-strong); }
@@ -74,7 +74,7 @@
   align-self: center;
   background: none; border: 1px solid var(--border); border-radius: 2px;
   padding: 7px 13px; cursor: pointer;
-  font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
   transition: border-color .18s ease, color .18s ease;
   flex: 0 0 auto;
@@ -84,7 +84,7 @@
 
 .navblurb {
   margin: 0; padding: 11px 2px 13px;
-  font-size: 13px; color: var(--text-muted);
+  font-size: var(--fs-small); color: var(--text-muted);
 }
 
 .navmob { display: none; }
@@ -108,7 +108,7 @@
   }
   .navmob-btn svg { width: 20px; height: 20px; }
   .navmob-btn span {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+    font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
     text-transform: uppercase;
   }
   .navmob-btn.on { color: var(--highlight-text); }
@@ -123,12 +123,12 @@
   .navblurb { display: none; }
 
   header.wrap { padding-top: 18px !important; }
-  header .brand { font-size: 34px !important; }
+  header .brand { font-size: var(--fs-h1) !important; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
   .pitch, .badges, .hero-candles, .metal { display: none !important; }
 }
 
 @media (max-width: 560px) {
-  .navsub-lbl { font-size: 10px; letter-spacing: .08em; }
+  .navsub-lbl { font-size: var(--fs-label); letter-spacing: var(--ls-label); }
   .navlearn { padding: 6px 10px; }
 }
 

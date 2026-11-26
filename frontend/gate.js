@@ -80,15 +80,15 @@
     '#altaha-gate .ag-lock{width:44px;height:44px;margin:0 auto 14px;border-radius:50%;display:grid;' +
       'place-items:center;background:var(--surface-raised);color:var(--text-primary)}' +
     '#altaha-gate .ag-kick{margin:0 0 6px;font:500 12px/1.4 "IBM Plex Mono",ui-monospace,monospace;' +
-      'letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}' +
+      'letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted)}' +
     '#altaha-gate h2{margin:0 0 10px;font:400 30px/1.15 "Instrument Serif",Georgia,serif}' +
-    '#altaha-gate p.ag-lede{margin:0 auto 22px;max-width:40ch;font:400 15px/1.55 Inter,system-ui,sans-serif;' +
+    '#altaha-gate p.ag-lede{margin:0 auto 22px;max-width:40ch;font:400 var(--fs-body)/var(--lh-body) var(--font-sans);' +
       'color:var(--text-secondary)}' +
     '#altaha-gate .ag-go{display:inline-flex;align-items:center;justify-content:center;min-height:48px;' +
       'padding:0 26px;border-radius:999px;background:var(--accent);color:var(--on-accent);' +
-      'font:600 15px/1 Inter,system-ui,sans-serif;text-decoration:none}' +
+      'font:600 var(--fs-body)/var(--lh-none) var(--font-sans);text-decoration:none}' +
     '#altaha-gate .ag-go:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}' +
-    '#altaha-gate .ag-note{margin:14px 0 0;font:400 13px/1.5 Inter,system-ui,sans-serif;color:var(--text-muted)}';
+    '#altaha-gate .ag-note{margin:14px 0 0;font:400 var(--fs-small)/var(--lh-small) var(--font-sans);color:var(--text-muted)}';
 
   var style = document.createElement('style');
   style.id = 'altaha-gate-css';

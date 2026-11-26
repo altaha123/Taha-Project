@@ -1429,7 +1429,7 @@
         if (request !== chartRequest) return;
         box.setAttribute('aria-busy', 'false');
         box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--text-muted);' +
-          'font-size:13px">' + (isIntraday(asked) && failStatus
+          'font-size:var(--fs-small)">' + (isIntraday(asked) && failStatus
             ? 'Intraday prices for this stock are not available right now. Try 1M or longer.'
             : 'Price history is not available right now.') + '</div>';
       });
@@ -1484,7 +1484,7 @@
     var rows = ((d && d.candles) || []).filter(function (r) { return r && typeof r[4] === 'number' && isFinite(r[4]); });
     if (rows.length < 2) {
       box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--text-muted);' +
-        'font-size:13px">Not enough history to draw this range.</div>';
+        'font-size:var(--fs-small)">Not enough history to draw this range.</div>';
       return;
     }
     var closes = rows.map(function (r) { return r[4]; });

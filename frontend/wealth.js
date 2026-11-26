@@ -448,7 +448,7 @@
     var ok = v.filter(function (x) { return x !== null; });
     if (ok.length < 2) {
       return '<div class="wd-area' + (opts.light ? ' light' : '') + '" style="display:grid;place-items:center;color:' +
-        (opts.light ? 'var(--text-muted)' : 'rgba(255,255,255,.55)') + ';font-size:13px">The chart fills in once prices for the last sessions arrive.</div>';
+        (opts.light ? 'var(--text-muted)' : 'rgba(255,255,255,.55)') + ';font-size:var(--fs-small)">The chart fills in once prices for the last sessions arrive.</div>';
     }
     var id = 'wdc' + (++chartSeq);
     var W = 600, H = 200, P = 10;
@@ -1264,7 +1264,7 @@
     var hwm = num(f.to_hwm) > 0.5 && t.share_pct
       ? '<p class="wd-note" style="color:var(--dn)">' + pv(esc(inr(f.to_hwm, 0))) + ' below the ' + (t.hwm ? 'high-water mark' : 'last settlement') + '. No profit share is due until it is made back.</p>' : '';
     var receipt = '<div class="wd-receipt"><div class="wd-due"><div><small>Accrued this period</small><b class="pv">' + esc(inr(f.total)) + '</b></div>' +
-      '<div style="text-align:right">' + due + '<div class="wd-muted" style="font-size:13px;margin-top:6px">' + esc(c.terms_label) + '</div></div></div>' +
+      '<div style="text-align:right">' + due + '<div class="wd-muted" style="font-size:var(--fs-small);margin-top:6px">' + esc(c.terms_label) + '</div></div></div>' +
       '<ol class="wd-steps">' + steps + '</ol>' + hwm +
       (ro ? '' : '<div class="wd-acts" style="margin-top:14px"><button type="button" class="wd-btn primary" data-act="settle" data-id="' + c.id + '">' + ic('bill') + 'Settle this period</button>' +
         '<button type="button" class="wd-btn" data-act="past" data-id="' + c.id + '">Record an earlier settlement</button></div>') + '</div>';
@@ -1319,7 +1319,7 @@
   function profileTab(c) {
     return '<form class="wd-panel" data-form="client" data-id="' + c.id + '"><h3>Profile and terms</h3>' + clientFields(c) +
       '<div class="wd-acts" style="margin-top:14px"><button type="submit" class="wd-btn primary">' + ic('check') + 'Save changes</button><span class="wd-err" role="alert"></span></div></form>' +
-      '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Remove this client</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:14px">' +
+      '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Remove this client</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:var(--fs-body)">' +
         'Deletes their profile, every trade and every settlement. To keep the record, set their status to Closed instead.</p>' +
       '<button type="button" class="wd-btn danger" data-act="del-client" data-id="' + c.id + '">' + ic('trash') + 'Delete ' + esc(c.name) + '</button></div>';
   }
@@ -1464,12 +1464,12 @@
       '<div class="wd-grid2" style="margin-top:16px"><div class="wd-panel"><h3>Privacy</h3>' +
         '<label class="wd-toggle"><input type="checkbox" data-act="privacy-toggle"' + (S.priv ? ' checked' : '') + '> Hide amounts and names on this screen</label>' +
         '<p class="wd-note">For screen-sharing and working in public. Hover over a blurred figure to read it. Remembered on this browser.</p></div>' +
-      '<div class="wd-panel"><h3>Export</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:14px">Spreadsheets of the whole desk, for your accountant or your own records.</p>' +
+      '<div class="wd-panel"><h3>Export</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:var(--fs-body)">Spreadsheets of the whole desk, for your accountant or your own records.</p>' +
         '<div class="wd-acts"><button type="button" class="wd-btn" data-act="export" data-what="holdings">' + ic('download') + 'Holdings</button>' +
         '<button type="button" class="wd-btn" data-act="export" data-what="ledger">' + ic('download') + 'Ledger</button>' +
         '<button type="button" class="wd-btn" data-act="export" data-what="fees">' + ic('download') + 'Fees</button></div></div></div>' +
       '<div class="wd-panel" style="margin-top:16px"><h3>Hand-set prices</h3>' + prices + '</div>' +
-      '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Close this desk</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:14px">' +
+      '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Close this desk</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:var(--fs-body)">' +
         'Deletes the desk and everything on it: every client, trade, call and settlement. Export first if you want a copy. This cannot be undone.</p>' +
         '<button type="button" class="wd-btn danger" data-act="del-desk">' + ic('trash') + 'Delete the desk</button></div>' +
       '<p class="wd-note">' + esc(b.disclaimer) + '</p>';
@@ -1514,7 +1514,7 @@
         '<a class="wd-btn" href="wealth.html?demo=1">' + ic('spark') + 'Explore a sample desk</a></div>' +
         '<p class="wd-note">Free. Your book is private to your account. A client sees their own portfolio only if you switch that on.</p></div>' +
       '<div class="wd-stage" aria-hidden="true">' +
-        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:#EBEDEF">Book value</p><p class="wd-big" style="font-size:42px">₹7,62,56,240</p>' +
+        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:#EBEDEF">Book value</p><p class="wd-big" style="font-size:var(--fs-display)">₹7,62,56,240</p>' +
           '<div class="wd-hero-sub"><span class="wd-pill up">▲ +₹1,24,800 today</span><span class="wd-pill">42 clients</span></div></div>' +
         '<div class="wd-float f2 c-rose"><div class="wd-card-top"><span class="wd-av">AK</span><span class="wd-card-n"><b>Ayesha Kapoor</b><small>AK-01 · Mumbai</small></span></div>' +
           '<div class="wd-card-v" style="margin-top:10px"><b>₹28.9 L</b><span class="ret up">+15.4%</span></div>' + spark([10, 12, 11, 14, 13, 16, 18, 17, 20, 22]) + '</div>' +
@@ -2160,7 +2160,7 @@
           '<small>.xlsx or .csv · read on this device</small></label>' +
         '<p class="wd-err" data-status role="status"></p>' +
         '<details' + (opts.paste ? ' open' : '') + '><summary class="wd-link" style="display:inline-block;margin-bottom:8px">Or paste rows from a spreadsheet</summary>' +
-          field('Rows', '<textarea name="text" rows="7" style="font-family:\'IBM Plex Mono\',monospace;font-size:13px" placeholder="Symbol, Qty, Avg cost, Date\nRELIANCE, 50, 1250.50, 03/01/2025\nTCS, 12, 3305"></textarea>',
+          field('Rows', '<textarea name="text" rows="7" style="font-family:\'IBM Plex Mono\',monospace;font-size:var(--fs-small)" placeholder="Symbol, Qty, Avg cost, Date\nRELIANCE, 50, 1250.50, 03/01/2025\nTCS, 12, 3305"></textarea>',
             'A header row is recognised by its words; without one the columns are symbol, quantity, average cost, date.', 'full') +
           '<button type="button" class="wd-btn sm" data-read>Read these rows</button></details>' +
         '<p class="wd-note">' + ic('lock') + ' The file is opened in this browser. Only each holding’s stock, quantity and prices are sent, not the name, client code or anything else in the statement.</p>',

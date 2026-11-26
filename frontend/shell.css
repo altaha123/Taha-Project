@@ -91,13 +91,13 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
   background:var(--surface-raised); color:var(--text-secondary);
   display:flex; align-items:center; gap:14px;
   padding:0 18px; overflow:hidden;
-  font-size:13px; letter-spacing:.01em;
+  font-size:var(--fs-small); letter-spacing:normal;
   perspective:600px;
 }
 .sh-ribbon-tag{
   flex:0 0 auto; display:inline-flex; align-items:center; gap:7px;
-  font:600 10px/1 'IBM Plex Mono',ui-monospace,monospace;
-  letter-spacing:.14em; text-transform:uppercase;
+  font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
+  letter-spacing:var(--ls-label); text-transform:uppercase;
   color:var(--text-muted); white-space:nowrap;
 }
 .sh-dot{
@@ -132,16 +132,16 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 }
 .sh-head a:hover{ text-decoration:underline; text-underline-offset:3px; }
 .sh-head .src{
-  flex:0 0 auto; font:500 10px/1 'IBM Plex Mono',ui-monospace,monospace;
-  letter-spacing:.08em; text-transform:uppercase; opacity:.62;
+  flex:0 0 auto; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
+  letter-spacing:var(--ls-label); text-transform:uppercase; opacity:.62;
 }
 .sh-head .corr{
-  flex:0 0 auto; font:600 10px/1 'IBM Plex Mono',monospace;
+  flex:0 0 auto; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
   padding:3px 6px; border-radius:99px;
   border:1px solid rgba(197,202,211,.35); color:var(--text-muted);
 }
 .sh-ribbon-clock{
-  flex:0 0 auto; font:500 11px/1 'IBM Plex Mono',monospace;
+  flex:0 0 auto; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
   white-space:nowrap;
 }
 @media (max-width:720px){ .sh-ribbon-clock{ display:none } }
@@ -188,12 +188,12 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
   box-shadow:var(--e2);
 }
 .sh-chip .sym{
-  font:600 12px/1 'IBM Plex Mono',monospace; letter-spacing:.04em;
+  font:600 var(--fs-label)/var(--lh-none) var(--font-mono); letter-spacing:var(--ls-label);
 }
-.sh-chip .lv{ font:500 12px/1 'IBM Plex Mono',monospace; color:var(--text-secondary) }
-.sh-chip .ch{ font:600 12px/1 'IBM Plex Mono',monospace }
+.sh-chip .lv{ font:500 var(--fs-label)/var(--lh-none) var(--font-sans); color:var(--text-secondary) }
+.sh-chip .ch{ font:600 var(--fs-label)/var(--lh-none) var(--font-sans) }
 .sh-chip .ch.up{ color:var(--gain) } .sh-chip .ch.dn{ color:var(--loss) }
-.sh-chip .arw{ font-size:10px; vertical-align:middle }
+.sh-chip .arw{ font-size:var(--fs-label); vertical-align:middle }
 /* A flash when a printed value changes, so movement is noticed, not hunted. */
 .sh-chip.flash-up{ animation: shFlashU 900ms var(--ease) }
 .sh-chip.flash-dn{ animation: shFlashD 900ms var(--ease) }
@@ -215,7 +215,7 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 
 .sh-brand{
   display:flex; align-items:center; gap:9px; text-decoration:none;
-  color:var(--text-primary); flex:0 0 auto; font-weight:600; letter-spacing:-.01em;
+  color:var(--text-primary); flex:0 0 auto; font-weight:600; letter-spacing:var(--ls-heading);
 }
 /* The mark itself, not a stand-in for it. A background rather than an <img>
    because the artwork swaps with the theme; see .brandmark in index.html. */
@@ -228,8 +228,8 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 /* The old placeholder tile flipped on hover. A mirrored logo is a wrong
    logo — the arrow would point the other way — so it lifts instead. */
 .sh-brand:hover .mk{ transform:translateY(-1px) scale(1.06) }
-.sh-brand .nm{ font-size:16px }
-.sh-brand .nm i{ font-family:'Instrument Serif',Georgia,serif; font-style:italic; color:var(--highlight-text) }
+.sh-brand .nm{ font-size:var(--fs-body) }
+.sh-brand .nm i{ font-family:var(--font-display); font-style:italic; color:var(--highlight-text) }
 @media (max-width:560px){ .sh-brand .nm{ display:none } }
 
 .sh-nav{ display:flex; align-items:stretch; gap:2px; height:100%; flex:1 1 auto; min-width:0 }
@@ -258,8 +258,8 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
    phone sheet. The door menus themselves are styled with the doors, below. */
 
 .sh-col h4{
-  margin:0 0 12px; font:600 11px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted);
+  margin:0 0 12px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
+  letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
 }
 .sh-item{
   display:grid; grid-template-columns:34px 1fr; gap:11px; align-items:start;
@@ -269,8 +269,8 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 }
 .sh-item:hover{ background:var(--surface-raised); transform:translateX(3px) }
 .sh-txt{ display:block; min-width:0 }
-.sh-item b{ display:block; font-weight:500; font-size:14px }
-.sh-txt > span{ display:block; font-size:12px; color:var(--text-muted); margin-top:2px; line-height:1.4 }
+.sh-item b{ display:block; font-weight:500; font-size:var(--fs-body) }
+.sh-txt > span{ display:block; font-size:var(--fs-small); color:var(--text-muted); margin-top:2px; line-height:var(--lh-label) }
 
 /* The icon tile. display:grid rather than inline because it is a <span> and
    an inline box would ignore the size outright — the same trap that left the
@@ -308,7 +308,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
   background:var(--bg); color:var(--text-primary);
   /* Set in the reading face. It was in the monospace, which suits a ticker
      and not the sentence the placeholder asks for. */
-  font:400 14px/1 var(--sans, Inter, system-ui, sans-serif); letter-spacing:0;
+  font:400 var(--fs-body)/var(--lh-none) var(--font-sans); letter-spacing:0;
   transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-mid) var(--ease), background var(--t-fast) var(--ease);
 }
 .sh-search input:focus{
@@ -320,7 +320,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-search .ic{ position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.45; pointer-events:none }
 .sh-search .kbd{
   position:absolute; right:9px; top:50%; transform:translateY(-50%);
-  font:500 10px/1 'IBM Plex Mono',monospace; color:var(--text-muted);
+  font:500 var(--fs-label)/var(--lh-none) var(--font-mono); color:var(--text-muted);
   border:1px solid var(--border); border-radius:5px; padding:3px 5px; pointer-events:none;
 }
 .sh-search input:focus ~ .kbd{ opacity:0 }
@@ -340,18 +340,18 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
   font-weight:400; transition:background var(--t-fast) var(--ease);
 }
 .sh-ac b.row:hover, .sh-ac b.row.sel{ background:var(--surface-raised) }
-.sh-ac .s{ font:600 12px/1 'IBM Plex Mono',monospace; flex:0 0 auto }
-.sh-ac .n{ font-size:12px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1 1 auto }
+.sh-ac .s{ font:600 var(--fs-small)/var(--lh-none) var(--font-sans); flex:0 0 auto }
+.sh-ac .n{ font-size:var(--fs-small); color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1 1 auto }
 /* The exchange the ticker actually trades on, so the row reads as a listing
    rather than as a guess at a name. */
 .sh-ac .x{
-  flex:0 0 auto; margin-left:auto; font:600 10px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.08em; color:var(--text-muted); border:1px solid var(--border);
+  flex:0 0 auto; margin-left:auto; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
+  letter-spacing:var(--ls-label); color:var(--text-muted); border:1px solid var(--border);
   border-radius:4px; padding:3px 5px;
 }
 .sh-ac .row i{ font-style:normal; font-weight:600; color:var(--text-primary) }
 .sh-ac b.row.empty{
-  display:block; cursor:default; font-size:12px; color:var(--text-muted);
+  display:block; cursor:default; font-size:var(--fs-small); color:var(--text-muted);
 }
 .sh-ac b.row.empty:hover{ background:none }
 
@@ -364,7 +364,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
   position:relative; display:inline-grid; place-items:center; flex:0 0 auto;
   width:30px; height:30px; border-radius:9px; overflow:hidden;
   background:var(--surface-raised); border:1px solid var(--border); color:var(--text-secondary);
-  font:600 11px/1 Inter,system-ui,sans-serif; letter-spacing:.02em;
+  font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:normal;
 }
 .co-lg img{
   position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box;
@@ -387,7 +387,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-icon:active{ transform:translateY(0) scale(.95) }
 
 .sh-account{
-  font:600 13px/1 Inter, system-ui, sans-serif; color:var(--text-secondary);
+  font:600 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-secondary);
   text-decoration:none; padding:9px 13px; border:1px solid var(--border);
   border-radius:9px; white-space:nowrap; max-width:150px; overflow:hidden;
   text-overflow:ellipsis;
@@ -395,7 +395,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 }
 .sh-account:hover{ background:var(--surface-raised); color:var(--text-primary) }
 .sh-pro{
-  font:600 12px/1 Inter, system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase;
+  font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase;
   color:var(--highlight-text); background:var(--highlight-subtle); text-decoration:none; padding:9px 12px;
   border:1px solid var(--border-strong); border-radius:9px; white-space:nowrap;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
@@ -404,7 +404,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-pro:hover{ filter:brightness(1.04) }
 .sh-pro:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:3px }
 .sh-adv{
-  font:600 13px/1 Inter, system-ui, sans-serif; color:var(--text-secondary); text-decoration:none;
+  font:600 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-secondary); text-decoration:none;
   padding:9px 11px; border-radius:9px; white-space:nowrap;
   transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
@@ -417,8 +417,8 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 a.sh-item{ text-decoration:none; color:inherit }
 .sh-dpro{ display:grid; gap:4px; padding:14px; border-radius:12px; border:1px solid var(--border-strong);
   text-decoration:none; color:var(--text-primary); background:var(--surface-raised) }
-.sh-dpro b{ color:var(--text-primary); font-size:16px }
-.sh-dpro span{ font-size:13px; color:var(--text-muted) }
+.sh-dpro b{ color:var(--text-primary); font-size:var(--fs-body) }
+.sh-dpro span{ font-size:var(--fs-small); color:var(--text-muted) }
 /* ── 3g · Mobile drawer ──────────────────────────────────────────────────── */
 
 .sh-drawer{
@@ -502,12 +502,12 @@ a.sh-item{ text-decoration:none; color:inherit }
   grid-column:1 / -1;
   margin:0 0 4px; padding:0 0 12px;
   border-bottom:1px solid var(--border);
-  font-family:var(--serif, Georgia, serif);
-  font-size:16px; line-height:1.35; color:var(--text-primary);
+  font-family:var(--font-sans);
+  font-size:var(--fs-body); line-height:var(--lh-h3); color:var(--text-primary);
 }
 .sh-drawer .sh-megaq{
   border-bottom:0; padding:0 0 10px;
-  font-size:14px; color:var(--text-muted);
+  font-size:var(--fs-body); color:var(--text-muted);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -521,7 +521,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 /* The tape: a Live tag in the accent, the moving rail, the IST clock. */
 .sh-ticker::before, .sh-ticker::after{ display:none }
 .sh-livetag{ flex:none; display:flex; align-items:center; gap:8px; align-self:stretch; padding:0 14px;
-  background:var(--accent); color:var(--on-accent,#fff); font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em; text-transform:uppercase }
+  background:var(--accent); color:var(--on-accent,#fff); font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase }
 .sh-livetag .sh-dot{ position:relative; width:7px; height:7px; border-radius:50%; background:currentColor }
 .sh-livetag .sh-dot::after{ content:''; position:absolute; inset:0; border-radius:50%; background:inherit; animation:shPing 1.7s ease-out infinite }
 @keyframes shPing{ 0%{ transform:scale(1); opacity:.7 } 100%{ transform:scale(3.2); opacity:0 } }
@@ -533,7 +533,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-railbox{ position:relative; flex:1 1 auto; min-width:0; height:100%; display:flex; align-items:center; overflow:hidden;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent) }
-.sh-ticker .sh-ribbon-clock{ flex:none; padding:0 14px; font:500 11px/1 'IBM Plex Mono',monospace; color:var(--text-muted); letter-spacing:.04em }
+.sh-ticker .sh-ribbon-clock{ flex:none; padding:0 14px; font:500 var(--fs-label)/var(--lh-none) var(--font-mono); color:var(--text-muted); letter-spacing:var(--ls-label) }
 
 /* The bar: one row at every width. */
 .sh-bar{ gap:16px }
@@ -545,7 +545,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-doorwrap::before{ content:''; position:absolute; inset:11px 3px; border-radius:11px; background:var(--surface-raised);
   opacity:0; transform:scale(.94); transition:opacity .2s var(--ease), transform .25s var(--ease-out); pointer-events:none }
 .sh-doorwrap:hover::before, .sh-doorwrap.open::before{ opacity:1; transform:none }
-.sh-door{ position:relative; padding:0 3px 0 15px; border:0; background:none; font:500 16px/1 var(--sans, Inter, system-ui, sans-serif);
+.sh-door{ position:relative; padding:0 3px 0 15px; border:0; background:none; font:500 var(--fs-body)/var(--lh-none) var(--font-sans);
   color:var(--text-secondary); cursor:pointer; transition:color .25s }
 .sh-door::after{ display:none !important }
 .sh-doorwrap:hover .sh-door, .sh-doorwrap.open .sh-door, .sh-door.on{ color:var(--text-primary) }
@@ -569,16 +569,16 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
   opacity:0; transition:transform .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1), opacity .25s }
 .sh-search{ flex:1 1 380px; max-width:560px }
 .sh-search input{ padding-right:64px }
-.sh-search .kbd{ letter-spacing:.02em }
+.sh-search .kbd{ letter-spacing:normal }
 
 /* Search results: grouped, tools beside companies. */
 .sh-ac{ max-height:min(70vh, 520px) }
-.sh-ac .hd{ display:block; padding:10px 13px 4px; font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted) }
+.sh-ac .hd{ display:block; padding:10px 13px 4px; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
 .sh-ac b.row.tool{ align-items:center }
 .sh-ac b.row.tool .sh-ico{ width:30px; height:30px; flex:none }
 .sh-ac .tl{ display:flex; flex-direction:column; gap:2px; min-width:0 }
-.sh-ac .tn{ font-size:13px; font-weight:500; color:var(--text-primary) }
-.sh-ac .th{ font-size:12px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.sh-ac .tn{ font-size:var(--fs-small); font-weight:500; color:var(--text-primary) }
+.sh-ac .th{ font-size:var(--fs-label); color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .sh-ac b.row{ animation: shRowIn .22s ease-out both }
 @keyframes shRowIn{ from{ transform:translateX(8px) } to{ transform:none } }
 
@@ -594,14 +594,14 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-memenu .sh-right{ display:flex !important; flex-direction:column; align-items:stretch; gap:2px; margin:0 }
 .sh-memenu .sh-right > *{ display:flex !important; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px;
   width:100%; min-height:48px; box-sizing:border-box; padding:8px 12px; border:0 !important; border-radius:12px;
-  background:transparent !important; color:var(--text-primary) !important; font:500 14px/1.2 var(--sans, Inter, sans-serif) !important;
+  background:transparent !important; color:var(--text-primary) !important; font:500 var(--fs-body)/var(--lh-h1) var(--font-sans) !important;
   text-align:left; text-decoration:none; filter:none !important; max-width:none !important }
 .sh-memenu .sh-right > *:hover{ background:var(--surface-raised) !important }
-.sh-memenu .sh-right small{ font-size:12px; font-weight:400; color:var(--text-muted) }
+.sh-memenu .sh-right small{ font-size:var(--fs-small); font-weight:400; color:var(--text-muted) }
 .sh-memenu .sh-right .sh-pro{ color:var(--text-primary) !important; font-weight:600 !important; box-shadow:none !important }
 .sh-memenu .sh-merow{ display:flex; align-items:center; justify-content:space-between; padding:6px 12px; margin:4px 0;
-  border-top:1px solid var(--border); border-bottom:1px solid var(--border); font-size:14px }
-.sh-melearn h4{ margin:8px 12px 2px; font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted) }
+  border-top:1px solid var(--border); border-bottom:1px solid var(--border); font-size:var(--fs-body) }
+.sh-melearn h4{ margin:8px 12px 2px; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
 .sh-melearn .sh-item{ width:100%; padding:8px 10px }
 
 /* The door bar. */
@@ -610,7 +610,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
   border-bottom:1px solid var(--border) }
 .sh-pin:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 .sh-pin{ flex:none; display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border:1px dashed var(--border-strong);
-  border-radius:16px; background:transparent; color:var(--text-primary); font:500 12px/1 var(--sans, Inter, sans-serif); cursor:pointer }
+  border-radius:16px; background:transparent; color:var(--text-primary); font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer }
 .sh-pin.on{ border-style:solid; background:var(--highlight-subtle) }
 
 .sh-doorbar .sh-pin{ margin-left:auto }
@@ -648,7 +648,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
    heavy thing in it and the eye knows where to start. */
 .sh-mega-lead{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; gap:9px;
   min-height:214px; padding:20px 20px 18px; border:0; border-radius:14px; background:linear-gradient(160deg,#1A1B1E 0%,#0A0A0B 46%,#050506 100%); color:#FFFFFF;
-  font:400 13px/1.45 var(--sans, Inter, system-ui, sans-serif); text-align:left; cursor:pointer;
+  font:400 var(--fs-small)/var(--lh-label) var(--font-sans); text-align:left; cursor:pointer;
   transition:box-shadow .3s var(--ease) }
 .sh-mega-lead::before{ content:''; position:absolute; left:-90px; top:-160px; width:280px; height:280px; border-radius:50%;
   background:rgba(206,212,221,.22); filter:blur(48px); pointer-events:none; transition:transform .7s var(--ease-out) }
@@ -664,24 +664,24 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-mega-mark{ position:absolute !important; right:-26px; bottom:-30px; width:112px; height:112px; color:#FFFFFF; opacity:.09; z-index:0 !important;
   transition:transform .7s var(--ease-out), opacity .4s var(--ease) }
 .sh-mega-lead:hover .sh-mega-mark{ transform:translate(-6px,-6px) rotate(-6deg); opacity:.15 }
-.sh-mega-kick{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.14em;
+.sh-mega-kick{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:#E8EBEF }
-.sh-mega-status{ display:inline-flex; align-items:center; gap:6px; color:#D2D2D8; font-weight:500; letter-spacing:.1em }
+.sh-mega-status{ display:inline-flex; align-items:center; gap:6px; color:#D2D2D8; font-weight:500; letter-spacing:var(--ls-label) }
 .sh-mega-status:empty{ display:none }
 .sh-mega-status::before{ content:''; width:6px; height:6px; border-radius:50%; background:#5E5E69 }
 .sh-mega-status.live{ color:#6FD39A }
 .sh-mega-status.live::before{ background:#6FD39A; box-shadow:0 0 0 3px rgba(111,211,154,.2) }
-.sh-mega-q{ font:400 28px/1.06 var(--serif, 'Instrument Serif', Georgia, serif); letter-spacing:-.005em; color:#FFFFFF }
-.sh-mega-p{ max-width:26ch; font-size:13px; color:#D2D2D8 }
+.sh-mega-q{ font:500 var(--fs-h1)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); color:#FFFFFF }
+.sh-mega-p{ max-width:26ch; font-size:var(--fs-small); color:#D2D2D8 }
 .sh-mega-live{ display:grid; gap:7px; width:100%; margin-top:2px; padding-top:11px; border-top:1px solid rgba(255,255,255,.13) }
 .sh-mega-live[hidden]{ display:none }
 .sh-mega-ix{ display:grid; grid-template-columns:minmax(0,1fr) auto 58px; gap:10px; align-items:baseline;
-  font:500 12px/1.2 'IBM Plex Mono',monospace; color:#EEEEF1 }
+  font:500 var(--fs-small)/var(--lh-h1) var(--font-sans); color:#EEEEF1 }
 .sh-mega-ix > :first-child{ color:#D2D2D8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .sh-mega-ix > :last-child{ text-align:right }
 .sh-mega-ix .up{ color:#6FD39A } .sh-mega-ix .dn{ color:#FF9B85 }
 .sh-mega-go{ display:inline-flex; align-items:center; gap:8px; height:34px; margin-top:auto; padding:0 15px; border-radius:17px;
-  background:#E5E7EA; color:#0A0A0B; font:600 13px/1 var(--sans, Inter, system-ui, sans-serif);
+  background:#E5E7EA; color:#0A0A0B; font:600 var(--fs-small)/var(--lh-none) var(--font-sans);
   transition:gap .25s var(--ease-out), background-color .2s var(--ease) }
 .sh-mega-lead:hover .sh-mega-go, .sh-mega-lead:focus-visible .sh-mega-go{ gap:13px; background:#EEF0F2 }
 /* You are on this door's own page: the card says so instead of offering it. */
@@ -690,11 +690,11 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 
 /* The tools: up to three columns, each under the name of what it is for. */
 .sh-mega-cols{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0 8px; padding:12px 6px 8px 14px; align-content:start }
-.sh-mega-col h4{ margin:0 0 5px; padding:0 10px; font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em; color:var(--text-muted) }
+.sh-mega-col h4{ margin:0 0 5px; padding:0 10px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); color:var(--text-muted) }
 .sh-mega-col h4:not(:first-child){ margin-top:17px }
 .sh-mega .sh-item{ position:relative; grid-template-columns:36px 1fr; gap:12px; padding:8px 10px; border-radius:13px; font:inherit }
-.sh-mega .sh-item b{ font:600 14px/1.25 var(--sans, Inter, system-ui, sans-serif); color:var(--text-primary) }
-.sh-mega .sh-txt > span{ font:400 13px/1.4 var(--sans, Inter, system-ui, sans-serif); color:var(--text-secondary); text-wrap:balance }
+.sh-mega .sh-item b{ font:600 var(--fs-body)/var(--lh-h2) var(--font-sans); color:var(--text-primary) }
+.sh-mega .sh-txt > span{ font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--text-secondary); text-wrap:balance }
 .sh-mega .sh-ico{ width:36px; height:36px; border-radius:11px }
 .sh-mega .sh-item:hover, .sh-mega .sh-item:focus-visible{ background:var(--surface-raised); transform:none; outline:none }
 .sh-mega .sh-item:focus-visible{ box-shadow:inset 0 0 0 2px var(--focus-ring) }
@@ -715,7 +715,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 /* Narrower laptops: the hints wrap sooner, so the card gives up some room. */
 @media (max-width:1180px){
   .sh-mega-pane{ grid-template-columns:minmax(0, 232px) minmax(0, 1fr) }
-  .sh-mega-q{ font-size:24px }
+  .sh-mega-q{ font-size:var(--fs-h2) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
   .sh-mega-cols{ padding-left:8px }
 }
 /* No doors in the header below this width, so no menus either. */
@@ -726,7 +726,7 @@ html.sh-has-doorbar.sh-doorbar-none{ --sh-doorbar-h:0px }
 html.sh-doorbar-none .sh-doorbar{ display:none }
 @media (min-width:1041px){ html.sh-has-doorbar:not(.sh-doorbar-none){ --sh-doorbar-h:42px } }
 .sh-crumbbar{ gap:14px }
-.sh-crumb{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:3px; font:500 13px/1 var(--sans, Inter, system-ui, sans-serif); color:var(--text-secondary) }
+.sh-crumb{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:3px; font:500 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-secondary) }
 .sh-crumb > svg{ flex:none; color:var(--text-muted) }
 .sh-crumb-door{ flex:none; margin-left:-9px; padding:7px 9px; border:0; border-radius:9px; background:none; color:var(--text-secondary); font:inherit }
 button.sh-crumb-door{ cursor:pointer; transition:background-color .2s var(--ease), color .2s var(--ease) }
@@ -743,7 +743,7 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
    what a thumb can hit to the full height of the bar. */
 .sh-where{ position:relative; flex:0 1 auto; min-width:0; display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 11px 0 10px;
   border:1px solid var(--border); border-radius:17px; background:var(--bg); color:var(--text-secondary);
-  font:500 14px/1 var(--sans, Inter, system-ui, sans-serif); cursor:pointer; -webkit-tap-highlight-color:transparent;
+  font:500 var(--fs-body)/var(--lh-none) var(--font-sans); cursor:pointer; -webkit-tap-highlight-color:transparent;
   transition:border-color .2s var(--ease), background-color .2s var(--ease), transform .15s var(--ease) }
 .sh-where::after{ content:''; position:absolute; inset:-6px -4px }
 .sh-where:active{ transform:scale(.97) }
@@ -783,7 +783,7 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
 .sh-sheet-ind{ position:absolute; top:4px; bottom:4px; left:4px; width:calc((100% - 8px) / 3); border-radius:12px; background:var(--accent);
   transform:translateX(calc(var(--n, 0) * 100%)); transition:transform .36s var(--ease-out) }
 .sh-sheet-tab{ position:relative; height:40px; padding:0 4px; border:0; border-radius:12px; background:none; color:var(--text-secondary);
-  font:500 14px/1 var(--sans, Inter, system-ui, sans-serif); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color .25s var(--ease) }
+  font:500 var(--fs-body)/var(--lh-none) var(--font-sans); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color .25s var(--ease) }
 .sh-sheet-tab[aria-selected="true"]{ color:var(--on-accent); font-weight:600 }
 .sh-sheet-tab:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:1px; box-shadow:none }
 .sh-sheet-x{ flex:none; display:grid; place-items:center; width:44px; height:44px; border:0; border-radius:50%; background:var(--surface-raised);
@@ -798,25 +798,25 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
    the question and an arrow so the tools start on the first screen. */
 .sh-sheet-lead{ position:relative; overflow:hidden; display:flex; align-items:center; gap:14px; width:100%; box-sizing:border-box;
   padding:16px 14px 17px 18px; border:0; border-radius:18px; background:#0A0A0B; color:#FFFFFF; text-align:left; cursor:pointer;
-  font:400 13px/1.4 var(--sans, Inter, system-ui, sans-serif); -webkit-tap-highlight-color:transparent }
+  font:400 var(--fs-small)/var(--lh-label) var(--font-sans); -webkit-tap-highlight-color:transparent }
 .sh-sheet-lead::before{ content:''; position:absolute; left:-80px; top:-150px; width:260px; height:260px; border-radius:50%;
   background:rgba(206,212,221,.22); filter:blur(46px); pointer-events:none }
 .sh-sheet-lead:active{ transform:scale(.99) }
 .sh-sheet-lead:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:18px; box-shadow:none }
 :root[data-theme="dark"] .sh-sheet-lead{ box-shadow:inset 0 0 0 1px rgba(197,202,211,.2) }
 .sh-sheet-lead-t{ position:relative; flex:1 1 auto; min-width:0; display:grid; gap:8px }
-.sh-sheet-lead .sh-mega-q{ font-size:24px }
+.sh-sheet-lead .sh-mega-q{ font-size:var(--fs-h2) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
 .sh-sheet-lead-go{ position:relative; flex:none; display:grid; place-items:center; width:40px; height:40px; border-radius:50%;
   background:#E5E7EA; color:#0A0A0B }
 .sh-sheet-lead[aria-current="page"] .sh-sheet-lead-go{ display:none }
 
-.sh-sheet-group h4{ margin:18px 8px 5px; font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em; color:var(--text-muted) }
+.sh-sheet-group h4{ margin:18px 8px 5px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); color:var(--text-muted) }
 .sh-sheet .sh-item{ position:relative; grid-template-columns:42px 1fr; gap:14px; align-items:center; min-height:60px; padding:8px;
   border-radius:14px; font:inherit; -webkit-tap-highlight-color:transparent }
 .sh-sheet .sh-ico{ width:42px; height:42px; border-radius:13px }
 .sh-sheet .sh-ico svg{ width:19px; height:19px }
-.sh-sheet .sh-item b{ font:600 16px/1.25 var(--sans, Inter, system-ui, sans-serif); color:var(--text-primary) }
-.sh-sheet .sh-txt > span{ margin-top:2px; font:400 14px/1.4 var(--sans, Inter, system-ui, sans-serif); color:var(--text-secondary) }
+.sh-sheet .sh-item b{ font:600 var(--fs-h3)/var(--lh-h2) var(--font-sans); color:var(--text-primary) }
+.sh-sheet .sh-txt > span{ margin-top:2px; font:400 var(--fs-body)/var(--lh-label) var(--font-sans); color:var(--text-secondary) }
 .sh-sheet .sh-item:hover{ transform:none }
 .sh-sheet .sh-item:active{ background:var(--surface-raised) }
 .sh-sheet .sh-item:focus-visible{ outline:none; box-shadow:inset 0 0 0 2px var(--focus-ring) }
@@ -830,7 +830,7 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
 
 /* The phone sheet: Me first, then every door. */
 .sh-dme .sh-dpro{ margin:6px 0 10px }
-.sh-drawer .sh-col h4{ font:500 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted) }
+.sh-drawer .sh-col h4{ font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
 
 @media (max-width:1040px){
   .sh-doors{ display:none }
@@ -841,7 +841,7 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
   html.sh-has-doorbar{ --sh-doorbar-h:44px }
   .sh-bar{ gap:10px; padding:0 12px }
   .sh-brand .nm{ display:none }
-  .sh-search input{ height:42px; font-size:16px; padding-right:12px }
+  .sh-search input{ height:42px; font-size:var(--fs-input); padding-right:12px }
   .sh-search .kbd{ display:none }
   .sh-ticker .sh-ribbon-clock{ display:none }
   .sh-doorbar{ padding:0 10px }
@@ -885,7 +885,7 @@ html[data-motion="off"] .sh-sheet[open] .sh-sheet-pane:not([hidden]) .sh-sheet-g
    right. Quiet on purpose: it is a map, read once, not a second header. */
 .sh-footer{
   margin-top:72px; border-top:1px solid var(--border); background:var(--surface-raised);
-  color:var(--text-secondary); font-size:14px; line-height:1.5;
+  color:var(--text-secondary); font-size:var(--fs-body); line-height:var(--lh-small);
 }
 .sh-fin{
   max-width:1240px; margin:0 auto; padding:48px 24px 28px;
@@ -893,13 +893,13 @@ html[data-motion="off"] .sh-sheet[open] .sh-sheet-pane:not([hidden]) .sh-sheet-g
 }
 .sh-fbrand p{ margin:14px 0 16px; max-width:34ch }
 .sh-fbrand .sh-brand .mk{ height:30px }
-.sh-fbrand .sh-brand .nm{ font-size:18px }
+.sh-fbrand .sh-brand .nm{ font-size:var(--fs-body) }
 .sh-fmail{ display:inline-flex; align-items:center; gap:9px; color:var(--text-primary); text-decoration:none; font-weight:500 }
 .sh-fmail svg{ width:18px; height:18px; flex:0 0 auto }
 .sh-fmail:hover span{ text-decoration:underline }
 .sh-fcols{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:28px }
 .sh-fcol h4{
-  margin:0 0 14px; font-size:12px; font-weight:600; letter-spacing:.09em;
+  margin:0 0 14px; font-size:var(--fs-label); font-weight:600; letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-primary);
 }
 .sh-fcol ul{ list-style:none; margin:0; padding:0; display:grid; gap:10px }
@@ -908,7 +908,7 @@ html[data-motion="off"] .sh-sheet[open] .sh-sheet-pane:not([hidden]) .sh-sheet-g
 .sh-fcol a:focus-visible, .sh-fmail:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:3px; border-radius:3px }
 .sh-fbase{
   max-width:1240px; margin:0 auto; padding:18px 24px 26px; border-top:1px solid var(--border);
-  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:13px;
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:var(--fs-small);
 }
 @media (max-width:900px){
   .sh-fin{ grid-template-columns:1fr; gap:32px; padding:36px 20px 22px }

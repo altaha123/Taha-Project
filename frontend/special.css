@@ -9,23 +9,23 @@
    Only the formula chip, the one line a returning reader re-reads, stays. */
 .sp-formula{ display:inline-block; margin:0 0 22px; padding:11px 16px;
   border:1px solid var(--border); border-radius:10px; background:var(--surface-raised);
-  font-size:14px; letter-spacing:.02em }
+  font-size:var(--fs-body); letter-spacing:normal }
 
 /* The measured record, including the part that did not work. */
 .sp-measured{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
   gap:11px; margin:0 0 8px }
 .sp-stat{ border:1px solid var(--border); border-radius:12px; padding:14px 16px;
   background:var(--surface) }
-.sp-stat .k{ font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
+.sp-stat .k{ font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted) }
-.sp-stat .v{ font:600 20px/1 'IBM Plex Mono',monospace; margin-top:10px;
-  letter-spacing:-.02em; font-variant-numeric:tabular-nums }
-.sp-stat .h{ font-size:11px; color:var(--text-muted); margin-top:6px }
+.sp-stat .v{ font:500 var(--fs-h2)/var(--lh-none) var(--font-display); margin-top:10px;
+  letter-spacing:var(--ls-heading); font-variant-numeric:tabular-nums }
+.sp-stat .h{ font-size:var(--fs-label); color:var(--text-muted); margin-top:6px }
 .sp-caveat{ grid-column:1/-1; border:1px dashed var(--border); border-radius:12px;
-  padding:15px 17px; font-size:13px; line-height:1.6; color:var(--text-secondary) }
+  padding:15px 17px; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary) }
 .sp-caveat b{ color:var(--text-primary) }
 
-.sp-asof{ font-size:12px; color:var(--text-muted); margin-left:12px }
+.sp-asof{ font-size:var(--fs-small); color:var(--text-muted); margin-left:12px }
 
 /* One row per name, with the working. */
 .sp-row{ border:1px solid var(--border); border-radius:12px; background:var(--surface);
@@ -34,38 +34,38 @@
 .sp-row > summary{ list-style:none; cursor:pointer; padding:14px 17px; display:grid;
   grid-template-columns:34px 1fr auto auto; gap:14px; align-items:center }
 .sp-row > summary::-webkit-details-marker{ display:none }
-.sp-rank{ font:600 13px/1 'IBM Plex Mono',monospace; color:var(--text-muted);
+.sp-rank{ font:600 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-muted);
   font-variant-numeric:tabular-nums }
 /* display:block on every one of these. They are all <span>, and an inline box
    ignores width, height and top margin — without it the symbol, its sub-line
    and the "delivered" caption all run together on one line. */
-.sp-sym{ display:block; font:600 16px/1.3 'IBM Plex Mono',monospace; letter-spacing:.03em }
+.sp-sym{ display:block; font:600 var(--fs-h3)/var(--lh-h3) var(--font-mono); letter-spacing:normal }
 .sp-sym a{ color:inherit; text-decoration:none }
 .sp-sym a:hover{ color:var(--highlight-text); text-decoration:underline }
-.sp-sub{ display:block; font-size:12px; color:var(--text-muted); margin-top:4px; line-height:1.45 }
+.sp-sub{ display:block; font-size:var(--fs-small); color:var(--text-muted); margin-top:4px; line-height:var(--lh-label) }
 .sp-deliv{ text-align:right }
-.sp-deliv .n{ display:block; font:600 16px/1 'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums }
-.sp-deliv .l{ display:block; font:500 10px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
+.sp-deliv .n{ display:block; font:600 var(--fs-h3)/var(--lh-none) var(--font-sans); font-variant-numeric:tabular-nums }
+.sp-deliv .l{ display:block; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted); margin-top:5px }
 .sp-bar{ width:70px; height:6px; border-radius:99px; background:var(--border);
   overflow:hidden; display:block }
 .sp-bar i{ display:block; height:100%; border-radius:99px;
   background:linear-gradient(90deg,var(--accent-hover),var(--border-strong)) }
 .sp-body-open{ padding:2px 17px 16px; border-top:1px solid var(--border) }
-.sp-kv{ display:grid; grid-template-columns:130px 1fr; gap:10px; padding:9px 0; font-size:13px }
+.sp-kv{ display:grid; grid-template-columns:130px 1fr; gap:10px; padding:9px 0; font-size:var(--fs-small) }
 .sp-kv + .sp-kv{ border-top:1px dashed var(--border) }
-.sp-kv .k{ font:500 10px/1.5 'IBM Plex Mono',monospace; letter-spacing:.1em;
+.sp-kv .k{ font:500 var(--fs-label)/var(--lh-small) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted) }
-.sp-kv .v{ color:var(--text-secondary); line-height:1.6 }
-.sp-kv .v.mono{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-primary) }
+.sp-kv .v{ color:var(--text-secondary); line-height:var(--lh-body) }
+.sp-kv .v.mono{ font-family:var(--font-sans); font-size:var(--fs-small); color:var(--text-primary) }
 
-.sp-state{ padding:40px 20px; text-align:center; color:var(--text-muted); font-size:14px }
-.sp-state b{ display:block; color:var(--text-primary); font-size:16px; margin-bottom:8px }
+.sp-state{ padding:40px 20px; text-align:center; color:var(--text-muted); font-size:var(--fs-body) }
+.sp-state b{ display:block; color:var(--text-primary); font-size:var(--fs-body); margin-bottom:8px }
 .sp-prog{ display:block; width:min(260px,70%); height:6px; margin:14px auto 7px;
   border-radius:99px; background:var(--border); overflow:hidden }
 .sp-prog i{ display:block; height:100%; border-radius:99px; background:var(--accent);
   transition:width .4s ease }
-.sp-progn{ display:block; font-size:12px; color:var(--text-muted) }
+.sp-progn{ display:block; font-size:var(--fs-small); color:var(--text-muted) }
 @media (max-width:640px){
   .sp-row > summary{ grid-template-columns:26px 1fr auto }
   .sp-bar{ display:none }
@@ -78,20 +78,20 @@
 .sp-legend{ grid-column:1/-1; display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:4px }
 .sp-leg{ border-top:2px solid var(--border-strong); padding-top:10px }
-.sp-leg b{ display:block; font-size:13px; font-weight:600; margin-bottom:5px }
-.sp-leg span{ display:block; font-size:12px; line-height:1.5; color:var(--text-muted) }
+.sp-leg b{ display:block; font-size:var(--fs-small); font-weight:600; margin-bottom:5px }
+.sp-leg span{ display:block; font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-muted) }
 
 /* The per-stock breakdown. Every one of these is display:block or grid on
    purpose — they are all <span>, and an inline box drops width and height. */
 .sp-parts{ display:grid; gap:7px; padding:12px 0 6px }
 .sp-part{ display:grid; grid-template-columns:150px 1fr 34px; gap:11px; align-items:center }
-.sp-part .pl{ display:block; font-size:12px; color:var(--text-secondary) }
+.sp-part .pl{ display:block; font-size:var(--fs-small); color:var(--text-secondary) }
 .sp-part .pb{ display:block; height:7px; border-radius:99px;
   background:var(--border); overflow:hidden }
 .sp-part .pb i{ display:block; height:100%; border-radius:99px; background:var(--accent) }
 .sp-part .pb i.hi{ background:linear-gradient(90deg,var(--accent-hover),var(--border-strong)) }
 .sp-part .pb i.lo{ background:var(--loss); opacity:.75 }
 .sp-part .pb i.na{ background:var(--border) }
-.sp-part .pv{ display:block; text-align:right; font:600 12px/1 'IBM Plex Mono',monospace;
+.sp-part .pv{ display:block; text-align:right; font:600 var(--fs-small)/var(--lh-none) var(--font-sans);
   font-variant-numeric:tabular-nums }
 @media (max-width:640px){ .sp-part{ grid-template-columns:112px 1fr 30px; gap:8px } }

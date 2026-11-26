@@ -16,11 +16,6 @@
    advisers, the wealth desk) were falling through to whatever each rule
    happened to name as its fallback, which on Windows meant Segoe UI in one
    panel and Courier in the next. */
-:root{
-  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
-  --serif:'Instrument Serif',Georgia,serif;
-}
 
 /* ── 1 · PALETTE ─────────────────────────────────────────────────────────
    Platinum. White paper and black ink by day, true black and platinum white
@@ -89,11 +84,11 @@ header.wrap{position:relative;isolation:isolate}
   transition:border-color 150ms ease,box-shadow 300ms ease}
 .searchrow:focus-within{border-color:var(--focus-ring) !important;
   box-shadow:0 0 0 4px color-mix(in srgb,var(--focus-ring) 15%,transparent) !important}
-#tk{font-family:var(--mono) !important;font-size:16px !important;letter-spacing:.05em;
+#tk{font-family:var(--font-sans) !important;font-size:var(--fs-body) !important;letter-spacing:normal;
   color:var(--text-primary) !important;background:none !important;border:0 !important}
 #go{background:var(--accent) !important;color:var(--on-accent,#fff) !important;border:0 !important;
-  border-radius:10px !important;font-family:var(--mono) !important;font-size:12px !important;
-  letter-spacing:.09em;text-transform:uppercase;padding:0 26px !important;
+  border-radius:10px !important;font-family:var(--font-sans) !important;font-size:var(--fs-label) !important;
+  letter-spacing:var(--ls-label);text-transform:uppercase;padding:0 26px !important;
   transition:transform 150ms ease,box-shadow 300ms ease}
 :root[data-theme="dark"] #go{color:#0A0A0B !important}
 #go:hover{transform:translateY(-1px);box-shadow:0 10px 24px color-mix(in srgb,var(--highlight) 30%,transparent)}
@@ -103,7 +98,7 @@ header.wrap{position:relative;isolation:isolate}
    The complaint was that switching between Filings, Ideas and the rest was
    confusing. Selected state is now unmistakable in both themes.           */
 
-.tabs .tab{font-family:var(--mono) !important;font-size:12px !important;letter-spacing:.09em;
+.tabs .tab{font-family:var(--font-sans) !important;font-size:var(--fs-label) !important;letter-spacing:var(--ls-label);
   text-transform:uppercase;border-radius:9px !important;padding:11px 16px !important;
   color:var(--text-muted) !important;background:transparent !important;border:0 !important;
   transition:color 150ms ease,background 150ms ease}
@@ -165,8 +160,8 @@ header.wrap > *:not(#skin-art){position:relative;z-index:1}
    nav.js rebuilds the tab bar as .navmain-btn / .navsub-btn, so styling
    .tabs .tab missed entirely. Targeting what is actually on the page.     */
 
-.navmain-btn{font-family:var(--mono) !important;font-size:12px !important;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted) !important;
+.navmain-btn{font-family:var(--font-sans) !important;font-size:var(--fs-label) !important;
+  letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted) !important;
   border-radius:9px 9px 0 0;padding:12px 14px !important;
   transition:color 150ms ease,background 150ms ease}
 .navmain-btn:hover{color:var(--text-primary) !important;
@@ -209,8 +204,8 @@ body .searchrow:focus-within{ transform:none }
 body #tk{ letter-spacing:0; min-height:48px }
 body #go{
   min-height:48px; color:var(--on-accent,#fff) !important;
-  font-family:Inter,system-ui,sans-serif !important;
-  font-weight:600; letter-spacing:.02em;
+  font-family:var(--font-sans) !important;
+  font-weight:600; letter-spacing:normal;
 }
 body #go:hover{ opacity:1; box-shadow:0 4px 12px #0a0a0b18 }
 body #go:disabled{ opacity:.55; cursor:wait; transform:none; box-shadow:none }
@@ -223,8 +218,8 @@ body .hm-tools{ gap:16px }
 body .hm-route{
   border-radius:16px; box-shadow:var(--ui-elevation);
 }
-body .hm-route h3{ font-weight:600; line-height:1.4 }
-body .hm-route p{ color:var(--ui-secondary); font-size:14px; line-height:1.65 }
+body .hm-route h3{ font-weight:600; line-height:var(--lh-label) }
+body .hm-route p{ color:var(--ui-secondary); font-size:var(--fs-body); line-height:var(--lh-body) }
 body .mb-card{ border-radius:14px; box-shadow:var(--ui-elevation) }
 body .mb-card .k, body .mb-note{ color:var(--ui-secondary) }
 

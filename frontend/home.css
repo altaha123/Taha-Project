@@ -26,9 +26,9 @@ body.sh-on #skin-art svg{ height:100% }
 /* The artwork was tall enough to be the whole first screen. It is now a
    backdrop to the masthead rather than the content of the page. */
 body.sh-on header.wrap{ min-height:0; max-height:none }
-body.sh-on .brand{ font-size:clamp(28px,4.6vw,42px); margin:4px 0 2px }
-body.sh-on .eyebrow{ font-size:10px; letter-spacing:.18em }
-body.sh-on .tag{ font-size:11px; margin-top:2px }
+body.sh-on .brand{ font-size:var(--fs-display); margin:4px 0 2px ; font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading)}
+body.sh-on .eyebrow{ font-size:var(--fs-label); letter-spacing:var(--ls-label) }
+body.sh-on .tag{ font-size:var(--fs-label); margin-top:2px }
 
 /* Two claims that repeated what the masthead already said, and a badge row
    that competed with the search box for the eye. The pitch survives in one
@@ -53,11 +53,11 @@ body.sh-on .hero-tiles{ display:none !important }
 }
 .mb-card{ padding:16px 18px; border-radius:14px }
 .mb-card .k{
-  font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em;
+  font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted);
 }
-.mb-card .v{ font:600 24px/1 'IBM Plex Mono',monospace; margin-top:12px; letter-spacing:-.02em }
-.mb-card .c{ font:600 13px/1 'IBM Plex Mono',monospace; margin-top:9px }
+.mb-card .v{ font:500 var(--fs-h2)/var(--lh-none) var(--font-display); margin-top:12px; letter-spacing:var(--ls-heading) }
+.mb-card .c{ font:600 var(--fs-small)/var(--lh-none) var(--font-sans); margin-top:9px }
 .mb-card .c.up{ color:var(--gain) } .mb-card .c.dn{ color:var(--loss) }
 
 /* A hairline that fills to show the move's size against the day's biggest.
@@ -74,24 +74,24 @@ body.sh-on .hero-tiles{ display:none !important }
 @media (max-width:680px){ .mb-movers{ grid-template-columns:1fr } }
 .mb-col{ padding:15px 17px; border-radius:14px }
 .mb-col h3{
-  margin:0 0 11px; font:600 10px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.13em; text-transform:uppercase; color:var(--text-muted);
+  margin:0 0 11px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
+  letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
 }
 .mb-col ol{ margin:0; padding:0; list-style:none }
 .mb-col li{ display:flex; align-items:baseline; gap:10px; padding:6px 0 }
 .mb-col li + li{ border-top:1px solid var(--border) }
 .mb-col a{
   flex:1 1 auto; min-width:0; text-decoration:none; color:var(--text-primary);
-  font:500 13px/1.3 'IBM Plex Mono',monospace; letter-spacing:.02em;
+  font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); letter-spacing:normal;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   transition:color 160ms var(--ease);
 }
 .mb-col a:hover{ color:var(--highlight-text) }
-.mb-col em{ font:600 12px/1 'IBM Plex Mono',monospace; font-style:normal; flex:0 0 auto }
+.mb-col em{ font:600 var(--fs-small)/var(--lh-none) var(--font-sans); font-style:normal; flex:0 0 auto }
 .mb-col em.up{ color:var(--gain) } .mb-col em.dn{ color:var(--loss) }
 
 .mb-note{
-  margin:14px 0 0; text-align:center; font-size:13px; color:var(--text-muted);
+  margin:14px 0 0; text-align:center; font-size:var(--fs-small); color:var(--text-muted);
 }
 .mb-skel{ height:96px; border-radius:14px;
   background:linear-gradient(90deg,var(--border) 25%,var(--surface-raised) 37%,var(--border) 63%);
@@ -101,7 +101,7 @@ body.sh-on .hero-tiles{ display:none !important }
 /* ── 3 · The search box, promoted ────────────────────────────────────────── */
 
 body.sh-on .searchrow{ max-width:660px; margin-left:auto; margin-right:auto }
-body.sh-on .searchrow input{ font-size:16px }   /* 16px stops iOS zooming on focus */
+body.sh-on .searchrow input{ font-size:var(--fs-input) }   /* 16px stops iOS zooming on focus */
 
 /* ── 4 · Motion off ──────────────────────────────────────────────────────── */
 

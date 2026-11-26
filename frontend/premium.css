@@ -32,10 +32,7 @@
   /* The same three families as every other page (altaha-skin.css). This
      used to put the Apple system font ahead of Inter, so on a Mac or an
      iPhone half the homepage was set in San Francisco and the other half,
-     wherever a rule named Inter itself, in Inter. */
-  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --serif: 'Instrument Serif', Georgia, serif;
+     wherever a rule named Inter itself, in Inter. */;
 
   --maxw: 1100px;
   --gut: clamp(18px, 4vw, 34px);
@@ -96,10 +93,10 @@ html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
 body {
   background: var(--bg);
   color: var(--text-primary);
-  font-family: var(--sans);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -.011em;
+  letter-spacing: var(--ls-heading);
   /* `overflow-x: hidden` on the body makes it a scroll container, and the used
      value of overflow-y then becomes `auto` — so every `position: sticky`
      inside the body resolved against the body's scrollport, which never
@@ -133,7 +130,7 @@ body {
   border-bottom: 1px solid rgba(255,255,255,.07);
 }
 .tickerbar .tk { background: transparent !important; border: 0; }
-.tickerbar .tk .n { color: rgba(255,255,255,.66); letter-spacing: .1em; }
+.tickerbar .tk .n { color: rgba(255,255,255,.66); letter-spacing: var(--ls-label); }
 .tickerbar .tk .l { color: rgba(255,255,255,.94); font-weight: 500; }
 .tickerbar .tk .c.up { color: #2FD98B; }
 .tickerbar .tk .c.dn { color: #FF5C4D; }
@@ -194,29 +191,29 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 .hero-candles g { animation: candleGrow 900ms var(--ease-soft) both; transform-origin: 50% 50%; }
 
 .eyebrow {
-  font-family: var(--mono);
-  font-size: 11px; letter-spacing: .24em; text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .brand {
-  font-family: var(--sans);
-  font-weight: 600;
-  font-size: clamp(52px, 9.6vw, 100px);
-  line-height: .93;
-  letter-spacing: -.046em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-display);
+  line-height: var(--lh-none);
+  letter-spacing: var(--ls-heading);
   margin: 18px 0 0;
 }
 .brand i {
-  font-family: var(--serif);
+  font-family: var(--font-display);
   font-style: italic; font-weight: 400;
-  letter-spacing: -.02em;
+  letter-spacing: var(--ls-heading);
   background: linear-gradient(148deg, var(--accent-hover) 0%, var(--border-strong) 44%, var(--accent) 100%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.tag { font-size: 14px; color: var(--text-muted); margin-top: 14px; letter-spacing: .005em; }
+.tag { font-size: var(--fs-body); color: var(--text-muted); margin-top: 14px; letter-spacing: normal; }
 
 .metal {
   height: 1px; border: 0; max-width: 300px; margin: 30px auto;
@@ -225,9 +222,9 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 }
 
 .pitch {
-  font-size: clamp(16px, 1.8vw, 20px);
-  line-height: 1.56; color: var(--text-secondary);
-  max-width: 600px; margin-inline: auto; letter-spacing: -.013em;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-body); color: var(--text-secondary);
+  max-width: 600px; margin-inline: auto; letter-spacing: var(--ls-heading); font-family:var(--font-display); font-weight:500;
 }
 .pitch b { color: var(--text-primary); font-weight: 600; }
 
@@ -236,11 +233,11 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 .badge {
   background: var(--surface); border: .5px solid var(--border);
   border-radius: var(--r-pill); box-shadow: var(--sh-1);
-  font-size: 12px; color: var(--text-secondary); padding: 7px 15px; letter-spacing: -.004em;
+  font-size: var(--fs-label); color: var(--text-secondary); padding: 7px 15px; letter-spacing: normal;
 }
 
 .brandsw { margin-top: 20px; }
-.bsw { font-size: 13px; letter-spacing: -.005em; }
+.bsw { font-size: var(--fs-small); letter-spacing: normal; }
 
 /* ── 5. INDEX TILES ────────────────────────────────────────────────────────
    Live NIFTY / SENSEX / BANKNIFTY, mirrored from the ticker data already on
@@ -265,15 +262,15 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 }
 .hero-tile:hover { box-shadow: var(--sh-2); transform: translateY(-2px); }
 .hero-tile-name {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .17em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 .hero-tile-val {
-  font-size: 24px; font-weight: 600; letter-spacing: -.03em;
-  margin-top: 7px; color: var(--text-primary);
+  font-size: var(--fs-h2); font-weight: 500; letter-spacing: var(--ls-heading);
+  margin-top: 7px; color: var(--text-primary); font-family:var(--font-display);
 }
 .hero-tile-chg {
-  font-family: var(--mono); font-size: 12px; margin-top: 3px; font-weight: 500;
+  font-family: var(--font-sans); font-size: var(--fs-small); margin-top: 3px; font-weight: 500;
 }
 .hero-tile-chg.up { color: var(--gain); }
 .hero-tile-chg.dn { color: var(--loss); }
@@ -314,10 +311,10 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 html[data-theme="dark"] .seg { box-shadow: inset 0 1px 2px rgba(0,0,0,.35); }
 
 .seg > button, .seg > .moreWrap > button {
-  font-family: var(--sans); font-weight: 500; font-size: 14px;
-  letter-spacing: -.005em; padding: 8px 18px;
+  font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-body);
+  letter-spacing: normal; padding: 8px 18px;
 }
-.seg.mono > button { font-family: var(--mono); font-size: 11px; padding: 7px 13px; }
+.seg.mono > button { font-family: var(--font-sans); font-size: var(--fs-label); padding: 7px 13px; }
 
 .seg-puck {
   top: 3px; bottom: 3px;
@@ -348,15 +345,15 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
 }
 .searchrow:focus-within { box-shadow: var(--sh-3), var(--ring); transform: translateY(-1px); }
 .searchrow input {
-  font-family: var(--sans); font-size: 16px; letter-spacing: -.012em;
+  font-family: var(--font-sans); font-size: var(--fs-input); letter-spacing: normal;
   background: transparent; border: 0; color: var(--text-primary);
 }
 .searchrow input::placeholder { color: var(--text-muted); }
 .searchrow button, #go, #rgo {
   border-radius: var(--r-pill); border: 0;
   background: var(--accent); color: var(--on-accent);
-  font-family: var(--sans); font-weight: 500; font-size: 14px;
-  letter-spacing: -.008em; padding: 11px 26px;
+  font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-body);
+  letter-spacing: normal; padding: 11px 26px;
   transition: transform var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
 }
 .searchrow button:hover, #go:hover, #rgo:hover { opacity: .86; transform: translateY(-1px); }
@@ -364,7 +361,7 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
 
 .kbdhint {
   display: inline-flex; align-items: center;
-  font-family: var(--mono); font-size: 10px; color: var(--text-muted);
+  font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted);
   border: .5px solid var(--border); border-radius: 6px;
   padding: 3px 7px; margin-right: 9px; background: var(--surface-raised);
 }
@@ -392,8 +389,8 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
   box-shadow: var(--sh-2); transform: translateY(-2px); border-color: var(--border);
 }
 
-.vhead h4, .lh h3 { font-family: var(--sans); font-weight: 600; letter-spacing: -.023em; }
-.lh h3 { font-size: 24px; }
+.vhead h4, .lh h3 { font-family: var(--font-sans); font-weight: 600; letter-spacing: var(--ls-heading); }
+.lh h3 { font-size: var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
 
 /* Section headers get a candle glyph — the subject as structural device,
    not decoration bolted on. */
@@ -404,7 +401,7 @@ html[data-theme="dark"] .seg-puck { background: #292D36; box-shadow: 0 2px 8px r
 }
 
 .sk, .sk2, .lbl, .modelbl, .dlbl {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .18em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 
@@ -430,26 +427,26 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   transition: stroke-dashoffset 1200ms var(--ease-soft) !important;
 }
 .seal .val {
-  font-family: var(--sans); font-weight: 600; letter-spacing: -.05em;
+  font-family: var(--font-display); font-weight: 400; letter-spacing: var(--ls-heading);
   font-variant-numeric: tabular-nums;
-  font-size: clamp(42px, 7vw, 64px); line-height: 1;
+  font-size: var(--fs-display); line-height: var(--lh-none);
 }
 .seal .of {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .2em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 
 .vstamp {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .2em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-primary);
 }
-.vsummary { font-size: clamp(16px, 1.8vw, 20px); line-height: 1.55;
-            letter-spacing: -.014em; color: var(--text-primary); }
-.vbasis { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+.vsummary { font-size: var(--fs-h2); line-height: var(--lh-body);
+            letter-spacing: var(--ls-heading); color: var(--text-primary); font-family:var(--font-display); font-weight:500; }
+.vbasis { font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted); }
 
 .confchip {
   display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; padding: 4px 10px; border-radius: var(--r-pill);
   border: .5px solid var(--border); background: var(--surface-raised);
   color: var(--text-secondary); margin-left: 8px;
@@ -474,7 +471,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 }
 .act:active, .livebtn:active { transform: translateY(0) scale(.985); }
 .auditbtn, .showfull {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; padding: 13px 24px;
 }
 
@@ -484,7 +481,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 .audit:hover { border-color: var(--border); }
 .octable-wrap { border-radius: var(--r-card); border: .5px solid var(--border); }
 .octable th {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
   position: sticky; top: 0; background: var(--surface); z-index: 2;
 }
@@ -528,8 +525,8 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 5px;
   border: 0; background: none; cursor: pointer; border-radius: 999px;
   padding: 4px 10px; color: rgba(255,255,255,.5);
-  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
-  text-transform: uppercase; line-height: 1;
+  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
+  text-transform: uppercase; line-height: var(--lh-none);
   transition: color var(--t-fast) var(--ease);
 }
 .themeseg button svg { display: block; }
@@ -557,7 +554,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   width: 42px; height: 42px; border-radius: 50%;
   display: grid; place-items: center; cursor: pointer;
   background: var(--surface); border: .5px solid var(--border);
-  box-shadow: var(--sh-2); color: var(--text-secondary); font-size: 16px;
+  box-shadow: var(--sh-2); color: var(--text-secondary); font-size: var(--fs-body);
 }
 
 /* ── 15. MOBILE TAB BAR ────────────────────────────────────────────────── */
@@ -575,7 +572,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   flex: 1 1 0; border: 0; background: none; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 6px 2px; border-radius: 10px;
-  font-family: var(--sans); font-size: 10px; font-weight: 500;
+  font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500;
   color: var(--text-muted);
   transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
@@ -592,7 +589,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
   .mobnav { display: block; }
   body { padding-bottom: 64px; }
   .tabnav { display: none; }
-  .brand { font-size: clamp(42px, 13vw, 64px); }
+  .brand { font-size: var(--fs-display); font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading); }
   .searchrow { padding-left: 16px; }
   .verdict { padding: 22px 18px; }
   .hero-candles { height: 140px; }
@@ -618,7 +615,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
     box-shadow: var(--sh-3, 0 20px 48px rgba(0,0,0,.28));
   }
   .moreMenu:not(.open) { transform: translateY(8px) scale(.98); }
-  .moreMenu button { padding: 15px 16px; font-size: 12px; letter-spacing: .12em; }
+  .moreMenu button { padding: 15px 16px; font-size: var(--fs-small); letter-spacing: normal; }
   .moreMenu .mobonly { display: block; }
   .moreMenu .sep { margin: 6px 0; }
 }
@@ -676,14 +673,14 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 
 /* The number sits low in a dial, under the needle hub, not dead centre */
 .seal .val {
-  font-family: var(--sans) !important;
-  font-weight: 600; letter-spacing: -.05em;
+  font-family: var(--font-display) !important;
+  font-weight: 400; letter-spacing: var(--ls-heading);
   font-variant-numeric: tabular-nums;
-  font-size: 52px !important;
+  font-size: var(--fs-display) !important;
   position: relative; top: 26px !important;
   transition: color var(--t) var(--ease);
 }
-.seal .of { bottom: 20px !important; letter-spacing: .22em; }
+.seal .of { bottom: 20px !important; letter-spacing: var(--ls-label); }
 
 .seal .val.b-strong { color: var(--gain); }
 .seal .val.b-good   { color: var(--text-primary); }
@@ -699,7 +696,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 rgba(255,255
 .cardbtn svg { width: 13px; height: 13px; stroke-width: 1.8; }
 
 @media (max-width: 780px) {
-  .seal .val { font-size: 42px !important; top: 22px !important; }
+  .seal .val { font-size: var(--fs-display) !important; top: 22px !important; font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading); }
 }
 
 /* ── More menu, dark mode ──────────────────────────────────────────────────

@@ -5,46 +5,45 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <script src="theme.js"></script>
+<link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
 <link rel="stylesheet" href="tokens.css">
 <title>Daily brief | Altaha Screener</title>
 <meta name="description" content="Every new DGFT, RBI, SEBI and government circular, with what it changes and which Indian sectors and stocks it touches." />
 <link rel="icon" href="favicon.ico" sizes="any" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="type.css">
 <style>
-  body { margin: 0; background: var(--bg); color: var(--text-primary); font-family: Inter, system-ui, sans-serif; }
+  body { margin: 0; background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); }
   .bf { max-width: 780px; margin: 0 auto; padding: 20px 16px 60px; }
   .bf a { color: inherit; }
   .bf-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .bf h1 { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-size: 34px; margin: 8px 0 2px; }
-  .bf-sub { color: var(--text-secondary); font-size: 14px; margin: 0 0 14px; line-height: 1.5; }
+  .bf h1 { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); margin: 8px 0 2px; letter-spacing:var(--ls-heading); }
+  .bf-sub { color: var(--text-secondary); font-size: var(--fs-body); margin: 0 0 14px; line-height: var(--lh-small); }
   .bf-days { display: flex; gap: 6px; margin: 0 0 14px; }
-  .bf-days button { border: 1px solid var(--border); background: none; color: inherit; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 13px; cursor: pointer; min-height: 36px; }
+  .bf-days button { border: 1px solid var(--border); background: none; color: inherit; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: var(--fs-small); cursor: pointer; min-height: 36px; }
   .bf-days button.on { background: var(--accent); color: var(--on-accent); border-color: var(--border-strong); }
-  .bf-note { border-left: 3px solid var(--border-strong); background: var(--surface-raised); padding: 9px 12px; font-size: 13px; line-height: 1.5; margin: 0 0 16px; }
+  .bf-note { border-left: 3px solid var(--border-strong); background: var(--surface-raised); padding: 9px 12px; font-size: var(--fs-small); line-height: var(--lh-small); margin: 0 0 16px; }
   .bf-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
-  .bf-chip { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+  .bf-chip { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: var(--fs-small); }
   .bf-chip.positive, .bf-imp.positive, .bf-st.helped { color: #1a7f4b; }
   .bf-chip.negative, .bf-imp.negative, .bf-st.hurt { color: #b3261e; }
   .bf-imp.mixed { color: #30343b; }
   html[data-theme="dark"] .bf-chip.positive, html[data-theme="dark"] .bf-imp.positive, html[data-theme="dark"] .bf-st.helped { color: #6fcf97; }
   html[data-theme="dark"] .bf-chip.negative, html[data-theme="dark"] .bf-imp.negative, html[data-theme="dark"] .bf-st.hurt { color: #ff8a80; }
   html[data-theme="dark"] .bf-imp.mixed { color: #d6d9de; }
-  .bf h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); margin: 22px 0 4px; font-weight: 600; }
+  .bf h2 { font-size: var(--fs-small); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-secondary); margin: 22px 0 4px; font-weight: 600; }
   .bf-item { border-top: 1px solid var(--border); padding: 13px 0; }
-  .bf-meta { font-size: 12px; color: var(--text-secondary); display: flex; gap: 8px; flex-wrap: wrap; }
+  .bf-meta { font-size: var(--fs-label); color: var(--text-secondary); display: flex; gap: 8px; flex-wrap: wrap; }
   .bf-imp { font-weight: 600; text-transform: capitalize; }
-  .bf-title { font-weight: 600; margin: 4px 0; line-height: 1.35; overflow-wrap: anywhere; }
-  .bf-text { font-size: 14px; line-height: 1.5; margin: 4px 0; }
-  .bf-why { font-size: 14px; line-height: 1.5; color: var(--text-secondary); margin: 4px 0; }
-  .bf-stocks { list-style: none; padding: 0; margin: 6px 0 0; font-size: 14px; line-height: 1.5; }
+  .bf-title { font-weight: 600; margin: 4px 0; line-height: var(--lh-h3); overflow-wrap: anywhere; }
+  .bf-text { font-size: var(--fs-body); line-height: var(--lh-small); margin: 4px 0; }
+  .bf-why { font-size: var(--fs-body); line-height: var(--lh-small); color: var(--text-secondary); margin: 4px 0; }
+  .bf-stocks { list-style: none; padding: 0; margin: 6px 0 0; font-size: var(--fs-body); line-height: var(--lh-small); }
   .bf-st { font-weight: 600; }
-  .bf-quiet { color: var(--text-secondary); font-size: 14px; padding: 16px 0; }
-  details.bf-rest summary { cursor: pointer; font-size: 14px; padding: 10px 0; color: var(--text-secondary); }
+  .bf-quiet { color: var(--text-secondary); font-size: var(--fs-body); padding: 16px 0; }
+  details.bf-rest summary { cursor: pointer; font-size: var(--fs-body); padding: 10px 0; color: var(--text-secondary); }
 </style>
 </head>
 <body>

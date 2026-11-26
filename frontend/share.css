@@ -13,7 +13,7 @@
 .shbtn{
   display:inline-flex;align-items:center;gap:6px;
   border:1px solid var(--border);background:transparent;color:var(--text-muted);
-  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   padding:6px 11px;border-radius:6px;cursor:pointer;
   transition:color .18s ease,border-color .18s ease,background .18s ease,transform .18s ease;
 }
@@ -43,25 +43,25 @@ body.sh-open{overflow:hidden}
 }
 
 .shx{position:absolute;top:12px;right:14px;width:30px;height:30px;border:0;
-  background:transparent;color:var(--text-muted);font-size:24px;line-height:1;cursor:pointer;
-  border-radius:6px}
+  background:transparent;color:var(--text-muted);font-size:var(--fs-h2);line-height:var(--lh-none);cursor:pointer;
+  border-radius:6px; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
 .shx:hover{color:var(--text-primary);background:var(--surface-raised)}
 
-.shttl{font-family:var(--serif);font-size:28px;font-weight:400;margin:0 0 6px;
-  color:var(--text-primary);padding-right:34px}
-.shsub{font-size:13px;line-height:1.55;color:var(--text-muted);margin:0 0 16px;max-width:56ch}
+.shttl{font-family:var(--font-display);font-size:var(--fs-h1);font-weight:500;margin:0 0 6px;
+  color:var(--text-primary);padding-right:34px; letter-spacing:var(--ls-heading)}
+.shsub{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:0 0 16px;max-width:56ch}
 
 .shcardwrap{position:relative;border:1px solid var(--border);border-radius:9px;
   overflow:hidden;background:var(--surface-raised);min-height:120px;display:flex;
   align-items:center;justify-content:center}
 .shcard{display:block;width:100%;height:auto}
 .shcard[hidden]{display:none}
-.shspin{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--text-muted);padding:38px 24px;text-align:center;line-height:1.7}
+.shspin{font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
+  color:var(--text-muted);padding:38px 24px;text-align:center;line-height:var(--lh-body)}
 .shspin[hidden]{display:none}
 
 .shbtns{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
-.shnote{font-size:12px;line-height:1.6;color:var(--text-muted);margin:12px 0 0;min-height:1.2em}
+.shnote{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:12px 0 0;min-height:1.2em}
 
 /* The sheet reuses .sharebtn, which the analysis page already defines. These
    are the pieces that page had no reason to specify. */
@@ -70,7 +70,7 @@ body.sh-open{overflow:hidden}
 
 @media (max-width:560px){
   .shbox{padding:20px 16px 16px;border-radius:11px}
-  .shttl{font-size:20px}
+  .shttl{font-size:var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
   .shbtns .sharebtn{flex:1 1 46%;justify-content:center;text-align:center}
 }
 
@@ -90,7 +90,7 @@ body.sh-open{overflow:hidden}
 html[data-theme="dark"] .shnet-li{--brand:#3d8fe0}
 html[data-theme="dark"] .shnet-fb{--brand:#4b8dff}
 
-.shgrp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+.shgrp{font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   color:var(--text-muted);margin:16px 0 0}
 .shgrp + .shbtns{margin-top:8px}
 .shbtns .sharebtn{display:inline-flex;align-items:center;gap:8px}
@@ -113,7 +113,7 @@ html[data-theme="dark"] .shnet-fb{--brand:#4b8dff}
 .shround.done{border-color:var(--gain);box-shadow:0 0 0 2px var(--gain)}
 .shpill{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 15px;
   border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);
-  font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   cursor:pointer;transition:border-color .15s ease,color .15s ease}
 .shpill:hover{border-color:var(--border-strong);color:var(--text-primary)}
 .shpill.done{border-color:var(--gain);color:var(--gain)}
