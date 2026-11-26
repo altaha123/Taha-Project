@@ -16,7 +16,7 @@ function fixture({reduced=false,noCanvas=false}={}){
   const ctx=new Proxy({}, {get(_,key){if(key==='createRadialGradient'||key==='createLinearGradient')return ()=>gradient;if(key==='fillRect')return ()=>draws++;return ()=>{}},set(){return true}});
   w.HTMLCanvasElement.prototype.getContext=()=>noCanvas?null:ctx;
   const button=w.document.querySelector('#genbtn2');let clicks=0;button.onclick=()=>clicks++;
-  for(const name of ['planet-renderer','universe-voyage','universe-scan'])w.eval(fs.readFileSync(path.join(__dirname,'../'+name+'.js'),'utf8'));
+  for(const name of ['universe-voyage','universe-scan'])w.eval(fs.readFileSync(path.join(__dirname,'../'+name+'.js'),'utf8'));
   const update=s=>w.AltahaUniverse.update(s);
   const advance=(frames=5)=>{for(let i=0;i<frames;i++){now+=40;const pending=[...queue.values()];queue.clear();pending.forEach(fn=>fn(now))}};
   const $=selector=>w.document.querySelector(selector);

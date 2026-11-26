@@ -113,9 +113,16 @@ const server = http.createServer((req, res) => {
   nets.forEach(n => {
     assert.ok(n.path && n.w >= 14 && n.h >= 14, `${n.label}: the logo does not draw`);
   });
-  const brand = Object.fromEntries(nets.map(n => [n.label.replace('Share on ', ''), n.colour]));
-  assert.equal(brand.WhatsApp, 'rgb(37, 211, 102)', 'WhatsApp is not in its own green');
-  assert.equal(brand.Telegram, 'rgb(38, 165, 228)', 'Telegram is not in its own blue');
+  /* The marks used to wear each network's own colour. The page keeps one
+     palette now (THEME.md: tokens only), so every mark is drawn in the same
+     ink, --text-secondary, and the shape alone names the network. */
+  const ink = await page.evaluate(() => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--text-secondary)';
+    document.body.appendChild(probe);
+    const c = getComputedStyle(probe).color; probe.remove(); return c;
+  });
+  nets.forEach(n => assert.equal(n.colour, ink, `${n.label}: the mark is not in the palette's ink`));
   assert.ok(await bar.locator('[data-to="sheet"] svg').count(), 'the image button has no glyph');
   assert.ok(await bar.locator('[data-to="copy"] svg').count(), 'copy link has no glyph');
   await page.locator('#rcard').screenshot({ path: path.join(output, 'card-desktop.png') });

@@ -305,10 +305,17 @@ def test_a_company_s_own_page_never_talks_about_the_server():
 
 
 def test_the_planet_credit_is_shown_only_with_the_planets():
-    css = _read("universe-scan.css")
-    assert ".su-texture-credit{display:none" in css
-    assert ".su-textured .su-texture-credit{display:block}" in css
-    assert "if(renderer)host.classList.add('su-textured')" in _read("universe-voyage.js")
-    scan = _read("universe-scan.js")
-    assert "node('div','su-texture-credit')" in scan and "credit.setAttribute('data-nosnippet','')" in scan
-    assert "Solar System Scope · CC BY 4.0" in scan, "the textures are CC BY: the credit must stay"
+    """
+    The scan card used to draw CC BY planet maps and credit them. It now draws
+    flat circles in the chart tokens: no map is loaded there, so there is no
+    credit to show, and nothing left that could show one without the other.
+    """
+    voyage = _read("universe-voyage.js")
+    assert "AltahaPlanets" not in voyage and "su-textured" not in voyage, "the scan loads no planet map"
+    assert not os.path.exists(os.path.join(FRONT, "planet-renderer.js")), "the map renderer is gone"
+    assert not os.path.exists(os.path.join(FRONT, "assets", "planets")), "and so are the maps"
+    for name in ("doors.js", "doors.css", "index.html"):
+        assert "assets/planets" not in _read(name) and "Solar System Scope" not in _read(name), name
+    css, scan = _read("universe-scan.css"), _read("universe-scan.js")
+    assert "su-texture-credit" not in css and "su-textured" not in css
+    assert "su-texture-credit" not in scan and "Solar System Scope" not in scan
