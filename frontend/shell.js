@@ -568,13 +568,9 @@
     right.appendChild(pro);
     right.appendChild(adv);
     right.appendChild(wd);
-    var themeRow = el('div', 'sh-merow');
-    themeRow.innerHTML = '<span>Appearance</span>';
-    themeRow.appendChild(themeBtn);
     var learn = el('div', 'sh-melearn');
     learn.innerHTML = '<h4>Learn</h4>' + ME_ITEMS.map(function (it) { return itemHTML('me', it); }).join('');
     menu.appendChild(right);
-    menu.appendChild(themeRow);
     menu.appendChild(learn);
     meWrap.appendChild(me);
     meWrap.appendChild(menu);
@@ -583,6 +579,7 @@
     bar.appendChild(nav);
     bar.appendChild(megawrap);       // straight after the doors, so Tab walks into an open menu
     bar.appendChild(search);
+    bar.appendChild(themeBtn);       // sun or moon, always in the header
     bar.appendChild(meWrap);
 
     chrome.appendChild(ticker);
@@ -1763,25 +1760,28 @@
   /* ── Theme ───────────────────────────────────────────────────────────────── */
 
   function currentTheme() {
-    return document.documentElement.getAttribute('data-theme') || 'light';
+    return window.AltahaTheme ? window.AltahaTheme.get()
+      : (document.documentElement.getAttribute('data-theme') || 'light');
   }
   function paintThemeBtn() {
     var b = document.getElementById('sh-theme');
     if (!b) return;
     var dark = currentTheme() === 'dark';
     b.innerHTML = dark
-      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
-      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>';
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>';
     b.setAttribute('aria-label', dark ? 'Switch to light appearance' : 'Switch to dark appearance');
+    b.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    b.title = dark ? 'Light appearance' : 'Dark appearance';
   }
   function toggleTheme() {
-    // Same attribute, same storage key and same event as premium.js, so the
-    // charts and the segmented control stay in step with this button.
+    // theme.js owns the attribute, the storage key and the 'altaha:theme'
+    // event; every chart and control repaints on that one announcement.
+    if (window.AltahaTheme) { window.AltahaTheme.toggle(); return; }
     var t = currentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', t);
     try { localStorage.setItem('altaha-theme', t); } catch (e) {}
     window.dispatchEvent(new CustomEvent('altaha:theme', { detail: { theme: t } }));
-    paintThemeBtn();
   }
   function wireTheme() {
     var b = document.getElementById('sh-theme');

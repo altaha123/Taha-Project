@@ -1,84 +1,81 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   Altaha Screener — type.css
-   One type ladder, one set of text roles, for every page and every tab.
+   Altaha — type.css
+   The seven text roles, for every page and every tab.
 
-   WHY THIS FILE EXISTS
-   Text sizes had accumulated one declaration at a time: 8, 8.5, 9, 9.5, 10,
-   10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 19,
-   21, 22, 23, 25, 26, 27, 30, 31, 32 … roughly six hundred of them across
-   twenty stylesheets. Half-pixel steps are invisible one at a time and
-   unmistakable in aggregate: nothing lines up, and every panel reads as though
-   it came from a different site. The same happened to weight (450 and 550 are
-   not weights Inter ships, so the browser was faking them) and to section
-   headings, which were declared serif in one stylesheet and sans-600 in
-   another, so the winner depended on load order.
+   The sizes, families and line-heights are tokens in tokens.css; this file
+   says which element wears which. Nothing in the product is set at a size
+   that is not one of these:
 
-   THE LADDER — every font-size in this project is one of these
-     10  micro     mono uppercase labels, the smallest legible step
-     11  caption   metadata, table headers
-     12  small     secondary lines, chips
-     13  compact   dense body text in cards and tables
-     14  body      default reading size
-     16  lead      intro lines, inputs (16px also stops iOS zooming on focus)
-     18  h4        sub-headings
-     20  h3        card titles
-     24  h2        section headings
-     28  figure    the number a card exists to show
-     34  display   panel headlines
-     42  page      page titles
-     52  hero      the score, the brand on small screens
-     64  brand     the wordmark
+     display   40  Fraunces 400   hero metrics: an index level, a portfolio value
+     h1        30  Fraunces 500   page titles
+     h2        22  Fraunces 500   section headings
+     h3        16  Inter 600      card titles
+     body      14  Inter 400      text
+     small     13  Inter 400      secondary text
+     label     11  Inter 500      UPPERCASE, tracked .08em, muted
 
-   Anything responsive uses clamp() between two rungs, never a value between
-   them. The ladder was declared here long before it was followed: some six
-   hundred declarations in the other stylesheets still sat between rungs
-   (10.5, 12.5, 13.5, 15, 22, 26 ...) and have since been moved onto it. A
-   new size goes on a rung or it does not go in. Weight is 400, 500 or 600; all three families ship those and none of
-   them ships 700, so 700 was being synthesised and looked blotchy next to the
-   real 600.
+   Hierarchy is size and colour, never weight: nothing is heavier than 600 and
+   Fraunces is never heavier than 500. Headings of 22px and up are tracked
+   -.01em. Figures are tabular everywhere (set once, on body). Ticker symbols
+   may use JetBrains Mono; nothing else does.
 
-   This file loads last on purpose. It settles the arguments between the older
-   stylesheets rather than adding a fourth opinion.
+   Loads after the page stylesheets and before components.css.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root{
-  --fs-micro:10px;  --fs-caption:11px; --fs-small:12px;   --fs-compact:13px;
-  --fs-body:14px;   --fs-lead:16px;    --fs-h4:18px;      --fs-h3:20px;
-  --fs-h2:24px;     --fs-figure:28px;  --fs-display:34px; --fs-page:42px;
-
-  --lh-tight:1.15;  --lh-snug:1.35;    --lh-body:1.6;     --lh-loose:1.7;
-  --tr-label:.14em;                    /* one tracking for every mono label */
-
-  /* The three families are named once, in altaha-skin.css, which every page
-     loads. The radius and timing tokens live in premium.css, which only the
-     homepage loads, so they are aliased here with the same fallbacks. */
-  --ty-serif: var(--serif, 'Instrument Serif', Georgia, serif);
-  --ty-mono:  var(--mono, 'IBM Plex Mono', ui-monospace, monospace);
-  --ty-sans:  var(--sans, 'Inter', system-ui, sans-serif);
-  --ty-pill:  var(--r-pill, 999px);
-  --ty-t:     var(--t, 280ms);
-  --ty-ease:  var(--ease, cubic-bezier(.22,.61,.36,1));
+  /* Aliases the older rules below still reach for. */
+  --ty-serif:var(--font-display);
+  --ty-mono:var(--font-sans);
+  --ty-sans:var(--font-sans);
+  --ty-pill:var(--r-pill);
+  --ty-t:var(--t);
+  --ty-ease:var(--ease);
 }
+
+/* ── Roles ─────────────────────────────────────────────────────────────────
+   As classes, for new markup, and on the bare heading elements, so a heading
+   nobody dressed is still right. */
+.t-display{ font:400 var(--fs-display)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading) }
+h1, .t-h1{ font:500 var(--fs-h1)/var(--lh-h1) var(--font-display); letter-spacing:var(--ls-heading) }
+h2, .t-h2{ font:500 var(--fs-h2)/var(--lh-h2) var(--font-display); letter-spacing:var(--ls-heading) }
+h3, .t-h3{ font:600 var(--fs-h3)/var(--lh-h3) var(--font-sans); letter-spacing:normal }
+h4, h5, h6{ font:600 var(--fs-body)/var(--lh-h3) var(--font-sans); letter-spacing:normal }
+.t-body{ font:400 var(--fs-body)/var(--lh-body) var(--font-sans) }
+.t-small{ font:400 var(--fs-small)/var(--lh-small) var(--font-sans); color:var(--text-secondary) }
+.t-label{
+  font:500 var(--fs-label)/var(--lh-label) var(--font-sans);
+  letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
+}
+.t-num{ font-variant-numeric:tabular-nums }
+.t-ticker{ font-family:var(--font-mono); letter-spacing:normal }
+
+/* Fraunces has no italic here and no weight past 500. An <i> inside a heading
+   was the old design's second voice; it is the cognac now, upright. */
+h1 i, h2 i, h1 em, h2 em, .t-display i, .t-h1 i, .t-h2 i{ font-style:normal; color:var(--highlight-text) }
+b, strong{ font-weight:600 }
+/* A bare <small> is 'smaller', which lands between two sizes of the scale. */
+small{ font-size:var(--fs-small) }
+
+/* Fields read at the input size: 14px with a mouse, 16px under a finger. */
+input, select, textarea{ font-family:var(--font-sans); font-size:var(--fs-input) }
 
 /* ── Base ──────────────────────────────────────────────────────────────────
    b/strong and the heading elements default to 700 in every browser. With no
    700 loaded that is a synthetic bold, which is why emphasised words looked
    heavier in some panels than others. */
-b, strong{ font-weight:600 }
-h1, h2, h3, h4, h5, h6{ font-weight:400 }
 
 /* ── Section headings ──────────────────────────────────────────────────────
    `.lh h3` (index), `.vhead h4` (index sub-panels) and `.stk-sec h2` (stock
    page) are the same thing wearing three faces. Instrument Serif at 400 is the
    one the rest of the product already uses. */
 .lh h3, .vhead h4, .stk-sec > h2, .psec > .lh h3{
-  font-family:var(--ty-serif);
-  font-weight:400;
-  letter-spacing:-.01em;
-  line-height:var(--lh-tight);
+  font-family:var(--font-display);
+  font-weight:500;
+  letter-spacing:var(--ls-heading);
+  line-height:var(--lh-h2);
 }
-.lh h3{ font-size:var(--fs-h2) }
-.vhead h4{ font-size:var(--fs-h3) }
+.lh h3{ font-size:var(--fs-h2) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
+.vhead h4{ font-size:var(--fs-h2) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
 
 /* `.lh` holds three children — a gold rule, the heading, and a metadata span —
    under `justify-content:space-between`, which parked the heading in the
@@ -91,33 +88,36 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
    Every tab used to open with a centred paragraph of explanation at a size
    that belonged to no role — some four lines, one eight. A tab opens with its
    name and a single line saying what it is, exactly as the stock page does. */
-.tabhead{ margin:6px 0 26px; max-width:72ch }
+.tabhead{ margin:8px 0 28px; max-width:72ch }
 .tabhead > h2{
-  margin:0 0 4px; font-family:var(--ty-serif); font-weight:400;
-  font-size:var(--fs-h2); line-height:var(--lh-tight); letter-spacing:-.01em;
+  margin:0 0 4px; font-family:var(--font-display); font-weight:500;
+  font-size:var(--fs-h1); line-height:var(--lh-h1); letter-spacing:var(--ls-heading);
 }
-.tabhead > h2 i{ font-style:italic; color:var(--gold) }
+.tabhead > h2 i{ font-style:normal; color:var(--highlight-text) }
+/* On a phone the title gives its room to the tool: the first row of a list
+   has to be on the first screen. */
+@media (max-width:560px){ .tabhead{ margin-bottom:var(--sp-2) } }
 .tabhead > p{
   margin:0; font-size:var(--fs-body); line-height:var(--lh-body);
-  color:var(--mute); max-width:66ch;
+  color:var(--text-muted); max-width:66ch;
 }
-.tabhead > p a{ color:var(--gold-dp) }
+.tabhead > p a{ color:var(--highlight-text) }
 
 /* ── Secondary text ────────────────────────────────────────────────────────
    Four classes doing one job at four sizes. Two roles now: a line under a
    heading, and a quiet footnote. */
 .stk-sec > .sub, .lsub, .ideas-note{
-  font-size:var(--fs-body); line-height:var(--lh-body); color:var(--mute);
+  font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-muted);
 }
-.rnote, .disc, .brun-note, .stk-disc{ line-height:var(--lh-loose) }
-.rnote, .disc, .stk-disc{ font-size:var(--fs-small); color:var(--mute) }
+.rnote, .disc, .brun-note, .stk-disc{ line-height:var(--lh-body) }
+.rnote, .disc, .stk-disc{ font-size:var(--fs-small); color:var(--text-muted) }
 
 /* ── Mono labels ───────────────────────────────────────────────────────────
    The uppercase mono label is the most repeated element on the site and had
    accumulated five sizes and six trackings. Tracking is what the eye reads as
    "same kind of label", so it matters more than the size does. */
 .brun-note, .statcell span, .tkstat, .fbtag, .sk, .sk2, .lbl, .modelbl, .dlbl{
-  font-size:var(--fs-micro); letter-spacing:var(--tr-label);
+  font-size:var(--fs-label); letter-spacing:var(--ls-label);
 }
 
 /* ── Controls that never got a style ───────────────────────────────────────
@@ -127,11 +127,11 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
 .searchrow{ align-items:center }
 .searchrow input{
   flex:1 1 auto; min-width:0;
-  border:0; background:transparent; color:var(--ink);
-  font-family:var(--ty-mono); font-size:var(--fs-lead); letter-spacing:.06em;
-  padding:15px 22px;
+  border:0; background:transparent; color:var(--text-primary);
+  font-family:var(--font-sans); font-size:var(--fs-input); letter-spacing:normal;
+  padding:16px 24px;
 }
-.searchrow input::placeholder{ font-family:var(--ty-sans); letter-spacing:.01em; color:var(--mute) }
+.searchrow input::placeholder{ font-family:var(--font-sans); letter-spacing:normal; color:var(--text-muted) }
 .searchrow input:focus{ outline:none }
 .searchrow > button{ flex:0 0 auto; cursor:pointer }
 
@@ -139,40 +139,41 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
    buttons outside one, where they fell back to the browser's default chrome. */
 .hzrow{ display:flex; flex-wrap:wrap; justify-content:flex-start; gap:8px }
 .hzrow > .hz{
-  border:1px solid var(--rule); border-radius:var(--ty-pill);
-  background:var(--paper); color:var(--ink-2); cursor:pointer;
-  font-family:var(--ty-sans); font-weight:500; font-size:var(--fs-body);
-  padding:10px 20px; line-height:1.2;
+  border:1px solid var(--border); border-radius:var(--ty-pill);
+  background:var(--bg); color:var(--text-secondary); cursor:pointer;
+  font-family:var(--font-sans); font-weight:500; font-size:var(--fs-body);
+  padding:12px 20px; line-height:var(--lh-h1);
   transition:border-color var(--ty-t) var(--ty-ease), color var(--ty-t) var(--ty-ease),
              background var(--ty-t) var(--ty-ease);
 }
 .hzrow > .hz small{
-  display:block; font-family:var(--ty-mono); font-size:var(--fs-micro);
-  letter-spacing:var(--tr-label); text-transform:uppercase; color:var(--mute);
+  display:block; font-family:var(--font-sans); font-size:var(--fs-label);
+  letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
   margin-top:3px;
 }
-.hzrow > .hz:hover{ border-color:var(--ink-2); color:var(--ink) }
-.hzrow > .hz.active{ background:var(--ink); border-color:var(--ink); color:var(--paper) }
+.hzrow > .hz:hover{ border-color:var(--border-strong); color:var(--text-primary) }
+.hzrow > .hz.active{ background:var(--highlight-subtle); border-color:transparent; color:var(--highlight-text) }
 .hzrow > .hz.active small{ color:inherit; opacity:.74 }
 
 /* `#genbtn` and `#pf_go` were dressed by id; `#genbtn2` and the Planner's twin
    were not, and shipped as system buttons. */
 #genbtn, #genbtn2, #pf_go, #rgo, #optgo{
-  font-family:var(--ty-sans); font-weight:500; font-size:var(--fs-body);
-  letter-spacing:-.008em; cursor:pointer;
+  font-family:var(--font-sans); font-weight:500; font-size:var(--fs-body);
+  letter-spacing:normal; cursor:pointer;
 }
 #genbtn2, #pf_go{
-  background:var(--ink); color:var(--paper); border:1px solid var(--ink);
-  border-radius:var(--ty-pill); padding:11px 24px;
-  transition:opacity var(--ty-t) var(--ty-ease), transform var(--ty-t) var(--ty-ease);
+  height:var(--control-h); padding:0 var(--sp-6);
+  background:var(--accent); color:var(--on-accent); border:1px solid transparent;
+  border-radius:var(--ty-pill);
+  transition:background-color var(--t-fast) var(--ease);
 }
-#genbtn2:hover:not(:disabled), #pf_go:hover:not(:disabled){ opacity:.86; transform:translateY(-1px) }
-#genbtn2:disabled, #pf_go:disabled{ opacity:.45; cursor:default; transform:none }
-#genbtn2:focus-visible, #pf_go:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+#genbtn2:hover:not(:disabled), #pf_go:hover:not(:disabled){ background:var(--accent-hover) }
+#genbtn2:disabled, #pf_go:disabled{ opacity:.45; cursor:default }
+#genbtn2:focus-visible, #pf_go:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 
 /* The holdings table's column headings wrapped to three lines because the
    optional-field hint was set in the same uppercase mono as the heading. */
-.pfhead i{ font-style:normal; text-transform:none; letter-spacing:.01em; opacity:.72 }
+.pfhead i{ font-style:normal; text-transform:none; letter-spacing:normal; opacity:.72 }
 .pfhead > span{ white-space:nowrap }
 
 /* ── Tab bodies read from the left margin ──────────────────────────────────

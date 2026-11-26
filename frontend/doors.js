@@ -236,8 +236,6 @@
       '<div class="dr-grid">' +
         '<div class="dr-main">' +
           '<section class="dr-hero dr-rise" style="--i:1" aria-label="The market now">' +
-            '<span class="dr-blob dr-b1" aria-hidden="true"></span><span class="dr-blob dr-b2" aria-hidden="true"></span>' +
-            '<span class="dr-gridbg" aria-hidden="true"></span>' +
             '<div class="dr-hero-l">' +
               '<span class="dr-kick"><i class="dr-ping"></i>NIFTY 50</span>' +
               '<div class="dr-big"><span class="dr-level" id="drt-level">—</span>' +
@@ -491,11 +489,15 @@
         // other way to a price's.
         var vix = /VIX/i.test(i.label);
         var t = vix ? tone(-(i.change_pct || 0)) : tone(i.change_pct);
+        // The arrow follows the sign of the number, whatever its colour.
+        var c = Number(i.change_pct);
+        var arrow = !finite(i.change_pct) || !c ? '' :
+          '<span class="dr-ix-a" aria-hidden="true">' + (c > 0 ? '▲' : '▼') + '\u00A0</span>';
         return '<div class="dr-ix dr-rise" style="--i:' + (k + 2) + '">' +
           '<span class="dr-ix-n">' + esc(i.label) + '</span>' +
           '<span class="dr-ix-v">' + inr(i.level, 2) + '</span>' +
           weekSpark(i.label, t) +
-          '<span class="dr-ix-c ' + t + '">' + pct(i.change_pct) + '</span></div>';
+          '<span class="dr-ix-c ' + t + '">' + arrow + pct(i.change_pct) + '</span></div>';
       }).join('') : '';
     }
     var st = $('drt-state');
@@ -538,11 +540,8 @@
     var up = vals[vals.length - 1] >= vals[0];
     host.innerHTML =
       '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
-        '<defs><linearGradient id="drt-fill" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0" stop-color="#C5CAD3" stop-opacity=".42"/><stop offset="1" stop-color="#C5CAD3" stop-opacity="0"/>' +
-        '</linearGradient></defs>' +
         '<line class="dr-prevline" x1="0" x2="' + W + '" y1="' + Y(prev).toFixed(1) + '" y2="' + Y(prev).toFixed(1) + '"/>' +
-        '<path class="dr-area" d="' + line + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="url(#drt-fill)"/>' +
+        '<path class="dr-area" d="' + line + ' L' + W + ' ' + H + ' L0 ' + H + ' Z"/>' +
         '<path class="dr-line dr-draw" pathLength="1" d="' + line + '"/>' +
       '</svg>' +
       '<span class="dr-dot" style="left:' + (last[0] / W * 100).toFixed(2) + '%;top:' + (last[1] / H * 100).toFixed(2) + '%"></span>' +
@@ -587,12 +586,13 @@
       } else {
         heat.innerHTML = rows.map(function (r, i) {
           var c = Number(r.change_pct) || 0, a = Math.min(1, Math.abs(c) / 2.4);
-          var L = Math.round(92 - a * 56);
-          var bg = c >= 0 ? 'hsl(146,40%,' + L + '%)' : 'hsl(9,60%,' + L + '%)';
+          /* The tile is the card surface tinted toward gain or loss by how far
+             the sector moved: at most 22%, so the ink on it always reads. */
+          var heat = Math.round(a * 22);
           return '<button type="button" class="dr-tile" data-sector="' + esc(r.sector) +
             '" aria-expanded="false" aria-controls="drt-secpanel" style="--i:' + i +
-            ';background-color:' + bg + ';color:' + (L < 60 ? '#FFFFFF' : '#0A0A0B') + '">' +
-            '<span>' + esc(r.sector) + '</span><b>' + pct(r.change_pct) + '</b>' +
+            ';--heat:' + heat + ';--tone:var(' + (c >= 0 ? '--gain' : '--loss') + ')">' +
+            '<span>' + esc(r.sector) + '</span><b class="' + tone(r.change_pct) + '">' + pct(r.change_pct) + '</b>' +
             (finite(r.up) && finite(r.total) ? '<small>' + r.up + ' of ' + r.total + ' up</small>' : '') + '</button>';
         }).join('');
       }
@@ -936,13 +936,6 @@
   var I = { built: false };
 
   function ideasShell() {
-    var stars = '';
-    for (var i = 0; i < 44; i++) {
-      // Deterministic, so the sky does not reshuffle on every visit.
-      var x = (i * 37.3) % 100, y = (i * 61.7 + (i % 5) * 7) % 100, s = 1 + (i % 3) * 0.7, d = (i % 7) * 0.45;
-      stars += '<i class="dr-star" style="left:' + x.toFixed(1) + '%;top:' + y.toFixed(1) + '%;width:' + s +
-        'px;height:' + s + 'px;animation-delay:' + d.toFixed(2) + 's"></i>';
-    }
     var universe = universeCount();
     var cards = [
       '<button type="button" class="dr-card dr-tool dr-rise" style="--i:2" data-goto="research/query">' +
@@ -1000,12 +993,11 @@
          planet again before seeing a single stock. */
       '<section class="pk-panel dr-rise" id="dri-picks" style="--i:1" aria-label="Stock picks"></section>' +
       '<button type="button" class="dr-universe dr-rise" style="--i:2" data-goto="research/ideas">' +
-        '<span class="dr-sky" aria-hidden="true">' + stars + '</span>' +
         '<span class="dr-orbits" aria-hidden="true">' +
           '<span class="dr-ring r1"></span><span class="dr-ring r2"></span>' +
-          '<span class="dr-orbit o1"><span class="dr-planet p-jupiter s84"></span></span>' +
-          '<span class="dr-orbit o2"><span class="dr-planet p-mars s56"></span></span>' +
-          '<span class="dr-planet p-earth s140 dr-earth"></span>' +
+          '<span class="dr-orbit o1"><span class="dr-planet p-a"></span></span>' +
+          '<span class="dr-orbit o2"><span class="dr-planet p-b"></span></span>' +
+          '<span class="dr-planet p-c dr-earth"></span>' +
         '</span>' +
         '<span class="dr-universe-t">' +
           '<span class="dr-label gold">Universe scan</span>' +
@@ -1014,8 +1006,6 @@
           (universe ? '<span class="dr-universe-n"><b class="dr-n" data-count-to="' + universe + '">' + inr(universe, 0) + '</b> companies on NSE today</span>' : '') +
           '<span class="dr-cta">Open the scan ' + svg('arrow', 16) + '</span>' +
         '</span>' +
-        // data-nosnippet: a credit, not what the page is about.
-        '<span class="dr-credit" data-nosnippet>Planet textures: Solar System Scope, CC BY 4.0</span>' +
       '</button>' +
       '<div class="dr-cards wide">' + cards + '</div>' +
       '<div class="dr-rows">' + more + '</div>' +
@@ -1082,8 +1072,6 @@
     return '<div class="dr dr-money">' +
       head('Portfolio', 'How am I doing, and what next?') +
       '<button type="button" class="dr-hero dr-pfhero dr-rise" style="--i:1" data-goto="portfolio/portfolio">' +
-        '<span class="dr-blob dr-b1" aria-hidden="true"></span><span class="dr-blob dr-b3" aria-hidden="true"></span>' +
-        '<span class="dr-gridbg" aria-hidden="true"></span>' +
         '<span class="dr-ringwrap" aria-hidden="true"><svg viewBox="0 0 120 120"><circle class="dr-ring-bg" cx="60" cy="60" r="48"/>' +
           '<circle class="dr-ring-fg" cx="60" cy="60" r="48" pathLength="100" style="--len:' + (n ? ring : 6) + '"/></svg>' +
           '<span class="dr-ring-n"><b class="dr-n" data-count-to="' + n + '">' + n + '</b><small>' + (n === 1 ? 'holding' : 'holdings') + '</small></span></span>' +

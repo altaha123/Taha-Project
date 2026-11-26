@@ -19,16 +19,16 @@
 
 /* ── 1 · The masthead, reduced to a band ─────────────────────────────────── */
 
-body.sh-on header.wrap{ padding:22px 20px 16px !important }
+body.sh-on header.wrap{ padding:24px 20px 16px !important }
 body.sh-on #skin-art{ top:-6px; opacity:.62 }
 body.sh-on #skin-art svg{ height:100% }
 
 /* The artwork was tall enough to be the whole first screen. It is now a
    backdrop to the masthead rather than the content of the page. */
 body.sh-on header.wrap{ min-height:0; max-height:none }
-body.sh-on .brand{ font-size:clamp(28px,4.6vw,42px); margin:4px 0 2px }
-body.sh-on .eyebrow{ font-size:10px; letter-spacing:.18em }
-body.sh-on .tag{ font-size:11px; margin-top:2px }
+body.sh-on .brand{ font-size:var(--fs-display); margin:4px 0 2px ; font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading)}
+body.sh-on .eyebrow{ font-size:var(--fs-label); letter-spacing:var(--ls-label) }
+body.sh-on .tag{ font-size:var(--fs-label); margin-top:2px }
 
 /* Two claims that repeated what the masthead already said, and a badge row
    that competed with the search box for the eye. The pitch survives in one
@@ -46,62 +46,64 @@ body.sh-on .hero-tiles{ display:none !important }
 
 /* ── 2 · The market board ────────────────────────────────────────────────── */
 
-.mb{ max-width:1120px; margin:0 auto; padding:6px 20px 0 }
+.mb{ max-width:1120px; margin:0 auto; padding:8px 20px 0 }
 .mb-idx{
   display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
-  gap:12px; margin-bottom:14px;
+  gap:12px; margin-bottom:16px;
 }
-.mb-card{ padding:16px 18px; border-radius:14px }
+.mb-card{ padding:16px 20px; border-radius:var(--r-card) }
 .mb-card .k{
-  font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em;
-  text-transform:uppercase; color:var(--mute);
+  font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
+  text-transform:uppercase; color:var(--text-muted);
 }
-.mb-card .v{ font:600 24px/1 'IBM Plex Mono',monospace; margin-top:12px; letter-spacing:-.02em }
-.mb-card .c{ font:600 13px/1 'IBM Plex Mono',monospace; margin-top:9px }
-.mb-card .c.up{ color:var(--sh-up) } .mb-card .c.dn{ color:var(--sh-dn) }
+.mb-card .v{ font:500 var(--fs-h2)/var(--lh-none) var(--font-display); margin-top:12px; letter-spacing:var(--ls-heading) }
+.mb-card .c{ font:500 var(--fs-small)/var(--lh-none) var(--font-sans); margin-top:8px }
+.mb-card .c.up{ color:var(--gain) } .mb-card .c.dn{ color:var(--loss) }
+/* A coloured change always carries its arrow. */
+.mb-card .c.up::before, .mb-col em.up::before{ content:"\25B2\00A0"; display:inline-block;transform:scale(.72);transform-origin:left center }
+.mb-card .c.dn::before, .mb-col em.dn::before{ content:"\25BC\00A0"; display:inline-block;transform:scale(.72);transform-origin:left center }
 
 /* A hairline that fills to show the move's size against the day's biggest.
    Absolute percentages on four indices are hard to compare at a glance;
    lengths are not. */
-.mb-card .spark{ height:3px; background:var(--rule-2); border-radius:99px; margin-top:13px; overflow:hidden }
-.mb-card .spark i{ display:block; height:100%; width:0; border-radius:99px;
+.mb-card .spark{ height:3px; background:var(--border); border-radius:var(--r-pill); margin-top:12px; overflow:hidden }
+.mb-card .spark i{ display:block; height:100%; width:0; border-radius:var(--r-pill);
   transition:width 900ms var(--ease-out) }
-.mb-card .spark i.up{ background:var(--sh-up) } .mb-card .spark i.dn{ background:var(--sh-dn) }
+.mb-card .spark i.up{ background:var(--gain) } .mb-card .spark i.dn{ background:var(--loss) }
 
 .mb-movers{
   display:grid; grid-template-columns:1fr 1fr; gap:12px;
 }
 @media (max-width:680px){ .mb-movers{ grid-template-columns:1fr } }
-.mb-col{ padding:15px 17px; border-radius:14px }
+.mb-col{ padding:16px 16px; border-radius:var(--r-card) }
 .mb-col h3{
-  margin:0 0 11px; font:600 10px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.13em; text-transform:uppercase; color:var(--mute);
+  margin:0 0 12px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
+  letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
 }
 .mb-col ol{ margin:0; padding:0; list-style:none }
-.mb-col li{ display:flex; align-items:baseline; gap:10px; padding:6px 0 }
-.mb-col li + li{ border-top:1px solid var(--rule-2) }
+.mb-col li{ display:flex; align-items:baseline; gap:12px; padding:8px 0 }
+.mb-col li + li{ border-top:1px solid var(--border) }
 .mb-col a{
-  flex:1 1 auto; min-width:0; text-decoration:none; color:var(--ink);
-  font:500 13px/1.3 'IBM Plex Mono',monospace; letter-spacing:.02em;
+  flex:1 1 auto; min-width:0; text-decoration:none; color:var(--text-primary);
+  font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); letter-spacing:normal;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   transition:color 160ms var(--ease);
 }
-.mb-col a:hover{ color:var(--gold) }
-.mb-col em{ font:600 12px/1 'IBM Plex Mono',monospace; font-style:normal; flex:0 0 auto }
-.mb-col em.up{ color:var(--sh-up) } .mb-col em.dn{ color:var(--sh-dn) }
+.mb-col a:hover{ color:var(--highlight-text) }
+.mb-col em{ font:500 var(--fs-small)/var(--lh-none) var(--font-sans); font-style:normal; flex:0 0 auto }
+.mb-col em.up{ color:var(--gain) } .mb-col em.dn{ color:var(--loss) }
 
 .mb-note{
-  margin:14px 0 0; text-align:center; font-size:13px; color:var(--mute);
+  margin:16px 0 0; text-align:center; font-size:var(--fs-small); color:var(--text-muted);
 }
-.mb-skel{ height:96px; border-radius:14px;
-  background:linear-gradient(90deg,var(--rule-2) 25%,var(--paper-2) 37%,var(--rule-2) 63%);
-  background-size:400% 100%; animation:mbSkel 1400ms ease-in-out infinite }
-@keyframes mbSkel{ from{ background-position:100% 0 } to{ background-position:0 0 } }
+.mb-skel{ height:96px; border-radius:var(--r-card);
+  background:var(--wash-strong); animation:mbSkel 1800ms ease-in-out infinite }
+@keyframes mbSkel{ 50%{ opacity:.5 } }
 
 /* ── 3 · The search box, promoted ────────────────────────────────────────── */
 
 body.sh-on .searchrow{ max-width:660px; margin-left:auto; margin-right:auto }
-body.sh-on .searchrow input{ font-size:16px }   /* 16px stops iOS zooming on focus */
+body.sh-on .searchrow input{ font-size:var(--fs-input) }   /* 16px stops iOS zooming on focus */
 
 /* ── 4 · Motion off ──────────────────────────────────────────────────────── */
 

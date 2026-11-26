@@ -157,7 +157,12 @@ function picture(){
       assert.equal(await page.evaluate(()=>document.documentElement.classList.contains('sh-wait')),false,url+': nothing was waiting');
       assert.equal(await page.evaluate(()=>getComputedStyle(document.getElementById('view-today')).display!=='none'),true,url+': still on Market');
       assert.deepEqual(twice(asked),[],url+': nothing is fetched twice');
-      assert.equal(await page.evaluate(()=>document.querySelectorAll('link[rel=preload]').length),0,url+': nothing later is asked for ahead of Market');
+      /* The three fonts the first screen is set in are preloaded on every
+         page (tokens.css): a ticker symbol that swapped face after the first
+         paint moved the tape by a pixel. Those are for Market itself.
+         Anything else preloaded would be a later file jumping the queue. */
+      assert.equal(await page.evaluate(()=>document.querySelectorAll('link[rel=preload]:not([as=font])').length),0,url+': nothing later is asked for ahead of Market');
+      assert.equal(await page.evaluate(()=>document.querySelectorAll('link[rel=preload][as=font]').length),3,url+': the three first-screen fonts are preloaded');
       assert.deepEqual(errors,[],url+': no script errors');
       await context.close();
     }

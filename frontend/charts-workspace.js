@@ -53,11 +53,16 @@
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
-  function tok(name, fb) {
-    var v = "";
-    try { v = getComputedStyle(document.documentElement).getPropertyValue(name).trim(); } catch (e) {}
-    return v || fb;
-  }
+  /* A colour is a theme token, read at the moment it is drawn (theme.js), so
+     the workspace is right in both themes and follows the toggle. A value
+     that starts with "--" anywhere in this file or in charts-math.js is a
+     token name; asColor() turns it into the colour it means now. */
+  var Th = window.AltahaTheme;
+  function tok(name) { return Th.color(name); }
+  function asColor(c) { return typeof c === "string" && c.indexOf("--") === 0 ? tok(c) : c; }
+  function alphaOf(c, a) { return Th.alpha(asColor(c), a); }
+  /* <input type="color"> takes six hex digits and nothing else. */
+  function hex6(c) { c = asColor(c); return /^#[0-9a-f]{6}$/i.test(c || "") ? c : tok("--text-muted"); }
   function ok(x) { return x != null && isFinite(x); }
   function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
   function fmt(n, d) {
@@ -308,12 +313,14 @@
   var EXTENDABLE = { trend: 1, ray: 1, xline: 1, infoline: 1, chan: 1, regchan: 1, fib: 1, fibext: 1 };
   var FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1, 1.272, 1.618, 2.618];
   var FIBEXT_LEVELS = [0, 0.382, 0.5, 0.618, 1, 1.272, 1.618, 2, 2.618];
-  var FIB_COLORS = ["#6E6E78", "#8E2F2A", "#C0692B", "#1F5D45", "#1E7B85", "#2E5E8E", "#6E6E78", "#2E5E8E", "#8E2F2A", "#6B4E9B", "#B0457A"];
-
-  var PALETTE = ["#B08D2E", "#8A6D1E", "#0A0A0B", "#33333A", "#6E6E78", "#FFFFFF",
-                 "#1F5D45", "#2E8B57", "#1E7B85", "#2E5E8E", "#4F7CC4", "#6B4E9B",
-                 "#8E2F2A", "#D04A3C", "#C0692B", "#E0A526", "#B0457A", "#D9BC6A"];
-  var CMP_COLORS = ["#2E5E8E", "#B0457A", "#1E7B85", "#C0692B"];
+  /* Token names, not colours: asColor() reads them when a level is drawn. */
+  var FIB_COLORS = ["--text-muted", "--chart-6", "--chart-1", "--chart-3", "--chart-2", "--chart-5",
+                    "--text-muted", "--chart-2", "--chart-6", "--chart-4", "--chart-1"];
+  /* What a drawing can be coloured: the chart series, gain and loss, and the
+     three inks. A drawing keeps the token, so it is right in both themes. */
+  var PALETTE = ["--chart-1", "--chart-2", "--chart-3", "--chart-4", "--chart-5", "--chart-6",
+                 "--gain", "--loss", "--warning", "--info", "--text-primary", "--text-secondary", "--text-muted"];
+  var CMP_COLORS = ["--chart-2", "--chart-1", "--chart-3", "--chart-6"];
 
   /* ── state ─────────────────────────────────────────────────────────────── */
 
@@ -451,34 +458,34 @@
 
   /* ── theme ─────────────────────────────────────────────────────────────── */
 
-  function upC() { return L.set.up || tok("--pass", "#1F5D45"); }
-  function dnC() { return L.set.down || tok("--fail", "#8E2F2A"); }
+  function upC() { return asColor(L.set.up) || tok("--gain"); }
+  function dnC() { return asColor(L.set.down) || tok("--loss"); }
 
   function theme(sub) {
-    var LW = window.LightweightCharts, grid = L.set.grid ? tok("--rule-2", "#EEEEF1") : "rgba(0,0,0,0)";
-    var tf = tfOf(L.tf);
+    var LW = window.LightweightCharts, grid = L.set.grid ? Th.alpha("--border", 0.5) : "transparent";
+    var tf = tfOf(L.tf), T = Th.chart();
     return {
       layout: {
-        background: { type: "solid", color: tok("--surface", "#ffffff") },
-        textColor: tok("--ink-2", "#33333A"),
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: 11
+        background: { type: "solid", color: tok("--surface") },
+        textColor: tok("--text-muted"),
+        fontFamily: T.fontSans, fontSize: T.axisSize
       },
       grid: { vertLines: { color: grid }, horzLines: { color: grid } },
       /* minimumWidth pins the axis gutter. Without it a pane whose values are
          0 to 100 draws a narrower scale than the price pane, the panes end at
          different x, and every bar sits a few pixels off the one above it. */
-      rightPriceScale: { borderColor: tok("--rule", "#E4E4E8"), minimumWidth: 76,
+      rightPriceScale: { borderColor: tok("--border"), minimumWidth: 76,
                          scaleMargins: sub ? { top: 0.1, bottom: 0.08 } : { top: 0.08, bottom: 0.2 } },
-      timeScale: { borderColor: tok("--rule", "#E4E4E8"), timeVisible: !!tf.intra, secondsVisible: false,
+      timeScale: { borderColor: tok("--border"), timeVisible: !!tf.intra, secondsVisible: false,
                    rightOffset: 10, barSpacing: 7, minBarSpacing: 0.5 },
       crosshair: {
         mode: L.set.cross ? LW.CrosshairMode.Magnet : LW.CrosshairMode.Normal,
-        vertLine: { color: tok("--mute", "#6E6E78"), width: 1, style: 2, labelBackgroundColor: tok("--ink", "#0A0A0B") },
-        horzLine: { color: tok("--mute", "#6E6E78"), width: 1, style: 2, labelBackgroundColor: tok("--ink", "#0A0A0B") }
+        vertLine: { color: tok("--text-muted"), width: 1, style: 2, labelBackgroundColor: tok("--accent") },
+        horzLine: { color: tok("--text-muted"), width: 1, style: 2, labelBackgroundColor: tok("--accent") }
       },
       watermark: {
         visible: !sub && !!L.set.wm && !!W.sym, text: W.sym ? W.sym + " · " + L.tf : "",
-        color: "rgba(110,110,120,.10)", fontSize: 52, fontFamily: "'IBM Plex Mono', monospace",
+        color: Th.alpha("--text-muted", 0.1), fontSize: T.displaySize, fontFamily: T.fontMono,
         horzAlign: "center", vertAlign: "center"
       },
       handleScroll: true, handleScale: true
@@ -632,9 +639,9 @@
   function newDrawing(type, pts) {
     var o = { id: uid(), type: type, pts: pts, color: W.color, width: W.width, style: "solid" };
     if (type === "fib" || type === "fibext") o.tv = 1;
-    if (type === "hilite") { o.color = "#D9BC6A"; o.width = 14; }
-    if (type === "arrowup") o.color = tok("--pass", "#1F5D45");
-    if (type === "arrowdown") o.color = tok("--fail", "#8E2F2A");
+    if (type === "hilite") { o.color = "--highlight"; o.width = 14; }
+    if (type === "arrowup") o.color = "--gain";
+    if (type === "arrowdown") o.color = "--loss";
     if (type === "text" || type === "callout") { o.fs = 14; o.text = ""; }
     if (type === "regchan") o.dev = 2;
     if (type === "vprofile") o.rowsN = 24;
@@ -719,7 +726,7 @@
           run.forEach(function (q, k) { if (k) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); });
           for (var k = run.length - 1; k >= 0; k--) ctx.lineTo(run[k][0], run[k][2]);
           ctx.closePath();
-          ctx.fillStyle = cloud ? (run.up ? tok("--pass", "#1F5D45") : tok("--fail", "#8E2F2A")) : col;
+          ctx.fillStyle = cloud ? (run.up ? tok("--gain") : tok("--loss")) : col;
           ctx.globalAlpha = cloud ? 0.12 : 0.07; ctx.fill(); ctx.globalAlpha = 1;
           run = [];
         }
@@ -792,11 +799,12 @@
     ctx.lineTo(b.x - s * Math.cos(ang + 0.42), b.y - s * Math.sin(ang + 0.42));
     ctx.closePath(); ctx.fill();
   }
-  var MONO = "500 11px 'IBM Plex Mono', monospace";
+  /* Labels on the drawing layer: the 11px label size, in Inter. */
+  function labelFont() { var T = Th.chart(); return "500 " + T.axisSize + "px " + T.fontSans; }
   /* A filled label. align: 0 left, 0.5 centre, 1 right of x. Recorded as a
      box so clicking the label selects its drawing. */
   function label(text, x, y, bg, fg, align, font) {
-    ctx.font = font || MONO;
+    ctx.font = font || labelFont();
     var lines = String(text).split("\n"), w = 0;
     lines.forEach(function (s) { w = Math.max(w, ctx.measureText(s).width); });
     w += 12;
@@ -811,7 +819,7 @@
     return { x: x0, y: y0, w: w, h: h };
   }
   function plainText(text, x, y, col, align, font) {
-    ctx.font = font || MONO; ctx.fillStyle = col;
+    ctx.font = font || labelFont(); ctx.fillStyle = col;
     var w = ctx.measureText(text).width, x0 = x - w * (align || 0);
     ctx.fillText(text, x0, y);
     HC.b.push([x0 - 2, y - 11, w + 4, 15]);
@@ -823,17 +831,18 @@
     ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
     ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
   }
-  function onWhite(col) {
-    /* Text on a filled label: white unless the colour is pale. */
-    var m = /^#?([0-9a-f]{6})$/i.exec(col || "");
-    if (!m) return "#fff";
+  function onWhite(c) {
+    /* Text on a filled label: the light ink unless the fill is pale. */
+    var T = Th.chart(), lightInk = T.theme === "dark" ? T.text : T.onAccent, darkInk = T.theme === "dark" ? T.onAccent : T.text;
+    var m = /^#?([0-9a-f]{6})$/i.exec(asColor(c) || "");
+    if (!m) return lightInk;
     var n = parseInt(m[1], 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
-    return (r * 0.299 + g * 0.587 + b * 0.114) > 170 ? "#0A0A0B" : "#fff";
+    return (r * 0.299 + g * 0.587 + b * 0.114) > 170 ? darkInk : lightInk;
   }
   function handles(list) {
     if (!list) return;
-    ctx.fillStyle = tok("--surface", "#fff");
-    ctx.strokeStyle = tok("--gold", "#666D79");
+    ctx.fillStyle = tok("--surface");
+    ctx.strokeStyle = tok("--highlight");
     ctx.lineWidth = 1.5; ctx.setLineDash([]);
     list.forEach(function (q) {
       if (q.x == null || q.y == null) return;
@@ -870,13 +879,13 @@
   }
   function ratioOn(a, b, r) {
     if (!a || !b || !ok(r)) return;
-    label(r.toFixed(3), (a.x + b.x) / 2, (a.y + b.y) / 2, tok("--surface", "#fff"), tok("--ink-2", "#33333A"), 0.5);
+    label(r.toFixed(3), (a.x + b.x) / 2, (a.y + b.y) / 2, tok("--surface"), tok("--text-secondary"), 0.5);
   }
 
   function shape(d, g, ghost) {
     var P = pix(d, g);
     if (!P.length || P[0].y == null) return;
-    var c = d.color || W.color, w = d.width || 2, sty = d.style || "solid";
+    var c = asColor(d.color || W.color), w = d.width || 2, sty = d.style || "solid";
     var fa = d.fill == null ? 1 : d.fill;          /* fill strength, 0 to 1 */
     var A = d.pts, typ = d.type, n = need(typ);
     stroke(c, w, sty);
@@ -909,7 +918,7 @@
             var dp = A[1].p - A[0].p, bars = Math.round(tToL(A[1].t) - tToL(A[0].t));
             txt = (dp >= 0 ? "+" : "") + fmt(dp) + " (" + pctS(A[0].p ? dp / A[0].p * 100 : 0) + ")\n" +
                   bars + " bars, " + span(A[1].t - A[0].t) + "\n" + deg.toFixed(1) + "°";
-            label(txt, b.x + 10, b.y + 26, tok("--ink", "#0A0A0B"), tok("--paper", "#fff"), 0);
+            label(txt, b.x + 10, b.y + 26, tok("--accent"), tok("--on-accent"), 0);
           }
         }
         if (d.text) plainText(d.text, (a.x + b.x) / 2, (a.y + b.y) / 2 - 7, c, 0.5, "500 12px 'Inter', system-ui, sans-serif");
@@ -1001,7 +1010,7 @@
         var L0 = eL3 ? 0 : xl, R0 = eR3 ? g.w : xr;
         var ys = lvls.map(function (lv) { return { lv: lv, p: base + unit * lv.v, y: Y(base + unit * lv.v) }; });
         ys.forEach(function (q, j) {
-          var lc = d.mono ? c : (q.lv.c || FIB_COLORS[j % FIB_COLORS.length]);
+          var lc = d.mono ? c : (q.lv.c || asColor(FIB_COLORS[j % FIB_COLORS.length]));
           if (j && ys[j - 1].y != null && q.y != null && fa) {
             var ga = ctx.globalAlpha;
             ctx.fillStyle = lc; ctx.globalAlpha = ga * 0.07 * fa;
@@ -1011,11 +1020,11 @@
         });
         ys.forEach(function (q, j) {
           if (q.y == null) return;
-          var lc = d.mono ? c : (q.lv.c || FIB_COLORS[j % FIB_COLORS.length]);
+          var lc = d.mono ? c : (q.lv.c || asColor(FIB_COLORS[j % FIB_COLORS.length]));
           stroke(lc, q.lv.v === 0 || q.lv.v === 1 ? w : Math.max(1, w - 1), sty);
           seg({ x: L0, y: q.y }, { x: R0, y: q.y });
           if (d.labels !== false) {
-            ctx.font = "500 11px 'IBM Plex Mono', monospace"; ctx.fillStyle = lc;
+            ctx.font = labelFont(); ctx.fillStyle = lc;
             ctx.fillText((typ === "fib" ? (q.lv.v * 100).toFixed(1).replace(/\.0$/, "") + "%" : q.lv.v.toString()) +
                          "  (" + fmt(q.p) + ")", xl + 4, q.y - 4);
           }
@@ -1035,7 +1044,7 @@
         seq.forEach(function (s, j) {
           var x = g.x(l0 + u * s);
           if (x < -10 || x > g.w + 10) return;
-          stroke(d.mono ? c : FIB_COLORS[j % FIB_COLORS.length], j < 2 ? w : 1, sty);
+          stroke(d.mono ? c : asColor(FIB_COLORS[j % FIB_COLORS.length]), j < 2 ? w : 1, sty);
           seg({ x: x, y: 0 }, { x: x, y: g.h });
           plainText(String(s), x + 3, 14, c, 0);
         });
@@ -1060,7 +1069,7 @@
           });
         }
         rays.forEach(function (r, j) {
-          var lc = d.mono ? c : FIB_COLORS[j % FIB_COLORS.length];
+          var lc = d.mono ? c : asColor(FIB_COLORS[j % FIB_COLORS.length]);
           var e = extend(a, r, false, true);
           stroke(lc, r.main ? w : 1, sty);
           seg(a, e[1]);
@@ -1075,7 +1084,7 @@
         var gl = [0, 0.25, 0.382, 0.5, 0.618, 0.75, 1], bx = b.x - a.x, by = b.y - a.y;
         fillRect(a.x, a.y, bx, by, c, 0.05 * fa);
         gl.forEach(function (v, j) {
-          stroke(d.mono ? c : FIB_COLORS[j % FIB_COLORS.length], v === 0 || v === 1 ? w : 1, v === 0 || v === 1 ? sty : "dash");
+          stroke(d.mono ? c : asColor(FIB_COLORS[j % FIB_COLORS.length]), v === 0 || v === 1 ? w : 1, v === 0 || v === 1 ? sty : "dash");
           seg({ x: a.x + bx * v, y: a.y }, { x: a.x + bx * v, y: b.y });
           seg({ x: a.x, y: a.y + by * v }, { x: b.x, y: a.y + by * v });
           if (d.labels !== false) {
@@ -1125,10 +1134,10 @@
         if (yE == null || yS == null || yT == null) return;
         var xL = Math.min(a.x, b.x), xR = Math.max(a.x, b.x);
         if (xR - xL < 40) xR = xL + 90;
-        var gp = tok("--pass", "#1F5D45"), bd = tok("--fail", "#8E2F2A");
+        var gp = tok("--gain"), bd = tok("--loss");
         fillRect(xL, yE, xR - xL, yS - yE, bd, 0.16);
         fillRect(xL, yE, xR - xL, yT - yE, gp, 0.16);
-        stroke(tok("--ink-2", "#33333A"), 1.2, "solid");
+        stroke(tok("--text-secondary"), 1.2, "solid");
         seg({ x: xL, y: yE }, { x: xR, y: yE });
         var risk = Math.abs(entry - stop), rew = Math.abs(tgt - entry), longSide = tgt >= entry;
         var tl = "Target " + fmt(tgt) + "  " + pctS(entry ? (tgt - entry) / entry * 100 : 0) + "  " + (risk ? (rew / risk).toFixed(2) : "–") + "R";
@@ -1145,12 +1154,12 @@
           mid2 += "  Now " + (pnl >= 0 ? "+" : "") + (pnl / risk).toFixed(2) + "R";
           var yc = Y(cur);
           if (yc != null && Math.min(yS, yT) <= yc && yc <= Math.max(yS, yT)) {
-            stroke(tok("--ink-2", "#33333A"), 1, "dot"); seg({ x: xL, y: yc }, { x: xR, y: yc });
+            stroke(tok("--text-secondary"), 1, "dot"); seg({ x: xL, y: yc }, { x: xR, y: yc });
           }
         }
-        label(tl, xL + 4, yT + (yT > yE ? 12 : -12), gp, "#fff", 0);
-        label(sl, xL + 4, yS + (yS > yE ? 12 : -12), bd, "#fff", 0);
-        label(mid2, xL + 4, yE, tok("--ink", "#0A0A0B"), tok("--paper", "#fff"), 0);
+        label(tl, xL + 4, yT + (yT > yE ? 12 : -12), gp, tok("--on-accent"), 0);
+        label(sl, xL + 4, yS + (yS > yE ? 12 : -12), bd, tok("--on-accent"), 0);
+        label(mid2, xL + 4, yE, tok("--accent"), tok("--on-accent"), 0);
         HC.h = [{ x: a.x, y: yE, i: 0 }, { x: b.x, y: yS, i: 1 }, { x: b.x, y: yT, i: 2 }];
         break;
       }
@@ -1158,14 +1167,14 @@
         if (!b) return;
         var e1 = A[0].p, f1 = A[1].p, pct1 = e1 ? (f1 - e1) / e1 * 100 : 0;
         var bars2 = Math.round(tToL(A[1].t) - tToL(A[0].t)), upd = f1 >= e1;
-        var kc = typ === "drange" ? (d.color || c) : (upd ? tok("--pass", "#1F5D45") : tok("--fail", "#8E2F2A"));
+        var kc = typ === "drange" ? (asColor(d.color) || c) : (upd ? tok("--gain") : tok("--loss"));
         if (typ === "prange") {
           var xa = Math.min(a.x, b.x), xb = Math.max(a.x, b.x); if (xb - xa < 30) xb = xa + 60;
           fillRect(xa, a.y, xb - xa, b.y - a.y, kc, 0.12);
           stroke(kc, 1.2, "solid");
           seg({ x: xa, y: a.y }, { x: xb, y: a.y }); seg({ x: xa, y: b.y }, { x: xb, y: b.y });
           var cx = (xa + xb) / 2; seg({ x: cx, y: a.y }, { x: cx, y: b.y }); arrowHead({ x: cx, y: a.y }, { x: cx, y: b.y }, kc, 1);
-          label((f1 - e1 >= 0 ? "+" : "") + fmt(f1 - e1) + "  (" + pctS(pct1) + ")", cx, Math.max(a.y, b.y) + 14, kc, "#fff", 0.5);
+          label((f1 - e1 >= 0 ? "+" : "") + fmt(f1 - e1) + "  (" + pctS(pct1) + ")", cx, Math.max(a.y, b.y) + 14, kc, onWhite(kc), 0.5);
         } else if (typ === "drange") {
           var ya = Math.min(a.y, b.y), yb = Math.max(a.y, b.y); if (yb - ya < 30) yb = ya + 40;
           fillRect(a.x, ya, b.x - a.x, yb - ya, kc, 0.1);
@@ -1179,7 +1188,7 @@
           fillRect(a.x, a.y, b.x - a.x, b.y - a.y, kc, 0.12);
           stroke(kc, 1.5, "dash"); seg(a, b); arrowHead(a, b, kc, 1);
           label((pct1 >= 0 ? "+" : "") + pct1.toFixed(2) + "%   " + fmt(f1 - e1) + "\n" + Math.abs(bars2) + " bars, " + span(A[1].t - A[0].t),
-                (a.x + b.x) / 2, Math.min(a.y, b.y) - 22, kc, "#fff", 0.5);
+                (a.x + b.x) / 2, Math.min(a.y, b.y) - 22, kc, onWhite(kc), 0.5);
         }
         HC.h = [a, b];
         break;
@@ -1205,7 +1214,7 @@
         if (!vp) { seg({ x: xa2, y: a.y }, { x: xb2, y: a.y }); HC.h = [a, b]; break; }
         var maxW = Math.max(40, (xb2 - xa2) * 0.6);
         var yt = Y(vp.hi), yb2 = Y(vp.lo);
-        stroke(tok("--rule", "#E4E4E8"), 1, "solid");
+        stroke(tok("--border"), 1, "solid");
         fillRect(xa2, yt, xb2 - xa2, yb2 - yt, c, 0.03);
         /* Value area: the 70% of volume around the busiest row. */
         var tot = vp.total, acc = vp.up[vp.poc] + vp.dn[vp.poc], lo2 = vp.poc, hi2 = vp.poc;
@@ -1327,20 +1336,20 @@
     var tags = [];
     W.drawings.forEach(function (d) {
       if (d.hidden || !d.pts.length) return;
-      if (d.type === "hline" || d.type === "hray" || d.type === "cross") tags.push({ p: d.pts[0].p, c: d.color || W.color });
+      if (d.type === "hline" || d.type === "hray" || d.type === "cross") tags.push({ p: d.pts[0].p, c: asColor(d.color || W.color) });
     });
     var times = [];
     if (W.sel && !W.sel.hidden) {
       var s = W.sel;
       if (s.type !== "brush" && s.type !== "hilite") {
         s.pts.forEach(function (q) {
-          if (s.type !== "vline") tags.push({ p: q.p, c: tok("--ink", "#0A0A0B") });
+          if (s.type !== "vline") tags.push({ p: q.p, c: tok("--accent") });
           if (s.type !== "hline") times.push(q.t);
         });
       }
     }
     W.drawings.forEach(function (d) { if (!d.hidden && (d.type === "vline" || d.type === "cross") && d !== W.sel) times.push(d.pts[0].t); });
-    ctx.font = MONO; ctx.setLineDash([]);
+    ctx.font = labelFont(); ctx.setLineDash([]);
     tags.forEach(function (t) {
       var y = Y(t.p); if (y == null || y < 0 || y > g.h) return;
       ctx.fillStyle = t.c; ctx.fillRect(g.w + 1, y - 9, g.W - g.w - 1, 18);
@@ -1350,8 +1359,8 @@
     times.forEach(function (t) {
       var x = X(g, t); if (x < 0 || x > g.w) return;
       var s2 = fmtT(t, intra), tw = ctx.measureText(s2).width + 12;
-      ctx.fillStyle = tok("--ink", "#0A0A0B"); ctx.fillRect(x - tw / 2, g.h - 18, tw, 18);
-      ctx.fillStyle = tok("--paper", "#fff"); ctx.fillText(s2, x - tw / 2 + 6, g.h - 5);
+      ctx.fillStyle = tok("--accent"); ctx.fillRect(x - tw / 2, g.h - 18, tw, 18);
+      ctx.fillStyle = tok("--on-accent"); ctx.fillText(s2, x - tw / 2 + 6, g.h - 5);
     });
   }
 
@@ -1723,7 +1732,7 @@
   function inspector() {
     var d = W.sel;
     if (!d) { inspEl.classList.remove("on"); inspEl.innerHTML = ""; return; }
-    var c = d.color || W.color;
+    var c = asColor(d.color || W.color);
     var h = '<span class="cw-i-name">' + esc((T[d.type] || {}).lab || d.type) + "</span>" +
       '<button type="button" data-x="color" title="Colour" aria-label="Colour"><i class="cw-sw-dot" style="background:' + esc(c) + '"></i></button>';
     if (d.type !== "arrowup" && d.type !== "arrowdown" && d.type !== "flag" && d.type !== "text" && d.type !== "pricelabel") {
@@ -1768,7 +1777,7 @@
     ta.placeholder = "Type, then Enter";
     ta.style.left = clamp(x - 4, 4, box.clientWidth - 220) + "px";
     ta.style.top = clamp(y - 22, 4, box.clientHeight - 60) + "px";
-    ta.style.color = d.color || W.color;
+    ta.style.color = asColor(d.color || W.color);
     box.appendChild(ta);
     /* Focused at once, so the first keys typed land in it rather than on the
        chart as shortcuts; and again after the click that placed it, whose
@@ -1847,13 +1856,13 @@
     PALETTE.forEach(function (c) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "cw-sw" + (c.toLowerCase() === String(cur).toLowerCase() ? " on" : "");
-      b.style.background = c; b.setAttribute("aria-label", "Colour " + c);
+      b.style.background = asColor(c); b.setAttribute("aria-label", "Colour " + c.replace(/^--/, "").replace(/-/g, " "));
       b.addEventListener("click", function (e) { e.stopPropagation(); closePops(); fn(c); });
       wrap.appendChild(b);
     });
     var lab = document.createElement("label");
     lab.className = "cw-custom";
-    lab.innerHTML = '<input type="color" value="' + (/^#[0-9a-f]{6}$/i.test(cur) ? cur : "#666d79") + '"><span>Custom</span>';
+    lab.innerHTML = '<input type="color" value="' + hex6(cur) + '"><span>Custom</span>';
     lab.querySelector("input").addEventListener("change", function (e) { closePops(); fn(e.target.value); });
     wrap.appendChild(lab);
     return pop(anchor, wrap, "cw-pop-colors");
@@ -1896,7 +1905,7 @@
   function drawingSettings(d) {
     var before = JSON.stringify(W.drawings), c = d.color || W.color;
     var h = '<div class="cw-form">';
-    h += row("Colour", '<input type="color" data-k="color" value="' + (/^#[0-9a-f]{6}$/i.test(c) ? c : "#666d79") + '">');
+    h += row("Colour", '<input type="color" data-k="color" value="' + hex6(c) + '">');
     h += row("Thickness", '<select data-k="width">' + [1, 2, 3, 4, 6, 8, 14].map(function (v) { return "<option" + ((d.width || 2) === v ? " selected" : "") + ">" + v + "</option>"; }).join("") + "</select>");
     h += row("Line", '<select data-k="style">' + [["solid", "Solid"], ["dash", "Dashed"], ["dot", "Dotted"]].map(function (v) { return '<option value="' + v[0] + '"' + ((d.style || "solid") === v[0] ? " selected" : "") + ">" + v[1] + "</option>"; }).join("") + "</select>");
     if (FILLED[d.type] || d.type === "path") h += row("Fill", '<input type="range" min="0" max="2" step="0.1" data-k="fill" value="' + (d.fill == null ? 1 : d.fill) + '">');
@@ -2007,7 +2016,7 @@
 
   function addAlert(p, t) {
     var o = newDrawing("hline", [{ t: t || (W.times[W.times.length - 1] || 0), p: p }]);
-    o.alert = true; o.color = "#C0692B"; o.style = "dash"; o.width = 1;
+    o.alert = true; o.color = "--warning"; o.style = "dash"; o.width = 1;
     commit(o);
     toast("Alert set at " + fmt(p) + ". This tab will tell you when price crosses it.");
     askNotify();
@@ -2060,7 +2069,7 @@
       .map(function (q) { return s.p[q.k]; });
     return s.def.short + (vals.length ? " " + vals.join(" ") : "");
   }
-  function colOf(s, o) { return (s.col && s.col[o.k]) || o.c; }
+  function colOf(s, o) { return asColor((s.col && s.col[o.k]) || o.c); }
 
   function addStudy(id) {
     var def = M.indicator(id); if (!def) return;
@@ -2124,7 +2133,7 @@
       else h += row(q.l, '<input type="number" data-p="' + q.k + '" min="' + q.min + '" max="' + q.max + '" step="' + (q.step || 1) + '" value="' + s.p[q.k] + '">');
     });
     def.out.forEach(function (o) {
-      h += row(o.l, '<input type="color" data-c="' + o.k + '" value="' + (/^#[0-9a-f]{6}$/i.test(colOf(s, o)) ? colOf(s, o) : "#666d79") + '">');
+      h += row(o.l, '<input type="color" data-c="' + o.k + '" value="' + hex6(colOf(s, o)) + '">');
     });
     if (def.note) h += "<p class='cw-p'>" + esc(def.note) + "</p>";
     h += "</div>";
@@ -2195,7 +2204,7 @@
       if (a > area * 1.01) { area = a; list = [c]; } else if (a >= area * 0.99) list.push(c);
     });
     if (!list.length) return 0;
-    var bg = tok("--surface", "#ffffff"), m = /^#?([0-9a-f]{6})$/i.exec(bg), n = 0;
+    var bg = tok("--surface"), m = /^#?([0-9a-f]{6})$/i.exec(bg), n = 0;
     var br = m ? parseInt(m[1], 16) >> 16 : 255, bgc = m ? (parseInt(m[1], 16) >> 8) & 255 : 255, bb = m ? parseInt(m[1], 16) & 255 : 255;
     list.forEach(function (c) {
       var x = c.getContext("2d"); if (!x) { n++; return; }
@@ -2390,7 +2399,7 @@
     if (s.def.prec) base.priceFormat = { type: "price", precision: s.def.prec, minMove: Math.pow(10, -s.def.prec) };
     if (s.def.fmt === "volume") base.priceFormat = { type: "volume" };
     if (o.s === "hist") return [addSeries(chart, "Histogram", Object.assign({ priceLineVisible: false, lastValueVisible: false, visible: !s.hidden, color: colOf(s, o) }, base), bag)];
-    if (o.by) return [addSeries(chart, "Line", lineOpts(o, s, base), bag), addSeries(chart, "Line", lineOpts(o, s, Object.assign({ color: o.c2 }, base)), bag)];
+    if (o.by) return [addSeries(chart, "Line", lineOpts(o, s, base), bag), addSeries(chart, "Line", lineOpts(o, s, Object.assign({ color: asColor(o.c2) }, base)), bag)];
     var ex = Object.assign({}, base);
     if (o.s === "dots") { ex.lineVisible = false; ex.pointMarkersVisible = true; }
     if (o.s === "step") ex.lineType = 1;
@@ -2406,9 +2415,9 @@
       if (!ok(v)) { out.push({ time: t }); if (o.by) out2.push({ time: t }); prev = null; continue; }
       if (o.s === "hist") {
         var col;
-        if (s.id === "vol") { var r = W.disp[i]; col = r && r.close >= r.open ? up : dn; col = hexA(col, 0.38); }
-        else if (o.rising) col = prev == null || v >= prev ? colOf(s, o) : (o.c2 || dn);
-        else col = v >= 0 ? (s.col[o.k] || o.c) : (o.c2 || dn);
+        if (s.id === "vol") { var r = W.disp[i]; col = r && r.close >= r.open ? up : dn; col = alphaOf(col, 0.38); }
+        else if (o.rising) col = prev == null || v >= prev ? colOf(s, o) : (asColor(o.c2) || dn);
+        else col = v >= 0 ? colOf(s, o) : (asColor(o.c2) || dn);
         out.push({ time: t, value: v, color: col });
       } else if (o.by) {
         var dir = s.data[o.by][i];
@@ -2419,27 +2428,22 @@
     }
     return idx === 1 ? out2 : out;
   }
-  function hexA(c, a) {
-    var m = /^#([0-9a-f]{6})$/i.exec(c || "");
-    if (!m) return c;
-    var n = parseInt(m[1], 16);
-    return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
-  }
-
+  /* Lines are 1.5px. An area is its line colour at 15%, flat: both ends of
+     the fill are the same colour, so there is no gradient. */
   function mainOpts() {
-    var up = upC(), dn = dnC(), ink = tok("--ink", "#0A0A0B"), gold = tok("--gold", "#666D79");
+    var up = upC(), dn = dnC(), T = Th.chart(), ink = T.text, line = T.series[0], lw = T.lineWidth;
     var base = { priceLineVisible: !!L.set.last, lastValueVisible: true, priceLineStyle: 2 };
     switch (L.type) {
-      case "hollow": return ["Candlestick", Object.assign(base, { upColor: "rgba(0,0,0,0)", downColor: dn, borderUpColor: up, borderDownColor: dn, wickUpColor: up, wickDownColor: dn })];
+      case "hollow": return ["Candlestick", Object.assign(base, { upColor: "transparent", downColor: dn, borderUpColor: up, borderDownColor: dn, wickUpColor: up, wickDownColor: dn })];
       case "bars": return ["Bar", Object.assign(base, { upColor: up, downColor: dn, thinBars: false })];
-      case "line": return ["Line", Object.assign(base, { color: ink, lineWidth: 2 })];
-      case "step": return ["Line", Object.assign(base, { color: ink, lineWidth: 2, lineType: 1 })];
-      case "area": return ["Area", Object.assign(base, { lineColor: gold, topColor: hexA(gold.charAt(0) === "#" ? gold : "#666D79", 0.3), bottomColor: hexA(gold.charAt(0) === "#" ? gold : "#666D79", 0.02), lineWidth: 2 })];
+      case "line": return ["Line", Object.assign(base, { color: ink, lineWidth: lw })];
+      case "step": return ["Line", Object.assign(base, { color: ink, lineWidth: lw, lineType: 1 })];
+      case "area": return ["Area", Object.assign(base, { lineColor: line, topColor: T.fills[0], bottomColor: T.fills[0], lineWidth: lw })];
       case "baseline": {
         var bv = W.disp.length ? W.disp[Math.max(0, W.disp.length - 120)].close : 0;
+        var upFill = alphaOf(up, T.fillOpacity), dnFill = alphaOf(dn, T.fillOpacity);
         return ["Baseline", Object.assign(base, { baseValue: { type: "price", price: bv }, topLineColor: up, bottomLineColor: dn,
-          topFillColor1: hexA(up.charAt(0) === "#" ? up : "#1F5D45", 0.25), topFillColor2: hexA(up.charAt(0) === "#" ? up : "#1F5D45", 0.03),
-          bottomFillColor1: hexA(dn.charAt(0) === "#" ? dn : "#8E2F2A", 0.03), bottomFillColor2: hexA(dn.charAt(0) === "#" ? dn : "#8E2F2A", 0.25), lineWidth: 2 })];
+          topFillColor1: upFill, topFillColor2: upFill, bottomFillColor1: dnFill, bottomFillColor2: dnFill, lineWidth: lw })];
       }
       default: return ["Candlestick", Object.assign(base, { upColor: up, downColor: dn, borderUpColor: up, borderDownColor: dn, wickUpColor: up, wickDownColor: dn })];
     }
@@ -2533,7 +2537,7 @@
       });
       var first = s.ser[s.def.out[0].k][0];
       (s.def.levels || []).forEach(function (lv) {
-        try { first.createPriceLine({ price: lv, color: tok("--mute", "#6E6E78"), lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: "" }); } catch (e) {}
+        try { first.createPriceLine({ price: lv, color: tok("--text-muted"), lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: "" }); } catch (e) {}
       });
       p.chart.applyOptions({ timeScale: { visible: k === W.panes.length - 1, timeVisible: !!tfOf(L.tf).intra } });
     });
@@ -2559,7 +2563,7 @@
     W.levelLines = [];
     var lv = W.meta && W.meta.levels;
     if (!lv || !W.main || !L.set.levels || W.cmp.length) return;
-    var sup = tok("--pass", "#1f5d45"), res = tok("--fail", "#8e2f2a");
+    var sup = tok("--gain"), res = tok("--loss");
     function add(z, colour, tag) {
       if (!z || z.level == null) return;
       var s = clamp(z.strength == null ? 50 : z.strength, 0, 100);
@@ -2656,11 +2660,13 @@
     if (i == null || i < 0 || i >= W.disp.length) i = W.disp.length - 1;
     W.xIdx = i;
     var c = W.disp[i], pv = i ? W.disp[i - 1].close : c.open;
-    var chg = pv ? (c.close - pv) / pv * 100 : 0, col = c.close >= c.open ? "var(--pass)" : "var(--fail)";
+    /* The close is ink. The change is green or red by its own sign, and
+       says so with an arrow as well as a colour. */
+    var chg = pv ? (c.close - pv) / pv * 100 : 0, rose = c.close - pv >= 0, col = rose ? "var(--gain)" : "var(--loss)";
     var el = legEl.querySelector('[data-v="ohlc"]');
     if (el) el.innerHTML = "<span class='k'>O</span>" + fmt(c.open) + " <span class='k'>H</span>" + fmt(c.high) +
-      " <span class='k'>L</span>" + fmt(c.low) + " <span class='k'>C</span><b style='color:" + col + "'>" + fmt(c.close) + "</b> " +
-      "<span style='color:" + col + "'>" + (c.close - pv >= 0 ? "+" : "") + fmt(c.close - pv) + " (" + pctS(chg) + ")</span>" +
+      " <span class='k'>L</span>" + fmt(c.low) + " <span class='k'>C</span><b>" + fmt(c.close) + "</b> " +
+      "<span style='color:" + col + "'>" + (rose ? "\u25B2 +" : "\u25BC ") + fmt(c.close - pv) + " (" + pctS(chg) + ")</span>" +
       (W.rows[i] && W.rows[i].volume ? " <span class='k'>Vol</span>" + fmtV(W.rows[i].volume) : "");
     W.st.forEach(function (s) {
       var holder = (s.def.pane ? subEl : legEl).querySelector('[data-v="' + s.uid + '"]');
@@ -2952,7 +2958,7 @@
     fetchChart(sym, tfOf(L.tf).fetch).then(function (d) {
       var rows = rowsFrom(d);
       if (!rows.length) { toast("No candles for " + sym + "."); return; }
-      W.cmp.push({ sym: sym, raw: rows, color: CMP_COLORS[W.cmp.length % CMP_COLORS.length] });
+      W.cmp.push({ sym: sym, raw: rows, color: asColor(CMP_COLORS[W.cmp.length % CMP_COLORS.length]) });
       rebuild(true, true);
       toast(sym + " added. The scale is now in percent from the left edge of the screen.");
     }).catch(function (e) { toast("Could not load " + sym + ": " + (e.message || "unavailable")); });
@@ -3110,19 +3116,19 @@
     var out = document.createElement("canvas");
     out.width = base.width; out.height = total;
     var c = out.getContext("2d");
-    c.fillStyle = tok("--surface", "#fff"); c.fillRect(0, 0, out.width, out.height);
+    c.fillStyle = tok("--surface"); c.fillRect(0, 0, out.width, out.height);
     c.drawImage(base, 0, head);
     /* Every overlay on the price chart, in the order it is stacked. */
     var ovs = box.querySelectorAll("canvas.cw-patov, #cw-cv");
     ovs.forEach(function (ov) { try { c.drawImage(ov, 0, 0, ov.width, ov.height, 0, head, base.width, base.height); } catch (e) {} });
     var y = head + base.height;
     shots.forEach(function (s) { c.drawImage(s, 0, y); y += s.height; });
-    c.fillStyle = tok("--ink", "#0A0A0B");
-    c.font = "600 " + Math.round(13 * sc) + "px 'IBM Plex Mono', monospace";
+    c.fillStyle = tok("--text-primary");
+    c.font = "600 " + Math.round(13 * sc) + "px " + Th.font("--font-sans");   // theme-ok: pixels of the exported image, scaled by its density
     var last = W.disp[W.disp.length - 1];
     c.fillText(W.sym + "  " + L.tf + "  " + (last ? fmtT(last.time, !!tfOf(L.tf).intra) + "  C " + fmt(last.close) : ""), 10 * sc, 20 * sc);
-    c.font = "500 " + Math.round(11 * sc) + "px 'IBM Plex Mono', monospace";
-    c.fillStyle = "rgba(0,0,0,.42)";
+    c.font = "500 " + Math.round(11 * sc) + "px " + Th.font("--font-sans");   // theme-ok: pixels of the exported image, scaled by its density
+    c.fillStyle = tok("--text-muted");
     var wm = "altaha screener";
     c.fillText(wm, out.width - c.measureText(wm).width - 10 * sc, 20 * sc);
     return out;
@@ -3153,8 +3159,8 @@
   function chartSettings() {
     var s = L.set;
     var h = '<div class="cw-form">' +
-      row("Rising candles", '<input type="color" data-s="up" value="' + (/^#[0-9a-f]{6}$/i.test(upC()) ? upC() : "#1f5d45") + '">') +
-      row("Falling candles", '<input type="color" data-s="down" value="' + (/^#[0-9a-f]{6}$/i.test(dnC()) ? dnC() : "#8e2f2a") + '">') +
+      row("Rising candles", '<input type="color" data-s="up" value="' + hex6(upC()) + '">') +
+      row("Falling candles", '<input type="color" data-s="down" value="' + hex6(dnC()) + '">') +
       row("Grid lines", '<input type="checkbox" data-s="grid"' + (s.grid ? " checked" : "") + ">") +
       row("Crosshair snaps to the close", '<input type="checkbox" data-s="cross"' + (s.cross ? " checked" : "") + ">") +
       row("Last price line", '<input type="checkbox" data-s="last"' + (s.last ? " checked" : "") + ">") +
@@ -3212,7 +3218,7 @@
     inp.addEventListener("keydown", function (e) { e.stopPropagation(); if (e.key === "Enter") go(); });
   }
   function flash(o) {
-    o.style = "dash"; o.width = 1; o.color = tok("--gold", "#666D79");
+    o.style = "dash"; o.width = 1; o.color = "--highlight";
     W.drawings.push(o); render();
     setTimeout(function () { W.drawings = W.drawings.filter(function (x) { return x !== o; }); render(); }, 1600);
   }

@@ -1,4 +1,4 @@
-/* Planets visualise progress and open real checkpoint snapshots. */
+/* The scan card: progress, checkpoint discoveries and the week's five sessions. */
 (function () {
   'use strict';
   function estimateRemaining(samples, total) {
@@ -39,15 +39,6 @@
     hud.appendChild(node('strong','su-voyage-place','Quality & profitability'));
     hud.appendChild(node('span','su-voyage-note','The picks above are made from this scan'));
     scene.appendChild(hud);
-    // The credit for the planet maps. It is shown only while those maps are
-    // on screen (universe-voyage.js marks the host su-textured when its
-    // renderer exists); without them there is nothing to credit. A div,
-    // because data-nosnippet is honoured on div, span and section only, and
-    // this line is not what the page is about.
-    var credit=node('div','su-texture-credit');credit.setAttribute('data-nosnippet','');
-    var creditLink=node('a','','Planet maps: Solar System Scope · CC BY 4.0');
-    creditLink.href='https://www.solarsystemscope.com/textures/';creditLink.target='_blank';creditLink.rel='noopener noreferrer';
-    credit.appendChild(creditLink);host.appendChild(credit);
     var checkpoints=node('div','su-checkpoints');
     checkpoints.setAttribute('aria-label','This week, Monday to Friday');
     scene.querySelectorAll('.su-planet').forEach(function(el){checkpoints.appendChild(el);}); scene.appendChild(checkpoints);
@@ -138,7 +129,8 @@
   function fmt(v, dp) { return Number(v).toLocaleString('en-IN', {maximumFractionDigits: dp == null ? 0 : dp}); }
   // A rising VIX is fear rising, so its colours are inverted.
   function pctSpan(v, invert) { var good = invert ? v < 0 : v > 0, bad = invert ? v > 0 : v < 0;
-    return v == null ? '<em>—</em>' : '<em class="' + (good ? 'up' : bad ? 'dn' : '') + '">' + (v > 0 ? '+' : '') + v.toFixed(2) + '%</em>'; }
+    // The arrow follows the sign of the number; the colour follows what it means.
+    return v == null ? '<em>—</em>' : '<em class="' + (good ? 'up' : bad ? 'dn' : '') + '">' + (v > 0 ? '▲ +' : v < 0 ? '▼ ' : '') + v.toFixed(2) + '%</em>'; }
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function dayBody(s) {
     var idx = s.indices || {}, f = s.flows;
@@ -150,7 +142,7 @@
       flows = [['FII / FPI', f.fii], ['DII', f.dii]].map(function (r) {
         var n = r[1].net, w = Math.round(Math.abs(n) / max * 50);
         return '<div class="su-flow"><b>' + r[0] + '</b><span class="su-flow-bar"><i class="' + (n >= 0 ? 'buy' : 'sell') + '" style="--w:' + w + '%"></i></span>' +
-          '<em class="' + (n >= 0 ? 'up' : 'dn') + '">' + (n >= 0 ? '+' : '−') + '₹' + fmt(Math.abs(n)) + ' cr</em></div>'; }).join('');
+          '<em class="' + (n >= 0 ? 'up' : 'dn') + '">' + (n >= 0 ? '▲ +' : '▼ −') + '₹' + fmt(Math.abs(n)) + ' cr</em></div>'; }).join('');
     } else {
       flows = '<p class="su-flow-none">FII/DII flows weren’t recorded for this session. NSE publishes only the latest day, so the week fills in as each session is captured.</p>';
     }

@@ -5,7 +5,7 @@
 
    Why not SVG. The obvious approach is to build an <svg>, load it into an
    <img>, and drawImage it. It silently loses every custom font: an SVG loaded
-   through an img tag cannot reach the page's fonts, so Instrument Serif comes
+   through an img tag cannot reach the page's fonts, so the display face comes
    out as Times and the whole identity evaporates. There is no error. You just
    get an ugly card.
 
@@ -28,24 +28,52 @@
     story:    { w: 1080, h: 1920, label: 'Story' }
   };
 
-  /* Ledger palette. Hard-coded rather than read from CSS variables: an
-     exported PNG must look the same whoever generates it, and must not flip
-     when the site is in dark mode. */
-  var LIGHT = {
-    paper: '#F8F9FA', ink: '#101113', mute: '#5A5A64',
-    gold: '#2E3238', goldLine: '#666D79', rule: 'rgba(110,111,113,0.28)'
-  };
-  var DARK = {
-    paper: '#0D0E10', ink: '#F1F2F5', mute: '#8A919F',
-    gold: '#7A838F', goldLine: '#666D79', rule: 'rgba(189,190,193,0.22)'
-  };
+  /* The card's palette is the brand's, read from tokens.css when the card is
+     drawn. A card has its own Light / Dark switch, so it asks for the tokens
+     of the theme it was told to use, whichever theme the site is in: an
+     exported PNG must not flip because the person exporting it reads at night. */
+  var ROLES = { paper: '--bg', ink: '--text-primary', mute: '--text-muted',
+                gold: '--highlight-text', goldLine: '--highlight', rule: '--border' };
+  function themeTokens(theme) {
+    var out = {};
+    try {
+      [].forEach.call(document.styleSheets, function (sheet) {
+        var rules;
+        try { rules = sheet.cssRules; } catch (e) { return; }
+        [].forEach.call(rules || [], function (rule) {
+          var sel = String(rule.selectorText || '').replace(/['"\s]/g, '');
+          if (sel !== ':root' && !(theme === 'dark' && sel === ':root[data-theme=dark]')) return;
+          for (var i = 0; i < rule.style.length; i++) {
+            var name = rule.style[i];
+            if (name.indexOf('--') === 0) out[name] = rule.style.getPropertyValue(name).trim();
+          }
+        });
+      });
+    } catch (e) {}
+    return out;
+  }
+  function palette(theme) {
+    var tokens = themeTokens(theme === 'dark' ? 'dark' : 'light');
+    var site = global.AltahaTheme, P = {};
+    Object.keys(ROLES).forEach(function (role) {
+      P[role] = tokens[ROLES[role]] || (site ? site.color(ROLES[role]) : '');
+    });
+    return P;
+  }
 
-  var SERIF = '"Instrument Serif", Georgia, serif';
-  var MONO  = '"IBM Plex Mono", ui-monospace, monospace';
-  var SANS  = '"Inter", system-ui, sans-serif';
+  /* Fraunces for the headline and the figures, Inter for everything else,
+     both named by their tokens. */
+  var DISPLAY = 'serif', SANS = 'sans-serif';
+  function faces() {
+    var site = global.AltahaTheme;
+    if (!site) return;
+    DISPLAY = site.font('--font-display');
+    SANS = site.font('--font-sans');
+  }
 
+  /* Sizes below are pixels of the exported image, 1080 across. */
   function font(size, family, weight) {
-    return (weight ? weight + ' ' : '') + Math.round(size) + 'px ' + family;
+    return (weight ? weight + ' ' : '') + Math.round(size) + 'px ' + family; // theme-ok: canvas pixels of a fixed-size export
   }
 
   /* ---- text measurement and wrapping ---------------------------------- */
@@ -109,7 +137,7 @@
   /* ---- chrome --------------------------------------------------------- */
 
   function drawEyebrow(ctx, parts, x, y, P, size) {
-    ctx.font = font(size, MONO, '500');
+    ctx.font = font(size, SANS, '500');
     ctx.textBaseline = 'alphabetic';
     var cx = x;
     for (var i = 0; i < parts.length; i++) {
@@ -137,9 +165,8 @@
     ctx.fillRect(x, y, w, 1);
   }
 
-  /* The one deliberate flourish: a gold arc in the corner, echoing the
-     --gold-line stroke role from the design system. Strokes and arcs only,
-     never text — that is what the token is for. */
+  /* The one deliberate flourish: a cognac arc in the corner, drawn in
+     --highlight. Strokes and arcs only, never text. */
   function drawMark(ctx, W, H, P, pad) {
     ctx.save();
     ctx.strokeStyle = P.goldLine;
@@ -158,12 +185,12 @@
   function drawFooter(ctx, W, H, P, pad, handle) {
     var fy = H - pad;
     drawRule(ctx, pad, fy - 74, W - pad * 2, P);
-    ctx.font = font(25, MONO, '500');
+    ctx.font = font(25, SANS, '500');
     ctx.fillStyle = P.mute;
     ctx.textAlign = 'left';
     ctx.fillText(handle || '@altaha.screener', pad, fy - 26);
     ctx.textAlign = 'right';
-    ctx.font = font(22, MONO, '400');
+    ctx.font = font(22, SANS, '400');
     ctx.fillText('NOT INVESTMENT ADVICE', W - pad, fy - 26);
     ctx.textAlign = 'left';
   }
@@ -191,7 +218,7 @@
     // Ticker, the largest thing on the card. It is what someone scrolling sees.
     var ticker = item.symbol || '';
     if (ticker) {
-      ctx.font = font(104, SERIF, '400');
+      ctx.font = font(104, DISPLAY, '400');
       ctx.fillStyle = P.ink;
       ctx.fillText(ticker, pad, y + 82);
       y += 110;
@@ -215,7 +242,7 @@
     var regionHeight = regionBottom - regionTop - figsHeight;
 
     var body = measured(ctx, r.body || item.headline || '', {
-      family: SERIF, weight: '400', min: 38, max: 78,
+      family: DISPLAY, weight: '400', min: 38, max: 78,
       width: inner, height: regionHeight, lineHeight: 1.22
     });
 
@@ -225,7 +252,7 @@
 
     if (figs) {
       y += 58;
-      ctx.font = font(34, MONO, '500');
+      ctx.font = font(34, SANS, '500');
       ctx.fillStyle = P.goldLine;
       ctx.fillRect(pad, y - 34, 3, 46);
       ctx.fillStyle = P.gold;
@@ -233,7 +260,7 @@
     }
 
     // Source line sits on the footer rule, not floating after the body.
-    ctx.font = font(23, MONO, '400');
+    ctx.font = font(23, SANS, '400');
     ctx.fillStyle = P.mute;
     var src = 'SOURCE: ' + (item.exchange || 'BSE') + ' FILING' +
               (item.pdf ? ' · PDF LINKED IN BIO' : '');
@@ -265,14 +292,14 @@
        card that is mine rather than the publication's, so it gets the number
        treatment: big figure, small label. */
     var n = c.corroboration || 1;
-    ctx.font = font(150, SERIF, '400');
+    ctx.font = font(150, DISPLAY, '400');
     ctx.fillStyle = n >= 3 ? P.gold : P.mute;
     ctx.fillText(String(n), pad, y + 118);
     var nw = ctx.measureText(String(n)).width;
-    ctx.font = font(30, MONO, '500');
+    ctx.font = font(30, SANS, '500');
     ctx.fillStyle = P.mute;
     ctx.fillText(n === 1 ? 'OUTLET' : 'OUTLETS', pad + nw + 28, y + 76);
-    ctx.font = font(24, MONO, '400');
+    ctx.font = font(24, SANS, '400');
     ctx.fillText(n >= 3 ? 'CARRYING THIS' : (c.speculative ? 'UNCONFIRMED' : 'SO FAR'),
                  pad + nw + 28, y + 112);
     y += 170;
@@ -288,7 +315,7 @@
       ? 'Also carried by ' + c.publications.slice(1).join(', ') + '.' : '';
 
     var head = measured(ctx, '\u201C' + (lead.title || '') + '\u201D', {
-      family: SERIF, weight: '400', min: 40, max: 76,
+      family: DISPLAY, weight: '400', min: 40, max: 76,
       width: inner, height: sourceTop - y - 120, lineHeight: 1.2
     });
 
@@ -316,7 +343,7 @@
       drawLines(ctx, alsoBlock, pad, y, P.mute);
     }
 
-    ctx.font = font(23, MONO, '400');
+    ctx.font = font(23, SANS, '400');
     ctx.fillStyle = P.mute;
     ctx.fillText('HEADLINE AS PUBLISHED · LINK IN BIO', pad, H - pad - 108);
 
@@ -337,7 +364,7 @@
     drawEyebrow(ctx, [{ text: 'Daily wrap', gold: true }, { text: data.date || '' }], pad, y, P, 24);
 
     y += 84;
-    ctx.font = font(88, SERIF, '400');
+    ctx.font = font(88, DISPLAY, '400');
     ctx.fillStyle = P.ink;
     ctx.fillText('Today’s filings', pad, y + 68);
     y += 128;
@@ -348,7 +375,7 @@
     var rows = data.rows || [];
     for (var i = 0; i < rows.length && i < 7; i++) {
       var rowY = y + 92;
-      ctx.font = font(58, SERIF, '400');
+      ctx.font = font(58, DISPLAY, '400');
       ctx.fillStyle = P.gold;
       var num = String(rows[i].count);
       ctx.fillText(num, pad, rowY);
@@ -391,7 +418,7 @@
 
     ctx.fillStyle = P.paper; ctx.fillRect(0, 0, W, H);
 
-    // gold rule sweeping down behind everything
+    // a cognac rule sweeping across behind everything
     var sweep = ease(t / 1.1);
     ctx.save(); ctx.globalAlpha = 0.35;
     ctx.strokeStyle = P.goldLine; ctx.lineWidth = 3;
@@ -419,11 +446,11 @@
     if (tk > 0) {
       ctx.save(); ctx.globalAlpha = tk;
       ctx.textAlign = 'center';
-      ctx.font = '600 30px ' + MONO; ctx.fillStyle = P.gold;
+      ctx.font = '600 30px ' + SANS; ctx.fillStyle = P.gold; // theme-ok: canvas pixels of a fixed-size export
       ctx.fillText((data.category_label || 'Filing').toUpperCase(), W / 2, 380);
-      ctx.font = '400 128px ' + SERIF; ctx.fillStyle = P.ink;
+      ctx.font = '400 128px ' + DISPLAY; ctx.fillStyle = P.ink; // theme-ok: canvas pixels of a fixed-size export
       ctx.fillText(data.symbol || '', W / 2, 510);
-      ctx.font = '400 30px ' + SANS; ctx.fillStyle = P.mute;
+      ctx.font = '400 30px ' + SANS; ctx.fillStyle = P.mute; // theme-ok: canvas pixels of a fixed-size export
       ctx.fillText(data.company || '', W / 2, 562);
       ctx.restore();
     }
@@ -434,7 +461,7 @@
     var shown = Math.floor(Math.max(0, (t - 1.25)) / 0.13);
     if (shown > 0) {
       ctx.textAlign = 'left';
-      ctx.font = '400 62px ' + SERIF;
+      ctx.font = '400 62px ' + DISPLAY; // theme-ok: canvas pixels of a fixed-size export
       var lines = wrap(ctx, words.slice(0, shown).join(' '), W - pad * 2);
       var all = wrap(ctx, words.join(' '), W - pad * 2);
       var blockH = all.length * 78;
@@ -451,7 +478,7 @@
         ctx.save(); ctx.globalAlpha = f;
         ctx.translate(0, (1 - f) * 22);
         ctx.fillStyle = P.goldLine; ctx.fillRect(pad, 1210, 4, 66);
-        ctx.font = '500 50px ' + MONO; ctx.fillStyle = P.gold;
+        ctx.font = '500 50px ' + SANS; ctx.fillStyle = P.gold; // theme-ok: canvas pixels of a fixed-size export
         ctx.textAlign = 'left'; ctx.fillText(fg, pad + 30, 1260);
         ctx.restore();
       }
@@ -470,12 +497,12 @@
       ctx.save(); ctx.globalAlpha = sc;
       ctx.strokeStyle = P.rule; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(pad, 1560); ctx.lineTo(W - pad, 1560); ctx.stroke();
-      ctx.textAlign = 'left'; ctx.font = '400 30px ' + MONO; ctx.fillStyle = P.mute;
+      ctx.textAlign = 'left'; ctx.font = '400 30px ' + SANS; ctx.fillStyle = P.mute; // theme-ok: canvas pixels of a fixed-size export
       ctx.fillText('SOURCE: ' + (data.exchange || 'BSE') + ' FILING'
         + (data.time_ist ? ' \u00B7 ' + data.time_ist.toUpperCase() : ''), pad, 1622);
-      ctx.font = '500 34px ' + MONO; ctx.fillStyle = P.ink;
+      ctx.font = '500 34px ' + SANS; ctx.fillStyle = P.ink; // theme-ok: canvas pixels of a fixed-size export
       ctx.fillText(data.handle || '@altaha.screener', pad, 1760);
-      ctx.textAlign = 'right'; ctx.font = '400 28px ' + MONO; ctx.fillStyle = P.mute;
+      ctx.textAlign = 'right'; ctx.font = '400 28px ' + SANS; ctx.fillStyle = P.mute; // theme-ok: canvas pixels of a fixed-size export
       ctx.fillText('NOT INVESTMENT ADVICE', W - pad, 1760);
       ctx.restore();
     }
@@ -510,7 +537,7 @@
       var cv = document.createElement('canvas');
       cv.width = W; cv.height = H;
       var ctx = cv.getContext('2d');
-      var P = opts.theme === 'dark' ? DARK : LIGHT;
+      faces(); var P = palette(opts.theme);
       var stream = cv.captureStream(FPS);
       var chunks = [];
       var rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8000000 });
@@ -539,7 +566,7 @@
   function render(canvas, kind, data, options) {
     var opts = options || {};
     var F = FORMATS[opts.format || 'portrait'] || FORMATS.portrait;
-    var P = opts.theme === 'dark' ? DARK : LIGHT;
+    faces(); var P = palette(opts.theme);
 
     canvas.width = F.w;
     canvas.height = F.h;
@@ -584,7 +611,7 @@
    ---------------------------------------------------------------------------
    Same pattern as nav.js and scoring.js: a wrapper layer. It does not rewrite
    index.html, it does not touch the analysis page, and it injects its own CSS
-   built entirely from the page's existing Ledger tokens.
+   built entirely from the tokens in tokens.css.
 
    v2 adds the News tab. This file REPLACES the v1 from Update 5 — it is not a
    layer on top of it. The design audit already flagged five script layers
@@ -617,138 +644,144 @@
   function adminKey() { try { return localStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
   function setAdminKey(v) { try { localStorage.setItem(KEY_STORE, v || ''); } catch (e) {} }
 
-  /* ---------- styles, all from existing tokens ----------------------- */
+  /* ---------- styles, all from tokens.css ------------------------------ */
   var CSS = `
   #altaha-social-panel{position:fixed;inset:0;z-index:9800;display:none;
-    background:var(--paper-2,#F5F5F7);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
   #altaha-social-panel.open{display:block}
-  .as-wrap{max-width:940px;margin:0 auto;padding:0 0 120px;background:var(--paper,#FFFFFF);min-height:100vh;border-left:1px solid var(--rule-2,#EEEEF1);border-right:1px solid var(--rule-2,#EEEEF1)}
+  .as-wrap{max-width:940px;margin:0 auto;padding:var(--sp-8) 0 120px;min-height:100vh}
   .as-pad{padding:0 40px}
   @media(max-width:620px){.as-pad{padding:0 18px}}
   .as-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
-    border-bottom:1px solid var(--gold,#666D79);padding-bottom:12px;margin-bottom:6px}
-  .as-title{font-family:var(--serif,'Instrument Serif',Georgia,serif);
-    font-size:clamp(28px,4.4vw,34px);line-height:1.05;color:var(--ink,#0A0A0B);margin:0}
-  .as-sub{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#5E5E69)}
-  .as-close{margin-left:auto;background:none;border:1px solid var(--mute,#5E5E69);
-    color:var(--ink,#0A0A0B);border-radius:999px;width:34px;height:34px;font-size:18px;
-    cursor:pointer;line-height:1;transition:background var(--t-fast,150ms) var(--ease,ease)}
-  .as-close:hover{background:rgba(0,0,0,.05)}
-  .as-close:focus-visible{outline:2px solid var(--gold,#666D79);outline-offset:2px}
+    border-bottom:1px solid var(--border-strong);padding-bottom:12px;margin-bottom:6px}
+  .as-title{font:500 var(--fs-h1)/var(--lh-h1) var(--font-display);letter-spacing:var(--ls-heading);
+    color:var(--text-primary);margin:0}
+  .as-sub{font-family:var(--font-sans);font-size:var(--fs-label);
+    letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted)}
+  .as-close{margin-left:auto;background:none;border:1px solid var(--border-strong);
+    color:var(--text-secondary);border-radius:var(--r-pill);width:40px;height:40px;font-size:var(--fs-h3);
+    cursor:pointer;line-height:var(--lh-none);transition:background var(--t-fast,150ms) var(--ease,ease)}
+  .as-close:hover{background:var(--wash)}
+  .as-close:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
-  .as-note{font-size:13px;line-height:1.55;color:var(--mute,#5E5E69);
-    margin:12px 0 16px;padding:10px 12px;border-left:2px solid var(--gold,#666D79)}
+  .as-note{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);
+    margin:12px 0 16px;padding:10px 12px;border-left:2px solid var(--border-strong)}
 
-  .as-tabs{display:flex;gap:0;margin:14px 0 4px;border-bottom:1px solid var(--rule,#E4E4E8)}
-  .as-tab{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:12px;letter-spacing:.09em;
-    text-transform:uppercase;padding:9px 16px;background:none;border:none;cursor:pointer;
-    color:var(--mute,#5E5E69);border-bottom:2px solid transparent;margin-bottom:-1px;
+  .as-tabs{display:flex;gap:var(--sp-6);margin:14px 0 4px;border-bottom:1px solid var(--border)}
+  .as-tab{font:500 var(--fs-body)/var(--lh-none) var(--font-sans);
+    min-height:var(--control-h);padding:0 2px;background:none;border:none;border-radius:0;cursor:pointer;
+    color:var(--text-secondary);border-bottom:2px solid transparent;margin-bottom:-1px;
     transition:color var(--t-fast,150ms) var(--ease,ease)}
-  .as-tab[aria-selected="true"]{color:var(--ink,#0A0A0B);border-bottom-color:var(--gold,#666D79)}
-  .as-tab:focus-visible{outline:2px solid var(--gold,#666D79);outline-offset:-2px}
+  .as-tab:hover{color:var(--text-primary)}
+  .as-tab[aria-selected="true"]{color:var(--highlight-text);border-bottom-color:var(--highlight)}
+  .as-tab:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 
-  .as-corro{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    letter-spacing:.06em;padding:2px 8px;border-radius:999px;
-    border:1px solid var(--gold,#666D79);color:var(--gold-dp,#000000)}
-  .as-corro.solo{border-color:var(--mute,#5E5E69);color:var(--mute,#5E5E69)}
-  .as-spec{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    letter-spacing:.06em;color:#9A5B00;text-transform:uppercase}
-  .as-also{font-size:12px;color:var(--mute,#5E5E69);line-height:1.5;margin:6px 0 2px}
-  .as-also a{color:var(--mute,#5E5E69)}
-  .as-headline{font-size:16px;line-height:1.45;color:var(--ink,#0A0A0B);margin:0 0 6px}
-  .as-headline a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule,#E4E4E8)}
-  .as-headline a:hover{border-bottom-color:var(--gold,#666D79)}
+  .as-corro{font-family:var(--font-sans);font-size:var(--fs-label);
+    letter-spacing:var(--ls-label);padding:2px 8px;border-radius:var(--r-pill);
+    border:1px solid var(--border-strong);color:var(--text-primary)}
+  .as-corro.solo{border-color:var(--border);color:var(--text-muted)}
+  .as-spec{font-family:var(--font-sans);font-size:var(--fs-label);
+    letter-spacing:var(--ls-label);color:var(--highlight-text);text-transform:uppercase}
+  .as-also{font-size:var(--fs-small);color:var(--text-muted);line-height:var(--lh-small);margin:6px 0 2px}
+  .as-also a{color:var(--text-muted)}
+  .as-headline{font-size:var(--fs-h3);line-height:var(--lh-label);color:var(--text-primary);margin:0 0 6px}
+  .as-headline a{color:inherit;text-decoration:none;border-bottom:1px solid var(--border)}
+  .as-headline a:hover{border-bottom-color:var(--highlight)}
 
   .as-bar{display:flex;gap:12px;align-items:center;padding:14px 0 4px}
   .as-chips{display:flex;gap:7px;overflow-x:auto;flex:1 1 auto;padding-bottom:6px;scrollbar-width:none;-ms-overflow-style:none}
   .as-chips::-webkit-scrollbar{display:none}
   .as-fetch{flex:0 0 auto}
-  .as-chip{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;flex:0 0 auto;padding:6px 12px;border-radius:999px;cursor:pointer;
-    border:1px solid var(--mute,#5E5E69);background:transparent;color:var(--mute,#5E5E69);
-    transition:all var(--t-fast,150ms) var(--ease,ease)}
-  .as-chip[aria-pressed="true"]{background:var(--ink,#0A0A0B);color:var(--paper,#FFFFFF);
-    border-color:var(--ink,#0A0A0B)}
-  .as-chip:focus-visible{outline:2px solid var(--gold,#666D79);outline-offset:2px}
+  .as-chip{font-family:var(--font-sans);font-size:var(--fs-label);font-weight:500;
+    letter-spacing:var(--ls-label);text-transform:uppercase;white-space:nowrap;flex:0 0 auto;padding:6px 12px;border-radius:var(--r-pill);cursor:pointer;
+    border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);
+    transition:color var(--t-fast,150ms) var(--ease,ease),border-color var(--t-fast,150ms) var(--ease,ease),background var(--t-fast,150ms) var(--ease,ease)}
+  .as-chip:hover{color:var(--text-primary)}
+  .as-chip[aria-pressed="true"]{background:var(--highlight-subtle);color:var(--highlight-text);
+    border-color:transparent}
+  .as-chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
-  .as-row{border-bottom:1px solid var(--rule-2,#EEEEF1);padding:24px 0;
+  .as-row{border-bottom:1px solid var(--border);padding:24px 0;
     opacity:0;transform:translateY(8px);
     animation:asArrive var(--t-slow,460ms) var(--ease-soft,cubic-bezier(.16,1,.3,1)) forwards}
   @keyframes asArrive{to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.as-row{animation:none;opacity:1;transform:none}}
 
   .as-eyebrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
-    font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--mute,#5E5E69);margin-bottom:7px}
-  .as-tag{color:var(--gold-dp,#000000);border-bottom:1px solid var(--gold,#666D79);padding-bottom:1px}
-  .as-dot{width:4px;height:4px;border-radius:50%;background:var(--gold,#666D79);flex:0 0 auto}
-  .as-pill{border:1px solid var(--rule,#E4E4E8);border-radius:999px;padding:2px 8px}
+    font-family:var(--font-sans);font-size:var(--fs-label);
+    letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted);margin-bottom:7px}
+  .as-tag{color:var(--text-primary);border-bottom:1px solid var(--border-strong);padding-bottom:1px}
+  .as-dot{width:4px;height:4px;border-radius:50%;background:var(--highlight);flex:0 0 auto}
+  .as-pill{border:1px solid var(--border);border-radius:var(--r-pill);padding:2px 8px}
   .as-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-  .as-tick{font-family:var(--serif,'Instrument Serif',Georgia,serif);font-size:28px;line-height:1;color:var(--ink,#0A0A0B)}
-  .as-co{font-size:13px;color:var(--mute,#5E5E69)}
-  .as-hold{display:inline-block;font-family:var(--mono,monospace);font-size:11px;color:var(--part,#41464F);border:1px dashed var(--gold-lt,#C5CAD3);border-radius:4px;padding:5px 10px;margin-bottom:12px}
+  .as-tick{font:500 var(--fs-h1)/var(--lh-none) var(--font-display);letter-spacing:var(--ls-heading);color:var(--text-primary)}
+  .as-co{font-size:var(--fs-small);color:var(--text-muted)}
+  .as-hold{display:inline-block;font-family:var(--font-sans);font-size:var(--fs-label);color:var(--warning);background:var(--warning-bg);border-radius:var(--r-control);padding:4px 10px;margin-bottom:12px}
   .as-edit{margin-top:12px}
   .as-edit[hidden]{display:none}
-  .as-btn.quiet{background:transparent;border-color:transparent;color:var(--mute,#5E5E69);padding:8px 6px}
-  .as-body{font-size:16px;line-height:1.5;color:var(--ink,#0A0A0B);margin:0 0 8px}
-  .as-figs{display:inline-block;font-family:var(--mono,'IBM Plex Mono',monospace);font-size:13px;
-    color:var(--gold-dp,#000000);border:1px solid var(--gold-lt,#C5CAD3);border-radius:999px;
+  .as-acts .as-btn.quiet{background:transparent;border-color:transparent;color:var(--text-muted);padding:0 var(--sp-2)}
+  .as-body{font-size:var(--fs-h3);font-weight:400;line-height:var(--lh-small);color:var(--text-primary);margin:0 0 8px}
+  .as-figs{display:inline-block;font-family:var(--font-sans);font-size:var(--fs-small);
+    color:var(--highlight-text);background:var(--highlight-subtle);border-radius:var(--r-pill);
     padding:4px 11px;margin-bottom:12px}
 
   .as-post{width:100%;box-sizing:border-box;min-height:112px;resize:vertical;
-    font-family:var(--mono,'IBM Plex Mono',monospace);font-size:13px;line-height:1.55;
-    color:var(--ink,#0A0A0B);background:rgba(0,0,0,.025);
-    border:1px solid var(--rule,#E4E4E8);border-radius:4px;padding:10px 11px}
-  .as-post:focus{outline:none;border-color:var(--gold,#666D79)}
+    font-family:var(--font-sans);font-size:var(--fs-small);line-height:var(--lh-body);
+    color:var(--text-primary);background:var(--surface-raised);
+    border:1px solid var(--border);border-radius:var(--r-control);padding:10px 11px}
+  .as-post:focus{outline:none;border-color:var(--focus-ring);box-shadow:var(--ring)}
 
   .as-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
-  .as-btn{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;letter-spacing:.06em;
-    text-transform:uppercase;padding:7px 14px;border-radius:3px;cursor:pointer;
-    border:1px solid var(--ink,#0A0A0B);background:var(--ink,#0A0A0B);color:var(--paper,#FFFFFF);
-    transition:opacity var(--t-fast,150ms) var(--ease,ease)}
-  .as-btn.ghost{background:transparent;color:var(--mute,#5E5E69);border-color:var(--mute,#5E5E69)}
-  .as-btn:hover{opacity:.82}
-  .as-btn:focus-visible{outline:2px solid var(--gold,#666D79);outline-offset:2px}
-  .as-count{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;
-    color:var(--mute,#5E5E69);margin-left:auto}
-  .as-count.over{color:#B3261E}
-  .as-src{font-size:12px;color:var(--mute,#5E5E69);margin-top:7px}
-  .as-src a{color:var(--gold-dp,#000000)}
+  /* Every row carries the same actions, so none of them is the screen's one
+     accent: they are secondary buttons, and the ghost kind is words only. */
+  .as-btn{display:inline-flex;align-items:center;text-decoration:none;font:500 var(--fs-small)/var(--lh-none) var(--font-sans);
+    min-height:var(--control-h);padding:0 var(--sp-4);border-radius:var(--r-control);cursor:pointer;
+    border:1px solid var(--border-strong);background:transparent;color:var(--text-primary);
+    transition:color var(--t-fast,150ms) var(--ease,ease),border-color var(--t-fast,150ms) var(--ease,ease)}
+  .as-btn.ghost{border-color:transparent;color:var(--text-secondary);padding:0 var(--sp-2)}
+  .as-btn:hover{color:var(--highlight-text);border-color:var(--highlight)}
+  .as-btn.ghost:hover{border-color:transparent}
+  .as-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  .as-count{font-family:var(--font-sans);font-size:var(--fs-label);
+    color:var(--text-muted);margin-left:auto}
+  .as-count.over{color:var(--loss)}
+  .as-src{font-size:var(--fs-small);color:var(--text-muted);margin-top:7px}
+  .as-src a{color:var(--highlight-text)}
 
-  .as-shot{margin-top:12px;border:1px solid var(--rule,#E4E4E8);border-radius:4px;
-    padding:12px;background:rgba(0,0,0,.02)}
+  .as-shot{margin-top:12px;border:1px solid var(--border);border-radius:var(--r-card);
+    padding:var(--sp-4);background:var(--surface)}
   .as-shot[hidden]{display:none}
   .as-shot-opts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-  .as-opt{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:11px;letter-spacing:.05em;
-    text-transform:uppercase;padding:4px 10px;border-radius:999px;cursor:pointer;
-    border:1px solid var(--mute,#5E5E69);background:transparent;color:var(--mute,#5E5E69)}
-  .as-opt[aria-pressed="true"]{background:var(--ink,#0A0A0B);color:var(--paper,#FFFFFF);
-    border-color:var(--ink,#0A0A0B)}
-  .as-opt:focus-visible{outline:2px solid var(--gold,#666D79);outline-offset:2px}
+  .as-opt{font-family:var(--font-sans);font-size:var(--fs-label);font-weight:500;letter-spacing:var(--ls-label);
+    text-transform:uppercase;padding:4px 10px;border-radius:var(--r-pill);cursor:pointer;
+    border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary)}
+  .as-opt[aria-pressed="true"]{background:var(--highlight-subtle);color:var(--highlight-text);
+    border-color:transparent}
+  .as-opt:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
   .as-canvas{display:block;width:100%;max-width:270px;height:auto;margin:0 auto 10px;
-    border:1px solid var(--rule,#E4E4E8);border-radius:2px}
+    border:1px solid var(--border);border-radius:var(--r-xs)}
   .as-cap{width:100%;box-sizing:border-box;min-height:130px;resize:vertical;
-    font-family:var(--sans,'Inter',system-ui,sans-serif);font-size:13px;line-height:1.5;
-    color:var(--ink,#0A0A0B);background:transparent;border:1px solid var(--rule,#E4E4E8);
-    border-radius:4px;padding:9px 10px;margin-bottom:8px}
-  .as-cap:focus{outline:none;border-color:var(--gold,#666D79)}
-  .as-writelbl{display:block;font-size:12px;line-height:1.5;color:var(--mute,#5E5E69);margin-bottom:7px}
+    font-family:var(--font-sans);font-size:var(--fs-small);line-height:var(--lh-small);
+    color:var(--text-primary);background:var(--surface-raised);border:1px solid var(--border);
+    border-radius:var(--r-control);padding:9px 10px;margin-bottom:8px}
+  .as-cap:focus{outline:none;border-color:var(--focus-ring);box-shadow:var(--ring)}
+  .as-writelbl{display:block;font-size:var(--fs-label);line-height:var(--lh-small);color:var(--text-muted);margin-bottom:7px}
   .as-writeacts[hidden]{display:none}
   .as-btn[disabled]{opacity:.5;cursor:progress}
 
-  .as-skel{height:74px;border-radius:4px;margin:14px 0;
-    background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 37%,rgba(0,0,0,.04) 63%);
-    background-size:400% 100%;animation:asSkel 1.4s ease-in-out infinite}
-  @keyframes asSkel{0%{background-position:100% 0}100%{background-position:0 0}}
-  .as-empty{padding:56px 0 40px;max-width:52ch;color:var(--mute,#5E5E69);font-size:14px;line-height:1.6}
+  .as-skel{height:74px;border-radius:var(--r-control);margin:14px 0;
+    background:var(--wash);animation:asSkel 1.8s ease-in-out infinite}
+  @keyframes asSkel{50%{opacity:.5}}
+  @media (prefers-reduced-motion:reduce){.as-skel{animation:none}}
+  .as-empty{padding:56px 0 40px;max-width:52ch;color:var(--text-muted);font-size:var(--fs-body);line-height:var(--lh-body)}
   .as-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:9900;
-    background:var(--ink,#0A0A0B);color:var(--paper,#FFFFFF);padding:9px 16px;border-radius:999px;
-    font-family:var(--mono,'IBM Plex Mono',monospace);font-size:12px;letter-spacing:.05em;
+    background:var(--surface-raised);color:var(--text-primary);border:1px solid var(--border-strong);
+    box-shadow:var(--shadow-raised);padding:9px 16px;border-radius:var(--r-card);
+    font-family:var(--font-sans);font-size:var(--fs-small);
     opacity:0;transition:opacity var(--t,280ms) var(--ease,ease);pointer-events:none}
   .as-toast.show{opacity:1}
   #altaha-social-open{font:inherit}
-  @media(max-width:560px){.as-wrap{padding:16px 14px 90px}.as-body{font-size:16px}}
+  @media(max-width:560px){.as-wrap{padding:16px 14px 90px}}
   `;
 
   function injectCSS() {
@@ -1393,10 +1426,10 @@
     b.type = 'button';
     b.textContent = 'Social';
     b.style.cssText = 'position:fixed;right:16px;bottom:76px;z-index:9700;'
-      + 'font-family:var(--mono,monospace);font-size:11px;letter-spacing:.08em;'
-      + 'text-transform:uppercase;padding:9px 15px;border-radius:999px;cursor:pointer;'
-      + 'border:1px solid var(--gold-line,#666D79);background:var(--paper,#F8F9FA);'
-      + 'color:var(--ink,#101113);box-shadow:0 2px 10px rgba(0,0,0,.1)';
+      + 'font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);'
+      + 'text-transform:uppercase;padding:9px 15px;border-radius:var(--r-pill);cursor:pointer;'
+      + 'border:1px solid var(--border-strong);background:var(--bg);'
+      + 'color:var(--text-primary);box-shadow:none';
     b.addEventListener('click', open);
     document.body.appendChild(b);
   }

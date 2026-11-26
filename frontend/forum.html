@@ -4,29 +4,24 @@
 <meta charset="utf-8" /><script src="clean-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="theme.js"></script>
+<link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/jetbrains-mono-latin.woff2" crossorigin>
+<link rel="stylesheet" href="tokens.css">
 <title>Forum | Altaha Screener</title>
 <meta name="description" content="Discuss Indian stocks, the market, mutual funds and tax with other investors. One discussion per company on every stock page. Free to read; sign in to post." />
 <meta name="referrer" content="no-referrer" />
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20261124-logos">
 <link rel="stylesheet" href="type.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="forum.css?v=20261122-forum">
 <script>
-  /* Theme before first paint, as every page here does. */
-  (function () {
-    try {
-      var s = localStorage.getItem('altaha-theme');
-      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
-    } catch (e) {}
-  })();
   var API_BASE = "https://taha-project.onrender.com";
 </script>
 <script src="analytics.js" defer></script>

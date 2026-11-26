@@ -91,8 +91,8 @@ both. A query from a link, a saved screen or the last visit opens the editor
 if any line is not a card's and the cards otherwise; nothing moves the reader
 between sections while they work in one. The cards are `WISHES` in
 `frontend/query.js`, and `backend/tests/test_query_wishes.py` puts every line
-they can write through the server's parser. Every font size on the page is a
-rung of the ladder in `frontend/type.css`.
+they can write through the server's parser. Every font size on the page is one
+of the seven type tokens in `frontend/tokens.css` (see [THEME.md](THEME.md)).
 
 **Built for the first visit.** People who were sent the site found it too
 complex to find their way around, so three things changed (Nov 2026):
@@ -647,9 +647,17 @@ altaha/
 │   └── requirements.txt
 ├── frontend/
 │   ├── index.html    the whole website — one file, no build step
-│   └── wealth.html   the Wealth desk, for portfolio managers
+│   ├── wealth.html   the Wealth desk, for portfolio managers
+│   ├── tokens.css    every colour, font and size ("Navy and Cognac", light and dark)
+│   ├── theme.js      light or dark before first paint, and colours for charts
+│   └── components.css  the one button, tab, table, card, chip and field
+├── THEME.md          the design tokens and the rules for using them
 └── README.md
 ```
+
+**How it looks.** The visual system is documented in [THEME.md](THEME.md):
+the palette, the seven text sizes, the components, and the check that keeps a
+raw colour or font size out of the code (`node frontend/tools/check-theme.cjs`).
 
 ---
 

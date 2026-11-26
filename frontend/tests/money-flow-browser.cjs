@@ -347,14 +347,20 @@ const invisible = page => page.evaluate(() => {
       await page.waitForTimeout(120);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
         false, `${width} ${theme}: horizontal page scroll`);
-      // The stage is dark whichever theme the site is in.
-      const lum = await page.locator('.mf-stage').evaluate(e => {
-        const c = getComputedStyle(e).backgroundColor.match(/[\d.]+/g).map(Number);
-        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-      });
-      assert.ok(lum < 30, `${width} ${theme}: the stage is not dark (${lum})`);
+      // The page wears the site's theme (THEME.md): its cards are the surface
+      // token, light by day and dark by night, and the text on a card is the
+      // primary ink, which is the opposite. (It used to be a dark stage of
+      // its own in both themes.)
+      const lumOf = c => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      const card = await page.locator('.mf-card').first().evaluate(e => getComputedStyle(e).backgroundColor.match(/[\d.]+/g).map(Number));
       const ink = await page.locator('.mf-card .mf-name').first().evaluate(e => getComputedStyle(e).color.match(/[\d.]+/g).map(Number));
-      assert.ok(ink[0] > 200, `${width} ${theme}: card text is not light on the dark stage`);
+      if (theme === 'dark') {
+        assert.ok(lumOf(card) < 60, `${width} dark: a card is not dark (${lumOf(card)})`);
+        assert.ok(lumOf(ink) > 200, `${width} dark: card text is not light on a dark card`);
+      } else {
+        assert.ok(lumOf(card) > 230, `${width} light: a card is not light (${lumOf(card)})`);
+        assert.ok(lumOf(ink) < 60, `${width} light: card text is not dark on a light card`);
+      }
       // No figure is cut off by its own box.
       const clipped = await page.locator('.mf-tile .v, .mf-flowfig, .mf-card-top, .mf-rs').evaluateAll(
         els => els.filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => e.className + ':' + e.textContent.slice(0, 30)));

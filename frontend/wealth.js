@@ -46,9 +46,11 @@
   var PRIV_KEY = 'altaha-wealth-private-v1';
   var UNI_KEY = 'altaha-universe-v2';
   var COLORS = ['gold', 'green', 'blue', 'rose', 'violet', 'slate'];
-  /* The first slice is the accent itself (ink by day, platinum by night); a
-     fixed grey here sat too close to the slate further along. */
-  var PALETTE = ['var(--gold)', '#2F9E6E', '#3D7FB8', '#C8566B', '#8B6BC4', '#66758A', '#D9822B', '#4BA3A3', '#9C6B4E', '#A3A34B'];
+  /* The six series colours in their order, then the first four again at half
+     strength for a book spread over more than six sectors. */
+  var PALETTE = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-6)',
+    'color-mix(in srgb, var(--chart-1) 50%, var(--surface))', 'color-mix(in srgb, var(--chart-2) 50%, var(--surface))',
+    'color-mix(in srgb, var(--chart-3) 50%, var(--surface))', 'color-mix(in srgb, var(--chart-4) 50%, var(--surface))'];
   var CTABS = [['holdings', 'Holdings'], ['ledger', 'Ledger'], ['fees', 'Fees'], ['profile', 'Profile']];
 
   var S = {
@@ -436,7 +438,7 @@
     var v = (vals || []).filter(finite);
     var d = sparkPath(v, 74, 24, 2);
     if (!d) return '';
-    var col = v[v.length - 1] >= v[0] ? 'var(--up)' : 'var(--dn)';
+    var col = v[v.length - 1] >= v[0] ? 'var(--gain)' : 'var(--dn)';
     return '<svg class="wd-mini" viewBox="0 0 74 24" aria-hidden="true"><path d="' + d + '" stroke="' + col + '"/></svg>';
   }
 
@@ -447,8 +449,7 @@
     var v = (vals || []).map(function (x) { return finite(x) ? Number(x) : null; });
     var ok = v.filter(function (x) { return x !== null; });
     if (ok.length < 2) {
-      return '<div class="wd-area' + (opts.light ? ' light' : '') + '" style="display:grid;place-items:center;color:' +
-        (opts.light ? 'var(--mute)' : 'rgba(255,255,255,.55)') + ';font-size:13px">The chart fills in once prices for the last sessions arrive.</div>';
+      return '<div class="wd-area' + (opts.light ? ' light' : '') + '" style="display:grid;place-items:center;color:var(--text-muted);font-size:var(--fs-small)">The chart fills in once prices for the last sessions arrive.</div>';
     }
     var id = 'wdc' + (++chartSeq);
     var W = 600, H = 200, P = 10;
@@ -461,15 +462,11 @@
     });
     var line = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
     var fill = line + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + H + ' L' + pts[0][0].toFixed(1) + ' ' + H + ' Z';
-    var gid = id + 'g';
-    var col = opts.light ? 'var(--a, var(--gold))' : 'var(--a2, #EBEDEF)';
     CHARTS[id] = { pts: pts, dates: dates || [], W: W, H: H, fmt: opts.fmt || inr };
     var grid = [0.25, 0.5, 0.75].map(function (f) { return '<line class="gd" vector-effect="non-scaling-stroke" x1="0" x2="' + W + '" y1="' + (H * f) + '" y2="' + (H * f) + '"/>'; }).join('');
     return '<div class="wd-area' + (opts.light ? ' light' : '') + '" id="' + id + '" role="img" aria-label="' + esc(opts.label || 'Value over the last sessions') + '">' +
       '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
-        '<defs><linearGradient id="' + gid + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="' + col + '" stop-opacity=".42"/>' +
-        '<stop offset="1" stop-color="' + col + '" stop-opacity="0"/></linearGradient></defs>' + grid +
-        '<path class="fl" d="' + fill + '" fill="url(#' + gid + ')"/>' +
+        grid + '<path class="fl" d="' + fill + '"/>' +
         '<path class="ln" pathLength="1" vector-effect="non-scaling-stroke" d="' + line + '"/>' +
         '<line class="cx" vector-effect="non-scaling-stroke" x1="0" x2="0" y1="0" y2="' + H + '" style="display:none"/>' +
       '</svg><span class="wd-tip" style="display:none"></span></div>';
@@ -483,7 +480,7 @@
       var tip = el.querySelector('.wd-tip'), cx = el.querySelector('.cx');
       var dot = document.createElement('span');
       dot.style.cssText = 'position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);display:none;pointer-events:none;' +
-        'background:#FFFFFF;border:3px solid var(--a, #7A838F);box-shadow:0 2px 8px rgba(0,0,0,.3)';
+        'background:var(--surface);border:2px solid var(--a, var(--chart-1));box-shadow:none';
       el.appendChild(dot);
       function at(clientX) {
         var r = el.getBoundingClientRect();
@@ -515,10 +512,10 @@
     });
     if (items.length > 9) {
       var rest = items.slice(9).reduce(function (s, x) { return s + num(x.value); }, 0);
-      legend += '<li><i style="background:var(--rule)"></i><span>' + (items.length - 9) + ' more</span><b>' + (100 * rest / total).toFixed(1) + '%</b></li>';
+      legend += '<li><i style="background:var(--border)"></i><span>' + (items.length - 9) + ' more</span><b>' + (100 * rest / total).toFixed(1) + '%</b></li>';
     }
     return '<div class="wd-donut"><div class="wd-donut-c"><svg viewBox="0 0 170 170" aria-hidden="true">' +
-      '<circle cx="85" cy="85" r="64" stroke="var(--rule-2)"/>' + segs + '</svg><span><b class="pv">' + esc(centre) + '</b><small>' + esc(sub || '') + '</small></span></div>' +
+      '<circle cx="85" cy="85" r="64" stroke="var(--border)"/>' + segs + '</svg><span><b class="pv">' + esc(centre) + '</b><small>' + esc(sub || '') + '</small></span></div>' +
       '<ul class="wd-legend">' + legend + '</ul></div>';
   }
 
@@ -661,8 +658,8 @@
   }
 
   function marketPill(b) {
-    return b.market_open ? '<span class="wd-pill wd-live up"><i></i>Market open</span>'
-      : '<span class="wd-pill"><i style="color:#9C9CA6"></i>Market closed · last close</span>';
+    return b.market_open ? '<span class="wd-pill wd-live"><i></i>Market open</span>'
+      : '<span class="wd-pill"><i style="color:var(--text-muted)"></i>Market closed · last close</span>';
   }
 
   /* ── Overview ────────────────────────────────────────────────────────── */
@@ -676,7 +673,7 @@
         '<p class="wd-hero-hi">' + greeting() + (name ? ', ' + esc(name) : '') + '. Here is your book.</p>' +
         '<p class="wd-big pv" data-count="' + num(t.aum) + '" data-fmt="inr">' + esc(inr(t.aum, 0)) + '</p>' +
         '<div class="wd-hero-sub">' +
-          '<span class="wd-pill ' + tone(t.day_change) + '">' + (num(t.day_change) >= 0 ? '▲' : '▼') + ' ' + pv(esc(signed(t.day_change, 0))) + ' today · ' + esc(pct(t.day_pct)) + '</span>' +
+          '<span class="wd-pill ' + tone(t.day_change) + '">' + pv(esc(signed(t.day_change, 0))) + ' today · ' + esc(pct(t.day_pct)) + '</span>' +
           marketPill(b) + '<span class="wd-pill">' + plural(t.active, 'active client') + '</span></div></div>' +
       '<div class="wd-hero-chart"><div class="wd-chart-k"><span>Last ' + (b.spark.values.length || 30) + ' sessions</span><span class="pv">' +
         esc(b.spark.values.length ? pct(100 * (b.spark.values[b.spark.values.length - 1] / b.spark.values[0] - 1)) : '') + '</span></div>' +
@@ -689,9 +686,9 @@
 
     var rs = b.rec_stats || {};
     html += '<div class="wd-kpis">' +
-      kpi('Clients', t.active + (t.paused ? ' <small style="font-size:.5em" class="wd-muted">+' + t.paused + ' paused</small>' : ''), t.clients + ' on the desk', 'users', 'c-blue', 1) +
+      kpi('Clients', t.active + (t.paused ? ' <small class="wd-muted">+' + t.paused + ' paused</small>' : ''), t.clients + ' on the desk', 'users', 'c-blue', 1) +
       kpi('Capital managed', pv(esc(short(t.capital))), pv(esc(short(t.cash))) + ' in cash', 'rupee', 'c-green', 2) +
-      kpi('In profit', t.in_profit + '<small style="font-size:.5em" class="wd-muted"> of ' + (t.active + t.paused) + '</small>', t.below_hwm ? t.below_hwm + ' below the high-water mark' : 'None below the high-water mark', 'up', 'c-gold', 3) +
+      kpi('In profit', t.in_profit + '<small class="wd-muted"> of ' + (t.active + t.paused) + '</small>', t.below_hwm ? t.below_hwm + ' below the high-water mark' : 'None below the high-water mark', 'up', 'c-gold', 3) +
       kpi('Open calls', rs.open || 0, (rs.judged ? rs.working + ' of ' + rs.judged + ' working · avg ' + pct(rs.avg_pct, 1) : 'No calls yet'), 'target', 'c-violet', 4) +
       kpi('Booked profit', pv(esc(short(t.booked))), pv(esc(short(t.unrealised))) + ' on paper', 'check', 'c-rose', 5) +
       '</div>';
@@ -699,7 +696,7 @@
     html += '<div class="wd-grid2">' +
       '<div class="wd-panel wd-rise" style="--i:2"><h3>Needs your attention <small>' + plural(b.alerts.length, 'item') + '</small></h3>' + alertsHTML(b.alerts.slice(0, 7)) + '</div>' +
       '<div class="wd-panel wd-rise" style="--i:3"><h3>Commission <button type="button" class="wd-link" data-go="fees">Open ›</button></h3>' + monthsHTML(b.commission.months) +
-        '<div class="wd-key"><span><i style="background:color-mix(in srgb,var(--gold) 40%,var(--rule))"></i>Billed</span><span><i style="background:var(--gold)"></i>Received</span></div></div>' +
+        '<div class="wd-key"><span><i style="background:var(--chart-5)"></i>Billed</span><span><i style="background:var(--chart-1)"></i>Received</span></div></div>' +
       '</div>';
 
     html += '<div class="wd-panel wd-news-panel wd-rise" style="--i:3;margin-top:16px"><h3><span>' + ic('news') + 'On your stocks this week ' + liveTag() + '</span>' +
@@ -713,7 +710,7 @@
     html += '<div class="wd-grid2" style="margin-top:16px">' +
       '<div class="wd-panel wd-rise" style="--i:4"><h3>What the book holds <small>across every client</small></h3>' + exposureHTML(b.exposures.slice(0, 8)) + '</div>' +
       '<div class="wd-panel wd-rise" style="--i:5"><h3>Where the money is <small>by sector</small></h3>' +
-        donut(b.sectors.map(function (s) { return { label: s.sector, value: s.value, color: s.sector === 'Cash' ? '#9CC6EC' : null }; }), short(t.aum), 'book value') + '</div>' +
+        donut(b.sectors.map(function (s) { return { label: s.sector, value: s.value, color: s.sector === 'Cash' ? 'var(--border-strong)' : null }; }), short(t.aum), 'book value') + '</div>' +
       '</div>';
     html += '<p class="wd-note">' + esc(b.disclaimer) + '</p>';
     return html;
@@ -1201,7 +1198,7 @@
       }).join('') + '</div>' : '<p class="wd-muted" style="margin:0">Nothing sold yet.</p>') +
       '<p class="wd-note">Dividends ' + pv(esc(inr(c.dividends, 0))) + ' · charges ' + pv(esc(inr(c.charges, 0))) + ' · on paper ' + pv(esc(signed(c.unrealised, 0))) + '</p></div>';
     return table + cardsHtml + '<div class="wd-grid2" style="margin-top:16px"><div class="wd-panel"><h3>Allocation <small>by sector</small></h3>' +
-      donut(c.sectors.map(function (s) { return { label: s.sector, value: s.value, color: s.sector === 'Cash' ? '#9CC6EC' : null }; }), short(c.value), 'value') + '</div>' + side + '</div>' +
+      donut(c.sectors.map(function (s) { return { label: s.sector, value: s.value, color: s.sector === 'Cash' ? 'var(--border-strong)' : null }; }), short(c.value), 'value') + '</div>' + side + '</div>' +
       (ro ? '' : '<div class="wd-panel wd-news-panel" style="margin-top:16px"><h3><span>' + ic('news') + 'News on their stocks <small>this week</small></span>' +
         '<button type="button" class="wd-link" data-go="news">All news ›</button></h3><div data-news="client" data-cid="' + c.id + '"></div></div>');
   }
@@ -1264,7 +1261,7 @@
     var hwm = num(f.to_hwm) > 0.5 && t.share_pct
       ? '<p class="wd-note" style="color:var(--dn)">' + pv(esc(inr(f.to_hwm, 0))) + ' below the ' + (t.hwm ? 'high-water mark' : 'last settlement') + '. No profit share is due until it is made back.</p>' : '';
     var receipt = '<div class="wd-receipt"><div class="wd-due"><div><small>Accrued this period</small><b class="pv">' + esc(inr(f.total)) + '</b></div>' +
-      '<div style="text-align:right">' + due + '<div class="wd-muted" style="font-size:13px;margin-top:6px">' + esc(c.terms_label) + '</div></div></div>' +
+      '<div style="text-align:right">' + due + '<div class="wd-muted" style="font-size:var(--fs-small);margin-top:6px">' + esc(c.terms_label) + '</div></div></div>' +
       '<ol class="wd-steps">' + steps + '</ol>' + hwm +
       (ro ? '' : '<div class="wd-acts" style="margin-top:14px"><button type="button" class="wd-btn primary" data-act="settle" data-id="' + c.id + '">' + ic('bill') + 'Settle this period</button>' +
         '<button type="button" class="wd-btn" data-act="past" data-id="' + c.id + '">Record an earlier settlement</button></div>') + '</div>';
@@ -1319,7 +1316,7 @@
   function profileTab(c) {
     return '<form class="wd-panel" data-form="client" data-id="' + c.id + '"><h3>Profile and terms</h3>' + clientFields(c) +
       '<div class="wd-acts" style="margin-top:14px"><button type="submit" class="wd-btn primary">' + ic('check') + 'Save changes</button><span class="wd-err" role="alert"></span></div></form>' +
-      '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Remove this client</h3><p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">' +
+      '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Remove this client</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:var(--fs-body)">' +
         'Deletes their profile, every trade and every settlement. To keep the record, set their status to Closed instead.</p>' +
       '<button type="button" class="wd-btn danger" data-act="del-client" data-id="' + c.id + '">' + ic('trash') + 'Delete ' + esc(c.name) + '</button></div>';
   }
@@ -1338,7 +1335,7 @@
     return '<div class="wd-sec" style="margin-top:4px"><div><h2>Recommendations</h2><p>Make a call once, then book it for every client who acted on it.</p></div>' +
       '<button type="button" class="wd-btn primary" data-act="new-rec">' + ic('plus') + 'New call</button></div>' +
       '<div class="wd-kpis">' + kpi('Open', rs.open || 0, (rs.closed || 0) + ' closed', 'target', 'c-violet', 0) +
-        kpi('Working', (rs.working || 0) + '<small style="font-size:.5em" class="wd-muted"> of ' + (rs.judged || 0) + '</small>', 'above the price you called', 'up', 'c-green', 1) +
+        kpi('Working', (rs.working || 0) + '<small class="wd-muted"> of ' + (rs.judged || 0) + '</small>', 'above the price you called', 'up', 'c-green', 1) +
         kpi('Average since call', esc(pct(rs.avg_pct, 1)), rs.best ? 'best ' + esc(rs.best) + ' · worst ' + esc(rs.worst) : '—', 'call', 'c-gold', 2) +
         kpi('Targets reached', rs.targets || 0, 'still open', 'check', 'c-green', 3) +
         kpi('Stops hit', rs.stops || 0, 'still open, review them', 'alert', 'c-rose', 4) + '</div>' +
@@ -1396,7 +1393,7 @@
         '<div class="gold"><small>Collected this year</small><b class="pv">' + esc(inr(t.collected_fy, 0)) + '</b><span>' + esc(t.fy_label) + '</span></div>' +
         '<div><small>Billed this year</small><b class="pv">' + esc(inr(t.billed_fy, 0)) + '</b><span>' + esc(short(t.accrued_share)) + ' share + ' + esc(short(t.accrued_fixed)) + ' fixed accruing</span></div></div></div>';
     html += '<div class="wd-grid2"><div class="wd-panel"><h3>Last twelve months</h3>' + monthsHTML(cm.months) +
-      '<div class="wd-key"><span><i style="background:color-mix(in srgb,var(--gold) 40%,var(--rule))"></i>Billed</span><span><i style="background:var(--gold)"></i>Received</span></div></div>' +
+      '<div class="wd-key"><span><i style="background:var(--chart-5)"></i>Billed</span><span><i style="background:var(--chart-1)"></i>Received</span></div></div>' +
       '<div class="wd-panel"><h3>If the market moves <small>accrued across the book</small></h3><div class="wd-sens" role="img" aria-label="Accrued commission if every price moved">' +
         cm.sensitivity.map(function (s, i) {
           return '<div class="' + (s.move === 0 ? 'zero' : '') + '"><span class="c"><i style="height:' + (100 * num(s.fee) / sMax).toFixed(1) + '%;--i:' + i + '"></i></span>' +
@@ -1464,12 +1461,12 @@
       '<div class="wd-grid2" style="margin-top:16px"><div class="wd-panel"><h3>Privacy</h3>' +
         '<label class="wd-toggle"><input type="checkbox" data-act="privacy-toggle"' + (S.priv ? ' checked' : '') + '> Hide amounts and names on this screen</label>' +
         '<p class="wd-note">For screen-sharing and working in public. Hover over a blurred figure to read it. Remembered on this browser.</p></div>' +
-      '<div class="wd-panel"><h3>Export</h3><p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">Spreadsheets of the whole desk, for your accountant or your own records.</p>' +
+      '<div class="wd-panel"><h3>Export</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:var(--fs-body)">Spreadsheets of the whole desk, for your accountant or your own records.</p>' +
         '<div class="wd-acts"><button type="button" class="wd-btn" data-act="export" data-what="holdings">' + ic('download') + 'Holdings</button>' +
         '<button type="button" class="wd-btn" data-act="export" data-what="ledger">' + ic('download') + 'Ledger</button>' +
         '<button type="button" class="wd-btn" data-act="export" data-what="fees">' + ic('download') + 'Fees</button></div></div></div>' +
       '<div class="wd-panel" style="margin-top:16px"><h3>Hand-set prices</h3>' + prices + '</div>' +
-      '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Close this desk</h3><p style="margin:0 0 12px;color:var(--ink-2);font-size:14px">' +
+      '<div class="wd-panel wd-danger" style="margin-top:16px"><h3>Close this desk</h3><p style="margin:0 0 12px;color:var(--text-secondary);font-size:var(--fs-body)">' +
         'Deletes the desk and everything on it: every client, trade, call and settlement. Export first if you want a copy. This cannot be undone.</p>' +
         '<button type="button" class="wd-btn danger" data-act="del-desk">' + ic('trash') + 'Delete the desk</button></div>' +
       '<p class="wd-note">' + esc(b.disclaimer) + '</p>';
@@ -1514,8 +1511,8 @@
         '<a class="wd-btn" href="wealth.html?demo=1">' + ic('spark') + 'Explore a sample desk</a></div>' +
         '<p class="wd-note">Free. Your book is private to your account. A client sees their own portfolio only if you switch that on.</p></div>' +
       '<div class="wd-stage" aria-hidden="true">' +
-        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:#EBEDEF">Book value</p><p class="wd-big" style="font-size:42px">₹7,62,56,240</p>' +
-          '<div class="wd-hero-sub"><span class="wd-pill up">▲ +₹1,24,800 today</span><span class="wd-pill">42 clients</span></div></div>' +
+        '<div class="wd-float f1 dark c-gold"><p class="wd-kick">Book value</p><p class="wd-big">₹7,62,56,240</p>' +
+          '<div class="wd-hero-sub"><span class="wd-pill up">+₹1,24,800 today</span><span class="wd-pill">42 clients</span></div></div>' +
         '<div class="wd-float f2 c-rose"><div class="wd-card-top"><span class="wd-av">AK</span><span class="wd-card-n"><b>Ayesha Kapoor</b><small>AK-01 · Mumbai</small></span></div>' +
           '<div class="wd-card-v" style="margin-top:10px"><b>₹28.9 L</b><span class="ret up">+15.4%</span></div>' + spark([10, 12, 11, 14, 13, 16, 18, 17, 20, 22]) + '</div>' +
         '<div class="wd-float f3"><p class="wd-kick">Your share this quarter</p><ol class="wd-steps" style="margin-top:6px">' +
@@ -1550,13 +1547,13 @@
       : '<h3>How you charge</h3><p class="wd-muted" style="margin:-6px 0 14px">The terms a new client starts on. You can change them for any client later.</p>' + termsFields(terms, 't_') +
         '<p class="wd-note">' + esc((S.info && S.info.fee_note) || '') + '</p>';
     root.innerHTML = '<div class="wd-setup wd-rise"><p class="wd-kick">Set up your wealth desk · step ' + step + ' of 2</p>' +
-      '<h1 style="font:400 clamp(34px,5vw,52px)/1.05 \'Instrument Serif\',Georgia,serif;margin:6px 0 10px">' + (step === 1 ? 'Your book, in one place.' : 'Your commission, worked out.') + '</h1>' +
+      '<h1>' + (step === 1 ? 'Your book, in one place.' : 'Your commission, worked out.') + '</h1>' +
       '<p class="wd-muted" style="margin:0 0 16px">Signed in as ' + esc(me.email || '') + '. Only you will see your clients.</p>' +
       '<div class="wd-steps-top"><i class="on"></i><i class="' + (step === 2 ? 'on' : '') + '"></i></div>' +
       '<form class="wd-panel" data-form="setup">' + body +
         '<div class="wd-acts" style="margin-top:16px">' + (step === 2 ? '<button type="button" class="wd-btn" data-act="setup-back">' + ic('back') + 'Back</button>' : '') +
         '<button type="submit" class="wd-btn primary">' + (step === 1 ? 'Next' : ic('check') + 'Open my desk') + '</button><span class="wd-err" role="alert"></span></div></form>' +
-      '<p class="wd-note" style="text-align:center">Want to look around first? <a class="wd-link" href="wealth.html?demo=1">Open the sample desk</a>.</p></div>';
+      '<p class="wd-note">Want to look around first? <a class="wd-link" href="wealth.html?demo=1">Open the sample desk</a>.</p></div>';
     wireTerms(root);
   }
 
@@ -2160,14 +2157,14 @@
           '<small>.xlsx or .csv · read on this device</small></label>' +
         '<p class="wd-err" data-status role="status"></p>' +
         '<details' + (opts.paste ? ' open' : '') + '><summary class="wd-link" style="display:inline-block;margin-bottom:8px">Or paste rows from a spreadsheet</summary>' +
-          field('Rows', '<textarea name="text" rows="7" style="font-family:\'IBM Plex Mono\',monospace;font-size:13px" placeholder="Symbol, Qty, Avg cost, Date\nRELIANCE, 50, 1250.50, 03/01/2025\nTCS, 12, 3305"></textarea>',
+          field('Rows', '<textarea name="text" rows="7" style="font-size:var(--fs-small)" placeholder="Symbol, Qty, Avg cost, Date\nRELIANCE, 50, 1250.50, 03/01/2025\nTCS, 12, 3305"></textarea>',
             'A header row is recognised by its words; without one the columns are symbol, quantity, average cost, date.', 'full') +
           '<button type="button" class="wd-btn sm" data-read>Read these rows</button></details>' +
         '<p class="wd-note">' + ic('lock') + ' The file is opened in this browser. Only each holding’s stock, quantity and prices are sent, not the name, client code or anything else in the statement.</p>',
       wire: function (form) {
         var status = form.querySelector('[data-status]'), drop = form.querySelector('[data-drop]');
         function go(p) {
-          status.style.color = 'var(--mute)';
+          status.style.color = 'var(--text-muted)';
           status.textContent = 'Reading…';
           p.then(function (st) {
             if (!st.holdings.length) throw new Error('No holdings found. The file needs a column of quantities and one of stock names, symbols or ISINs.');
@@ -2676,7 +2673,7 @@
   }
 
   function confirmModal(title, text, label, fn) {
-    modal({ title: title, body: '<p style="margin:0;color:var(--ink-2)">' + text + '</p>', submit: label, danger: true, onSubmit: fn });
+    modal({ title: title, body: '<p style="margin:0;color:var(--text-secondary)">' + text + '</p>', submit: label, danger: true, onSubmit: fn });
   }
 
   /* ── The statement ───────────────────────────────────────────────────── */
@@ -2694,7 +2691,7 @@
           '<td>' + (h.priced ? esc(px(h.ltp)) : 'at cost') + '</td><td>' + esc(inr(h.value, 0)) + '</td><td>' + esc(signed(h.pnl, 0)) + ' (' + esc(pct(h.pnl_pct, 1)) + ')</td><td>' + (finite(h.weight) ? h.weight.toFixed(1) + '%' : '') + '</td></tr>';
       }).join('') + (num(c.cash) > 0.5 ? '<tr><td>Cash</td><td></td><td></td><td></td><td>' + esc(inr(c.cash, 0)) + '</td><td></td><td></td></tr>' : '') + '</tbody></table>' +
       '<h2>Fee for the current period</h2><p>' + esc(t ? c.terms_label : '') + '</p><table><tbody>' + (f.steps || []).map(function (s) {
-        return '<tr><td>' + esc(s.label) + '<br><small style="color:#777">' + esc(s.formula) + '</small></td><td>' + (s.unit === 'days' ? esc(plural(s.value, 'day')) : esc(inr(s.value))) + '</td></tr>';
+        return '<tr><td>' + esc(s.label) + '<br><small style="color:var(--text-muted)">' + esc(s.formula) + '</small></td><td>' + (s.unit === 'days' ? esc(plural(s.value, 'day')) : esc(inr(s.value))) + '</td></tr>';
       }).join('') + '</tbody></table>';
     if ((c.settlements || []).length) {
       html += '<h2>Settlements</h2><table><thead><tr><th>Period</th><th>Billed</th><th>Status</th></tr></thead><tbody>' + c.settlements.map(function (s) {
@@ -2806,7 +2803,7 @@
       case 'del-desk':
         modal({
           title: 'Delete the whole desk?', danger: true, submit: 'Delete everything',
-          body: '<p style="margin:0;color:var(--ink-2)">Every client, trade, call and settlement. Export first if you want a copy. Type <b>DELETE</b> to confirm.</p>' +
+          body: '<p style="margin:0;color:var(--text-secondary)">Every client, trade, call and settlement. Export first if you want a copy. Type <b>DELETE</b> to confirm.</p>' +
             field('Confirm', '<input name="confirm" autocomplete="off" autocapitalize="characters">'),
           onSubmit: function (fd) {
             return api('/wealth/desk', { method: 'DELETE', body: { confirm: String(fd.get('confirm') || '').trim() } }).then(function () {

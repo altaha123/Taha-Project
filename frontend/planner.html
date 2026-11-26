@@ -15,6 +15,11 @@
      model in its header, and the tabs planner.js lists. If one of those
      changes, this page changes with it. -->
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="theme.js"></script>
+<link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/jetbrains-mono-latin.woff2" crossorigin>
+<link rel="stylesheet" href="tokens.css">
 <title>Money planner: the month your investments could pay your bills | Altaha Screener</title>
 <meta name="description" content="A free money planner for Indian households. Four numbers give the month your investments could cover your spending; then see what a purchase, a goal or a raise does to that date. Your figures stay in your browser." />
 <meta name="robots" content="index,follow" />
@@ -29,23 +34,14 @@
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="shell.css?v=20261124-logos">
 <link rel="stylesheet" href="stock.css?v=20261121-type">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="type.css">
+<link rel="stylesheet" href="components.css">
 <script>
-  (function () {
-    try {
-      var s = localStorage.getItem('altaha-theme');
-      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
-    } catch (e) {}
-  })();
   var API_BASE = "https://taha-project.onrender.com";
 </script>
 <script src="analytics.js" defer></script>

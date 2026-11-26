@@ -122,11 +122,12 @@ const num = t => Number(String(t).replace(/[^0-9.\-]/g, ''));
   const cards = page.locator('#funda-body .kp');
   assert.deepEqual((await cards.locator('.kp-l').allInnerTexts()).map(t => t.toLowerCase()),
     ['revenue', 'ebitda', 'net profit', 'eps']);
-  // FIGURES ARE IN THE INTERFACE SANS. They were once in the display serif,
-  // which is narrow, and nobody saw it: the test browser had web fonts blocked.
-  assert.match(await cards.nth(0).locator('.kp-v').evaluate(el => getComputedStyle(el).fontFamily), /^"?Inter/);
-  assert.ok(!/Instrument Serif/.test(await page.locator('#funda-body .fc h3').evaluate(
-    el => getComputedStyle(el).fontFamily)), 'a chart title is in the display serif');
+  // A CARD'S HEADLINE FIGURE IS A METRIC, so it is in the display face
+  // (Fraunces, at the 22px heading size) like every other metric card. A
+  // chart's title is a card title, and stays in the interface sans.
+  assert.match(await cards.nth(0).locator('.kp-v').evaluate(el => getComputedStyle(el).fontFamily), /^"?Fraunces/);
+  assert.match(await page.locator('#funda-body .fc h3').evaluate(
+    el => getComputedStyle(el).fontFamily), /^"?Inter/, 'a chart title is in the display serif');
   // Each card carries its own small trend, drawn as a line.
   assert.equal(await cards.locator('.kp-s svg path.kp-ln').count(), 4);
   const rev = cards.nth(0);

@@ -385,50 +385,50 @@
      exactly what it chose, and each can be changed. */
 
   var WISHES = [
-    { id: 'profit', icon: '💰', tint: '176,141,46', title: 'Makes good money', say: 'Earns well on what its owners put in', def: 0,
+    { id: 'profit', icon: '💰', tint: 'var(--chart-1)', title: 'Makes good money', say: 'Earns well on what its owners put in', def: 0,
       levels: [
         { tag: 'Good',  q: ['ROE > 12'], num: 'ROE above 12%', note: 'Earns more than ₹12 a year on every ₹100 of its owners’ money.' },
         { tag: 'Great', q: ['ROE > 18'], num: 'ROE above 18%', note: 'Earns more than ₹18 a year on every ₹100 of its owners’ money.' },
         { tag: 'Top',   q: ['ROE > 25'], num: 'ROE above 25%', note: 'Earns more than ₹25 a year on every ₹100 of its owners’ money.' }] },
-    { id: 'growth', icon: '🌱', tint: '47,125,79', title: 'Growing fast', say: 'Sells more and earns more every year', def: 0,
+    { id: 'growth', icon: '🌱', tint: 'var(--chart-3)', title: 'Growing fast', say: 'Sells more and earns more every year', def: 0,
       levels: [
         { tag: 'Steady', q: ['Sales growth 3Y > 10', 'Profit growth 3Y > 10'], num: 'Sales and profit up 10% a year, 3 years', note: 'Sales and profit both grew more than 10% a year over three years.' },
         { tag: 'Fast',   q: ['Sales growth 3Y > 15', 'Profit growth 3Y > 15'], num: 'Sales and profit up 15% a year, 3 years', note: 'Sales and profit both grew more than 15% a year over three years.' },
         { tag: 'Racing', q: ['Sales growth 3Y > 25', 'Profit growth 3Y > 25'], num: 'Sales and profit up 25% a year, 3 years', note: 'Sales and profit both grew more than 25% a year over three years.' }] },
-    { id: 'debt', icon: '🕊️', tint: '68,125,159', title: 'Owes little', say: 'Has not borrowed much', def: 1,
+    { id: 'debt', icon: '🕊️', tint: 'var(--chart-5)', title: 'Owes little', say: 'Has not borrowed much', def: 1,
       levels: [
         { tag: 'Some',        q: ['Debt to equity < 1'],   num: 'Debt to equity under 1',   note: 'Has borrowed less than its own money: under ₹100 for every ₹100 it owns.' },
         { tag: 'Little',      q: ['Debt to equity < 0.5'], num: 'Debt to equity under 0.5', note: 'Has borrowed less than ₹50 for every ₹100 of its own money.' },
         { tag: 'Almost none', q: ['Debt to equity < 0.1'], num: 'Debt to equity under 0.1', note: 'Has borrowed less than ₹10 for every ₹100 of its own money.' }] },
-    { id: 'cheap', icon: '🏷️', tint: '176,58,43', title: 'Not too pricey', say: 'The share price is low for what it earns', def: 1,
+    { id: 'cheap', icon: '🏷️', tint: 'var(--chart-6)', title: 'Not too pricey', say: 'The share price is low for what it earns', def: 1,
       levels: [
         { tag: 'Fair',       q: ['PE > 0', 'PE < 30'], num: 'PE under 30', note: 'You pay less than ₹30 for every ₹1 it earns in a year. Loss-makers are left out.' },
         { tag: 'Cheap',      q: ['PE > 0', 'PE < 20'], num: 'PE under 20', note: 'You pay less than ₹20 for every ₹1 it earns in a year. Loss-makers are left out.' },
         { tag: 'Very cheap', q: ['PE > 0', 'PE < 12'], num: 'PE under 12', note: 'You pay less than ₹12 for every ₹1 it earns in a year. Loss-makers are left out.' }] },
-    { id: 'dividend', icon: '🎁', tint: '128,90,170', title: 'Pays you every year', say: 'Shares its profit as dividends', def: 0,
+    { id: 'dividend', icon: '🎁', tint: 'var(--chart-4)', title: 'Pays you every year', say: 'Shares its profit as dividends', def: 0,
       levels: [
         { tag: 'A little', q: ['Dividend yield > 1'], num: 'Dividend yield above 1%', note: 'Pays more than ₹1 a year on every ₹100 of its shares.' },
         { tag: 'Good',     q: ['Dividend yield > 2'], num: 'Dividend yield above 2%', note: 'Pays more than ₹2 a year on every ₹100 of its shares.' },
         { tag: 'A lot',    q: ['Dividend yield > 4'], num: 'Dividend yield above 4%', note: 'Pays more than ₹4 a year on every ₹100 of its shares.' }] },
-    { id: 'size', icon: '🏢', tint: '90,100,120', title: 'How big?', say: 'Choose the size of company', def: 2, kind: 'choice',
+    { id: 'size', icon: '🏢', tint: 'var(--chart-2)', title: 'How big?', say: 'Choose the size of company', def: 2, kind: 'choice',
       levels: [
         { tag: 'Small',  q: ['Market cap < 5000'], num: 'Market cap under ₹5,000 cr', note: 'All its shares together are worth less than ₹5,000 crore.' },
         { tag: 'Medium', q: ['Market cap >= 5000', 'Market cap < 50000'], num: 'Market cap ₹5,000 to ₹50,000 cr', note: 'All its shares together are worth ₹5,000 to ₹50,000 crore.' },
         { tag: 'Big',    q: ['Market cap >= 50000'], num: 'Market cap above ₹50,000 cr', note: 'All its shares together are worth more than ₹50,000 crore.' }] },
-    { id: 'owners', icon: '🔑', tint: '190,120,30', title: 'Founders still own a lot', say: 'The people who run it hold a big share', def: 1,
+    { id: 'owners', icon: '🔑', tint: 'var(--chart-1)', title: 'Founders still own a lot', say: 'The people who run it hold a big share', def: 1,
       levels: [
         { tag: 'A fair share', q: ['Promoter holding > 40'], num: 'Promoter holding above 40%', note: 'The founders and their family own more than 40 of every 100 shares.' },
         { tag: 'Half',         q: ['Promoter holding > 50'], num: 'Promoter holding above 50%', note: 'The founders and their family own more than half the company.' },
         { tag: 'Most of it',   q: ['Promoter holding > 65'], num: 'Promoter holding above 65%', note: 'The founders and their family own more than 65 of every 100 shares.' }] },
-    { id: 'clean', icon: '🔒', tint: '40,130,130', title: 'No shares pawned', say: 'The owners have not pledged shares for loans', def: 0,
+    { id: 'clean', icon: '🔒', tint: 'var(--chart-3)', title: 'No shares pawned', say: 'The owners have not pledged shares for loans', def: 0,
       levels: [
         { tag: 'None', q: ['Pledged percentage = 0'], num: 'Pledged shares: 0%', note: 'The owners have not handed over any of their shares as security for a loan.' }] },
-    { id: 'cash', icon: '💵', tint: '31,122,85', title: 'Brings in real cash', say: 'Profit that turns up in the bank', def: 1,
+    { id: 'cash', icon: '💵', tint: 'var(--chart-5)', title: 'Brings in real cash', say: 'Profit that turns up in the bank', def: 1,
       levels: [
         { tag: 'Some',   q: ['Operating cash flow > 0'], num: 'Operating cash flow positive', note: 'The business itself brought in cash last year.' },
         { tag: 'Plenty', q: ['Operating cash flow > 0', 'Free cash flow 3Y > 0'], num: 'Free cash flow positive over 3 years', note: 'It brought in cash, and had some left after paying for its own growth, over three years.' },
         { tag: 'All of it', q: ['Operating cash flow > 0', 'Free cash flow 3Y > 0', 'Cash conversion > 1'], num: 'Cash conversion above 1', note: 'It had cash left over, and every rupee of profit arrived as a rupee of cash or more.' }] },
-    { id: 'hot', icon: '🔥', tint: '214,110,40', title: 'Had a strong last quarter', say: 'The newest results were clearly better', def: 0,
+    { id: 'hot', icon: '🔥', tint: 'var(--chart-6)', title: 'Had a strong last quarter', say: 'The newest results were clearly better', def: 0,
       levels: [
         { tag: 'Better',      q: ['Sales growth YoY quarter > 10', 'Profit growth YoY quarter > 10'], num: 'Latest quarter up 10% on last year', note: 'Sales and profit were both more than 10% higher than in the same three months last year.' },
         { tag: 'Much better', q: ['Sales growth YoY quarter > 20', 'Profit growth YoY quarter > 20'], num: 'Latest quarter up 20% on last year', note: 'Sales and profit were both more than 20% higher than in the same three months last year.' },

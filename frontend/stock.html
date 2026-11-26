@@ -4,6 +4,14 @@
 <meta charset="utf-8" /><script src="clean-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="theme.js"></script>
+<!-- Where the API lives. stock.js, broker.js and the tests read it; a
+     deployment that serves the API elsewhere rewrites this one line. -->
+<script>var API_BASE = "https://taha-project.onrender.com";</script>
+<link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/jetbrains-mono-latin.woff2" crossorigin>
+<link rel="stylesheet" href="tokens.css">
 <title>Stock | Altaha Screener</title>
 <meta name="description" content="Price, key figures, score, financials, peers, ownership, delivery, news and filings for any Indian stock, on one page." />
 <meta name="robots" content="index,follow" />
@@ -12,9 +20,6 @@
 <link rel="icon" type="image/png" href="icon-512.png" sizes="512x512" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
@@ -23,21 +28,9 @@
 <link rel="stylesheet" href="ownership.css">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="type.css">
+<link rel="stylesheet" href="components.css">
 <link rel="stylesheet" href="broker.css?v=20261123-broker">
 
-<script>
-  /* Theme is resolved before first paint. Doing it in a stylesheet or after
-     DOMContentLoaded produces a white flash on every load for dark-mode users,
-     which is the single most noticeable rendering bug a site can ship. */
-  (function () {
-    try {
-      var s = localStorage.getItem('altaha-theme');
-      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
-    } catch (e) {}
-  })();
-  var API_BASE = "https://taha-project.onrender.com";
-</script>
 <script src="analytics.js" defer></script>
 <script src="auth.js" defer></script>
 </head>
@@ -214,12 +207,6 @@
         <div class="sc-hero card">
           <div class="dial" id="dial">
             <svg viewBox="0 0 200 200" aria-hidden="true">
-              <defs>
-                <linearGradient id="dialG" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="var(--gold-dp)"/>
-                  <stop offset="1" stop-color="var(--gold-lt)"/>
-                </linearGradient>
-              </defs>
               <circle class="trk" cx="100" cy="100" r="84"/>
               <circle class="arc" id="arc" cx="100" cy="100" r="84"/>
             </svg>

@@ -157,7 +157,7 @@
     clearTimeout(slowTimer);
     $('state').innerHTML =
       '<div class="stk-state" data-nosnippet><div class="big">' + esc(msg) + '</div>' +
-      '<div><a href="./" style="color:var(--gold)">Back to the screener</a></div></div>';
+      '<div><a href="./" style="color:var(--text-primary)">Back to the screener</a></div></div>';
   }
   function liveOff(retry) {
     clearTimeout(slowTimer);
@@ -1179,15 +1179,12 @@
     function y(v) { return H - ((v - lo) / (hi - lo)) * H; }
     var line = 'M' + closes.map(function (v, i) { return x(i).toFixed(1) + ',' + y(v).toFixed(1); }).join(' L');
     var rising = closes[n - 1] >= closes[0];
-    var stroke = rising ? 'var(--sh-up)' : 'var(--sh-dn)';
+    var stroke = rising ? 'var(--gain)' : 'var(--loss)';
     box.innerHTML =
       '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' +
         'Closing price over the last year, from ' + esc(money(closes[0], d.currency)) + ' to ' +
         esc(money(closes[n - 1], d.currency)) + '">' +
-        '<defs><linearGradient id="ovG" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0" stop-color="' + stroke + '" stop-opacity=".22"/>' +
-          '<stop offset="1" stop-color="' + stroke + '" stop-opacity="0"/></linearGradient></defs>' +
-        '<path class="ov-area" d="' + line + ' L' + W + ',' + H + ' L0,' + H + ' Z" fill="url(#ovG)"/>' +
+        '<path class="ov-area" d="' + line + ' L' + W + ',' + H + ' L0,' + H + ' Z" style="fill:' + stroke + '"/>' +
         '<path class="ov-line' + (REDUCED ? '' : ' draw') + '" d="' + line + '" style="stroke:' + stroke + '"/>' +
       '</svg>' +
       '<span class="ov-dot" style="top:' + (100 * y(closes[n - 1]) / H).toFixed(1) + '%;color:' + stroke + '"></span>';
@@ -1437,8 +1434,8 @@
       .catch(function () {
         if (request !== chartRequest) return;
         box.setAttribute('aria-busy', 'false');
-        box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--mute);' +
-          'font-size:13px">' + (isIntraday(asked) && failStatus
+        box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--text-muted);' +
+          'font-size:var(--fs-small)">' + (isIntraday(asked) && failStatus
             ? 'Intraday prices for this stock are not available right now. Try 1M or longer.'
             : 'Price history is not available right now.') + '</div>';
       });
@@ -1492,8 +1489,8 @@
   function drawChart(d, box) {
     var rows = ((d && d.candles) || []).filter(function (r) { return r && typeof r[4] === 'number' && isFinite(r[4]); });
     if (rows.length < 2) {
-      box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--mute);' +
-        'font-size:13px">Not enough history to draw this range.</div>';
+      box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--text-muted);' +
+        'font-size:var(--fs-small)">Not enough history to draw this range.</div>';
       return;
     }
     var closes = rows.map(function (r) { return r[4]; });
@@ -1517,7 +1514,7 @@
     var line = 'M' + pts.join(' L');
     var area = line + ' L' + W + ',' + H + ' L0,' + H + ' Z';
     var rising = closes[n - 1] >= base;
-    var stroke = rising ? 'var(--sh-up)' : 'var(--sh-dn)';
+    var stroke = rising ? 'var(--gain)' : 'var(--loss)';
     var label = (RANGES.filter(function (r) { return r[0] === chartRange; })[0] || [])[1] || '';
 
     var periodLow = Math.min.apply(null, closes), periodHigh = Math.max.apply(null, closes);
@@ -1537,15 +1534,7 @@
         'aria-label="Closing prices for ' + esc(TICKER) + '. Arrow keys move through days; ' +
         'hold Shift to measure the change across a stretch.">' +
         '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
-        '<defs><linearGradient id="sparkG" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0" stop-color="' + stroke + '" stop-opacity=".26"/>' +
-          '<stop offset="1" stop-color="' + stroke + '" stop-opacity="0"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="scSelG" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop class="sc-sel-stop" offset="0" stop-opacity=".32"/>' +
-          '<stop class="sc-sel-stop" offset="1" stop-opacity="0"/>' +
-        '</linearGradient>' +
-        '<clipPath id="scClip"><rect class="sc-clip" x="0" y="-10" width="0" height="' + (H + 20) + '"/></clipPath>' +
+        '<defs><clipPath id="scClip"><rect class="sc-clip" x="0" y="-10" width="0" height="' + (H + 20) + '"/></clipPath>' +
         '</defs>' +
         '<g class="sc-base">' +
           '<path class="spark-fill" d="' + area + '"/>' +
@@ -1553,7 +1542,7 @@
             '" style="stroke:' + stroke + '"/>' +
         '</g>' +
         '<g class="sc-sel" clip-path="url(#scClip)">' +
-          '<path class="sc-sel-fill" d="' + area + '" fill="url(#scSelG)"/>' +
+          '<path class="sc-sel-fill" d="' + area + '"/>' +
           '<path class="sc-sel-line" d="' + line + '"/>' +
         '</g>' +
         '</svg>' + guides +
@@ -3870,7 +3859,9 @@
     if (head && panebar && 'IntersectionObserver' in window) {
       var chrome = document.querySelector('.sh-chrome');
       new IntersectionObserver(function (entries) {
-        panebar.classList.toggle('is-stuck', !entries[0].isIntersecting);
+        /* The newest reading: when two arrive in one callback (a resize and
+           a scroll in the same frame) the first is already out of date. */
+        panebar.classList.toggle('is-stuck', !entries[entries.length - 1].isIntersecting);
       }, { rootMargin: '-' + (((chrome && chrome.offsetHeight) || 96) + 4) + 'px 0px 0px 0px' }).observe(head);
     }
   }

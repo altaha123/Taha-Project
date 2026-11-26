@@ -69,6 +69,18 @@ jobs:
           sys.exit(1 if bad else 0)
           PY
 
+      - name: Theme guardrail
+        # Every colour, font and type size in the frontend is a token from
+        # frontend/tokens.css (THEME.md). A raw hex, an rgb() or a pixel font
+        # size in a stylesheet, a page or a script fails here, so the palette
+        # cannot drift back into six hundred one-off values.
+        run: node frontend/tools/check-theme.cjs
+
+      - name: Palette contrast (WCAG AA, both themes)
+        # Reads the colours out of tokens.css and checks every text and
+        # background pairing the design allows, light and dark.
+        run: node frontend/tools/check-contrast.cjs
+
       - name: Frontend unit tests
         # share.js composes the text that goes onto a public timeline, so its
         # guard against price levels and directives runs on every PR.
