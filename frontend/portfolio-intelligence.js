@@ -14,8 +14,15 @@
   const date = x => { const d = new Date(x); return x && !isNaN(d) ? d.toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}) : x || 'Unavailable'; };
   const safeURL = x => { try {const u = new URL(x);return ['https:','http:'].includes(u.protocol) ? u.href : null;}catch(e){return null;} };
   const empty = text => '<p class="pi-empty">'+esc(text)+'</p>';
+  /* Figures sit on the right. A column is numeric when every cell that holds
+     anything is a figure (a dash is neither); the first column is the row's
+     name and stays on the left. */
+  const plain = c => String(c ?? '').replace(/<[^>]*>/g,'').replace(/&[a-z#0-9]+;/gi,' ').trim();
+  const figure = t => /^[▲▼+−\-₹\s]*[\d][\d,.]*\s*(%|pp|×|x|Cr|L)?(\s*(\/|of)\s*[\d,.]+)?$/.test(t);
   function table(headers, rows) {
-    return '<div class="pi-table-scroll" tabindex="0" role="region" aria-label="'+esc(headers.join(', '))+'"><table class="pi-table"><thead><tr>'+headers.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+    const numeric = headers.map((_,i)=>{if(!i)return false;const cells=rows.map(r=>plain(r[i])).filter(t=>t&&t!=='—');return cells.length>0&&cells.every(figure);});
+    const cls = i => numeric[i] ? ' class="num"' : '';
+    return '<div class="pi-table-scroll" tabindex="0" role="region" aria-label="'+esc(headers.join(', '))+'"><table class="pi-table"><thead><tr>'+headers.map((h,i)=>'<th scope="col"'+cls(i)+'>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map((c,i)=>'<td'+cls(i)+'>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
   }
   const dataTable = (headers, rows, flat) => rows.length ? (flat ? table(headers,rows) : '<details class="pi-data"><summary>View chart data</summary>'+table(headers,rows)+'</details>') : '';
   function card(id,title,question,content,controls='') {
@@ -83,7 +90,8 @@
     if(finite(rb.coverage_pct)&&rb.coverage_pct<99.5) html+='<p class="pi-warning">These shares are of the '+pct(rb.coverage_pct)+' of the book with usable price history, renormalised to 100%. They are not shares of the whole portfolio: '+esc((rb.symbols||[]).join(', '))+' are the holdings measured here.</p>';
     html+=table(['Holding','Share of capital','Share of risk','Difference','Volatility / year'],
       (rb.holdings||[]).map(h=>[esc(h.symbol),pct(h.weight_pct),pct(h.risk_share_pct),
-        '<b class="'+tone(-h.risk_vs_capital_pp)+'">'+sign(h.risk_vs_capital_pp)+' pp</b>',pct(h.volatility_pct)]));
+        // Colour is the meaning (more risk than capital is the adverse side); the arrow follows the sign of the number.
+        '<b class="'+tone(-h.risk_vs_capital_pp)+'">'+(finite(h.risk_vs_capital_pp)&&h.risk_vs_capital_pp!==0?(h.risk_vs_capital_pp>0?'▲ ':'▼ '):'')+sign(h.risk_vs_capital_pp)+' pp</b>',pct(h.volatility_pct)]));
     html+=bench
       ? '<div class="pi-confidence"><span>Beta vs '+esc(bench.name)+' <b>'+num(bench.beta,2)+'</b></span><span>R² <b>'+num(bench.r_squared,2)+'</b></span><span>Tracking error <b>'+pct(bench.tracking_error_pct)+'</b></span><span>Up capture <b>'+pct(bench.up_capture_pct)+'</b></span><span>Down capture <b>'+pct(bench.down_capture_pct)+'</b></span><span>Observations <b>'+num(bench.observations,0)+'</b></span></div>'
       : '<p class="pi-note">Benchmark sensitivity unavailable: '+esc((rb.benchmark&&rb.benchmark.reason)||'no index history accompanied this report')+'</p>';
@@ -241,7 +249,7 @@
     html+='<div class="pi-grid">'+Object.entries(groupNames).map(([k,title])=>card('pi-group-'+k,title,k==='risk'?'Heuristic monitoring priority, not a volatility attribution':k==='weak'?'Weak evidence is a review signal, not an automatic sell instruction':'Ranked by portfolio relevance',d.groups?.[k]?.length?'<ol class="pi-ranking">'+d.groups[k].map(r=>'<li><div><a href="#pi-holdings" data-focus-symbol="'+esc(r.symbol)+'">'+esc(r.symbol)+'</a><span>'+pct(r.weight_pct)+' · score '+num(r.score)+'</span></div><p>'+esc(r.reasons.join('. '))+'</p></li>').join('')+'</ol>':empty('No holdings meet this category’s available evidence requirements.'))).join('')+'</div>';
     const corr=d.history?.correlation||{}, hasCorr=corr.matrix?.some((row,i)=>row.some((c,j)=>i!==j&&finite(c.value)));
     let heat=empty('At least 60 overlapping adjusted daily return observations per pair are required. Missing or unverified history is not filled.');
-    if(hasCorr) heat='<div class="pi-heat-scroll" tabindex="0" role="region" aria-label="Correlation matrix"><table class="pi-heat"><thead><tr><th></th>'+corr.symbols.map(s=>'<th scope="col">'+esc(s)+'</th>').join('')+'</tr></thead><tbody>'+corr.matrix.map((row,i)=>'<tr><th scope="row">'+esc(corr.symbols[i])+'</th>'+row.map((c,j)=>'<td style="background:'+(finite(c.value)?'rgba(76,122,158,'+(.08+Math.abs(c.value)*.5)+')':'transparent')+'" title="'+esc(corr.symbols[i]+' / '+corr.symbols[j])+': '+c.observations+' overlapping returns">'+num(c.value,2)+'<small>n='+c.observations+'</small></td>').join('')+'</tr>').join('')+'</tbody></table></div><p>'+esc(corr.high_pairs?.length?corr.high_pairs.length+' pairs have correlation ≥0.8 and involve '+pct(corr.high_correlation_exposure_pct)+' of priced capital. These holdings may provide less diversification than their count suggests.':'No measured pair exceeds 0.8 correlation in this window. This does not establish independence.')+'</p>';
+    if(hasCorr) heat='<div class="pi-heat-scroll" tabindex="0" role="region" aria-label="Correlation matrix"><table class="pi-heat"><thead><tr><th></th>'+corr.symbols.map(s=>'<th scope="col">'+esc(s)+'</th>').join('')+'</tr></thead><tbody>'+corr.matrix.map((row,i)=>'<tr><th scope="row">'+esc(corr.symbols[i])+'</th>'+row.map((c,j)=>'<td style="background:'+(finite(c.value)?'color-mix(in srgb,var(--highlight) '+Math.round(3+Math.abs(c.value)*19)+'%,var(--surface))':'transparent')+'" title="'+esc(corr.symbols[i]+' / '+corr.symbols[j])+': '+c.observations+' overlapping returns">'+num(c.value,2)+'<small>n='+c.observations+'</small></td>').join('')+'</tr>').join('')+'</tbody></table></div><p>'+esc(corr.high_pairs?.length?corr.high_pairs.length+' pairs have correlation ≥0.8 and involve '+pct(corr.high_correlation_exposure_pct)+' of priced capital. These holdings may provide less diversification than their count suggests.':'No measured pair exceeds 0.8 correlation in this window. This does not establish independence.')+'</p>';
     html+=card('pi-correlation','Correlation & Hidden Concentration','Do different holdings behave alike?',heat+'<p class="pi-note">'+esc(corr.from||'—')+' to '+esc(corr.to||'—')+'. '+esc(d.history?.method||'')+'</p>');
     html+=card('pi-scenarios','Hypothetical Stress Scenarios','What would an equal decline in an exposed sleeve mean?',table(['Hypothetical shock','Exposure','Arithmetic','Change in value'],(d.scenarios||[]).map(s=>[esc(s.name),pct(s.exposure_pct),esc(s.arithmetic),money(s.impact_inr)]))+'<p class="pi-note">Exposure arithmetic only. Other holdings are assumed unchanged. No estimated beta, forecast, second-order effect, oil, currency or rate sensitivity is implied.</p>');
     html+=card('pi-developments','Latest Portfolio Developments','What changed in the world around your holdings?',newsCards(d.developments?.events)+'<p class="pi-note">Feed cache checked '+esc(date(d.developments?.checked_at))+'. '+esc(d.developments?.method)+'</p>');
@@ -250,7 +258,9 @@
     html+=card('pi-quality','Data Quality','Coverage and freshness set the limits of this review','<div class="pi-confidence"><span>Scored capital <b>'+pct(q.scored_value_pct)+'</b></span><span>Sector classified <b>'+pct(q.sector_value_pct)+'</b></span><span>Holdings with costs <b>'+pct(q.cost_holdings_pct)+'</b></span><span>Confidence coverage <b>'+pct(q.confidence_coverage_pct)+'</b></span></div>'+(q.warnings||[]).map(w=>'<p class="pi-warning">'+esc(w)+'</p>').join('')+'<p class="pi-note">Valuation sources: '+esc(q.price_sources?.join(', '))+'. Price dates: '+esc(q.price_dates?.join(', ')||'Unavailable')+'. Score scan: '+esc(date(q.score_as_of))+'. Benchmark weights: '+esc(d.benchmark?.as_of)+'.</p><p class="pi-note">Filings last poll: '+esc(date(d.developments?.source_status?.filings?.last_poll))+'. '+esc(d.developments?.source_status?.filings?.error||'')+' Press cache age: '+num(d.developments?.source_status?.press?.age_seconds,0)+' seconds. '+esc((d.developments?.source_status?.press?.errors||[]).join?.('; ')||d.developments?.source_status?.press?.error||'')+'</p><p class="pi-note">'+esc(d.snapshot_note||'Review history is saved only in this browser. Clearing browser data removes it; it is not synced across devices.')+'</p>');
     return html+'</div>';
   }
-  function palette(i) {return ['#A38338','#447D9F','#518E7A','#9A729B','#B37452','#718294'][i%6];}
+  /* Every chart colour is a theme token, read when the chart is drawn (theme.js). */
+  function theme() {return root.AltahaTheme.chart();}
+  function palette(i) {return 'var(--chart-'+(i%6+1)+')';}   // for markup; a canvas asks theme()
   let loader;
   function loadChart() {
     if(root.Chart) return Promise.resolve(root.Chart);
@@ -260,34 +270,48 @@
   }
   function destroy() {state.charts.forEach(c=>c.destroy());state.charts=[];}
   function chartFailure(canvas) {if(canvas?.parentElement){canvas.parentElement.innerHTML=empty('Chart unavailable. Open “View chart data” below for the full figures.');}}
-  function draw(d) {
+  function draw(d,still) {
     destroy();
-    const style=getComputedStyle(document.documentElement), ink=style.getPropertyValue('--ink').trim()||'#242627', mute=style.getPropertyValue('--mute').trim()||'#69706E';
-    const dark=document.documentElement.dataset.theme==='dark';
+    const T=theme(), ink=T.text, mute=T.axis, sans=T.fontSans.split(',')[0].replace(/["']/g,'');
+    const small=parseInt(root.AltahaTheme.font('--fs-small'),10)||T.axisSize;
     function create(id,type,labels,datasets,extra={}) {
       const canvas=document.getElementById(id);if(!canvas || !canvas.getBoundingClientRect().width)return;
-      const grid=dark?'rgba(255,255,255,.10)':'rgba(0,0,0,.08)';
-      const options={responsive:true,maintainAspectRatio:false,animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:350},color:ink,
+      const grid=T.grid;
+      const options={responsive:true,maintainAspectRatio:false,animation:still||matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:350},color:ink,
         events:['mousemove','mouseout','click','touchstart','touchmove'],
-        plugins:{legend:{display:datasets.length>1,position:'bottom',labels:{color:ink,boxWidth:10,padding:16,font:{size:12}}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+num(typeof ctx.parsed==='number'?ctx.parsed:ctx.parsed.x)}}},
-        scales:type==='doughnut'?{}:{x:{grid:{color:grid},ticks:{color:mute,font:{size:11}}},y:{grid:{display:false},ticks:{color:ink,font:{size:12},autoSkip:false}}},...extra};
+        plugins:{legend:{display:datasets.length>1,position:'bottom',labels:{color:T.textSecondary,boxWidth:10,padding:16,font:{family:sans,size:T.axisSize}}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+num(typeof ctx.parsed==='number'?ctx.parsed:ctx.parsed.x)}}},
+        scales:type==='doughnut'?{}:{x:{grid:{color:grid},ticks:{color:mute,font:{family:sans,size:T.axisSize}}},y:{grid:{display:false},ticks:{color:mute,font:{family:sans,size:T.axisSize},autoSkip:false}}},...extra};
+      /* A chart that passes its own scales or plugins replaces the ones above
+         wholesale, so the house rules are laid back over whatever it passed:
+         11px muted axis labels, gridlines at half-strength border, slim bars,
+         and a tooltip that is a raised surface rather than a black box. */
+      const tick={color:mute,font:{family:sans,size:T.axisSize}};
+      Object.values(options.scales||{}).forEach(sc=>{
+        sc.ticks={...tick,...(sc.ticks||{}),font:tick.font};
+        if(!(sc.grid&&sc.grid.display===false))sc.grid={color:grid,...(sc.grid||{})};
+        sc.border={color:T.border,...(sc.border||{})};
+        if(sc.title)sc.title={...sc.title,color:mute,font:tick.font};
+      });
+      options.plugins=options.plugins||{};
+      options.plugins.tooltip={backgroundColor:T.raised,titleColor:T.text,bodyColor:T.text,borderColor:T.borderStrong,borderWidth:1,cornerRadius:8,padding:10,boxPadding:4,titleFont:{family:sans,size:small,weight:'600'},bodyFont:{family:sans,size:small},...(options.plugins.tooltip||{})};
+      if(type==='bar')datasets.forEach(ds=>{if(ds.maxBarThickness==null)ds.maxBarThickness=datasets.length>1?8:12;ds.borderRadius=2;});
       try {const c=new root.Chart(canvas,{type,data:{labels,datasets},options,plugins:extra._plugins||[]});state.charts.push(c);}catch(e){chartFailure(canvas);}
     }
     const a=allocation(d);
-    create('pi-allocation-chart','doughnut',a.map(x=>x.label),[{label:'Weight',data:a.map(x=>x.weight_pct),backgroundColor:a.map((_,i)=>palette(i)),borderWidth:2,borderColor:dark?'#181D22':'#fff'}],{cutout:'72%',onClick:(e,points)=>{if(points[0])filterAllocation(a[points[0].index].label);},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const v=a[c.dataIndex];return [pct(v.weight_pct)+' · '+money(v.value),v.count+' holdings · score '+num(v.score)];}}}}});
+    create('pi-allocation-chart','doughnut',a.map(x=>x.label),[{label:'Weight',data:a.map(x=>x.weight_pct),backgroundColor:a.map((_,i)=>T.series[i%6]),borderWidth:2,borderColor:T.surface}],{cutout:'72%',onClick:(e,points)=>{if(points[0])filterAllocation(a[points[0].index].label);},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const v=a[c.dataIndex];return [pct(v.weight_pct)+' · '+money(v.value),v.count+' holdings · score '+num(v.score)];}}}}});
     const rows=d.holdings||[], cap=d.policy?.max_stock_pct||15;
-    const capLine={id:'stockPolicy',afterDraw(c){const {ctx,chartArea,scales}=c;if(!chartArea)return;const x=scales.x.getPixelForValue(cap);ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle=ink;ctx.beginPath();ctx.moveTo(x,chartArea.top);ctx.lineTo(x,chartArea.bottom);ctx.stroke();ctx.restore();}};
-    create('pi-concentration-chart','bar',rows.map(r=>r.symbol),[{label:'Portfolio weight %',data:rows.map(r=>r.weight_pct),backgroundColor:rows.map(r=>r.weight_pct>cap?'#AF6157':'#447D9F'),borderRadius:3}],{indexAxis:'y',scales:{x:{min:0,max:Math.min(100,Math.max(cap,...rows.map(r=>r.weight_pct))*1.1),ticks:{color:mute}},y:{ticks:{color:ink,autoSkip:false},grid:{display:false}}},_plugins:[capLine],plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const r=rows[c.dataIndex];return [pct(r.weight_pct)+' · policy limit '+pct(cap),'Score '+num(r.composite)+' · P&L '+money(r.pnl)];}}}}});
+    const capLine={id:'stockPolicy',afterDraw(c){const {ctx,chartArea,scales}=c;if(!chartArea)return;const x=scales.x.getPixelForValue(cap);ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle=T.axis;ctx.beginPath();ctx.moveTo(x,chartArea.top);ctx.lineTo(x,chartArea.bottom);ctx.stroke();ctx.restore();}};
+    create('pi-concentration-chart','bar',rows.map(r=>r.symbol),[{label:'Portfolio weight %',data:rows.map(r=>r.weight_pct),backgroundColor:rows.map(r=>r.weight_pct>cap?T.loss:T.series[0]),borderRadius:3}],{indexAxis:'y',scales:{x:{min:0,max:Math.min(100,Math.max(cap,...rows.map(r=>r.weight_pct))*1.1),ticks:{color:mute}},y:{ticks:{color:ink,autoSkip:false},grid:{display:false}}},_plugins:[capLine],plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const r=rows[c.dataIndex];return [pct(r.weight_pct)+' · policy limit '+pct(cap),'Score '+num(r.composite)+' · P&L '+money(r.pnl)];}}}}});
     const comp=sectorComparison(d);
-    create('pi-sector-chart','bar',comp.map(s=>s.sector),[{label:'Portfolio %',data:comp.map(s=>s.weight_pct),backgroundColor:'#4C515A',borderRadius:2},{label:'Nifty 500 proxy %',data:comp.map(s=>s.benchmark_weight_pct),backgroundColor:'#447D9F',borderRadius:2},{label:'Active weight (pp)',data:comp.map(s=>s.active_weight_pct),backgroundColor:comp.map(s=>s.active_weight_pct>=0?'#518E7A':'#AF6157'),borderRadius:2}],{indexAxis:'y'});
+    create('pi-sector-chart','bar',comp.map(s=>s.sector),[{label:'Portfolio %',data:comp.map(s=>s.weight_pct),backgroundColor:T.series[0],borderRadius:2},{label:'Nifty 500 proxy %',data:comp.map(s=>s.benchmark_weight_pct),backgroundColor:T.series[1],borderRadius:2},{label:'Active weight (pp)',data:comp.map(s=>s.active_weight_pct),backgroundColor:comp.map(s=>s.active_weight_pct>=0?T.gain:T.loss),borderRadius:2}],{indexAxis:'y'});
     const bands=d.score_distribution||[];
-    create('pi-distribution-chart','bar',bands.map(b=>b.label),[{label:'Capital %',data:bands.map(b=>b.weight_pct),backgroundColor:bands.map(b=>b.label==='Strong'||b.label==='Good'?'#518E7A':b.label==='Average'?'#4C515A':b.label==='Weak'||b.label==='Poor'?'#AF6157':'#718294'),borderRadius:3}],{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>pct(bands[c.dataIndex].weight_pct)+' · '+bands[c.dataIndex].count+' holdings'}}}});
+    create('pi-distribution-chart','bar',bands.map(b=>b.label),[{label:'Capital %',data:bands.map(b=>b.weight_pct),backgroundColor:bands.map(b=>b.label==='Strong'||b.label==='Good'?T.gain:b.label==='Average'?T.series[4]:b.label==='Weak'||b.label==='Poor'?T.loss:T.borderStrong),borderRadius:3}],{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>pct(bands[c.dataIndex].weight_pct)+' · '+bands[c.dataIndex].count+' holdings'}}}});
     const pnl=rows.filter(r=>finite(r.pnl)).sort((a,b)=>b.pnl-a.pnl);
-    create('pi-contribution-chart','bar',pnl.map(r=>r.symbol),[{label:'P&L ₹',data:pnl.map(r=>r.pnl),backgroundColor:pnl.map(r=>r.pnl>=0?'#518E7A':'#AF6157'),borderRadius:3}],{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>[money(pnl[c.dataIndex].pnl),pct(pnl[c.dataIndex].contribution_pct)+' of current portfolio value']}}}});
+    create('pi-contribution-chart','bar',pnl.map(r=>r.symbol),[{label:'P&L ₹',data:pnl.map(r=>r.pnl),backgroundColor:pnl.map(r=>r.pnl>=0?T.gain:T.loss),borderRadius:3}],{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>[money(pnl[c.dataIndex].pnl),pct(pnl[c.dataIndex].contribution_pct)+' of current portfolio value']}}}});
     const points=d.history?.windows?.[state.window]?.points||[];
-    create('pi-risk-return-chart','bubble',[],[{label:'Holding',data:points.map(p=>({x:p.volatility_pct,y:p.return_pct,r:Math.max(3,Math.sqrt(p.weight_pct)*3)})),backgroundColor:points.map(p=>finite(p.score)?p.score>=((d.score_bands||{}).strong||60)?'#518E7Ab0':p.score<((d.score_bands||{}).weak||40)?'#AF6157b0':'#447D9Fb0':'#718294b0')}],{scales:{x:{title:{display:true,text:'Annualised volatility %',color:ink},ticks:{color:mute}},y:{title:{display:true,text:state.window+' return %',color:ink},ticks:{color:mute}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const p=points[c.dataIndex];return [p.symbol+' · '+pct(p.weight_pct)+' weight','Return '+pct(p.return_pct)+' · volatility '+pct(p.volatility_pct),p.from+' to '+p.to];}}}}});
+    create('pi-risk-return-chart','bubble',[],[{label:'Holding',data:points.map(p=>({x:p.volatility_pct,y:p.return_pct,r:Math.max(3,Math.sqrt(p.weight_pct)*3)})),backgroundColor:points.map(p=>finite(p.score)?p.score>=((d.score_bands||{}).strong||60)?root.AltahaTheme.alpha('--gain',.7):p.score<((d.score_bands||{}).weak||40)?root.AltahaTheme.alpha('--loss',.7):root.AltahaTheme.alpha('--chart-1',.7):root.AltahaTheme.alpha('--chart-5',.7))}],{scales:{x:{title:{display:true,text:'Annualised volatility %',color:ink},ticks:{color:mute}},y:{title:{display:true,text:state.window+' return %',color:ink},ticks:{color:mute}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const p=points[c.dataIndex];return [p.symbol+' · '+pct(p.weight_pct)+' weight','Return '+pct(p.return_pct)+' · volatility '+pct(p.volatility_pct),p.from+' to '+p.to];}}}}});
     const f=d.factor_exposure||[];
-    create('pi-factors-chart','bar',f.map(x=>x.label),[{label:'Score / 100',data:f.map(x=>x.value),backgroundColor:'#447D9F',borderRadius:3}],{indexAxis:'y',scales:{x:{min:0,max:100,ticks:{color:mute}},y:{ticks:{color:ink,autoSkip:false},grid:{display:false}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>num(f[c.dataIndex].value)+' · '+pct(f[c.dataIndex].coverage_pct)+' capital covered'}}}});
+    create('pi-factors-chart','bar',f.map(x=>x.label),[{label:'Score / 100',data:f.map(x=>x.value),backgroundColor:T.series[0],borderRadius:3}],{indexAxis:'y',scales:{x:{min:0,max:100,ticks:{color:mute}},y:{ticks:{color:ink,autoSkip:false},grid:{display:false}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>num(f[c.dataIndex].value)+' · '+pct(f[c.dataIndex].coverage_pct)+' capital covered'}}}});
   }
   function focus(symbol) {const r=[...document.querySelectorAll('.pi-holding')].find(r=>r.dataset.symbol===symbol);if(r){r.hidden=false;r.open=true;r.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}}
   function filterAllocation(value) {
@@ -342,10 +366,20 @@
     return d;
   }
   function exportHTML(d,css) {
+    /* A printout is always the light palette. The charts go into the file as
+       pictures of the live canvases, so on a dark page they are redrawn light
+       for the picture (no animation, so the frame is complete) and then put
+       back. The document itself carries data-theme="light" and links the live
+       tokens.css by absolute URL: the copied rules name tokens and the fonts
+       load from beside that file. */
+    const el=document.documentElement, was=el.getAttribute('data-theme'), relight=was==='dark'&&!!root.Chart&&state.charts.length>0;
+    if(relight){el.setAttribute('data-theme','light');try{draw(d,true);}catch(e){}}
     const box=document.createElement('div');box.innerHTML=build(d,true);
     box.querySelectorAll('canvas').forEach(canvas=>{const live=document.getElementById(canvas.id);try{if(!live||!live.width||!live.getBoundingClientRect().width)throw Error();const img=document.createElement('img');img.src=live.toDataURL('image/png');img.alt=canvas.getAttribute('aria-label');img.style='max-width:100%;height:auto';canvas.parentElement.replaceWith(img);}catch(e){canvas.parentElement.remove();}});
     box.querySelectorAll('details').forEach(el=>el.open=true);box.querySelectorAll('button').forEach(el=>{const span=document.createElement('span');span.className=el.className;span.innerHTML=el.innerHTML;el.replaceWith(span);});
-    return '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Altaha Portfolio Intelligence</title><style>'+css+'\n.pi-root{max-width:1180px;margin:auto}.pi-grid{display:block}.pi-card{margin-bottom:20px}body{background:var(--surface);color:var(--text-primary);padding:20px}details{break-inside:avoid}</style><body>'+box.innerHTML+'</body></html>';
+    if(relight){el.setAttribute('data-theme',was);try{draw(d);}catch(e){}}
+    let tokens='tokens.css';try{tokens=new URL('tokens.css',location.href).href;}catch(e){}
+    return '<!doctype html><html lang="en" data-theme="light"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Altaha Portfolio Intelligence</title><link rel="stylesheet" href="'+esc(tokens)+'"><style>'+css+'\n.pi-root{max-width:1180px;margin:auto}.pi-grid{display:block}.pi-card{margin-bottom:20px}body{background:var(--surface);color:var(--text-primary);padding:20px}details{break-inside:avoid}</style><body>'+box.innerHTML+'</body></html>';
   }
   root.PortfolioIntelligence={mount,build,compare,snapshot,acceptSnapshot,exportHTML,destroy};
   if(typeof module!=='undefined')module.exports={compare,snapshot,build,allocation,sectorComparison,safeURL};

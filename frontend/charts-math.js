@@ -701,8 +701,11 @@
        calc   (D, p) -> { key: array }. D carries o, h, l, c, v, t.
      ══════════════════════════════════════════════════════════════════════ */
 
-  var GOLD = "#B08D2E", GREEN = "#1F5D45", RED = "#8E2F2A", BLUE = "#2E5E8E", INK = "#33333A",
-      PURPLE = "#6B4E9B", TEAL = "#1E7B85", ORANGE = "#C0692B", MUTE = "#6E6E78", PINK = "#B0457A";
+  /* Default colours, as theme token names rather than values: this file has
+     no page to read a colour from (it also runs under Node). The workspace
+     resolves a name that starts with "--" when it draws. */
+  var GOLD = "--chart-1", GREEN = "--gain", RED = "--loss", BLUE = "--chart-2", INK = "--text-secondary",
+      PURPLE = "--chart-5", TEAL = "--chart-3", ORANGE = "--chart-6", MUTE = "--text-muted", PINK = "--chart-4";
 
   var LEN = function (v, l) { return { k: "len", l: l || "Length", v: v, min: 1, max: 500 }; };
   var SRC = { k: "src", l: "Source", v: "close", opts: ["close", "open", "high", "low", "hl2", "hlc3", "ohlc4"] };

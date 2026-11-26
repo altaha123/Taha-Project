@@ -35,6 +35,9 @@
     return (v > 0 ? "+" : "") + Number(v).toFixed(dp == null ? 2 : dp) + "%";
   }
 
+  /* A coloured figure carries an arrow, and the arrow follows the sign. */
+  function arrow(v) { return v > 0 ? "▲ " : v < 0 ? "▼ " : ""; }
+
   var state = { sym: null, range: "1D", busy: false, data: null };
 
   /* ---- the panel ------------------------------------------------------- */
@@ -106,8 +109,8 @@
         return "<tr><td>" + h.sessions + " sessions</td>" +
                "<td><b>" + h.resolved_in_direction_pct + "%</b></td>" +
                '<td class="' + (h.median_return_pct > 0 ? "pos" : h.median_return_pct < 0 ? "neg" : "") +
-                 '">' + pct(h.median_return_pct) + "</td>" +
-               '<td class="neg">' + pct(h.worst_pct) + "</td>" +
+                 '">' + arrow(h.median_return_pct) + pct(h.median_return_pct) + "</td>" +
+               '<td class="neg">' + arrow(h.worst_pct) + pct(h.worst_pct) + "</td>" +
                "<td>" + h.n + "</td></tr>";
       }).join("");
     return '<div class="patrate"><h5>What happened the last ' + br.instances +
@@ -237,11 +240,17 @@
       try { return localStorage.getItem(KEY) !== "0"; } catch (e) { return true; }
     })();
 
-    function tok(name, dflt) {
+    /* Colours and the label face are tokens, asked for at draw time so the
+       overlay follows the theme. */
+    function tok(name) {
+      if (window.AltahaTheme) return window.AltahaTheme.color(name);
       try {
-        var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        return v || dflt;
-      } catch (e) { return dflt; }
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      } catch (e) { return ""; }
+    }
+    function labelFont() {
+      var T = window.AltahaTheme ? window.AltahaTheme.chart() : null;
+      return T ? "600 " + T.axisSize + "px " + T.fontSans : "";
     }
 
     function tap() {
@@ -323,9 +332,9 @@
     }
 
     function colourFor(direction) {
-      if (direction === "bullish") return tok("--pass", "#1F5D45");
-      if (direction === "bearish") return tok("--fail", "#8E2F2A");
-      return tok("--gold", "#666D79");
+      if (direction === "bullish") return tok("--gain");
+      if (direction === "bearish") return tok("--loss");
+      return tok("--text-secondary");
     }
 
     function dash(c, a, b, colour, width) {
@@ -340,16 +349,20 @@
       c.restore();
     }
 
+    /* A raised box with primary ink in both themes. The shape's own line
+       carries the direction colour; the words do not need to. */
     function label(c, text, x, y, colour, right) {
       c.save();
-      c.font = "600 10px 'IBM Plex Mono', monospace";
+      var face = labelFont();
+      if (face) c.font = face;
       var w = c.measureText(text).width;
       if (right) x -= w;
-      c.fillStyle = tok("--paper", "#FFFFFF");
-      c.globalAlpha = 0.88;
-      c.fillRect(x - 3, y - 11, w + 6, 14);
-      c.globalAlpha = 1;
-      c.fillStyle = colour;
+      c.fillStyle = tok("--surface-raised");
+      c.fillRect(x - 4, y - 12, w + 8, 16);
+      c.strokeStyle = tok("--border");
+      c.lineWidth = 1;
+      c.strokeRect(x - 3.5, y - 11.5, w + 7, 15);
+      c.fillStyle = tok("--text-primary");
       c.fillText(text, x, y);
       c.restore();
     }
@@ -422,7 +435,7 @@
         pts.forEach(function (q) {
           ctx.beginPath();
           ctx.arc(q[0], q[1], 4.5, 0, Math.PI * 2);
-          ctx.fillStyle = tok("--paper", "#FFFFFF");
+          ctx.fillStyle = tok("--surface");
           ctx.fill();
           ctx.lineWidth = 2.4;
           ctx.strokeStyle = colour;
@@ -560,6 +573,7 @@
         window.AltahaChartTap.watch(function () { sig = ""; draw(); });
       }
       window.addEventListener("resize", function () { sig = ""; draw(); });
+      window.addEventListener("altaha:theme", function () { sig = ""; draw(); });
     }
 
     /* The workspace mounts asynchronously, and on a slow connection so does

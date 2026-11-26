@@ -277,7 +277,9 @@ const POINTS = { trend: 2, ray: 2, xline: 2, infoline: 2, arrowline: 2, angle: 2
       await page.mouse.click(x, y);
       assert.ok(await page.isVisible('#cw-insp.on'), 'a click selects the line');
       await page.click('#cw-insp [data-x="color"]'); await page.locator('.cw-pop-colors .cw-sw').nth(9).click();
-      assert.equal(await page.evaluate(() => AltahaCharts.drawings().slice(-1)[0].color), '#2E5E8E', 'recoloured');
+      /* A swatch is a theme token, not a hex: the drawing keeps the token's
+         name, so it is the right colour in both themes (charts-workspace.js). */
+      assert.equal(await page.evaluate(() => AltahaCharts.drawings().slice(-1)[0].color), '--info', 'recoloured');
       const before = await page.evaluate(() => AltahaCharts.drawings().slice(-1)[0].pts[0].p);
       await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x, y + 20); await page.mouse.move(x, y + 40); await page.mouse.up();
       assert.ok(await page.evaluate(() => AltahaCharts.drawings().slice(-1)[0].pts[0].p) < before, 'dragged lower');
