@@ -340,6 +340,12 @@ html.cw-max-on,html.cw-max-on body{overflow:hidden}
 .cw-chip.cw-ico{padding:3px 8px}
 .cw-chip.cw-ico svg{width:14px;height:14px}
 .cw-note{margin-left:auto;text-align:right;letter-spacing:normal;flex:1 1 180px;min-width:0;text-transform:none;font-family:var(--font-sans);font-size:var(--fs-small)}
+/* Wider than a phone the note keeps to one line and gives way first, so the
+   foot never wraps to a second row when its hint changes: a taller foot
+   takes its height from the chart, and every drawing moves under the pointer. */
+@media (min-width:561px){
+  .cw-note{flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
 
 /* ── Popovers, menus and dialogs (always inside #cw) ──────────────────── */
 
