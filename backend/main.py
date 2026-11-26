@@ -193,6 +193,12 @@ try:
     import score_explain
 except Exception:
     score_explain = None
+# Money Flow: institutional flows by sector. Optional like the rest: the site
+# runs without it and the tab says it is off.
+try:
+    import money_flow
+except Exception:
+    money_flow = None
 try:
     import special as special_engine
 except Exception:
@@ -4216,6 +4222,100 @@ def delivery_trends(min_turnover_cr: float = 10.0, limit: int = 40):
         raise HTTPException(503, f"Delivery data unavailable: {type(e).__name__}")
 
 
+# ---------------------------------------------------------------------------
+# Money Flow
+#
+# Where institutional money is moving: NSDL's fortnightly FPI flow by sector,
+# NSE's daily FII/DII figures, sector rotation against the Nifty 50 and
+# stock-level accumulation. Every endpoint is a read of what the evening job
+# stored (money_flow.py); nothing here fetches from NSDL or NSE in a request.
+# ---------------------------------------------------------------------------
+
+@app.get("/moneyflow")
+def moneyflow_overview():
+    """
+    The Money Flow page in one payload: the FII/DII chart, the FPI heatmap,
+    the rotation chart and every sector's card with its score and the three
+    parts it is made of.
+    """
+    if money_flow is None:
+        raise HTTPException(503, "Money Flow is not loaded on this instance.")
+    try:
+        return to_native(money_flow.overview())
+    except Exception as e:
+        raise HTTPException(503, f"Money Flow unavailable: {type(e).__name__}")
+
+
+@app.get("/moneyflow/brief")
+def moneyflow_brief():
+    """Four figures for the Market page's card. The page itself is /moneyflow."""
+    if money_flow is None:
+        return {"available": False, "message": "Money Flow is not loaded on this instance."}
+    try:
+        return to_native(money_flow.brief())
+    except Exception as e:
+        raise HTTPException(503, f"Money Flow unavailable: {type(e).__name__}")
+
+
+@app.get("/moneyflow/status")
+def moneyflow_status():
+    """What the store holds, the last runs of each job and what they said."""
+    if money_flow is None:
+        return {"available": False, "error": "Money Flow is not loaded on this instance."}
+    try:
+        return to_native(money_flow.status())
+    except Exception as e:
+        raise HTTPException(503, f"Money Flow status unavailable: {type(e).__name__}")
+
+
+@app.get("/moneyflow/sector/{slug}")
+def moneyflow_sector(slug: str):
+    """One sector: its card, two years of FPI fortnights, and the stocks
+    inside it showing the most accumulation."""
+    if money_flow is None:
+        raise HTTPException(503, "Money Flow is not loaded on this instance.")
+    if not slug or len(slug) > 80:
+        raise HTTPException(400, "Provide a sector.")
+    try:
+        out = money_flow.sector_detail(slug)
+    except Exception as e:
+        raise HTTPException(503, f"Money Flow unavailable: {type(e).__name__}")
+    if out is None:
+        raise HTTPException(404, "No such sector.")
+    return to_native(out)
+
+
+@app.post("/admin/moneyflow/run")
+def admin_moneyflow_run(job: str = "daily", key: str = "", limit: int = 40, months: int = 0,
+                        x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key")):
+    """
+    Run one Money Flow job and return what each step did.
+
+      daily      index closes, FII/DII, deals, any new NSDL report, the scores
+      backfill   one bounded slice of history; call until `remaining` is 0
+      recompute  the scores only, from what is stored
+
+    Driven by the money-flow workflow. Idempotent: a second call the same
+    evening writes nothing it has already written.
+    """
+    _require_admin(x_admin_key or key)
+    if money_flow is None:
+        raise HTTPException(503, "Money Flow is not loaded on this instance.")
+    job = (job or "daily").strip().lower()
+    if job not in ("daily", "backfill", "recompute"):
+        raise HTTPException(400, "job is daily, backfill or recompute.")
+    try:
+        if job == "backfill":
+            out = money_flow.run_backfill(months=(months or None), limit=max(1, min(int(limit), 200)))
+        elif job == "recompute":
+            out = money_flow.run_recompute()
+        else:
+            out = money_flow.run_daily()
+    except Exception as e:
+        raise HTTPException(503, f"The Money Flow job failed: {str(e)[:200]}")
+    return to_native(out)
+
+
 @app.get("/special/status")
 def altaha_special_status():
     """Whether the delivery cache is deep enough to rank anything, and why not."""
@@ -6645,8 +6745,21 @@ def analyze(ticker: str, horizon: str = "position"):
         # universe scan has run, and the page renders the figures plainly when
         # it is — the context is an addition, never a dependency.
         "peers": _peer_context(sym, info.get("sector"), header_ratios),
+        # The company's sector as Money Flow reads it: FPI flow, rotation and
+        # breadth. Context beside the score, never an input to it. None for a
+        # company outside NSE's classification or before the first job.
+        "sector_tailwind": _sector_tailwind(sym),
         "disclaimer": DISCLAIMER,
     })
+
+
+def _sector_tailwind(sym):
+    if money_flow is None:
+        return None
+    try:
+        return money_flow.tailwind(sym)
+    except Exception:
+        return None
 
 
 @app.get("/explain")

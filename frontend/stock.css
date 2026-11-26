@@ -2125,3 +2125,9 @@ html[data-theme="dark"] .pr-table tbody tr.self th, html[data-theme="dark"] .pr-
 .talk-btn.is-gold:hover{background:var(--accent-hover)}
 .talk-btn[hidden]{display:none}
 .talk-fine{font-size:var(--fs-small);color:var(--text-muted);margin:var(--sp-4) 0 0;line-height:var(--lh-small)}
+
+/* The sector's Money Flow rank, under the key figures. */
+.ktail{ margin:var(--sp-4) 0 0; padding-top:var(--sp-4); border-top:1px solid var(--border); font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-secondary) }
+.ktail[hidden]{ display:none }
+.ktail b{ font-weight:600; color:var(--text-primary); margin-right:8px }
+.ktail a{ color:var(--highlight-text); text-underline-offset:3px; white-space:nowrap }

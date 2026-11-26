@@ -53,6 +53,7 @@
   var ICON = {
     alerts:   '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
     deals:    '<path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/>',
+    flows:    '<path d="M3 17c4 0 4-10 9-10s5 6 9 6"/><path d="m17 9 4 4-4 4"/>',
     wow:      '<path d="M5 21V4h11l-2 4 2 4H5"/>',
     delivery: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
     results:  '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -207,6 +208,8 @@
       line: 'Unusual moves, as they happen.' },
     { id: 'drt-deals', goto: 'discover/deals', icon: 'deals', name: 'Big trades', unit: 'stocks with deals',
       line: 'Bulk and block deals.' },
+    { id: 'drt-moneyflow', goto: 'discover/flows', icon: 'flows', name: 'Money flow', unit: 'sectors FPIs bought',
+      line: 'FPI, FII and DII money, sector by sector.' },
     { id: 'drt-wow', goto: 'discover/wow', icon: 'wow', name: 'Order wins', unit: '',
       line: 'New orders, sized against the company.' },
     { id: 'drt-special', goto: 'discover/special', icon: 'delivery', name: 'Delivery trends', unit: 'delivery spikes',
@@ -841,6 +844,12 @@
       if (!d || d.available === false) return fillTool('drt-deals', null, (d && d.message) || 'The deals feed is unavailable today.');
       fillTool('drt-deals', d.total_symbols != null ? d.total_symbols : (d.symbols || []).length, null,
         (d.symbols || []).slice(0, 4).map(function (r) { return { text: r.symbol, tone: tone(r.net_cr) }; }));
+    });
+    // A few figures, not the page: /moneyflow itself is fetched when its tab opens.
+    get('/moneyflow/brief', 15000).then(function (d) {
+      if (!d || d.available === false) return fillTool('drt-moneyflow', null, (d && d.message) || 'FPI, FII and DII money, sector by sector.');
+      fillTool('drt-moneyflow', d.inflow_sectors, d.line,
+        (d.top || []).slice(0, 4).map(function (r) { return { text: r.short, tone: r.direction === 'inflow' ? 'up' : r.direction === 'outflow' ? 'dn' : '' }; }));
     });
     // Order wins are read out of each filing's PDF on the server, so nothing
     // asks for them until their own tab is opened (filings-views-browser

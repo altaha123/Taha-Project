@@ -1,0 +1,440 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Money flow.
+
+   IN THE THEME, LIKE EVERY OTHER PAGE
+   This page was first built as a dark stage of its own in both themes. It is
+   ordinary surface cards on the page now, in Navy and Cognac, light or dark:
+   every --mf-* name below points at a token from tokens.css.
+
+   COLOURS ARE TOKENS, AND EACH DOES ONE JOB
+     --mf-in / --mf-out    money in, money out
+     --mf-fii / --mf-dii   who: FII, DII
+     --mf-silver           a level that has no direction (a score, a trail)
+   Text is always an ink token. A figure never wears a data colour; the mark
+   beside it does.
+
+   MOTION IS OPT-IN PER RENDER
+   Nothing below hides an element unless money-flow.js has put .mf-anim on
+   the root, which it does only when motion is allowed. So with motion off,
+   or with no script at all, every element is simply there.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#view-flows{ --gutter:clamp(14px,3vw,30px) }
+.mf-stage{
+  --mf-bg:transparent; --mf-card:var(--surface); --mf-card-2:var(--surface-raised);
+  --mf-line:var(--border); --mf-line-2:var(--border-strong);
+  --mf-ink:var(--text-primary); --mf-ink-2:var(--text-secondary); --mf-mute:var(--text-muted);
+  --mf-in:var(--gain); --mf-out:var(--loss); --mf-fii:var(--chart-2); --mf-dii:var(--chart-1);
+  --mf-mid:var(--surface-raised); --mf-silver:var(--chart-5);
+  --mf-metal:var(--highlight-text);
+  position:relative; isolation:isolate;
+  /* Wider than the page's column, up to the width the charts want. */
+  --mf-w:min(1240px, 100vw - 2 * var(--gutter));
+  width:var(--mf-w); margin:4px 0 40px; margin-left:calc((100% - var(--mf-w)) / 2);
+  padding:0; background:none;
+  color:var(--mf-ink); font-family:var(--font-sans);
+  font-size:var(--fs-body); line-height:var(--lh-small); letter-spacing:0;
+  min-width:0;
+}
+.mf-stage *, .mf-drawer *{ box-sizing:border-box }
+.mf-stage button, .mf-drawer button, .mf-stage table, .mf-stage th, .mf-stage td,
+.mf-drawer table, .mf-drawer th, .mf-drawer td{ font-family:inherit; letter-spacing:0 }
+/* The site gives every table cell a slashed zero. In a grid of two hundred
+   figures that reads as a column of eights. */
+.mf-stage th, .mf-stage td, .mf-drawer th, .mf-drawer td{ font-feature-settings:'tnum' 1 }
+
+/* ── top ─────────────────────────────────────────────────────────────────── */
+.mf-top{ margin:0 0 28px }
+.mf-eyebrow{ font:600 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--mf-mute) }
+.mf-top h2{ margin:8px 0 0; font-family:var(--font-display); font-weight:500;
+  font-size:var(--fs-h1); line-height:var(--lh-h1); letter-spacing:var(--ls-heading); color:var(--mf-ink) }
+.mf-top h2 i{ font-style:normal; color:var(--mf-metal) }
+.mf-asof{ margin:16px 0 0; font-size:var(--fs-small); color:var(--mf-mute) }
+
+.mf-key{ display:inline-block; width:9px; height:9px; border-radius:var(--r-xs); margin-right:8px; vertical-align:baseline; background:var(--mf-silver) }
+.mf-key.fii{ background:var(--mf-fii) } .mf-key.dii{ background:var(--mf-dii) }
+.mf-key.line{ height:2px; width:12px; border-radius:var(--r-xs); vertical-align:middle }
+
+.mf-tiles{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0 0 16px }
+.mf-tile{ min-width:0; padding:16px 20px 16px; border-radius:var(--r-card); background:var(--mf-card);
+  box-shadow:inset 0 0 0 1px var(--mf-line) }
+.mf-tile .k{ font-size:var(--fs-small); color:var(--mf-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.mf-tile .v{ margin-top:8px; font-weight:500; font-size:var(--fs-h1); line-height:var(--lh-display); letter-spacing:var(--ls-heading); color:var(--mf-ink) ; font-family:var(--font-display)}
+.mf-tile .n{ margin-top:8px; font-size:var(--fs-small); line-height:var(--lh-label); color:var(--mf-ink-2) }
+
+/* ── a section ───────────────────────────────────────────────────────────── */
+.mf-sec{ margin:16px 0 0; padding:clamp(16px,2.2vw,28px); border-radius:var(--r-card); background:var(--mf-card);
+  box-shadow:inset 0 0 0 1px var(--mf-line); min-width:0 }
+.mf-head{ display:flex; flex-wrap:wrap; gap:12px 24px; align-items:flex-end; justify-content:space-between; margin:0 0 20px }
+.mf-head > div:first-child{ min-width:0; flex:1 1 320px }
+.mf-head h3{ margin:0; font-size:var(--fs-h2); font-weight:500; letter-spacing:var(--ls-heading); color:var(--mf-ink) ; font-family:var(--font-display)}
+.mf-head p{ margin:4px 0 0; max-width:74ch; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--mf-mute) }
+.mf-tools{ display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px }
+.mf-legend{ display:inline-flex; flex-wrap:wrap; gap:8px 16px; font-size:var(--fs-small); color:var(--mf-ink-2) }
+.mf-legend > span{ display:inline-flex; align-items:center; white-space:nowrap }
+.mf-legend svg{ width:16px; height:16px; margin-right:8px; flex:none }
+.mf-empty{ margin:0; padding:24px 4px; font-size:var(--fs-small); color:var(--mf-mute); max-width:70ch }
+
+/* Pick one: underline tabs, as everywhere. */
+.mf-seg{ display:inline-flex; gap:16px }
+.mf-seg > button{ border:0; border-bottom:2px solid transparent; border-radius:0; background:none; cursor:pointer; padding:8px 0; font-size:var(--fs-small); font-weight:500;
+  color:var(--mf-ink-2); white-space:nowrap }
+.mf-seg > button:hover{ color:var(--mf-ink) }
+.mf-seg > button.active{ color:var(--highlight-text); border-bottom-color:var(--highlight) }
+.mf-stage :focus-visible, .mf-drawer :focus-visible{ outline:2px solid var(--mf-silver); outline-offset:2px; border-radius:var(--r-xs) }
+.mf-check{ display:inline-flex; align-items:center; gap:8px; font-size:var(--fs-small); color:var(--mf-ink-2); cursor:pointer }
+.mf-check input{ width:15px; height:15px; accent-color:var(--mf-silver) }
+
+/* ── chart chrome, shared ────────────────────────────────────────────────── */
+.mf-plot{ position:relative; min-width:0 }
+.mf-plot svg{ display:block; width:100%; height:auto; overflow:visible }
+.mf-grid{ stroke:var(--border); stroke-width:1 }
+.mf-zero{ stroke:var(--border); stroke-width:1 }
+.mf-tick{ fill:var(--mf-mute); font:500 var(--fs-label) var(--font-sans); font-variant-numeric:tabular-nums }
+.mf-axis{ fill:var(--mf-mute); font:500 var(--fs-label) var(--font-sans) }
+.mf-cross{ stroke:var(--border); stroke-width:1; pointer-events:none }
+.mf-hit{ fill:transparent; stroke:none }
+
+/* ── the market ──────────────────────────────────────────────────────────── */
+.mf-bar.fii{ fill:var(--mf-fii) } .mf-bar.dii{ fill:var(--mf-dii) }
+.mf-line{ fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round }
+.mf-line.fii{ stroke:var(--mf-fii) } .mf-line.dii{ stroke:var(--mf-dii) }
+.mf-end{ stroke:var(--mf-card); stroke-width:2 }
+.mf-end.fii{ fill:var(--mf-fii) } .mf-end.dii{ fill:var(--mf-dii) }
+.mf-hero-svg{ cursor:crosshair }
+.mf-figs{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px }
+.mf-fig{ display:flex; gap:16px; padding:20px; border-radius:var(--r-card); background:var(--mf-card-2); box-shadow:inset 0 0 0 1px var(--mf-line) }
+.mf-fig .mf-key{ width:4px; height:auto; align-self:stretch; border-radius:var(--r-xs); margin:0 }
+.mf-fig .k{ font-size:var(--fs-small); color:var(--mf-mute) }
+.mf-fig .v{ margin-top:8px; font-size:var(--fs-display); font-weight:400; letter-spacing:var(--ls-heading); line-height:var(--lh-none) ; font-family:var(--font-display)}
+.mf-fig .n{ margin-top:8px; font-size:var(--fs-small); color:var(--mf-ink-2) }
+
+/* ── tables: the heatmap, and the twin of every chart ────────────────────── */
+.mf-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -2px; padding:0 2px 2px }
+.mf-table{ margin-top:16px }
+.mf-table > summary, .mf-method > summary{ cursor:pointer; font-size:var(--fs-small); color:var(--mf-ink-2); list-style:none; display:inline-flex; align-items:center; gap:8px }
+.mf-table > summary::-webkit-details-marker, .mf-method > summary::-webkit-details-marker{ display:none }
+.mf-table > summary::before, .mf-method > summary::before{ content:'+'; display:inline-grid; place-items:center; width:18px; height:18px;
+  border-radius:50%; box-shadow:inset 0 0 0 1px var(--mf-line-2); font-size:var(--fs-small); line-height:var(--lh-none); color:var(--mf-ink) }
+.mf-table[open] > summary::before, .mf-method[open] > summary::before{ content:'\2212' }
+.mf-table table, .mf-method table, .mf-stocks{ width:100%; border-collapse:collapse; margin-top:12px; font-size:var(--fs-small) }
+.mf-table th, .mf-table td, .mf-method th, .mf-method td{ padding:8px 12px 8px 0; text-align:right; white-space:nowrap;
+  border-bottom:1px solid var(--mf-line); font-variant-numeric:tabular-nums; color:var(--mf-ink-2); font-weight:400 }
+.mf-table th:first-child, .mf-method th, .mf-method td{ text-align:left }
+.mf-table thead th, .mf-method thead th{ color:var(--mf-mute); font-weight:500 }
+.mf-method td:last-child{ white-space:normal; min-width:260px; color:var(--mf-mute) }
+
+.mf-heat-t{ border-collapse:separate; border-spacing:3px; width:100%; min-width:860px; table-layout:fixed }
+.mf-heat-t th{ font-weight:500; color:var(--mf-mute); font-size:var(--fs-label) }
+.mf-heat-t thead th{ padding:0 0 8px; text-align:center; vertical-align:bottom; line-height:var(--lh-h2) }
+.mf-heat-t thead th:first-child{ width:136px; text-align:left }
+.mf-heat-t thead th span{ display:block; color:var(--mf-ink-2); font-variant-numeric:tabular-nums }
+.mf-heat-t thead th small{ display:block; font-size:var(--fs-label) }
+.mf-heat-t thead th.mf-sum{ width:108px; text-align:right; padding-right:4px }
+.mf-heat-t thead th:last-child{ width:170px; text-align:left; padding-left:12px }
+.mf-heat-t tbody th{ text-align:left; padding:0; position:sticky; left:0; z-index:1; background:var(--mf-card) }
+.mf-rowbtn{ border:0; background:none; padding:8px 8px 8px 0; cursor:pointer; color:var(--mf-ink); font-size:var(--fs-small); font-weight:500;
+  text-align:left; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-radius:var(--r-xs) }
+.mf-rowbtn:hover{ text-decoration:underline; text-underline-offset:3px }
+.mf-cell{ height:34px; padding:0 2px; border-radius:var(--r-xs); text-align:center; font-size:var(--fs-label); font-weight:600;
+  font-variant-numeric:tabular-nums; color:var(--text-primary); background:var(--mf-mid); cursor:default }
+.mf-cell.z{ background:var(--mf-mid); color:var(--mf-ink-2) }
+.mf-cell.na{ background:transparent; box-shadow:inset 0 0 0 1px var(--mf-line) }
+/* The heat is a tint of gain or loss over the card, four steps deep. The ink
+   on it stays the page's ink, so every step reads in both themes. */
+.mf-cell.in1{ background:color-mix(in srgb, var(--mf-in) 10%, var(--surface)) }
+.mf-cell.in2{ background:color-mix(in srgb, var(--mf-in) 18%, var(--surface)) }
+.mf-cell.in3{ background:color-mix(in srgb, var(--mf-in) 28%, var(--surface)) }
+.mf-cell.in4{ background:color-mix(in srgb, var(--mf-in) 40%, var(--surface)) }
+.mf-cell.out1{ background:color-mix(in srgb, var(--mf-out) 10%, var(--surface)) }
+.mf-cell.out2{ background:color-mix(in srgb, var(--mf-out) 18%, var(--surface)) }
+.mf-cell.out3{ background:color-mix(in srgb, var(--mf-out) 28%, var(--surface)) }
+.mf-cell.out4{ background:color-mix(in srgb, var(--mf-out) 40%, var(--surface)) }
+td.mf-cell:hover{ box-shadow:0 0 0 2px var(--mf-ink) }
+.mf-sum{ text-align:right; padding-right:4px; font-variant-numeric:tabular-nums; white-space:nowrap }
+.mf-sum b{ font-weight:600; font-size:var(--fs-small); color:var(--mf-ink) }
+.mf-trend{ padding-left:12px; white-space:nowrap; font-size:var(--fs-small); color:var(--mf-ink-2) }
+.mf-trend > span{ vertical-align:middle }
+.mf-total th{ color:var(--mf-ink-2) !important; font-size:var(--fs-label) !important; padding:8px 0 !important }
+.mf-total td.mf-cell{ height:28px }
+.mf-total td, .mf-total th{ border-top:8px solid transparent }
+.mf-scale{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin-top:16px; font-size:var(--fs-small); color:var(--mf-ink-2) }
+.mf-ramp{ display:inline-flex; gap:2px }
+.mf-ramp i{ display:block; width:22px; height:10px; border-radius:var(--r-xs); padding:0 }
+.mf-scale em{ font-style:normal; color:var(--mf-mute); flex:1 1 320px }
+
+.mf-arrow{ width:16px; height:16px; flex:none; vertical-align:middle; margin-right:8px; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; stroke:var(--mf-silver) }
+.mf-arrow.in{ stroke:var(--mf-in) } .mf-arrow.out{ stroke:var(--mf-out) }
+
+/* ── rotation ────────────────────────────────────────────────────────────── */
+.mf-rot-grid{ display:grid; grid-template-columns:minmax(0,1.75fr) minmax(230px,1fr); gap:clamp(16px,2.4vw,32px); align-items:start }
+.mf-q{ fill:var(--border) }
+.mf-q.lead{ fill:var(--border) } .mf-q.lagg{ fill:var(--text-muted) }
+.mf-qname{ fill:var(--border); font:600 var(--fs-label) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase }
+.mf-trail{ fill:none; stroke:var(--mf-silver); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; opacity:.5 }
+.mf-step{ fill:var(--mf-silver); opacity:.55 }
+.mf-dot{ stroke:var(--mf-card); stroke-width:2 }
+.mf-dot.in{ fill:var(--mf-in) }
+.mf-dot.out{ fill:var(--mf-card); stroke:var(--mf-out); stroke-width:2.6 }
+.mf-dot.flat{ fill:var(--mf-silver) }
+.mf-dot.theme{ fill:var(--text-muted) }
+.mf-lab{ fill:var(--mf-ink); font:500 var(--fs-label) var(--font-sans); paint-order:stroke; stroke:var(--mf-card); stroke-width:3.5px; stroke-linejoin:round }
+.mf-rr{ cursor:default; outline:none }
+.mf-rr.k-sector{ cursor:pointer }
+.mf-rr.k-theme .mf-trail{ stroke-dasharray:none; opacity:.28 }
+.mf-rr.k-theme .mf-lab{ fill:var(--mf-ink-2) }
+.mf-rrg-svg.has-focus .mf-rr{ opacity:.22; transition:opacity .15s ease }
+.mf-rrg-svg.has-focus .mf-rr.on{ opacity:1 }
+.mf-rr.on .mf-trail, .mf-rr:focus-visible .mf-trail{ opacity:1; stroke-width:2.2; stroke:var(--surface) }
+.mf-rr:focus-visible .mf-dot{ stroke:var(--surface) }
+.mf-rrg-svg.is-moving .mf-lab{ opacity:.75 }
+.mf-play{ display:flex; align-items:center; gap:16px; margin-top:12px }
+.mf-playbtn{ display:inline-flex; align-items:center; gap:8px; border:0; cursor:pointer; padding:8px 16px 8px 12px; border-radius:var(--r-pill);
+  background:transparent; color:var(--mf-ink); box-shadow:inset 0 0 0 1px var(--mf-line-2); font-size:var(--fs-small); font-weight:500 }
+.mf-playbtn svg{ width:14px; height:14px; fill:currentColor }
+.mf-playbtn.on svg path{ d:path('M7 5h4v14H7zM13 5h4v14h-4z') }
+.mf-scrub{ flex:1 1 120px; min-width:0; accent-color:var(--mf-silver); height:20px }
+.mf-week{ font-size:var(--fs-small); color:var(--mf-ink-2); white-space:nowrap; font-variant-numeric:tabular-nums; min-width:108px; text-align:right }
+.mf-rrg-legend{ margin-top:12px }
+.mf-quads{ display:grid; gap:12px }
+.mf-qcap{ margin:0 2px; font-size:var(--fs-label); color:var(--mf-mute); text-align:right; grid-column:1 / -1 }
+.mf-qlist{ padding:12px 16px; border-radius:var(--r-card); background:var(--mf-card-2); box-shadow:inset 0 0 0 1px var(--mf-line) }
+.mf-qlist h4{ margin:0 0 8px; font-weight:400; display:flex; flex-direction:column; gap:4px; align-items:flex-start }
+.mf-qlist h4 small{ font-size:var(--fs-label); color:var(--mf-mute) }
+.mf-qlist ul{ list-style:none; margin:0; padding:0 }
+.mf-qlist li{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:1.5px 0; font-size:var(--fs-small); border-radius:var(--r-xs) }
+.mf-qlist li > span:last-child{ font-size:var(--fs-label); color:var(--mf-mute); font-variant-numeric:tabular-nums; white-space:nowrap }
+.mf-qlist li.on{ background:var(--wash); box-shadow:var(--ring) }
+.mf-qlist li .mf-rowbtn{ padding:1px 0 }
+.mf-qlist .mf-theme{ color:var(--mf-ink-2) }
+.mf-qlist p{ margin:0; font-size:var(--fs-small); color:var(--mf-mute) }
+
+.mf-quad{ display:inline-flex; align-items:center; gap:8px; padding:3px 8px 3px 8px; border-radius:var(--r-pill); font-size:var(--fs-label); font-weight:600;
+  letter-spacing:normal; color:var(--mf-ink); background:var(--wash); box-shadow:inset 0 0 0 1px var(--mf-line-2); white-space:nowrap }
+.mf-quad i{ width:9px; height:9px; border-radius:var(--r-xs); background:
+  linear-gradient(var(--mf-mute),var(--mf-mute)) 0 0/4px 4px no-repeat, linear-gradient(var(--mf-mute),var(--mf-mute)) 5px 0/4px 4px no-repeat,
+  linear-gradient(var(--mf-mute),var(--mf-mute)) 0 5px/4px 4px no-repeat, linear-gradient(var(--mf-mute),var(--mf-mute)) 5px 5px/4px 4px no-repeat; opacity:.9 }
+/* The chip's mark is the chart in miniature: four flat squares, the lit one
+   is the quadrant. (Each layer is one colour; nothing blends.) */
+.mf-quad.q-leading i{ background:
+  linear-gradient(var(--border-strong),var(--border-strong)) 0 0/4px 4px no-repeat, linear-gradient(var(--highlight),var(--highlight)) 5px 0/4px 4px no-repeat,
+  linear-gradient(var(--border-strong),var(--border-strong)) 0 5px/4px 4px no-repeat, linear-gradient(var(--border-strong),var(--border-strong)) 5px 5px/4px 4px no-repeat }
+.mf-quad.q-improving i{ background:
+  linear-gradient(var(--highlight),var(--highlight)) 0 0/4px 4px no-repeat, linear-gradient(var(--border-strong),var(--border-strong)) 5px 0/4px 4px no-repeat,
+  linear-gradient(var(--border-strong),var(--border-strong)) 0 5px/4px 4px no-repeat, linear-gradient(var(--border-strong),var(--border-strong)) 5px 5px/4px 4px no-repeat }
+.mf-quad.q-weakening i{ background:
+  linear-gradient(var(--border-strong),var(--border-strong)) 0 0/4px 4px no-repeat, linear-gradient(var(--border-strong),var(--border-strong)) 5px 0/4px 4px no-repeat,
+  linear-gradient(var(--border-strong),var(--border-strong)) 0 5px/4px 4px no-repeat, linear-gradient(var(--highlight),var(--highlight)) 5px 5px/4px 4px no-repeat }
+.mf-quad.q-lagging i{ background:
+  linear-gradient(var(--border-strong),var(--border-strong)) 0 0/4px 4px no-repeat, linear-gradient(var(--border-strong),var(--border-strong)) 5px 0/4px 4px no-repeat,
+  linear-gradient(var(--highlight),var(--highlight)) 0 5px/4px 4px no-repeat, linear-gradient(var(--border-strong),var(--border-strong)) 5px 5px/4px 4px no-repeat }
+.mf-quad.q-none{ color:var(--mf-mute); padding-left:8px }
+
+/* ── the ranking ─────────────────────────────────────────────────────────── */
+.mf-cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(264px,1fr)); gap:12px }
+.mf-card{ position:relative; display:flex; flex-direction:column; gap:16px; text-align:left; cursor:pointer; min-width:0;
+  padding:16px 16px 16px; border:0; border-radius:var(--r-card); color:var(--mf-ink); background:var(--mf-card);
+  box-shadow:inset 0 0 0 1px var(--mf-line);
+  /* The lift on hover is `translate`, not `transform`: the reveal below owns
+     transform, with a delay per card that a hover must not inherit. */
+  transition:translate .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, background .25s ease }
+.mf-card:hover{ background:var(--surface-raised);
+  box-shadow:inset 0 0 0 1px var(--mf-line-2), var(--shadow-raised) }
+.mf-card-top{ display:flex; align-items:center; gap:12px; min-width:0 }
+.mf-rank{ font-size:var(--fs-small); font-weight:600; color:var(--mf-mute); font-variant-numeric:tabular-nums }
+.mf-name{ flex:1 1 auto; min-width:0; font-size:var(--fs-h3); font-weight:600; letter-spacing:normal; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.mf-card-mid{ display:flex; align-items:center; gap:16px; min-width:0 }
+.mf-score{ position:relative; flex:none; width:68px; height:68px }
+.mf-score.big{ width:88px; height:88px }
+.mf-score > b{ position:absolute; inset:0; display:grid; place-items:center; font-size:var(--fs-h2); font-weight:500; letter-spacing:var(--ls-heading) ; font-family:var(--font-display)}
+.mf-score.big > b{ font-size:var(--fs-h1) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
+.mf-ring{ width:100%; height:100%; transform:rotate(-90deg) }
+.mf-ring circle{ fill:none; stroke-width:5 }
+.mf-ring .t{ stroke:var(--border) }
+.mf-ring .v{ stroke:var(--mf-silver); stroke-linecap:round }
+.mf-flow{ min-width:0; flex:1 1 auto; display:grid; gap:4px }
+.mf-trendline{ display:flex; align-items:center; margin-bottom:3px; font-size:var(--fs-small); font-weight:600; color:var(--mf-ink); white-space:nowrap; min-width:0 }
+.mf-trendline > span{ overflow:hidden; text-overflow:ellipsis }
+/* The flag for a sector FPIs turned from selling to buying: the turn arrow,
+   the words, and a ring round the arrow so it is found at a glance. */
+.mf-trendline.flip .mf-arrow{ border-radius:50%; padding:3px; width:22px; height:22px; margin-left:-3px; margin-right:4px;
+  background:color-mix(in oklab, var(--mf-in) 22%, transparent); box-shadow:0 0 0 1px color-mix(in oklab, var(--mf-in) 60%, transparent) }
+.mf-flowfig{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-width:0 }
+.mf-flowfig b{ font-size:var(--fs-small); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap }
+.mf-flowfig small, .mf-rs small{ font-size:var(--fs-label); color:var(--mf-mute); white-space:nowrap }
+.mf-spark{ display:block; width:100%; height:30px }
+.mf-spark rect.in{ fill:var(--mf-in) } .mf-spark rect.out{ fill:var(--mf-out) }
+.mf-spark line{ stroke:var(--border); stroke-width:1; vector-effect:non-scaling-stroke }
+.mf-spark.none{ height:30px; border-top:1px solid var(--mf-line); margin-top:16px }
+.mf-rs{ display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:var(--fs-small); color:var(--mf-mute) }
+.mf-rs > span{ flex:1 1 100% }
+.mf-rs b{ font-size:var(--fs-small); font-weight:600; color:var(--mf-ink); font-variant-numeric:tabular-nums }
+.mf-rs small{ margin-right:12px }
+.mf-parts{ display:grid; gap:8px }
+.mf-part{ display:grid; grid-template-columns:62px 1fr 24px; gap:8px; align-items:center; font-size:var(--fs-label); color:var(--mf-mute) }
+.mf-part i{ display:block; height:4px; border-radius:var(--r-xs); background:var(--wash-strong); overflow:hidden }
+.mf-part i b{ display:block; height:100%; border-radius:var(--r-xs); background:var(--mf-silver) }
+.mf-part em{ font-style:normal; text-align:right; color:var(--mf-ink-2); font-variant-numeric:tabular-nums }
+.mf-part.na i{ background:repeating-linear-gradient(90deg, var(--border) 0 3px, transparent 3px 6px) }
+.mf-open{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:auto; padding-top:12px; border-top:1px solid var(--mf-line);
+  font-size:var(--fs-label); font-weight:500; letter-spacing:normal; color:var(--mf-ink-2); white-space:nowrap; overflow:hidden }
+.mf-open span{ color:var(--mf-ink); transition:transform .25s ease }
+.mf-card:hover .mf-open span{ transform:translateX(4px) }
+.mf-unscored{ margin:16px 0 0; font-size:var(--fs-small); color:var(--mf-mute) }
+
+.mf-gaps{ margin:16px 0 0; padding:16px 20px; border-radius:var(--r-card); font-size:var(--fs-small); color:var(--mf-ink-2); box-shadow:inset 0 0 0 1px var(--mf-line-2) }
+.mf-gaps b{ color:var(--mf-ink); font-weight:600 }
+.mf-gaps ul{ margin:8px 0 0; padding-left:20px } .mf-gaps li{ margin:3px 0 }
+.mf-method{ margin:20px 4px 0 }
+.mf-method-body{ margin-top:16px }
+.mf-method dl{ margin:0; display:grid; grid-template-columns:150px 1fr; gap:8px 20px; font-size:var(--fs-small) }
+.mf-method dt{ color:var(--mf-ink) } .mf-method dd{ margin:0; color:var(--mf-mute); max-width:80ch }
+.mf-fit{ display:inline-block; padding:2px 8px; border-radius:var(--r-pill); font-size:var(--fs-label); box-shadow:inset 0 0 0 1px var(--mf-line-2); color:var(--mf-ink-2) }
+.mf-fit.f-ambiguous{ box-shadow:inset 0 0 0 1px var(--mf-silver); color:var(--mf-ink) }
+.mf-disc{ margin:20px 4px 0; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--mf-mute); max-width:92ch }
+
+.mf-state{ display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:36px 8px; font-size:var(--fs-body); color:var(--mf-mute) }
+.mf-state b{ font-size:var(--fs-h3); font-weight:600; color:var(--mf-ink) }
+.mf-btn{ margin-top:12px; border:0; cursor:pointer; height:var(--control-h); padding:0 20px; border-radius:var(--r-control); background:transparent; color:var(--mf-ink); box-shadow:inset 0 0 0 1px var(--mf-line-2); font-size:var(--fs-body); font-weight:500 }
+
+/* ── tooltip ─────────────────────────────────────────────────────────────── */
+.mf-tip{ position:fixed; z-index:1300; pointer-events:none; max-width:280px; padding:12px 12px; border-radius:var(--r-control);
+  background:var(--surface-raised); color:var(--mf-ink-2); font-size:var(--fs-small); line-height:var(--lh-label);
+  box-shadow:inset 0 0 0 1px var(--mf-line-2), var(--shadow-raised) }
+.mf-tip[hidden]{ display:none }
+.mf-tip > b{ display:block; font-size:var(--fs-body); font-weight:600; color:var(--mf-ink) }
+.mf-tip > span{ display:block }
+.mf-tip .row{ display:flex; align-items:baseline; gap:8px; margin-top:4px; white-space:nowrap }
+.mf-tip .row b{ font-weight:600; color:var(--mf-ink); font-variant-numeric:tabular-nums }
+.mf-tip .row .mf-key{ margin:0; align-self:center }
+.mf-tip .row.sub b{ font-weight:500; color:var(--mf-ink-2) }
+
+/* ── one sector, opened ──────────────────────────────────────────────────── */
+html.mf-locked{ overflow:hidden }
+.mf-drawer{ position:fixed; inset:0; z-index:1200; font-family:var(--font-sans); font-size:var(--fs-body); line-height:var(--lh-small);
+  --mf-bg:var(--surface); --mf-card:var(--surface); --mf-card-2:var(--surface-raised); --mf-line:var(--border); --mf-line-2:var(--border-strong);
+  --mf-ink:var(--text-primary); --mf-ink-2:var(--text-secondary); --mf-mute:var(--text-muted); --mf-in:var(--gain); --mf-out:var(--loss); --mf-mid:var(--surface-raised); --mf-silver:var(--chart-5);
+  color:var(--mf-ink) }
+.mf-drawer[hidden]{ display:none }
+.mf-scrim{ position:absolute; inset:0; background:var(--scrim); opacity:0; transition:opacity .25s ease }
+.mf-panel{ position:absolute; top:0; right:0; bottom:0; width:min(760px,100%); overflow-y:auto; overscroll-behavior:contain;
+  padding:clamp(20px,3vw,32px); background:var(--mf-card); box-shadow:inset 1px 0 0 var(--mf-line-2);
+  transform:translateX(34px); opacity:0; transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .22s ease; outline:none }
+.mf-drawer.open .mf-scrim{ opacity:1 }
+.mf-drawer.open .mf-panel{ transform:none; opacity:1 }
+.mf-dhead{ display:flex; align-items:flex-start; gap:16px; padding-right:44px; position:relative }
+.mf-dhead > div:first-child{ flex:1 1 auto; min-width:0 }
+.mf-dhead h3{ margin:8px 0 12px; font-family:var(--font-display); font-weight:400;
+  font-size:var(--fs-display); line-height:var(--lh-none); letter-spacing:var(--ls-heading) }
+.mf-dchips{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px }
+.mf-close{ position:absolute; top:-6px; right:-6px; width:38px; height:38px; border:0; border-radius:50%; cursor:pointer;
+  background:var(--wash-strong); color:var(--mf-ink); font-size:var(--fs-h2); line-height:var(--lh-none) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
+.mf-close:hover{ background:var(--wash-strong) }
+.mf-dfacts{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:24px 0 16px }
+.mf-dfacts > div{ min-width:0; padding:12px 12px; border-radius:var(--r-card); background:var(--mf-card-2); box-shadow:inset 0 0 0 1px var(--mf-line) }
+.mf-dfacts span{ display:block; font-size:var(--fs-label); color:var(--mf-mute) }
+.mf-dfacts b{ display:block; margin-top:4px; font-size:var(--fs-body); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.mf-dfacts small{ display:block; margin-top:3px; font-size:var(--fs-label); color:var(--mf-mute) }
+.mf-panel section{ margin-top:28px }
+.mf-panel h4{ margin:0 0 12px; font-size:var(--fs-body); font-weight:600 }
+.mf-dnote{ margin:0 0 12px; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--mf-mute); max-width:80ch }
+.mf-panel > .mf-dnote{ margin-top:24px }
+.mf-fbar.in{ fill:var(--mf-in) } .mf-fbar.out{ fill:var(--mf-out) }
+g[data-tip="fn"]:hover .mf-fbar{ filter:brightness(1.25) }
+.mf-stocks{ min-width:640px; margin-top:0 }
+.mf-stocks th, .mf-stocks td{ padding:12px 16px 12px 0; text-align:right; vertical-align:top; border-bottom:1px solid var(--mf-line); font-weight:400 }
+.mf-stocks thead th{ font-size:var(--fs-label); color:var(--mf-mute); white-space:nowrap; padding-top:0 }
+.mf-stocks th:first-child{ text-align:left; width:30% }
+.mf-stocks td b{ display:block; font-size:var(--fs-small); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap }
+.mf-stocks small{ display:block; margin-top:2px; font-size:var(--fs-label); color:var(--mf-mute); white-space:nowrap }
+.mf-stocks tbody th a{ font-size:var(--fs-body); font-weight:600; letter-spacing:normal; color:var(--mf-ink); text-decoration:none }
+.mf-stocks tbody th a:hover{ text-decoration:underline; text-underline-offset:3px }
+.mf-stocks tbody th small{ white-space:normal }
+.mf-stocks tbody tr:not(.mf-why) > *{ border-bottom:0; padding-bottom:8px }
+.mf-stocks tr.mf-why td{ padding:0 0 12px; text-align:left; font-size:var(--fs-small); line-height:var(--lh-small); color:var(--mf-ink-2) }
+.mf-chg.in::before, .mf-chg.out::before{ content:''; display:inline-block; width:0; height:0; margin-right:4px; vertical-align:middle;
+  border-left:4px solid transparent; border-right:4px solid transparent }
+.mf-chg.in::before{ border-bottom:6px solid var(--mf-in) } .mf-chg.out::before{ border-top:6px solid var(--mf-out) }
+.mf-dbar{ display:block; position:relative; height:4px; margin:8px 0 0 auto; width:72px; border-radius:var(--r-xs); background:var(--wash-strong) }
+.mf-dbar i{ display:block; height:100%; border-radius:var(--r-xs); background:var(--mf-silver) }
+.mf-dbar.up i{ background:var(--mf-in) }
+.mf-dbar u{ position:absolute; top:-3px; width:2px; height:10px; background:var(--mf-ink); border-radius:var(--r-xs) }
+.mf-deal{ display:inline-flex; align-items:center; gap:8px; font-size:var(--fs-small); font-weight:600; white-space:nowrap }
+.mf-deal i{ width:8px; height:8px; border-radius:50% }
+.mf-deal.in i{ background:var(--mf-in) } .mf-deal.out i{ box-shadow:inset 0 0 0 2px var(--mf-out) }
+.mf-deal.none{ font-weight:400; color:var(--mf-mute) }
+.mf-dealcell small{ white-space:normal; max-width:20ch; margin-left:auto; text-align:right }
+.mf-acc span{ display:block; height:4px; width:44px; margin:8px 0 0 auto; border-radius:var(--r-xs); background:var(--wash-strong); overflow:hidden }
+.mf-acc span i{ display:block; height:100%; background:var(--mf-silver); border-radius:var(--r-xs) }
+
+/* ── motion, only when the script has said it may run ────────────────────────
+   Every reveal is a TRANSITION between two states, never a keyframe
+   animation. A stylesheet that pauses animations (the site has one for its
+   masthead, and a reader's own may) holds a keyframe reveal at its first
+   frame, which is opacity 0: the element is then invisible for good. A
+   transition cannot be paused that way. The hidden state exists only while
+   .mf-anim is on the root AND the section has not yet come into view. */
+.mf-anim .mf-sec, .mf-anim .mf-tiles{ transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1) }
+.mf-anim .mf-sec:not(.is-in), .mf-anim .mf-tiles:not(.is-in){ opacity:0; transform:translateY(16px) }
+
+.mf-anim .mf-tile{ transition:opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1) }
+.mf-anim .mf-tile:nth-child(2){ transition-delay:.07s } .mf-anim .mf-tile:nth-child(3){ transition-delay:.14s }
+.mf-anim .mf-tile:nth-child(4){ transition-delay:.21s }
+.mf-anim .mf-tiles:not(.is-in) .mf-tile{ opacity:0; transform:translateY(12px) }
+
+.mf-anim .mf-bar{ transform-box:fill-box; transform-origin:50% 100%;
+  transition:transform .6s cubic-bezier(.2,.8,.2,1); transition-delay:calc(.25s + var(--i) * 12ms) }
+.mf-anim .mf-bar.neg{ transform-origin:50% 0 }
+.mf-anim .mf-sec:not(.is-in) .mf-bar{ transform:scaleY(0) }
+.mf-anim .mf-line{ stroke-dasharray:1; stroke-dashoffset:0; transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1) .35s }
+.mf-anim .mf-sec:not(.is-in) .mf-line{ stroke-dashoffset:1 }
+.mf-anim .mf-end{ transition:opacity .35s ease 1.75s }
+.mf-anim .mf-sec:not(.is-in) .mf-end{ opacity:0 }
+
+.mf-anim td.mf-cell{ transition:opacity .5s ease, box-shadow .15s ease; transition-delay:calc(.15s + var(--c) * 45ms), 0s }
+.mf-anim .mf-sec:not(.is-in) td.mf-cell{ opacity:0 }
+
+.mf-anim .mf-card{ transition:opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1), translate .25s cubic-bezier(.2,.8,.2,1),
+    box-shadow .25s ease, background .25s ease;
+  transition-delay:calc(.1s + var(--i) * 35ms), calc(.1s + var(--i) * 35ms), 0s, 0s, 0s }
+.mf-anim .mf-sec:not(.is-in) .mf-card{ opacity:0; transform:translateY(14px) }
+.mf-ring .v{ stroke-dasharray:var(--len) 164 }
+.mf-anim .mf-ring .v{ transition:stroke-dasharray 1.1s cubic-bezier(.2,.8,.2,1); transition-delay:calc(.3s + var(--i, 0) * 35ms) }
+.mf-anim .mf-sec:not(.is-in) .mf-ring .v{ stroke-dasharray:0 164 }
+
+@media (prefers-reduced-motion:reduce){
+  .mf-stage *, .mf-drawer, .mf-drawer *{ animation:none !important; transition:none !important }
+}
+html[data-motion="off"] .mf-stage, html[data-motion="off"] .mf-stage *, html[data-motion="off"] .mf-drawer, html[data-motion="off"] .mf-drawer *{ animation:none !important; transition:none !important }
+
+/* ── narrower ────────────────────────────────────────────────────────────── */
+@media (max-width:980px){
+  .mf-tiles{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .mf-rot-grid{ grid-template-columns:minmax(0,1fr) }
+  .mf-quads{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+}
+@media (max-width:640px){
+  .mf-stage{ --mf-w:calc(100vw - 16px); border-radius:var(--r-card) }
+  .mf-figs, .mf-quads{ grid-template-columns:minmax(0,1fr) }
+  .mf-dfacts{ grid-template-columns:repeat(2,minmax(0,1fr)) }
+  .mf-method dl{ grid-template-columns:1fr; gap:2px 0 } .mf-method dd{ margin-bottom:12px }
+  .mf-play{ flex-wrap:wrap } .mf-week{ min-width:0 }
+  .mf-qname{ font-size:var(--fs-label); letter-spacing:var(--ls-label) }
+  .mf-panel{ padding:16px 16px 28px }
+  /* A six-column table does not fit a phone, and one that scrolls sideways
+     hides its last columns. Each stock becomes a block: its name, then its
+     five figures two to a row, each under its own label. */
+  .mf-stocks{ display:block; min-width:0 }
+  .mf-stocks thead{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%) }
+  .mf-stocks tbody{ display:block }
+  .mf-stocks tbody tr{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px; padding:16px 0 8px }
+  .mf-stocks tbody tr.mf-why{ display:block; padding:0 0 16px; border-bottom:1px solid var(--mf-line) }
+  .mf-stocks tbody th{ grid-column:1 / -1; width:auto !important; padding:0 !important }
+  .mf-stocks tbody td{ padding:0 !important; text-align:left; border:0 }
+  .mf-stocks tbody td[data-label]::before{ content:attr(data-label); display:block; margin-bottom:3px; font-size:var(--fs-label); color:var(--mf-mute) }
+  .mf-stocks tr.mf-why td{ display:block }
+  .mf-dbar, .mf-acc span, .mf-dealcell small{ margin-left:0; text-align:left }
+  .mf-cards{ grid-template-columns:minmax(0,1fr) }
+  .mf-heat-t thead th:first-child{ width:112px }
+}
+@media (max-width:420px){ .mf-tiles{ grid-template-columns:minmax(0,1fr) } }

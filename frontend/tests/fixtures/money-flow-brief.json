@@ -1,0 +1,49 @@
+{
+ "as_of": "2026-11-20",
+ "available": true,
+ "flipped_to_inflow": [
+  "Cement",
+  "FMCG",
+  "Financials",
+  "Healthcare",
+  "Telecom"
+ ],
+ "fortnight": {
+  "end": "2026-11-15",
+  "start": "2026-11-01"
+ },
+ "inflow_sectors": 14,
+ "line": "Ranked first on money flow: IT, Capital Goods, Consumer Services.",
+ "outflow_sectors": 8,
+ "top": [
+  {
+   "direction": "inflow",
+   "quadrant": "Leading",
+   "score": 95.6,
+   "short": "IT",
+   "slug": "information-technology"
+  },
+  {
+   "direction": "inflow",
+   "quadrant": "Leading",
+   "score": 74.8,
+   "short": "Capital Goods",
+   "slug": "capital-goods"
+  },
+  {
+   "direction": "inflow",
+   "quadrant": "Leading",
+   "score": 72.8,
+   "short": "Consumer Services",
+   "slug": "consumer-services"
+  },
+  {
+   "direction": "inflow",
+   "quadrant": "Weakening",
+   "score": 60.6,
+   "short": "FMCG",
+   "slug": "fast-moving-consumer-goods"
+  }
+ ],
+ "total_cr": 8345.0
+}
