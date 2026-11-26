@@ -9,33 +9,33 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --pf-good:        #0A7548;
-  --pf-bad:         #C62828;
-  --pf-over:        #7B828C;
-  --pf-under:       #4C7A9E;
-  --pf-dot-held:    #7B828C;
-  --pf-dot-idle:    #8A8B8D;
-  --pf-q-lead:      rgba(46, 125, 91, .08);
-  --pf-q-improve:   rgba(76, 122, 158, .08);
-  --pf-q-weaken:    rgba(123, 130, 140, .09);
-  --pf-q-lag:       rgba(181, 69, 60, .07);
-  --pf-axis:        rgba(0, 0, 0, .22);
-  --pf-rule:        rgba(123, 130, 140, .55);
+  --pf-good:        var(--gain);
+  --pf-bad:         var(--loss);
+  --pf-over:        var(--text-muted);
+  --pf-under:       var(--info);
+  --pf-dot-held:    var(--text-muted);
+  --pf-dot-idle:    var(--border-strong);
+  --pf-q-lead:      var(--gain);
+  --pf-q-improve:   var(--info);
+  --pf-q-weaken:    var(--text-muted);
+  --pf-q-lag:       var(--loss);
+  --pf-axis:        var(--border);
+  --pf-rule:        var(--border-strong);
 }
 
 html[data-theme="dark"] {
-  --pf-good:        #2FD98B;
-  --pf-bad:         #FF5C4D;
-  --pf-over:        #C5CAD3;
-  --pf-under:       #6FA8D4;
-  --pf-dot-held:    #C5CAD3;
-  --pf-dot-idle:    #79808E;
-  --pf-q-lead:      rgba(52, 196, 141, .10);
-  --pf-q-improve:   rgba(111, 168, 212, .10);
-  --pf-q-weaken:    rgba(197, 202, 211, .11);
-  --pf-q-lag:       rgba(240, 115, 106, .09);
-  --pf-axis:        rgba(255, 255, 255, .26);
-  --pf-rule:        rgba(197, 202, 211, .5);
+  --pf-good:        var(--gain);
+  --pf-bad:         var(--loss);
+  --pf-over:        var(--text-primary);
+  --pf-under:       var(--info);
+  --pf-dot-held:    var(--text-primary);
+  --pf-dot-idle:    var(--border-strong);
+  --pf-q-lead:      var(--gain);
+  --pf-q-improve:   var(--info);
+  --pf-q-weaken:    var(--text-muted);
+  --pf-q-lag:       var(--loss);
+  --pf-axis:        var(--border);
+  --pf-rule:        var(--border-strong);
 }
 
 /* ── Input rows ─────────────────────────────────────────────────────────── */
@@ -49,9 +49,9 @@ html[data-theme="dark"] {
 }
 .pfrow input {
   width: 100%;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 2px;
+  border-radius: var(--r-xs);
   padding: 9px 10px;
   font-family: var(--font-sans);
   font-size: var(--fs-small);
@@ -65,10 +65,10 @@ html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--
    marking the field itself removes the ambiguity entirely. */
 .pfrow input.bad {
   border-color: var(--loss);
-  background: rgba(181, 69, 60, .05);
+  background: var(--loss-bg);
 }
 .pfdel {
-  background: none; border: 1px solid var(--border); border-radius: 2px;
+  background: none; border: 1px solid var(--border); border-radius: var(--r-xs);
   color: var(--text-muted); cursor: pointer; padding: 8px 0; font-size: var(--fs-small);
   transition: color .15s, border-color .15s;
 }
@@ -85,8 +85,8 @@ html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--
 
 .pfinrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
 .pfbtn {
-  display: inline-block; background: #fff; border: 1px solid var(--border);
-  border-radius: 2px; padding: 8px 13px; font-family: var(--font-sans);
+  display: inline-block; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-xs); padding: 8px 13px; font-family: var(--font-sans);
   font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase;
   color: var(--text-primary); cursor: pointer; text-decoration: none;
   transition: border-color .15s, color .15s;
@@ -96,7 +96,7 @@ html[data-theme="dark"] .pfbtn { background: var(--surface); color: var(--text-s
 .pfbtn.ghost { background: none; }
 .pfbtn:disabled { opacity: .4; cursor: not-allowed; }
 .pfsel {
-  background: #fff; border: 1px solid var(--border); border-radius: 2px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xs);
   padding: 8px 10px; font-family: var(--font-sans); font-size: var(--fs-label);
   text-transform: uppercase; letter-spacing: var(--ls-label); color: var(--text-primary);
 }
@@ -104,7 +104,7 @@ html[data-theme="dark"] .pfsel { background: var(--surface); color: var(--text-s
 
 .pfpaste {
   width: 100%; min-height: 42px; resize: vertical;
-  background: #fff; border: 1px dashed var(--border); border-radius: 3px;
+  background: var(--surface); border: 1px dashed var(--border); border-radius: var(--r-xs);
   padding: 10px 12px; font-family: var(--font-sans); font-size: var(--fs-small);
   color: var(--text-primary); margin-bottom: 12px;
 }
@@ -118,7 +118,7 @@ html[data-theme="dark"] .pfpaste { background: var(--surface); color: var(--text
 
 .pfmapper {
   display: none; margin: 14px 0; padding: 16px;
-  border: 1px solid var(--border-strong); border-radius: 3px;
+  border: 1px solid var(--border-strong); border-radius: var(--r-xs);
   background: var(--surface-raised);
 }
 .pfmap-head { font-size: var(--fs-small); color: var(--text-secondary); margin-bottom: 14px; line-height: var(--lh-body); }
@@ -133,13 +133,13 @@ html[data-theme="dark"] .pfpaste { background: var(--surface); color: var(--text
 }
 .pfmap-grid i { font-style: normal; opacity: .6; text-transform: none; }
 .pfmap-grid select {
-  background: #fff; border: 1px solid var(--border); border-radius: 2px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xs);
   padding: 8px 9px; font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary);
 }
 html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: var(--text-secondary); }
 .pfmap-preview {
   font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted);
-  border: 1px solid var(--border); border-radius: 2px; padding: 8px;
+  border: 1px solid var(--border); border-radius: var(--r-xs); padding: 8px;
   margin-bottom: 14px; overflow-x: auto;
 }
 .pfmap-preview > div { display: flex; gap: 14px; white-space: nowrap; padding: 2px 0; }
@@ -149,7 +149,7 @@ html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: 
 /* ── Progress ───────────────────────────────────────────────────────────── */
 
 .pfprog {
-  height: 3px; background: var(--border); border-radius: 2px;
+  height: 3px; background: var(--border); border-radius: var(--r-xs);
   overflow: hidden; margin-bottom: 9px;
 }
 .pfprog i {
@@ -198,7 +198,7 @@ html[data-theme="dark"] .pfstat { background: var(--surface); }
   text-transform: uppercase; color: var(--text-muted);
 }
 .pfpolicy input {
-  background: #fff; border: 1px solid var(--border); border-radius: 2px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xs);
   padding: 8px 10px; font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary);
 }
 html[data-theme="dark"] .pfpolicy input { background: var(--surface); color: var(--text-primary); }
@@ -255,7 +255,7 @@ html[data-theme="dark"] .pff { background: var(--surface); }
   display: grid; grid-template-columns: 11px 1fr auto; gap: 10px;
   align-items: center; font-size: var(--fs-small); color: var(--text-secondary);
 }
-.pflg i { width: 11px; height: 11px; border-radius: 2px; display: block; }
+.pflg i { width: 11px; height: 11px; border-radius: var(--r-xs); display: block; }
 .pflg b { font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary); }
 
 .pfmeth { margin-top: 14px; }
@@ -290,7 +290,7 @@ html[data-theme="dark"] .pff { background: var(--surface); }
 
 .pfstate {
   font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase;
-  padding: 3px 7px; border: 1px solid var(--border); border-radius: 2px;
+  padding: 3px 7px; border: 1px solid var(--border); border-radius: var(--r-xs);
   text-align: center; color: var(--text-muted);
 }
 .pfstate.leading   { color: var(--gain); border-color: var(--gain); }
@@ -409,13 +409,13 @@ html[data-theme="dark"] .pfact { background: var(--surface); }
 }
 .pfact-tag {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
-  text-transform: uppercase; padding: 4px 9px; border-radius: 2px;
+  text-transform: uppercase; padding: 4px 9px; border-radius: var(--r-xs);
   background: var(--border); color: var(--text-primary);
 }
-.pfact.exit   .pfact-tag { background: var(--loss); color: #fff; }
-.pfact.reduce .pfact-tag { background: var(--warning); color: #0B0C0D; }
-.pfact.review .pfact-tag { background: var(--border-strong); color: #0B0C0D; }
-.pfact.add    .pfact-tag { background: var(--gain); color: #04231A; }
+.pfact.exit   .pfact-tag { background: var(--loss); color: var(--on-accent); }
+.pfact.reduce .pfact-tag { background: var(--warning); color: var(--text-primary); }
+.pfact.review .pfact-tag { background: var(--border-strong); color: var(--text-primary); }
+.pfact.add    .pfact-tag { background: var(--gain); color: var(--gain); }
 .pfact-sym {
   font-family: var(--font-mono); font-size: var(--fs-body); color: var(--text-primary); letter-spacing: normal;
 }
@@ -423,7 +423,7 @@ html[data-theme="dark"] .pfact { background: var(--surface); }
 .pfact-conv {
   margin-left: auto; font-family: var(--font-sans); font-size: var(--fs-label);
   letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-muted);
-  border: 1px solid var(--border); padding: 3px 7px; border-radius: 2px;
+  border: 1px solid var(--border); padding: 3px 7px; border-radius: var(--r-xs);
 }
 .pfact-conv.high { color: var(--text-secondary); border-color: var(--border-strong); }
 
@@ -457,7 +457,7 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 }
 .pfaltpill {
   font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-secondary);
-  border: 1px solid var(--border); border-radius: 2px; padding: 5px 9px;
+  border: 1px solid var(--border); border-radius: var(--r-xs); padding: 5px 9px;
 }
 .pfaltpill b { color: var(--text-primary); }
 .pfaltpill i { font-style: normal; color: var(--gain); margin-left: 5px; font-size: var(--fs-label); }
@@ -488,7 +488,7 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 .pftag {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; text-align: center; padding: 4px 6px;
-  border: 1px solid var(--border); border-radius: 2px; color: var(--text-muted);
+  border: 1px solid var(--border); border-radius: var(--r-xs); color: var(--text-muted);
 }
 .pftag.exit   { color: var(--loss); border-color: var(--loss); }
 .pftag.reduce { color: var(--warning); border-color: var(--warning); }
@@ -497,7 +497,7 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 .pfbtn.primary {
   background: var(--accent); color: var(--on-accent); border-color: var(--border-strong);
 }
-.pfbtn.primary:hover { background: var(--accent-hover); border-color: var(--highlight); color: var(--on-accent,#fff); }
+.pfbtn.primary:hover { background: var(--accent-hover); border-color: var(--highlight); color: var(--on-accent,var(--on-accent)); }
 .pfreport-act { margin-top: 20px; }
 
 @media (max-width: 780px) {
@@ -512,40 +512,40 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 
 /* Portfolio workspace: scoped above legacy global button/input rules. */
 #view-portfolio{
-  --pf-editor-muted:#4D4D56;
+  --pf-editor-muted:var(--text-muted);
   scroll-margin-top:calc(var(--sh-chrome-h,132px) + 20px);
 }
-html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:#B4B4BD }
+html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:var(--text-secondary) }
 #view-portfolio .tabhead{ margin-bottom:24px }
 #view-portfolio .tabhead h2{ font-size:var(--fs-display); margin-bottom:10px ; font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading)}
 #view-portfolio .tabhead p{ max-width:64ch; line-height:var(--lh-body) }
-#view-portfolio > .psec{ padding:24px; border:1px solid var(--border); border-radius:18px; background:var(--surface) }
+#view-portfolio > .psec{ padding:24px; border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface) }
 #view-portfolio .lh{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:22px }
 #view-portfolio #pf_count{ color:var(--pf-editor-muted); font:400 var(--fs-small)/var(--lh-small) var(--font-sans) }
 #view-portfolio .pfbtn{
   display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
-  min-height:44px; padding:11px 16px; border:1px solid var(--border); border-radius:9px;
+  min-height:44px; padding:11px 16px; border:1px solid var(--border); border-radius:var(--r-control);
   background:var(--surface-raised); color:var(--text-primary); box-shadow:none;
   font:500 var(--fs-body)/var(--lh-label) var(--font-sans); text-transform:none; letter-spacing:0;
 }
 #view-portfolio .pfbtn:hover:not(:disabled){ background:var(--bg); border-color:var(--highlight); transform:none; box-shadow:none }
 #view-portfolio #pf_addrow{ background:var(--accent); color:var(--on-accent); border-color:var(--border-strong) }
 #view-portfolio #pf_save, #view-portfolio #pf_go, #view-portfolio #pf_dl{
-  background:var(--accent); color:var(--on-accent,#fff); border-color:var(--border-strong);
+  background:var(--accent); color:var(--on-accent,var(--on-accent)); border-color:var(--border-strong);
 }
 #view-portfolio .pfbtn:disabled{ opacity:.4; cursor:not-allowed; transform:none }
 #view-portfolio .pfbtn.ghost{ background:transparent; border-color:var(--border); color:var(--pf-editor-muted) }
 #view-portfolio .pfbtn.ghost:hover:not(:disabled){ color:var(--loss); border-color:var(--loss) }
 #view-portfolio .pfsel, #view-portfolio .pfpaste{
   width:100%; min-width:0; box-sizing:border-box; min-height:46px; padding:12px;
-  border:1px solid var(--border); border-radius:9px; background:var(--bg);
+  border:1px solid var(--border); border-radius:var(--r-control); background:var(--bg);
   color:var(--text-primary); font:400 var(--fs-body)/var(--lh-label) var(--font-sans); text-transform:none; letter-spacing:0;
 }
 #view-portfolio .pf-import-options, #view-portfolio .pf-manage{ margin-top:18px; color:var(--pf-editor-muted); font:400 var(--fs-small)/var(--lh-body) var(--font-sans) }
 #view-portfolio .pf-import-options summary, #view-portfolio .pf-manage summary{ cursor:pointer; min-height:44px; padding:10px 0; color:var(--text-secondary) }
 #view-portfolio .pf-manage{ border-top:1px solid var(--border); padding-top:10px }
 #view-portfolio .brun{ display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding-top:8px }
-#view-portfolio #pf_go{ min-height:50px; padding:14px 24px; border-radius:10px; font:600 var(--fs-h3)/var(--lh-label) var(--font-sans); letter-spacing:0; text-transform:none; box-shadow:none }
+#view-portfolio #pf_go{ min-height:50px; padding:14px 24px; border-radius:var(--r-control); font:600 var(--fs-h3)/var(--lh-label) var(--font-sans); letter-spacing:0; text-transform:none; box-shadow:none }
 #view-portfolio :where(button,a,summary,select,textarea):focus-visible{ outline:2px solid var(--focus-ring); outline-offset:3px }
 @media(max-width:780px){
   #view-portfolio > .psec{ padding:18px 14px }
@@ -563,8 +563,8 @@ html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:#B4B4BD }
    wide desktop column and in a phone alike.                                 */
 
 #view-portfolio > .psec{ container-type:inline-size; container-name:pfed }
-#view-portfolio{ --pf-up:#1F7A4D; --pf-dn:#B4442F; --pf-row-h:62px }
-html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
+#view-portfolio{ --pf-up:var(--gain); --pf-dn:var(--loss); --pf-row-h:62px }
+html[data-theme="dark"] #view-portfolio{ --pf-up:var(--gain); --pf-dn:var(--loss) }
 #view-portfolio .up{ color:var(--pf-up) } #view-portfolio .dn{ color:var(--pf-dn) }
 #view-portfolio .lh{ margin-bottom:16px; justify-content:flex-start }
 #view-portfolio .lh > #pf_count{ margin-left:auto }
@@ -579,30 +579,30 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pf-import-options summary{ min-height:36px; padding:6px 0 }
 
 /* The board. */
-#view-portfolio .pf-board{ margin:0 0 18px; padding:18px 20px 14px; border-radius:18px; color:#FFFFFF;
-  background:radial-gradient(120% 140% at 0% 0%,#202224 0%,#0A0B0C 46%,#07080A 100%); box-shadow:0 14px 34px #15161824 }
+#view-portfolio .pf-board{ margin:0 0 18px; padding:18px 20px 14px; border-radius:var(--r-card); color:var(--text-primary);
+  background:var(--surface-raised); box-shadow:none }
 #view-portfolio .pf-board[hidden]{ display:none }
 #view-portfolio .pf-stats{ display:grid; grid-template-columns:1.4fr repeat(3,minmax(0,1fr)); gap:14px 22px }
 #view-portfolio .pf-stat{ min-width:0 }
-#view-portfolio .pf-stat > span{ display:block; font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:#E8EBEF }
-#view-portfolio .pf-stat b{ display:block; margin-top:4px; font:500 var(--fs-h2)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+#view-portfolio .pf-stat > span{ display:block; font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--on-accent) }
+#view-portfolio .pf-stat b{ display:block; margin-top:4px; font:500 var(--fs-h2)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); color:var(--on-accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 #view-portfolio .pf-stat-main b{ font:400 var(--fs-display)/var(--lh-none) var(--font-display); letter-spacing:var(--ls-heading) }
-#view-portfolio .pf-stat small{ display:block; margin-top:4px; font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:#C6C7C9 }
+#view-portfolio .pf-stat small{ display:block; margin-top:4px; font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--on-accent) }
 #view-portfolio .pf-stat em{ font-style:normal }
-#view-portfolio .pf-board .up{ color:#7BE0A6 } #view-portfolio .pf-board .dn{ color:#FF9F8A }
-#view-portfolio .pf-strip{ display:flex; height:12px; margin-top:16px; border-radius:6px; overflow:hidden; background:#ffffff14; gap:2px }
+#view-portfolio .pf-board .up{ color:var(--gain) } #view-portfolio .pf-board .dn{ color:var(--loss) }
+#view-portfolio .pf-strip{ display:flex; height:12px; margin-top:16px; border-radius:var(--r-xs); overflow:hidden; background:var(--wash-strong); gap:2px }
 #view-portfolio .pf-strip i{ display:block; min-width:3px; height:100% }
-#view-portfolio .pf-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:9px; font:500 var(--fs-small)/var(--lh-label) var(--font-sans); color:#E5E6E9 }
+#view-portfolio .pf-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:9px; font:500 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--on-accent) }
 #view-portfolio .pf-legend span{ display:inline-flex; align-items:center; gap:6px }
-#view-portfolio .pf-legend i{ width:9px; height:9px; border-radius:3px; flex:none }
-#view-portfolio .pf-legend b{ font-weight:600; color:#FFFFFF }
-#view-portfolio .pf-legend .pf-more{ color:#AFB0B2 }
-#view-portfolio .pf-boardfoot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid #ffffff1c }
-#view-portfolio .pf-sort{ display:inline-flex; flex-wrap:wrap; gap:4px; padding:3px; border-radius:12px; background:#ffffff12 }
-#view-portfolio .pf-sort button{ min-height:32px; padding:0 12px; border:0; border-radius:9px; background:transparent; color:#E5E6E9; font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer }
-#view-portfolio .pf-sort button[aria-pressed="true"]{ background:#FFFFFF; color:#0A0A0B; font-weight:600 }
-#view-portfolio .pf-sort button:focus-visible{ outline:2px solid #C5CAD3; outline-offset:1px }
-#view-portfolio .pf-src{ font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:#AFB0B2 }
+#view-portfolio .pf-legend i{ width:9px; height:9px; border-radius:var(--r-xs); flex:none }
+#view-portfolio .pf-legend b{ font-weight:600; color:var(--on-accent) }
+#view-portfolio .pf-legend .pf-more{ color:var(--text-muted) }
+#view-portfolio .pf-boardfoot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid var(--border) }
+#view-portfolio .pf-sort{ display:inline-flex; flex-wrap:wrap; gap:4px; padding:3px; border-radius:var(--r-card); background:var(--wash) }
+#view-portfolio .pf-sort button{ min-height:32px; padding:0 12px; border:0; border-radius:var(--r-control); background:transparent; color:var(--on-accent); font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer }
+#view-portfolio .pf-sort button[aria-pressed="true"]{ background:var(--surface); color:var(--text-primary); font-weight:600 }
+#view-portfolio .pf-sort button:focus-visible{ outline:2px solid var(--border-strong); outline-offset:1px }
+#view-portfolio .pf-src{ font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--text-muted) }
 
 /* One header for every row. */
 #view-portfolio .pfhead,
@@ -617,18 +617,18 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:#6FD39A; --pf-dn:#FF9B85 }
 #view-portfolio .pfhead span:nth-child(5), #view-portfolio .pfhead span:nth-child(6){ text-align:right }
 
 #view-portfolio #pf_rows{ display:block; margin:0 }
-#view-portfolio .pfrow{ position:relative; min-height:var(--pf-row-h); margin:0; padding:8px 10px; border-bottom:1px solid var(--border); border-radius:12px;
+#view-portfolio .pfrow{ position:relative; min-height:var(--pf-row-h); margin:0; padding:8px 10px; border-bottom:1px solid var(--border); border-radius:var(--r-card);
   transition:background-color .15s }
 #view-portfolio .pfrow:hover, #view-portfolio .pfrow:focus-within{ background:var(--surface-raised) }
-#view-portfolio .pf-av{ grid-area:av; display:grid; place-items:center; width:38px; height:38px; border-radius:12px;
-  color:#fff; font:600 var(--fs-small)/var(--lh-none) var(--font-sans); letter-spacing:normal; background:#7f8083; text-transform:uppercase }
+#view-portfolio .pf-av{ grid-area:av; display:grid; place-items:center; width:38px; height:38px; border-radius:var(--r-card);
+  color:var(--on-accent); font:600 var(--fs-small)/var(--lh-none) var(--font-sans); letter-spacing:normal; background:var(--text-muted); text-transform:uppercase }
 #view-portfolio .pf-av.empty{ background:transparent; color:var(--text-primary); border:1.5px dashed var(--border-strong); font-size:var(--fs-body); font-weight:500 }
 /* The company's mark, over its initials (portfolio.js, paintAv). On white
    whatever the theme: a logo is drawn for a white page, and on a dark tile
    half of them disappear. */
 #view-portfolio .pf-av{ position:relative; overflow:hidden }
 #view-portfolio .pf-av img{ position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box;
-  object-fit:contain; padding:8%; background:#fff; border:1px solid var(--border); border-radius:inherit;
+  object-fit:contain; padding:8%; background:var(--surface); border:1px solid var(--border); border-radius:inherit;
   animation:pfAvIn 240ms ease-out both }
 @keyframes pfAvIn{ from{ opacity:0 } to{ opacity:1 } }
 @media (prefers-reduced-motion: reduce){ #view-portfolio .pf-av img{ animation:none } }
@@ -643,7 +643,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 /* Inputs read as text until touched. */
 #view-portfolio .pfrow input{
   display:block; box-sizing:border-box; width:100%; min-width:0; height:38px; margin:0;
-  padding:7px 9px; border:1px solid transparent; border-radius:9px;
+  padding:7px 9px; border:1px solid transparent; border-radius:var(--r-control);
   background:transparent; color:var(--text-primary); font:500 var(--fs-input)/var(--lh-h3) var(--font-sans); letter-spacing:0; text-transform:none;
   font-variant-numeric:tabular-nums; transition:border-color .15s, background-color .15s;
 }
@@ -651,7 +651,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pfrow input[type=number]{ -moz-appearance:textfield; appearance:textfield }
 #view-portfolio .pfrow input[type=number]::-webkit-inner-spin-button,
 #view-portfolio .pfrow input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0 }
-#view-portfolio .pfrow input:focus{ outline:none; border-color:var(--focus-ring); background:var(--bg); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus-ring) 22%,transparent) }
+#view-portfolio .pfrow input:focus{ outline:none; border-color:var(--focus-ring); background:var(--bg); box-shadow:var(--ring) }
 #view-portfolio .pfrow input::placeholder{ color:var(--pf-editor-muted); opacity:.7; font-weight:400 }
 #view-portfolio .pfrow input.bad{ border-color:var(--loss); background:color-mix(in srgb,var(--loss) 7%,transparent) }
 #view-portfolio .pfrow .pf_sym{ height:30px; padding:4px 8px; font:600 var(--fs-h3)/var(--lh-h1) var(--font-sans); letter-spacing:normal; text-transform:uppercase }
@@ -661,16 +661,16 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pfrow:not(.has-date):not(:hover):not(:focus-within) .pf_date::-webkit-calendar-picker-indicator{ opacity:.35 }
 #view-portfolio .pf-name{ display:flex; align-items:center; gap:6px; min-width:0; padding:1px 9px 0; font:400 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--pf-editor-muted) }
 #view-portfolio .pf-name span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-#view-portfolio .pf-tag{ flex:none; padding:2px 7px; border-radius:99px; font:600 var(--fs-label)/var(--lh-h3) var(--font-sans); font-style:normal;
+#view-portfolio .pf-tag{ flex:none; padding:2px 7px; border-radius:var(--r-pill); font:600 var(--fs-label)/var(--lh-h3) var(--font-sans); font-style:normal;
   background:var(--surface-raised); border:1px solid var(--border); color:var(--text-secondary) }
-#view-portfolio .pf-tag.gold{ background:var(--accent); border-color:transparent; color:var(--on-accent,#FFFFFF) }
+#view-portfolio .pf-tag.gold{ background:var(--accent); border-color:transparent; color:var(--on-accent,var(--on-accent)) }
 
 /* Worked-out figures. */
 #view-portfolio .pf-live{ min-width:0; text-align:right; font-variant-numeric:tabular-nums }
 #view-portfolio .pf-live b{ display:block; font:600 var(--fs-body)/var(--lh-h3) var(--font-sans); letter-spacing:normal; color:var(--text-primary); white-space:nowrap }
 #view-portfolio .pf-live small{ display:block; margin-top:2px; font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--pf-editor-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 #view-portfolio .pf-live .pf-wait{ color:var(--pf-editor-muted); font-weight:400 }
-#view-portfolio .pf-pl{ display:inline-block !important; padding:1px 7px; border-radius:99px; font-weight:600 !important }
+#view-portfolio .pf-pl{ display:inline-block !important; padding:1px 7px; border-radius:var(--r-pill); font-weight:600 !important }
 #view-portfolio .pf-pl.up{ color:var(--pf-up); background:color-mix(in srgb,var(--pf-up) 12%,transparent) }
 #view-portfolio .pf-pl.dn{ color:var(--pf-dn); background:color-mix(in srgb,var(--pf-dn) 12%,transparent) }
 #view-portfolio .pf-trend{ height:28px }
@@ -679,9 +679,9 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pf-spark.up polyline{ stroke:var(--pf-up) } #view-portfolio .pf-spark.dn polyline{ stroke:var(--pf-dn) }
 
 /* Its share of the portfolio, as a hairline under the row. */
-#view-portfolio .pf-wbar{ position:absolute; left:60px; bottom:-1px; height:2px; width:0; max-width:calc(100% - 70px); border-radius:2px; opacity:.85; transition:width .4s ease }
+#view-portfolio .pf-wbar{ position:absolute; left:60px; bottom:-1px; height:2px; width:0; max-width:calc(100% - 70px); border-radius:var(--r-xs); opacity:.85; transition:width .4s ease }
 
-#view-portfolio .pfdel{ display:grid; place-items:center; width:34px; height:34px; min-height:0; padding:0; border:1px solid transparent; border-radius:10px;
+#view-portfolio .pfdel{ display:grid; place-items:center; width:34px; height:34px; min-height:0; padding:0; border:1px solid transparent; border-radius:var(--r-control);
   background:transparent; color:var(--pf-editor-muted); cursor:pointer; opacity:.55; transition:opacity .15s, color .15s, border-color .15s }
 #view-portfolio .pfrow:hover .pfdel, #view-portfolio .pfrow:focus-within .pfdel, #view-portfolio .pfdel:focus-visible{ opacity:1 }
 #view-portfolio .pfdel:hover{ color:var(--loss); border-color:var(--loss) }
@@ -689,19 +689,19 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 
 /* The account strip. */
 #view-portfolio .pfacct{ display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:10px 16px; margin:0 0 18px; padding:12px 16px;
-  border:1px solid var(--border); border-radius:14px; background:var(--surface); overflow-wrap:anywhere }
+  border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface); overflow-wrap:anywhere }
 #view-portfolio .pfacct:not(.on){ border-left:3px solid var(--highlight) }
 #view-portfolio .pfacct.on{ border-left:1px solid var(--border) }
 #view-portfolio .pfacct span{ max-width:none }
 #view-portfolio .pfacct b{ font:600 var(--fs-body)/var(--lh-label) var(--font-sans); color:var(--text-primary) }
 #view-portfolio .pfacct span{ font-size:var(--fs-small); line-height:var(--lh-small); color:var(--pf-editor-muted) }
 #view-portfolio .pfacct-av{ display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:50%;
-  background:var(--highlight-subtle); box-shadow:var(--metal-shadow); color:var(--highlight-text) !important; font:600 var(--fs-h3)/var(--lh-none) var(--font-sans) !important }
+  background:var(--highlight-subtle); box-shadow:none; color:var(--highlight-text) !important; font:600 var(--fs-h3)/var(--lh-none) var(--font-sans) !important }
 #view-portfolio .pfacct-who{ display:flex; flex-direction:column; min-width:0; flex:1 1 260px }
 #view-portfolio .pfacct-opt{ display:inline-flex; align-items:center; gap:9px; min-height:40px; margin:0; font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--text-primary); cursor:pointer }
 #view-portfolio .pfacct-switch input{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none }
-#view-portfolio .pfacct-switch i{ position:relative; flex:none; width:36px; height:20px; border-radius:10px; background:var(--border); transition:background-color .2s }
-#view-portfolio .pfacct-switch i::after{ content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 3px #0003; transition:transform .2s }
+#view-portfolio .pfacct-switch i{ position:relative; flex:none; width:36px; height:20px; border-radius:var(--r-control); background:var(--border); transition:background-color .2s }
+#view-portfolio .pfacct-switch i::after{ content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--surface); box-shadow:none; transition:transform .2s }
 #view-portfolio .pfacct-switch input:checked + i{ background:var(--accent) }
 #view-portfolio .pfacct-switch input:checked + i::after{ transform:translateX(16px) }
 #view-portfolio .pfacct-switch input:focus-visible + i{ outline:2px solid var(--focus-ring); outline-offset:2px }
@@ -730,12 +730,12 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio #pf_rows{ display:grid; gap:12px; padding-top:6px }
   #view-portfolio .pfrow, #view-portfolio .pfrow:focus-within, #view-portfolio .pfrow.is-open, #view-portfolio .pfrow.has-date{
     grid-template-columns:repeat(12,minmax(0,1fr)); grid-template-areas:none;
-    column-gap:4px; row-gap:6px; padding:16px 12px 12px; border:1px solid var(--border); border-radius:14px; background:var(--surface);
+    column-gap:4px; row-gap:6px; padding:16px 12px 12px; border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface);
   }
   #view-portfolio .pfrow:hover{ background:var(--surface) }
   /* Line 1: badge, symbol and name, today's price. Line 2: quantity and
      average cost, then value and profit. */
-  #view-portfolio .pf-av{ grid-area:auto; grid-column:1/3; grid-row:1; width:36px; height:36px; border-radius:11px; font-size:var(--fs-small) }
+  #view-portfolio .pf-av{ grid-area:auto; grid-column:1/3; grid-row:1; width:36px; height:36px; border-radius:var(--r-card); font-size:var(--fs-small) }
   #view-portfolio .pf-field-symbol{ grid-area:auto; grid-column:3/9; grid-row:1 }
   #view-portfolio .pf-price{ grid-area:auto; grid-column:9/13; grid-row:1; text-align:right; align-self:center }
   #view-portfolio .pf-field-qty{ grid-area:auto; grid-column:1/5; grid-row:2 }
@@ -756,9 +756,9 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); color:var(--pf-editor-muted) }
   #view-portfolio .pfrow .pf_date{ width:auto; flex:1 1 auto; height:34px; font-size:var(--fs-body) }
   #view-portfolio .pfdel{ grid-area:auto; position:absolute; top:-10px; right:-10px; width:24px; height:24px; border-radius:50%; opacity:1;
-    border:1px solid var(--border); background:var(--surface); box-shadow:0 2px 6px #0e0f101a; z-index:1 }
+    border:1px solid var(--border); background:var(--surface); box-shadow:none; z-index:1 }
   #view-portfolio .pf-wbar{ display:none }
-  #view-portfolio .pf-board{ padding:16px 14px 12px; border-radius:16px }
+  #view-portfolio .pf-board{ padding:16px 14px 12px; border-radius:var(--r-card) }
   #view-portfolio .pf-stats{ grid-template-columns:1fr 1fr; gap:12px 14px }
   #view-portfolio .pf-stat-main{ grid-column:1/-1 }
   #view-portfolio .pf-stat-main b{ font-size:var(--fs-h1) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
@@ -777,6 +777,6 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 html[data-motion="off"] #view-portfolio .pfrow, html[data-motion="off"] #view-portfolio .pfrow input, html[data-motion="off"] #view-portfolio .pf-wbar,
 html[data-motion="off"] #view-portfolio .pfacct-switch i, html[data-motion="off"] #view-portfolio .pfacct-switch i::after{ transition:none }
 @media print{
-  #view-portfolio .pf-board{ background:none; color:#000; box-shadow:none; border:1px solid #ccc }
+  #view-portfolio .pf-board{ background:none; color:var(--on-accent); box-shadow:none; border:1px solid var(--border-strong) }
   #view-portfolio .pf-sort, #view-portfolio .pfdel{ display:none }
 }

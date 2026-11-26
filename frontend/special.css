@@ -8,27 +8,27 @@
 /* The tab opens with the shared `.tabhead` (type.css) like every other tab.
    Only the formula chip, the one line a returning reader re-reads, stays. */
 .sp-formula{ display:inline-block; margin:0 0 22px; padding:11px 16px;
-  border:1px solid var(--border); border-radius:10px; background:var(--surface-raised);
+  border:1px solid var(--border); border-radius:var(--r-control); background:var(--surface-raised);
   font-size:var(--fs-body); letter-spacing:normal }
 
 /* The measured record, including the part that did not work. */
 .sp-measured{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
   gap:11px; margin:0 0 8px }
-.sp-stat{ border:1px solid var(--border); border-radius:12px; padding:14px 16px;
+.sp-stat{ border:1px solid var(--border); border-radius:var(--r-card); padding:14px 16px;
   background:var(--surface) }
 .sp-stat .k{ font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted) }
 .sp-stat .v{ font:500 var(--fs-h2)/var(--lh-none) var(--font-display); margin-top:10px;
   letter-spacing:var(--ls-heading); font-variant-numeric:tabular-nums }
 .sp-stat .h{ font-size:var(--fs-label); color:var(--text-muted); margin-top:6px }
-.sp-caveat{ grid-column:1/-1; border:1px dashed var(--border); border-radius:12px;
+.sp-caveat{ grid-column:1/-1; border:1px dashed var(--border); border-radius:var(--r-card);
   padding:15px 17px; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary) }
 .sp-caveat b{ color:var(--text-primary) }
 
 .sp-asof{ font-size:var(--fs-small); color:var(--text-muted); margin-left:12px }
 
 /* One row per name, with the working. */
-.sp-row{ border:1px solid var(--border); border-radius:12px; background:var(--surface);
+.sp-row{ border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface);
   margin-bottom:9px; overflow:hidden; transition:border-color .2s ease, box-shadow .2s ease }
 .sp-row:hover{ border-color:var(--border-strong) }
 .sp-row > summary{ list-style:none; cursor:pointer; padding:14px 17px; display:grid;
@@ -47,10 +47,10 @@
 .sp-deliv .n{ display:block; font:600 var(--fs-h3)/var(--lh-none) var(--font-sans); font-variant-numeric:tabular-nums }
 .sp-deliv .l{ display:block; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted); margin-top:5px }
-.sp-bar{ width:70px; height:6px; border-radius:99px; background:var(--border);
+.sp-bar{ width:70px; height:6px; border-radius:var(--r-pill); background:var(--border);
   overflow:hidden; display:block }
-.sp-bar i{ display:block; height:100%; border-radius:99px;
-  background:linear-gradient(90deg,var(--accent-hover),var(--border-strong)) }
+.sp-bar i{ display:block; height:100%; border-radius:var(--r-pill);
+  background:var(--border-strong) }
 .sp-body-open{ padding:2px 17px 16px; border-top:1px solid var(--border) }
 .sp-kv{ display:grid; grid-template-columns:130px 1fr; gap:10px; padding:9px 0; font-size:var(--fs-small) }
 .sp-kv + .sp-kv{ border-top:1px dashed var(--border) }
@@ -62,8 +62,8 @@
 .sp-state{ padding:40px 20px; text-align:center; color:var(--text-muted); font-size:var(--fs-body) }
 .sp-state b{ display:block; color:var(--text-primary); font-size:var(--fs-body); margin-bottom:8px }
 .sp-prog{ display:block; width:min(260px,70%); height:6px; margin:14px auto 7px;
-  border-radius:99px; background:var(--border); overflow:hidden }
-.sp-prog i{ display:block; height:100%; border-radius:99px; background:var(--accent);
+  border-radius:var(--r-pill); background:var(--border); overflow:hidden }
+.sp-prog i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--accent);
   transition:width .4s ease }
 .sp-progn{ display:block; font-size:var(--fs-small); color:var(--text-muted) }
 @media (max-width:640px){
@@ -86,10 +86,10 @@
 .sp-parts{ display:grid; gap:7px; padding:12px 0 6px }
 .sp-part{ display:grid; grid-template-columns:150px 1fr 34px; gap:11px; align-items:center }
 .sp-part .pl{ display:block; font-size:var(--fs-small); color:var(--text-secondary) }
-.sp-part .pb{ display:block; height:7px; border-radius:99px;
+.sp-part .pb{ display:block; height:7px; border-radius:var(--r-pill);
   background:var(--border); overflow:hidden }
-.sp-part .pb i{ display:block; height:100%; border-radius:99px; background:var(--accent) }
-.sp-part .pb i.hi{ background:linear-gradient(90deg,var(--accent-hover),var(--border-strong)) }
+.sp-part .pb i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--accent) }
+.sp-part .pb i.hi{ background:var(--border-strong) }
 .sp-part .pb i.lo{ background:var(--loss); opacity:.75 }
 .sp-part .pb i.na{ background:var(--border) }
 .sp-part .pv{ display:block; text-align:right; font:600 var(--fs-small)/var(--lh-none) var(--font-sans);

@@ -10,7 +10,7 @@
 /* ── Shared ──────────────────────────────────────────────────────────────── */
 
 .wo-empty, .cc-empty{
-  padding:20px 18px; background:var(--surface-raised); border-radius:12px;
+  padding:20px 18px; background:var(--surface-raised); border-radius:var(--r-card);
   color:var(--text-muted); font-size:var(--fs-body); line-height:var(--lh-body);
 }
 .wo-empty a, .cc-empty a{ color:var(--highlight-text) }
@@ -25,7 +25,7 @@
 /* The top of the page: what happened this week, in a sentence and three
    figures, and the one rule the page judges by. */
 .wo-lead{
-  padding:20px 20px 18px; border:1px solid var(--border); border-radius:16px;
+  padding:20px 20px 18px; border:1px solid var(--border); border-radius:var(--r-card);
   background:var(--surface);
 }
 .wo-say{
@@ -37,7 +37,7 @@
 .wo-rule b{ color:var(--text-primary) }
 .wo-tiles{ display:grid; grid-template-columns:1fr; gap:10px }
 @media (min-width:720px){ .wo-tiles{ grid-template-columns:repeat(3,minmax(0,1fr)) } }
-.wo-tile{ display:grid; gap:8px; align-content:start; padding:13px 15px; background:var(--surface-raised); border-radius:12px }
+.wo-tile{ display:grid; gap:8px; align-content:start; padding:13px 15px; background:var(--surface-raised); border-radius:var(--r-card) }
 .wo-tile .lb{
   font:500 var(--fs-label)/var(--lh-h1) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted);
@@ -70,7 +70,7 @@
 .wo-list{ display:grid; gap:12px }
 .wo{
   background:var(--surface); border:1px solid var(--border);
-  border-radius:14px; overflow:hidden;
+  border-radius:var(--r-card); overflow:hidden;
 }
 
 /* A WOW order. The size sits in its own panel so a reader running down the
@@ -99,16 +99,16 @@
    is where WOW begins. */
 .wo-bar{
   position:relative; display:block; height:8px; margin-top:7px;
-  border-radius:99px; background:var(--border);
+  border-radius:var(--r-pill); background:var(--border);
 }
 .wo-bar i{
-  position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:var(--accent);
+  position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill); background:var(--accent);
 }
 .wo-bar u{
   position:absolute; top:-3px; bottom:-3px; width:2px; margin-left:-1px;
   background:var(--text-primary); opacity:.5; text-decoration:none;
 }
-.wo-bar.over i{ border-radius:99px 3px 3px 99px }
+.wo-bar.over i{ border-radius:var(--r-pill) var(--r-xs) var(--r-xs) var(--r-pill) }
 .wo-bar.over::after{
   content:"›"; position:absolute; right:-9px; top:50%; transform:translateY(-54%);
   font:600 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-primary);
@@ -116,7 +116,7 @@
 
 .wo .fl{
   font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); font-style:normal;
-  text-transform:uppercase; padding:4px 7px; border-radius:5px; white-space:nowrap;
+  text-transform:uppercase; padding:4px 7px; border-radius:var(--r-xs); white-space:nowrap;
 }
 .wo .fl.wow{ background:var(--accent); color:var(--on-accent) }
 .wo .fl.soft{ border:1px solid var(--border); color:var(--text-muted) }
@@ -138,7 +138,7 @@
 .wo-facts dd{ margin:6px 0 0; font-size:var(--fs-small); line-height:var(--lh-label); color:var(--text-secondary); overflow-wrap:anywhere }
 .wo-warn{
   margin:14px 0 0; padding:10px 13px; border-left:2px solid var(--loss);
-  background:var(--surface-raised); border-radius:0 8px 8px 0;
+  background:var(--surface-raised); border-radius:0 var(--r-control) var(--r-control) 0;
   font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary); max-width:78ch;
 }
 .wo-warn.soft{ border-left-color:var(--text-muted) }
@@ -155,7 +155,7 @@
 /* The order a shared card linked to: clear of the sticky header when it is
    scrolled to, and ringed so it can be told from its neighbours. */
 .wo{ scroll-margin-top:150px }
-.wo.is-arrived{ border-color:var(--border-strong); box-shadow:0 0 0 3px rgba(102,109,121,.2) }
+.wo.is-arrived{ border-color:var(--border-strong); box-shadow:var(--ring) }
 .wo-row.is-arrived{ box-shadow:inset 3px 0 0 var(--border-strong) }
 .wo-ev > summary{
   cursor:pointer; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
@@ -164,7 +164,7 @@
 .wo-ev > summary:hover{ color:var(--highlight-text) }
 .wo-ev blockquote{
   margin:9px 0 0; padding:11px 14px; background:var(--surface-raised);
-  border-left:2px solid var(--border); border-radius:0 8px 8px 0;
+  border-left:2px solid var(--border); border-radius:0 var(--r-control) var(--r-control) 0;
   font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary); overflow-wrap:anywhere;
 }
 .wo-ev .basis{ margin:8px 0 0; font-size:var(--fs-small); color:var(--text-muted); line-height:var(--lh-small) }
@@ -176,7 +176,7 @@
 
 /* Every other order: a row in one list, which opens to the same detail. */
 .wo-list.rows{
-  gap:0; border:1px solid var(--border); border-radius:14px; overflow:hidden;
+  gap:0; border:1px solid var(--border); border-radius:var(--r-card); overflow:hidden;
   background:var(--surface);
 }
 .wo-row{ border:0; border-radius:0; border-bottom:1px solid var(--border); background:transparent }
@@ -211,27 +211,27 @@
 /* Waiting for the first read. */
 .wo-empty b{ color:var(--text-primary); font-weight:600 }
 .wo-skel{
-  display:block; height:52px; margin-top:12px; border-radius:11px; opacity:.6;
-  background:linear-gradient(90deg,var(--border) 25%,var(--surface) 37%,var(--border) 63%);
+  display:block; height:52px; margin-top:12px; border-radius:var(--r-card); opacity:.6;
+  background:var(--border);
   background-size:400% 100%; animation:wo-skel 1.5s ease infinite;
 }
 @keyframes wo-skel{ 0%{ background-position:100% 50% } 100%{ background-position:0 50% } }
 @media (prefers-reduced-motion: reduce){ .wo-skel{ animation:none } }
 .wo-retry{
-  margin-left:8px; padding:6px 12px; border:1px solid var(--border); border-radius:8px;
+  margin-left:8px; padding:6px 12px; border:1px solid var(--border); border-radius:var(--r-control);
   background:var(--surface); color:var(--text-primary); font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer;
 }
 .wo-retry:hover{ border-color:var(--highlight); color:var(--highlight-text) }
 
 /* Quarter on quarter: the whole market's disclosed orders, under the week. */
-.wq{ margin:30px 0 0; padding:18px; background:var(--surface-raised); border-radius:14px }
+.wq{ margin:30px 0 0; padding:18px; background:var(--surface-raised); border-radius:var(--r-card) }
 .wq h3{
   margin:0 0 15px; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
   letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
 }
 .wq-grid{ display:grid; grid-template-columns:1fr; gap:12px; align-items:center }
 @media (min-width:720px){ .wq-grid{ grid-template-columns:1fr auto 1fr } }
-.wq-side{ padding:13px 15px; background:var(--surface); border-radius:11px; border:1px solid var(--border) }
+.wq-side{ padding:13px 15px; background:var(--surface); border-radius:var(--r-card); border:1px solid var(--border) }
 .wq-side.partial{ border-style:dashed }
 .wq-side .lb{
   font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
@@ -251,14 +251,14 @@
 
 .cc-nosum{
   padding:15px 17px; margin-bottom:20px; border-left:2px solid var(--border-strong);
-  background:var(--surface-raised); border-radius:0 11px 11px 0;
+  background:var(--surface-raised); border-radius:0 var(--r-card) var(--r-card) 0;
   font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary);
 }
 .cc-nosum b{ color:var(--text-primary) }
 
 .cc{
   background:var(--surface); border:1px solid var(--border);
-  border-radius:14px; padding:17px; margin-bottom:14px;
+  border-radius:var(--r-card); padding:17px; margin-bottom:14px;
 }
 .cc-head{
   display:flex; flex-wrap:wrap; gap:5px 14px; align-items:baseline;
@@ -270,7 +270,7 @@
 .cc-co em{
   font:600 var(--fs-label)/var(--lh-none) var(--font-sans); font-style:normal;
   letter-spacing:var(--ls-label); color:var(--highlight-text); border:1px solid var(--border);
-  border-radius:5px; padding:4px 7px;
+  border-radius:var(--r-xs); padding:4px 7px;
 }
 .cc-when{ margin-left:auto; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); color:var(--text-muted) }
 /* Share sits after the date, at the end of the header. On a phone the header
@@ -283,7 +283,7 @@
 /* The call a shared card linked to: clear of the sticky header when it is
    scrolled to, and ringed so it can be told from its neighbours. */
 .cc{ scroll-margin-top:150px }
-.cc.is-arrived{ border-color:var(--border-strong); box-shadow:0 0 0 3px rgba(102,109,121,.2) }
+.cc.is-arrived{ border-color:var(--border-strong); box-shadow:var(--ring) }
 
 .cc-facts{ display:flex; flex-wrap:wrap; gap:9px 24px; margin-bottom:17px }
 .cc-facts span{
@@ -300,7 +300,7 @@
 }
 .cc-quote{
   margin:0 0 9px; padding:12px 15px; background:var(--surface-raised);
-  border-left:2px solid var(--border-strong); border-radius:0 9px 9px 0;
+  border-left:2px solid var(--border-strong); border-radius:0 var(--r-control) var(--r-control) 0;
   font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary);
 }
 .cc-quote cite{
@@ -312,8 +312,8 @@
 .cc-topics{ display:grid; gap:7px }
 .cc-topic{ display:grid; grid-template-columns:104px 1fr 40px; gap:11px; align-items:center; font-size:var(--fs-small) }
 .cc-topic .k{ color:var(--text-secondary); text-transform:capitalize }
-.cc-topic .bar{ display:block; height:7px; background:var(--border); border-radius:99px; overflow:hidden }
-.cc-topic .bar i{ display:block; height:100%; background:var(--accent); border-radius:99px }
+.cc-topic .bar{ display:block; height:7px; background:var(--border); border-radius:var(--r-pill); overflow:hidden }
+.cc-topic .bar i{ display:block; height:100%; background:var(--accent); border-radius:var(--r-pill) }
 .cc-topic .v{ font:600 var(--fs-small)/var(--lh-none) var(--font-sans); text-align:right; color:var(--text-muted) }
 
 .cc-people{ display:grid; grid-template-columns:1fr; gap:6px 26px }
@@ -326,10 +326,10 @@
   color:var(--text-muted); margin-top:3px;
 }
 
-.cc-shift{ margin-top:19px; padding:15px 17px; background:var(--surface-raised); border-radius:12px }
+.cc-shift{ margin-top:19px; padding:15px 17px; background:var(--surface-raised); border-radius:var(--r-card) }
 .cc-shift.none{
   color:var(--text-muted); font-size:var(--fs-small); line-height:var(--lh-body);
-  padding:13px 16px; margin-top:19px; background:var(--surface-raised); border-radius:12px;
+  padding:13px 16px; margin-top:19px; background:var(--surface-raised); border-radius:var(--r-card);
 }
 .cc-shift h4{
   margin:0 0 12px; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
@@ -338,7 +338,7 @@
 .cc-moves{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px }
 .cc-move{
   display:inline-flex; align-items:baseline; gap:7px; padding:6px 10px;
-  border-radius:8px; border:1px solid var(--border); background:var(--surface);
+  border-radius:var(--r-control); border:1px solid var(--border); background:var(--surface);
   font-size:var(--fs-small); color:var(--text-secondary);
 }
 .cc-move b{ text-transform:capitalize; font-weight:600 }
@@ -390,7 +390,7 @@
 }
 .cc-sum{ margin:0 0 13px; font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary); max-width:72ch }
 .cc-why{
-  margin:0 0 4px; padding:10px 13px; background:var(--surface-raised); border-radius:9px;
+  margin:0 0 4px; padding:10px 13px; background:var(--surface-raised); border-radius:var(--r-control);
   font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary); max-width:72ch;
 }
 .cc-why b{
@@ -424,13 +424,13 @@
 .cc-by{ margin:15px 0 0; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-muted); max-width:76ch; overflow-wrap:anywhere }
 .cc-wait{
   margin:0 0 15px; padding:10px 13px; border-left:2px solid var(--border);
-  background:var(--surface-raised); border-radius:0 9px 9px 0;
+  background:var(--surface-raised); border-radius:0 var(--r-control) var(--r-control) 0;
   font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-muted);
 }
 .cc-wait.is-on{ border-left-color:var(--border-strong); color:var(--text-secondary) }
 .cc-retry{
   margin-left:6px; padding:7px 13px; cursor:pointer; font-family:inherit; font-size:var(--fs-small);
-  border:1px solid var(--border); border-radius:99px; background:none; color:var(--text-secondary);
+  border:1px solid var(--border); border-radius:var(--r-pill); background:none; color:var(--text-secondary);
 }
 .cc-retry:hover{ border-color:var(--highlight); color:var(--highlight-text) }
 
@@ -454,10 +454,10 @@
 }
 .iv-card{
   display:grid; gap:4px; text-align:left; padding:14px 15px; cursor:pointer;
-  background:var(--surface); border:1px solid var(--border); border-radius:12px;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card);
   font-family:inherit; color:var(--text-secondary);
 }
-.iv-card:hover{ border-color:var(--border-strong); box-shadow:var(--e2) }
+.iv-card:hover{ border-color:var(--border-strong); box-shadow:var(--shadow-raised) }
 .iv-card:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 .iv-card b{ font-size:var(--fs-body); color:var(--text-primary) }
 .iv-card .iv-kind{
@@ -489,14 +489,14 @@
   position:absolute; inset:0; width:100%; height:100%;
   object-fit:cover; object-position:50% 20%;
 }
-.iv-av.is-org{ border-radius:11px }
+.iv-av.is-org{ border-radius:var(--r-card) }
 .iv-av.is-logo img{
-  object-fit:contain; object-position:50% 50%; background:#fff; padding:4px;
+  object-fit:contain; object-position:50% 50%; background:var(--surface); padding:4px;
   box-sizing:border-box;
 }
 .iv-av.lg{ width:64px; height:64px }
 .iv-av.lg i{ font-size:var(--fs-body) }
-.iv-av.lg.is-org{ border-radius:15px }
+.iv-av.lg.is-org{ border-radius:var(--r-card) }
 .iv-av.lg.is-logo img{ padding:6px }
 
 .iv-who-head{ display:flex; align-items:center; gap:14px; margin:0 0 12px }
@@ -512,7 +512,7 @@
 
 .iv-back{
   margin:0 0 16px; padding:7px 12px; cursor:pointer;
-  background:none; border:1px solid var(--border); border-radius:99px;
+  background:none; border:1px solid var(--border); border-radius:var(--r-pill);
   font:500 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-secondary);
 }
 .iv-back:hover{ border-color:var(--highlight); color:var(--highlight-text) }
@@ -524,7 +524,7 @@
 .iv-about{ margin:0 0 12px; font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary); max-width:70ch }
 .iv-redirect{
   margin:0 0 14px; padding:11px 14px; border-left:2px solid var(--border-strong);
-  background:var(--surface-raised); border-radius:0 9px 9px 0;
+  background:var(--surface-raised); border-radius:0 var(--r-control) var(--r-control) 0;
   font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary); max-width:70ch;
 }
 /* The floor and the lag, in the header of every portfolio rather than in a
@@ -536,7 +536,7 @@
 .iv-list{ list-style:none; margin:0 0 8px; padding:0; display:grid; gap:8px }
 .iv-pos{
   padding:12px 14px; background:var(--surface);
-  border:1px solid var(--border); border-radius:11px;
+  border:1px solid var(--border); border-radius:var(--r-card);
 }
 .iv-pos-head{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap }
 .iv-pos-head .sym{
@@ -555,7 +555,7 @@
 .iv-flag{
   font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted); cursor:help;
-  border:1px solid var(--border); border-radius:4px; padding:3px 6px;
+  border:1px solid var(--border); border-radius:var(--r-xs); padding:3px 6px;
 }
 
 /* The breakdown. Indented under its total and in the mono face, so it reads as
@@ -592,7 +592,7 @@
 }
 .iv-notes p{ margin:0 0 9px } .iv-notes p:last-child{ margin:0 }
 .iv-empty{
-  padding:20px 18px; background:var(--surface-raised); border-radius:11px;
+  padding:20px 18px; background:var(--surface-raised); border-radius:var(--r-card);
   color:var(--text-muted); font-size:var(--fs-body); line-height:var(--lh-body);
 }
 
@@ -635,13 +635,13 @@
 .lg-wrap > summary:hover{ color:var(--highlight-text) }
 .lg-panel{
   margin-top:10px; padding:16px 18px; border:1px solid var(--border);
-  border-radius:12px; background:var(--surface); max-width:60ch;
+  border-radius:var(--r-card); background:var(--surface); max-width:60ch;
 }
 .lg-head{ display:grid; gap:3px; margin-bottom:12px }
 .lg-head b{ font-size:var(--fs-body); color:var(--text-primary) }
 .lg-head span{ font-size:var(--fs-label); color:var(--text-muted) }
 .lg-bar{
-  height:7px; border-radius:99px; background:var(--surface-raised);
+  height:7px; border-radius:var(--r-pill); background:var(--surface-raised);
   overflow:hidden; margin-bottom:7px;
 }
 .lg-bar i{ display:block; height:100%; background:var(--accent); transition:width .4s ease }
@@ -653,10 +653,10 @@
 .lg-btns{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px }
 .lg-btn{
   padding:8px 14px; cursor:pointer; font-family:inherit; font-size:var(--fs-small);
-  border:1px solid var(--border); border-radius:99px; background:none; color:var(--text-secondary);
+  border:1px solid var(--border); border-radius:var(--r-pill); background:none; color:var(--text-secondary);
 }
 .lg-btn:hover{ border-color:var(--highlight); color:var(--highlight-text) }
 .lg-btn.is-go{ background:var(--accent); border-color:var(--border-strong); color:var(--on-accent) }
-.lg-btn.is-go:hover{ background:var(--accent); border-color:var(--highlight); color:var(--on-accent,#fff)}
+.lg-btn.is-go:hover{ background:var(--accent); border-color:var(--highlight); color:var(--on-accent,var(--on-accent))}
 .lg-fine{ margin:0; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-muted) }
 @media (prefers-reduced-motion:reduce){ .lg-bar i{ transition:none } }

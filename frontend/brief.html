@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="altaha-polish.css">
 <link rel="stylesheet" href="altaha-skin.css">
 <link rel="stylesheet" href="type.css">
+<link rel="stylesheet" href="components.css">
 <style>
   body { margin: 0; background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); }
   .bf { max-width: 780px; margin: 0 auto; padding: 20px 16px 60px; }
@@ -22,17 +23,17 @@
   .bf h1 { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); margin: 8px 0 2px; letter-spacing:var(--ls-heading); }
   .bf-sub { color: var(--text-secondary); font-size: var(--fs-body); margin: 0 0 14px; line-height: var(--lh-small); }
   .bf-days { display: flex; gap: 6px; margin: 0 0 14px; }
-  .bf-days button { border: 1px solid var(--border); background: none; color: inherit; border-radius: 999px; padding: 7px 14px; font: inherit; font-size: var(--fs-small); cursor: pointer; min-height: 36px; }
+  .bf-days button { border: 1px solid var(--border); background: none; color: inherit; border-radius: var(--r-pill); padding: 7px 14px; font: inherit; font-size: var(--fs-small); cursor: pointer; min-height: 36px; }
   .bf-days button.on { background: var(--accent); color: var(--on-accent); border-color: var(--border-strong); }
   .bf-note { border-left: 3px solid var(--border-strong); background: var(--surface-raised); padding: 9px 12px; font-size: var(--fs-small); line-height: var(--lh-small); margin: 0 0 16px; }
   .bf-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
-  .bf-chip { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: var(--fs-small); }
-  .bf-chip.positive, .bf-imp.positive, .bf-st.helped { color: #1a7f4b; }
-  .bf-chip.negative, .bf-imp.negative, .bf-st.hurt { color: #b3261e; }
-  .bf-imp.mixed { color: #30343b; }
-  html[data-theme="dark"] .bf-chip.positive, html[data-theme="dark"] .bf-imp.positive, html[data-theme="dark"] .bf-st.helped { color: #6fcf97; }
-  html[data-theme="dark"] .bf-chip.negative, html[data-theme="dark"] .bf-imp.negative, html[data-theme="dark"] .bf-st.hurt { color: #ff8a80; }
-  html[data-theme="dark"] .bf-imp.mixed { color: #d6d9de; }
+  .bf-chip { border: 1px solid var(--border); border-radius: var(--r-pill); padding: 4px 10px; font-size: var(--fs-small); }
+  .bf-chip.positive, .bf-imp.positive, .bf-st.helped { color: var(--gain); }
+  .bf-chip.negative, .bf-imp.negative, .bf-st.hurt { color: var(--loss); }
+  .bf-imp.mixed { color: var(--text-secondary); }
+  html[data-theme="dark"] .bf-chip.positive, html[data-theme="dark"] .bf-imp.positive, html[data-theme="dark"] .bf-st.helped { color: var(--gain); }
+  html[data-theme="dark"] .bf-chip.negative, html[data-theme="dark"] .bf-imp.negative, html[data-theme="dark"] .bf-st.hurt { color: var(--loss); }
+  html[data-theme="dark"] .bf-imp.mixed { color: var(--text-primary); }
   .bf h2 { font-size: var(--fs-small); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-secondary); margin: 22px 0 4px; font-weight: 600; }
   .bf-item { border-top: 1px solid var(--border); padding: 13px 0; }
   .bf-meta { font-size: var(--fs-label); color: var(--text-secondary); display: flex; gap: 8px; flex-wrap: wrap; }

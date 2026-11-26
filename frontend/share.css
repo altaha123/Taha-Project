@@ -14,7 +14,7 @@
   display:inline-flex;align-items:center;gap:6px;
   border:1px solid var(--border);background:transparent;color:var(--text-muted);
   font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
-  padding:6px 11px;border-radius:6px;cursor:pointer;
+  padding:6px 11px;border-radius:var(--r-xs);cursor:pointer;
   transition:color .18s ease,border-color .18s ease,background .18s ease,transform .18s ease;
 }
 .shbtn:hover{color:var(--highlight-text);border-color:var(--highlight);background:var(--surface-raised);transform:translateY(-1px)}
@@ -28,12 +28,11 @@ body.sh-open{overflow:hidden}
 .shsheet{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;
   justify-content:center;padding:22px}
 .shsheet[hidden]{display:none}
-.shback{position:absolute;inset:0;background:rgba(0,0,0,.62);
-  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+.shback{position:absolute;inset:0;background:var(--scrim);
   animation:shfade .2s ease both}
 .shbox{position:relative;z-index:1;width:min(720px,100%);max-height:92vh;overflow:auto;
-  background:var(--bg);border:1px solid var(--border);border-radius:14px;
-  box-shadow:0 30px 80px rgba(0,0,0,.34);padding:26px 26px 22px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-card);
+  box-shadow:none;padding:26px 26px 22px;
   animation:shrise .24s cubic-bezier(.2,.8,.25,1) both}
 @keyframes shfade{from{opacity:0}to{opacity:1}}
 @keyframes shrise{from{opacity:0;transform:translateY(14px) scale(.985)}
@@ -44,14 +43,14 @@ body.sh-open{overflow:hidden}
 
 .shx{position:absolute;top:12px;right:14px;width:30px;height:30px;border:0;
   background:transparent;color:var(--text-muted);font-size:var(--fs-h2);line-height:var(--lh-none);cursor:pointer;
-  border-radius:6px; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
+  border-radius:var(--r-xs); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
 .shx:hover{color:var(--text-primary);background:var(--surface-raised)}
 
 .shttl{font-family:var(--font-display);font-size:var(--fs-h1);font-weight:500;margin:0 0 6px;
   color:var(--text-primary);padding-right:34px; letter-spacing:var(--ls-heading)}
 .shsub{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:0 0 16px;max-width:56ch}
 
-.shcardwrap{position:relative;border:1px solid var(--border);border-radius:9px;
+.shcardwrap{position:relative;border:1px solid var(--border);border-radius:var(--r-control);
   overflow:hidden;background:var(--surface-raised);min-height:120px;display:flex;
   align-items:center;justify-content:center}
 .shcard{display:block;width:100%;height:auto}
@@ -69,7 +68,7 @@ body.sh-open{overflow:hidden}
 .shbtns .sharebtn.done{border-color:var(--gain);color:var(--gain)}
 
 @media (max-width:560px){
-  .shbox{padding:20px 16px 16px;border-radius:11px}
+  .shbox{padding:20px 16px 16px;border-radius:var(--r-card)}
   .shttl{font-size:var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
   .shbtns .sharebtn{flex:1 1 46%;justify-content:center;text-align:center}
 }
@@ -83,12 +82,12 @@ body.sh-open{overflow:hidden}
    theme rather than vanishing on the dark paper. */
 .shico{width:15px;height:15px;flex:0 0 auto;display:block}
 .shnet-x{--brand:var(--text-primary)}
-.shnet-wa{--brand:#25D366}
-.shnet-tg{--brand:#26A5E4}
-.shnet-li{--brand:#0A66C2}
-.shnet-fb{--brand:#0866FF}
-html[data-theme="dark"] .shnet-li{--brand:#3d8fe0}
-html[data-theme="dark"] .shnet-fb{--brand:#4b8dff}
+.shnet-wa{--brand:var(--gain)}
+.shnet-tg{--brand:var(--info)}
+.shnet-li{--brand:var(--info)}
+.shnet-fb{--brand:var(--info)}
+html[data-theme="dark"] .shnet-li{--brand:var(--info)}
+html[data-theme="dark"] .shnet-fb{--brand:var(--info)}
 
 .shgrp{font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   color:var(--text-muted);margin:16px 0 0}
@@ -107,12 +106,12 @@ html[data-theme="dark"] .shnet-fb{--brand:#4b8dff}
   transition:transform var(--t-fast,.15s) ease,background .15s ease,color .15s ease,
              border-color .15s ease}
 .shround .shico{width:18px;height:18px}
-.shround:hover{background:var(--brand);border-color:var(--brand);color:#fff;transform:translateY(-1px)}
+.shround:hover{background:var(--brand);border-color:var(--brand);color:var(--on-accent);transform:translateY(-1px)}
 .shround.shnet-x:hover{color:var(--on-accent)}
 .shround:focus-visible,.shpill:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .shround.done{border-color:var(--gain);box-shadow:0 0 0 2px var(--gain)}
 .shpill{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 15px;
-  border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);
+  border-radius:var(--r-pill);border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);
   font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   cursor:pointer;transition:border-color .15s ease,color .15s ease}
 .shpill:hover{border-color:var(--border-strong);color:var(--text-primary)}

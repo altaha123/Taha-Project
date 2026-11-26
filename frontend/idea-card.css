@@ -5,7 +5,7 @@
 #idearows .idea .conv{font-size:var(--fs-h1);line-height:var(--lh-none); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
 
 .ideaplan2{display:grid;grid-template-columns:1.6fr 1.2fr 1fr .7fr;gap:1px;margin-top:16px;
-  background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  background:var(--border);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden}
 .ideaplan2 .pc{background:var(--surface);padding:11px 14px;min-width:0}
 .ideaplan2 .pc b{display:block;font:500 var(--fs-label)/var(--lh-none) var(--font-sans);letter-spacing:var(--ls-label);
   text-transform:uppercase;color:var(--text-muted)}
@@ -16,7 +16,7 @@
 .ideaplan2 .sl span{color:var(--loss)}
 .ideaplan2 .rr span{color:var(--text-primary)}
 .ideaplan2.wait{display:flex;gap:12px;align-items:baseline;padding:11px 14px;background:var(--surface-raised)}
-.ideaplan2.wait span{font:600 var(--fs-small) var(--font-sans);letter-spacing:normal;color:#3e4147}
+.ideaplan2.wait span{font:600 var(--fs-small) var(--font-sans);letter-spacing:normal;color:var(--text-secondary)}
 .ideaplan2.wait em{font-style:normal;font-size:var(--fs-small);color:var(--text-muted)}
 @media(max-width:620px){
   .ideaplan2{grid-template-columns:1fr 1fr}
@@ -40,7 +40,7 @@
 .ideamore .arch .ip{padding:2px 8px;border:1px solid;font-weight:600;letter-spacing:var(--ls-label);margin-right:6px}
 .ideamore .ip.buy{color:var(--gain);border-color:var(--gain)}
 .ideamore .ip.watch{color:var(--text-primary);border-color:var(--border-strong)}
-.ideamore .ip.wait{color:#3e4147;border-color:#3e4147}
+.ideamore .ip.wait{color:var(--text-secondary);border-color:var(--border-strong)}
 .ideamore .ip.avoid{color:var(--loss);border-color:var(--loss)}
 .ideamore .filingtag{margin-top:10px}
 

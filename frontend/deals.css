@@ -12,7 +12,7 @@
 
 .dl-counts{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 12px}
 .dl-counts span{display:flex;align-items:baseline;gap:6px;padding:7px 12px;
-  border:1px solid var(--border);border-radius:8px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-control);background:var(--surface);
   font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   color:var(--text-muted)}
 .dl-counts b{font-family:var(--font-display);font-size:var(--fs-h2);letter-spacing:var(--ls-heading);color:var(--text-primary); font-weight:500}
@@ -24,8 +24,8 @@
 
 /* ---- one stock's day --------------------------------------------------- */
 .dl-rows{display:grid;gap:10px;margin-top:14px}
-.dl-row{border:1px solid var(--border);border-radius:10px;padding:14px 16px;
-  background:var(--surface);box-shadow:var(--sh-1);
+.dl-row{border:1px solid var(--border);border-radius:var(--r-control);padding:14px 16px;
+  background:var(--surface);box-shadow:none;
   animation:dl-rise .46s cubic-bezier(.2,.8,.25,1) both;
   animation-delay:calc(var(--i,0) * 34ms)}
 @keyframes dl-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -45,7 +45,7 @@
 .dl-meta{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:10px;
   font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   color:var(--text-muted)}
-.dl-tag{font-style:normal;padding:3px 7px;border-radius:4px;border:1px solid var(--border);
+.dl-tag{font-style:normal;padding:3px 7px;border-radius:var(--r-xs);border:1px solid var(--border);
   letter-spacing:var(--ls-label)}
 .dl-tag.block{border-color:var(--border-strong);color:var(--text-primary)}
 .dl-tag.cross{border-color:var(--text-muted)}
@@ -62,7 +62,7 @@
 .dl-parties li span{font-family:var(--font-sans);font-size:var(--fs-label);color:var(--text-muted);flex:0 0 auto}
 .dl-inst{font-style:normal;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
   text-transform:uppercase;color:var(--text-primary);margin-left:6px;
-  border:1px solid var(--border);padding:1px 5px;border-radius:3px}
+  border:1px solid var(--border);padding:1px 5px;border-radius:var(--r-xs)}
 .dl-inst.prop{color:var(--text-muted)}
 
 .dl-read{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:11px 0 0;
@@ -70,7 +70,7 @@
 
 /* ---- the per-stock table ----------------------------------------------- */
 .dl-summary{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:14px 0;
-  padding:13px 15px;border:1px solid var(--border);border-radius:9px;
+  padding:13px 15px;border:1px solid var(--border);border-radius:var(--r-control);
   background:var(--surface-raised)}
 .dl-summary b{font-family:var(--font-display);font-size:var(--fs-h1);color:var(--text-secondary); font-weight:500; letter-spacing:var(--ls-heading)}
 .dl-summary.up b{color:var(--gain)} .dl-summary.dn b{color:var(--loss)}

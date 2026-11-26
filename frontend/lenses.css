@@ -20,24 +20,24 @@
 
 .ln-run{
   display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; margin-top:16px;
-  padding:12px 14px; border-radius:14px; border:1px solid var(--border);
+  padding:12px 14px; border-radius:var(--r-card); border:1px solid var(--border);
   background:var(--surface); max-width:72ch;
 }
 .ln-runbtn{
   display:inline-flex; align-items:center; gap:8px; min-height:40px; padding:0 18px;
-  border:0; border-radius:999px; cursor:pointer; font:600 var(--fs-body)/var(--lh-none) var(--font-sans);
-  color:var(--on-accent,#fff); background:linear-gradient(135deg,var(--accent-hover),var(--accent));
-  box-shadow:0 6px 16px color-mix(in srgb,var(--border-strong) 28%,transparent);
+  border:0; border-radius:var(--r-pill); cursor:pointer; font:600 var(--fs-body)/var(--lh-none) var(--font-sans);
+  color:var(--on-accent,var(--on-accent)); background:var(--accent);
+  box-shadow:none;
   transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
 }
-:root[data-theme="dark"] .ln-runbtn{ color:#0A0A0B }
+:root[data-theme="dark"] .ln-runbtn{ color:var(--on-accent) }
 .ln-runbtn svg{ width:14px; height:14px; fill:currentColor }
 .ln-runbtn:hover:not(:disabled){ transform:translateY(-1px) }
 .ln-runbtn:focus-visible, .ln-stopbtn:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 .ln-runbtn:disabled{ cursor:progress; opacity:.85 }
 .ln-runbtn.is-busy svg{ animation:lnSpin 1.2s linear infinite; transform-origin:50% 50% }
 .ln-stopbtn{
-  min-height:40px; padding:0 14px; border-radius:999px; cursor:pointer;
+  min-height:40px; padding:0 14px; border-radius:var(--r-pill); cursor:pointer;
   border:1px solid var(--border); background:none; color:var(--text-secondary);
   font:500 var(--fs-small)/var(--lh-none) var(--font-sans);
 }
@@ -53,9 +53,9 @@
 .ln-card{
   position:relative; overflow:hidden; isolation:isolate;
   display:flex; flex-direction:column; gap:8px; min-height:280px;
-  padding:20px 20px 18px; border-radius:16px; text-decoration:none; color:var(--text-primary);
+  padding:20px 20px 18px; border-radius:var(--r-card); text-decoration:none; color:var(--text-primary);
   background:var(--surface); border:1px solid var(--border);
-  box-shadow:0 1px 0 color-mix(in srgb,var(--border-strong) 4%,transparent);
+  box-shadow:none;
   transition:transform .32s cubic-bezier(.16,1,.3,1), box-shadow .32s ease, border-color .2s ease;
   animation:lnRise .6s cubic-bezier(.16,1,.3,1) both;
   animation-delay:calc(var(--i,0) * 55ms);
@@ -64,34 +64,33 @@
    card's accent, drawn rather than imported. */
 .ln-card::before{
   content:""; position:absolute; inset:-40% -40% auto auto; width:220px; height:220px; z-index:-1;
-  background:radial-gradient(circle, color-mix(in srgb,var(--accent) 22%,transparent) 0%, transparent 68%);
   transition:transform .6s cubic-bezier(.16,1,.3,1), opacity .3s ease; opacity:.75;
 }
 .ln-card::after{
-  content:""; position:absolute; left:0; top:18px; bottom:18px; width:3px; border-radius:0 3px 3px 0;
-  background:linear-gradient(var(--border-strong), var(--highlight));
+  content:""; position:absolute; left:0; top:18px; bottom:18px; width:3px; border-radius:0 var(--r-xs) var(--r-xs) 0;
+  background:var(--highlight);
 }
 .ln-card:hover, .ln-card:focus-visible{
   transform:translateY(-4px); border-color:color-mix(in srgb,var(--focus-ring) 55%,var(--border));
-  box-shadow:0 14px 34px color-mix(in srgb,var(--border-strong) 12%,transparent);
+  box-shadow:var(--shadow-raised);
 }
 .ln-card:hover::before{ transform:scale(1.25) translate(-10px,10px); opacity:1 }
 .ln-card:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 
 .ln-card-top{ display:flex; align-items:center; justify-content:space-between }
 .ln-glyph{
-  display:grid; place-items:center; width:40px; height:40px; border-radius:12px;
+  display:grid; place-items:center; width:40px; height:40px; border-radius:var(--r-card);
   background:var(--surface-raised); border:1px solid var(--border); color:var(--text-primary);
 }
 .ln-glyph svg{ width:20px; height:20px }
 .ln-card:hover .ln-glyph{
-  background:linear-gradient(135deg,var(--accent-hover),var(--accent)); color:var(--on-accent,#fff); border-color:transparent;
+  background:var(--accent); color:var(--on-accent,var(--on-accent)); border-color:transparent;
 }
 .ln-rules, .ln-soon{
   font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase;
   color:var(--text-muted);
 }
-.ln-soon{ color:var(--text-primary); border:1px dashed var(--border-strong); border-radius:999px; padding:5px 9px }
+.ln-soon{ color:var(--text-primary); border:1px dashed var(--border-strong); border-radius:var(--r-pill); padding:5px 9px }
 .ln-orig{
   margin-top:8px; font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted);
@@ -132,9 +131,8 @@
 .ln-back a{ font:500 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-muted); text-decoration:none }
 .ln-back a:hover{ color:var(--highlight-text) }
 .ln-hero{
-  position:relative; margin:16px 0 22px; padding:28px 26px 26px; border-radius:18px;
+  position:relative; margin:16px 0 22px; padding:28px 26px 26px; border-radius:var(--r-card);
   background:
-    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb,var(--accent) 16%,transparent) 0%, transparent 55%),
     var(--surface);
   border:1px solid var(--border);
 }
@@ -148,22 +146,22 @@
 }
 .ln-rulelist{ list-style:none; margin:0 0 10px; padding:0; display:grid; gap:8px }
 .ln-rulelist li{
-  display:flex; gap:12px; align-items:baseline; padding:11px 14px; border-radius:12px;
+  display:flex; gap:12px; align-items:baseline; padding:11px 14px; border-radius:var(--r-card);
   background:var(--surface-raised); border:1px solid var(--border); line-height:var(--lh-label);
 }
 .ln-rn{
   flex:none; font:600 var(--fs-label)/var(--lh-none) var(--font-sans); color:var(--text-primary);
-  border:1px solid color-mix(in srgb,var(--border-strong) 45%,transparent); border-radius:6px; padding:4px 6px;
+  border:1px solid color-mix(in srgb,var(--border-strong) 45%,transparent); border-radius:var(--r-xs); padding:4px 6px;
 }
 .ln-results{ margin-top:26px }
 .ln-soonbox{
-  margin:22px 0; padding:16px 18px; border-radius:14px; border:1px dashed var(--border-strong);
+  margin:22px 0; padding:16px 18px; border-radius:var(--r-card); border:1px dashed var(--border-strong);
   background:color-mix(in srgb,var(--accent) 7%,transparent); line-height:var(--lh-body);
 }
 
 .ln-tablewrap{
   overflow-x:auto; -webkit-overflow-scrolling:touch; margin:10px 0 6px;
-  border:1px solid var(--border); border-radius:14px; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface);
 }
 .ln-table{ width:100%; border-collapse:collapse; font-size:var(--fs-body) }
 .ln-table thead th{
@@ -185,10 +183,10 @@
    the column under "Company" is always the company. */
 .ln-table tbody tr:hover > th[scope="row"]{
   background:color-mix(in srgb,var(--accent) 5%,var(--surface)) }
-.ln-table th[scope="row"]{ box-shadow:1px 0 0 var(--border) }
+.ln-table th[scope="row"]{ box-shadow:none }
 .ln-table thead th:first-child:not(.qs-n), .ln-table thead th.qs-co{
   position:sticky; left:0; z-index:2; text-align:left; background:var(--surface);
-  box-shadow:1px 0 0 var(--border) }
+  box-shadow:none }
 .ln-table th[scope="row"] a{ text-decoration:none; color:var(--text-primary); display:block }
 .ln-table th[scope="row"] b{ display:block; font:600 var(--fs-small)/var(--lh-h1) var(--font-sans) }
 .ln-table th[scope="row"] span{ display:block; font-size:var(--fs-small); color:var(--text-secondary); line-height:var(--lh-h3) }
@@ -203,7 +201,7 @@
 .ln-score{ text-align:center; padding:9px 12px; font:500 var(--fs-small)/var(--lh-h1) var(--font-sans); white-space:nowrap }
 .ln-score small{ display:block; font-size:var(--fs-label); color:var(--text-muted); margin-top:3px }
 
-.ln-near{ margin:22px 0 0; border:1px solid var(--border); border-radius:14px; padding:4px 14px 12px }
+.ln-near{ margin:22px 0 0; border:1px solid var(--border); border-radius:var(--r-card); padding:4px 14px 12px }
 .ln-near summary{
   cursor:pointer; padding:12px 0; font:500 var(--fs-h2)/var(--lh-h1) var(--font-display);
   list-style-position:outside; letter-spacing:var(--ls-heading);
@@ -218,14 +216,14 @@
   font-size:var(--fs-small); color:var(--text-muted) }
 .ln-chip{
   border:1px solid var(--border); background:var(--surface); color:var(--text-secondary);
-  border-radius:999px; padding:7px 13px; font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer;
+  border-radius:var(--r-pill); padding:7px 13px; font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer;
   min-height:34px;
 }
 .ln-chip.on{ background:var(--accent); color:var(--on-accent); border-color:var(--border-strong) }
 .ln-conv{ list-style:none; margin:0; padding:0; display:grid; gap:10px }
 .ln-conv li{
   display:grid; grid-template-columns:44px minmax(180px,1.2fr) auto minmax(0,2fr); gap:14px;
-  align-items:center; padding:14px 16px; border-radius:14px; border:1px solid var(--border);
+  align-items:center; padding:14px 16px; border-radius:var(--r-card); border:1px solid var(--border);
   background:var(--surface);
   animation:lnRise .5s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i,0) * 35ms);
 }
@@ -241,16 +239,16 @@
 
 .ln-badges{ display:flex; flex-wrap:wrap; gap:6px }
 .ln-badge{
-  display:inline-flex; align-items:center; min-height:28px; padding:4px 11px; border-radius:999px;
+  display:inline-flex; align-items:center; min-height:28px; padding:4px 11px; border-radius:var(--r-pill);
   font:500 var(--fs-label)/var(--lh-none) var(--font-sans); text-decoration:none; white-space:nowrap;
   border:1px solid var(--border); color:var(--text-muted); background:transparent;
   transition:transform .15s ease, border-color .15s ease;
 }
 .ln-badge:hover{ transform:translateY(-1px); border-color:var(--highlight) }
 .ln-badge.is-pass{
-  background:linear-gradient(135deg,var(--accent-hover),var(--accent)); color:var(--on-accent,#fff); border-color:transparent;
+  background:var(--accent); color:var(--on-accent,var(--on-accent)); border-color:transparent;
 }
-:root[data-theme="dark"] .ln-badge.is-pass{ color:#0A0A0B }
+:root[data-theme="dark"] .ln-badge.is-pass{ color:var(--on-accent) }
 .ln-badge.is-near-miss{ border-color:var(--border-strong); color:var(--text-primary) }
 .ln-badge.is-soon{ border-style:dashed; opacity:.7 }
 .ln-badge.is-insufficient, .ln-badge.is-none{ opacity:.65 }
@@ -258,9 +256,9 @@
 /* ── States and the notice ───────────────────────────────────────────────── */
 
 .ln-state{ padding:28px 18px; text-align:center; color:var(--text-muted); border:1px dashed var(--border);
-  border-radius:14px; margin:12px 0 }
+  border-radius:var(--r-card); margin:12px 0 }
 .ln-state .ln-btn{ display:block; margin:12px auto 0; border:1px solid var(--border-strong); background:none;
-  color:var(--text-primary); border-radius:999px; padding:8px 16px; cursor:pointer; min-height:36px }
+  color:var(--text-primary); border-radius:var(--r-pill); padding:8px 16px; cursor:pointer; min-height:36px }
 .ln-spin{ display:inline-block; width:14px; height:14px; margin-right:8px; vertical-align:-2px;
   border:2px solid var(--border); border-top-color:var(--border-strong); border-radius:50%;
   animation:lnSpin .8s linear infinite }
@@ -298,7 +296,7 @@
   margin:0 0 6px; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
   letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
 }
-.sc-item{ margin:12px 0 0; border:1px solid var(--border); border-radius:14px; padding:4px 14px 12px }
+.sc-item{ margin:12px 0 0; border:1px solid var(--border); border-radius:var(--r-card); padding:4px 14px 12px }
 .sc-item summary{
   cursor:pointer; padding:12px 0; font:500 var(--fs-h2)/var(--lh-h1) var(--font-display);
   list-style-position:outside; letter-spacing:var(--ls-heading);

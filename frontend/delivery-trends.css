@@ -11,7 +11,7 @@
 
 /* The market in four figures. */
 .dt-tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:11px; margin:0 0 26px }
-.dt-tile{ border:1px solid var(--border); border-radius:12px; padding:14px 16px; background:var(--surface); min-width:0 }
+.dt-tile{ border:1px solid var(--border); border-radius:var(--r-card); padding:14px 16px; background:var(--surface); min-width:0 }
 .dt-tile .k{ font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
 .dt-tile .v{ font:500 var(--fs-h2)/var(--lh-none) var(--font-display); margin-top:10px; letter-spacing:var(--ls-heading); font-variant-numeric:tabular-nums }
 .dt-tile .n{ font-size:var(--fs-small); line-height:var(--lh-label); color:var(--text-muted); margin-top:7px }
@@ -44,12 +44,12 @@
   text-transform:uppercase; color:var(--text-muted) }
 .dt-head > span:nth-child(n+3){ text-align:right }
 
-.dt-row{ border:1px solid var(--border); border-radius:12px; background:var(--surface); margin-bottom:8px;
+.dt-row{ border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface); margin-bottom:8px;
   overflow:hidden; transition:border-color .2s ease }
 .dt-row:hover, .dt-row[open]{ border-color:var(--border-strong) }
 .dt-row > summary{ list-style:none; cursor:pointer; padding:13px 17px }
 .dt-row > summary::-webkit-details-marker{ display:none }
-.dt-row > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-2px; border-radius:12px }
+.dt-row > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-2px; border-radius:var(--r-card) }
 .dt-id{ min-width:0 }
 .dt-sym{ display:block; font:600 var(--fs-body)/var(--lh-h3) var(--font-mono); letter-spacing:normal }
 .dt-sub{ display:block; font-size:var(--fs-small); color:var(--text-muted); margin-top:3px; line-height:var(--lh-label);
@@ -71,7 +71,7 @@
 .dt-links a:hover{ text-decoration:underline }
 
 .dt-empty{ padding:34px 20px; text-align:center; color:var(--text-muted); font-size:var(--fs-body);
-  border:1px dashed var(--border); border-radius:12px }
+  border:1px dashed var(--border); border-radius:var(--r-card) }
 .dt-capped{ margin:10px 0 0; font-size:var(--fs-small); color:var(--text-muted) }
 
 /* Industries. */
@@ -86,8 +86,8 @@
 .dt-sec{ padding:10px 2px; border-top:1px solid var(--border) }
 .dt-sec .n{ font-size:var(--fs-body); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .dt-sec .n small{ margin-left:8px; font-size:var(--fs-small); color:var(--text-muted) }
-.dt-sec .b{ position:relative; display:block; height:8px; border-radius:99px; background:var(--border) }
-.dt-sec .b i{ display:block; height:100%; border-radius:99px; background:var(--text-muted); opacity:.55 }
+.dt-sec .b{ position:relative; display:block; height:8px; border-radius:var(--r-pill); background:var(--border) }
+.dt-sec .b i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--text-muted); opacity:.55 }
 .dt-sec .b i.hi{ background:var(--accent); opacity:1 }
 .dt-sec .b i.lo{ opacity:.3 }
 .dt-sec .b u{ position:absolute; top:-3px; bottom:-3px; width:1px; background:var(--text-secondary) }

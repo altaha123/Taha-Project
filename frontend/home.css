@@ -51,7 +51,7 @@ body.sh-on .hero-tiles{ display:none !important }
   display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
   gap:12px; margin-bottom:14px;
 }
-.mb-card{ padding:16px 18px; border-radius:14px }
+.mb-card{ padding:16px 18px; border-radius:var(--r-card) }
 .mb-card .k{
   font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted);
@@ -63,8 +63,8 @@ body.sh-on .hero-tiles{ display:none !important }
 /* A hairline that fills to show the move's size against the day's biggest.
    Absolute percentages on four indices are hard to compare at a glance;
    lengths are not. */
-.mb-card .spark{ height:3px; background:var(--border); border-radius:99px; margin-top:13px; overflow:hidden }
-.mb-card .spark i{ display:block; height:100%; width:0; border-radius:99px;
+.mb-card .spark{ height:3px; background:var(--border); border-radius:var(--r-pill); margin-top:13px; overflow:hidden }
+.mb-card .spark i{ display:block; height:100%; width:0; border-radius:var(--r-pill);
   transition:width 900ms var(--ease-out) }
 .mb-card .spark i.up{ background:var(--gain) } .mb-card .spark i.dn{ background:var(--loss) }
 
@@ -72,7 +72,7 @@ body.sh-on .hero-tiles{ display:none !important }
   display:grid; grid-template-columns:1fr 1fr; gap:12px;
 }
 @media (max-width:680px){ .mb-movers{ grid-template-columns:1fr } }
-.mb-col{ padding:15px 17px; border-radius:14px }
+.mb-col{ padding:15px 17px; border-radius:var(--r-card) }
 .mb-col h3{
   margin:0 0 11px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
   letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
@@ -93,8 +93,8 @@ body.sh-on .hero-tiles{ display:none !important }
 .mb-note{
   margin:14px 0 0; text-align:center; font-size:var(--fs-small); color:var(--text-muted);
 }
-.mb-skel{ height:96px; border-radius:14px;
-  background:linear-gradient(90deg,var(--border) 25%,var(--surface-raised) 37%,var(--border) 63%);
+.mb-skel{ height:96px; border-radius:var(--r-card);
+  background:var(--border);
   background-size:400% 100%; animation:mbSkel 1400ms ease-in-out infinite }
 @keyframes mbSkel{ from{ background-position:100% 0 } to{ background-position:0 0 } }
 

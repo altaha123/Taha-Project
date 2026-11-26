@@ -12,9 +12,9 @@
 .patload{font-size:var(--fs-body);line-height:var(--lh-body);color:var(--text-muted);padding:18px 0;max-width:620px}
 
 .patcard{border:1px solid var(--border);border-left:3px solid var(--border);
-         border-radius:var(--r-card);background:var(--surface);box-shadow:var(--sh-1);
+         border-radius:var(--r-card);background:var(--surface);box-shadow:none;
          padding:18px 20px;margin-bottom:16px}
-.patcard.bullish{border-left-color:#0a7548}
+.patcard.bullish{border-left-color:var(--gain)}
 .patcard.bearish{border-left-color:var(--loss)}
 .patcard.neutral{border-left-color:var(--border-strong)}
 
@@ -23,7 +23,7 @@
 .patstatus{font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
            border:1px solid var(--border);border-radius:var(--r-pill);padding:2px 8px;
            margin-left:9px;font-style:normal;white-space:nowrap}
-.patstatus.confirmed{border-color:#0a7548;color:#0a7548;background:rgba(31,111,67,.07)}
+.patstatus.confirmed{border-color:var(--gain);color:var(--gain);background:var(--gain-bg)}
 .patstatus.forming{border-color:var(--border-strong);color:var(--text-primary)}
 .patstatus.failed{border-color:var(--loss);color:var(--loss);background:color-mix(in srgb,var(--loss) 9%,transparent)}
 .patconf-n{font-family:var(--font-display);font-size:var(--fs-h2);color:var(--text-primary);flex-shrink:0;text-align:right; font-weight:500; letter-spacing:var(--ls-heading)}
@@ -31,7 +31,7 @@
                  text-transform:uppercase;color:var(--text-muted);margin-top:2px}
 
 .patlevels{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:14px 0 0;
-           background:var(--border);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+           background:var(--border);border:1px solid var(--border);border-radius:var(--r-control);overflow:hidden}
 .patlevels > div{background:var(--bg);padding:10px 12px;min-width:0}
 .patlevels b{display:block;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
              text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:3px}
@@ -45,7 +45,7 @@
          background:var(--surface-raised);font-size:var(--fs-small);line-height:var(--lh-body)}
 .patconf b{display:block;color:var(--text-primary)}
 .patconf span{display:block;color:var(--text-muted);font-size:var(--fs-small);margin-top:3px}
-.patconf.ok{border-left-color:#0a7548}
+.patconf.ok{border-left-color:var(--gain)}
 .patconf.no{border-left-color:var(--loss);background:color-mix(in srgb,var(--loss) 9%,transparent)}
 .patconf.mix{border-left-color:var(--border-strong)}
 
@@ -53,7 +53,7 @@
 .patchecks li{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-secondary);padding:3px 0 3px 20px;
               position:relative}
 .patchecks li b{position:absolute;left:0;top:3px;font-weight:400}
-.patchecks li.ok b{color:#0a7548}
+.patchecks li.ok b{color:var(--gain)}
 .patchecks li.no b{color:var(--loss)}
 .patchecks li span{color:var(--text-muted);font-family:var(--font-sans);font-size:var(--fs-label)}
 
@@ -107,7 +107,7 @@
 .patbar i{font-style:normal;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
           border:1px solid var(--border);border-radius:var(--r-pill);padding:3px 10px;
           color:var(--text-secondary);white-space:nowrap}
-.patbar i.bullish{border-color:#0a7548;color:#0a7548}
+.patbar i.bullish{border-color:var(--gain);color:var(--gain)}
 .patbar i.bearish{border-color:var(--loss);color:var(--loss)}
 .patbar i em{font-style:normal;text-transform:uppercase;font-size:var(--fs-label);
              letter-spacing:var(--ls-label);color:var(--text-muted)}

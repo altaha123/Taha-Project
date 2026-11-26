@@ -15,8 +15,8 @@
    small bars) width are animated.
    ========================================================================== */
 
-#view-live{ --la-tg:#229ED9; --la-radius:var(--r-card,14px);
-            --la-surface:var(--surface,#fff); --la-line:var(--border) }
+#view-live{ --la-tg:var(--info); --la-radius:var(--r-card,14px);
+            --la-surface:var(--surface,var(--surface)); --la-line:var(--border) }
 
 /* ── entrance: each part rises in turn when the tab opens ────────────────── */
 @keyframes laRise{ from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
@@ -30,11 +30,11 @@
 .la-hero{ display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:28px; align-items:center;
           padding:30px 32px; margin:8px 0 18px; border-radius:calc(var(--la-radius) + 4px);
           border:1px solid var(--la-line); position:relative; overflow:hidden;
-          background:linear-gradient(135deg, var(--la-surface) 0%, var(--surface-raised) 100%);
-          box-shadow:var(--sh-1,0 1px 2px rgba(0,0,0,.04)) }
+          background:var(--surface-raised);
+          box-shadow:none }
 .la-hero::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
-                  background:linear-gradient(180deg,var(--border-strong),var(--highlight)) }
-.la-status{ display:inline-flex; align-items:center; gap:9px; padding:6px 13px 6px 11px; border-radius:999px;
+                  background:var(--highlight) }
+.la-status{ display:inline-flex; align-items:center; gap:9px; padding:6px 13px 6px 11px; border-radius:var(--r-pill);
             border:1px solid var(--la-line); background:var(--la-surface);
             font-family:var(--font-sans); font-size:var(--fs-small); letter-spacing:normal; color:var(--text-secondary) }
 .la-hero h2{ font-family:var(--font-display); font-weight:400; font-size:var(--fs-display); line-height:var(--lh-none);
@@ -43,24 +43,24 @@
 
 /* the status dot: steady when closed, a ring going out while live */
 .la-dot{ position:relative; width:9px; height:9px; border-radius:50%; background:var(--text-muted); flex-shrink:0 }
-.la-dot.on{ background:#2E9E6B }
-.la-dot.on::after{ content:""; position:absolute; inset:0; border-radius:50%; background:#2E9E6B;
+.la-dot.on{ background:var(--gain) }
+.la-dot.on::after{ content:""; position:absolute; inset:0; border-radius:50%; background:var(--gain);
                    animation:laPing 1.8s cubic-bezier(0,0,.2,1) infinite }
 @keyframes laPing{ 0%{transform:scale(1);opacity:.7} 80%,100%{transform:scale(3.2);opacity:0} }
 
 /* the Telegram button */
 .la-tg{ position:relative; display:inline-flex; align-items:center; gap:12px; padding:14px 26px 14px 22px;
-        border-radius:999px; background:var(--la-tg); color:#fff; font-size:var(--fs-h3); font-weight:600;
+        border-radius:var(--r-pill); background:var(--la-tg); color:var(--on-accent); font-size:var(--fs-h3); font-weight:600;
         text-decoration:none; letter-spacing:normal; overflow:hidden; isolation:isolate;
-        box-shadow:0 6px 18px rgba(34,158,217,.28);
+        box-shadow:none;
         transition:transform var(--t,280ms) var(--ease-soft,ease-out), box-shadow var(--t,280ms) var(--ease-soft,ease-out) }
-.la-tg:hover{ transform:translateY(-2px); box-shadow:0 10px 26px rgba(34,158,217,.38) }
+.la-tg:hover{ transform:translateY(-2px); box-shadow:var(--shadow-raised) }
 .la-tg:active{ transform:translateY(0) scale(.98) }
 .la-tg:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:3px }
 .la-tg svg{ width:22px; height:22px; flex-shrink:0; transition:transform var(--t,280ms) var(--ease-soft,ease-out) }
 .la-tg:hover svg{ transform:translate(3px,-3px) rotate(-8deg) }
 .la-tg::after{ content:""; position:absolute; inset:0; z-index:-1;
-               background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.34) 50%,transparent 70%);
+               background:linear-gradient(100deg,transparent 30%,var(--wash-strong) 50%,transparent 70%);
                transform:translateX(-130%); animation:laSheen 5.5s var(--ease-soft,ease-out) 1.2s infinite }
 @keyframes laSheen{ 0%{transform:translateX(-130%)} 30%,100%{transform:translateX(130%)} }
 .la-tgsub{ font-size:var(--fs-small); color:var(--text-muted); margin:10px 0 0 4px }
@@ -78,7 +78,7 @@
 
 /* ── owner bar ───────────────────────────────────────────────────────────── */
 #view-live .ltg{ font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary) }
-#view-live .ltg.off{ border:1px dashed var(--loss); border-radius:10px; padding:10px 14px; color:inherit }
+#view-live .ltg.off{ border:1px dashed var(--loss); border-radius:var(--r-control); padding:10px 14px; color:inherit }
 #view-live .ltg code{ font-family:var(--font-mono); font-size:var(--fs-small) }
 #view-live #tgjoin .ltg.off{ display:inline-block; font-size:var(--fs-small) }
 .la-owner{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; padding:12px 16px; margin:0 0 18px;
@@ -86,7 +86,7 @@
 .la-owner[hidden]{ display:none }
 .la-owner .la-tag{ font-family:var(--font-sans); font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
                    color:var(--text-primary); margin-right:4px }
-.la-owner .livebtn{ font-size:var(--fs-label); padding:7px 13px; letter-spacing:var(--ls-label); border-radius:999px }
+.la-owner .livebtn{ font-size:var(--fs-label); padding:7px 13px; letter-spacing:var(--ls-label); border-radius:var(--r-pill) }
 .la-owner #ltg{ margin:0 0 0 auto; font-size:var(--fs-small) }
 .la-owner #ltg.off{ border:0; padding:0; color:var(--loss) }
 .la-owner #lquiet{ flex-basis:100% }
@@ -96,17 +96,17 @@
 /* ── the two columns of calls ────────────────────────────────────────────── */
 .la-cols{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; align-items:start }
 .la-panel{ border:1px solid var(--la-line); border-radius:calc(var(--la-radius) + 2px); background:var(--la-surface);
-           padding:20px 20px 18px; box-shadow:var(--sh-1,0 1px 2px rgba(0,0,0,.04)); min-width:0 }
+           padding:20px 20px 18px; box-shadow:none; min-width:0 }
 .la-wide{ margin-top:18px }
 .la-head{ display:flex; align-items:center; gap:12px; margin-bottom:14px }
-.la-ico{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:var(--fs-body); flex-shrink:0;
+.la-ico{ width:38px; height:38px; border-radius:var(--r-card); display:grid; place-items:center; font-size:var(--fs-body); flex-shrink:0;
          background:var(--surface-raised); border:1px solid var(--la-line) }
 .la-head h3{ font-family:var(--font-sans); font-weight:600; font-size:var(--fs-h3); letter-spacing:normal; margin:0; color:var(--text-primary) }
 .la-head small{ display:block; font-size:var(--fs-small); color:var(--text-muted); font-weight:400; margin-top:2px; letter-spacing:0 }
-.la-badge{ margin-left:auto; min-width:28px; padding:4px 10px; border-radius:999px; text-align:center;
+.la-badge{ margin-left:auto; min-width:28px; padding:4px 10px; border-radius:var(--r-pill); text-align:center;
            font-family:var(--font-sans); font-size:var(--fs-label); font-weight:600; background:var(--surface-raised); color:var(--text-secondary);
            border:1px solid var(--la-line) }
-.la-badge.has{ background:var(--accent); border-color:var(--border-strong); color:var(--on-accent,#fff)}
+.la-badge.has{ background:var(--accent); border-color:var(--border-strong); color:var(--on-accent,var(--on-accent))}
 
 /* one call */
 .la-call{ position:relative; border:1px solid var(--la-line); border-radius:var(--la-radius); padding:14px 16px 13px 18px;
@@ -115,31 +115,31 @@
 .la-call:first-child{ margin-top:0 }
 .la-call::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--gain) }
 .la-call.dn::before{ background:var(--loss) }
-.la-call:hover{ transform:translateY(-2px); box-shadow:var(--sh-2,0 6px 18px rgba(0,0,0,.08)) }
+.la-call:hover{ transform:translateY(-2px); box-shadow:var(--shadow-raised) }
 .la-call header{ display:flex; align-items:center; gap:10px }
 .la-side{ font-family:var(--font-sans); font-size:var(--fs-label); font-weight:600; letter-spacing:var(--ls-label); padding:3px 9px;
-          border-radius:6px; color:#fff; background:var(--gain) }
+          border-radius:var(--r-xs); color:var(--on-accent); background:var(--gain) }
 .la-side.sell{ background:var(--loss) }
 .la-sym{ font-weight:600; font-size:var(--fs-h3); color:var(--text-primary); text-decoration:none; letter-spacing:normal }
 .la-sym:hover{ color:var(--highlight-text) }
 .la-call time{ margin-left:auto; font-family:var(--font-sans); font-size:var(--fs-small); color:var(--text-muted) }
 .la-levels{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0 10px }
-.la-levels div{ padding:9px 10px 8px; border-radius:9px; background:var(--la-surface); border:1px solid var(--la-line); min-width:0 }
+.la-levels div{ padding:9px 10px 8px; border-radius:var(--r-control); background:var(--la-surface); border:1px solid var(--la-line); min-width:0 }
 .la-levels span{ display:block; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
                  font-family:var(--font-sans) }
 .la-levels b{ display:block; margin-top:3px; font-family:var(--font-sans); font-weight:600; font-size:var(--fs-body); color:var(--text-primary);
               white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums }
 .la-levels .stop b{ color:var(--loss) } .la-levels .tgt b{ color:var(--gain) }
 .la-why{ font-size:var(--fs-body); line-height:var(--lh-small); color:var(--text-secondary); margin:0 }
-.la-out{ display:inline-flex; align-items:center; gap:7px; margin-top:10px; padding:4px 11px; border-radius:999px;
+.la-out{ display:inline-flex; align-items:center; gap:7px; margin-top:10px; padding:4px 11px; border-radius:var(--r-pill);
          font-size:var(--fs-small); font-weight:600 }
-.la-out.won{ color:var(--gain); background:rgba(46,158,107,.12) }
-.la-out.lost{ color:var(--loss); background:rgba(190,60,50,.10) }
+.la-out.won{ color:var(--gain); background:var(--gain-bg) }
+.la-out.lost{ color:var(--loss); background:var(--loss-bg) }
 .la-out.flat{ color:var(--text-secondary); background:var(--surface-raised) }
 
 /* a call that has just arrived: slides in and glows once */
 @keyframes laArrive{ 0%{opacity:0;transform:translateY(-10px) scale(.985)} 100%{opacity:1;transform:none} }
-@keyframes laGlow{ 0%{box-shadow:0 0 0 0 rgba(102,109,121,.55)} 100%{box-shadow:0 0 0 14px rgba(102,109,121,0)} }
+@keyframes laGlow{ 0%{box-shadow:none} 100%{box-shadow:var(--ring)} }
 .la-call.is-new{ animation:laArrive 480ms var(--ease-soft,ease-out) both, laGlow 1.4s ease-out 300ms 2 }
 
 /* nothing yet: a sweep while the scanner is checking, still when it is not */
@@ -149,11 +149,11 @@
 .la-radar{ position:relative; width:38px; height:38px; border-radius:50%; flex-shrink:0;
            border:1px solid var(--border); background:var(--surface-raised); overflow:hidden }
 .la-radar::after{ content:""; position:absolute; inset:0; border-radius:50%; opacity:0;
-                  background:conic-gradient(from 0deg, rgba(46,158,107,.55), transparent 28%) }
+                  background:conic-gradient(from 0deg, var(--gain), transparent 28%) }
 .la-radar::before{ content:""; position:absolute; left:50%; top:50%; width:5px; height:5px; margin:-2.5px;
                    border-radius:50%; background:var(--text-muted); z-index:1 }
 .la-empty.live .la-radar::after{ opacity:1; animation:laSweep 2.4s linear infinite }
-.la-empty.live .la-radar::before{ background:#2E9E6B }
+.la-empty.live .la-radar::before{ background:var(--gain) }
 @keyframes laSweep{ to{ transform:rotate(360deg) } }
 
 /* ── closest to breaking out ─────────────────────────────────────────────── */
@@ -166,8 +166,8 @@
 .la-w .top b{ font-weight:600; font-size:var(--fs-body); color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .la-w .top i{ font-style:normal; font-size:var(--fs-label); color:var(--gain) } .la-w.dn .top i{ color:var(--loss) }
 .la-w .top span{ margin-left:auto; font-family:var(--font-sans); font-size:var(--fs-small); color:var(--text-secondary); white-space:nowrap }
-.la-w .bar{ height:5px; border-radius:99px; background:var(--surface-raised); margin:9px 0 7px; overflow:hidden }
-.la-w .bar u{ display:block; height:100%; width:0; border-radius:99px; background:var(--gain);
+.la-w .bar{ height:5px; border-radius:var(--r-pill); background:var(--surface-raised); margin:9px 0 7px; overflow:hidden }
+.la-w .bar u{ display:block; height:100%; width:0; border-radius:var(--r-pill); background:var(--gain);
               transition:width 900ms var(--ease-soft,ease-out) }
 .la-w.dn .bar u{ background:var(--loss) }
 .la-w .sub{ display:flex; justify-content:space-between; gap:8px; font-size:var(--fs-small); color:var(--text-muted); white-space:nowrap }
@@ -183,7 +183,7 @@
 .la-r .big span{ font-size:var(--fs-small); color:var(--text-muted) }
 .la-r .big em{ margin-left:auto; font-style:normal; font-family:var(--font-sans); font-weight:600; font-size:var(--fs-body) }
 .la-r .big em.up{ color:var(--gain) } .la-r .big em.down{ color:var(--loss) }
-.la-seg{ display:flex; height:9px; border-radius:99px; overflow:hidden; background:var(--surface-raised); margin:13px 0 11px }
+.la-seg{ display:flex; height:9px; border-radius:var(--r-pill); overflow:hidden; background:var(--surface-raised); margin:13px 0 11px }
 .la-seg u{ display:block; width:0; transition:width 900ms var(--ease-soft,ease-out) }
 .la-seg u.t{ background:var(--gain) } .la-seg u.s{ background:var(--loss) } .la-seg u.c{ background:var(--text-muted); opacity:.55 }
 .la-leg{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:var(--fs-small); color:var(--text-secondary) }

@@ -22,8 +22,8 @@
 
 .acf-card{
   position:relative;                      /* the coin layer's frame of reference */
-  border:1px solid var(--border); border-radius:16px; background:var(--surface);
-  box-shadow:var(--skin-shadow,0 1px 2px rgba(0,0,0,.04));
+  border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface);
+  box-shadow:none;
   margin:0 0 26px;
   /* So `scrollIntoView` lands the card below the site chrome rather than
      under it. */
@@ -67,29 +67,29 @@
 
 .acf-slider{ position:relative; margin:18px 0 6px; padding-bottom:30px }
 .acf-track{
-  position:absolute; left:0; right:0; top:13px; height:6px; border-radius:999px;
+  position:absolute; left:0; right:0; top:13px; height:6px; border-radius:var(--r-pill);
   background:var(--border); pointer-events:none;
 }
 .acf-track > i{
-  display:block; height:100%; border-radius:999px;
-  background:linear-gradient(90deg,var(--border-strong),var(--accent));
+  display:block; height:100%; border-radius:var(--r-pill);
+  background:var(--accent);
   transition:width 140ms linear;
 }
 .acf-slider input[type=range]{
   position:relative; z-index:1; width:100%; margin:0; height:32px;
   background:transparent; -webkit-appearance:none; appearance:none; cursor:pointer;
 }
-.acf-slider input[type=range]:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:6px; border-radius:8px }
+.acf-slider input[type=range]:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:6px; border-radius:var(--r-control) }
 .acf-slider input[type=range]::-webkit-slider-runnable-track{ height:32px; background:transparent }
 .acf-slider input[type=range]::-moz-range-track{ height:32px; background:transparent }
 .acf-slider input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none; appearance:none; width:26px; height:26px; margin-top:3px;
-  border-radius:999px; background:var(--bg); border:2px solid var(--border-strong);
-  box-shadow:0 1px 6px rgba(0,0,0,.18); transition:transform 140ms cubic-bezier(.22,1,.36,1);
+  border-radius:var(--r-pill); background:var(--bg); border:2px solid var(--border-strong);
+  box-shadow:none; transition:transform 140ms cubic-bezier(.22,1,.36,1);
 }
 .acf-slider input[type=range]::-moz-range-thumb{
-  width:26px; height:26px; border-radius:999px; background:var(--bg);
-  border:2px solid var(--border-strong); box-shadow:0 1px 6px rgba(0,0,0,.18);
+  width:26px; height:26px; border-radius:var(--r-pill); background:var(--bg);
+  border:2px solid var(--border-strong); box-shadow:none;
   transition:transform 140ms cubic-bezier(.22,1,.36,1);
 }
 .acf-slider input[type=range]:active::-webkit-slider-thumb{ transform:scale(1.18) }
@@ -106,7 +106,7 @@
 
 .acf-chips{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:16px 0 0 }
 .acf-chip{
-  font-family:var(--font-sans); font-size:var(--fs-label); padding:7px 13px; border-radius:999px;
+  font-family:var(--font-sans); font-size:var(--fs-label); padding:7px 13px; border-radius:var(--r-pill);
   border:1px solid var(--border); background:var(--surface-raised); color:var(--text-secondary); cursor:pointer;
   transition:border-color 140ms ease, color 140ms ease, transform 140ms cubic-bezier(.22,1,.36,1);
 }
@@ -115,26 +115,26 @@
 .acf-type > span{ font-family:var(--font-sans); font-size:var(--fs-label); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted) }
 .acf-type input{
-  width:132px; padding:7px 10px; border:1px solid var(--border); border-radius:9px;
+  width:132px; padding:7px 10px; border:1px solid var(--border); border-radius:var(--r-control);
   background:var(--bg); color:var(--text-primary); font-family:var(--font-sans); font-size:var(--fs-small);
 }
 
 /* Stage 2 — the questions */
 .acf-progress{ margin-bottom:14px; padding-top:4px }
-.acf-bar{ height:4px; border-radius:999px; background:var(--border); overflow:hidden; margin-bottom:9px }
+.acf-bar{ height:4px; border-radius:var(--r-pill); background:var(--border); overflow:hidden; margin-bottom:9px }
 .acf-bar > i{
-  display:block; height:100%; border-radius:999px; background:var(--accent);
+  display:block; height:100%; border-radius:var(--r-pill); background:var(--accent);
   transition:width 420ms cubic-bezier(.22,1,.36,1);
 }
 .acf-bar.wide{ height:8px; margin:12px 0 14px }
-.acf-bar.wide > i{ background:linear-gradient(90deg,var(--border-strong),var(--accent)) }
+.acf-bar.wide > i{ background:var(--accent) }
 .acf-q h3{
   margin:0 0 6px; font-family:var(--font-display); font-weight:500;
   font-size:var(--fs-h2); line-height:var(--lh-h3); color:var(--text-primary); letter-spacing:var(--ls-heading);
 }
 .acf-opts{ display:grid; gap:9px; margin:18px 0 0 }
 .acf-opt{
-  display:block; width:100%; text-align:left; padding:14px 16px; border-radius:12px;
+  display:block; width:100%; text-align:left; padding:14px 16px; border-radius:var(--r-card);
   border:1px solid var(--border); background:var(--surface-raised); color:var(--text-primary);
   font-size:var(--fs-body); line-height:var(--lh-label); cursor:pointer; min-height:48px;
   transition:border-color 140ms ease, background 140ms ease, transform 140ms cubic-bezier(.22,1,.36,1);
@@ -146,7 +146,7 @@
 /* Stage 3 — the asset classes */
 .acf-axes{ display:flex; flex-wrap:wrap; gap:10px; margin:16px 0 0 }
 .acf-axis{
-  flex:1 1 150px; border:1px solid var(--border); border-radius:11px;
+  flex:1 1 150px; border:1px solid var(--border); border-radius:var(--r-card);
   background:var(--surface-raised); padding:10px 12px; display:flex; flex-direction:column; gap:2px;
 }
 .acf-axis .k{ font-family:var(--font-sans); font-size:var(--fs-label); letter-spacing:var(--ls-label);
@@ -155,7 +155,7 @@
 .acf-axis small{ font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted) }
 
 .acf-flag{ border-left:3px solid var(--border); padding:11px 14px; margin:16px 0 0;
-  background:var(--surface-raised); border-radius:0 10px 10px 0 }
+  background:var(--surface-raised); border-radius:0 var(--r-control) var(--r-control) 0 }
 .acf-flag b{ display:block; font-size:var(--fs-body); color:var(--text-primary); margin-bottom:4px }
 .acf-flag p{ margin:0; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary) }
 .acf-flag.is-stop{ border-left-color:var(--loss) }
@@ -163,7 +163,7 @@
 .acf-flag.is-note{ border-left-color:var(--border-strong) }
 
 .acf-groups{ display:grid; gap:14px; margin:22px 0 0 }
-.acf-group{ border:1px solid var(--border); border-radius:13px; background:var(--surface-raised); padding:15px 16px }
+.acf-group{ border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface-raised); padding:15px 16px }
 .acf-group-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap }
 .acf-group-head b{ display:block; font-size:var(--fs-body); color:var(--text-primary) }
 .acf-group-head small{ display:block; font-size:var(--fs-label); color:var(--text-muted); margin-top:2px }
@@ -199,7 +199,7 @@
   font-variant-numeric:tabular-nums; color:var(--text-primary);
 }
 
-.acf-first{ margin:18px 0 0; border:1px solid var(--border); border-radius:13px;
+.acf-first{ margin:18px 0 0; border:1px solid var(--border); border-radius:var(--r-card);
   background:var(--surface-raised); padding:14px 16px 12px }
 .acf-first h4,.acf-out h4,.acf-how h4{
   margin:0 0 10px; font-family:var(--font-sans); font-size:var(--fs-label); letter-spacing:var(--ls-label);
@@ -209,8 +209,8 @@
 .acf-call{ display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-top:1px solid var(--border) }
 .acf-call:first-child{ border-top:0; padding-top:2px }
 .acf-call-n{
-  flex:0 0 24px; height:24px; border-radius:999px; display:grid; place-items:center;
-  font-family:var(--font-sans); font-size:var(--fs-small); color:#fff; background:var(--accent-hover);
+  flex:0 0 24px; height:24px; border-radius:var(--r-pill); display:grid; place-items:center;
+  font-family:var(--font-sans); font-size:var(--fs-small); color:var(--on-accent); background:var(--accent-hover);
 }
 .acf-call.is-cushion .acf-call-n{ background:var(--warning) }
 .acf-call.is-debt .acf-call-n{ background:var(--loss) }
@@ -225,7 +225,7 @@
 .acf-inline span{ font-family:var(--font-sans); font-size:var(--fs-label); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted) }
 .acf-inline input{
-  width:150px; padding:7px 10px; border:1px solid var(--border-strong); border-radius:9px;
+  width:150px; padding:7px 10px; border:1px solid var(--border-strong); border-radius:var(--r-control);
   background:var(--bg); color:var(--text-primary); font-family:var(--font-sans); font-size:var(--fs-small);
 }
 .acf-free{ display:flex; justify-content:space-between; align-items:baseline; gap:12px;
@@ -235,12 +235,12 @@
 
 .acf-view{ display:flex; gap:6px; margin:22px 0 -10px; flex-wrap:wrap }
 .acf-pill{
-  font-family:var(--font-sans); font-size:var(--fs-label); padding:6px 12px; border-radius:999px;
+  font-family:var(--font-sans); font-size:var(--fs-label); padding:6px 12px; border-radius:var(--r-pill);
   border:1px solid var(--border); background:transparent; color:var(--text-secondary); cursor:pointer; min-height:32px;
 }
 .acf-pill.is-on{ border-color:var(--border-strong); background:var(--highlight-subtle); color:var(--text-primary) }
 
-.acf-out{ margin:20px 0 0; border:1px solid var(--border); border-radius:13px; background:var(--surface-raised); padding:14px 16px }
+.acf-out{ margin:20px 0 0; border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface-raised); padding:14px 16px }
 .acf-out-head{ display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap }
 .acf-out-head h4{ margin:0 }
 .acf-years{ display:flex; align-items:center; gap:10px; flex:1 1 200px; max-width:320px }
@@ -257,7 +257,7 @@
 .acf-out-total > b{ font-size:var(--fs-h2) !important ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
 
 .acf-how{ margin:20px 0 0 }
-.acf-how-group{ border:1px solid var(--border); border-radius:12px; background:var(--surface-raised); margin:0 0 8px }
+.acf-how-group{ border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface-raised); margin:0 0 8px }
 .acf-how-group summary{
   display:flex; align-items:center; gap:8px; padding:12px 14px; cursor:pointer; list-style:none;
   font-size:var(--fs-body); color:var(--text-primary);
@@ -271,7 +271,7 @@
 .acf-via{ margin:4px 0 0; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary) }
 .acf-sleeves small b{ color:var(--text-secondary); font-weight:600 }
 
-.acf-leftout{ margin:14px 0 0; border:1px dashed var(--border); border-radius:12px; padding:0 14px }
+.acf-leftout{ margin:14px 0 0; border:1px dashed var(--border); border-radius:var(--r-card); padding:0 14px }
 .acf-leftout summary{ padding:12px 0; cursor:pointer; font-size:var(--fs-body); color:var(--text-primary) }
 .acf-leftout summary small{ display:block; margin-top:2px; font-size:var(--fs-small); color:var(--text-muted) }
 .acf-leftout ul{ list-style:none; margin:0; padding:0 0 6px }
@@ -286,13 +286,13 @@
 
 .acf-act{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:22px 0 0 }
 .acf-go{
-  padding:12px 22px; border-radius:999px; border:1px solid var(--border-strong);
-  background:var(--accent); color:var(--on-accent,#fff); font-size:var(--fs-body); cursor:pointer; min-height:44px;
+  padding:12px 22px; border-radius:var(--r-pill); border:1px solid var(--border-strong);
+  background:var(--accent); color:var(--on-accent,var(--on-accent)); font-size:var(--fs-body); cursor:pointer; min-height:44px;
   transition:transform 140ms cubic-bezier(.22,1,.36,1), filter 140ms ease;
 }
 .acf-go:hover{ transform:translateY(-1px); filter:brightness(1.06) }
 .acf-back{
-  padding:12px 18px; border-radius:999px; border:1px solid var(--border);
+  padding:12px 18px; border-radius:var(--r-pill); border:1px solid var(--border);
   background:transparent; color:var(--text-secondary); font-size:var(--fs-body); cursor:pointer; min-height:44px;
 }
 .acf-back:hover{ border-color:var(--highlight); color:var(--text-primary) }
@@ -331,18 +331,16 @@
 .mfx-coin{
   position:absolute; width:28px; height:28px; border-radius:50%;
   display:grid; place-items:center; will-change:transform,opacity;
-  font:600 var(--fs-body)/var(--lh-none) var(--font-sans); color:#23262b;
-  background:radial-gradient(circle at 34% 28%,#ffffff 0%,#e3e6eb 42%,#a9b0bb 78%,#7a838f 100%);
-  box-shadow:0 2px 5px rgba(0,0,0,.28), inset 0 -1px 2px rgba(0,0,0,.22),
-             inset 0 1px 1px rgba(255,255,255,.55);
-  text-shadow:0 1px 0 rgba(255,255,255,.35);
+  font:600 var(--fs-body)/var(--lh-none) var(--font-sans); color:var(--text-primary);
+  background:var(--surface);
+  box-shadow:none;
 }
 
 /* The light that runs across a figure the moment it changes. */
 .mfx-sheen{
   background-image:linear-gradient(100deg,
-    transparent 30%, rgba(197,202,211,.85) 45%, rgba(255,255,255,.95) 50%,
-    rgba(197,202,211,.85) 55%, transparent 70%);
+    transparent 30%, var(--surface) 45%, var(--surface) 50%,
+    var(--surface) 55%, transparent 70%);
   background-size:260% 100%; background-repeat:no-repeat;
   -webkit-background-clip:text; background-clip:text;
   animation:mfx-sweep 850ms cubic-bezier(.3,.1,.3,1);
@@ -379,7 +377,7 @@
   letter-spacing:normal }
 
 .acf-swatch{
-  display:inline-block; width:9px; height:9px; border-radius:2.5px;
+  display:inline-block; width:9px; height:9px; border-radius:var(--r-xs);
   margin-right:7px; vertical-align:baseline;
 }
 .acf-swatch.is-growth{ background:var(--accent) }
@@ -419,9 +417,9 @@
 .adv-skin{ fill:var(--surface-raised); stroke:var(--text-secondary); stroke-width:1.5 }
 .adv-hair{ fill:var(--text-primary); transition:fill 260ms ease }
 .adv-hair.is-dark{ fill:var(--text-primary) }
-.adv-hair.is-salt{ fill:#767779 }
-.adv-hair.is-grey{ fill:#9a9a9d }
-.adv-hair.is-white{ fill:#c8c9cc }
+.adv-hair.is-salt{ fill:var(--text-muted) }
+.adv-hair.is-grey{ fill:var(--text-muted) }
+.adv-hair.is-white{ fill:var(--border-strong) }
 .adv-specs{ fill:none; stroke:var(--highlight); stroke-width:1.7;
   stroke-linecap:round; stroke-linejoin:round }
 .adv-gold{ fill:var(--highlight) }
@@ -442,12 +440,12 @@
 /* The question, in a bubble the figure is talking into. */
 .acf-bubble{
   position:relative; background:var(--surface-raised); border:1px solid var(--border);
-  border-radius:15px; padding:16px 19px;
+  border-radius:var(--r-card); padding:16px 19px;
 }
 .acf-bubble::before{
   content:''; position:absolute; left:-8px; top:30px; width:15px; height:15px;
   background:var(--surface-raised); border-left:1px solid var(--border);
-  border-bottom:1px solid var(--border); border-radius:0 0 0 4px;
+  border-bottom:1px solid var(--border); border-radius:0 0 0 var(--r-xs);
   transform:rotate(45deg);
 }
 .acf-bubble > :last-child{ margin-bottom:0 }
@@ -488,7 +486,7 @@
      that height and still leaves the text 280px. */
   .acf-ask{ grid-template-columns:64px minmax(0,1fr); gap:10px }
   .acf-art,.acf-adviser{ width:64px; align-self:center }
-  .acf-bubble{ padding:12px 14px; border-radius:13px }
+  .acf-bubble{ padding:12px 14px; border-radius:var(--r-card) }
   .acf-bubble::before{ top:22px }
 }
 
@@ -636,7 +634,7 @@
 .acf-dots{ margin:22px 0 0; padding-top:16px; border-top:1px solid var(--border) }
 .acf-dot-row{ display:flex; flex-wrap:wrap; gap:9px; align-items:center }
 .acf-dot{
-  width:11px; height:11px; padding:0; border-radius:999px; cursor:pointer;
+  width:11px; height:11px; padding:0; border-radius:var(--r-pill); cursor:pointer;
   border:1.5px solid var(--border); background:transparent;
   transition:transform 160ms cubic-bezier(.34,1.5,.64,1),
              background 160ms ease, border-color 160ms ease;

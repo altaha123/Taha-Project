@@ -483,7 +483,7 @@
       var tip = el.querySelector('.wd-tip'), cx = el.querySelector('.cx');
       var dot = document.createElement('span');
       dot.style.cssText = 'position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);display:none;pointer-events:none;' +
-        'background:#FFFFFF;border:3px solid var(--a, #7A838F);box-shadow:0 2px 8px rgba(0,0,0,.3)';
+        'background:var(--surface);border:3px solid var(--a, var(--border-strong));box-shadow:none';
       el.appendChild(dot);
       function at(clientX) {
         var r = el.getBoundingClientRect();
@@ -662,7 +662,7 @@
 
   function marketPill(b) {
     return b.market_open ? '<span class="wd-pill wd-live up"><i></i>Market open</span>'
-      : '<span class="wd-pill"><i style="color:#9C9CA6"></i>Market closed · last close</span>';
+      : '<span class="wd-pill"><i style="color:var(--text-muted)"></i>Market closed · last close</span>';
   }
 
   /* ── Overview ────────────────────────────────────────────────────────── */
@@ -1514,7 +1514,7 @@
         '<a class="wd-btn" href="wealth.html?demo=1">' + ic('spark') + 'Explore a sample desk</a></div>' +
         '<p class="wd-note">Free. Your book is private to your account. A client sees their own portfolio only if you switch that on.</p></div>' +
       '<div class="wd-stage" aria-hidden="true">' +
-        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:#EBEDEF">Book value</p><p class="wd-big" style="font-size:var(--fs-display)">₹7,62,56,240</p>' +
+        '<div class="wd-float f1 dark c-gold"><p class="wd-kick" style="color:var(--on-accent)">Book value</p><p class="wd-big" style="font-size:var(--fs-display)">₹7,62,56,240</p>' +
           '<div class="wd-hero-sub"><span class="wd-pill up">▲ +₹1,24,800 today</span><span class="wd-pill">42 clients</span></div></div>' +
         '<div class="wd-float f2 c-rose"><div class="wd-card-top"><span class="wd-av">AK</span><span class="wd-card-n"><b>Ayesha Kapoor</b><small>AK-01 · Mumbai</small></span></div>' +
           '<div class="wd-card-v" style="margin-top:10px"><b>₹28.9 L</b><span class="ret up">+15.4%</span></div>' + spark([10, 12, 11, 14, 13, 16, 18, 17, 20, 22]) + '</div>' +
@@ -2694,7 +2694,7 @@
           '<td>' + (h.priced ? esc(px(h.ltp)) : 'at cost') + '</td><td>' + esc(inr(h.value, 0)) + '</td><td>' + esc(signed(h.pnl, 0)) + ' (' + esc(pct(h.pnl_pct, 1)) + ')</td><td>' + (finite(h.weight) ? h.weight.toFixed(1) + '%' : '') + '</td></tr>';
       }).join('') + (num(c.cash) > 0.5 ? '<tr><td>Cash</td><td></td><td></td><td></td><td>' + esc(inr(c.cash, 0)) + '</td><td></td><td></td></tr>' : '') + '</tbody></table>' +
       '<h2>Fee for the current period</h2><p>' + esc(t ? c.terms_label : '') + '</p><table><tbody>' + (f.steps || []).map(function (s) {
-        return '<tr><td>' + esc(s.label) + '<br><small style="color:#777">' + esc(s.formula) + '</small></td><td>' + (s.unit === 'days' ? esc(plural(s.value, 'day')) : esc(inr(s.value))) + '</td></tr>';
+        return '<tr><td>' + esc(s.label) + '<br><small style="color:var(--text-muted)">' + esc(s.formula) + '</small></td><td>' + (s.unit === 'days' ? esc(plural(s.value, 'day')) : esc(inr(s.value))) + '</td></tr>';
       }).join('') + '</tbody></table>';
     if ((c.settlements || []).length) {
       html += '<h2>Settlements</h2><table><thead><tr><th>Period</th><th>Billed</th><th>Status</th></tr></thead><tbody>' + c.settlements.map(function (s) {

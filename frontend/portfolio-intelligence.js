@@ -345,7 +345,7 @@
     const box=document.createElement('div');box.innerHTML=build(d,true);
     box.querySelectorAll('canvas').forEach(canvas=>{const live=document.getElementById(canvas.id);try{if(!live||!live.width||!live.getBoundingClientRect().width)throw Error();const img=document.createElement('img');img.src=live.toDataURL('image/png');img.alt=canvas.getAttribute('aria-label');img.style='max-width:100%;height:auto';canvas.parentElement.replaceWith(img);}catch(e){canvas.parentElement.remove();}});
     box.querySelectorAll('details').forEach(el=>el.open=true);box.querySelectorAll('button').forEach(el=>{const span=document.createElement('span');span.className=el.className;span.innerHTML=el.innerHTML;el.replaceWith(span);});
-    return '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Altaha Portfolio Intelligence</title><style>'+css+'\n.pi-root{max-width:1180px;margin:auto}.pi-grid{display:block}.pi-card{margin-bottom:20px}body{background:#fff;color:#202824;padding:20px}details{break-inside:avoid}</style><body>'+box.innerHTML+'</body></html>';
+    return '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Altaha Portfolio Intelligence</title><style>'+css+'\n.pi-root{max-width:1180px;margin:auto}.pi-grid{display:block}.pi-card{margin-bottom:20px}body{background:var(--surface);color:var(--text-primary);padding:20px}details{break-inside:avoid}</style><body>'+box.innerHTML+'</body></html>';
   }
   root.PortfolioIntelligence={mount,build,compare,snapshot,acceptSnapshot,exportHTML,destroy};
   if(typeof module!=='undefined')module.exports={compare,snapshot,build,allocation,sectorComparison,safeURL};

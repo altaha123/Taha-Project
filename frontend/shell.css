@@ -41,9 +41,9 @@
   --sh-chrome-h: calc(var(--sh-ticker-h) + var(--sh-bar-h) + var(--sh-doorbar-h));
 
   /* Three elevations. A fourth would stop meaning anything. */
-  --e1: 0 1px 2px rgba(10,10,11,.05);
-  --e2: 0 2px 6px rgba(10,10,11,.06), 0 12px 28px rgba(10,10,11,.09);
-  --e3: 0 8px 18px rgba(10,10,11,.10), 0 30px 70px rgba(10,10,11,.16);
+  --e1: 0 1px 2px var(--text-muted);
+  --e2: 0 2px 6px var(--text-muted), 0 12px 28px var(--text-muted);
+  --e3: 0 8px 18px var(--text-muted), 0 30px 70px var(--text-muted);
   /* The ribbon is a dark band in BOTH themes. Deriving it from an inverted
      token turned it into a bright white strip across the top of a dark page,
      which is the one thing a dark theme exists to avoid. */;
@@ -51,9 +51,9 @@
 }
 
 :root[data-theme="dark"]{
-  --e1: 0 1px 2px rgba(0,0,0,.5);
-  --e2: 0 2px 6px rgba(0,0,0,.5), 0 12px 30px rgba(0,0,0,.55);
-  --e3: 0 8px 20px rgba(0,0,0,.6), 0 34px 80px rgba(0,0,0,.7);
+  --e1: 0 1px 2px var(--text-secondary);
+  --e2: 0 2px 6px var(--text-secondary), 0 12px 30px var(--text-secondary);
+  --e3: 0 8px 20px var(--text-secondary), 0 34px 80px var(--text-secondary);
 }
 
 /* ── 2 · SUPPRESS THE OLD CHROME ─────────────────────────────────────────────
@@ -102,13 +102,13 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 }
 .sh-dot{
   width:6px; height:6px; border-radius:50%;
-  background:var(--gain); box-shadow:0 0 0 0 currentColor;
+  background:var(--gain); box-shadow:none;
   animation: shPulse 2.4s var(--ease) infinite;
 }
 @keyframes shPulse{
-  0%{ box-shadow:0 0 0 0 rgba(63,191,135,.55) }
-  70%{ box-shadow:0 0 0 7px rgba(63,191,135,0) }
-  100%{ box-shadow:0 0 0 0 rgba(63,191,135,0) }
+  0%{ box-shadow:none }
+  70%{ box-shadow:var(--ring) }
+  100%{ box-shadow:none }
 }
 
 /* One headline at a time, rotated on a 3D hinge — the ribbon is thin, so a
@@ -137,8 +137,8 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 }
 .sh-head .corr{
   flex:0 0 auto; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
-  padding:3px 6px; border-radius:99px;
-  border:1px solid rgba(197,202,211,.35); color:var(--text-muted);
+  padding:3px 6px; border-radius:var(--r-pill);
+  border:1px solid var(--border-strong); color:var(--text-muted);
 }
 .sh-ribbon-clock{
   flex:0 0 auto; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
@@ -151,8 +151,6 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 .sh-ticker{
   height:var(--sh-ticker-h);
   background:var(--surface-raised);
-  backdrop-filter:blur(14px) saturate(1.5);
-  -webkit-backdrop-filter:blur(14px) saturate(1.5);
   border-bottom:1px solid var(--border);
   display:flex; align-items:center; overflow:hidden;
   position:relative; perspective:900px;
@@ -185,7 +183,7 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 .sh-chip:hover{
   background:var(--surface);
   transform:translateZ(24px) scale(1.045);
-  box-shadow:var(--e2);
+  box-shadow:var(--shadow-raised);
 }
 .sh-chip .sym{
   font:600 var(--fs-label)/var(--lh-none) var(--font-mono); letter-spacing:var(--ls-label);
@@ -197,21 +195,19 @@ body.sh-on{ padding-top: var(--sh-chrome-h); }
 /* A flash when a printed value changes, so movement is noticed, not hunted. */
 .sh-chip.flash-up{ animation: shFlashU 900ms var(--ease) }
 .sh-chip.flash-dn{ animation: shFlashD 900ms var(--ease) }
-@keyframes shFlashU{ 0%{background:rgba(31,122,85,.20)} 100%{background:transparent} }
-@keyframes shFlashD{ 0%{background:rgba(176,58,43,.20)} 100%{background:transparent} }
+@keyframes shFlashU{ 0%{background:var(--gain-bg)} 100%{background:transparent} }
+@keyframes shFlashD{ 0%{background:var(--loss-bg)} 100%{background:transparent} }
 
 /* ── 3c · The menu bar ───────────────────────────────────────────────────── */
 
 .sh-bar{
   height:var(--sh-bar-h);
   background:var(--surface);
-  backdrop-filter:blur(18px) saturate(1.6);
-  -webkit-backdrop-filter:blur(18px) saturate(1.6);
   border-bottom:1px solid var(--border);
   display:flex; align-items:center; gap:18px; padding:0 18px;
   transition:box-shadow var(--t-mid) var(--ease);
 }
-.sh-chrome.scrolled .sh-bar{ box-shadow:var(--e2) }
+.sh-chrome.scrolled .sh-bar{ box-shadow:none }
 
 .sh-brand{
   display:flex; align-items:center; gap:9px; text-decoration:none;
@@ -247,7 +243,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 /* The active underline grows from the centre rather than appearing. */
 .sh-top::after{
   content:''; position:absolute; left:13px; right:13px; bottom:0; height:2px;
-  background:var(--highlight); border-radius:2px 2px 0 0;
+  background:var(--highlight); border-radius:var(--r-xs) var(--r-xs) 0 0;
   transform:scaleX(0); transform-origin:50%;
   transition:transform var(--t-mid) var(--ease-out);
 }
@@ -264,7 +260,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-item{
   display:grid; grid-template-columns:34px 1fr; gap:11px; align-items:start;
   width:100%; text-align:left; border:0; background:none;
-  cursor:pointer; padding:8px 10px; border-radius:10px; color:var(--text-primary);
+  cursor:pointer; padding:8px 10px; border-radius:var(--r-control); color:var(--text-primary);
   transition:background var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
 }
 .sh-item:hover{ background:var(--surface-raised); transform:translateX(3px) }
@@ -276,7 +272,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
    an inline box would ignore the size outright — the same trap that left the
    score page's bars invisible. */
 .sh-ico{
-  display:grid; place-items:center; width:34px; height:34px; border-radius:10px;
+  display:grid; place-items:center; width:34px; height:34px; border-radius:var(--r-control);
   background:var(--surface-raised); border:1px solid var(--border); color:var(--text-primary);
   transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
              transform var(--t-mid) var(--ease-out), box-shadow var(--t-mid) var(--ease);
@@ -285,10 +281,10 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 /* It lifts off the panel on hover — the depth cue that says this row is the
    thing you are about to press. */
 .sh-item:hover .sh-ico{
-  background:linear-gradient(135deg,var(--accent-hover),var(--accent));
-  border-color:transparent; color:var(--on-accent,#fff);
+  background:var(--accent);
+  border-color:transparent; color:var(--on-accent,var(--on-accent));
   transform:translateZ(20px) translateY(-2px) scale(1.06);
-  box-shadow:var(--e2);
+  box-shadow:var(--shadow-raised);
 }
 
 @keyframes shColIn{ from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:none } }
@@ -304,7 +300,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
      it, which is why that button read "hlist". */
   box-sizing:border-box;
   width:100%; height:36px; padding:0 34px 0 34px;
-  border:1px solid var(--border); border-radius:99px;
+  border:1px solid var(--border); border-radius:var(--r-pill);
   background:var(--bg); color:var(--text-primary);
   /* Set in the reading face. It was in the monospace, which suits a ticker
      and not the sentence the placeholder asks for. */
@@ -313,7 +309,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 }
 .sh-search input:focus{
   outline:none; border-color:var(--focus-ring);
-  box-shadow:0 0 0 4px var(--highlight-subtle), var(--e2);
+  box-shadow:var(--ring), var(--shadow-raised);
   background:var(--surface);
 }
 .sh-search input::placeholder{ color:var(--text-muted) }
@@ -321,7 +317,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-search .kbd{
   position:absolute; right:9px; top:50%; transform:translateY(-50%);
   font:500 var(--fs-label)/var(--lh-none) var(--font-mono); color:var(--text-muted);
-  border:1px solid var(--border); border-radius:5px; padding:3px 5px; pointer-events:none;
+  border:1px solid var(--border); border-radius:var(--r-xs); padding:3px 5px; pointer-events:none;
 }
 .sh-search input:focus ~ .kbd{ opacity:0 }
 
@@ -329,7 +325,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-ac{
   position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:40;
   background:var(--surface); border:1px solid var(--border);
-  border-radius:12px; box-shadow:var(--e3); overflow:hidden;
+  border-radius:var(--r-card); box-shadow:none; overflow:hidden;
   display:none; max-height:340px; overflow-y:auto;
   transform-origin:50% 0; animation: shAcIn 200ms var(--ease-out) both;
 }
@@ -347,7 +343,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-ac .x{
   flex:0 0 auto; margin-left:auto; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
   letter-spacing:var(--ls-label); color:var(--text-muted); border:1px solid var(--border);
-  border-radius:4px; padding:3px 5px;
+  border-radius:var(--r-xs); padding:3px 5px;
 }
 .sh-ac .row i{ font-style:normal; font-weight:600; color:var(--text-primary) }
 .sh-ac b.row.empty{
@@ -362,13 +358,13 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
    drawn for a white page, and on a dark tile half of them disappear. */
 .co-lg{
   position:relative; display:inline-grid; place-items:center; flex:0 0 auto;
-  width:30px; height:30px; border-radius:9px; overflow:hidden;
+  width:30px; height:30px; border-radius:var(--r-control); overflow:hidden;
   background:var(--surface-raised); border:1px solid var(--border); color:var(--text-secondary);
   font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:normal;
 }
 .co-lg img{
   position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box;
-  object-fit:contain; padding:10%; background:#fff; border-radius:inherit;
+  object-fit:contain; padding:10%; background:var(--surface); border-radius:inherit;
 }
 .co-lg img.in{ animation: coLgIn 240ms ease-out both }
 @keyframes coLgIn{ from{ opacity:0; transform:scale(.86) } to{ opacity:1; transform:none } }
@@ -379,7 +375,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-right{ display:flex; align-items:center; gap:8px; flex:0 0 auto; margin-left:auto }
 .sh-icon{
   width:34px; height:34px; display:grid; place-items:center;
-  border:1px solid var(--border); border-radius:9px; background:none;
+  border:1px solid var(--border); border-radius:var(--r-control); background:none;
   color:var(--text-secondary); cursor:pointer;
   transition:transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
@@ -389,7 +385,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-account{
   font:600 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-secondary);
   text-decoration:none; padding:9px 13px; border:1px solid var(--border);
-  border-radius:9px; white-space:nowrap; max-width:150px; overflow:hidden;
+  border-radius:var(--r-control); white-space:nowrap; max-width:150px; overflow:hidden;
   text-overflow:ellipsis;
   transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
@@ -397,15 +393,15 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 .sh-pro{
   font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase;
   color:var(--highlight-text); background:var(--highlight-subtle); text-decoration:none; padding:9px 12px;
-  border:1px solid var(--border-strong); border-radius:9px; white-space:nowrap;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+  border:1px solid var(--border-strong); border-radius:var(--r-control); white-space:nowrap;
+  box-shadow:none;
   transition:filter var(--t-fast) var(--ease);
 }
 .sh-pro:hover{ filter:brightness(1.04) }
 .sh-pro:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:3px }
 .sh-adv{
   font:600 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-secondary); text-decoration:none;
-  padding:9px 11px; border-radius:9px; white-space:nowrap;
+  padding:9px 11px; border-radius:var(--r-control); white-space:nowrap;
   transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 .sh-adv:hover{ background:var(--surface-raised); color:var(--text-primary) }
@@ -415,7 +411,7 @@ html[data-theme="dark"] .sh-brand .mk{ background-image:url(altaha-logo-dark.png
 
 /* Menu items that are links to another page, not tabs. */
 a.sh-item{ text-decoration:none; color:inherit }
-.sh-dpro{ display:grid; gap:4px; padding:14px; border-radius:12px; border:1px solid var(--border-strong);
+.sh-dpro{ display:grid; gap:4px; padding:14px; border-radius:var(--r-card); border:1px solid var(--border-strong);
   text-decoration:none; color:var(--text-primary); background:var(--surface-raised) }
 .sh-dpro b{ color:var(--text-primary); font-size:var(--fs-body) }
 .sh-dpro span{ font-size:var(--fs-small); color:var(--text-muted) }
@@ -440,8 +436,8 @@ a.sh-item{ text-decoration:none; color:inherit }
 
 .d3-card{
   position:relative; background:var(--surface);
-  border:1px solid var(--border); border-radius:14px;
-  box-shadow:var(--e1); transform-style:preserve-3d;
+  border:1px solid var(--border); border-radius:var(--r-card);
+  box-shadow:none; transform-style:preserve-3d;
   transition:box-shadow var(--t-mid) var(--ease), transform var(--t-mid) var(--ease-out);
 }
 /* --rx/--ry are written by shell.js from pointer position; the fallback of 0
@@ -449,23 +445,16 @@ a.sh-item{ text-decoration:none; color:inherit }
 .d3-card.tilt{
   transform: rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(0);
 }
-.d3-card.tilt:hover{ box-shadow:var(--e3) }
+.d3-card.tilt:hover{ box-shadow:var(--shadow-raised) }
 /* A specular sheen that tracks the pointer. Pure decoration, and the first
    thing to go when motion is reduced. */
 .d3-card.tilt::after{
   content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
-  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),
-             rgba(255,255,255,.16), transparent 45%);
   opacity:0; transition:opacity var(--t-mid) var(--ease);
 }
 .d3-card.tilt:hover::after{ opacity:1 }
-:root[data-theme="dark"] .d3-card.tilt::after{
-  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),
-             rgba(197,202,211,.10), transparent 45%);
-}
-
 .d3-lift{ transition:transform var(--t-mid) var(--ease-out), box-shadow var(--t-mid) var(--ease) }
-.d3-lift:hover{ transform:translateY(-4px) translateZ(30px); box-shadow:var(--e3) }
+.d3-lift:hover{ transform:translateY(-4px) translateZ(30px); box-shadow:var(--shadow-raised) }
 
 /* Scroll reveal. Elements start displaced on the Z hinge and settle. */
 .reveal{ opacity:0; transform:translateY(22px) rotateX(-6deg); transform-origin:50% 100%;
@@ -521,7 +510,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 /* The tape: a Live tag in the accent, the moving rail, the IST clock. */
 .sh-ticker::before, .sh-ticker::after{ display:none }
 .sh-livetag{ flex:none; display:flex; align-items:center; gap:8px; align-self:stretch; padding:0 14px;
-  background:var(--accent); color:var(--on-accent,#fff); font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase }
+  background:var(--accent); color:var(--on-accent,var(--on-accent)); font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase }
 .sh-livetag .sh-dot{ position:relative; width:7px; height:7px; border-radius:50%; background:currentColor }
 .sh-livetag .sh-dot::after{ content:''; position:absolute; inset:0; border-radius:50%; background:inherit; animation:shPing 1.7s ease-out infinite }
 @keyframes shPing{ 0%{ transform:scale(1); opacity:.7 } 100%{ transform:scale(3.2); opacity:0 } }
@@ -531,8 +520,8 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-livetag.is-off .sh-dot{ background:var(--text-muted); animation:none; box-shadow:none }
 .sh-livetag.is-off .sh-dot::after{ display:none }
 .sh-railbox{ position:relative; flex:1 1 auto; min-width:0; height:100%; display:flex; align-items:center; overflow:hidden;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent);
-  mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent) }
+  -webkit-mask-image:linear-gradient(90deg,transparent,black 40px,black calc(100% - 40px),transparent);
+  mask-image:linear-gradient(90deg,transparent,black 40px,black calc(100% - 40px),transparent) }
 .sh-ticker .sh-ribbon-clock{ flex:none; padding:0 14px; font:500 var(--fs-label)/var(--lh-none) var(--font-mono); color:var(--text-muted); letter-spacing:var(--ls-label) }
 
 /* The bar: one row at every width. */
@@ -542,7 +531,7 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
    the door's page; the arrow, or resting the mouse on either, opens its menu.
    The soft tile behind them is what says the two are one thing to point at. */
 .sh-doorwrap{ position:relative; display:flex; align-items:stretch; height:100% }
-.sh-doorwrap::before{ content:''; position:absolute; inset:11px 3px; border-radius:11px; background:var(--surface-raised);
+.sh-doorwrap::before{ content:''; position:absolute; inset:11px 3px; border-radius:var(--r-card); background:var(--surface-raised);
   opacity:0; transform:scale(.94); transition:opacity .2s var(--ease), transform .25s var(--ease-out); pointer-events:none }
 .sh-doorwrap:hover::before, .sh-doorwrap.open::before{ opacity:1; transform:none }
 .sh-door{ position:relative; padding:0 3px 0 15px; border:0; background:none; font:500 var(--fs-body)/var(--lh-none) var(--font-sans);
@@ -556,16 +545,16 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
    two sit too close together for that. */
 .sh-door:focus-visible, .sh-doorcv:focus-visible{ outline:none; box-shadow:none }
 .sh-doorwrap:has(> .sh-door:focus-visible)::before{ opacity:1; transform:none; box-shadow:0 0 0 2px var(--focus-ring) }
-.sh-doorcv:focus-visible .cv{ outline:2px solid var(--focus-ring); outline-offset:5px; border-radius:7px }
+.sh-doorcv:focus-visible .cv{ outline:2px solid var(--focus-ring); outline-offset:5px; border-radius:var(--r-control) }
 @supports not selector(:has(a)){
-  .sh-door:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-9px; border-radius:12px }
+  .sh-door:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-9px; border-radius:var(--r-card) }
 }
 .sh-doorcv{ position:relative; display:grid; place-items:center; width:27px; padding:0 9px 0 0; border:0; background:none;
   color:var(--text-muted); cursor:pointer; transition:color .25s }
 .sh-doorcv .cv{ transition:transform .3s var(--ease-out) }
 .sh-doorwrap:hover .sh-doorcv, .sh-doorwrap.open .sh-doorcv, .sh-door.on + .sh-doorcv{ color:var(--text-primary) }
 .sh-doorwrap.open .sh-doorcv .cv{ transform:rotate(180deg) }
-.sh-door-ind{ position:absolute; left:0; bottom:0; height:3px; width:0; border-radius:3px 3px 0 0; background:var(--highlight);
+.sh-door-ind{ position:absolute; left:0; bottom:0; height:3px; width:0; border-radius:var(--r-xs) var(--r-xs) 0 0; background:var(--highlight);
   opacity:0; transition:transform .45s cubic-bezier(.2,.8,.2,1), width .45s cubic-bezier(.2,.8,.2,1), opacity .25s }
 .sh-search{ flex:1 1 380px; max-width:560px }
 .sh-search input{ padding-right:64px }
@@ -585,15 +574,15 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 /* Me: one button, one menu. */
 .sh-mewrap{ position:relative; flex:0 0 auto; margin-left:auto }
 .sh-me{ width:42px; height:42px; border-radius:50%; background:var(--surface-raised); color:var(--text-primary) }
-.sh-me[aria-expanded="true"]{ box-shadow:0 0 0 3px color-mix(in srgb,var(--highlight) 22%,transparent) }
+.sh-me[aria-expanded="true"]{ box-shadow:var(--ring) }
 .sh-memenu{ position:absolute; top:calc(100% + 10px); right:0; z-index:60; width:310px; padding:8px;
-  background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:var(--e3);
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); box-shadow:var(--shadow-raised);
   display:none; transform-origin:100% 0 }
 .sh-memenu.open{ display:block; animation:shMeIn .22s cubic-bezier(.2,.7,.2,1) both }
 @keyframes shMeIn{ from{ transform:translateY(-8px) scale(.97) } to{ transform:none } }
 .sh-memenu .sh-right{ display:flex !important; flex-direction:column; align-items:stretch; gap:2px; margin:0 }
 .sh-memenu .sh-right > *{ display:flex !important; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px;
-  width:100%; min-height:48px; box-sizing:border-box; padding:8px 12px; border:0 !important; border-radius:12px;
+  width:100%; min-height:48px; box-sizing:border-box; padding:8px 12px; border:0 !important; border-radius:var(--r-card);
   background:transparent !important; color:var(--text-primary) !important; font:500 var(--fs-body)/var(--lh-h1) var(--font-sans) !important;
   text-align:left; text-decoration:none; filter:none !important; max-width:none !important }
 .sh-memenu .sh-right > *:hover{ background:var(--surface-raised) !important }
@@ -606,11 +595,11 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 
 /* The door bar. */
 .sh-doorbar{ height:var(--sh-doorbar-h); display:flex; align-items:center; gap:10px; padding:0 18px;
-  background:var(--surface); backdrop-filter:blur(18px) saturate(1.6); -webkit-backdrop-filter:blur(18px) saturate(1.6);
+  background:var(--surface);
   border-bottom:1px solid var(--border) }
 .sh-pin:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 .sh-pin{ flex:none; display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border:1px dashed var(--border-strong);
-  border-radius:16px; background:transparent; color:var(--text-primary); font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer }
+  border-radius:var(--r-card); background:transparent; color:var(--text-primary); font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer }
 .sh-pin.on{ border-style:solid; background:var(--highlight-subtle) }
 
 .sh-doorbar .sh-pin{ margin-left:auto }
@@ -635,9 +624,9 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
 .sh-megawrap.open .sh-mega{ visibility:visible; opacity:1; transform:none; pointer-events:auto;
   transition:opacity .16s var(--ease-out), transform .24s var(--ease-out), visibility 0s }
 .sh-mega-in{ position:relative; overflow:hidden auto; max-height:calc(100vh - var(--sh-chrome-h) - 26px);
-  background:var(--surface); border:1px solid var(--border); border-radius:22px; box-shadow:var(--e3) }
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); box-shadow:var(--shadow-raised) }
 .sh-mega-tip{ position:absolute; top:3px; left:-7px; width:13px; height:13px; border:1px solid var(--border); border-right:0; border-bottom:0;
-  border-radius:3px 0 0 0; background:var(--surface);
+  border-radius:var(--r-xs) 0 0 0; background:var(--surface);
   transform:translateX(var(--tip)) rotate(45deg); transition:transform .28s var(--ease-out) }
 
 .sh-mega-pane{ display:grid; grid-template-columns:minmax(0, 262px) minmax(0, 1fr); gap:4px; padding:10px }
@@ -647,62 +636,62 @@ html.sh-has-doorbar{ --sh-doorbar-h: 46px; }
    Dark in both themes, like the market panel on Market, so the panel has one
    heavy thing in it and the eye knows where to start. */
 .sh-mega-lead{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; gap:9px;
-  min-height:214px; padding:20px 20px 18px; border:0; border-radius:14px; background:linear-gradient(160deg,#1A1B1E 0%,#0A0A0B 46%,#050506 100%); color:#FFFFFF;
+  min-height:214px; padding:20px 20px 18px; border:0; border-radius:var(--r-card); background:var(--surface); color:var(--text-primary);
   font:400 var(--fs-small)/var(--lh-label) var(--font-sans); text-align:left; cursor:pointer;
   transition:box-shadow .3s var(--ease) }
 .sh-mega-lead::before{ content:''; position:absolute; left:-90px; top:-160px; width:280px; height:280px; border-radius:50%;
-  background:rgba(206,212,221,.22); filter:blur(48px); pointer-events:none; transition:transform .7s var(--ease-out) }
+  background:var(--wash-strong); pointer-events:none; transition:transform .7s var(--ease-out) }
 .sh-mega-lead::after{ content:''; position:absolute; inset:0; pointer-events:none;
-  background-image:linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-image:none;
   background-size:38px 38px }
 .sh-mega-lead:hover::before, .sh-mega-lead:focus-visible::before{ transform:translate(34px, 26px) scale(1.12) }
-.sh-mega-lead:hover{ box-shadow:0 10px 26px rgba(10,10,11,.28) }
-.sh-mega-lead:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:14px; box-shadow:none }
+.sh-mega-lead:hover{ box-shadow:var(--shadow-raised) }
+.sh-mega-lead:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:var(--r-card); box-shadow:none }
 /* On the dark theme the panel is nearly the card's own colour; a hairline keeps its edge. */
-:root[data-theme="dark"] .sh-mega-lead{ box-shadow:inset 0 0 0 1px rgba(197,202,211,.2) }
+:root[data-theme="dark"] .sh-mega-lead{ box-shadow:inset 0 0 0 1px var(--border) }
 .sh-mega-lead > *{ position:relative; z-index:1 }
-.sh-mega-mark{ position:absolute !important; right:-26px; bottom:-30px; width:112px; height:112px; color:#FFFFFF; opacity:.09; z-index:0 !important;
+.sh-mega-mark{ position:absolute !important; right:-26px; bottom:-30px; width:112px; height:112px; color:var(--on-accent); opacity:.09; z-index:0 !important;
   transition:transform .7s var(--ease-out), opacity .4s var(--ease) }
 .sh-mega-lead:hover .sh-mega-mark{ transform:translate(-6px,-6px) rotate(-6deg); opacity:.15 }
 .sh-mega-kick{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
-  text-transform:uppercase; color:#E8EBEF }
-.sh-mega-status{ display:inline-flex; align-items:center; gap:6px; color:#D2D2D8; font-weight:500; letter-spacing:var(--ls-label) }
+  text-transform:uppercase; color:var(--on-accent) }
+.sh-mega-status{ display:inline-flex; align-items:center; gap:6px; color:var(--on-accent); font-weight:500; letter-spacing:var(--ls-label) }
 .sh-mega-status:empty{ display:none }
-.sh-mega-status::before{ content:''; width:6px; height:6px; border-radius:50%; background:#5E5E69 }
-.sh-mega-status.live{ color:#6FD39A }
-.sh-mega-status.live::before{ background:#6FD39A; box-shadow:0 0 0 3px rgba(111,211,154,.2) }
-.sh-mega-q{ font:500 var(--fs-h1)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); color:#FFFFFF }
-.sh-mega-p{ max-width:26ch; font-size:var(--fs-small); color:#D2D2D8 }
-.sh-mega-live{ display:grid; gap:7px; width:100%; margin-top:2px; padding-top:11px; border-top:1px solid rgba(255,255,255,.13) }
+.sh-mega-status::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--accent) }
+.sh-mega-status.live{ color:var(--gain) }
+.sh-mega-status.live::before{ background:var(--gain); box-shadow:var(--ring) }
+.sh-mega-q{ font:500 var(--fs-h1)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); color:var(--on-accent) }
+.sh-mega-p{ max-width:26ch; font-size:var(--fs-small); color:var(--on-accent) }
+.sh-mega-live{ display:grid; gap:7px; width:100%; margin-top:2px; padding-top:11px; border-top:1px solid var(--border) }
 .sh-mega-live[hidden]{ display:none }
 .sh-mega-ix{ display:grid; grid-template-columns:minmax(0,1fr) auto 58px; gap:10px; align-items:baseline;
-  font:500 var(--fs-small)/var(--lh-h1) var(--font-sans); color:#EEEEF1 }
-.sh-mega-ix > :first-child{ color:#D2D2D8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  font:500 var(--fs-small)/var(--lh-h1) var(--font-sans); color:var(--on-accent) }
+.sh-mega-ix > :first-child{ color:var(--on-accent); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .sh-mega-ix > :last-child{ text-align:right }
-.sh-mega-ix .up{ color:#6FD39A } .sh-mega-ix .dn{ color:#FF9B85 }
-.sh-mega-go{ display:inline-flex; align-items:center; gap:8px; height:34px; margin-top:auto; padding:0 15px; border-radius:17px;
-  background:#E5E7EA; color:#0A0A0B; font:600 var(--fs-small)/var(--lh-none) var(--font-sans);
+.sh-mega-ix .up{ color:var(--gain) } .sh-mega-ix .dn{ color:var(--loss) }
+.sh-mega-go{ display:inline-flex; align-items:center; gap:8px; height:34px; margin-top:auto; padding:0 15px; border-radius:var(--r-card);
+  background:var(--border); color:var(--text-primary); font:600 var(--fs-small)/var(--lh-none) var(--font-sans);
   transition:gap .25s var(--ease-out), background-color .2s var(--ease) }
-.sh-mega-lead:hover .sh-mega-go, .sh-mega-lead:focus-visible .sh-mega-go{ gap:13px; background:#EEF0F2 }
+.sh-mega-lead:hover .sh-mega-go, .sh-mega-lead:focus-visible .sh-mega-go{ gap:13px; background:var(--accent) }
 /* You are on this door's own page: the card says so instead of offering it. */
-.sh-mega-lead[aria-current="page"] .sh-mega-go{ background:rgba(255,255,255,.12); color:#FFFFFF }
+.sh-mega-lead[aria-current="page"] .sh-mega-go{ background:var(--wash-strong); color:var(--text-primary) }
 .sh-mega-lead[aria-current="page"] .sh-mega-go svg{ display:none }
 
 /* The tools: up to three columns, each under the name of what it is for. */
 .sh-mega-cols{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:0 8px; padding:12px 6px 8px 14px; align-content:start }
 .sh-mega-col h4{ margin:0 0 5px; padding:0 10px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); color:var(--text-muted) }
 .sh-mega-col h4:not(:first-child){ margin-top:17px }
-.sh-mega .sh-item{ position:relative; grid-template-columns:36px 1fr; gap:12px; padding:8px 10px; border-radius:13px; font:inherit }
+.sh-mega .sh-item{ position:relative; grid-template-columns:36px 1fr; gap:12px; padding:8px 10px; border-radius:var(--r-card); font:inherit }
 .sh-mega .sh-item b{ font:600 var(--fs-body)/var(--lh-h2) var(--font-sans); color:var(--text-primary) }
 .sh-mega .sh-txt > span{ font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--text-secondary); text-wrap:balance }
-.sh-mega .sh-ico{ width:36px; height:36px; border-radius:11px }
+.sh-mega .sh-ico{ width:36px; height:36px; border-radius:var(--r-card) }
 .sh-mega .sh-item:hover, .sh-mega .sh-item:focus-visible{ background:var(--surface-raised); transform:none; outline:none }
 .sh-mega .sh-item:focus-visible{ box-shadow:inset 0 0 0 2px var(--focus-ring) }
-.sh-mega .sh-item:focus-visible .sh-ico{ background:linear-gradient(135deg,var(--accent-hover),var(--accent)); border-color:transparent; color:var(--on-accent,#fff)}
+.sh-mega .sh-item:focus-visible .sh-ico{ background:var(--accent); border-color:transparent; color:var(--on-accent,var(--on-accent))}
 /* The tool that is open: its tile stays gold and a short rule marks the row. */
 .sh-mega .sh-item[aria-current="page"]{ background:var(--surface-raised) }
-.sh-mega .sh-item[aria-current="page"] .sh-ico{ background:linear-gradient(135deg,var(--accent-hover),var(--accent)); border-color:transparent; color:var(--on-accent,#fff)}
-.sh-mega .sh-item[aria-current="page"]::before{ content:''; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--highlight) }
+.sh-mega .sh-item[aria-current="page"] .sh-ico{ background:var(--accent); border-color:transparent; color:var(--on-accent,var(--on-accent))}
+.sh-mega .sh-item[aria-current="page"]::before{ content:''; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 var(--r-xs) var(--r-xs) 0; background:var(--highlight) }
 
 /* A pane arriving, on opening or on moving to the next door, fades in where
    it stands. Nothing slides: rows that travel are rows the pointer misses. */
@@ -728,10 +717,10 @@ html.sh-doorbar-none .sh-doorbar{ display:none }
 .sh-crumbbar{ gap:14px }
 .sh-crumb{ flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:3px; font:500 var(--fs-small)/var(--lh-none) var(--font-sans); color:var(--text-secondary) }
 .sh-crumb > svg{ flex:none; color:var(--text-muted) }
-.sh-crumb-door{ flex:none; margin-left:-9px; padding:7px 9px; border:0; border-radius:9px; background:none; color:var(--text-secondary); font:inherit }
+.sh-crumb-door{ flex:none; margin-left:-9px; padding:7px 9px; border:0; border-radius:var(--r-control); background:none; color:var(--text-secondary); font:inherit }
 button.sh-crumb-door{ cursor:pointer; transition:background-color .2s var(--ease), color .2s var(--ease) }
 button.sh-crumb-door:hover{ background:var(--surface-raised); color:var(--text-primary) }
-button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:1px; border-radius:9px; box-shadow:none }
+button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:1px; border-radius:var(--r-control); box-shadow:none }
 .sh-crumb-here{ flex:none; margin-left:5px; font-weight:600; color:var(--text-primary); white-space:nowrap }
 .sh-crumb-hint{ min-width:0; margin-left:12px; padding-left:14px; border-left:1px solid var(--border); color:var(--text-muted);
   font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
@@ -742,13 +731,13 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
    tools", an arrow that turns when the sheet is up. The ::after stretches
    what a thumb can hit to the full height of the bar. */
 .sh-where{ position:relative; flex:0 1 auto; min-width:0; display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 11px 0 10px;
-  border:1px solid var(--border); border-radius:17px; background:var(--bg); color:var(--text-secondary);
+  border:1px solid var(--border); border-radius:var(--r-card); background:var(--bg); color:var(--text-secondary);
   font:500 var(--fs-body)/var(--lh-none) var(--font-sans); cursor:pointer; -webkit-tap-highlight-color:transparent;
   transition:border-color .2s var(--ease), background-color .2s var(--ease), transform .15s var(--ease) }
 .sh-where::after{ content:''; position:absolute; inset:-6px -4px }
 .sh-where:active{ transform:scale(.97) }
 .sh-where[aria-expanded="true"]{ border-color:var(--highlight); background:var(--surface-raised) }
-.sh-where:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:17px; box-shadow:none }
+.sh-where:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:var(--r-card); box-shadow:none }
 .sh-where-ic{ flex:none; color:var(--text-primary) }
 .sh-where-door{ flex:none }
 .sh-where-sep{ flex:none; margin:0 -2px; color:var(--text-muted) }
@@ -761,10 +750,10 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
    bottom edge. Three parts, top to bottom: the handle, the three doors with
    the cross beside them, and the list, which is the only part that scrolls. */
 .sh-sheet{ box-sizing:border-box; position:fixed; inset:auto 0 0 0; width:100%; max-width:620px; max-height:88vh; max-height:min(88dvh, 780px);
-  margin:0 auto; padding:0; border:0; border-radius:24px 24px 0 0; background:var(--surface); color:var(--text-primary);
-  box-shadow:0 -20px 60px rgba(10,10,11,.3); overflow:hidden; flex-direction:column; transition:transform .28s var(--ease-out) }
+  margin:0 auto; padding:0; border:0; border-radius:var(--r-card) var(--r-card) 0 0; background:var(--surface); color:var(--text-primary);
+  box-shadow:var(--shadow-raised); overflow:hidden; flex-direction:column; transition:transform .28s var(--ease-out) }
 .sh-sheet[open]{ display:flex; animation:shSheetIn .4s var(--ease-out) }
-.sh-sheet::backdrop{ background:rgba(0,0,0,.52) }
+.sh-sheet::backdrop{ background:var(--scrim) }
 .sh-sheet[open]::backdrop{ animation:shFadeIn .3s ease-out }
 .sh-sheet.closing{ animation:shSheetOut .24s var(--ease) forwards }
 .sh-sheet.closing::backdrop{ animation:shFadeOut .24s ease-in forwards }
@@ -775,14 +764,14 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
 @keyframes shFadeOut{ to{ opacity:0 } }
 
 .sh-sheet-grab{ flex:none; display:grid; place-items:center; height:26px; cursor:grab; touch-action:none }
-.sh-sheet-grab i{ width:42px; height:5px; border-radius:3px; background:var(--border) }
+.sh-sheet-grab i{ width:42px; height:5px; border-radius:var(--r-xs); background:var(--border) }
 .sh-sheet-head{ flex:none; display:flex; align-items:center; gap:10px; padding:0 12px 10px 14px }
 .sh-sheet-tabs{ position:relative; flex:1 1 auto; min-width:0; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); padding:4px;
-  border:1px solid var(--border); border-radius:16px; background:var(--surface-raised) }
+  border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface-raised) }
 /* One dark tile under the chosen door; it slides to the next rather than jumping. */
-.sh-sheet-ind{ position:absolute; top:4px; bottom:4px; left:4px; width:calc((100% - 8px) / 3); border-radius:12px; background:var(--accent);
+.sh-sheet-ind{ position:absolute; top:4px; bottom:4px; left:4px; width:calc((100% - 8px) / 3); border-radius:var(--r-card); background:var(--accent);
   transform:translateX(calc(var(--n, 0) * 100%)); transition:transform .36s var(--ease-out) }
-.sh-sheet-tab{ position:relative; height:40px; padding:0 4px; border:0; border-radius:12px; background:none; color:var(--text-secondary);
+.sh-sheet-tab{ position:relative; height:40px; padding:0 4px; border:0; border-radius:var(--r-card); background:none; color:var(--text-secondary);
   font:500 var(--fs-body)/var(--lh-none) var(--font-sans); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color .25s var(--ease) }
 .sh-sheet-tab[aria-selected="true"]{ color:var(--on-accent); font-weight:600 }
 .sh-sheet-tab:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:1px; box-shadow:none }
@@ -797,23 +786,23 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
 /* The door's own page, first: the same dark card as the menus, cut down to
    the question and an arrow so the tools start on the first screen. */
 .sh-sheet-lead{ position:relative; overflow:hidden; display:flex; align-items:center; gap:14px; width:100%; box-sizing:border-box;
-  padding:16px 14px 17px 18px; border:0; border-radius:18px; background:#0A0A0B; color:#FFFFFF; text-align:left; cursor:pointer;
+  padding:16px 14px 17px 18px; border:0; border-radius:var(--r-card); background:var(--surface); color:var(--text-primary); text-align:left; cursor:pointer;
   font:400 var(--fs-small)/var(--lh-label) var(--font-sans); -webkit-tap-highlight-color:transparent }
 .sh-sheet-lead::before{ content:''; position:absolute; left:-80px; top:-150px; width:260px; height:260px; border-radius:50%;
-  background:rgba(206,212,221,.22); filter:blur(46px); pointer-events:none }
+  background:var(--wash-strong); pointer-events:none }
 .sh-sheet-lead:active{ transform:scale(.99) }
-.sh-sheet-lead:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:18px; box-shadow:none }
-:root[data-theme="dark"] .sh-sheet-lead{ box-shadow:inset 0 0 0 1px rgba(197,202,211,.2) }
+.sh-sheet-lead:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:var(--r-card); box-shadow:none }
+:root[data-theme="dark"] .sh-sheet-lead{ box-shadow:inset 0 0 0 1px var(--border) }
 .sh-sheet-lead-t{ position:relative; flex:1 1 auto; min-width:0; display:grid; gap:8px }
 .sh-sheet-lead .sh-mega-q{ font-size:var(--fs-h2) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
 .sh-sheet-lead-go{ position:relative; flex:none; display:grid; place-items:center; width:40px; height:40px; border-radius:50%;
-  background:#E5E7EA; color:#0A0A0B }
+  background:var(--border); color:var(--text-primary) }
 .sh-sheet-lead[aria-current="page"] .sh-sheet-lead-go{ display:none }
 
 .sh-sheet-group h4{ margin:18px 8px 5px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label); color:var(--text-muted) }
 .sh-sheet .sh-item{ position:relative; grid-template-columns:42px 1fr; gap:14px; align-items:center; min-height:60px; padding:8px;
-  border-radius:14px; font:inherit; -webkit-tap-highlight-color:transparent }
-.sh-sheet .sh-ico{ width:42px; height:42px; border-radius:13px }
+  border-radius:var(--r-card); font:inherit; -webkit-tap-highlight-color:transparent }
+.sh-sheet .sh-ico{ width:42px; height:42px; border-radius:var(--r-card) }
 .sh-sheet .sh-ico svg{ width:19px; height:19px }
 .sh-sheet .sh-item b{ font:600 var(--fs-h3)/var(--lh-h2) var(--font-sans); color:var(--text-primary) }
 .sh-sheet .sh-txt > span{ margin-top:2px; font:400 var(--fs-body)/var(--lh-label) var(--font-sans); color:var(--text-secondary) }
@@ -821,8 +810,8 @@ button.sh-crumb-door:focus-visible{ outline:2px solid var(--focus-ring); outline
 .sh-sheet .sh-item:active{ background:var(--surface-raised) }
 .sh-sheet .sh-item:focus-visible{ outline:none; box-shadow:inset 0 0 0 2px var(--focus-ring) }
 .sh-sheet .sh-item[aria-current="page"]{ background:var(--surface-raised) }
-.sh-sheet .sh-item[aria-current="page"] .sh-ico{ background:linear-gradient(135deg,var(--accent-hover),var(--accent)); border-color:transparent; color:var(--on-accent,#fff)}
-.sh-sheet .sh-item[aria-current="page"]::before{ content:''; position:absolute; left:0; top:16px; bottom:16px; width:3px; border-radius:0 3px 3px 0; background:var(--highlight) }
+.sh-sheet .sh-item[aria-current="page"] .sh-ico{ background:var(--accent); border-color:transparent; color:var(--on-accent,var(--on-accent))}
+.sh-sheet .sh-item[aria-current="page"]::before{ content:''; position:absolute; left:0; top:16px; bottom:16px; width:3px; border-radius:0 var(--r-xs) var(--r-xs) 0; background:var(--highlight) }
 
 /* The list rises in a group at a time, on opening and on changing door. */
 .sh-sheet[open] .sh-sheet-pane:not([hidden]) .sh-sheet-lead{ animation:shColIn .4s var(--ease-out) backwards; animation-delay:60ms }
@@ -905,7 +894,7 @@ html[data-motion="off"] .sh-sheet[open] .sh-sheet-pane:not([hidden]) .sh-sheet-g
 .sh-fcol ul{ list-style:none; margin:0; padding:0; display:grid; gap:10px }
 .sh-fcol a{ color:var(--text-secondary); text-decoration:none }
 .sh-fcol a:hover{ color:var(--text-primary); text-decoration:underline }
-.sh-fcol a:focus-visible, .sh-fmail:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:3px; border-radius:3px }
+.sh-fcol a:focus-visible, .sh-fmail:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:3px; border-radius:var(--r-xs) }
 .sh-fbase{
   max-width:1240px; margin:0 auto; padding:18px 24px 26px; border-top:1px solid var(--border);
   display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:var(--fs-small);

@@ -536,7 +536,7 @@
     host.innerHTML =
       '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
         '<defs><linearGradient id="drt-fill" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0" stop-color="#C5CAD3" stop-opacity=".42"/><stop offset="1" stop-color="#C5CAD3" stop-opacity="0"/>' +
+          '<stop offset="0" stop-color="var(--border-strong)" stop-opacity=".42"/><stop offset="1" stop-color="var(--border-strong)" stop-opacity="0"/>' +
         '</linearGradient></defs>' +
         '<line class="dr-prevline" x1="0" x2="' + W + '" y1="' + Y(prev).toFixed(1) + '" y2="' + Y(prev).toFixed(1) + '"/>' +
         '<path class="dr-area" d="' + line + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="url(#drt-fill)"/>' +

@@ -34,14 +34,14 @@
 
 .sb-tile{position:relative;display:flex;flex-direction:column;gap:8px;
   text-align:left;padding:14px 15px 13px;cursor:pointer;
-  border:1px solid var(--border);border-radius:10px;
-  background:var(--surface);box-shadow:var(--sh-1);
+  border:1px solid var(--border);border-radius:var(--r-control);
+  background:var(--surface);box-shadow:none;
   font:inherit;color:inherit;overflow:hidden;
   animation:sb-rise .5s cubic-bezier(.2,.8,.25,1) both;
   animation-delay:calc(var(--i,0) * 38ms);
   transition:box-shadow .2s ease,border-color .2s ease}
-.sb-tile:hover{box-shadow:var(--sh-2);border-color:var(--border)}
-.sb-tile:focus-visible{outline:none;box-shadow:var(--ring,0 0 0 2px var(--focus-ring))}
+.sb-tile:hover{box-shadow:var(--shadow-raised);border-color:var(--border)}
+.sb-tile:focus-visible{outline:none;box-shadow:var(--shadow-raised)}
 @keyframes sb-rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 
 /* A hairline down the left edge, coloured by direction — readable at a glance
@@ -67,7 +67,7 @@
   font-variant-numeric:tabular-nums; font-weight:500; letter-spacing:var(--ls-heading)}
 .sb-pct.up{color:var(--gain)} .sb-pct.dn{color:var(--loss)}
 
-.sb-breadth{display:block;height:3px;border-radius:2px;background:var(--border);
+.sb-breadth{display:block;height:3px;border-radius:var(--r-xs);background:var(--border);
   overflow:hidden}
 .sb-breadth i{display:block;height:100%;background:var(--gain);
   transition:width .6s cubic-bezier(.2,.8,.25,1)}
@@ -79,7 +79,7 @@
 
 /* ---- the constituent panel --------------------------------------------- */
 .sb-detail{margin-top:12px;padding:16px 18px;border:1px solid var(--border);
-  border-radius:10px;background:var(--surface-raised);
+  border-radius:var(--r-control);background:var(--surface-raised);
   animation:sb-open .34s cubic-bezier(.2,.8,.25,1) both}
 @keyframes sb-open{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
@@ -124,10 +124,10 @@
    stylesheet so cascade order cannot silently change the sector layout. */
 .sb-board { scroll-margin-top:calc(var(--sh-chrome-h,132px) + 20px); border-top:1px solid var(--border); padding-top:24px; }
 .sb-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
-.sb-tile { padding:20px 18px; gap:12px; animation:none; border-radius:12px; box-shadow:none; }
+.sb-tile { padding:20px 18px; gap:12px; animation:none; border-radius:var(--r-card); box-shadow:none; }
 .sb-tile .sb-name { white-space:normal; font-size:var(--fs-small); min-height:34px; }
 .sb-pct { font:500 var(--fs-h1)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); }
-.sb-breadth { height:7px; border-radius:6px; }
+.sb-breadth { height:7px; border-radius:var(--r-xs); }
 .sb-breadth i { transform-origin:left center; transition:none; }
 .sb-meta { font-size:var(--fs-label); letter-spacing:0; line-height:var(--lh-body); }
 .sb-win { min-height:44px; min-width:50px; font-size:var(--fs-label); }

@@ -1,0 +1,204 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Altaha — components.css
+   One button, one tab, one table, one card, one chip, one field.
+
+   Loads last, on every page. It does two jobs:
+
+   1. Defines each component once, as a class new markup should use
+      (.btn, .tabs, .card, .metric, .chip, .field, .tip ...).
+   2. Brings the older, per-page versions of the same things into line. The
+      product grew sixty button classes and eighty chip classes; rather than
+      restyle each, the rules here name them and give them the one look.
+
+   Only tokens from tokens.css appear in this file.
+
+   THE RULES THIS FILE ENFORCES
+   - Hairlines, 1px, in --border. No heavy outlines.
+   - No shadow in dark mode. One shadow in light, on raised things only.
+   - Cards 12px, controls 8px, the primary action and chips fully round.
+   - --accent is for the primary action, the active destination and the logo.
+     --highlight is for key figures and the line under the active tab.
+   - Green and red are for data, never decoration, and always carry ▲ or ▼.
+   - Text reads from the left. Numbers in tables sit on the right.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Ground rules ─────────────────────────────────────────────────────────── */
+::selection{ background:var(--highlight-subtle); color:var(--text-primary) }
+:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
+a{ text-decoration-thickness:1px; text-underline-offset:3px }
+hr{ border:0; border-top:1px solid var(--border) }
+
+/* Scrollbars: thin, a quiet thumb, no track. */
+*{ scrollbar-width:thin; scrollbar-color:var(--border-strong) transparent }
+::-webkit-scrollbar{ width:8px; height:8px }
+::-webkit-scrollbar-track{ background:transparent }
+::-webkit-scrollbar-thumb{
+  background:var(--border-strong); border-radius:var(--r-pill);
+  border:2px solid transparent; background-clip:content-box;
+}
+::-webkit-scrollbar-corner{ background:transparent }
+
+/* ── Section header ───────────────────────────────────────────────────────
+   An 11px label, a Fraunces heading, and optionally a thin rule under them.
+     <header class="section-head ruled">
+       <span class="t-label">Market overview</span><h2>Nifty 50</h2>
+     </header> */
+.section-head{ display:flex; flex-direction:column; gap:var(--sp-1); margin:0 0 var(--sp-6) }
+.section-head > h2{ margin:0 }
+.section-head.ruled{ padding-bottom:var(--sp-3); border-bottom:1px solid var(--border-strong) }
+.section + .section, .section-head:not(:first-child){ margin-top:var(--sp-12) }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────
+   Primary: the one filled thing on a screen. Secondary: an outline.
+   Ghost: words only. */
+.btn, .btn-primary, .btn-secondary, .btn-ghost{
+  display:inline-flex; align-items:center; justify-content:center; gap:var(--sp-2);
+  height:var(--control-h); padding:0 var(--sp-5);
+  font:500 var(--fs-body)/var(--lh-none) var(--font-sans); letter-spacing:normal;
+  border:1px solid transparent; border-radius:var(--r-control);
+  background:transparent; color:var(--text-primary);
+  cursor:pointer; text-decoration:none; white-space:nowrap;
+  transition:background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.btn-primary{ background:var(--accent); color:var(--on-accent); border-radius:var(--r-pill); padding:0 var(--sp-6) }
+.btn-primary:hover{ background:var(--accent-hover) }
+.btn-secondary{ border-color:var(--border-strong) }
+.btn-secondary:hover{ background:var(--surface-raised) }
+.btn-ghost{ padding:0 var(--sp-2) }
+.btn-ghost:hover{ color:var(--highlight-text) }
+.btn:disabled, .btn-primary:disabled, .btn-secondary:disabled, .btn-ghost:disabled{ opacity:.45; cursor:default }
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────
+   A row of words; the chosen one is cognac with a 2px line under it. There
+   are no filled pill tabs anywhere. */
+.tabs, :where([role="tablist"]){ display:flex; align-items:stretch; gap:var(--sp-6); border-bottom:1px solid var(--border) }
+.tab, :where([role="tab"]){
+  position:relative; padding:var(--sp-3) 0; margin:0 0 -1px;
+  background:none; border:0; border-bottom:2px solid transparent; border-radius:0;
+  font:500 var(--fs-body)/var(--lh-none) var(--font-sans); letter-spacing:normal;
+  color:var(--text-secondary); cursor:pointer; white-space:nowrap;
+  transition:color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.tab:hover, :where([role="tab"]):hover{ color:var(--text-primary) }
+.tab.active, .tab.on, .tab[aria-selected="true"], :where([role="tab"][aria-selected="true"]){
+  color:var(--highlight-text); border-bottom-color:var(--highlight);
+}
+
+/* ── Tables ───────────────────────────────────────────────────────────────
+   Header in the label style on the raised surface. 48px rows, a hairline
+   between rows and none between columns. Figures on the right. Gain and loss
+   colour the text, never the cell. */
+table{ border-collapse:collapse; border-spacing:0 }
+th{
+  height:40px; padding:0 var(--sp-4); text-align:left; white-space:nowrap; vertical-align:middle;
+  font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase;
+  color:var(--text-muted); background:var(--surface-raised);
+  border:0; border-bottom:1px solid var(--border);
+}
+td{
+  height:var(--row-h); padding:0 var(--sp-4); vertical-align:middle;
+  font-size:var(--fs-body); color:var(--text-primary);
+  border:0; border-bottom:1px solid var(--border);
+}
+tbody tr:hover > td{ background:var(--surface-raised) }
+tbody tr.selected > td, tbody tr.is-selected > td, tbody tr[aria-selected="true"] > td{ background:var(--highlight-subtle) }
+tbody tr.selected > td:first-child, tbody tr.is-selected > td:first-child,
+tbody tr[aria-selected="true"] > td:first-child{ box-shadow:inset 2px 0 0 var(--highlight) }
+/* A row's own heading is text, not a column label. */
+tbody th, th[scope="row"]{
+  height:var(--row-h); font:500 var(--fs-body)/var(--lh-body) var(--font-sans); letter-spacing:normal; text-transform:none;
+  color:var(--text-primary); background:transparent; white-space:normal;
+}
+td.num, th.num, td.r, th.r, td[align="right"], th[align="right"]{ text-align:right }
+td.num, td.r{ font-variant-numeric:tabular-nums }
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card);
+  padding:var(--card-pad); box-shadow:none;
+}
+.card > .card-title, .card-title{ margin:0; font:600 var(--fs-h3)/var(--lh-h3) var(--font-sans); color:var(--text-primary) }
+.card-meta{
+  font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label);
+  text-transform:uppercase; color:var(--text-muted);
+}
+
+/* Metric card: label on top, the figure in Fraunces, the change beneath. */
+.metric{ display:flex; flex-direction:column; gap:var(--sp-2) }
+.metric-label{
+  font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label);
+  text-transform:uppercase; color:var(--text-muted);
+}
+.metric-value{
+  font:400 var(--fs-display)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading);
+  color:var(--text-primary); font-variant-numeric:tabular-nums lining-nums;
+}
+.metric-change{ font:500 var(--fs-small)/var(--lh-none) var(--font-sans); font-variant-numeric:tabular-nums }
+
+/* ── Change: gain and loss ────────────────────────────────────────────────
+   Colour alone does not say up or down to everyone. The arrow always does. */
+.chg-up, .chg-down{ font-variant-numeric:tabular-nums; white-space:nowrap }
+.chg-up{ color:var(--gain) }
+.chg-down{ color:var(--loss) }
+.chg-up::before{ content:"\25B2"; display:inline-block; margin-right:2px; transform:scale(.72); transform-origin:left center }
+.chg-down::before{ content:"\25BC"; display:inline-block; margin-right:2px; transform:scale(.72); transform-origin:left center }
+
+/* The older markup marks a rise and a fall with .up and .dn (or .pos/.neg) on
+   the figure itself. Each of those gets the same arrow. A new figure should
+   use .chg-up / .chg-down and need no entry here. */
+:is(.dr-mchg, .dr-flow b, .dr-tile b).up::before{ content:"\25B2"; display:inline-block; margin-right:2px; transform:scale(.72); transform-origin:left center }
+:is(.dr-mchg, .dr-flow b, .dr-tile b).dn::before{ content:"\25BC"; display:inline-block; margin-right:2px; transform:scale(.72); transform-origin:left center }
+
+/* ── Chips and badges ─────────────────────────────────────────────────────── */
+.chip, .badge{
+  display:inline-flex; align-items:center; gap:var(--sp-1);
+  height:22px; padding:0 var(--sp-2); border:0; border-radius:var(--r-pill);
+  font:500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:normal; white-space:nowrap;
+  background:var(--highlight-subtle); color:var(--highlight-text);
+}
+/* A chip that filters: an outline at rest, the cognac wash when pressed. */
+button.chip, .chip[aria-pressed]{ background:transparent; color:var(--text-secondary); border:1px solid var(--border); cursor:pointer }
+button.chip:hover, .chip[aria-pressed]:hover{ border-color:var(--border-strong); color:var(--text-primary) }
+.chip[aria-pressed="true"], button.chip.on{ background:var(--highlight-subtle); color:var(--highlight-text); border-color:transparent }
+.chip.gain, .badge.gain, .chip.up, .badge.up{ background:var(--gain-bg); color:var(--gain) }
+.chip.loss, .badge.loss, .chip.down, .badge.down{ background:var(--loss-bg); color:var(--loss) }
+.chip.warn, .badge.warn{ background:var(--warning-bg); color:var(--warning) }
+.chip.info, .badge.info{ background:var(--info-bg); color:var(--info) }
+
+/* ── Fields ───────────────────────────────────────────────────────────────── */
+.field,
+input[type="text"], input[type="search"], input[type="email"], input[type="number"], input[type="tel"],
+input[type="password"], input[type="date"], input[type="url"], input:not([type]), select, textarea{
+  background:var(--surface-raised); color:var(--text-primary);
+  border:1px solid var(--border); border-radius:var(--r-control);
+  font-family:var(--font-sans); font-size:var(--fs-input);
+  transition:border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.field::placeholder, input::placeholder, textarea::placeholder{ color:var(--text-muted); opacity:1 }
+.field:focus, .field:focus-visible,
+input[type="text"]:focus, input[type="search"]:focus, input[type="email"]:focus, input[type="number"]:focus,
+input[type="tel"]:focus, input[type="password"]:focus, input[type="date"]:focus, input[type="url"]:focus,
+input:not([type]):focus, select:focus, textarea:focus{
+  outline:none; border-color:var(--focus-ring); box-shadow:var(--ring);
+}
+input[type="checkbox"], input[type="radio"], input[type="range"]{ accent-color:var(--accent) }
+
+/* ── Tooltips, menus, modals ──────────────────────────────────────────────── */
+.tip, .menu, .modal, :where([role="tooltip"], [role="menu"], [role="listbox"], dialog){
+  background:var(--surface-raised); color:var(--text-primary);
+  border:1px solid var(--border-strong); border-radius:var(--r-card);
+  box-shadow:var(--shadow-raised);
+}
+dialog::backdrop{ background:var(--scrim) }
+
+/* ── Skeletons ────────────────────────────────────────────────────────────
+   The raised surface, with a slow, faint pass of light across it. */
+@keyframes skeleton-pass{ from{ background-position:200% 0 } to{ background-position:-200% 0 } }
+.skeleton, .skel, .wo-skel, .wd-skel, .cl-skel, .pi-skeleton, .mb-skel, .skel-row{
+  background:linear-gradient(90deg, var(--surface-raised) 0%, var(--surface-raised) 40%, var(--border) 50%, var(--surface-raised) 60%, var(--surface-raised) 100%);
+  background-size:200% 100%; border-radius:var(--r-xs); color:transparent;
+  animation:skeleton-pass 1.8s linear infinite;
+}
+@media (prefers-reduced-motion:reduce){
+  .skeleton, .skel, .wo-skel, .wd-skel, .cl-skel, .pi-skeleton, .mb-skel, .skel-row{ animation:none }
+}

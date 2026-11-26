@@ -26,7 +26,7 @@
 }
 .navmain-btn svg { width: 17px; height: 17px; flex: 0 0 auto; }
 .navmain-btn:hover { color: var(--text-secondary); }
-.navmain-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 2px; }
+.navmain-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--r-xs); }
 
 .navmain-btn.on { color: var(--text-primary); }
 .navmain-btn.on::after {
@@ -68,11 +68,11 @@
 .navsub-btn.on { border-bottom-color: var(--border-strong); }
 .navsub-btn.on .navsub-lbl { color: var(--text-primary); }
 .navsub-btn.on .navsub-hint { opacity: .85; }
-.navsub-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 2px; }
+.navsub-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--r-xs); }
 
 .navlearn {
   align-self: center;
-  background: none; border: 1px solid var(--border); border-radius: 2px;
+  background: none; border: 1px solid var(--border); border-radius: var(--r-xs);
   padding: 7px 13px; cursor: pointer;
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
@@ -94,8 +94,6 @@
     display: block;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
     background: var(--surface);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
     border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
   }
