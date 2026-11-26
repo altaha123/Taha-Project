@@ -7,6 +7,7 @@
 <script src="theme.js"></script>
 <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/jetbrains-mono-latin.woff2" crossorigin>
 <link rel="stylesheet" href="tokens.css">
 <title>Sign in | Altaha Screener</title>
 <meta name="description" content="Sign in to save your portfolio and get one email after the close: what your holdings did, and what was filed on them." />
@@ -23,26 +24,31 @@
 <link rel="stylesheet" href="type.css">
 <link rel="stylesheet" href="components.css">
 
+<script>
+  var API_BASE = "https://taha-project.onrender.com";
+</script>
 <script src="analytics.js" defer></script>
 <script src="auth.js" defer></script>
 
 <style>
   body { margin:0; font-family:var(--font-sans); -webkit-font-smoothing:antialiased; }
-  /* Black, white and the one ultramarine, like the rest of the site. The
-     picture is drawn from the --si-a-* values so it turns with the theme
-     instead of sitting on a dark page as a pale card. */
-  .si-page { --si-muted:var(--text-muted); --si-card:var(--surface); --si-accent:var(--highlight);
-    --si-a-sky1:var(--surface); --si-a-sky2:var(--border); --si-a-sun:var(--surface); --si-a-hill1:var(--border); --si-a-hill2:var(--border);
-    --si-a-top:var(--accent); --si-a-face1:var(--accent); --si-a-face2:var(--accent); --si-a-side:var(--accent);
-    --si-a-btop:var(--surface-raised); --si-a-bface1:var(--text-muted); --si-a-bface2:var(--accent); --si-a-bside:var(--accent);
+  /* Navy and cognac, like the rest of the site. The picture is drawn flat
+     from the --si-a-* values, which are mixed from the chart tokens, so it
+     turns with the theme by itself. */
+  .si-page { --si-muted:var(--text-muted); --si-card:var(--surface); --si-accent:var(--highlight-text);
+    --si-a-sky:var(--surface);
+    --si-a-sun:color-mix(in srgb, var(--chart-1) 26%, var(--surface));
+    --si-a-hill1:color-mix(in srgb, var(--chart-3) 24%, var(--surface));
+    --si-a-hill2:color-mix(in srgb, var(--chart-4) 30%, var(--surface));
+    --si-a-top:color-mix(in srgb, var(--chart-2) 45%, var(--surface));
+    --si-a-face:color-mix(in srgb, var(--chart-2) 82%, var(--surface));
+    --si-a-side:var(--chart-2);
+    --si-a-btop:color-mix(in srgb, var(--chart-1) 45%, var(--surface));
+    --si-a-bface:color-mix(in srgb, var(--chart-1) 82%, var(--surface));
+    --si-a-bside:var(--chart-1);
     --si-a-line:var(--border-strong); --si-a-quiet:var(--text-muted);
     min-height:100svh; padding:28px clamp(20px,5vw,80px); box-sizing:border-box;
     background:var(--bg); }
-  [data-theme="dark"] .si-page {
-    --si-a-sky1:var(--surface); --si-a-sky2:var(--bg); --si-a-sun:var(--text-primary); --si-a-hill1:var(--surface-raised); --si-a-hill2:var(--surface-raised);
-    --si-a-top:var(--accent); --si-a-face1:var(--accent); --si-a-face2:var(--border-strong); --si-a-side:var(--border-strong);
-    --si-a-btop:var(--accent); --si-a-bface1:var(--accent); --si-a-bface2:var(--border-strong); --si-a-bside:var(--surface-raised);
-    --si-a-line:var(--border-strong); --si-a-quiet:var(--text-secondary); }
   .si-page *, .si-page *::before, .si-page *::after { box-sizing:border-box; }
   .si-header { max-width:1180px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
   .si-brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text-primary); }
@@ -53,34 +59,34 @@
   .si-wrap { max-width:1100px; margin:clamp(40px,8vh,96px) auto 48px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:center; gap:clamp(40px,7vw,100px); }
   .si-eyebrow { color:var(--si-accent); font:500 var(--fs-label)/var(--lh-small) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; margin:0 0 20px; }
   .si-story h2 { font:400 var(--fs-display)/var(--lh-none) var(--font-display); letter-spacing:var(--ls-heading); margin:0; color:var(--text-primary); }
-  .si-story h2 em { color:var(--highlight-text); font-weight:400; }
-  .si-description { max-width:370px; color:var(--si-muted); font-size:var(--fs-body); line-height:var(--lh-body); margin:22px 0 0; }
+  .si-story h2 em { color:var(--highlight-text); font-weight:inherit; }
+  .si-description { max-width:370px; color:var(--si-muted); font-size:var(--fs-body); line-height:var(--lh-body); margin:24px 0 0; }
   .si-art { margin:28px 0 0; position:relative; }
-  .si-art svg { display:block; width:100%; height:auto; border-radius:var(--r-card); }
-  .si-art figcaption { color:var(--si-muted); font-size:var(--fs-label); margin-top:10px; letter-spacing:normal; }
-  .si-card { min-width:0; padding:38px; border:1px solid var(--border); border-radius:var(--r-card); background:var(--si-card); box-shadow:none; animation:si-enter .5s ease-out both; }
+  .si-art svg { display:block; width:100%; height:auto; border:1px solid var(--border); border-radius:var(--r-card); }
+  .si-art figcaption { color:var(--si-muted); font-size:var(--fs-label); margin-top:12px; letter-spacing:normal; }
+  .si-card { min-width:0; padding:40px; border:1px solid var(--border); border-radius:var(--r-card); background:var(--si-card); box-shadow:none; animation:si-enter .5s ease-out both; }
   .si-card h1 { font:400 var(--fs-display)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); margin:0 0 12px; color:var(--text-primary); }
-  .si-lede { font-size:var(--fs-body); line-height:var(--lh-body); color:var(--si-muted); margin:0 0 26px; overflow-wrap:anywhere; }
+  .si-lede { font-size:var(--fs-body); line-height:var(--lh-body); color:var(--si-muted); margin:0 0 28px; overflow-wrap:anywhere; }
   .si-field { display:block; margin-bottom:16px; }
-  .si-field span { display:block; font-size:var(--fs-small); font-weight:500; color:var(--text-primary); margin-bottom:9px; }
-  .si-input { width:100%; min-height:52px; padding:14px 16px; font:400 var(--fs-body)/var(--lh-label) var(--font-sans); color:var(--text-primary); background:var(--bg); border:1px solid var(--border); border-radius:var(--r-control); }
+  .si-field span { display:block; font-size:var(--fs-small); font-weight:500; color:var(--text-primary); margin-bottom:8px; }
+  .si-input { width:100%; min-height:48px; padding:12px 16px; font:400 var(--fs-input)/var(--lh-label) var(--font-sans); color:var(--text-primary); background:var(--surface-raised); border:1px solid var(--border); border-radius:var(--r-control); }
   .si-input::placeholder { color:var(--si-muted); opacity:1; }
-  .si-page :focus-visible { outline:3px solid var(--si-accent); outline-offset:4px; }
-  .si-btn { display:block; width:100%; min-height:52px; padding:15px 18px; font:600 var(--fs-body)/var(--lh-small) var(--font-sans); color:var(--on-accent); background:var(--accent); border:1px solid transparent; border-radius:var(--r-control); cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
-  .si-btn:hover:not(:disabled) { background:var(--accent); color:var(--on-accent,var(--on-accent)); box-shadow:var(--shadow-raised); }
+  .si-page :focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+  /* 48px, not the 40px control height: this is the one button on a page mostly opened on a phone. */
+  .si-btn { display:block; width:100%; min-height:48px; padding:12px var(--sp-6); font:500 var(--fs-body)/var(--lh-small) var(--font-sans); color:var(--on-accent); background:var(--accent); border:1px solid transparent; border-radius:var(--r-pill); cursor:pointer; transition:background-color var(--t-fast) var(--ease); }
+  .si-btn:hover:not(:disabled) { background:var(--accent-hover); color:var(--on-accent); }
   .si-btn[disabled] { opacity:.55; cursor:wait; }
   .si-note { font-size:var(--fs-small); line-height:var(--lh-body); margin:16px 0 0; color:var(--si-muted); overflow-wrap:anywhere; }
   .si-note:empty { display:none; }
-  .si-note.bad { color:var(--loss); background:var(--surface-raised); padding:12px; border-radius:var(--r-control); }
+  .si-note.bad { color:var(--loss); background:var(--loss-bg); padding:12px; border-radius:var(--r-control); }
   .si-note.good { color:var(--si-accent); }
-  [data-theme="dark"] .si-note.bad { color:var(--loss); background:var(--surface-raised); }
-  .si-list { list-style:none; margin:28px 0 0; padding:22px 0 0; border-top:1px solid var(--border); display:grid; gap:16px; }
+  .si-list { list-style:none; margin:28px 0 0; padding:24px 0 0; border-top:1px solid var(--border); display:grid; gap:16px; }
   .si-list li { display:flex; align-items:flex-start; gap:12px; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--si-muted); }
   .si-list b { display:block; font-size:var(--fs-small); color:var(--text-primary); font-weight:500; }
-  .si-list svg { flex:none; width:18px; height:18px; margin-top:2px; color:var(--si-accent); }
+  .si-list svg { flex:none; width:18px; height:18px; margin-top:2px; color:var(--highlight); }
   .si-back { display:inline-block; margin-top:24px; font-size:var(--fs-small); color:var(--si-accent); text-underline-offset:4px; }
-  .si-code { font-family:var(--font-display); font-size:var(--fs-h2); letter-spacing:normal; text-align:center; font-weight:500; }
-  .si-or { display:none; align-items:center; gap:14px; margin:22px 0; font-size:var(--fs-small); color:var(--si-muted); }
+  .si-code { letter-spacing:.2em; }
+  .si-or { display:none; align-items:center; gap:16px; margin:24px 0; font-size:var(--fs-small); color:var(--si-muted); }
   .si-or::before, .si-or::after { content:''; flex:1; height:1px; background:var(--border); }
   #si-google { display:none; min-height:44px; }
   .si-footer { max-width:1100px; margin:auto; padding:0 0 16px; color:var(--si-muted); font-size:var(--fs-small); line-height:var(--lh-body); display:flex; justify-content:space-between; gap:16px; }
@@ -88,20 +94,20 @@
   @media(max-width:760px) {
     .si-page { padding:20px; }
     .si-wrap { grid-template-columns:minmax(0,1fr); max-width:440px; gap:24px; margin:32px auto; }
-    .si-story { position:relative; padding-right:110px; min-height:120px; }
+    .si-story { position:relative; padding-right:112px; min-height:120px; }
     .si-eyebrow { font-size:var(--fs-label); margin-bottom:12px; }
     .si-story h2 { font-size:var(--fs-h1); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
     .si-description { font-size:var(--fs-small); line-height:var(--lh-body); margin:12px 0 0; }
     .si-art { position:absolute; right:0; top:22px; width:96px; margin:0; }
-    .si-art svg { height:124px; object-fit:cover; border-radius:var(--r-card); }
+    .si-art svg { height:124px; border-radius:var(--r-card); }
     .si-art figcaption { display:none; }
-    .si-card { padding:26px 24px; border-radius:var(--r-card); }
+    .si-card { padding:28px 24px; border-radius:var(--r-card); }
     .si-card h1 { font-size:var(--fs-h1); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
     .si-footer { max-width:440px; font-size:var(--fs-label); flex-wrap:wrap; gap:4px; }
   }
   @media(max-width:360px) {
     .si-page { padding:16px; }
-    .si-card { padding:24px 18px; }
+    .si-card { padding:24px 20px; }
     .si-story { padding-right:0; }
     .si-art { display:none; }
     .si-home { font-size:var(--fs-small); }
@@ -121,28 +127,21 @@
     <h2>A clearer view.<br><em>Of every investment.</em></h2>
     <p class="si-description">Keep your portfolio close. See what changed, and stay connected to the companies you own.</p>
     <figure class="si-art">
-      <svg viewBox="0 0 500 280" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="si-art-title">
-        <title id="si-art-title">An abstract market landscape with sculptural black and blue columns</title>
-        <defs>
-          <linearGradient id="si-sky" x2="500" y2="280" gradientUnits="userSpaceOnUse"><stop style="stop-color:var(--si-a-sky1)"/><stop offset="1" style="stop-color:var(--si-a-sky2)"/></linearGradient>
-          <linearGradient id="si-ink" x2="1" y2="1"><stop style="stop-color:var(--si-a-face1)"/><stop offset="1" style="stop-color:var(--si-a-face2)"/></linearGradient>
-          <linearGradient id="si-blue" x2="1" y2="1"><stop style="stop-color:var(--si-a-bface1)"/><stop offset="1" style="stop-color:var(--si-a-bface2)"/></linearGradient>
-        </defs>
-        <rect width="500" height="280" rx="24" fill="url(#si-sky)"/>
+      <svg viewBox="0 0 500 280" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="si-art-title">
+        <title id="si-art-title">An abstract market landscape with navy and cognac columns</title>
+        <rect width="500" height="280" style="fill:var(--si-a-sky)"/>
         <circle cx="380" cy="90" r="58" style="fill:var(--si-a-sun)"/>
-        <circle cx="380" cy="90" r="74" style="stroke:var(--si-a-sun)" stroke-opacity=".35"/>
         <path d="M0 210Q150 160 290 210T500 205V280H0Z" style="fill:var(--si-a-hill1)"/>
         <path d="M0 247Q180 206 500 240V280H0Z" style="fill:var(--si-a-hill2)"/>
-        <ellipse cx="275" cy="244" rx="166" ry="16" fill="var(--text-primary)" opacity=".12"/>
         <path d="M118 184l40-19 41 19-40 20z" style="fill:var(--si-a-top)"/>
-        <path d="M118 184l41 20v42l-41-20z" fill="url(#si-ink)"/><path d="M159 204l40-20v42l-40 20z" style="fill:var(--si-a-side)"/>
+        <path d="M118 184l41 20v42l-41-20z" style="fill:var(--si-a-face)"/><path d="M159 204l40-20v42l-40 20z" style="fill:var(--si-a-side)"/>
         <path d="M203 143l40-19 41 19-40 20z" style="fill:var(--si-a-top)"/>
-        <path d="M203 143l41 20v83l-41-20z" fill="url(#si-ink)"/><path d="M244 163l40-20v83l-40 20z" style="fill:var(--si-a-side)"/>
+        <path d="M203 143l41 20v83l-41-20z" style="fill:var(--si-a-face)"/><path d="M244 163l40-20v83l-40 20z" style="fill:var(--si-a-side)"/>
         <path d="M288 94l40-19 41 19-40 20z" style="fill:var(--si-a-btop)"/>
-        <path d="M288 94l41 20v132l-41-20z" fill="url(#si-blue)"/><path d="M329 114l40-20v132l-40 20z" style="fill:var(--si-a-bside)"/>
-        <path d="M77 164C147 115 174 148 225 91S316 62 344 38" style="stroke:var(--si-a-line)" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>
+        <path d="M288 94l41 20v132l-41-20z" style="fill:var(--si-a-bface)"/><path d="M329 114l40-20v132l-40 20z" style="fill:var(--si-a-bside)"/>
+        <path d="M77 164C147 115 174 148 225 91S316 62 344 38" style="stroke:var(--si-a-line)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 7"/>
         <circle cx="77" cy="164" r="4" style="fill:var(--si-a-line)"/><circle cx="344" cy="38" r="4" style="fill:var(--highlight)"/>
-        <path d="M397 231v-39m-7 13h14v18h-14zM429 208v-51m-7 11h14v24h-14z" style="stroke:var(--si-a-quiet)" stroke-width="2"/>
+        <path d="M397 231v-39m-7 13h14v18h-14zM429 208v-51m-7 11h14v24h-14z" style="stroke:var(--si-a-quiet)" stroke-width="1.5"/>
       </svg>
       <figcaption>A little perspective makes a difference.</figcaption>
     </figure>

@@ -7,6 +7,7 @@
 <script src="theme.js"></script>
 <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/jetbrains-mono-latin.woff2" crossorigin>
 <link rel="stylesheet" href="tokens.css">
 <title>Daily brief | Altaha Screener</title>
 <meta name="description" content="Every new DGFT, RBI, SEBI and government circular, with what it changes and which Indian sectors and stocks it touches." />
@@ -17,34 +18,47 @@
 <link rel="stylesheet" href="components.css">
 <style>
   body { margin: 0; background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); }
-  .bf { max-width: 780px; margin: 0 auto; padding: 20px 16px 60px; }
+  .bf { max-width: 780px; margin: 0 auto; padding: var(--sp-8) var(--gutter) var(--sp-16); }
   .bf a { color: inherit; }
-  .bf-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .bf h1 { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); margin: 8px 0 2px; letter-spacing:var(--ls-heading); }
-  .bf-sub { color: var(--text-secondary); font-size: var(--fs-body); margin: 0 0 14px; line-height: var(--lh-small); }
-  .bf-days { display: flex; gap: 6px; margin: 0 0 14px; }
-  .bf-days button { border: 1px solid var(--border); background: none; color: inherit; border-radius: var(--r-pill); padding: 7px 14px; font: inherit; font-size: var(--fs-small); cursor: pointer; min-height: 36px; }
-  .bf-days button.on { background: var(--accent); color: var(--on-accent); border-color: var(--border-strong); }
-  .bf-note { border-left: 3px solid var(--border-strong); background: var(--surface-raised); padding: 9px 12px; font-size: var(--fs-small); line-height: var(--lh-small); margin: 0 0 16px; }
-  .bf-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; }
-  .bf-chip { border: 1px solid var(--border); border-radius: var(--r-pill); padding: 4px 10px; font-size: var(--fs-small); }
-  .bf-chip.positive, .bf-imp.positive, .bf-st.helped { color: var(--gain); }
-  .bf-chip.negative, .bf-imp.negative, .bf-st.hurt { color: var(--loss); }
-  .bf-imp.mixed { color: var(--text-secondary); }
-  html[data-theme="dark"] .bf-chip.positive, html[data-theme="dark"] .bf-imp.positive, html[data-theme="dark"] .bf-st.helped { color: var(--gain); }
-  html[data-theme="dark"] .bf-chip.negative, html[data-theme="dark"] .bf-imp.negative, html[data-theme="dark"] .bf-st.hurt { color: var(--loss); }
-  html[data-theme="dark"] .bf-imp.mixed { color: var(--text-primary); }
-  .bf h2 { font-size: var(--fs-small); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-secondary); margin: 22px 0 4px; font-weight: 600; }
-  .bf-item { border-top: 1px solid var(--border); padding: 13px 0; }
-  .bf-meta { font-size: var(--fs-label); color: var(--text-secondary); display: flex; gap: 8px; flex-wrap: wrap; }
+  .bf-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap; }
+  .bf-top a { font-size: var(--fs-small); color: var(--text-secondary); text-decoration: none; }
+  .bf-top a:hover { color: var(--highlight-text); }
+  .bf-top .bf-sub { margin: 0; font-size: var(--fs-small); color: var(--text-muted); }
+  .bf h1 { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-h1); margin: var(--sp-6) 0 var(--sp-2); letter-spacing:var(--ls-heading); }
+  .bf-sub { color: var(--text-secondary); font-size: var(--fs-body); margin: 0 0 var(--sp-3); line-height: var(--lh-body); }
+  .bf-sub a { color: var(--highlight-text); }
+  /* The period is a row of underline tabs: cognac and a 2px line when chosen. */
+  .bf-days { display: flex; gap: var(--sp-6); margin: var(--sp-6) 0; border-bottom: 1px solid var(--border); }
+  .bf-days button { border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--text-secondary); border-radius: 0; padding: var(--sp-3) 0; font: 500 var(--fs-body)/var(--lh-none) var(--font-sans); cursor: pointer; min-height: 40px; }
+  .bf-days button:hover { color: var(--text-primary); }
+  .bf-days button.on { color: var(--highlight-text); border-bottom-color: var(--highlight); }
+  .bf-note { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); color: var(--text-secondary); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-small); line-height: var(--lh-small); margin: 0 0 var(--sp-6); }
+  .bf-sum { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: 0 0 var(--sp-6); }
+  .bf-chip { display: inline-flex; align-items: center; min-height: 22px; border-radius: var(--r-pill); padding: 0 var(--sp-2); font: 500 var(--fs-label)/var(--lh-label) var(--font-sans); background: var(--wash-strong); color: var(--text-secondary); }
+  .bf-chip b { font-weight: 600; margin-right: var(--sp-1); }
+  /* Helped and hurt are data: the colour always comes with its arrow. */
+  .bf-chip.positive { background: var(--gain-bg); color: var(--gain); }
+  .bf-chip.negative { background: var(--loss-bg); color: var(--loss); }
+  .bf-imp.positive, .bf-st.helped { color: var(--gain); }
+  .bf-imp.negative, .bf-st.hurt { color: var(--loss); }
+  .bf-chip.positive::before, .bf-imp.positive::before, .bf-st.helped::before { content:"\25B2";display:inline-block;transform:scale(.72);transform-origin:left center;margin-right:2px;}
+  .bf-chip.negative::before, .bf-imp.negative::before, .bf-st.hurt::before { content:"\25BC";display:inline-block;transform:scale(.72);transform-origin:left center;margin-right:2px;}
+  .bf-imp.mixed { color: var(--text-primary); }
+  .bf h2 { font: 500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-muted); margin: var(--sp-8) 0 var(--sp-2); }
+  .bf-item { border-top: 1px solid var(--border); padding: var(--sp-4) 0; }
+  .bf-meta { font-size: var(--fs-label); line-height: var(--lh-label); color: var(--text-muted); display: flex; gap: var(--sp-2) var(--sp-3); flex-wrap: wrap; }
   .bf-imp { font-weight: 600; text-transform: capitalize; }
-  .bf-title { font-weight: 600; margin: 4px 0; line-height: var(--lh-h3); overflow-wrap: anywhere; }
-  .bf-text { font-size: var(--fs-body); line-height: var(--lh-small); margin: 4px 0; }
-  .bf-why { font-size: var(--fs-body); line-height: var(--lh-small); color: var(--text-secondary); margin: 4px 0; }
-  .bf-stocks { list-style: none; padding: 0; margin: 6px 0 0; font-size: var(--fs-body); line-height: var(--lh-small); }
+  .bf-title { font-size: var(--fs-h3); font-weight: 600; margin: var(--sp-2) 0; line-height: var(--lh-h3); overflow-wrap: anywhere; }
+  .bf-text { font-size: var(--fs-body); line-height: var(--lh-body); margin: var(--sp-2) 0; }
+  .bf-why { font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); margin: var(--sp-2) 0; }
+  .bf-why b { font-weight: 600; color: var(--text-primary); }
+  .bf-stocks { list-style: none; padding: 0; margin: var(--sp-2) 0 0; font-size: var(--fs-body); line-height: var(--lh-body); }
+  .bf-stocks b { font-weight: 600; }
   .bf-st { font-weight: 600; }
-  .bf-quiet { color: var(--text-secondary); font-size: var(--fs-body); padding: 16px 0; }
-  details.bf-rest summary { cursor: pointer; font-size: var(--fs-body); padding: 10px 0; color: var(--text-secondary); }
+  .bf-quiet { color: var(--text-secondary); font-size: var(--fs-body); padding: var(--sp-4) 0; }
+  details.bf-rest { margin-top: var(--sp-6); border-top: 1px solid var(--border); }
+  details.bf-rest summary { cursor: pointer; font-size: var(--fs-body); padding: var(--sp-3) 0; color: var(--text-secondary); }
+  details.bf-rest .bf-item:first-of-type { border-top: 0; }
 </style>
 </head>
 <body>

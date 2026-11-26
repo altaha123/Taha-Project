@@ -8,15 +8,13 @@
      record    how past calls ended
 
    Motion follows motion.css's rule: it has to show something the static page
-   cannot. The dot pulses while the scanner is live. The empty state sweeps
-   while stocks are being checked. A new call slides in and glows once, so it
-   is noticed. Bars fill because they are proportions. Everything is switched
+   cannot. The dot pulses while the scanner is live. A new call slides in and
+   is ringed once, so it is noticed. Bars fill because they are proportions. Everything is switched
    off under prefers-reduced-motion, and only transform, opacity and (on the
    small bars) width are animated.
    ========================================================================== */
 
-#view-live{ --la-tg:var(--info); --la-radius:var(--r-card,14px);
-            --la-surface:var(--surface,var(--surface)); --la-line:var(--border) }
+#view-live{ --la-radius:var(--r-card); --la-surface:var(--surface); --la-line:var(--border) }
 
 /* ── entrance: each part rises in turn when the tab opens ────────────────── */
 @keyframes laRise{ from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
@@ -28,17 +26,15 @@
 
 /* ── hero ────────────────────────────────────────────────────────────────── */
 .la-hero{ display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:28px; align-items:center;
-          padding:30px 32px; margin:8px 0 18px; border-radius:calc(var(--la-radius) + 4px);
+          padding:var(--card-pad); margin:8px 0 var(--sp-6); border-radius:var(--la-radius);
           border:1px solid var(--la-line); position:relative; overflow:hidden;
-          background:var(--surface-raised);
+          background:var(--la-surface);
           box-shadow:none }
-.la-hero::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
-                  background:var(--highlight) }
-.la-status{ display:inline-flex; align-items:center; gap:9px; padding:6px 13px 6px 11px; border-radius:var(--r-pill);
-            border:1px solid var(--la-line); background:var(--la-surface);
+.la-status{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px 8px 12px; border-radius:var(--r-pill);
+            border:1px solid var(--la-line); background:transparent;
             font-family:var(--font-sans); font-size:var(--fs-small); letter-spacing:normal; color:var(--text-secondary) }
-.la-hero h2{ font-family:var(--font-display); font-weight:400; font-size:var(--fs-display); line-height:var(--lh-none);
-             letter-spacing:var(--ls-heading); margin:14px 0 8px; color:var(--text-primary) }
+.la-hero h2{ font-family:var(--font-display); font-weight:500; font-size:var(--fs-h1); line-height:var(--lh-h1);
+             letter-spacing:var(--ls-heading); margin:16px 0 8px; color:var(--text-primary) }
 .la-hero p.la-lede{ font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary); margin:0 0 20px; max-width:44ch }
 
 /* the status dot: steady when closed, a ring going out while live */
@@ -48,45 +44,37 @@
                    animation:laPing 1.8s cubic-bezier(0,0,.2,1) infinite }
 @keyframes laPing{ 0%{transform:scale(1);opacity:.7} 80%,100%{transform:scale(3.2);opacity:0} }
 
-/* the Telegram button */
-.la-tg{ position:relative; display:inline-flex; align-items:center; gap:12px; padding:14px 26px 14px 22px;
-        border-radius:var(--r-pill); background:var(--la-tg); color:var(--on-accent); font-size:var(--fs-h3); font-weight:600;
-        text-decoration:none; letter-spacing:normal; overflow:hidden; isolation:isolate;
-        box-shadow:none;
-        transition:transform var(--t,280ms) var(--ease-soft,ease-out), box-shadow var(--t,280ms) var(--ease-soft,ease-out) }
-.la-tg:hover{ transform:translateY(-2px); box-shadow:var(--shadow-raised) }
-.la-tg:active{ transform:translateY(0) scale(.98) }
-.la-tg:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:3px }
-.la-tg svg{ width:22px; height:22px; flex-shrink:0; transition:transform var(--t,280ms) var(--ease-soft,ease-out) }
-.la-tg:hover svg{ transform:translate(3px,-3px) rotate(-8deg) }
-.la-tg::after{ content:""; position:absolute; inset:0; z-index:-1;
-               background:linear-gradient(100deg,transparent 30%,var(--wash-strong) 50%,transparent 70%);
-               transform:translateX(-130%); animation:laSheen 5.5s var(--ease-soft,ease-out) 1.2s infinite }
-@keyframes laSheen{ 0%{transform:translateX(-130%)} 30%,100%{transform:translateX(130%)} }
-.la-tgsub{ font-size:var(--fs-small); color:var(--text-muted); margin:10px 0 0 4px }
+/* the Telegram button: the one primary action on this page */
+.la-tg{ display:inline-flex; align-items:center; gap:var(--sp-2); height:var(--control-h); padding:0 var(--sp-6);
+        border-radius:var(--r-pill); background:var(--accent); color:var(--on-accent); font-size:var(--fs-body); font-weight:500;
+        text-decoration:none; letter-spacing:normal;
+        transition:background-color var(--t-fast) var(--ease) }
+.la-tg:hover{ background:var(--accent-hover) }
+.la-tg:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
+.la-tg svg{ width:18px; height:18px; flex-shrink:0 }
+.la-tgsub{ font-size:var(--fs-small); color:var(--text-muted); margin:12px 0 0 }
 
 /* today's numbers */
 .la-stats{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-radius:var(--la-radius);
-           border:1px solid var(--la-line); background:var(--la-surface); overflow:hidden }
-.la-stat{ padding:18px 14px 16px; text-align:center; border-left:1px solid var(--la-line) }
+           border:1px solid var(--la-line); background:transparent; overflow:hidden }
+.la-stat{ padding:var(--sp-4); text-align:left; border-left:1px solid var(--la-line) }
 .la-stat:first-child{ border-left:0 }
 .la-stat b{ display:block; font-family:var(--font-display); font-weight:500; font-size:var(--fs-h1);
             line-height:var(--lh-display); color:var(--text-primary); font-variant-numeric:tabular-nums ; letter-spacing:var(--ls-heading)}
-.la-stat span{ display:block; margin-top:6px; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
+.la-stat span{ display:block; margin-top:8px; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
                color:var(--text-muted); font-family:var(--font-sans) }
-.la-stat.good b{ color:var(--gain) }
 
 /* ── owner bar ───────────────────────────────────────────────────────────── */
 #view-live .ltg{ font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary) }
-#view-live .ltg.off{ border:1px dashed var(--loss); border-radius:var(--r-control); padding:10px 14px; color:inherit }
+#view-live .ltg.off{ border:1px solid var(--border); border-left:2px solid var(--loss); border-radius:var(--r-control); padding:12px 16px; color:inherit }
 #view-live .ltg code{ font-family:var(--font-mono); font-size:var(--fs-small) }
 #view-live #tgjoin .ltg.off{ display:inline-block; font-size:var(--fs-small) }
-.la-owner{ display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; padding:12px 16px; margin:0 0 18px;
+.la-owner{ display:flex; flex-wrap:wrap; align-items:center; gap:12px 12px; padding:12px 16px; margin:0 0 20px;
            border:1px dashed var(--border); border-radius:var(--la-radius); font-size:var(--fs-small); color:var(--text-secondary) }
 .la-owner[hidden]{ display:none }
 .la-owner .la-tag{ font-family:var(--font-sans); font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
                    color:var(--text-primary); margin-right:4px }
-.la-owner .livebtn{ font-size:var(--fs-label); padding:7px 13px; letter-spacing:var(--ls-label); border-radius:var(--r-pill) }
+.la-owner .livebtn{ font-size:var(--fs-small); padding:8px 12px; border-radius:var(--r-control) }
 .la-owner #ltg{ margin:0 0 0 auto; font-size:var(--fs-small) }
 .la-owner #ltg.off{ border:0; padding:0; color:var(--loss) }
 .la-owner #lquiet{ flex-basis:100% }
@@ -94,79 +82,70 @@
 .la-owner #lquiet .ltg{ margin:4px 0 0; font-size:var(--fs-small) }
 
 /* ── the two columns of calls ────────────────────────────────────────────── */
-.la-cols{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; align-items:start }
-.la-panel{ border:1px solid var(--la-line); border-radius:calc(var(--la-radius) + 2px); background:var(--la-surface);
-           padding:20px 20px 18px; box-shadow:none; min-width:0 }
-.la-wide{ margin-top:18px }
-.la-head{ display:flex; align-items:center; gap:12px; margin-bottom:14px }
-.la-ico{ width:38px; height:38px; border-radius:var(--r-card); display:grid; place-items:center; font-size:var(--fs-body); flex-shrink:0;
-         background:var(--surface-raised); border:1px solid var(--la-line) }
+.la-cols{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-6); align-items:start }
+.la-panel{ border:1px solid var(--la-line); border-radius:var(--la-radius); background:var(--la-surface);
+           padding:var(--card-pad); box-shadow:none; min-width:0 }
+.la-wide{ margin-top:var(--sp-6) }
+.la-head{ display:flex; align-items:center; gap:12px; margin-bottom:var(--sp-4) }
+/* The headings carried an emoji each. The words say it. */
+.la-ico{ display:none }
 .la-head h3{ font-family:var(--font-sans); font-weight:600; font-size:var(--fs-h3); letter-spacing:normal; margin:0; color:var(--text-primary) }
 .la-head small{ display:block; font-size:var(--fs-small); color:var(--text-muted); font-weight:400; margin-top:2px; letter-spacing:0 }
-.la-badge{ margin-left:auto; min-width:28px; padding:4px 10px; border-radius:var(--r-pill); text-align:center;
+.la-badge{ margin-left:auto; min-width:28px; padding:4px 12px; border-radius:var(--r-pill); text-align:center;
            font-family:var(--font-sans); font-size:var(--fs-label); font-weight:600; background:var(--surface-raised); color:var(--text-secondary);
            border:1px solid var(--la-line) }
-.la-badge.has{ background:var(--accent); border-color:var(--border-strong); color:var(--on-accent,var(--on-accent))}
+.la-badge.has{ background:var(--highlight-subtle); border-color:transparent; color:var(--highlight-text) }
 
 /* one call */
-.la-call{ position:relative; border:1px solid var(--la-line); border-radius:var(--la-radius); padding:14px 16px 13px 18px;
-          margin-top:10px; background:var(--bg); overflow:hidden;
-          transition:transform var(--t,280ms) var(--ease-soft,ease-out), box-shadow var(--t,280ms) var(--ease-soft,ease-out) }
-.la-call:first-child{ margin-top:0 }
-.la-call::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--gain) }
-.la-call.dn::before{ background:var(--loss) }
-.la-call:hover{ transform:translateY(-2px); box-shadow:var(--shadow-raised) }
-.la-call header{ display:flex; align-items:center; gap:10px }
-.la-side{ font-family:var(--font-sans); font-size:var(--fs-label); font-weight:600; letter-spacing:var(--ls-label); padding:3px 9px;
-          border-radius:var(--r-xs); color:var(--on-accent); background:var(--gain) }
-.la-side.sell{ background:var(--loss) }
+.la-call{ position:relative; border-top:1px solid var(--la-line); padding:var(--sp-4) 0; background:transparent }
+.la-call:first-child{ border-top:0; padding-top:0 }
+.la-call:last-child{ padding-bottom:0 }
+.la-call header{ display:flex; align-items:center; gap:12px }
+.la-side{ font-family:var(--font-sans); font-size:var(--fs-label); font-weight:500; letter-spacing:var(--ls-label); padding:3px 8px;
+          border-radius:var(--r-pill); color:var(--gain); background:var(--gain-bg) }
+.la-side.sell{ color:var(--loss); background:var(--loss-bg) }
 .la-sym{ font-weight:600; font-size:var(--fs-h3); color:var(--text-primary); text-decoration:none; letter-spacing:normal }
 .la-sym:hover{ color:var(--highlight-text) }
 .la-call time{ margin-left:auto; font-family:var(--font-sans); font-size:var(--fs-small); color:var(--text-muted) }
-.la-levels{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0 10px }
-.la-levels div{ padding:9px 10px 8px; border-radius:var(--r-control); background:var(--la-surface); border:1px solid var(--la-line); min-width:0 }
+.la-levels{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0 12px }
+.la-levels div{ padding:8px 12px 8px; border-radius:var(--r-control); background:var(--surface-raised); min-width:0 }
 .la-levels span{ display:block; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
                  font-family:var(--font-sans) }
 .la-levels b{ display:block; margin-top:3px; font-family:var(--font-sans); font-weight:600; font-size:var(--fs-body); color:var(--text-primary);
               white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums }
-.la-levels .stop b{ color:var(--loss) } .la-levels .tgt b{ color:var(--gain) }
 .la-why{ font-size:var(--fs-body); line-height:var(--lh-small); color:var(--text-secondary); margin:0 }
-.la-out{ display:inline-flex; align-items:center; gap:7px; margin-top:10px; padding:4px 11px; border-radius:var(--r-pill);
+.la-out{ display:inline-flex; align-items:center; gap:8px; margin-top:12px; padding:4px 12px; border-radius:var(--r-pill);
          font-size:var(--fs-small); font-weight:600 }
 .la-out.won{ color:var(--gain); background:var(--gain-bg) }
 .la-out.lost{ color:var(--loss); background:var(--loss-bg) }
 .la-out.flat{ color:var(--text-secondary); background:var(--surface-raised) }
 
-/* a call that has just arrived: slides in and glows once */
-@keyframes laArrive{ 0%{opacity:0;transform:translateY(-10px) scale(.985)} 100%{opacity:1;transform:none} }
-@keyframes laGlow{ 0%{box-shadow:none} 100%{box-shadow:var(--ring)} }
-.la-call.is-new{ animation:laArrive 480ms var(--ease-soft,ease-out) both, laGlow 1.4s ease-out 300ms 2 }
+/* a call that has just arrived: slides in, on a tint that fades */
+@keyframes laArrive{ 0%{opacity:0;transform:translateY(-10px)} 100%{opacity:1;transform:none} }
+@keyframes laNew{ 0%{background-color:var(--highlight-subtle)} 100%{background-color:transparent} }
+.la-call.is-new{ animation:laArrive 480ms var(--ease-soft,ease-out) both, laNew 2.8s ease-out 300ms both }
 
-/* nothing yet: a sweep while the scanner is checking, still when it is not */
-.la-empty{ display:flex; align-items:center; gap:14px; padding:18px 16px; border:1px dashed var(--border);
+/* nothing yet: the dot is green while the scanner is checking */
+.la-empty{ display:flex; align-items:center; gap:16px; padding:20px 16px; border:1px solid var(--border);
            border-radius:var(--la-radius); color:var(--text-secondary); font-size:var(--fs-body); line-height:var(--lh-label) }
 .la-empty small{ display:block; color:var(--text-muted); font-size:var(--fs-small); margin-top:2px }
 .la-radar{ position:relative; width:38px; height:38px; border-radius:50%; flex-shrink:0;
            border:1px solid var(--border); background:var(--surface-raised); overflow:hidden }
-.la-radar::after{ content:""; position:absolute; inset:0; border-radius:50%; opacity:0;
-                  background:conic-gradient(from 0deg, var(--gain), transparent 28%) }
 .la-radar::before{ content:""; position:absolute; left:50%; top:50%; width:5px; height:5px; margin:-2.5px;
                    border-radius:50%; background:var(--text-muted); z-index:1 }
-.la-empty.live .la-radar::after{ opacity:1; animation:laSweep 2.4s linear infinite }
 .la-empty.live .la-radar::before{ background:var(--gain) }
-@keyframes laSweep{ to{ transform:rotate(360deg) } }
 
 /* ── closest to breaking out ─────────────────────────────────────────────── */
-.la-watch{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px }
-.la-w{ display:block; padding:12px 14px 12px; border:1px solid var(--la-line); border-radius:var(--la-radius);
-       background:var(--bg); text-decoration:none; color:inherit; min-width:0;
-       transition:transform var(--t,280ms) var(--ease-soft,ease-out), border-color var(--t,280ms) var(--ease-soft,ease-out) }
-.la-w:hover{ transform:translateY(-2px); border-color:var(--border-strong) }
+.la-watch{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px }
+.la-w{ display:block; padding:12px 16px 12px; border:1px solid var(--la-line); border-radius:var(--la-radius);
+       background:transparent; text-decoration:none; color:inherit; min-width:0;
+       transition:border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease) }
+.la-w:hover{ border-color:var(--border-strong); background:var(--surface-raised) }
 .la-w .top{ display:flex; align-items:baseline; gap:8px }
-.la-w .top b{ font-weight:600; font-size:var(--fs-body); color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.la-w .top b{ font-family:var(--font-mono); font-weight:500; font-size:var(--fs-small); color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .la-w .top i{ font-style:normal; font-size:var(--fs-label); color:var(--gain) } .la-w.dn .top i{ color:var(--loss) }
 .la-w .top span{ margin-left:auto; font-family:var(--font-sans); font-size:var(--fs-small); color:var(--text-secondary); white-space:nowrap }
-.la-w .bar{ height:5px; border-radius:var(--r-pill); background:var(--surface-raised); margin:9px 0 7px; overflow:hidden }
+.la-w .bar{ height:5px; border-radius:var(--r-pill); background:var(--surface-raised); margin:8px 0 8px; overflow:hidden }
 .la-w .bar u{ display:block; height:100%; width:0; border-radius:var(--r-pill); background:var(--gain);
               transition:width 900ms var(--ease-soft,ease-out) }
 .la-w.dn .bar u{ background:var(--loss) }
@@ -174,40 +153,40 @@
 .la-w .sub span{ overflow:hidden; text-overflow:ellipsis }
 
 /* ── the record ──────────────────────────────────────────────────────────── */
-.la-rec{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px }
-.la-r{ padding:16px 18px 15px; border:1px solid var(--la-line); border-radius:var(--la-radius); background:var(--bg) }
+.la-rec{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px }
+.la-r{ padding:var(--sp-4); border:1px solid var(--la-line); border-radius:var(--la-radius); background:transparent }
 .la-r h4{ font-family:var(--font-sans); font-weight:500; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
           color:var(--text-muted); margin:0 0 8px }
-.la-r .big{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap }
+.la-r .big{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap }
 .la-r .big b{ font-family:var(--font-display); font-weight:500; font-size:var(--fs-h1); color:var(--text-primary); font-variant-numeric:tabular-nums ; letter-spacing:var(--ls-heading)}
 .la-r .big span{ font-size:var(--fs-small); color:var(--text-muted) }
 .la-r .big em{ margin-left:auto; font-style:normal; font-family:var(--font-sans); font-weight:600; font-size:var(--fs-body) }
 .la-r .big em.up{ color:var(--gain) } .la-r .big em.down{ color:var(--loss) }
-.la-seg{ display:flex; height:9px; border-radius:var(--r-pill); overflow:hidden; background:var(--surface-raised); margin:13px 0 11px }
+.la-r .big em.up::before{ content:"\25B2\00A0"; display:inline-block; transform:scale(.72); transform-origin:left center } .la-r .big em.down::before{ content:"\25BC\00A0"; display:inline-block; transform:scale(.72); transform-origin:left center }
+.la-seg{ display:flex; height:9px; border-radius:var(--r-pill); overflow:hidden; background:var(--surface-raised); margin:12px 0 12px }
 .la-seg u{ display:block; width:0; transition:width 900ms var(--ease-soft,ease-out) }
 .la-seg u.t{ background:var(--gain) } .la-seg u.s{ background:var(--loss) } .la-seg u.c{ background:var(--text-muted); opacity:.55 }
-.la-leg{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:var(--fs-small); color:var(--text-secondary) }
-.la-leg span::before{ content:""; display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px;
+.la-leg{ display:flex; flex-wrap:wrap; gap:8px 16px; font-size:var(--fs-small); color:var(--text-secondary) }
+.la-leg span::before{ content:""; display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px;
                       background:var(--gain) }
 .la-leg span.s::before{ background:var(--loss) } .la-leg span.c::before{ background:var(--text-muted); opacity:.55 }
 .la-r .none{ font-size:var(--fs-body); color:var(--text-muted); margin:2px 0 0 }
 
-#view-live .disc{ margin-top:22px }
+#view-live .disc{ margin-top:24px }
 #view-live .ownerlink{ font:inherit; font-size:var(--fs-small); background:none; border:0; color:var(--text-muted); cursor:pointer;
                        text-decoration:underline; margin-left:8px; padding:0 }
 
 /* ── smaller screens ─────────────────────────────────────────────────────── */
 @media (max-width:900px){
-  .la-hero{ grid-template-columns:1fr; gap:22px; padding:24px 20px 22px 24px }
+  .la-hero{ grid-template-columns:1fr; gap:24px }
   .la-cols{ grid-template-columns:1fr }
 }
 @media (max-width:560px){
-  .la-hero{ padding:20px 16px 18px 20px; margin-top:4px }
-  .la-tg{ width:100%; justify-content:center; padding:14px 18px }
-  .la-stat{ padding:14px 6px 12px }
+  .la-hero{ margin-top:4px }
+  .la-tg{ width:100%; justify-content:center }
+  .la-stat{ padding:var(--sp-3) }
   .la-stat span{ font-size:var(--fs-label); letter-spacing:var(--ls-label) }
-  .la-panel{ padding:16px 14px 14px }
-  .la-levels{ gap:6px } .la-levels div{ padding:8px 7px 7px } .la-levels b{ font-size:var(--fs-small) }
+  .la-levels{ gap:8px } .la-levels div{ padding:8px 8px 8px } .la-levels b{ font-size:var(--fs-small) }
   .la-rec{ grid-template-columns:1fr }
   .la-owner #ltg{ margin-left:0; flex-basis:100% }
   .la-watch{ grid-template-columns:1fr }
@@ -216,8 +195,6 @@
 /* ── no motion for those who ask for none ────────────────────────────────── */
 @media (prefers-reduced-motion:reduce){
   #view-live .la-rise, .la-call.is-new{ animation:none }
-  .la-dot.on::after, .la-tg::after, .la-empty.live .la-radar::after{ animation:none }
-  .la-dot.on::after{ display:none }
-  .la-empty.live .la-radar::after{ opacity:.6 }
-  .la-tg, .la-tg svg, .la-call, .la-w, .la-w .bar u, .la-seg u{ transition:none }
+  .la-dot.on::after{ animation:none; display:none }
+  .la-tg, .la-w, .la-w .bar u, .la-seg u{ transition:none }
 }

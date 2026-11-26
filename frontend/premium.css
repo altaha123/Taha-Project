@@ -146,7 +146,7 @@ header.wrap {
   position: relative;
   isolation: isolate;
   text-align: center;
-  padding-block: clamp(54px, 9vw, 108px) clamp(30px, 4vw, 52px);
+  padding-block: clamp(56px, 9vw, 108px) clamp(32px, 4vw, 52px);
 }
 
 /* Chart grid — the graph-paper an instrument is read against */
@@ -200,7 +200,7 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
   font-size: var(--fs-display);
   line-height: var(--lh-none);
   letter-spacing: var(--ls-heading);
-  margin: 18px 0 0;
+  margin: 20px 0 0;
 }
 .brand i {
   font-family: var(--font-display);
@@ -211,12 +211,11 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
   -webkit-text-fill-color: transparent;
 }
 
-.tag { font-size: var(--fs-body); color: var(--text-muted); margin-top: 14px; letter-spacing: normal; }
+.tag { font-size: var(--fs-body); color: var(--text-muted); margin-top: 16px; letter-spacing: normal; }
 
 .metal {
-  height: 1px; border: 0; max-width: 300px; margin: 30px auto;
-  background: linear-gradient(90deg, transparent, var(--border) 16%,
-              var(--border-strong) 50%, var(--border) 84%, transparent);
+  height: 1px; border: 0; max-width: 300px; margin: 32px auto;
+  background: var(--border-strong);
 }
 
 .pitch {
@@ -226,12 +225,12 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 }
 .pitch b { color: var(--text-primary); font-weight: 600; }
 
-.badges { margin-top: 26px; display: flex; flex-wrap: wrap;
+.badges { margin-top: 28px; display: flex; flex-wrap: wrap;
           justify-content: center; gap: 8px; }
 .badge {
   background: var(--surface); border: .5px solid var(--border);
   border-radius: var(--r-pill); box-shadow: none;
-  font-size: var(--fs-label); color: var(--text-secondary); padding: 7px 15px; letter-spacing: normal;
+  font-size: var(--fs-label); color: var(--text-secondary); padding: 8px 16px; letter-spacing: normal;
 }
 
 .brandsw { margin-top: 20px; }
@@ -245,8 +244,8 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 .hero-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-  max-width: 660px; margin: 34px auto 0;
+  gap: 12px;
+  max-width: 660px; margin: 36px auto 0;
 }
 .hero-tile {
   position: relative; overflow: hidden;
@@ -254,7 +253,7 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
   border: .5px solid var(--border);
   border-radius: var(--r-card);
   box-shadow: none;
-  padding: 14px 16px 15px;
+  padding: 16px 16px 16px;
   text-align: left;
   transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
 }
@@ -265,7 +264,7 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 }
 .hero-tile-val {
   font-size: var(--fs-h2); font-weight: 500; letter-spacing: var(--ls-heading);
-  margin-top: 7px; color: var(--text-primary); font-family:var(--font-display);
+  margin-top: 8px; color: var(--text-primary); font-family:var(--font-display);
 }
 .hero-tile-chg {
   font-family: var(--font-sans); font-size: var(--fs-small); margin-top: 3px; font-weight: 500;
@@ -283,7 +282,7 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 
 .tabnav {
   position: sticky; top: 0; z-index: 60;
-  padding: 11px 0 12px;
+  padding: 12px 0 12px;
   background: var(--surface);
   transition: box-shadow var(--t) var(--ease);
 }
@@ -297,36 +296,7 @@ html[data-theme="dark"] .hero-candles { opacity: .42; }
 .tabnav.is-stuck::after { opacity: 1; }
 
 /* ── 7. SEGMENTED CONTROLS ─────────────────────────────────────────────── */
-
-.seg {
-  background: var(--surface-raised);
-  border: .5px solid var(--border);
-  padding: 3px;
-  box-shadow: none;
-}
-html[data-theme="dark"] .seg { box-shadow: none; }
-
-.seg > button, .seg > .moreWrap > button {
-  font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-body);
-  letter-spacing: normal; padding: 8px 18px;
-}
-.seg.mono > button { font-family: var(--font-sans); font-size: var(--fs-label); padding: 7px 13px; }
-
-.seg-puck {
-  top: 3px; bottom: 3px;
-  background: var(--surface);
-  box-shadow: none;
-  transition: transform 420ms var(--ease), width 420ms var(--ease),
-              opacity var(--t-fast) linear;
-}
-.seg-puck::after { border-color: transparent; }
-html[data-theme="dark"] .seg-puck { background: var(--surface-raised); box-shadow: none; }
-
-.seg.has-puck > button.active,
-.seg.has-puck > .moreWrap > button.active { color: var(--text-primary); font-weight: 600; }
-.seg > button.active, .seg > .moreWrap > button.active {
-  background: var(--surface); color: var(--text-primary); box-shadow: none;
-}
+/* The pick-one control is the underline tab now; index.html styles .seg. */
 
 /* ── 8. SEARCH ─────────────────────────────────────────────────────────── */
 
@@ -335,7 +305,7 @@ html[data-theme="dark"] .seg-puck { background: var(--surface-raised); box-shado
   border: .5px solid var(--border);
   border-radius: var(--r-pill);
   box-shadow: none;
-  padding: 6px 6px 6px 22px;
+  padding: 8px 8px 8px 24px;
   max-width: 620px; margin-inline: auto;
   transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease);
 }
@@ -349,7 +319,7 @@ html[data-theme="dark"] .seg-puck { background: var(--surface-raised); box-shado
   border-radius: var(--r-pill); border: 0;
   background: var(--accent); color: var(--on-accent);
   font-family: var(--font-sans); font-weight: 500; font-size: var(--fs-body);
-  letter-spacing: normal; padding: 11px 26px;
+  letter-spacing: normal; padding: 12px 28px;
   transition: transform var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
 }
 .searchrow button:hover, #go:hover, #rgo:hover { opacity: .86; transform: translateY(-1px); }
@@ -359,7 +329,7 @@ html[data-theme="dark"] .seg-puck { background: var(--surface-raised); box-shado
   display: inline-flex; align-items: center;
   font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted);
   border: .5px solid var(--border); border-radius: var(--r-xs);
-  padding: 3px 7px; margin-right: 9px; background: var(--surface-raised);
+  padding: 3px 8px; margin-right: 8px; background: var(--surface-raised);
 }
 @media (max-width: 700px) { .kbdhint { display: none; } }
 
@@ -408,7 +378,7 @@ html[data-theme="dark"] .seg-puck { background: var(--surface-raised); box-shado
   border: .5px solid var(--border);
   background: var(--surface-raised);
   box-shadow: none;
-  padding: clamp(22px, 4vw, 40px);
+  padding: clamp(24px, 4vw, 40px);
   position: relative; overflow: hidden;
 }
 .verdict::after {
@@ -438,9 +408,9 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 var(--border
 .vbasis { font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted); }
 
 .confchip {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; gap: 8px;
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
-  text-transform: uppercase; padding: 4px 10px; border-radius: var(--r-pill);
+  text-transform: uppercase; padding: 4px 12px; border-radius: var(--r-pill);
   border: .5px solid var(--border); background: var(--surface-raised);
   color: var(--text-secondary); margin-left: 8px;
 }
@@ -465,7 +435,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 var(--border
 .act:active, .livebtn:active { transform: translateY(0) scale(.985); }
 .auditbtn, .showfull {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
-  text-transform: uppercase; padding: 13px 24px;
+  text-transform: uppercase; padding: 12px 24px;
 }
 
 /* ── 12. LEDGER / TABLES ───────────────────────────────────────────────── */
@@ -515,9 +485,9 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 var(--border
   background: var(--wash);
 }
 .themeseg button {
-  position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 5px;
+  position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 4px;
   border: 0; background: none; cursor: pointer; border-radius: var(--r-pill);
-  padding: 4px 10px; color: var(--on-accent);
+  padding: 4px 12px; color: var(--on-accent);
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; line-height: var(--lh-none);
   transition: color var(--t-fast) var(--ease);
@@ -537,7 +507,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 var(--border
 
 @media (max-width: 560px) {
   .themeseg button span { display: none; }      /* icons only on a narrow strip */
-  .themeseg button { padding: 5px 9px; }
+  .themeseg button { padding: 4px 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .themepuck { transition: none; } }
 
@@ -555,14 +525,14 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 var(--border
 .mobnav {
   display: none;
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
-  padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
   background: var(--surface); border-top: .5px solid var(--border);
 }
 .mobnav-inner { display: flex; gap: 2px; }
 .mobnav button {
   flex: 1 1 0; border: 0; background: none; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 6px 2px; border-radius: var(--r-control);
+  padding: 8px 2px; border-radius: var(--r-control);
   font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500;
   color: var(--text-muted);
   transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
@@ -582,7 +552,7 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 var(--border
   .tabnav { display: none; }
   .brand { font-size: var(--fs-display); font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading); }
   .searchrow { padding-left: 16px; }
-  .verdict { padding: 22px 18px; }
+  .verdict { padding: 24px 20px; }
   .hero-candles { height: 140px; }
   /* The Screener's inline drawing strip stays hidden on touch — its targets
      are 24px. The Charts tab has its own 40px rail and is the place to draw
@@ -606,9 +576,9 @@ html[data-theme="dark"] .verdict::after { box-shadow: inset 0 1px 0 var(--border
     box-shadow: none;
   }
   .moreMenu:not(.open) { transform: translateY(8px) scale(.98); }
-  .moreMenu button { padding: 15px 16px; font-size: var(--fs-small); letter-spacing: normal; }
+  .moreMenu button { padding: 16px 16px; font-size: var(--fs-small); letter-spacing: normal; }
   .moreMenu .mobonly { display: block; }
-  .moreMenu .sep { margin: 6px 0; }
+  .moreMenu .sep { margin: 8px 0; }
 }
 
 /* ── 16. SCROLLBAR ─────────────────────────────────────────────────────── */

@@ -1,7 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Delivery trends — where delivery is unusual now.
-   Shares the gold-and-paper tokens with special.css, which now dresses only
-   the long-run book folded away underneath this.
+   special.css dresses only the long-run book folded away underneath this.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 #dt-root{ transition:opacity .2s ease }
@@ -10,44 +9,43 @@
 .dt-asof{ margin:0 0 16px; font-size:var(--fs-small); color:var(--text-muted); letter-spacing:normal }
 
 /* The market in four figures. */
-.dt-tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:11px; margin:0 0 26px }
-.dt-tile{ border:1px solid var(--border); border-radius:var(--r-card); padding:14px 16px; background:var(--surface); min-width:0 }
+.dt-tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:var(--sp-3); margin:0 0 var(--sp-8) }
+.dt-tile{ border:1px solid var(--border); border-radius:var(--r-card); padding:var(--sp-4); background:var(--surface); min-width:0 }
 .dt-tile .k{ font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
-.dt-tile .v{ font:500 var(--fs-h2)/var(--lh-none) var(--font-display); margin-top:10px; letter-spacing:var(--ls-heading); font-variant-numeric:tabular-nums }
-.dt-tile .n{ font-size:var(--fs-small); line-height:var(--lh-label); color:var(--text-muted); margin-top:7px }
+.dt-tile .v{ font:500 var(--fs-h2)/var(--lh-none) var(--font-display); margin-top:12px; letter-spacing:var(--ls-heading); font-variant-numeric:tabular-nums }
+.dt-tile .n{ font-size:var(--fs-small); line-height:var(--lh-label); color:var(--text-muted); margin-top:8px }
 
 .dt-chg{ font-variant-numeric:tabular-nums }
 .dt-chg.up{ color:var(--gain) }
 .dt-chg.dn{ color:var(--loss) }
+.dt-chg.up::before{ content:"\25B2\00A0";display:inline-block;transform:scale(.72);transform-origin:left center }
+.dt-chg.dn::before{ content:"\25BC\00A0";display:inline-block;transform:scale(.72);transform-origin:left center }
 
 /* Which list, which direction, how liquid. */
-.dt-controls{ display:flex; flex-direction:column; gap:11px; margin:0 0 14px }
+.dt-controls{ display:flex; flex-direction:column; gap:12px; margin:0 0 16px }
 .dt-controls > .seg{ align-self:flex-start }
-.dt-filters{ display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center }
-.dt-seg > button{ position:relative; z-index:1; border:0; background:none; border-radius:var(--r-pill,99px);
-  padding:8px 15px; cursor:pointer; white-space:nowrap; font-family:var(--font-sans); font-weight:500;
-  font-size:var(--fs-body); color:var(--text-secondary) }
-.dt-seg > button:hover:not(.active){ color:var(--text-primary) }
-.dt-seg > button:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
-.dt-count{ display:inline-block; margin-left:5px; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); opacity:.7;
+.dt-filters{ display:flex; flex-wrap:wrap; gap:12px 20px; align-items:baseline }
+/* The lists and filters are the site's underline tabs (.seg, index.html). */
+.dt-count{ display:inline-block; margin-left:4px; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
   font-variant-numeric:tabular-nums }
-.dt-floor{ display:inline-flex; align-items:center; gap:9px; font-size:var(--fs-small); color:var(--text-muted) }
-.dt-floor .dt-seg > button{ padding:6px 12px; font-size:var(--fs-small); font-family:var(--font-sans) }
+.dt-floor{ display:inline-flex; align-items:baseline; gap:8px; font-size:var(--fs-small); color:var(--text-muted) }
 
-.dt-rule{ margin:0 0 14px; max-width:78ch; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary); min-height:1.6em }
+.dt-rule{ margin:0 0 16px; max-width:78ch; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-secondary); min-height:1.6em }
 
 /* One stock per row. The same five columns in the header and every row. */
 .dt-head, .dt-row > summary{ display:grid; gap:16px; align-items:center;
   grid-template-columns:minmax(0,1.5fr) minmax(90px,1fr) minmax(128px,.9fr) 104px 84px }
 /* 18, not 17: a row's 17 sits inside its 1px border. */
-.dt-head{ padding:0 18px 8px; font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label);
+/* The row below has a 1px border; the head carries a clear one so its
+   columns end where the row's do. */
+.dt-head{ padding:0 16px 8px; border:0 solid transparent; border-width:0 1px; font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted) }
 .dt-head > span:nth-child(n+3){ text-align:right }
 
 .dt-row{ border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface); margin-bottom:8px;
   overflow:hidden; transition:border-color .2s ease }
 .dt-row:hover, .dt-row[open]{ border-color:var(--border-strong) }
-.dt-row > summary{ list-style:none; cursor:pointer; padding:13px 17px }
+.dt-row > summary{ list-style:none; cursor:pointer; padding:12px 16px }
 .dt-row > summary::-webkit-details-marker{ display:none }
 .dt-row > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:-2px; border-radius:var(--r-card) }
 .dt-id{ min-width:0 }
@@ -64,54 +62,54 @@
 .dt-fig small{ display:block; font-size:var(--fs-small); color:var(--text-muted); margin-top:4px; white-space:nowrap;
   font-variant-numeric:tabular-nums }
 
-.dt-open{ padding:12px 17px 15px; border-top:1px solid var(--border) }
+.dt-open{ padding:12px 16px 16px; border-top:1px solid var(--border) }
 .dt-open p{ margin:0; max-width:76ch; font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary) }
-.dt-open .dt-links{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:10px; font-size:var(--fs-small); color:var(--text-muted) }
+.dt-open .dt-links{ display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:12px; font-size:var(--fs-small); color:var(--text-muted) }
 .dt-links a{ color:var(--highlight-text); text-decoration:none; font-weight:500 }
 .dt-links a:hover{ text-decoration:underline }
 
-.dt-empty{ padding:34px 20px; text-align:center; color:var(--text-muted); font-size:var(--fs-body);
-  border:1px dashed var(--border); border-radius:var(--r-card) }
-.dt-capped{ margin:10px 0 0; font-size:var(--fs-small); color:var(--text-muted) }
+.dt-empty{ padding:var(--card-pad); text-align:left; color:var(--text-muted); font-size:var(--fs-body);
+  border:1px solid var(--border); border-radius:var(--r-card) }
+.dt-capped{ margin:12px 0 0; font-size:var(--fs-small); color:var(--text-muted) }
 
 /* Industries. */
-.dt-sectors{ margin:40px 0 0 }
+.dt-sectors{ margin:var(--sp-12) 0 0 }
 .dt-sechead h3{ margin:0 0 4px; font-family:var(--font-display); font-weight:500; font-size:var(--fs-h2) ; letter-spacing:var(--ls-heading)}
 .dt-sechead p{ margin:0 0 16px; max-width:74ch; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-muted) }
-.dt-sechdr, .dt-sec{ display:grid; gap:14px; align-items:center;
+.dt-sechdr, .dt-sec{ display:grid; gap:16px; align-items:center;
   grid-template-columns:minmax(0,1.3fr) minmax(70px,1.2fr) 118px 78px 84px }
-.dt-sechdr{ padding:0 2px 7px; font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label);
+.dt-sechdr{ padding:0 2px 8px; font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted) }
 .dt-sechdr > span:nth-child(n+3){ text-align:right }
-.dt-sec{ padding:10px 2px; border-top:1px solid var(--border) }
+.dt-sec{ padding:12px 2px; border-top:1px solid var(--border) }
 .dt-sec .n{ font-size:var(--fs-body); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .dt-sec .n small{ margin-left:8px; font-size:var(--fs-small); color:var(--text-muted) }
 .dt-sec .b{ position:relative; display:block; height:8px; border-radius:var(--r-pill); background:var(--border) }
-.dt-sec .b i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--text-muted); opacity:.55 }
-.dt-sec .b i.hi{ background:var(--accent); opacity:1 }
-.dt-sec .b i.lo{ opacity:.3 }
+.dt-sec .b i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--border-strong) }
+.dt-sec .b i.hi{ background:var(--chart-1) }
+.dt-sec .b i.lo{ opacity:.6 }
 .dt-sec .b u{ position:absolute; top:-3px; bottom:-3px; width:1px; background:var(--text-secondary) }
 .dt-sec .m, .dt-sec .s, .dt-sec .c{ text-align:right }
 .dt-sec b{ display:block; font:600 var(--fs-body)/var(--lh-display) var(--font-sans); font-variant-numeric:tabular-nums }
 .dt-sec .m small, .dt-sec .s small, .dt-sec .c small{ display:block; font-size:var(--fs-label); color:var(--text-muted); margin-top:3px;
   white-space:nowrap; font-variant-numeric:tabular-nums }
-.dt-more > summary{ cursor:pointer; padding:11px 2px; border-top:1px solid var(--border); font-size:var(--fs-small); color:var(--text-primary) }
+.dt-more > summary{ cursor:pointer; padding:12px 2px; border-top:1px solid var(--border); font-size:var(--fs-small); color:var(--text-primary) }
 .dt-secnote{ margin:12px 0 0; max-width:74ch; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-muted) }
 
-.dt-disc{ margin:18px 0 0; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-muted) }
+.dt-disc{ margin:20px 0 0; font-size:var(--fs-small); line-height:var(--lh-body); color:var(--text-muted) }
 
 /* The one-year ranking, kept and folded away. */
-.dt-book{ margin:44px 0 0; border-top:1px solid var(--border); padding-top:18px }
-.dt-book > summary{ list-style:none; cursor:pointer; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 14px }
+.dt-book{ margin:var(--sp-12) 0 0; border-top:1px solid var(--border); padding-top:20px }
+.dt-book > summary{ list-style:none; cursor:pointer; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 16px }
 .dt-book > summary::-webkit-details-marker{ display:none }
 .dt-book > summary b{ font-family:var(--font-display); font-weight:500; font-size:var(--fs-h2) ; letter-spacing:var(--ls-heading)}
 .dt-book > summary b i{ color:var(--highlight-text) }
 .dt-book > summary span{ font-size:var(--fs-small); color:var(--text-muted) }
 .dt-book > summary::after{ content:"Open"; margin-left:auto; font:500 var(--fs-label)/var(--lh-none) var(--font-sans);
-  letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-primary) }
+  letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--highlight-text) }
 .dt-book[open] > summary::after{ content:"Close" }
 .dt-book > summary:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:4px }
-.dt-book-body{ padding-top:22px }
+.dt-book-body{ padding-top:24px }
 
 @media (max-width:820px){
   .dt-head, .dt-row > summary{ grid-template-columns:minmax(0,1.4fr) minmax(112px,.9fr) 76px }
@@ -120,12 +118,12 @@
   .dt-sechdr > span:nth-child(4), .dt-sec .s{ display:none }
 }
 @media (max-width:520px){
-  .dt-tiles{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-bottom:22px }
-  .dt-tile{ padding:12px 13px }
+  .dt-tiles{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-bottom:24px }
+  .dt-tile{ padding:12px 12px }
   .dt-tile .v{ font-size:var(--fs-h2) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
-  .dt-head, .dt-row > summary{ gap:10px }
-  .dt-row > summary{ padding-left:13px; padding-right:13px }
-  .dt-head{ padding-left:14px; padding-right:14px }
+  .dt-head, .dt-row > summary{ gap:12px }
+  .dt-row > summary{ padding-left:12px; padding-right:12px }
+  .dt-head{ padding-left:12px; padding-right:12px }
   .dt-fig small{ font-size:var(--fs-label) }
   .dt-floor{ flex-wrap:wrap }
   .dt-sechdr, .dt-sec{ grid-template-columns:minmax(0,1fr) 96px 64px }

@@ -46,9 +46,17 @@
 
   function theme() { return document.documentElement.getAttribute('data-theme') || 'light'; }
 
+  /* theme.js owns the attribute, the stored choice and the 'altaha:theme'
+     event. This file only keeps its own control in step with it. */
   function applyTheme(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    try { localStorage.setItem('altaha-theme', t); } catch (e) {}
+    if (window.AltahaTheme) window.AltahaTheme.set(t);
+    else {
+      document.documentElement.setAttribute('data-theme', t);
+      try { localStorage.setItem('altaha-theme', t); } catch (e) {}
+    }
+    paintTheme(t);
+  }
+  function paintTheme(t) {
 
     /* Segmented control: mark the live option and move the puck. */
     var seg = $('.themeseg');
@@ -67,7 +75,6 @@
       b.setAttribute('aria-label',
         t === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
     }
-    window.dispatchEvent(new CustomEvent('altaha:theme', { detail: { theme: t } }));
   }
 
   /* The control lives in the ticker strip at the very top of the page rather
@@ -109,16 +116,9 @@
     var bar = $('.tickerinner');
     if (bar) bar.appendChild(seg);
     else document.body.appendChild(seg);   // strip absent: still reachable
-    applyTheme(theme());
+    paintTheme(theme());               // paint only: loading a page is not a choice
   }
-
-  var mq = window.matchMedia('(prefers-color-scheme: dark)');
-  var onMq = function (e) {
-    var saved = null;
-    try { saved = localStorage.getItem('altaha-theme'); } catch (err) {}
-    if (!saved) applyTheme(e.matches ? 'dark' : 'light');
-  };
-  if (mq.addEventListener) mq.addEventListener('change', onMq); else mq.addListener(onMq);
+  window.addEventListener('altaha:theme', function () { paintTheme(theme()); });
 
   /* ── 2. HERO CANDLE FIELD ─────────────────────────────────────────────────
      Sixty sessions of a plausible uptrend with two corrections, drawn wide and
@@ -686,34 +686,28 @@
     var fsc   = txt('#fscore');
     if (!isFinite(score)) return null;
 
-    var bd = score >= 72 ? '#2FD98B' : score >= 55 ? '#D9BE7E'
-           : score >= 40 ? '#D8AE4B' : '#FF5C4D';
+    /* The card is drawn from the theme tokens (theme.js), in whichever theme
+       the reader is using: ivory and navy, or midnight and cognac. Flat: no
+       glow, no gradient. Sizes below are pixels of the 1080 x 1350 image. */
+    var T = window.AltahaTheme.chart();
+    var bd = score >= 72 ? T.gain : score >= 55 ? T.highlight
+           : score >= 40 ? T.warning : T.loss;
 
     // Ground
-    x.fillStyle = '#0A0B0E'; x.fillRect(0, 0, W, H);
-    var glow = x.createRadialGradient(W / 2, 300, 40, W / 2, 300, 720);
-    glow.addColorStop(0, 'rgba(122,131,143,.16)');
-    glow.addColorStop(1, 'rgba(122,131,143,0)');
-    x.fillStyle = glow; x.fillRect(0, 0, W, H);
+    x.fillStyle = T.bg; x.fillRect(0, 0, W, H);
 
-    // Chart paper
-    x.strokeStyle = 'rgba(255,255,255,.045)'; x.lineWidth = 1;
-    for (var gx = 0; gx <= W; gx += 72) { x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx, H); x.stroke(); }
-    for (var gy = 0; gy <= H; gy += 72) { x.beginPath(); x.moveTo(0, gy); x.lineTo(W, gy); x.stroke(); }
-
-    var S = '"Inter", system-ui, -apple-system, sans-serif';
-    var M = '"IBM Plex Mono", ui-monospace, monospace';
+    var S = T.fontSans, D = T.fontDisplay, M = T.fontSans;
 
     // Wordmark
     x.textAlign = 'center';
-    x.fillStyle = 'rgba(255,255,255,.42)'; x.font = '500 22px ' + M;
+    x.fillStyle = T.axis; x.font = '500 22px ' + M;   // theme-ok: pixels of the exported image
     x.fillText('A L T A H A   S C R E E N E R', W / 2, 96);
 
     // Subject
-    x.fillStyle = '#F3F4F7'; x.font = '600 62px ' + S;
+    x.fillStyle = T.text; x.font = '500 62px ' + D;   // theme-ok: pixels of the exported image
     var nm = name.length > 26 ? name.slice(0, 25) + '…' : name;
     x.fillText(nm, W / 2, 200);
-    x.fillStyle = 'rgba(255,255,255,.50)'; x.font = '400 28px ' + M;
+    x.fillStyle = T.textSecondary; x.font = '400 28px ' + M;   // theme-ok: pixels of the exported image
     x.fillText([sym, px].filter(Boolean).join('   ·   '), W / 2, 248);
 
     // The dial, redrawn at scale
@@ -726,42 +720,40 @@
     function rad(d) { return (d - 90) * Math.PI / 180; }
 
     x.lineCap = 'round';
-    x.strokeStyle = 'rgba(255,255,255,.10)'; x.lineWidth = 17;
+    x.strokeStyle = T.border; x.lineWidth = 17;
     x.beginPath(); x.arc(cx, cy, R, rad(A0), rad(A0 + SW)); x.stroke();
 
     x.strokeStyle = bd; x.lineWidth = 17;
-    x.shadowColor = bd; x.shadowBlur = 34;
     x.beginPath(); x.arc(cx, cy, R, rad(A0), rad(A1)); x.stroke();
-    x.shadowBlur = 0;
 
     // Tick ring
     for (var i = 0; i <= 50; i++) {
       var d = A0 + (i / 50) * SW, major = i % 5 === 0;
       var p1 = pol(major ? 232 : 240, d), p2 = pol(252, d);
-      x.strokeStyle = (i / 50) * 100 <= score ? bd : 'rgba(255,255,255,.16)';
+      x.strokeStyle = (i / 50) * 100 <= score ? bd : T.borderStrong;
       x.lineWidth = major ? 3 : 1.6;
       x.beginPath(); x.moveTo(p1[0], p1[1]); x.lineTo(p2[0], p2[1]); x.stroke();
     }
 
     // Reading
-    x.fillStyle = '#F3F4F7'; x.font = '600 168px ' + S;
+    x.fillStyle = T.text; x.font = '400 168px ' + D;   // theme-ok: pixels of the exported image
     x.fillText(String(Math.round(score)), cx, cy + 62);
-    x.fillStyle = 'rgba(255,255,255,.42)'; x.font = '400 22px ' + M;
+    x.fillStyle = T.axis; x.font = '400 22px ' + M;   // theme-ok: pixels of the exported image
     x.fillText('O U T   O F   1 0 0', cx, cy + 118);
 
     if (label) {
-      x.fillStyle = bd; x.font = '500 30px ' + M;
+      x.fillStyle = bd; x.font = '500 30px ' + M;   // theme-ok: pixels of the exported image
       x.fillText(label.toUpperCase(), cx, 900);
     }
 
     // Split
-    x.strokeStyle = 'rgba(255,255,255,.12)'; x.lineWidth = 1;
+    x.strokeStyle = T.border; x.lineWidth = 1;
     x.beginPath(); x.moveTo(180, 960); x.lineTo(900, 960); x.stroke();
 
     [['TECHNICAL', tsc, W / 2 - 180], ['FUNDAMENTAL', fsc, W / 2 + 180]].forEach(function (col) {
-      x.fillStyle = 'rgba(255,255,255,.42)'; x.font = '400 20px ' + M;
+      x.fillStyle = T.axis; x.font = '400 20px ' + M;   // theme-ok: pixels of the exported image
       x.fillText(col[0], col[2], 1020);
-      x.fillStyle = '#F3F4F7'; x.font = '600 56px ' + S;
+      x.fillStyle = T.text; x.font = '400 56px ' + D;   // theme-ok: pixels of the exported image
       x.fillText(col[1] || '—', col[2], 1084);
     });
 
@@ -770,11 +762,11 @@
     // Provenance. A number without a date is not evidence.
     var when = new Date().toLocaleDateString('en-IN',
       { day: 'numeric', month: 'short', year: 'numeric' });
-    x.fillStyle = 'rgba(255,255,255,.52)'; x.font = '400 22px ' + M;
+    x.fillStyle = T.textSecondary; x.font = '400 22px ' + M;   // theme-ok: pixels of the exported image
     x.fillText(when, cx, 1200);
-    x.fillStyle = 'rgba(255,255,255,.34)'; x.font = '400 19px ' + M;
+    x.fillStyle = T.axis; x.font = '400 19px ' + M;   // theme-ok: pixels of the exported image
     x.fillText('Every calculation shown at the source', cx, 1240);
-    x.fillStyle = 'rgba(122,131,143,.72)'; x.font = '500 21px ' + M;
+    x.fillStyle = T.highlight; x.font = '500 21px ' + M;   // theme-ok: pixels of the exported image
     x.fillText('altahascreener.in', cx, 1284);
 
     return { canvas: c, sym: sym || 'stock' };

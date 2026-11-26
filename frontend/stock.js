@@ -1175,10 +1175,7 @@
       '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' +
         'Closing price over the last year, from ' + esc(money(closes[0], d.currency)) + ' to ' +
         esc(money(closes[n - 1], d.currency)) + '">' +
-        '<defs><linearGradient id="ovG" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0" stop-color="' + stroke + '" stop-opacity=".22"/>' +
-          '<stop offset="1" stop-color="' + stroke + '" stop-opacity="0"/></linearGradient></defs>' +
-        '<path class="ov-area" d="' + line + ' L' + W + ',' + H + ' L0,' + H + ' Z" fill="url(#ovG)"/>' +
+        '<path class="ov-area" d="' + line + ' L' + W + ',' + H + ' L0,' + H + ' Z" style="fill:' + stroke + '"/>' +
         '<path class="ov-line' + (REDUCED ? '' : ' draw') + '" d="' + line + '" style="stroke:' + stroke + '"/>' +
       '</svg>' +
       '<span class="ov-dot" style="top:' + (100 * y(closes[n - 1]) / H).toFixed(1) + '%;color:' + stroke + '"></span>';
@@ -1528,15 +1525,7 @@
         'aria-label="Closing prices for ' + esc(TICKER) + '. Arrow keys move through days; ' +
         'hold Shift to measure the change across a stretch.">' +
         '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
-        '<defs><linearGradient id="sparkG" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0" stop-color="' + stroke + '" stop-opacity=".26"/>' +
-          '<stop offset="1" stop-color="' + stroke + '" stop-opacity="0"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="scSelG" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop class="sc-sel-stop" offset="0" stop-opacity=".32"/>' +
-          '<stop class="sc-sel-stop" offset="1" stop-opacity="0"/>' +
-        '</linearGradient>' +
-        '<clipPath id="scClip"><rect class="sc-clip" x="0" y="-10" width="0" height="' + (H + 20) + '"/></clipPath>' +
+        '<defs><clipPath id="scClip"><rect class="sc-clip" x="0" y="-10" width="0" height="' + (H + 20) + '"/></clipPath>' +
         '</defs>' +
         '<g class="sc-base">' +
           '<path class="spark-fill" d="' + area + '"/>' +
@@ -1544,7 +1533,7 @@
             '" style="stroke:' + stroke + '"/>' +
         '</g>' +
         '<g class="sc-sel" clip-path="url(#scClip)">' +
-          '<path class="sc-sel-fill" d="' + area + '" fill="url(#scSelG)"/>' +
+          '<path class="sc-sel-fill" d="' + area + '"/>' +
           '<path class="sc-sel-line" d="' + line + '"/>' +
         '</g>' +
         '</svg>' + guides +
@@ -3861,7 +3850,9 @@
     if (head && panebar && 'IntersectionObserver' in window) {
       var chrome = document.querySelector('.sh-chrome');
       new IntersectionObserver(function (entries) {
-        panebar.classList.toggle('is-stuck', !entries[0].isIntersecting);
+        /* The newest reading: when two arrive in one callback (a resize and
+           a scroll in the same frame) the first is already out of date. */
+        panebar.classList.toggle('is-stuck', !entries[entries.length - 1].isIntersecting);
       }, { rootMargin: '-' + (((chrome && chrome.offsetHeight) || 96) + 4) + 'px 0px 0px 0px' }).observe(head);
     }
   }

@@ -682,23 +682,19 @@ def _doc(site, api, title, description, body, path=None, robots="index,follow", 
 %(canonical)s<link rel="icon" href="/favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" href="/icon-512.png" sizes="512x512" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="/theme.js"></script>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/fraunces-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/jetbrains-mono-latin.woff2" crossorigin>
+<link rel="stylesheet" href="/tokens.css">
 <link rel="stylesheet" href="/altaha-polish.css">
 <link rel="stylesheet" href="/altaha-skin.css">
 <link rel="stylesheet" href="/shell.css">
 <link rel="stylesheet" href="/stock.css">
 <link rel="stylesheet" href="/experience.css">
 <link rel="stylesheet" href="/type.css">
+<link rel="stylesheet" href="/components.css">
 <script>
-  (function () {
-    try {
-      var s = localStorage.getItem('altaha-theme');
-      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
-    } catch (e) {}
-  })();
   var API_BASE = %(api)s;
 </script>
 %(head)s<script src="/analytics.js" defer></script>

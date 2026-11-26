@@ -7,195 +7,202 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .pk-panel { --pk-card: var(--dr-card, var(--surface)); --pk-rule: var(--dr-rule, var(--border)); --pk-mute: var(--dr-mute, var(--text-muted));
-  margin: 0 0 22px; padding: 20px 22px 18px; border: 1px solid var(--pk-rule); border-radius: var(--r-card); background: var(--pk-card);
+  margin: 0 0 var(--sp-6); padding: var(--card-pad); border: 1px solid var(--pk-rule); border-radius: var(--r-card); background: var(--pk-card);
   box-shadow: none; }
-.pk-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 14px; }
-.pk-title { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-display); letter-spacing: var(--ls-heading); color: var(--text-primary); }
+.pk-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: var(--sp-4); }
+.pk-title { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-heading); color: var(--text-primary); }
 .pk-sub { margin: 0; font-size: var(--fs-body); color: var(--pk-mute, var(--text-muted)); }
 
 /* ── Which list ────────────────────────────────────────────────────────
-   Ten lists in two rows, and each row says what kind it is. They were two
-   bars of five tabs with nothing to tell them apart; a chip here is as wide
-   as its own words, and carries how long the list is held under its name. */
-.pk-chooser { display: grid; gap: 10px; }
+   Ten lists in two rows, and each row says what kind it is. They are tabs:
+   the chosen one is cognac with a 2px line under it and nothing is filled.
+   Each carries how long the list is held under its name. */
+.pk-chooser { display: grid; gap: var(--sp-2); }
 .pk-group { display: grid; grid-template-columns: 124px minmax(0, 1fr); align-items: center; gap: 12px; }
 .pk-group-h { font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-muted); }
-.pk-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
-.pk-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; min-height: 48px;
-  padding: 7px 16px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--bg); color: var(--text-primary);
-  font: 500 var(--fs-body)/var(--lh-none) var(--font-sans); white-space: nowrap; cursor: pointer; text-align: left;
-  transition: background var(--t-fast, 150ms), color var(--t-fast, 150ms), border-color var(--t-fast, 150ms), transform var(--t-fast, 150ms); }
+.pk-tabs { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0 var(--sp-8); border-bottom: 1px solid var(--border); }
+.pk-tab, .pk-panel .pk-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; min-height: 52px;
+  margin: 0 0 -1px; padding: var(--sp-2) 0; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; box-shadow: none;
+  color: var(--text-secondary); font: 500 var(--fs-body)/var(--lh-none) var(--font-sans); letter-spacing: normal; text-transform: none;
+  white-space: nowrap; cursor: pointer; text-align: left;
+  transition: color var(--t-fast, 150ms), border-color var(--t-fast, 150ms); }
 .pk-tab i { font-style: normal; }
 .pk-tab small { font: 400 var(--fs-small)/var(--lh-none) var(--font-sans); color: var(--text-muted); }
-.pk-tab:hover { border-color: var(--highlight); transform: translateY(-1px); }
-.pk-tab.on { background: var(--accent); border-color: var(--border-strong); color: var(--on-accent); font-weight: 600; }
-.pk-tab.on small { color: inherit; opacity: .72; }
+.pk-tab:hover, .pk-panel .pk-tab:hover { color: var(--text-primary); background: none; }
+.pk-tab.on, .pk-panel .pk-tab.on, .pk-tab[aria-selected="true"] { color: var(--highlight-text); border-bottom-color: var(--highlight); background: none; }
 .pk-tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 /* ── What the list is, and how it did ─────────────────────────────────── */
-.pk-idea { margin: 16px 0 12px; font-size: var(--fs-body); line-height: var(--lh-label); color: var(--text-primary); }
+.pk-idea { margin: var(--sp-5) 0 var(--sp-3); font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-primary); }
 .pk-idea span { color: var(--pk-mute, var(--text-muted)); }
-.pk-record { margin: 0 0 14px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface-raised); }
-.pk-record-h { margin: 0; padding: 11px 14px 0; font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label);
+.pk-record { margin: 0 0 var(--sp-4); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface-raised); }
+.pk-record-h { margin: 0; padding: var(--sp-3) var(--sp-4) 0; font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); }
 .pk-record-n { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.pk-record-n > span { display: flex; flex-direction: column; gap: 4px; padding: 8px 14px 12px; min-width: 0; }
+.pk-record-n > span { display: flex; flex-direction: column; gap: 4px; padding: var(--sp-2) var(--sp-4) var(--sp-3); min-width: 0; }
 .pk-record-n > span + span { border-left: 1px solid var(--border); }
-.pk-record-n b { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-none); font-variant-numeric: tabular-nums; color: var(--text-primary); letter-spacing:var(--ls-heading); }
+.pk-record-n b { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-h1); font-variant-numeric: tabular-nums; color: var(--text-primary); letter-spacing:var(--ls-heading); white-space: nowrap; }
 .pk-record-n b.up { color: var(--gain); } .pk-record-n b.dn { color: var(--loss); }
-.pk-record-n small { font-size: var(--fs-small); line-height: var(--lh-h3); color: var(--text-secondary); }
+.pk-record-n b.up::before { content: "\25B2\00A0"; display:inline-block; transform:scale(.6); transform-origin:left center; margin-right:-.3em; }
+.pk-record-n b.dn::before { content: "\25BC\00A0"; display:inline-block; transform:scale(.6); transform-origin:left center; margin-right:-.3em; }
+.pk-record-n small { font-size: var(--fs-small); line-height: var(--lh-small); color: var(--text-secondary); }
 /* "52 of every 100 went up" as a bar: the part that went up, and the rest. */
 .pk-meter { display: block; height: 6px; max-width: 220px; margin-top: 4px; border-radius: var(--r-xs); overflow: hidden;
   background: color-mix(in srgb, var(--loss) 38%, var(--surface-raised)); }
 .pk-meter i { display: block; height: 100%; border-radius: var(--r-xs) 0 0 var(--r-xs); background: var(--gain); }
 .pk-how { border-top: 1px solid var(--border); }
-.pk-how summary { padding: 9px 14px; font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label); color: var(--text-muted); cursor: pointer; list-style: none; }
+.pk-how summary { padding: var(--sp-3) var(--sp-4); font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-muted); cursor: pointer; list-style: none; }
 .pk-how summary::-webkit-details-marker { display: none; }
-.pk-how summary::after { content: ' · how'; color: var(--text-primary); }
+.pk-how summary::after { content: ' · how'; color: var(--highlight-text); }
 .pk-how[open] summary::after { content: ' · hide'; }
-.pk-how ul { margin: 0; padding: 0 14px 12px 30px; font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-secondary); }
+.pk-how ul { margin: 0; padding: 0 var(--sp-4) var(--sp-3) 32px; font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-secondary); }
 .pk-how li b { font-weight: 600; color: var(--text-primary); }
-.pk-live { margin: -4px 0 14px; font-size: var(--fs-small); color: var(--text-secondary); }
-.pk-stale { margin: 0 0 12px; padding: 9px 12px; border-left: 3px solid var(--warning); border-radius: var(--r-xs); background: var(--warning-bg);
+.pk-live { margin: -4px 0 var(--sp-4); font-size: var(--fs-small); color: var(--text-secondary); }
+.pk-stale { margin: 0 0 12px; padding: 8px 12px; border-left: 2px solid var(--warning); border-radius: var(--r-xs); background: var(--warning-bg);
   color: var(--text-primary); font-size: var(--fs-small); }
 .pk-quiet { margin: 16px 0 12px; font-size: var(--fs-body); color: var(--pk-mute, var(--text-muted)); }
-.pk-retry { border: 0; background: none; padding: 0; color: var(--text-primary); font: inherit; text-decoration: underline; cursor: pointer; }
+.pk-retry, .pk-panel .pk-retry { border: 0; background: none; padding: 0; color: var(--highlight-text); font: inherit; text-decoration: underline; cursor: pointer; }
 
 /* ── The picks ────────────────────────────────────────────────────────── */
-.pk-cards-h { margin: 18px 0 2px; font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase;
+.pk-cards-h { margin: var(--sp-5) 0 2px; font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase;
   color: var(--text-muted); }
 .pk-cards { display: flex; flex-direction: column; }
-.pk-card { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 13px 8px;
-  border-top: 1px solid var(--border); border-radius: var(--r-card); color: inherit; text-decoration: none; transition: background var(--t-fast, 150ms); }
+.pk-card { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 16px 8px;
+  border-top: 1px solid var(--border); color: inherit; text-decoration: none; transition: background var(--t-fast, 150ms); }
 .pk-card:first-child { border-top: 0; }
 .pk-card:hover { background: var(--surface-raised); }
 .pk-card:hover .pk-name { color: var(--highlight-text); }
 .pk-card:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.pk-rank { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent);
-  font-family: var(--font-display); font-size: var(--fs-h2); line-height: var(--lh-none); color: var(--text-primary); font-variant-numeric: tabular-nums; font-weight:500; letter-spacing:var(--ls-heading); }
+/* The place in the list: a small figure in a hairline ring, not a filled badge. */
+.pk-rank { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: none;
+  font: 500 var(--fs-body)/var(--lh-none) var(--font-sans); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .pk-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.pk-name { font-family: var(--font-display); font-size: var(--fs-h2); line-height: var(--lh-display); color: var(--text-primary); overflow-wrap: anywhere; transition: color var(--t-fast, 150ms); font-weight:500; letter-spacing:var(--ls-heading); }
+.pk-name { font-family: var(--font-display); font-size: var(--fs-h2); line-height: var(--lh-h2); color: var(--text-primary); overflow-wrap: anywhere; transition: color var(--t-fast, 150ms); font-weight:500; letter-spacing:var(--ls-heading); }
 .pk-sym { font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: var(--ls-label); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 /* Three prices, left to right: where it is, where a good result would be,
    where to leave. Green and red are on the percentages only; the prices
-   themselves stay the ink colour so none of the three shouts. */
-.pk-levels { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(96px, auto); border: 1px solid var(--border); border-radius: var(--r-card);
-  background: var(--bg); overflow: hidden; }
-.pk-lv { display: flex; flex-direction: column; gap: 3px; padding: 8px 14px; text-align: right; }
+   themselves stay the text colour so none of the three shouts. */
+.pk-levels { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(96px, auto); border: 1px solid var(--border); border-radius: var(--r-control);
+  background: var(--surface-raised); overflow: hidden; }
+.pk-lv { display: flex; flex-direction: column; gap: 4px; padding: 8px 16px; text-align: right; }
 .pk-lv + .pk-lv { border-left: 1px solid var(--border); }
 .pk-lv small { font-size: var(--fs-label); color: var(--text-muted); white-space: nowrap; }
 .pk-lv b { font-family: var(--font-sans); font-size: var(--fs-body); font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pk-lv i { font: 500 var(--fs-label)/var(--lh-none) var(--font-sans); font-style: normal; font-variant-numeric: tabular-nums; }
 .pk-aim i { color: var(--gain); } .pk-exit i { color: var(--loss); }
-.pk-aimnote { margin: 12px 0 0; padding: 10px 14px; border-radius: var(--r-card); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-secondary); }
+.pk-aim i::before { content: "\25B2\00A0"; display:inline-block; transform:scale(.72); transform-origin:left center; }
+.pk-exit i::before { content: "\25BC\00A0"; display:inline-block; transform:scale(.72); transform-origin:left center; }
+.pk-aimnote { margin: 12px 0 0; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-control); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-secondary); }
 .pk-aimnote b { font-weight: 600; color: var(--text-primary); }
 
-.pk-why { display: flex; flex-wrap: wrap; gap: 5px 6px; margin-top: 4px; }
-.pk-why span { padding: 3px 9px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--bg); font-size: var(--fs-small); line-height: var(--lh-h3); color: var(--text-secondary); white-space: nowrap; }
+.pk-why { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.pk-why span { padding: 3px 12px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-h3); color: var(--text-secondary); white-space: nowrap; }
 
-.pk-plan { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 12px 0 2px; padding: 10px 14px; border-radius: var(--r-control); background: var(--surface-raised); font-size: var(--fs-body); color: var(--text-secondary); }
+.pk-plan { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 12px 0 2px; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-control); background: var(--surface-raised); font-size: var(--fs-body); color: var(--text-secondary); }
 .pk-plan b { margin-right: 4px; font-weight: 600; color: var(--text-primary); }
-.pk-plan small { color: var(--loss); font-family: var(--font-sans); font-size: var(--fs-label); }
+/* How far the target and the exit are from the price. A rise and a fall, so
+   each carries its arrow as well as its colour. */
+.pk-plan small { color: var(--loss); font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; white-space: nowrap; }
+.pk-plan small::before { content: "\25BC\00A0"; display:inline-block; transform:scale(.72); transform-origin:left center; }
 .pk-plan small.up { color: var(--gain); }
+.pk-plan small.up::before { content: "\25B2\00A0"; }
 
-.pk-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
-.pk-all { min-height: 42px; padding: 10px 20px; border: 0; border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); font: 500 var(--fs-body)/var(--lh-none) var(--font-sans); cursor: pointer; }
+.pk-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: var(--sp-4); border-top: 1px solid var(--border); }
+.pk-all { min-height: var(--control-h); padding: 0 var(--sp-6); border: 0; border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); font: 500 var(--fs-body)/var(--lh-none) var(--font-sans); cursor: pointer; }
 .pk-all:hover { background: var(--accent-hover); }
 /* On the Ideas page the panel sits inside .dr, whose `.dr button` rule makes
    every button inherit its colour and font. That outranks a single class, so
-   this button was ink on ink, a black pill with nothing written on it, and
-   the chips and the retry link lost their own type. Said again here with the
-   panel's name in front, which outranks it back. */
+   this button lost its own colour and type, and so did the tabs and the retry
+   link. Said again here with the panel's name in front, which outranks it
+   back (the tabs and the retry link do the same where they are defined). */
 .pk-panel .pk-all { color: var(--on-accent); font: 500 var(--fs-body)/var(--lh-none) var(--font-sans); text-align: center; }
-.pk-panel .pk-tab { color: var(--text-primary); font: 500 var(--fs-body)/var(--lh-none) var(--font-sans); }
-.pk-panel .pk-tab.on { color: var(--on-accent); font-weight: 600; }
-.pk-panel .pk-retry { color: var(--text-primary); text-decoration: underline; }
 .pk-all:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.pk-updated { font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label); color: var(--text-muted); }
+.pk-updated { font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-muted); }
 
-.pk-skel { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
-.pk-skel i { display: block; height: 54px; border-radius: var(--r-card); background: var(--surface-raised); }
+.pk-skel { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+.pk-skel i { display: block; height: 54px; border-radius: var(--r-control); background: var(--surface-raised); }
 .pk-skel i:first-child { height: 76px; }
 
 /* ── On the Stock picks tab ───────────────────────────────────────────── */
-#view-ideas .pk-chooser.page { margin: 0 0 14px; }
+#view-ideas .pk-chooser.page { margin: 0 0 var(--sp-5); }
 #view-ideas #pickaim .pk-aimnote { max-width: 760px; margin: 16px 0 4px; }
-#view-ideas #pickhead .pk-updated { margin: -4px 0 14px; }
+#view-ideas #pickhead .pk-updated { margin: -4px 0 16px; }
 /* Fifteen rows need no filter dialog; it stays for the older, longer lists. */
 #view-ideas.is-picks .ux-filterbar { display: none; }
-#view-ideas #ideatools { margin-top: 14px; }
-#view-ideas .pk-idea { margin-top: 14px; }
+#view-ideas #ideatools { margin-top: 16px; }
+#view-ideas .pk-idea { margin-top: 16px; }
 #view-ideas .pk-record { max-width: 560px; }
-#view-ideas .idea .pk-why { margin: 10px 0 0; }
-.pk-notes { margin: 6px 0 14px; font-size: var(--fs-small); color: var(--text-secondary); }
-.pk-notes summary { cursor: pointer; color: var(--text-muted); font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label); }
-.pk-notes ul { margin: 8px 0 0; padding-left: 18px; line-height: var(--lh-small); }
+#view-ideas .idea .pk-why { margin: 12px 0 0; }
+.pk-notes { margin: 8px 0 16px; font-size: var(--fs-small); color: var(--text-secondary); }
+.pk-notes summary { cursor: pointer; color: var(--text-muted); font-family: var(--font-sans); font-size: var(--fs-small); }
+.pk-notes ul { margin: 8px 0 0; padding-left: 20px; line-height: var(--lh-small); }
 /* Facts beside a pick: the result it was priced on, an order, the chart. */
-.pk-fact { margin: 8px 0 0; font-size: var(--fs-body); line-height: var(--lh-label); color: var(--text-secondary); }
+.pk-fact { margin: 8px 0 0; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); }
 .pk-fact b { font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase;
-  color: var(--text-muted); margin-right: 6px; }
-.pk-chart { margin: 14px 0 6px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface-raised); }
+  color: var(--text-muted); margin-right: 8px; }
+.pk-chart { margin: 16px 0 8px; padding: var(--sp-3) var(--sp-4); border: 1px solid var(--border); border-radius: var(--r-control); background: var(--surface-raised); }
 .pk-chart h6 { margin: 0 0 8px; font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label); text-transform: uppercase;
   color: var(--text-muted); }
-.pk-chart dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 14px; margin: 0; font-size: var(--fs-body); line-height: var(--lh-label); }
+.pk-chart dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 0; font-size: var(--fs-body); line-height: var(--lh-small); }
 .pk-chart dt { color: var(--text-muted); }
 .pk-chart dd { margin: 0; color: var(--text-primary); }
-.pk-chart p { margin: 10px 0 0; font-size: var(--fs-small); line-height: var(--lh-label); color: var(--text-muted); }
-.pk-market { margin: 4px 0 14px; max-width: 560px; font-size: var(--fs-body); line-height: var(--lh-small); color: var(--text-secondary); }
-.pk-again { margin: 34px 0 10px; font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); color: var(--text-primary); letter-spacing:var(--ls-heading); }
-
-html[data-theme="dark"] .pk-panel { box-shadow: none; }
+.pk-chart p { margin: 12px 0 0; font-size: var(--fs-small); line-height: var(--lh-small); color: var(--text-muted); }
+.pk-market { margin: 4px 0 16px; max-width: 560px; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); }
+.pk-again { margin: var(--sp-12) 0 var(--sp-3); font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-h1); color: var(--text-primary); letter-spacing:var(--ls-heading); }
 
 @media (max-width: 720px) {
-  .pk-group { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .pk-group { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
 @media (max-width: 560px) {
-  .pk-panel { padding: 16px 14px 14px; border-radius: var(--r-card); }
-  .pk-title { font-size: var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
+  .pk-title { font-size: var(--fs-h2); line-height: var(--lh-h2); }
   .pk-sub { display: none; }
-  .pk-head { margin-bottom: 10px; }
-  .pk-chooser { gap: 8px; }
-  /* Five chips across a phone, each as wide as its own word needs
+  .pk-head { margin-bottom: 12px; }
+  .pk-chooser { gap: var(--sp-3); }
+  /* Five tabs across a phone, each as wide as its own word needs
      ("Momentum" is twice "Week"). The first word of a two-word name and the
-     holding time drop out; the list's own line under the chips still says
+     holding time drop out; the list's own line under the tabs still says
      how long it is held. */
-  .pk-tabs { flex-wrap: nowrap; gap: 4px; }
-  .pk-tab, .pk-panel .pk-tab { flex: 1 1 auto; min-width: 0; min-height: 40px; align-items: center; padding: 8px 2px; border-radius: var(--r-card);
-    font-size: var(--fs-small); letter-spacing: normal; text-transform: capitalize; }
+  .pk-tabs { flex-wrap: nowrap; justify-content: space-between; gap: 0 var(--sp-2); }
+  .pk-tab, .pk-panel .pk-tab { flex: 0 1 auto; min-width: 0; min-height: 40px; align-items: flex-start; padding: var(--sp-2) 0;
+    font-size: var(--fs-small); text-transform: capitalize; }
   .pk-tab i, .pk-tab small { display: none; }
-  .pk-tab:hover { transform: none; }
   .pk-chart dl { grid-template-columns: minmax(0, 1fr); gap: 1px 0; }
-  .pk-chart dd { margin-bottom: 7px; }
-  .pk-idea { margin: 12px 0 10px; font-size: var(--fs-body); }
-  .pk-record-n b { font-size: var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
-  .pk-record-n > span { padding: 6px 10px 10px; }
-  .pk-record-n small { font-size: var(--fs-label); }
-  .pk-record-h { padding: 9px 10px 0; }
-  .pk-name { font-size: var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
+  .pk-chart dd { margin-bottom: 8px; }
+  .pk-idea { margin: 12px 0 12px; }
+  .pk-record-n b { font-size: var(--fs-h2); line-height: var(--lh-h2); }
+  .pk-record-n > span { padding: 8px 12px 12px; }
+  .pk-record-n small { font-size: var(--fs-label); line-height: var(--lh-label); }
+  .pk-record-h { padding: 8px 12px 0; }
   /* The three prices drop under the reasons, across the card's full width. */
-  .pk-card { grid-template-columns: 30px minmax(0, 1fr); gap: 8px 10px; align-items: start; padding: 12px 2px; }
-  .pk-rank { width: 30px; height: 30px; font-size: var(--fs-body); }
+  .pk-card { grid-template-columns: 30px minmax(0, 1fr); gap: 8px 12px; align-items: start; padding: 12px 2px; }
+  .pk-rank { width: 30px; height: 30px; font-size: var(--fs-small); }
   .pk-levels { grid-column: 1 / -1; grid-auto-columns: minmax(0, 1fr); }
-  .pk-lv { padding: 7px 10px; text-align: left; }
-  .pk-lv b { font-size: var(--fs-body); }
-  .pk-cards-h { margin-top: 14px; }
+  .pk-lv { padding: 8px 12px; text-align: left; }
+  .pk-cards-h { margin-top: 16px; }
   .pk-all { flex: 1; }
 }
-@media (prefers-reduced-motion: reduce) { .pk-tab, .pk-name, .pk-card { transition: none; } .pk-tab:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pk-tab, .pk-name, .pk-card { transition: none; } }
 
-/* The setup lists: the sector table and the watch list. */
-.pk-cost { margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid var(--border-strong); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-label); color: var(--text-primary); }
-.pk-sectors { margin: 12px 0 0; border: 1px solid var(--border); border-radius: var(--r-control); padding: 8px 12px; font-size: var(--fs-small); }
-.pk-sectors summary { cursor: pointer; font-weight: 600; color: var(--text-primary); }
-.pk-sectors-scroll { overflow-x: auto; margin-top: 8px; }
-.pk-sectors table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.pk-sectors th { text-align: right; font-weight: 500; color: var(--text-secondary); font-size: var(--fs-label); padding: 4px 6px; white-space: nowrap; }
+/* The setup lists: the sector table and the watch list. The table itself is
+   the shared one (components.css): a label-style header on the raised
+   surface, 48px rows, a hairline between rows, figures on the right. */
+.pk-cost { margin: 8px 0 0; padding: 8px 12px; border-left: 2px solid var(--border-strong); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-small); color: var(--text-primary); }
+.pk-record .pk-cost { margin: 0; border-left: 0; border-top: 1px solid var(--border); padding: var(--sp-3) var(--sp-4); background: none; }
+.pk-sectors { margin: 12px 0 0; border: 1px solid var(--border); border-radius: var(--r-card); padding: 0 var(--sp-4); font-size: var(--fs-small); background: var(--surface); }
+.pk-sectors summary { cursor: pointer; padding: var(--sp-3) 0; font-weight: 600; color: var(--text-primary); }
+.pk-sectors-scroll { overflow-x: auto; margin: 0 calc(var(--sp-4) * -1); border-top: 1px solid var(--border); }
+.pk-sectors table { width: 100%; font-variant-numeric: tabular-nums; }
+.pk-sectors th, .pk-sectors td { text-align: right; white-space: nowrap; }
 .pk-sectors th:first-child, .pk-sectors td:first-child { text-align: left; }
-.pk-sectors td { text-align: right; padding: 5px 6px; border-top: 1px solid var(--border); white-space: nowrap; }
 .pk-sectors td:first-child { white-space: normal; }
-.pk-sectors td small { color: var(--text-secondary); }
-.pk-sectors td b { display: inline-block; min-width: 1.4em; color: var(--text-secondary); font-weight: 600; }
-.pk-sectors tr.on td { background: var(--surface-raised); color: var(--text-primary); font-weight: 600; }
-.pk-sectors p { margin: 8px 0 2px; color: var(--text-secondary); line-height: var(--lh-label); }
-.pk-brief { margin: 2px 0 14px; font-size: var(--fs-body); color: var(--text-secondary); }
-.pk-brief a { color: var(--text-primary); font-weight: 600; }
+.pk-sectors td small { color: var(--text-muted); font-size: var(--fs-small); }
+.pk-sectors td b { display: inline-block; min-width: 1.6em; color: var(--text-muted); font-weight: 500; }
+.pk-sectors td a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
+.pk-sectors td a:hover { color: var(--highlight-text); }
+/* The sectors the list picks from: the selected-row tint and a cognac bar. */
+.pk-sectors tr.on td { background: var(--highlight-subtle); }
+.pk-sectors tr.on td:first-child { box-shadow: inset 2px 0 0 var(--highlight); }
+.pk-sectors tr.on td b, .pk-sectors tr.on td small { color: var(--text-secondary); }
+.pk-sectors p { margin: var(--sp-3) 0; color: var(--text-secondary); line-height: var(--lh-small); }
+.pk-brief { margin: 2px 0 16px; font-size: var(--fs-body); color: var(--text-secondary); }
+.pk-brief a { color: var(--highlight-text); font-weight: 500; }

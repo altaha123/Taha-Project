@@ -13,7 +13,8 @@ function groupReturn(group,stocks){
 function entries(){var c=state.c||{},stocks=(state.p||{}).stocks||{},g=(c.groups||[]).find(g=>g.name===state.group);
  return (g?g.stocks.map(s=>({...s,name:s.symbol,change:stocks[s.symbol]?.change_pct,stock:true})):(c.groups||[]).map(g=>({...g,change:groupReturn(g,stocks)}))).sort((a,b)=>b.weight_pct-a.weight_pct);
 }
-var COLORS=['#b99648','#588f88','#7985ac','#b78169','#899a60','#b88aa8','#648caa','#9a906e'];
+// Ring segments take the chart series in order and start again after the sixth.
+var COLORS=[1,2,3,4,5,6].map(i=>'var(--chart-'+i+')');
 function compositionView(items,group){
  var total=items.reduce((s,r)=>s+r.weight_pct,0),offset=0;
  var segments=items.map((r,i)=>{

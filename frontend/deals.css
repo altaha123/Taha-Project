@@ -3,28 +3,28 @@
    project have all been caused by a module claiming a name the page already
    used for something else. */
 
-.dl-board{margin:30px 0 8px}
-.dl-stock{margin:34px 0 0;padding-top:26px;border-top:1px solid var(--border)}
+.dl-board{margin:32px 0 8px}
+.dl-stock{margin:36px 0 0;padding-top:28px;border-top:1px solid var(--border)}
 .dl-stock[hidden]{display:none}
 
 .dl-hdr h3{font-family:var(--font-display);font-size:var(--fs-h2);font-weight:500;margin:0;color:var(--text-primary); letter-spacing:var(--ls-heading)}
-.dl-hdr span{display:block;font-size:var(--fs-small);color:var(--text-muted);margin-top:5px;line-height:var(--lh-body)}
+.dl-hdr span{display:block;font-size:var(--fs-small);color:var(--text-muted);margin-top:4px;line-height:var(--lh-body)}
 
-.dl-counts{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 12px}
-.dl-counts span{display:flex;align-items:baseline;gap:6px;padding:7px 12px;
-  border:1px solid var(--border);border-radius:var(--r-control);background:var(--surface);
+.dl-counts{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 12px}
+.dl-counts span{display:flex;align-items:baseline;gap:8px;padding:8px 12px;
+  border:1px solid var(--border);border-radius:var(--r-card);background:var(--surface);
   font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   color:var(--text-muted)}
 .dl-counts b{font-family:var(--font-display);font-size:var(--fs-h2);letter-spacing:var(--ls-heading);color:var(--text-primary); font-weight:500}
 
-.dl-caveat{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:14px 0 0;
+.dl-caveat{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:16px 0 0;
   max-width:74ch}
 .dl-load{padding:24px 0;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
   text-transform:uppercase;color:var(--text-muted)}
 
 /* ---- one stock's day --------------------------------------------------- */
-.dl-rows{display:grid;gap:10px;margin-top:14px}
-.dl-row{border:1px solid var(--border);border-radius:var(--r-control);padding:14px 16px;
+.dl-rows{display:grid;gap:var(--sp-3);margin-top:var(--sp-4)}
+.dl-row{border:1px solid var(--border);border-radius:var(--r-card);padding:var(--card-pad);
   background:var(--surface);box-shadow:none;
   animation:dl-rise .46s cubic-bezier(.2,.8,.25,1) both;
   animation-delay:calc(var(--i,0) * 34ms)}
@@ -39,41 +39,43 @@
 .dl-net{font-family:var(--font-display);font-size:var(--fs-h2);color:var(--text-secondary);text-align:right;
   flex:0 0 auto;font-variant-numeric:tabular-nums; font-weight:500; letter-spacing:var(--ls-heading)}
 .dl-net.up{color:var(--gain)} .dl-net.dn{color:var(--loss)}
+.dl-net.up::before{content:"\25B2\00A0";display:inline-block;transform:scale(.72);transform-origin:left center} .dl-net.dn::before{content:"\25BC\00A0";display:inline-block;transform:scale(.72);transform-origin:left center}
 .dl-net small{display:block;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
   text-transform:uppercase;color:var(--text-muted);margin-top:2px}
 
-.dl-meta{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:10px;
+.dl-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;
   font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);text-transform:uppercase;
   color:var(--text-muted)}
-.dl-tag{font-style:normal;padding:3px 7px;border-radius:var(--r-xs);border:1px solid var(--border);
+.dl-tag{font-style:normal;padding:3px 8px;border-radius:var(--r-pill);border:1px solid var(--border);
   letter-spacing:var(--ls-label)}
 .dl-tag.block{border-color:var(--border-strong);color:var(--text-primary)}
-.dl-tag.cross{border-color:var(--text-muted)}
+.dl-tag.cross{border-color:var(--border-strong)}
 .dl-tag.prop{border-color:var(--border)}
 
-.dl-parties{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:12px}
-.dl-parties h6{margin:0 0 6px;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
+.dl-parties{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px}
+.dl-parties h6{margin:0 0 8px;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
   text-transform:uppercase;font-weight:500;color:var(--text-muted)}
 .dl-parties h6.up{color:var(--gain)} .dl-parties h6.dn{color:var(--loss)}
 .dl-parties ul{list-style:none;margin:0;padding:0}
-.dl-parties li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;
+.dl-parties li{display:flex;justify-content:space-between;gap:12px;align-items:baseline;
   padding:3px 0;font-size:var(--fs-small);color:var(--text-secondary)}
 .dl-parties li b{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dl-parties li span{font-family:var(--font-sans);font-size:var(--fs-label);color:var(--text-muted);flex:0 0 auto}
 .dl-inst{font-style:normal;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
-  text-transform:uppercase;color:var(--text-primary);margin-left:6px;
-  border:1px solid var(--border);padding:1px 5px;border-radius:var(--r-xs)}
+  text-transform:uppercase;color:var(--text-secondary);margin-left:8px;
+  border:1px solid var(--border);padding:1px 8px;border-radius:var(--r-pill)}
 .dl-inst.prop{color:var(--text-muted)}
 
-.dl-read{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:11px 0 0;
-  padding-top:10px;border-top:1px solid var(--border)}
+.dl-read{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:12px 0 0;
+  padding-top:12px;border-top:1px solid var(--border)}
 
 /* ---- the per-stock table ----------------------------------------------- */
-.dl-summary{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:14px 0;
-  padding:13px 15px;border:1px solid var(--border);border-radius:var(--r-control);
-  background:var(--surface-raised)}
+.dl-summary{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin:16px 0;
+  padding:12px 16px;border:1px solid var(--border);border-radius:var(--r-card);
+  background:var(--surface)}
 .dl-summary b{font-family:var(--font-display);font-size:var(--fs-h1);color:var(--text-secondary); font-weight:500; letter-spacing:var(--ls-heading)}
 .dl-summary.up b{color:var(--gain)} .dl-summary.dn b{color:var(--loss)}
+.dl-summary.up b::before{content:"\25B2\00A0";display:inline-block;transform:scale(.72);transform-origin:left center} .dl-summary.dn b::before{content:"\25BC\00A0";display:inline-block;transform:scale(.72);transform-origin:left center}
 .dl-summary span{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);flex:1 1 22ch}
 
 .dl-tablewrap{overflow-x:auto;margin-top:12px}
@@ -84,8 +86,7 @@
 .dl-table td{padding:8px 12px 8px 0;border-bottom:1px solid var(--border);
   color:var(--text-secondary);white-space:nowrap}
 .dl-table td:nth-child(2){white-space:normal;min-width:18ch}
-.dl-table td:nth-child(5),.dl-table td:nth-child(6),.dl-table td:nth-child(7){
-  font-family:var(--font-sans);font-size:var(--fs-label)}
+.dl-table th:nth-child(n+5),.dl-table td:nth-child(n+5){text-align:right;font-variant-numeric:tabular-nums}
 .dl-table tr.up td:nth-child(4){color:var(--gain)}
 .dl-table tr.dn td:nth-child(4){color:var(--loss)}
 

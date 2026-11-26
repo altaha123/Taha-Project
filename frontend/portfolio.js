@@ -457,13 +457,16 @@
   var SORT_KEY = 'altaha-pf-sort-v1';
   try { LIVE.sort = localStorage.getItem(SORT_KEY) || ''; } catch (e) {}
 
-  // Ten tones that sit with the gold, each dark enough for white initials.
-  var TONES = ['#9A7420', '#2F6F6B', '#4A5BA8', '#86497A', '#A9502D',
-               '#5F7232', '#4C6275', '#A4475F', '#B0731F', '#2F7350'];
-  function tone(sym) {
-    var h = 0;
-    for (var i = 0; i < sym.length; i++) h = (h * 31 + sym.charCodeAt(i)) >>> 0;
-    return TONES[h % TONES.length];
+  /* The colour of a holding in the allocation strip, its legend and the
+     hairline under its row: the six chart tokens in order, by size, so the
+     largest is always the first series colour and no two neighbours in the
+     strip share one. A holding with no weight yet has none. */
+  function tones(F) {
+    var map = {};
+    F.rows.filter(function (f) { return f.weight; })
+      .sort(function (a, b) { return b.weight - a.weight; })
+      .forEach(function (f, i) { map[f.r.symbol] = 'var(--chart-' + (i % 6 + 1) + ')'; });
+    return function (sym) { return map[sym] || ''; };
   }
   /* The company's mark over its initials. The same image host the Wealth desk
      uses (wealth.js), keyed by NSE symbol, so a small company with no website
@@ -480,7 +483,6 @@
       av.dataset.sym = sym;
       av.dataset.mark = '';
       av.textContent = sym ? sym.replace(/[^A-Z0-9]/g, '').slice(0, 2) : '+';
-      av.style.background = sym ? tone(sym) : '';
       av.classList.toggle('empty', !sym);
       av.classList.remove('has-img');
     }
@@ -663,6 +665,7 @@
     var F = figures();
     var host = $('pf_rows');
     if (!host) return;
+    var tone = tones(F);
 
     // Two small honours, only once there is a list to rank: the largest
     // holding and the best return. They describe the past; neither is a call.
@@ -720,7 +723,7 @@
       row.classList.toggle('has-date', !!f.r.date);
     });
 
-    paintSummary(F);
+    paintSummary(F, tone);
 
     var count = $('pf_count');
     if (count) {
@@ -730,7 +733,7 @@
     }
   }
 
-  function paintSummary(F) {
+  function paintSummary(F, tone) {
     var host = $('pf_board');
     if (!host) return;
     if (!F.named) { host.innerHTML = ''; host.hidden = true; return; }
@@ -1282,8 +1285,8 @@
   /* Hand-rolled SVG. Every chart reads its colours from the stylesheet's
      custom properties, so dark mode needs no separate code path. */
 
-  var PALETTE = ['#C8A84B', '#4C7A9E', '#7A9E6B', '#B5735C', '#8A7BA8',
-                 '#C4915C', '#5E8F86', '#9E6B84', '#6B7A9E', '#A89060'];
+  // The six series tokens, in order. Markup can name a token directly.
+  var PALETTE = [1, 2, 3, 4, 5, 6].map(function (i) { return 'var(--chart-' + i + ')'; });
 
   function svg(w, h, body, label) {
     return '<svg viewBox="0 0 ' + w + ' ' + h + '" role="img" ' +
@@ -1827,9 +1830,13 @@
     var body = buildReport(d, true);
     var css = collectStyles();
 
-    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+    // data-theme="light": a printout is always the light palette. The live
+    // tokens.css is linked by absolute URL so the tokens and the fonts load
+    // in the new window; the copied rules below carry the file offline.
+    return '<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="utf-8">' +
       '<meta name="viewport" content="width=device-width,initial-scale=1">' +
       '<title>Altaha Portfolio Review, ' + when + '</title>' +
+      '<link rel="stylesheet" href="' + esc(tokensURL()) + '">' +
       '<style>' + css + '</style></head><body><div class="wrap">' +
       '<header class="rpt-head">' +
         '<div class="rpt-brand"><img class="rpt-mark" src="' + MARK + '" alt="">' +
@@ -1843,6 +1850,10 @@
       '</div></body></html>';
   }
 
+  function tokensURL() {
+    try { return new URL('tokens.css', location.href).href; } catch (e) { return 'tokens.css'; }
+  }
+
   /* Pull the live stylesheets so the saved file looks like the site. Same-origin
      sheets expose cssRules; anything that throws is skipped rather than
      breaking the export. */
@@ -1851,7 +1862,13 @@
     for (var i = 0; i < document.styleSheets.length; i++) {
       try {
         var rules = document.styleSheets[i].cssRules;
-        for (var j = 0; j < rules.length; j++) out.push(rules[j].cssText);
+        for (var j = 0; j < rules.length; j++) {
+          // @font-face is left to the linked tokens.css: a copied rule keeps
+          // its relative url() and, in a saved file, would point at nothing
+          // and still win over the linked one.
+          if (rules[j].type === 5) continue;
+          out.push(rules[j].cssText);
+        }
       } catch (e) { /* cross-origin sheet, skip */ }
     }
     out.push(

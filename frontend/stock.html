@@ -5,8 +5,12 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <script src="theme.js"></script>
+<!-- Where the API lives. stock.js, broker.js and the tests read it; a
+     deployment that serves the API elsewhere rewrites this one line. -->
+<script>var API_BASE = "https://taha-project.onrender.com";</script>
 <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="fonts/fraunces-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="fonts/jetbrains-mono-latin.woff2" crossorigin>
 <link rel="stylesheet" href="tokens.css">
 <title>Stock | Altaha Screener</title>
 <meta name="description" content="Price, key figures, score, financials, peers, ownership, delivery, news and filings for any Indian stock, on one page." />
@@ -199,12 +203,6 @@
         <div class="sc-hero card">
           <div class="dial" id="dial">
             <svg viewBox="0 0 200 200" aria-hidden="true">
-              <defs>
-                <linearGradient id="dialG" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="var(--text-primary)"/>
-                  <stop offset="1" stop-color="var(--text-muted)"/>
-                </linearGradient>
-              </defs>
               <circle class="trk" cx="100" cy="100" r="84"/>
               <circle class="arc" id="arc" cx="100" cy="100" r="84"/>
             </svg>

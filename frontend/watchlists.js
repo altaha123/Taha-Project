@@ -503,7 +503,8 @@
     var host = document.createElement('div');
     host.className = 'wl-confetti';
     host.setAttribute('aria-hidden', 'true');
-    var colors = ['#C5CAD3', '#2FD98B', '#5B9BD5', '#FF5C4D', '#9A7FD1', '#DBDFE4'];
+    // The six chart tokens; an inline style can name a token directly.
+    var colors = [1, 2, 3, 4, 5, 6].map(function (n) { return 'var(--chart-' + n + ')'; });
     for (var i = 0; i < 70; i++) {
       var b = document.createElement('i');
       b.style.left = (Math.random() * 100) + '%';
@@ -762,11 +763,13 @@
     var big = {};
     order.slice(0, Math.min(3, Math.floor(priced.length / 4))).forEach(function (r) { big[r.s] = 1; });
     return '<div class="wl-heat">' + priced.map(function (r, k) {
+      // Colour is the data: a tint of gain or loss over the card surface,
+      // from 4% for a flat day to 22% at a 3% move, with the theme's own ink
+      // on top. The figure carries the arrow.
       var c = r.q.change_pct, a = Math.min(1, Math.abs(c) / 3);
-      var L = Math.round(90 - a * 52);
-      var bg = c >= 0 ? 'hsl(150,42%,' + L + '%)' : 'hsl(8,62%,' + L + '%)';
-      return '<a class="wl-hcell' + (big[r.s] ? ' big' : '') + '" href="stock.html?ticker=' + encodeURIComponent(r.s) + '" style="--i:' + Math.min(k, 20) +
-        ';background:' + bg + ';color:' + (L < 62 ? '#FFFFFF' : '#0A0A0B') + '">' +
+      var bg = 'color-mix(in srgb, var(--' + (c >= 0 ? 'gain' : 'loss') + ') ' + Math.round(4 + a * 18) + '%, var(--surface))';
+      return '<a class="wl-hcell' + (big[r.s] ? ' big' : '') + (c > 0 ? ' up' : c < 0 ? ' dn' : '') + '" href="stock.html?ticker=' + encodeURIComponent(r.s) + '" style="--i:' + Math.min(k, 20) +
+        ';background:' + bg + '">' +
         '<b>' + esc(r.s) + '</b><span>' + pct(c) + '</span><small>' + inr(r.q.ltp, 0) + '</small></a>';
     }).join('') + '</div>';
   }

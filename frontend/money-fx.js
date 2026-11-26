@@ -3,7 +3,7 @@
 
    WHY THIS EXISTS
    A number that fades in is a form field. A number that rupees arrive into is
-   money. This is the small physics layer that carries that difference: gold
+   money. This is the small physics layer that carries that difference:
    ₹ coins that arc, spin, land and settle, and a sheen that runs across a
    figure the moment it changes.
 

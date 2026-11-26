@@ -19,7 +19,7 @@
 
 /* ── 1 · The masthead, reduced to a band ─────────────────────────────────── */
 
-body.sh-on header.wrap{ padding:22px 20px 16px !important }
+body.sh-on header.wrap{ padding:24px 20px 16px !important }
 body.sh-on #skin-art{ top:-6px; opacity:.62 }
 body.sh-on #skin-art svg{ height:100% }
 
@@ -46,24 +46,27 @@ body.sh-on .hero-tiles{ display:none !important }
 
 /* ── 2 · The market board ────────────────────────────────────────────────── */
 
-.mb{ max-width:1120px; margin:0 auto; padding:6px 20px 0 }
+.mb{ max-width:1120px; margin:0 auto; padding:8px 20px 0 }
 .mb-idx{
   display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
-  gap:12px; margin-bottom:14px;
+  gap:12px; margin-bottom:16px;
 }
-.mb-card{ padding:16px 18px; border-radius:var(--r-card) }
+.mb-card{ padding:16px 20px; border-radius:var(--r-card) }
 .mb-card .k{
   font:600 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing:var(--ls-label);
   text-transform:uppercase; color:var(--text-muted);
 }
 .mb-card .v{ font:500 var(--fs-h2)/var(--lh-none) var(--font-display); margin-top:12px; letter-spacing:var(--ls-heading) }
-.mb-card .c{ font:600 var(--fs-small)/var(--lh-none) var(--font-sans); margin-top:9px }
+.mb-card .c{ font:500 var(--fs-small)/var(--lh-none) var(--font-sans); margin-top:8px }
 .mb-card .c.up{ color:var(--gain) } .mb-card .c.dn{ color:var(--loss) }
+/* A coloured change always carries its arrow. */
+.mb-card .c.up::before, .mb-col em.up::before{ content:"\25B2\00A0"; display:inline-block;transform:scale(.72);transform-origin:left center }
+.mb-card .c.dn::before, .mb-col em.dn::before{ content:"\25BC\00A0"; display:inline-block;transform:scale(.72);transform-origin:left center }
 
 /* A hairline that fills to show the move's size against the day's biggest.
    Absolute percentages on four indices are hard to compare at a glance;
    lengths are not. */
-.mb-card .spark{ height:3px; background:var(--border); border-radius:var(--r-pill); margin-top:13px; overflow:hidden }
+.mb-card .spark{ height:3px; background:var(--border); border-radius:var(--r-pill); margin-top:12px; overflow:hidden }
 .mb-card .spark i{ display:block; height:100%; width:0; border-radius:var(--r-pill);
   transition:width 900ms var(--ease-out) }
 .mb-card .spark i.up{ background:var(--gain) } .mb-card .spark i.dn{ background:var(--loss) }
@@ -72,13 +75,13 @@ body.sh-on .hero-tiles{ display:none !important }
   display:grid; grid-template-columns:1fr 1fr; gap:12px;
 }
 @media (max-width:680px){ .mb-movers{ grid-template-columns:1fr } }
-.mb-col{ padding:15px 17px; border-radius:var(--r-card) }
+.mb-col{ padding:16px 16px; border-radius:var(--r-card) }
 .mb-col h3{
-  margin:0 0 11px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
+  margin:0 0 12px; font:600 var(--fs-label)/var(--lh-none) var(--font-sans);
   letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
 }
 .mb-col ol{ margin:0; padding:0; list-style:none }
-.mb-col li{ display:flex; align-items:baseline; gap:10px; padding:6px 0 }
+.mb-col li{ display:flex; align-items:baseline; gap:12px; padding:8px 0 }
 .mb-col li + li{ border-top:1px solid var(--border) }
 .mb-col a{
   flex:1 1 auto; min-width:0; text-decoration:none; color:var(--text-primary);
@@ -87,16 +90,15 @@ body.sh-on .hero-tiles{ display:none !important }
   transition:color 160ms var(--ease);
 }
 .mb-col a:hover{ color:var(--highlight-text) }
-.mb-col em{ font:600 var(--fs-small)/var(--lh-none) var(--font-sans); font-style:normal; flex:0 0 auto }
+.mb-col em{ font:500 var(--fs-small)/var(--lh-none) var(--font-sans); font-style:normal; flex:0 0 auto }
 .mb-col em.up{ color:var(--gain) } .mb-col em.dn{ color:var(--loss) }
 
 .mb-note{
-  margin:14px 0 0; text-align:center; font-size:var(--fs-small); color:var(--text-muted);
+  margin:16px 0 0; text-align:center; font-size:var(--fs-small); color:var(--text-muted);
 }
 .mb-skel{ height:96px; border-radius:var(--r-card);
-  background:var(--border);
-  background-size:400% 100%; animation:mbSkel 1400ms ease-in-out infinite }
-@keyframes mbSkel{ from{ background-position:100% 0 } to{ background-position:0 0 } }
+  background:var(--wash-strong); animation:mbSkel 1800ms ease-in-out infinite }
+@keyframes mbSkel{ 50%{ opacity:.5 } }
 
 /* ── 3 · The search box, promoted ────────────────────────────────────────── */
 

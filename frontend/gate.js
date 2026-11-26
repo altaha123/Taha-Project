@@ -73,22 +73,26 @@
              'html.gate-out #altaha-gate{display:block}';
   }
   rules +=
-    '#altaha-gate{display:none;box-sizing:border-box;max-width:560px;margin:48px auto;padding:0 16px}' +
+    '#altaha-gate{display:none;box-sizing:border-box;max-width:560px;margin:var(--sp-12) auto;padding:0 var(--gutter)}' +
+    /* An ordinary card: surface, hairline, read from the left. Its button is
+       the one filled action on the screen. */
     '#altaha-gate .ag-card{border:1px solid var(--border);border-radius:var(--r-card);' +
-      'background:var(--bg);color:var(--text-primary);padding:32px 28px;text-align:center;' +
+      'background:var(--surface);color:var(--text-primary);padding:var(--sp-8);text-align:left;' +
       'box-shadow:none}' +
-    '#altaha-gate .ag-lock{width:44px;height:44px;margin:0 auto 14px;border-radius:50%;display:grid;' +
-      'place-items:center;background:var(--surface-raised);color:var(--text-primary)}' +
-    '#altaha-gate .ag-kick{margin:0 0 6px;font:500 12px/1.4 "IBM Plex Mono",ui-monospace,monospace;' +
+    '#altaha-gate .ag-lock{width:40px;height:40px;margin:0 0 var(--sp-5);border-radius:50%;display:grid;' +
+      'place-items:center;background:var(--highlight-subtle);color:var(--highlight-text)}' +
+    '#altaha-gate .ag-kick{margin:0 0 var(--sp-2);font:500 var(--fs-label)/var(--lh-label) var(--font-sans);' +
       'letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--text-muted)}' +
-    '#altaha-gate h2{margin:0 0 10px;font:400 30px/1.15 "Instrument Serif",Georgia,serif}' +
-    '#altaha-gate p.ag-lede{margin:0 auto 22px;max-width:40ch;font:400 var(--fs-body)/var(--lh-body) var(--font-sans);' +
+    '#altaha-gate h2{margin:0 0 var(--sp-3);font:500 var(--fs-h2)/var(--lh-h2) var(--font-display);' +
+      'letter-spacing:var(--ls-heading);color:var(--text-primary)}' +
+    '#altaha-gate p.ag-lede{margin:0 0 var(--sp-6);max-width:52ch;font:400 var(--fs-body)/var(--lh-body) var(--font-sans);' +
       'color:var(--text-secondary)}' +
-    '#altaha-gate .ag-go{display:inline-flex;align-items:center;justify-content:center;min-height:48px;' +
-      'padding:0 26px;border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);' +
-      'font:600 var(--fs-body)/var(--lh-none) var(--font-sans);text-decoration:none}' +
+    '#altaha-gate .ag-go{display:inline-flex;align-items:center;justify-content:center;height:var(--control-h);' +
+      'padding:0 var(--sp-6);border-radius:var(--r-pill);background:var(--accent);color:var(--on-accent);' +
+      'font:500 var(--fs-body)/var(--lh-none) var(--font-sans);text-decoration:none}' +
+    '#altaha-gate .ag-go:hover{background:var(--accent-hover)}' +
     '#altaha-gate .ag-go:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}' +
-    '#altaha-gate .ag-note{margin:14px 0 0;font:400 var(--fs-small)/var(--lh-small) var(--font-sans);color:var(--text-muted)}';
+    '#altaha-gate .ag-note{margin:var(--sp-4) 0 0;font:400 var(--fs-small)/var(--lh-small) var(--font-sans);color:var(--text-muted)}';
 
   var style = document.createElement('style');
   style.id = 'altaha-gate-css';

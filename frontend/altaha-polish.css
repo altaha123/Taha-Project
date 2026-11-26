@@ -31,9 +31,7 @@
 
 /* The decorative divider under the wordmark keeps the brighter gold. */
 .metal {
-  background: linear-gradient(90deg, transparent,
-              var(--border-strong) 20%, var(--border-strong) 80%, transparent) !important;
-  opacity: .8;
+  background: var(--border-strong) !important;
 }
 
 
@@ -88,9 +86,9 @@ button#go, button#rgo {
 .searchrow input, input#tk { min-width: 0; }
 
 @media (max-width: 480px) {
-  .searchrow { padding: 5px 5px 5px 14px; }
-  button#go, button#rgo { padding: 0 18px; font-size: var(--fs-body); }
-  input#tk { padding: 14px 8px 14px 0; font-size: var(--fs-input); letter-spacing: normal; }
+  .searchrow { padding: 4px 4px 4px 16px; }
+  button#go, button#rgo { padding: 0 20px; font-size: var(--fs-body); }
+  input#tk { padding: 16px 8px 16px 0; font-size: var(--fs-input); letter-spacing: normal; }
   /* The floating light/dark button used to land on top of the Analyse
      button. Nudged clear of the bottom tab bar and the search field. */
   .themebtn { bottom: 84px; right: 12px; width: 38px; height: 38px; }
@@ -200,13 +198,13 @@ button#go, button#rgo {
   font-size: var(--fs-body) !important;
   font-weight: 500 !important;
   letter-spacing: normal;
-  padding-bottom: 9px !important;
+  padding-bottom: 8px !important;
 }
 .navsub-btn small, .navsub-btn span { opacity: .82; }
 .navsub-btn.on, .navsub-btn[aria-selected="true"] {
   border-bottom: 2px solid var(--border-strong) !important;
 }
-.navsub-inner { gap: 26px !important; }
+.navsub-inner { gap: 28px !important; }
 
 
 /* ── 9 · THE FIRST SCREEN SHOWS THE SEARCH BOX ────────────────────────────
@@ -223,7 +221,7 @@ button#go, button#rgo {
   .hero-in .brand { font-size: var(--fs-display) !important; font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading); }
 }
 @media (max-width: 720px) {
-  .hero-in { padding-top: 22px !important; padding-bottom: 12px !important; }
+  .hero-in { padding-top: 24px !important; padding-bottom: 12px !important; }
   .hero-in .brand { font-size: var(--fs-display) !important; font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading); }
   .navsub-inner { gap: 16px !important; }
   .navsub-btn { font-size: var(--fs-small) !important; }

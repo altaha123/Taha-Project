@@ -1,31 +1,32 @@
 /* Idea card — trimmed to score, buy range, stop, target and R:R.
    Everything else lives behind "Details". */
 #idearows .idea .top{align-items:flex-start}
-#idearows .idea .nm small{margin-top:6px}
-#idearows .idea .conv{font-size:var(--fs-h1);line-height:var(--lh-none); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
+#idearows .idea .nm small{margin-top:8px}
+#idearows .idea .conv{font-size:var(--fs-h1);line-height:var(--lh-none); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); color:var(--highlight)}
+#idearows .idea .conv small{color:var(--text-muted)}
 
 .ideaplan2{display:grid;grid-template-columns:1.6fr 1.2fr 1fr .7fr;gap:1px;margin-top:16px;
   background:var(--border);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden}
-.ideaplan2 .pc{background:var(--surface);padding:11px 14px;min-width:0}
+.ideaplan2 .pc{background:var(--surface);padding:12px 16px;min-width:0}
 .ideaplan2 .pc b{display:block;font:500 var(--fs-label)/var(--lh-none) var(--font-sans);letter-spacing:var(--ls-label);
   text-transform:uppercase;color:var(--text-muted)}
-.ideaplan2 .pc span{display:block;margin-top:8px;font:600 var(--fs-body)/var(--lh-h1) var(--font-sans);
+.ideaplan2 .pc span{display:block;margin-top:8px;font:500 var(--fs-body)/var(--lh-h1) var(--font-sans);
   color:var(--text-primary);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.ideaplan2 .pc small{font-weight:400;font-size:var(--fs-label);color:var(--loss);margin-left:6px}
-.ideaplan2 .buy span{color:var(--gain)}
-.ideaplan2 .sl span{color:var(--loss)}
-.ideaplan2 .rr span{color:var(--text-primary)}
-.ideaplan2.wait{display:flex;gap:12px;align-items:baseline;padding:11px 14px;background:var(--surface-raised)}
-.ideaplan2.wait span{font:600 var(--fs-small) var(--font-sans);letter-spacing:normal;color:var(--text-secondary)}
+/* The prices stay the text colour: a level is not a rise or a fall. Only the
+   distance to the stop is red, and it carries its arrow. */
+.ideaplan2 .pc small{font-weight:500;font-size:var(--fs-label);color:var(--loss);margin-left:8px;white-space:nowrap}
+.ideaplan2 .pc small::before{content:"\25BC\00A0";display:inline-block; transform:scale(.72); transform-origin:left center}
+.ideaplan2.wait{display:flex;gap:12px;align-items:baseline;padding:12px 16px;background:var(--surface-raised)}
+.ideaplan2.wait span{font:500 var(--fs-small) var(--font-sans);letter-spacing:normal;color:var(--text-secondary)}
 .ideaplan2.wait em{font-style:normal;font-size:var(--fs-small);color:var(--text-muted)}
 @media(max-width:620px){
   .ideaplan2{grid-template-columns:1fr 1fr}
 }
 
-#idearows .idea > .idearow-actions{align-items:center;margin-top:14px}
+#idearows .idea > .idearow-actions{align-items:center;margin-top:16px}
 
 /* Details disclosure — grid-rows trick animates to the content's height. */
-.morebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;
+.morebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;min-height:var(--control-h);
   font:500 var(--fs-label) var(--font-sans);letter-spacing:var(--ls-label);text-transform:uppercase;
   background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0 4px}
 .morebtn:hover{color:var(--text-primary)}
@@ -35,14 +36,14 @@
 .ideamore{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s var(--ease-soft,ease)}
 .ideamore-in{min-height:0;overflow:hidden;opacity:0;transition:opacity .22s ease}
 .idea.open .ideamore{grid-template-rows:1fr}
-.idea.open .ideamore-in{opacity:1;padding-top:6px}
-.ideamore .arch{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.ideamore .arch .ip{padding:2px 8px;border:1px solid;font-weight:600;letter-spacing:var(--ls-label);margin-right:6px}
+.idea.open .ideamore-in{opacity:1;padding-top:8px}
+.ideamore .arch{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ideamore .arch .ip{padding:2px 8px;border:1px solid;border-radius:var(--r-pill);font-weight:500;letter-spacing:var(--ls-label);margin-right:8px}
 .ideamore .ip.buy{color:var(--gain);border-color:var(--gain)}
-.ideamore .ip.watch{color:var(--text-primary);border-color:var(--border-strong)}
+.ideamore .ip.watch{color:var(--highlight-text);border-color:var(--highlight)}
 .ideamore .ip.wait{color:var(--text-secondary);border-color:var(--border-strong)}
 .ideamore .ip.avoid{color:var(--loss);border-color:var(--loss)}
-.ideamore .filingtag{margin-top:10px}
+.ideamore .filingtag{margin-top:12px}
 
 /* ── Save: the star pops, spins and throws a ring when a stock is saved ── */
 .svbtn{display:inline-flex;align-items:center;gap:8px;position:relative;
@@ -53,7 +54,7 @@
 .svbtn.on{border-color:var(--highlight);color:var(--highlight-text)}
 .svbtn.on .sv-star{color:var(--highlight-text)}
 .svbtn.pop .sv-star{animation:svPop .6s cubic-bezier(.2,1.6,.4,1) both}
-.svbtn::after{content:"";position:absolute;left:18px;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;
+.svbtn::after{content:"";position:absolute;left:18px;top:50%;width:22px;height:22px;margin:-12px 0 0 -12px;
   border-radius:50%;border:2px solid var(--border-strong);opacity:0;pointer-events:none}
 .svbtn.pop::after{animation:svRing .6s ease-out both}
 @keyframes svPop{0%{transform:scale(.4) rotate(-90deg)}60%{transform:scale(1.45) rotate(20deg)}
@@ -66,7 +67,7 @@
 }
 
 /* Save sits beside Details on the card. */
-#idearows .svbtn{min-height:44px;padding:7px 16px;font:500 var(--fs-label) var(--font-sans);
+#idearows .svbtn{min-height:var(--control-h);padding:0 var(--sp-4);font:500 var(--fs-label) var(--font-sans);
   letter-spacing:var(--ls-label);text-transform:uppercase}
 #idearows .svbtn .sv-star{font-size:var(--fs-body)}
 

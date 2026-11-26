@@ -1,6 +1,6 @@
 /* Shared finishing layer, using the existing light/dark theme tokens. */
 :root { --ux-fast: 180ms; }
-.ux-button, .ux-bottom button { font: inherit; color: var(--text-primary); background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-control); padding: 10px 14px; min-height: 44px; cursor: pointer; transition: background var(--ux-fast), border-color var(--ux-fast), transform var(--ux-fast); }
+.ux-button, .ux-bottom button { font: inherit; color: var(--text-primary); background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-control); padding: 12px 16px; min-height: 44px; cursor: pointer; transition: background var(--ux-fast), border-color var(--ux-fast), transform var(--ux-fast); }
 .ux-button:hover { background: var(--surface-raised); border-color: var(--highlight); }
 .ux-button:active, .ux-bottom button:active { transform: scale(.97); }
 .ux-button[aria-pressed="true"] { color: var(--highlight-text); background: var(--surface-raised); border-color: var(--highlight); }
@@ -29,7 +29,7 @@
 .ux-saved-list > .ux-art { max-width: 240px; margin: 20px auto; }
 .ux-guide { display: grid; grid-template-columns: 160px 1fr; gap: 24px; align-items: center; max-width: 660px; margin: 20px auto 28px; padding: 20px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); }
 .ux-guide ol { padding-left: 20px; color: var(--text-muted); font-size: var(--fs-body); line-height: var(--lh-body); }
-.ux-toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; padding: 12px 18px; border: 1px solid var(--border-strong); border-radius: var(--r-card); background: var(--bg); color: var(--text-primary); box-shadow: var(--shadow-raised); width: max-content; max-width: calc(100vw - 40px); box-sizing: border-box; z-index: 1500; transition: opacity var(--ux-fast), transform var(--ux-fast); font-size: var(--fs-body); }
+.ux-toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; padding: 12px 20px; border: 1px solid var(--border-strong); border-radius: var(--r-card); background: var(--bg); color: var(--text-primary); box-shadow: var(--shadow-raised); width: max-content; max-width: calc(100vw - 40px); box-sizing: border-box; z-index: 1500; transition: opacity var(--ux-fast), transform var(--ux-fast); font-size: var(--fs-body); }
 .ux-toast.on { opacity: 1; transform: translate(-50%, 0); }
 .idea .nm > a { color: inherit; text-decoration: none; }
 .idea .nm > a:hover { text-decoration: underline; text-underline-offset: 4px; }
@@ -53,14 +53,14 @@
 @media (max-width: 1040px) {
   body.sh-on { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .ux-bottom { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; inset: auto 0 0; z-index: 950; gap: 4px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--border); box-shadow: none; }
-  .ux-bottom button { border-color: transparent; font-size: var(--fs-small); padding: 10px 4px; font-weight: 500; }
+  .ux-bottom button { border-color: transparent; font-size: var(--fs-small); padding: 12px 4px; font-weight: 500; }
   .ux-bottom button[aria-current], .ux-bottom button[aria-expanded="true"] { background: var(--surface-raised); border-color: var(--highlight); }
   .ux-desktop-save { display: none; }
   .ux-toast { bottom: calc(82px + env(safe-area-inset-bottom)); }
   .sh-drawer { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
   .sh-icon { min-width: 44px; min-height: 44px; }
   .sh-search input { font-size: var(--fs-input); height: 44px; }
-  .sh-bar { gap: 10px; padding-inline: 12px; }
+  .sh-bar { gap: 12px; padding-inline: 12px; }
   .sh-search .kbd { display: none; }
   .sh-search input { padding-right: 12px; }
   .sh-ticker { overflow-x: auto; }
@@ -70,12 +70,12 @@
 @media (max-width: 600px) {
   .ux-dialog { width: 100%; max-width: 100%; height: 92vh; height: 92dvh; max-height: 92dvh; margin: auto 0 0; padding: 20px; border-radius: var(--r-card) var(--r-card) 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
   .ux-dialog-foot { bottom: -20px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
-  .ux-guide { grid-template-columns: 1fr; gap: 14px; padding: 18px; }
+  .ux-guide { grid-template-columns: 1fr; gap: 16px; padding: 20px; }
   .ux-guide > .ux-art { width: 120px; }
   .ux-guide h2 { font-size: var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
-  .mb { padding: 6px 0 0; }
+  .mb { padding: 8px 0 0; }
   .mb-idx { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .mb-card { padding: 14px 12px; }
+  .mb-card { padding: 16px 12px; }
   .mb-card .v { font-size: var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading); }
   .mb-card .k { font-size: var(--fs-label); letter-spacing: var(--ls-label); }
   .mb-movers { grid-template-columns: 1fr; }
@@ -99,11 +99,11 @@
 /* The phone bar since the three doors: icon over label, search raised in the
    middle, and a gold marker that slides to the door you are in. */
 @media (max-width: 720px) {
-  .ux-bottom { position: fixed; align-items: end; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); gap: 0; }
+  .ux-bottom { position: fixed; align-items: end; padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); gap: 0; }
   .ux-bottom .ux-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px;
-    padding: 6px 2px 4px; border: 0 !important; background: transparent !important; color: var(--text-muted); font-size: var(--fs-label); transition: color .3s; }
+    padding: 8px 2px 4px; border: 0 !important; background: transparent !important; color: var(--text-muted); font-size: var(--fs-label); transition: color .3s; }
   .ux-bottom .ux-tab[aria-current] { color: var(--text-primary); font-weight: 600; }
-  .ux-bottom .ux-fab { justify-self: center; width: 56px; height: 56px; min-height: 56px; margin-top: -18px; padding: 0; border-radius: 50% !important;
+  .ux-bottom .ux-fab { justify-self: center; width: 56px; height: 56px; min-height: 56px; margin-top: -20px; padding: 0; border-radius: 50% !important;
     background: var(--accent) !important; color: var(--on-accent, var(--text-primary)); box-shadow: var(--shadow-raised);
     animation: uxPop .5s cubic-bezier(.2,.7,.2,1) .2s backwards; }
   .ux-bottom .ux-fab span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

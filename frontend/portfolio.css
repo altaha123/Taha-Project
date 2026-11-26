@@ -1,39 +1,23 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Altaha Screener — Portfolio Review styles
 
-   Chart colours are declared as custom properties on :root and overridden
-   under html[data-theme="dark"]. The SVG builders reference the variables
-   rather than literal hex, so dark mode needs no second code path — the same
-   oversight that made the More menu's labels invisible on a dark background
-   cannot recur here.
+   Chart colours are custom properties on :root that name theme tokens. The
+   SVG builders reference the variables rather than a literal colour, so the
+   charts follow the theme with no second code path.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
   --pf-good:        var(--gain);
   --pf-bad:         var(--loss);
-  --pf-over:        var(--text-muted);
-  --pf-under:       var(--info);
-  --pf-dot-held:    var(--text-muted);
+  --pf-over:        var(--chart-1);
+  --pf-under:       var(--chart-2);
+  --pf-dot-held:    var(--chart-1);
   --pf-dot-idle:    var(--border-strong);
-  --pf-q-lead:      var(--gain);
-  --pf-q-improve:   var(--info);
-  --pf-q-weaken:    var(--text-muted);
-  --pf-q-lag:       var(--loss);
-  --pf-axis:        var(--border);
-  --pf-rule:        var(--border-strong);
-}
-
-html[data-theme="dark"] {
-  --pf-good:        var(--gain);
-  --pf-bad:         var(--loss);
-  --pf-over:        var(--text-primary);
-  --pf-under:       var(--info);
-  --pf-dot-held:    var(--text-primary);
-  --pf-dot-idle:    var(--border-strong);
-  --pf-q-lead:      var(--gain);
-  --pf-q-improve:   var(--info);
-  --pf-q-weaken:    var(--text-muted);
-  --pf-q-lag:       var(--loss);
+  /* Quadrant grounds are faint washes: the dots and labels are the data. */
+  --pf-q-lead:      var(--gain-bg);
+  --pf-q-improve:   var(--info-bg);
+  --pf-q-weaken:    var(--wash);
+  --pf-q-lag:       var(--loss-bg);
   --pf-axis:        var(--border);
   --pf-rule:        var(--border-strong);
 }
@@ -51,13 +35,12 @@ html[data-theme="dark"] {
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-xs);
-  padding: 9px 10px;
+  border-radius: var(--r-control);
+  padding: 8px 12px;
   font-family: var(--font-sans);
   font-size: var(--fs-small);
   color: var(--text-primary);
 }
-html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--text-primary); }
 .pfrow input:focus { outline: none; border-color: var(--focus-ring); }
 
 /* Inline validation. The old module could only say "add at least one
@@ -68,7 +51,7 @@ html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--
   background: var(--loss-bg);
 }
 .pfdel {
-  background: none; border: 1px solid var(--border); border-radius: var(--r-xs);
+  background: none; border: 1px solid var(--border); border-radius: var(--r-control);
   color: var(--text-muted); cursor: pointer; padding: 8px 0; font-size: var(--fs-small);
   transition: color .15s, border-color .15s;
 }
@@ -83,32 +66,32 @@ html[data-theme="dark"] .pfrow input { background: var(--surface); color: var(--
 }
 .pfhead i { font-style: normal; opacity: .6; text-transform: none; letter-spacing: 0; }
 
-.pfinrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+.pfinrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center; }
+/* The secondary button: an outline, 40px, 8px corners. */
 .pfbtn {
-  display: inline-block; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r-xs); padding: 8px 13px; font-family: var(--font-sans);
-  font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase;
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  min-height: var(--control-h); padding: 0 var(--sp-5);
+  background: transparent; border: 1px solid var(--border-strong);
+  border-radius: var(--r-control); font: 500 var(--fs-body)/var(--lh-none) var(--font-sans);
+  letter-spacing: normal; text-transform: none;
   color: var(--text-primary); cursor: pointer; text-decoration: none;
-  transition: border-color .15s, color .15s;
+  transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
-html[data-theme="dark"] .pfbtn { background: var(--surface); color: var(--text-secondary); }
-.pfbtn:hover { border-color: var(--highlight); color: var(--highlight-text); }
+.pfbtn:hover { background: var(--surface-raised); color: var(--text-primary); }
 .pfbtn.ghost { background: none; }
 .pfbtn:disabled { opacity: .4; cursor: not-allowed; }
 .pfsel {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xs);
-  padding: 8px 10px; font-family: var(--font-sans); font-size: var(--fs-label);
-  text-transform: uppercase; letter-spacing: var(--ls-label); color: var(--text-primary);
+  background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--r-control);
+  padding: 8px 12px; font-family: var(--font-sans); font-size: var(--fs-input);
+  color: var(--text-primary);
 }
-html[data-theme="dark"] .pfsel { background: var(--surface); color: var(--text-secondary); }
 
 .pfpaste {
   width: 100%; min-height: 42px; resize: vertical;
-  background: var(--surface); border: 1px dashed var(--border); border-radius: var(--r-xs);
-  padding: 10px 12px; font-family: var(--font-sans); font-size: var(--fs-small);
+  background: var(--surface-raised); border: 1px dashed var(--border-strong); border-radius: var(--r-control);
+  padding: 12px 12px; font-family: var(--font-sans); font-size: var(--fs-input);
   color: var(--text-primary); margin-bottom: 12px;
 }
-html[data-theme="dark"] .pfpaste { background: var(--surface); color: var(--text-secondary); }
 .pfpaste:focus { outline: none; border-color: var(--focus-ring); border-style: solid; }
 
 .brun-note.warn { color: var(--loss); }
@@ -117,32 +100,31 @@ html[data-theme="dark"] .pfpaste { background: var(--surface); color: var(--text
 /* ── Column mapper ──────────────────────────────────────────────────────── */
 
 .pfmapper {
-  display: none; margin: 14px 0; padding: 16px;
-  border: 1px solid var(--border-strong); border-radius: var(--r-xs);
+  display: none; margin: 16px 0; padding: var(--sp-4);
+  border: 1px solid var(--border); border-radius: var(--r-card);
   background: var(--surface-raised);
 }
-.pfmap-head { font-size: var(--fs-small); color: var(--text-secondary); margin-bottom: 14px; line-height: var(--lh-body); }
+.pfmap-head { font-size: var(--fs-small); color: var(--text-secondary); margin-bottom: 16px; line-height: var(--lh-body); }
 .pfmap-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px; margin-bottom: 14px;
+  gap: 12px; margin-bottom: 16px;
 }
-.pfmap-grid label { display: flex; flex-direction: column; gap: 5px; }
+.pfmap-grid label { display: flex; flex-direction: column; gap: 4px; }
 .pfmap-grid span {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 .pfmap-grid i { font-style: normal; opacity: .6; text-transform: none; }
 .pfmap-grid select {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xs);
-  padding: 8px 9px; font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-control);
+  padding: 8px 8px; font-family: var(--font-sans); font-size: var(--fs-input); color: var(--text-primary);
 }
-html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: var(--text-secondary); }
 .pfmap-preview {
   font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted);
-  border: 1px solid var(--border); border-radius: var(--r-xs); padding: 8px;
-  margin-bottom: 14px; overflow-x: auto;
+  border: 1px solid var(--border); border-radius: var(--r-control); padding: 8px;
+  margin-bottom: 16px; overflow-x: auto;
 }
-.pfmap-preview > div { display: flex; gap: 14px; white-space: nowrap; padding: 2px 0; }
+.pfmap-preview > div { display: flex; gap: 16px; white-space: nowrap; padding: 2px 0; }
 .pfmap-preview span { min-width: 74px; }
 .pfmap-act { display: flex; gap: 8px; }
 
@@ -150,10 +132,10 @@ html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: 
 
 .pfprog {
   height: 3px; background: var(--border); border-radius: var(--r-xs);
-  overflow: hidden; margin-bottom: 9px;
+  overflow: hidden; margin-bottom: 8px;
 }
 .pfprog i {
-  display: block; height: 100%; background: var(--accent);
+  display: block; height: 100%; background: var(--highlight);
   transition: width .45s cubic-bezier(.4, 0, .2, 1);
 }
 .pfprogtx {
@@ -173,13 +155,13 @@ html[data-theme="dark"] .pfmap-grid select { background: var(--surface); color: 
 .pfstats {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 1px; background: var(--border); border: 1px solid var(--border);
-  margin-top: 18px;
+  border-radius: var(--r-card); overflow: hidden;
+  margin-top: 20px;
 }
 .pfstat {
-  background: var(--bg); padding: 12px 13px;
-  display: flex; flex-direction: column; gap: 5px;
+  background: var(--surface); padding: 12px 12px;
+  display: flex; flex-direction: column; gap: 4px;
 }
-html[data-theme="dark"] .pfstat { background: var(--surface); }
 .pfstat .k {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
@@ -190,29 +172,27 @@ html[data-theme="dark"] .pfstat { background: var(--surface); }
 
 .pfpolicy {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px; margin-bottom: 6px;
+  gap: 12px; margin-bottom: 8px;
 }
-.pfpolicy label { display: flex; flex-direction: column; gap: 5px; }
+.pfpolicy label { display: flex; flex-direction: column; gap: 4px; }
 .pfpolicy .k {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
 .pfpolicy input {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xs);
-  padding: 8px 10px; font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary);
+  background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--r-control);
+  padding: 8px 12px; font-family: var(--font-sans); font-size: var(--fs-input); color: var(--text-primary);
 }
-html[data-theme="dark"] .pfpolicy input { background: var(--surface); color: var(--text-primary); }
 .pfpolicy input:focus { outline: none; border-color: var(--focus-ring); }
 .pfpolicy .u { font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-muted); }
 
 .pfbreach {
-  border: 1px solid var(--border); border-left: 3px solid var(--loss);
-  border-radius: 0; background: var(--bg); padding: 14px 16px; margin-bottom: 9px;
+  border: 1px solid var(--border); border-left: 2px solid var(--loss);
+  border-radius: var(--r-control); background: var(--surface); padding: 16px 16px; margin-bottom: 8px;
 }
-html[data-theme="dark"] .pfbreach { background: var(--surface); }
 .pfb-head {
   display: flex; justify-content: space-between; align-items: baseline;
-  gap: 12px; margin-bottom: 7px; flex-wrap: wrap;
+  gap: 12px; margin-bottom: 8px; flex-wrap: wrap;
 }
 .pfb-title {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
@@ -224,10 +204,10 @@ html[data-theme="dark"] .pfbreach { background: var(--surface); }
 .pfbreach p { margin: 0; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); }
 
 .pff {
-  border-left: 3px solid var(--border); padding: 12px 15px; margin-bottom: 8px;
-  font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); background: var(--bg);
+  border-left: 2px solid var(--border); padding: 12px 16px; margin-bottom: 8px;
+  font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); background: var(--surface-raised);
+  border-radius: 0 var(--r-control) var(--r-control) 0;
 }
-html[data-theme="dark"] .pff { background: var(--surface); }
 .pff.good { border-left-color: var(--gain); }
 .pff.note { border-left-color: var(--border-strong); }
 .pff.flag { border-left-color: var(--loss); }
@@ -248,35 +228,37 @@ html[data-theme="dark"] .pff { background: var(--surface); }
 .pfrule { stroke: var(--pf-rule); stroke-width: 1; stroke-dasharray: 4 3; }
 
 .pfchart-split {
-  display: grid; grid-template-columns: 220px 1fr; gap: 26px; align-items: center;
+  display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: center;
 }
-.pflegend { display: flex; flex-direction: column; gap: 7px; }
+.pflegend { display: flex; flex-direction: column; gap: 8px; }
 .pflg {
-  display: grid; grid-template-columns: 11px 1fr auto; gap: 10px;
+  display: grid; grid-template-columns: 11px 1fr auto; gap: 12px;
   align-items: center; font-size: var(--fs-small); color: var(--text-secondary);
 }
 .pflg i { width: 11px; height: 11px; border-radius: var(--r-xs); display: block; }
 .pflg b { font-family: var(--font-sans); font-size: var(--fs-small); color: var(--text-primary); }
 
-.pfmeth { margin-top: 14px; }
+.pfmeth { margin-top: 16px; }
 .pfmeth summary {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); cursor: pointer;
 }
-.pfmeth p { font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-muted); margin: 9px 0 0; }
+.pfmeth p { font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-muted); margin: 8px 0 0; }
 
 /* ── Sector table ───────────────────────────────────────────────────────── */
 
-.pfsectbl { border: 1px solid var(--border); overflow-x: auto; }
+.pfsectbl { border: 1px solid var(--border); border-radius: var(--r-card); overflow-x: auto; }
 .pfst-head, .pfst-row {
   display: grid;
   grid-template-columns: 1.7fr .6fr .6fr .6fr .8fr .9fr;
-  gap: 10px; padding: 11px 14px; align-items: center; min-width: 560px;
+  gap: 12px; padding: 12px 16px; align-items: center; min-width: 560px;
 }
 .pfst-head {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
 }
+.pfst-head span:nth-child(n+2):nth-child(-n+5), .pfst-row > span:nth-child(n+2):nth-child(-n+5) { text-align: right; }
 .pfst-row { border-bottom: 1px solid var(--border); font-family: var(--font-sans); font-size: var(--fs-small); }
 .pfst-row:last-child { border-bottom: 0; }
 .pfst-row .nm {
@@ -287,24 +269,29 @@ html[data-theme="dark"] .pff { background: var(--surface); }
 .pfst-row .up   { color: var(--gain); }
 .pfst-row .down { color: var(--loss); }
 .pfst-row .mute { color: var(--text-muted); }
+/* A rise or a fall always carries its arrow, here and in the ledgers below. */
+:is(.pfst-row, .pfl-row, .pfh .m) .up::before, .pfhero-val .s.up::before, .pvsub.up::before { content: "\25B2\00A0"; display:inline-block;transform:scale(.72);transform-origin:left center; }
+:is(.pfst-row, .pfl-row, .pfh .m) .down::before, .pfhero-val .s.down::before, .pvsub.down::before { content: "\25BC\00A0"; display:inline-block;transform:scale(.72);transform-origin:left center; }
 
+/* State and call tags are chips: a tint and its tone, no outline. */
 .pfstate {
-  font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase;
-  padding: 3px 7px; border: 1px solid var(--border); border-radius: var(--r-xs);
-  text-align: center; color: var(--text-muted);
+  justify-self: start; display: inline-flex; align-items: center; height: 22px;
+  font: 500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing: normal;
+  padding: 0 var(--sp-2); border-radius: var(--r-pill);
+  background: var(--highlight-subtle); color: var(--highlight-text);
 }
-.pfstate.leading   { color: var(--gain); border-color: var(--gain); }
-.pfstate.improving { color: var(--pf-under); border-color: var(--pf-under); }
-.pfstate.weakening { color: var(--warning); border-color: var(--warning); }
-.pfstate.lagging   { color: var(--loss); border-color: var(--loss); }
+.pfstate.leading   { color: var(--gain); background: var(--gain-bg); }
+.pfstate.improving { color: var(--info); background: var(--info-bg); }
+.pfstate.weakening { color: var(--warning); background: var(--warning-bg); }
+.pfstate.lagging   { color: var(--loss); background: var(--loss-bg); }
 
 /* ── Holdings ledger ────────────────────────────────────────────────────── */
 
 .pfh { border-bottom: 1px solid var(--border); }
-.pfh.breach > summary { border-left: 3px solid var(--loss); padding-left: 11px; }
+.pfh.breach > summary { border-left: 2px solid var(--loss); padding-left: 12px; }
 .pfh > summary {
   display: grid; grid-template-columns: 1.7fr .9fr .6fr 1fr .5fr;
-  gap: 12px; padding: 13px 0; cursor: pointer; align-items: center; list-style: none;
+  gap: 12px; padding: 12px 0; cursor: pointer; align-items: center; list-style: none;
 }
 .pfh > summary::-webkit-details-marker { display: none; }
 .pfh .sym {
@@ -330,9 +317,9 @@ html[data-theme="dark"] .pff { background: var(--surface); }
 @media (max-width: 780px) {
   .pfrow, .pfhead { grid-template-columns: 1.2fr .6fr .8fr 32px; }
   .pfrow .pf_date, .pfhead .h-date { display: none; }
-  .pfchart-split { grid-template-columns: 1fr; gap: 18px; }
+  .pfchart-split { grid-template-columns: 1fr; gap: 20px; }
   .pfchart-split .pfsvg { max-width: 220px; margin: 0 auto; }
-  .pfh > summary { grid-template-columns: 1.4fr .8fr .5fr; row-gap: 6px; }
+  .pfh > summary { grid-template-columns: 1.4fr .8fr .5fr; row-gap: 8px; }
   .pfh .setup { grid-column: 1 / -1; }
   .pfstats { grid-template-columns: repeat(2, 1fr); }
 }
@@ -342,15 +329,14 @@ html[data-theme="dark"] .pff { background: var(--surface); }
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .pfhero {
-  border: 1px solid var(--border); border-top: 3px solid var(--border-strong);
-  background: var(--bg); padding: 26px 28px; margin-bottom: 22px;
+  border: 1px solid var(--border); border-radius: var(--r-card);
+  background: var(--surface); padding: var(--card-pad); margin-bottom: var(--sp-6);
 }
-html[data-theme="dark"] .pfhero { background: var(--surface); }
 .pfhero-top {
   display: flex; justify-content: space-between; align-items: center;
   gap: 24px; flex-wrap: wrap;
 }
-.pfhero-val { display: flex; flex-direction: column; gap: 6px; }
+.pfhero-val { display: flex; flex-direction: column; gap: 8px; }
 .pfhero-val .k {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
@@ -374,19 +360,19 @@ html[data-theme="dark"] .pfhero { background: var(--surface); }
 
 .pfactionbar {
   display: grid; grid-template-columns: repeat(5, 1fr);
-  gap: 1px; background: var(--border); border: 1px solid var(--border); margin-top: 22px;
+  gap: 1px; background: var(--border); border: 1px solid var(--border); margin-top: 24px;
+  border-radius: var(--r-control); overflow: hidden;
 }
 .pfab {
-  background: var(--bg); padding: 12px 8px; text-align: center;
+  background: var(--surface); padding: 12px var(--sp-4); text-align: left;
   display: flex; flex-direction: column; gap: 3px;
 }
-html[data-theme="dark"] .pfab { background: var(--surface); }
 .pfab b { font-family: var(--font-display); font-size: var(--fs-h2); color: var(--text-primary); font-weight:500; letter-spacing:var(--ls-heading); }
 .pfab span {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted);
 }
-.pfab.zero b { color: var(--text-muted); opacity: .45; }
+.pfab.zero b { color: var(--text-muted); }
 .pfab.exit b   { color: var(--loss); }
 .pfab.reduce b { color: var(--warning); }
 .pfab.add b    { color: var(--gain); }
@@ -394,28 +380,22 @@ html[data-theme="dark"] .pfab { background: var(--surface); }
 /* ── Action cards ───────────────────────────────────────────────────────── */
 
 .pfact {
-  border: 1px solid var(--border); border-left: 3px solid var(--text-muted);
-  background: var(--bg); padding: 18px 20px; margin-bottom: 12px;
+  border: 1px solid var(--border); border-radius: var(--r-card);
+  background: var(--surface); padding: var(--card-pad); margin-bottom: 12px;
 }
-html[data-theme="dark"] .pfact { background: var(--surface); }
-.pfact.exit   { border-left-color: var(--loss); }
-.pfact.reduce { border-left-color: var(--warning); }
-.pfact.review { border-left-color: var(--border-strong); }
-.pfact.add    { border-left-color: var(--gain); }
-.pfact.hold   { border-left-color: var(--border); }
 
 .pfact-head {
-  display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap; margin-bottom: 11px;
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;
 }
 .pfact-tag {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
-  text-transform: uppercase; padding: 4px 9px; border-radius: var(--r-xs);
-  background: var(--border); color: var(--text-primary);
+  text-transform: uppercase; padding: 4px 8px; border-radius: var(--r-pill);
+  background: var(--highlight-subtle); color: var(--highlight-text);
 }
-.pfact.exit   .pfact-tag { background: var(--loss); color: var(--on-accent); }
-.pfact.reduce .pfact-tag { background: var(--warning); color: var(--text-primary); }
-.pfact.review .pfact-tag { background: var(--border-strong); color: var(--text-primary); }
-.pfact.add    .pfact-tag { background: var(--gain); color: var(--gain); }
+.pfact.exit   .pfact-tag { background: var(--loss-bg); color: var(--loss); }
+.pfact.reduce .pfact-tag { background: var(--warning-bg); color: var(--warning); }
+.pfact.review .pfact-tag { background: var(--info-bg); color: var(--info); }
+.pfact.add    .pfact-tag { background: var(--gain-bg); color: var(--gain); }
 .pfact-sym {
   font-family: var(--font-mono); font-size: var(--fs-body); color: var(--text-primary); letter-spacing: normal;
 }
@@ -423,24 +403,23 @@ html[data-theme="dark"] .pfact { background: var(--surface); }
 .pfact-conv {
   margin-left: auto; font-family: var(--font-sans); font-size: var(--fs-label);
   letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-muted);
-  border: 1px solid var(--border); padding: 3px 7px; border-radius: var(--r-xs);
 }
-.pfact-conv.high { color: var(--text-secondary); border-color: var(--border-strong); }
+.pfact-conv.high { color: var(--text-secondary); }
 
 .pfact-say {
   font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-primary);
   margin: 0 0 12px; font-weight: 500;
 }
-.pfact-why { margin: 0; padding-left: 17px; }
+.pfact-why { margin: 0; padding-left: 16px; }
 .pfact-why li {
-  font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); margin-bottom: 5px;
+  font-size: var(--fs-body); line-height: var(--lh-body); color: var(--text-secondary); margin-bottom: 4px;
 }
 
 .pfnews {
-  margin-top: 13px; padding: 10px 13px; border-left: 2px solid var(--border-strong);
+  margin-top: 12px; padding: 12px 12px; border-left: 2px solid var(--border-strong);
   background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-secondary);
+  border-radius: 0 var(--r-control) var(--r-control) 0;
 }
-html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 .pfnews.critical, .pfnews.high { border-left-color: var(--loss); }
 .pfnews .k {
   display: block; font-family: var(--font-sans); font-size: var(--fs-label);
@@ -449,7 +428,7 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 .pfnews a { color: var(--highlight-text); }
 
 .pfalt {
-  margin-top: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
 .pfalt .k {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
@@ -457,22 +436,24 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 }
 .pfaltpill {
   font-family: var(--font-sans); font-size: var(--fs-label); color: var(--text-secondary);
-  border: 1px solid var(--border); border-radius: var(--r-xs); padding: 5px 9px;
+  border: 1px solid var(--border); border-radius: var(--r-pill); padding: 4px 8px;
 }
 .pfaltpill b { color: var(--text-primary); }
-.pfaltpill i { font-style: normal; color: var(--gain); margin-left: 5px; font-size: var(--fs-label); }
+.pfaltpill i { font-style: normal; color: var(--highlight-text); margin-left: 4px; font-size: var(--fs-label); }
 
 /* ── Ledger ─────────────────────────────────────────────────────────────── */
 
-.pfledger { border: 1px solid var(--border); overflow-x: auto; }
+.pfledger { border: 1px solid var(--border); border-radius: var(--r-card); overflow-x: auto; }
 .pfl-head, .pfl-row {
   display: grid; grid-template-columns: 1.7fr 1.1fr .8fr .7fr .5fr .8fr;
-  gap: 10px; padding: 11px 14px; align-items: center; min-width: 620px;
+  gap: 12px; padding: 12px 16px; align-items: center; min-width: 620px;
 }
 .pfl-head {
   font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
 }
+.pfl-head span:nth-child(n+2):nth-child(-n+5), .pfl-row > span:nth-child(n+2):nth-child(-n+5) { text-align: right; }
 .pfl-row { border-bottom: 1px solid var(--border); }
 .pfl-row:last-child { border-bottom: 0; }
 .pfl-row .nm {
@@ -486,22 +467,23 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
 .pfl-row .sc.hi { color: var(--gain); }
 .pfl-row .sc.lo { color: var(--loss); }
 .pftag {
-  font-family: var(--font-sans); font-size: var(--fs-label); letter-spacing: var(--ls-label);
-  text-transform: uppercase; text-align: center; padding: 4px 6px;
-  border: 1px solid var(--border); border-radius: var(--r-xs); color: var(--text-muted);
+  justify-self: start; display: inline-flex; align-items: center; height: 22px;
+  font: 500 var(--fs-label)/var(--lh-none) var(--font-sans); letter-spacing: normal;
+  padding: 0 var(--sp-2); border-radius: var(--r-pill);
+  background: var(--highlight-subtle); color: var(--highlight-text);
 }
-.pftag.exit   { color: var(--loss); border-color: var(--loss); }
-.pftag.reduce { color: var(--warning); border-color: var(--warning); }
-.pftag.add    { color: var(--gain); border-color: var(--gain); }
+.pftag.exit   { color: var(--loss); background: var(--loss-bg); }
+.pftag.reduce { color: var(--warning); background: var(--warning-bg); }
+.pftag.add    { color: var(--gain); background: var(--gain-bg); }
 
-.pfbtn.primary {
-  background: var(--accent); color: var(--on-accent); border-color: var(--border-strong);
-}
-.pfbtn.primary:hover { background: var(--accent-hover); border-color: var(--highlight); color: var(--on-accent,var(--on-accent)); }
+/* The page's one accent fill is Analyse. "Download report" leads its own row
+   as the strong outline. */
+.pfbtn.primary { border-color: var(--text-primary); }
+.pfbtn.primary:hover { background: var(--surface-raised); }
 .pfreport-act { margin-top: 20px; }
 
 @media (max-width: 780px) {
-  .pfhero { padding: 20px 17px; }
+  .pfhero { padding: 20px 16px; }
   .pfhero-top { flex-direction: column; align-items: flex-start; }
   .pfactionbar { grid-template-columns: repeat(3, 1fr); }
   .pfact-conv { margin-left: 0; }
@@ -515,40 +497,50 @@ html[data-theme="dark"] .pfnews { background: var(--surface-raised); }
   --pf-editor-muted:var(--text-muted);
   scroll-margin-top:calc(var(--sh-chrome-h,132px) + 20px);
 }
-html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:var(--text-secondary) }
-#view-portfolio .tabhead{ margin-bottom:24px }
-#view-portfolio .tabhead h2{ font-size:var(--fs-display); margin-bottom:10px ; font-family:var(--font-display); font-weight:400; letter-spacing:var(--ls-heading)}
+#view-portfolio .tabhead{ margin-bottom:var(--sp-8) }
+#view-portfolio .tabhead h2{ font:500 var(--fs-h1)/var(--lh-h1) var(--font-display); letter-spacing:var(--ls-heading); margin-bottom:var(--sp-2) }
 #view-portfolio .tabhead p{ max-width:64ch; line-height:var(--lh-body) }
-#view-portfolio > .psec{ padding:24px; border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface) }
-#view-portfolio .lh{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:22px }
+#view-portfolio > .psec{ padding:var(--card-pad); border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface) }
+#view-portfolio .lh{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px }
+/* type.css sets `.psec > .lh h3` to 400 after the scale made 22px Fraunces 500. */
+#view-portfolio .lh h3{ font-weight:500; line-height:var(--lh-h2) }
 #view-portfolio #pf_count{ color:var(--pf-editor-muted); font:400 var(--fs-small)/var(--lh-small) var(--font-sans) }
+/* Every button here is the secondary outline, 40px high. The one accent fill
+   on the page is Analyse. */
 #view-portfolio .pfbtn{
   display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box;
-  min-height:44px; padding:11px 16px; border:1px solid var(--border); border-radius:var(--r-control);
-  background:var(--surface-raised); color:var(--text-primary); box-shadow:none;
-  font:500 var(--fs-body)/var(--lh-label) var(--font-sans); text-transform:none; letter-spacing:0;
+  min-height:var(--control-h); padding:0 var(--sp-5); border:1px solid var(--border-strong); border-radius:var(--r-control);
+  background:transparent; color:var(--text-primary); box-shadow:none;
+  font:500 var(--fs-body)/var(--lh-none) var(--font-sans); text-transform:none; letter-spacing:0;
 }
-#view-portfolio .pfbtn:hover:not(:disabled){ background:var(--bg); border-color:var(--highlight); transform:none; box-shadow:none }
-#view-portfolio #pf_addrow{ background:var(--accent); color:var(--on-accent); border-color:var(--border-strong) }
-#view-portfolio #pf_save, #view-portfolio #pf_go, #view-portfolio #pf_dl{
-  background:var(--accent); color:var(--on-accent,var(--on-accent)); border-color:var(--border-strong);
-}
-#view-portfolio .pfbtn:disabled{ opacity:.4; cursor:not-allowed; transform:none }
-#view-portfolio .pfbtn.ghost{ background:transparent; border-color:var(--border); color:var(--pf-editor-muted) }
-#view-portfolio .pfbtn.ghost:hover:not(:disabled){ color:var(--loss); border-color:var(--loss) }
+#view-portfolio .pfbtn:hover:not(:disabled){ background:var(--surface-raised); border-color:var(--border-strong); color:var(--text-primary); transform:none; box-shadow:none }
+#view-portfolio .pfbtn.primary{ border-color:var(--text-primary) }
+#view-portfolio .pfbtn:disabled{ opacity:.45; cursor:not-allowed; transform:none }
+#view-portfolio .pfbtn.ghost{ background:transparent; border-color:transparent; padding:0 var(--sp-2); color:var(--text-secondary) }
+#view-portfolio .pfbtn.ghost:hover:not(:disabled){ background:transparent; border-color:transparent; color:var(--highlight-text) }
+#view-portfolio :is(#pf_clear, #pf_delete):hover:not(:disabled){ color:var(--loss) }
 #view-portfolio .pfsel, #view-portfolio .pfpaste{
-  width:100%; min-width:0; box-sizing:border-box; min-height:46px; padding:12px;
-  border:1px solid var(--border); border-radius:var(--r-control); background:var(--bg);
-  color:var(--text-primary); font:400 var(--fs-body)/var(--lh-label) var(--font-sans); text-transform:none; letter-spacing:0;
+  width:100%; min-width:0; box-sizing:border-box; min-height:var(--control-h); padding:var(--sp-2) var(--sp-3);
+  border:1px solid var(--border); border-radius:var(--r-control); background:var(--surface-raised);
+  color:var(--text-primary); font:400 var(--fs-input)/var(--lh-label) var(--font-sans); text-transform:none; letter-spacing:0;
 }
-#view-portfolio .pf-import-options, #view-portfolio .pf-manage{ margin-top:18px; color:var(--pf-editor-muted); font:400 var(--fs-small)/var(--lh-body) var(--font-sans) }
-#view-portfolio .pf-import-options summary, #view-portfolio .pf-manage summary{ cursor:pointer; min-height:44px; padding:10px 0; color:var(--text-secondary) }
-#view-portfolio .pf-manage{ border-top:1px solid var(--border); padding-top:10px }
-#view-portfolio .brun{ display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding-top:8px }
-#view-portfolio #pf_go{ min-height:50px; padding:14px 24px; border-radius:var(--r-control); font:600 var(--fs-h3)/var(--lh-label) var(--font-sans); letter-spacing:0; text-transform:none; box-shadow:none }
+#view-portfolio .pfpaste{ border-style:dashed; border-color:var(--border-strong) }
+#view-portfolio :is(.pfsel, .pfpaste):focus{ outline:none; border-color:var(--focus-ring); border-style:solid; box-shadow:var(--ring) }
+/* "Do you already hold stocks?" and the account strip: plain cards. */
+#view-portfolio .pffork{ padding:var(--card-pad); margin:0 0 var(--sp-6); border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface) }
+#view-portfolio .pffork h3{ font:600 var(--fs-h3)/var(--lh-h3) var(--font-sans); letter-spacing:normal }
+#view-portfolio .pf-import-options, #view-portfolio .pf-manage{ margin-top:20px; color:var(--pf-editor-muted); font:400 var(--fs-small)/var(--lh-body) var(--font-sans) }
+#view-portfolio .pf-import-options summary, #view-portfolio .pf-manage summary{ cursor:pointer; min-height:44px; padding:12px 0; color:var(--text-secondary) }
+#view-portfolio .pf-manage{ border-top:1px solid var(--border); padding-top:12px }
+#view-portfolio .brun{ display:flex; flex-wrap:wrap; align-items:center; gap:16px; padding-top:8px }
+/* The primary action: accent fill, pill, 40px. */
+#view-portfolio #pf_go{ height:var(--control-h); min-height:0; padding:0 var(--sp-6); border:1px solid transparent; border-radius:var(--r-pill);
+  background:var(--accent); color:var(--on-accent); font:500 var(--fs-body)/var(--lh-none) var(--font-sans); letter-spacing:0; text-transform:none; box-shadow:none }
+#view-portfolio #pf_go:hover:not(:disabled){ background:var(--accent-hover); opacity:1; transform:none }
+#view-portfolio .brun-note{ font:400 var(--fs-small)/var(--lh-small) var(--font-sans); letter-spacing:normal; text-transform:none; color:var(--text-muted) }
+#view-portfolio .brun-note.warn{ color:var(--loss) } #view-portfolio .brun-note.good{ color:var(--gain) }
 #view-portfolio :where(button,a,summary,select,textarea):focus-visible{ outline:2px solid var(--focus-ring); outline-offset:3px }
 @media(max-width:780px){
-  #view-portfolio > .psec{ padding:18px 14px }
   #view-portfolio #pf_go{ width:100% }
   #view-portfolio .brun-note{ width:100% }
 }
@@ -564,45 +556,52 @@ html[data-theme="dark"] #view-portfolio{ --pf-editor-muted:var(--text-secondary)
 
 #view-portfolio > .psec{ container-type:inline-size; container-name:pfed }
 #view-portfolio{ --pf-up:var(--gain); --pf-dn:var(--loss); --pf-row-h:62px }
-html[data-theme="dark"] #view-portfolio{ --pf-up:var(--gain); --pf-dn:var(--loss) }
-#view-portfolio .up{ color:var(--pf-up) } #view-portfolio .dn{ color:var(--pf-dn) }
+#view-portfolio .pfrow .up{ color:var(--pf-up) } #view-portfolio .pfrow .dn{ color:var(--pf-dn) }
 #view-portfolio .lh{ margin-bottom:16px; justify-content:flex-start }
 #view-portfolio .lh > #pf_count{ margin-left:auto }
 
 /* Toolbar: saved portfolios and Save on the left, Add and Import on the right. */
-#view-portfolio .pf-workspace{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 16px; margin-bottom:18px }
+#view-portfolio .pf-workspace{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px 16px; margin-bottom:20px }
 #view-portfolio .pf-savebar{ display:flex; align-items:flex-end; gap:8px; flex:1 1 360px; min-width:0; flex-wrap:wrap }
-#view-portfolio .pf-savebar > label{ width:100%; font:600 var(--fs-label)/var(--lh-label) var(--font-sans); color:var(--pf-editor-muted) }
+#view-portfolio .pf-savebar > label{ width:100%; font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
 #view-portfolio .pf-savebar .pfsel{ flex:1 1 200px; width:auto }
 #view-portfolio .pf-entrybar{ display:flex; flex-wrap:wrap; gap:8px; margin:0 }
 #view-portfolio .pf-import-options{ flex:1 1 100%; margin-top:0 }
-#view-portfolio .pf-import-options summary{ min-height:36px; padding:6px 0 }
+#view-portfolio .pf-import-options summary{ min-height:36px; padding:8px 0 }
 
-/* The board. */
-#view-portfolio .pf-board{ margin:0 0 18px; padding:18px 20px 14px; border-radius:var(--r-card); color:var(--text-primary);
+/* The board: the hero metrics. A raised panel inside the editor card, each
+   figure in Fraunces with its label above and its change beneath. */
+#view-portfolio .pf-board{ margin:0 0 var(--sp-6); padding:var(--card-pad); border:1px solid var(--border); border-radius:var(--r-card); color:var(--text-primary);
   background:var(--surface-raised); box-shadow:none }
 #view-portfolio .pf-board[hidden]{ display:none }
-#view-portfolio .pf-stats{ display:grid; grid-template-columns:1.4fr repeat(3,minmax(0,1fr)); gap:14px 22px }
+#view-portfolio .pf-stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:var(--sp-6) var(--sp-8) }
 #view-portfolio .pf-stat{ min-width:0 }
-#view-portfolio .pf-stat > span{ display:block; font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--on-accent) }
-#view-portfolio .pf-stat b{ display:block; margin-top:4px; font:500 var(--fs-h2)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); color:var(--on-accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-#view-portfolio .pf-stat-main b{ font:400 var(--fs-display)/var(--lh-none) var(--font-display); letter-spacing:var(--ls-heading) }
-#view-portfolio .pf-stat small{ display:block; margin-top:4px; font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--on-accent) }
+#view-portfolio .pf-stat > span{ display:block; font:500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
+#view-portfolio .pf-stat b{ display:block; margin-top:var(--sp-2); font:400 var(--fs-display)/var(--lh-display) var(--font-display); letter-spacing:var(--ls-heading); font-variant-numeric:tabular-nums lining-nums; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+#view-portfolio .pf-stat small{ display:block; margin-top:var(--sp-2); font:500 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--text-secondary) }
 #view-portfolio .pf-stat em{ font-style:normal }
 #view-portfolio .pf-board .up{ color:var(--gain) } #view-portfolio .pf-board .dn{ color:var(--loss) }
-#view-portfolio .pf-strip{ display:flex; height:12px; margin-top:16px; border-radius:var(--r-xs); overflow:hidden; background:var(--wash-strong); gap:2px }
+#view-portfolio .pf-stat :is(b, small).up::before, #view-portfolio .pf-live small.up::before{ content:"\25B2\00A0"; display:inline-block;transform:scale(.72);transform-origin:left center }
+#view-portfolio .pf-stat :is(b, small).dn::before, #view-portfolio .pf-live small.dn::before{ content:"\25BC\00A0"; display:inline-block;transform:scale(.72);transform-origin:left center }
+/* On a 40px figure the arrow is drawn at half size; the room the glyph leaves is the gap. */
+#view-portfolio .pf-stat b.up::before{ content:"\25B2"; transform:scale(.5) }
+#view-portfolio .pf-stat b.dn::before{ content:"\25BC"; transform:scale(.5) }
+#view-portfolio .pf-strip{ display:flex; height:8px; margin-top:var(--sp-6); border-radius:var(--r-xs); overflow:hidden; background:var(--wash-strong); gap:2px }
 #view-portfolio .pf-strip i{ display:block; min-width:3px; height:100% }
-#view-portfolio .pf-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:9px; font:500 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--on-accent) }
-#view-portfolio .pf-legend span{ display:inline-flex; align-items:center; gap:6px }
-#view-portfolio .pf-legend i{ width:9px; height:9px; border-radius:var(--r-xs); flex:none }
-#view-portfolio .pf-legend b{ font-weight:600; color:var(--on-accent) }
+#view-portfolio .pf-legend{ display:flex; flex-wrap:wrap; gap:8px var(--sp-4); margin-top:var(--sp-3); font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--text-secondary) }
+#view-portfolio .pf-legend span{ display:inline-flex; align-items:center; gap:8px }
+#view-portfolio .pf-legend i{ width:8px; height:8px; border-radius:var(--r-xs); flex:none }
+#view-portfolio .pf-legend b{ font-weight:500; color:var(--text-primary) }
 #view-portfolio .pf-legend .pf-more{ color:var(--text-muted) }
-#view-portfolio .pf-boardfoot{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid var(--border) }
-#view-portfolio .pf-sort{ display:inline-flex; flex-wrap:wrap; gap:4px; padding:3px; border-radius:var(--r-card); background:var(--wash) }
-#view-portfolio .pf-sort button{ min-height:32px; padding:0 12px; border:0; border-radius:var(--r-control); background:transparent; color:var(--on-accent); font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer }
-#view-portfolio .pf-sort button[aria-pressed="true"]{ background:var(--surface); color:var(--text-primary); font-weight:600 }
-#view-portfolio .pf-sort button:focus-visible{ outline:2px solid var(--border-strong); outline-offset:1px }
-#view-portfolio .pf-src{ font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--text-muted) }
+#view-portfolio .pf-boardfoot{ display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px var(--sp-6); margin-top:var(--sp-5); border-bottom:1px solid var(--border) }
+/* Sort: underline tabs. The chosen one is cognac with a 2px line, no fill. */
+#view-portfolio .pf-sort{ display:inline-flex; flex-wrap:wrap; gap:0 var(--sp-6) }
+#view-portfolio .pf-sort button{ min-height:40px; padding:var(--sp-3) 0; margin:0 0 -1px; border:0; border-bottom:2px solid transparent; border-radius:0; background:none; color:var(--text-secondary);
+  font:500 var(--fs-small)/var(--lh-none) var(--font-sans); cursor:pointer; transition:color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease) }
+#view-portfolio .pf-sort button:hover{ color:var(--text-primary) }
+#view-portfolio .pf-sort button[aria-pressed="true"]{ color:var(--highlight-text); border-bottom-color:var(--highlight) }
+#view-portfolio .pf-sort button:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:1px }
+#view-portfolio .pf-src{ padding-bottom:var(--sp-3); font:400 var(--fs-small)/var(--lh-label) var(--font-sans); color:var(--text-muted) }
 
 /* One header for every row. */
 #view-portfolio .pfhead,
@@ -611,24 +610,26 @@ html[data-theme="dark"] #view-portfolio{ --pf-up:var(--gain); --pf-dn:var(--loss
   grid-template-columns:40px minmax(150px,1.7fr) minmax(64px,.6fr) minmax(84px,.8fr) minmax(104px,.95fr) minmax(128px,1.15fr) 96px 128px 34px;
   grid-template-areas:"av sym qty buy price val trend date del";
 }
-#view-portfolio .pfhead{ padding:0 10px 8px; margin:0; border-bottom:1px solid var(--border);
-  font:600 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--pf-editor-muted) }
+#view-portfolio .pfhead{ min-height:40px; padding:0 12px; margin:0; border-bottom:1px solid var(--border); border-radius:var(--r-control) var(--r-control) 0 0; background:var(--surface-raised);
+  font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
 #view-portfolio .pfhead span:nth-child(2){ grid-column:2 }
 #view-portfolio .pfhead span:nth-child(5), #view-portfolio .pfhead span:nth-child(6){ text-align:right }
 
 #view-portfolio #pf_rows{ display:block; margin:0 }
-#view-portfolio .pfrow{ position:relative; min-height:var(--pf-row-h); margin:0; padding:8px 10px; border-bottom:1px solid var(--border); border-radius:var(--r-card);
+#view-portfolio .pfrow{ position:relative; min-height:var(--pf-row-h); margin:0; padding:8px 12px; border-bottom:1px solid var(--border);
   transition:background-color .15s }
 #view-portfolio .pfrow:hover, #view-portfolio .pfrow:focus-within{ background:var(--surface-raised) }
-#view-portfolio .pf-av{ grid-area:av; display:grid; place-items:center; width:38px; height:38px; border-radius:var(--r-card);
-  color:var(--on-accent); font:600 var(--fs-small)/var(--lh-none) var(--font-sans); letter-spacing:normal; background:var(--text-muted); text-transform:uppercase }
-#view-portfolio .pf-av.empty{ background:transparent; color:var(--text-primary); border:1.5px dashed var(--border-strong); font-size:var(--fs-body); font-weight:500 }
-/* The company's mark, over its initials (portfolio.js, paintAv). On white
-   whatever the theme: a logo is drawn for a white page, and on a dark tile
-   half of them disappear. */
+/* The badge: the company's initials on the quiet cognac tint. */
+#view-portfolio .pf-av{ grid-area:av; display:grid; place-items:center; width:38px; height:38px; border-radius:var(--r-control);
+  color:var(--highlight-text); font:600 var(--fs-small)/var(--lh-none) var(--font-sans); letter-spacing:normal; background:var(--highlight-subtle); text-transform:uppercase }
+#view-portfolio .pf-av.empty{ background:transparent; color:var(--text-muted); border:1px dashed var(--border-strong); font-size:var(--fs-body); font-weight:500 }
+/* The company's mark, over its initials (portfolio.js, paintAv). On a light
+   tile whatever the theme: a logo is drawn for a white page, and on a dark
+   tile half of them disappear. */
 #view-portfolio .pf-av{ position:relative; overflow:hidden }
 #view-portfolio .pf-av img{ position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box;
   object-fit:contain; padding:8%; background:var(--surface); border:1px solid var(--border); border-radius:inherit;
+  color-scheme:light;
   animation:pfAvIn 240ms ease-out both }
 @keyframes pfAvIn{ from{ opacity:0 } to{ opacity:1 } }
 @media (prefers-reduced-motion: reduce){ #view-portfolio .pf-av img{ animation:none } }
@@ -643,7 +644,7 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 /* Inputs read as text until touched. */
 #view-portfolio .pfrow input{
   display:block; box-sizing:border-box; width:100%; min-width:0; height:38px; margin:0;
-  padding:7px 9px; border:1px solid transparent; border-radius:var(--r-control);
+  padding:8px 8px; border:1px solid transparent; border-radius:var(--r-control);
   background:transparent; color:var(--text-primary); font:500 var(--fs-input)/var(--lh-h3) var(--font-sans); letter-spacing:0; text-transform:none;
   font-variant-numeric:tabular-nums; transition:border-color .15s, background-color .15s;
 }
@@ -654,28 +655,30 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 #view-portfolio .pfrow input:focus{ outline:none; border-color:var(--focus-ring); background:var(--bg); box-shadow:var(--ring) }
 #view-portfolio .pfrow input::placeholder{ color:var(--pf-editor-muted); opacity:.7; font-weight:400 }
 #view-portfolio .pfrow input.bad{ border-color:var(--loss); background:color-mix(in srgb,var(--loss) 7%,transparent) }
-#view-portfolio .pfrow .pf_sym{ height:30px; padding:4px 8px; font:600 var(--fs-h3)/var(--lh-h1) var(--font-sans); letter-spacing:normal; text-transform:uppercase }
+/* The symbol is the one place the mono face belongs. */
+#view-portfolio .pfrow .pf_sym{ height:30px; padding:4px 8px; font:500 var(--fs-body)/var(--lh-h1) var(--font-mono); letter-spacing:normal; text-transform:uppercase }
+#view-portfolio .pfrow .pf_sym::placeholder{ font-family:var(--font-sans); text-transform:none }
 #view-portfolio .pfrow .pf_date{ font-size:var(--fs-small); color:var(--text-secondary) }
 #view-portfolio .pfrow:not(.has-date):not(:hover):not(:focus-within) .pf_date{ color:transparent }
 #view-portfolio .pfrow:not(.has-date) .pf_date{ color:var(--pf-editor-muted) }
 #view-portfolio .pfrow:not(.has-date):not(:hover):not(:focus-within) .pf_date::-webkit-calendar-picker-indicator{ opacity:.35 }
-#view-portfolio .pf-name{ display:flex; align-items:center; gap:6px; min-width:0; padding:1px 9px 0; font:400 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--pf-editor-muted) }
+#view-portfolio .pf-name{ display:flex; align-items:center; gap:8px; min-width:0; padding:1px 8px 0; font:400 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--pf-editor-muted) }
 #view-portfolio .pf-name span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-#view-portfolio .pf-tag{ flex:none; padding:2px 7px; border-radius:var(--r-pill); font:600 var(--fs-label)/var(--lh-h3) var(--font-sans); font-style:normal;
-  background:var(--surface-raised); border:1px solid var(--border); color:var(--text-secondary) }
-#view-portfolio .pf-tag.gold{ background:var(--accent); border-color:transparent; color:var(--on-accent,var(--on-accent)) }
+#view-portfolio .pf-tag{ flex:none; padding:2px 8px; border-radius:var(--r-pill); font:500 var(--fs-label)/var(--lh-h3) var(--font-sans); font-style:normal;
+  background:transparent; border:1px solid var(--border-strong); color:var(--text-secondary) }
+#view-portfolio .pf-tag.gold{ background:var(--highlight-subtle); border-color:transparent; color:var(--highlight-text) }
 
 /* Worked-out figures. */
 #view-portfolio .pf-live{ min-width:0; text-align:right; font-variant-numeric:tabular-nums }
 #view-portfolio .pf-live b{ display:block; font:600 var(--fs-body)/var(--lh-h3) var(--font-sans); letter-spacing:normal; color:var(--text-primary); white-space:nowrap }
 #view-portfolio .pf-live small{ display:block; margin-top:2px; font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--pf-editor-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 #view-portfolio .pf-live .pf-wait{ color:var(--pf-editor-muted); font-weight:400 }
-#view-portfolio .pf-pl{ display:inline-block !important; padding:1px 7px; border-radius:var(--r-pill); font-weight:600 !important }
-#view-portfolio .pf-pl.up{ color:var(--pf-up); background:color-mix(in srgb,var(--pf-up) 12%,transparent) }
-#view-portfolio .pf-pl.dn{ color:var(--pf-dn); background:color-mix(in srgb,var(--pf-dn) 12%,transparent) }
+/* Profit and loss colour the figure, not a pill behind it. */
+#view-portfolio .pf-pl.up{ color:var(--pf-up) }
+#view-portfolio .pf-pl.dn{ color:var(--pf-dn) }
 #view-portfolio .pf-trend{ height:28px }
 #view-portfolio .pf-spark{ display:block; width:100%; height:28px; overflow:visible }
-#view-portfolio .pf-spark polyline{ fill:none; stroke-width:1.8; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke }
+#view-portfolio .pf-spark polyline{ fill:none; stroke-width:1.5; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke }
 #view-portfolio .pf-spark.up polyline{ stroke:var(--pf-up) } #view-portfolio .pf-spark.dn polyline{ stroke:var(--pf-dn) }
 
 /* Its share of the portfolio, as a hairline under the row. */
@@ -688,24 +691,22 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
 @media (hover:none){ #view-portfolio .pfdel{ opacity:1 } }
 
 /* The account strip. */
-#view-portfolio .pfacct{ display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:10px 16px; margin:0 0 18px; padding:12px 16px;
+#view-portfolio .pfacct{ display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:12px 16px; margin:0 0 var(--sp-6); padding:var(--sp-4) var(--card-pad);
   border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface); overflow-wrap:anywhere }
-#view-portfolio .pfacct:not(.on){ border-left:3px solid var(--highlight) }
-#view-portfolio .pfacct.on{ border-left:1px solid var(--border) }
 #view-portfolio .pfacct span{ max-width:none }
 #view-portfolio .pfacct b{ font:600 var(--fs-body)/var(--lh-label) var(--font-sans); color:var(--text-primary) }
 #view-portfolio .pfacct span{ font-size:var(--fs-small); line-height:var(--lh-small); color:var(--pf-editor-muted) }
 #view-portfolio .pfacct-av{ display:grid; place-items:center; flex:none; width:36px; height:36px; border-radius:50%;
   background:var(--highlight-subtle); box-shadow:none; color:var(--highlight-text) !important; font:600 var(--fs-h3)/var(--lh-none) var(--font-sans) !important }
 #view-portfolio .pfacct-who{ display:flex; flex-direction:column; min-width:0; flex:1 1 260px }
-#view-portfolio .pfacct-opt{ display:inline-flex; align-items:center; gap:9px; min-height:40px; margin:0; font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--text-primary); cursor:pointer }
+#view-portfolio .pfacct-opt{ display:inline-flex; align-items:center; gap:8px; min-height:40px; margin:0; font:500 var(--fs-small)/var(--lh-h3) var(--font-sans); color:var(--text-primary); cursor:pointer }
 #view-portfolio .pfacct-switch input{ position:absolute; opacity:0; width:1px; height:1px; pointer-events:none }
-#view-portfolio .pfacct-switch i{ position:relative; flex:none; width:36px; height:20px; border-radius:var(--r-control); background:var(--border); transition:background-color .2s }
+#view-portfolio .pfacct-switch i{ position:relative; flex:none; width:36px; height:20px; border-radius:var(--r-pill); background:var(--border-strong); transition:background-color .2s }
 #view-portfolio .pfacct-switch i::after{ content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--surface); box-shadow:none; transition:transform .2s }
 #view-portfolio .pfacct-switch input:checked + i{ background:var(--accent) }
 #view-portfolio .pfacct-switch input:checked + i::after{ transform:translateX(16px) }
 #view-portfolio .pfacct-switch input:focus-visible + i{ outline:2px solid var(--focus-ring); outline-offset:2px }
-#view-portfolio .pfacct .pfbtn{ min-height:38px; padding:8px 14px; font-size:var(--fs-small) }
+#view-portfolio .pfacct .pfbtn{ padding:0 var(--sp-4) }
 #view-portfolio .pfacct-note{ flex:1 1 100%; margin:0 }
 #view-portfolio .pfacct-note:empty{ display:none }
 
@@ -727,10 +728,10 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
    thirds on the second line; the remove button sits on the card's corner. */
 @container pfed (max-width: 620px){
   #view-portfolio .pfhead{ display:none }
-  #view-portfolio #pf_rows{ display:grid; gap:12px; padding-top:6px }
+  #view-portfolio #pf_rows{ display:grid; gap:12px; padding-top:8px }
   #view-portfolio .pfrow, #view-portfolio .pfrow:focus-within, #view-portfolio .pfrow.is-open, #view-portfolio .pfrow.has-date{
     grid-template-columns:repeat(12,minmax(0,1fr)); grid-template-areas:none;
-    column-gap:4px; row-gap:6px; padding:16px 12px 12px; border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface);
+    column-gap:4px; row-gap:8px; padding:16px 12px 12px; border:1px solid var(--border); border-radius:var(--r-card); background:var(--surface);
   }
   #view-portfolio .pfrow:hover{ background:var(--surface) }
   /* Line 1: badge, symbol and name, today's price. Line 2: quantity and
@@ -744,13 +745,12 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio .pf-field-date{ grid-area:auto; grid-column:1/13; grid-row:3; display:none }
   #view-portfolio .pf-trend{ display:none }
   #view-portfolio .pf-field-qty .pf-lbl, #view-portfolio .pf-field-buy .pf-lbl{ display:block; margin:0 0 3px 2px; font:500 var(--fs-label)/var(--lh-h1) var(--font-sans); color:var(--pf-editor-muted) }
-  #view-portfolio .pfrow input{ height:34px; padding:5px 8px; font-size:var(--fs-input); border-color:var(--border); background:var(--bg) }
+  #view-portfolio .pfrow input{ height:34px; padding:4px 8px; font-size:var(--fs-input); border-color:var(--border); background:var(--bg) }
   #view-portfolio .pfrow .pf_sym{ height:28px; padding:2px 4px; font-size:var(--fs-body); border-color:transparent; background:transparent }
   #view-portfolio .pfrow .pf_sym:focus{ border-color:var(--focus-ring); background:var(--bg) }
   #view-portfolio .pf-name{ padding-left:4px; font-size:var(--fs-small) }
   #view-portfolio .pf-live b{ font-size:var(--fs-body) }
   #view-portfolio .pf-live small{ font-size:var(--fs-small) }
-  #view-portfolio .pf-pl{ padding:1px 6px; font-size:var(--fs-label) !important }
   #view-portfolio .pf-sep{ display:none }
   #view-portfolio .pfrow:focus-within .pf-field-date, #view-portfolio .pfrow.is-open .pf-field-date, #view-portfolio .pfrow.has-date .pf-field-date{ display:flex; align-items:center; gap:8px }
   #view-portfolio .pfrow:focus-within .pf-field-date .pf-lbl, #view-portfolio .pfrow.is-open .pf-field-date .pf-lbl, #view-portfolio .pfrow.has-date .pf-field-date .pf-lbl{ display:inline; font:500 var(--fs-label)/var(--lh-none) var(--font-sans); color:var(--pf-editor-muted) }
@@ -758,25 +758,25 @@ html[data-motion="off"] #view-portfolio .pf-av img{ animation:none }
   #view-portfolio .pfdel{ grid-area:auto; position:absolute; top:-10px; right:-10px; width:24px; height:24px; border-radius:50%; opacity:1;
     border:1px solid var(--border); background:var(--surface); box-shadow:none; z-index:1 }
   #view-portfolio .pf-wbar{ display:none }
-  #view-portfolio .pf-board{ padding:16px 14px 12px; border-radius:var(--r-card) }
-  #view-portfolio .pf-stats{ grid-template-columns:1fr 1fr; gap:12px 14px }
+  /* The worth is the hero at 40px; the three beside it step down to 22px so
+     two fit on a line. */
+  #view-portfolio .pf-stats{ grid-template-columns:1fr 1fr; gap:var(--sp-4) }
   #view-portfolio .pf-stat-main{ grid-column:1/-1 }
-  #view-portfolio .pf-stat-main b{ font-size:var(--fs-h1) ; font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
-  #view-portfolio .pf-stat b{ font-size:var(--fs-body) }
-  #view-portfolio .pf-boardfoot{ flex-direction:column; align-items:stretch }
-  #view-portfolio .pf-sort{ justify-content:space-between }
-  #view-portfolio .pf-sort button{ flex:1 1 auto; padding:0 8px }
+  #view-portfolio .pf-stat:not(.pf-stat-main) b{ font:500 var(--fs-h2)/var(--lh-h2) var(--font-display); letter-spacing:var(--ls-heading) }
+  #view-portfolio .pf-boardfoot{ flex-direction:column-reverse; align-items:stretch; gap:0 }
+  #view-portfolio .pf-src{ padding-bottom:0 }
+  #view-portfolio .pf-sort{ gap:0 var(--sp-5) }
   /* Toolbar in one tidy block: Add and Import side by side, Save beside the list. */
-  #view-portfolio .pf-workspace{ gap:10px }
+  #view-portfolio .pf-workspace{ gap:12px }
   #view-portfolio .pf-savebar{ flex:1 1 100% }
   #view-portfolio .pf-entrybar{ width:100% }
-  #view-portfolio .pf-entrybar > .pfbtn, #view-portfolio .pf-savebar .pfbtn{ flex:1; min-height:42px; padding:8px 12px; font-size:var(--fs-body) }
+  #view-portfolio .pf-entrybar > .pfbtn, #view-portfolio .pf-savebar .pfbtn{ flex:1; padding:0 var(--sp-3) }
 }
 
 @media (prefers-reduced-motion: reduce){ #view-portfolio .pfrow, #view-portfolio .pfrow input, #view-portfolio .pf-wbar, #view-portfolio .pfdel, #view-portfolio .pfacct-switch i, #view-portfolio .pfacct-switch i::after{ transition:none } }
 html[data-motion="off"] #view-portfolio .pfrow, html[data-motion="off"] #view-portfolio .pfrow input, html[data-motion="off"] #view-portfolio .pf-wbar,
 html[data-motion="off"] #view-portfolio .pfacct-switch i, html[data-motion="off"] #view-portfolio .pfacct-switch i::after{ transition:none }
 @media print{
-  #view-portfolio .pf-board{ background:none; color:var(--on-accent); box-shadow:none; border:1px solid var(--border-strong) }
+  #view-portfolio .pf-board{ background:none }
   #view-portfolio .pf-sort, #view-portfolio .pfdel{ display:none }
 }
