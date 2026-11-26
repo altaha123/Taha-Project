@@ -3,7 +3,7 @@
    project have all been caused by a module claiming a name the page already
    used for something else. */
 
-.dl-board{margin:32px 0 8px}
+.dl-board{margin:32px 0 8px;min-width:0}
 .dl-stock{margin:36px 0 0;padding-top:28px;border-top:1px solid var(--border)}
 .dl-stock[hidden]{display:none}
 
@@ -23,16 +23,18 @@
   text-transform:uppercase;color:var(--text-muted)}
 
 /* ---- one stock's day --------------------------------------------------- */
-.dl-rows{display:grid;gap:var(--sp-3);margin-top:var(--sp-4)}
-.dl-row{border:1px solid var(--border);border-radius:var(--r-card);padding:var(--card-pad);
+/* minmax(0,1fr), not the implicit auto track: a long client name must not
+   be allowed to widen the card past the page. */
+.dl-rows{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-3);margin-top:var(--sp-4)}
+.dl-row{min-width:0;border:1px solid var(--border);border-radius:var(--r-card);padding:var(--card-pad);
   background:var(--surface);box-shadow:none;
   animation:dl-rise .46s cubic-bezier(.2,.8,.25,1) both;
   animation-delay:calc(var(--i,0) * 34ms)}
 @keyframes dl-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-.dl-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.dl-top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;min-width:0}
 .dl-sym{font-family:var(--font-mono);font-size:var(--fs-small);letter-spacing:normal;color:var(--text-primary);
-  cursor:pointer;min-width:0}
+  cursor:pointer;flex:1 1 auto;min-width:0}
 .dl-sym:hover{color:var(--highlight-text)}
 .dl-sym small{display:block;font-family:var(--font-sans);font-size:var(--fs-small);letter-spacing:0;
   color:var(--text-muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -52,19 +54,21 @@
 .dl-tag.cross{border-color:var(--border-strong)}
 .dl-tag.prop{border-color:var(--border)}
 
-.dl-parties{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px}
+.dl-parties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:12px}
 .dl-parties h6{margin:0 0 8px;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
   text-transform:uppercase;font-weight:500;color:var(--text-muted)}
 .dl-parties h6.up{color:var(--gain)} .dl-parties h6.dn{color:var(--loss)}
 .dl-parties ul{list-style:none;margin:0;padding:0}
-.dl-parties li{display:flex;justify-content:space-between;gap:12px;align-items:baseline;
+.dl-parties li{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;
   padding:3px 0;font-size:var(--fs-small);color:var(--text-secondary)}
-.dl-parties li b{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dl-parties li span{font-family:var(--font-sans);font-size:var(--fs-label);color:var(--text-muted);flex:0 0 auto}
+.dl-parties li b{font-weight:400;flex:1 1 18ch;min-width:0;overflow-wrap:break-word}
+.dl-parties li span{font-family:var(--font-sans);font-size:var(--fs-label);color:var(--text-muted);flex:0 0 auto;
+  margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums}
 .dl-inst{font-style:normal;font-family:var(--font-sans);font-size:var(--fs-label);letter-spacing:var(--ls-label);
   text-transform:uppercase;color:var(--text-secondary);margin-left:8px;
-  border:1px solid var(--border);padding:1px 8px;border-radius:var(--r-pill)}
+  border:1px solid var(--border);padding:1px 8px;border-radius:var(--r-pill);flex:0 0 auto;white-space:nowrap}
 .dl-inst.prop{color:var(--text-muted)}
+.dl-parties li .dl-inst{margin-left:0}
 
 .dl-read{font-size:var(--fs-small);line-height:var(--lh-body);color:var(--text-muted);margin:12px 0 0;
   padding-top:12px;border-top:1px solid var(--border)}
@@ -91,7 +95,8 @@
 .dl-table tr.dn td:nth-child(4){color:var(--loss)}
 
 @media(max-width:620px){
-  .dl-parties{grid-template-columns:1fr;gap:12px}
+  .dl-parties{grid-template-columns:minmax(0,1fr);gap:12px}
+  .dl-sym small{white-space:normal;overflow-wrap:break-word}
   .dl-net{font-size:var(--fs-h2); font-family:var(--font-display); font-weight:500; letter-spacing:var(--ls-heading)}
 }
 @media (prefers-reduced-motion: reduce){ .dl-row{animation:none} }
