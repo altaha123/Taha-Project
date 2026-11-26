@@ -167,7 +167,7 @@
     series.forEach(function (d, i) {
       var x = i * slot + pad;
       var up = d.c >= d.o;
-      var col = up ? 'var(--up)' : 'var(--down)';
+      var col = up ? 'var(--gain)' : 'var(--loss)';
       var g = el('g', {});
       if (!reduced) g.setAttribute('style', 'animation-delay:' + (120 + i * 17) + 'ms');
       g.appendChild(el('line', {
@@ -212,7 +212,7 @@
     var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H,
                           preserveAspectRatio: 'none', 'aria-hidden': 'true' });
     svg.appendChild(el('path', {
-      d: d, fill: 'none', stroke: rising ? 'var(--up)' : 'var(--down)',
+      d: d, fill: 'none', stroke: rising ? 'var(--gain)' : 'var(--loss)',
       'stroke-width': 1.6, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'
     }));
     return svg;
@@ -534,10 +534,10 @@
      backend they must move here, or the dial will disagree with the words
      printed next to it. */
   function band(v) {
-    if (v >= 72) return { key: 'b-strong', css: 'var(--pass)' };
-    if (v >= 55) return { key: 'b-good',   css: 'var(--gold)' };
-    if (v >= 40) return { key: 'b-mixed',  css: 'var(--part)' };
-    return          { key: 'b-weak',   css: 'var(--fail)' };
+    if (v >= 72) return { key: 'b-strong', css: 'var(--gain)' };
+    if (v >= 55) return { key: 'b-good',   css: 'var(--text-primary)' };
+    if (v >= 40) return { key: 'b-mixed',  css: 'var(--warning)' };
+    return          { key: 'b-weak',   css: 'var(--loss)' };
   }
 
   var dial = null;

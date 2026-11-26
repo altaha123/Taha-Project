@@ -12,13 +12,13 @@
    with some analysis attached. */
 .shbtn{
   display:inline-flex;align-items:center;gap:6px;
-  border:1px solid var(--rule-2);background:transparent;color:var(--mute);
+  border:1px solid var(--border);background:transparent;color:var(--text-muted);
   font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   padding:6px 11px;border-radius:6px;cursor:pointer;
   transition:color .18s ease,border-color .18s ease,background .18s ease,transform .18s ease;
 }
-.shbtn:hover{color:var(--gold);border-color:var(--gold);background:var(--paper-2);transform:translateY(-1px)}
-.shbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.shbtn:hover{color:var(--highlight-text);border-color:var(--highlight);background:var(--surface-raised);transform:translateY(-1px)}
+.shbtn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .shbtn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.9;
   stroke-linecap:round;stroke-linejoin:round}
 
@@ -32,7 +32,7 @@ body.sh-open{overflow:hidden}
   backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   animation:shfade .2s ease both}
 .shbox{position:relative;z-index:1;width:min(720px,100%);max-height:92vh;overflow:auto;
-  background:var(--paper);border:1px solid var(--rule-2);border-radius:14px;
+  background:var(--bg);border:1px solid var(--border);border-radius:14px;
   box-shadow:0 30px 80px rgba(0,0,0,.34);padding:26px 26px 22px;
   animation:shrise .24s cubic-bezier(.2,.8,.25,1) both}
 @keyframes shfade{from{opacity:0}to{opacity:1}}
@@ -43,30 +43,30 @@ body.sh-open{overflow:hidden}
 }
 
 .shx{position:absolute;top:12px;right:14px;width:30px;height:30px;border:0;
-  background:transparent;color:var(--mute);font-size:24px;line-height:1;cursor:pointer;
+  background:transparent;color:var(--text-muted);font-size:24px;line-height:1;cursor:pointer;
   border-radius:6px}
-.shx:hover{color:var(--ink);background:var(--paper-2)}
+.shx:hover{color:var(--text-primary);background:var(--surface-raised)}
 
 .shttl{font-family:var(--serif);font-size:28px;font-weight:400;margin:0 0 6px;
-  color:var(--ink);padding-right:34px}
-.shsub{font-size:13px;line-height:1.55;color:var(--mute);margin:0 0 16px;max-width:56ch}
+  color:var(--text-primary);padding-right:34px}
+.shsub{font-size:13px;line-height:1.55;color:var(--text-muted);margin:0 0 16px;max-width:56ch}
 
-.shcardwrap{position:relative;border:1px solid var(--rule-2);border-radius:9px;
-  overflow:hidden;background:var(--paper-2);min-height:120px;display:flex;
+.shcardwrap{position:relative;border:1px solid var(--border);border-radius:9px;
+  overflow:hidden;background:var(--surface-raised);min-height:120px;display:flex;
   align-items:center;justify-content:center}
 .shcard{display:block;width:100%;height:auto}
 .shcard[hidden]{display:none}
 .shspin{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--mute);padding:38px 24px;text-align:center;line-height:1.7}
+  color:var(--text-muted);padding:38px 24px;text-align:center;line-height:1.7}
 .shspin[hidden]{display:none}
 
 .shbtns{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
-.shnote{font-size:12px;line-height:1.6;color:var(--mute);margin:12px 0 0;min-height:1.2em}
+.shnote{font-size:12px;line-height:1.6;color:var(--text-muted);margin:12px 0 0;min-height:1.2em}
 
 /* The sheet reuses .sharebtn, which the analysis page already defines. These
    are the pieces that page had no reason to specify. */
 .shbtns .sharebtn[hidden]{display:none}
-.shbtns .sharebtn.done{border-color:var(--pass);color:var(--pass)}
+.shbtns .sharebtn.done{border-color:var(--gain);color:var(--gain)}
 
 @media (max-width:560px){
   .shbox{padding:20px 16px 16px;border-radius:11px}
@@ -82,7 +82,7 @@ body.sh-open{overflow:hidden}
    networks' own; X's mark is black, so it follows the ink and flips with the
    theme rather than vanishing on the dark paper. */
 .shico{width:15px;height:15px;flex:0 0 auto;display:block}
-.shnet-x{--brand:var(--ink)}
+.shnet-x{--brand:var(--text-primary)}
 .shnet-wa{--brand:#25D366}
 .shnet-tg{--brand:#26A5E4}
 .shnet-li{--brand:#0A66C2}
@@ -91,32 +91,32 @@ html[data-theme="dark"] .shnet-li{--brand:#3d8fe0}
 html[data-theme="dark"] .shnet-fb{--brand:#4b8dff}
 
 .shgrp{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--mute);margin:16px 0 0}
+  color:var(--text-muted);margin:16px 0 0}
 .shgrp + .shbtns{margin-top:8px}
 .shbtns .sharebtn{display:inline-flex;align-items:center;gap:8px}
 .shbtns .sharebtn.shnet .shico{color:var(--brand)}
-.shbtns .sharebtn.shnet:hover{border-color:var(--brand);color:var(--ink)}
-.shbtns .sharebtn.shnet.done .shico{color:var(--pass)}
+.shbtns .sharebtn.shnet:hover{border-color:var(--brand);color:var(--text-primary)}
+.shbtns .sharebtn.shnet.done .shico{color:var(--gain)}
 
 /* ---- the row of logos on a card ------------------------------------------- */
 .shlogos{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .shlogos-gap{width:6px}
 .shround{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;
-  justify-content:center;border:1px solid var(--rule);background:var(--paper);color:var(--brand);
+  justify-content:center;border:1px solid var(--border);background:var(--bg);color:var(--brand);
   cursor:pointer;padding:0;
   transition:transform var(--t-fast,.15s) ease,background .15s ease,color .15s ease,
              border-color .15s ease}
 .shround .shico{width:18px;height:18px}
 .shround:hover{background:var(--brand);border-color:var(--brand);color:#fff;transform:translateY(-1px)}
-.shround.shnet-x:hover{color:var(--paper)}
-.shround:focus-visible,.shpill:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.shround.done{border-color:var(--pass);box-shadow:0 0 0 2px var(--pass)}
+.shround.shnet-x:hover{color:var(--on-accent)}
+.shround:focus-visible,.shpill:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.shround.done{border-color:var(--gain);box-shadow:0 0 0 2px var(--gain)}
 .shpill{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 15px;
-  border-radius:999px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);
+  border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);
   font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;
   cursor:pointer;transition:border-color .15s ease,color .15s ease}
-.shpill:hover{border-color:var(--ink);color:var(--ink)}
-.shpill.done{border-color:var(--pass);color:var(--pass)}
+.shpill:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.shpill.done{border-color:var(--gain);color:var(--gain)}
 @media (prefers-reduced-motion: reduce){ .shround{transition:none} .shround:hover{transform:none} }
 @media (max-width:520px){
   .shlogos-gap{flex-basis:100%;height:0}

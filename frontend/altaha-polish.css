@@ -29,24 +29,10 @@
    19.8:1 on white and 18.8:1 on black; the hint grey is 6.5:1 and 7.6:1.
    Rules and underlines use the steel, which clears 4.5:1 on both.         */
 
-:root {
-  --gold:     #0A0A0B;
-  --gold-dp:  #000000;
-  --mute:     #5E5E69;
-  --gold-line: #6F7886;
-}
-
-html[data-theme="dark"] {
-  --gold:     #F2F3F5;
-  --gold-dp:  #FFFFFF;
-  --mute:     #9C9CA6;
-  --gold-line: #AEB5C0;
-}
-
 /* The decorative divider under the wordmark keeps the brighter gold. */
 .metal {
   background: linear-gradient(90deg, transparent,
-              var(--gold-line) 20%, var(--gold-line) 80%, transparent) !important;
+              var(--border-strong) 20%, var(--border-strong) 80%, transparent) !important;
   opacity: .8;
 }
 
@@ -139,14 +125,6 @@ button#go, button#rgo {
    by accident rather than by decision — which is why buttons, tabs and
    panels all moved at slightly different rates. */
 
-:root {
-  --t-fast: 140ms;
-  --t:      300ms;
-  --t-slow: 640ms;
-  --ease:      cubic-bezier(.32,.72,0,1);
-  --ease-soft: cubic-bezier(.16,1,.3,1);
-}
-
 /* Any control still carrying a hand-written speed is brought back in line. */
 .tab, .mode, .tf, .dtool, .exp, .fchip, .hz, .act, .pfbtn, .livebtn,
 .navmain-btn, .navsub-btn, .bsw, .trackbtn {
@@ -226,7 +204,7 @@ button#go, button#rgo {
 }
 .navsub-btn small, .navsub-btn span { opacity: .82; }
 .navsub-btn.on, .navsub-btn[aria-selected="true"] {
-  border-bottom: 2px solid var(--gold-line, #666D79) !important;
+  border-bottom: 2px solid var(--border-strong) !important;
 }
 .navsub-inner { gap: 26px !important; }
 

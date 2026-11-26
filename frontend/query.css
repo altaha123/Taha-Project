@@ -17,41 +17,41 @@
 .qs-head{ margin:0 0 22px; padding-top:18px }
 .qs-head h2{ font:400 clamp(34px,4.4vw,52px)/1.05 'Instrument Serif',Georgia,serif;
   letter-spacing:-.02em; margin:0 0 12px }
-.qs-head p{ max-width:62ch; margin:0; font-size:16px; line-height:1.6; color:var(--ink-2) }
+.qs-head p{ max-width:62ch; margin:0; font-size:16px; line-height:1.6; color:var(--text-secondary) }
 
 /* ── The two sections ──────────────────────────────────────────────────────
    Pick what you want, or make your own query: two tabs the width of the page,
    so the second way in is as plain as the first. */
 .qs-modes{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin:0 0 6px }
 .qs-mode{ display:flex; align-items:center; gap:14px; min-height:76px; padding:12px 18px 12px 12px; text-align:left;
-  cursor:pointer; border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFFFF);
-  color:var(--ink); font:inherit; -webkit-tap-highlight-color:transparent;
+  cursor:pointer; border:1px solid var(--border); border-radius:18px; background:var(--surface);
+  color:var(--text-primary); font:inherit; -webkit-tap-highlight-color:transparent;
   transition:border-color .2s ease, background-color .2s ease, box-shadow .25s ease }
-.qs-mode:hover{ border-color:var(--gold) }
-.qs-mode.on{ border-color:var(--ink); background:var(--ink); color:var(--paper); box-shadow:0 10px 26px rgba(10,10,11,.16) }
+.qs-mode:hover{ border-color:var(--highlight) }
+.qs-mode.on{ border-color:var(--border-strong); background:var(--accent); color:var(--on-accent); box-shadow:0 10px 26px rgba(10,10,11,.16) }
 .qs-mode-ic{ flex:none; display:grid; place-items:center; width:48px; height:48px; border-radius:14px;
-  background:color-mix(in srgb, var(--gold) 14%, transparent); font-size:24px; line-height:1 }
-.qs-mode.on .qs-mode-ic{ background:color-mix(in srgb, var(--paper) 14%, transparent) }
+  background:color-mix(in srgb, var(--accent) 14%, transparent); font-size:24px; line-height:1 }
+.qs-mode.on .qs-mode-ic{ background:color-mix(in srgb, var(--bg) 14%, transparent) }
 .qs-mode-t{ display:block; min-width:0 }
 .qs-mode-t b{ display:block; font:600 16px/1.25 Inter,system-ui,sans-serif }
-.qs-mode-t span{ display:block; margin-top:3px; font:400 13px/1.35 Inter,system-ui,sans-serif; color:var(--ink-2) }
-.qs-mode.on .qs-mode-t span{ color:color-mix(in srgb, var(--paper) 72%, transparent) }
-.qs-mode:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.qs-mode-t span{ display:block; margin-top:3px; font:400 13px/1.35 Inter,system-ui,sans-serif; color:var(--text-secondary) }
+.qs-mode.on .qs-mode-t span{ color:color-mix(in srgb, var(--on-accent) 72%, transparent) }
+.qs-mode:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 
 .qs-examples{ display:flex; flex-wrap:wrap; align-items:center; gap:8px }
 .qs-exlab{ font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--mute); margin-right:2px }
+  text-transform:uppercase; color:var(--text-muted); margin-right:2px }
 .qs-chip{
   min-height:38px; padding:0 15px; border-radius:999px; cursor:pointer;
-  border:1px solid var(--rule); background:var(--skin-card,#FFFFFF); color:var(--ink);
+  border:1px solid var(--border); background:var(--surface); color:var(--text-primary);
   font:500 13px/1 Inter,system-ui,sans-serif; transition:border-color .15s ease, background .15s ease;
 }
-.qs-chip:hover{ border-color:var(--gold); background:color-mix(in srgb,var(--gold) 8%,transparent) }
+.qs-chip:hover{ border-color:var(--highlight); background:color-mix(in srgb,var(--accent) 8%,transparent) }
 .qs-chip:focus-visible, .qs-btn:focus-visible, .qs-sort:focus-visible, .qs-fbtn:focus-visible{
-  outline:2px solid var(--gold); outline-offset:2px }
+  outline:2px solid var(--focus-ring); outline-offset:2px }
 
 .qs-card{
-  border:1px solid var(--rule); border-radius:16px; background:var(--skin-card,#FFFFFF);
+  border:1px solid var(--border); border-radius:16px; background:var(--surface);
   box-shadow:var(--skin-shadow); overflow:visible;
 }
 
@@ -59,55 +59,55 @@
 
 .qs-builder{
   display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) auto;
-  gap:10px; align-items:end; padding:16px 16px 14px; border-bottom:1px solid var(--rule-2);
+  gap:10px; align-items:end; padding:16px 16px 14px; border-bottom:1px solid var(--border);
 }
 .qs-lab{ display:flex; flex-direction:column; gap:6px; min-width:0 }
 .qs-lab > span{ font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--mute) }
+  text-transform:uppercase; color:var(--text-muted) }
 .qs-lab > span i{ font-style:normal; text-transform:none; letter-spacing:0 }
 .qs-lab select, .qs-lab input, .qs-find{
   width:100%; min-height:40px; padding:0 10px; border-radius:10px; box-sizing:border-box;
-  border:1px solid var(--rule); background:var(--paper); color:var(--ink);
+  border:1px solid var(--border); background:var(--bg); color:var(--text-primary);
   font:400 14px/1.2 Inter,system-ui,sans-serif;
 }
 .qs-lab select:focus, .qs-lab input:focus, .qs-find:focus, .qs-editor textarea:focus{
-  outline:none; border-color:var(--gold); box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 18%,transparent) }
+  outline:none; border-color:var(--focus-ring); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus-ring) 18%,transparent) }
 
 /* ── The editor ────────────────────────────────────────────────────────── */
 
 .qs-editor{ padding:14px 16px 16px }
-.qs-edlab{ display:block; margin-bottom:8px; font-weight:600; font-size:14px; color:var(--ink) }
-.qs-edlab span{ font-weight:400; font-size:13px; color:var(--mute); margin-left:6px }
+.qs-edlab{ display:block; margin-bottom:8px; font-weight:600; font-size:14px; color:var(--text-primary) }
+.qs-edlab span{ font-weight:400; font-size:13px; color:var(--text-muted); margin-left:6px }
 .qs-edwrap{ position:relative }
 .qs-editor textarea{
   width:100%; box-sizing:border-box; min-height:128px; resize:vertical; padding:12px 14px;
-  border-radius:12px; border:1px solid var(--rule); background:var(--paper); color:var(--ink);
+  border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text-primary);
   font:500 14px/1.7 'IBM Plex Mono',ui-monospace,monospace;
 }
 .qs-ac{
   position:absolute; left:0; right:0; top:100%; z-index:20; margin:4px 0 0; padding:4px;
-  list-style:none; border-radius:12px; border:1px solid var(--rule); background:var(--skin-card,#FFFFFF);
+  list-style:none; border-radius:12px; border:1px solid var(--border); background:var(--surface);
   box-shadow:var(--skin-lift); max-height:300px; overflow:auto;
 }
 .qs-ac li{ padding:8px 10px; border-radius:8px; cursor:pointer; display:flex; gap:10px; align-items:baseline }
 .qs-ac li b{ font:600 13px/1.3 'IBM Plex Mono',monospace; white-space:nowrap }
-.qs-ac li span{ font-size:13px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-.qs-ac li.on, .qs-ac li:hover{ background:color-mix(in srgb,var(--gold) 12%,transparent) }
+.qs-ac li span{ font-size:13px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.qs-ac li.on, .qs-ac li:hover{ background:color-mix(in srgb,var(--accent) 12%,transparent) }
 
-.qs-hint{ margin:10px 0 0; font-size:13px; line-height:1.7; color:var(--mute) }
+.qs-hint{ margin:10px 0 0; font-size:13px; line-height:1.7; color:var(--text-muted) }
 .qs-hint code, .qs-hint kbd{
   font:500 12px/1 'IBM Plex Mono',monospace; padding:2px 5px; border-radius:5px;
-  background:var(--paper-2); color:var(--ink-2);
+  background:var(--surface-raised); color:var(--text-secondary);
 }
 
 .qs-err{
   margin:12px 0 0; padding:12px 14px; border-radius:12px; font-size:14px; line-height:1.5;
-  border:1px solid color-mix(in srgb,var(--fail) 45%,transparent);
-  background:color-mix(in srgb,var(--fail) 8%,transparent); color:var(--ink);
+  border:1px solid color-mix(in srgb,var(--loss) 45%,transparent);
+  background:color-mix(in srgb,var(--loss) 8%,transparent); color:var(--text-primary);
 }
-.qs-err b{ color:var(--fail); font-weight:600 }
+.qs-err b{ color:var(--loss); font-weight:600 }
 .qs-where{ margin:8px 0 0; font:500 13px/1.45 'IBM Plex Mono',monospace; white-space:pre;
-  overflow-x:auto; color:var(--ink-2) }
+  overflow-x:auto; color:var(--text-secondary) }
 .qs-sug{ margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13px }
 
 .qs-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px }
@@ -116,15 +116,15 @@
   font:600 14px/1 Inter,system-ui,sans-serif;
 }
 .qs-btn-go{
-  border:0; color:var(--on-accent,#fff); background:linear-gradient(135deg,var(--gold-dp),var(--gold));
-  box-shadow:0 6px 16px color-mix(in srgb,var(--gold) 28%,transparent);
+  border:0; color:var(--on-accent,#fff); background:linear-gradient(135deg,var(--accent-hover),var(--accent));
+  box-shadow:0 6px 16px color-mix(in srgb,var(--border-strong) 28%,transparent);
   transition:transform .15s ease, opacity .15s ease;
 }
 :root[data-theme="dark"] .qs-btn-go{ color:#0A0A0B }
 .qs-btn-go:hover:not(:disabled){ transform:translateY(-1px) }
 .qs-btn-go:disabled{ cursor:progress; opacity:.8 }
-.qs-btn-ghost{ border:1px solid var(--rule); background:none; color:var(--ink-2); font-weight:500 }
-.qs-btn-ghost:hover{ border-color:var(--gold); color:var(--ink) }
+.qs-btn-ghost{ border:1px solid var(--border); background:none; color:var(--text-secondary); font-weight:500 }
+.qs-btn-ghost:hover{ border-color:var(--highlight); color:var(--text-primary) }
 
 /* ── Results ───────────────────────────────────────────────────────────── */
 
@@ -133,8 +133,8 @@
 .qs-sum{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; margin-bottom:4px }
 .qs-sum p{ margin:0 }
 .qs-sum p:first-child{ font:400 28px/1.2 'Instrument Serif',Georgia,serif }
-.qs-sum p:first-child span{ font:400 14px/1 Inter,system-ui,sans-serif; color:var(--mute) }
-.qs-unk{ font-size:13px; color:var(--mute); flex:1 1 260px }
+.qs-sum p:first-child span{ font:400 14px/1 Inter,system-ui,sans-serif; color:var(--text-muted) }
+.qs-unk{ font-size:13px; color:var(--text-muted); flex:1 1 260px }
 .qs-csv{ margin-left:auto; min-height:34px; font-size:13px }
 
 .qs-table thead th{ cursor:default; padding:0 }
@@ -142,37 +142,37 @@
 .qs-sort{
   all:unset; box-sizing:border-box; display:block; width:100%; padding:12px 10px; cursor:pointer;
   font:600 11px/1.2 'IBM Plex Mono',monospace; letter-spacing:.08em; text-transform:uppercase;
-  color:var(--mute); text-align:right; white-space:nowrap;
+  color:var(--text-muted); text-align:right; white-space:nowrap;
 }
-.qs-sort:hover, th[aria-sort] .qs-sort{ color:var(--gold) }
+.qs-sort:hover, th[aria-sort] .qs-sort{ color:var(--highlight-text) }
 .qs-num{ text-align:right; padding:9px 12px; font:500 13px/1.2 'IBM Plex Mono',monospace;
   white-space:nowrap; font-variant-numeric:tabular-nums }
 .qs-num.qs-txt{ text-align:left; font-family:Inter,system-ui,sans-serif; white-space:normal; min-width:140px }
-.qs-na{ color:var(--mute) }
-.qs-n{ width:1%; text-align:right; padding:9px 4px 9px 12px; color:var(--mute);
+.qs-na{ color:var(--text-muted) }
+.qs-n{ width:1%; text-align:right; padding:9px 4px 9px 12px; color:var(--text-muted);
   font:500 12px/1 'IBM Plex Mono',monospace }
 .qs-more{ display:block; margin:12px auto 4px }
 
 /* ── Field reference ───────────────────────────────────────────────────── */
 
-.qs-ref{ margin:14px 0 0; border:1px solid var(--rule); border-radius:14px; padding:4px 16px 14px }
+.qs-ref{ margin:14px 0 0; border:1px solid var(--border); border-radius:14px; padding:4px 16px 14px }
 .qs-ref summary{ cursor:pointer; padding:12px 0; font:400 20px/1.2 'Instrument Serif',Georgia,serif }
-.qs-ref summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--mute); margin-left:6px }
+.qs-ref summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--text-muted); margin-left:6px }
 .qs-find{ margin:4px 0 14px; max-width:420px }
 #qs-fields{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:6px 24px }
 .qs-fgroup h4{ margin:10px 0 6px; font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--gold) }
+  text-transform:uppercase; color:var(--text-primary) }
 .qs-fgroup ul{ list-style:none; margin:0; padding:0 }
-.qs-fgroup li{ padding:7px 0; border-top:1px solid var(--rule-2) }
-.qs-fgroup li p{ margin:3px 0 0; font-size:13px; line-height:1.5; color:var(--ink-2) }
-.qs-fgroup li em{ font-style:normal; color:var(--mute) }
-.qs-fgroup li small{ font:500 11px/1 'IBM Plex Mono',monospace; color:var(--mute) }
+.qs-fgroup li{ padding:7px 0; border-top:1px solid var(--border) }
+.qs-fgroup li p{ margin:3px 0 0; font-size:13px; line-height:1.5; color:var(--text-secondary) }
+.qs-fgroup li em{ font-style:normal; color:var(--text-muted) }
+.qs-fgroup li small{ font:500 11px/1 'IBM Plex Mono',monospace; color:var(--text-muted) }
 .qs-fbtn{
-  all:unset; cursor:pointer; font:600 13px/1.3 'IBM Plex Mono',monospace; color:var(--ink);
-  border-bottom:1px dashed var(--gold);
+  all:unset; cursor:pointer; font:600 13px/1.3 'IBM Plex Mono',monospace; color:var(--text-primary);
+  border-bottom:1px dashed var(--border-strong);
 }
-.qs-fbtn:hover{ color:var(--gold) }
-.qs-fbtn::after{ content:" +"; color:var(--gold) }
+.qs-fbtn:hover{ color:var(--highlight-text) }
+.qs-fbtn::after{ content:" +"; color:var(--text-primary) }
 .qs-notice{ margin-top:18px }
 
 @media (max-width:720px){
@@ -188,20 +188,20 @@
 .qs-saved{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:14px 0 0 }
 .qs-saved[hidden]{ display:none }
 .qs-schip{ display:inline-flex; align-items:stretch }
-.qs-schip .qs-chip{ border-top-right-radius:0; border-bottom-right-radius:0; border-color:var(--gold) }
-.qs-sdel{ border:1px solid var(--gold); border-left:0; background:var(--paper-2); color:var(--mute);
+.qs-schip .qs-chip{ border-top-right-radius:0; border-bottom-right-radius:0; border-color:var(--border-strong) }
+.qs-sdel{ border:1px solid var(--border-strong); border-left:0; background:var(--surface-raised); color:var(--text-muted);
   border-radius:0 999px 999px 0; padding:0 10px; cursor:pointer; font-size:16px; line-height:1; min-width:32px }
-.qs-sdel:hover{ color:var(--fail) }
-.qs-sdel:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
-.qs-ssign{ font-size:13px; color:var(--mute); margin-left:4px }
+.qs-sdel:hover{ color:var(--loss) }
+.qs-sdel:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
+.qs-ssign{ font-size:13px; color:var(--text-muted); margin-left:4px }
 .qs-saveform{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px;
-  padding:12px; border:1px dashed var(--rule); border-radius:12px }
+  padding:12px; border:1px dashed var(--border); border-radius:12px }
 .qs-saveform[hidden]{ display:none }
 .qs-saveform label{ font-size:13px; font-weight:600; width:100% }
 .qs-saveform input{ flex:1 1 220px; min-height:42px; padding:9px 12px; border-radius:10px;
-  border:1px solid var(--rule); background:var(--paper); color:var(--ink); font:400 16px Inter,system-ui,sans-serif }
-.qs-saveform input:focus{ outline:2px solid var(--gold); outline-offset:1px }
-.qs-savemsg{ width:100%; margin:0; font-size:13px; color:var(--mute) }
+  border:1px solid var(--border); background:var(--bg); color:var(--text-primary); font:400 16px Inter,system-ui,sans-serif }
+.qs-saveform input:focus{ outline:2px solid var(--focus-ring); outline-offset:1px }
+.qs-savemsg{ width:100%; margin:0; font-size:13px; color:var(--text-muted) }
 .qs-savemsg:empty{ display:none }
 
 /* ── Ask AI ───────────────────────────────────────────────────────────────
@@ -212,41 +212,41 @@
 .qs-actions .qs-aibtn{ margin-left:auto }
 .qs-aibtn{
   display:inline-flex; align-items:center; gap:8px; font-weight:600;
-  border:1px solid color-mix(in srgb,var(--gold) 55%,var(--rule));
-  background:color-mix(in srgb,var(--gold) 7%,transparent); color:var(--ink);
+  border:1px solid color-mix(in srgb,var(--border-strong) 55%,var(--border));
+  background:color-mix(in srgb,var(--accent) 7%,transparent); color:var(--text-primary);
   transition:border-color .15s ease, background .15s ease;
 }
 .qs-aibtn:hover, .qs-aibtn[aria-expanded="true"]{
-  border-color:var(--gold); background:color-mix(in srgb,var(--gold) 14%,transparent) }
-.qs-aispark{ color:var(--gold) }
+  border-color:var(--highlight); background:color-mix(in srgb,var(--accent) 14%,transparent) }
+.qs-aispark{ color:var(--text-primary) }
 .qs-aitag{ font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.1em; text-transform:uppercase;
-  padding:3px 6px; border-radius:999px; background:var(--paper-2); color:var(--mute) }
+  padding:3px 6px; border-radius:999px; background:var(--surface-raised); color:var(--text-muted) }
 
 .qs-ai{
-  border-top:1px solid var(--rule-2); padding:16px; border-radius:0 0 16px 16px;
-  background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 6%,transparent),transparent 140px);
+  border-top:1px solid var(--border); padding:16px; border-radius:0 0 16px 16px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 6%,transparent),transparent 140px);
 }
 .qs-ai[hidden], .qs-ai-chat[hidden], .qs-ai-key[hidden], .qs-ai-log[hidden],
 .qs-ai-starters[hidden]{ display:none }
 .qs-ai-head{ display:flex; gap:12px; align-items:flex-start; justify-content:space-between }
 .qs-ai-title{ margin:0; font:400 24px/1.15 'Instrument Serif',Georgia,serif }
-.qs-ai-title span{ color:var(--gold) }
-.qs-ai-sub{ margin:4px 0 0; font-size:14px; line-height:1.55; color:var(--ink-2); max-width:66ch }
+.qs-ai-title span{ color:var(--text-primary) }
+.qs-ai-sub{ margin:4px 0 0; font-size:14px; line-height:1.55; color:var(--text-secondary); max-width:66ch }
 .qs-ai-tools{ display:flex; gap:6px; align-items:center; flex:none }
 .qs-ai-mini{ min-height:32px; padding:0 12px; font-size:13px }
-.qs-ai-x{ border:0; background:none; color:var(--mute); font-size:24px; line-height:1; width:34px;
+.qs-ai-x{ border:0; background:none; color:var(--text-muted); font-size:24px; line-height:1; width:34px;
   height:34px; border-radius:8px; cursor:pointer }
-.qs-ai-x:hover{ color:var(--ink); background:var(--paper-2) }
-.qs-ai-x:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.qs-ai-x:hover{ color:var(--text-primary); background:var(--surface-raised) }
+.qs-ai-x:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 
 .qs-ai-key{ margin-top:14px; max-width:540px }
 .qs-ai-key label{ display:block; font-size:13px; font-weight:600; margin-bottom:6px }
 .qs-ai-keyrow{ display:flex; gap:8px }
 .qs-ai-keyrow input{ flex:1 1 auto; min-width:0; min-height:42px; padding:0 12px; border-radius:10px;
-  border:1px solid var(--rule); background:var(--paper); color:var(--ink); font:400 16px Inter,system-ui,sans-serif }
-.qs-ai-fine{ margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--mute) }
+  border:1px solid var(--border); background:var(--bg); color:var(--text-primary); font:400 16px Inter,system-ui,sans-serif }
+.qs-ai-fine{ margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--text-muted) }
 .qs-ai-fine:empty{ display:none }
-.qs-ai-fine.is-err{ color:var(--fail) }
+.qs-ai-fine.is-err{ color:var(--loss) }
 
 .qs-ai-chat{ margin-top:14px }
 .qs-ai-log{ position:relative; display:flex; flex-direction:column; gap:12px; margin-bottom:12px;
@@ -255,32 +255,32 @@
 .qs-ai-msg p{ margin:0 0 8px }
 .qs-ai-msg p:last-child{ margin-bottom:0 }
 .qs-ai-msg.is-user{ align-self:flex-end; max-width:min(82%,560px); padding:10px 14px;
-  border-radius:14px 14px 4px 14px; background:color-mix(in srgb,var(--gold) 15%,var(--paper));
+  border-radius:14px 14px 4px 14px; background:color-mix(in srgb,var(--accent) 15%,var(--bg));
   overflow-wrap:anywhere }
-.qs-ai-msg.is-ai{ padding:12px 14px; border-radius:14px; border:1px solid var(--rule); background:var(--paper) }
-.qs-ai-msg.is-note{ padding:10px 14px; border-radius:12px; border:1px dashed var(--rule);
-  color:var(--ink-2); font-size:13px }
-.qs-ai-msg.is-busy{ color:var(--ink-2); font-size:13px }
+.qs-ai-msg.is-ai{ padding:12px 14px; border-radius:14px; border:1px solid var(--border); background:var(--bg) }
+.qs-ai-msg.is-note{ padding:10px 14px; border-radius:12px; border:1px dashed var(--border);
+  color:var(--text-secondary); font-size:13px }
+.qs-ai-msg.is-busy{ color:var(--text-secondary); font-size:13px }
 .qs-ai-who{ display:block; margin-bottom:6px; font:600 11px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.12em; text-transform:uppercase; color:var(--gold) }
+  letter-spacing:.12em; text-transform:uppercase; color:var(--text-primary) }
 .qs-ai-text{ overflow-wrap:anywhere }
 .qs-ai-text code{ font:500 13px/1 'IBM Plex Mono',monospace; padding:2px 5px; border-radius:5px;
-  background:var(--paper-2); color:var(--ink) }
+  background:var(--surface-raised); color:var(--text-primary) }
 .qs-ai-text ul{ margin:0 0 8px; padding-left:20px }
 .qs-ai-text li{ margin:2px 0 }
 
 .qs-ai-qs{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; margin-top:12px }
 .qs-ai-q{ display:flex; flex-direction:column; gap:8px; min-width:0; padding:12px; border-radius:12px;
-  border:1px solid var(--rule); background:var(--skin-card,#FFFFFF) }
+  border:1px solid var(--border); background:var(--surface) }
 .qs-ai-q header{ display:flex; flex-wrap:wrap; gap:4px 10px; align-items:baseline; justify-content:space-between }
 .qs-ai-q header b{ font-size:14px }
-.qs-ai-n{ font:500 12px/1.35 'IBM Plex Mono',monospace; color:var(--mute) }
-.qs-ai-n.is-ok{ color:var(--pass) }
-.qs-ai-n.is-bad{ color:var(--fail) }
-.qs-ai-q pre{ margin:0; padding:8px 10px; border-radius:8px; background:var(--paper-2); color:var(--ink);
+.qs-ai-n{ font:500 12px/1.35 'IBM Plex Mono',monospace; color:var(--text-muted) }
+.qs-ai-n.is-ok{ color:var(--gain) }
+.qs-ai-n.is-bad{ color:var(--loss) }
+.qs-ai-q pre{ margin:0; padding:8px 10px; border-radius:8px; background:var(--surface-raised); color:var(--text-primary);
   font:500 13px/1.55 'IBM Plex Mono',monospace; white-space:pre-wrap; overflow-wrap:anywhere }
-.qs-ai-q p{ margin:0; font-size:13px; line-height:1.5; color:var(--ink-2) }
-.qs-ai-q p.qs-ai-sample{ font-size:12px; color:var(--mute) }
+.qs-ai-q p{ margin:0; font-size:13px; line-height:1.5; color:var(--text-secondary) }
+.qs-ai-q p.qs-ai-sample{ font-size:12px; color:var(--text-muted) }
 .qs-ai-qbtns{ display:flex; flex-wrap:wrap; gap:6px; margin-top:auto }
 .qs-ai-follow, .qs-ai-starters{ display:flex; flex-wrap:wrap; gap:6px }
 .qs-ai-follow{ margin-top:12px }
@@ -288,14 +288,14 @@
 
 .qs-ai-ask{ display:flex; gap:8px; align-items:flex-end }
 .qs-ai-ask textarea{ flex:1 1 auto; min-width:0; min-height:46px; max-height:180px; resize:vertical;
-  padding:11px 12px; border-radius:12px; border:1px solid var(--rule); background:var(--paper);
-  color:var(--ink); font:400 16px/1.45 Inter,system-ui,sans-serif; box-sizing:border-box }
+  padding:11px 12px; border-radius:12px; border:1px solid var(--border); background:var(--bg);
+  color:var(--text-primary); font:400 16px/1.45 Inter,system-ui,sans-serif; box-sizing:border-box }
 .qs-ai-ask textarea:disabled{ opacity:.6 }
-.qs-ai-ask textarea:focus, .qs-ai-keyrow input:focus{ outline:none; border-color:var(--gold);
-  box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 18%,transparent) }
+.qs-ai-ask textarea:focus, .qs-ai-keyrow input:focus{ outline:none; border-color:var(--focus-ring);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--focus-ring) 18%,transparent) }
 
 .qs-ai-dots{ display:inline-flex; gap:4px; margin-right:8px; vertical-align:middle }
-.qs-ai-dots i{ width:6px; height:6px; border-radius:50%; background:var(--gold);
+.qs-ai-dots i{ width:6px; height:6px; border-radius:50%; background:var(--accent);
   animation:qs-ai-dot 1.2s infinite ease-in-out }
 .qs-ai-dots i:nth-child(2){ animation-delay:.15s }
 .qs-ai-dots i:nth-child(3){ animation-delay:.3s }
@@ -326,10 +326,10 @@
 .qz[hidden], .qs-adv[hidden]{ display:none }
 .qz-step{ margin:0 0 34px }
 .qz-h{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin:0 0 16px;
-  font:400 28px/1.15 'Instrument Serif',Georgia,serif; letter-spacing:-.01em; color:var(--ink) }
-.qz-h small{ font:400 14px/1.3 Inter,system-ui,sans-serif; letter-spacing:0; color:var(--mute) }
+  font:400 28px/1.15 'Instrument Serif',Georgia,serif; letter-spacing:-.01em; color:var(--text-primary) }
+.qz-h small{ font:400 14px/1.3 Inter,system-ui,sans-serif; letter-spacing:0; color:var(--text-muted) }
 .qz-num{ flex:none; display:grid; place-items:center; width:32px; height:32px; border-radius:50%;
-  background:var(--ink); color:var(--paper); font:600 14px/1 Inter,system-ui,sans-serif }
+  background:var(--accent); color:var(--on-accent); font:600 14px/1 Inter,system-ui,sans-serif }
 
 .qz-emoji{ flex:none; display:grid; place-items:center; width:46px; height:46px; border-radius:14px;
   background:rgba(var(--tint, 176,141,46), .14); font-size:24px; line-height:1;
@@ -340,101 +340,101 @@
    and not others, and a row of cards came out at three different heights. */
 .qz-recipes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:10px }
 .qz-recipe{ display:flex; align-items:center; gap:14px; min-height:84px; padding:12px 16px 12px 12px; text-align:left; cursor:pointer;
-  border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFFFF); color:var(--ink);
+  border:1px solid var(--border); border-radius:18px; background:var(--surface); color:var(--text-primary);
   font:inherit; -webkit-tap-highlight-color:transparent;
   transition:border-color .2s ease, transform .2s ease, box-shadow .25s ease, background-color .2s ease }
-.qz-recipe:hover{ border-color:var(--gold); transform:translateY(-2px); box-shadow:0 10px 24px rgba(10,10,11,.09) }
+.qz-recipe:hover{ border-color:var(--highlight); transform:translateY(-2px); box-shadow:0 10px 24px rgba(10,10,11,.09) }
 .qz-recipe:hover .qz-emoji, .qz-wish-main:hover .qz-emoji{ transform:scale(1.1) rotate(-6deg) }
 .qz-recipe:active, .qz-wish-main:active{ transform:scale(.985) }
-.qz-recipe.on{ border-color:var(--gold); background:color-mix(in srgb, var(--gold) 11%, var(--skin-card,#FFFFFF));
-  box-shadow:inset 0 0 0 1px var(--gold) }
+.qz-recipe.on{ border-color:var(--highlight); background:color-mix(in srgb, var(--accent) 11%, var(--surface));
+  box-shadow:inset 0 0 0 1px var(--highlight) }
 .qz-recipe-t, .qz-wish-t{ display:block; min-width:0 }
-.qz-recipe-t b, .qz-wish-t b{ display:block; font:600 16px/1.25 Inter,system-ui,sans-serif; color:var(--ink) }
-.qz-recipe-t span, .qz-wish-t span{ display:block; margin-top:3px; font:400 13px/1.4 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qz-recipe-t b, .qz-wish-t b{ display:block; font:600 16px/1.25 Inter,system-ui,sans-serif; color:var(--text-primary) }
+.qz-recipe-t span, .qz-wish-t span{ display:block; margin-top:3px; font:400 13px/1.4 Inter,system-ui,sans-serif; color:var(--text-secondary) }
 
 /* Step 2 · the things to ask for. A closed card is as tall as two lines of
    its description need, so a row is one height whether a line wraps or not. */
 .qz-wishes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:10px; align-items:start }
-.qz-wish{ border:1px solid var(--rule); border-radius:18px; background:var(--skin-card,#FFFFFF);
+.qz-wish{ border:1px solid var(--border); border-radius:18px; background:var(--surface);
   transition:border-color .2s ease, box-shadow .25s ease, background-color .25s ease }
 .qz-wish:hover{ border-color:rgba(var(--tint), .7); box-shadow:0 10px 24px rgba(10,10,11,.08) }
-.qz-wish.on{ border-color:rgb(var(--tint)); background:color-mix(in srgb, rgb(var(--tint)) 7%, var(--skin-card,#FFFFFF));
+.qz-wish.on{ border-color:rgb(var(--tint)); background:color-mix(in srgb, rgb(var(--tint)) 7%, var(--surface));
   box-shadow:inset 0 0 0 1px rgb(var(--tint)) }
 .qz-wish-main{ display:flex; align-items:center; gap:14px; width:100%; min-height:84px; padding:12px 14px 12px 12px; text-align:left;
-  border:0; border-radius:18px; background:none; color:var(--ink); font:inherit; cursor:pointer;
+  border:0; border-radius:18px; background:none; color:var(--text-primary); font:inherit; cursor:pointer;
   -webkit-tap-highlight-color:transparent; transition:transform .15s ease }
 .qz-wish-t{ flex:1 1 auto }
 /* The tick: an empty ring until the card is chosen, so "this can be switched on" is visible before it is. */
 .qz-tick{ flex:none; display:grid; place-items:center; width:26px; height:26px; border-radius:50%;
-  border:2px solid var(--rule); color:transparent; transition:background-color .2s ease, border-color .2s ease, transform .3s cubic-bezier(.2,1.4,.4,1) }
+  border:2px solid var(--border); color:transparent; transition:background-color .2s ease, border-color .2s ease, transform .3s cubic-bezier(.2,1.4,.4,1) }
 .qz-wish.on .qz-tick{ border-color:rgb(var(--tint)); background:rgb(var(--tint)); color:#fff; transform:scale(1.08) }
 .qz-wish.on .qz-emoji{ background:rgba(var(--tint), .22) }
 .qz-more{ padding:0 14px 14px; animation:qzOpen .28s cubic-bezier(.2,.8,.2,1) }
 @keyframes qzOpen{ from{ opacity:0; transform:translateY(-6px) } to{ opacity:1; transform:none } }
 .qz-levels{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:4px; padding:4px; border-radius:13px;
-  background:color-mix(in srgb, rgb(var(--tint)) 10%, var(--paper-2)) }
-.qz-level{ min-height:38px; padding:0 6px; border:0; border-radius:10px; background:none; color:var(--ink-2); cursor:pointer;
+  background:color-mix(in srgb, rgb(var(--tint)) 10%, var(--surface-raised)) }
+.qz-level{ min-height:38px; padding:0 6px; border:0; border-radius:10px; background:none; color:var(--text-secondary); cursor:pointer;
   font:500 14px/1.1 Inter,system-ui,sans-serif; -webkit-tap-highlight-color:transparent;
   transition:background-color .2s ease, color .2s ease }
-.qz-level:hover{ color:var(--ink) }
+.qz-level:hover{ color:var(--text-primary) }
 .qz-level.on{ background:rgb(var(--tint)); color:#fff; font-weight:600; box-shadow:0 2px 8px rgba(var(--tint), .35) }
-.qz-note{ margin:10px 2px 0; font:400 13px/1.5 Inter,system-ui,sans-serif; color:var(--ink-2) }
-.qz-numtag{ display:table; margin-top:8px; padding:3px 8px; border-radius:7px; background:var(--paper-2);
-  font:500 12px/1.3 'IBM Plex Mono',ui-monospace,monospace; color:var(--mute); white-space:nowrap }
+.qz-note{ margin:10px 2px 0; font:400 13px/1.5 Inter,system-ui,sans-serif; color:var(--text-secondary) }
+.qz-numtag{ display:table; margin-top:8px; padding:3px 8px; border-radius:7px; background:var(--surface-raised);
+  font:500 12px/1.3 'IBM Plex Mono',ui-monospace,monospace; color:var(--text-muted); white-space:nowrap }
 .qz-recipe:focus-visible, .qz-wish-main:focus-visible, .qz-level:focus-visible, .qz-bar-x:focus-visible, .qz-float:focus-visible{
-  outline:2px solid var(--gold); outline-offset:2px; box-shadow:none }
+  outline:2px solid var(--focus-ring); outline-offset:2px; box-shadow:none }
 .qz-wish-main:focus-visible{ border-radius:18px }
 
 /* Step 3 · who fits: the count, then a bar for each choice in turn. */
-.qz-board{ border:1px solid var(--rule); border-radius:20px; background:var(--skin-card,#FFFFFF); padding:20px 22px; transition:opacity .2s ease }
+.qz-board{ border:1px solid var(--border); border-radius:20px; background:var(--surface); padding:20px 22px; transition:opacity .2s ease }
 .qz-board.is-counting{ opacity:.55 }
 .qz-board.is-empty, .qz-board.is-down{ border-style:dashed; background:none }
-.qz-wait{ margin:6px 0; font:400 16px/1.55 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qz-wait{ margin:6px 0; font:400 16px/1.55 Inter,system-ui,sans-serif; color:var(--text-secondary) }
 .qz-wait .qs-btn{ margin-left:8px; min-height:34px }
 .qz-count{ display:flex; align-items:center; gap:16px; margin:0 0 16px }
-.qz-count b{ font:400 clamp(52px, 7vw, 64px)/1 'Instrument Serif',Georgia,serif; letter-spacing:-.01em; color:var(--ink);
+.qz-count b{ font:400 clamp(52px, 7vw, 64px)/1 'Instrument Serif',Georgia,serif; letter-spacing:-.01em; color:var(--text-primary);
   font-variant-numeric:tabular-nums }
-.qz-board.is-none .qz-count b{ color:var(--mute) }
-.qz-count span{ font:600 16px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
-.qz-count small{ display:block; margin-top:3px; font:400 14px/1.4 Inter,system-ui,sans-serif; color:var(--mute) }
+.qz-board.is-none .qz-count b{ color:var(--text-muted) }
+.qz-count span{ font:600 16px/1.3 Inter,system-ui,sans-serif; color:var(--text-primary) }
+.qz-count small{ display:block; margin-top:3px; font:400 14px/1.4 Inter,system-ui,sans-serif; color:var(--text-muted) }
 .qz-funnel{ list-style:none; margin:0; padding:0; display:grid; gap:8px }
 .qz-bar{ display:grid; grid-template-columns:minmax(120px, 250px) minmax(40px, 1fr) minmax(46px, auto) 26px; align-items:center; gap:12px }
-.qz-bar-l{ display:flex; align-items:center; gap:8px; min-width:0; font:400 14px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
+.qz-bar-l{ display:flex; align-items:center; gap:8px; min-width:0; font:400 14px/1.3 Inter,system-ui,sans-serif; color:var(--text-primary) }
 .qz-bar-l b{ font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-.qz-bar-l i{ flex:none; font-style:normal; font-size:12px; color:var(--mute); white-space:nowrap }
-.qz-bar.is-all .qz-bar-l b{ color:var(--ink-2); font-weight:400 }
-.qz-bar-track{ height:14px; border-radius:7px; background:var(--paper-2); overflow:hidden }
+.qz-bar-l i{ flex:none; font-style:normal; font-size:12px; color:var(--text-muted); white-space:nowrap }
+.qz-bar.is-all .qz-bar-l b{ color:var(--text-secondary); font-weight:400 }
+.qz-bar-track{ height:14px; border-radius:7px; background:var(--surface-raised); overflow:hidden }
 .qz-bar-fill{ display:block; height:100%; border-radius:7px; background:rgba(var(--tint, 139,132,119), .55);
   transition:width .6s cubic-bezier(.2,.8,.2,1) }
-.qz-bar.is-all .qz-bar-fill{ background:var(--rule) }
-.qz-bar.is-last .qz-bar-fill{ background:linear-gradient(90deg, var(--gold-dp), var(--gold-lt)) }
-.qz-bar-n{ text-align:right; font:500 13px/1 'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--ink-2) }
-.qz-bar.is-last .qz-bar-n{ color:var(--ink); font-weight:600 }
+.qz-bar.is-all .qz-bar-fill{ background:var(--border) }
+.qz-bar.is-last .qz-bar-fill{ background:linear-gradient(90deg, var(--accent-hover), var(--border-strong)) }
+.qz-bar-n{ text-align:right; font:500 13px/1 'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--text-secondary) }
+.qz-bar.is-last .qz-bar-n{ color:var(--text-primary); font-weight:600 }
 .qz-bar-x{ display:grid; place-items:center; width:26px; height:26px; padding:0; border:0; border-radius:50%; background:none;
-  color:var(--mute); font:400 20px/1 Inter,system-ui,sans-serif }
+  color:var(--text-muted); font:400 20px/1 Inter,system-ui,sans-serif }
 button.qz-bar-x{ cursor:pointer }
-button.qz-bar-x:hover{ background:var(--paper-2); color:var(--ink) }
-.qz-unk{ margin:14px 0 0; font:400 13px/1.5 Inter,system-ui,sans-serif; color:var(--mute) }
+button.qz-bar-x:hover{ background:var(--surface-raised); color:var(--text-primary) }
+.qz-unk{ margin:14px 0 0; font:400 13px/1.5 Inter,system-ui,sans-serif; color:var(--text-muted) }
 .qz-acts{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px }
 .qz-acts[hidden]{ display:none }
 .qz .qs-saveform{ margin-top:12px }
 
 /* The count that follows the reader down the page while they choose. */
 .qz-float{ position:sticky; bottom:18px; z-index:30; display:flex; align-items:center; gap:10px; margin:0 auto; padding:0 18px 0 20px;
-  min-height:48px; border:0; border-radius:24px; background:var(--ink); color:var(--paper); cursor:pointer;
+  min-height:48px; border:0; border-radius:24px; background:var(--accent); color:var(--on-accent); cursor:pointer;
   font:400 14px/1 Inter,system-ui,sans-serif; box-shadow:0 12px 30px rgba(10,10,11,.28); animation:qzFloat .3s cubic-bezier(.2,.8,.2,1) }
 .qz-float[hidden]{ display:none }
 .qz-float b{ font:600 16px/1 Inter,system-ui,sans-serif }
-.qz-float span{ margin-left:6px; padding-left:12px; border-left:1px solid color-mix(in srgb, var(--paper) 30%, transparent); color:var(--gold-lt); font-weight:600 }
+.qz-float span{ margin-left:6px; padding-left:12px; border-left:1px solid color-mix(in srgb, var(--border) 30%, transparent); color:var(--text-muted); font-weight:600 }
 @keyframes qzFloat{ from{ opacity:0; transform:translateY(12px) } to{ opacity:1; transform:none } }
 
 /* Results: a line of help above the table, the columns explained under it. */
-.qs-tip{ margin:2px 0 10px; font:400 14px/1.5 Inter,system-ui,sans-serif; color:var(--mute) }
-.qs-legend{ margin:12px 0 4px; border:1px solid var(--rule-2); border-radius:14px; padding:0 14px; background:var(--skin-card,#FFFFFF) }
-.qs-legend summary{ padding:12px 0; cursor:pointer; font:500 14px/1.3 Inter,system-ui,sans-serif; color:var(--ink) }
+.qs-tip{ margin:2px 0 10px; font:400 14px/1.5 Inter,system-ui,sans-serif; color:var(--text-muted) }
+.qs-legend{ margin:12px 0 4px; border:1px solid var(--border); border-radius:14px; padding:0 14px; background:var(--surface) }
+.qs-legend summary{ padding:12px 0; cursor:pointer; font:500 14px/1.3 Inter,system-ui,sans-serif; color:var(--text-primary) }
 .qs-legend dl{ display:grid; grid-template-columns:minmax(110px, max-content) 1fr; gap:8px 16px; margin:0 0 14px }
-.qs-legend dt{ font:600 13px/1.5 'IBM Plex Mono',ui-monospace,monospace; color:var(--ink) }
-.qs-legend dd{ margin:0; font:400 14px/1.5 Inter,system-ui,sans-serif; color:var(--ink-2) }
+.qs-legend dt{ font:600 13px/1.5 'IBM Plex Mono',ui-monospace,monospace; color:var(--text-primary) }
+.qs-legend dd{ margin:0; font:400 14px/1.5 Inter,system-ui,sans-serif; color:var(--text-secondary) }
 
 /* Make your own query: the editor, as a section of its own. Its steps are
    numbered like the cards' so the two sections read as the same kind of page. */

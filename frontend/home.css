@@ -54,19 +54,19 @@ body.sh-on .hero-tiles{ display:none !important }
 .mb-card{ padding:16px 18px; border-radius:14px }
 .mb-card .k{
   font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.13em;
-  text-transform:uppercase; color:var(--mute);
+  text-transform:uppercase; color:var(--text-muted);
 }
 .mb-card .v{ font:600 24px/1 'IBM Plex Mono',monospace; margin-top:12px; letter-spacing:-.02em }
 .mb-card .c{ font:600 13px/1 'IBM Plex Mono',monospace; margin-top:9px }
-.mb-card .c.up{ color:var(--sh-up) } .mb-card .c.dn{ color:var(--sh-dn) }
+.mb-card .c.up{ color:var(--gain) } .mb-card .c.dn{ color:var(--loss) }
 
 /* A hairline that fills to show the move's size against the day's biggest.
    Absolute percentages on four indices are hard to compare at a glance;
    lengths are not. */
-.mb-card .spark{ height:3px; background:var(--rule-2); border-radius:99px; margin-top:13px; overflow:hidden }
+.mb-card .spark{ height:3px; background:var(--border); border-radius:99px; margin-top:13px; overflow:hidden }
 .mb-card .spark i{ display:block; height:100%; width:0; border-radius:99px;
   transition:width 900ms var(--ease-out) }
-.mb-card .spark i.up{ background:var(--sh-up) } .mb-card .spark i.dn{ background:var(--sh-dn) }
+.mb-card .spark i.up{ background:var(--gain) } .mb-card .spark i.dn{ background:var(--loss) }
 
 .mb-movers{
   display:grid; grid-template-columns:1fr 1fr; gap:12px;
@@ -75,26 +75,26 @@ body.sh-on .hero-tiles{ display:none !important }
 .mb-col{ padding:15px 17px; border-radius:14px }
 .mb-col h3{
   margin:0 0 11px; font:600 10px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.13em; text-transform:uppercase; color:var(--mute);
+  letter-spacing:.13em; text-transform:uppercase; color:var(--text-muted);
 }
 .mb-col ol{ margin:0; padding:0; list-style:none }
 .mb-col li{ display:flex; align-items:baseline; gap:10px; padding:6px 0 }
-.mb-col li + li{ border-top:1px solid var(--rule-2) }
+.mb-col li + li{ border-top:1px solid var(--border) }
 .mb-col a{
-  flex:1 1 auto; min-width:0; text-decoration:none; color:var(--ink);
+  flex:1 1 auto; min-width:0; text-decoration:none; color:var(--text-primary);
   font:500 13px/1.3 'IBM Plex Mono',monospace; letter-spacing:.02em;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   transition:color 160ms var(--ease);
 }
-.mb-col a:hover{ color:var(--gold) }
+.mb-col a:hover{ color:var(--highlight-text) }
 .mb-col em{ font:600 12px/1 'IBM Plex Mono',monospace; font-style:normal; flex:0 0 auto }
-.mb-col em.up{ color:var(--sh-up) } .mb-col em.dn{ color:var(--sh-dn) }
+.mb-col em.up{ color:var(--gain) } .mb-col em.dn{ color:var(--loss) }
 
 .mb-note{
-  margin:14px 0 0; text-align:center; font-size:13px; color:var(--mute);
+  margin:14px 0 0; text-align:center; font-size:13px; color:var(--text-muted);
 }
 .mb-skel{ height:96px; border-radius:14px;
-  background:linear-gradient(90deg,var(--rule-2) 25%,var(--paper-2) 37%,var(--rule-2) 63%);
+  background:linear-gradient(90deg,var(--border) 25%,var(--surface-raised) 37%,var(--border) 63%);
   background-size:400% 100%; animation:mbSkel 1400ms ease-in-out infinite }
 @keyframes mbSkel{ from{ background-position:100% 0 } to{ background-position:0 0 } }
 

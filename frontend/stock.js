@@ -157,7 +157,7 @@
     clearTimeout(slowTimer);
     $('state').innerHTML =
       '<div class="stk-state" data-nosnippet><div class="big">' + esc(msg) + '</div>' +
-      '<div><a href="./" style="color:var(--gold)">Back to the screener</a></div></div>';
+      '<div><a href="./" style="color:var(--text-primary)">Back to the screener</a></div></div>';
   }
   function liveOff(retry) {
     clearTimeout(slowTimer);
@@ -1170,7 +1170,7 @@
     function y(v) { return H - ((v - lo) / (hi - lo)) * H; }
     var line = 'M' + closes.map(function (v, i) { return x(i).toFixed(1) + ',' + y(v).toFixed(1); }).join(' L');
     var rising = closes[n - 1] >= closes[0];
-    var stroke = rising ? 'var(--sh-up)' : 'var(--sh-dn)';
+    var stroke = rising ? 'var(--gain)' : 'var(--loss)';
     box.innerHTML =
       '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' +
         'Closing price over the last year, from ' + esc(money(closes[0], d.currency)) + ' to ' +
@@ -1428,7 +1428,7 @@
       .catch(function () {
         if (request !== chartRequest) return;
         box.setAttribute('aria-busy', 'false');
-        box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--mute);' +
+        box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--text-muted);' +
           'font-size:13px">' + (isIntraday(asked) && failStatus
             ? 'Intraday prices for this stock are not available right now. Try 1M or longer.'
             : 'Price history is not available right now.') + '</div>';
@@ -1483,7 +1483,7 @@
   function drawChart(d, box) {
     var rows = ((d && d.candles) || []).filter(function (r) { return r && typeof r[4] === 'number' && isFinite(r[4]); });
     if (rows.length < 2) {
-      box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--mute);' +
+      box.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--text-muted);' +
         'font-size:13px">Not enough history to draw this range.</div>';
       return;
     }
@@ -1508,7 +1508,7 @@
     var line = 'M' + pts.join(' L');
     var area = line + ' L' + W + ',' + H + ' L0,' + H + ' Z';
     var rising = closes[n - 1] >= base;
-    var stroke = rising ? 'var(--sh-up)' : 'var(--sh-dn)';
+    var stroke = rising ? 'var(--gain)' : 'var(--loss)';
     var label = (RANGES.filter(function (r) { return r[0] === chartRange; })[0] || [])[1] || '';
 
     var periodLow = Math.min.apply(null, closes), periodHigh = Math.max.apply(null, closes);

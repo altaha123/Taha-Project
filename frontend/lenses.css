@@ -9,40 +9,40 @@
 
 .ln-kicker{
   margin:0 0 8px; font:600 11px/1.2 'IBM Plex Mono',monospace;
-  letter-spacing:.14em; text-transform:uppercase; color:var(--gold);
+  letter-spacing:.14em; text-transform:uppercase; color:var(--text-primary);
 }
 .ln-head h2{ font-size:clamp(28px,4.2vw,42px); line-height:1.08; margin:0 0 12px }
 .ln-head p{ max-width:66ch; line-height:1.65 }
-.ln-meta{ font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--mute); letter-spacing:.02em }
-.ln-small{ font-size:13px; color:var(--mute); line-height:1.55; max-width:72ch }
+.ln-meta{ font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--text-muted); letter-spacing:.02em }
+.ln-small{ font-size:13px; color:var(--text-muted); line-height:1.55; max-width:72ch }
 
 /* ── The Run button ──────────────────────────────────────────────────────── */
 
 .ln-run{
   display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; margin-top:16px;
-  padding:12px 14px; border-radius:14px; border:1px solid var(--rule);
-  background:var(--skin-card, #FFFFFF); max-width:72ch;
+  padding:12px 14px; border-radius:14px; border:1px solid var(--border);
+  background:var(--surface); max-width:72ch;
 }
 .ln-runbtn{
   display:inline-flex; align-items:center; gap:8px; min-height:40px; padding:0 18px;
   border:0; border-radius:999px; cursor:pointer; font:600 14px/1 Inter,system-ui,sans-serif;
-  color:var(--on-accent,#fff); background:linear-gradient(135deg,var(--gold-dp),var(--gold));
-  box-shadow:0 6px 16px color-mix(in srgb,var(--gold) 28%,transparent);
+  color:var(--on-accent,#fff); background:linear-gradient(135deg,var(--accent-hover),var(--accent));
+  box-shadow:0 6px 16px color-mix(in srgb,var(--border-strong) 28%,transparent);
   transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
 }
 :root[data-theme="dark"] .ln-runbtn{ color:#0A0A0B }
 .ln-runbtn svg{ width:14px; height:14px; fill:currentColor }
 .ln-runbtn:hover:not(:disabled){ transform:translateY(-1px) }
-.ln-runbtn:focus-visible, .ln-stopbtn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.ln-runbtn:focus-visible, .ln-stopbtn:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 .ln-runbtn:disabled{ cursor:progress; opacity:.85 }
 .ln-runbtn.is-busy svg{ animation:lnSpin 1.2s linear infinite; transform-origin:50% 50% }
 .ln-stopbtn{
   min-height:40px; padding:0 14px; border-radius:999px; cursor:pointer;
-  border:1px solid var(--rule); background:none; color:var(--ink-2);
+  border:1px solid var(--border); background:none; color:var(--text-secondary);
   font:500 13px/1 Inter,system-ui,sans-serif;
 }
-.ln-runst{ flex:1 1 260px; font-size:13px; line-height:1.45; color:var(--mute) }
-.ln-runst.is-error{ color:var(--fail) }
+.ln-runst{ flex:1 1 260px; font-size:13px; line-height:1.45; color:var(--text-muted) }
+.ln-runst.is-error{ color:var(--loss) }
 
 /* ── The index: a grid of lens cards ─────────────────────────────────────── */
 
@@ -53,9 +53,9 @@
 .ln-card{
   position:relative; overflow:hidden; isolation:isolate;
   display:flex; flex-direction:column; gap:8px; min-height:280px;
-  padding:20px 20px 18px; border-radius:16px; text-decoration:none; color:var(--ink);
-  background:var(--skin-card, #FFFFFF); border:1px solid var(--rule);
-  box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent);
+  padding:20px 20px 18px; border-radius:16px; text-decoration:none; color:var(--text-primary);
+  background:var(--surface); border:1px solid var(--border);
+  box-shadow:0 1px 0 color-mix(in srgb,var(--border-strong) 4%,transparent);
   transition:transform .32s cubic-bezier(.16,1,.3,1), box-shadow .32s ease, border-color .2s ease;
   animation:lnRise .6s cubic-bezier(.16,1,.3,1) both;
   animation-delay:calc(var(--i,0) * 55ms);
@@ -64,84 +64,84 @@
    card's accent, drawn rather than imported. */
 .ln-card::before{
   content:""; position:absolute; inset:-40% -40% auto auto; width:220px; height:220px; z-index:-1;
-  background:radial-gradient(circle, color-mix(in srgb,var(--gold) 22%,transparent) 0%, transparent 68%);
+  background:radial-gradient(circle, color-mix(in srgb,var(--accent) 22%,transparent) 0%, transparent 68%);
   transition:transform .6s cubic-bezier(.16,1,.3,1), opacity .3s ease; opacity:.75;
 }
 .ln-card::after{
   content:""; position:absolute; left:0; top:18px; bottom:18px; width:3px; border-radius:0 3px 3px 0;
-  background:linear-gradient(var(--gold-lt), var(--gold-dp));
+  background:linear-gradient(var(--border-strong), var(--highlight));
 }
 .ln-card:hover, .ln-card:focus-visible{
-  transform:translateY(-4px); border-color:color-mix(in srgb,var(--gold) 55%,var(--rule));
-  box-shadow:0 14px 34px color-mix(in srgb,var(--ink) 12%,transparent);
+  transform:translateY(-4px); border-color:color-mix(in srgb,var(--focus-ring) 55%,var(--border));
+  box-shadow:0 14px 34px color-mix(in srgb,var(--border-strong) 12%,transparent);
 }
 .ln-card:hover::before{ transform:scale(1.25) translate(-10px,10px); opacity:1 }
-.ln-card:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+.ln-card:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 
 .ln-card-top{ display:flex; align-items:center; justify-content:space-between }
 .ln-glyph{
   display:grid; place-items:center; width:40px; height:40px; border-radius:12px;
-  background:var(--paper-2); border:1px solid var(--rule); color:var(--gold);
+  background:var(--surface-raised); border:1px solid var(--border); color:var(--text-primary);
 }
 .ln-glyph svg{ width:20px; height:20px }
 .ln-card:hover .ln-glyph{
-  background:linear-gradient(135deg,var(--gold-dp),var(--gold)); color:var(--on-accent,#fff); border-color:transparent;
+  background:linear-gradient(135deg,var(--accent-hover),var(--accent)); color:var(--on-accent,#fff); border-color:transparent;
 }
 .ln-rules, .ln-soon{
   font:600 10px/1 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase;
-  color:var(--mute);
+  color:var(--text-muted);
 }
-.ln-soon{ color:var(--gold); border:1px dashed var(--gold); border-radius:999px; padding:5px 9px }
+.ln-soon{ color:var(--text-primary); border:1px dashed var(--border-strong); border-radius:999px; padding:5px 9px }
 .ln-orig{
   margin-top:8px; font:500 11px/1.35 'IBM Plex Mono',monospace; letter-spacing:.06em;
-  text-transform:uppercase; color:var(--mute);
+  text-transform:uppercase; color:var(--text-muted);
 }
 .ln-name{ font:400 34px/1.05 'Instrument Serif',Georgia,serif; letter-spacing:-.01em }
-.ln-idea{ font-size:14px; line-height:1.55; color:var(--ink-2) }
-.ln-why{ margin-top:auto; font-size:13px; line-height:1.5; color:var(--mute) }
+.ln-idea{ font-size:14px; line-height:1.55; color:var(--text-secondary) }
+.ln-why{ margin-top:auto; font-size:13px; line-height:1.5; color:var(--text-muted) }
 .ln-count{
-  margin-top:auto; padding-top:12px; border-top:1px solid var(--rule-2);
+  margin-top:auto; padding-top:12px; border-top:1px solid var(--border);
   display:flex; align-items:baseline; gap:10px;
 }
 .ln-count b{
-  font:400 42px/1 'Instrument Serif',Georgia,serif; color:var(--gold);
+  font:400 42px/1 'Instrument Serif',Georgia,serif; color:var(--text-primary);
   font-variant-numeric:tabular-nums; min-width:1.2ch;
 }
-.ln-count span{ font-size:13px; color:var(--ink-2); line-height:1.3 }
-.ln-count i{ display:block; font-style:normal; font-size:12px; color:var(--mute) }
+.ln-count span{ font-size:13px; color:var(--text-secondary); line-height:1.3 }
+.ln-count i{ display:block; font-style:normal; font-size:12px; color:var(--text-muted) }
 
-.ln-card.is-soon{ background:color-mix(in srgb,var(--paper-2) 70%,var(--skin-card, #FFFFFF)); border-style:dashed }
-.ln-card.is-soon::after{ background:var(--rule) }
-.ln-card.is-soon .ln-name{ color:var(--ink-2) }
+.ln-card.is-soon{ background:color-mix(in srgb,var(--surface-raised) 70%,var(--surface)); border-style:dashed }
+.ln-card.is-soon::after{ background:var(--border) }
+.ln-card.is-soon .ln-name{ color:var(--text-secondary) }
 
 .ln-jump{ margin:10px 0 0 }
-.ln-jump a{ color:var(--gold); font-weight:500; text-decoration:none }
+.ln-jump a{ color:var(--highlight-text); font-weight:500; text-decoration:none }
 .ln-jump a:hover{ text-decoration:underline }
 /* Where the lenses agree: the companies that meet several, under the cards.
    It was a page of its own (Convergence); the rule above it and the heading
    are what say a second part of the same page has started. */
-.ln-together{ margin:44px 0 0; padding:30px 0 0; border-top:1px solid var(--rule); scroll-margin-top:calc(var(--sh-chrome-h, 96px) + 14px) }
+.ln-together{ margin:44px 0 0; padding:30px 0 0; border-top:1px solid var(--border); scroll-margin-top:calc(var(--sh-chrome-h, 96px) + 14px) }
 .ln-together-head{ margin:0 0 18px; max-width:70ch }
-.ln-together-head h3{ margin:6px 0 8px; font:400 28px/1.12 'Instrument Serif',Georgia,serif; letter-spacing:-.005em; color:var(--ink) }
-.ln-together-head p:last-child{ margin:0; font-size:16px; line-height:1.6; color:var(--ink-2) }
+.ln-together-head h3{ margin:6px 0 8px; font:400 28px/1.12 'Instrument Serif',Georgia,serif; letter-spacing:-.005em; color:var(--text-primary) }
+.ln-together-head p:last-child{ margin:0; font-size:16px; line-height:1.6; color:var(--text-secondary) }
 
 @keyframes lnRise{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
 
 /* ── One lens ────────────────────────────────────────────────────────────── */
 
-.ln-back a{ font:500 13px/1 'IBM Plex Mono',monospace; color:var(--mute); text-decoration:none }
-.ln-back a:hover{ color:var(--gold) }
+.ln-back a{ font:500 13px/1 'IBM Plex Mono',monospace; color:var(--text-muted); text-decoration:none }
+.ln-back a:hover{ color:var(--highlight-text) }
 .ln-hero{
   position:relative; margin:16px 0 22px; padding:28px 26px 26px; border-radius:18px;
   background:
-    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb,var(--gold) 16%,transparent) 0%, transparent 55%),
-    var(--skin-card, #FFFFFF);
-  border:1px solid var(--rule);
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb,var(--accent) 16%,transparent) 0%, transparent 55%),
+    var(--surface);
+  border:1px solid var(--border);
 }
 .ln-hero .ln-glyph{ width:48px; height:48px; margin-bottom:14px }
 .ln-hero h2{ font:400 clamp(42px,6vw,64px)/1 'Instrument Serif',Georgia,serif; margin:0 0 12px }
 .ln-hero-idea{ font:400 clamp(18px,2.1vw,24px)/1.45 'Instrument Serif',Georgia,serif;
-  color:var(--ink-2); max-width:56ch; margin:0 }
+  color:var(--text-secondary); max-width:56ch; margin:0 }
 
 .ln-rulebox h3, .ln-results h3{
   font:400 28px/1.15 'Instrument Serif',Georgia,serif; margin:0 0 12px;
@@ -149,34 +149,34 @@
 .ln-rulelist{ list-style:none; margin:0 0 10px; padding:0; display:grid; gap:8px }
 .ln-rulelist li{
   display:flex; gap:12px; align-items:baseline; padding:11px 14px; border-radius:12px;
-  background:var(--paper-2); border:1px solid var(--rule-2); line-height:1.45;
+  background:var(--surface-raised); border:1px solid var(--border); line-height:1.45;
 }
 .ln-rn{
-  flex:none; font:600 11px/1 'IBM Plex Mono',monospace; color:var(--gold);
-  border:1px solid color-mix(in srgb,var(--gold) 45%,transparent); border-radius:6px; padding:4px 6px;
+  flex:none; font:600 11px/1 'IBM Plex Mono',monospace; color:var(--text-primary);
+  border:1px solid color-mix(in srgb,var(--border-strong) 45%,transparent); border-radius:6px; padding:4px 6px;
 }
 .ln-results{ margin-top:26px }
 .ln-soonbox{
-  margin:22px 0; padding:16px 18px; border-radius:14px; border:1px dashed var(--gold);
-  background:color-mix(in srgb,var(--gold) 7%,transparent); line-height:1.6;
+  margin:22px 0; padding:16px 18px; border-radius:14px; border:1px dashed var(--border-strong);
+  background:color-mix(in srgb,var(--accent) 7%,transparent); line-height:1.6;
 }
 
 .ln-tablewrap{
   overflow-x:auto; -webkit-overflow-scrolling:touch; margin:10px 0 6px;
-  border:1px solid var(--rule); border-radius:14px; background:var(--skin-card, #FFFFFF);
+  border:1px solid var(--border); border-radius:14px; background:var(--surface);
 }
 .ln-table{ width:100%; border-collapse:collapse; font-size:14px }
 .ln-table thead th{
   font:600 11px/1 'IBM Plex Mono',monospace; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--mute); text-align:center; padding:12px 10px; border-bottom:1px solid var(--rule);
+  color:var(--text-muted); text-align:center; padding:12px 10px; border-bottom:1px solid var(--border);
   white-space:nowrap; cursor:help;
 }
 .ln-table thead th:first-child{ text-align:left; cursor:default }
-.ln-table tbody tr + tr > *{ border-top:1px solid var(--rule-2) }
-.ln-table tbody tr:hover > *{ background:color-mix(in srgb,var(--gold) 5%,transparent) }
+.ln-table tbody tr + tr > *{ border-top:1px solid var(--border) }
+.ln-table tbody tr:hover > *{ background:color-mix(in srgb,var(--accent) 5%,transparent) }
 .ln-table th[scope="row"]{
   position:sticky; left:0; z-index:1; text-align:left; font-weight:400; padding:11px 14px;
-  background:var(--skin-card, #FFFFFF); min-width:180px;
+  background:var(--surface); min-width:180px;
 }
 /* The company column stays put while the figures scroll under it, so it has
    to be opaque in every state. The row's hover tint is see-through; on this
@@ -184,58 +184,58 @@
    underneath show through the company's name. Its heading sticks with it, so
    the column under "Company" is always the company. */
 .ln-table tbody tr:hover > th[scope="row"]{
-  background:color-mix(in srgb,var(--gold) 5%,var(--skin-card, #FFFFFF)) }
-.ln-table th[scope="row"]{ box-shadow:1px 0 0 var(--rule-2) }
+  background:color-mix(in srgb,var(--accent) 5%,var(--surface)) }
+.ln-table th[scope="row"]{ box-shadow:1px 0 0 var(--border) }
 .ln-table thead th:first-child:not(.qs-n), .ln-table thead th.qs-co{
-  position:sticky; left:0; z-index:2; text-align:left; background:var(--skin-card, #FFFFFF);
-  box-shadow:1px 0 0 var(--rule-2) }
-.ln-table th[scope="row"] a{ text-decoration:none; color:var(--ink); display:block }
+  position:sticky; left:0; z-index:2; text-align:left; background:var(--surface);
+  box-shadow:1px 0 0 var(--border) }
+.ln-table th[scope="row"] a{ text-decoration:none; color:var(--text-primary); display:block }
 .ln-table th[scope="row"] b{ display:block; font:600 13px/1.2 'IBM Plex Mono',monospace }
-.ln-table th[scope="row"] span{ display:block; font-size:13px; color:var(--ink-2); line-height:1.3 }
-.ln-table th[scope="row"] em{ display:block; font-style:normal; font-size:12px; color:var(--mute) }
-.ln-table th[scope="row"] a:hover b{ color:var(--gold) }
+.ln-table th[scope="row"] span{ display:block; font-size:13px; color:var(--text-secondary); line-height:1.3 }
+.ln-table th[scope="row"] em{ display:block; font-style:normal; font-size:12px; color:var(--text-muted) }
+.ln-table th[scope="row"] a:hover b{ color:var(--highlight-text) }
 .ln-cell{ text-align:center; padding:9px 10px; cursor:help; white-space:nowrap }
 .ln-cell span{ display:block; font-size:18px; line-height:1; font-weight:600 }
-.ln-cell small{ display:block; margin-top:3px; font:500 11px/1.2 'IBM Plex Mono',monospace; color:var(--mute) }
-.ln-cell.is-pass span{ color:var(--pass) }
-.ln-cell.is-fail span{ color:var(--fail) }
-.ln-cell.is-na span{ color:var(--mute) }
+.ln-cell small{ display:block; margin-top:3px; font:500 11px/1.2 'IBM Plex Mono',monospace; color:var(--text-muted) }
+.ln-cell.is-pass span{ color:var(--gain) }
+.ln-cell.is-fail span{ color:var(--loss) }
+.ln-cell.is-na span{ color:var(--text-muted) }
 .ln-score{ text-align:center; padding:9px 12px; font:500 13px/1.2 'IBM Plex Mono',monospace; white-space:nowrap }
-.ln-score small{ display:block; font-size:11px; color:var(--mute); margin-top:3px }
+.ln-score small{ display:block; font-size:11px; color:var(--text-muted); margin-top:3px }
 
-.ln-near{ margin:22px 0 0; border:1px solid var(--rule); border-radius:14px; padding:4px 14px 12px }
+.ln-near{ margin:22px 0 0; border:1px solid var(--border); border-radius:14px; padding:4px 14px 12px }
 .ln-near summary{
   cursor:pointer; padding:12px 0; font:400 24px/1.2 'Instrument Serif',Georgia,serif;
   list-style-position:outside;
 }
-.ln-near summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--mute); margin-left:8px }
+.ln-near summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--text-muted); margin-left:8px }
 
 .ln-sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap }
 
 /* ── Convergence ─────────────────────────────────────────────────────────── */
 
 .ln-convbar{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px;
-  font-size:13px; color:var(--mute) }
+  font-size:13px; color:var(--text-muted) }
 .ln-chip{
-  border:1px solid var(--rule); background:var(--skin-card, #FFFFFF); color:var(--ink-2);
+  border:1px solid var(--border); background:var(--surface); color:var(--text-secondary);
   border-radius:999px; padding:7px 13px; font:500 13px/1 Inter,system-ui,sans-serif; cursor:pointer;
   min-height:34px;
 }
-.ln-chip.on{ background:var(--ink); color:var(--paper); border-color:var(--ink) }
+.ln-chip.on{ background:var(--accent); color:var(--on-accent); border-color:var(--border-strong) }
 .ln-conv{ list-style:none; margin:0; padding:0; display:grid; gap:10px }
 .ln-conv li{
   display:grid; grid-template-columns:44px minmax(180px,1.2fr) auto minmax(0,2fr); gap:14px;
-  align-items:center; padding:14px 16px; border-radius:14px; border:1px solid var(--rule);
-  background:var(--skin-card, #FFFFFF);
+  align-items:center; padding:14px 16px; border-radius:14px; border:1px solid var(--border);
+  background:var(--surface);
   animation:lnRise .5s cubic-bezier(.16,1,.3,1) both; animation-delay:calc(var(--i,0) * 35ms);
 }
-.ln-rank{ font:400 28px/1 'Instrument Serif',Georgia,serif; color:var(--gold); text-align:center }
-.ln-conv-co{ text-decoration:none; color:var(--ink); min-width:0 }
+.ln-rank{ font:400 28px/1 'Instrument Serif',Georgia,serif; color:var(--text-primary); text-align:center }
+.ln-conv-co{ text-decoration:none; color:var(--text-primary); min-width:0 }
 .ln-conv-co b{ display:block; font:600 13px/1.2 'IBM Plex Mono',monospace }
-.ln-conv-co span{ display:block; font-size:13px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-.ln-conv-co em{ display:block; font-style:normal; font-size:12px; color:var(--mute) }
-.ln-conv-n{ font-size:13px; color:var(--mute); white-space:nowrap }
-.ln-conv-n b{ font:400 28px/1 'Instrument Serif',Georgia,serif; color:var(--ink) }
+.ln-conv-co span{ display:block; font-size:13px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.ln-conv-co em{ display:block; font-style:normal; font-size:12px; color:var(--text-muted) }
+.ln-conv-n{ font-size:13px; color:var(--text-muted); white-space:nowrap }
+.ln-conv-n b{ font:400 28px/1 'Instrument Serif',Georgia,serif; color:var(--text-primary) }
 
 /* ── Badges, shared by convergence and the stock strip ───────────────────── */
 
@@ -243,32 +243,32 @@
 .ln-badge{
   display:inline-flex; align-items:center; min-height:28px; padding:4px 11px; border-radius:999px;
   font:500 12px/1 Inter,system-ui,sans-serif; text-decoration:none; white-space:nowrap;
-  border:1px solid var(--rule); color:var(--mute); background:transparent;
+  border:1px solid var(--border); color:var(--text-muted); background:transparent;
   transition:transform .15s ease, border-color .15s ease;
 }
-.ln-badge:hover{ transform:translateY(-1px); border-color:var(--gold) }
+.ln-badge:hover{ transform:translateY(-1px); border-color:var(--highlight) }
 .ln-badge.is-pass{
-  background:linear-gradient(135deg,var(--gold-dp),var(--gold)); color:var(--on-accent,#fff); border-color:transparent;
+  background:linear-gradient(135deg,var(--accent-hover),var(--accent)); color:var(--on-accent,#fff); border-color:transparent;
 }
 :root[data-theme="dark"] .ln-badge.is-pass{ color:#0A0A0B }
-.ln-badge.is-near-miss{ border-color:var(--gold); color:var(--gold) }
+.ln-badge.is-near-miss{ border-color:var(--border-strong); color:var(--text-primary) }
 .ln-badge.is-soon{ border-style:dashed; opacity:.7 }
 .ln-badge.is-insufficient, .ln-badge.is-none{ opacity:.65 }
 
 /* ── States and the notice ───────────────────────────────────────────────── */
 
-.ln-state{ padding:28px 18px; text-align:center; color:var(--mute); border:1px dashed var(--rule);
+.ln-state{ padding:28px 18px; text-align:center; color:var(--text-muted); border:1px dashed var(--border);
   border-radius:14px; margin:12px 0 }
-.ln-state .ln-btn{ display:block; margin:12px auto 0; border:1px solid var(--gold); background:none;
-  color:var(--gold); border-radius:999px; padding:8px 16px; cursor:pointer; min-height:36px }
+.ln-state .ln-btn{ display:block; margin:12px auto 0; border:1px solid var(--border-strong); background:none;
+  color:var(--text-primary); border-radius:999px; padding:8px 16px; cursor:pointer; min-height:36px }
 .ln-spin{ display:inline-block; width:14px; height:14px; margin-right:8px; vertical-align:-2px;
-  border:2px solid var(--rule); border-top-color:var(--gold); border-radius:50%;
+  border:2px solid var(--border); border-top-color:var(--border-strong); border-radius:50%;
   animation:lnSpin .8s linear infinite }
 @keyframes lnSpin{ to{ transform:rotate(360deg) } }
 
 .ln-notice{
-  margin:28px 0 8px; padding-top:14px; border-top:1px solid var(--rule);
-  font-size:13px; line-height:1.55; color:var(--mute); max-width:80ch;
+  margin:28px 0 8px; padding-top:14px; border-top:1px solid var(--border);
+  font-size:13px; line-height:1.55; color:var(--text-muted); max-width:80ch;
 }
 
 /* ── Small screens ───────────────────────────────────────────────────────── */
@@ -296,17 +296,17 @@
 .sc-wrap{ margin-top:40px }
 .sc-h{
   margin:0 0 6px; font:500 11px/1 'IBM Plex Mono',monospace;
-  letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted);
 }
-.sc-item{ margin:12px 0 0; border:1px solid var(--rule); border-radius:14px; padding:4px 14px 12px }
+.sc-item{ margin:12px 0 0; border:1px solid var(--border); border-radius:14px; padding:4px 14px 12px }
 .sc-item summary{
   cursor:pointer; padding:12px 0; font:400 24px/1.2 'Instrument Serif',Georgia,serif;
   list-style-position:outside;
 }
-.sc-item summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--mute); margin-left:8px }
+.sc-item summary span{ font:400 13px/1 Inter,system-ui,sans-serif; color:var(--text-muted); margin-left:8px }
 .sc-rule{ margin:10px 0 }
-.sc-co{ display:block; font-size:12px; font-weight:400; color:var(--mute) }
-.sc-asof{ white-space:nowrap; font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--ink-2) }
+.sc-co{ display:block; font-size:12px; font-weight:400; color:var(--text-muted) }
+.sc-asof{ white-space:nowrap; font:500 12px/1.4 'IBM Plex Mono',monospace; color:var(--text-secondary) }
 .sc-figs span{ display:inline-block; margin:0 14px 4px 0; font-variant-numeric:tabular-nums }
-.sc-figs i{ font-style:normal; color:var(--mute); font-size:12px }
+.sc-figs i{ font-style:normal; color:var(--text-muted); font-size:12px }
 .sc-vh{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0) }

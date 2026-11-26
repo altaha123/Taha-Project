@@ -4,6 +4,8 @@
 <meta charset="utf-8" /><script src="clean-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="theme.js"></script>
+<link rel="stylesheet" href="tokens.css">
 <title>Sign in | Altaha Screener</title>
 <meta name="description" content="Sign in to save your portfolio and get one email after the close: what your holdings did, and what was filed on them." />
 <meta name="referrer" content="no-referrer" />
@@ -21,18 +23,6 @@
 <link rel="stylesheet" href="shell.css?v=20261124-logos">
 <link rel="stylesheet" href="type.css">
 
-<script>
-  /* Theme before first paint, as every other page here does — a white flash
-     on a dark-mode phone is the most visible bug a page can ship. */
-  (function () {
-    try {
-      var s = localStorage.getItem('altaha-theme');
-      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
-    } catch (e) {}
-  })();
-  var API_BASE = "https://taha-project.onrender.com";
-</script>
 <script src="analytics.js" defer></script>
 <script src="auth.js" defer></script>
 
@@ -41,13 +31,13 @@
   /* Black, white and the one ultramarine, like the rest of the site. The
      picture is drawn from the --si-a-* values so it turns with the theme
      instead of sitting on a dark page as a pale card. */
-  .si-page { --si-muted:var(--mute,#5e5e69); --si-card:var(--skin-card,#ffffff); --si-accent:var(--gold,#0a0a0b);
+  .si-page { --si-muted:var(--text-muted); --si-card:var(--surface); --si-accent:var(--highlight);
     --si-a-sky1:#f7f7f9; --si-a-sky2:#e6e6eb; --si-a-sun:#ffffff; --si-a-hill1:#dcdce2; --si-a-hill2:#cbcbd3;
     --si-a-top:#5b5b66; --si-a-face1:#33333a; --si-a-face2:#0a0a0b; --si-a-side:#0a0a0b;
     --si-a-btop:#e8ebef; --si-a-bface1:#8a93a0; --si-a-bface2:#4a505a; --si-a-bside:#2e3238;
     --si-a-line:#0a0a0b; --si-a-quiet:#5e5e69;
     min-height:100svh; padding:28px clamp(20px,5vw,80px); box-sizing:border-box;
-    background:var(--paper); }
+    background:var(--bg); }
   [data-theme="dark"] .si-page {
     --si-a-sky1:#151518; --si-a-sky2:#0b0b0d; --si-a-sun:#f5f5f7; --si-a-hill1:#1d1d21; --si-a-hill2:#28282d;
     --si-a-top:#fafafa; --si-a-face1:#d2d2d8; --si-a-face2:#9c9ca6; --si-a-side:#5a5a64;
@@ -55,43 +45,43 @@
     --si-a-line:#fafafa; --si-a-quiet:#9c9ca6; }
   .si-page *, .si-page *::before, .si-page *::after { box-sizing:border-box; }
   .si-header { max-width:1180px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; }
-  .si-brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--ink); }
-  .si-monogram { width:40px; height:40px; border-radius:12px; background:var(--ink); color:var(--paper); display:grid; place-items:center; font:400 28px/1 var(--serif,'Instrument Serif',Georgia,serif); }
+  .si-brand { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text-primary); }
+  .si-monogram { width:40px; height:40px; border-radius:12px; background:var(--accent); color:var(--on-accent); display:grid; place-items:center; font:400 28px/1 var(--serif,'Instrument Serif',Georgia,serif); }
   .si-brand-name { font-size:18px; font-weight:600; letter-spacing:-.04em; }
   .si-brand-name small { display:block; font-size:10px; letter-spacing:.2em; text-transform:uppercase; margin-top:4px; color:var(--si-muted); }
   .si-home { color:var(--si-muted); font-size:13px; text-decoration:none; padding:12px 0; }
   .si-wrap { max-width:1100px; margin:clamp(40px,8vh,96px) auto 48px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); align-items:center; gap:clamp(40px,7vw,100px); }
   .si-eyebrow { color:var(--si-accent); font:500 11px/1.5 'IBM Plex Mono',monospace; letter-spacing:.16em; text-transform:uppercase; margin:0 0 20px; }
-  .si-story h2 { font:400 clamp(42px,4.6vw,64px)/1.04 'Instrument Serif',Georgia,serif; letter-spacing:-.035em; margin:0; color:var(--ink); }
-  .si-story h2 em { color:var(--accent-em,var(--si-accent)); font-weight:400; }
+  .si-story h2 { font:400 clamp(42px,4.6vw,64px)/1.04 'Instrument Serif',Georgia,serif; letter-spacing:-.035em; margin:0; color:var(--text-primary); }
+  .si-story h2 em { color:var(--highlight-text); font-weight:400; }
   .si-description { max-width:370px; color:var(--si-muted); font-size:16px; line-height:1.7; margin:22px 0 0; }
   .si-art { margin:28px 0 0; position:relative; }
   .si-art svg { display:block; width:100%; height:auto; border-radius:24px; }
   .si-art figcaption { color:var(--si-muted); font-size:11px; margin-top:10px; letter-spacing:.03em; }
-  .si-card { min-width:0; padding:38px; border:1px solid var(--rule); border-radius:24px; background:var(--si-card); box-shadow:0 16px 60px #0a0a0b0f,0 2px 6px #0a0a0b08; animation:si-enter .5s ease-out both; }
-  .si-card h1 { font:400 42px/1.15 'Instrument Serif',Georgia,serif; letter-spacing:-.025em; margin:0 0 12px; color:var(--ink); }
+  .si-card { min-width:0; padding:38px; border:1px solid var(--border); border-radius:24px; background:var(--si-card); box-shadow:0 16px 60px #0a0a0b0f,0 2px 6px #0a0a0b08; animation:si-enter .5s ease-out both; }
+  .si-card h1 { font:400 42px/1.15 'Instrument Serif',Georgia,serif; letter-spacing:-.025em; margin:0 0 12px; color:var(--text-primary); }
   .si-lede { font-size:14px; line-height:1.7; color:var(--si-muted); margin:0 0 26px; overflow-wrap:anywhere; }
   .si-field { display:block; margin-bottom:16px; }
-  .si-field span { display:block; font-size:13px; font-weight:500; color:var(--ink); margin-bottom:9px; }
-  .si-input { width:100%; min-height:52px; padding:14px 16px; font:400 16px/1.4 Inter,system-ui,sans-serif; color:var(--ink); background:var(--paper); border:1px solid var(--rule); border-radius:10px; }
+  .si-field span { display:block; font-size:13px; font-weight:500; color:var(--text-primary); margin-bottom:9px; }
+  .si-input { width:100%; min-height:52px; padding:14px 16px; font:400 16px/1.4 Inter,system-ui,sans-serif; color:var(--text-primary); background:var(--bg); border:1px solid var(--border); border-radius:10px; }
   .si-input::placeholder { color:var(--si-muted); opacity:1; }
   .si-page :focus-visible { outline:3px solid var(--si-accent); outline-offset:4px; }
-  .si-btn { display:block; width:100%; min-height:52px; padding:15px 18px; font:600 14px/1.5 Inter,system-ui,sans-serif; color:var(--paper); background:var(--ink); border:1px solid transparent; border-radius:10px; cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
-  .si-btn:hover:not(:disabled) { background:var(--gold); color:var(--on-accent,#fff); box-shadow:0 4px 14px color-mix(in srgb,var(--gold) 28%,transparent); }
+  .si-btn { display:block; width:100%; min-height:52px; padding:15px 18px; font:600 14px/1.5 Inter,system-ui,sans-serif; color:var(--on-accent); background:var(--accent); border:1px solid transparent; border-radius:10px; cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
+  .si-btn:hover:not(:disabled) { background:var(--accent); color:var(--on-accent,#fff); box-shadow:0 4px 14px color-mix(in srgb,var(--highlight) 28%,transparent); }
   .si-btn[disabled] { opacity:.55; cursor:wait; }
   .si-note { font-size:13px; line-height:1.65; margin:16px 0 0; color:var(--si-muted); overflow-wrap:anywhere; }
   .si-note:empty { display:none; }
   .si-note.bad { color:#a52f28; background:#fff0ec; padding:12px; border-radius:8px; }
   .si-note.good { color:var(--si-accent); }
   [data-theme="dark"] .si-note.bad { color:#ffc3b8; background:#38201d; }
-  .si-list { list-style:none; margin:28px 0 0; padding:22px 0 0; border-top:1px solid var(--rule); display:grid; gap:16px; }
+  .si-list { list-style:none; margin:28px 0 0; padding:22px 0 0; border-top:1px solid var(--border); display:grid; gap:16px; }
   .si-list li { display:flex; align-items:flex-start; gap:12px; font-size:12px; line-height:1.6; color:var(--si-muted); }
-  .si-list b { display:block; font-size:13px; color:var(--ink); font-weight:500; }
+  .si-list b { display:block; font-size:13px; color:var(--text-primary); font-weight:500; }
   .si-list svg { flex:none; width:18px; height:18px; margin-top:2px; color:var(--si-accent); }
   .si-back { display:inline-block; margin-top:24px; font-size:13px; color:var(--si-accent); text-underline-offset:4px; }
   .si-code { font-family:'IBM Plex Mono',monospace; font-size:24px; letter-spacing:8px; text-align:center; }
   .si-or { display:none; align-items:center; gap:14px; margin:22px 0; font-size:12px; color:var(--si-muted); }
-  .si-or::before, .si-or::after { content:''; flex:1; height:1px; background:var(--rule); }
+  .si-or::before, .si-or::after { content:''; flex:1; height:1px; background:var(--border); }
   #si-google { display:none; min-height:44px; }
   .si-footer { max-width:1100px; margin:auto; padding:0 0 16px; color:var(--si-muted); font-size:12px; line-height:1.6; display:flex; justify-content:space-between; gap:16px; }
   @keyframes si-enter { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
@@ -151,7 +141,7 @@
         <path d="M288 94l40-19 41 19-40 20z" style="fill:var(--si-a-btop)"/>
         <path d="M288 94l41 20v132l-41-20z" fill="url(#si-blue)"/><path d="M329 114l40-20v132l-40 20z" style="fill:var(--si-a-bside)"/>
         <path d="M77 164C147 115 174 148 225 91S316 62 344 38" style="stroke:var(--si-a-line)" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 7"/>
-        <circle cx="77" cy="164" r="4" style="fill:var(--si-a-line)"/><circle cx="344" cy="38" r="4" style="fill:var(--gold,#0a0a0b)"/>
+        <circle cx="77" cy="164" r="4" style="fill:var(--si-a-line)"/><circle cx="344" cy="38" r="4" style="fill:var(--highlight)"/>
         <path d="M397 231v-39m-7 13h14v18h-14zM429 208v-51m-7 11h14v24h-14z" style="stroke:var(--si-a-quiet)" stroke-width="2"/>
       </svg>
       <figcaption>A little perspective makes a difference.</figcaption>

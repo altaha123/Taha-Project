@@ -4,14 +4,14 @@
 
 .navwrap {
   margin: 0 0 26px;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
 }
 
 .navmain {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--border);
 }
 
 .navmain-btn {
@@ -21,17 +21,17 @@
   background: none; border: 0; cursor: pointer;
   font-family: var(--mono);
   font-size: 12px; letter-spacing: .13em; text-transform: uppercase;
-  color: var(--mute);
+  color: var(--text-muted);
   transition: color .18s var(--ease, ease), background .18s var(--ease, ease);
 }
 .navmain-btn svg { width: 17px; height: 17px; flex: 0 0 auto; }
-.navmain-btn:hover { color: var(--ink-2); }
+.navmain-btn:hover { color: var(--text-secondary); }
 .navmain-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 2px; }
 
-.navmain-btn.on { color: var(--ink); }
+.navmain-btn.on { color: var(--text-primary); }
 .navmain-btn.on::after {
   content: ''; position: absolute; left: 0; right: 0; bottom: -1px;
-  height: 2px; background: var(--gold);
+  height: 2px; background: var(--highlight);
 }
 
 .navsub {
@@ -58,33 +58,33 @@
 }
 .navsub-lbl {
   font-family: var(--mono); font-size: 11px; letter-spacing: .11em;
-  text-transform: uppercase; color: var(--mute);
+  text-transform: uppercase; color: var(--text-muted);
   transition: color .18s ease;
 }
 .navsub-hint {
-  font-size: 11px; color: var(--mute); opacity: .62;
+  font-size: 11px; color: var(--text-muted); opacity: .62;
 }
-.navsub-btn:hover .navsub-lbl { color: var(--ink-2); }
-.navsub-btn.on { border-bottom-color: var(--ink); }
-.navsub-btn.on .navsub-lbl { color: var(--ink); }
+.navsub-btn:hover .navsub-lbl { color: var(--text-secondary); }
+.navsub-btn.on { border-bottom-color: var(--border-strong); }
+.navsub-btn.on .navsub-lbl { color: var(--text-primary); }
 .navsub-btn.on .navsub-hint { opacity: .85; }
 .navsub-btn:focus-visible { outline: none; box-shadow: var(--ring); border-radius: 2px; }
 
 .navlearn {
   align-self: center;
-  background: none; border: 1px solid var(--rule); border-radius: 2px;
+  background: none; border: 1px solid var(--border); border-radius: 2px;
   padding: 7px 13px; cursor: pointer;
   font-family: var(--mono); font-size: 10px; letter-spacing: .13em;
-  text-transform: uppercase; color: var(--mute);
+  text-transform: uppercase; color: var(--text-muted);
   transition: border-color .18s ease, color .18s ease;
   flex: 0 0 auto;
 }
-.navlearn:hover, .navlearn.on { border-color: var(--gold); color: var(--gold-dp); }
+.navlearn:hover, .navlearn.on { border-color: var(--highlight); color: var(--highlight-text); }
 .navlearn:focus-visible { outline: none; box-shadow: var(--ring); }
 
 .navblurb {
   margin: 0; padding: 11px 2px 13px;
-  font-size: 13px; color: var(--mute);
+  font-size: 13px; color: var(--text-muted);
 }
 
 .navmob { display: none; }
@@ -93,10 +93,10 @@
   .navmob {
     display: block;
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
-    background: var(--glass, var(--paper));
+    background: var(--surface);
     backdrop-filter: saturate(180%) blur(14px);
     -webkit-backdrop-filter: saturate(180%) blur(14px);
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom);
   }
   .navmob-inner { display: grid; grid-template-columns: repeat(5, 1fr); }
@@ -104,20 +104,20 @@
   .navmob-btn {
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     padding: 9px 4px 8px; min-height: 52px;
-    background: none; border: 0; cursor: pointer; color: var(--mute);
+    background: none; border: 0; cursor: pointer; color: var(--text-muted);
   }
   .navmob-btn svg { width: 20px; height: 20px; }
   .navmob-btn span {
     font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
     text-transform: uppercase;
   }
-  .navmob-btn.on { color: var(--gold-dp); }
+  .navmob-btn.on { color: var(--highlight-text); }
 
   body { padding-bottom: 66px; }
 
   .navmain { display: none; }
   .navwrap { border-bottom: 0; margin-bottom: 10px; }
-  .navsub { border-bottom: 1px solid var(--rule); min-height: 44px; gap: 8px; }
+  .navsub { border-bottom: 1px solid var(--border); min-height: 44px; gap: 8px; }
   .navsub-btn { padding: 9px 12px; }
   .navsub-hint { display: none; }
   .navblurb { display: none; }

@@ -96,21 +96,21 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
   margin:0 0 4px; font-family:var(--ty-serif); font-weight:400;
   font-size:var(--fs-h2); line-height:var(--lh-tight); letter-spacing:-.01em;
 }
-.tabhead > h2 i{ font-style:italic; color:var(--gold) }
+.tabhead > h2 i{ font-style:italic; color:var(--highlight-text) }
 .tabhead > p{
   margin:0; font-size:var(--fs-body); line-height:var(--lh-body);
-  color:var(--mute); max-width:66ch;
+  color:var(--text-muted); max-width:66ch;
 }
-.tabhead > p a{ color:var(--gold-dp) }
+.tabhead > p a{ color:var(--highlight-text) }
 
 /* ── Secondary text ────────────────────────────────────────────────────────
    Four classes doing one job at four sizes. Two roles now: a line under a
    heading, and a quiet footnote. */
 .stk-sec > .sub, .lsub, .ideas-note{
-  font-size:var(--fs-body); line-height:var(--lh-body); color:var(--mute);
+  font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-muted);
 }
 .rnote, .disc, .brun-note, .stk-disc{ line-height:var(--lh-loose) }
-.rnote, .disc, .stk-disc{ font-size:var(--fs-small); color:var(--mute) }
+.rnote, .disc, .stk-disc{ font-size:var(--fs-small); color:var(--text-muted) }
 
 /* ── Mono labels ───────────────────────────────────────────────────────────
    The uppercase mono label is the most repeated element on the site and had
@@ -127,11 +127,11 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
 .searchrow{ align-items:center }
 .searchrow input{
   flex:1 1 auto; min-width:0;
-  border:0; background:transparent; color:var(--ink);
+  border:0; background:transparent; color:var(--text-primary);
   font-family:var(--ty-mono); font-size:var(--fs-lead); letter-spacing:.06em;
   padding:15px 22px;
 }
-.searchrow input::placeholder{ font-family:var(--ty-sans); letter-spacing:.01em; color:var(--mute) }
+.searchrow input::placeholder{ font-family:var(--ty-sans); letter-spacing:.01em; color:var(--text-muted) }
 .searchrow input:focus{ outline:none }
 .searchrow > button{ flex:0 0 auto; cursor:pointer }
 
@@ -139,8 +139,8 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
    buttons outside one, where they fell back to the browser's default chrome. */
 .hzrow{ display:flex; flex-wrap:wrap; justify-content:flex-start; gap:8px }
 .hzrow > .hz{
-  border:1px solid var(--rule); border-radius:var(--ty-pill);
-  background:var(--paper); color:var(--ink-2); cursor:pointer;
+  border:1px solid var(--border); border-radius:var(--ty-pill);
+  background:var(--bg); color:var(--text-secondary); cursor:pointer;
   font-family:var(--ty-sans); font-weight:500; font-size:var(--fs-body);
   padding:10px 20px; line-height:1.2;
   transition:border-color var(--ty-t) var(--ty-ease), color var(--ty-t) var(--ty-ease),
@@ -148,11 +148,11 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
 }
 .hzrow > .hz small{
   display:block; font-family:var(--ty-mono); font-size:var(--fs-micro);
-  letter-spacing:var(--tr-label); text-transform:uppercase; color:var(--mute);
+  letter-spacing:var(--tr-label); text-transform:uppercase; color:var(--text-muted);
   margin-top:3px;
 }
-.hzrow > .hz:hover{ border-color:var(--ink-2); color:var(--ink) }
-.hzrow > .hz.active{ background:var(--ink); border-color:var(--ink); color:var(--paper) }
+.hzrow > .hz:hover{ border-color:var(--border-strong); color:var(--text-primary) }
+.hzrow > .hz.active{ background:var(--accent); border-color:var(--border-strong); color:var(--on-accent) }
 .hzrow > .hz.active small{ color:inherit; opacity:.74 }
 
 /* `#genbtn` and `#pf_go` were dressed by id; `#genbtn2` and the Planner's twin
@@ -162,13 +162,13 @@ h1, h2, h3, h4, h5, h6{ font-weight:400 }
   letter-spacing:-.008em; cursor:pointer;
 }
 #genbtn2, #pf_go{
-  background:var(--ink); color:var(--paper); border:1px solid var(--ink);
+  background:var(--accent); color:var(--on-accent); border:1px solid var(--border-strong);
   border-radius:var(--ty-pill); padding:11px 24px;
   transition:opacity var(--ty-t) var(--ty-ease), transform var(--ty-t) var(--ty-ease);
 }
 #genbtn2:hover:not(:disabled), #pf_go:hover:not(:disabled){ opacity:.86; transform:translateY(-1px) }
 #genbtn2:disabled, #pf_go:disabled{ opacity:.45; cursor:default; transform:none }
-#genbtn2:focus-visible, #pf_go:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+#genbtn2:focus-visible, #pf_go:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
 
 /* The holdings table's column headings wrapped to three lines because the
    optional-field hint was set in the same uppercase mono as the heading. */

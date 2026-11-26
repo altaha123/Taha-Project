@@ -4,6 +4,8 @@
 <meta charset="utf-8" /><script src="clean-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="theme.js"></script>
+<link rel="stylesheet" href="tokens.css">
 <title>Stock | Altaha Screener</title>
 <meta name="description" content="Price, key figures, score, financials, peers, ownership, delivery, news and filings for any Indian stock, on one page." />
 <meta name="robots" content="index,follow" />
@@ -25,19 +27,6 @@
 <link rel="stylesheet" href="type.css">
 <link rel="stylesheet" href="broker.css?v=20261123-broker">
 
-<script>
-  /* Theme is resolved before first paint. Doing it in a stylesheet or after
-     DOMContentLoaded produces a white flash on every load for dark-mode users,
-     which is the single most noticeable rendering bug a site can ship. */
-  (function () {
-    try {
-      var s = localStorage.getItem('altaha-theme');
-      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
-    } catch (e) {}
-  })();
-  var API_BASE = "https://taha-project.onrender.com";
-</script>
 <script src="analytics.js" defer></script>
 <script src="auth.js" defer></script>
 </head>
@@ -212,8 +201,8 @@
             <svg viewBox="0 0 200 200" aria-hidden="true">
               <defs>
                 <linearGradient id="dialG" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="var(--gold-dp)"/>
-                  <stop offset="1" stop-color="var(--gold-lt)"/>
+                  <stop offset="0" stop-color="var(--text-primary)"/>
+                  <stop offset="1" stop-color="var(--text-muted)"/>
                 </linearGradient>
               </defs>
               <circle class="trk" cx="100" cy="100" r="84"/>

@@ -6,12 +6,12 @@
    Numbers are tabular; the three record figures are the only large type.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.pk-panel { --pk-card: var(--dr-card, #fff); --pk-rule: var(--dr-rule, var(--rule-2)); --pk-mute: var(--dr-mute, var(--mute));
+.pk-panel { --pk-card: var(--dr-card, #fff); --pk-rule: var(--dr-rule, var(--border)); --pk-mute: var(--dr-mute, var(--text-muted));
   margin: 0 0 22px; padding: 20px 22px 18px; border: 1px solid var(--pk-rule); border-radius: 22px; background: var(--pk-card);
   box-shadow: 0 10px 34px rgba(10, 10, 11, .06); }
 .pk-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 14px; }
-.pk-title { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1.1; letter-spacing: -.005em; color: var(--ink); }
-.pk-sub { margin: 0; font-size: 14px; color: var(--pk-mute, var(--mute)); }
+.pk-title { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1.1; letter-spacing: -.005em; color: var(--text-primary); }
+.pk-sub { margin: 0; font-size: 14px; color: var(--pk-mute, var(--text-muted)); }
 
 /* ── Which list ────────────────────────────────────────────────────────
    Ten lists in two rows, and each row says what kind it is. They were two
@@ -19,102 +19,102 @@
    as its own words, and carries how long the list is held under its name. */
 .pk-chooser { display: grid; gap: 10px; }
 .pk-group { display: grid; grid-template-columns: 124px minmax(0, 1fr); align-items: center; gap: 12px; }
-.pk-group-h { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--tk-label, var(--mute)); }
+.pk-group-h { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
 .pk-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
 .pk-tab { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; min-height: 48px;
-  padding: 7px 16px; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper); color: var(--ink);
+  padding: 7px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); color: var(--text-primary);
   font: 500 14px/1 var(--sans); white-space: nowrap; cursor: pointer; text-align: left;
   transition: background var(--t-fast, 150ms), color var(--t-fast, 150ms), border-color var(--t-fast, 150ms), transform var(--t-fast, 150ms); }
 .pk-tab i { font-style: normal; }
-.pk-tab small { font: 400 12px/1 var(--sans); color: var(--tk-label, var(--mute)); }
-.pk-tab:hover { border-color: var(--gold); transform: translateY(-1px); }
-.pk-tab.on { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
+.pk-tab small { font: 400 12px/1 var(--sans); color: var(--text-muted); }
+.pk-tab:hover { border-color: var(--highlight); transform: translateY(-1px); }
+.pk-tab.on { background: var(--accent); border-color: var(--border-strong); color: var(--on-accent); font-weight: 600; }
 .pk-tab.on small { color: inherit; opacity: .72; }
-.pk-tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.pk-tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 /* ── What the list is, and how it did ─────────────────────────────────── */
-.pk-idea { margin: 16px 0 12px; font-size: 16px; line-height: 1.4; color: var(--ink); }
-.pk-idea span { color: var(--pk-mute, var(--mute)); }
-.pk-record { margin: 0 0 14px; border: 1px solid var(--rule-2); border-radius: 14px; background: var(--paper-2); }
+.pk-idea { margin: 16px 0 12px; font-size: 16px; line-height: 1.4; color: var(--text-primary); }
+.pk-idea span { color: var(--pk-mute, var(--text-muted)); }
+.pk-record { margin: 0 0 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-raised); }
 .pk-record-h { margin: 0; padding: 11px 14px 0; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--tk-label, var(--mute)); }
+  text-transform: uppercase; color: var(--text-muted); }
 .pk-record-n { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .pk-record-n > span { display: flex; flex-direction: column; gap: 4px; padding: 8px 14px 12px; min-width: 0; }
-.pk-record-n > span + span { border-left: 1px solid var(--rule-2); }
-.pk-record-n b { font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
-.pk-record-n b.up { color: var(--pass); } .pk-record-n b.dn { color: var(--fail); }
-.pk-record-n small { font-size: 13px; line-height: 1.35; color: var(--ink-2); }
+.pk-record-n > span + span { border-left: 1px solid var(--border); }
+.pk-record-n b { font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.pk-record-n b.up { color: var(--gain); } .pk-record-n b.dn { color: var(--loss); }
+.pk-record-n small { font-size: 13px; line-height: 1.35; color: var(--text-secondary); }
 /* "52 of every 100 went up" as a bar: the part that went up, and the rest. */
 .pk-meter { display: block; height: 6px; max-width: 220px; margin-top: 4px; border-radius: 3px; overflow: hidden;
-  background: color-mix(in srgb, var(--fail) 38%, var(--paper-2)); }
-.pk-meter i { display: block; height: 100%; border-radius: 3px 0 0 3px; background: var(--pass); }
-.pk-how { border-top: 1px solid var(--rule-2); }
-.pk-how summary { padding: 9px 14px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--tk-label, var(--mute)); cursor: pointer; list-style: none; }
+  background: color-mix(in srgb, var(--loss) 38%, var(--surface-raised)); }
+.pk-meter i { display: block; height: 100%; border-radius: 3px 0 0 3px; background: var(--gain); }
+.pk-how { border-top: 1px solid var(--border); }
+.pk-how summary { padding: 9px 14px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--text-muted); cursor: pointer; list-style: none; }
 .pk-how summary::-webkit-details-marker { display: none; }
-.pk-how summary::after { content: ' · how'; color: var(--gold-dp); }
+.pk-how summary::after { content: ' · how'; color: var(--text-primary); }
 .pk-how[open] summary::after { content: ' · hide'; }
-.pk-how ul { margin: 0; padding: 0 14px 12px 30px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
-.pk-how li b { font-weight: 600; color: var(--ink); }
-.pk-live { margin: -4px 0 14px; font-size: 13px; color: var(--ink-2); }
-.pk-stale { margin: 0 0 12px; padding: 9px 12px; border-left: 3px solid var(--warn-edge, #b26a00); border-radius: 4px; background: var(--warn-bg, #fdf8f0);
-  color: var(--warn-ink, #5c4520); font-size: 13px; }
-.pk-quiet { margin: 16px 0 12px; font-size: 14px; color: var(--pk-mute, var(--mute)); }
-.pk-retry { border: 0; background: none; padding: 0; color: var(--gold-dp); font: inherit; text-decoration: underline; cursor: pointer; }
+.pk-how ul { margin: 0; padding: 0 14px 12px 30px; font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
+.pk-how li b { font-weight: 600; color: var(--text-primary); }
+.pk-live { margin: -4px 0 14px; font-size: 13px; color: var(--text-secondary); }
+.pk-stale { margin: 0 0 12px; padding: 9px 12px; border-left: 3px solid var(--warning); border-radius: 4px; background: var(--warning-bg);
+  color: var(--text-primary); font-size: 13px; }
+.pk-quiet { margin: 16px 0 12px; font-size: 14px; color: var(--pk-mute, var(--text-muted)); }
+.pk-retry { border: 0; background: none; padding: 0; color: var(--text-primary); font: inherit; text-decoration: underline; cursor: pointer; }
 
 /* ── The picks ────────────────────────────────────────────────────────── */
 .pk-cards-h { margin: 18px 0 2px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--tk-label, var(--mute)); }
+  color: var(--text-muted); }
 .pk-cards { display: flex; flex-direction: column; }
 .pk-card { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 13px 8px;
-  border-top: 1px solid var(--rule-2); border-radius: 12px; color: inherit; text-decoration: none; transition: background var(--t-fast, 150ms); }
+  border-top: 1px solid var(--border); border-radius: 12px; color: inherit; text-decoration: none; transition: background var(--t-fast, 150ms); }
 .pk-card:first-child { border-top: 0; }
-.pk-card:hover { background: var(--paper-2); }
-.pk-card:hover .pk-name { color: var(--gold-dp); }
-.pk-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.pk-rank { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--gold) 14%, transparent);
-  font-family: var(--serif); font-size: 20px; line-height: 1; color: var(--gold-dp); font-variant-numeric: tabular-nums; }
+.pk-card:hover { background: var(--surface-raised); }
+.pk-card:hover .pk-name { color: var(--highlight-text); }
+.pk-card:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.pk-rank { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, transparent);
+  font-family: var(--serif); font-size: 20px; line-height: 1; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 .pk-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.pk-name { font-family: var(--serif); font-size: 20px; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere; transition: color var(--t-fast, 150ms); }
-.pk-sym { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--tk-label, var(--mute)); font-variant-numeric: tabular-nums; }
+.pk-name { font-family: var(--serif); font-size: 20px; line-height: 1.15; color: var(--text-primary); overflow-wrap: anywhere; transition: color var(--t-fast, 150ms); }
+.pk-sym { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 /* Three prices, left to right: where it is, where a good result would be,
    where to leave. Green and red are on the percentages only; the prices
    themselves stay the ink colour so none of the three shouts. */
-.pk-levels { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(96px, auto); border: 1px solid var(--rule-2); border-radius: 12px;
-  background: var(--paper); overflow: hidden; }
+.pk-levels { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(96px, auto); border: 1px solid var(--border); border-radius: 12px;
+  background: var(--bg); overflow: hidden; }
 .pk-lv { display: flex; flex-direction: column; gap: 3px; padding: 8px 14px; text-align: right; }
-.pk-lv + .pk-lv { border-left: 1px solid var(--rule-2); }
-.pk-lv small { font-size: 11px; color: var(--tk-label, var(--mute)); white-space: nowrap; }
-.pk-lv b { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pk-lv + .pk-lv { border-left: 1px solid var(--border); }
+.pk-lv small { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.pk-lv b { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text-primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pk-lv i { font: 500 11px/1 var(--mono); font-style: normal; font-variant-numeric: tabular-nums; }
-.pk-aim i { color: var(--pass); } .pk-exit i { color: var(--fail); }
-.pk-aimnote { margin: 12px 0 0; padding: 10px 14px; border-radius: 12px; background: var(--paper-2); font-size: 13px; line-height: 1.55; color: var(--ink-2); }
-.pk-aimnote b { font-weight: 600; color: var(--ink); }
+.pk-aim i { color: var(--gain); } .pk-exit i { color: var(--loss); }
+.pk-aimnote { margin: 12px 0 0; padding: 10px 14px; border-radius: 12px; background: var(--surface-raised); font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
+.pk-aimnote b { font-weight: 600; color: var(--text-primary); }
 
 .pk-why { display: flex; flex-wrap: wrap; gap: 5px 6px; margin-top: 4px; }
-.pk-why span { padding: 3px 9px; border: 1px solid var(--rule-2); border-radius: 999px; background: var(--paper); font-size: 12px; line-height: 1.3; color: var(--ink-2); white-space: nowrap; }
+.pk-why span { padding: 3px 9px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg); font-size: 12px; line-height: 1.3; color: var(--text-secondary); white-space: nowrap; }
 
-.pk-plan { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 12px 0 2px; padding: 10px 14px; border-radius: 10px; background: var(--paper-2); font-size: 14px; color: var(--ink-2); }
-.pk-plan b { margin-right: 4px; font-weight: 600; color: var(--ink); }
-.pk-plan small { color: var(--fail); font-family: var(--mono); font-size: 11px; }
-.pk-plan small.up { color: var(--pass); }
+.pk-plan { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 12px 0 2px; padding: 10px 14px; border-radius: 10px; background: var(--surface-raised); font-size: 14px; color: var(--text-secondary); }
+.pk-plan b { margin-right: 4px; font-weight: 600; color: var(--text-primary); }
+.pk-plan small { color: var(--loss); font-family: var(--mono); font-size: 11px; }
+.pk-plan small.up { color: var(--gain); }
 
-.pk-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--rule-2); }
-.pk-all { min-height: 42px; padding: 10px 20px; border: 0; border-radius: 999px; background: var(--ink); color: var(--paper); font: 500 14px/1 var(--sans); cursor: pointer; }
-.pk-all:hover { background: var(--gold-dp); }
+.pk-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
+.pk-all { min-height: 42px; padding: 10px 20px; border: 0; border-radius: 999px; background: var(--accent); color: var(--on-accent); font: 500 14px/1 var(--sans); cursor: pointer; }
+.pk-all:hover { background: var(--accent-hover); }
 /* On the Ideas page the panel sits inside .dr, whose `.dr button` rule makes
    every button inherit its colour and font. That outranks a single class, so
    this button was ink on ink, a black pill with nothing written on it, and
    the chips and the retry link lost their own type. Said again here with the
    panel's name in front, which outranks it back. */
-.pk-panel .pk-all { color: var(--paper); font: 500 14px/1 var(--sans); text-align: center; }
-.pk-panel .pk-tab { color: var(--ink); font: 500 14px/1 var(--sans); }
-.pk-panel .pk-tab.on { color: var(--paper); font-weight: 600; }
-.pk-panel .pk-retry { color: var(--gold-dp); text-decoration: underline; }
-.pk-all:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.pk-updated { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--tk-label, var(--mute)); }
+.pk-panel .pk-all { color: var(--on-accent); font: 500 14px/1 var(--sans); text-align: center; }
+.pk-panel .pk-tab { color: var(--text-primary); font: 500 14px/1 var(--sans); }
+.pk-panel .pk-tab.on { color: var(--on-accent); font-weight: 600; }
+.pk-panel .pk-retry { color: var(--text-primary); text-decoration: underline; }
+.pk-all:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.pk-updated { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--text-muted); }
 
 .pk-skel { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
-.pk-skel i { display: block; height: 54px; border-radius: 12px; background: var(--paper-2); }
+.pk-skel i { display: block; height: 54px; border-radius: 12px; background: var(--surface-raised); }
 .pk-skel i:first-child { height: 76px; }
 
 /* ── On the Stock picks tab ───────────────────────────────────────────── */
@@ -127,22 +127,22 @@
 #view-ideas .pk-idea { margin-top: 14px; }
 #view-ideas .pk-record { max-width: 560px; }
 #view-ideas .idea .pk-why { margin: 10px 0 0; }
-.pk-notes { margin: 6px 0 14px; font-size: 13px; color: var(--ink-2); }
-.pk-notes summary { cursor: pointer; color: var(--tk-label, var(--mute)); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; }
+.pk-notes { margin: 6px 0 14px; font-size: 13px; color: var(--text-secondary); }
+.pk-notes summary { cursor: pointer; color: var(--text-muted); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; }
 .pk-notes ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.5; }
 /* Facts beside a pick: the result it was priced on, an order, the chart. */
-.pk-fact { margin: 8px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+.pk-fact { margin: 8px 0 0; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
 .pk-fact b { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--tk-label, var(--mute)); margin-right: 6px; }
-.pk-chart { margin: 14px 0 6px; padding: 12px 14px; border: 1px solid var(--rule-2); border-radius: 12px; background: var(--paper-2); }
+  color: var(--text-muted); margin-right: 6px; }
+.pk-chart { margin: 14px 0 6px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-raised); }
 .pk-chart h6 { margin: 0 0 8px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--tk-label, var(--mute)); }
+  color: var(--text-muted); }
 .pk-chart dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 14px; margin: 0; font-size: 14px; line-height: 1.45; }
-.pk-chart dt { color: var(--tk-label, var(--mute)); }
-.pk-chart dd { margin: 0; color: var(--ink); }
-.pk-chart p { margin: 10px 0 0; font-size: 13px; line-height: 1.45; color: var(--tk-label, var(--mute)); }
-.pk-market { margin: 4px 0 14px; max-width: 560px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
-.pk-again { margin: 34px 0 10px; font-family: var(--serif); font-weight: 400; font-size: 28px; color: var(--ink); }
+.pk-chart dt { color: var(--text-muted); }
+.pk-chart dd { margin: 0; color: var(--text-primary); }
+.pk-chart p { margin: 10px 0 0; font-size: 13px; line-height: 1.45; color: var(--text-muted); }
+.pk-market { margin: 4px 0 14px; max-width: 560px; font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
+.pk-again { margin: 34px 0 10px; font-family: var(--serif); font-weight: 400; font-size: 28px; color: var(--text-primary); }
 
 html[data-theme="dark"] .pk-panel { box-shadow: none; }
 
@@ -184,18 +184,18 @@ html[data-theme="dark"] .pk-panel { box-shadow: none; }
 @media (prefers-reduced-motion: reduce) { .pk-tab, .pk-name, .pk-card { transition: none; } .pk-tab:hover { transform: none; } }
 
 /* The setup lists: the sector table and the watch list. */
-.pk-cost { margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid var(--gold); background: var(--paper-2); font-size: 13px; line-height: 1.45; color: var(--ink); }
-.pk-sectors { margin: 12px 0 0; border: 1px solid var(--rule-2); border-radius: 10px; padding: 8px 12px; font-size: 13px; }
-.pk-sectors summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.pk-cost { margin: 8px 0 0; padding: 8px 12px; border-left: 3px solid var(--border-strong); background: var(--surface-raised); font-size: 13px; line-height: 1.45; color: var(--text-primary); }
+.pk-sectors { margin: 12px 0 0; border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; font-size: 13px; }
+.pk-sectors summary { cursor: pointer; font-weight: 600; color: var(--text-primary); }
 .pk-sectors-scroll { overflow-x: auto; margin-top: 8px; }
 .pk-sectors table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.pk-sectors th { text-align: right; font-weight: 500; color: var(--ink-2); font-size: 12px; padding: 4px 6px; white-space: nowrap; }
+.pk-sectors th { text-align: right; font-weight: 500; color: var(--text-secondary); font-size: 12px; padding: 4px 6px; white-space: nowrap; }
 .pk-sectors th:first-child, .pk-sectors td:first-child { text-align: left; }
-.pk-sectors td { text-align: right; padding: 5px 6px; border-top: 1px solid var(--rule-2); white-space: nowrap; }
+.pk-sectors td { text-align: right; padding: 5px 6px; border-top: 1px solid var(--border); white-space: nowrap; }
 .pk-sectors td:first-child { white-space: normal; }
-.pk-sectors td small { color: var(--ink-2); }
-.pk-sectors td b { display: inline-block; min-width: 1.4em; color: var(--ink-2); font-weight: 600; }
-.pk-sectors tr.on td { background: var(--paper-2); color: var(--ink); font-weight: 600; }
-.pk-sectors p { margin: 8px 0 2px; color: var(--ink-2); line-height: 1.45; }
-.pk-brief { margin: 2px 0 14px; font-size: 14px; color: var(--ink-2); }
-.pk-brief a { color: var(--ink); font-weight: 600; }
+.pk-sectors td small { color: var(--text-secondary); }
+.pk-sectors td b { display: inline-block; min-width: 1.4em; color: var(--text-secondary); font-weight: 600; }
+.pk-sectors tr.on td { background: var(--surface-raised); color: var(--text-primary); font-weight: 600; }
+.pk-sectors p { margin: 8px 0 2px; color: var(--text-secondary); line-height: 1.45; }
+.pk-brief { margin: 2px 0 14px; font-size: 14px; color: var(--text-secondary); }
+.pk-brief a { color: var(--text-primary); font-weight: 600; }

@@ -4,6 +4,8 @@
 <meta charset="utf-8" /><script src="clean-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="theme.js"></script>
+<link rel="stylesheet" href="tokens.css">
 <title>Forum | Altaha Screener</title>
 <meta name="description" content="Discuss Indian stocks, the market, mutual funds and tax with other investors. One discussion per company on every stock page. Free to read; sign in to post." />
 <meta name="referrer" content="no-referrer" />
@@ -18,17 +20,6 @@
 <link rel="stylesheet" href="shell.css?v=20261124-logos">
 <link rel="stylesheet" href="type.css">
 <link rel="stylesheet" href="forum.css?v=20261122-forum">
-<script>
-  /* Theme before first paint, as every page here does. */
-  (function () {
-    try {
-      var s = localStorage.getItem('altaha-theme');
-      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
-    } catch (e) {}
-  })();
-  var API_BASE = "https://taha-project.onrender.com";
-</script>
 <script src="analytics.js" defer></script>
 <script src="auth.js" defer></script>
 </head>

@@ -15,6 +15,8 @@
      model in its header, and the tabs planner.js lists. If one of those
      changes, this page changes with it. -->
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="theme.js"></script>
+<link rel="stylesheet" href="tokens.css">
 <title>Money planner: the month your investments could pay your bills | Altaha Screener</title>
 <meta name="description" content="A free money planner for Indian households. Four numbers give the month your investments could cover your spending; then see what a purchase, a goal or a raise does to that date. Your figures stay in your browser." />
 <meta name="robots" content="index,follow" />
@@ -38,16 +40,6 @@
 <link rel="stylesheet" href="stock.css?v=20261121-type">
 <link rel="stylesheet" href="experience.css?v=20261015-doors">
 <link rel="stylesheet" href="type.css">
-<script>
-  (function () {
-    try {
-      var s = localStorage.getItem('altaha-theme');
-      var d = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', s || (d ? 'dark' : 'light'));
-    } catch (e) {}
-  })();
-  var API_BASE = "https://taha-project.onrender.com";
-</script>
 <script src="analytics.js" defer></script>
 <script src="auth.js" defer></script>
 </head>

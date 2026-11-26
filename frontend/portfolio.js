@@ -1717,10 +1717,10 @@
     var R = 52, C = 2 * Math.PI * R, span = 0.75, off = C * (1 - span * (v / 100));
     return '<svg viewBox="0 0 130 130" class="pfdial" role="img" aria-label="Weighted score ' +
       v + ' out of 100">' +
-      '<circle cx="65" cy="65" r="' + R + '" fill="none" stroke="var(--rule)" ' +
+      '<circle cx="65" cy="65" r="' + R + '" fill="none" stroke="var(--border)" ' +
         'stroke-width="9" stroke-dasharray="' + (C * span) + ' ' + C + '" ' +
         'transform="rotate(135 65 65)" stroke-linecap="round"/>' +
-      '<circle cx="65" cy="65" r="' + R + '" fill="none" stroke="var(--gold)" ' +
+      '<circle cx="65" cy="65" r="' + R + '" fill="none" stroke="var(--text-primary)" ' +
         'stroke-width="9" stroke-dasharray="' + (C * span) + ' ' + C + '" ' +
         'stroke-dashoffset="' + (C * span - C * span * (v / 100)) + '" ' +
         'transform="rotate(135 65 65)" stroke-linecap="round"/>' +

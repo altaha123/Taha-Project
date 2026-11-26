@@ -5,19 +5,19 @@
 #idearows .idea .conv{font-size:34px;line-height:1}
 
 .ideaplan2{display:grid;grid-template-columns:1.6fr 1.2fr 1fr .7fr;gap:1px;margin-top:16px;
-  background:var(--rule-2);border:1px solid var(--rule-2);border-radius:12px;overflow:hidden}
-.ideaplan2 .pc{background:var(--skin-card,var(--paper));padding:11px 14px;min-width:0}
+  background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.ideaplan2 .pc{background:var(--surface);padding:11px 14px;min-width:0}
 .ideaplan2 .pc b{display:block;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--mute)}
+  text-transform:uppercase;color:var(--text-muted)}
 .ideaplan2 .pc span{display:block;margin-top:8px;font:600 14px/1.2 'IBM Plex Mono',monospace;
-  color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.ideaplan2 .pc small{font-weight:400;font-size:11px;color:var(--fail,#a11);margin-left:6px}
-.ideaplan2 .buy span{color:var(--pass,#0a7548)}
-.ideaplan2 .sl span{color:var(--fail,#a11)}
-.ideaplan2 .rr span{color:var(--gold-dp)}
-.ideaplan2.wait{display:flex;gap:12px;align-items:baseline;padding:11px 14px;background:var(--paper-2)}
+  color:var(--text-primary);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ideaplan2 .pc small{font-weight:400;font-size:11px;color:var(--loss);margin-left:6px}
+.ideaplan2 .buy span{color:var(--gain)}
+.ideaplan2 .sl span{color:var(--loss)}
+.ideaplan2 .rr span{color:var(--text-primary)}
+.ideaplan2.wait{display:flex;gap:12px;align-items:baseline;padding:11px 14px;background:var(--surface-raised)}
 .ideaplan2.wait span{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#3e4147}
-.ideaplan2.wait em{font-style:normal;font-size:13px;color:var(--mute)}
+.ideaplan2.wait em{font-style:normal;font-size:13px;color:var(--text-muted)}
 @media(max-width:620px){
   .ideaplan2{grid-template-columns:1fr 1fr}
 }
@@ -27,8 +27,8 @@
 /* Details disclosure — grid-rows trick animates to the content's height. */
 .morebtn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;
   font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;
-  background:none;border:none;color:var(--mute);cursor:pointer;padding:0 4px}
-.morebtn:hover{color:var(--ink)}
+  background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0 4px}
+.morebtn:hover{color:var(--text-primary)}
 .morebtn i{width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
   transform:translateY(-2px) rotate(45deg);transition:transform .28s var(--ease-soft,ease)}
 .idea.open .morebtn i{transform:translateY(1px) rotate(-135deg)}
@@ -38,23 +38,23 @@
 .idea.open .ideamore-in{opacity:1;padding-top:6px}
 .ideamore .arch{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .ideamore .arch .ip{padding:2px 8px;border:1px solid;font-weight:600;letter-spacing:.08em;margin-right:6px}
-.ideamore .ip.buy{color:var(--pass);border-color:var(--pass)}
-.ideamore .ip.watch{color:var(--gold);border-color:var(--gold)}
+.ideamore .ip.buy{color:var(--gain);border-color:var(--gain)}
+.ideamore .ip.watch{color:var(--text-primary);border-color:var(--border-strong)}
 .ideamore .ip.wait{color:#3e4147;border-color:#3e4147}
-.ideamore .ip.avoid{color:var(--fail);border-color:var(--fail)}
+.ideamore .ip.avoid{color:var(--loss);border-color:var(--loss)}
 .ideamore .filingtag{margin-top:10px}
 
 /* ── Save: the star pops, spins and throws a ring when a stock is saved ── */
 .svbtn{display:inline-flex;align-items:center;gap:8px;position:relative;
   border-radius:var(--r-pill,999px)}
-.svbtn .sv-star{display:inline-block;font-size:18px;line-height:1;color:var(--mute);
+.svbtn .sv-star{display:inline-block;font-size:18px;line-height:1;color:var(--text-muted);
   transition:color .2s ease,transform .2s ease}
 .svbtn:hover .sv-star{transform:scale(1.15) rotate(-8deg)}
-.svbtn.on{border-color:var(--gold);color:var(--gold-dp)}
-.svbtn.on .sv-star{color:var(--gold)}
+.svbtn.on{border-color:var(--highlight);color:var(--highlight-text)}
+.svbtn.on .sv-star{color:var(--highlight-text)}
 .svbtn.pop .sv-star{animation:svPop .6s cubic-bezier(.2,1.6,.4,1) both}
 .svbtn::after{content:"";position:absolute;left:18px;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;
-  border-radius:50%;border:2px solid var(--gold);opacity:0;pointer-events:none}
+  border-radius:50%;border:2px solid var(--border-strong);opacity:0;pointer-events:none}
 .svbtn.pop::after{animation:svRing .6s ease-out both}
 @keyframes svPop{0%{transform:scale(.4) rotate(-90deg)}60%{transform:scale(1.45) rotate(20deg)}
   100%{transform:scale(1) rotate(0)}}

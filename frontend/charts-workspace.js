@@ -2656,7 +2656,7 @@
     if (i == null || i < 0 || i >= W.disp.length) i = W.disp.length - 1;
     W.xIdx = i;
     var c = W.disp[i], pv = i ? W.disp[i - 1].close : c.open;
-    var chg = pv ? (c.close - pv) / pv * 100 : 0, col = c.close >= c.open ? "var(--pass)" : "var(--fail)";
+    var chg = pv ? (c.close - pv) / pv * 100 : 0, col = c.close >= c.open ? "var(--gain)" : "var(--loss)";
     var el = legEl.querySelector('[data-v="ohlc"]');
     if (el) el.innerHTML = "<span class='k'>O</span>" + fmt(c.open) + " <span class='k'>H</span>" + fmt(c.high) +
       " <span class='k'>L</span>" + fmt(c.low) + " <span class='k'>C</span><b style='color:" + col + "'>" + fmt(c.close) + "</b> " +
