@@ -607,6 +607,108 @@ Under the breakout list the page also shows **Setting up**: tight bases not
 yet broken, nearest their top first. Those are watched, not picked, and have
 no record.
 
+### Rebuilt, December 2026
+
+A reader named four faults in these lists, and each was measured before
+anything changed (`research/setups_lab.py --v2`, every version declared
+before the run, all in `research/setups-lab-v2.json`):
+
+1. **They left too early.** Every list was out within 7 to 21 sessions on a
+   7–10% stop. Held 63 sessions on a 12% stop, the *same old picks* made
+   several times as much after costs: the old technical scorecard went from
+   +0.84% to +4.40% a pick, the old breakout from +0.65% to +2.90%. A few
+   picks in ten that make 25% or more carry an average, and a month is too
+   short for them.
+2. **The quick trade lost money after costs** (−0.20% a pick in the lab,
+   −0.14% in the replay), however often it rose.
+3. **The breakout missed early launches.** It wanted a 40-session base 18%
+   wide or tighter in a stock already in the top half of 12-month leaders.
+   RATNAVEER's July 2026 breakout (a 40-session base 24% wide whose last
+   fortnight spanned 44% of its range, volume down to 0.57 of usual) never
+   qualified; nor did HFCL's April 2026 turn (a 60-session base 29% wide).
+4. **Technicals and money flow bought stretched stocks**, and money flow
+   ignored how long a sector's turn takes.
+
+The rule, set before the run: for each list the version taken is the best on
+2017–21 among the *new* versions (lead over the Nifty 500 for breakouts,
+technicals, money flow and emerging, among versions with a pick on a quarter
+of sessions, 150 picks in 2017–21 and a profit after costs; for quick trades
+the most picks rising among versions with a profit after costs and a lead
+over the index). The version shipped until now is measured beside it.
+
+| List | What was taken | Hold, exit |
+|---|---|---|
+| **Breakouts** | VCP launchpad: a close above a 40- or 60-session base 28% wide or less that was 20% or tighter or tightened before the break (squeeze, the last fortnight's range, or volume drying up), on 1.6× volume, closing in the top 45% of the day; above the 200-day, 50-day ≥ 98% of it; leader ≥ 45; industry in the top 60% on money flow; a month better than the Nifty 500's; not more than 16% over the 50-day or 55% up in three months; no profit fall over 10% or results sold | 63 sessions, close 12% under |
+| **Technicals** | Early Stage-2 pullback: price and 50-day above a rising 200-day, leader ≥ 55; a low within 1.5% of the 20-day average in three sessions and a green close 0–6% above it; RSI 48–68; industry in the top half; no profit fall over 10% | 63 sessions, close 12% under |
+| **Swing dips** (was Quick trades) | Uptrend, leader in the top 35%, a two-day RSI under 10 or a 4% fall in five sessions, still within 3% of the 50-day, results not just sold | 21 sessions, close 10% under |
+| **Money flow** | Top three sectors on rotation (three-month median move 45%, share above the 50-day 35%, turnover shift 20%); in each, the five strongest stocks in an uptrend, outside the most volatile fifth, within 15% of their high and ahead of the Nifty 500 over one month and three | 63 sessions, close 15% under |
+| **Emerging** | Listed 6–18 months; above a rising 50-day average, within 10% of its high, leader ≥ 60, ahead of the Nifty 500 over one month and three, not more than 18% over the 50-day; no loss or fall in sales last quarter where one is on file | 90 sessions; after 15, a close under the 50-day; a close 15% under |
+
+What the rule took that the reader did not ask for, said plainly:
+
+- **Breakouts are pattern A alone.** A or B led by 1.6 points on 2017–21, A
+  alone by 2.2, B alone by 0.5 (B did best of the three on 2022–26, 1.8,
+  which the rule may not look at). B, the base turnaround, is measured on
+  every stock, listed under the breakouts as *Setting up*, and one constant
+  away (`leaders.LAUNCH_PATTERNS`).
+- **Money flow has no anti-chasing screen.** The version without it led by
+  2.6 points on 2017–21 against 2.4 with it.
+- **Emerging leaves on the 50-day average.** On 2017–21 it led 63 sessions
+  with a 15% line by 5.23 points against 5.17: a tie the rule broke. On
+  2022–26 the 63-session version did better (3.9 against 2.9).
+- **The technical list is the pullback the reader asked for, but the old
+  scorecard held 63 sessions did better in both halves** (lead +2.30 / +2.23
+  against +2.22 / +1.34 in the lab). The rule chose among the new versions;
+  the comparison stands in the lab's output.
+
+**The market-weather screen** (Nifty 500 above its 50-day average) was tried
+on breakouts, swing dips and emerging. It did not raise both the share of
+picks rising and the average after costs in both halves for any of them,
+so no list is held back in a weak market. On breakouts it raised the lead in
+both halves but cut the share rising on 2017–21 by a tenth of a point.
+
+Engine replay, every fifth session, 486 list dates tried, after 0.49% costs:
+
+| List | Picks | Rose | 25%+ winners | After costs | Nifty 500 | Against the average stock (t) | 2017–21 / 2022–26 | Before (after costs) |
+|---|---|---|---|---|---|---|---|---|
+| Breakouts | 2,504 | 51.9% | 10.2% | **+2.87%** | +2.52% | +1.60% (2.1) | +3.23 / +0.08 | +0.56% |
+| Technicals | 5,637 | 49.3% | 13.7% | **+3.86%** | +3.30% | +0.96% (1.3) | +2.53 / **−0.72** | +0.80% |
+| Swing dips | 4,439 | 50.9% | 4.0% | **+0.87%** | +1.07% | +0.81% (2.5) | +1.31 / +0.32 | **−0.14%** |
+| Money flow | 5,629 | 55.5% | 13.9% | **+4.94%** | +3.32% | +2.12% (2.5) | +3.17 / +1.01 | +0.90% |
+| Emerging | 736 | 38.6% | 11.8% | **+4.20%** | +2.18% | +3.77% (1.8) | +7.08 / +1.12 | +1.02% |
+
+The Nifty 500 column is larger than before because the holds are longer;
+compare a list with the index and the average stock over the same sessions,
+not with its old self alone. Read plainly:
+
+- **Money flow is the strongest of the five**: ahead of the average stock in
+  both halves by a point or more, and more than half its picks rose.
+- **Swing dips now keep a profit after costs**, in both halves, at the price
+  of a hit rate near half where it was two in three.
+- **Breakouts and technicals are mostly a 2017–21 result.** Against the
+  average stock on the same days, breakouts were level in 2022–26 (+0.08) and
+  technicals behind it (−0.72, with fewer than half the picks rising).
+- **Emerging is carried by a few large winners.** Six picks in ten fell; the
+  median pick lost 3%. Only 292 of 486 dates had a list, 2.5 names on average.
+- The lab picked every day; the replay is the engine every fifth session,
+  with its own order, so the two do not print the same figures. The page
+  prints the replay's.
+
+**The two stocks a reader named**, replayed through the old and new rules
+(every date the rule fired on the stock, whether or not it made the top 15):
+
+- **RATNAVEER**: the new breakout fired on 27 Jul 2026, bought at ₹202.28,
+  +71.7% over the 63 sessions it was held, as a VCP launchpad. The old
+  breakout never fired. The old technical bought the same day and was
+  stopped out at −10.3% four sessions later; the new pullback bought on 6 Jul
+  2026 at ₹181.00 and was +87.5% at 63 sessions.
+- **HFCL**: the old breakout never fired. The new one fired three times since
+  2022: 31 Oct 2022 (VCP launchpad, ₹83.15, stopped at −13.4%), 7 Aug 2023
+  (base turnaround, ₹73.80, stopped at −12.1%) and 9 Apr 2026 (base
+  turnaround, ₹80.40, **+167%** in 63 sessions). The 2026 move came from
+  pattern B, which the shipped list does not pick from. The late-2023 and
+  mid-2024 rallies were not caught by either version.
+
 ## The daily brief
 
 `backend/policy_brief.py` reads every new DGFT notification, public notice,
@@ -692,6 +794,7 @@ python research/separation_lab.py           # every trial behind "One stock, one
 python research/signals_lab.py              # every trial behind "What a reader asked for"
 python research/short_term_lab.py           # every trial behind "Two tabs"
 python research/setups_lab.py               # every trial behind "The setup lists"
+python research/setups_lab.py --v2          # every trial behind "Rebuilt, December 2026"
 python research/ideas_study.py --setups     # the setup lists' records alone, into the same file
 ```
 

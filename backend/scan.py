@@ -860,6 +860,70 @@ def recent_results(today=None):
 GROWTH_LOOKBACK_DAYS = 150
 
 
+# The setup lists measure a stock against the Nifty 500 (research/setups_lab.py
+# --v2). Yahoo's symbol for the index; NIFTYBEES (the Nifty 50) stands in when
+# it cannot be read, and the median liquid stock when neither can.
+BENCHMARK_SYMBOL = "^CRSLDX"
+
+
+def benchmark_returns():
+    """{"ret_1m", "ret_3m", "above_50d", "above_200d", "source"} for the
+    Nifty 500, from the last close: what leaders.rank() reads to say whether
+    a stock beat the market. None when no feed answers; rank() then uses the
+    median liquid stock. Never raises."""
+    def read(close, source):
+        close = close.dropna()
+        if len(close) < 64:
+            return None
+        last = float(close.iloc[-1])
+        out = {"ret_1m": last / float(close.iloc[-22]) - 1, "ret_3m": last / float(close.iloc[-64]) - 1,
+               "above_50d": bool(last > float(close.tail(50).mean())),
+               "above_200d": (bool(last > float(close.tail(200).mean())) if len(close) >= 200 else None),
+               "source": source}
+        return out if all(v == v for v in (out["ret_1m"], out["ret_3m"])) else None
+    try:
+        df = yf.download(BENCHMARK_SYMBOL, period="1y", interval="1d", progress=False, auto_adjust=True)
+        if df is not None and len(df):
+            close = df["Close"]
+            if hasattr(close, "columns"):           # a one-ticker frame with a ticker level
+                close = close.iloc[:, 0]
+            got = read(close, "Nifty 500")
+            if got:
+                return got
+    except Exception:
+        pass
+    try:
+        import ideas
+        df, _src = ideas._index_frame()
+        if df is not None:
+            return read(df["Close"], "NIFTYBEES (Nifty 50)")
+    except Exception:
+        pass
+    return None
+
+
+def institutional_map():
+    """{SYMBOL: {"accumulation", "sector_score"}} from Money Flow's latest
+    session: the stock's delivery-and-deals accumulation score and its
+    sector's flow score (FPI flow, rotation, breadth), both 0-100. The money
+    flow list uses these to order the names its tested rule chose; they
+    choose nothing, because there is no history of them to test on. {} when
+    Money Flow has not been computed. Never raises."""
+    out = {}
+    try:
+        import money_flow_store as mfs
+        _date, cards = mfs.sector_cards()
+        for sector, card in (cards or {}).items():
+            _d, rows = mfs.accumulation(sector)
+            for r in rows or []:
+                sym = str(r.get("symbol") or "").upper()
+                if sym:
+                    out[sym] = {"accumulation": r.get("score"), "sector_score": card.get("score")}
+    except Exception:
+        return {}
+    return out
+
+
 def latest_growth(today=None):
     """{SYMBOL: {"pat_yoy_pct", "revenue_yoy_pct", "quarter"}} for each
     company's most recent quarterly filing in the last five months. What the
@@ -875,7 +939,7 @@ def latest_growth(today=None):
             sym = str(r.get("symbol") or "").upper()
             if sym:
                 out[sym] = {"pat_yoy_pct": r.get("pat_yoy_pct"), "revenue_yoy_pct": r.get("revenue_yoy_pct"),
-                            "quarter": r.get("label")}
+                            "pat_cr": r.get("pat_cr"), "quarter": r.get("label")}
     except Exception:
         return {}
     return out
@@ -1071,8 +1135,10 @@ def _record_to_pit(rows, universe_all, n_candidates, ill, nod, regime=None):
 
 # The sectors ranked on money flow by the scan now running (leaders.sector_flow).
 _SECTOR_FLOW = []
-# Tight bases not yet broken (leaders.breakout_watch), from the same scan.
+# Bases not yet broken (leaders.breakout_watch), from the same scan, and the
+# short-term list's own tight 40-session bases (leaders.short_watch).
 _WATCH = []
+_SHORT_WATCH = []
 
 
 def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
@@ -1111,6 +1177,7 @@ def _build_payload(rows, source, universe_all, prefiltered, n_candidates,
         "factor_universe": rows,
         "sector_flow": list(_SECTOR_FLOW),
         "breakout_watch": list(_WATCH),
+        "short_watch": list(_SHORT_WATCH),
         "rankings": rows[:STORE_TOP],
         "skipped": failed,
         # Set when the scan ended itself rather than finishing. A short list
@@ -1241,7 +1308,8 @@ def run_scan(progress=None, names=None, checkpoint=None):
     # inputs are still held, then drop the inputs: the block is all a row needs.
     try:
         blocks = leaders.rank(cands, results=recent_results(), sectors=sector_map(),
-                              fundamentals=latest_growth())
+                              fundamentals=latest_growth(), benchmark=benchmark_returns(),
+                              institutional=institutional_map())
     except Exception:
         blocks = {}
     # Every sector's standing on money flow, once, for the page's table.
@@ -1255,6 +1323,10 @@ def run_scan(progress=None, names=None, checkpoint=None):
         _WATCH[:] = leaders.breakout_watch(blocks)
     except Exception:
         _WATCH[:] = []
+    try:
+        _SHORT_WATCH[:] = leaders.short_watch(blocks)
+    except Exception:
+        _SHORT_WATCH[:] = []
     # Breakout alerts: the close's confirmed breakouts, tomorrow's watch list,
     # and the Telegram summary. Only a scan of the whole market may replace
     # the watch list — a list of names given by hand is somebody's shortlist.

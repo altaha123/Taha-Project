@@ -605,6 +605,9 @@ def describe(df):
         "avg_pct": round(float(df["ret"].mean() * 100), 2),
         "median_pct": round(float(df["ret"].median() * 100), 2),
         "index_avg_pct": round(float(per_date["bench"].mean() * 100), 2),
+        # The share of picks that made 25% or more: the large winners a
+        # short hold or a tight stop cuts off.
+        "big_winner_pct": round(float((df["ret"] >= 0.25).mean() * 100), 1),
         "worst_5pct": round(float(np.percentile(df["ret"], 5) * 100), 1),
         "best_5pct": round(float(np.percentile(df["ret"], 95) * 100), 1),
         "exit_hit_pct": round(float(df["exited"].mean() * 100), 1),
@@ -768,11 +771,37 @@ def _engine_candidates(P, i, young=None):
         # up to it and none after, so the last close is the traded price.
         j = P.C.columns.get_loc(n)
         k = P.RAW.iat[i, j] / P.C.iat[i, j]
-        df = pd.DataFrame({"High": P.H[n].values[sl] * k, "Low": P.L[n].values[sl] * k,
-                           "Close": P.C[n].values[sl] * k}, index=P.C.index[sl])
+        df = pd.DataFrame({"Open": P.O[n].values[sl] * k, "High": P.H[n].values[sl] * k,
+                           "Low": P.L[n].values[sl] * k, "Close": P.C[n].values[sl] * k},
+                          index=P.C.index[sl])
         df["Volume"] = P.VAL[n].values[sl] / df["Close"]
-        cands.append({"symbol": n, "leader_sig": leaders.signals(df)})
+        # How long it has traded. The frame holds 300 sessions at most, and a
+        # company listed before the panel begins (January 2016) has an age the
+        # panel cannot see: it is old, never newly listed. The live scan reads
+        # two years of bars and needs no such help.
+        age = _AGE.get("age")
+        age_now = None if age is None else float(age[i, j])
+        cands.append({"symbol": n, "leader_sig": leaders.signals(df), "listed_sessions": age_now})
     return cands
+
+
+_AGE = {}
+
+
+def listing_ages(P):
+    """Sessions since each company's first trade, date x stock, as an array;
+    1e4 for a company already trading in the panel's first week."""
+    age = (P.traded.cumsum() > 0).cumsum().values.astype(float)
+    age[:, P.traded.iloc[:5].any(axis=0).values] = 1e4
+    return age
+
+
+def benchmark_at(P, i):
+    """The Nifty 500's one- and three-month returns on session i."""
+    n5 = P.N500.values
+    if i < 63 or not (np.isfinite(n5[i]) and np.isfinite(n5[i - 21]) and np.isfinite(n5[i - 63])):
+        return None
+    return {"ret_1m": float(n5[i] / n5[i - 21] - 1), "ret_3m": float(n5[i] / n5[i - 63] - 1)}
 
 
 def parity(P, U, scores, R=None, results=None, W=None, Y=None):
@@ -848,9 +877,11 @@ def _replay_date(i):
         known = R[R["i"] <= i].drop_duplicates("symbol", keep="last")
         filed = {r.symbol: {"filed_at": str(r.filed)[:19]} for r in known.itertuples(index=False)}
         growth = {r.symbol: {"pat_yoy_pct": None if pd.isna(r.pat_yoy_pct) else float(r.pat_yoy_pct),
-                             "revenue_yoy_pct": None if pd.isna(r.revenue_yoy_pct) else float(r.revenue_yoy_pct)}
+                             "revenue_yoy_pct": None if pd.isna(r.revenue_yoy_pct) else float(r.revenue_yoy_pct),
+                             "pat_cr": None if pd.isna(r.pat_cr) else float(r.pat_cr)}
                   for r in known[known["i"] >= i - 100].itertuples(index=False)}
-    blocks = leaders.rank(_engine_candidates(P, i, Y), results=filed, sectors=sectors, fundamentals=growth)
+    blocks = leaders.rank(_engine_candidates(P, i, Y), results=filed, sectors=sectors, fundamentals=growth,
+                          benchmark=benchmark_at(P, i))
     out = {}
     for key in leaders.SETUPS:
         top = sorted((b["lists"][key]["rank"], s) for s, b in blocks.items()
@@ -876,6 +907,7 @@ def setup_picks(P, Y, sectors, procs=4, R=None):
         if got.get("stamp") == stamp:
             return got["picks"]
     _REPLAY.update(P=P, Y=Y, sectors=sectors, R=R)
+    _AGE["age"] = listing_ages(P)
     days = list(range(262, len(P.C) - 2, 5))
     with mp.get_context("fork").Pool(procs) as pool:
         rows = pool.map(_replay_date, days, chunksize=4)
@@ -885,14 +917,17 @@ def setup_picks(P, Y, sectors, procs=4, R=None):
     return picks
 
 
-def run_setup(P, picks, hold, exit_pct, above_sma5=False):
-    """run_list, with the quick trade's sell rule: out at the first close
-    above the 5-day average. The index is measured over the sessions each
-    pick was actually held."""
-    if not above_sma5:
+def run_setup(P, picks, hold, exit_pct, above_sma5=False, below_sma50_after=None):
+    """run_list, with a list's own sell rule: out at the first close above
+    the 5-day average (the old quick trade), or at the first close under the
+    50-day average once the pick has been held `below_sma50_after` sessions
+    (emerging). The index is then measured over the sessions each pick was
+    actually held."""
+    if not above_sma5 and below_sma50_after is None:
         return run_list(P, picks, hold, exit_pct)
     Cn, On, N5 = P.C.values, P.O.values, P.N500.values
     S5 = P.C.rolling(5).mean().values
+    S50 = P.sma50.values
     col = {n: i for i, n in enumerate(P.C.columns)}
     row = {d: i for i, d in enumerate(P.C.index)}
     recs = []
@@ -914,8 +949,12 @@ def run_setup(P, picks, hold, exit_pct, above_sma5=False):
                 if c <= e * (1 - exit_pct / 100.0):
                     ret, out, stopped = c / e - 1, k, True
                     break
-                if c > S5[k, j]:
+                if above_sma5 and c > S5[k, j]:
                     ret, out = c / e - 1, k
+                    break
+                if (below_sma50_after is not None and k - i >= below_sma50_after
+                        and np.isfinite(S50[k, j]) and c < S50[k, j]):
+                    ret, out, stopped = c / e - 1, k, True
                     break
             if ret is None:
                 c = Cn[last, j]
@@ -931,19 +970,30 @@ SETUP_NOTES = {
              "five sessions, still above it; above the 200-day average; leader score in the top half; six "
              "or more of nine chart conditions; its industry in the top half on money flow; no fall in "
              "profit last quarter; results, if just out, not sold by the market.",
-    "breakout": "Forty sessions inside an 18% range, then a close above its top on twice the usual "
-                "volume within the last five sessions; above the 200-day average; leader score in the top half.",
-    "technical": "Seven or more of nine chart conditions met: price above the 20-day average, the 20 "
-                 "above the 50, the 50 above the 200, RSI over 55, MACD above its signal, ADX 25 or more "
-                 "with buyers ahead, more volume on up days, this week's volume above usual, and within "
-                 "5% of the 52-week high.",
-    "quick": "In an uptrend, leader score in the top 30%, two-day RSI under 10. Sold at the first close "
-             "above the 5-day average, after seven sessions, or on a close 7% under the entry.",
-    "flow": "The four sectors ranked highest on turnover share against their own sixty sessions, the "
-            "share of their stocks above the 50-day average, and their median month; the four strongest "
-            "stocks in each.",
-    "emerging": "Companies listed six to twelve months, above their own 50-day average, whose leader "
-                "score stands in the top half of the established universe; strongest first.",
+    "breakout": "A close above the top of a 40- or 60-session base 28% wide or less that was 20% or tighter "
+                "or tightened before the break, on 1.6 times the usual volume, in the top 45% of the day's "
+                "range, within the last five sessions and still above it; above the 200-day average with "
+                "the 50-day at least 98% of it; leader score 45 or more; its industry in the top 60% on "
+                "money flow; a month better than the Nifty 500's; not more than 16% above its 50-day "
+                "average or 55% up in three months; no known fall in profit over 10% or results sold "
+                "by the market. Held 63 sessions, left on a close 12% under.",
+    "technical": "A rising 200-day average with price and the 50-day above it, leader score 55 or more; a "
+                 "low within 1.5% of the 20-day average in the last three sessions and a green close above "
+                 "it, no more than 6% over it; RSI 48 to 68; its industry in the top half on money flow; no "
+                 "known fall in profit over 10%. Held 63 sessions, left on a close 12% under.",
+    "quick": "In an uptrend, leader score in the top 35%, a two-day RSI under 10 or a 4% fall in five "
+             "sessions, still within 3% of its 50-day average, results not just sold. Held 21 sessions, "
+             "left on a close 10% under.",
+    "flow": "The three sectors ranked highest on rotation (45% their median stock's three months, 35% the "
+            "share of their stocks above the 50-day average, 20% their share of turnover this week against "
+            "sixty sessions); in each, the five strongest stocks in an uptrend, outside the most volatile "
+            "fifth, within 15% of their high, and ahead of the Nifty 500 over one month and three. Held 63 "
+            "sessions, left on a close 15% under.",
+    "emerging": "Companies listed six to eighteen months, above a rising 50-day average, within 10% of their "
+                "high, leader score 60 or more, ahead of the Nifty 500 over one month and three, no more "
+                "than 18% over the 50-day, no loss or fall in sales last quarter where one is on file. Held "
+                "90 sessions; after 15, left on a close under the 50-day average; at any time on a close "
+                "15% under.",
 }
 
 
@@ -957,11 +1007,13 @@ def setup_records(P, U, Y, R=None):
         spec = leaders.LISTS[key]
         hold, exit_pct = spec["hold_sessions"], spec["exit_pct"]
         sma5 = spec.get("sell_rule") == "sma5"
-        ran = run_setup(P, picks.get(key) or [], hold, exit_pct, above_sma5=sma5)
+        trail = spec.get("trail_after") if spec.get("sell_rule") == "sma50" else None
+        ran = run_setup(P, picks.get(key) or [], hold, exit_pct, above_sma5=sma5, below_sma50_after=trail)
         rec = with_breakdowns(ran)
         if rec is None:
             continue
-        held = hold if not sma5 else max(1, int(round(float(ran["held"].mean()))))
+        own_rule = sma5 or trail is not None
+        held = hold if not own_rule else max(1, int(round(float(ran["held"].mean()))))
         rec.update(hold_sessions=hold, exit_pct=exit_pct,
                    avg_after_costs_pct=round(rec["avg_pct"] - ROUND_TRIP_COST_PCT, 2),
                    vs_average_stock=vs_average_stock(P, U, ran, held),
@@ -971,11 +1023,17 @@ def setup_records(P, U, Y, R=None):
                    kind="setup", what=SETUP_NOTES[key],
                    replay="The site's own engine run on every fifth session; its top fifteen bought at "
                           "the next open.")
-        if sma5:
+        if own_rule:
             rec["avg_sessions_held"] = round(float(ran["held"].mean()), 1)
+        if spec.get("let_run"):
+            rec["version"] = "2026-12"
         if key == "short":
             rec["bias"] = ("Industries are NSE's list as it stands today, and quarterly results start in 2018 "
                            "and cover companies listed today. Before 2018 the profit screen passes everyone.")
+        if key in ("breakout", "technical", "emerging"):
+            rec["bias"] = ("Industries are NSE's list as it stands today, so a company since delisted has no "
+                           "industry here and passes that screen unread. Quarterly results start in 2018 and "
+                           "cover companies listed today; without one a stock is never refused for it.")
         if key == "flow":
             rec["bias"] = ("Sectors are NSE's list as it stands today, so a company since delisted has "
                            "no sector here and could not be picked.")

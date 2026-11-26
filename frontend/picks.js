@@ -61,11 +61,13 @@
     { key: 'momentum', label: 'Momentum',      hold: 'about 3 months' },
     { key: 'long',     label: 'Long term',     hold: 'about a year' },
     /* The setup lists: picked on what the chart or the tape is doing now. */
-    { key: 'breakout',  label: 'Breakouts',    group: 'setup', hold: 'about a month' },
-    { key: 'technical', label: 'Technicals',   group: 'setup', hold: 'about a month' },
-    { key: 'quick',     label: 'Quick trades', lead: 'Quick ', short: 'trades', group: 'setup', hold: 'a few days' },
-    { key: 'flow',      label: 'Money flow',   lead: 'Money ', short: 'flow', group: 'setup', hold: 'about a month' },
-    { key: 'emerging',  label: 'Emerging',     group: 'setup', hold: 'about a month' }
+    /* Rebuilt December 2026 (research/setups_lab.py --v2): held long enough
+       for the large winners, so the holds below are the tested ones. */
+    { key: 'breakout',  label: 'Breakouts',    group: 'setup', hold: 'about 3 months' },
+    { key: 'technical', label: 'Technicals',   group: 'setup', hold: 'about 3 months' },
+    { key: 'quick',     label: 'Swing dips',   lead: 'Swing ', short: 'dips', group: 'setup', hold: 'about a month' },
+    { key: 'flow',      label: 'Money flow',   lead: 'Money ', short: 'flow', group: 'setup', hold: 'about 3 months' },
+    { key: 'emerging',  label: 'Emerging',     group: 'setup', hold: 'about 4 months' }
   ];
   var KEYS = LISTS.map(function (l) { return l.key; });
   var STORE = 'altaha-pick-list';
@@ -108,11 +110,19 @@
   /* ── What a pick says ──────────────────────────────────────────────────── */
 
   function whyHTML(s) {
-    var why = (s && s.why) || [];
+    /* A breakout's pattern is its badge (patternHTML), so it is not said twice. */
+    var why = ((s && s.why) || []).filter(function (w) { return !(s.pattern && w === s.pattern); });
     if (!why.length) return '';
     return '<div class="pk-why">' + why.slice(0, 4).map(function (w) {
       return '<span>' + esc(w) + '</span>';
     }).join('') + '</div>';
+  }
+
+  /* Which breakout pattern a pick is: a VCP launchpad (a base that tightened
+     before it broke) or a base turnaround (a first 60-session high after a
+     long sideways base). The server's word; nothing here decides it. */
+  function patternHTML(s) {
+    return s && s.pattern ? '<span class="pk-badge">' + esc(s.pattern) + '</span>' : '';
   }
 
   /* Hold, the mark of a good result, and the one price that ends it. The
@@ -124,6 +134,8 @@
       (p.sell_rule === 'sma5'
         ? '<span><b>Sell</b> first close above its 5-day average</span>'
         : '<span><b>Hold</b> ' + esc(p.hold_text || '') + '</span>') +
+      (p.sell_rule === 'sma50'
+        ? '<span><b>Sell</b> on a close under its 50-day average, after 15 sessions</span>' : '') +
       (finite(p.aim) ? '<span><b>Target</b> ' + inr(p.aim) +
         (finite(p.aim_pct) ? ' <small class="up">+' + Number(p.aim_pct).toFixed(0) + '%</small>' : '') + '</span>' : '') +
       '<span><b>Exit below</b> ' + inr(p.stop) +
@@ -218,18 +230,23 @@
     var halves = Object.keys(h).map(function (k) {
       var x = h[k] || {};
       return '<li><b>' + esc(k) + '</b> ' + Math.round(x.up_pct) + ' in 100 rose · ' +
-        signed(x.avg_pct) + ' · market ' + signed(x.index_avg_pct) + '</li>';
+        signed(x.avg_pct) + ' · market ' + signed(x.index_avg_pct) +
+        (finite(x.big_winner_pct) ? ' · ' + Number(x.big_winner_pct).toFixed(0) + '% made 25% or more' : '') + '</li>';
     }).join('');
     var up = Math.max(0, Math.min(100, Math.round(t.up_pct)));
     return '<div class="pk-record">' +
       '<p class="pk-record-h">How this list did when tested</p>' +
-      '<div class="pk-record-n">' +
+      '<div class="pk-record-n' + (finite(t.big_winner_pct) ? ' four' : '') + '">' +
         '<span><b>' + Math.round(t.up_pct) + '</b><small>of every 100 picks went up</small>' +
           /* The same figure as a bar: the part that went up, and the rest. */
           '<i class="pk-meter" aria-hidden="true"><i style="width:' + up + '%"></i></i></span>' +
         '<span><b class="' + (t.avg_pct >= 0 ? 'up' : 'dn') + '">' + signed(t.avg_pct) + '</b><small>average ' +
           (t.avg_pct >= 0 ? 'gain' : 'loss') + ' per pick' + (d.hold_text ? ', held ' + esc(d.hold_text) : '') + '</small></span>' +
         '<span><b>' + signed(t.index_avg_pct) + '</b><small>the market over the same time</small></span>' +
+        /* The rebuilt setup lists are held for the few large winners; this
+           is how many there were. Shown only where the study measured it. */
+        (finite(t.big_winner_pct)
+          ? '<span><b>' + Number(t.big_winner_pct).toFixed(0) + '%</b><small>of picks made 25% or more</small></span>' : '') +
       '</div>' +
       '<details class="pk-how"><summary>Tested on NSE prices' + (years ? ', ' + esc(years) : '') + '</summary>' +
         '<ul>' +
@@ -263,33 +280,46 @@
   function sectorsHTML(d) {
     var rows = (d && d.sector_flow) || [];
     if (!rows.length) return '';
-    var top = d.flow_sectors || 4;
+    var top = d.flow_sectors || 3;
+    var three = rows.some(function (r) { return finite(r.month3_pct); });
     return '<details class="pk-sectors" open><summary>Where money is moving: ' + rows.length + ' sectors ranked</summary>' +
-      '<div class="pk-sectors-scroll"><table><thead><tr><th>Sector</th><th title="Share of market turnover this week against its share over sixty sessions">Turnover</th>' +
-      '<th title="Stocks above their 50-day average">Above 50-day</th><th title="Median stock, last 21 sessions">Month</th></tr></thead><tbody>' +
+      '<div class="pk-sectors-scroll"><table><thead><tr><th>Sector</th>' +
+      (three ? '<th title="Median stock, last 63 sessions">3 months</th>' : '') +
+      '<th title="Stocks above their 50-day average">Above 50-day</th>' +
+      '<th title="Share of market turnover this week against its share over sixty sessions">Turnover</th>' +
+      '<th title="Median stock, last 21 sessions">Month</th></tr></thead><tbody>' +
       rows.map(function (r) {
         return '<tr' + (r.rank <= top ? ' class="on"' : '') + '><td><b>' + r.rank + '</b> ' + esc(r.sector) +
-          ' <small>' + r.stocks + '</small></td><td>' + (finite(r.shift) ? Number(r.shift).toFixed(2) + '×' : '—') +
-          '</td><td>' + (finite(r.breadth_pct) ? Math.round(r.breadth_pct) + '%' : '—') + '</td><td>' + signed(r.month_pct) + '</td></tr>';
+          ' <small>' + r.stocks + '</small></td>' + (three ? '<td>' + signed(r.month3_pct) + '</td>' : '') +
+          '<td>' + (finite(r.breadth_pct) ? Math.round(r.breadth_pct) + '%' : '—') + '</td><td>' +
+          (finite(r.shift) ? Number(r.shift).toFixed(2) + '×' : '—') + '</td><td>' + signed(r.month_pct) + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
-      '<p>Turnover is the sector\u2019s share of all trading this week against its usual share: above 1× means money is moving in. ' +
-      'The list takes the strongest stocks from the top ' + top + '.</p></details>';
+      '<p>Sectors are ranked on rotation: their median stock\u2019s three months counts most, then how many of their stocks ' +
+      'are above the 50-day average, then their share of trading this week against their usual share (above 1× means ' +
+      'money is moving in). The list takes the strongest stocks from the top ' + top + '.</p></details>';
   }
 
   /* Breakouts: tight bases that have not broken yet. Watched, not picked. */
   function watchHTML(d) {
     var rows = (d && d.watch) || [];
     if (!rows.length) return '';
-    return '<details class="pk-sectors pk-watch"><summary>Setting up: ' + rows.length + ' tight bases not yet broken</summary>' +
-      '<div class="pk-sectors-scroll"><table><thead><tr><th>Stock</th><th>Top of base</th><th>Away</th><th>Range</th></tr></thead><tbody>' +
+    var patterns = rows.some(function (r) { return r.pattern; });
+    return '<details class="pk-sectors pk-watch"><summary>Setting up: ' + rows.length + ' bases not yet broken</summary>' +
+      '<div class="pk-sectors-scroll"><table><thead><tr><th>Stock</th>' + (patterns ? '<th>Pattern</th>' : '') +
+      '<th>Top of base</th><th>Away</th><th>Range</th></tr></thead><tbody>' +
       rows.map(function (r) {
         return '<tr><td><a href="stock.html?ticker=' + encodeURIComponent(r.symbol) + '">' + esc(r.symbol) + '</a>' +
-          (r.sector ? ' <small>' + esc(r.sector) + '</small>' : '') + '</td><td>' + inr(r.top) + '</td><td>' +
+          (r.sector ? ' <small>' + esc(r.sector) + '</small>' : '') + '</td>' +
+          (patterns ? '<td>' + esc(r.pattern || '') + '</td>' : '') + '<td>' + inr(r.top) + '</td><td>' +
           (finite(r.to_top_pct) ? Number(r.to_top_pct).toFixed(1) + '%' : '—') + '</td><td>' +
           (finite(r.width_pct) ? Number(r.width_pct).toFixed(0) + '%' : '—') + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
-      '<p>Forty sessions inside a range 18% wide or tighter, within 4% of its top. None has broken out: ' +
-      'a stock joins the list above only after it closes over the top on twice its usual volume.</p></details>';
+      (patterns
+        ? '<p>Within 3% of the top of a base. A VCP launchpad is a base 28% wide or less that tightened; a base turnaround ' +
+          'is a 60-session base 35% wide or less, in a stock not yet a leader. None has broken out: a launchpad joins the ' +
+          'list above only after it closes over the top on 1.6 times its usual volume. Turnarounds are watched only.</p>'
+        : '<p>Forty sessions inside a range 18% wide or tighter, within 3% of its top. None has broken out: ' +
+          'a stock joins the list above only after it closes over the top on twice its usual volume.</p>') + '</details>';
   }
 
   /* A scan ranked before the recipes last changed. Its record would be another
@@ -362,7 +392,7 @@
       '<span class="pk-rank">' + (i + 1) + '</span>' +
       '<span class="pk-main">' +
         '<span class="pk-name">' + esc(s.name || s.symbol) + '</span>' +
-        '<span class="pk-sym">' + esc(s.symbol) + '</span>' +
+        '<span class="pk-sym">' + esc(s.symbol) + '</span>' + patternHTML(s) +
         whyHTML(s) +
       '</span>' +
       /* Three prices in a row, read left to right: where it is, where a good
@@ -450,7 +480,7 @@
     isTested: isTested, whyHTML: whyHTML, planHTML: planHTML, recordHTML: recordHTML,
     recipeHTML: recipeHTML, liveHTML: liveHTML, updatedText: updatedText, mount: mount, signed: signed, inr: inr,
     resultsHTML: resultsHTML, orderHTML: orderHTML, flowHTML: flowHTML, chartHTML: chartHTML, marketHTML: marketHTML,
-    sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML, aimHTML: aimHTML
+    sectorsHTML: sectorsHTML, watchHTML: watchHTML, costHTML: costHTML, aimHTML: aimHTML, patternHTML: patternHTML
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.AltahaPicks = api;

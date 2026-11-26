@@ -39,6 +39,8 @@
 .pk-record-h { margin: 0; padding: var(--sp-3) var(--sp-4) 0; font-family: var(--font-sans); font-size: var(--fs-label); font-weight: 500; letter-spacing: var(--ls-label);
   text-transform: uppercase; color: var(--text-muted); }
 .pk-record-n { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* A rebuilt setup list adds a fourth figure: the share of 25%+ winners. */
+.pk-record-n.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .pk-record-n > span { display: flex; flex-direction: column; gap: 4px; padding: var(--sp-2) var(--sp-4) var(--sp-3); min-width: 0; }
 .pk-record-n > span + span { border-left: 1px solid var(--border); }
 .pk-record-n b { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-h1); line-height: var(--lh-h1); font-variant-numeric: tabular-nums; color: var(--text-primary); letter-spacing:var(--ls-heading); white-space: nowrap; }
@@ -95,6 +97,8 @@
 .pk-aimnote { margin: 12px 0 0; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-control); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-body); color: var(--text-secondary); }
 .pk-aimnote b { font-weight: 600; color: var(--text-primary); }
 
+/* A breakout's pattern: VCP launchpad or base turnaround. */
+.pk-badge { display: inline-block; align-self: flex-start; width: max-content; margin: 6px 8px 0 0; padding: 1px 8px; border: 1px solid var(--accent); border-radius: var(--r-pill); color: var(--accent); font: 500 var(--fs-label)/var(--lh-label) var(--font-sans); letter-spacing: var(--ls-label); white-space: nowrap; vertical-align: middle; }
 .pk-why { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .pk-why span { padding: 3px 12px; border: 1px solid var(--border); border-radius: var(--r-pill); background: var(--surface-raised); font-size: var(--fs-small); line-height: var(--lh-h3); color: var(--text-secondary); white-space: nowrap; }
 
@@ -172,6 +176,9 @@
   .pk-record-n b { font-size: var(--fs-h2); line-height: var(--lh-h2); }
   .pk-record-n > span { padding: 8px 12px 12px; }
   .pk-record-n small { font-size: var(--fs-label); line-height: var(--lh-label); }
+  .pk-record-n.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pk-record-n.four > span:nth-child(3) { border-left: 0; }
+  .pk-record-n.four > span:nth-child(n+3) { border-top: 1px solid var(--border); }
   .pk-record-h { padding: 8px 12px 0; }
   /* The three prices drop under the reasons, across the card's full width. */
   .pk-card { grid-template-columns: 30px minmax(0, 1fr); gap: 8px 12px; align-items: start; padding: 12px 2px; }

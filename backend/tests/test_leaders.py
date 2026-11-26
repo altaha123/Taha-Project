@@ -350,8 +350,8 @@ def test_the_mark_above_the_price_is_for_the_page_and_closes_nothing():
     import call_log
     assert call_log._levels({"plan": p})["target"] is None, "the mark would close a logged call"
     # A list that already says when to sell carries no mark.
-    q = leaders.plan("quick", 100.0)
-    assert q["sell_rule"] == "sma5" and q["aim"] is None and q["aim_pct"] is None
+    q = leaders.plan("emerging", 100.0)
+    assert q["sell_rule"] == "sma50" and q["aim"] is None and q["aim_pct"] is None
 
 
 def test_what_selling_at_the_mark_did_is_the_studys_own_figures():
@@ -983,6 +983,193 @@ def test_the_scorecard_counts_the_nine_conditions_it_names():
     assert set(t["scorecard_met"]) <= set(leaders.SCORECARD_LABELS) and len(leaders.SCORECARD_LABELS) == 9
 
 
+# --- the setup lists as rebuilt in December 2026 (research/setups_lab.py --v2) ---
+
+def _bars(closes, vols=None, last=None):
+    """Daily bars with an open; `last` is (high, low, open) for the final bar."""
+    c = np.asarray(closes, dtype=float)
+    h, low, o = c * 1.005, c * 0.995, c.copy()
+    v = np.full(len(c), 1e6) if vols is None else np.asarray(vols, dtype=float)
+    if last:
+        h[-1], low[-1], o[-1] = last
+    idx = pd.bdate_range("2024-01-01", periods=len(c))
+    return pd.DataFrame({"Open": o, "High": h, "Low": low, "Close": c, "Volume": v}, index=idx)
+
+
+def _ratnaveer_like():
+    """A climb, then a 50-session base about 23% wide whose last fortnight
+    tightened on lighter volume, then a close above it on 2.5 times the
+    volume near the day's high: the RATNAVEER launch of July 2026 in shape."""
+    rng = np.random.default_rng(7)
+    climb = np.linspace(60, 100, 230)
+    wide = 90 + 9 * np.sin(np.linspace(0, 6 * np.pi, 35))
+    tight = 96 + rng.uniform(-1.5, 1.5, 15)
+    v = np.full(281, 1e6)
+    v[-16:-1], v[-1] = 6e5, 2.5e6
+    return _bars(np.concatenate([climb, wide, tight, [104.0]]), v, last=(104.4, 99.0, 99.5))
+
+
+def _hfcl_like():
+    """A fall, a recovery and a long sideways base with a quiet last month
+    near its top, then a first 60-session high on 2.6 times the volume: the
+    shape of HFCL's April 2026 turn."""
+    rng = np.random.default_rng(11)
+    base1 = 82 + 7 * np.sin(np.linspace(0, 4 * np.pi, 70))
+    base1[-5] = 90.0
+    c = np.concatenate([np.linspace(100, 60, 100), np.linspace(60, 80, 60), base1,
+                        86 + rng.uniform(-2, 2, 50), [94.0]])
+    v = np.full(len(c), 1e6)
+    v[-1] = 2.6e6
+    return _bars(c, v, last=(94.3, 88.0, 88.5))
+
+
+def _setup_ctx(**over):
+    ctx = {"sectors": {"AAA": "Alpha"},
+           "flow_by": {"Alpha": {"sector": "Alpha", "rank": 2, "of": 10, "score": 80.0}},
+           "flow_top": [], "flow_pick": {}, "flow_why": {}, "bench": {"ret_1m": 0.0, "ret_3m": 0.0},
+           "fund": {}, "events": {}, "updown": {"AAA": 0.6}, "institutional": {}}
+    ctx.update(over)
+    return ctx
+
+
+def _sig(df):
+    g = leaders.signals(df)
+    g["ret_1m"] = 0.05                    # ahead of the market in these cases unless a test says not
+    return g
+
+
+def test_a_tightening_base_broken_on_volume_is_a_vcp_launchpad():
+    t = leaders.technicals(_ratnaveer_like())
+    L = t["launch"][-1]
+    assert L["sessions_ago"] == 0 and L["a"] and L["rel_volume"] >= leaders.LAUNCH_A_VOLUME
+    # Wider than the old 18% box, which would never have counted it, but tightened at the end.
+    assert leaders.BOX_MAX_WIDTH < L["a"]["width"] <= leaders.LAUNCH_A_WIDTH
+    assert L["range_15_60"] <= leaders.LAUNCH_A_RANGE and L["clv"] >= leaders.LAUNCH_CLV
+    g = _sig(_ratnaveer_like())
+    score, why, order = leaders._setup("breakout", "AAA", g, {"leader": 0.6}, True, _setup_ctx())
+    assert why is None and score > 0 and order > 0
+    assert leaders._launch(g, g["tech"], {"leader": 0.6}, None, None)[1] == "VCP launchpad"
+
+
+def test_a_breakout_already_stretched_is_not_bought():
+    g = _sig(_ratnaveer_like())
+    g["tech"] = dict(g["tech"], ext_50d_pct=21.0)
+    _s, why, _o = leaders._setup("breakout", "AAA", g, {"leader": 0.6}, True, _setup_ctx())
+    assert why and "above its 50-day average" in why
+    g = _sig(_ratnaveer_like())
+    g["ret_3m"] = 0.70
+    _s, why, _o = leaders._setup("breakout", "AAA", g, {"leader": 0.6}, True, _setup_ctx())
+    assert why and "three months" in why
+
+
+def test_each_breakout_screen_refuses_in_words():
+    base = _sig(_ratnaveer_like())
+    cases = {
+        "leader score": ({}, {"leader": 0.3}, {}),
+        "outside the top": ({}, {"leader": 0.6},
+                            {"flow_by": {"Alpha": {"sector": "Alpha", "rank": 9, "of": 10, "score": 20.0}}}),
+        "did not beat": ({"ret_1m": -0.05}, {"leader": 0.6}, {}),
+        "Profit fell": ({}, {"leader": 0.6}, {"fund": {"AAA": {"pat_yoy_pct": -30.0}}}),
+        "results were sold": ({}, {"leader": 0.6},
+                              {"events": {"AAA": {"reaction": -0.05, "move": -0.06, "market_move": -0.01}}}),
+    }
+    for text, (g_over, part, ctx_over) in cases.items():
+        g = dict(base, **g_over)
+        _s, why, _o = leaders._setup("breakout", "AAA", g, part, True, _setup_ctx(**ctx_over))
+        assert why and text in why, (text, why)
+    # A company with no quarter on file is never refused for it.
+    assert leaders._setup("breakout", "AAA", base, {"leader": 0.6}, True, _setup_ctx(fund={}))[1] is None
+
+
+def test_a_first_sixty_session_high_out_of_a_long_base_is_a_turnaround_even_for_a_laggard(monkeypatch):
+    t = leaders.technicals(_hfcl_like())
+    L = t["launch"][-1]
+    assert L["b"] and L["b"]["base"] == 60 and L["b"]["width"] <= leaders.LAUNCH_B_WIDTH
+    assert L["rel_volume"] >= leaders.LAUNCH_B_VOLUME and L["clv"] >= leaders.LAUNCH_B_CLV
+    g = _sig(_hfcl_like())
+    laggard = {"leader": 0.30}          # not yet in the top half of 12-month leaders
+    # With pattern B switched on it is picked as a turnaround; A alone needs a leader.
+    monkeypatch.setattr(leaders, "LAUNCH_PATTERNS", ("A", "B"))
+    launch, pattern, why = leaders._launch(g, g["tech"], laggard, None, {"pat_yoy_pct": 25.0})
+    assert launch and pattern == "Base turnaround" and why is None
+    # A turnaround needs sales or profit growing where a quarter is on file.
+    assert leaders._launch(g, g["tech"], laggard, None, {"pat_yoy_pct": -5.0, "revenue_yoy_pct": -2.0})[0] is None
+    monkeypatch.setattr(leaders, "LAUNCH_PATTERNS", ("A",))
+    launch, _p, why = leaders._launch(g, g["tech"], laggard, None, {"pat_yoy_pct": 25.0})
+    assert launch is None and "leader score" in why
+
+
+def test_the_shipped_breakout_list_is_the_pattern_the_lab_chose():
+    with open(os.path.join(HERE, "..", "..", "research", "setups-lab-v2.json"), encoding="utf-8") as f:
+        lab = json.load(f)
+    taken = lab["taken"]["breakout"]
+    assert taken["version"].startswith("new: A ") and leaders.LAUNCH_PATTERNS == ("A",)
+    spec = leaders.LISTS["breakout"]
+    assert (spec["hold_sessions"], spec["exit_pct"]) == (taken["hold"], taken["stop"])
+
+
+def _pullback(**over):
+    g = {"price": 102.0, "sma50": 98.0, "sma200": 90.0, "uptrend": True, "ret_1m": 0.02, "ret_3m": 0.08,
+         "tech": {"ema20": 100.0, "rsi": 58.0, "ext_20d_pct": 2.0, "low3_vs_ema20": 1.005,
+                  "closed_up": True, "sma200_rising": True}}
+    for k, v in over.items():
+        if k in g["tech"]:
+            g["tech"][k] = v
+        else:
+            g[k] = v
+    return leaders._setup("technical", "AAA", g, {"leader": over.pop("leader", 0.7)}, True, _setup_ctx())
+
+
+def test_a_calm_pullback_to_the_20_day_in_a_rising_trend_is_a_technical_pick():
+    score, why, order = _pullback()
+    assert why is None and 0 < score <= 100 and order > 0
+
+
+def test_the_technical_list_refuses_a_stretched_or_overbought_stock():
+    cases = {"6% or less": dict(ext_20d_pct=9.0), "RSI is 74": dict(rsi=74.0),
+             "not rising": dict(sma200_rising=False), "pulled back": dict(low3_vs_ema20=1.06),
+             "close up": dict(closed_up=False), "Not in an uptrend": dict(uptrend=False),
+             "under its 20-day": dict(ext_20d_pct=-0.5)}
+    for text, over in cases.items():
+        _s, why, _o = _pullback(**over)
+        assert why and text in why, (text, why)
+
+
+def _dip(**over):
+    g = {"price": 97.0, "sma50": 98.0, "sma200": 85.0, "uptrend": True, "ret_5d": -0.05,
+         "tech": {"rsi2": 6.0}}
+    leader = over.pop("leader", 0.8)
+    ev = over.pop("ev", None)
+    for k, v in over.items():
+        if k in g["tech"]:
+            g["tech"][k] = v
+        else:
+            g[k] = v
+    return leaders._setup("quick", "AAA", g, {"leader": leader}, True,
+                          _setup_ctx(events={"AAA": ev} if ev else {}))
+
+
+def test_a_swing_dip_is_a_leader_sold_hard_that_still_holds_its_50_day():
+    assert _dip()[1] is None
+    assert _dip(rsi2=40.0)[1] is None                       # a 5% week is enough on its own
+    assert "Not sold off" in _dip(rsi2=40.0, ret_5d=-0.01)[1]
+    assert "market leader" in _dip(leader=0.5)[1]
+    assert "50-day average" in _dip(price=90.0)[1]
+    assert "its results" in _dip(ev={"reaction": -0.06})[1]
+
+
+def test_the_swing_dip_is_held_a_month_and_keeps_a_profit_after_costs():
+    p = leaders.plan("quick", 200.0, dt.date(2026, 11, 9))
+    assert p["sell_rule"] is None and p["hold_sessions"] == 21 and p["stop"] == 180.0
+    with open(os.path.join(HERE, "..", "..", "research", "setups-lab-v2.json"), encoding="utf-8") as f:
+        lab = json.load(f)
+    old = lab["quick"]["old: rsi2 under 10, leader top 30% (shipped until now)"]["exits"]
+    old = old["first close above the 5-day average, 7 sessions, close 7% under (old)"]
+    new = lab["quick"]["new: leader swing dip"]["exits"]["21 sessions, close 10% under"]
+    assert old["after_costs_pct"] < 0 < new["after_costs_pct"]
+    assert new["by_half"]["2017-21"]["after_costs_pct"] > 0 and new["by_half"]["2022-26"]["after_costs_pct"] > 0
+
+
 def _ranked_with_sectors():
     cands = universe(80)
     names = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"]
@@ -1000,10 +1187,11 @@ def test_every_block_carries_every_setup_list():
             assert (e["rank"] is None) or e["eligible"]
 
 
-def test_money_flow_picks_only_from_the_top_sectors():
+def test_money_flow_picks_only_from_the_top_three_sectors():
     _c, sectors, blocks = _ranked_with_sectors()
     table = {b["sector_flow"]["sector"]: b["sector_flow"] for b in blocks.values() if b.get("sector_flow")}
     assert len(table) == 5 and sorted(r["rank"] for r in table.values()) == [1, 2, 3, 4, 5]
+    assert leaders.FLOW_SECTORS == 3 and leaders.FLOW_PER_SECTOR == 5
     top = {s for s, r in table.items() if r["rank"] <= leaders.FLOW_SECTORS}
     picked = [s for s, b in blocks.items() if b["lists"]["flow"]["rank"]]
     assert picked, "no money-flow pick from a ranked universe"
@@ -1012,6 +1200,42 @@ def test_money_flow_picks_only_from_the_top_sectors():
     for s in picked:
         per[sectors[s]] = per.get(sectors[s], 0) + 1
     assert max(per.values()) <= leaders.FLOW_PER_SECTOR
+    # Each pick beat the market (here the median stock: no index was given) over one month and three.
+    med1 = float(np.median([b["facts"]["return_1m_pct"] for b in blocks.values() if not b["young"]]))
+    assert all(blocks[s]["facts"]["return_1m_pct"] > med1 - 0.1 for s in picked)
+
+
+def test_sectors_are_ordered_on_rotation_and_the_short_list_keeps_its_own_score():
+    _c, _s, blocks = _ranked_with_sectors()
+    rows = sorted({b["sector_flow"]["sector"]: b["sector_flow"] for b in blocks.values()
+                   if b.get("sector_flow")}.values(), key=lambda r: r["rank"])
+    assert [r["rank"] for r in rows] == list(range(1, 6))
+    assert all(rows[i]["score"] >= rows[i + 1]["score"] for i in range(4))
+    assert sorted(r["classic_rank"] for r in rows) == [1, 2, 3, 4, 5]
+    assert all("month3_pct" in r and "classic_score" in r for r in rows)
+    assert sum(leaders.ROTATION_WEIGHTS.values()) == pytest.approx(1.0)
+
+
+def test_money_flow_anti_chasing_is_measured_and_off(monkeypatch):
+    """The lab ran money flow with and without the anti-chasing screen and the
+    rule took the version without it. Switched on, it refuses a stretched name."""
+    assert leaders.FLOW_ANTI_CHASE is False
+    cands, sectors, before = _ranked_with_sectors()
+    monkeypatch.setattr(leaders, "FLOW_EXT50", -100.0)       # every stock is "stretched"
+    monkeypatch.setattr(leaders, "FLOW_ANTI_CHASE", True)
+    after = leaders.rank(cands, sectors=sectors)
+    assert not any(b["lists"]["flow"]["rank"] for b in after.values())
+    assert any("50-day average" in (b["lists"]["flow"]["why_not"] or "") for b in after.values())
+
+
+def test_institutional_buying_reorders_the_money_flow_names_and_chooses_none():
+    cands, sectors, plain = _ranked_with_sectors()
+    picked = {s for s, b in plain.items() if b["lists"]["flow"]["rank"]}
+    last = max(picked, key=lambda s: plain[s]["lists"]["flow"]["rank"])
+    inst = {last: {"accumulation": 100.0}}
+    boosted = leaders.rank(cands, sectors=sectors, institutional=inst)
+    assert {s for s, b in boosted.items() if b["lists"]["flow"]["rank"]} == picked
+    assert boosted[last]["lists"]["flow"]["rank"] <= plain[last]["lists"]["flow"]["rank"]
 
 
 def test_money_flow_is_empty_without_a_sector_list_and_says_why():
@@ -1020,42 +1244,90 @@ def test_money_flow_is_empty_without_a_sector_list_and_says_why():
     assert all("sector" in b["lists"]["flow"]["why_not"].lower() for b in blocks.values())
 
 
-def test_quick_trades_need_an_oversold_leader_in_an_uptrend():
-    _c, _s, blocks = _ranked_with_sectors()
-    for b in blocks.values():
-        if b["lists"]["quick"]["rank"]:
-            assert b["uptrend"] and b["technicals"]["rsi2"] < leaders.QUICK_RSI2
-            assert b["parts"]["leader"] >= leaders.QUICK_LEADER_FLOOR * 100 - 1
+def test_the_benchmark_given_is_the_one_measured_against():
+    cands, sectors, _b = _ranked_with_sectors()
+    high = leaders.rank(cands, sectors=sectors, benchmark={"ret_1m": 0.5, "ret_3m": 0.5})
+    assert not any(b["lists"]["flow"]["rank"] for b in high.values())
+    assert any("beaten the market" in (b["lists"]["flow"]["why_not"] or "") for b in high.values())
 
 
-def test_emerging_is_for_companies_listed_under_a_year():
-    _c, _s, blocks = _ranked_with_sectors()
-    for b in blocks.values():
-        e = b["lists"]["emerging"]
-        if not b["young"]:
-            assert not e["eligible"] and "more than a year" in e["why_not"]
+def test_emerging_is_for_companies_listed_six_to_eighteen_months():
+    cands = universe(60)
+    for i, c in enumerate(cands):
+        c["listed_sessions"] = 300 if i % 2 else 1e4      # half listed ~14 months, half long ago
+    blocks = leaders.rank(cands)
+    for i, c in enumerate(cands):
+        e = blocks[c["symbol"]]["lists"]["emerging"]
+        if not i % 2:
+            assert not e["eligible"] and "Listed more than 18 months" in e["why_not"]
+        elif e["eligible"]:
+            b = blocks[c["symbol"]]
+            assert b["technicals"]["sma50_rising"] and b["parts"]["leader"] >= leaders.EMERGING_LEADER * 100 - 1
+    # Without a listing age the frame's own length is read (a 320-session frame: about fifteen months).
+    assert leaders.EMERGING_MIN_SESSIONS <= 320 <= leaders.EMERGING_MAX_SESSIONS
 
 
-def test_the_quick_trade_plan_says_when_to_sell():
-    p = leaders.plan("quick", 200.0, dt.date(2026, 11, 9))
-    assert p["sell_rule"] == "sma5" and "5-day average" in p["note"] and p["stop"] == 186.0
-    assert leaders.plan("breakout", 100.0)["stop"] == 92.0
+def test_emerging_refuses_a_loss_maker_and_falling_sales():
+    g = _sig(_ratnaveer_like())
+    g["near_high"] = 0.97
+    g["tech"] = dict(g["tech"], sma50_rising=True)
+    ctx = _setup_ctx(bench={"ret_1m": -0.1, "ret_3m": -0.1})
+    assert "not rising" in leaders._emerging("AAA", dict(g, tech=dict(g["tech"], sma50_rising=False)),
+                                             {"leader": 0.8}, ctx, 300)[1]
+    assert leaders._emerging("AAA", g, {"leader": 0.8}, ctx, 300)[1] is None
+    assert "loss" in leaders._emerging("AAA", g, {"leader": 0.8},
+                                       _setup_ctx(bench=ctx["bench"], fund={"AAA": {"pat_cr": -3.0}}), 300)[1]
+    assert "Sales fell" in leaders._emerging("AAA", g, {"leader": 0.8},
+                                             _setup_ctx(bench=ctx["bench"],
+                                                        fund={"AAA": {"revenue_yoy_pct": -4.0}}), 300)[1]
+    assert "Listed more than" in leaders._emerging("AAA", g, {"leader": 0.8}, ctx, 500)[1]
 
 
-def test_each_setup_list_has_a_replayed_record_and_the_page_can_say_what_it_cost():
+def test_the_rebuilt_plans_hold_for_the_move_and_carry_no_target():
+    for key, (hold, stop) in {"breakout": (63, 12.0), "technical": (63, 12.0), "quick": (21, 10.0),
+                              "flow": (63, 15.0), "emerging": (90, 15.0)}.items():
+        p = leaders.plan(key, 100.0, dt.date(2026, 12, 1))
+        assert (p["hold_sessions"], p["risk_pct"]) == (hold, stop), key
+        assert p["aim"] is None and p["t1"] is None, key
+    e = leaders.plan("emerging", 100.0)
+    assert e["sell_rule"] == "sma50" and "50-day average" in e["note"] and e["stop"] == 85.0
+    assert leaders.plan("breakout", 100.0)["stop"] == 88.0
+    # The short-term list is not one of them, and is unchanged.
+    assert leaders.plan("short", 100.0)["aim"] == 108.0
+
+
+def test_each_setup_list_has_a_replayed_record_with_its_big_winners():
     with open(os.path.join(HERE, "..", "..", "research", "ideas-study.json"), encoding="utf-8") as f:
         study = json.load(f)
     for key in leaders.SETUPS:
         rec = study["lists"][key]
-        assert rec["kind"] == "setup" and rec["picks"] > 1000 and rec["what"]
+        assert rec["kind"] == "setup" and rec["picks"] > 500 and rec["what"]
         assert rec["by_half"]["2017-21"] and rec["by_half"]["2022-26"]
         assert rec["avg_after_costs_pct"] == round(rec["avg_pct"] - study["round_trip_cost_pct"], 2)
-    # The quick trade's gain did not cover its costs in the test; the record must show that.
-    assert study["lists"]["quick"]["avg_after_costs_pct"] < 0
-    assert study["lists"]["quick"]["avg_sessions_held"] < leaders.LISTS["quick"]["hold_sessions"]
+        assert "big_winner_pct" in rec and "big_winner_pct" in rec["by_half"]["2022-26"], key
+    for key in ("breakout", "technical", "quick", "flow", "emerging"):
+        assert study["lists"][key]["version"] == "2026-12", key
+    assert study["lists"]["emerging"]["avg_sessions_held"] < leaders.LISTS["emerging"]["hold_sessions"]
 
 
-def test_the_breakout_watch_lists_only_unbroken_tight_bases():
+def test_the_breakout_watch_lists_unbroken_bases_of_either_pattern():
+    def block(score, watch, sector_flow=None, **t):
+        return {"young": False, "score": score, "sector": "Alpha", "facts": {"turnover_cr": 50, "return_3m_pct": 10},
+                "sector_flow": sector_flow, "technicals": dict({"launch": [], "ext_50d_pct": 8.0, "watch": watch}, **t)}
+    vcp = {"pattern": "VCP launchpad", "base": 40, "top": 100, "low": 80, "width_pct": 25.0, "to_top_pct": 1.2}
+    turn = {"pattern": "Base turnaround", "base": 60, "top": 100, "low": 76, "width_pct": 31.0, "to_top_pct": 2.0}
+    blocks = {"AAA": block(60.0, vcp),
+              "BBB": block(20.0, turn),                       # a laggard: a turnaround needs no leader score
+              "CCC": block(20.0, vcp),                        # a launchpad does
+              "DDD": block(80.0, vcp, ext_50d_pct=25.0),      # stretched
+              "EEE": block(80.0, vcp, launch=[{"a": {}}]),    # already broke out
+              "FFF": block(80.0, None)}
+    got = leaders.breakout_watch(blocks)
+    assert [r["symbol"] for r in got] == ["AAA", "BBB"]
+    assert [r["pattern"] for r in got] == ["VCP launchpad", "Base turnaround"]
+
+
+def test_the_short_lists_watch_is_its_own_tight_forty_session_base():
     blocks = {"AAA": {"young": False, "score": 80.0, "sector": "Alpha", "facts": {"turnover_cr": 50},
                       "technicals": {"box": None, "above_200d": True, "rel_volume_5": 1.1,
                                      "base": {"top": 100, "low": 92, "width_pct": 8.7, "to_top_pct": 1.2}}},
@@ -1065,7 +1337,12 @@ def test_the_breakout_watch_lists_only_unbroken_tight_bases():
               "CCC": {"young": False, "score": 30.0, "facts": {},
                       "technicals": {"box": None, "above_200d": True,
                                      "base": {"top": 100, "low": 95, "width_pct": 5.0, "to_top_pct": 1.0}}}}
-    assert [r["symbol"] for r in leaders.breakout_watch(blocks)] == ["AAA"]
+    assert [r["symbol"] for r in leaders.short_watch(blocks)] == ["AAA"]
+
+
+def test_technicals_still_read_only_three_hundred_bars():
+    long = _bars(np.linspace(50, 150, 900))
+    assert leaders.technicals(long) == leaders.technicals(long.iloc[-300:])
 
 
 # --- the short-term list: a breakout, passed through five screens -----------------

@@ -124,11 +124,13 @@ HORIZON_DAYS = {
     "pick_momentum": 93,
     "pick_long": 370,
     "pick_short": 32,
-    "pick_breakout": 32,
-    "pick_technical": 32,
-    "pick_quick": 11,
-    "pick_flow": 32,
-    "pick_emerging": 32,
+    # The setup lists rebuilt in December 2026 (leaders.LISTS): held for the
+    # move, so their premise lasts as long as the hold the study measured.
+    "pick_breakout": 93,
+    "pick_technical": 93,
+    "pick_quick": 32,
+    "pick_flow": 93,
+    "pick_emerging": 132,
 }
 
 

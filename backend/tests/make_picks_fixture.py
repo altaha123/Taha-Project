@@ -35,7 +35,7 @@ sys.path.insert(0, str(ROOT / "research"))
 OUT = ROOT / "frontend" / "tests" / "fixtures" / "picks.json"
 
 ROW_KEYS = ("symbol", "name", "price", "sector", "list", "setup", "setup_key", "horizon", "pick_rank",
-            "young", "conviction", "conviction_band", "why", "evidence", "plan", "results", "order",
+            "young", "conviction", "conviction_band", "why", "pattern", "evidence", "plan", "results", "order",
             "technicals", "chart", "news", "adverse_filing", "avg_turnover_cr", "liquidity_tier",
             "tracked", "composite", "technical", "fundamental", "f_score", "setup_fit", "call")
 TOP_KEYS = ("available", "degraded", "method_key", "list", "horizon", "label", "idea", "hold_text",
@@ -98,6 +98,9 @@ def main():
     names = pd.read_csv(S.RESULTS_CSV, usecols=["symbol", "company"]).drop_duplicates("symbol")
     names = dict(zip(names["symbol"], names["company"]))
 
+    # How long each company has traded, as the replay tells the engine (its
+    # frames hold 300 sessions; the emerging list needs to see further).
+    S._AGE["age"] = S.listing_ages(P)
     cands = S._engine_candidates(P, i, Y)
     known = R[R["i"] <= i].drop_duplicates("symbol", keep="last")
     filed = {r.symbol: {"filed_at": str(r.filed)[:19], "quarter": "Q2 FY27",
@@ -122,11 +125,13 @@ def main():
     # Each company's last quarter, as the scan reads it: a hundred sessions back at most.
     growth = {r.symbol: {"pat_yoy_pct": None if pd.isna(r.pat_yoy_pct) else float(r.pat_yoy_pct),
                          "revenue_yoy_pct": None if pd.isna(r.revenue_yoy_pct) else float(r.revenue_yoy_pct),
+                         "pat_cr": None if pd.isna(r.pat_cr) else float(r.pat_cr),
                          "quarter": "Q2 FY27"}
               for r in known[known["i"] >= i - 100].itertuples(index=False)}
 
     def payload(results):
-        blocks = leaders.rank(cands, results=results, sectors=sectors, fundamentals=growth)
+        blocks = leaders.rank(cands, results=results, sectors=sectors, fundamentals=growth,
+                              benchmark=S.benchmark_at(P, i))
         flow = {}
         for b in blocks.values():
             if b.get("sector_flow"):
@@ -144,7 +149,7 @@ def main():
         return {"scanned_at": day.strftime("%d %b %Y") + ", 18:10", "universe_source": "NSE equity list",
                 "scored": len(rows), "factor_universe": rows, "rankings": rows,
                 "sector_flow": sorted(flow.values(), key=lambda r: r["rank"]),
-                "breakout_watch": leaders.breakout_watch(blocks)}
+                "breakout_watch": leaders.breakout_watch(blocks), "short_watch": leaders.short_watch(blocks)}
 
     def trimmed(sel):
         out = {k: sel.get(k) for k in TOP_KEYS}
