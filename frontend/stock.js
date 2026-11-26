@@ -3882,6 +3882,11 @@
 
   function start() {
     if (!TICKER) {
+      /* /stock and /stock.html with nothing named: an empty page at two
+         addresses, which a search engine files as a duplicate. It is not a
+         page anyone should land on from a search. */
+      var robots = document.querySelector('meta[name="robots"]');
+      if (robots) robots.setAttribute('content', 'noindex,follow');
       failed('No stock was named. Try searching for one.');
       return;
     }

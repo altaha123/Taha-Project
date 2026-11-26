@@ -92,6 +92,35 @@ def test_the_new_addresses_shadow_nothing(vercel):
         "a file whose name starts like a company or sector address"
 
 
+def test_every_indexable_static_page_names_its_one_address(vercel):
+    """
+    The static host answers /advisors, /advisors.html (and /pricing for /pro)
+    with the same page, all 200. Without a canonical, Search Console files the
+    copies as "Duplicate without user-selected canonical". Every page a
+    crawler may index says which address is the page: its clean one.
+
+    stock.html is left out: on /stock-TCS the API writes the canonical, and on
+    /stock?ticker=TCS stock.js adds one pointing there.
+    """
+    clean = {}
+    for src, dest in vercel.items():
+        if dest.endswith(".html") and ":" not in src and not src.endswith("/"):
+            clean.setdefault(dest.lstrip("/"), []).append(src)
+    for name in sorted(n for n in os.listdir(FRONT) if n.endswith(".html")):
+        if name == "stock.html":
+            continue
+        page = _read(name)
+        robots = re.search(r'<meta name="robots" content="([^"]*)"', page)
+        if robots and "noindex" in robots.group(1):
+            continue
+        links = re.findall(r'<link rel="canonical" href="([^"]*)"', page)
+        assert len(links) == 1, "%s may be indexed and names %d canonicals" % (name, len(links))
+        path = "/" if name == "index.html" else links[0][len(SITE):]
+        assert links[0] == SITE + path, links[0]
+        assert name == "index.html" or path in clean.get(name, []), \
+            "%s's canonical %s is not an address vercel.json serves it at" % (name, path)
+
+
 # ── The three reading pages ─────────────────────────────────────────────────
 
 @pytest.mark.parametrize("path", sorted(READING))
