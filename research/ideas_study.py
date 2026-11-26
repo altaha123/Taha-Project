@@ -974,7 +974,11 @@ SETUP_NOTES = {
                 "or tightened before the break, on 1.6 times the usual volume, in the top 45% of the day's "
                 "range, within the last five sessions and still above it; above the 200-day average with "
                 "the 50-day at least 98% of it; leader score 45 or more; its industry in the top 60% on "
-                "money flow; a month better than the Nifty 500's; not more than 16% above its 50-day "
+                "money flow (a VCP launchpad). Or the first close above a 60-session top in 20 sessions, "
+                "from a base 35% wide or less that tightened, on twice the usual volume, closing in the top "
+                "40% of the day, above rising 50- and 200-day averages, sales or profit growing where a "
+                "quarter is on file, whatever the leader score (a base turnaround). For both: a month "
+                "better than the Nifty 500's; not more than 16% above its 50-day "
                 "average or 55% up in three months; no known fall in profit over 10% or results sold "
                 "by the market. Held 63 sessions, left on a close 12% under.",
     "technical": "A rising 200-day average with price and the 50-day above it, leader score 55 or more; a "

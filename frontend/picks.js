@@ -316,8 +316,8 @@
       }).join('') + '</tbody></table></div>' +
       (patterns
         ? '<p>Within 3% of the top of a base. A VCP launchpad is a base 28% wide or less that tightened; a base turnaround ' +
-          'is a 60-session base 35% wide or less, in a stock not yet a leader. None has broken out: a launchpad joins the ' +
-          'list above only after it closes over the top on 1.6 times its usual volume. Turnarounds are watched only.</p>'
+          'is a 60-session base 35% wide or less, in a stock not yet a leader. None has broken out: a stock joins the list ' +
+          'above only after it closes over the top, on 1.6 times its usual volume for a launchpad and twice for a turnaround.</p>'
         : '<p>Forty sessions inside a range 18% wide or tighter, within 3% of its top. None has broken out: ' +
           'a stock joins the list above only after it closes over the top on twice its usual volume.</p>') + '</details>';
   }

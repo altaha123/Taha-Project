@@ -118,9 +118,11 @@ of the index), its 2022-2026 record then printed whatever it was:
                wide or less that was tight or tightened, on 1.6 times the
                usual volume, not already stretched (16% over the 50-day, 55%
                in three months). Held 63 sessions, out on a close 12% under.
-               The base-turnaround pattern (a first 60-session high on twice
-               the volume, for a stock not yet a leader) is measured too and
-               is on the watch list; see LAUNCH_PATTERNS.
+               Or a base turnaround: a first 60-session high on twice the
+               volume out of a base 35% wide or less, for a stock not yet a
+               leader, with sales or profit growing where a quarter is on
+               file. The rule chose A alone; the reader chose both after
+               seeing the figures (see LAUNCH_PATTERNS).
   Technicals   an early Stage-2 pullback: a rising 200-day average, a dip to
                the 20-day average and a green close within 6% of it. 63 / 12%.
                Measured honestly: the old seven-of-nine scorecard, held the
@@ -479,9 +481,12 @@ VERGE_PCT = 3.0            # how near the top of its base counts as on the verge
 # set before the run, took the best 2017-2021 lead over the Nifty 500 among
 # the new versions, and that was pattern A alone (a lead of 2.2 points a
 # pick, 1.4 on 2022-2026), ahead of A or B (1.6, 1.2) and B alone (0.5,
-# 1.8). B is still measured on every stock, shown on the watch list, and is
-# one edit away: ("A", "B"), then a replay (ideas_study.py --setups).
-LAUNCH_PATTERNS = ("A",)
+# 1.8). The reader then chose both, so that early turnarounds of the HFCL
+# kind (April 2026) are on the list and not only on the watch list. That is
+# a choice made after the lab's figures were seen; the record on the page is
+# the engine replayed with both patterns, whatever it is. ("A",) and a
+# replay (ideas_study.py --setups) puts back what the rule chose.
+LAUNCH_PATTERNS = ("A", "B")
 LAUNCH_A_WIDTH = 0.28      # the base, high over low, less one
 LAUNCH_A_TIGHT = 0.20      # a base this tight needs no further sign of tightening
 LAUNCH_A_SQUEEZE = 0.90    # ... otherwise one of these, read on the bars before the break
@@ -1666,6 +1671,10 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
                 launch, pattern, _w = _launch(g, g.get("tech") or {}, part, flow_by.get(sectors.get(sym)),
                                               fundamentals.get(sym))
                 fact = {"launch": launch, "pattern": pattern} if launch else None
+                # The pattern and breakout the list counted, so the page names
+                # the same one: a launch whose A side failed a screen can still
+                # count as B.
+                counted = {"pattern": pattern, "launch_ago": launch["sessions_ago"]} if launch else {}
             if key == "technical":
                 fact = {} if why_not is None else None
             if key == "emerging":
@@ -1673,6 +1682,8 @@ def rank(candidates, results=None, sectors=None, fundamentals=None, benchmark=No
             lists[key] = {"score": round(score, 1), "eligible": why_not is None,
                           "why_not": why_not, "rank": None,
                           "why": _why(key, g, calm[i], fact)}
+            if key == "breakout":
+                lists[key].update(counted)
         blocks[sym] = {
             "recipe": RECIPE,
             "universe": len(pool),
