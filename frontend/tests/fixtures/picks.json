@@ -6,152 +6,176 @@
 "list":"month",
 "horizon":"month",
 "label":"Swing / This month",
-"idea":"Market leaders in industries money is moving into, profit not down last quarter. Ranked higher on a pullback this month and on sales growth.",
+"idea":"Market leaders in the top half of industries on money flow, profit not down last quarter. Ranked higher on a pullback this month and sales growth.",
 "hold_text":"about a month",
 "exit_pct":12.0,
 "tested":{
 "list_dates":482,
-"picks":6984,
-"up_pct":54.0,
-"beat_index_pct":48.7,
-"avg_pct":1.81,
-"median_pct":0.93,
+"picks":6765,
+"up_pct":53.6,
+"beat_index_pct":48.6,
+"avg_pct":1.68,
+"median_pct":0.85,
 "index_avg_pct":1.13,
 "big_winner_pct":2.7,
-"worst_5pct":-13.5,
-"best_5pct":19.7,
-"exit_hit_pct":11.9,
-"lists_ahead_of_index_pct":58.5,
+"worst_5pct":-13.6,
+"best_5pct":19.3,
+"exit_hit_pct":12.2,
+"lists_ahead_of_index_pct":56.4,
 "by_half":{
 "2017-21":{
 "list_dates":244,
-"picks":3418,
-"up_pct":57.2,
-"beat_index_pct":49.8,
-"avg_pct":2.43,
-"median_pct":1.66,
+"picks":3203,
+"up_pct":56.9,
+"beat_index_pct":50.0,
+"avg_pct":2.29,
+"median_pct":1.64,
 "index_avg_pct":1.46,
-"big_winner_pct":2.9,
+"big_winner_pct":2.7,
 "worst_5pct":-13.0,
-"best_5pct":19.9,
-"exit_hit_pct":9.4,
-"lists_ahead_of_index_pct":60.2
+"best_5pct":19.4,
+"exit_hit_pct":9.8,
+"lists_ahead_of_index_pct":59.8
 },
 "2022-26":{
 "list_dates":238,
-"picks":3566,
-"up_pct":50.9,
-"beat_index_pct":47.6,
-"avg_pct":1.22,
-"median_pct":0.2,
+"picks":3562,
+"up_pct":50.6,
+"beat_index_pct":47.3,
+"avg_pct":1.14,
+"median_pct":0.16,
 "index_avg_pct":0.8,
 "big_winner_pct":2.6,
 "worst_5pct":-14.0,
-"best_5pct":19.5,
-"exit_hit_pct":14.3,
-"lists_ahead_of_index_pct":56.7
+"best_5pct":19.3,
+"exit_hit_pct":14.4,
+"lists_ahead_of_index_pct":52.9
 }
 },
 "by_year":{
 "2017":{
-"avg_pct":2.04,
+"avg_pct":1.81,
 "index_avg_pct":2.35,
-"up_pct":61.1,
-"picks":648
+"up_pct":59.9,
+"picks":596
 },
 "2018":{
-"avg_pct":0.46,
+"avg_pct":0.65,
 "index_avg_pct":-0.51,
-"up_pct":51.1,
-"picks":696
+"up_pct":52.6,
+"picks":683
 },
 "2019":{
-"avg_pct":1.22,
+"avg_pct":1.04,
 "index_avg_pct":1.03,
-"up_pct":53.9,
-"picks":686
+"up_pct":53.6,
+"picks":618
 },
 "2020":{
-"avg_pct":3.63,
+"avg_pct":3.31,
 "index_avg_pct":2.1,
-"up_pct":61.1,
-"picks":660
+"up_pct":59.0,
+"picks":586
 },
 "2021":{
-"avg_pct":4.74,
+"avg_pct":4.48,
 "index_avg_pct":2.37,
-"up_pct":59.2,
-"picks":728
+"up_pct":59.6,
+"picks":720
 },
 "2022":{
-"avg_pct":1.19,
+"avg_pct":0.98,
 "index_avg_pct":0.06,
-"up_pct":49.2,
-"picks":750
+"up_pct":48.7,
+"picks":747
 },
 "2023":{
-"avg_pct":3.12,
+"avg_pct":3.07,
 "index_avg_pct":2.19,
-"up_pct":60.8,
-"picks":732
+"up_pct":60.7,
+"picks":731
 },
 "2024":{
-"avg_pct":1.6,
+"avg_pct":1.49,
 "index_avg_pct":1.08,
-"up_pct":53.2,
+"up_pct":52.4,
 "picks":735
 },
 "2025":{
-"avg_pct":-0.39,
+"avg_pct":-0.38,
 "index_avg_pct":0.54,
-"up_pct":43.4,
+"up_pct":44.1,
 "picks":749
 },
 "2026":{
-"avg_pct":0.49,
+"avg_pct":0.45,
 "index_avg_pct":-0.02,
-"up_pct":47.3,
+"up_pct":46.8,
 "picks":600
 }
 },
 "hold_sessions":21,
 "exit_pct":12.0,
-"avg_after_costs_pct":1.32,
+"avg_after_costs_pct":1.19,
 "vs_average_stock":{
-"excess_pct":0.79,
-"t":2.61,
-"lists_ahead_pct":57.9,
+"excess_pct":0.71,
+"t":2.29,
+"lists_ahead_pct":56.2,
 "by_half":{
 "2017-21":{
-"excess_pct":1.26,
-"t":2.58,
-"lists_ahead_pct":61.1
+"excess_pct":1.2,
+"t":2.35,
+"lists_ahead_pct":58.2
 },
 "2022-26":{
-"excess_pct":0.3,
-"t":0.91,
-"lists_ahead_pct":54.6
+"excess_pct":0.22,
+"t":0.64,
+"lists_ahead_pct":54.2
 }
+}
+},
+"vs_eligible_stock":{
+"excess_pct":0.48,
+"t":1.6,
+"lists_ahead_pct":53.9,
+"by_half":{
+"2017-21":{
+"excess_pct":0.98,
+"t":2.08,
+"lists_ahead_pct":58.6
+},
+"2022-26":{
+"excess_pct":-0.04,
+"t":-0.11,
+"lists_ahead_pct":49.2
+}
+}
+},
+"member_premium":{
+"pct":0.23,
+"by_half":{
+"2017-21":0.22,
+"2022-26":0.25
 }
 },
 "market":{
 "above_200d":{
 "list_dates":365,
-"picks":5330,
-"up_pct":52.8,
-"avg_pct":1.65,
+"picks":5182,
+"up_pct":52.5,
+"avg_pct":1.53,
 "index_avg_pct":0.65
 },
 "below_200d":{
 "list_dates":117,
-"picks":1654,
-"up_pct":57.9,
-"avg_pct":2.34,
+"picks":1583,
+"up_pct":57.2,
+"avg_pct":2.19,
 "index_avg_pct":2.66
 }
 },
-"what":"Market leaders (leader score in the top 30%) in an uptrend and outside the most volatile fifth, in an industry in the top half on money flow, with no loss and no fall in profit last quarter, no results the market sold in the last month and no more than 10% of the company pledged. Ranked on the month's pullback, closeness to the 52-week high, the last quarter's sales and margin growth, the industry's money flow and a live catalyst; at most four from one industry.",
-"bias":"Pledges, deliveries and orders have no history to replay: they were unknown here, which the list counts as neutral, and the live list reads them. Industries are NSE's list as it stands today. Quarterly filings start in 2018 and cover companies listed today; a stock with none is never refused for it, and a revised quarter is seen from the revision's date.",
+"what":"Market leaders (leader score in the top 30%) in an uptrend and outside the most volatile fifth, in an industry ranked in the top half on money flow, with no loss and no fall in profit last quarter, no results the market sold in the last 21 sessions and no more than 10% of the company pledged. Ranked on the month's pullback, closeness to the 52-week high, the last quarter's sales and margin growth (a lender's sales alone), the industry's money flow and a live catalyst; at most 4 from one industry.",
+"bias":"Pledges, deliveries and orders have no history to replay: they were unknown here, which the list counts as neutral, and the live list reads them. Industries are NSE's list as it stands today, and a stock without one fails the industry test, so the replay could pick only companies in that list. On the same days the liquid stocks in that list did better than the average liquid stock by 0.23%, and the list's lead over them was +0.48% a pick (2017-21 +0.98%, 2022-26 −0.04%). Quarterly filings start in 2018 and cover companies listed today; a stock with none is never refused for it, and a revised quarter is seen from the revision's date.",
 "replay":"The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices and filings cut at that session; its top fifteen bought at the next open.",
 "lab":{
 "variant":"M3",
@@ -173,43 +197,55 @@
 },
 "first":{
 "list_dates":177,
-"picks":2474,
-"up_pct":56.7,
-"beat_index_pct":49.8,
-"avg_pct":2.72,
-"median_pct":1.53,
+"picks":2316,
+"up_pct":56.4,
+"beat_index_pct":50.0,
+"avg_pct":2.57,
+"median_pct":1.52,
 "index_avg_pct":1.48,
-"big_winner_pct":3.7,
+"big_winner_pct":3.5,
 "worst_5pct":-13.1,
-"best_5pct":21.6,
-"exit_hit_pct":9.9,
-"lists_ahead_of_index_pct":62.7,
-"avg_net_pct":2.23,
-"vs_index_pct":1.24,
-"vs_avg_stock_pct":1.55,
-"vs_avg_stock_net_pct":1.06,
-"vs_avg_stock_t":2.58,
-"lists_ahead_of_avg_stock_pct":66.7
+"best_5pct":21.2,
+"exit_hit_pct":10.4,
+"lists_ahead_of_index_pct":64.4,
+"avg_net_pct":2.08,
+"vs_index_pct":1.09,
+"vs_avg_stock_pct":1.49,
+"vs_avg_stock_net_pct":1.0,
+"vs_avg_stock_t":2.39,
+"lists_ahead_of_avg_stock_pct":63.8,
+"vs_eligible_pct":1.22,
+"vs_eligible_net_pct":0.73,
+"vs_eligible_t":2.06,
+"lists_ahead_of_eligible_pct":61.0,
+"member_premium_pct":0.27,
+"member_premium_t":3.34
 },
 "second":{
 "list_dates":238,
-"picks":3566,
-"up_pct":50.9,
-"beat_index_pct":47.6,
-"avg_pct":1.22,
-"median_pct":0.2,
+"picks":3562,
+"up_pct":50.6,
+"beat_index_pct":47.3,
+"avg_pct":1.14,
+"median_pct":0.16,
 "index_avg_pct":0.8,
 "big_winner_pct":2.6,
 "worst_5pct":-14.0,
-"best_5pct":19.5,
-"exit_hit_pct":14.3,
-"lists_ahead_of_index_pct":56.7,
-"avg_net_pct":0.73,
-"vs_index_pct":0.42,
-"vs_avg_stock_pct":0.3,
-"vs_avg_stock_net_pct":-0.19,
-"vs_avg_stock_t":0.91,
-"lists_ahead_of_avg_stock_pct":54.6
+"best_5pct":19.3,
+"exit_hit_pct":14.4,
+"lists_ahead_of_index_pct":52.9,
+"avg_net_pct":0.65,
+"vs_index_pct":0.34,
+"vs_avg_stock_pct":0.22,
+"vs_avg_stock_net_pct":-0.27,
+"vs_avg_stock_t":0.64,
+"lists_ahead_of_avg_stock_pct":54.2,
+"vs_eligible_pct":-0.04,
+"vs_eligible_net_pct":-0.53,
+"vs_eligible_t":-0.11,
+"lists_ahead_of_eligible_pct":49.2,
+"member_premium_pct":0.25,
+"member_premium_t":5.12
 },
 "before":{
 "week":{
@@ -233,7 +269,13 @@
 "vs_avg_stock_pct":0.41,
 "vs_avg_stock_net_pct":-0.08,
 "vs_avg_stock_t":2.89,
-"lists_ahead_of_avg_stock_pct":58.2
+"lists_ahead_of_avg_stock_pct":58.2,
+"vs_eligible_pct":0.33,
+"vs_eligible_net_pct":-0.16,
+"vs_eligible_t":2.44,
+"lists_ahead_of_eligible_pct":57.6,
+"member_premium_pct":0.08,
+"member_premium_t":3.98
 },
 "second":{
 "list_dates":241,
@@ -253,7 +295,13 @@
 "vs_avg_stock_pct":0.22,
 "vs_avg_stock_net_pct":-0.27,
 "vs_avg_stock_t":2.09,
-"lists_ahead_of_avg_stock_pct":56.4
+"lists_ahead_of_avg_stock_pct":56.4,
+"vs_eligible_pct":0.15,
+"vs_eligible_net_pct":-0.34,
+"vs_eligible_t":1.46,
+"lists_ahead_of_eligible_pct":56.4,
+"member_premium_pct":0.06,
+"member_premium_t":5.24
 }
 },
 "month":{
@@ -277,7 +325,13 @@
 "vs_avg_stock_pct":1.45,
 "vs_avg_stock_net_pct":0.96,
 "vs_avg_stock_t":2.46,
-"lists_ahead_of_avg_stock_pct":62.7
+"lists_ahead_of_avg_stock_pct":62.7,
+"vs_eligible_pct":1.17,
+"vs_eligible_net_pct":0.68,
+"vs_eligible_t":2.08,
+"lists_ahead_of_eligible_pct":60.5,
+"member_premium_pct":0.27,
+"member_premium_t":3.34
 },
 "second":{
 "list_dates":238,
@@ -297,7 +351,13 @@
 "vs_avg_stock_pct":0.13,
 "vs_avg_stock_net_pct":-0.36,
 "vs_avg_stock_t":0.46,
-"lists_ahead_of_avg_stock_pct":52.9
+"lists_ahead_of_avg_stock_pct":52.9,
+"vs_eligible_pct":-0.13,
+"vs_eligible_net_pct":-0.62,
+"vs_eligible_t":-0.46,
+"lists_ahead_of_eligible_pct":47.5,
+"member_premium_pct":0.25,
+"member_premium_t":5.12
 }
 }
 },
@@ -310,16 +370,16 @@
 "target_test":{
 "target_pct":12.0,
 "sold":{
-"up_pct":55.5,
-"avg_pct":1.42,
-"median_pct":1.38,
-"picks":6984
+"up_pct":55.2,
+"avg_pct":1.34,
+"median_pct":1.31,
+"picks":6765
 },
 "held":{
-"up_pct":54.0,
-"avg_pct":1.81,
-"median_pct":0.93,
-"picks":6984
+"up_pct":53.6,
+"avg_pct":1.68,
+"median_pct":0.85,
+"picks":6765
 }
 },
 "study":{
@@ -335,7 +395,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -348,7 +408,7 @@
 },
 "market_test":{
 "state":"above_200d",
-"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +1.6% (53 in 100 rose), against +2.3% on the other days. The list is not held back in either.",
+"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +1.5% (52 in 100 rose), against +2.2% on the other days. The list is not held back in either.",
 "lists":365
 },
 "chart_note":"Facts about the chart, not reasons for the pick. Tested over ten years, none of these improved a list, so none of them changes a rank.",
@@ -364,23 +424,15 @@
 4
 ],
 [
-"Financial Services",
-2
+"Automobile and Auto Components",
+3
 ],
 [
-"Automobile and Auto Components",
-2
+"Financial Services",
+3
 ],
 [
 "Realty",
-1
-],
-[
-"Information Technology",
-1
-],
-[
-"Consumer Durables",
 1
 ]
 ],
@@ -388,8 +440,8 @@
 "selection_notes":[],
 "excluded_adverse":[],
 "count":15,
-"considered":26,
-"method":"A stock is here when it is a market leader (its leader score in the top 30% of liquid stocks), in an uptrend and outside the most volatile fifth, in an industry in the top half on money flow, with no loss and no fall in profit in its last quarter, no results the market sold in the last 21 sessions, and promoters pledging 10% of the company or less. It is ordered on its pullback over the month and the week, its closeness to the 52-week high, its last quarter's sales and margin growth, its industry's money flow and a live catalyst (heavy deliveries on a falling week, or a large order), with at most 4 stocks from one industry. A figure a company has not filed counts as the middle of the field.",
+"considered":24,
+"method":"A stock is here when it is a market leader (its leader score in the top 30% of liquid stocks), in an uptrend and outside the most volatile fifth, in an industry in the top half on money flow, with no loss and no fall in profit in its last quarter, no results the market sold in the last 21 sessions, and promoters pledging 10% of the company or less. It is ordered on its pullback over the month, its closeness to the 52-week high, its last quarter's sales and margin growth (sales alone for a bank or lender), its industry's money flow and a live catalyst (heavy deliveries on a falling week, or a large order), with at most 4 stocks from one industry. A figure a company has not filed counts as the middle of the field.",
 "recipe_current":true,
 "study_current":true,
 "weights":{
@@ -482,7 +534,7 @@
 "horizon":"about a month",
 "pick_rank":1,
 "young":false,
-"conviction":81.2,
+"conviction":81.4,
 "conviction_band":"Moderate",
 "why":[
 "Pulled back 9% this month",
@@ -511,9 +563,9 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":18.0,
+"points":18.2,
 "of":20.0,
-"share_pct":90.2,
+"share_pct":91.1,
 "detail":"Sales +53%, operating margin +11.3 pts on a year ago."
 },
 {
@@ -657,11 +709,11 @@
 "horizon":"about a month",
 "pick_rank":2,
 "young":false,
-"conviction":72.2,
+"conviction":71.3,
 "conviction_band":"Moderate",
 "why":[
 "Pulled back 10% this month",
-"Sales +14%, margin +3.3 pts",
+"Sales +14%, margin +1.8 pts",
 "Healthcare: top half on money flow",
 "13% below its 52-week high"
 ],
@@ -686,10 +738,10 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":10.4,
+"points":9.6,
 "of":20.0,
-"share_pct":52.0,
-"detail":"Sales +14%, operating margin +3.3 pts on a year ago."
+"share_pct":47.8,
+"detail":"Sales +14%, operating margin +1.8 pts on a year ago."
 },
 {
 "factor":"Its industry's money flow",
@@ -803,7 +855,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":13.83,
-"opm_yoy_chg":3.27,
+"opm_yoy_chg":1.83,
 "pat_yoy_pct":38.78,
 "earnings_quality_ok":true,
 "roce_pct":16.12,
@@ -831,7 +883,7 @@
 "horizon":"about a month",
 "pick_rank":3,
 "young":false,
-"conviction":70.4,
+"conviction":70.6,
 "conviction_band":"Moderate",
 "why":[
 "Sales +47%, margin +4.8 pts",
@@ -859,9 +911,9 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":16.8,
+"points":16.9,
 "of":20.0,
-"share_pct":83.9,
+"share_pct":84.7,
 "detail":"Sales +47%, operating margin +4.8 pts on a year ago."
 },
 {
@@ -1004,11 +1056,11 @@
 "horizon":"about a month",
 "pick_rank":4,
 "young":false,
-"conviction":67.3,
+"conviction":67.5,
 "conviction_band":"Speculative",
 "why":[
 "Pulled back 6% this month",
-"Sales +48%, margin -0.3 pts",
+"Sales +48%, margin -0.1 pts",
 "Services: top half on money flow",
 "20% below its 52-week high"
 ],
@@ -1033,10 +1085,10 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":12.7,
+"points":12.9,
 "of":20.0,
-"share_pct":63.5,
-"detail":"Sales +48%, operating margin -0.3 pts on a year ago."
+"share_pct":64.6,
+"detail":"Sales +48%, operating margin -0.1 pts on a year ago."
 },
 {
 "factor":"Its industry's money flow",
@@ -1152,7 +1204,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":47.71,
-"opm_yoy_chg":-0.26,
+"opm_yoy_chg":-0.07,
 "pat_yoy_pct":20.65,
 "earnings_quality_ok":true,
 "roce_pct":15.74,
@@ -1170,185 +1222,6 @@
 }
 },
 {
-"symbol":"TECHM",
-"name":"Tech Mahindra Limited",
-"price":1813.9,
-"sector":"Information Technology",
-"list":"month",
-"setup":"Month pick",
-"setup_key":"pick_month",
-"horizon":"about a month",
-"pick_rank":5,
-"young":false,
-"conviction":67.2,
-"conviction_band":"Speculative",
-"why":[
-"Sales +16%, margin +2.3 pts",
-"Information Technology: top half on money flow",
-"3% below its 52-week high"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"How far it pulled back",
-"key":"pull",
-"points":20.3,
-"of":30.0,
-"share_pct":67.6,
-"detail":"+0.1% over the last month."
-},
-{
-"factor":"Closeness to the 52-week high",
-"key":"high",
-"points":23.6,
-"of":25.0,
-"share_pct":94.4,
-"detail":"3% below its 52-week high."
-},
-{
-"factor":"Sales and margin growth last quarter",
-"key":"fundmom",
-"points":10.3,
-"of":20.0,
-"share_pct":51.3,
-"detail":"Sales +16%, operating margin +2.3 pts on a year ago."
-},
-{
-"factor":"Its industry's money flow",
-"key":"secflow",
-"points":8.1,
-"of":15.0,
-"share_pct":53.9,
-"detail":"Information Technology ranks 11 of 18 industries on money flow."
-},
-{
-"factor":"A live catalyst: deliveries or an order",
-"key":"catalyst",
-"points":5.0,
-"of":10.0,
-"share_pct":50.0,
-"detail":"No delivery surge or large order on record: counted as the middle."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":1813.9,
-"stop":1596.23,
-"risk_pct":12.0,
-"rr":null,
-"t1":null,
-"aim":2031.57,
-"aim_pct":12.0,
-"hold_sessions":21,
-"hold_text":"about a month",
-"review_on":"2026-12-27",
-"sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,596.23, 12% under this price."
-},
-"results":null,
-"order":null,
-"technicals":{
-"below_60d_high_pct":3.0,
-"below_6m_high_pct":2.2,
-"breakout":{
-"sessions_ago":1,
-"rel_volume":0.9,
-"level":1834.7
-},
-"squeeze":0.84,
-"range_15_60":0.4,
-"dry_up":0.67,
-"up_down_volume":1.59,
-"rel_volume":0.9,
-"rsi":59.0,
-"macd_hist_pct":-0.12,
-"macd_rising":true,
-"above_20d_pct":2.3,
-"adx":25.0,
-"atr_pct":2.7,
-"rsi2":48.0,
-"sma5":1798.7,
-"rel_volume_5":1.1,
-"above_50d":true,
-"above_200d":true,
-"scorecard":7,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"50-day average above the 200-day",
-"RSI over 55",
-"ADX at 25 or more, buyers ahead",
-"More volume on up days",
-"Within 5% of its 52-week high"
-],
-"box":null,
-"base":{
-"top":1860.0,
-"low":1442.5,
-"width_pct":28.9,
-"to_top_pct":2.5
-},
-"ext_50d_pct":8.0,
-"ext_20d_pct":2.3,
-"ema20":1773.21,
-"clv":0.0,
-"sma50_rising":true,
-"sma200_rising":true,
-"closed_up":false,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Breakout",
-"v":"Closed at a six-month high yesterday, on 0.9 times its usual volume, the first in over 20 sessions."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 59 · MACD below its signal line and rising · ADX 25."
-},
-{
-"k":"Volume",
-"v":"0.9 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":374.6,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":15.61,
-"opm_yoy_chg":2.32,
-"pat_yoy_pct":33.95,
-"earnings_quality_ok":true,
-"roce_pct":21.42,
-"roe_pct":16.61,
-"cfo_to_pat":1.28,
-"fcf_pos_years_3y":3,
-"debt_equity_x":0.07,
-"pe":29.1,
-"peg":null,
-"pledge_pct":null,
-"f_score":7,
-"is_financial":false,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"AKUMS",
 "name":"Akums Drugs and Pharmaceuticals Limited",
 "price":756.75,
@@ -1357,9 +1230,9 @@
 "setup":"Month pick",
 "setup_key":"pick_month",
 "horizon":"about a month",
-"pick_rank":6,
+"pick_rank":5,
 "young":false,
-"conviction":66.5,
+"conviction":66.7,
 "conviction_band":"Speculative",
 "why":[
 "Sales +32%, margin +5.2 pts",
@@ -1387,9 +1260,9 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":15.2,
+"points":15.3,
 "of":20.0,
-"share_pct":76.0,
+"share_pct":76.7,
 "detail":"Sales +32%, operating margin +5.2 pts on a year ago."
 },
 {
@@ -1504,7 +1377,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":31.93,
-"opm_yoy_chg":5.23,
+"opm_yoy_chg":5.22,
 "pat_yoy_pct":168.29,
 "earnings_quality_ok":true,
 "roce_pct":13.99,
@@ -1522,181 +1395,6 @@
 }
 },
 {
-"symbol":"PAISALO",
-"name":"Paisalo Digital Limited",
-"price":72.25,
-"sector":"Financial Services",
-"list":"month",
-"setup":"Month pick",
-"setup_key":"pick_month",
-"horizon":"about a month",
-"pick_rank":7,
-"young":false,
-"conviction":65.1,
-"conviction_band":"Speculative",
-"why":[
-"Pulled back 8% this month",
-"Sales +24%, margin +4.8 pts",
-"Financial Services: top half on money flow",
-"24% below its 52-week high"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"How far it pulled back",
-"key":"pull",
-"points":26.3,
-"of":30.0,
-"share_pct":87.7,
-"detail":"-7.5% over the last month."
-},
-{
-"factor":"Closeness to the 52-week high",
-"key":"high",
-"points":9.9,
-"of":25.0,
-"share_pct":39.6,
-"detail":"24% below its 52-week high."
-},
-{
-"factor":"Sales and margin growth last quarter",
-"key":"fundmom",
-"points":13.6,
-"of":20.0,
-"share_pct":68.0,
-"detail":"Sales +24%, operating margin +4.8 pts on a year ago."
-},
-{
-"factor":"Its industry's money flow",
-"key":"secflow",
-"points":10.3,
-"of":15.0,
-"share_pct":68.9,
-"detail":"Financial Services ranks 6 of 18 industries on money flow."
-},
-{
-"factor":"A live catalyst: deliveries or an order",
-"key":"catalyst",
-"points":5.0,
-"of":10.0,
-"share_pct":50.0,
-"detail":"No delivery surge or large order on record: counted as the middle."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":72.25,
-"stop":63.58,
-"risk_pct":12.0,
-"rr":null,
-"t1":null,
-"aim":80.92,
-"aim_pct":12.0,
-"hold_sessions":21,
-"hold_text":"about a month",
-"review_on":"2026-12-27",
-"sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹63.58, 12% under this price."
-},
-"results":null,
-"order":null,
-"technicals":{
-"below_60d_high_pct":23.9,
-"below_6m_high_pct":22.7,
-"breakout":null,
-"squeeze":0.54,
-"range_15_60":0.24,
-"dry_up":0.44,
-"up_down_volume":1.22,
-"rel_volume":0.6,
-"rsi":35.0,
-"macd_hist_pct":-0.34,
-"macd_rising":false,
-"above_20d_pct":-4.7,
-"adx":24.0,
-"atr_pct":3.8,
-"rsi2":14.0,
-"sma5":73.64,
-"rel_volume_5":0.6,
-"above_50d":false,
-"above_200d":true,
-"scorecard":2,
-"scorecard_met":[
-"50-day average above the 200-day",
-"More volume on up days"
-],
-"box":null,
-"base":{
-"top":88.71,
-"low":67.69,
-"width_pct":31.1,
-"to_top_pct":22.8
-},
-"ext_50d_pct":-9.8,
-"ext_20d_pct":-4.7,
-"ema20":75.82,
-"clv":0.07,
-"sma50_rising":false,
-"sma200_rising":true,
-"closed_up":false,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Price",
-"v":"24% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Above its 200-day average, under its 20 and 50-day."
-},
-{
-"k":"Indicators",
-"v":"RSI 35 · MACD below its signal line · ADX 24."
-},
-{
-"k":"Volume",
-"v":"0.6 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
-},
-{
-"k":"Range",
-"v":"Tightening: the last ten sessions moved 54% as much as the last sixty."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":65.9,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":23.79,
-"opm_yoy_chg":4.85,
-"pat_yoy_pct":27.36,
-"earnings_quality_ok":true,
-"roce_pct":null,
-"roe_pct":13.23,
-"cfo_to_pat":-3.3,
-"fcf_pos_years_3y":null,
-"debt_equity_x":2.83,
-"pe":24.7,
-"peg":0.68,
-"pledge_pct":null,
-"f_score":null,
-"is_financial":true,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"MANKIND",
 "name":"Mankind Pharma Limited",
 "price":2689.4,
@@ -1705,9 +1403,9 @@
 "setup":"Month pick",
 "setup_key":"pick_month",
 "horizon":"about a month",
-"pick_rank":8,
+"pick_rank":6,
 "young":false,
-"conviction":64.7,
+"conviction":64.9,
 "conviction_band":"Speculative",
 "why":[
 "Sales +17%, margin +2.1 pts",
@@ -1735,9 +1433,9 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":10.5,
+"points":10.7,
 "of":20.0,
-"share_pct":52.7,
+"share_pct":53.6,
 "detail":"Sales +17%, operating margin +2.1 pts on a year ago."
 },
 {
@@ -1876,7 +1574,7 @@
 "pe":49.5,
 "peg":3.55,
 "pledge_pct":null,
-"f_score":6,
+"f_score":7,
 "is_financial":false,
 "sector_mf_quadrant":null
 }
@@ -1891,13 +1589,13 @@
 "setup":"Month pick",
 "setup_key":"pick_month",
 "horizon":"about a month",
-"pick_rank":9,
+"pick_rank":7,
 "young":false,
-"conviction":64.2,
+"conviction":64.0,
 "conviction_band":"Speculative",
 "why":[
 "Pulled back 3% this week",
-"Sales +35%, margin -2.1 pts",
+"Sales +35%, margin -2.2 pts",
 "Automobile and Auto Components: top half on money flow",
 "6% below its 52-week high"
 ],
@@ -1922,10 +1620,10 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":9.8,
+"points":9.6,
 "of":20.0,
-"share_pct":49.3,
-"detail":"Sales +35%, operating margin -2.1 pts on a year ago."
+"share_pct":48.1,
+"detail":"Sales +35%, operating margin -2.2 pts on a year ago."
 },
 {
 "factor":"Its industry's money flow",
@@ -2041,7 +1739,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":35.23,
-"opm_yoy_chg":-2.09,
+"opm_yoy_chg":-2.24,
 "pat_yoy_pct":30.81,
 "earnings_quality_ok":true,
 "roce_pct":13.57,
@@ -2059,6 +1757,186 @@
 }
 },
 {
+"symbol":"AARTIPHARM",
+"name":"Aarti Pharmalabs Limited",
+"price":1015.15,
+"sector":"Healthcare",
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":8,
+"young":false,
+"conviction":62.8,
+"conviction_band":"Speculative",
+"why":[
+"Sales +46%, margin +4.3 pts",
+"Healthcare: top half on money flow",
+"3% below its 52-week high"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"How far it pulled back",
+"key":"pull",
+"points":5.7,
+"of":30.0,
+"share_pct":19.1,
+"detail":"+14.6% over the last month."
+},
+{
+"factor":"Closeness to the 52-week high",
+"key":"high",
+"points":23.5,
+"of":25.0,
+"share_pct":94.1,
+"detail":"3% below its 52-week high."
+},
+{
+"factor":"Sales and margin growth last quarter",
+"key":"fundmom",
+"points":16.6,
+"of":20.0,
+"share_pct":83.1,
+"detail":"Sales +46%, operating margin +4.3 pts on a year ago."
+},
+{
+"factor":"Its industry's money flow",
+"key":"secflow",
+"points":11.9,
+"of":15.0,
+"share_pct":79.4,
+"detail":"Healthcare ranks 2 of 18 industries on money flow."
+},
+{
+"factor":"A live catalyst: deliveries or an order",
+"key":"catalyst",
+"points":5.0,
+"of":10.0,
+"share_pct":50.0,
+"detail":"No delivery surge or large order on record: counted as the middle."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1015.15,
+"stop":893.33,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"aim":1136.97,
+"aim_pct":12.0,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-27",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹893.33, 12% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":3.1,
+"below_6m_high_pct":1.0,
+"breakout":null,
+"squeeze":0.63,
+"range_15_60":0.52,
+"dry_up":0.76,
+"up_down_volume":1.6,
+"rel_volume":0.7,
+"rsi":62.0,
+"macd_hist_pct":0.32,
+"macd_rising":false,
+"above_20d_pct":4.1,
+"adx":39.0,
+"atr_pct":4.2,
+"rsi2":34.0,
+"sma5":1014.82,
+"rel_volume_5":0.9,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Within 5% of its 52-week high"
+],
+"box":null,
+"base":{
+"top":1047.25,
+"low":782.0,
+"width_pct":33.9,
+"to_top_pct":3.2
+},
+"ext_50d_pct":10.7,
+"ext_20d_pct":4.1,
+"ema20":974.87,
+"clv":0.3,
+"sma50_rising":true,
+"sma200_rising":true,
+"closed_up":false,
+"launch":[],
+"watch":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"3% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 62 · MACD above its signal line · ADX 39."
+},
+{
+"k":"Volume",
+"v":"0.7 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
+},
+{
+"k":"Range",
+"v":"Tightening: the last ten sessions moved 63% as much as the last sixty."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":46.8,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":45.93,
+"opm_yoy_chg":4.28,
+"pat_yoy_pct":155.98,
+"earnings_quality_ok":true,
+"roce_pct":9.67,
+"roe_pct":8.22,
+"cfo_to_pat":1.5,
+"fcf_pos_years_3y":null,
+"debt_equity_x":0.37,
+"pe":35.9,
+"peg":null,
+"pledge_pct":null,
+"f_score":null,
+"is_financial":false,
+"sector_mf_quadrant":null
+}
+}
+},
+{
 "symbol":"IGIL",
 "name":"International Gemological Institute Limited",
 "price":429.65,
@@ -2067,9 +1945,9 @@
 "setup":"Month pick",
 "setup_key":"pick_month",
 "horizon":"about a month",
-"pick_rank":10,
+"pick_rank":9,
 "young":false,
-"conviction":62.7,
+"conviction":62.8,
 "conviction_band":"Speculative",
 "why":[
 "Pulled back 2% this week",
@@ -2098,9 +1976,9 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":14.2,
+"points":14.3,
 "of":20.0,
-"share_pct":71.2,
+"share_pct":71.7,
 "detail":"Sales +31%, operating margin +3.4 pts on a year ago."
 },
 {
@@ -2235,186 +2113,6 @@
 }
 },
 {
-"symbol":"AARTIPHARM",
-"name":"Aarti Pharmalabs Limited",
-"price":1015.15,
-"sector":"Healthcare",
-"list":"month",
-"setup":"Month pick",
-"setup_key":"pick_month",
-"horizon":"about a month",
-"pick_rank":11,
-"young":false,
-"conviction":62.4,
-"conviction_band":"Speculative",
-"why":[
-"Sales +46%, margin +4.0 pts",
-"Healthcare: top half on money flow",
-"3% below its 52-week high"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"How far it pulled back",
-"key":"pull",
-"points":5.7,
-"of":30.0,
-"share_pct":19.1,
-"detail":"+14.6% over the last month."
-},
-{
-"factor":"Closeness to the 52-week high",
-"key":"high",
-"points":23.5,
-"of":25.0,
-"share_pct":94.1,
-"detail":"3% below its 52-week high."
-},
-{
-"factor":"Sales and margin growth last quarter",
-"key":"fundmom",
-"points":16.2,
-"of":20.0,
-"share_pct":81.1,
-"detail":"Sales +46%, operating margin +4.0 pts on a year ago."
-},
-{
-"factor":"Its industry's money flow",
-"key":"secflow",
-"points":11.9,
-"of":15.0,
-"share_pct":79.4,
-"detail":"Healthcare ranks 2 of 18 industries on money flow."
-},
-{
-"factor":"A live catalyst: deliveries or an order",
-"key":"catalyst",
-"points":5.0,
-"of":10.0,
-"share_pct":50.0,
-"detail":"No delivery surge or large order on record: counted as the middle."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":1015.15,
-"stop":893.33,
-"risk_pct":12.0,
-"rr":null,
-"t1":null,
-"aim":1136.97,
-"aim_pct":12.0,
-"hold_sessions":21,
-"hold_text":"about a month",
-"review_on":"2026-12-27",
-"sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹893.33, 12% under this price."
-},
-"results":null,
-"order":null,
-"technicals":{
-"below_60d_high_pct":3.1,
-"below_6m_high_pct":1.0,
-"breakout":null,
-"squeeze":0.63,
-"range_15_60":0.52,
-"dry_up":0.76,
-"up_down_volume":1.6,
-"rel_volume":0.7,
-"rsi":62.0,
-"macd_hist_pct":0.32,
-"macd_rising":false,
-"above_20d_pct":4.1,
-"adx":39.0,
-"atr_pct":4.2,
-"rsi2":34.0,
-"sma5":1014.82,
-"rel_volume_5":0.9,
-"above_50d":true,
-"above_200d":true,
-"scorecard":8,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"50-day average above the 200-day",
-"RSI over 55",
-"MACD above its signal line",
-"ADX at 25 or more, buyers ahead",
-"More volume on up days",
-"Within 5% of its 52-week high"
-],
-"box":null,
-"base":{
-"top":1047.25,
-"low":782.0,
-"width_pct":33.9,
-"to_top_pct":3.2
-},
-"ext_50d_pct":10.7,
-"ext_20d_pct":4.1,
-"ema20":974.87,
-"clv":0.3,
-"sma50_rising":true,
-"sma200_rising":true,
-"closed_up":false,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Price",
-"v":"3% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 62 · MACD above its signal line · ADX 39."
-},
-{
-"k":"Volume",
-"v":"0.7 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
-},
-{
-"k":"Range",
-"v":"Tightening: the last ten sessions moved 63% as much as the last sixty."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":46.8,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":45.93,
-"opm_yoy_chg":3.95,
-"pat_yoy_pct":155.98,
-"earnings_quality_ok":true,
-"roce_pct":9.67,
-"roe_pct":8.22,
-"cfo_to_pat":1.5,
-"fcf_pos_years_3y":null,
-"debt_equity_x":0.37,
-"pe":35.9,
-"peg":null,
-"pledge_pct":null,
-"f_score":null,
-"is_financial":false,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"SANSERA",
 "name":"Sansera Engineering Limited",
 "price":4742.2,
@@ -2423,9 +2121,9 @@
 "setup":"Month pick",
 "setup_key":"pick_month",
 "horizon":"about a month",
-"pick_rank":12,
+"pick_rank":10,
 "young":false,
-"conviction":62.3,
+"conviction":62.5,
 "conviction_band":"Speculative",
 "why":[
 "Sales +32%, margin +2.0 pts",
@@ -2453,9 +2151,9 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":13.5,
+"points":13.7,
 "of":20.0,
-"share_pct":67.6,
+"share_pct":68.3,
 "detail":"Sales +32%, operating margin +2.0 pts on a year ago."
 },
 {
@@ -2597,6 +2295,181 @@
 }
 },
 {
+"symbol":"PAISALO",
+"name":"Paisalo Digital Limited",
+"price":72.25,
+"sector":"Financial Services",
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":11,
+"young":false,
+"conviction":61.8,
+"conviction_band":"Speculative",
+"why":[
+"Pulled back 8% this month",
+"Sales +24%",
+"Financial Services: top half on money flow",
+"24% below its 52-week high"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"How far it pulled back",
+"key":"pull",
+"points":26.3,
+"of":30.0,
+"share_pct":87.7,
+"detail":"-7.5% over the last month."
+},
+{
+"factor":"Closeness to the 52-week high",
+"key":"high",
+"points":9.9,
+"of":25.0,
+"share_pct":39.6,
+"detail":"24% below its 52-week high."
+},
+{
+"factor":"Sales and margin growth last quarter",
+"key":"fundmom",
+"points":10.3,
+"of":20.0,
+"share_pct":51.4,
+"detail":"Sales +24% on a year ago."
+},
+{
+"factor":"Its industry's money flow",
+"key":"secflow",
+"points":10.3,
+"of":15.0,
+"share_pct":68.9,
+"detail":"Financial Services ranks 6 of 18 industries on money flow."
+},
+{
+"factor":"A live catalyst: deliveries or an order",
+"key":"catalyst",
+"points":5.0,
+"of":10.0,
+"share_pct":50.0,
+"detail":"No delivery surge or large order on record: counted as the middle."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":72.25,
+"stop":63.58,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"aim":80.92,
+"aim_pct":12.0,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-27",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹63.58, 12% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":23.9,
+"below_6m_high_pct":22.7,
+"breakout":null,
+"squeeze":0.54,
+"range_15_60":0.24,
+"dry_up":0.44,
+"up_down_volume":1.22,
+"rel_volume":0.6,
+"rsi":35.0,
+"macd_hist_pct":-0.34,
+"macd_rising":false,
+"above_20d_pct":-4.7,
+"adx":24.0,
+"atr_pct":3.8,
+"rsi2":14.0,
+"sma5":73.64,
+"rel_volume_5":0.6,
+"above_50d":false,
+"above_200d":true,
+"scorecard":2,
+"scorecard_met":[
+"50-day average above the 200-day",
+"More volume on up days"
+],
+"box":null,
+"base":{
+"top":88.71,
+"low":67.69,
+"width_pct":31.1,
+"to_top_pct":22.8
+},
+"ext_50d_pct":-9.8,
+"ext_20d_pct":-4.7,
+"ema20":75.82,
+"clv":0.07,
+"sma50_rising":false,
+"sma200_rising":true,
+"closed_up":false,
+"launch":[],
+"watch":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"24% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 200-day average, under its 20 and 50-day."
+},
+{
+"k":"Indicators",
+"v":"RSI 35 · MACD below its signal line · ADX 24."
+},
+{
+"k":"Volume",
+"v":"0.6 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
+},
+{
+"k":"Range",
+"v":"Tightening: the last ten sessions moved 54% as much as the last sixty."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":65.9,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":23.79,
+"opm_yoy_chg":null,
+"pat_yoy_pct":27.36,
+"earnings_quality_ok":true,
+"roce_pct":null,
+"roe_pct":13.23,
+"cfo_to_pat":-3.3,
+"fcf_pos_years_3y":null,
+"debt_equity_x":2.83,
+"pe":24.7,
+"peg":0.68,
+"pledge_pct":null,
+"f_score":null,
+"is_financial":true,
+"sector_mf_quadrant":null
+}
+}
+},
+{
 "symbol":"TMB",
 "name":"Tamilnad Mercantile Bank Limited",
 "price":848.4,
@@ -2605,7 +2478,7 @@
 "setup":"Month pick",
 "setup_key":"pick_month",
 "horizon":"about a month",
-"pick_rank":13,
+"pick_rank":12,
 "young":false,
 "conviction":61.2,
 "conviction_band":"Speculative",
@@ -2772,181 +2645,6 @@
 }
 },
 {
-"symbol":"LGEINDIA",
-"name":"LG Electronics India Limited",
-"price":1770.9,
-"sector":"Consumer Durables",
-"list":"month",
-"setup":"Month pick",
-"setup_key":"pick_month",
-"horizon":"about a month",
-"pick_rank":14,
-"young":false,
-"conviction":61.0,
-"conviction_band":"Speculative",
-"why":[
-"Sales +20%, margin +0.6 pts",
-"Consumer Durables: top half on money flow",
-"4% below its 52-week high"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"How far it pulled back",
-"key":"pull",
-"points":14.7,
-"of":30.0,
-"share_pct":49.1,
-"detail":"+5.5% over the last month."
-},
-{
-"factor":"Closeness to the 52-week high",
-"key":"high",
-"points":23.4,
-"of":25.0,
-"share_pct":93.4,
-"detail":"4% below its 52-week high."
-},
-{
-"factor":"Sales and margin growth last quarter",
-"key":"fundmom",
-"points":9.5,
-"of":20.0,
-"share_pct":47.7,
-"detail":"Sales +20%, operating margin +0.6 pts on a year ago."
-},
-{
-"factor":"Its industry's money flow",
-"key":"secflow",
-"points":8.3,
-"of":15.0,
-"share_pct":55.6,
-"detail":"Consumer Durables ranks 10 of 18 industries on money flow."
-},
-{
-"factor":"A live catalyst: deliveries or an order",
-"key":"catalyst",
-"points":5.0,
-"of":10.0,
-"share_pct":50.0,
-"detail":"No delivery surge or large order on record: counted as the middle."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":1770.9,
-"stop":1558.39,
-"risk_pct":12.0,
-"rr":null,
-"t1":null,
-"aim":1983.41,
-"aim_pct":12.0,
-"hold_sessions":21,
-"hold_text":"about a month",
-"review_on":"2026-12-27",
-"sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹1,558.39, 12% under this price."
-},
-"results":null,
-"order":null,
-"technicals":{
-"below_60d_high_pct":3.5,
-"below_6m_high_pct":2.6,
-"breakout":null,
-"squeeze":1.17,
-"range_15_60":0.66,
-"dry_up":2.62,
-"up_down_volume":0.83,
-"rel_volume":2.1,
-"rsi":55.0,
-"macd_hist_pct":0.28,
-"macd_rising":false,
-"above_20d_pct":1.9,
-"adx":23.0,
-"atr_pct":3.1,
-"rsi2":50.0,
-"sma5":1773.12,
-"rel_volume_5":11.0,
-"above_50d":true,
-"above_200d":true,
-"scorecard":7,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"50-day average above the 200-day",
-"RSI over 55",
-"MACD above its signal line",
-"Volume above its usual this week",
-"Within 5% of its 52-week high"
-],
-"box":null,
-"base":{
-"top":1836.0,
-"low":1588.0,
-"width_pct":15.6,
-"to_top_pct":3.7
-},
-"ext_50d_pct":3.3,
-"ext_20d_pct":1.9,
-"ema20":1738.14,
-"clv":0.25,
-"sma50_rising":true,
-"sma200_rising":true,
-"closed_up":true,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Price",
-"v":"4% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 55 · MACD above its signal line · ADX 23."
-},
-{
-"k":"Volume",
-"v":"2.1 times its usual volume in the last session; more volume on falling days than rising days over 50 sessions (0.8 to 1)."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":71.9,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":19.53,
-"opm_yoy_chg":0.63,
-"pat_yoy_pct":25.66,
-"earnings_quality_ok":true,
-"roce_pct":30.53,
-"roe_pct":21.98,
-"cfo_to_pat":1.02,
-"fcf_pos_years_3y":null,
-"debt_equity_x":0.0,
-"pe":62.4,
-"peg":null,
-"pledge_pct":null,
-"f_score":null,
-"is_financial":false,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"ADANIPORTS",
 "name":"Adani Ports and Special Economic Zone Limited",
 "price":1880.0,
@@ -2955,13 +2653,13 @@
 "setup":"Month pick",
 "setup_key":"pick_month",
 "horizon":"about a month",
-"pick_rank":15,
+"pick_rank":13,
 "young":false,
-"conviction":60.4,
+"conviction":60.7,
 "conviction_band":"Speculative",
 "why":[
 "Pulled back 2% this week",
-"Sales +24%, margin -0.8 pts",
+"Sales +24%, margin -0.5 pts",
 "Services: top half on money flow",
 "5% below its 52-week high"
 ],
@@ -2986,10 +2684,10 @@
 {
 "factor":"Sales and margin growth last quarter",
 "key":"fundmom",
-"points":8.8,
+"points":9.1,
 "of":20.0,
-"share_pct":44.2,
-"detail":"Sales +24%, operating margin -0.8 pts on a year ago."
+"share_pct":45.5,
+"detail":"Sales +24%, operating margin -0.5 pts on a year ago."
 },
 {
 "factor":"Its industry's money flow",
@@ -3106,7 +2804,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":23.7,
-"opm_yoy_chg":-0.79,
+"opm_yoy_chg":-0.52,
 "pat_yoy_pct":18.02,
 "earnings_quality_ok":true,
 "roce_pct":12.49,
@@ -3118,6 +2816,376 @@
 "peg":0.94,
 "pledge_pct":null,
 "f_score":null,
+"is_financial":false,
+"sector_mf_quadrant":null
+}
+}
+},
+{
+"symbol":"FEDERALBNK",
+"name":"The Federal Bank  Limited",
+"price":360.0,
+"sector":"Financial Services",
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":14,
+"young":false,
+"conviction":59.6,
+"conviction_band":"Speculative",
+"why":[
+"Pulled back 1% this week",
+"Sales +16%",
+"Financial Services: top half on money flow",
+"4% below its 52-week high"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"How far it pulled back",
+"key":"pull",
+"points":15.0,
+"of":30.0,
+"share_pct":50.0,
+"detail":"+5.4% over the last month."
+},
+{
+"factor":"Closeness to the 52-week high",
+"key":"high",
+"points":22.6,
+"of":25.0,
+"share_pct":90.3,
+"detail":"4% below its 52-week high."
+},
+{
+"factor":"Sales and margin growth last quarter",
+"key":"fundmom",
+"points":6.7,
+"of":20.0,
+"share_pct":33.5,
+"detail":"Sales +16% on a year ago."
+},
+{
+"factor":"Its industry's money flow",
+"key":"secflow",
+"points":10.3,
+"of":15.0,
+"share_pct":68.9,
+"detail":"Financial Services ranks 6 of 18 industries on money flow."
+},
+{
+"factor":"A live catalyst: deliveries or an order",
+"key":"catalyst",
+"points":5.0,
+"of":10.0,
+"share_pct":50.0,
+"detail":"No delivery surge or large order on record: counted as the middle."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":360.0,
+"stop":316.8,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"aim":403.2,
+"aim_pct":12.0,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-27",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹316.80, 12% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":4.3,
+"below_6m_high_pct":3.6,
+"breakout":{
+"sessions_ago":4,
+"rel_volume":1.5,
+"level":371.7
+},
+"squeeze":1.06,
+"range_15_60":0.72,
+"dry_up":0.9,
+"up_down_volume":1.61,
+"rel_volume":0.7,
+"rsi":57.0,
+"macd_hist_pct":-0.08,
+"macd_rising":false,
+"above_20d_pct":1.5,
+"adx":30.0,
+"atr_pct":2.5,
+"rsi2":61.0,
+"sma5":361.27,
+"rel_volume_5":1.6,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":4,
+"top":368.9,
+"low":313.75,
+"width_pct":17.6,
+"rel_volume":1.5,
+"close":373.5,
+"holding":false
+},
+"base":{
+"top":376.2,
+"low":313.75,
+"width_pct":19.9,
+"to_top_pct":4.5
+},
+"ext_50d_pct":5.7,
+"ext_20d_pct":1.5,
+"ema20":354.67,
+"clv":0.38,
+"sma50_rising":true,
+"sma200_rising":true,
+"closed_up":true,
+"launch":[],
+"watch":null
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 4 sessions ago, on 1.5 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 57 · MACD below its signal line · ADX 30."
+},
+{
+"k":"Volume",
+"v":"0.7 times its usual volume in the last session; 1.6 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":201.6,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":16.17,
+"opm_yoy_chg":null,
+"pat_yoy_pct":53.42,
+"earnings_quality_ok":true,
+"roce_pct":null,
+"roe_pct":11.71,
+"cfo_to_pat":0.97,
+"fcf_pos_years_3y":3,
+"debt_equity_x":0.86,
+"pe":17.1,
+"peg":1.4,
+"pledge_pct":null,
+"f_score":null,
+"is_financial":true,
+"sector_mf_quadrant":null
+}
+}
+},
+{
+"symbol":"TVSMOTOR",
+"name":"TVS Motor Company Limited",
+"price":4526.5,
+"sector":"Automobile and Auto Components",
+"list":"month",
+"setup":"Month pick",
+"setup_key":"pick_month",
+"horizon":"about a month",
+"pick_rank":15,
+"young":false,
+"conviction":59.3,
+"conviction_band":"Speculative",
+"why":[
+"Pulled back 2% this week",
+"Sales +39%, margin -1.1 pts",
+"Automobile and Auto Components: top half on money flow",
+"2% below its 52-week high"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"How far it pulled back",
+"key":"pull",
+"points":9.0,
+"of":30.0,
+"share_pct":29.9,
+"detail":"+10.8% over the last month."
+},
+{
+"factor":"Closeness to the 52-week high",
+"key":"high",
+"points":23.8,
+"of":25.0,
+"share_pct":95.1,
+"detail":"2% below its 52-week high."
+},
+{
+"factor":"Sales and margin growth last quarter",
+"key":"fundmom",
+"points":10.9,
+"of":20.0,
+"share_pct":54.6,
+"detail":"Sales +39%, operating margin -1.1 pts on a year ago."
+},
+{
+"factor":"Its industry's money flow",
+"key":"secflow",
+"points":10.7,
+"of":15.0,
+"share_pct":71.1,
+"detail":"Automobile and Auto Components ranks 5 of 18 industries on money flow."
+},
+{
+"factor":"A live catalyst: deliveries or an order",
+"key":"catalyst",
+"points":5.0,
+"of":10.0,
+"share_pct":50.0,
+"detail":"No delivery surge or large order on record: counted as the middle."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":4526.5,
+"stop":3983.32,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"aim":5069.68,
+"aim_pct":12.0,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-27",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹3,983.32, 12% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":2.4,
+"below_6m_high_pct":1.8,
+"breakout":null,
+"squeeze":1.36,
+"range_15_60":0.31,
+"dry_up":1.11,
+"up_down_volume":1.18,
+"rel_volume":0.9,
+"rsi":59.0,
+"macd_hist_pct":-0.03,
+"macd_rising":false,
+"above_20d_pct":2.0,
+"adx":22.0,
+"atr_pct":2.5,
+"rsi2":30.0,
+"sma5":4560.96,
+"rel_volume_5":1.0,
+"above_50d":true,
+"above_200d":true,
+"scorecard":5,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"Within 5% of its 52-week high"
+],
+"box":null,
+"base":{
+"top":4636.1,
+"low":3741.9,
+"width_pct":23.9,
+"to_top_pct":2.4
+},
+"ext_50d_pct":7.6,
+"ext_20d_pct":2.0,
+"ema20":4437.66,
+"clv":0.11,
+"sma50_rising":true,
+"sma200_rising":true,
+"closed_up":false,
+"launch":[],
+"watch":{
+"pattern":"VCP launchpad",
+"base":40,
+"top":4636.1,
+"low":3741.9,
+"width_pct":23.9,
+"to_top_pct":2.4
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 59 · MACD below its signal line · ADX 22."
+},
+{
+"k":"Volume",
+"v":"0.9 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":279.9,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":38.6,
+"opm_yoy_chg":-1.11,
+"pat_yoy_pct":46.43,
+"earnings_quality_ok":true,
+"roce_pct":16.75,
+"roe_pct":31.62,
+"cfo_to_pat":0.59,
+"fcf_pos_years_3y":1,
+"debt_equity_x":3.08,
+"pe":56.2,
+"peg":1.63,
+"pledge_pct":null,
+"f_score":6,
 "is_financial":false,
 "sector_mf_quadrant":null
 }
@@ -3151,50 +3219,50 @@
 "list":"long",
 "horizon":"long",
 "label":"Long-term compounders",
-"idea":"High returns on capital backed by cash, little debt, a steady climb and a price under the list's ceiling.",
+"idea":"High returns on capital and, outside lending, cash backing and modest debt; above the 200-day average. Ranked on quality, growth, governance, price and the year's trend.",
 "hold_text":"about a year",
 "exit_pct":30.0,
 "tested":{
 "list_dates":436,
-"picks":6514,
-"up_pct":57.7,
-"beat_index_pct":46.4,
-"avg_pct":20.15,
-"median_pct":8.48,
+"picks":6512,
+"up_pct":58.4,
+"beat_index_pct":47.3,
+"avg_pct":21.88,
+"median_pct":9.32,
 "index_avg_pct":13.7,
-"big_winner_pct":35.5,
-"worst_5pct":-32.8,
-"best_5pct":113.3,
-"exit_hit_pct":23.6,
-"lists_ahead_of_index_pct":53.2,
+"big_winner_pct":36.5,
+"worst_5pct":-32.7,
+"best_5pct":120.6,
+"exit_hit_pct":23.2,
+"lists_ahead_of_index_pct":54.1,
 "by_half":{
 "2017-21":{
 "list_dates":244,
-"picks":3634,
-"up_pct":54.2,
-"beat_index_pct":42.0,
-"avg_pct":16.88,
-"median_pct":5.03,
+"picks":3632,
+"up_pct":55.6,
+"beat_index_pct":43.9,
+"avg_pct":19.99,
+"median_pct":6.05,
 "index_avg_pct":14.19,
-"big_winner_pct":29.9,
-"worst_5pct":-33.4,
-"best_5pct":110.2,
-"exit_hit_pct":26.5,
-"lists_ahead_of_index_pct":40.2
+"big_winner_pct":32.0,
+"worst_5pct":-33.3,
+"best_5pct":125.8,
+"exit_hit_pct":26.1,
+"lists_ahead_of_index_pct":42.2
 },
 "2022-26":{
 "list_dates":192,
 "picks":2880,
-"up_pct":62.1,
-"beat_index_pct":52.0,
-"avg_pct":24.28,
-"median_pct":15.4,
+"up_pct":62.0,
+"beat_index_pct":51.5,
+"avg_pct":24.25,
+"median_pct":14.6,
 "index_avg_pct":13.08,
-"big_winner_pct":42.6,
-"worst_5pct":-32.0,
-"best_5pct":115.5,
-"exit_hit_pct":20.0,
-"lists_ahead_of_index_pct":69.8
+"big_winner_pct":42.1,
+"worst_5pct":-31.9,
+"best_5pct":115.8,
+"exit_hit_pct":19.7,
+"lists_ahead_of_index_pct":69.3
 }
 },
 "by_year":{
@@ -3211,86 +3279,86 @@
 "picks":731
 },
 "2019":{
-"avg_pct":1.57,
+"avg_pct":2.08,
 "index_avg_pct":-1.72,
-"up_pct":48.2,
-"picks":735
+"up_pct":48.4,
+"picks":733
 },
 "2020":{
-"avg_pct":74.43,
+"avg_pct":80.88,
 "index_avg_pct":51.36,
-"up_pct":75.5,
+"up_pct":78.7,
 "picks":742
 },
 "2021":{
-"avg_pct":5.63,
+"avg_pct":13.94,
 "index_avg_pct":9.16,
-"up_pct":49.3,
+"up_pct":52.4,
 "picks":735
 },
 "2022":{
-"avg_pct":19.11,
+"avg_pct":16.71,
 "index_avg_pct":10.92,
-"up_pct":59.9,
+"up_pct":55.9,
 "picks":750
 },
 "2023":{
-"avg_pct":64.91,
+"avg_pct":66.14,
 "index_avg_pct":34.84,
-"up_pct":89.0,
+"up_pct":90.3,
 "picks":735
 },
 "2024":{
-"avg_pct":2.36,
+"avg_pct":3.0,
 "index_avg_pct":3.56,
-"up_pct":46.7,
+"up_pct":48.4,
 "picks":735
 },
 "2025":{
-"avg_pct":9.31,
+"avg_pct":9.84,
 "index_avg_pct":1.92,
-"up_pct":51.8,
+"up_pct":52.4,
 "picks":660
 }
 },
 "hold_sessions":252,
 "exit_pct":30.0,
-"avg_after_costs_pct":19.66,
+"avg_after_costs_pct":21.39,
 "vs_average_stock":{
-"excess_pct":4.05,
-"t":2.07,
-"lists_ahead_pct":59.9,
+"excess_pct":5.74,
+"t":2.35,
+"lists_ahead_pct":64.4,
 "by_half":{
 "2017-21":{
-"excess_pct":4.28,
-"t":1.32,
-"lists_ahead_pct":58.6
+"excess_pct":7.33,
+"t":1.87,
+"lists_ahead_pct":64.8
 },
 "2022-26":{
-"excess_pct":3.74,
-"t":2.83,
-"lists_ahead_pct":61.5
+"excess_pct":3.72,
+"t":2.97,
+"lists_ahead_pct":64.1
 }
 }
 },
 "market":{
 "above_200d":{
 "list_dates":341,
-"picks":5098,
-"up_pct":54.8,
-"avg_pct":17.09,
+"picks":5096,
+"up_pct":55.5,
+"avg_pct":19.29,
 "index_avg_pct":11.34
 },
 "below_200d":{
 "list_dates":95,
 "picks":1416,
-"up_pct":68.1,
-"avg_pct":31.19,
+"up_pct":69.1,
+"avg_pct":31.18,
 "index_avg_pct":22.16
 }
 },
-"what":"Above the 200-day average and outside the most volatile fifth, a profit over the last four quarters, an F-score of 5 or more, no more than 5% pledged, a return on capital of 14% or more, cash from operations positive and at least 0.7 times profit, debt no more than equity (a lender: a return on equity of 13% or more), and a P/E under 90 unless its PEG is 1.5 or under on profit growing 35% a year. Ranked on quality, three-year compounding, governance, valuation against its own industry and the year-long trend; at most four from one industry.",
-"bias":"Balance sheets are on file from September 2022 and full-year cash flows from 2020-21. Before then the return, debt, F-score and cash checks were skipped as unknown and the list ranked mostly on its trend, which is why its version was chosen on 2022-11 to 2024-04. Pledges and holdings have no history and were unknown throughout. The tables hold companies listed today, and a revised filing is seen from the revision's date.",
+"what":"Above the 200-day average and outside the most volatile fifth, a profit over the last four quarters, an F-score of 5 or more, no more than 5% pledged, a return on capital of 14% or more, cash from operations positive and at least 0.7 times profit, debt no more than equity (a lender instead: a return on equity of 13% or more) and positive shareholders' equity, and a P/E of 90 or under unless its PEG is 1.5 or under on three-year profit growth of 35% a year or more. Ranked on quality, three-year compounding, governance, valuation against its own industry and the year-long trend; at most 4 from one industry.",
+"bias":"A check is made only where its figure is known. In 2017-21, of the liquid companies the list ranks, lenders aside, cash from operations against profit was known for 9.4% on average, debt to equity for 0%, return on capital for 0% and the F-score for 0%, so there the list was ranked mostly on its trend. At least half of them had cash from operations against profit from 28 May 2021 on, debt to equity from 9 November 2022, return on capital from 19 May 2023 and the F-score from 21 May 2024. From November 2022 to April 2024, the period this version was chosen on, the F-score was known for 0.4% of them on average (85.9% from May 2024 to November 2025), so that check was effectively untested there. Pledges and holdings have no history and were unknown throughout. The tables hold companies listed today, and a revised filing is seen from the revision's date.",
 "replay":"The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices and filings cut at that session; its top fifteen bought at the next open.",
 "lab":{
 "variant":"L1",
@@ -3308,42 +3376,42 @@
 "first":{
 "list_dates":74,
 "picks":1110,
-"up_pct":79.9,
-"beat_index_pct":59.1,
-"avg_pct":48.94,
-"median_pct":37.77,
+"up_pct":81.1,
+"beat_index_pct":60.1,
+"avg_pct":49.67,
+"median_pct":37.5,
 "index_avg_pct":26.38,
-"big_winner_pct":60.6,
-"worst_5pct":-30.7,
+"big_winner_pct":60.4,
+"worst_5pct":-30.3,
 "best_5pct":166.7,
-"exit_hit_pct":7.3,
-"lists_ahead_of_index_pct":82.4,
-"avg_net_pct":48.45,
-"vs_index_pct":22.56,
-"vs_avg_stock_pct":4.15,
-"vs_avg_stock_net_pct":3.66,
-"vs_avg_stock_t":1.41,
-"lists_ahead_of_avg_stock_pct":55.4
+"exit_hit_pct":5.9,
+"lists_ahead_of_index_pct":81.1,
+"avg_net_pct":49.18,
+"vs_index_pct":23.29,
+"vs_avg_stock_pct":4.87,
+"vs_avg_stock_net_pct":4.38,
+"vs_avg_stock_t":2.13,
+"lists_ahead_of_avg_stock_pct":63.5
 },
 "second":{
 "list_dates":77,
 "picks":1155,
-"up_pct":48.7,
-"beat_index_pct":46.3,
-"avg_pct":6.06,
-"median_pct":-0.99,
+"up_pct":49.7,
+"beat_index_pct":46.9,
+"avg_pct":6.53,
+"median_pct":-0.18,
 "index_avg_pct":2.24,
-"big_winner_pct":29.4,
-"worst_5pct":-32.5,
-"best_5pct":72.1,
-"exit_hit_pct":29.6,
-"lists_ahead_of_index_pct":63.6,
-"avg_net_pct":5.57,
-"vs_index_pct":3.82,
-"vs_avg_stock_pct":4.65,
-"vs_avg_stock_net_pct":4.16,
-"vs_avg_stock_t":3.62,
-"lists_ahead_of_avg_stock_pct":71.4
+"big_winner_pct":29.9,
+"worst_5pct":-32.4,
+"best_5pct":71.8,
+"exit_hit_pct":28.9,
+"lists_ahead_of_index_pct":64.9,
+"avg_net_pct":6.04,
+"vs_index_pct":4.29,
+"vs_avg_stock_pct":5.13,
+"vs_avg_stock_net_pct":4.64,
+"vs_avg_stock_t":3.89,
+"lists_ahead_of_avg_stock_pct":75.3
 },
 "before":{
 "long":{
@@ -3441,39 +3509,89 @@
 "generated":"2026-11-27",
 "reference_2018_22":{
 "list_dates":218,
-"picks":3258,
-"up_pct":56.8,
-"beat_index_pct":45.1,
-"avg_pct":21.4,
-"median_pct":7.35,
+"picks":3256,
+"up_pct":57.4,
+"beat_index_pct":46.3,
+"avg_pct":24.44,
+"median_pct":8.13,
 "index_avg_pct":15.54,
-"big_winner_pct":33.9,
-"worst_5pct":-33.5,
-"best_5pct":119.5,
+"big_winner_pct":35.7,
+"worst_5pct":-33.4,
+"best_5pct":132.8,
 "exit_hit_pct":26.0,
-"lists_ahead_of_index_pct":51.8,
-"avg_net_pct":20.91,
-"vs_index_pct":5.86,
-"vs_avg_stock_pct":3.67,
-"vs_avg_stock_net_pct":3.18,
-"vs_avg_stock_t":1.02,
-"lists_ahead_of_avg_stock_pct":53.2
+"lists_ahead_of_index_pct":53.7,
+"avg_net_pct":23.95,
+"vs_index_pct":8.9,
+"vs_avg_stock_pct":6.64,
+"vs_avg_stock_net_pct":6.15,
+"vs_avg_stock_t":1.42,
+"lists_ahead_of_avg_stock_pct":58.3
+},
+"coverage":{
+"from":"2017-01-24",
+"to":"2026-11-23",
+"windows":{
+"first":[
+"2022-11-01",
+"2024-04-30"
+],
+"second":[
+"2024-05-01",
+"2025-11-17"
+]
+},
+"list_dates":{
+"first":74,
+"second":77
+},
+"first_half":{
+"label":"2017-21",
+"before":"2022-01-01",
+"list_dates":244
+},
+"checks":{
+"roce_pct":{
+"most_from":"2023-05-19",
+"first_pct":57.1,
+"second_pct":91.6,
+"first_half_pct":0.0
+},
+"debt_equity_x":{
+"most_from":"2022-11-09",
+"first_pct":88.4,
+"second_pct":93.7,
+"first_half_pct":0.0
+},
+"cfo_to_pat":{
+"most_from":"2021-05-28",
+"first_pct":83.4,
+"second_pct":86.7,
+"first_half_pct":9.4
+},
+"f_score":{
+"most_from":"2024-05-21",
+"first_pct":0.4,
+"second_pct":85.9,
+"first_half_pct":0.0
+}
+},
+"what":"On every long list date. companies: the liquid companies listed a year that the engine ranks for the long list, less the ones it judges as lenders (a company with no filings counts as none, as the list reads it); with_filings: how many of them had any filing visible that session; and for each check, how many had its figure. most_from is the list date from which a figure was known for at least half of them on every list date after (None if not on the last); first_pct and second_pct are its mean share known over each window's list dates, and first_half_pct over the list dates of the record's first half (first_half), as the page splits the record."
 }
 }
 },
 "target_test":{
 "target_pct":30.0,
 "sold":{
-"up_pct":65.0,
-"avg_pct":8.95,
+"up_pct":65.4,
+"avg_pct":9.22,
 "median_pct":30.0,
-"picks":6514
+"picks":6512
 },
 "held":{
-"up_pct":57.7,
-"avg_pct":20.15,
-"median_pct":8.48,
-"picks":6514
+"up_pct":58.4,
+"avg_pct":21.88,
+"median_pct":9.32,
+"picks":6512
 }
 },
 "study":{
@@ -3489,7 +3607,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -3502,7 +3620,7 @@
 },
 "market_test":{
 "state":"above_200d",
-"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +17.1% (55 in 100 rose), against +31.2% on the other days. The list is not held back in either.",
+"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +19.3% (56 in 100 rose), against +31.2% on the other days. The list is not held back in either.",
 "lists":341
 },
 "chart_note":"Facts about the chart, not reasons for the pick. Tested over ten years, none of these improved a list, so none of them changes a rank.",
@@ -3514,11 +3632,11 @@
 4
 ],
 [
-"Automobile and Auto Components",
-3
+"Healthcare",
+4
 ],
 [
-"Healthcare",
+"Automobile and Auto Components",
 3
 ],
 [
@@ -3526,15 +3644,11 @@
 2
 ],
 [
-"Media Entertainment & Publication",
-1
-],
-[
 "Consumer Services",
 1
 ],
 [
-"Services",
+"Media Entertainment & Publication",
 1
 ]
 ],
@@ -3542,8 +3656,8 @@
 "selection_notes":[],
 "excluded_adverse":[],
 "count":15,
-"considered":33,
-"method":"A company is here when it is above its 200-day average and outside the most volatile fifth, made money over the last four quarters, scores 5 or more of 9 on Piotroski's F-score and has promoters pledging 5% of it or less; it earns 14% or more on its capital, with cash from operations at least 0.7 times its profit and debt no more than 1 times its equity (a bank or lender: 13% or more on its equity); and it is priced under a P/E of 90, unless its PEG is 1.5 or under on profit growing 35% a year. It is ordered on returns and cash, three-year growth, pledges and holdings, its valuation against its own industry and its year-long trend, with at most 4 stocks from one industry. A figure a company has not filed counts as the middle of the field.",
+"considered":31,
+"method":"A company is here when it is above its 200-day average and outside the most volatile fifth, made money over the last four quarters, scores 5 or more of 9 on Piotroski's F-score and has promoters pledging 5% of it or less; it earns 14% or more on its capital, with cash from operations at least 0.7 times its profit and debt no more than 1 times its equity (a bank or lender: 13% or more on its equity), and its shareholders' equity is positive; and it is priced at a P/E of 90 or under, unless its PEG is 1.5 or under on profit growing 35% a year. It is ordered on returns and cash, three-year growth, pledges and holdings, its valuation against its own industry and its year-long trend, with at most 4 stocks from one industry. A figure a company has not filed counts as the middle of the field.",
 "recipe_current":true,
 "study_current":true,
 "weights":{
@@ -3636,7 +3750,7 @@
 "horizon":"about a year",
 "pick_rank":1,
 "young":false,
-"conviction":81.2,
+"conviction":81.5,
 "conviction_band":"Moderate",
 "why":[
 "ROE 44%",
@@ -3657,9 +3771,9 @@
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":23.0,
+"points":23.3,
 "of":25.0,
-"share_pct":92.0,
+"share_pct":93.4,
 "detail":"Sales +81% a year, profit +130% a year over three years."
 },
 {
@@ -3783,7 +3897,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":34.1,
-"opm_yoy_chg":4.25,
+"opm_yoy_chg":null,
 "pat_yoy_pct":44.97,
 "earnings_quality_ok":true,
 "roce_pct":null,
@@ -3811,7 +3925,7 @@
 "horizon":"about a year",
 "pick_rank":2,
 "young":false,
-"conviction":76.9,
+"conviction":77.0,
 "conviction_band":"Moderate",
 "why":[
 "ROE 23%",
@@ -3826,7 +3940,7 @@
 "key":"quality",
 "points":26.6,
 "of":30.0,
-"share_pct":88.5,
+"share_pct":88.7,
 "detail":"Return on equity 23%."
 },
 {
@@ -3997,7 +4111,7 @@
 "horizon":"about a year",
 "pick_rank":3,
 "young":false,
-"conviction":74.8,
+"conviction":74.9,
 "conviction_band":"Moderate",
 "why":[
 "ROE 16%",
@@ -4010,17 +4124,17 @@
 {
 "factor":"Returns on capital, backed by cash",
 "key":"quality",
-"points":22.5,
+"points":22.6,
 "of":30.0,
-"share_pct":75.0,
+"share_pct":75.3,
 "detail":"Return on equity 16%."
 },
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":23.1,
+"points":23.0,
 "of":25.0,
-"share_pct":92.2,
+"share_pct":92.1,
 "detail":"Sales +48% a year, profit +67% a year over three years."
 },
 {
@@ -4144,7 +4258,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":59.23,
-"opm_yoy_chg":2.98,
+"opm_yoy_chg":null,
 "pat_yoy_pct":77.26,
 "earnings_quality_ok":true,
 "roce_pct":null,
@@ -4172,7 +4286,7 @@
 "horizon":"about a year",
 "pick_rank":4,
 "young":false,
-"conviction":73.3,
+"conviction":73.4,
 "conviction_band":"Moderate",
 "why":[
 "ROCE 48%, cash flow 1× profit",
@@ -4185,17 +4299,17 @@
 {
 "factor":"Returns on capital, backed by cash",
 "key":"quality",
-"points":23.6,
+"points":23.5,
 "of":30.0,
-"share_pct":78.5,
+"share_pct":78.4,
 "detail":"Return on capital 48%, cash from operations 1× profit, free cash flow in 3 of the last 3 years, debt 0× equity."
 },
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":23.7,
+"points":23.8,
 "of":25.0,
-"share_pct":94.8,
+"share_pct":95.0,
 "detail":"Sales +34% a year, profit +102% a year over three years."
 },
 {
@@ -4338,6 +4452,382 @@
 }
 },
 {
+"symbol":"ANANDRATHI",
+"name":"Anand Rathi Wealth Limited",
+"price":2412.2,
+"sector":"Financial Services",
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":5,
+"young":false,
+"conviction":72.1,
+"conviction_band":"Moderate",
+"why":[
+"ROE 47%",
+"Sales +28% a year for 3 years",
+"P/E 61, PEG 1.8",
+"Up 64% in a year"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"Returns on capital, backed by cash",
+"key":"quality",
+"points":30.0,
+"of":30.0,
+"share_pct":100.0,
+"detail":"Return on equity 47%."
+},
+{
+"factor":"Growth over three years",
+"key":"compounding",
+"points":17.7,
+"of":25.0,
+"share_pct":70.8,
+"detail":"Sales +28% a year, profit +33% a year over three years."
+},
+{
+"factor":"Pledges and changes in holdings",
+"key":"governance",
+"points":7.5,
+"of":15.0,
+"share_pct":50.0,
+"detail":"Pledges and holdings are not on file: counted as the middle."
+},
+{
+"factor":"Price against its own industry",
+"key":"valuation",
+"points":2.6,
+"of":15.0,
+"share_pct":17.2,
+"detail":"P/E 61, PEG 1.83, against its own industry."
+},
+{
+"factor":"The year-long trend",
+"key":"trendq",
+"points":14.3,
+"of":15.0,
+"share_pct":95.7,
+"detail":"+64% over 12 months, 1% below its 52-week high, straightness 61/100."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":2412.2,
+"stop":1688.54,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"aim":3135.86,
+"aim_pct":30.0,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-27",
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹1,688.54, 30% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":1.3,
+"below_6m_high_pct":0.0,
+"breakout":null,
+"squeeze":0.56,
+"range_15_60":0.3,
+"dry_up":0.59,
+"up_down_volume":2.07,
+"rel_volume":0.7,
+"rsi":73.0,
+"macd_hist_pct":-0.09,
+"macd_rising":true,
+"above_20d_pct":2.8,
+"adx":35.0,
+"atr_pct":1.5,
+"rsi2":90.0,
+"sma5":2386.78,
+"rel_volume_5":1.1,
+"above_50d":true,
+"above_200d":true,
+"scorecard":7,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Within 5% of its 52-week high"
+],
+"box":null,
+"base":{
+"top":2428.6,
+"low":2015.9,
+"width_pct":20.5,
+"to_top_pct":0.7
+},
+"ext_50d_pct":7.7,
+"ext_20d_pct":2.8,
+"ema20":2347.17,
+"clv":0.12,
+"sma50_rising":true,
+"sma200_rising":true,
+"closed_up":false,
+"launch":[],
+"watch":{
+"pattern":"VCP launchpad",
+"base":40,
+"top":2445.0,
+"low":2015.9,
+"width_pct":21.3,
+"to_top_pct":1.4
+}
+},
+"chart":[
+{
+"k":"Price",
+"v":"1% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 73 · MACD below its signal line and rising · ADX 35."
+},
+{
+"k":"Volume",
+"v":"0.7 times its usual volume in the last session; 2.1 times as much volume on rising days as on falling days over 50 sessions."
+},
+{
+"k":"Range",
+"v":"Tightening: the last ten sessions moved 56% as much as the last sixty."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":58.9,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":15.68,
+"opm_yoy_chg":null,
+"pat_yoy_pct":-10.65,
+"earnings_quality_ok":true,
+"roce_pct":null,
+"roe_pct":46.77,
+"cfo_to_pat":0.71,
+"fcf_pos_years_3y":3,
+"debt_equity_x":0.01,
+"pe":60.7,
+"peg":1.83,
+"pledge_pct":null,
+"f_score":null,
+"is_financial":true,
+"sector_mf_quadrant":null
+}
+}
+},
+{
+"symbol":"TRENT",
+"name":"Trent Limited",
+"price":3273.0,
+"sector":"Consumer Services",
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":6,
+"young":false,
+"conviction":71.4,
+"conviction_band":"Moderate",
+"why":[
+"ROCE 32%, cash flow 1.6× profit",
+"Sales +35% a year for 3 years",
+"P/E 74, PEG 1.2",
+"Up 12% in a year"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"Returns on capital, backed by cash",
+"key":"quality",
+"points":23.2,
+"of":30.0,
+"share_pct":77.4,
+"detail":"Return on capital 32%, cash from operations 1.6× profit, debt 0.1× equity."
+},
+{
+"factor":"Growth over three years",
+"key":"compounding",
+"points":21.8,
+"of":25.0,
+"share_pct":87.0,
+"detail":"Sales +35% a year, profit +64% a year over three years."
+},
+{
+"factor":"Pledges and changes in holdings",
+"key":"governance",
+"points":7.5,
+"of":15.0,
+"share_pct":50.0,
+"detail":"Pledges and holdings are not on file: counted as the middle."
+},
+{
+"factor":"Price against its own industry",
+"key":"valuation",
+"points":8.4,
+"of":15.0,
+"share_pct":56.0,
+"detail":"P/E 74, PEG 1.17, EV/EBITDA 42, against its own industry."
+},
+{
+"factor":"The year-long trend",
+"key":"trendq",
+"points":10.6,
+"of":15.0,
+"share_pct":70.4,
+"detail":"+12% over 12 months, 4% below its 52-week high, straightness 8/100."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":3273.0,
+"stop":2291.1,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"aim":4254.9,
+"aim_pct":30.0,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-27",
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹2,291.10, 30% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":2.3,
+"below_6m_high_pct":2.1,
+"breakout":null,
+"squeeze":0.69,
+"range_15_60":0.43,
+"dry_up":0.83,
+"up_down_volume":1.43,
+"rel_volume":0.7,
+"rsi":65.0,
+"macd_hist_pct":0.15,
+"macd_rising":false,
+"above_20d_pct":3.9,
+"adx":37.0,
+"atr_pct":2.5,
+"rsi2":55.0,
+"sma5":3263.86,
+"rel_volume_5":1.2,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Within 5% of its 52-week high"
+],
+"box":{
+"sessions_ago":2,
+"top":3280.0,
+"low":2545.8,
+"width_pct":28.8,
+"rel_volume":2.4,
+"close":3319.6,
+"holding":false
+},
+"base":{
+"top":3349.9,
+"low":2545.8,
+"width_pct":31.6,
+"to_top_pct":2.3
+},
+"ext_50d_pct":11.4,
+"ext_20d_pct":3.9,
+"ema20":3149.63,
+"clv":0.28,
+"sma50_rising":true,
+"sma200_rising":true,
+"closed_up":true,
+"launch":[],
+"watch":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"2% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 65 · MACD above its signal line · ADX 37."
+},
+{
+"k":"Volume",
+"v":"0.7 times its usual volume in the last session; 1.4 times as much volume on rising days as on falling days over 50 sessions."
+},
+{
+"k":"Range",
+"v":"Tightening: the last ten sessions moved 69% as much as the last sixty."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":218.4,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":21.91,
+"opm_yoy_chg":1.4,
+"pat_yoy_pct":25.35,
+"earnings_quality_ok":true,
+"roce_pct":31.56,
+"roe_pct":24.22,
+"cfo_to_pat":1.55,
+"fcf_pos_years_3y":null,
+"debt_equity_x":0.06,
+"pe":74.2,
+"peg":1.17,
+"pledge_pct":null,
+"f_score":null,
+"is_financial":false,
+"sector_mf_quadrant":null
+}
+}
+},
+{
 "symbol":"TIPSMUSIC",
 "name":"Tips Music Limited",
 "price":777.5,
@@ -4346,9 +4836,9 @@
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
-"pick_rank":5,
+"pick_rank":7,
 "young":false,
-"conviction":71.1,
+"conviction":71.3,
 "conviction_band":"Moderate",
 "why":[
 "ROCE 112%, cash flow 0.9× profit",
@@ -4369,9 +4859,9 @@
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":19.8,
+"points":19.9,
 "of":25.0,
-"share_pct":79.0,
+"share_pct":79.6,
 "detail":"Sales +26% a year, profit +41% a year over three years."
 },
 {
@@ -4510,193 +5000,6 @@
 }
 },
 {
-"symbol":"ANANDRATHI",
-"name":"Anand Rathi Wealth Limited",
-"price":2412.2,
-"sector":"Financial Services",
-"list":"long",
-"setup":"Long-term pick",
-"setup_key":"pick_long",
-"horizon":"about a year",
-"pick_rank":6,
-"young":false,
-"conviction":71.0,
-"conviction_band":"Moderate",
-"why":[
-"ROE 47%",
-"Sales +28% a year for 3 years",
-"P/E 61, PEG 1.8",
-"Up 64% in a year"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"Returns on capital, backed by cash",
-"key":"quality",
-"points":30.0,
-"of":30.0,
-"share_pct":100.0,
-"detail":"Return on equity 47%."
-},
-{
-"factor":"Growth over three years",
-"key":"compounding",
-"points":16.5,
-"of":25.0,
-"share_pct":66.1,
-"detail":"Sales +28% a year, profit +33% a year over three years."
-},
-{
-"factor":"Pledges and changes in holdings",
-"key":"governance",
-"points":7.5,
-"of":15.0,
-"share_pct":50.0,
-"detail":"Pledges and holdings are not on file: counted as the middle."
-},
-{
-"factor":"Price against its own industry",
-"key":"valuation",
-"points":2.6,
-"of":15.0,
-"share_pct":17.2,
-"detail":"P/E 61, PEG 1.83, against its own industry."
-},
-{
-"factor":"The year-long trend",
-"key":"trendq",
-"points":14.3,
-"of":15.0,
-"share_pct":95.7,
-"detail":"+64% over 12 months, 1% below its 52-week high, straightness 61/100."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":2412.2,
-"stop":1688.54,
-"risk_pct":30.0,
-"rr":null,
-"t1":null,
-"aim":3135.86,
-"aim_pct":30.0,
-"hold_sessions":252,
-"hold_text":"about a year",
-"review_on":"2027-11-27",
-"sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹1,688.54, 30% under this price."
-},
-"results":null,
-"order":null,
-"technicals":{
-"below_60d_high_pct":1.3,
-"below_6m_high_pct":0.0,
-"breakout":null,
-"squeeze":0.56,
-"range_15_60":0.3,
-"dry_up":0.59,
-"up_down_volume":2.07,
-"rel_volume":0.7,
-"rsi":73.0,
-"macd_hist_pct":-0.09,
-"macd_rising":true,
-"above_20d_pct":2.8,
-"adx":35.0,
-"atr_pct":1.5,
-"rsi2":90.0,
-"sma5":2386.78,
-"rel_volume_5":1.1,
-"above_50d":true,
-"above_200d":true,
-"scorecard":7,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"50-day average above the 200-day",
-"RSI over 55",
-"ADX at 25 or more, buyers ahead",
-"More volume on up days",
-"Within 5% of its 52-week high"
-],
-"box":null,
-"base":{
-"top":2428.6,
-"low":2015.9,
-"width_pct":20.5,
-"to_top_pct":0.7
-},
-"ext_50d_pct":7.7,
-"ext_20d_pct":2.8,
-"ema20":2347.17,
-"clv":0.12,
-"sma50_rising":true,
-"sma200_rising":true,
-"closed_up":false,
-"launch":[],
-"watch":{
-"pattern":"VCP launchpad",
-"base":40,
-"top":2445.0,
-"low":2015.9,
-"width_pct":21.3,
-"to_top_pct":1.4
-}
-},
-"chart":[
-{
-"k":"Price",
-"v":"1% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 73 · MACD below its signal line and rising · ADX 35."
-},
-{
-"k":"Volume",
-"v":"0.7 times its usual volume in the last session; 2.1 times as much volume on rising days as on falling days over 50 sessions."
-},
-{
-"k":"Range",
-"v":"Tightening: the last ten sessions moved 56% as much as the last sixty."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":58.9,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":15.68,
-"opm_yoy_chg":-12.26,
-"pat_yoy_pct":-10.65,
-"earnings_quality_ok":true,
-"roce_pct":null,
-"roe_pct":46.77,
-"cfo_to_pat":0.71,
-"fcf_pos_years_3y":3,
-"debt_equity_x":0.01,
-"pe":60.7,
-"peg":1.83,
-"pledge_pct":null,
-"f_score":null,
-"is_financial":true,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"SJS",
 "name":"S.J.S. Enterprises Limited",
 "price":2075.2,
@@ -4705,9 +5008,9 @@
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
-"pick_rank":7,
+"pick_rank":8,
 "young":false,
-"conviction":68.9,
+"conviction":68.6,
 "conviction_band":"Speculative",
 "why":[
 "ROCE 26%, cash flow 1.3× profit",
@@ -4720,7 +5023,7 @@
 {
 "factor":"Returns on capital, backed by cash",
 "key":"quality",
-"points":23.9,
+"points":23.8,
 "of":30.0,
 "share_pct":79.5,
 "detail":"Return on capital 26%, cash from operations 1.3× profit, free cash flow in 3 of the last 3 years, debt 0× equity."
@@ -4728,9 +5031,9 @@
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":20.2,
+"points":20.3,
 "of":25.0,
-"share_pct":81.0,
+"share_pct":81.4,
 "detail":"Sales +30% a year, profit +37% a year over three years."
 },
 {
@@ -4744,10 +5047,10 @@
 {
 "factor":"Price against its own industry",
 "key":"valuation",
-"points":10.2,
+"points":9.8,
 "of":15.0,
-"share_pct":67.8,
-"detail":"P/E 29, PEG 0.8, EV/EBITDA 19, against its own industry."
+"share_pct":65.4,
+"detail":"P/E 29, PEG 0.8, EV/EBITDA 21, against its own industry."
 },
 {
 "factor":"The year-long trend",
@@ -4850,7 +5153,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":16.95,
-"opm_yoy_chg":1.21,
+"opm_yoy_chg":1.22,
 "pat_yoy_pct":34.8,
 "earnings_quality_ok":true,
 "roce_pct":26.33,
@@ -4876,9 +5179,9 @@
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
-"pick_rank":8,
+"pick_rank":9,
 "young":false,
-"conviction":68.3,
+"conviction":68.2,
 "conviction_band":"Speculative",
 "why":[
 "ROCE 19%, cash flow 1.1× profit",
@@ -4891,7 +5194,7 @@
 {
 "factor":"Returns on capital, backed by cash",
 "key":"quality",
-"points":21.9,
+"points":21.8,
 "of":30.0,
 "share_pct":72.8,
 "detail":"Return on capital 19%, cash from operations 1.1× profit, free cash flow in 3 of the last 3 years, debt 0× equity."
@@ -4899,9 +5202,9 @@
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":17.0,
+"points":16.8,
 "of":25.0,
-"share_pct":67.9,
+"share_pct":67.3,
 "detail":"Sales +17% a year, profit +17% a year over three years."
 },
 {
@@ -4915,9 +5218,9 @@
 {
 "factor":"Price against its own industry",
 "key":"valuation",
-"points":11.8,
+"points":11.9,
 "of":15.0,
-"share_pct":78.8,
+"share_pct":79.2,
 "detail":"P/E 22, PEG 1.35, EV/EBITDA 15, against its own industry."
 },
 {
@@ -5020,7 +5323,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":30.5,
-"opm_yoy_chg":2.73,
+"opm_yoy_chg":2.74,
 "pat_yoy_pct":44.78,
 "earnings_quality_ok":true,
 "roce_pct":18.97,
@@ -5038,6 +5341,373 @@
 }
 },
 {
+"symbol":"POWERINDIA",
+"name":"Hitachi Energy India Limited",
+"price":31120.0,
+"sector":"Capital Goods",
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":10,
+"young":false,
+"conviction":67.9,
+"conviction_band":"Speculative",
+"why":[
+"ROCE 26%, cash flow 1.3× profit",
+"Sales +22% a year for 3 years",
+"P/E 115, PEG 1",
+"Up 45% in a year"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"Returns on capital, backed by cash",
+"key":"quality",
+"points":24.6,
+"of":30.0,
+"share_pct":82.0,
+"detail":"Return on capital 26%, cash from operations 1.3× profit, free cash flow in 3 of the last 3 years, debt 0× equity."
+},
+{
+"factor":"Growth over three years",
+"key":"compounding",
+"points":22.2,
+"of":25.0,
+"share_pct":88.9,
+"detail":"Sales +22% a year, profit +119% a year over three years."
+},
+{
+"factor":"Pledges and changes in holdings",
+"key":"governance",
+"points":7.5,
+"of":15.0,
+"share_pct":50.0,
+"detail":"Pledges and holdings are not on file: counted as the middle."
+},
+{
+"factor":"Price against its own industry",
+"key":"valuation",
+"points":5.7,
+"of":15.0,
+"share_pct":37.9,
+"detail":"P/E 115, PEG 0.97, EV/EBITDA 88, against its own industry."
+},
+{
+"factor":"The year-long trend",
+"key":"trendq",
+"points":7.8,
+"of":15.0,
+"share_pct":52.2,
+"detail":"+45% over 12 months, 20% below its 52-week high, straightness -47/100."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":31120.0,
+"stop":21784.0,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"aim":40456.0,
+"aim_pct":30.0,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-27",
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹21,784.00, 30% under this price."
+},
+"results":{
+"filed_at":"2026-11-12 18:36:28",
+"session":"2026-11-13",
+"sessions_ago":9,
+"quarter":"Q2 FY27",
+"move_pct":10.7,
+"market_move_pct":-0.4,
+"reaction_pct":11.1,
+"vol_x":6.37,
+"pat_yoy_pct":20.48,
+"revenue_yoy_pct":63.52,
+"reported":77,
+"qualified":28
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":7.8,
+"below_6m_high_pct":19.1,
+"breakout":null,
+"squeeze":1.35,
+"range_15_60":0.66,
+"dry_up":1.47,
+"up_down_volume":1.02,
+"rel_volume":0.8,
+"rsi":58.0,
+"macd_hist_pct":0.66,
+"macd_rising":true,
+"above_20d_pct":4.3,
+"adx":16.0,
+"atr_pct":3.8,
+"rsi2":87.0,
+"sma5":30323.0,
+"rel_volume_5":1.2,
+"above_50d":true,
+"above_200d":true,
+"scorecard":4,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"RSI over 55",
+"MACD above its signal line"
+],
+"box":null,
+"base":{
+"top":32250.0,
+"low":25420.0,
+"width_pct":26.9,
+"to_top_pct":3.6
+},
+"ext_50d_pct":4.3,
+"ext_20d_pct":4.3,
+"ema20":29837.23,
+"clv":0.77,
+"sma50_rising":false,
+"sma200_rising":true,
+"closed_up":true,
+"launch":[],
+"watch":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"8% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 58 · MACD above its signal line and rising · ADX 16."
+},
+{
+"k":"Volume",
+"v":"0.8 times its usual volume in the last session; 1.0 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":298.9,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":63.52,
+"opm_yoy_chg":-2.76,
+"pat_yoy_pct":20.48,
+"earnings_quality_ok":true,
+"roce_pct":25.77,
+"roe_pct":21.04,
+"cfo_to_pat":1.26,
+"fcf_pos_years_3y":3,
+"debt_equity_x":0.0,
+"pe":115.2,
+"peg":0.97,
+"pledge_pct":null,
+"f_score":7,
+"is_financial":false,
+"sector_mf_quadrant":null
+}
+}
+},
+{
+"symbol":"VIJAYA",
+"name":"Vijaya Diagnostic Centre Limited",
+"price":1552.5,
+"sector":"Healthcare",
+"list":"long",
+"setup":"Long-term pick",
+"setup_key":"pick_long",
+"horizon":"about a year",
+"pick_rank":11,
+"young":false,
+"conviction":67.8,
+"conviction_band":"Speculative",
+"why":[
+"ROCE 28%, cash flow 1.6× profit",
+"Sales +21% a year for 3 years",
+"P/E 78, PEG 3",
+"Up 51% in a year"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"Returns on capital, backed by cash",
+"key":"quality",
+"points":26.0,
+"of":30.0,
+"share_pct":86.7,
+"detail":"Return on capital 28%, cash from operations 1.6× profit, free cash flow in 3 of the last 3 years, debt 0× equity."
+},
+{
+"factor":"Growth over three years",
+"key":"compounding",
+"points":17.1,
+"of":25.0,
+"share_pct":68.4,
+"detail":"Sales +21% a year, profit +27% a year over three years."
+},
+{
+"factor":"Pledges and changes in holdings",
+"key":"governance",
+"points":7.5,
+"of":15.0,
+"share_pct":50.0,
+"detail":"Pledges and holdings are not on file: counted as the middle."
+},
+{
+"factor":"Price against its own industry",
+"key":"valuation",
+"points":5.0,
+"of":15.0,
+"share_pct":33.1,
+"detail":"P/E 78, PEG 2.95, EV/EBITDA 40, against its own industry."
+},
+{
+"factor":"The year-long trend",
+"key":"trendq",
+"points":12.3,
+"of":15.0,
+"share_pct":81.9,
+"detail":"+51% over 12 months, 6% below its 52-week high, straightness 18/100."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":1552.5,
+"stop":1086.75,
+"risk_pct":30.0,
+"rr":null,
+"t1":null,
+"aim":2018.25,
+"aim_pct":30.0,
+"hold_sessions":252,
+"hold_text":"about a year",
+"review_on":"2027-11-27",
+"sell_rule":null,
+"note":"Hold about a year. Leave if it closes below ₹1,086.75, 30% under this price."
+},
+"results":null,
+"order":null,
+"technicals":{
+"below_60d_high_pct":6.4,
+"below_6m_high_pct":4.6,
+"breakout":{
+"sessions_ago":4,
+"rel_volume":5.0,
+"level":1570.7
+},
+"squeeze":1.39,
+"range_15_60":0.81,
+"dry_up":2.05,
+"up_down_volume":1.21,
+"rel_volume":0.6,
+"rsi":58.0,
+"macd_hist_pct":0.87,
+"macd_rising":false,
+"above_20d_pct":3.1,
+"adx":27.0,
+"atr_pct":4.1,
+"rsi2":25.0,
+"sma5":1582.44,
+"rel_volume_5":3.8,
+"above_50d":true,
+"above_200d":true,
+"scorecard":8,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week"
+],
+"box":null,
+"base":{
+"top":1659.2,
+"low":1335.0,
+"width_pct":24.3,
+"to_top_pct":6.9
+},
+"ext_50d_pct":5.9,
+"ext_20d_pct":3.1,
+"ema20":1505.72,
+"clv":0.1,
+"sma50_rising":true,
+"sma200_rising":true,
+"closed_up":false,
+"launch":[],
+"watch":null
+},
+"chart":[
+{
+"k":"Breakout",
+"v":"Closed at a six-month high 4 sessions ago, on 5.0 times its usual volume, the first in over 20 sessions."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 58 · MACD above its signal line · ADX 27."
+},
+{
+"k":"Volume",
+"v":"0.6 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":16.2,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":26.71,
+"opm_yoy_chg":3.55,
+"pat_yoy_pct":37.41,
+"earnings_quality_ok":true,
+"roce_pct":27.78,
+"roe_pct":19.7,
+"cfo_to_pat":1.56,
+"fcf_pos_years_3y":3,
+"debt_equity_x":0.0,
+"pe":78.4,
+"peg":2.95,
+"pledge_pct":null,
+"f_score":8,
+"is_financial":false,
+"sector_mf_quadrant":null
+}
+}
+},
+{
 "symbol":"HEROMOTOCO",
 "name":"Hero MotoCorp Limited",
 "price":5701.0,
@@ -5046,9 +5716,9 @@
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
-"pick_rank":9,
+"pick_rank":12,
 "young":false,
-"conviction":68.1,
+"conviction":67.8,
 "conviction_band":"Speculative",
 "why":[
 "ROCE 32%, cash flow 1.4× profit",
@@ -5063,15 +5733,15 @@
 "key":"quality",
 "points":25.1,
 "of":30.0,
-"share_pct":83.6,
+"share_pct":83.5,
 "detail":"Return on capital 32%, cash from operations 1.4× profit, free cash flow in 3 of the last 3 years, debt 0× equity."
 },
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":14.6,
+"points":14.3,
 "of":25.0,
-"share_pct":58.5,
+"share_pct":57.3,
 "detail":"Sales +12% a year, profit +27% a year over three years."
 },
 {
@@ -5240,373 +5910,6 @@
 }
 },
 {
-"symbol":"VIJAYA",
-"name":"Vijaya Diagnostic Centre Limited",
-"price":1552.5,
-"sector":"Healthcare",
-"list":"long",
-"setup":"Long-term pick",
-"setup_key":"pick_long",
-"horizon":"about a year",
-"pick_rank":10,
-"young":false,
-"conviction":68.1,
-"conviction_band":"Speculative",
-"why":[
-"ROCE 28%, cash flow 1.6× profit",
-"Sales +21% a year for 3 years",
-"P/E 78, PEG 3",
-"Up 51% in a year"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"Returns on capital, backed by cash",
-"key":"quality",
-"points":26.0,
-"of":30.0,
-"share_pct":86.7,
-"detail":"Return on capital 28%, cash from operations 1.6× profit, free cash flow in 3 of the last 3 years, debt 0× equity."
-},
-{
-"factor":"Growth over three years",
-"key":"compounding",
-"points":17.3,
-"of":25.0,
-"share_pct":69.3,
-"detail":"Sales +21% a year, profit +27% a year over three years."
-},
-{
-"factor":"Pledges and changes in holdings",
-"key":"governance",
-"points":7.5,
-"of":15.0,
-"share_pct":50.0,
-"detail":"Pledges and holdings are not on file: counted as the middle."
-},
-{
-"factor":"Price against its own industry",
-"key":"valuation",
-"points":5.0,
-"of":15.0,
-"share_pct":33.1,
-"detail":"P/E 78, PEG 2.95, EV/EBITDA 40, against its own industry."
-},
-{
-"factor":"The year-long trend",
-"key":"trendq",
-"points":12.3,
-"of":15.0,
-"share_pct":81.9,
-"detail":"+51% over 12 months, 6% below its 52-week high, straightness 18/100."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":1552.5,
-"stop":1086.75,
-"risk_pct":30.0,
-"rr":null,
-"t1":null,
-"aim":2018.25,
-"aim_pct":30.0,
-"hold_sessions":252,
-"hold_text":"about a year",
-"review_on":"2027-11-27",
-"sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹1,086.75, 30% under this price."
-},
-"results":null,
-"order":null,
-"technicals":{
-"below_60d_high_pct":6.4,
-"below_6m_high_pct":4.6,
-"breakout":{
-"sessions_ago":4,
-"rel_volume":5.0,
-"level":1570.7
-},
-"squeeze":1.39,
-"range_15_60":0.81,
-"dry_up":2.05,
-"up_down_volume":1.21,
-"rel_volume":0.6,
-"rsi":58.0,
-"macd_hist_pct":0.87,
-"macd_rising":false,
-"above_20d_pct":3.1,
-"adx":27.0,
-"atr_pct":4.1,
-"rsi2":25.0,
-"sma5":1582.44,
-"rel_volume_5":3.8,
-"above_50d":true,
-"above_200d":true,
-"scorecard":8,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"50-day average above the 200-day",
-"RSI over 55",
-"MACD above its signal line",
-"ADX at 25 or more, buyers ahead",
-"More volume on up days",
-"Volume above its usual this week"
-],
-"box":null,
-"base":{
-"top":1659.2,
-"low":1335.0,
-"width_pct":24.3,
-"to_top_pct":6.9
-},
-"ext_50d_pct":5.9,
-"ext_20d_pct":3.1,
-"ema20":1505.72,
-"clv":0.1,
-"sma50_rising":true,
-"sma200_rising":true,
-"closed_up":false,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Breakout",
-"v":"Closed at a six-month high 4 sessions ago, on 5.0 times its usual volume, the first in over 20 sessions."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 58 · MACD above its signal line · ADX 27."
-},
-{
-"k":"Volume",
-"v":"0.6 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":16.2,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":26.71,
-"opm_yoy_chg":3.55,
-"pat_yoy_pct":37.41,
-"earnings_quality_ok":true,
-"roce_pct":27.78,
-"roe_pct":19.7,
-"cfo_to_pat":1.56,
-"fcf_pos_years_3y":3,
-"debt_equity_x":0.0,
-"pe":78.4,
-"peg":2.95,
-"pledge_pct":null,
-"f_score":8,
-"is_financial":false,
-"sector_mf_quadrant":null
-}
-}
-},
-{
-"symbol":"POWERINDIA",
-"name":"Hitachi Energy India Limited",
-"price":31120.0,
-"sector":"Capital Goods",
-"list":"long",
-"setup":"Long-term pick",
-"setup_key":"pick_long",
-"horizon":"about a year",
-"pick_rank":11,
-"young":false,
-"conviction":67.8,
-"conviction_band":"Speculative",
-"why":[
-"ROCE 26%, cash flow 1.3× profit",
-"Sales +22% a year for 3 years",
-"P/E 115, PEG 1",
-"Up 45% in a year"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"Returns on capital, backed by cash",
-"key":"quality",
-"points":24.6,
-"of":30.0,
-"share_pct":82.0,
-"detail":"Return on capital 26%, cash from operations 1.3× profit, free cash flow in 3 of the last 3 years, debt 0× equity."
-},
-{
-"factor":"Growth over three years",
-"key":"compounding",
-"points":22.1,
-"of":25.0,
-"share_pct":88.3,
-"detail":"Sales +22% a year, profit +119% a year over three years."
-},
-{
-"factor":"Pledges and changes in holdings",
-"key":"governance",
-"points":7.5,
-"of":15.0,
-"share_pct":50.0,
-"detail":"Pledges and holdings are not on file: counted as the middle."
-},
-{
-"factor":"Price against its own industry",
-"key":"valuation",
-"points":5.8,
-"of":15.0,
-"share_pct":38.5,
-"detail":"P/E 115, PEG 0.97, EV/EBITDA 91, against its own industry."
-},
-{
-"factor":"The year-long trend",
-"key":"trendq",
-"points":7.8,
-"of":15.0,
-"share_pct":52.2,
-"detail":"+45% over 12 months, 20% below its 52-week high, straightness -47/100."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":31120.0,
-"stop":21784.0,
-"risk_pct":30.0,
-"rr":null,
-"t1":null,
-"aim":40456.0,
-"aim_pct":30.0,
-"hold_sessions":252,
-"hold_text":"about a year",
-"review_on":"2027-11-27",
-"sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹21,784.00, 30% under this price."
-},
-"results":{
-"filed_at":"2026-11-12 18:36:28",
-"session":"2026-11-13",
-"sessions_ago":9,
-"quarter":"Q2 FY27",
-"move_pct":10.7,
-"market_move_pct":-0.4,
-"reaction_pct":11.1,
-"vol_x":6.37,
-"pat_yoy_pct":20.48,
-"revenue_yoy_pct":63.52,
-"reported":77,
-"qualified":28
-},
-"order":null,
-"technicals":{
-"below_60d_high_pct":7.8,
-"below_6m_high_pct":19.1,
-"breakout":null,
-"squeeze":1.35,
-"range_15_60":0.66,
-"dry_up":1.47,
-"up_down_volume":1.02,
-"rel_volume":0.8,
-"rsi":58.0,
-"macd_hist_pct":0.66,
-"macd_rising":true,
-"above_20d_pct":4.3,
-"adx":16.0,
-"atr_pct":3.8,
-"rsi2":87.0,
-"sma5":30323.0,
-"rel_volume_5":1.2,
-"above_50d":true,
-"above_200d":true,
-"scorecard":4,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"RSI over 55",
-"MACD above its signal line"
-],
-"box":null,
-"base":{
-"top":32250.0,
-"low":25420.0,
-"width_pct":26.9,
-"to_top_pct":3.6
-},
-"ext_50d_pct":4.3,
-"ext_20d_pct":4.3,
-"ema20":29837.23,
-"clv":0.77,
-"sma50_rising":false,
-"sma200_rising":true,
-"closed_up":true,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Price",
-"v":"8% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 58 · MACD above its signal line and rising · ADX 16."
-},
-{
-"k":"Volume",
-"v":"0.8 times its usual volume in the last session; 1.0 times as much volume on rising days as on falling days over 50 sessions."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":298.9,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":63.52,
-"opm_yoy_chg":-2.76,
-"pat_yoy_pct":20.48,
-"earnings_quality_ok":true,
-"roce_pct":25.77,
-"roe_pct":21.04,
-"cfo_to_pat":1.26,
-"fcf_pos_years_3y":3,
-"debt_equity_x":0.0,
-"pe":115.2,
-"peg":0.97,
-"pledge_pct":null,
-"f_score":7,
-"is_financial":false,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"IPCALAB",
 "name":"IPCA Laboratories Limited",
 "price":1782.9,
@@ -5615,9 +5918,9 @@
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
-"pick_rank":12,
+"pick_rank":13,
 "young":false,
-"conviction":67.7,
+"conviction":67.6,
 "conviction_band":"Speculative",
 "why":[
 "ROCE 16%, cash flow 1× profit",
@@ -5632,7 +5935,7 @@
 "key":"quality",
 "points":19.7,
 "of":30.0,
-"share_pct":65.6,
+"share_pct":65.5,
 "detail":"Return on capital 16%, cash from operations 1× profit, free cash flow in 3 of the last 3 years, debt 0.1× equity."
 },
 {
@@ -5640,7 +5943,7 @@
 "key":"compounding",
 "points":16.8,
 "of":25.0,
-"share_pct":67.4,
+"share_pct":67.1,
 "detail":"Sales +16% a year, profit +35% a year over three years."
 },
 {
@@ -5654,9 +5957,9 @@
 {
 "factor":"Price against its own industry",
 "key":"valuation",
-"points":12.0,
+"points":11.9,
 "of":15.0,
-"share_pct":79.9,
+"share_pct":79.5,
 "detail":"P/E 32, PEG 0.92, EV/EBITDA 20, against its own industry."
 },
 {
@@ -5763,7 +6066,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":13.83,
-"opm_yoy_chg":3.27,
+"opm_yoy_chg":1.83,
 "pat_yoy_pct":38.78,
 "earnings_quality_ok":true,
 "roce_pct":16.12,
@@ -5781,195 +6084,6 @@
 }
 },
 {
-"symbol":"TRENT",
-"name":"Trent Limited",
-"price":3273.0,
-"sector":"Consumer Services",
-"list":"long",
-"setup":"Long-term pick",
-"setup_key":"pick_long",
-"horizon":"about a year",
-"pick_rank":13,
-"young":false,
-"conviction":67.4,
-"conviction_band":"Speculative",
-"why":[
-"ROCE 32%, cash flow 1.6× profit",
-"Sales +35% a year for 3 years",
-"P/E 74, PEG 1.2",
-"Up 12% in a year"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"Returns on capital, backed by cash",
-"key":"quality",
-"points":23.2,
-"of":30.0,
-"share_pct":77.5,
-"detail":"Return on capital 32%, cash from operations 1.6× profit, debt 0.1× equity."
-},
-{
-"factor":"Growth over three years",
-"key":"compounding",
-"points":17.7,
-"of":25.0,
-"share_pct":71.0,
-"detail":"Sales +35% a year, profit +64% a year over three years."
-},
-{
-"factor":"Pledges and changes in holdings",
-"key":"governance",
-"points":7.5,
-"of":15.0,
-"share_pct":50.0,
-"detail":"Pledges and holdings are not on file: counted as the middle."
-},
-{
-"factor":"Price against its own industry",
-"key":"valuation",
-"points":8.4,
-"of":15.0,
-"share_pct":56.0,
-"detail":"P/E 74, PEG 1.17, EV/EBITDA 42, against its own industry."
-},
-{
-"factor":"The year-long trend",
-"key":"trendq",
-"points":10.6,
-"of":15.0,
-"share_pct":70.4,
-"detail":"+12% over 12 months, 4% below its 52-week high, straightness 8/100."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":3273.0,
-"stop":2291.1,
-"risk_pct":30.0,
-"rr":null,
-"t1":null,
-"aim":4254.9,
-"aim_pct":30.0,
-"hold_sessions":252,
-"hold_text":"about a year",
-"review_on":"2027-11-27",
-"sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹2,291.10, 30% under this price."
-},
-"results":null,
-"order":null,
-"technicals":{
-"below_60d_high_pct":2.3,
-"below_6m_high_pct":2.1,
-"breakout":null,
-"squeeze":0.69,
-"range_15_60":0.43,
-"dry_up":0.83,
-"up_down_volume":1.43,
-"rel_volume":0.7,
-"rsi":65.0,
-"macd_hist_pct":0.15,
-"macd_rising":false,
-"above_20d_pct":3.9,
-"adx":37.0,
-"atr_pct":2.5,
-"rsi2":55.0,
-"sma5":3263.86,
-"rel_volume_5":1.2,
-"above_50d":true,
-"above_200d":true,
-"scorecard":8,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"50-day average above the 200-day",
-"RSI over 55",
-"MACD above its signal line",
-"ADX at 25 or more, buyers ahead",
-"More volume on up days",
-"Within 5% of its 52-week high"
-],
-"box":{
-"sessions_ago":2,
-"top":3280.0,
-"low":2545.8,
-"width_pct":28.8,
-"rel_volume":2.4,
-"close":3319.6,
-"holding":false
-},
-"base":{
-"top":3349.9,
-"low":2545.8,
-"width_pct":31.6,
-"to_top_pct":2.3
-},
-"ext_50d_pct":11.4,
-"ext_20d_pct":3.9,
-"ema20":3149.63,
-"clv":0.28,
-"sma50_rising":true,
-"sma200_rising":true,
-"closed_up":true,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Price",
-"v":"2% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 65 · MACD above its signal line · ADX 37."
-},
-{
-"k":"Volume",
-"v":"0.7 times its usual volume in the last session; 1.4 times as much volume on rising days as on falling days over 50 sessions."
-},
-{
-"k":"Range",
-"v":"Tightening: the last ten sessions moved 69% as much as the last sixty."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":218.4,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":21.91,
-"opm_yoy_chg":1.4,
-"pat_yoy_pct":25.35,
-"earnings_quality_ok":true,
-"roce_pct":31.56,
-"roe_pct":24.22,
-"cfo_to_pat":1.55,
-"fcf_pos_years_3y":null,
-"debt_equity_x":0.06,
-"pe":74.2,
-"peg":1.17,
-"pledge_pct":null,
-"f_score":null,
-"is_financial":false,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"LUMAXTECH",
 "name":"Lumax Auto Technologies Limited",
 "price":2327.8,
@@ -5980,7 +6094,7 @@
 "horizon":"about a year",
 "pick_rank":14,
 "young":false,
-"conviction":66.8,
+"conviction":67.1,
 "conviction_band":"Speculative",
 "why":[
 "ROCE 21%, cash flow 1.4× profit",
@@ -5995,15 +6109,15 @@
 "key":"quality",
 "points":19.2,
 "of":30.0,
-"share_pct":64.1,
+"share_pct":64.0,
 "detail":"Return on capital 21%, cash from operations 1.4× profit, free cash flow in 3 of the last 3 years, debt 0.5× equity."
 },
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":19.4,
+"points":19.5,
 "of":25.0,
-"share_pct":77.7,
+"share_pct":78.0,
 "detail":"Sales +38% a year, profit +45% a year over three years."
 },
 {
@@ -6017,10 +6131,10 @@
 {
 "factor":"Price against its own industry",
 "key":"valuation",
-"points":8.3,
+"points":8.6,
 "of":15.0,
-"share_pct":55.2,
-"detail":"P/E 44, PEG 0.98, EV/EBITDA 24, against its own industry."
+"share_pct":57.0,
+"detail":"P/E 44, PEG 0.98, EV/EBITDA 23, against its own industry."
 },
 {
 "factor":"The year-long trend",
@@ -6145,41 +6259,41 @@
 }
 },
 {
-"symbol":"GPPL",
-"name":"Gujarat Pipavav Port Limited",
-"price":178.5,
-"sector":"Services",
+"symbol":"ACUTAAS",
+"name":"Acutaas Chemicals Limited",
+"price":4075.0,
+"sector":"Healthcare",
 "list":"long",
 "setup":"Long-term pick",
 "setup_key":"pick_long",
 "horizon":"about a year",
 "pick_rank":15,
 "young":false,
-"conviction":66.7,
+"conviction":66.1,
 "conviction_band":"Speculative",
 "why":[
-"ROCE 28%, cash flow 0.9× profit",
-"Sales +8% a year for 3 years",
-"P/E 16, PEG 0.9",
-"Up 2% in a year"
+"ROCE 28%, cash flow 0.8× profit",
+"Sales +30% a year for 3 years",
+"P/E 76, PEG 1.2",
+"Up 138% in a year"
 ],
 "pattern":null,
 "evidence":[
 {
 "factor":"Returns on capital, backed by cash",
 "key":"quality",
-"points":21.4,
+"points":15.5,
 "of":30.0,
-"share_pct":71.3,
-"detail":"Return on capital 28%, cash from operations 0.9× profit, debt 0× equity."
+"share_pct":51.7,
+"detail":"Return on capital 28%, cash from operations 0.8× profit, free cash flow in 0 of the last 3 years, debt 0× equity."
 },
 {
 "factor":"Growth over three years",
 "key":"compounding",
-"points":15.0,
+"points":22.7,
 "of":25.0,
-"share_pct":60.1,
-"detail":"Sales +8% a year, profit +18% a year over three years."
+"share_pct":90.8,
+"detail":"Sales +30% a year, profit +62% a year over three years."
 },
 {
 "factor":"Pledges and changes in holdings",
@@ -6192,94 +6306,90 @@
 {
 "factor":"Price against its own industry",
 "key":"valuation",
-"points":12.4,
+"points":6.5,
 "of":15.0,
-"share_pct":82.6,
-"detail":"P/E 16, PEG 0.87, EV/EBITDA 11, against its own industry."
+"share_pct":43.3,
+"detail":"P/E 76, PEG 1.22, EV/EBITDA 52, against its own industry."
 },
 {
 "factor":"The year-long trend",
 "key":"trendq",
-"points":10.3,
+"points":13.9,
 "of":15.0,
-"share_pct":69.0,
-"detail":"+2% over 12 months, 11% below its 52-week high, straightness 61/100."
+"share_pct":92.5,
+"detail":"+138% over 12 months, 1% below its 52-week high, straightness 36/100."
 }
 ],
 "plan":{
 "style":"hold",
 "stance":"HOLD",
-"entry":178.5,
-"stop":124.95,
+"entry":4075.0,
+"stop":2852.5,
 "risk_pct":30.0,
 "rr":null,
 "t1":null,
-"aim":232.05,
+"aim":5297.5,
 "aim_pct":30.0,
 "hold_sessions":252,
 "hold_text":"about a year",
 "review_on":"2027-11-27",
 "sell_rule":null,
-"note":"Hold about a year. Leave if it closes below ₹124.95, 30% under this price."
+"note":"Hold about a year. Leave if it closes below ₹2,852.50, 30% under this price."
 },
 "results":null,
 "order":null,
 "technicals":{
-"below_60d_high_pct":1.9,
-"below_6m_high_pct":0.0,
+"below_60d_high_pct":1.4,
+"below_6m_high_pct":0.1,
 "breakout":null,
-"squeeze":0.97,
-"range_15_60":0.81,
-"dry_up":1.12,
-"up_down_volume":1.16,
-"rel_volume":0.7,
-"rsi":63.0,
-"macd_hist_pct":0.41,
-"macd_rising":false,
-"above_20d_pct":3.8,
-"adx":23.0,
-"atr_pct":2.8,
+"squeeze":0.66,
+"range_15_60":0.39,
+"dry_up":0.7,
+"up_down_volume":2.01,
+"rel_volume":1.3,
+"rsi":65.0,
+"macd_hist_pct":-0.19,
+"macd_rising":true,
+"above_20d_pct":5.3,
+"adx":25.0,
+"atr_pct":3.9,
 "rsi2":84.0,
-"sma5":176.29,
-"rel_volume_5":0.7,
+"sma5":3971.28,
+"rel_volume_5":1.4,
 "above_50d":true,
 "above_200d":true,
-"scorecard":5,
+"scorecard":8,
 "scorecard_met":[
 "Above its 20-day average",
 "20-day average above the 50-day",
 "50-day average above the 200-day",
 "RSI over 55",
-"MACD above its signal line"
+"ADX at 25 or more, buyers ahead",
+"More volume on up days",
+"Volume above its usual this week",
+"Within 5% of its 52-week high"
 ],
 "box":null,
 "base":{
-"top":181.89,
-"low":154.53,
-"width_pct":17.7,
-"to_top_pct":1.9
+"top":4130.0,
+"low":3031.1,
+"width_pct":36.3,
+"to_top_pct":1.3
 },
-"ext_50d_pct":6.9,
-"ext_20d_pct":3.8,
-"ema20":171.99,
-"clv":0.29,
+"ext_50d_pct":15.4,
+"ext_20d_pct":5.3,
+"ema20":3869.42,
+"clv":0.5,
 "sma50_rising":true,
-"sma200_rising":false,
+"sma200_rising":true,
 "closed_up":false,
 "launch":[],
-"watch":{
-"pattern":"VCP launchpad",
-"base":40,
-"top":181.89,
-"low":154.53,
-"width_pct":17.7,
-"to_top_pct":1.9
-}
+"watch":null
 },
 "chart":[
 {
 "k":"Price",
-"v":"2% under its 60-day high."
+"v":"1% under its 60-day high."
 },
 {
 "k":"Averages",
@@ -6287,16 +6397,20 @@
 },
 {
 "k":"Indicators",
-"v":"RSI 63 · MACD above its signal line · ADX 23."
+"v":"RSI 65 · MACD below its signal line and rising · ADX 25."
 },
 {
 "k":"Volume",
-"v":"0.7 times its usual volume in the last session; 1.2 times as much volume on rising days as on falling days over 50 sessions."
+"v":"1.3 times its usual volume in the last session; 2.0 times as much volume on rising days as on falling days over 50 sessions."
+},
+{
+"k":"Range",
+"v":"Tightening: the last ten sessions moved 66% as much as the last sixty."
 }
 ],
 "news":[],
 "adverse_filing":false,
-"avg_turnover_cr":19.3,
+"avg_turnover_cr":114.7,
 "liquidity_tier":"liquid",
 "tracked":false,
 "composite":null,
@@ -6307,19 +6421,19 @@
 "leader":{
 "fundamentals":{
 "quarter":"Q2 FY27",
-"revenue_yoy_pct":13.3,
-"opm_yoy_chg":-11.36,
-"pat_yoy_pct":-5.0,
+"revenue_yoy_pct":42.69,
+"opm_yoy_chg":9.15,
+"pat_yoy_pct":71.36,
 "earnings_quality_ok":true,
-"roce_pct":28.27,
-"roe_pct":21.57,
-"cfo_to_pat":0.95,
-"fcf_pos_years_3y":null,
+"roce_pct":27.98,
+"roe_pct":23.52,
+"cfo_to_pat":0.82,
+"fcf_pos_years_3y":0,
 "debt_equity_x":0.0,
-"pe":15.7,
-"peg":0.87,
+"pe":76.0,
+"peg":1.22,
 "pledge_pct":null,
-"f_score":null,
+"f_score":7,
 "is_financial":false,
 "sector_mf_quadrant":null
 }
@@ -6685,50 +6799,50 @@
 "list":"results",
 "horizon":"results",
 "label":"After results",
-"idea":"Companies whose stock jumped on quarterly results that showed real growth.",
+"idea":"Companies whose quarterly results showed real growth, ranked on the day's move against the average stock, its volume and the growth.",
 "hold_text":"about a month",
 "exit_pct":12.0,
 "tested":{
 "list_dates":205,
-"picks":2915,
+"picks":2914,
 "up_pct":55.0,
-"beat_index_pct":49.4,
-"avg_pct":1.89,
-"median_pct":1.17,
+"beat_index_pct":49.1,
+"avg_pct":1.81,
+"median_pct":1.14,
 "index_avg_pct":1.01,
-"big_winner_pct":3.1,
+"big_winner_pct":3.0,
 "worst_5pct":-13.7,
-"best_5pct":21.5,
-"exit_hit_pct":13.6,
-"lists_ahead_of_index_pct":57.1,
+"best_5pct":21.1,
+"exit_hit_pct":13.9,
+"lists_ahead_of_index_pct":56.6,
 "by_half":{
 "2018-21":{
 "list_dates":87,
-"picks":1196,
-"up_pct":55.0,
-"beat_index_pct":48.1,
-"avg_pct":2.06,
+"picks":1195,
+"up_pct":55.1,
+"beat_index_pct":48.2,
+"avg_pct":2.08,
 "median_pct":1.19,
 "index_avg_pct":1.25,
 "big_winner_pct":2.9,
 "worst_5pct":-13.5,
-"best_5pct":20.1,
+"best_5pct":20.0,
 "exit_hit_pct":11.5,
 "lists_ahead_of_index_pct":56.3
 },
 "2022-26":{
 "list_dates":118,
 "picks":1719,
-"up_pct":55.0,
-"beat_index_pct":50.4,
-"avg_pct":1.78,
-"median_pct":1.13,
+"up_pct":54.9,
+"beat_index_pct":49.7,
+"avg_pct":1.63,
+"median_pct":1.09,
 "index_avg_pct":0.84,
 "big_winner_pct":3.1,
-"worst_5pct":-13.8,
-"best_5pct":21.9,
-"exit_hit_pct":15.1,
-"lists_ahead_of_index_pct":57.6
+"worst_5pct":-13.9,
+"best_5pct":21.6,
+"exit_hit_pct":15.5,
+"lists_ahead_of_index_pct":56.8
 }
 },
 "by_year":{
@@ -6739,9 +6853,9 @@
 "picks":217
 },
 "2019":{
-"avg_pct":1.34,
+"avg_pct":1.26,
 "index_avg_pct":1.66,
-"up_pct":53.9,
+"up_pct":53.5,
 "picks":297
 },
 "2020":{
@@ -6751,76 +6865,76 @@
 "picks":300
 },
 "2021":{
-"avg_pct":4.73,
+"avg_pct":4.85,
 "index_avg_pct":2.19,
-"up_pct":59.9,
-"picks":382
+"up_pct":60.6,
+"picks":381
 },
 "2022":{
-"avg_pct":-1.24,
+"avg_pct":-1.38,
 "index_avg_pct":-0.93,
 "up_pct":42.9,
 "picks":324
 },
 "2023":{
-"avg_pct":4.78,
+"avg_pct":4.71,
 "index_avg_pct":2.44,
-"up_pct":70.5,
-"picks":359
+"up_pct":70.4,
+"picks":361
 },
 "2024":{
-"avg_pct":3.62,
+"avg_pct":3.34,
 "index_avg_pct":2.67,
-"up_pct":59.7,
+"up_pct":59.1,
 "picks":357
 },
 "2025":{
-"avg_pct":0.29,
+"avg_pct":0.24,
 "index_avg_pct":0.44,
-"up_pct":52.2,
-"picks":356
+"up_pct":52.3,
+"picks":354
 },
 "2026":{
-"avg_pct":1.1,
+"avg_pct":0.83,
 "index_avg_pct":-0.78,
-"up_pct":48.0,
+"up_pct":47.7,
 "picks":323
 }
 },
 "hold_sessions":21,
 "exit_pct":12.0,
-"avg_after_costs_pct":1.4,
+"avg_after_costs_pct":1.32,
 "vs_average_stock":{
-"excess_pct":0.99,
-"t":2.96,
-"lists_ahead_pct":59.0,
+"excess_pct":0.9,
+"t":2.66,
+"lists_ahead_pct":56.6,
 "by_half":{
 "2018-21":{
-"excess_pct":1.16,
-"t":1.64,
+"excess_pct":1.17,
+"t":1.65,
 "lists_ahead_pct":54.0
 },
 "2022-26":{
-"excess_pct":0.86,
-"t":3.39,
-"lists_ahead_pct":62.7
+"excess_pct":0.7,
+"t":2.68,
+"lists_ahead_pct":58.5
 }
 }
 },
 "vs_reporters":{
-"excess_pct":0.91,
-"t":3.13,
-"lists_ahead_pct":61.0,
+"excess_pct":0.83,
+"t":2.8,
+"lists_ahead_pct":58.0,
 "by_half":{
 "2018-21":{
-"excess_pct":1.07,
-"t":1.76,
-"lists_ahead_pct":56.3
+"excess_pct":1.09,
+"t":1.77,
+"lists_ahead_pct":55.2
 },
 "2022-26":{
-"excess_pct":0.79,
-"t":3.38,
-"lists_ahead_pct":64.4
+"excess_pct":0.64,
+"t":2.69,
+"lists_ahead_pct":60.2
 }
 }
 },
@@ -6828,15 +6942,15 @@
 "above_200d":{
 "list_dates":152,
 "picks":2196,
-"up_pct":55.1,
-"avg_pct":2.15,
+"up_pct":55.0,
+"avg_pct":2.07,
 "index_avg_pct":0.69
 },
 "below_200d":{
 "list_dates":53,
-"picks":719,
-"up_pct":54.8,
-"avg_pct":1.12,
+"picks":718,
+"up_pct":54.9,
+"avg_pct":1.03,
 "index_avg_pct":1.94
 }
 },
@@ -6846,8 +6960,8 @@
 "companies":2247,
 "window_sessions":10,
 "min_companies":8,
-"what":"Liquid companies whose quarterly results were first priced in the last 10 sessions and showed real growth: sales up 8% or more, profit and operating profit up, other income no more than 35% and an exceptional gain no more than 30% of profit before tax, and cash from operations positive in the last full year. Not already up 18% on the day, nor more than 15% under the 200-day average. Ranked half on that session's move less the average liquid stock's, a quarter on the volume behind it and a quarter on the growth; at most four from one industry. A list is made only when eight or more pass every test.",
-"bias":"The results tables hold companies listed today, so one delisted after a bad quarter is missing, and a revised quarter is seen from the revision's date with the revised figures. vs_reporters compares the list with every liquid company whose results were priced in the same ten sessions, which shares that bias.",
+"what":"Liquid companies whose quarterly results were first priced in the last 10 sessions and showed real growth: sales up 8% or more on a year ago, a profit and an operating profit, both up on a year ago (one-off items left out of the operating profit), other income no more than 35% and an exceptional gain no more than 30% of profit before tax, and cash from operations positive in the last full year. A lender is tested on its sales, profit and exceptional gain only. Not already up more than 18% on the day, nor more than 15% under the 200-day average. Ranked half on that session's move less the average liquid stock's, a quarter on the volume behind it and a quarter on the growth; at most 4 from one industry. A list is made only when 8 or more pass every test.",
+"bias":"The results tables hold companies listed today, so one delisted after a bad quarter is missing, and a revised quarter is seen from the revision's date with the revised figures. Against every liquid company whose results were priced in the same 10 sessions, which shares that bias, the list's lead was +0.83% a pick (2018-21 +1.09%, 2022-26 +0.64%).",
 "replay":"The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices and filings cut at that session; its top fifteen bought at the next open.",
 "lab":{
 "variant":"R4",
@@ -6864,43 +6978,43 @@
 },
 "first":{
 "list_dates":87,
-"picks":1196,
-"up_pct":55.0,
-"beat_index_pct":48.1,
-"avg_pct":2.06,
+"picks":1195,
+"up_pct":55.1,
+"beat_index_pct":48.2,
+"avg_pct":2.08,
 "median_pct":1.19,
 "index_avg_pct":1.25,
 "big_winner_pct":2.9,
 "worst_5pct":-13.5,
-"best_5pct":20.1,
+"best_5pct":20.0,
 "exit_hit_pct":11.5,
 "lists_ahead_of_index_pct":56.3,
-"avg_net_pct":1.57,
-"vs_index_pct":0.81,
-"vs_avg_stock_pct":1.16,
-"vs_avg_stock_net_pct":0.67,
-"vs_avg_stock_t":1.64,
+"avg_net_pct":1.59,
+"vs_index_pct":0.83,
+"vs_avg_stock_pct":1.17,
+"vs_avg_stock_net_pct":0.68,
+"vs_avg_stock_t":1.65,
 "lists_ahead_of_avg_stock_pct":54.0
 },
 "second":{
 "list_dates":118,
 "picks":1719,
-"up_pct":55.0,
-"beat_index_pct":50.4,
-"avg_pct":1.78,
-"median_pct":1.13,
+"up_pct":54.9,
+"beat_index_pct":49.7,
+"avg_pct":1.63,
+"median_pct":1.09,
 "index_avg_pct":0.84,
 "big_winner_pct":3.1,
-"worst_5pct":-13.8,
-"best_5pct":21.9,
-"exit_hit_pct":15.1,
-"lists_ahead_of_index_pct":57.6,
-"avg_net_pct":1.29,
-"vs_index_pct":0.94,
-"vs_avg_stock_pct":0.86,
-"vs_avg_stock_net_pct":0.37,
-"vs_avg_stock_t":3.39,
-"lists_ahead_of_avg_stock_pct":62.7
+"worst_5pct":-13.9,
+"best_5pct":21.6,
+"exit_hit_pct":15.5,
+"lists_ahead_of_index_pct":56.8,
+"avg_net_pct":1.14,
+"vs_index_pct":0.79,
+"vs_avg_stock_pct":0.7,
+"vs_avg_stock_net_pct":0.21,
+"vs_avg_stock_t":2.68,
+"lists_ahead_of_avg_stock_pct":58.5
 },
 "before":{
 "results":{
@@ -6968,7 +7082,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -6981,7 +7095,7 @@
 },
 "market_test":{
 "state":"above_200d",
-"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +2.1% (55 in 100 rose), against +1.1% on the other days. The list is not held back in either.",
+"text":"The index is above its 200-day average. In the test, picks made on days like this averaged +2.1% (55 in 100 rose), against +1.0% on the other days. The list is not held back in either.",
 "lists":152
 },
 "chart_note":"Facts about the chart, not reasons for the pick. Tested over ten years, none of these improved a list, so none of them changes a rank.",
@@ -7028,7 +7142,7 @@
 "excluded_adverse":[],
 "count":15,
 "considered":22,
-"method":"Every liquid NSE company whose quarterly results were first priced in the last 10 sessions is ranked against the others that reported, on how its stock moved that session against the average stock, the volume behind the move and the growth itself. Only results that were real growth are listed: sales up 8% or more on a year ago, profit and operating profit up, other income no more than 35% of profit before tax and no exceptional gain over 30% of it, and a stock not already up 18% that day, nor more than 15% under its 200-day average. With fewer than 8 such companies there is no list, and at most 4 come from one industry.",
+"method":"Every liquid NSE company whose quarterly results were first priced in the last 10 sessions is ranked against the others that reported, on how its stock moved that session against the average stock, the volume behind the move and the growth itself. Only results that were real growth are listed: sales up 8% or more on a year ago, profit up and operating profit up with one-off items left out, other income no more than 35% of profit before tax, no exceptional gain over 30% of it and cash from operations positive in the last full year (for a bank or lender: sales, profit and the exceptional test only), and a stock not already up more than 18% that day, nor more than 15% under its 200-day average. With fewer than 8 such companies there is no list, and at most 4 come from one industry.",
 "recipe_current":true,
 "study_current":true,
 "weights":{
@@ -7119,7 +7233,7 @@
 "horizon":"about a month",
 "pick_rank":1,
 "young":false,
-"conviction":88.9,
+"conviction":89.5,
 "conviction_band":"High",
 "why":[
 "Results on 12 Nov: rose 10% on 13 Nov",
@@ -7148,9 +7262,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":17.8,
+"points":18.4,
 "of":25.0,
-"share_pct":71.2,
+"share_pct":73.7,
 "detail":"Sales +31%, operating margin +0.1 pts on a year ago, sales growing faster than the quarter before."
 }
 ],
@@ -7263,7 +7377,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":31.03,
-"opm_yoy_chg":0.13,
+"opm_yoy_chg":0.14,
 "pat_yoy_pct":31.93,
 "earnings_quality_ok":true,
 "roce_pct":28.33,
@@ -7281,179 +7395,6 @@
 }
 },
 {
-"symbol":"BELRISE",
-"name":"Belrise Industries Limited",
-"price":241.04,
-"sector":"Automobile and Auto Components",
-"list":"results",
-"setup":"Results pick",
-"setup_key":"pick_results",
-"horizon":"about a month",
-"pick_rank":2,
-"young":false,
-"conviction":87.5,
-"conviction_band":"High",
-"why":[
-"Results on 13 Nov: rose 9% on 16 Nov",
-"Volume 42.0× usual",
-"Sales +17%, operating profit up",
-"Profit up 25% on a year ago"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"Move on the day its results were priced",
-"key":"reaction",
-"points":48.7,
-"of":50.0,
-"share_pct":97.4,
-"detail":"+9.2% on 16 Nov, the first session after its results reached the exchange; the average liquid stock moved -1.0%. Against the 77 companies priced on results in the last 10 sessions."
-},
-{
-"factor":"Volume that day",
-"key":"volume",
-"points":25.0,
-"of":25.0,
-"share_pct":100.0,
-"detail":"42.0 times its usual volume that day."
-},
-{
-"factor":"Growth in the quarter it reported",
-"key":"growth",
-"points":13.8,
-"of":25.0,
-"share_pct":55.4,
-"detail":"Sales +17%, operating margin -0.5 pts on a year ago, sales growing faster than the quarter before."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":241.04,
-"stop":212.12,
-"risk_pct":12.0,
-"rr":null,
-"t1":null,
-"aim":269.96,
-"aim_pct":12.0,
-"hold_sessions":21,
-"hold_text":"about a month",
-"review_on":"2026-12-27",
-"sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹212.12, 12% under this price."
-},
-"results":{
-"filed_at":"2026-11-13 22:03:03",
-"session":"2026-11-16",
-"sessions_ago":8,
-"quarter":"Q2 FY27",
-"move_pct":9.2,
-"market_move_pct":-1.0,
-"reaction_pct":10.2,
-"vol_x":42.03,
-"pat_yoy_pct":25.24,
-"revenue_yoy_pct":16.69,
-"reported":77,
-"qualified":28
-},
-"order":null,
-"technicals":{
-"below_60d_high_pct":5.2,
-"below_6m_high_pct":7.8,
-"breakout":null,
-"squeeze":1.24,
-"range_15_60":0.57,
-"dry_up":2.67,
-"up_down_volume":2.37,
-"rel_volume":1.2,
-"rsi":64.0,
-"macd_hist_pct":1.14,
-"macd_rising":false,
-"above_20d_pct":4.8,
-"adx":23.0,
-"atr_pct":3.3,
-"rsi2":76.0,
-"sma5":239.63,
-"rel_volume_5":1.3,
-"above_50d":true,
-"above_200d":true,
-"scorecard":7,
-"scorecard_met":[
-"Above its 20-day average",
-"20-day average above the 50-day",
-"50-day average above the 200-day",
-"RSI over 55",
-"MACD above its signal line",
-"More volume on up days",
-"Volume above its usual this week"
-],
-"box":null,
-"base":{
-"top":254.28,
-"low":194.19,
-"width_pct":30.9,
-"to_top_pct":5.5
-},
-"ext_50d_pct":5.2,
-"ext_20d_pct":4.8,
-"ema20":230.04,
-"clv":0.21,
-"sma50_rising":true,
-"sma200_rising":true,
-"closed_up":false,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Price",
-"v":"5% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Above its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 64 · MACD above its signal line · ADX 23."
-},
-{
-"k":"Volume",
-"v":"1.2 times its usual volume in the last session; 2.4 times as much volume on rising days as on falling days over 50 sessions."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":64.3,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":16.69,
-"opm_yoy_chg":-0.53,
-"pat_yoy_pct":25.24,
-"earnings_quality_ok":true,
-"roce_pct":13.46,
-"roe_pct":12.52,
-"cfo_to_pat":1.76,
-"fcf_pos_years_3y":null,
-"debt_equity_x":0.18,
-"pe":39.5,
-"peg":null,
-"pledge_pct":null,
-"f_score":6,
-"is_financial":false,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"TDPOWERSYS",
 "name":"TD Power Systems Limited",
 "price":617.65,
@@ -7462,9 +7403,9 @@
 "setup":"Results pick",
 "setup_key":"pick_results",
 "horizon":"about a month",
-"pick_rank":3,
+"pick_rank":2,
 "young":false,
-"conviction":87.0,
+"conviction":87.6,
 "conviction_band":"High",
 "why":[
 "Results on 12 Nov: rose 2% on 13 Nov",
@@ -7493,9 +7434,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":22.4,
+"points":23.0,
 "of":25.0,
-"share_pct":89.6,
+"share_pct":91.9,
 "detail":"Sales +86%, operating margin +2.4 pts on a year ago, sales growing faster than the quarter before."
 }
 ],
@@ -7628,6 +7569,179 @@
 }
 },
 {
+"symbol":"BELRISE",
+"name":"Belrise Industries Limited",
+"price":241.04,
+"sector":"Automobile and Auto Components",
+"list":"results",
+"setup":"Results pick",
+"setup_key":"pick_results",
+"horizon":"about a month",
+"pick_rank":3,
+"young":false,
+"conviction":87.4,
+"conviction_band":"High",
+"why":[
+"Results on 13 Nov: rose 9% on 16 Nov",
+"Volume 42.0× usual",
+"Sales +17%, operating profit up",
+"Profit up 25% on a year ago"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"Move on the day its results were priced",
+"key":"reaction",
+"points":48.7,
+"of":50.0,
+"share_pct":97.4,
+"detail":"+9.2% on 16 Nov, the first session after its results reached the exchange; the average liquid stock moved -1.0%. Against the 77 companies priced on results in the last 10 sessions."
+},
+{
+"factor":"Volume that day",
+"key":"volume",
+"points":25.0,
+"of":25.0,
+"share_pct":100.0,
+"detail":"42.0 times its usual volume that day."
+},
+{
+"factor":"Growth in the quarter it reported",
+"key":"growth",
+"points":13.7,
+"of":25.0,
+"share_pct":54.9,
+"detail":"Sales +17%, operating margin -0.6 pts on a year ago, sales growing faster than the quarter before."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":241.04,
+"stop":212.12,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"aim":269.96,
+"aim_pct":12.0,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-27",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹212.12, 12% under this price."
+},
+"results":{
+"filed_at":"2026-11-13 22:03:03",
+"session":"2026-11-16",
+"sessions_ago":8,
+"quarter":"Q2 FY27",
+"move_pct":9.2,
+"market_move_pct":-1.0,
+"reaction_pct":10.2,
+"vol_x":42.03,
+"pat_yoy_pct":25.24,
+"revenue_yoy_pct":16.69,
+"reported":77,
+"qualified":28
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":5.2,
+"below_6m_high_pct":7.8,
+"breakout":null,
+"squeeze":1.24,
+"range_15_60":0.57,
+"dry_up":2.67,
+"up_down_volume":2.37,
+"rel_volume":1.2,
+"rsi":64.0,
+"macd_hist_pct":1.14,
+"macd_rising":false,
+"above_20d_pct":4.8,
+"adx":23.0,
+"atr_pct":3.3,
+"rsi2":76.0,
+"sma5":239.63,
+"rel_volume_5":1.3,
+"above_50d":true,
+"above_200d":true,
+"scorecard":7,
+"scorecard_met":[
+"Above its 20-day average",
+"20-day average above the 50-day",
+"50-day average above the 200-day",
+"RSI over 55",
+"MACD above its signal line",
+"More volume on up days",
+"Volume above its usual this week"
+],
+"box":null,
+"base":{
+"top":254.28,
+"low":194.19,
+"width_pct":30.9,
+"to_top_pct":5.5
+},
+"ext_50d_pct":5.2,
+"ext_20d_pct":4.8,
+"ema20":230.04,
+"clv":0.21,
+"sma50_rising":true,
+"sma200_rising":true,
+"closed_up":false,
+"launch":[],
+"watch":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"5% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Above its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 64 · MACD above its signal line · ADX 23."
+},
+{
+"k":"Volume",
+"v":"1.2 times its usual volume in the last session; 2.4 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":64.3,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":16.69,
+"opm_yoy_chg":-0.55,
+"pat_yoy_pct":25.24,
+"earnings_quality_ok":true,
+"roce_pct":13.46,
+"roe_pct":12.52,
+"cfo_to_pat":1.76,
+"fcf_pos_years_3y":null,
+"debt_equity_x":0.18,
+"pe":39.5,
+"peg":null,
+"pledge_pct":null,
+"f_score":6,
+"is_financial":false,
+"sector_mf_quadrant":null
+}
+}
+},
+{
 "symbol":"SYNCOMF",
 "name":"Syncom Formulations (India) Limited",
 "price":24.0,
@@ -7638,7 +7752,7 @@
 "horizon":"about a month",
 "pick_rank":4,
 "young":false,
-"conviction":83.9,
+"conviction":84.2,
 "conviction_band":"Moderate",
 "why":[
 "Results on 13 Nov: rose 4% on 16 Nov",
@@ -7667,9 +7781,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":19.9,
+"points":20.2,
 "of":25.0,
-"share_pct":79.7,
+"share_pct":80.9,
 "detail":"Sales +17%, operating margin +7.3 pts on a year ago, sales growing faster than the quarter before."
 }
 ],
@@ -7816,7 +7930,7 @@
 "horizon":"about a month",
 "pick_rank":5,
 "young":false,
-"conviction":83.8,
+"conviction":83.7,
 "conviction_band":"Moderate",
 "why":[
 "Results on 12 Nov: rose 11% on 13 Nov",
@@ -7845,9 +7959,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":14.6,
+"points":14.5,
 "of":25.0,
-"share_pct":58.6,
+"share_pct":58.1,
 "detail":"Sales +64%, operating margin -2.8 pts on a year ago."
 }
 ],
@@ -7986,7 +8100,7 @@
 "horizon":"about a month",
 "pick_rank":6,
 "young":false,
-"conviction":81.1,
+"conviction":80.8,
 "conviction_band":"Moderate",
 "why":[
 "Results on 14 Nov: rose 8% on 16 Nov",
@@ -8015,9 +8129,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":13.8,
+"points":13.6,
 "of":25.0,
-"share_pct":55.4,
+"share_pct":54.3,
 "detail":"Sales +25%, operating margin -2.1 pts on a year ago, sales growing faster than the quarter before."
 }
 ],
@@ -8131,7 +8245,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":24.56,
-"opm_yoy_chg":-2.11,
+"opm_yoy_chg":-2.1,
 "pat_yoy_pct":4.04,
 "earnings_quality_ok":true,
 "roce_pct":13.36,
@@ -8159,7 +8273,7 @@
 "horizon":"about a month",
 "pick_rank":7,
 "young":false,
-"conviction":76.2,
+"conviction":76.3,
 "conviction_band":"Moderate",
 "why":[
 "Results on 13 Nov: rose 2% that day",
@@ -8190,8 +8304,8 @@
 "key":"growth",
 "points":13.9,
 "of":25.0,
-"share_pct":55.6,
-"detail":"Sales +22%, operating margin +0.3 pts on a year ago."
+"share_pct":55.8,
+"detail":"Sales +22%, operating margin +0.0 pts on a year ago."
 }
 ],
 "plan":{
@@ -8305,7 +8419,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":22.2,
-"opm_yoy_chg":0.28,
+"opm_yoy_chg":0.04,
 "pat_yoy_pct":30.6,
 "earnings_quality_ok":true,
 "roce_pct":18.77,
@@ -8333,7 +8447,7 @@
 "horizon":"about a month",
 "pick_rank":8,
 "young":false,
-"conviction":74.1,
+"conviction":74.0,
 "conviction_band":"Moderate",
 "why":[
 "Results on 13 Nov: rose 2% on 16 Nov",
@@ -8362,9 +8476,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":19.3,
+"points":19.1,
 "of":25.0,
-"share_pct":77.1,
+"share_pct":76.3,
 "detail":"Sales +127%, operating margin -1.2 pts on a year ago, sales growing faster than the quarter before."
 }
 ],
@@ -8476,7 +8590,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":127.39,
-"opm_yoy_chg":-1.21,
+"opm_yoy_chg":-1.2,
 "pat_yoy_pct":238.95,
 "earnings_quality_ok":true,
 "roce_pct":10.14,
@@ -8504,10 +8618,10 @@
 "horizon":"about a month",
 "pick_rank":9,
 "young":false,
-"conviction":73.2,
+"conviction":73.5,
 "conviction_band":"Moderate",
 "why":[
-"Results on 12 Nov: rose 0% on 13 Nov",
+"Results on 12 Nov: rose 0.3% on 13 Nov",
 "Volume 3.9× usual",
 "Sales +30%, operating profit up",
 "Profit up 53% on a year ago"
@@ -8533,9 +8647,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":20.2,
+"points":20.5,
 "of":25.0,
-"share_pct":80.9,
+"share_pct":82.1,
 "detail":"Sales +30%, operating margin +8.2 pts on a year ago."
 }
 ],
@@ -8641,7 +8755,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":29.86,
-"opm_yoy_chg":8.23,
+"opm_yoy_chg":8.22,
 "pat_yoy_pct":53.36,
 "earnings_quality_ok":true,
 "roce_pct":9.69,
@@ -8669,10 +8783,10 @@
 "horizon":"about a month",
 "pick_rank":10,
 "young":false,
-"conviction":71.2,
+"conviction":71.3,
 "conviction_band":"Moderate",
 "why":[
-"Results on 12 Nov: fell 0% on 13 Nov",
+"Results on 12 Nov: fell 0.4% on 13 Nov",
 "Volume 8.8× usual",
 "Sales +11%, operating profit up"
 ],
@@ -8697,9 +8811,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":17.6,
+"points":17.7,
 "of":25.0,
-"share_pct":70.5,
+"share_pct":70.9,
 "detail":"Sales +11%, operating margin +6.2 pts on a year ago, sales growing faster than the quarter before."
 }
 ],
@@ -8827,6 +8941,176 @@
 }
 },
 {
+"symbol":"NAVA",
+"name":"NAVA LIMITED",
+"price":538.6,
+"sector":"Power",
+"list":"results",
+"setup":"Results pick",
+"setup_key":"pick_results",
+"horizon":"about a month",
+"pick_rank":11,
+"young":false,
+"conviction":68.6,
+"conviction_band":"Speculative",
+"why":[
+"Results on 12 Nov: rose 0.1% on 13 Nov",
+"Volume 2.4× usual",
+"Sales +30%, operating profit up",
+"Profit up 127% on a year ago"
+],
+"pattern":null,
+"evidence":[
+{
+"factor":"Move on the day its results were priced",
+"key":"reaction",
+"points":35.7,
+"of":50.0,
+"share_pct":71.4,
+"detail":"+0.1% on 13 Nov, the first session after its results reached the exchange; the average liquid stock moved -0.4%. Against the 77 companies priced on results in the last 10 sessions."
+},
+{
+"factor":"Volume that day",
+"key":"volume",
+"points":10.7,
+"of":25.0,
+"share_pct":42.9,
+"detail":"2.4 times its usual volume that day."
+},
+{
+"factor":"Growth in the quarter it reported",
+"key":"growth",
+"points":22.1,
+"of":25.0,
+"share_pct":88.6,
+"detail":"Sales +30%, operating margin +5.4 pts on a year ago, sales growing faster than the quarter before."
+}
+],
+"plan":{
+"style":"hold",
+"stance":"HOLD",
+"entry":538.6,
+"stop":473.97,
+"risk_pct":12.0,
+"rr":null,
+"t1":null,
+"aim":603.23,
+"aim_pct":12.0,
+"hold_sessions":21,
+"hold_text":"about a month",
+"review_on":"2026-12-27",
+"sell_rule":null,
+"note":"Hold about a month. Leave if it closes below ₹473.97, 12% under this price."
+},
+"results":{
+"filed_at":"2026-11-12 18:51:12",
+"session":"2026-11-13",
+"sessions_ago":9,
+"quarter":"Q2 FY27",
+"move_pct":0.1,
+"market_move_pct":-0.4,
+"reaction_pct":0.5,
+"vol_x":2.39,
+"pat_yoy_pct":127.3,
+"revenue_yoy_pct":29.95,
+"reported":77,
+"qualified":28
+},
+"order":null,
+"technicals":{
+"below_60d_high_pct":9.8,
+"below_6m_high_pct":13.5,
+"breakout":null,
+"squeeze":1.21,
+"range_15_60":0.54,
+"dry_up":0.97,
+"up_down_volume":1.84,
+"rel_volume":0.6,
+"rsi":49.0,
+"macd_hist_pct":0.07,
+"macd_rising":false,
+"above_20d_pct":-0.6,
+"adx":21.0,
+"atr_pct":3.8,
+"rsi2":17.0,
+"sma5":549.58,
+"rel_volume_5":2.4,
+"above_50d":false,
+"above_200d":false,
+"scorecard":4,
+"scorecard_met":[
+"20-day average above the 50-day",
+"MACD above its signal line",
+"More volume on up days",
+"Volume above its usual this week"
+],
+"box":null,
+"base":{
+"top":597.0,
+"low":456.0,
+"width_pct":30.9,
+"to_top_pct":10.8
+},
+"ext_50d_pct":-0.2,
+"ext_20d_pct":-0.6,
+"ema20":541.66,
+"clv":0.12,
+"sma50_rising":false,
+"sma200_rising":false,
+"closed_up":false,
+"launch":[],
+"watch":null
+},
+"chart":[
+{
+"k":"Price",
+"v":"10% under its 60-day high."
+},
+{
+"k":"Averages",
+"v":"Under its 20, 50 and 200-day averages."
+},
+{
+"k":"Indicators",
+"v":"RSI 49 · MACD above its signal line · ADX 21."
+},
+{
+"k":"Volume",
+"v":"0.6 times its usual volume in the last session; 1.8 times as much volume on rising days as on falling days over 50 sessions."
+}
+],
+"news":[],
+"adverse_filing":false,
+"avg_turnover_cr":10.9,
+"liquidity_tier":"liquid",
+"tracked":false,
+"composite":null,
+"technical":null,
+"fundamental":null,
+"f_score":null,
+"setup_fit":null,
+"leader":{
+"fundamentals":{
+"quarter":"Q2 FY27",
+"revenue_yoy_pct":29.95,
+"opm_yoy_chg":5.42,
+"pat_yoy_pct":127.3,
+"earnings_quality_ok":true,
+"roce_pct":11.66,
+"roe_pct":10.29,
+"cfo_to_pat":2.23,
+"fcf_pos_years_3y":3,
+"debt_equity_x":0.26,
+"pe":16.2,
+"peg":null,
+"pledge_pct":null,
+"f_score":5,
+"is_financial":false,
+"sector_mf_quadrant":null
+}
+}
+},
+{
 "symbol":"ACE",
 "name":"Action Construction Equipment Limited",
 "price":1325.7,
@@ -8835,12 +9119,12 @@
 "setup":"Results pick",
 "setup_key":"pick_results",
 "horizon":"about a month",
-"pick_rank":11,
+"pick_rank":12,
 "young":false,
-"conviction":71.0,
-"conviction_band":"Moderate",
+"conviction":67.2,
+"conviction_band":"Speculative",
 "why":[
-"Results on 12 Nov: rose 0% on 13 Nov",
+"Results on 12 Nov: little changed on 13 Nov",
 "Volume 5.8× usual",
 "Sales +19%, operating profit up",
 "Profit up 82% on a year ago"
@@ -8866,10 +9150,10 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":17.4,
+"points":13.6,
 "of":25.0,
-"share_pct":69.7,
-"detail":"Sales +19%, operating margin +6.1 pts on a year ago."
+"share_pct":54.6,
+"detail":"Sales +19%, operating margin +0.5 pts on a year ago."
 }
 ],
 "plan":{
@@ -9005,7 +9289,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":19.06,
-"opm_yoy_chg":6.11,
+"opm_yoy_chg":0.47,
 "pat_yoy_pct":82.38,
 "earnings_quality_ok":true,
 "roce_pct":28.78,
@@ -9023,176 +9307,6 @@
 }
 },
 {
-"symbol":"NAVA",
-"name":"NAVA LIMITED",
-"price":538.6,
-"sector":"Power",
-"list":"results",
-"setup":"Results pick",
-"setup_key":"pick_results",
-"horizon":"about a month",
-"pick_rank":12,
-"young":false,
-"conviction":68.3,
-"conviction_band":"Speculative",
-"why":[
-"Results on 12 Nov: rose 0% on 13 Nov",
-"Volume 2.4× usual",
-"Sales +30%, operating profit up",
-"Profit up 127% on a year ago"
-],
-"pattern":null,
-"evidence":[
-{
-"factor":"Move on the day its results were priced",
-"key":"reaction",
-"points":35.7,
-"of":50.0,
-"share_pct":71.4,
-"detail":"+0.1% on 13 Nov, the first session after its results reached the exchange; the average liquid stock moved -0.4%. Against the 77 companies priced on results in the last 10 sessions."
-},
-{
-"factor":"Volume that day",
-"key":"volume",
-"points":10.7,
-"of":25.0,
-"share_pct":42.9,
-"detail":"2.4 times its usual volume that day."
-},
-{
-"factor":"Growth in the quarter it reported",
-"key":"growth",
-"points":21.9,
-"of":25.0,
-"share_pct":87.6,
-"detail":"Sales +30%, operating margin +5.4 pts on a year ago, sales growing faster than the quarter before."
-}
-],
-"plan":{
-"style":"hold",
-"stance":"HOLD",
-"entry":538.6,
-"stop":473.97,
-"risk_pct":12.0,
-"rr":null,
-"t1":null,
-"aim":603.23,
-"aim_pct":12.0,
-"hold_sessions":21,
-"hold_text":"about a month",
-"review_on":"2026-12-27",
-"sell_rule":null,
-"note":"Hold about a month. Leave if it closes below ₹473.97, 12% under this price."
-},
-"results":{
-"filed_at":"2026-11-12 18:51:12",
-"session":"2026-11-13",
-"sessions_ago":9,
-"quarter":"Q2 FY27",
-"move_pct":0.1,
-"market_move_pct":-0.4,
-"reaction_pct":0.5,
-"vol_x":2.39,
-"pat_yoy_pct":127.3,
-"revenue_yoy_pct":29.95,
-"reported":77,
-"qualified":28
-},
-"order":null,
-"technicals":{
-"below_60d_high_pct":9.8,
-"below_6m_high_pct":13.5,
-"breakout":null,
-"squeeze":1.21,
-"range_15_60":0.54,
-"dry_up":0.97,
-"up_down_volume":1.84,
-"rel_volume":0.6,
-"rsi":49.0,
-"macd_hist_pct":0.07,
-"macd_rising":false,
-"above_20d_pct":-0.6,
-"adx":21.0,
-"atr_pct":3.8,
-"rsi2":17.0,
-"sma5":549.58,
-"rel_volume_5":2.4,
-"above_50d":false,
-"above_200d":false,
-"scorecard":4,
-"scorecard_met":[
-"20-day average above the 50-day",
-"MACD above its signal line",
-"More volume on up days",
-"Volume above its usual this week"
-],
-"box":null,
-"base":{
-"top":597.0,
-"low":456.0,
-"width_pct":30.9,
-"to_top_pct":10.8
-},
-"ext_50d_pct":-0.2,
-"ext_20d_pct":-0.6,
-"ema20":541.66,
-"clv":0.12,
-"sma50_rising":false,
-"sma200_rising":false,
-"closed_up":false,
-"launch":[],
-"watch":null
-},
-"chart":[
-{
-"k":"Price",
-"v":"10% under its 60-day high."
-},
-{
-"k":"Averages",
-"v":"Under its 20, 50 and 200-day averages."
-},
-{
-"k":"Indicators",
-"v":"RSI 49 · MACD above its signal line · ADX 21."
-},
-{
-"k":"Volume",
-"v":"0.6 times its usual volume in the last session; 1.8 times as much volume on rising days as on falling days over 50 sessions."
-}
-],
-"news":[],
-"adverse_filing":false,
-"avg_turnover_cr":10.9,
-"liquidity_tier":"liquid",
-"tracked":false,
-"composite":null,
-"technical":null,
-"fundamental":null,
-"f_score":null,
-"setup_fit":null,
-"leader":{
-"fundamentals":{
-"quarter":"Q2 FY27",
-"revenue_yoy_pct":29.95,
-"opm_yoy_chg":5.43,
-"pat_yoy_pct":127.3,
-"earnings_quality_ok":true,
-"roce_pct":11.66,
-"roe_pct":10.29,
-"cfo_to_pat":2.23,
-"fcf_pos_years_3y":3,
-"debt_equity_x":0.26,
-"pe":16.2,
-"peg":null,
-"pledge_pct":null,
-"f_score":5,
-"is_financial":false,
-"sector_mf_quadrant":null
-}
-}
-},
-{
 "symbol":"FILATEX",
 "name":"Filatex India Limited",
 "price":112.57,
@@ -9203,7 +9317,7 @@
 "horizon":"about a month",
 "pick_rank":13,
 "young":false,
-"conviction":66.9,
+"conviction":66.7,
 "conviction_band":"Speculative",
 "why":[
 "Results on 13 Nov: rose 3% on 16 Nov",
@@ -9232,9 +9346,9 @@
 {
 "factor":"Growth in the quarter it reported",
 "key":"growth",
-"points":14.0,
+"points":13.8,
 "of":25.0,
-"share_pct":56.1,
+"share_pct":55.2,
 "detail":"Sales +21%, operating margin -1.4 pts on a year ago, sales growing faster than the quarter before."
 }
 ],
@@ -9388,7 +9502,7 @@
 "conviction":62.3,
 "conviction_band":"Speculative",
 "why":[
-"Results on 13 Nov: fell 1% on 16 Nov",
+"Results on 13 Nov: fell 0.7% on 16 Nov",
 "Volume 4.4× usual",
 "Sales +20%, operating profit up",
 "Profit up 15% on a year ago"
@@ -9416,7 +9530,7 @@
 "key":"growth",
 "points":11.7,
 "of":25.0,
-"share_pct":46.7,
+"share_pct":46.8,
 "detail":"Sales +20%, operating margin -0.8 pts on a year ago."
 }
 ],
@@ -9713,7 +9827,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":11.52,
-"opm_yoy_chg":-0.8,
+"opm_yoy_chg":-0.81,
 "pat_yoy_pct":3.99,
 "earnings_quality_ok":true,
 "roce_pct":70.99,
@@ -9724,7 +9838,7 @@
 "pe":45.1,
 "peg":4.43,
 "pledge_pct":null,
-"f_score":4,
+"f_score":5,
 "is_financial":false,
 "sector_mf_quadrant":null
 }
@@ -9758,50 +9872,50 @@
 "list":"results",
 "horizon":"results",
 "label":"After results",
-"idea":"Companies whose stock jumped on quarterly results that showed real growth.",
+"idea":"Companies whose quarterly results showed real growth, ranked on the day's move against the average stock, its volume and the growth.",
 "hold_text":"about a month",
 "exit_pct":12.0,
 "tested":{
 "list_dates":205,
-"picks":2915,
+"picks":2914,
 "up_pct":55.0,
-"beat_index_pct":49.4,
-"avg_pct":1.89,
-"median_pct":1.17,
+"beat_index_pct":49.1,
+"avg_pct":1.81,
+"median_pct":1.14,
 "index_avg_pct":1.01,
-"big_winner_pct":3.1,
+"big_winner_pct":3.0,
 "worst_5pct":-13.7,
-"best_5pct":21.5,
-"exit_hit_pct":13.6,
-"lists_ahead_of_index_pct":57.1,
+"best_5pct":21.1,
+"exit_hit_pct":13.9,
+"lists_ahead_of_index_pct":56.6,
 "by_half":{
 "2018-21":{
 "list_dates":87,
-"picks":1196,
-"up_pct":55.0,
-"beat_index_pct":48.1,
-"avg_pct":2.06,
+"picks":1195,
+"up_pct":55.1,
+"beat_index_pct":48.2,
+"avg_pct":2.08,
 "median_pct":1.19,
 "index_avg_pct":1.25,
 "big_winner_pct":2.9,
 "worst_5pct":-13.5,
-"best_5pct":20.1,
+"best_5pct":20.0,
 "exit_hit_pct":11.5,
 "lists_ahead_of_index_pct":56.3
 },
 "2022-26":{
 "list_dates":118,
 "picks":1719,
-"up_pct":55.0,
-"beat_index_pct":50.4,
-"avg_pct":1.78,
-"median_pct":1.13,
+"up_pct":54.9,
+"beat_index_pct":49.7,
+"avg_pct":1.63,
+"median_pct":1.09,
 "index_avg_pct":0.84,
 "big_winner_pct":3.1,
-"worst_5pct":-13.8,
-"best_5pct":21.9,
-"exit_hit_pct":15.1,
-"lists_ahead_of_index_pct":57.6
+"worst_5pct":-13.9,
+"best_5pct":21.6,
+"exit_hit_pct":15.5,
+"lists_ahead_of_index_pct":56.8
 }
 },
 "by_year":{
@@ -9812,9 +9926,9 @@
 "picks":217
 },
 "2019":{
-"avg_pct":1.34,
+"avg_pct":1.26,
 "index_avg_pct":1.66,
-"up_pct":53.9,
+"up_pct":53.5,
 "picks":297
 },
 "2020":{
@@ -9824,76 +9938,76 @@
 "picks":300
 },
 "2021":{
-"avg_pct":4.73,
+"avg_pct":4.85,
 "index_avg_pct":2.19,
-"up_pct":59.9,
-"picks":382
+"up_pct":60.6,
+"picks":381
 },
 "2022":{
-"avg_pct":-1.24,
+"avg_pct":-1.38,
 "index_avg_pct":-0.93,
 "up_pct":42.9,
 "picks":324
 },
 "2023":{
-"avg_pct":4.78,
+"avg_pct":4.71,
 "index_avg_pct":2.44,
-"up_pct":70.5,
-"picks":359
+"up_pct":70.4,
+"picks":361
 },
 "2024":{
-"avg_pct":3.62,
+"avg_pct":3.34,
 "index_avg_pct":2.67,
-"up_pct":59.7,
+"up_pct":59.1,
 "picks":357
 },
 "2025":{
-"avg_pct":0.29,
+"avg_pct":0.24,
 "index_avg_pct":0.44,
-"up_pct":52.2,
-"picks":356
+"up_pct":52.3,
+"picks":354
 },
 "2026":{
-"avg_pct":1.1,
+"avg_pct":0.83,
 "index_avg_pct":-0.78,
-"up_pct":48.0,
+"up_pct":47.7,
 "picks":323
 }
 },
 "hold_sessions":21,
 "exit_pct":12.0,
-"avg_after_costs_pct":1.4,
+"avg_after_costs_pct":1.32,
 "vs_average_stock":{
-"excess_pct":0.99,
-"t":2.96,
-"lists_ahead_pct":59.0,
+"excess_pct":0.9,
+"t":2.66,
+"lists_ahead_pct":56.6,
 "by_half":{
 "2018-21":{
-"excess_pct":1.16,
-"t":1.64,
+"excess_pct":1.17,
+"t":1.65,
 "lists_ahead_pct":54.0
 },
 "2022-26":{
-"excess_pct":0.86,
-"t":3.39,
-"lists_ahead_pct":62.7
+"excess_pct":0.7,
+"t":2.68,
+"lists_ahead_pct":58.5
 }
 }
 },
 "vs_reporters":{
-"excess_pct":0.91,
-"t":3.13,
-"lists_ahead_pct":61.0,
+"excess_pct":0.83,
+"t":2.8,
+"lists_ahead_pct":58.0,
 "by_half":{
 "2018-21":{
-"excess_pct":1.07,
-"t":1.76,
-"lists_ahead_pct":56.3
+"excess_pct":1.09,
+"t":1.77,
+"lists_ahead_pct":55.2
 },
 "2022-26":{
-"excess_pct":0.79,
-"t":3.38,
-"lists_ahead_pct":64.4
+"excess_pct":0.64,
+"t":2.69,
+"lists_ahead_pct":60.2
 }
 }
 },
@@ -9901,15 +10015,15 @@
 "above_200d":{
 "list_dates":152,
 "picks":2196,
-"up_pct":55.1,
-"avg_pct":2.15,
+"up_pct":55.0,
+"avg_pct":2.07,
 "index_avg_pct":0.69
 },
 "below_200d":{
 "list_dates":53,
-"picks":719,
-"up_pct":54.8,
-"avg_pct":1.12,
+"picks":718,
+"up_pct":54.9,
+"avg_pct":1.03,
 "index_avg_pct":1.94
 }
 },
@@ -9919,8 +10033,8 @@
 "companies":2247,
 "window_sessions":10,
 "min_companies":8,
-"what":"Liquid companies whose quarterly results were first priced in the last 10 sessions and showed real growth: sales up 8% or more, profit and operating profit up, other income no more than 35% and an exceptional gain no more than 30% of profit before tax, and cash from operations positive in the last full year. Not already up 18% on the day, nor more than 15% under the 200-day average. Ranked half on that session's move less the average liquid stock's, a quarter on the volume behind it and a quarter on the growth; at most four from one industry. A list is made only when eight or more pass every test.",
-"bias":"The results tables hold companies listed today, so one delisted after a bad quarter is missing, and a revised quarter is seen from the revision's date with the revised figures. vs_reporters compares the list with every liquid company whose results were priced in the same ten sessions, which shares that bias.",
+"what":"Liquid companies whose quarterly results were first priced in the last 10 sessions and showed real growth: sales up 8% or more on a year ago, a profit and an operating profit, both up on a year ago (one-off items left out of the operating profit), other income no more than 35% and an exceptional gain no more than 30% of profit before tax, and cash from operations positive in the last full year. A lender is tested on its sales, profit and exceptional gain only. Not already up more than 18% on the day, nor more than 15% under the 200-day average. Ranked half on that session's move less the average liquid stock's, a quarter on the volume behind it and a quarter on the growth; at most 4 from one industry. A list is made only when 8 or more pass every test.",
+"bias":"The results tables hold companies listed today, so one delisted after a bad quarter is missing, and a revised quarter is seen from the revision's date with the revised figures. Against every liquid company whose results were priced in the same 10 sessions, which shares that bias, the list's lead was +0.83% a pick (2018-21 +1.09%, 2022-26 +0.64%).",
 "replay":"The site's own engine (backend/leaders.rank) run on every fifth session from 2017, on prices and filings cut at that session; its top fifteen bought at the next open.",
 "lab":{
 "variant":"R4",
@@ -9937,43 +10051,43 @@
 },
 "first":{
 "list_dates":87,
-"picks":1196,
-"up_pct":55.0,
-"beat_index_pct":48.1,
-"avg_pct":2.06,
+"picks":1195,
+"up_pct":55.1,
+"beat_index_pct":48.2,
+"avg_pct":2.08,
 "median_pct":1.19,
 "index_avg_pct":1.25,
 "big_winner_pct":2.9,
 "worst_5pct":-13.5,
-"best_5pct":20.1,
+"best_5pct":20.0,
 "exit_hit_pct":11.5,
 "lists_ahead_of_index_pct":56.3,
-"avg_net_pct":1.57,
-"vs_index_pct":0.81,
-"vs_avg_stock_pct":1.16,
-"vs_avg_stock_net_pct":0.67,
-"vs_avg_stock_t":1.64,
+"avg_net_pct":1.59,
+"vs_index_pct":0.83,
+"vs_avg_stock_pct":1.17,
+"vs_avg_stock_net_pct":0.68,
+"vs_avg_stock_t":1.65,
 "lists_ahead_of_avg_stock_pct":54.0
 },
 "second":{
 "list_dates":118,
 "picks":1719,
-"up_pct":55.0,
-"beat_index_pct":50.4,
-"avg_pct":1.78,
-"median_pct":1.13,
+"up_pct":54.9,
+"beat_index_pct":49.7,
+"avg_pct":1.63,
+"median_pct":1.09,
 "index_avg_pct":0.84,
 "big_winner_pct":3.1,
-"worst_5pct":-13.8,
-"best_5pct":21.9,
-"exit_hit_pct":15.1,
-"lists_ahead_of_index_pct":57.6,
-"avg_net_pct":1.29,
-"vs_index_pct":0.94,
-"vs_avg_stock_pct":0.86,
-"vs_avg_stock_net_pct":0.37,
-"vs_avg_stock_t":3.39,
-"lists_ahead_of_avg_stock_pct":62.7
+"worst_5pct":-13.9,
+"best_5pct":21.6,
+"exit_hit_pct":15.5,
+"lists_ahead_of_index_pct":56.8,
+"avg_net_pct":1.14,
+"vs_index_pct":0.79,
+"vs_avg_stock_pct":0.7,
+"vs_avg_stock_net_pct":0.21,
+"vs_avg_stock_t":2.68,
+"lists_ahead_of_avg_stock_pct":58.5
 },
 "before":{
 "results":{
@@ -10041,7 +10155,7 @@
 },
 "scanned_at":"09 Oct 2026, 18:10",
 "partial":false,
-"scored":96,
+"scored":97,
 "universe_source":"NSE equity list",
 "universe":null,
 "regime":{
@@ -10054,7 +10168,7 @@
 },
 "market_test":{
 "state":"below_200d",
-"text":"The index is under its 200-day average. In the test, picks made on days like this averaged +1.1% (55 in 100 rose), against +2.1% on the other days. The list is not held back in either.",
+"text":"The index is under its 200-day average. In the test, picks made on days like this averaged +1.0% (55 in 100 rose), against +2.1% on the other days. The list is not held back in either.",
 "lists":53
 },
 "chart_note":"Facts about the chart, not reasons for the pick. Tested over ten years, none of these improved a list, so none of them changes a rank.",
@@ -10068,7 +10182,7 @@
 "excluded_adverse":[],
 "count":0,
 "considered":0,
-"method":"Every liquid NSE company whose quarterly results were first priced in the last 10 sessions is ranked against the others that reported, on how its stock moved that session against the average stock, the volume behind the move and the growth itself. Only results that were real growth are listed: sales up 8% or more on a year ago, profit and operating profit up, other income no more than 35% of profit before tax and no exceptional gain over 30% of it, and a stock not already up 18% that day, nor more than 15% under its 200-day average. With fewer than 8 such companies there is no list, and at most 4 come from one industry.",
+"method":"Every liquid NSE company whose quarterly results were first priced in the last 10 sessions is ranked against the others that reported, on how its stock moved that session against the average stock, the volume behind the move and the growth itself. Only results that were real growth are listed: sales up 8% or more on a year ago, profit up and operating profit up with one-off items left out, other income no more than 35% of profit before tax, no exceptional gain over 30% of it and cash from operations positive in the last full year (for a bank or lender: sales, profit and the exceptional test only), and a stock not already up more than 18% that day, nor more than 15% under its 200-day average. With fewer than 8 such companies there is no list, and at most 4 come from one industry.",
 "recipe_current":true,
 "study_current":true,
 "weights":{
@@ -10341,7 +10455,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -11510,7 +11624,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -11986,7 +12100,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":39.55,
-"opm_yoy_chg":-0.93,
+"opm_yoy_chg":-0.94,
 "pat_yoy_pct":9.99,
 "earnings_quality_ok":true,
 "roce_pct":17.34,
@@ -13027,7 +13141,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":18.85,
-"opm_yoy_chg":6.41,
+"opm_yoy_chg":6.4,
 "pat_yoy_pct":58.24,
 "earnings_quality_ok":true,
 "roce_pct":18.84,
@@ -13197,7 +13311,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":31.93,
-"opm_yoy_chg":5.23,
+"opm_yoy_chg":5.22,
 "pat_yoy_pct":168.29,
 "earnings_quality_ok":true,
 "roce_pct":13.99,
@@ -13544,7 +13658,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":146.87,
-"opm_yoy_chg":0.0,
+"opm_yoy_chg":0.01,
 "pat_yoy_pct":86.9,
 "earnings_quality_ok":true,
 "roce_pct":9.69,
@@ -13738,7 +13852,7 @@
 "pe":49.5,
 "peg":3.55,
 "pledge_pct":null,
-"f_score":6,
+"f_score":7,
 "is_financial":false,
 "sector_mf_quadrant":null
 }
@@ -14072,7 +14186,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":29.42,
-"opm_yoy_chg":6.53,
+"opm_yoy_chg":6.54,
 "pat_yoy_pct":57.73,
 "earnings_quality_ok":true,
 "roce_pct":28.33,
@@ -14083,7 +14197,7 @@
 "pe":17.7,
 "peg":null,
 "pledge_pct":null,
-"f_score":5,
+"f_score":6,
 "is_financial":false,
 "sector_mf_quadrant":null
 }
@@ -14245,7 +14359,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":59.65,
-"opm_yoy_chg":2.38,
+"opm_yoy_chg":0.68,
 "pat_yoy_pct":51.58,
 "earnings_quality_ok":true,
 "roce_pct":24.71,
@@ -14455,7 +14569,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -14752,7 +14866,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":43.41,
-"opm_yoy_chg":4.02,
+"opm_yoy_chg":4.03,
 "pat_yoy_pct":66.76,
 "earnings_quality_ok":true,
 "roce_pct":15.8,
@@ -14924,10 +15038,10 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":62.08,
-"opm_yoy_chg":16.36,
+"opm_yoy_chg":null,
 "pat_yoy_pct":169.41,
 "earnings_quality_ok":true,
-"roce_pct":8.01,
+"roce_pct":null,
 "roe_pct":6.7,
 "cfo_to_pat":-24.59,
 "fcf_pos_years_3y":0,
@@ -14935,8 +15049,8 @@
 "pe":53.1,
 "peg":null,
 "pledge_pct":null,
-"f_score":3,
-"is_financial":false,
+"f_score":null,
+"is_financial":true,
 "sector_mf_quadrant":null
 }
 }
@@ -15435,7 +15549,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":36.63,
-"opm_yoy_chg":2.54,
+"opm_yoy_chg":2.55,
 "pat_yoy_pct":46.41,
 "earnings_quality_ok":true,
 "roce_pct":16.4,
@@ -15776,7 +15890,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":16.75,
-"opm_yoy_chg":0.42,
+"opm_yoy_chg":0.71,
 "pat_yoy_pct":23.81,
 "earnings_quality_ok":true,
 "roce_pct":20.89,
@@ -15787,7 +15901,7 @@
 "pe":40.1,
 "peg":1.0,
 "pledge_pct":null,
-"f_score":6,
+"f_score":7,
 "is_financial":false,
 "sector_mf_quadrant":null
 }
@@ -15946,7 +16060,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":647.13,
-"opm_yoy_chg":359.19,
+"opm_yoy_chg":365.39,
 "pat_yoy_pct":null,
 "earnings_quality_ok":false,
 "roce_pct":-0.97,
@@ -16119,7 +16233,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":23.7,
-"opm_yoy_chg":-0.79,
+"opm_yoy_chg":-0.52,
 "pat_yoy_pct":18.02,
 "earnings_quality_ok":true,
 "roce_pct":12.49,
@@ -16291,7 +16405,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":35.23,
-"opm_yoy_chg":-2.09,
+"opm_yoy_chg":-2.24,
 "pat_yoy_pct":30.81,
 "earnings_quality_ok":true,
 "roce_pct":13.57,
@@ -16818,7 +16932,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":35.89,
-"opm_yoy_chg":3.86,
+"opm_yoy_chg":3.85,
 "pat_yoy_pct":86.72,
 "earnings_quality_ok":true,
 "roce_pct":19.16,
@@ -17381,7 +17495,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -18143,7 +18257,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":-23.28,
-"opm_yoy_chg":-29.74,
+"opm_yoy_chg":-15.43,
 "pat_yoy_pct":10.28,
 "earnings_quality_ok":false,
 "roce_pct":6.88,
@@ -19632,7 +19746,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":13.3,
-"opm_yoy_chg":-11.36,
+"opm_yoy_chg":3.05,
 "pat_yoy_pct":-5.0,
 "earnings_quality_ok":true,
 "roce_pct":28.27,
@@ -20031,7 +20145,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -20975,7 +21089,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":8.0,
-"opm_yoy_chg":6.08,
+"opm_yoy_chg":6.09,
 "pat_yoy_pct":21.93,
 "earnings_quality_ok":true,
 "roce_pct":26.87,
@@ -21146,7 +21260,7 @@
 "fundamentals":{
 "quarter":"Q2 FY27",
 "revenue_yoy_pct":47.39,
-"opm_yoy_chg":5.21,
+"opm_yoy_chg":null,
 "pat_yoy_pct":53.75,
 "earnings_quality_ok":true,
 "roce_pct":null,
@@ -21356,7 +21470,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
@@ -21886,7 +22000,7 @@
 },
 "scanned_at":"27 Nov 2026, 18:10",
 "partial":false,
-"scored":111,
+"scored":109,
 "universe_source":"NSE equity list",
 "universe":700,
 "regime":{
