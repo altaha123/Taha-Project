@@ -1722,19 +1722,32 @@
   </div><!-- /view-allocate -->
 
   <div id="view-live" style="display:none">
-    <!-- Styles: alerts.css. Four parts, top to bottom: hero, calls, watch, record. -->
+    <!-- Styles: alerts.css. The decisions (which card a break gets, what a
+         filter keeps, what a call's live state says, where it sits on the
+         timeline) are in alerts-logic.js. Two lanes of calls: Classic, every
+         call as it has always been, and ★ Select, the strongest few.
+         Top to bottom: the hero (status, Select's pacing, today's numbers and
+         the day's timeline), the owner's controls, the filters, the calls,
+         the radar (testing a level now, then closest to breaking out), the
+         record, and the owner's Select funnel. -->
     <section class="la-hero la-rise">
       <div>
         <span class="la-status"><span class="la-dot" id="ldot"></span><span id="lstat">Connecting</span></span>
         <h2>Live alerts</h2>
         <p class="la-lede">Intraday calls and consolidation breakouts, the moment they happen.</p>
+        <p class="la-pace" id="lpace" hidden></p>
         <div id="tgjoin"></div>
       </div>
       <div class="la-stats" id="lstats">
         <div class="la-stat"><b id="st-calls">0</b><span>Calls today</span></div>
+        <div class="la-stat star"><b id="st-select">0</b><span><span class="la-st" aria-hidden="true">★</span> Select calls</span></div>
         <div class="la-stat good"><b id="st-hit">0</b><span>Hit target</span></div>
         <div class="la-stat"><b id="st-watch">0</b><span>Stocks watched</span></div>
       </div>
+      <!-- The day from 9:15 to 3:30: Select's three sessions shaded with the
+           slots each has used, a mark for every call at the minute it fired
+           (★ for Select), coloured by how it stands, and a tick for now. -->
+      <div class="la-tl" id="ltl"></div>
     </section>
 
     <!-- The owner's controls. Hidden from visitors; shown once the admin key
@@ -1748,8 +1761,30 @@
       <div id="lquiet"></div>
     </div>
 
+    <!-- Which calls to show, kept on this browser. The lane is one choice of
+         three; the rest narrow it. The chime is off until it is pressed. -->
+    <div class="la-bar la-rise d1" id="lbar">
+      <div class="la-fgroup" role="group" aria-label="Lane">
+        <button type="button" class="la-fpill" data-f="all" aria-pressed="true">All</button>
+        <button type="button" class="la-fpill" data-f="select" aria-pressed="false"><span class="la-st" aria-hidden="true">★</span> Select</button>
+        <button type="button" class="la-fpill" data-f="classic" aria-pressed="false">Classic</button>
+      </div>
+      <div class="la-fgroup" role="group" aria-label="Narrow the calls">
+        <button type="button" class="la-fpill" data-f="active" aria-pressed="false">Active</button>
+        <button type="button" class="la-fpill" data-f="buy" aria-pressed="false">BUY</button>
+        <button type="button" class="la-fpill" data-f="sell" aria-pressed="false">SELL</button>
+        <button type="button" class="la-fpill" data-f="score" aria-pressed="false">Score 75+</button>
+      </div>
+      <button type="button" class="la-chime" id="lchime" aria-pressed="false"
+              title="A soft two-note chime when a new call arrives while this page is open">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><path class="off" d="M4 4l16 16"/></svg>
+        <span>Chime</span>
+      </button>
+    </div>
+    <p class="la-lanes la-rise d1" id="llanes">Classic is every call, as it has always been. <span class="la-st" aria-hidden="true">★</span> Select is the strongest few: up to 8 a day, spread over three sessions.</p>
+
     <div class="la-cols">
-      <section class="la-panel la-rise d1">
+      <section class="la-panel la-rise d2">
         <div class="la-head">
           <span class="la-ico" aria-hidden="true">⚡</span>
           <h3>Intraday calls<small>Key levels broken on heavy volume</small></h3>
@@ -1767,6 +1802,17 @@
       </section>
     </div>
 
+    <!-- Stocks sitting on a level this minute, and the one thing each is
+         waiting for. Shown while the market is open, even when empty. -->
+    <section class="la-panel la-wide la-rise d3" id="lradarwrap" hidden>
+      <div class="la-head">
+        <h3>Testing a level right now<small>At a level this minute, and what each is waiting for</small></h3>
+        <span class="la-badge" id="lrcount">0</span>
+      </div>
+      <div class="la-tape" id="ltape"></div>
+      <div class="la-rd" id="lradar"></div>
+    </section>
+
     <section class="la-panel la-wide la-rise d3" id="bowatchwrap" hidden>
       <div class="la-head">
         <span class="la-ico" aria-hidden="true">🎯</span>
@@ -1778,9 +1824,20 @@
     <section class="la-panel la-wide la-rise d4">
       <div class="la-head">
         <span class="la-ico" aria-hidden="true">📊</span>
-        <h3>How the calls have done<small>Checked after every market close</small></h3>
+        <h3>How the calls have done<small>Classic against <span class="la-st" aria-hidden="true">★</span> Select, checked after every market close</small></h3>
       </div>
       <div class="la-rec" id="lhit"></div>
+      <div class="la-sess" id="lsess"></div>
+    </section>
+
+    <!-- The owner's view of the Select lane: where today's stocks were held
+         back, and whether the engine's own parts are ready. -->
+    <section class="la-panel la-wide la-funnel" id="lfunnelwrap" hidden>
+      <div class="la-head">
+        <h3><span class="la-tag">Owner</span> <span class="la-st" aria-hidden="true">★</span> Select filter funnel<small>Stocks each check held back today, one per stock and side</small></h3>
+      </div>
+      <div class="la-eng" id="leng"></div>
+      <div id="lfunnel"></div>
     </section>
 
     <p class="disc">Alerts are measurements, not recommendations. No signal predicts price.
@@ -2516,9 +2573,8 @@ function switchTab(which){
   if(which==="watchlists" && window.AltahaWatchlists) window.AltahaWatchlists.open();
   if(which==="strategies" && window.AltahaStrategyLab) window.AltahaStrategyLab.open();
   refreshSegsSoon();
-  if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
-  if(which==="live"){ loadLive();
-    liveTimer = setInterval(function(){ if(!document.hidden) loadLive(); }, 30000); }
+  // The Alerts page polls only while it is the page on screen (laPoll).
+  laPoll(which === "live");
 }
 
 
