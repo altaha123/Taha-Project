@@ -457,22 +457,25 @@
   /* Why a stock at a level has not fired yet, as a chip. `tone` picks the
      colour: the one about to fire is cognac, a full slot is a warning, the
      two that are a matter of degree (volume, score) are information, and
-     everything else is quiet. `rank` orders the radar: nearest to firing
-     first, never-today last. */
+     everything else is quiet. `rank` orders the radar the way
+     breakouts.status() does: confirming first, then the ones only the slot
+     budget held back, then score, then volume; after those, the deeper a
+     stock got through the checks (volume is the first, the order book the
+     last before the score), the nearer it is. */
   var REASONS = {
     confirm:  { label: 'Confirming', tone: 'hl', rank: 0 },
-    volume:   { label: 'Needs volume', tone: 'info', rank: 1 },
+    cap:      { label: 'Slots full', tone: 'warn', rank: 1 },
     score:    { label: 'Score short', tone: 'info', rank: 2 },
-    vwap:     { label: 'Wrong side of VWAP', tone: 'muted', rank: 3 },
-    extended: { label: 'Stretched', tone: 'muted', rank: 4 },
-    rpos:     { label: 'Low in its range', labelDn: 'High in its range', tone: 'muted', rank: 5 },
-    book:     { label: 'Sellers heavier', labelDn: 'Buyers heavier', tone: 'muted', rank: 6 },
-    sector:   { label: 'Sector against', tone: 'muted', rank: 7 },
-    index:    { label: 'Index against', tone: 'muted', rank: 8 },
-    risk:     { label: 'Stop too wide', tone: 'muted', rank: 9 },
-    room:     { label: 'No room to target', tone: 'muted', rank: 10 },
-    spent:    { label: 'Already called', tone: 'muted', rank: 11 },
-    cap:      { label: 'Slots full', tone: 'warn', rank: 12 }
+    volume:   { label: 'Needs volume', tone: 'info', rank: 3 },
+    book:     { label: 'Sellers heavier', labelDn: 'Buyers heavier', tone: 'muted', rank: 4 },
+    room:     { label: 'No room to target', tone: 'muted', rank: 5 },
+    risk:     { label: 'Stop too wide', tone: 'muted', rank: 6 },
+    spent:    { label: 'Already moved', tone: 'muted', rank: 7 },
+    sector:   { label: 'Sector against', tone: 'muted', rank: 8 },
+    index:    { label: 'Index against', tone: 'muted', rank: 9 },
+    rpos:     { label: 'Low in its range', labelDn: 'High in its range', tone: 'muted', rank: 10 },
+    extended: { label: 'Stretched', tone: 'muted', rank: 11 },
+    vwap:     { label: 'Wrong side of VWAP', tone: 'muted', rank: 12 }
   };
 
   function reason(code, dir) {
@@ -488,9 +491,9 @@
   }
 
   /* Nearest to firing first: by reason, then Select before Classic (its
-     checks are the stricter, so passing them means more), then the share of
-     the threshold reached, then score, then name, so the order is stable
-     between passes. */
+     checks are the stricter, so getting that far means more), then the
+     share of the threshold reached, then score, then name, so the order
+     holds still between passes. */
   function radarSort(rows) {
     return (rows || []).filter(function (w) { return w && w.symbol; })
       .map(function (w, i) { return { w: w, i: i, rank: reason(w.code).rank }; })
@@ -513,21 +516,21 @@
 
   /* ── sectors ────────────────────────────────────────────────────────── */
 
-  /* NSE's industry names, shortened the way money_flow_config.py shortens
-     them for a card. */
+  /* NSE's industry names as a badge has room for them: the same short names
+     breakouts.SECTOR_SHORT gives (sectors_live carries them as `short`), so
+     a card and the sector tape agree. Any other name is short already. */
   var SECTOR_SHORT = {
-    'automobile and auto components': 'Auto', 'capital goods': 'Capital Goods', 'chemicals': 'Chemicals',
-    'construction': 'Construction', 'construction materials': 'Cement', 'consumer durables': 'Durables',
-    'consumer services': 'Consumer Services', 'diversified': 'Diversified', 'fast moving consumer goods': 'FMCG',
-    'financial services': 'Financials', 'forest materials': 'Forest', 'healthcare': 'Healthcare',
-    'information technology': 'IT', 'media entertainment & publication': 'Media', 'metals & mining': 'Metals',
-    'oil gas & consumable fuels': 'Oil & Gas', 'power': 'Power', 'realty': 'Realty', 'services': 'Services',
-    'telecommunication': 'Telecom', 'textiles': 'Textiles', 'utilities': 'Utilities'
+    'automobile and auto components': 'Auto', 'fast moving consumer goods': 'FMCG',
+    'information technology': 'IT', 'oil gas & consumable fuels': 'Oil & Gas',
+    'financial services': 'Financials', 'consumer services': 'Consumer',
+    'consumer durables': 'Durables', 'construction materials': 'Cement',
+    'metals & mining': 'Metals', 'capital goods': 'Capital goods',
+    'telecommunication': 'Telecom', 'media entertainment & publication': 'Media',
+    'forest materials': 'Forest'
   };
   function sectorShort(name) {
     var s = String(name == null ? '' : name).trim();
-    if (!s) return '';
-    return SECTOR_SHORT[s.toLowerCase()] || (s.length > 18 ? s.split(/\s+/)[0] : s);
+    return s ? SECTOR_SHORT[s.toLowerCase()] || s : '';
   }
 
   /* The day's leaders and laggards: the top `n` up and the top `n` down. */
@@ -603,8 +606,8 @@
     volume: 'Volume not there yet', vwap: 'Wrong side of VWAP', score: 'Score below the bar',
     rpos: 'Not near the day’s extreme', sector: 'Sector not moving with it', extended: 'Too far past VWAP',
     book: 'Order book leaning against it', confirm: 'Did not hold for a second pass', risk: 'Stop too wide',
-    room: 'No room to the next level', index: 'Index against it', spent: 'Already called today',
-    cap: 'Session or sector slots full', pdh: 'Below yesterday’s high'
+    room: 'No room to the next level', index: 'Index against it', spent: 'Already moved too far today',
+    cap: 'Held back by the slot budget', pdh: 'Below yesterday’s high'
   };
 
   /* breakouts.status() counts, per check, the stocks (one per stock and

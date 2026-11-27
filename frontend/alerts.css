@@ -1,20 +1,35 @@
 /* ============================================================================
    Altaha — Live alerts (Market → Alerts)
    ----------------------------------------------------------------------------
-   One page, four parts, top to bottom:
-     hero      what this is, the Telegram button, and today's numbers
+   One page, top to bottom:
+     hero      what this is, the Telegram button, today's numbers, Select's
+               pacing and the day's timeline
+     filters   which lane (All, ★ Select, Classic) and which calls, the chime
      calls     intraday calls and consolidation breakouts, side by side
-     watch     the stocks closest to breaking out
-     record    how past calls ended
+     radar     stocks testing a level right now, then the closest to breaking out
+     record    how past calls ended, Classic against ★ Select, and by session
+     funnel    (owner only) where Select held today's stocks back
+
+   Two lanes. Classic is every call, as it always was. ★ Select is the few
+   strongest; it is marked by cognac, the theme's own note of something
+   special: a hairline on the left of its cards, a tint on its badges and on
+   its three sessions in the timeline. Never louder than that.
 
    Motion follows motion.css's rule: it has to show something the static page
    cannot. The dot pulses while the scanner is live. A new call slides in and
-   is ringed once, so it is noticed. Bars fill because they are proportions. Everything is switched
+   is ringed once, so it is noticed. A mark pressed on the timeline lights its
+   card once. Bars fill because they are proportions. Everything is switched
    off under prefers-reduced-motion, and only transform, opacity and (on the
    small bars) width are animated.
    ========================================================================== */
 
 #view-live{ --la-radius:var(--r-card); --la-surface:var(--surface); --la-line:var(--border) }
+
+/* Read by a screen reader, not drawn. */
+#view-live .la-sr{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden;
+                   clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0 }
+/* The ★ of the Select lane, wherever it is written. */
+#view-live .la-st{ color:var(--highlight) }
 
 /* ── entrance: each part rises in turn when the tab opens ────────────────── */
 @keyframes laRise{ from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
@@ -36,6 +51,11 @@
 .la-hero h2{ font-family:var(--font-display); font-weight:500; font-size:var(--fs-h1); line-height:var(--lh-h1);
              letter-spacing:var(--ls-heading); margin:16px 0 8px; color:var(--text-primary) }
 .la-hero p.la-lede{ font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary); margin:0 0 20px; max-width:44ch }
+/* Select's pacing, in the server's words: which session, and its ★ slots. */
+.la-hero p.la-pace{ display:flex; align-items:center; gap:var(--sp-2); width:fit-content; max-width:100%; margin:-8px 0 20px;
+                    padding:4px 12px; border-radius:var(--r-pill); background:var(--highlight-subtle);
+                    font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-primary) }
+.la-hero p.la-pace[hidden]{ display:none }
 
 /* the status dot: steady when closed, a ring going out while live */
 .la-dot{ position:relative; width:9px; height:9px; border-radius:50%; background:var(--text-muted); flex-shrink:0 }
@@ -54,15 +74,87 @@
 .la-tg svg{ width:18px; height:18px; flex-shrink:0 }
 .la-tgsub{ font-size:var(--fs-small); color:var(--text-muted); margin:12px 0 0 }
 
-/* today's numbers */
-.la-stats{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-radius:var(--la-radius);
+/* today's numbers, two by two */
+.la-stats{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-radius:var(--la-radius);
            border:1px solid var(--la-line); background:transparent; overflow:hidden }
 .la-stat{ padding:var(--sp-4); text-align:left; border-left:1px solid var(--la-line) }
-.la-stat:first-child{ border-left:0 }
+.la-stat:nth-child(odd){ border-left:0 }
+.la-stat:nth-child(n+3){ border-top:1px solid var(--la-line) }
 .la-stat b{ display:block; font-family:var(--font-display); font-weight:500; font-size:var(--fs-h1);
             line-height:var(--lh-display); color:var(--text-primary); font-variant-numeric:tabular-nums ; letter-spacing:var(--ls-heading)}
 .la-stat span{ display:block; margin-top:8px; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
                color:var(--text-muted); font-family:var(--font-sans) }
+.la-stat span .la-st{ display:inline; margin:0 }
+
+/* ── the day's timeline ──────────────────────────────────────────────────────
+   9:15 to 3:30 on one strip. Select's three sessions are shaded cognac, the
+   one under way a little deeper, each labelled with the ★ slots it has used.
+   Every call is a mark at the minute it fired: a dot for Classic on the lower
+   row, a star for Select on the upper, coloured by how it stands. A tick
+   marks now while the market is open. */
+.la-tl{ grid-column:1 / -1; min-width:0 }
+.la-tl-head{ display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-3); margin:0 0 var(--sp-2) }
+.la-tl-head h3{ margin:0; font-family:var(--font-sans); font-size:var(--fs-label); font-weight:500; letter-spacing:var(--ls-label);
+                text-transform:uppercase; color:var(--text-muted) }
+.la-tl-sum{ font-size:var(--fs-small); color:var(--text-secondary); text-align:right }
+.la-tl-strip{ position:relative; height:84px; border:1px solid var(--la-line); border-radius:var(--r-control);
+              background:var(--surface-raised) }
+.la-tl-marks{ position:absolute; inset:0 }
+.la-tl-band{ position:absolute; top:0; bottom:0; background:color-mix(in srgb, var(--highlight) 7%, transparent);
+             border-left:1px solid color-mix(in srgb, var(--highlight) 26%, transparent) }
+.la-tl-band + .la-tl-band{ border-left-style:dashed }
+.la-tl-band.now{ background:color-mix(in srgb, var(--highlight) 13%, transparent) }
+.la-tl-band > span[aria-hidden]{ position:absolute; left:var(--sp-2); top:var(--sp-1); white-space:nowrap;
+                                 font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted) }
+.la-tl-band > span b{ font-weight:500; color:var(--text-secondary) }
+.la-tl-band.now > span[aria-hidden], .la-tl-band.now > span b{ color:var(--highlight-text) }
+.la-tl-empty{ position:absolute; left:50%; bottom:var(--sp-3); transform:translateX(-50%); white-space:nowrap;
+              font-size:var(--fs-small); color:var(--text-muted) }
+
+/* A mark is a button the size of a fingertip; the dot or star is drawn in
+   the middle of it. Colour is the state, shape is the lane. */
+.la-tl-dot{ position:absolute; width:24px; height:24px; margin:-12px 0 0 -12px; padding:0; border:0; border-radius:50%;
+            background:none; cursor:pointer; display:grid; place-items:center; color:var(--text-secondary);
+            transition:transform var(--t-fast) var(--ease) }
+.la-tl-dot.classic{ top:62px }
+.la-tl-dot.select{ top:36px }
+.la-tl-dot.s1{ transform:translateY(-7px) }
+.la-tl-dot.s2{ transform:translateY(7px) }
+.la-tl-dot.classic::before{ content:""; width:10px; height:10px; box-sizing:border-box; border-radius:50%;
+                            border:2px solid currentColor; background:var(--surface) }
+.la-tl-dot svg{ width:16px; height:16px; fill:var(--surface); stroke:currentColor; stroke-width:2; stroke-linejoin:round }
+.la-tl-dot.select.open{ color:var(--highlight) }
+.la-tl-dot.t1, .la-tl-dot.won{ color:var(--gain) }
+.la-tl-dot.lost{ color:var(--loss) }
+.la-tl-dot.flat{ color:var(--text-muted) }
+.la-tl-dot.won.classic::before, .la-tl-dot.lost.classic::before, .la-tl-dot.flat.classic::before{ background:currentColor }
+.la-tl-dot.won svg, .la-tl-dot.lost svg, .la-tl-dot.flat svg{ fill:currentColor }
+.la-tl-dot.t1.classic::before{ background:color-mix(in srgb, currentColor 45%, var(--surface)) }
+.la-tl-dot.t1 svg{ fill:color-mix(in srgb, currentColor 45%, var(--surface)) }
+.la-tl-dot:hover{ transform:scale(1.18) }
+.la-tl-dot.s1:hover{ transform:translateY(-7px) scale(1.18) }
+.la-tl-dot.s2:hover{ transform:translateY(7px) scale(1.18) }
+.la-tl-dot:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:0; z-index:2 }
+.la-tl-now{ position:absolute; top:-4px; bottom:-4px; width:2px; margin-left:-1px; border-radius:var(--r-xs);
+            background:var(--highlight); pointer-events:none }
+.la-tl-now::before{ content:""; position:absolute; top:-3px; left:-3px; width:8px; height:8px; border-radius:50%; background:var(--highlight) }
+.la-tl-now[hidden]{ display:none }
+.la-tl-hours{ position:relative; height:16px; margin-top:var(--sp-1) }
+.la-tl-hours span{ position:absolute; top:0; transform:translateX(-50%); font-size:var(--fs-label); line-height:var(--lh-label);
+                   color:var(--text-muted); white-space:nowrap }
+.la-tl-hours span.start{ transform:none }
+.la-tl-hours span.end{ transform:translateX(-100%) }
+.la-tl-key{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-1) var(--sp-4); margin-top:var(--sp-2);
+            font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted) }
+.la-tl-key span{ display:inline-flex; align-items:center; gap:var(--sp-1) }
+.la-tl-key span::before{ content:""; width:8px; height:8px; box-sizing:border-box; border-radius:50%; border:2px solid currentColor }
+.la-tl-key .k-dot::before{ border-color:var(--text-secondary) }
+.la-tl-key .k-star::before{ display:none }
+.la-tl-key .k-star svg{ width:12px; height:12px; fill:none; stroke:var(--highlight); stroke-width:2.4; stroke-linejoin:round }
+.la-tl-key .k-open::before{ border-color:var(--text-secondary); background:transparent }
+.la-tl-key .k-t1::before{ border-color:var(--gain); background:color-mix(in srgb, var(--gain) 45%, var(--surface)) }
+.la-tl-key .k-won::before{ border-color:var(--gain); background:var(--gain) }
+.la-tl-key .k-lost::before{ border-color:var(--loss); background:var(--loss) }
 
 /* ── owner bar ───────────────────────────────────────────────────────────── */
 #view-live .ltg{ font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary) }
@@ -72,8 +164,8 @@
 .la-owner{ display:flex; flex-wrap:wrap; align-items:center; gap:12px 12px; padding:12px 16px; margin:0 0 20px;
            border:1px dashed var(--border); border-radius:var(--la-radius); font-size:var(--fs-small); color:var(--text-secondary) }
 .la-owner[hidden]{ display:none }
-.la-owner .la-tag{ font-family:var(--font-sans); font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
-                   color:var(--text-primary); margin-right:4px }
+#view-live .la-tag{ font-family:var(--font-sans); font-size:var(--fs-label); font-weight:500; letter-spacing:var(--ls-label); text-transform:uppercase;
+                    color:var(--text-primary); margin-right:4px }
 .la-owner .livebtn{ font-size:var(--fs-small); padding:8px 12px; border-radius:var(--r-control) }
 .la-owner #ltg{ margin:0 0 0 auto; font-size:var(--fs-small) }
 .la-owner #ltg.off{ border:0; padding:0; color:var(--loss) }
@@ -81,11 +173,31 @@
 .la-owner #lquiet:empty{ display:none }
 .la-owner #lquiet .ltg{ margin:4px 0 0; font-size:var(--fs-small) }
 
+/* ── the filters ─────────────────────────────────────────────────────────────
+   Pills, as components.css draws a chip that filters: an outline at rest, the
+   cognac wash when pressed. Taller than a chip, because a thumb presses them. */
+.la-bar{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2) var(--sp-4); margin:0 0 var(--sp-2) }
+.la-fgroup{ display:flex; flex-wrap:wrap; gap:var(--sp-2) }
+.la-fgroup + .la-fgroup{ padding-left:var(--sp-4); border-left:1px solid var(--la-line) }
+.la-fpill, .la-chime{ display:inline-flex; align-items:center; gap:var(--sp-1); height:32px; padding:0 var(--sp-3);
+                      border-radius:var(--r-pill); border:1px solid var(--border); background:transparent; cursor:pointer;
+                      font-family:var(--font-sans); font-size:var(--fs-small); font-weight:500; line-height:var(--lh-none);
+                      color:var(--text-secondary); white-space:nowrap;
+                      transition:background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease) }
+.la-fpill:hover, .la-chime:hover{ border-color:var(--border-strong); color:var(--text-primary) }
+.la-fpill[aria-pressed="true"], .la-chime[aria-pressed="true"]{ background:var(--highlight-subtle); border-color:transparent; color:var(--highlight-text) }
+.la-fpill:focus-visible, .la-chime:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
+.la-chime{ margin-left:auto }
+.la-chime svg{ width:16px; height:16px; flex-shrink:0 }
+.la-chime[aria-pressed="true"] svg .off{ display:none }
+.la-lanes{ margin:0 0 var(--sp-5); font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-muted); max-width:80ch }
+
 /* ── the two columns of calls ────────────────────────────────────────────── */
 .la-cols{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-6); align-items:start }
 .la-panel{ border:1px solid var(--la-line); border-radius:var(--la-radius); background:var(--la-surface);
            padding:var(--card-pad); box-shadow:none; min-width:0 }
 .la-wide{ margin-top:var(--sp-6) }
+.la-panel[hidden]{ display:none }
 .la-head{ display:flex; align-items:center; gap:12px; margin-bottom:var(--sp-4) }
 /* The headings carried an emoji each. The words say it. */
 .la-ico{ display:none }
@@ -100,40 +212,150 @@
 .la-call{ position:relative; border-top:1px solid var(--la-line); padding:var(--sp-4) 0; background:transparent }
 .la-call:first-child{ border-top:0; padding-top:0 }
 .la-call:last-child{ padding-bottom:0 }
+/* A ★ call (Select's own, or Classic's that Select confirmed): a cognac
+   hairline down its left edge. The lane, said once, quietly. */
+.la-call.star{ border-left:2px solid var(--highlight); padding-left:var(--sp-4) }
 .la-call header{ display:flex; align-items:center; gap:12px }
 .la-side{ font-family:var(--font-sans); font-size:var(--fs-label); font-weight:500; letter-spacing:var(--ls-label); padding:3px 8px;
           border-radius:var(--r-pill); color:var(--gain); background:var(--gain-bg) }
 .la-side.sell{ color:var(--loss); background:var(--loss-bg) }
-.la-sym{ font-weight:600; font-size:var(--fs-h3); color:var(--text-primary); text-decoration:none; letter-spacing:normal }
+.la-sym{ font-weight:600; font-size:var(--fs-h3); color:var(--text-primary); text-decoration:none; letter-spacing:normal; min-width:0;
+         overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .la-sym:hover{ color:var(--highlight-text) }
-.la-call time{ margin-left:auto; font-family:var(--font-sans); font-size:var(--fs-small); color:var(--text-muted) }
-.la-levels{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0 12px }
+.la-sym:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:var(--r-xs) }
+.la-when{ margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; text-align:right }
+.la-call time{ font-family:var(--font-sans); font-size:var(--fs-small); color:var(--text-muted) }
+.la-ago{ font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted) }
+.la-ago:empty{ display:none }
+
+/* the call's tags: score, setup, volume, sector, lane */
+.la-pills{ display:flex; flex-wrap:wrap; gap:var(--sp-1) var(--sp-2); margin:var(--sp-3) 0 0 }
+.la-pill{ display:inline-flex; align-items:center; gap:var(--sp-1); height:22px; padding:0 var(--sp-2); border-radius:var(--r-pill);
+          border:1px solid var(--la-line); background:transparent; white-space:nowrap;
+          font-family:var(--font-sans); font-size:var(--fs-label); font-weight:500; line-height:var(--lh-none); color:var(--text-secondary) }
+.la-pill.score{ color:var(--text-primary); font-variant-numeric:tabular-nums }
+.la-pill.score.hi{ border-color:color-mix(in srgb, var(--highlight) 45%, transparent) }
+.la-pill.lane.star, .la-pill.confirm{ background:var(--highlight-subtle); border-color:transparent; color:var(--highlight-text) }
+.la-pill.quiet{ background:var(--surface-raised); border-color:transparent }
+
+.la-levels{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:12px 0 12px }
 .la-levels div{ padding:8px 12px 8px; border-radius:var(--r-control); background:var(--surface-raised); min-width:0 }
 .la-levels span{ display:block; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted);
-                 font-family:var(--font-sans) }
+                 font-family:var(--font-sans); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 .la-levels b{ display:block; margin-top:3px; font-family:var(--font-sans); font-weight:600; font-size:var(--fs-body); color:var(--text-primary);
               white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums }
+/* The half-book reached: where half was booked and the stop went to cost. */
+.la-levels .t1.hit{ background:var(--gain-bg) }
+.la-levels .t1.hit span{ color:var(--gain) }
 .la-why{ font-size:var(--fs-body); line-height:var(--lh-small); color:var(--text-secondary); margin:0 }
-.la-out{ display:inline-flex; align-items:center; gap:8px; margin-top:12px; padding:4px 12px; border-radius:var(--r-pill);
+
+/* where the call stands now: the live state pill, the P&L, a note */
+.la-state{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2) var(--sp-3); margin:0 0 var(--sp-3) }
+.la-live{ display:inline-flex; align-items:center; gap:var(--sp-2); height:28px; padding:0 var(--sp-3); border-radius:var(--r-pill);
+          font-family:var(--font-sans); font-size:var(--fs-small); font-weight:600; letter-spacing:.02em; white-space:nowrap;
+          font-variant-numeric:tabular-nums }
+.la-live.info{ background:var(--info-bg); color:var(--info) }
+.la-live.info::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor }
+.la-live.hl{ background:var(--highlight-subtle); color:var(--highlight-text) }
+.la-live.won{ background:var(--gain-bg); color:var(--gain) }
+.la-live.lost{ background:var(--loss-bg); color:var(--loss) }
+.la-live.flat{ background:var(--surface-raised); color:var(--text-secondary) }
+.la-state > b{ font-size:var(--fs-small); font-weight:600 }
+.la-state > b.la-flat{ color:var(--text-secondary) }
+.la-state small{ font-size:var(--fs-small); color:var(--text-muted) }
+
+/* The rail: stop on the left, target on the right, the entry and the
+   half-book as ticks between, in risk units so every card's rail reads the
+   same way. The band is how far the price has travelled since the entry,
+   from the live tracker's own samples; the dot is where it is now. */
+.la-rail{ position:relative; height:14px; margin:0 6px }
+.la-rail::before{ content:""; position:absolute; left:0; right:0; top:6px; height:2px; border-radius:var(--r-pill); background:var(--wash-strong) }
+.la-rail .ex{ position:absolute; top:5px; height:4px; border-radius:var(--r-pill); background:color-mix(in srgb, var(--text-primary) 18%, transparent) }
+.la-rail .tk{ position:absolute; top:2px; width:2px; height:10px; margin-left:-1px; border-radius:var(--r-xs); background:var(--border-strong) }
+.la-rail .nw{ position:absolute; top:2px; width:10px; height:10px; margin-left:-5px; border-radius:50%;
+              background:var(--text-secondary); outline:2px solid var(--surface) }
+.la-rail .nw.up{ background:var(--gain) }
+.la-rail .nw.dn{ background:var(--loss) }
+.la-rail-l{ position:relative; height:16px; margin:2px 6px var(--sp-3); font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted) }
+.la-rail-l span{ position:absolute; top:0; transform:translateX(-50%); white-space:nowrap }
+.la-rail-l span:first-child{ left:0; transform:none }
+.la-rail-l span:last-child{ right:0; transform:none }
+
+.la-out{ display:inline-flex; align-items:center; gap:8px; margin:0 0 12px; padding:4px 12px; border-radius:var(--r-pill);
          font-size:var(--fs-small); font-weight:600 }
 .la-out.won{ color:var(--gain); background:var(--gain-bg) }
 .la-out.lost{ color:var(--loss); background:var(--loss-bg) }
 .la-out.flat{ color:var(--text-secondary); background:var(--surface-raised) }
 
+/* Stopped out: still there to read, in quieter ink, so the calls still in
+   play stand forward. Only the state pill keeps its colour. */
+.la-call.is-stop .la-sym, .la-call.is-stop .la-levels b{ color:var(--text-secondary) }
+.la-call.is-stop .la-side{ color:var(--text-secondary); background:var(--surface-raised) }
+.la-call.is-stop .la-why, .la-call.is-stop .la-pill{ color:var(--text-muted) }
+.la-call.is-stop .la-pill.lane.star, .la-call.is-stop .la-pill.confirm{ background:transparent; border-color:var(--la-line) }
+.la-call.is-stop .la-levels div{ background:transparent; outline:1px solid var(--la-line); outline-offset:-1px }
+.la-call.is-stop.star{ border-left-color:var(--border-strong) }
+
 /* a call that has just arrived: slides in, on a tint that fades */
 @keyframes laArrive{ 0%{opacity:0;transform:translateY(-10px)} 100%{opacity:1;transform:none} }
 @keyframes laNew{ 0%{background-color:var(--highlight-subtle)} 100%{background-color:transparent} }
 .la-call.is-new{ animation:laArrive 480ms var(--ease-soft,ease-out) both, laNew 2.8s ease-out 300ms both }
+/* Select confirming a call already on screen: its badge arrives, once. */
+@keyframes laPop{ from{opacity:0;transform:scale(.9)} to{opacity:1;transform:none} }
+.la-pill.confirm.is-new{ animation:laPop 420ms var(--ease-soft,ease-out) both }
+/* a mark on the timeline was pressed: its card is lit once */
+@keyframes laFlash{ 0%,30%{background-color:var(--highlight-subtle)} 100%{background-color:transparent} }
+.la-call.is-flash{ animation:laFlash 1.8s ease-out both }
 
 /* nothing yet: the dot is green while the scanner is checking */
 .la-empty{ display:flex; align-items:center; gap:16px; padding:20px 16px; border:1px solid var(--border);
            border-radius:var(--la-radius); color:var(--text-secondary); font-size:var(--fs-body); line-height:var(--lh-label) }
 .la-empty small{ display:block; color:var(--text-muted); font-size:var(--fs-small); margin-top:2px }
+.la-empty .la-reset{ font:inherit; padding:0; border:0; background:none; color:var(--highlight-text); text-decoration:underline; cursor:pointer }
+.la-empty .la-reset:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:var(--r-xs) }
 .la-radar{ position:relative; width:38px; height:38px; border-radius:50%; flex-shrink:0;
            border:1px solid var(--border); background:var(--surface-raised); overflow:hidden }
 .la-radar::before{ content:""; position:absolute; left:50%; top:50%; width:5px; height:5px; margin:-2.5px;
                    border-radius:50%; background:var(--text-muted); z-index:1 }
 .la-empty.live .la-radar::before{ background:var(--gain) }
+
+/* ── testing a level right now ───────────────────────────────────────────────
+   One tile per stock at a level, nearest to firing first: its reason as a
+   chip coloured by kind (confirming is cognac, a full slot a warning, volume
+   and score information, the rest quiet), and how long it has waited. */
+.la-tape{ display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); margin:0 0 var(--sp-4) }
+.la-tape:empty{ display:none }
+.la-tape-h{ margin-right:var(--sp-1); font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase; color:var(--text-muted) }
+.la-tchip{ display:inline-flex; align-items:center; gap:var(--sp-2); height:26px; padding:0 var(--sp-3); border-radius:var(--r-pill);
+           border:1px solid var(--la-line); font-size:var(--fs-small); color:var(--text-secondary); white-space:nowrap }
+.la-tchip b{ font-weight:600 }
+.la-rd{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px }
+.la-rt{ display:block; padding:12px 16px; border:1px solid var(--la-line); border-radius:var(--la-radius);
+        background:transparent; text-decoration:none; color:inherit; min-width:0;
+        transition:border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease) }
+.la-rt:hover{ border-color:var(--border-strong); background:var(--surface-raised) }
+.la-rt:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
+.la-rt.star{ border-left:2px solid var(--highlight) }
+.la-rt .top{ display:flex; align-items:center; gap:var(--sp-2); min-width:0 }
+.la-rt .top b{ font-family:var(--font-mono); font-weight:500; font-size:var(--fs-small); color:var(--text-primary);
+               overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.la-rt .top i{ font-style:normal; font-size:var(--fs-label); color:var(--gain) }
+.la-rt.dn .top i{ color:var(--loss) }
+.la-chip{ margin-left:auto; display:inline-flex; align-items:center; height:22px; padding:0 var(--sp-2); border-radius:var(--r-pill);
+          font-size:var(--fs-label); font-weight:500; line-height:var(--lh-none); white-space:nowrap; flex-shrink:0 }
+.la-chip.hl{ background:var(--highlight-subtle); color:var(--highlight-text) }
+.la-chip.warn{ background:var(--warning-bg); color:var(--warning) }
+.la-chip.info{ background:var(--info-bg); color:var(--info) }
+.la-chip.muted{ background:var(--surface-raised); color:var(--text-secondary) }
+.la-rt .lvl{ margin-top:var(--sp-2); font-size:var(--fs-small); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.la-rt .lvl span{ color:var(--text-secondary) }
+.la-rt .bar{ height:4px; border-radius:var(--r-pill); background:var(--surface-raised); margin:var(--sp-2) 0 0; overflow:hidden }
+.la-rt .bar u{ display:block; height:100%; width:0; border-radius:var(--r-pill); background:var(--info);
+               transition:width 900ms var(--ease-soft,ease-out) }
+.la-rt .why{ margin:var(--sp-1) 0 0; font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-secondary);
+             display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
+.la-rt .since{ margin-top:var(--sp-2); font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted) }
+.la-rd-more{ margin:0; align-self:center; font-size:var(--fs-small); color:var(--text-muted) }
 
 /* ── closest to breaking out ─────────────────────────────────────────────── */
 .la-watch{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px }
@@ -155,6 +377,7 @@
 /* ── the record ──────────────────────────────────────────────────────────── */
 .la-rec{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px }
 .la-r{ padding:var(--sp-4); border:1px solid var(--la-line); border-radius:var(--la-radius); background:transparent }
+.la-r.star{ border-left:2px solid var(--highlight) }
 .la-r h4{ font-family:var(--font-sans); font-weight:500; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
           color:var(--text-muted); margin:0 0 8px }
 .la-r .big{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap }
@@ -171,6 +394,35 @@
                       background:var(--gain) }
 .la-leg span.s::before{ background:var(--loss) } .la-leg span.c::before{ background:var(--text-muted); opacity:.55 }
 .la-r .none{ font-size:var(--fs-body); color:var(--text-muted); margin:2px 0 0 }
+.la-split{ margin:var(--sp-3) 0 0; font-size:var(--fs-small); color:var(--text-muted) }
+
+/* by session: Classic and ★ Select side by side, a row per session */
+.la-sess:empty{ display:none }
+.la-sess{ margin-top:var(--sp-6) }
+.la-sess h4{ font-family:var(--font-sans); font-weight:500; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
+             color:var(--text-muted); margin:0 0 8px }
+.la-sess table{ width:100% }
+.la-sess th, .la-sess td{ height:auto; padding:var(--sp-2) var(--sp-3) }
+.la-sess tbody th small, .la-sess td small{ display:block; font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted); font-weight:400 }
+.la-sess td b{ display:block; font-size:var(--fs-body); font-weight:600; color:var(--text-primary) }
+.la-sess td.none{ color:var(--text-muted) }
+.la-note{ margin:var(--sp-3) 0 0; font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-muted); max-width:90ch }
+
+/* ── the owner's Select funnel ───────────────────────────────────────────── */
+.la-funnel{ border-style:dashed }
+.la-funnel .la-head h3 .la-tag{ margin-right:var(--sp-2) }
+.la-eng{ display:flex; flex-wrap:wrap; gap:var(--sp-2); margin:0 0 var(--sp-4) }
+.la-eng:empty{ display:none }
+.la-eng span{ display:inline-flex; align-items:center; min-height:26px; padding:2px var(--sp-3); border-radius:var(--r-pill);
+              border:1px solid var(--la-line); font-size:var(--fs-small); color:var(--text-secondary) }
+.la-fn{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-3) var(--sp-8) }
+.la-fn li{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--sp-1) var(--sp-3); align-items:baseline;
+           font-size:var(--fs-small); color:var(--text-secondary) }
+.la-fn li b{ font-weight:600; color:var(--text-primary); font-variant-numeric:tabular-nums }
+.la-fn .bar{ grid-column:1 / -1; height:6px; border-radius:var(--r-pill); background:var(--surface-raised); overflow:hidden }
+.la-fn .bar u{ display:block; height:100%; width:0; border-radius:var(--r-pill); background:var(--highlight);
+               transition:width 900ms var(--ease-soft,ease-out) }
+.la-funnel .none{ margin:0; font-size:var(--fs-body); color:var(--text-muted) }
 
 #view-live .disc{ margin-top:24px }
 #view-live .ownerlink{ font:inherit; font-size:var(--fs-small); background:none; border:0; color:var(--text-muted); cursor:pointer;
@@ -186,15 +438,32 @@
   .la-tg{ width:100%; justify-content:center }
   .la-stat{ padding:var(--sp-3) }
   .la-stat span{ font-size:var(--fs-label); letter-spacing:var(--ls-label) }
-  .la-levels{ gap:8px } .la-levels div{ padding:8px 8px 8px } .la-levels b{ font-size:var(--fs-small) }
+  .la-levels{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px } .la-levels div{ padding:8px 8px 8px } .la-levels b{ font-size:var(--fs-small) }
   .la-rec{ grid-template-columns:1fr }
   .la-owner #ltg{ margin-left:0; flex-basis:100% }
   .la-watch{ grid-template-columns:1fr }
+  .la-rd{ grid-template-columns:1fr }
+  .la-fn{ grid-template-columns:1fr }
+  /* The lane pills, then the chime on the same row; the narrowing pills below. */
+  .la-bar{ gap:var(--sp-2) }
+  .la-fgroup + .la-fgroup{ order:2; padding-left:0; border-left:0 }
+  .la-chime{ order:1 }
+  /* A session's name does not fit its band on a phone: its slots do. */
+  .la-tl-band > span b{ display:none }
+  .la-tl-hours span.end{ display:none }
+  .la-tl-head{ flex-direction:column; gap:var(--sp-1) }
+  .la-tl-sum{ text-align:left }
+  .la-sess th, .la-sess td{ padding:var(--sp-2) }
 }
 
 /* ── no motion for those who ask for none ────────────────────────────────── */
 @media (prefers-reduced-motion:reduce){
-  #view-live .la-rise, .la-call.is-new{ animation:none }
+  #view-live .la-rise, .la-call.is-new, .la-pill.confirm.is-new{ animation:none }
+  .la-call.is-flash{ animation:none; background-color:var(--highlight-subtle) }
   .la-dot.on::after{ animation:none; display:none }
-  .la-tg, .la-w, .la-w .bar u, .la-seg u{ transition:none }
+  .la-tg, .la-w, .la-w .bar u, .la-seg u, .la-rt, .la-rt .bar u, .la-fn .bar u, .la-tl-dot,
+  .la-fpill, .la-chime{ transition:none }
+  .la-tl-dot:hover{ transform:none }
+  .la-tl-dot.s1:hover{ transform:translateY(-7px) }
+  .la-tl-dot.s2:hover{ transform:translateY(7px) }
 }

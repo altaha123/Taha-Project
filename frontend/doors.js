@@ -835,7 +835,8 @@
   function todayCounts() {
     get('/intraday/status', 9000).then(function (d) {
       if (!d) return fillTool('drt-live', null, 'The scanner could not be reached just now.');
-      var a = d.alerts_today || [];
+      // A break both lanes called is one call: skip Select's record of one Classic already made.
+      var a = (d.alerts_today || []).filter(function (x) { return !(x.engine === 'select' && x.pair_time); });
       fillTool('drt-live', a.length, d.market_open ? 'Watching ' + (d.watchlist_size || 0) + ' names right now.'
         : 'Market closed.',
         a.slice(-4).reverse().map(function (x) { return { text: x.symbol }; }));

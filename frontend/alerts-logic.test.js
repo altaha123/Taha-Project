@@ -273,11 +273,13 @@ assert.strictEqual(L.countCalls(ROWS), 7, "a paired Select record is not counted
     { symbol: "WIPRO", dir: "UP", code: "volume", lane: "select", rvol: 2.2, need: 2.5, score: 61 },
   ];
   assert.deepStrictEqual(L.radarSort(waiting).map(w => w.symbol),
-    ["TATAPOWER", "WIPRO", "ICICIBANK", "AXISBANK", "JSWSTEEL", "HDFCLIFE", "MARUTI", "COALINDIA"],
-    "about to fire first, slots-full last; within volume, Select first and the nearer one first");
+    ["TATAPOWER", "COALINDIA", "JSWSTEEL", "WIPRO", "ICICIBANK", "AXISBANK", "MARUTI", "HDFCLIFE"],
+    "as breakouts.status() ranks them: confirming, slots full, score, volume, then the deeper checks; " +
+    "within volume, Select first and the nearer one first");
   assert.strictEqual(waiting[0].symbol, "ICICIBANK", "the server's list is not reordered in place");
   assert.deepStrictEqual(L.reason("confirm"), { code: "confirm", label: "Confirming", tone: "hl", rank: 0 });
   assert.strictEqual(L.reason("cap").tone, "warn");
+  assert.strictEqual(L.reason("spent").label, "Already moved", "spent is a stock that has already run, not one already called");
   assert.strictEqual(L.reason("volume").tone, "info");
   assert.strictEqual(L.reason("score").tone, "info");
   assert.strictEqual(L.reason("sector").tone, "muted");
@@ -295,8 +297,8 @@ assert.strictEqual(L.countCalls(ROWS), 7, "a paired Select record is not counted
   assert.strictEqual(L.sectorShort("Automobile and Auto Components"), "Auto");
   assert.strictEqual(L.sectorShort("Fast Moving Consumer Goods"), "FMCG");
   assert.strictEqual(L.sectorShort("Oil Gas & Consumable Fuels"), "Oil & Gas");
-  assert.strictEqual(L.sectorShort("Power"), "Power");
-  assert.strictEqual(L.sectorShort("Something Entirely Unheard Of"), "Something");
+  assert.strictEqual(L.sectorShort("Capital Goods"), "Capital goods", "the same words breakouts.SECTOR_SHORT uses");
+  assert.strictEqual(L.sectorShort("Power"), "Power", "a short name stays as it is");
   assert.strictEqual(L.sectorShort(null), "");
   const tape = L.sectorTape([
     { sector: "Realty", pct: -0.62 }, { sector: "Power", pct: 0.2 }, { sector: "Information Technology", pct: 0.93 },

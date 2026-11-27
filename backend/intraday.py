@@ -971,6 +971,8 @@ def _track_live(snap, now=None):
             sign = 1 if a.get("direction", "UP") == "UP" else -1
             pnl = sign * (px - entry) / entry * 100
             r = sign * (px - entry) / risk
+            for k in ("live_outcome", "live_time", "live_exit"):
+                a.setdefault(k, None)               # open: present, and None
             a["live_price"] = round(px, 2)
             a["live_pnl_pct"] = round(pnl, 2)
             a["live_r"] = round(r, 2)
@@ -2131,7 +2133,18 @@ def diagnose():
     for s, r in (_state["last_reject"] or {}).items():
         if r:
             reasons[r] = reasons.get(r, 0) + 1
-    return {
+    bst = None
+    if breakouts is not None:
+        try:
+            bst = breakouts.status()
+        except Exception as e:
+            bst = {"error": str(e)[:160]}
+    bsd = bst if isinstance(bst, dict) else {}
+    try:
+        archived = len(_archive_index()[0])
+    except Exception:
+        archived = None
+    return _native({
         "running": _state["running"],
         "market_open": market_open(),
         "minutes_since_open": minutes_since_open() if market_open() else None,
@@ -2156,13 +2169,25 @@ def diagnose():
                        "ALERT_START_MIN": ALERT_START_MIN,
                        "ALERT_END_MIN": ALERT_END_MIN},
         "alerts_configured": bool(notify and notify.configured()),
-        "breakouts": breakouts.status() if breakouts is not None else None,
+        "breakouts": bst,
         "volume_alerts_on": VOLUME_ALERTS,
         "poll_seconds": POLL_SECONDS,
         "error": _state["error"],
         "log_path": LOG_FILE,
         "log_is_ephemeral": DATA_DIR == HERE,
-    }
+        # The two lanes, from the engine.
+        "lanes": bsd.get("lanes"),
+        "profiles": bsd.get("profiles"),
+        "checkpoint": bsd.get("checkpoint"),
+        "gates": bsd.get("gates"),
+        # This loop's own side of it.
+        "updates_tg": _updates_mode(),
+        "public_lanes": list(_public_lanes()),
+        "log_rows": len(_state["alerts"]),
+        "archive_rows": archived,
+        "archive_path": _archive_path(),
+        "background_jobs": _jobs_view(),
+    })
 
 
 def _loop():
@@ -2170,6 +2195,12 @@ def _loop():
     while _state["running"]:
         try:
             _ensure_levels()
+        except Exception as e:
+            _state["error"] = str(e)[:160]
+        # Profiles, a missed opening range, money flow: each in its own
+        # thread, so the pass below is never kept waiting on them.
+        _ensure_background()
+        try:
             if market_open():
                 scan_once()
             else:
@@ -2209,8 +2240,21 @@ def stop():
     _thread["t"] = None
 
 
+def _pacing(rows, now):
+    """The Select lane's slots for the page, counted from the log."""
+    fn = getattr(breakouts, "pacing", None) if breakouts is not None else None
+    if not fn:
+        return None
+    try:
+        return _call(fn, log=rows, now=now)
+    except Exception:
+        return None
+
+
 def status():
-    return {
+    now = now_ist()
+    today = _alerts_today()
+    return _native({
         "running": _state["running"],
         "market_open": market_open(),
         "watchlist_size": len(_state["watch"]),
@@ -2219,7 +2263,8 @@ def status():
         "profiles_built": len(_state["profiles"]),
         "profiles_pending": len(_state["warm_pending"]),
         "index_change_pct": _state["regime"],
-        "alerts_today": _alerts_today()[::-1],
+        # Newest first, both lanes, with the live fields.
+        "alerts_today": today[::-1],
         "top_rvol_now": _state["top_rvol"][:8],
         "profiles_given_up": sum(1 for n in _state["warm_fail"].values() if n >= 2),
         "in_alert_window": (market_open()
@@ -2229,4 +2274,10 @@ def status():
         "poll_seconds": POLL_SECONDS,
         "daily_cap": MAX_ALERTS_DAY,
         "error": _state["error"],
-    }
+        "pacing": _pacing(today, now),
+        "clock": now.strftime("%H:%M"),
+        "lanes": {"classic": sum(1 for a in today if _engine(a) != "select"),
+                  "select": sum(1 for a in today if _engine(a) == "select")},
+        "updates_tg": _updates_mode(),
+        "live_tracked": _live_count(today, now),
+    })
