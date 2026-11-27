@@ -379,10 +379,10 @@ LISTS = {
         "mix": MONTH["mix"], "recipe": "MONTH",
         # What the gates ensure, then what the rank rewards. A pullback and
         # growing sales raise a stock's rank but are not required: on a
-        # given day most picks may have risen over the month.
-        "idea": ("Market leaders in industries money is moving into, with last quarter's profit not down "
-                 "on a year ago. Ranked on how far each pulled back this month, how near it is to its "
-                 "52-week high, and its sales and margin growth."),
+        # given day most picks may have risen over the month. Three lines on
+        # a phone at most, or the first pick falls below the first screen.
+        "idea": ("Market leaders in industries money is moving into, profit not down last quarter. "
+                 "Ranked higher on a pullback this month and on sales growth."),
     },
     "results": {
         "label": "After results", "setup": "Results pick", "setup_key": "pick_results",
