@@ -37,6 +37,10 @@ const root = path.resolve('frontend');
 const output = path.resolve('test-results/picks');
 fs.mkdirSync(output, { recursive: true });
 const FIX = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/picks.json'), 'utf8'));
+/* A live catalyst on the first breakout pick, as ideas.catalysts() writes one.
+   The fixture is made from the price panel, which has no orders or calls. */
+const CATALYST = 'Order worth \u20b9420 crore, 6.1% of its market value, disclosed 2026-11-20';
+FIX.breakout.rows[0].catalysts = { lines: [CATALYST], score: 2.2 };
 const KEYS = ['week', 'month', 'results', 'momentum', 'long'];
 const PORT = 8793;
 
@@ -113,7 +117,7 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
 
   assert.deepEqual(await panel.locator('.pk-tab').evaluateAll(ns => ns.map(n => n.getAttribute('aria-label'))),
                    ['This week', 'This month', 'After results', 'Momentum', 'Long term',
-                    'Breakouts', 'Technicals', 'Quick trades', 'Money flow', 'Emerging']);
+                    'Breakouts', 'Technicals', 'Swing dips', 'Money flow', 'Emerging']);
   assert.equal(await panel.locator('.pk-tab[aria-selected="true"]').getAttribute('data-pick'), 'month',
                'a first visit should open on the month list');
 
@@ -281,19 +285,35 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
     assert.ok(await page.locator(`#hzseg2 .hz[data-h="${key}"]`).getAttribute('aria-selected') === 'true'
       && (await page.locator('#hzseg .hz[aria-selected="true"]').count()) === 0, `${key}: only its tab is selected`);
   }
-  /* Quick trades: the plan says when to sell, and the cost of trading is in the open. */
+  /* Swing dips (the quick list, rebuilt December 2026): held about a month,
+     no target, and the average pick now covers the cost of trading it. */
   await page.locator('#hzseg2 .hz[data-h="quick"]').click();
   await page.locator(`#idearows .idea[data-t="${FIX.quick.rows[0].symbol}"]`).waitFor();
-  assert.ok(/5-day average/.test(await page.locator('#idearows .idea .pk-plan').first().innerText()), 'quick: the plan names the sell rule');
-  // A list with a sell rule of its own carries no target: it already says when to sell.
-  assert.doesNotMatch(await page.locator('#idearows').innerText(), /Target/, 'quick: a target is shown beside a sell rule');
+  assert.match(await page.locator('#idearows .idea .pk-plan').first().innerText(), /about a month/, 'quick: the plan says how long');
+  assert.doesNotMatch(await page.locator('#idearows .idea .pk-plan').first().innerText(), /5-day average/);
+  // A rebuilt setup list is held for its large winners and carries no target.
+  assert.doesNotMatch(await page.locator('#idearows').innerText(), /Target/, 'quick: a target is shown on a list held for its winners');
   assert.equal(await page.locator('#pickaim .pk-aimnote').count(), 0);
-  assert.ok(/lost/.test(await page.locator('#pickhead .pk-cost').innerText()), 'quick: says the average pick did not cover costs');
+  assert.equal(await page.locator('#pickhead .pk-cost').count(), FIX.quick.tested.avg_after_costs_pct < 0 ? 1 : 0,
+    'quick: the cost note follows the record');
+  // The record carries the share of 25%+ winners, as a fourth figure.
+  assert.equal(await page.locator('#pickhead .pk-record-n.four > span').count(), 4, 'quick: the big-winner figure is missing');
+  assert.match(await page.locator('#pickhead .pk-record-n').innerText(), /made 25% or more/);
+  await page.locator('#pickhead .pk-record').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: path.join(output, 'quick-desktop.png') });
+  /* Emerging: sold on a close under the 50-day average, and said so. */
+  await page.locator('#hzseg2 .hz[data-h="emerging"]').click();
+  await page.locator(`#idearows .idea[data-t="${FIX.emerging.rows[0].symbol}"]`).waitFor();
+  assert.match(await page.locator('#idearows .idea .pk-plan').first().innerText(), /50-day average/, 'emerging: the plan names its sell rule');
   /* Money flow: the sector table, top sectors marked. */
   await page.locator('#hzseg2 .hz[data-h="flow"]').click();
   await page.locator('#pickhead .pk-sectors table').waitFor();
   assert.ok((await page.locator('#pickhead .pk-sectors tbody tr').count()) === FIX.flow.sector_flow.length, 'flow: every sector is ranked');
-  assert.ok((await page.locator('#pickhead .pk-sectors tbody tr.on').count()) === 4, 'flow: the four sectors picked from are marked');
+  assert.ok((await page.locator('#pickhead .pk-sectors tbody tr.on').count()) === FIX.flow.flow_sectors, 'flow: the sectors picked from are marked');
+  assert.equal(FIX.flow.flow_sectors, 3, 'flow: the list takes the top three sectors');
+  // Each sector's own index against its 60-session high: a sector breakout.
+  assert.match(await page.locator('#pickhead .pk-sectors thead').textContent(), /Index/);
+  assert.match(await page.locator('#pickhead .pk-sectors tbody').textContent(), /New high|% under/);
   /* Breakouts: the ledger is pass or fail, and the watch list is separate. */
   await page.locator('#hzseg2 .hz[data-h="breakout"]').click();
   const b0 = page.locator(`#idearows .idea[data-t="${FIX.breakout.rows[0].symbol}"]`);
@@ -301,8 +321,15 @@ const rupees = s => Number(String(s).replace(/[^0-9.]/g, ''));
   assert.ok((await page.locator('#pickhead .pk-watch tbody tr').count()) === FIX.breakout.watch.length, 'breakout: the unbroken bases are listed apart');
   await b0.locator('.morebtn').click();
   await b0.locator('.evbtn').click();
-  assert.ok(/Yes/.test(await b0.locator('.evwrap').innerText()) && !/null|undefined|NaN/.test(await b0.locator('.evwrap').innerText()),
-    'breakout: the ledger reads as conditions met');
+  assert.ok(/VCP launchpad|Base turnaround/.test(await b0.locator('.evwrap').innerText())
+    && !/null|undefined|NaN/.test(await b0.locator('.evwrap').innerText()),
+    'breakout: the ledger names the pattern and reads as conditions met');
+  // A live catalyst is marked on the pick and said in full in its details.
+  assert.equal(await b0.locator('.pk-cat').innerText(), 'Catalyst');
+  assert.match(await b0.locator('.pk-catalyst').innerText(), /Order worth/);
+  // The pattern is a badge on the pick, and is not said twice.
+  assert.equal(await b0.locator('.pk-badge:not(.pk-cat)').innerText(), FIX.breakout.rows[0].pattern);
+  assert.equal((await b0.locator('.pk-why span').allInnerTexts()).filter(t => t === FIX.breakout.rows[0].pattern).length, 0);
   await page.screenshot({ path: path.join(output, 'breakout-desktop.png') });
 
   // Another tab on the full list asks the server for that list.

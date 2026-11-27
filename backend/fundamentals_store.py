@@ -538,7 +538,7 @@ def recent_quarterly(since):
     when it was filed and the year-on-year growth it reported. What the
     results pick list asks before each scan.
     """
-    sql = ("SELECT symbol, label, period_end, filed_at, revenue_yoy_pct, pat_yoy_pct"
+    sql = ("SELECT symbol, label, period_end, filed_at, revenue_yoy_pct, pat_yoy_pct, pat_cr"
            " FROM income_statement WHERE freq = 'quarterly' AND filed_at >= ?"
            " ORDER BY filed_at")
     return [dict(r) for r in _connect().execute(sql, (str(since),)).fetchall()]

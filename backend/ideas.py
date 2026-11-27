@@ -99,6 +99,11 @@ except Exception:
     wow_orders = None
 
 try:
+    import concalls
+except Exception:
+    concalls = None
+
+try:
     from data_source import resolve as _resolve
 except Exception:
     _resolve = None
@@ -865,6 +870,108 @@ def chart_facts(tech, facts=None, pattern=None, price=None):
     return out
 
 
+# ---- Live catalysts on the setup lists (December 2026) ---------------------
+# A reader pointed out that RATNAVEER's and HFCL's moves came with news: an
+# order, an earnings call that raised the outlook, a story in the press. The
+# site reads all three as they arrive, but keeps no history of them, so they
+# cannot be tested. They are shown beside a setup pick, and they move a pick
+# up its own list; they never put a stock on a list or take one off.
+CATALYST_LISTS = ("breakout", "technical", "quick", "flow", "emerging")
+CONCALL_DAYS = 100        # an earnings call older than this is last quarter's news
+CATALYST_NEWS_HOURS = 168 # a story older than a week is not a catalyst
+CATALYST_ORDER_PCT = 1.0  # an order worth this share of the company's value or more
+
+
+def _concall_for(symbol):
+    """The company's newest earnings-call transcript read in the last
+    CONCALL_DAYS, as {"date", "quarter", "headline", "weight", "said",
+    "guidance_count"}, or None. "said" is a commitment management made on the
+    call, quoted from the transcript (the brief checks quotes word for word);
+    "weight" is how much the brief thought the call mattered."""
+    if concalls is None or not symbol:
+        return None
+    try:
+        rows = concalls.filed_since(symbol=str(symbol).upper(), limit=1)
+    except Exception:
+        return None
+    if not rows:
+        return None
+    r = rows[0]
+    if r.get("epoch") and time.time() - float(r["epoch"]) > CONCALL_DAYS * 86400:
+        return None
+    try:
+        brief = concalls.briefs_for([r["pdf"]]).get(r["pdf"]) or {}
+    except Exception:
+        brief = {}
+    dg = r.get("digest") or {}
+    said = ((brief.get("commitments") or [{}])[0].get("said")
+            or (dg.get("guidance") or [{}])[0].get("said"))
+    return {"date": (r.get("at") or "")[:10] or None, "quarter": dg.get("quarter"),
+            "headline": brief.get("headline") or r.get("headline"),
+            "weight": brief.get("weight"), "guidance_count": dg.get("guidance_count"),
+            "said": (said[:220] + "\u2026") if said and len(said) > 220 else said}
+
+
+def _recent_news(stories, hours=CATALYST_NEWS_HOURS):
+    """Stories from the last `hours`, rumours left out."""
+    cut = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=hours)
+    out = []
+    for st in stories or []:
+        if st.get("speculative"):
+            continue
+        when = str(st.get("when") or "")
+        try:
+            t = dt.datetime.fromisoformat(when.replace("Z", "+00:00"))
+            if t.tzinfo is None:
+                t = t.replace(tzinfo=dt.timezone.utc)
+        except ValueError:
+            continue
+        if t >= cut:
+            out.append(st)
+    return out
+
+
+def _finite_num(v):
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return False
+    return f == f and f not in (float("inf"), float("-inf"))
+
+
+def catalysts(symbol, stories=None, order=None):
+    """
+    What has happened to a company lately that the chart cannot show:
+    {"order", "concall", "news", "lines", "score"}, or None when there is
+    nothing. `lines` are the facts in words; `score` only orders a list's
+    picks among themselves (an order worth 1% or more of the company 1 to 3,
+    a call the brief rated high or medium 1 or 0.5, a week's news 0.3).
+    """
+    order = order if order is not None else _order_for(symbol)
+    call = _concall_for(symbol)
+    news = _recent_news(stories)
+    lines, score = [], 0.0
+    if order and _finite_num(order.get("value_cr")):
+        pct = order.get("pct_of_market_cap")
+        lines.append(f"Order worth \u20b9{float(order['value_cr']):,.0f} crore"
+                     + (f", {float(pct):.1f}% of its market value" if _finite_num(pct) else "")
+                     + (f", disclosed {order['date']}" if order.get("date") else ""))
+        if _finite_num(pct) and float(pct) >= CATALYST_ORDER_PCT:
+            score += min(3.0, 1.0 + float(pct) / 5.0)
+    if call:
+        lines.append("Earnings call" + (f" ({call['quarter']})" if call.get("quarter") else "")
+                     + (f" on {call['date']}" if call.get("date") else "")
+                     + (f": {call['headline']}" if call.get("headline") else ""))
+        score += {"high": 1.0, "medium": 0.5}.get(call.get("weight"), 0.25)
+    if news:
+        lines.append(f"In the news: {news[0].get('title')}"
+                     + (f" ({len(news)} stories this week)" if len(news) > 1 else ""))
+        score += 0.3
+    if not lines:
+        return None
+    return {"order": order, "concall": call, "news": news[:3], "lines": lines[:3], "score": round(score, 2)}
+
+
 def _order_for(symbol):
     """The largest order this company disclosed in the last few weeks, with
     its size against the company's market value, or None. Read from the order
@@ -923,6 +1030,20 @@ def has_picks(payload):
     return any((r.get("leader") or {}).get("lists") for r in rows)
 
 
+def breakout_pattern(block):
+    """The pattern of the breakout a block's breakout pick was made on:
+    "VCP launchpad" or "Base turnaround", by the same order the list uses
+    (the earliest launch of the last five sessions of a pattern it picks
+    from), or None."""
+    t = (block or {}).get("technicals") or {}
+    for L in t.get("launch") or []:
+        if L.get("a") and "A" in leaders.LAUNCH_PATTERNS:
+            return "VCP launchpad"
+        if L.get("b") and "B" in leaders.LAUNCH_PATTERNS:
+            return "Base turnaround"
+    return None
+
+
 def _setup_evidence(key, block):
     """The ledger for a setup list: what the setup measured, line by line.
     A line that is a pass or a fail carries points 1 of 1; a plain
@@ -948,7 +1069,7 @@ def _setup_evidence(key, block):
         met = t.get("scorecard_met") or []
         line("Technicals", f"{t.get('scorecard')} of 9 chart conditions: " + "; ".join(met) + ".", True)
         line("Trend", f"Above its 200-day average (\u20b9{facts.get('sma200')}). " + lead, True)
-        line("Industry", f"{f.get('sector')} ranks {f.get('rank')} of {f.get('of')} on money flow: "
+        line("Industry", f"{f.get('sector')} ranks {f.get('classic_rank') or f.get('rank')} of {f.get('of')} on money flow: "
                          f"{f.get('breadth_pct')}% of its stocks are above their 50-day average and its "
                          f"median stock moved {f.get('month_pct')}% this month.", True)
         if q.get("pat_yoy_pct") is not None:
@@ -963,41 +1084,78 @@ def _setup_evidence(key, block):
             line("Results", f"Priced on {leaders._short_day(res.get('session'))}: {res['move_pct']:+.1f}% that day, "
                             f"the average stock {res['market_move_pct']:+.1f}%.", res.get("reaction_pct", 0) >= -2)
     elif key == "breakout":
-        b = t.get("box") or {}
-        line("The base", f"{leaders.BOX_SESSIONS} sessions between \u20b9{b.get('low')} and \u20b9{b.get('top')}: "
-                         f"a {b.get('width_pct')}% range. The list needs {leaders.BOX_MAX_WIDTH * 100:.0f}% or tighter.", True)
-        ago = b.get("sessions_ago")
+        launch = (t.get("launch") or [])
+        f, q = block.get("sector_flow") or {}, block.get("quarter") or {}
+        # The breakout the list counted: the earliest of the last five still above its base.
+        L = next((x for x in launch if (x.get("a") and "A" in leaders.LAUNCH_PATTERNS)
+                  or (x.get("b") and "B" in leaders.LAUNCH_PATTERNS)), None) or {}
+        pattern = breakout_pattern(block) or "VCP launchpad"
+        base = (L.get("a") if pattern == "VCP launchpad" else L.get("b")) or {}
+        line("Pattern", pattern + (": a base that tightened before it broke." if pattern == "VCP launchpad" else
+                                   ": a first 60-session high after a long sideways base."), True)
+        line("The base", f"{base.get('base')} sessions between \u20b9{base.get('low')} and \u20b9{base.get('top')}: "
+                         f"a {base.get('width_pct')}% range. The list needs "
+                         f"{leaders.LAUNCH_A_WIDTH * 100:.0f}% or tighter.", True)
+        ago = L.get("sessions_ago")
         line("The breakout", ("Closed" if not ago else f"{ago} session{'s' if ago != 1 else ''} ago it closed")
-             + f" at \u20b9{b.get('close')}, above the top of the base.", True)
-        line("Volume", f"{b.get('rel_volume')} times its usual volume that day. The list needs "
-                       f"{leaders.BOX_MIN_VOLUME:.0f} times.", True)
-        line("Still above the base", "Yes." if b.get("holding") else
-             "No: it has closed back under the top of the base since.", bool(b.get("holding")))
+             + f" at \u20b9{L.get('close')}, above the top of the base, on {L.get('rel_volume')} times its usual "
+               "volume. Still above it.", True)
+        ext = t.get("ext_50d_pct")
+        line("Not stretched", (f"{ext}% above its 50-day average" if ext is not None else "Near its 50-day average")
+             + f" and {facts.get('return_3m_pct')}% over three months. The list buys "
+               f"{leaders.CHASE_EXT50:.0f}% or less over the 50-day and {leaders.CHASE_RET3M * 100:.0f}% or less "
+               "in three months.", True)
         line("Long-term trend", f"Above its 200-day average (\u20b9{facts.get('sma200')}).", True)
+        if f:
+            line("Industry", f"{f.get('sector')} ranks {f.get('rank')} of {f.get('of')} on money flow.", True)
+            if f.get("near_high") is not None:
+                line("Industry breaking out",
+                     (f"Its industry index made a new 60-session high in the last 10 sessions."
+                      if f.get("breakout") else
+                      f"Its industry index is {f.get('from_high_pct')}% under its 60-session high.")
+                     + " The list wants it within 3%.", bool(f.get("near_high")))
         line("Strength", lead, True)
+        if q.get("pat_yoy_pct") is not None:
+            line("Last quarter", f"Profit {'rose' if q['pat_yoy_pct'] >= 0 else 'fell'} "
+                                 f"{abs(q['pat_yoy_pct']):.0f}% on a year ago.", True)
     elif key == "technical":
-        met = set(t.get("scorecard_met") or [])
-        for label in leaders.SCORECARD_LABELS:
-            line(label, "Met." if label in met else "Not met.", label in met)
+        f = block.get("sector_flow") or {}
+        line("Uptrend", "Price and its 50-day average are above a rising 200-day average.", True)
+        line("Pullback", f"Dipped to its 20-day average (\u20b9{t.get('ema20')}) in the last three sessions and "
+                         f"closed up, {t.get('ext_20d_pct')}% above it. The list buys "
+                         f"{leaders.PULL_EXT_MAX:.0f}% or less above it.", True)
+        line("RSI", f"{t.get('rsi')}: room to run. The list wants {leaders.PULL_RSI[0]:.0f} to "
+                    f"{leaders.PULL_RSI[1]:.0f}.", True)
+        if f:
+            line("Industry", f"{f.get('sector')} ranks {f.get('rank')} of {f.get('of')} on money flow.", True)
+        line("Strength", lead + f" The list needs {leaders.PULL_LEADER * 100:.0f} or more.", True)
     elif key == "quick":
-        line("Two-day RSI", f"{t.get('rsi2')}: sold hard over the last two sessions. The setup is under "
-                            f"{leaders.QUICK_RSI2:.0f}.", True)
+        line("The dip", f"Two-day RSI {t.get('rsi2')}, {facts.get('return_5d_pct')}% over five sessions. The "
+                        f"setup is an RSI under {leaders.DIP_RSI2:.0f} or a fall of "
+                        f"{abs(leaders.DIP_DROP5) * 100:.0f}% or more.", True)
+        line("Support", f"Still within 3% of its 50-day average (\u20b9{facts.get('sma50')}).", True)
         line("Uptrend", "Price and its 50-day average are above the 200-day average.", True)
-        line("Strength", lead + " The list needs the top 30%.", True)
-        line("Sell at", f"The first close above its 5-day average (\u20b9{t.get('sma5')} today; it moves each day).")
+        line("Strength", lead + f" The list needs the top {100 - leaders.DIP_LEADER * 100:.0f}%.", True)
+        line("Sell at", "After about a month (21 sessions), or on a close 10% under the price it was bought at.")
     elif key == "flow":
         f = block.get("sector_flow") or {}
-        line("Sector", f"{f.get('sector')}: ranked {f.get('rank')} of {f.get('of')} sectors on money flow.", True)
-        line("Turnover share", f"{f.get('shift')} times its sixty-session share of market turnover this week.")
+        line("Sector", f"{f.get('sector')}: ranked {f.get('rank')} of {f.get('of')} sectors on rotation.", True)
+        line("Sector's three months", f"Its median stock moved {f.get('month3_pct')}% over the last 63 sessions.")
         line("Breadth", f"{f.get('breadth_pct')}% of its {f.get('stocks')} liquid stocks are above their 50-day average.")
-        line("Sector's month", f"Its median stock moved {f.get('month_pct')}% over the last 21 sessions.")
-        line("Strength", lead + " Among the four strongest in its sector.", True)
+        line("Turnover share", f"{f.get('shift')} times its sixty-session share of market turnover this week.")
+        line("Ahead of the market", f"{facts.get('return_1m_pct')}% this month and {facts.get('return_3m_pct')}% "
+                                    "over three months, both ahead of the Nifty 500.", True)
+        line("Strength", lead + f" Among the {leaders.FLOW_PER_SECTOR} strongest in its sector.", True)
     elif key == "emerging":
-        line("Listed", f"{block.get('listed_sessions')} sessions ago: six to twelve months.", True)
-        line("Above its 50-day average", "Yes.", True)
-        line("Strength", lead + " Its 6-month return stands in for the 12-month one.", True)
-        line("Six months", f"{facts.get('return_6m_pct')}% over six months, {facts.get('below_high_pct')}% "
-                           "below its high.")
+        line("Listed", f"{block.get('listed_sessions')} sessions ago: six to eighteen months.", True)
+        line("Stage-2 advance", "Above a rising 50-day average, within 10% of its high "
+                                f"({facts.get('below_high_pct')}% below it).", True)
+        line("Ahead of the market", f"{facts.get('return_1m_pct')}% this month and {facts.get('return_3m_pct')}% "
+                                    "over three months, both ahead of the Nifty 500.", True)
+        line("Strength", lead + (" Its 6-month return stands in for the 12-month one." if block.get("young") else ""),
+             True)
+        line("Sell at", "After about four months (90 sessions); after the first 15, on a close under the "
+                        "50-day average; at any time on a close 15% under the price it was bought at.")
     return out
 
 
@@ -1125,47 +1283,75 @@ SETUP_METHOD = {
               "fall in profit last quarter; and results, if just out, not sold by the market. A serious "
               "adverse filing removes it. Picks are ordered on strength, chart, industry and profit growth "
               "together." + _REPLAYED),
-    "breakout": ("A stock is here when it spent 40 sessions inside a range 18% wide or tighter, then "
-                 "closed above the top of that range on at least twice its usual volume in the last five "
-                 "sessions. It must be above its 200-day average and in the stronger half of liquid stocks. "
-                 "Stocks still holding above the base come first, the newest breakout before older ones."
-                 + _REPLAYED),
-    "technical": ("Nine chart conditions are checked on every liquid stock: price above its 20-day "
-                  "average, the 20-day above the 50-day, the 50-day above the 200-day, RSI over 55, MACD "
-                  "above its signal line, ADX at 25 or more with buyers ahead, more volume on up days than "
-                  "down days, this week's volume above usual, and price within 5% of its 52-week high. A "
-                  "stock is here when it meets seven or more; the most conditions come first, then the "
-                  "closest to its high." + _REPLAYED),
-    "quick": ("A stock is here when it is in an uptrend, in the top 30% of liquid stocks on the leader "
-              "score, and its two-day RSI is under 10: a strong stock sold hard for a day or two. The most "
-              "oversold come first. The trade ends at the first close above the 5-day average." + _REPLAYED),
-    "flow": ("Every NSE sector with eight or more liquid stocks is ranked on three things: its share of "
-             "market turnover this week against its share over sixty sessions, how many of its stocks are "
-             "above their 50-day average, and its median stock's month. The list is the four strongest "
-             "stocks in each of the top four sectors." + _REPLAYED),
-    "emerging": ("Companies listed six to twelve months, trading \u20b910 crore a day or more, above their own "
-                 "50-day average, whose leader score stands in the top half of the established market. "
-                 "Their 6-month return stands in for the 12-month one." + _REPLAYED),
+    "breakout": ("A stock is here when it closed above the top of a 40- or 60-session base in the last five "
+                 "sessions and is still above it. The base must be 28% wide or less and either 20% or tighter "
+                 "or tightening before the break (a calmer last fortnight, or volume drying up): a VCP "
+                 "launchpad. The breakout needs 1.6 times the usual volume and a close in the top 45% of the "
+                 "day's range. The stock must be above its 200-day average, with a leader score of 45 or "
+                 "more, its industry in the top 60% on money flow and its industry's own index within 3% of "
+                 "its 60-session high, and a month better than the Nifty 500's. "
+                 "It is left out if it is already more than 16% above its 50-day average or up 55% in three "
+                 "months, if its last quarter's profit fell more than 10%, or if the market sold its results. "
+                 "Newest breakouts first, then the heaviest volume. Held about three months." + _REPLAYED),
+    "technical": ("A stock is here when it is in a confirmed uptrend (price and the 50-day average above a "
+                  "rising 200-day average, leader score 55 or more), dipped to within 1.5% of its 20-day "
+                  "average in the last three sessions, and closed up and back above it, no more than 6% over "
+                  "it. Its RSI must be 48 to 68, its industry in the top half on money flow, and its last "
+                  "quarter's profit not down more than 10%. Ordered on strength, industry and how much more "
+                  "volume trades on up days. Held about three months." + _REPLAYED),
+    "quick": ("A stock is here when it is in an uptrend, in the top 35% of liquid stocks on the leader score, "
+              "and was sold off hard (a two-day RSI under 10, or 4% or more down in five sessions) while "
+              "still within 3% of its 50-day average. A fall on its own results is left out. The most "
+              "oversold come first. Held about a month: the old exit at the 5-day average lost money after "
+              "costs in the test." + _REPLAYED),
+    "flow": ("Every NSE sector with eight or more liquid stocks is ranked on rotation: 45% its median "
+             "stock's move over three months, 35% how many of its stocks are above their 50-day average, 20% "
+             "its share of market turnover this week against its share over sixty sessions. The list is the "
+             "five strongest stocks in each of the top three sectors that are in an uptrend, within 15% of "
+             "their high and ahead of the Nifty 500 over one month and three. Held about three months."
+             + _REPLAYED),
+    "emerging": ("Companies listed six to eighteen months, trading \u20b910 crore a day or more, above a "
+                 "rising 50-day average and within 10% of their high, with a leader score of 60 or more, "
+                 "ahead of the Nifty 500 over one month and three, and no more than 18% above the 50-day "
+                 "average. A loss or a fall in sales in the last quarter, where one is on file, rules a "
+                 "company out. Held about four months; after the first 15 sessions it is sold on a close "
+                 "under its 50-day average." + _REPLAYED),
 }
 SETUP_EMPTY = {
     "short": ("No stock passes every screen today. A breakout from a tight base, in a strong industry, with "
               "profit not falling, is uncommon: in the test about one list in four was empty. An empty list "
               "is the answer, not a fault."),
-    "breakout": "No stock has broken out of a tight 40-session base on heavy volume in the last five sessions.",
-    "technical": "No liquid stock meets seven of the nine chart conditions in this scan.",
-    "quick": ("No market leader is this oversold today. The setup needs a two-day RSI under 10 in a "
-              "stock that is in an uptrend; most days have a few, some have none."),
+    "breakout": ("No stock has broken out of a tightening base on heavy volume in the last five sessions "
+                 "without already being stretched. The bases closest to breaking are listed below."),
+    "technical": ("No stock in a rising trend has pulled back to its 20-day average and turned up in this "
+                  "scan. That is common in a market falling hard and in one running hard."),
+    "quick": ("No market leader is this oversold today. The setup needs a sharp fall in a stock that is in "
+              "an uptrend and still holding its 50-day average; most days have a few, some have none."),
     "flow": "No sector could be ranked on money flow in this scan.",
-    "emerging": "No company listed six to twelve months passes the tests in this scan.",
+    "emerging": "No company listed six to eighteen months passes the tests in this scan.",
 }
 SETUP_NOTE = {
     "short": ("Stocks on the verge of a breakout are shown under the list, to watch. In the test, buying "
               "before the breakout did no better than chance, so the list waits for it."),
-    "quick": ("A quick trade lasts about three sessions. In the test two in three rose, but the average gain "
-              "was smaller than the cost of buying and selling: see the record before trading it."),
-    "emerging": ("Listed under a year, so each has six to twelve months of prices. Less history means "
-                 "less to judge by."),
+    "quick": ("Held about a month. In the test about half the picks rose, but the average one made money "
+              "after the cost of buying and selling, which the old few-day exit did not."),
+    "breakout": ("Held about three months with no target: much of the average comes from the one pick in ten "
+                 "that made 25% or more. Expect about half to fall."),
+    "emerging": ("Listed six to eighteen months, so each has less history to judge by. Much of the average "
+                 "comes from a few large winners; more than half the picks fell in the test."),
 }
+
+
+def _watch_with_catalysts(rows, news_idx):
+    """The breakout watch list with each base's live catalyst, if any: a
+    base with a fresh order or earnings call behind it is the one to watch."""
+    out = []
+    for r in rows:
+        r = dict(r)
+        c = catalysts(r.get("symbol"), (news_idx or {}).get(str(r.get("symbol") or "").upper()))
+        r["catalyst"] = c["lines"][0] if c else None
+        out.append(r)
+    return out
 
 
 def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
@@ -1221,6 +1407,8 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
             "young": bool(block.get("young")),
             "conviction": entry["score"], "rank_score": entry["score"],
             "why": entry.get("why") or [],
+            # The breakout pattern, for the badge on a breakout pick.
+            "pattern": breakout_pattern(block) if key == "breakout" else None,
             "evidence": _pick_evidence(key, block),
             "plan": leaders.plan(key, row.get("price"), called_on),
             "catalyst": filing, "filing": filing, "adverse_filing": adverse,
@@ -1243,13 +1431,25 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
             # Its sector on Money Flow. A fact beside the pick; not ranked.
             "sector_tailwind": sector_tailwind(sym),
         })
+        if key in CATALYST_LISTS:
+            # An order, an earnings call, a week's news: live facts, untested,
+            # that move a pick up its list and never put one on it.
+            row["catalysts"] = catalysts(sym, row["news"], row["order"])
         band = "High" if entry["score"] >= 85 else ("Moderate" if entry["score"] >= 70 else "Speculative")
         row["conviction_band"] = band
         row["conviction_why"] = f"Ranked {entry['rank']} of the stocks that passed every gate."
         row["thesis"] = spec["idea"]
         chosen.append(row)
 
+    if key in CATALYST_LISTS and any(r.get("catalysts") for r in chosen):
+        # Picks with a fresh catalyst first, the strongest first; the rest keep
+        # the list's own order. Which stocks are on the list does not change.
+        chosen.sort(key=lambda r: (-((r.get("catalysts") or {}).get("score") or 0.0), r["pick_rank"]))
     notes = []
+    if key in CATALYST_LISTS and any(r.get("catalysts") for r in chosen):
+        notes.append("Picks with a fresh catalyst (an order worth 1% or more of the company, an earnings "
+                     "call, a week's news) are shown first. Catalysts were not part of the test: there is "
+                     "no history of them to test on, so they reorder the list and never choose it.")
     if excluded_adverse:
         notes.append("Removed for a serious adverse filing: "
                      + ", ".join(f"{e['symbol']} ({e['category']})" for e in excluded_adverse[:4]) + ".")
@@ -1313,6 +1513,10 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "horizon_note": ((f"{spec['idea']} Sell at the first close above the 5-day average or after "
                           f"{spec['hold_sessions']} sessions; leave on a close {spec['exit_pct']:.0f}% under the call price.")
                          if spec.get("sell_rule") == "sma5" else
+                         (f"{spec['idea']} Hold {spec['hold_text']}; after the first "
+                          f"{spec.get('trail_after', 15)} sessions sell on a close under the 50-day average; "
+                          f"leave at any time on a close {spec['exit_pct']:.0f}% under the call price.")
+                         if spec.get("sell_rule") == "sma50" else
                          (f"{spec['idea']} Hold {spec['hold_text']}; leave on a close "
                           f"{spec['exit_pct']:.0f}% under the call price.")),
         "tested": tested_record(key) if recipe_current else None,
@@ -1335,7 +1539,11 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         "flow_sectors": leaders.FLOW_SECTORS if key == "flow" else None,
         # Tight bases not yet broken, nearest their top first: the breakout
         # list's waiting room. Watched, not picked.
-        "watch": (payload.get("breakout_watch") or []) if key in ("breakout", "short") else None,
+        "watch": (_watch_with_catalysts(payload.get("breakout_watch") or [], news_idx) if key == "breakout" else
+                  # A scan from before December 2026 has no short_watch; its
+                  # breakout_watch was the short list's own.
+                  (payload.get("short_watch") if "short_watch" in payload else payload.get("breakout_watch") or [])
+                  if key == "short" else None),
         "primary": [{"key": k, "label": leaders.LISTS[k]["label"]} for k in leaders.PRIMARY],
         "scanned_at": payload.get("scanned_at"),
         "staleness": stale,

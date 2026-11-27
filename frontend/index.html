@@ -222,8 +222,8 @@
 <link rel="stylesheet" href="calls.css?v=20261121-type">
 <link rel="stylesheet" href="watchlists.css?v=20261121-fill">
 <link rel="stylesheet" href="strategy-lab.css?v=20261121-type">
-<link rel="stylesheet" href="picks.css?v=20261121-type">
-<script src="picks.js?v=20261121-type"></script>
+<link rel="stylesheet" href="picks.css?v=20261127-catalysts">
+<script src="picks.js?v=20261127-catalysts"></script>
 <script src="universe-voyage.js?v=20261120-seo"></script>
 <script src="universe-scan.js?v=20261121-type"></script>
 </template>
@@ -1808,11 +1808,11 @@
       </div></div>
       <div class="pk-group"><span class="pk-group-h" aria-hidden="true">By chart setup</span>
       <div class="pk-tabs page setups" id="hzseg2" role="tablist" aria-label="Setup">
-        <button type="button" role="tab" class="pk-tab hz" data-h="breakout"><span>Breakouts</span><small>~ a month</small></button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="technical"><span>Technicals</span><small>~ a month</small></button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="quick"><span><i>Quick </i>trades</span><small>a few days</small></button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="flow"><span><i>Money </i>flow</span><small>~ a month</small></button>
-        <button type="button" role="tab" class="pk-tab hz" data-h="emerging"><span>Emerging</span><small>~ a month</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="breakout"><span>Breakouts</span><small>~ 3 months</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="technical"><span>Technicals</span><small>~ 3 months</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="quick"><span><i>Swing </i>dips</span><small>~ a month</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="flow"><span><i>Money </i>flow</span><small>~ 3 months</small></button>
+        <button type="button" role="tab" class="pk-tab hz" data-h="emerging"><span>Emerging</span><small>~ 4 months</small></button>
       </div></div>
     </div>
     <p class="pk-brief"><a href="brief.html">Today&rsquo;s policy brief</a>: every new DGFT, RBI, SEBI and government circular, and the stocks it touches.</p>
@@ -3352,6 +3352,7 @@ async function loadIdeas(){
             <span class="nm"><a href="stock.html?ticker=${encodeURIComponent(s.symbol)}">${i+1}. ${esc(s.name)}</a><small>${esc(s.symbol)} · ₹${s.price ?? "—"}</small></span>
             <span class="conv">${scoreTxt(s.conviction ?? s.setup_fit)}<small>score</small></span>
           </div>
+          ${picks && PK.patternHTML ? PK.patternHTML(s) + (PK.catalystBadge ? PK.catalystBadge(s) : "") : ""}
           ${picks ? PK.whyHTML(s) : ""}
           ${window.AltahaCalls ? window.AltahaCalls.stamp(s.call, s.symbol) : ""}
           ${picks ? PK.planHTML(s.plan) : planGrid(s.plan)}
@@ -3363,7 +3364,7 @@ async function loadIdeas(){
             ${picks
               ? `<div class="arch">Ranked ${s.pick_rank} of the stocks that passed every test${s.sector?` · ${esc(s.sector)}`:""}${s.plan&&s.plan.review_on?` · review by ${esc(s.plan.review_on)}`:""}</div>`
               : `<div class="arch">${s.plan&&s.plan.stance?`<span class="ip ${stanceCls(s.plan.stance)}">${esc(s.plan.stance)}</span>`:""}${esc(s.setup || "—")} · typical hold ${esc(s.horizon || "—")} · fit ${scoreTxt(s.setup_fit, 0)}/100${tierChip(s.liquidity_tier)}${s.conviction_band?`<span class="cband ${esc(s.conviction_band)}">${esc(s.conviction_band)}</span>`:""}</div>`}
-            ${picks && PK.resultsHTML ? PK.resultsHTML(s) + PK.orderHTML(s) + (PK.flowHTML ? PK.flowHTML(s) : "") : ""}
+            ${picks && PK.resultsHTML ? PK.resultsHTML(s) + (PK.catalystHTML && s.catalysts ? PK.catalystHTML(s) : PK.orderHTML(s)) + (PK.flowHTML ? PK.flowHTML(s) : "") : ""}
             ${s.filing?`<div class="filingtag">📎 ${esc(s.filing.category)} · ${esc(s.filing.line)}</div>`:""}
             ${catalystChips(s)}
             <div class="ln"><span>Composite ${scoreTxt(s.composite)}</span><span>Technical ${scoreTxt(s.technical, 0)}</span>

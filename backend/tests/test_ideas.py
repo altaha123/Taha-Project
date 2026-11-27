@@ -110,3 +110,71 @@ def test_a_stale_scan_is_penalised_and_says_so():
 def test_an_unknown_horizon_is_rejected():
     with pytest.raises(ValueError):
         ideas.select(payload([]), horizon="yearly")
+
+
+# --- live catalysts on the setup lists (December 2026) -----------------------
+
+class _Calls:
+    """concalls, as ideas reads it: the newest transcript and its brief."""
+    def __init__(self, epoch, weight="high"):
+        self.epoch, self.weight = epoch, weight
+
+    def filed_since(self, symbol="", limit=1, epoch=0):
+        return [{"pdf": "x.pdf", "symbol": symbol, "headline": "Transcript", "at": "2026-11-12T10:00:00",
+                 "epoch": self.epoch, "digest": {"quarter": "Q2 FY27", "guidance_count": 4,
+                                                 "guidance": [{"said": "We expect order inflow to double."}]}}]
+
+    def briefs_for(self, pdfs):
+        return {"x.pdf": {"headline": "Order book at a record; margin guidance raised", "weight": self.weight,
+                          "commitments": [{"said": "Margins of 14% this year."}]}}
+
+
+def test_a_catalyst_is_an_order_a_call_or_a_weeks_news(monkeypatch):
+    import time as _t
+    monkeypatch.setattr(ideas, "concalls", _Calls(_t.time() - 5 * 86400))
+    now = dt.datetime.now(dt.timezone.utc)
+    stories = [{"title": "Wins export order", "when": now.isoformat(), "speculative": False},
+               {"title": "Rumour", "when": now.isoformat(), "speculative": True},
+               {"title": "Old story", "when": (now - dt.timedelta(days=30)).isoformat(), "speculative": False}]
+    order = {"value_cr": 420.0, "pct_of_market_cap": 6.1, "date": "2026-11-20"}
+    c = ideas.catalysts("AAA", stories, order)
+    assert len(c["lines"]) == 3
+    assert c["lines"][0].startswith("Order worth ₹420 crore, 6.1%")
+    assert "Q2 FY27" in c["lines"][1] and "record" in c["lines"][1]
+    assert c["lines"][2] == "In the news: Wins export order"           # rumour and old story left out
+    assert c["concall"]["said"] == "Margins of 14% this year."
+    assert c["score"] == pytest.approx(min(3.0, 1 + 6.1 / 5) + 1.0 + 0.3)
+
+
+def test_no_catalyst_is_none_and_an_old_call_is_not_news(monkeypatch):
+    import time as _t
+    monkeypatch.setattr(ideas, "concalls", _Calls(_t.time() - (ideas.CONCALL_DAYS + 5) * 86400))
+    assert ideas.catalysts("AAA", [], {}) is None
+    monkeypatch.setattr(ideas, "concalls", None)
+    small = ideas.catalysts("AAA", [], {"value_cr": 5.0, "pct_of_market_cap": 0.2})
+    assert small["lines"] and small["score"] == 0.0                     # shown, but too small to move a pick
+
+
+def test_catalysts_reorder_a_setup_list_and_never_change_who_is_on_it(monkeypatch):
+    """Served through ideas.select: the members of a setup list are the
+    engine's; a catalyst only moves one up, and the page is told why."""
+    import leaders
+    from test_leaders import _ranked_with_sectors, scan_payload
+    monkeypatch.setattr(ideas, "sector_outlook", lambda: {})
+    monkeypatch.setattr(ideas, "market_regime", lambda: None)
+    monkeypatch.setattr(ideas, "_news_index", lambda hours: ({}, []))
+    monkeypatch.setattr(ideas, "_filing_for", lambda sym, hours, cats: None)
+    monkeypatch.setattr(ideas, "tracker", None)
+    _c, sectors, blocks = _ranked_with_sectors()
+    payload = scan_payload(blocks, sectors)
+    monkeypatch.setattr(ideas, "catalysts", lambda sym, stories=None, order=None: None)
+    plain = ideas.select(payload, horizon="flow", limit=15)
+    assert len(plain["rows"]) >= 3
+    last = plain["rows"][-1]["symbol"]
+    monkeypatch.setattr(ideas, "catalysts", lambda sym, stories=None, order=None:
+                        {"lines": ["Order worth \u20b9420 crore"], "score": 2.0} if sym == last else None)
+    lifted = ideas.select(payload, horizon="flow", limit=15)
+    assert [r["symbol"] for r in lifted["rows"]][0] == last
+    assert {r["symbol"] for r in lifted["rows"]} == {r["symbol"] for r in plain["rows"]}
+    assert any("never choose it" in n for n in lifted["selection_notes"])
+    assert set(ideas.CATALYST_LISTS) == {"breakout", "technical", "quick", "flow", "emerging"}
