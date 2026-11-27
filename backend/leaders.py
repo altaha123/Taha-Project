@@ -27,7 +27,7 @@ each read from the company's own filings as well as its chart
 (fund_snapshot.py builds the figures, the same code for the live scan and
 for the replay):
 
-  Swing / This month       a market leader (leader score in the top 30%), in
+  Swing / This month       a market leader (a leader score of 70 or more), in
                 an uptrend and outside the most volatile fifth, in an industry
                 in the top half on money flow, that pulled back over the last
                 month, ranked on the pullback, its closeness to the 52-week
@@ -81,7 +81,7 @@ also held on our own data, turned into a percentile among every liquid stock:
   LEADER SCORE  = the average of the first four.
 
   This week    half leader score, half dip. A strong stock that just fell.
-  This month   a leader (leader score in the top 30%) that fell over the
+  This month   a leader (a leader score of 70 or more) that fell over the
                last month: half month dip, half closeness to the 52-week high.
   Momentum     the leader score, leaving out the long-term top 15. About
                three months.
@@ -241,8 +241,10 @@ MIN_YOUNG_SESSIONS = 127           # six months of closes plus the base one
 MAX_YOUNG_SPAN_DAYS = 215          # calendar days those 127 closes may cover
 YOUNG_LISTS = ()
 CALM_FLOOR = 0.20                  # calm percentile under which a name is out
-# The leader percentile a month pick must reach: the top 30%. The specification
-# asked for the top 35%; research/fundamental_ideas_lab.py tried both, and the
+# The leader score a month pick must reach, out of 1. The score is the mean of
+# four percentile ranks, so 0.70 is not "the top 30%": about a quarter of liquid
+# stocks reach it (19-29% on dates from 2017 to 2026). The specification asked
+# for 0.65 ("the top 35%"); research/fundamental_ideas_lab.py tried both, and the
 # rule declared before the run chose this one (version M3, with the pullback
 # read over the month alone) on 2018-21. MONTH reads it.
 LEADER_FLOOR = 0.70
@@ -1965,7 +1967,7 @@ def _month(sym, g, part, is_calm, snap, ctx):
     elif not is_calm:
         why = VOLATILE_TEXT
     elif part["leader"] < floor:
-        why = f"Not a market leader: its leader score is under the top {100 - floor * 100:.0f}% of liquid stocks."
+        why = f"Not a market leader: its leader score is under {floor * 100:.0f} of 100."
     elif cfg["sector_gate"] and row is None:
         why = "Its industry could not be ranked on money flow."
     elif cfg["sector_gate"] and row["rank"] > row["of"] * cfg["sector_top"]:
@@ -1984,9 +1986,11 @@ def _month(sym, g, part, is_calm, snap, ctx):
         why = BELOW_FLOOR_TEXT
 
     facts = []
-    if r21 is not None and r21 <= -0.01:
+    # The pullback the list ranks on, and only that one: a stock that rose
+    # over the month is not said to have pulled back because its week fell.
+    if "dip21" in pull_mix and r21 is not None and r21 <= -0.01:
         facts.append(f"Pulled back {abs(r21) * 100:.0f}% this month")
-    elif r5 is not None and r5 <= -0.01:
+    elif "dip" in pull_mix and r5 is not None and r5 <= -0.01:
         facts.append(f"Pulled back {abs(r5) * 100:.0f}% this week")
     if growth:
         facts.append(growth)

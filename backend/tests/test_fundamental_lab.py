@@ -252,7 +252,7 @@ def test_the_long_note_is_written_from_the_counts():
         # Every check under one company in ten over 2017-21: the list ranked on its trend there.
         "In 2017-21, of the liquid companies the list ranks, lenders aside, cash from operations against profit "
         "was known for 8.7% on average, debt to equity for 0%, return on capital for 1% and the F-score for 0.5%, "
-        "so there the list was ranked mostly on its trend. "
+        "so there the list was ranked mostly on its trend and the growth in its filed income. "
         "At least half of them had cash from operations against profit from 6 October 2021 on, debt to equity "
         "from 8 March 2023, return on capital from 7 June 2023 and the F-score from 12 June 2024. "
         # 0.5% throughout the first window; in the second (to LAST), 0.5% on
@@ -328,7 +328,8 @@ def test_the_results_note_prints_the_lead_over_the_companies_that_reported():
 
 def test_what_each_list_is_is_written_from_the_recipe_the_engine_reads():
     month = L.what_text("month", L._recipe("month", "M3"))
-    assert f"leader score in the top {100 - leaders.MONTH['leader_floor'] * 100:.0f}%" in month
+    assert f"a leader score of {leaders.MONTH['leader_floor'] * 100:.0f} or more out of 100" in month
+    assert f"more than {abs(leaders.MONTH['bad_reaction']) * 100:.0f}% under the average stock" in month
     # The gate compares an industry's rank with how many are ranked.
     assert "in an industry ranked in the top half on money flow" in month
     assert f"no more than {leaders.MONTH['pledge_max']:g}% of the company pledged" in month
@@ -348,7 +349,7 @@ def test_what_each_list_is_is_written_from_the_recipe_the_engine_reads():
     # words move with it.
     for tab, key, field, value, want in (
             ("month", "M3", "sector_top", 0.4, "ranked in the top 40% on money flow"),
-            ("month", "M3", "leader_floor", 0.8, "leader score in the top 20%"),
+            ("month", "M3", "leader_floor", 0.8, "a leader score of 80 or more out of 100"),
             ("results", "R4", "rev_min", 11.0, "sales up 11% or more"),
             ("results", "R4", "exceptional_max", 0.2, "no more than 20% of profit before tax"),
             ("results", "R4", "min_qualified", 6, "only when 6 or more pass"),

@@ -1409,13 +1409,14 @@ def _tab_method(key):
         pulled = (" and the week" if pull.get("dip") else "") if pull.get("dip21") else (
             " over the week" if pull.get("dip") else "")
         top = cfg.get("sector_top", 0.5)
-        return (f"A stock is here when it is a market leader (its leader score in the top "
-                f"{100 - floor * 100:.0f}% of liquid stocks), in an uptrend and outside the most volatile "
+        return (f"A stock is here when it is a market leader (a leader score of {floor * 100:.0f} or more out "
+                "of 100), in an uptrend and outside the most volatile "
                 "fifth" + ((", in an industry in the top half on money flow" if top == 0.5 else
                             f", in an industry in the top {top * 100:.0f}% on money flow")
                            if cfg["sector_gate"] else "")
                 + (", with no loss and no fall in profit in its last quarter" if cfg["profit_guard"] else "")
-                + (f", no results the market sold in the last {cfg['result_lookback']} sessions"
+                + (f", no results the market sold (more than {abs(cfg['bad_reaction']) * 100:.0f}% under the "
+                   f"average stock that day) in the last {cfg['result_lookback']} sessions"
                    if cfg["result_guard"] else "")
                 + f", and promoters pledging {cfg['pledge_max']:g}% of the company or less. It is ordered "
                 + (f"on its pullback over the month{pulled}" if pull.get("dip21") else f"on its pullback{pulled}")

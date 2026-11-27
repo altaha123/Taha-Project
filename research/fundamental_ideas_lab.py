@@ -888,14 +888,15 @@ def _what_month(cfg):
     gate = ((f"in an industry ranked in the top {'half' if top == 0.5 else f'{top * 100:.0f}%'} on money "
              "flow, ") if cfg["sector_gate"] else "")
     rules = ((["no loss and no fall in profit last quarter"] if cfg["profit_guard"] else [])
-             + ([f"no results the market sold in the last {cfg['result_lookback']} sessions"]
+             + ([f"no results the market sold (more than {abs(cfg['bad_reaction']) * 100:.0f}% under the average "
+                 f"stock that day) in the last {cfg['result_lookback']} sessions"]
                 if cfg["result_guard"] else [])
              + [f"no more than {cfg['pledge_max']:g}% of the company pledged"])
     words = {"pull": _and(pull or ["the"]) + " pullback", "high": "closeness to the 52-week high",
              # A lender's margin is not read (leaders._snapshot_pcts).
              "fundmom": "the last quarter's sales and margin growth (a lender's sales alone)",
              "secflow": "the industry's money flow", "catalyst": "a live catalyst"}
-    return (f"Market leaders (leader score in the top {100 - cfg['leader_floor'] * 100:.0f}%) in an uptrend and "
+    return (f"Market leaders (a leader score of {cfg['leader_floor'] * 100:.0f} or more out of 100) in an uptrend and "
             f"outside {_calm()}, {gate}with " + _and(rules) + ". Ranked on " + _and(_parts(cfg["mix"], words))
             + f"; at most {cfg['sector_cap']} from one industry.")
 
@@ -1013,7 +1014,8 @@ def _early_checks(cov, who):
     # has no history; compounding and valuation read the income tables,
     # which begin in 2018. With every check this rare, the trend is most of
     # what the list could rank on.
-    so = ("so there the list was ranked mostly on its trend" if len(low) == len(CHECKS) else
+    so = ("so there the list was ranked mostly on its trend and the growth in its filed income"
+          if len(low) == len(CHECKS) else
           "so " + ("that check was" if len(low) == 1 else "those checks were") + " effectively untested there")
     return f"In {cov['first_half']['label']}, of {who} {shares}, {so}."
 
@@ -1328,7 +1330,7 @@ def merged(study, part):
             continue
         if k == "lists":
             out["recipe"] = part["recipe"]
-            out["lists_note"] = S.LISTS_NOTE
+            out["lists_note"] = S.LISTS_NOTE.format(recipe=part["recipe"])
             out["lists"] = lists
         elif k == "exits":
             out["exits"] = exits
@@ -1340,7 +1342,7 @@ def merged(study, part):
         else:
             out[k] = v
     # A file written before any of these keys existed still gets them.
-    for k, v in (("recipe", part["recipe"]), ("lists_note", S.LISTS_NOTE), ("lists", lists),
+    for k, v in (("recipe", part["recipe"]), ("lists_note", S.LISTS_NOTE.format(recipe=part["recipe"])), ("lists", lists),
                  ("exits", exits), ("retired", retired), ("overlap", part["overlap"])):
         out.setdefault(k, v)
     return out

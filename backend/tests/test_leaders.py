@@ -373,7 +373,7 @@ def test_a_month_pick_has_to_be_a_market_leader():
     followers = [b for b in blocks.values()
                  if b["uptrend"] and b["calm"] and b["score"] < floor * 100 - 0.05]
     assert followers
-    assert all(b["lists"]["month"]["rank"] is None and "top 30%" in b["lists"]["month"]["why_not"]
+    assert all(b["lists"]["month"]["rank"] is None and "under 70 of 100" in b["lists"]["month"]["why_not"]
                for b in followers)
 
 

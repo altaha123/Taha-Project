@@ -782,8 +782,8 @@ RETIRED = {
     "momentum": ("long", "Replaced by Long-term compounders in December 2026; kept as measured, a list every "
                          "five sessions from 2017 held 63 sessions with a close 15% under as the exit."),
 }
-LISTS_NOTE = ("month, results and long are the three fundamental lists of December 2026, recipe '2026-12 "
-              "fundamental lists v3': the site's own engine replayed point in time on prices and filings by "
+LISTS_NOTE = ("month, results and long are the three fundamental lists of December 2026, recipe '{recipe}': "
+              "the site's own engine replayed point in time on prices and filings by "
               "research/fundamental_ideas_lab.py, each the version a rule declared before the run chose (see "
               "each list's lab). The setup lists are the engine's own replay too (ideas_study.py --setups). "
               "This week and momentum, which they replaced, are under retired as last measured.")
@@ -1270,7 +1270,7 @@ def study():
     }
     if fund:
         result["recipe"] = fund["recipe"]
-    result.update({"lists_note": LISTS_NOTE,
+    result.update({"lists_note": LISTS_NOTE.format(recipe=(fund or {}).get("recipe") or "not yet replayed"),
                    "lists": dict((fund or {}).get("lists") or {}), "exits": dict((fund or {}).get("exits") or {}),
                    "retired": retired_records(P, U, scores, plain, W, Y),
                    "before": {}, "score": {}, "factors": {}})
