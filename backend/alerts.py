@@ -1,5 +1,5 @@
 """
-Altaha Screener — Alert delivery  (v24)
+Altaha Screener — Alert delivery  (v25)
 
 WHAT CHANGED FROM v23 AND WHY
 -----------------------------
@@ -36,6 +36,17 @@ WHAT CHANGED FROM v23 AND WHY
    If a pass produced a byte-identical digest to the previous one — which
    happens when the scanner restarts and re-detects the same setup — it is
    dropped rather than buzzing twice.
+
+TWO LANES (v25)
+---------------
+The breakout engine now runs two lanes side by side: Classic (today's
+calls, unchanged) and ★ Select (fewer, stricter calls). A Classic card is
+byte-for-byte what it was; a Select card carries one extra line under the
+title. When both lanes flag one break the owner gets ONE full card, and if
+Select confirms a break Classic already called, a short "Select confirms"
+line instead of a second card (intraday.py decides which; this file only
+words them). Follow-ups after a call (half-book reached, target, stop loss)
+are short one-liners, private only, and off unless ALERT_UPDATES_TG asks.
 
 Environment (unchanged):
     TELEGRAM_BOT_TOKEN        from @BotFather
@@ -79,7 +90,14 @@ KIND_LABEL = {
     "BO_BASE_DN": "Base breakdown", "BO_LOW52": "52-week low breakdown",
     "BO_LOW20": "20-day low breakdown", "BO_PDL": "Yesterday's low broken",
     "BO_ORB_DN": "Opening range breakdown", "BO_RANGE_DN": "Intraday range breakdown",
+    # Setups the day itself makes (the Select lane's two new ones).
+    "BO_HOD": "Fresh day-high breakout", "BO_LOD": "Fresh day-low breakdown",
+    "BO_VWAP": "VWAP pullback reclaim", "BO_VWAP_DN": "VWAP pullback breakdown",
 }
+
+# The one line a ★ Select call carries under its title, private and public
+# alike. No number in it: it says which lane, not how good on a scale.
+SELECT_LINE = "★ <b>Select</b> · one of today's strongest setups"
 
 # Delivery memory, read by health() and by the Live view.
 _LAST = {"ok": None, "at": None, "detail": "no send attempted yet",
@@ -252,7 +270,16 @@ def _level_name(a):
     if not name:
         head = str(a.get("headline") or "")
         name = head.split(", ", 1)[1] if ", " in head else ""
+    # A card is read on a phone by someone who may not trade: the one desk
+    # word a day-made level could bring with it is put in plain words. No
+    # Classic level is named this way, so a Classic card is unchanged.
+    name = str(name).replace("VWAP", "the day's average price")
     return name[:1].upper() + name[1:]
+
+
+def _is_select(a):
+    """Old logged rows carry no engine: they are Classic."""
+    return (a.get("engine") or "classic") == "select"
 
 
 def _event_lines(a):
@@ -292,7 +319,8 @@ def format_call(a):
     """
     up = a.get("direction", "UP") == "UP"
     title, kind = _head(a, label_side=True)
-    parts = [title, kind, RULE,
+    parts = [title] + ([SELECT_LINE] if _is_select(a) else []) + [
+             kind, RULE,
              f"{'💰 Buy at' if up else '💰 Sell at'}  <b>{_e(_rupee(a.get('entry')))}</b>",
              f"🛑 Stop loss  <b>{_e(_rupee(a.get('stop')))}</b>",
              f"🎯 Target  <b>{_e(_rupee(a.get('target')))}</b>",
@@ -306,6 +334,72 @@ def format_call(a):
     if tag:
         parts += ["", _e(tag)]
     return "\n".join(parts)
+
+
+def format_confirm(a):
+    """
+    The short private line sent when ★ Select confirms a break the Classic
+    lane already called. The owner holds that card already; a second full
+    card for the same break would read as a second trade. So: a nod, and
+    Select's own numbers on one line, for whoever wants its tighter plan.
+    """
+    up = a.get("direction", "UP") == "UP"
+    when = _clock(a.get("pair_time"))
+    head = (f"★ <b>{_e(a['symbol'])}</b> · Select confirms the "
+            + (f"{_e(when)} call" if when else "earlier call"))
+    nums = (f"{'💰 Buy at' if up else '💰 Sell at'} <b>{_e(_rupee(a.get('entry')))}</b>"
+            f" · 🛑 Stop loss <b>{_e(_rupee(a.get('stop')))}</b>"
+            f" · 🎯 Target <b>{_e(_rupee(a.get('target')))}</b>")
+    return head + "\n" + nums
+
+
+def _move(a, price):
+    """'+1.0%' / '−0.7%': the trade's profit or loss at `price`, signed by
+    its direction, with a real minus sign so it reads at a glance."""
+    try:
+        entry = float(a["entry"])
+        sign = 1 if a.get("direction", "UP") == "UP" else -1
+        p = sign * (float(price) - entry) / entry * 100
+    except (TypeError, ValueError, KeyError, ZeroDivisionError):
+        return ""
+    return f"{'+' if p >= 0 else '−'}{abs(p):.1f}%"
+
+
+def format_update(a, event):
+    """
+    A one-line follow-up on a call already sent, for the private chat only:
+    event is 't1' (half the position can be booked and the stop moved to
+    cost), 'target', 'stop' or 'close' (still open at the 3:15 pm exit).
+    Returns '' when the call lacks the number the line needs, so a caller
+    never sends a message with a hole in it.
+    """
+    up = a.get("direction", "UP") == "UP"
+    side = "BUY" if up else "SELL"
+    who = ("★ " if _is_select(a) else "") + f"<b>{_e(a.get('symbol', ''))}</b> {side}"
+    if event == "t1":
+        x = a.get("t1")
+        if x is None or a.get("entry") is None:
+            return ""
+        return (f"✅ {who} reached half-book {_e(_rupee(x))} ({_move(a, x)})"
+                f" · move the stop loss to cost {_e(_rupee(a.get('entry')))}")
+    if event == "target":
+        x = a.get("target")
+        if x is None:
+            return ""
+        at = _clock(a.get("live_time"))
+        return (f"🎯 {who} hit the target {_e(_rupee(x))} ({_move(a, x)})"
+                + (f" at {_e(at)}" if at else ""))
+    if event == "stop":
+        x = a.get("stop")
+        if x is None:
+            return ""
+        return f"🛑 {who} hit the stop loss {_e(_rupee(x))} ({_move(a, x)})"
+    if event == "close":
+        x = a.get("live_exit") if a.get("live_exit") is not None else a.get("live_price")
+        if x is None:
+            return ""
+        return f"⏰ {who} closed at 3:15 pm · {_e(_rupee(x))} ({_move(a, x)})"
+    return ""
 
 
 def format_digest(rows, index_pct=None, total_today=None, clock=None):
@@ -352,7 +446,7 @@ def format_public(a):
         # A breakout call: what crossed what, on what volume, and the price.
         # No buy or sell, no levels to trade, no exit time.
         title, kind = _head(a, label_side=False)
-        lines = [title, kind, RULE] + _event_lines(a)
+        lines = [title] + ([SELECT_LINE] if _is_select(a) else []) + [kind, RULE] + _event_lines(a)
         lines.append(f"💹 Now <b>{_e(_rupee(a.get('price')))}</b>")
         f = a.get("filing")
         if f:
@@ -374,15 +468,37 @@ def format_public(a):
     return "\n".join(lines)
 
 
-def format_day_open(stocks, levels_asof, index_pct, poll_seconds=20):
+def _clock_or(v, default):
+    """A time for a sentence: '09:25' becomes '9:25 am'; words already
+    written that way are kept; nothing gives the default."""
+    v = str(v or "").strip()
+    if not v:
+        return default
+    if len(v) <= 5 and ":" in v and v.replace(":", "").isdigit():
+        return _clock(v) or default
+    return v
+
+
+def format_day_open(stocks, levels_asof, index_pct, poll_seconds=20, select=None):
     """Sent once, just after the open. Its only job is to make a dead scanner
-    distinguishable from a quiet market."""
+    distinguishable from a quiet market. With the ★ Select lane on, one more
+    line says how many of its calls the day can bring, and when.
+    `select` may be a dict {"cap_day", "from", "to"}; any truthy value uses
+    the defaults."""
     if stocks:
-        return ("<b>ALTAHA · live</b>\n" +
+        text = ("<b>ALTAHA · live</b>\n" +
                 _e(f"Watching {stocks} stocks, checked every {poll_seconds} seconds. "
                    "Calls come from 9:20 am to 3:00 pm."))
-    return ("<b>ALTAHA · live</b>\n" +
-            _e("Getting the watch list ready. Calls start in a few minutes."))
+    else:
+        text = ("<b>ALTAHA · live</b>\n" +
+                _e("Getting the watch list ready. Calls start in a few minutes."))
+    if select:
+        s = select if isinstance(select, dict) else {}
+        cap = s.get("cap_day") or 8
+        text += "\n" + _e(f"★ Select: up to {cap} high-conviction calls, "
+                          f"{_clock_or(s.get('from'), '9:25 am')} to "
+                          f"{_clock_or(s.get('to'), '2:45 pm')}.")
+    return text
 
 
 def format_day_close(alerts, near):
@@ -423,28 +539,43 @@ def format_levels_ready(asof, stocks, near):
     return "\n".join(lines)
 
 
-def format_day_result(day, alerts):
-    """
-    Sent once after the close, when every call has been checked against what
-    the price did next. In plain terms: how many hit the target, how many hit
-    the stop loss, and each call's profit or loss in percent.
-    """
+def _result_lines(alerts, label=""):
+    """One lane's tally and its calls, profit or loss each."""
     n = len(alerts)
-    lines = [f"<b>ALTAHA · today's calls</b> · {_e(day)}"]
-    if not n:
-        lines.append("No call today. No stock broke out strongly enough.")
-        return "\n".join(lines)
     tg = sum(1 for a in alerts if a.get("outcome") == "TARGET")
     st = sum(1 for a in alerts if a.get("outcome") == "STOP")
     flat = sum(1 for a in alerts if a.get("outcome") == "OPEN_AT_CLOSE")
-    lines.append(_e(f"{n} call" + ("s" if n != 1 else "") + f": {tg} hit target, "
-                    f"{st} hit stop loss, {flat} closed at 3:15 pm"))
+    lines = [_e(label + f"{n} call" + ("s" if n != 1 else "") + f": {tg} hit target, "
+                f"{st} hit stop loss, {flat} closed at 3:15 pm")]
     rows = []
     for a in alerts[:15]:
         side = "BUY " if a.get("direction", "UP") == "UP" else "SELL"
         pct = f"{a['pnl_pct']:+.1f}%" if a.get("pnl_pct") is not None else "  n/a"
         rows.append(f"{side} {a['symbol'][:11]:<11} {pct:>6}")
     lines.append("<code>" + _e("\n".join(rows)) + "</code>")
+    return lines
+
+
+def format_day_result(day, alerts):
+    """
+    Sent once after the close, when every call has been checked against what
+    the price did next. In plain terms: how many hit the target, how many hit
+    the stop loss, and each call's profit or loss in percent.
+
+    Classic calls (and old rows, which carry no lane) come first, worded
+    exactly as before; ★ Select calls follow on their own line, so the two
+    records are never added together.
+    """
+    classic = [a for a in alerts if not _is_select(a)]
+    select = [a for a in alerts if _is_select(a)]
+    lines = [f"<b>ALTAHA · today's calls</b> · {_e(day)}"]
+    if not classic and not select:
+        lines.append("No call today. No stock broke out strongly enough.")
+        return "\n".join(lines)
+    if classic:
+        lines += _result_lines(classic)
+    if select:
+        lines += _result_lines(select, label="★ Select: ")
     return "\n".join(lines)
 
 
@@ -534,26 +665,39 @@ def send_plain(text: str) -> bool:
     return ok
 
 
-def send_batch(rows: list, index_pct=None, total_today=None, clock=None) -> bool:
-    """One digest to the private feed; facts-only lines to the public channel."""
-    if not rows:
+def send_batch(rows: list, index_pct=None, total_today=None, clock=None,
+               public_rows=None) -> bool:
+    """
+    One digest to the private feed; facts-only lines to the public channel.
+
+    `public_rows`, when given, is what the public channel gets instead of
+    `rows`: the caller routes by lane, so one break is posted once even
+    when both lanes called it, or when the private chat got only a short
+    "Select confirms" line. It may hold rows the digest does not. Returns
+    whether a private digest went out.
+    """
+    rows = list(rows or [])
+    public = rows if public_rows is None else list(public_rows)
+    if not rows and not public:
         return False
 
-    text = format_digest(rows, index_pct=index_pct,
-                         total_today=total_today, clock=clock)
+    ok = False
+    if rows:
+        text = format_digest(rows, index_pct=index_pct,
+                             total_today=total_today, clock=clock)
 
-    # A restart that re-detects the same setups must not buzz twice.
-    h = hashlib.sha1(text.encode("utf-8")).hexdigest()
-    if h == _LAST.get("last_hash"):
-        _mark(True, "suppressed: identical to the previous digest")
-        return True
-    _LAST["last_hash"] = h
+        # A restart that re-detects the same setups must not buzz twice.
+        h = hashlib.sha1(text.encode("utf-8")).hexdigest()
+        if h == _LAST.get("last_hash"):
+            _mark(True, "suppressed: identical to the previous digest")
+            return True
+        _LAST["last_hash"] = h
 
-    ok, detail = _post(TG_CHAT, text)
-    _mark(ok, detail)
+        ok, detail = _post(TG_CHAT, text)
+        _mark(ok, detail)
 
     if TG_PUBLIC:
-        for a in rows[:5]:
+        for a in public[:5]:
             _post(TG_PUBLIC, format_public(a))
     if WA_TOKEN:
         for a in rows[:3]:
