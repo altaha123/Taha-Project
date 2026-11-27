@@ -79,7 +79,7 @@
        chip says how long a pick is held; `hold` is the plan's own words, for
        an answer that does not say. A phone drops the name's `tail`. */
     { key: 'month',   label: 'Swing / This month', short: 'Swing', tail: ' / This month', chip: '~ 2\u20134 weeks', hold: 'about a month' },
-    { key: 'results', label: 'After results', chip: '~ 1\u20133 months', hold: 'about a month' },
+    { key: 'results', label: 'After results', chip: '~ 1 month',    hold: 'about a month' },
     { key: 'long',    label: 'Long term',     chip: '~ 1 year',     hold: 'about a year' },
     /* The setup lists: picked on what the chart or the tape is doing now. */
     /* Rebuilt December 2026 (research/setups_lab.py --v2): held long enough

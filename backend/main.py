@@ -1252,7 +1252,7 @@ def ideas(horizon: str = "short", limit: int = 15,
         log_as = result.get("list") or horizon
         if (limit == 15 and min_tier == "moderate" and not include_thin
                 and min_conviction is None):
-            _log_calls(log_as, result.get("rows") or [], p)
+            _log_calls(log_as, result.get("rows") or [], p, result.get("recipe"))
         _attach_calls(log_as, result.get("rows") or [], p)
         result["live"] = _live_record(log_as)
         return to_native({**result, "disclaimer": DISCLAIMER})
@@ -1354,12 +1354,20 @@ def _call_horizons(p):
 
 
 def _live_record(horizon):
-    """How this list's own calls have done since it went live. Counts only;
-    None when the log cannot be read, so the page says nothing, not zero."""
+    """How this list's own calls have done since the recipe running now went
+    live. The month and long-term lists kept their names through the December
+    2026 rebuild, so the calls the old recipes made are in the log under the
+    same keys; they are not this recipe's record and are not counted. Counts
+    only; None when the log cannot be read or this recipe has logged nothing
+    yet, so the page says nothing, not zero."""
     if call_log is None or horizon not in getattr(call_log, "PICK_HORIZONS", ()):
         return None
     try:
-        rows = (call_log.listing(horizon=horizon, limit=2000) or {}).get("rows") or []
+        import leaders as _leaders
+        since = call_log.recipe_since(horizon, _leaders.RECIPE)
+        if since is None:
+            return None
+        rows = (call_log.listing(horizon=horizon, since=since, limit=1000) or {}).get("rows") or []
     except Exception:
         return None
     priced = [r for r in rows if r.get("move_pct") is not None]
@@ -1375,7 +1383,7 @@ def _live_record(horizon):
     }
 
 
-def _log_calls(horizon, rows, p):
+def _log_calls(horizon, rows, p, recipe=None):
     if call_log is None or not p or p.get("partial"):
         return None
     try:
@@ -1385,7 +1393,7 @@ def _log_calls(horizon, rows, p):
             # momentum). Nothing would ever drop those.
             call_log.retire(call_log.LEGACY_HORIZONS, p.get("scanned_at"), _scan_prices(p))
             call_log.retire_replaced(p.get("scanned_at"), _scan_prices(p))
-        return call_log.record(horizon, rows, p.get("scanned_at"), _scan_prices(p))
+        return call_log.record(horizon, rows, p.get("scanned_at"), _scan_prices(p), recipe=recipe)
     except Exception:
         import traceback
         print(f"[call_log] record failed for horizon={horizon}\n{traceback.format_exc()}", flush=True)
@@ -1443,7 +1451,7 @@ def _log_scan_calls(p):
                     sel = ideas_engine.select(p, horizon=h, limit=15)
                 except Exception:
                     continue
-                _log_calls(h, sel.get("rows") or [], p)
+                _log_calls(h, sel.get("rows") or [], p, sel.get("recipe"))
         finally:
             _call_log_busy.release()
 

@@ -60,7 +60,7 @@ const TARGET = { target_pct: 12, sold: { up_pct: 58.4, avg_pct: 1.92 }, held: { 
 const HOLD = ['month', 'results', 'long'];
 const HOLD_LABELS = ['Swing / This month', 'After results', 'Long term'];
 const SETUP_LABELS = ['Breakouts', 'Technicals', 'Swing dips', 'Money flow', 'Emerging'];
-const CHIPS = ['~ 2–4 weeks', '~ 1–3 months', '~ 1 year'];
+const CHIPS = ['~ 2–4 weeks', '~ 1 month', '~ 1 year'];
 /* Advice words the new copy never uses. */
 const ADVICE = /\b(buy|sell|should|recommend)/i;
 const PORT = 8793;

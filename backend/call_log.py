@@ -171,6 +171,12 @@ CREATE TABLE IF NOT EXISTS recorded_scans (
   at       TEXT NOT NULL,
   PRIMARY KEY (horizon, scan)
 );
+CREATE TABLE IF NOT EXISTS list_recipes (
+  horizon  TEXT NOT NULL,
+  recipe   TEXT NOT NULL,
+  since    TEXT NOT NULL,
+  PRIMARY KEY (horizon, recipe)
+);
 """
 
 _write_lock = threading.Lock()
@@ -321,13 +327,17 @@ def recorded(horizon: str, scanned_at: str) -> bool:
 
 
 def record(horizon: str, rows: list, scanned_at: str, prices: dict | None = None,
-           now: dt.datetime | None = None) -> dict:
+           now: dt.datetime | None = None, recipe: str | None = None) -> dict:
     """
     Write one scan's Ideas list for one horizon. Idempotent per scan.
 
     rows    the list exactly as /ideas served it, best first
     prices  {SYMBOL: price} for the whole scored universe in the same scan, so
             a call that left the list still gets a closing price
+    recipe  the leaders.RECIPE stamp the list was ranked under. The first scan
+            logged under a stamp dates it (recipe_since), so a list rebuilt
+            under its old name does not count the calls its old recipe made
+            as its own.
     """
     if horizon not in HORIZONS:
         return {"recorded": False, "reason": "unknown horizon"}
@@ -413,6 +423,9 @@ def record(horizon: str, rows: list, scanned_at: str, prices: dict | None = None
 
         conn.execute("INSERT INTO recorded_scans(horizon,scan,at) VALUES(?,?,?)",
                      (horizon, str(scanned_at), _iso(now or dt.datetime.now(dt.timezone.utc))))
+        if recipe:
+            conn.execute("INSERT OR IGNORE INTO list_recipes(horizon,recipe,since) VALUES(?,?,?)",
+                         (horizon, str(recipe), at))
     return {"recorded": True, "horizon": horizon, "opened": opened,
             "carried": kept, "closed": closed, "at": at}
 
@@ -570,7 +583,7 @@ def _by_day(rows, now, days=14):
 
 def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 300,
             prices: dict | None = None, now: dt.datetime | None = None,
-            index=None, index_name: str = "") -> dict:
+            index=None, index_name: str = "", since: str = "") -> dict:
     """
     Ideas newest first, each with its timeline, plus a summary of all of them.
 
@@ -578,6 +591,7 @@ def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 
             measured to
     index   the index's daily closes, as [(date, close)] or {date: close}, for
             the same-days comparison; without it the index fields are None
+    since   only the calls made at or after this time (recipe_since)
     """
     now = now or dt.datetime.now(dt.timezone.utc)
     prices = {str(k).upper(): _num(v) for k, v in (prices or {}).items()}
@@ -589,6 +603,8 @@ def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 
         where.append("status=?"); args.append(status)
     if symbol:
         where.append("symbol=?"); args.append(symbol.strip().upper())
+    if since:
+        where.append("called_at>=?"); args.append(str(since))
     sql = "SELECT * FROM calls" + (" WHERE " + " AND ".join(where) if where else "")
     conn = _connect()
     calls = conn.execute(sql + " ORDER BY called_at DESC, id DESC", args).fetchall()
@@ -607,6 +623,16 @@ def listing(horizon: str = "", status: str = "", symbol: str = "", limit: int = 
         "method": METHOD + (" " + INDEX_METHOD.format(name=index_name or "the index")
                             if series else ""),
     }
+
+
+def recipe_since(horizon: str, recipe: str):
+    """When the first scan ranked under `recipe` was logged for this list, or
+    None if none has been. Calls made before it belong to an earlier recipe."""
+    if not horizon or not recipe:
+        return None
+    row = _connect().execute("SELECT since FROM list_recipes WHERE horizon=? AND recipe=?",
+                             (horizon, str(recipe))).fetchone()
+    return row["since"] if row else None
 
 
 def open_index(horizon: str, prices: dict | None = None) -> dict:

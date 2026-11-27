@@ -1651,6 +1651,9 @@ def select_picks(payload: dict, key: str, limit: int = 15) -> dict:
         # study found on selling there, for the lists it tested that way.
         "target_test": leaders.target_tested(key) if show_record else None,
         "recipe_current": recipe_current,
+        # The stamp the rows were ranked under, so the call log can date a
+        # rebuilt list from its first scan (call_log.recipe_since).
+        "recipe": next(iter(stamps)) if len(stamps) == 1 else None,
         "study_current": study_current,
         # The study's header only. Its tables are in research/ideas-study.json;
         # sending them with every list would triple the response for nobody.

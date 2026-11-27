@@ -377,7 +377,12 @@ LISTS = {
         "label": "Swing / This month", "setup": "Month pick", "setup_key": "pick_month",
         "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 12.0,
         "mix": MONTH["mix"], "recipe": "MONTH",
-        "idea": "Market leaders pulling back in industries money is moving into, with sales and margins growing.",
+        # What the gates ensure, then what the rank rewards. A pullback and
+        # growing sales raise a stock's rank but are not required: on a
+        # given day most picks may have risen over the month.
+        "idea": ("Market leaders in industries money is moving into, with last quarter's profit not down "
+                 "on a year ago. Ranked on how far each pulled back this month, how near it is to its "
+                 "52-week high, and its sales and margin growth."),
     },
     "results": {
         "label": "After results", "setup": "Results pick", "setup_key": "pick_results",
@@ -1699,7 +1704,7 @@ def _emerging(sym, g, part, ctx, listed):
 
 # What each part of the three lists' scores is called on the page.
 FACTOR_LABELS = {
-    "pull": "Pullback over the last month and week",
+    "pull": "How far it pulled back",
     "high": "Closeness to the 52-week high",
     "fundmom": "Sales and margin growth last quarter",
     "secflow": "Its industry's money flow",
@@ -1709,7 +1714,7 @@ FACTOR_LABELS = {
     "growth": "Growth in the quarter it reported",
     "quality": "Returns on capital, backed by cash",
     "compounding": "Growth over three years",
-    "governance": "Pledges and who is buying",
+    "governance": "Pledges and changes in holdings",
     "valuation": "Price against its own industry",
     "trendq": "The year-long trend",
 }
@@ -1917,9 +1922,12 @@ def _month(sym, g, part, is_calm, snap, ctx):
               "catalyst": 1.0 if catalyst else NEUTRAL}
     r21, r5 = _finite(g.get("ret_1m")), _finite(g.get("ret_5d"))
     growth = _sales_margin(snap)
+    # The moves the pullback is read from, and only those: the month's under
+    # M3, the five sessions' as well when a recipe blends them in.
+    moves = _said([("dip21" in pull_mix and r21 is not None, f"{(r21 or 0) * 100:+.1f}% over the last month"),
+                   ("dip" in pull_mix and r5 is not None, f"{(r5 or 0) * 100:+.1f}% over the last five sessions")])
     details = {
-        "pull": (f"{(r21 or 0) * 100:+.1f}% over the last month and {(r5 or 0) * 100:+.1f}% over the last "
-                 "five sessions"),
+        "pull": _cap(moves) or "Its move over the last month is not on record: ranked as no pullback",
         "high": _high_text(g) or "Its 52-week high is not known",
         "fundmom": ((_sales_margin(snap, "operating margin") + " on a year ago") if growth else
                     "No recent quarter on file: counted as the middle of the field"),

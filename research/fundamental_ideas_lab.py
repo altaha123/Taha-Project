@@ -7,8 +7,9 @@ The fundamental Ideas lab: the three Ideas tabs, replayed point in time.
     python research/fundamental_ideas_lab.py --publish   # the chosen versions' records, into the study file
 
 WHAT IT TESTS
-The Ideas page shows three lists (backend/leaders.py): a swing list of healthy
-leaders pulling back in industries money is moving into, the companies whose
+The Ideas page shows three lists (backend/leaders.py): a swing list of market
+leaders in industries money is moving into, ranked higher the further they
+pulled back over the month, the companies whose
 results the market rewarded for real reasons, and long-term compounders. All
 three read a company's own filings. This file replays them on every fifth
 session from 2017 to 2026 and measures what they did next, against what the

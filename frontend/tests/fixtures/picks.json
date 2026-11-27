@@ -6,7 +6,7 @@
 "list":"month",
 "horizon":"month",
 "label":"Swing / This month",
-"idea":"Market leaders pulling back in industries money is moving into, with sales and margins growing.",
+"idea":"Market leaders in industries money is moving into, with last quarter's profit not down on a year ago. Ranked on how far each pulled back this month, how near it is to its 52-week high, and its sales and margin growth.",
 "hold_text":"about a month",
 "exit_pct":12.0,
 "tested":{
@@ -493,12 +493,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":27.1,
 "of":30.0,
 "share_pct":90.3,
-"detail":"-9.4% over the last month and -5.9% over the last five sessions."
+"detail":"-9.4% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -668,12 +668,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":27.3,
 "of":30.0,
 "share_pct":91.1,
-"detail":"-10.0% over the last month and -4.1% over the last five sessions."
+"detail":"-10.0% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -841,12 +841,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":20.4,
 "of":30.0,
 "share_pct":68.0,
-"detail":"-0.0% over the last month and -0.3% over the last five sessions."
+"detail":"-0.0% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -1015,12 +1015,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":25.4,
 "of":30.0,
 "share_pct":84.7,
-"detail":"-6.4% over the last month and -1.8% over the last five sessions."
+"detail":"-6.4% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -1190,12 +1190,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":20.3,
 "of":30.0,
 "share_pct":67.6,
-"detail":"+0.1% over the last month and +5.3% over the last five sessions."
+"detail":"+0.1% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -1369,12 +1369,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":15.2,
 "of":30.0,
 "share_pct":50.7,
-"detail":"+5.2% over the last month and +6.2% over the last five sessions."
+"detail":"+5.2% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -1543,12 +1543,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":26.3,
 "of":30.0,
 "share_pct":87.7,
-"detail":"-7.5% over the last month and -2.7% over the last five sessions."
+"detail":"-7.5% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -1717,12 +1717,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":12.5,
 "of":30.0,
 "share_pct":41.7,
-"detail":"+7.5% over the last month and +2.3% over the last five sessions."
+"detail":"+7.5% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -1904,12 +1904,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":17.2,
 "of":30.0,
 "share_pct":57.3,
-"detail":"+3.2% over the last month and -2.6% over the last five sessions."
+"detail":"+3.2% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -2080,12 +2080,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":10.1,
 "of":30.0,
 "share_pct":33.7,
-"detail":"+9.5% over the last month and -1.7% over the last five sessions."
+"detail":"+9.5% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -2255,12 +2255,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":5.7,
 "of":30.0,
 "share_pct":19.1,
-"detail":"+14.6% over the last month and -0.9% over the last five sessions."
+"detail":"+14.6% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -2435,12 +2435,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":9.2,
 "of":30.0,
 "share_pct":30.7,
-"detail":"+10.5% over the last month and +0.5% over the last five sessions."
+"detail":"+10.5% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -2618,12 +2618,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":15.3,
 "of":30.0,
 "share_pct":51.0,
-"detail":"+5.2% over the last month and -5.2% over the last five sessions."
+"detail":"+5.2% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -2792,12 +2792,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":14.7,
 "of":30.0,
 "share_pct":49.1,
-"detail":"+5.5% over the last month and +3.2% over the last five sessions."
+"detail":"+5.5% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -2968,12 +2968,12 @@
 "pattern":null,
 "evidence":[
 {
-"factor":"Pullback over the last month and week",
+"factor":"How far it pulled back",
 "key":"pull",
 "points":13.0,
 "of":30.0,
 "share_pct":43.3,
-"detail":"+7.2% over the last month and -1.9% over the last five sessions."
+"detail":"+7.2% over the last month."
 },
 {
 "factor":"Closeness to the 52-week high",
@@ -3663,7 +3663,7 @@
 "detail":"Sales +81% a year, profit +130% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -3838,7 +3838,7 @@
 "detail":"Sales +23% a year, profit +39% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -4024,7 +4024,7 @@
 "detail":"Sales +48% a year, profit +67% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -4199,7 +4199,7 @@
 "detail":"Sales +34% a year, profit +102% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -4375,7 +4375,7 @@
 "detail":"Sales +26% a year, profit +41% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -4547,7 +4547,7 @@
 "detail":"Sales +28% a year, profit +33% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -4734,7 +4734,7 @@
 "detail":"Sales +30% a year, profit +37% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -4905,7 +4905,7 @@
 "detail":"Sales +17% a year, profit +17% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -5075,7 +5075,7 @@
 "detail":"Sales +12% a year, profit +27% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -5277,7 +5277,7 @@
 "detail":"Sales +21% a year, profit +27% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -5458,7 +5458,7 @@
 "detail":"Sales +22% a year, profit +119% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -5644,7 +5644,7 @@
 "detail":"Sales +16% a year, profit +35% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -5818,7 +5818,7 @@
 "detail":"Sales +35% a year, profit +64% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -6007,7 +6007,7 @@
 "detail":"Sales +38% a year, profit +45% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,
@@ -6182,7 +6182,7 @@
 "detail":"Sales +8% a year, profit +18% a year over three years."
 },
 {
-"factor":"Pledges and who is buying",
+"factor":"Pledges and changes in holdings",
 "key":"governance",
 "points":7.5,
 "of":15.0,

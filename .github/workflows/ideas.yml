@@ -2,10 +2,11 @@ name: Keep the pick lists fresh and measured
 
 # Two things nothing was doing.
 #
-# 1. THE SCAN. The four pick lists (backend/leaders.py) are built by the
+# 1. THE SCAN. The pick lists (backend/leaders.py) are built by the
 #    universe scan, and the scan only ran when somebody pressed Refresh. The
 #    page was showing a list five days old with "Stale" printed above it.
-#    A one-week list has to be made every day.
+#    The month list reads each day's pullback and the results list each
+#    day's filings, so both have to be made every day.
 #
 # 2. THE RECORD. /cron/tick marks the tracker after the close and attaches
 #    forward returns to what each scan banked. It was written to be called by
@@ -101,7 +102,7 @@ jobs:
             echo "minute ${i}: ${status}"
             case "${status}" in done*) break ;; error*) echo "::error::The scan ended in an error."; exit 1 ;; esac
           done
-          for h in week month momentum long; do
+          for h in month results long; do
             curl -sS --max-time 90 "${API}/ideas?horizon=${h}" | python3 -c "
           import sys, json
           d = json.load(sys.stdin)

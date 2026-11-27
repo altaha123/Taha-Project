@@ -413,3 +413,52 @@ def test_logging_a_tested_list_closes_what_week_and_momentum_left_open(app_with_
     assert main.call_log.recorded("month", SCAN1) and not main.call_log.recorded("week", SCAN1)
     # Once: the next scan finds nothing left open there to close.
     assert main.call_log.retire_replaced(SCAN2, {}) == 0
+
+
+# --- a list rebuilt under its old name (December 2026) -------------------------
+
+def test_the_first_scan_under_a_recipe_dates_it_and_a_repeat_does_not_move_it(log):
+    assert log.recipe_since("month", "v3") is None
+    log.record("month", [idea("ABB", setup_key="pick_month")], SCAN1, {}, recipe="v2")
+    log.record("month", [idea("TCS", setup_key="pick_month")], SCAN2, {}, recipe="v3")
+    log.record("month", [idea("TCS", setup_key="pick_month")], SCAN3, {}, recipe="v3")
+    first = log.recipe_since("month", "v3")
+    assert first is not None and first.startswith("2026-10-27")
+    assert log.recipe_since("month", "v2").startswith("2026-10-26")
+    # Per list: the long list has logged nothing under v3.
+    assert log.recipe_since("long", "v3") is None
+    # A scan logged without a stamp dates nothing.
+    log.record("long", [idea("ABB", setup_key="pick_long")], SCAN1, {})
+    assert log.recipe_since("long", "") is None
+
+
+def test_listing_since_leaves_out_calls_made_before_it(log):
+    log.record("month", [idea("ABB", setup_key="pick_month")], SCAN1, {}, recipe="v2")
+    log.record("month", [idea("ABB", setup_key="pick_month"), idea("TCS", setup_key="pick_month")],
+               SCAN2, {}, recipe="v3")
+    since = log.recipe_since("month", "v3")
+    # ABB was called by v2 and carried by v3: it stays the earlier recipe's call.
+    assert [r["symbol"] for r in log.listing(horizon="month", since=since)["rows"]] == ["TCS"]
+    assert {r["symbol"] for r in log.listing(horizon="month")["rows"]} == {"ABB", "TCS"}
+
+
+def test_the_live_tally_counts_only_the_running_recipes_calls(app_with_scan, monkeypatch):
+    main = app_with_scan
+    import leaders
+    old = [idea(s, setup_key="pick_month", price=100.0) for s in ("A1", "A2", "A3", "A4", "A5", "A6")]
+    log = main.call_log
+    log.record("month", old, "19 Oct 2026, 05:10", {}, recipe="2026-12 setup lists v2")
+    # The old recipe's six calls close, all up, before the rebuild goes live.
+    log.record("month", [], "20 Oct 2026, 05:10", {s["symbol"]: 110.0 for s in old},
+               recipe="2026-12 setup lists v2")
+    assert main._live_record("month") is None          # the running recipe has logged nothing
+    monkeypatch.setattr(main.ideas_engine, "select",
+                        lambda p, **k: {"rows": [idea("NEW", setup_key="pick_month")], "available": True,
+                                        "list": "month", "recipe": leaders.RECIPE})
+    out = main.ideas(horizon="month")
+    live = out["live"]
+    assert live["calls"] == 1 and live["closed"] == 0
+    assert live["since"] == "2026-10-26"
+    assert log.recipe_since("month", leaders.RECIPE) is not None
+    # The other list kept its old calls out of its tally too.
+    assert main._live_record("long") is None
