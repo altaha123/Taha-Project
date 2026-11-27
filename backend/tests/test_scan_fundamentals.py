@@ -83,8 +83,14 @@ def test_the_tables_are_read_a_chunk_of_companies_and_a_few_columns_at_a_time(st
     syms = [f"S{i:04d}" for i in range(600)]
     out = scan.fundamental_snapshot(today=ASOF, symbols=syms)
     assert set(out) == {"S0001", "S0299", "S0599"}
-    reads = [(q, a) for q, a in seen if q.lstrip().upper().startswith("SELECT")]
+    reads = [(q, a) for q, a in seen if q.lstrip().upper().startswith("SELECT") and "yf_profile" not in q]
     assert len(reads) == 4 * 3, "four tables, three chunks of companies"
+    # The stored sectors of companies NSE's list does not name: two columns,
+    # a chunk at a time.
+    profiles = [(q, a) for q, a in seen if "yf_profile" in q]
+    assert 0 < len(profiles) <= 3
+    for sql, args in profiles:
+        assert sql.split("FROM")[0].split() == ["SELECT", "symbol,", "sector"] and len(args) <= scan.SNAPSHOT_CHUNK
     for sql, args in reads:
         assert "symbol IN (" in sql and "*" not in sql.split("FROM")[0]
         held = [a for a in args if isinstance(a, str) and a.startswith("S0")]
@@ -248,3 +254,20 @@ def test_results_are_asked_for_over_five_weeks(monkeypatch):
     scan.recent_results(ASOF)
     assert asked["cal"] == (ASOF - dt.timedelta(days=35), ASOF)
     assert asked["store"] == (ASOF - dt.timedelta(days=35)).isoformat()
+
+
+def test_a_lender_outside_nses_list_is_known_by_its_stored_sector(store, quiet_live):
+    """NSE's industry list names about 750 companies. A liquid NBFC outside it
+    is read as a lender from the sector Yahoo's profile stored for it, as the
+    quarterly screens read it, so it is never held to a manufacturer's debt."""
+    seed(store, "NBFC1", "MAKER")
+    conn = store._connect()
+    for sym, sector in (("NBFC1", "Financial Services"), ("MAKER", "Industrials")):
+        conn.execute("INSERT OR REPLACE INTO yf_profile (symbol, company, sector, industry, shares, price,"
+                     " market_cap, currency, updated_utc) VALUES (?,?,?,?,?,?,?,?,?)",
+                     (sym, sym, sector, None, None, None, None, "INR", "2026-11-01T00:00:00"))
+    conn.commit()
+    out = scan.fundamental_snapshot(today=ASOF, symbols=["NBFC1", "MAKER"], sectors={"MAKER": "Capital Goods"})
+    assert out["NBFC1"]["is_financial"] is True and out["NBFC1"]["opm_yoy_chg"] is None
+    # NSE's own industry wins where it names the company.
+    assert out["MAKER"]["is_financial"] is False and out["MAKER"]["sector"] == "Capital Goods"

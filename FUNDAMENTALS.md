@@ -177,6 +177,9 @@ from `fund_snapshot.py`, the same one the Ideas lists read):
   each of the last two with the operating margin up 2.5 points or more; profit
   in the latest quarter and the last four together; for non-lenders an
   operating margin of 8% or more that has not fallen more than 1.5 points.
+  Every margin is EBITDA without exceptional items over revenue, so a one-off
+  gain neither lifts a margin nor, a year later, reads as its collapse; a
+  lender (by its industry, or a balance sheet that is mostly loans) has none.
   Ordered on growth and margin change together, not on size.
 - **Operational turnarounds** (`turnarounds`): profit now against a loss in the
   same quarter a year ago, on higher revenue; for non-lenders an operating

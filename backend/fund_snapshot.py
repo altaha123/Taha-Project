@@ -39,10 +39,26 @@ FINANCIAL COMPANIES
 Banks, NBFCs and insurers borrow and lend for a living. Their debt-to-equity,
 operating margin, free cash flow and net cash say nothing about the quality
 of the business, and a screen that reads them as it reads a manufacturer's
-throws out every good bank. `is_financial` marks them, from NSE's industry
-("Financial Services") or, failing that, from the bank-format lines in their
-own filings, and the lists judge them on return on equity, profit growth and
-valuation instead.
+throws out every good bank. `is_financial` marks them, from their industry
+("Financial Services") or, failing that, from their own filings: the
+bank-format lines, deposits, or a balance sheet that is mostly loans. A
+financial company's snapshot carries no operating margin at all, so nothing
+downstream can rank or print one, and the lists judge it on return on
+equity, profit growth and valuation instead.
+
+OPERATING MARGIN
+----------------
+The stored EBITDA, and the margin stored beside it, are worked out from
+profit after exceptional items, so a one-off gain or loss sits inside them.
+Every margin here is the business's own: EBITDA without exceptional items
+over revenue (_core_opm).
+
+PER-SHARE FIGURES
+-----------------
+Each quarter's EPS is stored as it was filed. After a split or a bonus the
+quarters before it are on the old share count, so a plain sum of four
+quarters mixes two counts. Trailing EPS is put on the latest quarter's count
+where the count each quarter implies (profit over EPS) jumped (_eps_ttm).
 
 Standard library only.
 """
@@ -71,6 +87,17 @@ OTHER_INCOME_MAX_PCT = 35.0      # other income as a share of profit before tax
 EXCEPTIONAL_MAX_SHARE = 0.30     # an exceptional gain larger than this share of PBT drives the profit
 
 FINANCIAL_SECTORS = {"financial services"}
+# A balance sheet whose loans are more than this share of its assets is a
+# lender's, whatever its industry says: an NBFC that files Ind AS results has
+# no bank-format lines and takes no deposits.
+LENDER_LOANS_SHARE = 0.5
+# A quarter whose implied share count (profit over EPS) is this many times the
+# latest quarter's, or this fraction of it, was filed on another share count:
+# a split, a bonus or a consolidation lay between them. Ordinary issues and
+# buybacks move it far less.
+SHARE_JUMP = 1.4
+# Below this, a quarter's EPS is too small for its rounding to imply a count.
+EPS_MIN_FOR_COUNT = 0.05
 
 QUADRANTS = ("Leading", "Improving", "Weakening", "Lagging")
 
@@ -153,9 +180,9 @@ def _one_basis(rows, basis):
 
 
 def is_financial(sector=None, quarter=None, balance=None):
-    """A bank, NBFC or insurer: by NSE's industry, else by the bank-format
-    lines a lender's own filing carries (pre-provision operating profit,
-    provisions, deposits)."""
+    """A bank, NBFC or insurer: by its industry, else by what a lender's own
+    filing carries (pre-provision operating profit and provisions, deposits,
+    or loans that are most of its assets)."""
     if sector and str(sector).strip().lower() in FINANCIAL_SECTORS:
         return True
     q = quarter or {}
@@ -164,6 +191,9 @@ def is_financial(sector=None, quarter=None, balance=None):
     b = balance or {}
     deposits, total = _f(b.get("deposits_cr")), _f(b.get("total_liabilities_cr"))
     if deposits is not None and total and deposits > 0.2 * total:
+        return True
+    loans, assets = _f(b.get("loans_cr")), _f(b.get("total_assets_cr"))
+    if loans is not None and assets and assets > 0 and loans > LENDER_LOANS_SHARE * assets:
         return True
     return False
 
@@ -194,6 +224,48 @@ def _core_ebitda(row):
     return ebitda - exc if exc is not None else ebitda
 
 
+def _core_opm(row):
+    """The operating margin without exceptional items, in percent: core
+    EBITDA over revenue. The stored margin where there is no EBITDA line to
+    strip, and None where neither can be read."""
+    core, rev = _core_ebitda(row), _f((row or {}).get("revenue_cr"))
+    if core is not None and rev is not None and rev > 0:
+        return core / rev * 100.0
+    return _f((row or {}).get("opm_pct"))
+
+
+def _margin_change(now, before):
+    """Points the core margin moved between two periods, or None."""
+    a, b = _core_opm(now), _core_opm(before)
+    return None if a is None or b is None else a - b
+
+
+def _implied_shares(row):
+    """Crore shares a quarter's profit and EPS imply, or None when the EPS is
+    too small, or of the other sign, to say."""
+    pat, eps = _f((row or {}).get("pat_cr")), _f((row or {}).get("eps_basic"))
+    if pat is None or eps is None or abs(eps) < EPS_MIN_FOR_COUNT or (pat > 0) != (eps > 0) or pat == 0:
+        return None
+    return abs(pat) / abs(eps)
+
+
+def _eps_ttm(four):
+    """Four quarters' EPS added up on the newest quarter's share count: a
+    quarter filed on another count (SHARE_JUMP) is restated onto it. None
+    when a quarter's EPS is not on file."""
+    ref = next((n for n in (_implied_shares(r) for r in four) if n), None)
+    total = 0.0
+    for r in four:
+        eps = _f(r.get("eps_basic"))
+        if eps is None:
+            return None
+        n = _implied_shares(r)
+        if ref and n and max(n / ref, ref / n) > SHARE_JUMP:
+            eps = eps * n / ref
+        total += eps
+    return total
+
+
 def _in_a_row(rows):
     """True when each row's quarter ended one quarter after the next one's."""
     return all(_apart(a.get("period_end"), b.get("period_end"), QUARTER_APART_DAYS)
@@ -209,9 +281,11 @@ def _ttm(rows, start):
     def total(key):
         vals = [_f(r.get(key)) for r in four]
         return None if any(v is None for v in vals) else sum(vals)
+    cores = [_core_ebitda(r) for r in four]
     return {"revenue": total("revenue_cr"), "pat": total("pat_cr"),
-            "ebitda": total("ebitda_cr"), "eps": total("eps_basic"),
-            "through": four[0].get("period_end")}
+            "ebitda": total("ebitda_cr"),
+            "core_ebitda": None if any(v is None for v in cores) else sum(cores),
+            "eps": _eps_ttm(four), "through": four[0].get("period_end")}
 
 
 def _quarters(rows, asof, fin):
@@ -232,12 +306,11 @@ def _quarters(rows, asof, fin):
     for k in ("revenue_cr", "pat_cr", "ebitda_cr", "exceptional_cr", "pbt_cr", "other_income_cr"):
         out[k] = _r(_f(top.get(k)))
     # The stored EBITDA includes exceptional items; the business's own leaves
-    # them out (_core_ebitda).
+    # them out (_core_ebitda), and so does every margin here (_core_opm).
     out["core_ebitda_cr"] = _r(_core_ebitda(top))
+    out["opm_pct"] = _r(_core_opm(top))
     ago = _year_ago(rows[1:], top)
-    out["opm_yoy_chg"] = None
-    if ago is not None and _f(top.get("opm_pct")) is not None and _f(ago.get("opm_pct")) is not None:
-        out["opm_yoy_chg"] = _r(_f(top["opm_pct"]) - _f(ago["opm_pct"]))
+    out["opm_yoy_chg"] = _r(_margin_change(top, ago)) if ago is not None else None
     out["pat_yoy_cr_prev"] = _r(_f((ago or {}).get("pat_cr")))
     # The year-ago quarter's revenue and EBITDA without exceptional items, as
     # figures: a growth rate is only worked out between two positive numbers,
@@ -258,11 +331,15 @@ def _quarters(rows, asof, fin):
     prev_chg = None
     if prev is not None:
         prev_ago = _year_ago(rows[2:], prev)
-        if prev_ago is not None and _f(prev.get("opm_pct")) is not None and _f(prev_ago.get("opm_pct")) is not None:
-            prev_chg = _f(prev["opm_pct"]) - _f(prev_ago["opm_pct"])
+        if prev_ago is not None:
+            prev_chg = _margin_change(prev, prev_ago)
     out["prev_opm_yoy_chg"] = _r(prev_chg)
     out["opm_expanding_2q"] = (None if out["opm_yoy_chg"] is None or prev_chg is None
                                else bool(out["opm_yoy_chg"] > 0 and prev_chg > 0))
+    if fin:
+        # A lender has no operating margin to read (FINANCIAL COMPANIES).
+        for k in ("opm_pct", "opm_yoy_chg", "prev_opm_yoy_chg", "opm_expanding_2q"):
+            out[k] = None
     out["earnings_quality_ok"] = earnings_quality(out, fin)
     # The last four quarters, and the four before them.
     t0, t1 = _ttm(rows, 0), _ttm(rows, 4)
@@ -270,6 +347,7 @@ def _quarters(rows, asof, fin):
         out["revenue_ttm_cr"] = _r(t0["revenue"])
         out["pat_ttm_cr"] = _r(t0["pat"])
         out["ebitda_ttm_cr"] = _r(t0["ebitda"])
+        out["core_ebitda_ttm_cr"] = _r(t0["core_ebitda"])
         out["eps_ttm"] = _r(t0["eps"])
         if t1 and _apart(t0["through"], t1["through"], ONE_YEAR_DAYS):
             out["revenue_ttm_yoy_pct"] = _r(_pct(t0["revenue"], t1["revenue"]))
@@ -342,15 +420,15 @@ def _annual(ann, cfs, sheets, asof, fin):
         out["fy_end"] = str(a0.get("period_end") or "")[:10] or None
         out["pat_annual_cr"] = _r(_f(a0.get("pat_cr")))
         out["revenue_annual_cr"] = _r(_f(a0.get("revenue_cr")))
-        out["opm_annual_pct"] = _r(_f(a0.get("opm_pct")))
+        out["opm_annual_pct"] = None if fin else _r(_core_opm(a0))
         a3 = next((r for r in a[1:] if _apart(a0.get("period_end"), r.get("period_end"), THREE_YEAR_DAYS)), None)
         if a3 is not None:
             out["rev_cagr_3y"] = _r(_cagr(a0.get("revenue_cr"), a3.get("revenue_cr"), 3))
             out["pat_cagr_3y"] = _r(_cagr(a0.get("pat_cr"), a3.get("pat_cr"), 3))
         a1 = next((r for r in a[1:] if _apart(a0.get("period_end"), r.get("period_end"), ONE_YEAR_DAYS)), None)
         a2 = next((r for r in a[1:] if _apart(a0.get("period_end"), r.get("period_end"), (705, 760))), None)
-        if a2 is not None and _f(a0.get("opm_pct")) is not None and _f(a2.get("opm_pct")) is not None:
-            out["opm_trend_2y"] = _r(_f(a0["opm_pct"]) - _f(a2["opm_pct"]))
+        if a2 is not None and not fin:
+            out["opm_trend_2y"] = _r(_margin_change(a0, a2))
         if _f(a0.get("interest_cover_x")) is not None:
             out["interest_cover_x"] = _r(_f(a0.get("interest_cover_x")))
     else:
@@ -474,7 +552,7 @@ def piotroski_tests(a0, a1, b0, b1, cfs):
     eq0, eq1 = _f(b0.get("equity_capital_cr")), _f(b1.get("equity_capital_cr"))
     if eq0 is not None and eq1 is not None:
         tests.append(eq0 <= eq1 * 1.001)
-    m0, m1 = _f(a0.get("opm_pct")), _f(a1.get("opm_pct"))
+    m0, m1 = _core_opm(a0), _core_opm(a1)
     if m0 is not None and m1 is not None:
         tests.append(m0 > m1)
     r0, r1 = _f(a0.get("revenue_cr")), _f(a1.get("revenue_cr"))
@@ -541,9 +619,13 @@ def valuation(snap, price):
         if g and g > 0:
             out["peg"] = _r(out["pe"] / g, 2)
     if not snap.get("is_financial"):
-        ebitda, mcap = _f(snap.get("ebitda_ttm_cr")), out["market_cap_cr"]
-        if ebitda and ebitda > 0 and mcap:
-            nd = _f(snap.get("net_debt_cr")) or 0.0
+        # The business's own EBITDA, and an enterprise value only where the
+        # net debt is known: an unknown debt is not no debt.
+        ebitda = _f(snap.get("core_ebitda_ttm_cr"))
+        if ebitda is None:
+            ebitda = _f(snap.get("ebitda_ttm_cr"))
+        mcap, nd = out["market_cap_cr"], _f(snap.get("net_debt_cr"))
+        if ebitda and ebitda > 0 and mcap and nd is not None:
             out["ev_ebitda"] = _r((mcap + nd) / ebitda, 1)
     return out
 

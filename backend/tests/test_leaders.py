@@ -554,7 +554,7 @@ def test_the_lists_are_the_three_fundamental_ones_and_the_setups():
     assert leaders.ORDER == ("month", "results", "long")
     assert "week" not in leaders.LISTS and "momentum" not in leaders.LISTS
     assert leaders.YOUNG_LISTS == ()
-    assert leaders.RECIPE == "2026-12 fundamental lists v3"
+    assert leaders.RECIPE == "2026-12 fundamental lists v4"
     assert leaders.DAYS_KEPT == 23
     assert set(leaders.ALL) == set(leaders.LISTS)
     for key, spec in leaders.LISTS.items():
@@ -1998,13 +1998,14 @@ def test_month_refuses_an_industry_money_is_leaving_or_that_cannot_be_ranked():
     blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
     leaders_ = [s for s, b in blocks.items()
                 if b["uptrend"] and b["calm"] and b["parts"]["leader"] >= leaders.MONTH["leader_floor"] * 100 + 1]
-    weak = [s for s in leaders_ if blocks[s]["sector_flow"]["score"] < leaders.MONTH["sector_floor"]]
-    strong = [s for s in leaders_ if blocks[s]["sector_flow"]["score"] >= leaders.MONTH["sector_floor"]]
+    top = lambda s: blocks[s]["sector_flow"]["rank"] <= blocks[s]["sector_flow"]["of"] * leaders.MONTH["sector_top"]
+    weak = [s for s in leaders_ if not top(s)]
+    strong = [s for s in leaders_ if top(s)]
     assert weak and strong
     for s in weak:
         row = blocks[s]["sector_flow"]
         assert blocks[s]["lists"]["month"]["why_not"] == \
-            f"Its industry, {row['sector']}, ranks {row['rank']} of {row['of']} on money flow: the bottom half."
+            f"Its industry, {row['sector']}, ranks {row['rank']} of {row['of']} on money flow: the list needs the top half."
     assert all("money flow" not in (blocks[s]["lists"]["month"]["why_not"] or "") for s in strong)
     x = strong[0]
     unknown = {k: v for k, v in sectors.items() if k != x}
@@ -2069,8 +2070,8 @@ def test_results_refuses_results_that_were_not_real_growth_in_words():
         "S03": (dict(revenue_yoy_pct=-6.0), "Sales fell 6% on a year ago; the list needs 8% growth."),
         "S04": (dict(pat_cr=-3.0, pat_yoy_pct=None), "Made a loss in the quarter it reported."),
         "S05": (dict(pat_yoy_pct=-4.0), "Profit did not grow on a year ago."),
-        "S06": (dict(ebitda_yoy_pct=-2.0), "Operating profit did not grow."),
-        "S07": (dict(core_ebitda_cr=-5.0), "Operating profit did not grow."),
+        "S06": (dict(ebitda_yoy_pct=-2.0), "Operating profit did not grow on a year ago."),
+        "S07": (dict(core_ebitda_cr=-5.0), "Made an operating loss in the quarter, one-off items left out."),
         "S08": (dict(cfo_cr=-10.0), "Its last full year's operations used cash."),
         "S09": (dict(pat_cr=None), "The figures it reported are not in the fundamentals tables yet."),
     }
@@ -2083,6 +2084,89 @@ def test_results_refuses_results_that_were_not_real_growth_in_words():
         assert blocks[s]["lists"]["results"]["why_not"] == text, (s, blocks[s]["lists"]["results"]["why_not"])
     assert blocks["S10"]["lists"]["results"]["eligible"]
     assert len(ranked(blocks, "results")) == 10
+
+
+def test_results_reads_operating_profit_without_one_off_items():
+    """The stored EBITDA has exceptional items in it. A one-off gain a year
+    ago can make a fall look like growth, and a one-off loss now the reverse:
+    where both quarters' core figures are filed they decide."""
+    cands, results = reporters(n=20, step=0.007)
+    snaps = reported(results)
+    # Stored growth +30% thanks to a one-off; without it, operating profit fell.
+    snaps["S00"] = healthy(core_ebitda_cr=90.0, core_ebitda_yoy_cr_prev=100.0, ebitda_yoy_pct=30.0)
+    # Stored growth -5% because of a one-off loss now; without it, it rose.
+    snaps["S01"] = healthy(core_ebitda_cr=110.0, core_ebitda_yoy_cr_prev=100.0, ebitda_yoy_pct=-5.0)
+    # A rise from an operating loss a year ago is a rise.
+    snaps["S02"] = healthy(core_ebitda_cr=12.0, core_ebitda_yoy_cr_prev=-8.0, ebitda_yoy_pct=None)
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    got = {s: blocks[s]["lists"]["results"] for s in ("S00", "S01", "S02")}
+    assert got["S00"]["why_not"] == "Operating profit did not grow on a year ago, one-off items left out."
+    assert got["S01"]["eligible"] and got["S02"]["eligible"]
+    assert "Sales +18%, operating profit up" in got["S01"]["why"]
+
+
+def test_results_says_a_small_move_with_its_decimal():
+    cands, results = reporters(n=12, step=0.008)
+    snaps = reported(results)
+    blocks = leaders.rank(cands, results=results, snapshot=snaps)
+    events = leaders.result_reactions([(c["symbol"], leaders.signals(c)) for c in cands
+                                       if leaders.signals(c)], {k.upper(): v for k, v in results.items()})
+    for s, ev in events.items():
+        fact = blocks[s]["lists"]["results"]["why"][0]
+        move = ev["move"] * 100
+        if abs(move) < 1:
+            assert re.search(r"(rose|fell) \d\.\d%|little changed", fact), fact
+        assert "0%" not in fact.split(":")[1].split(" on ")[0] or abs(move) >= 0.05, fact
+
+
+def test_a_lenders_margin_is_neither_ranked_nor_printed():
+    """fund_snapshot leaves a lender's margin out; a snapshot that still
+    carries one (an older build, a hand-made one) is not ranked on it."""
+    cands, sectors, snaps = market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    x = first_on(blocks, "month")
+    def month(**over):
+        return leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: healthy(**over)}))[x]["lists"]["month"]
+    low = month(is_financial=True, opm_yoy_chg=-12.0)
+    high = month(is_financial=True, opm_yoy_chg=12.0)
+    assert low["score"] == high["score"]
+    assert not any("margin" in w for w in low["why"] + high["why"])
+    # A manufacturer's margin still counts.
+    assert month(opm_yoy_chg=12.0)["score"] > month(opm_yoy_chg=-12.0)["score"]
+    def long(**over):
+        return leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: healthy(**over)}))[x]["lists"]["long"]
+    assert long(is_financial=True, opm_trend_2y=-6.0)["score"] == long(is_financial=True, opm_trend_2y=6.0)["score"]
+
+
+def test_long_refuses_a_negative_equity_and_ranks_its_debt_last():
+    cands, sectors, snaps = market()
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    x = first_on(blocks, "long")
+    neg = healthy(total_equity_cr=-2900.0, debt_equity_x=None, roce_pct=None, roe_pct=None)
+    got = leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: neg}))[x]["lists"]["long"]
+    assert got["why_not"] == "Shareholders' equity is negative: it owes more than it owns."
+    quality = next(r for r in got["breakdown"] if r["factor"] == "quality")
+    plain = next(r for r in leaders.rank(cands, sectors=sectors, snapshot=dict(snaps, **{x: dict(neg, total_equity_cr=None)}))
+                 [x]["lists"]["long"]["breakdown"] if r["factor"] == "quality")
+    assert quality["value"] < plain["value"], "debt against a negative equity read as the middle"
+
+
+def test_month_reads_the_top_half_by_rank_not_by_score():
+    """An industry's money-flow score is a mean of percentiles, so a score of
+    50 is not the middle rank. The gate and the card read the rank."""
+    cands, sectors, snaps = market(n=200, k=20)
+    blocks = leaders.rank(cands, sectors=sectors, snapshot=snaps)
+    for s, b in blocks.items():
+        e, row = b["lists"]["month"], b.get("sector_flow")
+        if not row:
+            continue
+        in_top = row["rank"] <= row["of"] / 2
+        if e.get("eligible"):
+            assert in_top, (s, row)
+            assert any(w.endswith(": top half on money flow") for w in e["why"])
+        for w in e["why"]:
+            if w.endswith("top half on money flow"):
+                assert in_top, (s, row, w)
 
 
 def test_results_ranks_a_move_on_heavy_volume_and_faster_growth_above_a_bigger_move_on_neither():

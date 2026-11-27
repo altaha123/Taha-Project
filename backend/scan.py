@@ -975,13 +975,13 @@ SNAPSHOT_COLUMNS = {
                                "other_income_share_pct", "interest_cover_x", "revenue_yoy_pct",
                                "ebitda_yoy_pct", "pat_yoy_pct"],
     "annual": _SNAP_KEYS + ["label", "months", "revenue_cr", "finance_cost_cr", "pbt_cr", "pat_cr",
-                            "opm_pct", "interest_cover_x"],
+                            "ebitda_cr", "exceptional_cr", "opm_pct", "interest_cover_x"],
     "cashflow": _SNAP_KEYS + ["months", "cfo_cr", "fcf_cr"],
     "balance": _SNAP_KEYS + ["total_assets_cr", "current_investments_cr", "cash_and_equivalents_cr",
                              "other_bank_balances_cr", "total_equity_cr", "equity_capital_cr",
                              "total_liabilities_cr", "borrowings_non_current_cr", "deposits_cr",
-                             "total_borrowings_cr", "net_debt_cr", "debt_equity_x", "current_ratio_x",
-                             "current_assets_cr", "current_liabilities_cr"],
+                             "loans_cr", "total_borrowings_cr", "net_debt_cr", "debt_equity_x",
+                             "current_ratio_x", "current_assets_cr", "current_liabilities_cr"],
 }
 # The live-only facts (no history exists to replay them, so the lab reads
 # them as unknown). Every snapshot carries each key, None until read.
@@ -1144,6 +1144,19 @@ def _sector_money_flow():
     return {name: (card.get("quadrant"), card.get("score")) for name, card in (cards or {}).items()}
 
 
+def _stored_sectors(conn, symbols):
+    """{SYMBOL: sector} from the stored Yahoo profiles, for the companies
+    given; {} when there are none or the table cannot be read."""
+    if not symbols:
+        return {}
+    try:
+        marks = ",".join("?" * len(symbols))
+        return {r[0]: r[1] for r in conn.execute(
+            "SELECT symbol, sector FROM yf_profile WHERE symbol IN (%s)" % marks, list(symbols)) if r[1]}
+    except Exception:
+        return {}
+
+
 def fundamental_snapshot(today=None, symbols=None, prices=None, sectors=None):
     """
     {SYMBOL: snapshot} for the three fundamental pick lists:
@@ -1184,10 +1197,13 @@ def fundamental_snapshot(today=None, symbols=None, prices=None, sectors=None):
         for i in range(0, len(syms), SNAPSHOT_CHUNK):
             part = syms[i:i + SNAPSHOT_CHUNK]
             rows = {t: _snapshot_rows(conn, t, part, day) for t in SNAPSHOT_COLUMNS}
+            # A company outside NSE's industry list is told apart as a lender
+            # by its stored Yahoo sector, as the quarterly screens do.
+            stored = _stored_sectors(conn, [sym for sym in part if not sectors.get(sym)])
             for sym in part:
                 snap = FS.build(rows["quarterly"].get(sym, ()), rows["annual"].get(sym, ()),
                                 rows["cashflow"].get(sym, ()), rows["balance"].get(sym, ()),
-                                sector=sectors.get(sym), asof=day)
+                                sector=sectors.get(sym) or stored.get(sym), asof=day)
                 if not snap:
                     continue
                 snap = FS.with_price(snap, prices.get(sym))

@@ -1405,15 +1405,22 @@ def _tab_method(key):
         return None
     if key == "month":
         floor = cfg["leader_floor"]
+        pull = cfg.get("pull_mix") or {}
+        pulled = (" and the week" if pull.get("dip") else "") if pull.get("dip21") else (
+            " over the week" if pull.get("dip") else "")
+        top = cfg.get("sector_top", 0.5)
         return (f"A stock is here when it is a market leader (its leader score in the top "
                 f"{100 - floor * 100:.0f}% of liquid stocks), in an uptrend and outside the most volatile "
-                "fifth" + (", in an industry in the top half on money flow" if cfg["sector_gate"] else "")
+                "fifth" + ((", in an industry in the top half on money flow" if top == 0.5 else
+                            f", in an industry in the top {top * 100:.0f}% on money flow")
+                           if cfg["sector_gate"] else "")
                 + (", with no loss and no fall in profit in its last quarter" if cfg["profit_guard"] else "")
                 + (f", no results the market sold in the last {cfg['result_lookback']} sessions"
                    if cfg["result_guard"] else "")
                 + f", and promoters pledging {cfg['pledge_max']:g}% of the company or less. It is ordered "
-                "on its pullback over the month and the week, its closeness to the 52-week high, its last "
-                "quarter's sales and margin growth, its industry's money flow and a live catalyst (heavy "
+                + (f"on its pullback over the month{pulled}" if pull.get("dip21") else f"on its pullback{pulled}")
+                + ", its closeness to the 52-week high, its last "
+                "quarter's sales and margin growth (sales alone for a bank or lender), its industry's money flow and a live catalyst (heavy "
                 "deliveries on a falling week, or a large order), with at most "
                 f"{cfg['sector_cap']} stocks from one industry. A figure a company has not filed counts as "
                 "the middle of the field.")
@@ -1426,9 +1433,10 @@ def _tab_method(key):
                 "stock moved that session against the average stock, the volume behind the move and the "
                 "growth itself"
                 + ((f". Only results that were real growth are listed: sales up {cfg['rev_min']:g}% or more on "
-                    "a year ago, profit and operating profit up, other income no more than "
-                    f"{cfg['other_income_max']:g}% of profit before tax and no exceptional gain over "
-                    f"{cfg['exceptional_max'] * 100:.0f}% of it")
+                    "a year ago, profit up and operating profit up with one-off items left out, other income "
+                    f"no more than {cfg['other_income_max']:g}% of profit before tax, no exceptional gain over "
+                    f"{cfg['exceptional_max'] * 100:.0f}% of it and cash from operations positive in the last "
+                    "full year (for a bank or lender: sales, profit and the exceptional test only)")
                    if cfg["quality_gate"] else "")
                 + f", and a stock not already up {cfg['chase_max'] * 100:.0f}% that day{floor}. With fewer "
                 f"than {cfg['min_qualified']} such companies there is no list, and at most "
@@ -1438,7 +1446,8 @@ def _tab_method(key):
             f"F-score and has promoters pledging {cfg['pledge_max']:g}% of it or less"
             + ((f"; it earns {cfg['roce_min']:g}% or more on its capital, with cash from operations at least "
                 f"{cfg['cfo_to_pat_min']:g} times its profit and debt no more than {cfg['de_max']:g} times its "
-                f"equity (a bank or lender: {cfg['roe_min_fin']:g}% or more on its equity)")
+                f"equity (a bank or lender: {cfg['roe_min_fin']:g}% or more on its equity), and its "
+                "shareholders' equity is positive")
                if cfg["floors"] else "")
             + ((f"; and it is priced under a P/E of {cfg['pe_max']:g}, unless its PEG is "
                 f"{cfg['peg_escape']:g} or under on profit growing {cfg['cagr_escape']:g}% a year")

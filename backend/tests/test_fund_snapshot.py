@@ -256,3 +256,62 @@ def test_a_test_whose_lines_were_not_filed_is_not_counted_as_failed():
     # Half a score is no score.
     assert FS.piotroski_tests(a0, None, b0, b1, cfs) is None and FS.piotroski(a0, a1, b0, None, cfs) is None
     assert FS.piotroski(a0, a1, b0, b1, cfs) == full[0]
+
+
+# --- figures the review found wrong (December 2026) ---------------------------
+
+def test_trailing_eps_is_on_the_latest_share_count_across_a_split():
+    """A 1:10 split between quarters: the quarter before it was filed on a
+    tenth of the shares. Its EPS is restated, so the P/E is the true one."""
+    q = quarters()
+    q[3]["eps_basic"] = round(q[3]["pat_cr"] / (SHARES_CR / 10), 4)      # filed before the split
+    s = FS.build(q, annuals(), cashflows(), balances(), asof=ASOF)
+    pat_ttm = sum(r["pat_cr"] for r in q[:4])
+    assert s["eps_ttm"] == pytest.approx(pat_ttm / SHARES_CR, rel=1e-3)
+    assert FS.valuation(s, 120.0)["pe"] == pytest.approx(120.0 / (pat_ttm / SHARES_CR), abs=0.1)
+    # Ordinary quarters are summed as filed.
+    plain = FS.build(quarters(), annuals(), cashflows(), balances(), asof=ASOF)
+    assert plain["eps_ttm"] == pytest.approx(sum(r["eps_basic"] for r in quarters()[:4]), abs=0.01)
+
+
+def test_margins_leave_one_off_items_out():
+    """A one-off gain in the year-ago quarter made its stored margin huge:
+    the change is read on the business's own EBITDA."""
+    q = quarters()
+    ago = q[4]
+    ago["exceptional_cr"] = 200.0
+    ago["ebitda_cr"] = round(ago["ebitda_cr"] + 200.0, 4)
+    ago["opm_pct"] = round(ago["ebitda_cr"] / ago["revenue_cr"] * 100, 4)
+    s = FS.build(q, annuals(), cashflows(), balances(), asof=ASOF)
+    core_now = q[0]["ebitda_cr"] / q[0]["revenue_cr"] * 100
+    core_ago = (ago["ebitda_cr"] - 200.0) / ago["revenue_cr"] * 100
+    assert s["opm_yoy_chg"] == pytest.approx(core_now - core_ago, abs=0.01)
+    assert s["opm_yoy_chg"] > 0, "a one-off a year ago read as a margin collapse"
+    # A one-off gain now does not lift the margin either.
+    q2 = quarters(exceptional_cr=50.0)
+    q2[0]["ebitda_cr"] = round(q2[0]["ebitda_cr"] + 50.0, 4)
+    s2 = FS.build(q2, annuals(), cashflows(), balances(), asof=ASOF)
+    assert s2["opm_pct"] == pytest.approx(core_now, abs=0.01)
+
+
+def test_a_lender_has_no_operating_margin():
+    s = FS.build(quarters(), annuals(), cashflows(), balances(), sector="Financial Services", asof=ASOF)
+    for k in ("opm_pct", "opm_yoy_chg", "prev_opm_yoy_chg", "opm_expanding_2q", "opm_annual_pct", "opm_trend_2y"):
+        assert s.get(k) is None, k
+    assert s["revenue_yoy_pct"] is not None and s["roe_pct"] is not None
+
+
+def test_a_balance_sheet_mostly_loans_is_a_lenders():
+    """An NBFC filing Ind AS results has no bank-format lines and no deposits;
+    its loans are most of what it owns."""
+    nbfc = balances(loans_cr=420.0)
+    assert FS.build(quarters(), annuals(), cashflows(), nbfc, asof=ASOF)["is_financial"] is True
+    maker = balances(loans_cr=20.0)
+    assert FS.build(quarters(), annuals(), cashflows(), maker, asof=ASOF)["is_financial"] is False
+
+
+def test_an_enterprise_value_needs_the_net_debt():
+    s = FS.build(quarters(), annuals(), cashflows(), balances(net_debt_cr=None), asof=ASOF)
+    assert FS.valuation(s, 120.0)["ev_ebitda"] is None, "an unknown debt was read as none"
+    known = FS.build(quarters(), annuals(), cashflows(), balances(), asof=ASOF)
+    assert FS.valuation(known, 120.0)["ev_ebitda"] is not None

@@ -290,7 +290,7 @@ BREAKOUT_SECTOR_NEAR_HIGH = True
 # Stamped on every block rank() writes. A scan made under an earlier recipe
 # still serves its lists after a deploy, but the page must not print this
 # recipe's tested record beside them. Change it whenever LISTS changes.
-RECIPE = "2026-12 fundamental lists v3"
+RECIPE = "2026-12 fundamental lists v4"
 
 # The three fundamental lists' recipes (December 2026). Every threshold and
 # weight each list reads is here, so research/fundamental_ideas_lab.py can
@@ -303,7 +303,7 @@ RECIPE = "2026-12 fundamental lists v3"
 MONTH = {
     "leader_floor": LEADER_FLOOR,      # leader percentile a pick must reach
     "sector_gate": True,               # its industry must rank on money flow ...
-    "sector_floor": 50.0,              # ... at this score (0-100) or better: the top half
+    "sector_top": 0.5,                 # ... in this top share of industries by rank: the top half
     "profit_guard": True,              # no loss, and no fall in profit, last quarter
     "result_guard": True,              # no results the market sold ...
     "result_lookback": 21,             # ... in this many sessions ...
@@ -381,20 +381,26 @@ LISTS = {
         # growing sales raise a stock's rank but are not required: on a
         # given day most picks may have risen over the month. Three lines on
         # a phone at most, or the first pick falls below the first screen.
-        "idea": ("Market leaders in industries money is moving into, profit not down last quarter. "
-                 "Ranked higher on a pullback this month and on sales growth."),
+        "idea": ("Market leaders in the top half of industries on money flow, profit not down last quarter. "
+                 "Ranked higher on a pullback this month and sales growth."),
     },
     "results": {
         "label": "After results", "setup": "Results pick", "setup_key": "pick_results",
         "hold_sessions": 21, "hold_days": 30, "hold_text": "about a month", "exit_pct": 12.0,
         "mix": RESULTS["mix"], "recipe": "RESULTS", "event": "results",
-        "idea": "Companies whose stock jumped on quarterly results that showed real growth.",
+        # A rise on the day is ranked, not required: half the score is the
+        # move against the average stock, so a stock that fell can be listed.
+        "idea": ("Companies whose quarterly results showed real growth, ranked on the day's move "
+                 "against the average stock, its volume and the growth."),
     },
     "long": {
         "label": "Long-term compounders", "setup": "Long-term pick", "setup_key": "pick_long",
         "hold_sessions": 252, "hold_days": 365, "hold_text": "about a year", "exit_pct": 30.0,
         "mix": LONG["mix"], "recipe": "LONG",
-        "idea": "High returns on capital backed by cash, little debt, a steady climb and a price under the list's ceiling.",
+        # The gates, then the rank. Lenders skip the cash and debt floors, and
+        # the year's trend is ranked, not required.
+        "idea": ("High returns on capital and, outside lending, cash backing and modest debt; above the "
+                 "200-day average. Ranked on quality, growth, governance, price and the year's trend."),
     },
 }
 # The setup lists. Each was asked for by name and is built as a list of its
@@ -1723,7 +1729,7 @@ FUNDAMENTALS_SHOWN = ("quarter", "revenue_yoy_pct", "opm_yoy_chg", "pat_yoy_pct"
                       "roce_pct", "roe_pct", "cfo_to_pat", "fcf_pos_years_3y", "debt_equity_x", "pe", "peg",
                       "pledge_pct", "f_score", "is_financial", "sector_mf_quadrant")
 WHY_MAX = 4                        # facts printed beside a pick
-TOP_HALF_SCORE = 50.0              # an industry's money-flow score at or over this is the top half
+TOP_HALF = 0.5                     # the top half of industries, by their rank on money flow
 FCF_YEARS = 3                      # the years free cash flow is counted over
 F_SCORE_TOP = 9                    # Piotroski's scale
 PROFIT_TEXT_MAX = 1000.0           # a growth figure past this is a near-zero base, not news
@@ -1826,11 +1832,22 @@ def _snapshot_pcts(syms, snaps, sectors):
             v = _fig(snaps.get(s), key)
             out[s] = None if v is None else sign * v
         return out
-    pct = {k: _figure_pct(col(k)) for k in ("revenue_yoy_pct", "opm_yoy_chg", "rev_cagr_3y", "pat_cagr_3y",
-                                             "revenue_ttm_yoy_pct", "pat_ttm_yoy_pct", "opm_trend_2y")}
+    pct = {k: _figure_pct(col(k)) for k in ("revenue_yoy_pct", "rev_cagr_3y", "pat_cagr_3y",
+                                             "revenue_ttm_yoy_pct", "pat_ttm_yoy_pct")}
+    # A lender's operating margin says nothing about it (fund_snapshot,
+    # FINANCIAL COMPANIES): it is not ranked, so its growth reads on sales
+    # and profit alone.
+    for k in ("opm_yoy_chg", "opm_trend_2y"):
+        pct[k] = _figure_pct(col(k, lenders=False))
     pct["roce_pct"] = _figure_pct(col("roce_pct", lenders=False))
     pct["cfo_to_pat"] = _figure_pct(col("cfo_to_pat", lenders=False))
     pct["neg_de"] = _figure_pct(col("debt_equity_x", lenders=False, sign=-1.0))
+    # A negative equity has no debt-to-equity figure, yet any debt against it
+    # is the most debt there is: it ranks last, not in the middle.
+    for s in syms:
+        equity = _fig(snaps.get(s), "total_equity_cr")
+        if not fin[s] and equity is not None and equity <= 0:
+            pct["neg_de"][s] = 0.0
     lenders = col("roe_pct", lenders=True)
     if sum(v is not None for v in lenders.values()) >= INDUSTRY_PCT_MIN:
         pct["roe_fin"] = _figure_pct(lenders)
@@ -1871,8 +1888,10 @@ def _sold_text(ev):
 
 def _sales_margin(snap, margin="margin"):
     """The last quarter's growth in words, from what it filed: "Sales +28%,
-    margin +3.4 pts", or either half alone, or None."""
-    rev, opm = _fig(snap, "revenue_yoy_pct"), _fig(snap, "opm_yoy_chg")
+    margin +3.4 pts", or either half alone, or None. A lender's margin is
+    never said: it is not read (fund_snapshot, FINANCIAL COMPANIES)."""
+    rev = _fig(snap, "revenue_yoy_pct")
+    opm = None if (snap or {}).get("is_financial") else _fig(snap, "opm_yoy_chg")
     out = []
     if rev is not None and abs(rev) < PROFIT_TEXT_MAX:
         out.append(f"Sales {rev:+.0f}%")
@@ -1949,10 +1968,10 @@ def _month(sym, g, part, is_calm, snap, ctx):
         why = f"Not a market leader: its leader score is under the top {100 - floor * 100:.0f}% of liquid stocks."
     elif cfg["sector_gate"] and row is None:
         why = "Its industry could not be ranked on money flow."
-    elif cfg["sector_gate"] and row["score"] < cfg["sector_floor"]:
+    elif cfg["sector_gate"] and row["rank"] > row["of"] * cfg["sector_top"]:
         why = (f"Its industry, {row['sector']}, ranks {row['rank']} of {row['of']} on money flow: "
-               + ("the bottom half." if cfg["sector_floor"] == TOP_HALF_SCORE else
-                  f"under the list's floor of {cfg['sector_floor']:.0f}."))
+               + ("the list needs the top half." if cfg["sector_top"] == TOP_HALF else
+                  f"the list needs the top {cfg['sector_top'] * 100:.0f}%."))
     elif cfg["profit_guard"] and pat is not None and pat <= 0:
         why = "Made a loss in its last quarter."
     elif cfg["profit_guard"] and pat_yoy is not None and pat_yoy < 0:
@@ -1972,7 +1991,7 @@ def _month(sym, g, part, is_calm, snap, ctx):
     if growth:
         facts.append(growth)
     if row:
-        facts.append(f"{row['sector']}: top half on money flow" if row["score"] >= TOP_HALF_SCORE else
+        facts.append(f"{row['sector']}: top half on money flow" if row["rank"] <= row["of"] * TOP_HALF else
                      f"{row['sector']}: ranked {row['rank']} of {row['of']} on money flow")
     if _high_text(g):
         facts.append(_high_text(g))
@@ -2018,9 +2037,12 @@ def _result_quality(q, cfg):
     if pat_yoy is not None and pat_yoy <= 0:
         return "Profit did not grow on a year ago."
     if not fin:
-        core, ebitda_yoy = _fig(q, "core_ebitda_cr"), _fig(q, "ebitda_yoy_pct")
-        if (core is not None and core <= 0) or (ebitda_yoy is not None and ebitda_yoy <= 0):
-            return "Operating profit did not grow."
+        core, before = _fig(q, "core_ebitda_cr"), _fig(q, "core_ebitda_yoy_cr_prev")
+        if core is not None and core <= 0:
+            return "Made an operating loss in the quarter, one-off items left out."
+        if _operating_profit_grew(q) is False:
+            return ("Operating profit did not grow on a year ago, one-off items left out."
+                    if core is not None and before is not None else "Operating profit did not grow on a year ago.")
         oi = _fig(q, "other_income_share_pct")
         if oi is not None and oi > cfg["other_income_max"]:
             return (f"Other income was {_vs(oi, cfg['other_income_max'])}% of profit before tax: not the "
@@ -2033,6 +2055,20 @@ def _result_quality(q, cfg):
     if not fin and cfo is not None and cfo <= 0:
         return "Its last full year's operations used cash."
     return None
+
+
+def _operating_profit_grew(q):
+    """Did the quarter's operating profit, without exceptional items, beat
+    the same quarter a year before? The two figures where both are filed
+    (a rise from a loss counts), else the stored growth rate; None when
+    neither can be read, and for a lender, which has none to read."""
+    if not q or q.get("is_financial"):
+        return None
+    core, before = _fig(q, "core_ebitda_cr"), _fig(q, "core_ebitda_yoy_cr_prev")
+    if core is not None and before is not None:
+        return core > before
+    growth = _fig(q, "ebitda_yoy_pct")
+    return None if growth is None else growth > 0
 
 
 def _results_list(events, reaction, snapshot):
@@ -2048,7 +2084,8 @@ def _results_list(events, reaction, snapshot):
     reported = {s: _reported(events[s], snapshot.get(s)) for s in events}
     pct = {"volume": _figure_pct({s: _finite(events[s].get("vol_x")) for s in events}),
            "revenue_yoy_pct": _figure_pct({s: _fig(reported[s], "revenue_yoy_pct") for s in events}),
-           "opm_yoy_chg": _figure_pct({s: _fig(reported[s], "opm_yoy_chg") for s in events})}
+           "opm_yoy_chg": _figure_pct({s: None if (reported[s] or {}).get("is_financial")
+                                       else _fig(reported[s], "opm_yoy_chg") for s in events})}
     out = {}
     for s, ev in events.items():
         q = reported[s]
@@ -2083,13 +2120,15 @@ def _results_list(events, reaction, snapshot):
 
         move = ev["move"] * 100
         filed_day = _short_day(ev["filed_at"])
-        facts = [f"Results on {filed_day}: {'rose' if move >= 0 else 'fell'} {abs(move):.0f}% "
-                 + ("that day" if filed_day == day else f"on {day}")]
+        # A move under a point keeps its decimal: "fell 0%" says nothing.
+        moved = ("little changed" if abs(move) < 0.05 else
+                 ("rose " if move > 0 else "fell ") + (f"{abs(move):.0f}%" if abs(move) >= 1 else f"{abs(move):.1f}%"))
+        facts = [f"Results on {filed_day}: {moved} " + ("that day" if filed_day == day else f"on {day}")]
         if vol_x is not None:
             facts.append(f"Volume {vol_x:.1f}\u00d7 usual")
-        ebitda_yoy = _fig(q, "ebitda_yoy_pct")
+        op_up = _operating_profit_grew(q)
         line = _said([(rev is not None and abs(rev or 0) < PROFIT_TEXT_MAX, f"Sales {rev or 0:+.0f}%"),
-                      (ebitda_yoy is not None, "operating profit " + ("up" if (ebitda_yoy or 0) > 0 else "down"))])
+                      (op_up is not None, "operating profit " + ("up" if op_up else "down"))])
         if line:
             facts.append(_cap(line))
         pat_yoy = _fig(q, "pat_yoy_pct")
@@ -2109,7 +2148,12 @@ def _results_list(events, reaction, snapshot):
 def _long_floor(snap, fin, cfg):
     """Why a company fails the long list's return, cash or debt floors, or
     None. A lender is judged on its return on equity alone: its debt is its
-    stock in trade and its cash flow follows its lending."""
+    stock in trade and its cash flow follows its lending. A negative equity
+    has no return or debt ratio to test, and fails them all: what it owes is
+    more than what it owns."""
+    equity = _fig(snap, "total_equity_cr")
+    if equity is not None and equity <= 0:
+        return "Shareholders' equity is negative: it owes more than it owns."
     if fin:
         roe = _fig(snap, "roe_pct")
         if roe is not None and roe < cfg["roe_min_fin"]:
