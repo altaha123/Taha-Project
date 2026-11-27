@@ -1767,7 +1767,7 @@
     <div class="la-bar la-rise d1" id="lbar">
       <div class="la-fgroup" role="group" aria-label="Lane">
         <button type="button" class="la-fpill" data-f="all" aria-pressed="true">All</button>
-        <button type="button" class="la-fpill" data-f="select" aria-pressed="false"><span class="la-st" aria-hidden="true">★</span> Select</button>
+        <button type="button" class="la-fpill" data-f="select" aria-pressed="false"><span><span class="la-st" aria-hidden="true">★</span> Select</span></button>
         <button type="button" class="la-fpill" data-f="classic" aria-pressed="false">Classic</button>
       </div>
       <div class="la-fgroup" role="group" aria-label="Narrow the calls">
@@ -2750,10 +2750,10 @@ function alertCard(it, open){
   if(a.setup) pills.push(`<span class="la-pill">${esc(a.setup)}</span>`);
   if(rv !== null) pills.push(`<span class="la-pill" title="Volume against its usual for this time of day">RVOL ${rv.toFixed(1)}×</span>`);
   if(sec) pills.push(`<span class="la-pill" title="${esc(a.sector)}${sp !== null ? ": the sector's typical move today" : ""}">${esc(sec)}${sp !== null ? " " + esc(L.pct(sp)) : ""}</span>`);
-  pills.push(sel ? `<span class="la-pill lane star">${LA_STAR} Select</span>` : `<span class="la-pill lane">Classic</span>`);
+  pills.push(sel ? `<span class="la-pill lane star"><span>${LA_STAR} Select</span></span>` : `<span class="la-pill lane">Classic</span>`);
   if(pair && !sel){
     const pf = !laFirstPaint && !laSeen.has(L.keyOf(pair)), ps = L.num(pair.score);
-    pills.push(`<span class="la-pill confirm${pf ? " is-new" : ""}" title="The stricter Select lane called the same break${ps !== null ? ", scoring it " + Math.round(ps) + "/100" : ""}">${LA_STAR} Select confirmed ${esc(L.clock12(pair.time))}</span>`);
+    pills.push(`<span class="la-pill confirm${pf ? " is-new" : ""}" title="The stricter Select lane called the same break${ps !== null ? ", scoring it " + Math.round(ps) + "/100" : ""}"><span>${LA_STAR} Select confirmed ${esc(L.clock12(pair.time))}</span></span>`);
   }
   if(pair && sel) pills.push(`<span class="la-pill quiet">Classic called it ${esc(L.clock12(pair.time))}</span>`);
 
@@ -2900,7 +2900,8 @@ function renderLanes(b){
    money flow, the live tracker) are ready. */
 function renderFunnel(b, d){
   const L = laLogic(), wrap = $("lfunnelwrap");
-  wrap.hidden = !isOwner() || !b;
+  // An older backend reports no gates: then there is no funnel to show.
+  wrap.hidden = !isOwner() || !b || !b.gates;
   if(wrap.hidden) return;
   const eng = [];
   const ln = b.lanes, pr = b.profiles, cp = b.checkpoint, mf = b.money_flow;

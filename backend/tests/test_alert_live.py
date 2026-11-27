@@ -349,11 +349,14 @@ ICON = {"✅": "t1", "🎯": "target", "🛑": "stop", "⏰": "close"}
 def test_follow_ups_go_by_alert_updates_tg(loop, clock, monkeypatch, mode, expect):
     d, n, _ = loop
     monkeypatch.setattr(intraday, "ALERT_UPDATES_TG", mode)
-    logged().extend([call(symbol="WIN", time="10:00"), call(symbol="LOSE", time="10:00")])
+    logged().extend([call(symbol="WIN", time="10:00"), call(symbol="LOSE", time="10:00"),
+                     call(symbol="HOLD", time="10:00")])
     for hm, win, lose in (((10, 5), 101.6, 100.0), ((10, 30), 102.6, 99.4), ((15, 16), 99.0, 99.0)):
         clock.set(*hm)
-        d.quotes.update(quotes(WIN=win, LOSE=lose))
+        d.quotes.update(quotes(WIN=win, LOSE=lose, HOLD=100.9))
         intraday.scan_once()
+    # The close at 3:15 pm is in the day's result, not a message of its own.
+    assert logged()[2]["live_outcome"] == "OPEN_AT_CLOSE"
     assert [ICON[t[0]] for t in n.plain] == expect
     if "t1" in expect:
         assert n.plain[0] == ("✅ <b>WIN</b> BUY reached half-book ₹101.50 (+1.0%) · "
@@ -362,7 +365,7 @@ def test_follow_ups_go_by_alert_updates_tg(loop, clock, monkeypatch, mode, expec
         assert "🎯 <b>WIN</b> BUY hit the target ₹102.50 (+2.0%) at 10:30 am" in n.plain
     if "stop" in expect:
         assert "🛑 <b>LOSE</b> BUY hit the stop loss ₹99.50 (−1.0%)" in n.plain
-    win, lose = logged()
+    win, lose, _hold = logged()
     assert bool(win.get("tg_t1")) == ("t1" in expect)
     assert bool(win.get("tg_target")) == ("target" in expect)
     assert bool(lose.get("tg_stop")) == ("stop" in expect)
@@ -503,14 +506,17 @@ def test_the_log_is_written_whole_or_not_at_all(isolated, clock, monkeypatch):
     row = call()
     with open(intraday.LOG_FILE, "w") as f:
         json.dump([row], f)
-    # A row nothing can encode: the save fails and the file on disk is the
-    # old one, whole — the old code had truncated it by then.
-    monkeypatch.setitem(intraday._state, "alerts", [row, dict(row, symbol="BAD", why=object())])
-    intraday._save_log()
-    assert json.load(open(intraday.LOG_FILE)) == [row]
-    # A crash before the rename: the same.
     monkeypatch.setitem(intraday._state, "alerts", [row, call(symbol="FAR")])
+    # The write itself fails (here: its temporary file cannot be opened).
+    # The file on disk is the old one, whole; the old code had truncated it.
+    monkeypatch.setattr(intraday, "_tid", lambda: 7)
+    blocker = f"{intraday.LOG_FILE}.{os.getpid()}.7.tmp"
+    os.mkdir(blocker)
+    intraday._save_log()
+    os.rmdir(blocker)
+    assert json.load(open(intraday.LOG_FILE)) == [row]
 
+    # A crash between the write and the rename: the same, and no debris.
     def crash(src, dst):
         raise OSError("disk went away")
     with monkeypatch.context() as m:
@@ -518,12 +524,26 @@ def test_the_log_is_written_whole_or_not_at_all(isolated, clock, monkeypatch):
         intraday._save_log()
     assert json.load(open(intraday.LOG_FILE)) == [row]
     assert not [p for p in os.listdir(isolated) if p.endswith(".tmp")]
-    # numpy numbers from the engine are written as numbers.
+
+    # numpy numbers from the engine are written as numbers, and a value
+    # nothing knows how to write is kept as its text, not a lost day.
     monkeypatch.setitem(intraday._state, "alerts",
-                        [dict(row, score=np.int64(71), rvol=np.float32(2.5), shadow={"rpos"})])
+                        [dict(row, score=np.int64(71), rvol=np.float32(2.5), shadow={"rpos"},
+                              odd=dt.time(10, 5))])
     intraday._save_log()
     back = json.load(open(intraday.LOG_FILE))[0]
     assert back["score"] == 71 and back["rvol"] == 2.5 and back["shadow"] == ["rpos"]
+    assert back["odd"] == "10:05:00"
+
+
+def test_an_archive_that_cannot_be_written_keeps_its_rows_hot(isolated, clock, monkeypatch):
+    clock.set(16, 30)
+    old, new = call(symbol="OLD", date="2026-06-01"), call(symbol="NEW")
+    monkeypatch.setitem(intraday._state, "alerts", [old, new])
+    monkeypatch.setattr(intraday, "ARCHIVE_FILE", str(isolated / "no-such-dir" / "a.jsonl"))
+    intraday._save_log()
+    assert [a["symbol"] for a in json.load(open(intraday.LOG_FILE))] == ["OLD", "NEW"]
+    assert [a["symbol"] for a in logged()] == ["OLD", "NEW"]
 
 
 def test_a_log_that_does_not_parse_is_set_aside_not_overwritten(isolated):
@@ -1082,7 +1102,6 @@ def test_a_pass_makes_one_dhan_call_and_starts_no_background_work(loop, clock, m
                       profiles_fresh=lambda now=None: asked.append("profiles") or False,
                       profile_symbols=lambda: asked.append("symbols") or ["A"],
                       set_money_flow=lambda m, day: asked.append("flow"))
-    monkeypatch.setattr(intraday, "money_flow", None, raising=False)
     logged().append(call(symbol="OPEN", time="09:45"))    # a call still being tracked
     clock.set(10, 30)
     intraday.scan_once()

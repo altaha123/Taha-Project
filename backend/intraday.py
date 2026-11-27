@@ -299,14 +299,26 @@ def _call(fn, *args, **kw):
 def _jsonable(o):
     """What json.dump cannot write on its own. The engine works in numpy, and
     one numpy number in one row used to make the whole save raise — inside a
-    bare except, so the day's log silently never reached the disk."""
+    bare except, so the day's log silently never reached the disk. Anything
+    else unknown is written as its text: an odd value in one row must never
+    stop the day's log from being kept."""
     if isinstance(o, np.generic):
         return o.item()
     if isinstance(o, np.ndarray):
         return o.tolist()
     if isinstance(o, (set, frozenset, tuple)):
         return list(o)
-    raise TypeError(f"{type(o).__name__} is not JSON serialisable")
+    return str(o)
+
+
+def _fsync(f):
+    """Flush to the disk where the filesystem allows it. Some do not; the
+    rename is still atomic for the process, so that is no reason to fail."""
+    try:
+        f.flush()
+        os.fsync(f.fileno())
+    except OSError:
+        pass
 
 
 def _native(o):
@@ -336,8 +348,7 @@ def _write_atomic(path, text):
     try:
         with open(tmp, "w", encoding="utf-8") as f:
             f.write(text)
-            f.flush()
-            os.fsync(f.fileno())
+            _fsync(f)
         os.replace(tmp, path)
     finally:
         if os.path.exists(tmp):
@@ -808,8 +819,7 @@ def _archive_append(rows):
                    for a in fresh).encode("utf-8")
     with open(path, "ab") as f:
         f.write(lead + blob)
-        f.flush()
-        os.fsync(f.fileno())
+        _fsync(f)
     return len(fresh)
 
 
@@ -855,15 +865,21 @@ def _load_log():
 
 def _save_log():
     """Archive what has aged out, then write the hot log whole. Archive
-    first, trim after: a row is never out of both files."""
+    first, trim after: a row is never out of both files. An archive that
+    cannot be written (a full disk) keeps its rows hot and trims nothing —
+    and still does not stop today's log being saved."""
     with _lock:
         try:
             rows = _state["alerts"]
             _hot, old = _split_hot(rows)
             if old:
-                _archive_append(old)            # raises: nothing is trimmed
-                gone = {id(a) for a in old}
-                rows[:] = [a for a in rows if id(a) not in gone]
+                try:
+                    _archive_append(old)
+                except Exception:
+                    old = []
+                if old:
+                    gone = {id(a) for a in old}
+                    rows[:] = [a for a in rows if id(a) not in gone]
             _write_atomic(LOG_FILE, json.dumps(rows, default=_jsonable,
                                                separators=(",", ":")))
         except Exception:

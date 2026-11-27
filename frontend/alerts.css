@@ -52,8 +52,8 @@
              letter-spacing:var(--ls-heading); margin:16px 0 8px; color:var(--text-primary) }
 .la-hero p.la-lede{ font-size:var(--fs-body); line-height:var(--lh-body); color:var(--text-secondary); margin:0 0 20px; max-width:44ch }
 /* Select's pacing, in the server's words: which session, and its ★ slots. */
-.la-hero p.la-pace{ display:flex; align-items:center; gap:var(--sp-2); width:fit-content; max-width:100%; margin:-8px 0 20px;
-                    padding:4px 12px; border-radius:var(--r-pill); background:var(--highlight-subtle);
+.la-hero p.la-pace{ display:block; width:fit-content; max-width:100%; box-sizing:border-box; margin:-8px 0 20px;
+                    padding:4px 12px; border-radius:var(--r-card); background:var(--highlight-subtle);
                     font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-primary) }
 .la-hero p.la-pace[hidden]{ display:none }
 
@@ -148,9 +148,10 @@
             font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted) }
 .la-tl-key span{ display:inline-flex; align-items:center; gap:var(--sp-1) }
 .la-tl-key span::before{ content:""; width:8px; height:8px; box-sizing:border-box; border-radius:50%; border:2px solid currentColor }
-.la-tl-key .k-dot::before{ border-color:var(--text-secondary) }
+.la-tl-key i{ width:1px; height:12px; background:var(--border) }
+.la-tl-key .k-dot::before{ border-color:var(--text-secondary); background:var(--text-secondary) }
 .la-tl-key .k-star::before{ display:none }
-.la-tl-key .k-star svg{ width:12px; height:12px; fill:none; stroke:var(--highlight); stroke-width:2.4; stroke-linejoin:round }
+.la-tl-key .k-star svg{ width:12px; height:12px; fill:var(--text-secondary); stroke:var(--text-secondary); stroke-width:2; stroke-linejoin:round }
 .la-tl-key .k-open::before{ border-color:var(--text-secondary); background:transparent }
 .la-tl-key .k-t1::before{ border-color:var(--gain); background:color-mix(in srgb, var(--gain) 45%, var(--surface)) }
 .la-tl-key .k-won::before{ border-color:var(--gain); background:var(--gain) }
@@ -245,8 +246,10 @@
 .la-levels b{ display:block; margin-top:3px; font-family:var(--font-sans); font-weight:600; font-size:var(--fs-body); color:var(--text-primary);
               white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums }
 /* The half-book reached: where half was booked and the stop went to cost. */
-.la-levels .t1.hit{ background:var(--gain-bg) }
-.la-levels .t1.hit span{ color:var(--gain) }
+.la-levels .t1.hit{ position:relative; background:var(--gain-bg) }
+.la-levels .t1.hit span{ color:var(--gain); padding-right:var(--sp-3) }
+.la-levels .t1.hit::after{ content:"\2713"; position:absolute; top:6px; right:8px; font-size:var(--fs-label); font-weight:600;
+                           line-height:var(--lh-label); color:var(--gain) }
 .la-why{ font-size:var(--fs-body); line-height:var(--lh-small); color:var(--text-secondary); margin:0 }
 
 /* where the call stands now: the live state pill, the P&L, a note */
@@ -335,7 +338,6 @@
         transition:border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease) }
 .la-rt:hover{ border-color:var(--border-strong); background:var(--surface-raised) }
 .la-rt:focus-visible{ outline:2px solid var(--focus-ring); outline-offset:2px }
-.la-rt.star{ border-left:2px solid var(--highlight) }
 .la-rt .top{ display:flex; align-items:center; gap:var(--sp-2); min-width:0 }
 .la-rt .top b{ font-family:var(--font-mono); font-weight:500; font-size:var(--fs-small); color:var(--text-primary);
                overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
@@ -347,14 +349,16 @@
 .la-chip.warn{ background:var(--warning-bg); color:var(--warning) }
 .la-chip.info{ background:var(--info-bg); color:var(--info) }
 .la-chip.muted{ background:var(--surface-raised); color:var(--text-secondary) }
-.la-rt .lvl{ margin-top:var(--sp-2); font-size:var(--fs-small); color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-.la-rt .lvl span{ color:var(--text-secondary) }
+.la-rt .lvl{ display:flex; align-items:baseline; gap:var(--sp-2); margin-top:var(--sp-2); font-size:var(--fs-small); white-space:nowrap }
+.la-rt .lvl span{ min-width:0; overflow:hidden; text-overflow:ellipsis; color:var(--text-secondary) }
+.la-rt .lvl b{ margin-left:auto; font-weight:600; color:var(--text-primary); font-variant-numeric:tabular-nums }
 .la-rt .bar{ height:4px; border-radius:var(--r-pill); background:var(--surface-raised); margin:var(--sp-2) 0 0; overflow:hidden }
 .la-rt .bar u{ display:block; height:100%; width:0; border-radius:var(--r-pill); background:var(--info);
                transition:width 900ms var(--ease-soft,ease-out) }
 .la-rt .why{ margin:var(--sp-1) 0 0; font-size:var(--fs-small); line-height:var(--lh-small); color:var(--text-secondary);
              display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
-.la-rt .since{ margin-top:var(--sp-2); font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted) }
+.la-rt .since{ display:flex; justify-content:space-between; gap:var(--sp-2); margin-top:var(--sp-2);
+              font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted); white-space:nowrap }
 .la-rd-more{ margin:0; align-self:center; font-size:var(--fs-small); color:var(--text-muted) }
 
 /* ── closest to breaking out ─────────────────────────────────────────────── */
@@ -401,7 +405,8 @@
 .la-sess{ margin-top:var(--sp-6) }
 .la-sess h4{ font-family:var(--font-sans); font-weight:500; font-size:var(--fs-label); letter-spacing:var(--ls-label); text-transform:uppercase;
              color:var(--text-muted); margin:0 0 8px }
-.la-sess table{ width:100% }
+.la-sess table{ width:100%; max-width:720px; table-layout:fixed }
+.la-sess thead th:first-child{ width:44% }
 .la-sess th, .la-sess td{ height:auto; padding:var(--sp-2) var(--sp-3) }
 .la-sess tbody th small, .la-sess td small{ display:block; font-size:var(--fs-label); line-height:var(--lh-label); color:var(--text-muted); font-weight:400 }
 .la-sess td b{ display:block; font-size:var(--fs-body); font-weight:600; color:var(--text-primary) }
@@ -415,12 +420,12 @@
 .la-eng:empty{ display:none }
 .la-eng span{ display:inline-flex; align-items:center; min-height:26px; padding:2px var(--sp-3); border-radius:var(--r-pill);
               border:1px solid var(--la-line); font-size:var(--fs-small); color:var(--text-secondary) }
-.la-fn{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--sp-3) var(--sp-8) }
+.la-fn{ list-style:none; margin:0; padding:0; columns:2; column-gap:var(--sp-8) }
 .la-fn li{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--sp-1) var(--sp-3); align-items:baseline;
-           font-size:var(--fs-small); color:var(--text-secondary) }
+           margin:0 0 var(--sp-3); break-inside:avoid; font-size:var(--fs-small); color:var(--text-secondary) }
 .la-fn li b{ font-weight:600; color:var(--text-primary); font-variant-numeric:tabular-nums }
 .la-fn .bar{ grid-column:1 / -1; height:6px; border-radius:var(--r-pill); background:var(--surface-raised); overflow:hidden }
-.la-fn .bar u{ display:block; height:100%; width:0; border-radius:var(--r-pill); background:var(--highlight);
+.la-fn .bar u{ display:block; height:100%; width:0; border-radius:var(--r-pill); background:var(--chart-5);
                transition:width 900ms var(--ease-soft,ease-out) }
 .la-funnel .none{ margin:0; font-size:var(--fs-body); color:var(--text-muted) }
 
@@ -443,7 +448,7 @@
   .la-owner #ltg{ margin-left:0; flex-basis:100% }
   .la-watch{ grid-template-columns:1fr }
   .la-rd{ grid-template-columns:1fr }
-  .la-fn{ grid-template-columns:1fr }
+  .la-fn{ columns:1 }
   /* The lane pills, then the chime on the same row; the narrowing pills below. */
   .la-bar{ gap:var(--sp-2) }
   .la-fgroup + .la-fgroup{ order:2; padding-left:0; border-left:0 }
